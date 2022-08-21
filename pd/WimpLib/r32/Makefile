@@ -17,21 +17,27 @@ CMODULES=$(PD).cmodules
 
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
-AS = ObjAsm
-ASflags_BASE=-I$(PD).cmodules.Hdr --throwback
+AS=ObjAsm
+# --arm to allow assembly of UAL syntax code
+# -cpu=3M to allow assembly of S/UMULL
+ASflags_BASE=-I$(PD).cmodules.Hdr --arm --cpu=3M --throwback
 ASflags=$(ASflags_BASE)
 
 # NB PipeDream uses a global register for its sb variable, so avoid using that in this library code!
 
-CC = cc
-CCflags_BASE=-c -I$(WimpLib) -I$(PD) -fafh -throwback -DSB_GLOBAL_REGISTER -Wp
+CC=cc
+CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -throwback
+# -arch 2 -cpu 3 gives code I prefer to look at e.g. STMs, multiple exit LDMs
+CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -arch 2 -cpu 3 -throwback
+# -arch 3M to allow use of S/UMULL with -Otime
+#CCflags_BASE=-c -I$(WimpLib) -I$(PD) -DSB_GLOBAL_REGISTER -fafh -Wp -arch 3M -cpu 7 -DNORCROFT_ARCH_M -throwback
 CCflags=$(CCflags_BASE) -Otime
 #CCflags=$(CCflags_BASE) -g
 
 CCflags_CSX=$(CCflags) -DCOMPILING_WIMPLIB_EXTENSIONS
 
-LibFile = libfile
-LibFileflags = -o -c $@
+LibFile=libfile
+LibFileflags=-o -c $@
 
 WimpLib: o.WimpLib
 

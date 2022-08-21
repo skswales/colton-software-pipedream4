@@ -400,45 +400,6 @@ static S32         main_window_initial_y1;
 static S32         main_window_default_height;
 #define            main_window_y_bump           (wimptx_title_height() + 16)
 
-/*
-can we print a file of this filetype?
-*/
-
-static BOOL
-pd_can_print(
-    _InVal_     FILETYPE_RISC_OS rft)
-{
-    switch(rft)
-    {
-    case FILETYPE_PD_CHART:
-    case FILETYPE_PIPEDREAM:
-        return(TRUE);
-
-    default:
-        return(FALSE);
-    }
-}
-
-/*
-can we 'run' a file of this filetype?
-*/
-
-static BOOL
-pd_can_run(
-    _InVal_     FILETYPE_RISC_OS rft)
-{
-    switch(rft)
-    {
-    case FILETYPE_PD_CHART:
-    case FILETYPE_PD_MACRO:
-    case FILETYPE_PIPEDREAM:
-        return(TRUE);
-
-    default:
-        return(FALSE);
-    }
-}
-
 /******************************************************************************
 *
 *                           icon bar processing
@@ -1006,8 +967,6 @@ strnpcpyind(
 *
 ******************************************************************************/
 
-/* initial drag of data from somewhere to icon */
-
 static BOOL
 iconbar_event_Message_DataSave(
     const WimpMessage * const user_message)
@@ -1106,6 +1065,45 @@ iconbar_event_Message_DataLoad(
 }
 
 /* double-click on object */
+
+/*
+can we 'run' a file of this filetype?
+*/
+
+_Check_return_
+static inline BOOL
+pd_can_run(
+    _InVal_     FILETYPE_RISC_OS rft)
+{
+    switch(rft)
+    {
+    case FILETYPE_PD_CHART:
+    case FILETYPE_PD_MACRO:
+    case FILETYPE_PIPEDREAM:
+        return(TRUE);
+
+    default:
+        break;
+    }
+
+    { /* accept any foreign filetype if it is currently set up to use our app */
+    BOOL claim = FALSE;
+    U8Z var_name[32];
+    TCHARZ var_value[BUF_MAX_PATHSTRING];
+
+    consume_int(xsnprintf(var_name, elemof32(var_name), "Alias$@RunType_%.3X", rft));
+
+    if(NULL == _kernel_getenv(var_name, var_value, elemof32(var_value)))
+    {
+        if(NULL != strstr(var_value, "!PipeDream.!Run"))
+            claim = TRUE;
+
+        // reportf(TEXT("pd_can_run: claim_broadcast=%s for %s : %s"), report_boolstring(claim), var_name, var_value);
+    }
+
+    return(claim);
+    } /*block*/
+}
 
 static void
 iconbar_event_Message_DataOpen_PDMacro(
@@ -1336,6 +1334,44 @@ iconbar_event_Message_TaskInitialise(
     }
 
     return(TRUE);
+}
+
+/*
+can we print a file of this filetype?
+*/
+
+_Check_return_
+static inline BOOL
+pd_can_print(
+    _InVal_     FILETYPE_RISC_OS rft)
+{
+    switch(rft)
+    {
+    case FILETYPE_PD_CHART:
+    case FILETYPE_PIPEDREAM:
+        return(TRUE);
+
+    default:
+        break;
+    }
+
+    { /* accept any foreign filetype if it is currently set up to use our app for printing */
+    BOOL claim = FALSE;
+    U8Z var_name[32];
+    TCHARZ var_value[BUF_MAX_PATHSTRING];
+
+    consume_int(xsnprintf(var_name, elemof32(var_name), "Alias$@PrintType_%.3X", rft));
+
+    if(NULL == _kernel_getenv(var_name, var_value, elemof32(var_value)))
+    {
+        if(NULL != strstr(var_value, "!PipeDream.!Run -Print"))
+            claim = TRUE;
+
+        // reportf(TEXT("pd_can_print: claim_broadcast=%s for %s : %s"), report_boolstring(claim), var_name, var_value);
+    }
+
+    return(claim);
+    } /*block*/
 }
 
 static BOOL

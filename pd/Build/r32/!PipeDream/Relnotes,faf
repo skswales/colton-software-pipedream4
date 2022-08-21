@@ -86,6 +86,14 @@ href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda
 and Errata</a> for details of changes to functionality.</p>
 
 
+<h4>4.59 (06 Sep 2021)</h4>
+
+<p>PipeDream can now be set up to be the default handler for any file type
+that it can import. See the !Boot file for details.</p>
+
+<p>ROOL DDE 30b build environment used.</p>
+
+
 <h4>4.58.03 (31 Jan 2021)</h4>
 
 <p>Fixed printing of negative numbers in red to a colour printer.</p>

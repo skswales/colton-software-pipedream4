@@ -19,11 +19,12 @@
  * &.extrautils.PlingStore.MakeStore
  */
 
-#define HexVersion   0x45803
-#define Version      "4.58.03"
-#define CurrentDate  "31-Jan-2021"
+#define HexVersion   0x45900
+#define Version      "4.59"
+#define CurrentDate  "06-Sep-2021"
 
 /*
+* 06 Sep 2021 - 4.59
 * 31 Jan 2021 - 4.58.03
 * 27 Sep 2020 - 4.58.02
 * 24 Sep 2020 - 4.58.01
@@ -76,6 +77,7 @@
 * 22 Mar 2012 - 4.50/34
 * 22 Mar 2012 - 4.50/33
 * 21 Mar 2012 - 4.50/32 - the first 32-bit PipeDream 4
+*
 * 10 Aug 2000 - 4.50/23 - the last 26-bit PipeDream 4
 * 05 Apr 1999 - 4.50/22
 * 17 Jan 1999 - 4.50/21
@@ -96,7 +98,19 @@
 * 18 Feb 1996 - 4.50 - the first StrongARM PipeDream 4
 * 28 Apr 1992 - 4.13
 * 10 Oct 1991 - 4.00 - the first PipeDream 4
+*
 * 11 Oct 1990 - 3.14 - the last PipeDream 3
+* 14 Sep 1990 - 3.13
+* 22 May 1990 - 3.11
+* 03 May 1990 - 3.10
+* 15 Jan 1990 - 3.07
+* 16 Oct 1989 - 3.06
+* 22 Sep 1989 - 3.05
+* 26 Jul 1989 - 3.00 - the first PipeDream 3
+* 21 Jul 1989 - 3.00 (prerelease)
+*
+* 04 Jun 1992 - 2.21 - the last PipeDream 2
+* 18 Nov 1988 - 2.2
 */
 
 #include "version_x.h"

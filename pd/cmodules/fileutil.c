@@ -37,7 +37,7 @@ file__make_usable_dir(
 places to look for files
 */
 
-static char *search_path = NULL;
+static char *g_search_path = NULL;
 
 /******************************************************************************
 *
@@ -737,10 +737,10 @@ file_get_cwd(
 *
 ******************************************************************************/
 
-extern char *
+extern const char *
 file_get_search_path(void)
 {
-    return((search_path && *search_path) ? search_path : NULL);
+    return((g_search_path && *g_search_path) ? g_search_path : NULL);
 }
 
 /******************************************************************************
@@ -1170,11 +1170,11 @@ extern void
 file_set_path(
     _In_z_      PCTSTR pathstr)
 {
-    status_consume(str_set(&search_path, pathstr));
+    status_consume(str_set(&g_search_path, pathstr));
 
     reportf("file_set_path(%u:%s)",
-            (NULL == search_path) ? 0 : strlen(search_path),
-            report_tstr(search_path));
+            (NULL == g_search_path) ? 0 : strlen(g_search_path),
+            report_tstr(g_search_path));
 }
 
 /******************************************************************************

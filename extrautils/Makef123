@@ -18,8 +18,9 @@ CMODULES=$(PD).cmodules
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 CC=cc
-CCflags_BASE=-c -I$(PD) -DRISCOS -DNDEBUG -throwback
-CCflags=$(CCflags_BASE) -Otime -faf
+# -arch 2 -cpu 3 gives code I prefer to look at e.g. STMs, multiple exit LDMs
+CCflags_BASE=-c -I$(PD) -DRISCOS -DNDEBUG -fa -arch 2 -cpu 3 -throwback
+CCflags=$(CCflags_BASE) -Otime
 #CCflags=$(CCflags_BASE) -g
 
 LD=link

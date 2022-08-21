@@ -443,7 +443,7 @@ file_get_cwd(
     _InVal_     U32 elemof_buffer,
     PC_U8 currentfilename);
 
-extern char *
+extern const char *
 file_get_search_path(void);
 
 extern char *

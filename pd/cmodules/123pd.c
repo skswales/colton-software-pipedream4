@@ -2474,7 +2474,7 @@ wrlmar(
 {
     S32 i;
     uchar *optp;
-    S32 curv;
+    S32 curv = 0;
     uchar tstr[5];
 
     optp = searchopt(optid);

@@ -7,5 +7,12 @@
 # Copyright (C) 2014-2021 Stuart Swales
 
 # set your cross environment up first
-gcc -c ../../*.c ../../cmodules/*.c  -I../.. -I../../WimpLib/ -I ../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/msvchack  -funsigned-char -DCROSS_COMPILE -DHOST_GCCSDK -DRELEASED
-
+arm-none-eabi-gcc \
+ -c ../../*.c ../../cmodules/*.c  \
+ -I../.. \
+ -I../../WimpLib/ \
+ -I ../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/msvchack \
+ -I ../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib \
+ -funsigned-char \
+ -fno-builtin \
+ -DCROSS_COMPILE -DHOST_GCCSDK -DTARGET_RISCOS -DRELEASED

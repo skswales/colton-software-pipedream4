@@ -500,6 +500,15 @@ REM PROCs(f%,"File$Type_DB0","LotusWK1",TRUE)
 PROCo(f%,"|")
 REM Never override any other definition...
 PROCs(f%,"File$Type_DFE","CSV",TRUE)
+:
+PROCo(f%,"|")
+PROCo(f%,"| PipeDream (4.59 on) can be set up to be the default handler for any file type")
+PROCo(f%,"| that it can import, so long as it is not overridden by another application.")
+PROCo(f%,"| You could put one or both of the following lines in a file in your")
+PROCo(f%,"| !Boot.Choices.Boot.PreDesk directory, substituting the actual upper-case")
+PROCo(f%,"| hex file type for XXX in these aliases and removing the comment characters.")
+BPUT#f%,"| ";: PROCft_ar(f%,"XXX","Run "+var_product_dir$+".!Run %%*0",FALSE)
+BPUT#f%,"| ";: PROCft_ap(f%,"XXX","Run "+var_product_dir$+".!Run -Print %%*0",FALSE)
 ENDPROC
 :
 :

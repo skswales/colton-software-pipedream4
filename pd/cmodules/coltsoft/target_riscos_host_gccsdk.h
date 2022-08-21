@@ -30,6 +30,8 @@
 #endif /* CODE_ANALYSIS */
 #endif /* __clang__ */
 
+#define __STDC_NO_COMPLEX__ 1 /* only for CROSS_COMPILE - see RISC OS complex.h */
+
 #endif /* __target_riscos_host_gccsdk_h */
 
 /* end of target_riscos_host_gccsdk.h */

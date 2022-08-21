@@ -1183,15 +1183,17 @@ two_nums_type_match(
 * a signed 64-bit result that the caller may consult
 * e.g. to promote to fp
 *
+* N.B. before faffing with this, look at the generated code...
+* ...it could be better, but is easy to make worse!
+*
 ******************************************************************************/
 
 _Check_return_
 static inline int32_t
 int32_from_int64_possible_overflow(
-    _In_        const int64_t int64,
-    _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
+    _InoutRef_   P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
 {
-    p_int64_with_int32_overflow->int64_result = int64;
+    const int64_t int64 = p_int64_with_int32_overflow->int64_result;
 
     /* if both the top word and the MSB of the low word of the result
      * are all zeros (+ve) or all ones (-ve) then
@@ -1209,7 +1211,7 @@ int32_from_int64_possible_overflow(
 
     return((int64 < 0) ? INT32_MIN : INT32_MAX);
 #elif RISCOS
-    /* two instructions on ARM Norcroft - SUBS r0, r0, r1 ASR #31; MOVNE r0, #1 */
+    /* two instructions on ARM Norcroft - SUBS r0, r_hi, r_lo ASR #31; MOVNE r0, #1 */
     if(false == (p_int64_with_int32_overflow->f_overflow = (
                 ((int32_t) (int64 >> 32))  -  (((int32_t) int64) >> 31)
                 ) ) )
@@ -1217,7 +1219,7 @@ int32_from_int64_possible_overflow(
         return((int32_t) int64);
     }
   
-    /* just test sign bit of 64-bit result - single instruction TST r1 on ARM Norcroft (compare does full subtraction) */
+    /* just test sign bit of 64-bit result - single instruction TST r_hi on ARM Norcroft (compare does full subtraction) */
     return(((uint32_t) (int64 >> 32) & 0x80000000U) ? INT32_MIN : INT32_MAX);
 #else
     /* portable version */
@@ -1239,11 +1241,19 @@ int32_add_check_overflow(
     _In_        const int32_t addend_b,
     _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
 {
-    /* NB contorted order to save register juggling on ARM Norcroft */
+#if RISCOS
+    /* NB contorted order to save register juggling on ARM Norcroft for arithmetic op */
     const int64_t int64 = (int64_t) addend_b + addend_a;
+#else
+    const int64_t int64 = (int64_t) addend_a + addend_b;
+#endif
 
-    return(int32_from_int64_possible_overflow(int64, p_int64_with_int32_overflow));
+    p_int64_with_int32_overflow->int64_result = int64;
+
+    return(int32_from_int64_possible_overflow(p_int64_with_int32_overflow));
 }
+
+#if defined(UNUSED_KEEP_ALIVE)
 
 _Check_return_
 extern int32_t
@@ -1254,7 +1264,9 @@ int32_subtract_check_overflow(
 {
     const int64_t int64 = (int64_t) minuend - subtrahend;
 
-    return(int32_from_int64_possible_overflow(int64, p_int64_with_int32_overflow));
+    p_int64_with_int32_overflow->int64_result = int64;
+
+    return(int32_from_int64_possible_overflow(p_int64_with_int32_overflow));
 }
 
 _Check_return_
@@ -1264,11 +1276,20 @@ int32_multiply_check_overflow(
     _In_        const int32_t multiplicand_b,
     _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
 {
-    /* NB contorted order to save register juggling on ARM Norcroft */
+#if RISCOS && !defined(NORCROFT_ARCH_M)
+    /* NB contorted order to save register juggling on ARM Norcroft for function call */
     /* ARM Norcroft should generate a call to _ll_mullss: "Create a 64-bit number by multiplying two int32_t numbers" */
     const int64_t int64 = (int64_t) multiplicand_b * multiplicand_a;
+#else
+    /* Specify -arch 3M -Otime with ARM Norcroft to use SMULL instead of function call */
+    const int64_t int64 = (int64_t) multiplicand_a * multiplicand_b;
+#endif
 
-    return(int32_from_int64_possible_overflow(int64, p_int64_with_int32_overflow));
+    p_int64_with_int32_overflow->int64_result = int64;
+
+    return(int32_from_int64_possible_overflow(p_int64_with_int32_overflow));
 }
+
+#endif /* UNUSED_KEEP_ALIVE */
 
 /* end of ss_const.c */

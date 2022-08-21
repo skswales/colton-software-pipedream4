@@ -10,6 +10,7 @@
         GET     as_flags_h
         GET     Hdr:ListOpts
         GET     Hdr:APCS.APCS-32
+        GET     Hdr:Macros
         GET     as_macro_h
 
 XOS_Bit                 * 1 :SHL: 17
@@ -55,7 +56,7 @@ ctrlflagp
         MOV     r1, #0
         ADR     r2, EscapeHandler
         MOV     r3, #0
-        SWI     XOS_Control
+        SVC     #XOS_Control
 
         Return "", "fpbased"
 
@@ -87,7 +88,7 @@ ctrlflagp
         MOV     r2, #0
         ADR     r3, EventHandler
         MOV     ip, r3
-        SWI     XOS_Control
+        SVC     #XOS_Control
         CMP     ip, r3
         MOVEQ   a1, #0
         MOVNE   a1, r3
@@ -119,7 +120,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XOS_ReadMonotonicTime
+        SVC     #XOS_ReadMonotonicTime
 
         Return "","LinkNotStacked"
 
@@ -133,7 +134,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XOS_WriteN
+        SVC     #XOS_WriteN
         MOVVC   a1, #0
 
         Return "","LinkNotStacked"
@@ -149,7 +150,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XOS_Plot
+        SVC     #XOS_Plot
         MOVVC   a1, #0
 
         Return "","LinkNotStacked"
@@ -158,7 +159,7 @@ ctrlflagp
 
         BeginExternal riscos_hourglass_off ; (void)
 
-        SWI     XHourglass_Off
+        SVC     #XHourglass_Off
 
         Return "","LinkNotStacked"
 
@@ -168,7 +169,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XHourglass_On
+        SVC     #XHourglass_On
 
         Return "","LinkNotStacked"
 
@@ -178,7 +179,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XHourglass_Percentage
+        SVC     #XHourglass_Percentage
 
         Return "","LinkNotStacked"
 
@@ -192,7 +193,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XHourglass_Smash
+        SVC     #XHourglass_Smash
 
         Return "","LinkNotStacked"
 
@@ -202,7 +203,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XHourglass_Start
+        SVC     #XHourglass_Start
 
         Return "","LinkNotStacked"
 
@@ -221,7 +222,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XFont_LoseFont
+        SVC     #XFont_LoseFont
         MOVVC   a1, #0
 
         Return "","LinkNotStacked"
@@ -235,7 +236,7 @@ ctrlflagp
 
         ; LinkNotStacked - no FunctionEntry here
 
-        SWI     XFont_SetFont
+        SVC     #XFont_SetFont
         MOVVC   a1, #0
 
         Return "","LinkNotStacked"
@@ -264,7 +265,7 @@ ctrlflagp
 
         STR     fp, [sp, #-4]! ; Total Paranoia!
 
-        SWI     XWimp_SlotSize
+        SVC     #XWimp_SlotSize
 
         LDR     fp, [sp], #4
 

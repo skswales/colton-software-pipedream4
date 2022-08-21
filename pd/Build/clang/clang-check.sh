@@ -8,11 +8,14 @@
 
 clang \
  -target arm-none-eabi \
+ -std=c99 \
  -c ../../*.c ../../cmodules/*.c  \
- -I../.. -I../../WimpLib/ \
- -I ../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/msvchack \
- -I ../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib \
+ -I../.. \
+ -I../../WimpLib/ \
+ -I../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/clanghack \
+ -I../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/msvchack \
+ -I../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib \
  -DCROSS_COMPILE -DHOST_CLANG -DTARGET_RISCOS -DRELEASED \
  -funsigned-char \
  -fno-builtin \
- -Wall -Wextra
+ -Wall -Wextra -Wno-missing-field-initializers

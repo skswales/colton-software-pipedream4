@@ -7,8 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.58
-TEXTUAL_VERSION_NUMBER=4.58.03
+TEXTUAL_VERSION_NUMBER=4.59
+#TEXTUAL_VERSION_NUMBER=4.59.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
@@ -27,21 +27,25 @@ WimpLib=$(PD).WimpLib
 
 # Can speed up build (especially when using HostFS on RPCemu on Windows) by using RAM disc
 # Uncomment these vvv if you want
-
 # INC_RAM_WimpLib=-IRAM:$.WimpLib
-
 # INC_RAM_PD=-IRAM:$.pd
 
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 AS=ObjAsm
-ASflags_BASE=-I$(CMODULES).Hdr --cpu=3M --throwback
+# --arm to allow assembly of UAL syntax code
+# -cpu=3M to allow assembly of S/UMULL
+ASflags_BASE=-I$(CMODULES).Hdr --arm --cpu=3M --throwback
 # vvv current ObjAsm has noisy useless deprecation warnings
-ASflags_BASE=-I$(CMODULES).Hdr --cpu=3M
+#ASflags_BASE=-I$(CMODULES).Hdr --arm --cpu=3M
 ASflags=$(ASflags_BASE)
 
 CC=cc
-CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -fafh -throwback -DSB_GLOBAL_REGISTER
+CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -throwback
+# -arch 2 -cpu 3 gives code I prefer to look at e.g. STMs, multiple exit LDMs
+CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -arch 2 -cpu 3 -throwback
+# -arch 3M to allow use of S/UMULL with -Otime
+#CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -DSB_GLOBAL_REGISTER -fafh -arch 3M -cpu 7 -DNORCROFT_ARCH_M -throwback
 CCflags=$(CCflags_BASE) -Otime
 #
 # CCflags=$(CCflags_BASE) -Otime -DCHECKING
@@ -421,51 +425,51 @@ o.Modules.debug:      $(CMODULES).c.debug
 o.Modules.ev_arith:    $(CMODULES).c.ev_arith
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_arith
 o.Modules.ev_comp:    $(CMODULES).c.ev_comp
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_comp
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_comp
 o.Modules.ev_dcom:    $(CMODULES).c.ev_dcom
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_dcom
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_dcom
 o.Modules.ev_docs:    $(CMODULES).c.ev_docs
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_docs
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_docs
 o.Modules.ev_eval:    $(CMODULES).c.ev_eval
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_eval
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_eval
 o.Modules.ev_exec:    $(CMODULES).c.ev_exec
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_exec
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_exec
 o.Modules.ev_fndat:    $(CMODULES).c.ev_fndat
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fndat
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fndat
 o.Modules.ev_fnfin:    $(CMODULES).c.ev_fnfin
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnfin
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnfin
 o.Modules.ev_fnsta:    $(CMODULES).c.ev_fnsta
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnsta
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnsta
 o.Modules.ev_fnstb:    $(CMODULES).c.ev_fnstb
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnstb
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnstb
 o.Modules.ev_fnstm:    $(CMODULES).c.ev_fnstm
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnstm
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnstm
 o.Modules.ev_fnstr:    $(CMODULES).c.ev_fnstr
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnstr
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnstr
 o.Modules.ev_func:    $(CMODULES).c.ev_func
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_func
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_func
 o.Modules.ev_help:    $(CMODULES).c.ev_help
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_help
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_help
 o.Modules.ev_math:    $(CMODULES).c.ev_math
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_math
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_math
 o.Modules.ev_matb:    $(CMODULES).c.ev_matb
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_matb
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_matb
 o.Modules.ev_matr:    $(CMODULES).c.ev_matr
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_matr
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_matr
 o.Modules.ev_mcpx:    $(CMODULES).c.ev_mcpx
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_mcpx
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_mcpx
 o.Modules.ev_mtri:    $(CMODULES).c.ev_mtri
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_mtri
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_mtri
 o.Modules.ev_name:    $(CMODULES).c.ev_name
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_name
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_name
 o.Modules.ev_rpn:     $(CMODULES).c.ev_rpn
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_rpn
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_rpn
 o.Modules.ev_tabl:    $(CMODULES).c.ev_tabl
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_tabl
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_tabl
 o.Modules.ev_tree:    $(CMODULES).c.ev_tree
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_tree
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_tree
 o.Modules.ev_uref:    $(CMODULES).c.ev_uref
-        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_uref
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_uref
 o.Modules.file:       $(CMODULES).c.file
         $(CC) -o $@ $(CCflags) $(CMODULES).c.file
 o.Modules.fileutil:   $(CMODULES).c.fileutil

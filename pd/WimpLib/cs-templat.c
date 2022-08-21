@@ -529,10 +529,10 @@ template_readfile(
     {
         if(!template__block[b])
         {
-            char filename[256];
-            int length = res_findname(template__require[b], filename);
-            if(length > 0)
-                template__readfile_do(b, filename, length);
+            char filename__require[256];
+            int length__require = res_findname(template__require[b], filename__require);
+            if(length__require > 0)
+                template__readfile_do(b, filename__require, length__require);
         }
     }
 
