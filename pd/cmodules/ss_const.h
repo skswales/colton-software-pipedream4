@@ -428,7 +428,7 @@ _Check_return_
 extern STATUS
 ss_string_make_uchars(
     _OutRef_    P_EV_DATA p_ev_data,
-    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _In_reads_opt_(uchars_n) PC_UCHARS uchars,
     _In_        U32 uchars_n);
 
 _Check_return_

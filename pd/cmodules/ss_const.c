@@ -63,10 +63,11 @@ real_floor(
         int exponent;
         F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
         const int mantissa_digits_minus_n = (DBL_MANT_DIG - 3);
+        const int exponent_minus_mdmn = exponent - mantissa_digits_minus_n;
 
         if(exponent >= 0) /* no need to do more for negative exponents here */
         {
-            const F64 rounding_value = copysign(pow(2.0, exponent - mantissa_digits_minus_n), mantissa);
+            const F64 rounding_value = copysign(pow(2.0, exponent_minus_mdmn), mantissa);
             const F64 adjusted_value = f64 + rounding_value;
 
             /* adjusted result */
@@ -105,10 +106,11 @@ real_trunc(
         int exponent;
         F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
         const int mantissa_digits_minus_n = (DBL_MANT_DIG - 3);
+        const int exponent_minus_mdmn = exponent - mantissa_digits_minus_n;
 
         if(exponent >= 0) /* no need to do more for negative exponents here */
         {
-            const F64 rounding_value = copysign(pow(2.0, exponent - mantissa_digits_minus_n), mantissa);
+            const F64 rounding_value = copysign(pow(2.0, exponent_minus_mdmn), mantissa);
             const F64 adjusted_value = f64 + rounding_value;
 
             /* adjusted result */
@@ -1143,7 +1145,7 @@ _Check_return_
 extern STATUS
 ss_string_make_uchars(
     _OutRef_    P_EV_DATA p_ev_data,
-    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _In_reads_opt_(uchars_n) PC_UCHARS uchars,
     _In_        U32 uchars_n)
 {
     assert(p_ev_data);
@@ -1156,8 +1158,10 @@ ss_string_make_uchars(
         STATUS status;
         if(NULL == (p_ev_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*NULLCH*/, &status)))
             return(ev_data_set_error(p_ev_data, status));
-        assert(uchars);
-        memcpy32(p_ev_data->arg.string_wr.uchars, uchars, uchars_n);
+        if(NULL == uchars)
+            PtrPutByte(p_ev_data->arg.string_wr.uchars, CH_NULL); /* allows append (like ustr_set_n()) */
+        else
+            memcpy32(p_ev_data->arg.string_wr.uchars, uchars, uchars_n);
         p_ev_data->arg.string_wr.uchars[uchars_n] = NULLCH;
         p_ev_data->did_num = RPN_TMP_STRING; /* copy is now owned by the caller */
         }

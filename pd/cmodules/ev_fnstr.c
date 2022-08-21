@@ -577,30 +577,28 @@ PROC_EXEC_PROTO(c_replace)
 
 PROC_EXEC_PROTO(c_rept)
 {
-    U8Z buffer[BUF_EV_MAX_STRING_LEN];
     const U32 len = args[0]->arg.string.size;
     S32 n = args[1]->arg.integer;
-    P_U8 p_u8 = buffer;
+    P_U8 p_u8;
     S32 x;
 
     exec_func_ignore_parms();
 
-    if( n > (S32) ((elemof32(buffer)-1) / len))
-        n = (S32) ((elemof32(buffer)-1) / len);
-
-    if(n <= 0)
+    if(n < 0)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
         return;
     }
+
+    status_assert(ss_string_make_uchars(p_ev_data_res, NULL, (U32) n * len));
+
+    p_u8 = p_ev_data_res->arg.string_wr.uchars;
 
     for(x = 0; x < n; ++x)
     {
         memcpy32(p_u8, args[0]->arg.string.uchars, len);
         p_u8 += len;
     }
-
-    status_assert(ss_string_make_uchars(p_ev_data_res, buffer, (U32) n * len));
 }
 
 /******************************************************************************
