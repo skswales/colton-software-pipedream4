@@ -219,12 +219,12 @@ stringout_field(
     trace_2(TRACE_REALLY, "stringout_field(%d, \"%s\")", fwidth, str);
 
     if(len > fwidth)
-        {
+    {
         ch = str[fwidth];
         str[fwidth] = '\0';
         drawn = stringout(str);
         str[fwidth] = ch;
-        }
+    }
     else
         drawn = stringout(str);
 
@@ -289,7 +289,7 @@ new_window_height(
             return(0);
 
     if((nrows != maximum_rows)  &&  vertvec_mh)
-        {
+    {
         /* only (re)set variables if realloc ok */
         old_maximum_rows = maximum_rows;
 
@@ -302,18 +302,18 @@ new_window_height(
         reinit_rows();          /* derives things from paghyt */
 
         if(nrows > old_maximum_rows)
-            {
+        {
             rptr      = vertvec_entry(old_maximum_rows);
             last_rptr = vertvec_entry(nrows);
 
             do  {
                 rptr->flags = LAST;
-                }
-            while(++rptr < last_rptr);
             }
+            while(++rptr < last_rptr);
+        }
 
         out_rebuildvert = TRUE;     /* shrinking or growing */
-        }
+    }
     else
         trace_0(TRACE_APP_PD4, "no row change: why were we called?");
 
@@ -348,7 +348,7 @@ new_window_width(
             return(0);
 
     if((ncols != maximum_cols)  &&  horzvec_mh)
-        {
+    {
         /* only (re)set variables if realloc ok */
         old_maximum_cols = maximum_cols;
 
@@ -367,19 +367,19 @@ new_window_width(
         trace_1(TRACE_APP_PD4, "cols_available := %d", cols_available);
 
         if(ncols > old_maximum_cols)
-            {
+        {
             cptr      = horzvec_entry(old_maximum_cols);
             last_cptr = horzvec_entry(ncols);
 
             do  {
                 cptr++->flags = LAST;
-                }
-            while(cptr < last_cptr);
             }
+            while(cptr < last_cptr);
+        }
 
         /* columns need much more redrawing than rows on resize */
         out_rebuildhorz = TRUE;
-        }
+    }
     else
         trace_0(TRACE_APP_PD4, "no col change: why were we called?");
 
@@ -427,10 +427,10 @@ screen_initialise(void)
             new_window_width(pw);
 
     if(!ok)
-        {
+    {
         trace_0(TRACE_APP_PD4, "***** screen_initialise() failed *****");
         screen_finalise();
-        }
+    }
 
     return(ok);
 }
@@ -472,13 +472,13 @@ static MONOTIME draw_screen_initialTime;
 #endif
 
 #define draw_screen_timeout_init() /* void() */ \
-    { \
+{ \
     if(draw_screen_timeout_criterion()) \
-        { \
+    { \
         draw_screen_donePict = 0; \
         draw_screen_initialTime = monotime(); \
-        } \
-    }
+    } \
+}
 
 #define draw_screen_timeout() /* BOOL(): TRUE if should time out */ ( \
     draw_screen_timeout_criterion()  && \
@@ -499,7 +499,7 @@ draw_screen(void)
     oldrow = currow;
 
     if(xf_draweverything)
-        {
+    {
         xf_draweverything = FALSE; /* unset this redraw flag */
 
         xf_drawslotcoordinates = xf_drawcolumnheadings =
@@ -507,7 +507,7 @@ draw_screen(void)
 
         /* clear out entire window */
         please_clear_textarea(-BIG_TX, BIG_TY, BIG_TX, BIG_TY);
-        }
+    }
 
     xf_interrupted = FALSE; /* always reset, gets set again if needed */
 
@@ -528,7 +528,7 @@ draw_screen(void)
     old_movement = movement;
 
     if((int) movement)
-        {
+    {
         xf_drawslotcoordinates = TRUE;
 
         if(!dont_update_lescrl)
@@ -539,88 +539,88 @@ draw_screen(void)
         if(movement & ABSOLUTE)
             chkmov();
         else
-            {
+        {
             switch((int) movement)
-                {
-                case CURSOR_UP:
-                    curup();
-                    break;
+            {
+            case CURSOR_UP:
+                curup();
+                break;
 
-                case CURSOR_DOWN:
-                    curdown();
-                    break;
+            case CURSOR_DOWN:
+                curdown();
+                break;
 
-                case CURSOR_PREV_COL:
-                    prevcol();
-                    break;
+            case CURSOR_PREV_COL:
+                prevcol();
+                break;
 
-                case CURSOR_NEXT_COL:
-                    nextcol();
-                    break;
+            case CURSOR_NEXT_COL:
+                nextcol();
+                break;
 
-                case CURSOR_SUP:
-                    cursup();
-                    break;
+            case CURSOR_SUP:
+                cursup();
+                break;
 
-                case CURSOR_SDOWN:
-                    cursdown();
-                    break;
+            case CURSOR_SDOWN:
+                cursdown();
+                break;
 
-                default:
-                    break;
-                }
+            default:
+                break;
             }
+        }
 
         movement = 0;
-        }
+    }
 
     curosc();
 
     /* re-load screen vector if we change rows with draw files about */
     if(draw_file_refs.lbr  &&  (pict_currow != currow))
-        {
+    {
         trace_0(TRACE_APP_PD4, "draw_screen calling filvert: pict_currow != currow");
         filvert(fstnrx(), currow, DONT_CALL_FIXPAGE);
-        }
+    }
 
     if(pict_on_screen_prev != pict_on_screen)
-        {
+    {
         trace_0(TRACE_APP_PD4, "*** forcing out_screen because pict_on_screen changed");
         pict_on_screen_prev = pict_on_screen;
         out_screen = TRUE;
-        }
+    }
 
     check_output_current_slot(old_movement);
 
     if(xf_flush)
-        {
+    {
         xf_flush = FALSE;
         clearkeyboardbuffer();
-        }
+    }
 
     (void) draw_altered_state();        /* sets extent, scroll offsets */
 
     /* send window to the front after adjusting scroll offsets! */
     if(xf_frontmainwindow)
-        {
+    {
         /* this sort of fronting demands caret claim at the grand opening */
         xf_acquirecaret = TRUE;
         riscos_frontmainwindow(in_execfile);
-        }
+    }
 
     if(xf_drawcolumnheadings)
         colh_draw_column_headings();
 #if 1
     /* SKS after 4.11 08jan92 - consider interrupt in draw_screen_below() for full screen case ... */
     if(out_screen)
-        {
+    {
         out_screen = FALSE;
 
         out_below  = TRUE;
         rowtoend   = 0;
 
         xf_draw_empty_right = 1;
-        }
+    }
 
     if(xf_draw_empty_right)
         draw_empty_right_of_screen(); /* ditto 13jan92 - this is now needed */
@@ -726,13 +726,13 @@ find_coff(
     coff = 0;
 
     while(!(cptr->flags & LAST))
-        {
+    {
         if(tcol == cptr->colno)
             return(coff);
 
         coff++;
         cptr++;
-        }
+    }
 
     return(-2);
 }
@@ -754,23 +754,23 @@ maybe_draw_pictures(void)
     trace_0(TRACE_MAYBE, "maybe_draw_pictures(): ");
 
     if(pict_on_screen)
-        {
+    {
         rptr = vertvec();
 
         for(roff = 0; roff < rowsonscreen; roff++, rptr++)
-            {
+        {
             if(rptr->flags & PICT)
-                {
+            {
                 trow = rptr->rowno;
 
                 cptr = horzvec();
 
                 for(coff = 0; !(cptr->flags & LAST); coff++, cptr++)
-                    {
+                {
                     tcol = cptr->colno;
 
                     if(draw_find_file(current_docno(), tcol, trow, &p_draw_diag, &p_draw_file_ref))
-                        {
+                    {
                         trace_2(TRACE_APP_PD4, "found picture at col %d, row %d", tcol, trow);
 
                         x0 = calcad(coff /*find_coff(p_draw_file_ref->col)*/);
@@ -783,7 +783,7 @@ maybe_draw_pictures(void)
                                 tsize_x(p_draw_file_ref->xsize_os), tsize_y(p_draw_file_ref->ysize_os), x0, y0, x1, y1);
 
                         if(textobjectintersects(x0, y0, x1, y1))
-                            {
+                        {
                             draw_screen_donePict = 1;
 
                             really_draw_picture(p_draw_diag, p_draw_file_ref, x0, y0, x1, y1);
@@ -791,12 +791,12 @@ maybe_draw_pictures(void)
                             /* reload as drawing may shuffle core */
                             /* cptr = horzvec_entry(coff); */
                             /* rptr = vertvec_entry(roff); */
-                            }
                         }
                     }
                 }
             }
         }
+    }
     else
         trace_0(TRACE_APP_PD4, "pict_on_screen = 0");
 }
@@ -815,16 +815,16 @@ draw_slot_in_buffer(void)
     char paint_str[PAINT_STRSIZ];
 
     if(slot_in_buffer)
-        {
+    {
         if(!output_buffer)
-            {
+        {
             trace_2(TRACE_APP_PD4, "draw_slot_in_buffer: lescrl %d, old_lescrl %d", lescrl, old_lescroll);
 
             /* if scroll position is different, we must output */
             if(lescrl != old_lescroll)
                 output_buffer = TRUE;
             else
-                {
+            {
                 /* if scroll position will be different, we must output */
                 fwidth_ch = (xf_inexpression || xf_inexpression_box || xf_inexpression_line)
                                     ? pagwid_plus1
@@ -839,20 +839,20 @@ draw_slot_in_buffer(void)
                    !(xf_inexpression || xf_inexpression_box || xf_inexpression_line)  &&
                    fwidth_ch
                   )
-                    {
+                {
                     /* fonty cal_lescrl a little more complex */
 
                     trace_0(TRACE_APP_PD4, "draw_slot_in_buffer: fonty_cal_lescrl(fwidth)");
 
                     /* is the caret off the left of the field? (scroll margin one char) */
                     if(lecpos <= lescrl)
-                        {
+                    {
                         if(lescrl)
                             /* off left - will need to centre caret in field */
                             output_buffer = TRUE;
-                        }
+                    }
                     else
-                        {
+                    {
                         /* is the caret off the right of the field? (scroll margin one char) */
                         fwidth_mp = ch_to_mp(fwidth_ch);
 
@@ -864,30 +864,30 @@ draw_slot_in_buffer(void)
                         if(swidth_mp > fwidth_mp)
                             /* off right - will need to right justify */
                             output_buffer = TRUE;
-                        }
                     }
+                }
                 else
-                    {
+                {
                     trace_1(TRACE_APP_PD4, "draw_slot_in_buffer: cal_lescrl(fwidth) %d", cal_lescrl(fwidth_ch));
 
                     if(cal_lescrl(fwidth_ch) != lescrl)
                         output_buffer = TRUE;
-                    }
                 }
             }
+        }
 
         trace_1(TRACE_APP_PD4, "draw_slot_in_buffer: output_buffer = %s", trace_boolstring(output_buffer));
 
         if(output_buffer)
-            {
+        {
             if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
                 draw_slot_in_buffer_in_place();
 
             old_lescroll = lescrl;
             old_lecpos = lecpos;    /* for movement checks */
             output_buffer = FALSE;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -951,20 +951,20 @@ draw_screen_below(
     trace_1(TRACE_DRAW, "\n*** draw_screen_below(%d)", roff);
 
     while(roff < rowsonscreen)
-        {
+    {
         draw_row(roff);
 
         ++roff;
 
         if( (roff < rowsonscreen) &&
             (draw_screen_timeout() || keyinbuffer()))
-            {
+        {
             trace_1(TRACE_OUT | TRACE_ANY, "*** draw_screen_below interrupted: leaving out_below set, rowtoend = %d", roff);
             rowtoend = roff;
             xf_interrupted = out_below = TRUE;
             break;
-            }
         }
+    }
 
     if(xf_interrupted)
         return;
@@ -989,14 +989,14 @@ maybe_draw_rows(void)
     BOOL morebelow;
 
     while(roff < rowsonscreen)
-        {
+    {
         morebelow = maybe_draw_row(roff);
 
         if(!morebelow)
             break;
 
         ++roff;
-        }
+    }
 }
 
 /* returns FALSE if this line is below the bottom of the cliparea and
@@ -1014,13 +1014,13 @@ maybe_draw_row(
     /* NB. cliparea.y0 >= rpos > cliparea.y1 is condition we want to draw */
 
     if(cliparea.y0 < rpos)
-        {
+    {
         trace_0(TRACE_MAYBE, "row below clipped area");
         return(FALSE);
-        }
+    }
 
     if(cliparea.y1 < rpos)
-        {
+    {
         trace_0(TRACE_MAYBE, "row in clipped area");
 
         /* limit matched textarea to this line */
@@ -1029,7 +1029,7 @@ maybe_draw_row(
 
         maybe_draw_row_border(roff, rpos);
         maybe_draw_row_contents(roff, rpos);
-        }
+    }
     else
         trace_0(TRACE_MAYBE, "row above clipped area");
 
@@ -1046,18 +1046,18 @@ maybe_draw_row_border(
     /* required to redraw left slop too */
 
     if(!borbit)
-        {
+    {
         if(textxintersects(-1, 0))
-            {
+        {
             clear_thistextarea();
 
             /* draw first vbar - needs to include hbar */
             at(-1, rpos);
             draw_grid_vbar(TRUE);
-            }
+        }
 
         return;
-        }
+    }
 
     if(textxintersects(-1, borderwidth))
         really_draw_row_border(roff, rpos);
@@ -1072,20 +1072,20 @@ maybe_draw_row_contents(
     S32 rpos)
 {
     if(textxintersects(borderwidth, borderwidth + hbar_length))
-        {
+    {
         new_row_length = really_draw_row_contents(roff, rpos);
         /* only matters if update, not redraw */
 
         if(grid_on)
-            {
+        {
             /* draw last vbar */
             at(borderwidth + hbar_length, rpos);
             draw_grid_vbar(FALSE);
 
             at(borderwidth, rpos);
             draw_grid_hbar(hbar_length);
-            }
         }
+    }
 }
 
 extern void
@@ -1097,16 +1097,16 @@ draw_row(
     trace_1(TRACE_DRAW, "\n*** draw_row(%d) --- ", roff);
 
     if(vertvec_entry(roff)->flags & LAST)
-        {
+    {
         trace_0(TRACE_REALLY, "last row");
         return;
-        }
+    }
 
     if(roff > rowsonscreen)
-        {
+    {
         trace_2(TRACE_DRAW, "roff (%d) > rowsonscreen (%d)", roff, rowsonscreen);
         return;
-        }
+    }
 
     if( out_rowout   &&  (rowout  == roff))
         out_rowout  = FALSE;
@@ -1144,16 +1144,16 @@ draw_row_border(
     trace_1(TRACE_DRAW, "\n*** draw_row_border(%d) --- ", roff);
 
     if(vertvec_entry(roff)->flags & LAST)
-        {
+    {
         trace_0(TRACE_REALLY, "last row");
         return;
-        }
+    }
 
     if(roff > rowsonscreen)
-        {
+    {
         trace_2(TRACE_DRAW, "roff (%d) > rowsonscreen (%d)", roff, rowsonscreen);
         return;
-        }
+    }
 
     if( out_rowborout   &&  (rowborout  == roff))
         out_rowborout  = FALSE;
@@ -1193,15 +1193,15 @@ really_draw_row_border(
      * otherwise drawn whole by really_draw_row_contents()
     */
     if(rptr->flags & PAGE)
-        {
+    {
         /* soft page breaks are shown as a bar, right across the page - here we draw the bit */
         /* crossing the border row, the rest is drawn by really_draw_row_contents            */
 
         setbgcolour(SOFTPAGEBREAKC);    /*PAGEBREAKC*/
         clear_thistextarea();
-        }
+    }
     else
-        {
+    {
         /* draw row number in border */
         ROW trow = rptr->rowno;
         wimp_icon border;       /* We plot the row number in two parts, so that the icon borders overlap */
@@ -1210,18 +1210,18 @@ really_draw_row_border(
         int fgcol, bgcol;
 
         if(trow == currow)
-            {
+        {
             fgcol = CURBORDERFOREC;
             bgcol = CURBORDERBACKC;
-            }
+        }
         else
-            {
+        {
             fgcol = BORDERFOREC;
             bgcol = BORDERBACKC;
 
             if(rptr->flags & FIX)
                 bgcol = FIXBORDERBACKC;
-            }
+        }
 
         border.box.x0 = texttooffset_x(-1);             /* -1 character, so icon is clipped at the window edge, */
         border.box.x1 = texttooffset_x(borderwidth);    /*  with no left hand border */
@@ -1247,7 +1247,7 @@ really_draw_row_border(
         /* draw first vbar - needs to include hbar */
         if(grid_on)
             draw_grid_vbar(TRUE);
-        }
+    }
 
     killcolourcache();          /* cos wimp_ploticon changes foreground and background */
     setcolour(FORE, BACK);      /* colours under our feet!                             */
@@ -1293,7 +1293,7 @@ really_draw_row_contents(
     /* is the row a soft (automatic) page break? */
 
     if(rptr->flags & PAGE)
-        {
+    {
         /* soft page breaks are shown as a bar, right across the page - here we draw the bit */
         /* that crosses the columns, the left-hand bit is drawn by really_draw_row_border    */
 
@@ -1305,11 +1305,11 @@ really_draw_row_contents(
         setbgcolour(BACK);
 
         newlen = os_if_fonts(len);
-        }
+    }
     else if(chkrpb(rptr->rowno))
-        {
+    {
         if(chkfsb()  &&  chkpac(rptr->rowno))
-            {
+                {
             /* conditional page break occurred */
             /* shown as a bar crossing the columns, the row border has the usual row number */
 
@@ -1321,9 +1321,9 @@ really_draw_row_contents(
           /*setbgcolour(BACK); done later on */
 
             newlen = os_if_fonts(len);
-            }
+        }
         else
-            {
+        {
             /* conditional page break not breaking              */
             /* shown as '~ nnn' in text foreground break colour */
 
@@ -1335,12 +1335,12 @@ really_draw_row_contents(
             stringout(tbuf);                    /* his mind, if he changes it again, thump him */
             newlen = os_if_fonts(len);
             trace_1(TRACE_REALLY, "length of line so far: %d", newlen);
-            }
+        }
 
         setcolour(FORE, BACK);  /* cos we've altered fg or bg colour */
-        }
+    }
     else
-        {
+    {
         trace_0(TRACE_REALLY, "normal row: drawing cells");
 
         at(borderwidth, rpos);
@@ -1348,13 +1348,13 @@ really_draw_row_contents(
         newlen = 0;     /* maybe nothing drawn! */
 
         for(coff = 0; !(horzvec_entry(coff)->flags & LAST); coff++)
-            {
+        {
             newlen = really_draw_slot(coff, roff, TRUE);
             invoff();
-            }
+        }
 
         newlen -= os_if_fonts(borderwidth);
-        }
+    }
 
     trace_0(TRACE_REALLY, "clear crud off eol");
     ospca_fonts(os_if_fonts(hbar_length) - newlen);
@@ -1381,10 +1381,10 @@ draw_slot(
     trace_2(TRACE_DRAW, "\n*** draw_slot(%d, %d)", coff, roff);
 
     if(tcell  &&  slot_displays_contents(tcell))
-        {
+    {
         overlap = chkolp(tcell, tcol, trow);
         fwidth = MAX(fwidth, overlap);
-        }
+    }
 
     please_redraw_textarea(cpos, rpos, cpos + fwidth, rpos-1);
 }
@@ -1424,16 +1424,16 @@ really_draw_slot(
     /* if at beginning of line reset last offset to bos */
 
     if((coff == 0)  ||  !in_draw_row)
-        {
+    {
         last_offset = os_cpos;
         trace_1(TRACE_REALLY, "last_offset := %d", last_offset);
-        }
+    }
 
     /* special case for blank, partially overlapped cells.
      * just need to space to the end of the column
     */
     if(slotblank  &&  (last_offset > os_cpos))
-        {
+    {
         /* c_width is column width truncated to eos */
         if( c_width > RHS_X - cpos)
             c_width = RHS_X - cpos;
@@ -1443,7 +1443,7 @@ really_draw_slot(
         trace_1(TRACE_REALLY, "blank, partially overlapped cell: spaces_to_draw := %d", spaces_to_draw);
 
         if(spaces_to_draw > 0)          /* last cell partially overlaps */
-            {
+        {
             at_fonts(last_offset, rpos);
             (void) setivs(tcol, trow);
         /*  setprotectedstatus(NULL); */
@@ -1451,10 +1451,10 @@ really_draw_slot(
             last_offset += spaces_to_draw;
             if(grid_on)
                 draw_grid_vbar(FALSE);
-            }
+        }
 
         return(last_offset);
-        }
+    }
 
     /* possible overlap state */
     overlap = chkolp(thisslot, tcol, trow);
@@ -1463,16 +1463,16 @@ really_draw_slot(
     spaces_at_end = c_width - overlap;
 
     if(slotblank  ||  slot_displays_contents(thisslot)  ||  (spaces_at_end > 0))
-        {
+    {
         /* draw blanks & text to overlap position, spaces (>=0) beyond */
         fwidth = overlap;
         spaces_at_end = MAX(spaces_at_end, 0);
-        }
+    }
     else
-        {
+    {
         fwidth = c_width;
         spaces_at_end = 0;
-        }
+    }
 
     /* we are drawing to last_offset, which is the value returned */
 
@@ -1495,12 +1495,12 @@ really_draw_slot(
                                                      TRUE /*riscos_fonts <<< SKS*/);
 
     if(!slot_visible)
-        {
+    {
         at(cpos, rpos);
         widthofslot = 0;
-        }
+    }
     else
-        {
+    {
         /* this is current cell to be drawn by dspfld
          * don't bother drawing current cell if not numeric
         */
@@ -1508,33 +1508,33 @@ really_draw_slot(
             (!thisslot  ||
              ((thisslot->type == SL_TEXT)  &&  !(thisslot->justify & PROTECTED)) ||
              (thisslot->type == SL_PAGE)))
-            {
+        {
             widthofslot = dspfld(cpos, rpos, fwidth);
 
             if(riscos_fonts)
                 /* come down from mp to OS units, via pixel rounding */
                 widthofslot = div_round_ceil_fn(widthofslot, x_scale * dx) * dx;
-            }
+        }
         else if(slotblank)
-            {
+        {
             at(cpos, rpos);
             widthofslot = 0;
-            }
+        }
         else
-            {
+        {
             if( thisslot->flags & SL_ALTERED)
                 thisslot->flags = SL_ALTERED ^ thisslot->flags;
 
             if(result_sign(thisslot) < 0)
-                {
+            {
                 if(currently_inverted)
                     setbgcolour(NEGATIVEC);
                 else
                     setfgcolour(NEGATIVEC);
-                }
+            }
 
             if(riscos_fonts)
-                {
+            {
                 /* position font output */
                 screen_xad_os = gcoord_x(cpos);
                 screen_yad_os = gcoord_y(rpos);
@@ -1545,17 +1545,17 @@ really_draw_slot(
                 ensurefontcolours();
 
                 widthofslot = div_round_ceil_fn(outslt(thisslot, trow, fwidth), x_scale * dx) * dx;
-                }
+            }
             else
-                {
+            {
                 at(cpos, rpos);
 
                 widthofslot = os_if_fonts(outslt(thisslot, trow, fwidth));
-                }
+            }
 
             trace_1(TRACE_APP_PD4, "widthofslot = %d (OS)", widthofslot);
             }
-        }
+    }
 
     /* now get fwidth & cpos into os units */
 
@@ -1580,16 +1580,16 @@ really_draw_slot(
             end_of_inverse, os_cpos, to_do_inverse);
 
     if(to_do_inverse > 0)
-        {
+    {
         to_do_inverse = MIN(to_do_inverse, fwidth);
         if(slot_visible)
-            {
+        {
             at_fonts(os_cpos, rpos);
             draw_spaces_with_grid(to_do_inverse, os_cpos);
-            }
+        }
         os_cpos += to_do_inverse;
         fwidth -= to_do_inverse;
-        }
+    }
 
     if(slot_in_block)
         invert();
@@ -1623,7 +1623,7 @@ draw_spaces_with_grid(
                 spaces_left, start);
 
     if(grid_on)
-        {
+    {
         /* where we will draw the last grid vbar */
         end = start + spaces_left;
 
@@ -1631,56 +1631,56 @@ draw_spaces_with_grid(
         coff = calcoff(riscos_fonts ? start / charwidth : start);
 
         if(coff >= 0)
-            {
+        {
             tcol = col_number(coff);
             c_width = os_if_fonts(colwidth(tcol)) - (start - os_if_fonts(calcad(coff)));
             trace_2(TRACE_APP_PD4, "c_width(%d) = %d", tcol, c_width);
             last = FALSE;
-            }
+        }
         else
-            {
+        {
             c_width = 0; /* SKS 10.10.91 */
             last = TRUE;
-            }
+        }
 
         while(spaces_left >= 0)
-            {
+        {
             trace_1(TRACE_APP_PD4, "spaces_left = %d", spaces_left);
 
             if(last)
-                {
+            {
                 trace_0(TRACE_APP_PD4, "last column hit - space to end");
                 ospca_fonts(spaces_left);
                 /* don't draw grid vbar as we are given spastic (but correct)
                  * widths for right margin positions beyond last column end
                 */
                 break;
-                }
+            }
 
             if( c_width > spaces_left)
                 c_width = spaces_left;
 
             if(c_width)
-                {
+            {
                 ospca_fonts(c_width);
                 spaces_left -= c_width;
 
                 draw_grid_vbar(FALSE);
-                }
+            }
 
             coff++;
 
             last = (horzvec_entry(coff)->flags & LAST);
 
             if(!last  &&  (spaces_left > 0))
-                {
+            {
                 tcol = col_number(coff);
                 c_width = os_if_fonts(colwidth(tcol));
 
                 trace_2(TRACE_APP_PD4, "c_width(%d) = %d", tcol, c_width);
-                }
             }
         }
+    }
     else
         ospca_fonts(spaces_left);
 }
@@ -1723,12 +1723,12 @@ check_output_current_slot(
     S32 move)
 {
     if(out_currslot)
-        {
+    {
         if(atend(curcol, currow))
             mark_to_end(currowoffset);
         else
             mark_slot(travel_here());
-        }
+    }
 
     if(!slot_in_buffer  ||  move)
         colh_draw_contents_of_numslot();
@@ -1737,10 +1737,10 @@ check_output_current_slot(
         out_below   ||
         (out_rowout  &&  (rowout  == currowoffset)) ||
         (out_rowout1 &&  (rowout1 == currowoffset)) )
-        {
+    {
         output_buffer = TRUE;
         dspfld_from = -1;
-        }
+    }
 
     filbuf();
 }
@@ -1793,22 +1793,22 @@ draw_altered_slots(void)
     rptr = i_rptr;
 
     while(!(rptr->flags & LAST))
-        {
+    {
         if(!(rptr->flags & PAGE))
-            {
+        {
             cptr = i_cptr;
 
             while(!(cptr->flags & LAST))
-                {
+            {
                 tcell = travel(cptr->colno, rptr->rowno);
 
                 if(tcell)
-                    {
+                {
                     if(tcell->type == SL_PAGE)
                         break;
 
                     if(tcell->flags & SL_ALTERED)
-                        {
+                    {
                         coff = (S32) (cptr - i_cptr);
                         roff = (S32) (rptr - i_rptr);
 
@@ -1820,22 +1820,22 @@ draw_altered_slots(void)
                         rptr    = i_rptr + roff;
 
                         invoff();
-                        }
+                    }
 
                     if(draw_screen_timeout() || keyinbuffer())
-                        {
+                    {
                         trace_0(TRACE_OUT | TRACE_ANY, "*** draw_altered_slots interrupted - leaving xf_drawsome set");
                         xf_interrupted = TRUE;
                         return;
-                        }
                     }
+                }
 
                 cptr++;
-                }
             }
+        }
 
         rptr++;
-        }
+    }
 
     xf_drawsome = FALSE;        /* only reset when all are done */
 }
@@ -1874,30 +1874,30 @@ draw_one_altered_slot(
 
     /* no need to reload pointers as only one cell is being drawn */
     while(!(rptr->flags & LAST))
-        {
+    {
         if((rptr->rowno == row)  &&  !(rptr->flags & PAGE))
             while(!(cptr->flags & LAST))
-                {
+            {
                 if(cptr->colno == col)
-                    {
+                {
                     tcell = travel(cptr->colno, rptr->rowno);
 
                     if(tcell)
-                        {
+                    {
                         draw_slot((S32)(cptr - i_cptr),
                                   (S32)(rptr - i_rptr), FALSE);
 
                         invoff();
-                        }
-
-                    return;
                     }
 
-                cptr++;
+                    return;
                 }
 
+                cptr++;
+            }
+
         rptr++;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1914,10 +1914,10 @@ draw_empty_bottom_of_screen(void)
     trace_0(TRACE_DRAW, "\n*** draw_empty_bottom_of_screen()");
 
     if(start > paghyt)
-        {
+    {
         trace_2(TRACE_DRAW, "--- start (%d) > paghyt (%d) ", start, paghyt);
         return;
-        }
+    }
 
     /* may be overlapped by a Draw file - redraw not clear */
     please_redraw_textarea(-1, paghyt, RHS_X, start-1);
@@ -1931,38 +1931,38 @@ maybe_draw_empty_bottom_of_screen(void)
     trace_0(TRACE_MAYBE, "maybe_draw_empty_bottom_of_screen() --- ");
 
     if(start > paghyt)
-        {
+    {
         trace_2(TRACE_MAYBE, "start (%d) > paghyt (%d) ", start, paghyt);
-        }
+    }
     else
-        {
+    {
         trace_0(TRACE_MAYBE, "some bottom on screen");
 
         /* required to redraw left slop too */
 
         if(textobjectintersects(-1, paghyt, RHS_X, start-1))
-            {
+        {
             trace_0(TRACE_REALLY, "really_draw_empty_bottom_of_screen()");
 
             clear_thistextarea();
 
             if(borbit)
                 really_draw_extended_row_border();
-            }
         }
+    }
 }
 
 static void
 maybe_draw_unused_bit_at_bottom(void)
 {
     if(unused_bit_at_bottom)
-        {
+    {
         trace_0(TRACE_MAYBE, "maybe_draw_unused_bit_at_bottom()");
 
         /* required to redraw left slop too */
 
         if(textobjectintersects(-1, paghyt+1, RHS_X, paghyt))
-            {
+        {
             trace_0(TRACE_REALLY, "really_draw_unused_bit_at_bottom()");
 
             /* may have been overlapped by a Draw file */
@@ -1970,8 +1970,8 @@ maybe_draw_unused_bit_at_bottom(void)
 
             if(borbit)
                 really_draw_extended_row_border();
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -1995,14 +1995,14 @@ draw_empty_right_of_screen(void)
     /* may be overlapped by a Draw file - redraw not clear */
     /* NB. right of screen may not be visible */
     if(x1 > x0)
-        {
+    {
         BOOL grid_below = !borbit  &&  grid_on;
         S32 grid_adjust = grid_below ? 1 : 0;
         S32 y0 = calrad(rowsonscreen) - 1;
         S32 y1 = calrad(0) - 1 - grid_adjust;
 
         please_redraw_textarea(x0, y0, x1, y1);
-        }
+    }
 }
 
 static void
@@ -2018,12 +2018,12 @@ maybe_draw_empty_right_of_screen(void)
     /* required to redraw one more raster if grid below editing line */
 
     if(textobjectintersects(x0, y0, x1, y1))
-        {
+    {
         trace_0(TRACE_REALLY, "really_draw_empty_right_of_screen()");
 
         clear_textarea(thisarea.x0, thisarea.y0, thisarea.x1, thisarea.y1 + grid_adjust,
                        grid_below);
-        }
+    }
 }
 
 /******************************************************************************
@@ -2053,22 +2053,22 @@ outslt(
                           riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
 
     switch(justify)
-        {
-        case J_LCR:
-            return(lcrjust(array, fwidth, FALSE));
+    {
+    case J_LCR:
+        return(lcrjust(array, fwidth, FALSE));
 
-        case J_LEFTRIGHT:
-        case J_RIGHTLEFT:
-            if(riscos_fonts)
-                return(font_paint_justify(array, fwidth));
+    case J_LEFTRIGHT:
+    case J_RIGHTLEFT:
+        if(riscos_fonts)
+            return(font_paint_justify(array, fwidth));
 
-            res = justifyline(array, fwidth, justify, NULL);
-            microspacing = FALSE;
-            return(res);
+        res = justifyline(array, fwidth, justify, NULL);
+        microspacing = FALSE;
+        return(res);
 
-        default:
-            return(onejst(array, fwidth, justify));
-        }
+    default:
+        return(onejst(array, fwidth, justify));
+    }
 }
 
 /******************************************************************************
@@ -2118,12 +2118,12 @@ onejst(
     fwidth_ch -= fwidth_adjust_ch;
 
     if(riscos_fonts)
-        {
+    {
         if(type != J_FREE)
-            {
+        {
             font_strip_spaces(paint_buf, str, NULL);
             paint_str = paint_buf;
-            }
+        }
         else
             paint_str = str;
 
@@ -2132,42 +2132,42 @@ onejst(
         fwidth_mp = ch_to_mp(fwidth_ch);
 
         if(swidth_mp > fwidth_mp)
-            {
+        {
             /* fill as much field as possible if too big */
             x_mp  = 0;
             xx_mp = font_truncate(paint_str, fwidth_mp + ch_to_mp(fwidth_adjust_ch));
-            }
+        }
         else
-            {
+        {
             switch(type)
-                {
-                default:
-                    trace_0(TRACE_APP_PD4, "*** error in OneJst ***");
+            {
+            default:
+                trace_0(TRACE_APP_PD4, "*** error in OneJst ***");
 
-                case J_FREE:
-                case J_LEFT:
-                    x_mp  = 0;
-                    xx_mp = swidth_mp;
-                    break;
+            case J_FREE:
+            case J_LEFT:
+                x_mp  = 0;
+                xx_mp = swidth_mp;
+                break;
 
-                case J_RIGHT:
-                    x_mp  = fwidth_mp - swidth_mp;
-                    xx_mp = fwidth_mp;
-                    break;
+            case J_RIGHT:
+                x_mp  = fwidth_mp - swidth_mp;
+                xx_mp = fwidth_mp;
+                break;
 
-                case J_CENTRE:
-                    x_mp  = (fwidth_mp - swidth_mp) / 2;
-                    xx_mp = fwidth_mp;  /* make centred fields fill field (for grid) */
-                    break;
-                }
+            case J_CENTRE:
+                x_mp  = (fwidth_mp - swidth_mp) / 2;
+                xx_mp = fwidth_mp;  /* make centred fields fill field (for grid) */
+                break;
             }
+        }
 
         if(draw_to_screen)
-            {
+        {
             font_setruboutbox(xx_mp);
 
             paint_op |= font_RUBOUT;
-            }
+        }
         if('Y' == d_options_KE)
         {
             paint_op |= font_KERNING;
@@ -2180,17 +2180,17 @@ onejst(
                                  riscos_font_xad + x_mp, riscos_font_yad));
 
         return(xx_mp);
-        }
+    }
 
     /* non-fonty code */
 
     /* ignore leading and trailing spaces */
 
     if(type != J_FREE)
-        {
+    {
         --str;
         do { ch = *++str; } while(ch == SPACE);
-        }
+    }
 
     /* find end of string */
     ptr = str + strlen(str); /* NB this is a plain string */
@@ -2213,22 +2213,22 @@ onejst(
         fwidth_ch += fwidth_adjust_ch;
     else
         switch(type)
-            {
-            default:
-                trace_0(TRACE_APP_PD4, "*** error in OneJst ***");
+        {
+        default:
+            trace_0(TRACE_APP_PD4, "*** error in OneJst ***");
 
-            case J_FREE:
-            case J_LEFT:
-                break;
+        case J_FREE:
+        case J_LEFT:
+            break;
 
-            case J_RIGHT:
-                spaces = fwidth_ch - swidth_ch;
-                break;
+        case J_RIGHT:
+            spaces = fwidth_ch - swidth_ch;
+            break;
 
-            case J_CENTRE:
-                spaces = (fwidth_ch - swidth_ch) >> 1;
-                break;
-            }
+        case J_CENTRE:
+            spaces = (fwidth_ch - swidth_ch) >> 1;
+            break;
+        }
 
     if(spaces > 0)
         ospca(spaces);
@@ -2294,40 +2294,40 @@ lcrjust(
     /* wee three strings from outslt are: baring nulls wee travel() sofar */
     str2 = str;
     if(riscos_fonts)
-        {
+    {
         while(NULLCH != *str2)
             str2 += font_skip(str2);
-        }
+    }
     else
-        {
+    {
         str2 += strlen(str2); /* str is a plain non-fonty string */
-        }
+    }
     ++str2;
 
     str3 = str2;
     if(riscos_fonts)
-        {
+    {
         while(NULLCH != *str3)
             str3 += font_skip(str3);
-        }
+    }
     else
-        {
+    {
         str3 += strlen(str3); /* str2 is a plain non-fonty string */
-        }
+    }
     ++str3;
 
     if(reversed)
-        {
+    {
         tstr = str3;
         str3 = str;
         str  = tstr;
-        }
+    }
 
     /* leave one char space to the right */
     --fwidth_ch;
 
     if(riscos_fonts)
-        {
+    {
         x_mp  = 0;
         xx_mp = 0;
 
@@ -2353,32 +2353,32 @@ lcrjust(
             swidth1_mp = font_truncate(paint1_buf, fwidth_mp);
 
         if(swidth1_mp)
-            {
+        {
             font_complain(font_paint(paint1_buf, paint_op,
                                      riscos_font_xad, riscos_font_yad));
             xx_mp = swidth1_mp;
-            }
+        }
 
         x_mp = (fwidth_mp - swidth2_mp) / 2;
 
         if(swidth2_mp  &&  (x_mp >= xx_mp))
-            {
+        {
             font_complain(font_paint(paint2_buf, paint_op,
                                      riscos_font_xad + x_mp, riscos_font_yad));
             xx_mp = x_mp + swidth2_mp;
-            }
+        }
 
         x_mp = fwidth_mp - swidth3_mp;
 
         if(swidth3_mp  &&  (x_mp >= xx_mp))
-            {
+        {
             font_complain(font_paint(paint3_buf, paint_op,
                                      riscos_font_xad + x_mp, riscos_font_yad));
             xx_mp = x_mp + swidth3_mp;
-            }
+        }
 
         return(xx_mp);
-        }
+    }
 
     /* non-fonty code */
 
@@ -2403,20 +2403,20 @@ lcrjust(
     switch_off_highlights();
 
     if(spaces1 > 0)
-        {
+    {
         sofar += spaces1;
         ospca(spaces1);
-        }
+    }
 
     sofar += strout(str2, fwidth_ch - sofar);
 
     switch_off_highlights();
 
     if(spaces2 > 0)
-        {
+    {
         sofar += spaces2;
         ospca(spaces2);
-        }
+    }
 
     sofar += strout(str3, fwidth_ch - sofar);
 
@@ -2457,24 +2457,24 @@ font_paint_justify(
     if(swidth_mp + lead_space_mp > fwidth_mp)
         swidth_mp = font_truncate(paint_buf, fwidth_mp + ch_to_mp(fwidth_adjust_ch) - lead_space_mp);
     else
-        {
+    {
         swidth_mp = fwidth_mp;
 
         paint_op |= font_JUSTIFY;
-        }
+    }
 
     if(draw_to_screen)
-        {
+    {
         /* rubout box must be set up before justification point */
         font_setruboutbox(swidth_mp);
 
         paint_op |= font_RUBOUT;
-        }
+    }
 
     if('Y' == d_options_KE)
-        {
+    {
         paint_op |= font_KERNING;
-        }
+    }
 
     if(paint_op & font_JUSTIFY)
         /* provide right-hand justification point */
@@ -2519,10 +2519,10 @@ justifyline(
     /* if outputting to VIEW file, send the spaces */
     if(out_array)
         while(leadingspaces > 0)
-            {
+        {
             *out_array++ = SPACE;
             --leadingspaces;
-            }
+        }
 
     ospca(leadingspaces);
 
@@ -2533,39 +2533,39 @@ justifyline(
     fudge_for_highlights = 0;
     words = 0;
     while(*from)
-        {
+    {
         words++;
 
         while(*from  &&  (*from != SPACE))
-            {
+        {
             if(ishighlight(*from))
                 fudge_for_highlights++;
                 /* if it's a highlight but displayed as inverse char
                  * it uses an extra character space on screen
                 */
             from++;
-            }
+        }
 
         trailingspaces = 0;
         while(*from++ == SPACE)
             trailingspaces++;
         --from;
-        }
+    }
 
     /* get rid of trailing spaces */
     *(from - trailingspaces) = '\0';
 
     gaps = words-1;
     if(gaps < 1)
-        {
+    {
         if(out_array)
-            {
+        {
             strncpy(out_array, str, fwidth);
             return(leadingspaces + strlen(out_array));
-            }
+        }
 
         return(leadingspaces + strout(str, fwidth));
-        }
+    }
 
     linelength = (from-str) - fudge_for_highlights - trailingspaces;
 
@@ -2582,15 +2582,15 @@ justifyline(
 
     /* spacestoadd is in micro space units */
     if((spacestoadd = (fwidth-linelength-1) * c_width) <= 0)
-        {
+    {
         if(out_array)
-            {
+        {
             strncpy(out_array, str, fwidth);
             return(leadingspaces + strlen(out_array));
-            }
+        }
 
         return(leadingspaces + strout(str, fwidth));
-        }
+    }
 
     /* firstgap in microspace units */
     firstgap = spacestoadd / gaps;
@@ -2599,15 +2599,15 @@ justifyline(
     gapbreak = spacestoadd - (gaps * firstgap);
 
     if(type == J_LEFTRIGHT)
-        {
+    {
         secondgap = firstgap;
         firstgap++;
-        }
+    }
     else
-        {
+    {
         secondgap = firstgap+1;
         gapbreak = gaps - gapbreak;
-        }
+    }
 
     /* send out each word, followed by gap */
     from = str;
@@ -2615,7 +2615,7 @@ justifyline(
     while(((count + added_sofar) <
          (fwidth + (out_array ? fudge_for_highlights : 0)))
             &&  *from)
-        {
+    {
         BOOL nullfound = FALSE;
         S32 oldcount;
         S32 spacesout;
@@ -2626,22 +2626,22 @@ justifyline(
         /* find end of word */
         for(lastword = from; *from != SPACE; from++)
             if(*from == '\0')
-                {
+            {
                 nullfound = TRUE;
                 break;
-                }
+            }
 
         /* *from must be space here */
         *from = '\0';
 
         /* send out word */
         if(out_array)
-            {
+        {
             S32 tcount = strlen(strncpy(out_array, lastword,
                                  fwidth-count-added_sofar+fudge_for_highlights));
             out_array += tcount;
             count += tcount;
-            }
+        }
         else
             count += strout(lastword, fwidth-count - added_sofar);
 
@@ -2657,10 +2657,10 @@ justifyline(
             ;
 
         if(*from == '\0')
-            {
+        {
             count = oldcount;
             break;
-            }
+        }
 
         /* add gap */
         addon = (gapbreak-- > 0) ? firstgap : secondgap;
@@ -2681,35 +2681,35 @@ justifyline(
         if(microspacing)
             mspace((uchar) spacesout);
         else if(out_array)
-            {
+        {
             /* spacesout-addon hard, addon soft */
             while(spacesout-- > addon)
                 *out_array++ = SPACE;
 
             while(addon-- > 0)
                 *out_array++ = TEMP_SOFT_SPACE;
-            }
+        }
         else
-            {
+        {
             if(spacesout > 0)
-                {
+            {
                 if(sqobit  &&  !riscos_printing)
                     do { sndchr(SPACE); } while(--spacesout > 0);
                 else
-                    {
+                {
                     if(highlights_on)
-                        {
+                    {
                         if(draw_to_screen)
                             clear_underlay(spacesout);
 
                         do { sndchr(SPACE); } while(--spacesout > 0);
-                        }
+                    }
                     else
                         ospca(spacesout);
-                    }
                 }
             }
         }
+    }
 
     return(leadingspaces + count + added_sofar);
 }
@@ -2808,46 +2808,46 @@ font_strip_spaces(
     i = str_in;
     o = out_buf;
     while(NULLCH != *i)
-        {
+    {
         S32 nchar;
 
         font_change = is_font_change(i);
 
         if(!str)
-            {
+        {
             if(*i == SPACE)
-                {
+            {
                 ++lead_spaces;
                 ++i;
                 continue;
-                }
+            }
             else if(!font_change)
                 str = i;
-            }
+        }
 
         nchar = font_skip(i);
         memcpy32(o, i, nchar);
 
         i += nchar;
         o += nchar;
-        }
+    }
 
     /* stuff trailing spaces */
     if(o != out_buf)
-        {
+    {
         while(*--o == SPACE && !font_change);
         *(o + 1) = '\0';
-        }
+    }
     else
         *o = '\0';
 
     if(str)
-        {
+    {
         ch = *str;
         *str = '\0';
         lead_space_mp = font_width(str_in);
         *str = ch;
-        }
+    }
     else
         lead_space_mp = 0;
 
@@ -2881,20 +2881,20 @@ strout(
     S32 len;
 
     if(draw_to_screen  &&  (fwidth > 0))
-        {
+    {
         len = strlen(str);
         clear_underlay(MIN(len, fwidth));
-        }
+    }
 
     while(*str  &&  (count < fwidth))
-        {
+    {
         if( *str == FUNNYSPACE)
             *str = SPACE;
 
         /* sndchr returns width of thing (highlight?) output */
         if(sndchr(*str++))
             count++;
-        }
+    }
 
     return(count);
 }
@@ -2918,41 +2918,41 @@ sndchr(
         return(prnout(ch));
 
     if((ch >= CH_SPACE)  &&  (ch != CH_DELETE))
-        {
+    {
         if(highlights_on)
             wrch_h(ch);
         else
             wrch(ch);
 
         return(TRUE);
-        }
+    }
 
     switch(ch)
-        {
-        case HIGH_UNDERLINE:
-            eorval = N_UNDERLINE;
-            break;
+    {
+    case HIGH_UNDERLINE:
+        eorval = N_UNDERLINE;
+        break;
 
-        case HIGH_ITALIC:
-            eorval = N_ITALIC;
-            break;
+    case HIGH_ITALIC:
+        eorval = N_ITALIC;
+        break;
 
-        case HIGH_SUBSCRIPT:
-            eorval = N_SUBSCRIPT;
-            break;
+    case HIGH_SUBSCRIPT:
+        eorval = N_SUBSCRIPT;
+        break;
 
-        case HIGH_SUPERSCRIPT:
-            eorval = N_SUPERSCRIPT;
-            break;
+    case HIGH_SUPERSCRIPT:
+        eorval = N_SUPERSCRIPT;
+        break;
 
-        case HIGH_BOLD:
-            eorval = N_BOLD;
-            break;
+    case HIGH_BOLD:
+        eorval = N_BOLD;
+        break;
 
-        default:
-            twzchr(ch);
-            return(TRUE);
-        }
+    default:
+        twzchr(ch);
+        return(TRUE);
+    }
 
     highlights_on ^= eorval;
     return(FALSE);
@@ -2977,7 +2977,7 @@ end_of_block(
 
     /* while the column is marked add its width on to x */
     for(;;)
-        {
+    {
         if(cptr->flags & LAST)
             return(xpos);
 
@@ -2989,7 +2989,7 @@ end_of_block(
         xpos += os_if_fonts(colwidth(tcol));
 
         cptr++;
-        }
+    }
 }
 
 /******************************************************************************
@@ -3017,25 +3017,26 @@ adjust_lescrl(
        !(xf_inexpression || xf_inexpression_box || xf_inexpression_line) &&
        fwidth_ch
       )
-        {
+    {
         /* adjust for fancy font printing */
 
         fwidth_mp = ch_to_mp(fwidth_ch);
 
-        do  {
+        for(;;)
+        {
             /* fonty cal_lescrl a little more complex */
 
             /* is the caret off the left of the field? (scroll margin one char) */
             if(lecpos <= lescrl)
-                {
+            {
                 /* off left - try to centre caret in field */
                 if(lescrl)
                     lescrl = MAX(lecpos - 2, 0);        /* 3rd attempt! */
 
                 break;
-                }
+            }
             else
-                {
+            {
                 /* is the caret off the right of the field? (scroll margin one char) */
                 expand_current_slot_in_fonts(paint_str, TRUE, NULL);
                 swidth_mp = font_width(paint_str);
@@ -3047,16 +3048,15 @@ adjust_lescrl(
                     lescrl++;
                 else
                     break;
-                }
             }
-        while(TRUE);
         }
+    }
     else
-        {
+    {
         /* adjust for standard font printing */
 
         lescrl = cal_lescrl(fwidth_ch);
-        }
+    }
 }
 
 /******************************************************************************
@@ -3082,14 +3082,14 @@ cal_dead_text(void)
     dspfld_from = -1;
 
     if((lescrl == old_lescroll)  &&  (dead_text > 0))
-        {
+    {
         ptr += dead_text;
         while((*--ptr == SPACE)  &&  dead_text)
             --dead_text;
         ++ptr;
 
         trace_1(TRACE_APP_PD4, "cal_dead_text: %d dead text", dead_text);
-        }
+    }
     else
         dead_text = 0;
 
@@ -3127,7 +3127,7 @@ dspfld(
     trace_3(TRACE_APP_PD4, "dspfld: x %d, y %d, fwidth_ch %d", x, y, fwidth_ch);
 
     if(riscos_fonts  &&  !(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
-        {
+    {
         /* fancy font printing */
 
         screen_xad_os = gcoord_x(x);
@@ -3161,9 +3161,9 @@ dspfld(
             killfontcolourcache();
 
         dspfld_written = swidth_mp;
-        }
+    }
     else
-        {
+    {
         /* standard font printing */
 
         linelen = strlen(linbuf);
@@ -3190,7 +3190,7 @@ dspfld(
 #else
         while(width_left > 0)
 #endif
-            {
+        {
             start = ptr;
 
             /* gather up ordinary characters for block print */
@@ -3199,16 +3199,16 @@ dspfld(
 
             /* and print them */
             if(--ptr != start)
-                {
+            {
                 S32 done;
 
                 /* any trailing spaces left over from last time? */
                 if(trailing_spaces)
-                    {
+                {
                     chars_printed += trailing_spaces;
                     ospca(trailing_spaces);
                     trailing_spaces = 0;
-                    }
+                }
 
                 /* output string */
                 done = ptr - start;
@@ -3216,50 +3216,50 @@ dspfld(
                 chars_printed += done;
                 clear_underlay(done);
                 stringout_field(start, done);
-                }
+            }
 
             /* gather up trailing spaces for eventual block print */
             while((*ptr++ == SPACE)  &&  (width_left > 0))
-                {
+            {
                 ++trailing_spaces;
                 --width_left;
-                }
+            }
 
             /* at end of field */
             if(!*--ptr  ||  (width_left <= 0))
-                {
+            {
                 /* may be some spaces to output if
                  * lecpos is off the end of the buffer
                 */
                 trailing_spaces = (lecpos - lescrl) - chars_printed;
                 trailing_spaces = MIN(trailing_spaces, width_left);
                 if(trailing_spaces > 0)
-                    {
+                {
                     chars_printed += trailing_spaces;
                     ospca(trailing_spaces);
-                    }
+                }
                 dspfld_written = chars_printed;
                 break;
-                }
+            }
             else if(*ptr < SPACE)
-                {
+            {
                 if(trailing_spaces > 0)
-                    {
+                {
                     chars_printed += trailing_spaces;
                     ospca(trailing_spaces);
                     trailing_spaces = 0;
-                    }
+                }
 
                 /* output space or control char */
                 --width_left;
                 ++chars_printed;
                 twzchr(*ptr++);
-                }
             }
+        }
 
         /* do we need to invert a particular word? */
         if(word_to_invert)
-            {
+        {
             S32 len = strlen(word_to_invert);
 
             at(x + lecpos - lescrl, y);
@@ -3270,8 +3270,8 @@ dspfld(
             invert();
 
             at(x + chars_printed, y);
-            }
         }
+    }
 
     return(dspfld_written);
 }
@@ -3298,21 +3298,21 @@ position_cursor(void)
     y = calrad(currowoffset);
 
     if(riscos_fonts)
-        {
+    {
         /* fancy font positioning */
 
         if(lecpos > lescrl)
-            {
+        {
             expand_current_slot_in_fonts(paint_str, TRUE, NULL);
             swidth_mp = font_width(paint_str);
-            }
+        }
         else
             swidth_mp = 0;
 
         x = ch_to_os(x) + div_round_floor_fn(swidth_mp, x_scale * dx) * dx;     /* mp into OS via pixels */
-        }
+    }
     else
-        {
+    {
         /* standard font positioning */
 
         x += (lecpos - lescrl < 0)
@@ -3320,17 +3320,17 @@ position_cursor(void)
                     : (S32) (lecpos - lescrl);
 
         x = MIN(x, pagwid_plus1);
-        }
+    }
 
     /* merely note new caret position, updated later */
 
     if((x != lastcursorpos_x)  ||  (y != lastcursorpos_y))
-        {
+    {
         /*reportf("caret moving to %d, %d", x, y);*/
         lastcursorpos_x = x;
         lastcursorpos_y = y;
         xf_caretreposition = TRUE;
-        }
+    }
     /*else
         reportf("not moving caret");*/
 }
@@ -3345,10 +3345,10 @@ static void
 switch_off_highlights(void)
 {
     if(prnbit)
-        {
+    {
         prnout(EOS);
         return;
-        }
+    }
 
     highlights_on = 0;
 }
@@ -3438,7 +3438,7 @@ chkolp(
     if(printing)
         trycol = tcol;
     else
-        {
+    {
         /* cptr := horzvec entry (+1) for trycol */
         cptr = horzvec();
 
@@ -3446,23 +3446,23 @@ chkolp(
             if(cptr->flags & LAST)
                 /* no more cols so return wrapwidth */
                 return(wrapwidth);
-            }
-        while(cptr++->colno != tcol);
         }
+        while(cptr++->colno != tcol);
+    }
 
     while(totalwidth < wrapwidth)
-        {
+    {
         if(printing)
             /* when printing, next column is always trycol+1 */
             trycol++;
         else
-            {
+        {
             /* get next column in horzvec */
             if(cptr->flags & LAST)
                 return(wrapwidth);
 
             trycol = cptr++->colno;
-            }
+        }
 
         if(trycol >= numcol)
             return(wrapwidth);
@@ -3482,7 +3482,7 @@ chkolp(
                 break;
 
         totalwidth += colwidth(trycol);
-        }
+    }
 
     return(MIN(totalwidth, wrapwidth));
 }
@@ -3505,14 +3505,14 @@ is_overlapped(
     S32 gap = 0;
 
     while(--coff >= 0)
-        {
+    {
         COL  tcol  = col_number(coff);
         P_CELL tcell = travel(tcol, trow);
 
         gap += colwidth(tcol);
 
         if(tcell)
-            {
+        {
             if(!slot_displays_contents(tcell))
                 return(FALSE);
 
@@ -3522,8 +3522,8 @@ is_overlapped(
 #else
             return(colwrapwidth(tcol) >= gap);
 #endif
-            }
         }
+    }
 
     return(FALSE);
 }

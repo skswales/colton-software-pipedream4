@@ -9,7 +9,7 @@
 
         GET     as_flags_h
 
-        GET     as_regs_h
+        ;GET     as_regs_h
         GET     as_macro_h
 
 XOS_Bit                 * 1 :SHL: 17
@@ -64,23 +64,16 @@ ctrlflagp
 
         BeginInternal EscapeHandler
 
-        STMFD   r13_svc!, {r0, lr}
+        STR     r0, [r13, #-4]! ; r13_svc
 
-        AND     r11, r11, #&40		; set flag or clear flag on bit 6 of R11
+        AND     r11, r11, #&40  ; set flag or clear flag on bit 6 of R11
         LDR     r0, =ctrlflagp
         LDR     r0, [r0]
         STR     r11, [r0, #0]
 
-        LDMFD   r13_svc!, {r0, pc}	; 26-bit or 32-bit return; flags have not been modified
+        LDR     r0, [r13], #4   ; r13_svc
+        MOV     pc, lr          ; 26-bit or 32-bit return; flags have not been modified
 
- [ {FALSE}
-        TEQ     r0, r0				; sets Z (can be omitted if not in User mode)
-        TEQ     pc, pc				; EQ if in a 32-bit mode, NE if 26-bit
-        LDMEQFD r13_svc!, {r0, pc}	; 32-bit return
-
-        LDMFD   r13_svc!, {r0, pc}^ ; 26-bit return, preserving flags
- ]
- 
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern void *
 ; EventH(void);

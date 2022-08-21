@@ -37,7 +37,7 @@ strings_lookup(
     PC_U8 text = string_lookup(stringid);
 
     if(!text)
-        {
+    {
         (void) xsnprintf(buffer, elemof32(buffer),
                 BAD_MESSAGE_FILE_STR
                          ? BAD_MESSAGE_FILE_STR
@@ -45,7 +45,7 @@ strings_lookup(
                 stringid);
 
         reperr_fatal(buffer);
-        }
+    }
 
     return(text);
 }

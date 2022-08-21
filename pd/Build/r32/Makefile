@@ -8,7 +8,7 @@
 # Copyright (C) 1998-2015 R W Colton
 
 #TEXTUAL_VERSION_NUMBER=4.54
-TEXTUAL_VERSION_NUMBER=4.53/04
+TEXTUAL_VERSION_NUMBER=4.53/06
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -32,11 +32,11 @@ WimpLib=$(PD).WimpLib
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 AS=ObjAsm
-ASflags_BASE=-I$(CMODULES).Hdr -APCS 3/32bit/SWSTackCheck -throwback -stamp -quit -CloseExec
+ASflags_BASE=-I$(CMODULES).Hdr -throwback -stamp -quit -CloseExec
 ASflags=$(ASflags_BASE)
 
 CC=cc
-CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -APCS 3/32bit/fpe3/swst/fp/nofpr -fah -throwback -DSB_GLOBAL_REGISTER
+CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -fah -throwback -DSB_GLOBAL_REGISTER
 CCflags=$(CCflags_BASE) -Otime
 
 LD=link

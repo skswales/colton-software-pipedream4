@@ -2,11 +2,12 @@
 <HTML>
 <HEAD>
 <META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
-<TITLE>Colton Software PipeDream for RISC&nbsp;OS - Release Notes</TITLE>
+<TITLE>Colton Software PipeDream - Release Notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Colton Software PipeDream for RISC&nbsp;OS</H1>
+<H1>Colton Software PipeDream</H1>
 
+<H1>Release Notes</H1>
 <p><A HREF="#Copyright">Licence and Copyright</A></p>
 <p><A HREF="#OnlineResources">Online Resources</A></p>
 <p><A HREF="#Support">Support</A></p>
@@ -18,17 +19,17 @@
 <A ID="Copyright">
 <H2>Licence and Copyright</H2>
 
-<P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
-(MPL).</P>
-
-<P>A copy of the MPL may be downloaded from <A
-HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
-
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!-- Copyright (C) 1989-1998 Colton Software Limited,
    - Copyright (C) 1998-2015 R W Colton -->
+
+<P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
+(MPL).</P>
+
+<P>A copy of the MPL may be downloaded from <A
+HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
 
 <P>Copyright (C) 1987-1998 Colton Software Limited,
 Copyright (C) 1998-2015 R W Colton</P>
@@ -72,10 +73,32 @@ any problems.</P>
 <A ID="ReleaseHistory">
 <H2>Release history</H2>
 
-<p>Just the last few revisions of PipeDream are documented here.</p>
+<p>The full release history may be found
+<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A>;
+just the last few revisions of PipeDream are documented here.</p>
 
-<p>A fuller release history may be found
-<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A></p>
+<P>&nbsp;</P>
+
+<H4>4.53/07 (xx Sep 2015)</H4>
+
+<p>Formula editing window (obtained by pressing Ctrl-Return in the formula line) uses DejaVuSans.Mono if it is available.</p>
+
+
+<H4>4.53/06 (21 Sep 2015)</H4>
+
+<p>Choices:PipeDream. replaced by &lt;Choices$Write&gt;.PipeDream. in the PipeDream$Path variable. This should allow better resolution of custom function files when they have been opened by Shift-click on the PipeDream icon.</p>
+
+<p>PipeDream compiled with ROOL DDE 25 (used DDE 20 prior to this release).</p>
+
+<p>Lotus 1-2-3 file converters moved out to separate packaged utilities.</p>
+
+
+<H4>4.53/05 (14 Sep 2015)</H4>
+
+<P>IconSprites !SpritesR5 on RISC OS 5.</P>
+
+<P>Modernised pinboard icon in !SpritesR5 to RISC OS 5 style.</P>
+
 
 <H4>4.53/04 (04 Sep 2015)</H4>
 
@@ -83,9 +106,6 @@ any problems.</P>
 
 <P>Pressing a key will terminate the splash screen early, as does clicking the window.</P>
 
-<P>IconSprites !SpritesR5 on RISC OS 5.</P>
-
-<P>Modernised pinboard icon in !SpritesR5 to RISC OS 5 style.</P>
 
 <P>Modernised pinboard icon in !Sprites22 to RISC OS 4 style.</P>
 

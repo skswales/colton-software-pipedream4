@@ -228,15 +228,15 @@ dep_table_check_free_some(
 {
     /* free the handle altogether */
     if(dpp->size && !dpp->next)
-        {
+    {
         al_ptr_dispose(&dpp->ptr);
         dpp->size = 0;
         return;
-        }
+    }
 
     /* free some memory */
     if(dpp->size - dpp->next >= inc_size)
-        {
+    {
         STATUS status;
         P_ANY newptr;
 
@@ -245,7 +245,7 @@ dep_table_check_free_some(
 
         dpp->ptr  = newptr;
         dpp->size = dpp->next + inc_size;
-        }
+    }
 }
 
 /******************************************************************************
@@ -321,55 +321,55 @@ ev_add_exp_slot_to_tree(
 
     res = 0;
     while(res >= 0 && grub_next(p_ev_cell, &grubb) != RPN_FRM_END)
-        {
+    {
         switch(grubb.data.did_num)
+        {
+        case RPN_DAT_SLR:
+            if(ev_add_slrdependency(&grubb) < 0)
+                res = -1;
+            break;
+
+        case RPN_DAT_RANGE:
+            if(ev_add_rngdependency(&grubb) < 0)
+                res = -1;
+            break;
+
+        /* record use of a name */
+        case RPN_DAT_NAME:
+            if(add_namuse(&grubb) < 0)
+                res = -1;
+            break;
+
+        /* custom function call */
+        case RPN_FNM_CUSTOMCALL:
+            if(add_custom_use(&grubb) < 0)
+                res = -1;
+            break;
+
+        /* custom function definitions */
+        case RPN_FNM_FUNCTION:
             {
-            case RPN_DAT_SLR:
-                if(ev_add_slrdependency(&grubb) < 0)
-                    res = -1;
-                break;
+            EV_NAMEID custom_num = custom_def_find(grubb.data.arg.nameid);
 
-            case RPN_DAT_RANGE:
-                if(ev_add_rngdependency(&grubb) < 0)
-                    res = -1;
-                break;
+            if(custom_num >= 0)
+            {
+                P_EV_CUSTOM p_ev_custom = custom_ptr_must(custom_num);
+                P_SS_DOC p_ss_doc;
 
-            /* record use of a name */
-            case RPN_DAT_NAME:
-                if(add_namuse(&grubb) < 0)
-                    res = -1;
-                break;
+                p_ev_custom->owner  = *slrp;
+                p_ev_custom->flags &= ~TRF_UNDEFINED;
 
-            /* custom function call */
-            case RPN_FNM_CUSTOMCALL:
-                if(add_custom_use(&grubb) < 0)
-                    res = -1;
-                break;
+                /* mark document as a custom function sheet */
+                if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) != NULL)
+                    p_ss_doc->flags |= DCF_CUSTOM;
 
-            /* custom function definitions */
-            case RPN_FNM_FUNCTION:
-                {
-                EV_NAMEID custom_num = custom_def_find(grubb.data.arg.nameid);
-
-                if(custom_num >= 0)
-                    {
-                    P_EV_CUSTOM p_ev_custom = custom_ptr_must(custom_num);
-                    P_SS_DOC p_ss_doc;
-
-                    p_ev_custom->owner  = *slrp;
-                    p_ev_custom->flags &= ~TRF_UNDEFINED;
-
-                    /* mark document as a custom function sheet */
-                    if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) != NULL)
-                        p_ss_doc->flags |= DCF_CUSTOM;
-
-                    ev_todo_add_custom_dependents(grubb.data.arg.nameid);
-                    }
-
-                break;
+                ev_todo_add_custom_dependents(grubb.data.arg.nameid);
                 }
+
+            break;
             }
         }
+    }
 
     /* restore flags */
     custom_def.flags |= custom_flags;
@@ -486,21 +486,21 @@ ev_del_extdependency(
 
     eix = 0;
     if((eep = tree_extptr(p_ss_doc, 0)) != NULL)
-        {
+    {
         while(eix < p_ss_doc->exttab.next)
-            {
+        {
             if(eep->inthandle == handle_in)
-                {
+            {
                 eep->flags |= TRF_TOBEDEL;
                 p_ss_doc->exttab.flags |= TRF_TOBEDEL;
                 p_ss_doc->exttab.mindel = MIN(p_ss_doc->exttab.mindel, eix);
                 break;
-                }
+            }
 
             ++eep;
             ++eix;
-            }
         }
+    }
 
     tree_flags |= TRF_BLOWN;
 }
@@ -548,159 +548,159 @@ ev_enum_dep_sup_get(
     S32 res, item_get;
 
     if(*item_no < 0)
-        {
+    {
         item_get = dsp->item_no++;
         *item_no = item_get;
-        }
+    }
     else
         item_get = *item_no;
 
     res = -1;
 
     if(dsp->get_deps)
-        {
+    {
         /* look for things dependent upon this cell */
         switch(dsp->category)
+        {
+        case EV_DEPSUP_SLR:
             {
-            case EV_DEPSUP_SLR:
-                {
-                EV_TRENT six;
+            EV_TRENT six;
 
-                if((six = search_for_slrdependent(&dsp->slr)) >= 0)
-                    {
-                    P_SS_DOC p_ss_doc;
-                    P_SLR_USE sep;
-
-                    p_ss_doc = ev_p_ss_doc_from_docno(dsp->slr.docno);
-                    six  += item_get;
-                    sep   = tree_slrptr(p_ss_doc, six);
-                    __assume(sep);
-
-                    if( six < p_ss_doc->slr_table.next    &&
-                        !(sep->flags & TRF_TOBEDEL)       &&
-                        slr_equal(&dsp->slr, &sep->refto) )
-                        {
-                        p_ev_data->did_num = RPN_DAT_SLR;
-                        p_ev_data->arg.slr = sep->byslr;
-                        res = 1;
-                        }
-                    }
-                break;
-                }
-
-            case EV_DEPSUP_RANGE:
-                {
+            if((six = search_for_slrdependent(&dsp->slr)) >= 0)
+            {
                 P_SS_DOC p_ss_doc;
-                P_RANGE_USE rep;
+                P_SLR_USE sep;
 
                 p_ss_doc = ev_p_ss_doc_from_docno(dsp->slr.docno);
+                six  += item_get;
+                sep   = tree_slrptr(p_ss_doc, six);
+                __assume(sep);
 
-                /* look thru range dependencies */
-                if((rep = tree_rngptr(p_ss_doc, 0)) != NULL)
-                    {
-                    EV_TRENT rix;
-
-                    for(rix = 0; rix < p_ss_doc->range_table.next; ++rix, ++rep)
-                        {
-                        if(rep->flags & TRF_TOBEDEL)
-                            continue;
-
-                        if(ev_slr_in_range(&rep->refto, &dsp->slr) && !item_get--)
-                            {
-                            p_ev_data->did_num = RPN_DAT_SLR;
-                            p_ev_data->arg.slr = rep->byslr;
-                            res = 1;
-                            }
-                        }
-                    }
-                break;
-                }
-
-            case EV_DEPSUP_NAME:
+                if( six < p_ss_doc->slr_table.next    &&
+                    !(sep->flags & TRF_TOBEDEL)       &&
+                    slr_equal(&dsp->slr, &sep->refto) )
                 {
-                P_EV_NAME p_ev_name;
-
-                /* look for name references */
-                if((p_ev_name = names_def.ptr) != NULL)
-                    {
-                    EV_TRENT i;
-
-                    for(i = 0; i < names_def.next; ++i, ++p_ev_name)
-                        {
-                        S32 got_ref = 0;
-
-                        if(p_ev_name->flags & TRF_TOBEDEL)
-                            continue;
-
-                        switch(p_ev_name->def_data.did_num)
-                            {
-                            case RPN_DAT_SLR:
-                                if(slr_equal(&p_ev_name->def_data.arg.slr, &dsp->slr))
-                                    got_ref = 1;
-                                break;
-
-                            case RPN_DAT_RANGE:
-                                if(ev_slr_in_range(&p_ev_name->def_data.arg.range, &dsp->slr))
-                                    got_ref = 1;
-                                break;
-                            }
-
-                        if(got_ref && !item_get--)
-                            {
-                            p_ev_data->did_num = RPN_DAT_NAME;
-                            p_ev_data->arg.nameid = p_ev_name->key;
-                            res = 1;
-                            }
-                        }
-                    }
-
-                break;
+                    p_ev_data->did_num = RPN_DAT_SLR;
+                    p_ev_data->arg.slr = sep->byslr;
+                    res = 1;
                 }
             }
+            break;
+            }
+
+        case EV_DEPSUP_RANGE:
+            {
+            P_SS_DOC p_ss_doc;
+            P_RANGE_USE rep;
+
+            p_ss_doc = ev_p_ss_doc_from_docno(dsp->slr.docno);
+
+            /* look thru range dependencies */
+            if((rep = tree_rngptr(p_ss_doc, 0)) != NULL)
+            {
+                EV_TRENT rix;
+
+                for(rix = 0; rix < p_ss_doc->range_table.next; ++rix, ++rep)
+                {
+                    if(rep->flags & TRF_TOBEDEL)
+                        continue;
+
+                    if(ev_slr_in_range(&rep->refto, &dsp->slr) && !item_get--)
+                    {
+                        p_ev_data->did_num = RPN_DAT_SLR;
+                        p_ev_data->arg.slr = rep->byslr;
+                        res = 1;
+                    }
+                }
+            }
+            break;
+            }
+
+        case EV_DEPSUP_NAME:
+            {
+            P_EV_NAME p_ev_name;
+
+            /* look for name references */
+            if((p_ev_name = names_def.ptr) != NULL)
+            {
+                EV_TRENT i;
+
+                for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+                {
+                    S32 got_ref = 0;
+
+                    if(p_ev_name->flags & TRF_TOBEDEL)
+                        continue;
+
+                    switch(p_ev_name->def_data.did_num)
+                    {
+                    case RPN_DAT_SLR:
+                        if(slr_equal(&p_ev_name->def_data.arg.slr, &dsp->slr))
+                            got_ref = 1;
+                        break;
+
+                    case RPN_DAT_RANGE:
+                        if(ev_slr_in_range(&p_ev_name->def_data.arg.range, &dsp->slr))
+                            got_ref = 1;
+                        break;
+                    }
+
+                    if(got_ref && !item_get--)
+                    {
+                        p_ev_data->did_num = RPN_DAT_NAME;
+                        p_ev_data->arg.nameid = p_ev_name->key;
+                        res = 1;
+                    }
+                }
+            }
+
+            break;
+            }
         }
+    }
     else
-        {
+    {
         P_EV_CELL p_ev_cell;
 
         /* grub about for supporters of this cell */
         if(ev_travel(&p_ev_cell, &dsp->slr) > 0)
-            {
+        {
             struct EV_GRUB_STATE grubb;
 
             grub_init(&grubb, &dsp->slr);
 
             while(res < 0 && grub_next(p_ev_cell, &grubb) != RPN_FRM_END)
-                {
+            {
                 switch(grubb.data.did_num)
-                    {
-                    case RPN_DAT_SLR:
-                        if(dsp->category == EV_DEPSUP_SLR)
-                            if(!item_get--)
-                                {
-                                *p_ev_data = grubb.data;
-                                res = 1;
-                                }
-                        break;
-                    case RPN_DAT_RANGE:
-                        if(dsp->category == EV_DEPSUP_RANGE)
-                            if(!item_get--)
-                                {
-                                *p_ev_data = grubb.data;
-                                res = 1;
-                                }
-                        break;
-                    case RPN_DAT_NAME:
-                        if(dsp->category == EV_DEPSUP_NAME)
-                            if(!item_get--)
-                                {
-                                *p_ev_data = grubb.data;
-                                res = 1;
-                                }
-                        break;
-                    }
+                {
+                case RPN_DAT_SLR:
+                    if(dsp->category == EV_DEPSUP_SLR)
+                        if(!item_get--)
+                        {
+                            *p_ev_data = grubb.data;
+                            res = 1;
+                        }
+                    break;
+                case RPN_DAT_RANGE:
+                    if(dsp->category == EV_DEPSUP_RANGE)
+                        if(!item_get--)
+                        {
+                            *p_ev_data = grubb.data;
+                            res = 1;
+                        }
+                    break;
+                case RPN_DAT_NAME:
+                    if(dsp->category == EV_DEPSUP_NAME)
+                        if(!item_get--)
+                        {
+                            *p_ev_data = grubb.data;
+                            res = 1;
+                            }
+                    break;
                 }
             }
         }
+    }
 
     return(res);
 }
@@ -722,38 +722,38 @@ ev_todo_add_doc_dependents(
     ++ev_serial_num;
 
     if((p_ss_doc = ev_p_ss_doc_from_docno(docno)) != NULL)
-        {
+    {
         P_RANGE_USE rep;
         P_SLR_USE sep;
 
         /* look thru range dependencies */
         if((rep = tree_rngptr(p_ss_doc, 0)) != NULL)
-            {
+        {
             EV_TRENT rix;
 
             for(rix = 0; rix < p_ss_doc->range_table.next; ++rix, ++rep)
-                {
+            {
                 if(rep->flags & TRF_TOBEDEL)
                     continue;
 
                 todo_add_slr(&rep->byslr, TODO_SORT);
-                }
             }
+        }
 
         /* add slr dependencies */
         if((sep = tree_slrptr(p_ss_doc, 0)) != NULL)
-            {
+        {
             EV_TRENT six;
 
             for(six = 0; six < p_ss_doc->slr_table.next; ++six, ++sep)
-                {
+            {
                 if(sep->flags & TRF_TOBEDEL)
                     continue;
 
                 todo_add_slr(&sep->byslr, TODO_SORT);
-                }
             }
         }
+    }
 
     /* add dependents of names referencing this document */
     slr.docno = docno;
@@ -761,18 +761,18 @@ ev_todo_add_doc_dependents(
 
     /* look for custom function references */
     if((p_ev_custom = custom_def.ptr) != NULL)
-        {
+    {
         EV_NAMEID i;
 
         for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
-            {
+        {
             if(0 != (p_ev_custom->flags & (TRF_TOBEDEL | TRF_UNDEFINED)))
                 continue;
 
             if(p_ev_custom->owner.docno == docno)
                 todo_add_custom_dependents(p_ev_custom->key);
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -963,7 +963,7 @@ search_for_custom_use(
                       custom_use_deptable.sorted,
                       sizeof(CUSTOM_USE),
                       custom_comp)) != 0)
-        {
+    {
         EV_TRENT mix;
 
         /* step back to start of all names the same */
@@ -972,7 +972,7 @@ search_for_custom_use(
             --mep, --mix);
 
         res = mix;
-        }
+    }
     else
         res = -1;
 
@@ -1006,7 +1006,7 @@ search_for_name_use(
                       namtab.sorted,
                       sizeof(NAME_USE),
                       namcomp)) != 0)
-        {
+    {
         EV_TRENT nix;
 
         /* step back to start of all names the same */
@@ -1015,7 +1015,7 @@ search_for_name_use(
             --nep, --nix);
 
         res = nix;
-        }
+    }
     else
         res = -1;
 
@@ -1043,7 +1043,7 @@ search_for_rng_ref(
 
     res = -1;
     if((srep = tree_rngptr(p_ss_doc, 0)) != NULL)
-        {
+    {
         RANGE_USE target;
         P_RANGE_USE rep;
 
@@ -1055,7 +1055,7 @@ search_for_rng_ref(
                           p_ss_doc->range_table.sorted,
                           sizeof(RANGE_USE),
                           rngcomp)) != NULL)
-            {
+        {
             EV_TRENT rix;
 
             /* step back to start of all ranges the same */
@@ -1063,8 +1063,8 @@ search_for_rng_ref(
                 rix > 0 && !rngcomp(rep - 1, &target);
                 --rep, --rix);
             res = rix;
-            }
         }
+    }
     return(res);
 }
 
@@ -1089,7 +1089,7 @@ search_for_slrdependent(
 
     res = -1;
     if((ssep = tree_slrptr(p_ss_doc, 0)) != NULL)
-        {
+    {
         SLR_USE target;
         P_SLR_USE sep;
 
@@ -1101,7 +1101,7 @@ search_for_slrdependent(
                           p_ss_doc->slr_table.sorted,
                           sizeof(SLR_USE),
                           slrcomp)) != NULL)
-            {
+        {
             EV_TRENT six;
 
             /* step back to start of all refs the same */
@@ -1109,8 +1109,8 @@ search_for_slrdependent(
                 six > 0 && !slrcomp(sep - 1, &target);
                 --sep, --six);
             res = six;
-            }
         }
+    }
 
     return(res);
 }
@@ -1159,43 +1159,43 @@ todo_add_dependents(
     P_SS_DOC p_ss_doc;
 
     if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) != NULL)
-        {
+    {
         P_RANGE_USE rep;
         P_SLR_USE sep;
         EV_TRENT six;
 
         /* look thru range dependencies */
         if((rep = tree_rngptr(p_ss_doc, 0)) != NULL)
-            {
+        {
             EV_TRENT rix;
 
             for(rix = 0; rix < p_ss_doc->range_table.next; ++rix, ++rep)
-                {
+            {
                 if(rep->flags & TRF_TOBEDEL)
                     continue;
 
                 if(ev_slr_in_range(&rep->refto, slrp))
                     todo_add_slr(&rep->byslr, TODO_SORT);
-                }
             }
+        }
 
         /* find slr dependents */
         six = search_for_slrdependent(slrp);
 
         if(six >= 0)
-            {
+        {
             sep = tree_slrptr(p_ss_doc, six);
             __assume(sep);
 
             for( ; six < p_ss_doc->slr_table.next && slr_equal(&sep->refto, slrp); ++six, ++sep)
-                {
+            {
                 if(sep->flags & TRF_TOBEDEL)
                     continue;
 
                 todo_add_slr(&sep->byslr, TODO_SORT);
-                }
             }
         }
+    }
 
     /* look for name references */
     todo_add_name_deps_of_slr(slrp, FALSE);
@@ -1215,26 +1215,26 @@ todo_add_custom_dependents(
     S32 found_use = 0;
 
     if((mix = search_for_custom_use(customid)) >= 0)
-        {
+    {
         P_CUSTOM_USE mep;
 
         if((mep = tree_macptr(mix)) != NULL)
-            {
+        {
             CUSTOM_USE key;
 
             key.custom_to = customid;
 
             for( ; mix < custom_use_deptable.next && !custom_comp(mep, &key); ++mix, ++mep)
-                {
+            {
                 if(mep->flags & TRF_TOBEDEL)
                     continue;
 
                 todo_add_slr(&mep->byslr, TODO_SORT);
-                }
             }
+        }
 
         found_use = 1;
-        }
+    }
 
     return(found_use);
 }
@@ -1253,26 +1253,26 @@ todo_add_name_dependents(
     S32 found_use = 0;
 
     if((nix = search_for_name_use(nameid)) >= 0)
-        {
+    {
         P_NAME_USE nep;
 
         if((nep = tree_namptr(nix)) != NULL)
-            {
+        {
             NAME_USE key;
 
             key.nameto = nameid;
 
             for( ; nix < namtab.next && !namcomp(nep, &key); ++nix, ++nep)
-                {
+            {
                 if(nep->flags & TRF_TOBEDEL)
                     continue;
 
                 todo_add_slr(&nep->byslr, TODO_SORT);
-                }
             }
+        }
 
         found_use = 1;
-        }
+    }
 
     return(found_use);
 }
@@ -1295,44 +1295,44 @@ todo_add_name_deps_of_slr(
 
     /* look for name references */
     if((p_ev_name = names_def.ptr) != NULL)
-        {
+    {
         EV_NAMEID i;
 
         for(i = 0; i < names_def.next; ++i, ++p_ev_name)
-            {
+        {
             S32 got_ref = 0;
 
             if(p_ev_name->flags & TRF_TOBEDEL)
                 continue;
 
             switch(p_ev_name->def_data.did_num)
+            {
+            case RPN_DAT_SLR:
+                if(all_doc)
                 {
-                case RPN_DAT_SLR:
-                    if(all_doc)
-                        {
-                        if(p_ev_name->def_data.arg.slr.docno == slrp->docno)
-                            got_ref = 1;
-                        }
-                    else if(slr_equal(&p_ev_name->def_data.arg.slr, slrp))
+                    if(p_ev_name->def_data.arg.slr.docno == slrp->docno)
                         got_ref = 1;
-                    break;
-
-                case RPN_DAT_RANGE:
-                    if(all_doc)
-                        {
-                        if(p_ev_name->def_data.arg.range.s.docno == slrp->docno)
-                            got_ref = 1;
-                        }
-                    if(ev_slr_in_range(&p_ev_name->def_data.arg.range, slrp))
-                        got_ref = 1;
-                    break;
                 }
+                else if(slr_equal(&p_ev_name->def_data.arg.slr, slrp))
+                    got_ref = 1;
+                break;
+
+            case RPN_DAT_RANGE:
+                if(all_doc)
+                {
+                    if(p_ev_name->def_data.arg.range.s.docno == slrp->docno)
+                        got_ref = 1;
+                }
+                if(ev_slr_in_range(&p_ev_name->def_data.arg.range, slrp))
+                    got_ref = 1;
+                break;
+            }
 
             /* mark all uses of name */
             if(got_ref)
                 todo_add_name_dependents(p_ev_name->key);
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -1351,11 +1351,11 @@ todo_add_slr(
     S32 sort)
 {
     if(!doc_check_custom(slrp->docno))
-        {
+    {
         P_TODO_ENTRY todop;
 
         if(!sort || (todop = todo_has_slr(slrp)) == NULL)
-            {
+        {
             if(dep_table_check_add_one(&todotab,
                                        sizeof(TODO_ENTRY),
                                        TDOBLKINC) < 0)
@@ -1363,7 +1363,7 @@ todo_add_slr(
 
             /* find place to insert, keeping order */
             if(sort && todotab.sorted == todotab.next && todotab.next)
-                {
+            {
                 TODO_ENTRY target;
                 P_TODO_ENTRY todops, todope;
 
@@ -1375,18 +1375,18 @@ todo_add_slr(
                 do  {
                     --todop;
                     if(todocomp(&target, todop) > 0)
-                        {
+                    {
                         ++todop;
                         break;
-                        }
                     }
+                }
                 while(todop > todops);
 
                 /* make space for new entry */
                 memmove32(todop + 1, todop, PtrDiffBytesU32(todope, todop));
                 ++todotab.next;
                 ++todotab.sorted;
-                }
+            }
             else
                 todop = todo_ptr(todotab.next++);
 
@@ -1396,17 +1396,17 @@ todo_add_slr(
             todop->flags   = 0;
 
 #if TRACE_ALLOWED
-            if(tracing(TRACE_MODULE_EVAL))
-                {
+            if_constant(tracing(TRACE_MODULE_EVAL))
+            {
                 char buffer[BUF_EV_LONGNAMLEN];
                 ev_trace_slr(buffer, elemof32(buffer), "<todo_add_slr> added $$, serial_num=%ld, todo=%ld", slrp);
                 trace_2(TRACE_MODULE_EVAL, buffer, ev_serial_num, todotab.next);
-                }
-#endif
             }
+#endif
+        }
 
         todop->flags  &= ~TRF_TOBEDEL;
-        }
+    }
 
     return(0);
 }
@@ -1459,28 +1459,28 @@ todo_get_slr(
         tree_sort_todo();
 
     if(todotab.next)
-        {
+    {
         P_TODO_ENTRY todop, todops;
 
         for(todops = todo_ptr(0), todop = todo_ptr(todotab.next - 1); todop >= todops; --todop)
-            {
+        {
             if(todop->flags & TRF_TOBEDEL)
                 continue;
 
             /* don't leave custom function sheet todos behind */
             if(doc_check_custom(todop->slr.docno))
-                {
+            {
                 todop->flags  |= TRF_TOBEDEL;
                 todotab.flags |= TRF_TOBEDEL;
                 todotab.mindel = MIN(todotab.mindel, todop - todops);
                 continue;
-                }
+            }
 
             *slrp = todop->slr;
             got_todo = 1;
             break;
-            }
         }
+    }
 
     return(got_todo);
 }
@@ -1504,7 +1504,7 @@ todo_has_slr(
         tree_sort_todo();
 
     if((todop = todo_ptr(0)) != NULL)
-        {
+    {
         TODO_ENTRY target;
 
         target.slr = *slrp;
@@ -1514,7 +1514,7 @@ todo_has_slr(
                         todotab.sorted,
                         sizeof(TODO_ENTRY),
                         todocomp);
-        }
+    }
 
     return(found);
 }
@@ -1532,20 +1532,20 @@ todo_remove_slr(
     P_TODO_ENTRY todop;
 
     if((todop = todo_has_slr(slrp)) != NULL)
-        {
+    {
         todop->flags  |= TRF_TOBEDEL;
         todotab.flags |= TRF_TOBEDEL;
         todotab.mindel = MIN(todotab.mindel, todop - todo_ptr(0));
 
 #if TRACE_ALLOWED
-        if(tracing(TRACE_MODULE_EVAL))
-            {
+        if_constant(tracing(TRACE_MODULE_EVAL))
+        {
             char buffer[BUF_EV_LONGNAMLEN];
             ev_trace_slr(buffer, elemof32(buffer), "<todo_remove_slr> removed $$, todo=%ld", slrp);
             trace_1(TRACE_MODULE_EVAL, buffer, todotab.next);
-            }
-#endif
         }
+#endif
+    }
 }
 
 /******************************************************************************
@@ -1565,11 +1565,11 @@ tree_remove_tobedel(
 
     /* first free any deleted entries */
     if(dpp->next && (dpp->flags & TRF_TOBEDEL))
-        {
+    {
         P_U8 sep, iep, oep;
 
         if(dpp->ptr)
-            {
+        {
             EV_TRENT i, old_next;
 
             old_next = dpp->next;
@@ -1578,7 +1578,7 @@ tree_remove_tobedel(
             for(i = dpp->mindel, iep = oep = sep + (i * ent_size);
                 i < dpp->next;
                 ++i, iep += ent_size)
-                {
+            {
                 if(*((const EV_FLAGS *)(iep + flag_offset)) & TRF_TOBEDEL)
                     continue;
 
@@ -1586,7 +1586,7 @@ tree_remove_tobedel(
                     memcpy32(oep, iep, ent_size);
 
                 oep += ent_size;
-                }
+            }
 
             dpp->mindel = dpp->next = (oep - sep) / ent_size;
             dpp->flags &= ~TRF_TOBEDEL;
@@ -1595,8 +1595,8 @@ tree_remove_tobedel(
 
             blown = 1;
             dep_table_check_free_some(dpp, ent_size, inc_size);
-            }
         }
+    }
 
     return(blown);
 }
@@ -1620,16 +1620,16 @@ tree_sort(
     blown = tree_remove_tobedel(dpp, ent_size, inc_size, flag_offset);
 
     if(dpp->sorted < dpp->next)
-        {
+    {
         if(dpp->ptr)
-            {
+        {
             trace_0(TRACE_MODULE_EVAL, "** sort **");
             qsort((P_U8) dpp->ptr, dpp->next, ent_size, sort_proc);
 
             dpp->sorted = dpp->next;
             blown = 1;
-            }
         }
+    }
 
     return(blown);
 }
@@ -1649,7 +1649,7 @@ tree_sort_all(void)
         return;
 
     for(docno = DOCNO_FIRST; docno < docu_array_size; ++docno)
-        {
+    {
         P_SS_DOC p_ss_doc;
 
         if(docno_void_entry(docno))
@@ -1664,7 +1664,7 @@ tree_sort_all(void)
 
         tree_sort_ranges(docno);
         tree_sort_slrs(docno);
-        }
+    }
 
     tree_sort_customs();
     tree_sort_names();

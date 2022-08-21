@@ -136,10 +136,10 @@ wimp_reporterror_rf(
     }
 
     if(message)
-        {
+    {
         flags = (wimp_errflags) (flags | wimp_ENOERRORFROM);
         name = message;
-        }
+    }
 
     if(wimpt_os_version_query() >= RISC_OS_3_5)
     {

@@ -60,129 +60,129 @@ arg_normalise(
     P_S32 max_y)
 {
     switch(p_ev_data->did_num)
+    {
+    case RPN_DAT_REAL:
+        if(!(type_flags & (EM_INT | EM_REA)))
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
+        else if(!(type_flags & EM_REA))
+            real_to_integer_force(p_ev_data);
+        break;
+
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+        if(!(type_flags & (EM_INT | EM_REA)))
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
+        else if(!(type_flags & EM_INT))
+            ev_data_set_real(p_ev_data, (F64) p_ev_data->arg.integer);
+        break;
+
+    case RPN_DAT_SLR:
+        /* if function doesn't want SLRs, dereference them */
+        if(!(type_flags & EM_SLR))
         {
-        case RPN_DAT_REAL:
-            if(!(type_flags & (EM_INT | EM_REA)))
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
-            else if(!(type_flags & EM_REA))
-                real_to_integer_force(p_ev_data);
-            break;
-
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-            if(!(type_flags & (EM_INT | EM_REA)))
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
-            else if(!(type_flags & EM_INT))
-                ev_data_set_real(p_ev_data, (F64) p_ev_data->arg.integer);
-            break;
-
-        case RPN_DAT_SLR:
-            /* if function doesn't want SLRs, dereference them */
-            if(!(type_flags & EM_SLR))
-                {
-                ev_slr_deref(p_ev_data, &p_ev_data->arg.slr, TRUE);
-                return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
-                }
-            break;
-
-        case RPN_TMP_STRING:
-            if(!(type_flags & EM_STR))
-                {
-                trace_1(TRACE_MODULE_EVAL, "arg_normalise freeing string: %s", p_ev_data->arg.string.uchars);
-                str_clr(&p_ev_data->arg.string_wr.uchars);
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
-                }
-            break;
-
-        case RPN_DAT_STRING:
-        case RPN_RES_STRING:
-            if(!(type_flags & EM_STR))
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
-            break;
-
-        case RPN_DAT_DATE:
-            if(!(type_flags & EM_DAT))
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXDATE)));
-            break;
-
-        case RPN_DAT_RANGE:
-            if(!(type_flags & EM_ARY) && max_x && max_y)
-                {
-                EV_COL col_size;
-                EV_ROW row_size;
-
-                col_size = p_ev_data->arg.range.e.col - p_ev_data->arg.range.s.col;
-                row_size = p_ev_data->arg.range.e.row - p_ev_data->arg.range.s.row;
-
-                *max_x = MAX(col_size, *max_x);
-                *max_y = MAX(row_size, *max_y);
-                }
-            else if(!(type_flags & EM_ARY))
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
-
-            break;
-
-        case RPN_TMP_ARRAY:
-        case RPN_RES_ARRAY:
-            if(type_flags & EM_AR0)
-                {
-                EV_DATA temp;
-
-                temp = *ss_array_element_index_borrow(p_ev_data, 0, 0);
-
-                if(p_ev_data->did_num == RPN_TMP_ARRAY)
-                    ss_array_free(p_ev_data);
-
-                *p_ev_data = temp;
-                return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
-                }
-            else if(!(type_flags & EM_ARY) && max_x && max_y)
-                {
-                *max_x = MAX(*max_x, p_ev_data->arg.ev_array.x_size);
-                *max_y = MAX(*max_y, p_ev_data->arg.ev_array.y_size);
-                }
-            else if(!(type_flags & EM_ARY))
-                {
-                if(p_ev_data->did_num == RPN_TMP_ARRAY)
-                    ss_array_free(p_ev_data);
-
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
-                }
-
-            break;
-
-        case RPN_DAT_NAME:
-            name_deref(p_ev_data, p_ev_data->arg.nameid);
+            ev_slr_deref(p_ev_data, &p_ev_data->arg.slr, TRUE);
             return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
-
-        case RPN_DAT_BLANK:
-            if(!(type_flags & EM_BLK))
-                {
-                if(!(type_flags & EM_STR))
-                    {
-                    ev_data_set_real(p_ev_data, 0.0);
-                    return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
-                    }
-                else
-                    {
-                    p_ev_data->arg.string.uchars = "";
-                    p_ev_data->arg.string.size = 0;
-                    p_ev_data->did_num = RPN_DAT_STRING;
-                    }
-                }
-            break;
-
-        case RPN_DAT_ERROR:
-            if(!(type_flags & EM_ERR))
-                return(p_ev_data->arg.ev_error.status);
-            break;
-
-        case RPN_FRM_COND:
-            if(!(type_flags & EM_CDX))
-                return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_BADEXPR)));
-            break;
         }
+        break;
+
+    case RPN_TMP_STRING:
+        if(!(type_flags & EM_STR))
+        {
+            trace_1(TRACE_MODULE_EVAL, "arg_normalise freeing string: %s", p_ev_data->arg.string.uchars);
+            str_clr(&p_ev_data->arg.string_wr.uchars);
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
+        }
+        break;
+
+    case RPN_DAT_STRING:
+    case RPN_RES_STRING:
+        if(!(type_flags & EM_STR))
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
+        break;
+
+    case RPN_DAT_DATE:
+        if(!(type_flags & EM_DAT))
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXDATE)));
+        break;
+
+    case RPN_DAT_RANGE:
+        if(!(type_flags & EM_ARY) && max_x && max_y)
+        {
+            EV_COL col_size;
+            EV_ROW row_size;
+
+            col_size = p_ev_data->arg.range.e.col - p_ev_data->arg.range.s.col;
+            row_size = p_ev_data->arg.range.e.row - p_ev_data->arg.range.s.row;
+
+            *max_x = MAX(col_size, *max_x);
+            *max_y = MAX(row_size, *max_y);
+        }
+        else if(!(type_flags & EM_ARY))
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
+
+        break;
+
+    case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
+        if(type_flags & EM_AR0)
+        {
+            EV_DATA temp;
+
+            temp = *ss_array_element_index_borrow(p_ev_data, 0, 0);
+
+            if(p_ev_data->did_num == RPN_TMP_ARRAY)
+                ss_array_free(p_ev_data);
+
+            *p_ev_data = temp;
+            return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
+        }
+        else if(!(type_flags & EM_ARY) && max_x && max_y)
+        {
+            *max_x = MAX(*max_x, p_ev_data->arg.ev_array.x_size);
+            *max_y = MAX(*max_y, p_ev_data->arg.ev_array.y_size);
+        }
+        else if(!(type_flags & EM_ARY))
+        {
+            if(p_ev_data->did_num == RPN_TMP_ARRAY)
+                ss_array_free(p_ev_data);
+
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
+        }
+
+        break;
+
+    case RPN_DAT_NAME:
+        name_deref(p_ev_data, p_ev_data->arg.nameid);
+        return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
+
+    case RPN_DAT_BLANK:
+        if(!(type_flags & EM_BLK))
+        {
+            if(!(type_flags & EM_STR))
+            {
+                ev_data_set_real(p_ev_data, 0.0);
+                return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
+            }
+            else
+            {
+                p_ev_data->arg.string.uchars = "";
+                p_ev_data->arg.string.size = 0;
+                p_ev_data->did_num = RPN_DAT_STRING;
+            }
+        }
+        break;
+
+    case RPN_DAT_ERROR:
+        if(!(type_flags & EM_ERR))
+            return(p_ev_data->arg.ev_error.status);
+        break;
+
+    case RPN_FRM_COND:
+        if(!(type_flags & EM_CDX))
+            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_BADEXPR)));
+        break;
+    }
 
     return(p_ev_data->did_num);
 }
@@ -278,20 +278,20 @@ array_expand(
     res = 0;
     if(p_ev_data->did_num == RPN_TMP_ARRAY ||
        p_ev_data->did_num == RPN_RES_ARRAY)
-        {
+    {
         old_x = p_ev_data->arg.ev_array.x_size;
         old_y = p_ev_data->arg.ev_array.y_size;
-        }
+    }
     else if(p_ev_data->did_num == RPN_DAT_RANGE)
-        {
+    {
         old_x = p_ev_data->arg.range.e.col - p_ev_data->arg.range.s.col;
         old_y = p_ev_data->arg.range.e.row - p_ev_data->arg.range.s.row;
-        }
+    }
     else
-        {
+    {
         temp = *p_ev_data;
         old_x = old_y = 0;
-        }
+    }
 
     /* if array/range is already big enough, give up */
     if(max_x <= old_x && max_y <= old_y)
@@ -302,7 +302,7 @@ array_expand(
      * the user's typed data
     */
     if(p_ev_data->did_num != RPN_TMP_ARRAY)
-        {
+    {
         EV_DATA new_array;
 
         status_return(ss_array_make(&new_array, max_x, max_y));
@@ -316,54 +316,54 @@ array_expand(
          * it is owned by the rpn and will be freed with that
         */
         *p_ev_data = new_array;
-        }
+    }
     /* ensure target array element exists */
     else if(ss_array_element_make(p_ev_data, max_x - 1, max_y - 1) < 0)
         return(status_nomem());
 
     if((old_x == 1 && old_y == 1) ||
        (old_x == 0 && old_y == 0))
-        {
+    {
         if(old_x)
             temp = *ss_array_element_index_borrow(p_ev_data, 0, 0);
 
         /* replicate across and down */
         for(y = 0; y < max_y; ++y)
             for(x = 0; x < max_x; ++x)
-                {
+            {
                 if(old_x && (!x && !y))
                     continue;
 
                 if((res = array_element_copy(p_ev_data, x, y, &temp)) < 0)
                     goto end_expand;
-                }
-        }
+            }
+    }
     else if(max_x > old_x && old_y == max_y)
-        {
+    {
         /* replicate across */
         for(y = 0; y < max_y; ++y)
-            {
+        {
             temp = *ss_array_element_index_borrow(p_ev_data, old_x - 1, y);
 
             for(x = 1; x < max_x; ++x)
                 if((res = array_element_copy(p_ev_data, x, y, &temp)) < 0)
                     goto end_expand;
-            }
         }
+    }
     else if(max_y > old_y && old_x == max_x)
-        {
+    {
         /* replicate down */
         for(x = 0; x < max_x; ++x)
-            {
+        {
             temp = *ss_array_element_index_borrow(p_ev_data, x, old_y - 1);
 
             for(y = 1; y < max_y; ++y)
                 if((res = array_element_copy(p_ev_data, x, y, &temp)) < 0)
                     goto end_expand;
-            }
         }
+    }
     else
-        {
+    {
         /* fill new elements with blanks */
         temp.did_num = RPN_DAT_BLANK;
 
@@ -376,7 +376,7 @@ array_expand(
             for(x = 0; x < max_x; ++x)
                 if((res = array_element_copy(p_ev_data, x, y, &temp)) < 0)
                     goto end_expand;
-        }
+    }
 
 end_expand:
 
@@ -480,26 +480,26 @@ array_range_sizes(
     _OutRef_    P_S32 ys)
 {
     switch(p_ev_data_in->did_num)
+    {
+    case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
         {
-        case RPN_TMP_ARRAY:
-        case RPN_RES_ARRAY:
-            {
-            *xs = p_ev_data_in->arg.ev_array.x_size;
-            *ys = p_ev_data_in->arg.ev_array.y_size;
-            break;
-            }
-
-        case RPN_DAT_RANGE:
-            {
-            *xs = p_ev_data_in->arg.range.e.col - p_ev_data_in->arg.range.s.col;
-            *ys = p_ev_data_in->arg.range.e.row - p_ev_data_in->arg.range.s.row;
-            break;
-            }
-
-        default:
-            *xs = *ys = 0;
-            break;
+        *xs = p_ev_data_in->arg.ev_array.x_size;
+        *ys = p_ev_data_in->arg.ev_array.y_size;
+        break;
         }
+
+    case RPN_DAT_RANGE:
+        {
+        *xs = p_ev_data_in->arg.range.e.col - p_ev_data_in->arg.range.s.col;
+        *ys = p_ev_data_in->arg.range.e.row - p_ev_data_in->arg.range.s.row;
+        break;
+        }
+
+    default:
+        *xs = *ys = 0;
+        break;
+    }
 }
 
 /******************************************************************************
@@ -516,13 +516,13 @@ array_scan_element(
     EV_TYPE type_flags)
 {
     if(asbp->x_pos >= asbp->p_ev_data->arg.ev_array.x_size)
-        {
+    {
         asbp->x_pos  = 0;
         asbp->y_pos += 1;
 
         if(asbp->y_pos >= asbp->p_ev_data->arg.ev_array.y_size)
             return(RPN_FRM_END);
-        }
+    }
 
     *p_ev_data = *ss_array_element_index_borrow(asbp->p_ev_data, asbp->x_pos, asbp->y_pos);
 
@@ -632,30 +632,30 @@ cond_rpn_range_adjust(
      * that skip over the atom !
      */
     if(*skip_seen)
-        {
+    {
         RPNSTATE rpnbs;
 
         rpnbs.pos = *skip_seen;
         rpn_check(&rpnbs);
 
         while(rpnbs.pos < *out_pos)
-            {
+        {
             if(rpnbs.num == RPN_FRM_SKIPTRUE ||
                rpnbs.num == RPN_FRM_SKIPFALSE)
-                {
+            {
                 S16 skip_dist = readval_S16(rpnbs.pos + 2);
                 if(rpnbs.pos + skip_dist + bytes_adjust > *out_pos)
-                    {
+                {
                     writeval_S16(rpnbs.pos + 2, skip_dist + bytes_adjust);
                     *skip_seen = de_const_cast(P_U8, rpnbs.pos); /* hmm */
-                    }
+                }
                 else
                     *skip_seen = NULL;
-                }
+            }
 
             rpn_skip(&rpnbs);
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -670,22 +670,22 @@ data_ensure_owner(
     _InRef_     PC_EV_DATA p_ev_data_in)
 {
     switch(p_ev_data_out->did_num = p_ev_data_in->did_num)
-        {
-        case RPN_RES_STRING:
-        case RPN_DAT_STRING:
-            ss_data_resource_copy(p_ev_data_out, p_ev_data_in);
-            p_ev_data_out->did_num = RPN_TMP_STRING;
-            break;
+    {
+    case RPN_RES_STRING:
+    case RPN_DAT_STRING:
+        ss_data_resource_copy(p_ev_data_out, p_ev_data_in);
+        p_ev_data_out->did_num = RPN_TMP_STRING;
+        break;
 
-        case RPN_RES_ARRAY:
-            ss_data_resource_copy(p_ev_data_out, p_ev_data_in);
-            p_ev_data_out->did_num = RPN_TMP_ARRAY;
-            break;
+    case RPN_RES_ARRAY:
+        ss_data_resource_copy(p_ev_data_out, p_ev_data_in);
+        p_ev_data_out->did_num = RPN_TMP_ARRAY;
+        break;
 
-        default:
-            *p_ev_data_out = *p_ev_data_in;
-            break;
-        }
+    default:
+        *p_ev_data_out = *p_ev_data_in;
+        break;
+    }
 }
 
 /******************************************************************************
@@ -843,94 +843,94 @@ data_limit_types(
     S32 array)
 {
     switch(p_ev_data->did_num)
+    {
+    /* these types need no attention */
+    case RPN_DAT_REAL:
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+    case RPN_DAT_DATE:
+    case RPN_DAT_BLANK:
+    case RPN_DAT_ERROR:
+    case RPN_TMP_STRING:
+        break;
+
+    /* scan array and remove embedded cockroaches */
+    case RPN_TMP_ARRAY:
+        if(array)
+            ev_data_set_error(p_ev_data, create_error(EVAL_ERR_NESTEDARRAY));
+        else
         {
-        /* these types need no attention */
-        case RPN_DAT_REAL:
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-        case RPN_DAT_DATE:
-        case RPN_DAT_BLANK:
-        case RPN_DAT_ERROR:
-        case RPN_TMP_STRING:
-            break;
+            S32 ix, iy;
 
-        /* scan array and remove embedded cockroaches */
-        case RPN_TMP_ARRAY:
-            if(array)
-                ev_data_set_error(p_ev_data, create_error(EVAL_ERR_NESTEDARRAY));
+            for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
+                for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
+                    data_limit_types(ss_array_element_index_wr(p_ev_data, ix, iy), TRUE);
+        }
+        break;
+
+    case RPN_DAT_SLR:
+        {
+        EV_DATA temp;
+
+        ev_slr_deref(&temp, &p_ev_data->arg.slr, TRUE);
+        data_ensure_owner(p_ev_data, &temp);
+        data_limit_types(p_ev_data, array);
+        break;
+        }
+
+    case RPN_DAT_NAME:
+        name_deref(p_ev_data, p_ev_data->arg.nameid);
+        data_limit_types(p_ev_data, array);
+        break;
+
+    /* range is converted to array of constants */
+    case RPN_DAT_RANGE:
+        if(array)
+            ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXRANGE));
+        else
+        {
+            EV_DATA array_out;
+            S32 xs, ys;
+
+            array_range_sizes(p_ev_data, &xs, &ys);
+
+            if(status_fail(ss_array_make(&array_out, xs, ys)))
+                ev_data_set_error(p_ev_data, status_nomem());
             else
-                {
-                S32 ix, iy;
-
-                for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
-                    for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
-                        data_limit_types(ss_array_element_index_wr(p_ev_data, ix, iy), TRUE);
-                }
-            break;
-
-        case RPN_DAT_SLR:
             {
-            EV_DATA temp;
+                S32 ix, iy;
+                EV_SLR slr;
 
-            ev_slr_deref(&temp, &p_ev_data->arg.slr, TRUE);
-            data_ensure_owner(p_ev_data, &temp);
-            data_limit_types(p_ev_data, array);
-            break;
+                slr.docno = p_ev_data->arg.range.s.docno;
+                slr.flags = 0;
+
+                for(iy = 0, slr.row = p_ev_data->arg.range.s.row;
+                    iy < ys;
+                    ++iy, ++slr.row)
+                    for(ix = 0, slr.col = p_ev_data->arg.range.s.col;
+                        ix < xs;
+                        ++ix, ++slr.col)
+                    {
+                        EV_DATA temp;
+                        P_EV_DATA p_ev_data_a;
+
+                        ev_slr_deref(&temp, &slr, FALSE);
+                        p_ev_data_a = ss_array_element_index_wr(&array_out, ix, iy);
+                        data_ensure_owner(p_ev_data_a, &temp);
+                        data_limit_types(p_ev_data_a, TRUE);
+                    }
             }
 
-        case RPN_DAT_NAME:
-            name_deref(p_ev_data, p_ev_data->arg.nameid);
-            data_limit_types(p_ev_data, array);
-            break;
-
-        /* range is converted to array of constants */
-        case RPN_DAT_RANGE:
-            if(array)
-                ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXRANGE));
-            else
-                {
-                EV_DATA array_out;
-                S32 xs, ys;
-
-                array_range_sizes(p_ev_data, &xs, &ys);
-
-                if(status_fail(ss_array_make(&array_out, xs, ys)))
-                    ev_data_set_error(p_ev_data, status_nomem());
-                else
-                    {
-                    S32 ix, iy;
-                    EV_SLR slr;
-
-                    slr.docno = p_ev_data->arg.range.s.docno;
-                    slr.flags = 0;
-
-                    for(iy = 0, slr.row = p_ev_data->arg.range.s.row;
-                        iy < ys;
-                        ++iy, ++slr.row)
-                        for(ix = 0, slr.col = p_ev_data->arg.range.s.col;
-                            ix < xs;
-                            ++ix, ++slr.col)
-                            {
-                            EV_DATA temp;
-                            P_EV_DATA p_ev_data_a;
-
-                            ev_slr_deref(&temp, &slr, FALSE);
-                            p_ev_data_a = ss_array_element_index_wr(&array_out, ix, iy);
-                            data_ensure_owner(p_ev_data_a, &temp);
-                            data_limit_types(p_ev_data_a, TRUE);
-                            }
-                    }
-
-                *p_ev_data = array_out;
-                }
-            break;
-
-        /* duff result types */
-        default:
-            ev_data_set_error(p_ev_data, create_error(EVAL_ERR_INTERNAL));
-            break;
+            *p_ev_data = array_out;
         }
+        break;
+
+    /* duff result types */
+    default:
+        ev_data_set_error(p_ev_data, create_error(EVAL_ERR_INTERNAL));
+        break;
+    }
 }
 
 /******************************************************************************
@@ -950,49 +950,49 @@ ev_data_to_result_convert(
     data_limit_types(&temp, FALSE);
 
     switch(p_ev_result->did_num = temp.did_num)
+    {
+    case RPN_DAT_REAL:
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+    case RPN_DAT_DATE:
+    case RPN_DAT_BLANK:
+    case RPN_DAT_ERROR:
+        p_ev_result->arg = temp.arg.ev_constant;
+        break;
+
+        /* mutate temp types to result types */
+
+    case RPN_TMP_STRING:
+        p_ev_result->did_num = RPN_RES_STRING;
+        p_ev_result->arg.string = temp.arg.string;
+        break;
+
+    case RPN_TMP_ARRAY:
         {
-        case RPN_DAT_REAL:
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-        case RPN_DAT_DATE:
-        case RPN_DAT_BLANK:
-        case RPN_DAT_ERROR:
-            p_ev_result->arg = temp.arg.ev_constant;
-            break;
+        S32 ix, iy;
 
-            /* mutate temp types to result types */
-
-        case RPN_TMP_STRING:
-            p_ev_result->did_num = RPN_RES_STRING;
-            p_ev_result->arg.string = temp.arg.string;
-            break;
-
-        case RPN_TMP_ARRAY:
+        for(iy = 0; iy < temp.arg.ev_array.y_size; ++iy)
+            for(ix = 0; ix < temp.arg.ev_array.x_size; ++ix)
             {
-            S32 ix, iy;
+                P_EV_DATA p_ev_data_a;
 
-            for(iy = 0; iy < temp.arg.ev_array.y_size; ++iy)
-                for(ix = 0; ix < temp.arg.ev_array.x_size; ++ix)
-                    {
-                    P_EV_DATA p_ev_data_a;
-
-                    p_ev_data_a = ss_array_element_index_wr(&temp, ix, iy);
-                    if(p_ev_data_a->did_num == RPN_TMP_STRING)
-                        p_ev_data_a->did_num = RPN_RES_STRING;
-                    }
-
-            p_ev_result->did_num = RPN_RES_ARRAY;
-            p_ev_result->arg.ev_array = temp.arg.ev_array;
-            break;
+                p_ev_data_a = ss_array_element_index_wr(&temp, ix, iy);
+                if(p_ev_data_a->did_num == RPN_TMP_STRING)
+                    p_ev_data_a->did_num = RPN_RES_STRING;
             }
 
-        default:
-            p_ev_result->did_num = RPN_DAT_ERROR;
-            p_ev_result->arg.ev_error.status  = create_error(EVAL_ERR_INTERNAL);
-            p_ev_result->arg.ev_error.type = ERROR_NORMAL;
-            break;
+        p_ev_result->did_num = RPN_RES_ARRAY;
+        p_ev_result->arg.ev_array = temp.arg.ev_array;
+        break;
         }
+
+    default:
+        p_ev_result->did_num = RPN_DAT_ERROR;
+        p_ev_result->arg.ev_error.status  = create_error(EVAL_ERR_INTERNAL);
+        p_ev_result->arg.ev_error.type = ERROR_NORMAL;
+        break;
+    }
 }
 
 /******************************************************************************
@@ -1006,15 +1006,15 @@ ev_is_formula(
     P_EV_CELL p_ev_cell)
 {
     switch(p_ev_cell->parms.type)
-        {
-        case EVS_CON_RPN:
-        case EVS_VAR_RPN:
-            return(1);
+    {
+    case EVS_CON_RPN:
+    case EVS_VAR_RPN:
+        return(1);
 
-        case EVS_CON_DATA:
-        default:
-            return(0);
-        }
+    case EVS_CON_DATA:
+    default:
+        return(0);
+    }
 }
 
 /******************************************************************************
@@ -1034,19 +1034,19 @@ ev_exp_copy(
 
     rpn_in = rpn_out = NULL;
     switch(in_slotp->parms.type)
-        {
-        case EVS_CON_DATA:
-            break;
-        case EVS_CON_RPN:
-            rpn_in  =  in_slotp->rpn.con.rpn_str;
-            rpn_out = out_slotp->rpn.con.rpn_str;
-            break;
-        case EVS_VAR_RPN:
-            rpn_in  =  in_slotp->rpn.var.rpn_str;
-            rpn_out = out_slotp->rpn.var.rpn_str;
-            out_slotp->rpn.var.visited = 0;
-            break;
-        }
+    {
+    case EVS_CON_DATA:
+        break;
+    case EVS_CON_RPN:
+        rpn_in  =  in_slotp->rpn.con.rpn_str;
+        rpn_out = out_slotp->rpn.con.rpn_str;
+        break;
+    case EVS_VAR_RPN:
+        rpn_in  =  in_slotp->rpn.var.rpn_str;
+        rpn_out = out_slotp->rpn.var.rpn_str;
+        out_slotp->rpn.var.visited = 0;
+        break;
+    }
 
     out_slotp->parms      = in_slotp->parms;
     out_slotp->parms.circ = 0;
@@ -1108,80 +1108,80 @@ ev_proc_conditional_rpn(
         done = rpnb.num;
 
         switch(rpnb.num)
+        {
+        /* replace ranges with slr for current offset */
+        case RPN_DAT_RANGE:
             {
-            /* replace ranges with slr for current offset */
-            case RPN_DAT_RANGE:
+            EV_RANGE rng;
+
+            read_range(&rng, rpnb.pos + 1);
+
+            rpn_skip(&rpnb);
+
+            cond_rpn_range_adjust(&rng, &skip_seen, &out_pos, (S32) PACKED_SLRSIZE - (S32) PACKED_RNGSIZE,
+                                  target_slrp, abs_col, abs_row);
+
+            break;
+            }
+
+        /* check if a name indirects to a range */
+        case RPN_DAT_NAME:
+            {
+            S32 name_processed = 0;
+            EV_NAMEID nameid, name_num;
+
+            read_nameid(&nameid, rpnb.pos + 1);
+
+            name_num = name_def_find(nameid);
+
+            if(name_num >= 0)
+            {
+                P_EV_NAME p_ev_name = name_ptr_must(name_num);
+
+                if(!(p_ev_name->flags & TRF_UNDEFINED) &&
+                   p_ev_name->def_data.did_num == RPN_DAT_RANGE)
                 {
-                EV_RANGE rng;
+                    EV_RANGE rng = p_ev_name->def_data.arg.range;
 
-                read_range(&rng, rpnb.pos + 1);
+                    rpn_skip(&rpnb);
 
-                rpn_skip(&rpnb);
+                    cond_rpn_range_adjust(&rng, &skip_seen, &out_pos, PACKED_SLRSIZE - sizeof(EV_NAMEID),
+                                          target_slrp, abs_col, abs_row);
 
-                cond_rpn_range_adjust(&rng, &skip_seen, &out_pos, (S32) PACKED_SLRSIZE - (S32) PACKED_RNGSIZE,
-                                      target_slrp, abs_col, abs_row);
-
-                break;
-                }
-
-            /* check if a name indirects to a range */
-            case RPN_DAT_NAME:
-                {
-                S32 name_processed = 0;
-                EV_NAMEID nameid, name_num;
-
-                read_nameid(&nameid, rpnb.pos + 1);
-
-                name_num = name_def_find(nameid);
-
-                if(name_num >= 0)
-                    {
-                    P_EV_NAME p_ev_name = name_ptr_must(name_num);
-
-                    if(!(p_ev_name->flags & TRF_UNDEFINED) &&
-                       p_ev_name->def_data.did_num == RPN_DAT_RANGE)
-                        {
-                        EV_RANGE rng = p_ev_name->def_data.arg.range;
-
-                        rpn_skip(&rpnb);
-
-                        cond_rpn_range_adjust(&rng, &skip_seen, &out_pos, PACKED_SLRSIZE - sizeof(EV_NAMEID),
-                                              target_slrp, abs_col, abs_row);
-
-                        name_processed = 1;
-                        }
-                    }
-
-                if(!name_processed)
-                    goto copy_rpn;
-
-                break;
-                }
-
-            /* net skips for adjustment */
-            case RPN_FRM_SKIPTRUE:
-            case RPN_FRM_SKIPFALSE:
-                if(!skip_seen)
-                    skip_seen = out_pos;
-
-            /* note fall thru ! */
-
-            /* copy across the chunk of rpn unmodified */
-            copy_rpn:
-            default:
-                {
-                PC_U8 old_pos;
-                S32 len;
-
-                old_pos = rpnb.pos;
-                rpn_skip(&rpnb);
-                len = rpnb.pos - old_pos;
-                memcpy32(out_pos, old_pos, len);
-                out_pos += len;
-                break;
+                    name_processed = 1;
                 }
             }
+
+            if(!name_processed)
+                goto copy_rpn;
+
+            break;
+            }
+
+        /* net skips for adjustment */
+        case RPN_FRM_SKIPTRUE:
+        case RPN_FRM_SKIPFALSE:
+            if(!skip_seen)
+                skip_seen = out_pos;
+
+        /* note fall thru ! */
+
+        /* copy across the chunk of rpn unmodified */
+        copy_rpn:
+        default:
+            {
+            PC_U8 old_pos;
+            S32 len;
+
+            old_pos = rpnb.pos;
+            rpn_skip(&rpnb);
+            len = rpnb.pos - old_pos;
+            memcpy32(out_pos, old_pos, len);
+            out_pos += len;
+            break;
+            }
         }
+    }
     while(done != RPN_FRM_END);
 
     return(out_pos - rpn_out);
@@ -1198,23 +1198,23 @@ ev_result_free_resources(
     _InoutRef_  P_EV_RESULT p_ev_result)
 {
     switch(p_ev_result->did_num)
-        {
-        case RPN_RES_STRING:
-            trace_1(TRACE_MODULE_EVAL, "ev_result_free_resources freeing string: %s", p_ev_result->arg.string.uchars);
-            str_clr(&p_ev_result->arg.string_wr.uchars);
-            p_ev_result->did_num = RPN_DAT_BLANK;
-            break;
+    {
+    case RPN_RES_STRING:
+        trace_1(TRACE_MODULE_EVAL, "ev_result_free_resources freeing string: %s", p_ev_result->arg.string.uchars);
+        str_clr(&p_ev_result->arg.string_wr.uchars);
+        p_ev_result->did_num = RPN_DAT_BLANK;
+        break;
 
-        case RPN_RES_ARRAY:
-            {
-            EV_DATA ev_data;
-            /* go via EV_DATA */
-            ev_data.arg.ev_array = p_ev_result->arg.ev_array;
-            ss_array_free(&ev_data);
-            p_ev_result->did_num = RPN_DAT_BLANK;
-            break;
-            }
+    case RPN_RES_ARRAY:
+        {
+        EV_DATA ev_data;
+        /* go via EV_DATA */
+        ev_data.arg.ev_array = p_ev_result->arg.ev_array;
+        ss_array_free(&ev_data);
+        p_ev_result->did_num = RPN_DAT_BLANK;
+        break;
         }
+    }
 
     return(0);
 }
@@ -1231,25 +1231,25 @@ ev_result_to_data_convert(
     _InRef_     PC_EV_RESULT p_ev_result)
 {
     switch(p_ev_data->did_num = p_ev_result->did_num)
-        {
-        default: default_unhandled();
+    {
+    default: default_unhandled();
 #if CHECKING
-            ev_data_set_error(p_ev_data, create_error(EVAL_ERR_INTERNAL));
-            break;
+        ev_data_set_error(p_ev_data, create_error(EVAL_ERR_INTERNAL));
+        break;
 
-        case RPN_DAT_REAL:
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-        case RPN_DAT_DATE:
-        case RPN_DAT_BLANK:
-        case RPN_DAT_ERROR:
-        case RPN_RES_STRING: /* no mutation needed in this direction */
-        case RPN_RES_ARRAY:
+    case RPN_DAT_REAL:
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+    case RPN_DAT_DATE:
+    case RPN_DAT_BLANK:
+    case RPN_DAT_ERROR:
+    case RPN_RES_STRING: /* no mutation needed in this direction */
+    case RPN_RES_ARRAY:
 #endif
-            p_ev_data->arg.ev_constant = p_ev_result->arg;
-            break;
-        }
+        p_ev_data->arg.ev_constant = p_ev_result->arg;
+        break;
+    }
 }
 
 /******************************************************************************
@@ -1272,10 +1272,10 @@ ev_slr_deref(
     if((slrp->flags & SLR_EXT_REF) && ev_doc_error(slrp->docno))
         ev_data_set_error(p_ev_data, ev_doc_error(slrp->docno));
     else if((res = ev_travel(&p_ev_cell, slrp)) != 0)
-        {
+    {
         /* it's an external string */
         if(res < 0)
-            {
+        {
             char buffer[BUF_EV_MAX_STRING_LEN];
             P_U8 ext_ptr;
             S32 ext_res;
@@ -1283,7 +1283,7 @@ ev_slr_deref(
             if((ext_res = ev_external_string(slrp, &ext_ptr, buffer, EV_MAX_STRING_LEN)) == 0)
                 p_ev_data->did_num = RPN_DAT_BLANK;
             else
-                {
+            {
                 S32 err;
                 P_U8 c;
 
@@ -1291,51 +1291,51 @@ ev_slr_deref(
                 for(c = ext_ptr; *c == ' '; ++c);
 
                 if(*c)
-                    {
+                {
                     S32 len = strlen(ext_ptr);
                     if((ext_res > 0) || copy_ext)
                         err = ss_string_make_uchars(p_ev_data, ext_ptr, len);
                     else
-                        {
+                    {
                         p_ev_data->arg.string.uchars = ext_ptr;
                         p_ev_data->arg.string.size = len;
                         p_ev_data->did_num = RPN_RES_STRING;
-                        }
                     }
+                }
                 else
                     p_ev_data->did_num = RPN_DAT_BLANK;
-                }
             }
+        }
         /* it's an evaluator cell */
         else
-            {
+        {
             ev_result_to_data_convert(p_ev_data, &p_ev_cell->ev_result);
 
             switch(p_ev_data->did_num)
-                {
-                case RPN_DAT_ERROR:
+            {
+            case RPN_DAT_ERROR:
 #if 1
-                    if(p_ev_data->arg.ev_error.type != ERROR_PROPAGATED)
-                    {
-                        p_ev_data->arg.ev_error.type = ERROR_PROPAGATED; /* leaving underlying error */
-                        p_ev_data->arg.ev_error.docno = slrp->docno;
-                        p_ev_data->arg.ev_error.col = slrp->col;
-                        p_ev_data->arg.ev_error.row = slrp->row;
-                    }
-#else
-                    p_ev_data->arg.ev_error.num = create_error(EVAL_ERR_PROPAGATED);
-#endif
-                    break;
-
-                case RPN_TMP_STRING:
-                case RPN_DAT_STRING:
-                case RPN_RES_STRING:
-                    if(ss_string_is_blank(p_ev_data))
-                        p_ev_data->did_num = RPN_DAT_BLANK;
-                    break;
+                if(p_ev_data->arg.ev_error.type != ERROR_PROPAGATED)
+                {
+                    p_ev_data->arg.ev_error.type = ERROR_PROPAGATED; /* leaving underlying error */
+                    p_ev_data->arg.ev_error.docno = slrp->docno;
+                    p_ev_data->arg.ev_error.col = slrp->col;
+                    p_ev_data->arg.ev_error.row = slrp->row;
                 }
+#else
+                p_ev_data->arg.ev_error.num = create_error(EVAL_ERR_PROPAGATED);
+#endif
+                break;
+
+            case RPN_TMP_STRING:
+            case RPN_DAT_STRING:
+            case RPN_RES_STRING:
+                if(ss_string_is_blank(p_ev_data))
+                    p_ev_data->did_num = RPN_DAT_BLANK;
+                break;
             }
         }
+    }
     else
         p_ev_data->did_num = RPN_DAT_BLANK;
 
@@ -1354,7 +1354,7 @@ ev_trace_slr(
     P_U8 dollar;
 
     if((dollar = strstr(string_in, "$$")) != NULL)
-        {
+    {
         EV_SLR slr = *slrp;
         char buffer[BUF_EV_LONGNAMLEN];
         xstrnkpy(buffer, elemof32(buffer), string_in, dollar - string_in);
@@ -1362,7 +1362,7 @@ ev_trace_slr(
         (void) ev_dec_slr(buffer + (dollar - string_in), slr.docno, &slr, FALSE);
         xstrkat(buffer, elemof32(buffer), dollar + 2);
         xstrkpy(string_out, elemof_buffer, buffer);
-        }
+    }
     else
         xstrkpy(string_out, elemof_buffer, string_in);
 }
@@ -1383,15 +1383,15 @@ name_deref(
     EV_NAMEID name_num = name_def_find(nameid);
 
     if(name_num >= 0)
-        {
+    {
         P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
         if(!(p_ev_name->flags & TRF_UNDEFINED))
-            {
+        {
             ss_data_resource_copy(p_ev_data, &p_ev_name->def_data);
             return;
-            }
         }
+    }
 
     ev_data_set_error(p_ev_data, create_error(EVAL_ERR_NAMEUNDEF));
 }
@@ -1410,14 +1410,14 @@ range_next(
 {
     if(slrp_pos->row >= p_ev_range->e.row ||
        slrp_pos->row >= ev_numrow(slrp_pos))
-        {
+    {
         slrp_pos->row  = p_ev_range->s.row;
         slrp_pos->col += 1;
 
         /* hit the end of the range ? */
         if(slrp_pos->col >= p_ev_range->e.col)
             return(0);
-        }
+    }
     else
         slrp_pos->row += 1;
 
@@ -1463,13 +1463,13 @@ range_scan_element(
     EV_TYPE type_flags)
 {
     if(rsbp->pos.col >= rsbp->range.e.col)
-        {
+    {
         rsbp->pos.col  = rsbp->range.s.col;
         rsbp->pos.row += 1;
 
         if(rsbp->pos.row >= rsbp->range.e.row)
             return(RPN_FRM_END);
-        }
+    }
 
     ev_slr_deref(p_ev_data, &rsbp->pos, FALSE);
     rsbp->slr_of_result = rsbp->pos;
@@ -1481,93 +1481,13 @@ range_scan_element(
 
 /******************************************************************************
 *
-* p_ev_data_res = p_ev_data1/p_ev_data2
+* p_ev_data_res = p_ev_data1 + p_ev_data2
 *
 ******************************************************************************/
 
-extern S32
-two_nums_divide(
-    _InoutRef_  P_EV_DATA p_ev_data_res,
-    _InoutRef_  P_EV_DATA p_ev_data1,
-    _InoutRef_  P_EV_DATA p_ev_data2)
-{
-    S32 did_op = 0;
-
-    switch(two_nums_type_match(p_ev_data1, p_ev_data2, 0))
-        {
-        case TWO_INTS:
-            if(p_ev_data2->arg.integer != 0)
-                {
-                ldiv_t tmp = ldiv(p_ev_data1->arg.integer, p_ev_data2->arg.integer);
-
-                if(tmp.rem == 0)
-                    ev_data_set_integer(p_ev_data_res, (S32) tmp.quot);
-                else
-                    ev_data_set_real(p_ev_data_res, (F64) p_ev_data1->arg.integer / p_ev_data2->arg.integer);
-                }
-            else
-                ev_data_set_error(p_ev_data_res, create_error(EVAL_ERR_DIVIDEBY0));
-
-            did_op = 1;
-            break;
-
-        case TWO_REALS:
-            if(p_ev_data2->arg.fp != 0.0)
-                ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp / p_ev_data2->arg.fp);
-            else
-                ev_data_set_error(p_ev_data_res, create_error(EVAL_ERR_DIVIDEBY0));
-
-            did_op = 1;
-            break;
-
-        case TWO_MIXED:
-            break;
-        }
-
-    return(did_op);
-}
-
-/******************************************************************************
-*
-* p_ev_data_res = p_ev_data1-p_ev_data2
-*
-******************************************************************************/
-
-extern S32
-two_nums_minus(
-    _InoutRef_  P_EV_DATA p_ev_data_res,
-    _InoutRef_  P_EV_DATA p_ev_data1,
-    _InoutRef_  P_EV_DATA p_ev_data2)
-{
-    S32 did_op = 0;
-
-    switch(two_nums_type_match(p_ev_data1, p_ev_data2, 0))
-        {
-        case TWO_INTS:
-            ev_data_set_integer(p_ev_data_res, p_ev_data1->arg.integer - p_ev_data2->arg.integer);
-            did_op = 1;
-            break;
-
-        case TWO_REALS:
-            ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp - p_ev_data2->arg.fp);
-            did_op = 1;
-            break;
-
-        case TWO_MIXED:
-            break;
-        }
-
-    return(did_op);
-}
-
-/******************************************************************************
-*
-* p_ev_data_res = p_ev_data1+p_ev_data2
-*
-******************************************************************************/
-
-extern S32
-two_nums_plus(
+_Check_return_
+extern BOOL
+two_nums_add_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2)
@@ -1575,53 +1495,141 @@ two_nums_plus(
     S32 did_op = 0;
 
     switch(two_nums_type_match(p_ev_data1, p_ev_data2, 1))
-        {
-        case TWO_INTS:
-            ev_data_set_integer(p_ev_data_res, p_ev_data1->arg.integer + p_ev_data2->arg.integer);
-            did_op = 1;
-            break;
+    {
+    case TWO_INTS:
+        ev_data_set_integer(p_ev_data_res, p_ev_data1->arg.integer + p_ev_data2->arg.integer);
+        did_op = 1;
+        break;
 
-        case TWO_REALS:
-            ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp + p_ev_data2->arg.fp);
-            did_op = 1;
-            break;
+    case TWO_REALS:
+        ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp + p_ev_data2->arg.fp);
+        did_op = 1;
+        break;
 
-        case TWO_MIXED:
-            break;
-        }
+    default:
+    case TWO_MIXED:
+        break;
+    }
 
     return(did_op);
 }
 
 /******************************************************************************
 *
-* p_ev_data_res = p_ev_data1*p_ev_data2
+* p_ev_data_res = p_ev_data1 / p_ev_data2
 *
 ******************************************************************************/
 
-extern S32
-two_nums_times(
+_Check_return_
+extern BOOL
+two_nums_divide_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2)
 {
-    S32 did_op = 0;
+    BOOL did_op = 0;
+
+    switch(two_nums_type_match(p_ev_data1, p_ev_data2, 0))
+    {
+    case TWO_INTS:
+        if(p_ev_data2->arg.integer != 0)
+        {
+            ldiv_t tmp = ldiv(p_ev_data1->arg.integer, p_ev_data2->arg.integer);
+
+            if(tmp.rem == 0)
+                ev_data_set_integer(p_ev_data_res, (S32) tmp.quot);
+            else
+                ev_data_set_real(p_ev_data_res, (F64) p_ev_data1->arg.integer / p_ev_data2->arg.integer);
+        }
+        else
+            ev_data_set_error(p_ev_data_res, create_error(EVAL_ERR_DIVIDEBY0));
+
+        did_op = 1;
+        break;
+
+    case TWO_REALS:
+        if(p_ev_data2->arg.fp != 0.0)
+            ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp / p_ev_data2->arg.fp);
+        else
+            ev_data_set_error(p_ev_data_res, create_error(EVAL_ERR_DIVIDEBY0));
+
+        did_op = 1;
+        break;
+
+    default:
+    case TWO_MIXED:
+        break;
+    }
+
+    return(did_op);
+}
+
+/******************************************************************************
+*
+* p_ev_data_res = p_ev_data1 * p_ev_data2
+*
+******************************************************************************/
+
+_Check_return_
+extern BOOL
+two_nums_multiply_try(
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InoutRef_  P_EV_DATA p_ev_data1,
+    _InoutRef_  P_EV_DATA p_ev_data2)
+{
+    BOOL did_op = 0;
 
     switch(two_nums_type_match(p_ev_data1, p_ev_data2, 1))
-        {
-        case TWO_INTS:
-            ev_data_set_integer(p_ev_data_res, p_ev_data1->arg.integer * p_ev_data2->arg.integer);
-            did_op = 1;
-            break;
+    {
+    case TWO_INTS:
+        ev_data_set_integer(p_ev_data_res, p_ev_data1->arg.integer * p_ev_data2->arg.integer);
+        did_op = 1;
+        break;
 
-        case TWO_REALS:
-            ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp * p_ev_data2->arg.fp);
-            did_op = 1;
-            break;
+    case TWO_REALS:
+        ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp * p_ev_data2->arg.fp);
+        did_op = 1;
+        break;
 
-        case TWO_MIXED:
-            break;
-        }
+    default:
+    case TWO_MIXED:
+        break;
+    }
+
+    return(did_op);
+}
+
+/******************************************************************************
+*
+* p_ev_data_res = p_ev_data1 - p_ev_data2
+*
+******************************************************************************/
+
+_Check_return_
+extern BOOL
+two_nums_subtract_try(
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InoutRef_  P_EV_DATA p_ev_data1,
+    _InoutRef_  P_EV_DATA p_ev_data2)
+{
+    BOOL did_op = 0;
+
+    switch(two_nums_type_match(p_ev_data1, p_ev_data2, 0))
+    {
+    case TWO_INTS:
+        ev_data_set_integer(p_ev_data_res, p_ev_data1->arg.integer - p_ev_data2->arg.integer);
+        did_op = 1;
+        break;
+
+    case TWO_REALS:
+        ev_data_set_real(p_ev_data_res, p_ev_data1->arg.fp - p_ev_data2->arg.fp);
+        did_op = 1;
+        break;
+
+    default:
+    case TWO_MIXED:
+        break;
+    }
 
     return(did_op);
 }

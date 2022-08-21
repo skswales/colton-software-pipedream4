@@ -9,7 +9,7 @@
 URD=$.pipedream.trunk
 
 #PD=$(URD).pd
-PD=^.^
+PD=^.pd
 
 CMODULES=$(PD).cmodules
 
@@ -18,7 +18,7 @@ CMODULES=$(PD).cmodules
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 CC=cc
-CCflags_BASE=-c -I$(PD) -APCS 3/32bit/fpe3/swst/fp/nofpr -DRISCOS -DNDEBUG -throwback
+CCflags_BASE=-c -I$(PD) -DRISCOS -DNDEBUG -throwback
 CCflags=$(CCflags_BASE) -Otime
 #CCflags=$(CCflags_BASE) -g
 
@@ -28,48 +28,48 @@ Linkflags=-aif -o $@ -map
 
 # Final targets:
 lotus-converters:   \
-    @.!PipeDream.Resource.RISC_OS.u_ltp \
-    @.!PipeDream.Resource.RISC_OS.u_ptl
+    @.123PD.Apps.Utilities.!123PD.u_ltp \
+    @.PD123.Apps.Utilities.!PD123.u_ptl
 
 #
 # C modules static dependencies
 #
-@.o.Modules.123pd_ltp:      $(CMODULES).c.123pd
+@.o.123pd_ltp:      $(CMODULES).c.123pd
         $(CC) -o $@ $(CCflags) -DUTIL_LTP $(CMODULES).c.123pd
-@.o.Modules.pd123_ltp:      $(CMODULES).c.pd123
+@.o.pd123_ltp:      $(CMODULES).c.pd123
         $(CC) -o $@ $(CCflags) -DUTIL_LTP $(CMODULES).c.pd123
 #
-@.o.Modules.123pd_ptl:      $(CMODULES).c.123pd
+@.o.123pd_ptl:      $(CMODULES).c.123pd
         $(CC) -o $@ $(CCflags) -DUTIL_PTL $(CMODULES).c.123pd
-@.o.Modules.pd123_ptl:      $(CMODULES).c.pd123
+@.o.pd123_ptl:      $(CMODULES).c.pd123
         $(CC) -o $@ $(CCflags) -DUTIL_PTL $(CMODULES).c.pd123
 #
 # C modules extra dependencies
 #
-@.o.Modules.123pd_ltp:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
-@.o.Modules.pd123_ltp:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
+@.o.123pd_ltp:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
+@.o.pd123_ltp:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
 #
-@.o.Modules.123pd_ptl:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
-@.o.Modules.pd123_ptl:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
+@.o.123pd_ptl:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
+@.o.pd123_ptl:      $(CMODULES).h.pd123    $(CMODULES).pd123.h
 
-@.!PipeDream.Resource.RISC_OS.u_ltp: \
-    @.o.Modules.123pd_ltp \
-    @.o.Modules.pd123_ltp \
+@.123PD.Apps.Utilities.!123PD.u_ltp: \
+    @.o.123pd_ltp \
+    @.o.pd123_ltp \
     C:o.Stubs
     $(LD) $(Linkflags) -base &8000 \
-    @.o.Modules.123pd_ltp \
-    @.o.Modules.pd123_ltp \
+    @.o.123pd_ltp \
+    @.o.pd123_ltp \
     C:o.Stubs
     Squeeze $@
     Info $@
 
-@.!PipeDream.Resource.RISC_OS.u_ptl: \
-    @.o.Modules.123pd_ptl \
-    @.o.Modules.pd123_ptl \
+@.PD123.Apps.Utilities.!PD123.u_ptl: \
+    @.o.123pd_ptl \
+    @.o.pd123_ptl \
     C:o.Stubs
     $(LD) $(Linkflags) -base &8000 \
-    @.o.Modules.123pd_ptl \
-    @.o.Modules.pd123_ptl \
+    @.o.123pd_ptl \
+    @.o.pd123_ptl \
     C:o.Stubs
     Squeeze $@
     Info $@

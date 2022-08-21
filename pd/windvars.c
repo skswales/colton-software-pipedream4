@@ -749,10 +749,10 @@ convert_docu_thunk_to_document(
     reportf("convert_docu_thunk_to_document(docno=%u)", docno);
 
     if(!docu_is_thunk(p_docu))
-        {
+    {
         assert(docu_is_thunk(p_docu));
         return(TRUE);
-        }
+    }
 
     p_docu->ss_instance_data.ss_doc.is_docu_thunk = FALSE;
 
@@ -763,8 +763,7 @@ convert_docu_thunk_to_document(
     current_p_docu_global_register_assign(p_docu); /* select it as current */
 
     for(;;) /* loop for structure */
-        {
-
+    {
         /* call various people to initialise now */
 
         { /* obtain the desired full document name */
@@ -788,19 +787,19 @@ convert_docu_thunk_to_document(
 
         ok = TRUE;
         break;
-        }
+    }
 
     if(ok)
-        {
+    {
         ++nDocuments;
         res = 1;
-        }
+    }
     else
-        {
+    {
         /* undo our work on this one on failure */
         destroy_current_document();
         res = status_nomem();
-        }
+    }
 
     if(res < 0)
         reperr(res, _unable_to_create_new_document_STR);
@@ -840,11 +839,11 @@ create_new_docu_thunk(
         return(reperr_null(create_error(ERR_TOOMANYDOCS)));
 
     if(NULL == (p_docu = al_ptr_alloc_elem(DOCU, 1, &res)))
-        {
+    {
         trace_0(TRACE_APP_PD4, "Unable to claim space for new document data");
-        }
+    }
     else
-        {
+    {
         if(new_docno >= docu_array_size)
             docu_array_size = new_docno + 1;
 
@@ -857,19 +856,19 @@ create_new_docu_thunk(
         docu_array[new_docno] = p_docu; /* note in array */
 
         ok = name_dup(&p_docu->ss_instance_data.ss_doc.docu_name, p_docu_name);
-        }
+    }
 
     if(ok)
-        {
+    {
         res = 1;
-        }
+    }
     else
-        {
+    {
         /* undo our work on this one on failure */
         destroy_docu_thunk(new_docno);
         new_docno = DOCNO_NONE;
         res = status_nomem();
-        }
+    }
 
     if(res < 0)
         reperr(res, _unable_to_create_new_document_STR);
@@ -905,15 +904,15 @@ create_new_document(
 
     /* does this match any existing document? if so, we must load into a new document (consider documents loaded from different elements on path that we may be trying to sort out) */
     if(DOCNO_NONE != (docno = docno_find_name(p_docu_name, DOCNO_NONE, TRUE)))
-        {
+    {
         reportf("creating a new document to avoid overwriting an existing document");
         new_docno = create_new_docu_thunk(p_docu_name);
-        }
+    }
     else
-        {
+    {
         /* does this match any existing docu thunk? if so, fulfil that */
         if(DOCNO_NONE != (docno = docno_find_name(p_docu_name, DOCNO_NONE, FALSE)))
-            {
+        {
             P_SS_DOC p_ss_doc;
 
             new_docno = (DOCNO) docno;
@@ -925,13 +924,13 @@ create_new_document(
                     report_tstr(p_ss_doc->docu_name.path_name), report_tstr(p_ss_doc->docu_name.leaf_name), report_boolstring(p_ss_doc->docu_name.flags.path_name_supplied));
             name_free(&p_ss_doc->docu_name);
             (void) name_dup(&p_ss_doc->docu_name, p_docu_name);
-            }
+        }
         else
-            {
+        {
             reportf("creating a new document as there are no matching documents or docu thunks");
             new_docno = create_new_docu_thunk(p_docu_name);
-            }
         }
+    }
 
     ok = (DOCNO_NONE != new_docno);
 
@@ -994,7 +993,7 @@ destroy_docu_thunk(
     reportf("destroy_docu_thunk(docno=%u)", docno);
 
     if(NO_DOCUMENT != (p_docu = docu_array[docno]))
-        {
+    {
         assert(docu_is_thunk(p_docu));
         assert(current_p_docu != p_docu);
 
@@ -1003,22 +1002,22 @@ destroy_docu_thunk(
         name_free(&p_docu->ss_instance_data.ss_doc.docu_name);
 
         al_ptr_free(p_docu);
-        }
+    }
 
     if(0 != docu_array_size)
-        {
+    {
         /* do a bit of pruning to keep loops fast */
         while(NO_DOCUMENT == docu_array[docu_array_size - 1])
-            {
+        {
             --docu_array_size;
 
             if(1 == docu_array_size)
-                {
+            {
                 docu_array_size = 0;
                 break;
-                }
             }
         }
+    }
 
     reportf("destroy_docu_thunk(docno=%u): docu_array_size AFTER %u", docno, docu_array_size);
 }
@@ -1047,10 +1046,10 @@ destroy_current_document(void)
 
     /* clear marked block */
     if(blk_docno == docno)
-        {
+    {
         blk_docno = DOCNO_NONE;
         blkstart.col = blkend.col = NO_COL;
-        }
+    }
 
     /* clear search block */
     if(sch_docno == docno)
@@ -1082,16 +1081,16 @@ destroy_current_document(void)
     for(pp = NO_DOCUMENT, cp = document_list;
         NO_DOCUMENT != cp;
         pp = cp, cp = pp->link)
-        {
+    {
         if(cp == current_p_docu)
-            {
+        {
             if(document_list == cp)
                 document_list = cp->link;
             else
                 pp->link = cp->link;
             break;
-            }
         }
+    }
 
     myassert0x(NO_DOCUMENT != cp, "Failed to find current document again for destroy");
 
@@ -1156,7 +1155,7 @@ get_untitled_document(void)
      * any that the user may have foolishly renamed / reloaded
     */
     for(;;)
-        {
+    {
         DOCU_NAME docu_name;
         DOCNO docno;
 
@@ -1172,7 +1171,7 @@ get_untitled_document(void)
         /* Otherwise it is already valid (loaded document or docu thunk), or DOCNO_SEVERAL. */
         /* In any case, loop and try the next one */
         ++UntitledNumber;
-        }
+    }
 
     return(buffer);
 }
@@ -1196,15 +1195,15 @@ find_document_using_leafname(
     trace_1(TRACE_APP_PD4, "find_document_using_leafname(%s)", wholename);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-        {
+    {
         PC_DOCU_NAME test_docu_name = &p_docu->ss_instance_data.ss_doc.docu_name;
 
         if(0 == _stricmp(test_docu_name->leaf_name, leafname))
-            {
+        {
             p_docu_found = p_docu;
             count++;
-            }
         }
+    }
 
     if(count > 1)
         return(DOCNO_SEVERAL);
@@ -1231,10 +1230,10 @@ find_document_using_wholename(
     trace_1(TRACE_APP_PD4, "find_document_using_wholename(%s)", wholename);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-        {
+    {
         if(0 == _stricmp(p_docu->Xcurrentfilename, wholename))
             return(p_docu->docno);
-        }
+    }
 
     return(DOCNO_NONE);
 }
@@ -1294,7 +1293,7 @@ find_document_with_input_focus(void)
     wimp_get_caret_pos(&current);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-        {
+    {
         if((p_docu->Xxf_inexpression_box) && expedit_owns_window(p_docu, current.w))
             break;
 
@@ -1303,7 +1302,7 @@ find_document_with_input_focus(void)
 
         if(p_docu->Xmain_window == current.w)
             break;
-        }
+    }
 
     trace_1(TRACE_APP_PD4, "yields " PTR_XTFMT, report_ptr_cast(p_docu));
     return(p_docu);
@@ -1347,11 +1346,11 @@ mergebuf_all(void)
     P_DOCU p_docu;
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-        {
+    {
         select_document(p_docu);
         res &= mergebuf_nocheck();      /* ensure buffer changes to main data */
         filbuf();
-        }
+    }
 
     (void) select_document_using_docno(old_docno);
 
@@ -1547,23 +1546,23 @@ select_document(
     trace_1(TRACE_APP_PD4, TEXT("selecting document p_docu=") PTR_XTFMT, report_ptr_cast(p_docu_new));
 
     if(NO_DOCUMENT != p_docu_new)
-        {
+    {
         BOOL found = FALSE;
         P_DOCU p_docu;
 
         assert(!docu_is_thunk(p_docu_new));
 
         for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-            {
+        {
             if(p_docu == p_docu_new)
-                {
+            {
                 found = TRUE;
                 break;
-                }
             }
+        }
 
         assert(found);
-        }
+    }
 
     current_p_docu_global_register_assign(p_docu_new);
 }

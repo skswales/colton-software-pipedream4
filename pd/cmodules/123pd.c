@@ -350,22 +350,22 @@ static struct CONSTR
 }
 constab[] =
 {
-	(uchar *) "V",    BIT_EXP,    NULL,
-	(uchar *) "DF",   BIT_DCF,    NULL,
-	(uchar *) "R",    BIT_RYT,    NULL,
-	(uchar *) "C",    BIT_CEN,    NULL,
-	(uchar *) "B",    BIT_BRK,    NULL,
-	(uchar *) "D",    BIT_DCN,    procdcp,
-	(uchar *) "LCR",        0,    NULL,
-	(uchar *) "LC",   BIT_CUR,    NULL,
-	(uchar *) "L",    BIT_LFT,    NULL,
-	(uchar *) "TC",         0,    NULL,
-	(uchar *) "PC",         0,    procpct,
-	(uchar *) "F",          0,    NULL,
-	(uchar *) "H",          0,    NULL,
-	(uchar *) "JL",         0,    NULL,
-	(uchar *) "JR",         0,    NULL,
-	(uchar *) "P",          0,    NULL
+    { (uchar *) "V",    BIT_EXP,    NULL },
+    { (uchar *) "DF",   BIT_DCF,    NULL },
+    { (uchar *) "R",    BIT_RYT,    NULL },
+    { (uchar *) "C",    BIT_CEN,    NULL },
+    { (uchar *) "B",    BIT_BRK,    NULL },
+    { (uchar *) "D",    BIT_DCN,    procdcp },
+    { (uchar *) "LCR",        0,    NULL },
+    { (uchar *) "LC",   BIT_CUR,    NULL },
+    { (uchar *) "L",    BIT_LFT,    NULL },
+    { (uchar *) "TC",         0,    NULL },
+    { (uchar *) "PC",         0,    procpct },
+    { (uchar *) "F",          0,    NULL },
+    { (uchar *) "H",          0,    NULL },
+    { (uchar *) "JL",         0,    NULL },
+    { (uchar *) "JR",         0,    NULL },
+    { (uchar *) "P",          0,    NULL }
 };
 
 /* pd constants */
@@ -438,22 +438,22 @@ main(
 
 	/* argument checking */
 	if(argc < 3)
-		{
+	{
 		fprintf(stderr, "Syntax: %s <infile> <outfile>\n", argv[0]);
 		return(EXIT_FAILURE);
-		}
+	}
 
 	if((pd123__fin = fopen(*++argv, "rb")) == NULL)
-		{
+	{
 		printf("Can't open %s\n", *argv);
 		return(EXIT_FAILURE);
-		}
+	}
 
 	if((pd123__fout = fopen(*++argv, "wb")) == NULL)
-		{
+	{
 		printf("Can't open %s\n", *argv);
 		return(EXIT_FAILURE);
-		}
+	}
 
 	if(fseek(pd123__fin, 0l, SEEK_END))
 		return(PD123_ERR_FILE);
@@ -462,10 +462,10 @@ main(
 		return(PD123_ERR_FILE);
 
 	if((pdf = malloc(pdsize)) == NULL)
-		{
+	{
 		printf("Not enough memory for PD file\n");
 		return(EXIT_FAILURE);
-		}
+	}
 
 	/* read in PD file */
 	fread(pdf, 1, pdsize, pd123__fin);
@@ -481,22 +481,22 @@ main(
 	printf("\n");
 
 	switch(err)
-		{
-		case PD123_ERR_MEM:
-			fprintf(stderr, "Out of memory\n");
-			break;
-		case PD123_ERR_FILE:
-			perror("File error");
-			break;
-		case PD123_ERR_BADFILE:
-			fprintf(stderr, "Bad PipeDream file\n");
-			break;
-		case PD123_ERR_BIGFILE:
-			fprintf(stderr, "Too many rows or columns for Lotus\n");
-			break;
-		default:
-			break;
-		}
+	{
+	case PD123_ERR_MEM:
+		fprintf(stderr, "Out of memory\n");
+		break;
+	case PD123_ERR_FILE:
+		perror("File error");
+		break;
+	case PD123_ERR_BADFILE:
+		fprintf(stderr, "Bad PipeDream file\n");
+		break;
+	case PD123_ERR_BIGFILE:
+		fprintf(stderr, "Too many rows or columns for Lotus\n");
+		break;
+	default:
+		break;
+	}
 
 	fclose(pd123__fout);
 	free(pdf);
@@ -611,11 +611,11 @@ lexpr(void)
 {
 	alterm();
 	while(chknxs() == LF_OR)
-		{
+	{
 		pd123__csym.symno = SYM_BLANK;
 		alterm();
 		ebout(LF_OR);
-		}
+	}
 	return;
 }
 
@@ -630,11 +630,11 @@ alterm(void)
 {
 	blterm();
 	while(chknxs() == LF_AND)
-		{
+	{
 		pd123__csym.symno = SYM_BLANK;
 		blterm();
 		ebout(LF_AND);
-		}
+	}
 	return;
 }
 
@@ -650,25 +650,24 @@ blterm(void)
 	S32 nxsym;
 
 	clterm();
-	do
-		{
+	for(;;)
+    {
 		switch(nxsym = chknxs())
-			{
-			case LF_EQUALS:
-			case LF_NOTEQUAL:
-			case LF_LT:
-			case LF_GT:
-			case LF_LTEQUAL:
-			case LF_GTEQUAL:
-				pd123__csym.symno = SYM_BLANK;
-				break;
-			default:
-				return;
-			}
+		{
+		case LF_EQUALS:
+		case LF_NOTEQUAL:
+		case LF_LT:
+		case LF_GT:
+		case LF_LTEQUAL:
+		case LF_GTEQUAL:
+			pd123__csym.symno = SYM_BLANK;
+			break;
+		default:
+			return;
+		}
 		clterm();
 		ebout((uchar) nxsym);
-		}
-	while(TRUE);
+	}
 }
 
 /******************************************************************************
@@ -683,21 +682,20 @@ clterm(void)
 	S32 nxsym;
 
 	dlterm();
-	do
-		{
+	for(;;)
+	{
 		switch(nxsym = chknxs())
-			{
-			case LF_PLUS:
-			case LF_MINUS:
-				pd123__csym.symno = SYM_BLANK;
-				break;
-			default:
-				return;
-			}
+		{
+		case LF_PLUS:
+		case LF_MINUS:
+			pd123__csym.symno = SYM_BLANK;
+			break;
+		default:
+			return;
+		}
 		dlterm();
 		ebout((uchar) nxsym);
-		}
-	while(TRUE);
+	}
 }
 
 /******************************************************************************
@@ -712,21 +710,20 @@ dlterm(void)
 	S32 nxsym;
 
 	elterm();
-	do
+	for(;;)
+	{
+	switch(nxsym = chknxs())
 		{
-		switch(nxsym = chknxs())
-			{
-			case LF_TIMES:
-			case LF_DIVIDE:
-				pd123__csym.symno = SYM_BLANK;
-				break;
-			default:
-				return;
-			}
+		case LF_TIMES:
+		case LF_DIVIDE:
+			pd123__csym.symno = SYM_BLANK;
+			break;
+		default:
+			return;
+		}
 		elterm();
 		ebout((uchar) nxsym);
-		}
-	while(TRUE);
+	}
 }
 
 /******************************************************************************
@@ -740,11 +737,11 @@ elterm(void)
 {
 	flterm();
 	while(chknxs() == LF_POWER)
-		{
+	{
 		pd123__csym.symno = SYM_BLANK;
 		flterm();
 		ebout(LF_POWER);
-		}
+	}
 	return;
 }
 
@@ -758,26 +755,26 @@ static void
 flterm(void)
 {
 	switch(chknxs())
-		{
-		case LF_PLUS:
-			pd123__csym.symno = SYM_BLANK;
-			flterm();
-			ebout(LF_UPLUS);
-			return;
-		case LF_MINUS:
-			pd123__csym.symno = SYM_BLANK;
-			flterm();
-			ebout(LF_UMINUS);
-			return;
-		case LF_NOT:
-			pd123__csym.symno = SYM_BLANK;
-			flterm();
-			ebout(LF_NOT);
-			return;
-		default:
-			glterm();
-			return;
-		}
+	{
+	case LF_PLUS:
+		pd123__csym.symno = SYM_BLANK;
+		flterm();
+		ebout(LF_UPLUS);
+		return;
+	case LF_MINUS:
+		pd123__csym.symno = SYM_BLANK;
+		flterm();
+		ebout(LF_UMINUS);
+		return;
+	case LF_NOT:
+		pd123__csym.symno = SYM_BLANK;
+		flterm();
+		ebout(LF_NOT);
+		return;
+	default:
+		glterm();
+		return;
+	}
 }
 
 /******************************************************************************
@@ -790,21 +787,21 @@ static void
 glterm(void)
 {
 	if(chknxs() == SYM_OBRACKET)
-		{
+	{
 		pd123__csym.symno = SYM_BLANK;
 		lexpr();
 		if(chknxs() != SYM_CBRACKET)
-			{
+		{
 			pd123__csym.symno = SYM_BAD;
 			return;
-			}
+		}
 		pd123__csym.symno = SYM_BLANK;
 		ebout(LF_BRACKETS);
-		}
+	}
 	else
-		{
+	{
 		lterm();
-		}
+	}
 }
 
 /******************************************************************************
@@ -820,70 +817,70 @@ lterm(void)
 	uchar *c;
 
 	switch(nxsym = chknxs())
+	{
+	case LF_CONST:
+		pd123__csym.symno = SYM_BLANK;
+		ebout(LF_CONST);
+		edout(pd123__csym.fpval);
+		return;
+
+	case LF_SLR:
+		pd123__csym.symno = SYM_BLANK;
+		ebout(LF_SLR);
+		ewout(makeabr(pd123__csym.stcol, ecol));
+		ewout(makeabr(pd123__csym.strow, erow));
+		return;
+
+	case LF_INTEGER:
+		pd123__csym.symno = SYM_BLANK;
+		ebout(LF_INTEGER);
+		ewout((S16) pd123__csym.fpval);
+		return;
+
+	case LF_STRING:
+		pd123__csym.symno = SYM_BLANK;
+		ebout(LF_STRING);
+		c = pd123__csym.stringp;
+		while(*c)
+			ebout((uchar) pd123__ichlotus((S32) *c++));
+		ebout('\0');
+		return;
+
+	case SYM_FUNC:
+		pd123__csym.symno = SYM_BLANK;
+		switch(pd123__opreqv[pd123__csym.ixf].n_args)
 		{
-		case LF_CONST:
-			pd123__csym.symno = SYM_BLANK;
-			ebout(LF_CONST);
-			edout(pd123__csym.fpval);
+		/* zero argument functions */
+		case 0:
+			ebout(pd123__opreqv[pd123__csym.ixf].fno);
 			return;
 
-		case LF_SLR:
-			pd123__csym.symno = SYM_BLANK;
-			ebout(LF_SLR);
-			ewout(makeabr(pd123__csym.stcol, ecol));
-			ewout(makeabr(pd123__csym.strow, erow));
+		/* variable argument functions */
+		case -1:
+			{
+			S32 narg, fno;
+			oprp funp = &pd123__opreqv[pd123__csym.ixf];
+
+			fno = funp->fno;
+			narg = procfunc(funp);
+			ebout((uchar) fno);
+			ebout((uchar) narg);
 			return;
+			}
 
-		case LF_INTEGER:
-			pd123__csym.symno = SYM_BLANK;
-			ebout(LF_INTEGER);
-			ewout((S16) pd123__csym.fpval);
+		/* fixed argument functions */
+		default:
+			{
+			S32 fno;
+			oprp funp = &pd123__opreqv[pd123__csym.ixf];
+
+			fno = funp->fno;
+			procfunc(funp);
+			ebout((uchar) fno);
 			return;
-
-		case LF_STRING:
-			pd123__csym.symno = SYM_BLANK;
-			ebout(LF_STRING);
-			c = pd123__csym.stringp;
-			while(*c)
-				ebout((uchar) pd123__ichlotus((S32) *c++));
-			ebout('\0');
-			return;
-
-		case SYM_FUNC:
-			pd123__csym.symno = SYM_BLANK;
-			switch(pd123__opreqv[pd123__csym.ixf].n_args)
-				{
-				/* zero argument functions */
-				case 0:
-					ebout(pd123__opreqv[pd123__csym.ixf].fno);
-					return;
-
-				/* variable argument functions */
-				case -1:
-					{
-					S32 narg, fno;
-					oprp funp = &pd123__opreqv[pd123__csym.ixf];
-
-					fno = funp->fno;
-					narg = procfunc(funp);
-					ebout((uchar) fno);
-					ebout((uchar) narg);
-					return;
-					}
-
-				/* fixed argument functions */
-				default:
-					{
-					S32 fno;
-					oprp funp = &pd123__opreqv[pd123__csym.ixf];
-
-					fno = funp->fno;
-					procfunc(funp);
-					ebout((uchar) fno);
-					return;
-					}
-				}
+			}
 		}
+	}
 }
 
 /******************************************************************************
@@ -903,13 +900,13 @@ procfunc(
 		amodp = argmod[funp->argix - 1];
 
 	if(chknxs() != SYM_OBRACKET)
-		{
+	{
 		pd123__csym.symno = SYM_BAD;
 		return(0);
-		}
+	}
 
 	do
-		{
+	{
 		/* call argument modifier */
 		if(amodp)
 			(*amodp)(&narg, 0);
@@ -918,14 +915,14 @@ procfunc(
 		if(amodp)
 			(*amodp)(&narg, 1);
 		++narg;
-		}
+	}
 	while(chknxs() == SYM_COMMA);
 
 	if(chknxs() != SYM_CBRACKET)
-		{
+	{
 		pd123__csym.symno = SYM_BAD;
 		return(narg);
-		}
+	}
 
 	if((funp->n_args >= 0) && (funp->n_args != (uchar) narg))
 		return(pd123__csym.symno = SYM_BAD);
@@ -967,33 +964,33 @@ moindex(
     S32 prepost)
 {
 	switch(*narg)
+	{
+	case 0:
+		if(!prepost)
 		{
-		case 0:
-			if(!prepost)
-				{
-				++(*narg);
-				ebout(LF_RANGE);
-				ewout(makeabr(0, ecol));
-				ewout(makeabr(0, erow));
-				ewout(makeabr(LOTUS_MAXCOL - 1, ecol));
-				ewout(makeabr(LOTUS_MAXROW - 1, erow));
-				}
-			break;
-
-		case 1:
-		case 2:
-			if(prepost)
-				{
-				/* add minus 1 to argument */
-				ebout(LF_INTEGER);
-				euwout(1);
-				ebout(LF_MINUS);
-				}
-			break;
-
-		default:
-			break;
+			++(*narg);
+			ebout(LF_RANGE);
+			ewout(makeabr(0, ecol));
+			ewout(makeabr(0, erow));
+			ewout(makeabr(LOTUS_MAXCOL - 1, ecol));
+			ewout(makeabr(LOTUS_MAXROW - 1, erow));
 		}
+		break;
+
+	case 1:
+	case 2:
+		if(prepost)
+		{
+			/* add minus 1 to argument */
+			ebout(LF_INTEGER);
+			euwout(1);
+			ebout(LF_MINUS);
+		}
+		break;
+
+	default:
+		break;
+	}
 }
 
 /******************************************************************************
@@ -1006,7 +1003,7 @@ static void
 element(void)
 {
 	if(chknxs() == LF_RANGE)
-		{
+	{
 		pd123__csym.symno = SYM_BLANK;
 		ebout(LF_RANGE);
 		ewout(makeabr(pd123__csym.stcol, ecol));
@@ -1014,7 +1011,7 @@ element(void)
 		ewout(makeabr(pd123__csym.encol, ecol));
 		ewout(makeabr(pd123__csym.enrow, erow));
 		return;
-		}
+	}
 
 	lexpr();
 }
@@ -1038,70 +1035,70 @@ dolotus(void)
 		return(PD123_ERR_BIGFILE);
 
 	for(i = 0; i < elemof32(lfstruct); ++i)
-		{
+	{
 		curlfi = &lfstruct[i];
 
 		if(curlfi->writefunc)
-			{
+		{
 			/* call special function for this instruction */
 			if((err = (*curlfi->writefunc)()) != 0)
 				return(err);
-			}
+		}
 		else
-			{
+		{
 			/* use table to write out default data */
 			if((err = writeins(curlfi)) != 0)
 				return(err);
 			if(curlfi->length)
-				{
+			{
 				S32 len = (S32) curlfi->length;
 				S32 dlen = (S32) curlfi->dlen;
 				uchar *dp = curlfi->sdata;
 
 				/* check for a pattern to be output */
 				if(curlfi->pattern == NOPT)
-					{
+				{
 					/* output data */
 					while(dlen--)
-						{
+					{
 						if((err = pd123__foutc((S32) *dp++, pd123__fout)) != 0)
 							return(err);
 						--len;
-						}
 					}
+				}
 				else
-					{
+				{
 					S32 tlen = curlfi->pattern;
 
 					/* output leading nulls before pattern */
 					while(tlen--)
-						{
+					{
 						if((err = pd123__foutc(0, pd123__fout)) != 0)
 							return(err);
 						--len;
-						}
+					}
 
 					/* output as many patterns as possible */
 					while(dlen <= len)
-						{
+					{
 						tlen = dlen;
 						while(tlen--)
-							{
+						{
 							if((err = pd123__foutc((S32) *dp++, pd123__fout)) != 0)
 								return(err);
 							--len;
-							}
-						dp = curlfi->sdata;
 						}
+						dp = curlfi->sdata;
 					}
+				}
 
 				/* pad with trailing nulls */
 				while(len--)
 					if((err = pd123__foutc(0, pd123__fout)) != 0)
 						return(err);
-				}
 			}
 		}
+	}
 	return(0);
 }
 
@@ -1132,10 +1129,10 @@ edout(
 
 	/* this for the ARM <-> 8087 */
 	union EDOUT_U
-		{
+	{
 		F64 fpval;
 		uchar fpbytes[sizeof(F64)];
-		} fp;
+	} fp;
 	U32 i;
 
 	fp.fpval = fpval;
@@ -1167,10 +1164,10 @@ euwout(
 
 	/* this for the ARM */
 	union EUWOUT_U
-		{
+	{
 		U16 uword;
 		uchar uwbytes[sizeof(U16)];
-		} uw;
+	} uw;
 
 	uw.uword = wrd;
 	*expop++ = uw.uwbytes[0];
@@ -1197,10 +1194,10 @@ ewout(
 
 	/* this for the ARM */
 	union EWOUT_U
-		{
+	{
 		S16 word;
 		uchar wbytes[sizeof(S16)];
-		} w;
+	} w;
 
 	w.word = wrd;
 	*expop++ = w.wbytes[0];
@@ -1228,13 +1225,13 @@ findcolumns(void)
 
 	pd123__maxcol = 0;
 	for(i = 0; i < LOTUS_MAXCOL; ++i)
-		{
+	{
 		colcur[i] = NULL;
 		colwid[i] = 0;
-		}
+	}
 
 	while((fp = searchcon(fp, pdend, (uchar *) "CO:")) != 0)
-		{
+	{
 		S32 col, cw, ww, cr1, cr2;
 		uchar huge *tp = fp, huge *fpend = fp - 4;
 		uchar tstr[12];
@@ -1247,7 +1244,7 @@ findcolumns(void)
 
 		i = sscanf((char *) tstr + cr1, ",%d,%d%n", &cw, &ww, &cr2);
 		if((i == 2) && (*(fp + cr1 + cr2) == '%'))
-			{
+		{
 			fp += cr1 + cr2 + 1;
 			pd123__maxcol = col + 1;
 			colcur[col] = fp;
@@ -1255,8 +1252,8 @@ findcolumns(void)
 			if(lastcol != -1)
 				colend[lastcol] = fpend;
 			lastcol = col;
-			}
 		}
+	}
 
 	if(lastcol != -1)
 		colend[lastcol] = pdend;
@@ -1294,28 +1291,28 @@ nxtsym(void)
 
 	/* special date scanning */
 	switch(pd123__csym.scandate--)
-		{
-		case 7:
-			return(pd123__csym.symno = SYM_OBRACKET);
-		case 6:
-			pd123__csym.fpval = (F64) pd123__csym.yr;
-			return(pd123__csym.symno = LF_INTEGER);
-		case 5:
-			return(pd123__csym.symno = SYM_COMMA);
-		case 4:
-			pd123__csym.fpval = (F64) pd123__csym.mon;
-			return(pd123__csym.symno = LF_INTEGER);
-		case 3:
-			return(pd123__csym.symno = SYM_COMMA);
-		case 2:
-			pd123__csym.fpval = (F64) pd123__csym.day;
-			return(pd123__csym.symno = LF_INTEGER);
-		case 1:
-			return(pd123__csym.symno = SYM_CBRACKET);
+	{
+	case 7:
+		return(pd123__csym.symno = SYM_OBRACKET);
+	case 6:
+		pd123__csym.fpval = (F64) pd123__csym.yr;
+		return(pd123__csym.symno = LF_INTEGER);
+	case 5:
+		return(pd123__csym.symno = SYM_COMMA);
+	case 4:
+		pd123__csym.fpval = (F64) pd123__csym.mon;
+		return(pd123__csym.symno = LF_INTEGER);
+	case 3:
+		return(pd123__csym.symno = SYM_COMMA);
+	case 2:
+		pd123__csym.fpval = (F64) pd123__csym.day;
+		return(pd123__csym.symno = LF_INTEGER);
+	case 1:
+		return(pd123__csym.symno = SYM_CBRACKET);
 
-		default:
-			break;
-		}
+	default:
+		break;
+	}
 
 	/* check for end of expression */
 	if(!cc)
@@ -1323,57 +1320,57 @@ nxtsym(void)
 
 	/* check for constant */
 	if(isdigit(cc) || (cc == '.'))
-		{
+	{
 		if((ts = reccon(exppos, &pd123__csym.fpval, &pd123__csym.day,
 											 &pd123__csym.mon,
 											 &pd123__csym.yr, &cr)) != 0)
-			{
+		{
 			exppos += cr;
 			switch(ts)
-				{
-				case PD_DATE:
-					pd123__csym.scandate = 7;
-					pd123__flookup((uchar *) "datef");
-					pd123__csym.symno = SYM_FUNC;
-					break;
-				case PD_INTEGER:
-					pd123__csym.symno = LF_INTEGER;
-					break;
-				case PD_REAL:
-					pd123__csym.symno = LF_CONST;
-					break;
-				}
-			return(pd123__csym.symno);
+			{
+			case PD_DATE:
+				pd123__csym.scandate = 7;
+				pd123__flookup((uchar *) "datef");
+				pd123__csym.symno = SYM_FUNC;
+				break;
+			case PD_INTEGER:
+				pd123__csym.symno = LF_INTEGER;
+				break;
+			case PD_REAL:
+				pd123__csym.symno = LF_CONST;
+				break;
 			}
+			return(pd123__csym.symno);
 		}
+	}
 
 	/* check for cell reference/range */
 	if(isalpha(cc) || (cc == '$'))
-		{
+	{
 		if((cr = pd123__scnslr(exppos, &pd123__csym.stcol, &pd123__csym.strow)) != 0)
-			{
+		{
 			exppos += cr;
 			/* check for another SLR to make range */
 			if((cr = pd123__scnslr(exppos, &pd123__csym.encol, &pd123__csym.enrow)) != 0)
-				{
+			{
 				exppos += cr;
 				return(pd123__csym.symno = LF_RANGE);
-				}
+			}
 
 			return(pd123__csym.symno = LF_SLR);
-			}
 		}
+	}
 
 	/* check for function */
 	if(isalpha(cc))
-		{
+	{
 		fs = fstr;
 		do
-			{
+		{
 			*fs++ = tolower(cc);
 			++co;
 			cc = *(++exppos);
-			}
+		}
 		while((isalpha(cc) || isdigit(cc)) && (co < 24));
 
 		*fs = '\0';
@@ -1381,11 +1378,11 @@ nxtsym(void)
 		if(pd123__csym.symno != SYM_BAD)
 			return(pd123__csym.symno = SYM_FUNC);
 		return(SYM_BAD);
-		}
+	}
 
 	/* check for string */
 	if((cc == '"') || (cc == '\''))
-		{
+	{
 		fs = exppos + 1;
 		while(*fs && (*fs != cc))
 			++fs;
@@ -1395,23 +1392,23 @@ nxtsym(void)
 		pd123__csym.stringp = exppos + 1;
 		exppos = fs + 1;
 		return(pd123__csym.symno = LF_STRING);
-		}
+	}
 
 	/* check for special operators */
 	switch(cc)
-		{
-		case '(':
-			++exppos;
-			return(pd123__csym.symno = SYM_OBRACKET);
-		case ')':
-			++exppos;
-			return(pd123__csym.symno = SYM_CBRACKET);
-		case ',':
-			++exppos;
-			return(pd123__csym.symno = SYM_COMMA);
-		default:
-			break;
-		}
+	{
+	case '(':
+		++exppos;
+		return(pd123__csym.symno = SYM_OBRACKET);
+	case ')':
+		++exppos;
+		return(pd123__csym.symno = SYM_CBRACKET);
+	case ',':
+		++exppos;
+		return(pd123__csym.symno = SYM_COMMA);
+	default:
+		break;
+	}
 
 	/* check for operator */
 	exppos += pd123__olookup(exppos);
@@ -1469,28 +1466,28 @@ searchcon(
 	uchar *tp, huge *ip;
 
 	if(endp > startp)
-		{
+	{
 		do
-			{
+		{
 			if(*startp++ == '%')
-				{
+			{
 				tlen = conlen;
 				tp = conid;
 				ip = startp;
 				do
-					{
+				{
 					if(toupper(*ip) != toupper(*tp))
 						break;
 					++ip;
 					++tp;
-					}
+				}
 				while(--tlen);
 				if(!tlen)
 					return(ip);
-				}
 			}
-		while(startp < endp);
 		}
+		while(startp < endp);
+	}
 
 	return(NULL);
 }
@@ -1511,7 +1508,7 @@ searchopt(
 	uchar *tp, huge *ip;
 
 	while((curp = searchcon(curp, endp, (uchar *) "OP")) != 0)
-		{
+	{
 		if(*curp++ != '%')
 			continue;
 
@@ -1519,19 +1516,19 @@ searchopt(
 		tp = optid;
 		ip = curp;
 		do
-			{
+		{
 			if(toupper(*ip) != toupper(*tp))
 				break;
 			++ip;
 			++tp;
-			}
+		}
 		while(--tlen);
 
 		if(!tlen)
 			return(ip);
 
 		oldp = curp;
-		}
+	}
 
 	/* set pointer to last option */
 	optend = oldp;
@@ -1564,25 +1561,25 @@ reccon(
 
 	/* check for date without brackets */
 	if((res = sscanf((char *) slot, "%d.%d.%d%n", day, mon, yr, cs)) == 3)
-		{
+	{
 		#if WINDOWS
 		/* check for sscanf bug */
 		if(!(*(slot + *cs - 1)))
 			--(*cs);
 		#endif
 		return(PD_DATE);
-		}
+	}
 
 	/* check for date with brackets */
 	if((res = sscanf((char *) slot, "(%d.%d.%d)%n", day, mon, yr, cs)) == 3)
-		{
+	{
 		/* check for sscanf bug */
 		#if WINDOWS
 		if(!(*(slot + *cs - 1)))
 			--(*cs);
 		#endif
 		return(PD_DATE);
-		}
+	}
 
 	/* a fuddle cos sscanf doesn't get ".5", needs "0.5" */
 	tp = tstr;
@@ -1590,7 +1587,7 @@ reccon(
 		*tp++ = '0';
 	strncpy((char *) tp, (char *) slot, 25);
 	if((res = sscanf((char *) tstr, "%lf%n", fpval, cs)) > 0)
-		{
+	{
 		/* account for inserted zero */
 		if(tp != tstr)
 			--(*cs);
@@ -1606,7 +1603,7 @@ reccon(
 			return(PD_INTEGER);
 		else
 			return(PD_REAL);
-		}
+	}
 
 	/* ensure that cs is zero - some sscanfs
 	don't set it to zero if the scan nowt */
@@ -1650,10 +1647,10 @@ pd123__scnslr(
 	S32 tc, tr;
 
 	if(*c == '$')
-		{
+	{
 		++c;
 		absc = 0x8000;
-		}
+	}
 
 	if((cr = lotus_stox(c, &tc)) == 0)
 		return(0);
@@ -1661,10 +1658,10 @@ pd123__scnslr(
 
 	c += cr;
 	if(*c == '$')
-		{
+	{
 		++c;
 		absr = 0x8000;
-		}
+	}
 
 	if(!isdigit(*c))
 		return(0);
@@ -1704,18 +1701,18 @@ lotus_stox(
 	i = toupper(*string) - 'A';
 	++string;
 	if((i >= 0) && (i <= 25))
-		{
+	{
 		tcol = i;
 		cr = 1;
 		i = toupper(*string) - 'A';
 		++string;
 		if((i >= 0) && (i <= 25))
-			{
+		{
 			tcol = (tcol + 1) * 26 + i;
 			cr = 2;
-			}
-		*col = tcol;
 		}
+		*col = tcol;
+	}
 
 	return(cr);
 }
@@ -1758,21 +1755,21 @@ wrlcalcord(void)
 
 	optp = searchopt((uchar *) "RC");
 	if(optp)
-		{
+	{
 		switch(toupper(*optp))
-			{
-			case 'C':
-				ofmt = 1;
-				break;
-			case 'R':
-				ofmt = 0xFF;
-				break;
-			default:
-			case 'N':
-				ofmt = 0;
-				break;
-			}
+		{
+		case 'C':
+			ofmt = 1;
+			break;
+		case 'R':
+			ofmt = 0xFF;
+			break;
+		default:
+		case 'N':
+			ofmt = 0;
+			break;
 		}
+	}
 	else
 		ofmt = pd123__searchdefo((uchar *) "RC");
 
@@ -1796,43 +1793,43 @@ wrcols(void)
 	uchar slot[256], cc, *op;
 
 	do
-		{
+	{
 		didacol = 0;
 		for(col = 0; col < pd123__maxcol; ++col)
-			{
+		{
 			if(((c = colcur[col]) != 0) && (c < colend[col]))
-				{
+			{
 				constr = NULL;
 				op = slot;
 				slotbits = dcp = 0;
 				while(cc = *c++, (cc != LF) && (cc != CR))
-					{
+				{
 					if(cc == '%')
-						{
+					{
 						/* look up a construct */
 						if(constr && (op - constr < 25))
-							{
+						{
 							conp pcons = NULL;
 
 							for(i = 0; i < elemof32(constab); ++i)
-								{
+							{
 								uchar *c1 = constr + 1;
 								uchar *c2 = constab[i].conid;
 
 								while(isalpha(*c1) && (toupper(*c1) == *c2))
-									{
+								{
 									++c1;
 									++c2;
 									if(!*c2)
-										{
+									{
 										pcons = &constab[i];
 										break;
-										}
 									}
+								}
 
 								*op = '\0';
 								if(pcons)
-									{
+								{
 									if(pcons->proccons)
 										op = (*pcons->proccons)(constr,
 																c1,
@@ -1841,24 +1838,24 @@ wrcols(void)
 										op = constr;
 									slotbits |= pcons->mask;
 									break;
-									}
 								}
+							}
 
 							if(!pcons)
 								*op++ = cc;
 							constr = NULL;
-							}
+						}
 						else
-							{
+						{
 							constr = op;
 							*op++ = cc;
-							}
-						}
-					else
-						{
-						*op++ = cc;
 						}
 					}
+					else
+					{
+						*op++ = cc;
+					}
+				}
 
 				*op++ = '\0';
 				if((cc == LF) && (*c == CR))
@@ -1874,8 +1871,8 @@ wrcols(void)
 					if((err = writeslot(slot, col, row, slotbits, dcp)) != 0)
 						return(err);
 				didacol = 1;
-				}
 			}
+		}
 		++row;
 
 		/* check for the file getting too big */
@@ -1886,7 +1883,7 @@ wrcols(void)
 			if((*counter)( ((colcur[0] - pdf) * (S32) 100) /
 						   ((colend[0] - pdf) + (S32) 1) ))
 				break;
-		}
+	}
 	while(didacol);
 	return(0);
 }
@@ -1903,7 +1900,7 @@ wrcolws(void)
 	S32 err, i, cwid;
 
 	for(i = 0; i < pd123__maxcol; ++i)
-		{
+	{
 		cwid = colwid[i];
 
 		/* weed out hidden cols and default widths */
@@ -1916,7 +1913,7 @@ wrcolws(void)
 			return(err);
 		if((err = pd123__foutc((uchar) cwid, pd123__fout)) != 0)
 			return(err);
-		}
+	}
 	return(0);
 }
 
@@ -2003,38 +2000,38 @@ wrlheadfoot(
 	len = curlfi->length;
 	optp = searchopt(optid);
 	if(optp)
-		{
+	{
 		delim = *optp++;
 
 		while((*optp != CR) && (*optp != LF) && (optp < pdend) && len)
-			{
+		{
 			co = *optp++;
 			if(co == delim)
-				{
+			{
 				co = '|';
-				}
+			}
 			else if(co == '@')
-				{
+			{
 				tstr[0] = co;
 				tstr[1] = *optp;
 				tstr[2] = *(optp + 1);
 
 				if(0 == u_strnicmp(tstr, "@D@", 3))
-					{
+				{
 					co = '@';
 					optp += 2;
-					}
+				}
 				else if(0 == u_strnicmp(tstr, "@P@", 3))
-					{
+				{
 					co = '#';
 					optp += 2;
-					}
 				}
+			}
 
 			if((err = pd123__foutc((len--, pd123__ichlotus(co)), pd123__fout)) != 0)
 				return(err);
-			}
 		}
+	}
 
 	while(len--)
 		if((err = pd123__foutc(0, pd123__fout)) != 0)
@@ -2092,10 +2089,10 @@ lts_writedouble(
 {
 	S32 err, i;
 	union LTS_WRITEDOUBLE_U
-		{
+	{
 		F64 fpval;
 		char fpbytes[sizeof(F64)];
-		} fp;
+	} fp;
 
 	fp.fpval = fpval;
 
@@ -2250,12 +2247,12 @@ writelformat(
 
 	/* ensure sensible value in dcp */
 	if(!(mask & BIT_DCN))
-		{
+	{
 		if(decplc == -1)
 			dcp = 2;
 		else
 			dcp = decplc;
-		}
+	}
 
 	/* priority: GENERAL>BRACKETS>DEC.PLACES */
 	/* check for decimal places */
@@ -2264,12 +2261,12 @@ writelformat(
 
 	/* check for brackets needed */
 	if(mask & BIT_BRK)
-		{
+	{
 		if(mask & BIT_CUR)
 			ofmt = L_CURCY | dcp;
 		else
 			ofmt = L_COMMA | dcp;
-		}
+	}
 
 	/* check for general format */
 	if(mask & BIT_DCF)
@@ -2297,12 +2294,12 @@ writeslot(
 	uchar *ep;
 
 	if(!(mask & BIT_EXP))
-		{
+	{
 		if((err = writelabel(slot, col, row, mask)) != 0)
 			return(err);
-		}
+	}
 	else
-		{
+	{
 		F64 fpval;
 
 		/* try to interpret the cell as an integer/float/date */
@@ -2314,52 +2311,52 @@ writeslot(
 			res = 0;
 
 		switch(res)
+		{
+		case PD_REAL:
+			/* output floating value */
+			if((err = writesslot(L_NUMBER, 13, col, row, mask, dcp)) != 0)
+				return(err);
+
+			return(lts_writedouble(fpval));
+			break;
+
+		case PD_INTEGER:
+			/* output integer */
+			if((err = writesslot(L_INTEGER, 7, col, row, mask, dcp)) != 0)
+				return(err);
+
+			return(lts_writeword((S16) fpval));
+			break;
+
+		case PD_DATE:
+			return(writeldate(day, mon, yr, col, row));
+			break;
+
+		default:
+			/* must be expression */
+			if((len = compileexp(slot, col, row)) != 0)
 			{
-			case PD_REAL:
-				/* output floating value */
-				if((err = writesslot(L_NUMBER, 13, col, row, mask, dcp)) != 0)
+				if((err = writesslot(L_FORMULA, len + 15, col, row, mask, dcp)) != 0)
 					return(err);
 
-				return(lts_writedouble(fpval));
-				break;
-
-			case PD_INTEGER:
-				/* output integer */
-				if((err = writesslot(L_INTEGER, 7, col, row, mask, dcp)) != 0)
+				if((err = lts_writedouble(0.)) != 0)
 					return(err);
-
-				return(lts_writeword((S16) fpval));
-				break;
-
-			case PD_DATE:
-				return(writeldate(day, mon, yr, col, row));
-				break;
-
-			default:
-				/* must be expression */
-				if((len = compileexp(slot, col, row)) != 0)
-					{
-					if((err = writesslot(L_FORMULA, len + 15, col, row, mask, dcp)) != 0)
+				ep = expbuf;
+				lts_writeuword(len);
+				while(len--)
+					if((err = pd123__foutc(*ep++, pd123__fout)) != 0)
 						return(err);
-
-					if((err = lts_writedouble(0.)) != 0)
-						return(err);
-					ep = expbuf;
-					lts_writeuword(len);
-					while(len--)
-						if((err = pd123__foutc(*ep++, pd123__fout)) != 0)
-							return(err);
-					}
-				else
-					{
-					/* write out bad expression as a label */
-					if((err = writelabel(slot, col, row, mask)) != 0)
-						return(err);
-					++pd123__errexp;
-					}
-				break;
 			}
+			else
+			{
+				/* write out bad expression as a label */
+				if((err = writelabel(slot, col, row, mask)) != 0)
+					return(err);
+				++pd123__errexp;
+			}
+			break;
 		}
+	}
 
 	return(0);
 }
@@ -2402,10 +2399,10 @@ lts_writeuword(
 {
 	S32 err;
 	union LTS_WRITEUWORD_U
-		{
+	{
 		U16 uword;
 		uchar uwbytes[sizeof(U16)];
-		} uw;
+	} uw;
 
 	uw.uword = aword;
 	if((err = pd123__foutc(uw.uwbytes[0], pd123__fout)) == 0)
@@ -2425,10 +2422,10 @@ lts_writeword(
 {
 	S32 err;
 	union LTS_WRITEWORD_U
-		{
+	{
 		S16 word;
 		char wbytes[sizeof(S16)];
-		} w;
+	} w;
 
 	w.word = aword;
 	if((err = pd123__foutc(w.wbytes[0], pd123__fout)) == 0)
@@ -2453,12 +2450,12 @@ wrlmar(
 
 	optp = searchopt(optid);
 	if(optp)
-		{
+	{
 		for(i = 0; i < 5; ++i)
 			tstr[i] = *optp++;
 		if(sscanf((char *) tstr, "%d", &curv) < 1)
 			optp = NULL;
-		}
+	}
 
 	if(!optp)
 		curv = pd123__searchdefo(optid);
@@ -2516,14 +2513,14 @@ wrwindow1(void)
 	/* work out format byte */
 	optp = searchopt((uchar *) "DP");
 	if(optp)
-		{
+	{
 		if(toupper(*optp) == 'F')
-			{
+		{
 			ofmt = L_SPECL | L_GENFMT;
 			decplc = -1;
-			}
+		}
 		else
-			{
+		{
 			uchar huge *tp = optp;
 			uchar tstr[12];
 
@@ -2535,12 +2532,12 @@ wrwindow1(void)
 			optp = searchopt((uchar *) "MB");
 			if(optp && (toupper(*optp) == 'B'))
 				ofmt = decplc | L_COMMA;
-			}
 		}
+	}
 	else
-		{
+	{
 		ofmt = pd123__searchdefo((uchar *) "DP");
-		}
+	}
 
 	/* write out format byte */
 	if((err = pd123__foutc(ofmt, pd123__fout)) != 0)
@@ -2556,17 +2553,17 @@ wrwindow1(void)
 	widleft = 76;
 	for(i = ncols = 0; i < pd123__maxcol; ++i)
 		if(!colwid[i])
-			{
+		{
 			pd123__hidvec[(i >> 3)] |= (1 << (i & 7));
-			}
+		}
 		else
-			{
+		{
 			if(widleft > 0)
-				{
+			{
 				++ncols;
 				widleft -= colwid[i];
-				}
 			}
+		}
 
 	/* write out number of cols on screen */
 	if((err = lts_writeuword(ncols)) != 0)
@@ -2610,7 +2607,7 @@ u_strnicmp(
     int c1, c2;
 
     while(n-- > 0)
-        {
+    {
         c1 = *a++;
         c1 = tolower(c1);
         c2 = *b++;
@@ -2621,7 +2618,7 @@ u_strnicmp(
 
         if(c1 == 0)
             return(0);          /* no need to check c2 */
-        }
+    }
 
     return(0);
 }

@@ -69,21 +69,21 @@ change_doc_mac_nam(
     P_EV_NAME p_ev_name;
 
     while((p_ev_custom = custom_def.ptr) != NULL)
-        {
+    {
         EV_NAMEID i;
 
         for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
-            {
+        {
             if(p_ev_custom->flags & TRF_TOBEDEL)
                 continue;
 
             if( (p_ev_custom->owner.docno == docno_from) &&
                 (p_ev_custom->flags & TRF_UNDEFINED) )
-                {
+            {
                 EV_NAMEID new_num = find_custom_in_list(docno_to, p_ev_custom->id);
 
                 if(new_num >= 0)
-                    {
+                {
                     P_EV_CUSTOM t_p_ev_custom = custom_ptr_must(new_num);
 
                     custom_change_id(t_p_ev_custom->key, p_ev_custom->key);
@@ -97,30 +97,30 @@ change_doc_mac_nam(
                             p_ev_custom->key, t_p_ev_custom->key);
                     /* re-loop size the world has moved under our feet */
                     break;
-                    }
                 }
             }
+        }
 
         if(i >= custom_def.next)
             break;
-        }
+    }
 
     while((p_ev_name = names_def.ptr) != NULL)
-        {
+    {
         EV_NAMEID i;
 
         for(i = 0; i < names_def.next; ++i, ++p_ev_name)
-            {
+        {
             if(p_ev_name->flags & TRF_TOBEDEL)
                 continue;
 
             if( (p_ev_name->owner.docno == docno_from) &&
                 (p_ev_name->flags & TRF_UNDEFINED) )
-                {
+            {
                 EV_NAMEID new_num = find_name_in_list(docno_to, p_ev_name->id);
 
                 if(new_num >= 0)
-                    {
+                {
                     P_EV_NAME t_p_ev_name = name_ptr_must(new_num);
 
                     name_change_id(t_p_ev_name->key, p_ev_name->key);
@@ -134,13 +134,13 @@ change_doc_mac_nam(
                             p_ev_name->key, t_p_ev_name->key);
                     /* re-loop size the world has moved under our feet */
                     break;
-                    }
                 }
             }
+        }
 
         if(i >= names_def.next)
             break;
-        }
+    }
 }
 
 /******************************************************************************
@@ -318,11 +318,11 @@ ev_name_make(
 
     res = 0;
     if(undefine)
-        {
+    {
         EV_NAMEID name_num = find_name_in_list(doc_from, name_text);
 
         if(name_num >= 0)
-            {
+        {
             P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
             ev_todo_add_name_dependents(p_ev_name->key);
@@ -330,26 +330,26 @@ ev_name_make(
             ss_data_free_resources(&p_ev_name->def_data);
 
             p_ev_name->flags |= TRF_UNDEFINED;
-            }
+        }
         else
             res = create_error(EVAL_ERR_NAMEUNDEF);
-        }
+    }
     else
-        {
+    {
         EV_DATA data;
 
         if((res = ss_recog_constant(&data, doc_from, name_def_text, p_optblock, 1)) > 0)
-            {
+        {
             EV_NAMEID name_key;
 
             res = name_make(&name_key, doc_from, name_text, &data);
 
             /* name_make has copied away resources */
             ss_data_free_resources(&data);
-            }
+        }
         else if(!res)
             res = create_error(EVAL_ERR_NA);
-        }
+    }
 
     return(res);
 }
@@ -377,7 +377,7 @@ find_custom_in_list(
         return(-1);
 
     for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
-        {
+    {
         if(p_ev_custom->flags & TRF_TOBEDEL)
             continue;
 
@@ -386,7 +386,7 @@ find_custom_in_list(
 
         if(0 == _stricmp(p_ev_custom->id, custom_name))
             return(i);
-       }
+    }
 
     return(-1);
 }
@@ -414,7 +414,7 @@ find_name_in_list(
         return(-1);
 
     for(i = 0; i < names_def.next; ++i, ++p_ev_name)
-        {
+    {
         if(p_ev_name->flags & TRF_TOBEDEL)
             continue;
 
@@ -423,7 +423,7 @@ find_name_in_list(
 
         if(0 == _stricmp(p_ev_name->id, name))
             return(i);
-        }
+    }
 
     return(-1);
 }
@@ -446,12 +446,12 @@ custom_change_id(
         return;
 
     for(i = 0; i < custom_use_deptable.next; ++i, ++mep)
-        {
+    {
         if(mep->flags & TRF_TOBEDEL)
             continue;
 
         if(mep->custom_to == id_from)
-            {
+        {
             P_EV_CELL p_ev_cell;
 
             if(ev_travel(&p_ev_cell, &mep->byslr) > 0)
@@ -459,8 +459,8 @@ custom_change_id(
 
             mep->custom_to = id_to;
             custom_use_deptable.sorted = 0;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -512,15 +512,15 @@ custom_list_sort(void)
      * custom use has rendered the definition record useless
      */
     if((custom_def.flags & TRF_CHECKUSE) && !(custom_def.flags & TRF_DELHOLD))
-        {
+    {
         P_EV_CUSTOM p_ev_custom;
 
         if((p_ev_custom = custom_def.ptr) != NULL)
-            {
+        {
             EV_NAMEID i;
 
             for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
-                {
+            {
                 if(p_ev_custom->flags & TRF_TOBEDEL)
                     continue;
 
@@ -529,7 +529,7 @@ custom_list_sort(void)
                     continue;
 
                 if(search_for_custom_use(p_ev_custom->key) < 0)
-                    {
+                {
                     P_SS_DOC p_ss_doc;
 
                     if(NULL != (p_ss_doc = ev_p_ss_doc_from_docno(p_ev_custom->owner.docno)))
@@ -542,12 +542,12 @@ custom_list_sort(void)
                     trace_1(TRACE_MODULE_EVAL,
                             "custom_list_sort deleting custom: %s",
                             p_ev_custom->id);
-                    }
                 }
             }
+        }
 
         custom_def.flags &= ~TRF_CHECKUSE;
-        }
+    }
 
     tree_sort(&custom_def,
               sizeof(EV_CUSTOM),
@@ -585,21 +585,21 @@ nam_ref_count_update(
     S32 update)
 {
     switch(p_ev_name->def_data.did_num)
-        {
-        case RPN_DAT_SLR:
-            ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.slr.docno)->nam_ref_count += update;
-            trace_2(TRACE_MODULE_EVAL,
-                    "nam_ref_count_update doc: %d, ref now: %d",
-                    p_ev_name->def_data.arg.slr.docno, ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.slr.docno)->nam_ref_count);
-            break;
+    {
+    case RPN_DAT_SLR:
+        ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.slr.docno)->nam_ref_count += update;
+        trace_2(TRACE_MODULE_EVAL,
+                "nam_ref_count_update doc: %d, ref now: %d",
+                p_ev_name->def_data.arg.slr.docno, ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.slr.docno)->nam_ref_count);
+        break;
 
-        case RPN_DAT_RANGE:
-            ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.range.s.docno)->nam_ref_count += update;
-            trace_2(TRACE_MODULE_EVAL,
-                    "nam_ref_count_update doc: %d, ref now: %d",
-                    p_ev_name->def_data.arg.range.s.docno, ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.range.s.docno)->nam_ref_count);
-            break;
-        }
+    case RPN_DAT_RANGE:
+        ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.range.s.docno)->nam_ref_count += update;
+        trace_2(TRACE_MODULE_EVAL,
+                "nam_ref_count_update doc: %d, ref now: %d",
+                p_ev_name->def_data.arg.range.s.docno, ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.range.s.docno)->nam_ref_count);
+        break;
+    }
 }
 
 /******************************************************************************
@@ -620,12 +620,12 @@ name_change_id(
         return;
 
     for(i = 0; i < namtab.next; ++i, ++nep)
-        {
+    {
         if(nep->flags & TRF_TOBEDEL)
             continue;
 
         if(nep->nameto == id_from)
-            {
+        {
             P_EV_CELL p_ev_cell;
 
             if(ev_travel(&p_ev_cell, &nep->byslr) > 0)
@@ -633,8 +633,8 @@ name_change_id(
 
             nep->nameto = id_to;
             namtab.sorted = 0;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -703,15 +703,15 @@ name_list_sort(void)
      * name use has rendered the definition record useless
      */
     if((names_def.flags & TRF_CHECKUSE) && !(names_def.flags & TRF_DELHOLD))
-        {
+    {
         P_EV_NAME p_ev_name;
 
         if((p_ev_name = names_def.ptr) != NULL)
-            {
+        {
             EV_NAMEID i;
 
             for(i = 0; i < names_def.next; ++i, ++p_ev_name)
-                {
+            {
                 if(p_ev_name->flags & TRF_TOBEDEL)
                     continue;
 
@@ -720,7 +720,7 @@ name_list_sort(void)
                     continue;
 
                 if(search_for_name_use(p_ev_name->key) < 0)
-                    {
+                {
                     P_SS_DOC p_ss_doc;
 
                     name_free_resources(p_ev_name);
@@ -733,12 +733,12 @@ name_list_sort(void)
                     names_def.mindel = MIN(names_def.mindel, i);
 
                     trace_1(TRACE_MODULE_EVAL, "name_list_sort deleting name: %s", p_ev_name->id);
-                    }
                 }
             }
+        }
 
         names_def.flags &= ~TRF_CHECKUSE;
-        }
+    }
 
     tree_sort(&names_def,
               sizeof(EV_NAME),
@@ -779,11 +779,11 @@ name_make(
     S32 res = 0;
 
     if(ident_validate(name) >= 0)
-        {
+    {
         EV_NAMEID name_num = ensure_name_in_list(docno, name);
 
         if(name_num >= 0)
-            {
+        {
             P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
             /* free any resources owned by the name at the moment */
@@ -799,10 +799,10 @@ name_make(
             nam_ref_count_update(p_ev_name, 1);
 
             *nameidp = p_ev_name->key;
-            }
+        }
         else
             res = status_nomem();
-        }
+    }
     else
         res = create_error(EVAL_ERR_BADIDENT);
 

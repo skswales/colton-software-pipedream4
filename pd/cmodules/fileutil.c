@@ -80,12 +80,12 @@ file_combined_path(
     file_get_cwd(destpath, elemof_buffer, currentfilename);
 
     if(search_path && *search_path)
-        {
+    {
         if(*destpath)
             xstrkat(destpath, elemof_buffer, FILE_PATH_SEP_STR);
 
         xstrkat(destpath, elemof_buffer, search_path);
-        }
+    }
 
     return(*destpath ? destpath : NULL);
 }
@@ -135,11 +135,11 @@ file_find_close(
     p = *pp;
 
     if(p)
-        {
+    {
         file_path_element_close(&p->pathenum);
 
         al_ptr_dispose(P_P_ANY_PEDANTIC(pp));
-        }
+    }
 }
 
 /******************************************************************************
@@ -180,10 +180,10 @@ file_find_first_subdir(
         return(NULL);
 
     if(!file_path_element_first(&p->pathenum, path))
-        {
+    {
         al_ptr_dispose(P_P_ANY_PEDANTIC(pp));
         return(NULL);
-        }
+    }
 
     /* initialise object enumeration structure */
 
@@ -240,23 +240,23 @@ file_find_next(
 
     /* loop finding objects */
     for(;;)
-        {
+    {
         if(p->state == 3)
-            {
+        {
             /* keep looking in current dir */
 
             #if RISCOS
             if(p->dirindex < 0)
-                {
+            {
                 /* already exhausted current dir, restart with new path element */
                 p->state = 0;
                 continue;
-                }
+            }
 
             dirname = file__make_usable_dir(p->pathenum->res, array, elemof32(array));
 
             if(*p->subdir) /* not empty? */
-                {
+            {
                 if(dirname == p->pathenum->res)
                 {
                     xstrkpy(array, elemof32(array), dirname);
@@ -266,7 +266,7 @@ file_find_next(
                 xstrkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
                 xstrkat(dirname, elemof32(array), p->subdir);
                 /* dirname IS valid, cos we checked it when p->state was 2 */
-                }
+            }
 
             gbpbblk.dataptr  = &p->objinfo.fileinfo;            /* r2 Result buffer               */
             gbpbblk.nbytes   = 1;                               /* r3 One object                  */
@@ -275,11 +275,11 @@ file_find_next(
             gbpbblk.wild_fld = p->pattern;                      /* r6 Wildcarded name to match    */
 
             if(_kernel_ERROR == _kernel_osgbpb(OSGBPB_ReadDirEntriesInfo /*10*/, (unsigned) dirname, &gbpbblk))
-                {
+            {
                 /* error, restart with new path element */
                 p->state = 0;
                 continue;
-                }
+            }
 
             p->dirindex = gbpbblk.fileptr;
 
@@ -291,11 +291,11 @@ file_find_next(
             usError = _dos_findnext(&p->objinfo.fileinfo);
 
             if(usError)
-                {
+            {
                 /* no more found, restart with new path element */
                 p->state = 0;
                 continue;
-                }
+            }
 
             /* enumeration functions can return silly '.' and '..' */
             if(p->objinfo.fileinfo.name[0] == '.')
@@ -305,15 +305,15 @@ file_find_next(
             #endif /* WINDOWS */
 
             return(&p->objinfo);
-            }
+        }
 
         if(p->state == 2)
-            {
+        {
             /* got a good dir, start search */
             dirname = file__make_usable_dir(p->pathenum->res, array, elemof32(array));
 
             if(*p->subdir) /* not empty? */
-                {
+            {
                 if(dirname == p->pathenum->res)
                 {
                     xstrkpy(array, elemof32(array), dirname);
@@ -324,12 +324,12 @@ file_find_next(
                 xstrkat(dirname, elemof32(array), p->subdir);
 
                 if(!file_is_dir(dirname))
-                    {
+                {
                     /* subdir invalid, get new path element */
                     p->state = 0;
                     continue;
-                    }
                 }
+            }
 
             #if RISCOS
             /* start hunting for files in this directory */
@@ -344,35 +344,35 @@ file_find_next(
             driveNumber = file__DosDriveNumber(dirname);
 
             if(driveNumber != -1)
-                {
+            {
                 usError = _chdrive(driveNumber);
 
                 dirname += 2;
-                }
+            }
 
             if(!usError)
-                {
+            {
                 AnsiToOem(dirname, dirname);
                 usError = chdir(dirname);
-                }
+            }
 
             if(usError)
-                {
+            {
                 /* nothing found, restart with new path element */
                 p->state = 0;
                 continue;
-                }
+            }
 
             usError = _dos_findfirst(p->pattern,
                                      _A_NORMAL | _A_RDONLY | _A_SUBDIR,
                                      &p->objinfo.fileinfo);
 
             if(usError)
-                {
+            {
                 /* nothing found, restart with new path element */
                 p->state = 0;
                 continue;
-                }
+            }
 
             p->state = 3;
 
@@ -387,11 +387,11 @@ file_find_next(
             #else
             #error file_find_next not implemented on this system
             #endif /* OS */
-            }
+        }
 
         /* path element requires validation? */
         if(p->state == 1)
-            {
+        {
             if(file_is_dir(p->pathenum->res))
                 /* valid dir found, restart search */
                 p->state = 2;
@@ -400,11 +400,11 @@ file_find_next(
                 p->state = 0;
 
             continue;
-            }
+        }
 
         /* require new path element? */
         if(p->state == 0)
-            {
+        {
             if(file_path_element_next(&p->pathenum))
                 /* possible dir found, requires validation */
                 p->state = 1;
@@ -413,11 +413,11 @@ file_find_next(
                 break;
 
             continue;
-            }
+        }
 
         myassert0x(p->state == 0, "bad object enumeration state");
         break;
-        }
+    }
 
     file_find_close(pp);
 
@@ -547,18 +547,18 @@ file_find_on_path(
     reportf("file_find_on_path(%u:%s)", strlen32(srcfilename), srcfilename);
 
     if(file_is_rooted(srcfilename))
-        {
+    {
         /* ALWAYS copy in! */
         strcpy(filename, srcfilename);
         return(file_readable(filename));
-        }
+    }
 
     res = 0;
 
     for(pathelem = file_path_element_first(&path, file_get_path());
         pathelem != NULL;
         pathelem = file_path_element_next(&path))
-        {
+    {
         xstrkpy(filename, elemof_buffer, pathelem);
         xstrkat(filename, elemof_buffer, srcfilename);
 
@@ -572,7 +572,7 @@ file_find_on_path(
             break;
 
         res = 0; /* otherwise suppress the error (may be caused by malformed path element) and loop */
-        }
+    }
 
     trace_2(TRACE_MODULE_FILE,
             "file_find_on_path() yields filename \"%s\" & %s",
@@ -598,11 +598,11 @@ file_find_on_path_or_relative(
     reportf("file_find_on_path_or_relative(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, strlen32(currentfilename), currentfilename);
 
     if(file_is_rooted(srcfilename))
-        {
+    {
         /* ALWAYS copy in! */
         strcpy(filename, srcfilename);
         return(file_readable(filename));
-        }
+    }
 
     file_combined_path(rawpath, elemof32(rawpath), currentfilename);
 
@@ -611,7 +611,7 @@ file_find_on_path_or_relative(
     for(pathelem = file_path_element_first(&path, rawpath);
         pathelem != NULL;
         pathelem = file_path_element_next(&path))
-        {
+    {
         xstrkpy(filename, elemof_buffer, pathelem);
         xstrkat(filename, elemof_buffer, srcfilename);
 
@@ -625,7 +625,7 @@ file_find_on_path_or_relative(
             break;
 
         res = 0; /* otherwise suppress the error (may be caused by malformed path element) and loop */
-        }
+    }
 
     trace_2(TRACE_MODULE_FILE,
             "file_find_on_path() yields filename \"%s\" & %s",
@@ -660,11 +660,11 @@ file_find_dir_on_path(
     reportf("file_find_dir_on_path(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, currentfilename ? strlen32(currentfilename) : 0, currentfilename ? currentfilename : "<NULL>");
 
     if(file_is_rooted(srcfilename))
-        {
+    {
         /* ALWAYS copy in! */
         strcpy(filename, srcfilename);
         return(file_is_dir(filename));
-        }
+    }
 
     file_combined_path(rawpath, elemof32(rawpath), currentfilename);
 
@@ -673,18 +673,18 @@ file_find_dir_on_path(
     res = 0;
 
     while(pathelem)
-        {
+    {
         if(file_is_dir(pathelem))
-            {
+        {
             xstrkpy(filename, elemof_buffer, pathelem);
             xstrkat(filename, elemof_buffer, srcfilename);
 
             if((res = file_is_dir(filename)) != 0)
                 break;
-            }
+        }
 
         pathelem = file_path_element_next(&path);
-        }
+    }
 
     trace_2(TRACE_MODULE_FILE,
             "file_find_dir_on_path() yields dirname \"%s\" & %s",
@@ -710,12 +710,12 @@ file_get_cwd(
     *destpath = NULLCH;
 
     if((namep = currentfilename) != NULL)
-        {
+    {
         PC_U8 leafp = file_leafname(namep);
         S32 nchars = leafp - namep;
         if(nchars)
             xstrnkpy(destpath, elemof_buffer, namep, nchars);
-        }
+    }
 
     res = *destpath ? destpath : NULL;
 
@@ -765,15 +765,15 @@ file_get_prefix(
     *destpath = NULLCH;
 
     while(pathelem)
-        {
+    {
         if(file_is_dir(pathelem))
-            {
+        {
             xstrkpy(destpath, elemof_buffer, pathelem);
             break;
-            }
+        }
 
         pathelem = file_path_element_next(&path);
-        }
+    }
 
     trace_1(TRACE_MODULE_FILE, "file_get_prefix yields %s", destpath);
     return(*destpath ? destpath : NULL);
@@ -914,7 +914,7 @@ file_leafname(
      * or a root delimiter
     */
     while(leaf > filename)
-        {
+    {
         U8 ch = *--leaf;
 
         if( (ch == FILE_ROOT_CH)
@@ -923,11 +923,11 @@ file_leafname(
          || (ch == FILE_DIR_SEP_CH2)
             #endif
             )
-            {
+        {
             ++leaf;
             break;
-            }
         }
+    }
 
     return((P_U8) leaf);
 }
@@ -987,15 +987,15 @@ file_path_element_first(
     /* strip trailing spaces */
     ptr = path + strlen(path);
     while(ptr > path)
-        {
+    {
         U8 ch = *--ptr;
 
         if(ch != ' ')
-            {
+        {
             ++ptr;
             break;
-            }
         }
+    }
 
     /* initialise path enumeration structure */
     p->ptr = p->path;
@@ -1034,29 +1034,29 @@ file_path_element_next(
     res = p->ptr;
 
     if(p->pushed)
-        {
+    {
         /* last operation pushed a char to make way for a dir sep and NULLCH */
         *res = p->pushed;
         p->pushed = NULLCH;
-        }
+    }
 
     ch = *res;
 
     /* allow for quoted path elements - specifically for RISC OS or OS/2 */
     if(ch == '\"')
-        {
+    {
         inquotes = 1;
         ch = *++res;
-        }
+    }
     else
         inquotes = 0;
 
     /* path ended? */
     if(!ch)
-        {
+    {
         file_path_element_close(pp);
         return(NULL);
-        }
+    }
 
     /* loop till we find a path separator or eos */
     ptr = res;
@@ -1064,11 +1064,11 @@ file_path_element_next(
 
     do  {
         if(ch == '\"')
-            {
+        {
             /* end the returned part of the string */
             *ptr = NULLCH;
             ch = *ptr;
-            }
+        }
 
         if(ch == FILE_PATH_SEP_CH)
             if(!inquotes)
@@ -1076,7 +1076,7 @@ file_path_element_next(
 
         lastch = ch;
         ch = *++ptr;
-        }
+    }
     while(ch);
 
     /* ensure path correctly terminated */
@@ -1087,7 +1087,7 @@ file_path_element_next(
      && (lastch != FILE_DIR_SEP_CH2)
         #endif
         )
-        {
+    {
         /* overwrite path sep or last NULLCH */
         lastch = *ptr;
         *ptr++ = FILE_DIR_SEP_CH;
@@ -1099,12 +1099,12 @@ file_path_element_next(
         else
             /* that was the last path element, leave the pointer on this NULLCH */
             ;
-        }
+    }
     else if(ch)
-        {
+    {
         /* kill the path sep, start on next element next time */
         *ptr++ = NULLCH;
-        }
+    }
     /* otherwise got a correctly terminated end element */
 
     p->ptr = ptr;
@@ -1179,14 +1179,14 @@ file_wild(
 
     do  {
         if((ch == FILE_WILD_MULTIPLE)  ||  (ch == FILE_WILD_SINGLE))
-            {
+        {
             trace_2(TRACE_MODULE_FILE,
                     "file_wild(%s) returns %s", filename, ptr);
             return((P_U8) ptr);
-            }
+        }
 
         ch = *++ptr;
-        }
+    }
     while(ch);
 
     trace_1(TRACE_MODULE_FILE, "file_wild(%s) returns NULL", filename);
@@ -1223,26 +1223,27 @@ file__make_usable_dir(
         #ifdef FILE_DIR_SEP_CH2
     ||  (ch == FILE_DIR_SEP_CH2)
         #endif
-      ) {
-        #if WINDOWS
+      )
+    {
+    #if WINDOWS
         /* must allow \ or c:\ */
         if(ptr != dirname)
             if((ptr != dirname + 2) || (file__DosDriveNumber(dirname) == -1))
-        #endif
-                {
+    #endif
+            {
                 /* need to strip off that carefully placed dir sep */
                 xstrnkpy(buffer, elemof_buffer, dirname, ptr - dirname); /* no -1 ... */
                 dirname = buffer;
-                }
-        }
+            }
+    }
     #if RISCOS && 0 /* no - this simply does not work */
     else if(ch == FILE_ROOT_CH)
-        {
+    {
         /* need to add csd symbol on end */
         xstrkpy(buffer, elemof_buffer, dirname);
         xstrkat(buffer, elemof_buffer, "@");
         dirname = buffer;
-        }
+    }
     #endif
 
     return((P_U8) dirname);

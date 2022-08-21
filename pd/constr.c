@@ -64,13 +64,13 @@ insertrow(
 
     for(tcol = scol; tcol < ecol; tcol++)
         if(!insertslotat(tcol, trow))
-            {
+        {
             /* remove those we'd added */
             while(--tcol >= scol)
                 killslot(tcol, trow);
 
             return(FALSE);
-            }
+        }
 
     mark_to_end(currowoffset);
     out_rebuildvert = TRUE;
@@ -124,16 +124,16 @@ InsertPageBreak_fn(void)
     xf_flush = TRUE;
 
     while(dialog_box(D_INSPAGE))
-        {
+    {
         tcell = insertrow(0, numcol)
                     ? createslot(0, currow, 1, SL_PAGE)
                     : NULL;
 
         if(!tcell)
-            {
+        {
             reperr_null(status_nomem());
             break;
-            }
+        }
 
         tcell->content.page.condval = (S32) d_inspage[0].option;
 
@@ -142,7 +142,7 @@ InsertPageBreak_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -157,12 +157,12 @@ extern BOOL
 check_not_blank_sheet(void)
 {
     if(!numrow)
-        {
+    {
         if(!createslot((COL) 0, (ROW) 0, 1, SL_TEXT))
             return(FALSE);
 
         filealtered(FALSE);
-        }
+    }
 
     return(TRUE);
 }
@@ -244,7 +244,7 @@ constr_initialise_once(void)
 
     /* load Choices file iff present */
     if(file_find_on_path(buffer, elemof32(buffer), CHOICES_FILE_STR))
-        {
+    {
         zero_struct(load_file_options);
         load_file_options.document_name = buffer;
         load_file_options.filetype_option = PD4_CHAR;
@@ -253,14 +253,14 @@ constr_initialise_once(void)
 
         /* save away default options if loaded ok, then kill it */
         if(ok)
-            {
+        {
             savecoltab();
 
             save_options_to_list();
 
             destroy_current_document();
-            }
         }
+    }
 
     /* load driver */
     load_driver(&d_driver[D_DRIVER_NAME].textfield, FALSE);
@@ -302,14 +302,14 @@ extern BOOL
 dftcol(void)
 {
     if(!numcol)
-        {
+    {
         if(!createcol(5))
             return(FALSE);
 
         dstwrp(0, 72);
 
         filealtered(FALSE);
-        }
+    }
 
     return(TRUE /*check_not_blank_sheet()*/);
 }
@@ -324,12 +324,12 @@ extern void
 NewWindow_fn(void)
 {
     if(create_new_untitled_document())
-        {
+    {
         /* bring to front immediately if in execfile, else sometime later */
         riscos_frontmainwindow(in_execfile);
         /* draw_screen(); --- no need to do explicitly here */
         xf_acquirecaret = TRUE;
-        }
+    }
 }
 
 /******************************************************************************
@@ -421,7 +421,7 @@ PROC_QSORT_PROTO(static, rowcomp, SORT_ENTRY)
         /* if equal at this column, loop */
         if(res)
             break;
-        }
+    }
     while(++col < fields);
 
     if(res)
@@ -473,32 +473,32 @@ SortBlock_fn(void)
 
     /* check two markers set in this document & more than one row in block */
     if(!MARKER_DEFINED())
-        {
+    {
         reperr_null((blkstart.col != NO_COL)
                             ? create_error(ERR_NOBLOCKINDOC)
                             : create_error(ERR_NOBLOCK));
         return;
-        }
+    }
 
     if(blkend.row == blkstart.row)
-        {
+    {
         reperr_null(create_error(ERR_NOBLOCK));
         return;
-        }
+    }
 
     /* first, get the user's requirements */
 
     /* if this column is in the block, give it to the dialog box */
     if((curcol >= blkstart.col)  &&  (curcol <= blkend.col))
-        {
+    {
         (void) write_col(array, elemof32(array), curcol);
 
         if(!mystr_set(&d_sort[SORT_FIELD_COLUMN].textfield, array))
             return;
-        }
+    }
 
     while(dialog_box(D_SORT))
-        {
+    {
         /* read the fields in - note that variable fields ends up as number read */
         fields = 0;
 
@@ -508,14 +508,14 @@ SortBlock_fn(void)
             if(sort_fields[fields].column == NO_COL)
                 break;
             sort_fields[fields].reverse = (d_sort[fields * 2 + SORT_FIELD_ASCENDING].option == 'N');
-            }
+        }
         while(++fields < SORT_FIELD_DEPTH);
 
         if(!fields)
-            {
+        {
             reperr_null(create_error(ERR_BAD_COL));
             continue;
-            }
+        }
 
         /* wait till all is recalced */
         ev_recalc_all();
@@ -542,21 +542,21 @@ SortBlock_fn(void)
 
         /* allocate array to be sorted */
         if(NULL == al_array_alloc(&sortblkh, SORT_ENTRY, nrecs, &sortblk_init_block, &status))
-            {
+        {
             dialog_box_end();
             reperr_null(status);
             goto endpoint;
-            }
+        }
 
         trace_1(TRACE_MODULE_UREF, "allocated sort block, %d entries", nrecs);
 
         /* allocate row table */
         if(NULL == al_array_alloc(&sortrowblkh, ROW, ((S32) blkend.row - blkstart.row + 1), &sortrowblk_init_block, &status))
-            {
+        {
             dialog_box_end();
             reperr_null(status);
             goto endpoint;
-            }
+        }
 
         trace_1(TRACE_MODULE_UREF, "allocated sort row block, %d entries", ((S32) blkend.row - blkstart.row + 1));
 
@@ -570,7 +570,7 @@ SortBlock_fn(void)
 
         /* load array with records */
         for(i = blkstart.row, sortp = sortblkp; i <= blkend.row; ++i, ++sortp)
-            {
+        {
             trace_2(TRACE_APP_PD4, "SortBlock: adding " PTR_XTFMT ", row %d", report_ptr_cast(sortp), i);
             sortp->keyrow = i;
 
@@ -579,19 +579,19 @@ SortBlock_fn(void)
                     break;
 
             sortp->rowsinrec = (i--) - sortp->keyrow;
-            }
+        }
 
         trace_2(TRACE_MODULE_UREF, "SortBlock: sorting array " PTR_XTFMT", %d elements", report_ptr_cast(sortblkp), nrecs);
 
         if(setjmp(sortpoint))
-            { /* NB current_p_docu global register furtling IS required as return here via longjmp() *may* have corrupted the register */
+        { /* NB current_p_docu global register furtling IS required as return here via longjmp() *may* have corrupted the register */
             current_p_docu_global_register_restore_from_backup();
             goto endpoint;
-            }
+        }
         else
-            { /* sort the array */
+        { /* sort the array */
             qsort(sortblkp, nrecs, sizeof32(SORT_ENTRY), rowcomp);
-            }
+        }
 
         /* build table of rows to be sorted */
         sortrowblkp = array_base(&sortrowblkh, ROW);
@@ -616,7 +616,7 @@ SortBlock_fn(void)
         nrows = rowtp - sortrowblkp;
 
         for(n = 0; n < nrows; ++n)
-            {
+        {
             if(ctrlflag)
                 goto endpoint;
 
@@ -626,17 +626,17 @@ SortBlock_fn(void)
              * falling over in the middle of a row - it will be happy, but the user probably won't!
             */
             if(status_fail(alloc_ensure_froth(0x1000)))
-                {
+            {
                 dialog_box_end();
                 reperr_null(status_nomem());
                 goto endpoint;
-                }
+            }
 
             /* must re-load row block pointer each time, ahem */
             rowtp = array_ptr(&sortrowblkh, ROW, n);
             row = n + blkstart.row;
             if(*rowtp != row)
-                {
+            {
                 /* do physical swap */
                 if(!swap_rows(row,
                               *rowtp,
@@ -648,13 +648,13 @@ SortBlock_fn(void)
                               TRUE /* always update refs */
 #endif
                             ))
-                    {
+                {
                     reperr_null(status_nomem());
                     goto endpoint;
-                    }
+                }
                 else
                     /* update list of unsorted rows */
-                    {
+                {
                     ROW nn;
                     P_ROW nrowtp;
 
@@ -664,16 +664,16 @@ SortBlock_fn(void)
                     for(nn = n + 1, nrowtp = rowtp + 1;
                         nn < nrows;
                         ++nn, ++nrowtp)
-                        {
+                    {
                         if(*nrowtp == row)
-                            {
+                        {
                             *nrowtp = *rowtp;
                             break;
-                            }
                         }
                     }
                 }
             }
+        }
 
     endpoint:
 
@@ -696,7 +696,7 @@ SortBlock_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -715,12 +715,12 @@ dependent_files_warning(void)
                                            docno_array);
 
     for(i = 0, p_docno = docno_array; i < n_docs; ++i, ++p_docno)
-        {
+    {
         if(*p_docno == cur_docno)
             continue;
 
         ++nDepDocs;
-        }
+    }
 
     nDepDocs += pdchart_dependent_documents(cur_docno);
 
@@ -747,10 +747,10 @@ close_window(void)
         p_docu_next = first_document();
 
     if(hadcaret  &&  (NO_DOCUMENT != p_docu_next))
-        {
+    {
         select_document(p_docu_next);
         /* xf_frontmainwindow = xf_acquirecaret = TRUE; */ /* SKS 31aug2012 - avoid setting focus in other window; avoid unpinning documents */
-        }
+    }
 }
 
 /******************************************************************************

@@ -104,18 +104,18 @@ add_prefix_to_name_using_dir(
     reportf("add_prefix_to_name_using_dir(%u:%s, dir=%s, allow_cwd=%s)", strlen32(name), name, dir, report_boolstring(allow_cwd));
 
     if(!file_is_rooted(name))
-        {
+    {
         /* see if we can invent a file in an existing directory */
         (void) file_add_prefix_to_name(buffer, elemof_buffer, dir, allow_cwd ? currentfilename : NULL);
 
         if(file_is_dir(buffer) > 0)
-            {
+        {
             /* dir of that name exists, so add file */
             xstrkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
             xstrkat(buffer, elemof_buffer, name);
             return(buffer);
-            }
         }
+    }
 
     return(file_add_prefix_to_name(buffer, elemof_buffer, name, allow_cwd ? currentfilename : NULL));
 }
@@ -132,22 +132,22 @@ add_choices_write_prefix_to_name_using_dir(
     reportf("add_choices_write_prefix_to_name_using_dir(%u:%s, dir=%u:%s)", strlen32(name), name, dir ? strlen32(dir) : 0, dir ? dir : "<NULL>");
 
     if(file_is_rooted(name))
-        {
+    {
         xstrkpy(buffer, elemof_buffer, name);
         return(buffer);
-        }
+    }
 
     xstrkpy(buffer, elemof_buffer, "<Choices$Write>" FILE_DIR_SEP_STR "PipeDream");
 
     (void) file_create_directory(buffer);
 
     if(NULL != dir)
-        {
+    {
         xstrkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
         xstrkat(buffer, elemof_buffer, dir);
 
         (void) file_create_directory(buffer);
-        }
+    }
 
     xstrkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
     xstrkat(buffer, elemof_buffer, name);
@@ -160,7 +160,7 @@ checkoverwrite(
     const char *name)
 {
     if(file_readable(name) > 0)
-        {
+    {
         (void) init_dialog_box(D_OVERWRITE);
 
         if(!dialog_box_start()  ||  !dialog_box(D_OVERWRITE))
@@ -169,7 +169,7 @@ checkoverwrite(
         dialog_box_end();
 
         return(d_overwrite[0].option != 'N');
-        }
+    }
 
     return(TRUE);
 }
@@ -196,14 +196,14 @@ pd_file_open(
     res = file_open(name, mode, &file);
 
     if(res < 0)
-        {
+    {
         char * err = file_get_error();
 
         if(err)
             rep_fserr(err);
         else
             reperr(res, name);
-        }
+    }
 
     trace_1(TRACE_APP_PD4, "returns " PTR_XTFMT, report_ptr_cast(file));
 
@@ -225,11 +225,11 @@ pd_file_close(
     res = file_close(xput);
 
     if(res < 0)
-        {
+    {
         char * err = file_get_error();
         rep_fserr(err ? err : reperr_getstr(res));
         return(EOF);
-        }
+    }
 
     return(0);
 }
@@ -281,10 +281,10 @@ pd_file_putc(
     int res;
 
     if(file_putc_fast_ready(output))
-        {
+    {
         res = file_putc_fast(ch, output);
         return(res);
-        }
+    }
 
     res = file_putc(ch, output);
 
@@ -372,28 +372,28 @@ away_eol(
     U8 ch;
 
     switch(d_save[SAV_LINESEP].option)
-        {
-        case LINE_SEP_LFCR:
-            if(!go_away_byte(LF, output))
-                return(FALSE);
+    {
+    case LINE_SEP_LFCR:
+        if(!go_away_byte(LF, output))
+            return(FALSE);
 
-            /* drop thru */
+        /* drop thru */
 
-        case LINE_SEP_CR:
-            ch = CR;
-            break;
+    case LINE_SEP_CR:
+        ch = CR;
+        break;
 
-        case LINE_SEP_CRLF:
-            if(!go_away_byte(CR, output))
-                return(FALSE);
+    case LINE_SEP_CRLF:
+        if(!go_away_byte(CR, output))
+            return(FALSE);
 
-            /* drop thru */
+        /* drop thru */
 
-    /*  case LINE_SEP_LF:   */
-        default:
-            ch = LF;
-            break;
-        }
+/*  case LINE_SEP_LF:   */
+    default:
+        ch = LF;
+        break;
+    }
 
     return(go_away_byte(ch, output));
 }

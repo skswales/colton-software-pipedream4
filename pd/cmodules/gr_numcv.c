@@ -44,7 +44,7 @@ gr_font_stringwidth(
     S32 res;
 
     if(f)
-        {
+    {
         fs.s     = (char *) str;
         fs.x     = INT_MAX;
         fs.y     = INT_MAX;
@@ -53,11 +53,11 @@ gr_font_stringwidth(
 
         if((NULL == font_setfont(f)) &&
            (NULL == font_strwidth(&fs)) )
-            {
+        {
             res = fs.x;
             return(res);
-            }
         }
+    }
 
     res = strlen(str) * SYSCHARWIDTH_MP;
 
@@ -81,16 +81,16 @@ gr_font_truncate(
     os_error * e;
 
     if(!f)
-        {
+    {
         S32 nchars       = strlen(str);
         S32 nchars_limit = *width_mpp / SYSCHARWIDTH_MP; /* rounding down */
         fs.term = MIN(nchars, nchars_limit);
         fs.x    = SYSCHARWIDTH_MP * fs.term;
 
         e = NULL;
-        }
+    }
     else if(NULL == (e = font_SetFont(f)))
-        {
+    {
         fs.s     = str;
         fs.x     = *width_mpp;
         fs.y     = INT_MAX;
@@ -98,19 +98,19 @@ gr_font_truncate(
         fs.term  = INT_MAX;
 
         e = font_strwidth(&fs);
-        }
+    }
 
     if(NULL == e)
-        {
+    {
         str[fs.term] = '\0';
         trace_2(TRACE_RISCOS_HOST, "gr_font_truncate new width: %d, str: \"%s\"", fs.x, str);
         *width_mpp = fs.x;
-        }
+    }
     else
-        {
+    {
         trace_1(TRACE_RISCOS_HOST, "gr_font_truncate error: %s", e->errmess);
         *width_mpp = 0;
-        }
+    }
 
     return(e);
 }
@@ -142,10 +142,10 @@ gr_numtostr(
     S32 inc;
 
     if(value < 0.0)
-        {
+    {
         value = fabs(value);
         negative = TRUE;
-        }
+    }
     else
         negative = FALSE;
 
@@ -169,7 +169,7 @@ gr_numtostr(
 
     /* work out thousands separator */
     if(thousands_sep_ch && !eformat /*SKS 17.01.99*/)
-        {
+    {
         S32 beforedot;
 
         /* count number of digits before decimal point/end of number */
@@ -184,7 +184,7 @@ gr_numtostr(
             dotptr = NULL;
 
         while(beforedot > 3)
-            {
+        {
             inc = ((beforedot - 1) % 3) + 1;
             nextprint += inc;
 
@@ -196,21 +196,21 @@ gr_numtostr(
                 ++dotptr;
 
             beforedot -= inc;
-            }
         }
+    }
     else
-        {
+    {
         /* replace (or at least find) decimal point
          * if not doing thousands
         */
         dotptr = strchr(numptr, DOT_CH);
 
         if(dotptr)
-            {
+        {
             *dotptr++ = decimal_point_ch;
             nextprint = dotptr;
-            }
         }
+    }
 
     /* find end of string */
     while(*nextprint++)
@@ -221,13 +221,13 @@ gr_numtostr(
     eptr = strchr(numptr, 'e');
 
     if(eptr)
-        {
+    {
         /* remove leading + from exponent */
         if(*++eptr == '+')
-            {
+        {
             --nextprint;
             memmove32(eptr, eptr+1, strlen32p1(eptr+1) /*for NULLCH*/);
-            }
+        }
         else if(*eptr == '-')
             eptr++;
 
@@ -238,11 +238,11 @@ gr_numtostr(
         --tptr;
 
         if(eptr != tptr)
-            {
+        {
             nextprint -= tptr - eptr;
             memmove32(eptr, tptr, strlen32p1(tptr) /*for NULLCH*/);
-            }
         }
+    }
 }
 
 /* end of gr_numcv.c */

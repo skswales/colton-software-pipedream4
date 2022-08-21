@@ -44,11 +44,11 @@ win_send_open(wimp_w w, BOOL immediate, const wimp_openstr * openstr)
     e.data.o   = *openstr;
     e.data.o.w = w;
     if(immediate)
-        {
+    {
         e.e = wimp_EOPEN;
         wimpt_fake_event(&e);
         event_process();
-        }
+    }
     else
         wimpt_safe(wimp_sendwmessage(wimp_EOPEN, (wimp_msgstr *) &e.data.o, w, (wimp_i) -1));
 }
@@ -143,12 +143,12 @@ win_getfield(wimp_w w, wimp_i i, char *buffer /*out*/, size_t size)
     wimpt_safe(wimp_get_icon_info(w, i, &info));
 
     if(!(info.flags & wimp_ITEXT))
-        {
+    {
         tracef0("- non-text icon: ");
         j = 0;  /* returns "" */
-        }
+    }
     else
-        {
+    {
         myassert2x(info.flags & wimp_INDIRECT, "win_getfield: window &%p icon &%u has inline buffer", w, i);
 
         from = info.data.indirecttext.buffer;
@@ -158,7 +158,7 @@ win_getfield(wimp_w w, wimp_i i, char *buffer /*out*/, size_t size)
         j = ptr - from - 1;
         j = min(j, size - 1);
         memcpy(buffer, from, j);
-        }
+    }
 
     buffer[j] = NULLCH;
     tracef1(" returns \"%s\"]", buffer);
@@ -176,10 +176,10 @@ win_setfield(wimp_w w, wimp_i i, const char * value)
     wimpt_safe(wimp_get_icon_info(w, i, &info));
 
     if(!(info.flags & wimp_ITEXT))
-        {
+    {
         tracef0(" non-text icon - ignored");
         return;
-        }
+    }
 
     myassert2x(info.flags & wimp_INDIRECT, "win_setfield: window &%p icon &%u has inline buffer", w, i);
 
@@ -198,7 +198,7 @@ win_setfield(wimp_w w, wimp_i i, const char * value)
     tracef2("[caret in window &%p, icon &%p]", caret.w, caret.i);
 
     if((caret.w == w)  &&  (caret.i == i))
-        {
+    {
         if(caret.index == oldlen)
             caret.index = newlen;       /* if grown and caret was at end,
                                          * move caret right */
@@ -208,7 +208,7 @@ win_setfield(wimp_w w, wimp_i i, const char * value)
         caret.height = -1;   /* calc x,y,h from icon/index */
 
         wimpt_complain(wimp_set_caret_pos(&caret));
-        }
+    }
 
     /* prod it, to cause redraw */
     wimpt_safe(
@@ -307,7 +307,7 @@ win_bumpdouble(
     BOOL   res = win_adjustbumphit(&hit, val);
 
     if(res)
-        {
+    {
         try_ddelta = *ddelta;
 
         if(hit == dec)
@@ -325,7 +325,7 @@ win_bumpdouble(
         *dvar = dval;
 
         win_setdouble(w, val, dvar, decplaces);
-        }
+    }
 
     return(res);
 }
@@ -347,12 +347,12 @@ win_checkdouble(
         dval = *dmin;
 
     if(*dvar != dval)
-        {
+    {
         *dvar = dval;
 
         if(modify)
             *modify = 1;
-        }
+    }
 
     /* NEVER set modify 0; that's for the caller to accumulate */
 }
@@ -418,7 +418,7 @@ win_bumpint(
     BOOL   res = win_adjustbumphit(&hit, val);
 
     if(res)
-        {
+    {
         try_idelta = idelta;
 
         if(hit == dec)
@@ -436,7 +436,7 @@ win_bumpint(
         *ivar = ival;
 
         win_setint(w, val, *ivar);
-        }
+    }
 
     return(res);
 }
@@ -456,12 +456,12 @@ win_checkint(
         ival = imin;
 
     if(*ivar != ival)
-        {
+    {
         *ivar = ival;
 
         if(modify)
             *modify = 1;
-        }
+    }
 
     /* NEVER set modify 0; that's for the caller to accumulate */
 }
@@ -546,7 +546,7 @@ win_whichonoff(wimp_w w, wimp_i first, wimp_i last, wimp_i dft)
     int    ival;
 
     for(i = last; i >= first; --i)
-        {
+    {
         ival = win_getonoff(w, i);
 
         if(ival)
@@ -554,7 +554,7 @@ win_whichonoff(wimp_w w, wimp_i first, wimp_i last, wimp_i dft)
 
         if(i == first)
             return(dft);
-        }
+    }
 
     return(i);
 }
@@ -688,18 +688,18 @@ win_setmenuhi(wimp_w w, wimp_i i, void *handle)
     WIN__STR *p;
 
     if(i == (wimp_i) -1)
-        {
+    {
         win_setmenuh(w, handle);
         return;
-        }
+    }
 
     p = win__find(w);
 
     if(p)
-        {
+    {
         p->menuhi_i = i;
         p->menuhi   = handle;
-        }
+    }
 }
 
 extern void *

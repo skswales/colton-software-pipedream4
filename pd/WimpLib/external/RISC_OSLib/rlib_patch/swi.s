@@ -7,7 +7,7 @@
 + [ {TRUE}
 +        GET     as_flags_h
 +
-+        GET     as_regs_h
++        ;GET     as_regs_h
 +        GET     as_macro_h
 + |
          GET     Hdr:ListOpts

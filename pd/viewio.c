@@ -226,10 +226,10 @@ view_convert(
                         {
                             /* H6 */
                             if(had_subscript)
-                                {
+                            {
                                 had_subscript = FALSE;
                                 linbuf[lecpos++] = HIGH_SUBSCRIPT;
-                                }
+                            }
 
                             had_superscript = TRUE;
                             *lastch = linbuf[lecpos++] = HIGH_SUPERSCRIPT;
@@ -371,48 +371,48 @@ view_get_ruler(
             c = pd_file_getc(loadinput);
 
             switch(c)
-                {
-                case EOF:
+            {
+            case EOF:
+                return(-1);
+
+            case CR:
+            case LF:
+                c = CR;
+
+            case '>':
+            case '*':
+                trace_2(TRACE_APP_PD4, "view_get_ruler creating column %d because %c found in ruler", tcol, c == CR ? 'e' : c);
+                if(!createcol(tcol))
                     return(-1);
 
-                case CR:
-                case LF:
-                    c = CR;
+                set_width_and_wrap(tcol, width, 0);
+                goto NEXTCOL;
 
-                case '>':
-                case '*':
-                    trace_2(TRACE_APP_PD4, "view_get_ruler creating column %d because %c found in ruler", tcol, c == CR ? 'e' : c);
-                    if(!createcol(tcol))
-                        return(-1);
+            case '<':
+                wrappoint = wrapcount+1;
+                break;
 
-                    set_width_and_wrap(tcol, width, 0);
-                    goto NEXTCOL;
-
-                case '<':
-                    wrappoint = wrapcount+1;
-                    break;
-
-                default:
-                    break;
-                }
+            default:
+                break;
+            }
 
             width++;
-            }
+        }
         while(c != CR);
 
     NEXTCOL:
 
         ++tcol;
-        }
+    }
     while(c != CR);
 
     /* set wrap point for all columns */
     for(tcol = 0; (wrappoint > 0)  &&  (tcol < numcol); tcol++)
-        {
+    {
         width = colwidth(tcol);
         set_width_and_wrap(tcol, width, wrappoint);
         wrappoint -= width;
-        }
+    }
 
     return(0);      /* ruler processed - get more input */
 }
@@ -457,22 +457,22 @@ view_get_stored_command(
         trace_2(TRACE_APP_PD4, "got char %c %d for stored command", c, c);
 
         switch(c)
-            {
-            case EOF:
+        {
+        case EOF:
+            return(-1);
+
+        case CR:
+        case LF:
+            c = '\0';
+
+        default:
+            if(to - array >= sizeof(array))
                 return(-1);
 
-            case CR:
-            case LF:
-                c = '\0';
-
-            default:
-                if(to - array >= sizeof(array))
-                    return(-1);
-
-                *to++ = (char) c;
-                break;
-            }
+            *to++ = (char) c;
+            break;
         }
+    }
     while(c);
 
     trace_1(TRACE_APP_PD4, "view_get_stored_command: got parameters '%s'", array);
@@ -483,14 +483,14 @@ view_get_stored_command(
         trace_2(TRACE_APP_PD4, "Comparing with stored command %c%c", optptr->v_sc1, optptr->v_sc2);
 
         if((ch1 == optptr->v_sc1)  &&  (ch2 == optptr->v_sc2))
-            {
+        {
             trace_2(TRACE_APP_PD4, "Matched stored command %c%c", ch1, ch2);
 
             update_dialog_from_windvars(D_POPTIONS);
 
             /* only store first occurrence of option */
             if(!optptr->v_done)
-                {
+            {
                 optptr->v_done = TRUE;
 
                 option = optptr->p_OFFset;
@@ -498,118 +498,118 @@ view_get_stored_command(
                 add_in = 0;
 
                 switch(option)
-                    {
-                    case O_HE:
-                    case O_FO:
-                        /* convert page and dates in headers & footers */
-                        from = array;
-                        to   = cvtarray;
-                        do  {
-                            ch = *from++;
+                {
+                case O_HE:
+                case O_FO:
+                    /* convert page and dates in headers & footers */
+                    from = array;
+                    to   = cvtarray;
+                    do  {
+                        ch = *from++;
 
-                            if(ch == '|')
-                                switch(toupper(*from))
-                                    {
-                                    case 'D':
-                                    case 'P':
-                                        if(NULLCH != get_text_at_char())
-                                            {
-                                            *to++ = get_text_at_char();
-                                            *to++ = *from++;
-                                            ch = get_text_at_char();
-                                            break;
-                                            }
-                                        /*DROPTHRU*/
-
-                                    default:
-                                        break;
-                                    }
-
-                            *to++ = ch;
-                            }
-                        while(ch);
-
-                        (void) mystr_set(&d_poptions[option].textfield, cvtarray);
-                        break;
-
-                    case O_LS:
-                        add_in = 1;
-
-                    case O_PL:
-                    case O_TM:
-                    case O_HM:
-                    case O_FM:
-                    case O_BM:
-                    case O_LM:
-                        number = atoi(array);
-
-                        if( number < 0)
-                            number = 0;
-
-                        d_poptions[option].option = (uchar) (number + add_in);
-                        break;
-
-                    case O_PB:
-                        /* get status, page breaks always on unless
-                         * 0* or off* after leading spaces
-                        */
-                        from = array;
-
-                        while((ch = *from++) == SPACE)
-                            ;
-
-                        if(!ch  ||  (0 == _stricmp(from - 1, "OFF")))
-                            d_poptions[O_PL].option = 0;
-
-                        break;
-
-                    case O_HT:
-                        /* check HT 2 definition */
-                        from = array;
-
-                        while((ch = *from++) == SPACE)
-                            ;
-
-                        if(ch == '2')
+                        if(ch == '|')
+                            switch(toupper(*from))
                             {
-                            extended_highlights = (atoi(from) == 130);
-                            trace_2(TRACE_APP_PD4, "view_get_stored_command: HT 2 %s -> extended highlights %s", from, trace_boolstring(extended_highlights));
+                            case 'D':
+                            case 'P':
+                                if(NULLCH != get_text_at_char())
+                                {
+                                    *to++ = get_text_at_char();
+                                    *to++ = *from++;
+                                    ch = get_text_at_char();
+                                    break;
+                                }
+                                /*DROPTHRU*/
+
+                            default:
+                                break;
                             }
 
-                        optptr->v_done = FALSE;     /* can do many times */
-                        break;
-
-                    case O_PS:
-                        /* ignore set register commands */
-                        break;
-
-                    case O_PE:
-                        /* set page break */
-                        *type = SL_PAGE;
-                        *pageoffset = (uchar) atoi(array);
-
-                        /* falls through */
-
-                /*  case O_CE:  */
-                /*  case O_LJ:  */
-                /*  case O_RJ:  */
-                    default:
-                        /* set justify state and get line */
-                        *justify = optptr->v_default;
-                        lecpos = strlen(strcpy(linbuf, array));
-                        optptr->v_done = FALSE;     /* can do many times */
-                        c = CR;
-                        break;
+                        *to++ = ch;
                     }
+                    while(ch);
+
+                    (void) mystr_set(&d_poptions[option].textfield, cvtarray);
+                    break;
+
+                case O_LS:
+                    add_in = 1;
+
+                case O_PL:
+                case O_TM:
+                case O_HM:
+                case O_FM:
+                case O_BM:
+                case O_LM:
+                    number = atoi(array);
+
+                    if( number < 0)
+                        number = 0;
+
+                    d_poptions[option].option = (uchar) (number + add_in);
+                    break;
+
+                case O_PB:
+                    /* get status, page breaks always on unless
+                     * 0* or off* after leading spaces
+                    */
+                    from = array;
+
+                    while((ch = *from++) == SPACE)
+                        ;
+
+                    if(!ch  ||  (0 == _stricmp(from - 1, "OFF")))
+                        d_poptions[O_PL].option = 0;
+
+                    break;
+
+                case O_HT:
+                    /* check HT 2 definition */
+                    from = array;
+
+                    while((ch = *from++) == SPACE)
+                        ;
+
+                    if(ch == '2')
+                    {
+                        extended_highlights = (atoi(from) == 130);
+                        trace_2(TRACE_APP_PD4, "view_get_stored_command: HT 2 %s -> extended highlights %s", from, trace_boolstring(extended_highlights));
+                    }
+
+                    optptr->v_done = FALSE;     /* can do many times */
+                    break;
+
+                case O_PS:
+                    /* ignore set register commands */
+                    break;
+
+                case O_PE:
+                    /* set page break */
+                    *type = SL_PAGE;
+                    *pageoffset = (uchar) atoi(array);
+
+                    /* falls through */
+
+            /*  case O_CE:  */
+            /*  case O_LJ:  */
+            /*  case O_RJ:  */
+                default:
+                    /* set justify state and get line */
+                    *justify = optptr->v_default;
+                    lecpos = strlen(strcpy(linbuf, array));
+                    optptr->v_done = FALSE;     /* can do many times */
+                    c = CR;
+                    break;
                 }
+            }
 
             update_windvars_from_dialog(D_POPTIONS);
 
             return(c);
-            }
+        }
 
         ++optptr;
-        }
+    }
     while(++a_index < NO_OF_ALL_OPTS);
 
     /* unrecognised stored command - just put into linbuf */
@@ -680,7 +680,7 @@ view_load_preinit(
             (void) mystr_set(&d_poptions[offset].textfield, NULL);
         else
             d_poptions[offset].option = (uchar) def;
-        }
+    }
     while(++count < NO_OF_PAGE_OPTS);
 
     /*count = NO_OF_PAGE_OPTS;*/
@@ -739,7 +739,7 @@ view_save_ruler_options(
 
     /* output dots */
     for(count = tcol = 0; (tcol < numcol)  &&  (count < 130); tcol++)
-        {
+    {
         thiswidth = colwidth(tcol);
         scount = 0;
 
@@ -751,18 +751,18 @@ view_save_ruler_options(
         if(tcol < numcol-1 &&
                 !away_byte((uchar) ((count++ == rmargin-2) ? '<' : '*'), output))
             return(FALSE);
-        }
+    }
 
     /* maybe still output right margin */
     if(count <= rmargin-2)
-        {
+    {
         for( ; count < rmargin-2; count++)
             if(!away_byte('.', output))
                 return(FALSE);
 
         if(!away_byte('<', output))
             return(FALSE);
-        }
+    }
 
     if(!away_eol(output))
         return(FALSE);
@@ -772,7 +772,7 @@ view_save_ruler_options(
     update_dialog_from_windvars(D_POPTIONS);
 
     for(count = 0; res  &&  (count < NO_OF_PAGE_OPTS); count++)
-        {
+    {
         out_stored = FALSE;
         margin = -1;
 
@@ -783,130 +783,130 @@ view_save_ruler_options(
         offset = view_opts[count].p_OFFset;
 
         switch(offset)
+        {
+        case O_HE:
+        case O_FO:
+            /* if there isn't a header(footer) we need to subtract one from
+                either the top(bottom) margin or header(footer) margin
+            */
+            blank = str_isblank(d_poptions[offset].textfield);
+
+            if(offset == O_HE)
+                noheader = blank;
+            else
+                nofooter = blank;
+
+            if(!blank)
             {
-            case O_HE:
-            case O_FO:
-                /* if there isn't a header(footer) we need to subtract one from
-                    either the top(bottom) margin or header(footer) margin
-                */
-                blank = str_isblank(d_poptions[offset].textfield);
+                from = d_poptions[offset].textfield;
+                to   = array + 2;
+                do  {
+                    ch = *from++;
 
-                if(offset == O_HE)
-                    noheader = blank;
-                else
-                    nofooter = blank;
+                    if(is_text_at_char(ch))
+                        switch(toupper(*from))
+                        {
+                        case 'D':
+                        case 'P':
+                            if(is_text_at_char(*(from+1)))
+                            {
+                                *to++ = '|';
+                                *to++ = *from++;
+                                /* and skip spurious text-at chars too */
+                                do
+                                    ch = *from++;
+                                while(is_text_at_char(ch));
+                            }
+                            break;
 
-                if(!blank)
-                    {
-                    from = d_poptions[offset].textfield;
-                    to   = array + 2;
-                    do  {
-                        ch = *from++;
-
-                        if(is_text_at_char(ch))
-                            switch(toupper(*from))
-                                {
-                                case 'D':
-                                case 'P':
-                                    if(is_text_at_char(*(from+1)))
-                                        {
-                                        *to++ = '|';
-                                        *to++ = *from++;
-                                        /* and skip spurious text-at chars too */
-                                        do
-                                            ch = *from++;
-                                        while(is_text_at_char(ch));
-                                        }
-                                    break;
-
-                                default:
-                                    break;
-                                }
-
-                        *to++ = ch;
+                        default:
+                            break;
                         }
-                    while(ch);
 
-                    out_stored = TRUE;
-                    }
+                    *to++ = ch;
+                }
+                while(ch);
 
-                break;
-
-            case O_TM:
-            case O_HM:
-                margin = d_poptions[offset].option;
-
-                if(noheader  &&  (margin > 0))
-                    {
-                    /* no header so subtract one from margin */
-                    noheader = FALSE;
-                    margin--;
-                    }
-
-                /* don't bother if same as VIEW default */
-                if(view_opts[count].v_default == (uchar) margin)
-                    margin = -1;
-
-                break;
-
-            case O_FM:
-            case O_BM:
-                margin = d_poptions[offset].option;
-
-                if(nofooter && margin > 0)
-                    {
-                    nofooter = FALSE;
-                    margin--;
-                    }
-
-                /* don't bother if same as VIEW default */
-                if(view_opts[count].v_default == (uchar) margin)
-                    margin = -1;
-
-                break;
-
-            case O_PL:
-            case O_LM:
-                /* PD and VIEW the same */
-                if(view_opts[count].v_default != d_poptions[offset].option)
-                    margin = d_poptions[offset].option;
-
-                break;
-
-            case O_LS:
-                /* PD line spacing one greater than VIEW line spacing
-                 * Don't bother if LS=0 in PD
-                */
-                if(d_poptions[O_LS].option > 1)
-                    margin = d_poptions[O_LS].option - 1;
-
-                break;
-
-            case O_PS:
-                /* start page - output SR P n */
-                if(!str_isblank(d_poptions[O_PS].textfield))
-                    {
-                    (void) xsnprintf(array + 2, elemof32(array) - 2, "P %s", d_poptions[O_PS].textfield);
-                    out_stored = TRUE;
-                    }
-
-                break;
-
-            default:
-                break;
+                out_stored = TRUE;
             }
+
+            break;
+
+        case O_TM:
+        case O_HM:
+            margin = d_poptions[offset].option;
+
+            if(noheader  &&  (margin > 0))
+            {
+                /* no header so subtract one from margin */
+                noheader = FALSE;
+                margin--;
+            }
+
+            /* don't bother if same as VIEW default */
+            if(view_opts[count].v_default == (uchar) margin)
+                margin = -1;
+
+            break;
+
+        case O_FM:
+        case O_BM:
+            margin = d_poptions[offset].option;
+
+            if(nofooter && margin > 0)
+            {
+                nofooter = FALSE;
+                margin--;
+            }
+
+            /* don't bother if same as VIEW default */
+            if(view_opts[count].v_default == (uchar) margin)
+                margin = -1;
+
+            break;
+
+        case O_PL:
+        case O_LM:
+            /* PD and VIEW the same */
+            if(view_opts[count].v_default != d_poptions[offset].option)
+                margin = d_poptions[offset].option;
+
+            break;
+
+        case O_LS:
+            /* PD line spacing one greater than VIEW line spacing
+             * Don't bother if LS=0 in PD
+            */
+            if(d_poptions[O_LS].option > 1)
+                margin = d_poptions[O_LS].option - 1;
+
+            break;
+
+        case O_PS:
+            /* start page - output SR P n */
+            if(!str_isblank(d_poptions[O_PS].textfield))
+            {
+                (void) xsnprintf(array + 2, elemof32(array) - 2, "P %s", d_poptions[O_PS].textfield);
+                out_stored = TRUE;
+            }
+
+            break;
+
+        default:
+            break;
+        }
 
         /* if parameter has been set, build stored command */
         if(margin >= 0)
-            {
+        {
             (void) sprintf(array + 2, "%d", margin);
             out_stored = TRUE;
-            }
+        }
 
         if(out_stored)
             if(!view_save_stored_command(array, output)  ||  !away_eol(output))
                 res = FALSE;
-        }
+    }
 
     update_windvars_from_dialog(D_POPTIONS);
 
@@ -943,81 +943,81 @@ view_save_slot(
     uchar justify = tcell->justify & J_BITS;
 
     if((justify == J_LEFTRIGHT)  ||  (justify == J_RIGHTLEFT))
-        {
+    {
         /* set null terminator */
         memset32(linbuf, 0, LIN_BUFSIZ);
 
         /* expand justified line into linbuf, not forgetting terminator */
         justifyline(tcell->content.text, rightmargin - *v_chars_sofar, justify, linbuf);
-        }
+    }
     else
         /* write just text or formula part of cell out */
         plain_slot(tcell, tcol, trow, VIEW_CHAR, linbuf);
 
     /* output contents, dealing with highlight chars */
     for(lptr = linbuf; *lptr; lptr++)
-        {
+    {
         ch = *lptr;
 
         if(*v_chars_sofar >= 130)
-            {
+        {
             *splitlines += 1;
             *v_chars_sofar = 0;
             if(!away_eol(output))
                 return(FALSE);
-            }
+        }
 
         switch(ch)
+        {
+        /* soft spaces inserted by justify line are 0x1A which is H3 */
+        case TEMP_SOFT_SPACE:
+            if(!away_byte(VIEW_SOFT_SPACE, output))
+                return(FALSE);
+
+            break;
+
+        default:
+            if((ch == text_at_char) && (NULLCH != text_at_char)) /* case text_at_char: */
             {
-            /* soft spaces inserted by justify line are 0x1A which is H3 */
-            case TEMP_SOFT_SPACE:
-                if(!away_byte(VIEW_SOFT_SPACE, output))
-                    return(FALSE);
+                ch = *++lptr;
 
-                break;
-
-            default:
-                if((ch == text_at_char) && (NULLCH != text_at_char)) /* case text_at_char: */
-                    {
-                    ch = *++lptr;
-
-                    switch(toupper(ch))
-                        {
-                        case 'P':
-                        case 'D':
-                            if(!away_byte('|', output)  ||  !away_byte(ch, output))
-                                return(FALSE);
-
-                            while(*++lptr == text_at_char)
-                                ;
-
-                            --lptr;
-                            break;
-
-                        default:
-                            if(ch == text_at_char)
-                                ++lptr;
-
-                            --lptr;
-                            if(!away_byte(text_at_char, output))
-                                return(FALSE);
-                            break;
-                        }
-
-                    break;
-                    }
-
-                if(ishighlight(ch))
-                    {
-                    if(!away_string(highlight_table[ch - FIRST_HIGHLIGHT], output))
+                switch(toupper(ch))
+                {
+                case 'P':
+                case 'D':
+                    if(!away_byte('|', output)  ||  !away_byte(ch, output))
                         return(FALSE);
-                    }
-                else if(!away_byte(ch, output))
-                    return(FALSE);
+
+                    while(*++lptr == text_at_char)
+                        ;
+
+                    --lptr;
+                    break;
+
+                default:
+                    if(ch == text_at_char)
+                        ++lptr;
+
+                    --lptr;
+                    if(!away_byte(text_at_char, output))
+                        return(FALSE);
+                    break;
+                }
 
                 break;
             }
+
+            if(ishighlight(ch))
+            {
+                if(!away_string(highlight_table[ch - FIRST_HIGHLIGHT], output))
+                    return(FALSE);
+            }
+            else if(!away_byte(ch, output))
+                return(FALSE);
+
+            break;
         }
+    }
 
     return(TRUE);
 }

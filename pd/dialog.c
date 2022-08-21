@@ -971,13 +971,13 @@ find_option(
         /* for each entry in each dialog box */
         do  {
             if((dptr->ch1 == ch1)  &&  (dptr->ch2 == ch2))
-                {
+            {
                 *dbox_num = dhptr - dialog_head;
                 return(dptr);
-                }
             }
-        while(++dptr < last_dptr);
         }
+        while(++dptr < last_dptr);
+    }
     while(++dhptr < last_dhptr);
 
     *dbox_num = 0;
@@ -1009,69 +1009,69 @@ getoption(
     optr += 4;
 
     if((*optr == 'M') && (*(optr+1) == 'C'))
-        {
+    {
         get_menu_change(optr+2);
         return;
-        }
+    }
 
     dptr = find_option(optr[0], optr[1], &dbox_num);
     if(!dptr)
-        {
+    {
         trace_0(TRACE_APP_DIALOG, "no such option found");
         return;
-        }
+    }
 
     update_dialog_from_windvars(dbox_num);
 
     from = optr + 2;
 
     switch(dptr->type)
-        {
-        case F_SPECIAL:
-            dptr->option = *from;
-            break;
+    {
+    case F_SPECIAL:
+        dptr->option = *from;
+        break;
 
-        case F_ARRAY:
-        case F_COLOUR:
-        case F_NUMBER:
-        case F_LIST:
-            dptr->option = (uchar) atoi((char *) from);
-            break;
+    case F_ARRAY:
+    case F_COLOUR:
+    case F_NUMBER:
+    case F_LIST:
+        dptr->option = (uchar) atoi((char *) from);
+        break;
 
-        case F_TEXT:
-            /* user dictionaries have to be treated specially,
-             * 'cos there may be more than one
-            */
-            if(dptr == d_user_open)
-                dict_number((char *) from, TRUE);
+    case F_TEXT:
+        /* user dictionaries have to be treated specially,
+         * 'cos there may be more than one
+        */
+        if(dptr == d_user_open)
+            dict_number((char *) from, TRUE);
 
-            if(dptr == d_protect)
-                add_to_protect_list(from);
-            else if(dptr == d_linked_columns)
-                add_to_linked_columns_list(from);
-            else if(dptr == d_names_dbox)
-                add_to_names_list(from);
+        if(dptr == d_protect)
+            add_to_protect_list(from);
+        else if(dptr == d_linked_columns)
+            add_to_linked_columns_list(from);
+        else if(dptr == d_names_dbox)
+            add_to_names_list(from);
 
-            /* copy string and encode highlights  */
+        /* copy string and encode highlights  */
 
-            while(*from)
-                if(    (*from == '%')
-                    &&  (from[1] == 'H')  &&  (from[3] == '%')
-                    &&  ishighlighttext(from[2]))
-                    {
-                    *to++ = from[2] - FIRST_HIGHLIGHT_TEXT + FIRST_HIGHLIGHT;
-                    from += 4;
-                    }
-                else
-                    *to++ = *from++;
+        while(*from)
+            if(    (*from == '%')
+                &&  (from[1] == 'H')  &&  (from[3] == '%')
+                &&  ishighlighttext(from[2]))
+                {
+                *to++ = from[2] - FIRST_HIGHLIGHT_TEXT + FIRST_HIGHLIGHT;
+                from += 4;
+                }
+            else
+                *to++ = *from++;
 
-            *to = '\0';
-            (void) mystr_set(&dptr->textfield, array);
-            break;
+        *to = '\0';
+        (void) mystr_set(&dptr->textfield, array);
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     update_windvars_from_dialog(dbox_num);
 }
@@ -1097,7 +1097,7 @@ save_opt_to_list(
     last_dptr = dptr + n;
 
     for(; dptr < last_dptr; dptr++)
-        {
+    {
         key = (((S32) dptr->ch1) << 8) + (S32) dptr->ch2;
 
         /* RJM adds on 22.9.91 */
@@ -1107,61 +1107,61 @@ save_opt_to_list(
         ptr = array;
 
         switch(dptr->type)
+        {
+        case F_TEXT:
+            ptr1 = dptr->textfield;
+            if(str_isblank(ptr1))
+                ptr1 = NULLSTR;
+
+            if(dptr->optionlist)
             {
-            case F_TEXT:
-                ptr1 = dptr->textfield;
-                if(str_isblank(ptr1))
-                    ptr1 = NULLSTR;
-
-                if(dptr->optionlist)
-                    {
-                    ptr2 = *dptr->optionlist;
-                    if(str_isblank(ptr2))
-                        ptr2 = NULLSTR;
-                    }
-                else
+                ptr2 = *dptr->optionlist;
+                if(str_isblank(ptr2))
                     ptr2 = NULLSTR;
-
-                if(0 == strcmp(ptr1, ptr2))
-                    continue;
-
-                ptr = ptr1;
-                break;
-
-            case F_ARRAY:
-                if(!dptr->option)
-                    continue;
-
-                (void) sprintf(array, "%d", (int) dptr->option);
-                break;
-
-            case F_LIST:
-            case F_NUMBER:
-            case F_COLOUR:
-                if((int) dptr->option == atoi(*dptr->optionlist))
-                    continue;
-
-                (void) sprintf(array, "%d", (int) dptr->option);
-                break;
-
-            case F_SPECIAL:
-                if(dptr->option == **dptr->optionlist)
-                    continue;
-
-                array[0] = dptr->option;
-                array[1] = '\0';
-                break;
-
-            default:
-                break;
             }
+            else
+                ptr2 = NULLSTR;
+
+            if(0 == strcmp(ptr1, ptr2))
+                continue;
+
+            ptr = ptr1;
+            break;
+
+        case F_ARRAY:
+            if(!dptr->option)
+                continue;
+
+            (void) sprintf(array, "%d", (int) dptr->option);
+            break;
+
+        case F_LIST:
+        case F_NUMBER:
+        case F_COLOUR:
+            if((int) dptr->option == atoi(*dptr->optionlist))
+                continue;
+
+            (void) sprintf(array, "%d", (int) dptr->option);
+            break;
+
+        case F_SPECIAL:
+            if(dptr->option == **dptr->optionlist)
+                continue;
+
+            array[0] = dptr->option;
+            array[1] = '\0';
+            break;
+
+        default:
+            break;
+        }
 
         if(status_fail(res = add_to_list(&def_first_option, key, ptr)))
-            {
+        {
             reperr_null(res);
             break;
-            }
         }
+    }
 }
 
 /* write an S32 into a str_set string */
@@ -1237,7 +1237,7 @@ recover_options_from_list(void)
     for(lptr = first_in_list(&def_first_option);
         lptr;
         lptr = next_in_list(&def_first_option))
-        {
+    {
         key = lptr->key;
 
         ch2 = (uchar) (key & 0xFF);
@@ -1249,27 +1249,27 @@ recover_options_from_list(void)
             continue;
 
         switch(dptr->type)
-            {
-            case F_SPECIAL:
-                dptr->option = *(lptr->value);
-                break;
+        {
+        case F_SPECIAL:
+            dptr->option = *(lptr->value);
+            break;
 
-            case F_ARRAY:
-            case F_COLOUR:
-            case F_NUMBER:
-            case F_LIST:
+        case F_ARRAY:
+        case F_COLOUR:
+        case F_NUMBER:
+        case F_LIST:
 /*???*/
-                dptr->option = (uchar) atoi((char *) lptr->value);
-                break;
+            dptr->option = (uchar) atoi((char *) lptr->value);
+            break;
 
-            case F_TEXT:
-                (void) mystr_set(&dptr->textfield, lptr->value);    /* keep trying */
-                break;
+        case F_TEXT:
+            (void) mystr_set(&dptr->textfield, lptr->value);    /* keep trying */
+            break;
 
-            default:
-                break;
-            }
+        default:
+            break;
         }
+    }
 
 #if 0
     /* update any variables that are not accessed thru dialog boxes */
@@ -1281,11 +1281,11 @@ extern void
 update_dialog_from_fontinfo(void)
 {
     if(is_current_document())
-        {
+    {
         init_dialog_box(D_FONTS);
 
         if(riscos_fonts)
-            {
+        {
             /* even saves defaults onto list */
             mystr_set(          &d_fonts[D_FONTS_G].textfield, global_font);
 #if 0 /* SKS after 4.11 19jan92 moved these from here ... */
@@ -1293,67 +1293,67 @@ update_dialog_from_fontinfo(void)
             write_int_to_string(&d_fonts[D_FONTS_Y].textfield, global_font_y);
             write_int_to_string(&d_fonts[D_FONTS_S].textfield, auto_line_height ? 0 : global_font_leading_mp);
 #endif
-            }
+        }
         else
-            {
+        {
             str_clr(&d_fonts[D_FONTS_G].textfield);
 #if 0 /* SKS after 4.11 19jan92 removed these */
             str_clr(&d_fonts[D_FONTS_X].textfield);
             str_clr(&d_fonts[D_FONTS_Y].textfield);
             str_clr(&d_fonts[D_FONTS_S].textfield);
 #endif
-            }
+        }
 
 #if 1 /* SKS after 4.11 19jan92 moved these ... to here */
         write_int_to_string(&d_fonts[D_FONTS_X].textfield, global_font_x);
         write_int_to_string(&d_fonts[D_FONTS_Y].textfield, global_font_y);
         write_int_to_string(&d_fonts[D_FONTS_S].textfield, auto_line_height ? 0 : global_font_leading_mp);
 #endif
-        }
+    }
 }
 
 extern void
 update_fontinfo_from_dialog(void)
 {
     if(is_current_document())
-        {
+    {
         str_clr(&global_font);
 
         if(d_fonts[D_FONTS_G].textfield)
-            {
+        {
             str_swap(&global_font, &d_fonts[D_FONTS_G].textfield);
             /* try the new font out */
             riscos_fonts = TRUE;
             riscos_font_error = FALSE;
             ensure_global_font_valid();
-            }
+        }
         else
             riscos_fonts = FALSE;
 
         if(d_fonts[D_FONTS_X].textfield)
-            {
+        {
             consume(int, sscanf(d_fonts[D_FONTS_X].textfield, "%d", &global_font_x));
             str_clr(&d_fonts[D_FONTS_X].textfield);
-            }
+        }
 
         if(d_fonts[D_FONTS_Y].textfield)
-            {
+        {
             consume(int, sscanf(d_fonts[D_FONTS_Y].textfield, "%d", &global_font_y));
             str_clr(&d_fonts[D_FONTS_Y].textfield);
-            }
+        }
 
         if(d_fonts[D_FONTS_S].textfield)
-            {
+        {
             consume(int, sscanf(d_fonts[D_FONTS_S].textfield, "%d", &global_font_leading_mp));
             str_clr(&d_fonts[D_FONTS_S].textfield);
-            }
+        }
 
         auto_line_height = (global_font_leading_mp == 0);
         if(auto_line_height)
             new_font_leading_based_on_y(); /* <<<<RJM,RCM */
         else
             new_font_leading(global_font_leading_mp); /*<<<SKS*/
-        }
+    }
 }
 
 extern void
@@ -1366,7 +1366,7 @@ update_dialog_from_windvars(
     void * ptr;
 
     if(is_current_document())
-        {
+    {
         dhptr     = dialog_head + boxnumber;
         init_dptr = dhptr->dialog_box;
 
@@ -1379,37 +1379,37 @@ update_dialog_from_windvars(
             wvoffset = dptr->offset;
 
             if(wvoffset)
-                {
+            {
                 ptr = PtrAddBytes(void *, current_document(), wvoffset);
 
                 trace_2(TRACE_APP_DIALOG, "offset/ptr to windvars variable = &%x, " PTR_XTFMT", ", wvoffset, report_ptr_cast(ptr));
 
                 switch(dptr->type)
-                    {
-                    case F_ERRORTYPE:
-                    case F_TEXT:
-                        /* copy the windvars variable to dialog[n].textfield */
-                        /* still need primary copy for screen updates */
-                        (void) mystr_set(&dptr->textfield, * (char **) ptr);
-                        trace_2(TRACE_APP_DIALOG, "dialog[%d].textfield is now \"%s\"",
-                                dptr - init_dptr,
-                                trace_string(dptr->textfield));
-                        break;
+                {
+                case F_ERRORTYPE:
+                case F_TEXT:
+                    /* copy the windvars variable to dialog[n].textfield */
+                    /* still need primary copy for screen updates */
+                    (void) mystr_set(&dptr->textfield, * (char **) ptr);
+                    trace_2(TRACE_APP_DIALOG, "dialog[%d].textfield is now \"%s\"",
+                            dptr - init_dptr,
+                            trace_string(dptr->textfield));
+                    break;
 
-                    case F_NUMBER:
-                    case F_ARRAY:
-                    default:
-                        /* copy the windvars variable to dialog[n].option */
-                        dptr->option = * (uchar *) ptr;
-                        trace_3(TRACE_APP_DIALOG, "dialog[%d].option is now %d, '%c'",
-                                dptr - init_dptr,
-                                dptr->option, dptr->option);
-                        break;
-                    }
+                case F_NUMBER:
+                case F_ARRAY:
+                default:
+                    /* copy the windvars variable to dialog[n].option */
+                    dptr->option = * (uchar *) ptr;
+                    trace_3(TRACE_APP_DIALOG, "dialog[%d].option is now %d, '%c'",
+                            dptr - init_dptr,
+                            dptr->option, dptr->option);
+                    break;
                 }
             }
-        while(++dptr < last_dptr);
         }
+        while(++dptr < last_dptr);
+    }
     else
         trace_0(TRACE_APP_DIALOG, "unable to update_dialog_from_windvars as no current document");
 }
@@ -1424,7 +1424,7 @@ update_windvars_from_dialog(
     void *ptr;
 
     if(is_current_document())
-        {
+    {
         dhptr     = dialog_head + boxnumber;
         init_dptr = dhptr->dialog_box;
 
@@ -1437,38 +1437,38 @@ update_windvars_from_dialog(
             wvoffset = dptr->offset;
 
             if(wvoffset)
-                {
+            {
                 ptr = PtrAddBytes(void *, current_document(), wvoffset);
 
                 trace_4(TRACE_APP_DIALOG, "offset/ptr to windvars %c%c variable = &%x, " PTR_XTFMT ", ", dptr->ch1, dptr->ch2, wvoffset, ptr);
 
                 switch(dptr->type)
-                    {
-                    case F_ERRORTYPE:
-                    case F_TEXT:
-                        /* move the dialog[n].textfield to windvars variable */
-                        str_clr((char **) ptr);
-                        * (char **) ptr = dptr->textfield;
-                        dptr->textfield = NULL;
-                        trace_2(TRACE_APP_DIALOG, "windvar for [%d].textfield is now \"%s\"",
-                                    dptr - init_dptr,
-                                    trace_string(* (char **) ptr));
-                        break;
+                {
+                case F_ERRORTYPE:
+                case F_TEXT:
+                    /* move the dialog[n].textfield to windvars variable */
+                    str_clr((char **) ptr);
+                    * (char **) ptr = dptr->textfield;
+                    dptr->textfield = NULL;
+                    trace_2(TRACE_APP_DIALOG, "windvar for [%d].textfield is now \"%s\"",
+                                dptr - init_dptr,
+                                trace_string(* (char **) ptr));
+                    break;
 
-                    case F_NUMBER:
-                    case F_ARRAY:
-                    default:
-                        /* copy the dialog[n].option to windvars variable */
-                        * (uchar *) ptr = dptr->option;
-                        trace_3(TRACE_APP_DIALOG, "windvar for [%d].option is now %d, '%c'",
-                                    dptr - init_dptr,
-                                    * (uchar *)  ptr, * (uchar *) ptr);
-                        break;
-                    }
+                case F_NUMBER:
+                case F_ARRAY:
+                default:
+                    /* copy the dialog[n].option to windvars variable */
+                    * (uchar *) ptr = dptr->option;
+                    trace_3(TRACE_APP_DIALOG, "windvar for [%d].option is now %d, '%c'",
+                                dptr - init_dptr,
+                                * (uchar *)  ptr, * (uchar *) ptr);
+                    break;
                 }
             }
-        while(++dptr < last_dptr);
         }
+        while(++dptr < last_dptr);
+    }
     else
         trace_0(TRACE_APP_DIALOG, "unable to update_windvars_from_dialog as no current document");
 }
@@ -1611,42 +1611,42 @@ init___dialog_box(
 
         if((wvoffset != 0) == windvars)    /* init one set or the other */
         if(!windvars || is_current_document())
-            {
+        {
             /* for F_TEXT, F_COMPOSITE */
             str_clr(&dptr->textfield);
 
             if(dptr->optionlist != NO_LIST)
-                {
+            {
                 switch(dptr->type)
-                    {
-                    case F_TEXT:
-                        if(allocatestrings)
-                            res = res && mystr_set(&dptr->textfield, *dptr->optionlist);
-                        break;
+                {
+                case F_TEXT:
+                    if(allocatestrings)
+                        res = res && mystr_set(&dptr->textfield, *dptr->optionlist);
+                    break;
 
-                    case F_ARRAY:
-                        dptr->option = 0;
-                        break;
+                case F_ARRAY:
+                    dptr->option = 0;
+                    break;
 
-                    case F_NUMBER:
-                    case F_COLOUR:
-                        dptr->option = (uchar) atoi(*dptr->optionlist);
-                        break;
+                case F_NUMBER:
+                case F_COLOUR:
+                    dptr->option = (uchar) atoi(*dptr->optionlist);
+                    break;
 
-                    case F_LIST:
-                        /* optionlist gives list_block * */
-                        break;
+                case F_LIST:
+                    /* optionlist gives list_block * */
+                    break;
 
-                /*  case F_COMPOSITE:  */
-                /*  case F_SPECIAL:    */
-                /*  case F_CHAR:       */
-                    default:
-                        dptr->option = **dptr->optionlist;
-                        break;
-                    }
+            /*  case F_COMPOSITE:  */
+            /*  case F_SPECIAL:    */
+            /*  case F_CHAR:       */
+                default:
+                    dptr->option = **dptr->optionlist;
+                    break;
                 }
             }
         }
+    }
     while(++dptr < last_dptr);
 
     return(res);
@@ -1663,22 +1663,22 @@ read_parm(
     uchar *array)
 {
     for(;;)
-        {
+    {
         switch(*exec_ptr)
-            {
-            case '\0':
-                return(FALSE);
+        {
+        case '\0':
+            return(FALSE);
 
-            case CR:
-            case TAB:
-                *array = '\0';
-                return(TRUE);
+        case CR:
+        case TAB:
+            *array = '\0';
+            return(TRUE);
 
-            default:
-                *array++ = *exec_ptr++;
-                break;
-            }
+        default:
+            *array++ = *exec_ptr++;
+            break;
         }
+    }
 }
 
 /******************************************************************************
@@ -1703,12 +1703,12 @@ extract_parameters(
 
     /* exec_ptr points at TAB to start */
     for(; *exec_ptr != CR; count++, dptr++)
-        {
+    {
         if(count >= items)
-            {
+        {
             strcpy(array, (char *) exec_ptr);
             goto ERRORPOINT;
-            }
+        }
 
         /* read the parameter */
         exec_ptr++;
@@ -1719,80 +1719,80 @@ extract_parameters(
         trace_1(TRACE_APP_DIALOG, "read_parm read: %s", trace_string(array));
 
         switch(dptr->type)
+        {
+        case F_COLOUR:
+        case F_CHAR:
+        case F_NUMBER:
+            dptr->option = (uchar) atoi((char *) array);
+            break;
+
+        case F_COMPOSITE:
+        case F_SPECIAL:
+            ptr = array;
+            while(*ptr++ == SPACE)
+                ;
+
+            c = *--ptr;
+
+            if(!c  ||  !strchr(*dptr->optionlist, c))
+                goto ERRORPOINT;
+
+            dptr->option = (uchar) c;
+            if(dptr->type == F_SPECIAL)
+                break;
+
+            /* this is composite */
+            if(*exec_ptr == CR)
+                return;
+
+            /* so get the textfield */
+            exec_ptr++;
+            read_parm(array);
+
+            /* deliberate fall thru */
+
+        case F_TEXT:
+            if(!mystr_set(&dptr->textfield, array))
+                return;
+            break;
+
+        case F_LIST:
+            dptr->option = (uchar) atoi((char *) array);
+            break;
+
+        case F_ARRAY:
             {
-            case F_COLOUR:
-            case F_CHAR:
-            case F_NUMBER:
-                dptr->option = (uchar) atoi((char *) array);
-                break;
+            BOOL found = FALSE;
+            char ***list = (char ***) dptr->optionlist;
 
-            case F_COMPOSITE:
-            case F_SPECIAL:
-                ptr = array;
-                while(*ptr++ == SPACE)
-                    ;
+            trace_1(TRACE_APP_DIALOG, "F_ARRAY searching for: %s", trace_string(array));
 
-                c = *--ptr;
-
-                if(!c  ||  !strchr(*dptr->optionlist, c))
-                    goto ERRORPOINT;
-
-                dptr->option = (uchar) c;
-                if(dptr->type == F_SPECIAL)
-                    break;
-
-                /* this is composite */
-                if(*exec_ptr == CR)
-                    return;
-
-                /* so get the textfield */
-                exec_ptr++;
-                read_parm(array);
-
-                /* deliberate fall thru */
-
-            case F_TEXT:
-                if(!mystr_set(&dptr->textfield, array))
-                    return;
-                break;
-
-            case F_LIST:
-                dptr->option = (uchar) atoi((char *) array);
-                break;
-
-            case F_ARRAY:
+            /* MRJC fix added here 16.8.89 to stop
+             * this loop zooming off end of array
+            */
+            for(c = 0; *(list + c); c++)
+            {
+                trace_1(TRACE_APP_DIALOG, "F_ARRAY comparing with: %s", trace_string(**(list + c)));
+                if(0 == _stricmp(array, **(list + c)))
                 {
-                BOOL found = FALSE;
-                char ***list = (char ***) dptr->optionlist;
-
-                trace_1(TRACE_APP_DIALOG, "F_ARRAY searching for: %s", trace_string(array));
-
-                /* MRJC fix added here 16.8.89 to stop
-                 * this loop zooming off end of array
-                */
-                for(c = 0; *(list + c); c++)
-                    {
-                    trace_1(TRACE_APP_DIALOG, "F_ARRAY comparing with: %s", trace_string(**(list + c)));
-                    if(0 == _stricmp(array, **(list + c)))
-                        {
-                        dptr->option = c;
-                        found = TRUE;
-                        break;
-                        }
-                    }
-
-                if(!found)
-                    {
-                    trace_0(TRACE_APP_DIALOG, "F_ARRAY key not found");
-                    goto ERRORPOINT;
-                    }
+                    dptr->option = c;
+                    found = TRUE;
+                    break;
                 }
-                break;
-
-            default:
-                break;
             }
+
+            if(!found)
+            {
+                trace_0(TRACE_APP_DIALOG, "F_ARRAY key not found");
+                goto ERRORPOINT;
+            }
+            break;
+            }
+
+        default:
+            break;
         }
+    }
 
     trace_0(TRACE_APP_DIALOG, "extract parameters out");
 
@@ -1827,12 +1827,12 @@ dialog_box(
     trace_1(TRACE_APP_DIALOG, "dialog_box(%d)", boxnumber);
 
     if(is_current_document())
-        {
+    {
         /* RISCOS doesn't use linbuf to process dialog: mergebuf just to set filealtered before going into dialog */
         if(!mergebuf_nocheck())
             return(FALSE);
         filbuf();
-        }
+    }
 
     update_dialog_from_windvars(boxnumber);
 
@@ -1845,27 +1845,27 @@ dialog_box(
      * displayed and have user interaction.
     */
     if((dhptr->flags & EXEC_CAN_FILL) &&  (in_execfile  ||  command_expansion))
-        {
+    {
         if(exec_ptr)
-            {
+        {
             /* exec_ptr points at TAB parameter...
              * read the parameters and leave exec_ptr on |M
             */
             extract_parameters(dptr, dhptr->items);
             exec_filled_dialog = TRUE;
-            }
+        }
 
         res = !been_error;
-        }
+    }
     else
-        {
+    {
         res = (dhptr->dproc)
                     ? riscdialog_execute(dhptr->dproc, dhptr->dname, dptr, boxnumber)
                     : reperr_not_installed(create_error(ERR_GENFAIL));
 
         if((dhptr->flags & EXEC_CAN_FILL)  &&  macro_recorder_on)
             out_comm_parms_to_macro_file(dhptr->dialog_box, dhptr->items, res);
-        }
+    }
 
     if(res)
         update_windvars_from_dialog(boxnumber);
@@ -1891,16 +1891,16 @@ dialog_box_can_persist(void)
 
     /* SKS after 4.12 01apr92 - ensure people don't get persistent dialogs 'cos that screws up command file recording (which is too hard to fix) */
     if(!ended && macro_recorder_on)
-        {
+    {
         dialog_box_end();
         ended = TRUE;
-        }
+    }
 
     if(!ended && is_current_document())
-        {
+    {
         draw_screen();
         draw_caret();
-        }
+    }
 
     return(!ended);
 }
@@ -1950,11 +1950,11 @@ dialog_box_start(void)
     pdfontselect_finalise(TRUE);
 
     if(riscdialog_in_dialog())
-        {
+    {
         riscdialog_front_dialog();
         reperr_null(ERR_ALREADY_IN_DIALOG);
         return(FALSE);
-        }
+    }
 
     exec_filled_dialog = FALSE;
 
@@ -1971,20 +1971,20 @@ ExampleCommand_fn(void)
         return;
 
     while(dialog_box(D_whatever))
-        {
+    {
         if(some_error_condition_wanting_retry)
-            {
+        {
             reperr();
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         some processing of args;
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }

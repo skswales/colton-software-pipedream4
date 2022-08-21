@@ -26,15 +26,15 @@ insert_this_ch(
     S32 tcase)
 {
     if(tcase != NOCASEINFO)
-        {
+    {
         if(*firstone)
-            {
+        {
             *firstone = FALSE;
             ch = ((tcase & FIRSTUPPER)  ? toupper : tolower) (ch);
-            }
+        }
         else
             ch = ((tcase & SECONDUPPER) ? toupper : tolower) (ch);
-        }
+    }
 
     if((curcol == sch_pos_end.col)  &&  (currow == sch_pos_end.row))
         ++sch_end_offset;
@@ -62,64 +62,64 @@ replace_one_word(
     xf_iovbit = TRUE;
 
     for( ; *next_replace_word; next_replace_word++)
-        {
+    {
         switch(*next_replace_word)
+        {
+        case DUMMYHAT:
+            next_replace_word++;
+            switch(toupper(*next_replace_word))
             {
-            case DUMMYHAT:
-                next_replace_word++;
-                switch(toupper(*next_replace_word))
+            case '#':
+                if(*++next_replace_word  &&  isdigit(*next_replace_word))
+                {
+                    if((offset = (S32) (*next_replace_word - '1')) < wild_strings)
                     {
-                    case '#':
-                        if(*++next_replace_word  &&  isdigit(*next_replace_word))
-                            {
-                            if((offset = (S32) (*next_replace_word - '1')) < wild_strings)
-                                {
-                                /* insert the (offset+1)th string from wild_string */
-                                uchar *tptr;
-                                P_LIST lptr = search_list(&wild_string_list, (S32) offset);
+                        /* insert the (offset+1)th string from wild_string */
+                        uchar *tptr;
+                        P_LIST lptr = search_list(&wild_string_list, (S32) offset);
 
-                                tptr = lptr ? lptr->value : UNULLSTR;
+                        tptr = lptr ? lptr->value : UNULLSTR;
 
-                                /* insert the string */
-                                while(*tptr)
-                                    {
-                                    insert_this_ch(*tptr++, &firstone, tcase);
-                                    if(been_error)
-                                        goto HAS_BEEN_ERROR;
-                                    }
-                                }
-                            }
-                        break;
-
-                    case '?':
-                        if(*++next_replace_word  &&  isdigit(*next_replace_word))
-                            {
-                            if((offset = (S32) (*next_replace_word - '1')) < wild_queries)
-                                insert_this_ch(wild_query[offset], &firstone, tcase);
-                            break;
-                            }
-
-                    default:
-                        break;
+                        /* insert the string */
+                        while(*tptr)
+                        {
+                            insert_this_ch(*tptr++, &firstone, tcase);
+                            if(been_error)
+                                goto HAS_BEEN_ERROR;
+                        }
                     }
+                }
                 break;
 
-            case FUNNYSPACE:
-                return(TRUE);
+            case '?':
+                if(*++next_replace_word  &&  isdigit(*next_replace_word))
+                {
+                    if((offset = (S32) (*next_replace_word - '1')) < wild_queries)
+                        insert_this_ch(wild_query[offset], &firstone, tcase);
+                    break;
+                }
 
             default:
-                insert_this_ch(*next_replace_word, &firstone, tcase);
                 break;
             }
+            break;
+
+        case FUNNYSPACE:
+            return(TRUE);
+
+        default:
+            insert_this_ch(*next_replace_word, &firstone, tcase);
+            break;
+        }
 
         HAS_BEEN_ERROR:
 
         if(been_error)
-            {
+        {
             xf_iovbit = tiovbit;
             return(FALSE);
-            }
         }
+    }
 
     sch_pos_stt.row = currow;
     sch_pos_stt.col = curcol;
@@ -205,34 +205,34 @@ do_replace(
     lecpos = sch_stt_offset;
 
     while((currow != sch_pos_end.row)  ||  (curcol != sch_pos_stt.col)  ||  (lecpos < sch_end_offset))
-        {
+    {
         tcase = NOCASEINFO;
 
         /* move over spaces and line cell breaks */
         assert(lecpos < elemof32(linbuf));
         if(linbuf[lecpos] == SPACE)
-            {
+        {
             if(first  ||  !*next_replace_word)
                 delete_this_ch();
             else
                 lecpos++;
 
             continue;
-            }
+        }
 
         first = FALSE;
 
         if(!linbuf[lecpos])
-            {
+        {
             if(!next_slot_in_replace())
                 return(FALSE);
 
             continue;
-            }
+        }
 
         /* look at the case of the word before it is deleted */
         if(folding  &&  (isalpha(linbuf[lecpos]) || isalpha(linbuf[lecpos+1])))
-            {
+        {
             tcase = 0;
 
             if(isupper(linbuf[lecpos]))
@@ -240,7 +240,7 @@ do_replace(
 
             if(isupper(linbuf[lecpos+1]))
                 tcase |= SECONDUPPER;
-            }
+        }
 
         /* delete the word, only works in one cell */
         while(linbuf[lecpos]  &&  linbuf[lecpos] != SPACE  &&
@@ -252,17 +252,17 @@ do_replace(
 
         if(!replace_one_word(tcase))
             return(FALSE);
-        }
+    }
 
     /* add all the other words */
     while(*next_replace_word  &&  !been_error)
-        {
+    {
         if( *next_replace_word == FUNNYSPACE)
             *next_replace_word = SPACE;
 
         if(!replace_one_word(NOCASEINFO))
             return(FALSE);
-        }
+    }
 
     trace_0(TRACE_APP_PD4, "leaving do_replace");
 

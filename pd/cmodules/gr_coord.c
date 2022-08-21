@@ -69,7 +69,7 @@ gr_box_hit(
     offset->y = apoint->y - abox->y0;
 
     if(semimajor)
-        {
+    {
         /* inclusive */
         if((apoint->x + semimajor->x) < abox->x0)
             return(-1);
@@ -81,9 +81,9 @@ gr_box_hit(
             return(-1);
         if((apoint->y - semimajor->y) > abox->y1)
             return(-1);
-        }
+    }
     else
-        {
+    {
         /* inclusive */
         if(offset->x < 0)
             return(-1);
@@ -95,7 +95,7 @@ gr_box_hit(
             return(-1);
         if(apoint->y > abox->y1)
             return(-1);
-        }
+    }
 
     return(1);
 }
@@ -234,28 +234,28 @@ gr_box_sort(
     GR_COORD tmp;
 
     if(abox->x1 < abox->x0)
-        {
+    {
         tmp      = abox->x1;
         sbox->x1 = abox->x0;
         sbox->x0 = tmp;
-        }
+    }
     else if(sbox != abox)
-        {
+    {
         sbox->x0 = abox->x0;
         sbox->x1 = abox->x1;
-        }
+    }
 
     if(abox->y1 < abox->y0)
-        {
+    {
         tmp      = abox->y1;
         sbox->y1 = abox->y0;
         sbox->y0 = tmp;
-        }
+    }
     else if(sbox != abox)
-        {
+    {
         sbox->y0 = abox->y0;
         sbox->y1 = abox->y1;
-        }
+    }
 }
 
 /******************************************************************************
@@ -277,16 +277,16 @@ gr_box_translate(
 
     /* all coordinates independent so using input as output is trivial */
     if(spoint->x)
-        {
+    {
         xbox->x0 = abox->x0 + spoint->x;
         xbox->x1 = abox->x1 + spoint->x;
-        }
+    }
 
     if(spoint->y)
-        {
+    {
         xbox->y0 = abox->y0 + spoint->y;
         xbox->y1 = abox->y1 + spoint->y;
-        }
+    }
 
     return(xbox);
 }
@@ -313,15 +313,15 @@ gr_box_union(
     /* all coordinates independent so using input as output is trivial */
 #ifdef GR_COORD_NO_UNION_EMPTIES
     if((abox->x0 == abox->x1)  ||  (abox->y0 == abox->y1))
-        {
+    {
         if(ubox != (voidp) bbox)
             *ubox = *bbox;
-        }
+    }
     else if((bbox->x0 == bbox->x1)  ||  (bbox->y0 == bbox->y1))
-        {
+    {
         if(ubox != (voidp) abox)
             *ubox = *abox;
-        }
+    }
     else
 #else
     /* SKS doesn't think this is a good idea after all!
@@ -329,12 +329,12 @@ gr_box_union(
      * where all grouped objects have 'empty' bboxes ...
     */
 #endif
-        {
+    {
         ubox->x0 = MIN(abox->x0, bbox->x0);
         ubox->y0 = MIN(abox->y0, bbox->y0);
         ubox->x1 = MAX(abox->x1, bbox->x1);
         ubox->y1 = MAX(abox->y1, bbox->y1);
-        }
+    }
 
     return(ubox);
 }
@@ -406,11 +406,11 @@ gr_coord_sort(
     GR_COORD tmp;
 
     if(*bcoord < *acoord)
-        {
+    {
         tmp     = *bcoord;
         *bcoord = *acoord;
         *acoord = tmp;
-        }
+    }
 }
 
 #if defined(UNUSED)

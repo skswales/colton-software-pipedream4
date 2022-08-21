@@ -89,7 +89,7 @@ PROC_EXEC_PROTO(c_mul)
 {
     exec_func_ignore_parms();
 
-    two_nums_times(p_ev_data_res, args[0], args[1]);
+    two_nums_multiply_try(p_ev_data_res, args[0], args[1]);
 }
 
 /******************************************************************************
@@ -103,78 +103,78 @@ PROC_EXEC_PROTO(c_add)
 {
     exec_func_ignore_parms();
 
-    if(two_nums_plus(p_ev_data_res, args[0], args[1]))
+    if(two_nums_add_try(p_ev_data_res, args[0], args[1]))
         return;
 
     switch(args[0]->did_num)
-        {
-        case RPN_DAT_REAL:
-            real_to_integer_force(args[0]);
+    {
+    case RPN_DAT_REAL:
+        real_to_integer_force(args[0]);
 
-        /*FALLTHRU*/
+    /*FALLTHRU*/
+
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+        switch(args[1]->did_num)
+        {
+        /* number + date */
+        case RPN_DAT_DATE:
+            p_ev_data_res->did_num = RPN_DAT_DATE;
+
+            if(EV_DATE_INVALID != args[1]->arg.ev_date.date)
+            {
+                p_ev_data_res->arg.ev_date.date = args[1]->arg.ev_date.date + args[0]->arg.integer;
+                p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time;
+            }
+            else
+            {
+                p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time + args[0]->arg.integer;
+                ss_date_normalise(&p_ev_data_res->arg.ev_date);
+            }
+            break;
+        }
+        break;
+
+    case RPN_DAT_DATE:
+        switch(args[1]->did_num)
+        {
+        /* date + number */
+        case RPN_DAT_REAL:
+            real_to_integer_force(args[1]);
+
+            /*FALLTHRU*/
 
         case RPN_DAT_WORD8:
         case RPN_DAT_WORD16:
         case RPN_DAT_WORD32:
-            switch(args[1]->did_num)
-                {
-                /* number + date */
-                case RPN_DAT_DATE:
-                    p_ev_data_res->did_num = RPN_DAT_DATE;
+            p_ev_data_res->did_num = RPN_DAT_DATE;
 
-                    if(EV_DATE_INVALID != args[1]->arg.ev_date.date)
-                        {
-                        p_ev_data_res->arg.ev_date.date = args[1]->arg.ev_date.date + args[0]->arg.integer;
-                        p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time;
-                        }
-                    else
-                        {
-                        p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
-                        p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time + args[0]->arg.integer;
-                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
-                        }
-                    break;
-                }
+            if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
+            {
+                p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.integer;
+                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
+            }
+            else
+            {
+                p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.integer;
+                ss_date_normalise(&p_ev_data_res->arg.ev_date);
+            }
             break;
 
+        /* date + date */
         case RPN_DAT_DATE:
-            switch(args[1]->did_num)
-                {
-                /* date + number */
-                case RPN_DAT_REAL:
-                    real_to_integer_force(args[1]);
-
-                    /*FALLTHRU*/
-
-                case RPN_DAT_WORD8:
-                case RPN_DAT_WORD16:
-                case RPN_DAT_WORD32:
-                    p_ev_data_res->did_num = RPN_DAT_DATE;
-
-                    if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
-                        {
-                        p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.integer;
-                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
-                        }
-                    else
-                        {
-                        p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
-                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.integer;
-                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
-                        }
-                    break;
-
-                /* date + date */
-                case RPN_DAT_DATE:
-                    p_ev_data_res->did_num = RPN_DAT_DATE;
-                    p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.ev_date.date;
-                    p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.ev_date.time;
-                    ss_date_normalise(&p_ev_data_res->arg.ev_date);
-                    break;
-                }
-
+            p_ev_data_res->did_num = RPN_DAT_DATE;
+            p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.ev_date.date;
+            p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.ev_date.time;
+            ss_date_normalise(&p_ev_data_res->arg.ev_date);
             break;
         }
+
+        break;
+    }
 }
 
 /******************************************************************************
@@ -188,74 +188,74 @@ PROC_EXEC_PROTO(c_sub)
 {
     exec_func_ignore_parms();
 
-    if(two_nums_minus(p_ev_data_res, args[0], args[1]))
+    if(two_nums_subtract_try(p_ev_data_res, args[0], args[1]))
         return;
 
     switch(args[0]->did_num)
+    {
+    case RPN_DAT_REAL:
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+        switch(args[1]->did_num)
         {
+        /* number - date */
+        case RPN_DAT_DATE:
+            ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXDATE);
+            break;
+        }
+        break;
+
+    case RPN_DAT_DATE:
+        switch(args[1]->did_num)
+        {
+        /* date - number */
         case RPN_DAT_REAL:
+            real_to_integer_force(args[1]);
+
+            /*FALLTHRU*/
+
         case RPN_DAT_WORD8:
         case RPN_DAT_WORD16:
         case RPN_DAT_WORD32:
-            switch(args[1]->did_num)
-                {
-                /* number - date */
-                case RPN_DAT_DATE:
-                    ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXDATE);
-                    break;
-                }
+            p_ev_data_res->did_num = RPN_DAT_DATE;
+
+            if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
+            {
+                p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.integer;
+                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
+            }
+            else
+            {
+                p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.integer;
+                ss_date_normalise(&p_ev_data_res->arg.ev_date);
+            }
             break;
 
+        /* date - date */
         case RPN_DAT_DATE:
-            switch(args[1]->did_num)
-                {
-                /* date - number */
-                case RPN_DAT_REAL:
-                    real_to_integer_force(args[1]);
+            p_ev_data_res->did_num = RPN_DAT_DATE;
+            p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.ev_date.date;
+            p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.ev_date.time;
 
-                    /*FALLTHRU*/
-
-                case RPN_DAT_WORD8:
-                case RPN_DAT_WORD16:
-                case RPN_DAT_WORD32:
-                    p_ev_data_res->did_num = RPN_DAT_DATE;
-
-                    if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
-                        {
-                        p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.integer;
-                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
-                        }
-                    else
-                        {
-                        p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
-                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.integer;
-                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
-                        }
-                    break;
-
-                /* date - date */
-                case RPN_DAT_DATE:
-                    p_ev_data_res->did_num = RPN_DAT_DATE;
-                    p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.ev_date.date;
-                    p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.ev_date.time;
-
-                    if(p_ev_data_res->arg.ev_date.date && p_ev_data_res->arg.ev_date.time)
-                        {
-                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
-                        }
-                    else
-                        {
-                        ev_data_set_integer(p_ev_data_res,
-                                            (p_ev_data_res->arg.ev_date.date
-                                                 ? p_ev_data_res->arg.ev_date.date
-                                                 : p_ev_data_res->arg.ev_date.time));
-                        }
-
-                    break;
-                }
+            if(p_ev_data_res->arg.ev_date.date && p_ev_data_res->arg.ev_date.time)
+            {
+                ss_date_normalise(&p_ev_data_res->arg.ev_date);
+            }
+            else
+            {
+                ev_data_set_integer(p_ev_data_res,
+                                    (p_ev_data_res->arg.ev_date.date
+                                         ? p_ev_data_res->arg.ev_date.date
+                                         : p_ev_data_res->arg.ev_date.time));
+            }
 
             break;
         }
+
+        break;
+    }
 }
 
 /******************************************************************************
@@ -269,7 +269,7 @@ PROC_EXEC_PROTO(c_div)
 {
     exec_func_ignore_parms();
 
-    two_nums_divide(p_ev_data_res, args[0], args[1]);
+    two_nums_divide_try(p_ev_data_res, args[0], args[1]);
 }
 
 /******************************************************************************
@@ -442,7 +442,7 @@ poke_slot(
         res = create_error(EVAL_ERR_OWNCOLUMN);
     #endif
     else
-        {
+    {
         EV_DATA temp;
         EV_RESULT ev_result;
 
@@ -456,7 +456,7 @@ poke_slot(
         if((res = ev_make_slot(slrp, &ev_result)) < 0)
             ev_result_free_resources(&ev_result);
         else
-            {
+        {
             UREF_PARM urefb;
 
             /* notify anybody about the change */
@@ -465,8 +465,8 @@ poke_slot(
             ev_uref(&urefb);
             urefb.action = UREF_REDRAW;
             ev_uref(&urefb);
-            }
         }
+    }
 
     return(res);
 }
@@ -488,85 +488,85 @@ PROC_EXEC_PROTO(c_setvalue)
     err = 0;
 
     switch(args[0]->did_num)
+    {
+    case RPN_DAT_SLR:
         {
-        case RPN_DAT_SLR:
-            {
-            if(!slr_equal(p_cur_slr, &args[0]->arg.slr))
-                err = poke_slot(&args[0]->arg.slr, args[1], p_cur_slr);
+        if(!slr_equal(p_cur_slr, &args[0]->arg.slr))
+            err = poke_slot(&args[0]->arg.slr, args[1], p_cur_slr);
 
-            if(!err)
-                ss_data_resource_copy(p_ev_data_res, args[1]);
+        if(!err)
+            ss_data_resource_copy(p_ev_data_res, args[1]);
 
-            break;
-            }
-
-        case RPN_DAT_RANGE:
-            {
-            RANGE_SCAN_BLOCK rsb;
-            EV_SLR top_left;
-
-            if((err = range_scan_init(&args[0]->arg.range, &rsb)) >= 0)
-                {
-                EV_DATA element;
-                S32 first;
-
-                first = 1;
-                top_left = rsb.slr_of_result;
-
-                while(range_scan_element(&rsb,
-                                         &element,
-                                         EM_ANY) != RPN_FRM_END)
-                    {
-                    S32 res;
-                    EV_DATA poke_data;
-
-                    switch(args[1]->did_num)
-                        {
-                        case RPN_DAT_RANGE:
-                        case RPN_TMP_ARRAY:
-                        case RPN_RES_ARRAY:
-                            array_range_index(&poke_data,
-                                              args[1],
-                                              rsb.slr_of_result.col - rsb.range.s.col,
-                                              rsb.slr_of_result.row - rsb.range.s.row, EM_ANY);
-                            break;
-                        default:
-                            poke_data = *args[1];
-                            break;
-                        }
-
-                    /* poke cell duplicates resources,
-                     * but don't poke to ourselves
-                     */
-                    if(!slr_equal(p_cur_slr, &rsb.slr_of_result))
-                        {
-                        if((res = poke_slot(&rsb.slr_of_result, &poke_data, p_cur_slr)) < 0)
-                            if(!err)
-                                err = res;
-                        }
-
-                    if(first)
-                        ss_data_resource_copy(p_ev_data_res, &poke_data);
-
-                    first = 0;
-                    }
-                }
-            break;
-            }
-
-        /* we can't cope with arrays to poke */
-        case RPN_RES_ARRAY:
-        case RPN_TMP_ARRAY:
-            err = create_error(EVAL_ERR_UNEXARRAY);
-            break;
+        break;
         }
 
-    if(err < 0)
+    case RPN_DAT_RANGE:
         {
+        RANGE_SCAN_BLOCK rsb;
+        EV_SLR top_left;
+
+        if((err = range_scan_init(&args[0]->arg.range, &rsb)) >= 0)
+        {
+            EV_DATA element;
+            S32 first;
+
+            first = 1;
+            top_left = rsb.slr_of_result;
+
+            while(range_scan_element(&rsb,
+                                     &element,
+                                     EM_ANY) != RPN_FRM_END)
+            {
+                S32 res;
+                EV_DATA poke_data;
+
+                switch(args[1]->did_num)
+                {
+                case RPN_DAT_RANGE:
+                case RPN_TMP_ARRAY:
+                case RPN_RES_ARRAY:
+                    array_range_index(&poke_data,
+                                      args[1],
+                                      rsb.slr_of_result.col - rsb.range.s.col,
+                                      rsb.slr_of_result.row - rsb.range.s.row, EM_ANY);
+                    break;
+                default:
+                    poke_data = *args[1];
+                    break;
+                }
+
+                /* poke cell duplicates resources,
+                 * but don't poke to ourselves
+                 */
+                if(!slr_equal(p_cur_slr, &rsb.slr_of_result))
+                {
+                    if((res = poke_slot(&rsb.slr_of_result, &poke_data, p_cur_slr)) < 0)
+                        if(!err)
+                            err = res;
+                }
+
+                if(first)
+                    ss_data_resource_copy(p_ev_data_res, &poke_data);
+
+                first = 0;
+            }
+        }
+        break;
+        }
+
+    /* we can't cope with arrays to poke */
+    case RPN_RES_ARRAY:
+    case RPN_TMP_ARRAY:
+        err = create_error(EVAL_ERR_UNEXARRAY);
+        break;
+    }
+
+    if(err < 0)
+    {
         /* free anything we might have saved */
         ss_data_free_resources(p_ev_data_res);
         ev_data_set_error(p_ev_data_res, err);
-        }
+    }
 }
 
 /*
@@ -671,7 +671,7 @@ PROC_EXEC_PROTO(c_irr)
     exec_func_ignore_parms();
 
     for(iteration_count = 0; iteration_count < 40; ++iteration_count)
-        {
+    {
         F64 this_npv, this_r;
         EV_DATA npv;
 
@@ -699,7 +699,7 @@ PROC_EXEC_PROTO(c_irr)
 
         last_npv = this_npv;
         last_r = this_r;
-        }
+    }
 
     ev_data_set_error(p_ev_data_res, EVAL_ERR_IRR);
 }
@@ -864,42 +864,42 @@ array_range_proc(
     P_EV_DATA p_ev_data)
 {
     switch(p_ev_data->did_num)
+    {
+    case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
+        array_range_proc_array(stbp, p_ev_data);
+        break;
+
+    case RPN_DAT_RANGE:
         {
-        case RPN_TMP_ARRAY:
-        case RPN_RES_ARRAY:
-            array_range_proc_array(stbp, p_ev_data);
-            break;
+        RANGE_SCAN_BLOCK rsb;
 
-        case RPN_DAT_RANGE:
-            {
-            RANGE_SCAN_BLOCK rsb;
+        if(range_scan_init(&p_ev_data->arg.range, &rsb) >= 0)
+        {
+            EV_DATA element;
 
-            if(range_scan_init(&p_ev_data->arg.range, &rsb) >= 0)
+            while(range_scan_element(&rsb,
+                                     &element,
+                                     EM_REA | EM_ARY | EM_BLK | EM_DAT) != RPN_FRM_END)
+                switch(element.did_num)
                 {
-                EV_DATA element;
-
-                while(range_scan_element(&rsb,
-                                         &element,
-                                         EM_REA | EM_ARY | EM_BLK | EM_DAT) != RPN_FRM_END)
-                    switch(element.did_num)
-                        {
-                        case RPN_TMP_ARRAY:
-                        case RPN_RES_ARRAY:
-                            array_range_proc_array(stbp, &element);
-                            break;
-                        default:
-                            array_range_proc_item(stbp, &element);
-                            break;
-                        }
+                case RPN_TMP_ARRAY:
+                case RPN_RES_ARRAY:
+                    array_range_proc_array(stbp, &element);
+                    break;
+                default:
+                    array_range_proc_item(stbp, &element);
+                    break;
                 }
-
-            break;
-            }
-
-        default:
-            array_range_proc_item(stbp, p_ev_data);
-            break;
         }
+
+        break;
+        }
+
+    default:
+        array_range_proc_item(stbp, p_ev_data);
+        break;
+    }
 }
 
 /******************************************************************************
@@ -916,13 +916,13 @@ array_range_proc_array(
     ARRAY_SCAN_BLOCK asb;
 
     if(array_scan_init(&asb, p_ev_data))
-        {
+    {
         EV_DATA element;
 
         while(array_scan_element(&asb, &element,
                                  EM_REA | EM_AR0 | EM_BLK | EM_DAT) != RPN_FRM_END)
             array_range_proc_item(stbp, &element);
-        }
+    }
 }
 
 /*
@@ -1256,28 +1256,28 @@ dbase_sub_function(
     /* work out state of condition */
     if((arg_normalise(cond_flagp, EM_REA, NULL, NULL) == RPN_DAT_REAL) &&
        (cond_flagp->arg.fp != 0.0))
-        {
+    {
         EV_DATA data;
 
 #if TRACE_ALLOWED
-        if(tracing(TRACE_MODULE_EVAL))
-            {
+        if_constant(tracing(TRACE_MODULE_EVAL))
+        {
             char buffer[BUF_EV_LONGNAMLEN];
             ev_trace_slr(buffer, elemof32(buffer), "DBASE processing cell: $$", &cur_slot);
             trace_0(TRACE_MODULE_EVAL, buffer);
-            }
+        }
 #endif
 
         ev_slr_deref(&data, &cur_slot, FALSE);
         array_range_proc(p_stack_dbase->p_stat_block, &data);
-        }
+    }
 #if TRACE_ALLOWED
-    else if(tracing(TRACE_MODULE_EVAL))
-        {
+    else if_constant(tracing(TRACE_MODULE_EVAL))
+    {
         char buffer[BUF_EV_LONGNAMLEN];
         ev_trace_slr(buffer, elemof32(buffer), "DBASE failed cell: $$", &cur_slot);
         trace_0(TRACE_MODULE_EVAL, buffer);
-        }
+    }
 #endif
 }
 
@@ -1314,70 +1314,70 @@ lookup_array_range_proc(
     S32 res = 0;
 
     switch(p_ev_data->did_num)
+    {
+    case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
+        lkbp->in_array = 1;
+        res = lookup_array_range_proc_array(lkbp, p_ev_data);
+        break;
+
+    case RPN_DAT_RANGE:
         {
-        case RPN_TMP_ARRAY:
-        case RPN_RES_ARRAY:
-            lkbp->in_array = 1;
-            res = lookup_array_range_proc_array(lkbp, p_ev_data);
-            break;
+        if(lkbp->in_range || range_scan_init(&p_ev_data->arg.range, &lkbp->rsb) >= 0)
+        {
+            EV_DATA element;
 
-        case RPN_DAT_RANGE:
+            lkbp->in_range = 0;
+            while(range_scan_element(&lkbp->rsb,
+                                     &element,
+                                     EM_REA | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_INT) != RPN_FRM_END)
             {
-            if(lkbp->in_range || range_scan_init(&p_ev_data->arg.range, &lkbp->rsb) >= 0)
+                switch(element.did_num)
                 {
-                EV_DATA element;
+                case RPN_TMP_ARRAY:
+                case RPN_RES_ARRAY:
+                    res = lookup_array_range_proc_array(lkbp, &element);
+                    break;
 
-                lkbp->in_range = 0;
-                while(range_scan_element(&lkbp->rsb,
-                                         &element,
-                                         EM_REA | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_INT) != RPN_FRM_END)
+                default:
+                    if((res = lookup_array_range_proc_item(lkbp, &element)) >= 0)
                     {
-                    switch(element.did_num)
-                        {
-                        case RPN_TMP_ARRAY:
-                        case RPN_RES_ARRAY:
-                            res = lookup_array_range_proc_array(lkbp, &element);
-                            break;
-
-                        default:
-                            if((res = lookup_array_range_proc_item(lkbp, &element)) >= 0)
-                                {
-                                /* save position */
-                                lkbp->result_data.arg.slr = lkbp->rsb.slr_of_result;
-                                lkbp->result_data.did_num = RPN_DAT_SLR;
-                                lkbp->had_one = 1;
-                                }
-                            else
-                                res = 1;
-                            break;
-                        }
-
-                    if(res)
-                        break;
-
-                    if(!--lkbp->break_count)
-                        {
-                        lkbp->in_range = 1;
-                        lkbp->break_count = LOOKUP_BREAK_COUNT;
-                        res = -1;
-                        break;
-                        }
+                        /* save position */
+                        lkbp->result_data.arg.slr = lkbp->rsb.slr_of_result;
+                        lkbp->result_data.did_num = RPN_DAT_SLR;
+                        lkbp->had_one = 1;
                     }
+                    else
+                        res = 1;
+                    break;
                 }
 
-            break;
-            }
+                if(res)
+                    break;
 
-        default:
-            if((res = lookup_array_range_proc_item(lkbp, p_ev_data)) >= 0)
+                if(!--lkbp->break_count)
                 {
-                lkbp->result_data = *p_ev_data;
-                lkbp->had_one = 1;
+                    lkbp->in_range = 1;
+                    lkbp->break_count = LOOKUP_BREAK_COUNT;
+                    res = -1;
+                    break;
                 }
-            else
-                res = 1;
-            break;
+            }
         }
+
+        break;
+        }
+
+    default:
+        if((res = lookup_array_range_proc_item(lkbp, p_ev_data)) >= 0)
+        {
+            lkbp->result_data = *p_ev_data;
+            lkbp->had_one = 1;
+        }
+        else
+            res = 1;
+        break;
+    }
 
     /* if we didn't find a match, yet we are
      * not looking for an exact match, return the last
@@ -1404,27 +1404,27 @@ lookup_array_range_proc_array(
     ARRAY_SCAN_BLOCK asb;
 
     if(array_scan_init(&asb, p_ev_data))
-        {
+    {
         EV_DATA element;
 
         while(array_scan_element(&asb, &element,
                                  EM_REA | EM_STR | EM_DAT | EM_AR0 | EM_BLK | EM_INT) != RPN_FRM_END)
-            {
+        {
             if(element.did_num == RPN_DAT_BLANK)
                 continue;
 
             if((res = lookup_array_range_proc_item(lkbp, &element)) >= 0)
-                {
+            {
                 lkbp->result_data = element;
                 lkbp->had_one = 1;
-                }
+            }
             else
                 res = 1;
 
             if(res)
                 break;
-            }
         }
+    }
 
     return(res);
 }
@@ -1450,30 +1450,31 @@ lookup_array_range_proc_item(
     res = 0;
 
     switch(lkbp->lookup_id)
+    {
+    case LOOKUP_CHOOSE:
         {
-        case LOOKUP_CHOOSE:
-            {
-            if(!--lkbp->choose_count)
-                res = 1;
-            break;
-            }
-
-        default:
-            {
-            S32 match;
-
-            /* SKS 22oct96 for 4.50 reversed to make wildcard lookups work */
-            if(0 == (match = ss_data_compare(p_ev_data, &lkbp->target_data)))
-                res = 1;
-            else
-                {
-                match = -match;
-
-                if(match < 0 && lkbp->match > 0 || match > 0 && lkbp->match < 0)
-                    res = -1;
-                }
-            }
+        if(!--lkbp->choose_count)
+            res = 1;
+        break;
         }
+
+    default:
+        {
+        S32 match;
+
+        /* SKS 22oct96 for 4.50 reversed to make wildcard lookups work */
+        if(0 == (match = ss_data_compare(p_ev_data, &lkbp->target_data)))
+            res = 1;
+        else
+        {
+            match = -match;
+
+            if(match < 0 && lkbp->match > 0 || match > 0 && lkbp->match < 0)
+                res = -1;
+        }
+        break;
+        }
+    }
 
     if(res >= 0)
         lkbp->count += 1;
@@ -1508,19 +1509,19 @@ lookup_block_init(
     lkbp->break_count = LOOKUP_BREAK_COUNT;
 
     switch(lookup_id)
-        {
-        case LOOKUP_HLOOKUP:
-        case LOOKUP_VLOOKUP:
-            lkbp->match = 1;
-            break;
-        case LOOKUP_MATCH:
-            lkbp->match = match;
-            break;
-        case LOOKUP_LOOKUP:
-        default:
-            lkbp->match = 0;
-            break;
-        }
+    {
+    case LOOKUP_HLOOKUP:
+    case LOOKUP_VLOOKUP:
+        lkbp->match = 1;
+        break;
+    case LOOKUP_MATCH:
+        lkbp->match = match;
+        break;
+    case LOOKUP_LOOKUP:
+    default:
+        lkbp->match = 0;
+        break;
+    }
 
     lkbp->had_one = 0;
 }
@@ -1537,51 +1538,51 @@ lookup_finish(
     P_STACK_LOOKUP p_stack_lookup)
 {
     switch(p_stack_lookup->p_lookup_block->lookup_id)
+    {
+    case LOOKUP_LOOKUP:
         {
-        case LOOKUP_LOOKUP:
-            {
-            EV_DATA data;
+        EV_DATA data;
 
-            array_range_mono_index(&data,
-                                   &p_stack_lookup->arg2,
-                                   p_stack_lookup->p_lookup_block->count - 1,
-                                   EM_REA | EM_SLR | EM_STR | EM_DAT | EM_BLK | EM_INT);
-            /* MRJC 27.3.92 */
-            ss_data_resource_copy(p_ev_data_res, &data);
-            break;
-            }
-
-        case LOOKUP_HLOOKUP:
-            {
-            if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
-                ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
-            else
-                {
-                ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
-                p_ev_data_res->arg.slr.row += (EV_ROW) p_stack_lookup->arg2.arg.integer;
-                }
-            break;
-            }
-
-        case LOOKUP_VLOOKUP:
-            {
-            if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
-                ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
-            else
-                {
-                ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
-                p_ev_data_res->arg.slr.col += (EV_COL) p_stack_lookup->arg2.arg.integer;
-                }
-            break;
-            }
-
-        case LOOKUP_MATCH:
-            if(p_stack_lookup->p_lookup_block->in_array)
-                ev_data_set_integer(p_ev_data_res, p_stack_lookup->p_lookup_block->count);
-            else
-                ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
-            break;
+        array_range_mono_index(&data,
+                               &p_stack_lookup->arg2,
+                               p_stack_lookup->p_lookup_block->count - 1,
+                               EM_REA | EM_SLR | EM_STR | EM_DAT | EM_BLK | EM_INT);
+        /* MRJC 27.3.92 */
+        ss_data_resource_copy(p_ev_data_res, &data);
+        break;
         }
+
+    case LOOKUP_HLOOKUP:
+        {
+        if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
+            ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
+        else
+        {
+            ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
+            p_ev_data_res->arg.slr.row += (EV_ROW) p_stack_lookup->arg2.arg.integer;
+        }
+        break;
+        }
+
+    case LOOKUP_VLOOKUP:
+        {
+        if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
+            ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
+        else
+        {
+            ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
+            p_ev_data_res->arg.slr.col += (EV_COL) p_stack_lookup->arg2.arg.integer;
+        }
+        break;
+        }
+
+    case LOOKUP_MATCH:
+        if(p_stack_lookup->p_lookup_block->in_array)
+            ev_data_set_integer(p_ev_data_res, p_stack_lookup->p_lookup_block->count);
+        else
+            ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
+        break;
+    }
 }
 
 /******************************************************************************

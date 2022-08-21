@@ -80,33 +80,33 @@ funclist_add(
     /* search for handler on list */
 
     if(NULL != *p_p_list_block)
-        {
+    {
         for(hp = collect_first(FUNCLIST_HANDLER, p_p_list_block, itemnop);
             hp;
             hp = collect_next( FUNCLIST_HANDLER, p_p_list_block, itemnop))
-            {
+        {
             if(hp->priority < priority)
-                {
+            {
                 /* found place in list to add before */
                 break;
-                }
+            }
 
             if((hp->proc == proc)  &&  (hp->handle == handle))
-                {
+            {
                 trace_2(TRACE_MODULE_FUNCLIST, "funclist_proc (&%p,&%p) already on list, retagging", report_procedure_name(report_proc_cast(proc)), report_ptr_cast(handle));
                 hp->tag = tag;
                 return(STATUS_OK);
-                }
             }
+        }
 
         /* if we ran out of list, add to end */
         *itemnop = list_numitem(*p_p_list_block);
-        }
+    }
     else
-        {
+    {
         /* add to start */
         *itemnop = 0;
-        }
+    }
 
     myassert1x(extradata <= 256, "extradata %s too big for current pool initialiser", extradata);
 
@@ -155,7 +155,7 @@ funclist_first(
     *itemnop = list_numitem(*p_p_list_block);
 
     if(*itemnop)
-        {
+    {
         if(ascending)
             *itemnop = 0;
         else
@@ -163,7 +163,7 @@ funclist_first(
                 --(*itemnop);
 
         if((hp = collect_first_from(FUNCLIST_HANDLER, p_p_list_block, itemnop)) != NULL)
-            {
+        {
             trace_3(TRACE_MODULE_FUNCLIST,
                     " yields (&%p,&%p) %d", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
             *proc   = hp->proc;
@@ -171,8 +171,8 @@ funclist_first(
             tag     = hp->tag;
 
             return(tag);
-            }
         }
+    }
 
     *proc = funclist_proc_none;
     *handle = NULL;
@@ -211,7 +211,7 @@ funclist_next(
         hp = collect_prev(FUNCLIST_HANDLER, p_p_list_block, itemnop);
 
     if(NULL != hp)
-        {
+    {
         trace_3(TRACE_MODULE_FUNCLIST,
                 " yields (&%p,&%p) %d", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
         *proc   = hp->proc;
@@ -219,7 +219,7 @@ funclist_next(
         tag     = hp->tag;
 
         return(tag);
-        }
+    }
 
     *proc = funclist_proc_none;
     *handle = NULL;
@@ -254,11 +254,11 @@ funclist_readdata_ip(
 
     /* got position of handler on list */
     if((hp = collect_goto_item(FUNCLIST_HANDLER, p_p_list_block, itemno)) != NULL)
-        {
+    {
         trace_1(TRACE_MODULE_FUNCLIST, " from &%p", PtrAddBytes(PC_BYTE, (hp + 1), offset));
         memcpy32(dest, PtrAddBytes(PC_BYTE, (hp + 1), offset), nbytes);
         return(1);
-        }
+    }
 
     trace_0(TRACE_MODULE_FUNCLIST, " -- not found");
     return(0);
@@ -288,9 +288,9 @@ funclist_remove(
     for(hp = collect_first(FUNCLIST_HANDLER, p_p_list_block, &itemno);
         hp;
         hp = collect_next( FUNCLIST_HANDLER, p_p_list_block, &itemno))
-        {
+    {
         if((hp->proc == proc) && (hp->handle == handle))
-            {
+        {
             itemno = list_atitem(*p_p_list_block);
 
             (void) collect_delete_entry(p_p_list_block, itemno);
@@ -298,8 +298,8 @@ funclist_remove(
             collect_compress(p_p_list_block);
 
             return;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -329,11 +329,11 @@ funclist_writedata_ip(
 
     /* got position of handler on list */
     if((hp = collect_goto_item(FUNCLIST_HANDLER, p_p_list_block, itemno)) != NULL)
-        {
+    {
         trace_1(TRACE_MODULE_FUNCLIST, " to &%p", PtrAddBytes(P_BYTE, (hp + 1), offset));
         memcpy32(PtrAddBytes(P_BYTE, (hp + 1), offset), from, nbytes);
         return(1);
-        }
+    }
 
     trace_0(TRACE_MODULE_FUNCLIST, " -- not found");
     return(0);

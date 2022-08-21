@@ -66,63 +66,63 @@ compile_search_string(
         ch = *from++;
 
         switch(ch)
+        {
+        case '^':
+            switch(toupper(*from))
             {
             case '^':
-                switch(toupper(*from))
-                    {
-                    case '^':
-                        array[to_idx++] = '^';
-                        break;
-
-                    case 'S':
-                        array[to_idx++] = SPACE;
-                        break;
-
-                    case 'B':
-                        /* check at start of search string */
-                        if(from != (uchar *) d_search[SCH_TARGET].textfield + 1)
-                            goto BAD_HAT_POINT;
-                        only_start = TRUE;
-                        break;
-
-                    case '?':
-                    case '#':
-                        if(is_replace  &&  (!from[1]  ||  !isdigit(from[1])))
-                            goto BAD_HAT_POINT;
-                        array[to_idx++] = DUMMYHAT;
-                        array[to_idx++] = toupper(*from);
-                        break;
-
-                    default:
-                        if((*from >= FIRST_HIGHLIGHT_TEXT)  &&  (*from <= LAST_HIGHLIGHT_TEXT))
-                            array[to_idx++] = (uchar) (FIRST_HIGHLIGHT + (*from - FIRST_HIGHLIGHT_TEXT));
-                        else
-                            goto BAD_HAT_POINT;
-                        break;
-                    }
-                from++;
+                array[to_idx++] = '^';
                 break;
 
-            case CTRLDI:
-                if(*from == CTRLDI)
-                    array[to_idx++] = CTRLDI;
-                else if(isalpha(*from))
-                    array[to_idx++] = toupper(*from) - ('A'-1);
-                from++;
+            case 'S':
+                array[to_idx++] = SPACE;
                 break;
 
-            case SPACE:
-                while(*from++ == SPACE)
-                    ;
-                from--;
-                array[to_idx++] = FUNNYSPACE;
+            case 'B':
+                /* check at start of search string */
+                if(from != (uchar *) d_search[SCH_TARGET].textfield + 1)
+                    goto BAD_HAT_POINT;
+                only_start = TRUE;
+                break;
+
+            case '?':
+            case '#':
+                if(is_replace  &&  (!from[1]  ||  !isdigit(from[1])))
+                    goto BAD_HAT_POINT;
+                array[to_idx++] = DUMMYHAT;
+                array[to_idx++] = toupper(*from);
                 break;
 
             default:
-                array[to_idx++] = ch;
+                if((*from >= FIRST_HIGHLIGHT_TEXT)  &&  (*from <= LAST_HIGHLIGHT_TEXT))
+                    array[to_idx++] = (uchar) (FIRST_HIGHLIGHT + (*from - FIRST_HIGHLIGHT_TEXT));
+                else
+                    goto BAD_HAT_POINT;
                 break;
             }
+            from++;
+            break;
+
+        case CTRLDI:
+            if(*from == CTRLDI)
+                array[to_idx++] = CTRLDI;
+            else if(isalpha(*from))
+                array[to_idx++] = toupper(*from) - ('A'-1);
+            from++;
+            break;
+
+        case SPACE:
+            while(*from++ == SPACE)
+                ;
+            from--;
+            array[to_idx++] = FUNNYSPACE;
+            break;
+
+        default:
+            array[to_idx++] = ch;
+            break;
         }
+    }
     while(ch);
 
     if(!mystr_set(targ, array))
@@ -171,7 +171,7 @@ set_search_all_rows(void)
 
 #ifdef SEARCH_COLRANGE
     if(d_search[SCH_COLRANGE].option == 'Y')
-        {
+    {
         /* column range */
 
         buff_sofar = (uchar *) d_search[SCH_COLRANGE].textfield;
@@ -184,15 +184,15 @@ set_search_all_rows(void)
 
         if((sch_end.col == NO_COL)  ||  (sch_end.col < sch_stt.col))
             return(reperr_null(ERR_BAD_COL));
-        }
+    }
     else
 #endif
-        {
+    {
         /* whole sheet selected */
 
         sch_stt.col = 0;
         sch_end.col = numcol-1;
-        }
+    }
 
     return(TRUE);
 }
@@ -241,17 +241,17 @@ do_search(
     d_search[SCH_CONFIRM].option = 'Y';
 
     while(dialog_box(D_SEARCH))
-        {
+    {
         if(str_isblank(d_search[SCH_TARGET].textfield))
-            {
+        {
             reperr_null(ERR_BAD_STRING);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         break; /* never persists in this case */
-        }
+    }
 
     dialog_box_end();
 
@@ -309,23 +309,23 @@ next_or_previous_match(
 
     /* cannot check with str_isblank cos might be looking for spaces */
     if(!target_string  ||  (*target_string == '\0'))
-        {
+    {
         reperr_null(ERR_BAD_STRING);
         return;
-        }
+    }
 
     /* if moved to another document, allow next/prev match (allow col option) */
     if(sch_docno != current_docno())
-        {
+    {
         if(!set_search_all_rows())
             return;
-        }
+    }
 
     /* do now, so we don't get flashing dbox */
     riscos_frontmainwindow(TRUE);
 
     if(xf_inexpression_box || xf_inexpression_line)
-        {
+    {
         /* NextMatch_fn or PrevMatch_fn called whilst in an editor, so */
         /* mergeback current edit buffer contents before doing search  */
 
@@ -335,7 +335,7 @@ next_or_previous_match(
             return;             /* mergeback failed, probably text too big for linbuf */
 
         lecpos = caretpos;      /* so we don't continually find same sub-string */
-        }
+    }
     else if(!mergebuf())
         return;
 
@@ -468,7 +468,7 @@ sch_stringcmp(
 
     /* look all through this string for target_string */
     for( ; *ptr2  &&  sch_stt_offset >= 0; ptr2+=increment, sch_stt_offset+=increment)
-        {
+    {
         uchar *x, *y;
         uchar *ox, *oy, *oldypos;
         BOOL wild_x;
@@ -483,10 +483,10 @@ sch_stringcmp(
         oldypos = NULL;
 
         if(moved_slots)
-            {
+        {
             recover_first_slot();
             moved_slots = FALSE;
-            }
+        }
         y = current_slot = ptr2;
         x = target_string-1;
 
@@ -503,49 +503,49 @@ STAR:
         if(wild_strings == -1)
             last_wild_strings = wild_strings = 0;
         else
-            {
+        {
             /* remember position of start of match */
             oldypos = y;
-            }
+        }
 
         oy = y;
 
         /* loop1: NEXT_STAR */
         for(;;)
-            {
+        {
             wild_strings = last_wild_strings;
             oy++;
             ox = x;
 
             /*  loop3: */
             for(;;)
-                {
+            {
                 uchar xch, ych;
                 S32 pos_res;
 
                 if(wild_x  &&  (*x == '#'))
-                    {
+                {
                     if(*y == SPACE)
                         goto NOT_THIS_POS;
 
                     goto STAR;
-                    }
+                }
 
                 if(!*x)
-                    {
+                {
                     sch_end_offset = y-current_slot;
                     return(TRUE);       /* found x-string in y */
-                    }
+                }
 
                 /* see if we have space matching */
                 if(*x == FUNNYSPACE)
-                    {
+                {
                     /* read to last space or end of cell */
                     while((*y == SPACE)  &&  ((y[1] == SPACE)  ||  !y[1]))
                         y++;
 
                     if(!*y)
-                        {
+                    {
                         /* get next non-blank cell */
                         moved_slots = TRUE;
 
@@ -555,22 +555,22 @@ STAR:
                             goto NOT_THIS_POS;
 
                         if(*y != SPACE)
-                            {
+                        {
                             y--;    /* y is going to be incremented */
                             goto HAD_MATCH;
-                            }
+                        }
 
                         while(y[1] == SPACE)
                             y++;
 
                         goto HAD_MATCH;
-                        }
+                    }
 
                     if(*y != SPACE)
                         goto NOT_THIS_POS;
 
                     goto HAD_MATCH;
-                    }
+                }
 
                 /* see if characters at x and y match */
 
@@ -578,7 +578,7 @@ STAR:
                 ych = folding ? toupper(*y) : *y;
 
                 if((pos_res = xch - ych) != 0)
-                    {
+                {
                     /* are we trying to match space with wildcard? */
                     if(*y == SPACE)
                         goto NOT_THIS_POS;
@@ -589,9 +589,9 @@ STAR:
 
                     /* single character wildcard at x? */
                     if(!wild_x  ||  (*x != '?')  ||  (*y == SPACE))
-                        {
+                    {
                         if(moved_slots)
-                            {
+                        {
                             recover_first_slot();
                             moved_slots = FALSE;
                             }
@@ -604,19 +604,19 @@ STAR:
                             goto NOT_THIS_POS;
 
                         break;
-                        }
+                    }
                     else if(wild_queries < WILD_FIELDS)
                         wild_query[wild_queries++] = *y;
 
-                    }
+                }
 
                 HAD_MATCH:
 
                 if(oldypos)
-                    {
+                {
                     save_wild_string(y, oldypos);
                     oldypos = NULL;
-                    }
+                }
 
                 /* characters at x and y match, so increment x and y */
 
@@ -625,13 +625,13 @@ STAR:
                     x++;
 
                 y++;
-                }
             }
+        }
 
         NOT_THIS_POS:
             ;
         /* the string was not found at this position, look at the next one */
-        }
+    }
 
     return(FALSE);
 }
@@ -655,18 +655,18 @@ look_in_this_slot(
     len = strlen((char *) linbuf);
 
     if(next)
-        {
+    {
         if(sch_stt_offset > len)
             return(FALSE);
-        }
+    }
     else
-        {
+    {
         if(sch_stt_offset < 0)
             return(FALSE);
 
         if( sch_stt_offset > len)
             sch_stt_offset = len-1;
-        }
+    }
 
     return(sch_stringcmp(linbuf + sch_stt_offset, next, d_search[SCH_CASE].option == 'Y'));
 }
@@ -688,15 +688,15 @@ find_sch_string(
   /*S32 res;*/
 
     if(xf_inexpression)
-        {
+    {
         merexp();
         endeex();
-        }
+    }
     else if(xf_inexpression_box || xf_inexpression_line)
-        {
+    {
         if(!expedit_mergebacktext(FALSE, NULL))
             return(FALSE);      /* mergeback failed, probably text too big for linbuf */
-        }
+    }
     else if(!mergebuf())
         return(FALSE);
 
@@ -705,64 +705,64 @@ find_sch_string(
     mark_slot(travel_here());
 
     for(;;)
-        {
+    {
         if(ctrlflag)
-            {
+        {
             ack_esc();
             return(reperr_null(ERR_ESCAPE));
-            }
+        }
 
         tcell = travel(sch_pos_stt.col, sch_pos_stt.row);
 
         if(tcell)
             switch(tcell->type)
-                {
-                case SL_NUMBER:
-                    if(d_search[SCH_EXPRESSIONS].option != 'Y')
-                        break;
-                case SL_TEXT:
-                    if(look_in_this_slot(tcell, next))
-                        goto FOUNDONE;
-
-                default:
+            {
+            case SL_NUMBER:
+                if(d_search[SCH_EXPRESSIONS].option != 'Y')
                     break;
-                }
+            case SL_TEXT:
+                if(look_in_this_slot(tcell, next))
+                    goto FOUNDONE;
+
+            default:
+                break;
+            }
 
         if(next)
-            {
+        {
             if(++sch_pos_stt.col > sch_end.col)
-                {
+            {
                 sch_pos_stt.col = sch_stt.col;
 
                 if(++sch_pos_stt.row > sch_end.row)
-                    {
+                {
                     return(FALSE);
-                    }
+                }
 
                 if(replace_option  &&  !confirm_option)
                     /* Tutu says 'sod the columns' */
                     actind((S32) (((sch_pos_stt.row - sch_stt.row) * 100) / number_of_rows));
-                }
+            }
 
             /* having moved on, reset sch_stt_offset */
             sch_stt_offset = 0;
-            }
+        }
         else
-            {
+        {
             if(--sch_pos_stt.col < sch_stt.col)
-                {
+            {
                 sch_pos_stt.col = sch_end.col;
 
                 if(--sch_pos_stt.row < sch_stt.row)
-                    {
+                {
                     return(FALSE);
-                    }
                 }
+            }
 
             /* having moved on, reset sch_stt_offset */
             sch_stt_offset = LIN_BUFSIZ;
-            }
         }
+    }
 
 FOUNDONE:
 
@@ -823,26 +823,26 @@ prompt_user(void)
 
     /* if doesn't fit */
     if(lecpos + len > overlap)
-        {
+    {
         lescrl = lecpos - overlap / 2;
         dont_update_lescrl = TRUE;
-        }
+    }
 
     /* get screen redraw after dbox shown */
     xf_interrupted = xf_acquirecaret = TRUE;
 
     if(xf_inexpression)
-        {
+    {
         S32 caretpos = lecpos; /* cos endeex zeros it */
         merexp();
         endeex();
         expedit_editcurrentslot(caretpos, FALSE);
-        }
+    }
 
     res = riscdialog_replace_dbox(NULL, NULL);
 
     if(xf_inexpression_box || xf_inexpression_line)
-        {
+    {
         S32   caretpos; /* buffer offset to cursor column, row (might be multiline) within cell */
         P_CELL tcell;
 
@@ -858,7 +858,7 @@ prompt_user(void)
         seteex();
         lecpos = caretpos;
         lescrl = 0;
-        }
+    }
 
     return(res);
 }
@@ -887,13 +887,13 @@ find_and_replace(
     escape_enable();
 
     for(;;)
-        {
+    {
         if(update_toldpos)
-            {
+        {
             toldpos.col = curcol;
             toldpos.row = currow;
             tlecpos = lecpos;
-            }
+        }
         else
             update_toldpos = TRUE;
 
@@ -905,7 +905,7 @@ find_and_replace(
         /* find the string */
 
         if(!find_sch_string(next, replace_option, confirm_option))
-            {
+        {
             escape_disable();
 
             curcol = toldpos.col;
@@ -937,7 +937,7 @@ find_and_replace(
             (void) riscdialog_replace_dbox(array1, array2);
 
             goto ENDPOINT;
-            }
+        }
 
         if(next)
             found_sofar++;
@@ -948,7 +948,7 @@ find_and_replace(
 
         /* don't stop on colwidths zero */
         if(colwidth(curcol) == 0)
-            {
+        {
             if(next)
                 hidden_sofar++;
             else
@@ -958,7 +958,7 @@ find_and_replace(
             /* if a search or replace with prompt, go round again */
             if(!replace_option  ||  confirm_option)
                 continue;
-            }
+        }
 
         if(protected_slot(curcol, currow))
             continue;
@@ -968,56 +968,56 @@ find_and_replace(
             {
             /* do a replace or return to user ? */
             if(replace_option)
-                {
+            {
                 do_it = TRUE;
 
                 if(confirm_option)
                     /* ask the user if the string should be changed */
                     switch(prompt_user())
-                        {
-                        case ESCAPE:
-                            goto ENDPOINT;
+                    {
+                    case ESCAPE:
+                        goto ENDPOINT;
 
-                        case 'A':
-                            confirm_option = FALSE;
-                            break;
+                    case 'A':
+                        confirm_option = FALSE;
+                        break;
 
-                        case 'Y':
-                            break;
+                    case 'Y':
+                        break;
 
-                        default:
-                            do_it = FALSE;
-                            break;
-                        }
+                    default:
+                        do_it = FALSE;
+                        break;
+                    }
 
                 /* replace the target string with the replace string */
                 if(do_it)
-                    {
+                {
                     do_it = do_replace(replace_string, d_search[SCH_CASE].option == 'Y');
                     delete_list(&wild_string_list);
                     if(!do_it)
                         goto ENDPOINT;
                     --sch_stt_offset;     /* as we will increment it at the loop start */
                     /* don't worry about the backward replace case - it can't happen! */
-                    }
+                }
 
                 /* mark the cell anyway */
                 mark_row_border(currowoffset);
                 mark_slot(travel_here());
 
                 if(confirm_option)
-                    {
+                {
                     draw_screen();
                     draw_caret();
-                    }
                 }
+            }
             else
                 /* found string in search, next match */
                 goto ENDPOINT;
             }
 
         escape_enable();
-        }
+    }
 
 ENDPOINT:
 
@@ -1033,12 +1033,12 @@ ENDPOINT:
     riscdialog_replace_dbox_end();
 
     if(xf_inexpression)
-        {
+    {
         S32 caretpos = lecpos; /* cos endeex zeros it */
         merexp();
         endeex();
         expedit_editcurrentslot(caretpos, FALSE);
-        }
+    }
 }
 
 /* end of pdsearch.c */

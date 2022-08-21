@@ -668,6 +668,18 @@ mlec_get_host_font(void)
     _kernel_swi_regs rs;
     _kernel_oserror * p_kernel_oserror;
 
+    rs.r[1] = (int) "\\F" "DejaVuSans.Mono" "\\E" "Latin1";
+    rs.r[2] = /*x16_size_x ? x16_size_x :*/ x16_size_y;
+    rs.r[3] = x16_size_y;
+    rs.r[4] = 0;
+    rs.r[5] = 0;
+
+    if(NULL == (p_kernel_oserror = (_kernel_swi(/*Font_FindFont*/ 0x040081, &rs, &rs))))
+    {
+        host_font = (HOST_FONT) rs.r[0];
+        return(host_font);
+    }
+
     rs.r[1] = (int) "\\F" "Corpus.Medium" "\\E" "Latin1";
     rs.r[2] = /*x16_size_x ? x16_size_x :*/ x16_size_y;
     rs.r[3] = x16_size_y;
@@ -675,9 +687,12 @@ mlec_get_host_font(void)
     rs.r[5] = 0;
 
     if(NULL == (p_kernel_oserror = (_kernel_swi(/*Font_FindFont*/ 0x040081, &rs, &rs))))
+    {
         host_font = (HOST_FONT) rs.r[0];
+        return(host_font);
+    }
 
-    return(host_font);
+    return(HOST_FONT_NONE);
 }
 
 /******************************************************************************
@@ -700,9 +715,9 @@ mlec_create(
     trace_0(TRACE_MODULE_MLEC, "mlec_create");
 
     if(NULL != (*mlecp = mlec = al_ptr_alloc_elem(MLEC_STRUCT, 1, &status)))
-        {
+    {
         if(flex_alloc((flex_ptr)&mlec->buffptr, buffsiz))
-            {
+        {
             /* empty buffer */
             mlec->lower.start = mlec->lower.end = 0;
             mlec->upper.start = mlec->upper.end = mlec->buffsiz = buffsiz;
@@ -759,10 +774,10 @@ mlec_create(
 #endif
 
             return(STATUS_OK);
-            }
+        }
 
         al_ptr_free(mlec);
-        }
+    }
 
     *mlecp = NULL;
     return(status);
@@ -781,7 +796,7 @@ mlec_destroy(
     MLEC_HANDLE mlec = *mlecp;
 
     if(mlec)
-        {
+    {
         /*>>>I suppose we could call detach???*/
 
         if(HOST_FONT_NONE != mlec->host_font)
@@ -792,7 +807,7 @@ mlec_destroy(
         al_ptr_free(mlec);
 
         *mlecp = NULL;
-        }
+    }
 }
 
 /******************************************************************************
@@ -887,15 +902,15 @@ mlec_attach_eventhandler(
     S32 add)
 {
     if(add)
-        {
+    {
         mlec->callbackproc = proc;
         mlec->callbackhand = handle;
-        }
+    }
     else
-        {
+    {
         mlec->callbackproc = NULL;
         mlec->callbackhand = NULL;
-        }
+    }
 }
 
 #if SUPPORT_GETTEXT
@@ -975,7 +990,7 @@ string_write_putblock(
     int datasize)
 {
     if(xferhandlep->s.siz > (xferhandlep->s.len + datasize))
-        {
+    {
         char *ptr = &(xferhandlep->s.ptr[xferhandlep->s.len]);
         int   i;
 
@@ -984,7 +999,7 @@ string_write_putblock(
 
         xferhandlep->s.len += datasize;
         return(0);
-        }
+    }
 
     return(create_error(MLEC_ERR_GETTEXT_BUFOVF)); /* shouldn't happen, string_write_size should catch the problem */
 }
@@ -996,10 +1011,10 @@ string_write_close(
     /* terminate the string */
 
     if(xferhandlep->s.siz > xferhandlep->s.len)
-        {
+    {
         xferhandlep->s.ptr[xferhandlep->s.len] = '\0';
         return(0);
-        }
+    }
 
     return(create_error(MLEC_ERR_GETTEXT_BUFOVF)); /* shouldn't happen, string_write_size should catch the problem */
 }
@@ -1016,7 +1031,7 @@ mlec_SetText(
     trace_0(TRACE_MODULE_MLEC, "mlec_SetText");
 
     if((err = checkspace_deletealltext(mlec, strlen(text))) >= 0)
-        {
+    {
         /* current contents flushed only when we know the new text will fit */
 
         /*>>>what about clearing the selection???*/
@@ -1037,7 +1052,7 @@ mlec_SetText(
         force_redraw_eotext(mlec);      /* cursor (lcol,pcol,row) now (0,0,0), */
                                         /* so this redraws whole window        */
         err = mlec__insert_text(mlec, text);  /* space test WILL be successful */
-        }
+    }
 
     trace_3(TRACE_MODULE_MLEC, "exit mlec_SetText with cursor (%d,%d,%d)", mlec->cursor.row,mlec->cursor.lcol,mlec->cursor.pcol);
     return(err);
@@ -1060,201 +1075,201 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
 
     /* Process the event */
     switch (e->e)
+    {
+    case wimp_EOPEN:                                                /* 2 */
+        trace_0(TRACE_MODULE_MLEC, "** Open_Window_Request on mlec pane window **");
+        if(mlec->callbackproc)
         {
-        case wimp_EOPEN:                                                /* 2 */
-            trace_0(TRACE_MODULE_MLEC, "** Open_Window_Request on mlec pane window **");
-            if(mlec->callbackproc)
-                {
-                if(mlec_event_openned == (*mlec->callbackproc)(Mlec_IsOpen, mlec->callbackhand, &e->data.o))
-                    break;
-              /*else             */
-              /*    drop into... */
-                }
-            wimp_open_wind(&e->data.o);
-            break;
+            if(mlec_event_openned == (*mlec->callbackproc)(Mlec_IsOpen, mlec->callbackhand, &e->data.o))
+                break;
+          /*else             */
+          /*    drop into... */
+        }
+        wimp_open_wind(&e->data.o);
+        break;
 
-        case wimp_EREDRAW:                                              /* 1 */
-            mlec__redraw_loop(mlec);    /* redraw text & selection */
-            break;
+    case wimp_EREDRAW:                                              /* 1 */
+        mlec__redraw_loop(mlec);    /* redraw text & selection */
+        break;
 
-        case wimp_ECLOSE:                                               /* 3 */
+    case wimp_ECLOSE:                                               /* 3 */
 #if TRUE
-            trace_0(TRACE_MODULE_MLEC, "** Close_Window_Request on mlec pane window **");
+        trace_0(TRACE_MODULE_MLEC, "** Close_Window_Request on mlec pane window **");
+        if(mlec->callbackproc)
+        {
+            if(mlec_event_closed == (*mlec->callbackproc)(Mlec_IsClose, mlec->callbackhand, &e->data.close))
+                break;
+          /*else             */
+          /*    drop into... */
+        }
+        win_close_wind(e->data.close.w);
+      /*wimp_close_wind(e->data.close.w);*/
+#else
+        return(FALSE);              /* default action */
+#endif
+        break;
+
+    case wimp_EBUT:                                                 /* 6 */
+        if((int)e->data.but.m.i == -1)      /* work area background */
+            mlec__mouse_click(mlec, &e->data.but.m);
+        else
+        {
             if(mlec->callbackproc)
+                (*mlec->callbackproc)(Mlec_IsClick, mlec->callbackhand, &e->data.but.m);
+        }
+        break;
+
+#if SUPPORT_SELECTION
+    /* We don't receive dragging-null-events this way, mlec__drag_start() passes mlec__drag_null_handler() */
+    /* to Null_EventHandler(), null events are then passed directly to us.                                 */
+    /*                                                                                                     */
+  /*case wimp_ENULL:*/                                              /* 0 */
+  /*    break;      */
+#endif
+
+#if SUPPORT_SELECTION
+    case wimp_EUSERDRAG:                                            /* 7 */
+        /* Returned when a 'User_Drag' operation (started by win_drag_box) completes */
+        mlec__drag_complete(mlec, &e->data.dragbox);
+        break;
+#endif
+    case wimp_EKEY:                                                 /* 8 */
+        {
+        int err = 0;
+
+        trace_1(TRACE_MODULE_MLEC, "** Key_Pressed on EditBox pane window, key code=%d **",e->data.key.chcode);
+        switch(e->data.key.chcode)                                        /*>>>this is a load of crap, but it will do for now*/
+        {
+        case akbd_LeftK:                      mlec__cursor_left     (mlec); break;
+        case akbd_RightK:                     mlec__cursor_right    (mlec); break;
+        case akbd_DownK:                      mlec__cursor_down     (mlec); break;
+        case akbd_UpK:                        mlec__cursor_up       (mlec); break;
+
+        case akbd_LeftK  + akbd_Ctl:          mlec__cursor_linehome (mlec); break;
+        case akbd_RightK + akbd_Ctl:          mlec__cursor_lineend  (mlec); break;
+        case akbd_DownK  + akbd_Ctl:          mlec__cursor_textend  (mlec); break;
+        case akbd_UpK    + akbd_Ctl:          mlec__cursor_texthome (mlec); break;
+
+        case akbd_LeftK  + akbd_Sh:           mlec__cursor_wordleft (mlec); break;
+        case akbd_RightK + akbd_Sh:           mlec__cursor_wordright(mlec); break;
+
+        case akbd_TabK:                 err = mlec__insert_tab      (mlec); break;
+        case akbd_TabK + akbd_Sh:             mlec__cursor_tab_left (mlec); break;
+
+        case akbd_CopyK:                      mlec__delete_right    (mlec); break;
+        case akbd_CopyK           + akbd_Ctl: mlec__delete_line     (mlec); break;
+        case akbd_CopyK + akbd_Sh:            mlec__delete_lineend  (mlec); break;
+        case akbd_CopyK + akbd_Sh + akbd_Ctl: mlec__delete_linehome (mlec); break;
+
+        case cs_akbd_BackspaceK:              mlec__delete_left     (mlec); break;
+
+#ifdef SUPPORT_CUTPASTE
+        /* SKS - no menus on gr_editt window so lets have some keyboard shortcuts */
+        case cs_akbd_DeleteK:
+            if(akbd_pollsh())
+                err = mlec__selection_cut(mlec);
+            else
+                      mlec__delete_left  (mlec);
+            break;
+#else
+        case akbd_DeleteK:                    mlec__delete_left     (mlec); break;
+#endif
+
+#ifdef SUPPORT_CUTPASTE
+        /* SKS - no menus on gr_editt window so lets have some keyboard shortcuts */
+        case akbd_InsertK + akbd_Sh:    err = mlec__atcursor_paste(mlec); break;
+        case akbd_InsertK + akbd_Ctl:   err = mlec__selection_copy(mlec); break;
+#endif
+
+        case 13 :
+            if(!akbd_pollctl())
+            {
+                if(mlec->callbackproc)
                 {
-                if(mlec_event_closed == (*mlec->callbackproc)(Mlec_IsClose, mlec->callbackhand, &e->data.close))
+                    if(mlec_event_return == (*mlec->callbackproc)(Mlec_IsReturn, mlec->callbackhand, NULL))
+                        break;
+                  /*else             */
+                  /*    drop into... */
+                }
+            }
+
+            err = mlec__insert_newline(mlec);
+            break;
+
+        case 27 :
+            if(mlec->callbackproc)
+            {
+                if(mlec_event_escape == (*mlec->callbackproc)(Mlec_IsEscape, mlec->callbackhand, NULL))
                     break;
               /*else             */
               /*    drop into... */
-                }
-            win_close_wind(e->data.close.w);
-          /*wimp_close_wind(e->data.close.w);*/
-#else
-            return(FALSE);              /* default action */
-#endif
+            }
+
+            /* processed - we ignored it! */
             break;
 
-        case wimp_EBUT:                                                 /* 6 */
-            if((int)e->data.but.m.i == -1)      /* work area background */
-                mlec__mouse_click(mlec, &e->data.but.m);
+        default:
+            if(((e->data.key.chcode >= 32)  && (e->data.key.chcode <127)) ||
+               ((e->data.key.chcode >= 128) && (e->data.key.chcode <256))
+              )
+                err = mlec__insert_char(mlec,e->data.key.chcode);
             else
-                {
-                if(mlec->callbackproc)
-                    (*mlec->callbackproc)(Mlec_IsClick, mlec->callbackhand, &e->data.but.m);
-                }
+                return(FALSE);
             break;
+        }
 
-#if SUPPORT_SELECTION
-        /* We don't receive dragging-null-events this way, mlec__drag_start() passes mlec__drag_null_handler() */
-        /* to Null_EventHandler(), null events are then passed directly to us.                                 */
-        /*                                                                                                     */
-      /*case wimp_ENULL:*/                                              /* 0 */
-      /*    break;      */
-#endif
+        /* Any error is the result of direct user interaction with the mlec, */
+        /* so report the error here, cos there is no caller to return it to. */
+        if(err < 0)
+            report_error(mlec, err);
+        }
+        break;
 
-#if SUPPORT_SELECTION
-        case wimp_EUSERDRAG:                                            /* 7 */
-            /* Returned when a 'User_Drag' operation (started by win_drag_box) completes */
-            mlec__drag_complete(mlec, &e->data.dragbox);
-            break;
-#endif
-        case wimp_EKEY:                                                 /* 8 */
+    case wimp_ESEND:
+    case wimp_ESENDWANTACK:                                         /* 17 */
+        trace_1(TRACE_MODULE_MLEC, "action is %d",e->data.msg.hdr.action);           /* 18 */
+        switch(e->data.msg.hdr.action)
+        {
+#if SUPPORT_LOADSAVE
+        case wimp_MDATALOAD:   /* File dragged from file viewer, dropped on our window */
+        case wimp_MDATAOPEN:   /* File double clicked in file viewer */
             {
-            int err = 0;
+            char *filename;
 
-            trace_1(TRACE_MODULE_MLEC, "** Key_Pressed on EditBox pane window, key code=%d **",e->data.key.chcode);
-            switch(e->data.key.chcode)                                        /*>>>this is a load of crap, but it will do for now*/
-                {
-                case akbd_LeftK:                      mlec__cursor_left     (mlec); break;
-                case akbd_RightK:                     mlec__cursor_right    (mlec); break;
-                case akbd_DownK:                      mlec__cursor_down     (mlec); break;
-                case akbd_UpK:                        mlec__cursor_up       (mlec); break;
-
-                case akbd_LeftK  + akbd_Ctl:          mlec__cursor_linehome (mlec); break;
-                case akbd_RightK + akbd_Ctl:          mlec__cursor_lineend  (mlec); break;
-                case akbd_DownK  + akbd_Ctl:          mlec__cursor_textend  (mlec); break;
-                case akbd_UpK    + akbd_Ctl:          mlec__cursor_texthome (mlec); break;
-
-                case akbd_LeftK  + akbd_Sh:           mlec__cursor_wordleft (mlec); break;
-                case akbd_RightK + akbd_Sh:           mlec__cursor_wordright(mlec); break;
-
-                case akbd_TabK:                 err = mlec__insert_tab      (mlec); break;
-                case akbd_TabK + akbd_Sh:             mlec__cursor_tab_left (mlec); break;
-
-                case akbd_CopyK:                      mlec__delete_right    (mlec); break;
-                case akbd_CopyK           + akbd_Ctl: mlec__delete_line     (mlec); break;
-                case akbd_CopyK + akbd_Sh:            mlec__delete_lineend  (mlec); break;
-                case akbd_CopyK + akbd_Sh + akbd_Ctl: mlec__delete_linehome (mlec); break;
-
-                case cs_akbd_BackspaceK:              mlec__delete_left     (mlec); break;
-
-#ifdef SUPPORT_CUTPASTE
-                /* SKS - no menus on gr_editt window so lets have some keyboard shortcuts */
-                case cs_akbd_DeleteK:
-                    if(akbd_pollsh())
-                        err = mlec__selection_cut(mlec);
-                    else
-                              mlec__delete_left  (mlec);
-                    break;
-#else
-                case akbd_DeleteK:                    mlec__delete_left     (mlec); break;
-#endif
-
-#ifdef SUPPORT_CUTPASTE
-                /* SKS - no menus on gr_editt window so lets have some keyboard shortcuts */
-                case akbd_InsertK + akbd_Sh:    err = mlec__atcursor_paste(mlec); break;
-                case akbd_InsertK + akbd_Ctl:   err = mlec__selection_copy(mlec); break;
-#endif
-
-                case 13 :
-                    if(!akbd_pollctl())
-                        {
-                        if(mlec->callbackproc)
-                            {
-                            if(mlec_event_return == (*mlec->callbackproc)(Mlec_IsReturn, mlec->callbackhand, NULL))
-                                break;
-                          /*else             */
-                          /*    drop into... */
-                            }
-                        }
-
-                    err = mlec__insert_newline(mlec);
-                    break;
-
-                case 27 :
-                    if(mlec->callbackproc)
-                        {
-                        if(mlec_event_escape == (*mlec->callbackproc)(Mlec_IsEscape, mlec->callbackhand, NULL))
-                            break;
-                      /*else             */
-                      /*    drop into... */
-                        }
-
-                    /* processed - we ignored it! */
-                    break;
-
-                default:
-                    if(((e->data.key.chcode >= 32)  && (e->data.key.chcode <127)) ||
-                       ((e->data.key.chcode >= 128) && (e->data.key.chcode <256))
-                      )
-                        err = mlec__insert_char(mlec,e->data.key.chcode);
-                    else
-                        return(FALSE);
-                    break;
-                }
-
-            /* Any error is the result of direct user interaction with the mlec, */
-            /* so report the error here, cos there is no caller to return it to. */
-            if(err < 0)
-                report_error(mlec, err);
+            if(FILETYPE_TEXT == xferrecv_checkinsert(&filename))
+            {
+                int err = mlec__atcursor_load(mlec, filename);
+                xferrecv_insertfileok();  /* a badly named fn, means finished/given up, */
+                                          /* so delete any scrap file                   */
+                if(err < 0)
+                    report_error(mlec, err);    /* Report the error here, cos there is no caller to return it to. */
             }
             break;
+            }
 
-        case wimp_ESEND:
-        case wimp_ESENDWANTACK:                                         /* 17 */
-            trace_1(TRACE_MODULE_MLEC, "action is %d",e->data.msg.hdr.action);           /* 18 */
-            switch(e->data.msg.hdr.action)
-                {
-#if SUPPORT_LOADSAVE
-                case wimp_MDATALOAD:   /* File dragged from file viewer, dropped on our window */
-                case wimp_MDATAOPEN:   /* File double clicked in file viewer */
-                    {
-                    char *filename;
+        case wimp_MDATASAVE:    /* File dragged from another application, dropped on our window */
+            {
+            int size;
 
-                    if(FILETYPE_TEXT == xferrecv_checkinsert(&filename))
-                        {
-                        int err = mlec__atcursor_load(mlec, filename);
-                        xferrecv_insertfileok();  /* a badly named fn, means finished/given up, */
-                                                  /* so delete any scrap file                   */
-                        if(err < 0)
-                            report_error(mlec, err);    /* Report the error here, cos there is no caller to return it to. */
-                        }
-                    }
-                    break;
-
-                case wimp_MDATASAVE:    /* File dragged from another application, dropped on our window */
-                    {
-                    int size;
-
-                    if(FILETYPE_TEXT == xferrecv_checkimport(&size))
-                        {
-                        /* we don't support RAM xfers, this will cause the data to be saved  */
-                        /* in a scrap file, we are then sent a wimp_MDATALOAD command for it */
-                        xferrecv_import_via_file(NULL);
-                        }
-                    }
-                    break;
-#endif
-                default:
-                    return(FALSE);
-                    break;
-                }
+            if(FILETYPE_TEXT == xferrecv_checkimport(&size))
+            {
+                /* we don't support RAM xfers, this will cause the data to be saved  */
+                /* in a scrap file, we are then sent a wimp_MDATALOAD command for it */
+                xferrecv_import_via_file(NULL);
+            }
             break;
-
+            }
+#endif
         default:
             return(FALSE);
             break;
         }
+        break;
+
+    default:
+        return(FALSE);
+        break;
+    }
 
     /* done something, so... */
     return(TRUE);
@@ -1290,46 +1305,46 @@ mlec__mouse_click(
 
     /* Decode the mouse buttons */
     if(mousep->bbits & wimp_BCLICKLEFT)         /* 0x400 Single 'select' */
-        {
+    {
         mlec__cursor_setpos(mlec, x,y);
         mlec_claim_focus(mlec);
-        }
+    }
 #if SUPPORT_SELECTION
     else
     if(mousep->bbits & wimp_BDRAGLEFT)          /* 0x040 Long   'select' */
-        {
+    {
         mlec__cursor_setpos(mlec, x,y);
         mlec_claim_focus(mlec);
         mlec__drag_start(mlec);
-        }
+    }
     else
     if(mousep->bbits & wimp_BLEFT)              /* 0x004 Double 'select' */
-        {
+    {
         mlec__cursor_setpos(mlec, x,y);
         mlec__select_word(mlec);
         mlec_claim_focus(mlec);
-        }
+    }
     else
     if(mousep->bbits & wimp_BCLICKRIGHT)        /* 0x100 Single 'adjust' */
-        {
+    {
         /* Alter selection, (will create one if needed, starting at cursor position) */
         mlec__selection_adjust(mlec, x,y);
         /* NB don't claim focus */
-        }
+    }
     else
     if(mousep->bbits & wimp_BDRAGRIGHT)         /* 0x010 Long   'adjust' */
-        {
+    {
         mlec__selection_adjust(mlec, x,y);
         mlec__drag_start(mlec);
         /* NB don't claim focus */
-        }
+    }
     else
     if(mousep->bbits & wimp_BRIGHT)             /* 0x001 Double 'adjust' */
-        {
+    {
         mlec__selection_adjust(mlec, x,y);
         mlec__select_word(mlec);
         /* NB don't claim focus */
-        }
+    }
 #endif
 }
 
@@ -1403,18 +1418,18 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
     markend.col   = 0; markend.row   = 0;
 
     if(mlec->selectvalid)
-        {
+    {
         if((mlec->selectanchor.row < mlec->cursor.row) ||
            ((mlec->selectanchor.row == mlec->cursor.row) && (mlec->selectanchor.col < mlec->cursor.pcol))
           )
-            {
+        {
             markstart = mlec->selectanchor; markend.col = mlec->cursor.pcol; markend.row = mlec->cursor.row;
-            }
-        else
-            {
-            markstart.col = mlec->cursor.pcol; markstart.row = mlec->cursor.row; markend = mlec->selectanchor;
-            }
         }
+        else
+        {
+            markstart.col = mlec->cursor.pcol; markstart.row = mlec->cursor.row; markend = mlec->selectanchor;
+        }
+    }
 #endif
 
     trace_0(TRACE_MODULE_MLEC, "** Redraw_Window_Request on EditBox pane window - mlec__redraw_loop called **");
@@ -1435,7 +1450,7 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
 
     /* Do the redraw loop */
     while (more)
-        {
+    {
         wimp_box screenBB;              /* bounding box of a region of the screen that needs updating */
         wimp_box lineBB;                /* partial bounding box of a line considered for rendering    */
         wimp_box cursor;                /* all characters on cursor row, to the left of the cursor    */
@@ -1475,25 +1490,25 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
 
         /* Skip lines that are above the current graphics window */
         while((lineBB.y0 > screenBB.y1) && (ptr < upper_end))
-            {
+        {
             /* line is above the region to be redrawn, so skip it */
             while(ptr < upper_end)
-                {
+            {
                 if(CR == *ptr++)
-                    {
+                {
                     lineCol = 0; lineRow++;
 
                     lineBB.x0  = cursor.x0;
                     lineBB.y1 -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
                     lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
                     break;
-                    }
                 }
             }
+        }
 
         /* Render lines that fall within the current graphics window */
         while((lineBB.y1 > screenBB.y0) && (ptr < upper_end))
-            {
+        {
             /* line within redraw region, so render it */
             render_line(mlec, lineCol, lineBB.x0, lineBB.y1, screenBB, &ptr, upper_end);
 
@@ -1502,10 +1517,10 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
             lineBB.x0  = cursor.x0;
             lineBB.y1 -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
             lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
-            }
+        }
 
         /* remaining lines are below the graphics window */
-        }
+        } /*block*/
 
         {
         /* Render characters to the left of the cursor and the lines above it */
@@ -1521,7 +1536,7 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
 
         /* Skip lines that are below the current graphics window */
         while((lineBB.y1 < screenBB.y0) && (linestart >= lower_start))
-            {
+        {
             /* line is below region to be redrawn, so skip it */
             lineend = --linestart;          /* point at terminator for previous line */
             while((linestart > lower_start) && (CR != *(linestart - 1)))
@@ -1531,11 +1546,11 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
 
             lineBB.y1 += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
             lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
-            }
+        }
 
         /* Render lines that fall within the current graphics window */
         while((lineBB.y0 < screenBB.y1) && (linestart >= lower_start))
-            {
+        {
             /* line within redraw region, so render it */
             ptr = linestart;
             render_line(mlec, lineCol, lineBB.x0, lineBB.y1, screenBB, &ptr, lineend);
@@ -1548,7 +1563,7 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
 
             lineBB.y1 += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
             lineBB.y0 = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
-            }
+        }
 
         /* remaining lines are above the graphics window */
 
@@ -1556,7 +1571,7 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
         if(mlec->selectvalid)
             show_selection(mlec, markstart, markend, orgx, orgy, screenBB);
 #endif
-        }
+        } /*block*/
 
 #if FALSE
         {
@@ -1569,7 +1584,7 @@ static void mlec__redraw_loop(MLEC_HANDLE mlec)
 #endif
 
         wimp_get_rectangle(&r, &more);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1590,13 +1605,13 @@ static void mlec__cursor_down(MLEC_HANDLE mlec)
 
     /* Can only move down if current line has a terminator */
     for(found = FALSE, i = mlec->upper.start; i < mlec->upper.end; i++)
-        {
+    {
         if (TRUE == (found = (buff[i] == CR)))
             break;
-        }
+    }
 
     if(found)
-        {
+    {
         /* move rest of line including terminator */
         while(CR != (buff[mlec->lower.end++] = buff[mlec->upper.start++]))
             /* null statement */;
@@ -1611,11 +1626,11 @@ static void mlec__cursor_down(MLEC_HANDLE mlec)
               (mlec->upper.start < mlec->upper.end  ) &&
               (CR != buff[mlec->upper.start])
              )
-            {
+        {
             buff[mlec->lower.end++] = buff[mlec->upper.start++];
             mlec->cursor.pcol++;
-            }
         }
+    }
   /*else             */
   /*    on last line */
 
@@ -1627,34 +1642,34 @@ static void mlec__cursor_left(MLEC_HANDLE mlec)
     clear_selection(mlec);
 
     if(mlec->lower.end > mlec->lower.start)
-        {
+    {
         char *buff = mlec->buffptr;
         char  ch;
 
         ch = buff[--mlec->upper.start] = buff[--mlec->lower.end];
 
         if(ch == CR)
-            {
+        {
             int i;
             /* wrap cursor to end of previous line */
 
             /* which means finding the line length */
             mlec->cursor.pcol = 0;
             for(i = mlec->lower.end; i > mlec->lower.start; mlec->cursor.pcol++)
-                {
+            {
                 if(buff[--i] == CR)
                     break;
-                }
+            }
 
             --mlec->cursor.row;
-            }
+        }
         else
-            {
+        {
             /* ordinary character */
             --mlec->cursor.pcol;
-            }
-        mlec->cursor.lcol = mlec->cursor.pcol;
         }
+        mlec->cursor.lcol = mlec->cursor.pcol;
+    }
   /*else                 */
   /*    at start of text */
 
@@ -1666,25 +1681,25 @@ static void mlec__cursor_right(MLEC_HANDLE mlec)
     clear_selection(mlec);
 
     if(mlec->upper.start < mlec->upper.end)
-        {
+    {
         char *buff = mlec->buffptr;
         char  ch;
 
         ch = buff[mlec->lower.end++] = buff[mlec->upper.start++];
 
         if(ch == CR)
-            {
+        {
             /* wrap cursor to beginning of next line */
             mlec->cursor.pcol = 0;
             mlec->cursor.row++;
-            }
+        }
         else
-            {
+        {
             /* ordinary character */
             mlec->cursor.pcol++;
-            }
-        mlec->cursor.lcol = mlec->cursor.pcol;
         }
+        mlec->cursor.lcol = mlec->cursor.pcol;
+    }
   /*else               */
   /*    at end of text */
 
@@ -1696,7 +1711,7 @@ static void mlec__cursor_up(MLEC_HANDLE mlec)
     clear_selection(mlec);
 
     if(mlec->cursor.row > 0)
-        {
+    {
         char *buff = mlec->buffptr;
         int   i;
 
@@ -1709,20 +1724,20 @@ static void mlec__cursor_up(MLEC_HANDLE mlec)
         /* which means finding the line length */
         mlec->cursor.pcol = 0;
         for(i = mlec->lower.end; i > mlec->lower.start; mlec->cursor.pcol++)
-            {
+        {
             if(buff[--i] == CR)
                 break;
-            }
+        }
 
         --mlec->cursor.row;
 
         /* try moving to logical cursor postion */
         while(mlec->cursor.pcol > mlec->cursor.lcol)
-            {
+        {
             buff[--mlec->upper.start] = buff[--mlec->lower.end];
             --mlec->cursor.pcol;
-            }
         }
+    }
   /*else            */
   /*    on top line */
 
@@ -1739,17 +1754,17 @@ static void mlec__cursor_lineend(MLEC_HANDLE mlec)
        (mlec->upper.start < mlec->upper.end) &&
        (CR != buff[mlec->upper.start])
        )
-        {
+    {
         while(
               (mlec->upper.start < mlec->upper.end) &&
               (CR != buff[mlec->upper.start])
              )
-            {
+        {
             buff[mlec->lower.end++] = buff[mlec->upper.start++];
             mlec->cursor.pcol++;
-            }
-        mlec->cursor.lcol = mlec->cursor.pcol;
         }
+        mlec->cursor.lcol = mlec->cursor.pcol;
+    }
   /*else                              */
   /*    at end of text or end of line */
 
@@ -1761,17 +1776,17 @@ static void mlec__cursor_linehome(MLEC_HANDLE mlec)
     clear_selection(mlec);
 
     if(mlec->cursor.pcol > 0)
-        {
+    {
         char *buff = mlec->buffptr;
 
         /* move cursor to start of line */
         while(mlec->cursor.pcol > 0)
-            {
+        {
             buff[--mlec->upper.start] = buff[--mlec->lower.end];
             --mlec->cursor.pcol;
-            }
-        mlec->cursor.lcol = mlec->cursor.pcol;  /* snap logical col to physical col */
         }
+        mlec->cursor.lcol = mlec->cursor.pcol;  /* snap logical col to physical col */
+    }
   /*else                 */
   /*    at start of line */
 
@@ -1791,18 +1806,18 @@ static void mlec__cursor_tab_left(MLEC_HANDLE mlec)
     clear_selection(mlec);
 
     if(mlec->cursor.pcol > 0)
-        {
+    {
         char *buff = mlec->buffptr;
 
         /* move left (at least one) to tab-stop */
         do  {
             buff[--mlec->upper.start] = buff[--mlec->lower.end];
             --mlec->cursor.pcol;
-            }
+        }
         while(mlec->cursor.pcol & TAB_MASK);
 
         mlec->cursor.lcol = mlec->cursor.pcol;  /* snap logical col to physical col */
-        }
+    }
   /*else                 */
   /*    at start of line */
 
@@ -1814,24 +1829,24 @@ static void mlec__cursor_textend(MLEC_HANDLE mlec)
     clear_selection(mlec);
 
     if(mlec->upper.start < mlec->upper.end)
-        {
+    {
         char *buff = mlec->buffptr;
 
         while(mlec->upper.start < mlec->upper.end)
-            {
+        {
             if(CR == (buff[mlec->lower.end++] = buff[mlec->upper.start++]))
-                {
+            {
                 mlec->cursor.pcol = 0;
                 mlec->cursor.row++;
-                }
+            }
             else
-                {
+            {
                 /* ordinary character */
                 mlec->cursor.pcol++;
-                }
             }
-        mlec->cursor.lcol = mlec->cursor.pcol;
         }
+        mlec->cursor.lcol = mlec->cursor.pcol;
+    }
   /*else               */
   /*    at end of text */
 
@@ -1845,17 +1860,17 @@ mlec__cursor_texthome(
     clear_selection(mlec);
 
     if(mlec->lower.end > mlec->lower.start)
-        {
+    {
         char *buff = mlec->buffptr;
 
         while(mlec->lower.end > mlec->lower.start)
-            {
+        {
             buff[--mlec->upper.start] = buff[--mlec->lower.end];
-            }
+        }
 
         mlec->cursor.row  = 0;
         mlec->cursor.lcol = mlec->cursor.pcol = 0;
-        }
+    }
   /*else                 */
   /*    at start of text */
 
@@ -1893,10 +1908,10 @@ static void mlec__cursor_wordleft(MLEC_HANDLE mlec)
     word_left(mlec, &wordstart);
 
     if(mlec->cursor.pcol == wordstart.col)
-        {
+    {
         /* cursor at start of line */
         mlec__cursor_left(mlec);        /* will wrap cursor to end of previous line */
-        }
+    }
     else
         mlec__cursor_setpos(mlec, wordstart.col, wordstart.row);
 }
@@ -1908,10 +1923,10 @@ static void mlec__cursor_wordright(MLEC_HANDLE mlec)
     word_limits(mlec, &wordstart, &wordend);
 
     if(mlec->cursor.pcol == wordend.col)
-        {
+    {
         /* cursor at eoline */
         mlec__cursor_right(mlec);       /* will wrap cursor to beginning of next line */
-        }
+    }
     else
         mlec__cursor_setpos(mlec, wordend.col, wordend.row);
 }
@@ -1941,7 +1956,7 @@ mlec__insert_char(
     int err;
 
     if((err = checkspace_delete_selection(mlec, 1)) >= 0)
-        {
+    {
         char *buff = mlec->buffptr;
 
         force_redraw_eoline(mlec);     /* will execute later on */
@@ -1950,7 +1965,7 @@ mlec__insert_char(
         mlec->cursor.pcol++;
 
         mlec->cursor.lcol = mlec->cursor.pcol;  /* snap logical col to physical col */
-        }
+    }
   /*else                          */
   /*    sod off, the buffers full */
 
@@ -1963,7 +1978,7 @@ int mlec__insert_newline(MLEC_HANDLE mlec)
     int err;
 
     if((err = checkspace_delete_selection(mlec, 1)) >= 0)
-        {
+    {
         char *buff = mlec->buffptr;
 
         force_redraw_eotext(mlec);      /* will execute later on */
@@ -1972,7 +1987,7 @@ int mlec__insert_newline(MLEC_HANDLE mlec)
         mlec->cursor.lcol = mlec->cursor.pcol = 0;  /* snap logical col and physical col to start of next line */
         mlec->cursor.row++;
         mlec->linecount++;
-        }
+    }
   /*else                          */
   /*    sod off, the buffers full */
 
@@ -1993,7 +2008,7 @@ static int mlec__insert_tab(MLEC_HANDLE mlec)
     int err;
 
     if((err = checkspace_delete_selection(mlec, 1+TAB_MASK)) >= 0)
-        {
+    {
         char *buff = mlec->buffptr;
 
         force_redraw_eoline(mlec);      /* will execute later on */
@@ -2001,11 +2016,11 @@ static int mlec__insert_tab(MLEC_HANDLE mlec)
         do  {
             buff[mlec->lower.end++] = SPACE;
             mlec->cursor.pcol++;
-            }
+        }
         while(mlec->cursor.pcol & TAB_MASK);
 
         mlec->cursor.lcol = mlec->cursor.pcol;  /* snap logical col to physical col */
-        }
+    }
   /*else                          */
   /*    sod off, the buffers full */
 
@@ -2034,7 +2049,7 @@ mlec__insert_text(
     int err;
 
     if((err = checkspace_delete_selection(mlec, strlen(text))) >= 0)
-        {
+    {
         char *buff = mlec->buffptr;
         int   col  = mlec->cursor.pcol;
         int   row  = mlec->cursor.row;
@@ -2047,34 +2062,34 @@ mlec__insert_text(
         force_redraw_eotext(mlec);      /* will execute later on */
 
         for(; 0 != (ch = *text); text++)
-            {
+        {
             switch(ch)
+            {
+            case CR:
+            case LF:
+                if(ch == skip)
                 {
-                case CR:
-                case LF:
-                    if(ch == skip)
-                        {
-                        skip = '\0';
-                        continue;
-                        }
-                    skip = ch ^ (CR ^ LF);          /* ^ means EOR */
-                    ch = CR;        /*>>>would zero be better???*/
-                    buff[lend++] = ch;
-                    col = 0; row++; line++;
+                    skip = '\0';
                     continue;
-
-                default:
-                    buff[lend++] = ch; col++;
-                    break;
                 }
-            skip = '\0';
+                skip = ch ^ (CR ^ LF);          /* ^ means EOR */
+                ch = CR;        /*>>>would zero be better???*/
+                buff[lend++] = ch;
+                col = 0; row++; line++;
+                continue;
+
+            default:
+                buff[lend++] = ch; col++;
+                break;
             }
+            skip = '\0';
+        }
 
         mlec->cursor.lcol = mlec->cursor.pcol  = col;
         mlec->cursor.row  = row;
         mlec->linecount   = line;
         mlec->lower.end   = lend;
-        }
+    }
   /*else                          */
   /*    sod off, the buffers full */
 
@@ -2093,34 +2108,34 @@ static void mlec__delete_left(MLEC_HANDLE mlec)
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete char left of cursor                                     */
     if(mlec->lower.end > mlec->lower.start)
-        {
+    {
         char *buff = mlec->buffptr;
         int   i;
 
         if(CR == buff[--mlec->lower.end])
-            {
+        {
             /* cursor moves to what was the end of the previous line */
 
             /* which means finding its length */
             mlec->cursor.pcol = 0;
             for(i = mlec->lower.end; i > mlec->lower.start; mlec->cursor.pcol++)
-                {
+            {
                 if(buff[--i] == CR)
                     break;
-                }
+            }
 
             --mlec->cursor.row;
             force_redraw_eotext(mlec);
             --mlec->linecount;
-            }
+        }
         else
-            {
+        {
             /* ordinary character */
             --mlec->cursor.pcol;
             force_redraw_eoline(mlec);
-            }
-        mlec->cursor.lcol = mlec->cursor.pcol;
         }
+        mlec->cursor.lcol = mlec->cursor.pcol;
+    }
   /*else                 */
   /*    at start of text */
 
@@ -2132,21 +2147,21 @@ static void mlec__delete_right(MLEC_HANDLE mlec)
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete char right of cursor                                    */
     if(mlec->upper.start < mlec->upper.end)
-        {
+    {
         char *buff = mlec->buffptr;
 
         if(CR == buff[mlec->upper.start++])
-            {
+        {
             force_redraw_eotext(mlec);
             --mlec->linecount;
-            }
+        }
         else
-            {
+        {
             /* ordinary character */
             force_redraw_eoline(mlec);
-            }
-        mlec->cursor.lcol = mlec->cursor.pcol;  /* cos lcol may have been past old eol */
         }
+        mlec->cursor.lcol = mlec->cursor.pcol;  /* cos lcol may have been past old eol */
+    }
   /*else               */
   /*    at end of text */
 
@@ -2162,31 +2177,31 @@ static void mlec__delete_line(MLEC_HANDLE mlec)
     BOOL  done = FALSE;
 
     if(mlec->cursor.pcol > 0)
-        {
+    {
         done = TRUE;
 
         /* skip cursor to start of line, chucking chars on floor as we go */
         mlec->lower.end   -= mlec->cursor.pcol;
         mlec->cursor.lcol  = mlec->cursor.pcol = 0;
-        }
+    }
 
     while(mlec->upper.start < mlec->upper.end)
-        {
+    {
         done = TRUE;
 
         if(CR == buff[mlec->upper.start++])     /* chuck char on floor   */
-            {
+        {
             --mlec->linecount;
             break;                              /* finish if it was a CR */
-            }
         }
+    }
 
     if(done)
-        {
+    {
         force_redraw_eotext(mlec);
 
         mlec->cursor.lcol = mlec->cursor.pcol;
-        }
+    }
   /*else                              */
   /*    no text or on empty last line */
     }
@@ -2206,17 +2221,17 @@ static void mlec__delete_lineend(MLEC_HANDLE mlec)
           (mlec->upper.start < mlec->upper.end) &&
           (CR != buff[mlec->upper.start])
          )
-        {
+    {
         done = TRUE;
         mlec->upper.start++;    /* chuck char on floor */
-        }
+    }
 
     if(done)
-        {
+    {
         force_redraw_eoline(mlec);
 
         mlec->cursor.lcol = mlec->cursor.pcol; /* be paranoid, should already be snapped */
-        }
+    }
   /*else                              */
   /*    at end of text or end of line */
     }
@@ -2229,13 +2244,13 @@ static void mlec__delete_linehome(MLEC_HANDLE mlec)
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete from cursor to start-of-line                            */
     if(mlec->cursor.pcol > 0)
-        {
+    {
         /* skip cursor to start of line, chucking chars on floor as we go */
         mlec->lower.end   -= mlec->cursor.pcol;
         mlec->cursor.lcol  = mlec->cursor.pcol = 0;
 
         force_redraw_eoline(mlec);
-        }
+    }
   /*else                 */
   /*    at start of line */
 
@@ -2266,7 +2281,7 @@ mlec__main_button(
     wimp_i icon)
 {
     if(mlec->main != window_NULL)
-        {
+    {
         wimp_mousestr mouse;
 
         mouse.x = mouse.y = -1;
@@ -2276,7 +2291,7 @@ mlec__main_button(
         mouse.i     = icon;
 
         wimpt_safe(wimp_sendwmessage(wimp_EBUT, (wimp_msgstr*)&mouse, mlec->main, 0));
-        }
+    }
 
 }
 #endif
@@ -2302,14 +2317,14 @@ void mlec_claim_focus(MLEC_HANDLE mlec)
        (current.x != carrot.x) || (current.y != carrot.y) ||
        (current.height != carrot.height)        /* cos this field holds caret (in)visible bit */
       )
-        {
+    {
         wimp_set_caret_pos(&carrot);
         trace_3(TRACE_MODULE_MLEC, "place caret (%d,%d,%d)",carrot.x,carrot.y,carrot.height);
-        }
+    }
     else
-        {
+    {
         trace_0(TRACE_MODULE_MLEC, " no action (we own input focus, caret already positioned)");
-        }
+    }
 }
 
 void mlec_release_focus(MLEC_HANDLE mlec)
@@ -2321,7 +2336,7 @@ void mlec_release_focus(MLEC_HANDLE mlec)
     wimp_get_caret_pos(&current);
 
     if(current.w == mlec->pane)
-        {
+    {
         current.w = (wimp_w)-1;
         current.i = (wimp_i)-1;
         current.x = current.y = current.index = 0;
@@ -2329,11 +2344,11 @@ void mlec_release_focus(MLEC_HANDLE mlec)
 
         wimp_set_caret_pos(&current);
         trace_0(TRACE_MODULE_MLEC, " focus given away");
-        }
+    }
     else
-        {
+    {
         trace_0(TRACE_MODULE_MLEC, " no action (focus belongs elsewhere)");
-        }
+    }
 }
 
 void scroll_until_cursor_visible(MLEC_HANDLE mlec)
@@ -2354,34 +2369,34 @@ void scroll_until_cursor_visible(MLEC_HANDLE mlec)
     trace_1(TRACE_MODULE_MLEC, "extenty=%d",extenty);
 
     if(mlec->paneextent.x1 < extentx)
-        {
+    {
         mlec->paneextent.x1 = extentx;
         change = TRUE;
-        }
+    }
 
     if(mlec->paneextent.y0 > extenty)       /* NB -ve numbers */
-        {
+    {
         mlec->paneextent.y0 = extenty;
         change = TRUE;
-        }
+    }
 
     if(change)
-        {
+    {
         blk.w   = mlec->pane;
         blk.box = mlec->paneextent;
         wimp_set_extent(&blk);
 
         if(mlec->callbackproc)
             (*mlec->callbackproc)(Mlec_IsWorkAreaChanged, mlec->callbackhand, &blk);
-        }
     }
+    } /*block*/
 
     /* May need to scroll the window, to keep the cursor (pcol,row) visible. */
     {
     wimp_wstate state;
 
     if(wimp_get_wind_state(mlec->pane, &state) == NULL)
-        {
+    {
         wimp_box  curshape;
         int       visible_width  = state.o.box.x1 - state.o.box.x0;
         int       visible_height = state.o.box.y1 - state.o.box.y0;
@@ -2397,43 +2412,43 @@ void scroll_until_cursor_visible(MLEC_HANDLE mlec)
         trace_2(TRACE_MODULE_MLEC, "cursor is (%d,%d)", curshape.x0, curshape.y1);
 
         while(state.o.scx > curshape.x0)
-            {
+        {
             state.o.scx -= 4 * mlec->charwidth;
             done = TRUE;
-            }
+        }
 
         while((state.o.scx + visible_width) < curshape.x1)
-            {
+        {
             state.o.scx += 4 * mlec->charwidth;
             done = TRUE;
-            }
+        }
 
         while(state.o.scy < curshape.y1)
-            {
+        {
             state.o.scy += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
             done = TRUE;
-            }
+        }
 
         while((state.o.scy - visible_height) > curshape.y0)
-            {
+        {
             state.o.scy -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
             done = TRUE;
-            }
+        }
 
         if(done)
-            {
+        {
 #if FALSE
             mlec__redraw_loop(mlec);    /* redraw all invalid rectangles BEFORE scrolling window */
                                         /* cos wimp fails to scroll the invalid rectangle list   */
             /*>>>causes a lot of flicker when cursor up/down causes a scroll */
 #endif
             wimp_open_wind(&state.o);
-            }
+        }
 
         show_caret(mlec);   /* probably better here...                             */
-        }
-                            /* ...than here, but then again doesn't really matter? */
     }
+                            /* ...than here, but then again doesn't really matter? */
+    } /*block*/
 }
 
 void show_caret(MLEC_HANDLE mlec)
@@ -2447,7 +2462,7 @@ void show_caret(MLEC_HANDLE mlec)
     wimp_get_caret_pos(&current);
 
     if(current.w == mlec->pane)
-        {
+    {
         wimp_caretstr carrot;    /* nyeeeer, whats up doc? */
 
         trace_0(TRACE_MODULE_MLEC, "we own input focus ");
@@ -2457,19 +2472,19 @@ void show_caret(MLEC_HANDLE mlec)
         if((current.x != carrot.x) || (current.y != carrot.y) ||
            (current.height != carrot.height)    /* cos this field holds caret (in)visible bit */
           )
-            {
+        {
             wimp_set_caret_pos(&carrot);
             trace_3(TRACE_MODULE_MLEC, "place caret (%d,%d,%d)",carrot.x,carrot.y,carrot.height);
-            }
+        }
         else
-            {
-            trace_0(TRACE_MODULE_MLEC, " no action (caret already positioned)");
-            }
-        }
-    else
         {
-        trace_0(TRACE_MODULE_MLEC, " no action (focus belongs elsewhere)");
+            trace_0(TRACE_MODULE_MLEC, " no action (caret already positioned)");
         }
+    }
+    else
+    {
+        trace_0(TRACE_MODULE_MLEC, " no action (focus belongs elsewhere)");
+    }
 }
 
 /******************************************************************************
@@ -2514,70 +2529,70 @@ move_cursor(
     char *buff = mlec->buffptr;
 
     if(mlec->cursor.row > row)
-        {
+    {
         /* move cursor to (0,row), or (0,0) if row<0 */
 
         while((mlec->cursor.row > row) &&
               (mlec->cursor.row > 0)
              )
-            {
+        {
             /* move rest of line including terminator of previous line */
             while(CR != (buff[--mlec->upper.start] = buff[--mlec->lower.end]))
                 /* null statement */;
 
             --mlec->cursor.row; /* now at end of previous line, column position unknown */
-            }
+        }
 
         /* somewhere on required line (or line 0 if row < 0), find column 0 */
         while((mlec->lower.end > mlec->lower.start) &&
               (CR != buff[mlec->lower.end-1])
              )
-            {
+        {
             buff[--mlec->upper.start] = buff[--mlec->lower.end];
-            }
+        }
 
         mlec->cursor.pcol = 0;
-        }
+    }
 
     while(
           (mlec->cursor.row  < row)             &&
           (mlec->upper.start < mlec->upper.end)
          )
-        {
+    {
         if(CR == (buff[mlec->lower.end++] = buff[mlec->upper.start++]))
-            {
+        {
             /* wrap cursor to beginning of next line */
             mlec->cursor.pcol = 0;
             mlec->cursor.row++;
-            }
+        }
         else
-            {
+        {
             /* ordinary character */
             mlec->cursor.pcol++;
-            }
         }
+    }
 
     if(mlec->cursor.row == row)
-        {
+    {
         if(col < 0)
             col = 0;
 
         while(mlec->cursor.pcol > col)
-            {
+        {
             buff[--mlec->upper.start] = buff[--mlec->lower.end];
             --mlec->cursor.pcol;
-            }
+        }
 
         while(
               (mlec->cursor.pcol < col)             &&
               (mlec->upper.start < mlec->upper.end) &&
               (CR != buff[mlec->upper.start])
              )
-            {
+        {
             buff[mlec->lower.end++] = buff[mlec->upper.start++];
             mlec->cursor.pcol++;
-            }
         }
+    }
 
     mlec->cursor.lcol = mlec->cursor.pcol;
 }
@@ -2598,14 +2613,14 @@ word_left(
     int   scol = mlec->cursor.pcol;
 
     while((scol > 0) && (' ' == *(sptr-1)))
-        {
+    {
         --scol; --sptr;
-        }
+    }
 
     while((scol > 0) && (' ' != *(sptr-1)))
-        {
+    {
         --scol; --sptr;
-        }
+    }
 
     startp->col = scol;
     startp->row = mlec->cursor.row;
@@ -2637,29 +2652,29 @@ word_limits(
     scol = ecol = mlec->cursor.pcol;
 
     if((eptr < upper_end) && (CR != *eptr) && (' ' != *eptr))
-        {
+    {
         while((eptr < upper_end) && (CR != *eptr) && (' ' != *eptr))
-            {
-            ecol++; eptr++;
-            }
-        }
-    else
         {
-        while((scol > 0) && (' ' == *(sptr-1)))
-            {
-            --scol; --sptr;
-            }
+            ecol++; eptr++;
         }
+    }
+    else
+    {
+        while((scol > 0) && (' ' == *(sptr-1)))
+        {
+            --scol; --sptr;
+        }
+    }
 
     while((scol > 0) && (' ' != *(sptr-1)))
-        {
+    {
         --scol; --sptr;
-        }
+    }
 
     while((eptr < upper_end) && (CR != *eptr) && (' ' == *eptr))
-        {
+    {
         ecol++; eptr++;
-        }
+    }
 
     startp->col = scol;
     startp->row = endp->row = mlec->cursor.row;
@@ -2690,37 +2705,37 @@ render_line(
 
     /* find first character not totally hidden */
     while((charedge <= screen.x0) && (*cpp < limit))              /*>>>  <= ??? */
-        {
+    {
         if(CR == *((*cpp)++))
-            {
+        {
             scan = FALSE;       /* (*cpp), now points to first character on next line */
             break;
-            }
+        }
 
         x = charedge;
         charedge += mlec->charwidth;
         lineCol++;
-        }
+    }
 
     charedge = x;                       /* char covers charedge.. (inc..), N.B. screen.x1 is inclusive!! */
     showptr  = (*cpp);
     while((charedge </*=*/ screen.x1) && (*cpp < limit) && scan)
-        {
+    {
         if(CR == *((*cpp)++))
-            {
+        {
             scan = FALSE;       /* (*cpp), now points to first character on next line */
             break;
-            }
+        }
 
         charedge += mlec->charwidth;
         lineCol++;
         showcnt++;
-        }
+    }
 
     if (showcnt > 0)
-        {
+    {
         if(HOST_FONT_NONE != mlec->host_font)
-            {
+        {
             const int base_line_shift = -24;
             _kernel_swi_regs rs;
 
@@ -2732,35 +2747,35 @@ render_line(
             rs.r[7] = showcnt;
 
             (void) _kernel_swi(/*Font_Paint*/ 0x40086, &rs, &rs);
-            }
+        }
         else
         {
             bbc_move(x, y-wimpt_dy());
 
             /* SKS after PD 4.12 27mar92 - convert CtrlChar on fly */
             while(showcnt--)
-                {
+            {
                 char ch = *showptr++;
                 if((ch < 0x20) || (ch == 0x7F))
                     ch = '.';
                 bbc_vdu(ch);
-                }
             }
         }
+    }
 
     /* if not already there, advance (*cpp), to first character on next line */
     while((*cpp < limit) && scan)
-        {
+    {
         if(CR == *((*cpp)++))
             break;
 
         lineCol++;
-        }
+    }
 
     if(mlec->maxcol < lineCol)
-        {
+    {
         mlec->maxcol = lineCol;
-        }
+    }
 }
 
 /******************************************************************************
@@ -2791,7 +2806,7 @@ checkspace_deletealltext(
     /* Check buffer space, note use of lower.start..upper.end instead of lower.end..upper.start */
     /* we want to know if text will fit after current text is flushed */
     if(shortfall > 0)
-        {
+    {
         trace_2(TRACE_MODULE_MLEC, "do flex_midextend by %d bytes, at position %d", shortfall, mlec->upper.start);
 
         if(!flex_midextend((flex_ptr)&mlec->buffptr, mlec->upper.start, shortfall))
@@ -2800,8 +2815,7 @@ checkspace_deletealltext(
         mlec->buffsiz     += shortfall;
         mlec->upper.start += shortfall;
         mlec->upper.end   += shortfall;
-
-        }
+    }
 
     return(0);
 }
@@ -2816,7 +2830,7 @@ checkspace_delete_selection(
     shortfall = size - (mlec->upper.start - mlec->lower.end);
 
     if(shortfall > 0)
-        {
+    {
         shortfall = ((shortfall + 3) & -4);     /* round up to a word */
 
         trace_2(TRACE_MODULE_MLEC, "do flex_midextend by %d bytes, at position %d", shortfall, mlec->upper.start);
@@ -2827,7 +2841,7 @@ checkspace_delete_selection(
         mlec->buffsiz     += shortfall;
         mlec->upper.start += shortfall;
         mlec->upper.end   += shortfall;
-        }
+    }
 
     delete_selection(mlec);
     return(0); /*>>>not quite right, we don't consider the space the delete_selection will free*/
@@ -2961,33 +2975,33 @@ null_event_proto(static, mlec__drag_null_handler)
     MLEC_HANDLE mlec = (MLEC_HANDLE) p_null_event_block->client_handle;
 
     switch(p_null_event_block->rc)
+    {
+    case NULL_QUERY:
+        return(NULL_EVENTS_REQUIRED);
+
+    case NULL_EVENT:
         {
-        case NULL_QUERY:
-            return(NULL_EVENTS_REQUIRED);
+        wimp_mousestr mouse;
+        wimp_wstate   r;
+        int           x,y, orgx,orgy;
 
-        case NULL_EVENT:
-            {
-            wimp_mousestr mouse;
-            wimp_wstate   r;
-            int           x,y, orgx,orgy;
+        (void)wimp_get_point_info(&mouse);
+        (void)wimp_get_wind_state(mlec->pane, &r);
 
-            (void)wimp_get_point_info(&mouse);
-            (void)wimp_get_wind_state(mlec->pane, &r);
+        orgx = r.o.box.x0 - r.o.scx; orgy = r.o.box.y1 - r.o.scy;
+        x = mouse.x - orgx;       /* mouse position relative to */
+        y = mouse.y - orgy;       /* window origin              */
 
-            orgx = r.o.box.x0 - r.o.scx; orgy = r.o.box.y1 - r.o.scy;
-            x = mouse.x - orgx;       /* mouse position relative to */
-            y = mouse.y - orgy;       /* window origin              */
+        x = ( x - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] +8 ) / 16;                 /* 8=half char width, 16=char width*/
+        y = (-y - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] -1) / mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
 
-            x = ( x - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] +8 ) / 16;                 /* 8=half char width, 16=char width*/
-            y = (-y - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] -1) / mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
-
-            mlec__selection_adjust(mlec, x,y);
-            }
-            return(NULL_EVENT_COMPLETED);
-
-        default:
-            return(NULL_EVENT_UNKNOWN);
+        mlec__selection_adjust(mlec, x,y);
         }
+        return(NULL_EVENT_COMPLETED);
+
+    default:
+        return(NULL_EVENT_UNKNOWN);
+    }
 
 }
 
@@ -3011,13 +3025,13 @@ mlec__selection_adjust(
     trace_2(TRACE_MODULE_MLEC, "adjust selection to (%d,%d)",col,row);
 
     if(!mlec->selectvalid)
-        {
+    {
         /* currently no selection, so start one at the cursor position */
 
         mlec->selectvalid      = TRUE;
         mlec->selectanchor.col = mlec->cursor.pcol;
         mlec->selectanchor.row = mlec->cursor.row;
-        }
+    }
 
     old.col = mlec->cursor.pcol; old.row = mlec->cursor.row;
 
@@ -3058,7 +3072,7 @@ mlec__select_word(
     word_limits(mlec, &wordstart, &wordend);
 
     if(!mlec->selectvalid)
-        {
+    {
 #if TRUE
         /* currently no selection, so set anchor to wordstart */
 
@@ -3071,16 +3085,16 @@ mlec__select_word(
         move_cursor(mlec, wordstart.col, wordstart.row);        /* Works, but causes text flow */
 #endif
         mlec__selection_adjust(mlec, wordend.col, wordend.row);
-        }
+    }
     else
-        {
+    {
         if((mlec->selectanchor.row < mlec->cursor.row) ||
            ((mlec->selectanchor.row == mlec->cursor.row) && (mlec->selectanchor.col < mlec->cursor.pcol))
           )
             mlec__selection_adjust(mlec, wordend.col, wordend.row);
         else
             mlec__selection_adjust(mlec, wordstart.col, wordstart.row);
-        }
+    }
 }
 
 void
@@ -3088,10 +3102,10 @@ clear_selection(
     MLEC_HANDLE mlec)
 {
     if(mlec->selectvalid)
-        {
+    {
         mlec__update_loop(mlec, mlec->selectanchor, mlec->cursor);
         mlec->selectvalid = FALSE;
-        }
+    }
 }
 
 void
@@ -3101,7 +3115,7 @@ delete_selection(
     MARKED_TEXT range;
 
     if(range_is_selection(mlec, &range))
-        {
+    {
         /* Since it is defined that any attempt to move the cursor will either clear the selection, or retain */
         /* it and extend it to the cursor position, the cursor MUST lie within selectstart..selectend         */
 
@@ -3124,7 +3138,7 @@ delete_selection(
             force_redraw_eotext(mlec);
 
         mlec->selectvalid = FALSE;
-        }
+    }
 }
 
 BOOL
@@ -3133,19 +3147,19 @@ range_is_selection(
     MARKED_TEXT *range)
 {
     if(mlec->selectvalid)
-        {
+    {
         MARK_POSITION markstart, markend;
 
         if((mlec->selectanchor.row < mlec->cursor.row) ||
            ((mlec->selectanchor.row == mlec->cursor.row) && (mlec->selectanchor.col < mlec->cursor.pcol))
           )
-            {
+        {
             markstart = mlec->selectanchor; markend.col = mlec->cursor.pcol; markend.row = mlec->cursor.row;
-            }
+        }
         else
-            {
+        {
             markstart.col = mlec->cursor.pcol; markstart.row = mlec->cursor.row; markend = mlec->selectanchor;
-            }
+        }
 
         range->markstart = markstart;
         range->marklines = markend.row - markstart.row;
@@ -3163,7 +3177,7 @@ range_is_selection(
             range->lower.end = mlec->upper.start;
 
     /*>>>wrong - should whinge if no selection */
-        }
+    }
 
     return(mlec->selectvalid);
 }
@@ -3185,56 +3199,56 @@ find_offset(
         find->col = 0;          /* they are either cursor(pcol,row) or selectanchor(col,row), */
 
     if(find->row < 0)           /* but a little bomb proofing never hurt anyone!?.            */
-        {
+    {
         find->row = 0;
         find->col = 0;
-        }
+    }
 
     if((find->row == mlec->cursor.row) && (find->col < mlec->cursor.pcol))
-        {
+    {
         /* easy case: cursor on required row, past required col */
 
         *offsetp = mlec->lower.end - mlec->cursor.pcol + find->col;
-        }
+    }
     else
-        {
+    {
         /* hard case: must identify and search appropriate buff_region */
         int col, row, off, lim;
 
         if(find->row < mlec->cursor.row)
-            {
+        {
             /* search lower buff_region */
 
             col = 0;
             row = 0;
             off = mlec->lower.start;
             lim = mlec->lower.end;
-            }
+        }
         else
-            {
+        {
             /* search upper buff_region */
 
             col = mlec->cursor.pcol;
             row = mlec->cursor.row;
             off = mlec->upper.start;
             lim = mlec->upper.end;
-            }
+        }
 
         while(
               (row < find->row) &&
               (off < lim)
              )
-            {
+        {
             if(CR == buff[off++])
-                {
+            {
                 col = 0;
                 row++;
-                }
-            else
-                {
-                col++;
-                }
             }
+            else
+            {
+                col++;
+            }
+                }
 
         /* either found required row, or reached end-of-text */
         while(
@@ -3242,14 +3256,14 @@ find_offset(
               (off < lim)       &&
               (CR != buff[off])
              )
-            {
+        {
             col++;
             off++;
-            }
+        }
 
         /* pass back closest col,row found, and its offset in the buffer */
         find->col = col; find->row = row; *offsetp = off;
-        }
+    }
 }
 
 /******************************************************************************
@@ -3277,13 +3291,13 @@ mlec__update_loop(
     if((mark1.row < mark2.row) ||
        ((mark1.row == mark2.row) && (mark1.col < mark2.pcol))
       )
-        {
+    {
         markstart = mark1; markend.col = mark2.pcol; markend.row = mark2.row;
-        }
+    }
     else
-        {
+    {
         markstart.col = mark2.pcol; markstart.row = mark2.row; markend = mark1;
-        }
+    }
 
  trace_4(TRACE_MODULE_MLEC, "mlec__update_loop (%d,%d, %d,%d)",markstart.col,markstart.row,markend.col,markend.row);
     r.w      =  mlec->pane;
@@ -3299,14 +3313,14 @@ mlec__update_loop(
  trace_4(TRACE_MODULE_MLEC, "(%d,%d,%d,%d)",r.g.x0,r.g.y0,r.g.x1,r.g.y1);
 
     while(more)
-        {
+    {
         int orgx=r.box.x0-r.scx;       /* graphics units */
         int orgy=r.box.y1-r.scy;       /*>>>> could be put outside loop?*/
 
         show_selection(mlec, markstart, markend, orgx, orgy, r.g/*screenBB*/);
 
         wimp_get_rectangle(&r, &more);
-        }
+    }
 }
 
 static int /*colnum*/
@@ -3392,52 +3406,52 @@ show_selection(
     /*>>>could put in code to skip lines that are above the current graphics window */
 
     while((lineBB.y1 > screenBB.y0) && (ptr < upper_end))
-        {
+    {
         lineBB.x1  = lineBB.x0;
 
         while(ptr < upper_end)
-            {
+        {
             if(CR == *ptr++)
-                {
+            {
                 lineBB.x1 += mlec->termwidth;
                 break;
-                }
-            lineBB.x1 += mlec->charwidth;
             }
+            lineBB.x1 += mlec->charwidth;
+        }
 
         if((lineRow >= markstart.row) && (lineRow <= markend.row))
-            {
+        {
             if(lineRow == markstart.row)
-                {
+            {
                 int start = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markstart.col;
 
                 if(lineBB.x0 < start)
                     lineBB.x0 = start;
-                }
+            }
 
             if(lineRow == markend.row)
-                {
+            {
                 int end = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markend.col;
 
                 if(lineBB.x1 > end)
                     lineBB.x1 = end;
-                }
+            }
 
             if(lineBB.x0 < lineBB.x1)
-                {
+            {
                 /* NB lineBB is (L,B,R,T) edges which are (inc,inc,exc,exc), bbc_RectangleFill takes (inc,inc,inc,inc) */
 
                 bbc_move(lineBB.x0, lineBB.y0);
                 os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1);
-                }
             }
+        }
 
         lineCol = 0; lineRow++;
 
         lineBB.x0  = cursor.x0;
         lineBB.y1 -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
         lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
-        }
+    }
 
     /* remaining lines are below the graphics window */
     }
@@ -3456,43 +3470,43 @@ show_selection(
     /*>>>could put in code to skip lines that are below the current graphics window */
 
     while((lineBB.y0 < screenBB.y1) && (ptr > lower_start))
-        {
+    {
       /*lineBB.x1  = lineBB.x0;*/
 
         while(ptr > lower_start)
-            {
+        {
             if(CR == *--ptr)
                 break;
 
             lineBB.x1 += mlec->charwidth;
-            }
+        }
 
         if((lineRow >= markstart.row) && (lineRow <= markend.row))
-            {
+        {
             if(lineRow == markstart.row)
-                {
+            {
                 int start = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markstart.col;
 
                 if(lineBB.x0 < start)
                     lineBB.x0 = start;
-                }
+            }
 
             if(lineRow == markend.row)
-                {
+            {
                 int end = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markend.col;
 
                 if(lineBB.x1 > end)
                     lineBB.x1 = end;
-                }
+            }
 
             if(lineBB.x0 < lineBB.x1)
-                {
+            {
                 /* NB lineBB is (L,B,R,T) edges which are (inc,inc,exc,exc), bbc_RectangleFill takes (inc,inc,inc,inc) */
 
                 bbc_move(lineBB.x0, lineBB.y0);
                 os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1);
-                }
             }
+        }
 
         lineCol = 0; --lineRow;
 
@@ -3500,7 +3514,7 @@ show_selection(
         lineBB.x1  = lineBB.x0 + mlec->termwidth; /* cos CR has width */
         lineBB.y1 += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
         lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
-        }
+    }
 
     /* remaining lines are above the graphics window */
     }
@@ -3560,12 +3574,12 @@ mlec__selection_save(
     XFER_HANDLE handle;
 
     if(range_is_selection(mlec, &range))
-        {
+    {
         if((err = file_write_open(&handle, filename, filetype)) >= 0)
             err = text_out(mlec, &handle, range, lineterm, file_write_size, file_write_putblock, file_write_close);
         return(err);
         /*>>>should this clear the selection???*//*No, for consistancy with mlec__selection_copy */
-        }
+    }
 
     return(create_error(MLEC_ERR_NOSELECTION));
 }
@@ -3580,14 +3594,14 @@ file_read_open(
     int err;
 
     if((err = file_open(filename, file_open_read, &(xferhandlep->f))) >= 0)
-        {
+    {
         *filesizep = err = (S32) file_length(xferhandlep->f);
 
         if(err < 0)
             file_close(&(xferhandlep->f));
 
         *filetypep = file_get_type(xferhandlep->f);
-        }
+    }
 
     return(err);        /*>>>what about filetype checks???*/
 }
@@ -3681,12 +3695,12 @@ mlec__selection_copy(
     reject_if_paste_buffer(mlec);
 
     if(range_is_selection(mlec, &range))
-        {
+    {
         if((err = paste_write_open(&handle)) >= 0)
             err = text_out(mlec, &handle, range, NULL, paste_write_size, paste_write_putblock, paste_write_close);
         return(err);
         /*>>>should this clear the selection???*//*No, windows doesn't*/
-        }
+    }
 
     return(create_error(MLEC_ERR_NOSELECTION));
 }
@@ -3754,7 +3768,7 @@ paste_read_getblock(
     datasize = datasize;
 
     if(mlec)
-        {
+    {
         MARKED_TEXT  range;
         char        *buff = mlec->buffptr;
         int          i;
@@ -3768,7 +3782,7 @@ paste_read_getblock(
             *dataptr++ = buff[i];
 
         return(0);
-        }
+    }
 
     return(create_error(MLEC_ERR_BUFFERWENT_AWOL));
 }
@@ -3816,7 +3830,7 @@ paste_write_putblock(
     MLEC_HANDLE mlec = xferhandlep->p;
 
     if(mlec)
-        {
+    {
         char *ptr = &mlec->buffptr[mlec->lower.end];
         int   i;
 
@@ -3826,7 +3840,7 @@ paste_write_putblock(
 
         return(mlec__insert_text(mlec, ptr));   /* space test WILL be successful */
                                                 /*>>> could flex space move???   */
-        }
+    }
 
     return(create_error(MLEC_ERR_BUFFERWENT_AWOL));
 }
@@ -3869,22 +3883,22 @@ text_in(
     int filesize;
 
     if((err = (*openp)(filename, &filetype, &filesize, &handle)) >= 0)
-        {
+    {
         if((err = checkspace_delete_selection(mlec, filesize + 1)) >= 0)           /* plus 1 to allow room for terminator */
-            {
+        {
             if((err = (*readp)(&handle, &mlec->buffptr[mlec->lower.end], filesize)) >= 0)
-                {
+            {
                 char *ptr = &mlec->buffptr[mlec->lower.end];
                 ptr[filesize] = '\0';
                 mlec__insert_text(mlec, ptr); /* space test WILL be successful */
-                }
             }
+        }
 
         if(err >= 0)
             err = (*closep)(&handle);   /* no error so far, may get one from close operation */
         else
             (*closep)(&handle);         /* must do close, but we want the earlier error */
-        }
+    }
 
     scroll_until_cursor_visible(mlec);  /* In case an error stops mlec__insert_text doing one for us */
     return(err);
@@ -3907,11 +3921,11 @@ text_out(
                      /* since only paste_write_open expects this to be valid we should be OK   */
                      /*>>>think about this, can we do calculation properly*/
     if((err = (*sizep)(xferhandlep, xfersize)) >= 0)
-        {
+    {
         char *buff = mlec->buffptr;
 
         if(lineterm)
-            {
+        {
             /* output the text line-by-line, replacing our terminators by the caller-supplied sequence */
 
             BOOL term;
@@ -3919,45 +3933,45 @@ text_out(
             int  linestart, lineend;
 
             for(linestart = range.lower.start; linestart < range.lower.end; linestart = lineend)
-                {
+            {
                 for(term = FALSE, lineend = linestart; lineend < range.lower.end; lineend++)
-                    {
+                {
                     if (TRUE == (term = (buff[lineend] == CR)))
                         break;
-                    }
-
-                if(((size = lineend - linestart) > 0) && (err >= 0))
-                    err = (*writep)(xferhandlep, &buff[linestart], size);
-
-                /* if we stopped at eol, output the supplied terminator char(s) */
-                if(term && (err >= 0))
-                    {
-                    err = (*writep)(xferhandlep, lineterm, strlen(lineterm));
-                    lineend++;              /* not forgetting to skip our term */
-                    }
                 }
 
-            for(linestart = range.upper.start; linestart < range.upper.end; linestart = lineend)
-                {
-                for(term = FALSE, lineend = linestart; lineend < range.upper.end; lineend++)
-                    {
-                    if (TRUE == (term = (buff[lineend] == CR)))
-                        break;
-                    }
-
                 if(((size = lineend - linestart) > 0) && (err >= 0))
                     err = (*writep)(xferhandlep, &buff[linestart], size);
 
                 /* if we stopped at eol, output the supplied terminator char(s) */
                 if(term && (err >= 0))
-                    {
+                {
                     err = (*writep)(xferhandlep, lineterm, strlen(lineterm));
                     lineend++;              /* not forgetting to skip our term */
-                    }
                 }
             }
-        else
+
+            for(linestart = range.upper.start; linestart < range.upper.end; linestart = lineend)
             {
+                for(term = FALSE, lineend = linestart; lineend < range.upper.end; lineend++)
+                {
+                    if (TRUE == (term = (buff[lineend] == CR)))
+                        break;
+                }
+
+                if(((size = lineend - linestart) > 0) && (err >= 0))
+                    err = (*writep)(xferhandlep, &buff[linestart], size);
+
+                /* if we stopped at eol, output the supplied terminator char(s) */
+                if(term && (err >= 0))
+                {
+                    err = (*writep)(xferhandlep, lineterm, strlen(lineterm));
+                    lineend++;              /* not forgetting to skip our term */
+                }
+            }
+        }
+        else
+        {
             /* not bothered about line terminator characters, so blast the data out in 2 (max) lumps */
 
             int size;
@@ -3967,13 +3981,13 @@ text_out(
 
             if(((size = range.upper.end - range.upper.start) > 0) && (err >= 0))
                 err = (*writep)(xferhandlep, &buff[range.upper.start], size);
-            }
+        }
 
         if(err >= 0)
             err = (*closep)(xferhandlep);   /* no error so far, may get one from close operation */
         else
             (*closep)(xferhandlep);         /* must do close, but we want the earlier error */
-        }
+    }
 
     return(err);
 }
@@ -4009,7 +4023,7 @@ static menu mlec_menu_selection = NULL;
 static void mlec__event_menu_maker(const char *menu_title)
 {
     if(!mlec_menu_root)
-        {
+    {
         mlec_menu_root      = menu_new_c(menu_title,
                                          string_lookup(MLEC_MSG_MENUBDY));
 
@@ -4020,7 +4034,7 @@ static void mlec__event_menu_maker(const char *menu_title)
 
         menu_submenu(mlec_menu_root, MENU_ROOT_SAVE     , mlec_menu_save);
         menu_submenu(mlec_menu_root, MENU_ROOT_SELECTION, mlec_menu_selection);
-        }
+    }
 }
 
 menu mlec__event_menu_filler(void *handle)
@@ -4028,26 +4042,26 @@ menu mlec__event_menu_filler(void *handle)
     MLEC_HANDLE mlec = (MLEC_HANDLE)handle;
 
     if(mlec_menu_root)
-        {
+    {
         BOOL fade = !mlec->selectvalid;
 
         menu_setflags(mlec_menu_root, MENU_ROOT_PASTE, FALSE, paste == NULL);    /*>>>Paste NYA, so fade it*/
 
         if(mlec_menu_save)
-            {
+        {
             menu_setflags(mlec_menu_save, MENU_SAVE_SELECTION, FALSE, fade);
-            }
+        }
 
         if(mlec_menu_selection)
-            {
+        {
             /* Copy,Cut & Delete only allowed for a valid selection */
 
             menu_setflags(mlec_menu_selection, MENU_SELECTION_CLEAR , FALSE, fade);
             menu_setflags(mlec_menu_selection, MENU_SELECTION_COPY  , FALSE, fade);
             menu_setflags(mlec_menu_selection, MENU_SELECTION_CUT   , FALSE, fade);
             menu_setflags(mlec_menu_selection, MENU_SELECTION_DELETE, FALSE, fade);
-            }
         }
+    }
 
     return(mlec_menu_root);
 }
@@ -4061,7 +4075,7 @@ mlec__event_save(
     BOOL selection)
 {
     if(0 != (mlec__save_dbox = dbox_new("xfer_send")))
-        {
+    {
         dbox_show(mlec__save_dbox);
 
         (void) xfersend_x(FILETYPE_TEXT,
@@ -4079,7 +4093,7 @@ mlec__event_save(
 
         dbox_hide(mlec__save_dbox);
         dbox_dispose(&mlec__save_dbox);
-        }
+    }
 }
 
 BOOL mlec__event_menu_proc(void *handle, char *hit, BOOL submenurequest)
@@ -4090,45 +4104,45 @@ BOOL mlec__event_menu_proc(void *handle, char *hit, BOOL submenurequest)
     IGNOREPARM(submenurequest);
 
     switch(*hit++)
+    {
+    case MENU_ROOT_SAVE:
+        switch(*hit++)
         {
-        case MENU_ROOT_SAVE:
-            switch(*hit++)
-                {
-                case MENU_SAVE_FILE:
-                    mlec__event_save(mlec, FALSE);
-                    break;
-
-                case MENU_SAVE_SELECTION:
-                    mlec__event_save(mlec, TRUE);
-                    break;
-                }
+        case MENU_SAVE_FILE:
+            mlec__event_save(mlec, FALSE);
             break;
 
-        case MENU_ROOT_SELECTION:
-            switch(*hit++)
-                {
-                case MENU_SELECTION_CLEAR:
-                    mlec__selection_clear(mlec);
-                    break;
-
-                case MENU_SELECTION_COPY:
-                    err = mlec__selection_copy(mlec);
-                    break;
-
-                case MENU_SELECTION_CUT:
-                    err = mlec__selection_cut(mlec);
-                    break;
-
-                case MENU_SELECTION_DELETE:
-                    mlec__selection_delete(mlec);
-                    break;
-                }
-            break;
-
-        case MENU_ROOT_PASTE:
-            err = mlec__atcursor_paste(mlec);
+        case MENU_SAVE_SELECTION:
+            mlec__event_save(mlec, TRUE);
             break;
         }
+        break;
+
+    case MENU_ROOT_SELECTION:
+        switch(*hit++)
+        {
+        case MENU_SELECTION_CLEAR:
+            mlec__selection_clear(mlec);
+            break;
+
+        case MENU_SELECTION_COPY:
+            err = mlec__selection_copy(mlec);
+            break;
+
+        case MENU_SELECTION_CUT:
+            err = mlec__selection_cut(mlec);
+            break;
+
+        case MENU_SELECTION_DELETE:
+            mlec__selection_delete(mlec);
+            break;
+        }
+        break;
+
+    case MENU_ROOT_PASTE:
+        err = mlec__atcursor_paste(mlec);
+        break;
+    }
 
     /* Any error is the result of direct user interaction with the mlec, */
     /* so report the error here, cos there is no caller to return it to. */
@@ -4161,10 +4175,10 @@ BOOL mlec__saveall(/*const*/ char *filename, void *handle)
     int         err;
 
     if((err = mlec__alltext_save(mlec, filename, FILETYPE_TEXT, lineterm_LF)) < 0)
-        {
+    {
         report_error(mlec, err);        /* Report the error here, cos there is no caller to return it to. */
         return(FALSE);
-        }
+    }
 
     return(TRUE);
 }
@@ -4177,10 +4191,10 @@ BOOL mlec__saveselection(/*const*/ char *filename, void *handle)
     int         err;
 
     if((err = mlec__selection_save(mlec, filename, FILETYPE_TEXT, lineterm_LF)) < 0)
-        {
+    {
         report_error(mlec, err);        /* Report the error here, cos there is no caller to return it to. */
         return(FALSE);
-        }
+    }
 
     return(TRUE);
 }

@@ -156,25 +156,25 @@ vsload_isvsfile(
     /* loop for structure */
     res = FALSE;
 
-    while(TRUE)
-        {
+    for(;;)
+    {
         /* read in ViewSheet file header */
         if(file_seek(fin, 0, SEEK_SET) < 0)
-            {
+        {
             res = create_error(VSLOAD_ERR_CANTREAD);
             break;
-            }
+        }
 
         if((bytes_read = file_read(&vsfh, 1, sizeof(vsfh), fin)) < 0)
-            {
+        {
             res = create_error(VSLOAD_ERR_CANTREAD);
             break;
-            }
+        }
 
         res = vsload_fileheader_isvsfile(vsfh, bytes_read);
 
         break; /* always */
-        }
+    }
 
     /* restore file */
     file_setpos(fin, &pos);
@@ -208,19 +208,19 @@ vsload_loadvsfile(
 
     /* loop for structure */
     for(;;)
-        {
+    {
         /* read in the file */
         if(file_seek(fin, 0, SEEK_SET) < 0)
-            {
+        {
             res = create_error(VSLOAD_ERR_CANTREAD);
             break;
-            }
+        }
 
         if(file_read(vsp, 1, vsfsize, fin) < 0)
-            {
+        {
             res = create_error(VSLOAD_ERR_CANTREAD);
             break;
-            }
+        }
 
         if(NULL == (outbuf = al_ptr_alloc_bytes(char *, (S32) VS_MAXSLOTLEN + 1, &res)))
             break;
@@ -228,7 +228,7 @@ vsload_loadvsfile(
         res = vsp->maxrow;
 
         break; /* always */
-        }
+    }
 
     if(res < 0)
         vsload_fileend();
@@ -261,10 +261,10 @@ vsdecodeslot(
     bracstac[0] = BRACKET;
     bracix = 1;
 
-    while(TRUE)
-        {
+    for(;;)
+    {
         if(isalpha(*ip))
-            {
+        {
             for(i = 0; i < elemof32(vsfuncs); ++i)
                 if(0 == _strnicmp(vsfuncs[i].name, ip, strlen(vsfuncs[i].name)))
                     break;
@@ -274,38 +274,38 @@ vsdecodeslot(
             trace_1(TRACE_APP_PD4, "i: %d]", i);
 
             if(i < elemof(vsfuncs))
-                {
+            {
                 static char average_str[] = "average(";
                 if(0 == _strnicmp(average_str, ip, sizeof(average_str) - 1))
-                    {
+                {
                     strcpy(op, "avg(");
                     op += 4;
-                    }
+                }
                 else
-                    {
+                {
                     strcpy(op, vsfuncs[i].name);
                     op += strlen(vsfuncs[i].name);
                     trace_0(TRACE_APP_PD4, "copied]");
-                    }
+                }
 
                 ip += strlen(vsfuncs[i].name);
 
                 bracstac[bracix++] = vsfuncs[i].flags;
                 continue;
-                }
             }
+        }
         else if(*ip == '(')
-            {
+        {
             bracstac[bracix] = bracstac[bracix - 1];
             bracix++;
-            }
+        }
         else if(*ip == ')')
-            {
+        {
             if(bracix)
                 --bracix;
-            }
+        }
         else if(*ip == SLR_START)
-            {
+        {
             S32 col, row;
 
             col = (S32) *(++ip);
@@ -314,9 +314,9 @@ vsdecodeslot(
             rangeix += sprintf(rangebuf + rangeix, "%d", row + 1);
             rangebuf[rangeix] = '\0';
             if(++slrcount == 2)
-                {
+            {
                 if(bracix && bracstac[bracix - 1] != NO_SUM)
-                    {
+                {
                     strcpy(op, "sum(");
                     op += 4;
                     strcpy(op, rangebuf);
@@ -324,23 +324,23 @@ vsdecodeslot(
                     strcpy(op, ")");
                     op += 1;
                     slrcount = rangeix = 0;
-                    }
                 }
+            }
 
             ++ip;
             continue;
-            }
+        }
 
         if(slrcount)
-            {
+        {
             strcpy(op, rangebuf);
             op += rangeix;
             slrcount = rangeix = 0;
-            }
+        }
 
         if(!(*op++ = *ip++))
             break;
-        }
+    }
 
     return(outbuf);
 }
@@ -411,19 +411,19 @@ vsload_travel(
     slotcont = vsdp + readval_S16(&vsp->ctbpn1) + coloff;
 
     if(*type == VS_NUMBER)
-        {
+    {
         char formatb;
 
         formatb = *(slotcont + 5);
         if((formatb & 0x7F) == 0x7F)
-            {
+        {
             /* default to FRM */
             *decp = -2;
             *minus = TRUE;
             *justright = TRUE;
-            }
+        }
         else
-            {
+        {
             if(formatb & 0x40)
                 *decp = formatb & 0xF;
             else
@@ -438,11 +438,11 @@ vsload_travel(
                 *minus = FALSE;
             else
                 *minus = TRUE;
-            }
+        }
 
         res = vsdecodeslot(slotcont + 6);
         return(res);
-        }
+    }
 
     /* bash off right-justify label bit */
     if(*slotcont & 0x80)

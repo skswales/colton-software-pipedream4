@@ -75,29 +75,29 @@ actind(
         return;
 
     if(number < 0)
-        {
+    {
         if(last_number >= 0)
-            {
+        {
             /* switch off and reset statics */
             last_number = -1;
             #if defined(DO_VISDELAY_BY_STEAM)
             trace_0(TRACE_APP_PD4, "visdelay_end()");
             riscos_visdelay_off();
             #endif
-            }
+        }
 
         return;
-        }
+    }
 
     if( number > 99)
         number = 99;
 
     #if defined(DO_VISDELAY_BY_STEAM)
     if(last_number < 0)
-        {
+    {
         trace_0(TRACE_APP_PD4, "visdelay_begin()");
         riscos_visdelay_on();
-        }
+    }
     #endif
 
     last_number = number;
@@ -105,10 +105,10 @@ actind(
     /* is there anything to output after the heading */
 
     if(number > 0)
-        {
+    {
         trace_1(TRACE_APP_PD4, "riscos_hourglass_percent(%d)", number);
         riscos_hourglass_percent(number);
-        }
+    }
 }
 
 extern void
@@ -166,7 +166,7 @@ bash_slots_about_a_bit(
     escape_enable();
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL && !ctrlflag)
-        {
+    {
         actind_in_block(DOWN_COLUMNS);
 
         if(is_protected_slot(tcell))
@@ -176,22 +176,22 @@ bash_slots_about_a_bit(
         d_options_TH = TH_BLANK;
 
         switch(tcell->type)
+        {
+        case SL_TEXT:
+            if(bash_snapshot == action)
             {
-            case SL_TEXT:
-                if(bash_snapshot == action)
-                    {
-                    d_options_DF = dateformat;
-                    d_options_TH = thousands;
-                    }
-                break;
-
-            case SL_NUMBER:
-                break;
-
-            default:
-            case SL_PAGE:
-                continue;   /* enough to confuse SKS for a while! */
+                d_options_DF = dateformat;
+                d_options_TH = thousands;
             }
+            break;
+
+        case SL_NUMBER:
+            break;
+
+        default:
+        case SL_PAGE:
+            continue;   /* enough to confuse SKS for a while! */
+        }
 
         /* keep dataflower happy - moved from a bit below */
         oldformat = tcell->format;
@@ -201,93 +201,93 @@ bash_slots_about_a_bit(
 
         /* decompile into buffer */
         switch(action)
+        {
+        case bash_tonumber:
+            xf_inexpression = TRUE;
+            prccon(linbuf, tcell);
+            break;
+
+        case bash_totext:
+            prccon(linbuf, tcell);
+            break;
+
+        case bash_exchange:
             {
-            case bash_tonumber:
+            if(tcell->type == SL_TEXT)
                 xf_inexpression = TRUE;
-                prccon(linbuf, tcell);
-                break;
 
-            case bash_totext:
-                prccon(linbuf, tcell);
-                break;
+            prccon(linbuf, tcell);
+            break;
+            }
 
-            case bash_exchange:
-                {
-                if(tcell->type == SL_TEXT)
+        default:
+        case bash_snapshot:
+            {
+            P_EV_RESULT p_ev_result;
+
+            switch(result_extract(tcell, &p_ev_result))
+            {
+            case SL_NUMBER:
+                /* leave strings as text cells */
+                if(p_ev_result->did_num != RPN_RES_STRING)
                     xf_inexpression = TRUE;
 
-                prccon(linbuf, tcell);
-                break;
-                }
+                /* poke the minus/brackets flag to minus */
+                tcell->format = F_DCPSID | F_DCP;
 
-            default:
-            case bash_snapshot:
+                /* array results are left as arrays - not decompiled into
+                 * their formula (same difference for constant arrays, but
+                 * not for calculated arrays)
+                 */
+                if(p_ev_result->did_num == RPN_RES_ARRAY)
                 {
-                P_EV_RESULT p_ev_result;
+                    EV_DATA data;
+                    const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
+                    EV_OPTBLOCK optblock;
 
-                switch(result_extract(tcell, &p_ev_result))
-                    {
-                    case SL_NUMBER:
-                        /* leave strings as text cells */
-                        if(p_ev_result->did_num != RPN_RES_STRING)
-                            xf_inexpression = TRUE;
+                    ev_set_options(&optblock, cur_docno);
 
-                        /* poke the minus/brackets flag to minus */
-                        tcell->format = F_DCPSID | F_DCP;
+                    ev_result_to_data_convert(&data, p_ev_result);
 
-                        /* array results are left as arrays - not decompiled into
-                         * their formula (same difference for constant arrays, but
-                         * not for calculated arrays)
-                         */
-                        if(p_ev_result->did_num == RPN_RES_ARRAY)
-                            {
-                            EV_DATA data;
-                            const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
-                            EV_OPTBLOCK optblock;
-
-                            ev_set_options(&optblock, cur_docno);
-
-                            ev_result_to_data_convert(&data, p_ev_result);
-
-                            ev_decode_data(linbuf, cur_docno, &data, &optblock);
-                            break;
-                            }
-
-                    /* note fall thru */
-                    default:
-                        (void) expand_slot(current_docno(), tcell, in_block.row, linbuf, LIN_BUFSIZ /*fwidth*/,
-                                           DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
-                                           FALSE /*allow_fonty_result*/, TRUE /*cff*/);
-                        break;
-                    }
-                break;
+                    ev_decode_data(linbuf, cur_docno, &data, &optblock);
+                    break;
                 }
+
+            /* note fall thru */
+            default:
+                (void) expand_slot(current_docno(), tcell, in_block.row, linbuf, LIN_BUFSIZ /*fwidth*/,
+                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
+                                   FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+                break;
             }
+            break;
+            }
+        }
 
         slot_in_buffer = buffer_altered = TRUE;
 
         /* compile into cell */
 
         if(xf_inexpression)
-            {
+        {
             seteex_nodraw();    /*>>>RCM says: OK dog breath, what do I do with this */
             merexp_reterr(NULL, NULL, FALSE);
             endeex_nodraw();
 
             if(bash_snapshot == action)
-                {
+            {
                 /* reset format in new cell */
                 if((NULL != (tcell = travel(in_block.col, in_block.row)))  &&  (tcell->type != SL_TEXT))
                     tcell->format = oldformat;
-                }
+            }
 
             /* SKS after 4.11 03feb92 - added escape clause */
             if(been_error)
                 goto EXIT_POINT;
-            }
+        }
         else if(!mergebuf_core(FALSE, FALSE))
             goto EXIT_POINT;
-        }
+    }
 
     curcol = oldpos.col;
     currow = oldpos.row;
@@ -333,29 +333,29 @@ compile_text_slot(
         *slot_refsp = 0;
 
     if(NULLCH == text_at_char)
-        {
+    {
         while(NULLCH != *from)
             *to++ = *from++;
-        }
+    }
     else
-        {
+    {
         while(NULLCH != *from)
-            {
+        {
             if((*to++ = *from++) != text_at_char)
                 continue;
 
             /* if block of more than one text-at chars just write them and continue */
             if(*from == text_at_char)
-                {
+            {
                 while(*from == text_at_char)
                     *to++ = *from++;
 
                 continue;
-                }
+            }
 
             /* if it's a cell reference deal with it */
             if(slot_ref_here(from))
-                {
+            {
                 COL tcol;
                 ROW trow;
                 BOOL abscol = FALSE, absrow = FALSE;
@@ -369,10 +369,10 @@ compile_text_slot(
                 /* set up getcol and getsbd */
                 buff_sofar = (P_U8) from;
                 if(*buff_sofar == '$')
-                    {
+                {
                     abscol = TRUE;
                     buff_sofar++;
-                    }
+                }
 
                 tcol = getcol();
 
@@ -380,10 +380,10 @@ compile_text_slot(
                     tcol = (COL) (tcol | ABSCOLBIT);
 
                 if(*buff_sofar == '$')
-                    {
+                {
                     absrow = TRUE;
                     buff_sofar++;
-                    }
+                }
 
                 trow = (ROW) getsbd() - 1;
 
@@ -408,11 +408,11 @@ compile_text_slot(
                     *to++ = *from++;
 
                 continue;
-                }
+            }
 
             /* check for any other text-at field */
             if(strchr("DTPNLFGdtpnlfg", *from))
-                {
+            {
                 /* MRJC 30.3.92 */
                 if(slot_refsp)
                     *slot_refsp = SL_TREFS;
@@ -427,11 +427,11 @@ compile_text_slot(
                     *to++ = *from++;
 
                 continue;
-                }
+            }
 
             /* this was an isolated text-at char - just loop and put following content in as normal */
-            }
         }
+    }
 
     *to = NULLCH;
 
@@ -449,43 +449,43 @@ report_compiled_text_string(
 
     /* quick pass to see if we need to copy for rewriting */
     for(;;)
-        {
+    {
         uchar c = *cts++;
 
         if(NULLCH == c)
             return(cts_in); /* nothing out-of-the-ordinary - just pass the source */
 
         if((c < 0x20) || (c == 0x7F))
-            {
+        {
             --cts; /* retract for rewriting loop */
             break;
-            }
         }
+    }
 
     memcpy32(to, cts_in, cts - cts_in); /* copy what we have scanned over so far */
     to += (cts - cts_in);
 
     for(;;)
-        {
+    {
         uchar c = (*to++ = *cts++);
 
         if((to - buffer) >= elemof32(buffer))
-            {
+        {
             to[-1] = NULLCH; /* ran out of space. NULLCH-terminate and exit */
             return(buffer);
-            }
+        }
 
         if(NULLCH == c)
             return(buffer); /* buffer is NULLCH-terminated, exit */
 
         if((c < 0x20) || (c == 0x7F))
-            {
+        {
             to[-1] = c | 0x80; /* overwrite with tbs C1 equivalent */
             if(SLRLD1 == c)
                 cts += COMPILED_TEXT_SLR_SIZE-1;
             continue;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -506,21 +506,21 @@ compiled_text_len(
         return(1); /*NULLCH*/
 
     for(;;)
-        {
+    {
         PC_U8 ptr = str + strlen(str);
 
         if(SLRLD1 == ptr[-1]) /* ptr is never == str */
-            { /* the NULLCH we found is SLRLD2 - keep going */
+        {   /* the NULLCH we found is SLRLD2 - keep going */
             str = ptr + COMPILED_TEXT_SLR_SIZE-1; /* restart past the compiled SLR */
             /*eportf("ctl: SLRLD2 @ %d in %s", PtrDiffBytesS32(ptr, str_in), report_compiled_text_string(str_in));*/
             continue;
-            }
+        }
 
         /* (NULLCH == *ptr) */
         /*eportf("ctl: NULLCH @ %d in %s", PtrDiffBytesS32(ptr, str_in), report_compiled_text_string(str_in));*/
         str = ptr + 1; /* want to leave str pointing past the real NULLCH */
         return(PtrDiffBytesS32(str, str_in));
-        }
+    }
 #else
     int c;
 
@@ -562,10 +562,10 @@ compile_expression(
 
     /* get sensible defaults for result and parms */
     if(d_progvars[OR_AM].option != 'A')
-        {
+    {
         p_ev_result->did_num = RPN_DAT_WORD8;
         p_ev_result->arg.integer = 0;
-        }
+    }
     else
         p_ev_result->did_num = RPN_DAT_BLANK;
 
@@ -575,13 +575,13 @@ compile_expression(
     if(!ev_name_check(text_in, docno))
         rpn_len = create_error(EVAL_ERR_BADEXPR);
     else if((rpn_len = ss_recog_constant(&data, docno, text_in, &optblock, 0)) > 0)
-        {
+    {
         ev_data_to_result_convert(p_ev_result, &data);
         rpn_len = 0;
         parmsp->type = EVS_CON_DATA;
-        }
+    }
     else
-        {
+    {
         rpn_len = ev_compile(docno,
                              text_in,
                              compiled_out,
@@ -592,7 +592,7 @@ compile_expression(
 
         if(!rpn_len)
             rpn_len = create_error(EVAL_ERR_BADEXPR);
-        }
+    }
 
     trace_0(TRACE_MODULE_EVAL, " compiled");
 
@@ -625,7 +625,7 @@ draw_add_file_ref(
 
     /* search for a duplicate reference */
     if((p_draw_file_ref = draw_search_refs_slot(&rng.s)) == NULL)
-        {
+    {
         /* add external dependency */
         if((res = ev_add_extdependency(0,
                                        0,
@@ -637,10 +637,10 @@ draw_add_file_ref(
         /* key into list using external dependency handle */
 
         if(NULL == (p_draw_file_ref = collect_add_entry_elem(DRAW_FILE_REF, &draw_file_refs, (P_LIST_ITEMNO) &ext_dep_han, &res)))
-            {
+        {
             ev_del_extdependency(rng.s.docno, ext_dep_han);
             return(res);
-            }
+        }
 
         p_draw_file_ref->draw_file_key = draw_file_key;
         p_draw_file_ref->docno = rng.s.docno;
@@ -650,7 +650,7 @@ draw_add_file_ref(
         gr_cache_ref(&draw_file_key, 1); /* add a ref */
 
         trace_1(TRACE_MODULE_UREF, "draw_add_file_ref adding draw file ref: " PTR_XTFMT, report_ptr_cast(draw_file_key));
-        }
+    }
 
     /* check for range and load factors */
     if((*xp > SHRT_MAX)  ||  (*xp < 1.0))
@@ -692,7 +692,7 @@ draw_adjust_file_ref(
     trace_2(TRACE_APP_PD4, "draw_adjust_file_ref(" PTR_XTFMT ", " PTR_XTFMT ")", report_ptr_cast(p_draw_diag), report_ptr_cast(p_draw_file_ref));
 
     if(p_draw_diag->data)
-        {
+    {
         DRAW_BOX box;
         S32 xsize, ysize;
         S32 scaled_xsize, scaled_ysize;
@@ -716,7 +716,7 @@ draw_adjust_file_ref(
         /* scale sizes */
         trace_2(TRACE_APP_PD4, "draw_adjust_file_ref: scaled sizes x: %d, y: %d (os)",
                 p_draw_file_ref->xsize_os, p_draw_file_ref->ysize_os);
-        }
+    }
 
     /* a certain amount of redrawing may be necessary */
     p_docu = p_docu_from_docno(p_draw_file_ref->docno);
@@ -724,7 +724,7 @@ draw_adjust_file_ref(
     assert(!docu_is_thunk(p_docu));
 
     if(p_docu->Xpict_on_screen)
-        {
+    {
         DOCNO old_docno = current_docno();
 
         select_document(p_docu);
@@ -732,49 +732,49 @@ draw_adjust_file_ref(
         rptr = vertvec();
 
         for(roff = 0; roff < rowsonscreen; roff++, rptr++)
-            {
+        {
             if(rptr->flags & PICT)
-                {
+            {
                 trow = rptr->rowno;
 
                 cptr = horzvec();
 
                 for(coff = 0; !(cptr->flags & LAST); coff++, cptr++)
-                    {
+                {
                     tcol = cptr->colno;
 
                     if(draw_find_file(current_docno(), tcol, trow, &sch_p_draw_diag, NULL))
-                        {
+                    {
                         trace_3(TRACE_APP_PD4, "found picture at col %d, row %d, p_draw_diag " PTR_XTFMT, tcol, trow, report_ptr_cast(sch_p_draw_diag));
 
                         if(p_draw_diag == sch_p_draw_diag)
-                            {
+                        {
                             xf_interrupted = TRUE;
 #if 1
                             /* SKS after 4.11 22jan92 - slight (and careful) optimisation here; Draw files always hang down */
                             if(out_below)
                                 rowtoend  = MIN(rowtoend, roff);
                             else
-                                {
+                            {
                                 out_below = TRUE;
                                 rowtoend  = roff;
-                                }
+                            }
 
                             xf_draw_empty_right = 1;
 #else
                             out_screen = TRUE;
 #endif
                             goto FOUND_ONE;
-                            }
                         }
                     }
                 }
             }
+        }
 
     FOUND_ONE:;
 
         select_document_using_docno(old_docno);
-        }
+    }
 }
 
 /******************************************************************************
@@ -794,11 +794,11 @@ draw_redraw_all_pictures(void)
     for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         p_draw_file_ref;
         p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
-        {
+    {
         P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
         draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
-        }
+    }
 }
 
 /******************************************************************************
@@ -819,17 +819,17 @@ gr_cache_recache_proto(static, draw_file_recached)
     for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         p_draw_file_ref;
         p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
-        {
+    {
         if(p_draw_file_ref->draw_file_key == cah)
-            {
+        {
             P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
             if(NULL == p_draw_diag)
                 p_draw_diag = gr_cache_search_empty(); /* paranoia in case of reload failure */
 
             draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -876,15 +876,15 @@ draw_cache_file(
     chart_exists = gr_chart_query_exists(&ch, &ext_handle, namebuf);
 
     if(chart_exists && explicit_load)
-        {
+    {
         /*reperr(ERR_CHART_ALREADY_LOADED, namebuf);*/
         return(pdchart_show_editor_using_handle(ext_handle));
-        }
+    }
 
     (void) gr_cache_entry_query(&draw_file_key, namebuf);
 
     if(!draw_file_key)
-        {
+    {
         if((res = gr_cache_entry_ensure(&draw_file_key, namebuf)) < 0)
             return(res);
 
@@ -893,12 +893,12 @@ draw_cache_file(
 
         /* add tag stripper iff chart not already loaded */
         if(!chart_exists)
-            {
+        {
             status_assert(gr_cache_tagstripper_add(pdchart_tagstrip, &info, wacky_tag));
 
             added_stripper = TRUE;
-            }
         }
+    }
 
     (void) gr_cache_loaded_ensure(&draw_file_key);
 
@@ -908,40 +908,40 @@ draw_cache_file(
     /* if we loaded a live Chart file we'll now want to ensure its dependent docs are loaded too */
 
     if(info.pdchartdatakey)
-        {
+    {
         /* when all refs to this chart go to zero then kill the cache entry */
         gr_cache_entry_set_autokill(&draw_file_key);
 
         if((res = pdchart_load_dependents(info.pdchartdatakey, namebuf)) < 0)
-            {
+        {
             reperr_null(res);
             been_error = FALSE;
-            }
+        }
 
         pdchart_load_ended(info.pdchartdatakey, load_as_preferred);
 
         if(explicit_load && !load_as_preferred)
-            {
+        {
             pdchart_select_using_handle(info.pdchartdatakey);
 
             if((res = pdchart_show_editor_using_handle(info.pdchartdatakey)) < 0)
-                {
+            {
                 reperr_null(res);
                 been_error = FALSE;
-                }
             }
         }
+    }
 
     if(gr_cache_error_query(&draw_file_key) >= 0)
-        {
+    {
         if(is_current_document())
-            {
+        {
             res = draw_add_file_ref(draw_file_key, xp, yp, col, row);
 
             if(res <= 0)
                 return(res ? res : status_nomem());
-            }
         }
+    }
 
     return((S32) draw_file_key);
 }
@@ -993,18 +993,18 @@ draw_find_file(
     for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         p_draw_file_ref;
         p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
-        {
+    {
         trace_3(TRACE_APP_PD4, "draw_find_file found docno: %d, col: %d, row: %d",
                 p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
 
         if( (docno == p_draw_file_ref->docno)  &&
             ((col == -1) || (col == p_draw_file_ref->col))  &&
             (row == p_draw_file_ref->row))
-            {
+        {
             P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
             if(p_draw_diag  &&  p_draw_diag->data)
-                {
+            {
                 trace_1(TRACE_APP_PD4, "draw_find_file found key: " PTR_XTFMT, report_ptr_cast(p_draw_file_ref->draw_file_key));
 
                 if(p_p_draw_diag)
@@ -1014,9 +1014,9 @@ draw_find_file(
                     *p_p_draw_file_ref = p_draw_file_ref;
 
                 return(1);
-                }
             }
         }
+    }
 
     return(0);
 }
@@ -1034,7 +1034,7 @@ draw_remove_ref(
     P_DRAW_FILE_REF p_draw_file_ref;
 
     if((p_draw_file_ref = draw_search_refs(ext_dep_han)) != NULL)
-        {
+    {
         /* remove external dependency */
         ev_del_extdependency(p_draw_file_ref->docno, ext_dep_han);
 
@@ -1044,7 +1044,7 @@ draw_remove_ref(
         gr_cache_ref(&p_draw_file_ref->draw_file_key, 0); /* remove a ref */
 
         collect_subtract_entry(&draw_file_refs.lbr, (LIST_ITEMNO) ext_dep_han);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1076,12 +1076,12 @@ draw_search_refs_slot(
     for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         p_draw_file_ref;
         p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
-        {
+    {
         if( (p_draw_file_ref->docno == p_slr->docno) &&
             (p_draw_file_ref->col == p_slr->col) &&
             (p_draw_file_ref->row == p_slr->row) )
                 return(p_draw_file_ref);
-        }
+    }
 
     return(NULL);
 }
@@ -1122,29 +1122,29 @@ draw_str_insertslot(
     c = sl->content.text;
 
     while(NULLCH != *c)
-        {
+    {
         if(SLRLD1 == *c) /* because of possibility of text-at char change, this need not be preceded by the current text-at char (orphaned) */
-            {
+        {
             c += COMPILED_TEXT_SLR_SIZE;
             continue;
-            }
+        }
 
         if(*c++ != text_at_char)
             continue;
 
         /* skip over multiple text-at chars */
         if(*c == text_at_char)
-            {
+        {
             while(*c == text_at_char)
                 ++c;
             continue;
-            }
+        }
 
         /* check for a draw file reference */
         to = tbuf;
         len = readfxy('G', &c, &to, &name, &x, &y);
         if(len)
-            {
+        {
             char namebuf[BUF_MAX_PATHSTRING];
 
             xstrnkpy(namebuf, elemof32(namebuf), name, len);
@@ -1153,13 +1153,13 @@ draw_str_insertslot(
             if((res = draw_cache_file(namebuf, &x, &y, col, row, 0, 0)) >= 0)
                 found_file = 1;
             else
-                {
+            {
                 reperr(res, namebuf);
                 been_error = FALSE;
-                }
-            break;
             }
+            break;
         }
+    }
 
     return(found_file);
 }
@@ -1204,52 +1204,52 @@ PROC_UREF_PROTO(static, draw_uref)
     trace_0(TRACE_MODULE_UREF, "draw_uref");
 
     switch(upp->action)
+    {
+    case UREF_CHANGEDOC:
+    case UREF_CHANGE:
+    case UREF_REDRAW:
+        break;
+
+    case UREF_REPLACE:
+    case UREF_UREF:
+    case UREF_DELETE:
+    case UREF_SWAP:
+    case UREF_SWAPCELL:
+    case UREF_CLOSE:
         {
-        case UREF_CHANGEDOC:
-        case UREF_CHANGE:
-        case UREF_REDRAW:
-            break;
+        P_DRAW_FILE_REF p_draw_file_ref = draw_search_refs(inthandle);
 
-        case UREF_REPLACE:
-        case UREF_UREF:
-        case UREF_DELETE:
-        case UREF_SWAP:
-        case UREF_SWAPCELL:
-        case UREF_CLOSE:
+        if(p_draw_file_ref != NULL)
+        {
+            switch(upp->action)
             {
-            P_DRAW_FILE_REF p_draw_file_ref = draw_search_refs(inthandle);
+            case UREF_SWAP:
+            case UREF_SWAPCELL:
+            case UREF_UREF:
+                p_draw_file_ref->col = at_rng->s.col;
+                p_draw_file_ref->row = at_rng->s.row;
 
-            if(p_draw_file_ref != NULL)
-                {
-                switch(upp->action)
-                    {
-                    case UREF_SWAP:
-                    case UREF_SWAPCELL:
-                    case UREF_UREF:
-                        p_draw_file_ref->col = at_rng->s.col;
-                        p_draw_file_ref->row = at_rng->s.row;
+                trace_3(TRACE_MODULE_UREF,
+                        "draw uref updated doc: %d, col: %d, row: %d",
+                        p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
+                break;
 
-                        trace_3(TRACE_MODULE_UREF,
-                                "draw uref updated doc: %d, col: %d, row: %d",
-                                p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
-                        break;
+            case UREF_REPLACE:
+            case UREF_DELETE:
+            case UREF_CLOSE:
+                trace_3(TRACE_MODULE_UREF,
+                        "draw uref frees doc: %d, col: %d, row: %d",
+                        p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
+                draw_remove_ref(inthandle);
+                break;
 
-                    case UREF_REPLACE:
-                    case UREF_DELETE:
-                    case UREF_CLOSE:
-                        trace_3(TRACE_MODULE_UREF,
-                                "draw uref frees doc: %d, col: %d, row: %d",
-                                p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
-                        draw_remove_ref(inthandle);
-                        break;
-
-                    default:
-                        break;
-                    }
-                }
-            break;
+            default:
+                break;
             }
         }
+        break;
+        }
+    }
 }
 
 /*
@@ -1268,7 +1268,7 @@ Newslotcontents_fn(void)
         return;
 
     while(dialog_box(D_NAME))
-        {
+    {
         strcpy(linbuf, d_name[0].textfield);
 
         buffer_altered  = TRUE;
@@ -1282,7 +1282,7 @@ Newslotcontents_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -1326,36 +1326,36 @@ PROC_UREF_PROTO(extern, eval_wants_slot_drawn)
     IGNOREPARM(status);
 
     switch(upp->action)
+    {
+    case UREF_REDRAW:
         {
-        case UREF_REDRAW:
-            {
-            DOCNO old_docno = change_document_using_docno((DOCNO) exthandle);
-            P_CELL tcell;
+        DOCNO old_docno = change_document_using_docno((DOCNO) exthandle);
+        P_CELL tcell;
 
-            /* don't redraw blanks and text cells unless they contain slrs */
-            tcell = travel((COL) upp->slr1.col, (ROW) upp->slr1.row);
+        /* don't redraw blanks and text cells unless they contain slrs */
+        tcell = travel((COL) upp->slr1.col, (ROW) upp->slr1.row);
 
-            if(tcell != NULL)
-                if((tcell->type == SL_NUMBER) ||
-                   (tcell->type == SL_TEXT && (tcell->flags & SL_TREFS)) )
-                    draw_one_altered_slot((COL) upp->slr1.col, (ROW) upp->slr1.row);
+        if(tcell != NULL)
+            if((tcell->type == SL_NUMBER) ||
+               (tcell->type == SL_TEXT && (tcell->flags & SL_TREFS)) )
+                draw_one_altered_slot((COL) upp->slr1.col, (ROW) upp->slr1.row);
 
-            select_document_using_docno(old_docno);
-            break;
-            }
+        select_document_using_docno(old_docno);
+        break;
+        }
 
 #if 0 /* SKS 20130404 */
-        case UREF_RENAME:
-            {
-            DOCNO old_docno = change_document_using_docno((DOCNO) exthandle);
+    case UREF_RENAME:
+        {
+        DOCNO old_docno = change_document_using_docno((DOCNO) exthandle);
 
-            filealtered(TRUE);
+        filealtered(TRUE);
 
-            select_document_using_docno(old_docno);
-            break;
-            }
-#endif
+        select_document_using_docno(old_docno);
+        break;
         }
+#endif
+    }
 }
 
 /******************************************************************************
@@ -1400,23 +1400,23 @@ filbuf(void)
     nslot = travel_here();
 
     if(nslot)
-        {
+    {
         if((nslot->type == SL_TEXT)  &&  !(nslot->justify & PROTECTED))
-            {
+        {
             prccon(linbuf, nslot);
             slot_in_buffer = TRUE;
-            }
+        }
         else
             /* ensure linbuf zapped */
             zap = TRUE;
-        }
+    }
 
     if(!nslot  ||  zap)
-        {
+    {
         *linbuf = '\0';
         lescrl = 0;
         slot_in_buffer = !zap;
-        }
+    }
 }
 
 /*
@@ -1439,10 +1439,10 @@ getcol(void)
         buff_sofar++;
 
     while(ch = *buff_sofar, isalpha(ch))
-        {
+    {
         buff_sofar++;
         res = (res+1)*26 + toupper(ch) - 'A';
-        }
+    }
 
     return((res == -1) ? NO_COL : res);
 }
@@ -1463,12 +1463,12 @@ dependent_links_warning(void)
     for(lptr = first_in_list(&graphics_link_list);
         lptr;
         lptr = next_in_list(&graphics_link_list))
-        {
+    {
         PC_GRAPHICS_LINK_ENTRY glp = (P_GRAPHICS_LINK_ENTRY) lptr->value;
 
         if(glp->docno == docno)
             ++nLinks;
-        }
+    }
 
     if(nLinks)
         return(riscdialog_query_YN(close_dependent_links_winge_STR) == riscdialog_query_YES);
@@ -1537,10 +1537,10 @@ graph_add_entry(
                                    &glp->ext_dep_han,
                                    graph_uref,
                                    &rng)) < 0)
-        {
+    {
         graph_remove_entry(ghan);
         return(res);
-        }
+    }
 
     return((S32) ghan);
 }
@@ -1560,12 +1560,12 @@ graph_active_present(
     for(lptr = first_in_list(&graphics_link_list);
         lptr;
         lptr = next_in_list(&graphics_link_list))
-        {
+    {
         PC_GRAPHICS_LINK_ENTRY glp = (PC_GRAPHICS_LINK_ENTRY) lptr->value;
 
         if(glp->update  &&  ((docno == DOCNO_NONE)  ||  (glp->docno == docno)))
             return(TRUE);
-        }
+    }
 
     return(FALSE);
 }
@@ -1583,12 +1583,12 @@ graph_remove_entry(
     PC_GRAPHICS_LINK_ENTRY glp = graph_search_list(han);
 
     if(glp != NULL)
-        {
+    {
         /* remove external dependency */
         ev_del_extdependency(glp->docno,
                              glp->ext_dep_han);
         delete_from_list(&graphics_link_list, (S32) han);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1623,7 +1623,7 @@ graph_send_block(
     trace_4(TRACE_MODULE_UREF, "graph_send_block scol: %d, srow: %d, ecol: %d, erow: %d", scol, srow, ecol, erow);
 
     if(glp->update)
-        {
+    {
         COL tcol;
         ROW trow;
 
@@ -1635,7 +1635,7 @@ graph_send_block(
         for(tcol = scol; tcol < ecol; ++tcol)
             for(trow = srow; trow < erow; ++trow)
                 riscos_sendslotcontents(glp, (S32) (tcol - glp->col), (S32) (trow - glp->row));
-        }
+    }
 }
 
 /******************************************************************************
@@ -1651,91 +1651,91 @@ PROC_UREF_PROTO(static, graph_uref)
     trace_0(TRACE_MODULE_UREF, "graph_uref");
 
     switch(upp->action)
+    {
+    case UREF_CHANGEDOC:
+    case UREF_REPLACE:
+    case UREF_REDRAW:
+        break;
+
+    case UREF_CHANGE:
+    case UREF_UREF:
+    case UREF_DELETE:
+    case UREF_SWAP:
+    case UREF_SWAPCELL:
+    case UREF_CLOSE:
         {
-        case UREF_CHANGEDOC:
-        case UREF_REPLACE:
-        case UREF_REDRAW:
-            break;
+        P_GRAPHICS_LINK_ENTRY glp = graph_search_list((ghandle) exthandle);
 
-        case UREF_CHANGE:
-        case UREF_UREF:
-        case UREF_DELETE:
-        case UREF_SWAP:
-        case UREF_SWAPCELL:
-        case UREF_CLOSE:
+        if(glp != NULL)
+        {
+            DOCNO old_docno = change_document_using_docno(glp->docno);
+
+            switch(upp->action)
             {
-            P_GRAPHICS_LINK_ENTRY glp = graph_search_list((ghandle) exthandle);
+            case UREF_CHANGE:
+                graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr1.col + 1, upp->slr1.row + 1);
+                break;
 
-            if(glp != NULL)
+            case UREF_DELETE:
+                if(status == DEP_DELETE)
+                    goto kill_ref;
+                else
+                    goto update_ref;
+                break;
+
+            case UREF_UREF:
+            update_ref:
+                if(status == DEP_UPDATE)
                 {
-                DOCNO old_docno = change_document_using_docno(glp->docno);
+                    glp->col = at_rng->s.col;
+                    glp->row = at_rng->s.row;
 
-                switch(upp->action)
+                    /* transmit if block has changed size */
+                    if( at_rng->e.col - at_rng->s.col != glp->xsize + 1 ||
+                        at_rng->e.row - at_rng->s.row != glp->ysize + 1)
                     {
-                    case UREF_CHANGE:
-                        graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr1.col + 1, upp->slr1.row + 1);
-                        break;
+                        riscos_sendallslots(glp);
 
-                    case UREF_DELETE:
-                        if(status == DEP_DELETE)
-                            goto kill_ref;
-                        else
-                            goto update_ref;
-                        break;
-
-                    case UREF_UREF:
-                    update_ref:
-                        if(status == DEP_UPDATE)
-                            {
-                            glp->col = at_rng->s.col;
-                            glp->row = at_rng->s.row;
-
-                            /* transmit if block has changed size */
-                            if( at_rng->e.col - at_rng->s.col != glp->xsize + 1 ||
-                                at_rng->e.row - at_rng->s.row != glp->ysize + 1)
-                                {
-                                riscos_sendallslots(glp);
-
-                                /* reset extent of dependency */
-                                at_rng->e.col = at_rng->s.col + glp->xsize + 1;
-                                at_rng->e.row = at_rng->s.row + glp->ysize + 1;
-                                }
-                            else
-                                graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr2.col, upp->slr2.row);
-                            }
-                        else
-                            graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr2.col, upp->slr2.row);
-                        break;
-
-                    case UREF_SWAP:
-                        glp->col = at_rng->s.col;
-                        glp->row = at_rng->s.row;
-                        graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr2.col, upp->slr1.row + 1);
-                        graph_send_block(glp, upp->slr1.col, upp->slr2.row, upp->slr2.col, upp->slr2.row + 1);
-                        break;
-
-                    case UREF_SWAPCELL:
-                        glp->col = at_rng->s.col;
-                        glp->row = at_rng->s.row;
-                        graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr1.col + 1, upp->slr1.row + 1);
-                        graph_send_block(glp, upp->slr2.col, upp->slr2.row, upp->slr2.col + 1, upp->slr2.row + 1);
-                        break;
-
-                    case UREF_CLOSE:
-                    kill_ref:
-                        riscos_sendsheetclosed(glp);
-                        graph_remove_entry((ghandle) exthandle);
-                        break;
-
-                    default:
-                        break;
+                        /* reset extent of dependency */
+                        at_rng->e.col = at_rng->s.col + glp->xsize + 1;
+                        at_rng->e.row = at_rng->s.row + glp->ysize + 1;
                     }
-
-                select_document_using_docno(old_docno);
+                    else
+                        graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr2.col, upp->slr2.row);
                 }
-            break;
+                else
+                    graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr2.col, upp->slr2.row);
+                break;
+
+            case UREF_SWAP:
+                glp->col = at_rng->s.col;
+                glp->row = at_rng->s.row;
+                graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr2.col, upp->slr1.row + 1);
+                graph_send_block(glp, upp->slr1.col, upp->slr2.row, upp->slr2.col, upp->slr2.row + 1);
+                break;
+
+            case UREF_SWAPCELL:
+                glp->col = at_rng->s.col;
+                glp->row = at_rng->s.row;
+                graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr1.col + 1, upp->slr1.row + 1);
+                graph_send_block(glp, upp->slr2.col, upp->slr2.row, upp->slr2.col + 1, upp->slr2.row + 1);
+                break;
+
+            case UREF_CLOSE:
+            kill_ref:
+                riscos_sendsheetclosed(glp);
+                graph_remove_entry((ghandle) exthandle);
+                break;
+
+            default:
+                break;
             }
+
+            select_document_using_docno(old_docno);
         }
+        break;
+        }
+    }
 }
 
 extern void
@@ -1743,11 +1743,11 @@ mark_slot(
     P_CELL tcell)
 {
     if(tcell)
-        {
+    {
         tcell->flags |= SL_ALTERED;
         xf_drawsome = TRUE;
         trace_0(TRACE_APP_PD4, "cell marked altered");
-        }
+    }
 }
 
 /******************************************************************************
@@ -1792,10 +1792,10 @@ merexp_reterr(
         *at_posp = -1;
 
     if(!buffer_altered)
-        {
+    {
         slot_in_buffer = FALSE;
         return;
-        }
+    }
 
     filealtered(TRUE);
 
@@ -1814,24 +1814,24 @@ merexp_reterr(
                                      &at_pos,
                                      &result,
                                      &parms)) < 0)
-        {
+    {
         /* expression won't compile */
 
         /* if caller asked for errors to be returned, do so */
         if(errp)
-            {
+        {
             *errp = rpn_len;
 
             if(at_posp)
                 *at_posp = at_pos;
 
             return;
-            }
+        }
 
         /* else make it a text cell */
         merstr(curcol, currow, send_replace, TRUE);
         return;
-        }
+    }
 
     justify = J_RIGHT;
     format = 0;
@@ -1841,24 +1841,24 @@ merexp_reterr(
 
     /* save justify flags for numeric cell */
     if(tcell)
-        {
+    {
         switch(tcell->type)
-            {
-            case SL_NUMBER:
-                justify = tcell->justify;
-                format  = tcell->format;
-                break;
+        {
+        case SL_NUMBER:
+            justify = tcell->justify;
+            format  = tcell->format;
+            break;
 
-            default:
-                break;
-            }
+        default:
+            break;
         }
+    }
 
     if((res = merge_compiled_exp(&slr, justify, format, compiled_out, rpn_len, &result, &parms, FALSE, TRUE)) < 0)
-        {
+    {
         *linbuf = '\0';
         reperr_null(status_nomem());
-        }
+    }
 
     if(send_replace && (parms.type == EVS_CON_DATA || res < 0))
         slot_changed(newcol, newrow);
@@ -1889,19 +1889,19 @@ merge_compiled_exp(
 
     /* calculate new total length */
     switch(parmsp->type)
-        {
-        default:
-            assert(0);
-        case EVS_CON_DATA:
-            tot_len = NUM_DAT_OVH;
-            break;
-        case EVS_CON_RPN:
-            tot_len = NUM_CON_OVH + rpn_len;
-            break;
-        case EVS_VAR_RPN:
-            tot_len = NUM_VAR_OVH + rpn_len;
-            break;
-        }
+    {
+    default:
+        assert(0);
+    case EVS_CON_DATA:
+        tot_len = NUM_DAT_OVH;
+        break;
+    case EVS_CON_RPN:
+        tot_len = NUM_CON_OVH + rpn_len;
+        break;
+    case EVS_VAR_RPN:
+        tot_len = NUM_VAR_OVH + rpn_len;
+        break;
+    }
 
     res = 0;
 
@@ -1909,7 +1909,7 @@ merge_compiled_exp(
     if((tcell = createslot((COL) slrp->col, (ROW) slrp->row, tot_len, SL_NUMBER)) == NULL)
         res = -1;
     else
-        {
+    {
         /* copy across data */
         tcell->justify                       = justify;
         tcell->format                        = format;
@@ -1918,41 +1918,41 @@ merge_compiled_exp(
 
         add_to_tree = 0;
         switch(parmsp->type)
-            {
-            case EVS_CON_DATA:
-                if(!load_flag)
-                    ev_todo_add_dependents(slrp);
-                break;
+        {
+        case EVS_CON_DATA:
+            if(!load_flag)
+                ev_todo_add_dependents(slrp);
+            break;
 
-            case EVS_CON_RPN:
-                memcpy32(tcell->content.number.guts.rpn.con.rpn_str, compiled_out, rpn_len);
-                add_to_tree = 1;
-                break;
+        case EVS_CON_RPN:
+            memcpy32(tcell->content.number.guts.rpn.con.rpn_str, compiled_out, rpn_len);
+            add_to_tree = 1;
+            break;
 
-            case EVS_VAR_RPN:
-                tcell->content.number.guts.rpn.var.visited = 0;
-                memcpy32(tcell->content.number.guts.rpn.var.rpn_str, compiled_out, rpn_len);
-                add_to_tree = 1;
-                break;
-            }
+        case EVS_VAR_RPN:
+            tcell->content.number.guts.rpn.var.visited = 0;
+            memcpy32(tcell->content.number.guts.rpn.var.rpn_str, compiled_out, rpn_len);
+            add_to_tree = 1;
+            break;
+        }
 
         if(add_refs && add_to_tree)
-            {
+        {
             if(ev_add_exp_slot_to_tree(&tcell->content.number.guts, slrp) < 0)
-                {
+            {
                 tree_insert_fail(slrp);
                 res = -1;
-                }
+            }
             else
-                {
+            {
                 ev_todo_add_slr(slrp, load_flag ? 0 : 1);
 
                 /* force left justification for macro cells */
                 if(ev_doc_is_custom_sheet(current_docno()))
                     tcell->justify = J_LEFT;
-                }
             }
         }
+    }
 
     return(res);
 }
@@ -2040,55 +2040,55 @@ buffer_length_detecting_text_at_char(
         return(1); /*NULLCH*/
 
     for(;;)
-        {
+    {
         PC_U8 ptr;
 
         /* search for text-at char and NULLCH together using our xstrzchr() */
         /* this will also find orphaned (text-at char changed) SLRLD1/2 */
         /* if fact we only need to find first instance of text-at char, then speed up with fast Norcroft strlen() */
         if(!*p_contains_tac)
-            {
+        {
             ptr = xstrzchr(str, text_at_char);
 
             if(text_at_char == *ptr)
-                {
+            {
                 *p_contains_tac = TRUE;
                 str = ptr + 1;
                 if(SLRLD1 == *str) /* cater for this common occurrence (saves one loop) */
                     str += COMPILED_TEXT_SLR_SIZE;
                 continue;
-                }
+            }
 
             /* failed to find text_at_char but ptr is pointing at a NULLCH (either real or SLRLD2) */
-            }
+        }
         else
-            {
+        {
             ptr = str + strlen(str);
-            }
+        }
 
         if(SLRLD1 == ptr[-1]) /* ptr is never == str */
-            { /* the NULLCH we found is SLRLD2 - keep going */
+        {   /* the NULLCH we found is SLRLD2 - keep going */
             str = ptr + COMPILED_TEXT_SLR_SIZE-1; /* restart past the compiled SLR */
             continue;
-            }
+        }
 
         /* (NULLCH == *ptr) */
         str = ptr + 1; /* want to leave str pointing past the real NULLCH */
         return(PtrDiffBytesS32(str, str_in));
-        }
+    }
 #else
     for(;;)
-        {
+    {
         uchar ch = *str++; /* want to leave str pointing past NULLCH */
 
         if(NULLCH == ch)
             break;
 
         if(SLRLD1 == ch)
-            {
+        {
             str += COMPILED_TEXT_SLR_SIZE-1;
             continue;
-            }
+        }
 
         if(text_at_char == ch) /* catered for NULLCH t-a-c above */
             *p_contains_tac = TRUE;
@@ -2111,7 +2111,7 @@ merstr(
     res = TRUE;
 
     if(buffer_altered)
-        {
+    {
         P_CELL newslot, oldslot;
         char justifyflag;
         U8 slot_refs = 0;
@@ -2137,26 +2137,26 @@ merstr(
         source_text = linbuf;
         source_len = buffer_length_detecting_text_at_char(source_text, &contains_text_at_char);
         if(contains_text_at_char)
-            {
+        {
             source_len = compile_text_slot(array, linbuf, &slot_refs);
             source_text = array;
-            }
+        }
         } /*block*/
 
         if(source_len == 1)
-            {
+        {
             buffer_altered = FALSE;
 
             if((res = createhole(tcol, trow)) == FALSE)
-                {
+            {
                 *linbuf = '\0';
                 reperr_null(status_nomem());
-                }
             }
+        }
         else
-            {
+        {
             if((newslot = createslot(tcol, trow, source_len, SL_TEXT)) == NULL)
-                {
+            {
                 /* if user is typing in, delete the line, so we don't get caught.
                  * But if loading a file, don't delete the line because rebuffer
                  * may free some memory and merstr will get called again
@@ -2165,27 +2165,27 @@ merstr(
                     *linbuf = '\0';
 
                 res = reperr_null(status_nomem());
-                }
+            }
             else
-                {
+            {
                 newslot->justify = justifyflag;
                 newslot->flags   = slot_refs;
                 memcpy32(newslot->content.text, source_text, source_len);
 
                 if(add_refs && draw_tree_str_insertslot(tcol, trow, TRUE) < 0)
-                    {
+                {
                     reperr_null(status_nomem());
                     res = FALSE;
-                    }
                 }
+            }
 
             if(res)
                 buffer_altered = FALSE;
-            }
+        }
 
         if(send_replace)
             slot_changed(tcol, trow);
-        }
+    }
 
     return(res);
 }
@@ -2237,13 +2237,13 @@ prccon(
     int c;
 
     if((NULL == ptr)  ||  (ptr->type == SL_PAGE))
-        {
+    {
         *to = '\0';
         return;
-        }
+    }
 
     if(ptr->type == SL_NUMBER)
-        {
+    {
         const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
         EV_OPTBLOCK optblock;
 
@@ -2252,15 +2252,15 @@ prccon(
         ev_decode_slot(cur_docno, to, &ptr->content.number.guts, &optblock);
 
         return;
-        }
+    }
 
     from = ptr->content.text;
 
     if(!(ptr->flags & SL_TREFS))
-        {
+    {
         strcpy(to, from);
         return;
-        }
+    }
 
     /* this copes with compiled cell references in text cells.
      * On compilation, text-at chars are left in the cell so they can
@@ -2268,7 +2268,7 @@ prccon(
     */
     do  {
         if(SLRLD1 == (c = (*to++ = *from++)))
-            {
+        {
             const uchar * csr = from + 1; /* CSR is past the SLRLD1/2 */
             EV_DOCNO docno;
             COL tcol;
@@ -2280,8 +2280,8 @@ prccon(
             to -= 1; /* we want to overwrite the SLRLD1 that we copied */
 
             to += write_ref(to, BUF_MAX_REFERENCE, docno, tcol, trow);
-            }
         }
+    }
     while(NULLCH != c);
 }
 
@@ -2316,7 +2316,7 @@ readfxy(
 
     /* check for a draw file */
     if((toupper(*from) == id)  &&  (*(from + 1) == ':'))
-        {
+    {
         /* load to pointer and copy l: */
         to = *pto;
         *to++ = *from++;
@@ -2348,7 +2348,7 @@ readfxy(
 
         /* scan following x and y parameters */
         if(*--from == ',')
-            {
+        {
             consume(int, sscanf(from, ", %lg %n", xp, &scanned));
             trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s", scanned, from);
             while(scanned--)
@@ -2359,14 +2359,14 @@ readfxy(
             trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s", scanned, from);
             while(scanned--)
                 *to++ = *from++;
-            }
+        }
 
         /* there must be a following text-at-char */
         if(*from != text_at_char)
-            {
+        {
             trace_0(TRACE_APP_PD4, "readfxy found no trailing text-at-char");
             return(0);
-            }
+        }
 
         /* copy second parameter to first if no second */
         if((*xp != -1)  &&  (*yp == -1))
@@ -2385,7 +2385,7 @@ readfxy(
         #endif
 
         return(namelen);
-        }
+    }
     else
         return(0);
 }
@@ -2412,25 +2412,25 @@ row_select(
     ev_proc_conditional_rpn(cond_rpn, rpn_in, &slr, FALSE, TRUE);
 
     if((res = ev_eval_rpn(&result, &slr, cond_rpn)) >= 0)
-        {
+    {
         res = 0;
         switch(result.did_num)
-            {
-            case RPN_DAT_REAL:
-                if(result.arg.fp != 0)
-                   res = 1;
-                break;
-            case RPN_DAT_WORD8:
-            case RPN_DAT_WORD16:
-            case RPN_DAT_WORD32:
-                if(result.arg.integer != 0)
-                    res = 1;
-                break;
-            case RPN_DAT_ERROR:
-                res = result.arg.ev_error.status;
-                break;
-            }
+        {
+        case RPN_DAT_REAL:
+            if(result.arg.fp != 0)
+               res = 1;
+            break;
+        case RPN_DAT_WORD8:
+        case RPN_DAT_WORD16:
+        case RPN_DAT_WORD32:
+            if(result.arg.integer != 0)
+                res = 1;
+            break;
+        case RPN_DAT_ERROR:
+            res = result.arg.ev_error.status;
+            break;
         }
+    }
 
     return(res);
 }
@@ -2490,17 +2490,17 @@ slot_displays_contents(
     P_CELL tcell)
 {
     switch(tcell->type)
-        {
-        case SL_TEXT:
-            return(TRUE);
+    {
+    case SL_TEXT:
+        return(TRUE);
 
-        case SL_NUMBER:
-            return(ev_doc_is_custom_sheet(current_docno()) &&
-                   ev_is_formula(&tcell->content.number.guts));
+    case SL_NUMBER:
+        return(ev_doc_is_custom_sheet(current_docno()) &&
+               ev_is_formula(&tcell->content.number.guts));
 
-        default:
-            return(FALSE);
-        }
+    default:
+        return(FALSE);
+    }
 }
 
 /*
@@ -2518,13 +2518,13 @@ slot_ref_here(
 
     /* MRJC added this to cope with external references */
     if(*ptr == '[')
-        {
+    {
         ++ptr;
         while(isalnum(*ptr))
             ++ptr;
         if(*ptr++ != ']')
             return(FALSE);
-        }
+    }
 
     if(*ptr == '$')
         ptr++;
@@ -2534,7 +2534,7 @@ slot_ref_here(
 
     do  {
         ch = *++ptr;
-        }
+    }
     while(isalpha(ch));
 
     if(ch == '$')
@@ -2547,7 +2547,7 @@ slot_ref_here(
         if(ch)
             row_zero = FALSE;
         ch = *++ptr;
-        }
+    }
     while(isdigit(ch));
 
     return(!row_zero  &&  is_text_at_char(ch));
@@ -2678,7 +2678,7 @@ text_slot_add_dependency(
     csr = sl->content.text;
 
     while(NULL != (csr = find_next_csr(csr)))
-        {
+    {
         COL tcol;
         ROW trow;
         S32 e_off;
@@ -2693,23 +2693,23 @@ text_slot_add_dependency(
         e_off = csr - sl->content.text;
 
         if(!bad_reference(tcol, trow))
-            {
+        {
             grubb.data.arg.slr.col = (EV_COL) (tcol & COLNOBITS);
             grubb.data.arg.slr.row = (EV_ROW) (trow & ROWNOBITS);
             /*eportf("adding SLR dependency byoffset %d for CSR docno %d col 0x%x row 0x%x", grubb.byoffset, grubb.data.arg.slr.docno, grubb.data.arg.slr.col, grubb.data.arg.slr.row);*/
             if(ev_add_slrdependency(&grubb) < 0)
                 return(-1);
-            }
+        }
         else
-            {/*EMPTY*/
+        { /*EMPTY*/
             /*eportf("NOT adding SLR dependency byoffset %d for CSR docno %d col 0x%x row 0x%x", grubb.byoffset, grubb.data.arg.slr.docno, tcol, trow);*/
-            }
+        }
 
         /* reload after adding dependency */
         sl = travel(col, row);
         __assume(sl);
         csr = sl->content.text + e_off;
-        }
+    }
 
     return(0);
 }

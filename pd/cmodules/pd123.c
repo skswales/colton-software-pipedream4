@@ -299,21 +299,21 @@ static char isolics[] =
 
 static struct OPTDEF optqv[] =
 {
-	(uchar *) "AM",  L_CALCMODE,  0,  0xFF,   wrcalcmode,
-	(uchar *) "RC", L_CALCORDER,  0,     0,   wrcalcord,
-	(uchar *) "DP",   L_WINDOW1,  4,     2,   wrdecplc,
-	(uchar *) "MB",   L_WINDOW1,  4,     0,   wrminbrk,
-	(uchar *) "TH",   L_WINDOW1,  4,     0,   wrthousands,
-	(uchar *) "FO",    L_FOOTER,  0,     0,   wrheadfoot,
-	(uchar *) "HE",    L_HEADER,  0,     0,   wrheadfoot,
-	(uchar *) "BM",   L_MARGINS,  8,     8,   wrmargins,
-	(uchar *) "LM",   L_MARGINS,  0,     0,   wrmargins,
-	(uchar *) "PL",   L_MARGINS,  4,    66,   wrmargins,
-	(uchar *) "TM",   L_MARGINS,  6,     0,   wrmargins,
-	(uchar *) "FM",           0,  0,     2,   wrsetmar,
-	(uchar *) "HM",           0,  0,     2,   wrsetmar,
-	(uchar *) "WR",           0,  0,   'N',   wrwrapmo,
-	(uchar *) "TN",           0,  0,   'N',   wrtextn,
+    { (uchar *) "AM",  L_CALCMODE,  0,  0xFF,   wrcalcmode },
+    { (uchar *) "RC", L_CALCORDER,  0,     0,   wrcalcord },
+    { (uchar *) "DP",   L_WINDOW1,  4,     2,   wrdecplc },
+    { (uchar *) "MB",   L_WINDOW1,  4,     0,   wrminbrk },
+    { (uchar *) "TH",   L_WINDOW1,  4,     0,   wrthousands },
+    { (uchar *) "FO",    L_FOOTER,  0,     0,   wrheadfoot },
+    { (uchar *) "HE",    L_HEADER,  0,     0,   wrheadfoot },
+    { (uchar *) "BM",   L_MARGINS,  8,     8,   wrmargins },
+    { (uchar *) "LM",   L_MARGINS,  0,     0,   wrmargins },
+    { (uchar *) "PL",   L_MARGINS,  4,    66,   wrmargins },
+    { (uchar *) "TM",   L_MARGINS,  6,     0,   wrmargins },
+    { (uchar *) "FM",           0,  0,     2,   wrsetmar },
+    { (uchar *) "HM",           0,  0,     2,   wrsetmar },
+    { (uchar *) "WR",           0,  0,   'N',   wrwrapmo },
+    { (uchar *) "TN",           0,  0,   'N',   wrtextn },
 };
 
 /******************************************************************************
@@ -324,120 +324,120 @@ static struct OPTDEF optqv[] =
 
 struct OPRDEF pd123__opreqv[] =
 {
-	LF_CONST,   LO_CONST,  0,      0, (uchar *) "",            0,
-	LF_SLR,     LO_CONST,  0,      0, (uchar *) "",            0,
-	LF_RANGE,   LO_CONST,  0,      0, (uchar *) "",            0,
-	LF_END,     LO_END,    0,      0, (uchar *) "",            0,
-	LF_BRACKETS,LO_BRACKETS,0,     0, (uchar *) "",            0,
-	LF_INTEGER, LO_CONST,  0,      0, (uchar *) "",            0,
-	LF_STRING,  LO_CONST,  0,      0, (uchar *) "",            0,
-	LF_UMINUS,  LO_UNARY,  1,  PD_VP, (uchar *) "-",           0,
-	LF_PLUS,    LO_BINARY, 2,  PD_VP, (uchar *) "+",           0,
-	LF_MINUS,   LO_BINARY, 2,  PD_VP, (uchar *) "-",           0,
-	LF_TIMES,   LO_BINARY, 2,  PD_VP, (uchar *) "*",           0,
-	LF_DIVIDE,  LO_BINARY, 2,  PD_VP, (uchar *) "/",           0,
-	LF_POWER,   LO_BINARY, 2,  PD_VP, (uchar *) "^",           0,
-	LF_EQUALS,  LO_BINARY, 2,  PD_VP, (uchar *) "=",           0,
-	LF_NOTEQUAL,LO_BINARY, 2,  PD_VP, (uchar *) "<>",          0,
-	LF_LTEQUAL, LO_BINARY, 2,  PD_VP, (uchar *) "<=",          0,
-	LF_GTEQUAL, LO_BINARY, 2,  PD_VP, (uchar *) ">=",          0,
-	LF_LT,      LO_BINARY, 2,  PD_VP, (uchar *) "<",           0,
-	LF_GT,      LO_BINARY, 2,  PD_VP, (uchar *) ">",           0,
-	LF_AND,     LO_BINARY, 2,  PD_VP, (uchar *) "&",           0,
-	LF_OR,      LO_BINARY, 2,  PD_VP, (uchar *) "|",           0,
-	LF_NOT,     LO_UNARY,  1,  PD_VP, (uchar *) "!",           0,
-	LF_UPLUS,   LO_UNARY,  1,  PD_VP, (uchar *) "+",           0,
-	LF_NA,      LO_FUNC,   0,      0, (uchar *) "na",          0,
-	LF_ERR,     LO_FUNC,   0,      0, (uchar *) "err",         0,
-	LF_ABS,     LO_FUNC,   1,  PD_VP, (uchar *) "abs",         0,
-	LF_INT,     LO_FUNC,   1,  PD_VP, (uchar *) "int",         0,
-	LF_SQRT,    LO_FUNC,   1,  PD_VP, (uchar *) "sqr",         0,
-	LF_LOG,     LO_FUNC,   1,  PD_VP, (uchar *) "log",         0,
-	LF_LN,      LO_FUNC,   1,  PD_VP, (uchar *) "ln",          0,
-	LF_PI,      LO_FUNC,   0,  PD_VP, (uchar *) "pi",          0,
-	LF_SIN,     LO_FUNC,   1,  PD_VP, (uchar *) "sin",         0,
-	LF_COS,     LO_FUNC,   1,  PD_VP, (uchar *) "cos",         0,
-	LF_TAN,     LO_FUNC,   1,  PD_VP, (uchar *) "tan",         0,
-	LF_ATAN2,   LO_FUNC,   1,   PD_3, (uchar *) "atan2",       0,
-	LF_ATAN,    LO_FUNC,   1,  PD_VP, (uchar *) "atn",         0,
-	LF_ASIN,    LO_FUNC,   1,  PD_VP, (uchar *) "asn",         0,
-	LF_ACOS,    LO_FUNC,   1,  PD_VP, (uchar *) "acs",         0,
-	LF_EXP,     LO_FUNC,   1,  PD_VP, (uchar *) "exp",         0,
-	LF_MOD,     LO_FUNC,   2,  PD_PC, (uchar *) "mod",         0,
-	LF_CHOOSE,  LO_FUNC,  -1,  PD_VP, (uchar *) "choose",      FU_CHOOSE,
-	LF_ISNA,    LO_FUNC,   1,      0, (uchar *) "isna",        0,
-	LF_ISERR,   LO_FUNC,   1,      0, (uchar *) "iserr",       0,
-	LF_FALSE,   LO_FUNC,   0,  PD_VP, (uchar *) "0",           0,
-	LF_TRUE,    LO_FUNC,   1,  PD_VP, (uchar *) "1",           0,
-	LF_RAND,    LO_FUNC,   0,   PD_3, (uchar *) "rand",        0,
-	LF_DATE,    LO_FUNC,   3,  PD_VP, (uchar *) "datef",       FU_DATE,
-	LF_TODAY,   LO_FUNC,   0,  PD_PC, (uchar *) "date",        0,
-	LF_PMT,     LO_FUNC,   3,  PD_PC, (uchar *) "pmt",         0,
-	LF_PV,      LO_FUNC,   3,  PD_PC, (uchar *) "pv",          0,
-	LF_FV,      LO_FUNC,   3,  PD_PC, (uchar *) "fv",          0,
-	LF_IF,      LO_FUNC,   3,  PD_VP, (uchar *) "if",          0,
-	LF_DAY,     LO_FUNC,   1,  PD_VP, (uchar *) "day",         0,
-	LF_MONTH,   LO_FUNC,   1,  PD_VP, (uchar *) "month",       0,
-	LF_YEAR,    LO_FUNC,   1,  PD_VP, (uchar *) "year",        0,
-	LF_ROUND,   LO_FUNC,   2,   PD_3, (uchar *) "round",       0,
-	LF_TIME,    LO_FUNC,   3,      0, (uchar *) "time",        0,
-	LF_HOUR,    LO_FUNC,   1,      0, (uchar *) "hour",        0,
-	LF_MINUTE,  LO_FUNC,   1,      0, (uchar *) "minute",      0,
-	LF_SECOND,  LO_FUNC,   1,      0, (uchar *) "second",      0,
-	LF_ISN,     LO_FUNC,   1,      0, (uchar *) "isnumber",    0,
-	LF_ISS,     LO_FUNC,   1,      0, (uchar *) "isstring",    0,
-	LF_LENGTH,  LO_FUNC,   1,      0, (uchar *) "length",      0,
-	LF_VALUE,   LO_FUNC,   1,      0, (uchar *) "value",       0,
-	LF_FIXED,   LO_FUNC,   1,      0, (uchar *) "fixed",       0,
-	LF_MID,     LO_FUNC,   3,      0, (uchar *) "mid",         0,
-	LF_CHR,     LO_FUNC,   1,      0, (uchar *) "char",        0,
-	LF_ASCII,   LO_FUNC,   1,      0, (uchar *) "code",        0,
-	LF_FIND,    LO_FUNC,   3,      0, (uchar *) "find",        0,
-	LF_DATEVALUE,LO_FUNC,  1,  PD_VP, (uchar *) "datevalue",   FU_DATEVAL,
-	LF_TIMEVALUE,LO_FUNC,  1,      0, (uchar *) "timevalue",   0,
-	LF_CELLPOINTER,LO_FUNC,1,      0, (uchar *) "cellpointer", 0,
-	LF_SUM,     LO_FUNC,  -1,  PD_VP, (uchar *) "sum",         0,
-	LF_AVG,     LO_FUNC,  -1,  PD_PC, (uchar *) "avg",         0,
-	LF_CNT,     LO_FUNC,  -1,  PD_VP, (uchar *) "count",       0,
-	LF_MIN,     LO_FUNC,  -1,  PD_VP, (uchar *) "min",         0,
-	LF_MAX,     LO_FUNC,  -1,  PD_VP, (uchar *) "max",         0,
-	LF_VLOOKUP, LO_FUNC,   3,  PD_PC, (uchar *) "vlookup",     0,
-	LF_NPV,     LO_FUNC,   2,  PD_PC, (uchar *) "npv",         0,
-	LF_VAR,     LO_FUNC,  -1,  PD_PC, (uchar *) "var",         0,
-	LF_STD,     LO_FUNC,  -1,  PD_PC, (uchar *) "std",         0,
-	LF_IRR,     LO_FUNC,   2,  PD_PC, (uchar *) "irr",         0,
-	LF_HLOOKUP, LO_FUNC,   3,  PD_PC, (uchar *) "hlookup",     0,
-	LF_DSUM,    LO_FUNC,   3,      0, (uchar *) "dsum",        0,
-	LF_DAVG,    LO_FUNC,   3,      0, (uchar *) "davg",        0,
-	LF_DCNT,    LO_FUNC,   3,      0, (uchar *) "dsum",        0,
-	LF_DMIN,    LO_FUNC,   3,      0, (uchar *) "dmin",        0,
-	LF_DMAX,    LO_FUNC,   3,      0, (uchar *) "dmax",        0,
-	LF_DVAR,    LO_FUNC,   3,      0, (uchar *) "dvar",        0,
-	LF_DSTD,    LO_FUNC,   3,      0, (uchar *) "dstd",        0,
-	LF_INDEX,   LO_FUNC,   3,  PD_VP, (uchar *) "index",       FU_INDEX,
-	LF_COLS,    LO_FUNC,   1,      0, (uchar *) "cols",        0,
-	LF_ROWS,    LO_FUNC,   1,      0, (uchar *) "rows",        0,
-	LF_REPEAT,  LO_FUNC,   2,      0, (uchar *) "repeat",      0,
-	LF_UPPER,   LO_FUNC,   1,      0, (uchar *) "upper",       0,
-	LF_LOWER,   LO_FUNC,   1,      0, (uchar *) "lower",       0,
-	LF_LEFT,    LO_FUNC,   2,      0, (uchar *) "left",        0,
-	LF_RIGHT,   LO_FUNC,   2,      0, (uchar *) "right",       0,
-	LF_REPLACE, LO_FUNC,   4,      0, (uchar *) "replace",     0,
-	LF_PROPER,  LO_FUNC,   1,      0, (uchar *) "proper",      0,
-	LF_CELL,    LO_FUNC,   2,      0, (uchar *) "cell",        0,
-	LF_TRIM,    LO_FUNC,   1,      0, (uchar *) "trim",        0,
-	LF_CLEAN,   LO_FUNC,   1,      0, (uchar *) "clean",       0,
-	LF_S,       LO_FUNC,   1,      0, (uchar *) "s",           0,
-	LF_V,       LO_FUNC,   1,      0, (uchar *) "v",           0,
-	LF_STREQ,   LO_FUNC,   2,      0, (uchar *) "exact",       0,
-	LF_CALL,    LO_FUNC,   1,      0, (uchar *) "call",        0,
-	LF_INDIRECT,LO_FUNC,   1,      0, (uchar *) "indirect",    0,
-	LF_RATE,    LO_FUNC,   3,  PD_PC, (uchar *) "rate",        0,
-	LF_TERM,    LO_FUNC,   3,  PD_PC, (uchar *) "term",        0,
-	LF_CTERM,   LO_FUNC,   3,  PD_PC, (uchar *) "cterm",       0,
-	LF_SLN,     LO_FUNC,   3,  PD_PC, (uchar *) "sln",         0,
-	LF_SOY,     LO_FUNC,   4,  PD_PC, (uchar *) "syd",         0,
-	LF_DDB,     LO_FUNC,   4,  PD_PC, (uchar *) "ddb",         0,
+    { LF_CONST,   LO_CONST,  0,      0, (uchar *) "",            0 },
+    { LF_SLR,     LO_CONST,  0,      0, (uchar *) "",            0 },
+    { LF_RANGE,   LO_CONST,  0,      0, (uchar *) "",            0 },
+    { LF_END,     LO_END,    0,      0, (uchar *) "",            0 },
+    { LF_BRACKETS,LO_BRACKETS,0,     0, (uchar *) "",            0 },
+    { LF_INTEGER, LO_CONST,  0,      0, (uchar *) "",            0 },
+    { LF_STRING,  LO_CONST,  0,      0, (uchar *) "",            0 },
+    { LF_UMINUS,  LO_UNARY,  1,  PD_VP, (uchar *) "-",           0 },
+    { LF_PLUS,    LO_BINARY, 2,  PD_VP, (uchar *) "+",           0 },
+    { LF_MINUS,   LO_BINARY, 2,  PD_VP, (uchar *) "-",           0 },
+    { LF_TIMES,   LO_BINARY, 2,  PD_VP, (uchar *) "*",           0 },
+    { LF_DIVIDE,  LO_BINARY, 2,  PD_VP, (uchar *) "/",           0 },
+    { LF_POWER,   LO_BINARY, 2,  PD_VP, (uchar *) "^",           0 },
+    { LF_EQUALS,  LO_BINARY, 2,  PD_VP, (uchar *) "=",           0 },
+    { LF_NOTEQUAL,LO_BINARY, 2,  PD_VP, (uchar *) "<>",          0 },
+    { LF_LTEQUAL, LO_BINARY, 2,  PD_VP, (uchar *) "<=",          0 },
+    { LF_GTEQUAL, LO_BINARY, 2,  PD_VP, (uchar *) ">=",          0 },
+    { LF_LT,      LO_BINARY, 2,  PD_VP, (uchar *) "<",           0 },
+    { LF_GT,      LO_BINARY, 2,  PD_VP, (uchar *) ">",           0 },
+    { LF_AND,     LO_BINARY, 2,  PD_VP, (uchar *) "&",           0 },
+    { LF_OR,      LO_BINARY, 2,  PD_VP, (uchar *) "|",           0 },
+    { LF_NOT,     LO_UNARY,  1,  PD_VP, (uchar *) "!",           0 },
+    { LF_UPLUS,   LO_UNARY,  1,  PD_VP, (uchar *) "+",           0 },
+    { LF_NA,      LO_FUNC,   0,      0, (uchar *) "na",          0 },
+    { LF_ERR,     LO_FUNC,   0,      0, (uchar *) "err",         0 },
+    { LF_ABS,     LO_FUNC,   1,  PD_VP, (uchar *) "abs",         0 },
+    { LF_INT,     LO_FUNC,   1,  PD_VP, (uchar *) "int",         0 },
+    { LF_SQRT,    LO_FUNC,   1,  PD_VP, (uchar *) "sqr",         0 },
+    { LF_LOG,     LO_FUNC,   1,  PD_VP, (uchar *) "log",         0 },
+    { LF_LN,      LO_FUNC,   1,  PD_VP, (uchar *) "ln",          0 },
+    { LF_PI,      LO_FUNC,   0,  PD_VP, (uchar *) "pi",          0 },
+    { LF_SIN,     LO_FUNC,   1,  PD_VP, (uchar *) "sin",         0 },
+    { LF_COS,     LO_FUNC,   1,  PD_VP, (uchar *) "cos",         0 },
+    { LF_TAN,     LO_FUNC,   1,  PD_VP, (uchar *) "tan",         0 },
+    { LF_ATAN2,   LO_FUNC,   1,   PD_3, (uchar *) "atan2",       0 },
+    { LF_ATAN,    LO_FUNC,   1,  PD_VP, (uchar *) "atn",         0 },
+    { LF_ASIN,    LO_FUNC,   1,  PD_VP, (uchar *) "asn",         0 },
+    { LF_ACOS,    LO_FUNC,   1,  PD_VP, (uchar *) "acs",         0 },
+    { LF_EXP,     LO_FUNC,   1,  PD_VP, (uchar *) "exp",         0 },
+    { LF_MOD,     LO_FUNC,   2,  PD_PC, (uchar *) "mod",         0 },
+    { LF_CHOOSE,  LO_FUNC,  -1,  PD_VP, (uchar *) "choose",      FU_CHOOSE },
+    { LF_ISNA,    LO_FUNC,   1,      0, (uchar *) "isna",        0 },
+    { LF_ISERR,   LO_FUNC,   1,      0, (uchar *) "iserr",       0 },
+    { LF_FALSE,   LO_FUNC,   0,  PD_VP, (uchar *) "0",           0 },
+    { LF_TRUE,    LO_FUNC,   1,  PD_VP, (uchar *) "1",           0 },
+    { LF_RAND,    LO_FUNC,   0,   PD_3, (uchar *) "rand",        0 },
+    { LF_DATE,    LO_FUNC,   3,  PD_VP, (uchar *) "datef",       FU_DATE },
+    { LF_TODAY,   LO_FUNC,   0,  PD_PC, (uchar *) "date",        0 },
+    { LF_PMT,     LO_FUNC,   3,  PD_PC, (uchar *) "pmt",         0 },
+    { LF_PV,      LO_FUNC,   3,  PD_PC, (uchar *) "pv",          0 },
+    { LF_FV,      LO_FUNC,   3,  PD_PC, (uchar *) "fv",          0 },
+    { LF_IF,      LO_FUNC,   3,  PD_VP, (uchar *) "if",          0 },
+    { LF_DAY,     LO_FUNC,   1,  PD_VP, (uchar *) "day",         0 },
+    { LF_MONTH,   LO_FUNC,   1,  PD_VP, (uchar *) "month",       0 },
+    { LF_YEAR,    LO_FUNC,   1,  PD_VP, (uchar *) "year",        0 },
+    { LF_ROUND,   LO_FUNC,   2,   PD_3, (uchar *) "round",       0 },
+    { LF_TIME,    LO_FUNC,   3,      0, (uchar *) "time",        0 },
+    { LF_HOUR,    LO_FUNC,   1,      0, (uchar *) "hour",        0 },
+    { LF_MINUTE,  LO_FUNC,   1,      0, (uchar *) "minute",      0 },
+    { LF_SECOND,  LO_FUNC,   1,      0, (uchar *) "second",      0 },
+    { LF_ISN,     LO_FUNC,   1,      0, (uchar *) "isnumber",    0 },
+    { LF_ISS,     LO_FUNC,   1,      0, (uchar *) "isstring",    0 },
+    { LF_LENGTH,  LO_FUNC,   1,      0, (uchar *) "length",      0 },
+    { LF_VALUE,   LO_FUNC,   1,      0, (uchar *) "value",       0 },
+    { LF_FIXED,   LO_FUNC,   1,      0, (uchar *) "fixed",       0 },
+    { LF_MID,     LO_FUNC,   3,      0, (uchar *) "mid",         0 },
+    { LF_CHR,     LO_FUNC,   1,      0, (uchar *) "char",        0 },
+    { LF_ASCII,   LO_FUNC,   1,      0, (uchar *) "code",        0 },
+    { LF_FIND,    LO_FUNC,   3,      0, (uchar *) "find",        0 },
+    { LF_DATEVALUE,LO_FUNC,  1,  PD_VP, (uchar *) "datevalue",   FU_DATEVAL },
+    { LF_TIMEVALUE,LO_FUNC,  1,      0, (uchar *) "timevalue",   0 },
+    { LF_CELLPOINTER,LO_FUNC,1,      0, (uchar *) "cellpointer", 0 },
+    { LF_SUM,     LO_FUNC,  -1,  PD_VP, (uchar *) "sum",         0 },
+    { LF_AVG,     LO_FUNC,  -1,  PD_PC, (uchar *) "avg",         0 },
+    { LF_CNT,     LO_FUNC,  -1,  PD_VP, (uchar *) "count",       0 },
+    { LF_MIN,     LO_FUNC,  -1,  PD_VP, (uchar *) "min",         0 },
+    { LF_MAX,     LO_FUNC,  -1,  PD_VP, (uchar *) "max",         0 },
+    { LF_VLOOKUP, LO_FUNC,   3,  PD_PC, (uchar *) "vlookup",     0 },
+    { LF_NPV,     LO_FUNC,   2,  PD_PC, (uchar *) "npv",         0 },
+    { LF_VAR,     LO_FUNC,  -1,  PD_PC, (uchar *) "var",         0 },
+    { LF_STD,     LO_FUNC,  -1,  PD_PC, (uchar *) "std",         0 },
+    { LF_IRR,     LO_FUNC,   2,  PD_PC, (uchar *) "irr",         0 },
+    { LF_HLOOKUP, LO_FUNC,   3,  PD_PC, (uchar *) "hlookup",     0 },
+    { LF_DSUM,    LO_FUNC,   3,      0, (uchar *) "dsum",        0 },
+    { LF_DAVG,    LO_FUNC,   3,      0, (uchar *) "davg",        0 },
+    { LF_DCNT,    LO_FUNC,   3,      0, (uchar *) "dsum",        0 },
+    { LF_DMIN,    LO_FUNC,   3,      0, (uchar *) "dmin",        0 },
+    { LF_DMAX,    LO_FUNC,   3,      0, (uchar *) "dmax",        0 },
+    { LF_DVAR,    LO_FUNC,   3,      0, (uchar *) "dvar",        0 },
+    { LF_DSTD,    LO_FUNC,   3,      0, (uchar *) "dstd",        0 },
+    { LF_INDEX,   LO_FUNC,   3,  PD_VP, (uchar *) "index",       FU_INDEX },
+    { LF_COLS,    LO_FUNC,   1,      0, (uchar *) "cols",        0 },
+    { LF_ROWS,    LO_FUNC,   1,      0, (uchar *) "rows",        0 },
+    { LF_REPEAT,  LO_FUNC,   2,      0, (uchar *) "repeat",      0 },
+    { LF_UPPER,   LO_FUNC,   1,      0, (uchar *) "upper",       0 },
+    { LF_LOWER,   LO_FUNC,   1,      0, (uchar *) "lower",       0 },
+    { LF_LEFT,    LO_FUNC,   2,      0, (uchar *) "left",        0 },
+    { LF_RIGHT,   LO_FUNC,   2,      0, (uchar *) "right",       0 },
+    { LF_REPLACE, LO_FUNC,   4,      0, (uchar *) "replace",     0 },
+    { LF_PROPER,  LO_FUNC,   1,      0, (uchar *) "proper",      0 },
+    { LF_CELL,    LO_FUNC,   2,      0, (uchar *) "cell",        0 },
+    { LF_TRIM,    LO_FUNC,   1,      0, (uchar *) "trim",        0 },
+    { LF_CLEAN,   LO_FUNC,   1,      0, (uchar *) "clean",       0 },
+    { LF_S,       LO_FUNC,   1,      0, (uchar *) "s",           0 },
+    { LF_V,       LO_FUNC,   1,      0, (uchar *) "v",           0 },
+    { LF_STREQ,   LO_FUNC,   2,      0, (uchar *) "exact",       0 },
+    { LF_CALL,    LO_FUNC,   1,      0, (uchar *) "call",        0 },
+    { LF_INDIRECT,LO_FUNC,   1,      0, (uchar *) "indirect",    0 },
+    { LF_RATE,    LO_FUNC,   3,  PD_PC, (uchar *) "rate",        0 },
+    { LF_TERM,    LO_FUNC,   3,  PD_PC, (uchar *) "term",        0 },
+    { LF_CTERM,   LO_FUNC,   3,  PD_PC, (uchar *) "cterm",       0 },
+    { LF_SLN,     LO_FUNC,   3,  PD_PC, (uchar *) "sln",         0 },
+    { LF_SOY,     LO_FUNC,   4,  PD_PC, (uchar *) "syd",         0 },
+    { LF_DDB,     LO_FUNC,   4,  PD_PC, (uchar *) "ddb",         0 },
 };
 
 /******************************************************************************
@@ -518,22 +518,22 @@ main(
 
 	/* argument checking */
 	if(argc < 3)
-		{
+	{
 		fprintf(stderr, "Syntax: %s <infile> <outfile>\n", argv[0]);
 		exit(EXIT_FAILURE);
-		}
+	}
 
 	if((pd123__fin = fopen(*++argv, "rb")) == NULL)
-		{
+	{
 		printf("Can't open %s\n", *argv);
 		exit(EXIT_FAILURE);
-		}
+	}
 
 	if((pd123__fout = fopen(*++argv, "wb")) == NULL)
-		{
+	{
 		printf("Can't open %s\n", *argv);
 		exit(EXIT_FAILURE);
-		}
+	}
 
 	if(fseek(pd123__fin, 0l, SEEK_END))
 		return(PD123_ERR_FILE);
@@ -542,10 +542,10 @@ main(
 		return(PD123_ERR_FILE);
 
 	if(0 == (lotusf = malloc(length)))
-		{
+	{
 		printf("Not enough memory for LOTUS file\n");
 		exit(EXIT_FAILURE);
-		}
+	}
 
 	/* read in LOTUS file */
 	fread(lotusf, 1, (U16) length, pd123__fin);
@@ -559,15 +559,15 @@ main(
 
 	/* read in range of 123 file */
 	if(0 == (err = readrange()))
-		{
+	{
 		/* write out options to PD file */
 		err = writeoptions();
 
 		/* write out columns */
 		if(!err)
-			{
+		{
 			for(col = sc; (col <= ec) && !(foundeof && (col > pd123__maxcol)); ++col)
-				{
+			{
 				uchar scol[10];
 				S32 cr;
 
@@ -576,25 +576,25 @@ main(
 				cr = lotus_xtos(scol, col);
 				scol[cr] = '\0';
 				printf("\rColumn: %s", scol);
-				}
-			printf("\n");
 			}
+			printf("\n");
 		}
+	}
 
 	switch(err)
-		{
-		case PD123_ERR_MEM:
-			fprintf(stderr, "Out of memory\n");
-			break;
-		case PD123_ERR_FILE:
-			perror("File error");
-			break;
-		case PD123_ERR_BADFILE:
-			fprintf(stderr, "Bad Lotus file\n");
-			break;
-		default:
-			break;
-		}
+	{
+	case PD123_ERR_MEM:
+		fprintf(stderr, "Out of memory\n");
+		break;
+	case PD123_ERR_FILE:
+		perror("File error");
+		break;
+	case PD123_ERR_BADFILE:
+		fprintf(stderr, "Bad Lotus file\n");
+		break;
+	default:
+		break;
+	}
 
 	fclose(pd123__fout);
 	free(lotusf);
@@ -662,14 +662,14 @@ readlotus(
 
 	/* read in range of 123 file */
 	if((err = readrange()) == 0)
-		{
+	{
 		/* write out options to PD file */
 		err = writeoptions();
 
 		/* write out columns */
 		if(!err)
 			for(col = sc; (col <= ec) && !(foundeof && (col > pd123__maxcol)); ++col)
-				{
+			{
 				if((err = writepcol(col, sr, er)) != 0)
 					break;
 
@@ -677,8 +677,8 @@ readlotus(
 				if(counterproc)
 					if((*counterproc)( (((S32) col - sc) * 100) / ((S32) pd123__maxcol + 1) ))
 						break;
-				}
-		}
+			}
+	}
 
 	free(lotusf);
 
@@ -733,19 +733,19 @@ checkdate(
     long value)
 {
 	switch(*specflg)
-		{
-		case 0:
-			if(fprintf(pd123__fout, "%%V%%") < 0)
-				return(PD123_ERR_FILE);
-			break;
-		case P_TEXT:
-			break;
-		case P_DATE:
-			*specflg = 0;
-			if(fprintf(pd123__fout, "%%V%%") < 0)
-				return(PD123_ERR_FILE);
-			return(writedate(value));
-		}
+	{
+	case 0:
+		if(fprintf(pd123__fout, "%%V%%") < 0)
+			return(PD123_ERR_FILE);
+		break;
+	case P_TEXT:
+		break;
+	case P_DATE:
+		*specflg = 0;
+		if(fprintf(pd123__fout, "%%V%%") < 0)
+			return(PD123_ERR_FILE);
+		return(writedate(value));
+	}
 	*specflg = -1;
 	return(0);
 }
@@ -810,42 +810,42 @@ convconst(
 	uchar *c;
 
 	switch(opr)
+	{
+	case LF_CONST:
+		reslen = fptostr(resstr, lts_readdouble(arg));
+		break;
+
+	case LF_SLR:
+		convslr(resstr, &reslen, arg, col, row, NULL, NULL);
+		break;
+
+	case LF_RANGE:
 		{
-		case LF_CONST:
-			reslen = fptostr(resstr, lts_readdouble(arg));
-			break;
+		S32 cc = 0, cr = 0;
 
-		case LF_SLR:
-			convslr(resstr, &reslen, arg, col, row, NULL, NULL);
-			break;
-
-		case LF_RANGE:
-			{
-			S32 cc = 0, cr = 0;
-
-			convslr(resstr, &reslen, arg, col, row, &cc, &cr);
-			convslr(resstr, &reslen, arg + 4, col, row, &cc, &cr);
-			break;
-			}
-
-		case LF_INTEGER:
-			{
-			S32 ival;
-
-			ival = (S32) lts_readword16(arg);
-			reslen = sprintf((char *) resstr, "%d", ival);
-			break;
-			}
-
-		case LF_STRING:
-			c = resstr;
-			*c++ = '"';
-			for(reslen = 0; *arg; reslen++)
-				*c++ = (uchar) lotusich((S32) *arg++);
-			*c++= '"';
-			reslen += 2;
-			break;
+		convslr(resstr, &reslen, arg, col, row, &cc, &cr);
+		convslr(resstr, &reslen, arg + 4, col, row, &cc, &cr);
+		break;
 		}
+
+	case LF_INTEGER:
+		{
+		S32 ival;
+
+		ival = (S32) lts_readword16(arg);
+		reslen = sprintf((char *) resstr, "%d", ival);
+		break;
+		}
+
+	case LF_STRING:
+		c = resstr;
+		*c++ = '"';
+		for(reslen = 0; *arg; reslen++)
+			*c++ = (uchar) lotusich((S32) *arg++);
+		*c++= '"';
+		reslen += 2;
+		break;
+	}
 
 	resstr[reslen] = '\0';
 	if((res = malloc(reslen + 1)) != NULL)
@@ -891,10 +891,10 @@ convslr(
     ++row;
 
     if(col_dollar)
-		{
+	{
 		*(tstr + tlen) = '$';
 		++tlen;
-		}
+	}
     tlen += lotus_xtos(tstr + tlen, col);
 
     if(row_dollar)
@@ -909,15 +909,15 @@ convslr(
 
 	/* if on second ref., check for highest and swap */
     if(*reslen && ((cc && (col < *cc)) || (cr && (row < *cr))))
-		{
+	{
 		memmove32(resstr + tlen, resstr, *reslen);
 		strncpy((char *) resstr, (char *) tstr, tlen);
-		}
+	}
 	else
-		{
+	{
 		/* add second string */
 		strncpy((char *) (resstr + *reslen), (char *) tstr, tlen);
-		}
+	}
 	*reslen += tlen;
 }
 
@@ -1091,7 +1091,7 @@ findrec(
 
 	/* search for required opcode */
 	do
-		{
+	{
 		/* read opcode */
 		atpos = curpos;
 		opcode = lts_readuword16(atpos);
@@ -1100,64 +1100,64 @@ findrec(
 		atpos += 2;
 
 		switch(aflag)
+		{
+		case TYPE_MATCH:
+			if(opcode == type)
+				return(atpos);
+			break;
+
+		case WIDTH_MATCH:
+			if(opcode == type)
 			{
-			case TYPE_MATCH:
-				if(opcode == type)
-					return(atpos);
-				break;
+				S32 c;
 
-			case WIDTH_MATCH:
-				if(opcode == type)
-					{
-					S32 c;
+				datapos = atpos;
 
-					datapos = atpos;
-
-					c = (S32) lts_readuword16(atpos);
-					atpos += 2;
-					if(col == c)
-						return(datapos);
-					}
-				break;
-
-			case NEXT_ROW:
-				if(opcode == L_INTEGER ||
-				   opcode == L_NUMBER ||
-				   opcode == L_LABEL ||
-				   opcode == L_FORMULA)
-					{
-					S32 c, r;
-
-					/* skip format byte */
-					datapos = atpos++;
-					c = (S32) lts_readuword16(atpos);
-					atpos += 2;
-					r = (S32) lts_readuword16(atpos);
-					atpos += 2;
-
-					/* set maximum column found */
-					pd123__maxcol = MAX(c, pd123__maxcol);
-					if((c == col) && (r > row))
-						return(datapos);
-					}
-				break;
+				c = (S32) lts_readuword16(atpos);
+				atpos += 2;
+				if(col == c)
+					return(datapos);
 			}
+			break;
 
-			/* advance to next record */
-			if(opcode == L_EOF)
-				{
-				if(aflag == NEXT_ROW)
-					{
-					foundeof = 1;
-					return(NULL);
-					}
-				curpos = lotusf;
-				}
-			else
-				{
-				curpos += length + 4;
-				}
+		case NEXT_ROW:
+			if(opcode == L_INTEGER ||
+			   opcode == L_NUMBER ||
+			   opcode == L_LABEL ||
+			   opcode == L_FORMULA)
+			{
+				S32 c, r;
+
+				/* skip format byte */
+				datapos = atpos++;
+				c = (S32) lts_readuword16(atpos);
+				atpos += 2;
+				r = (S32) lts_readuword16(atpos);
+				atpos += 2;
+
+				/* set maximum column found */
+				pd123__maxcol = MAX(c, pd123__maxcol);
+				if((c == col) && (r > row))
+					return(datapos);
+			}
+			break;
 		}
+
+		/* advance to next record */
+		if(opcode == L_EOF)
+		{
+			if(aflag == NEXT_ROW)
+			{
+				foundeof = 1;
+				return(NULL);
+			}
+			curpos = lotusf;
+		}
+		else
+		{
+			curpos += length + 4;
+		}
+	}
 	while(curpos != startpos);
 
 	return(NULL);
@@ -1176,19 +1176,19 @@ pd123__flookup(
 	U32 i;
 
 	for(i = 0; i < elemof32(pd123__opreqv); ++i)
-		{
+	{
 		oprp op = &pd123__opreqv[i];
 
 		if(op->ftype != LO_FUNC)
 			continue;
 
 		if(0 == strcmp((char *) func, (char *) op->pdeqv))
-			{
+		{
 			pd123__csym.ixf = i;
 			pd123__csym.symno = op->fno;
 			return(strlen((char *) op->pdeqv));
-			}
 		}
+	}
 
 	return(pd123__csym.symno = SYM_BAD);
 }
@@ -1250,14 +1250,14 @@ fptostr(
 
 	/* search for exponent and remove leading zeros because	they confuse the Z88; remove the + for good measure */
 	if((exp = (uchar *) strstr((char *) resstr, "e")) != NULL)
-		{
+	{
 		sign = *(++exp);
 		exps = exp;
 		if(sign == '-')
-			{
+		{
 			++exp;
 			++exps;
-			}
+		}
 		if(sign == '+')
 			++exp;
 		while(*exp == '0')
@@ -1265,7 +1265,7 @@ fptostr(
 		strncpy((char *) exps, (char *) exp, reslen - (exp - resstr));
 		reslen = reslen - (exp - exps);
 		resstr[reslen] = '\0';
-		}
+	}
 
 	return(reslen);
 }
@@ -1376,19 +1376,19 @@ pd123__olookup(
 	U32 i;
 
 	for(i = 0; i < elemof32(pd123__opreqv); ++i)
-		{
+	{
 		oprp op = &pd123__opreqv[i];
 
 		if((op->ftype != LO_BINARY) && (op->fno != LF_NOT))
 			continue;
 
 		if(0 == strncmp((char *) opr, (char *) op->pdeqv, strlen((char *) op->pdeqv)))
-			{
+		{
 			pd123__csym.ixf = i;
 			pd123__csym.symno = op->fno;
 			return(strlen((char *) op->pdeqv));
-			}
 		}
+	}
 
 	return(pd123__csym.symno = SYM_BAD);
 }
@@ -1476,7 +1476,7 @@ readrange(void)
 		return(PD123_ERR_BADFILE);
 
 	if((rec = findrec(L_RANGE, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		sc = (S32) lts_readuword16(rec);
 		rec += 2;
 		sr = (S32) lts_readuword16(rec);
@@ -1485,45 +1485,45 @@ readrange(void)
 		rec += 2;
 		er = (S32) lts_readuword16(rec);
 		rec += 2;
-		}
+	}
 	else
-		{
+	{
 		return(PD123_ERR_BADFILE);
-		}
+	}
 
 	if((sc == -1) || (ec == -1) || (ec == 0) || (er == 0))
-		{
+	{
 		sc = sr = 0;
 		ec = LOTUS_MAXCOL - 1;
 		er = LOTUS_MAXROW - 1;
-		}
+	}
 
 	pd123__maxcol = -1;
 	foundeof = 0;
 
 	/* read default column width */
 	if((rec = findrec(L_WINDOW1, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		rec += 6;
 		defcwid = (S32) lts_readuword16(rec);
 		rec += 2;
-		}
+	}
 	else
-		{
+	{
 		defcwid = 0;
-		}
+	}
 
 	/* read hidden column vector */
 	if((rec = findrec(L_HIDVEC1, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		for(i = 0; i < 32; ++i)
 			pd123__hidvec[i] = *rec++;
-		}
+	}
 	else
-		{
+	{
 		for(i = 0; i < 32; ++i)
 			pd123__hidvec[i] = 0;
-		}
+	}
 	return(0);
 }
 
@@ -1542,10 +1542,10 @@ lts_readdouble(
 	/* this for the ARM <-> 8087 */
 	U32 i;
 	union LTS_READDOUBLE_U
-		{
+	{
 		F64 fpval;
 		uchar fpbytes[8];
-		} fp;
+	} fp;
 
 	for(i = 4; i < 8; ++i)
 		fp.fpbytes[i] = *arg++;
@@ -1577,10 +1577,10 @@ lts_readuword16(
 	/* this for the ARM */
 	S32 i;
 	union LTS_READUWORD16_U
-		{
+	{
 		U16 uword;
 		uchar uwbytes[2];
-		} uw;
+	} uw;
 
 	for(i = 0; i < 2; ++i)
 		uw.uwbytes[i] = *arg++;
@@ -1609,10 +1609,10 @@ lts_readword16(
 	/* this for the ARM */
 	S32 i;
 	union LTS_READWORD16_U
-		{
+	{
 		S16 word;
 		uchar wbytes[2];
-		} w;
+	} w;
 
 	for(i = 0; i < 2; ++i)
 		w.wbytes[i] = *arg++;
@@ -1636,45 +1636,45 @@ static S32
 scnsym(void)
 {
 	if(cursym != -1)
-		{
+	{
 		/* work out how to skip symbol */
 		++termp;
 		switch(curopr->ftype)
+		{
+		case LO_CONST:
+			switch(cursym)
 			{
-			case LO_CONST:
-				switch(cursym)
-					{
-					case LF_CONST:
-						termp += 8;
-						break;
-					case LF_SLR:
-						termp += 4;
-						break;
-					case LF_RANGE:
-						termp += 8;
-						break;
-					case LF_INTEGER:
-						termp += 2;
-						break;
-					case LF_STRING:
-						while(*termp++)
-							;
-						break;
-					default:
-						break;
-					}
+			case LF_CONST:
+				termp += 8;
 				break;
-
-			case LO_FUNC:
-				/* skip argument count */
-				if(curopr->n_args == -1)
-					++termp;
+			case LF_SLR:
+				termp += 4;
 				break;
-
+			case LF_RANGE:
+				termp += 8;
+				break;
+			case LF_INTEGER:
+				termp += 2;
+				break;
+			case LF_STRING:
+				while(*termp++)
+					;
+				break;
 			default:
 				break;
 			}
+			break;
+
+		case LO_FUNC:
+			/* skip argument count */
+			if(curopr->n_args == -1)
+				++termp;
+			break;
+
+		default:
+			break;
 		}
+	}
 	return(chksym());
 }
 
@@ -1731,18 +1731,18 @@ wrcalcmode(
 	uchar cm;
 
 	if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		cm = *(rec + op->offset);
 		if(!cm)
-			{
+		{
 			if((err = startopt(op)) != 0)
 				return(err);
 			if((err = pd123__foutc('M', pd123__fout)) != 0)
 				return(err);
 			if((err = foutcr(pd123__fout)) != 0)
 				return(err);
-			}
 		}
+	}
 	return(0);
 }
 
@@ -1760,34 +1760,34 @@ wrcalcord(
 	char calco;
 	S32 err;
 
-	  if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
+	{
 		calc = *(rec + op->offset);
 		if((err = startopt(op)) != 0)
 			return(err);
 		if(pd123__curpd >= PD_3)
-			{
+		{
 			switch(calc)
-				{
-				case 0xFF:
-					calco = 'R';
-					break;
-				case 1:
-					calco = 'C';
-					break;
-				default:
-				case 0:
-					calco = 'N';
-					break;
-				}
+			{
+			case 0xFF:
+				calco = 'R';
+				break;
+			case 1:
+				calco = 'C';
+				break;
+			default:
+			case 0:
+				calco = 'N';
+				break;
+			}
 			if((err = pd123__foutc(calco, pd123__fout)) != 0)
 				return(err);
-			}
+		}
 		else if((err = pd123__foutc(((calc == 0xFF) ? 'R' : 'C'), pd123__fout)) != 0)
 			return(err);
 		if((err = foutcr(pd123__fout)) != 0)
 			return(err);
-		}
+	}
 	return(0);
 }
 
@@ -1805,33 +1805,32 @@ wrdecplc(
 	S32 err, decplc;
 
 	if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		rec += op->offset;
 
 		if((*rec & L_FMTTYPE) != L_SPECL)
-			{
+		{
 			decplc = (S32) (*rec & L_DECPLC);
 			if(decplc != op->deflt)
-				{
+			{
 				if((err = startopt(op)) != 0)
 					return(err);
 				if(fprintf(pd123__fout, "%d", decplc) < 0)
 					return(PD123_ERR_FILE);
 				if((err = foutcr(pd123__fout)) != 0)
 					return(err);
-				}
 			}
+		}
 		else
-			{
+		{
 			if((err = startopt(op)) != 0)
 				return(err);
 			if((err = pd123__foutc('F', pd123__fout)) != 0)
 				return(err);
 			if((err = foutcr(pd123__fout)) != 0)
 				return(err);
-			}
-
 		}
+	}
 	return(0);
 }
 
@@ -1849,33 +1848,33 @@ wrheadfoot(
 	S32 err;
 
 	if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		rec += op->offset;
 		if(*rec)
-			{
+		{
 			if((err = startopt(op)) != 0)
 				return(err);
 			if((err = pd123__foutc('|', pd123__fout)) != 0)
 				return(err);
 			while(*rec)
-				{
+			{
 				/* check for lotus page number */
 				if(*rec == '#')
-					{
+				{
 					if((err = outstr((uchar *) "@P@")) != 0)
 						return(err);
 					++rec;
-					}
+				}
 				/* check for lotus date */
 				else if(*rec == '@')
-					{
+				{
 					if((err = outstr((uchar *) "@D@")) != 0)
 						return(err);
 					++rec;
-					}
+				}
 				else if((err = pd123__foutc(lotusich((S32) *rec++), pd123__fout)) != 0)
 					return(err);
-				}
+			}
 			if((err = foutcr(pd123__fout)) != 0)
 				return(err);
 			}
@@ -1898,11 +1897,11 @@ writedate(
 	S32 year;
 
 	if(dateno > 73049)
-		{
+	{
 		day = month = year = 99;
-		}
+	}
 	else
-		{
+	{
 		dayno = year = month = day = 0;
 		year = -1;
 		leap = 0;
@@ -1916,14 +1915,14 @@ writedate(
 					++lasta;
 				dayno += lasta;
 				++month;
-				}
-			while((dayno < dateno)  &&  (month < 12));
 			}
+			while((dayno < dateno)  &&  (month < 12));
+		}
 		while(dayno < dateno);
 
 		day = (S32) (dateno - (dayno - lasta));
 		year %= 100;
-		}
+	}
 
 	if(fprintf(pd123__fout, "%d.%d.%d", day, month, year) < 0)
 		return(PD123_ERR_FILE);
@@ -1948,200 +1947,199 @@ writeexp(
 	argsp = nobrk = 0;
 
 	chksym();
-	do
-		{
+	for(;;)
+	{
 		switch(curopr->ftype)
+		{
+		case LO_CONST:
+			if((argstk[argsp++] =
+						convconst(cursym, termp + 1, col, row)) == 0)
+				return(PD123_ERR_MEM);
+			if(argsp == MAXSTACK)
+				return(PD123_ERR_EXP);
+			break;
+
+		case LO_END:
+			break;
+
+		case LO_BRACKETS:
 			{
-			case LO_CONST:
-				if((argstk[argsp++] =
-							convconst(cursym, termp + 1, col, row)) == 0)
-					return(PD123_ERR_MEM);
-				if(argsp == MAXSTACK)
-					return(PD123_ERR_EXP);
-				break;
-
-			case LO_END:
-				break;
-
-			case LO_BRACKETS:
-				{
-				if(!nobrk)
-					{
-					uchar *nele, *oele, *c;
-
-					if(!argsp)
-						{
-						freestk();
-						return(PD123_ERR_EXP);
-						}
-
-					oele = argstk[--argsp];
-
-					/* add two for brackets and null */
-					if((nele = malloc(strlen((char *) oele) + 2 + 1)) == NULL)
-						return(PD123_ERR_MEM);
-
-					c = nele;
-					*c++ = '(';
-					strcpy((char *) c, (char *) oele);
-					c += strlen((char *) oele);
-					*c++ = ')';
-					*c++ = '\0';
-					free(oele);
-					argstk[argsp++] = nele;
-					}
-				nobrk = 0;
-				break;
-				}
-
-			case LO_UNARY:
-				{
+			if(!nobrk)
+			{
 				uchar *nele, *oele, *c;
-				S32 addlen;
 
 				if(!argsp)
-					{
+				{
 					freestk();
 					return(PD123_ERR_EXP);
-					}
+				}
 
 				oele = argstk[--argsp];
-				addlen = strlen((char *) curopr->pdeqv);
-				/* extra for new operator and null */
-				if((nele = malloc(strlen((char *) oele) + addlen + 1)) == NULL)
+
+				/* add two for brackets and null */
+				if((nele = malloc(strlen((char *) oele) + 2 + 1)) == NULL)
 					return(PD123_ERR_MEM);
 
 				c = nele;
-				strcpy((char *) c, (char *) curopr->pdeqv);
-				c += addlen;
+				*c++ = '(';
 				strcpy((char *) c, (char *) oele);
 				c += strlen((char *) oele);
+				*c++ = ')';
 				*c++ = '\0';
 				free(oele);
 				argstk[argsp++] = nele;
-				if(!curopr->ltpok || (pd123__curpd < curopr->ltpok))
-					++pd123__poorfunc;
-				break;
-				}
-
-			case LO_BINARY:
-				{
-				uchar *ele1, *ele2, *nele, *c;
-				S32 addlen, lele1, lele2;
-
-				if(argsp < 2)
-					{
-					freestk();
-					return(PD123_ERR_EXP);
-					}
-
-				ele2 = argstk[--argsp];
-				ele1 = argstk[--argsp];
-				lele1 = strlen((char *) ele1);
-				lele2 = strlen((char *) ele2);
-				addlen = strlen((char *) curopr->pdeqv);
-				/* two arguments, operator and null */
-				if((nele = malloc(lele1 + lele2 + addlen + 1)) == NULL)
-					return(PD123_ERR_MEM);
-
-				c = nele;
-				strcpy((char *) c, (char *) ele1);
-				c += lele1;
-				strcpy((char *) c, (char *) curopr->pdeqv);
-				c += addlen;
-				strcpy((char *) c, (char *) ele2);
-				c += lele2;
-				*c++ = '\0';
-				free(ele1);
-				free(ele2);
-				argstk[argsp++] = nele;
-				if(!curopr->ltpok || (pd123__curpd < curopr->ltpok))
-					++pd123__poorfunc;
-				break;
-				}
-
-			case LO_FUNC:
-				{
-				S32 narg, i, tlen, argc, noname = 0;
-				uchar *nele, *c;
-				uchar argsep = ',';
-
-				/* work out number of arguments */
-				if((narg = curopr->n_args) == -1)
-					narg = (S32) *(termp + 1);
-
-				if(argsp < narg)
-					{
-					freestk();
-					return(PD123_ERR_EXP);
-					}
-
-				/* call argument fuddler */
-				if(curopr->argix)
-					if((err = (*argfuddle[curopr->argix - 1])(&narg,
-															  &argsep,
-															  &nobrk,
-															  &noname)) != 0)
-						return(err);
-
-				tlen = 0;
-				if(narg)
-					{
-					/* add up the length of all the arguments */
-					for(i = 1; i <= narg; ++i)
-						tlen += strlen((char *) argstk[argsp - i]);
-					/* add in space for commas and function brackets */
-					tlen += narg - 1;
-					if(!nobrk)
-						tlen += 2;
-					}
-
-				/* add length of name, null */
-				if(!noname)
-					tlen += strlen((char *) curopr->pdeqv);
-				++tlen;
-				if((nele = malloc(tlen)) == NULL)
-					return(PD123_ERR_MEM);
-
-				c = nele;
-				if(!noname)
-					{
-					strcpy((char *) c, (char *) curopr->pdeqv);
-					c += strlen((char *) curopr->pdeqv);
-					}
-				argc = narg;
-				if(narg)
-					{
-					if(!nobrk)
-						*c++ = '(';
-					while(argc)
-						{
-						uchar *carg = argstk[argsp - (argc--)];
-						strcpy((char *) c, (char *) carg);
-						c += strlen((char *) carg);
-						if(argc)
-							*c++ = argsep;
-						free(carg);
-						}
-					if(!nobrk)
-						*c++ = ')';
-					}
-				*c++ = '\0';
-				argsp -= narg;
-                __assume(argsp < elemof32(argstk));
-				argstk[argsp++] = nele;
-				if(!curopr->ltpok || (pd123__curpd < curopr->ltpok))
-					++pd123__poorfunc;
-				nobrk = 0;
-				break;
-				}
 			}
+			nobrk = 0;
+			break;
+			}
+
+		case LO_UNARY:
+			{
+			uchar *nele, *oele, *c;
+			S32 addlen;
+
+			if(!argsp)
+			{
+				freestk();
+				return(PD123_ERR_EXP);
+			}
+
+			oele = argstk[--argsp];
+			addlen = strlen((char *) curopr->pdeqv);
+			/* extra for new operator and null */
+			if((nele = malloc(strlen((char *) oele) + addlen + 1)) == NULL)
+				return(PD123_ERR_MEM);
+
+			c = nele;
+			strcpy((char *) c, (char *) curopr->pdeqv);
+			c += addlen;
+			strcpy((char *) c, (char *) oele);
+			c += strlen((char *) oele);
+			*c++ = '\0';
+			free(oele);
+			argstk[argsp++] = nele;
+			if(!curopr->ltpok || (pd123__curpd < curopr->ltpok))
+				++pd123__poorfunc;
+			break;
+			}
+
+		case LO_BINARY:
+			{
+			uchar *ele1, *ele2, *nele, *c;
+			S32 addlen, lele1, lele2;
+
+			if(argsp < 2)
+			{
+				freestk();
+				return(PD123_ERR_EXP);
+			}
+
+			ele2 = argstk[--argsp];
+			ele1 = argstk[--argsp];
+			lele1 = strlen((char *) ele1);
+			lele2 = strlen((char *) ele2);
+			addlen = strlen((char *) curopr->pdeqv);
+			/* two arguments, operator and null */
+			if((nele = malloc(lele1 + lele2 + addlen + 1)) == NULL)
+				return(PD123_ERR_MEM);
+
+			c = nele;
+			strcpy((char *) c, (char *) ele1);
+			c += lele1;
+			strcpy((char *) c, (char *) curopr->pdeqv);
+			c += addlen;
+			strcpy((char *) c, (char *) ele2);
+			c += lele2;
+			*c++ = '\0';
+			free(ele1);
+			free(ele2);
+			argstk[argsp++] = nele;
+			if(!curopr->ltpok || (pd123__curpd < curopr->ltpok))
+				++pd123__poorfunc;
+			break;
+			}
+
+		case LO_FUNC:
+			{
+			S32 narg, i, tlen, argc, noname = 0;
+			uchar *nele, *c;
+			uchar argsep = ',';
+
+			/* work out number of arguments */
+			if((narg = curopr->n_args) == -1)
+				narg = (S32) *(termp + 1);
+
+			if(argsp < narg)
+			{
+				freestk();
+				return(PD123_ERR_EXP);
+			}
+
+			/* call argument fuddler */
+			if(curopr->argix)
+				if((err = (*argfuddle[curopr->argix - 1])(&narg,
+														  &argsep,
+														  &nobrk,
+														  &noname)) != 0)
+					return(err);
+
+			tlen = 0;
+			if(narg)
+			{
+				/* add up the length of all the arguments */
+				for(i = 1; i <= narg; ++i)
+					tlen += strlen((char *) argstk[argsp - i]);
+				/* add in space for commas and function brackets */
+				tlen += narg - 1;
+				if(!nobrk)
+					tlen += 2;
+			}
+
+			/* add length of name, null */
+			if(!noname)
+				tlen += strlen((char *) curopr->pdeqv);
+			++tlen;
+			if((nele = malloc(tlen)) == NULL)
+				return(PD123_ERR_MEM);
+
+			c = nele;
+			if(!noname)
+			{
+				strcpy((char *) c, (char *) curopr->pdeqv);
+				c += strlen((char *) curopr->pdeqv);
+			}
+			argc = narg;
+			if(narg)
+			{
+				if(!nobrk)
+					*c++ = '(';
+				while(argc)
+				{
+					uchar *carg = argstk[argsp - (argc--)];
+					strcpy((char *) c, (char *) carg);
+					c += strlen((char *) carg);
+					if(argc)
+						*c++ = argsep;
+					free(carg);
+				}
+				if(!nobrk)
+					*c++ = ')';
+			}
+			*c++ = '\0';
+			argsp -= narg;
+            __assume(argsp < elemof32(argstk));
+			argstk[argsp++] = nele;
+			if(!curopr->ltpok || (pd123__curpd < curopr->ltpok))
+				++pd123__poorfunc;
+			nobrk = 0;
+			break;
+			}
+		}
 
 		if(cursym == LF_END)
 			break;
 		scnsym();
-		}
-	while(TRUE);
+	}
 
 	err = outstr(argstk[0]);
 	oldsp = argsp;
@@ -2168,60 +2166,60 @@ writeformat(
 
 	decplc = *fmtp & L_DECPLC;
 	switch(*fmtp & L_FMTTYPE)
+	{
+	case L_CURCY:
+		if((err = outcon((uchar *) "LC")) != 0)
+			return(err);
+		if((err = outcon((uchar *) "B")) != 0)
+			return(err);
+		if((err = outdecplc(decplc)) != 0)
+			return(err);
+		break;
+	case L_PERCT:
+		if((err = outcon((uchar *) "TC")) != 0)
+			return(err);
+		if((err = outdecplc(decplc)) != 0)
+			return(err);
+		break;
+	default:
+	case L_COMMA:
+		if((err = outcon((uchar *) "B")) != 0)
+			return(err);
+		if((err = outdecplc(decplc)) != 0)
+			return(err);
+		break;
+	case L_FIXED:
+	case L_SCIFI:
+		if((err = outdecplc(decplc)) != 0)
+			return(err);
+		break;
+	case L_SPECL:
+		switch(decplc)
 		{
-		case L_CURCY:
-			if((err = outcon((uchar *) "LC")) != 0)
-				return(err);
-			if((err = outcon((uchar *) "B")) != 0)
-				return(err);
-			if((err = outdecplc(decplc)) != 0)
+		/* general format */
+		case L_GENFMT:
+			if((err = outcon((uchar *) "DF")) != 0)
 				return(err);
 			break;
-		case L_PERCT:
-			if((err = outcon((uchar *) "TC")) != 0)
-				return(err);
-			if((err = outdecplc(decplc)) != 0)
-				return(err);
+		/* dates */
+		case L_DDMMYY:
+		case L_DDMM:
+		case L_MMYY:
+		case L_DATETIME:
+		case L_DATETIMES:
+		case L_DATEINT1:
+		case L_DATEINT2:
+			*specflg = P_DATE;
+			break;
+		/* text */
+		case L_TEXT:
+			*specflg = P_TEXT;
 			break;
 		default:
-		case L_COMMA:
-			if((err = outcon((uchar *) "B")) != 0)
-				return(err);
-			if((err = outdecplc(decplc)) != 0)
-				return(err);
-			break;
-		case L_FIXED:
-		case L_SCIFI:
-			if((err = outdecplc(decplc)) != 0)
-				return(err);
-			break;
-		case L_SPECL:
-			switch(decplc)
-				{
-				/* general format */
-				case L_GENFMT:
-					if((err = outcon((uchar *) "DF")) != 0)
-						return(err);
-					break;
-				/* dates */
-				case L_DDMMYY:
-				case L_DDMM:
-				case L_MMYY:
-				case L_DATETIME:
-				case L_DATETIMES:
-				case L_DATEINT1:
-				case L_DATEINT2:
-					*specflg = P_DATE;
-					break;
-				/* text */
-				case L_TEXT:
-					*specflg = P_TEXT;
-					break;
-				default:
-					break;
-				}
 			break;
 		}
+		break;
+	}
 
 	return(0);
 }
@@ -2274,14 +2272,14 @@ writepcol(
 	/* reset pointer to start */
 	curpos = NULL;
 	if((rec = findrec(L_COLW1, WIDTH_MATCH, col, 0)) != NULL)
-		{
+	{
 		rec += 2;
 		cw = (S32) *rec;
-		}
+	}
 	else
-		{
+	{
 		cw = defcwid;
-		}
+	}
 
 	/* check hidden vector for an entry */
 	if(pd123__hidvec[col >> 3] & (1 << (col & 7)))
@@ -2293,7 +2291,7 @@ writepcol(
 	/* output all the rows */
 	row = sro - 1;
 	while(row <= ero)
-		{
+	{
 		U16 opcode;
 		S32 count, oldrow;
 		uchar huge *fmtp;
@@ -2321,117 +2319,117 @@ writepcol(
 
 		/* deal with different cell types */
 		switch(opcode)
+		{
+		case L_INTEGER:
 			{
-			case L_INTEGER:
-				{
-				S32 intval, specflg = 0;
+			S32 intval, specflg = 0;
 
-				if((err = writeformat(fmtp, &specflg)) != 0)
-					return(err);
+			if((err = writeformat(fmtp, &specflg)) != 0)
+				return(err);
 
-				intval = (S32) lts_readword16(rec);
-				rec += 2;
-				if((err = checkdate(&specflg, (long) intval)) != 0)
-					return(err);
-				if(specflg)
-					if(fprintf(pd123__fout, "%d", intval) < 0)
-						return(PD123_ERR_FILE);
-				break;
-				}
+			intval = (S32) lts_readword16(rec);
+			rec += 2;
+			if((err = checkdate(&specflg, (long) intval)) != 0)
+				return(err);
+			if(specflg)
+				if(fprintf(pd123__fout, "%d", intval) < 0)
+					return(PD123_ERR_FILE);
+			break;
+			}
 
-			case L_NUMBER:
-				{
-				S32 specflg = 0;
-				F64 fpval;
-				uchar resstr[25];
+		case L_NUMBER:
+			{
+			S32 specflg = 0;
+			F64 fpval;
+			uchar resstr[25];
 
-				if((err = writeformat(fmtp, &specflg)) != 0)
-					return(err);
+			if((err = writeformat(fmtp, &specflg)) != 0)
+				return(err);
 
-				fpval = lts_readdouble(rec);
+			fpval = lts_readdouble(rec);
 
-				#if RISCOS
-				if(fpval < LONG_MAX)
-					if((err = checkdate(&specflg, (long) (fpval + .5))) != 0)
-						return(err);
-				#else
+			#if RISCOS
+			if(fpval < LONG_MAX)
 				if((err = checkdate(&specflg, (long) (fpval + .5))) != 0)
 					return(err);
-				#endif
+			#else
+			if((err = checkdate(&specflg, (long) (fpval + .5))) != 0)
+				return(err);
+			#endif
 
-				if(specflg)
-					{
-					fptostr(resstr, fpval);
-					if((err = outstr(resstr)) != 0)
-						return(err);
-					}
-				break;
-				}
-
-			case L_LABEL:
-				{
-				S32 rep = FALSE, width = cw;
-				uchar huge *startlab;
-
-				/* deal with label alignment byte */
-				switch(*rec++)
-					{
-					case '\'':
-						break;
-					case '"':
-						if((err = outcon((uchar *) "R")) != 0)
-							return(err);
-						break;
-					case '^':
-						if((err = outcon((uchar *) "C")) != 0)
-							return(err);
-						break;
-					case '\\':
-						rep = TRUE;
-						break;
-					}
-
-				startlab = rec;
-				do
-					{
-					while(*rec)
-						{
-						if((err = pd123__foutc(lotusich((S32) *rec++), pd123__fout)) != 0)
-							return(err);
-						--width;
-						}
-					rec = startlab;
-					}
-				while(rep && (width > 0));
-
-				break;
-				}
-
-			case L_FORMULA:
-				{
-				S32 specflg = 0;
-
-				if((err = writeformat(fmtp, &specflg)) != 0)
+			if(specflg)
+			{
+				fptostr(resstr, fpval);
+				if((err = outstr(resstr)) != 0)
 					return(err);
-
-				if((err = outcon((uchar *) "V")) != 0)
-					return(err);
-
-				if((err = writeexp(rec + 10, col, row)) != 0)
-					{
-					if(err != PD123_ERR_EXP)
-						return(err);
-					else
-						pd123__errexp += 1;
-					}
-
-				break;
-				}
 			}
+			break;
+			}
+
+		case L_LABEL:
+			{
+			S32 rep = FALSE, width = cw;
+			uchar huge *startlab;
+
+			/* deal with label alignment byte */
+			switch(*rec++)
+			{
+			case '\'':
+				break;
+			case '"':
+				if((err = outcon((uchar *) "R")) != 0)
+					return(err);
+				break;
+			case '^':
+				if((err = outcon((uchar *) "C")) != 0)
+					return(err);
+				break;
+			case '\\':
+				rep = TRUE;
+				break;
+			}
+
+			startlab = rec;
+			do
+			{
+				while(*rec)
+				{
+					if((err = pd123__foutc(lotusich((S32) *rec++), pd123__fout)) != 0)
+						return(err);
+					--width;
+				}
+				rec = startlab;
+			}
+			while(rep && (width > 0));
+
+			break;
+			}
+
+		case L_FORMULA:
+			{
+			S32 specflg = 0;
+
+			if((err = writeformat(fmtp, &specflg)) != 0)
+				return(err);
+
+			if((err = outcon((uchar *) "V")) != 0)
+				return(err);
+
+			if((err = writeexp(rec + 10, col, row)) != 0)
+			{
+				if(err != PD123_ERR_EXP)
+					return(err);
+				else
+					pd123__errexp += 1;
+			}
+
+			break;
+			}
+		}
 
 		if((err = foutcr(pd123__fout)) != 0)
 			return(err);
-		}
+	}
 	return(0);
 }
 
@@ -2449,14 +2447,14 @@ wrmar(
 	S32 err;
 
 	if(value != op->deflt)
-		{
+	{
 		if((err = startopt(op)) != 0)
 			return(err);
 		if(fprintf(pd123__fout, "%d", value) < 0)
 			return(PD123_ERR_FILE);
 		if((err = foutcr(pd123__fout)) != 0)
 			return(err);
-		}
+	}
 	return(0);
 }
 
@@ -2474,11 +2472,11 @@ wrmargins(
 	U16 value;
 
 	if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		rec += op->offset;
 		value = *rec++;
 		return(wrmar(op, value));
-		}
+	}
 	return(0);
 }
 
@@ -2497,19 +2495,19 @@ wrminbrk(
 	S32 minbrk;
 
 	if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		rec += op->offset;
 		minbrk = (*rec & L_FMTTYPE) == L_CURCY ? 1 : 0;
 		if(minbrk)
-			{
+		{
 			if((err = startopt(op)) != 0)
 				return(err);
 			if((err = pd123__foutc('B', pd123__fout)) != 0)
 				return(err);
 			if((err = foutcr(pd123__fout)) != 0)
 				return(err);
-			}
 		}
+	}
 	return(0);
 }
 
@@ -2539,13 +2537,13 @@ wrtextn(
 	S32 err;
 
 	if(pd123__curpd >= PD_PC)
-		{
+	{
 		if((err = startopt(op)) != 0)
 			return(err);
 		if((err = pd123__foutc((S32) op->deflt, pd123__fout)) != 0)
 			return(err);
 		return(foutcr(pd123__fout));
-		}
+	}
 
 	return(0);
 }
@@ -2564,19 +2562,19 @@ wrthousands(
 	S32 err;
 
 	if((rec = findrec(op->opcode, TYPE_MATCH, 0, 0)) != NULL)
-		{
+	{
 		rec += op->offset;
 		thous = *rec & L_FMTTYPE;
 		if(thous == L_COMMA || thous == L_CURCY)
-			{
+		{
 			if((err = startopt(op)) != 0)
 				return(err);
 			if((err = pd123__foutc('1', pd123__fout)) != 0)
 				return(err);
 			if((err = foutcr(pd123__fout)) != 0)
 				return(err);
-			}
 		}
+	}
 	return(0);
 }
 

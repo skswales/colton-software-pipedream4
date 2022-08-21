@@ -144,7 +144,7 @@ collect_copy(
     LIST_ITEMNO key = 0;
 
     if(NULL != collect_first(BYTE, old_p_p_list_block, &key))
-        {
+    {
         do  {
             S32 entry_size = list_entsize(*old_p_p_list_block, list_atitem(*old_p_p_list_block));
             STATUS status;
@@ -152,18 +152,18 @@ collect_copy(
             P_ANY new_entp;
 
             if(NULL == (new_entp = _collect_add_entry(new_nlbrp, entry_size, &key, &status)))
-                {
+            {
                 collect_delete(&new_nlbrp->lbr);
                 return(status);
-                }
+            }
 
             /* listed memory may move */
             old_entp = _list_gotoitemcontents(*old_p_p_list_block, list_atitem(*old_p_p_list_block));
 
             memcpy32(new_entp, old_entp, entry_size);
-            }
-        while(collect_next(BYTE, old_p_p_list_block, &key));
         }
+        while(collect_next(BYTE, old_p_p_list_block, &key));
+    }
 
     return(STATUS_DONE);
 }

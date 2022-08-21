@@ -467,101 +467,101 @@ ss_data_compare(
     two_nums_type_match(&data1, &data2, 0);
 
     if(data1.did_num != data2.did_num)
-        {
+    {
         if(data1.did_num < data2.did_num)
             res = -1;
         else
             res = 1;
-        }
+    }
     else
-        {
+    {
         switch(data1.did_num)
+        {
+        case RPN_DAT_REAL:
+            if(data1.arg.fp < data2.arg.fp)
+                res = -1;
+            else if(data1.arg.fp == data2.arg.fp)
+                res = 0;
+            else
+                res = 1;
+            break;
+
+        case RPN_DAT_WORD8:
+        case RPN_DAT_WORD16:
+        case RPN_DAT_WORD32:
+            if(data1.arg.integer < data2.arg.integer)
+                res = -1;
+            else if(data1.arg.integer == data2.arg.integer)
+                res = 0;
+            else
+                res = 1;
+            break;
+
+        case RPN_DAT_STRING:
+            res = stricmp_wild(data1.arg.string.uchars, data2.arg.string.uchars);
+            break;
+
+        case RPN_TMP_ARRAY:
             {
-            case RPN_DAT_REAL:
-                if(data1.arg.fp < data2.arg.fp)
-                    res = -1;
-                else if(data1.arg.fp == data2.arg.fp)
-                    res = 0;
-                else
-                    res = 1;
-                break;
+            if(data1.arg.ev_array.y_size < data2.arg.ev_array.y_size)
+                res = -1;
+            else if(data1.arg.ev_array.y_size > data2.arg.ev_array.y_size)
+                res = 1;
+            else if(data1.arg.ev_array.x_size < data2.arg.ev_array.x_size)
+                res = -1;
+            else if(data1.arg.ev_array.x_size > data2.arg.ev_array.x_size)
+                res = 1;
 
-            case RPN_DAT_WORD8:
-            case RPN_DAT_WORD16:
-            case RPN_DAT_WORD32:
-                if(data1.arg.integer < data2.arg.integer)
-                    res = -1;
-                else if(data1.arg.integer == data2.arg.integer)
-                    res = 0;
-                else
-                    res = 1;
-                break;
+            if(!res)
+            {
+                S32 ix, iy;
 
-            case RPN_DAT_STRING:
-                res = stricmp_wild(data1.arg.string.uchars, data2.arg.string.uchars);
-                break;
-
-            case RPN_TMP_ARRAY:
+                for(iy = 0; iy < data1.arg.ev_array.y_size; ++iy)
                 {
-                if(data1.arg.ev_array.y_size < data2.arg.ev_array.y_size)
-                    res = -1;
-                else if(data1.arg.ev_array.y_size > data2.arg.ev_array.y_size)
-                    res = 1;
-                else if(data1.arg.ev_array.x_size < data2.arg.ev_array.x_size)
-                    res = -1;
-                else if(data1.arg.ev_array.x_size > data2.arg.ev_array.x_size)
-                    res = 1;
-
-                if(!res)
+                    for(ix = 0; ix < data1.arg.ev_array.x_size; ++ix)
                     {
-                    S32 ix, iy;
-
-                    for(iy = 0; iy < data1.arg.ev_array.y_size; ++iy)
-                        {
-                        for(ix = 0; ix < data1.arg.ev_array.x_size; ++ix)
-                            {
-                            if((res = ss_data_compare(ss_array_element_index_borrow(&data1, ix, iy),
-                                                      ss_array_element_index_borrow(&data2, ix, iy))) != 0)
-                                goto end_array_comp;
-                            }
-                        }
-
-                    end_array_comp:
-                        ;
+                        if((res = ss_data_compare(ss_array_element_index_borrow(&data1, ix, iy),
+                                                  ss_array_element_index_borrow(&data2, ix, iy))) != 0)
+                            goto end_array_comp;
                     }
-                break;
                 }
 
-            case RPN_DAT_DATE:
-                if(data1.arg.ev_date.date < data2.arg.ev_date.date)
-                    res = -1;
-                else if(data1.arg.ev_date.date == data2.arg.ev_date.date)
-                    {
-                    if(data1.arg.ev_date.time < data2.arg.ev_date.time)
-                        res = -1;
-                    else if(data1.arg.ev_date.time == data2.arg.ev_date.time)
-                        res = 0;
-                    else
-                        res = 1;
-                    }
-                else
-                    res = 1;
-                break;
+                end_array_comp:
+                    ;
+            }
+            break;
+            }
 
-            case RPN_DAT_ERROR:
-                if(data1.arg.ev_error.status < data2.arg.ev_error.status)
+        case RPN_DAT_DATE:
+            if(data1.arg.ev_date.date < data2.arg.ev_date.date)
+                res = -1;
+            else if(data1.arg.ev_date.date == data2.arg.ev_date.date)
+            {
+                if(data1.arg.ev_date.time < data2.arg.ev_date.time)
                     res = -1;
-                else if(data1.arg.ev_error.status == data2.arg.ev_error.status)
+                else if(data1.arg.ev_date.time == data2.arg.ev_date.time)
                     res = 0;
                 else
                     res = 1;
-                break;
-
-            case RPN_DAT_BLANK:
-                res = 0;
-                break;
             }
+            else
+                res = 1;
+            break;
+
+        case RPN_DAT_ERROR:
+            if(data1.arg.ev_error.status < data2.arg.ev_error.status)
+                res = -1;
+            else if(data1.arg.ev_error.status == data2.arg.ev_error.status)
+                res = 0;
+            else
+                res = 1;
+            break;
+
+        case RPN_DAT_BLANK:
+            res = 0;
+            break;
         }
+    }
 
     return(res);
 }
@@ -577,17 +577,17 @@ ss_data_free_resources(
     _InoutRef_  P_EV_DATA p_ev_data)
 {
     switch(p_ev_data->did_num)
-        {
-        case RPN_TMP_STRING:
-            str_clr(&p_ev_data->arg.string_wr.uchars);
-            p_ev_data->did_num = RPN_DAT_BLANK;
-            break;
+    {
+    case RPN_TMP_STRING:
+        str_clr(&p_ev_data->arg.string_wr.uchars);
+        p_ev_data->did_num = RPN_DAT_BLANK;
+        break;
 
-        case RPN_TMP_ARRAY:
-            ss_array_free(p_ev_data);
-            p_ev_data->did_num = RPN_DAT_BLANK;
-            break;
-        }
+    case RPN_TMP_ARRAY:
+        ss_array_free(p_ev_data);
+        p_ev_data->did_num = RPN_DAT_BLANK;
+        break;
+    }
 }
 
 /******************************************************************************
@@ -604,22 +604,22 @@ ss_data_resource_copy(
 {
     /* we get our own copy of handle based resources */
     switch(p_ev_data_in->did_num)
-        {
-        case RPN_DAT_STRING:
-        case RPN_TMP_STRING:
-        case RPN_RES_STRING:
-            (void) ss_string_dup(p_ev_data_out, p_ev_data_in);
-            break;
+    {
+    case RPN_DAT_STRING:
+    case RPN_TMP_STRING:
+    case RPN_RES_STRING:
+        (void) ss_string_dup(p_ev_data_out, p_ev_data_in);
+        break;
 
-        case RPN_TMP_ARRAY:
-        case RPN_RES_ARRAY:
-            (void) ss_array_dup(p_ev_data_out, p_ev_data_in);
-            break;
+    case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
+        (void) ss_array_dup(p_ev_data_out, p_ev_data_in);
+        break;
 
-        default:
-            *p_ev_data_out = *p_ev_data_in;
-            break;
-        }
+    default:
+        *p_ev_data_out = *p_ev_data_in;
+        break;
+    }
 
     return(p_ev_data_out->did_num);
 }
@@ -1174,7 +1174,7 @@ ss_string_make_uchars(
     uchars_n = MIN(uchars_n, EV_MAX_STRING_LEN); /* SKS 27oct96 limit in any case */
 
     /*if(0 != uchars_n)*/
-        {
+    {
         STATUS status;
         if(NULL == (p_ev_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*NULLCH*/, &status)))
             return(ev_data_set_error(p_ev_data, status));
@@ -1184,13 +1184,13 @@ ss_string_make_uchars(
             memcpy32(p_ev_data->arg.string_wr.uchars, uchars, uchars_n);
         p_ev_data->arg.string_wr.uchars[uchars_n] = NULLCH;
         p_ev_data->did_num = RPN_TMP_STRING; /* copy is now owned by the caller */
-        }
+    }
 #if 0 /* can't do this in PipeDream - gets transferred to a result and then freed */
     else
-        { /* SKS 27oct96 optimise empty strings */
+    {   /* SKS 27oct96 optimise empty strings */
         p_ev_data->arg.string.uchars = "";
         p_ev_data->did_num = RPN_DAT_STRING;
-        }
+    }
 #endif
 
     p_ev_data->arg.string.size = uchars_n;

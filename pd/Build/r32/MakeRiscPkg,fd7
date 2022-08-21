@@ -29,6 +29,7 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 %Copy <Obey$Dir>.!PipeDream.!RunImage           <pd$Disc>.Z.* ~rf~cln~v
 %Copy <Obey$Dir>.!PipeDream.!Sprites            <pd$Disc>.Z.* ~rf~cln~v
 %Copy <Obey$Dir>.!PipeDream.!Sprites22          <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!SpritesR5          <pd$Disc>.Z.* ~rf~cln~v
 
 %Access                                         <pd$Disc>.Z.* r/r
 
@@ -55,8 +56,8 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 %Copy <ap$Resource$Dir>.RISC_OS.tem_f           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
 %Copy <ap$Resource$Dir>.RISC_OS.tem_p           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
 %Copy <ap$Resource$Dir>.RISC_OS.tem_s           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.u_ltp           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.RISC_OS.u_ptl           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+|%Copy <ap$Resource$Dir>.RISC_OS.u_ltp           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+|%Copy <ap$Resource$Dir>.RISC_OS.u_ptl           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
 
 %CDir                                           <pd$Disc>.Z.Resource.CmdFiles
 %Copy <ap$Resource$Dir>.CmdFiles.CopyDelete     <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v

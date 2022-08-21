@@ -178,7 +178,7 @@ gr_chart_save_chart_with_dialog(
     filename = cp->core.currentfilename;
 
     if(0 != (gr_chart__save_dbox = dbox_new("xfer_send")))
-        {
+    {
         gr_chart__saving_chart = TRUE;
 
         dbox_show(gr_chart__save_dbox);
@@ -197,7 +197,7 @@ gr_chart_save_chart_with_dialog(
         dbox_dispose(&gr_chart__save_dbox);
 
         gr_chart__saving_chart = FALSE;
-        }
+    }
 
     return(saveres);
 }
@@ -228,7 +228,7 @@ gr_chart_save_draw_file_with_dialog(
     filename = cp->core.currentdrawname;
 
     if(0 != (gr_chart__save_dbox = dbox_new("xfer_send")))
-        {
+    {
         gr_chart__saving_chart = TRUE;
 
         dbox_show(gr_chart__save_dbox);
@@ -247,7 +247,7 @@ gr_chart_save_draw_file_with_dialog(
         dbox_dispose(&gr_chart__save_dbox);
 
         gr_chart__saving_chart = FALSE;
-        }
+    }
 
     return(saveres);
 }
@@ -326,9 +326,9 @@ gr_chart_save_chart_without_dialog_checking_xfersend_core(
         res = 1;
 
     if(res > 0)
-        {
+    {
         if(!check_xfersend || xfersend_file_is_safe())
-            {
+        {
             /* make this the current file unless scrap or already there.
              * do before clear_modified to ensure the new name is picked up
             */
@@ -340,8 +340,8 @@ gr_chart_save_chart_without_dialog_checking_xfersend_core(
             gr_chartedit_setwintitle(cp);
 
             gr_chart_riscos_broadcast_changed(save_filename);
-            }
         }
+    }
 
     return(res);
 }
@@ -365,7 +365,7 @@ gr_chart_save_chart_without_dialog_checking_xfersend(
 
     /* SKS after 4.12 30mar92 - only do this when allowed to */
     if((res < 0) && force_constructs)
-        {
+    {
         P_GR_CHART cp;
         P_GR_DIAG p_gr_diag;
 
@@ -381,7 +381,7 @@ gr_chart_save_chart_without_dialog_checking_xfersend(
         res = gr_chart_save_chart_without_dialog_checking_xfersend_core(chp, filename, check_xfersend);
 
         cp->core.p_gr_diag = p_gr_diag;
-        }
+    }
 
     return(res);
 }
@@ -422,9 +422,9 @@ gr_chart_save_draw_file_without_dialog(
     res = gr_riscdiag_diagram_save(&p_gr_diag->gr_riscdiag, save_filename);
 
     if(res > 0)
-        {
+    {
         if(xfersend_file_is_safe())
-            {
+        {
             if(filename /*no point setting same back*/)
                 res = gr_chart_name_set(&cp->core.ch, save_filename);
 
@@ -438,8 +438,8 @@ gr_chart_save_draw_file_without_dialog(
 #endif
 
             gr_chart_riscos_broadcast_changed(save_filename);
-            }
         }
+    }
 
     return(res);
 }
@@ -532,14 +532,14 @@ gr_fillstyle_translate_pict_for_load(
         cahp = NULL;
 
     if(!cahp)
-        {
+    {
         fillstyle->pattern       = 0;
 
         fillstyle->bits.notsolid = 0; /* force to be solid */
         fillstyle->bits.pattern  = 0;
 
         return(0);
-        }
+    }
 
     fillstyle->pattern      = (GR_FILL_PATTERN_HANDLE) *cahp;
 
@@ -592,12 +592,12 @@ gr_fillstyle_make_key_for_save(
         return(0);
 
     if((p_u32 = collect_goto_item(U32, &fillstyle_translation_table.lbr, key)) == NULL)
-        {
+    {
         if(NULL == (p_u32 = collect_add_entry_elem(U32, &fillstyle_translation_table, &key, &status)))
             return(status);
 
         *p_u32 = fillstyle_translation_ekey++;
-        }
+    }
 
     return(1);
 }
@@ -631,7 +631,7 @@ gr_fillstyle_table_make_for_save(
             return(res);
 
     for(series_idx = 0; series_idx < cp->series.n_defined; ++series_idx)
-        {
+    {
         /* note refs to series pictures */
         serp = getserp(cp, series_idx);
         if((res = gr_fillstyle_make_key_for_save(&serp->style.pdrop_fill)) < 0) /* this may be overenthusiastic */
@@ -644,7 +644,7 @@ gr_fillstyle_table_make_for_save(
             return(res);
         if((res = gr_point_list_fillstyle_enum_for_save(cp, series_idx, GR_LIST_POINT_FILLSTYLE)) < 0)
             return(res);
-        }
+    }
 
     return(1);
 }
@@ -1054,64 +1054,64 @@ gr_load_save_id_change(
 
     /* now we have to work out what this 'selected' for direct pokers */
     switch(gr_load_save_objid.name)
+    {
+    default:
+        assert(0);
+    case GR_CHART_OBJNAME_CHART:
+    case GR_CHART_OBJNAME_PLOTAREA:
+    case GR_CHART_OBJNAME_LEGEND:
+    case GR_CHART_OBJNAME_TEXT:
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_POINT:
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_DROPPOINT:
+    case GR_CHART_OBJNAME_BESTFITSER:
         {
-        default:
-            assert(0);
-        case GR_CHART_OBJNAME_CHART:
-        case GR_CHART_OBJNAME_PLOTAREA:
-        case GR_CHART_OBJNAME_LEGEND:
-        case GR_CHART_OBJNAME_TEXT:
-            break;
+        GR_SERIES_IDX series_idx;
 
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_POINT:
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_DROPPOINT:
-        case GR_CHART_OBJNAME_BESTFITSER:
+        if(in_save)
+            series_idx = gr_series_idx_from_external(cp, gr_load_save_objid.no);
+        else
+        {
+            P_GR_SERIES serp;
+            S32        res;
+
+            /* SKS after 4.12 26mar92 - series are loaded contiguously into axes set 0 and
+             * eventually split with explicit split point to preserve overlay series styles
+            */
+            series_idx = gr_load_save_objid.no - 1;
+
+            if(series_idx >= cp->axes[0].series.end_idx)
             {
-            GR_SERIES_IDX series_idx;
+                if((res = gr_chart_add_series(cp, 0, 1 /*init if new*/)) < 0)
+                    return(res);
 
-            if(in_save)
+                /* NB. convert using fn as allocation may have changed */
                 series_idx = gr_series_idx_from_external(cp, gr_load_save_objid.no);
-            else
-                {
-                P_GR_SERIES serp;
-                S32        res;
 
-                /* SKS after 4.12 26mar92 - series are loaded contiguously into axes set 0 and
-                 * eventually split with explicit split point to preserve overlay series styles
-                */
-                series_idx = gr_load_save_objid.no - 1;
+                serp = getserp(cp, series_idx);
 
-                if(series_idx >= cp->axes[0].series.end_idx)
-                    {
-                    if((res = gr_chart_add_series(cp, 0, 1 /*init if new*/)) < 0)
-                        return(res);
-
-                    /* NB. convert using fn as allocation may have changed */
-                    series_idx = gr_series_idx_from_external(cp, gr_load_save_objid.no);
-
-                    serp = getserp(cp, series_idx);
-
-                    /* don't auto-reinitialise descriptors created by loading */
-                    serp->internal_bits.descriptor_ok = 1;
-                    }
-                }
-
-            gr_load_save_use_axes_idx      = gr_axes_idx_from_series_idx(cp, series_idx);
-            gr_load_save_use_series_idx    = series_idx;
-            gr_load_save_use_series_idx_ok = 1;
+                /* don't auto-reinitialise descriptors created by loading */
+                serp->internal_bits.descriptor_ok = 1;
             }
-            break;
-
-        case GR_CHART_OBJNAME_AXIS:
-        case GR_CHART_OBJNAME_AXISGRID:
-        case GR_CHART_OBJNAME_AXISTICK:
-            /* can poke unused axes ok */
-
-            gr_load_save_use_axis_idx = gr_axes_idx_from_external(cp, gr_load_save_objid.no, &gr_load_save_use_axes_idx);
-            break;
         }
+
+        gr_load_save_use_axes_idx      = gr_axes_idx_from_series_idx(cp, series_idx);
+        gr_load_save_use_series_idx    = series_idx;
+        gr_load_save_use_series_idx_ok = 1;
+        }
+        break;
+
+    case GR_CHART_OBJNAME_AXIS:
+    case GR_CHART_OBJNAME_AXISGRID:
+    case GR_CHART_OBJNAME_AXISTICK:
+        /* can poke unused axes ok */
+
+        gr_load_save_use_axis_idx = gr_axes_idx_from_external(cp, gr_load_save_objid.no, &gr_load_save_use_axes_idx);
+        break;
+    }
 
     return(1);
 }
@@ -1145,49 +1145,49 @@ gr_construct_save(
     out += strlen(out);
 
     switch(p_con->obj_type)
-        {
-        default:
-            /* unknown structure type */
-            assert(0);
+    {
+    default:
+        /* unknown structure type */
+        assert(0);
+        return(1);
+
+    case GR_STR_NONE:
+        p0 = NULL;
+        break;
+
+    case GR_STR_CHART:
+        assert(!gr_load_save_id_out_pending);
+        assert(cp);
+        p0 = cp;
+        if(!p0)
             return(1);
+        break;
 
-        case GR_STR_NONE:
-            p0 = NULL;
-            break;
+    case GR_STR_AXES:
+        assert(!gr_load_save_id_out_pending);
+        assert(cp);
+        p0 = cp ? &cp->axes[gr_load_save_use_axes_idx] : NULL;
+        if(!p0)
+            return(1);
+        break;
 
-        case GR_STR_CHART:
-            assert(!gr_load_save_id_out_pending);
-            assert(cp);
-            p0 = cp;
-            if(!p0)
-                return(1);
-            break;
+    case GR_STR_AXIS:
+        assert(!gr_load_save_id_out_pending);
+        assert(cp);
+        p0 = cp ? &cp->axes[gr_load_save_use_axes_idx].axis[gr_load_save_use_axis_idx] : NULL;
+        if(!p0)
+            return(1);
+        break;
 
-        case GR_STR_AXES:
-            assert(!gr_load_save_id_out_pending);
-            assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx] : NULL;
-            if(!p0)
-                return(1);
-            break;
-
-        case GR_STR_AXIS:
-            assert(!gr_load_save_id_out_pending);
-            assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx].axis[gr_load_save_use_axis_idx] : NULL;
-            if(!p0)
-                return(1);
-            break;
-
-        case GR_STR_SERIES:
-            assert(!gr_load_save_id_out_pending);
-            assert(cp);
-            assert(gr_load_save_use_series_idx_ok);
-            p0 = (cp && gr_load_save_use_series_idx_ok) ? getserp(cp, gr_load_save_use_series_idx) : NULL;
-            if(!p0)
-                return(1);
-            break;
-        }
+    case GR_STR_SERIES:
+        assert(!gr_load_save_id_out_pending);
+        assert(cp);
+        assert(gr_load_save_use_series_idx_ok);
+        p0 = (cp && gr_load_save_use_series_idx_ok) ? getserp(cp, gr_load_save_use_series_idx) : NULL;
+        if(!p0)
+            return(1);
+        break;
+    }
 
     if(p0)
         p0 = (P_ANY) ((P_U8) p0 + p_con->offset);
@@ -1195,311 +1195,311 @@ gr_construct_save(
     p_arg_format = gr_construct_arg_format[p_con->arg_type_save];
 
     switch(p_con->arg_type_save)
+    {
+    default:
+        /* unknown arg type */
+        assert(0);
+        break;
+
+    case GR_ARG_OBJID:
+    case GR_ARG_OBJID_N:
+    case GR_ARG_OBJID_NN:
+        if(!gr_load_save_id_change(cp, 1)) /* failed with silly series */
+            return(1);
+
+        switch(gr_load_save_id_out_pending)
         {
+        case 0:
+            gr_load_save_id_out_pending = 1;
+
+            out = NULL;
+            break;
+
         default:
-            /* unknown arg type */
-            assert(0);
+        case 1:
+            /* no-one used that id for anything so ignore it, keep this new id pending */
+            out = NULL;
             break;
 
-        case GR_ARG_OBJID:
-        case GR_ARG_OBJID_N:
-        case GR_ARG_OBJID_NN:
-            if(!gr_load_save_id_change(cp, 1)) /* failed with silly series */
-                return(1);
-
-            switch(gr_load_save_id_out_pending)
-                {
-                case 0:
-                    gr_load_save_id_out_pending = 1;
-
-                    out = NULL;
-                    break;
-
-                default:
-                case 1:
-                    /* no-one used that id for anything so ignore it, keep this new id pending */
-                    out = NULL;
-                    break;
-
-                case 2:
-                    gr_load_save_id_out_pending = 0;
-
-                    out += sprintf(out, p_arg_format,
-                                   p_id->name,
-                                   p_id->no,
-                                   p_id->subno);
-                    break;
-                }
-            break;
-
-        case GR_ARG_UBF32:
-            {
-            P_U32 p_u32 = p0;
-
-            assert(p_u32);
-
-            out += sprintf(out, p_arg_format, p_u32[0]);
-            }
-            break;
-
-        case GR_ARG_S32:
-            {
-            P_S32 p_s32 = p0;
-
-            assert(p_s32);
-
-            out += sprintf(out, p_arg_format, p_s32[0]);
-            }
-            break;
-
-        case GR_ARG_S32_2:
-            {
-            P_S32 p_s32 = p0;
-
-            assert(p_s32);
-
-            out += sprintf(out, p_arg_format, p_s32[0], p_s32[1]);
-            }
-            break;
-
-        case GR_ARG_S32_4:
-            {
-            P_S32 p_s32 = p0;
-
-            assert(p_s32);
+        case 2:
+            gr_load_save_id_out_pending = 0;
 
             out += sprintf(out, p_arg_format,
-                           p_s32[0], p_s32[1], p_s32[2], p_s32[3]);
-            }
-            break;
-
-        case GR_ARG_F64_SAVE:
-            {
-            P_F64 p_f64 = p0;
-
-            assert(p_f64);
-
-            out += sprintf(out, p_arg_format, p_f64[0]);
-            }
-            break;
-
-        case GR_ARG_PICT_TRANS:
-            {
-            va_list extra_args;
-
-            va_start(extra_args, contab_ix);
-
-            out += vsprintf(out, p_arg_format, extra_args);
-
-            va_end(extra_args);
-            }
-            break;
-
-        case GR_ARG_FILLSTYLE:
-            {
-            GR_FILLSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_fillstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.fg.manual)
-                out = NULL;
-            else
-                {
-                /* save some bytes for invisible colours */
-                if(!style.fg.visible)
-                    style.fg.red = style.fg.green = style.fg.blue = 0;
-
-                out += sprintf(out, p_arg_format,
-                               style.fg,
-                               gr_fillstyle_translate_pict_for_save(&style), /* use translation */
-                               style.bits);
-                }
-            }
-            break;
-
-        case GR_ARG_LINESTYLE:
-            {
-            GR_LINESTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_linestyle_query(cp, p_id, &style);
-
-            if(using_default || !style.fg.manual)
-                out = NULL;
-            else
-                {
-                /* save some bytes for invisible colours */
-                if(!style.fg.visible)
-                    style.fg.red = style.fg.green = style.fg.blue = 0;
-
-                out += sprintf(out, p_arg_format,
-                               style.fg,
-                               style.pattern,
-                               style.width);
-                }
-            }
-            break;
-
-        case GR_ARG_TEXTSTYLE:
-            {
-            GR_TEXTSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_textstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.fg.manual)
-                out = NULL;
-            else
-                {
-                /* save some bytes for invisible colours */
-                if(!style.fg.visible)
-                    style.fg.red = style.fg.green = style.fg.blue = 0;
-
-                if(!style.bg.visible)
-                    style.bg.red = style.bg.green = style.bg.blue = 0;
-
-                out += sprintf(out, p_arg_format,
-                               style.fg,
-                               style.bg,
-                               style.width,
-                               style.height,
-                               style.szFontName);
-                }
-            }
-            break;
-
-        case GR_ARG_BARCHSTYLE_SAVE:
-            {
-            GR_BARCHSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_barchstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.bits.manual)
-                out = NULL;
-            else
-                out += sprintf(out, p_arg_format,
-                               style.bits,
-                               style.slot_width_percentage);
-            }
-            break;
-
-        case GR_ARG_BARLINECHSTYLE_SAVE:
-            {
-            GR_BARLINECHSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_barlinechstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.bits.manual)
-                out = NULL;
-            else
-                out += sprintf(out, p_arg_format,
-                               style.bits,
-                               style.slot_depth_percentage);
-            }
-            break;
-
-        case GR_ARG_LINECHSTYLE_SAVE:
-            {
-            GR_LINECHSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_linechstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.bits.manual)
-                out = NULL;
-            else
-                out += sprintf(out, p_arg_format,
-                               style.bits,
-                               style.slot_width_percentage);
-            }
-            break;
-
-        case GR_ARG_PIECHDISPLSTYLE_SAVE:
-            {
-            GR_PIECHDISPLSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_piechdisplstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.bits.manual)
-                out = NULL;
-            else
-                out += sprintf(out, p_arg_format,
-                               style.bits,
-                               style.radial_displacement);
-            }
-            break;
-
-        case GR_ARG_PIECHLABELSTYLE:
-            {
-            GR_PIECHLABELSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_piechlabelstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.bits.manual)
-                out = NULL;
-            else
-                out += sprintf(out, p_arg_format,
-                               style.bits);
-            }
-            break;
-
-        case GR_ARG_SCATCHSTYLE_SAVE:
-            {
-            GR_SCATCHSTYLE style;
-            S32 using_default;
-
-            using_default = gr_chart_objid_scatchstyle_query(cp, p_id, &style);
-
-            if(using_default || !style.bits.manual)
-                out = NULL;
-            else
-                out += sprintf(out, p_arg_format,
-                               style.bits,
-                               style.width_percentage);
-            }
-            break;
-
-        case GR_ARG_TEXTPOS:
-            {
-            GR_BOX box;
-
-            gr_text_box_query(cp, p_id->no, &box);
-
-            out += sprintf(out, p_arg_format,
-                           box.x0, box.y0, box.x1, box.y1);
-            }
-            break;
-
-        case GR_ARG_TEXTCONTENTS:
-            {
-            va_list extra_args;
-
-            /* check flush id change */
-            if(gr_load_save_id_out_pending)
-                if((res = gr_save_id_now(cp, f)) < 0)
-                    return(res);
-
-            /* flush construct so far */
-            if((res = file_puts(args, f)) < 0)
-                return(res);
-
-            out = args;
-            *out = NULLCH;
-
-            va_start(extra_args, contab_ix);
-
-            if((res = gr_chart_construct_save_frag_txt(f, va_arg(extra_args, P_U8))) < 0)
-                return(res);
-
-            va_end(extra_args);
-            }
+                           p_id->name,
+                           p_id->no,
+                           p_id->subno);
             break;
         }
+        break;
+
+    case GR_ARG_UBF32:
+        {
+        P_U32 p_u32 = p0;
+
+        assert(p_u32);
+
+        out += sprintf(out, p_arg_format, p_u32[0]);
+        }
+        break;
+
+    case GR_ARG_S32:
+        {
+        P_S32 p_s32 = p0;
+
+        assert(p_s32);
+
+        out += sprintf(out, p_arg_format, p_s32[0]);
+        }
+        break;
+
+    case GR_ARG_S32_2:
+        {
+        P_S32 p_s32 = p0;
+
+        assert(p_s32);
+
+        out += sprintf(out, p_arg_format, p_s32[0], p_s32[1]);
+        }
+        break;
+
+    case GR_ARG_S32_4:
+        {
+        P_S32 p_s32 = p0;
+
+        assert(p_s32);
+
+        out += sprintf(out, p_arg_format,
+                       p_s32[0], p_s32[1], p_s32[2], p_s32[3]);
+        }
+        break;
+
+    case GR_ARG_F64_SAVE:
+        {
+        P_F64 p_f64 = p0;
+
+        assert(p_f64);
+
+        out += sprintf(out, p_arg_format, p_f64[0]);
+        }
+        break;
+
+    case GR_ARG_PICT_TRANS:
+        {
+        va_list extra_args;
+
+        va_start(extra_args, contab_ix);
+
+        out += vsprintf(out, p_arg_format, extra_args);
+
+        va_end(extra_args);
+        }
+        break;
+
+    case GR_ARG_FILLSTYLE:
+        {
+        GR_FILLSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_fillstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.fg.manual)
+            out = NULL;
+        else
+        {
+            /* save some bytes for invisible colours */
+            if(!style.fg.visible)
+                style.fg.red = style.fg.green = style.fg.blue = 0;
+
+            out += sprintf(out, p_arg_format,
+                           style.fg,
+                           gr_fillstyle_translate_pict_for_save(&style), /* use translation */
+                           style.bits);
+        }
+        break;
+        }
+
+    case GR_ARG_LINESTYLE:
+        {
+        GR_LINESTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_linestyle_query(cp, p_id, &style);
+
+        if(using_default || !style.fg.manual)
+            out = NULL;
+        else
+        {
+            /* save some bytes for invisible colours */
+            if(!style.fg.visible)
+                style.fg.red = style.fg.green = style.fg.blue = 0;
+
+            out += sprintf(out, p_arg_format,
+                           style.fg,
+                           style.pattern,
+                           style.width);
+        }
+        }
+        break;
+
+    case GR_ARG_TEXTSTYLE:
+        {
+        GR_TEXTSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_textstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.fg.manual)
+            out = NULL;
+        else
+        {
+            /* save some bytes for invisible colours */
+            if(!style.fg.visible)
+                style.fg.red = style.fg.green = style.fg.blue = 0;
+
+            if(!style.bg.visible)
+                style.bg.red = style.bg.green = style.bg.blue = 0;
+
+            out += sprintf(out, p_arg_format,
+                           style.fg,
+                           style.bg,
+                           style.width,
+                           style.height,
+                           style.szFontName);
+        }
+        break;
+        }
+
+    case GR_ARG_BARCHSTYLE_SAVE:
+        {
+        GR_BARCHSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_barchstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.bits.manual)
+            out = NULL;
+        else
+            out += sprintf(out, p_arg_format,
+                           style.bits,
+                           style.slot_width_percentage);
+        }
+        break;
+
+    case GR_ARG_BARLINECHSTYLE_SAVE:
+        {
+        GR_BARLINECHSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_barlinechstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.bits.manual)
+            out = NULL;
+        else
+            out += sprintf(out, p_arg_format,
+                           style.bits,
+                           style.slot_depth_percentage);
+        }
+        break;
+
+    case GR_ARG_LINECHSTYLE_SAVE:
+        {
+        GR_LINECHSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_linechstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.bits.manual)
+            out = NULL;
+        else
+            out += sprintf(out, p_arg_format,
+                           style.bits,
+                           style.slot_width_percentage);
+        }
+        break;
+
+    case GR_ARG_PIECHDISPLSTYLE_SAVE:
+        {
+        GR_PIECHDISPLSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_piechdisplstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.bits.manual)
+            out = NULL;
+        else
+            out += sprintf(out, p_arg_format,
+                           style.bits,
+                           style.radial_displacement);
+        }
+        break;
+
+    case GR_ARG_PIECHLABELSTYLE:
+        {
+        GR_PIECHLABELSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_piechlabelstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.bits.manual)
+            out = NULL;
+        else
+            out += sprintf(out, p_arg_format,
+                           style.bits);
+        }
+        break;
+
+    case GR_ARG_SCATCHSTYLE_SAVE:
+        {
+        GR_SCATCHSTYLE style;
+        S32 using_default;
+
+        using_default = gr_chart_objid_scatchstyle_query(cp, p_id, &style);
+
+        if(using_default || !style.bits.manual)
+            out = NULL;
+        else
+            out += sprintf(out, p_arg_format,
+                           style.bits,
+                           style.width_percentage);
+        }
+        break;
+
+    case GR_ARG_TEXTPOS:
+        {
+        GR_BOX box;
+
+        gr_text_box_query(cp, p_id->no, &box);
+
+        out += sprintf(out, p_arg_format,
+                       box.x0, box.y0, box.x1, box.y1);
+        }
+        break;
+
+    case GR_ARG_TEXTCONTENTS:
+        {
+        va_list extra_args;
+
+        /* check flush id change */
+        if(gr_load_save_id_out_pending)
+            if((res = gr_save_id_now(cp, f)) < 0)
+                return(res);
+
+        /* flush construct so far */
+        if((res = file_puts(args, f)) < 0)
+            return(res);
+
+        out = args;
+        *out = NULLCH;
+
+        va_start(extra_args, contab_ix);
+
+        if((res = gr_chart_construct_save_frag_txt(f, va_arg(extra_args, P_U8))) < 0)
+            return(res);
+
+        va_end(extra_args);
+        }
+        break;
+    }
 
     /* construct cancelled; don't output to file */
     if(!out)
@@ -1572,15 +1572,15 @@ gr_fillstyle_table_save(
     for(ekey = 1;
         ekey < fillstyle_translation_ekey;
         ekey++)
-        {
+    {
         LIST_ITEMNO key;
 
         for(p_u32 = collect_first(U32, &fillstyle_translation_table.lbr, &key);
             p_u32;
             p_u32 = collect_next( U32, &fillstyle_translation_table.lbr, &key))
-            {
+        {
             if(ekey == *p_u32)
-                {
+            {
                 GR_CACHE_HANDLE cah;
                 U8              namebuffer[BUF_MAX_PATHSTRING];
                 P_U8            picture_name;
@@ -1602,20 +1602,20 @@ gr_fillstyle_table_save(
                 pathelem = file_path_element_first(&path, pathbuffer);
 
                 while(pathelem)
-                    {
+                {
                     U32 pathlen = strlen(pathelem);
 
                     if(0 == _strnicmp(picture_name, pathelem, pathlen))
-                        {
+                    {
                         picture_name += pathlen;
 
                         file_path_element_close(&path);
                         break;
-                        }
+                    }
 
                     pathelem = file_path_element_next(&path);
-                    }
                 }
+                } /*block*/
 
                 if((res = gr_construct_save(cp, f, GR_CON_PICT_TRANS,
                                             /* extra extra */
@@ -1624,9 +1624,9 @@ gr_fillstyle_table_save(
 
                 /* stop this loop, go find another key to look up */
                 break;
-                }
             }
         }
+    }
 
     return(1);
 }
@@ -1674,7 +1674,7 @@ gr_chart_save_plotareas(
     gr_load_save_objid.has_no = 1;
 
     for(plotidx = 0; plotidx < (U32) (cp->d3.bits.use ? GR_CHART_N_PLOTAREAS : 1); ++plotidx)
-        {
+    {
         gr_load_save_objid.no = plotidx;
 
         if((res = gr_save_id(cp, f)) < 0)
@@ -1684,7 +1684,7 @@ gr_chart_save_plotareas(
             return(res);
         if((res = gr_construct_save(cp, f, GR_CON_LINESTYLE)) < 0)
             return(res);
-        }
+    }
 
     return(1);
 }
@@ -1726,10 +1726,10 @@ typedef struct GR_CHART_SAVE_POINT_DATA_LIST
     GR_CONSTRUCT_TABLE_OFFSET contab_ix;
     LIST_ITEMNO               key;
     struct GR_CHART_SAVE_POINT_DATA_LIST_BITS
-        {
+    {
         UBF def_save : 1;
         UBF cur_save : 1;
-        }
+    }
     bits;
 }
 * P_GR_CHART_SAVE_POINT_DATA_LIST;
@@ -1817,14 +1817,14 @@ gr_chart_save_points(
 
     /* loop over points together */
     for(;;)
-        {
+    {
         LIST_ITEMNO key = max_key;
 
         /* loop over all in list to find next common key */
         for(ix = 0; ix < p_data->list_n; ++ix)
-            {
+        {
             if(p_data->list[ix].key != max_key)
-                {
+            {
                 if(((first
                         ? gr_point_list_first
                         : gr_point_list_next )
@@ -1833,8 +1833,8 @@ gr_chart_save_points(
                     p_data->list[ix].key = max_key;
                 else
                     key = MIN(key, p_data->list[ix].key);
-                }
             }
+        }
 
         first = 0;
 
@@ -1849,19 +1849,19 @@ gr_chart_save_points(
 
         /* save out all points which have stopped at this key, restarting all else from this key unless end jammed */
         for(ix = 0; ix < p_data->list_n; ++ix)
-            {
+        {
             if(p_data->list[ix].key != key)
-                {
+            {
                 if(p_data->list[ix].key != max_key)
                     p_data->list[ix].key = key;
-                }
+            }
             else
-                {
+            {
                 if((res = gr_construct_save(cp, f, p_data->list[ix].contab_ix)) < 0)
                     return(res);
-                }
             }
         }
+    }
 
     return(1);
 }
@@ -1923,65 +1923,65 @@ gr_chart_save_series(
     charttype = cp->axes[0].charttype;
 
     switch(charttype)
-        {
-        case GR_CHARTTYPE_PIE:
-        case GR_CHARTTYPE_SCAT:
-            break;
+    {
+    case GR_CHARTTYPE_PIE:
+    case GR_CHARTTYPE_SCAT:
+        break;
 
-        default:
-        case GR_CHARTTYPE_BAR:
-        case GR_CHARTTYPE_LINE:
-            charttype = cp->axes[gr_load_save_use_axes_idx].charttype;
+    default:
+    case GR_CHARTTYPE_BAR:
+    case GR_CHARTTYPE_LINE:
+        charttype = cp->axes[gr_load_save_use_axes_idx].charttype;
 
-            if(charttype != GR_CHARTTYPE_LINE)
-                charttype = GR_CHARTTYPE_BAR;
+        if(charttype != GR_CHARTTYPE_LINE)
+            charttype = GR_CHARTTYPE_BAR;
 
-            if(serp->charttype != GR_CHARTTYPE_NONE)
-                charttype = serp->charttype;
-            break;
-        }
+        if(serp->charttype != GR_CHARTTYPE_NONE)
+            charttype = serp->charttype;
+        break;
+    }
 
     gr_chart_save_points_init_save_bits(&gr_chart_save_point_data);
 
     switch(charttype)
-        {
-        case GR_CHARTTYPE_PIE:
-            if((res = gr_construct_save(cp, f, GR_CON_PIECHDISPLSTYLE)) < 0)
-                return(res);
-            if((res = gr_construct_save(cp, f, GR_CON_PIECHLABELSTYLE)) < 0)
-                return(res);
+    {
+    case GR_CHARTTYPE_PIE:
+        if((res = gr_construct_save(cp, f, GR_CON_PIECHDISPLSTYLE)) < 0)
+            return(res);
+        if((res = gr_construct_save(cp, f, GR_CON_PIECHLABELSTYLE)) < 0)
+            return(res);
 
-            gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_PIECHDISPLSTYLE);
-            gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_PIECHLABELSTYLE);
-            break;
+        gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_PIECHDISPLSTYLE);
+        gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_PIECHLABELSTYLE);
+        break;
 
-        case GR_CHARTTYPE_BAR:
-            if((res = gr_construct_save(cp, f, GR_CON_BARCHSTYLE)) < 0)
-                return(res);
-            if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
-                return(res);
+    case GR_CHARTTYPE_BAR:
+        if((res = gr_construct_save(cp, f, GR_CON_BARCHSTYLE)) < 0)
+            return(res);
+        if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
+            return(res);
 
-            gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_BARCHSTYLE);
-            gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_BARLINECHSTYLE);
-            break;
+        gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_BARCHSTYLE);
+        gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_BARLINECHSTYLE);
+        break;
 
-        case GR_CHARTTYPE_LINE:
-            if((res = gr_construct_save(cp, f, GR_CON_LINECHSTYLE)) < 0)
-                return(res);
-            if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
-                return(res);
+    case GR_CHARTTYPE_LINE:
+        if((res = gr_construct_save(cp, f, GR_CON_LINECHSTYLE)) < 0)
+            return(res);
+        if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
+            return(res);
 
-            gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_LINECHSTYLE);
-            gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_BARLINECHSTYLE);
-            break;
+        gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_LINECHSTYLE);
+        gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_BARLINECHSTYLE);
+        break;
 
-        case GR_CHARTTYPE_SCAT:
-            if((res = gr_construct_save(cp, f, GR_CON_SCATCHSTYLE)) < 0)
-                return(res);
+    case GR_CHARTTYPE_SCAT:
+        if((res = gr_construct_save(cp, f, GR_CON_SCATCHSTYLE)) < 0)
+            return(res);
 
-            gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_SCATCHSTYLE);
-            break;
-        }
+        gr_chart_save_points_set_save_bit(&gr_chart_save_point_data, GR_CON_SCATCHSTYLE);
+        break;
+    }
 
     /*
     drop lines
@@ -1990,36 +1990,36 @@ gr_chart_save_series(
     gr_chart_save_points_init_save_bits(&gr_chart_save_pdrop_data);
 
     switch(charttype)
-        {
-        case GR_CHARTTYPE_PIE:
-            break;
+    {
+    case GR_CHARTTYPE_PIE:
+        break;
 
-        case GR_CHARTTYPE_LINE:
-            gr_load_save_objid.name = GR_CHART_OBJNAME_DROPSER;
+    case GR_CHARTTYPE_LINE:
+        gr_load_save_objid.name = GR_CHART_OBJNAME_DROPSER;
 
-        if((res = gr_save_id(cp, f)) < 0)
-            return(res);
+    if((res = gr_save_id(cp, f)) < 0)
+        return(res);
 
-        if((res = gr_construct_save(cp, f, GR_CON_FILLSTYLE)) < 0)
-            return(res);
+    if((res = gr_construct_save(cp, f, GR_CON_FILLSTYLE)) < 0)
+        return(res);
+    if((res = gr_construct_save(cp, f, GR_CON_LINESTYLE)) < 0)
+        return(res);
+
+    gr_chart_save_points_set_save_bit(&gr_chart_save_pdrop_data, GR_CON_FILLSTYLE);
+    gr_chart_save_points_set_save_bit(&gr_chart_save_pdrop_data, GR_CON_LINESTYLE);
+
+    /* deliberate drop thru ... */
+
+    case GR_CHARTTYPE_SCAT:
+    default:
+    case GR_CHARTTYPE_BAR:
+        gr_load_save_objid.name = GR_CHART_OBJNAME_BESTFITSER;
+
         if((res = gr_construct_save(cp, f, GR_CON_LINESTYLE)) < 0)
             return(res);
 
-        gr_chart_save_points_set_save_bit(&gr_chart_save_pdrop_data, GR_CON_FILLSTYLE);
-        gr_chart_save_points_set_save_bit(&gr_chart_save_pdrop_data, GR_CON_LINESTYLE);
-
-        /* deliberate drop thru ... */
-
-        case GR_CHARTTYPE_SCAT:
-        default:
-        case GR_CHARTTYPE_BAR:
-            gr_load_save_objid.name = GR_CHART_OBJNAME_BESTFITSER;
-
-            if((res = gr_construct_save(cp, f, GR_CON_LINESTYLE)) < 0)
-                return(res);
-
-            break;
-        }
+        break;
+    }
 
     /*
     point data
@@ -2060,7 +2060,7 @@ gr_chart_save_axis(
         return(res);
 
     for(mmix = GR_CHART_AXISTICK_MAJOR; mmix <= GR_CHART_AXISTICK_MINOR; ++mmix)
-        {
+    {
         gr_chart_objid_from_axis_grid(&gr_load_save_objid, mmix);
 
         if((res = gr_save_id(cp, f)) < 0)
@@ -2076,7 +2076,7 @@ gr_chart_save_axis(
 
         if((res = gr_construct_save(cp, f, GR_CON_LINESTYLE)) < 0)
             return(res);
-        }
+    }
 
     return(1);
 }
@@ -2110,49 +2110,49 @@ gr_chart_save_axes(
     charttype = cp->axes[0].charttype;
 
     switch(charttype)
-        {
-        case GR_CHARTTYPE_PIE:
-        case GR_CHARTTYPE_SCAT:
-            break;
+    {
+    case GR_CHARTTYPE_PIE:
+    case GR_CHARTTYPE_SCAT:
+        break;
 
-        default:
-        case GR_CHARTTYPE_BAR:
-        case GR_CHARTTYPE_LINE:
-            charttype = cp->axes[gr_load_save_use_axes_idx].charttype;
+    default:
+    case GR_CHARTTYPE_BAR:
+    case GR_CHARTTYPE_LINE:
+        charttype = cp->axes[gr_load_save_use_axes_idx].charttype;
 
-            if(charttype != GR_CHARTTYPE_LINE)
-                charttype = GR_CHARTTYPE_BAR;
-            break;
-        }
+        if(charttype != GR_CHARTTYPE_LINE)
+            charttype = GR_CHARTTYPE_BAR;
+        break;
+    }
 
     switch(charttype)
-        {
-        case GR_CHARTTYPE_PIE:
-            if((res = gr_construct_save(cp, f, GR_CON_PIECHDISPLSTYLE)) < 0)
-                return(res);
-            if((res = gr_construct_save(cp, f, GR_CON_PIECHLABELSTYLE)) < 0)
-                return(res);
-            break;
+    {
+    case GR_CHARTTYPE_PIE:
+        if((res = gr_construct_save(cp, f, GR_CON_PIECHDISPLSTYLE)) < 0)
+            return(res);
+        if((res = gr_construct_save(cp, f, GR_CON_PIECHLABELSTYLE)) < 0)
+            return(res);
+        break;
 
-        case GR_CHARTTYPE_BAR:
-            if((res = gr_construct_save(cp, f, GR_CON_BARCHSTYLE)) < 0)
-                return(res);
-            if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
-                return(res);
-            break;
+    case GR_CHARTTYPE_BAR:
+        if((res = gr_construct_save(cp, f, GR_CON_BARCHSTYLE)) < 0)
+            return(res);
+        if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
+            return(res);
+        break;
 
-        case GR_CHARTTYPE_LINE:
-            if((res = gr_construct_save(cp, f, GR_CON_LINECHSTYLE)) < 0)
-                return(res);
-            if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
-                return(res);
-            break;
+    case GR_CHARTTYPE_LINE:
+        if((res = gr_construct_save(cp, f, GR_CON_LINECHSTYLE)) < 0)
+            return(res);
+        if((res = gr_construct_save(cp, f, GR_CON_BARLINECHSTYLE)) < 0)
+            return(res);
+        break;
 
-        case GR_CHARTTYPE_SCAT:
-            if((res = gr_construct_save(cp, f, GR_CON_SCATCHSTYLE)) < 0)
-                return(res);
-            break;
-        }
+    case GR_CHARTTYPE_SCAT:
+        if((res = gr_construct_save(cp, f, GR_CON_SCATCHSTYLE)) < 0)
+            return(res);
+        break;
+    }
 
     return(1);
 }
@@ -2169,7 +2169,7 @@ gr_chart_save_texts(
     for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
         t;
         t = collect_next( GR_TEXT, &cp->text.lbr, &key))
-        {
+    {
         if(t->bits.unused)
             continue;
 
@@ -2190,7 +2190,7 @@ gr_chart_save_texts(
 
         if((res = gr_construct_save(cp, f, GR_CON_TEXTSTYLE)) < 0)
             return(res);
-        }
+    }
 
     return(1);
 }
@@ -2227,75 +2227,75 @@ gr_chart_save_internal(
         return(res);
 
     switch(cp->axes[0].charttype)
+    {
+    case GR_CHARTTYPE_PIE:
+        /* save axes 0 info */
+        if((res = gr_chart_save_axes(cp, f, 0)) < 0)
+            return(res);
+
+        /* no axis info to save */
+        break;
+
+    case GR_CHARTTYPE_SCAT:
+        for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
         {
-        case GR_CHARTTYPE_PIE:
-            /* save axes 0 info */
-            if((res = gr_chart_save_axes(cp, f, 0)) < 0)
+            if((res = gr_chart_save_axes(cp, f, axes_idx)) < 0)
                 return(res);
 
-            /* no axis info to save */
-            break;
-
-        case GR_CHARTTYPE_SCAT:
-            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-                {
-                if((res = gr_chart_save_axes(cp, f, axes_idx)) < 0)
+            /* output value X and Y axes */
+            for(axis_idx = 0; axis_idx <= 1; ++axis_idx)
+                if((res = gr_chart_save_axis(cp, f, axes_idx, axis_idx)) < 0)
                     return(res);
-
-                /* output value X and Y axes */
-                for(axis_idx = 0; axis_idx <= 1; ++axis_idx)
-                    if((res = gr_chart_save_axis(cp, f, axes_idx, axis_idx)) < 0)
-                        return(res);
-                }
-            break;
-
-        default:
-        case GR_CHARTTYPE_BAR:
-        case GR_CHARTTYPE_LINE:
-            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-                {
-                if((res = gr_chart_save_axes(cp, f, axes_idx)) < 0)
-                    return(res);
-
-                /* output category X and 1 or 2 value Y axes.
-                 * ignore Z axes as they are currently irrelevant
-                */
-                for(axis_idx = 0; axis_idx <= 1; ++axis_idx)
-                    {
-                    /* it is pointless outputting the second, identical, category axis */
-                    if((axis_idx == 0) && (axes_idx == 1))
-                        continue;
-
-                    if((res = gr_chart_save_axis(cp, f, axes_idx, axis_idx)) < 0)
-                        return(res);
-                    }
-                }
-            break;
         }
+        break;
+
+    default:
+    case GR_CHARTTYPE_BAR:
+    case GR_CHARTTYPE_LINE:
+        for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
+        {
+            if((res = gr_chart_save_axes(cp, f, axes_idx)) < 0)
+                return(res);
+
+            /* output category X and 1 or 2 value Y axes.
+             * ignore Z axes as they are currently irrelevant
+            */
+            for(axis_idx = 0; axis_idx <= 1; ++axis_idx)
+            {
+                /* it is pointless outputting the second, identical, category axis */
+                if((axis_idx == 0) && (axes_idx == 1))
+                    continue;
+
+                if((res = gr_chart_save_axis(cp, f, axes_idx, axis_idx)) < 0)
+                    return(res);
+            }
+        }
+        break;
+    }
 
     switch(cp->axes[0].charttype)
-        {
-        GR_SERIES_IDX series_idx;
+    {
+    GR_SERIES_IDX series_idx;
 
-        case GR_CHARTTYPE_PIE:
-            /* just the one series */
-            series_idx = cp->pie_series_idx;
-            if((res = gr_chart_save_series(cp, f, series_idx)) < 0)
-                return(res);
-            break;
+    case GR_CHARTTYPE_PIE:
+        /* just the one series */
+        series_idx = cp->pie_series_idx;
+        if((res = gr_chart_save_series(cp, f, series_idx)) < 0)
+            return(res);
+        break;
 
-        case GR_CHARTTYPE_SCAT:
-        default:
-        case GR_CHARTTYPE_BAR:
-        case GR_CHARTTYPE_LINE:
-            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-                for(series_idx = cp->axes[axes_idx].series.stt_idx;
-                    series_idx < cp->axes[axes_idx].series.end_idx;
-                    series_idx++)
-                        if((res = gr_chart_save_series(cp, f, series_idx)) < 0)
-                            return(res);
-            break;
-        }
+    case GR_CHARTTYPE_SCAT:
+    default:
+    case GR_CHARTTYPE_BAR:
+    case GR_CHARTTYPE_LINE:
+        for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
+            for(series_idx = cp->axes[axes_idx].series.stt_idx;
+                series_idx < cp->axes[axes_idx].series.end_idx;
+                series_idx++)
+                    if((res = gr_chart_save_series(cp, f, series_idx)) < 0)
+                        return(res);
+        break;
+    }
 
     if((res = gr_chart_save_texts(cp, f)) < 0)
         return(0);
@@ -2339,7 +2339,7 @@ gr_chart_construct_save_frag_txt(
         do  {
             /* found character to replace? */
             if((cvt_ptr = strchr(curptr, construct_cvt[cvt_ix].ch)) != NULL)
-                {
+            {
                 U32 nbytes;
 
                 /* copy good fragment to output stream */
@@ -2357,10 +2357,10 @@ gr_chart_construct_save_frag_txt(
                 out += strlen(out);
 
                 break;
-                }
             }
-        while(--cvt_ix >= 0);
         }
+        while(--cvt_ix >= 0);
+    }
     while(cvt_ptr);
 
     /* copy tail fragment */
@@ -2388,7 +2388,7 @@ gr_chart_construct_decode_frag_txt(
         do  {
             /* found string to replace? */
             if((cvt_ptr = strstr(curptr, construct_cvt[cvt_ix].str)) != NULL)
-                {
+            {
                 U32 nbytes;
 
                 /* copy good fragment down to output pos */
@@ -2403,10 +2403,10 @@ gr_chart_construct_decode_frag_txt(
                 /* put replacement character in output */
                 *out++ = construct_cvt[cvt_ix].ch;
                 break;
-                }
             }
-        while(--cvt_ix >= 0);
         }
+        while(--cvt_ix >= 0);
+    }
     while(cvt_ptr);
 
     /* move tail fragment down INCLUDING NULLCH TERMINATOR */
@@ -2487,45 +2487,45 @@ gr_construct_load_this(
     p_con = &gr_construct_table[contab_ix];
 
     switch(p_con->obj_type)
-        {
-        default:
-            /* unknown structure type */
-            assert(0);
+    {
+    default:
+        /* unknown structure type */
+        assert(0);
+        return(1);
+
+    case GR_STR_NONE:
+        p0 = NULL;
+        break;
+
+    case GR_STR_CHART:
+        assert(cp);
+        p0 = cp;
+        if(!p0)
             return(1);
+        break;
 
-        case GR_STR_NONE:
-            p0 = NULL;
-            break;
+    case GR_STR_AXES:
+        assert(cp);
+        p0 = cp ? &cp->axes[gr_load_save_use_axes_idx] : NULL;
+        if(!p0)
+            return(1);
+        break;
 
-        case GR_STR_CHART:
-            assert(cp);
-            p0 = cp;
-            if(!p0)
-                return(1);
-            break;
+    case GR_STR_AXIS:
+        assert(cp);
+        p0 = cp ? &cp->axes[gr_load_save_use_axes_idx].axis[gr_load_save_use_axis_idx] : NULL;
+        if(!p0)
+            return(1);
+        break;
 
-        case GR_STR_AXES:
-            assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx] : NULL;
-            if(!p0)
-                return(1);
-            break;
-
-        case GR_STR_AXIS:
-            assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx].axis[gr_load_save_use_axis_idx] : NULL;
-            if(!p0)
-                return(1);
-            break;
-
-        case GR_STR_SERIES:
-            assert(cp);
-            assert(gr_load_save_use_series_idx_ok);
-            p0 = (cp && gr_load_save_use_series_idx_ok) ? getserp(cp, gr_load_save_use_series_idx) : NULL;
-            if(!p0)
-                return(1);
-            break;
-        }
+    case GR_STR_SERIES:
+        assert(cp);
+        assert(gr_load_save_use_series_idx_ok);
+        p0 = (cp && gr_load_save_use_series_idx_ok) ? getserp(cp, gr_load_save_use_series_idx) : NULL;
+        if(!p0)
+            return(1);
+        break;
+    }
 
     if(p0)
         p0 = (P_ANY) ((P_U8) p0 + p_con->offset);
@@ -2539,228 +2539,228 @@ gr_construct_load_this(
     p_arg_format = gr_construct_arg_format[p_con->arg_type_load];
 
     switch(p_con->arg_type_load)
+    {
+    default:
+        /* unknown arg type */
+        assert(0);
+        break;
+
+    case GR_ARG_OBJID:
+    case GR_ARG_OBJID_N:
+    case GR_ARG_OBJID_NN:
         {
-        default:
-            /* unknown arg type */
-            assert(0);
-            break;
+        U16 name  = U16_MAX;
+        U16 no    = U16_MAX;
+        U16 subno = U16_MAX;
 
-        case GR_ARG_OBJID:
-        case GR_ARG_OBJID_N:
-        case GR_ARG_OBJID_NN:
+        consume(int, sscanf(args, p_arg_format,
+               &name, &no, &subno));
+
+        gr_chart_objid_clear(p_id);
+
+        if(name != U16_MAX)
+        {
+            p_id->name = name;
+
+            if(no != U16_MAX)
             {
-            U16 name  = U16_MAX;
-            U16 no    = U16_MAX;
-            U16 subno = U16_MAX;
+                p_id->no     = no;
+                p_id->has_no = 1;
 
-            consume(int, sscanf(args, p_arg_format,
-                   &name, &no, &subno));
-
-            gr_chart_objid_clear(p_id);
-
-            if(name != U16_MAX)
+                if(subno != U16_MAX)
                 {
-                p_id->name = name;
-
-                if(no != U16_MAX)
-                    {
-                    p_id->no     = no;
-                    p_id->has_no = 1;
-
-                    if(subno != U16_MAX)
-                        {
-                        p_id->subno     = subno;
-                        p_id->has_subno = 1;
-                        }
-                    }
+                    p_id->subno     = subno;
+                    p_id->has_subno = 1;
                 }
-
-            res = gr_load_save_id_change(cp, 0);
             }
-            break;
-
-        case GR_ARG_S32_4:
-            p3 = (P_S32) p0 + 3;
-            p2 = (P_S32) p0 + 2;
-
-            /* deliberate drop thru ... */
-
-        case GR_ARG_S32_2:
-            p1 = (P_S32) p0 + 1;
-
-            /* deliberate drop thru ... */
-
-        case GR_ARG_UBF32:
-        case GR_ARG_S32:
-        case GR_ARG_F64_LOAD:
-            /* scan up to 4 arguments in at 32-bit intervals, directly poking structure */
-            consume(int, sscanf(args, p_arg_format, p0, p1, p2, p3));
-            break;
-
-        case GR_ARG_PICT_TRANS:
-            {
-            U8  filename[BUF_MAX_PATHSTRING];
-            U32 ekey;
-
-            consume(int, sscanf(args, p_arg_format,
-                   &ekey,
-                   &filename[0]));
-
-            res = gr_fillstyle_create_pict_for_load(cp, ekey, filename);
-            }
-            break;
-
-        case GR_ARG_FILLSTYLE:
-            {
-            GR_FILLSTYLE style;
-
-            gr_chart_objid_fillstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.fg,
-                   &style.pattern,
-                   &style.bits));
-
-            gr_fillstyle_translate_pict_for_load(&style); /* translation from PTE to cah */
-
-            res = gr_chart_objid_fillstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_LINESTYLE:
-            {
-            GR_LINESTYLE style;
-
-            gr_chart_objid_linestyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.fg,
-                   &style.pattern,
-                   &style.width));
-
-            res = gr_chart_objid_linestyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_TEXTSTYLE:
-            {
-            GR_TEXTSTYLE style;
-
-            gr_chart_objid_textstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.fg,
-                   &style.bg,
-                   &style.width,
-                   &style.height,
-                   &style.szFontName[0]));
-
-            res = gr_chart_objid_textstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_BARCHSTYLE_LOAD:
-            {
-            GR_BARCHSTYLE style;
-
-            gr_chart_objid_barchstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.bits,
-                   &style.slot_width_percentage));
-
-            res = gr_chart_objid_barchstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_BARLINECHSTYLE_LOAD:
-            {
-            GR_BARLINECHSTYLE style;
-
-            gr_chart_objid_barlinechstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.bits,
-                   &style.slot_depth_percentage));
-
-            res = gr_chart_objid_barlinechstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_LINECHSTYLE_LOAD:
-            {
-            GR_LINECHSTYLE style;
-
-            gr_chart_objid_linechstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.bits,
-                   &style.slot_width_percentage));
-
-            res = gr_chart_objid_linechstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_PIECHDISPLSTYLE_LOAD:
-            {
-            GR_PIECHDISPLSTYLE style;
-
-            gr_chart_objid_piechdisplstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.bits,
-                   &style.radial_displacement));
-
-            res = gr_chart_objid_piechdisplstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_PIECHLABELSTYLE:
-            {
-            GR_PIECHLABELSTYLE style;
-
-            gr_chart_objid_piechlabelstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.bits));
-
-            res = gr_chart_objid_piechlabelstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_SCATCHSTYLE_LOAD:
-            {
-            GR_SCATCHSTYLE style;
-
-            gr_chart_objid_scatchstyle_query(cp, p_id, &style);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &style.bits,
-                   &style.width_percentage));
-
-            res = gr_chart_objid_scatchstyle_set(cp, p_id, &style);
-            }
-            break;
-
-        case GR_ARG_TEXTPOS:
-            {
-            GR_BOX box;
-
-            gr_text_box_query(cp, p_id->no, &box);
-
-            consume(int, sscanf(args, p_arg_format,
-                   &box.x0, &box.y0, &box.x1, &box.y1));
-
-            res = gr_text_box_set(cp, p_id->no, &box);
-            }
-            break;
-
-        case GR_ARG_TEXTCONTENTS:
-            gr_chart_construct_decode_frag_txt(args);
-
-            res = gr_text_new(cp, p_id->no, args, NULL);
-            break;
         }
+
+        res = gr_load_save_id_change(cp, 0);
+        }
+        break;
+
+    case GR_ARG_S32_4:
+        p3 = (P_S32) p0 + 3;
+        p2 = (P_S32) p0 + 2;
+
+        /* deliberate drop thru ... */
+
+    case GR_ARG_S32_2:
+        p1 = (P_S32) p0 + 1;
+
+        /* deliberate drop thru ... */
+
+    case GR_ARG_UBF32:
+    case GR_ARG_S32:
+    case GR_ARG_F64_LOAD:
+        /* scan up to 4 arguments in at 32-bit intervals, directly poking structure */
+        consume(int, sscanf(args, p_arg_format, p0, p1, p2, p3));
+        break;
+
+    case GR_ARG_PICT_TRANS:
+        {
+        U8  filename[BUF_MAX_PATHSTRING];
+        U32 ekey;
+
+        consume(int, sscanf(args, p_arg_format,
+               &ekey,
+               &filename[0]));
+
+        res = gr_fillstyle_create_pict_for_load(cp, ekey, filename);
+        }
+        break;
+
+    case GR_ARG_FILLSTYLE:
+        {
+        GR_FILLSTYLE style;
+
+        gr_chart_objid_fillstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.fg,
+               &style.pattern,
+               &style.bits));
+
+        gr_fillstyle_translate_pict_for_load(&style); /* translation from PTE to cah */
+
+        res = gr_chart_objid_fillstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_LINESTYLE:
+        {
+        GR_LINESTYLE style;
+
+        gr_chart_objid_linestyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.fg,
+               &style.pattern,
+               &style.width));
+
+        res = gr_chart_objid_linestyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_TEXTSTYLE:
+        {
+        GR_TEXTSTYLE style;
+
+        gr_chart_objid_textstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.fg,
+               &style.bg,
+               &style.width,
+               &style.height,
+               &style.szFontName[0]));
+
+        res = gr_chart_objid_textstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_BARCHSTYLE_LOAD:
+        {
+        GR_BARCHSTYLE style;
+
+        gr_chart_objid_barchstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.bits,
+               &style.slot_width_percentage));
+
+        res = gr_chart_objid_barchstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_BARLINECHSTYLE_LOAD:
+        {
+        GR_BARLINECHSTYLE style;
+
+        gr_chart_objid_barlinechstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.bits,
+               &style.slot_depth_percentage));
+
+        res = gr_chart_objid_barlinechstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_LINECHSTYLE_LOAD:
+        {
+        GR_LINECHSTYLE style;
+
+        gr_chart_objid_linechstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.bits,
+               &style.slot_width_percentage));
+
+        res = gr_chart_objid_linechstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_PIECHDISPLSTYLE_LOAD:
+        {
+        GR_PIECHDISPLSTYLE style;
+
+        gr_chart_objid_piechdisplstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.bits,
+               &style.radial_displacement));
+
+        res = gr_chart_objid_piechdisplstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_PIECHLABELSTYLE:
+        {
+        GR_PIECHLABELSTYLE style;
+
+        gr_chart_objid_piechlabelstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.bits));
+
+        res = gr_chart_objid_piechlabelstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_SCATCHSTYLE_LOAD:
+        {
+        GR_SCATCHSTYLE style;
+
+        gr_chart_objid_scatchstyle_query(cp, p_id, &style);
+
+        consume(int, sscanf(args, p_arg_format,
+               &style.bits,
+               &style.width_percentage));
+
+        res = gr_chart_objid_scatchstyle_set(cp, p_id, &style);
+        }
+        break;
+
+    case GR_ARG_TEXTPOS:
+        {
+        GR_BOX box;
+
+        gr_text_box_query(cp, p_id->no, &box);
+
+        consume(int, sscanf(args, p_arg_format,
+               &box.x0, &box.y0, &box.x1, &box.y1));
+
+        res = gr_text_box_set(cp, p_id->no, &box);
+        }
+        break;
+
+    case GR_ARG_TEXTCONTENTS:
+        gr_chart_construct_decode_frag_txt(args);
+
+        res = gr_text_new(cp, p_id->no, args, NULL);
+        break;
+    }
 
     return(res);
 }
@@ -2778,7 +2778,7 @@ gr_construct_load(
     if(*args == '%')
     if((args = strchr(args + 1, ',')) != NULL)
     if((args = strchr(args + 1, ',')) != NULL)
-        {
+    {
         /* step past construct, leadin */
         U32 con_len = ++args - ++in;
 
@@ -2788,27 +2788,27 @@ gr_construct_load(
 
         /* NB --p_con kosher */
         while(--p_con >= i_p_con)
-            {
+        {
             if(0 == strncmp(in, p_con->txt_id, con_len))
                 return(gr_construct_load_this(cp, args, (GR_CONSTRUCT_TABLE_OFFSET) (p_con - i_p_con)));
-            }
+        }
 
         if(gr_ext_contab && (0 != gr_ext_contab_last_ix))
-            {
+        {
             /* lookup construct in external table, throw away if unmatched */
             i_p_con = gr_ext_contab;
             p_con   = i_p_con + gr_ext_contab_last_ix;
 
             while(--p_con >= i_p_con)
-                {
+            {
                 if(0 == strncmp(in, p_con->txt_id, con_len))
                     return(gr_ext_construct_load_this(cp->core.ch, args, p_con - i_p_con));
-                }
             }
+        }
 
         /* unmatched */
         return(1);
-        }
+    }
 
     /* ignore line anyway */
     return(1);
@@ -2863,16 +2863,16 @@ gr_chart_construct_gets(
 
     do  {
         if((res = gr_chart_construct_getc(p_info)) == EOF)
-            {
+        {
             /* EOF terminating a line is ok normally, especially if chars read */
             if(count > 0)
                 return(count);
 
             return(EOF);
-            }
+        }
 
         if(res == '\x0A')
-            {
+        {
             /* got line terminator, read ahead */
             if((newres = gr_chart_construct_getc(p_info)) == EOF)
                 /* that EOF will terminate next line immediately */
@@ -2881,11 +2881,11 @@ gr_chart_construct_gets(
             /* sod alternate line terminators */
             gr_chart_construct_ungetc(p_info);
             break;
-            }
+        }
 
         buffer[count++] = res;
         buffer[count  ] = NULLCH; /* keep terminated */
-        }
+    }
     while(count < bufsize);
 
     return(count);
@@ -2904,14 +2904,14 @@ gr_chart_construct_tagstrip_process(
     assert(cp);
 
     while((res = gr_chart_construct_gets(p_info, args, sizeof(args)-1)) != EOF)
-        {
+    {
         if((res = gr_construct_load(cp, args)) < 0)
             return(res);
-        }
+    }
 
     /* SKS after 4.12 26mar92 - end of that lot, post-process overlay chart to preserve styles */
     if(cp->axes_idx_max > 0)
-        {
+    {
         GR_ESERIES_NO first_overlay_series;
 
         first_overlay_series = cp->axes[1].series.start_series;
@@ -2919,7 +2919,7 @@ gr_chart_construct_tagstrip_process(
             first_overlay_series = 0 - first_overlay_series;
 
         if(first_overlay_series /*>= 0*/ && (first_overlay_series <= cp->series.n_defined))
-            {
+        {
             /* split between axes 0 and 1 sets */
             GR_SERIES_IDX first_overlay_seridx;
 
@@ -2934,8 +2934,8 @@ gr_chart_construct_tagstrip_process(
             cp->axes[1].cache.n_series = cp->axes[1].series.end_idx - cp->axes[1].series.stt_idx;
 
             cp->series.n = cp->axes[0].cache.n_series + cp->axes[1].cache.n_series;
-            }
         }
+    }
 
     return(1);
 }

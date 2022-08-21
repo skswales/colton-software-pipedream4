@@ -95,102 +95,102 @@ grub_next(
     RPNSTATE cur_rpn;
 
     switch(p_ev_cell->parms.type)
-        {
-        case EVS_CON_DATA:
-            rpn_start = at_pos = NULL;
-            res = RPN_FRM_END;
-            break;
-        case EVS_CON_RPN:
-            rpn_start = p_ev_cell->rpn.con.rpn_str;
-            res = -1;
-            break;
-        case EVS_VAR_RPN:
-            rpn_start = p_ev_cell->rpn.var.rpn_str;
-            res = -1;
-            break;
-        }
+    {
+    case EVS_CON_DATA:
+        rpn_start = at_pos = NULL;
+        res = RPN_FRM_END;
+        break;
+    case EVS_CON_RPN:
+        rpn_start = p_ev_cell->rpn.con.rpn_str;
+        res = -1;
+        break;
+    case EVS_VAR_RPN:
+        rpn_start = p_ev_cell->rpn.var.rpn_str;
+        res = -1;
+        break;
+    }
 
     if(rpn_start)
-        {
+    {
         cur_rpn.pos = rpn_start + grubp->offset;
         rpn_check(&cur_rpn);
         data_offset = 1;
         nodep = 0;
-        }
+    }
 
     while(res < 0)
-        {
+    {
         at_pos = cur_rpn.pos;
 
         switch(cur_rpn.num)
-            {
-            case RPN_DAT_SLR:
-            case RPN_DAT_RANGE:
-            case RPN_DAT_NAME:
-                read_cur_sym(&cur_rpn, &grubp->data);
-                if(nodep)
-                    res = RPN_FRM_NODEP;
-                else
-                    res = cur_rpn.num;
-                break;
+        {
+        case RPN_DAT_SLR:
+        case RPN_DAT_RANGE:
+        case RPN_DAT_NAME:
+            read_cur_sym(&cur_rpn, &grubp->data);
+            if(nodep)
+                res = RPN_FRM_NODEP;
+            else
+                res = cur_rpn.num;
+            break;
 
-            /* make sure we grub about in the
-            condition string as well */
-            case RPN_FRM_COND:
-                cur_rpn.pos += 1 + sizeof(S16);
-                rpn_check(&cur_rpn);
-                grubp->in_cond = 1;
-                continue;
+        /* make sure we grub about in the
+        condition string as well */
+        case RPN_FRM_COND:
+            cur_rpn.pos += 1 + sizeof(S16);
+            rpn_check(&cur_rpn);
+            grubp->in_cond = 1;
+            continue;
 
-            /* next data item to be ignored for dependencies */
-            case RPN_FRM_NODEP:
-                /* set nodep flag */
-                nodep = 1;
-                break;
+        /* next data item to be ignored for dependencies */
+        case RPN_FRM_NODEP:
+            /* set nodep flag */
+            nodep = 1;
+            break;
 
-            /* return movie functions as
-             * slr dependencies
+        /* return movie functions as
+         * slr dependencies
+         */
+        case RPN_FNV_COL:
+        case RPN_FNV_ROW:
+        case RPN_FNV_COLS:
+        case RPN_FNV_ROWS:
+            /* if it has an argument, ignore since
+             * this contains the dependency - already returned
+             * in RPN_DAT_SLR case above
              */
-            case RPN_FNV_COL:
-            case RPN_FNV_ROW:
-            case RPN_FNV_COLS:
-            case RPN_FNV_ROWS:
-                /* if it has an argument, ignore since
-                 * this contains the dependency - already returned
-                 * in RPN_DAT_SLR case above
-                 */
-                if(!*(cur_rpn.pos + 1))
-                    {
-                    /* return self-reference */
-                    grubp->data.arg.slr = grubp->slr;
-                    grubp->data.did_num = RPN_DAT_SLR;
-                    res = cur_rpn.num;
-                    at_pos = NULL;
-                    }
-                break;
-
-            /* custom functions */
-            case RPN_FNM_CUSTOMCALL:
-            case RPN_FNM_FUNCTION:
-                read_nameid(&grubp->data.arg.nameid, cur_rpn.pos + 2);
-                res = grubp->data.did_num = cur_rpn.num;
-                data_offset = 2;
-                break;
-
-            case RPN_FRM_END:
-                if(!grubp->in_cond)
-                    res = RPN_FRM_END;
-                else
-                    grubp->in_cond = 0;
-                break;
+            if(!*(cur_rpn.pos + 1))
+            {
+                /* return self-reference */
+                grubp->data.arg.slr = grubp->slr;
+                grubp->data.did_num = RPN_DAT_SLR;
+                res = cur_rpn.num;
+                at_pos = NULL;
             }
+            break;
+
+        /* custom functions */
+        case RPN_FNM_CUSTOMCALL:
+        case RPN_FNM_FUNCTION:
+            read_nameid(&grubp->data.arg.nameid, cur_rpn.pos + 2);
+            res = grubp->data.did_num = cur_rpn.num;
+            data_offset = 2;
+            break;
+
+        case RPN_FRM_END:
+            if(!grubp->in_cond)
+                res = RPN_FRM_END;
+            else
+                grubp->in_cond = 0;
+            break;
+        }
 
         rpn_skip(&cur_rpn);
-        }
+    }
 
     /* set current position in rpn string */
     if(rpn_start)
-        {
+    {
         grubp->offset = cur_rpn.pos - rpn_start;
 
         /* set position of data item */
@@ -198,7 +198,7 @@ grub_next(
             grubp->byoffset = at_pos - rpn_start + data_offset;
         else
             grubp->byoffset = -1;
-        }
+    }
 
     return(res);
 }
@@ -218,19 +218,19 @@ ev_len(
     len = 0;
 
     switch(p_ev_cell->parms.type)
-        {
-        case EVS_CON_DATA:
-            len = offsetof(EV_CELL, parms) + sizeof(EV_PARMS);
-            break;
-        case EVS_CON_RPN:
-            len = offsetof(EV_CELL, rpn.con.rpn_str) +
-                  len_rpn(p_ev_cell->rpn.con.rpn_str);
-            break;
-        case EVS_VAR_RPN:
-            len = offsetof(EV_CELL, rpn.var.rpn_str) +
-                  len_rpn(p_ev_cell->rpn.var.rpn_str);
-            break;
-        }
+    {
+    case EVS_CON_DATA:
+        len = offsetof(EV_CELL, parms) + sizeof(EV_PARMS);
+        break;
+    case EVS_CON_RPN:
+        len = offsetof(EV_CELL, rpn.con.rpn_str) +
+              len_rpn(p_ev_cell->rpn.con.rpn_str);
+        break;
+    case EVS_VAR_RPN:
+        len = offsetof(EV_CELL, rpn.var.rpn_str) +
+              len_rpn(p_ev_cell->rpn.var.rpn_str);
+        break;
+    }
 
     return(len);
 }
@@ -251,61 +251,61 @@ ev_rpn_adjust_refs(
     _InRef_     PC_UREF_PARM upp)
 {
     switch(p_ev_cell->parms.type)
+    {
+    case EVS_CON_DATA:
+    case EVS_CON_RPN:
+        break;
+
+    case EVS_VAR_RPN:
         {
-        case EVS_CON_DATA:
-        case EVS_CON_RPN:
-            break;
+        RPNSTATE cur_rpn;
+        S32 in_cond = 0;
 
-        case EVS_VAR_RPN:
+        cur_rpn.pos = p_ev_cell->rpn.var.rpn_str;
+
+        rpn_check(&cur_rpn);
+
+        while(cur_rpn.num != RPN_FRM_END || in_cond)
+        {
+            switch(cur_rpn.num)
             {
-            RPNSTATE cur_rpn;
-            S32 in_cond = 0;
+            case RPN_FRM_END:
+                in_cond = 0;
+                break;
 
-            cur_rpn.pos = p_ev_cell->rpn.var.rpn_str;
+            case RPN_FRM_COND:
+                cur_rpn.pos += 1 + sizeof(S16);
+                rpn_check(&cur_rpn);
+                in_cond = 1;
+                continue;
 
-            rpn_check(&cur_rpn);
-
-            while(cur_rpn.num != RPN_FRM_END || in_cond)
+            case RPN_DAT_SLR:
                 {
-                switch(cur_rpn.num)
-                    {
-                    case RPN_FRM_END:
-                        in_cond = 0;
-                        break;
+                P_U8 p_u8 = de_const_cast(P_U8, cur_rpn.pos + 1);
+                EV_SLR slr;
 
-                    case RPN_FRM_COND:
-                        cur_rpn.pos += 1 + sizeof(S16);
-                        rpn_check(&cur_rpn);
-                        in_cond = 1;
-                        continue;
+                read_slr    (&slr, p_u8);
+                ev_match_slr(&slr, upp);
+                write_slr   (&slr, p_u8);
+                break;
+                }
 
-                    case RPN_DAT_SLR:
-                        {
-                        P_U8 p_u8 = de_const_cast(P_U8, cur_rpn.pos + 1);
-                        EV_SLR slr;
+            case RPN_DAT_RANGE:
+                {
+                P_U8 p_u8 = de_const_cast(P_U8, cur_rpn.pos + 1);
+                EV_RANGE rng;
 
-                        read_slr    (&slr, p_u8);
-                        ev_match_slr(&slr, upp);
-                        write_slr   (&slr, p_u8);
-                        break;
-                        }
-
-                    case RPN_DAT_RANGE:
-                        {
-                        P_U8 p_u8 = de_const_cast(P_U8, cur_rpn.pos + 1);
-                        EV_RANGE rng;
-
-                        read_range  (&rng, p_u8);
-                        ev_match_rng(&rng, upp);
-                        write_rng   (&rng, p_u8);
-                        break;
-                        }
-                    }
-
-                rpn_skip(&cur_rpn);
+                read_range  (&rng, p_u8);
+                ev_match_rng(&rng, upp);
+                write_rng   (&rng, p_u8);
+                break;
                 }
             }
+
+            rpn_skip(&cur_rpn);
         }
+        }
+    }
 }
 
 /******************************************************************************
@@ -352,47 +352,47 @@ read_cur_sym(
     PC_U8 p_rpn_content = rpnsp->pos + sizeof32(EV_IDNO);
 
     switch(p_ev_data->did_num = rpnsp->num)
-        {
-        case RPN_DAT_REAL:
-            read_from_rpn(&p_ev_data->arg.fp, p_rpn_content, sizeof32(F64));
-            return;
+    {
+    case RPN_DAT_REAL:
+        read_from_rpn(&p_ev_data->arg.fp, p_rpn_content, sizeof32(F64));
+        return;
 
-        case RPN_DAT_WORD8:
-            p_ev_data->arg.integer = (S32) *p_rpn_content;
-            return;
+    case RPN_DAT_WORD8:
+        p_ev_data->arg.integer = (S32) *p_rpn_content;
+        return;
 
-        case RPN_DAT_WORD16:
-            p_ev_data->arg.integer = (S32) readval_S16(p_rpn_content);
-            return;
+    case RPN_DAT_WORD16:
+        p_ev_data->arg.integer = (S32) readval_S16(p_rpn_content);
+        return;
 
-        case RPN_DAT_WORD32:
-            read_from_rpn(&p_ev_data->arg.integer, p_rpn_content, sizeof32(S32));
-            return;
+    case RPN_DAT_WORD32:
+        read_from_rpn(&p_ev_data->arg.integer, p_rpn_content, sizeof32(S32));
+        return;
 
-        case RPN_DAT_SLR:
-            read_slr(&p_ev_data->arg.slr, p_rpn_content);
-            return;
+    case RPN_DAT_SLR:
+        read_slr(&p_ev_data->arg.slr, p_rpn_content);
+        return;
 
-        case RPN_DAT_RANGE:
-            read_range(&p_ev_data->arg.range, p_rpn_content);
-            return;
+    case RPN_DAT_RANGE:
+        read_range(&p_ev_data->arg.range, p_rpn_content);
+        return;
 
-        case RPN_DAT_STRING:
-            p_ev_data->arg.string.uchars = p_rpn_content + sizeof(S16);
-            p_ev_data->arg.string.size = ustrlen32(p_ev_data->arg.string.uchars);
-            return;
+    case RPN_DAT_STRING:
+        p_ev_data->arg.string.uchars = p_rpn_content + sizeof(S16);
+        p_ev_data->arg.string.size = ustrlen32(p_ev_data->arg.string.uchars);
+        return;
 
-        case RPN_DAT_DATE:
-            read_date(&p_ev_data->arg.ev_date, p_rpn_content);
-            return;
+    case RPN_DAT_DATE:
+        read_date(&p_ev_data->arg.ev_date, p_rpn_content);
+        return;
 
-        case RPN_DAT_NAME:
-            read_nameid(&p_ev_data->arg.nameid, p_rpn_content);
-            return;
+    case RPN_DAT_NAME:
+        read_nameid(&p_ev_data->arg.nameid, p_rpn_content);
+        return;
 
-        case RPN_DAT_BLANK:
-            return;
-        }
+    case RPN_DAT_BLANK:
+        return;
+    }
 }
 
 /******************************************************************************
@@ -508,106 +508,106 @@ rpn_skip(
     P_RPNSTATE rpnsp)
 {
     if(rpnsp->num != -1)
-        {
+    {
         /* work out how to skip symbol */
         ++rpnsp->pos;
 
         switch(rpn_table[rpnsp->num].rpn_type)
+        {
+        case RPN_DAT:
+            switch(rpnsp->num)
             {
-            case RPN_DAT:
-                switch(rpnsp->num)
-                    {
-                    case RPN_DAT_REAL:
-                        rpnsp->pos += sizeof(F64);
-                        break;
-                    case RPN_DAT_WORD8:
-                        rpnsp->pos += sizeof(char);
-                        break;
-                    case RPN_DAT_WORD16:
-                        rpnsp->pos += sizeof(S16);
-                        break;
-                    case RPN_DAT_WORD32:
-                        rpnsp->pos += sizeof(S32);
-                        break;
-                    case RPN_DAT_SLR:
-                        rpnsp->pos += PACKED_SLRSIZE;
-                        break;
-                    case RPN_DAT_RANGE:
-                        rpnsp->pos += PACKED_RNGSIZE;
-                        break;
-                    case RPN_DAT_STRING:
-                        rpnsp->pos += readval_S16(rpnsp->pos);
-                        break;
-                    case RPN_DAT_DATE:
-                        rpnsp->pos += PACKED_DATESIZE;
-                        break;
-                    case RPN_DAT_NAME:
-                        rpnsp->pos += sizeof(EV_NAMEID);
-                        break;
-
-                    case RPN_DAT_BLANK:
-                    default:
-                        break;
-                    }
+            case RPN_DAT_REAL:
+                rpnsp->pos += sizeof(F64);
+                break;
+            case RPN_DAT_WORD8:
+                rpnsp->pos += sizeof(char);
+                break;
+            case RPN_DAT_WORD16:
+                rpnsp->pos += sizeof(S16);
+                break;
+            case RPN_DAT_WORD32:
+                rpnsp->pos += sizeof(S32);
+                break;
+            case RPN_DAT_SLR:
+                rpnsp->pos += PACKED_SLRSIZE;
+                break;
+            case RPN_DAT_RANGE:
+                rpnsp->pos += PACKED_RNGSIZE;
+                break;
+            case RPN_DAT_STRING:
+                rpnsp->pos += readval_S16(rpnsp->pos);
+                break;
+            case RPN_DAT_DATE:
+                rpnsp->pos += PACKED_DATESIZE;
+                break;
+            case RPN_DAT_NAME:
+                rpnsp->pos += sizeof(EV_NAMEID);
                 break;
 
-            case RPN_FRM:
-                switch(rpnsp->num)
-                    {
-                    case RPN_FRM_SPACE:
-                    case RPN_FRM_RETURN:
-                        /* skip cr/space argument */
-                        rpnsp->pos += 1;
-                        break;
-                    case RPN_FRM_COND:
-                        /* skip entire conditional rpn */
-                        rpnsp->pos += readval_S16(rpnsp->pos);
-                        break;
-                    case RPN_FRM_SKIPTRUE:
-                    case RPN_FRM_SKIPFALSE:
-                        /* skip skip argument */
-                        rpnsp->pos += 1 + sizeof(S16);
-                        break;
-                    case RPN_FRM_NODEP:
-                    default:
-                        break;
-                    }
-                break;
-
-            case RPN_LCL:
-                while(*rpnsp->pos)
-                    ++rpnsp->pos;
-                ++rpnsp->pos;
-                break;
-
-            case RPN_UOP:
-            case RPN_BOP:
-            case RPN_REL:
-                break;
-
-            case RPN_FN0:
-            case RPN_FNF:
-                break;
-
-            case RPN_FNV:
-                /* skip argument count */
-                ++rpnsp->pos;
-                break;
-
-            case RPN_FNM:
-                /* skip argument count and custom id */
-                rpnsp->pos += (1 + sizeof(EV_NAMEID));
-                break;
-
-            case RPN_FNA:
-                /* skip x, y counts */
-                rpnsp->pos += sizeof(S32) * 2;
-                break;
-
+            case RPN_DAT_BLANK:
             default:
                 break;
             }
+            break;
+
+        case RPN_FRM:
+            switch(rpnsp->num)
+            {
+            case RPN_FRM_SPACE:
+            case RPN_FRM_RETURN:
+                /* skip cr/space argument */
+                rpnsp->pos += 1;
+                break;
+            case RPN_FRM_COND:
+                /* skip entire conditional rpn */
+                rpnsp->pos += readval_S16(rpnsp->pos);
+                break;
+            case RPN_FRM_SKIPTRUE:
+            case RPN_FRM_SKIPFALSE:
+                /* skip skip argument */
+                rpnsp->pos += 1 + sizeof(S16);
+                break;
+            case RPN_FRM_NODEP:
+            default:
+                break;
+            }
+            break;
+
+        case RPN_LCL:
+            while(*rpnsp->pos)
+                ++rpnsp->pos;
+            ++rpnsp->pos;
+            break;
+
+        case RPN_UOP:
+        case RPN_BOP:
+        case RPN_REL:
+            break;
+
+        case RPN_FN0:
+        case RPN_FNF:
+            break;
+
+        case RPN_FNV:
+            /* skip argument count */
+            ++rpnsp->pos;
+            break;
+
+        case RPN_FNM:
+            /* skip argument count and custom id */
+            rpnsp->pos += (1 + sizeof(EV_NAMEID));
+            break;
+
+        case RPN_FNA:
+            /* skip x, y counts */
+            rpnsp->pos += sizeof(S32) * 2;
+            break;
+
+        default:
+            break;
         }
+    }
 
     return(rpn_check(rpnsp));
 }

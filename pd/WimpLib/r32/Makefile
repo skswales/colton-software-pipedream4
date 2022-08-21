@@ -18,13 +18,13 @@ CMODULES=$(PD).cmodules
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 AS = ObjAsm
-ASflags_BASE=-I$(PD).cmodules.Hdr -APCS 3/32bit/SWSTackCheck -throwBack -stamp -quit -CloseExec
+ASflags_BASE=-I$(PD).cmodules.Hdr -throwBack -stamp -quit -CloseExec
 ASflags=$(ASflags_BASE)
 
 # NB PipeDream uses a global register for its sb variable, so avoid using that in this library code!
 
 CC = cc
-CCflags_BASE=-c -I$(WimpLib) -I$(PD) -APCS 3/32bit/fpe3/swst/fp/nofpr -throwback -DSB_GLOBAL_REGISTER -Wp
+CCflags_BASE=-c -I$(WimpLib) -I$(PD) -throwback -DSB_GLOBAL_REGISTER -Wp
 CCflags=$(CCflags_BASE) -Otime
 #CCflags=$(CCflags_BASE) -g
 

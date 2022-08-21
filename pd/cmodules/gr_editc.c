@@ -142,11 +142,11 @@ gr_chartedit_cep_from_ceh(
     P_GR_CHARTEDITOR cep = NULL;
 
     if(ceh)
-        {
+    {
         cep = collect_goto_item(GR_CHARTEDITOR, &gr_chart_editors.lbr, (LIST_ITEMNO) ceh);
 
         myassert1x(cep != NULL, "gr_chartedit_cep_from_ceh: failed to find chart editor handle &%p", ceh);
-        }
+    }
 
     return(cep);
 }
@@ -211,11 +211,11 @@ gr_chartedit_dispose(
     for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
         t;
         t = collect_next( GR_TEXT, &cp->text.lbr, &key))
-        {
+    {
         /* kill off the editing window for this object if there is one */
         if(t->bits.being_edited)
             gr_chartedit_text_editor_kill(cp, key);
-        }
+    }
 
     /* remove (eventually) any FontSelector or other persistent dialog processes */
     if(cep->riscos.processing_fontselector)
@@ -310,10 +310,10 @@ gr_chartedit_new(
 
     /* SKS after 4.12 26mar92 - allocate core for selection fake GR_DIAG */
     if(NULL == (cep->selection.p_gr_diag = al_ptr_calloc_elem(GR_DIAG, 1, &res)))
-        {
+    {
         collect_subtract_entry(&gr_chart_editors.lbr, key);
         return(res);
-        }
+    }
 
     /* convert ceh explicitly */
     ceh = (GR_CHARTEDIT_HANDLE) key;
@@ -333,11 +333,11 @@ gr_chartedit_new(
     template_h = template_find_new(GR_CHARTEDIT_TEM);
 
     if(template_h)
-        {
+    {
         cep->riscos.ww = template_copy_new(template_h);
 
         if(cep->riscos.ww != NULL)
-            {
+        {
             /* keep window at the same posn,size,scroll for chart if previously edited */
             cep->riscos.init_scx = cep->riscos.ww->scx;
             cep->riscos.init_scy = cep->riscos.ww->scy;
@@ -346,25 +346,25 @@ gr_chartedit_new(
             assert(cp);
 
             if(cp->core.editsave.open_box.x0 == cp->core.editsave.open_box.x1)
-                {
+            {
                 cp->core.editsave.open_box = cep->riscos.ww->box;
                 cp->core.editsave.open_scx = cep->riscos.ww->scx;
                 cp->core.editsave.open_scy = cep->riscos.ww->scy;
-                }
+            }
 
             wimpt_complain(win_create_wind(cep->riscos.ww,
                                            &cep->riscos.w,
                                            gr_chartedit_riscos_event_handler,
                                            (P_ANY) ceh));
-            }
         }
+    }
 
 #if RISCOS
     if(!cep->riscos.w)
-        {
+    {
         gr_chartedit_dispose(cehp);
         return(0);
-        }
+    }
 
     /* add uk previewer to window */
     win_add_unknown_event_processor(gr_chartedit_riscos_unknown_event_previewer, ceh);
@@ -406,15 +406,15 @@ gr_chartedit_notify(
     S32 res;
 
     if(!cep)
-        {
+    {
         nproc   = gr_chartedit_notify_default;
         nhandle = NULL;
-        }
+    }
     else
-        {
+    {
         nproc   = cep->notifyproc;
         nhandle = cep->notifyhandle;
-        }
+    }
 
     res = (* nproc) (nhandle, cep ? cep->ceh : 0, ntype, nextra);
 
@@ -437,50 +437,50 @@ gr_chartedit_notify_proto(extern, gr_chartedit_notify_default, handle, ceh, ntyp
     IGNOREPARM(handle);
 
     switch(ntype)
+    {
+    case GR_CHARTEDIT_NOTIFY_RESIZEREQ:
+        /* always allow resize ops */
+        break;
+
+    case GR_CHARTEDIT_NOTIFY_SELECTREQ:
+        /* always allow select ops */
+        break;
+
+    case GR_CHARTEDIT_NOTIFY_CLOSEREQ:
+        /* naughty: owner of editor ought to want to know about this */
+        /* also, mustn't have a lock here */
+        assert(0);
+        gr_chartedit_dispose(&ceh);
+        break;
+
+    case GR_CHARTEDIT_NOTIFY_TITLEREQ:
         {
-        case GR_CHARTEDIT_NOTIFY_RESIZEREQ:
-            /* always allow resize ops */
-            break;
+        GR_CHARTEDIT_NOTIFY_TITLE_STR * t = nextra;
+        P_GR_CHART    cp;
+        #if RISCOS
+        PC_U8 prog = wimpt_programname();
+        #else
+        PC_U8 prog = "Charts";
+        #endif
+        PC_U8 filename;
 
-        case GR_CHARTEDIT_NOTIFY_SELECTREQ:
-            /* always allow select ops */
-            break;
+        cep = gr_chartedit_cep_from_ceh(ceh);
+        assert(cep);
 
-        case GR_CHARTEDIT_NOTIFY_CLOSEREQ:
-            /* naughty: owner of editor ought to want to know about this */
-            /* also, mustn't have a lock here */
-            assert(0);
-            gr_chartedit_dispose(&ceh);
-            break;
+        cp = gr_chart_cp_from_ch(cep->ch);
+        assert(cp);
 
-        case GR_CHARTEDIT_NOTIFY_TITLEREQ:
-            {
-            GR_CHARTEDIT_NOTIFY_TITLE_STR * t = nextra;
-            P_GR_CHART    cp;
-            #if RISCOS
-            PC_U8 prog = wimpt_programname();
-            #else
-            PC_U8 prog = "Charts";
-            #endif
-            PC_U8 filename;
+        filename = cp->core.currentfilename;
 
-            cep = gr_chartedit_cep_from_ceh(ceh);
-            assert(cep);
-
-            cp = gr_chart_cp_from_ch(cep->ch);
-            assert(cp);
-
-            filename = cp->core.currentfilename;
-
-            (void) xsnprintf(t->title, elemof32(t->title), "%s: %s", prog, filename);
-            }
-            break;
-
-        default:
-            myassert1x(0, "gr_chartedit_notify_default called with unknown notify type %d", ntype);
-            res = 0;
-            break;
+        (void) xsnprintf(t->title, elemof32(t->title), "%s: %s", prog, filename);
         }
+        break;
+
+    default:
+        myassert1x(0, "gr_chartedit_notify_default called with unknown notify type %d", ntype);
+        res = 0;
+        break;
+    }
 
     return(res);
 }
@@ -515,20 +515,20 @@ gr_chartedit_riscos_correlate(
 
     /* tighter correlation if ADJUST clicked (but remember some objects may be truly subpixel ...) */
     if(adjustclicked)
-        {
+    {
         /* tight error ellipse centred on pixel centre */
         selellipse.x = gr_pixit_from_riscos(wimpt_dx()) / 2;
         selellipse.y = gr_pixit_from_riscos(wimpt_dy()) / 2;
         selpoint.x   = point->x + selellipse.x;
         selpoint.y   = point->y + selellipse.y;
-        }
+    }
     else
-        {
+    {
         /* larger (but still small) error circle if SELECT clicked */
         selellipse.x = gr_pixit_from_riscos(8);
         selellipse.y = selellipse.x;
         selpoint     = *point;
-        }
+    }
 
     /* scanning backwards from the front of the diagram */
     endObject = GR_DIAG_OBJECT_LAST;
@@ -536,13 +536,13 @@ gr_chartedit_riscos_correlate(
     *id = gr_chart_objid_anon;
 
     if(!cp->core.p_gr_diag)
-        {
+    {
         hitObject[0] = GR_DIAG_OBJECT_NONE;
             return(0);
-        }
+    }
 
     for(;;)
-        {
+    {
         gr_diag_object_correlate_between(cp->core.p_gr_diag, &selpoint, &selellipse,
                                          hitObject,
                                          GR_DIAG_OBJECT_FIRST,
@@ -557,10 +557,10 @@ gr_chartedit_riscos_correlate(
             hitIndex < hitObjectDepth;
             hitIndex++)
             if(hitObject[hitIndex] == GR_DIAG_OBJECT_NONE)
-                {
+            {
                 --hitIndex;
                 break;
-                }
+            }
 
         pObject.p_byte = gr_diag_getoffptr(BYTE, cp->core.p_gr_diag, hitObject[hitIndex]);
 
@@ -569,13 +569,13 @@ gr_chartedit_riscos_correlate(
 
         /* if hit anonymous object at end then loop up to but not including this object */
         if(id->name == GR_CHART_OBJNAME_ANON)
-            {
+        {
             endObject = hitObject[hitIndex];
             continue;
-            }
+        }
 
         return(hitIndex);
-        }
+    }
 }
 
 #endif /* RISCOS */
@@ -674,10 +674,10 @@ gr_chartedit_selection_clear_if_temp(
     P_GR_CHARTEDITOR cep)
 {
     if(cep->selection.temp)
-        {
+    {
         cep->selection.temp = 0;
         cep->selection.id   = gr_chart_objid_anon;
-        }
+    }
 }
 
 static void
@@ -702,13 +702,13 @@ gr_chartedit_selection_kill_repr(
     assert(cep);
 
     if(cep->selection.p_gr_diag->gr_riscdiag.draw_diag.length)
-        {
+    {
         /* SKS after 4.12 26mar92 - called on dispose after window deletion */
         if(cep->riscos.w)
             gr_chartedit_selection_xor(cep);
 
         gr_riscdiag_diagram_delete(&cep->selection.p_gr_diag->gr_riscdiag);
-        }
+    }
 }
 
 /******************************************************************************
@@ -725,10 +725,10 @@ gr_chartedit_selection_make(
     assert(cep);
 
     if(gr_chartedit_notify(cep, GR_CHARTEDIT_NOTIFY_SELECTREQ, (P_ANY) id))
-        {
+    {
         /* worthwhile doing it again? */
         if(0 != memcmp(&cep->selection.id, id, sizeof(*id)))
-            {
+        {
             /* remove the old one */
             gr_chartedit_selection_kill_repr(cep);
 
@@ -743,8 +743,8 @@ gr_chartedit_selection_make(
             gr_chartedit_selection_make_repr(cep);
 
             return(1);
-            }
         }
+    }
 
     return(0);
 }
@@ -798,7 +798,7 @@ gr_chartedit_selection_make_repr(
                                               process);
 
     if(hitObject != GR_DIAG_OBJECT_NONE)
-        {
+    {
         U32 objectSize;
 
         pObject.p_byte = gr_diag_getoffptr(BYTE, cp->core.p_gr_diag, hitObject);
@@ -811,7 +811,7 @@ gr_chartedit_selection_make_repr(
         /* scan rest of actual diagram and accumulate bboxes for objects of same class OR THEIR CHILDREN */
 
         for(;;)
-            {
+        {
             hitObject = gr_diag_object_search_between(cp->core.p_gr_diag,
                                                       cep->selection.id,
                                                       hitObject + objectSize,
@@ -824,20 +824,20 @@ gr_chartedit_selection_make_repr(
             pObject.p_byte = gr_diag_getoffptr(BYTE, cp->core.p_gr_diag, hitObject);
             objectSize = pObject.hdr->size;
             gr_box_union(&cep->selection.box, NULL, &pObject.hdr->bbox);
-            }
         }
+    }
     else
-        {
+    {
         cep->selection.box.x0 = 0;
         cep->selection.box.y0 = 0;
         cep->selection.box.x1 = 0;
         cep->selection.box.y1 = 0;
 
         simple_box = 0;
-        }
+    }
 
     if(simple_box)
-        {
+    {
         linestyle.width = 0;
 
         /* never, even if the program is buggy, make a huge dot-dashed path
@@ -852,7 +852,7 @@ gr_chartedit_selection_make_repr(
             linestyle.pattern = GR_LINE_PATTERN_STANDARD;
 
         for(;;)
-            {
+        {
             DRAW_BOX draw_box;
 
             if((res = gr_riscdiag_diagram_new(&cep->selection.p_gr_diag->gr_riscdiag, "selection", 0)) < 0)
@@ -870,20 +870,20 @@ gr_chartedit_selection_make_repr(
                                             &draw_box, &linestyle, NULL);
 
             if(res > 0)
-                {
+            {
                 gr_riscdiag_diagram_end(&cep->selection.p_gr_diag->gr_riscdiag);
 
                 gr_chartedit_selection_xor(cep);
-                }
+            }
             else
                 gr_riscdiag_diagram_delete(&cep->selection.p_gr_diag->gr_riscdiag);
 
             break;
-            }
+        }
 
         if(res < 0)
             gr_chartedit_winge(res);
-        }
+    }
 }
 
 /******************************************************************************
@@ -922,18 +922,18 @@ gr_riscdiag_path_render(
     path_seq = pObject.path + 1;
 
     if(pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK)
-        {
+    {
         line_dash_pattern = (P_DRAW_DASH_HEADER) path_seq;
 
         path_seq = PtrAddBytes(P_U8, line_dash_pattern, sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * line_dash_pattern->dashcount);
-        }
+    }
 
     bodge_path_seq.bytep = path_seq;
 
     /* fill the path */
 
     if(pObject.path->fillcolour != -1)
-        {
+    {
         e = colourtran_setGCOL(* (wimp_paletteword *) &pObject.path->fillcolour,
                                0, rip->action, &gcol_out);
 
@@ -951,12 +951,12 @@ gr_riscdiag_path_render(
 
         if(e)
             return(0);
-        }
+    }
 
     /* stroke the path */
 
     if(pObject.path->pathcolour != -1)
-        {
+    {
         e = colourtran_setGCOL(* (wimp_paletteword *) &pObject.path->pathcolour,
                                0, rip->action, &gcol_out);
 
@@ -983,7 +983,7 @@ gr_riscdiag_path_render(
 
         if(e)
             return(0);
-        }
+    }
 
     return(1);
 }
@@ -1042,12 +1042,12 @@ gr_chartedit_selection_xor(
         more = FALSE;
 
     while(more)
-        {
+    {
         gr_chartedit_selection_xor_core(cep, &r);
 
         if(wimpt_complain(wimp_get_rectangle(&r, &more)))
             more = FALSE;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1077,7 +1077,7 @@ gr_chartedit_set_scales(
     diagbelow                   = 0;
 
     if(p_draw_file_header)
-        {
+    {
         P_GR_CHART  cp;
         F64 scale_from_layout;
         S32 diagsize;
@@ -1101,7 +1101,7 @@ gr_chartedit_set_scales(
         /* 0.0010 is safe limit imposed by rendering code */
         if( cep->riscos.scale_from_diag < 0.0010)
             cep->riscos.scale_from_diag = 0.0010;
-        }
+    }
 
     cep->riscos.scale_from_diag16.x   = gr_scale_from_f64(cep->riscos.scale_from_diag);
     cep->riscos.scale_from_diag16.y   = cep->riscos.scale_from_diag16.x;
@@ -1115,10 +1115,10 @@ gr_chartedit_set_scales(
     pct_scale = cep->riscos.scale_from_diag * 100.0;
 
     if(diagbelow)
-        {
+    {
         GR_COORD scalebelow = gr_coord_scale(diagbelow, cep->riscos.scale_from_diag16.y);
         cep->riscos.diagram_off_y += ((int) scalebelow) / GR_RISCDRAW_PER_RISCOS;
-        }
+    }
 
     if((S32) pct_scale == pct_scale)
         (void) sprintf(buffer, "%d%%",   (S32) pct_scale);
@@ -1135,7 +1135,7 @@ gr_chartedit_setwintitle(
     assert(cp);
 
     if(cp->core.ceh)
-        {
+    {
         GR_CHARTEDIT_NOTIFY_TITLE_STR t;
         P_GR_CHARTEDITOR cep;
 
@@ -1148,7 +1148,7 @@ gr_chartedit_setwintitle(
             xstrkat(t.title, elemof32(t.title), " *");
 
         win_settitle(cep->riscos.w, t.title);
-        }
+    }
 }
 
 /* SKS after 4.12 25mar92 - finally got round to putting this in! */
@@ -1159,19 +1159,19 @@ gr_chartedit_warning(
     S32 err)
 {
     if(!cp->core.ceh)
-        {
+    {
         if(err)
             gr_chartedit_winge(err);
-        }
+    }
     else
-        {
+    {
         P_GR_CHARTEDITOR cep;
 
         cep = gr_chartedit_cep_from_ceh(cp->core.ceh);
         assert(cep);
 
         win_setfield(cep->riscos.w, (wimp_i) GR_CHARTEDIT_TEM_ICON_BASE, err ? string_lookup(err) : "");
-        }
+    }
 }
 
 /******************************************************************************
@@ -1219,13 +1219,13 @@ gr_chartedit_riscos_open(
         o.box.y0 = o.box.y1 - max_poss_height;
 
     if(!cep->riscos.heading_size)
-        {
+    {
         /* on first open read baseline from an icon offset in the window */
         wimp_icon icon;
         wimpt_safe(wimp_get_icon_info(cep->riscos.w, GR_CHARTEDIT_TEM_ICON_BASE, &icon));
         /*                   +ve = small -ve/+ve + larger +ve */
         cep->riscos.heading_size  = (GR_OSUNIT) icon.box.y0 + cp->core.editsave.open_scy;
-        }
+    }
 
     /* widening, no loss of precision */
     new_size.x = gr_pixit_from_riscos(((GR_OSUNIT) o.box.x1 - o.box.x0) -
@@ -1243,7 +1243,7 @@ gr_chartedit_riscos_open(
     s.old_size = cep->size; /* remember for even when we think this ain't going to be a resize ... see below */
 
     if((new_size.x != cep->size.x)  ||  (new_size.y != cep->size.y))
-        {
+    {
         S32 allow_resize;
 
         /* ask owner if this resize op is ok */
@@ -1266,11 +1266,11 @@ gr_chartedit_riscos_open(
         o.box.y0 -= (int) cep->riscos.heading_size;
         o.box.y0 -= GR_CHARTEDIT_DISPLAY_BM_OS;
         o.box.y0 -= GR_CHARTEDIT_DISPLAY_TM_OS;
-        }
+    }
 
     if(!wimpt_complain(win_open_wind(&o)))
         /* o is updated to give actual opened state */
-        {
+    {
         cp->core.editsave.open_box = o.box; /* keep useful abs screen info for updates/redraw event */
         cp->core.editsave.open_scx = o.scx;
         cp->core.editsave.open_scy = o.scy;
@@ -1285,7 +1285,7 @@ gr_chartedit_riscos_open(
         resize_y = (cep->size.y != s.old_size.y);
 
         if(resize_y)
-            {
+        {
             /* get ***all*** this old area (but not the heading) redrawn sometime */
 
             /* important thing to bear in mind is that at this point we
@@ -1303,12 +1303,12 @@ gr_chartedit_riscos_open(
             r.box.y1 = cp->core.editsave.open_scy - (int) cep->riscos.heading_size;
             r.box.y0 = cp->core.editsave.open_scy - (cp->core.editsave.open_box.y1 - cp->core.editsave.open_box.y0); /* entire window to bottom */
             wimpt_complain(wimp_force_redraw(&r));
-            }
+        }
 
         /* whether p_gr_diag exists or not is irrelevent a ce moment */
 
         gr_chartedit_set_scales(cep);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1358,7 +1358,7 @@ gr_chartedit_riscos_redraw_core(
     gr_chart_diagram(&cep->ch, &p_gr_diag);
 
     if(p_gr_diag)
-        {
+    {
         /* always display files starting at bottom left (therefore NO scy contribution!) */
 
         passed_r.box.x0 = cp->core.editsave.open_box.x0 - cp->core.editsave.open_scx;
@@ -1374,7 +1374,7 @@ gr_chartedit_riscos_redraw_core(
         if(p_gr_diag->gr_riscdiag.dd_allocsize)
             status_assert(draw_do_render(gr_riscdiag_getoffptr(BYTE, &p_gr_diag->gr_riscdiag, 0), p_gr_diag->gr_riscdiag.dd_allocsize,
                                          passed_r.box.x0, passed_r.box.y1, cep->riscos.scale_from_diag, cep->riscos.scale_from_diag, (P_GDI_BOX) &passed_r.g));
-        }
+    }
 
     /* restore caller's graphics window */
     wimpt_safe(bbc_gwindow(r->g.x0,              r->g.y0,
@@ -1407,12 +1407,12 @@ gr_chartedit_riscos_redraw(
 
     if(!wimpt_complain(wimp_redraw_wind(&r, &more)))
         while(more)
-            {
+        {
             gr_chartedit_riscos_redraw_core(cep, &r);
 
             if(wimpt_complain(wimp_get_rectangle(&r, &more)))
                 more = FALSE;
-            }
+        }
 }
 
 /******************************************************************************
@@ -1489,19 +1489,19 @@ gr_chartedit_riscos_force_redraw(
     gr_chartedit_riscos_setup_redrawstr(cep, pdf_handle, &r);
 
     if(immediate)
-        {
+    {
         S32 more;
 
         /* call redraw handler in update loop to get more instant effects */
         if(!wimpt_complain(wimp_update_wind(&r, &more)))
             while(more)
-                {
+            {
                 gr_chartedit_riscos_redraw_core(cep, &r);
 
                 if(wimpt_complain(wimp_get_rectangle(&r, &more)))
                     more = FALSE;
-                }
-        }
+            }
+    }
     else
         /* queue a redraw for this bit of window */
         wimpt_complain(wimp_force_redraw(&r));
@@ -1525,206 +1525,206 @@ gr_chartedit_riscos_button_click(
     adjustclicked = but->m.bbits & (wimp_BRIGHT | (wimp_BRIGHT << 8));
 
     switch(but->m.i)
+    {
+    case -1:
+        /* display section background */
         {
-        case -1:
-            /* display section background */
+        /* use adjust clicked state to enter deeper into structure than clicked */
+        /* ie allow selection of point rather than looping back to enclosing series */
+        GR_CHART_OBJID id;
+        GR_DIAG_OFFSET hitObject[64];
+        unsigned int hitIndex;
+        GR_POINT point;
+        P_GR_CHART cp;
+
+        cp = gr_chart_cp_from_ch(cep->ch);
+        assert(cp);
+
+        gr_chartedit_riscos_point_from_abs(cp, &point, but->m.x, but->m.y);
+
+        if(but->m.bbits & ((wimp_BLEFT | wimp_BRIGHT) << 4))
+        {
+            /* drag */
+            GR_POINT workareaoff;
+
+            workareaoff.x = cp->core.editsave.open_scx;
+            workareaoff.y = cp->core.editsave.open_scy - ((GR_OSUNIT) cp->core.editsave.open_box.y1 - cp->core.editsave.open_box.y0);
+
+            /* add in display offset */
+            workareaoff.x += cep->riscos.diagram_off_x;
+            workareaoff.y += cep->riscos.diagram_off_y;
+
+            switch(cep->selection.id.name)
             {
-            /* use adjust clicked state to enter deeper into structure than clicked */
-            /* ie allow selection of point rather than looping back to enclosing series */
+            case GR_CHART_OBJNAME_TEXT:
+            case GR_CHART_OBJNAME_LEGEND:
+                gr_chartedit_selected_object_drag_start(cep, &point, &workareaoff);
+                break;
+
+            default:
+                break;
+            }
+            break;
+        }
+
+        hitIndex = gr_nodbg_bring_me_the_head_of_yuri_gagarin(cep, &id, hitObject,
+                                                              point.x, point.y, adjustclicked);
+
+        if(!adjustclicked)
+            gr_chart_objid_find_parent(&id);
+
+        if(hitObject[0] == GR_DIAG_OBJECT_NONE)
+            /* clear selection - queue a redraw to take place later */
+            gr_chartedit_selection_clear(cep);
+        else
+            gr_chartedit_selection_make(cep, &id);
+
+        }
+        break;
+
+    case 0:
+        /* editing section background */
+        break;
+
+    case 1:
+        {
+        /* selection display icon - either clear selection or select Chart/Plot area/Legend in cycle */
+        if(adjustclicked)
+            gr_chartedit_selection_clear(cep);
+        else
+        {
             GR_CHART_OBJID id;
-            GR_DIAG_OFFSET hitObject[64];
-            unsigned int hitIndex;
-            GR_POINT point;
-            P_GR_CHART cp;
+            P_GR_CHART      cp;
 
             cp = gr_chart_cp_from_ch(cep->ch);
-            assert(cp);
 
-            gr_chartedit_riscos_point_from_abs(cp, &point, but->m.x, but->m.y);
+            id = cep->selection.id;
 
-            if(but->m.bbits & ((wimp_BLEFT | wimp_BRIGHT) << 4))
+            switch(id.name)
+            {
+            case GR_CHART_OBJNAME_CHART:
+                id.name   = GR_CHART_OBJNAME_PLOTAREA;
+                id.has_no = 1;
+                break;
+
+            case GR_CHART_OBJNAME_PLOTAREA:
+                if(cp->d3.bits.use)
+                    if(++id.no < GR_CHART_N_PLOTAREAS)
+                        break;
+
+                if(cp->axes[0].charttype == GR_CHARTTYPE_PIE)
+                    /* no axes to select */
+                    goto maybe_select_legend;
+
+                id.name   = GR_CHART_OBJNAME_AXIS;
+                id.has_no = 1;
+                id.no     = 0;
+
+            /* deliberate drop thru ... */
+
+            case GR_CHART_OBJNAME_AXIS:
                 {
-                /* drag */
-                GR_POINT workareaoff;
+                U32 eaxes = 2;
 
-                workareaoff.x = cp->core.editsave.open_scx;
-                workareaoff.y = cp->core.editsave.open_scy - ((GR_OSUNIT) cp->core.editsave.open_box.y1 - cp->core.editsave.open_box.y0);
+                if(cp->d3.bits.use)
+                    ++eaxes;
 
-                /* add in display offset */
-                workareaoff.x += cep->riscos.diagram_off_x;
-                workareaoff.y += cep->riscos.diagram_off_y;
+                eaxes *= (cp->axes_idx_max + 1);
 
-                switch(cep->selection.id.name)
-                    {
-                    case GR_CHART_OBJNAME_TEXT:
-                    case GR_CHART_OBJNAME_LEGEND:
-                        gr_chartedit_selected_object_drag_start(cep, &point, &workareaoff);
-                        break;
+                ++id.no;
 
-                    default:
-                        break;
-                    }
+                /* skip 3D Axes 3 and 6 until punters can do anything to 'em */
+                if(cp->d3.bits.use && (id.no == 3) || (id.no == 6))
+                    ++id.no;
+
+                /* skip second category axis for similar reasons */
+                if((cp->axes[0].charttype == GR_CHARTTYPE_BAR) || (cp->axes[0].charttype == GR_CHARTTYPE_LINE))
+                    if(id.no == (cp->d3.bits.use ? 4 : 3))
+                        ++id.no;
+
+                if(id.no <= eaxes)
+                    break;
+                }
+
+            maybe_select_legend:;
+                if(cp->legend.bits.on)
+                {
+                    id = gr_chart_objid_legend;
+                    break;
+                }
+
+                /* deliberate drop thru ... */
+
+            case GR_CHART_OBJNAME_LEGEND:
+                gr_chart_objid_from_series_no(0, &id);
+                goto select_next_series;
+                break;
+
+            case GR_CHART_OBJNAME_DROPSER:
+                /* select associated series as hitting series may be hard */
+                id.name = GR_CHART_OBJNAME_SERIES;
+                break;
+
+            case GR_CHART_OBJNAME_SERIES:
+            select_next_series:
+                {
+                if(++id.no > (U32) cp->series.n)
+                {
+                    /* find first text object */
+                    gr_chart_objid_from_text(0, &id);
+                    goto select_next_text;
+                }
                 break;
                 }
 
-            hitIndex = gr_nodbg_bring_me_the_head_of_yuri_gagarin(cep, &id, hitObject,
-                                                                  point.x, point.y, adjustclicked);
-
-            if(!adjustclicked)
-                gr_chart_objid_find_parent(&id);
-
-            if(hitObject[0] == GR_DIAG_OBJECT_NONE)
-                /* clear selection - queue a redraw to take place later */
-                gr_chartedit_selection_clear(cep);
-            else
-                gr_chartedit_selection_make(cep, &id);
-
-            }
-            break;
-
-        case 0:
-            /* editing section background */
-            break;
-
-        case 1:
-            {
-            /* selection display icon - either clear selection or select Chart/Plot area/Legend in cycle */
-            if(adjustclicked)
-                gr_chartedit_selection_clear(cep);
-            else
+            case GR_CHART_OBJNAME_POINT:
+            case GR_CHART_OBJNAME_DROPPOINT:
                 {
-                GR_CHART_OBJID id;
-                P_GR_CHART      cp;
+                GR_SERIES_IDX series_idx;
 
-                cp = gr_chart_cp_from_ch(cep->ch);
+                series_idx = gr_series_idx_from_external(cp, id.no);
 
-                id = cep->selection.id;
-
-                switch(id.name)
-                    {
-                    case GR_CHART_OBJNAME_CHART:
-                        id.name   = GR_CHART_OBJNAME_PLOTAREA;
-                        id.has_no = 1;
-                        break;
-
-                    case GR_CHART_OBJNAME_PLOTAREA:
-                        if(cp->d3.bits.use)
-                            if(++id.no < GR_CHART_N_PLOTAREAS)
-                                break;
-
-                        if(cp->axes[0].charttype == GR_CHARTTYPE_PIE)
-                            /* no axes to select */
-                            goto maybe_select_legend;
-
-                        id.name   = GR_CHART_OBJNAME_AXIS;
-                        id.has_no = 1;
-                        id.no     = 0;
-
-                    /* deliberate drop thru ... */
-
-                    case GR_CHART_OBJNAME_AXIS:
-                        {
-                        U32 eaxes = 2;
-
-                        if(cp->d3.bits.use)
-                            ++eaxes;
-
-                        eaxes *= (cp->axes_idx_max + 1);
-
-                        ++id.no;
-
-                        /* skip 3D Axes 3 and 6 until punters can do anything to 'em */
-                        if(cp->d3.bits.use && (id.no == 3) || (id.no == 6))
-                            ++id.no;
-
-                        /* skip second category axis for similar reasons */
-                        if((cp->axes[0].charttype == GR_CHARTTYPE_BAR) || (cp->axes[0].charttype == GR_CHARTTYPE_LINE))
-                            if(id.no == (cp->d3.bits.use ? 4 : 3))
-                                ++id.no;
-
-                        if(id.no <= eaxes)
-                            break;
-                        }
-
-                    maybe_select_legend:;
-                        if(cp->legend.bits.on)
-                            {
-                            id = gr_chart_objid_legend;
-                            break;
-                            }
-
-                        /* deliberate drop thru ... */
-
-                    case GR_CHART_OBJNAME_LEGEND:
-                        gr_chart_objid_from_series_no(0, &id);
-                        goto select_next_series;
-                        break;
-
-                    case GR_CHART_OBJNAME_DROPSER:
-                        /* select associated series as hitting series may be hard */
-                        id.name = GR_CHART_OBJNAME_SERIES;
-                        break;
-
-                    case GR_CHART_OBJNAME_SERIES:
-                    select_next_series:
-                        {
-                        if(++id.no > (U32) cp->series.n)
-                            {
-                            /* find first text object */
-                            gr_chart_objid_from_text(0, &id);
-                            goto select_next_text;
-                            }
-                        }
-                        break;
-
-                    case GR_CHART_OBJNAME_POINT:
-                    case GR_CHART_OBJNAME_DROPPOINT:
-                        {
-                        GR_SERIES_IDX series_idx;
-
-                        series_idx = gr_series_idx_from_external(cp, id.no);
-
-                        if(++id.subno > (U32) gr_travel_series_n_items_total(cp, series_idx))
-                            {
-                            /* try finding P1 of next series */
-                            id.subno = 1;
-                            goto select_next_series;
-                            }
-                        }
-                        break;
-
-                    case GR_CHART_OBJNAME_TEXT:
-                    select_next_text:
-                        {
-                        P_GR_TEXT    t;
-                        LIST_ITEMNO key;
-
-                        key = id.no;
-
-                        if((t = collect_next(GR_TEXT, &cp->text.lbr, &key)) == NULL)
-                            goto default_case;
-
-                        id.no = (U8) key;
-
-                        if(t->bits.unused)
-                            goto select_next_text;
-                        }
-                        break;
-
-                    default:
-                    case GR_CHART_OBJNAME_ANON:
-                    default_case:
-                        id = gr_chart_objid_chart;
-                        break;
-                    }
-
-                gr_chartedit_selection_make(cep, &id);
+                if(++id.subno > (U32) gr_travel_series_n_items_total(cp, series_idx))
+                {
+                    /* try finding P1 of next series */
+                    id.subno = 1;
+                    goto select_next_series;
                 }
+                break;
+                }
+
+            case GR_CHART_OBJNAME_TEXT:
+            select_next_text:
+                {
+                P_GR_TEXT    t;
+                LIST_ITEMNO key;
+
+                key = id.no;
+
+                if((t = collect_next(GR_TEXT, &cp->text.lbr, &key)) == NULL)
+                    goto default_case;
+
+                id.no = (U8) key;
+
+                if(t->bits.unused)
+                    goto select_next_text;
+                }
+                break;
+
+            default:
+            case GR_CHART_OBJNAME_ANON:
+            default_case:
+                id = gr_chart_objid_chart;
+                break;
             }
 
-        default:
-            break;
+            gr_chartedit_selection_make(cep, &id);
         }
+        }
+
+    default:
+        break;
+    }
 }
 
 static void
@@ -1749,165 +1749,165 @@ gr_chartedit_riscos_message(
     S32             processed = TRUE;
 
     switch(msg->hdr.action)
+    {
+    case wimp_MDATASAVE:
         {
-        case wimp_MDATASAVE:
-            {
-            /* possible object dragged into main window - would normally ask for DATALOAD
-             * except that we don't actually want anything saving to us that isn't already on disc
-            */
-            S32 size;
-            FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkimport(&size);
+        /* possible object dragged into main window - would normally ask for DATALOAD
+         * except that we don't actually want anything saving to us that isn't already on disc
+        */
+        S32 size;
+        FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkimport(&size);
 
-            if(gr_chart_saving_chart(NULL))
-                {
-                message_output(string_lookup(create_error(GR_CHART_ERR_NO_SELF_INSERT)));
-                break;
-                }
+        if(gr_chart_saving_chart(NULL))
+        {
+            message_output(string_lookup(create_error(GR_CHART_ERR_NO_SELF_INSERT)));
+            break;
+        }
 
-            switch(filetype)
-                {
-                case FILETYPE_DIRECTORY:
-                case FILETYPE_APPLICATION:
-                    messagef(string_lookup(create_error(FILE_ERR_ISADIR)), msg->data.datasave.leaf);
-                    break;
-
-                case FILETYPE_PIPEDREAM:
-                    /* can't detect at this point whether 'tis bog standard or a chart */
-                    break;
-
-                default:
-                    if(gr_cache_can_import(filetype))
-                        message_output(string_lookup(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED)));
-                    break;
-                }
-            }
+        switch(filetype)
+        {
+        case FILETYPE_DIRECTORY:
+        case FILETYPE_APPLICATION:
+            messagef(string_lookup(create_error(FILE_ERR_ISADIR)), msg->data.datasave.leaf);
             break;
 
-        case wimp_MDATALOAD:
-            {
-            /* when punter drops a Draw file on us, find out what object
-             * we dropped on, unless we have a selection, in which case use that
-            */
-            P_U8 filename;
-            FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
-            /* sets up reply too */
-
-            trace_1(TRACE_MODULE_GR_CHART, "chart editing window got a DataLoad for %s", trace_tstr(filename));
-
-            if(gr_chart_saving_chart(NULL))
-                {
-                message_output(string_lookup(create_error(GR_CHART_ERR_NO_SELF_INSERT)));
-                break;
-                }
-
-            switch(filetype)
-                {
-                case FILETYPE_DIRECTORY:
-                case FILETYPE_APPLICATION:
-                    messagef(string_lookup(create_error(FILE_ERR_ISADIR)), filename);
-                    break;
-
-                case FILETYPE_PIPEDREAM:
-                    break;
-
-                default:
-                    if(gr_cache_can_import(filetype))
-                        {
-                        GR_CHART_OBJID  id;
-                        P_GR_CHART       cp;
-                        GR_CACHE_HANDLE cah;
-                        S32             res;
-
-                        cep = gr_chartedit_cep_from_ceh(ceh);
-                        assert(cep);
-
-                        cp = gr_chart_cp_from_ch(cep->ch);
-                        assert(cp);
-
-                        /* given that end-of-menu event is not available on RISC OS 2.00
-                         * we must clear out the temp state ourselves
-                        */
-                        gr_chartedit_selection_clear_if_temp(cep);
-
-                        id = cep->selection.id;
-
-                        if(id.name == GR_CHART_OBJNAME_ANON)
-                            {
-                            const wimp_msgdataload * dataload = &wimpt_last_event()->data.msg.data.dataload;
-
-                            trace_0(TRACE_MODULE_GR_CHART, "no current selection - look for drop on object");
-
-                            switch(dataload->i)
-                                {
-                                default:
-                                    /* other regions are uninteresting */
-                                    break;
-
-                                case -1:
-                                    /* display section background */
-                                    {
-                                    GR_DIAG_OFFSET hitObject[64];
-                                    unsigned int hitIndex;
-                                    GR_POINT point;
-
-                                    gr_chartedit_riscos_point_from_abs(cp, &point, dataload->x, dataload->y);
-
-                                    hitIndex = gr_nodbg_bring_me_the_head_of_yuri_gagarin(cep, &id, hitObject,
-                                                                                          point.x, point.y, FALSE);
-
-                                    gr_chart_objid_find_parent(&id);
-
-                                    /* just use the above as an id selector */
-                                    }
-                                    break;
-                                }
-                            }
-
-                        if(id.name == GR_CHART_OBJNAME_ANON)
-                            {
-                            trace_0(TRACE_MODULE_GR_CHART, "still nothing hit - how boring");
-                            break;
-                            }
-
-                        /* load the file, disallowing recolouring */
-
-                        if((res = gr_cache_entry_ensure(&cah, filename)) > 0)
-                            {
-                            GR_FILLSTYLE style;
-
-                            gr_chart_objid_fillstyle_query(cp, &id, &style);
-
-                            style.fg.manual = 1;
-                            style.pattern = (GR_FILL_PATTERN_HANDLE) cah;
-
-                            style.bits.notsolid   = 1;
-                            style.bits.pattern    = 1;
-                            style.bits.norecolour = 1;
-
-                            res = gr_chart_objid_fillstyle_set(cp, &id, &style);
-                            }
-
-                        if(res < 0)
-                            gr_chartedit_winge(res);
-                        else
-                            gr_chart_modify_and_rebuild(&cep->ch);
-                        } /* fi(can import) */
-
-                    break;
-                } /* esac(filetype) */
-
-            /* note that this is mandatory */
-            xferrecv_insertfileok();
-            }
+        case FILETYPE_PIPEDREAM:
+            /* can't detect at this point whether 'tis bog standard or a chart */
             break;
 
         default:
-            trace_2(TRACE_MODULE_GR_CHART,
-                    "unprocessed wimp message to chartedit window: %s, ceh &%p",
-                    report_wimp_message(msg, FALSE), report_ptr_cast(ceh));
-            processed = FALSE;
+            if(gr_cache_can_import(filetype))
+                message_output(string_lookup(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED)));
             break;
         }
+        }
+        break;
+
+    case wimp_MDATALOAD:
+        {
+        /* when punter drops a Draw file on us, find out what object
+         * we dropped on, unless we have a selection, in which case use that
+        */
+        P_U8 filename;
+        FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
+        /* sets up reply too */
+
+        trace_1(TRACE_MODULE_GR_CHART, "chart editing window got a DataLoad for %s", trace_tstr(filename));
+
+        if(gr_chart_saving_chart(NULL))
+        {
+            message_output(string_lookup(create_error(GR_CHART_ERR_NO_SELF_INSERT)));
+            break;
+        }
+
+        switch(filetype)
+        {
+        case FILETYPE_DIRECTORY:
+        case FILETYPE_APPLICATION:
+            messagef(string_lookup(create_error(FILE_ERR_ISADIR)), filename);
+            break;
+
+        case FILETYPE_PIPEDREAM:
+            break;
+
+        default:
+            if(gr_cache_can_import(filetype))
+            {
+                GR_CHART_OBJID  id;
+                P_GR_CHART       cp;
+                GR_CACHE_HANDLE cah;
+                S32             res;
+
+                cep = gr_chartedit_cep_from_ceh(ceh);
+                assert(cep);
+
+                cp = gr_chart_cp_from_ch(cep->ch);
+                assert(cp);
+
+                /* given that end-of-menu event is not available on RISC OS 2.00
+                 * we must clear out the temp state ourselves
+                */
+                gr_chartedit_selection_clear_if_temp(cep);
+
+                id = cep->selection.id;
+
+                if(id.name == GR_CHART_OBJNAME_ANON)
+                {
+                    const wimp_msgdataload * dataload = &wimpt_last_event()->data.msg.data.dataload;
+
+                    trace_0(TRACE_MODULE_GR_CHART, "no current selection - look for drop on object");
+
+                    switch(dataload->i)
+                    {
+                    default:
+                        /* other regions are uninteresting */
+                        break;
+
+                    case -1:
+                        /* display section background */
+                        {
+                        GR_DIAG_OFFSET hitObject[64];
+                        unsigned int hitIndex;
+                        GR_POINT point;
+
+                        gr_chartedit_riscos_point_from_abs(cp, &point, dataload->x, dataload->y);
+
+                        hitIndex = gr_nodbg_bring_me_the_head_of_yuri_gagarin(cep, &id, hitObject,
+                                                                              point.x, point.y, FALSE);
+
+                        gr_chart_objid_find_parent(&id);
+
+                        /* just use the above as an id selector */
+                        }
+                        break;
+                    }
+                }
+
+                if(id.name == GR_CHART_OBJNAME_ANON)
+                {
+                    trace_0(TRACE_MODULE_GR_CHART, "still nothing hit - how boring");
+                    break;
+                }
+
+                /* load the file, disallowing recolouring */
+
+                if((res = gr_cache_entry_ensure(&cah, filename)) > 0)
+                {
+                    GR_FILLSTYLE style;
+
+                    gr_chart_objid_fillstyle_query(cp, &id, &style);
+
+                    style.fg.manual = 1;
+                    style.pattern = (GR_FILL_PATTERN_HANDLE) cah;
+
+                    style.bits.notsolid   = 1;
+                    style.bits.pattern    = 1;
+                    style.bits.norecolour = 1;
+
+                    res = gr_chart_objid_fillstyle_set(cp, &id, &style);
+                }
+
+                if(res < 0)
+                    gr_chartedit_winge(res);
+                else
+                    gr_chart_modify_and_rebuild(&cep->ch);
+            } /* fi(can import) */
+
+            break;
+        } /* esac(filetype) */
+
+        /* note that this is mandatory */
+        xferrecv_insertfileok();
+        }
+        break;
+
+    default:
+        trace_2(TRACE_MODULE_GR_CHART,
+                "unprocessed wimp message to chartedit window: %s, ceh &%p",
+                report_wimp_message(msg, FALSE), report_ptr_cast(ceh));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -1925,65 +1925,65 @@ gr_chartedit_riscos_event_handler(
             report_wimp_event(e->e, &e->data), report_ptr_cast(ceh));
 
     switch(e->e)
+    {
+    case wimp_ECLOSE:
         {
-        case wimp_ECLOSE:
-            {
-            P_GR_CHARTEDITOR cep;
+        P_GR_CHARTEDITOR cep;
 
-            /* call owner of editor to get him to do something about the close */
-            cep = gr_chartedit_cep_from_ceh(ceh);
-            assert(cep);
+        /* call owner of editor to get him to do something about the close */
+        cep = gr_chartedit_cep_from_ceh(ceh);
+        assert(cep);
 
-            (void) gr_chartedit_notify(cep, GR_CHARTEDIT_NOTIFY_CLOSEREQ, 0);
+        (void) gr_chartedit_notify(cep, GR_CHARTEDIT_NOTIFY_CLOSEREQ, 0);
 
-            /* DO NOT LOOK AT ANY CHART RELATED VARIABLES NOW ! */
-            }
-            break;
-
-        case wimp_EOPEN:
-            gr_chartedit_riscos_open(&e->data.o, ceh);
-            break;
-
-        case wimp_EREDRAW:
-            gr_chartedit_riscos_redraw(&e->data.redraw, ceh);
-            break;
-
-        case wimp_EBUT:
-            {
-            P_GR_CHARTEDITOR cep;
-
-            cep = gr_chartedit_cep_from_ceh(ceh);
-            assert(cep);
-
-            gr_chartedit_fontselect_kill(cep);
-
-            gr_chartedit_riscos_button_click(&e->data.but, ceh);
-            }
-            break;
-
-        case wimp_EUSERDRAG:
-            gr_chartedit_riscos_drag_complete(&e->data.dragbox, ceh);
-            break;
-
-        case wimp_EPTRLEAVE:
-        case wimp_EPTRENTER:
-        case wimp_EGAINCARET:
-        case wimp_ELOSECARET:
-            processed = FALSE;
-            break;
-
-        case wimp_ESEND:
-        case wimp_ESENDWANTACK:
-            processed = gr_chartedit_riscos_message(&e->data.msg, ceh);
-            break;
-
-        default:
-            trace_2(TRACE_MODULE_GR_CHART,
-                    "unprocessed wimp event to chartedit window: %s, ceh &%p",
-                    report_wimp_event(e->e, &e->data), report_ptr_cast(ceh));
-            processed = FALSE;
-            break;
+        /* DO NOT LOOK AT ANY CHART RELATED VARIABLES NOW ! */
         }
+        break;
+
+    case wimp_EOPEN:
+        gr_chartedit_riscos_open(&e->data.o, ceh);
+        break;
+
+    case wimp_EREDRAW:
+        gr_chartedit_riscos_redraw(&e->data.redraw, ceh);
+        break;
+
+    case wimp_EBUT:
+        {
+        P_GR_CHARTEDITOR cep;
+
+        cep = gr_chartedit_cep_from_ceh(ceh);
+        assert(cep);
+
+        gr_chartedit_fontselect_kill(cep);
+
+        gr_chartedit_riscos_button_click(&e->data.but, ceh);
+        }
+        break;
+
+    case wimp_EUSERDRAG:
+        gr_chartedit_riscos_drag_complete(&e->data.dragbox, ceh);
+        break;
+
+    case wimp_EPTRLEAVE:
+    case wimp_EPTRENTER:
+    case wimp_EGAINCARET:
+    case wimp_ELOSECARET:
+        processed = FALSE;
+        break;
+
+    case wimp_ESEND:
+    case wimp_ESENDWANTACK:
+        processed = gr_chartedit_riscos_message(&e->data.msg, ceh);
+        break;
+
+    default:
+        trace_2(TRACE_MODULE_GR_CHART,
+                "unprocessed wimp event to chartedit window: %s, ceh &%p",
+                report_wimp_event(e->e, &e->data), report_ptr_cast(ceh));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -1996,27 +1996,27 @@ gr_chartedit_riscos_unknown_event_previewer(
     P_GR_CHARTEDITOR cep;
 
     switch(e->e)
+    {
+    default:
+        break;
+
+    case wimp_ESEND:
+    case wimp_ESENDWANTACK:
+        switch(e->data.msg.hdr.action)
         {
         default:
             break;
 
-        case wimp_ESEND:
-        case wimp_ESENDWANTACK:
-            switch(e->data.msg.hdr.action)
-                {
-                default:
-                    break;
+        case wimp_PALETTECHANGE:
+            /* redraw our Draw file as colour translation may have changed */
+            cep = gr_chartedit_cep_from_ceh(handle);
+            assert(cep);
 
-                case wimp_PALETTECHANGE:
-                    /* redraw our Draw file as colour translation may have changed */
-                    cep = gr_chartedit_cep_from_ceh(handle);
-                    assert(cep);
-
-                    gr_chartedit_diagram_update_later(cep);
-                    break;
-                }
+            gr_chartedit_diagram_update_later(cep);
             break;
         }
+        break;
+    }
 
     return(0); /* unclaimed event */
 }

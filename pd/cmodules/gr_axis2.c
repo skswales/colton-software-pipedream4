@@ -93,18 +93,18 @@ gr_axis_form_category(
         ticksp->current = 1.0;
 
     if(ticksp->bits.manual)
-        {
+    {
         if(ticksp->punter <= 0.0)
             ticksp->current = 0.0; /* off */
         else
-            {
+        {
             F64 test = ticksp->punter / ticksp->current;
 
             if((test >= 1.0/10.0) && (test <= 10.0/1.0))
                 /* use punter value unless it is silly or we area doing autocalc */
                 ticksp->current = ticksp->punter;
-            }
         }
+    }
 
     /* category axis minor ticks */
     ticksp = &p_axis->minor;
@@ -115,18 +115,18 @@ gr_axis_form_category(
         ticksp->current = 1.0;
 
     if(ticksp->bits.manual)
-        {
+    {
         if(ticksp->punter <= 0.0)
             ticksp->current = 0.0; /* off */
         else
-            {
+        {
             F64 test = ticksp->punter / ticksp->current;
 
             if((test >= 1.0/10.0) && (test <= 10.0/1.0))
                 /* use punter value unless it is silly or we area doing autocalc */
                 ticksp->current = ticksp->punter;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -148,30 +148,30 @@ gr_axis_form_value_log(
     p_axis->current = p_axis->actual;
 
     if(p_axis->current.min > p_axis->current.max)
-        { /* SKS 28 Dec 2012 sort out potential exception (zombie) when no data on this axis */
+    {   /* SKS 28 Dec 2012 sort out potential exception (zombie) when no data on this axis */
         p_axis->current.min = 1.0;
         p_axis->current.max = 2.0;
-        }
+    }
 
     if(!p_axis->bits.manual) /* SKS 25 Nov 1996 ensure punter gets updated from actual on first chart build */
         p_axis->punter = p_axis->current;
 
     if(!p_axes->bits.stacked_pct || !is_y_axis)
         if(p_axis->bits.manual)
-            {
+        {
             if((p_axis->punter.min > 0.0) && (p_axis->punter.max > 0.0))
-                { /* do sort just in case... */
+            {   /* do sort just in case... */
                 p_axis->current.min = MIN(p_axis->punter.min, p_axis->punter.max);
                 p_axis->current.max = MAX(p_axis->punter.max, p_axis->punter.min);
-                }
             }
+        }
 
     if(p_axis->bits.incl_zero)
-        {
+    {
         /* in log scaling mode this 'obviously' means an exponent of zero! */
         p_axis->current.min = MIN(p_axis->current.min, 1.0);
         p_axis->current.max = MAX(p_axis->current.max, 1.0);
-        }
+    }
 
     /* account for stupid log graphs */
     if( p_axis->current.min < 10.0*DBL_MIN)
@@ -193,11 +193,11 @@ gr_axis_form_value_log(
     ticksp->current = pow(p_axis->bits.log_base, ticksp->current);
 
     if(ticksp->bits.manual)
-        {
+    {
         if(ticksp->punter <= 1.0) /* must be multiplying by something significant each time */
             ticksp->current = 0.0; /* off */
         else
-            {
+        {
             /* look at punter value and split into base and exponent step adder */
             F64 test, exponent;
 
@@ -208,7 +208,7 @@ gr_axis_form_value_log(
 
             /* was number close enough to a power of the base? */
             if(test < LOG_SIG_EPS)
-                {
+            {
                 test = log10(ticksp->current);
 
                 (void) splitlognum(&test, &test);
@@ -216,13 +216,13 @@ gr_axis_form_value_log(
                 test = ticksp->punter / test;
 
                 if((test >= 1.0/10.0) && (test <= 10.0/1.0))
-                    {
+                {
                     /* use punter value unless it is silly or we area doing autocalc */
                     ticksp->current = ticksp->punter;
-                    }
                 }
+            }
             else
-                {
+            {
                 /* try base 2 */
                 test = log(ticksp->punter) / log(2.0);
 
@@ -230,19 +230,19 @@ gr_axis_form_value_log(
 
                 /* was number close enough to a power of the base? */
                 if(test < LOG_SIG_EPS)
-                    {
+                {
                     ticksp->current = ticksp->punter;
                     p_axis->bits.log_base = 2;
-                    }
                 }
             }
         }
+    }
 
     lna = log(p_axis->bits.log_base);
 
     /* Round down the current.min to a multiple of the major value towards an exponent of -infinity */
     if(!p_axis->bits.manual || (p_axis->current.min != p_axis->punter.min))
-        {
+    {
         F64 ftest;
 
         /* compute log-to-the-base-of-major-multiplier of the current.min */
@@ -256,7 +256,7 @@ gr_axis_form_value_log(
 
         if( p_axis->current.min < DBL_MIN)
             p_axis->current.min = pow(10.0, DBL_MIN_10_EXP); /* may look bad for non-base 10 but who cares */
-        }
+    }
 
     /* account for stupid graphs */
     if( p_axis->current.max <= p_axis->current.min)
@@ -264,7 +264,7 @@ gr_axis_form_value_log(
 
     /* Round up the current.max to a multiple of the major value towards an exponent of +infinity */
     if(!p_axis->bits.manual || (p_axis->current.max != p_axis->punter.max))
-        {
+    {
         F64 ctest;
 
         /* compute log-to-the-base-of-major-multiplier of the current.max */
@@ -275,7 +275,7 @@ gr_axis_form_value_log(
         ctest = ceil(ctest);
 
         p_axis->current.max = pow(p_axis->bits.log_base, ctest);
-        }
+    }
 
     /* cache the spanned interval NOW as major scaling might have modified the endpoints! */
     p_axis->current_span = (log(p_axis->current.max) - log(p_axis->current.min)) / lna;
@@ -288,18 +288,18 @@ gr_axis_form_value_log(
     ticksp->current = 1.0;
 
     if(ticksp->bits.manual)
-        {
+    {
         if(ticksp->punter <= 0.0)
             ticksp->current = 0.0; /* off */
         else
-            {
+        {
             F64 test = ticksp->punter / ticksp->current;
 
             if((test >= 1.0/10.0) && (test <= 10.0/1.0))
                 /* use punter value unless it is silly or we area doing autocalc */
                 ticksp->current = ticksp->punter;
-            }
         }
+    }
 }
 
 static void
@@ -312,26 +312,26 @@ gr_axis_form_value_lin(
     p_axis->current = p_axis->actual;
 
     if(p_axis->current.min > p_axis->current.max)
-        { /* SKS 28 Dec 2012 sort out potential exception (zombie) when no data on this axis */
+    {   /* SKS 28 Dec 2012 sort out potential exception (zombie) when no data on this axis */
         p_axis->current.min = 0.0;
         p_axis->current.max = 1.0;
-        }
+    }
 
     if(!p_axis->bits.manual) /* SKS 25 Nov 1996 ensure punter gets updated from actual on first chart build */
         p_axis->punter = p_axis->current;
 
     if(p_axis->bits.manual)
-        {
+    {
         /* SKS 25 Nov 1996 don't override a punter selection even if it's really silly (but do sort just in case...) */
         p_axis->current.min = MIN(p_axis->punter.min, p_axis->punter.max);
         p_axis->current.max = MAX(p_axis->punter.max, p_axis->punter.min);
-        }
+    }
 
     if(p_axis->bits.incl_zero)
-        {
+    {
         p_axis->current.min = MIN(p_axis->current.min, 0.0);
         p_axis->current.max = MAX(p_axis->current.max, 0.0);
-        }
+    }
 
     /* value axis major ticks */
     ticksp = &p_axis->major;
@@ -341,31 +341,31 @@ gr_axis_form_value_lin(
     major_interval  = ticksp->current;
 
     if(ticksp->bits.manual)
-        {
+    {
         if(ticksp->punter <= 0.0)
             ticksp->current = 0.0; /* off */
         else
-            {
+        {
             F64 test = ticksp->punter / ticksp->current;
 
             if((test >= 1.0/10.0) && (test <= 10.0/1.0))
-                {
+            {
                 /* use punter value unless it is silly or we area doing autocalc */
                 ticksp->current = ticksp->punter;
                 major_interval  = ticksp->current;
-                }
             }
         }
+    }
 #if 1
     /* SKS after 4.12 26mar92 - in auto mode only: RJM reckons this is what punters would like and I agree */
     else
-        {
+    {
         if(ticksp->current == 0.5)
-            {
+        {
             ticksp->current = 1.0;
             major_interval  = ticksp->current;
-            }
         }
+    }
 #endif
 
     /* remember for decimal places rounding of values shown on axis */
@@ -381,13 +381,13 @@ gr_axis_form_value_lin(
 
     /* Round down the current.min to a multiple of the major value towards -infinity */
     if(!p_axis->bits.manual || (p_axis->current.min != p_axis->punter.min))
-        {
+    {
         F64 ftest;
 
         ftest = floor(p_axis->current.min / major_interval);
 
         p_axis->current.min = ftest * major_interval;
-        }
+    }
 
     /* account for stupid graphs */
     if( p_axis->current.max <= p_axis->current.min)
@@ -395,13 +395,13 @@ gr_axis_form_value_lin(
 
     /* Round up the current.max to a multiple of the major value towards +infinity */
     if(!p_axis->bits.manual || (p_axis->current.max != p_axis->punter.max))
-        {
+    {
         F64 ctest;
 
         ctest = ceil( p_axis->current.max / major_interval);
 
         p_axis->current.max = ctest * major_interval;
-        }
+    }
 
     /* cache the spanned interval NOW as major scaling might have modified the endpoints! */
     p_axis->current_span = p_axis->current.max - p_axis->current.min;
@@ -424,18 +424,18 @@ gr_axis_form_value_lin(
     ticksp->current = gr_lin_major(2.0 * major_interval);
 
     if(ticksp->bits.manual)
-        {
+    {
         if(ticksp->punter <= 0.0)
             ticksp->current = 0.0; /* off */
         else
-            {
+        {
             F64 test = ticksp->punter / ticksp->current;
 
             if((test >= 1.0/10.0) && (test <= 10.0/1.0))
                 /* use punter value unless it is silly or we area doing autocalc */
                 ticksp->current = ticksp->punter;
-            }
         }
+    }
 }
 
 extern void

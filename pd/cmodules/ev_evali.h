@@ -997,26 +997,30 @@ range_scan_element(
     P_EV_DATA p_ev_data,
     EV_TYPE type_flags);
 
-extern S32
-two_nums_divide(
+_Check_return_
+extern BOOL
+two_nums_add_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2);
 
-extern S32
-two_nums_minus(
+_Check_return_
+extern BOOL
+two_nums_divide_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2);
 
-extern S32
-two_nums_plus(
+_Check_return_
+extern BOOL
+two_nums_multiply_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2);
 
-extern S32
-two_nums_times(
+_Check_return_
+extern BOOL
+two_nums_subtract_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2);

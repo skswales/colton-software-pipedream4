@@ -32,7 +32,7 @@ fast_strtoul(
     profile_ensure_frame();
 
     for(;;)
-        {
+    {
         int digit;
         if(!isdigit(c))
             break;
@@ -46,16 +46,16 @@ fast_strtoul(
             overflowed = TRUE;
         ok = TRUE;
         c = *p_u8++;
-        }
+    }
 
     if(endptr)
         *endptr = ok ? (P_U8Z) (p_u8 - 1) : (P_U8Z) p_u8_in;
 
     if(overflowed)
-        {
+    {
         errno = ERANGE;
         return(U32_MAX);
-        }
+    }
 
     return((hi << 16) | lo);
 }
@@ -126,7 +126,7 @@ memswap32(
     /* copy aligned words at a time if possible */
     if( (((SWAPTYPE) p1 & (sizeof(SWAPTYPE)-1)) == 0) &&
         (((SWAPTYPE) p2 & (sizeof(SWAPTYPE)-1)) == 0) )
-        {
+    {
         P_SWAPTYPE s1, s2;
         SWAPTYPE s;
 
@@ -134,29 +134,29 @@ memswap32(
         s2 = p2;
 
         while(nbytes > sizeof32(s))
-            {
+        {
             nbytes -= sizeof32(s);
              s    = *s1;
             *s1++ = *s2;
             *s2++ =  s;
-            }
+        }
 
         c1 = (P_U8) s1;
         c2 = (P_U8) s2;
-        }
+    }
     else
-        {
+    {
         c1 = p1;
         c2 = p2;
-        }
+    }
 #endif
 
     for(i = 0; i < nbytes; ++i)
-        {
+    {
          c    = *c1;
         *c1++ = *c2;
         *c2++ =  c;
-        }
+    }
 }
 
 #undef SWAPTYPE
@@ -188,11 +188,11 @@ stristr(
     int i;
 
     for(;;)
-        {
+    {
         i = 0;
 
         for(;;)
-            {
+        {
             if(!b[i])
                 return((P_U8) a);
 
@@ -200,11 +200,11 @@ stristr(
                 break;
 
             ++i;
-            }
+        }
 
         if(!*a++)
             return(NULL);
-        }
+    }
 }
 
 /******************************************************************************
@@ -224,7 +224,7 @@ strrncmp(
     _In_        U32 n)
 {
     if(n)
-        {
+    {
         a += n;
         b += n;
 
@@ -232,7 +232,7 @@ strrncmp(
             if(*--a != *--b)
                 break;
         while(--n);
-        }
+    }
 
     return(n);
 }
@@ -257,17 +257,17 @@ str_set(
     U32 l = b ? strlen32(b) : 0;
 
     if(NULL != a)
-        {
+    {
         /* some of variable already set to this? */
         if((0 != l) && (0 == strncmp(a, b, l)))
-            {
+        {
             /* terminate at new offset */
             a[l] = NULLCH;
             return(STATUS_DONE);
-            }
+        }
 
         al_ptr_dispose(P_P_ANY_PEDANTIC(aa));
-        }
+    }
 
     if(0 == l)
         return(STATUS_OK);
@@ -351,7 +351,7 @@ _stricmp(
     int c1, c2;
 
     for(;;)
-        {
+    {
         c1 = *a++;
         c1 = tolower(c1);
         c2 = *b++;
@@ -362,7 +362,7 @@ _stricmp(
 
         if(c1 == 0)
             return(0);          /* no need to check c2 */
-        }
+    }
 }
 
 /******************************************************************************
@@ -380,7 +380,7 @@ _strnicmp(
     int c1, c2;
 
     while(n-- > 0)
-        {
+    {
         c1 = *a++;
         c1 = tolower(c1);
         c2 = *b++;
@@ -391,7 +391,7 @@ _strnicmp(
 
         if(c1 == 0)
             return(0);          /* no need to check c2 */
-        }
+    }
 
     return(0);
 }
@@ -463,8 +463,8 @@ STAR:
     oy = y;
 
     /* loop1: */
-    while(TRUE)
-        {
+    for(;;)
+    {
         while(is_control(*y))
             ++y;
 
@@ -475,55 +475,55 @@ STAR:
         ox = x;
 
         /* loop3: */
-        while(TRUE)
-            {
+        for(;;)
+        {
             if(wild_x)
                 switch(*x)
-                    {
-                    case '#':
-                        /*trace_0(0, "wild_stricmp loop3: ^# found in first string: goto STAR to skip it & hilites");*/
-                        goto STAR;
+                {
+                case '#':
+                    /*trace_0(0, "wild_stricmp loop3: ^# found in first string: goto STAR to skip it & hilites");*/
+                    goto STAR;
 
-                    case '^':
-                        /*trace_0(0, "wild_stricmp loop3: ^^ found in first string: match as ^");*/
-                        wild_x = FALSE;
+                case '^':
+                    /*trace_0(0, "wild_stricmp loop3: ^^ found in first string: match as ^");*/
+                    wild_x = FALSE;
 
-                    default:
-                        break;
-                    }
+                default:
+                    break;
+                }
 
             /*trace_3(0, "wild_stricmp loop3: x -> '%s', y -> '%s', wild_x %s", x, y, trace_boolstring(wild_x));*/
 
             /* are we at end of y string? */
             if(y == end_y)
-                {
+            {
                 /*trace_1(0, "wild_stricmp: end of y string: returns %d", (*x == '\0') ? 0 : -1);*/
                 if(x == end_x)
                     return(0);       /* equal */
                 else
                     return(-1);      /* first bigger */
-                }
+            }
 
             /* see if characters at x and y match */
             pos_res = toupper(*y) - toupper(*x);
             if(pos_res)
-                {
+            {
                 /* single character wildcard at x? */
                 if(!wild_x  ||  *x != '?'  ||  *y == ' ')
-                    {
+                {
                     y = oy;
                     x = ox;
 
                     if(x == ptr2)
-                        {
+                    {
                         /*trace_1(0, "wild_stricmp: returns %d", pos_res);*/
                         return(pos_res);
-                        }
+                    }
 
                     /*trace_0(0, "wild_stricmp: chars differ: restore ptrs & break to loop1");*/
                     break;
-                    }
                 }
+            }
 
             /* characters at x and y match, so increment x and y */
             /*trace_0(0, "wild_stricmp: chars at x & y match: ++x, ++y & hilite skip both & keep in loop3");*/
@@ -534,8 +534,8 @@ STAR:
                 ++x;
 
             do { ch = *++y; } while(is_control(ch));
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -560,14 +560,14 @@ stox(
     scanned = 0;
 
     if((c >= 'A') && (c <= 'Z'))
-        {
+    {
         S32 col;
 
         col     = (c - 'A');
         scanned = 1;
 
         for(;;)
-            {
+        {
             c = toupper(*string);
             ++string;
             if((c < 'A') || (c > 'Z'))
@@ -584,10 +584,10 @@ stox(
             col -= 'A';
 
             ++scanned;
-            }
+        }
 
         *p_col = col;
-        }
+    }
 
     return(scanned);
 }

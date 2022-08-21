@@ -90,10 +90,10 @@ typedef struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE
     S32                scatch_modified;     /* must be separate S32 not bitfield */
 
     struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE_PIE_XTRA
-        {
+    {
         S32 anticlockwise;
         F64  start_heading;
-        }
+    }
     pie_xtra;
     S32 pie_xtra_modified;
 }
@@ -228,14 +228,14 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
     S32             res;
 
     switch(id.name)
-        {
-        default:
-            assert(0);
-            return(0);
+    {
+    default:
+        assert(0);
+        return(0);
 
-        case GR_CHART_OBJNAME_POINT:
-            break;
-        }
+    case GR_CHART_OBJNAME_POINT:
+        break;
+    }
 
     epoint_no  = id.subno;
     eseries_no = id.no;
@@ -264,13 +264,13 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
         : file_find_on_path(filename, elemof32(filename), leafname);
 
     if(res <= 0)
-        {
+    {
         (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id + 1), eseries_no, epoint_no); /* "markers.S1P2" */
 
         res = (NULL != currname)
             ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
             : file_find_on_path(filename, elemof32(filename), leafname);
-        }
+    }
 
     if(res <= 0)
         return(0);
@@ -311,63 +311,63 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
     S32             res;
 
     switch(id.name)
+    {
+    default:
+        assert(0);
+        return(1);
+
+    case GR_CHART_OBJNAME_POINT:
+        if((res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, id, file_id)) < 0)
+            return(0);
+
+        if(res > 0)
+            return(res);
+
+        /* deliberate drop thru ... */
+
+    case GR_CHART_OBJNAME_SERIES:
+        eseries_no = id.no;
+
+        series_idx = gr_series_idx_from_external(cp, eseries_no);
+
+        gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
+
+        if(fillstyle.pattern == GR_FILL_PATTERN_NONE)
         {
-        default:
-            assert(0);
-            return(1);
+            /* keep it if already set, just twiddle bits */
 
-        case GR_CHART_OBJNAME_POINT:
-            if((res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, id, file_id)) < 0)
-                return(0);
+            currname = file_is_rooted(cp->core.currentfilename)
+                                    ? cp->core.currentfilename
+                                    : NULL;
 
-            if(res > 0)
-                return(res);
+            (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), eseries_no); /* "markers.S1 */
 
-            /* deliberate drop thru ... */
+            res = (NULL != currname)
+                ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
+                : file_find_on_path(filename, elemof32(filename), leafname);
 
-        case GR_CHART_OBJNAME_SERIES:
-            eseries_no = id.no;
+            if(res <= 0)
+            {
+                messagef(string_lookup(msg_id), eseries_no, eseries_no);
 
-            series_idx = gr_series_idx_from_external(cp, eseries_no);
-
-            gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
-
-            if(fillstyle.pattern == GR_FILL_PATTERN_NONE)
-                {
-                /* keep it if already set, just twiddle bits */
-
-                currname = file_is_rooted(cp->core.currentfilename)
-                                        ? cp->core.currentfilename
-                                        : NULL;
-
-                (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), eseries_no); /* "markers.S1 */
+                /* use series 1 markers */
+                (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), 1);
 
                 res = (NULL != currname)
                     ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
                     : file_find_on_path(filename, elemof32(filename), leafname);
 
                 if(res <= 0)
-                    {
-                    messagef(string_lookup(msg_id), eseries_no, eseries_no);
-
-                    /* use series 1 markers */
-                    (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), 1);
-
-                    res = (NULL != currname)
-                        ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
-                        : file_find_on_path(filename, elemof32(filename), leafname);
-
-                    if(res <= 0)
-                        return(0);
-                    }
-
-                if((res = gr_cache_entry_ensure(&cah, filename)) <= 0)
                     return(0);
+            }
 
-                fillstyle.pattern = (GR_FILL_PATTERN_HANDLE) cah;
-                }
-            break;
+            if((res = gr_cache_entry_ensure(&cah, filename)) <= 0)
+                return(0);
+
+            fillstyle.pattern = (GR_FILL_PATTERN_HANDLE) cah;
         }
+        break;
+    }
 
     fillstyle.bits.notsolid = 1;
     fillstyle.bits.pattern  = 1;
@@ -384,39 +384,39 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
         return(res);
 
     switch(id.name)
+    {
+    default:
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
         {
-        default:
-            break;
+        /* if vary by point try looking up SxPy files */
+        P_GR_SERIES serp = getserp(cp, series_idx);
 
-        case GR_CHART_OBJNAME_SERIES:
+        if(serp->bits.point_vary_manual
+                        ? serp->bits.point_vary
+                        : gr_axesp_from_series_idx(cp, series_idx)->bits.point_vary)
+        {
+            GR_CHART_OBJID point_id;
+            GR_POINT_NO    point, n_points;
+
+            point_id           = id;
+            point_id.name      = GR_CHART_OBJNAME_POINT;
+            point_id.has_subno = 1;
+
+            n_points = gr_travel_series_n_items_total(cp, series_idx);
+
+            for(point = 1; point < n_points; ++point)
             {
-            /* if vary by point try looking up SxPy files */
-            P_GR_SERIES serp = getserp(cp, series_idx);
+                point_id.subno = (U16) gr_point_external_from_key(point);
 
-            if(serp->bits.point_vary_manual
-                            ? serp->bits.point_vary
-                            : gr_axesp_from_series_idx(cp, series_idx)->bits.point_vary)
-                {
-                GR_CHART_OBJID point_id;
-                GR_POINT_NO    point, n_points;
-
-                point_id           = id;
-                point_id.name      = GR_CHART_OBJNAME_POINT;
-                point_id.has_subno = 1;
-
-                n_points = gr_travel_series_n_items_total(cp, series_idx);
-
-                for(point = 1; point < n_points; ++point)
-                    {
-                    point_id.subno = (U16) gr_point_external_from_key(point);
-
-                    if((res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, point_id, file_id)) <= 0)
-                        break;
-                    }
-                }
+                if((res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, point_id, file_id)) <= 0)
+                    break;
             }
-            break;
         }
+        break;
+        }
+    }
 
     return(1);
 }
@@ -432,39 +432,39 @@ gr_chartedit_gallery_barlinescatch_get_pictures(
     S32 msg_id  = is_bar ? GR_CHART_MSG_WINGE_SERIES_PICTURE : GR_CHART_MSG_WINGE_SERIES_MARKER;
 
     switch(modifying_id.name)
+    {
+    case GR_CHART_OBJNAME_AXIS:
         {
-        case GR_CHART_OBJNAME_AXIS:
-            {
-            GR_AXES_IDX     axes_idx;
-            GR_SERIES_IDX   series_idx;
-            GR_CHART_OBJID id;
-            S32            res;
+        GR_AXES_IDX     axes_idx;
+        GR_SERIES_IDX   series_idx;
+        GR_CHART_OBJID id;
+        S32            res;
 
-            (void) gr_axes_idx_from_external(cp, modifying_id.no, &axes_idx);
+        (void) gr_axes_idx_from_external(cp, modifying_id.no, &axes_idx);
 
-            for(series_idx = cp->axes[axes_idx].series.stt_idx;
-                series_idx < cp->axes[axes_idx].series.end_idx;
-                series_idx++)
-                {
-                gr_chart_objid_from_series_idx(cp, series_idx, &id);
-                if(0 >= (res =
-                    gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
-                        cp, id, file_id, msg_id)))
-                        return(res);
-                }
-            }
-            return(1);
-
-        default:
-            #ifndef NDEBUG
-            assert(0);
-            return(1);
-            #endif
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_POINT:
-            return(gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
-                        cp, modifying_id, file_id, msg_id));
+        for(series_idx = cp->axes[axes_idx].series.stt_idx;
+            series_idx < cp->axes[axes_idx].series.end_idx;
+            series_idx++)
+        {
+            gr_chart_objid_from_series_idx(cp, series_idx, &id);
+            if(0 >= (res =
+                gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
+                    cp, id, file_id, msg_id)))
+                    return(res);
         }
+        return(1);
+        }
+
+    default:
+        #ifndef NDEBUG
+        assert(0);
+        return(1);
+        #endif
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_POINT:
+        return(gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
+                    cp, modifying_id, file_id, msg_id));
+    }
 }
 
 static void
@@ -475,45 +475,45 @@ gr_chartedit_gallery_barlinescatch_kill_pictures(
     GR_FILLSTYLE fillstyle;
 
     switch(modifying_id.name)
+    {
+    case GR_CHART_OBJNAME_AXIS:
         {
-        case GR_CHART_OBJNAME_AXIS:
-            {
-            GR_AXES_IDX    axes_idx;
-            GR_SERIES_IDX  series_idx;
-            GR_CHART_OBJID id;
+        GR_AXES_IDX    axes_idx;
+        GR_SERIES_IDX  series_idx;
+        GR_CHART_OBJID id;
 
-            (void) gr_axes_idx_from_external(cp, modifying_id.no, &axes_idx);
+        (void) gr_axes_idx_from_external(cp, modifying_id.no, &axes_idx);
 
-            for(series_idx = cp->axes[axes_idx].series.stt_idx;
-                series_idx < cp->axes[axes_idx].series.end_idx;
-                series_idx++)
-                {
-                gr_chart_objid_from_series_idx(cp, series_idx, &id);
+        for(series_idx = cp->axes[axes_idx].series.stt_idx;
+            series_idx < cp->axes[axes_idx].series.end_idx;
+            series_idx++)
+        {
+            gr_chart_objid_from_series_idx(cp, series_idx, &id);
 
-                gr_chartedit_gallery_barlinescatch_kill_pictures(cp, id);
-                }
-            }
-            break;
-
-        default:
-        #ifndef NDEBUG
-            assert(0);
-            break;
-
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_POINT:
-        #endif
-            gr_chart_objid_fillstyle_query(cp, &modifying_id, &fillstyle);
-
-            if(fillstyle.pattern != GR_FILL_PATTERN_NONE)
-                {
-                fillstyle.bits.pattern = 0;
-                fillstyle.pattern      = GR_FILL_PATTERN_NONE;
-                fillstyle.fg.manual    = 1;
-                (void) gr_chart_objid_fillstyle_set(cp, &modifying_id, &fillstyle);
-                }
-            break;
+            gr_chartedit_gallery_barlinescatch_kill_pictures(cp, id);
         }
+        break;
+        }
+
+    default:
+    #ifndef NDEBUG
+        assert(0);
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_POINT:
+    #endif
+        gr_chart_objid_fillstyle_query(cp, &modifying_id, &fillstyle);
+
+        if(fillstyle.pattern != GR_FILL_PATTERN_NONE)
+        {
+            fillstyle.bits.pattern = 0;
+            fillstyle.pattern      = GR_FILL_PATTERN_NONE;
+            fillstyle.fg.manual    = 1;
+            (void) gr_chart_objid_fillstyle_set(cp, &modifying_id, &fillstyle);
+        }
+        break;
+    }
 }
 
 static void
@@ -528,12 +528,12 @@ gr_chartedit_gallery_scatch_lines_onoff(
     gr_chart_objid_scatchstyle_query(cp, &id, &scatchstyle);
 
     if(scatchstyle.bits.lines_off != lines_off)
-        {
+    {
         scatchstyle.bits.lines_off = lines_off;
 
         scatchstyle.bits.manual = 1;
         (void) gr_chart_objid_scatchstyle_set(cp, &id, &scatchstyle);
-        }
+    }
 }
 
 /******************************************************************************
@@ -581,52 +581,52 @@ gr_chartedit_gallery_barlinescatch_convert(
     state->reflect_modify = 1;
 
     switch(state->modifying_id.name)
+    {
+    case GR_CHART_OBJNAME_AXIS:
+        p_axes = &cp->axes[state->modifying_axes_idx];
+
+        /* make all series on selected axes part of a xxx chart */
+        p_axes->charttype = state->charttype;
+        p_axes->sertype   = sertype;
+
+        /* ensure all series currently on these axes get blotted */
+        for(series_idx = p_axes->series.stt_idx;
+            series_idx < p_axes->series.end_idx;
+            series_idx++)
         {
-        case GR_CHART_OBJNAME_AXIS:
-            p_axes = &cp->axes[state->modifying_axes_idx];
+            serp = getserp(cp, series_idx);
 
-            /* make all series on selected axes part of a xxx chart */
-            p_axes->charttype = state->charttype;
-            p_axes->sertype   = sertype;
-
-            /* ensure all series currently on these axes get blotted */
-            for(series_idx = p_axes->series.stt_idx;
-                series_idx < p_axes->series.end_idx;
-                series_idx++)
-                {
-                serp = getserp(cp, series_idx);
-
-                serp->charttype = GR_CHARTTYPE_NONE;
-
-                serp->sertype = sertype;
-                * (int *) &serp->valid = 0;
-                sertype_modified = 1;
-                }
-            break;
-
-        default:
-            assert(0);
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_POINT:
-            serp = getserp(cp, state->modifying_series_idx);
-
-            serp->charttype = state->charttype;
+            serp->charttype = GR_CHARTTYPE_NONE;
 
             serp->sertype = sertype;
             * (int *) &serp->valid = 0;
             sertype_modified = 1;
-            break;
         }
+        break;
+
+    default:
+        assert(0);
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_POINT:
+        serp = getserp(cp, state->modifying_series_idx);
+
+        serp->charttype = state->charttype;
+
+        serp->sertype = sertype;
+        * (int *) &serp->valid = 0;
+        sertype_modified = 1;
+        break;
+    }
 
     if(sertype_modified)
-        {
+    {
         /* kill current pictures prior to reshuffle */
         if(state->bits.tristate_pictures == RISCOS_TRISTATE_OFF)
             gr_chartedit_gallery_barlinescatch_kill_pictures(cp, state->modifying_id);
 
         /* need to reshuffle and reallocate */
         gr_chart_realloc_series(cp);
-        }
+    }
 }
 
 static void
@@ -644,7 +644,7 @@ gr_chartedit_gallery_barlinescatch_decode(
     icons = state->icons;
 
     if(icons)
-        {
+    {
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
         if(i)
             win_checkdouble(w, i,
@@ -700,9 +700,9 @@ gr_chartedit_gallery_barlinescatch_decode(
                             &cp->d3.pitch,
                             NULL,
                             &pitch_min_limit, &pitch_max_limit, pitch_decplaces);
-        }
+    }
     else if(state->charttype == GR_CHARTTYPE_PIE)
-        {
+    {
         i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL;
         if(i)
             win_checkdouble(w, i,
@@ -720,14 +720,14 @@ gr_chartedit_gallery_barlinescatch_decode(
                             &pie_heading_min_limit,
                             &pie_heading_max_limit,
                              pie_heading_decplaces);
-        }
+    }
 
     if(state->reflect_modify)
-        {
+    {
         state->reflect_modify = 0; /* no point doing it again unless subsequently changed */
 
         if(state->bits.tristate_cumulative != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32          cumulative;
             P_GR_AXES     p_axes;
             GR_SERIES_IDX series_idx;
@@ -738,38 +738,38 @@ gr_chartedit_gallery_barlinescatch_decode(
             state->bits.tristate_cumulative = RISCOS_TRISTATE_DONT_CARE;
 
             switch(state->modifying_id.name)
+            {
+            case GR_CHART_OBJNAME_AXIS:
+                p_axes = &cp->axes[state->modifying_axes_idx];
+
+                p_axes->bits.cumulative = cumulative;
+
+                /* blow away serp->valid.use_xxx */
+                for(series_idx = p_axes->series.stt_idx;
+                    series_idx < p_axes->series.end_idx;
+                    series_idx++)
                 {
-                case GR_CHART_OBJNAME_AXIS:
-                    p_axes = &cp->axes[state->modifying_axes_idx];
-
-                    p_axes->bits.cumulative = cumulative;
-
-                    /* blow away serp->valid.use_xxx */
-                    for(series_idx = p_axes->series.stt_idx;
-                        series_idx < p_axes->series.end_idx;
-                        series_idx++)
-                        {
-                        serp = getserp(cp, series_idx);
-
-                        /* blow away serp->valid.use_xxx */
-                        * (int *) &serp->valid = 0;
-                        }
-                    break;
-
-                default:
-                    serp = getserp(cp, state->modifying_series_idx);
+                    serp = getserp(cp, series_idx);
 
                     /* blow away serp->valid.use_xxx */
                     * (int *) &serp->valid = 0;
-
-                    serp->bits.cumulative        = cumulative;
-                    serp->bits.cumulative_manual = 1;
-                    break;
                 }
+                break;
+
+            default:
+                serp = getserp(cp, state->modifying_series_idx);
+
+                /* blow away serp->valid.use_xxx */
+                * (int *) &serp->valid = 0;
+
+                serp->bits.cumulative        = cumulative;
+                serp->bits.cumulative_manual = 1;
+                break;
             }
+        }
 
         if(state->bits.tristate_point_vary != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32        point_vary;
             P_GR_SERIES serp;
 
@@ -778,22 +778,22 @@ gr_chartedit_gallery_barlinescatch_decode(
             state->bits.tristate_point_vary = RISCOS_TRISTATE_DONT_CARE;
 
             switch(state->modifying_id.name)
-                {
-                case GR_CHART_OBJNAME_AXIS:
-                    cp->axes[state->modifying_axes_idx].bits.point_vary = point_vary;
-                    break;
+            {
+            case GR_CHART_OBJNAME_AXIS:
+                cp->axes[state->modifying_axes_idx].bits.point_vary = point_vary;
+                break;
 
-                default:
-                    serp = getserp(cp, state->modifying_series_idx);
+            default:
+                serp = getserp(cp, state->modifying_series_idx);
 
-                    serp->bits.point_vary        = point_vary;
-                    serp->bits.point_vary_manual = 1;
-                    break;
-                }
+                serp->bits.point_vary        = point_vary;
+                serp->bits.point_vary_manual = 1;
+                break;
             }
+        }
 
         if(state->bits.tristate_fill_axis != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32        fill_axis;
             P_GR_SERIES serp;
 
@@ -802,22 +802,22 @@ gr_chartedit_gallery_barlinescatch_decode(
             state->bits.tristate_fill_axis = RISCOS_TRISTATE_DONT_CARE;
 
             switch(state->modifying_id.name)
-                {
-                case GR_CHART_OBJNAME_AXIS:
-                    cp->axes[state->modifying_axes_idx].bits.fill_axis = fill_axis;
-                    break;
+            {
+            case GR_CHART_OBJNAME_AXIS:
+                cp->axes[state->modifying_axes_idx].bits.fill_axis = fill_axis;
+                break;
 
-                default:
-                    serp = getserp(cp, state->modifying_series_idx);
+            default:
+                serp = getserp(cp, state->modifying_series_idx);
 
-                    serp->bits.fill_axis        = fill_axis;
-                    serp->bits.fill_axis_manual = 1;
-                    break;
-                }
+                serp->bits.fill_axis        = fill_axis;
+                serp->bits.fill_axis_manual = 1;
+                break;
             }
+        }
 
         if(state->bits.tristate_best_fit != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32        best_fit;
             P_GR_SERIES serp;
 
@@ -826,22 +826,22 @@ gr_chartedit_gallery_barlinescatch_decode(
             state->bits.tristate_best_fit = RISCOS_TRISTATE_DONT_CARE;
 
             switch(state->modifying_id.name)
-                {
-                case GR_CHART_OBJNAME_AXIS:
-                    cp->axes[state->modifying_axes_idx].bits.best_fit = best_fit;
-                    break;
+            {
+            case GR_CHART_OBJNAME_AXIS:
+                cp->axes[state->modifying_axes_idx].bits.best_fit = best_fit;
+                break;
 
-                default:
-                    serp = getserp(cp, state->modifying_series_idx);
+            default:
+                serp = getserp(cp, state->modifying_series_idx);
 
-                    serp->bits.best_fit        = best_fit;
-                    serp->bits.best_fit_manual = 1;
-                    break;
-                }
+                serp->bits.best_fit        = best_fit;
+                serp->bits.best_fit_manual = 1;
+                break;
             }
+        }
 
         if(state->bits.tristate_join_lines != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32 join_lines;
 
             join_lines = (state->bits.tristate_join_lines == RISCOS_TRISTATE_ON);
@@ -849,10 +849,10 @@ gr_chartedit_gallery_barlinescatch_decode(
             state->bits.tristate_join_lines = RISCOS_TRISTATE_DONT_CARE;
 
             gr_chartedit_gallery_scatch_lines_onoff(cp, state->modifying_id, join_lines);
-            }
+        }
 
         if(state->bits.tristate_stacked != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32          stacked;
             P_GR_AXES     p_axes;
             GR_SERIES_IDX series_idx;
@@ -870,15 +870,15 @@ gr_chartedit_gallery_barlinescatch_decode(
             for(series_idx = p_axes->series.stt_idx;
                 series_idx < p_axes->series.end_idx;
                 series_idx++)
-                {
+            {
                 serp = getserp(cp, series_idx);
 
                 * (int *) &serp->valid = 0;
-                }
             }
+        }
 
         if(state->bits.tristate_pictures != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32 pictures;
 
             pictures = (state->bits.tristate_pictures == RISCOS_TRISTATE_ON);
@@ -889,10 +889,10 @@ gr_chartedit_gallery_barlinescatch_decode(
                 gr_chartedit_gallery_barlinescatch_get_pictures(cp, state->modifying_id, state->charttype);
             else
                 gr_chartedit_gallery_barlinescatch_kill_pictures(cp, state->modifying_id);
-            }
+        }
 
         if(state->bits.tristate_categ_x_val != RISCOS_TRISTATE_DONT_CARE)
-            {
+        {
             S32 categ_x_val;
 
             categ_x_val = (state->bits.tristate_categ_x_val == RISCOS_TRISTATE_ON);
@@ -903,62 +903,62 @@ gr_chartedit_gallery_barlinescatch_decode(
                 ;
             else
                 ;
-            }
+        }
 
         res = 1;
 
         for(;;)
-            {
+        {
             if(state->barch_modified)
-                {
+            {
                 state->barch_modified = 0;
                 state->barch.bits.manual = 1;
                 if((res = gr_chart_objid_barchstyle_set(cp, &state->modifying_id, &state->barch)) < 0)
                     break;
-                }
+            }
 
             if(state->linech_modified)
-                {
+            {
                 state->linech_modified = 0;
                 state->linech.bits.manual = 1;
                 if((res = gr_chart_objid_linechstyle_set(cp, &state->modifying_id, &state->linech)) < 0)
                     break;
-                }
+            }
 
             if(state->barlinech_modified)
-                {
+            {
                 state->barlinech_modified = 0;
                 state->barlinech.bits.manual = 1;
                 if((res = gr_chart_objid_barlinechstyle_set(cp, &state->modifying_id, &state->barlinech)) < 0)
                     break;
-                }
+            }
 
             if(state->piechdispl_modified)
-                {
+            {
                 state->piechdispl_modified = 0;
                 state->piechdispl.bits.manual = 1;
                 if((res = gr_chart_objid_piechdisplstyle_set(cp, &state->modifying_id, &state->piechdispl)) < 0)
                     break;
-                }
+            }
 
             if(state->piechlabel_modified)
-                {
+            {
                 state->piechlabel_modified = 0;
                 state->piechlabel.bits.manual = 1;
                 if((res = gr_chart_objid_piechlabelstyle_set(cp, &state->modifying_id, &state->piechlabel)) < 0)
                     break;
-                }
+            }
 
             if(state->scatch_modified)
-                {
+            {
                 state->scatch_modified = 0;
                 state->scatch.bits.manual = 1;
                 if((res = gr_chart_objid_scatchstyle_set(cp, &state->modifying_id, &state->scatch)) < 0)
                     break;
-                }
+            }
 
             if(state->pie_xtra_modified)
-                {
+            {
                 /* currently bash one series */
                 P_GR_SERIES serp;
 
@@ -968,16 +968,16 @@ gr_chartedit_gallery_barlinescatch_decode(
 
                 serp->bits.pie_anticlockwise  = state->pie_xtra.anticlockwise;
                 serp->style.pie_start_heading = state->pie_xtra.start_heading;
-                }
+            }
 
             break;
-            }
+        }
 
         if(res < 0)
             gr_chartedit_winge(res);
 
         gr_chart_modify_and_rebuild(&state->cep->ch);
-        }
+    }
 }
 
 static const F64
@@ -1013,7 +1013,7 @@ gr_chartedit_gallery_barlinescatch_encode(
     unfadeprocRO = (cp->axes_idx_max > 0) ? win_unfadefield : win_fadefield;
 
     if(state->charttype == GR_CHARTTYPE_PIE)
-        {
+    {
         win_setdouble(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL,
                       &state->piechdispl.radial_displacement, pct_radial_dsp_decplaces);
 
@@ -1028,7 +1028,7 @@ gr_chartedit_gallery_barlinescatch_encode(
                          (state->pie_xtra.start_heading == pie_start_headings[i]));
 
         return;
-        }
+    }
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
     if(i)
@@ -1036,13 +1036,13 @@ gr_chartedit_gallery_barlinescatch_encode(
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
     if(i)
-        {
+    {
         (* unfadeproc2d) (w, i - 2); /* triplet field */
         (* unfadeproc2d) (w, i - 1);
         (* unfadeproc2d) (w, i);
 
         win_setdouble(w, i, &cp->barch.slot_overlap_percentage, pct_decplaces);
-        }
+    }
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_STACK_PICT];
     if(i)
@@ -1054,23 +1054,23 @@ gr_chartedit_gallery_barlinescatch_encode(
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
     if(i)
-        {
+    {
         (* unfadeproc2d) (w, i - 2); /* triplet field */
         (* unfadeproc2d) (w, i - 1);
         (* unfadeproc2d) (w, i);
 
         win_setdouble(w, i, &cp->linech.slot_shift_percentage, pct_decplaces);
-        }
+    }
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BARLINE_3D_DEPTH];
     if(i)
-        {
+    {
         (* unfadeproc3d) (w, i - 2); /* triplet field */
         (* unfadeproc3d) (w, i - 1);
         (* unfadeproc3d) (w, i);
 
         win_setdouble(w, i, &state->barlinech.slot_depth_percentage, pct_decplaces);
-        }
+    }
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
     if(i)
@@ -1082,23 +1082,23 @@ gr_chartedit_gallery_barlinescatch_encode(
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ROLL];
     if(i)
-        {
+    {
         (* unfadeproc3d) (w, i - 2); /* triplet field */
         (* unfadeproc3d) (w, i - 1);
         (* unfadeproc3d) (w, i);
 
         win_setdouble(w, i, &cp->d3.roll, roll_decplaces);
-        }
+    }
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_PITCH];
     if(i)
-        {
+    {
         (* unfadeproc3d) (w, i - 2); /* triplet field */
         (* unfadeproc3d) (w, i - 1);
         (* unfadeproc3d) (w, i);
 
         win_setdouble(w, i, &cp->d3.pitch, pitch_decplaces);
-        }
+    }
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
     if(i)
@@ -1159,51 +1159,51 @@ gr_chartedit_gallery_barlinescatch_getsel(
                                     : state->cep->selection.id;
 
     switch(state->modifying_id.name)
+    {
+    case GR_CHART_OBJNAME_BESTFITSER:
+    case GR_CHART_OBJNAME_DROPSER:
+        state->modifying_id.name = GR_CHART_OBJNAME_SERIES;
+        goto setup_series_or_point;
+
+    case GR_CHART_OBJNAME_DROPPOINT:
+        state->modifying_id.name = GR_CHART_OBJNAME_POINT;
+
+    /* deliberate drop thru ... */
+
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_POINT:
+    setup_series_or_point:;
+        state->modifying_series_idx = gr_series_idx_from_external(cp, state->modifying_id.no);
+        state->modifying_axes_idx   = gr_axes_idx_from_series_idx(cp, state->modifying_series_idx);
+        if(state->charttype == GR_CHARTTYPE_PIE)
+            cp->pie_series_idx = state->modifying_series_idx;
+        break;
+
+    default:
+        /* if unsure, modify first axes set */
+        gr_chart_objid_from_axes_idx(cp, 0, 0, &state->modifying_id);
+        goto setup_axis;
+
+    case GR_CHART_OBJNAME_AXISTICK:
+    case GR_CHART_OBJNAME_AXISGRID:
+        state->modifying_id.name      = GR_CHART_OBJNAME_AXIS;
+        state->modifying_id.has_subno = 0;
+        state->modifying_id.subno     = 0;
+
+    /* deliberate drop thru ... */
+
+    case GR_CHART_OBJNAME_AXIS:
+    setup_axis:;
+        (void) gr_axes_idx_from_external(cp, state->modifying_id.no, &state->modifying_axes_idx);
+
+        if(state->charttype == GR_CHARTTYPE_PIE)
         {
-        case GR_CHART_OBJNAME_BESTFITSER:
-        case GR_CHART_OBJNAME_DROPSER:
-            state->modifying_id.name = GR_CHART_OBJNAME_SERIES;
+            /* if unsure, modify Series 1 */
+            gr_chart_objid_from_series_idx(cp, 0, &state->modifying_id);
             goto setup_series_or_point;
-
-        case GR_CHART_OBJNAME_DROPPOINT:
-            state->modifying_id.name = GR_CHART_OBJNAME_POINT;
-
-        /* deliberate drop thru ... */
-
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_POINT:
-        setup_series_or_point:;
-            state->modifying_series_idx = gr_series_idx_from_external(cp, state->modifying_id.no);
-            state->modifying_axes_idx   = gr_axes_idx_from_series_idx(cp, state->modifying_series_idx);
-            if(state->charttype == GR_CHARTTYPE_PIE)
-                cp->pie_series_idx = state->modifying_series_idx;
-            break;
-
-        default:
-            /* if unsure, modify first axes set */
-            gr_chart_objid_from_axes_idx(cp, 0, 0, &state->modifying_id);
-            goto setup_axis;
-
-        case GR_CHART_OBJNAME_AXISTICK:
-        case GR_CHART_OBJNAME_AXISGRID:
-            state->modifying_id.name      = GR_CHART_OBJNAME_AXIS;
-            state->modifying_id.has_subno = 0;
-            state->modifying_id.subno     = 0;
-
-        /* deliberate drop thru ... */
-
-        case GR_CHART_OBJNAME_AXIS:
-        setup_axis:;
-            (void) gr_axes_idx_from_external(cp, state->modifying_id.no, &state->modifying_axes_idx);
-
-            if(state->charttype == GR_CHARTTYPE_PIE)
-                {
-                /* if unsure, modify Series 1 */
-                gr_chart_objid_from_series_idx(cp, 0, &state->modifying_id);
-                goto setup_series_or_point;
-                }
-            break;
         }
+        break;
+    }
 
     /* read current state */
 
@@ -1217,7 +1217,7 @@ gr_chartedit_gallery_barlinescatch_getsel(
         gr_chart_objid_barlinechstyle_query( cp, &state->modifying_id, &state->barlinech);
 
     if(state->charttype == GR_CHARTTYPE_PIE)
-        {
+    {
         /* currently read one series */
         P_GR_SERIES serp;
 
@@ -1228,7 +1228,7 @@ gr_chartedit_gallery_barlinescatch_getsel(
 
         state->pie_xtra.anticlockwise = serp->bits.pie_anticlockwise;
         state->pie_xtra.start_heading = serp->style.pie_start_heading;
-        }
+    }
 
     if(state->charttype == GR_CHARTTYPE_SCAT)
         gr_chart_objid_scatchstyle_query(    cp, &state->modifying_id, &state->scatch);
@@ -1264,7 +1264,7 @@ gr_chartedit_gallery_barlinescatch_init(
     char * errorp;
 
     if(*p_dbox)
-        {
+    {
         wimp_w w = dbox_syshandle(*p_dbox);
         wimp_wstate wstate;
         wimp_eventstr e;
@@ -1278,7 +1278,7 @@ gr_chartedit_gallery_barlinescatch_init(
         wimpt_safe(wimp_sendwmessage(wimp_EOPEN, (wimp_msgstr *) &e.data.o, w, (wimp_i) -1));
 
         return(0);
-        }
+    }
 
     *p_dbox = d = dbox_new_new(dboxname, &errorp);
 
@@ -1316,22 +1316,22 @@ gr_chartedit_gallery_barlinescatch_process(
     /* adjusters all modify but rebuild at end */
 
     if(f == dbox_OK)
-        {
+    {
         state->reflect_modify = 1;
         return;
-        }
+    }
 
     if(icons)
-        {
+    {
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
         if(i && win_bumpdouble(w, f, i,
                             &state->barch.slot_width_percentage,
                             &double_1,
                             &pct_min_limit, &pct_max_limit, pct_decplaces))
-            {
+        {
             state->barch_modified = 1;
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
         if(i && !cp->d3.bits.on && win_bumpdouble(w, f, i,
@@ -1342,7 +1342,7 @@ gr_chartedit_gallery_barlinescatch_process(
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_STACK_PICT];
         if(i && (i == f))
-            {
+        {
             state->barch.bits.pictures_stacked = win_getonoff(w, f);
             state->barch_modified = 1;
 
@@ -1351,17 +1351,17 @@ gr_chartedit_gallery_barlinescatch_process(
                 state->bits.tristate_pictures = RISCOS_TRISTATE_ON;
 
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_WIDTH];
         if(i && win_bumpdouble(w, f, i,
                             &state->linech.slot_width_percentage,
                             &double_1,
                             &pct_min_limit, &pct_max_limit, pct_decplaces))
-            {
+        {
             state->linech_modified = 1;
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
         if(i && !cp->d3.bits.on && win_bumpdouble(w, f, i,
@@ -1375,27 +1375,27 @@ gr_chartedit_gallery_barlinescatch_process(
                             &state->barlinech.slot_depth_percentage,
                             &double_1,
                             &pct_min_limit, &pct_max_limit, pct_decplaces))
-            {
+        {
             state->barlinech_modified = 1;
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
         if(i && win_bumpdouble(w, f, i,
                             &state->scatch.width_percentage,
                             &pct_bumpvalue,
                             &pct_min_limit, &pct_max_limit, pct_decplaces))
-            {
+        {
             state->scatch_modified = 1;
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ON];
         if(i && (i == f))
-            {
+        {
             cp->d3.bits.on = win_getonoff(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ROLL];
         if(i && cp->d3.bits.on && win_bumpdouble(w, f, i,
@@ -1413,86 +1413,86 @@ gr_chartedit_gallery_barlinescatch_process(
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
         if(i && (i == f))
-            {
+        {
             if(cp->axes_idx_max > 0)
-                {
+            {
                 cp->axes_idx_max = 0;
                 cp->bits.realloc_series = 1;
 
                 state->reflect_modify = 1;
-                }
-            return;
             }
+            return;
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CUMULATIVE];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_cumulative = riscos_tristate_hit(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_POINT_VARY];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_point_vary = riscos_tristate_hit(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_FILL_AXIS];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_fill_axis = riscos_tristate_hit(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BEST_FIT];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_best_fit = riscos_tristate_hit(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_JOIN_LINES];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_join_lines = riscos_tristate_hit(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_STACKED];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_stacked = riscos_tristate_hit(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_PICTURES];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_pictures = riscos_tristate_hit(w, f);
             return;
-            }
+        }
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CATEG_X_VAL];
         if(i && (i == f))
-            {
+        {
             state->bits.tristate_categ_x_val = riscos_tristate_hit(w, f);
             return;
-            }
         }
+    }
     else if(state->charttype == GR_CHARTTYPE_PIE)
-        {
+    {
         i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_ANTICLOCKWISE;
         if(i && (i == f))
-            {
+        {
             state->pie_xtra.anticlockwise = win_getonoff(w, f);
             state->pie_xtra_modified = 1;
             return;
-            }
+        }
 
         if( (f >= GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000) &&
             (f <= GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_315) )
-            {
+        {
             state->pie_xtra.start_heading = pie_start_headings[f - GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000];
             state->pie_xtra_modified = 1;
 
@@ -1501,7 +1501,7 @@ gr_chartedit_gallery_barlinescatch_process(
                           &state->pie_xtra.start_heading, pie_heading_decplaces);
 
             return;
-            }
+        }
 
         i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL;
         if(i && win_bumpdouble(w, f, i,
@@ -1510,10 +1510,10 @@ gr_chartedit_gallery_barlinescatch_process(
                             &pie_heading_min_limit,
                             &pie_heading_max_limit,
                              pie_heading_decplaces))
-            {
+        {
             state->pie_xtra_modified = 1;
             return;
-            }
+        }
 
         i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL;
         if(i && win_bumpdouble(w, f, i,
@@ -1522,11 +1522,11 @@ gr_chartedit_gallery_barlinescatch_process(
                             &pct_radial_dsp_min_limit,
                             &pct_radial_dsp_max_limit,
                              pct_radial_dsp_decplaces))
-            {
+        {
             state->piechdispl_modified = 1;
             return;
-            }
         }
+    }
 
     assert(0);
 }
@@ -1593,11 +1593,11 @@ gr_chartedit_gallery_bar_process(
     cp = state.cp;
 
     for(;;)
-        {
+    {
         gr_chartedit_gallery_barlinescatch_getsel(&state);
 
         for(;;)
-            {
+        {
             gr_chartedit_gallery_barlinescatch_encode(&state);
 
             f = dbox_fillin(d);
@@ -1618,7 +1618,7 @@ gr_chartedit_gallery_bar_process(
             if(ok_hit || pict_hit)
                 if(state.modifying_id.name == GR_CHART_OBJNAME_AXIS)
                     if( cp->axes[state.modifying_axes_idx].charttype != state.charttype)
-                        {
+                    {
                         cp->axes[state.modifying_axes_idx].charttype  = state.charttype;
 
                         /* set up grid state on first conversion */
@@ -1634,14 +1634,14 @@ gr_chartedit_gallery_bar_process(
 
                         /* fake default pict_hit if OK clicked */
                         if(ok_hit)
-                            {
+                        {
                             f = GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_FIRST;
                             pict_hit = 1;
-                            }
                         }
+                    }
 
             if(pict_hit)
-                {
+            {
                 GR_SERIES_TYPE sertype;
 
                 sertype                           = GR_CHART_SERIES_PLAIN;
@@ -1653,46 +1653,46 @@ gr_chartedit_gallery_bar_process(
                 state.barch.bits.pictures_stacked = 1;
 
                 switch(f - GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_FIRST)
-                    {
-                    default:
-                    case 0:
-                        break;
+                {
+                default:
+                case 0:
+                    break;
 
-                    case 1:
-                        sertype                           = GR_CHART_SERIES_PLAIN_ERROR1;
-                        break;
+                case 1:
+                    sertype                           = GR_CHART_SERIES_PLAIN_ERROR1;
+                    break;
 
-                    case 2:
-                        state.bits.tristate_point_vary    = RISCOS_TRISTATE_ON;
-                        break;
+                case 2:
+                    state.bits.tristate_point_vary    = RISCOS_TRISTATE_ON;
+                    break;
 
-                    case 3:
-                        break;
+                case 3:
+                    break;
 
-                    case 4:
-                        state.bits.tristate_pictures      = RISCOS_TRISTATE_ON;
-                        state.barch.bits.pictures_stacked = 1;
-                        state.barch_modified              = 1;
-                        break;
+                case 4:
+                    state.bits.tristate_pictures      = RISCOS_TRISTATE_ON;
+                    state.barch.bits.pictures_stacked = 1;
+                    state.barch_modified              = 1;
+                    break;
 
-                    case 5:
-                        state.bits.tristate_pictures      = RISCOS_TRISTATE_ON;
-                        state.barch.bits.pictures_stacked = 0;
-                        state.barch_modified              = 1;
-                        break;
+                case 5:
+                    state.bits.tristate_pictures      = RISCOS_TRISTATE_ON;
+                    state.barch.bits.pictures_stacked = 0;
+                    state.barch_modified              = 1;
+                    break;
 
-                    case 6:
-                        state.bits.tristate_stacked       = RISCOS_TRISTATE_ON;
-                        break;
+                case 6:
+                    state.bits.tristate_stacked       = RISCOS_TRISTATE_ON;
+                    break;
 
-                    case 7:
-                        state.bits.tristate_stacked       = RISCOS_TRISTATE_ON;
-                        cp->axes[state.modifying_axes_idx].bits.stacked_pct = 1;
-                        break;
-                    }
+                case 7:
+                    state.bits.tristate_stacked       = RISCOS_TRISTATE_ON;
+                    cp->axes[state.modifying_axes_idx].bits.stacked_pct = 1;
+                    break;
+                }
 
                 gr_chartedit_gallery_barlinescatch_convert(&state, sertype);
-                }
+            }
             else
                 gr_chartedit_gallery_barlinescatch_process(&state, f);
 
@@ -1700,7 +1700,7 @@ gr_chartedit_gallery_bar_process(
 
             if(ok_hit || pict_hit)
                 break;
-            }
+        }
 
         /* hits on pictures not caused by OK faking pict_hit go loopy */
         if(!ok_hit && pict_hit)
@@ -1710,7 +1710,7 @@ gr_chartedit_gallery_bar_process(
 
         if(!persist)
             break;
-        }
+    }
 
     dbox_dispose(&d);
 }
@@ -1777,11 +1777,11 @@ gr_chartedit_gallery_line_process(
     cp = state.cp;
 
     for(;;)
-        {
+    {
         gr_chartedit_gallery_barlinescatch_getsel(&state);
 
         for(;;)
-            {
+        {
             gr_chartedit_gallery_barlinescatch_encode(&state);
 
             f = dbox_fillin(d);
@@ -1802,7 +1802,7 @@ gr_chartedit_gallery_line_process(
             if(ok_hit || pict_hit)
                 if(state.modifying_id.name == GR_CHART_OBJNAME_AXIS)
                     if( cp->axes[state.modifying_axes_idx].charttype != state.charttype)
-                        {
+                    {
                         cp->axes[state.modifying_axes_idx].charttype  = state.charttype;
 
                         /* set up grid state on first conversion */
@@ -1818,14 +1818,14 @@ gr_chartedit_gallery_line_process(
 
                         /* fake default pict_hit if OK clicked */
                         if(ok_hit)
-                            {
+                        {
                             f = GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_FIRST;
                             pict_hit = 1;
-                            }
                         }
+                    }
 
             if(pict_hit)
-                {
+            {
                 GR_SERIES_TYPE sertype;
 
                 sertype                       = GR_CHART_SERIES_PLAIN;
@@ -1834,47 +1834,47 @@ gr_chartedit_gallery_line_process(
                 state.bits.tristate_pictures  = RISCOS_TRISTATE_OFF;
 
                 switch(f - GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_FIRST)
-                    {
-                    default:
-                    case 0:
-                        break;
+                {
+                default:
+                case 0:
+                    break;
 
-                    case 1:
-                        sertype                       = GR_CHART_SERIES_PLAIN_ERROR1;
-                        break;
+                case 1:
+                    sertype                       = GR_CHART_SERIES_PLAIN_ERROR1;
+                    break;
 
-                    case 2:
-                        state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
-                        break;
+                case 2:
+                    state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
+                    break;
 
-                    case 3:
-                        state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
-                        state.bits.tristate_stacked   = RISCOS_TRISTATE_ON;
-                        break;
+                case 3:
+                    state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
+                    state.bits.tristate_stacked   = RISCOS_TRISTATE_ON;
+                    break;
 
-                    case 4:
-                        state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
-                        break;
+                case 4:
+                    state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
+                    break;
 
-                    case 5:
-                        sertype                       = GR_CHART_SERIES_PLAIN_ERROR1;
-                        state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
-                        break;
+                case 5:
+                    sertype                       = GR_CHART_SERIES_PLAIN_ERROR1;
+                    state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
+                    break;
 
-                    case 6:
-                        state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
-                        state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
-                        break;
+                case 6:
+                    state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
+                    state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
+                    break;
 
-                    case 7:
-                        state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
-                        state.bits.tristate_stacked   = RISCOS_TRISTATE_ON;
-                        state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
-                        break;
-                    }
+                case 7:
+                    state.bits.tristate_fill_axis = RISCOS_TRISTATE_ON;
+                    state.bits.tristate_stacked   = RISCOS_TRISTATE_ON;
+                    state.bits.tristate_pictures  = RISCOS_TRISTATE_ON;
+                    break;
+                }
 
                 gr_chartedit_gallery_barlinescatch_convert(&state, sertype);
-                }
+            }
             else
                 gr_chartedit_gallery_barlinescatch_process(&state, f);
 
@@ -1882,7 +1882,7 @@ gr_chartedit_gallery_line_process(
 
             if(ok_hit || pict_hit)
                 break;
-            }
+        }
 
         /* hits on pictures not caused by OK faking pict_hit go loopy */
         if(!ok_hit && pict_hit)
@@ -1892,7 +1892,7 @@ gr_chartedit_gallery_line_process(
 
         if(!persist)
             break;
-        }
+    }
 
     dbox_dispose(&d);
 }
@@ -1959,11 +1959,11 @@ gr_chartedit_gallery_scat_process(
     cp = state.cp;
 
     for(;;)
-        {
+    {
         gr_chartedit_gallery_barlinescatch_getsel(&state);
 
         for(;;)
-            {
+        {
             gr_chartedit_gallery_barlinescatch_encode(&state);
 
             f = dbox_fillin(d);
@@ -1983,7 +1983,7 @@ gr_chartedit_gallery_scat_process(
 
             if(ok_hit || pict_hit)
                 if( cp->axes[0].charttype != state.charttype)
-                    {
+                {
                     cp->axes[0].charttype  = state.charttype;
 
                     /* set up grid state on first conversion */
@@ -1996,7 +1996,7 @@ gr_chartedit_gallery_scat_process(
                     cp->axes[0].axis[Y_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_RIGHT;
 
                     if(cp->axes_idx_max > 0)
-                        {
+                    {
                         cp->axes[1].axis[X_AXIS_IDX].major.bits.grid = 1;
                         cp->axes[1].axis[X_AXIS_IDX].minor.bits.grid = 0;
                         cp->axes[1].axis[X_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_BOTTOM;
@@ -2004,20 +2004,20 @@ gr_chartedit_gallery_scat_process(
                         cp->axes[1].axis[Y_AXIS_IDX].major.bits.grid = 1;
                         cp->axes[1].axis[Y_AXIS_IDX].minor.bits.grid = 0;
                         cp->axes[1].axis[Y_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_LEFT;
-                        }
+                    }
 
                     gr_chartedit_gallery_undo_pie_bodges(cp);
 
                     /* fake default pict_hit if OK clicked */
                     if(ok_hit)
-                        {
+                    {
                         f = GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_FIRST;
                         pict_hit = 1;
-                        }
                     }
+                }
 
             if(pict_hit)
-                {
+            {
                 GR_SERIES_TYPE sertype;
 
                 sertype                        = GR_CHART_SERIES_POINT;
@@ -2025,53 +2025,53 @@ gr_chartedit_gallery_scat_process(
                 state.bits.tristate_pictures   = RISCOS_TRISTATE_ON;
 
                 switch(f - GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_FIRST)
-                    {
-                    default:
-                    case 0:
-                        state.bits.tristate_pictures   = RISCOS_TRISTATE_OFF;
-                        break;
+                {
+                default:
+                case 0:
+                    state.bits.tristate_pictures   = RISCOS_TRISTATE_OFF;
+                    break;
 
-                    case 1:
-                        sertype                        = GR_CHART_SERIES_POINT_ERROR1;
-                        state.bits.tristate_pictures   = RISCOS_TRISTATE_OFF;
-                        break;
+                case 1:
+                    sertype                        = GR_CHART_SERIES_POINT_ERROR1;
+                    state.bits.tristate_pictures   = RISCOS_TRISTATE_OFF;
+                    break;
 
-                    case 2:
-                        sertype                        = GR_CHART_SERIES_POINT_ERROR2;
-                        state.bits.tristate_pictures   = RISCOS_TRISTATE_OFF;
-                        break;
+                case 2:
+                    sertype                        = GR_CHART_SERIES_POINT_ERROR2;
+                    state.bits.tristate_pictures   = RISCOS_TRISTATE_OFF;
+                    break;
 
-                    case 3:
-                        state.bits.tristate_join_lines = RISCOS_TRISTATE_OFF;
-                        break;
+                case 3:
+                    state.bits.tristate_join_lines = RISCOS_TRISTATE_OFF;
+                    break;
 
-                    case 4:
-                        sertype                        = GR_CHART_SERIES_POINT_ERROR1;
-                        state.bits.tristate_join_lines = RISCOS_TRISTATE_OFF;
-                        break;
+                case 4:
+                    sertype                        = GR_CHART_SERIES_POINT_ERROR1;
+                    state.bits.tristate_join_lines = RISCOS_TRISTATE_OFF;
+                    break;
 
-                    case 5:
-                        sertype                        = GR_CHART_SERIES_POINT_ERROR2;
-                        state.bits.tristate_join_lines = RISCOS_TRISTATE_OFF;
-                        break;
+                case 5:
+                    sertype                        = GR_CHART_SERIES_POINT_ERROR2;
+                    state.bits.tristate_join_lines = RISCOS_TRISTATE_OFF;
+                    break;
 
-                    case 6:
-                        break;
+                case 6:
+                    break;
 
-                    case 7:
-                        sertype                        = GR_CHART_SERIES_POINT_ERROR1;
-                        break;
+                case 7:
+                    sertype                        = GR_CHART_SERIES_POINT_ERROR1;
+                    break;
 
-                    case 8:
-                        sertype                        = GR_CHART_SERIES_POINT_ERROR2;
-                        break;
-                    }
+                case 8:
+                    sertype                        = GR_CHART_SERIES_POINT_ERROR2;
+                    break;
+                }
 
                 if(state.bits.tristate_categ_x_val == RISCOS_TRISTATE_ON)
                     sertype = (GR_SERIES_TYPE) ((sertype - GR_CHART_SERIES_POINT) + GR_CHART_SERIES_PLAIN);
 
                 gr_chartedit_gallery_barlinescatch_convert(&state, sertype);
-                }
+            }
             else
                 gr_chartedit_gallery_barlinescatch_process(&state, f);
 
@@ -2079,7 +2079,7 @@ gr_chartedit_gallery_scat_process(
 
             if(ok_hit || pict_hit)
                 break;
-            }
+        }
 
         /* hits on pictures not caused by OK faking pict_hit go loopy */
         if(!ok_hit && pict_hit)
@@ -2089,7 +2089,7 @@ gr_chartedit_gallery_scat_process(
 
         if(!persist)
             break;
-        }
+    }
 
     dbox_dispose(&d);
 }
@@ -2124,11 +2124,11 @@ gr_chartedit_gallery_pie_process(
     cp = state.cp;
 
     for(;;)
-        {
+    {
         gr_chartedit_gallery_barlinescatch_getsel(&state);
 
         for(;;)
-            {
+        {
             gr_chartedit_gallery_barlinescatch_encode(&state);
 
             f = dbox_fillin(d);
@@ -2147,128 +2147,128 @@ gr_chartedit_gallery_pie_process(
             /* maybe set base axes types to pie, first hit on anything converts */
 
             if(ok_hit || pict_hit)
-                {
+            {
                 if(cp->axes[0].charttype != GR_CHARTTYPE_PIE)
-                    {
+                {
                     P_GR_SERIES serp;
 
                     cp->axes[0].charttype = GR_CHARTTYPE_PIE;
 
                     /* this is what the book says ... */
                     if(cp->axes_idx_max > 0)
-                        {
+                    {
                         cp->axes_idx_max = 0;
                         cp->bits.realloc_series = 1;
-                        }
+                    }
 
                     serp = getserp(cp, state.modifying_series_idx);
 
                     /* normally pies vary by point unless punter insists */
                     if(!serp->bits.point_vary_manual)
-                        {
+                    {
                         serp->bits.point_vary_manual = 1;
                         serp->bits.point_vary        = 1;
 
                         serp->internal_bits.point_vary_manual_pie_bodge = 1;
-                        }
+                    }
 
                         /* fake default pict_hit if OK clicked */
                         if(ok_hit)
-                            {
+                        {
                             f = GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_FIRST;
                             pict_hit = 1;
-                            }
-                    }
+                        }
                 }
+            }
 
             if(pict_hit)
-                {
+            {
                 switch(f - GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_FIRST)
+                {
+                case 0:
+                    state.piechdispl.radial_displacement = 0.0;
+                    win_setdouble(state.w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL, &state.piechdispl.radial_displacement, 0);
+                    state.piechdispl_modified = 1;
+
+                    state.piechlabel.bits.label_leg = 0;
+                    state.piechlabel.bits.label_val = 0;
+                    state.piechlabel.bits.label_pct = 0;
+
+                    state.piechlabel_modified = 1;
+                    break;
+
+                case 1:
+                    state.piechlabel.bits.label_leg = 0;
+                    state.piechlabel.bits.label_val = 1;
+                    state.piechlabel.bits.label_pct = 0;
+
+                    state.piechlabel_modified = 1;
+                    break;
+
+                case 2:
+                    state.piechlabel.bits.label_leg = 0;
+                    state.piechlabel.bits.label_val = 0;
+                    state.piechlabel.bits.label_pct = 1;
+
+                    state.piechlabel_modified = 1;
+                    break;
+
+                case 3:
+                    state.piechlabel.bits.label_leg = 1;
+                    state.piechlabel.bits.label_val = 0;
+                    state.piechlabel.bits.label_pct = 0;
+
+                    state.piechlabel_modified = 1;
+                    break;
+
+                case 4:
                     {
-                    case 0:
-                        state.piechdispl.radial_displacement = 0.0;
-                        win_setdouble(state.w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL, &state.piechdispl.radial_displacement, 0);
-                        state.piechdispl_modified = 1;
+                    /* explode a point and kill the rest if not just point selected - this is harder */
+                    GR_CHART_OBJID tmp_id;
+                    GR_PIECHDISPLSTYLE tmp_style;
 
-                        state.piechlabel.bits.label_leg = 0;
-                        state.piechlabel.bits.label_val = 0;
-                        state.piechlabel.bits.label_pct = 0;
-
-                        state.piechlabel_modified = 1;
-                        break;
-
-                    case 1:
-                        state.piechlabel.bits.label_leg = 0;
-                        state.piechlabel.bits.label_val = 1;
-                        state.piechlabel.bits.label_pct = 0;
-
-                        state.piechlabel_modified = 1;
-                        break;
-
-                    case 2:
-                        state.piechlabel.bits.label_leg = 0;
-                        state.piechlabel.bits.label_val = 0;
-                        state.piechlabel.bits.label_pct = 1;
-
-                        state.piechlabel_modified = 1;
-                        break;
-
-                    case 3:
-                        state.piechlabel.bits.label_leg = 1;
-                        state.piechlabel.bits.label_val = 0;
-                        state.piechlabel.bits.label_pct = 0;
-
-                        state.piechlabel_modified = 1;
-                        break;
-
-                    case 4:
-                        {
-                        /* explode a point and kill the rest if not just point selected - this is harder */
-                        GR_CHART_OBJID tmp_id;
-                        GR_PIECHDISPLSTYLE tmp_style;
-
-                        if(state.modifying_id.name != GR_CHART_OBJNAME_POINT)
-                            {
-                            /* explode point 1 of whichever series if no point selected */
-                            gr_chart_objid_from_series_idx(cp, state.modifying_series_idx, &tmp_id);
-                            tmp_id.name      = GR_CHART_OBJNAME_POINT;
-                            tmp_id.has_subno = 1;
-                            tmp_id.subno     = 1;
-                            }
-                        else
-                            tmp_id = state.modifying_id;
-
-                        state.piechdispl_modified = 0;
-
-                        gr_chart_objid_piechdisplstyle_query(cp, &tmp_id, &tmp_style);
-                        tmp_style.radial_displacement = state.piechdispl.radial_displacement;
-                        gr_chart_objid_piechdisplstyle_set(  cp, &tmp_id, &tmp_style);
-                        }
-                        break;
-
-                    case 5:
-                        {
-                        /* explode all - set series base value to whatever */
-                        GR_CHART_OBJID tmp_id;
-                        GR_PIECHDISPLSTYLE tmp_style;
-
-                        state.piechdispl_modified = 0;
-
+                    if(state.modifying_id.name != GR_CHART_OBJNAME_POINT)
+                    {
+                        /* explode point 1 of whichever series if no point selected */
                         gr_chart_objid_from_series_idx(cp, state.modifying_series_idx, &tmp_id);
-
-                        gr_chart_objid_piechdisplstyle_query(cp, &tmp_id, &tmp_style);
-                        tmp_style.radial_displacement = state.piechdispl.radial_displacement;
-                        gr_chart_objid_piechdisplstyle_set(  cp, &tmp_id, &tmp_style);
-                        }
-                        break;
-
-                    default:
-                        assert(0);
-                        break;
+                        tmp_id.name      = GR_CHART_OBJNAME_POINT;
+                        tmp_id.has_subno = 1;
+                        tmp_id.subno     = 1;
                     }
+                    else
+                        tmp_id = state.modifying_id;
+
+                    state.piechdispl_modified = 0;
+
+                    gr_chart_objid_piechdisplstyle_query(cp, &tmp_id, &tmp_style);
+                    tmp_style.radial_displacement = state.piechdispl.radial_displacement;
+                    gr_chart_objid_piechdisplstyle_set(  cp, &tmp_id, &tmp_style);
+                    }
+                    break;
+
+                case 5:
+                    {
+                    /* explode all - set series base value to whatever */
+                    GR_CHART_OBJID tmp_id;
+                    GR_PIECHDISPLSTYLE tmp_style;
+
+                    state.piechdispl_modified = 0;
+
+                    gr_chart_objid_from_series_idx(cp, state.modifying_series_idx, &tmp_id);
+
+                    gr_chart_objid_piechdisplstyle_query(cp, &tmp_id, &tmp_style);
+                    tmp_style.radial_displacement = state.piechdispl.radial_displacement;
+                    gr_chart_objid_piechdisplstyle_set(  cp, &tmp_id, &tmp_style);
+                    }
+                    break;
+
+                default:
+                    assert(0);
+                    break;
+                }
 
                 gr_chartedit_gallery_barlinescatch_convert(&state, GR_CHART_SERIES_PLAIN);
-                }
+            }
             else
                 gr_chartedit_gallery_barlinescatch_process(&state, f);
 
@@ -2276,7 +2276,7 @@ gr_chartedit_gallery_pie_process(
 
             if(ok_hit || pict_hit)
                 break;
-            }
+        }
 
         /* hits on pictures not caused by OK faking pict_hit go loopy */
         if(!ok_hit && pict_hit)
@@ -2286,7 +2286,7 @@ gr_chartedit_gallery_pie_process(
 
         if(!persist)
             break;
-        }
+    }
 
     dbox_dispose(&d);
 }
@@ -2309,16 +2309,16 @@ gr_chartedit_gallery_undo_pie_bodges(
     for(series_idx = 0;
         series_idx < cp->series.n_defined;
         series_idx++)
-        {
+    {
         serp = getserp(cp, series_idx);
 
         if(serp->internal_bits.point_vary_manual_pie_bodge)
-            {
+        {
             serp->internal_bits.point_vary_manual_pie_bodge = 0;
 
             serp->bits.point_vary_manual = 0;
-            }
         }
+    }
 }
 
 /* end of gr_blgal.c */

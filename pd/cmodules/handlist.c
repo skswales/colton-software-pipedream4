@@ -174,10 +174,10 @@ list_allochandle(
     validatepools();
 
     if(!bytes)
-        {
+    {
         trace_2(TRACE_MODULE_LIST, "allocated handle: %d, size: %d", 0, 0);
         return(0);
-        }
+    }
 
     newhandle = 0;
 
@@ -186,14 +186,14 @@ list_allochandle(
         STATUS status;
 
         if(NULL != al_array_alloc(&array_handle, P_U8, bytes, &handlist_array_init_block, &status))
-            {
+        {
             newhandle = (ARRAY_HANDLE) array_handle;
             trace_2(TRACE_MODULE_LIST, "allocated handle: %d, size: %d", newhandle, bytes);
             return(newhandle);
-            }
+        }
 
         trace_0(TRACE_MODULE_LIST, "*************** AL_ARRAY_ALLOC FAILED **************");
-        }
+    }
     while(list_unlockpools() || list_freepoolspace(-1));
 
     trace_2(TRACE_MODULE_LIST, "allocated handle: %d, size: %d", 0, 0);
@@ -234,7 +234,7 @@ list_createitem(
     newitem = list_gotoitem(lp, item);
 
     if(!newitem)
-        {
+    {
         #ifdef SPARSE_DEBUG
         trace_4(TRACE_MODULE_LIST, "list_createitem *: lp: %x, lp->itemc: %d, item: %d, atitem: %d",
                 (S32) lp, lp->itemc, (S32) item, (S32) list_atitem(lp));
@@ -243,13 +243,13 @@ list_createitem(
         it = list_igotoitem(lp, (itemcur = list_atitem(lp)));
 
         if(it && (it->flags & LIST_FILL))
-            {
+        {
             /* save parameters for address reconstruction */
             poolsave = lp->ix_pooldesc;
             offsetsave = lp->itemc;
 
             if((itemcur + it->i.itemfill) > item)
-                {
+            {
                 /* check for creating hole */
                 if(!size && !fill)
                     return(list_igotoitem(lp, itemcur));
@@ -258,63 +258,63 @@ list_createitem(
                 the size of the lower filler block */
                 if((newfill = (itemcur + it->i.itemfill -
                                 item - FILLSET)) != 0)
-                    {
+                {
                     /* adjust higher filler for new filler */
                     it->i.itemfill -= newfill;
 
                     if(!fillafter(lp, newfill, newfill))
-                        {
+                    {
                         /* replace earlier state */
                         convofftoptr(lp,
                                      poolsave,
                                      offsetsave)->i.itemfill += newfill;
                         return(NULL);
-                        }
+                    }
 
                     /* re-load higher fill pointer */
                     it = list_igotoitem(lp, itemcur);
-                    }
+                }
 
                 /* if filler is only 1 big, cause
                 new item to overwrite it */
                 if(it->i.itemfill == 1)
-                    {
+                {
                     newitem = it;
                     it = NULL;
-                    }
+                }
                 /* otherwise make filler 1 smaller
                 anticipating item being created */
                 else
                     it->i.itemfill -= FILLSET;
-                }
+            }
             else
                 /* found a trailing filler - need to enlarge */
-                {
+            {
                 it->i.itemfill += item - (itemcur + it->i.itemfill);
                 it = NULL;
 
                 /* update numitem record */
                 if(item >= lp->numitem)
-                    {
+                {
                     lp->numitem = item + 1;
                     #ifdef SPARSE_DEBUG
                     trace_2(TRACE_MODULE_LIST, "list_createitem 1 lp: %x, numitem: %d",
                             (S32) lp, lp->numitem);
                     #endif
-                    }
                 }
             }
+        }
         /* adding past end of list - filler item needed */
         else if((newfill = (it ? item - (itemcur + list_leapnext(it))
                                : item - itemcur)) > 0)
-            {
+        {
             if(!fillafter(lp, newfill, (LIST_ITEMNO) 0))
                 return(NULL);
             it = NULL;
 
             /* update numitem record */
             if(item >= lp->numitem)
-                {
+            {
                 #if 1
                 /* in case where addafter of actual item fails (below), and we
                  * added a trailing filler to an existing list, numitem was 1
@@ -330,52 +330,52 @@ list_createitem(
                 trace_2(TRACE_MODULE_LIST, "list_createitem 2 lp: %x, numitem: %d",
                         (S32) lp, lp->numitem);
                 #endif
-                }
             }
+        }
         else
             it = NULL;
-        }
+    }
 
     if(fill || !size)
-        {
+    {
         fill = TRUE;
         size = FILLSIZE;
-        }
+    }
 
     if(!newitem)
-        {
+    {
         /* allocate actual item */
         if((newitem = addafter(lp, size, (LIST_ITEMNO) FILLSET)) == NULL)
-            {
+        {
             /* correct higher filler since we couldn't insert */
             if(it)
                 convofftoptr(lp, poolsave, offsetsave)->i.itemfill += FILLSET;
             return(NULL);
-            }
+        }
 
         /* update numitem record */
         if(item >= lp->numitem)
-            {
+        {
             lp->numitem = item + 1;
             #ifdef SPARSE_DEBUG
             trace_2(TRACE_MODULE_LIST, "list_createitem 3 lp: %x, numitem: %d",
                     (S32) lp, lp->numitem);
             #endif
-            }
         }
+    }
     else
-        {
+    {
         /* item exists - ensure the same size */
         if((newitem = reallocitem(lp, newitem, size)) == NULL)
             return(NULL);
-        }
+    }
 
     /* set filler flag if it is a filler or a hole */
     if(fill)
-        {
+    {
         newitem->flags |= LIST_FILL;
         newitem->i.itemfill = FILLSET;
-        }
+    }
     else
         newitem->flags &= ~LIST_FILL;
 
@@ -404,11 +404,11 @@ list_deleteitems(
             return;
 
         if((it->flags & LIST_FILL) && (list_leapnext(it) > numdel))
-            {
+        {
             it->i.itemfill -= numdel;
             updatepoolitems(lp, -numdel);
             return;
-            }
+        }
 
         /* give up if we're about to delete the wrong item */
         if(list_atitem(lp) != item)
@@ -418,7 +418,7 @@ list_deleteitems(
         numdel -= removed;
         deallocitem(lp, it);
         updatepoolitems(lp, -removed);
-        }
+    }
     while(numdel);
 }
 
@@ -581,11 +581,11 @@ list_garbagecollect(
     validatepools();
 
     for(item = 0, res = 0; item < list_numitem(lp); ++item)
-        {
+    {
         it = list_igotoitem(lp, item);
 
         if(it && (it->flags & LIST_FILL) && (item == list_atitem(lp)))
-            {
+        {
             nextitem = item + list_leapnext(it);
             it = list_igotoitem(lp, nextitem);
 
@@ -594,25 +594,25 @@ list_garbagecollect(
                ((nextitem == list_atitem(lp)) ||
                 (nextitem == list_numitem(lp)))
               )
-                {
+            {
                 fill = it->i.itemfill;
                 deallocitem(lp, it);
                 updatepoolitems(lp, -fill);
                 if( ((it = list_igotoitem(lp, item)) != NULL) &&
                     (it->flags & LIST_FILL))
-                    {
+                {
                     it->i.itemfill += fill;
                     updatepoolitems(lp, fill);
-                    }
+                }
 
                 res += 1;
 
                 #ifdef SPARSE_DEBUG
                 trace_0(TRACE_MODULE_LIST, "Filler recovered");
                 #endif
-                }
             }
         }
+    }
 
     validatepools();
 
@@ -659,13 +659,13 @@ list_gotoitem(
             break;
 
     if(!lpt)
-        {
+    {
         trace_1(TRACE_MODULE_LIST, "lp: %x not registered", (S32) lp);
 
         for(lpt = firstblock; lpt; lpt = lpt->nextblock)
             trace_1(TRACE_MODULE_LIST, "lp: %x found", (S32) lpt);
-        }
     }
+    } /*block*/
     #endif
 
     /* load pool descriptor pointer */
@@ -681,73 +681,72 @@ list_gotoitem(
     it = (P_LIST_ITEM) (pp + lp->itemc);
 
     if((i = lp->item) == item)
-        {
+    {
         #ifdef SPARSE_DEBUG
         if(!lp->itemc && (item != pdp->poolitem))
             trace_1(TRACE_MODULE_LIST, "*** mismatch: item: %d", (S32) item);
         #endif
 
         return(!(it->flags & LIST_FILL) ? it : NULL);
-        }
+    }
 
     /* skip backwards to pool if necessary */
     if(item < pdp->poolitem)
-        {
+    {
         do
             {
             --lp->ix_pooldesc;
             --lp->poold;
             --pdp;
-            }
+        }
         while(item < pdp->poolitem);
 
         i = pdp->poolitem;
         pp = getpoolptr(pdp);
         it = (P_LIST_ITEM) pp;
-        }
+    }
 
     if(item > i)
+    {
+        for(;;)
         {
-        do
-            {
             /* go down list */
             while(it->offsetn)
-                {
+            {
                 if((i + (t = list_leapnext(it))) > item)
                     goto there;
                 it = (P_LIST_ITEM) (((P_U8) it) + it->offsetn);
                 if((i += t) == item)
                     goto there;
-                }
+            }
 
             if((lp->ix_pooldesc + 1 < lp->pooldblkfree) &&
                (item >= (pdp + 1)->poolitem))
-                {
+            {
                 do
                     {
                     ++lp->ix_pooldesc;
                     ++lp->poold;
                     ++pdp;
-                    }
+                }
                 while((lp->ix_pooldesc + 1 < lp->pooldblkfree) &&
                       (item >= (pdp + 1)->poolitem));
 
                 i = pdp->poolitem;
                 pp = getpoolptr(pdp);
                 it = (P_LIST_ITEM) pp;
-                }
+            }
             else
                 break;
-            }
-        while(TRUE);
         }
+    }
     else if(item < i)
         /* go up the list */
-        {
+    {
         do
             it = (P_LIST_ITEM) (((P_U8) it) - it->offsetp);
         while((i -= list_leapnext(it)) > item);
-        }
+    }
 
 there:
 
@@ -831,10 +830,10 @@ list_initseq(
         return(NULL);
 
     if(!(it->flags & LIST_FILL))
-        {
+    {
         *itemnop = list_atitem(lp);
         return(it);
-        }
+    }
 
     return(list_nextseq(lp, itemnop));
 }
@@ -862,19 +861,19 @@ list_insertitems(
      * add to the filler item to insert
     */
     if((it->flags & LIST_FILL))
-        {
+    {
         it->i.itemfill += numins;
         updatepoolitems(lp, numins);
         return(0);
-        }
+    }
 
     psl = (item == 0) ? NULL : list_igotoitem(lp, item - 1);
     if(psl && ((psl->flags & LIST_FILL)))
-        {
+    {
         psl->i.itemfill += numins;
         updatepoolitems(lp, numins);
         return(0);
-        }
+    }
 
     /* create filler at insert position */
     list_igotoitem(lp, item);
@@ -910,7 +909,7 @@ list_nextseq(
     if( (lp->item != *itemnop)      ||
         ((pdp = lp->poold) == NULL) ||
         ((pp = pdp->pool) == NULL)  )
-        {
+    {
         #if defined(SPARSE_DEBUG) || defined(SPARSE_SEQ_DEBUG)
         if(!pdp || !pp)
             trace_0(TRACE_MODULE_LIST, "list_nextseq: reloading pdp/pp");
@@ -920,7 +919,7 @@ list_nextseq(
 
         if((it = list_igotoitem(lp, *itemnop)) == NULL)
             return(NULL);
-        }
+    }
     else
         it = (P_LIST_ITEM) (pp + lp->itemc);
 
@@ -938,7 +937,7 @@ list_nextseq(
         if(*itemnop >= list_numitem(lp))
             return(NULL);
         it = list_igotoitem(lp, *itemnop);
-        }
+    }
     while(it->flags & LIST_FILL);
 
     #if defined(SPARSE_DEBUG) || defined(SPARSE_SEQ_DEBUG)
@@ -976,18 +975,18 @@ list_packlist(
     for(i = 0, space_found = 0, pdp = getpooldp(lp, 0);
         pdp && i < lp->pooldblkfree && space_found < needed;
         ++i, ++pdp)
-        {
+    {
         trace_4(TRACE_MODULE_LIST, "list_packlist: consider pdp &%p, h_pool %d, size %d, free %d",
                 report_ptr_cast(pdp), pdp->h_pool, pdp->poolsize, pdp->poolfree);
 
         if(pdp->h_pool  &&  (pdp->poolsize > pdp->poolfree))
-            {
+        {
             space_found += (S32) pdp->poolsize - pdp->poolfree;
             reallocpool(lp, pdp->poolfree, i);
             /* reload pointer after dealloc */
             pdp = getpooldp(lp, i);
-            }
         }
+    }
 
     /* pack descriptor if needed;
      * +1 added to dblkfree; see comment in allocpool
@@ -995,7 +994,7 @@ list_packlist(
      */
     if(space_found < needed &&
        lp->pooldblksize > lp->pooldblkfree + 1)
-        {
+    {
         ARRAY_HANDLE new_h_pooldesc;
 
         /* unlock descriptor block for realloc */
@@ -1006,7 +1005,7 @@ list_packlist(
         space_found += ((S32) lp->pooldblksize - lp->pooldblkfree - 1) * sizeof(struct POOLDESC);
         lp->pooldblksize = lp->pooldblkfree + 1;
         lp->h_pooldesc = new_h_pooldesc;
-        }
+    }
 
     trace_2(TRACE_MODULE_LIST, "list_packlist: found %d, in lp &%p", space_found, report_ptr_cast(lp));
 
@@ -1030,12 +1029,12 @@ list_prevseq(
     validatepools();
 
     if((item = *itemnop) != 0)
-        {
+    {
         do
             {
             it = list_igotoitem(lp, item - 1);
             item = list_atitem(lp);
-            }
+        }
         while((it->flags & LIST_FILL) && item);
 
         *itemnop = item;
@@ -1044,7 +1043,7 @@ list_prevseq(
             return(NULL);
 
         return(it);
-        }
+    }
     else
         return(NULL);
 }
@@ -1069,11 +1068,11 @@ list_reallochandle(
     validatepools();
 
     if(!bytes)
-        {
+    {
         trace_2(TRACE_MODULE_LIST, "list_reallochandle: %d, size: %d", 0, 0);
         al_array_dispose(&hand);
         return(0);
-        }
+    }
 
     do  {
         ARRAY_HANDLE array_handle = (ARRAY_HANDLE) hand;
@@ -1090,14 +1089,14 @@ list_reallochandle(
         }
 
         if(NULL != al_array_extend_by(&array_handle, BYTE, bytes - curr_bytes, &handlist_array_init_block, &status))
-            {
+        {
             trace_2(TRACE_MODULE_LIST, "list_reallochandle: %d, size: %d", hand, bytes);
             return(hand);
-            }
+        }
 
         trace_0(TRACE_MODULE_LIST, "************** AL_ARRAY_REALLOC FAILED **************");
         status_assert(status);
-        }
+    }
     while(list_unlockpools() || list_freepoolspace(-1));
 
     trace_2(TRACE_MODULE_LIST, "list_reallochandle: %d, size: %d", 0, 0);
@@ -1174,7 +1173,7 @@ list_unlockpools(void)
     /* unlock all pools and pool descriptors */
 
     for(lp = firstblock, res = 0; lp; lp = lp->nextblock)
-        {
+    {
         #ifdef SPARSE_DEBUG
         trace_1(TRACE_MODULE_LIST, "Unlock lp: %x", (S32) lp);
         #endif
@@ -1182,13 +1181,13 @@ list_unlockpools(void)
         desc_was_locked = (lp->pooldblkp != NULL);
         pdp = getpooldp(lp, 0);
         if(pdp)
-            {
+        {
             #ifdef SPARSE_DEBUG
             trace_1(TRACE_MODULE_LIST, "Unlock pooldblkp: %x", (S32) lp->pooldblkp);
             #endif
 
             for(i = 0; i < lp->pooldblkfree; ++i, ++pdp)
-                {
+            {
                 #ifdef SPARSE_DEBUG
                 if(pdp->pool)
                     trace_2(TRACE_MODULE_LIST, "Discarding pool ptr for: %d, pool %p",
@@ -1196,19 +1195,19 @@ list_unlockpools(void)
                 #endif
 
                 if(pdp->pool)
-                    {
+                {
                     pdp->pool = NULL;
                     res = 1;
-                    }
                 }
+            }
 
             /* only say descriptor block unlocked if it was locked to start with */
             if(desc_was_locked)
                 res = 1;
-            }
+        }
 
         lp->pooldblkp = lp->poold = NULL;
-        }
+    }
 
     /* 'unlocking' blocks on RISCOS certainly won't
      * allow an allocation to succeed
@@ -1238,7 +1237,7 @@ addafter(
 
     olditemc = -1;
     if(lp->poold && lp->poold->pool)
-        {
+    {
         olditemc = lp->itemc;
         olditem = lp->item;
 
@@ -1248,15 +1247,15 @@ addafter(
         else
             lp->itemc = lp->poold->poolfree;
         lp->item += list_leapnext(it);
-        }
+    }
 
     it = addbefore(lp, size, adjust);
 
     if(!it  &&  (olditemc != -1))
-        {
+    {
         lp->itemc = olditemc;
         lp->item = olditem;
-        }
+    }
 
     return(it);
 }
@@ -1304,13 +1303,13 @@ allocitem(
 
     /* create a pool if we have none */
     if(!lp->poold)
-        {
+    {
         if(!allocpool(lp, lp->ix_pooldesc, lp->poolsizeinc))
             return(NULL);
         else
             if((pdp = lp->poold) == NULL)
                 pdp = getpooldp(lp, lp->ix_pooldesc);
-        }
+    }
 
     size += LIST_ITEMOVH;
 
@@ -1322,21 +1321,21 @@ allocitem(
 
     /* is there room in the pool ? */
     if(pdp->poolfree + size > pdp->poolsize)
-        {
+    {
         #ifdef SPARSE_DEBUG
         trace_0(TRACE_MODULE_LIST, "allocitem - no room in pool");
         #endif
 
         /* check if pool must be split */
         if(pdp->poolsize + size >= lp->maxpoolsize)
-            {
+        {
             #ifdef SPARSE_DEBUG
             trace_0(TRACE_MODULE_LIST, "allocitem - splitting pool");
             #endif
 
             if(!splitpool(lp, adjust))
                 return(NULL);
-            }
+        }
         else if(!reallocpool(lp,
                              pdp->poolsize + lp->poolsizeinc,
                              lp->ix_pooldesc))
@@ -1344,7 +1343,7 @@ allocitem(
 
         /* reload pool descriptor pointer */
         pdp = getpooldp(lp, lp->ix_pooldesc);
-        }
+    }
 
     #ifdef SPARSE_DEBUG
     trace_2(TRACE_MODULE_LIST, "allocitem: pdp: %x, pdp->pool: %x",
@@ -1358,25 +1357,25 @@ allocitem(
 
     /* is there a item after this one ? */
     if(pdp->poolfree - newsl)
-        {
+    {
         memmove32(nextsl, it, pdp->poolfree - newsl);
         prevsl = nextsl->offsetp ? (P_LIST_ITEM) (((P_U8) it) - nextsl->offsetp)
                                  : NULL;
         nextsl->offsetp = it->offsetn = size;
-        }
+    }
     else
-        {
+    {
         it->offsetn = 0;
         if(newsl)
-            {
+        {
             /* find previous item, painfully, by working down */
             prevsl = (P_LIST_ITEM) pdp->pool;
             while(prevsl->offsetn)
                 prevsl = (P_LIST_ITEM) (((P_U8) prevsl) + prevsl->offsetn);
-            }
+        }
         else
             prevsl = NULL;
-        }
+    }
 
     /* is there a item before this one ? */
     if(prevsl)
@@ -1408,9 +1407,9 @@ allocpool(
 
     /* check that pool descriptor block is large enough */
     if(lp->pooldblkfree >= lp->pooldblksize)
-        {
+    {
         if(0 == lp->h_pooldesc)
-            {
+        {
             lp->h_pooldesc = list_allochandle(sizeof(struct POOLDESC) * (S32) POOLDBLKSIZEINC);
             if(0 == lp->h_pooldesc)
                 return(NULL);
@@ -1422,16 +1421,16 @@ allocpool(
             #ifdef SPARSE_DEBUG
             trace_1(TRACE_MODULE_LIST, "allocpool allocated h_pooldesc: %d", lp->h_pooldesc);
             #endif
-            }
+        }
         else
-            {
+        {
             ARRAY_HANDLE new_h_pooldesc;
 
             /* unlock descriptor block for realloc */
             if(lp->pooldblkp)
-                {
+            {
                 lp->pooldblkp = lp->poold = NULL;
-                }
+            }
 
             new_h_pooldesc = list_reallochandle(lp->h_pooldesc, sizeof(struct POOLDESC) * ((S32) lp->pooldblksize + POOLDBLKSIZEINC));
             if(0 == new_h_pooldesc)
@@ -1443,8 +1442,8 @@ allocpool(
 
             lp->pooldblksize += POOLDBLKSIZEINC;
             lp->h_pooldesc = new_h_pooldesc;
-            }
         }
+    }
 
     #if 1
     /* packlist now never frees the dblkfree+1 entry; not only could
@@ -1480,10 +1479,10 @@ allocpool(
     /* allocate a pool */
     h_pool = list_allochandle((S32) size);
     if(0 == h_pool)
-        {
+    {
         --lp->pooldblkfree;
         return(NULL);
-        }
+    }
     #endif
 
     /* load address of descriptor block;
@@ -1498,11 +1497,11 @@ allocpool(
 
     if((lp->ix_pooldesc >= poolix) &&
        (lp->ix_pooldesc != lp->pooldblkfree - 1))
-        {
+    {
         ++lp->ix_pooldesc;
         if(lp->poold)
             ++lp->poold;
-        }
+    }
 
     pdp->h_pool = h_pool;
     pdp->poolsize = size;
@@ -1566,19 +1565,19 @@ deallocitem(
     if(it->offsetn)
         size = it->offsetn;
     else
-        {
+    {
         if(it->offsetp)
             size = pdp->poolfree - itoff;
         else
-            {
+        {
             deallocpool(lp, lp->ix_pooldesc);
             return;
-            }
         }
+    }
 
     /* sort out item links */
     if(it->offsetn)
-        {
+    {
         nextsl = (P_LIST_ITEM) (((P_U8) it) + it->offsetn);
 
         /* check for special case of trailing filler item */
@@ -1586,7 +1585,7 @@ deallocitem(
            !nextsl->offsetn &&
            (nextsl->flags & LIST_FILL) &&
            ((lp->ix_pooldesc + 1) == lp->pooldblkfree))
-            {
+        {
             trailfill = list_leapnext(nextsl);
             deallocpool(lp, lp->ix_pooldesc);
             lp->numitem -= trailfill;
@@ -1597,18 +1596,18 @@ deallocitem(
             #endif
 
             return;
-            }
+        }
 
         nextsl->offsetp = it->offsetp;
-        }
+    }
     else
-        {
+    {
         /* step back to previous item so we don't hang in space */
         prevsl = (P_LIST_ITEM) (((P_U8) it) - it->offsetp);
         lp->itemc -= it->offsetp;
         lp->item -= list_leapnext(prevsl);
         prevsl->offsetn = 0;
-        }
+    }
 
     memmove32(it, ((P_U8) it) + size, pdp->poolfree - size - itoff);
     pdp->poolfree -= size;
@@ -1638,7 +1637,7 @@ deallocpool(
         *pdp = *(pdp + 1);
 
     if(!--lp->pooldblkfree)
-        {
+    {
         /* deallocate pool descriptor block */
         al_array_dispose(&lp->h_pooldesc);
 
@@ -1648,15 +1647,15 @@ deallocpool(
         lp->itemc = 0;
         lp->item = lp->numitem = 0;
         lp->pooldblkp = lp->poold = NULL;
-        }
+    }
     else if(lp->ix_pooldesc >= lp->pooldblkfree)
-        {
+    {
         /* make sure not pointing past the end */
         --lp->ix_pooldesc;
         --lp->poold;
         lp->item = getpooldp(lp, lp->ix_pooldesc)->poolitem;
         lp->itemc = 0;
-        }
+    }
 
     return;
 }
@@ -1721,7 +1720,7 @@ getpooldp(
     pooldp pdp;
 
     if(NULL == lp->pooldblkp)
-        {
+    {
         if(0 == lp->h_pooldesc)
             return(NULL);
 
@@ -1730,7 +1729,7 @@ getpooldp(
         #ifdef SPARSE_DEBUG
         trace_1(TRACE_MODULE_LIST, "loaded new pooldblkp: %x", (S32) lp->pooldblkp);
         #endif
-        }
+    }
 
     pdp = (poolix >= lp->pooldblkfree) ? NULL : lp->pooldblkp + poolix;
 
@@ -1752,7 +1751,7 @@ getpoolptr(
     pooldp pdp)
 {
     if(!pdp->pool)
-        {
+    {
         if(0 == pdp->h_pool)
             return(NULL);
 
@@ -1761,7 +1760,7 @@ getpoolptr(
         #ifdef SPARSE_DEBUG
         trace_1(TRACE_MODULE_LIST, "loading poolptr %p", pdp->pool);
         #endif
-        }
+    }
 
     return(pdp->pool);
 }
@@ -1784,10 +1783,10 @@ reallocitem(
 
     /* check for a delete */
     if(!newsize)
-        {
+    {
         deallocitem(lp, it);
         return(NULL);
-        }
+    }
 
     if((pdp = lp->poold) == NULL)
         pdp = getpooldp(lp, lp->ix_pooldesc);
@@ -1815,13 +1814,13 @@ reallocitem(
 
     /* is there room in the pool ? */
     if(pdp->poolfree + extraspace >= pdp->poolsize)
-        {
+    {
         /* check if pool must be split */
         if(pdp->poolsize + extraspace >= lp->maxpoolsize)
-            {
+        {
             if(!splitpool(lp, (LIST_ITEMNO) 0))
                 return(NULL);
-            }
+        }
         else if(!reallocpool(lp,
                              pdp->poolsize + lp->poolsizeinc,
                              lp->ix_pooldesc))
@@ -1830,7 +1829,7 @@ reallocitem(
         /* re-load descriptor pointer */
         if((pdp = lp->poold) == NULL)
             pdp = getpooldp(lp, lp->ix_pooldesc);
-        }
+    }
 
     /* adjust pool for space needed */
     if((pp = pdp->pool) == NULL)
@@ -1843,11 +1842,11 @@ reallocitem(
     /* store new item size in item, & update link in next item */
     it = (P_LIST_ITEM) (pp + lp->itemc);
     if(it->offsetn)
-        {
+    {
         it->offsetn = (LINK_TYPE) (oldsize + extraspace);
         ((P_LIST_ITEM) (((P_U8) it) + it->offsetn))->offsetp =
                             (LINK_TYPE) (oldsize + extraspace);
-        }
+    }
 
     return(it);
 }
@@ -1937,11 +1936,11 @@ splitpool(
     just add a new pool onto the end */
     justadd = lp->itemc >= pdp->poolfree;
     if(justadd)
-        {
+    {
         /* free space in old pool for efficiency */
         reallocpool(lp, pdp->poolfree, lp->ix_pooldesc);
         newsize = lp->poolsizeinc;
-        }
+    }
     else
         newsize = pdp->poolsize / 2 + lp->maxitemsize;
 
@@ -1969,7 +1968,7 @@ splitpool(
 
     /* are we adding the item to the end of the pool? */
     if(!justadd)
-        {
+    {
         P_U8 pp;
         P_LIST_ITEM it, psl;
         LIST_ITEMNO itemc;
@@ -1995,20 +1994,20 @@ splitpool(
         split = pdp->poolsize / 2;
 
         while(offset < split)
-            {
+        {
             itemc += list_leapnext(it);
             offset += it->offsetn;
             it = (P_LIST_ITEM) (((P_U8) it) + it->offsetn);
             if(adjust && itemc > lp->item)
-                {
+            {
                 itemc += adjust;
                 #ifdef SPARSE_DEBUG
                 trace_2(TRACE_MODULE_LIST, "***** splitpool adding adjust of: %d, new itemc: %d *****",
                         adjust, itemc);
                 #endif
                 adjust = 0;
-                }
             }
+        }
 
         #ifdef SPARSE_DEBUG
         trace_2(TRACE_MODULE_LIST, "Offset: %d, Split: %d", offset, split);
@@ -2033,19 +2032,19 @@ splitpool(
 
         /* if item in next block, update item offset and pool descriptor */
         if(lp->itemc >= pdp->poolfree)
-            {
+        {
             lp->itemc -= pdp->poolfree;
             ++lp->ix_pooldesc;
             lp->poold = NULL;
-            }
         }
+    }
     else
-        {
+    {
         lp->itemc = 0;
         ++lp->ix_pooldesc;
         lp->poold = NULL;
         newpdp->poolitem = lp->item;
-        }
+    }
 
     /* re-load pointers */
     pdp = getpooldp(lp, lp->ix_pooldesc);
@@ -2075,14 +2074,14 @@ updatepoolitems(
             pdp->poolitem += change;
 
     if(lp->numitem)
-        {
+    {
         lp->numitem += change;
 
         #ifdef SPARSE_DEBUG
         trace_2(TRACE_MODULE_LIST, "updatepoolitems lp: %x, numitem: %d",
                 (S32) lp, lp->numitem);
         #endif
-        }
+    }
 }
 
 /******************************************************************************/
@@ -2104,67 +2103,67 @@ valfatal(
     char *ptr;
 
     switch(rc)
-        {
-        case 1:
-            ptr = "lp &%p < al_start &%p";
-            break;
+    {
+    case 1:
+        ptr = "lp &%p < al_start &%p";
+        break;
 
-        case 2:
-            ptr = "lp &%p >= al_end &%p";
-            break;
+    case 2:
+        ptr = "lp &%p >= al_end &%p";
+        break;
 
-        case 3:
-            ptr = "lp->pooldblkp &%p < fl_start &%p";
-            break;
+    case 3:
+        ptr = "lp->pooldblkp &%p < fl_start &%p";
+        break;
 
-        case 4:
-            ptr = "lp->pooldblkp &%p >= fl_end &%p";
-            break;
+    case 4:
+        ptr = "lp->pooldblkp &%p >= fl_end &%p";
+        break;
 
-        case 5:
-            ptr = "!lp->h_pooldesc but lp->pooldblkp &%p";
-            break;
+    case 5:
+        ptr = "!lp->h_pooldesc but lp->pooldblkp &%p";
+        break;
 
-        case 6:
-            ptr = "lp->h_pooldesc %d not in handleblock (size %d)";
-            break;
+    case 6:
+        ptr = "lp->h_pooldesc %d not in handleblock (size %d)";
+        break;
 
-        case 7:
-            ptr = "lp->pooldblkp &%p not same as handleblock[i] &%p";
-            break;
+    case 7:
+        ptr = "lp->pooldblkp &%p not same as handleblock[i] &%p";
+        break;
 
-        case 8:
-            ptr = "handleblock[i] &%p < fl_start &%p";
-            break;
+    case 8:
+        ptr = "handleblock[i] &%p < fl_start &%p";
+        break;
 
-        case 9:
-            ptr = "handleblock[i] &%p >= fl_end &%p";
-            break;
+    case 9:
+        ptr = "handleblock[i] &%p >= fl_end &%p";
+        break;
 
-        case 10:
-            ptr = "!pdp->h_pool but pdp->pool &%p";
-            break;
+    case 10:
+        ptr = "!pdp->h_pool but pdp->pool &%p";
+        break;
 
-        case 11:
-            ptr = "pdp->h_pool %d not in handleblock (size %d)";
-            break;
+    case 11:
+        ptr = "pdp->h_pool %d not in handleblock (size %d)";
+        break;
 
-        case 12:
-            ptr = "pdp->pool &%p not same as handleblock[i] &%p";
-            break;
+    case 12:
+        ptr = "pdp->pool &%p not same as handleblock[i] &%p";
+        break;
 
-        case 13:
-            ptr = "pdp->pool &%p < fl_start &%p";
-            break;
+    case 13:
+        ptr = "pdp->pool &%p < fl_start &%p";
+        break;
 
-        case 14:
-            ptr = "pdp->pool &%p >= fl_end &%p";
-            break;
+    case 14:
+        ptr = "pdp->pool &%p >= fl_end &%p";
+        break;
 
-        default:
-            ptr = "??? &%p &%p rc = %d";
-            break;
-        }
+    default:
+        ptr = "??? &%p &%p rc = %d";
+        break;
+    }
 
     reportf(ptr, p1, p2, rc);
 }
@@ -2216,7 +2215,7 @@ _validatepool(
     trace_2(TRACE_MODULE_LIST, ": descriptor handle %d ptr &%p", lp->h_pooldesc, lp->pooldblkp);
 
     if(lp->h_pooldesc)
-        {
+    {
         if((U32) lp->h_pooldesc >= (U32) handlefree)
             /* not in table */
             valfatal(6, (P_ANY) lp->h_pooldesc, (P_ANY) handlefree);
@@ -2225,37 +2224,37 @@ _validatepool(
             if(lp->pooldblkp != (ptr = array_base(&lp->h_pooldesc, struct POOLDESC)))
                 /* cached ptr different to that in table */
                 valfatal(7, lp->pooldblkp, ptr);
-        }
+    }
     else
-        {
+    {
         if(lp->pooldblkp)
             /* no handle but crap ptr */
             valfatal(5, lp->pooldblkp, NULL);
-        }
+    }
 
     if(lp->pooldblkp)
-        {
+    {
         if((P_U8) lp->pooldblkp < (P_U8) fl_start)
             valfatal(3, lp->pooldblkp, fl_start);
 
         if((P_U8) lp->pooldblkp >= (P_U8) fl_end)
             valfatal(4, lp->pooldblkp, fl_end);
-        }
+    }
 
     pdp = lp->pooldblkp = array_base(&lp->h_pooldesc, struct POOLDESC);
 
     if(pdp)
-        {
+    {
         trace_2(TRACE_MODULE_LIST, "Validating pools in descriptor &%p: free %d", lp->pooldblkp, lp->pooldblkfree);
 
         for(i = 0; i < lp->pooldblkfree; ++i, ++pdp)
-            {
+        {
             pool_was_locked = (pdp->pool != NULL);
 
             trace_5(TRACE_MODULE_LIST, "Validating pool (&%p[%d] = &%p): handle %d ptr &%p", lp->pooldblkp, i, pdp, pdp->h_pool, pdp->pool);
 
             if(pdp->h_pool)
-                {
+            {
                 if((U32) pdp->h_pool >= (U32) handlefree)
                     /* not in table */
                     valfatal(10, (void *) pdp->h_pool, (void *) handlefree);
@@ -2264,36 +2263,36 @@ _validatepool(
                     if(pdp->pool != (ptr = array_base(&pdp->h_pool, U8)))
                         /* cached ptr different to that in table */
                         valfatal(11, pdp->pool, ptr);
-                }
+            }
             else
-                {
+            {
                 if(pdp->pool)
                     /* no handle but crap ptr */
                     valfatal(12, pdp->pool, NULL);
-                }
+            }
 
             if(pdp->pool)
-                {
+            {
                 if((P_U8) pdp->pool < (P_U8) fl_start)
                     valfatal(13, pdp->pool, fl_start);
 
                 if((P_U8) pdp->pool >= (P_U8) fl_end)
                     valfatal(14, pdp->pool, fl_end);
-                }
+            }
 
             /* would be really tedious to check contents! */
 
             if(!pool_was_locked)
-                {
-                pdp->pool = NULL;
-                }
-            }
-
-        if(!desc_was_locked)
             {
-            lp->pooldblkp = NULL;
+                pdp->pool = NULL;
             }
         }
+
+        if(!desc_was_locked)
+        {
+            lp->pooldblkp = NULL;
+        }
+    }
 }
 
 static void
@@ -2311,19 +2310,19 @@ validatepools(void)
     cachebits();
 
     for(i = 0; i < handlefree; ++i)
-        {
+    {
         hep = handleblkp + i;
         ptr = hep->pointer;
         trace_2(TRACE_MODULE_LIST, "%d] = &%p  ", i, ptr);
         if(ptr)
-            {
+        {
             if((P_U8) ptr < (P_U8) fl_start)
                 valfatal(8, ptr, fl_start);
 
             if((P_U8) ptr >= (P_U8) fl_end)
                 valfatal(9, ptr, fl_end);
-            }
         }
+    }
 
     trace_0(TRACE_MODULE_LIST, "[Validate registered pools");
 

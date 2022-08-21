@@ -96,12 +96,12 @@ userIO_alert_user_open(
     S32   err;
 
     if((err = io_create(userp, "alert", title, message, button1, button2)) >= 0)
-        {
+    {
         if((err = io_open(userp)) >= 0)
             return(0);
 
         io_destroy(userp);
-        }
+    }
 
     return(err);
 }
@@ -140,15 +140,15 @@ userIO_input_from_user_open(
     S32   err;
 
     if((err = io_create(userp, "input", title, message, button1, button2)) >= 0)
-        {
+    {
         if((err = io_open(userp)) >= 0)
-            {
+        {
             /*>>>????clear text from input field???*/
             return(0);
-            }
+        }
 
         io_destroy(userp);
-        }
+    }
 
     return(err);
 }
@@ -185,7 +185,7 @@ io_create(
     *userp = user = al_ptr_alloc_elem(USERIO_STRUCT, 1, &err);
 
     if(user)
-        {
+    {
         user->window   = 0;
         user->template = NULL;
         user->button   = 0;     /* closed */
@@ -193,13 +193,13 @@ io_create(
         templatehan = template_find_new(ident);
 
         if(templatehan)
-            {
+        {
             user->template = template = template_copy_new(templatehan);
 
             if(template)
-                {
+            {
                 if(!win_create_wind(template, &window, io_event_handler, (void*)user))
-                    {
+                {
                     user->window = window;
 
                     win_settitle(window, de_const_cast(char *, title));
@@ -208,33 +208,33 @@ io_create(
                     win_setfield(window, (wimp_i)userIO_UserText, "");
 
                     if(button2)
-                        {
+                    {
                         /* put text in left and right buttons, make middle button invisible */
 
                         win_setfield(window, (wimp_i)userIO_ButtonL, button1);
                         win_setfield(window, (wimp_i)userIO_ButtonR, button2);
                         win_hidefield(window, (wimp_i)userIO_ButtonM);
-                        }
+                    }
                     else
-                        {
+                    {
                         /* put text in middle button, make left and right buttons invisible */
 
                         win_setfield(window, (wimp_i)userIO_ButtonM, button1);
                         win_hidefield(window, (wimp_i)userIO_ButtonL);
                         win_hidefield(window, (wimp_i)userIO_ButtonR);
-                        }
+                    }
 
                     return(0);
-                    }
+                }
               /*else                                               */
               /*    no room to create window/install event handler */
-                }
+            }
           /*else                         */
           /*    no room to copy template */
-            }
+        }
       /*else                        */
       /*    failed to find template */
-        }
+    }
   /*else                          */
   /*    no room for userIO_handle */
 
@@ -249,7 +249,7 @@ io_destroy(
     userIO_handle *userp)
 {
     if(*userp)
-        {
+    {
         if((*userp)->window)
             win_delete_wind(&(*userp)->window);
 
@@ -257,7 +257,7 @@ io_destroy(
             al_ptr_free((*userp)->template);
 
         al_ptr_free(*userp);
-        }
+    }
 
     *userp = NULL;
 }
@@ -270,20 +270,20 @@ io_open(
     userIO_handle  user = *userp;
 
     if(user)
-        {
+    {
         if(wimpt_complain(wimp_get_wind_state(user->window, &state)) == 0)
-            {
+        {
             state.o.w      = user->window;      /* Probably set, but make sure! */
             state.o.behind = (wimp_w)-1;        /* Make sure window is opened in front */
 
             if(!win_open_wind(&state.o))
-                {
+            {
                 user->button = -1;      /* nothing has happened yet */
 
                 return(0);
-                }
             }
         }
+    }
 
     return(status_nomem());  /* null handle or open failed */
 }
@@ -295,12 +295,12 @@ io_poll(
     int max_len)
 {
     if(*userp)
-        {
+    {
         if(text_out)
             win_getfield((*userp)->window, (wimp_i)userIO_UserText, text_out, max_len);
 
         return((*userp)->button);
-        }
+    }
 
     return(0);  /* closed */
 }
@@ -310,9 +310,9 @@ io_close(
     userIO_handle *userp)
 {
     if(*userp)
-        {
+    {
         win_close_wind((*userp)->window);  /* no need to validate window handle, win_close_wind does it */
-        }
+    }
 }
 
 static BOOL
@@ -324,59 +324,59 @@ io_event_handler(
 
     /* Deal with event */
     switch (e->e)
+    {
+    case wimp_EOPEN:                                                /* 2 */
+        return(FALSE);              /* default action */
+        break;
+
+    case wimp_EREDRAW:                                              /* 1 */
+        return(FALSE);              /* default action */
+        break;
+
+    case wimp_ECLOSE:                                               /* 3 */
+        /* merely register as user input */
+        if(user->button < 0)
+            user->button = 0;   /* closed */
+        break;
+
+    case wimp_EBUT:                                                 /* 6 */
+        if(e->data.but.m.bbits & 0x5)   /* 'select' or 'adjust' */
         {
-        case wimp_EOPEN:                                                /* 2 */
-            return(FALSE);              /* default action */
-            break;
+            switch ((int)e->data.but.m.i)
+            {
+            case userIO_ButtonL:
+            case userIO_ButtonM:
+                if(user->button < 0)
+                    user->button = 1;
+                break;
 
-        case wimp_EREDRAW:                                              /* 1 */
-            return(FALSE);              /* default action */
-            break;
+            case userIO_ButtonR:
+                if(user->button < 0)
+                    user->button = 2;
+                break;
+            }
+        }
+        break;
 
-        case wimp_ECLOSE:                                               /* 3 */
-            /* merely register as user input */
+    case wimp_EKEY:
+        switch(e->data.key.chcode)
+        {
+        case 13:
             if(user->button < 0)
-                user->button = 0;   /* closed */
+                user->button = 1;
             break;
 
-        case wimp_EBUT:                                                 /* 6 */
-            if(e->data.but.m.bbits & 0x5)   /* 'select' or 'adjust' */
-                {
-                switch ((int)e->data.but.m.i)
-                    {
-                    case userIO_ButtonL:
-                    case userIO_ButtonM:
-                        if(user->button < 0)
-                            user->button = 1;
-                        break;
-
-                    case userIO_ButtonR:
-                        if(user->button < 0)
-                            user->button = 2;
-                        break;
-                    }
-                }
-            break;
-
-        case wimp_EKEY:
-            switch(e->data.key.chcode)
-                {
-                case 13:
-                    if(user->button < 0)
-                        user->button = 1;
-                    break;
-
-                case 27:
-                    if(user->button < 0)
-                        user->button = 0;
-                    break;
-                }
-            break;
-
-        default:   /* Ignore any other events */
-            return(FALSE);
+        case 27:
+            if(user->button < 0)
+                user->button = 0;
             break;
         }
+        break;
+
+    default:   /* Ignore any other events */
+        return(FALSE);
+        break;
+    }
 
     /* done something, so... */
     return(TRUE);

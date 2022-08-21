@@ -58,28 +58,28 @@ fontlxtr__ensure_test(
     new_font_var = getenv("Font$Path");
 
     if(!new_font_var)
-        {
+    {
         fontlxtr__path[0] = '\0';
         *ensure = 1;
-        }
+    }
     else if(0 != strcmp(fontlxtr__path, new_font_var))
-        {
+    {
         strcpy(fontlxtr__path, new_font_var);
         *ensure = 1;
-        }
+    }
 
     new_font_var = getenv("Font$Prefix");
 
     if(!new_font_var)
-        {
+    {
         fontlxtr__prefix[0] = '\0';
         *ensure = 1;
-        }
+    }
     else if(0 != strcmp(fontlxtr__prefix, new_font_var))
-        {
+    {
         strcpy(fontlxtr__prefix, new_font_var);
         *ensure = 1;
-        }
+    }
 
     return(*ensure);
 }
@@ -101,12 +101,12 @@ fontselect_ensure_all_fonts(void)
     BOOL ensure = FALSE;
 
     if(fontlxtr__ensure_test(&ensure) || !fontlxtr__select_init)
-        {
+    {
         if(fontlxtr__select_init)
             fontselect_closedown();
 
         fontlxtr__select_init = fontselect_init();
-        }
+    }
 
     return(fontlxtr__select_init);
 }
@@ -118,14 +118,14 @@ fontselect_check_open(
     wimp_wstate ws;
 
     if(*w)
-        {
+    {
         if(!wimp_get_wind_state(*w, &ws))
             if((ws.flags & wimp_WOPEN) != 0)
                 return(TRUE);
 
         fontselect_closewindows();
         *w = 0;
-        }
+    }
 
     return(FALSE);
 }
@@ -160,50 +160,50 @@ fontselect_xtra_unknown_fn(
     BOOL try_anyway    = FALSE;
 
     switch(e->e)
+    {
+    case wimp_EBUT:
+        switch(e->data.but.m.i)
         {
-        case wimp_EBUT:
-            switch(e->data.but.m.i)
-                {
-                case 0:
-                    /* OK */
-                    close_windows = (e->data.but.m.bbits != wimp_BRIGHT);
-                    try_anyway = TRUE;
-                    break;
-
-                case 1:
-                    /* CANCEL */
-                    close_windows = TRUE;
-                    processed = TRUE;
-                    break;
-
-                default:
-                    break;
-                }
+        case 0:
+            /* OK */
+            close_windows = (e->data.but.m.bbits != wimp_BRIGHT);
+            try_anyway = TRUE;
             break;
 
-        case wimp_EKEY:
-            switch(e->data.key.chcode)
-                {
-                case 13:
-                    /* Return */
-                    close_windows = TRUE;
-                    try_anyway = TRUE;
-                    break;
-
-                case 27:
-                    /* Esc */
-                    close_windows = TRUE;
-                    processed = TRUE;
-                    break;
-
-                default:
-                    break;
-                }
+        case 1:
+            /* CANCEL */
+            close_windows = TRUE;
+            processed = TRUE;
             break;
 
         default:
             break;
         }
+        break;
+
+    case wimp_EKEY:
+        switch(e->data.key.chcode)
+        {
+        case 13:
+            /* Return */
+            close_windows = TRUE;
+            try_anyway = TRUE;
+            break;
+
+        case 27:
+            /* Esc */
+            close_windows = TRUE;
+            processed = TRUE;
+            break;
+
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
 
     if(!processed)
         /* send the uk event anyway if not already done so */
@@ -236,12 +236,12 @@ fontselect_prepare_process(void)
      * he'll have to go and move over the right arrow again!
     */
     if(fontselect.w != (wimp_w) 0)
-        {
+    {
         /* can't requeue it as it'd come through again instantly without the below process loop terminating */
         fontselect_closewindows();
         fontselect.state = FONTSELECT_ENDED;
         return(0);
-        }
+    }
 
     return(1);
 }
@@ -284,12 +284,12 @@ fontselect_process(
 
     /* wait for process to complete. user process will suffer upcalls from wm_events_get() */
     while(fontselect.state == FONTSELECT_WAIT)
-        {
+    {
         if(!fontselect_check_open(&fontselect.w))
             fontselect.state = FONTSELECT_ENDED;
         else
             wm_events_get(TRUE);
-        }
+    }
 
     /* clear the interlock */
     fontselect.w = (wimp_w) 0;
@@ -325,11 +325,11 @@ fontlist_enumerate(
 
             if( !weight        /* weightless font */                ||
                 typeface->flag /* weighted and weightless in one */ )
-                {
+            {
                 /* weightless font - may be asked to ignore weightless System font */
                 if(system || (0 != _stricmp(szFontName, "System")))
                     (* enumproc) (enumhandle, szFontName, ++seqno);
-                }
+            }
 
             if(weight)
                 do  {
@@ -356,15 +356,15 @@ fontlist_enumerate(
                             (* enumproc) (enumhandle, szFontName, ++seqno);
 
                             style = style->brother;
-                            }
+                        }
                         while(style);
 
                     weight = weight->brother;
-                    }
+                }
                 while(weight);
 
             typeface = typeface->brother;
-            }
+        }
         while(typeface);
 
     return(seqno);

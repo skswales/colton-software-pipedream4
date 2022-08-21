@@ -161,24 +161,24 @@ file_buffer(
             "file_buffer(" PTR_XTFMT ", " PTR_XTFMT ", %u)", report_ptr_cast(file_handle), userbuffer, bufsize);
 
     if(!file_handle)
-        {
+    {
         trace_1(TRACE_MODULE_FILE,
                 "file_buffer -- NULL FILE_HANDLE sets up default buffer size of %u",
                 bufsize);
         file__defbufsiz = bufsize;
         return(0);
-        }
+    }
 
 #if CHECKING
     if(file_handle->magic != _FILE_MAGIC_WORD)
-        {
+    {
         assert(file_handle->magic == _FILE_MAGIC_WORD);
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     if(userbuffer)
-        {
+    {
         myassert1x(bufsize != 0, "file_buffer with buffer &%p but bufsize 0", userbuffer);
 
         /* free buffer if any and we allocated it */
@@ -188,9 +188,9 @@ file_buffer(
         buffer = userbuffer;
 
         file_handle->flags = (file_handle->flags & ~_FILE_UNBUFFERED) | _FILE_USERBUFFER;
-        }
+    }
     else
-        {
+    {
         /* consider use has done file_buffer(file_handle, b, sizeof(b)) then
          * file_buffer(file_handle, NULL, q) - we have to assume that he's doing
          * this for a good reason eg. the buffer is going out of scope
@@ -199,18 +199,18 @@ file_buffer(
         file_handle->flags = file_handle->flags & ~(_FILE_UNBUFFERED | _FILE_USERBUFFER);
 
         if(bufsize)
-            {
+        {
             STATUS status;
             buffer = al_ptr_alloc_bytes(void *, bufsize, &status);
             if(!buffer)
                 return(file__set_error(file_handle, create_error(FILE_ERR_HANDLEUNBUFFERED)));
-            }
+        }
         else
-            {
+        {
             file_handle->flags = file_handle->flags | _FILE_UNBUFFERED;
             buffer = NULL;
-            }
         }
+    }
 
     file_handle->count   = -1;
 
@@ -236,11 +236,11 @@ file_clearerror(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     res = file_handle->error;
@@ -278,10 +278,10 @@ file_close(
 
 #if CHECKING
     if(file_handle->magic != _FILE_MAGIC_WORD)
-        {
+    {
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* search for file and delink from list
@@ -291,18 +291,18 @@ file_close(
     cp =                file_list;
 
     while(cp != _FILE_LIST_END)
-        {
+    {
         if(cp == file_handle)
             break;
 
         pp = cp;
         cp = pp->next;
-        }
+    }
 
     if(cp == _FILE_LIST_END)
         res = create_error(FILE_ERR_BADHANDLE);
     else
-        {
+    {
         /* take care in delinking */
         if(pp == (FILE_HANDLE) &file_list)
             file_list = file_handle->next;
@@ -310,7 +310,7 @@ file_close(
             pp->next = file_handle->next;
 
         if(file_handle->handle != _FILE_HANDLE_NULL)
-            {
+        {
             res = file__closefile(file_handle);
 
             file_handle->handle = _FILE_HANDLE_NULL;
@@ -318,14 +318,14 @@ file_close(
             /* free buffer if any and we allocated it */
             if(!(file_handle->flags & _FILE_USERBUFFER))
                 al_ptr_dispose(&file_handle->bufbase);
-            }
+        }
         else
             /* nop if already closed on fs but good */
             res = 0;
 
         /* free file descriptor */
         al_ptr_dispose(P_P_ANY_PEDANTIC(fp));
-        }
+    }
 
     trace_3(TRACE_MODULE_FILE,
             "file_close(" PTR_XTFMT " -> " PTR_XTFMT ") yields %d", report_ptr_cast(fp), report_ptr_cast(file_handle), res);
@@ -377,11 +377,11 @@ file_error(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     file_handle->flags &= ~_FILE_EOFREAD;
@@ -422,11 +422,11 @@ file_flush(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* flush internal buffers to file */
@@ -435,7 +435,7 @@ file_flush(
 
     /* flush external buffers to file -- no need to flush closed files! */
     if(!(file_handle->flags & _FILE_CLOSED))
-        {
+    {
 #if RISCOS
         rs.r[0] = OSArgs_Flush;
         rs.r[1] = file_handle->handle;
@@ -449,7 +449,7 @@ file_flush(
         if(fflush(file_handle->handle))
             res = file__set_error(file_handle, create_error(FILE_ERR_CANTWRITE));
 #endif
-        }
+    }
 
     trace_2(TRACE_MODULE_FILE, "file_flush(" PTR_XTFMT ") yields %d", report_ptr_cast(file_handle), res);
     return(res);
@@ -467,11 +467,11 @@ file_getbyte(
 {
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     return(file_getc(file_handle));
@@ -497,10 +497,10 @@ file_getpos(
     res32 = file_tell(file_handle); /* validates file */
 
     if(res32 >= 0)
-        {
+    {
         * (P_S32 ) pos = res32;
         return(0);
-        }
+    }
 
     return((S32) res32);
 }
@@ -549,26 +549,26 @@ file_gets(
 
     do  {
         if((res = file_getc(file_handle)) < 0)
-            {
+        {
             /* EOF terminating a line is ok normally, especially if chars read */
             if(res == EOF)
                 if(count > 0)
                     return(count);
 
             return(res);
-            }
+        }
 
         if((res == LF)  ||  (res == CR))
-            {
+        {
             /* got line terminator, read ahead */
             if((newres = file_getc(file_handle)) < 0)
-                {
+            {
                 /* that EOF will terminate next line immediately */
                 if(newres == EOF)
                     return(count);
 
                 return(newres);
-                }
+            }
 
             /* if not got alternate line terminator, put it back */
             if(res != (newres ^ LF ^ CR))
@@ -576,11 +576,11 @@ file_gets(
                     return(newres);
 
             break;
-            }
+        }
 
         buffer[count++] = res;
         buffer[count  ] = NULLCH; /* keep terminated */
-        }
+    }
     while(count < bufsize);
 
     return(count);
@@ -594,11 +594,11 @@ file_get_type(
 {
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(FILETYPE_UNDETERMINED);
-        }
+    }
 #endif
 
     return(file_handle->riscos.filetype);
@@ -635,11 +635,11 @@ file_length(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* ensure anything written to output buffer is included in the length */
@@ -750,10 +750,10 @@ file_open(
     /* would the name be too long to put in the allocated structure? */
 #if RISCOS
     if(strlen32(filename) >= sizeof32(file_handle->riscos.filename))
-        {
+    {
         reportf("file_open(%u:%s, &%02x): res=FILE_ERR_NAMETOOLONG", strlen(filename), filename, openatts[openmode]);
         return(create_error(FILE_ERR_NAMETOOLONG));
-        }
+    }
 #endif
 
     if(NULL == (*p_file_handle = file_handle = al_ptr_alloc_elem(_FILE_HANDLE, 1, &res)))
@@ -780,15 +780,15 @@ file_open(
     if(file__obtain_error_string(_kernel_swi(OS_Find, &rs, &rs)))
         res = create_error(FILE_ERR_CANTOPEN);
     else
-        {
+    {
         file_handle->handle = rs.r[0];
         res = (file_handle->handle != _FILE_HANDLE_NULL);
-        }
+    }
 
     reportf("file_open(%u:%s, &%02x): res=%d, OS_handle=%d", strlen(filename), filename, openatts[openmode], res, file_handle->handle);
 
     if(res > 0)
-        {
+    {
         rs.r[0] = OSFile_ReadInfo;
         rs.r[1] = (int) filename;
         rs.r[2] = 0; /* for error->untyped case */
@@ -797,7 +797,7 @@ file_open(
             file_handle->riscos.filetype = FILETYPE_UNTYPED;
         else
             file_handle->riscos.filetype = (FILETYPE_RISC_OS) ((rs.r[2] >> 8) & 0xFFF);
-        }
+    }
     } /*block*/
 #elif WINDOWS
     file_handle->handle = CreateFile(filename, openaccess[openmode], openshare[openmode], NULL, opencreate[openmode], FILE_ATTRIBUTE_NORMAL, NULL);
@@ -824,14 +824,14 @@ file_open(
     if(res <= 0)
         al_ptr_dispose(P_P_ANY_PEDANTIC(p_file_handle));
     else
-        {
+    {
         if(!file__initialised)
             file_init();
 
         /* link file onto head of list */
         file_handle->next  = file_list;
         file_list = file_handle;
-        }
+    }
 
     trace_2(TRACE_MODULE_FILE, TEXT("file_open yields " PTR_XTFMT ", %d"), report_ptr_cast(file_handle), res);
     return(res);
@@ -866,14 +866,14 @@ file_pad(
             ((res32 & alignmask) ? (alignment - (res32 & alignmask)) : 0));
 
     if(res32 & alignmask)
-        {
+    {
         alignment = alignment - (res32 & alignmask);
         do  {
             trace_0(TRACE_MODULE_FILE, "file_pad outputting NULLCH");
             res = file_putc(NULLCH, file_handle);
-            }
-        while((res >= 0)  &&  --alignment);
         }
+        while((res >= 0)  &&  --alignment);
+    }
     else
         res = 0;
 
@@ -895,11 +895,11 @@ file_putbyte(
 {
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     return(file_putc(c, file_handle));
@@ -937,11 +937,11 @@ file_read(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* trivial case? */
@@ -999,11 +999,11 @@ file_seek(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* always lose buffer as a subsequent file_putc will need to
@@ -1051,11 +1051,11 @@ file_set_type(
 {
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     file_handle->riscos.filetype          = filetype;
@@ -1075,11 +1075,11 @@ file_tell(
 {
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* return result either deduced from offset in buffer or real seq ptr */
@@ -1105,15 +1105,15 @@ file_ungetc(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     if(c != EOF)
-        {
+    {
         /* lose any buffer on this file */
         if((res = file__flushbuffer(file_handle, "file_ungetc")) < 0)
             return(res);
@@ -1124,7 +1124,7 @@ file_ungetc(
 
         file_handle->flags |= _FILE_HASUNGOTCH;
         file_handle->ungotch = c;
-        }
+    }
 
     return(c);
 }
@@ -1152,11 +1152,11 @@ file_write(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* trivial call? */
@@ -1193,11 +1193,11 @@ file_write_err(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* trivial call? */
@@ -1245,7 +1245,7 @@ file__closefile(
         /* no need to do anything; already closed on fs */
         res = 0;
     else
-        {
+    {
         res = file_flush(file_handle);
 
         {
@@ -1258,14 +1258,14 @@ file__closefile(
         reportf("file__closefile(OS_handle=%d)", file_handle->handle);
 
         if(file__obtain_error_string(_kernel_swi(OS_Find, &rs, &rs)))
-            {
+        {
             if(res >= 0)
                 res = create_error(FILE_ERR_CANTCLOSE);
-            }
+        }
         else
-            {
+        {
             if(file_handle->riscos.filetype_modified)
-                {
+            {
                 file_handle->riscos.filetype_modified = 0;
                 rs.r[0] = OSFile_SetType;
                 rs.r[1] = (int) &file_handle->riscos.filename;
@@ -1273,8 +1273,8 @@ file__closefile(
                 if(file__obtain_error_string(_kernel_swi(OS_File, &rs, &rs)))
                     if(res >= 0)
                         res = create_error(FILE_ERR_CANTCLOSE);
-                }
             }
+        }
 #elif WINDOWS
     /* update this near to the close */
     BY_HANDLE_FILE_INFORMATION info;
@@ -1292,7 +1292,7 @@ file__closefile(
     } /*block*/
 
         file_handle->flags |= _FILE_CLOSED;
-        }
+    }
 
     return(res);
 }
@@ -1351,10 +1351,10 @@ file__fillbuffer(
         file_handle->flags &= ~_FILE_EOFREAD;
 
     if(bytesread <= 0)
-        {
+    {
         file_handle->count = -1;
         return((bytesread < 0) ? bytesread : EOF);
-        }
+    }
 
     file_handle->count    = bytesread; /* doesn't matter if bytesread < bufsize */
     file_handle->ptr      = file_handle->bufbase;
@@ -1392,7 +1392,7 @@ file___flushbuffer(
         /* sticky error for ANSI closeness */
         res = file_handle->error;
     else if(file_handle->count != -1)
-        {
+    {
         /* we have a buffer, determine usage and dirtiness */
         bytesused = file_handle->bufbytes - file_handle->count;
 
@@ -1400,36 +1400,36 @@ file___flushbuffer(
         file_handle->count = -1;
 
         if(bytesused)
-            {
+        {
             if(file_handle->flags & _FILE_BUFDIRTY)
-                {
+            {
                 /* write used portion of buffer out to filing system
                  * at the correct place, updating seqptr
                 */
                 file_handle->flags &= ~_FILE_BUFDIRTY;
                 res = file__write(file_handle->bufbase, 1, bytesused, file_handle, file_handle->bufpos);
-                }
+            }
             else
-                {
+            {
                 /* update filing system seqptr to the point
                  * at which the client has used the read-only buffer
                 */
                 res = (S32) file__seek(file_handle, file_handle->bufpos + bytesused, SEEK_SET);
-                }
             }
+        }
         else
             res = 0;
-        }
+    }
     else
         res = 0;
 
 #if TRACE_ALLOWED
     if(res < 0)
-        {
+    {
         trace_3(TRACE_MODULE_FILE | TRACE_OUT,
                 "*** file_flushbuffer(" PTR_XTFMT ") from %s returning error %d ***",
                 report_ptr_cast(file_handle), caller, res);
-        }
+    }
 #endif
 
     return(res);
@@ -1489,11 +1489,11 @@ file__read(
 
     /* sticky error for ANSI closeness */
     if(file_handle->error)
-        {
+    {
         trace_1(TRACE_MODULE_FILE,
                 "file__read returns sticky error %d", file_handle->error);
         return(file_handle->error);
-        }
+    }
 
     {
 #if RISCOS
@@ -1503,10 +1503,10 @@ file__read(
     blk.nbytes  = bytestoread;
 
     if(_kernel_ERROR == _kernel_osgbpb(OSGBPB_ReadFromPTR, file_handle->handle, &blk))
-        {
+    {
         (void) file__set_error(file_handle, create_error(FILE_ERR_CANTREAD));
         return(file__obtain_error_string(_kernel_last_oserror()));
-        }
+    }
     else
         bytesread = bytestoread - blk.nbytes;
 #elif WINDOWS
@@ -1545,44 +1545,44 @@ file__seek(
     {
 #if RISCOS
     switch(origin)
-        {
-        default:
+    {
+    default:
 #if CHECKING
-            myassert3x(0, "file__seek(&%p, %d, origin=%d INVALID)", file_handle, offset, origin);
+        myassert3x(0, "file__seek(&%p, %d, origin=%d INVALID)", file_handle, offset, origin);
 
-        /*FALLTHRU*/
+    /*FALLTHRU*/
 
-        case SEEK_SET:
+    case SEEK_SET:
 #endif
-            newptr = 0;
-            break;
+        newptr = 0;
+        break;
 
-        case SEEK_CUR:
-            newptr = file__tell(file_handle);
-            if(!offset)
-                {
-                trace_4(TRACE_MODULE_FILE,
-                        "file__seek(" PTR_XTFMT ", &%8.8x, %d) (NO MOTION) yields &%8.8x",
-                        report_ptr_cast(file_handle), offset, origin, newptr);
-                return(newptr);
-                }
-            break;
-
-        case SEEK_END:
-            newptr = file_length(file_handle);
-            break;
+    case SEEK_CUR:
+        newptr = file__tell(file_handle);
+        if(!offset)
+        {
+            trace_4(TRACE_MODULE_FILE,
+                    "file__seek(" PTR_XTFMT ", &%8.8x, %d) (NO MOTION) yields &%8.8x",
+                    report_ptr_cast(file_handle), offset, origin, newptr);
+            return(newptr);
         }
+        break;
+
+    case SEEK_END:
+        newptr = file_length(file_handle);
+        break;
+    }
 
     if(newptr < 0)
         (void) file__set_error(file_handle, (STATUS) newptr);
     else
-        {
+    {
         newptr += offset;
 
         if(newptr < 0)
             newptr = file__set_error(file_handle, create_error(FILE_ERR_INVALIDPOSITION));
         else
-            {
+        {
             _kernel_swi_regs rs;
 
             rs.r[0] = OSArgs_SetPTR;
@@ -1591,8 +1591,8 @@ file__seek(
 
             if(file__obtain_error_string(_kernel_swi(OS_Args, &rs, &rs)))
                 newptr = file__set_error(file_handle, create_error(FILE_ERR_CANTREAD));
-            }
         }
+    }
 #elif WINDOWS
     DWORD dwMoveMethod;
 
@@ -1656,10 +1656,10 @@ file__set_error_string(
     trace_1(TRACE_MODULE_FILE, "file__set_error_string(%s)", errorstr);
 
     if(errorstr  &&  !file__errorptr)
-        {
+    {
         file__errorptr = file__errorbuffer;
         strcpy(file__errorptr, errorstr);
-        }
+    }
 #if TRACE_ALLOWED
     else if(file__errorptr)
         trace_0(TRACE_MODULE_FILE, "*** ERROR LOST ***");
@@ -1707,12 +1707,12 @@ file__tell(
      *                          - n bytes still to be used
     */
     if(file_handle->count != -1)
-        {
+    {
         curptr = file__tell_using_buffer(file_handle);
         trace_2(TRACE_MODULE_FILE,
                 "file__tell(" PTR_XTFMT ") yields &%8.8x", report_ptr_cast(file_handle), curptr);
         return(curptr);
-        }
+    }
 
     /* must ask filing system */
 
@@ -1776,11 +1776,11 @@ file__write(
 
     /* sticky error for ANSI closeness */
     if(file_handle->error)
-        {
+    {
         trace_1(TRACE_MODULE_FILE,
                 "file__write returns sticky error %d", file_handle->error);
         return(file_handle->error);
-        }
+    }
 
     {
 #if RISCOS
@@ -1851,15 +1851,15 @@ file__filbuf(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     if(file_handle->flags & _FILE_HASUNGOTCH)
-        {
+    {
         c = file_handle->ungotch;
 
         /* guaranteed no buffered data in this state! */
@@ -1869,10 +1869,10 @@ file__filbuf(
             return((S32) res32);
 
         return(c);
-        }
+    }
 
     if(!file_handle->bufbase)
-        {
+    {
         if(!(file_handle->flags & _FILE_UNBUFFERED))
             /* ensure buffered (or explicitly not, if file__defbufsiz == 0) */
             if((res = file_buffer(file_handle, NULL, file__defbufsiz)) < 0)
@@ -1881,12 +1881,12 @@ file__filbuf(
         /* DO NOT combine these two! (side effects from file_buffer()) */
 
         if(file_handle->flags & _FILE_UNBUFFERED)
-            {
+        {
             /* explicitly unbuffered i/o required? */
             res = file_read(&c, 1, 1, file_handle);
             return((res < 0) ? res : c);
-            }
         }
+    }
 
     if((res = file__fillbuffer(file_handle)) < 0)
         return(res);
@@ -1922,26 +1922,26 @@ file__flsbuf(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* no buffered data? */
     if(file_handle->count == -1)
-        {
+    {
         /* writeable file? */
         if(!(file_handle->flags & _FILE_WRITE))
-            {
+        {
             file_handle->error = create_error(FILE_ERR_ACCESSDENIED);
             return(file_handle->error);
-            }
+        }
 
         /* no buffer present? */
         if(!file_handle->bufbase)
-            {
+        {
             if(!(file_handle->flags & _FILE_UNBUFFERED))
                 /* ensure buffered (or explicitly not, if file__defbufsiz == 0) */
                 if((res = file_buffer(file_handle, NULL, file__defbufsiz)) < 0)
@@ -1950,12 +1950,12 @@ file__flsbuf(
             /* DO NOT combine these two! (side effects from file_buffer()) */
 
             if(file_handle->flags & _FILE_UNBUFFERED)
-                {
+            {
                 /* explicitly unbuffered i/o required */
                 res = file_write_err(&c, 1, 1, file_handle);
                 return((res < 0) ? res : c);
-                }
             }
+        }
 
         /* buffer is empty, make it so we can write to it,
          * noting where it belongs in the file.
@@ -1972,7 +1972,7 @@ file__flsbuf(
         file_handle->bufbytes = file_handle->bufsize;     /* bytes of buffer available in total */
 
         return(c);
-        }
+    }
 
     /* file has filled output buffer, clear out to disc and reset */
     if((res = file__flushbuffer(file_handle, "file__flsbuf")) < 0)
@@ -1998,11 +1998,11 @@ file__eof(
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
-        {
+    {
         assert(file_handle);
         assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
-        }
+    }
 #endif
 
     /* must flush internal buffers to do EOF check */

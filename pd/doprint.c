@@ -187,11 +187,11 @@ riscos_printing_abort(
     const char *procname)
 {
     if(riscos_printing)
-        {
+    {
         prncan(FALSE);
 
         messagef("Procedure %s called during RISC OS printing", procname);
-        }
+    }
 }
 
 #else
@@ -226,16 +226,16 @@ init_serial_print(
 
     /* set RS423 configuration */
     if(parity & 1)
-        {
+    {
         rs423config = ((databits & 1) << 4) |
                       ((stopbits & 1) << 3) |
                       (((parity >> 1) ^ 1) << 2);
-        }
+    }
     else
         /* handle no parity case */
-        {
+    {
         rs423config = (1 << 4) | (((stopbits & 1) ^ 1) << 2);
-        }
+    }
     _kernel_osbyte(156, rs423config, 0xE3);
 
     return(1);
@@ -256,11 +256,11 @@ pause(void)
     trace_0(TRACE_APP_PD4, "pause()");
 
     if(ctrlflag  ||  escape_pressed)
-        {
+    {
         ack_esc();
         escape_pressed = TRUE;
         return(create_error(ERR_ESCAPE));
-        }
+    }
 
     tprnbit = prnbit;
     prnoff(TRUE);
@@ -301,12 +301,12 @@ Print_fn(void)
     S32   res = FALSE;
 
     if(dialog_box_start())
-        {
+    {
         res = dialog_box(D_PRINT);
 
         /* never persists */
         dialog_box_end();
-        }
+    }
 
     /* orientation change: redo lines */
     if((d_print_QL != d_old_QL) || (d_print_QS != d_old_QS))
@@ -337,7 +337,7 @@ wait_vdu_reset(
     BOOL clear)
 {
     if(sheets_bit || screen_bit)
-        {
+    {
         wimpt_safe(bbc_vdu(bbc_TextToText));
 
         wimpt_safe(swi_wimp_textcolour(7));
@@ -349,7 +349,7 @@ wait_vdu_reset(
         wimpt_safe(bbc_vdu(bbc_MoveText)); /* TAB x,y */
         wimpt_safe(bbc_vdu(0));
         wimpt_safe(bbc_vdu(scrnheight()));
-        }
+    }
 }
 
 /*
@@ -367,13 +367,13 @@ last_col_in_width(
     COL this_fits = first_col;
 
     for(tcol = first_col; tcol < numcol; tcol++)
-        {
+    {
         P_S32 widp, wwidp;
 
         readpcolvars(tcol, &widp, &wwidp);
 
         if(*widp > 0)
-            {
+        {
             width_so_far += *widp;
 
             /* if blown off end send back previous one */
@@ -383,8 +383,8 @@ last_col_in_width(
                 return(tcol);
 
             this_fits = tcol;
-            }
         }
+    }
 
     return(this_fits);
 }
@@ -404,39 +404,39 @@ print_document_core_core(
 
     /* do we have mailshot parameters? */
     if(d_print_QD == 'Y')
-        {
+    {
         parmfile = d_print_QE;
 
         if(parmfile)
-            {
+        {
             res = file_find_on_path_or_relative(parmfile_array, elemof32(parmfile_array), parmfile, currentfilename)
                         /* doing macros - check it's a tab file */
                         ? find_filetype_option(parmfile_array)
                         : '\0';
 
             if(res != 'T')
-                {
+            {
                 res = (res == '\0') ? create_error(ERR_NOTFOUND) : create_error(ERR_NOTTABFILE);
                 /* must pass back a pointer to a non-auto object */
                 *errp = parmfile;
                 return(res);
-                }
+            }
 
             macrofile = pd_file_open(parmfile_array, file_open_read);
 
             if(macrofile)
-                {
+            {
                 STATUS status;
                 if(NULL != (printing_macro_buffer = al_ptr_alloc_bytes(char *, MACROFILE_BUFSIZ, &status)))
                     file_buffer(macrofile, printing_macro_buffer, MACROFILE_BUFSIZ);
-                }
+            }
             else
-                {
+            {
                 *errp = parmfile;
                 return(create_error(ERR_NOTFOUND));
-                }
             }
         }
+    }
     else
         parmfile = NULL;
 
@@ -444,18 +444,18 @@ print_document_core_core(
 
     /* RISC OS printing does multiple copies differently */
     if(riscos_printing)
-        {
+    {
         riscos_copies = copies;
         copies = 1;
         riscos_scale  = d_print_QS;
-        }
+    }
 
     draw_to_screen = FALSE;
 
     res = 0;
 
     if(copies)
-        {
+    {
         initialise_saved_print_state();
 
         do  {
@@ -491,18 +491,18 @@ print_document_core_core(
 
             if(res <= 0)
                 break;
-            }
+        }
         while(--copies > 0);
 
         finalise_saved_print_state();
-        }
+    }
 
     /* close macro file */
     if(macrofile)
-        {
+    {
         pd_file_close(&macrofile);
         al_ptr_dispose(P_P_ANY_PEDANTIC(&macro_buffer));
-        }
+    }
 
     return(res);
 }
@@ -555,83 +555,83 @@ print_document_core(
 
     /* setup printer destination */
     switch(d_print_QP)
+    {
+    case 'F':
         {
-        case 'F':
-            {
-            /* it's going to a file */
-            outnamerep = d_print_QF;
+        /* it's going to a file */
+        outnamerep = d_print_QF;
 
-            if(str_isblank(outnamerep))
-                return(create_error(ERR_BAD_NAME));
+        if(str_isblank(outnamerep))
+            return(create_error(ERR_BAD_NAME));
 
-            (void) file_add_prefix_to_name(outfile_array, elemof32(outfile_array), outnamerep, currentfilename);
+        (void) file_add_prefix_to_name(outfile_array, elemof32(outfile_array), outnamerep, currentfilename);
 
-            outname = outfile_array;
+        outname = outfile_array;
 
-            if(!checkoverwrite(outname))
-                return(0);
+        if(!checkoverwrite(outname))
+            return(0);
 
-            sheets_bit = FALSE;
-            }
-            break;
+        sheets_bit = FALSE;
+        }
+        break;
 
-        /* it's going to the screen */
-        case 'S':
-            {
-            outname = "rawvdu:"; /* unfortunately vdu: filters tbs chars */
+    /* it's going to the screen */
+    case 'S':
+        {
+        outname = "rawvdu:"; /* unfortunately vdu: filters tbs chars */
 
-            screen_bit = TRUE;
-            sheets_bit = FALSE;
-            linessofar = 0;
-            }
-            break;
+        screen_bit = TRUE;
+        sheets_bit = FALSE;
+        linessofar = 0;
+        }
+        break;
 
-        /* it's going to printer */
+    /* it's going to printer */
+    default:
+        {
+        trace_1(TRACE_APP_PD4, "outputting to driver type %d", d_driver_PT);
+
+        switch(d_driver_PT)
+        {
         default:
+        case driver_riscos:
+            riscos_printing = TRUE;
+            outname = "rawvdu:"; /* still need for output when waiting between pages */
+            break;
+
+        case driver_serial:
+            init_serial_print(0, /*port*/
+                              d_driver_PB,       /*baudrate*/
+                              d_driver_PW - '5', /*databits*/
+                              d_driver_PO - '1', /*stopbits*/
+                              (d_driver_PP == 'N') ? 0 :
+                              (d_driver_PP == 'O') ? 1 : 2   /*parity*/);
+
+            outname = "printer#serial:";
+            break;
+
+        case driver_parallel:
+            outname = "printer#parallel:";
+            break;
+
+        case driver_network:
+            if(!str_isblank(d_driver_PN))
             {
-            trace_1(TRACE_APP_PD4, "outputting to driver type %d", d_driver_PT);
-
-            switch(d_driver_PT)
-                {
-                default:
-                case driver_riscos:
-                    riscos_printing = TRUE;
-                    outname = "rawvdu:"; /* still need for output when waiting between pages */
-                    break;
-
-                case driver_serial:
-                    init_serial_print(0, /*port*/
-                                      d_driver_PB,       /*baudrate*/
-                                      d_driver_PW - '5', /*databits*/
-                                      d_driver_PO - '1', /*stopbits*/
-                                      (d_driver_PP == 'N') ? 0 :
-                                      (d_driver_PP == 'O') ? 1 : 2   /*parity*/);
-
-                    outname = "printer#serial:";
-                    break;
-
-                case driver_parallel:
-                    outname = "printer#parallel:";
-                    break;
-
-                case driver_network:
-                    if(!str_isblank(d_driver_PN))
-                        {
-                        /* SKS after 4.11 06jan92 - $.Stream is bodge for netprint 5.23 on RISC OS 3 */
-                        (void) xsnprintf(outfile_array, elemof32(outfile_array), "netprint#%s:$.Stream", d_driver_PN);
-                        outname = outfile_array;
-                        }
-                    else
-                        outname = "netprint:";
-                    break;
-
-                case driver_user:
-                    outname = "printer#user:";
-                    break;
-                }
+                /* SKS after 4.11 06jan92 - $.Stream is bodge for netprint 5.23 on RISC OS 3 */
+                (void) xsnprintf(outfile_array, elemof32(outfile_array), "netprint#%s:$.Stream", d_driver_PN);
+                outname = outfile_array;
             }
+            else
+                outname = "netprint:";
+            break;
+
+        case driver_user:
+            outname = "printer#user:";
             break;
         }
+        }
+        break;
+    }
 
     printer_output_error = 0;
     printer_output       = NULL;
@@ -639,31 +639,31 @@ print_document_core(
 
     assert(outname);
     if(outname)
-        {
+    {
         escape_enable();
         printer_output = pd_file_open(outname, file_open_write);
         escape_disable();
 
         if(!printer_output)
-            {
+        {
             *errp = outnamerep ? outnamerep : outname;
             riscos_printing = FALSE; /* hole closed by SKS after 4.11 17jan92 */
             return(create_error(ERR_CANNOTOPEN));
-            }
+        }
 
         /* ensure unbuffered */
         file_buffer(printer_output, NULL, 0);
 
         if(d_print_QP == 'F')
-            {
+        {
             /* Make real (user-specified) file a 'Printout' type file so we can
              * drag it to the PrinterXX application to print in the background
             */
             escape_enable();
             file_set_type(printer_output, FILETYPE_PRINTOUT);
             escape_disable();
-            }
         }
+    }
 
     { /* SKS 27jan97 add some headroom for printing */
     void * blkp;
@@ -682,7 +682,7 @@ print_document_core(
                                 : atoi(d_print_QM);
 
     if(sheets_bit  ||  screen_bit)
-        {
+    {
         wait_vdu_reset(TRUE);
         mustredraw = TRUE;
 
@@ -690,7 +690,7 @@ print_document_core(
 
         if(sheets_bit)
             puts(Initialising_STR);
-        }
+    }
 
     /* output PON as soon as printing starts */
     out_h_on = TRUE;
@@ -699,7 +699,7 @@ print_document_core(
     if(d_poptions_PX == 0)
         res = print_document_core_core(errp, &cancan);
     else
-        {
+    {
         /* print only as many column across as will fit in page width */
         /* set up block for each set of columns and print it */
 
@@ -714,17 +714,17 @@ print_document_core(
         save_bd = blk_docno;
 
         if(block_option)
-            {
+        {
             use_bs = blkstart;
             use_be = blkend;
-            }
+        }
         else
-            {
+        {
             use_bs.col = 0;
             use_bs.row = 0;
             use_be.col = numcol-1;
             use_be.row = numrow-1;
-            }
+        }
 
         blk_docno = current_docno();
 
@@ -739,7 +739,7 @@ print_document_core(
         new_column = use_bs.col;
 
         while(new_column <= use_be.col)
-            {
+        {
             /* start at this column and row */
             blkstart.col = new_column;
             blkstart.row = use_bs.row;
@@ -764,38 +764,38 @@ print_document_core(
 
             /* start here next time round */
             new_column = blkend.col + 1;
-            }
+        }
 
         d_print_QB   = save_QB;
 
         blkstart  = save_bs;
         blkend    = save_be;
         blk_docno = save_bd;
-        }
+    }
 
     /* output POFF after all printing done but only if prnon has been called in print_document_core_core */
     if(cancan)
         prncan(TRUE);
 
     if(printer_output || saved_printer_output) /* could be in either place, the latter is more likely and desired */
-        {
+    {
         char * err;
         S32    res1;
 
         if(saved_printer_output)
-            {
+        {
             assert(!printer_output); /* out of sync? */
             printer_output = saved_printer_output;
-            }
+        }
 
         escape_enable();
 
         if(!printer_output_error)
-            {
+        {
             (void) file_get_error();
 
             if((res1 = file_flush(printer_output)) < 0)
-                {
+            {
                 res = (res <= 0) ? res : res1;
 
                 err = file_get_error();
@@ -804,14 +804,14 @@ print_document_core(
                     rep_fserr(err);
                 else
                     reperr(res, d_print_QF);
-                }
             }
+        }
 
         trace_0(TRACE_APP_PD4, "closing printer_output");
         pd_file_close(&printer_output);
 
         escape_disable();
-        }
+    }
 
     flex_forbid_shrink(FALSE);
 
@@ -878,24 +878,24 @@ set_pitch(
     /* is there an offset ? */
     lptr = search_list(&highlight_list, HMI_O);
     if(lptr)
-        {
+    {
         offset = (S32) *lptr->value;
 
         if(offset > 128)
             n -= (256 - offset);
         else
             n += offset;
-        }
+    }
 
     /* send length of gap as byte or text form? */
     if(hmi_as_text)
-        {
+    {
         /* send length of gap as text form */
         (void) sprintf(buffer, "%d", n);
         ptr = buffer;
         while((ch = *ptr++) != '\0')
             rawprint(ch);
-        }
+    }
     else
         /* send length of gap as byte */
         rawprint(n);
@@ -927,10 +927,10 @@ mspace(
     trace_1(TRACE_APP_PD4, "mspace(%d)", n);
 
     if(riscos_printing)
-        {
+    {
         print_complain(os_plot(bbc_MoveCursorRel, n, 0));
         return;
-        }
+    }
 
     set_pitch(n);
 
@@ -951,15 +951,15 @@ static void
 getfpn(void)
 {
     if(encpln == 0)
-        {
+    {
         curpnm = 0;
         trace_1(TRACE_APP_PD4, "getfpn: curpnm := %d (encpln == 0)", curpnm);
-        }
+    }
     else if(reset_pnm)
-        {
+    {
         curpnm = filpnm;
         trace_1(TRACE_APP_PD4, "[getfpn: curpnm := %d (filpnm)]", curpnm);
-        }
+    }
 
     reset_pnm = FALSE;
 }
@@ -973,18 +973,18 @@ drop_n_lines(
     trace_1(TRACE_APP_PD4, "drop_n_lines(%d)", nlines);
 
     if(nlines > 0)
-        {
+    {
         if(riscos_printing)
-            {
+        {
             /* drop baseline n lines */
             riscos_font_yad -= nlines * global_font_leading_mp;
             trace_3(TRACE_APP_PD4, "riscos_font_yad = %d (mp) after dropping %d line%s",
                     riscos_font_yad, nlines, (nlines == 1) ? "" : "s");
             return;
-            }
+        }
 
         wrchrep(CR, nlines);
-        }
+    }
 }
 
 extern S32
@@ -1007,10 +1007,10 @@ print_left_margin(void)
     nspaces = left_margin_width();
 
     if(riscos_printing)
-        {
+    {
         /* left margin and two-sided margins now accounted for in RISC OS printing rectangle */
         riscos_font_xad = 0;
-        }
+    }
     else
         ospca(nspaces);
 
@@ -1036,7 +1036,7 @@ prchef(
         return;
 
     if(curpnm)
-        {
+    {
         /* set pitch if microspacing */
         setssp();
         set_pitch(smispc);
@@ -1044,14 +1044,14 @@ prchef(
         print_left_margin();
 
         if(riscos_printing)
-            {
+        {
             print_setcolours(FORE, BACK);
 
             if(riscos_fonts)
                 print_setfontcolours();
             else
                 at_print();
-            }
+        }
 
         /* expand the lcr field and send it off */
         expand_lcr(field, -1, array, header_footer_width,
@@ -1059,7 +1059,7 @@ prchef(
                    riscos_fonts /*allow_fonty_result*/, TRUE /*compile_lcr*/);
 
         lcrjust(array, header_footer_width, left_page);
-        }
+    }
 
     prnout(EOS);        /* switch off highlights */
     prnout(CR);
@@ -1144,7 +1144,7 @@ print_grid_lines(void)
     coord this_colstart, colwid;
 
     if(riscos_printing  &&  grid_on)
-        {
+    {
         nrows = (printing_last.row - in_block.row + 1) * enclns; /* SKS 20130701 *= enclns */
         if( nrows > encpln) /* clip to page core */
             nrows = encpln;
@@ -1156,14 +1156,14 @@ print_grid_lines(void)
 
         /* draw subsequent right hand of each column lines */
         for(col = printing_first.col; col <= printing_last.col; ++col)
-            {
+        {
             colwid = colwidth(col);
 
             if(colwid)
                 print_grid_line(this_colstart, 0, 0, nrows);
 
             this_colstart += colwid;
-            }
+        }
 
         /* draw final vertical line */
         print_grid_line(header_footer_width, 0, 0, nrows);
@@ -1173,7 +1173,7 @@ print_grid_lines(void)
         /* I'd say the latter if we did fonty rubout behind the printed text. so that's what it does */
         for(rowoff = 0; rowoff <= nrows; rowoff += enclns) /* SKS 20130701 += enclns */
             print_grid_line(0, header_footer_width, rowoff, 0);
-        }
+    }
 }
 
 static BOOL
@@ -1225,21 +1225,21 @@ outff(
         return(TRUE);
 
     if(!screen_bit)
-        {
+    {
         PC_LIST lptr = search_list(&highlight_list, E_P);
 
         if(lptr)
-            {
+        {
             /* we have string, can we output it? */
 
             if(do_something  ||  strchr((const char *) lptr->value, FORMFEED))
-                {
+            {
                 out_h_string_value_0(lptr);
 
                 return(TRUE);
-                }
             }
         }
+    }
 
     return(FALSE);
 }
@@ -1282,16 +1282,16 @@ botejc(void)
     prchef(d_poptions_F2);
 
     if(d_poptions_BM > 0)
-        {
+    {
         /* if can do FORMFEED, do it */
         if(!outff(FALSE))
-            {
+        {
             /* must output blanks to end of page */
             drop_n_lines(d_poptions_BM);
 
             outff(TRUE);
-            }
         }
+    }
 }
 
 /*
@@ -1306,7 +1306,7 @@ pagejc(void)
         return(TRUE);
 
     if(had_top)
-        {
+    {
         botejc();
         if(been_error)
             return(FALSE);
@@ -1314,7 +1314,7 @@ pagejc(void)
         curpnm++;
         trace_1(TRACE_APP_PD4, "pagejc: ++curpnm := %d", curpnm);
         return(TRUE);
-        }
+    }
 
     return(topejc());
 }
@@ -1343,32 +1343,32 @@ macrocall(void)
     delete_list(&first_macro);
 
     for(;;)
-        {
+    {
         res = getfield(macrofile, buffer, FALSE);
 
         switch(res)
-            {
-            case EOF:
-                return(0);
+        {
+        case EOF:
+            return(0);
 
-            case CR:
-            case TAB:
-                if(!str_isblank(buffer))
-                    status_return(mres = add_to_list(&first_macro, key, buffer));
-                /* omit blank fields ? */
-                else if(d_print_QO == 'Y')
-                    --key;
+        case CR:
+        case TAB:
+            if(!str_isblank(buffer))
+                status_return(mres = add_to_list(&first_macro, key, buffer));
+            /* omit blank fields ? */
+            else if(d_print_QO == 'Y')
+                --key;
 
-                if(res == CR)
-                    return(1);
-                break;
+            if(res == CR)
+                return(1);
+            break;
 
-            default:
-                break;
-            }
+        default:
+            break;
+        }
 
         ++key;
-        }
+    }
 }
 
 /* do once initially and once for each subsequent
@@ -1384,22 +1384,22 @@ init_print_selection(void)
 
     /* use marked block? */
     if(block_option)
-        {
+    {
         printing_first = blkstart;
         printing_last  = (blkend.col == NO_COL) ? blkstart : blkend;
 
         /* ensure column range valid for this file */
         if(printing_last.col >= numcol - 1)
             printing_last.col = numcol - 1;
-        }
+    }
     else
-        {
+    {
         /* entire document? (all rows) - now only if glbbit || !d_poptions_PX */
         printing_first.col = (COL) 0;
         printing_first.row = (ROW) 0;
         printing_last.col  = numcol - 1;
         printing_last.row  = numrow - 1;
-        }
+    }
 
     trace_4(TRACE_APP_PD4, "init_print_selection srow: %d, erow: %d, scol %d, ecol %d",
             printing_first.row, printing_last.row, printing_first.col, printing_last.col);
@@ -1435,7 +1435,7 @@ print_page(void)
 {
     /* for each file in multi-file document */
     for(;;)
-        {
+    {
         coord this_colstart = 0;  /* keep dataflower happy */
         coord drawn_sofar   = 0;  /* only used for PD printing */
         ROW previous_row   = -1; /* an invalid row number */
@@ -1449,12 +1449,12 @@ print_page(void)
 
         /* for each cell in file or block */
         while(next_in_block(ACROSS_ROWS))
-            {
+        {
             trace_2(TRACE_APP_PD4, "print_page loop... col %d, row %d", in_block.col, in_block.row);
 
             /* see if user wants to stop */
             if(ctrlflag  ||  escape_pressed)
-                {
+            {
                 ack_esc();
                 escape_pressed = TRUE;
                 return(create_error(ERR_ESCAPE));
@@ -1462,14 +1462,14 @@ print_page(void)
 
             /* forced first time round */
             if(previous_row != in_block.row)
-                {
+            {
                 /* it's a new row so check for hard break */
                 if(chkrpb(in_block.row))
-                    {
+                {
                     /* dont do hard break if coincides with soft break */
                     if( (in_block.row > 0)  &&  (pagcnt != enclns)  &&
                         chkpbs(in_block.row, pagcnt))
-                        {
+                    {
                         trace_0(TRACE_APP_PD4, "found active hard break line");
 
                         /* this code does not cater, like does VP, for
@@ -1482,17 +1482,17 @@ print_page(void)
                         real_pagcnt = 0;
 
                         return(more_in_block(ACROSS_ROWS) ? P_DONE_PAGE : P_FINISHED);
-                        }
+                    }
                     #if TRACE_ALLOWED
                     else
-                        {
+                    {
                         trace_0(TRACE_APP_PD4, "found inactive hard break line");
-                        }
+                    }
                     #endif
 
                     force_next_row();
                     continue;       /* get another row to print */
-                    }
+                }
 
                 previous_row = in_block.row;
                 this_colstart = 0;
@@ -1511,23 +1511,23 @@ print_page(void)
 
                 if(been_error)
                     return(P_HAD_ERROR);
-                }
+            }
 
             colwid = colwidth(in_block.col);
 
             if(colwid)
-                {
+            {
                 /* update to start of column */
                 if(!riscos_printing)
                     while(drawn_sofar < this_colstart)
-                        {
+                    {
                         prnout(SPACE);
 
                         if(been_error)
                             return(P_HAD_ERROR);
 
                         drawn_sofar++;
-                        }
+                    }
 
                 /* draw cell */
                 tcell = travel(in_block.col, in_block.row);
@@ -1536,21 +1536,21 @@ print_page(void)
                 fwidth = chkolp(tcell, in_block.col, in_block.row);
 
                 if(page_width)
-                    {
+                {
                     /* SKS after 4.11 06jan92 - limit field widths to page */
                     colwid = MIN(colwid, page_width - this_colstart);
                     fwidth = MIN(fwidth, page_width - this_colstart);
-                    }
+                }
 
                 if(tcell)
-                    {
+                {
                     P_DRAW_DIAG p_draw_diag;
                     P_DRAW_FILE_REF p_draw_file_ref;
                     S32 x, y;
 
                     if( riscos_printing  &&
                         draw_find_file(current_docno(), in_block.col, in_block.row, &p_draw_diag, &p_draw_file_ref))
-                        {
+                    {
                         /* pictures fill line, not just down from baseline */
                         trace_2(TRACE_APP_PD4, "found picture at %d, %d", in_block.col, in_block.row);
 
@@ -1566,16 +1566,16 @@ print_page(void)
 
                         /* Draw rendering has invalidated our colour cache */
                         killcolourcache();
-                        }
+                    }
                     else
-                        {
+                    {
                         trace_2(TRACE_APP_PD4, "printing cell %d, %d", in_block.col, in_block.row);
 
                         if((fwidth > colwid)  &&  !slot_displays_contents(tcell))
                             fwidth = colwid;
 
                         if(riscos_printing)
-                            {
+                        {
                             BOOL neg;
 
                             if(result_sign(tcell) < 0)
@@ -1589,13 +1589,13 @@ print_page(void)
                                 print_setfontcolours();
                             else
                                 at_print();
-                            }
+                        }
 
                         drawn_sofar += outslt(tcell, in_block.row, fwidth);
 
                         prnout(EOS);
-                        }
                     }
+                }
 
                 if(been_error)
                     return(P_HAD_ERROR);
@@ -1604,11 +1604,11 @@ print_page(void)
                     riscos_font_xad += colwid * (charwidth*MILLIPOINTS_PER_OS);
 
                 this_colstart += colwid;
-                }
+            }
 
             /* if at last column draw carriage returns */
             if(in_block.col == printing_last.col)
-                {
+            {
                 /* send out line spacing, checking not going over page break */
                 S32 i;
 
@@ -1616,25 +1616,25 @@ print_page(void)
                 actind_in_block(ACROSS_ROWS);
 
                 for(i = 0; i < enclns; i++)
-                    {
+                {
                     if((real_pagcnt < real_pagelength)  ||  (real_pagelength == 0))
-                        {
+                    {
                         prnout(CR);
                         real_pagcnt++;
-                        }
+                    }
 
                     pagcnt++;
 
                     if((real_pagelength > 0)  &&  (real_pagcnt >= real_pagelength))
-                        {
+                    {
                         pagcnt = 0;
                         real_pagcnt = 0;
                         break;
-                        }
                     }
+                }
 
                 if(pagcnt == 0)
-                    {
+                {
                     if(!pagejc())       /* bottom of page */
                         return(P_HAD_ERROR);
 
@@ -1642,9 +1642,9 @@ print_page(void)
                     real_pagcnt = 0;
 
                     return(more_in_block(ACROSS_ROWS) ? P_DONE_PAGE : P_FINISHED);
-                    }
                 }
             }
+        }
 
         trace_0(TRACE_APP_PD4, "complete current page");
 
@@ -1653,7 +1653,7 @@ print_page(void)
             return(P_HAD_ERROR);
 
         return(P_FINISHED);
-        }
+    }
 }
 
 /* state to preserve - vague effort to reduce code on ARM */
@@ -1690,13 +1690,13 @@ save_print_state(void)
     riscos_print_save.saved_reset_pnm   = reset_pnm;
     riscos_print_save.saved_curpnm      = curpnm;
     if(macrofile)
-        {
+    {
         file_getpos(macrofile, &riscos_print_save.saved_macrofilepos);
 
         delete_list(&riscos_print_save.saved_macrolist);
         riscos_print_save.saved_macrolist = first_macro;
         first_macro = NULL;
-        }
+    }
     riscos_print_save.saved_had_top     = had_top;
     trace_1(TRACE_APP_PD4, "saved had_top %s", trace_boolstring(had_top));
 }
@@ -1713,11 +1713,11 @@ restore_saved_print_state(void)
     reset_pnm           = riscos_print_save.saved_reset_pnm;
     curpnm              = riscos_print_save.saved_curpnm;
     if(macrofile)
-        {
+    {
         file_setpos(macrofile, &riscos_print_save.saved_macrofilepos);
 
         res = duplicate_list(&first_macro, &riscos_print_save.saved_macrolist);
-        }
+    }
     had_top             = riscos_print_save.saved_had_top;
     trace_1(TRACE_APP_PD4, "restored had_top := %s", trace_boolstring(had_top));
 
@@ -1763,7 +1763,7 @@ printx(void)
 
     /* do a print of all files for each macro call */
     while(macrocall()  ||  firstmacro)
-        {
+    {
         trace_0(TRACE_APP_PD4, "in printx macrocall loop...");
 
         firstmacro = FALSE;
@@ -1785,7 +1785,7 @@ printx(void)
 
         /* keep printing pages until this macro call complete */
         for(;;)
-            {
+        {
             trace_0(TRACE_APP_PD4, "printx about to call getfpn");
             getfpn();
 
@@ -1807,20 +1807,20 @@ printx(void)
                     c = toupper(c);
 
                     if(c == ESCAPE)
-                        {
+                    {
                         bleep();
                         escape_pressed = TRUE;
                         return(create_error(ERR_ESCAPE));              /* end printing please */
-                        }
+                    }
                     else if(strchr(Miss_Page_Chars_STR, c))
-                        {
+                    {
                         print_newline();
                         break;                  /* out of loop */
-                        }
+                    }
                     else if(strchr(All_Pages_Chars_STR, c))
-                        {
+                    {
                         sheets_bit = FALSE;
-                        }
+                    }
 
                     print_newline();
 
@@ -1830,21 +1830,21 @@ printx(void)
                         return(res ? res : create_error(ERR_GENFAIL));
 
                     if(riscos_printing)
-                        {
+                    {
                         print_setcolours(FORE, BACK);
 
                         if(riscos_fonts)
                             print_setfontcolours();
                         else
                             at_print();
-                        }
                     }
+                }
                 while(FALSE);
 
             escape_enable();
 
             if(riscos_printing  &&  prnbit)
-                {
+            {
                 save_print_state();
 
                 res = riscprint_page(riscos_copies, landscape_option, riscos_scale,
@@ -1852,9 +1852,9 @@ printx(void)
 
                 /* no error, or error either from giving page or printing slices */
                 res = res ? riscos_res : P_HAD_ERROR;
-                }
+            }
             else
-                {
+            {
                 /* print page to screen */
                 triscos_printing = riscos_printing;
                 triscos_fonts    = font_stack(riscos_fonts);
@@ -1868,7 +1868,7 @@ printx(void)
                 riscos_printing = triscos_printing;
                 riscos_fonts    = font_unstack(triscos_fonts);
                 setpvc();
-                }
+            }
 
             if(escape_disable())
                 res = create_error(ERR_ESCAPE);
@@ -1876,29 +1876,29 @@ printx(void)
             trace_1(TRACE_APP_PD4, "print_page returns %d", res);
 
             switch(res)
-                {
-                case P_DONE_PAGE:
-                    continue;
+            {
+            case P_DONE_PAGE:
+                continue;
 
-                case P_FINISHED:
-                    break;
+            case P_FINISHED:
+                break;
 
-            /*  case P_HAD_ERROR: */
-                default:
-                    /* it's an error */
-                    break;
-                }
+        /*  case P_HAD_ERROR: */
+            default:
+                /* it's an error */
+                break;
+            }
 
             trace_0(TRACE_APP_PD4, "this macro call finished");
             break;
-            }
+        }
 
         /* turn off highlights at the end of each macro invocation */
         off_highlights();
 
         if(res != P_FINISHED)
             break;
-        }   /* each macro */
+    }   /* each macro */
 
     return(res);
 }
@@ -1922,7 +1922,7 @@ rawprint(
     riscos_printing_abort("rawprint");
 
     if(!ctrlflag && !printer_output_error)
-        {
+    {
         int res;
 
 #if 0 /* printer_output is UNBUFFERED */
@@ -1939,7 +1939,7 @@ rawprint(
             printer_output_error = 1;
 
         return;
-        }
+    }
 
     (void) create_error(ERR_ESCAPE);
 }
@@ -1965,10 +1965,10 @@ out_one_ch(
     lptr = search_list(&highlight_list, (S32) ch);
 
     if(lptr)
-        {
+    {
         out_h_string_value_0(lptr);
         return(TRUE);
-        }
+    }
 
     rawprint(ch);
 
@@ -1991,23 +1991,23 @@ out_h_string(
         return;
 
     while((ch = *str++) != '\0')
-        {
+    {
         if(ch == ESCAPE)
-            {
+        {
             ch = *str++;
 
             if(ch == QUERY)
-                {
+            {
                 out_one_ch(thisch); /* thisch may be expanded */
                 continue;
-                }
+            }
 
             if(ch == 0xFF)
                 ch = 0;
-            }
+        }
 
         rawprint(ch);
-        }
+    }
 }
 
 /* a most common call to the above funcion */
@@ -2050,14 +2050,14 @@ riscos_drvon(void)
 
     /* only turn on right at start */
     if(out_h_on)
-        {
+    {
         out_h_on = FALSE;
 
         ok = riscprint_start();
 
         if(!ok)
             return(create_error(ERR_GENFAIL));
-        }
+    }
 
     /* always resume */
     trace_0(TRACE_APP_PD4, "riscos_drvon: resuming print");
@@ -2082,11 +2082,11 @@ riscos_drvoff(
 
     /*  only end job when fully finished */
     if(out_h_off)
-        {
+    {
         out_h_off = FALSE;
 
         riscprint_end(ok);
-        }
+    }
 
     return(FALSE);
 }
@@ -2100,21 +2100,21 @@ riscos_drvout(
     trace_2(TRACE_APP_PD4, "riscos_drvout(%d ('%c'))", ch, ch ? ch : '0');
 
     switch(ch)
-        {
-        case CR:
-            /* drop baseline one line; doesn't reposition xad */
-            riscos_font_yad -= global_font_leading_mp;
-            trace_1(TRACE_APP_PD4, "riscos_font_yad = %d (mp) due to CR", riscos_font_yad);
-            break;
+    {
+    case CR:
+        /* drop baseline one line; doesn't reposition xad */
+        riscos_font_yad -= global_font_leading_mp;
+        trace_1(TRACE_APP_PD4, "riscos_font_yad = %d (mp) due to CR", riscos_font_yad);
+        break;
 
-        case EOS:
-            /* switch off highlights (for system font) */
-            highlights_on = 0;
-            break;
+    case EOS:
+        /* switch off highlights (for system font) */
+        highlights_on = 0;
+        break;
 
-        default:
-            res = print_complain(bbc_vdu(ch));
-        }
+    default:
+        res = print_complain(bbc_vdu(ch));
+    }
 
     return(res);
 }
@@ -2135,21 +2135,21 @@ drvon(void)
     escape_enable();
 
     if(saved_printer_output)
-        {
+    {
         /* restore from saved */
         assert(!printer_output); /* out of sync? */
         printer_output = saved_printer_output;
         saved_printer_output = NULL;
-        }
+    }
 
     if(out_h_on)
-        {
+    {
         out_h_on = FALSE;
 
         /* if the driver has a printer on string, send it out */
         if(driver_loaded)
             out_h_string_value_0(search_list(&highlight_list, P_ON));
-        }
+    }
 
     return(escape_disable() ? create_error(ERR_ESCAPE) : 1);
 }
@@ -2171,25 +2171,25 @@ drvoff(
     escape_enable();
 
     if(out_h_off)
-        {
+    {
         out_h_off = FALSE;
 
         if(driver_loaded)
             out_h_string_value_0(search_list(&highlight_list, P_OFF));
-        }
+    }
 
     assert(!saved_printer_output); /* out of sync? */
     if(printer_output) /* SKS 18.10.91 - don't allow NULL to inadvertently get saved */
-        {
+    {
         saved_printer_output = printer_output;
         printer_output       = NULL;
-        }
+    }
 
     if(d_driver_PT == driver_serial)
-        {
+    {
         /* flush RS423 buffers */
         fx_x2(21, 1);
-        }
+    }
 
     return(!escape_disable());
 }
@@ -2214,22 +2214,22 @@ drvout(
         return(FALSE);
 
     if(ishighlight(ch))
-        {
+    {
         mask = (S32) (1 << (ch - FIRST_HIGHLIGHT));
 
         /* if it's waiting to go on, just turn it off */
         if(h_waiting & mask)
-            {
+        {
             h_waiting &= ~mask;
             return(FALSE);
-            }
+        }
 
         /* if its not on, make it wait */
         if(!(h_on & mask))
-            {
+        {
             h_waiting |= mask;
             return(FALSE);
-            }
+        }
 
         /* it must be on, so turn it off */
         h_on &= ~mask;
@@ -2246,15 +2246,15 @@ drvout(
         out_h_string_value_0(lptr);
 
         return(FALSE);
-        }
+    }
 
     /* if at end of cell, switch highlights off, maybe */
     if(ch == EOS)
-        {
+    {
         h_waiting &= ~off_at_cr;
 
         if(h_on)
-            {
+        {
             mask = 1;
             i = FIRST_HIGHLIGHT;
 
@@ -2268,7 +2268,7 @@ drvout(
                 if(h_waiting & mask)
                     h_waiting &= ~mask;
                 else if((h_on & mask))
-                    {
+                {
                     /* if it's on, turn it off, turn it off, turn it off, ...
                             turn it off again */
 
@@ -2284,77 +2284,76 @@ drvout(
                         lptr = search_list(&highlight_list, (S32) i);
 
                     out_h_string_value_0(lptr);
-                    }
+                }
 
                 mask <<= 1;
-                }
-            while(++i <= LAST_HIGHLIGHT);
             }
+            while(++i <= LAST_HIGHLIGHT);
+        }
 
         return(FALSE);
-        }
+    }
 
     if(ch == CR)
-        {
+    {
         if(!prnbit)     /* if outputting to screen */
-            {
+        {
             print_newline();
             return(TRUE);
-            }
         }
+    }
     else if(h_waiting)
-        {
+    {
         /* if something waiting, switch it on */
         mask = 1;
         i = FIRST_HIGHLIGHT;
 
         do  {
             if(h_waiting & mask)
-                {
+            {
                 /* if itsa query field, don't output anything */
                 if(h_query & mask)
                     h_on |= mask;
                 else
-                    {
+                {
                     lptr = search_list(&highlight_list, (S32) i);
 
                     if(lptr)
-                        {
+                    {
                         out_h_string_value_0(lptr);
                         h_on |= mask;
-                        }
                     }
-
                 }
+            }
 
             mask <<= 1;
-            }
+        }
         while(++i <= LAST_HIGHLIGHT);
 
         h_waiting = 0;
-        }
+    }
 
     /* output the character.  If any funny highlights expand the strings */
     if(h_query & h_on)
-        {
+    {
         mask = 1;
         i = FIRST_HIGHLIGHT;
 
         do  {
             if(h_query & h_on & mask)
-                {
+            {
                 /* if it's a query field, don't output anything */
                 lptr = search_list(&highlight_list, (S32) i);
                 if(lptr)
                     out_h_string(lptr->value, ch);
-                }
+            }
 
             mask <<= 1;
-            }
+        }
         while(++i <= LAST_HIGHLIGHT);
 
         return(TRUE);
-        }
+    }
 
     return(out_one_ch(ch));
 }
@@ -2379,17 +2378,17 @@ defout(
     rawprint(ch);
 
     if((ch == CR)  &&  !prnbit)
-        {
+    {
         #if 1 /* SKS 18.10.91 - vdu: does auto LFCR; 20.10.91 but rawvdu: don't */
         print_newline();
         #endif
 
         if(screen_bit)
-            {
+        {
             if(++linessofar >= scrnheight())
                 (void) pause();
-            }
         }
+    }
 
     return(TRUE);
 }
@@ -2412,18 +2411,18 @@ prnout(
     trace_2(TRACE_APP_PD4, "prnout(%d ('%c'))", ch, ch ? ch : '0');
 
     if((ch == SPACE)  &&  !microspacing)
-        {
+    {
         trace_0(TRACE_APP_PD4, "absorbing space");
         ++prnspc;
         return(TRUE);
-        }
+    }
 
     out = prnvec->out;
     nspaces = prnspc;
 
     /* if not end of cell, output spaces cos of printable character */
     if((ch != EOS)  &&  nspaces)
-        {
+    {
         prnspc = 0;
 
         /* ignore space queue at end of line */
@@ -2431,7 +2430,7 @@ prnout(
             do { (* out) (SPACE); } while(--nspaces > 0);
         else
             trace_1(TRACE_APP_PD4, "discarding %d trailing spaces at eol", nspaces);
-        }
+    }
 
     /* output character via driver */
     return((* out) (ch));
@@ -2505,9 +2504,9 @@ off_highlights(void)
     i = FIRST_HIGHLIGHT;
 
     while(h_on  &&  (i <= LAST_HIGHLIGHT))
-        {
+    {
         if(h_on & mask)
-            {
+        {
             /* turn highlight off with either off string or on string */
 
             lptr = search_list(&highlight_list, ((S32) i) + 256);
@@ -2516,11 +2515,11 @@ off_highlights(void)
                 lptr = search_list(&highlight_list, (S32) i);
 
             out_h_string_value_0(lptr);
-            }
+        }
 
         mask <<= 1;
         ++i;
-        }
+    }
 
     h_on = 0;
 }
@@ -2569,16 +2568,16 @@ print_complain(
     os_error * err)
 {
     if(err)
-        {
+    {
         if(riscos_printing)
-            {
+        {
             riscprint_suspend();
 
             reperr(create_error(ERR_PRINTER), err->errmess);
-            }
+        }
         else
             rep_fserr(err->errmess);
-        }
+    }
 
     return((BOOL) err);
 }
@@ -2594,13 +2593,13 @@ header_footer_length(
     COL tcol;
 
     for(tcol = first; tcol < last; tcol++)
-        {
+    {
         newwrap = this_colstart + colwrapwidth(tcol);
 
         maxwidth = MAX(maxwidth, newwrap);
 
         this_colstart += colwidth(tcol);
-        }
+    }
 
     return(MAX(this_colstart, maxwidth));
 }
@@ -2628,51 +2627,51 @@ getfield(
         ch = pd_file_getc(input);
 
     for(ptr = array; ; ch = pd_file_getc(input))
-        {
+    {
         switch(ch)
+        {
+        case EOF:
+            *ptr = '\0';
+            return(EOF);
+
+        case LF:
+        case CR:
             {
-            case EOF:
-                *ptr = '\0';
-                return(EOF);
+            /* read next character - if CR,LF or LF,CR throw
+             * character away, otherwise put character back in file
+            */
+            newch = pd_file_getc(input);
 
-            case LF:
-            case CR:
+            if((newch != EOF)  &&  ((newch + ch) != (LF + CR)))
+            {
+                if(file_ungetc(newch, input) == EOF)
                 {
-                /* read next character - if CR,LF or LF,CR throw
-                 * character away, otherwise put character back in file
-                */
-                newch = pd_file_getc(input);
-
-                if((newch != EOF)  &&  ((newch + ch) != (LF + CR)))
-                    {
-                    if(file_ungetc(newch, input) == EOF)
-                        {
-                        reperr_null(create_error(ERR_CANNOTREAD));
-                        *ptr = '\0';
-                        return(EOF);
-                        }
-                    }
-                }
-                ch = CR;
-
-                /* deliberate fall through */
-
-            case TAB:
-                *ptr = '\0';
-                return(ch);
-
-            default:
-                *ptr++ = (uchar) ch;
-
-                /* SKS after 4.11 03feb92 - where had this check gone? */
-                if(ptr - array >= LIN_BUFSIZ)
-                    {
-                    *--ptr = NULLCH;
+                    reperr_null(create_error(ERR_CANNOTREAD));
+                    *ptr = '\0';
                     return(EOF);
-                    }
-                break;
+                }
             }
+            }
+            ch = CR;
+
+            /* deliberate fall through */
+
+        case TAB:
+            *ptr = '\0';
+            return(ch);
+
+        default:
+            *ptr++ = (uchar) ch;
+
+            /* SKS after 4.11 03feb92 - where had this check gone? */
+            if(ptr - array >= LIN_BUFSIZ)
+            {
+                *--ptr = NULLCH;
+                return(EOF);
+            }
+            break;
         }
+    }
 }
 
 /******************************************************************************
@@ -2688,14 +2687,14 @@ PageLayout_fn(void)
         return;
 
     while(dialog_box(D_POPTIONS))
-        {
+    {
         update_variables();
 
         filealtered(TRUE);
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -2715,12 +2714,12 @@ PrinterConfig_fn(void)
     status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
 
     while(dialog_box(D_DRIVER))
-        {
+    {
         load_driver(&d_driver_PD, FALSE);
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 
@@ -2748,7 +2747,7 @@ EditPrinterDriver_fn(void)
     status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
 
     while(dialog_box(D_EDIT_DRIVER))
-        {
+    {
         /* Add prefix '<PipeDream$Dir>.PDrivers.' to driver name */
         TCHARZ buffer[BUF_MAX_PATHSTRING];
         LOAD_FILE_OPTIONS load_file_options;
@@ -2756,20 +2755,20 @@ EditPrinterDriver_fn(void)
         S32 res;
 
         if(str_isblank(tname))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if((res = add_path_using_dir(buffer, elemof32(buffer), tname, PDRIVERS_SUBDIR_STR)) <= 0)
-            {
+        {
             reperr_null(res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         zero_struct(load_file_options);
         load_file_options.document_name = buffer;
@@ -2782,7 +2781,7 @@ EditPrinterDriver_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 
@@ -2801,38 +2800,38 @@ MicrospacePitch_fn(void)
     micbit = FALSE;
 
     if(!driver_loaded)
-        {
+    {
         reperr_null(create_error(ERR_NO_DRIVER));
         return;
-        }
+    }
 
     if(!search_list(&highlight_list, HMI_P))
-        {
+    {
         reperr_null(create_error(ERR_NO_MICRO));
         return;
-        }
+    }
 
     if(!dialog_box_start())
         return;
 
     while(dialog_box(D_MSPACE))
-        {
+    {
         micbit = FALSE;
 
         if(d_mspace[0].option == 'Y')
-            {
+        {
             if(!d_mspace[1].option)
-                {
+            {
                 reperr_null(create_error(ERR_BAD_OPTION));
                 break;
-                }
+            }
 
             micbit = TRUE;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }

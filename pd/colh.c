@@ -162,7 +162,7 @@ redefine_icon(
        (create->i.box.y1 != current.box.y1) ||
        (create->i.flags  != current.flags)
       )
-        {
+    {
         /* icon size or flags are wrong, so... */
 
         wimp_redrawstr redraw;
@@ -181,7 +181,7 @@ redefine_icon(
 
         wimp_get_caret_pos(&carrot);
         if((carrot.w == window) && (carrot.i == icon))
-            {
+        {
             wimp_caretstr killit;
 
             killit.w = (wimp_w)-1;
@@ -190,7 +190,7 @@ redefine_icon(
             killit.height = 0x02000000;
 
             wimp_set_caret_pos(&killit);
-            }
+        }
 
         /* delete current definition */
         wimpt_complain(wimp_delete_icon(window, icon));
@@ -203,7 +203,7 @@ redefine_icon(
         if((carrot.w == window) && (carrot.i == icon))
             wimp_set_caret_pos(&carrot);
 
-        }
+    }
 }
 
 static void
@@ -256,12 +256,12 @@ set_icon_text(
                 /* really GetIconState, but some twat gave it the wrong name */
 
     if(0 != strcmp(info.data.indirecttext.buffer, text))
-        {
+    {
         /* redraw iff changed */
         strcpy(info.data.indirecttext.buffer, text);
 
         wimp_set_icon_state(window, icon, (wimp_iconflags) 0, (wimp_iconflags) 0);
-        }
+    }
 }
 
 static void
@@ -281,13 +281,13 @@ set_icon_text_and_flags(
     newtext = strcmp(info.data.indirecttext.buffer, text);
 
     if(newtext || ((info.flags & mask) != value))
-        {
+    {
         /* redraw iff changed */
         if(newtext)
             strcpy(info.data.indirecttext.buffer, text);
 
         wimp_set_icon_state(window, icon, (wimp_iconflags) value, (wimp_iconflags) mask);
-        }
+    }
 }
 
 /******************************************************************************
@@ -481,7 +481,7 @@ colh_really_draw_column_headings(void)
     coff = 0;
 
     for(; !((cptr = horzvec_entry(coff))->flags & LAST)  &&  (wind_width > number.box.x0); ++coff)
-        {
+    {
         colno = cptr->colno;
         cwid = colwidth(colno);
 
@@ -490,18 +490,18 @@ colh_really_draw_column_headings(void)
         number.box.x1 = border.box.x1 - dx;
 
         if(colno == curcol)
-            {
+        {
             fgcol = CURBORDERFOREC;
             bgcol = CURBORDERBACKC;
-            }
+        }
         else
-            {
+        {
             fgcol = BORDERFOREC;
             bgcol = BORDERBACKC;
 
             if(incolfixes(colno))
                 bgcol = FIXBORDERBACKC;
-            }
+        }
 
         border.flags = (wimp_iconflags) (wimp_IBORDER | (wimp_IFORECOL * logcol(GRIDC))); /*BORDERFOREC*/
 
@@ -515,12 +515,12 @@ colh_really_draw_column_headings(void)
         wimp_ploticon(&border);
 
         number.box.x0 = border.box.x1;
-        }
+    }
 
     /* Clear rest of column heading line upto right edge of window */
 
     if(wind_width > number.box.x0)
-        {
+    {
         border.box.x0 = number.box.x0 - dx;
         border.box.x1 = wind_width;
 
@@ -529,7 +529,7 @@ colh_really_draw_column_headings(void)
                      | (wimp_IBACKCOL * logcol(BORDERBACKC)) );
 
         wimp_ploticon(&border);
-        }
+    }
 
     /* Draw the right margin indicator (a down arrow) for the current column */
 
@@ -537,7 +537,7 @@ colh_really_draw_column_headings(void)
     number.box.x0 = number.box.x1 - 2 * charwidth;
 
     if(wind_width > number.box.x0)
-        {
+    {
       /*number.flags = wimp_ITEXT | wimp_IBORDER | wimp_IHCENTRE | wimp_IVCENTRE | wimp_IFILLED;*/
         number.flags = (wimp_iconflags) (wimp_ITEXT | wimp_IHCENTRE | wimp_IVCENTRE);
 
@@ -563,7 +563,7 @@ colh_really_draw_column_headings(void)
         number.data.text[1] = 0;
 #endif
         wimp_ploticon(&number);
-        }
+    }
 
     killcolourcache();          /* cos wimp_ploticon changes foreground and background */
     setcolour(FORE, BACK);      /* colours under our feet!                             */
@@ -599,13 +599,13 @@ colh_draw_drag_state(
     int size)
 {
     if(size >= 0)
-        {
+    {
         char array[32];
 
         (void) sprintf(array, "%d", size);
 
         draw_status_box_no_interlock(array);
-        }
+    }
     else
         draw_status_box_no_interlock(NULL);     /* Finished, so put the silly bar back */
 
@@ -650,7 +650,7 @@ colh_draw_slot_count_in_document(
     if((NO_DOCUMENT == (p_docu = p_docu_from_docno(slotcount_docno)))  ||  docu_is_thunk(p_docu))
         slotcount_docno = DOCNO_NONE;
     else
-        {
+    {
         DOCNO old_docno = current_docno();
 
         select_document(p_docu);
@@ -658,8 +658,7 @@ colh_draw_slot_count_in_document(
         colh_draw_slot_count(text);
 
         select_document_using_docno(old_docno);
-        }
-
+    }
 }
 
 static void
@@ -680,7 +679,7 @@ draw_status_box_no_interlock(
     _In_opt_z_      char *text)
 {
     if(text)
-        {
+    {
 #if TRUE
         set_icon_text_and_flags(colh_window, (wimp_i)COLH_STATUS_TEXT, text,
                                                                 (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));
@@ -696,13 +695,13 @@ draw_status_box_no_interlock(
         set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BAR   , (                          0), (wimp_IBORDER | wimp_IFILLED));
         set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BORDER, (                          0), (               wimp_IFILLED));
 #endif
-        }
+    }
     else
-        {
+    {
         set_icon_flags(colh_window, (wimp_i)COLH_STATUS_TEXT  , (                          0), (wimp_ITEXT   | wimp_IFILLED));
         set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BORDER, (               wimp_IFILLED), (               wimp_IFILLED));
         set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BAR   , (wimp_IBORDER | wimp_IFILLED), (wimp_IBORDER | wimp_IFILLED));
-        }
+    }
 }
 
 /******************************************************************************
@@ -732,13 +731,13 @@ colh_redraw_request(
 #endif
 
     while(!bum  &&  redrawindex)
-        {
+    {
       /*graphics_window = *((coord_box *) &redraw.g);*/
 
         colh_maybe_draw_column_headings();
 
         bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
-        }
+    }
 }
 
 /******************************************************************************
@@ -766,123 +765,123 @@ colh_event_handler(
              report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) colh_window, report_ptr_cast(current_document()));
 
     switch(e->e)
+    {
+    case wimp_EOPEN:    /* colh_window always opened as a pane on top of rear_window */
+    case wimp_ECLOSE:   /* colh_window has no close box */
+    case wimp_ESCROLL:  /* or scroll bars  */
+        break;
+
+    case wimp_EPTRENTER:
+        if(!drag_in_column_header)
+            colh_pointershape_starttracking();
+        break;
+
+    case wimp_EPTRLEAVE:                            /* When we start dragging, the wimp sends a pointer-leaving-window-event, */
+        if(!drag_in_column_header)                  /* we ignore this, so the pointer retains its dragcolumn or dragmargin    */
+            colh_pointershape_endtracking();        /* shape. When the drag has finshed we remove the tracker, the wimp may   */
+        break;                                      /* then send a pointer-entering-window-event.                             */
+
+    case wimp_EREDRAW:
+        colh_redraw_request(e);
+        break;
+
+    case wimp_EBUT:
+        application_button_click_in_colh(&(e->data.but.m));
+        break;
+
+    case wimp_EKEY:
+        switch(e->data.key.chcode)
         {
-        case wimp_EOPEN:    /* colh_window always opened as a pane on top of rear_window */
-        case wimp_ECLOSE:   /* colh_window has no close box */
-        case wimp_ESCROLL:  /* or scroll bars  */
+        case 13:
+            if(host_ctrl_pressed())
+            {
+                expedit_transfer_line_to_box(TRUE);     /* force newline */
+                break;
+            }
+
+            formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
+            break;                                      /* don't want to know where the caret was  */
+
+        case 27:
+            formline_canceledit();
             break;
 
-        case wimp_EPTRENTER:
-            if(!drag_in_column_header)
-                colh_pointershape_starttracking();
-            break;
-
-        case wimp_EPTRLEAVE:                            /* When we start dragging, the wimp sends a pointer-leaving-window-event, */
-            if(!drag_in_column_header)                  /* we ignore this, so the pointer retains its dragcolumn or dragmargin    */
-                colh_pointershape_endtracking();        /* shape. When the drag has finshed we remove the tracker, the wimp may   */
-            break;                                      /* then send a pointer-entering-window-event.                             */
-
-        case wimp_EREDRAW:
-            colh_redraw_request(e);
-            break;
-
-        case wimp_EBUT:
-            application_button_click_in_colh(&(e->data.but.m));
-            break;
-
-        case wimp_EKEY:
-            switch(e->data.key.chcode)
-                {
-                case 13:
-                    if(host_ctrl_pressed())
-                        {
-                        expedit_transfer_line_to_box(TRUE);     /* force newline */
-                        break;
-                        }
-
-                    formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
-                    break;                                      /* don't want to know where the caret was  */
-
-                case 27:
-                    formline_canceledit();
-                    break;
-
-                case akbd_UpK:                  /* up arrow   */
-                case akbd_DownK:                /* down arrow */
-                case akbd_TabK:                 /* tab        */
-                case akbd_TabK + akbd_Sh:       /* shift tab  */
-                case akbd_TabK + akbd_Ctl:      /* ctrl tab   */
-                case akbd_TabK + akbd_Sh + akbd_Ctl: /* ctrl shift tab */
-                    formline_mergebacktext(FALSE, NULL);        /* MUST NOT report formula compilation errors, */
-                                                                /* cos we want event block intact to send the  */
-                                                                /* key to PipeDream's main_window              */
+        case akbd_UpK:                  /* up arrow   */
+        case akbd_DownK:                /* down arrow */
+        case akbd_TabK:                 /* tab        */
+        case akbd_TabK + akbd_Sh:       /* shift tab  */
+        case akbd_TabK + akbd_Ctl:      /* ctrl tab   */
+        case akbd_TabK + akbd_Sh + akbd_Ctl: /* ctrl shift tab */
+            formline_mergebacktext(FALSE, NULL);        /* MUST NOT report formula compilation errors, */
+                                                        /* cos we want event block intact to send the  */
+                                                        /* key to PipeDream's main_window              */
 #if FALSE
-                case 388:       /* f4 - search     */
-                case 390:       /* f6 - next match */
+        case 388:       /* f4 - search     */
+        case 390:       /* f6 - next match */
 #endif
-                    e->data.key.c.w = main_window;
-                    e->data.key.c.i = (wimp_i)0;
-                    wimpt_fake_event(e);                        /* send key to PipeDream's main_window */
-                    break;
-
-                default:
-#if TRUE
-                    /* can't test for f4/f6 for search/next-match cos user may have changed the keys, so try... */
-                    if(e->data.key.chcode >= 256)
-                        {
-                        e->data.key.c.w = main_window;
-                        e->data.key.c.i = (wimp_i)0;
-                        wimpt_fake_event(e);            /* ...sending all likely looking keys to PipeDream's main_window */
-                        break;
-                        }
-#endif
-                    processed = FALSE;
-                    break;
-                }
-            break;
-
-        case wimp_EGAINCARET:
-            /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
-            if(slotcount_docno != current_docno())
-                {
-                colh_draw_slot_count_in_document(NULL); /* kill the current indicatior (if any) */
-
-                slotcount_docno = current_docno();
-                }
-            break;
-
-        case wimp_ELOSECARET:
-            trace_6(TRACE_APP_PD4, "colh_event_handler - LoseCaret: old window %d icon %d x %d y %d height %8.8X index %d",
-                    e->data.c.w, e->data.c.i,
-                    e->data.c.x, e->data.c.y,
-                    e->data.c.height, e->data.c.index);
-
-            if(xf_inexpression_line         &&
-               (e->data.c.w == colh_window) &&
-               (e->data.c.i == (wimp_i)COLH_CONTENTS_LINE) &&
-               (e->data.c.index >= 0)
-              )
-                {
-                trace_0(TRACE_APP_PD4, "colh_event_handler - stashing caret position");
-
-                /* Someone is stealing the caret from the contents/formula-line, stash position away so it can be restored    */
-                /* when pipedream reclaims the caret. Also means we can paste formula etc into formula line at correct place. */
-                formline_stashedcaret = e->data.c.index;
-                }
-            processed = FALSE;
-            break;
-
-        case wimp_ESEND:
-        case wimp_ESENDWANTACK:
-            colh_message(&e->data.msg);
+            e->data.key.c.w = main_window;
+            e->data.key.c.i = (wimp_i)0;
+            wimpt_fake_event(e);                        /* send key to PipeDream's main_window */
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event to colh_window: %s",
-                    report_wimp_event(e->e, &e->data));
+#if TRUE
+            /* can't test for f4/f6 for search/next-match cos user may have changed the keys, so try... */
+            if(e->data.key.chcode >= 256)
+            {
+                e->data.key.c.w = main_window;
+                e->data.key.c.i = (wimp_i)0;
+                wimpt_fake_event(e);            /* ...sending all likely looking keys to PipeDream's main_window */
+                break;
+            }
+#endif
             processed = FALSE;
             break;
         }
+        break;
+
+    case wimp_EGAINCARET:
+        /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
+        if(slotcount_docno != current_docno())
+        {
+            colh_draw_slot_count_in_document(NULL); /* kill the current indicatior (if any) */
+
+            slotcount_docno = current_docno();
+        }
+        break;
+
+    case wimp_ELOSECARET:
+        trace_6(TRACE_APP_PD4, "colh_event_handler - LoseCaret: old window %d icon %d x %d y %d height %8.8X index %d",
+                e->data.c.w, e->data.c.i,
+                e->data.c.x, e->data.c.y,
+                e->data.c.height, e->data.c.index);
+
+        if(xf_inexpression_line         &&
+           (e->data.c.w == colh_window) &&
+           (e->data.c.i == (wimp_i)COLH_CONTENTS_LINE) &&
+           (e->data.c.index >= 0)
+          )
+        {
+            trace_0(TRACE_APP_PD4, "colh_event_handler - stashing caret position");
+
+            /* Someone is stealing the caret from the contents/formula-line, stash position away so it can be restored    */
+            /* when pipedream reclaims the caret. Also means we can paste formula etc into formula line at correct place. */
+            formline_stashedcaret = e->data.c.index;
+        }
+        processed = FALSE;
+        break;
+
+    case wimp_ESEND:
+    case wimp_ESENDWANTACK:
+        colh_message(&e->data.msg);
+        break;
+
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event to colh_window: %s",
+                report_wimp_event(e->e, &e->data));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -937,49 +936,49 @@ application_button_click_in_colh(
     /* but guaranteed that we can simply slot_in_buffer = FALSE for movement */
 
     if((icon == (wimp_i)COLH_COLUMN_HEADINGS))
-        {
+    {
         /* have to cope with Pink 'Plonker' Duck Man's ideas on double clicks (fixed in new RISC OS+):
         * He says that left then right (or vice versa) is a double click!
         */
         if(buttonstate & (wimp_BLEFT | wimp_BRIGHT))
-            {
+        {
             selectclicked = ((buttonstate & wimp_BLEFT) != 0);
 
             /* must be same button that started us off */
             if(initially_selectclicked != selectclicked)
                 buttonstate = buttonstate << 8; /* force a single click */
-            }
+        }
 
         if(     buttonstate & (wimp_BLEFT      | wimp_BRIGHT))
-            {
+        {
             selectclicked = ((buttonstate & wimp_BLEFT) != 0);
 
             application_doubleclick_in_colh(icon, pointer, selectclicked);
-            }
+        }
         else if(buttonstate & (wimp_BDRAGLEFT  | wimp_BDRAGRIGHT))
-            {
+        {
             selectclicked = ((buttonstate & wimp_BDRAGLEFT) != 0);
 
             application_startdrag_in_colh(icon, pointer, selectclicked);
-            }
+        }
         else if(buttonstate & (wimp_BCLICKLEFT | wimp_BCLICKRIGHT))
-            {
+        {
             selectclicked = ((buttonstate & wimp_BCLICKLEFT) != 0);
 
             initially_selectclicked = selectclicked;
             application_singleclick_in_colh(icon, pointer, selectclicked);
-            }
         }
+    }
     else
-        {
+    {
         if(     buttonstate & (wimp_BLEFT      | wimp_BRIGHT))
-            {
+        {
             selectclicked = ((buttonstate & wimp_BLEFT) != 0);
 
             initially_selectclicked = selectclicked;
             application_singleclick_in_colh(icon, pointer, selectclicked);
-            }
         }
+    }
 }
 
 static void             /* new stuff */
@@ -999,251 +998,251 @@ application_singleclick_in_colh(
     trace_0(TRACE_APP_PD4, "application_singleclick_in_colh");
 
     switch((int)icon)
+    {
+    case COLH_BUTTON_OK:
+        formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
+        break;                                      /* don't want to know where the caret was  */
+
+    case COLH_BUTTON_CANCEL:
+        formline_canceledit();
+        break;
+
+    case COLH_CONTENTS_LINE:
+        EditContentsLine();
+        break;
+
+    case COLH_FUNCTION_SELECTOR:
+
+        /* deliberate drop thru ... */
+
+    case COLH_PIPEDREAM_LOGO:
+        funcnum = N_EditFormulaInWindow;
+        break;
+
+    case COLH_BUTTON_REPLICD:
+        funcnum = (selectclicked) ? N_ReplicateDown: N_Replicate;
+        break;
+
+    case COLH_BUTTON_REPLICR:
+        funcnum = (selectclicked) ? N_ReplicateRight : N_Replicate;
+        break;
+
+    case COLH_BUTTON_TOTEXT:
+        funcnum = (selectclicked) ? N_ToText : N_ExchangeNumbersText;
+        break;
+
+    case COLH_BUTTON_TONUMBER:
+        funcnum = (selectclicked) ? N_ToNumber : N_ExchangeNumbersText;
+        break;
+
+    case COLH_BUTTON_GRAPH:
+        funcnum = (selectclicked) ? N_ChartNew : N_ChartOptions;
+        break;
+
+    case COLH_BUTTON_SAVE:
+        funcnum = (selectclicked) ? N_SaveFile : N_SaveFileAsIs;
+        break;
+
+    case COLH_BUTTON_PRINT:
+        funcnum = (selectclicked) ? N_Print : N_PageLayout;
+        break;
+
+    case COLH_BUTTON_LJUSTIFY:
+        funcnum = N_LeftAlign;
+        break;
+
+    case COLH_BUTTON_CJUSTIFY:
+        funcnum = N_CentreAlign;
+        break;
+
+    case COLH_BUTTON_RJUSTIFY:
+        funcnum = N_RightAlign;
+        break;
+
+    case COLH_BUTTON_FJUSTIFY:
         {
-        case COLH_BUTTON_OK:
-            formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
-            break;                                      /* don't want to know where the caret was  */
+        if(d_options_JU == 'Y')
+            d_options_JU = 'N';
+        else
+        {
+            d_options_JU = 'Y';
+            d_options_WR = 'Y';
+        }
 
-        case COLH_BUTTON_CANCEL:
-            formline_canceledit();
+        update_variables();
+        break;
+        }
+
+    case COLH_BUTTON_FONT:
+        funcnum = (selectclicked) ? N_PRINTERFONT : N_INSERTFONT;
+        break;
+
+    case COLH_BUTTON_BOLD:
+        funcnum = N_Bold;
+        highlight_number = HIGH_BOLD;
+        break;
+
+    case COLH_BUTTON_ITALIC:
+        funcnum = N_Italic;
+        highlight_number = HIGH_ITALIC;
+        break;
+
+    case COLH_BUTTON_UNDERLINED:
+        funcnum = N_Underline;
+        highlight_number = HIGH_UNDERLINE;
+        break;
+
+    case COLH_BUTTON_SUBSCRIPT:
+        funcnum = N_Subscript;
+        highlight_number = HIGH_SUBSCRIPT;
+        break;
+
+    case COLH_BUTTON_SUPERSCRIPT:
+        funcnum = N_Superscript;
+        highlight_number = HIGH_SUPERSCRIPT;
+        break;
+
+    case COLH_BUTTON_LEADTRAIL:
+        funcnum = (selectclicked) ? N_LeadingCharacters : N_TrailingCharacters;
+        break;
+
+    case COLH_BUTTON_DECPLACES:
+        funcnum = N_DecimalPlaces;
+        break;
+
+    case COLH_BUTTON_COPY:
+        funcnum = (selectclicked) ? N_CopyBlockToPasteList : N_MoveBlock;
+        break;
+
+    case COLH_BUTTON_DELETE:
+        funcnum = (selectclicked) ? N_DeleteBlock : N_ClearBlock;
+        break;
+
+    case COLH_BUTTON_PASTE:
+        funcnum = N_Paste;
+        break;
+
+    case COLH_BUTTON_FORMATBLOCK:
+        funcnum = N_FormatBlock;
+        break;
+
+    case COLH_BUTTON_SEARCH:
+        funcnum = (selectclicked) ? N_Search : N_NextMatch;
+        break;
+
+    case COLH_BUTTON_SORT:
+        funcnum = (selectclicked) ? N_SortBlock : N_TransposeBlock;
+        break;
+
+    case COLH_BUTTON_SPELLCHECK:
+        funcnum = (selectclicked) ? N_CheckDocument : N_BrowseDictionary;
+        break;
+
+    case COLH_BUTTON_CMD_RECORD:
+        funcnum = N_RecordMacroFile;
+        break;
+
+    case COLH_BUTTON_CMD_EXEC:
+        funcnum = N_DoMacroFile;
+        break;
+
+    case COLH_STATUS_BAR:
+    case COLH_STATUS_TEXT:
+        /* if editing, suppress setting/clearing of marks */
+        if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
             break;
 
-        case COLH_CONTENTS_LINE:
-            EditContentsLine();
+        if(selectclicked && !blkindoc)
+        {
+            trace_0(TRACE_APP_PD4, "click on cell coordinates - mark entire sheet");
+            funcnum = N_MarkSheet;
+        }
+        else
+        {
+            trace_0(TRACE_APP_PD4, "click on cell coordinates - clear markers");
+            funcnum = N_ClearMarkedBlock;
+        }
+        break;
+
+    case COLH_COLUMN_HEADINGS:
+        {
+        pointer_shape *shape;
+        int   subposition;
+        COL  tcol;
+        coord tx;
+
+        /* if editing, suppress (curcol,currow) movement and selection dragging etc. */
+        if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
+        {
+            acquire = !extend;
             break;
+        }
 
-        case COLH_FUNCTION_SELECTOR:
+        colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
+        setpointershape(shape);
 
-            /* deliberate drop thru ... */
-
-        case COLH_PIPEDREAM_LOGO:
-            funcnum = N_EditFormulaInWindow;
-            break;
-
-        case COLH_BUTTON_REPLICD:
-            funcnum = (selectclicked) ? N_ReplicateDown: N_Replicate;
-            break;
-
-        case COLH_BUTTON_REPLICR:
-            funcnum = (selectclicked) ? N_ReplicateRight : N_Replicate;
-            break;
-
-        case COLH_BUTTON_TOTEXT:
-            funcnum = (selectclicked) ? N_ToText : N_ExchangeNumbersText;
-            break;
-
-        case COLH_BUTTON_TONUMBER:
-            funcnum = (selectclicked) ? N_ToNumber : N_ExchangeNumbersText;
-            break;
-
-        case COLH_BUTTON_GRAPH:
-            funcnum = (selectclicked) ? N_ChartNew : N_ChartOptions;
-            break;
-
-        case COLH_BUTTON_SAVE:
-            funcnum = (selectclicked) ? N_SaveFile : N_SaveFileAsIs;
-            break;
-
-        case COLH_BUTTON_PRINT:
-            funcnum = (selectclicked) ? N_Print : N_PageLayout;
-            break;
-
-        case COLH_BUTTON_LJUSTIFY:
-            funcnum = N_LeftAlign;
-            break;
-
-        case COLH_BUTTON_CJUSTIFY:
-            funcnum = N_CentreAlign;
-            break;
-
-        case COLH_BUTTON_RJUSTIFY:
-            funcnum = N_RightAlign;
-            break;
-
-        case COLH_BUTTON_FJUSTIFY:
+        switch(subposition)
+        {
+        case OVER_COLUMN_CENTRE:
+            if(extend)
             {
-            if(d_options_JU == 'Y')
-                d_options_JU = 'N';
-            else
+                /* either alter current block or set new block:
+                 * mergebuf has been done by caller to ensure cell marking correct
+                 */
+                if(blkindoc)
                 {
-                d_options_JU = 'Y';
-                d_options_WR = 'Y';
+                    trace_0(TRACE_APP_PD4, "alter number of marked columns");
+                    make_single_mark_into_block();
+                    alter_marked_block(tcol, ACTIVE_ROW);
                 }
-
-            update_variables();
-            break;
-            }
-
-        case COLH_BUTTON_FONT:
-            funcnum = (selectclicked) ? N_PRINTERFONT : N_INSERTFONT;
-            break;
-
-        case COLH_BUTTON_BOLD:
-            funcnum = N_Bold;
-            highlight_number = HIGH_BOLD;
-            break;
-
-        case COLH_BUTTON_ITALIC:
-            funcnum = N_Italic;
-            highlight_number = HIGH_ITALIC;
-            break;
-
-        case COLH_BUTTON_UNDERLINED:
-            funcnum = N_Underline;
-            highlight_number = HIGH_UNDERLINE;
-            break;
-
-        case COLH_BUTTON_SUBSCRIPT:
-            funcnum = N_Subscript;
-            highlight_number = HIGH_SUBSCRIPT;
-            break;
-
-        case COLH_BUTTON_SUPERSCRIPT:
-            funcnum = N_Superscript;
-            highlight_number = HIGH_SUPERSCRIPT;
-            break;
-
-        case COLH_BUTTON_LEADTRAIL:
-            funcnum = (selectclicked) ? N_LeadingCharacters : N_TrailingCharacters;
-            break;
-
-        case COLH_BUTTON_DECPLACES:
-            funcnum = N_DecimalPlaces;
-            break;
-
-        case COLH_BUTTON_COPY:
-            funcnum = (selectclicked) ? N_CopyBlockToPasteList : N_MoveBlock;
-            break;
-
-        case COLH_BUTTON_DELETE:
-            funcnum = (selectclicked) ? N_DeleteBlock : N_ClearBlock;
-            break;
-
-        case COLH_BUTTON_PASTE:
-            funcnum = N_Paste;
-            break;
-
-        case COLH_BUTTON_FORMATBLOCK:
-            funcnum = N_FormatBlock;
-            break;
-
-        case COLH_BUTTON_SEARCH:
-            funcnum = (selectclicked) ? N_Search : N_NextMatch;
-            break;
-
-        case COLH_BUTTON_SORT:
-            funcnum = (selectclicked) ? N_SortBlock : N_TransposeBlock;
-            break;
-
-        case COLH_BUTTON_SPELLCHECK:
-            funcnum = (selectclicked) ? N_CheckDocument : N_BrowseDictionary;
-            break;
-
-        case COLH_BUTTON_CMD_RECORD:
-            funcnum = N_RecordMacroFile;
-            break;
-
-        case COLH_BUTTON_CMD_EXEC:
-            funcnum = N_DoMacroFile;
-            break;
-
-        case COLH_STATUS_BAR:
-        case COLH_STATUS_TEXT:
-            /* if editing, suppress setting/clearing of marks */
-            if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
-                break;
-
-            if(selectclicked && !blkindoc)
+                else
                 {
-                trace_0(TRACE_APP_PD4, "click on cell coordinates - mark entire sheet");
-                funcnum = N_MarkSheet;
-                }
-            else
-                {
-                trace_0(TRACE_APP_PD4, "click on cell coordinates - clear markers");
-                funcnum = N_ClearMarkedBlock;
-                }
-            break;
-
-        case COLH_COLUMN_HEADINGS:
-            {
-            pointer_shape *shape;
-            int   subposition;
-            COL  tcol;
-            coord tx;
-
-            /* if editing, suppress (curcol,currow) movement and selection dragging etc. */
-            if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
-                {
-                acquire = !extend;
-                break;
-                }
-
-            colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
-            setpointershape(shape);
-
-            switch(subposition)
-                {
-                case OVER_COLUMN_CENTRE:
-                    if(extend)
-                        {
-                        /* either alter current block or set new block:
-                         * mergebuf has been done by caller to ensure cell marking correct
-                         */
-                        if(blkindoc)
-                            {
-                            trace_0(TRACE_APP_PD4, "alter number of marked columns");
-                            make_single_mark_into_block();
-                            alter_marked_block(tcol, ACTIVE_ROW);
-                            }
-                        else
-                            {
-                            trace_0(TRACE_APP_PD4, "mark all rows from caret to given column");
+                    trace_0(TRACE_APP_PD4, "mark all rows from caret to given column");
 #if 1 /* SKS */
-                            set_marked_block(curcol, numrow-1, tcol, 0, TRUE);
+                    set_marked_block(curcol, numrow-1, tcol, 0, TRUE);
 #else
-                            set_marked_block(curcol, 0, tcol, numrow-1, TRUE);
+                    set_marked_block(curcol, 0, tcol, numrow-1, TRUE);
 #endif
-                            }
-                        }
-                    else
-                        {
-                        trace_0(TRACE_APP_PD4, "not extending");
+                }
+            }
+            else
+            {
+                trace_0(TRACE_APP_PD4, "not extending");
 
-                        if(tcol != curcol)
-                            {
-                            /* position caret in new column (same row); mergebuf has been done by caller */
-                            slot_in_buffer = FALSE;
-                            chknlr(tcol, currow);
-                            lescrl = lecpos = 0;
-                            motion = TRUE;
-                            }
-
-                        acquire = TRUE;
-                        }
-
-                    break;
-
-                default:
-                    acquire = TRUE;
-                    break;
+                if(tcol != curcol)
+                {
+                    /* position caret in new column (same row); mergebuf has been done by caller */
+                    slot_in_buffer = FALSE;
+                    chknlr(tcol, currow);
+                    lescrl = lecpos = 0;
+                    motion = TRUE;
                 }
 
-            break;
+                acquire = TRUE;
             }
 
-        } /* switch(icon) */
+            break;
+
+        default:
+            acquire = TRUE;
+            break;
+        }
+
+        break;
+        }
+
+    } /* switch(icon) */
 
     if(highlight_number >= 0)
-        {
+    {
         /* is there a marked block in this document? */
         if((NO_COL != blkstart.col) && (blk_docno == current_docno()))
-            {
+        {
             /* can't think of a kosher way to do this */
             block_highlight_core(!selectclicked, highlight_number);
             funcnum = 0;
-            }
         }
+    }
 
     if(0 != funcnum)
         application_process_command(funcnum);
@@ -1255,10 +1254,10 @@ application_singleclick_in_colh(
         xf_caretreposition = TRUE;
 
     if(xf_caretreposition  ||  motion)
-        {
+    {
         draw_screen();
         draw_caret();
-        }
+    }
 }
 
 static void             /* new stuff */
@@ -1275,67 +1274,67 @@ application_doubleclick_in_colh(
         return;
 
     switch((int)icon)
+    {
+    case COLH_COLUMN_HEADINGS:
         {
-        case COLH_COLUMN_HEADINGS:
+        pointer_shape *shape;
+        int            subposition;
+        COL           tcol;
+        coord          tx;
+
+        colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
+        setpointershape(shape);
+
+        if(extend)
+            return;
+
+        switch(subposition)
+        {
+        case OVER_COLUMN_MARGIN_ADJUSTOR:
             {
-            pointer_shape *shape;
-            int            subposition;
-            COL           tcol;
-            coord          tx;
+            P_S32 widp, wwidp;
 
-            colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
-            setpointershape(shape);
+            trace_0(TRACE_APP_PD4, "On the right margin arrow - linking margin to column width");
 
-            if(extend)
-                return;
+            readpcolvars(tcol, &widp, &wwidp);
+            *wwidp = 0;
 
-            switch(subposition)
-                {
-                case OVER_COLUMN_MARGIN_ADJUSTOR:
-                    {
-                    P_S32 widp, wwidp;
+            if(colislinked(tcol))
+                adjust_this_linked_column(tcol);
 
-                    trace_0(TRACE_APP_PD4, "On the right margin arrow - linking margin to column width");
+            xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
+            filealtered(TRUE);
 
-                    readpcolvars(tcol, &widp, &wwidp);
-                    *wwidp = 0;
-
-                    if(colislinked(tcol))
-                        adjust_this_linked_column(tcol);
-
-                    xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
-                    filealtered(TRUE);
-
-                    draw_screen();
-
-                    break;
-                    }
-
-                case OVER_COLUMN_WIDTH_ADJUSTOR:
-                    {
-                    application_process_command(N_AutoWidth);
-                    break;
-                    }
-
-                case OVER_COLUMN_CENTRE:
-                    trace_0(TRACE_APP_PD4, "in column headings - mark column");
-#if 1 /* SKS */
-                    set_marked_block(tcol, numrow-1, tcol, 0, TRUE);
-#else
-                    set_marked_block(tcol, 0, tcol, numrow-1, TRUE);
-#endif
-                    break;
-
-                default:
-                    trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
-                    break;
-
-                } /* switch(subposition) */
+            draw_screen();
 
             break;
             }
 
-        } /* switch(icon) */
+        case OVER_COLUMN_WIDTH_ADJUSTOR:
+            {
+            application_process_command(N_AutoWidth);
+            break;
+            }
+
+        case OVER_COLUMN_CENTRE:
+            trace_0(TRACE_APP_PD4, "in column headings - mark column");
+#if 1 /* SKS */
+            set_marked_block(tcol, numrow-1, tcol, 0, TRUE);
+#else
+            set_marked_block(tcol, 0, tcol, numrow-1, TRUE);
+#endif
+            break;
+
+        default:
+            trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
+            break;
+
+        } /* switch(subposition) */
+
+        break;
+        }
+
+    } /* switch(icon) */
 }
 
 static void             /* new stuff */
@@ -1354,66 +1353,66 @@ application_startdrag_in_colh(
         return;
 
     switch((int)icon)
+    {
+    case COLH_COLUMN_HEADINGS:
         {
-        case COLH_COLUMN_HEADINGS:
-            {
-            pointer_shape *shape;
-            int            subposition;
-            COL           tcol;
-            coord          tx;
-            coord          ty   = -1; /*>>>don't really know this - suck it and see!*/
+        pointer_shape *shape;
+        int            subposition;
+        COL           tcol;
+        coord          tx;
+        coord          ty   = -1; /*>>>don't really know this - suck it and see!*/
 
-            colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
-            setpointershape(shape);     /* Must do this, incase colh_pointershape_null_handler hasn't been called yet. */
+        colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
+        setpointershape(shape);     /* Must do this, incase colh_pointershape_null_handler hasn't been called yet. */
 
-            switch(subposition)
-                {
-                case OVER_COLUMN_MARGIN_ADJUSTOR:
-                    trace_0(TRACE_APP_PD4, "Dragging the right margin");
-                    prepare_for_drag_column_wrapwidth(tx, tcol, extend);        /* extend means align margins of columns to */
-                    start_drag(DRAG_COLUMN_WRAPWIDTH);                          /* our right as well                        */
-                    break;
-
-                case OVER_COLUMN_WIDTH_ADJUSTOR:
-                    trace_1(TRACE_APP_PD4, "Dragging width of column %d", tcol);
-#if FALSE
-                    slot_in_buffer = FALSE;     /* dragging tends to change curcol; mergebuf has been done by caller */
-#endif
-                    prepare_for_drag_column_width(tx, tcol);
-                    start_drag(DRAG_COLUMN_WIDTH);
-                    break;
-
-                case OVER_COLUMN_CENTRE:
-                    trace_1(TRACE_APP_PD4, "In middle of column %d, ", tcol);
-
-                    /* mark all rows over given columns */
-                    if(blkindoc && extend)
-                        {
-                        trace_0(TRACE_APP_PD4, "in column headings - continuing all rows mark");
-                        make_single_mark_into_block();
-                        }
-                    else
-                        {
-                        trace_0(TRACE_APP_PD4, "in column headings - starting all rows mark");
-#if 1 /* SKS */
-                        prepare_for_drag_mark(tx, ty, tcol, numrow-1, tcol, 0);
-#else
-                        prepare_for_drag_mark(tx, ty, tcol, 0, tcol, numrow-1);
-#endif
-                        }
-
-                    start_drag(MARK_ALL_ROWS);
-                    break;
-
-                default:
-                    trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
-                    break;
-
-                } /* switch(subposition) */
-            }
+        switch(subposition)
+        {
+        case OVER_COLUMN_MARGIN_ADJUSTOR:
+            trace_0(TRACE_APP_PD4, "Dragging the right margin");
+            prepare_for_drag_column_wrapwidth(tx, tcol, extend);        /* extend means align margins of columns to */
+            start_drag(DRAG_COLUMN_WRAPWIDTH);                          /* our right as well                        */
             break;
 
-        } /* switch(icon) */
+        case OVER_COLUMN_WIDTH_ADJUSTOR:
+            trace_1(TRACE_APP_PD4, "Dragging width of column %d", tcol);
+#if FALSE
+            slot_in_buffer = FALSE;     /* dragging tends to change curcol; mergebuf has been done by caller */
+#endif
+            prepare_for_drag_column_width(tx, tcol);
+            start_drag(DRAG_COLUMN_WIDTH);
+            break;
+
+        case OVER_COLUMN_CENTRE:
+            trace_1(TRACE_APP_PD4, "In middle of column %d, ", tcol);
+
+            /* mark all rows over given columns */
+            if(blkindoc && extend)
+            {
+                trace_0(TRACE_APP_PD4, "in column headings - continuing all rows mark");
+                make_single_mark_into_block();
+            }
+            else
+            {
+                trace_0(TRACE_APP_PD4, "in column headings - starting all rows mark");
+#if 1 /* SKS */
+                prepare_for_drag_mark(tx, ty, tcol, numrow-1, tcol, 0);
+#else
+                prepare_for_drag_mark(tx, ty, tcol, 0, tcol, numrow-1);
+#endif
+            }
+
+            start_drag(MARK_ALL_ROWS);
+            break;
+
+        default:
+            trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
+            break;
+
+        } /* switch(subposition) */
+        break;
+        }
+
+    } /* switch(icon) */
 }
 
 /******************************************************************************
@@ -1440,10 +1439,10 @@ EditContentsLine(void)
     /* If using another editor, ignore the click and give the caret back. */
 
     if(xf_inexpression || xf_inexpression_box)
-        {
+    {
         xf_acquirecaret = TRUE;
         return;
-        }
+    }
 
     /* Start editing the formula, place caret where user clicked */
 
@@ -1495,237 +1494,237 @@ colh_HELPREQUEST(
     if(xf_inexpression_box)
         msg = help_colh_inexpression_box;
     else if(xf_inexpression_line)
-        {
+    {
         switch((int)icon)
-            {
-            case -1:
-                break;
+        {
+        case -1:
+            break;
 
-            case COLH_BUTTON_OK:
-                msg = colh_button_edit_ok;
-                break;
+        case COLH_BUTTON_OK:
+            msg = colh_button_edit_ok;
+            break;
 
-            case COLH_BUTTON_CANCEL:
-                msg = colh_button_edit_cancel;
-                break;
+        case COLH_BUTTON_CANCEL:
+            msg = colh_button_edit_cancel;
+            break;
 
-            case COLH_CONTENTS_LINE:
-                msg = help_colh_contents_line_inexpression;
-                break;
+        case COLH_CONTENTS_LINE:
+            msg = help_colh_contents_line_inexpression;
+            break;
 
-            case COLH_FUNCTION_SELECTOR:
-                msg = help_colh_transfer_to_window;
-                break;
+        case COLH_FUNCTION_SELECTOR:
+            msg = help_colh_transfer_to_window;
+            break;
 
-            case COLH_PIPEDREAM_LOGO:
-                /* they can sodding well use the new UI if they want help! */
-                break;
+        case COLH_PIPEDREAM_LOGO:
+            /* they can sodding well use the new UI if they want help! */
+            break;
 
-            case COLH_STATUS_BAR:
-            case COLH_STATUS_TEXT:
-                /* if editing, suppress setting/clearing of marks */
-                break;
+        case COLH_STATUS_BAR:
+        case COLH_STATUS_TEXT:
+            /* if editing, suppress setting/clearing of marks */
+            break;
 
-            case COLH_COLUMN_HEADINGS:                                                       /* if editing, all movement and drags are suppressed */
-                break;
+        case COLH_COLUMN_HEADINGS:                                                       /* if editing, all movement and drags are suppressed */
+            break;
 
-            default:
-                msg = help_colh_inexpression_line;
-                break;
-            }
+        default:
+            msg = help_colh_inexpression_line;
+            break;
         }
+    }
     else
         switch((int)icon)
+        {
+        case -1:
+            break;
+
+        case COLH_BUTTON_OK:
+            /* no action when not editing */
+            break;
+
+        case COLH_BUTTON_CANCEL:
+            /* no action when not editing */
+            break;
+
+        case COLH_CONTENTS_LINE:
+            msg = help_colh_contents_line;
+            break;
+
+        case COLH_FUNCTION_SELECTOR:
+            msg = help_colh_edit_in_window;
+            break;
+
+        case COLH_PIPEDREAM_LOGO:
+            /* they can sodding well use the new UI if they want help! */
+            break;
+
+        case COLH_STATUS_BAR:
+        case COLH_STATUS_TEXT:
+            /* if editing, suppress setting/clearing of marks */
+            if(xf_inexpression)
+                break;
+
+            msg = help_top_left_corner;
+            break;
+
+        case COLH_COLUMN_HEADINGS:
             {
-            case -1:
+            pointer_shape *shape;
+            int subposition;
+            COL tcol;
+            char cbuf[32];
+
+            /* if editing, all movement and drags are suppressed */
+            if(xf_inexpression)
                 break;
 
-            case COLH_BUTTON_OK:
-                /* no action when not editing */
+            colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, NULL);
+            setpointershape(shape);
+
+            switch(subposition)
+            {
+            case OVER_COLUMN_CENTRE:
+                msg = help_col_border;
                 break;
 
-            case COLH_BUTTON_CANCEL:
-                /* no action when not editing */
+            case OVER_COLUMN_MARGIN_ADJUSTOR:
+                (void) write_col(cbuf, elemof32(cbuf), tcol);
+
+                (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
+                        "%s%s.|M%s",
+                        help_drag_right_margin,
+                        cbuf,
+                        help_double_right_margin
+                       );
                 break;
 
-            case COLH_CONTENTS_LINE:
-                msg = help_colh_contents_line;
-                break;
+            case OVER_COLUMN_WIDTH_ADJUSTOR:
+                (void) write_col(cbuf, elemof32(cbuf), tcol);
 
-            case COLH_FUNCTION_SELECTOR:
-                msg = help_colh_edit_in_window;
-                break;
-
-            case COLH_PIPEDREAM_LOGO:
-                /* they can sodding well use the new UI if they want help! */
-                break;
-
-            case COLH_STATUS_BAR:
-            case COLH_STATUS_TEXT:
-                /* if editing, suppress setting/clearing of marks */
-                if(xf_inexpression)
-                    break;
-
-                msg = help_top_left_corner;
-                break;
-
-            case COLH_COLUMN_HEADINGS:
-                {
-                pointer_shape *shape;
-                int subposition;
-                COL tcol;
-                char cbuf[32];
-
-                /* if editing, all movement and drags are suppressed */
-                if(xf_inexpression)
-                    break;
-
-                colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, NULL);
-                setpointershape(shape);
-
-                switch(subposition)
-                    {
-                    case OVER_COLUMN_CENTRE:
-                        msg = help_col_border;
-                        break;
-
-                    case OVER_COLUMN_MARGIN_ADJUSTOR:
-                        (void) write_col(cbuf, elemof32(cbuf), tcol);
-
-                        (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
-                                "%s%s.|M%s",
-                                help_drag_right_margin,
-                                cbuf,
-                                help_double_right_margin
-                               );
-                        break;
-
-                    case OVER_COLUMN_WIDTH_ADJUSTOR:
-                        (void) write_col(cbuf, elemof32(cbuf), tcol);
-
-                        (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
-                                "%s%s.|M",
-                                help_drag_column_width,
-                                cbuf
-                               );
-                        break;
-                    }
-
-                break;
-                }
-
-            case COLH_BUTTON_REPLICD:
-                msg = colh_button_replicd;
-                break;
-
-            case COLH_BUTTON_REPLICR:
-                msg = colh_button_replicr;
-                break;
-
-            case COLH_BUTTON_TOTEXT:
-                msg = colh_button_totext;
-                break;
-
-            case COLH_BUTTON_TONUMBER:
-                msg = colh_button_tonumber;
-                break;
-
-            case COLH_BUTTON_GRAPH:
-                msg = colh_button_graph;
-                break;
-
-            case COLH_BUTTON_SAVE:
-                msg = colh_button_save;
-                break;
-
-            case COLH_BUTTON_PRINT:
-                msg = colh_button_print;
-                break;
-
-            case COLH_BUTTON_LJUSTIFY:
-                msg = colh_button_ljustify;
-                break;
-
-            case COLH_BUTTON_CJUSTIFY:
-                msg = colh_button_cjustify;
-                break;
-
-            case COLH_BUTTON_RJUSTIFY:
-                msg = colh_button_rjustify;
-                break;
-
-            case COLH_BUTTON_FJUSTIFY:
-                msg = colh_button_fjustify;
-                break;
-
-            case COLH_BUTTON_FONT:
-                msg = colh_button_font;
-                break;
-
-            case COLH_BUTTON_BOLD:
-                msg = colh_button_bold;
-                break;
-
-            case COLH_BUTTON_ITALIC:
-                msg = colh_button_italic;
-                break;
-
-            case COLH_BUTTON_UNDERLINED:
-                msg = colh_button_underlined;
-                break;
-
-            case COLH_BUTTON_SUBSCRIPT:
-                msg = colh_button_subscript;
-                break;
-
-            case COLH_BUTTON_SUPERSCRIPT:
-                msg = colh_button_superscript;
-                break;
-
-            case COLH_BUTTON_LEADTRAIL:
-                msg = colh_button_leadtrail;
-                break;
-
-            case COLH_BUTTON_DECPLACES:
-                msg = colh_button_decplaces;
-                break;
-
-            case COLH_BUTTON_COPY:
-                msg = colh_button_copy;
-                break;
-
-            case COLH_BUTTON_DELETE:
-                msg = colh_button_delete;
-                break;
-
-            case COLH_BUTTON_PASTE:
-                msg = colh_button_paste;
-                break;
-
-            case COLH_BUTTON_FORMATBLOCK:
-                msg = colh_button_formatblock;
-                break;
-
-            case COLH_BUTTON_SEARCH:
-                msg = colh_button_search;
-                break;
-
-            case COLH_BUTTON_SORT:
-                msg = colh_button_sort;
-                break;
-
-            case COLH_BUTTON_SPELLCHECK:
-                msg = colh_button_spellcheck;
-                break;
-
-            case COLH_BUTTON_CMD_RECORD:
-                msg = colh_button_cmd_record;
-                break;
-
-            case COLH_BUTTON_CMD_EXEC:
-                msg = colh_button_cmd_exec;
+                (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
+                        "%s%s.|M",
+                        help_drag_column_width,
+                        cbuf
+                       );
                 break;
             }
+
+            break;
+            }
+
+        case COLH_BUTTON_REPLICD:
+            msg = colh_button_replicd;
+            break;
+
+        case COLH_BUTTON_REPLICR:
+            msg = colh_button_replicr;
+            break;
+
+        case COLH_BUTTON_TOTEXT:
+            msg = colh_button_totext;
+            break;
+
+        case COLH_BUTTON_TONUMBER:
+            msg = colh_button_tonumber;
+            break;
+
+        case COLH_BUTTON_GRAPH:
+            msg = colh_button_graph;
+            break;
+
+        case COLH_BUTTON_SAVE:
+            msg = colh_button_save;
+            break;
+
+        case COLH_BUTTON_PRINT:
+            msg = colh_button_print;
+            break;
+
+        case COLH_BUTTON_LJUSTIFY:
+            msg = colh_button_ljustify;
+            break;
+
+        case COLH_BUTTON_CJUSTIFY:
+            msg = colh_button_cjustify;
+            break;
+
+        case COLH_BUTTON_RJUSTIFY:
+            msg = colh_button_rjustify;
+            break;
+
+        case COLH_BUTTON_FJUSTIFY:
+            msg = colh_button_fjustify;
+            break;
+
+        case COLH_BUTTON_FONT:
+            msg = colh_button_font;
+            break;
+
+        case COLH_BUTTON_BOLD:
+            msg = colh_button_bold;
+            break;
+
+        case COLH_BUTTON_ITALIC:
+            msg = colh_button_italic;
+            break;
+
+        case COLH_BUTTON_UNDERLINED:
+            msg = colh_button_underlined;
+            break;
+
+        case COLH_BUTTON_SUBSCRIPT:
+            msg = colh_button_subscript;
+            break;
+
+        case COLH_BUTTON_SUPERSCRIPT:
+            msg = colh_button_superscript;
+            break;
+
+        case COLH_BUTTON_LEADTRAIL:
+            msg = colh_button_leadtrail;
+            break;
+
+        case COLH_BUTTON_DECPLACES:
+            msg = colh_button_decplaces;
+            break;
+
+        case COLH_BUTTON_COPY:
+            msg = colh_button_copy;
+            break;
+
+        case COLH_BUTTON_DELETE:
+            msg = colh_button_delete;
+            break;
+
+        case COLH_BUTTON_PASTE:
+            msg = colh_button_paste;
+            break;
+
+        case COLH_BUTTON_FORMATBLOCK:
+            msg = colh_button_formatblock;
+            break;
+
+        case COLH_BUTTON_SEARCH:
+            msg = colh_button_search;
+            break;
+
+        case COLH_BUTTON_SORT:
+            msg = colh_button_sort;
+            break;
+
+        case COLH_BUTTON_SPELLCHECK:
+            msg = colh_button_spellcheck;
+            break;
+
+        case COLH_BUTTON_CMD_RECORD:
+            msg = colh_button_cmd_record;
+            break;
+
+        case COLH_BUTTON_CMD_EXEC:
+            msg = colh_button_cmd_exec;
+            break;
+        }
 
     if(msg)
         xstrkpy(buffer, elemof32(abuffer) - prefix_len, msg);
@@ -1745,15 +1744,15 @@ colh_message(
     int action = m->hdr.action;
 
     switch(action)
-        {
-        default:
-            break;
+    {
+    default:
+        break;
 
-        case wimp_MHELPREQUEST:
-            trace_0(TRACE_APP_PD4, "Help request on colh_window");
-            colh_HELPREQUEST(m);
-            break;
-        }
+    case wimp_MHELPREQUEST:
+        trace_0(TRACE_APP_PD4, "Help request on colh_window");
+        colh_HELPREQUEST(m);
+        break;
+    }
 }
 
 extern void
@@ -1793,7 +1792,7 @@ colh_where_in_column_headings(
         && !colislinked(curcol)
 #endif
       )
-        {
+    {
         trace_0(TRACE_APP_PD4, "Over right margin marker");
 
         shape     = POINTER_DRAGMARGIN;
@@ -1809,16 +1808,16 @@ colh_where_in_column_headings(
         /* is directly modified, those to the left are then calculated from it.          */
 
         if(colislinked(drag_tcol))
-            {
+        {
             COL scanend = numcol - 1;
 
             while(linked_column_linkright(drag_tcol) && (drag_tcol < scanend))
                 ++drag_tcol;
-            }
-#endif
         }
+#endif
+    }
     else
-        {       /* 'over right margin marker' test failed */
+    {       /* 'over right margin marker' test failed */
 
         gcoord hitband   = charwidth/2;
         coord  coff      = calcoff(tx);
@@ -1829,11 +1828,11 @@ colh_where_in_column_headings(
         drag_tx   = 0;
 
         if(coff >= 0)
-            {
+        {
             COL tcol = col_number(coff);
 
             if((tcol > 0) && (prev_coff != coff))
-                {
+            {
                 trace_2(TRACE_APP_PD4, "At left of column %d, ready to drag width of column %d", tcol, tcol-1);
 
                 drag_type = OVER_COLUMN_WIDTH_ADJUSTOR;
@@ -1841,13 +1840,13 @@ colh_where_in_column_headings(
                 drag_tcol = tcol-1;
 
                 shape     = (colwidth(drag_tcol) == 0 ? POINTER_DRAGCOLUMN_RIGHT : POINTER_DRAGCOLUMN);
-                }
+            }
             else
-                {
+            {
                 coord next_tx = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0) + hitband, charwidth);
 
                 if(coff != calcoff(next_tx))
-                    {
+                {
                     trace_2(TRACE_APP_PD4, "At right of column %d, ready to drag width of column %d", tcol, tcol);
 
                     shape     = POINTER_DRAGCOLUMN;
@@ -1855,9 +1854,9 @@ colh_where_in_column_headings(
                     drag_type = OVER_COLUMN_WIDTH_ADJUSTOR;
                     drag_tx   = tx;
                     drag_tcol = tcol;
-                    }
+                }
                 else
-                    {
+                {
                     trace_1(TRACE_APP_PD4, "Over middle of column %d, ", tcol);
 
                     shape     = POINTER_DEFAULT;    /*>>>might be nice to use another shape */
@@ -1865,41 +1864,41 @@ colh_where_in_column_headings(
                     drag_type = OVER_COLUMN_CENTRE;
                     drag_tx   = tx;
                     drag_tcol = tcol;
-                    }
                 }
             }
+        }
         else
-            {
+        {
             if(prev_coff >= 0)
-                {
+            {
                 COL prev_tcol = col_number(prev_coff); /* exists, is on screen, slightly to left of drag point */
                 COL tcol      = prev_tcol + 1;         /* assume there is a zero width col we should drag      */
 
                 if( (tcol < numcol) &&                  /* if it exists */
                     (colwidth(tcol) == 0)
                   )
-                    {
+                {
                     shape     = POINTER_DRAGCOLUMN_RIGHT;
 
                     drag_type = OVER_COLUMN_WIDTH_ADJUSTOR;
                     drag_tx   = tx;
                     drag_tcol = tcol;
-                    }
+                }
                 else
-                    {
+                {
                     shape     = POINTER_DRAGCOLUMN;
 
                     drag_type = OVER_COLUMN_WIDTH_ADJUSTOR;
                     drag_tx   = tx;
                     drag_tcol = prev_tcol;
-                    }
+                }
 
                 trace_1(TRACE_APP_PD4, "off right of column headings, ready to drag width of column %d", drag_tcol);
-                }
+            }
             else
                 trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
-            }
         }
+    }
 
     if(shapep)
         *shapep = shape;
@@ -1923,11 +1922,11 @@ colh_pointershape_drag_notification(
     if(start)
         trace_0(TRACE_APP_PD4, "colh_pointershape_drag_notification - STARTING");
     else
-        {
+    {
         trace_0(TRACE_APP_PD4, "colh_pointershape_drag_notification - ENDING");
 
         colh_pointershape_endtracking();
-        }
+    }
 }
 
 static void
@@ -1971,64 +1970,64 @@ null_event_proto(static, colh_pointershape_null_handler)
     trace_1(TRACE_APP_PD4, "colh_pointershape_null_handler, rc=%d", p_null_event_block->rc);
 
     switch(p_null_event_block->rc)
+    {
+    case NULL_QUERY:
+        trace_0(TRACE_APP_PD4, "colh call to ask if we want nulls");
+        return(dragtype == NO_DRAG_ACTIVE
+               ? NULL_EVENTS_REQUIRED
+               : NULL_EVENTS_OFF
+              );
+
+    case NULL_EVENT:
         {
-        case NULL_QUERY:
-            trace_0(TRACE_APP_PD4, "colh call to ask if we want nulls");
-            return(dragtype == NO_DRAG_ACTIVE
-                   ? NULL_EVENTS_REQUIRED
-                   : NULL_EVENTS_OFF
-                  );
+        wimp_mousestr pointer;
 
-        case NULL_EVENT:
+        trace_0(TRACE_APP_PD4, "colh null call");
+
+        if(select_document_using_docno(*dochanp))
+        if(NULL == wimp_get_point_info(&pointer))
+        {
+            /*(if(pointer.w == colh_window)*/    /* should be true, as we release null events when pointer leaves window */
             {
-            wimp_mousestr pointer;
-
-            trace_0(TRACE_APP_PD4, "colh null call");
-
-            if(select_document_using_docno(*dochanp))
-            if(NULL == wimp_get_point_info(&pointer))
+                switch((int)pointer.i)
                 {
-                /*(if(pointer.w == colh_window)*/    /* should be true, as we release null events when pointer leaves window */
+                case COLH_COLUMN_HEADINGS:
+                    /* if editing, all movement and drags are suppressed, so show default pointer */
+                    if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
                     {
-                    switch((int)pointer.i)
-                        {
-                        case COLH_COLUMN_HEADINGS:
-                            /* if editing, all movement and drags are suppressed, so show default pointer */
-                            if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
-                                {
-                                setpointershape(POINTER_DEFAULT);
-                                }
-                            else
-                                {
-                                pointer_shape *shape;
-
-                                colh_where_in_column_headings(&pointer, &shape, NULL, NULL, NULL);
-                                setpointershape(shape);
-                                }
-                            break;
-
-                        #if 0
-                        case COLH_FUNCTION_SELECTOR:
-                            trace_0(TRACE_APP_PD4, "change pointer to drop-down-menu");
-
-                            setpointershape(POINTER_DROPMENU);
-                            break;
-                        #endif
-
-                        default:
-                            trace_0(TRACE_APP_PD4, "restore default pointer");
-
-                            setpointershape(POINTER_DEFAULT);
-                            break;
-                        }
+                        setpointershape(POINTER_DEFAULT);
                     }
+                    else
+                    {
+                        pointer_shape *shape;
+
+                        colh_where_in_column_headings(&pointer, &shape, NULL, NULL, NULL);
+                        setpointershape(shape);
+                    }
+                    break;
+
+                #if 0
+                case COLH_FUNCTION_SELECTOR:
+                    trace_0(TRACE_APP_PD4, "change pointer to drop-down-menu");
+
+                    setpointershape(POINTER_DROPMENU);
+                    break;
+                #endif
+
+                default:
+                    trace_0(TRACE_APP_PD4, "restore default pointer");
+
+                    setpointershape(POINTER_DEFAULT);
+                    break;
                 }
             }
-            return(NULL_EVENT_COMPLETED);
-
-        default:
-            return(NULL_EVENT_UNKNOWN);
         }
+        }
+        return(NULL_EVENT_COMPLETED);
+
+    default:
+        return(NULL_EVENT_UNKNOWN);
+    }
 }
 
 /******************************************************************************
@@ -2051,29 +2050,29 @@ setpointershape(
     pointer_shape *shape)
 {
     if(current_pointer_shape != shape)
-        {
+    {
         riscos_hourglass_off();
 
         if(shape)
-            {
+        {
             sprite_id sprite;
 
             sprite.tag = sprite_id_name;
             sprite.s.name = shape->name;
 
             wimpt_safe(pointer_set_shape((sprite_area *)resspr_area() /* -1 */, &sprite, shape->x, shape->y));
-            }
+        }
         else
-            {
+        {
             /* POINTER_DEFAULT */
 
             pointer_reset_shape();
-            }
+        }
 
         current_pointer_shape = shape;
 
         riscos_hourglass_on();
-        }
+    }
 }
 
 /* end of colh.c */

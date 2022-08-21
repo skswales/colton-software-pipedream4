@@ -301,13 +301,13 @@ main(
 
     /* put the caret in a document if there is one (left over from key file etc.) */
     if(NO_DOCUMENT != first_document())
-        {
+    {
         select_document(first_document());
         /* get caret when it is actually fronted */
         xf_acquirecaret = TRUE;
         xf_frontmainwindow = TRUE;
         draw_screen();
-        }
+    }
 
     /* turn off null events unless we really want them - tested at the exit of each event processed */
     event_setmask((wimp_emask) (event_getmask() | wimp_EMNULL));
@@ -317,13 +317,13 @@ main(
     static jmp_buf program_safepoint;
 
     if(setjmp(program_safepoint))
-        {
+    {
         /* returned here from exception */
 
         /* SKS after 4.11 31jan92 - tidy up a little */
         riscos_printing = FALSE;
         alt_array[0] = NULLCH;
-        }
+    }
     else
         wimpt_set_safepoint(&program_safepoint);
     }
@@ -399,7 +399,7 @@ exec_file(
     P_DOCU p_docu;
 
     if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
-        {
+    {
         /*>>>RCM asks, what should we do if xf_inexpression or xf_inexpression_box is true???*/
         DOCNO old_docno = current_docno();
 
@@ -408,18 +408,18 @@ exec_file(
         do_execfile((char *) filename);
 
         if(is_current_document())
-            {
+        {
             draw_screen();
             draw_caret();
-            }
+        }
 
         select_document_using_docno(old_docno);
 
         return;
-        }
+    }
 
     if(create_new_untitled_document())
-        {
+    {
         DOCNO exec_docno = current_docno();
         BOOL resetwindow = TRUE;
 
@@ -434,25 +434,25 @@ exec_file(
         do_execfile((char *) filename);
 
         if(is_current_document())
-            {
+        {
             (void) mergebuf_nocheck();
 
             if(xf_filealtered)          /* watch out for strange people */
-                {
+            {
                 draw_screen();
                 draw_caret();
                 if(exec_docno == current_docno())
                     resetwindow = FALSE;
-                }
             }
+        }
 
         /* try to delete the one we started at */
         if(!is_current_document()  ||  (exec_docno != current_docno()))
-            {
+        {
             p_docu = p_docu_from_docno(exec_docno);
 
             if(p_docu != NO_DOCUMENT)
-                {
+            {
                 assert(!docu_is_thunk(p_docu));
 
                 select_document(p_docu);
@@ -460,19 +460,19 @@ exec_file(
                 (void) mergebuf_nocheck();
 
                 if(xf_filealtered)          /* watch out for strange people */
-                    {
+                {
                     draw_screen();
                     draw_caret();
                     resetwindow = FALSE;
-                    }
+                }
                 else
                     destroy_current_document();
-                }
             }
+        }
 
         if(resetwindow)
             riscos_resetwindowpos();
-        }
+    }
 }
 
 /******************************************************************************
@@ -536,7 +536,7 @@ decode_command_line_options(
     int i;
 
     for(i = 1; i < argc; ++i)
-        {
+    {
         char *arg = argv[i];
         char ch   = *arg;
         char array[BUF_MAX_PATHSTRING];
@@ -545,78 +545,78 @@ decode_command_line_options(
             reportf("main: *** got arg %d, '%s'", i, arg);
 
         switch(ch)
+        {
+        case '-':
+            ch = *++arg;
+            ch = tolower(ch);
+            switch(ch)
             {
-            case '-':
-                ch = *++arg;
-                ch = tolower(ch);
-                switch(ch)
+            case 'h':
+                if(pass == 2)
+                    application_process_command(N_Help);
+                break;
+
+            case 'k':
+                arg = argv[++i];
+                if(pass == 2)
+                    thicken_grid_lines(atoi(arg));
+                break;
+
+            case 'l':
+                arg = argv[++i];
+                if(pass == 2)
+                {
+                    setlocale(LC_CTYPE, arg);
+                }
+                break;
+
+            case 'm':
+                arg = argv[++i];
+                if(pass == 2)
+                    if(add_path_using_dir(array, elemof32(array), arg, MACROS_SUBDIR_STR))
+                        exec_file(arg);
+                break;
+
+            case 'n':
+                if(pass == 2)
+                    if(create_new_untitled_document())
                     {
-                    case 'h':
-                        if(pass == 2)
-                            application_process_command(N_Help);
-                        break;
-
-                    case 'k':
-                        arg = argv[++i];
-                        if(pass == 2)
-                            thicken_grid_lines(atoi(arg));
-                        break;
-
-                    case 'l':
-                        arg = argv[++i];
-                        if(pass == 2)
-                            {
-                            setlocale(LC_CTYPE, arg);
-                            }
-                        break;
-
-                    case 'm':
-                        arg = argv[++i];
-                        if(pass == 2)
-                            if(add_path_using_dir(array, elemof32(array), arg, MACROS_SUBDIR_STR))
-                                exec_file(arg);
-                        break;
-
-                    case 'n':
-                        if(pass == 2)
-                            if(create_new_untitled_document())
-                                {
-                                /* don't acquire caret here, done later */
-                                /* bring to front sometime */
-                                xf_frontmainwindow = TRUE;
-                                draw_screen();
-                                }
-                        break;
-
-                    case 'p':
-                        arg = argv[++i];
-                        if(pass == 2)
-                            print_file(arg);
-                        break;
-
-                    case 'q':
-                        if(pass == 2)
-                            application_process_command(N_Quit);
-                        break;
-
-                    default:
-                        messagef(Unrecognised_arg_Zs_STR, arg);
-                        break;
+                        /* don't acquire caret here, done later */
+                        /* bring to front sometime */
+                        xf_frontmainwindow = TRUE;
+                        draw_screen();
                     }
+                break;
+
+            case 'p':
+                arg = argv[++i];
+                if(pass == 2)
+                    print_file(arg);
+                break;
+
+            case 'q':
+                if(pass == 2)
+                    application_process_command(N_Quit);
                 break;
 
             default:
-                if(pass == 2)
-                    {
-                    LOAD_FILE_OPTIONS load_file_options;
-                    zero_struct(load_file_options);
-                    load_file_options.document_name = arg;
-                    load_file_options.filetype_option = AUTO_CHAR; /* therefore must go via loadfile() */
-                    (void) loadfile(arg, &load_file_options);
-                    }
+                messagef(Unrecognised_arg_Zs_STR, arg);
                 break;
-            }   /* esac */
-        }   /* od */
+            }
+            break;
+
+        default:
+            if(pass == 2)
+            {
+                LOAD_FILE_OPTIONS load_file_options;
+                zero_struct(load_file_options);
+                load_file_options.document_name = arg;
+                load_file_options.filetype_option = AUTO_CHAR; /* therefore must go via loadfile() */
+                (void) loadfile(arg, &load_file_options);
+            }
+            break;
+        }   /* esac */
+    }   /* od */
 }
 
 static void

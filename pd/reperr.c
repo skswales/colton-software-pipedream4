@@ -80,10 +80,10 @@ make_errorstring(
     increment = +MODULE_ERR_INCREMENT;
 
     if(errnum >= base)
-        {
+    {
         moduleno = errnum / increment;
         errnum   = errnum % increment;
-        }
+    }
     else
         moduleno = 0;
 
@@ -224,26 +224,26 @@ reperr(
     if(errornumber == ERR_OUTPUTSTRING)
         errorp = "%s";
     else
-        {
+    {
         errorp = reperr_getstr(errornumber);
 
         if(NULL == strstr(errorp, "%s"))
-            {
+        {
             /* if we have an arg then append it if not a %s error */
             if(text)
-                {
+            {
                 xstrkpy(array, elemof32(array), errorp);
                 xstrkat(array, elemof32(array), " %s");
                 errorp = array;
-                }
             }
+        }
         else
-            {
+        {
             /* ensure %s error messages don't look too bad */
             if(!text)
                 text = "";
-            }
         }
+    }
 
 #if defined(RISCOS_CMD_UTIL)
     vfprintf(stderr, errorp, args);
@@ -255,7 +255,7 @@ reperr(
     vreportf(errorp, args);
 
     if(been_error < 3) /* allow just a few errors to be reported before we start suppressing them */
-        {
+    {
         been_error++; /* = TRUE; */
 
         va_end(args);
@@ -267,7 +267,7 @@ reperr(
         consume_int(vsnprintf(err.errmess, elemof32(err.errmess), errorp, args));
 
         wimpt_complain(&err);
-        }
+    }
 #endif
 
     va_end(args);

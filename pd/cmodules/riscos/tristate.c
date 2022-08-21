@@ -72,7 +72,7 @@ riscos_tristate_query(
 
         if(0 == strncmp(test_name, tristate_name, strlen(test_name))) /* first time round Neil has left a 13 terminated string! */
             return(state);
-        }
+    }
     while(--state >= 0);
 
     return(RISCOS_TRISTATE_DONT_CARE);

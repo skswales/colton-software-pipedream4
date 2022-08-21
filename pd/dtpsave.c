@@ -47,20 +47,20 @@ chkcfm_for_fwp(
     tcell = travel(tcol, trow);
 
     if(tcell  &&  (tcell->type == SL_TEXT))
-        {
+    {
         /* note: if protected bit set will return false */
         switch(tcell->justify)
-            {
-            case J_FREE:
-            case J_LEFTRIGHT:
-            case J_RIGHTLEFT:
-                if(first  ||  (*tcell->content.text != SPACE))
-                    return(TRUE);
+        {
+        case J_FREE:
+        case J_LEFTRIGHT:
+        case J_RIGHTLEFT:
+            if(first  ||  (*tcell->content.text != SPACE))
+                return(TRUE);
 
-            default:
-                break;
-            }
+        default:
+            break;
         }
+    }
 
     return(FALSE);
 }
@@ -95,19 +95,19 @@ dtp_save_slot(
                         is_block_blank(tcol+1,trow-1,numcol,trow);
 
     if(fwp_save_first_slot_on_line)
-        {
+    {
         fwp_save_first_slot_on_line = FALSE;
 
         /* RJM 28.1.92 ensures that lines being concatenated have space between them */
         /* try to make formattable paragraphs in DTP mode too, but unformattable tables */
         if(possible_para_dtp  &&  trow > 0)
-            {
+        {
             /* do we need to send out space first? */
             P_CELL tslot1;
 
             tslot1 = travel(tcol, trow-1);
             if(tslot1)
-                {
+            {
                 uchar buffer[LIN_BUFSIZ];
                 S32 length;
 
@@ -116,23 +116,23 @@ dtp_save_slot(
                 if(length > 0 && buffer[length-1] != SPACE)
                     if(!away_byte(SPACE, output))
                         return(FALSE);
-                }
             }
+        }
 
         if(!possible_para_dtp  &&  trow > 0 && !away_eol(output))
             return(FALSE);
-        }
+    }
 
     if(!tcell)
         return(TRUE);
 
     /* output contents, chucking highlight chars */
     while((ch = *lptr++) != '\0')
-        {
+    {
         if(ch == SPACE)
             ++trailing_spaces;
         else
-            {
+        {
             if(trailing_spaces)
                 do
                     /* beware that FWP_SPACE is probably highlight char */
@@ -141,12 +141,12 @@ dtp_save_slot(
                 while(--trailing_spaces); /* leaving trailing_spaces at zero */
 
             if(ishighlight(ch))
-                {
-                }
+            {
+            }
             else if(!away_byte(ch, output))
                 return(FALSE);
-            }
         }
+    }
 
     while(trailing_spaces--)
         if(!away_byte(SPACE, output))
@@ -199,21 +199,21 @@ fwp_save_slot(
                         is_block_blank(tcol+1,trow,numcol,trow);
 
     if(fwp_save_first_slot_on_line)
-        {
+    {
         fwp_save_first_slot_on_line = FALSE;
 
         /* try to make formattable paragraphs in DTP mode too, but unformattable tables */
         if(!saving_fwp  &&  !possible_para_dtp  &&  !away_string("\x0A$", output))
             return(FALSE);
-        }
+    }
 
     /* output contents, dealing with highlight chars */
     while((ch = *lptr++) != '\0')
-        {
+    {
         if(ch == SPACE)
             ++trailing_spaces;
         else
-            {
+        {
             if(trailing_spaces)
                 do
                     /* beware that FWP_SPACE is probably highlight char */
@@ -222,21 +222,21 @@ fwp_save_slot(
                 while(--trailing_spaces); /* leaving trailing_spaces at zero */
 
             if(ishighlight(ch))
-                {
+            {
                 if(saving_fwp)
-                    {
+                {
                     /* poke highlight byte with new highlight */
                     h_byte ^= fwp_highlights[ch-FIRST_HIGHLIGHT];
 
                     /* output new highlight state */
                     if(!away_byte(FWP_HIGH_PREFIX, output)  ||  !away_byte(h_byte, output))
                         return(FALSE);
-                    }
                 }
+            }
             else if(!away_byte(ch, output))
                 return(FALSE);
-            }
         }
+    }
 
     /* switch all highlights off at end of cell */
     if(h_byte != FWP_NOHIGHLIGHTS)
@@ -244,7 +244,7 @@ fwp_save_slot(
             return(FALSE);
 
     if(!saving_fwp)
-        {
+    {
         while(trailing_spaces--)
             if(!away_byte(SPACE, output))
                 break;
@@ -254,7 +254,7 @@ fwp_save_slot(
 
         if(!away_byte('#', output))
             return(FALSE);
-        }
+    }
 
     /* if this and next lines can be formatted together, output space (always if DTP) */
     if(saving_fwp  &&  possible_para_fwp)
@@ -274,7 +274,7 @@ fwp_head_foot(
     uchar *second, *third;
 
     if(!str_isblank(lcr_field))
-        {
+    {
         expand_lcr(lcr_field, -1, expanded, LIN_BUFSIZ /* field width not buffer size */,
                    DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                    FALSE /*allow_fonty_result*/, FALSE /*compile_lcr*/);
@@ -293,7 +293,7 @@ fwp_head_foot(
             !away_string(third,         output) ||
             !away_byte  (FWP_LINESEP,   output) )
                 return(FALSE);
-        }
+    }
 
     return(TRUE);
 }
@@ -328,7 +328,7 @@ fwp_ruler(
 
     /* output dots */
     for(count=1, tcol=0; tcol<numcol && count < FWP_LINELENGTH; tcol++)
-        {
+    {
         coord thiswidth = colwidth(tcol);
         coord scount = 0;
 
@@ -344,18 +344,18 @@ fwp_ruler(
         if( (tcol < numcol-1) &&
             !away_byte((uchar) ((count++ == rmargin-2) ? FWP_RMARGIN : FWP_TABSTOP), output))
                 return(FALSE);
-        }
+    }
 
     /* maybe still output right margin */
     if(count <= rmargin-2)
-        {
+    {
         for( ; count < rmargin-2; count++)
             if(!away_byte('.', output))
                 return(FALSE);
 
         if(!away_byte(FWP_RMARGIN, output))
             return(FALSE);
-        }
+    }
 
     /* output pitch, ragged/justify, line spacing */
     if( !away_byte(FWP_PICA, output)                            ||
@@ -381,7 +381,7 @@ fwp_save_file_preamble(
     fwp_save_end_row = end_row;
 
     if(saving_fwp)
-        {
+    {
         /* send out start of fwp file */
 
         /* mandatory page layout */
@@ -406,7 +406,7 @@ fwp_save_file_preamble(
         /* mandatory ruler line */
         if(!fwp_ruler(output))
             return(FALSE);
-        }
+    }
 
     return(TRUE);
 }
@@ -447,7 +447,7 @@ fwp_isfwpfile(
     BOOL maybe_fwp = FALSE;
 
     if((*ptr++ == FWP_FORMAT_LINE)  &&  (*ptr++ == '0'))
-        {
+    {
         /* could be FWP page layout line.
          * If so next characters are ASCII digits giving page layout.
         */
@@ -455,11 +455,11 @@ fwp_isfwpfile(
 
         for(i = 2; i < 12; ++i, ++ptr)
             if(!isdigit(*ptr))
-                {
+            {
                 maybe_fwp = FALSE;
                 break;
-                }
-        }
+            }
+    }
 
     return(maybe_fwp);
 }
@@ -491,86 +491,86 @@ fwp_get_ruler(
             c = pd_file_getc(loadinput);
 
             switch(c)
-                {
-                case EOF:
+            {
+            case EOF:
+                return(-1);
+
+            case CR:
+            case LF:
+                c = CR;
+
+            case ']':
+                /* fudge width one more so column heading doesn't coincide with
+                    with right margin
+                */
+                width++;
+
+            case '[':
+                /* set a new column at the left margin if not 0 position */
+                if(wrapcount == 1)
+                    break;
+                /* deliberate fall thru */
+
+            case '#':
+            case FWP_TABSTOP:
+                /* got a tabstop */
+                if(!createcol(tcol))
                     return(-1);
 
-                case CR:
-                case LF:
-                    c = CR;
+                set_width_and_wrap(tcol, width, 0);
 
-                case ']':
-                    /* fudge width one more so column heading doesn't coincide with
-                        with right margin
-                    */
-                    width++;
+                if(c != ']')
+                    goto NEXTCOL;
 
-                case '[':
-                    /* set a new column at the left margin if not 0 position */
-                    if(wrapcount == 1)
+                wrappoint = wrapcount+1;
+
+                for(i = 0; ; i++)
+                {
+                    if((c = pd_file_getc(loadinput)) < 0)
+                        return(c);
+
+                    if((c == CR)  ||  (c == LF))
+                    {
+                        c = CR;
                         break;
-                    /* deliberate fall thru */
+                    }
 
-                case '#':
-                case FWP_TABSTOP:
-                    /* got a tabstop */
-                    if(!createcol(tcol))
-                        return(-1);
+                    /* look for justification and line spacing */
+                    if(i == 1)
+                    {
+                        /* '0' is ragged, '1' is justify */
+                        if(c == '0')
+                            d_options_JU = 'N';
+                        else if(c == '1')
+                            d_options_JU = 'Y';
+                    }
 
-                    set_width_and_wrap(tcol, width, 0);
-
-                    if(c != ']')
-                        goto NEXTCOL;
-
-                    wrappoint = wrapcount+1;
-
-                    for(i = 0; ; i++)
-                        {
-                        if((c = pd_file_getc(loadinput)) < 0)
-                            return(c);
-
-                        if((c == CR)  ||  (c == LF))
-                            {
-                            c = CR;
-                            break;
-                            }
-
-                        /* look for justification and line spacing */
-                        if(i == 1)
-                            {
-                            /* '0' is ragged, '1' is justify */
-                            if(c == '0')
-                                d_options_JU = 'N';
-                            else if(c == '1')
-                                d_options_JU = 'Y';
-                            }
-
-                        /* line spacing ? */
-                        if(i == 2)
-                            d_poptions_LS = c - '0';
-                        }
-                    break;
-
-                default:
-                    break;
+                    /* line spacing ? */
+                    if(i == 2)
+                        d_poptions_LS = c - '0';
                 }
+                break;
+
+            default:
+                break;
+            }
 
             width++;
-            }
+        }
         while(c != CR);
 
     NEXTCOL:
         tcol++;
-        }
+    }
     while(c != CR);
 
     /* set wrap point for all columns */
     for(tcol = 0; (wrappoint > 0)  &&  (tcol < numcol); tcol++)
-        {
+    {
         width = colwidth(tcol);
         set_width_and_wrap(tcol, width, wrappoint);
         wrappoint -= width;
-        }
+    }
 
     return(c);
 }
@@ -608,93 +608,93 @@ fwp_load_preinit(
             return;
 
         switch(c)
+        {
+        case FWP_PAGE_LAYOUT:
+            if(no_layout)
             {
-            case FWP_PAGE_LAYOUT:
-                if(no_layout)
-                    {
-                    no_layout = FALSE;
+                no_layout = FALSE;
 
-                    /* next ten bytes in ASCII decimal give margins */
-                    if(file_read(array, 1, 10, loadinput) != 10)
-                        return;
+                /* next ten bytes in ASCII decimal give margins */
+                if(file_read(array, 1, 10, loadinput) != 10)
+                    return;
 
-                    /* convert to sensible bytes */
-                    for(i = 0; i < 5; ++i)
-                        array[i] = (array[i*2] - '0') * 10 + array[i*2+1] - '0';
+                /* convert to sensible bytes */
+                for(i = 0; i < 5; ++i)
+                    array[i] = (array[i*2] - '0') * 10 + array[i*2+1] - '0';
 
-                    d_poptions_PL = array[0];
-                    d_poptions_TM = array[1];
-                    d_poptions_HM = array[2];
-                    d_poptions_FM = array[3];
-                    d_poptions_BM = array[4];
-                    }
-                break;
+                d_poptions_PL = array[0];
+                d_poptions_TM = array[1];
+                d_poptions_HM = array[2];
+                d_poptions_FM = array[3];
+                d_poptions_BM = array[4];
+            }
+            break;
 
-            case FWP_HEADER:
-                footer = FALSE;
+        case FWP_HEADER:
+            footer = FALSE;
 
-                /* deliberate fall-thru */
+            /* deliberate fall-thru */
 
-            case FWP_FOOTER:
-                /* get three parameters. Force in '/', quick & nasty */
-                    {
-                    uchar *ptr = array+1;
+        case FWP_FOOTER:
+            /* get three parameters. Force in '/', quick & nasty */
+            {
+            uchar *ptr = array+1;
 
-                    *array = FWP_DELIMITER;
+            *array = FWP_DELIMITER;
 
-                    for(;;)
-                        {
-                        if((c = pd_file_getc(loadinput)) < 0)
-                            return;
+            for(;;)
+            {
+                if((c = pd_file_getc(loadinput)) < 0)
+                    return;
 
-                        switch(c)
-                            {
-                            case FWP_FORMAT_LINE:
-                                *ptr++ = FWP_DELIMITER;
-                                continue;
+                switch(c)
+                {
+                case FWP_FORMAT_LINE:
+                    *ptr++ = FWP_DELIMITER;
+                    continue;
 
-                            case CR:
-                            case LF:
-                                *ptr = '\0';
-                                break;
-
-                            default:
-                                *ptr++ = (uchar) c;
-                                continue;
-                            }
-
-                        break;
-                        }
-
-                    mystr_set(footer ? &d_poptions_FO : &d_poptions_HE, array);
-                    }
-                break;
-
-            case FWP_RULER:
-                if(inserting)
-                    no_ruler = FALSE;
-
-                if(no_ruler)
-                    {
-                    no_ruler = FALSE;
-                    c = fwp_get_ruler(loadinput);
+                case CR:
+                case LF:
+                    *ptr = '\0';
                     break;
-                    }
-                /* deliberate fall-through if we don't want rulers */
 
-            default:
-                /* dunno wot this format line is so read past it */
-                for(;;)
-                    {
-                    if((c = pd_file_getc(loadinput)) < 0)
-                        return;
+                default:
+                    *ptr++ = (uchar) c;
+                    continue;
+                }
 
-                    if((c == CR)  ||  (c == LF))
-                        break;
-                    }
                 break;
             }
+
+            mystr_set(footer ? &d_poptions_FO : &d_poptions_HE, array);
+            break;
+            }
+
+        case FWP_RULER:
+            if(inserting)
+                no_ruler = FALSE;
+
+            if(no_ruler)
+            {
+                no_ruler = FALSE;
+                c = fwp_get_ruler(loadinput);
+                break;
+            }
+            /* deliberate fall-through if we don't want rulers */
+
+        default:
+            /* dunno wot this format line is so read past it */
+            for(;;)
+            {
+                if((c = pd_file_getc(loadinput)) < 0)
+                    return;
+
+                if((c == CR)  ||  (c == LF))
+                    break;
+            }
+            break;
         }
+    }
     while(no_layout || no_ruler);
 }
 
@@ -729,87 +729,87 @@ fwp_convert(
     uchar *type)
 {
     for(;;)
-        {
+    {
         switch(c)
+        {
+        case FWP_INDENT_SPACE:
+            /* got an indent so put in new column */
+            c = *field_separator;
+            break;
+
+        case FWP_STRETCH_SPACE:
+            /* this is what VIEW calls a soft space */
+            if(*justify == J_FREE)
             {
-            case FWP_INDENT_SPACE:
-                /* got an indent so put in new column */
-                c = *field_separator;
-                break;
-
-            case FWP_STRETCH_SPACE:
-                /* this is what VIEW calls a soft space */
-                if(*justify == J_FREE)
-                    {
-                    *justify = xf_leftright ? J_LEFTRIGHT : J_RIGHTLEFT;
-                    xf_leftright = !xf_leftright;
-                    d_options_JU = 'Y';
-                    }
-
-                c = 0;
-                break;
-
-            case FWP_SOFT_SPACE:
-                /* this is what VIEW calls a hard space */
-                c = SPACE;
-                break;
-
-            case FWP_ESCAPE_CHAR:
-                if((c = pd_file_getc(loadinput)) < 0)
-                    break;
-
-                /* if top-bit set itsa a highlight change
-                 * else ignore the rest of the line
-                */
-                if(c & 0x80)
-                    {
-                    /* highlight changes */
-                    fwp_change_highlights((uchar) c, *h_byte);
-                    *h_byte = c;
-                    c = 0;
-                    }
-                else
-                    {
-                    do
-                        if((c = pd_file_getc(loadinput)) < 0)
-                            break;
-                    while((c != CR)  &&  (c != LF));
-
-                    continue; /* with newly-read char */
-                    }
-
-                break;
-
-            case FWP_SOFT_PAGE:
-                if((c = pd_file_getc(loadinput)) < 0)
-                    break;
-
-                /* c is condition strangely encoded */
-                if(c > 0x80)
-                    *pageoffset = 256 - c;
-                else
-                    *pageoffset = c - 16;
-
-                /* deliberate fall-thru */
-
-            case FWP_HARD_PAGE:
-                *type = SL_PAGE;
-                c = CR;     /* force onto new line */
-                break;
-
-            case TAB:
-                break;
-
-            default:
-                if(c < 0x20)
-                    {
-                    c = 0; /* ignore all other control chars */
-                    }
-                break;
+                *justify = xf_leftright ? J_LEFTRIGHT : J_RIGHTLEFT;
+                xf_leftright = !xf_leftright;
+                d_options_JU = 'Y';
             }
 
-        break;
+            c = 0;
+            break;
+
+        case FWP_SOFT_SPACE:
+            /* this is what VIEW calls a hard space */
+            c = SPACE;
+            break;
+
+        case FWP_ESCAPE_CHAR:
+            if((c = pd_file_getc(loadinput)) < 0)
+                break;
+
+            /* if top-bit set itsa a highlight change
+             * else ignore the rest of the line
+            */
+            if(c & 0x80)
+            {
+                /* highlight changes */
+                fwp_change_highlights((uchar) c, *h_byte);
+                *h_byte = c;
+                c = 0;
+            }
+            else
+            {
+                do
+                    if((c = pd_file_getc(loadinput)) < 0)
+                        break;
+                while((c != CR)  &&  (c != LF));
+
+                continue; /* with newly-read char */
+            }
+
+            break;
+
+        case FWP_SOFT_PAGE:
+            if((c = pd_file_getc(loadinput)) < 0)
+                break;
+
+            /* c is condition strangely encoded */
+            if(c > 0x80)
+                *pageoffset = 256 - c;
+            else
+                *pageoffset = c - 16;
+
+            /* deliberate fall-thru */
+
+        case FWP_HARD_PAGE:
+            *type = SL_PAGE;
+            c = CR;     /* force onto new line */
+            break;
+
+        case TAB:
+            break;
+
+        default:
+            if(c < 0x20)
+            {
+                c = 0; /* ignore all other control chars */
+            }
+            break;
         }
+
+        break;
+    }
 
     return(c);
 }

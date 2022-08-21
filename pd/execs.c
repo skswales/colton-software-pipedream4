@@ -157,10 +157,10 @@ mark_block_output(
     S32 offset;
 
     if(bs->col == NO_COL)
-        {
+    {
         out_currslot = TRUE;
         return;
-        }
+    }
 
     if((offset = schrsc(bs->row)) != NOTFOUND)
         mark_to_end(offset);
@@ -204,40 +204,40 @@ alnsto_block(
     mark_block_output(&start_bl);
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-        {
+    {
         filealtered(TRUE);
 
         switch(justify)
-            {
-            case NO_JUSTIFY:
-                break;
+        {
+        case NO_JUSTIFY:
+            break;
 
-            case PROTECTED:
-                /* set protected bit */
-                tcell->justify |= PROTECTED;
-                break;
+        case PROTECTED:
+            /* set protected bit */
+            tcell->justify |= PROTECTED;
+            break;
 
-            case J_BITS:
-                /* clear protected bit */
-                tcell->justify &= J_BITS;
-                break;
+        case J_BITS:
+            /* clear protected bit */
+            tcell->justify &= J_BITS;
+            break;
 
-            default:
-                /* set justify bits, retaining protected status */
-                tcell->justify = (tcell->justify & CLR_J_BITS) | justify;
-                break;
-            }
+        default:
+            /* set justify bits, retaining protected status */
+            tcell->justify = (tcell->justify & CLR_J_BITS) | justify;
+            break;
+        }
 
         switch(tcell->type)
-            {
-            case SL_NUMBER:
-                tcell->format = (tcell->format & mask) ^ bits;
-                break;
+        {
+        case SL_NUMBER:
+            tcell->format = (tcell->format & mask) ^ bits;
+            break;
 
-            default:
-                break;
-            }
+        default:
+            break;
         }
+    }
 }
 
 static void
@@ -279,30 +279,30 @@ alnst1(
     mark_block_output(&start_bl);
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-        {
+    {
         switch(tcell->type)
+        {
+        case SL_NUMBER:
+            filealtered(TRUE);
+
+            format = tcell->format;
+
+            if((format & F_DCP) == 0)
             {
-            case SL_NUMBER:
-                filealtered(TRUE);
-
-                format = tcell->format;
-
-                if((format & F_DCP) == 0)
-                    {
-                    format |= (F_DCP | F_BRAC);
-                    if(d_options_MB == 'M')
-                        format &= (uchar) ~F_BRAC;
-                    format &= ~F_DCPSID;
-                    format |= get_dec_field_from_opt();
-                    }
-
-                tcell->format = (format & mask) ^ bits;
-                break;
-
-            default:
-                break;
+                format |= (F_DCP | F_BRAC);
+                if(d_options_MB == 'M')
+                    format &= (uchar) ~F_BRAC;
+                format &= ~F_DCPSID;
+                format |= get_dec_field_from_opt();
             }
+
+            tcell->format = (format & mask) ^ bits;
+            break;
+
+        default:
+            break;
         }
+    }
 }
 
 extern void
@@ -324,14 +324,14 @@ DecimalPlaces_fn(void)
         return;
 
     while(dialog_box(D_DECIMAL))
-        {
+    {
         alnst1((uchar) ~F_DCPSID, (d_decimal[0].option == 'F')
                                             ? (uchar) 0xF
                                             : d_decimal[0].option - '0');
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -353,22 +353,22 @@ Return_fn(void)
         check_word();
 
     if(d_options_IR == 'Y')
-        {
+    {
         internal_process_command(N_SplitLine);
 
         /* remove justify bit from current cell */
         if( !xf_inexpression  &&
             ((tcell = travel_here()) != NULL))
-                {
-                /* shirley we don't have to worry about PROTECTED bit,
-                    cos if protected what are we doing poking cell?
-                */
-                justify = tcell->justify & J_BITS;
-                if((justify == J_LEFTRIGHT)  ||  (justify == J_RIGHTLEFT))
-                    /* set justify bits, retaining protected status */
-                    tcell->justify = (tcell->justify & CLR_J_BITS) | J_FREE;
-                }
+        {
+            /* shirley we don't have to worry about PROTECTED bit,
+                cos if protected what are we doing poking cell?
+            */
+            justify = tcell->justify & J_BITS;
+            if((justify == J_LEFTRIGHT)  ||  (justify == J_RIGHTLEFT))
+                /* set justify bits, retaining protected status */
+                tcell->justify = (tcell->justify & CLR_J_BITS) | J_FREE;
         }
+    }
 
     /* finish expression editing or at row if at end of text */
 
@@ -386,7 +386,7 @@ Return_fn_core(void)
     trace_2(TRACE_APP_PD4, "Return_fn currow: %d, numrow: %d", currow, numrow);
 
     if(currow + 1 >= numrow)
-        {
+    {
         /* force blank cell in */
         if(!createhole(curcol, currow + 1))
             return(reperr_null(status_nomem()));
@@ -394,7 +394,7 @@ Return_fn_core(void)
         out_rebuildvert = TRUE;
         filealtered(TRUE);
         mark_row(currowoffset + 1);
-        }
+    }
 
     mark_row_praps(currowoffset, OLD_ROW);
 
@@ -422,61 +422,61 @@ prccml(
     BOOL instring = FALSE;
 
     while(*from)
-        {
+    {
         switch(*from)
+        {
+        case '|':
+            if(instring)
             {
-            case '|':
-                if(instring)
-                    {
-                    if(from[1] == '\"')
-                        from++;
-                    *to++ = *from++;
-                    break;
-                    }
-
-                from++;
-
-                if(*from == '|'  ||  *from == '\"')
-                    *to++ = *from;
-                else if(isalpha(*from))
-                    *to++ = toupper(*from) - 'A' + 1;
-
-                from++;
-                break;
-
-            case '\"':
-                /* remove leading spaces before strings */
-                if(!instring)
-                    while(to > array && *(to-1) == SPACE)
-                        to--;
-
-                instring = !instring;
-                from++;
-                /* and remove trailing spaces after strings */
-                if(!instring)
-                    while(*from == SPACE)
-                        from++;
-
-                break;
-
-            case '\\':
-                if(!instring)
-                    {
+                if(from[1] == '\"')
                     from++;
-                    if(*from == '\\')
-                        *to++ = *from++;
-                    else
-                        *to++ = CMDLDI;
-                    break;
-                    }
-
-                /* deliberate fall through */
-
-            default:
                 *to++ = *from++;
                 break;
             }
+
+            from++;
+
+            if(*from == '|'  ||  *from == '\"')
+                *to++ = *from;
+            else if(isalpha(*from))
+                *to++ = toupper(*from) - 'A' + 1;
+
+            from++;
+            break;
+
+        case '\"':
+            /* remove leading spaces before strings */
+            if(!instring)
+                while(to > array && *(to-1) == SPACE)
+                    to--;
+
+            instring = !instring;
+            from++;
+            /* and remove trailing spaces after strings */
+            if(!instring)
+                while(*from == SPACE)
+                    from++;
+
+            break;
+
+        case '\\':
+            if(!instring)
+            {
+                from++;
+                if(*from == '\\')
+                    *to++ = *from++;
+                else
+                    *to++ = CMDLDI;
+                break;
+            }
+
+            /* deliberate fall through */
+
+        default:
+            *to++ = *from++;
+            break;
         }
+    }
 
     *to = '\0';
 }
@@ -498,7 +498,7 @@ DefineKey_fn(void)
         return;
 
     while(dialog_box(D_DEFKEY)) /* so we can see prev defn'n */
-        {
+    {
         if(!d_defkey[1].textfield)
             *array = '\0';
         else
@@ -513,17 +513,17 @@ DefineKey_fn(void)
 
         /* add new one */
         if(*array)
-            {
+        {
             if(status_fail(res = add_to_list(&first_key, (S32) d_defkey[0].option, array)))
-                {
+            {
                 reperr_null(res);
                 break;
-                }
             }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -545,7 +545,7 @@ DefineFunctionKey_fn(void)
         return;
 
     while(dialog_box(D_DEF_FKEY))
-        {
+    {
         if(!d_def_fkey[1].textfield)
             *array = '\0';
         else
@@ -560,17 +560,17 @@ DefineFunctionKey_fn(void)
 
         /* add new definition */
         if(*array)
-            {
+        {
             if(status_fail(res = add_to_list(&first_key, key, array)))
-                {
+            {
                 reperr_null(res);
                 break;
-                }
             }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -594,16 +594,16 @@ DefineCommand_fn(void)
         return;
 
     while(dialog_box(D_DEF_CMD))
-        {
+    {
         src = d_def_cmd[0].textfield;
 
         if(!src  ||  (strlen(src) > (sizeof(S32) * 8 / 5)))
-            {
+        {
             bleep();
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         dst = array;
         key = 0;
@@ -617,7 +617,7 @@ DefineCommand_fn(void)
                 ch = '_';
 
             *dst++ = ch;
-            }
+        }
         while(ch != '_');
 
         /* remove old definition */
@@ -626,27 +626,27 @@ DefineCommand_fn(void)
         src = d_def_cmd[1].textfield;
 
         if(src)
-            {
+        {
             do  {
                 ch = *src++;
                 *dst++ = toupper(ch);   /* including terminating NULLCH */
-                }
+            }
             while(ch);
 
             if(!str_isblank(array))
-                {
+            {
                 /* add new definition */
                 if(status_fail(res = add_to_list(&first_command_redef, key, array)))
-                    {
+                {
                     reperr_null(res);
                     break;
-                    }
                 }
             }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -699,10 +699,10 @@ InsertReference_fn(void)
     U8 array[BUF_MAX_REFERENCE];
 
     if(!xf_inexpression && !xf_inexpression_box && !xf_inexpression_line)
-        {
+    {
         bleep();
         return;
-        }
+    }
 
     /* expand column then row into array */
     (void) write_ref(array, elemof32(array), current_docno(), curcol, currow);
@@ -747,7 +747,7 @@ SplitLine_fn(void)
     tcell = travel_here();
 
     if(!tcell  ||  ((tcell->type == SL_TEXT))  &&  !is_protected_slot(tcell))
-        {
+    {
         U32 bufflength = xustrlen32(linbuf, elemof32(linbuf));
         U32 splitpoint = MIN(bufflength, (U32) lecpos);
 
@@ -766,16 +766,16 @@ SplitLine_fn(void)
         /* leave lying around for merging later on */
         linbuf[splitpoint] = tempchar;
         memmove32(linbuf, linbuf + splitpoint, (bufflength - splitpoint + 1));
-        }
+    }
 
     /* if insert on wrap is row insert cells in this row for each column to the right,
      * and on the next row for each each column to the left, and for this one if we'll need
      * to move the rest of the line down
     */
     if(iowbit)
-        {
+    {
         for(tcol = 0; tcol < numcol; ++tcol)
-            {
+        {
             trow = currow;
 
             if(tcol < curcol)
@@ -784,10 +784,10 @@ SplitLine_fn(void)
                 ++trow;
 
             if(!insertslotat(tcol, trow))
-                {
+            {
                 /* remove those added */
                 while(--tcol >= 0)
-                    {
+                {
                     trow = currow;
                     if(tcol < curcol)
                         ++trow;
@@ -795,11 +795,11 @@ SplitLine_fn(void)
                         ++trow;
 
                     killslot(tcol, trow);
-                    }
+                }
 
                 return;
-                }
             }
+        }
 
         mark_to_end(currowoffset);
         out_rebuildvert = TRUE;
@@ -821,10 +821,10 @@ SplitLine_fn(void)
 
         if(been_error)
             return;
-        }
+    }
     /* insert on wrap is column, insert in just this column */
     else
-        {
+    {
         if(actually_splitting)
             currow++;
 
@@ -832,10 +832,10 @@ SplitLine_fn(void)
 
         if(actually_splitting)
             currow--;
-        }
+    }
 
     if(actually_splitting)
-        {
+    {
         currow++;
 
         buffer_altered = slot_in_buffer = TRUE;
@@ -844,7 +844,7 @@ SplitLine_fn(void)
             return;
 
         currow--;
-        }
+    }
 }
 
 /******************************************************************************
@@ -876,18 +876,18 @@ JoinLines_fn(void)
     /* can only join non-textual next cell if this cell null */
     nextslot = travel(curcol, currow + 1);
     if(nextslot  &&  (nextslot->type != SL_TEXT))
-        {
+    {
         if(thisslot)
             return;
 
         actually_joining = FALSE;
-        }
+    }
 
     if(protected_slot_in_block(curcol, currow, curcol, currow+1))
         return;
 
     if(actually_joining)
-        {
+    {
         thislen = strlen(linbuf);
         memcpy32(temparray, linbuf, thislen);
 
@@ -899,13 +899,13 @@ JoinLines_fn(void)
 
         /* SKS after 4.11 25jan92 - was >=, but MAXFLD is LIN_BUFSIZ-1 */
         if(thislen + nextlen > MAXFLD)
-            {
+        {
             currow--;
             slot_in_buffer = FALSE;
             filbuf();
             reperr_null(create_error(ERR_LINETOOLONG));
             return;
-            }
+        }
 
         memmove32(linbuf + thislen, linbuf,    nextlen+1);
         memcpy32( linbuf,           temparray, thislen);
@@ -915,13 +915,13 @@ JoinLines_fn(void)
 
         if(!mergebuf())
             return;
-        }
+    }
 
     dont_save = TRUE;
 
     /* wrap set to rows? */
     if(iowbit)
-        {
+    {
         /* look to see if all this row bar the current column is blank.
          * If so joinlines can delete a whole row, perhaps
          * be careful of numeric cells masquerading as blanks
@@ -930,7 +930,7 @@ JoinLines_fn(void)
         allblank = TRUE;
 
         for(tcol = 0; tcol < numcol; tcol++)
-            {
+        {
             trow = currow;
             if(tcol < curcol)
                 ++trow;
@@ -939,16 +939,16 @@ JoinLines_fn(void)
 
             tcell = travel(tcol, trow);
             if(!isslotblank(tcell)  ||  (tcell  &&  (tcell->type != SL_TEXT)))
-                {
+            {
                 allblank = FALSE;
                 break;
-                }
             }
+        }
 
         if(allblank)
-            {
+        {
             for(tcol = 0; tcol < numcol; tcol++)
-                {
+            {
                 trow = currow;
                 if(tcol < curcol)
                     ++trow;
@@ -956,7 +956,7 @@ JoinLines_fn(void)
                     ++trow;
 
                 killslot(tcol, trow);
-                }
+            }
 
             reset_numrow();
 
@@ -969,27 +969,27 @@ JoinLines_fn(void)
             if(!curcol)
                 trow = currow + 1;
             else
-                {
+            {
                 trow = currow + 2;
                 updref(curcol, currow + 1, numcol - 1, currow + 1, 0, -1, UREF_UREF, DOCNO_NONE);
-                }
+            }
 
             updref(0, trow, LARGEST_COL_POSSIBLE, LARGEST_ROW_POSSIBLE, 0, -1, UREF_UREF, DOCNO_NONE);
 
             out_rebuildvert = xf_flush = TRUE;
             filealtered(TRUE);
             mark_to_end(currowoffset-1);
-            }
+        }
         else if(actually_joining)
-            {
+        {
             currow++;
             internal_process_command(N_DeleteRowInColumn);     /* get rid of cell */
             internal_process_command(N_InsertRowInColumn);     /* and leave a hole */
             currow--;
-            }
         }
+    }
     else
-        {
+    {
         if(actually_joining)
             currow++;
 
@@ -997,7 +997,7 @@ JoinLines_fn(void)
 
         if(actually_joining)
             currow--;
-        }
+    }
 
     dont_save = FALSE;
 }
@@ -1024,10 +1024,10 @@ DeleteRowInColumn_fn(void)
         save_words(linbuf);
 
     if(!mergebuf_nocheck())
-        {
+    {
         buffer_altered = slot_in_buffer = FALSE;
         return;
-        }
+    }
 
     filealtered(TRUE); /* SKS 10jun97 */
 
@@ -1110,7 +1110,7 @@ DeleteColumn_fn(void)
     blkend    = be;
 
     if(res)
-        {
+    {
         /* if this column is one of two linked columns, clear linking */
         if(colislinked(tcol) && (count_this_linked_column(tcol) <= 2))
             remove_overlapped_linked_columns(tcol, tcol);
@@ -1126,7 +1126,7 @@ DeleteColumn_fn(void)
 
         xf_flush = out_rebuildhorz = xf_drawcolumnheadings = out_screen = TRUE;
         filealtered(TRUE);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1142,14 +1142,14 @@ Options_fn(void)
         return;
 
     while(dialog_box(D_OPTIONS))
-        {
+    {
         update_variables();
 
         filealtered(TRUE);
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -1179,20 +1179,20 @@ Colours_fn(void)
         return;
 
     while(dialog_box(D_COLOURS))
-        {
+    {
         P_DOCU p_docu;
         DOCNO old_docno = current_docno();
 
         for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-            {
+        {
             select_document(p_docu);
             riscos_invalidatemainwindow();
-            }
+        }
 
         select_document_using_docno(old_docno);
 
         if(!dialog_box_can_persist())
-            {
+        {
             /* must force ourselves to set caret position
              * in order to set new caret colour after killing
              * the menu tree (in case of writeable icons)
@@ -1200,8 +1200,8 @@ Colours_fn(void)
             if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
                 p_docu->Xxf_acquirecaret = p_docu->Xxf_interrupted = TRUE;
             break;
-            }
         }
+    }
 
     dialog_box_end();
 }
@@ -1219,10 +1219,10 @@ DoMacroFile_fn(void)
     PC_U8 filename;
 
     if(in_execfile)
-        {
+    {
         reperr_null(create_error(ERR_BAD_PARM));
         return;
-        }
+    }
 
     if(!dialog_box_start())
         return;
@@ -1230,30 +1230,30 @@ DoMacroFile_fn(void)
     status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, NULL, FILETYPE_PDMACRO));
 
     while(dialog_box(D_EXECFILE))
-        {
+    {
         filename = d_execfile[0].textfield;
 
         if(str_isblank(filename))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
         else
-            {
+        {
             if(file_find_on_path_or_relative(array, elemof32(array), filename, currentfilename))
                 do_execfile(array);
             else
                 reperr(create_error(ERR_NOTFOUND), filename);
-            }
+        }
 
         /* bodge required as dialog_box_ended considers this too */
         exec_filled_dialog = FALSE;
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 
@@ -1273,12 +1273,12 @@ About_fn(void)
         return;
 
     while(dialog_box(D_ABOUT))
-        {
+    {
         /* nothing at all */
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -1328,13 +1328,13 @@ DeleteRow_fn(void)
         return;
 
     if(!mergebuf())
-        {
+    {
         buffer_altered = slot_in_buffer = xf_inexpression = FALSE; /*>>>RCM says what the heck do I do with this???*/
         return;
-        }
+    }
 
     if(!dont_save)
-        {
+    {
         bd = blk_docno;
         bs = blkstart;
         be = blkend;
@@ -1349,43 +1349,43 @@ DeleteRow_fn(void)
         res = save_block_and_delete(TRUE, TRUE);
 
         if(res)
-            {
+        {
             if(blk_docno == bd)
-                {
+            {
                 /* if deleting row above start of block then move block up */
                 if(bs.row > currow)
-                    {
+                {
                     if( ba.row == bs.row--)
                         ba.row = bs.row;
-                    }
+                }
 
                 /* if deleting row in middle of or last row of block then
                  * move end of block up, and anchor too possibly
                 */
                 if(be.row >= currow)
-                    {
+                {
                     if( ba.row == be.row--)
                         ba.row = be.row;
-                    }
+                }
 
                 /* if last row of block has been deleted, remove block */
                 if(be.row < bs.row)
                     bs.col = NO_COL;
-                }
             }
+        }
 
         blk_docno = bd;
         blkstart  = bs;
         blkend    = be;
         blkanchor = ba;
-        }
+    }
 
     if(res)
-        {
+    {
         out_rebuildvert = TRUE;
         filealtered(TRUE);
         mark_to_end(currowoffset);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1402,10 +1402,10 @@ CopyBlockToPasteList_fn(void)
     DOCNO old_docno;
 
     if(blkstart.col == NO_COL)
-        {
+    {
         reperr_null(create_error(ERR_NOBLOCK));
         return;
-        }
+    }
 
     old_docno = change_document_using_docno(blk_docno);
 
@@ -1438,10 +1438,10 @@ save_words(
         reperr_null(res);
 
     if(been_error)
-        {
+    {
         --latest_word_on_stack;
         return(FALSE);
-        }
+    }
 
     ensure_paste_list_clipped();
 
@@ -1465,24 +1465,24 @@ DeleteToEndOfSlot_fn(void)
     mark_row(currowoffset);
 
     if(!slot_in_buffer)
-        {
+    {
         /* this is to delete non-text cells */
         tcell = travel_here();
 
         if(tcell  &&  (tcell->type != SL_PAGE))
-            {
+        {
             char buffer[EV_MAX_IN_LEN + 1];
 
             prccon(buffer, tcell);
             save_words(buffer);
-            }
+        }
 
         slot_in_buffer = buffer_altered = output_buffer = TRUE;
         lecpos = lescrl = 0;
         *linbuf = '\0';
         (void) mergebuf_nocheck();
         return;
-        }
+    }
 
     if(strlen((const char *) linbuf) > (size_t) lecpos)
         save_words(linbuf + lecpos);
@@ -1551,15 +1551,15 @@ protected_slot_in_range(
     init_block(bs, be);
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-        {
+    {
         trace_3(TRACE_APP_PD4, "got cell " PTR_XTFMT ", (%d, %d)", report_ptr_cast(tcell), in_block.col, in_block.row);
 
         if(is_protected_slot(tcell))
-            {
+        {
             res = !reperr_null(create_error(ERR_PROTECTED));
             break;
-            }
         }
+    }
 
     return(res);
 }
@@ -1609,13 +1609,13 @@ setprotectedstatus(
     S32 fg;
 
     if(tcell  &&  is_protected_slot(tcell))
-        {
+    {
         currently_protected = TRUE;
 
         fg = currently_inverted ? PROTECTC : FORE;
 
         setcolour(fg, fg ^ PROTECTC ^ FORE);
-        }
+    }
     else
         currently_protected = FALSE;
 }
@@ -1671,13 +1671,13 @@ save_names_to_file(
         (ev_enum_resource_get(&resource, &itemno, namebuf, NAMEBUF_LEN -1, argbuf, sizeof(argbuf) - 1, &argcount) >= 0);
         itemno = -1
        )
-        {
+    {
         xstrkpy(array, elemof32(array), namebuf);
         xstrkat(array, elemof32(array), ",");
         xstrkat(array, elemof32(array), argbuf);
         (void) mystr_set(&d_names_dbox[0].textfield, array);
         save_opt_to_file(output, d_names_dbox, 1);
-        }
+    }
 }
 
 /* incoming option in d_names_dbox[0] from file being loaded
@@ -1744,13 +1744,13 @@ save_protected_bits(
     init_doc_as_block();
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-        {
+    {
         /* if have already saved further down the block */
         if((in_block.col == last.col)  &&  (last.row > in_block.row))
             continue;
 
         if(is_protected_slot(tcell))
-            {
+        {
             /* if cell to left is protected, this cell already saved */
             /* honest */
             if((in_block.col > 0)  &&  test_protected_slot(in_block.col-1, in_block.row))
@@ -1779,8 +1779,8 @@ save_protected_bits(
             /* last doubles as remembering the last top-left */
             last.col = in_block.col;
             last.row++;
-            }
         }
+    }
 }
 
 /* incoming option in d_protect[0] from file being loaded
@@ -1827,7 +1827,7 @@ clear_protect_list(void)
     for(lptr = first_in_list(&protected_blocks);
         lptr;
         lptr = next_in_list(&protected_blocks))
-        {
+    {
         /* read two cell references out of lptr->value */
 
         buff_sofar = lptr->value;
@@ -1839,7 +1839,7 @@ clear_protect_list(void)
 
         /* and mark the block */
         set_protected_block(&bs, &be);
-        }
+    }
 
     /* RJM 6.11.91, fix for above */
     blk_docno = docno;
@@ -1863,14 +1863,14 @@ save_linked_columns(
     count = 0;
 
     while(enumerate_linked_columns(&count, &first, &last))
-        {
+    {
         char array[40];
 
         (void) sprintf(array, "%d,%d", first, last);
 
         (void) mystr_set(&d_linked_columns[0].textfield, array);
         save_opt_to_file(output, d_linked_columns, 1);
-        }
+    }
 }
 
 /* incoming option in d_linked_columns[0] from file being loaded
@@ -1905,7 +1905,7 @@ clear_linked_columns(void)
     for(lptr = first_in_list(&linked_columns);
         lptr;
         lptr = next_in_list(&linked_columns))
-        {
+    {
         COL first,last;
 
         /* read two cell references out of lptr->value */
@@ -1918,7 +1918,7 @@ clear_linked_columns(void)
 
         /* and mark the block */
         mark_as_linked_columns(first, last);
-        }
+    }
 
     adjust_all_linked_columns();
     out_screen = TRUE;

@@ -818,135 +818,135 @@ ev_enum_resource_get(
     IGNOREPARM(arg_buf_siz);
 
     if(*item_no < 0)
-        {
+    {
         item_get = resop->item_no++;
         *item_no = item_get;
-        }
+    }
     else
         item_get = *item_no;
 
     res = -1;
     switch(resop->category)
+    {
+    /* look thru custom functions */
+    case EV_RESO_CUSTOM:
         {
-        /* look thru custom functions */
-        case EV_RESO_CUSTOM:
+        EV_NAMEID custom_num;
+        P_EV_CUSTOM p_ev_custom;
+        char doc_name_buf[BUF_EV_LONGNAMLEN];
+        S32 item_at;
+
+        for(custom_num = 0, p_ev_custom = custom_def.ptr, item_at = 0;
+            custom_num < custom_def.next;
+            ++custom_num, ++p_ev_custom)
+        {
+            __assume(p_ev_custom);
+            if((resop->docno_to == DOCNO_NONE ||
+                resop->docno_to == p_ev_custom->owner.docno) &&
+               !(p_ev_custom->flags & TRF_UNDEFINED))
             {
-            EV_NAMEID custom_num;
-            P_EV_CUSTOM p_ev_custom;
-            char doc_name_buf[BUF_EV_LONGNAMLEN];
-            S32 item_at;
-
-            for(custom_num = 0, p_ev_custom = custom_def.ptr, item_at = 0;
-                custom_num < custom_def.next;
-                ++custom_num, ++p_ev_custom)
+                if(item_at == item_get)
                 {
-                __assume(p_ev_custom);
-                if((resop->docno_to == DOCNO_NONE ||
-                    resop->docno_to == p_ev_custom->owner.docno) &&
-                   !(p_ev_custom->flags & TRF_UNDEFINED))
+                    arg_out[0] = '\0';
+                    name_out[0] = '\0';
+                    if(p_ev_custom->owner.docno != resop->docno_from)
                     {
-                    if(item_at == item_get)
-                        {
-                        arg_out[0] = '\0';
-                        name_out[0] = '\0';
-                        if(p_ev_custom->owner.docno != resop->docno_from)
-                            {
-                            ev_write_docname(doc_name_buf, p_ev_custom->owner.docno, resop->docno_from);
-                            strncat(name_out, doc_name_buf, name_buf_siz);
-                            }
-                        strncat(name_out, p_ev_custom->id, name_buf_siz - strlen(name_out));
-                        if((*n_args = p_ev_custom->args.n) == 0)
-                            *n_args = 1;
-                        res = item_at;
-                        break;
-                        }
-
-                    ++item_at;
+                        ev_write_docname(doc_name_buf, p_ev_custom->owner.docno, resop->docno_from);
+                        strncat(name_out, doc_name_buf, name_buf_siz);
                     }
-                }
-            break;
-            }
-
-        /* look thru names */
-        case EV_RESO_NAMES:
-            {
-            EV_NAMEID name_num;
-            P_EV_NAME p_ev_name;
-            char doc_name_buf[BUF_EV_LONGNAMLEN];
-            S32 item_at;
-
-            for(name_num = 0, p_ev_name = names_def.ptr, item_at = 0;
-                name_num < names_def.next;
-                ++name_num, ++p_ev_name)
-                {
-                __assume(p_ev_name);
-                if((resop->docno_to == DOCNO_NONE ||
-                    resop->docno_to == p_ev_name->owner.docno) &&
-                   !(p_ev_name->flags & TRF_UNDEFINED))
-                    {
-                    if(item_at == item_get)
-                        {
-                        name_out[0] = '\0';
-                        if(p_ev_name->owner.docno != resop->docno_from)
-                            {
-                            ev_write_docname(doc_name_buf, p_ev_name->owner.docno, resop->docno_from);
-                            strncat(name_out, doc_name_buf, name_buf_siz);
-                            }
-                        strncat(name_out, p_ev_name->id, name_buf_siz - strlen(name_out));
-                        *n_args = 0;
-                        ev_decode_data(arg_out, resop->docno_from, &p_ev_name->def_data, &resop->optblock);
-                        res = item_at;
-                        break;
-                        }
-
-                    ++item_at;
-                    }
-                }
-            break;
-            }
-
-        /* deal with built-in functions */
-        default:
-            {
-            S32 rpn_num, item_at;
-            PC_RPNDEF rpn_p;
-
-            for(rpn_num = RPN_REL_NOTEQUAL, rpn_p = &rpn_table[rpn_num], item_at = 0;
-                rpn_num < RPN_FNM_CUSTOMCALL;
-                ++rpn_num, ++rpn_p)
-                {
-                S32 x;
-                if(resop->category == EV_RESO_COMPLEX &&
-                   rpn_num == RPN_FNF_C_RADIUS)
-                    x = 1;
-
-                if(rpn_p->category == (U8) resop->category)
-                    {
-                    if(item_at == item_get)
-                        {
-                        arg_out[0] = '\0';
-                        *n_args = 0;
-                        name_out[0] = '\0';
-                        strncat(name_out, func_name(rpn_num), name_buf_siz);
-
-                        if(rpn_p->n_args >= 0)
-                            *n_args = rpn_p->n_args;
-                        else if(rpn_p->n_args == -1)
-                            *n_args = 1;
-                        else
-                            *n_args = -(rpn_p->n_args + 1);
-
-                        res = item_at;
-                        break;
-                        }
-
-                    ++item_at;
-                    }
+                    strncat(name_out, p_ev_custom->id, name_buf_siz - strlen(name_out));
+                    if((*n_args = p_ev_custom->args.n) == 0)
+                        *n_args = 1;
+                    res = item_at;
+                    break;
                 }
 
-            break;
+                ++item_at;
             }
         }
+        break;
+        }
+
+    /* look thru names */
+    case EV_RESO_NAMES:
+        {
+        EV_NAMEID name_num;
+        P_EV_NAME p_ev_name;
+        char doc_name_buf[BUF_EV_LONGNAMLEN];
+        S32 item_at;
+
+        for(name_num = 0, p_ev_name = names_def.ptr, item_at = 0;
+            name_num < names_def.next;
+            ++name_num, ++p_ev_name)
+        {
+            __assume(p_ev_name);
+            if((resop->docno_to == DOCNO_NONE ||
+                resop->docno_to == p_ev_name->owner.docno) &&
+               !(p_ev_name->flags & TRF_UNDEFINED))
+            {
+                if(item_at == item_get)
+                {
+                    name_out[0] = '\0';
+                    if(p_ev_name->owner.docno != resop->docno_from)
+                    {
+                        ev_write_docname(doc_name_buf, p_ev_name->owner.docno, resop->docno_from);
+                        strncat(name_out, doc_name_buf, name_buf_siz);
+                    }
+                    strncat(name_out, p_ev_name->id, name_buf_siz - strlen(name_out));
+                    *n_args = 0;
+                    ev_decode_data(arg_out, resop->docno_from, &p_ev_name->def_data, &resop->optblock);
+                    res = item_at;
+                    break;
+                }
+
+                ++item_at;
+            }
+        }
+        break;
+        }
+
+    /* deal with built-in functions */
+    default:
+        {
+        S32 rpn_num, item_at;
+        PC_RPNDEF rpn_p;
+
+        for(rpn_num = RPN_REL_NOTEQUAL, rpn_p = &rpn_table[rpn_num], item_at = 0;
+            rpn_num < RPN_FNM_CUSTOMCALL;
+            ++rpn_num, ++rpn_p)
+        {
+            S32 x;
+            if(resop->category == EV_RESO_COMPLEX &&
+               rpn_num == RPN_FNF_C_RADIUS)
+                x = 1;
+
+            if(rpn_p->category == (U8) resop->category)
+            {
+                if(item_at == item_get)
+                {
+                    arg_out[0] = '\0';
+                    *n_args = 0;
+                    name_out[0] = '\0';
+                    strncat(name_out, func_name(rpn_num), name_buf_siz);
+
+                    if(rpn_p->n_args >= 0)
+                        *n_args = rpn_p->n_args;
+                    else if(rpn_p->n_args == -1)
+                        *n_args = 1;
+                    else
+                        *n_args = -(rpn_p->n_args + 1);
+
+                    res = item_at;
+                    break;
+                }
+
+                ++item_at;
+            }
+        }
+
+        break;
+        }
+    }
 
     return(res);
 }

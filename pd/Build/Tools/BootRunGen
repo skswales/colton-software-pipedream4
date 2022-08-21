@@ -203,10 +203,10 @@ IF NOT boot% THEN
   :
   PROCo(f%,"|")
   insert$ = "": REM IF debug% OR profile% THEN insert$ = "$.pipedream.trunk.pd.resource.riscos.uk.,$.pipedream.trunk.pd.resource.,"
-  PROCo(f%,"Set "+product$+"$Path Choices:"+product$+".,"+insert$+"<"+product$+"$Dir>.Resource.")
+  PROCo(f%,"Set "+product$+"$Path <Choices$Write>."+product$+".,"+insert$+"<"+product$+"$Dir>.Resource.")
   PROCo(f%,"|")
   PROCo(f%,"| Iff UserPath is set, prepend the path with that")
-  PROCo(f%,"If ""<"+product$+"$UserPath>""<>"""" Then Set "+product$+"$Path <"+product$+"$UserPath>,Choices:"+product$+".,"+insert$+"<"+product$+"$Dir>.Resource.")
+  PROCo(f%,"If ""<"+product$+"$UserPath>""<>"""" Then Set "+product$+"$Path <"+product$+"$UserPath>,<Choices$Write>."+product$+".,"+insert$+"<"+product$+"$Dir>.Resource.")
   :
   PROCo(f%,"|")
   PROCo(f%,"WimpSlot -min 32K -max 32K")

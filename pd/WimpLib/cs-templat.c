@@ -70,10 +70,10 @@ typedef struct TEMPLATE_INDEX_ENTRY
     size_t  dataSize:16;
     size_t  indDataSize:16; /* SKS pokes this in on loading */
     union TEMPLATE_INDEX_ENTRY_BITS
-        {
+    {
         size_t  indDataOffset; /* offset of indirect data in block */
         int     dataType;
-        }
+    }
     bits;
     char    name[12];  /* NB. may be CR terminated */
 }
@@ -141,18 +141,18 @@ template__atexit(void)
     int i;
 
     if(template__font_refs)
-        {
+    {
         for(i = 0; i < 256; ++i)
-            {
+        {
             TEMPLATE_FONT_PAIR * fpp = template__font_ref(i);
 
             while(fpp->refs)
-                {
+            {
                 (void) font_LoseFont(fpp->physfont);
                 fpp->refs--;
-                }
             }
         }
+    }
 }
 
 
@@ -171,9 +171,9 @@ template__convert_font_ref(unsigned int b, wimp_iconflags * p)
     fpp = template__font_refs ? template__font_ref(logfont) : NULL;
 
     if(!template__font_refs  ||  (fpp->physfont == 0))
-        {
+    {
         if(template__font_refs)
-            {
+        {
             fep = template__font_entry(b, logfont);
 
             if(wimpt_complain(font_find(fep->fontName,
@@ -182,20 +182,20 @@ template__convert_font_ref(unsigned int b, wimp_iconflags * p)
                                         0, 0,
                                         &physfont)))
                 physfont = 0;
-            }
+        }
         else
             physfont = 0;
 
         if(!physfont)
-            {
+        {
             /* use system font */
             *p = (*p & ~wimp_IFONTHMASK & ~wimp_IFONT) | (wimp_IFORECOL * 7) | (wimp_IBACKCOL * 0);
             return;
-            }
+        }
 
         fpp->physfont = physfont;
         fpp->refs++;
-        }
+    }
 
     /* make physical font ref in template definition */
     *p = (*p & ~wimp_IFONTHMASK) | ((unsigned long) fpp->physfont << wimp_IFONTHSHIFT);
@@ -215,11 +215,11 @@ extern void
 template_init(void)
 {
     if(!template__initialised)
-        {
+    {
         template_readfile(NULL);
 
         template__initialised = 1;
-        }
+    }
 }
 
 /* ----------------------------- template_copy -----------------------------
@@ -257,18 +257,18 @@ template_copy_new(
     iTemplateHandle = template__block_offset(iTemplateHandle);
 
     if(b >= TEMPLATE__N_BLOCKS)
-        {
+    {
         myassert2x(0, "template_settitle(%u, %u): block index too big",
                    b, iTemplateHandle);
         return(NULL);
-        }
+    }
 
     if(iTemplateHandle >= template__nTemplates[b])
-        {
+    {
         myassert3x(0, "template_settitle(%u, %u): nTemplates[b] = %u",
                    b, iTemplateHandle, template__nTemplates[b]);
         return(NULL);
-        }
+    }
 
     ip       = template__indexentry(b, iTemplateHandle);
     src_w    = (wimp_wind *) (template__block[b] + ip->dataOffset);
@@ -297,25 +297,25 @@ template_copy_new(
     char * newIndData = (char *) w + w_size;
 
     if(ind_size)
-        {
+    {
         tracef3("[template__copy IND DATA from &%p to &%p, size %u]", src_ind, newIndData, ind_size);
         memcpy(newIndData, src_ind, ind_size);
 #if TRACE
         if(memcmp(newIndData, src_ind, ind_size))
             tracef0("[template__copy IND DATA failed]");
 #endif
-        }
+    }
 
     ind_ind_change = newIndData - src_ind;
-    }
+    } /*block*/
 
     /* relocate title indirection pointer */
     if(w->titleflags & wimp_INDIRECT)
-        {
+    {
         indData = w->title.indirecttext.buffer;
         w->title.indirecttext.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
         tracef1("[template__copy: relocated title to &%p]", w->title.indirecttext.buffer);
-        }
+    }
 
     nIcons = w->nicons;
 
@@ -324,7 +324,7 @@ template_copy_new(
     iconp = (wimp_icon *) (w + 1) + icon; /* yes, this is necessary */
     while(++icon < nIcons)
         if((iconflags = (++iconp)->flags) & wimp_INDIRECT)
-            {
+        {
             tracef2("[template__copy: got indirected icon %u, flags &%p]", icon, iconflags);
             indData = iconp->data.indirecttext.buffer;
             iconp->data.indirecttext.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
@@ -336,12 +336,12 @@ template_copy_new(
             */
             if( (iconflags & wimp_ITEXT)  &&
                 (((int) iconp->data.indirecttext.validstring) > 0))
-                    {
-                    iconp->data.indirecttext.validstring = iconp->data.indirecttext.validstring + w_ind_change;
-                    tracef2("[template__copy: relocated icon %u validstring to &%p]",
-                            icon, iconp->data.indirecttext.validstring);
-                    }
+            {
+                iconp->data.indirecttext.validstring = iconp->data.indirecttext.validstring + w_ind_change;
+                tracef2("[template__copy: relocated icon %u validstring to &%p]",
+                        icon, iconp->data.indirecttext.validstring);
             }
+        }
 
     return(w);
 }
@@ -399,7 +399,7 @@ template_find_new(
     unsigned int           b;
 
     for(b = 0; template__block[b]  &&  !templateHandle; ++b)
-        {
+    {
         first_ip = template__indexentry(b, 0);
         ip       = first_ip - 1;
 
@@ -408,11 +408,11 @@ template_find_new(
             if(ip->bits.dataType == 1) /* only know about window definitions --- resolved at load time */
 #endif
                 if(template__nameeq(name, ip->name))
-                    {
+                {
                     templateHandle = template__itop(b, ip - first_ip);
                     break;
-                    }
-        }
+                }
+    }
 
     tracef2("[template_find(%s) yields handle &%p]", name, templateHandle);
     return(templateHandle);
@@ -441,7 +441,7 @@ template__nameeq(
 
         if(b12  ||  (c != c12))
             return(FALSE); /* finished s12 before s, or failed match */
-        }
+    }
     while(s - d < 12);
 
     return(*s == NULLCH); /* s12 full 12 chars, has s finished? */
@@ -472,10 +472,10 @@ template__readfile_do(
     tracef2("[template_readfile: template__block[%u] now &%p]", b, template__block[b]);
 
     if(!template__block[b])
-        {
+    {
         werr(TRUE, msgs_lookup("template3" /*"No room to load Templates"*/));
         return;
-        }
+    }
 
     fileblk.load = (int) template__block[b];
     fileblk.exec = 0;
@@ -491,11 +491,11 @@ template_readfile(
     unsigned int b;
 
     if(NULL != filename)
-        {
+    {
         /* always load file into first block */
         b = 0;
         if(!template__block[b])
-            {
+        {
             _kernel_osfile_block fileblk;
             size_t fileLength;
 
@@ -507,31 +507,31 @@ template_readfile(
             reportf("template_readfile(%u:%s): length=%u", strlen(filename), filename, fileLength);
 
             if(fileLength < sizeof(TEMPLATE_HEADER))
-                {
+            {
                 werr(TRUE, msgs_lookup("template6" /*"Template file not found"*/));
                 return;
-                }
+            }
 
             template__readfile_do(b, filename, fileLength);
-            }
         }
+    }
 
     for(b = 0; template__require[b]; ++b)
-        {
+    {
         if(!template__block[b])
-            {
+        {
             char filename[256];
             int length = res_findname(template__require[b], filename);
             if(length > 0)
                 template__readfile_do(b, filename, length);
-            }
         }
+    }
 
     for(b = 0; template__block[b]; ++b)
-        {
+    {
         tracef2("[template_readfile: binding template__block[%u] at &%p]", b, template__block[b]);
         template__resolve(b);
-        }
+    }
 }
 
 static void
@@ -559,38 +559,38 @@ template__resolve_icon(
 #endif
 
     if(iconflags & wimp_INDIRECT)
-        {
+    {
         char * indData = (char *) w + readval_U32(&p_icon->data.indirecttext.buffer); /* NB there will be indirected data (either text or sprite name pointer) */
         int iconLen = template__datalen(indData);
         int reqdLen = readval_U16(&p_icon->data.indirecttext.bufflen);
 
         if(iconLen != reqdLen)
-            {
+        {
             tracef1("[template__readfile: icon will need %u bytes]", reqdLen);
             *p_indSize = *p_indSize + reqdLen;
             if(pass == 2)
-                {
+            {
                 /* store address of new copy */
                 char * newIndData = template__ind_block[b] + *p_newIndDataOffset;
                 memcpy(newIndData, indData, iconLen);
                 writeval_U32(&p_icon->data.indirecttext.buffer, (U32) newIndData); /* compiler used to barf */
                 tracef1("[template__readfile: relocated icon ? data to &%p]", newIndData);
                 *p_newIndDataOffset = *p_newIndDataOffset + reqdLen;
-                }
             }
+        }
         else
             tracef1("[template__readfile: indirected icon ? fits exactly at &%p - no extra allocation]", indData);
 
         /* 06oct96 - look for some border stuff in the indirected validation string */
         /* NB only on the last pass (else we transform twice) */
         if((0 != (wimp_ITEXT & iconflags)) /*&& (0 == (wimp_ISPRITE & iconflags))*/)
-            {
+        {
             if((pass == 2) && has_border)
-                {
+            {
                 S32 indValidOffset = readval_S32(&p_icon->data.indirecttext.validstring);
 
                 if(indValidOffset > 0)
-                    {
+                {
                     char * indValid = (char *) w + indValidOffset;
                     int validLen = template__datalen(indValid); /* forces terminator to NULLCH so string fns work */
                     char * p;
@@ -603,15 +603,15 @@ template__resolve_icon(
                     /* search for bo(R)der settings */
                     /* attempt to fix up design border (and button types for RISC OS 3.1 users) */
                     if('R' != *p)
-                        {
+                    {
                         p = strstr(indValid, ";R");
                         skip = 1; /* one more character to skip */
-                        }
+                    }
 
                     if(NULL != p)
-                        {
+                    {
                         if(wimpt_os_version_query() < RISC_OS_3_5) /* or for testing */
-                            {
+                        {
                             int type;
 
                             p++;
@@ -619,68 +619,68 @@ template__resolve_icon(
                             p += skip;
 
                             switch(type = *p++)
-                                {
-                                default:  /* normal single pixel border */
+                            {
+                            default:  /* normal single pixel border */
 #ifndef NDEBUG
-                                case '0': /* normal single pixel border */
-                                case '1': /* slab out */
-                                case '2': /* slab in */
-                                case '3': /* ridge */
-                                case '4': /* channel */
-                                case '7': /* editable field */
+                            case '0': /* normal single pixel border */
+                            case '1': /* slab out */
+                            case '2': /* slab in */
+                            case '3': /* ridge */
+                            case '4': /* channel */
+                            case '7': /* editable field */
 #endif
-                                    break;
+                                break;
 
-                                case '5': /* action button (eg Cancel) */
-                                case '6': /* default action button (eg OK) */
+                            case '5': /* action button (eg Cancel) */
+                            case '6': /* default action button (eg OK) */
+                                {
+                                if(*p++ == ',')
+                                {
+                                    switch(*p++)
                                     {
-                                    if(*p++ == ',')
+                                    case '3':
+                                        /* mutate into a menu button */
+                                        if('6' == type)
                                         {
-                                        switch(*p++)
-                                            {
-                                            case '3':
-                                                /* mutate into a menu button */
-                                                if('6' == type)
-                                                    {
-                                                    /* reduce the height of this button */
-                                                    S32 iy0, iy1;
-                                                    iy0 = readval_S32(&p_icon->box.y0);
-                                                    iy1 = readval_S32(&p_icon->box.y1);
-                                                    iy1 -= 8;
-                                                    iy0 += 8;
-                                                    writeval_S32(&p_icon->box.y0, iy0);
-                                                    writeval_S32(&p_icon->box.y1, iy1);
-                                                    }
-                                                p[-3] = '1'; /* mutate into R1 */
-                                                p[-2] = NULLCH; /* remove the depressing effect */
-                                                /*iconflags &= ~wimp_IESGMASK;*/
-                                                /*iconflags |= (0x01U * wimp_IESG);*/
-                                                /* ^^^ OK,Cancel should be this ESG anyway */
-                                                iconflags = (wimp_iconflags) (iconflags & ~wimp_IBUTMASK);
-                                                iconflags = (wimp_iconflags) (iconflags | (0x09U * wimp_IBTYPE));
-                                                mutate_flags = TRUE;
-                                                break;
-
-                                            default:
-                                                break;
-                                            }
+                                            /* reduce the height of this button */
+                                            S32 iy0, iy1;
+                                            iy0 = readval_S32(&p_icon->box.y0);
+                                            iy1 = readval_S32(&p_icon->box.y1);
+                                            iy1 -= 8;
+                                            iy0 += 8;
+                                            writeval_S32(&p_icon->box.y0, iy0);
+                                            writeval_S32(&p_icon->box.y1, iy1);
                                         }
-                                    break;
+                                        p[-3] = '1'; /* mutate into R1 */
+                                        p[-2] = NULLCH; /* remove the depressing effect */
+                                        /*iconflags &= ~wimp_IESGMASK;*/
+                                        /*iconflags |= (0x01U * wimp_IESG);*/
+                                        /* ^^^ OK,Cancel should be this ESG anyway */
+                                        iconflags = (wimp_iconflags) (iconflags & ~wimp_IBUTMASK);
+                                        iconflags = (wimp_iconflags) (iconflags | (0x09U * wimp_IBTYPE));
+                                        mutate_flags = TRUE;
+                                        break;
+
+                                    default:
+                                        break;
                                     }
+                                }
+                                break;
                                 }
                             }
                         }
+                    }
                     else
-                        { /* no bo(R)der settings */
+                    { /* no bo(R)der settings */
                         /* remove design-time border */
                         /* NB to retain a border on an icon you must set validstring=" ;R1" */
                         if(wimp_BWRITABLE != button_type)
                             nobble_border = TRUE;
-                        }
+                    }
 
                     /* search for (S)prite settings (only needed at start) */
                     if('S' == indValid[0])
-                        {
+                    {
                         /* we have sprite validation section. Nobble standard buttons */
                         if(     0 == strncmp(indValid, "Soptoff,", sizeof("Soptoff,")-1/*NULLCH*/))
                             nobble_border = TRUE;
@@ -693,29 +693,29 @@ template__resolve_icon(
                         else
                             /* otherwise leave well alone - border really required */
                             nobble_border = FALSE;
-                        }
                     }
+                }
                 else
-                    { /* no validation string at all */
+                { /* no validation string at all */
                     /* remove design-time border */
                     nobble_border = TRUE;
-                    }
                 }
             }
         }
+    }
     else if(wimp_ITEXT & iconflags)
-        {
+    {
         /* simple non-indirected text icon */
         if((pass == 2) && has_border)
             /* remove design-time border */
             nobble_border = TRUE;
-        }
+    }
 
     if(nobble_border)
-        {
+    {
         iconflags = (wimp_iconflags) (iconflags & ~wimp_IBORDER);
         mutate_flags = TRUE;
-        }
+    }
 
     if(mutate_flags)
         writeval_U32(&p_icon->flags, iconflags);
@@ -759,17 +759,17 @@ template__resolve(
 
         while((++ip)->dataOffset)
             if(ip->bits.dataType == 1) /* only know about window definitions */
-                {
+            {
 #if TRACE
                 if(pass == 1)
-                    {
+                {
                     /* tidy up CR terminated id */
                     char *p = ip->name + sizeof(ip->name);
                     do
                         if(*--p < 32)
                             *p = NULLCH;
                     while(p > ip->name);
-                    }
+                }
 #endif
 
                 if(pass == 2)
@@ -796,28 +796,28 @@ template__resolve(
 #endif
 
                 if(iconflags & wimp_INDIRECT)
-                    {
+                {
                     char * indData = (char *) w + readval_U16(&w->title.indirecttext.buffer); /* NB there will be indirected data! */
                     int iconLen = template__datalen(indData);
                     int reqdLen = readval_U16(&w->title.indirecttext.bufflen);
 
                     if(iconLen != reqdLen)
-                        {
+                    {
                         tracef1("[template__readfile: title will need %u bytes]", reqdLen);
                         indSize += reqdLen;
                         if(pass == 2)
-                            {
+                        {
                             /* store address of new copy */
                             char * newIndData = template__ind_block[b] + newIndDataOffset;
                             memcpy(newIndData, indData, iconLen);
                             writeval_U32((P_BYTE) &w->title.indirecttext.buffer, (U32) newIndData); /* compiler used to barf */
                             tracef1("[template__readfile: relocated title to &%p]", newIndData);
                             newIndDataOffset += reqdLen;
-                            }
                         }
+                    }
                     else
                         tracef0("[template__readfile: indirected title fits exactly - no extra allocation]");
-                    }
+                }
 
                 nIcons = readval_U16(&w->nicons);
                 tracef1("[template__readfile: window defn has %u icons]", nIcons);
@@ -826,28 +826,28 @@ template__resolve(
                 icon  = -1;
                 p_icon = (wimp_icon *) (w + 1) + icon; /* yes, this is necessary */
                 while(++icon < nIcons)
-                    {
+                {
                     ++p_icon;
                     template__resolve_icon(b, pass, p_icon, w, &indSize, &newIndDataOffset);
-                    }
+                }
 
                 if(pass == 1)
                     totalIndSize += indSize;
                 else
-                    {
+                {
                     /* abuse this size field */
                     ip->indDataSize = indSize;
                     tracef3("[template__readfile: poked size field for window %12.12s to %u with %u]", ip->name, ip->indDataSize, indSize);
 
                     writeval_U32(&w->spritearea, (U32) spriteArea);
                     tracef1("[template__readfile: Binding sprites to area &%p]", spriteArea);
-                    }
                 }
+            }
             else
                 *ip->name = NULLCH; /* kill identifiers of unknown object types */
 
         if(pass == 1)
-            {
+        {
             trace_1(TRACE_OUT | TRACE_ANY, "\n\n[template__readfile: need %u bytes indirected workspace]", totalIndSize);
 
             if(!totalIndSize)
@@ -855,12 +855,12 @@ template__resolve(
 
             template__ind_block[b] = wlalloc_malloc(totalIndSize);
             if(!template__ind_block[b])
-                {
+            {
                 werr(TRUE, msgs_lookup("template3" /*"No room to load Templates"*/));
                 return;
-                }
             }
         }
+    }
     while(++pass <= 2);
 }
 
@@ -918,18 +918,18 @@ template_settitle(
     iTemplateHandle = template__block_offset(iTemplateHandle);
 
     if(b >= TEMPLATE__N_BLOCKS)
-        {
+    {
         myassert2x(0, "template_settitle(%u, %u): block index too big",
                    b, iTemplateHandle);
         return;
-        }
+    }
 
     if(iTemplateHandle >= template__nTemplates[b])
-        {
+    {
         myassert3x(0, "template_settitle(%u, %u): nTemplates[b] = %u",
                    b, iTemplateHandle, template__nTemplates[b]);
         return;
-        }
+    }
 
     ip     = template__indexentry(b, iTemplateHandle);
     w      = (wimp_wind *) (template__block[b] + ip->dataOffset);

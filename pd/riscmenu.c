@@ -134,7 +134,7 @@ iconbar_menu_maker(
     /* create submenu if needed */
 
     if(!event_is_menu_being_recreated())
-        {
+    {
         trace_0(TRACE_APP_PD4, "dispose of old & then create new documents menu list");
 
         /* ensure font selector goes bye-bye */
@@ -155,9 +155,9 @@ iconbar_menu_maker(
 
             /* enlarge array as needed */
             if(num_documents != 0)
-                {
+            {
                 if(num_documents > iw_menu_array_upb)
-                    {
+                {
                     STATUS status;
                     DOCNO * ptr;
 
@@ -165,47 +165,47 @@ iconbar_menu_maker(
                         reperr_null(status);
 
                     if(ptr)
-                        {
+                    {
                         iw_menu_array     = ptr;
                         iw_menu_array_upb = num_documents;
-                        }
+                    }
 
                     max_i = iw_menu_array_upb;
-                    }
+                }
                 else
                     max_i = num_documents;
 
                 for(p_docu = first_document(), i = 0; (NO_DOCUMENT != p_docu) && (i < max_i); p_docu = next_document(p_docu))
-                    {
+                {
                     PCTSTR name = riscos_obtainfilename(p_docu->Xcurrentfilename);
                     U8Z tempstring[256];
                     U32 len = strlen32(name);
 
                     if(len > iw_menu_MAXWIDTH)
-                        {
+                    {
                         xstrkpy(tempstring, elemof32(tempstring), iw_menu_prefix);
                         xstrkat(tempstring, elemof32(tempstring), name + (len - iw_menu_MAXWIDTH) + strlen32(iw_menu_prefix));
-                        }
+                    }
                     else
                         xstrkpy(tempstring, elemof32(tempstring), name);
 
                     /* create/extend menu 'unparsed' cos buffer may contain ',' */
                     if(iw_menu == NULL)
-                        {
+                    {
                         if((iw_menu = menu_new_unparsed(iw_menu_title, tempstring)) != NULL)
                             iw_menu_array[i++] = p_docu->docno;
-                        }
+                    }
                     else
-                        {
+                    {
                         menu_extend_unparsed(&iw_menu, tempstring);
                         iw_menu_array[i++] = p_docu->docno;
-                        }
                     }
+                }
 
                 (void) menu_submenu(iconbar_menu, mo_iconbar_documents, iw_menu);
-                }
             }
-        }
+            }
+    }
 
     /* encode menus */
 
@@ -255,98 +255,98 @@ iconbar_menu_handler(
     IGNOREPARM(handle);        /* this handle is useless */
 
     switch(selection)
+    {
+    case mo_iconbar_info:
+        if(CLICK_GIVES_DIALOG  ||  submenurequest)
+            riscdialog_execute(dproc_aboutprog,
+                               "aboutprog", d_about, D_ABOUT);
+        /* ignore clicks on 'Info' entry if !CLICK_GIVES_DIALOG */
+        break;
+
+    case mo_iconbar_help:
+        internal_process_command(N_Help);
+        break;
+
+    case mo_iconbar_documents:
+        switch(subselection)
         {
-        case mo_iconbar_info:
-            if(CLICK_GIVES_DIALOG  ||  submenurequest)
-                riscdialog_execute(dproc_aboutprog,
-                                   "aboutprog", d_about, D_ABOUT);
-            /* ignore clicks on 'Info' entry if !CLICK_GIVES_DIALOG */
+        case mo_noselection:
+            /* ignore clicks on 'documents' entry */
+            processed = FALSE;
             break;
-
-        case mo_iconbar_help:
-            internal_process_command(N_Help);
-            break;
-
-        case mo_iconbar_documents:
-            switch(subselection)
-                {
-                case mo_noselection:
-                    /* ignore clicks on 'documents' entry */
-                    processed = FALSE;
-                    break;
-
-                default:
-                    front_document_using_docno(iw_menu_array[subselection - mo_iw_dynamic]);
-                    break;
-                }
-            break;
-
-        case mo_iconbar_loadtemplate:
-            switch(subselection)
-                {
-                case mo_noselection:
-                    if(!submenurequest)
-                        application_process_command(N_NewWindow);
-                    else
-                        application_process_command(N_LoadTemplate);
-                    break;
-
-                default:
-                    processed = FALSE;
-                    break;
-                }
-            break;
-
-        case mo_iconbar_choices:
-            switch(subselection)
-                {
-                case mo_noselection:
-                    /* ignore clicks on 'choices' entry */
-                    processed = FALSE;
-                    break;
-
-                default:
-                    processed = decodesubmenu(&iconbar_headline[0],
-                                              subselection,
-                                              hit[2],
-                                              submenurequest);
-                    break;
-                }
-            break;
-
-#if 0
-        case mo_iconbar_savechoices:
-            {
-            /* can only save choices from a specified document */
-            P_DOCU p_docu;
-
-            if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
-                {
-                select_document(p_docu);
-                application_process_command(N_SaveChoices);
-                }
-
-            break;
-            }
-#endif
-
-        case mo_iconbar_quit:
-            application_process_command(N_Quit);
-            break;
-
-#if TRACE_ALLOWED
-        case mo_iconbar_trace:
-            if(trace_is_on())
-                trace_off();
-            else
-                trace_on();
-            break;
-#endif
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed iconbar menu hit %d", hit[0]);
+            front_document_using_docno(iw_menu_array[subselection - mo_iw_dynamic]);
             break;
         }
+        break;
+
+    case mo_iconbar_loadtemplate:
+        switch(subselection)
+        {
+        case mo_noselection:
+            if(!submenurequest)
+                application_process_command(N_NewWindow);
+            else
+                application_process_command(N_LoadTemplate);
+            break;
+
+        default:
+            processed = FALSE;
+            break;
+        }
+        break;
+
+    case mo_iconbar_choices:
+        switch(subselection)
+        {
+        case mo_noselection:
+            /* ignore clicks on 'choices' entry */
+            processed = FALSE;
+            break;
+
+        default:
+            processed = decodesubmenu(&iconbar_headline[0],
+                                      subselection,
+                                      hit[2],
+                                      submenurequest);
+            break;
+        }
+        break;
+
+#if 0
+    case mo_iconbar_savechoices:
+        {
+        /* can only save choices from a specified document */
+        P_DOCU p_docu;
+
+        if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
+        {
+            select_document(p_docu);
+            application_process_command(N_SaveChoices);
+        }
+
+        break;
+        }
+#endif
+
+    case mo_iconbar_quit:
+        application_process_command(N_Quit);
+        break;
+
+#if TRACE_ALLOWED
+    case mo_iconbar_trace:
+        if(trace_is_on())
+            trace_off();
+        else
+            trace_on();
+        break;
+#endif
+
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed iconbar menu hit %d", hit[0]);
+        break;
+    }
 
     return(processed);
 }
@@ -440,7 +440,7 @@ createfunctionsubmenu(
     BOOL entryhassubmenu = (parentposition == MENU_FUNCTION_EDITNAME);
 
     if(!(*submenup))
-        {
+    {
         menu        submenu = NULL;
         EV_RESOURCE resource;
         EV_OPTBLOCK optblock;
@@ -454,10 +454,10 @@ createfunctionsubmenu(
         trace_1(TRACE_APP_EXPEDIT, "Creating '%s' submenu", submenutitle);
 
         if(entryhassubmenu)
-            {
+        {
             namebuf[0]  = '>';
             insertpoint = namebuf + 1;
-            }
+        }
 
         cur_docno = (EV_DOCNO) current_docno();
 
@@ -472,31 +472,31 @@ createfunctionsubmenu(
             (ev_enum_resource_get(&resource, &itemno, insertpoint, (BUF_MAX_PATHSTRING + EV_INTNAMLEN), argbuf, 255, &argcount) >= 0);
             itemno = -1
            )
-            {
+        {
             trace_1(TRACE_APP_EXPEDIT, "  %s", namebuf);
 
             if(entryhassubmenu)
-                {
+            {
                 /* don't create/extend menu 'unparsed' cos buffer does contain '>' */
                 if(submenu == NULL)
                     submenu = menu_new_c(submenutitle, namebuf);
                 else
                     menu_extend(submenu, namebuf);
-                }
+            }
             else
-                {
+            {
                 /* create/extend menu 'unparsed' cos buffer may contain ',' (paranoia here) */
                 if(submenu == NULL)
                     submenu = menu_new_unparsed(submenutitle, namebuf);
                 else
                     menu_extend_unparsed(&submenu, namebuf);
-                }
             }
+        }
 
         *submenup = submenu;
         menu_submenu(parentmenu, parentposition, submenu);
         menu_setflags(parentmenu, parentposition, FALSE /*not ticked*/, (submenu == NULL));
-        }
+    }
 }
 
 static void
@@ -526,7 +526,7 @@ create_sup_dep_submenu(
     P_EV_SLR slrp = &menu_function_slr;
 
     if(!(*submenup))
-        {
+    {
         menu        submenu = NULL;
         EV_DOCNO    cur_docno;
         EV_OPTBLOCK optblock;
@@ -547,16 +547,16 @@ create_sup_dep_submenu(
             (ev_enum_dep_sup_get(&depsup, &itemno, &evdata) >= 0);
             itemno = -1
            )
-            {
+        {
             ev_decode_data(namebuf, cur_docno, &evdata, &optblock);
 
             if(evdata.did_num == RPN_DAT_SLR)
-                {
+            {
                 p_cell = travel_externally(evdata.arg.slr.docno,
                                           (COL) evdata.arg.slr.col,
                                           (ROW) evdata.arg.slr.row);
                 if(p_cell)
-                    {
+                {
                     (void) expand_slot(evdata.arg.slr.docno, p_cell, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ,
                                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                                        FALSE /*allow_fonty_result*/, FALSE /*cff*/);
@@ -565,20 +565,20 @@ create_sup_dep_submenu(
                     xstrkat(namebuf, elemof32(namebuf), valubuf); /* plain non-fonty string */
 
                     substitute_spaces(namebuf, 0xA0);
-                    }
                 }
+            }
 
             /* create/extend menu 'unparsed' cos namebuf may contain ',' */
             if(submenu == NULL)
                 submenu = menu_new_unparsed(submenutitle, namebuf);
             else
                 menu_extend_unparsed(&submenu, namebuf);
-            }
+        }
 
         *submenup = submenu;
         menu_submenu(parentmenu, parentposition, submenu);
         menu_setflags(parentmenu, parentposition, FALSE /*not ticked*/, (submenu == NULL));
-        }
+    }
 }
 #endif
 
@@ -594,7 +594,7 @@ function__event_menu_filler(
     (void) select_document_using_callback_handle(handle);
 
     if(menu_function)
-        {
+    {
 #if TRUE
         char entry[256];
         char coord[256];                        /* textual form of cur(col,row) is fairly short */
@@ -633,34 +633,34 @@ function__event_menu_filler(
         /* custom and names must be destroyed and recreated everytime */
 
         if(menu_function_custom)
-            {
+        {
             menu_submenu(menu_function, MENU_FUNCTION_CUSTOM, NULL);
             menu_dispose(&menu_function_custom, 0);
             menu_function_custom = NULL;
-            }
+        }
         createfunctionsubmenu(MENU_FUNCTION_CUSTOM   , &menu_function_custom   , menu_function_custom_title   , EV_RESO_CUSTOM);
 
         if(menu_function_names)
-            {
+        {
             menu_submenu(menu_function, MENU_FUNCTION_NAMES, NULL);
             menu_dispose(&menu_function_names, 0);
             menu_function_names = NULL;
-            }
+        }
         createfunctionsubmenu(MENU_FUNCTION_NAMES    , &menu_function_names    , menu_function_names_title    , EV_RESO_NAMES);
 
         if(menu_function_editname)
-            {
+        {
             menu_submenu(menu_function, MENU_FUNCTION_EDITNAME, NULL);
             menu_dispose(&menu_function_editname, 0);
             menu_function_editname = NULL;
-            }
+        }
         createfunctionsubmenu(MENU_FUNCTION_EDITNAME , &menu_function_editname , Edit_name_STR                , EV_RESO_NAMES);
 
         /* The cell info entry may already have a numinfo or textinfo menu structure attached, if so destroy it, */
         /* then create and attach a structure appropriate to cell (curcol,currow).                               */
 
         if(menu_function_numinfo)
-            {
+        {
             menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, NULL);
             menu_dispose(&menu_function_numinfo, 0);
             menu_function_numinfo = NULL;
@@ -685,10 +685,10 @@ function__event_menu_filler(
 
             menu_dispose(&menu_function_numinfo_supname, 0);
             menu_function_numinfo_supname = NULL;
-            }
+        }
 
         if(menu_function_textinfo)
-            {
+        {
             menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, NULL);
             menu_dispose(&menu_function_textinfo, 0);
             menu_function_textinfo = NULL;
@@ -701,13 +701,13 @@ function__event_menu_filler(
 
             menu_dispose(&menu_function_numinfo_depname, 0);
             menu_function_numinfo_depname = NULL;
-            }
+        }
 
         if(!mergebuf() || xf_inexpression || xf_inexpression_box || xf_inexpression_line || ev_doc_is_custom_sheet(current_docno()))
-            {
-            }
+        {
+        }
         else
-            {
+        {
             P_CELL tcell = travel_here();
             U8 type = (NULL != tcell) ? tcell->type : SL_TEXT;
             char coord[LIN_BUFSIZ];
@@ -715,102 +715,102 @@ function__event_menu_filler(
             (void) write_ref(coord, elemof32(coord), current_docno(), curcol, currow); /* always current doc */
 
             switch(type)
+            {
+            case SL_NUMBER:
+                /* got number cell */
+                set_ev_slr(&menu_function_slr, curcol, currow);
+
+                menu_function_numinfo = menu_new_c(menu_function_numinfo_title, menu_function_numinfo_entries);
+
                 {
-                case SL_NUMBER:
-                    /* got number cell */
-                    set_ev_slr(&menu_function_slr, curcol, currow);
+                char  entry[LIN_BUFSIZ + 1];
+                char  valubuf[LIN_BUFSIZ + 1];
 
-                    menu_function_numinfo = menu_new_c(menu_function_numinfo_title, menu_function_numinfo_entries);
+                (void) expand_slot(current_docno(), tcell, currow, valubuf, LIN_BUFSIZ,
+                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                                   FALSE /*allow_fonty_result*/, FALSE /*cff*/);
 
-                    {
-                    char  entry[LIN_BUFSIZ + 1];
-                    char  valubuf[LIN_BUFSIZ + 1];
+                xstrkpy(entry, elemof32(entry), coord);
+                xstrkat(entry, elemof32(entry), " ");
+                xstrkat(entry, elemof32(entry), valubuf); /* plain non-fonty string */
 
-                    (void) expand_slot(current_docno(), tcell, currow, valubuf, LIN_BUFSIZ,
-                                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                                       FALSE /*allow_fonty_result*/, FALSE /*cff*/);
+                substitute_spaces(entry, 0xA0);
 
-                    xstrkpy(entry, elemof32(entry), coord);
-                    xstrkat(entry, elemof32(entry), " ");
-                    xstrkat(entry, elemof32(entry), valubuf); /* plain non-fonty string */
+                /* create menu 'unparsed' cos entry may contain ',' */
+                menu_function_numinfo_cellvalue = menu_new_unparsed(menu_function_numinfo_value_title, entry);
+                }
+                menu_submenu (menu_function_numinfo, MENU_FUNCTION_NUMINFO_CELLVALUE, menu_function_numinfo_cellvalue);
+                menu_setflags(menu_function_numinfo, MENU_FUNCTION_NUMINFO_CELLVALUE, FALSE /*not ticked*/,
+                                                                             (NULL == menu_function_numinfo_cellvalue) /*greyed out*/);
 
-                    substitute_spaces(entry, 0xA0);
+                create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_SUPSLR     , &menu_function_numinfo_supslr,
+                                       menu_function_numinfo_slr_title  , EV_DEPSUP_SLR  , FALSE, menu_function_numinfo);
 
-                    /* create menu 'unparsed' cos entry may contain ',' */
-                    menu_function_numinfo_cellvalue = menu_new_unparsed(menu_function_numinfo_value_title, entry);
-                    }
-                    menu_submenu (menu_function_numinfo, MENU_FUNCTION_NUMINFO_CELLVALUE, menu_function_numinfo_cellvalue);
-                    menu_setflags(menu_function_numinfo, MENU_FUNCTION_NUMINFO_CELLVALUE, FALSE /*not ticked*/,
-                                                                                 (NULL == menu_function_numinfo_cellvalue) /*greyed out*/);
+                create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_SUPRANGE   , &menu_function_numinfo_suprange,
+                                       menu_function_numinfo_range_title, EV_DEPSUP_RANGE, FALSE, menu_function_numinfo);
 
-                    create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_SUPSLR     , &menu_function_numinfo_supslr,
-                                           menu_function_numinfo_slr_title  , EV_DEPSUP_SLR  , FALSE, menu_function_numinfo);
+                create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_SUPNAME    , &menu_function_numinfo_supname,
+                                       menu_function_numinfo_name_title , EV_DEPSUP_NAME , FALSE, menu_function_numinfo);
 
-                    create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_SUPRANGE   , &menu_function_numinfo_suprange,
-                                           menu_function_numinfo_range_title, EV_DEPSUP_RANGE, FALSE, menu_function_numinfo);
+                create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_DEPSLR     , &menu_function_numinfo_depslr,
+                                       menu_function_numinfo_slr_title  , EV_DEPSUP_SLR  , TRUE, menu_function_numinfo);
 
-                    create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_SUPNAME    , &menu_function_numinfo_supname,
-                                           menu_function_numinfo_name_title , EV_DEPSUP_NAME , FALSE, menu_function_numinfo);
+                create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_DEPRANGE   , &menu_function_numinfo_deprange,
+                                       menu_function_numinfo_range_title, EV_DEPSUP_RANGE, TRUE, menu_function_numinfo);
 
-                    create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_DEPSLR     , &menu_function_numinfo_depslr,
-                                           menu_function_numinfo_slr_title  , EV_DEPSUP_SLR  , TRUE, menu_function_numinfo);
+                create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_DEPNAME    , &menu_function_numinfo_depname,
+                                       menu_function_numinfo_name_title , EV_DEPSUP_NAME , TRUE, menu_function_numinfo);
 
-                    create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_DEPRANGE   , &menu_function_numinfo_deprange,
-                                           menu_function_numinfo_range_title, EV_DEPSUP_RANGE, TRUE, menu_function_numinfo);
+                break;
 
-                    create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_DEPNAME    , &menu_function_numinfo_depname,
-                                           menu_function_numinfo_name_title , EV_DEPSUP_NAME , TRUE, menu_function_numinfo);
+            case SL_TEXT:
+                {
+                BOOL can_compile_text = (NULL != tcell) ? (!is_protected_slot(tcell) && !isslotblank(tcell)) : FALSE;
 
-                    break;
+                set_ev_slr(&menu_function_slr, curcol, currow);
 
-                case SL_TEXT:
-                    {
-                    BOOL can_compile_text = (NULL != tcell) ? (!is_protected_slot(tcell) && !isslotblank(tcell)) : FALSE;
+                menu_function_textinfo =
+                    menu_new_c(
+                        (NULL != tcell)
+                            ? menu_function_textinfo_title
+                            : menu_function_textinfo_title_blank,
+                        menu_function_textinfo_entries);
 
-                    set_ev_slr(&menu_function_slr, curcol, currow);
+                menu_setflags(menu_function_textinfo, MENU_FUNCTION_TEXTINFO_COMPILE, FALSE /*not ticked*/,
+                                                                             !can_compile_text /*greyed out*/);
 
-                    menu_function_textinfo =
-                        menu_new_c(
-                            (NULL != tcell)
-                                ? menu_function_textinfo_title
-                                : menu_function_textinfo_title_blank,
-                            menu_function_textinfo_entries);
+                create_sup_dep_submenu(MENU_FUNCTION_TEXTINFO_DEPSLR    , &menu_function_numinfo_depslr,
+                                       menu_function_numinfo_slr_title  , EV_DEPSUP_SLR  , TRUE, menu_function_textinfo);
 
-                    menu_setflags(menu_function_textinfo, MENU_FUNCTION_TEXTINFO_COMPILE, FALSE /*not ticked*/,
-                                                                                 !can_compile_text /*greyed out*/);
+                create_sup_dep_submenu(MENU_FUNCTION_TEXTINFO_DEPRANGE  , &menu_function_numinfo_deprange,
+                                       menu_function_numinfo_range_title, EV_DEPSUP_RANGE, TRUE, menu_function_textinfo);
 
-                    create_sup_dep_submenu(MENU_FUNCTION_TEXTINFO_DEPSLR    , &menu_function_numinfo_depslr,
-                                           menu_function_numinfo_slr_title  , EV_DEPSUP_SLR  , TRUE, menu_function_textinfo);
+                create_sup_dep_submenu(MENU_FUNCTION_TEXTINFO_DEPNAME   , &menu_function_numinfo_depname,
+                                       menu_function_numinfo_name_title , EV_DEPSUP_NAME , TRUE, menu_function_textinfo);
 
-                    create_sup_dep_submenu(MENU_FUNCTION_TEXTINFO_DEPRANGE  , &menu_function_numinfo_deprange,
-                                           menu_function_numinfo_range_title, EV_DEPSUP_RANGE, TRUE, menu_function_textinfo);
-
-                    create_sup_dep_submenu(MENU_FUNCTION_TEXTINFO_DEPNAME   , &menu_function_numinfo_depname,
-                                           menu_function_numinfo_name_title , EV_DEPSUP_NAME , TRUE, menu_function_textinfo);
-
-                    break;
-                    }
+                break;
                 }
             }
+        }
 
         if(menu_function_numinfo)
-            {
+        {
             /* set menu entry to 'num. A1' */
             menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, menu_function_numinfo);
             menu_setflags(menu_function, MENU_FUNCTION_CELLINFO, FALSE /*not ticked*/, FALSE /*not greyed*/);
-            }
+        }
         else if(menu_function_textinfo)
-            {
+        {
             /* set menu entry to 'text A1' */
             menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, menu_function_textinfo);
             menu_setflags(menu_function, MENU_FUNCTION_CELLINFO, FALSE /*not ticked*/, FALSE /*not greyed*/);
-            }
+        }
         else
-            {
+        {
             /* just grey it out */
             menu_setflags(menu_function, MENU_FUNCTION_CELLINFO, FALSE /*not ticked*/, TRUE /*greyed out*/);
-            }
         }
+    }
 
     select_document_using_docno(old_docno);
 
@@ -898,58 +898,58 @@ function__event_menu_proc(
 
         case MENU_FUNCTION_CELLINFO:
             if(menu_function_numinfo)
-                {
+            {
                 switch(*hit++)
-                    {
-                    case MENU_FUNCTION_NUMINFO_SUPSLR:
-                        goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_SLR, (*hit++)-1);
-                        break;
+                {
+                case MENU_FUNCTION_NUMINFO_SUPSLR:
+                    goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_SLR, (*hit++)-1);
+                    break;
 
-                    case MENU_FUNCTION_NUMINFO_SUPRANGE:
-                        goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_RANGE, (*hit++)-1);
-                        break;
+                case MENU_FUNCTION_NUMINFO_SUPRANGE:
+                    goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_RANGE, (*hit++)-1);
+                    break;
 
-                    case MENU_FUNCTION_NUMINFO_SUPNAME:
-                        goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_NAME, (*hit++)-1);
-                        break;
+                case MENU_FUNCTION_NUMINFO_SUPNAME:
+                    goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_NAME, (*hit++)-1);
+                    break;
 
-                    case MENU_FUNCTION_NUMINFO_DEPSLR:
-                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
-                        break;
+                case MENU_FUNCTION_NUMINFO_DEPSLR:
+                    goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
+                    break;
 
-                    case MENU_FUNCTION_NUMINFO_DEPRANGE:
-                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
-                        break;
+                case MENU_FUNCTION_NUMINFO_DEPRANGE:
+                    goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
+                    break;
 
-                    case MENU_FUNCTION_NUMINFO_DEPNAME:
-                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
-                        break;
-                    }
+                case MENU_FUNCTION_NUMINFO_DEPNAME:
+                    goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
+                    break;
                 }
+            }
             else if(menu_function_textinfo)
-                {
+            {
                 switch(*hit++)
-                    {
-                    case MENU_FUNCTION_TEXTINFO_COMPILE:
-                        expedit_recompilecurrentslot_reporterrors();
-                        break;
-
-                    case MENU_FUNCTION_TEXTINFO_DEPSLR:
-                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
-                        break;
-
-                    case MENU_FUNCTION_TEXTINFO_DEPRANGE:
-                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
-                        break;
-
-                    case MENU_FUNCTION_TEXTINFO_DEPNAME:
-                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
-                        break;
-                    }
-                }
-            else
                 {
+                case MENU_FUNCTION_TEXTINFO_COMPILE:
+                    expedit_recompilecurrentslot_reporterrors();
+                    break;
+
+                case MENU_FUNCTION_TEXTINFO_DEPSLR:
+                    goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
+                    break;
+
+                case MENU_FUNCTION_TEXTINFO_DEPRANGE:
+                    goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
+                    break;
+
+                case MENU_FUNCTION_TEXTINFO_DEPNAME:
+                    goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
+                    break;
                 }
+            }
+            else
+            {
+            }
 
             break;
         }
@@ -985,11 +985,11 @@ goto_dep_or_sup_cell(
     ev_enum_dep_sup_init(&depsup, slrp, category, get_deps);
 
     if(ev_enum_dep_sup_get(&depsup, &itemno, &evdata) >= 0)
-        {
+    {
     /*    ev_decode_data(namebuf, curdoc, &evdata, &optblock);*/
 
         if(evdata.did_num == RPN_DAT_SLR)
-            {
+        {
             trace_3(TRACE_APP_EXPEDIT, "goto - docno,col,row (%u,%d,%d)",
                                       evdata.arg.slr.docno,
                                       (int) evdata.arg.slr.col,
@@ -997,7 +997,7 @@ goto_dep_or_sup_cell(
 
             /* based on GotoSlot_fn() */
             if(mergebuf())
-                {
+            {
                 select_document_using_docno(evdata.arg.slr.docno);
                 xf_frontmainwindow = TRUE;
                 chknlr((COL) evdata.arg.slr.col, (ROW) evdata.arg.slr.row);
@@ -1005,9 +1005,9 @@ goto_dep_or_sup_cell(
                 xf_caretreposition = TRUE;
                 draw_screen();
                 draw_caret();
-                }
             }
         }
+    }
 }
 
 /******************************************************************************
@@ -1053,44 +1053,44 @@ createsubmenu(
         BOOL process = !short_m  ||  on_short_menus(mptr->flags);
 
         if(!mptr->title)
-            {
+        {
             trace_2(TRACE_APP_PD4, "looking at item line: short = %s -> process = %s",
                     trace_boolstring(!(mptr->flags & LONG_ONLY)),
                     trace_boolstring(process));
 
             if(process && m /* !sep */)
                 sep = '|';
-            }
+        }
         else
-            {
+        {
             trace_3(TRACE_APP_PD4, "looking at command %s: short = %s -> process = %s",
                     trace_string(*mptr->title),
                     trace_boolstring(!(mptr->flags & LONG_ONLY)),
                     trace_boolstring(process));
 
             if(process)
-                {
+            {
                 if(get_menu_item(mhptr, mptr, ptr))
                     /* menu item has a submenu/dbox */
                     *--ptr = '>';
 
                 if(!m /* sep == '\0' */)
-                    {
+                {
                     /* first item */
                     m = menu_new_c(*mhptr->name, ptr);
                     if(!m)
                         return(FALSE);
-                    }
+                }
                 else
-                    {
+                {
                     *--ptr = sep;
                     menu_extend(m, ptr);
-                    }
+                }
 
                 sep = ',';
-                }
             }
         }
+    }
     while(++mptr < last_mptr);
 
     mhptr->m = m;
@@ -1121,14 +1121,14 @@ encodesubmenu(
     if(mhptr->m)
     do  {
         if(mptr->title)    /* ignore gaps */
-            {
+        {
             flag = mptr->flags;
 
             /* if this is a long menu, or item on short menu */
             if(!short_m  ||  on_short_menus(flag))
-                {
+            {
                 if(flag & (TICKABLE | GREYABLE | GREY_EXPEDIT | DOC_REQ))
-                    {
+                {
                     tick = fade = FALSE;
 
                     if(flag & TICKABLE)
@@ -1144,12 +1144,12 @@ encodesubmenu(
                         fade = fade || !has_a_document;
 
                     menu_setflags(mhptr->m, offset, tick, fade);
-                    }
+                }
 
                 ++offset;
-                }
             }
         }
+    }
     while(++mptr < last_mptr);
 }
 
@@ -1201,10 +1201,10 @@ createmainmenu(
 
     for(head_i = 0; head_i < head_size; head_i++)
         if(headline[head_i].installed)
-            {
+        {
             /* create main menu if needed - once only operation */
             if(needsmain)
-                {
+            {
                 ptr = description;
                 *++ptr = '>';
                 strcpy(ptr + 1, *headline[head_i].name);
@@ -1213,14 +1213,14 @@ createmainmenu(
                 if(!main_menu)
                     main_menu = menu_new_c(product_id(), ptr);
                 else
-                    {
+                {
                     *--ptr = ',';
                     menu_extend(main_menu, ptr);
-                    }
+                }
 
                 if(!main_menu)
                     break;
-                }
+            }
 
             /* dispose of existing submenu at this point */
             menu_dispose((menu *) &headline[head_i].m, 0);
@@ -1233,7 +1233,7 @@ createmainmenu(
                 reperr_null(status_nomem());
 
             (void) menu_submenu(main_menu, mo_main_dynamic + head_i, headline[head_i].m);
-            }
+        }
 }
 
 /******************************************************************************
@@ -1340,15 +1340,15 @@ new_font_leading_based_on_field(
     F64 dleading = get_leading_from_selector(window);
 
     if(dleading == 0)
-        {
+    {
         auto_line_height = TRUE;
         new_font_leading_based_on_y();
-        }
+    }
     else
-        {
+    {
         S32 leading = (S32) (dleading * 1000.0);
         new_font_leading(leading);
-        }
+    }
 }
 
 static void
@@ -1359,16 +1359,16 @@ pdfontselect_try_me(
     wimp_w w)
 {
     if(pdfontselect.docno != DOCNO_NONE)
-        {
+    {
         DOCNO old_docno = change_document_using_docno(pdfontselect.docno);
         S32 font_x = (S32) (*width  * 16.0);
         S32 font_y = (S32) (*height * 16.0);
 
         /* printer font selection; may unset riscos_fonts on error in repaint */
         if(font_name && (0 != _stricmp(font_name, "System")))
-            {
+        {
             if(pdfontselect.setting)
-                {
+            {
                 /* set new font */
                 (void) mystr_set(&global_font, font_name);
                 global_font_x = font_x;
@@ -1391,64 +1391,64 @@ pdfontselect_try_me(
                 win_setdouble(w, FONT_LEADING, &dleading, 2);
                 }
 
-                }
+            }
             else
-                {
+            {
                 /* insert font reference */
                 filbuf();
 
                 if(NULLCH != get_text_at_char())
-                    {
+                {
                     if( insert_string(d_options_TA, FALSE)  &&
                         insert_string("F:", FALSE)          &&
                         insert_string(font_name, FALSE)     )
-                        {
+                    {
                         if( (font_x != global_font_x)  ||
                             (font_y != global_font_y)  )
-                            {
+                        {
                             insertfontsize(font_x);
 
                             if(font_x != font_y)
                                 insertfontsize(font_y);
-                            }
+                        }
 
                         insert_string(d_options_TA, FALSE);
-                        }
                     }
                 }
             }
+        }
         else
-            {
+        {
             if(pdfontselect.setting)
-                {
+            {
                 str_clr(&global_font);
                 riscos_fonts = FALSE;
 
                 /* get height information recomputed */
                 new_font_leading(global_font_leading_mp);
-                }
+            }
             else
                 /* can't insert a ref to standard system font! */ ;
-            }
+        }
 
         if(pdfontselect.setting)
-            {
+        {
             riscos_font_error = FALSE;
             xf_draweverything = TRUE;
             xf_caretreposition = TRUE;
             filealtered(TRUE);
             draw_screen();
             /*draw_caret();*/
-            }
+        }
         else
-            {
+        {
             out_currslot = TRUE;
             filealtered(TRUE);
             draw_screen();
-            }
+        }
 
         select_document_using_docno(old_docno);
-        }
+    }
 }
 
 /* ensure font selector goes bye-bye */
@@ -1461,11 +1461,11 @@ pdfontselect_finalise(
         kill = (pdfontselect.docno == current_docno());
 
     if(kill && (pdfontselect.docno != DOCNO_NONE))
-        {
+    {
         pdfontselect.docno = DOCNO_NONE;
         /* this will cause process to end and return */
         fontselect_closewindows();
-        }
+    }
 }
 
 /*
@@ -1519,7 +1519,7 @@ pdfontselect_init_fn(
     IGNOREPARM(init_handle);
 
     if(pdfontselect.docno != DOCNO_NONE)
-        {
+    {
         F64 dleading = global_font_leading_mp / 1000.0;
         DOCNO old_docno = change_document_using_docno(pdfontselect.docno);
 
@@ -1533,7 +1533,7 @@ pdfontselect_init_fn(
         win_setdouble(fontselect_wind, FONT_LEADING, &dleading, 2);
 
         select_document_using_docno(old_docno);
-        }
+    }
 }
 
 static BOOL
@@ -1550,58 +1550,58 @@ pdfontselect_unknown_fn(
     IGNOREPARM(try_handle);
 
     if(pdfontselect.docno != DOCNO_NONE)
-        {
+    {
         DOCNO old_docno = change_document_using_docno(pdfontselect.docno);
 
         switch(e->e)
+        {
+        case wimp_EBUT:
+            switch(e->data.but.m.i)
             {
-            case wimp_EBUT:
-                switch(e->data.but.m.i)
-                    {
-                    /* can put in click on line height stuff here */
-                    case FONT_LEADING_UP:
-                    case FONT_LEADING_DOWN:
-                        {
-                        dbox_field f;
-                        auto_line_height = FALSE;
-                        f = (dbox_field) e->data.but.m.i; /* SKS 22.10.91 made bumpers reverse in RISC OS fashion */
-                        dbox_adjusthit(&f, FONT_LEADING_UP, FONT_LEADING_DOWN, riscos_adjustclicked());
-                        bump_line_height(e->data.but.m.w, (f == FONT_LEADING_UP));
-                        win_setonoff(e->data.but.m.w, FONT_LEADING_AUTO, FALSE /*off*/);
-                        }
-                        break;
-
-                    case FONT_LEADING_AUTO:
-                        auto_line_height = win_getonoff(e->data.but.m.w, FONT_LEADING_AUTO);
-                        if(auto_line_height)
-                            show_new_auto_line_height(e->data.but.m.w, height);
-                        break;
-
-                    default:
-                        if(try_anyway)
-                            pdfontselect_try_me(font_name, width, height, e->data.but.m.w);
-                        else if(auto_line_height)
-                            show_new_auto_line_height(e->data.but.m.w, height);
-                        break;
-                    }
+            /* can put in click on line height stuff here */
+            case FONT_LEADING_UP:
+            case FONT_LEADING_DOWN:
+                {
+                dbox_field f;
+                auto_line_height = FALSE;
+                f = (dbox_field) e->data.but.m.i; /* SKS 22.10.91 made bumpers reverse in RISC OS fashion */
+                dbox_adjusthit(&f, FONT_LEADING_UP, FONT_LEADING_DOWN, riscos_adjustclicked());
+                bump_line_height(e->data.but.m.w, (f == FONT_LEADING_UP));
+                win_setonoff(e->data.but.m.w, FONT_LEADING_AUTO, FALSE /*off*/);
+                }
                 break;
 
-            case wimp_EKEY:
-                switch(e->data.key.chcode)
-                    {
-                    default:
-                        if(try_anyway)
-                            pdfontselect_try_me(font_name, width, height, e->data.key.c.w);
-                        break;
-                    }
+            case FONT_LEADING_AUTO:
+                auto_line_height = win_getonoff(e->data.but.m.w, FONT_LEADING_AUTO);
+                if(auto_line_height)
+                    show_new_auto_line_height(e->data.but.m.w, height);
                 break;
 
             default:
+                if(try_anyway)
+                    pdfontselect_try_me(font_name, width, height, e->data.but.m.w);
+                else if(auto_line_height)
+                    show_new_auto_line_height(e->data.but.m.w, height);
                 break;
             }
+            break;
+
+        case wimp_EKEY:
+            switch(e->data.key.chcode)
+            {
+            default:
+                if(try_anyway)
+                    pdfontselect_try_me(font_name, width, height, e->data.key.c.w);
+                break;
+            }
+            break;
+
+        default:
+            break;
+        }
 
         select_document_using_docno(old_docno);
-        }
+    }
 
     return(processed);
 }
@@ -1612,11 +1612,11 @@ PrinterFont_fn(void)
     F64 width, height;
 
     if(riscdialog_in_dialog())
-        {
+    {
         riscdialog_front_dialog();
         reperr_null(ERR_ALREADY_IN_DIALOG);
         return;
-        }
+    }
 
     #if 0
     /* SKS 25oct96 refresh list every time to stop punters wingeing as much */
@@ -1654,18 +1654,18 @@ InsertFont_fn(void)
     F64 width, height;
 
     if(riscdialog_in_dialog())
-        {
+    {
         riscdialog_front_dialog();
         reperr_null(ERR_ALREADY_IN_DIALOG);
         return;
-        }
+    }
 
     /* RJM adds this on 5.10.91.  Is it right? Does it need error message?, RCM & SKS 27.11.91 yes it does */
     if(!riscos_fonts)
-        {
+    {
         reperr_null(create_error(ERR_SYSTEMFONTSELECTED));
         return;
-        }
+    }
 
     if(!fontselect_prepare_process())
         return;
@@ -1715,8 +1715,8 @@ decodesubmenu(
 
     trace_2(TRACE_APP_PD4, "decodesubmenu([%d][%d])", offset, nextoffset);
 
-    for(; ; mptr++)
-        {
+    for(;; mptr++)
+    {
         #if TRACE_ALLOWED
         PC_U8 command = trace_string(*mptr->title);
         #endif
@@ -1726,74 +1726,74 @@ decodesubmenu(
             continue;
 
         if(short_m  && !on_short_menus(mptr->flags))
-            {
+        {
             trace_1(TRACE_APP_PD4, "--- ignoring command %s", command);
             continue;
-            }
+        }
 
         trace_2(TRACE_APP_PD4, "--- looking at command %s, i = %d", command, i);
 
         if(i == offset)
-            {
+        {
             trace_1(TRACE_APP_PD4, "--- found command %s", command);
             break;
-            }
+        }
 
         ++i;
-        }
+    }
 
     funcnum = mptr->funcnum;
 
     /* look for direct hits on menus as opposed to submenu opening requests */
 
     switch(funcnum)
+    {
+    case N_ChartSelect:
+    case N_ChartDelete:
+    case N_ChartEdit:
+    case N_ChartAdd:
+    case N_ChartRemove:
+        if(submenurequest)
         {
-        case N_ChartSelect:
-        case N_ChartDelete:
-        case N_ChartEdit:
-        case N_ChartAdd:
-        case N_ChartRemove:
-            if(submenurequest)
-                {
-                /* a change from the usual way of things */
-                pdchart_submenu_show(submenurequest);
-                break;
-                }
-
-            pdchart_submenu_select_from(nextoffset);
-
-            if(funcnum == N_ChartSelect)
-                /* function performed */
-                break;
-
-            application_process_command(funcnum);
-            break;
-
-        case N_SaveChoices:
-            {
-            /* can only save choices from a specified document as it takes structure */
-            P_DOCU p_docu;
-
-            if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
-                {
-                select_document(p_docu);
-                application_process_command(funcnum);
-                }
-
-            break;
-            }
-
-        case N_SaveFile:
-            if(!submenurequest)
-                funcnum = N_SaveFileAsIs;
-
-            /* deliberate drop thru */
-
-        default:
-            /* call the appropriate function */
-            application_process_command(funcnum);
+            /* a change from the usual way of things */
+            pdchart_submenu_show(submenurequest);
             break;
         }
+
+        pdchart_submenu_select_from(nextoffset);
+
+        if(funcnum == N_ChartSelect)
+            /* function performed */
+            break;
+
+        application_process_command(funcnum);
+        break;
+
+    case N_SaveChoices:
+        {
+        /* can only save choices from a specified document as it takes structure */
+        P_DOCU p_docu;
+
+        if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
+        {
+            select_document(p_docu);
+            application_process_command(funcnum);
+        }
+
+        break;
+        }
+
+    case N_SaveFile:
+        if(!submenurequest)
+            funcnum = N_SaveFileAsIs;
+
+        /* deliberate drop thru */
+
+    default:
+        /* call the appropriate function */
+        application_process_command(funcnum);
+        break;
+    }
 
     return(processed);
 }
@@ -1829,36 +1829,36 @@ main_menu_handler(
         default:
             /* an event to do with the dynamic menu bits */
             switch(subselection)
+            {
+            case mo_noselection:
+                /* open the given submenu */
+                processed = FALSE;
+                break;
+
+            default:
+                /* always decode the selection: the called function
+                 * may put up a dialog box, in which case dbox does
+                 * the right thing.
+                */
                 {
-                case mo_noselection:
-                    /* open the given submenu */
-                    processed = FALSE;
-                    break;
+                /* lookup in the dynamic menu structure */
+                int offset  = selection - mo_main_dynamic;
+                int thisoff = 0;
+                int head_i;
 
-                default:
-                    /* always decode the selection: the called function
-                     * may put up a dialog box, in which case dbox does
-                     * the right thing.
-                    */
-                    {
-                    /* lookup in the dynamic menu structure */
-                    int offset  = selection - mo_main_dynamic;
-                    int thisoff = 0;
-                    int head_i;
-
-                    for(head_i = 0; head_i < head_size; head_i++)
-                        if(headline[head_i].installed)
-                            if(offset == thisoff++)
-                                {
-                                processed = decodesubmenu(&headline[head_i],
-                                                          subselection,
-                                                          hit[2],
-                                                          submenurequest);
-                                break;
-                                }
-                    }
-                    break;
+                for(head_i = 0; head_i < head_size; head_i++)
+                    if(headline[head_i].installed)
+                        if(offset == thisoff++)
+                        {
+                            processed = decodesubmenu(&headline[head_i],
+                                                      subselection,
+                                                      hit[2],
+                                                      submenurequest);
+                            break;
+                        }
                 }
+                break;
+            }
             break;
         }
     }

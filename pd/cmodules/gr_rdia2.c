@@ -209,11 +209,11 @@ gr_riscdiag_path_recompute_bbox(
     options.data.box = (drawmod_box *) &path_box;     /* where to put bbox */
 
     if(pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK)
-        {
+    {
         line_dash_pattern = (P_DRAW_DASH_HEADER) path_seq;
 
         path_seq = PtrAddBytes(P_U8, line_dash_pattern, sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * line_dash_pattern->dashcount);
-        }
+    }
 
     bodge_path_seq.bytep = path_seq;
 
@@ -295,7 +295,7 @@ gr_riscdiag_parallelogram_new(
         /* knock pointer back to write end correctly */
         pPara = (P_ANY) ((PC_U8) pPara - para_line_diff);
     else
-        {
+    {
         pPara->tr.tag    = DRAW_PATH_TYPE_LINE;
         pPara->tr.pt.x   = (pOriginBL->x + pOffsetTR->x);
         pPara->tr.pt.y   = (pOriginBL->y + pOffsetTR->y);
@@ -306,7 +306,7 @@ gr_riscdiag_parallelogram_new(
 
         pPara->bl2.tag   = DRAW_PATH_TYPE_LINE;
         pPara->bl2.pt    = pPara->bl.pt;
-        }
+    }
 
     pPara->close.tag = DRAW_PATH_TYPE_CLOSE;
 
@@ -545,7 +545,7 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
     P_U8 pDiagCopy = NULL; /* keep dataflower happy */
 
     if(gr_riscdiag_fontlist_scan(&source_gr_riscdiag, GR_RISCDIAG_OBJECT_FIRST, GR_RISCDIAG_OBJECT_LAST))
-        {
+    {
         /* never put the font list in our diagram */
         P_DRAW_OBJECT_FONTLIST pFontList;
         U32 fontListSize;
@@ -576,16 +576,16 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
         memcpy32(pDiagCopy + nBytesBefore,
                       PtrAddBytes(PC_BYTE, pFontList, fontListSize),
                       nBytesAfter);
-        }
+    }
     else
-        {
+    {
         if(NULL == (pDiagCopy = gr_riscdiag_ensure(BYTE, p_gr_riscdiag, diagLength, &status)))
             return(status);
 
         memcpy32(pDiagCopy,
                       PtrAddBytes(PC_BYTE, source_gr_riscdiag.draw_diag.data, sizeof32(DRAW_FILE_HEADER)),
                       diagLength);
-        }
+    }
     } /*block*/
 
 #endif
@@ -606,25 +606,25 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
     if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
         do  {
             switch(pObject.hdr->type)
+            {
+            case DRAW_OBJECT_TYPE_TEXT:
                 {
-                case DRAW_OBJECT_TYPE_TEXT:
-                    {
-                    const DRAW_OBJECT_TEXT * pObjectText = (const DRAW_OBJECT_TEXT *) pObject.p_byte;
-                    DRAW_FONT_REF16 old_fontref, new_fontref;
-                    PC_U8 old_fontname;
-                    old_fontref  = pObjectText->textstyle.fontref16;
-                    old_fontname = gr_riscdiag_fontlist_name(&source_gr_riscdiag, source_gr_riscdiag.dd_fontListR, old_fontref);
-                    new_fontref  = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, p_gr_riscdiag->dd_fontListR, old_fontname);
-                    * (P_U32) &pObjectText->textstyle = new_fontref;
-                    trace_3(TRACE_MODULE_GR_CHART, "converted copy ref %d to font %s to main ref %d",
-                            old_fontref, old_fontname, new_fontref);
-                    }
-                    break;
-
-                default:
-                    break;
+                const DRAW_OBJECT_TEXT * pObjectText = (const DRAW_OBJECT_TEXT *) pObject.p_byte;
+                DRAW_FONT_REF16 old_fontref, new_fontref;
+                PC_U8 old_fontname;
+                old_fontref  = pObjectText->textstyle.fontref16;
+                old_fontname = gr_riscdiag_fontlist_name(&source_gr_riscdiag, source_gr_riscdiag.dd_fontListR, old_fontref);
+                new_fontref  = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, p_gr_riscdiag->dd_fontListR, old_fontname);
+                * (P_U32) &pObjectText->textstyle = new_fontref;
+                trace_3(TRACE_MODULE_GR_CHART, "converted copy ref %d to font %s to main ref %d",
+                        old_fontref, old_fontname, new_fontref);
                 }
+                break;
+
+            default:
+                break;
             }
+        }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
 
     /* now can give source diagram back to its rightful owner */
@@ -649,19 +649,19 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
     size.y = pBox->y1 - posn.y;
 
     if(isotropic)
-        {
+    {
         /* make box square and reposition to centre */
         if(size.x > size.y)
-            {
+        {
             posn.x += (size.x - size.y) / 2;
             size.x = size.y;
-            }
+        }
         else if(size.x < size.y)
-            {
+        {
             posn.x += (size.y - size.x) / 2;
             size.y = size.x;
-            }
         }
+    }
 
     simple_scale.x = gr_scale_from_s32_pair(size.x, initsize.x);
     simple_scale.y = gr_scale_from_s32_pair(size.y, initsize.y);
@@ -705,136 +705,136 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
         do  {
             /* note that there is no awkward font table object now !*/
             switch(pObject.hdr->type)
+            {
+            case DRAW_OBJECT_TYPE_TEXT:
                 {
-                case DRAW_OBJECT_TYPE_TEXT:
-                    {
-                    DRAW_OBJECT_TEXT * pObjectText = (DRAW_OBJECT_TEXT *) pObject.hdr;
+                DRAW_OBJECT_TEXT * pObjectText = (DRAW_OBJECT_TEXT *) pObject.hdr;
 
-                    /* shift and scale and shift baseline origin */
-                    draw_point_xform(&pObjectText->coord, &pObjectText->coord, &scale_xform);
+                /* shift and scale and shift baseline origin */
+                draw_point_xform(&pObjectText->coord, &pObjectText->coord, &scale_xform);
 
-                    /* can scale both width and height */
-                    pObjectText->fsize_x = gr_coord_scale(pObjectText->fsize_x, simple_scale.x);
-                    pObjectText->fsize_y = gr_coord_scale(pObjectText->fsize_y, simple_scale.y);
+                /* can scale both width and height */
+                pObjectText->fsize_x = gr_coord_scale(pObjectText->fsize_x, simple_scale.x);
+                pObjectText->fsize_y = gr_coord_scale(pObjectText->fsize_y, simple_scale.y);
 
-                    break;
-                    }
-
-                case DRAW_OBJECT_TYPE_PATH:
-                    {
-                    P_BYTE p_path;
-
-                    /* simply scale the line width if not Thin */
-                    if(pObject.path->pathwidth != 0)
-                        pObject.path->pathwidth = gr_coord_scale(pObject.path->pathwidth, simple_scaling);
-
-                    if(recolour)
-                        {
-                        DRAW_COLOUR colour;
-
-                        recolour = 0;
-
-                        assert(fillstyle);
-                        colour = gr_colour_to_riscDraw(fillstyle->fg);
-
-                        /* set both stroke and fill */
-                        pObject.path->fillcolour = colour;
-                        pObject.path->pathcolour = colour;
-                        }
-
-                    /* path ordinarily starts here */
-                    p_path = (char *) (pObject.path + 1);
-
-                    /* simply scale the dash lengths and start offset if present */
-                    if(pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK)
-                        {
-                        const S32 dashcount = ((PC_DRAW_DASH_HEADER) p_path)->dashcount;
-                        S32 i;
-                        P_S32 p_s32;
-
-                        p_s32 = (P_S32) &((P_DRAW_DASH_HEADER) p_path)->dashstart;
-                        *p_s32 = gr_coord_scale(*p_s32, simple_scaling);
-
-                        for(i = 0; i < dashcount; ++i)
-                        {
-                            p_s32 = PtrAddBytes(P_S32, p_path, sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * i);
-                            *p_s32 = gr_coord_scale(*p_s32, simple_scaling);
-                        }
-
-                        /* skip dash header and pattern */
-                        p_path += sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * dashcount;
-                        }
-
-                    /* shift and scale the path coordinates */
-
-                    while(* (P_U32) p_path != DRAW_PATH_TYPE_TERM)
-                        switch(* (P_U32) p_path)
-                            {
-                            case DRAW_PATH_TYPE_MOVE:
-                            case DRAW_PATH_TYPE_LINE:
-                                {
-                                /* shift and scale and shift */
-                                DRAW_PATH_LINE line;
-
-                                memcpy32(&line, p_path, sizeof32(line));
-
-                                draw_point_xform(&line.pt, &line.pt, &scale_xform);
-
-                                memcpy32(p_path, &line, sizeof32(line));
-
-                                p_path += sizeof32(line);
-                                break;
-                                }
-
-                            case DRAW_PATH_TYPE_CURVE:
-                                {
-                                /* shift and scale and shift */
-                                DRAW_PATH_CURVE curve;
-
-                                memcpy32(&curve, p_path, sizeof32(curve));
-
-                                draw_point_xform(&curve.cp1, &curve.cp1, &scale_xform);
-                                draw_point_xform(&curve.cp2, &curve.cp2, &scale_xform);
-                                draw_point_xform(&curve.end, &curve.end, &scale_xform);
-
-                                memcpy32(p_path, &curve, sizeof32(curve));
-
-                                p_path += sizeof32(curve);
-                                break;
-                                }
-
-                            default:
-#if CHECKING
-                                myassert1x(0, "unknown path object tag %d", * (P_U32) p_path);
-
-                                /*FALLTHRU*/
-
-                            case DRAW_PATH_TYPE_CLOSE:
-#endif
-                                p_path += sizeof32(DRAW_PATH_CLOSE);
-                                break;
-                            }
-
-                    break;
-                    }
-
-                case DRAW_OBJECT_TYPE_SPRITE:
-                case DRAW_OBJECT_TYPE_TRFMSPRITE:
-                case DRAW_OBJECT_TYPE_TRFMTEXT:
-                case DRAW_OBJECT_TYPE_JPEG:
-                case DRAW_OBJECT_TYPE_DS_DIB:
-                case DRAW_OBJECT_TYPE_DS_DIBROT:
-                    {
-                    /* the bbox of these objects determines the contents format, not vice versa! */
-                    /* shift and scale and shift bbox */
-                    draw_box_xform(&pObject.hdr->bbox, NULL, &scale_xform);
-                    break;
-                    }
-
-                default:
-                    break;
+                break;
                 }
+
+            case DRAW_OBJECT_TYPE_PATH:
+                {
+                P_BYTE p_path;
+
+                /* simply scale the line width if not Thin */
+                if(pObject.path->pathwidth != 0)
+                    pObject.path->pathwidth = gr_coord_scale(pObject.path->pathwidth, simple_scaling);
+
+                if(recolour)
+                {
+                    DRAW_COLOUR colour;
+
+                    recolour = 0;
+
+                    assert(fillstyle);
+                    colour = gr_colour_to_riscDraw(fillstyle->fg);
+
+                    /* set both stroke and fill */
+                    pObject.path->fillcolour = colour;
+                    pObject.path->pathcolour = colour;
+                }
+
+                /* path ordinarily starts here */
+                p_path = (char *) (pObject.path + 1);
+
+                /* simply scale the dash lengths and start offset if present */
+                if(pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK)
+                {
+                    const S32 dashcount = ((PC_DRAW_DASH_HEADER) p_path)->dashcount;
+                    S32 i;
+                    P_S32 p_s32;
+
+                    p_s32 = (P_S32) &((P_DRAW_DASH_HEADER) p_path)->dashstart;
+                    *p_s32 = gr_coord_scale(*p_s32, simple_scaling);
+
+                    for(i = 0; i < dashcount; ++i)
+                    {
+                        p_s32 = PtrAddBytes(P_S32, p_path, sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * i);
+                        *p_s32 = gr_coord_scale(*p_s32, simple_scaling);
+                    }
+
+                    /* skip dash header and pattern */
+                    p_path += sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * dashcount;
+                }
+
+                /* shift and scale the path coordinates */
+
+                while(* (P_U32) p_path != DRAW_PATH_TYPE_TERM)
+                    switch(* (P_U32) p_path)
+                    {
+                    case DRAW_PATH_TYPE_MOVE:
+                    case DRAW_PATH_TYPE_LINE:
+                        {
+                        /* shift and scale and shift */
+                        DRAW_PATH_LINE line;
+
+                        memcpy32(&line, p_path, sizeof32(line));
+
+                        draw_point_xform(&line.pt, &line.pt, &scale_xform);
+
+                        memcpy32(p_path, &line, sizeof32(line));
+
+                        p_path += sizeof32(line);
+                        break;
+                        }
+
+                    case DRAW_PATH_TYPE_CURVE:
+                        {
+                        /* shift and scale and shift */
+                        DRAW_PATH_CURVE curve;
+
+                        memcpy32(&curve, p_path, sizeof32(curve));
+
+                        draw_point_xform(&curve.cp1, &curve.cp1, &scale_xform);
+                        draw_point_xform(&curve.cp2, &curve.cp2, &scale_xform);
+                        draw_point_xform(&curve.end, &curve.end, &scale_xform);
+
+                        memcpy32(p_path, &curve, sizeof32(curve));
+
+                        p_path += sizeof32(curve);
+                        break;
+                        }
+
+                    default:
+#if CHECKING
+                        myassert1x(0, "unknown path object tag %d", * (P_U32) p_path);
+
+                        /*FALLTHRU*/
+
+                    case DRAW_PATH_TYPE_CLOSE:
+#endif
+                        p_path += sizeof32(DRAW_PATH_CLOSE);
+                        break;
+                    }
+
+                break;
+                }
+
+            case DRAW_OBJECT_TYPE_SPRITE:
+            case DRAW_OBJECT_TYPE_TRFMSPRITE:
+            case DRAW_OBJECT_TYPE_TRFMTEXT:
+            case DRAW_OBJECT_TYPE_JPEG:
+            case DRAW_OBJECT_TYPE_DS_DIB:
+            case DRAW_OBJECT_TYPE_DS_DIBROT:
+                {
+                /* the bbox of these objects determines the contents format, not vice versa! */
+                /* shift and scale and shift bbox */
+                draw_box_xform(&pObject.hdr->bbox, NULL, &scale_xform);
+                break;
+                }
+
+            default:
+                break;
             }
+        }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
 
     /* ensure this group recomputed and rebound */
@@ -871,120 +871,120 @@ gr_riscdiag_shift_diagram(
     if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
         do  {
             switch(pObject.hdr->type)
-                {
-                case DRAW_OBJECT_TYPE_FONTLIST:
-                case DRAW_OBJECT_TYPE_OPTIONS:
-                case DRAW_OBJECT_TYPE_DS_WINFONTLIST:
-                    /* objects with either no, or no meaningful, bbox */
-                    continue;
+            {
+            case DRAW_OBJECT_TYPE_FONTLIST:
+            case DRAW_OBJECT_TYPE_OPTIONS:
+            case DRAW_OBJECT_TYPE_DS_WINFONTLIST:
+                /* objects with either no, or no meaningful, bbox */
+                continue;
 
-                default:
-                    break;
-                }
+            default:
+                break;
+            }
 
             draw_box_translate(&pObject.hdr->bbox, NULL, pShiftBy);
 
             switch(pObject.hdr->type)
+            {
+            case DRAW_OBJECT_TYPE_TEXT:
                 {
-                case DRAW_OBJECT_TYPE_TEXT:
+                DRAW_OBJECT_TEXT * pObjectText = (DRAW_OBJECT_TEXT *) pObject.hdr;
+
+                /* shift baseline origin */
+                pObjectText->coord.x += pShiftBy->x;
+                pObjectText->coord.y += pShiftBy->y;
+
+                break;
+                }
+
+            case DRAW_OBJECT_TYPE_PATH:
+                {
+                P_BYTE p_path;
+
+                /* path ordinarily starts here */
+                p_path = (char *) (pObject.path + 1);
+
+                /* simply scale the dash lengths and start offset if present */
+                if(pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK)
+                {
+                    const S32 dashcount = ((PC_DRAW_DASH_HEADER) p_path)->dashcount;
+
+                    /* skip dash header and pattern */
+                    p_path += sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * dashcount;
+                }
+
+                /* shift the path coordinates */
+
+                while(* (P_U32) p_path != DRAW_PATH_TYPE_TERM)
+                    switch(* (P_U32) p_path)
                     {
-                    DRAW_OBJECT_TEXT * pObjectText = (DRAW_OBJECT_TEXT *) pObject.hdr;
-
-                    /* shift baseline origin */
-                    pObjectText->coord.x += pShiftBy->x;
-                    pObjectText->coord.y += pShiftBy->y;
-
-                    break;
-                    }
-
-                case DRAW_OBJECT_TYPE_PATH:
-                    {
-                    P_BYTE p_path;
-
-                    /* path ordinarily starts here */
-                    p_path = (char *) (pObject.path + 1);
-
-                    /* simply scale the dash lengths and start offset if present */
-                    if(pObject.path->pathstyle.flags & DRAW_PS_DASH_PACK_MASK)
+                    case DRAW_PATH_TYPE_MOVE:
+                    case DRAW_PATH_TYPE_LINE:
                         {
-                        const S32 dashcount = ((PC_DRAW_DASH_HEADER) p_path)->dashcount;
+                        /* shift and scale and shift */
+                        DRAW_PATH_LINE line;
 
-                        /* skip dash header and pattern */
-                        p_path += sizeof32(DRAW_DASH_HEADER) + sizeof32(S32) * dashcount;
+                        memcpy32(&line, p_path, sizeof32(line));
+
+                        line.pt.x += pShiftBy->x;
+                        line.pt.y += pShiftBy->y;
+
+                        memcpy32(p_path, &line, sizeof32(line));
+
+                        p_path += sizeof32(line);
+                        break;
                         }
 
-                    /* shift the path coordinates */
+                    case DRAW_PATH_TYPE_CURVE:
+                        {
+                        /* shift and scale and shift */
+                        DRAW_PATH_CURVE curve;
 
-                    while(* (P_U32) p_path != DRAW_PATH_TYPE_TERM)
-                        switch(* (P_U32) p_path)
-                            {
-                            case DRAW_PATH_TYPE_MOVE:
-                            case DRAW_PATH_TYPE_LINE:
-                                {
-                                /* shift and scale and shift */
-                                DRAW_PATH_LINE line;
+                        memcpy32(&curve, p_path, sizeof32(curve));
 
-                                memcpy32(&line, p_path, sizeof32(line));
+                        curve.cp1.x += pShiftBy->x;
+                        curve.cp1.y += pShiftBy->y;
 
-                                line.pt.x += pShiftBy->x;
-                                line.pt.y += pShiftBy->y;
+                        curve.cp2.x += pShiftBy->x;
+                        curve.cp2.y += pShiftBy->y;
 
-                                memcpy32(p_path, &line, sizeof32(line));
+                        curve.end.x += pShiftBy->x;
+                        curve.end.y += pShiftBy->y;
 
-                                p_path += sizeof32(line);
-                                break;
-                                }
+                        memcpy32(p_path, &curve, sizeof32(curve));
 
-                            case DRAW_PATH_TYPE_CURVE:
-                                {
-                                /* shift and scale and shift */
-                                DRAW_PATH_CURVE curve;
+                        p_path += sizeof32(curve);
+                        break;
+                        }
 
-                                memcpy32(&curve, p_path, sizeof32(curve));
-
-                                curve.cp1.x += pShiftBy->x;
-                                curve.cp1.y += pShiftBy->y;
-
-                                curve.cp2.x += pShiftBy->x;
-                                curve.cp2.y += pShiftBy->y;
-
-                                curve.end.x += pShiftBy->x;
-                                curve.end.y += pShiftBy->y;
-
-                                memcpy32(p_path, &curve, sizeof32(curve));
-
-                                p_path += sizeof32(curve);
-                                break;
-                                }
-
-                            default:
+                    default:
 #if CHECKING
-                                myassert1x(0, "unknown path object tag %d", * (P_U32) p_path);
+                        myassert1x(0, "unknown path object tag %d", * (P_U32) p_path);
 
-                                /*FALLTHRU*/
+                        /*FALLTHRU*/
 
-                            case DRAW_PATH_TYPE_CLOSE:
+                    case DRAW_PATH_TYPE_CLOSE:
 #endif
-                                p_path += sizeof32(DRAW_PATH_CLOSE);
-                                break;
-                            }
-
-                    break;
+                        p_path += sizeof32(DRAW_PATH_CLOSE);
+                        break;
                     }
 
-                default:
-#if CHECKING
-                case DRAW_OBJECT_TYPE_SPRITE:
-                case DRAW_OBJECT_TYPE_TRFMSPRITE:
-                case DRAW_OBJECT_TYPE_TRFMTEXT:
-                case DRAW_OBJECT_TYPE_JPEG:
-                case DRAW_OBJECT_TYPE_DS_DIB:
-                case DRAW_OBJECT_TYPE_DS_DIBROT:
-#endif
-                    /* the bbox of these objects determines the contents format, not vice versa! */
-                    break;
+                break;
                 }
+
+            default:
+#if CHECKING
+            case DRAW_OBJECT_TYPE_SPRITE:
+            case DRAW_OBJECT_TYPE_TRFMSPRITE:
+            case DRAW_OBJECT_TYPE_TRFMTEXT:
+            case DRAW_OBJECT_TYPE_JPEG:
+            case DRAW_OBJECT_TYPE_DS_DIB:
+            case DRAW_OBJECT_TYPE_DS_DIBROT:
+#endif
+                /* the bbox of these objects determines the contents format, not vice versa! */
+                break;
             }
+        }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
 }
 
@@ -1059,7 +1059,7 @@ gr_riscdiag_sprite_recompute_bbox(
 
     /* only recalculate (and therefore set default size) if deliberately made bad */
     if(pObject->bbox.x0 >= pObject->bbox.x1)
-        {
+    {
         PC_BYTE p_sprite = PtrAddBytes(PC_BYTE, pObject, sizeof32(DRAW_OBJECT_HEADER));
         PC_SCB p_scb = (PC_SCB) p_sprite;
         S32 x1, y1;
@@ -1091,7 +1091,7 @@ gr_riscdiag_sprite_recompute_bbox(
         /* assumes bbox.x0, bbox.y0 correct */
         pObject->bbox.x1 = pObject->bbox.x0 + x1;
         pObject->bbox.y1 = pObject->bbox.y0 + y1;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1127,7 +1127,7 @@ gr_riscdiag_string_new(
     size = round_up(size, 4);
 
     if(bg.visible)
-        {
+    {
         DRAW_BOX dummy_box;
         GR_FILLSTYLE fillstyle;
 
@@ -1139,7 +1139,7 @@ gr_riscdiag_string_new(
         fillstyle.fg = bg;
 
         status_return(status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &rectStart, &dummy_box, NULL, &fillstyle));
-        }
+    }
 
     if(NULL == (pObject.p_byte = gr_riscdiag_object_new(p_gr_riscdiag, pTextStart, DRAW_OBJECT_TYPE_TEXT, size, &status)))
         return(status);
@@ -1175,7 +1175,7 @@ gr_riscdiag_string_new(
     strcpy((P_USTR) (pObjectText + 1), szText);
 
     if(bg.visible)
-        {
+    {
         /* poke background box path */
         struct GR_RISCDIAG_RECTANGLE_GUTS * pRect;
         S32 bot_y, top_y;
@@ -1205,7 +1205,7 @@ gr_riscdiag_string_new(
         pRect->tl.pt.y = top_y;
 
         pRect->bl2.pt = pRect->bl.pt;
-        }
+    }
 
     return(STATUS_DONE);
 }
@@ -1261,7 +1261,7 @@ gr_riscdiag_string_recompute_bbox(
             f = 0;
 
     if(f)
-        {
+    {
         if(NULL == font_SetFont(f))
             (void) font_stringbbox((P_USTR) (pObjectText + 1),
                                    (font_info *) &pObjectText->bbox); /* NB. in mp */
@@ -1273,9 +1273,9 @@ gr_riscdiag_string_recompute_bbox(
         pObjectText->bbox.x1 = (int) gr_round_pixit_to_ceil( (GR_COORD) pObjectText->bbox.x1 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
         pObjectText->bbox.y0 = (int) gr_round_pixit_to_floor((GR_COORD) pObjectText->bbox.y0 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
         pObjectText->bbox.y1 = (int) gr_round_pixit_to_ceil( (GR_COORD) pObjectText->bbox.y1 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
-        }
+    }
     else
-        {
+    {
         /* have a stab at VDU 5 System font bboxing
          * (I'd wondered why 1/640th point; its GR_POINTS_PER_RISCDRAW!)
          * note that Draw expects standard System font to be 12.80pt x 6.40pt
@@ -1284,7 +1284,7 @@ gr_riscdiag_string_recompute_bbox(
         pObjectText->bbox.x1 = pObjectText->fsize_x * strlen((PC_USTR) (pObjectText + 1));
         pObjectText->bbox.y0 = 0;
         pObjectText->bbox.y1 = pObjectText->fsize_y;
-        }
+    }
 
     /* move box to have its origin at string baseline origin */
     draw_box_translate(&pObjectText->bbox, NULL, &pObjectText->coord);
@@ -1303,29 +1303,29 @@ gr_riscdiag_diagram_tagged_object_strip(
 
     /* loop till all the little buggers removed */
     for(wastagObject = GR_RISCDIAG_OBJECT_NONE, hdrandgoopSize = 0;;)
-        {
+    {
         thisObject = GR_RISCDIAG_OBJECT_FIRST;
         endObject  = GR_RISCDIAG_OBJECT_LAST; /* keeps getting closer */
 
         if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
             do  {
                 if(wastagObject != GR_RISCDIAG_OBJECT_NONE)
-                    {
+                {
                     /* remove test for removed goop when past where the header was */
                     if(wastagObject <= thisObject)
                         wastagObject = GR_RISCDIAG_OBJECT_NONE;
                     else if(pObject.hdr->type == DRAW_OBJECT_TYPE_GROUP)
-                        {
+                    {
                         objectSize = pObject.hdr->size;
 
                         /* did this group enclose the tag hdr and goop we removed? */
                         if(thisObject + objectSize > wastagObject)
                             pObject.hdr->size -= (int) hdrandgoopSize;
-                        }
                     }
+                }
 
                 if(pObject.hdr->type == DRAW_OBJECT_TYPE_TAG)
-                    {
+                {
                     P_DRAW_OBJECT pEnclObject;
                     U32 tagHdrSize, enclObjectSize, tagGoopSize;
                     S32 PRM_conformant;
@@ -1357,7 +1357,7 @@ gr_riscdiag_diagram_tagged_object_strip(
                     tagGoopSize       = objectSize - enclObjectSize - tagHdrSize;
 
                     if(proc)
-                        {
+                    {
                         GR_RISCDIAG_TAGSTRIP_INFO info;
 
                         info.ppDiag         = &p_gr_riscdiag->draw_diag.data;
@@ -1368,14 +1368,14 @@ gr_riscdiag_diagram_tagged_object_strip(
                         info.goopSize       = tagGoopSize;
 
                         if(!PRM_conformant)
-                            {
+                        {
                             /* skip first word for Draw conformant tagged objects */
                             info.goopOffset += 4;
                             info.goopSize   -= 4;
-                            }
+                        }
 
                         (* proc) (handle, &info);
-                        }
+                    }
 
                     /* remove the tag goop by copying the rest of the diagram down over it */
                     /* note stupid way midextend works */
@@ -1403,8 +1403,8 @@ gr_riscdiag_diagram_tagged_object_strip(
                         p_gr_riscdiag->dd_rootGroupStart -= hdrandgoopSize;
 
                     break;
-                    }
                 }
+            }
             while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
 
         if(thisObject != GR_RISCDIAG_OBJECT_FIRST)
@@ -1413,7 +1413,7 @@ gr_riscdiag_diagram_tagged_object_strip(
 
         /* done the lot */
         break;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1504,11 +1504,11 @@ gr_riscdiag_font_dispose(
     font * fp /*inout*/)
 {
     if(*fp)
-        {
+    {
         font f = *fp;
         *fp = 0;
         font_LoseFont(f);
-        }
+    }
 }
 
 /*

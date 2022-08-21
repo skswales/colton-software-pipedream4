@@ -213,10 +213,10 @@ EditFormulaInWindow_fn(void)
 #endif
 
     if(xf_inexpression_line)
-        {
+    {
         expedit_transfer_line_to_box(FALSE);    /* don't force a newline */
         return;
-        }
+    }
 
     expedit_editcurrentslot(lecpos, TRUE);      /* force use of formula box */
 }
@@ -229,12 +229,12 @@ expedit_editcurrentslot(
     P_CELL tcell;
 
     if(xf_inexpression_box)
-        {
+    {
         trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot - fronting the formula window");
 
         win_send_front(editexpression_formwind->mainwindow, TRUE);
         return;
-        }
+    }
 
     trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot");
 
@@ -249,22 +249,22 @@ expedit_editcurrentslot(
     tcell = travel_here();
 
     if(tcell)
-        {
+    {
         if(tcell->type == SL_PAGE)
-            {
+        {
             xf_acquirecaret = TRUE;
             return;
-            }
+        }
 
         if(tcell->justify & PROTECTED)
-            {
+        {
             reperr_null(create_error(ERR_PROTECTED));
             xf_acquirecaret = TRUE;
             return;
-            }
+        }
 
         prccon(linbuf, tcell);
-        }
+    }
 
     start_editor(caretpos, force_inbox);
 }
@@ -304,16 +304,16 @@ expedit_recompilecurrentslot_reporterrors(void)
     tcell = travel_here();
 
     if(tcell)
-        {
+    {
         if(tcell->type != SL_TEXT)
             return;
 
         if(tcell->justify & PROTECTED)
-            {
+        {
             reperr_null(create_error(ERR_PROTECTED));
             xf_acquirecaret = TRUE;
             return;
-            }
+        }
 
         prccon(linbuf, tcell);
         slot_in_buffer = buffer_altered = TRUE;
@@ -325,19 +325,19 @@ expedit_recompilecurrentslot_reporterrors(void)
       /*endeex_nodraw();*/
 
         if(err < 0)
-            {
+        {
             if((at_pos >= 0) && !check_text_or_fixit(err))
-                {
+            {
                 start_editor(at_pos, FALSE);    /* use line or box as appropriate */
                 return;
-                }
+            }
 
             merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text cell */
-            }
+        }
 
         slot_in_buffer = buffer_altered = FALSE;
         lecpos = lescrl = 0;
-        }
+    }
 }
 
 extern void
@@ -345,7 +345,7 @@ expedit_transfer_line_to_box(
     BOOL newline)
 {
     if(xf_inexpression_line)
-        {
+    {
         wimp_icon  icon;
         S32        caretpos;
         char       title[LIN_BUFSIZ];
@@ -366,13 +366,13 @@ expedit_transfer_line_to_box(
                                             title)
            ) >= 0
           )
-            {
+        {
             xf_inexpression_line = FALSE;
             colh_draw_contents_of_numslot();
             xf_inexpression_box  = TRUE;        /* All other flags remain the same */
             colh_draw_edit_state_indicator();
-            }
         }
+    }
 }
 
 extern BOOL
@@ -382,7 +382,7 @@ expedit_insert_char(
     BOOL had_error = FALSE;
 
     if(xf_inexpression_line)
-        {
+    {
         wimp_icon  icon;
         S32        caretpos;
         S32        length;
@@ -397,7 +397,7 @@ expedit_insert_char(
         caretpos = MIN(caretpos, length);
 
         if((length + 1) < icon.data.indirecttext.bufflen)
-            {
+        {
             currpos = icon.data.indirecttext.buffer + caretpos;
             memmove32(currpos+1, currpos, (length - caretpos + 1));
             *currpos = ch;
@@ -406,14 +406,14 @@ expedit_insert_char(
             ++caretpos;
             formline_cursor_setpos(caretpos);
             wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
-            }
+        }
         else
             had_error = TRUE;
-        }
+    }
     else if(xf_inexpression_box)
-        {
+    {
         had_error = (mlec__insert_char(editexpression_formwind->mlec, ch) < 0);
-        }
+    }
 
     return(had_error);
 }
@@ -429,7 +429,7 @@ expedit_insert_string(
         return(FALSE);
 
     if(xf_inexpression_line)
-        {
+    {
         wimp_icon  icon;
         S32        caretpos;
         S32        length;
@@ -444,7 +444,7 @@ expedit_insert_string(
         caretpos = MIN(caretpos, length);
 
         if((length + insertlen) < icon.data.indirecttext.bufflen)
-            {
+        {
             currpos = icon.data.indirecttext.buffer + caretpos;
             memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
             memmove32(currpos, insertstr, insertlen);                       /* splice text in */
@@ -453,14 +453,14 @@ expedit_insert_string(
             caretpos += insertlen;
             formline_cursor_setpos(caretpos);
             wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
-            }
+        }
         else
             had_error = TRUE;
-        }
+    }
     else if(xf_inexpression_box)
-        {
+    {
         had_error = (mlec__insert_text(editexpression_formwind->mlec, (char*)insertstr) < 0);  /* cvt (const char*) to (char *) */
-        }
+    }
 
     return(had_error);
 }
@@ -471,14 +471,14 @@ expedit_get_cursorpos(
     P_S32 p_row)
 {
     if(xf_inexpression_line)
-        {
+    {
         *p_col = formline_cursor_getpos();
         *p_row = 0;
-        }
+    }
     else if(xf_inexpression_box)
-        {
+    {
         mlec__cursor_getpos(editexpression_formwind->mlec, p_col, p_row);
-        }
+    }
 }
 
 extern void
@@ -487,13 +487,13 @@ expedit_set_cursorpos(
     S32 row)
 {
     if(xf_inexpression_line)
-        {
+    {
         formline_cursor_setpos(col);
-        }
+    }
     else if(xf_inexpression_box)
-        {
+    {
         mlec__cursor_setpos(editexpression_formwind->mlec, col, row);
-        }
+    }
 }
 
 extern void
@@ -503,7 +503,7 @@ expedit_delete_bit_of_line(
     S32 row)
 {
     if(xf_inexpression_line)
-        {
+    {
         wimp_icon icon;
         S32       start, end, length;
 
@@ -518,19 +518,19 @@ expedit_delete_bit_of_line(
         end   = MIN(end  , length);
 
         if(start < end)
-            {
+        {
             /* chop characters from the buffer, position the caret at start of cut, and force a redraw */
             memmove32(&icon.data.indirecttext.buffer[start], &icon.data.indirecttext.buffer[end], (length - end + 1));
             formline_cursor_setpos(start);
             wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
-            }
         }
+    }
     else if(xf_inexpression_box)
-        {
+    {
         mlec__cursor_setpos   (editexpression_formwind->mlec, col_start, row);
         mlec__selection_adjust(editexpression_formwind->mlec, col_end  , row);
         mlec__selection_delete(editexpression_formwind->mlec);
-        }
+    }
 }
 
 extern BOOL
@@ -590,10 +590,10 @@ expedit_owns_window(
     wimp_w window)
 {
     if(p_docu->Xxf_inexpression_box)
-        {
+    {
         if(window == p_docu->Xeditexpression_formwind->panewindow)
             return(TRUE);
-        }
+    }
 
     return(FALSE);
 }
@@ -609,7 +609,7 @@ start_editor(
     cvt_offset_to_colrow(linbuf, caretpos, &cursorcol, &cursorrow, &multiline);
 
     if(multiline || force_inbox || !borbit)
-        {
+    {
         /* Fire up the formula box */
 
         char title[LIN_BUFSIZ];
@@ -626,7 +626,7 @@ start_editor(
                                             title)
            ) >= 0
           )
-            {
+        {
             output_buffer = slot_in_buffer = buffer_altered = xf_blockcursor = TRUE;
 
             edtslr_col = curcol;
@@ -636,10 +636,10 @@ start_editor(
 
             mark_row(currowoffset);
             draw_screen();
-            }
         }
+    }
     else
-        {
+    {
 #if FALSE
         assert((cursorcol == caretpos) && (cursorrow == 0));
 #else
@@ -667,7 +667,7 @@ start_editor(
         wimp_set_caret_pos(&carrot);
 #endif
         }
-        {                   /* Show cell as being editted */
+    {                   /* Show cell as being editted */
         /*seteex();*/
         output_buffer = slot_in_buffer = buffer_altered = xf_blockcursor = TRUE;
 
@@ -679,8 +679,8 @@ start_editor(
         mark_row(currowoffset);
         colh_draw_edit_state_indicator();
         draw_screen();
-        }
-        }
+    }
+    }
 }
 
 /******************************************************************************
@@ -701,7 +701,7 @@ formline_claim_focus(void)
     wimp_get_caret_pos(&carrot);
 
     if((carrot.w != colh_window) || (carrot.i != (wimp_i)COLH_CONTENTS_LINE))
-        {
+    {
         carrot.w      = colh_window;
         carrot.i      = (wimp_i)COLH_CONTENTS_LINE;
         carrot.x      = -1;
@@ -710,7 +710,7 @@ formline_claim_focus(void)
         carrot.index  = formline_stashedcaret;   /* index into string, set by formline_cursor_setpos */
                                                  /* or when caret was stolen from us                 */
         wimp_set_caret_pos(&carrot);
-        }
+    }
   /*else                                      */
   /*    formline_stashedcaret = carrot.index; */
 }
@@ -768,10 +768,10 @@ formline_cursor_setpos(
        (carrot.i == (wimp_i)COLH_CONTENTS_LINE) &&
        (carrot.index != pos)
       )
-        {
+    {
         carrot.index = pos;
         wimp_set_caret_pos(&carrot);
-        }
+    }
 }
 
 extern BOOL
@@ -780,7 +780,7 @@ formline_mergebacktext(
     P_S32 caretposp)
 {
     if(xf_inexpression_line)
-        {
+    {
         wimp_icon icon;
         S32       err, at_pos;
 
@@ -796,20 +796,20 @@ formline_mergebacktext(
         slot_in_buffer = TRUE;
 
         if(reporterror)
-            {
+        {
             merexp_reterr(&err, &at_pos, TRUE);
 
             if(err < 0)
-                {
+            {
                 if((at_pos >= 0) && !check_text_or_fixit(err))
-                    {
+                {
                     formline_cursor_setpos(at_pos);     /* show position of error */
                     return(FALSE);                      /* retain editing state   */
-                    }
+                }
 
                 merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text cell */
-                }
             }
+        }
         else
             merexp_reterr(NULL, NULL, TRUE);
 
@@ -817,7 +817,7 @@ formline_mergebacktext(
             output_formula_to_macro_file(linbuf);
 
         formline_canceledit();
-        }
+    }
 
     return(TRUE);
 }
@@ -828,7 +828,7 @@ formline_canceledit(void)
     /* c.f. endeex in c.numbers */
 
     if(xf_inexpression_line)
-        {
+    {
         xf_inexpression_line = FALSE;
         slot_in_buffer = buffer_altered = FALSE;
         lecpos = lescrl = 0;
@@ -844,7 +844,7 @@ formline_canceledit(void)
 
         colh_draw_edit_state_indicator();
         draw_screen();
-        }
+    }
 }
 
 /******************************************************************************
@@ -870,7 +870,7 @@ formwind_create_fill_open(
     S32 err;
 
     if((err = formwind_create(formwindp, docno)) >= 0)
-        {
+    {
         win_settitle((*formwindp)->mainwindow, title);
 
         formwind_open_infront_withfocus(*formwindp);
@@ -881,7 +881,7 @@ formwind_create_fill_open(
 #else
         err = formwind_settext(*formwindp, text, cursorcol, cursorrow, newline);
 #endif
-        }
+    }
 
     return(err);
 }
@@ -906,26 +906,26 @@ formwind_create(
     *formwindp = formwind = al_ptr_alloc_elem(FORMULA_WINDOW, 1, &err);
 
     if(formwind)
-        {
+    {
         formwind->mlec         = NULL;
         formwind->mainwindow   = formwind->panewindow   = 0;
         formwind->maintemplate = formwind->panetemplate = NULL;
         formwind->tracking     = FALSE;
 
         if((err = mlec_create(&mlec)) >= 0)
-            {
+        {
             formwind->mlec = mlec;
 
             templatehanmain = template_find_new("ExpEdMain");  /*>>>use a manifest??*/
             templatehanpane = template_find_new("ExpEdPane");  /*>>>use a manifest??*/
 
             if(templatehanmain && templatehanpane)
-                {
+            {
                 formwind->maintemplate = templatemain = template_copy_new(templatehanmain);
                 formwind->panetemplate = templatepane = template_copy_new(templatehanpane);
 
                 if(templatemain && templatepane)
-                    {
+                {
                     os_error * e;
                     mainBB = templatemain->box;
 
@@ -933,7 +933,7 @@ formwind_create(
                                          formwind_event_handler, (void*)(uintptr_t)docno);
 
                     if(!e)
-                        {
+                    {
                         /* Created main window */
 
                         formwind->mainwindow   = main_win_handle;
@@ -944,7 +944,7 @@ formwind_create(
                         e = wimp_create_wind(templatepane, &pane_win_handle);
 
                         if(!e)
-                            {
+                        {
                             /* Created pane window */
 
                             formwind->panewindow   = pane_win_handle;
@@ -977,22 +977,22 @@ formwind_create(
                             formwind_setextent(formwind, paneExtent);
 
                             return(0);
-                            }
+                        }
                       /*else                             */
                       /*    unable to create pane window */
-                        }
+                    }
                   /*else                             */
                   /*    unable to create main window */
-                    }
+                }
               /*else                        */
               /*    template copying failed */
-                }
+            }
           /*else                    */
           /*    templates not found */
-            }
+        }
       /*else                          */
       /*    mlec_create gave an error */
-        }
+    }
   /*else                            */
   /*    no room for FORMULA_WINDOW_HANDLE */
 
@@ -1011,14 +1011,14 @@ formwind_destroy(
     P_FORMULA_WINDOW_HANDLE formwindp)
 {
     if(*formwindp)
-        {
+    {
         formwind_pointershape_endtracking(*formwindp);
 
         if((*formwindp)->mlec)
-            {
+        {
             mlec_detach((*formwindp)->mlec);
             mlec_destroy(&((*formwindp)->mlec));
-            }
+        }
 
         /* SKS after 4.12 use win_ not wimp_ so that event handlers are released and
          * don't give exception-causing events after window structures freed
@@ -1037,7 +1037,7 @@ formwind_destroy(
             template_copy_dispose((wimp_wind **) &(*formwindp)->panetemplate);
 
         al_ptr_dispose(P_P_ANY_PEDANTIC(formwindp));
-        }
+    }
 }
 
 static void
@@ -1048,7 +1048,7 @@ formwind_open_infront_withfocus(
 
     /* Get the state of the window */
     if(wimpt_complain(wimp_get_wind_state(formwind->mainwindow, &state)) == 0)
-        {
+    {
         state.o.behind = (wimp_w)-1;    /* Make sure window is opened in front */
 
         /* Robert wants all formula windows to open/reopen where user last placed one */
@@ -1058,7 +1058,7 @@ formwind_open_infront_withfocus(
         formwind_open_window(formwind, &state.o);
 
         mlec_claim_focus(formwind->mlec);
-        }
+    }
 }
 
 static S32
@@ -1071,13 +1071,13 @@ formwind_settext(
     S32 err;
 
     if((err = mlec_SetText(formwind->mlec, text)) >= 0)
-        {
+    {
         mlec__cursor_setpos(formwind->mlec, cursorcol, cursorrow);
 
         /* if newline required, do one only if text is present */
         if(newline && *text)
             err = mlec__insert_newline(formwind->mlec);
-        }
+    }
 
     return(err);
 }
@@ -1110,51 +1110,51 @@ formwind_event_handler(
 
     /* Deal with event */
     switch (e->e)
+    {
+    case wimp_EOPEN:                                                /* 2 */
+        formwind_open_window(editexpression_formwind, &e->data.o);  /* main & pane */
+        break;
+
+    case wimp_EREDRAW:                                              /* 1 */
+        return(FALSE);              /* default action */
+        break;
+
+    case wimp_ECLOSE:       /* treat a close request as a cancel */ /* 3 */
+        formwind_canceledit();
+        break;
+
+    case wimp_EPTRENTER:
+        formwind_pointershape_starttracking(editexpression_formwind);
+        break;
+
+    case wimp_EPTRLEAVE:
+        formwind_pointershape_endtracking(editexpression_formwind);
+        break;
+
+    case wimp_EBUT:                                                 /* 6 */
+        if(e->data.but.m.bbits & 0x5)   /* 'select' or 'adjust' */
         {
-        case wimp_EOPEN:                                                /* 2 */
-            formwind_open_window(editexpression_formwind, &e->data.o);  /* main & pane */
-            break;
+            switch ((int)e->data.but.m.i)
+            {
+            case FORMWIND_BUTTON_OK:
+                formwind_mergebacktext(TRUE, NULL);     /* report formula compilation errors */
+                break;
 
-        case wimp_EREDRAW:                                              /* 1 */
-            return(FALSE);              /* default action */
-            break;
+            case FORMWIND_BUTTON_CANCEL:
+                formwind_canceledit();
+                break;
 
-        case wimp_ECLOSE:       /* treat a close request as a cancel */ /* 3 */
-            formwind_canceledit();
-            break;
-
-        case wimp_EPTRENTER:
-            formwind_pointershape_starttracking(editexpression_formwind);
-            break;
-
-        case wimp_EPTRLEAVE:
-            formwind_pointershape_endtracking(editexpression_formwind);
-            break;
-
-        case wimp_EBUT:                                                 /* 6 */
-            if(e->data.but.m.bbits & 0x5)   /* 'select' or 'adjust' */
-                {
-                switch ((int)e->data.but.m.i)
-                    {
-                    case FORMWIND_BUTTON_OK:
-                        formwind_mergebacktext(TRUE, NULL);     /* report formula compilation errors */
-                        break;
-
-                    case FORMWIND_BUTTON_CANCEL:
-                        formwind_canceledit();
-                        break;
-
-                    case FORMWIND_BUTTON_NEWLINE:
-                        mlec__insert_newline(mlec);
-                        break;
-                    }
-                }
-            break;
-
-        default:   /* Ignore any other events */
-            return(FALSE);
-            break;
+            case FORMWIND_BUTTON_NEWLINE:
+                mlec__insert_newline(mlec);
+                break;
+            }
         }
+        break;
+
+    default:   /* Ignore any other events */
+        return(FALSE);
+        break;
+    }
 
     /* done something, so... */
     return(TRUE);
@@ -1246,7 +1246,7 @@ formwind_open_window(
 
 #if (1)
     if (main->box.x0 <= oldmain.o.box.x0)
-        {
+    {
         pane.o.w      = formwind->panewindow;
 
         pane.o.box.x0 = main->box.x0 + formwind->margin.x0;     /* position pane relative to main */
@@ -1263,7 +1263,7 @@ formwind_open_window(
         trace_2(TRACE_APP_PD4, "opening pane before, x=%d, behind=%d",pane.o.box.x0,pane.o.behind);
 
         wimp_open_wind(&pane.o);
-        }
+    }
 #endif
 
     /* Open main window, then open pane (based on the actual position values */
@@ -1349,45 +1349,45 @@ formwind_mergebacktext(
     len = mlec_GetTextLen(editexpression_formwind->mlec);
 
     if(len >= LIN_BUFSIZ)
-        {
+    {
         reperr_null(create_error(ERR_LINETOOLONG));
         return(FALSE);
-        }
+    }
 
     /* read text into linbuf */
     mlec_GetText(editexpression_formwind->mlec, linbuf, LIN_BUFSIZ);
 
     /* next/prev match and its friends want to know where the caret is */
     if(caretposp)
-        {
+    {
         S32 col, row;
 
         mlec__cursor_getpos(editexpression_formwind->mlec, &col, &row);
         *caretposp = cvt_colrow_to_offset(linbuf, col, row);
-        }
+    }
 
     buffer_altered = TRUE;
     slot_in_buffer = TRUE;
 
     if(reporterror)
-        {
+    {
         merexp_reterr(&err, &at_pos, TRUE);
 
         if(err < 0)
-            {
+        {
             S32 cursorcol, cursorrow;
 
             cvt_offset_to_colrow(linbuf, at_pos, &cursorcol, &cursorrow, NULL);
 
             if((at_pos >= 0) && !check_text_or_fixit(err))
-                {
+            {
                 mlec__cursor_setpos(editexpression_formwind->mlec, cursorcol, cursorrow);       /* show position of error */
                 return(FALSE);                                                                  /* retain editing state   */
-                }
+            }
 
             merexp_reterr(NULL, NULL, TRUE);            /* force expression into sheet as a text cell */
-            }
         }
+    }
     else
         merexp_reterr(NULL, NULL, TRUE);
 
@@ -1427,56 +1427,56 @@ mlec_event_proto(static, formwind_mlec_event_handler)
     old_docno = change_document_using_docno(formwind->docno);
 
     switch(rc)
+    {
+    case Mlec_IsOpen:
         {
-        case Mlec_IsOpen:
-            {
-            wimp_openstr *panep = (wimp_openstr*)p_eventdata;
-            wimp_openstr  main;
+        wimp_openstr *panep = (wimp_openstr*)p_eventdata;
+        wimp_openstr  main;
 
-            wimp_open_wind(panep);      /* open pane, so scrolling works */
+        wimp_open_wind(panep);      /* open pane, so scrolling works */
 
-            main.w      = formwind->mainwindow;
-            main.box.x0 = panep->box.x0 - formwind->margin.x0;
-            main.box.x1 = panep->box.x1 - formwind->margin.x1;
-            main.box.y0 = panep->box.y0 - formwind->margin.y0;
-            main.box.y1 = panep->box.y1 - formwind->margin.y1;
-            main.scx    = main.scy = 0;
-            main.behind = panep->behind;
+        main.w      = formwind->mainwindow;
+        main.box.x0 = panep->box.x0 - formwind->margin.x0;
+        main.box.x1 = panep->box.x1 - formwind->margin.x1;
+        main.box.y0 = panep->box.y0 - formwind->margin.y0;
+        main.box.y1 = panep->box.y1 - formwind->margin.y1;
+        main.scx    = main.scy = 0;
+        main.behind = panep->behind;
 
-            formwind_open_window(formwind, &main);
+        formwind_open_window(formwind, &main);
 
-            res = mlec_event_openned;
-            }
-            break;
-
-        case Mlec_IsClose:
-            formwind_canceledit();
-            res = mlec_event_closed;
-            break;
-
-        case Mlec_IsEscape:
-            formwind_canceledit();
-            res = mlec_event_escape;
-            break;
-
-        case Mlec_IsReturn:
-            formwind_mergebacktext(TRUE, NULL);         /* report formula compilation errors */
-            res = mlec_event_return;
-            break;
-#if TRUE
-        case Mlec_IsWorkAreaChanged:
-            {
-            wimp_redrawstr *paneExtent = (wimp_redrawstr*)p_eventdata;
-
-            formwind_setextent(formwind, paneExtent->box);
-            res = mlec_event_workareachanged;
-            }
-            break;
-#endif
-      /*default:    */
-      /*    res = 0;*/
-      /*    break;  */
+        res = mlec_event_openned;
         }
+        break;
+
+    case Mlec_IsClose:
+        formwind_canceledit();
+        res = mlec_event_closed;
+        break;
+
+    case Mlec_IsEscape:
+        formwind_canceledit();
+        res = mlec_event_escape;
+        break;
+
+    case Mlec_IsReturn:
+        formwind_mergebacktext(TRUE, NULL);         /* report formula compilation errors */
+        res = mlec_event_return;
+        break;
+#if TRUE
+    case Mlec_IsWorkAreaChanged:
+        {
+        wimp_redrawstr *paneExtent = (wimp_redrawstr*)p_eventdata;
+
+        formwind_setextent(formwind, paneExtent->box);
+        res = mlec_event_workareachanged;
+        }
+        break;
+#endif
+  /*default:    */
+  /*    res = 0;*/
+  /*    break;  */
+    }
 
     select_document_using_docno(old_docno);
     return(res);
@@ -1487,13 +1487,13 @@ formwind_pointershape_starttracking(
     FORMULA_WINDOW_HANDLE formwind)
 {
     if(!formwind->tracking)
-        {
+    {
         trace_0(TRACE_APP_EXPEDIT, "formwind_pointershape_starttracking()");
 
         formwind->tracking = TRUE;
 
         status_assert(Null_EventHandlerAdd(formwind_pointershape_null_handler, formwind, 0));
-        }
+    }
 }
 
 static void
@@ -1501,13 +1501,13 @@ formwind_pointershape_endtracking(
     FORMULA_WINDOW_HANDLE formwind)
 {
     if(formwind->tracking)
-        {
+    {
         Null_EventHandlerRemove(formwind_pointershape_null_handler, formwind);
 
         setpointershape(POINTER_DEFAULT);
 
         formwind->tracking = FALSE;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1523,41 +1523,41 @@ null_event_proto(static, formwind_pointershape_null_handler)
     trace_1(TRACE_APP_EXPEDIT, "formwind_pointershape_null_handler, rc=%d", p_null_event_block->rc);
 
     switch(p_null_event_block->rc)
+    {
+    case NULL_QUERY:
+        trace_0(TRACE_APP_EXPEDIT, "call to ask if we want nulls");
+        return(NULL_EVENTS_REQUIRED);
+
+    case NULL_EVENT:
         {
-        case NULL_QUERY:
-            trace_0(TRACE_APP_EXPEDIT, "call to ask if we want nulls");
-            return(NULL_EVENTS_REQUIRED);
+        wimp_mousestr pointer;
 
-        case NULL_EVENT:
+        trace_0(TRACE_APP_EXPEDIT, "null call");
+
+        if(NULL == wimp_get_point_info(&pointer))
+        {
+            if(pointer.w == formwind->mainwindow)   /* should be true, as we release null events when pointer leaves window */
             {
-            wimp_mousestr pointer;
-
-            trace_0(TRACE_APP_EXPEDIT, "null call");
-
-            if(NULL == wimp_get_point_info(&pointer))
+                switch((int)pointer.i)
                 {
-                if(pointer.w == formwind->mainwindow)   /* should be true, as we release null events when pointer leaves window */
-                    {
-                    switch((int)pointer.i)
-                        {
-                        case FORMWIND_FUNCTION_SELECTOR:
-                            trace_0(TRACE_APP_EXPEDIT, "change pointer to drop-down-menu");
-                            setpointershape(POINTER_DROPMENU);
-                            break;
+                case FORMWIND_FUNCTION_SELECTOR:
+                    trace_0(TRACE_APP_EXPEDIT, "change pointer to drop-down-menu");
+                    setpointershape(POINTER_DROPMENU);
+                    break;
 
-                        default:
-                            trace_0(TRACE_APP_EXPEDIT, "restore default pointer");
-                            setpointershape(POINTER_DEFAULT);
-                            break;
-                        }
-                    }
+                default:
+                    trace_0(TRACE_APP_EXPEDIT, "restore default pointer");
+                    setpointershape(POINTER_DEFAULT);
+                    break;
                 }
             }
-            return(NULL_EVENT_COMPLETED);
-
-        default:
-            return(NULL_EVENT_UNKNOWN);
         }
+        return(NULL_EVENT_COMPLETED);
+        }
+
+    default:
+        return(NULL_EVENT_UNKNOWN);
+    }
 }
 
 /******************************************************************************
@@ -1601,21 +1601,21 @@ cvt_colrow_to_offset(
     char *ptr = text;
 
     while((row > 0) && (0 != (ch = *ptr)))
-        {
+    {
         if(ch == LF)
             --row;
 
         ptr++;
-        }
+    }
 
     while((col > 0) && (0 != (ch = *ptr)))
-        {
+    {
         if(ch == LF)
             break;
 
         --col;
         ptr++;
-        }
+    }
 
     return(ptr - text);
 }
@@ -1632,37 +1632,37 @@ cvt_offset_to_colrow(
     BOOL multiline;
 
     for(multiline = FALSE, pos = cursorcol = cursorrow = 0; *text != '\0'; text++, pos++)
-        {
+    {
 #if 1
         /* SKS after 4.12 27mar92 - wimp icon treats ctrlchar as terminators so don't edit on line if they're present */
         if(*text < 0x20)
-            {
+        {
             multiline = TRUE;
             if(pos < offset)
-                {
+            {
                 cursorcol++;
                 if(*text == LF)
-                    {
-                    cursorcol = 0; cursorrow++;
-                    }
-                }
-            }
-#else
-        if(*text == LF)
-            {
-            multiline = TRUE;
-            if(pos < offset)
                 {
-                cursorcol = 0; cursorrow++;
+                    cursorcol = 0; cursorrow++;
                 }
-            }
-#endif
-        else
-            {
-            if(pos < offset)
-                cursorcol++;
             }
         }
+#else
+        if(*text == LF)
+        {
+            multiline = TRUE;
+            if(pos < offset)
+            {
+                cursorcol = 0; cursorrow++;
+            }
+        }
+#endif
+        else
+        {
+            if(pos < offset)
+                cursorcol++;
+        }
+    }
 
     *p_col = cursorcol;
     *p_row = cursorrow;
@@ -1696,7 +1696,7 @@ DefineName_fn(void)
     cur_docno = (EV_DOCNO) current_docno();
 
     while(dialog_box(D_DEFINE_NAME))
-        {
+    {
         name     = d_define_name[0].textfield;
         contents = d_define_name[1].textfield;
 
@@ -1717,7 +1717,7 @@ DefineName_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -1749,21 +1749,21 @@ EditName_fn(
     cur_docno = (EV_DOCNO) current_docno();
 
     if(itemno >= 0)
-        {
+    {
         ev_set_options(&optblock, cur_docno);
 
         ev_enum_resource_init(&resource, category, cur_docno, cur_docno, &optblock); /* names local to this document */
 
         if(ev_enum_resource_get(&resource, &itemno, namebuf, (MAX_PATHSTRING + EV_INTNAMLEN), argbuf, LIN_BUFSIZ, &argcount) >= 0)
-            {
+        {
             /*>>>should we change trim name placed in [0].textfield to fit???, NB must keep whole namebuf for ev_name_make*/
 
             if( dialog_box_start() &&
                 mystr_set(&d_edit_name[0].textfield, namebuf) &&
                 mystr_set(&d_edit_name[1].textfield, argbuf)  )
-                {
+            {
                 while(dialog_box(D_EDIT_NAME))
-                    {
+                {
                     contents =  d_edit_name[1].textfield;
 
                     trace_1(TRACE_APP_EXPEDIT,"Name     : %s", trace_string(namebuf));
@@ -1783,12 +1783,12 @@ EditName_fn(
 
                     if(!dialog_box_can_persist())
                         break;
-                    }
+                }
 
                 dialog_box_end();
 
                 if(d_edit_name[2].option == 'U')
-                    {
+                {
                     trace_1(TRACE_APP_EXPEDIT,"Undefine : %s", trace_string(namebuf));
 
                     /* undefine the name */
@@ -1802,10 +1802,10 @@ EditName_fn(
                         reperr_null(err);
 
                     filealtered(TRUE);
-                    }
                 }
             }
         }
+    }
 }
 
 extern void
@@ -1825,7 +1825,7 @@ PasteName_fn(
     trace_0(TRACE_APP_EXPEDIT, "PasteName_fn");
 
     if(itemno >= 0)
-        {
+    {
         cur_docno = (EV_DOCNO) current_docno();
 
         ev_set_options(&optblock, cur_docno);
@@ -1833,46 +1833,46 @@ PasteName_fn(
         ev_enum_resource_init(&resource, category, DOCNO_NONE, cur_docno, &optblock); /* all names */
 
         if(ev_enum_resource_get(&resource, &itemno, namebuf, (MAX_PATHSTRING + EV_INTNAMLEN), argbuf, sizeof(argbuf) - 1, &argcount) >= 0)
-            {
+        {
             trace_1(TRACE_APP_EXPEDIT, " selected '%s'", namebuf);
 
             if(argcount)
-                {
+            {
                 xstrkat(namebuf, elemof32(namebuf), "(");
 
                 for(i = argcount; i > 1; i--)
                     xstrkat(namebuf, elemof32(namebuf), ",");
 
                 xstrkat(namebuf, elemof32(namebuf), ")");
-                }
+            }
 
             if(insert_string_check_numeric(namebuf, FALSE))     /* insert function, starts an editor if current cell */
-                {                                               /* is empty and sheet is in numeric entry mode       */
+            {                                                   /* is empty and sheet is in numeric entry mode       */
                 /* insert worked, so place caret after '(' */
                 if(argcount)
-                    {
+                {
                     /*backspace caret by argcount*/
 
                     if(xf_inexpression_box || xf_inexpression_line)
-                        {
+                    {
                         S32 col, row;
 
                         expedit_get_cursorpos(&col, &row);
                         expedit_set_cursorpos(col - argcount, row);
-                        }
+                    }
                     else
-                        {
+                    {
                         lecpos = MAX(lecpos - argcount, 0);
-                        }
                     }
                 }
+            }
 
             xf_acquirecaret = TRUE;     /* Give caret back to sheet */
             xf_caretreposition = TRUE;  /* Give caret back to sheet */
 
             draw_screen();
-            }
         }
+    }
 }
 
 /* end of expedit.c */

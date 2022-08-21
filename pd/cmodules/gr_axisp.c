@@ -78,11 +78,11 @@ gr_axes_idx_from_external(
     eaxes_no -= 1;
 
     if(cp->d3.bits.use)
-        {
+    {
         myassert1x(eaxes_no < 6, "external axes id %d > 6", eaxes_no);
         *p_axes_idx = eaxes_no / 3;
         return(eaxes_no % 3);
-        }
+    }
 
     myassert1x(eaxes_no < 4, "external axes id > 4", eaxes_no);
     *p_axes_idx = eaxes_no / 2;
@@ -154,10 +154,10 @@ splitlognum(
     NB. consider numbers such as log10(0.2) ~ -0.698 = (-1.0 exp) + (0.30103 man)
     */
     if(mantissa < 0.0)
-        {
+    {
         mantissa  += 1.0;
         *exponent -= 1.0;
-        }
+    }
 
     /* watch for logs going awry */
     if(mantissa < LOG_SIG_EPS)
@@ -166,10 +166,10 @@ splitlognum(
 
     else if((1.0 - mantissa) < LOG_SIG_EPS)
         /* round up */
-        {
+    {
         mantissa   = 0.0;
         *exponent += 1.0;
-        }
+    }
 
     return(mantissa);
 }
@@ -185,28 +185,28 @@ gr_numtopowstr(
     F64 lnz, mantissa, exponent;
 
     if(value == 0.0)
-        {
+    {
         xstrkpy(buffer, elemof_buffer, "0");
         return(1);
-        }
+    }
 
     if(value < 0.0)
-        {
+    {
         value = fabs(value);
         *buffer++ = '-';
-        }
+    }
 
     lnz = log(value) / log(*base);
 
     mantissa = splitlognum(&lnz, &exponent);
 
     if(mantissa != 0.0) /* log(1.0) == 0.0 */
-        {
+    {
         mantissa = pow(*base, mantissa);
 
         /* use ANSI 'times' character */
         (void) xsnprintf(buffer, elemof_buffer, "%g" "\xD7" "%g" "^" "%g", mantissa, *base, exponent);
-        }
+    }
     else
         (void) xsnprintf(buffer, elemof_buffer,             "%g" "^" "%g",           *base, exponent);
 
@@ -258,15 +258,15 @@ gr_axis_iterator_first(
     iterp->iter = p_axis->current.min;
 
     if(p_axis->bits.log_scale)
-        {
+    {
         iterp->base = p_axis->bits.log_base;
 
         gr_axis_iterator_renormalise_log(iterp);
-        }
+    }
     else
-        {
+    {
         iterp->base = 10.0; /* in case we use pow_label when not log_scale */
-        }
+    }
 
     return(1);
 }
@@ -278,7 +278,7 @@ gr_axis_iterator_next(
     P_GR_AXIS_ITERATOR iterp /*inout*/)
 {
     if(p_axis->bits.log_scale)
-        {
+    {
         if(major)
             iterp->mantissa *= iterp->step; /* use step as multiplier */
         else
@@ -288,18 +288,18 @@ gr_axis_iterator_next(
 
         if(iterp->mantissa >= iterp->base)
             gr_axis_iterator_renormalise_log(iterp);
-        }
+    }
     else
-        {
+    {
         iterp->iter += iterp->step;
 
         /* SKS after 4.12 26mar92 - correct for very small FP rounding errors (wouldn't loop up to 3.0 in 0.1 steps) */
         if(fabs(iterp->iter - p_axis->current.max) / iterp->step < 0.000244140625) /* 2^-12 */
-            {
+        {
             iterp->iter = p_axis->current.max;
             return(1);
-            }
         }
+    }
 
     return(iterp->iter <= p_axis->current.max);
 }
@@ -349,23 +349,23 @@ gr_axis_addin_category_grids(
         return(1);
 
     if(front)
-        {
+    {
         switch(p_axis->bits.arf)
-            {
-            default:
-            case GR_AXIS_POSITION_AUTO:
-                return(1);
-
-            case GR_AXIS_POSITION_FRONT:
-                draw_main = 1;
-                break;
-
-            case GR_AXIS_POSITION_REAR:
-                return(1);
-            }
-        }
-    else
         {
+        default:
+        case GR_AXIS_POSITION_AUTO:
+            return(1);
+
+        case GR_AXIS_POSITION_FRONT:
+            draw_main = 1;
+            break;
+
+        case GR_AXIS_POSITION_REAR:
+            return(1);
+        }
+    }
+    else
+    {
 #if 1
         /* I now argue that bringing the axis to the front
          * shouldn't affect rear grid drawing state
@@ -373,21 +373,21 @@ gr_axis_addin_category_grids(
         draw_main = 1;
 #else
         switch(p_axis->bits.arf)
-            {
-            default:
-            case GR_AXIS_POSITION_AUTO:
-                draw_main = 1;
-                break;
+        {
+        default:
+        case GR_AXIS_POSITION_AUTO:
+            draw_main = 1;
+            break;
 
-            case GR_AXIS_POSITION_FRONT:
-                return(1);
+        case GR_AXIS_POSITION_FRONT:
+            return(1);
 
-            case GR_AXIS_POSITION_REAR:
-                draw_main = 1;
-                break;
-            }
-#endif
+        case GR_AXIS_POSITION_REAR:
+            draw_main = 1;
+            break;
         }
+#endif
+    }
 
     id = *p_id;
 
@@ -405,7 +405,7 @@ gr_axis_addin_category_grids(
     for(point  = 0;
         point <= total_n_points;
         point += step)
-        {
+    {
         GR_COORD xpos, ypos;
         GR_BOX line_box;
 
@@ -420,7 +420,7 @@ gr_axis_addin_category_grids(
             xpos += cp->barlinech.cache.cat_group_width / 2;
 
         if(draw_main)
-            {
+        {
             /* vertical grid line up the entire y span */
             line_box.x0 = xpos;
             line_box.y0 = ypos;
@@ -436,7 +436,7 @@ gr_axis_addin_category_grids(
                 break;
 
             if(cp->d3.bits.use && front)
-                {
+            {
                 /* diagonal grid lines across the top too ONLY DURING THE FRONT PHASE */
                 line_box.x0 = xpos;
                 line_box.y0 = ypos + cp->plotarea.size.y;
@@ -446,11 +446,11 @@ gr_axis_addin_category_grids(
 
                 if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
                     break;
-                }
             }
+        }
 
         if(cp->d3.bits.use && !front)
-            {
+        {
             /* diagonal grid lines across the midplane and floor too ONLY DURING THE REAR PHASE */
             line_box.x0 = xpos;
             line_box.y0 = ypos;
@@ -462,16 +462,16 @@ gr_axis_addin_category_grids(
                 break;
 
             if((axis_ypos != 0) && (axis_ypos != cp->plotarea.size.y))
-                {
+            {
                 /* grid line across middle (simply shift) */
                 line_box.y0 += axis_ypos;
                 line_box.y1 += axis_ypos;
 
                 if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
                     break;
-                }
             }
         }
+    }
 
     if(res < 0)
         return(res);
@@ -493,29 +493,29 @@ gr_axis_ticksizes(
     ticksize = MIN(cp->plotarea.size.x, cp->plotarea.size.y) / TICKLEN_FRAC;
 
     switch(ticksp->bits.tick)
-        {
-        case GR_AXIS_TICK_POSITION_NONE:
-            *p_top    = 0;
-            *p_bottom = 0;
-            return(0);
+    {
+    case GR_AXIS_TICK_POSITION_NONE:
+        *p_top    = 0;
+        *p_bottom = 0;
+        return(0);
 
-        case GR_AXIS_TICK_POSITION_HALF_TOP:
-            *p_top    = ticksize;
-            *p_bottom = 0;
-            break;
+    case GR_AXIS_TICK_POSITION_HALF_TOP:
+        *p_top    = ticksize;
+        *p_bottom = 0;
+        break;
 
-        case GR_AXIS_TICK_POSITION_HALF_BOTTOM:
-            *p_top    = 0;
-            *p_bottom = ticksize;
-            break;
+    case GR_AXIS_TICK_POSITION_HALF_BOTTOM:
+        *p_top    = 0;
+        *p_bottom = ticksize;
+        break;
 
-        default:
-            assert(0);
-        case GR_AXIS_TICK_POSITION_FULL:
-            *p_top    = ticksize;
-            *p_bottom = ticksize;
-            break;
-        }
+    default:
+        assert(0);
+    case GR_AXIS_TICK_POSITION_FULL:
+        *p_top    = ticksize;
+        *p_bottom = ticksize;
+        break;
+    }
 
     return(1);
 }
@@ -571,7 +571,7 @@ gr_axis_addin_category_labels(
     for(point  = 0;
         point <  total_n_points; /* not <= as never have category label for end tick! */
         point += step)
-        {
+    {
         GR_COORD xpos;
         GR_BOX text_box;
         GR_CHART_VALUE cv;
@@ -595,31 +595,31 @@ gr_axis_addin_category_labels(
 
         /* always centre within one cat group else left justify */
         if(swidth_mp < gwidth_mp)
-            {
+        {
             text_box.x0 += (gwidth_mp - swidth_mp) / GR_MILLIPOINTS_PER_PIXIT / 2;
-            }
+        }
         else
-            {
+        {
             /* truncate the little bugger to AVAILABLE WIDTH */
             swidth_mp = available_width_mp;
 
             gr_font_truncate(f, cv.data.text, (int *) &swidth_mp);
-            }
+        }
 
         swidth_px = swidth_mp / GR_MILLIPOINTS_PER_PIXIT;
 
         switch(p_axis->bits.lzr)
-            {
-            case GR_AXIS_POSITION_TOP:
-                text_box.y0 += (3 * ticksize_top) / 2;
-                text_box.y0 += (1 * textstyle.height) / 4; /* st. descenders don't crash into ticks */
-                break;
+        {
+        case GR_AXIS_POSITION_TOP:
+            text_box.y0 += (3 * ticksize_top) / 2;
+            text_box.y0 += (1 * textstyle.height) / 4; /* st. descenders don't crash into ticks */
+            break;
 
-            default:
-                text_box.y0 -= (3 * ticksize_bottom) / 2;
-                text_box.y0 -= (3 * textstyle.height) / 4; /* st. ascenders don't crash into ticks */
-                break;
-            }
+        default:
+            text_box.y0 -= (3 * ticksize_bottom) / 2;
+            text_box.y0 -= (3 * textstyle.height) / 4; /* st. ascenders don't crash into ticks */
+            break;
+        }
 
         /* map to front or back of 3d world */
         if(cp->d3.bits.use)
@@ -630,7 +630,7 @@ gr_axis_addin_category_labels(
 
         if((res = gr_diag_text_new(p_gr_diag, NULL, *p_id, &text_box, cv.data.text, &textstyle)) < 0)
             break;
-        }
+    }
 
     gr_riscdiag_font_dispose(&f);
 
@@ -678,10 +678,10 @@ gr_axis_addin_category_ticks(
         return(1);
 
     if(!major)
-        {
+    {
         ticksize_top    /= 2;
         ticksize_bottom /= 2;
-        }
+    }
 
     axis_ypos -= ticksize_bottom;
     ticksize   = ticksize_top + ticksize_bottom;
@@ -702,7 +702,7 @@ gr_axis_addin_category_ticks(
     for(point  = 0;
         point <= total_n_points;
         point += step)
-        {
+    {
         GR_COORD xpos;
         GR_BOX line_box;
 
@@ -727,7 +727,7 @@ gr_axis_addin_category_ticks(
 
         if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
             break;
-        }
+    }
 
     if(res < 0)
         return(res);
@@ -761,40 +761,40 @@ gr_axis_addin_category(
     S32              res;
 
     switch(p_axis->bits.lzr)
-        {
-        case GR_AXIS_POSITION_TOP:
-            axis_ypos = cp->plotarea.size.y;
-            break;
+    {
+    case GR_AXIS_POSITION_TOP:
+        axis_ypos = cp->plotarea.size.y;
+        break;
 
-        case GR_AXIS_POSITION_ZERO:
-            axis_ypos = (GR_COORD) ((F64) cp->plotarea.size.y *
-                                    cp->axes[axes_idx].axis[Y_AXIS_IDX /*NB*/].zero_frac);
-            break;
+    case GR_AXIS_POSITION_ZERO:
+        axis_ypos = (GR_COORD) ((F64) cp->plotarea.size.y *
+                                cp->axes[axes_idx].axis[Y_AXIS_IDX /*NB*/].zero_frac);
+        break;
 
-        default:
-            assert(0);
-        case GR_AXIS_POSITION_BOTTOM:
-            axis_ypos = 0;
-            break;
-        }
+    default:
+        assert(0);
+    case GR_AXIS_POSITION_BOTTOM:
+        axis_ypos = 0;
+        break;
+    }
 
     switch(p_axis->bits.arf)
-        {
-        case GR_AXIS_POSITION_FRONT:
-        atfront:;
-            draw_main = (front == 1);
-            break;
+    {
+    case GR_AXIS_POSITION_FRONT:
+    atfront:;
+        draw_main = (front == 1);
+        break;
 
-        default:
-        case GR_AXIS_POSITION_AUTO:
-            if(cp->d3.bits.use)
-                if(axis_ypos != cp->plotarea.size.y)
-                    goto atfront;
+    default:
+    case GR_AXIS_POSITION_AUTO:
+        if(cp->d3.bits.use)
+            if(axis_ypos != cp->plotarea.size.y)
+                goto atfront;
 
-        case GR_AXIS_POSITION_REAR:
-            draw_main = (front == 0);
-            break;
-        }
+    case GR_AXIS_POSITION_REAR:
+        draw_main = (front == 0);
+        break;
+    }
 
     gr_chart_objid_from_axes_idx(cp, axes_idx, axis_idx, &id);
 
@@ -810,7 +810,7 @@ gr_axis_addin_category(
         return(res);
 
     if(draw_main)
-        {
+    {
         GR_BOX line_box;
         GR_LINESTYLE linestyle;
 
@@ -844,7 +844,7 @@ gr_axis_addin_category(
         /* labels */
         if((res = gr_axis_addin_category_labels(cp, &id, total_n_points, axis_ypos, front)) < 0)
             return(res);
-        }
+    }
 
     gr_diag_group_end(p_gr_diag, &axisStart);
 
@@ -890,31 +890,31 @@ gr_axis_addin_value_grids_x(
         return(1);
 
     if(front)
-        {
+    {
         switch(p_axis->bits.arf)
-            {
-            case GR_AXIS_POSITION_FRONT:
-                break;
+        {
+        case GR_AXIS_POSITION_FRONT:
+            break;
 
-            default:
-            case GR_AXIS_POSITION_AUTO:
-            case GR_AXIS_POSITION_REAR:
-                return(1);
-            }
+        default:
+        case GR_AXIS_POSITION_AUTO:
+        case GR_AXIS_POSITION_REAR:
+            return(1);
         }
+    }
     else
-        {
+    {
         switch(p_axis->bits.arf)
-            {
-            case GR_AXIS_POSITION_FRONT:
-                return(1);
+        {
+        case GR_AXIS_POSITION_FRONT:
+            return(1);
 
-            default:
-            case GR_AXIS_POSITION_AUTO:
-            case GR_AXIS_POSITION_REAR:
-                break;
-            }
+        default:
+        case GR_AXIS_POSITION_AUTO:
+        case GR_AXIS_POSITION_REAR:
+            break;
         }
+    }
 
     id = *p_id;
 
@@ -928,7 +928,7 @@ gr_axis_addin_value_grids_x(
     for(loop = gr_axis_iterator_first(p_axis, major, &iterator);
         loop;
         loop = gr_axis_iterator_next( p_axis, major, &iterator))
-        {
+    {
         GR_COORD xpos;
         GR_BOX line_box;
 
@@ -946,7 +946,7 @@ gr_axis_addin_value_grids_x(
 
         if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
             break;
-        }
+    }
 
     if(res < 0)
         return(res);
@@ -989,23 +989,23 @@ gr_axis_addin_value_grids_y(
         return(1);
 
     if(front)
-        {
+    {
         switch(p_axis->bits.arf)
-            {
-            default:
-            case GR_AXIS_POSITION_AUTO:
-                return(1);
-
-            case GR_AXIS_POSITION_FRONT:
-                draw_main = 1;
-                break;
-
-            case GR_AXIS_POSITION_REAR:
-                return(1);
-            }
-        }
-    else
         {
+        default:
+        case GR_AXIS_POSITION_AUTO:
+            return(1);
+
+        case GR_AXIS_POSITION_FRONT:
+            draw_main = 1;
+            break;
+
+        case GR_AXIS_POSITION_REAR:
+            return(1);
+        }
+    }
+    else
+    {
 #if 1
         /* I now argue that bringing the axis to the front
          * shouldn't affect rear grid drawing state
@@ -1013,21 +1013,21 @@ gr_axis_addin_value_grids_y(
         draw_main = 1;
 #else
         switch(p_axis->bits.arf)
-            {
-            default:
-            case GR_AXIS_POSITION_AUTO:
-                draw_main = 1;
-                break;
+        {
+        default:
+        case GR_AXIS_POSITION_AUTO:
+            draw_main = 1;
+            break;
 
-            case GR_AXIS_POSITION_FRONT:
-                return(1);
+        case GR_AXIS_POSITION_FRONT:
+            return(1);
 
-            case GR_AXIS_POSITION_REAR:
-                draw_main = 1;
-                break;
-            }
-#endif
+        case GR_AXIS_POSITION_REAR:
+            draw_main = 1;
+            break;
         }
+#endif
+    }
 
     id = *p_id;
 
@@ -1041,14 +1041,14 @@ gr_axis_addin_value_grids_y(
     for(loop = gr_axis_iterator_first(p_axis, major, &iterator);
         loop;
         loop = gr_axis_iterator_next( p_axis, major, &iterator))
-        {
+    {
         GR_COORD ypos;
         GR_BOX line_box;
 
         ypos = gr_value_pos(cp, axes_idx, axis_idx, &iterator.iter);
 
         if(draw_main)
-            {
+        {
             /* horizontal grid line across entire x span */
             line_box.x0  = 0;
             line_box.y0  = ypos;
@@ -1067,7 +1067,7 @@ gr_axis_addin_value_grids_y(
                 break;
 
             if(cp->d3.bits.use && front)
-                {
+            {
                 /* grid lines across front of right hand side ONLY DURING THE FRONT PHASE **/
 
                 line_box.x0  = cp->plotarea.size.x;
@@ -1081,11 +1081,11 @@ gr_axis_addin_value_grids_y(
 
                 if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
                     break;
-                }
             }
+        }
 
         if(cp->d3.bits.use && !front)
-            {
+        {
             /* grid lines across midplane and side wall ONLY DURING THE REAR PHASE */
             line_box.x0  = 0;
             line_box.y0  = ypos;
@@ -1100,16 +1100,16 @@ gr_axis_addin_value_grids_y(
                 break;
 
             if((axis_xpos != 0) && (axis_xpos != cp->plotarea.size.x))
-                {
+            {
                 /* grid line across middle (simply shift) */
                 line_box.x0 += axis_xpos;
                 line_box.x1 += axis_xpos;
 
                 if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
                     break;
-                }
             }
         }
+    }
 
     if(res < 0)
         return(res);
@@ -1165,7 +1165,7 @@ gr_axis_addin_value_labels_x(
     for(loop = gr_axis_iterator_first(p_axis, major, &iterator);
         loop;
         loop = gr_axis_iterator_next( p_axis, major, &iterator))
-        {
+    {
         GR_COORD xpos;
         GR_BOX text_box;
         GR_CHART_VALUE cv;
@@ -1185,7 +1185,7 @@ gr_axis_addin_value_labels_x(
                            &iterator.iter,
                            &iterator.base);
         else
-            {
+        {
             S32 decimals = ticksp->bits.decimals;
             S32 eformat  = (fabs(iterator.iter) >= U32_MAX);
 
@@ -1195,7 +1195,7 @@ gr_axis_addin_value_labels_x(
                         decimals,
                         NULLCH /* dp_ch */,
                         ','    /* ths_ch */);
-            }
+        }
 
         swidth_mp = gr_font_stringwidth(f, cv.data.text);
 
@@ -1211,17 +1211,17 @@ gr_axis_addin_value_labels_x(
             continue;
 
         switch(p_axis->bits.lzr)
-            {
-            case GR_AXIS_POSITION_TOP:
-                text_box.y0 += (3 * ticksize_top) / 2;
-                text_box.y0 += (1 * textstyle.height) / 4; /* st. descenders don't crash into ticks */
-                break;
+        {
+        case GR_AXIS_POSITION_TOP:
+            text_box.y0 += (3 * ticksize_top) / 2;
+            text_box.y0 += (1 * textstyle.height) / 4; /* st. descenders don't crash into ticks */
+            break;
 
-            default:
-                text_box.y0 -= (3 * ticksize_bottom) / 2;
-                text_box.y0 -= (3 * textstyle.height) / 4; /* st. ascenders don't crash into ticks */
-                break;
-            }
+        default:
+            text_box.y0 -= (3 * ticksize_bottom) / 2;
+            text_box.y0 -= (3 * textstyle.height) / 4; /* st. ascenders don't crash into ticks */
+            break;
+        }
 
         text_box.x1 = text_box.x0 + swidth_px;
         text_box.y1 = text_box.y0 + textstyle.height;
@@ -1230,7 +1230,7 @@ gr_axis_addin_value_labels_x(
 
         if((res = gr_diag_text_new(p_gr_diag, NULL, *p_id, &text_box, cv.data.text, &textstyle)) < 0)
             break;
-        }
+    }
 
     gr_riscdiag_font_dispose(&f);
 
@@ -1291,7 +1291,7 @@ gr_axis_addin_value_labels_y(
     for(loop = gr_axis_iterator_first(p_axis, major, &iterator);
         loop;
         loop = gr_axis_iterator_next( p_axis, major, &iterator))
-        {
+    {
         GR_BOX text_box;
         GR_COORD ypos;
         GR_CHART_VALUE cv;
@@ -1316,7 +1316,7 @@ gr_axis_addin_value_labels_y(
                            &iterator.iter,
                            &iterator.base);
         else
-            {
+        {
             S32 decimals = ticksp->bits.decimals;
             S32 eformat  = (fabs(iterator.iter) >= U32_MAX);
 
@@ -1326,7 +1326,7 @@ gr_axis_addin_value_labels_y(
                         decimals,
                         NULLCH /* dp_ch */,
                         ','    /* ths_ch */);
-            }
+        }
 
         swidth_mp = gr_font_stringwidth(f, cv.data.text);
 
@@ -1337,16 +1337,16 @@ gr_axis_addin_value_labels_y(
 
         /* if axis at right then left just else right just */
         if(p_axis->bits.lzr == GR_AXIS_POSITION_RIGHT)
-            {
+        {
             text_box.x0 += ticksize_right;
             text_box.x0 += spacewidth_px;
-            }
+        }
         else
-            {
+        {
             text_box.x0 -= ticksize_left;
             text_box.x0 -= spacewidth_px;
             text_box.x0 -= swidth_px;
-            }
+        }
 
         /* map to front or back of 3d world */
         if(cp->d3.bits.use)
@@ -1360,7 +1360,7 @@ gr_axis_addin_value_labels_y(
 
         if((res = gr_diag_text_new(p_gr_diag, NULL, *p_id, &text_box, cv.data.text, &textstyle)) < 0)
             break;
-        }
+    }
 
     gr_riscdiag_font_dispose(&f);
 
@@ -1414,7 +1414,7 @@ gr_axis_addin_value_ticks(
     for(loop = gr_axis_iterator_first(p_axis, major, &iterator);
         loop;
         loop = gr_axis_iterator_next( p_axis, major, &iterator))
-        {
+    {
         GR_COORD pos;
         GR_BOX line_box;
 
@@ -1442,7 +1442,7 @@ gr_axis_addin_value_ticks(
 
         if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
             break;
-        }
+    }
 
     if(res < 0)
         return(res);
@@ -1477,10 +1477,10 @@ gr_axis_addin_value_ticks_x(
         return(1);
 
     if(!major)
-        {
+    {
         ticksize_top    /= 2;
         ticksize_bottom /= 2;
-        }
+    }
 
     axis_pos.y = axis_ypos - ticksize_bottom;
     ticksize   = ticksize_top + ticksize_bottom;
@@ -1511,10 +1511,10 @@ gr_axis_addin_value_ticks_y(
         return(1);
 
     if(!major)
-        {
+    {
         ticksize_left  /= 2;
         ticksize_right /= 2;
-        }
+    }
 
     axis_pos.x = axis_xpos - ticksize_left;
     ticksize   = ticksize_left + ticksize_right;
@@ -1544,39 +1544,39 @@ gr_axis_addin_value_x(
     S32              res;
 
     switch(p_axis->bits.lzr)
-        {
-        case GR_AXIS_POSITION_TOP:
-            axis_ypos = cp->plotarea.size.y;
-            break;
+    {
+    case GR_AXIS_POSITION_TOP:
+        axis_ypos = cp->plotarea.size.y;
+        break;
 
-        case GR_AXIS_POSITION_ZERO:
-            axis_ypos = (GR_COORD) ((F64) cp->plotarea.size.y *
-                                    cp->axes[axes_idx].axis[Y_AXIS_IDX /*NB*/].zero_frac);
-            break;
+    case GR_AXIS_POSITION_ZERO:
+        axis_ypos = (GR_COORD) ((F64) cp->plotarea.size.y *
+                                cp->axes[axes_idx].axis[Y_AXIS_IDX /*NB*/].zero_frac);
+        break;
 
-        default:
-            assert(0);
-        case GR_AXIS_POSITION_LEFT:
-            axis_ypos = 0;
-            break;
-        }
+    default:
+        assert(0);
+    case GR_AXIS_POSITION_LEFT:
+        axis_ypos = 0;
+        break;
+    }
 
     /* NB. in 2d AUTO and REAR synonymous */
 
     /* no 3d to consider here */
 
     switch(p_axis->bits.arf)
-        {
-        case GR_AXIS_POSITION_FRONT:
-            draw_main = front;
-            break;
+    {
+    case GR_AXIS_POSITION_FRONT:
+        draw_main = front;
+        break;
 
-        default:
-        case GR_AXIS_POSITION_AUTO:
-        case GR_AXIS_POSITION_REAR:
-            draw_main = !front;
-            break;
-        }
+    default:
+    case GR_AXIS_POSITION_AUTO:
+    case GR_AXIS_POSITION_REAR:
+        draw_main = !front;
+        break;
+    }
 
     gr_chart_objid_from_axes_idx(cp, axes_idx, axis_idx, &id);
 
@@ -1592,7 +1592,7 @@ gr_axis_addin_value_x(
         return(res);
 
     if(draw_main)
-        {
+    {
         /* horizontal main axis line */
         GR_BOX line_box;
         GR_LINESTYLE linestyle;
@@ -1622,7 +1622,7 @@ gr_axis_addin_value_x(
         /* labels */
         if((res = gr_axis_addin_value_labels_x(cp, &id, axes_idx, axis_ypos, front)) < 0)
             return(res);
-        }
+    }
 
     gr_diag_group_end(p_gr_diag, &axisStart);
 
@@ -1652,42 +1652,42 @@ gr_axis_addin_value_y(
     S32              res;
 
     switch(p_axis->bits.lzr)
-        {
-        case GR_AXIS_POSITION_RIGHT:
-            axis_xpos = cp->plotarea.size.x;
-            break;
+    {
+    case GR_AXIS_POSITION_RIGHT:
+        axis_xpos = cp->plotarea.size.x;
+        break;
 
-        case GR_AXIS_POSITION_ZERO:
-            axis_xpos = (GR_COORD) ((F64) cp->plotarea.size.x *
-                                    cp->axes[axes_idx].axis[X_AXIS_IDX /*NB*/].zero_frac);
-            break;
+    case GR_AXIS_POSITION_ZERO:
+        axis_xpos = (GR_COORD) ((F64) cp->plotarea.size.x *
+                                cp->axes[axes_idx].axis[X_AXIS_IDX /*NB*/].zero_frac);
+        break;
 
-        default:
-            assert(0);
-        case GR_AXIS_POSITION_LEFT:
-            axis_xpos = 0;
-            break;
-        }
+    default:
+        assert(0);
+    case GR_AXIS_POSITION_LEFT:
+        axis_xpos = 0;
+        break;
+    }
 
     /* NB. in 2d AUTO and REAR synonymous */
 
     switch(p_axis->bits.arf)
-        {
-        case GR_AXIS_POSITION_FRONT:
-        atfront:;
-            draw_main = (front == 1);
-            break;
+    {
+    case GR_AXIS_POSITION_FRONT:
+    atfront:;
+        draw_main = (front == 1);
+        break;
 
-        default:
-        case GR_AXIS_POSITION_AUTO:
-            if(cp->d3.bits.use)
-                if(axis_xpos != cp->plotarea.size.x)
-                    goto atfront;
+    default:
+    case GR_AXIS_POSITION_AUTO:
+        if(cp->d3.bits.use)
+            if(axis_xpos != cp->plotarea.size.x)
+                goto atfront;
 
-        case GR_AXIS_POSITION_REAR:
-            draw_main = (front == 0);
-            break;
-        }
+    case GR_AXIS_POSITION_REAR:
+        draw_main = (front == 0);
+        break;
+    }
 
     gr_chart_objid_from_axes_idx(cp, axes_idx, axis_idx, &id);
 
@@ -1703,7 +1703,7 @@ gr_axis_addin_value_y(
         return(res);
 
     if(draw_main)
-        {
+    {
         /* axis line */
         GR_BOX line_box;
         GR_LINESTYLE linestyle;
@@ -1737,7 +1737,7 @@ gr_axis_addin_value_y(
         /* labels */
         if((res = gr_axis_addin_value_labels_y(cp, &id, axes_idx, axis_xpos, front)) < 0)
             return(res);
-        }
+    }
 
     gr_diag_group_end(p_gr_diag, &axisStart);
 
@@ -1755,21 +1755,21 @@ typedef struct GR_CHARTEDIT_CAT_AXIS_STATE
     wimp_w w;
 
     struct GR_CHARTEDIT_CAT_AXIS_STATE_AXIS
-        {
+    {
         UBF lzr : GR_AXIS_POSITION_LZR_BITS;
         UBF arf : GR_AXIS_POSITION_ARF_BITS;
-        }
+    }
     axis;
 
     struct GR_CHARTEDIT_CAT_AXIS_STATE_TICKS
-        {
+    {
         S32 val;
         S32 delta;
         S32 manual;
         S32 grid;
 
         UBF tick : GR_AXIS_TICK_SHAPE_BITS;
-        }
+    }
     major, minor;
 }
 GR_CHARTEDIT_CAT_AXIS_STATE;
@@ -1921,7 +1921,7 @@ gr_chartedit_selection_cat_axis_process(
             smp->delta = 1;
 
         for(;;)
-            {
+        {
             gr_chartedit_selection_cat_axis_encode(&state);
 
             if((f = dbox_fillin(d)) == dbox_CLOSE)
@@ -1935,88 +1935,88 @@ gr_chartedit_selection_cat_axis_process(
 
             /* adjusters all modify but rebuild at end */
             switch(f)
+            {
+            case dbox_OK:
+                break;
+
+            #ifndef NDEBUG
+            /* icons which can be clicked on for state but we don't want assert() to trap */
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BOTTOM:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ZERO:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_TOP:
+
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_FRONT:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_AUTO:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_REAR:
+
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_FULL:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_TOP:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_BOTTOM:
+
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_FULL:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_TOP:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_BOTTOM:
+                break;
+            #endif
+
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_AUTO:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL:
+                smp = &state.major;
+                mmp = &p_axis->major;
+
+                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL);
+
+                if(!smp->manual)
+                    smp->val = (S32) mmp->current;
+                break;
+
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_GRID:
+                state.major.grid = win_getonoff(w, f);
+                break;
+
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_AUTO:
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL:
+                smp = &state.minor;
+                mmp = &p_axis->minor;
+
+                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL);
+
+                if(!smp->manual)
+                    smp->val = (S32) mmp->current;
+                break;
+
+            case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_GRID:
+                state.minor.grid = win_getonoff(w, f);
+                break;
+
+            default:
+                smp = &state.major;
+
+                if(win_bumpint(w, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,
+                               &smp->val,
+                               smp->delta,
+                               1, INT_MAX))
                 {
-                case dbox_OK:
-                    break;
-
-                #ifndef NDEBUG
-                /* icons which can be clicked on for state but we don't want assert() to trap */
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BOTTOM:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ZERO:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_TOP:
-
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_FRONT:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_AUTO:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_REAR:
-
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_FULL:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_TOP:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_BOTTOM:
-
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_FULL:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_TOP:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_BOTTOM:
-                    break;
-                #endif
-
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_AUTO:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL:
-                    smp = &state.major;
-                    mmp = &p_axis->major;
-
-                    smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL);
-
-                    if(!smp->manual)
-                        smp->val = (S32) mmp->current;
-                    break;
-
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_GRID:
-                    state.major.grid = win_getonoff(w, f);
-                    break;
-
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_AUTO:
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL:
-                    smp = &state.minor;
-                    mmp = &p_axis->minor;
-
-                    smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL);
-
-                    if(!smp->manual)
-                        smp->val = (S32) mmp->current;
-                    break;
-
-                case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_GRID:
-                    state.minor.grid = win_getonoff(w, f);
-                    break;
-
-                default:
-                    smp = &state.major;
-
-                    if(win_bumpint(w, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,
-                                   &smp->val,
-                                   smp->delta,
-                                   1, INT_MAX))
-                        {
-                        state.major.manual = 1;
-                        break;
-                        }
-
-                    smp = &state.minor;
-
-                    if(win_bumpint(w, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,
-                                   &smp->val,
-                                   smp->delta,
-                                   1, state.major.val))
-                        {
-                        state.minor.manual = 1;
-                        break;
-                        }
-
-                    assert(0);
+                    state.major.manual = 1;
                     break;
                 }
+
+                smp = &state.minor;
+
+                if(win_bumpint(w, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,
+                               &smp->val,
+                               smp->delta,
+                               1, state.major.val))
+                {
+                    state.minor.manual = 1;
+                    break;
+                }
+
+                assert(0);
+                break;
+            }
 
             /* lzr */
 
@@ -2064,12 +2064,12 @@ gr_chartedit_selection_cat_axis_process(
 
             if(f == dbox_OK)
                 break;
-            }
+        }
 
         ok = (f == dbox_OK);
 
         if(ok)
-            {
+        {
             /* set chart from modified structure */
             p_axes = &cp->axes[modifying_axes_idx];
             p_axis = &p_axes->axis[modifying_axis_idx];
@@ -2094,10 +2094,10 @@ gr_chartedit_selection_cat_axis_process(
             mmp->bits.grid        = smp->grid;
 
             gr_chart_modify_and_rebuild(&cep->ch);
-            }
+        }
 
         persist = ok ? dbox_persist() : FALSE;
-        }
+    }
     while(persist);
 
     dbox_dispose(&d);
@@ -2110,30 +2110,30 @@ gr_chartedit_selection_cat_axis_process(
 ******************************************************************************/
 
 typedef struct GR_CHARTEDIT_AXIS_STATE
-    {
+{
     wimp_w w;
 
     struct GR_CHARTEDIT_AXIS_STATE_AXIS
-        {
+    {
         S32 manual, zero, log_scale, log_scale_modified, pow_label;
         F64 min, max, delta;
 
         UBF lzr : GR_AXIS_POSITION_LZR_BITS;
         UBF arf : GR_AXIS_POSITION_ARF_BITS;
-        }
+    }
     axis;
 
     struct GR_CHARTEDIT_AXIS_STATE_TICKS
-        {
+    {
         F64 val, delta;
         S32 manual, grid;
 
         UBF tick : GR_AXIS_TICK_SHAPE_BITS;
-        }
+    }
     major, minor;
 
     struct GR_CHARTEDIT_AXIS_STATE_SERIES
-        {
+    {
         S32 cumulative;
         S32 cumulative_modified;
 
@@ -2145,9 +2145,9 @@ typedef struct GR_CHARTEDIT_AXIS_STATE
 
         S32 stacked;
         S32 stacked_modified;
-        }
-    series;
     }
+    series;
+}
 GR_CHARTEDIT_AXIS_STATE;
 
 static const F64 dbl_min_limit     = -DBL_MAX;
@@ -2252,51 +2252,51 @@ gr_chartedit_selection_axis_process(
     id = cep->selection.id;
 
     switch(id.name)
+    {
+    case GR_CHART_OBJNAME_AXIS:
+        break;
+
+    case GR_CHART_OBJNAME_AXISGRID:
+    case GR_CHART_OBJNAME_AXISTICK:
+        id.name      = GR_CHART_OBJNAME_AXIS;
+        id.has_subno = 0; /* clear the crud */
+        id.subno     = 0;
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_BESTFITSER:
+    case GR_CHART_OBJNAME_POINT:
+    case GR_CHART_OBJNAME_DROPPOINT:
         {
-        case GR_CHART_OBJNAME_AXIS:
-            break;
+        GR_SERIES_IDX series_idx;
+        GR_AXES_IDX axes_idx;
 
-        case GR_CHART_OBJNAME_AXISGRID:
-        case GR_CHART_OBJNAME_AXISTICK:
-            id.name      = GR_CHART_OBJNAME_AXIS;
-            id.has_subno = 0; /* clear the crud */
-            id.subno     = 0;
-            break;
+        series_idx = gr_series_idx_from_external(cp, cep->selection.id.no);
+        axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
 
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_BESTFITSER:
-        case GR_CHART_OBJNAME_POINT:
-        case GR_CHART_OBJNAME_DROPPOINT:
-            {
-            GR_SERIES_IDX series_idx;
-            GR_AXES_IDX axes_idx;
-
-            series_idx = gr_series_idx_from_external(cp, cep->selection.id.no);
-            axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
-
-            gr_chart_objid_clear(&id);
-            id.name = GR_CHART_OBJNAME_AXIS;
-            id.no   = gr_axes_external_from_idx(cp, axes_idx, Y_AXIS_IDX);
-            }
-            break;
-
-        default:
-            gr_chart_objid_clear(&id);
-            id.name = GR_CHART_OBJNAME_AXIS;
-            id.no   = gr_axes_external_from_idx(cp, 0, Y_AXIS_IDX);
-            break;
+        gr_chart_objid_clear(&id);
+        id.name = GR_CHART_OBJNAME_AXIS;
+        id.no   = gr_axes_external_from_idx(cp, axes_idx, Y_AXIS_IDX);
         }
+        break;
+
+    default:
+        gr_chart_objid_clear(&id);
+        id.name = GR_CHART_OBJNAME_AXIS;
+        id.no   = gr_axes_external_from_idx(cp, 0, Y_AXIS_IDX);
+        break;
+    }
 
     modifying_axis_idx = gr_axes_idx_from_external(cp, id.no, &modifying_axes_idx);
 
     if( (cp->axes[modifying_axes_idx].charttype != GR_CHARTTYPE_SCAT) &&
         (cp->axes[0].charttype                  != GR_CHARTTYPE_SCAT) )
         if(modifying_axis_idx == 0)
-            {
+        {
             gr_chartedit_selection_cat_axis_process(cep, id); /* give him a hand with id processing */
             return;
-            }
+        }
 
     d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_AXIS, &errorp);
     if(!d)
@@ -2363,7 +2363,7 @@ gr_chartedit_selection_axis_process(
         state.series.stacked_modified    = 0;
 
         for(;;)
-            {
+        {
             gr_chartedit_selection_axis_encode(&state);
 
             if((f = dbox_fillin(d)) == dbox_CLOSE)
@@ -2377,206 +2377,206 @@ gr_chartedit_selection_axis_process(
 
             /* adjusters all modify but rebuild at end */
             switch(f)
+            {
+            case dbox_OK:
+                break;
+
+            #ifndef NDEBUG
+            /* icons which can be clicked on for state but we don't want assert() to trap */
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LEFT:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ZERO:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_RIGHT:
+
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_FRONT:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_AUTO:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_REAR:
+
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_FULL:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_LEFT:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_RIGHT:
+
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_FULL:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_LEFT:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_RIGHT:
+                break;
+            #endif
+
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_AUTO:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL:
+                state.axis.manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL);
+
+                if(!state.axis.manual)
                 {
-                case dbox_OK:
-                    break;
+                    state.axis.min = p_axis->current.min;
+                    state.axis.max = p_axis->current.max;
+                }
+                break;
 
-                #ifndef NDEBUG
-                /* icons which can be clicked on for state but we don't want assert() to trap */
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LEFT:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ZERO:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_RIGHT:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_ZERO:
+                state.axis.zero = win_getonoff(w, f);
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_FRONT:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_AUTO:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_REAR:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_LOG_SCALE:
+                state.axis.log_scale = win_getonoff(w, f);
+                state.axis.log_scale_modified = 1;
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_FULL:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_LEFT:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_RIGHT:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_POW_LABEL:
+                state.axis.pow_label = win_getonoff(w, f);
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_FULL:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_LEFT:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_RIGHT:
-                    break;
-                #endif
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL:
+                smp = &state.major;
+                mmp = &p_axis->major;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_AUTO:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL:
-                    state.axis.manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL);
+                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL);
 
-                    if(!state.axis.manual)
-                        {
-                        state.axis.min = p_axis->current.min;
-                        state.axis.max = p_axis->current.max;
-                        }
-                    break;
+                if(!smp->manual)
+                    smp->val = mmp->current;
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_ZERO:
-                    state.axis.zero = win_getonoff(w, f);
-                    break;
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_GRID:
+                state.major.grid = win_getonoff(w, f);
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_LOG_SCALE:
-                    state.axis.log_scale = win_getonoff(w, f);
-                    state.axis.log_scale_modified = 1;
-                    break;
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_AUTO:
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL:
+                smp = &state.minor;
+                mmp = &p_axis->minor;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_POW_LABEL:
-                    state.axis.pow_label = win_getonoff(w, f);
-                    break;
+                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL);
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL:
-                    smp = &state.major;
-                    mmp = &p_axis->major;
+                if(!smp->manual)
+                    smp->val = mmp->current;
+                break;
 
-                    smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL);
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_GRID:
+                state.minor.grid = win_getonoff(w, f);
+                break;
 
-                    if(!smp->manual)
-                        smp->val = mmp->current;
-                    break;
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_CUMULATIVE:
+                state.series.cumulative = win_getonoff(w, f);
+                state.series.cumulative_modified = 1;
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_GRID:
-                    state.major.grid = win_getonoff(w, f);
-                    break;
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_POINT_VARY:
+                state.series.point_vary = win_getonoff(w, f);
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_AUTO:
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL:
-                    smp = &state.minor;
-                    mmp = &p_axis->minor;
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_BEST_FIT:
+                state.series.best_fit = win_getonoff(w, f);
+                break;
 
-                    smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL);
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_FILL_AXIS:
+                state.series.fill_axis = win_getonoff(w, f);
+                break;
 
-                    if(!smp->manual)
-                        smp->val = mmp->current;
-                    break;
+            case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_STACKED:
+                state.series.stacked = win_getonoff(w, f);
+                state.series.stacked_modified = 1;
+                break;
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_GRID:
-                    state.minor.grid = win_getonoff(w, f);
-                    break;
+            default:
+                if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,
+                                  &state.axis.max,
+                                  &state.axis.delta,
+                                  &state.axis.min, &dbl_max_limit, INT_MAX))
+                {
+                    state.major.delta = gr_lin_major(state.axis.max - state.axis.min);
 
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_CUMULATIVE:
-                    state.series.cumulative = win_getonoff(w, f);
-                    state.series.cumulative_modified = 1;
-                    break;
-
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_POINT_VARY:
-                    state.series.point_vary = win_getonoff(w, f);
-                    break;
-
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_BEST_FIT:
-                    state.series.best_fit = win_getonoff(w, f);
-                    break;
-
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_FILL_AXIS:
-                    state.series.fill_axis = win_getonoff(w, f);
-                    break;
-
-                case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_STACKED:
-                    state.series.stacked = win_getonoff(w, f);
-                    state.series.stacked_modified = 1;
-                    break;
-
-                default:
-                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,
-                                      &state.axis.max,
-                                      &state.axis.delta,
-                                      &state.axis.min, &dbl_max_limit, INT_MAX))
-                        {
-                        state.major.delta = gr_lin_major(state.axis.max - state.axis.min);
-
-                        state.axis.manual = 1;
-                        break;
-                        }
-
-                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,
-                                      &state.axis.min,
-                                      &state.axis.delta,
-                                      state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
-                                      &state.axis.max, INT_MAX))
-                        {
-                        state.major.delta = gr_lin_major(state.axis.max - state.axis.min);
-
-                        state.axis.manual = 1;
-                        break;
-                        }
-
-                    smp = &state.major;
-
-                    if(state.axis.log_scale)
-                        {
-                        if(win_adjustbumphit(&f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL))
-                            {
-                            wimp_i dec = GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL - 1;
-                            F64 dval;
-
-                            dval = win_getdouble(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL, &smp->val, INT_MAX);
-                            dval = fabs(dval);
-
-                            if(f == dec)
-                                {
-                                /* try not to cause exceptions */
-
-                                if( dval <= dbl_min_interval_limit)
-                                    dval  = dbl_min_interval_limit;
-                                else
-                                    dval /= dbl_log_major_delta;
-                                }
-                            else
-                                {
-                                assert(DBL_MAX_10_EXP - 1 == 307);
-
-                                if( dval >= dbl_log_major_max_interval_limit)
-                                    dval  = dbl_log_major_max_interval_limit;
-                                else
-                                    {
-                                    /* start at one again if decremented to the limit value */
-                                    if(dval == dbl_min_interval_limit)
-                                        dval = 1.0;
-
-                                    dval *= dbl_log_major_delta;
-                                    }
-                                }
-
-                            smp->val = dval;
-
-                            smp->manual = 1;
-                            break;
-                            }
-                        }
-                    else
-                        {
-                        if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,
-                                          &smp->val,
-                                          &smp->delta,
-                                          &dbl_min_interval_limit,
-                                          &dbl_max_interval_limit, INT_MAX))
-                            {
-                            state.minor.delta = gr_lin_major(2.0 * smp->val);
-
-                            smp->manual = 1;
-                            break;
-                            }
-                        }
-
-                    smp = &state.minor;
-
-                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,
-                                      &smp->val,
-                                      state.axis.log_scale ? &dbl_log_minor_delta : &smp->delta,
-                                      &dbl_min_interval_limit,
-                                      state.axis.log_scale ? &dbl_log_minor_max_interval_limit : &dbl_max_interval_limit,
-                                      INT_MAX))
-                        {
-                        smp->manual = 1;
-                        break;
-                        }
-
-                    assert(0);
+                    state.axis.manual = 1;
                     break;
                 }
+
+                if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,
+                                  &state.axis.min,
+                                  &state.axis.delta,
+                                  state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
+                                  &state.axis.max, INT_MAX))
+                {
+                    state.major.delta = gr_lin_major(state.axis.max - state.axis.min);
+
+                    state.axis.manual = 1;
+                    break;
+                }
+
+                smp = &state.major;
+
+                if(state.axis.log_scale)
+                {
+                    if(win_adjustbumphit(&f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL))
+                    {
+                        wimp_i dec = GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL - 1;
+                        F64 dval;
+
+                        dval = win_getdouble(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL, &smp->val, INT_MAX);
+                        dval = fabs(dval);
+
+                        if(f == dec)
+                        {
+                            /* try not to cause exceptions */
+
+                            if( dval <= dbl_min_interval_limit)
+                                dval  = dbl_min_interval_limit;
+                            else
+                                dval /= dbl_log_major_delta;
+                        }
+                        else
+                        {
+                            assert(DBL_MAX_10_EXP - 1 == 307);
+
+                            if( dval >= dbl_log_major_max_interval_limit)
+                                dval  = dbl_log_major_max_interval_limit;
+                            else
+                            {
+                                /* start at one again if decremented to the limit value */
+                                if(dval == dbl_min_interval_limit)
+                                    dval = 1.0;
+
+                                dval *= dbl_log_major_delta;
+                            }
+                        }
+
+                        smp->val = dval;
+
+                        smp->manual = 1;
+                        break;
+                    }
+                }
+                else
+                {
+                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,
+                                      &smp->val,
+                                      &smp->delta,
+                                      &dbl_min_interval_limit,
+                                      &dbl_max_interval_limit, INT_MAX))
+                    {
+                        state.minor.delta = gr_lin_major(2.0 * smp->val);
+
+                        smp->manual = 1;
+                        break;
+                    }
+                }
+
+                smp = &state.minor;
+
+                if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,
+                                  &smp->val,
+                                  state.axis.log_scale ? &dbl_log_minor_delta : &smp->delta,
+                                  &dbl_min_interval_limit,
+                                  state.axis.log_scale ? &dbl_log_minor_max_interval_limit : &dbl_max_interval_limit,
+                                  INT_MAX))
+                {
+                    smp->manual = 1;
+                    break;
+                }
+
+                assert(0);
+                break;
+            }
 
             /* scale */
 
@@ -2642,12 +2642,12 @@ gr_chartedit_selection_axis_process(
 
             if(f == dbox_OK)
                 break;
-            }
+        }
 
         ok = (f == dbox_OK);
 
         if(ok)
-            {
+        {
             GR_SERIES_IDX series_idx;
             P_GR_SERIES serp;
 
@@ -2657,10 +2657,10 @@ gr_chartedit_selection_axis_process(
 
             p_axis->bits.manual     = state.axis.manual;
             if(p_axis->bits.manual)
-                {
+            {
                 p_axis->punter.min  = state.axis.min;
                 p_axis->punter.max  = state.axis.max;
-                }
+            }
             p_axis->bits.incl_zero  = state.axis.zero;
             p_axis->bits.log_scale  = state.axis.log_scale;
             p_axis->bits.pow_label  = state.axis.pow_label;
@@ -2693,20 +2693,20 @@ gr_chartedit_selection_axis_process(
             for(series_idx = cp->axes[modifying_axes_idx].series.stt_idx;
                 series_idx < cp->axes[modifying_axes_idx].series.end_idx;
                 series_idx++)
-                {
+            {
                 serp = getserp(cp, series_idx);
 
                 if( state.series.stacked_modified     ||
                     state.series.cumulative_modified  ||
                     state.axis.log_scale_modified     )
                     * (int *) &serp->valid = 0;
-                }
-
-            gr_chart_modify_and_rebuild(&cep->ch);
             }
 
-        persist = ok ? dbox_persist() : FALSE;
+            gr_chart_modify_and_rebuild(&cep->ch);
         }
+
+        persist = ok ? dbox_persist() : FALSE;
+    }
     while(persist);
 
     dbox_dispose(&d);

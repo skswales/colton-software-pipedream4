@@ -169,12 +169,12 @@ gr_colour_from_riscDraw(
     * (int *) &colour = 0;
 
     if(riscDraw != DRAW_COLOUR_Transparent)
-        {
+    {
         colour.visible  = 1;
         colour.red      = ((unsigned int) riscDraw >>  8) & 0xFF;
         colour.green    = ((unsigned int) riscDraw >> 16) & 0xFF;
         colour.blue     = ((unsigned int) riscDraw >> 24) & 0xFF;
-        }
+    }
 
     return(colour);
 }
@@ -200,11 +200,11 @@ gr_riscdiag_diagram_delete(
     P_GR_RISCDIAG p_gr_riscdiag)
 {
     if(p_gr_riscdiag)
-        {
+    {
         p_gr_riscdiag->dd_allocsize = 0;
 
         draw_diag_dispose(&p_gr_riscdiag->draw_diag);
-        }
+    }
 }
 
 /******************************************************************************
@@ -227,11 +227,11 @@ gr_riscdiag_diagram_end(
 
     /* reduce size of diagram to final size (never zero) */
     if(n_bytes != p_gr_riscdiag->dd_allocsize)
-        {
+    {
         /* shrink */
         (void) flex_realloc(&p_gr_riscdiag->draw_diag.data, (int) n_bytes);
         p_gr_riscdiag->dd_allocsize = n_bytes;
-        }
+    }
 
     /* always set sensible bbox */
     * (int *) &process = 0;
@@ -432,7 +432,7 @@ _gr_riscdiag_ensure(
 
     /* need to get more space for the diag? */
     if(size > (p_gr_riscdiag->dd_allocsize - p_gr_riscdiag->draw_diag.length))
-        {
+    {
         U32 requiredsize, allocsize, allocdelta;
         P_BYTE mp;
 
@@ -464,11 +464,11 @@ _gr_riscdiag_ensure(
         result = mp - p_gr_riscdiag->dd_allocsize + p_gr_riscdiag->draw_diag.length;
 
         p_gr_riscdiag->dd_allocsize = allocsize;
-        }
+    }
     else
-        { /* return pointer to base of ensured allocation and skip it */
+    {   /* return pointer to base of ensured allocation and skip it */
         result = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, p_gr_riscdiag->draw_diag.length);
-        }
+    }
 
     p_gr_riscdiag->draw_diag.length += size;
 
@@ -527,32 +527,32 @@ gr_riscdiag_fontlist_lookup(
 
     /* actual end of font list object data may not be word aligned */
     while(nextObject - thisOffset >= 4)
-        {
+    {
         if(0 == _stricmp(pFontListElem.elem->name, szFontName))
-            {
+        {
             fontRefNum = pFontListElem.elem->fontref8;
             break;
-            }
+        }
 
         thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
 
         thisOffset += thislen;
 
         pFontListElem.p_byte += thislen;
-        }
+    }
 
     /* SKS after 4.11 21jan92 - try looking up our alternate font if not looking for "System" */
     if(!fontRefNum)
-        {
+    {
         static S32 recursed_internally = 0;
 
         if(!recursed_internally && (0 != _stricmp(szFontName, "System")))
-            {
+        {
             recursed_internally = 1;
             fontRefNum = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, fontListR, string_lookup(GR_CHART_MSG_ALTERNATE_FONTNAME));
             recursed_internally = 0;
-            }
         }
+    }
 
     return(fontRefNum);
 }
@@ -591,19 +591,19 @@ gr_riscdiag_fontlist_name(
 
     /* actual unpadded end of font list object data may not be word aligned */
     while(nextObject - thisOffset >= 4)
-        {
+    {
         if(pFontListElem.elem->fontref8 == fontRef)
-            {
+        {
             szFontName = pFontListElem.elem->name;
             break;
-            }
+        }
 
         thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
 
         thisOffset += thislen;
 
         pFontListElem.p_byte += thislen;
-        }
+    }
 
     return(szFontName);
 }
@@ -708,12 +708,12 @@ gr_riscdiag_fontlist_scan(
     if(gr_riscdiag_object_first(p_gr_riscdiag, &sttObject, &endObject, &pObject, FALSE))
         do  {
             if(pObject.hdr->type == DRAW_OBJECT_TYPE_FONTLIST)
-                {
+            {
                 p_gr_riscdiag->dd_fontListR = sttObject;
 
                 return(sttObject);
-                }
             }
+        }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &sttObject, &endObject, &pObject, FALSE));
 
     return(GR_RISCDIAG_OBJECT_NONE);
@@ -798,22 +798,22 @@ gr_riscdiag_object_base_size(
     U32 type)
 {
     switch(type)
-        {
-        case DRAW_OBJECT_TYPE_FONTLIST:
-            return(sizeof32(DRAW_OBJECT_FONTLIST));
+    {
+    case DRAW_OBJECT_TYPE_FONTLIST:
+        return(sizeof32(DRAW_OBJECT_FONTLIST));
 
-        case DRAW_OBJECT_TYPE_TEXT:
-            return(sizeof32(DRAW_OBJECT_TEXT));
+    case DRAW_OBJECT_TYPE_TEXT:
+        return(sizeof32(DRAW_OBJECT_TEXT));
 
-        case DRAW_OBJECT_TYPE_PATH:
-            return(sizeof32(DRAW_OBJECT_PATH));
+    case DRAW_OBJECT_TYPE_PATH:
+        return(sizeof32(DRAW_OBJECT_PATH));
 
-        case DRAW_OBJECT_TYPE_GROUP:
-            return(sizeof32(DRAW_OBJECT_GROUP));
+    case DRAW_OBJECT_TYPE_GROUP:
+        return(sizeof32(DRAW_OBJECT_GROUP));
 
-        default:
-            return(sizeof32(DRAW_OBJECT_HEADER));
-        }
+    default:
+        return(sizeof32(DRAW_OBJECT_HEADER));
+    }
 }
 
 /******************************************************************************
@@ -838,12 +838,12 @@ gr_riscdiag_object_end(
             report_ptr_cast(p_gr_riscdiag), *pObjectStart, p_gr_riscdiag->draw_diag.length, n_bytes);
 
     if(n_bytes == gr_riscdiag_object_base_size(pObject.hdr->type))
-        {
+    {
         trace_0(TRACE_MODULE_GR_CHART, "gr_riscdiag_object_end: destroy object and zero contents (for reuse) as nothing in it");
         memset32(pObject.p_byte, 0, n_bytes);
         p_gr_riscdiag->draw_diag.length = *pObjectStart;
         n_bytes = 0;
-        }
+    }
     else
         /* update object size */
         pObject.hdr->size = n_bytes;
@@ -901,10 +901,10 @@ gr_riscdiag_object_first(
         p_gr_riscdiag->dd_fontListR = thisObject;
 
     if(*pSttObject >= *pEndObject)
-        {
+    {
         *pSttObject = GR_RISCDIAG_OBJECT_FIRST;
         pObject.hdr = NULL;
-        }
+    }
 
     if(ppObject)
         /* maintain current lock as initial, now caller's responsibility */
@@ -1003,10 +1003,10 @@ gr_riscdiag_object_next(
     pObject.p_byte += objectSize;
 
     if(*pSttObject >= *pEndObject)
-        {
+    {
         *pSttObject = GR_RISCDIAG_OBJECT_FIRST;
         pObject.hdr = NULL;
-        }
+    }
 
     if(ppObject)
         /* maintain current lock, still caller's responsibility */
@@ -1034,29 +1034,29 @@ gr_riscdiag_object_recompute_bbox(
     objectType = pObject.hdr->type;
 
     switch(objectType)
-        {
-        case DRAW_OBJECT_TYPE_TEXT:
-            gr_riscdiag_string_recompute_bbox(p_gr_riscdiag, objectStart);
-            break;
+    {
+    case DRAW_OBJECT_TYPE_TEXT:
+        gr_riscdiag_string_recompute_bbox(p_gr_riscdiag, objectStart);
+        break;
 
-        case DRAW_OBJECT_TYPE_PATH:
-            gr_riscdiag_path_recompute_bbox(p_gr_riscdiag, objectStart);
-            break;
+    case DRAW_OBJECT_TYPE_PATH:
+        gr_riscdiag_path_recompute_bbox(p_gr_riscdiag, objectStart);
+        break;
 
-        case DRAW_OBJECT_TYPE_SPRITE:
-            /* sprite bbox defines its size not vice versa */
-            /* however it may be forced bad, in which case we shall make default size */
-            gr_riscdiag_sprite_recompute_bbox(p_gr_riscdiag, objectStart);
-            break;
+    case DRAW_OBJECT_TYPE_SPRITE:
+        /* sprite bbox defines its size not vice versa */
+        /* however it may be forced bad, in which case we shall make default size */
+        gr_riscdiag_sprite_recompute_bbox(p_gr_riscdiag, objectStart);
+        break;
 
-        case DRAW_OBJECT_TYPE_JPEG:
-            /* sprite comments apply too */
-            gr_riscdiag_jpeg_recompute_bbox(p_gr_riscdiag, objectStart);
-            break;
+    case DRAW_OBJECT_TYPE_JPEG:
+        /* sprite comments apply too */
+        gr_riscdiag_jpeg_recompute_bbox(p_gr_riscdiag, objectStart);
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 }
 
 /******************************************************************************
@@ -1090,7 +1090,7 @@ gr_riscdiag_object_reset_bbox_between(
     pObject.p_byte = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, thisObject);
 
     while(thisObject < endObject)
-        {
+    {
         objectType = pObject.hdr->type;
         objectSize = pObject.hdr->size;
 
@@ -1105,70 +1105,70 @@ gr_riscdiag_object_reset_bbox_between(
 
         /* font tables do not have bboxes - beware! */
         switch(objectType)
+        {
+        case DRAW_OBJECT_TYPE_FONTLIST: /* font tables do not have bounding boxes - beware! */
+            p_gr_riscdiag->dd_fontListR = thisObject;
+            break;
+
+        case DRAW_OBJECT_TYPE_DS_WINFONTLIST: /* these have an invalid bounding box (usually all-zeros from us, crossed max from Oak Draw) */
+            p_gr_riscdiag->dd_fontListW = thisObject;
+            break;
+
+        case DRAW_OBJECT_TYPE_OPTIONS: /* these have an invalid bounding box (usually all-zeros) */
+            p_gr_riscdiag->dd_options = thisObject;
+            break;
+
+        case DRAW_OBJECT_TYPE_GROUP:
+            /* NB. groups skipped wholesale (assumed correct unless recursing) */
+            if(process.recurse)
             {
-            case DRAW_OBJECT_TYPE_FONTLIST: /* font tables do not have bounding boxes - beware! */
-                p_gr_riscdiag->dd_fontListR = thisObject;
-                break;
+                DRAW_BOX group_box;
 
-            case DRAW_OBJECT_TYPE_DS_WINFONTLIST: /* these have an invalid bounding box (usually all-zeros from us, crossed max from Oak Draw) */
-                p_gr_riscdiag->dd_fontListW = thisObject;
-                break;
+                gr_riscdiag_object_reset_bbox_between(p_gr_riscdiag,
+                                                      &group_box,
+                                                      thisObject + sizeof(DRAW_OBJECT_GROUP),
+                                                      thisObject + objectSize,
+                                                      process);
 
-            case DRAW_OBJECT_TYPE_OPTIONS: /* these have an invalid bounding box (usually all-zeros) */
-                p_gr_riscdiag->dd_options = thisObject;
-                break;
-
-            case DRAW_OBJECT_TYPE_GROUP:
-                /* NB. groups skipped wholesale (assumed correct unless recursing) */
-                if(process.recurse)
-                    {
-                    DRAW_BOX group_box;
-
-                    gr_riscdiag_object_reset_bbox_between(p_gr_riscdiag,
-                                                          &group_box,
-                                                          thisObject + sizeof(DRAW_OBJECT_GROUP),
-                                                          thisObject + objectSize,
-                                                          process);
-
-                    if(process.recompute)
-                        pObject.p_byte = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, thisObject);
-
-                    pObject.hdr->bbox = group_box;
-                    }
-
-                draw_box_union(pBox, NULL, &pObject.hdr->bbox);
-                break;
-
-            case DRAW_OBJECT_TYPE_TAG:
-                {
-                /* can't do anything with tagged object goop bar skip it - for bboxing,
-                 * take bbox of tagged object (not the tag), skipping header
-                */
-                U32 tagHdrSize = sizeof(DRAW_OBJECT_TAG);
-
-                /* test for PRM or Draw conformance */
-                if(((const DRAW_OBJECT_TAG *) pObject.p_byte)->intTag <= 9 /*TEXTAREA*/)
-                    tagHdrSize -= 4;
-
-                draw_box_union(pBox, NULL, &PtrAddBytes(P_DRAW_OBJECT_HEADER, pObject.p_byte, tagHdrSize)->bbox);
-                }
-                break;
-
-            default:
                 if(process.recompute)
-                    {
-                    gr_riscdiag_object_recompute_bbox(p_gr_riscdiag, thisObject);
-
                     pObject.p_byte = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, thisObject);
-                    }
 
-                draw_box_union(pBox, NULL, &pObject.hdr->bbox);
-                break;
+                pObject.hdr->bbox = group_box;
             }
+
+            draw_box_union(pBox, NULL, &pObject.hdr->bbox);
+            break;
+
+        case DRAW_OBJECT_TYPE_TAG:
+            {
+            /* can't do anything with tagged object goop bar skip it - for bboxing,
+             * take bbox of tagged object (not the tag), skipping header
+            */
+            U32 tagHdrSize = sizeof(DRAW_OBJECT_TAG);
+
+            /* test for PRM or Draw conformance */
+            if(((const DRAW_OBJECT_TAG *) pObject.p_byte)->intTag <= 9 /*TEXTAREA*/)
+                tagHdrSize -= 4;
+
+            draw_box_union(pBox, NULL, &PtrAddBytes(P_DRAW_OBJECT_HEADER, pObject.p_byte, tagHdrSize)->bbox);
+            }
+            break;
+
+        default:
+            if(process.recompute)
+            {
+                gr_riscdiag_object_recompute_bbox(p_gr_riscdiag, thisObject);
+
+                pObject.p_byte = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, thisObject);
+            }
+
+            draw_box_union(pBox, NULL, &pObject.hdr->bbox);
+            break;
+        }
 
         thisObject    += objectSize;
         pObject.p_byte += objectSize;
-        }
+    }
 }
 
 extern STATUS

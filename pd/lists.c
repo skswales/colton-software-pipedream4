@@ -193,23 +193,23 @@ duplicate_list(
     delete_list(dst);
 
     if(*src)
-        {
+    {
         item = 0;
         nitems = list_numitem(*src);
 
         while(item < nitems)
-            {
+        {
             it = list_gotoitem(*src, item);
 
             if(it)
-                {
+            {
                 s_lptr = (P_LIST) it->i.inside;
 
                 if(NULL == (d_lptr = add_list_entry(dst, strlen((char *) s_lptr->value) + 1, &res)))
-                    {
+                {
                     delete_list(dst);
                     return(res);
-                    }
+                }
 
                 /* new item creation may have moved source */
                 it = list_gotoitem(*src, item);
@@ -217,11 +217,11 @@ duplicate_list(
 
                 d_lptr->key = s_lptr->key;
                 strcpy((char *) d_lptr->value, (char *) s_lptr->value);
-                }
+            }
 
             ++item;
-            }
         }
+    }
 
     return(1);
 }
@@ -318,7 +318,7 @@ searchkey(
     *itp = NULL;
 
     for(i = 0; i < list_numitem(*list); i++)
-        {
+    {
         it = list_gotoitem(*list, i);
         if(!it)
             continue;
@@ -327,12 +327,12 @@ searchkey(
                 i, ((P_LIST) it->i.inside)->key, key);
 
         if(((P_LIST) it->i.inside)->key == key)
-            {
+        {
             trace_1(TRACE_APP_PD4, "key matched at item %d", i);
             *itp = it;
             return(i);
-            }
         }
+    }
 
     trace_0(TRACE_APP_PD4, "key not found in list");
 

@@ -102,13 +102,13 @@ application_process_key(
     c = inpchr_riscos(c);
 
     if(c)
-        {
+    {
         res = act_on_c(c);
 
         /* may have key expansion going etc. */
         while((c = inpchr_riscos(0)) != 0)
             (void) act_on_c(c);
-        }
+    }
     else
         res = TRUE;
 
@@ -132,7 +132,7 @@ act_on_c(
     S32 c)
 {
     if(c < 0)
-        {
+    {
         MENU * mptr;
 
         trace_1(TRACE_APP_PD4, "act_on_c(%d) (command)", c);
@@ -145,35 +145,35 @@ act_on_c(
             last_command_menup = mptr;
 
         if(is_current_document() && xf_interrupted)
-            {
+        {
             draw_screen();
             draw_caret();
-            }
+        }
 
         do_command(mptr, -c, TRUE);
 
 #if TRACE_ALLOWED
         if(ctrlflag)                /* should have all been caught by now */
-            {
+        {
             char array[256];
             (void) xsnprintf(array, elemof32(array), ": command %d left escape unprocessed", -c);
             ack_esc();
             reperr(create_error(ERR_ESCAPE), array);
-            }
+        }
 #else
         ack_esc();
 #endif
 
         if(is_current_document())
-            {
+        {
             draw_screen();
             draw_caret();
-            }
+        }
         else
             trace_0(TRACE_APP_PD4, "document disappeared from under our feet");
-        }
+    }
     else if(c > 0)
-        {
+    {
         trace_1(TRACE_APP_PD4, "act_on_c(%d) (key)", c);
 
         /* only add real keys to buffer! */
@@ -181,7 +181,7 @@ act_on_c(
             return(FALSE);
 
         if(is_current_document())
-            {
+        {
             inschr((uchar) c);          /* insert char in buffer */
             chkwrp();                   /* format if necessary */
 #define RJM_QUICKDRAW
@@ -193,16 +193,16 @@ act_on_c(
             /* RJM says caret left/right and delete chars should be faster */
             if(movement || (!in_execfile && !keyinbuffer()))
 #endif
-                {
+            {
                 draw_screen();
                 draw_caret();
-                }
+            }
 #ifdef RJM_QUICKDRAW
             else
                 xf_interrupted = TRUE;
 #endif
-            }
         }
+    }
 
     return(TRUE);
 }
@@ -246,48 +246,48 @@ inpchr_riscos(
         do  {
             /* if in expansion get next char */
             if(keyidx)
-                {
+            {
                 if((c = *keyidx++) == '\0')
                     keyidx = NULL;        /* this expansion has ended */
-                }
+            }
             else
                 /* no expansion char so try 'keyboard' */
-                {
+            {
                 if(keyfromriscos == 0)
-                    {
+                {
                     trace_0(TRACE_APP_PD4, "read key for risc os already: returns 0");
                     return(0);
-                    }
+                }
 
                 c = keyfromriscos;
                 keyfromriscos = 0;
-                }
             }
+        }
         /* c guaranteed set by here */
         /* expand char if not in edit line and not already expanding */
         while(!alt_array[0]  &&  !cbuff_offset  &&  c  &&  !keyidx  &&  schkvl(c));
 
         if(keyidx  &&  !*keyidx)
-            {
+        {
             /* expansion now completed after reading last char */
             keyidx = NULL;
 
             if(cbuff_offset  &&  (c != CR))
-                {
+            {
                 /* half a command entered on function key or something */
                 cbuff_offset = 0;
                 reperr_null(create_error(ERR_BAD_PARM));
                 trace_0(TRACE_APP_PD4, "error in key expansion: returns 0");
                 return(0);            /* an uninteresting result */
-                }
             }
+        }
 
         /* see if we're doing an Alt-sequence */
         c = fiddle_alt_riscos(c);
 
         /* starting, or continuing a command from a key expansion? */
         if((c == CMDLDI)  ||  cbuff_offset)
-            {
+        {
             MENU *mptr;
 
             mptr = command_edit(c);
@@ -301,8 +301,8 @@ inpchr_riscos(
                 c = 0 - mptr->funcnum;
 
 /* used to be      c = command_edit(c);    */
-            }
         }
+    }
     while(!c  &&  (cbuff_offset > 0));    /* incomplete command? */
 
     trace_1(TRACE_APP_PD4, "inpchr_riscos returns %d", c);
@@ -329,21 +329,21 @@ do_execfile(
         return; /* error already reported */
 
     if(filetype_option != 'T')
-        {
+    {
         if(0 == filetype_option)
             reperr(ERR_NOTFOUND, filename);
         else
             reperr(ERR_NOTTABFILE, filename);
         return;
-        }
+    }
 
     input = pd_file_open(filename, file_open_read);
 
     if(!input)
-        {
+    {
         reperr(create_error(ERR_CANNOTOPEN), filename);
         return;
-        }
+    }
 
     filbuf();
 
@@ -357,19 +357,19 @@ do_execfile(
         ptr = array;
 
         while(*ptr)
-            {
+        {
             /* if it's a command execute it, else if it's a key, expand it */
 
             if(been_error)
-                {
+            {
                 pd_file_close(&input);
 
                 in_execfile = FALSE;
                 return;
-                }
+            }
 
             if(*ptr == CMDLDI)
-                {
+            {
                 MENU *mptr;
                 uchar *oldpos = ptr;
 
@@ -379,54 +379,54 @@ do_execfile(
                 /* copy command to small array for execution */
 
                 for(;;)
-                    {
+                {
                     switch(*ptr)
-                        {
-                        case TAB:
-                        case CR:
-                        /* exec_ptr points to the start of a possible parameter string
-                         * for dialog box.  If there is a dialog box then after act_on_c()
-                         * exec_ptr will point to the carriage-return
-                        */
-                            exec_ptr = ptr++;
-                            break;
+                    {
+                    case TAB:
+                    case CR:
+                    /* exec_ptr points to the start of a possible parameter string
+                     * for dialog box.  If there is a dialog box then after act_on_c()
+                     * exec_ptr will point to the carriage-return
+                    */
+                        exec_ptr = ptr++;
+                        break;
 
-                        case '\0':
-                            /* unmatched / */
-                            reperr_null(create_error(ERR_BAD_PARM));
-                            goto BREAKOUT;
+                    case '\0':
+                        /* unmatched / */
+                        reperr_null(create_error(ERR_BAD_PARM));
+                        goto BREAKOUT;
 
-                        default:
-                            *keyidx++ = *ptr++;
-                            continue;
-                        }
-                    break;
+                    default:
+                        *keyidx++ = *ptr++;
+                        continue;
                     }
+                    break;
+                }
 
                 *keyidx = '\0';
                 keyidx = cbuff;
                 mptr = lukucm(FALSE);
                 if(mptr == (MENU *) NO_COMM)
-                    {
+                {
                     /* can't find command so convert CMDLDI back to backslash */
                     ptr = oldpos;
                     *ptr = '\\';
-                    }
+                }
                 else
-                    {
+                {
                     act_on_c(0 - mptr->funcnum);
                     ptr = exec_ptr+1;
 
                     /* having done a command, read to end of line */
                     while(*ptr != '\0' && *ptr != CR && *ptr != LF)
                         ptr++;
-                    }
+                }
 
                 keyidx = NULL;
-                }
+            }
             else
                 /* it's not a CMDLDI */
-                {
+            {
                 cbuff[0] = *ptr;
                 cbuff[1] = '\0';
                 keyidx = cbuff;
@@ -437,12 +437,12 @@ do_execfile(
                 if(keyidx)
                     /* 'input' the characters */
                     act_on_c(inpchr_riscos(0));
-                }
+            }
 
             if(is_current_document())
                 draw_screen();
-            }
         }
+    }
     while (c != EOF);
 
 BREAKOUT:
@@ -465,39 +465,39 @@ command_edit(
     MENU *mptr;
 
     switch((int) ch)
-        {
-        case TAB:
-            /* have got a command parameter
-             * set exec_ptr to the TAB position
-             * set keyidx to first character after return
-            */
-            exec_ptr = keyidx - 1;
-            command_expansion = TRUE;
+    {
+    case TAB:
+        /* have got a command parameter
+         * set exec_ptr to the TAB position
+         * set keyidx to first character after return
+        */
+        exec_ptr = keyidx - 1;
+        command_expansion = TRUE;
 
-            do { ch = *keyidx++; } while((ch != CR)  &&  (ch != '\0'));
+        do { ch = *keyidx++; } while((ch != CR)  &&  (ch != '\0'));
 
-            /* deliberate fall thru... */
+        /* deliberate fall thru... */
 
-        case CR:
-            cbuff[cbuff_offset] = '\0';
-            mptr = lukucm(FALSE);
-            cbuff_offset = 0;
-            return(mptr);
+    case CR:
+        cbuff[cbuff_offset] = '\0';
+        mptr = lukucm(FALSE);
+        cbuff_offset = 0;
+        return(mptr);
 
-        default:
-            if((ch != CMDLDI)  &&  ((ch < SPACE)  ||  (ch > 127)))
-                break;
-
-            /* add character to end of command buff */
-            if(cbuff_offset >= CMD_BUFSIZ-1)
-                {
-                bleep();
-                return(0);
-                }
-
-            cbuff[cbuff_offset++] = (uchar) ch;
+    default:
+        if((ch != CMDLDI)  &&  ((ch < SPACE)  ||  (ch > 127)))
             break;
+
+        /* add character to end of command buff */
+        if(cbuff_offset >= CMD_BUFSIZ-1)
+        {
+            bleep();
+            return(0);
         }
+
+        cbuff[cbuff_offset++] = (uchar) ch;
+        break;
+    }
 
     return(0);             /* nothing to add to text buffer */
 }
@@ -525,14 +525,14 @@ getsbd(void)
     --buff_sofar;
 
     if(!isdigit(*buff_sofar))
-        {
+    {
         /* for define key need to return chars, return as negative */
         ch = *buff_sofar++;
         if(ch == '\0')
             return(NO_VAL);
 
         return((coord) (0 - (coord) ch));
-        }
+    }
 
     consume(int, sscanf((char *) buff_sofar, "%d%n", &res, &count));
 
@@ -944,19 +944,19 @@ save_this_menu_changes(
     const MENU *firstmptr, *mptr;
 
     if(0 != mhptr->items)
-        {
+    {
         firstmptr = mhptr->tail;
         mptr = firstmptr + mhptr->items;
 
         while(--mptr >= firstmptr)
             if(mptr->flags & CHANGED)
-                {
+            {
                 if( !away_string("%OP%MC", output) ||
                     !away_string(mptr->command, output) ||
                     !away_eol(output) )
                         break;
-                }
-        }
+            }
+    }
 }
 
 extern void
@@ -1000,7 +1000,7 @@ resize_submenu(
 
         /* ignore lines between menus and missing items */
         if(ptr  &&  (!short_m  ||  on_short_menus(mptr->flags)))
-            {
+        {
             ptr = * (char **) ptr;
 
             titlelen   = strlen(ptr);
@@ -1010,8 +1010,8 @@ resize_submenu(
             maxcommandlen = MAX(maxcommandlen, commandlen);
 
             ++offset;
-            }
         }
+    }
     while(++mptr < lastmptr);
 
     mhptr->titlelen   = maxtitlelen;
@@ -1097,13 +1097,13 @@ schkvl_this_menu(
     MENU *firstmptr, *mptr;
 
     if(0 != mhptr->items)
-        {
+    {
         firstmptr = mhptr->tail;
         mptr      = firstmptr + mhptr->items;
 
         while(--mptr >= firstmptr)
             if(mptr->key == c)
-                {
+            {
                 /* expand original definition into buffer
                  * adding \ and \n
                  */
@@ -1112,8 +1112,8 @@ schkvl_this_menu(
                 strcat(keyidx + 1, CR_STR);
                 trace_1(TRACE_APP_PD4, "schkvl found: %s", trace_string(keyidx));
                 return(TRUE);
-                }
-        }
+            }
+    }
 
     return(FALSE);
 }
@@ -1130,7 +1130,7 @@ schkvl(
     if(lptr)
         keyidx = lptr->value;
     else if((c != 0)  &&  ((c < (S32) SPACE)  ||  (c >= (S32) 127)))
-        {
+    {
         firstmhptr = headline;
         mhptr      = firstmhptr + HEAD_SIZE + 1; /* check random_menu too */
 
@@ -1144,7 +1144,7 @@ schkvl(
 
         if(schkvl_this_menu(c, &iconbar_headline[0]))
             return(TRUE);
-        }
+    }
 
     if(keyidx  &&  !*keyidx)
         keyidx = NULL;
@@ -1175,12 +1175,12 @@ part_command_core_menu(
     char a, b;
 
     if(0 != mhptr->items)
-        {
+    {
         firstmptr = mhptr->tail;
         mptr = firstmptr + mhptr->items;
 
         while(--mptr >= firstmptr)
-            {
+        {
             aptr = alt_array;
             bptr = mptr->command;
 
@@ -1190,21 +1190,21 @@ part_command_core_menu(
                     b = *bptr++;
 
                     if(!a  ||  (a == SPACE))
-                        {
+                    {
                         if(!b)
-                            {
+                        {
                             trace_0(TRACE_APP_PD4, "found whole command");
                             *alt_array = '\0';
                             return(mptr);
-                            }
+                        }
 
                         trace_0(TRACE_APP_PD4, "found partial command");
                         return((MENU *) M_IS_SUBSET);
-                        }
                     }
+                }
                 while(a == toupper(b));
-            }
         }
+    }
 
     return(0);
 }
@@ -1245,13 +1245,13 @@ part_command(
     char a, b;
 
     if(allow_redef)
-        {
+    {
         trace_1(TRACE_APP_PD4, "look up alt_array %s on redefinition list", alt_array);
 
         for(lptr = first_in_list(&first_command_redef);
             lptr;
             lptr = next_in_list(&first_command_redef))
-            {
+        {
             aptr = alt_array;
             bptr = lptr->value;
 
@@ -1263,21 +1263,21 @@ part_command(
                     b = *bptr++;    /* def'n & redef'n always UC */
 
                     if(!a  ||  (a == SPACE))
-                        {
+                    {
                         if(b == '_')
-                            {
+                        {
                             trace_0(TRACE_APP_PD4, "found full redefined command - look it up");
                             strcpy(alt_array, bptr);
                             return(part_command_core());
-                            }
+                        }
 
                         trace_0(TRACE_APP_PD4, "found partial redefined command");
                         return(M_IS_SUBSET);
-                        }
                     }
+                }
                 while(a == b);
-            }
         }
+    }
 
     return(part_command_core());
 }
@@ -1302,46 +1302,46 @@ find_command(
     mhptr      = firstmhptr + HEAD_SIZE + 1; /* check random_menu too */
 
     if(funcnum)
-        {
+    {
         /* NB --mhptr kosher */
         while(--mhptr >= firstmhptr)
             if(mhptr->installed && (0 != mhptr->items))
-                {
+            {
                 firstmptr = mhptr->tail;
                 mptr      = firstmptr + mhptr->items;
 
                 while(--mptr >= firstmptr)
-                    {
+                {
                     trace_1(FALSE, "mptr->funcnum = %d", mptr->funcnum);
 
                     if(mptr->funcnum == funcnum)
-                        {
+                    {
                         *mptrp  = mptr;
                         return(TRUE);
-                        }
                     }
                 }
+            }
 
         /* check 'choices' last as that's rarer use */
         mhptr = &iconbar_headline[0];
 
         if(0 != mhptr->items)
-            {
+        {
             firstmptr = mhptr->tail;
             mptr = firstmptr + mhptr->items;
 
             while(--mptr >= firstmptr)
-                {
+            {
                 trace_1(FALSE, "mptr->funcnum = %d", mptr->funcnum);
 
                 if(mptr->funcnum == funcnum)
-                    {
+                {
                     *mptrp = mptr;
                     return(TRUE);
-                    }
                 }
             }
         }
+    }
 
     *mptrp = NULL;
     return(FALSE);
@@ -1386,11 +1386,11 @@ do_command(
     BOOL to_comm_file = (spool && ((mptr->flags & NO_MACROFILE) == 0));
 
     if(toggle_short_menu_entry)
-        {
+    {
         toggle_short_menu_entry = FALSE;
 
         if((mptr->flags & ALWAYS_SHORT) == 0)
-            {
+        {
             /* toggle the bit */
             mptr->flags ^= CHANGED;
 
@@ -1398,38 +1398,38 @@ do_command(
             riscmenu_clearmenutree();
             resize_menus(short_menus());
             riscmenu_buildmenutree(short_menus());
-            }
+        }
 
         return(TRUE);
-        }
+    }
 
     trace_1(TRACE_APP_PD4, "do_command(%d)", funcnum);
 
     if(is_current_document())
-        {
+    {
         /* fault commands that shouldn't be done in editing expression context */
         if(mptr->flags & GREY_EXPEDIT)
             if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
-                {
+            {
                 reperr_null(create_error(ERR_EDITINGEXP));
                 return(TRUE);
-                }
+            }
 
         /* many commands require buffers merged - but watch out for those that don't! */
         if(mptr->flags & DO_MERGEBUF)
             if(!mergebuf())
                 return(TRUE);
-        }
+    }
     else
-        {
+    {
         /* some commands can be done without a current document */
 
         if(mptr->flags & DOC_REQ)
-            {
+        {
             reportf("no current document to process command");
             return(TRUE);
-            }
         }
+    }
 
     if(to_comm_file && macro_recorder_on)
         out_comm_start_to_macro_file(funcnum);
@@ -1549,16 +1549,16 @@ fiddle_alt_riscos(
             kh, kh);
 
     if(!kh)
-        {
+    {
         if(str != alt_array)
-            {
+        {
             bleep();
             *alt_array = '\0';
             return('\0');
-            }
+        }
         else
             return(ch);
-        }
+    }
 
     *str++    = kh;
     *str    = '\0';
@@ -1716,10 +1716,10 @@ output_string_to_macro_file(
     BOOL res = away_string(str, macro_recorder_file);
 
     if(!res)
-        {
+    {
         reperr(create_error(ERR_CANNOTWRITE), macro_file_name);
         stop_macro_recorder();
-        }
+    }
 
     return(res);
 }
@@ -1751,11 +1751,11 @@ out_comm_start_to_macro_file(
     MENU * mptr;
 
     if(find_command(&mptr, funcnum))
-        {
+    {
         macro_command_name = mptr->command;
 
         macro_fillin_failed = FALSE;
-        }
+    }
 }
 
 static S32
@@ -1764,19 +1764,19 @@ really_out_comm_start(void)
     uchar array[LIN_BUFSIZ];
 
     if(macro_needs_lf)
-        {
+    {
         macro_needs_lf = FALSE;
         (void) output_string_to_macro_file(CR_STR);
-        }
+    }
 
     if(macro_command_name)
-        {
+    {
         xstrkpy(array, elemof32(array), "\\");
         xstrkat(array, elemof32(array), macro_command_name);
         macro_command_name = NULL;
         if(output_string_to_macro_file(array))
             return(strlen(array));
-        }
+    }
 
     return(0);
 }
@@ -1792,7 +1792,7 @@ out_comm_end_to_macro_file(
     MENU * mptr;
 
     if(!macro_fillin_failed && find_command(&mptr, funcnum))
-        {
+    {
         sofar = really_out_comm_start();
                     /* 0123456789 */
         xstrkpy(array, elemof32(array), "|m        ");
@@ -1802,7 +1802,7 @@ out_comm_end_to_macro_file(
         macro_needs_lf = FALSE;
 
         (void) output_string_to_macro_file(array);
-        }
+    }
 }
 
 /* SKS after 4.12 01apr92 - needed for \ESC */
@@ -1822,14 +1822,14 @@ cvt_string_arg_for_macro_file(
     offset = strlen(ptr);
 
     while((ch = *arg++) != '\0')
-        {
+    {
         if(ch == QUOTES)
             if(offset < buffer_limit)
                 ptr[offset++] = '|';
 
         if(offset < buffer_limit)
             ptr[offset++] = ch;
-        }
+    }
 
     xstrkpy(&ptr[offset], elemof_buffer - offset, "\" ");
 }
@@ -1848,16 +1848,16 @@ out_comm_parms_to_macro_file(
     BOOL charout, numout, textout, arrayout;
 
     if(!ok)
-        {
+    {
         macro_fillin_failed = TRUE;
         macro_needs_lf = FALSE;
         return;
-        }
+    }
 
     really_out_comm_start();
 
     for(i = 0, dptri = dptr; i < size; i++, dptri++)
-        {
+    {
         ptr = array;
         textptr = dptri->textfield;
         charout = FALSE;
@@ -1866,42 +1866,42 @@ out_comm_parms_to_macro_file(
         arrayout = FALSE;
 
         switch(dptr[i].type)
-            {
-            case F_ERRORTYPE:
-                return;
+        {
+        case F_ERRORTYPE:
+            return;
 
-            case F_COMPOSITE:
-                charout = textout = TRUE;
-                break;
+        case F_COMPOSITE:
+            charout = textout = TRUE;
+            break;
 
-            case F_ARRAY:
-                arrayout = TRUE;
-                break;
+        case F_ARRAY:
+            arrayout = TRUE;
+            break;
 
-            case F_LIST:
-            case F_NUMBER:
-            case F_COLOUR:
-                numout = TRUE;
-                break;
+        case F_LIST:
+        case F_NUMBER:
+        case F_COLOUR:
+            numout = TRUE;
+            break;
 
-            case F_SPECIAL:
-            case F_CHAR:
-                charout = TRUE;
-                break;
+        case F_SPECIAL:
+        case F_CHAR:
+            charout = TRUE;
+            break;
 
-            case F_TEXT:
-                textout = TRUE;
-                break;
+        case F_TEXT:
+            textout = TRUE;
+            break;
 
-            default:
-                break;
-            }
+        default:
+            break;
+        }
 
         if(charout || numout)
             ptr += sprintf(ptr, charout ? "|i %c " : "|i %d ", (int) dptri->option);
 
         if(textout || arrayout)
-            {
+        {
             /* expand string in, putting | before " */
             uchar *fptr;
 
@@ -1912,11 +1912,11 @@ out_comm_parms_to_macro_file(
                 fptr = ** ((char ***) dptri->optionlist + dptri->option);
 
             cvt_string_arg_for_macro_file(ptr, elemof32(array) - (ptr - array), fptr);
-            }
+        }
 
         if(!output_string_to_macro_file(array))
             break;
-        }
+    }
 }
 
 /*
@@ -1936,23 +1936,23 @@ RecordMacroFile_fn(void)
     if(macro_recorder_on)
         stop_macro_recorder();
     else
-        {
+    {
         if(!dialog_box_start())
             return;
 
         while(dialog_box(D_MACRO_FILE))
-            {
+        {
             name = d_macro_file[0].textfield;
 
             if(str_isblank(name))
-                {
+            {
                 reperr_null(create_error(ERR_BAD_NAME));
                 if(!dialog_box_can_retry())
                     break;
                 been_error = FALSE;
                 (void) init_dialog_box(D_MACRO_FILE);
                 continue;
-                }
+            }
 
             /* Record to subdirectory of <Choices$Write>.PipeDream */
             (void) add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), name, MACROS_SUBDIR_STR);
@@ -1963,12 +1963,12 @@ RecordMacroFile_fn(void)
             macro_recorder_file = pd_file_open(macro_file_name, file_open_write);
 
             if(!macro_recorder_file)
-                {
+            {
                 reperr(create_error(ERR_CANNOTOPEN), macro_file_name);
                 if(!dialog_box_can_retry())
                     break;
                 continue;
-                }
+            }
 
             file_set_type(macro_recorder_file, FILETYPE_PDMACRO);
 
@@ -1976,10 +1976,10 @@ RecordMacroFile_fn(void)
 
             /* if(!dialog_box_can_persist()) - no, job done */
             break;
-            }
+        }
 
         dialog_box_end();
-        }
+    }
 
     record_state_changed();
 }
@@ -1988,10 +1988,10 @@ static void
 stop_macro_recorder(void)
 {
     if(pd_file_close(&macro_recorder_file))
-        {
+    {
         str_clr(&d_execfile[0].textfield);
         reperr(create_error(ERR_CANNOTCLOSE), macro_file_name);
-        }
+    }
     else
         (void) mystr_set(&d_execfile[0].textfield, d_macro_file[0].textfield);
 

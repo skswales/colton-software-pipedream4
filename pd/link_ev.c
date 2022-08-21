@@ -41,13 +41,13 @@ dialog_title_make(
     xstrkpy(buffer, elemof_buffer, string);
 
     if(NULL != (p_ss_doc = ev_p_ss_doc_from_docno(docno)))
-        {
+    {
         xstrkat(buffer, elemof_buffer, ": [");
 
         xstrkat(buffer, elemof_buffer, p_ss_doc->docu_name.leaf_name);
 
         xstrkat(buffer, elemof_buffer, "]");
-        }
+    }
 }
 
 /******************************************************************************
@@ -172,10 +172,10 @@ ev_external_string(
         return(0);
 
     if(!(p_cell->flags & SL_TREFS))
-        {
+    {
         *outpp = p_cell->content.text;
         return(-1);
-        }
+    }
 
     (void) expand_slot(slrp->docno, p_cell, (ROW) slrp->row, tbuf, elemof32(tbuf) /*fwidth*/,
                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
@@ -203,33 +203,33 @@ ev_ext_uref(
     _InRef_     PC_UREF_PARM upp)
 {
     switch(upp->action)
+    {
+    default: default_unhandled();
+    case UREF_CHANGE:
+    case UREF_REDRAW:
+        break;
+
+    case UREF_UREF:
+    case UREF_DELETE:
+    case UREF_SWAP:
+    case UREF_CHANGEDOC:
+    case UREF_REPLACE:
+    case UREF_SWAPCELL:
         {
-        default: default_unhandled();
-        case UREF_CHANGE:
-        case UREF_REDRAW:
-            break;
+        P_CELL tcell;
 
-        case UREF_UREF:
-        case UREF_DELETE:
-        case UREF_SWAP:
-        case UREF_CHANGEDOC:
-        case UREF_REPLACE:
-        case UREF_SWAPCELL:
-            {
-            P_CELL tcell;
+        tcell = travel_externally(byslrp->docno,
+                                  (COL) byslrp->col,
+                                  (ROW) byslrp->row);
 
-            tcell = travel_externally(byslrp->docno,
-                                      (COL) byslrp->col,
-                                      (ROW) byslrp->row);
+        assert(NULL != tcell);
 
-            assert(NULL != tcell);
+        /*eportf("ex_ext_uref: text_csr_uref byoffset %d", byoffset);*/
+        (void) text_csr_uref(tcell->content.text + byoffset, upp);
 
-            /*eportf("ex_ext_uref: text_csr_uref byoffset %d", byoffset);*/
-            (void) text_csr_uref(tcell->content.text + byoffset, upp);
-
-            break;
-            }
+        break;
         }
+    }
 
     return(0);
 }
@@ -313,11 +313,11 @@ ev_make_slot(
 
 #if TRACE_ALLOWED
     if_constant(tracing(TRACE_MODULE_EVAL))
-        {
+    {
         char buffer[BUF_EV_LONGNAMLEN];
         ev_trace_slr(buffer, elemof32(buffer), "ev_make_slot $$", slrp);
         trace_0(TRACE_MODULE_EVAL, buffer);
-        }
+    }
 #endif
 
     if((NO_DOCUMENT == (p_docu = p_docu_from_docno(slrp->docno)))  ||  docu_is_thunk(p_docu))
@@ -326,33 +326,33 @@ ev_make_slot(
     docno = p_docu->docno;
 
     if((NULL != (sl = travel_externally(docno, slrp->col, slrp->row)))  &&  (sl->type == SL_NUMBER))
-        {
+    {
         justify = sl->justify;
         format  = sl->format;
-        }
+    }
     else
-        {
+    {
         justify = J_RIGHT;
         format  = 0;
-        }
+    }
 
     old_docno = change_document_using_docno(docno);
 
     filealtered(TRUE);
 
     if(slrp->row >= numrow)
-        {
+    {
         out_rebuildvert = TRUE;
         out_screen      = TRUE;
         xf_interrupted  = TRUE;
-        }
+    }
 
     if(slrp->col >= numcol)
-        {
+    {
         out_rebuildhorz = TRUE;
         out_screen      = TRUE;
         xf_interrupted  = TRUE;
-        }
+    }
 
     parms.type = EVS_CON_DATA;
     parms.control = 0;
@@ -462,13 +462,13 @@ ev_recalc_status(
     S32 to_calc)
 {
     if(0 != to_calc)
-        {
+    {
         char buffer[BUF_EV_INTNAMLEN];
 
         (void) sprintf(buffer, S32_FMT, to_calc);
 
         colh_draw_slot_count_in_document(buffer);
-        }
+    }
     else
         colh_draw_slot_count_in_document(NULL);
 }
@@ -537,11 +537,11 @@ ev_travel(
 
 #if TRACE_ALLOWED
     if_constant(tracing(TRACE_MODULE_EVAL))
-        {
+    {
         char buffer[BUF_EV_LONGNAMLEN];
         ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$", p_ev_slr);
         trace_0(TRACE_MODULE_EVAL, buffer);
-        }
+    }
 #endif
 
     *p_p_ev_cell = NULL;
@@ -564,11 +564,11 @@ ev_travel(
 
 #if TRACE_ALLOWED
     if_constant(tracing(TRACE_MODULE_EVAL))
-        {
+    {
         char buffer[BUF_EV_LONGNAMLEN];
         ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$", p_ev_slr);
         trace_0(TRACE_MODULE_EVAL, buffer);
-        }
+    }
 #endif
 
     *p_p_ev_cell = NULL;

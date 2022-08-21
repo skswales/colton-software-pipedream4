@@ -116,15 +116,15 @@ inschr(
 
         /* no cell and not in numeric mode */
         if(!tcell)
-            {
+        {
             if(txnbit)
                 break;
-            }
+        }
         else if(is_protected_slot(tcell))
-            {
+        {
             reperr_null(create_error(ERR_PROTECTED));
             return;
-            }
+        }
 
         /* text cell or blank text cell and text mode */
         if(tcell  &&  ((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE)))
@@ -133,14 +133,14 @@ inschr(
 
         /* new numeric cell */
         if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
-            {
+        {
             expedit_editcurrentslot_freshcontents(FALSE);
             if(ch < SPACE)
                 return;
-            }
+        }
 
         out_to_macro = FALSE;
-        }
+    }
     while(FALSE);
 
     /* SKS after 4.11 08jan92 - only record chars going into text cells not numeric cells */
@@ -166,11 +166,11 @@ chrina(
     uchar *currpos;
 
     if(xf_inexpression_box || xf_inexpression_line)
-        {
+    {
         been_error = expedit_insert_char(ch);
         /*>>>should I set buffer_altered???*/
         return;
-        }
+    }
 
     if(!slot_in_buffer)
         return;
@@ -179,36 +179,36 @@ chrina(
     currpos = linbuf + lecpos;
 
     if(lecpos > length)
-        {
+    {
         /* pad with spaces */
         memset32(linbuf+length, SPACE, (lecpos-length));
         length = lecpos;
         linbuf[length] = '\0';
-        }
+    }
 
     if(xf_iovbit)                  /* insert mode, create a space */
-        {
+    {
         if(length >= MAXFLD)
-            {
+        {
             (void) mergebuf_nocheck();
             bleep();
             clearkeyboardbuffer();
             return;
-            }
+        }
 
         memmove32(currpos+1, currpos, (length-lecpos+1));
-        }
+    }
     else if(lecpos == length)
-        {
+    {
         if(length >= MAXFLD)
-            {
+        {
             bleep();
             been_error = xf_flush = TRUE;
             return;
-            }
+        }
 
         linbuf[length+1] = '\0';
-        }
+    }
 
     *currpos = ch;
     output_buffer = buffer_altered = TRUE;
@@ -233,21 +233,21 @@ insert_string(
     char ch;
 
     if(xf_inexpression_box || xf_inexpression_line)
-        {
+    {
         been_error = expedit_insert_string(str);
         return(!been_error);
-        }
+    }
 
     t_xf_iovbit = xf_iovbit;
     xf_iovbit = TRUE;               /* Force insert mode */
 
     while((ch = *str++) != '\0')
-        {
+    {
         chrina(ch, allow_check);
 
         if(been_error)
             break;
-        }
+    }
 
     xf_iovbit = t_xf_iovbit;
 
@@ -266,10 +266,10 @@ insert_string_check_numeric(
 
         /* no cell and not in numeric mode */
         if(!tcell)
-            {
+        {
             if(txnbit)
                 break;
-            }
+        }
         else if(is_protected_slot(tcell))
             return(reperr_null(create_error(ERR_PROTECTED)));
 
@@ -280,10 +280,10 @@ insert_string_check_numeric(
 
         /* new numeric cell */
         if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
-            {
+        {
             expedit_editcurrentslot_freshcontents(FALSE);
-            }
         }
+    }
     while(FALSE);
 
     return(insert_string(str, allow_check));
@@ -391,19 +391,19 @@ PageLeft_fn(void)
 
     /* step back to find column to be first in horzvec */
     for(; (win_width > 0) && (tcol > 0); --tcol)
-        {
+    {
         while((tcol > 0)  &&  (incolfixes(tcol) || !colwidth(tcol)))
             --tcol;
 
         win_width -= colwidth(tcol);
-        }
+    }
 
     if(tcol >= 0)
-        {
+    {
         /* go to it and stick it in horzvec() */
         chknlr(tcol, currow);
         filhorz(tcol, tcol);
-        }
+    }
 }
 
 /******************************************************************************
@@ -444,10 +444,10 @@ extern void
 PrevColumn_fn(void)
 {
     if(!curcoloffset  &&  !fstncx())
-        {
+    {
         xf_flush = TRUE;
         return;
-        }
+    }
 
     movement = CURSOR_PREV_COL;
 }
@@ -465,19 +465,19 @@ CursorLeft_fn(void)
     BOOL    in_protected = !slot_in_buffer  &&  is_protected_slot(travel_here());
 
     if(!xf_inexpression  &&  (!lecpos  ||  (!slot_in_buffer  &&  !in_protected)))
-        {
+    {
         internal_process_command(N_PrevColumn);
         return;
-        }
+    }
 
     if(lecpos  &&  check_word_wanted()  &&  !in_protected)
         /* check word perhaps */
-        {
+    {
         ptr = linbuf + lecpos;
 
         if(spell_iswordc(master_dictionary, *ptr)  &&  !spell_iswordc(master_dictionary, *--ptr))
             check_word();
-        }
+    }
 
     if(lecpos)
         --lecpos;
@@ -495,29 +495,29 @@ CursorRight_fn(void)
     uchar * ptr;
 
     if(!slot_in_buffer)
-        {
+    {
 #if 0
     /* SKS after 4.11 09jan92 - why were we letting punters move around in protected cells? */
         /* might not have cell in buffer due to protection */
         if(!is_protected_slot(travel_here()))
 #endif
-            {
+        {
             internal_process_command(N_NextColumn);
             return;
-            }
-        /* if protected, don't try checking word 'cos it's not in linbuf */
         }
+        /* if protected, don't try checking word 'cos it's not in linbuf */
+    }
     else if(lecpos  &&  check_word_wanted())
         /* check word perhaps */
-        {
+    {
         ptr = linbuf + lecpos;
 
         if(!spell_iswordc(master_dictionary, *ptr)  &&  spell_iswordc(master_dictionary, *--ptr))
             check_word();
-        }
+    }
 
     if(lecpos <= MAXFLD)
-        {
+    {
         ++lecpos;
 
         /* this makes cursor jump to next column at end of current col */
@@ -526,9 +526,9 @@ CursorRight_fn(void)
             #if 0  /* this is the best way ! */
             NextColumn_fn();
             #else
-            {
+        {
             if(riscos_fonts)
-                {
+            {
                 #if 0
                 /* this is tricky and is not yet implemented */
                 char tbuf[PAINT_STRSIZ];
@@ -544,17 +544,17 @@ CursorRight_fn(void)
                 fs.term = INT_MAX;
 
                 if(!font_complain(font_strwidth(&fs)))
-                    {
+                {
 
-                    }
-                #endif
                 }
+                #endif
+            }
             /* are we at end of cell display? */
             else if(lecpos >= chkolp(travel_here(), curcol, currow))
                 internal_process_command(N_NextColumn);
-            }
-            #endif
         }
+            #endif
+    }
 }
 
 /******************************************************************************
@@ -586,7 +586,7 @@ WordCount_fn(void)
         init_doc_as_block();
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-        {
+    {
         actind_in_block(DOWN_COLUMNS);
 
         if(tcell->type != SL_TEXT)
@@ -598,12 +598,12 @@ WordCount_fn(void)
         inword = FALSE;
 
         while((ch = *ptr++) != NULLCH)
-            {
+        {
             if(SLRLD1 == ch)
-                {
+            {
                 ptr += COMPILED_TEXT_SLR_SIZE-1;
                 continue;
-                }
+            }
 
             if(ishighlight(ch))
                 continue;
@@ -611,15 +611,15 @@ WordCount_fn(void)
             if(SPACE == ch)
                 inword = FALSE;
             else
-                {
+            {
                 if(!inword)
-                    {
+                {
                     inword = TRUE;
                     count++;
-                    }
                 }
             }
         }
+    }
 
     actind_end();
 
@@ -709,9 +709,9 @@ DeleteCharacterLeft_fn(void)
 
     /* if moving back over start of line */
     if(lecpos <= 0)
-        {
+    {
         if((d_options_IR == 'Y')  &&  (currow > 0))
-            {
+        {
             internal_process_command(N_PrevWord);
             currow--;
             filbuf();
@@ -723,9 +723,9 @@ DeleteCharacterLeft_fn(void)
 
             chknlr(curcol, currow = trow);
             lecpos = tlecpos;
-            }
-        return;
         }
+        return;
+    }
 
     if(!slot_in_buffer)
         return;
@@ -819,32 +819,32 @@ highlight_words_on_line(
     lecpos = 0;
 
     while((ch = linbuf[lecpos]) != NULLCH)
-        {
+    {
         if(SLRLD1 == ch)
-            {
+        {
             lecpos += COMPILED_TEXT_SLR_SIZE;
             continue;
-            }
+        }
 
         if(delete)
-            {
+        {
             if(ch == h_ch)
                 delete_bit_of_line(lecpos, 1, FALSE);
             else
                 ++lecpos;
-            }
+        }
         else
-            {
+        {
             if( ( last_was_space  &&  ((ch != SPACE) &&  ch))   ||
                 (!last_was_space  &&  ((ch == SPACE) || !ch))   )
-                {
+            {
                 chrina(h_ch, FALSE);
                 last_was_space = !last_was_space;
-                }
+            }
 
             ++lecpos;
-            }
         }
+    }
 }
 
 extern void
@@ -861,7 +861,7 @@ block_highlight_core(
     init_marked_block();
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-        {
+    {
         actind_in_block(DOWN_COLUMNS);
 
         if((tcell->type != SL_TEXT)  ||  isslotblank(tcell))
@@ -876,16 +876,16 @@ block_highlight_core(
             highlight_words_on_line(H_INSERT, h_ch);
 
         if(buffer_altered)
-            {
+        {
             if(!merstr(in_block.col, in_block.row, TRUE, TRUE))
                 break;
 
             out_screen = TRUE;
             filealtered(TRUE);
-            }
+        }
 
         slot_in_buffer = FALSE;
-        }
+    }
 
     actind_end();
 
@@ -903,12 +903,12 @@ highlight_block(
         return;
 
     while(dialog_box(type))
-        {
+    {
         block_highlight_core(delete, (d_inshigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -987,11 +987,11 @@ DeleteWord_fn(void)
     S32 templecpos = lecpos;
 
     if(!fnxtwr()  &&  !xf_inexpression)
-        {
+    {
         /* delete line join */
         internal_process_command(N_DeleteCharacterRight);
         return;
-        }
+    }
 
     delete_bit_of_line(templecpos, lecpos - templecpos, TRUE);
 
@@ -1024,13 +1024,13 @@ delete_bit_of_line(
         return;
 
     if(save)
-        {
+    {
         /* save word to paste list */
         ch = dst[length];
         dst[length] = '\0';
         save_words(dst);
         dst[length] = ch;
-        }
+    }
 
     buffer_altered = TRUE;
 
@@ -1054,11 +1054,11 @@ NextWord_fn(void)
         return;
 
     if(currow+1 < numrow)
-        {
+    {
         lecpos = lescrl = 0;
         internal_process_command(N_CursorDown);
         return;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1073,7 +1073,7 @@ PrevWord_fn(void)
     P_CELL tcell;
 
     if(slot_in_buffer  &&  (lecpos > 0))
-        {
+    {
         /* move lecpos back to start of previous word in line buffer */
 
         while((lecpos > 0)  &&  (linbuf[lecpos-1] == SPACE))
@@ -1083,7 +1083,7 @@ PrevWord_fn(void)
             --lecpos;
 
         return;
-        }
+    }
 
     if(xf_inexpression  ||  !currow  ||  !mergebuf())
         return;
@@ -1116,10 +1116,10 @@ SwapCase_fn(void)
 
     /* if cursor off end of text move to next line */
     if(lecpos > (S32) strlen(linbuf))
-        {
+    {
         internal_process_command(N_NextWord);
         return;
-        }
+    }
 
     ch = (int) linbuf[lecpos];
 
@@ -1156,11 +1156,11 @@ AutoWidth_fn(void)
 
     /* SKS 19feb97 do something sensible when block not in doc for 4.50/09 */
     if((blkstart.col == NO_COL) || (blk_docno != current_docno()))
-        {
+    {
         /* no block so use current column */
         blkstart.col = blkend.col = curcol;
         blk_docno = current_docno();
-        }
+    }
     else if(!set_up_block(FALSE)) /* SKS 17jan99 amend marked block setup */
         return;
 
@@ -1169,7 +1169,7 @@ AutoWidth_fn(void)
 
     /* each column in block */
     for(tcol=blkstart.col; tcol <= blkend.col; tcol++)
-        {
+    {
         coord biggest_width = 0;
         coord biggest_margin = 0;
         P_CELL tcell;
@@ -1188,7 +1188,7 @@ AutoWidth_fn(void)
         init_block(&cs, &ce);
 
         while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-            {
+        {
             S32 iwidth;
             coord this_width = 0;
             char tjust;
@@ -1198,125 +1198,125 @@ AutoWidth_fn(void)
             tcell->justify = J_LEFT;
 
             switch(tcell->type)
+            {
+            char array[LIN_BUFSIZ];
+            char *ptr;
+
+            case SL_TEXT:
+                /* if we are not last column and nothing to right, don't bother */
+                if(tcol < numcol-1 && is_block_blank(tcol+1, in_block.row, numcol-1, in_block.row))
+                    nothing_on_right = TRUE;
+
+                /* deliberate fall-thru */
+            case SL_NUMBER:
+                (void) expand_slot(current_docno(), tcell, in_block.row, array, elemof32(array),
+                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                                   riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
+
+                if(riscos_fonts)
                 {
-                char array[LIN_BUFSIZ];
-                char *ptr;
+                    /* remove trailing spaces CAREFULLY as we may have a multibyte font sequence */
+                    BOOL last_was_font_change = FALSE;
 
-                case SL_TEXT:
-                    /* if we are not last column and nothing to right, don't bother */
-                    if(tcol < numcol-1 && is_block_blank(tcol+1, in_block.row, numcol-1, in_block.row))
-                        nothing_on_right = TRUE;
+                    ptr = array;
+                    while(NULLCH != *ptr)
+                    {
+                        S32 nchar = font_skip(ptr);
 
-                    /* deliberate fall-thru */
-                case SL_NUMBER:
-                    (void) expand_slot(current_docno(), tcell, in_block.row, array, elemof32(array),
-                                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                                       riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
+                        last_was_font_change = (nchar != 1);
 
-                    if(riscos_fonts)
-                        {
-                        /* remove trailing spaces CAREFULLY as we may have a multibyte font sequence */
-                        BOOL last_was_font_change = FALSE;
+                        ptr += nchar;
+                    }
 
-                        ptr = array;
-                        while(NULLCH != *ptr)
-                            {
-                            S32 nchar = font_skip(ptr);
-
-                            last_was_font_change = (nchar != 1);
-
-                            ptr += nchar;
-                            }
-
-                        if(!last_was_font_change)
-                            while((--ptr >= array) && (*ptr == SPACE))
-                                *ptr = NULLCH;
-
-                        /* SKS after 4.11 29jan92 - twiddle in this side for finer
-                         * tuning in fonts considering 1/2 chars etc
-                        */
-                        iwidth  = font_width(array);
-                        iwidth += (charwidth * MILLIPOINTS_PER_OS * 3) / 2;
-                        this_width = div_round_ceil_fn(iwidth, charwidth * MILLIPOINTS_PER_OS);
-                        }
-                    else
-                        {
-                        /* bug in 4.00 - system font highlights and trailing spaces counted */
-                        /* this_width = strlen(array)+2; */
-                        /* changed by RJM 18.10.91 */
-                        char *aptr;
-                        S32 hcount = 0;
-
-                        /* remove trailing spaces */
-                        ptr = array + strlen(array);
+                    if(!last_was_font_change)
                         while((--ptr >= array) && (*ptr == SPACE))
-                            *ptr = '\0';
+                            *ptr = NULLCH;
 
-                        for(aptr = array ; *aptr != '\0'; aptr++)
-                            {
-                            if(ishighlight(*aptr))
-                                hcount++;
-                            }
-
-                        /* count back trailing spaces and highlights */
-                        for( ; aptr>array; aptr--)
-                            if(*(aptr-1) == SPACE) /* wot? */
-                                ;
-                            else if(ishighlight(*(aptr-1)))
-                                hcount--;
-                            else
-                                break;
-
-                        this_width = aptr-array-hcount +2;
-                        }
-                    break;
-                default:
-                    break;
+                    /* SKS after 4.11 29jan92 - twiddle in this side for finer
+                     * tuning in fonts considering 1/2 chars etc
+                    */
+                    iwidth  = font_width(array);
+                    iwidth += (charwidth * MILLIPOINTS_PER_OS * 3) / 2;
+                    this_width = div_round_ceil_fn(iwidth, charwidth * MILLIPOINTS_PER_OS);
                 }
+                else
+                {
+                    /* bug in 4.00 - system font highlights and trailing spaces counted */
+                    /* this_width = strlen(array)+2; */
+                    /* changed by RJM 18.10.91 */
+                    char *aptr;
+                    S32 hcount = 0;
+
+                    /* remove trailing spaces */
+                    ptr = array + strlen(array);
+                    while((--ptr >= array) && (*ptr == SPACE))
+                        *ptr = '\0';
+
+                    for(aptr = array ; *aptr != '\0'; aptr++)
+                    {
+                        if(ishighlight(*aptr))
+                            hcount++;
+                    }
+
+                    /* count back trailing spaces and highlights */
+                    for( ; aptr>array; aptr--)
+                        if(*(aptr-1) == SPACE) /* wot? */
+                            ;
+                        else if(ishighlight(*(aptr-1)))
+                            hcount--;
+                        else
+                            break;
+
+                    this_width = aptr-array-hcount +2;
+                }
+                break;
+            default:
+                break;
+            }
             /* only don't bother with right-most text if it fits in right margin */
             if(nothing_on_right /* && this_width < right_margin */)
-                {
+            {
                 if(this_width > biggest_margin)
                     biggest_margin = this_width;
-                }
+            }
             else
-                {
+            {
                 if(this_width > biggest_width)
                     biggest_width = this_width;
-                }
-            tcell->justify = tjust;
             }
+            tcell->justify = tjust;
+        }
 
         /* got a width for this column */
         if(biggest_width > 0)
-            {
+        {
             changed = TRUE;
             *widp = biggest_width;
-            }
+        }
 
         /* do we need a bigger margin than existing one? */
         if(*wwidp < biggest_margin)
-            {
+        {
             *wwidp = biggest_margin;
             changed = TRUE;
-            }
+        }
         /* if margin less than column width, set it to 0 */
         if(*wwidp < *widp)
-            {
+        {
             *wwidp = 0;
             changed = TRUE;
-            }
         }
+    }
 
     /* Examine all columns in sheet, tweek right margins of all linked columns */
     changed |= adjust_all_linked_columns();
 
     /* better do a redraw, perhaps */
     if(changed)
-        {
+    {
         xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
         filealtered(TRUE);
-        }
+    }
 
     /* restore markers */
     blk_docno = bd;
@@ -1396,12 +1396,12 @@ ColumnWidth_fn(void)
         return;
 
     while(dialog_box(D_WIDTH))
-        {
+    {
         badparm = !do_widths_admin_core(&tcol1, &tcol2);
 
         /* width of zero special */
         if(!badparm  &&  (d_width[0].option == 0))
-            {
+        {
             /* if setting current column to zero width force cell out of buffer */
             if((curcol >= tcol1)  &&  (curcol <= tcol2))
                 if(!mergebuf())
@@ -1413,29 +1413,29 @@ ColumnWidth_fn(void)
 
             /* can't set fixed cols to zero width */
             if(!badparm)
-                {
+            {
                 tcol = tcol1;
                 do  {
                     if(incolfixes(tcol))
                         badparm = TRUE;
-                    }
-                while(++tcol <= tcol2);
                 }
+                while(++tcol <= tcol2);
             }
+        }
 
         if(badparm)
-            {
+        {
             reperr_null(create_error(ERR_BAD_PARM));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         tcol = tcol1;
         do  {
             readpcolvars(tcol, &widp, &wwidp);
             *widp = d_width[0].option;
-            }
+        }
         while(++tcol <= tcol2);
 
         /* Examine all columns in sheet, tweek right margins of all linked columns */
@@ -1459,7 +1459,7 @@ ColumnWidth_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -1482,14 +1482,14 @@ RightMargin_fn(void)
         return;
 
     while(dialog_box(D_MARGIN))
-        {
+    {
         if(!do_widths_admin_core(&tcol1, &tcol2))
-            {
+        {
             reperr_null(create_error(ERR_BAD_PARM));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         remove_overlapped_linked_columns(tcol1, tcol2);
 
@@ -1497,7 +1497,7 @@ RightMargin_fn(void)
         do  {
             readpcolvars(tcol, &widp, &wwidp);
             *wwidp = d_width[0].option;
-            }
+        }
         while(++tcol <= tcol2);
 
         xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
@@ -1505,7 +1505,7 @@ RightMargin_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -1562,7 +1562,7 @@ LinkColumns_fn(void)
     /* selecting a single column just does remove_overlapped_linked_columns(), and nowt else */
 
     if(blkstart.col != blkend.col)
-        {
+    {
         /* more than one column, so link them */
 
         /* Rightmost column needs a 'LINKSTOP' */
@@ -1581,15 +1581,15 @@ LinkColumns_fn(void)
         /* running total of the column widths (excluding blkend.col's width)                 */
 
         for(tcol = blkend.col; --tcol >= blkstart.col; )
-            {
+        {
             readpcolvars_(tcol, &widp, &wwidp, &colflagsp);
 
             right_margin += *widp;
 
             *colflagsp = LINKED_COLUMN_LINKRIGHT | (*colflagsp & ~LINKED_COLUMN_LINKSTOP);
             *wwidp     = right_margin;
-            }
         }
+    }
 
     /* better do a redraw */
     xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
@@ -1611,35 +1611,35 @@ adjust_all_linked_columns(void)
     BOOL   changed = FALSE;
 
     for(tcol = numcol; --tcol >= 0; )
-        {
+    {
         readpcolvars_(tcol, &widp, &wwidp, &colflagsp);
 
         if(*colflagsp & LINKED_COLUMN_LINKSTOP)
-            {
+        {
             right_margin = colwrapwidth(tcol);    /* don't use *wwidp, cos may be 0, we want a real margin position */
 
             for( ; --tcol >= 0; )
-                {
+            {
                 readpcolvars_(tcol, &widp, &wwidp, &colflagsp);
 
                 if(*colflagsp & LINKED_COLUMN_LINKRIGHT)
-                    {
+                {
                     right_margin += *widp;
 
                     if(*wwidp != right_margin)
-                        {
+                    {
                         *wwidp  = right_margin;
                         changed = TRUE;
-                        }
                     }
+                }
                 else
-                    {
+                {
                     ++tcol;     /* overshot, so restore tcol */
                     break;
-                    }
                 }
             }
         }
+    }
 
     return(changed);
 }
@@ -1706,10 +1706,10 @@ remove_overlapped_linked_columns(
         --tcol1;
 
     for( ; tcol1 <= tcol2; tcol1++)
-        {
+    {
         readpcolvars_(tcol1, &widp, &wwidp, &colflagsp);
         *colflagsp &= ~(LINKED_COLUMN_LINKRIGHT | LINKED_COLUMN_LINKSTOP);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1731,9 +1731,9 @@ enumerate_linked_columns(
     COL  tcol;
 
     for(tcol = *scanstart; tcol <= scanend; tcol++)
-        {
+    {
         if(colislinked(tcol))
-            {
+        {
             found        = TRUE;
             *found_first = tcol;
 
@@ -1742,8 +1742,8 @@ enumerate_linked_columns(
 
             *found_last = tcol++;
             break;
-            }
         }
+    }
 
     *scanstart = tcol;
     return(found);
@@ -1779,10 +1779,10 @@ mark_as_linked_columns(
 
     /* each preceeding column in the range needs a 'LINKRIGHT' */
     for(tcol = last; --tcol >= first; )
-        {
+    {
         readpcolvars_(tcol, &widp, &wwidp, &colflagsp);
         *colflagsp = (*colflagsp & ~LINKED_COLUMN_LINKSTOP) | LINKED_COLUMN_LINKRIGHT;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1812,16 +1812,16 @@ fill_linbuf(
 
     /* colword() sets up lastword to point to next word */
     while(colword())
-        {
+    {
         firstword = FALSE;
 
         /* copy word and spaces to temp buffer: any cell references need decompiling */
         from = lastword;
         to = buffer;
         while(((ch = *from++) != NULLCH)  &&  (ch != SPACE))
-            {
+        {
             if(SLRLD1 == ch)
-                { /* decompile compiled cell reference */
+            { /* decompile compiled cell reference */
                 const uchar * csr = from + 1; /* CSR is past the SLRLD1/2 */
 
                 from = talps_csr(csr, &docno, &tcol, &trow);
@@ -1830,17 +1830,17 @@ fill_linbuf(
                 to += write_ref(to, elemof32(buffer) - (to - buffer), docno, tcol, trow);
 
                 continue;
-                }
+            }
 
             *to++ = ch;
-            }
+        }
 
         /* and spaces after word */
         while(ch == SPACE)
-            {
+        {
             *to++ = ch;
             ch = *from++;
-            }
+        }
 
         --from; /* retract to point to NULLCH or first character after a SPACE */
         *to = NULLCH;
@@ -1851,19 +1851,19 @@ fill_linbuf(
         /* don't join words together from joined lines */
         to = linbuf + lecpos;
         if(lecpos > 0  &&  *(to - 1) != SPACE)
-            {
+        {
             lecpos++;
             *to++ = SPACE;
-            }
+        }
 
         if(wordlen > LIN_BUFSIZ - lecpos)
-            {
+        {
             trace_0(TRACE_APP_PD4, "fill_linbuf got a word that is too long!");
             *to = '\0';
             splitpoint = lecpos;
-            }
+        }
         else
-            {
+        {
             /* update global if we've taken word */
             lastword = (uchar *) from;
 
@@ -1874,10 +1874,10 @@ fill_linbuf(
 
             splitpoint = fndlbr(curr_outrow);
             trace_1(TRACE_APP_PD4, "fill_linbuf got splitpoint %d", splitpoint);
-            }
+        }
 
         if(splitpoint > 0)
-            {
+        {
             new_just = jusbit ? (cur_leftright ? J_LEFTRIGHT : J_RIGHTLEFT)
                               : J_FREE;
 
@@ -1889,13 +1889,13 @@ fill_linbuf(
 
             /* set to justify perhaps */
             if(jusbit  &&  ((tcell->justify & J_BITS) == J_FREE))
-                {
+            {
                 /* set new justify status, keeping protected bit */
                 tcell->justify = (tcell->justify & CLR_J_BITS) | new_just;
                 cur_leftright = !cur_leftright;
-                }
             }
         }
+    }
 
     assert(lecpos + 1 < elemof32(linbuf));
     linbuf[lecpos + 1] = NULLCH;
@@ -1912,10 +1912,10 @@ fill_linbuf(
 
     /* must output below here if a registration difference */
     if(lindif)
-        {
+    {
         mark_to_end(currowoffset);
         out_rebuildvert = TRUE;
-        }
+    }
     else
         reset_numrow();
 
@@ -1923,43 +1923,43 @@ fill_linbuf(
 
     /* if insert on wrap, need to insert lindif rows in other columns */
     if(lindif > 0)
-        {
+    {
         if(iowbit)
-            {
+        {
             COL tcol;
 
             for(tcol = 0; tcol < numcol; tcol++)
-                {
+            {
                 S32 i;
 
                 if(tcol != curcol)
                     for(i = 0; i < lindif; i++)
                         insertslotat(tcol, startrow);
-                }
+            }
 
             /* update numrow */
             reset_numrow();
 
             /* update for insert in all columns */
             updref(0, startrow, LARGEST_COL_POSSIBLE, LARGEST_ROW_POSSIBLE, 0, (ROW) lindif, UREF_UREF, DOCNO_NONE);
-            }
+        }
         else
-            {
+        {
             /* update numrow */
             reset_numrow();
 
             /* update for insert in this column only */
             updref(curcol, startrow, curcol, LARGEST_ROW_POSSIBLE, 0, (ROW) lindif, UREF_UREF, DOCNO_NONE);
-            }
         }
+    }
     /* paragraph is now shorter so fill in some lines */
     else
-        {
+    {
         /* only pad with blank rows if insert on wrap is rows */
         if(iowbit)
-            {
+        {
             for( ; lindif < 0; lindif++)
-                {
+            {
                 BOOL rowblank = TRUE;
                 COL tcol;
 
@@ -1967,13 +1967,13 @@ fill_linbuf(
                 for(tcol = 0; tcol < numcol; tcol++)
                     if(tcol != curcol && !isslotblank(travel(tcol,
                                                              curr_outrow)))
-                        {
+                    {
                         rowblank = FALSE;
                         break;
-                        }
+                    }
 
                 if(rowblank)
-                    {
+                {
                     for(tcol = 0; tcol < numcol; tcol++)
                         if(tcol != curcol)
                             killslot(tcol, curr_outrow);
@@ -1985,14 +1985,14 @@ fill_linbuf(
                     updref(0, currow + 1, LARGEST_COL_POSSIBLE, LARGEST_ROW_POSSIBLE, (COL) 0, (ROW) -1, UREF_UREF, DOCNO_NONE);
 
                     mark_row(currowoffset - 1);
-                    }
+                }
                 else
                     insertslotat(curcol, curr_outrow);
-                }
+            }
 
             reset_numrow();
-            }
         }
+    }
 
     trace_1(TRACE_APP_PD4, "fill_linbuf numrow: %d", numrow);
     return(TRUE);
@@ -2045,10 +2045,10 @@ mergeinline(
          (word_in <= 1)                         &&
          (word_out - word_in == last_word_in)   &&
          (old_just == new_just)                 )
-      )
-        {
+                                                    )
+    {
         mark_slot(travel(curcol, curr_outrow - 1));
-        }
+    }
 
     /* move word left at end of line back to start */
     from = linbuf + splitpoint;
@@ -2061,14 +2061,14 @@ mergeinline(
         word_out = 0;
 
     while(NULLCH != *from)
-        {
+    {
         if(SLRLD1 == (*to++ = *from++))
-            { /* copy the rest of the CSR over */
+        { /* copy the rest of the CSR over */
             memmove32(to, from, COMPILED_TEXT_SLR_SIZE-1); /* NB may overlap! */
             to += COMPILED_TEXT_SLR_SIZE-1;
             from += COMPILED_TEXT_SLR_SIZE-1;
-            }
         }
+    }
 
     *to = NULLCH;
 
@@ -2094,7 +2094,7 @@ colword(void)
     if(!lastword)
         next_word = word_on_new_line();
     else
-        {
+    {
         /* look for another word on same line */
         while(*lastword == SPACE)
             lastword++;
@@ -2102,13 +2102,13 @@ colword(void)
         if(*lastword)
             next_word = lastword;
         else
-            {
+        {
             /* no more words on this line so delete the cell */
             if((sl = travel(curcol, curr_inrow)) != NULL)
-                {
+            {
                 old_just = (sl->justify & J_BITS);
                 old_flags = sl->flags;
-                }
+            }
 
             killslot(curcol, curr_inrow);
 
@@ -2117,8 +2117,8 @@ colword(void)
 
             lindif--;
             next_word = word_on_new_line();
-            }
         }
+    }
 
     if(next_word)
         ++word_in;
@@ -2149,17 +2149,17 @@ static BOOL
 do_FormatParagraph(void)
 {
     if(!wrpbit)
-        {
+    {
         reperr_null(create_error(ERR_CANTWRAP));
         return(FALSE);
-        }
+    }
 
     /* if can't format, just move cursor down */
     if(!chkcfm(travel_here(), currow))
-        {
+    {
         internal_process_command(N_CursorDown);
         return(TRUE);
-        }
+    }
 
     init_colword(currow);
     fill_linbuf(currow + 1);
@@ -2180,10 +2180,10 @@ FormatBlock_fn(void)
 
     /* SKS for 4.50 do something sensible when no marked block in this doc */
     if((NO_COL == blkstart.col) || (blk_docno != current_docno()))
-        {
+    {
         FormatParagraph_fn();
         return;
-        }
+    }
 
     if(!set_up_block(TRUE))
         return;
@@ -2195,7 +2195,7 @@ FormatBlock_fn(void)
 #endif
 
     for(;next_slot_in_block(DOWN_COLUMNS);)
-        {
+    {
         curcol = in_block.col;
         currow = in_block.row;
 
@@ -2205,16 +2205,16 @@ FormatBlock_fn(void)
             break;
 
         if(movement == CURSOR_DOWN)
-            {
+        {
             currow++;
-            }
+        }
         else if(movement)
-            {
+        {
             if(newrow <= currow)
                 newrow = currow+1;
 
             currow = newrow;
-            }
+        }
         else
             break;
 
@@ -2226,14 +2226,14 @@ FormatBlock_fn(void)
 
 #ifdef RJM_DEBUG
         if(end_bl.col != startcol)
-            {
+        {
             COL debug_col = end_bl.col;
 
             reperr_null(create_error(ERR_BAD_PARM));
             break;
-            }
-#endif
         }
+#endif
+    }
 
     actind_end();
 
@@ -2280,12 +2280,12 @@ reformat_with_steady_cursor(
     /* if cursor was past line break, move down to next line,
     subtracting size of split part to get new position */
     if(tlecpos >= splitpoint && !nojmp)
-        {
+    {
         /* this does not cater for weird case
         where new word may jump two lines */
         lecpos = tlecpos - splitpoint;
         ++trow;
-        }
+    }
     else
         /* otherwise, stay where we were */
         lecpos = tlecpos;
@@ -2322,17 +2322,17 @@ del_chkwrp(void)
      * see if we can add the first word on the next line
     */
     if(splitpoint < 0)
-        {
+    {
         nextrow = currow + 1;
 
         sl = travel(curcol, nextrow);
 
         if(sl  &&  chkcfm(sl, nextrow))
-            {
+        {
             wrapwidth = chkolp(travel_here(), curcol, currow);
 
             if(riscos_fonts)
-                {
+            {
                 /* get string with font changes and text-at chars */
                 font_expand_for_break(tbuf, sl->content.text);
                 c = tbuf;
@@ -2347,31 +2347,31 @@ del_chkwrp(void)
 
                 if((wrapwidth - -splitpoint) < word_wid)
                     return;
-                }
+            }
             else
-                {
+            {
                 c = sl->content.text;
 
                 while((NULLCH != *c) && (SPACE != *c))
-                    {
+                {
                     if(SLRLD1 == *c)
                         c += COMPILED_TEXT_SLR_SIZE;
                     else
                         c++;
-                    }
+                }
 
                 word_wid = c - sl->content.text;
 
                 if((wrapwidth - -splitpoint) < word_wid)
                     return;
-                }
             }
+        }
         else
             return;
 
         /* cancel any hope of a split */
         splitpoint = 0;
-        }
+    }
 
     reformat_with_steady_cursor(splitpoint, TRUE);
 }
@@ -2419,15 +2419,15 @@ chkcfm(
 
     /* note: if protected bit set will return false */
     switch(tcell->justify)
-        {
-        case J_FREE:
-        case J_LEFTRIGHT:
-        case J_RIGHTLEFT:
-            break;
+    {
+    case J_FREE:
+    case J_LEFTRIGHT:
+    case J_RIGHTLEFT:
+        break;
 
-        default:
-            return(FALSE);
-        }
+    default:
+        return(FALSE);
+    }
 
     /* don't allow database reformat, hopefully
         no reformat on lines below the first if something to left or right
@@ -2487,7 +2487,7 @@ fndlbr(
     wrapwidth = chkolp(travel(curcol, row), curcol, row) - 1;
 
     if(riscos_fonts)
-        {
+    {
         /* get string with font changes and text-at chars */
         font_expand_for_break(tbuf, linbuf);
 
@@ -2504,7 +2504,7 @@ fndlbr(
         break_point = linbuf;
 
         while(split_count--  &&  *break_point)
-            {
+        {
             /* skip over word */
             while(((ch = *break_point++) != '\0')  &&  (ch != SPACE))
                 ;
@@ -2513,18 +2513,18 @@ fndlbr(
                 --break_point;
             else
                 had_space = TRUE;
-            }
+        }
 
         /* find end of gap */
         while(*break_point == SPACE)
-            {
+        {
             had_space = TRUE;
             ++break_point;
-            }
+        }
 
         /* if we found a gap, and we didn't get stuck at the line end, break */
         return(had_space && *break_point ? break_point - linbuf : 0);
-        }
+    }
 
     startofword = 0;
 
@@ -2537,71 +2537,71 @@ fndlbr(
 
     /* for each word */
     while(*tptr)
-        {
+    {
         startofword = tptr - linbuf;
 
         /* walk past word - updating for text-at fields */
         while(((ch = *tptr) != '\0')  &&  (ch != SPACE))
-            {
+        {
             if((text_at_char == ch) && (NULLCH != text_at_char))
-                {
+            {
                 /* length of text-at field is number of trailing text-at chars */
                 tptr++;
                 switch(toupper(*tptr))
-                    {
-                    case SLRLD1:
-                        tptr += COMPILED_TEXT_SLR_SIZE;
+                {
+                case SLRLD1:
+                    tptr += COMPILED_TEXT_SLR_SIZE;
+                    break;
+
+                case 'N': /* now */
+                case 'L': /* leafname */
+                case 'D':
+                case 'T':
+                case 'P':
+                    if(*++tptr != text_at_char)
+                        tptr -= 2;
+                    break;
+
+                /* a rather simplistic consume here */
+                case 'F': /* RJM added this 7.9.91 cos it seemed like a good idea */
+                case 'G':
+                    /* skip over internal part */
+                    c = tptr;
+                    while(((ch = *c++) != '\0')  &&  (ch != text_at_char))
+                        ;
+                    if(!ch)
+                        break;
+                    --c;
+                    /* skip over text-at chars - GF have zero width */
+                    while(((ch = *c++) != '\0')  &&  (ch == text_at_char))
+                        ;
+                    tptr = --c;
+                    break;
+
+                default:
+                    if(*tptr == text_at_char) /* case text_at_char: */
+                        /* n text-at chars to start yield (n-1) text-at chars out */
                         break;
 
-                    case 'N': /* now */
-                    case 'L': /* leafname */
-                    case 'D':
-                    case 'T':
-                    case 'P':
-                        if(*++tptr != text_at_char)
-                            tptr -= 2;
-                        break;
-
-                    /* a rather simplistic consume here */
-                    case 'F': /* RJM added this 7.9.91 cos it seemed like a good idea */
-                    case 'G':
-                        /* skip over internal part */
-                        c = tptr;
-                        while(((ch = *c++) != '\0')  &&  (ch != text_at_char))
-                            ;
-                        if(!ch)
-                            break;
-                        --c;
-                        /* skip over text-at chars - GF have zero width */
-                        while(((ch = *c++) != '\0')  &&  (ch == text_at_char))
-                            ;
-                        tptr = --c;
-                        break;
-
-                    default:
-                        if(*tptr == text_at_char) /* case text_at_char: */
-                            /* n text-at chars to start yield (n-1) text-at chars out */
-                            break;
-
-                        /* is it macro parameter? */
-                        if(isdigit(*tptr))
-                            while(isdigit(*tptr))
-                                ++tptr;
-                        else
-                            /* don't recognize following
-                             * so count text-at char anyway
-                            */
-                            --tptr;
-                        break;
-                    }
+                    /* is it macro parameter? */
+                    if(isdigit(*tptr))
+                        while(isdigit(*tptr))
+                            ++tptr;
+                    else
+                        /* don't recognize following
+                         * so count text-at char anyway
+                        */
+                        --tptr;
+                    break;
+                }
 
                 /* read past last text-at chars, updating width */
                 while(*tptr++ == text_at_char)
                     ++width;
                 --tptr;
-                }
+            }
             else
-                {
+            {
                 if(!ishighlight(ch))
                     ++width;
 
@@ -2609,8 +2609,8 @@ fndlbr(
                     tptr += COMPILED_TEXT_SLR_SIZE;
                 else
                     ++tptr;
-                }
             }
+        }
 
         /* end of word too far over so return offset of start of word */
         trace_3(TRACE_APP_PD4, "fndlbr width: %d, wrapwidth: %d, tptr: %s",
@@ -2623,7 +2623,7 @@ fndlbr(
         while(*tptr++ == SPACE)
             ++width;
         --tptr;
-        }
+    }
 
     return(-width);
 }

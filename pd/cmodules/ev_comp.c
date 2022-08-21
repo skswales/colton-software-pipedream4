@@ -325,29 +325,29 @@ ev_compile(
     *at_pos = cc->ip_pos - txt_in;
 
     if(cc->cur.did_num != RPN_FRM_END)
-        {
+    {
         res = cc->error;
         *at_pos = cc->err_pos - txt_in;
-        }
+    }
     else
-        {
+    {
         out_idno(RPN_FRM_END);
 
         /* we are allowed to fill the buffer with cc->op_maxlen bytes */
         if(cc->op_pos - cc->op_start > cc->op_maxlen)
-            {
+        {
             trace_2(TRACE_MODULE_EVAL | TRACE_OUT, "ev_compile: expression too long %d %d", cc->op_pos - cc->op_start, cc->op_maxlen);
             res = create_error(EVAL_ERR_EXPTOOLONG);
-            }
+        }
         else
-            {
+        {
             parmsp->control = cc->parms.control;
             if(cc->parms.var)
                 parmsp->type = EVS_VAR_RPN;
 
             res = cc->op_pos - rpn_out;
-            }
         }
+    }
 
     /* restore old compiler context */
     cc = old_cc;
@@ -378,17 +378,17 @@ ev_name_check(
         ++name;
 
     if((res = ident_validate(name)) >= 0)
-        {
+    {
         if(func_lookup(name) >= 0)
             res = -1;
         else
-            {
+        {
             if(find_name_in_list(docno, name) < 0)
                 res = 0;
             else
                 res = 1;
-            }
         }
+    }
 
     return(res);
 }
@@ -417,16 +417,15 @@ ss_recog_constant(
     PC_U8 in_pos = in_str;
 
     if(in_str)
-        {
+    {
         S32 len;
 
         while(*in_pos == ' ')
             ++in_pos;
 
-        if((len = recog_n_dt_str_slr_rng(p_ev_data, docno, in_pos, p_optblock->american_date, refs_ok, 0)) > 0 ||
-           (len = recog_array(p_ev_data, docno, in_pos, p_optblock->american_date, 0, 0)) > 0
-          )
-            {
+        if( (len = recog_n_dt_str_slr_rng(p_ev_data, docno, in_pos, p_optblock->american_date, refs_ok, 0)) > 0 ||
+            (len = recog_array(p_ev_data, docno, in_pos, p_optblock->american_date, 0, 0)) > 0 )
+        {
             in_pos += len;
 
             while(*in_pos == ' ' ||
@@ -439,10 +438,10 @@ ss_recog_constant(
                 res = 1;
             else
                 ss_data_free_resources(p_ev_data);
-            }
+        }
         else
             res = len;
-        }
+    }
 
     return(res > 0 ? in_pos - in_str : res);
 }
@@ -463,7 +462,7 @@ func_call(
     funp = &rpn_table[p_sym_inf->did_num];
 
     if(funp->parms.datab)
-        {
+    {
         /*
          * database functions
          */
@@ -475,9 +474,9 @@ func_call(
             out_idno_format(p_sym_inf);
 
         cc->dbs_nest -= 1;
-        }
+    }
     else if(p_sym_inf->did_num == RPN_FNV_IF)
-        {
+    {
         S32 narg;
         EV_IDNO which_if;
 
@@ -485,16 +484,16 @@ func_call(
          * if()
          */
         if((narg = proc_func_if(&which_if)) >= 0)
-            {
+        {
             p_sym_inf->did_num = which_if;
             out_idno_format(p_sym_inf);
 
             if(which_if == RPN_FNV_IF)
                 out_byte((char) narg);
-            }
         }
+    }
     else if(p_sym_inf->did_num == RPN_FNM_FUNCTION)
-        {
+    {
         /*
          * custom definitions
          */
@@ -502,50 +501,50 @@ func_call(
         EV_NAMEID customid;
 
         if((narg = proc_func_custom(&customid)) >= 0)
-            {
+        {
             out_idno_format(p_sym_inf);
             out_byte((char) narg);
             out_nameid(customid);
-            }
         }
+    }
     else
-        {
+    {
         /*
          * other functions
          */
         if(funp->n_args < 0)
-            {
+        {
             /*
              * variable argument functions
              */
             S32 narg;
 
             if((narg = proc_func(funp)) >= 0)
-                {
+            {
                 out_idno_format(p_sym_inf);
                 out_byte((char) narg);
 
                 /* custom calls have their id tagged on t'end */
                 if(p_sym_inf->did_num == RPN_FNM_CUSTOMCALL)
                     out_nameid(nameid);
-                }
             }
+        }
         else if(funp->n_args == 0)
-            {
+        {
             /*
              * zero argument functions
              */
             out_idno_format(p_sym_inf);
-            }
+        }
         else
-            {
+        {
             /*
              * fixed argument functions
              */
             if(proc_func(funp) >= 0)
                 out_idno_format(p_sym_inf);
-            }
         }
+    }
 
     /* done at the end cos p_sym_inf->did_num
      * may be adjusted */
@@ -585,14 +584,14 @@ ident_validate(
      * occur only after an underscore
     */
     while(isalnum(*pos) || *pos == '_')
-        {
+    {
         if(isdigit(*pos))
             had_digit = 1;
         else if(*pos == '_')
             digit_ok = 1;
 
         ++pos;
-        }
+    }
 
     /* MRJC 24.3.92 - skip trail spaces */
     while(*pos == ' ')
@@ -632,10 +631,10 @@ out_chkspace(
     S32 needed)
 {
     if((cc->op_pos - cc->op_start) + needed > cc->op_maxlen)
-        {
+    {
         set_error(create_error(EVAL_ERR_EXPTOOLONG));
         return(0);
-        }
+    }
 
     return(1);
 }
@@ -667,17 +666,17 @@ out_idno_format(
 {
     if(p_sym_inf->sym_cr)
         if(out_chkspace(2 * sizeof32(char)))
-            {
+        {
             *cc->op_pos++ = RPN_FRM_RETURN;
             *cc->op_pos++ = p_sym_inf->sym_cr;
-            }
+        }
 
     if(p_sym_inf->sym_space)
         if(out_chkspace(2 * sizeof32(char)))
-            {
+        {
             *cc->op_pos++ = RPN_FRM_SPACE;
             *cc->op_pos++ = p_sym_inf->sym_space;
-            }
+        }
 
     out_idno(p_sym_inf->did_num);
 }
@@ -743,12 +742,12 @@ out_string_free(
     len = strlen(*stringpp) + 1;
 
     if(out_chkspace(sizeof32(S16) + len))
-        {
+    {
         writeval_S16(cc->op_pos, len + sizeof32(S16));
         cc->op_pos += sizeof32(S16);
         strcpy(cc->op_pos, *stringpp);
         cc->op_pos += len;
-        }
+    }
 
     al_ptr_dispose(P_P_ANY_PEDANTIC(stringpp));
 }
@@ -806,13 +805,13 @@ proc_func(
 
     /* have we any arguments at all ? */
     if(scan_check_next(NULL) != SYM_OBRACKET)
-        {
+    {
         /* function allowed to be totally devoid ? */
         if(funp->n_args == -1)
             return(0);
 
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
-        }
+    }
     else
         cc->cur.did_num = SYM_BLANK;
 
@@ -821,23 +820,23 @@ proc_func(
 
     /* loop over function arguments */
     if(scan_check_next(NULL) != SYM_CBRACKET)
-        {
+    {
         /* indicate non-dependent arguments */
         if(nodep)
-            {
+        {
             out_byte(RPN_FRM_NODEP);
             --nodep;
-            }
+        }
 
-        while(TRUE)
-            {
+        for(;;)
+        {
             proc_func_arg_maybe_blank();
             ++narg;
             if(scan_check_next(NULL) != SYM_COMMA)
                 break;
             cc->cur.did_num = SYM_BLANK;
-            }
         }
+    }
 
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
@@ -848,10 +847,10 @@ proc_func(
      * have exactly the correct number of arguments
     */
     if(funp->n_args >= 0)
-        {
+    {
         if(narg != funp->n_args)
             return(set_error(create_error(EVAL_ERR_FUNARGS)));
-        }
+    }
     /* functions with variable number of arguments must
      * have at least (-funp->n_args - 1) arguments
     */
@@ -876,10 +875,10 @@ proc_func_arg_maybe_blank(void)
 
     if(sym_inf.did_num == SYM_COMMA ||
        sym_inf.did_num == SYM_CBRACKET)
-        {
+    {
         sym_inf.did_num = RPN_DAT_BLANK;
         out_idno_format(&sym_inf);
-        }
+    }
     else
         rec_expr();
 }
@@ -955,17 +954,17 @@ proc_func_if(
     proc_func_arg_maybe_blank();
 
     if(scan_check_next(NULL) != SYM_COMMA)
-        {
+    {
         /* check for single argument if */
         if(scan_check_next(NULL) == SYM_CBRACKET)
-            {
+        {
             cc->cur.did_num = SYM_BLANK;
             *which_if = RPN_FNF_IFC;
             return(1);
-            }
+        }
         else
             return(set_error(create_error(EVAL_ERR_BADEXPR)));
-        }
+    }
     else
         cc->cur.did_num = SYM_BLANK;
 
@@ -985,10 +984,10 @@ proc_func_if(
 
     /* did he give up with 2 arguments? */
     if(scan_check_next(NULL) == SYM_CBRACKET)
-        {
+    {
         cc->cur.did_num = SYM_BLANK;
         return(2);
-        }
+    }
 
     skip_posf = cc->op_pos;
     out_idno(RPN_FRM_SKIPTRUE);
@@ -1053,16 +1052,16 @@ proc_func_custom(
 
     /* does the custom function already exist ? */
     if((custom_num = find_custom_in_list(cc->docno, custom_name)) >= 0)
-        {
+    {
         p_ev_custom = custom_ptr_must(custom_num);
         if(!(p_ev_custom->flags & TRF_UNDEFINED))
             return(set_error(create_error(EVAL_ERR_CUSTOMEXISTS)));
-        }
+    }
     /* ensure custom function is in list */
     else if((custom_num = ensure_custom_in_list(cc->docno, custom_name)) >= 0)
-        {
+    {
         p_ev_custom = custom_ptr_must(custom_num);
-        }
+    }
     else
         return(set_error(status_nomem()));
 
@@ -1081,14 +1080,14 @@ proc_func_custom(
     res = 0;
     narg = 0;
     while(scan_check_next(NULL) == SYM_COMMA && narg < EV_MAX_ARGS)
-        {
+    {
         cc->cur.did_num = SYM_BLANK;
 
         if(scan_check_next(&sym_inf) != RPN_TMP_STRING)
-            {
+        {
             res = -1;
             break;
-            }
+        }
         else
             cc->cur.did_num = SYM_BLANK;
 
@@ -1102,7 +1101,7 @@ proc_func_custom(
         out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
 
         ++narg;
-        }
+    }
 
     p_ev_custom->args.n = narg;
 
@@ -1158,7 +1157,7 @@ proc_custom_argument(
 
     /* is there a type following ? */
     if(*ci == ':')
-        {
+    {
         EV_TYPE type_list;
 
         type_list = 0;
@@ -1184,11 +1183,11 @@ proc_custom_argument(
 
             while(*ci == ' ')
                 ++ci;
-            }
+        }
         while(*ci == ',');
 
         *typep = type_list;
-        }
+    }
 
     return(0);
 }
@@ -1220,7 +1219,7 @@ recog_array(
     PC_U8 in_pos = in_str;
 
     if(*in_pos == '{')
-        {
+    {
         S32 x, y;
 
         p_ev_data->did_num = RPN_TMP_ARRAY;
@@ -1238,18 +1237,18 @@ recog_array(
                                       refs_ok,
                                       names_ok,
                                       &x, &y)) >= 0)
-                {
+            {
                 in_pos += res;
                 y += 1;
-                }
+            }
             else
-                {
+            {
                 ss_array_free(p_ev_data);
                 break;
-                }
             }
-        while(*in_pos == ';');
         }
+        while(*in_pos == ';');
+    }
 
     /* check it's finished correctly */
     if(res > 0 && *in_pos++ != '}')
@@ -1293,33 +1292,33 @@ recog_array_row(
         if((len = recog_n_dt_str_slr_rng(&data, docno_from, in_pos, american, refs_ok, names_ok)) > 0)
             in_pos += len;
         else if(len < 0)
-            {
+        {
             res = len;
             break;
-            }
+        }
 
         /* can't expand array on subsequent rows */
         if(*y && *x >= p_ev_data_out->arg.ev_array.x_size)
-            {
+        {
             res = create_error(EVAL_ERR_SUBSCRIPT);
             break;
-            }
+        }
 
         /* put data into array */
         if(ss_array_element_make(p_ev_data_out, *x, *y) >= 0)
             *ss_array_element_index_wr(p_ev_data_out, *x, *y) = data;
         else
-            {
+        {
             res = status_nomem();
             break;
-            }
+        }
 
         *x += 1;
         res = 1;
 
         while(*in_pos == ' ')
             ++in_pos;
-        }
+    }
     while(*in_pos == ',');
 
     return(res > 0 ? in_pos - in_str : res);
@@ -1371,7 +1370,7 @@ ss_recog_date_time(
 
     /* check for a date */
     if((date_scanned = recog_date(pos, &day, &month, &year)) != 0)
-        {
+    {
         S32 tres;
 
 #if (RELEASED || 1) /* you may set the one to zero temporarily for testing Fireworkz serial numbers for years < 0100 in Debug build */
@@ -1385,26 +1384,26 @@ ss_recog_date_time(
             tres = ss_ymd_to_dateval(&p_ev_data->arg.ev_date.date, year, month, day);
 
         if(tres >= 0)
-            {
+        {
             pos += date_scanned;
             p_ev_data->did_num = RPN_DAT_DATE;
-            }
+        }
         else
             p_ev_data->arg.ev_date.date = 0;
-        }
+    }
 
     /* check for a time */
     seconds = 0;
     if((time_scanned = recog_time(pos, &hours, &minutes, &seconds)) != 0)
-        {
+    {
         if(ss_hms_to_timeval(&p_ev_data->arg.ev_date.time, hours, minutes, seconds) >= 0)
-            {
+        {
             pos += time_scanned;
             p_ev_data->did_num = RPN_DAT_DATE;
-            }
+        }
 
         ss_date_normalise(&p_ev_data->arg.ev_date);
-        }
+    }
 
     return(pos - in_str);
 }
@@ -1448,15 +1447,15 @@ recog_dt(
 
     another = 0;
     if(*epos == separator)
-        {
+    {
         ++epos;
         another = 1;
-        }
+    }
     else if(count)
         return(0);
 
     if(another)
-        {
+    {
         pos = epos;
         scan_val = (S32) strtol(pos, &epos, 10);
 
@@ -1468,16 +1467,16 @@ recog_dt(
 
         another = 0;
         if(*epos == separator)
-            {
+        {
             ++epos;
             another = 1;
-            }
+        }
         else if(count)
             return(0);
-        }
+    }
 
     if(another)
-        {
+    {
         pos = epos;
         scan_val = (S32) strtol(pos, &epos, 10);
 
@@ -1485,7 +1484,7 @@ recog_dt(
             return(0);
 
         *three = (S32) scan_val;
-        }
+    }
 
     return(epos - spos);
 }
@@ -1513,7 +1512,7 @@ recog_extref(
     doc_name[0] = NULLCH;
 
     if(*pos == '[')
-        {
+    {
         S32 len, name_start;
 
         len = 0;
@@ -1528,7 +1527,7 @@ recog_extref(
             doc_name[len] = *pos;
 
         if(*pos++ == ']')
-            {
+        {
             S32 i, name_end;
 
             name_end = len;
@@ -1544,10 +1543,10 @@ recog_extref(
             /* was there owt ? */
             if(i == name_end)
                 pos = in_str;
-            }
+        }
         else
             pos = in_str;
-        }
+    }
 
     return(pos - in_str);
 }
@@ -1576,17 +1575,17 @@ recog_ident(
     id_ch = (S32) *in_str;
 
     while((isalnum(id_ch) || id_ch == '_') && count < EV_INTNAMLEN)
-        {
+    {
         *co++ = (char) tolower(id_ch);
         id_ch = (S32) *++in_str;
         ++count;
-        }
+    }
 
     if(count)
-        {
+    {
         *co++ = '\0';
         count = ident_validate(id_out);
-        }
+    }
 
     return(count);
 }
@@ -1611,16 +1610,16 @@ recog_n_dt_str_slr_rng(
     if((len = ss_recog_number(p_ev_data, in_str)) == 0 &&
        (len = ss_recog_date_time(p_ev_data, in_str, american)) == 0 &&
        (len = recog_string(p_ev_data, in_str)) == 0)
-        {
+    {
         if(refs_ok)
-            {
+        {
             char doc_name[BUF_EV_LONGNAMLEN];
 
             /* check for external document reference */
             doc_name[0] = '\0';
 
             if((len = recog_extref(doc_name, elemof32(doc_name), in_str, 1)) >= 0)
-                {
+            {
                 S32 len1;
 
                 len1 = recog_slr_range(p_ev_data, docno_from, in_str + len, doc_name);
@@ -1630,17 +1629,17 @@ recog_n_dt_str_slr_rng(
                 else if(len1 < 0)
                     len = len1;
                 else if(names_ok)
-                    {
+                {
                     len1 = recog_name(p_ev_data, docno_from, in_str + len, doc_name);
 
                     if(len1 >= 0)
                         len += len1;
                     else
                         len = len1;
-                    }
                 }
             }
         }
+    }
 
     return(len);
 }
@@ -1663,7 +1662,7 @@ recog_name(
     S32 len;
 
     if((len = recog_ident(name_name, in_str)) > 0)
-        {
+    {
         EV_DOCNO refto_docno;
         EV_NAMEID name_num;
 
@@ -1673,11 +1672,11 @@ recog_name(
         if((name_num = ensure_name_in_list(refto_docno, name_name)) < 0)
             len = 0;
         else
-            {
+        {
             p_ev_data->did_num = RPN_DAT_NAME;
             p_ev_data->arg.nameid = name_ptr_must(name_num)->key;
-            }
         }
+    }
 
     return(len);
 }
@@ -1776,7 +1775,7 @@ ss_recog_number(
 
         /* must have scanned something and not be a date */
         if((ep != in_str) && (*ep != '.') && (*ep != ':'))
-            {
+        {
             ev_data_set_real(p_ev_data, negative ? -f64 : f64);
             /*real_to_integer_try(p_ev_data);*//*SKS for t5 1.30 why the hell did it bother? means you cant preserve 1.0 typed in */
             res = PtrDiffBytesS32(ep, in_str_in);
@@ -1811,10 +1810,10 @@ recog_slr(
     slrp->flags = 0;
 
     if(*pos == '$')
-        {
+    {
         ++pos;
         slrp->flags |= SLR_ABS_COL;
-        }
+    }
 
     if((res = ev_stox(pos, &slrp->col)) == 0)
         return(res);
@@ -1822,10 +1821,10 @@ recog_slr(
     pos += res;
 
     if(*pos == '$')
-        {
+    {
         ++pos;
         slrp->flags |= SLR_ABS_ROW;
-        }
+    }
 
     /* stop things like + and - being munged
      */
@@ -1868,7 +1867,7 @@ recog_slr_range(
     S32 len;
 
     if((len = recog_slr(&s_slr, in_str)) > 0)
-        {
+    {
         char doc_temp[BUF_EV_LONGNAMLEN];
         S32 len1;
         PC_U8 pos = in_str + len;
@@ -1900,28 +1899,28 @@ recog_slr_range(
         e_slr = s_slr;
         pos = in_str + len;
         if((len1 = recog_slr(&e_slr, pos)) > 0)
-            {
+        {
             /* set up range */
             e_slr.col += 1;
             e_slr.row += 1;
 
             if(s_slr.col < e_slr.col &&
                s_slr.row < e_slr.row)
-                {
+            {
                 p_ev_data->arg.range.s = s_slr;
                 p_ev_data->arg.range.e = e_slr;
                 p_ev_data->did_num = RPN_DAT_RANGE;
                 len += len1 + len_colon;
-                }
+            }
             else
                 len = 0;
-            }
+        }
         else
-            {
+        {
             p_ev_data->arg.slr = s_slr;
             p_ev_data->did_num = RPN_DAT_SLR;
-            }
         }
+    }
 
     return(len);
 }
@@ -1945,7 +1944,7 @@ recog_string(
 
     /* check for valid start characters */
     if(*in_str == '"')
-        {
+    {
         PC_U8 ci;
         P_U8 stringp, co;
         S32 len;
@@ -1953,37 +1952,37 @@ recog_string(
         ci = in_str + 1;
         len = 0;
         while(*ci)
-            {
+        {
             if(*ci == '"')
-                {
+            {
                 ci += 1;
 
                 if(*ci != '"')
                     break;
-                }
+            }
 
             ci += 1;
             len += 1;
-            }
+        }
 
         /* allocate memory for string */
         if(NULL != (stringp = al_ptr_alloc_bytes(P_U8, len + 1/*NULLCH*/, &res)))
-            {
+        {
             ci = in_str + 1;
             co = stringp;
             while(*ci)
-                {
+            {
                 if(*ci == '"')
-                    {
+                {
                     ci += 1;
 
                     if(*ci != '"')
                         break;
-                    }
+                }
 
                 *co++ = *ci;
                 ci += 1;
-                }
+            }
 
             *co = NULLCH;
 
@@ -1992,8 +1991,8 @@ recog_string(
             p_ev_data->did_num = RPN_TMP_STRING;
 
             res = ci - in_str;
-            }
         }
+    }
 
     return(res);
 }
@@ -2018,7 +2017,7 @@ rec_array(
         cc->cur.did_num = SYM_BLANK;
         rec_array_row(cur_y, x_size);
         ++cur_y;
-        }
+    }
     while(scan_check_next(NULL) == SYM_SEMICOLON);
 
     *y_size = cur_y;
@@ -2053,26 +2052,26 @@ rec_array_row(
         else
             rec_expr();
         ++cur_x;
-        }
+    }
     while(scan_check_next(NULL) == SYM_COMMA);
 
     /* check array x dimensions, and pad with
      * blanks if necessary
      */
     if(!cc->error)
-        {
+    {
         if(!cur_y)
             *x_size = cur_x;
         else if(cur_x > *x_size)
             set_error(create_error(EVAL_ERR_ARRAYEXPAND));
         else if(cur_x < *x_size)
-            {
+        {
             S32 i;
 
             for(i = cur_x; i < *x_size; ++i)
                 out_idno(RPN_DAT_BLANK);
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -2088,7 +2087,7 @@ rec_aterm(void)
 
     rec_bterm();
     while(scan_check_next(&sym_inf) == RPN_BOP_AND)
-        {
+    {
         P_U8 skip_pos, skip_parm;
 
         skip_pos = cc->op_pos;
@@ -2099,15 +2098,15 @@ rec_aterm(void)
         out_S16(0);
 
         if(!cc->error)
-            {
+        {
             cc->cur.did_num = SYM_BLANK;
             rec_bterm();
             out_idno_format(&sym_inf);
 
             /* write in skip parameter */
             writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
-            }
         }
+    }
     return;
 }
 
@@ -2123,25 +2122,24 @@ rec_bterm(void)
     SYM_INF sym_inf;
 
     rec_cterm();
-    do
-        {
+    for(;;)
+    {
         switch(scan_check_next(&sym_inf))
-            {
-            case RPN_REL_EQUALS:
-            case RPN_REL_NOTEQUAL:
-            case RPN_REL_LT:
-            case RPN_REL_GT:
-            case RPN_REL_LTEQUAL:
-            case RPN_REL_GTEQUAL:
-                cc->cur.did_num = SYM_BLANK;
-                break;
-            default:
-                return;
-            }
+        {
+        case RPN_REL_EQUALS:
+        case RPN_REL_NOTEQUAL:
+        case RPN_REL_LT:
+        case RPN_REL_GT:
+        case RPN_REL_LTEQUAL:
+        case RPN_REL_GTEQUAL:
+            cc->cur.did_num = SYM_BLANK;
+            break;
+        default:
+            return;
+        }
         rec_cterm();
         out_idno_format(&sym_inf);
-        }
-    while(TRUE);
+    }
 }
 
 /******************************************************************************
@@ -2156,21 +2154,20 @@ rec_cterm(void)
     SYM_INF sym_inf;
 
     rec_dterm();
-    do
-        {
+    for(;;)
+    {
         switch(scan_check_next(&sym_inf))
-            {
-            case RPN_BOP_PLUS:
-            case RPN_BOP_MINUS:
-                cc->cur.did_num = SYM_BLANK;
-                break;
-            default:
-                return;
-            }
+        {
+        case RPN_BOP_PLUS:
+        case RPN_BOP_MINUS:
+            cc->cur.did_num = SYM_BLANK;
+            break;
+        default:
+            return;
+        }
         rec_dterm();
         out_idno_format(&sym_inf);
-        }
-    while(TRUE);
+    }
 }
 
 /******************************************************************************
@@ -2185,21 +2182,20 @@ rec_dterm(void)
     SYM_INF sym_inf;
 
     rec_eterm();
-    do
+    for(;;)
         {
         switch(scan_check_next(&sym_inf))
-            {
-            case RPN_BOP_TIMES:
-            case RPN_BOP_DIVIDE:
-                cc->cur.did_num = SYM_BLANK;
-                break;
-            default:
-                return;
-            }
+        {
+        case RPN_BOP_TIMES:
+        case RPN_BOP_DIVIDE:
+            cc->cur.did_num = SYM_BLANK;
+            break;
+        default:
+            return;
+        }
         rec_eterm();
         out_idno_format(&sym_inf);
-        }
-    while(TRUE);
+    }
 }
 
 /******************************************************************************
@@ -2215,11 +2211,11 @@ rec_eterm(void)
 
     rec_fterm();
     while(scan_check_next(&sym_inf) == RPN_BOP_POWER)
-        {
+    {
         cc->cur.did_num = SYM_BLANK;
         rec_fterm();
         out_idno_format(&sym_inf);
-        }
+    }
     return;
 }
 
@@ -2238,7 +2234,7 @@ rec_expr(void)
 
     rec_aterm();
     while(scan_check_next(&sym_inf) == RPN_BOP_OR)
-        {
+    {
         P_U8 skip_pos, skip_parm;
 
         skip_pos = cc->op_pos;
@@ -2249,14 +2245,14 @@ rec_expr(void)
         out_S16(0);
 
         if(!cc->error)
-            {
+        {
             cc->cur.did_num = SYM_BLANK;
             rec_aterm();
             out_idno_format(&sym_inf);
 
             writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
-            }
         }
+    }
     return;
 }
 
@@ -2272,22 +2268,22 @@ rec_fterm(void)
     SYM_INF sym_inf;
 
     switch(scan_check_next(&sym_inf))
-        {
-        case RPN_BOP_PLUS:
-            sym_inf.did_num = RPN_UOP_UPLUS;
-            goto proc_op;
-        case RPN_BOP_MINUS:
-            sym_inf.did_num = RPN_UOP_UMINUS;
-        case RPN_UOP_NOT:
-        proc_op:
-            cc->cur.did_num = SYM_BLANK;
-            rec_fterm();
-            out_idno_format(&sym_inf);
-            return;
-        default:
-            rec_gterm();
-            return;
-        }
+    {
+    case RPN_BOP_PLUS:
+        sym_inf.did_num = RPN_UOP_UPLUS;
+        goto proc_op;
+    case RPN_BOP_MINUS:
+        sym_inf.did_num = RPN_UOP_UMINUS;
+    case RPN_UOP_NOT:
+    proc_op:
+        cc->cur.did_num = SYM_BLANK;
+        rec_fterm();
+        out_idno_format(&sym_inf);
+        return;
+    default:
+        rec_gterm();
+        return;
+    }
 }
 
 /******************************************************************************
@@ -2302,18 +2298,18 @@ rec_gterm(void)
     SYM_INF sym_inf;
 
     if(scan_check_next(&sym_inf) == SYM_OBRACKET)
-        {
+    {
         cc->cur.did_num = SYM_BLANK;
         rec_expr();
         if(scan_check_next(NULL) != SYM_CBRACKET)
             set_error(create_error(EVAL_ERR_CBRACKETS));
         else
-            {
+        {
             cc->cur.did_num = SYM_BLANK;
             sym_inf.did_num = RPN_FRM_BRACKETS;
             out_idno_format(&sym_inf);
-            }
         }
+    }
     else
         rec_lterm();
 }
@@ -2338,173 +2334,173 @@ rec_lterm(void)
     SYM_INF sym_inf;
 
     switch(scan_check_next(&sym_inf))
+    {
+    case RPN_DAT_REAL:
+        cc->cur.did_num = SYM_BLANK;
+        out_idno_format(&sym_inf);
+        out_to_rpn(sizeof32(F64), &cc->cur_sym.arg.fp);
+        break;
+
+    case RPN_DAT_WORD8:
+        cc->cur.did_num = SYM_BLANK;
+        out_idno_format(&sym_inf);
+        out_byte((char) cc->cur_sym.arg.integer);
+        break;
+
+    case RPN_DAT_WORD16:
+        cc->cur.did_num = SYM_BLANK;
+        out_idno_format(&sym_inf);
+        out_S16((S16) cc->cur_sym.arg.integer);
+        break;
+
+    case RPN_DAT_WORD32:
+        cc->cur.did_num = SYM_BLANK;
+        out_idno_format(&sym_inf);
+        out_to_rpn(sizeof32(S32), &cc->cur_sym.arg.integer);
+        break;
+
+    case RPN_DAT_SLR:
+        cc->cur.did_num = SYM_BLANK;
+        out_idno_format(&sym_inf);
+        out_slr(&cc->cur_sym.arg.slr);
+        break;
+
+    case RPN_DAT_RANGE:
+        cc->cur.did_num = SYM_BLANK;
+        out_idno_format(&sym_inf);
+        out_range(&cc->cur_sym.arg.range);
+        break;
+
+    case RPN_TMP_STRING:
+        cc->cur.did_num = SYM_BLANK;
+        out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
+        break;
+
+    case RPN_DAT_DATE:
+        cc->cur.did_num = SYM_BLANK;
+        out_idno_format(&sym_inf);
+        out_to_rpn(sizeof32(EV_DATE), &cc->cur_sym.arg.ev_date);
+        break;
+
+    case SYM_OARRAY:
         {
-        case RPN_DAT_REAL:
-            cc->cur.did_num = SYM_BLANK;
-            out_idno_format(&sym_inf);
-            out_to_rpn(sizeof32(F64), &cc->cur_sym.arg.fp);
-            break;
+        S32 x_size, y_size;
 
-        case RPN_DAT_WORD8:
-            cc->cur.did_num = SYM_BLANK;
-            out_idno_format(&sym_inf);
-            out_byte((char) cc->cur_sym.arg.integer);
-            break;
+        cc->array_nest += 1;
 
-        case RPN_DAT_WORD16:
-            cc->cur.did_num = SYM_BLANK;
-            out_idno_format(&sym_inf);
-            out_S16((S16) cc->cur_sym.arg.integer);
-            break;
+        if(cc->array_nest == 1)
+            rec_array(&x_size, &y_size);
 
-        case RPN_DAT_WORD32:
-            cc->cur.did_num = SYM_BLANK;
-            out_idno_format(&sym_inf);
-            out_to_rpn(sizeof32(S32), &cc->cur_sym.arg.integer);
-            break;
+        cc->array_nest -= 1;
 
-        case RPN_DAT_SLR:
-            cc->cur.did_num = SYM_BLANK;
-            out_idno_format(&sym_inf);
-            out_slr(&cc->cur_sym.arg.slr);
-            break;
-
-        case RPN_DAT_RANGE:
-            cc->cur.did_num = SYM_BLANK;
-            out_idno_format(&sym_inf);
-            out_range(&cc->cur_sym.arg.range);
-            break;
-
-        case RPN_TMP_STRING:
-            cc->cur.did_num = SYM_BLANK;
-            out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
-            break;
-
-        case RPN_DAT_DATE:
-            cc->cur.did_num = SYM_BLANK;
-            out_idno_format(&sym_inf);
-            out_to_rpn(sizeof32(EV_DATE), &cc->cur_sym.arg.ev_date);
-            break;
-
-        case SYM_OARRAY:
-            {
-            S32 x_size, y_size;
-
-            cc->array_nest += 1;
-
-            if(cc->array_nest == 1)
-                rec_array(&x_size, &y_size);
-
-            cc->array_nest -= 1;
-
-            if(cc->array_nest)
-                {
-                set_error(create_error(EVAL_ERR_NESTEDARRAY));
-                break;
-                }
-
-            if(scan_check_next(NULL) != SYM_CARRAY)
-                {
-                set_error(create_error(EVAL_ERR_CARRAY));
-                break;
-                }
-
-            /* array has been scanned */
-            cc->cur.did_num = SYM_BLANK;
-
-            /* output array details to compiled expression */
-            sym_inf.did_num = RPN_FNA_MAKEARRAY;
-            out_idno_format(&sym_inf);
-
-            /* output array sizes */
-            out_to_rpn(sizeof32(S32), &x_size);
-            out_to_rpn(sizeof32(S32), &y_size);
-
-            break;
-            }
-
-        case RPN_LCL_ARGUMENT:
-            {
-            P_U8 ci;
-
-            out_idno_format(&sym_inf);
-
-            ci = cc->ident;
-            do
-                out_byte(*ci);
-            while(*ci++);
-
-            cc->cur.did_num = SYM_BLANK;
-            break;
-            }
-
-        case SYM_TAG:
-            {
-            EV_DOCNO refto_docno;
-            char ident[BUF_EV_INTNAMLEN];
-
-            ev_doc_establish_doc_from_name(cc->doc_name, cc->docno, &refto_docno);
-            strcpy(ident, cc->ident);
-
-            /* we scanned the tag */
-            cc->cur.did_num = SYM_BLANK;
-
-            /* lookup id as internal function */
-            if(!cc->doc_name[0])
-                {
-                S32 int_func;
-
-                if((int_func = func_lookup(ident)) >= 0)
-                    {
-                    sym_inf.did_num = (EV_IDNO) int_func;
-                    func_call(&sym_inf, 0);
-                    break;
-                    }
-                 }
-
-            /* is it a custom function call ? */
-            if(scan_check_next(NULL) == SYM_OBRACKET)
-                {
-                /* must be a custom function - establish reference */
-                EV_NAMEID custom_num = ensure_custom_in_list(refto_docno, ident);
-                P_EV_CUSTOM p_ev_custom;
-
-                if(custom_num < 0)
-                    {
-                    set_error(status_nomem());
-                    break;
-                    }
-
-                p_ev_custom = custom_ptr_must(custom_num);
-                sym_inf.did_num = RPN_FNM_CUSTOMCALL;
-                func_call(&sym_inf, p_ev_custom->key);
-                }
-            else
-                {
-                EV_NAMEID name_num = ensure_name_in_list(refto_docno, ident);
-                P_EV_NAME p_ev_name;
-
-                if(name_num < 0)
-                    {
-                    set_error(status_nomem());
-                    break;
-                    }
-
-                p_ev_name = name_ptr_must(name_num);
-                sym_inf.did_num = RPN_DAT_NAME;
-                out_idno_format(&sym_inf);
-                out_nameid(p_ev_name->key);
-
-                cc->parms.var = 1;
-                }
-
-            break;
-            }
-
-        default:
-            set_error(create_error(EVAL_ERR_BADEXPR));
+        if(cc->array_nest)
+        {
+            set_error(create_error(EVAL_ERR_NESTEDARRAY));
             break;
         }
+
+        if(scan_check_next(NULL) != SYM_CARRAY)
+        {
+            set_error(create_error(EVAL_ERR_CARRAY));
+            break;
+        }
+
+        /* array has been scanned */
+        cc->cur.did_num = SYM_BLANK;
+
+        /* output array details to compiled expression */
+        sym_inf.did_num = RPN_FNA_MAKEARRAY;
+        out_idno_format(&sym_inf);
+
+        /* output array sizes */
+        out_to_rpn(sizeof32(S32), &x_size);
+        out_to_rpn(sizeof32(S32), &y_size);
+
+        break;
+        }
+
+    case RPN_LCL_ARGUMENT:
+        {
+        P_U8 ci;
+
+        out_idno_format(&sym_inf);
+
+        ci = cc->ident;
+        do
+            out_byte(*ci);
+        while(*ci++);
+
+        cc->cur.did_num = SYM_BLANK;
+        break;
+        }
+
+    case SYM_TAG:
+        {
+        EV_DOCNO refto_docno;
+        char ident[BUF_EV_INTNAMLEN];
+
+        ev_doc_establish_doc_from_name(cc->doc_name, cc->docno, &refto_docno);
+        strcpy(ident, cc->ident);
+
+        /* we scanned the tag */
+        cc->cur.did_num = SYM_BLANK;
+
+        /* lookup id as internal function */
+        if(!cc->doc_name[0])
+        {
+            S32 int_func;
+
+            if((int_func = func_lookup(ident)) >= 0)
+            {
+                sym_inf.did_num = (EV_IDNO) int_func;
+                func_call(&sym_inf, 0);
+                break;
+            }
+        }
+
+        /* is it a custom function call ? */
+        if(scan_check_next(NULL) == SYM_OBRACKET)
+        {
+            /* must be a custom function - establish reference */
+            EV_NAMEID custom_num = ensure_custom_in_list(refto_docno, ident);
+            P_EV_CUSTOM p_ev_custom;
+
+            if(custom_num < 0)
+            {
+                set_error(status_nomem());
+                break;
+            }
+
+            p_ev_custom = custom_ptr_must(custom_num);
+            sym_inf.did_num = RPN_FNM_CUSTOMCALL;
+            func_call(&sym_inf, p_ev_custom->key);
+        }
+        else
+        {
+            EV_NAMEID name_num = ensure_name_in_list(refto_docno, ident);
+            P_EV_NAME p_ev_name;
+
+            if(name_num < 0)
+            {
+                set_error(status_nomem());
+                break;
+            }
+
+            p_ev_name = name_ptr_must(name_num);
+            sym_inf.did_num = RPN_DAT_NAME;
+            out_idno_format(&sym_inf);
+            out_nameid(p_ev_name->key);
+
+            cc->parms.var = 1;
+        }
+
+        break;
+        }
+
+    default:
+        set_error(create_error(EVAL_ERR_BADEXPR));
+        break;
+    }
 }
 
 /******************************************************************************
@@ -2519,11 +2515,11 @@ scan_check_next(
     P_SYM_INF p_sym_inf)
 {
     if(cc->cur.did_num == SYM_BLANK)
-        {
+    {
         cc->err_pos = cc->ip_pos;
         scan_next_symbol();
         cc->n_scanned += 1;
-        }
+    }
 
     if(p_sym_inf)
         *p_sym_inf = cc->cur;
@@ -2558,22 +2554,22 @@ scan_next_symbol(void)
         }
 
         if(*cc->ip_pos == CR)
-            {
+        {
             ++cc->ip_pos;
             if(*cc->ip_pos == LF)
                 ++cc->ip_pos;
             ++cc->cur.sym_cr;
             continue;
-            }
+        }
 
         if(*cc->ip_pos == LF)
-            {
+        {
             ++cc->ip_pos;
             if(*cc->ip_pos == CR)
                 ++cc->ip_pos;
             ++cc->cur.sym_cr;
             continue;
-            }
+        }
 
         cc->cur.sym_space = 0;
         if(*cc->ip_pos == ' ')
@@ -2581,7 +2577,7 @@ scan_next_symbol(void)
             do  {
                 ++cc->ip_pos;
                 ++cc->cur.sym_space;
-                }
+            }
             while(*cc->ip_pos == ' ');
 
             continue;
@@ -2593,7 +2589,7 @@ scan_next_symbol(void)
     /* try to scan a data item */
     if(*cc->ip_pos != '-' &&
        *cc->ip_pos != '+')
-        {
+    {
         /* check for number */
         if((res = ss_recog_number(&cc->cur_sym, cc->ip_pos)) > 0)
             cc->ip_pos += res;
@@ -2605,106 +2601,106 @@ scan_next_symbol(void)
             cc->ip_pos += res;
 
         if(res > 0)
-            {
+        {
             cc->cur.did_num = cc->cur_sym.did_num;
             return;
-            }
         }
+    }
 
     /* clear external ref buffer */
     cc->doc_name[0] = '\0';
 
     /* check for internal slr or range */
     if((res = recog_slr_range(&cc->cur_sym, cc->docno, cc->ip_pos, cc->doc_name)) > 0)
-        {
+    {
         cc->ip_pos += res;
         cc->parms.var = 1;
         cc->cur.did_num = cc->cur_sym.did_num;
         return;
-        }
+    }
 
     /* check for special symbols */
     switch(*cc->ip_pos)
+    {
+    case '\0':
+        cc->cur.did_num = RPN_FRM_END;
+        return;
+    case '(':
+        ++cc->ip_pos;
+        cc->cur.did_num = SYM_OBRACKET;
+        return;
+    case ')':
+        ++cc->ip_pos;
+        cc->cur.did_num = SYM_CBRACKET;
+        return;
+    case ',':
+        ++cc->ip_pos;
+        cc->cur.did_num = SYM_COMMA;
+        return;
+    case ';':
+        ++cc->ip_pos;
+        cc->cur.did_num = SYM_SEMICOLON;
+        return;
+    case '{':
+        ++cc->ip_pos;
+        cc->cur.did_num = SYM_OARRAY;
+        return;
+    case '}':
+        ++cc->ip_pos;
+        cc->cur.did_num = SYM_CARRAY;
+        return;
+
+    /* local name */
+    case '@':
+        if((res = recog_ident(cc->ident, ++cc->ip_pos)) <= 0)
         {
-        case '\0':
-            cc->cur.did_num = RPN_FRM_END;
+            set_error(create_error(EVAL_ERR_BADIDENT));
             return;
-        case '(':
-            ++cc->ip_pos;
-            cc->cur.did_num = SYM_OBRACKET;
-            return;
-        case ')':
-            ++cc->ip_pos;
-            cc->cur.did_num = SYM_CBRACKET;
-            return;
-        case ',':
-            ++cc->ip_pos;
-            cc->cur.did_num = SYM_COMMA;
-            return;
-        case ';':
-            ++cc->ip_pos;
-            cc->cur.did_num = SYM_SEMICOLON;
-            return;
-        case '{':
-            ++cc->ip_pos;
-            cc->cur.did_num = SYM_OARRAY;
-            return;
-        case '}':
-            ++cc->ip_pos;
-            cc->cur.did_num = SYM_CARRAY;
-            return;
-
-        /* local name */
-        case '@':
-            if((res = recog_ident(cc->ident, ++cc->ip_pos)) <= 0)
-                {
-                set_error(create_error(EVAL_ERR_BADIDENT));
-                return;
-                }
-
-            cc->ip_pos += res;
-            cc->cur.did_num = RPN_LCL_ARGUMENT;
-            return;
-
-        default:
-            break;
         }
+
+        cc->ip_pos += res;
+        cc->cur.did_num = RPN_LCL_ARGUMENT;
+        return;
+
+    default:
+        break;
+    }
 
     /* check for external document reference */
     if((res = recog_extref(cc->doc_name, BUF_EV_LONGNAMLEN, cc->ip_pos, 1)) > 0)
-        {
+    {
         cc->ip_pos += res;
 
         if((res = recog_slr_range(&cc->cur_sym, cc->docno, cc->ip_pos, cc->doc_name)) > 0)
-            {
+        {
             cc->ip_pos += res;
             cc->parms.var = 1;
             cc->cur.did_num = cc->cur_sym.did_num;
             return;
-            }
         }
+    }
     else if(res < 0)
-        {
+    {
         set_error(res);
         return;
-        }
+    }
 
     /* scan an id */
     if(isalnum(*cc->ip_pos) || *cc->ip_pos == '_' || cc->doc_name[0])
-        {
+    {
         if((res = recog_ident(cc->ident, cc->ip_pos)) <= 0)
-            {
+        {
             set_error(res ? res : create_error(EVAL_ERR_BADIDENT));
             return;
-            }
+        }
 
         cc->ip_pos += res;
         cc->cur.did_num = SYM_TAG;
         return;
-        }
+    }
     /* must be an operator or a dud */
     else if(ispunct(*cc->ip_pos))
-        {
+    {
         P_U8 co;
         S32 cur_ch;
 
@@ -2712,31 +2708,31 @@ scan_next_symbol(void)
         count = 0;
         cur_ch = *cc->ip_pos;
         while(ispunct(cur_ch) && count < EV_INTNAMLEN)
-            {
+        {
             *co++  = cur_ch;
             cur_ch = *(++cc->ip_pos);
             ++count;
 
             switch(cur_ch)
-                {
-                case '>':
-                case '<':
-                case '=':
-                    continue;
+            {
+            case '>':
+            case '<':
+            case '=':
+                continue;
 
-                default:
-                    break;
-                }
+            default:
+                break;
+            }
 
             break;
-            }
+        }
 
         *co++ = '\0';
 
         if(count)
             if((cc->cur.did_num = func_lookup(cc->ident)) >= 0)
                 return;
-        }
+    }
 
     set_error(create_error(EVAL_ERR_BADEXPR));
 }
@@ -2779,7 +2775,7 @@ ev_stox(
     scanned = 0;
 
     if(i >= 0 && i <= 25)
-        {
+    {
         EV_COL tcol;
 
         tcol    = i;
@@ -2790,11 +2786,11 @@ ev_stox(
             if(i < 0 || i > 25)
                 break;
             tcol = (tcol + 1) * 26 + i;
-            }
+        }
         while(++scanned < EV_MAX_COL_LETS);
 
         *col = tcol;
-        }
+    }
 
     return(scanned);
 }

@@ -2,24 +2,24 @@
 <HTML>
 <HEAD>
 <META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
-<TITLE>Colton Software PipeDream for RISC OS - Help</TITLE>
+<TITLE>Colton Software PipeDream- Help</TITLE>
 </HEAD>
 <BODY>
-<H1>Colton Software PipeDream for RISC OS</H1>
+<H1>Colton Software PipeDream - Help</H1>
 
 <H2>Licence and Copyright</H2>
-
-<P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
-(MPL).</P>
-
-<P>A copy of the MPL may be downloaded from <A
-HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!-- Copyright (C) 1989-1998 Colton Software Limited,
    - Copyright (C) 1998-2015 R W Colton -->
+
+<P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
+(MPL).</P>
+
+<P>A copy of the MPL may be downloaded from <A
+HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
 
 <P>Copyright (C) 1989-1998 Colton Software Limited,
 Copyright (C) 1998-2015 R W Colton</P>

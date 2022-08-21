@@ -191,308 +191,308 @@ gr_chartedit_riscos_menu_handler(
     assert(cp);
 
     switch(selection)
+    {
+    case GR_CHART_MO_CHART_OPTIONS:
+        gr_chartedit_options_process(cep);
+        break;
+
+    case GR_CHART_MO_CHART_SAVE:
         {
-        case GR_CHART_MO_CHART_OPTIONS:
-            gr_chartedit_options_process(cep);
-            break;
+        S32 ask;
+        S32 res;
 
-        case GR_CHART_MO_CHART_SAVE:
-            {
-            S32 ask;
-            S32 res;
-
-            switch(subselection)
-                {
-                case mo_no_selection:
+        switch(subselection)
+        {
+        case mo_no_selection:
 #ifdef GR_CHART_SAVES_ONLY_DRAWFILE
-                    if(submenurequest)
-                        {
-                        /* use dialog */
-                        gr_chart_save_draw_file_with_dialog(&cep->ch);
-                        break;
-                        }
+            if(submenurequest)
+            {
+                /* use dialog */
+                gr_chart_save_draw_file_with_dialog(&cep->ch);
+                break;
+            }
 #endif
-                    if(submenurequest)
-                        {
-                        processed = FALSE;
-                        break;
-                        }
-
-                    /* click on 'Save =>' - save file as is */
-                    ask = !file_is_rooted(cp->core.currentfilename);
-
-                    if(!ask)
-                        {
-                        /* chart file already has name, save to there */
-                        res = gr_chart_save_chart_without_dialog(&cep->ch, NULL);
-
-                        if(res < 0)
-                            messagef(string_lookup(GR_CHART_MSG_CHARTSAVE_ERROR), string_lookup(res));
-
-                        break;
-                        }
-
-                    /* deliberate drop thru ... */
-
-                case GR_CHART_MO_SAVE_CHART:
-                    gr_chart_save_chart_with_dialog(&cep->ch);
-                    break;
-
-                case GR_CHART_MO_SAVE_DRAWFILE:
-                    gr_chart_save_draw_file_with_dialog(&cep->ch);
-                    break;
-                }
-            }
-            break;
-
-        case GR_CHART_MO_CHART_GALLERY:
-            switch(subselection)
-                {
-                case mo_no_selection:
-                    if(submenurequest)
-                        {
-                        processed = FALSE;
-                        break;
-                        }
-
-                    /* display gallery appropriate for the main axes <<< improve to use selection */
-                    switch(cp->axes[0].charttype)
-                        {
-                        case GR_CHARTTYPE_PIE:
-                            gr_chartedit_gallery_pie_process(cep);
-                            break;
-
-                        case GR_CHARTTYPE_BAR:
-                            gr_chartedit_gallery_bar_process(cep);
-                            break;
-
-                        case GR_CHARTTYPE_LINE:
-                            gr_chartedit_gallery_line_process(cep);
-                            break;
-
-                        case GR_CHARTTYPE_SCAT:
-                            gr_chartedit_gallery_scat_process(cep);
-                            break;
-
-                        default:
-                            processed = FALSE;
-                            break;
-                        }
-                    break;
-
-                case GR_CHART_MO_GALLERY_PIE:
-                    gr_chartedit_gallery_pie_process(cep);
-                    break;
-
-                case GR_CHART_MO_GALLERY_BAR:
-                    gr_chartedit_gallery_bar_process(cep);
-                    break;
-
-                case GR_CHART_MO_GALLERY_LINE:
-                    gr_chartedit_gallery_line_process(cep);
-                    break;
-
-                case GR_CHART_MO_GALLERY_SCATTER:
-                    gr_chartedit_gallery_scat_process(cep);
-                    break;
-
-                case GR_CHART_MO_GALLERY_OVERLAYS:
-                    {
-                    if(cp->axes_idx_max != 0)
-                        cp->axes_idx_max = 0;
-                    else
-                        cp->axes_idx_max = 1;
-
-                    cp->bits.realloc_series = 1;
-                    modified = 1;
-                    }
-                    break;
-
-                case GR_CHART_MO_GALLERY_PREFERRED:
-                    gr_chart_preferred_use(&cep->ch);
-                    modified = 1;
-                    break;
-
-                case GR_CHART_MO_GALLERY_SET_PREFERRED:
-                    gr_chart_preferred_set(&cep->ch);
-                    break;
-
-                case GR_CHART_MO_GALLERY_SAVE_PREFERRED:
-                    {
-                    U8 filename[BUF_MAX_PATHSTRING];
-
-                    /* direct callback to client to obtain a name */
-                    if(gr_chart_preferred_get_name(filename, MAX_PATHSTRING))
-                        gr_chart_preferred_save(filename);
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-            break;
-
-        case GR_CHART_MO_CHART_SELECTION:
+            if(submenurequest)
             {
-            switch(subselection)
-                {
-                case mo_no_selection:
-                    /* mostly ignore clicks on 'Selection =>' */
-                    if(submenurequest)
-                        processed = FALSE;
-                    else
-                        switch(cep->selection.id.name)
-                            {
-                            case GR_CHART_OBJNAME_AXIS:
-                                gr_chartedit_selection_axis_process(cep);
-                                break;
-
-                            case GR_CHART_OBJNAME_SERIES:
-                            case GR_CHART_OBJNAME_DROPSER:
-                                gr_chartedit_selection_series_process(cep);
-                                break;
-
-                            default:
-                                processed = FALSE;
-                                break;
-                            }
-                    break;
-
-                case GR_CHART_MO_SELECTION_FILLSTYLE:
-                    gr_chartedit_selection_fillstyle_edit(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_FILLCOLOUR:
-                    gr_chartedit_selection_fillcolour_edit(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_LINESTYLE:
-                    gr_chartedit_selection_linestyle_edit(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_LINECOLOUR:
-                    gr_chartedit_selection_linecolour_edit(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_TEXT:
-                    {
-                    switch(hit[2])
-                        {
-                        case mo_no_selection:
-                            if(submenurequest)
-                                {
-                                processed = FALSE;
-                                break;
-                                }
-
-                        /* else deliberate drop thru ... */
-
-                        case GR_CHART_MO_SELECTION_TEXT_EDIT:
-                            if(gr_chartedit_selection_text_edit(cep, submenurequest) > 0)
-                                modified = 1;
-                            break;
-
-                        case GR_CHART_MO_SELECTION_TEXT_DELETE:
-                            gr_chartedit_selection_text_delete(cep);
-                            modified = 1;
-                            break;
-                        }
-                    }
-                    break;
-
-                case GR_CHART_MO_SELECTION_TEXTCOLOUR:
-                    gr_chartedit_selection_textcolour_edit(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_TEXTSTYLE:
-                    gr_chartedit_selection_textstyle_edit(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_HINTCOLOUR:
-                    gr_chartedit_selection_hintcolour_edit(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_AXIS:
-                    gr_chartedit_selection_axis_process(cep);
-                    break;
-
-                case GR_CHART_MO_SELECTION_SERIES:
-                    gr_chartedit_selection_series_process(cep);
-                    break;
-                }
+                processed = FALSE;
+                break;
             }
+
+            /* click on 'Save =>' - save file as is */
+            ask = !file_is_rooted(cp->core.currentfilename);
+
+            if(!ask)
+            {
+                /* chart file already has name, save to there */
+                res = gr_chart_save_chart_without_dialog(&cep->ch, NULL);
+
+                if(res < 0)
+                    messagef(string_lookup(GR_CHART_MSG_CHARTSAVE_ERROR), string_lookup(res));
+
+                break;
+            }
+
+            /* deliberate drop thru ... */
+
+        case GR_CHART_MO_SAVE_CHART:
+            gr_chart_save_chart_with_dialog(&cep->ch);
             break;
 
-        case GR_CHART_MO_CHART_LEGEND:
-            {
-            switch(subselection)
-                {
-                case mo_no_selection:
-                    if(submenurequest)
-                        processed = FALSE;
-                    else
-                        {
-                        /* turn legend on/off */
-                        cp->legend.bits.on = !cp->legend.bits.on;
-
-                        /* in due course this will be done automagically */
-                        if(cep->selection.id.name == GR_CHART_OBJNAME_LEGEND)
-                            gr_chartedit_selection_clear(cep);
-
-                        modified = 1;
-                        }
-                    break;
-
-                case GR_CHART_MO_LEGEND_ARRANGE:
-                    cp->legend.bits.in_rows = !cp->legend.bits.in_rows;
-
-                    /* always turn legend on too */
-                    cp->legend.bits.on = TRUE;
-
-                    modified = 1;
-                    break;
-
-                default:
-                    break;
-                }
-            }
+        case GR_CHART_MO_SAVE_DRAWFILE:
+            gr_chart_save_draw_file_with_dialog(&cep->ch);
             break;
+        }
+        }
+        break;
 
-        case GR_CHART_MO_CHART_NEW_TEXT:
+    case GR_CHART_MO_CHART_GALLERY:
+        switch(subselection)
+        {
+        case mo_no_selection:
+            if(submenurequest)
             {
-            struct _wimp_eventdata_but but;
-            wimp_w dummy_w;
-            GR_POINT point;
-            LIST_ITEMNO    key;
-            char           new_text[32];
-            S32            res;
+                processed = FALSE;
+                break;
+            }
 
-            event_read_menuclickdata(&but.m.x, &but.m.y, &dummy_w, &but.m.i);
-
-            if(but.m.i != (wimp_i) -1)
-                /* can't do anything interesting with this */
+            /* display gallery appropriate for the main axes <<< improve to use selection */
+            switch(cp->axes[0].charttype)
+            {
+            case GR_CHARTTYPE_PIE:
+                gr_chartedit_gallery_pie_process(cep);
                 break;
 
-            gr_chartedit_riscos_point_from_abs(cp, &point, but.m.x, but.m.y);
+            case GR_CHARTTYPE_BAR:
+                gr_chartedit_gallery_bar_process(cep);
+                break;
 
-            /* add to end of list or reuse dead one */
-            key = gr_text_key_for_new(cp);
+            case GR_CHARTTYPE_LINE:
+                gr_chartedit_gallery_line_process(cep);
+                break;
 
-            (void) xsnprintf(new_text, elemof32(new_text), string_lookup(GR_CHART_MSG_TEXT_ZD), key);
+            case GR_CHARTTYPE_SCAT:
+                gr_chartedit_gallery_scat_process(cep);
+                break;
 
-            res = gr_chartedit_text_new_and_edit(cp, key, submenurequest, new_text, &point);
+            default:
+                processed = FALSE;
+                break;
+            }
+            break;
 
-            modified = (res > 0);
+        case GR_CHART_MO_GALLERY_PIE:
+            gr_chartedit_gallery_pie_process(cep);
+            break;
 
-            if(res < 0)
-                gr_chartedit_winge(res);
+        case GR_CHART_MO_GALLERY_BAR:
+            gr_chartedit_gallery_bar_process(cep);
+            break;
+
+        case GR_CHART_MO_GALLERY_LINE:
+            gr_chartedit_gallery_line_process(cep);
+            break;
+
+        case GR_CHART_MO_GALLERY_SCATTER:
+            gr_chartedit_gallery_scat_process(cep);
+            break;
+
+        case GR_CHART_MO_GALLERY_OVERLAYS:
+            {
+            if(cp->axes_idx_max != 0)
+                cp->axes_idx_max = 0;
+            else
+                cp->axes_idx_max = 1;
+
+            cp->bits.realloc_series = 1;
+            modified = 1;
+            }
+            break;
+
+        case GR_CHART_MO_GALLERY_PREFERRED:
+            gr_chart_preferred_use(&cep->ch);
+            modified = 1;
+            break;
+
+        case GR_CHART_MO_GALLERY_SET_PREFERRED:
+            gr_chart_preferred_set(&cep->ch);
+            break;
+
+        case GR_CHART_MO_GALLERY_SAVE_PREFERRED:
+            {
+            U8 filename[BUF_MAX_PATHSTRING];
+
+            /* direct callback to client to obtain a name */
+            if(gr_chart_preferred_get_name(filename, MAX_PATHSTRING))
+                gr_chart_preferred_save(filename);
             }
             break;
 
         default:
-            trace_2(TRACE_MODULE_GR_CHART, "unprocessed gr_chartedit menu hit %d, %d", selection, subselection);
             break;
         }
+        break;
+
+    case GR_CHART_MO_CHART_SELECTION:
+        {
+        switch(subselection)
+        {
+        case mo_no_selection:
+            /* mostly ignore clicks on 'Selection =>' */
+            if(submenurequest)
+                processed = FALSE;
+            else
+                switch(cep->selection.id.name)
+                {
+                case GR_CHART_OBJNAME_AXIS:
+                    gr_chartedit_selection_axis_process(cep);
+                    break;
+
+                case GR_CHART_OBJNAME_SERIES:
+                case GR_CHART_OBJNAME_DROPSER:
+                    gr_chartedit_selection_series_process(cep);
+                    break;
+
+                default:
+                    processed = FALSE;
+                    break;
+                }
+            break;
+
+        case GR_CHART_MO_SELECTION_FILLSTYLE:
+            gr_chartedit_selection_fillstyle_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_FILLCOLOUR:
+            gr_chartedit_selection_fillcolour_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_LINESTYLE:
+            gr_chartedit_selection_linestyle_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_LINECOLOUR:
+            gr_chartedit_selection_linecolour_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_TEXT:
+            {
+            switch(hit[2])
+            {
+            case mo_no_selection:
+                if(submenurequest)
+                {
+                    processed = FALSE;
+                    break;
+                }
+
+            /* else deliberate drop thru ... */
+
+            case GR_CHART_MO_SELECTION_TEXT_EDIT:
+                if(gr_chartedit_selection_text_edit(cep, submenurequest) > 0)
+                    modified = 1;
+                break;
+
+            case GR_CHART_MO_SELECTION_TEXT_DELETE:
+                gr_chartedit_selection_text_delete(cep);
+                modified = 1;
+                break;
+            }
+            }
+            break;
+
+        case GR_CHART_MO_SELECTION_TEXTCOLOUR:
+            gr_chartedit_selection_textcolour_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_TEXTSTYLE:
+            gr_chartedit_selection_textstyle_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_HINTCOLOUR:
+            gr_chartedit_selection_hintcolour_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_AXIS:
+            gr_chartedit_selection_axis_process(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_SERIES:
+            gr_chartedit_selection_series_process(cep);
+            break;
+        }
+        }
+        break;
+
+    case GR_CHART_MO_CHART_LEGEND:
+        {
+        switch(subselection)
+        {
+        case mo_no_selection:
+            if(submenurequest)
+                processed = FALSE;
+            else
+            {
+                /* turn legend on/off */
+                cp->legend.bits.on = !cp->legend.bits.on;
+
+                /* in due course this will be done automagically */
+                if(cep->selection.id.name == GR_CHART_OBJNAME_LEGEND)
+                    gr_chartedit_selection_clear(cep);
+
+                modified = 1;
+            }
+            break;
+
+        case GR_CHART_MO_LEGEND_ARRANGE:
+            cp->legend.bits.in_rows = !cp->legend.bits.in_rows;
+
+            /* always turn legend on too */
+            cp->legend.bits.on = TRUE;
+
+            modified = 1;
+            break;
+
+        default:
+            break;
+        }
+        }
+        break;
+
+    case GR_CHART_MO_CHART_NEW_TEXT:
+        {
+        struct _wimp_eventdata_but but;
+        wimp_w dummy_w;
+        GR_POINT point;
+        LIST_ITEMNO    key;
+        char           new_text[32];
+        S32            res;
+
+        event_read_menuclickdata(&but.m.x, &but.m.y, &dummy_w, &but.m.i);
+
+        if(but.m.i != (wimp_i) -1)
+            /* can't do anything interesting with this */
+            break;
+
+        gr_chartedit_riscos_point_from_abs(cp, &point, but.m.x, but.m.y);
+
+        /* add to end of list or reuse dead one */
+        key = gr_text_key_for_new(cp);
+
+        (void) xsnprintf(new_text, elemof32(new_text), string_lookup(GR_CHART_MSG_TEXT_ZD), key);
+
+        res = gr_chartedit_text_new_and_edit(cp, key, submenurequest, new_text, &point);
+
+        modified = (res > 0);
+
+        if(res < 0)
+            gr_chartedit_winge(res);
+        }
+        break;
+
+    default:
+        trace_2(TRACE_MODULE_GR_CHART, "unprocessed gr_chartedit menu hit %d, %d", selection, subselection);
+        break;
+    }
 
     /* look up our handle again; any persistent dialog processing
      * (especially that bloody FontSelector) may not have yet noticed
@@ -501,7 +501,7 @@ gr_chartedit_riscos_menu_handler(
     */
     cep = gr_chartedit_cep_from_ceh(ceh);
     if(cep)
-        {
+    {
         /* clear out that temporary selection if we aren't going to use it again */
         if(!submenurequest)
             if(!event_is_menu_recreate_pending())
@@ -509,7 +509,7 @@ gr_chartedit_riscos_menu_handler(
 
         if(modified)
             gr_chart_modify_and_rebuild(&cep->ch);
-        }
+    }
 
     return(processed);
 }
@@ -536,7 +536,7 @@ gr_chartedit_riscos_menu_maker(
     assert(cp);
 
     if(!gr_chartedit_riscos_menu)
-        {
+    {
         /* create main chart menu just the once*/
 
         gr_chartedit_riscos_menu = menu_new_c(string_lookup(GR_CHART_MSG_MENUHDR_CHART),
@@ -583,7 +583,7 @@ gr_chartedit_riscos_menu_maker(
         menu_submenu(gr_chartedit_riscos_menu,
                      GR_CHART_MO_CHART_LEGEND,
                      gr_chartedit_riscos_submenu_legend);
-        }
+    }
 
     gr_chartedit_fontselect_kill(cep);
 
@@ -593,7 +593,7 @@ gr_chartedit_riscos_menu_maker(
     gr_chartedit_selection_clear_if_temp(cep);
 
     if(cep->selection.id.name == GR_CHART_OBJNAME_ANON)
-        {
+    {
         struct _wimp_eventdata_but but;
         GR_POINT point;
         GR_DIAG_OFFSET hitObject[64];
@@ -602,7 +602,7 @@ gr_chartedit_riscos_menu_maker(
         event_read_menuclickdata(&but.m.x, &but.m.y, &but.m.w, &but.m.i);
 
         if(but.m.i == (wimp_i) -1)
-            {
+        {
             gr_chartedit_riscos_point_from_abs(cp, &point, but.m.x, but.m.y);
 
             hitIndex = gr_nodbg_bring_me_the_head_of_yuri_gagarin(cep, &cep->selection.id, hitObject,
@@ -614,8 +614,8 @@ gr_chartedit_riscos_menu_maker(
 
             if(cep->selection.id.name != GR_CHART_OBJNAME_ANON)
                 cep->selection.temp = TRUE;
-            }
         }
+    }
 
     { /* grey out 'Save =>' if no diagram to save */
     P_GR_DIAG p_gr_diag;
@@ -648,26 +648,26 @@ gr_chartedit_riscos_menu_maker(
         tick_overlay = TRUE;
 
     switch(cp->axes[0].charttype)
-        {
-        default:
-            assert(0);
-        case GR_CHARTTYPE_PIE:
-            tick_pie    = TRUE;
-            tick_overlay = FALSE;
-            break;
+    {
+    default:
+        assert(0);
+    case GR_CHARTTYPE_PIE:
+        tick_pie    = TRUE;
+        tick_overlay = FALSE;
+        break;
 
-        case GR_CHARTTYPE_BAR:
-            tick_bar = TRUE;
-            break;
+    case GR_CHARTTYPE_BAR:
+        tick_bar = TRUE;
+        break;
 
-        case GR_CHARTTYPE_LINE:
-            tick_line = TRUE;
-            break;
+    case GR_CHARTTYPE_LINE:
+        tick_line = TRUE;
+        break;
 
-        case GR_CHARTTYPE_SCAT:
-            tick_scatter = TRUE;
-            break;
-        }
+    case GR_CHARTTYPE_SCAT:
+        tick_scatter = TRUE;
+        break;
+    }
 
     menu_setflags(m, GR_CHART_MO_GALLERY_PIE,
                   tick_pie, fade);
@@ -727,65 +727,65 @@ gr_chartedit_riscos_menu_maker(
     tick = FALSE;
 
     switch(cep->selection.id.name)
-        {
-        case GR_CHART_OBJNAME_ANON:
-            /* fade all that is by default unfaded */
-            fade_fillstyle  = TRUE;
-            fade_fillcolour = TRUE;
-            fade_linestyle  = TRUE;
-            break;
+    {
+    case GR_CHART_OBJNAME_ANON:
+        /* fade all that is by default unfaded */
+        fade_fillstyle  = TRUE;
+        fade_fillcolour = TRUE;
+        fade_linestyle  = TRUE;
+        break;
 
-        case GR_CHART_OBJNAME_CHART:
-        case GR_CHART_OBJNAME_PLOTAREA:
-        case GR_CHART_OBJNAME_LEGEND:
-            fade_textstyle  = FALSE;
-            break;
+    case GR_CHART_OBJNAME_CHART:
+    case GR_CHART_OBJNAME_PLOTAREA:
+    case GR_CHART_OBJNAME_LEGEND:
+        fade_textstyle  = FALSE;
+        break;
 
-        case GR_CHART_OBJNAME_TEXT:
-            fade_fillstyle  = TRUE;
-            fade_fillcolour = TRUE;
-            fade_linestyle  = TRUE;
-            fade_text       = FALSE;
-            fade_textstyle  = FALSE;
-            break;
+    case GR_CHART_OBJNAME_TEXT:
+        fade_fillstyle  = TRUE;
+        fade_fillcolour = TRUE;
+        fade_linestyle  = TRUE;
+        fade_text       = FALSE;
+        fade_textstyle  = FALSE;
+        break;
 
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_DROPPOINT:
-            fade_fillstyle = TRUE;
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_DROPPOINT:
+        fade_fillstyle = TRUE;
 
-            /* deliberate drop thru ... */
+        /* deliberate drop thru ... */
 
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_POINT:
-            fade_textstyle = FALSE;
-            fade_series    = FALSE;
-            fade_axis      = (cp->axes[0].charttype == GR_CHARTTYPE_PIE);
-            break;
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_POINT:
+        fade_textstyle = FALSE;
+        fade_series    = FALSE;
+        fade_axis      = (cp->axes[0].charttype == GR_CHARTTYPE_PIE);
+        break;
 
-        case GR_CHART_OBJNAME_BESTFITSER:
-            fade_fillstyle  = TRUE;
-            fade_fillcolour = TRUE;
-            fade_series     = FALSE;
-            fade_axis       = (cp->axes[0].charttype == GR_CHARTTYPE_PIE);
-            break;
+    case GR_CHART_OBJNAME_BESTFITSER:
+        fade_fillstyle  = TRUE;
+        fade_fillcolour = TRUE;
+        fade_series     = FALSE;
+        fade_axis       = (cp->axes[0].charttype == GR_CHARTTYPE_PIE);
+        break;
 
-        case GR_CHART_OBJNAME_AXIS:
-            fade_fillstyle  = TRUE;
-            fade_fillcolour = TRUE;
-            fade_textstyle  = FALSE;
-            fade_axis       = FALSE;
-            break;
+    case GR_CHART_OBJNAME_AXIS:
+        fade_fillstyle  = TRUE;
+        fade_fillcolour = TRUE;
+        fade_textstyle  = FALSE;
+        fade_axis       = FALSE;
+        break;
 
-        case GR_CHART_OBJNAME_AXISGRID:
-        case GR_CHART_OBJNAME_AXISTICK:
-            fade_fillstyle  = TRUE;
-            fade_fillcolour = TRUE;
-            fade_axis       = FALSE;
-            break;
+    case GR_CHART_OBJNAME_AXISGRID:
+    case GR_CHART_OBJNAME_AXISTICK:
+        fade_fillstyle  = TRUE;
+        fade_fillcolour = TRUE;
+        fade_axis       = FALSE;
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     menu_setflags(m, GR_CHART_MO_SELECTION_FILLSTYLE,
                   tick, fade_fillstyle);
@@ -949,82 +949,82 @@ gr_chartedit_options_process(
         layout.pct_margin_right  = (F64) cp->core.layout.margins.right  / cp->core.layout.width  * 100.0;
 
         for(;;)
-            {
+        {
             gr_chartedit_options_encode(w, &layout);
 
             if((f = dbox_fillin(d)) == dbox_CLOSE)
                 break;
 
             if(f != dbox_OK)
-                {
+            {
                 /* adjusters all modify but rebuild at end */
                 pending_reflect_modify = 1;
 
                 switch(f)
-                    {
-                    /* nothing other than inc/dec/vals */
-                    case GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_WIDTH:
-                    case GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_HEIGHT:
-                    case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_LEFT:
-                    case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_BOTTOM:
-                    case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_RIGHT:
-                    case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_TOP:
-                        /* only purpose here is to get state reencoded on caret motion */
+                {
+                /* nothing other than inc/dec/vals */
+                case GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_WIDTH:
+                case GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_HEIGHT:
+                case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_LEFT:
+                case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_BOTTOM:
+                case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_RIGHT:
+                case GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_TOP:
+                    /* only purpose here is to get state reencoded on caret motion */
+                    break;
+
+                default:
+                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_WIDTH,
+                                      &layout.in_width,
+                                      &in_increment,
+                                      &in_min_limit,
+                                      &in_max_limit,
+                                      in_decplaces))
                         break;
 
-                    default:
-                        if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_WIDTH,
-                                          &layout.in_width,
-                                          &in_increment,
-                                          &in_min_limit,
-                                          &in_max_limit,
-                                          in_decplaces))
-                            break;
-
-                        if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_HEIGHT,
-                                          &layout.in_height,
-                                          &in_increment,
-                                          &in_min_limit,
-                                          &in_max_limit,
-                                          in_decplaces))
-                            break;
-
-                        if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_LEFT,
-                                          &layout.pct_margin_left,
-                                          &pct_margin_increment,
-                                          &pct_margin_min_limit,
-                                          &pct_margin_max_limit,
-                                          pct_margin_decplaces))
-                            break;
-
-                        if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_BOTTOM,
-                                          &layout.pct_margin_bottom,
-                                          &pct_margin_increment,
-                                          &pct_margin_min_limit,
-                                          &pct_margin_max_limit,
-                                          pct_margin_decplaces))
-                            break;
-
-                        if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_RIGHT,
-                                          &layout.pct_margin_right,
-                                          &pct_margin_increment,
-                                          &pct_margin_min_limit,
-                                          &pct_margin_max_limit,
-                                          pct_margin_decplaces))
-                            break;
-
-                        if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_TOP,
-                                          &layout.pct_margin_top,
-                                          &pct_margin_increment,
-                                          &pct_margin_min_limit,
-                                          &pct_margin_max_limit,
-                                          pct_margin_decplaces))
-                            break;
-
-                        assert(0);
+                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_HEIGHT,
+                                      &layout.in_height,
+                                      &in_increment,
+                                      &in_min_limit,
+                                      &in_max_limit,
+                                      in_decplaces))
                         break;
-                    }
+
+                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_LEFT,
+                                      &layout.pct_margin_left,
+                                      &pct_margin_increment,
+                                      &pct_margin_min_limit,
+                                      &pct_margin_max_limit,
+                                      pct_margin_decplaces))
+                        break;
+
+                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_BOTTOM,
+                                      &layout.pct_margin_bottom,
+                                      &pct_margin_increment,
+                                      &pct_margin_min_limit,
+                                      &pct_margin_max_limit,
+                                      pct_margin_decplaces))
+                        break;
+
+                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_RIGHT,
+                                      &layout.pct_margin_right,
+                                      &pct_margin_increment,
+                                      &pct_margin_min_limit,
+                                      &pct_margin_max_limit,
+                                      pct_margin_decplaces))
+                        break;
+
+                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_TOP,
+                                      &layout.pct_margin_top,
+                                      &pct_margin_increment,
+                                      &pct_margin_min_limit,
+                                      &pct_margin_max_limit,
+                                      pct_margin_decplaces))
+                        break;
+
+                    assert(0);
+                    break;
                 }
+            }
 
             win_checkdouble(w, GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_WIDTH,
                             &layout.in_width,
@@ -1070,12 +1070,12 @@ gr_chartedit_options_process(
 
             if(f == dbox_OK)
                 break;
-            }
+        }
 
         ok = (f == dbox_OK);
 
         if(ok)
-            {
+        {
             /* set chart from modified structure */
             cp->core.layout.width          = (GR_COORD) (layout.in_width  * GR_PIXITS_PER_INCH);
             cp->core.layout.height         = (GR_COORD) (layout.in_height * GR_PIXITS_PER_INCH);
@@ -1090,10 +1090,10 @@ gr_chartedit_options_process(
             cp->core.layout.size.y         = cp->core.layout.height - (cp->core.layout.margins.bottom + cp->core.layout.margins.top  );
 
             gr_chart_modify_and_rebuild(&cep->ch);
-            }
+        }
 
         persist = ok ? dbox_persist() : FALSE;
-        }
+    }
     while(persist);
 
     dbox_dispose(&d);
@@ -1157,19 +1157,19 @@ gr_chartedit_selection_series_process(
     pending_reflect_modify = 0;
 
     switch(cep->selection.id.name)
-        {
-        default:
-            modifying_series_idx = 0;
-            break;
+    {
+    default:
+        modifying_series_idx = 0;
+        break;
 
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_BESTFITSER:
-        case GR_CHART_OBJNAME_POINT:
-        case GR_CHART_OBJNAME_DROPPOINT:
-            modifying_series_idx = gr_series_idx_from_external(cp, cep->selection.id.no);
-            break;
-        }
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_BESTFITSER:
+    case GR_CHART_OBJNAME_POINT:
+    case GR_CHART_OBJNAME_DROPPOINT:
+        modifying_series_idx = gr_series_idx_from_external(cp, cep->selection.id.no);
+        break;
+    }
 
     /* always reflect the name of the series we will be
      * modifying, not the actual selected object
@@ -1195,112 +1195,112 @@ gr_chartedit_selection_series_process(
         state.tristate_fill_axis  = RISCOS_TRISTATE_DONT_CARE;
 
         for(;;)
-            {
+        {
             gr_chartedit_selection_series_encode(w, &state);
 
             if((f = dbox_fillin(d)) == dbox_CLOSE)
                 break;
 
             if(f != dbox_OK)
-                {
+            {
                 /* adjusters all modify but rebuild at end */
                 pending_reflect_modify = 1;
 
                 switch(f)
+                {
+                case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CUMULATIVE:
+                    state.tristate_cumulative = riscos_tristate_hit(w, f);
+                    break;
+
+                case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_POINT_VARY:
+                    state.tristate_point_vary = riscos_tristate_hit(w, f);
+                    break;
+
+                case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_BEST_FIT:
+                    state.tristate_best_fit   = riscos_tristate_hit(w, f);
+                    break;
+
+                case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_FILL_AXIS:
+                    state.tristate_fill_axis  = riscos_tristate_hit(w, f);
+                    break;
+
+                case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_REMOVE_SERIES:
                     {
-                    case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CUMULATIVE:
-                        state.tristate_cumulative = riscos_tristate_hit(w, f);
+                    GR_DATASOURCE_NO ds;
+
+                    serp = getserp(cp, modifying_series_idx);
+
+                    for(ds = 0; ds < GR_SERIES_MAX_DATASOURCES; ++ds)
+                        if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
+                            gr_chart_subtract_datasource_using_dsh(cp, serp->datasources.dsh[ds]);
+
+                    switch(cep->selection.id.name)
+                    {
+                    case GR_CHART_OBJNAME_SERIES:
+                    case GR_CHART_OBJNAME_POINT:
+                    case GR_CHART_OBJNAME_DROPSER:
+                    case GR_CHART_OBJNAME_DROPPOINT:
+                    case GR_CHART_OBJNAME_BESTFITSER:
+                        cep->selection.id = gr_chart_objid_anon;
                         break;
-
-                    case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_POINT_VARY:
-                        state.tristate_point_vary = riscos_tristate_hit(w, f);
-                        break;
-
-                    case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_BEST_FIT:
-                        state.tristate_best_fit   = riscos_tristate_hit(w, f);
-                        break;
-
-                    case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_FILL_AXIS:
-                        state.tristate_fill_axis  = riscos_tristate_hit(w, f);
-                        break;
-
-                    case GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_REMOVE_SERIES:
-                        {
-                        GR_DATASOURCE_NO ds;
-
-                        serp = getserp(cp, modifying_series_idx);
-
-                        for(ds = 0; ds < GR_SERIES_MAX_DATASOURCES; ++ds)
-                            if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
-                                gr_chart_subtract_datasource_using_dsh(cp, serp->datasources.dsh[ds]);
-
-                        switch(cep->selection.id.name)
-                            {
-                            case GR_CHART_OBJNAME_SERIES:
-                            case GR_CHART_OBJNAME_POINT:
-                            case GR_CHART_OBJNAME_DROPSER:
-                            case GR_CHART_OBJNAME_DROPPOINT:
-                            case GR_CHART_OBJNAME_BESTFITSER:
-                                cep->selection.id = gr_chart_objid_anon;
-                                break;
-
-                            default:
-                                break;
-                            }
-
-                        gr_chart_modify_and_rebuild(&cep->ch);
-
-                        goto endpoint;
-                        }
 
                     default:
-                        assert(0);
                         break;
                     }
+
+                    gr_chart_modify_and_rebuild(&cep->ch);
+
+                    goto endpoint;
+                    }
+
+                default:
+                    assert(0);
+                    break;
                 }
+            }
 
             if(f == dbox_OK)
                 break;
-            }
+        }
 
         ok = (f == dbox_OK);
 
         if(ok)
-            {
+        {
             /* set chart from modified structure */
             serp = getserp(cp, modifying_series_idx);
 
             if(state.tristate_cumulative != RISCOS_TRISTATE_DONT_CARE)
-                {
+            {
                 serp->bits.cumulative        = (state.tristate_cumulative == RISCOS_TRISTATE_ON);
                 serp->bits.cumulative_manual = 1;
 
                 * (int *) &serp->valid = 0;
-                }
-
-            if(state.tristate_point_vary != RISCOS_TRISTATE_DONT_CARE)
-                {
-                serp->bits.point_vary        = (state.tristate_point_vary == RISCOS_TRISTATE_ON);
-                serp->bits.point_vary_manual = 1;
-                }
-
-            if(state.tristate_best_fit != RISCOS_TRISTATE_DONT_CARE)
-                {
-                serp->bits.best_fit          = (state.tristate_best_fit == RISCOS_TRISTATE_ON);
-                serp->bits.best_fit_manual   = 1;
-                }
-
-            if(state.tristate_fill_axis != RISCOS_TRISTATE_DONT_CARE)
-                {
-                serp->bits.fill_axis         = (state.tristate_fill_axis == RISCOS_TRISTATE_ON);
-                serp->bits.fill_axis_manual  = 1;
-                }
-
-            gr_chart_modify_and_rebuild(&cep->ch);
             }
 
-        persist = ok ? dbox_persist() : FALSE;
+            if(state.tristate_point_vary != RISCOS_TRISTATE_DONT_CARE)
+            {
+                serp->bits.point_vary        = (state.tristate_point_vary == RISCOS_TRISTATE_ON);
+                serp->bits.point_vary_manual = 1;
+            }
+
+            if(state.tristate_best_fit != RISCOS_TRISTATE_DONT_CARE)
+            {
+                serp->bits.best_fit          = (state.tristate_best_fit == RISCOS_TRISTATE_ON);
+                serp->bits.best_fit_manual   = 1;
+            }
+
+            if(state.tristate_fill_axis != RISCOS_TRISTATE_DONT_CARE)
+            {
+                serp->bits.fill_axis         = (state.tristate_fill_axis == RISCOS_TRISTATE_ON);
+                serp->bits.fill_axis_manual  = 1;
+            }
+
+            gr_chart_modify_and_rebuild(&cep->ch);
         }
+
+        persist = ok ? dbox_persist() : FALSE;
+    }
     while(persist);
 
     endpoint:;
@@ -1331,11 +1331,11 @@ typedef struct GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO
     GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_TAG tag;
 
     union GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO_STYLE
-        {
+    {
         GR_LINESTYLE line;
         GR_FILLSTYLE fill;
         GR_TEXTSTYLE text;
-        }
+    }
     style;
 }
 GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO;
@@ -1361,68 +1361,68 @@ gr_chartedit_riscos_dboxtcol_handler(
     assert(cp);
 
     switch(i->tag)
+    {
+    case gr_chartedit_riscos_dboxtcol_callback_linecolour:
         {
-        case gr_chartedit_riscos_dboxtcol_callback_linecolour:
-            {
-            P_GR_LINESTYLE cur_style = &i->style.line;
-            GR_LINESTYLE  new_style = *cur_style;
+        P_GR_LINESTYLE cur_style = &i->style.line;
+        GR_LINESTYLE  new_style = *cur_style;
 
-            new_style.fg = col;
+        new_style.fg = col;
 
-            modify = memcmp(&new_style, cur_style, sizeof(new_style));
+        modify = memcmp(&new_style, cur_style, sizeof(new_style));
 
-            if(modify)
-                {
-                new_style.fg.manual = 1;
-                *cur_style = new_style;
-                res = gr_chart_objid_linestyle_set(cp, &i->id, cur_style);
-                }
-            }
-            break;
-
-        case gr_chartedit_riscos_dboxtcol_callback_fillcolour:
-            {
-            P_GR_FILLSTYLE cur_style = &i->style.fill;
-            GR_FILLSTYLE  new_style = *cur_style;
-
-            new_style.fg = col;
-
-            modify = memcmp(&new_style, cur_style, sizeof(new_style));
-
-            if(modify)
-                {
-                new_style.fg.manual = 1;
-                *cur_style = new_style;
-                res = gr_chart_objid_fillstyle_set(cp, &i->id, cur_style);
-                }
-            }
-            break;
-
-        case gr_chartedit_riscos_dboxtcol_callback_textcolour:
-        case gr_chartedit_riscos_dboxtcol_callback_hintcolour:
-            {
-            P_GR_TEXTSTYLE cur_style = &i->style.text;
-            GR_TEXTSTYLE  new_style = *cur_style;
-
-            if(i->tag == gr_chartedit_riscos_dboxtcol_callback_hintcolour)
-                new_style.bg = col;
-            else
-                new_style.fg = col;
-
-            modify = memcmp(&new_style, cur_style, sizeof(new_style));
-
-            if(modify)
-                {
-                new_style.fg.manual = 1; /* yes, in EITHER case */
-                *cur_style = new_style;
-                res = gr_chart_objid_textstyle_set(cp, &i->id, cur_style);
-                }
-            }
-            break;
-
-        default:
-            break;
+        if(modify)
+        {
+            new_style.fg.manual = 1;
+            *cur_style = new_style;
+            res = gr_chart_objid_linestyle_set(cp, &i->id, cur_style);
         }
+        break;
+        }
+
+    case gr_chartedit_riscos_dboxtcol_callback_fillcolour:
+        {
+        P_GR_FILLSTYLE cur_style = &i->style.fill;
+        GR_FILLSTYLE  new_style = *cur_style;
+
+        new_style.fg = col;
+
+        modify = memcmp(&new_style, cur_style, sizeof(new_style));
+
+        if(modify)
+        {
+            new_style.fg.manual = 1;
+            *cur_style = new_style;
+            res = gr_chart_objid_fillstyle_set(cp, &i->id, cur_style);
+        }
+        break;
+        }
+
+    case gr_chartedit_riscos_dboxtcol_callback_textcolour:
+    case gr_chartedit_riscos_dboxtcol_callback_hintcolour:
+        {
+        P_GR_TEXTSTYLE cur_style = &i->style.text;
+        GR_TEXTSTYLE  new_style = *cur_style;
+
+        if(i->tag == gr_chartedit_riscos_dboxtcol_callback_hintcolour)
+            new_style.bg = col;
+        else
+            new_style.fg = col;
+
+        modify = memcmp(&new_style, cur_style, sizeof(new_style));
+
+        if(modify)
+        {
+            new_style.fg.manual = 1; /* yes, in EITHER case */
+            *cur_style = new_style;
+            res = gr_chart_objid_textstyle_set(cp, &i->id, cur_style);
+        }
+        break;
+        }
+
+    default:
+        break;
+    }
 
     if(res < 0)
         gr_chartedit_winge(res);
@@ -1449,20 +1449,20 @@ gr_chartedit_selection_fillcolour_edit(
     S32 appendage = GR_CHART_MSG_EDIT_APPEND_FILL;
 
     switch(i.id.name)
-        {
-        case GR_CHART_OBJNAME_PLOTAREA:
-            if(i.id.no == 0)
-                /* 'Plot area area' sounds silly */
-                appendage = 0;
-            break;
+    {
+    case GR_CHART_OBJNAME_PLOTAREA:
+        if(i.id.no == 0)
+            /* 'Plot area area' sounds silly */
+            appendage = 0;
+        break;
 
-        case GR_CHART_OBJNAME_CHART:
-            appendage = GR_CHART_MSG_EDIT_APPEND_AREA;
-            break;
+    case GR_CHART_OBJNAME_CHART:
+        appendage = GR_CHART_MSG_EDIT_APPEND_AREA;
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
@@ -1503,19 +1503,19 @@ gr_chartedit_selection_hintcolour_edit(
     S32 appendage = 0;
 
     switch(i.id.name)
-        {
-        case GR_CHART_OBJNAME_PLOTAREA:
-            i.id = gr_chart_objid_chart;
+    {
+    case GR_CHART_OBJNAME_PLOTAREA:
+        i.id = gr_chart_objid_chart;
 
-            /* deliberate drop thru ... */
+        /* deliberate drop thru ... */
 
-        case GR_CHART_OBJNAME_CHART:
-            appendage = GR_CHART_MSG_EDIT_APPEND_BASE;
-            break;
+    case GR_CHART_OBJNAME_CHART:
+        appendage = GR_CHART_MSG_EDIT_APPEND_BASE;
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
@@ -1556,16 +1556,16 @@ gr_chartedit_selection_linecolour_edit(
     S32 appendage = GR_CHART_MSG_EDIT_APPEND_LINE;
 
     switch(i.id.name)
-        {
-        case GR_CHART_OBJNAME_CHART:
-        case GR_CHART_OBJNAME_PLOTAREA:
-        case GR_CHART_OBJNAME_LEGEND:
-            appendage = GR_CHART_MSG_EDIT_APPEND_BORDER;
-            break;
+    {
+    case GR_CHART_OBJNAME_CHART:
+    case GR_CHART_OBJNAME_PLOTAREA:
+    case GR_CHART_OBJNAME_LEGEND:
+        appendage = GR_CHART_MSG_EDIT_APPEND_BORDER;
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
@@ -1638,19 +1638,19 @@ gr_chartedit_riscos_linestyle_callback(
         ival = (GR_COORD) (dval * GR_PIXITS_PER_POINT);
 
     if((ival == cur_style->width)  ||  (ival == -1))
-        {
+    {
         i = win_whichonoff(w,
                            GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST,
                            GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST,
                            GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST);
 
         new_style.width = gr_chartedit_riscos_dialog_linewidth[i - GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST];
-        }
+    }
     else
         new_style.width = ival;
 
     if(0 != memcmp(&new_style, cur_style, sizeof(new_style)))
-        {
+    {
         P_GR_CHART cp;
 
         cp = gr_chart_cp_from_ch(cep->ch);
@@ -1661,7 +1661,7 @@ gr_chartedit_riscos_linestyle_callback(
         gr_chartedit_winge(gr_chart_objid_linestyle_set(cp, id, cur_style));
 
         gr_chart_modify_and_rebuild(&cep->ch);
-        }
+    }
 }
 
 static void
@@ -1697,10 +1697,10 @@ gr_chartedit_riscos_linestyle_encode(
         win_setfield(w, GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER,
                      string_lookup(GR_CHART_MSG_EDITOR_LINESTYLE_THIN));
     else
-        {
+    {
         dval = (F64) cur_style->width / GR_PIXITS_PER_POINT;
         win_setdouble(w, GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER, &dval, 2);
-        }
+    }
 
     for(i  = GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST;
         i <= GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST;
@@ -1743,16 +1743,16 @@ gr_chartedit_selection_linestyle_edit(
     S32 appendage = GR_CHART_MSG_EDIT_APPEND_LINE;
 
     switch(modifying_id.name)
-        {
-        case GR_CHART_OBJNAME_CHART:
-        case GR_CHART_OBJNAME_PLOTAREA:
-        case GR_CHART_OBJNAME_LEGEND:
-            appendage = GR_CHART_MSG_EDIT_APPEND_BORDER;
-            break;
+    {
+    case GR_CHART_OBJNAME_CHART:
+    case GR_CHART_OBJNAME_PLOTAREA:
+    case GR_CHART_OBJNAME_LEGEND:
+        appendage = GR_CHART_MSG_EDIT_APPEND_BORDER;
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     gr_chart_object_name_from_id(title, elemof32(title), &modifying_id);
 
@@ -1769,18 +1769,18 @@ gr_chartedit_selection_linestyle_edit(
 
         while(((f = dbox_fillin(d)) != dbox_CLOSE) && (f != dbox_OK))
             switch(f)
-                {
-                case GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER:
-                    /* clicking in user editing box turns off all width buttons */
-                    for(i  = GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST;
-                        i <= GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST;
-                        i++)
-                        win_setonoff(w, i, 0);
-                    break;
+            {
+            case GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER:
+                /* clicking in user editing box turns off all width buttons */
+                for(i  = GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST;
+                    i <= GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST;
+                    i++)
+                    win_setonoff(w, i, 0);
+                break;
 
-                default:
-                    break;
-                }
+            default:
+                break;
+            }
 
         ok = (f == dbox_OK);
 
@@ -1788,7 +1788,7 @@ gr_chartedit_selection_linestyle_edit(
             gr_chartedit_riscos_linestyle_callback(cep, &modifying_id, w, &linestyle);
 
         persist = ok ? dbox_persist() : FALSE;
-        }
+    }
     while(persist);
 
     dbox_dispose(&d);
@@ -1812,19 +1812,19 @@ gr_chartedit_selection_textcolour_edit(
     S32 appendage = 0;
 
     switch(i.id.name)
-        {
-        case GR_CHART_OBJNAME_PLOTAREA:
-            i.id = gr_chart_objid_chart;
+    {
+    case GR_CHART_OBJNAME_PLOTAREA:
+        i.id = gr_chart_objid_chart;
 
-            /* deliberate drop thru ... */
+        /* deliberate drop thru ... */
 
-        case GR_CHART_OBJNAME_CHART:
-            appendage = GR_CHART_MSG_EDIT_APPEND_BASE;
-            break;
+    case GR_CHART_OBJNAME_CHART:
+        appendage = GR_CHART_MSG_EDIT_APPEND_BASE;
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
@@ -1832,15 +1832,15 @@ gr_chartedit_selection_textcolour_edit(
         xstrkat(title, elemof32(title), string_lookup(appendage));
 
     switch(i.id.name)
-        {
-        case GR_CHART_OBJNAME_TEXT:
-            appendage = GR_CHART_MSG_EDIT_APPEND_COLOUR;
-            break;
+    {
+    case GR_CHART_OBJNAME_TEXT:
+        appendage = GR_CHART_MSG_EDIT_APPEND_COLOUR;
+        break;
 
-        default:
-            appendage = GR_CHART_MSG_EDIT_APPEND_TEXTCOLOUR;
-            break;
-        }
+    default:
+        appendage = GR_CHART_MSG_EDIT_APPEND_TEXTCOLOUR;
+        break;
+    }
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));

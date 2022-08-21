@@ -52,13 +52,13 @@ gr_nodbg_chart_save(
     S32 res;
 
     if(cp->core.p_gr_diag && cp->core.p_gr_diag->gr_riscdiag.draw_diag.length)
-        {
+    {
         /* write out the RISC OS Draw file representation */
         if((res = gr_riscdiag_diagram_save_into(&cp->core.p_gr_diag->gr_riscdiag, f)) < 0)
             return(res);
-        }
+    }
     else
-        {
+    {
         /* write out a null recognizable header of a RISC OS Draw file */
         P_DRAW_DIAG diag;
 
@@ -66,7 +66,7 @@ gr_nodbg_chart_save(
 
         if((res = file_write_err(diag->data, diag->length, 1, f)) < 0)
             return(res);
-        }
+    }
 
     /* save tag header and object */
     if((res = gr_riscdiag_wackytag_save_start(f, &wackytag_pos)) < 0)

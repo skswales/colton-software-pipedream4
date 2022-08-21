@@ -131,101 +131,101 @@ dec_const(
     S32 len;
 
     switch(p_ev_data->did_num)
+    {
+    case RPN_DAT_REAL:
+        len = fptostr(op_buf, &p_ev_data->arg.fp);
+        break;
+
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+        len = sprintf(op_buf, "%d", p_ev_data->arg.integer);
+        break;
+
+    case RPN_DAT_SLR:
+        len = ev_dec_slr(op_buf, dc->docno, &p_ev_data->arg.slr, dc->p_optblock->upper_case_slr);
+        break;
+
+    case RPN_DAT_RANGE:
+        len = ev_dec_range(op_buf, dc->docno, &p_ev_data->arg.range, dc->p_optblock->upper_case_slr);
+        break;
+
+    case RPN_RES_STRING:
+    case RPN_DAT_STRING:
+    case RPN_TMP_STRING:
         {
-        case RPN_DAT_REAL:
-            len = fptostr(op_buf, &p_ev_data->arg.fp);
-            break;
+        PC_U8 ci = p_ev_data->arg.string.uchars;
+        P_U8 co = op_buf;
 
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-            len = sprintf(op_buf, "%d", p_ev_data->arg.integer);
-            break;
+        *co++ = '"';
+        while(*ci)
+        {
+            if(*ci == '"')
+                *co++ = '"';
+            *co++ = *ci++;
+        }
+        *co++ = '"';
+        len = co - op_buf;
+        break;
+        }
 
-        case RPN_DAT_SLR:
-            len = ev_dec_slr(op_buf, dc->docno, &p_ev_data->arg.slr, dc->p_optblock->upper_case_slr);
-            break;
+    case RPN_DAT_DATE:
+        len = date_time_val_to_str(op_buf, &p_ev_data->arg.ev_date, dc->p_optblock->american_date);
+        break;
 
-        case RPN_DAT_RANGE:
-            len = ev_dec_range(op_buf, dc->docno, &p_ev_data->arg.range, dc->p_optblock->upper_case_slr);
-            break;
+    case RPN_RES_ARRAY:
+    case RPN_TMP_ARRAY:
+        {
+        S32 ix, iy;
 
-        case RPN_RES_STRING:
-        case RPN_DAT_STRING:
-        case RPN_TMP_STRING:
+        *op_buf = '{';
+        len = 1;
+
+        for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
+        {
+            for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
             {
-            PC_U8 ci = p_ev_data->arg.string.uchars;
-            P_U8 co = op_buf;
+                len += dec_const(op_buf + len, ss_array_element_index_borrow(p_ev_data, ix, iy));
 
-            *co++ = '"';
-            while(*ci)
-                {
-                if(*ci == '"')
-                    *co++ = '"';
-                *co++ = *ci++;
-                }
-            *co++ = '"';
-            len = co - op_buf;
-            break;
+                if(ix + 1 < p_ev_data->arg.ev_array.x_size)
+                    op_buf[len++] = ',';
             }
 
-        case RPN_DAT_DATE:
-            len = date_time_val_to_str(op_buf, &p_ev_data->arg.ev_date, dc->p_optblock->american_date);
-            break;
+            if(iy + 1 < p_ev_data->arg.ev_array.y_size)
+                op_buf[len++] = ';';
+        }
 
-        case RPN_RES_ARRAY:
-        case RPN_TMP_ARRAY:
-            {
-            S32 ix, iy;
+        op_buf[len++] = '}';
 
-            *op_buf = '{';
-            len = 1;
+        break;
+        }
 
-            for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
-                {
-                for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
-                    {
-                    len += dec_const(op_buf + len, ss_array_element_index_borrow(p_ev_data, ix, iy));
+    case RPN_DAT_NAME:
+        {
+        EV_NAMEID name_num = name_def_find(p_ev_data->arg.nameid);
 
-                    if(ix + 1 < p_ev_data->arg.ev_array.x_size)
-                        op_buf[len++] = ',';
-                    }
+        if(name_num >= 0)
+        {
+            P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
-                if(iy + 1 < p_ev_data->arg.ev_array.y_size)
-                    op_buf[len++] = ';';
-                }
-
-            op_buf[len++] = '}';
-
-            break;
-            }
-
-        case RPN_DAT_NAME:
-            {
-            EV_NAMEID name_num = name_def_find(p_ev_data->arg.nameid);
-
-            if(name_num >= 0)
-                {
-                P_EV_NAME p_ev_name = name_ptr_must(name_num);
-
-                if(p_ev_name->owner.docno != dc->docno)
-                    len = ev_write_docname(op_buf, p_ev_name->owner.docno, dc->docno);
-                else
-                    len = 0;
-                strcpy(op_buf + len, p_ev_name->id);
-                len += strlen(p_ev_name->id);
-                }
+            if(p_ev_name->owner.docno != dc->docno)
+                len = ev_write_docname(op_buf, p_ev_name->owner.docno, dc->docno);
             else
                 len = 0;
-
-            break;
-            }
-
-        default:
-        case RPN_DAT_BLANK:
-            len = 0;
-            break;
+            strcpy(op_buf + len, p_ev_name->id);
+            len += strlen(p_ev_name->id);
         }
+        else
+            len = 0;
+
+        break;
+        }
+
+    default:
+    case RPN_DAT_BLANK:
+        len = 0;
+        break;
+    }
 
     return(len);
 }
@@ -246,18 +246,18 @@ dec_format_space(
     ptr = buf_in;
 
     while(dc->cur.sym_cr)
-        {
+    {
         --dc->cur.sym_cr;
         if(dc->p_optblock->cr)
             *ptr++ = CR;
         if(dc->p_optblock->lf)
             *ptr++ = LF;
-        }
+    }
     while(dc->cur.sym_space)
-        {
+    {
         --dc->cur.sym_space;
         *ptr++ = ' ';
-        }
+    }
 
     return(ptr - buf_in);
 }
@@ -279,11 +279,11 @@ dec_freestk(void)
 
     /* free the stack itself */
     if(dc->arg_stk)
-        {
+    {
         al_ptr_dispose((P_P_ANY) /*_PEDANTIC*/ (&dc->arg_stk));
         dc->arg_stk_siz = 0;
         dc->arg_sp      = 0;
-        }
+    }
 }
 
 /******************************************************************************
@@ -343,7 +343,7 @@ dec_pushstr(
 
     /* make stack big enough */
     if(dc->arg_sp == dc->arg_stk_siz)
-        {
+    {
         P_P_U8 newsp;
 
         if(NULL == (newsp = al_ptr_realloc_elem(P_U8, dc->arg_stk, dc->arg_stk_siz + 50, &status)))
@@ -351,7 +351,7 @@ dec_pushstr(
 
         dc->arg_stk      = newsp;
         dc->arg_stk_siz += 50;
-        }
+    }
 
     /* allocate space for argument */
     if(NULL == (newp = al_ptr_alloc_bytes(P_U8Z, len + 1/*NULLCH*/, &status)))
@@ -420,278 +420,278 @@ dec_rpn_token(
     res = 0;
     len = -1;
     switch(rpn_table[dc->cur_rpn.num].rpn_type)
+    {
+    case RPN_DAT:
         {
-        case RPN_DAT:
+        /* read rpn argument */
+        read_cur_sym(&dc->cur_rpn, &dc->cur_sym);
+        len  = dec_format_space(op_buf);
+        len += dec_const(op_buf + len, &dc->cur_sym);
+        break;
+        }
+
+    case RPN_FRM:
+        {
+        switch(dc->cur.did_num)
+        {
+        /* brackets must be added to top argument on stack */
+        case RPN_FRM_BRACKETS:
             {
-            /* read rpn argument */
-            read_cur_sym(&dc->cur_rpn, &dc->cur_sym);
-            len  = dec_format_space(op_buf);
-            len += dec_const(op_buf + len, &dc->cur_sym);
-            break;
-            }
-
-        case RPN_FRM:
-            {
-            switch(dc->cur.did_num)
-                {
-                /* brackets must be added to top argument on stack */
-                case RPN_FRM_BRACKETS:
-                    {
-                    S32 pop_len;
-
-                    len = dec_format_space(op_buf);
-
-                    op_buf[len++] = '(';
-
-                    if((pop_len = dec_popstr(op_buf + len)) < 0)
-                        res = create_error(EVAL_ERR_BADRPN);
-                    else
-                        {
-                        len += pop_len;
-                        op_buf[len++] = ')';
-                        }
-                    break;
-                    }
-
-                case RPN_FRM_SPACE:
-                    dc->cur.sym_space = *(dc->cur_rpn.pos + 1);
-                    len = -1;
-                    break;
-
-                case RPN_FRM_RETURN:
-                    dc->cur.sym_cr    = *(dc->cur_rpn.pos + 1);
-                    len = -1;
-                    break;
-
-                case RPN_FRM_END:
-                    len = -1;
-                    break;
-
-                case RPN_FRM_COND:
-                    {
-                    S32 pop_len;
-
-                    len = dec_format_space(op_buf);
-
-                    if((pop_len = ev_decompile(dc->docno, op_buf + len,
-                                               dc->cur_rpn.pos + 3,
-                                               dc->p_optblock)) < 0)
-                        {
-                        strcpy(op_buf + len, DECOMP_ERR);
-                        pop_len = strlen(DECOMP_ERR);
-                        }
-
-                    len += pop_len;
-                    break;
-                    }
-
-                case RPN_FRM_SKIPTRUE:
-                case RPN_FRM_SKIPFALSE:
-                case RPN_FRM_NODEP:
-                    len = -1;
-                    break;
-                }
-            break;
-            }
-
-        case RPN_LCL:
-            {
-            PC_U8 ci;
+            S32 pop_len;
 
             len = dec_format_space(op_buf);
 
-            op_buf[len++] = '@';
-
-            ci = dc->cur_rpn.pos + 1;
-            while(*ci)
-                op_buf[len++] = *ci++;
-
-            break;
-            }
-
-        case RPN_UOP:
-            {
-            S32 pop_len, fun_len;
-            PC_USTR fname;
-
-            len     = dec_format_space(op_buf);
-            fname   = func_name(dc->cur.did_num);
-            fun_len = strlen(fname);
-            strcpy(op_buf + len, fname);
-            len    += fun_len;
+            op_buf[len++] = '(';
 
             if((pop_len = dec_popstr(op_buf + len)) < 0)
                 res = create_error(EVAL_ERR_BADRPN);
             else
+            {
                 len += pop_len;
-            break;
-            }
-
-        case RPN_REL:
-        case RPN_BOP:
-            {
-            S32 len1, fun_len, len2;
-            P_U8 str2;
-
-            if(dec_popptr(&str2) < 0 ||
-               (len1 = dec_popstr(op_buf)) < 0)
-                res = create_error(EVAL_ERR_BADRPN);
-            else
-                {
-                PC_USTR fname;
-
-                len = len1;
-                len += dec_format_space(op_buf + len);
-
-                fname = func_name(dc->cur.did_num);
-                fun_len = strlen(fname);
-                strcpy(op_buf + len, fname);
-                len += fun_len;
-
-                len2 = strlen(str2);
-                strcpy(op_buf + len, str2);
-                al_ptr_dispose(P_P_ANY_PEDANTIC(&str2));
-                len += len2;
+                op_buf[len++] = ')';
                 }
-
             break;
             }
 
-        case RPN_FN0:
+        case RPN_FRM_SPACE:
+            dc->cur.sym_space = *(dc->cur_rpn.pos + 1);
+            len = -1;
+            break;
+
+        case RPN_FRM_RETURN:
+            dc->cur.sym_cr    = *(dc->cur_rpn.pos + 1);
+            len = -1;
+            break;
+
+        case RPN_FRM_END:
+            len = -1;
+            break;
+
+        case RPN_FRM_COND:
             {
-            PC_USTR fname;
-            S32 fun_len;
+            S32 pop_len;
 
             len = dec_format_space(op_buf);
+
+            if((pop_len = ev_decompile(dc->docno, op_buf + len,
+                                       dc->cur_rpn.pos + 3,
+                                       dc->p_optblock)) < 0)
+            {
+                strcpy(op_buf + len, DECOMP_ERR);
+                pop_len = strlen(DECOMP_ERR);
+            }
+
+            len += pop_len;
+            break;
+            }
+
+        case RPN_FRM_SKIPTRUE:
+        case RPN_FRM_SKIPFALSE:
+        case RPN_FRM_NODEP:
+            len = -1;
+            break;
+        }
+        break;
+        }
+
+    case RPN_LCL:
+        {
+        PC_U8 ci;
+
+        len = dec_format_space(op_buf);
+
+        op_buf[len++] = '@';
+
+        ci = dc->cur_rpn.pos + 1;
+        while(*ci)
+            op_buf[len++] = *ci++;
+
+        break;
+        }
+
+    case RPN_UOP:
+        {
+        S32 pop_len, fun_len;
+        PC_USTR fname;
+
+        len     = dec_format_space(op_buf);
+        fname   = func_name(dc->cur.did_num);
+        fun_len = strlen(fname);
+        strcpy(op_buf + len, fname);
+        len    += fun_len;
+
+        if((pop_len = dec_popstr(op_buf + len)) < 0)
+            res = create_error(EVAL_ERR_BADRPN);
+        else
+            len += pop_len;
+        break;
+        }
+
+    case RPN_REL:
+    case RPN_BOP:
+        {
+        S32 len1, fun_len, len2;
+        P_U8 str2;
+
+        if(dec_popptr(&str2) < 0 ||
+           (len1 = dec_popstr(op_buf)) < 0)
+            res = create_error(EVAL_ERR_BADRPN);
+        else
+        {
+            PC_USTR fname;
+
+            len = len1;
+            len += dec_format_space(op_buf + len);
 
             fname = func_name(dc->cur.did_num);
             fun_len = strlen(fname);
             strcpy(op_buf + len, fname);
             len += fun_len;
-            break;
-            }
 
-        case RPN_FNF:
-        case RPN_FNV:
-        case RPN_FNM:
-            {
-            S32 narg, fun_len, first;
-
-            len = dec_format_space(op_buf);
-
-            /* work out number of arguments */
-            if((narg = rpn_table[dc->cur_rpn.num].n_args) < 0)
-                narg = (S32) *(dc->cur_rpn.pos + 1);
-
-            /* copy in custom/function name */
-            if(dc->cur.did_num == RPN_FNM_CUSTOMCALL)
-                {
-                EV_NAMEID custom_id, custom_num;
-                P_EV_CUSTOM p_ev_custom;
-
-                /* read custom id */
-                read_nameid(&custom_id, dc->cur_rpn.pos + 2);
-
-                custom_num = custom_def_find(custom_id);
-                assert(custom_num >= 0);
-                p_ev_custom = custom_ptr_must(custom_num);
-
-                if(p_ev_custom->owner.docno != dc->docno)
-                    len += ev_write_docname(op_buf + len,
-                                            p_ev_custom->owner.docno,
-                                            dc->docno);
-
-                strcpy(op_buf + len, p_ev_custom->id);
-                len += strlen(p_ev_custom->id);
-                }
-            else
-                {
-                PC_USTR fname;
-
-                fname = func_name(dc->cur.did_num);
-                fun_len = strlen(fname);
-                strcpy(op_buf + len, fname);
-                len += fun_len;
-                }
-
-            fun_len = len;
-            first   = 1;
-            if(narg || dc->cur.did_num == RPN_FNM_CUSTOMCALL)
-                {
-                op_buf[fun_len++] = '(';
-                op_buf[fun_len]   = ')';
-                len               = fun_len + 1;
-                }
-
-            /* loop to add arguments */
-            while(narg--)
-                {
-                S32 sep_len, arg_len;
-                P_U8 stringp;
-
-                if(dec_popptr(&stringp) < 0)
-                    res = create_error(EVAL_ERR_BADRPN);
-                else
-                    {
-                    arg_len = strlen(stringp);
-                    sep_len = arg_len + (first ? 0 : 1);
-
-                    memmove32(op_buf + fun_len + sep_len,
-                              op_buf + fun_len,
-                              len - fun_len);
-
-                    memmove32(op_buf + fun_len, stringp, arg_len);
-
-                    al_ptr_dispose(P_P_ANY_PEDANTIC(&stringp));
-                    len += sep_len;
-                    if(!first)
-                        op_buf[fun_len + arg_len] = ',';
-                    first = 0;
-                    }
-                }
-
-            break;
-            }
-
-        case RPN_FNA:
-            {
-            S32 x_size, y_size;
-            S32 x, y, sp, startsp;
-
-            len = dec_format_space(op_buf);
-
-            x_size = readval_S32(dc->cur_rpn.pos + 1);
-            y_size = readval_S32(dc->cur_rpn.pos + 1 + sizeof(S32));
-
-            op_buf[len++] = '{';
-
-            sp = startsp = dc->arg_sp - (S32) (x_size * y_size);
-
-            for(y = 0; y < (S32) y_size; ++y)
-                {
-                for(x = 0; x < (S32) x_size; ++x)
-                    {
-                    strcpy(op_buf + len, dc->arg_stk[sp]);
-                    len += strlen(dc->arg_stk[sp]);
-                    al_ptr_dispose(P_P_ANY_PEDANTIC(&dc->arg_stk[sp]));
-                    op_buf[len++] = ',';
-                    ++sp;
-                    }
-
-                op_buf[len - 1] = ';';
-                }
-
-            op_buf[len - 1] = '}';
-
-            dc->arg_sp = startsp;
-
-            break;
-            }
-
-        default:
-            res = create_error(EVAL_ERR_INTERNAL);
-            break;
+            len2 = strlen(str2);
+            strcpy(op_buf + len, str2);
+            al_ptr_dispose(P_P_ANY_PEDANTIC(&str2));
+            len += len2;
         }
+
+        break;
+        }
+
+    case RPN_FN0:
+        {
+        PC_USTR fname;
+        S32 fun_len;
+
+        len = dec_format_space(op_buf);
+
+        fname = func_name(dc->cur.did_num);
+        fun_len = strlen(fname);
+        strcpy(op_buf + len, fname);
+        len += fun_len;
+        break;
+        }
+
+    case RPN_FNF:
+    case RPN_FNV:
+    case RPN_FNM:
+        {
+        S32 narg, fun_len, first;
+
+        len = dec_format_space(op_buf);
+
+        /* work out number of arguments */
+        if((narg = rpn_table[dc->cur_rpn.num].n_args) < 0)
+            narg = (S32) *(dc->cur_rpn.pos + 1);
+
+        /* copy in custom/function name */
+        if(dc->cur.did_num == RPN_FNM_CUSTOMCALL)
+        {
+            EV_NAMEID custom_id, custom_num;
+            P_EV_CUSTOM p_ev_custom;
+
+            /* read custom id */
+            read_nameid(&custom_id, dc->cur_rpn.pos + 2);
+
+            custom_num = custom_def_find(custom_id);
+            assert(custom_num >= 0);
+            p_ev_custom = custom_ptr_must(custom_num);
+
+            if(p_ev_custom->owner.docno != dc->docno)
+                len += ev_write_docname(op_buf + len,
+                                        p_ev_custom->owner.docno,
+                                        dc->docno);
+
+            strcpy(op_buf + len, p_ev_custom->id);
+            len += strlen(p_ev_custom->id);
+        }
+        else
+        {
+            PC_USTR fname;
+
+            fname = func_name(dc->cur.did_num);
+            fun_len = strlen(fname);
+            strcpy(op_buf + len, fname);
+            len += fun_len;
+        }
+
+        fun_len = len;
+        first   = 1;
+        if(narg || dc->cur.did_num == RPN_FNM_CUSTOMCALL)
+        {
+            op_buf[fun_len++] = '(';
+            op_buf[fun_len]   = ')';
+            len               = fun_len + 1;
+        }
+
+        /* loop to add arguments */
+        while(narg--)
+        {
+            S32 sep_len, arg_len;
+            P_U8 stringp;
+
+            if(dec_popptr(&stringp) < 0)
+                res = create_error(EVAL_ERR_BADRPN);
+            else
+            {
+                arg_len = strlen(stringp);
+                sep_len = arg_len + (first ? 0 : 1);
+
+                memmove32(op_buf + fun_len + sep_len,
+                          op_buf + fun_len,
+                          len - fun_len);
+
+                memmove32(op_buf + fun_len, stringp, arg_len);
+
+                al_ptr_dispose(P_P_ANY_PEDANTIC(&stringp));
+                len += sep_len;
+                if(!first)
+                    op_buf[fun_len + arg_len] = ',';
+                first = 0;
+            }
+        }
+
+        break;
+        }
+
+    case RPN_FNA:
+        {
+        S32 x_size, y_size;
+        S32 x, y, sp, startsp;
+
+        len = dec_format_space(op_buf);
+
+        x_size = readval_S32(dc->cur_rpn.pos + 1);
+        y_size = readval_S32(dc->cur_rpn.pos + 1 + sizeof(S32));
+
+        op_buf[len++] = '{';
+
+        sp = startsp = dc->arg_sp - (S32) (x_size * y_size);
+
+        for(y = 0; y < (S32) y_size; ++y)
+        {
+            for(x = 0; x < (S32) x_size; ++x)
+            {
+                strcpy(op_buf + len, dc->arg_stk[sp]);
+                len += strlen(dc->arg_stk[sp]);
+                al_ptr_dispose(P_P_ANY_PEDANTIC(&dc->arg_stk[sp]));
+                op_buf[len++] = ',';
+                ++sp;
+            }
+
+            op_buf[len - 1] = ';';
+        }
+
+        op_buf[len - 1] = '}';
+
+        dc->arg_sp = startsp;
+
+        break;
+        }
+
+    default:
+        res = create_error(EVAL_ERR_INTERNAL);
+        break;
+    }
 
     *out_len = len;
 
@@ -784,29 +784,29 @@ ev_decode_slot(
     S32 res;
 
     switch(p_ev_cell->parms.type)
+    {
+    case EVS_CON_DATA:
         {
-        case EVS_CON_DATA:
-            {
-            EV_DATA data;
+        EV_DATA data;
 
-            ev_result_to_data_convert(&data, &p_ev_cell->ev_result);
-            ev_decode_data(txt_out, docno, &data, p_optblock);
-            res = 0;
-            break;
-            }
-
-        case EVS_CON_RPN:
-            res = ev_decompile(docno, txt_out, p_ev_cell->rpn.con.rpn_str, p_optblock);
-            break;
-
-        case EVS_VAR_RPN:
-            res = ev_decompile(docno, txt_out, p_ev_cell->rpn.var.rpn_str, p_optblock);
-            break;
-
-        default:
-            res = create_error(EVAL_ERR_INTERNAL);
-            break;
+        ev_result_to_data_convert(&data, &p_ev_cell->ev_result);
+        ev_decode_data(txt_out, docno, &data, p_optblock);
+        res = 0;
+        break;
         }
+
+    case EVS_CON_RPN:
+        res = ev_decompile(docno, txt_out, p_ev_cell->rpn.con.rpn_str, p_optblock);
+        break;
+
+    case EVS_VAR_RPN:
+        res = ev_decompile(docno, txt_out, p_ev_cell->rpn.var.rpn_str, p_optblock);
+        break;
+
+    default:
+        res = create_error(EVAL_ERR_INTERNAL);
+        break;
+    }
 
     return(res);
 }
@@ -857,14 +857,14 @@ ev_decompile(
 
         if(len >= 0)
             res = dec_pushstr(op_buf, len);
-        }
+    }
     while(!res);
 
     if(dc->arg_sp && !res)
         res = create_error(EVAL_ERR_BADRPN);
 
     if(!res)
-        {
+    {
         S32 temp_len;
         P_U8 ci, co;
 
@@ -878,7 +878,7 @@ ev_decompile(
 
         *co = '\0';
         res = len;
-        }
+    }
 
     /* release decompiler stack and contents */
     dec_freestk();
@@ -909,17 +909,17 @@ fptostr(
     /* search for exponent and remove leading zeros because
     they are confusing; remove the + for good measure */
     if((exp = strstr(op_buf, "e")) != NULL)
-        {
+    {
         char sign;
         P_U8 exps;
 
         sign = *(++exp);
         exps = exp;
         if(sign == '-')
-            {
+        {
             ++exp;
             ++exps;
-            }
+        }
 
         if(sign == '+')
             ++exp;
@@ -930,7 +930,7 @@ fptostr(
         strncpy(exps, exp, len - (exp - op_buf));
         len = len - (exp - exps);
         op_buf[len] = '\0';
-        }
+    }
 
     return(len);
 }

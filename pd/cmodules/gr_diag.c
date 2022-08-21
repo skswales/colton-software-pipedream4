@@ -123,10 +123,10 @@ gr_diag_create_riscdiag(
         status = gr_diag_create_riscdiag_between(p_gr_diag, GR_DIAG_OBJECT_FIRST, GR_DIAG_OBJECT_LAST);
 
     if(status_ok(status))
-        {
+    {
         gr_riscdiag_diagram_end(&p_gr_diag->gr_riscdiag);
         status = STATUS_DONE; /* paranoia */
-        }
+    }
     else
         gr_riscdiag_diagram_delete(&p_gr_diag->gr_riscdiag);
 
@@ -150,7 +150,7 @@ gr_diag_create_riscdiag_between(
                p_gr_diag, p_gr_diag ? p_gr_diag->handle : NULL);
 
     while(thisObject < endObject)
-        {
+    {
         P_GR_DIAG_OBJECT pObject;
         U32 objectSize;
         GR_DIAG_OBJTYPE objectType;
@@ -174,262 +174,262 @@ gr_diag_create_riscdiag_between(
         status = STATUS_DONE;
 
         switch(objectType)
+        {
+        case GR_DIAG_OBJTYPE_GROUP:
             {
-            case GR_DIAG_OBJTYPE_GROUP:
-                {
-                /* recurse unconditionally creating group contents.
-                 * could proceed linearly if we had a patchup list - but it don't go that deep
-                */
-                if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off, *pObject.group->name ? pObject.group->name : NULL)) < 0)
-                    break;
-
-                status = gr_diag_create_riscdiag_between(p_gr_diag,
-                                                         thisObject + sizeof(GR_DIAG_OBJGROUP),
-                                                         thisObject + objectSize);
-
-                /* fix up the group even if error */
-                gr_riscdiag_group_end(p_gr_riscdiag, &sys_off);
-                }
+            /* recurse unconditionally creating group contents.
+             * could proceed linearly if we had a patchup list - but it don't go that deep
+            */
+            if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off, *pObject.group->name ? pObject.group->name : NULL)) < 0)
                 break;
 
-            case GR_DIAG_OBJTYPE_TEXT:
+            status = gr_diag_create_riscdiag_between(p_gr_diag,
+                                                     thisObject + sizeof(GR_DIAG_OBJGROUP),
+                                                     thisObject + objectSize);
+
+            /* fix up the group even if error */
+            gr_riscdiag_group_end(p_gr_riscdiag, &sys_off);
+            }
+            break;
+
+        case GR_DIAG_OBJTYPE_TEXT:
+            {
+            GR_BOX   box;
+            GR_POINT point;
+            GR_SIZE  size;
+            DRAW_POINT draw_point;
+            char szText[256], szFontName[64];
+            GR_COORD  fsizex, fsizey;
+            GR_COLOUR fg, bg;
+            PC_U8     textp, segendp;
+            size_t    textoff, seglen, wholelen;
+
+            point  = pObject.text->pos;
+            size   = pObject.text->wid_hei;
+            fsizex = pObject.text->textstyle.width;
+            fsizey = pObject.text->textstyle.height;
+            fg     = pObject.text->textstyle.fg;
+            bg     = pObject.text->textstyle.bg;
+
+            strcpy(szFontName, pObject.text->textstyle.szFontName);
+
+            box.x0 = point.x;
+            box.y0 = point.y;
+            box.x1 = point.x + size.cx;
+            box.y1 = point.y + size.cy;
+
+            /* loop for structure */
+            for(;;)
+            {
+                textoff  = 0;
+                wholelen = strlen((PC_U8) (pObject.text + 1));
+
+                while(textoff < wholelen)
                 {
-                GR_BOX   box;
-                GR_POINT point;
-                GR_SIZE  size;
-                DRAW_POINT draw_point;
-                char szText[256], szFontName[64];
-                GR_COORD  fsizex, fsizey;
-                GR_COLOUR fg, bg;
-                PC_U8     textp, segendp;
-                size_t    textoff, seglen, wholelen;
+                    GR_DIAG_OFFSET sys_off_string;
 
-                point  = pObject.text->pos;
-                size   = pObject.text->wid_hei;
-                fsizex = pObject.text->textstyle.width;
-                fsizey = pObject.text->textstyle.height;
-                fg     = pObject.text->textstyle.fg;
-                bg     = pObject.text->textstyle.bg;
+                    textp = (PC_U8) (pObject.text + 1) + textoff;
 
-                strcpy(szFontName, pObject.text->textstyle.szFontName);
+                    /* is there a line break delimiter? */
+                    segendp = strchr(textp, 10);
 
-                box.x0 = point.x;
-                box.y0 = point.y;
-                box.x1 = point.x + size.cx;
-                box.y1 = point.y + size.cy;
-
-                /* loop for structure */
-                for(;;)
+                    if(!segendp)
                     {
-                    textoff  = 0;
-                    wholelen = strlen((PC_U8) (pObject.text + 1));
-
-                    while(textoff < wholelen)
-                        {
-                        GR_DIAG_OFFSET sys_off_string;
-
-                        textp = (PC_U8) (pObject.text + 1) + textoff;
-
-                        /* is there a line break delimiter? */
-                        segendp = strchr(textp, 10);
-
-                        if(!segendp)
-                            {
-                            seglen = strlen(textp);
-                            seglen = MIN(seglen, sizeof(szText)-1);
-                            }
+                        seglen = strlen(textp);
+                        seglen = MIN(seglen, sizeof(szText)-1);
+                    }
+                    else
+                    {
+                        seglen = segendp - textp;
+                        if(seglen > sizeof(szText)-1)
+                            seglen = sizeof(szText)-1;
                         else
-                            {
-                            seglen = segendp - textp;
-                            if(seglen > sizeof(szText)-1)
-                                seglen = sizeof(szText)-1;
-                            else
-                                ++textoff; /* skip line term iff whole line sent */
+                            ++textoff; /* skip line term iff whole line sent */
 
-                            /* defer group creation till actually needed */
-                            if(GR_RISCDIAG_OBJECT_NONE == sys_off)
-                                if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off, NULL)) < 0)
-                                    break;
-                            }
-
-                        textoff += seglen;
-
-                        xstrnkpy(szText, elemof32(szText), textp, seglen);
-
-                        gr_point_xform((P_GR_POINT) &draw_point, &point, &gr_riscdiag_riscDraw_from_pixit_xformer);
-
-                        if((status = gr_riscdiag_string_new(p_gr_riscdiag, &sys_off_string,
-                                                            &draw_point, szText, szFontName,
-                                                            fsizex, fsizey, fg, bg)) < 0)
-                            break;
-
-                        point.y -= (fsizey * 12) / 10;
-                        }
-
-                    /* end of loop for structure */
-                    break;
+                        /* defer group creation till actually needed */
+                        if(GR_RISCDIAG_OBJECT_NONE == sys_off)
+                            if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off, NULL)) < 0)
+                                break;
                     }
 
-                /* fix up the group even if error (iff created) */
-                if(GR_RISCDIAG_OBJECT_NONE != sys_off)
-                    gr_riscdiag_group_end(p_gr_riscdiag, &sys_off);
+                    textoff += seglen;
+
+                    xstrnkpy(szText, elemof32(szText), textp, seglen);
+
+                    gr_point_xform((P_GR_POINT) &draw_point, &point, &gr_riscdiag_riscDraw_from_pixit_xformer);
+
+                    if((status = gr_riscdiag_string_new(p_gr_riscdiag, &sys_off_string,
+                                                        &draw_point, szText, szFontName,
+                                                        fsizex, fsizey, fg, bg)) < 0)
+                        break;
+
+                    point.y -= (fsizey * 12) / 10;
                 }
-                break;
 
-            case GR_DIAG_OBJTYPE_RECTANGLE:
-                {
-                GR_BOX box;
-                DRAW_BOX draw_box;
-                GR_LINESTYLE linestyle;
-                GR_FILLSTYLE fillstyle;
-
-                box.x0 = pObject.rect->pos.x;
-                box.y0 = pObject.rect->pos.y;
-                box.x1 = pObject.rect->pos.x + pObject.rect->wid_hei.cx;
-                box.y1 = pObject.rect->pos.y + pObject.rect->wid_hei.cy;
-
-                linestyle = pObject.rect->linestyle;
-                fillstyle = pObject.rect->fillstyle;
-
-                draw_box_from_gr_box(&draw_box, &box);
-
-                status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &sys_off,
-                                                   &draw_box, &linestyle, &fillstyle);
-                }
-                break;
-
-            case GR_DIAG_OBJTYPE_LINE:
-                {
-                GR_POINT origin_BL, offset_BR;
-                DRAW_POINT draw_origin_BL, draw_offset_BR;
-                GR_LINESTYLE linestyle;
-
-                origin_BL = pObject.line->pos;
-                offset_BR.x = pObject.line->d.cx;
-                offset_BR.y = pObject.line->d.cy;
-
-                linestyle = pObject.line->linestyle;
-
-                draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
-                draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
-
-                status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
-                                                       &draw_origin_BL, &draw_offset_BR, &draw_offset_BR,
-                                                       &linestyle, NULL);
-                }
-                break;
-
-            case GR_DIAG_OBJTYPE_PARALLELOGRAM:
-                {
-                GR_POINT origin_BL, offset_BR, offset_TR;
-                DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR;
-                GR_LINESTYLE linestyle;
-                GR_FILLSTYLE fillstyle;
-
-                origin_BL = pObject.para->pos;
-                offset_BR = pObject.para->offset_BR;
-                offset_TR = pObject.para->offset_TR;
-
-                linestyle = pObject.para->linestyle;
-                fillstyle = pObject.para->fillstyle;
-
-                draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
-                draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
-                draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
-
-                status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
-                                                       &draw_origin_BL, &draw_offset_BR, &draw_offset_TR,
-                                                       &linestyle, &fillstyle);
-                }
-                break;
-
-            case GR_DIAG_OBJTYPE_TRAPEZOID:
-                {
-                GR_POINT origin_BL, offset_BR, offset_TR, offset_TL;
-                DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR, draw_offset_TL;
-                GR_LINESTYLE linestyle;
-                GR_FILLSTYLE fillstyle;
-
-                origin_BL = pObject.trap->pos;
-                offset_BR = pObject.trap->offset_BR;
-                offset_TR = pObject.trap->offset_TR;
-                offset_TL = pObject.trap->offset_TL;
-
-                linestyle = pObject.trap->linestyle;
-                fillstyle = pObject.trap->fillstyle;
-
-                draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
-                draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
-                draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
-                draw_point_from_gr_point(&draw_offset_TL, &offset_TL);
-
-                status = gr_riscdiag_trapezoid_new(p_gr_riscdiag, &sys_off,
-                                                   &draw_origin_BL, &draw_offset_BR, &draw_offset_TR, &draw_offset_TL,
-                                                   &linestyle, &fillstyle);
-                }
-                break;
-
-            case GR_DIAG_OBJTYPE_PIESECTOR:
-                {
-                GR_POINT pos;
-                GR_COORD       radius;
-                DRAW_POINT     draw_origin;
-                DRAW_COORD     draw_radius;
-                F64            alpha, beta;
-                GR_LINESTYLE   linestyle;
-                GR_FILLSTYLE   fillstyle;
-
-                pos       = pObject.pie->pos;
-                radius    = pObject.pie->radius;
-                alpha     = pObject.pie->alpha;
-                beta      = pObject.pie->beta;
-                linestyle = pObject.pie->linestyle;
-                fillstyle = pObject.pie->fillstyle;
-
-                draw_point_from_gr_point(&draw_origin, &pos);
-                draw_radius = gr_riscDraw_from_pixit(radius);
-
-                status = gr_riscdiag_piesector_new(p_gr_riscdiag, &sys_off,
-                                                   &draw_origin, draw_radius, &alpha, &beta,
-                                                   &linestyle, &fillstyle);
-                }
-                break;
-
-            case GR_DIAG_OBJTYPE_PICTURE:
-                {
-                GR_BOX    box;
-                DRAW_BOX        draw_box;
-                GR_CACHE_HANDLE picture;
-                GR_FILLSTYLE    fillstyle;
-                P_ANY diag;
-
-                /* a representation of 'nothing' */
-
-                box.x0 = pObject.pict->pos.x;
-                box.y0 = pObject.pict->pos.y;
-                box.x1 = pObject.pict->pos.x + pObject.pict->wid_hei.cx;
-                box.y1 = pObject.pict->pos.y + pObject.pict->wid_hei.cy;
-
-                picture   = pObject.pict->picture;
-
-                fillstyle = pObject.pict->fillstyle;
-
-                diag = gr_cache_loaded_ensure(&picture);
-
-                draw_box.x0 = gr_riscDraw_from_pixit(box.x0);
-                draw_box.y0 = gr_riscDraw_from_pixit(box.y0);
-                draw_box.x1 = gr_riscDraw_from_pixit(box.x1);
-                draw_box.y1 = gr_riscDraw_from_pixit(box.y1);
-
-                if(diag)
-                    status = gr_riscdiag_scaled_diagram_add(p_gr_riscdiag, &sys_off,
-                                                            &draw_box, diag, &fillstyle);
-                }
-                break;
-
-            default:
+                /* end of loop for structure */
                 break;
             }
+
+            /* fix up the group even if error (iff created) */
+            if(GR_RISCDIAG_OBJECT_NONE != sys_off)
+                gr_riscdiag_group_end(p_gr_riscdiag, &sys_off);
+            }
+            break;
+
+        case GR_DIAG_OBJTYPE_RECTANGLE:
+            {
+            GR_BOX box;
+            DRAW_BOX draw_box;
+            GR_LINESTYLE linestyle;
+            GR_FILLSTYLE fillstyle;
+
+            box.x0 = pObject.rect->pos.x;
+            box.y0 = pObject.rect->pos.y;
+            box.x1 = pObject.rect->pos.x + pObject.rect->wid_hei.cx;
+            box.y1 = pObject.rect->pos.y + pObject.rect->wid_hei.cy;
+
+            linestyle = pObject.rect->linestyle;
+            fillstyle = pObject.rect->fillstyle;
+
+            draw_box_from_gr_box(&draw_box, &box);
+
+            status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &sys_off,
+                                               &draw_box, &linestyle, &fillstyle);
+            }
+            break;
+
+        case GR_DIAG_OBJTYPE_LINE:
+            {
+            GR_POINT origin_BL, offset_BR;
+            DRAW_POINT draw_origin_BL, draw_offset_BR;
+            GR_LINESTYLE linestyle;
+
+            origin_BL = pObject.line->pos;
+            offset_BR.x = pObject.line->d.cx;
+            offset_BR.y = pObject.line->d.cy;
+
+            linestyle = pObject.line->linestyle;
+
+            draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
+            draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
+
+            status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
+                                                   &draw_origin_BL, &draw_offset_BR, &draw_offset_BR,
+                                                   &linestyle, NULL);
+            }
+            break;
+
+        case GR_DIAG_OBJTYPE_PARALLELOGRAM:
+            {
+            GR_POINT origin_BL, offset_BR, offset_TR;
+            DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR;
+            GR_LINESTYLE linestyle;
+            GR_FILLSTYLE fillstyle;
+
+            origin_BL = pObject.para->pos;
+            offset_BR = pObject.para->offset_BR;
+            offset_TR = pObject.para->offset_TR;
+
+            linestyle = pObject.para->linestyle;
+            fillstyle = pObject.para->fillstyle;
+
+            draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
+            draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
+            draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
+
+            status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
+                                                   &draw_origin_BL, &draw_offset_BR, &draw_offset_TR,
+                                                   &linestyle, &fillstyle);
+            }
+            break;
+
+        case GR_DIAG_OBJTYPE_TRAPEZOID:
+            {
+            GR_POINT origin_BL, offset_BR, offset_TR, offset_TL;
+            DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR, draw_offset_TL;
+            GR_LINESTYLE linestyle;
+            GR_FILLSTYLE fillstyle;
+
+            origin_BL = pObject.trap->pos;
+            offset_BR = pObject.trap->offset_BR;
+            offset_TR = pObject.trap->offset_TR;
+            offset_TL = pObject.trap->offset_TL;
+
+            linestyle = pObject.trap->linestyle;
+            fillstyle = pObject.trap->fillstyle;
+
+            draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
+            draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
+            draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
+            draw_point_from_gr_point(&draw_offset_TL, &offset_TL);
+
+            status = gr_riscdiag_trapezoid_new(p_gr_riscdiag, &sys_off,
+                                               &draw_origin_BL, &draw_offset_BR, &draw_offset_TR, &draw_offset_TL,
+                                               &linestyle, &fillstyle);
+            }
+            break;
+
+        case GR_DIAG_OBJTYPE_PIESECTOR:
+            {
+            GR_POINT pos;
+            GR_COORD       radius;
+            DRAW_POINT     draw_origin;
+            DRAW_COORD     draw_radius;
+            F64            alpha, beta;
+            GR_LINESTYLE   linestyle;
+            GR_FILLSTYLE   fillstyle;
+
+            pos       = pObject.pie->pos;
+            radius    = pObject.pie->radius;
+            alpha     = pObject.pie->alpha;
+            beta      = pObject.pie->beta;
+            linestyle = pObject.pie->linestyle;
+            fillstyle = pObject.pie->fillstyle;
+
+            draw_point_from_gr_point(&draw_origin, &pos);
+            draw_radius = gr_riscDraw_from_pixit(radius);
+
+            status = gr_riscdiag_piesector_new(p_gr_riscdiag, &sys_off,
+                                               &draw_origin, draw_radius, &alpha, &beta,
+                                               &linestyle, &fillstyle);
+            }
+            break;
+
+        case GR_DIAG_OBJTYPE_PICTURE:
+            {
+            GR_BOX    box;
+            DRAW_BOX        draw_box;
+            GR_CACHE_HANDLE picture;
+            GR_FILLSTYLE    fillstyle;
+            P_ANY diag;
+
+            /* a representation of 'nothing' */
+
+            box.x0 = pObject.pict->pos.x;
+            box.y0 = pObject.pict->pos.y;
+            box.x1 = pObject.pict->pos.x + pObject.pict->wid_hei.cx;
+            box.y1 = pObject.pict->pos.y + pObject.pict->wid_hei.cy;
+
+            picture   = pObject.pict->picture;
+
+            fillstyle = pObject.pict->fillstyle;
+
+            diag = gr_cache_loaded_ensure(&picture);
+
+            draw_box.x0 = gr_riscDraw_from_pixit(box.x0);
+            draw_box.y0 = gr_riscDraw_from_pixit(box.y0);
+            draw_box.x1 = gr_riscDraw_from_pixit(box.x1);
+            draw_box.y1 = gr_riscDraw_from_pixit(box.y1);
+
+            if(diag)
+                status = gr_riscdiag_scaled_diagram_add(p_gr_riscdiag, &sys_off,
+                                                        &draw_box, diag, &fillstyle);
+            }
+            break;
+
+        default:
+            break;
+        }
 
         status_return(status);
 
@@ -439,7 +439,7 @@ gr_diag_create_riscdiag_between(
         pObject.hdr->sys_off = sys_off;
 
         thisObject += objectSize;
-        }
+    }
 
     return(STATUS_DONE);
 }
@@ -625,14 +625,14 @@ gr_diag_diagram_dispose(
     P_GR_DIAG p_gr_diag;
 
     if(p_p_gr_diag && ((p_gr_diag = *p_p_gr_diag) != NULL))
-        {
+    {
         /* remove system-dependent representation too */
         gr_riscdiag_diagram_delete(&p_gr_diag->gr_riscdiag);
 
         al_array_dispose(&p_gr_diag->handle);
 
         al_ptr_dispose(P_P_ANY_PEDANTIC(p_p_gr_diag));
-        }
+    }
 }
 
 /******************************************************************************
@@ -680,21 +680,21 @@ gr_diag_diagram_new(
     P_GR_DIAG p_gr_diag = al_ptr_calloc_elem(GR_DIAG, 1, p_status);
 
     if(NULL != p_gr_diag)
-        {
+    {
         SC_ARRAY_INIT_BLOCK array_init_block = aib_init(512, sizeof32(U8), 1 /*zero allocation*/);
         P_GR_DIAG_DIAGHEADER pDiagHdr;
         const U32 n_bytes = sizeof32(*pDiagHdr);
 
         if(NULL != (pDiagHdr = (P_GR_DIAG_DIAGHEADER) al_array_alloc(&p_gr_diag->handle, BYTE, n_bytes, &array_init_block, p_status)))
-            {
+        {
             tstr_xstrkpy(pDiagHdr->szCreatorName, elemof32(pDiagHdr->szCreatorName), szCreatorName);
             gr_box_make_bad(&pDiagHdr->bbox);
-            }
-        else
-            {
-            al_ptr_dispose(P_P_ANY_PEDANTIC(&p_gr_diag));
-            }
         }
+        else
+        {
+            al_ptr_dispose(P_P_ANY_PEDANTIC(&p_gr_diag));
+        }
+    }
 
     return(p_gr_diag);
 }
@@ -789,7 +789,7 @@ gr_diag_group_new(
 
     /* leave name empty? */
     if(szGroupName)
-        {
+    {
         size_t nameLength;
 
         trace_3(TRACE_MODULE_GR_CHART,
@@ -804,7 +804,7 @@ gr_diag_group_new(
         nameLength = strlen(szGroupName);
         nameLength = MIN(nameLength, sizeof32(pObject.group->name));
         memcpy32(pObject.group->name, szGroupName, nameLength);
-        }
+    }
 
     return(1);
 }
@@ -851,35 +851,35 @@ gr_diag_object_base_size(
     GR_DIAG_OBJTYPE objectType)
 {
     switch(objectType)
-        {
-        case GR_DIAG_OBJTYPE_GROUP:
-            return(sizeof(GR_DIAG_OBJGROUP));
+    {
+    case GR_DIAG_OBJTYPE_GROUP:
+        return(sizeof(GR_DIAG_OBJGROUP));
 
-        case GR_DIAG_OBJTYPE_TEXT:
-            return(sizeof(GR_DIAG_OBJTEXT));
+    case GR_DIAG_OBJTYPE_TEXT:
+        return(sizeof(GR_DIAG_OBJTEXT));
 
-        case GR_DIAG_OBJTYPE_LINE:
-            return(sizeof(GR_DIAG_OBJLINE));
+    case GR_DIAG_OBJTYPE_LINE:
+        return(sizeof(GR_DIAG_OBJLINE));
 
-        case GR_DIAG_OBJTYPE_RECTANGLE:
-            return(sizeof(GR_DIAG_OBJRECTANGLE));
+    case GR_DIAG_OBJTYPE_RECTANGLE:
+        return(sizeof(GR_DIAG_OBJRECTANGLE));
 
-        case GR_DIAG_OBJTYPE_PARALLELOGRAM:
-            return(sizeof(GR_DIAG_OBJPARALLELOGRAM));
+    case GR_DIAG_OBJTYPE_PARALLELOGRAM:
+        return(sizeof(GR_DIAG_OBJPARALLELOGRAM));
 
-        case GR_DIAG_OBJTYPE_TRAPEZOID:
-            return(sizeof(GR_DIAG_OBJTRAPEZOID));
+    case GR_DIAG_OBJTYPE_TRAPEZOID:
+        return(sizeof(GR_DIAG_OBJTRAPEZOID));
 
-        case GR_DIAG_OBJTYPE_PIESECTOR:
-            return(sizeof(GR_DIAG_OBJPIESECTOR));
+    case GR_DIAG_OBJTYPE_PIESECTOR:
+        return(sizeof(GR_DIAG_OBJPIESECTOR));
 
-        case GR_DIAG_OBJTYPE_PICTURE:
-            return(sizeof(GR_DIAG_OBJPICTURE));
+    case GR_DIAG_OBJTYPE_PICTURE:
+        return(sizeof(GR_DIAG_OBJPICTURE));
 
-        default:
-            myassert1x(0, "gr_diag_object_base_size of objectType %d", objectType);
-            return(sizeof(GR_DIAG_OBJHDR));
-        }
+    default:
+        myassert1x(0, "gr_diag_object_base_size of objectType %d", objectType);
+        return(sizeof(GR_DIAG_OBJHDR));
+    }
 }
 
 /******************************************************************************
@@ -917,7 +917,7 @@ gr_diag_object_correlate_between(
 
     /* whenever current object becomes same as start object we've missed */
     while(thisObject > sttObject)
-        {
+    {
         S32 hit;
 
         /* block to reduce recursion stack overhead */
@@ -930,7 +930,7 @@ gr_diag_object_correlate_between(
         pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, findObject);
 
         for(;;)
-            {
+        {
             objectType = pObject.hdr->tag;
             objectSize = pObject.hdr->size;
 
@@ -943,23 +943,23 @@ gr_diag_object_correlate_between(
                        findObject, objectSize, array_elements32(&p_gr_diag->handle));
 
             if(findObject + objectSize >= thisObject)
-                {
+            {
                 /* leave lock on pObject.hdr for bbox scan - loop ALWAYS terminates through here */
                 /* also moves thisObject down */
                 thisObject = findObject;
                 break;
-                }
+            }
 
             findObject    += objectSize;
             pObject.p_byte += objectSize;
-            }
+        }
 
         /* test to see whether we hit this object */
         hit = gr_box_hit(&hit_point, &pObject.hdr->bbox, point, semimajor);
         } /*block*/
 
         if(hit > 0)
-            {
+        {
             pHitObject[0] = thisObject;
             pHitObject[1] = GR_DIAG_OBJECT_NONE; /* keep terminated */
 
@@ -967,7 +967,7 @@ gr_diag_object_correlate_between(
              * and that we are allowed to search into?
             */
             if((objectType == GR_DIAG_OBJTYPE_GROUP)  &&  (recursionLimit != 0))
-                {
+            {
                 /* find a new version of hit as we may have hit a group
                  * at this level but miss all its components at the next
                  * so groups are not found as leaves when recursing
@@ -991,13 +991,13 @@ gr_diag_object_correlate_between(
 
                 /* kill group hit, keep terminated */
                 pHitObject[0] = GR_DIAG_OBJECT_NONE;
-                }
+            }
             else
                 return(hit);
-            }
+        }
 
         /* loop for next object */
-        }
+    }
 
     return(0);
 }
@@ -1024,12 +1024,12 @@ gr_diag_object_end(
     n_bytes = array_elements32(&p_gr_diag->handle) - *pObjectStart;
 
     if(n_bytes == gr_diag_object_base_size(pObject.hdr->tag))
-        {
+    {
         /* destroy object and contents if nothing in it */
         al_array_shrink_by(&p_gr_diag->handle, - (S32) n_bytes);
         trace_3(TRACE_OUT | TRACE_ANY, TEXT("object_end: destroying type ") U32_TFMT TEXT(" n_bytes ") U32_XTFMT TEXT(" at ") U32_XTFMT, pObject.hdr->tag, n_bytes, *pObjectStart);
         n_bytes = 0;
-        }
+    }
     else
         /* update object size */
         pObject.hdr->size = n_bytes;
@@ -1058,10 +1058,10 @@ gr_diag_object_first(
     pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, *pSttObject);
 
     if(*pSttObject >= *pEndObject)
-        {
+    {
         *pSttObject = GR_DIAG_OBJECT_FIRST;
         pObject.hdr = NULL;
-        }
+    }
 
     /* maintain current lock as initial, now caller's responsibility */
     *ppObject = pObject;
@@ -1147,10 +1147,10 @@ gr_diag_object_next(
     *pSttObject += size;
 
     if(*pSttObject >= endObject)
-        {
+    {
         *pSttObject = GR_DIAG_OBJECT_FIRST;
         pObject.hdr = NULL;
-        }
+    }
 
     *ppObject = pObject;
 
@@ -1187,7 +1187,7 @@ gr_diag_object_reset_bbox_between(
     pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, thisObject);
 
     while(thisObject < endObject)
-        {
+    {
         objectSize = pObject.hdr->size;
         objectType = pObject.hdr->tag;
 
@@ -1201,9 +1201,9 @@ gr_diag_object_reset_bbox_between(
 
         /* fix up hierarchy recursively */
         if(objectType == GR_DIAG_OBJTYPE_GROUP)
-            {
+        {
             if(process.recurse)
-                {
+            {
                 GR_BOX group_box;
 
                 gr_diag_object_reset_bbox_between(p_gr_diag,
@@ -1216,17 +1216,17 @@ gr_diag_object_reset_bbox_between(
                     pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, thisObject);
 
                 pObject.hdr->bbox = group_box;
-                }
             }
+        }
         else if(process.recompute)
-            {
+        {
             if(process.severe_recompute)
-                {
+            {
                 /* get corresponding object recomputed */
 
                 /* probably no need for this yet, but ... */
                 /* pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, thisObject); */
-                }
+            }
 
             {
             /* merely copy over bbox info from corresponding object in Draw file */
@@ -1245,14 +1245,14 @@ gr_diag_object_reset_bbox_between(
             pObject.hdr->bbox.y0 = gr_round_pixit_to_floor(pObjectR.hdr->bbox.y0, div_y) * mul_y;
             pObject.hdr->bbox.x1 = gr_round_pixit_to_ceil( pObjectR.hdr->bbox.x1, div_x) * mul_x;
             pObject.hdr->bbox.y1 = gr_round_pixit_to_ceil( pObjectR.hdr->bbox.y1, div_y) * mul_y;
-            }
-            }
+            } /*block*/
+        }
 
         gr_box_union(pBox, NULL, &pObject.hdr->bbox);
 
         thisObject    += objectSize;
         pObject.p_byte += objectSize;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1285,7 +1285,7 @@ gr_diag_object_search_between(
     pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, thisObject);
 
     while(thisObject < endObject)
-        {
+    {
         objectSize = pObject.hdr->size;
         objectType = pObject.hdr->tag;
 
@@ -1298,27 +1298,27 @@ gr_diag_object_search_between(
                    thisObject, objectSize, array_elements32(&p_gr_diag->handle));
 
         if((* (P_U32) &objid) == (* (P_U32) &pObject.hdr->objid))
-            {
+        {
             hitObject = thisObject;
             break;
-            }
+        }
 
         if(process.find_children)
-            {
+        {
             GR_DIAG_OBJID_T id = pObject.hdr->objid;
 
             gr_chart_objid_find_parent(&id);
 
             if((* (P_U32) &objid) == (* (P_U32) &id))
-                {
+            {
                 hitObject = thisObject;
                 break;
-                }
             }
+        }
 
         if(objectType == GR_DIAG_OBJTYPE_GROUP)
             if(process.recurse)
-                {
+            {
                 /* search hierarchy recursively */
                 hitObject = gr_diag_object_search_between(p_gr_diag,
                                                           objid,
@@ -1328,11 +1328,11 @@ gr_diag_object_search_between(
 
                 if(hitObject != GR_DIAG_OBJECT_NONE)
                     break;
-                }
+            }
 
         thisObject    += objectSize;
         pObject.p_byte += objectSize;
-        }
+    }
 
     return(hitObject);
 }

@@ -141,10 +141,10 @@ worth_trying_again(
     ptr = array + strlen(array);
     if( (*--ptr == '\'')  ||
         ((spell_tolower(dict, *ptr) == 's')  &&  (*--ptr == '\'')))
-        {
+    {
         *ptr = '\0';
         res = TRUE;
-        }
+    }
 
     return(res);
 }
@@ -162,10 +162,10 @@ check_word_wanted(void)
         return(FALSE);
 
     if(err_open_master_dict())
-        {
+    {
         d_auto[0].option = 'N';
         return(FALSE);
-        }
+    }
 
     return(TRUE);
 }
@@ -183,7 +183,7 @@ check_word(void)
     dict = master_dictionary;
 
     if(get_word_from_line(dict, array, lecpos, NULL))
-        {
+    {
         tried_again = FALSE;
 
     TRY_AGAIN:
@@ -196,17 +196,17 @@ check_word(void)
         if(res < 0)
             reperr_module(create_error(ERR_SPELL), res);
         else if(!res  &&  not_in_user_dicts_or_list(array))
-            {
+        {
             if(!tried_again)
                 if(worth_trying_again(dict, array))
-                    {
+                {
                     tried_again = TRUE;
                     goto TRY_AGAIN;
-                    }
+                }
 
             bleep();
-            }
         }
+    }
 }
 
 static S32
@@ -254,20 +254,20 @@ close_user_dictionaries(
 {
     if( force  ||
         (mergedict_mds.dict == -1  &&  anagram_mds.dict == -1  &&  dumpdict_mds.dict == -1))
+    {
+        PC_LIST lptr;
+
+        while((lptr = first_in_list(&first_user_dict)) != NULL)
         {
-            PC_LIST lptr;
+            S32 res = close_dict_always((S32) lptr->key);
 
-            while((lptr = first_in_list(&first_user_dict)) != NULL)
-                {
-                S32 res = close_dict_always((S32) lptr->key);
-
-                if(res < 0)
-                    {
-                    reperr_module(create_error(ERR_SPELL), res);
-                    been_error = FALSE;
-                    }
-                }
+            if(res < 0)
+            {
+                reperr_module(create_error(ERR_SPELL), res);
+                been_error = FALSE;
+            }
         }
+    }
 }
 
 /******************************************************************************
@@ -286,15 +286,15 @@ flush_user_dictionaries(void)
     for(lptr = first_in_list(&first_user_dict);
         lptr;
         lptr = next_in_list(&first_user_dict))
-        {
+    {
         S32 res = spell_flush((S32) lptr->key);
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             been_error = FALSE;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -317,38 +317,38 @@ compile_wild_string(
     /* get word template from wild_string */
     if(!str_isblank(ptr))
         while((ch = *ptr++) != '\0')
-            {
+        {
             if(ch == '^')
-                {
+            {
                 ch = *ptr++;
 
                 switch(ch)
-                    {
-                    case '\0':
-                        --ptr;        /* point at 0 again */
-                        break;
+                {
+                case '\0':
+                    --ptr;        /* point at 0 again */
+                    break;
 
-                    case '#':
-                        ch = SPELL_WILD_MULTIPLE;
+                case '#':
+                    ch = SPELL_WILD_MULTIPLE;
 
-                        /* deliberate drop thru */
+                    /* deliberate drop thru */
 
-                    case '?':
-                        assert('?' == SPELL_WILD_SINGLE);
-                        iswild = TRUE;
+                case '?':
+                    assert('?' == SPELL_WILD_SINGLE);
+                    iswild = TRUE;
 
-                        /* deliberate drop thru */
+                    /* deliberate drop thru */
 
-                    default:
-                        *to++ = (char) ch;
-                        break;
-                    }
+                default:
+                    *to++ = (char) ch;
+                    break;
                 }
+            }
             else if(((ptr == from) ? spell_valid_1 : spell_iswordc) (dict, ch))
                 *to++ = spell_tolower(dict, ch);
             else
                 return(create_error(SPELL_ERR_BADWORD));
-            }
+        }
 
     *to = '\0';
     return(iswild);
@@ -387,10 +387,10 @@ dict_number(
     trace_1(TRACE_APP_PD4, "dict_number(%s)", trace_string(name));
 
     if(str_isblank(name))
-        {
+    {
         most_recent = -1;
         return(create_error(ERR_BAD_NAME));
-        }
+    }
 
     leaf = file_leafname(name);
 
@@ -399,10 +399,10 @@ dict_number(
     for(lptr = first_in_list(&first_user_dict);
         lptr;
         lptr = next_in_list(&first_user_dict))
-        {
+    {
         if(0 == _stricmp(leaf, file_leafname((char *) lptr->value)))
             return(most_recent = (S32) lptr->key);
-        }
+    }
 
     /* not on list so open it possibly (may even be relative to document) */
     dict = create_error(SPELL_ERR_CANTOPEN);
@@ -410,15 +410,15 @@ dict_number(
         if(add_path_or_relative_using_dir(fulldictname, elemof32(fulldictname), name, TRUE, DICTS_SUBDIR_STR))
             if(file_find_on_path(olddictdefn, elemof32(olddictdefn), OLD_DICTDEFN_FILE_STR))
                 if((dict = spell_opendict(fulldictname, olddictdefn, NULL)) >= 0)
-                    {
+                {
                     if(status_fail(res = add_to_list(&first_user_dict, dict, fulldictname)))
-                        {
+                    {
                         (void) spell_close(dict);
                         dict = (S32) res;
-                        }
+                    }
                     else
                         return(most_recent = dict);
-                    }
+                }
 
     most_recent = -1;
     return(dict);
@@ -445,7 +445,7 @@ get_word_from_line(
     trace_2(TRACE_APP_PD4, "get_word_from_line(): linbuf '%s', stt_offset = %d", linbuf, stt_offset);
 
     if(is_current_document()  &&  !xf_inexpression  &&  slot_in_buffer)
-        {
+    {
         src = linbuf;
         len = strlen(src);
         ptr = src + MIN(len, stt_offset);
@@ -467,13 +467,13 @@ get_word_from_line(
             ++ptr;
 
         if(browse_valid_1(dict, *ptr))
-            {
+        {
             found_offset = ptr - src;
 
             while(browse_iswordc(dict, *ptr)  &&  ((to - array) < MAX_WORD))
                 *to++ = (S32) *ptr++;
-            }
         }
+    }
 
     *to = '\0';
 
@@ -535,7 +535,7 @@ open_master_dict(void)
     PC_U8 name;
 
     if(master_dictionary < 0)
-        {
+    {
         name = MASTERDICT_STR;
 
         /* SKS after 4.12 26mar92 - treat master dictionary just like user dictionaries */
@@ -543,7 +543,7 @@ open_master_dict(void)
 
         /* don't hint that this is the one to be molested */
         most_recent = -1;
-        }
+    }
 
     return(master_dictionary);
 }
@@ -584,63 +584,63 @@ CreateUserDict_fn(void)
     /* leave d_user_create[1].textfield alone */
 
     while(dialog_box(D_USER_CREATE))
-        {
+    {
         name     = d_user_create[0].textfield;
         language = d_user_create[1].textfield;
 
         if(str_isblank(name))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
             (void) mystr_set(&d_user_create[0].textfield, USERDICT_STR);
             continue;
-            }
+        }
 
         /* try to create dictionary in a subdirectory of <Choices$Write>.PipeDream */
         name = add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), name, DICTS_SUBDIR_STR);
 
         if(str_isblank(language))
-            {
+        {
             reperr_null(create_error(ERR_BAD_LANGUAGE));
             if(!dialog_box_can_retry())
                 break;
             (void) mystr_set(&d_user_create[1].textfield, DEFAULT_DICTDEFN_FILE_STR);
             continue;
-            }
+        }
 
         /* Add prefix '<PipeDream$Dir>.DictDefn.' to language */
 
         if((res = add_path_using_dir(buffer2, elemof32(buffer2), language, DICTDEFNS_SUBDIR_STR)) <= 0)
-            {
+        {
             reperr_null(res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
         language = buffer2;
 
         trace_2(TRACE_APP_PD4, "name='%s', language='%s'", name, language);
 
         if(TRUE /*checkoverwrite(name)*/)
-            {
+        {
             res = spell_createdict(name, language);
 
             if(res >= 0)
                 res = dict_number(name, TRUE);
 
             if(res < 0)
-                {
+            {
                 reperr_module(create_error(ERR_SPELL), res);
                 if(!dialog_box_can_retry())
                     break;
                 continue;
-                }
             }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -664,32 +664,32 @@ OpenUserDict_fn(void)
         return;
 
     while(dialog_box(D_USER_OPEN))
-        {
+    {
         name = d_user_open[0].textfield;
 
         if(str_isblank(name))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
             (void) mystr_set(&d_user_open[0].textfield, USERDICT_STR);
             continue;
-            }
+        }
 
         /* open it, if not already open */
         res = dict_number(name, TRUE);
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -716,11 +716,11 @@ CloseUserDict_fn(void)
         return;
 
     while(dialog_box(D_USER_CLOSE))
-        {
+    {
         name = d_user_close[0].textfield;
 
         if(str_isblank(name))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
@@ -737,16 +737,16 @@ CloseUserDict_fn(void)
             res = 0;    /* ignore error from dict_number */
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -773,23 +773,23 @@ DeleteWordFromDict_fn(void)
         return;
 
     while(dialog_box(D_USER_DELETE))
-        {
+    {
         res = dict_number(d_user_delete[1].textfield, TRUE);
 
         if(res >= 0)
             res = spell_deleteword(res, d_user_delete[0].textfield);
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -828,28 +828,28 @@ InsertWordInDict_fn(void)
         return;
 
     while(dialog_box(D_USER_INSERT))
-        {
+    {
         res = dict_number(d_user_insert[1].textfield, TRUE);
 
         if(res >= 0)
-            {
+        {
             res = spell_addword(res, d_user_insert[0].textfield);
 
             if(res == 0)
                 res = create_error(ERR_WORDEXISTS);
-            }
+        }
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -902,22 +902,22 @@ init_box(merge_dump_strukt *mdsp,
 
     d = dbox_new_new(dname, &errorp);
     if(!d)
-        {
+    {
         if(errorp)
             rep_fserr(errorp);
         al_ptr_free(core);
         return(FALSE);
-        }
+    }
 
     mdsp->d = d;
 
     dbox_setfield(d, browsing_Template, NULLSTR);
 
     for(y = 0; y < BROWSE_DEPTH; ++y)
-        {
+    {
         mdsp->words[y][0] = '\0';
         dbox_setfield(d, browsing_FirstWord + y, mdsp->words[y]);
-        }
+    }
 
     if(statik)
         dbox_showstatic(d);
@@ -1005,17 +1005,17 @@ browse_null_core(
     dbox_getfield(d, browsing_Template, array, sizeof(array));
 
     if(0 != _stricmp(array, str))
-        {
+    {
         if(browse_iswild)
-            {
+        {
             bleep();
             dbox_setfield(d, browsing_Template, str);
-            }
+        }
         else
-            {
+        {
             trace_2(TRACE_APP_PD4, "template changed from %s to %s", str, array);
             if(array[0])
-                {
+            {
                 strcpy(str, array);
                 mdsp->res = get_and_display_words(TRUE, browse_iswild, mdsp->words,
                                                   browse_wild_string, browse_template,
@@ -1024,11 +1024,11 @@ browse_null_core(
                 if(mdsp->res < 0)
                     win_send_close(dbox_syshandle(d));
                 /* which will cause a CLOSE to be returned to fillin */
-                }
+            }
             else
                 trace_0(TRACE_APP_PD4, "string has been emptied");
-            }
         }
+    }
     else
         trace_0(TRACE_APP_PD4, "no change in string");
 }
@@ -1043,18 +1043,18 @@ browse_null(void)
 null_event_proto(static, browse_null_handler)
 {
     switch(rc)
-        {
-        case NULL_QUERY:
-            return(NULL_EVENTS_REQUIRED);
+    {
+    case NULL_QUERY:
+        return(NULL_EVENTS_REQUIRED);
 
-        case NULL_EVENT:
-            browse_null_core(mdsp);
+    case NULL_EVENT:
+        browse_null_core(mdsp);
 
-            return(NULL_EVENT_COMPLETED);
+        return(NULL_EVENT_COMPLETED);
 
-        default:
-            return(0);
-        }
+    default:
+        return(0);
+    }
 }
 #endif
 
@@ -1079,7 +1079,7 @@ get_and_display_words(
     S32 y;
 
     if(fillall)
-        {
+    {
         #if 0
         strcpy(words[BROWSE_CENTRE], iswild ? NULLSTR : template);
         #else
@@ -1091,7 +1091,7 @@ get_and_display_words(
             if(ch)
                 ch = spell_tolower(dict, ch);
             *dst++ = ch;
-            }
+        }
         while(ch);
         #endif
 
@@ -1115,17 +1115,17 @@ get_and_display_words(
                 words[y][0] = '\0';
 
         if(ctrlflag)
-            {
+        {
             ack_esc();
             return(create_error(ERR_ESCAPE));
-            }
+        }
 
         if(res < 0)
-            {
+        {
             *was_spell_errp = TRUE;
             return(res);
-            }
         }
+    }
 
     fill_box(words, iswild ? wild_str : template, d);
 
@@ -1154,42 +1154,42 @@ browse_raw_eventhandler(
     trace_1(TRACE_APP_PD4, "raw_event_browse got %s", report_wimp_event(e->e, &e->data));
 
     switch(e->e)
+    {
+    case wimp_EKEY:
+        switch(e->data.key.chcode)
         {
-        case wimp_EKEY:
-            switch(e->data.key.chcode)
-                {
-                case akbd_UpK:
-                case akbd_DownK:
-                    hiticon = (e->data.key.chcode == akbd_UpK)
-                                        ? browsing_ScrollUp
-                                        : browsing_ScrollDown;
-                    break;
+        case akbd_UpK:
+        case akbd_DownK:
+            hiticon = (e->data.key.chcode == akbd_UpK)
+                                ? browsing_ScrollUp
+                                : browsing_ScrollDown;
+            break;
 
-                case akbd_PageUpK:
-                case akbd_PageDownK:
-                    hiticon = (e->data.key.chcode == akbd_PageUpK)
-                                        ? browsing_PageUp
-                                        : browsing_PageDown;
-                    break;
-
-                default:
-                    hiticon = -1;
-                    break;
-                }
-
-            if(hiticon != -1)
-                {
-                e->e                = wimp_EBUT;
-                e->data.but.m.i     = (wimp_i) hiticon;
-                e->data.but.m.bbits = wimp_BLEFT;
-
-                clearkeyboardbuffer();
-                }
+        case akbd_PageUpK:
+        case akbd_PageDownK:
+            hiticon = (e->data.key.chcode == akbd_PageUpK)
+                                ? browsing_PageUp
+                                : browsing_PageDown;
             break;
 
         default:
+            hiticon = -1;
             break;
         }
+
+        if(hiticon != -1)
+        {
+            e->e                = wimp_EBUT;
+            e->data.but.m.i     = (wimp_i) hiticon;
+            e->data.but.m.bbits = wimp_BLEFT;
+
+            clearkeyboardbuffer();
+        }
+        break;
+
+    default:
+        break;
+    }
 
     return(FALSE);
 }
@@ -1209,11 +1209,11 @@ browse_process(void)
     char array[MAX_WORD+1];
 
     if(!*browse_template)
-        {
+    {
         /* start off at 'a' if nothing specified */
         *browse_template   = 'a';
         browse_template[1] = '\0';
-        }
+    }
 
     escape_enable();
 
@@ -1224,7 +1224,7 @@ browse_process(void)
                                       &browse_was_spell_err);
 
     if(mdsp->res < 0)
-        {
+    {
         if(browse_was_spell_err)
             reperr_module(create_error(ERR_SPELL), mdsp->res);
         else
@@ -1232,7 +1232,7 @@ browse_process(void)
 
         (void) escape_disable_nowinge();
         return;
-        }
+    }
 
     if(escape_disable())
         return;
@@ -1247,7 +1247,7 @@ browse_process(void)
 
     while(((f = riscdialog_fillin_for_browse(d)) != dbox_CLOSE)  &&
           (f != dbox_OK))
-        {
+    {
         adjustclicked = riscos_adjustclicked();
 
         (void) dbox_adjusthit(&f, browsing_ScrollUp, browsing_ScrollDown, adjustclicked);
@@ -1258,109 +1258,109 @@ browse_process(void)
         escape_enable();
 
         switch(f)
+        {
+        case browsing_ScrollUp:
+            if(*words[BROWSE_CENTRE-1])
             {
-            case browsing_ScrollUp:
-                if(*words[BROWSE_CENTRE-1])
-                    {
-                    scroll_words_down(words, BROWSE_DEPTH);
+                scroll_words_down(words, BROWSE_DEPTH);
 
-                    if(!browse_iswild)
-                        strcpy(browse_template, words[BROWSE_CENTRE]);
+                if(!browse_iswild)
+                    strcpy(browse_template, words[BROWSE_CENTRE]);
 
-                    if(*words[0])
-                        mdsp->res = spell_prevword(dict,
-                                                   words[0],
-                                                   words[0],
-                                                   browse_wild_string,
-                                                   &ctrlflag);
-                    }
-                break;
-
-            case browsing_ScrollDown:
-                if(*words[BROWSE_CENTRE+1])
-                    {
-                    scroll_words_up(words, BROWSE_DEPTH);
-
-                    if(!browse_iswild)
-                        strcpy(browse_template, words[BROWSE_CENTRE]);
-
-                    if(*mdsp->words[BROWSE_DEPTH-1])
-                        mdsp->res = spell_nextword(dict,
-                                                   words[BROWSE_DEPTH-1],
-                                                   words[BROWSE_DEPTH-1],
-                                                   browse_wild_string,
-                                                   &ctrlflag);
-                    }
-                break;
-
-            case browsing_PageUp:
-                if(browse_iswild)
-                    bleep();
-                else
-                    {
-                    mdsp->res = 1;
-
-                    for(i = 0; (mdsp->res > 0)  &&  (i < BROWSE_DEPTH); ++i)
-                        {
-                        strcpy(array, browse_template);
-
-                        mdsp->res = spell_prevword(dict,
-                                                   browse_template,
-                                                   browse_template,
-                                                   browse_wild_string,
-                                                   &ctrlflag);
-
-                        if(!mdsp->res)
-                            {
-                            /* restore template if no word found */
-                            strcpy(browse_template, array);
-                            break;
-                            }
-                        }
-
-                    fillall = TRUE;
-                    }
-                break;
-
-            case browsing_PageDown:
-                if(browse_iswild)
-                    bleep();
-                else
-                    {
-                    mdsp->res = 1;
-
-                    for(i = 0; (mdsp->res > 0)  &&  (i < BROWSE_DEPTH); ++i)
-                        {
-                        strcpy(array, browse_template);
-
-                        mdsp->res = spell_nextword(dict,
-                                                   browse_template,
-                                                   browse_template,
-                                                   browse_wild_string,
-                                                   &ctrlflag);
-
-                        if(!mdsp->res)
-                            {
-                            /* restore template if no word found */
-                            strcpy(browse_template, array);
-                            break;
-                            }
-                        }
-
-                    fillall = TRUE;
-                    }
-                break;
-
-            default:
-                /* clicks on words enter them */
-                which = f - browsing_FirstWord;
-                if( (which >= 0)  &&  (which < BROWSE_DEPTH)  &&
-                    *words[which])
-                        goto LOOP_EXIT;
-                else
-                    which = -1;
-                break;
+                if(*words[0])
+                    mdsp->res = spell_prevword(dict,
+                                               words[0],
+                                               words[0],
+                                               browse_wild_string,
+                                               &ctrlflag);
             }
+            break;
+
+        case browsing_ScrollDown:
+            if(*words[BROWSE_CENTRE+1])
+            {
+                scroll_words_up(words, BROWSE_DEPTH);
+
+                if(!browse_iswild)
+                    strcpy(browse_template, words[BROWSE_CENTRE]);
+
+                if(*mdsp->words[BROWSE_DEPTH-1])
+                    mdsp->res = spell_nextword(dict,
+                                               words[BROWSE_DEPTH-1],
+                                               words[BROWSE_DEPTH-1],
+                                               browse_wild_string,
+                                               &ctrlflag);
+            }
+            break;
+
+        case browsing_PageUp:
+            if(browse_iswild)
+                bleep();
+            else
+            {
+                mdsp->res = 1;
+
+                for(i = 0; (mdsp->res > 0)  &&  (i < BROWSE_DEPTH); ++i)
+                {
+                    strcpy(array, browse_template);
+
+                    mdsp->res = spell_prevword(dict,
+                                               browse_template,
+                                               browse_template,
+                                               browse_wild_string,
+                                               &ctrlflag);
+
+                    if(!mdsp->res)
+                    {
+                        /* restore template if no word found */
+                        strcpy(browse_template, array);
+                        break;
+                    }
+                }
+
+                fillall = TRUE;
+            }
+            break;
+
+        case browsing_PageDown:
+            if(browse_iswild)
+                bleep();
+            else
+            {
+                mdsp->res = 1;
+
+                for(i = 0; (mdsp->res > 0)  &&  (i < BROWSE_DEPTH); ++i)
+                {
+                    strcpy(array, browse_template);
+
+                    mdsp->res = spell_nextword(dict,
+                                               browse_template,
+                                               browse_template,
+                                               browse_wild_string,
+                                               &ctrlflag);
+
+                    if(!mdsp->res)
+                    {
+                        /* restore template if no word found */
+                        strcpy(browse_template, array);
+                        break;
+                    }
+                }
+
+                fillall = TRUE;
+            }
+            break;
+
+        default:
+            /* clicks on words enter them */
+            which = f - browsing_FirstWord;
+            if( (which >= 0)  &&  (which < BROWSE_DEPTH)  &&
+                *words[which])
+                    goto LOOP_EXIT;
+            else
+                which = -1;
+            break;
+        }
 
         mdsp->res = get_and_display_words(fillall, browse_iswild, words,
                                           browse_wild_string, browse_template,
@@ -1369,51 +1369,51 @@ browse_process(void)
                                           &browse_was_spell_err);
 
         if(mdsp->res < 0)
-            {
+        {
             escape_disable();
             break;
-            }
+        }
 
     LOOP_EXIT:
 
         if(escape_disable_nowinge())
-            {
+        {
             mdsp->res = create_error(ERR_ESCAPE);
             break;
-            }
+        }
 
         if(which >= 0)
-            {
+        {
             f = dbox_OK;
             break;
-            }
         }
+    }
 
     /* click/type-ahead may have resulted in string emptying
      * without us getting to see it
     */
     if((mdsp->res >= 0)  &&  (f == dbox_OK))
-        {
+    {
         if(which >= 0)
             strcpy(word_to_insert, words[which]);
         else
-            {
+        {
             dbox_getfield(d, browsing_Template, browse_template, LIN_BUFSIZ);
 
             if(!browse_template[0])
-                {
+            {
                 word_to_insert[0] = 'a';
                 word_to_insert[1] = browse_template[0];
-                }
+            }
             else
-                {
+            {
                 if(!browse_iswild)
                     strcpy(word_to_insert, browse_template);
                 else
                     strcpy(word_to_insert, words[BROWSE_CENTRE]);
-                }
             }
         }
+    }
 
     trace_1(TRACE_APP_PD4, "returning word_to_insert \"%s\"", word_to_insert);
 
@@ -1450,10 +1450,10 @@ browse(
         return(browse_iswild);
 
     if(!browse_iswild)
-        {
+    {
         *wild_string = '\0';
         strcpy(template, wild_str);
-        }
+    }
 
     *word_to_insert = template[MAX_WORD] = '\0';
 
@@ -1464,11 +1464,11 @@ browse(
     browse_wild_string    = wild_string;
 
     if(init_box(mdsp, "browsing", NULL, FALSE))
-        {
+    {
         browse_process();
 
         end_box(mdsp);
-        }
+    }
 
     return(mdsp->res);
 }
@@ -1510,14 +1510,14 @@ BrowseDictionary_fn(void)
         res = browse(res, d_user_browse[0].textfield);
 
     if(res < 0)
-        {
+    {
         if(browse_was_spell_err)
             reperr_module(create_error(ERR_SPELL), res);
         else
             reperr_null(res);
-        }
+    }
     else if(*word_to_insert && is_current_document())
-        {
+    {
         trace_1(TRACE_APP_PD4, "SBRfunc * word_to_insert: %s", trace_string(word_to_insert));
 
         /* save word about to be trashed onto paste list */
@@ -1530,7 +1530,7 @@ BrowseDictionary_fn(void)
 
         if(!do_replace(word_to_insert, TRUE))
             bleep();
-        }
+    }
 }
 
 /*
@@ -1559,22 +1559,22 @@ a_fillout(
 
     /* set all letters unused */
     while(aptr->letter)
-        {
+    {
         (aptr++)->used = FALSE;
         length++;
-        }
+    }
 
     /* get the common letters */
     for( ; *from; from++)
         for(aptr = letters; ; aptr++)
-            {
+        {
             if(!aptr->letter)
-                {
+            {
                 /* need to step back letter */
                 dontfillout = TRUE;
 
                 for(;;)
-                    {
+                {
                     uchar letter_to_free;
                     A_LETTER *smallest_bigger = NULL;
 
@@ -1587,52 +1587,52 @@ a_fillout(
 
                     /* search backwards, picking up the smallest bigger letter */
                     for(aptr = letters + length; ; --aptr)
-                        {
+                    {
                         if(aptr->used == FALSE)
-                            {
+                        {
                             if(aptr->letter > letter_to_free)
-                                {
+                            {
                                 smallest_bigger = aptr;
                                 continue;
-                                }
                             }
+                        }
                         else if(aptr->letter == letter_to_free)
-                            {
+                        {
                             aptr->used = FALSE;
 
                             if(smallest_bigger != NULL)
-                                {
+                            {
                                 smallest_bigger->used = TRUE;
                                 *to++ = smallest_bigger->letter;
                                 goto DO_FILL;
-                                }
+                            }
                             /* go back another letter */
                             break;
-                            }
                         }
                     }
                 }
+            }
 
             if(aptr->used)
                 continue;
 
             if(*from < aptr->letter)
-                {
+            {
                 /* no match so take next biggest letter */
                 aptr->used = TRUE;
                 *to++ = aptr->letter;
                 dontfillout = TRUE;
                 goto DO_FILL;
-                }
+            }
 
             if(*from == aptr->letter)
-                {
+            {
                 /* this letter matches, flag it and go round again */
                 aptr->used = TRUE;
                 *to++ = *from;
                 break;
-                }
             }
+        }
 
 DO_FILL:
 
@@ -1640,11 +1640,11 @@ DO_FILL:
     if(!subgrams  ||  (subgrams  &&  !dontfillout  &&  (to == array)))
         for(aptr = letters; aptr->letter; aptr++)
             if(aptr->used == FALSE)
-                {
+            {
                 *to++ = aptr->letter;
                 if(subgrams)
                     break;
-                }
+            }
 
     *to = '\0';
     return(TRUE);
@@ -1658,10 +1658,10 @@ add_word_to_box(
     trace_1(TRACE_APP_PD4, "adding word %s to box", str);
 
     if(++(mdsp->sofar) >= BROWSE_DEPTH)
-        {
+    {
         scroll_words_up(mdsp->words, BROWSE_DEPTH);
         mdsp->sofar = BROWSE_DEPTH-1;
-        }
+    }
 
     strcpy((mdsp->words)[mdsp->sofar], str);
 
@@ -1737,22 +1737,22 @@ anagram_eventhandler(
     dbox_field f = dbox_get(d);
 
     switch(f)
-        {
-        case anagram_Continue:
-            /* only resume if paused and not ended */
-            if(!mdsp->stopped)
-                mdsp->wants_nulls = TRUE;
-            break;
+    {
+    case anagram_Continue:
+        /* only resume if paused and not ended */
+        if(!mdsp->stopped)
+            mdsp->wants_nulls = TRUE;
+        break;
 
-        case anagram_Pause:
-            /* stop null events to anagram null processor */
-            mdsp->wants_nulls = FALSE;
-            break;
+    case anagram_Pause:
+        /* stop null events to anagram null processor */
+        mdsp->wants_nulls = FALSE;
+        break;
 
-        default:
-            anagram_end(mdsp);
-            break;
-            }
+    default:
+        anagram_end(mdsp);
+        break;
+        }
 }
 
 extern void
@@ -1768,24 +1768,24 @@ anagram_null_core(
     trace_0(TRACE_APP_PD4, "anagram_null()");
 
     if(a_fillout(anagram_letters, newword, anagram_last_found, anagram_sub))
-        {
+    {
         /* SKS - stop us from getting bad words */
         if(spell_valid_1(mdsp->dict, *newword))
-            {
+        {
             mdsp->res = spell_checkword(mdsp->dict, newword);
 
             if(mdsp->res < 0)
-                {
+            {
                 add_error_to_box(mdsp);
                 return;
-                }
+            }
 
             /* don't like most single letter words */
             if( mdsp->res  &&
                 ((newword[1])  || (*newword == 'i') ||  (*newword == 'a'))
                 )
                 add_word_to_box(mdsp, newword);
-            }
+        }
 
         escape_enable();
 
@@ -1797,25 +1797,25 @@ anagram_null_core(
             mdsp->res = res1;
 
         if(mdsp->res < 0)
-            {
+        {
             add_error_to_box(mdsp);
             return;
-            }
         }
+    }
     else
-        {
+    {
         mdsp->res = 0;
         mdsp->stopped = TRUE;
-        }
+    }
 
     if(!mdsp->res)
-        {
+    {
         complete_box(mdsp, anagram_sub ? Subgrams_STR : Anagrams_STR);
 
         /* force punter to do explicit end */
         mdsp->wants_nulls = FALSE;
         return;
-        }
+    }
 }
 
 null_event_proto(static, anagram_null_handler)
@@ -1823,20 +1823,20 @@ null_event_proto(static, anagram_null_handler)
     merge_dump_strukt * mdsp = (merge_dump_strukt *) p_null_event_block->client_handle;
 
     switch(p_null_event_block->rc)
-        {
-        case NULL_QUERY:
-            return(mdsp->wants_nulls
-                            ? NULL_EVENTS_REQUIRED
-                            : NULL_EVENTS_OFF);
+    {
+    case NULL_QUERY:
+        return(mdsp->wants_nulls
+                        ? NULL_EVENTS_REQUIRED
+                        : NULL_EVENTS_OFF);
 
-        case NULL_EVENT:
-            anagram_null_core(mdsp);
+    case NULL_EVENT:
+        anagram_null_core(mdsp);
 
-            return(NULL_EVENT_COMPLETED);
+        return(NULL_EVENT_COMPLETED);
 
-        default:
-            return(NULL_EVENT_UNKNOWN);
-        }
+    default:
+        return(NULL_EVENT_UNKNOWN);
+    }
 }
 
 static void
@@ -1877,10 +1877,10 @@ ana_or_sub_gram(
     char ch;
 
     if(mdsp->d)
-        {
+    {
         reperr_null(anagram_sub ? create_error(ERR_ALREADYSUBGRAMS) : create_error(ERR_ALREADYANAGRAMS));
         return;
-        }
+    }
 
     if(!dialog_box_start())
         return;
@@ -1889,16 +1889,16 @@ ana_or_sub_gram(
         return;
 
     while(dialog_box(sub ? D_USER_SUBGRAM : D_USER_ANAG))
-        {
+    {
         word = d_user_anag[0].textfield;
 
         if(str_isblank(word)  ||  (strlen(word) > MAX_WORD))
-            {
+        {
             reperr_null(create_error(SPELL_ERR_BADWORD));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         dialog_box_end();
 
@@ -1909,26 +1909,26 @@ ana_or_sub_gram(
                 : compile_wild_string(mdsp->dict, array, word);
 
         if(res < 0)
-            {
+        {
             reperr_null(res);
             break;
-            }
+        }
 
         /* sort letters into order */
         from = word;
         *array = '\0';
         while((ch = *from++) != '\0')
-            {
+        {
             ch = spell_tolower(mdsp->dict, ch);
 
             for(to = array; ; to++)
                 if(!*to  ||  (*to > ch))
-                    {
+                {
                     memmove32(to + 1, to, strlen32p1((char *) to));
                     *to = ch;
                     break;
-                    }
-            }
+                }
+        }
 
         trace_1(TRACE_APP_PD4, "array=_%s_", array);
 
@@ -1938,7 +1938,7 @@ ana_or_sub_gram(
         do  {
             ch = *from++;
             aptr++->letter = ch;
-            }
+        }
         while(ch);
 
         *anagram_last_found = '\0';
@@ -1946,18 +1946,18 @@ ana_or_sub_gram(
         anagram_sub = sub;
 
         if(init_box(mdsp, "anagram", sub ? Subgrams_STR : Anagrams_STR, TRUE))
-            {
+        {
             dbox_setfield(mdsp->d, browsing_Template, d_user_anag[0].textfield);
 
             anagram_start(mdsp);
             return;
-            }
+        }
 
         anagram_end(mdsp);
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -2015,15 +2015,15 @@ not_in_user_dicts_or_list(
     for(lptr = first_in_list(&first_spell);
         lptr;
         lptr = next_in_list(&first_spell))
-        {
+    {
         if(0 == _stricmp((char *) lptr->value, word))
             return(FALSE);
-        }
+    }
 
     for(lptr = first_in_list(&first_user_dict);
         lptr;
         lptr = next_in_list(&first_user_dict))
-        {
+    {
         S32 res;
 
         if((res = spell_checkword((S32) lptr->key, (char *) word)) > 0)
@@ -2031,7 +2031,7 @@ not_in_user_dicts_or_list(
 
         if((res < 0)  &&  (res != create_error(SPELL_ERR_BADWORD)))
             reperr_module(create_error(ERR_SPELL), res);
-        }
+    }
 
     return(TRUE);
 }
@@ -2049,7 +2049,7 @@ set_check_block(void)
     /* set up the check block */
 
     if(d_checkon[C_BLOCK].option == 'Y')
-        {
+    {
         /* marked block selected - check exists */
         if(!MARKER_DEFINED())
             return(reperr_null((blkstart.col != NO_COL)
@@ -2058,9 +2058,9 @@ set_check_block(void)
 
         sch_stt = blkstart;
         sch_end = (blkend.col != NO_COL) ? blkend : blkstart;
-        }
+    }
     else
-        {
+    {
         /* all rows, maybe all files */
 
         sch_stt.row = 0;
@@ -2068,7 +2068,7 @@ set_check_block(void)
 
         sch_stt.col = 0;
         sch_end.col = numcol-1;
-        }
+    }
 
     /* set up the initial position */
 
@@ -2108,10 +2108,10 @@ next_word_on_line(void)
     sch_stt_offset = (--ptr) - linbuf;
 
     while(!browse_valid_1(dict, *ptr)  &&  (sch_stt_offset < len))
-        {
+    {
         ++ptr;
         ++sch_stt_offset;
-        }
+    }
 
     return(sch_stt_offset < len);
 }
@@ -2133,55 +2133,55 @@ get_next_misspell(
     dict = master_dictionary;
 
     for(;;)
-        {
+    {
         if((sch_stt_offset == -1)  ||  !slot_in_buffer)
-            {
+        {
             if(sch_stt_offset == -1)
-                {
+            {
                 /* (NB. set sch_pos_stt.col = sch_stt.col - 1 to start) */
 
                 trace_0(TRACE_APP_PD4, "get_next_misspell: offset == -1 -> find another cell to scan for misspells");
 
                 do  {
                     if(sch_pos_stt.col < sch_end.col)
-                        {
+                    {
                         ++sch_pos_stt.col;
                         trace_1(TRACE_APP_PD4, "get_next_misspell stepped to column %d", sch_pos_stt.col);
-                        }
+                    }
                     else if(sch_pos_stt.row < sch_end.row)
-                        {
+                    {
                         ++sch_pos_stt.row;
                         sch_pos_stt.col = sch_stt.col;
                         trace_2(TRACE_APP_PD4, "get_next_misspell stepped to row %d, reset to column %d", sch_pos_stt.row, sch_pos_stt.col);
                         actind((S32) ((100 * sch_pos_stt.row - sch_stt.row) / (sch_end.row - sch_stt.row + 1)));
                         if(ctrlflag)
                             return(FALSE);
-                        }
+                    }
                     else
-                        {
+                    {
                         trace_0(TRACE_APP_PD4, "get_next_misspell ran out of cells");
                         return(FALSE);
-                        }
+                    }
 
                     tcell = travel(sch_pos_stt.col, sch_pos_stt.row);
-                    }
+                }
                 while(!tcell  ||  (tcell->type != SL_TEXT)  ||  str_isblank(tcell->content.text));
 
                 sch_stt_offset = 0;
-                }
+            }
             else
-                {
+            {
                 trace_0(TRACE_APP_PD4, "get_next_misspell found no cell in buffer so reload");
                 tcell = travel(sch_pos_stt.col, sch_pos_stt.row);
-                }
+            }
 
             prccon(linbuf, tcell);
-            }
+        }
 
         /* if current word not ok set variables */
 
         if(browse_valid_1(dict, linbuf[sch_stt_offset]))
-            {
+        {
             tried_again = FALSE;
 
             slot_in_buffer = TRUE;
@@ -2199,15 +2199,15 @@ get_next_misspell(
                 return(reperr_module(create_error(ERR_SPELL), res));
 
             if(!res  &&  (not_in_user_dicts_or_list(array)))
-                {
+            {
                 /* can't find it anywhere: try stripping off trailing ' or 's */
 
                 if(!tried_again)
                     if(worth_trying_again(dict, array))
-                        {
+                    {
                         tried_again = TRUE;
                         goto TRY_AGAIN;
-                        }
+                    }
 
                 /* not in any dictionary, with or without quote: move there! */
                 /* chknlr() sets the state to be picked up by a draw_screen() */
@@ -2215,12 +2215,12 @@ get_next_misspell(
                 chknlr(sch_pos_stt.col, sch_pos_stt.row);
                 return(TRUE);
                 }
-            }
+        }
 
         /* go to next word if available, else reload from another cell */
         if(!next_word_on_line())
             sch_stt_offset = -1;
-        }
+    }
 }
 
 #define C_CHANGE 0
@@ -2273,10 +2273,10 @@ CheckDocument_fn(void)
     escape_enable(); do_disable = TRUE;
 
     while(!been_error)
-        {
+    {
         /* find next mis-spelled word */
         for(; get_next_misspell(array) && !been_error && !ctrlflag; ++mis_spells)
-            {
+        {
             actind_end();
 
             escape_disable(); do_disable = FALSE;
@@ -2307,56 +2307,56 @@ CheckDocument_fn(void)
             clearkeyboardbuffer();
 
             if(!dialog_box_start()  ||  !dialog_box(D_CHECK))
-                {
+            {
                 been_error = TRUE;
                 break;
-                }
+            }
 
             dialog_box_end();
 
             /* add to user dictionary? */
             if(d_check[C_ADD].option == 'Y')
-                {
+            {
                 S32 dict = dict_number(d_check[C_ADD].textfield, TRUE);
 
                 if(dict >= 0)
-                    {
+                {
                     if((res = spell_addword(dict,
                                             d_check[C_CHANGE].textfield))
                                             < 0)
                         dict = res;
                     else if(res > 0)
                         ++words_added;
-                    }
+                }
 
                 if(dict < 0)
-                    {
+                {
                     reperr_module(create_error(ERR_SPELL), dict);
                     break;
-                    }
                 }
+            }
 
             /* browse? */
             if(d_check[C_BROWSE].option == 'Y')
-                {
+            {
                 res = browse(master_dictionary, d_check[C_CHANGE].textfield);
 
                 trace_1(TRACE_APP_PD4, "word_to_insert = _%s_", word_to_insert);
 
                 if(res < 0)
-                    {
+                {
                     reperr_module(create_error(ERR_SPELL), res);
                     break;
-                    }
+                }
                 else if(*word_to_insert)
-                    {
+                {
                     mystr_set(&d_check[C_CHANGE].textfield, word_to_insert);
                     d_check[C_CHANGE].option = 'Y';
-                    }
+                }
 
                 d_check[C_BROWSE].option = 'N';
                 goto DOG_BOX;
-                }
+            }
 
             /* redraw the row sometime */
             word_to_invert = NULL;
@@ -2364,7 +2364,7 @@ CheckDocument_fn(void)
 
             /* replace word? */
             if(d_check[C_CHANGE].option == 'Y')
-                {
+            {
                 sch_pos_end.col = sch_pos_stt.col;
                 sch_pos_end.row = sch_pos_stt.row;
                 sch_end_offset  = sch_stt_offset + strlen((char *) array);
@@ -2377,29 +2377,29 @@ CheckDocument_fn(void)
                 res = do_replace((uchar *) d_check[C_CHANGE].textfield, TRUE);
 
                 if(!res)
-                    {
+                {
                     bleep();
                     break;
-                    }
+                }
 
                 if(!mergebuf_nocheck())
                     break;
-                }
+            }
             /* if all set to no, add to temporary spell list */
             else if((d_check[C_BROWSE].option == 'N')  &&  (d_check[C_ADD].option == 'N'))
-                {
+            {
                 if(status_fail(res = add_to_list(&first_spell, 0, array)))
-                    {
+                {
                     reperr_null(res);
                     break;
-                    }
                 }
+            }
 
             escape_enable(); do_disable = TRUE;
-            } /*for()*/
+        } /*for()*/
 
         break;
-        }
+    }
 
     if(do_disable)
         escape_disable();
@@ -2409,7 +2409,7 @@ CheckDocument_fn(void)
     word_to_invert = NULL;
 
     if(is_current_document())
-        {
+    {
         /* restore old position - don't do mergebuf */
         slot_in_buffer = buffer_altered = FALSE;
 
@@ -2422,10 +2422,10 @@ CheckDocument_fn(void)
 
         draw_screen();
         draw_caret();
-        }
+    }
 
     if(!in_execfile)
-        {
+    {
         /* put up message box saying what happened */
         (void) xsnprintf(array1, elemof32(array1),
                 (mis_spells == 1)
@@ -2442,12 +2442,12 @@ CheckDocument_fn(void)
         d_check_mess[1].textfield = array2;
 
         if(dialog_box_start())
-            {
+        {
             (void) dialog_box(D_CHECK_MESS);
 
             dialog_box_end();
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -2472,11 +2472,11 @@ get_word_from_file(
     char *ptr;
 
     for(;;)
-        {
+    {
         ptr = array;
 
         for(;;)
-            {
+        {
             c = pd_file_getc(in);
 
             trace_1(TRACE_APP_PD4, "get_word_from_file: looking for good first char - trying %2.2X", c);
@@ -2486,14 +2486,14 @@ get_word_from_file(
 
             if(spell_valid_1(dict, c))
                 break;
-            }
+        }
 
         trace_2(TRACE_APP_PD4, "get_word_from_file: got good first char %2.2X, %c", c, c);
 
         /* c is first letter of word. Ignore overlong words */
 
         for(;;)
-            {
+        {
             if(ptr - array <= MAX_WORD)
                 *ptr++ = (char) c;
 
@@ -2502,22 +2502,22 @@ get_word_from_file(
             trace_1(TRACE_APP_PD4, "get_word_from_file: looking for more valid chars - trying %2.2X", c);
 
             if((c == EOF)  ||  !spell_iswordc(dict, c))
-                {
+            {
                 if(ptr - array > MAX_WORD)
-                    {
+                {
                     if(c == EOF)
                         return(FALSE);
                     else
                         break;
-                    }
+                }
 
                 *ptr = '\0';
 
                 trace_1(TRACE_APP_PD4, "get_word_from_file: got word '%s'", array);
                 return(TRUE);
-                }
             }
         }
+    }
 }
 
 static FILE_HANDLE mergedict_in   = NULL;
@@ -2569,22 +2569,22 @@ mergedict_eventhandler(
     trace_2(TRACE_APP_PD4, "mergedict_eventhandler got button %d: mergedict_in = " PTR_XTFMT, f, report_ptr_cast(mergedict_in));
 
     switch(f)
-        {
-        case mergedict_Continue:
-            /* only resume if paused and not ended */
-            if(!mdsp->stopped)
-                mdsp->wants_nulls = TRUE;
-            break;
+    {
+    case mergedict_Continue:
+        /* only resume if paused and not ended */
+        if(!mdsp->stopped)
+            mdsp->wants_nulls = TRUE;
+        break;
 
-        case mergedict_Pause:
-            /* stop null events to mergedict null processor */
-            mdsp->wants_nulls = FALSE;
-            break;
+    case mergedict_Pause:
+        /* stop null events to mergedict null processor */
+        mdsp->wants_nulls = FALSE;
+        break;
 
-        default:
-            mergedict_end(mdsp);
-            break;
-            }
+    default:
+        mergedict_end(mdsp);
+        break;
+        }
 }
 
 /* mergedict null processor */
@@ -2596,7 +2596,7 @@ mergedict_null_core(
     trace_0(TRACE_APP_PD4, "mergedict_null()");
 
     if(!get_word_from_file(mdsp->dict, mergedict_in, mergedict_array))
-        {
+    {
         complete_box(mdsp, Merge_STR);
 
         mergedict_close(mdsp);
@@ -2604,17 +2604,17 @@ mergedict_null_core(
         /* force punter to do explicit end */
         mdsp->wants_nulls = FALSE;
         return;
-        }
+    }
 
     mdsp->res = spell_addword(mdsp->dict, mergedict_array);
 
     if(mdsp->res != 0)
-        {
+    {
         add_word_to_box(mdsp, mergedict_array);
 
         if(mdsp->res < 0)
             add_error_to_box(mdsp);
-        }
+    }
 }
 
 null_event_proto(static, mergedict_null_handler)
@@ -2622,20 +2622,20 @@ null_event_proto(static, mergedict_null_handler)
     merge_dump_strukt * mdsp = (merge_dump_strukt *) p_null_event_block->client_handle;
 
     switch(p_null_event_block->rc)
-        {
-        case NULL_QUERY:
-            return(mdsp->wants_nulls
-                            ? NULL_EVENTS_REQUIRED
-                            : NULL_EVENTS_OFF);
+    {
+    case NULL_QUERY:
+        return(mdsp->wants_nulls
+                        ? NULL_EVENTS_REQUIRED
+                        : NULL_EVENTS_OFF);
 
-        case NULL_EVENT:
-            mergedict_null_core(mdsp);
+    case NULL_EVENT:
+        mergedict_null_core(mdsp);
 
-            return(NULL_EVENT_COMPLETED);
+        return(NULL_EVENT_COMPLETED);
 
-        default:
-            return(NULL_EVENT_UNKNOWN);
-        }
+    default:
+        return(NULL_EVENT_UNKNOWN);
+    }
 }
 
 static void
@@ -2665,10 +2665,10 @@ MergeFileWithDict_fn(void)
     merge_dump_strukt *mdsp = &mergedict_mds;
 
     if(mdsp->d)
-        {
+    {
         reperr_null(create_error(ERR_ALREADYMERGING));
         return;
-        }
+    }
 
     if(!dialog_box_start())
         return;
@@ -2679,35 +2679,35 @@ MergeFileWithDict_fn(void)
         return;
 
     while(dialog_box(D_USER_MERGE))
-        {
+    {
         /* open file */
         name = d_user_merge[0].textfield;
 
         if(str_isblank(name))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!file_find_on_path_or_relative(buffer, elemof32(buffer), name, currentfilename))
-            {
+        {
             reperr(create_error(ERR_NOTFOUND), name);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         mergedict_in = pd_file_open(buffer, file_open_read);
 
         if(!mergedict_in)
-            {
+        {
             reperr(create_error(ERR_CANNOTOPEN), name);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         dialog_box_end();
 
@@ -2715,15 +2715,15 @@ MergeFileWithDict_fn(void)
         mdsp->dict = dict_number(d_user_merge[1].textfield, TRUE);
 
         if(mdsp->dict >= 0)
-            {
+        {
             /* read words from file adding to user dictionary */
 
             if(init_box(mdsp, "merging", Merging_STR, TRUE))
-                {
+            {
                 mergedict_start(mdsp);
                 return;
-                }
             }
+        }
         else
             mdsp->res = mdsp->dict;
 
@@ -2731,7 +2731,7 @@ MergeFileWithDict_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -2757,7 +2757,7 @@ dumpdict_close(
     mdsp->stopped = TRUE;
 
     if(dumpdict_out)
-        {
+    {
         been_error = been_error || dumpdict_file_error;
 
         if(!been_error)
@@ -2770,7 +2770,7 @@ dumpdict_close(
         if(!been_error)
             /* suggest as the file to merge with */
             (void) mystr_set(&d_user_merge[0].textfield, d_user_dump[1].textfield);
-        }
+    }
 }
 
 /* dumpdict complete - tidy up */
@@ -2810,22 +2810,22 @@ dumpdict_eventhandler(
     trace_2(TRACE_APP_PD4, "dumpdict_eventhandler got button %d: dumpdict_out = " PTR_XTFMT, f, report_ptr_cast(dumpdict_out));
 
     switch(f)
-        {
-        case dumpdict_Continue:
-            /* only resume if paused and not ended */
-            if(!mdsp->stopped)
-                mdsp->wants_nulls = TRUE;
-            break;
+    {
+    case dumpdict_Continue:
+        /* only resume if paused and not ended */
+        if(!mdsp->stopped)
+            mdsp->wants_nulls = TRUE;
+        break;
 
-        case dumpdict_Pause:
-            /* stop null events to dumpdict null processor */
-            mdsp->wants_nulls = FALSE;
-            break;
+    case dumpdict_Pause:
+        /* stop null events to dumpdict null processor */
+        mdsp->wants_nulls = FALSE;
+        break;
 
-        default:
-            dumpdict_end(mdsp);
-            break;
-        }
+    default:
+        dumpdict_end(mdsp);
+        break;
+    }
 }
 
 /* dumpdict null processor */
@@ -2850,7 +2850,7 @@ dumpdict_null_core(
         was_ctrlflag = escape_disable_nowinge();
 
         if(!mdsp->res)
-            {
+        {
             complete_box(&dumpdict_mds, Dump_STR);
 
             dumpdict_close(mdsp);
@@ -2858,24 +2858,24 @@ dumpdict_null_core(
             /* force punter to do explicit end */
             mdsp->wants_nulls = FALSE;
             return;
-            }
+        }
 
         if(was_ctrlflag  &&  (mdsp->res > 0))
             mdsp->res = create_error(ERR_ESCAPE);
 
         if(mdsp->res < 0)
-            {
+        {
             add_error_to_box(mdsp);
             return;
-            }
+        }
 
         /* write to file */
         if( !away_string(dumpdict_template, dumpdict_out)  ||
             !away_eol(dumpdict_out)  )
-            {
+        {
             dumpdict_file_error = TRUE;
             win_send_close(dbox_syshandle(mdsp->d));
-            }
+        }
 
         if(*dumpdict_wild_string)
             break;
@@ -2889,20 +2889,20 @@ null_event_proto(static, dumpdict_null_handler)
     merge_dump_strukt * mdsp = (merge_dump_strukt *) p_null_event_block->client_handle;
 
     switch(p_null_event_block->rc)
-        {
-        case NULL_QUERY:
-            return(mdsp->wants_nulls
-                            ? NULL_EVENTS_REQUIRED
-                            : NULL_EVENTS_OFF);
+    {
+    case NULL_QUERY:
+        return(mdsp->wants_nulls
+                        ? NULL_EVENTS_REQUIRED
+                        : NULL_EVENTS_OFF);
 
-        case NULL_EVENT:
-            dumpdict_null_core(mdsp);
+    case NULL_EVENT:
+        dumpdict_null_core(mdsp);
 
-            return(NULL_EVENT_COMPLETED);
+        return(NULL_EVENT_COMPLETED);
 
-        default:
-            return(NULL_EVENT_UNKNOWN);
-        }
+    default:
+        return(NULL_EVENT_UNKNOWN);
+    }
 }
 
 static void
@@ -2932,10 +2932,10 @@ DumpDictionary_fn(void)
     merge_dump_strukt *mdsp = &dumpdict_mds;
 
     if(mdsp->d)
-        {
+    {
         reperr_null(create_error(ERR_ALREADYDUMPING));
         return;
-        }
+    }
 
     if(!dialog_box_start())
         return;
@@ -2961,18 +2961,18 @@ DumpDictionary_fn(void)
                     : compile_wild_string(mdsp->dict, dumpdict_wild_string, d_user_dump[0].textfield);
 
     if(mdsp->res < 0)
-        {
+    {
         reperr_module(create_error(ERR_SPELL), mdsp->res);
         return;
-        }
+    }
 
     name = d_user_dump[1].textfield;
 
     if(str_isblank(name))
-        {
+    {
         reperr_null(create_error(ERR_BAD_NAME));
         return;
-        }
+    }
 
     (void) file_add_prefix_to_name(buffer, elemof32(buffer), name, currentfilename);
 
@@ -2982,21 +2982,21 @@ DumpDictionary_fn(void)
     dumpdict_out = pd_file_open(buffer, file_open_write);
 
     if(!dumpdict_out)
-        {
+    {
         reperr(create_error(ERR_CANNOTOPEN), name);
         return;
-        }
+    }
 
     if(mdsp->dict >= 0)
-        {
+    {
         *dumpdict_template = '\0';
 
         if(init_box(mdsp, "merging", Dumping_STR, TRUE))
-            {
+        {
             dumpdict_start(mdsp);
             return;
-            }
         }
+    }
     else
         mdsp->res = mdsp->dict;
 
@@ -3024,27 +3024,27 @@ LockDictionary_fn(void)
         return;
 
     while(dialog_box(D_USER_LOCK))
-        {
+    {
         res = dict = open_appropriate_dict(&d_user_lock[0]);
 
         if(res >= 0)
-            {
+        {
             res = spell_load(dict);
             if(res < 0)
                 spell_unlock(dict);
-            }
+        }
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -3070,23 +3070,23 @@ UnlockDictionary_fn(void)
         return;
 
     while(dialog_box(D_USER_UNLOCK))
-        {
+    {
         res = open_appropriate_dict(&d_user_unlock[0]);
 
         if(res >= 0)
             res = spell_unlock(res);
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -3113,39 +3113,39 @@ DictionaryOptions_fn(void)
         return;
 
     while(dialog_box(D_USER_OPTIONS))
-        {
+    {
         name = d_user_options[0].textfield;
 
         if(str_isblank(name))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
             (void) mystr_set(&d_user_options[0].textfield, USERDICT_STR);
             continue;
-            }
+        }
 
         res = dict_number(name, TRUE);
 
         if(res >= 0)
-            {
+        {
             trace_2(TRACE_APP_PD4, "spell_setoptions(%d, %8x)", res, (d_user_options[0].option == 'Y') ? DICT_READONLY : 0);
             res = spell_setoptions(res,
                         /* OR */   (d_user_options[0].option == 'Y') ? DICT_READONLY : 0,
                         /* AND */  ~DICT_READONLY);
-            }
+        }
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -3167,18 +3167,18 @@ DisplayOpenDicts_fn(void)
     dbox_field f;
 
     if(init_box(mdsp, "merging", Opened_user_dictionaries_STR, FALSE))
-        {
+    {
         S32 i = 1; /* put one line of space at top */
         PC_LIST lptr = first_in_list(&first_user_dict);
 
         do  {
             if(lptr)
-                {
+            {
                 strcpy(mdsp->words[i], file_leafname((char *) (lptr->value)));
                 trace_1(TRACE_APP_PD4, "got user dict %s", mdsp->words[i]);
                 lptr = next_in_list(&first_user_dict);
-                }
             }
+        }
         while(++i < BROWSE_DEPTH);
 
         fill_box(mdsp->words, NULL, mdsp->d);
@@ -3190,7 +3190,7 @@ DisplayOpenDicts_fn(void)
             ;
 
         end_box(mdsp);
-        }
+    }
 }
 
 /******************************************************************************
@@ -3214,17 +3214,17 @@ PackUserDict_fn(void)
         return;
 
     while(dialog_box(D_USER_PACK))
-        {
+    {
         name0 = d_user_pack[0].textfield;
         name1 = d_user_pack[1].textfield;
 
         if(str_isblank(name0)  ||  str_isblank(name1))
-            {
+        {
             reperr_null(create_error(ERR_BAD_NAME));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         /* a better way would be to have a 'read pathname of dict' fn
          * for the case that dict0 is already open as we'd like to create
@@ -3234,23 +3234,23 @@ PackUserDict_fn(void)
         close_user_dictionaries(FALSE);
 
         if(!add_path_using_dir(array0, elemof32(array0), name0, DICTS_SUBDIR_STR))
-            {
+        {
             reperr(create_error(ERR_NOTFOUND), name0);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         name0 = array0;
 
         if(!file_is_rooted(name1))
-            {
+        {
             /* use pathname of name0 for name1 if not rooted */
             leaf = file_leafname(name0);
             memcpy32(array1, name0, leaf - name0);
             strcpy(array1 + (leaf - name0), name1);
             name1 = array1;
-            }
+        }
 
         /* create second dictionary based on first dictionary */
         res = spell_createdict(name1, name0);
@@ -3267,12 +3267,12 @@ PackUserDict_fn(void)
             res = dict1;
 
         if(res < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res);
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         if(res >= 0)
             res = spell_pack(dict0, dict1);
@@ -3283,20 +3283,20 @@ PackUserDict_fn(void)
             res1 = close_dict(dict1);
 
         if(res < 0)
-            {
+        {
             been_error = FALSE;
             res1 = res;
-            }
+        }
 
         if(res1 < 0)
-            {
+        {
             reperr_module(create_error(ERR_SPELL), res1);
             break;
-            }
+        }
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }

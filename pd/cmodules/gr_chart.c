@@ -150,10 +150,10 @@ gr_chart_add_labels(
     cp = gr_chart_cp_from_ch(*chp);
 
     if(cp->core.category_datasource.dsh != GR_DATASOURCE_HANDLE_NONE)
-        {
+    {
         myassert0x(0, "gr_chart_add_labels: chart already has labels");
         *p_int_handle_out = GR_DATASOURCE_HANDLE_NONE;
-        }
+    }
     else
         (void) gr_datasource_insert(cp, proc, ext_handle,
                                     p_int_handle_out, &gr_datasource_handle_start);
@@ -191,10 +191,10 @@ gr_chart_cp_from_ch(
     P_GR_CHART cp = NULL;
 
     if(ch)
-        {
+    {
         cp = collect_goto_item(GR_CHART, &gr_charts.lbr, key);
         myassert1x(cp != NULL, "gr_chart_cp_from_ch: failed to find chart handle &%p", ch);
-        }
+    }
 
     return(cp);
 }
@@ -232,48 +232,48 @@ gr_chart_damage(
     gr_chart_dsp_from_dsh(cp, &dsp, *p_int_handle);
 
     if(dsp)
-        {
+    {
         * (int *) &dsp->valid = 0;
 
         if(dsp == &cp->core.category_datasource)
-            {
+        {
             for(axes_idx = 0; axes_idx < cp->axes_idx_max; ++axes_idx)
                 for(series_idx = cp->axes[axes_idx].series.stt_idx;
                     series_idx < cp->axes[axes_idx].series.end_idx;
                     series_idx++)
-                    {
+                {
                     /* all series in chart depend on this! */
                     serp = getserp(cp, series_idx);
 
                     * (int *) &serp->valid = 0;
-                    }
-            }
-        else
-            {
-            switch(dsp->id.name)
-                {
-                case GR_CHART_OBJNAME_TEXT:
-                    /* internal reformat of text object needed */
-                    break;
-
-                case GR_CHART_OBJNAME_SERIES:
-                    {
-                    series_idx = gr_series_idx_from_external(cp, dsp->id.no);
-
-                    serp = getserp(cp, series_idx);
-
-                    * (int *) &serp->valid = 0;
-                    }
-                    break;
-
-                default:
-                    assert(0);
-                case GR_CHART_OBJNAME_ANON:
-                    /* SKS after 4.12 30mar92 - note that damages can come through to a datasource even when not yet assigned to a series */
-                    break;
                 }
+        }
+        else
+        {
+            switch(dsp->id.name)
+            {
+            case GR_CHART_OBJNAME_TEXT:
+                /* internal reformat of text object needed */
+                break;
+
+            case GR_CHART_OBJNAME_SERIES:
+                {
+                series_idx = gr_series_idx_from_external(cp, dsp->id.no);
+
+                serp = getserp(cp, series_idx);
+
+                * (int *) &serp->valid = 0;
+                }
+                break;
+
+            default:
+                assert(0);
+            case GR_CHART_OBJNAME_ANON:
+                /* SKS after 4.12 30mar92 - note that damages can come through to a datasource even when not yet assigned to a series */
+                break;
             }
         }
+    }
 }
 
 extern S32
@@ -318,11 +318,11 @@ gr_chart_diagram_ensure(
 
     /* clear down current chart and selection, redrawing editor window sometime */
     if(cep)
-        {
+    {
         gr_chartedit_selection_kill_repr(cep);
 
         gr_chartedit_diagram_update_later(cep);
-        }
+    }
 
     gr_diag_diagram_dispose(&cp->core.p_gr_diag);
 
@@ -335,7 +335,7 @@ gr_chart_diagram_ensure(
                 gr_chart_save_chart_winge(GR_CHART_MSG_CHARTSAVE_ERROR, res);
 
     if(cep)
-        {
+    {
         gr_chartedit_set_scales(cep);
 
         if(cp->core.p_gr_diag)
@@ -345,7 +345,7 @@ gr_chart_diagram_ensure(
             /* test here too as it's called from callback procs of dialogs too! */
             if(!cep->selection.temp)
                 gr_chartedit_selection_make_repr(cep);
-        }
+    }
 }
 
 /******************************************************************************
@@ -389,7 +389,7 @@ gr_chart_dispose_noncore(
     gr_chart_list_delete(cp, GR_LIST_CHART_TEXT_TEXTSTYLE);
 
     for(series_idx = 0; series_idx < cp->series.n_defined; ++series_idx)
-        {
+    {
         /* delete series pictures */
         serp = getserp(cp, series_idx);
         gr_fillstyle_pict_delete(&serp->style.pdrop_fill);
@@ -409,7 +409,7 @@ gr_chart_dispose_noncore(
         gr_point_list_delete(cp, series_idx, GR_LIST_POINT_PIECHDISPLSTYLE);
         gr_point_list_delete(cp, series_idx, GR_LIST_POINT_PIECHLABELSTYLE);
         gr_point_list_delete(cp, series_idx, GR_LIST_POINT_SCATCHSTYLE);
-        }
+    }
 
     al_ptr_dispose(P_P_ANY_PEDANTIC(&cp->series.mh));
 
@@ -558,10 +558,10 @@ gr_chart_layout_default = /* only approx. A8 */
     (GR_COORD) (4.00 * GR_PIXITS_PER_INCH), /* w */
     (GR_COORD) (3.00 * GR_PIXITS_PER_INCH), /* h */
 
-    (GR_PIXITS_PER_INCH * 4) / 10, /* LM */
-    (GR_PIXITS_PER_INCH * 3) / 10, /* BM */
-    (GR_PIXITS_PER_INCH * 4) / 10, /* RM */
-    (GR_PIXITS_PER_INCH * 3) / 10, /* TM */
+    { (GR_PIXITS_PER_INCH * 4) / 10, /* LM */
+      (GR_PIXITS_PER_INCH * 3) / 10, /* BM */
+      (GR_PIXITS_PER_INCH * 4) / 10, /* RM */
+      (GR_PIXITS_PER_INCH * 3) / 10  /* TM */ }
 
     /* dependent fields filled in by user of this structure */
 };
@@ -636,7 +636,7 @@ gr_chart_new(
     cp->axes[1].charttype = GR_CHARTTYPE_LINE;
 
     for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
-        {
+    {
         P_GR_AXES p_axes = &cp->axes[axes_idx];
 
         p_axes->style.barch.slot_width_percentage     = 100.0; /* fill slots widthways */
@@ -654,7 +654,7 @@ gr_chart_new(
         p_axes->style.scatch.bits.manual              = 1;
 
         for(axis_idx = 0; axis_idx < 3; ++axis_idx)
-            {
+        {
             P_GR_AXIS p_axis = &p_axes->axis[axis_idx];
 
             p_axis->bits.incl_zero = 1; /* this is RJM's fault */
@@ -667,8 +667,8 @@ gr_chart_new(
 
             p_axis->minor.punter    =  0.2;
             p_axis->minor.bits.tick = GR_AXIS_TICK_POSITION_NONE;
-            }
         }
+    }
 
     cp->axes[1].axis[X_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_TOP;
     cp->axes[1].axis[Y_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_RIGHT;
@@ -753,49 +753,49 @@ gr_chart_order_query(
         return(1);
     else
         switch(dsp->id.name)
+        {
+        case GR_CHART_OBJNAME_TEXT:
             {
-            case GR_CHART_OBJNAME_TEXT:
-                {
-                /* SKS after 4.12 27mar92 - needed for live text reload mechanism */
-                LIST_ITEMNO key;
-                P_GR_TEXT t;
+            /* SKS after 4.12 27mar92 - needed for live text reload mechanism */
+            LIST_ITEMNO key;
+            P_GR_TEXT t;
 
-                for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
-                    t;
-                    t = collect_next( GR_TEXT, &cp->text.lbr, &key))
-                    {
-                    P_GR_TEXT_GUTS gutsp;
+            for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
+                t;
+                t = collect_next( GR_TEXT, &cp->text.lbr, &key))
+            {
+                P_GR_TEXT_GUTS gutsp;
 
-                    if(!t->bits.live_text)
-                        continue;
+                if(!t->bits.live_text)
+                    continue;
 
-                    gutsp.mp = (t + 1);
-                    if(dsp == gutsp.dsp) /* dsp_from_dsh yielded this ptr */
-                        return(key);
-                    }
-
-                assert(0);
-                return(0);
-                }
-
-            default:
-                assert(0);
-
-            case GR_CHART_OBJNAME_SERIES:
-                {
-                GR_SERIES_IDX series_idx;
-                P_GR_SERIES   serp;
-
-                series_idx = gr_series_idx_from_external(cp, dsp->id.no);
-
-                serp = getserp(cp, series_idx);
-
-                assert(serp->datasources.dsh[dsp->id.subno] == dsh);
-
-                /* invert some sort of ordered key to pass back */
-                return((dsp->id.no + 1) * 0x100 + dsp->id.subno);
-                }
+                gutsp.mp = (t + 1);
+                if(dsp == gutsp.dsp) /* dsp_from_dsh yielded this ptr */
+                    return(key);
             }
+
+            assert(0);
+            return(0);
+            }
+
+        default:
+            assert(0);
+
+        case GR_CHART_OBJNAME_SERIES:
+            {
+            GR_SERIES_IDX series_idx;
+            P_GR_SERIES   serp;
+
+            series_idx = gr_series_idx_from_external(cp, dsp->id.no);
+
+            serp = getserp(cp, series_idx);
+
+            assert(serp->datasources.dsh[dsp->id.subno] == dsh);
+
+            /* invert some sort of ordered key to pass back */
+            return((dsp->id.no + 1) * 0x100 + dsp->id.subno);
+            }
+        }
 }
 
 extern S32
@@ -812,13 +812,13 @@ gr_chart_query_exists(
         cp = collect_next( GR_CHART, &gr_charts.lbr, &key))
         if(cp->core.currentfilename)
             if(0 == _stricmp(cp->core.currentfilename, szName))
-                {
+            {
                 if(chp)
                     *chp = cp->core.ch;
                 if(p_ext_handle)
                     *p_ext_handle = cp->core.ext_handle;
                 return(1);
-                }
+            }
 
     return(0);
 }
@@ -837,20 +837,20 @@ gr_chart_query_labelling(
     P_GR_CHART cp;
 
     if(chp)
-        {
+    {
         cp = gr_chart_cp_from_ch(*chp);
 
         return(cp->axes[0].charttype != GR_CHARTTYPE_SCAT);
-        }
+    }
 
     /* return preferred state if no chart to enquire about */
 
     if(gr_chart_preferred_ch)
-        {
+    {
         cp = gr_chart_cp_from_ch(gr_chart_preferred_ch);
 
         return(cp->axes[0].charttype != GR_CHARTTYPE_SCAT);
-        }
+    }
 
     /* hardwired state is bar chart so, yes, we will be labelling */
 
@@ -870,11 +870,11 @@ gr_chart_query_labels(
     P_GR_CHART cp;
 
     if(chp)
-        {
+    {
         cp = gr_chart_cp_from_ch(*chp);
 
         return(cp->core.category_datasource.dsh != GR_DATASOURCE_HANDLE_NONE);
-        }
+    }
 
     return(0);
 }
@@ -970,13 +970,13 @@ gr_datasource_insert(
     *p_int_handle_out = GR_DATASOURCE_HANDLE_NONE;
 
     if(*p_int_handle_after == GR_DATASOURCE_HANDLE_START)
-        {
+    {
         /* replace the category data source */
         dsp = &cp->core.category_datasource;
         id  = gr_chart_objid_chart;
-        }
+    }
     else if(*p_int_handle_after == GR_DATASOURCE_HANDLE_TEXTS)
-        {
+    {
         /* create new text object */
         LIST_ITEMNO   key;
         P_GR_TEXT      t;
@@ -997,9 +997,9 @@ gr_datasource_insert(
         dsp = gutsp.dsp;
 
         gr_chart_objid_from_text(key, &id);
-        }
+    }
     else
-        {
+    {
         if(*p_int_handle_after == GR_DATASOURCE_HANDLE_NONE)
             /* insert AT the end */
             before_ds = cp->core.datasources.n;
@@ -1007,7 +1007,7 @@ gr_datasource_insert(
             /* if inserting after (non null) category data source then insert BEFORE first real data source */
             before_ds = 0;
         else
-            {
+        {
             /* find the entry to insert BEFORE */
             gr_chart_dsp_from_dsh(cp, &dsp, *p_int_handle_after);
             if(!dsp)
@@ -1015,10 +1015,10 @@ gr_datasource_insert(
 
             i_dsp = cp->core.datasources.mh;
             before_ds = (dsp - i_dsp) + 1;
-            }
+        }
 
         if(cp->core.datasources.n == cp->core.datasources.n_alloc)
-            {
+        {
             const U32 n_alloc = cp->core.datasources.n_alloc + GR_DATASOURCES_DESC_INCR;
             STATUS status;
 
@@ -1027,7 +1027,7 @@ gr_datasource_insert(
 
             cp->core.datasources.mh      = mh;
             cp->core.datasources.n_alloc = n_alloc;
-            }
+        }
 
         dsp = cp->core.datasources.mh;
 
@@ -1045,7 +1045,7 @@ gr_datasource_insert(
 
         /* SKS after 4.12 30mar92 - not yet allocated to series */
         id = gr_chart_objid_anon;
-        }
+    }
 
     /* no prior inheritance; clear out descriptor */
     zero_struct_ptr(dsp);
@@ -1090,99 +1090,99 @@ gr_chart_subtract_datasource_using_dsh(
         cp->core.category_datasource.dsh = GR_DATASOURCE_HANDLE_NONE;
     else
         switch(dsp->id.name)
+        {
+        default:
+            assert(0);
+
+        case GR_CHART_OBJNAME_ANON:
+            /* unused datasource */
+            break;
+
+        case GR_CHART_OBJNAME_TEXT:
+            /* prevent recall during deletion */
+            dsp->dsh = GR_DATASOURCE_HANDLE_NONE;
+
+            gr_text_delete(cp, dsp->id.no);
+            break;
+
+        case GR_CHART_OBJNAME_SERIES:
             {
-            default:
-                assert(0);
+            GR_CHART_OBJID   id;
+            GR_SERIES_IDX     series_idx;
+            P_GR_SERIES       serp;
+            GR_DATASOURCE_NO ds;
 
-            case GR_CHART_OBJNAME_ANON:
-                /* unused datasource */
-                break;
+            dsp->dsh = GR_DATASOURCE_HANDLE_NONE;
 
-            case GR_CHART_OBJNAME_TEXT:
-                /* prevent recall during deletion */
-                dsp->dsh = GR_DATASOURCE_HANDLE_NONE;
+            /* kill client dep */
+            gr_travel_dsp(cp, dsp, 0, NULL);
 
-                gr_text_delete(cp, dsp->id.no);
-                break;
+            cp->bits.realloc_series = 1;
 
-            case GR_CHART_OBJNAME_SERIES:
-                {
-                GR_CHART_OBJID   id;
-                GR_SERIES_IDX     series_idx;
-                P_GR_SERIES       serp;
-                GR_DATASOURCE_NO ds;
+            id = dsp->id; /* rembember what series and ds we were used by */
 
-                dsp->dsh = GR_DATASOURCE_HANDLE_NONE;
+            --cp->core.datasources.n;
 
-                /* kill client dep */
-                gr_travel_dsp(cp, dsp, 0, NULL);
+            i_dsp = cp->core.datasources.mh;
 
-                cp->bits.realloc_series = 1;
+            /* compact down datasource descriptor array */
+            memmove32(dsp, /* DOWN */
+                      dsp + 1,
+                      sizeof32(*dsp) * (cp->core.datasources.n - (dsp - i_dsp)) );
+                                             /* max poss. # */  /* # preceding */
 
-                id = dsp->id; /* rembember what series and ds we were used by */
+            /* free up some space if worthwhile */
+            if( !cp->core.datasources.n  ||
+                (cp->core.datasources.n + GR_DATASOURCES_DESC_DECR <= cp->core.datasources.n_alloc))
+            {
+                STATUS status;
+                P_ANY mh = _al_ptr_realloc(cp->core.datasources.mh, cp->core.datasources.n * sizeof32(GR_DATASOURCE), &status);
 
-                --cp->core.datasources.n;
+                /* yes, we can reallocate to zero elements! */
+                assert(mh || !cp->core.datasources.n);
+                status_assert(status);
 
-                i_dsp = cp->core.datasources.mh;
-
-                /* compact down datasource descriptor array */
-                memmove32(dsp, /* DOWN */
-                          dsp + 1,
-                          sizeof32(*dsp) * (cp->core.datasources.n - (dsp - i_dsp)) );
-                                                 /* max poss. # */  /* # preceding */
-
-                /* free up some space if worthwhile */
-                if( !cp->core.datasources.n  ||
-                    (cp->core.datasources.n + GR_DATASOURCES_DESC_DECR <= cp->core.datasources.n_alloc))
-                    {
-                    STATUS status;
-                    P_ANY mh = _al_ptr_realloc(cp->core.datasources.mh, cp->core.datasources.n * sizeof32(GR_DATASOURCE), &status);
-
-                    /* yes, we can reallocate to zero elements! */
-                    assert(mh || !cp->core.datasources.n);
-                    status_assert(status);
-
-                    cp->core.datasources.mh      = mh;
-                    cp->core.datasources.n_alloc = mh ? cp->core.datasources.n : 0;
-                    }
-
-                /* remove from use in a series */
-                series_idx = gr_series_idx_from_external(cp, id.no);
-
-                serp = getserp(cp, series_idx);
-
-                * (int *) &serp->valid = 0;
-
-                assert(serp->datasources.dsh[id.subno] == dsh);
-                serp->datasources.dsh[id.subno] = GR_DATASOURCE_HANDLE_NONE;
-
-                /* loop over datasources in this series and see if it needs removing */
-                for(ds = 0; ds < GR_SERIES_MAX_DATASOURCES; ++ds)
-                    if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
-                        break;
-
-                if(ds == GR_SERIES_MAX_DATASOURCES)
-                    {
-                    P_GR_AXES p_axes;
-
-                    /* decrement number of series on these axes and swap
-                     * deleted series descriptor out to end of this set
-                     * if not already there
-                    */
-                    p_axes = gr_axesp_from_series_idx(cp, series_idx);
-
-                    if(series_idx != --p_axes->series.end_idx)
-                        {
-                        P_GR_SERIES last_serp;
-
-                        last_serp = getserp(cp, p_axes->series.end_idx);
-
-                        memswap32(serp, last_serp, sizeof32(*serp));
-                        }
-                    }
-                }
-                break;
+                cp->core.datasources.mh      = mh;
+                cp->core.datasources.n_alloc = mh ? cp->core.datasources.n : 0;
             }
+
+            /* remove from use in a series */
+            series_idx = gr_series_idx_from_external(cp, id.no);
+
+            serp = getserp(cp, series_idx);
+
+            * (int *) &serp->valid = 0;
+
+            assert(serp->datasources.dsh[id.subno] == dsh);
+            serp->datasources.dsh[id.subno] = GR_DATASOURCE_HANDLE_NONE;
+
+            /* loop over datasources in this series and see if it needs removing */
+            for(ds = 0; ds < GR_SERIES_MAX_DATASOURCES; ++ds)
+                if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
+                    break;
+
+            if(ds == GR_SERIES_MAX_DATASOURCES)
+            {
+                P_GR_AXES p_axes;
+
+                /* decrement number of series on these axes and swap
+                 * deleted series descriptor out to end of this set
+                 * if not already there
+                */
+                p_axes = gr_axesp_from_series_idx(cp, series_idx);
+
+                if(series_idx != --p_axes->series.end_idx)
+                {
+                    P_GR_SERIES last_serp;
+
+                    last_serp = getserp(cp, p_axes->series.end_idx);
+
+                    memswap32(serp, last_serp, sizeof32(*serp));
+                }
+            }
+            break;
+            }
+        }
 
     return(1);
 }
@@ -1207,9 +1207,9 @@ gr_chart_add_series(
 
     /* descriptor doesn't already exist? */
     if(series_idx >= ((axes_idx == 0) ? cp->axes[1].series.stt_idx : cp->series.n_defined))
-        {
+    {
         if(cp->series.n_defined >= cp->series.n_alloc)
-            {
+        {
             /* grow series descriptor for these axes to accomodate new series */
             const U32 n_alloc = cp->series.n_alloc + GR_SERIES_DESC_INCR;
             STATUS status;
@@ -1220,10 +1220,10 @@ gr_chart_add_series(
 
             cp->series.mh      = mh;
             cp->series.n_alloc = n_alloc;
-            }
+        }
 
         if(axes_idx == 0)
-            {
+        {
             /* have to move existing defined descriptors from higher axes up (maybe 0) */
             serp = getserp(cp, cp->axes[1].series.stt_idx);
 
@@ -1234,7 +1234,7 @@ gr_chart_add_series(
             /* overlay axes start higher up now (even during single axes set preparation) - move together */
             ++cp->axes[1].series.stt_idx;
             ++cp->axes[1].series.end_idx;
-            }
+        }
         else
             serp = getserp(cp, cp->series.n_defined);
 
@@ -1242,7 +1242,7 @@ gr_chart_add_series(
         zero_struct_ptr(serp);
 
         ++cp->series.n_defined;
-        }
+    }
 
     /* if not clearly specified the initialise this new
      * element from a lower friend, if available, or defaults
@@ -1250,23 +1250,23 @@ gr_chart_add_series(
     serp = getserp(cp, series_idx);
 
     if(!serp->internal_bits.descriptor_ok && init) /* won't be set if brand new */
-        {
+    {
         if(cp->axes[axes_idx].series.stt_idx == cp->axes[axes_idx].series.end_idx)
-            {
+        {
             /* first addition to axes set */
             serp->sertype   = cp->axes[axes_idx].sertype;
             serp->charttype = cp->axes[axes_idx].charttype;
-            }
+        }
         else
-            {
+        {
             /* clone some aspects of its friend */
             memcpy32(serp, serp-1, offsetof(GR_SERIES, GR_SERIES_CLONE_END));
 
             /* dup picture refs */
             gr_fillstyle_ref_add(&serp->style.pdrop_fill);
             gr_fillstyle_ref_add(&serp->style.point_fill);
-            }
         }
+    }
 
     serp->datasources.n_req = gr_series_n_datasources_req(cp, series_idx);
 
@@ -1300,7 +1300,7 @@ gr_chart_realloc_series(
     for(series_idx = 0;
         series_idx < cp->series.n_defined;
         series_idx++)
-        {
+    {
         serp = getserp(cp, series_idx);
 
         * (int *) &serp->valid = 0;
@@ -1309,7 +1309,7 @@ gr_chart_realloc_series(
 
         for(ds = 0; ds < GR_SERIES_MAX_DATASOURCES; ++ds)
             serp->datasources.dsh[ds] = GR_DATASOURCE_HANDLE_NONE;
-        }
+    }
 
     /* ensure first axes set always start at zero! */
     assert(cp->axes[0].series.stt_idx == 0);
@@ -1320,10 +1320,10 @@ gr_chart_realloc_series(
 
     /* 'remove' series from axes sets */
     for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
-        {
+    {
         cp->axes[axes_idx].series.end_idx = cp->axes[axes_idx].series.stt_idx;
         cp->axes[axes_idx].cache.n_series = 0;
-        }
+    }
 
     cp->series.n = 0;
 
@@ -1356,30 +1356,30 @@ gr_chart_realloc_series(
             if(dsp == last_dsp)
                 dsh = GR_DATASOURCE_HANDLE_NONE;
             else
-                {
+            {
                 id.no       = gr_series_external_from_idx(cp, series_idx);
                 id.subno    = serp->datasources.n;
 
                 dsh         = dsp->dsh;
                 (dsp++)->id = id;
-                }
+            }
 
             serp->datasources.dsh[serp->datasources.n++] = dsh;
-            }
+        }
         while(serp->datasources.n < serp->datasources.n_req);
 
         ++series_idx;
-        }
+    }
 #if 1
     while(dsp < last_dsp);
 #endif
 
     /* if only one axes set then all series are on that */
     if(cp->axes_idx_max > 0)
-        {
+    {
         /* loop stripping data sources and therefore series from main axes till a respectable balance is achieved */
         while((cp->axes[0].cache.n_series - cp->axes[1].cache.n_series) > 1)
-            {
+        {
             GR_SERIES_IDX n_series_strip;
             GR_SERIES_IDX new_seridx;
 
@@ -1399,7 +1399,7 @@ gr_chart_realloc_series(
             series_idx = cp->axes[0].series.end_idx;
             ds     = 0;
             while(--series_idx >= cp->axes[0].series.stt_idx)
-                {
+            {
                 serp = getserp(cp, series_idx);
 
                 ds += serp->datasources.n;
@@ -1409,7 +1409,7 @@ gr_chart_realloc_series(
 
                 if(ds >= serp->datasources.n_req)
                     break;
-                }
+            }
 
             serp = getserp(cp, new_seridx);
 
@@ -1417,15 +1417,15 @@ gr_chart_realloc_series(
             /* if number moved from main axes would swing the balance to the overlay side, stop */
             if( (ds < serp->datasources.n_req)                                               ||
                 (cp->axes[1].cache.n_series > (cp->axes[0].cache.n_series - n_series_strip)) )
-                {
+            {
                 /* apologies go to the allocator - remove this descriptor and stop */
                 --cp->axes[1].series.end_idx;
                 --cp->axes[1].cache.n_series;
                 --cp->series.n;
                 break;
-                }
+            }
             else
-                {
+            {
                 GR_SERIES_IDX     stop_at_seridx;
                 GR_SERIES_IDX     src_seridx;
                 GR_SERIES_IDX     dst_seridx;
@@ -1446,12 +1446,12 @@ gr_chart_realloc_series(
                 dsp = last_dsp;
 
                 for(;;)
-                    {
+                {
                     /* step back one ds; when run out, step back one descriptor,
                      * possibly jumping over the mid-axis gap
                     */
                     if(dst_ds == 0)
-                        {
+                    {
                         if(dst_seridx == cp->axes[1].series.stt_idx)
                             dst_seridx = cp->axes[0].series.end_idx;
 
@@ -1459,12 +1459,12 @@ gr_chart_realloc_series(
 
                         dst_serp = getserp(cp, dst_seridx);
                         dst_ds   = dst_serp->datasources.n_req;
-                        }
+                    }
 
                     --dst_ds;
 
                     if(src_ds == 0)
-                        {
+                    {
                         if(src_seridx == cp->axes[1].series.stt_idx)
                             src_seridx = cp->axes[0].series.end_idx;
 
@@ -1472,7 +1472,7 @@ gr_chart_realloc_series(
 
                         src_serp = getserp(cp, src_seridx);
                         src_ds   = src_serp->datasources.n_req;
-                        }
+                    }
 
                     --src_ds;
 
@@ -1490,8 +1490,8 @@ gr_chart_realloc_series(
 
                     if(src_seridx == stop_at_seridx)
                         break;
-                    }
                 }
+            }
 
             /* possibly several series removed from the main axes set */
             cp->axes[0].series.end_idx -= n_series_strip;
@@ -1499,21 +1499,21 @@ gr_chart_realloc_series(
             cp->series.n               -= n_series_strip;
 
             /* one more series added to the overlay axes set by allocator */
-            }
         }
+    }
 
     /* SKS after 4.12 26mar92 - added overlay reloading helper stuff */
     cp->axes[0].series.start_series = 0;
     if(cp->axes_idx_max > 0)
-        {
+    {
         if(cp->axes[1].series.start_series >= 0) /* auto allocation */
-            {
+        {
             if(cp->axes[1].cache.n_series != 0)
                 cp->axes[1].series.start_series = gr_series_external_from_idx(cp, cp->axes[1].series.stt_idx);
             else
                 cp->axes[1].series.start_series = 0;
-            }
         }
+    }
     else
         cp->axes[1].series.start_series = 0;
 
@@ -1523,11 +1523,11 @@ gr_chart_realloc_series(
     for(series_idx = cp->axes[0].series.stt_idx;
         series_idx < cp->axes[0].series.end_idx;
         series_idx++)
-        {
+    {
         serp = getserp(cp, series_idx);
 
         serp->internal_bits.descriptor_ok = 1;
-        }
+    }
 #endif
 
     /* can now go back over the datasources and reassign series ownership:
@@ -1536,7 +1536,7 @@ gr_chart_realloc_series(
     for(series_idx = cp->axes[1].series.stt_idx;
         series_idx < cp->axes[1].series.end_idx;
         series_idx++)
-        {
+    {
         serp = getserp(cp, series_idx);
 
 #if 0 /* SKS after 4.12 26mar92 - removed, this should only be set on loading and cloning */
@@ -1547,13 +1547,13 @@ gr_chart_realloc_series(
 
         for(ds = 0; ds < serp->datasources.n_req; ++ds)
             if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
-                {
+            {
                 gr_chart_dsp_from_dsh(cp, &dsp, serp->datasources.dsh[ds]);
                 assert(dsp);
                 id.subno = ds;
                 dsp->id  = id;
-                }
-        }
+            }
+    }
 
     return(1);
 }
@@ -1575,31 +1575,31 @@ gr_series_n_datasources_req(
     serp = getserp(cp, series_idx);
 
     switch(serp->sertype)
-        {
-        default:
+    {
+    default:
 #if CHECKING
-            myassert1x(0, "gr_series_datasources.n_req(type = %d unknown)", serp->sertype);
-        case GR_CHART_SERIES_PLAIN:
+        myassert1x(0, "gr_series_datasources.n_req(type = %d unknown)", serp->sertype);
+    case GR_CHART_SERIES_PLAIN:
 #endif
-            n_req = 1;
-            break;
+        n_req = 1;
+        break;
 
-        case GR_CHART_SERIES_POINT:
-        case GR_CHART_SERIES_PLAIN_ERROR1:
-            n_req = 2;
-            break;
+    case GR_CHART_SERIES_POINT:
+    case GR_CHART_SERIES_PLAIN_ERROR1:
+        n_req = 2;
+        break;
 
-        case GR_CHART_SERIES_POINT_ERROR1:
-        case GR_CHART_SERIES_PLAIN_ERROR2:
-        /*case GR_CHART_SERIES_HILOCLOSE:*/
-            n_req = 3;
-            break;
+    case GR_CHART_SERIES_POINT_ERROR1:
+    case GR_CHART_SERIES_PLAIN_ERROR2:
+    /*case GR_CHART_SERIES_HILOCLOSE:*/
+        n_req = 3;
+        break;
 
-        case GR_CHART_SERIES_POINT_ERROR2:
-        /*case GR_CHART_SERIES_HILOOPENCLOSE:*/
-            n_req = 4;
-            break;
-        }
+    case GR_CHART_SERIES_POINT_ERROR2:
+    /*case GR_CHART_SERIES_HILOOPENCLOSE:*/
+        n_req = 4;
+        break;
+    }
 
     return(n_req);
 }
@@ -1623,7 +1623,7 @@ gr_chart_cache_n_contrib(
     cp->cache.n_contrib_lines  = 0;
 
     for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-        {
+    {
         P_GR_AXES p_axes = &cp->axes[axes_idx];
 
         /* only add one effective series holder, one bar place or line
@@ -1637,67 +1637,67 @@ gr_chart_cache_n_contrib(
         p_axes->cache.n_contrib_lines = 0;
 
         switch(p_axes->charttype)
+        {
+        case GR_CHARTTYPE_PIE:
+            cp->cache.n_contrib_series = 1;
+            break;
+
+        default:
+        case GR_CHARTTYPE_SCAT:
+            /* normally using all series */
+            cp->cache.n_contrib_series += p_axes->series.end_idx;
+            cp->cache.n_contrib_series -= p_axes->series.stt_idx;
+            break;
+
+        case GR_CHARTTYPE_BAR:
+        case GR_CHARTTYPE_LINE:
+            for(series_idx = p_axes->series.stt_idx;
+                series_idx < p_axes->series.end_idx;
+                series_idx++)
             {
-            case GR_CHARTTYPE_PIE:
-                cp->cache.n_contrib_series = 1;
-                break;
+                serp = getserp(cp, series_idx);
 
-            default:
-            case GR_CHARTTYPE_SCAT:
-                /* normally using all series */
-                cp->cache.n_contrib_series += p_axes->series.end_idx;
-                cp->cache.n_contrib_series -= p_axes->series.stt_idx;
-                break;
+                switch(serp->charttype)
+                {
+                default:
+                    /* not bar or line, skip */
+                    continue;
 
-            case GR_CHARTTYPE_BAR:
-            case GR_CHARTTYPE_LINE:
-                for(series_idx = p_axes->series.stt_idx;
-                    series_idx < p_axes->series.end_idx;
-                    series_idx++)
-                    {
-                    serp = getserp(cp, series_idx);
+                case GR_CHARTTYPE_NONE:
+                    if(p_axes->charttype == GR_CHARTTYPE_LINE)
+                        goto add_line;
 
-                    switch(serp->charttype)
-                        {
-                        default:
-                            /* not bar or line, skip */
-                            continue;
+                    /* else deliberate drop thru ... */
 
-                        case GR_CHARTTYPE_NONE:
-                            if(p_axes->charttype == GR_CHARTTYPE_LINE)
-                                goto add_line;
+                case GR_CHARTTYPE_BAR:
+                    if(series_adding)
+                        ++cp->cache.n_contrib_series;
 
-                            /* else deliberate drop thru ... */
+                    if(bar_adding)
+                        ++p_axes->cache.n_contrib_bars;
 
-                        case GR_CHARTTYPE_BAR:
-                            if(series_adding)
-                                ++cp->cache.n_contrib_series;
+                    if(p_axes->bits.stacked)
+                        series_adding = bar_adding = FALSE;
+                    break;
 
-                            if(bar_adding)
-                                ++p_axes->cache.n_contrib_bars;
+                case GR_CHARTTYPE_LINE:
+                add_line:;
+                    if(series_adding)
+                        ++cp->cache.n_contrib_series;
 
-                            if(p_axes->bits.stacked)
-                                series_adding = bar_adding = FALSE;
-                            break;
+                    if(line_adding)
+                        ++p_axes->cache.n_contrib_lines;
 
-                        case GR_CHARTTYPE_LINE:
-                        add_line:;
-                            if(series_adding)
-                                ++cp->cache.n_contrib_series;
-
-                            if(line_adding)
-                                ++p_axes->cache.n_contrib_lines;
-
-                            if(p_axes->bits.stacked)
-                                series_adding = line_adding = FALSE;
-                            break;
-                        }
-                    }
+                    if(p_axes->bits.stacked)
+                        series_adding = line_adding = FALSE;
+                    break;
+                }
             }
+        }
 
         cp->cache.n_contrib_bars  += p_axes->cache.n_contrib_bars;
         cp->cache.n_contrib_lines += p_axes->cache.n_contrib_lines;
-        }
+    }
 }
 
 /******************************************************************************
@@ -1743,32 +1743,32 @@ gr_chart_dsp_from_dsh(
     LIST_ITEMNO key;
 
     if(dsh == GR_DATASOURCE_HANDLE_NONE)
-        {
+    {
         *dspp = &gr_chart_empty_traveller_datasource;
         return(1);
-        }
+    }
 
     dsp = &cp->core.category_datasource;
 
     if(dsp->dsh == dsh)
-        {
+    {
         *dspp = dsp;
         return(1);
-        }
+    }
 
     dsp = cp->core.datasources.mh;
 
     for(last_dsp = dsp + cp->core.datasources.n; dsp < last_dsp; ++dsp)
         if(dsp->dsh == dsh)
-            {
+        {
             *dspp = dsp;
             return(1);
-            }
+        }
 
     for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
         t;
         t = collect_next( GR_TEXT, &cp->text.lbr, &key))
-        {
+    {
         P_GR_TEXT_GUTS gutsp;
 
         if(!t->bits.live_text)
@@ -1778,11 +1778,11 @@ gr_chart_dsp_from_dsh(
         dsp = gutsp.dsp;
 
         if(dsp->dsh == dsh)
-            {
+        {
             *dspp = dsp;
             return(1);
-            }
         }
+    }
 
     *dspp = NULL;
     assert(0);
@@ -1838,39 +1838,39 @@ gr_travel_dsh_label(
     gr_travel_dsh(cp, dsh, item, pValue);
 
     switch(pValue->type)
+    {
+    case GR_CHART_VALUE_NONE:
+        break;
+
+    case GR_CHART_VALUE_TEXT:
+        /* got label */
+        break;
+
+    case GR_CHART_VALUE_NUMBER:
         {
-        case GR_CHART_VALUE_NONE:
-            break;
+        S32 decimals = -1;
+        S32 eformat  = FALSE;
 
-        case GR_CHART_VALUE_TEXT:
-            /* got label */
-            break;
+        pValue->type = GR_CHART_VALUE_TEXT;
 
-        case GR_CHART_VALUE_NUMBER:
-            {
-            S32 decimals = -1;
-            S32 eformat  = FALSE;
+        if(fabs(pValue->data.number) >= U32_MAX)
+            eformat = TRUE;
+        else if(fabs(pValue->data.number) >= 1.0)
+            decimals = ((S32) pValue->data.number == pValue->data.number) ? 0 : 2;
 
-            pValue->type = GR_CHART_VALUE_TEXT;
-
-            if(fabs(pValue->data.number) >= U32_MAX)
-                eformat = TRUE;
-            else if(fabs(pValue->data.number) >= 1.0)
-                decimals = ((S32) pValue->data.number == pValue->data.number) ? 0 : 2;
-
-            gr_numtostr(pValue->data.text, elemof32(pValue->data.text),
-                        &pValue->data.number,
-                        eformat,
-                        decimals,
-                        NULLCH /* dp_ch */,
-                        ','    /* ths_ch */);
-            }
-            break;
-
-        default:
-            pValue->type = GR_CHART_VALUE_NONE;
-            break;
+        gr_numtostr(pValue->data.text, elemof32(pValue->data.text),
+                    &pValue->data.number,
+                    eformat,
+                    decimals,
+                    NULLCH /* dp_ch */,
+                    ','    /* ths_ch */);
         }
+        break;
+
+    default:
+        pValue->type = GR_CHART_VALUE_NONE;
+        break;
+    }
 }
 
 /******************************************************************************
@@ -1923,10 +1923,10 @@ gr_travel_dsh_valof(
     gr_travel_dsh(cp, dsh, item, &value);
 
     if(value.type != GR_CHART_VALUE_NUMBER)
-        {
+    {
         *evalue = 0.0;
         return(0);
-        }
+    }
 
     *evalue = value.data.number;
     return(1);
@@ -1973,11 +1973,11 @@ gr_travel_categ_label(
     gr_travel_dsh_label(cp, cp->core.category_datasource.dsh, item, pValue);
 
     if(pValue->type != GR_CHART_VALUE_TEXT)
-        {
+    {
         /* invent a category label, based on item number */
         pValue->type = GR_CHART_VALUE_TEXT;
         (void) sprintf(pValue->data.text, "%u", item + 1);
-        }
+    }
 }
 
 /******************************************************************************
@@ -2034,11 +2034,11 @@ gr_travel_series_label(
     gr_travel_dsh_label(cp, serp->datasources.dsh[ds], GR_CHART_ITEMNO_LABEL, pValue);
 
     if(pValue->type != GR_CHART_VALUE_TEXT)
-        {
+    {
         /* invent a label, based on series number */
         pValue->type = GR_CHART_VALUE_TEXT;
         (void) sprintf(pValue->data.text, "S%u", gr_series_external_from_idx(cp, series_idx));
-        }
+    }
 }
 
 /******************************************************************************
@@ -2083,11 +2083,11 @@ gr_travel_series_n_items_total(
 
     maxnum = 0;
     for(ds = 0; ds < serp->datasources.n; ++ds)
-        {
+    {
         curnum = gr_travel_dsh_n_items(cp, serp->datasources.dsh[ds]);
         if(maxnum < curnum)
             maxnum = curnum;
-        }
+    }
     serp->cache.n_items_total = maxnum;
     serp->valid.n_items_total = 1;
 
@@ -2215,7 +2215,7 @@ gr_chart_plotarea_addin(
             return(res);
 
     if(cp->d3.bits.use)
-        {
+    {
         GR_POINT origin, ps1, ps2;
 
         /* wall */
@@ -2255,7 +2255,7 @@ gr_chart_plotarea_addin(
                                                     &origin, &ps1, &ps2,
                                                     &linestyle, &fillstyle)) < 0)
                     return(res);
-        }
+    }
 
     gr_diag_group_end(p_gr_diag, &plotGroupStart);
 
@@ -2284,21 +2284,21 @@ gr_chart_legend_boxes_prepare(
     rect_box->y1 = rect_box->y0 + ((textstyle->height * 6) / 8);
 
     if(line_box)
-        {
+    {
         line_box->x0 = rect_box->x0 - (rect_box->x1 - rect_box->x0) / 4;
         line_box->y0 =                (rect_box->y0 + rect_box->y1) / 2;
         line_box->x1 = rect_box->x1 + (rect_box->x1 - rect_box->x0) / 4;
         line_box->y1 = line_box->y0;
-        }
+    }
 
     /* embed point marker in a smaller box */
     if(pict_box)
-        {
+    {
         pict_box->x0 = rect_box->x0 + (rect_box->x1 - rect_box->x0) / 8;
         pict_box->y0 = rect_box->y0 + (rect_box->y1 - rect_box->y0) / 8;
         pict_box->x1 = rect_box->x1 - (rect_box->x1 - rect_box->x0) / 8;
         pict_box->y1 = rect_box->y1 - (rect_box->y1 - rect_box->y0) / 8;
-        }
+    }
 
     text_box->x0 = rect_box->x1 + (3 * textstyle->height / 4);
     text_box->y0 = curpt->y;
@@ -2319,10 +2319,10 @@ gr_chart_legend_boxes_fitq(
     S32 res = 1; /* normal return */
 
     if(in_rows)
-        {
+    {
         /* see if legend will fit in remainder of row */
         if(text_box->x1 > legendbox->x1)
-            {
+        {
             /* drop to start of next row */
             curpt->x = legendbox->x0;
 
@@ -2334,16 +2334,16 @@ gr_chart_legend_boxes_fitq(
                 return(0);
 
             res = 2; /* recompute boxes on return */
-            }
+        }
 
         /* record our maximum travel in the -ve y direction */
         maxpt->y = MIN(maxpt->y, text_box->y0);
-        }
+    }
     else
-        {
+    {
         /* see if legend will fit in remainder of column */
         if(text_box->y0 < legendbox->y0)
-            {
+        {
             /* move to top of next column */
             curpt->y = legendbox->y1;
 
@@ -2358,11 +2358,11 @@ gr_chart_legend_boxes_fitq(
                 return(0);
 
             res = 2; /* recompute boxes on return */
-            }
+        }
 
         /* record our maximum travel in the +ve x direction */
         maxpt->x = MAX(maxpt->x, text_box->x1);
-        }
+    }
 
     return(res);
 }
@@ -2410,23 +2410,23 @@ gr_chart_legend_addin(
     charttype = cp->axes[0].charttype;
 
     switch(charttype)
+    {
+    case GR_CHARTTYPE_PIE:
+        axes_idx = 0;
+        series_idx = cp->pie_series_idx;
+        n_for_legend = gr_travel_series_n_items_total(cp, series_idx);
+        break;
+
+    default:
+        n_for_legend = 0;
+
+        for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
         {
-        case GR_CHARTTYPE_PIE:
-            axes_idx = 0;
-            series_idx = cp->pie_series_idx;
-            n_for_legend = gr_travel_series_n_items_total(cp, series_idx);
-            break;
-
-        default:
-            n_for_legend = 0;
-
-            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-                {
-                n_for_legend += cp->axes[axes_idx].series.end_idx;
-                n_for_legend -= cp->axes[axes_idx].series.stt_idx;
-                }
-            break;
+            n_for_legend += cp->axes[axes_idx].series.end_idx;
+            n_for_legend -= cp->axes[axes_idx].series.stt_idx;
         }
+        break;
+    }
 
     /* if nothing to legend, return */
     if(!n_for_legend)
@@ -2438,7 +2438,7 @@ gr_chart_legend_addin(
     legend_margins.y1 = MAX(GR_CHART_LEGEND_TM, (5 * linespacing) / 4); /* account for baseline offset here */
 
     if(legend->bits.manual)
-        {
+    {
         legendbox.x0 = legend->posn.x;
         legendbox.y0 = legend->posn.y;
         legendbox.x1 = legend->posn.x + legend->size.x;
@@ -2453,11 +2453,11 @@ gr_chart_legend_addin(
         /* ensure always 'reasonable' size even if punter has set wally */
         legendbox.x1 = MAX(legendbox.x1, legendbox.x0 + 3 * linespacing);
         legendbox.y0 = MIN(legendbox.y0, legendbox.y1 - 2 * linespacing);
-        }
+    }
     else
-        {
+    {
         if(legend->bits.in_rows)
-            {
+        {
             /* legend at bottom, goes right across rows */
             GR_COORD x_size;
 
@@ -2478,9 +2478,9 @@ gr_chart_legend_addin(
             legendbox.y1 -= legend_margins.y1;
 
             legendbox.y0 = S32_MIN; /* can grow to be as deep as it needs to be */
-            }
+        }
         else
-            {
+        {
             /* legend at right, goes down in columns */
             GR_COORD estdepth, y_size;
 
@@ -2506,8 +2506,8 @@ gr_chart_legend_addin(
             legendbox.x0 += legend_margins.x0;
 
             /* NB. no output movement on legendbox.y1 */
-            }
         }
+    }
 
     /* record furthest positions we get to */
     maxpt.x = legendbox.x0;
@@ -2518,19 +2518,19 @@ gr_chart_legend_addin(
     res = 1;
 
     for(pass_out = 0; pass_out <= 1; ++pass_out)
-        {
+    {
         if(pass_out && !legend->bits.manual)
-            {
+        {
             /* now we can use the info gathered on pass 1 to make a reasonable legend box */
             if(legend->bits.in_rows)
-                {
+            {
                 legendbox.y0 = maxpt.y;
-                }
-            else
-                {
-                legendbox.x1 = maxpt.x;
-                }
             }
+            else
+            {
+                legendbox.x1 = maxpt.x;
+            }
+        }
 
         legend->posn.x = legendbox.x0;
         legend->posn.y = legendbox.y0;
@@ -2549,7 +2549,7 @@ gr_chart_legend_addin(
         curpt.y = legendbox.y1;
 
         if(pass_out)
-            {
+        {
             GR_BOX legend_outer_rect;
 
             if((res = gr_chart_group_new(cp, &legendGroupStart, &legend_id)) < 0)
@@ -2568,29 +2568,84 @@ gr_chart_legend_addin(
             if(fillstyle.bits.pattern)
                 if((res = gr_chart_scaled_picture_add(cp, &legend_id, &legend_outer_rect, &fillstyle)) < 0)
                     break;
-            }
+        }
 
         switch(charttype)
+        {
+        case GR_CHARTTYPE_PIE:
             {
-            case GR_CHARTTYPE_PIE:
+            /* loop plotting a rectangle of colour and category label for each category */
+            GR_CHART_ITEMNO point;
+
+            gr_chart_objid_clear(&intern_id);
+            intern_id.name      = GR_CHART_OBJNAME_POINT;
+            intern_id.no        = gr_series_external_from_idx(cp, cp->pie_series_idx);
+            intern_id.has_no    = 1;
+            intern_id.has_subno = 1;
+
+            for(point = 0; point < n_for_legend; ++point)
+            {
+                gr_travel_categ_label(cp, point, &cv);
+
+                swidth_mp = gr_font_stringwidth(f, cv.data.text);
+                swidth_px = swidth_mp / GR_MILLIPOINTS_PER_PIXIT;
+
+                gr_chart_legend_boxes_prepare(&curpt, &rect_box, NULL, NULL, &text_box, &textstyle, swidth_px);
+
+                res = gr_chart_legend_boxes_fitq(legend->bits.in_rows, &legendbox, &curpt, &maxpt, linespacing, &text_box, &maxlegx);
+
+                if(res == 0)
+                    break;
+
+                maxlegx = MAX(maxlegx, text_box.x1);
+
+                if(pass_out)
                 {
-                /* loop plotting a rectangle of colour and category label for each category */
-                GR_CHART_ITEMNO point;
+                    if(res == 2)
+                        gr_chart_legend_boxes_prepare(&curpt, &rect_box, NULL, NULL, &text_box, &textstyle, swidth_px);
 
-                gr_chart_objid_clear(&intern_id);
-                intern_id.name      = GR_CHART_OBJNAME_POINT;
-                intern_id.no        = gr_series_external_from_idx(cp, cp->pie_series_idx);
-                intern_id.has_no    = 1;
-                intern_id.has_subno = 1;
+                    intern_id.subno = (U16) gr_point_external_from_key(point);
 
-                for(point = 0; point < n_for_legend; ++point)
-                    {
-                    gr_travel_categ_label(cp, point, &cv);
+                    gr_chart_objid_linestyle_query(cp, &intern_id, &linestyle);
+                    gr_chart_objid_fillstyle_query(cp, &intern_id, &fillstyle);
+
+                    if((res = gr_diag_rectangle_new(p_gr_diag, NULL, legend_id,
+                                                    &rect_box, &linestyle, &fillstyle)) < 0)
+                        break;
+
+                    if(swidth_px)
+                        if((res = gr_diag_text_new(p_gr_diag, NULL, gr_chart_objid_legend,
+                                                    &text_box, cv.data.text, &textstyle)) < 0)
+                            break;
+                }
+
+                if(legend->bits.in_rows)
+                    curpt.x  = text_box.x1 + (linespacing / 2);
+                else
+                    curpt.y -= linespacing;
+            }
+            break;
+            }
+
+        default:
+            /* loop plotting the point marker and series label for each series */
+
+            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
+            {
+                p_axes = &cp->axes[axes_idx];
+
+                for(series_idx = p_axes->series.stt_idx;
+                    series_idx < p_axes->series.end_idx;
+                    series_idx++)
+                {
+                    /* loop plotting a rectangle of colour and category label for each category */
+
+                    gr_travel_series_label(cp, series_idx, &cv);
 
                     swidth_mp = gr_font_stringwidth(f, cv.data.text);
                     swidth_px = swidth_mp / GR_MILLIPOINTS_PER_PIXIT;
 
-                    gr_chart_legend_boxes_prepare(&curpt, &rect_box, NULL, NULL, &text_box, &textstyle, swidth_px);
+                    gr_chart_legend_boxes_prepare(&curpt, &rect_box, &line_box, &pict_box, &text_box, &textstyle, swidth_px);
 
                     res = gr_chart_legend_boxes_fitq(legend->bits.in_rows, &legendbox, &curpt, &maxpt, linespacing, &text_box, &maxlegx);
 
@@ -2600,142 +2655,87 @@ gr_chart_legend_addin(
                     maxlegx = MAX(maxlegx, text_box.x1);
 
                     if(pass_out)
-                        {
+                    {
+                        S32 linestyle_using_default;
+
                         if(res == 2)
-                            gr_chart_legend_boxes_prepare(&curpt, &rect_box, NULL, NULL, &text_box, &textstyle, swidth_px);
+                            gr_chart_legend_boxes_prepare(&curpt, &rect_box, &line_box, &pict_box, &text_box, &textstyle, swidth_px);
 
-                        intern_id.subno = (U16) gr_point_external_from_key(point);
+                        gr_chart_objid_from_series_no(gr_series_external_from_idx(cp, series_idx), &intern_id);
 
+                        linestyle_using_default =
                         gr_chart_objid_linestyle_query(cp, &intern_id, &linestyle);
                         gr_chart_objid_fillstyle_query(cp, &intern_id, &fillstyle);
 
-                        if((res = gr_diag_rectangle_new(p_gr_diag, NULL, legend_id,
-                                                        &rect_box, &linestyle, &fillstyle)) < 0)
-                            break;
+                        serp = getserp(cp, series_idx);
 
-                        if(swidth_px)
-                            if((res = gr_diag_text_new(p_gr_diag, NULL, gr_chart_objid_legend,
-                                                        &text_box, cv.data.text, &textstyle)) < 0)
-                                break;
-                        }
+                        charttype = (serp->charttype != GR_CHARTTYPE_NONE)
+                                                ? serp->charttype
+                                                : p_axes->charttype;
 
-                    if(legend->bits.in_rows)
-                        curpt.x  = text_box.x1 + (linespacing / 2);
-                    else
-                        curpt.y -= linespacing;
-                    }
-                }
-                break;
-
-            default:
-                /* loop plotting the point marker and series label for each series */
-
-                for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-                    {
-                    p_axes = &cp->axes[axes_idx];
-
-                    for(series_idx = p_axes->series.stt_idx;
-                        series_idx < p_axes->series.end_idx;
-                        series_idx++)
+                        if(charttype == GR_CHARTTYPE_BAR)
                         {
-                        /* loop plotting a rectangle of colour and category label for each category */
+                            if(!fillstyle.bits.notsolid)
+                                if((res = gr_diag_rectangle_new(p_gr_diag, NULL, legend_id,
+                                                                &rect_box, &linestyle, &fillstyle)) < 0)
+                                    break;
 
-                        gr_travel_series_label(cp, series_idx, &cv);
-
-                        swidth_mp = gr_font_stringwidth(f, cv.data.text);
-                        swidth_px = swidth_mp / GR_MILLIPOINTS_PER_PIXIT;
-
-                        gr_chart_legend_boxes_prepare(&curpt, &rect_box, &line_box, &pict_box, &text_box, &textstyle, swidth_px);
-
-                        res = gr_chart_legend_boxes_fitq(legend->bits.in_rows, &legendbox, &curpt, &maxpt, linespacing, &text_box, &maxlegx);
-
-                        if(res == 0)
-                            break;
-
-                        maxlegx = MAX(maxlegx, text_box.x1);
-
-                        if(pass_out)
+                            if(fillstyle.bits.pattern)
+                                if((res = gr_chart_scaled_picture_add(cp, &legend_id, &rect_box, &fillstyle)) < 0)
+                                    break;
+                        }
+                        else
+                        {
+                            if(cp->d3.bits.use && (charttype == GR_CHARTTYPE_LINE))
                             {
-                            S32 linestyle_using_default;
+                                /* draw a section of ribbon through the box */
+                                line_box.y0 -= (rect_box.x1 - rect_box.x0) / 4;
+                                line_box.y1 += (rect_box.x1 - rect_box.x0) / 4;
 
-                            if(res == 2)
-                                gr_chart_legend_boxes_prepare(&curpt, &rect_box, &line_box, &pict_box, &text_box, &textstyle, swidth_px);
-
-                            gr_chart_objid_from_series_no(gr_series_external_from_idx(cp, series_idx), &intern_id);
-
-                            linestyle_using_default =
-                            gr_chart_objid_linestyle_query(cp, &intern_id, &linestyle);
-                            gr_chart_objid_fillstyle_query(cp, &intern_id, &fillstyle);
-
-                            serp = getserp(cp, series_idx);
-
-                            charttype = (serp->charttype != GR_CHARTTYPE_NONE)
-                                                    ? serp->charttype
-                                                    : p_axes->charttype;
-
-                            if(charttype == GR_CHARTTYPE_BAR)
-                                {
                                 if(!fillstyle.bits.notsolid)
-                                    if((res = gr_diag_rectangle_new(p_gr_diag, NULL, legend_id,
-                                                                    &rect_box, &linestyle, &fillstyle)) < 0)
+                                    if((res = gr_diag_rectangle_new(p_gr_diag, NULL, gr_chart_objid_legend,
+                                                                    &line_box, &linestyle, &fillstyle)) < 0)
                                         break;
-
-                                if(fillstyle.bits.pattern)
-                                    if((res = gr_chart_scaled_picture_add(cp, &legend_id, &rect_box, &fillstyle)) < 0)
-                                        break;
-                                }
+                            }
                             else
-                                {
-                                if(cp->d3.bits.use && (charttype == GR_CHARTTYPE_LINE))
-                                    {
-                                    /* draw a section of ribbon through the box */
-                                    line_box.y0 -= (rect_box.x1 - rect_box.x0) / 4;
-                                    line_box.y1 += (rect_box.x1 - rect_box.x0) / 4;
+                            {
+                                /* draw a centred line through the box */
 
-                                    if(!fillstyle.bits.notsolid)
-                                        if((res = gr_diag_rectangle_new(p_gr_diag, NULL, gr_chart_objid_legend,
-                                                                        &line_box, &linestyle, &fillstyle)) < 0)
-                                            break;
-                                    }
-                                else
-                                    {
-                                    /* draw a centred line through the box */
+                                /* BODGE: in 2d line chart mode derive line chart line colour from fill colour */
+                                if(linestyle_using_default && (charttype == GR_CHARTTYPE_LINE))
+                                    linestyle.fg = fillstyle.fg;
 
-                                    /* BODGE: in 2d line chart mode derive line chart line colour from fill colour */
-                                    if(linestyle_using_default && (charttype == GR_CHARTTYPE_LINE))
-                                        linestyle.fg = fillstyle.fg;
-
-                                    if((res = gr_diag_line_new(p_gr_diag, NULL, legend_id,
-                                                               &line_box, &linestyle)) < 0)
-                                        break;
-                                    }
-
-                                if(fillstyle.bits.pattern)
-                                    if((res = gr_chart_scaled_picture_add(cp, &legend_id, &pict_box, &fillstyle)) < 0)
-                                        break;
-                                }
-
-                            if(swidth_px)
-                                if((res = gr_diag_text_new(p_gr_diag, NULL, legend_id,
-                                                            &text_box, cv.data.text, &textstyle)) < 0)
+                                if((res = gr_diag_line_new(p_gr_diag, NULL, legend_id,
+                                                           &line_box, &linestyle)) < 0)
                                     break;
                             }
 
-                        if(legend->bits.in_rows)
-                            curpt.x  = text_box.x1 + linespacing / 2;
-                        else
-                            curpt.y -= linespacing;
+                            if(fillstyle.bits.pattern)
+                                if((res = gr_chart_scaled_picture_add(cp, &legend_id, &pict_box, &fillstyle)) < 0)
+                                    break;
                         }
+
+                        if(swidth_px)
+                            if((res = gr_diag_text_new(p_gr_diag, NULL, legend_id,
+                                                        &text_box, cv.data.text, &textstyle)) < 0)
+                                break;
                     }
-                break;
+
+                    if(legend->bits.in_rows)
+                        curpt.x  = text_box.x1 + linespacing / 2;
+                    else
+                        curpt.y -= linespacing;
+                }
             }
+            break;
+        }
 
         if(res < 0)
             break;
 
         if(pass_out)
             gr_diag_group_end(p_gr_diag, &legendGroupStart);
-        }
+    }
 
     gr_riscdiag_font_dispose(&f);
 
@@ -2752,19 +2752,19 @@ gr_chart_init_for_build(
 
     /* reflect 3D usability */
     switch(cp->axes[0].charttype)
-        {
-        case GR_CHARTTYPE_PIE:
-        case GR_CHARTTYPE_SCAT:
-            cp->d3.bits.use = 0;
-            break;
+    {
+    case GR_CHARTTYPE_PIE:
+    case GR_CHARTTYPE_SCAT:
+        cp->d3.bits.use = 0;
+        break;
 
-        default:
-            assert(0);
-        case GR_CHARTTYPE_BAR:
-        case GR_CHARTTYPE_LINE:
-            cp->d3.bits.use = cp->d3.bits.on;
-            break;
-        }
+    default:
+        assert(0);
+    case GR_CHARTTYPE_BAR:
+    case GR_CHARTTYPE_LINE:
+        cp->d3.bits.use = cp->d3.bits.on;
+        break;
+    }
 
     /* given the chart size, work out where the plot area ought to be */
 
@@ -2780,7 +2780,7 @@ gr_chart_init_for_build(
     n_series_deep = cp->cache.n_contrib_series ? cp->cache.n_contrib_series : 1;
 
     if(cp->d3.bits.use)
-        {
+    {
         F64 sir = sin(cp->d3.roll  * _radians_per_degree);
         F64 cor = cos(cp->d3.roll  * _radians_per_degree);
         F64 sip = sin(cp->d3.pitch * _radians_per_degree);
@@ -2798,13 +2798,13 @@ gr_chart_init_for_build(
 
         new_posn.x = plotarea.x1 - size.x;
         new_posn.y = plotarea.y1 - size.y;
-        }
+    }
     else
-        {
+    {
         /* make null 3d vectors */
         new_posn.x = plotarea.x0;
         new_posn.y = plotarea.y0;
-        }
+    }
 
     cp->d3.cache.vector_full.x = plotarea.x0 - new_posn.x; /* 0 or -ve */
     cp->d3.cache.vector_full.y = plotarea.y0 - new_posn.y; /* 0 or -ve */
@@ -2851,11 +2851,11 @@ gr_chart_build(
     oldfpe = signal(SIGFPE, gr_chart_signal_handler);
 
     if(0 != setjmp(gr_chart_jmp_buf))
-        {
+    {
         reportf("*** gr_chart_build: setjmp returned from signal handler ***");
         (void) signal(SIGFPE, oldfpe);
         return(create_error(GR_CHART_ERR_EXCEPTION));
-        }
+    }
 
     cp = gr_chart_cp_from_ch(*chp);
 
@@ -2872,7 +2872,7 @@ gr_chart_build(
 
     /* loop for structure */
     for(;;)
-        {
+    {
         cp->core.p_gr_diag = p_gr_diag = gr_diag_diagram_new(GR_CHART_CREATORNAME, &res);
 
         if(!p_gr_diag)
@@ -2898,23 +2898,23 @@ gr_chart_build(
         }
 
         switch(cp->axes[0].charttype)
-            {
-            case GR_CHARTTYPE_PIE:
-                /* loop over categories plotting sectors */
-                res = gr_pie_addin(cp);
-                break;
+        {
+        case GR_CHARTTYPE_PIE:
+            /* loop over categories plotting sectors */
+            res = gr_pie_addin(cp);
+            break;
 
-            case GR_CHARTTYPE_BAR:
-            case GR_CHARTTYPE_LINE:
-                res = gr_barlinechart_addin(cp);
-                break;
+        case GR_CHARTTYPE_BAR:
+        case GR_CHARTTYPE_LINE:
+            res = gr_barlinechart_addin(cp);
+            break;
 
-            default:
-                assert(0);
-            case GR_CHARTTYPE_SCAT:
-                res = gr_scatterchart_addin(cp);
-                break;
-            }
+        default:
+            assert(0);
+        case GR_CHARTTYPE_SCAT:
+            res = gr_scatterchart_addin(cp);
+            break;
+        }
 
         if(res < 0)
             break;
@@ -2941,7 +2941,7 @@ gr_chart_build(
 
         /* end of loop for structure */
         break;
-        }
+    }
 
     (void) signal(SIGFPE, oldfpe);
 
@@ -2957,81 +2957,81 @@ gr_chart_object_name_from_id(
     P_U8 out = szName;
 
     switch(id->name)
-        {
-        case GR_CHART_OBJNAME_ANON:
-            assert(elemof_buffer);
-            if(elemof_buffer)
-                *out = NULLCH;
-            break;
+    {
+    case GR_CHART_OBJNAME_ANON:
+        assert(elemof_buffer);
+        if(elemof_buffer)
+            *out = NULLCH;
+        break;
 
-        case GR_CHART_OBJNAME_CHART:
-            xstrkpy(out, elemof_buffer, "Chart");
-            break;
+    case GR_CHART_OBJNAME_CHART:
+        xstrkpy(out, elemof_buffer, "Chart");
+        break;
 
-        case GR_CHART_OBJNAME_PLOTAREA:
-            if(id->no == 1)
-                xstrkpy(out, elemof_buffer, "Wall");
-            else if(id->no == 2)
-                xstrkpy(out, elemof_buffer, "Floor");
-            else
-                xstrkpy(out, elemof_buffer, "Plot area");
-            break;
+    case GR_CHART_OBJNAME_PLOTAREA:
+        if(id->no == 1)
+            xstrkpy(out, elemof_buffer, "Wall");
+        else if(id->no == 2)
+            xstrkpy(out, elemof_buffer, "Floor");
+        else
+            xstrkpy(out, elemof_buffer, "Plot area");
+        break;
 
-        case GR_CHART_OBJNAME_LEGEND:
-            xstrkpy(out, elemof_buffer, "Legend");
-            break;
+    case GR_CHART_OBJNAME_LEGEND:
+        xstrkpy(out, elemof_buffer, "Legend");
+        break;
 
-        case GR_CHART_OBJNAME_TEXT:
-            (void) xsnprintf(out, elemof_buffer, "Text " U16_FMT, id->no /*.text*/);
-            break;
+    case GR_CHART_OBJNAME_TEXT:
+        (void) xsnprintf(out, elemof_buffer, "Text " U16_FMT, id->no /*.text*/);
+        break;
 
-        case GR_CHART_OBJNAME_SERIES:
-            (void) xsnprintf(out, elemof_buffer, "Series " U16_FMT, id->no /*.series*/);
-            break;
+    case GR_CHART_OBJNAME_SERIES:
+        (void) xsnprintf(out, elemof_buffer, "Series " U16_FMT, id->no /*.series*/);
+        break;
 
-        case GR_CHART_OBJNAME_POINT:
-            (void) xsnprintf(out, elemof_buffer, "S" U16_FMT "P" U16_FMT, id->no /*.series*/, id->subno);
-            break;
+    case GR_CHART_OBJNAME_POINT:
+        (void) xsnprintf(out, elemof_buffer, "S" U16_FMT "P" U16_FMT, id->no /*.series*/, id->subno);
+        break;
 
-        case GR_CHART_OBJNAME_DROPSER:
-            (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT, id->no /*.series*/);
-            break;
+    case GR_CHART_OBJNAME_DROPSER:
+        (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT, id->no /*.series*/);
+        break;
 
-        case GR_CHART_OBJNAME_DROPPOINT:
-            (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT "P" U16_FMT, id->no /*.series*/, id->subno);
-            break;
+    case GR_CHART_OBJNAME_DROPPOINT:
+        (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT "P" U16_FMT, id->no /*.series*/, id->subno);
+        break;
 
-        case GR_CHART_OBJNAME_AXIS:
-            (void) xsnprintf(out, elemof_buffer, "Axis " U16_FMT, id->no /*.axis*/);
-            break;
+    case GR_CHART_OBJNAME_AXIS:
+        (void) xsnprintf(out, elemof_buffer, "Axis " U16_FMT, id->no /*.axis*/);
+        break;
 
-        case GR_CHART_OBJNAME_AXISGRID:
-            out += xsnprintf(out, elemof_buffer, "Grid " U16_FMT, id->no /*.axis*/);
-            if(id->subno > 1)
-                (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id->subno);
-            break;
+    case GR_CHART_OBJNAME_AXISGRID:
+        out += xsnprintf(out, elemof_buffer, "Grid " U16_FMT, id->no /*.axis*/);
+        if(id->subno > 1)
+            (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id->subno);
+        break;
 
-        case GR_CHART_OBJNAME_AXISTICK:
-            out += xsnprintf(out, elemof_buffer, "Tick " U16_FMT, id->no /*.axis*/);
-            if(id->subno > 1)
-                (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id->subno);
-            break;
+    case GR_CHART_OBJNAME_AXISTICK:
+        out += xsnprintf(out, elemof_buffer, "Tick " U16_FMT, id->no /*.axis*/);
+        if(id->subno > 1)
+            (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id->subno);
+        break;
 
-        case GR_CHART_OBJNAME_BESTFITSER:
-            (void) xsnprintf(out, elemof_buffer, "Best fit " U16_FMT, id->no /*.series*/);
-            break;
+    case GR_CHART_OBJNAME_BESTFITSER:
+        (void) xsnprintf(out, elemof_buffer, "Best fit " U16_FMT, id->no /*.series*/);
+        break;
 
-        default:
-            (void) xsnprintf(out, elemof_buffer,
-                             id->has_subno
-                                 ? "O%u(%u.%u)"
-                                 :
-                             id->has_no
-                                 ? "O%u(%u)"
-                                 : "O%u",
-                             id->name, id->no, id->subno);
-            break;
-        }
+    default:
+        (void) xsnprintf(out, elemof_buffer,
+                         id->has_subno
+                             ? "O%u(%u.%u)"
+                             :
+                         id->has_no
+                             ? "O%u(%u)"
+                             : "O%u",
+                         id->name, id->no, id->subno);
+        break;
+    }
 }
 
 extern PC_U8
@@ -3058,28 +3058,28 @@ gr_chart_objid_find_parent(
     GR_CHART_OBJID_NAME new_name = GR_CHART_OBJNAME_ANON;
 
     switch(p_id->name)
-        {
-        case GR_CHART_OBJNAME_POINT:
-            new_name = GR_CHART_OBJNAME_SERIES;
-            break;
+    {
+    case GR_CHART_OBJNAME_POINT:
+        new_name = GR_CHART_OBJNAME_SERIES;
+        break;
 
-        case GR_CHART_OBJNAME_DROPPOINT:
-            new_name = GR_CHART_OBJNAME_DROPSER;
-            break;
+    case GR_CHART_OBJNAME_DROPPOINT:
+        new_name = GR_CHART_OBJNAME_DROPSER;
+        break;
 
-        /* note that AXISGRID and AXISTICK aren't considered as AXIS is easy to hit */
+    /* note that AXISGRID and AXISTICK aren't considered as AXIS is easy to hit */
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     if(new_name != GR_CHART_OBJNAME_ANON)
-        {
+    {
         p_id->name      = new_name;
         p_id->has_subno = 0;
         p_id->subno     = 0; /* no longer just for debugging clarity, needed for diagram searches too */
         return(1);
-        }
+    }
 
     return(0);
 }
@@ -3169,10 +3169,10 @@ gr_chart_preferred_set(
         return(res);
 
     if((res = gr_chart_clone(&gr_chart_preferred_ch, chp, 1 /*non-core info too*/)) < 0)
-        {
+    {
         gr_chart_dispose(&gr_chart_preferred_ch);
         return(res);
-        }
+    }
 
     gr_chart_clone_noncore_pict_lose_refs(&gr_chart_preferred_ch);
 
@@ -3180,11 +3180,11 @@ gr_chart_preferred_set(
 
     /* run over all series in preferred world and give them the ok */
     for(series_idx = 0; series_idx < pcp->series.n_defined; ++series_idx)
-        {
+    {
         serp = getserp(pcp, series_idx);
 
         serp->internal_bits.descriptor_ok = 1;
-        }
+    }
 
     return(1);
 }
@@ -3232,10 +3232,10 @@ gr_chart_clone(
     PC_GR_CHART src_cp = gr_chart_cp_from_ch(*src_chp); /* restrict scope */
 
     if(non_core_too)
-        {
+    {
         dst_cp->core.layout   = src_cp->core.layout;
         dst_cp->core.editsave = src_cp->core.editsave;
-        }
+    }
 
     /* replicate current non-core contents from source */
     assert(offsetof(GR_CHART, core) == 0); /* else we'd need another memcpy of noncore info */
@@ -3255,23 +3255,23 @@ gr_chart_clone(
     dst_cp->series.n_alloc = 0;
 
     for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
-        {
+    {
         dst_cp->axes[axes_idx].cache.n_series = dst_cp->axes[axes_idx].series.end_idx - dst_cp->axes[axes_idx].series.stt_idx;
         dst_cp->series.n_alloc += dst_cp->axes[axes_idx].cache.n_series;
-        }
+    }
 
     dst_cp->series.n_defined = dst_cp->series.n_alloc;
 
     if(!dst_cp->series.n_alloc)
         dst_cp->series.mh = NULL;
     else
-        {
+    {
         if(NULL == (dst_cp->series.mh = al_ptr_alloc_elem(GR_SERIES, (S32) dst_cp->series.n_alloc, &res)))
             return(res);
 
         /* copy over in two sections such that destination is packed */
         for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
-            {
+        {
             P_GR_SERIES src_serp;
 
             src_serp = src_cp->series.mh;
@@ -3282,9 +3282,9 @@ gr_chart_clone(
 
             memcpy32(dst_serp, src_serp, sizeof32(*dst_serp) *
                 (dst_cp->axes[axes_idx].series.end_idx - dst_cp->axes[axes_idx].series.stt_idx));
-            }
         }
     }
+    } /*block*/
 
     /* have to properly duplicate the lists */
 
@@ -3301,7 +3301,7 @@ gr_chart_clone(
     status_accumulate(res, gr_chart_list_duplic(dst_cp, GR_LIST_CHART_TEXT_TEXTSTYLE));
 
     for(series_idx = 0; series_idx < dst_cp->series.n_defined; ++series_idx)
-        {
+    {
         /* dup refs to series pictures */
         dst_serp = getserp(dst_cp, series_idx);
         gr_fillstyle_ref_add(&dst_serp->style.pdrop_fill);
@@ -3321,7 +3321,7 @@ gr_chart_clone(
         status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_PIECHDISPLSTYLE));
         status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_PIECHLABELSTYLE));
         status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_SCATCHSTYLE));
-        }
+    }
 
     dst_cp->bits.realloc_series = 1;
 
@@ -3355,7 +3355,7 @@ gr_chart_clone_noncore_pict_lose_refs(
     gr_fillstyle_ref_lose(&cp->legend.areastyle);
 
     for(series_idx = 0; series_idx < cp->series.n_defined; ++series_idx)
-        {
+    {
         /* lose refs to series pictures */
         serp = getserp(cp, series_idx);
         gr_fillstyle_ref_lose(&serp->style.pdrop_fill);
@@ -3364,7 +3364,7 @@ gr_chart_clone_noncore_pict_lose_refs(
         /* lose refs to point pictures */
         gr_pdrop_list_fillstyle_reref(cp, series_idx, 0 /*lose*/);
         gr_point_list_fillstyle_reref(cp, series_idx, 0 /*lose*/);
-        }
+    }
 }
 
 /* end of gr_chart.c */

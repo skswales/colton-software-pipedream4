@@ -83,10 +83,10 @@ structure of an index to a dictionary
 struct IXSTRUCT
 {
     union IXSTRUCT_P
-        {
+    {
         LIST_ITEMNO cacheno;
         S32 disk;
-        } p;
+    } p;
     S16  blklen;
     char letflags;
 };
@@ -408,175 +408,175 @@ spell_addword(
     token_start = dp->token_start;
 
     switch(newword.len)
+    {
+    /* single letter word */
+    case 1:
+        ixp(dict, newword.lettix)->letflags |= LET_ONE;
+        break;
+
+    /* two letter word */
+    case 2:
+        ixp(dict, newword.lettix)->letflags |= LET_TWO;
+        break;
+
+    /* all other words */
+    default:
+        /* tokenise the word to be inserted */
+        rootlen = (newword.fail == INS_STARTLET)
+                  ? MAX(newword.matchc, 1)
+                  : MAX(newword.matchcp, 1);
+        tokenise(dict, &newword, rootlen);
+
+        /* check if the root matches the current or previous words */
+        rootlen = strlen(newword.body);
+        if(newword.fail == INS_WORD)
         {
-        /* single letter word */
-        case 1:
-            ixp(dict, newword.lettix)->letflags |= LET_ONE;
+            if(newword.match)
+            {
+                if(rootlen == newword.matchc)
+                    newword.fail = INS_TOKENCUR;
+            }
+            else if(newword.matchp)
+            {
+                if(rootlen == newword.matchcp)
+                    newword.fail = INS_TOKENPREV;
+                else if(!spell_addword_nestf && (rootlen > newword.matchcp))
+                {
+                    P_U8 pos;
+                    struct TOKWORD delword;
+
+                    delword = newword;
+                    strcpy(delword.bodyd, delword.bodydp);
+
+                    cp = (CACHEP) list_gotoitem(cachelp,
+                                                ixp(dict, delword.lettix)->
+                                                p.cacheno)->i.inside;
+
+                    pos = cp->data + delword.findpos;
+
+                    /* skip back to start of unit */
+                    while(delword.findpos && (*--pos >= token_start))
+                        --delword.findpos;
+
+                    spell_addword_nestf = 1;
+                    if((res = delreins(dict, word, &delword)) < 0)
+                        return(res);
+                    spell_addword_nestf = 0;
+                    if(res)
+                        break;
+                }
+            }
+        }
+
+        /* calculate space needed for word */
+        switch(newword.fail)
+        {
+        /* 1 byte for root count,
+           n bytes for body,
+           1 byte for token */
+        case INS_STARTLET:
+            wordsize = 1 + rootlen - newword.matchc + 1;
             break;
 
-        /* two letter word */
-        case 2:
-            ixp(dict, newword.lettix)->letflags |= LET_TWO;
+        case INS_WORD:
+            wordsize = 1 + rootlen - newword.matchcp + 1;
             break;
 
-        /* all other words */
-        default:
-            /* tokenise the word to be inserted */
-            rootlen = (newword.fail == INS_STARTLET)
-                      ? MAX(newword.matchc, 1)
-                      : MAX(newword.matchcp, 1);
-            tokenise(dict, &newword, rootlen);
-
-            /* check if the root matches the current or previous words */
-            rootlen = strlen(newword.body);
-            if(newword.fail == INS_WORD)
-                {
-                if(newword.match)
-                    {
-                    if(rootlen == newword.matchc)
-                        newword.fail = INS_TOKENCUR;
-                    }
-                else if(newword.matchp)
-                    {
-                    if(rootlen == newword.matchcp)
-                        newword.fail = INS_TOKENPREV;
-                    else if(!spell_addword_nestf && (rootlen > newword.matchcp))
-                        {
-                        P_U8 pos;
-                        struct TOKWORD delword;
-
-                        delword = newword;
-                        strcpy(delword.bodyd, delword.bodydp);
-
-                        cp = (CACHEP) list_gotoitem(cachelp,
-                                                    ixp(dict, delword.lettix)->
-                                                    p.cacheno)->i.inside;
-
-                        pos = cp->data + delword.findpos;
-
-                        /* skip back to start of unit */
-                        while(delword.findpos && (*--pos >= token_start))
-                            --delword.findpos;
-
-                        spell_addword_nestf = 1;
-                        if((res = delreins(dict, word, &delword)) < 0)
-                            return(res);
-                        spell_addword_nestf = 0;
-                        if(res)
-                            break;
-                        }
-                    }
-                }
-
-            /* calculate space needed for word */
-            switch(newword.fail)
-                {
-                /* 1 byte for root count,
-                   n bytes for body,
-                   1 byte for token */
-                case INS_STARTLET:
-                    wordsize = 1 + rootlen - newword.matchc + 1;
-                    break;
-
-                case INS_WORD:
-                    wordsize = 1 + rootlen - newword.matchcp + 1;
-                    break;
-
-                /* 1 byte for token */
-                case INS_TOKENPREV:
-                case INS_TOKENCUR:
-                    wordsize = 1;
-                    break;
-                }
-
-            /* check we have a cache block */
-            if((err = fetchblock(dict, newword.lettix)) != 0)
-                return(err);
-
-            /* add word to cache block */
-            err = 0;
-            cache_lock = 1;
-            do  {
-                /* loop to get some memory */
-                lett = ixp(dict, newword.lettix);
-
-                if((it = list_createitem(cachelp,
-                                         lett->p.cacheno,
-                                         lett->blklen +
-                                         wordsize +
-                                         sizeof(struct CACHEBLOCK),
-                                         FALSE)) != NULL)
-                    {
-                    cp = (CACHEP) it->i.inside;
-                    break;
-                    }
-
-                if((err = freecache(newword.lettix)) < 0)
-                    break;
-                }
-            while(TRUE);
-            cache_lock = 0;
-
-            if(err < 0)
-                return(err);
-
-            /* find place to insert new word */
-            newpos = cp->data + newword.findpos;
-            switch(newword.fail)
-                {
-                case INS_TOKENCUR:
-                    /* skip to tokens of current word */
-                    while(*newpos < token_start)
-                        {
-                        ++newpos;
-                        ++newword.findpos;
-                        }
-                    break;
-
-                case INS_TOKENPREV:
-                case INS_WORD:
-                case INS_STARTLET:
-                    break;
-                }
-
-            /* make space for new word */
-            temppos = newpos;
-            lett = ixp(dict, newword.lettix);
-            err = lett->blklen - newword.findpos;
-            memmove32(newpos + wordsize,
-                      newpos,
-                      lett->blklen - newword.findpos);
-
-            lett->blklen += wordsize;
-
-            /* move in word */
-            switch(newword.fail)
-                {
-                case INS_STARTLET:
-                    *newpos++ = '\0';
-                    ci = newword.body;
-                    while(*ci)
-                        *newpos++ = *ci++;
-                    *newpos++ = (char) newword.tail;
-                    *newpos++ = (char) newword.matchc;
-                    break;
-
-                /* note fall thru */
-                case INS_WORD:
-                    *newpos++ = (char) newword.matchcp;
-                    ci = newword.body + newword.matchcp;
-                    while(*ci)
-                        *newpos++ = *ci++;
-
-                /* note fall thru */
-                case INS_TOKENPREV:
-                case INS_TOKENCUR:
-                    *newpos++ = (char) newword.tail;
-                    break;
-                }
-
+        /* 1 byte for token */
+        case INS_TOKENPREV:
+        case INS_TOKENCUR:
+            wordsize = 1;
             break;
         }
+
+        /* check we have a cache block */
+        if((err = fetchblock(dict, newword.lettix)) != 0)
+            return(err);
+
+        /* add word to cache block */
+        err = 0;
+        cache_lock = 1;
+        for(;;)
+        {
+            /* loop to get some memory */
+            lett = ixp(dict, newword.lettix);
+
+            if((it = list_createitem(cachelp,
+                                     lett->p.cacheno,
+                                     lett->blklen +
+                                     wordsize +
+                                     sizeof(struct CACHEBLOCK),
+                                     FALSE)) != NULL)
+            {
+                cp = (CACHEP) it->i.inside;
+                break;
+            }
+
+            if((err = freecache(newword.lettix)) < 0)
+                break;
+        }
+        cache_lock = 0;
+
+        if(err < 0)
+            return(err);
+
+        /* find place to insert new word */
+        newpos = cp->data + newword.findpos;
+        switch(newword.fail)
+        {
+        case INS_TOKENCUR:
+            /* skip to tokens of current word */
+            while(*newpos < token_start)
+            {
+                ++newpos;
+                ++newword.findpos;
+            }
+            break;
+
+        case INS_TOKENPREV:
+        case INS_WORD:
+        case INS_STARTLET:
+            break;
+        }
+
+        /* make space for new word */
+        temppos = newpos;
+        lett = ixp(dict, newword.lettix);
+        err = lett->blklen - newword.findpos;
+        memmove32(newpos + wordsize,
+                  newpos,
+                  lett->blklen - newword.findpos);
+
+        lett->blklen += wordsize;
+
+        /* move in word */
+        switch(newword.fail)
+        {
+        case INS_STARTLET:
+            *newpos++ = '\0';
+            ci = newword.body;
+            while(*ci)
+                *newpos++ = *ci++;
+            *newpos++ = (char) newword.tail;
+            *newpos++ = (char) newword.matchc;
+            break;
+
+        /* note fall thru */
+        case INS_WORD:
+            *newpos++ = (char) newword.matchcp;
+            ci = newword.body + newword.matchcp;
+            while(*ci)
+                *newpos++ = *ci++;
+
+        /* note fall thru */
+        case INS_TOKENPREV:
+        case INS_TOKENCUR:
+            *newpos++ = (char) newword.tail;
+            break;
+        }
+
+        break;
+    }
 
     /* mark that it needs a write */
     ixp(dict, newword.lettix)->letflags |= LET_WRITE;
@@ -627,10 +627,10 @@ spell_close(
         return(create_error(SPELL_ERR_BADDICT));
 
     if((dicthand = dictlist[dict].dicthandle) == NULL)
-        {
+    {
         trace_1(TRACE_OUT | TRACE_MODULE_SPELL, "spell_close called to close non-open dictionary: %d", dict);
         return(create_error(SPELL_ERR_CANTCLOSE));
-        }
+    }
 
     /* write out any modified part */
     err = ensuredict(dict);
@@ -673,11 +673,11 @@ spell_createdict(
 
     /* check to see if it exists */
     if(file_open(name, file_open_read, &newdict), newdict != NULL)
-        {
+    {
         file_close(&newdict);
         release_dict_entry(dict);
         return(create_error(SPELL_ERR_EXISTS));
-        }
+    }
 
     /* dummy loop for structure */
     do  {
@@ -686,17 +686,17 @@ spell_createdict(
 
         /* try to open definition file */
         if(file_open(def_name, file_open_read, &def_file), def_file == NULL)
-            {
+        {
             err = create_error(SPELL_ERR_CANTOPENDEFN);
             break;
-            }
+        }
 
         /* create a blank file */
         if(file_open(name, file_open_write, &newdict), newdict == NULL)
-            {
+        {
             err = create_error(SPELL_ERR_CANTOPEN);
             break;
-            }
+        }
 
         /* get file buffers */
         file_buffer(newdict, NULL, BUF_SIZE);
@@ -719,21 +719,21 @@ spell_createdict(
 
         /* copy across definition file */
         while((res = read_def_line(def_file, buffer)) > 0)
-            {
+        {
             trace_1(TRACE_MODULE_SPELL, "spell_createdict def line: %s", trace_string(buffer));
 
             if((err = file_write(buffer, sizeof(char), res, newdict)) < 0)
                 goto error;
-            }
+        }
 
         trace_1(TRACE_MODULE_SPELL, "spell_createdict after def file: %d", res);
 
-        /* stop ooon error */
+        /* stop on error */
         if(res < 0)
-            {
+        {
             err = res;
             break;
-            }
+        }
 
         /* write out definition end byte */
         if((err = file_putc(0, newdict)) < 0)
@@ -753,19 +753,19 @@ spell_createdict(
 
         /* re-open for update */
         if(file_open(name, file_open_readwrite, &newdict), newdict == NULL)
-            {
+        {
             err = create_error(SPELL_ERR_CANTOPEN);
             break;
-            }
+        }
 
         file_buffer(newdict, NULL, BUF_SIZE);
 
         /* process definition file */
         if((res = load_dict_def(dict, NULL)) < 0)
-            {
+        {
             err = res;
             break;
-            }
+        }
 
         /* get a blank structure */
         wix.p.disk   = 0;
@@ -777,17 +777,17 @@ spell_createdict(
 
         /* write out blank structures */
         for(i = 0; i < dp->n_index; ++i)
-            {
+        {
             if((err = file_write(&wix,
                                  sizeof(struct IXSTRUCT),
                                  1,
                                  newdict)) < 0)
-                {
+            {
                 trace_1(TRACE_MODULE_SPELL, "spell_createdict failed to write out index entry %d", i);
                 goto error;
-                }
             }
         }
+    }
     while(FALSE);
 
 error:
@@ -799,7 +799,7 @@ error:
     release_dict_entry(dict);
 
     if(err < 0)
-        {
+    {
         if(newdict)
             file_close(&newdict);
 
@@ -808,7 +808,7 @@ error:
 
         remove(name);
         return(err);
-        }
+    }
 
     file_close(&def_file);
 
@@ -857,16 +857,16 @@ spell_deleteword(
 
     /* deal with 1 and 2 letter words */
     if(curword.len == 1)
-        {
+    {
         lett->letflags &= ~LET_ONE;
         return(0);
-        }
+    }
 
     if(curword.len == 2)
-        {
+    {
         lett->letflags &= ~LET_TWO;
         return(0);
-        }
+    }
 
     /* check we have a cache block */
     if((err = fetchblock(dict, curword.lettix)) != 0)
@@ -891,15 +891,15 @@ spell_deleteword(
     ++datap;
     tokcount = 0;
     while((*datap >= token_start) && (datap < ep))
-        {
+    {
         ++datap;
         ++tokcount;
-        }
+    }
     endword = datap;
 
     /* calculate bytes to delete */
     if(tokcount == 1)
-        {
+    {
         /* move to beginning of word */
         --datap;
         while(*datap >= char_offset)
@@ -909,11 +909,11 @@ spell_deleteword(
         if(endword == ep)
             delsize = endword - datap;
         else
-            {
+        {
             if(*endword <= *datap)
                 delsize = endword - datap;
             else
-                {
+            {
                 /* copy across the extra root required */
                 addroot = ((S32) *endword - (S32) *datap) + 1;
                 delsize = endword - datap - addroot + 1;
@@ -921,14 +921,14 @@ spell_deleteword(
                 co = endword + 1;
                 for(i = 0; i < addroot; ++i)
                     *--co = *--ci;
-                }
             }
         }
+    }
     else
-        {
+    {
         delsize = 1;
         datap = sp + curword.findpos;
-        }
+    }
 
     lett = ixp(dict, curword.lettix);
     blockbefore = (datap - sp) + delsize;
@@ -958,10 +958,10 @@ spell_flush(
         return(create_error(SPELL_ERR_BADDICT));
 
     if((dicthand = dictlist[dict].dicthandle) == NULL)
-        {
+    {
         trace_1(TRACE_OUT | TRACE_MODULE_SPELL, "spell_flush called to flush non-open dictionary: %d", dict);
         return(create_error(SPELL_ERR_CANTWRITE));
-        }
+    }
 
     /* write out any modified part */
     err = ensuredict(dict);
@@ -987,15 +987,15 @@ spell_full_events(
     bytes_freed = 0;
 
     if(!cache_lock)
-        {
+    {
         do  {
             bytes_freed += list_packlist(cachelp, n_bytes);
 
             if(bytes_freed > n_bytes)
                 break;
-            }
-        while(freecache(-1) > 0);
         }
+        while(freecache(-1) > 0);
+    }
 
     trace_1(TRACE_MODULE_SPELL, "spell_full_events freed total of %u bytes", bytes_freed);
 
@@ -1042,7 +1042,7 @@ spell_load(
             return(create_error(SPELL_ERR_BADDICT));
 
     for(i = 0; i < dp->n_index; ++i)
-        {
+    {
         /* is there a block defined ? */
         if(!ixpdp(dp, i)->blklen)
             continue;
@@ -1051,7 +1051,7 @@ spell_load(
             return(err);
 
         ixpdp(dp, i)->letflags |= LET_LOCKED;
-        }
+    }
 
     return(0);
 }
@@ -1105,16 +1105,16 @@ spell_nextword(
             return(create_error(SPELL_ERR_ESCAPE));
 
         if(!gotw)
-            {
+        {
             if((res = nextword(dict, wordout)) < 0)
                 return(res);
-            }
+        }
         else
-            {
+        {
             res = 1;
             gotw = 0;
-            }
         }
+    }
     while(res &&
           matchword(dict, mask, wordout) &&
           ((res = !endmatch(dict, wordout, mask, 1)) != 0));
@@ -1157,10 +1157,10 @@ spell_opendict(
 
     /* register interest in full events */
     if(!full_event_registered)
-        {
+    {
         status_assert(al_full_event_client_register(spell_full_events));
         full_event_registered = 1;
-        }
+    }
 
     /* get a dictionary number */
     if((dict = get_dict_entry()) < 0)
@@ -1174,10 +1174,10 @@ spell_opendict(
 
         /* look for the file */
         if(file_open(name, file_open_read, &dp->dicthandle), dp->dicthandle == NULL)
-            {
+        {
             err = create_error(SPELL_ERR_CANTOPEN);
             break;
-            }
+        }
 
         /* take copy of name for reopening in setoptions */
         xstrkpy(dp->dict_filename, elemof32(dp->dict_filename), name);
@@ -1205,37 +1205,37 @@ spell_opendict(
             break;
 
         if((fpos = file_tell(dp->dicthandle)) < 0)
-            {
+        {
             err = fpos;
             break;
-            }
+        }
 
         dp->dictsize = fpos - dp->data_offset;
 
         /* if dictionary can be updated, re-open for update */
         if(!(dp->dictflags & DICT_READONLY))
-            {
+        {
             file_close(&dp->dicthandle);
 
             /* look for the file */
             if(file_open(name, file_open_readwrite, &dp->dicthandle), dp->dicthandle == NULL)
-                {
+            {
                 err = create_error(SPELL_ERR_CANTOPEN);
                 break;
-                }
+            }
 
             file_buffer(dp->dicthandle, 0, BUF_SIZE);
-            }
         }
+    }
     while(FALSE);
 
     if(err < 0)
-        {
+    {
         if(dp->dicthandle)
             file_close(&dp->dicthandle);
         release_dict_entry(dict);
         return(err);
-        }
+    }
 
     /* loop over index, masking off unwanted bits */
     for(i = 0, lett = ixpdp(dp, 0); i < dp->n_index; ++i, ++lett)
@@ -1276,18 +1276,18 @@ spell_pack(
     err = 0;
 
     for(i = 0; i < olddp->n_index; ++i)
-        {
+    {
         lettin  = ixpdp(olddp, i);
         lettout = ixpdp(newdp, i);
 
         /* if no block, copy index entries and continue */
         if(!lettin->blklen)
-            {
+        {
             *lettout = *lettin;
             lettin->letflags &= LET_ONE | LET_TWO;
             lettout->letflags |= LET_WRITE;
             continue;
-            }
+        }
 
         if((err = fetchblock(olddict, i)) != 0)
             break;
@@ -1310,7 +1310,7 @@ spell_pack(
         cp->dict = newdict;
         cp->lettix = i;
         lettout->letflags |= LET_WRITE;
-        }
+    }
 
     newdp->dictflags = olddp->dictflags;
 
@@ -1353,7 +1353,7 @@ spell_prevword(
 
         if((res = prevword(dict, wordout)) < 0)
             return(res);
-        }
+    }
     while(res &&
           matchword(dict, mask, wordout) &&
           ((res = !endmatch(dict, wordout, mask, 0)) != 0));
@@ -1387,19 +1387,19 @@ spell_setoptions(
 
     /* may need to open for update! */
     if(dp->dictflags & DICT_READONLY)
-        {
+    {
         if(file_close(&dp->dicthandle))
             dp->dicthandle = NULL;
         else
             file_open(dp->dict_filename, file_open_readwrite, &dp->dicthandle);
 
         if(!dp->dicthandle)
-            {
+        {
             /* if failed to open for update, reopen for reading */
             file_open(dp->dict_filename, file_open_read, &dp->dicthandle);
             return(create_error(SPELL_ERR_CANTWRITE));
-            }
         }
+    }
 
     dp->dictflags &= (char) optionmask;
     dp->dictflags |= (char) optionset;
@@ -1434,7 +1434,7 @@ spell_stats(
 
     cacheno = 0;
     if((it = list_initseq(cachelp, &cacheno)) != NULL)
-        {
+    {
         do  {
             CACHEP cp = (CACHEP) it->i.inside;
 
@@ -1443,9 +1443,9 @@ spell_stats(
                      ixp(cp->dict, cp->lettix)->blklen;
             *largest = MAX(*largest, blksiz);
             *totalmem += blksiz;
-            }
-        while((it = list_nextseq(cachelp, &cacheno)) != NULL);
         }
+        while((it = list_nextseq(cachelp, &cacheno)) != NULL);
+    }
 }
 
 /******************************************************************************
@@ -1624,13 +1624,13 @@ char_ordinal_1(
     char i;
 
     if(ch >= 0)
-        {
+    {
         dp = &dictlist[dict];
 
         for(i = 0; i < dp->n_index_1; ++i)
             if(dp->letter_1[i] == (char) ch)
                 return(i + dp->char_offset);
-        }
+    }
 
     return(create_error(SPELL_ERR_BADWORD));
 }
@@ -1656,13 +1656,13 @@ char_ordinal_2(
     char i;
 
     if(ch >= 0)
-        {
+    {
         dp = &dictlist[dict];
 
         for(i = 0; i < dp->n_index_2; ++i)
             if(dp->letter_2[i] == (char) ch)
                 return(i + dp->char_offset);
-        }
+    }
 
     return(create_error(SPELL_ERR_BADWORD));
 }
@@ -1688,13 +1688,13 @@ char_ordinal_3(
     char i;
 
     if(ch >= 0)
-        {
+    {
         dp = &dictlist[dict];
 
         for(i = 0; i < dp->n_index_2; ++i)
             if(dp->letter_2[i] == (char) ch)
                 return(dp->man_token_start ? ch : i + dp->char_offset);
-        }
+    }
 
     return(create_error(SPELL_ERR_BADWORD));
 }
@@ -1783,10 +1783,10 @@ decodeword(
                                                dp->char_offset));
 
     if(len == 1)
-        {
+    {
         *(word + 1) = '\0';
         return(1);
-        }
+    }
 
     *(word + 1) = (char)
                   spell_tolower(dict,
@@ -1795,10 +1795,10 @@ decodeword(
                                                dp->char_offset));
 
     if(len == 2)
-        {
+    {
         *(word + 2) = '\0';
         return(2);
-        }
+    }
 
     /* decode body */
     ci = wp->bodyd;
@@ -1886,14 +1886,14 @@ deletecache(
 
     /* adjust cache numbers below */
     for(i = list_atitem(cachelp); i < list_numitem(cachelp); ++i)
-        {
+    {
         CACHEP cp = (CACHEP) list_gotoitem(cachelp, i)->i.inside;
         trace_2(TRACE_MODULE_SPELL, "cp: %p, ixp: %p", report_ptr_cast(cp), report_ptr_cast(ixp(cp->dict, cp->lettix)));
         ixp(cp->dict, cp->lettix)->p.cacheno = i;
 
         trace_2(TRACE_MODULE_SPELL, "deletecache adjusted: %d, numitems: %d",
                 i, list_numitem(cachelp));
-        }
+    }
 }
 
 /******************************************************************************
@@ -1933,7 +1933,7 @@ delreins(
     cache_lock = 1;
     err = 0;
     while((datap < ep) && *datap >= token_start)
-        {
+    {
         wp->tail = *datap - token_start;
         len = decodeword(dict, realword, wp, 0);
         if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(P_U8, len + 1/*NULLCH*/, &err)))
@@ -1945,7 +1945,7 @@ delreins(
         datap += (P_U8) cp - (P_U8) ocp;
         ep += (P_U8) cp - (P_U8) ocp;
         ++datap;
-        }
+    }
     cache_lock = 0;
 
     if(err)
@@ -1958,21 +1958,21 @@ delreins(
 
     /* if none out of range, free memory and exit */
     if(i == wordc)
-        {
+    {
         for(i = 0; i < wordc; ++i)
             al_ptr_free(deadwords[i]);
         return(0);
-        }
+    }
 
     /* delete the words */
     for(i = 0; i < wordc; ++i)
-        {
+    {
         char word_buf[MAX_WORD + 1];
 
         strcpy(word_buf, deadwords[i]);
         if((err = spell_deleteword(dict, word_buf)) < 0)
             return(err);
-        }
+    }
 
     /* add the new word */
     if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(P_U8, strlen(word) + 1/*NULLCH*/, &err)))
@@ -1983,14 +1983,14 @@ delreins(
     compar_dict = dict;
     qsort((void *) deadwords, wordc, sizeof(deadwords[0]), compar);
     for(i = 0; i < wordc; ++i)
-        {
+    {
         char word_buf[MAX_WORD + 1];
 
         strcpy(word_buf, deadwords[i]);
         if((err = spell_addword(dict, word_buf)) < 0)
             return(err);
         al_ptr_free(deadwords[i]);
-        }
+    }
 
     return(1);
 }
@@ -2017,10 +2017,10 @@ endmatch(
     len = 0;
     ci = mask;
     while(spell_iswordc(dict, (S32) *ci))
-        {
+    {
         ++ci;
         ++len;
-        }
+    }
 
     if(!len)
         return(0);
@@ -2050,27 +2050,27 @@ ensuredict(
     for(i = 0, err = allerr = 0, dp = &dictlist[dict];
         i < dp->n_index;
         ++i)
-        {
+    {
         SIXP lett = ixpdp(dp, i);
 
         trace_1(TRACE_MODULE_SPELL, "ensure letter: %d", i);
         if(lett->letflags & LET_WRITE)
-            {
+        {
             if(lett->letflags & LET_CACHED)
                 err = killcache(lett->p.cacheno);
             else
-                {
+            {
                 /* mask flags to be written to disk */
                 lett->letflags &= LET_ONE | LET_TWO;
                 err = writeindex(dict, i);
-                }
+            }
 
             if(err)
                 allerr = allerr ? allerr : err;
             else
                 ixpdp(dp, i)->letflags &= ~LET_WRITE;
-            }
         }
+    }
 
     return(allerr);
 }
@@ -2105,22 +2105,23 @@ fetchblock(
     /* allocate a list block if we don't have one */
     err = 0;
     if(!cachelp)
-        {
+    {
         if(NULL != (cachelp = al_ptr_alloc_elem(LIST_BLOCK, 1, &err)))
-            {
+        {
             list_init(cachelp,
                       SPELL_MAXITEMSIZE,
                       SPELL_MAXPOOLSIZE);
             list_register(cachelp);
             trace_0(TRACE_MODULE_SPELL, "fetchblock has allocated cache list block");
-            }
         }
+    }
 
     /* get a space to receive the block */
     if(err >= 0)
-        {
+    {
         cache_lock = 1;
-        do  {
+        for(;;)
+        {
             trace_0(TRACE_MODULE_SPELL, "fetchblock doing createitem");
             if((it = list_createitem(cachelp,
                                      list_numitem(cachelp),
@@ -2132,10 +2133,9 @@ fetchblock(
             trace_0(TRACE_MODULE_SPELL, "fetchblock doing freecache");
             if((err = freecache(-1)) < 0)
                 break;
-            }
-        while(TRUE);
-        cache_lock = 0;
         }
+        cache_lock = 0;
+    }
 
     if(err < 0)
         return(err);
@@ -2145,15 +2145,15 @@ fetchblock(
 
     /* read the data if there is any */
     if(lett->p.disk)
-        {
+    {
         /* position for the read */
         trace_0(TRACE_MODULE_SPELL, "fetchblock doing seek");
         dicthand = dictlist[dict].dicthandle;
         if((err = file_seek(dicthand, lett->p.disk, SEEK_SET)) < 0)
-            {
+        {
             deletecache(list_atitem(cachelp));
             return(err);
-            }
+        }
 
         /* read in the block */
         trace_0(TRACE_MODULE_SPELL, "fetchblock doing read");
@@ -2162,11 +2162,11 @@ fetchblock(
                             sizeof(char),
                             nbytes,
                             dicthand)) < 0)
-            {
+        {
             deletecache(list_atitem(cachelp));
             return(err);
-            }
         }
+    }
     else
         newblock->diskspace = 0;
 
@@ -2208,22 +2208,22 @@ freecache(
     minno = -1;
     cacheno = 0;
     if((it = list_initseq(cachelp, &cacheno)) != NULL)
-        {
+    {
         do  {
             cp = (CACHEP) it->i.inside;
             /* check if block is locked */
             if(lettix != cp->lettix &&
                !(ixp(cp->dict, cp->lettix)->letflags & LET_LOCKED))
-                {
+            {
                 if(cp->usecount < mincount)
-                    {
+                {
                     mincount = cp->usecount;
                     minno = cacheno;
-                    }
                 }
             }
-        while((it = list_nextseq(cachelp, &cacheno)) != NULL);
         }
+        while((it = list_nextseq(cachelp, &cacheno)) != NULL);
+    }
 
     if(minno < 0)
         return(status_nomem());
@@ -2269,7 +2269,7 @@ get_dict_entry(void)
 
     for(i = 0; i < MAX_DICT; ++i)
         if(dictlist[i].dicthandle == NULL)
-            {
+        {
             DIXP dp = &dictlist[i];
 
             dp->dicth          = 0;
@@ -2285,7 +2285,7 @@ get_dict_entry(void)
             list_register(&dp->dict_end_list);
 
             return(i);
-            }
+        }
 
     return(create_error(SPELL_ERR_DICTFULL));
 }
@@ -2311,7 +2311,7 @@ initmatch(
 
     /* if no wordin, initialise from mask */
     if(!*wordin)
-        {
+    {
         ci = mask;
         co = wordout;
         do  {
@@ -2319,21 +2319,21 @@ initmatch(
                !*ci                         ||
                (*ci == SPELL_WILD_MULTIPLE) ||
                (*ci == SPELL_WILD_SINGLE))
-                {
+            {
                 if(!ci || (ci == mask))
-                    {
+                {
                     *co++ = dictlist[dict].letter_1[0];
                     *co = '\0';
 
                     return((ixp(dict, 0)->letflags & LET_ONE) ? 1 : 0);
-                    }
+                }
                 *co = '\0';
                 return(1);
-                }
-            *co++ = *ci;
             }
-        while(*ci++);
+            *co++ = *ci;
         }
+        while(*ci++);
+    }
     else
         strcpy(wordout, wordin);
 
@@ -2377,7 +2377,7 @@ killcache(
     /* write out index entry */
     dicthand = dictlist[cp->dict].dicthandle;
     if(write && (err = writeindex(cp->dict, cp->lettix)) != 0)
-        {
+    {
         /* make the dictionary useless
          * if not properly updated
         */
@@ -2385,7 +2385,7 @@ killcache(
         file_clearerror(dicthand);
         (void) file_seek(dicthand, 0, SEEK_SET);
         (void) file_putc(0, dicthand);
-        }
+    }
 
     /* throw away the cache block */
     deletecache(cacheno);
@@ -2433,19 +2433,19 @@ load_dict_def(
 
     /* is it old dictionary format ? */
     if(0 == strncmp(keystr, OLD_KEYSTR, strlen(OLD_KEYSTR)))
-        {
+    {
         /* try to open definition file */
         if(file_open(def_name, file_open_read, &def_file), def_file == NULL)
             return(create_error(SPELL_ERR_BADDEFFILE));
 
         file_buffer(def_file, NULL, BUF_SIZE);
         keylen = strlen(OLD_KEYSTR);
-        }
+    }
     else if(0 == strncmp(keystr, KEYSTR, strlen(KEYSTR)))
-        {
+    {
         keylen = strlen(KEYSTR);
         def_file = dp->dicthandle;
-        }
+    }
     else
         return(create_error(SPELL_ERR_BADDICT));
 
@@ -2453,10 +2453,10 @@ load_dict_def(
 
     /* close definition file if separate */
     if(def_file != dp->dicthandle)
-        {
+    {
         if((err = file_close(&def_file)) < 0 && res >= 0)
             res = err;
-        }
+    }
 
     return(res);
 }
@@ -2520,14 +2520,14 @@ load_dict_def_now(
     in            = buffer;
     out           = dp->letter_1;
     while(*in)
-        {
+    {
         if(dp->man_token_start &&
            (*in >= dp->man_token_start ||
             *in <  dp->char_offset))
             return(create_error(SPELL_ERR_DEFCHARERR));
 
         *out++ = *in++;
-        }
+    }
 
     /* read second letter list */
     if((res = read_def_line(def_file, buffer)) <= 0 || res > MAX_INDEX)
@@ -2537,14 +2537,14 @@ load_dict_def_now(
     in            = buffer;
     out           = dp->letter_2;
     while(*in)
-        {
+    {
         if(dp->man_token_start &&
            (*in >= dp->man_token_start ||
             *in <  dp->char_offset))
             return(create_error(SPELL_ERR_DEFCHARERR));
 
         *out++ = *in++;
-        }
+    }
 
     /* initialise case map */
     for(i = 0; i < 256; i++)
@@ -2585,7 +2585,7 @@ load_dict_def_now(
         (res = read_def_line(def_file, buffer)) > 0 &&
         end < MAX_TOKEN - MIN_TOKEN;
         ++end)
-        {
+    {
         char *out;
         S32 i, ch;
 
@@ -2593,11 +2593,11 @@ load_dict_def_now(
         for(i = 0, in = buffer, ep = &token[end], out = ep->ending;
             i < MAX_ENDLEN;
             ++i)
-            {
+        {
             if((ch = char_ordinal_3(dict, spell_toupper(dict, *in++))) <= 0)
                 break;
             *out++ = (char) ch;
-            }
+        }
 
         if(!i || i == MAX_ENDLEN)
             return(create_error(SPELL_ERR_BADDEFFILE));
@@ -2605,7 +2605,7 @@ load_dict_def_now(
         *out++ = '\0';
         ep->len = (char) strlen(ep->ending);
         ep->pos = (char) end;
-        }
+    }
 
     /* check we read some endings */
     if(res >= 0 && end == 1)
@@ -2635,7 +2635,7 @@ load_dict_def_now(
 
     /* insert into dictionary ending list */
     for(i = 0, ep = token; i < end; ++i, ++ep)
-        {
+    {
         P_LIST_ITEM it;
         I_ENDP iep;
         S32 bytes;
@@ -2654,7 +2654,7 @@ load_dict_def_now(
         iep->len   = ep->len;
         iep->alpha = ep->alpha;
         strcpy(iep->ending, ep->ending);
-        }
+    }
 
     /* use minimum space */
     list_packlist(&dp->dict_end_list, (LIST_ITEMNO) -1);
@@ -2703,25 +2703,25 @@ lookupword(
     P_LIST_BLOCK dlp;
 
     if(needpos)
-        {
+    {
         wp->fail = INS_WORD;
         wp->findpos = wp->matchc = wp->match = wp->matchcp = wp->matchp = 0;
-        }
+    }
 
     lett = ixp(dict, wp->lettix);
 
     /* check one/two letter words */
     switch(wp->len)
-        {
-        case 1:
-            return(lett->letflags & LET_ONE);
+    {
+    case 1:
+        return(lett->letflags & LET_ONE);
 
-        case 2:
-            return(lett->letflags & LET_TWO);
+    case 2:
+        return(lett->letflags & LET_TWO);
 
-        default:
-            break;
-        }
+    default:
+        break;
+    }
 
     /* is there a block defined ? */
     if(!lett->blklen)
@@ -2751,7 +2751,7 @@ lookupword(
     found = updown = 0;
 
     while(endlim - startlim > 1)
-        {
+    {
         midpoint = datap = startlim + (endlim - startlim) / 2;
 
         /* step back to first in block */
@@ -2760,52 +2760,52 @@ lookupword(
 
         ch = (S32) *(datap + 1);
         if(ch == (S32) *wp->body)
-            {
+        {
             found = 1;
             break;
-            }
-
-        if(ch < (S32) *wp->body)
-            {
-            updown = 1;
-            startlim = midpoint;
-            }
-        else
-            {
-            updown = 0;
-            endlim = midpoint;
-            }
         }
 
-    if(!found)
+        if(ch < (S32) *wp->body)
         {
+            updown = 1;
+            startlim = midpoint;
+        }
+        else
+        {
+            updown = 0;
+            endlim = midpoint;
+        }
+    }
+
+    if(!found)
+    {
         /* set insert position after this letter
         if we are inserting a higher letter */
         if(needpos)
-            {
+        {
             if(updown)
-                {
+            {
                 endlim = cp->data + lett->blklen;
                 while(datap < endlim)
-                    {
+                {
                     ++datap;
                     if(!*datap)
                         break;
-                    }
                 }
+            }
 
             wp->fail = INS_WORD;
             wp->findpos = datap - (P_U8) cp->data /* fix C6.0 whinge */;
-            }
-        return(0);
         }
+        return(0);
+    }
 
     /* search forward for word */
     endlim = cp->data + lett->blklen;
 
     *wp->bodyd = '\0';
     while((datap + 1) < endlim)
-        {
+    {
         /* save previous body */
         if(needpos)
             strcpy(wp->bodydp, wp->bodyd);
@@ -2826,58 +2826,58 @@ lookupword(
         for(i = found = 0, ci = wp->bodyd, co = wp->body;
             i < bodylen;
             ++i, ++ci, ++co)
-            {
+        {
             if(*ci != *co)
-                {
+            {
                 if(*ci > *co)
                     found = 1;
                 else
                     found = -1;
 
                 break;
-                }
             }
+        }
 
         if(needpos)
-            {
+        {
             wp->matchcp = wp->matchc;
             wp->matchp = wp->match;
             wp->matchc = i;
             wp->match = (i == bodylen && wp->matchc >= wp->matchcp) ? 1 : 0;
-            }
+        }
 
         if(!found)
-            {
+        {
             /* compare tokens */
             while(((ch = (S32) *datap) >= (S32) token_start) &&
                   datap < endlim)
-                {
+            {
                 ++datap;
                 if(0 == strcmp(((I_ENDP) (list_gotoitem(dlp,
                                                     (LIST_ITEMNO)
                                                     ch - token_start)->
                                           i.inside))->ending,
                                wp->body + bodylen))
-                    {
+                {
                     if(needpos)
-                        {
+                    {
                         wp->fail = 0;
                         wp->findpos = datap - (P_U8) cp->data - 1 /* fix C6.0 whinge */;
-                        }
-                    return(1);
                     }
+                    return(1);
                 }
             }
+        }
 
         /* if bodies didn't compare */
         if(found                                   ||
            (needpos && (wp->matchc < wp->matchcp)))
-            {
+        {
             if(found >= 0)
-                {
+            {
                 /* step back to start of word */
                 if(needpos)
-                    {
+                {
                     while(*--datap >= char_offset)
                         ;
 
@@ -2889,24 +2889,24 @@ lookupword(
                             : INS_STARTLET;
 
                     wp->findpos = datap - (P_U8) cp->data /* fix C6.0 whinge */;
-                    }
-                return(0);
                 }
+                return(0);
+            }
             else
-                {
+            {
                 /* skip tokens, then move to next body */
                 while((*datap >= token_start) && (datap < endlim))
                     ++datap;
 
                 continue;
-                }
             }
-
         }
+
+    }
 
     /* at end of block */
     if(needpos)
-        {
+    {
         wp->matchcp = wp->matchc;
         wp->matchp = wp->match;
         wp->matchc = wp->match = 0;
@@ -2914,7 +2914,7 @@ lookupword(
 
         wp->fail = INS_WORD;
         wp->findpos = datap - (P_U8) cp->data /* fix C6.0 whinge */;
-        }
+    }
 
     return(0);
 }
@@ -2959,21 +2959,21 @@ makeindex(
 
     /* process second letter */
     if(len > 1)
-        {
+    {
         if((ch = char_ordinal_2(dict, spell_toupper(dict, *word++))) < 0)
             return(NULL);
 
         wp->lettix += ch - dp->char_offset;
-        }
+    }
 
     /* copy across body */
     co = wp->body;
     while(*word)
-        {
+    {
         if((ch = char_ordinal_3(dict, spell_toupper(dict, *word++))) < 0)
             return(NULL);
         *co++ = (char) ch;
-        }
+    }
     *co++ = '\0';
 
     /* clear tail index */
@@ -3008,33 +3008,35 @@ matchword(
     maskp = star = mask;
     wordp = nextpos = word;
 
-    do  {
-        /* loop1 */
+    /* loop1 */
+    for(;;)
+    {
         ++nextpos;
 
         /* loop3 */
-        do  {
+        for(;;)
+        {
             if(*maskp == SPELL_WILD_MULTIPLE)
-                {
+            {
                 nextpos = wordp;
                 star = ++maskp;
                 break;
-                }
+            }
 
             if(spell_toupper(dict, *maskp) != spell_toupper(dict, *wordp))
-                {
+            {
                 if(*wordp == '\0')
                     return(1);
 
                 if(*maskp != SPELL_WILD_SINGLE)
-                    {
+                {
                     ++maskp;
                     wordp = nextpos;
                     if(star != mask)
-                        {
+                    {
                         maskp = star;
                         break;
-                        }
+                    }
                     else
                         return(char_ordinal_2(dict,
                                               spell_toupper(dict, *maskp)) <
@@ -3042,16 +3044,14 @@ matchword(
                                               spell_toupper(dict, *wordp))
                                  ? -1
                                  :  1);
-                    }
                 }
+            }
 
             if(*maskp++ == '\0')
                 return(0);
             ++wordp;
-            }
-        while(TRUE);
         }
-    while(TRUE);
+    }
 }
 
 /******************************************************************************
@@ -3095,7 +3095,7 @@ nextword(
 
     do  {
         if(ixp(dict, curword.lettix)->blklen)
-            {
+        {
             /* check we have a cache block */
             if((err = fetchblock(dict, curword.lettix)) != 0)
                 return(err);
@@ -3108,7 +3108,7 @@ nextword(
 
             /* if we matched previous root */
             if(!curword.match && curword.matchp)
-                {
+            {
                 /* step back to previous unit */
                 --datap;
 
@@ -3116,20 +3116,20 @@ nextword(
 
                 curword.match  = curword.matchp;
                 curword.matchc = curword.matchcp;
-                }
+            }
             /* build a body at the start of a block */
             else if(datap < ep && !*datap)
-                {
+            {
                 /* skip null starter */
                 ++datap;
                 co = curword.bodyd;
                 while(*datap < token_start)
                     *co++ = *datap++;
                 *co++ = '\0';
-                }
+            }
 
             if(datap < ep)
-                {
+            {
                 tokenise(dict, &curword, MAX(curword.matchc, 1));
                 if(!curword.match)
                     curabval = -1;
@@ -3142,15 +3142,15 @@ nextword(
 
                 while((*datap < token_start) && (datap < ep))
                     ++datap;
-                }
+            }
 
             while(datap < ep)
-                {
+            {
                 /* find the next higher token */
                 tail = -1;
                 nexthigher = MAX_TOKEN;
                 while(((token = *datap) >= (S32) token_start) && (datap < ep))
-                    {
+                {
                     ++datap;
                     tokabval = ((I_ENDP) (list_gotoitem(dlp,
                                                         (LIST_ITEMNO)
@@ -3158,21 +3158,21 @@ nextword(
                                                         token_start)->
                                                         i.inside))->alpha;
                     if(tokabval > curabval)
-                        {
+                    {
                         if(tokabval < nexthigher)
-                            {
+                        {
                             tail = token - token_start;
                             nexthigher = tokabval;
-                            }
                         }
                     }
+                }
 
                 if((tail >= 0) && (nexthigher > curabval))
-                    {
+                {
                     /* work out the real word from the decoded stuff */
                     curword.tail = tail;
                     return(decodeword(dict, word, &curword, 0));
-                    }
+                }
 
                 /* if there were no tokens higher, go onto next root */
                 if(++datap >= ep)
@@ -3185,8 +3185,8 @@ nextword(
 
                 *co = '\0';
                 curabval = -1;
-                }
             }
+        }
 
         /* move onto the next letter */
         *curword.bodyd = *curword.bodydp = '\0';
@@ -3196,15 +3196,15 @@ nextword(
         /* skip down the index till we find
         an entry with some words in it */
         if(++curword.lettix < n_index)
-            {
+        {
             lett = ixp(dict, curword.lettix);
             if(lett->letflags & LET_ONE)
                 return(decodeword(dict, word, &curword, 1));
 
             if(lett->letflags & LET_TWO)
                 return(decodeword(dict, word, &curword, 2));
-            }
         }
+    }
     while(curword.lettix < n_index);
 
     *word = '\0';
@@ -3307,7 +3307,7 @@ prevword(
 
     do  {
         if(ixp(dict, curword.lettix)->blklen)
-            {
+        {
             /* check we have a cache block */
             if((err = fetchblock(dict, curword.lettix)) != 0)
                 return(err);
@@ -3322,22 +3322,22 @@ prevword(
 
             onroot = 0;
             if((datap > sp) && (curword.matchc || curword.matchcp))
-                {
+            {
                 /* if we didn't match this root,
                 start from the one before */
                 if(!curword.match)
-                    {
+                {
                     if(datap != ep)
                         while(*datap >= char_offset)
                             --datap;
                     if(datap > sp)
-                        {
+                    {
                         --datap;
                         curword.matchc = curword.matchcp;
                         curword.match = curword.matchcp = 0;
                         strcpy(curword.bodyd, curword.bodydp);
-                        }
                     }
+                }
 
                 tokenise(dict, &curword, MAX(curword.matchc, 1));
                 if(!curword.match)
@@ -3351,7 +3351,7 @@ prevword(
 
                 /* build a body at the start of a block */
                 if(*datap == '\0')
-                    {
+                {
                     /* skip null starter */
                     ++datap;
                     co = curword.bodyd;
@@ -3359,22 +3359,22 @@ prevword(
                         *co++ = *datap++;
                     *co++ = '\0';
                     curword.matchcp = 0;
-                    }
+                }
 
                 /* move on to the tokens */
                 while((*datap < token_start) && (datap < ep))
                     ++datap;
 
                 onroot = 1;
-                }
+            }
 
             /* move back down the block */
             while((datap > sp) && onroot)
-                {
+            {
                 /* find the next lower token */
                 tail = nextlower = -1;
                 while(((token = *datap) >= (S32) token_start) && (datap < ep))
-                    {
+                {
                     ++datap;
                     tokabval = ((I_ENDP) (list_gotoitem(dlp,
                                                         (LIST_ITEMNO)
@@ -3382,22 +3382,22 @@ prevword(
                                                         token_start)->
                                                         i.inside))->alpha;
                     if(tokabval < curabval)
-                        {
+                    {
                         if(tokabval > nextlower)
-                            {
+                        {
                             tail = token - token_start;
                             nextlower = tokabval;
-                            }
                         }
                     }
+                }
 
                 /* did we find a suitable token ? */
                 if((tail >= 0) && (nextlower < curabval))
-                    {
+                {
                     /* work out the real word from the decoded stuff */
                     curword.tail = tail;
                     return(decodeword(dict, word, &curword, 0));
-                    }
+                }
 
                 /* if there were no tokens lower,
                 go onto previous root */
@@ -3417,12 +3417,12 @@ prevword(
                 curword.match = 0;
                 strcpy(curword.bodyd, curword.bodydp);
                 curabval = MAX_TOKEN;
-                }
             }
+        }
 
         lett = ixp(dict, curword.lettix);
         if(datap == sp || !lett->blklen)
-            {
+        {
             char last_ch;
             S32 max_word;
 
@@ -3438,7 +3438,7 @@ prevword(
                     break;
 
                 lett = ixp(dict, curword.lettix);
-                }
+            }
             while(!lett->blklen);
 
             /* quit if at beginning */
@@ -3455,9 +3455,9 @@ prevword(
 
             /* set position to end of block */
             makeindex(dict, &curword, word);
-            }
+        }
         else
-            {
+        {
             char ch;
             char last_ch;
             S32 max_word;
@@ -3477,11 +3477,11 @@ prevword(
             *co = '\0';
 
             makeindex(dict, &curword, word);
-            }
+        }
 
         if((err = lookupword(dict, &curword, TRUE)) < 0)
             return(err);
-        }
+    }
     while(curword.lettix >= 0);
 
     *word = '\0';
@@ -3510,20 +3510,20 @@ read_def_line(
 
     comment = hadcr = hadbar = leadspc = 0;
     out = trail = buffer;
-    while(TRUE)
-        {
+    for(;;)
+    {
         if(last_ch)
-            {
+        {
             ch = last_ch;
             last_ch = 0;
-            }
+        }
         else
-            {
+        {
             ch = file_getc(def_file);
 
             if(file_eof(def_file))
                 break;
-            }
+        }
 
         if((err = file_error(def_file)) != 0)
             return(err);
@@ -3534,34 +3534,34 @@ read_def_line(
             break;
 
         if(ch == CR || ch == LF)
-            {
+        {
             hadcr = 1;
             hadbar = comment = 0;
             continue;
-            }
+        }
 
         /* stop on non-blank line and CR or LF */
         if(hadcr && trail != buffer)
-            {
+        {
             /* save last character */
             last_ch = ch;
             break;
-            }
+        }
         else
             hadcr = 0;
 
         /* check for comments */
         if(ch == ESC_CHAR)
-            {
+        {
             if(!hadbar)
-                {
+            {
                 hadbar = 1;
                 continue;
-                }
+            }
 
             /* bona fide | character */
             hadbar = 0;
-            }
+        }
 
         if(hadbar)
             comment = 1;
@@ -3584,7 +3584,7 @@ read_def_line(
 
         if(ch != SPACE)
             trail = out;
-        }
+    }
 
     if(trail != buffer)
         *trail++ = '\0';
@@ -3649,22 +3649,22 @@ setabval(
     /* work out the alphabetic value of the non-token ending
     that we have - either the next lower, or next higher value */
     for(i = 0, abval = lo_hi ? 0 : 1000; i < (S32) list_numitem(dlp); ++i)
-        {
+    {
         iep = (I_ENDP) (list_gotoitem(dlp, (LIST_ITEMNO) i)->i.inside);
 
         if(lo_hi)
-            {
+        {
             if(spell_strnicmp(dict, iep->ending, ending, -1) <= 0 &&
                (S32) iep->alpha > abval)
                 abval = (S32) iep->alpha;
-            }
+        }
         else
-            {
+        {
             if(spell_strnicmp(dict, iep->ending, ending, -1) >= 0 &&
                (S32) iep->alpha < abval)
                 abval = (S32) iep->alpha;
-            }
         }
+    }
 
     return(abval);
 }
@@ -3686,15 +3686,15 @@ stuffcache(
     /* write out/remove any blocks
     from this dictionary */
     for(i = 0; i < list_numitem(cachelp); ++i)
-        {
+    {
         CACHEP cp = (CACHEP) list_gotoitem(cachelp, i)->i.inside;
 
         if(cp->dict == dict)
-            {
+        {
             deletecache(i);
             --i;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -3734,19 +3734,19 @@ tokenise(
     dlp         = &dictlist[dict].dict_end_list;
 
     for(i = 0; i < (S32) list_numitem(dlp); ++i)
-        {
+    {
         I_ENDP curend = (I_ENDP) (list_gotoitem(dlp, (LIST_ITEMNO) i)->i.inside);
 
         if(maxtail < (S32) curend->len)
             continue;
 
         if(0 == strcmp(curend->ending, endbody - curend->len))
-            {
+        {
             wp->tail = i + token_start;
             *(endbody - curend->len) = '\0';
             break;
-            }
         }
+    }
 }
 
 /******************************************************************************
@@ -3768,7 +3768,7 @@ writeblock(
     lett = ixp(cp->dict, cp->lettix);
 
     if(lett->blklen)
-        {
+    {
         S32 err;
 
         dp = &dictlist[cp->dict];
@@ -3776,7 +3776,7 @@ writeblock(
 
         /* do we need to extend file ? */
         if((S32) lett->blklen > cp->diskspace)
-            {
+        {
             if((err = file_seek(dicthand,
                                 dp->data_offset + dp->dictsize + lett->blklen + EXT_SIZE,
                                 SEEK_SET)) < 0)
@@ -3788,7 +3788,7 @@ writeblock(
             cp->diskaddress = dp->data_offset + dp->dictsize;
             dp->dictsize   += lett->blklen + EXT_SIZE;
             cp->diskspace  += EXT_SIZE;
-            }
+        }
 
         /* write out block */
         if((err = file_seek(dicthand, cp->diskaddress, SEEK_SET)) < 0)
@@ -3799,7 +3799,7 @@ writeblock(
                              1,
                              dicthand)) < 0)
             return(err);
-        }
+    }
 
     lett->letflags &= ~LET_WRITE;
 

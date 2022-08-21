@@ -306,25 +306,25 @@ riscos_setcolour(
     BOOL isbackcolour)
 {
     if(isbackcolour)
-        {
+    {
         if(colour != current_bg)
-            {
+        {
             current_bg = colour;
             trace_1(TRACE_SETCOLOUR, "wimp_setcolour(bg %d)", colour);
             wimpt_safe(wimp_setcolour(colour | 0x80));
             font_colours_invalid = TRUE;
-            }
         }
+    }
     else
-        {
+    {
         if(colour != current_fg)
-            {
+        {
             current_fg = colour;
             trace_1(TRACE_SETCOLOUR, "wimp_setcolour(fg %d)", colour);
             wimpt_safe(wimp_setcolour(colour));
             font_colours_invalid = TRUE;
-            }
         }
+    }
 }
 
 extern void
@@ -334,7 +334,7 @@ new_font_leading(
     global_font_leading_mp = new_font_leading_mp;
 
     if(riscos_fonts)
-        {
+    {
         /* line spacing - round up to nearest OS unit */
         charallocheight = div_round_ceil(global_font_leading_mp, MILLIPOINTS_PER_OS);
 
@@ -346,7 +346,7 @@ new_font_leading(
 
         /* SKS after 4.11 06jan92 - only set page length if in auto mode */
         if(auto_line_height)
-            {
+        {
             S32 paper_size_mp;
             /* actual paper size */
             paper_size_mp = (d_print_QL == 'L')
@@ -358,16 +358,16 @@ new_font_leading(
 
             /* page length (round down) */
             d_poptions_PL = paper_size_mp / global_font_leading_mp;
-            }
         }
+    }
     else
-        {
+    {
         /* ignore font leading for system fonts on screen */
 
         /* leave page length alone too */
 
         charallocheight = 32;
-        }
+    }
 
     update_variables();
 }
@@ -442,7 +442,7 @@ cachemodevariables(void)
     old_docno = current_docno();
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-        {
+    {
         select_document(p_docu);
 
         new_grid_state();
@@ -457,7 +457,7 @@ cachemodevariables(void)
 
         if(main_window == caret_window)
             draw_caret();
-        }
+    }
 
     select_document_using_docno(old_docno);
 }
@@ -602,11 +602,11 @@ at_fonts(
     S32 ty)
 {
     if(riscos_fonts)
-        {
+    {
         trace_3(TRACE_DRAW, "at_fonts(%d (%d), %d)", x, textcell_xorg + x, ty);
 
         wimpt_safe(bbc_move(textcell_xorg + x, gcoord_y_textout(ty)));
-        }
+    }
     else
         at(x, ty);
 }
@@ -631,7 +631,7 @@ clear_textarea(
     trace_4(TRACE_APP_PD4_RENDER, "clear_textarea(%d, %d, %d, %d)", tx0, ty0, tx1, ty1);
 
     if((tx0 != tx1)  &&  ((ty0 != ty1) || zap_grid))
-        {
+    {
         x0 = gcoord_x(tx0);
         y0 = gcoord_y(ty0);
         x1 = gcoord_x(tx1) - dx;
@@ -645,7 +645,7 @@ clear_textarea(
 
         wimpt_safe(bbc_move(x0, y0));
         wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawAbsBack, x1, y1));
-        }
+    }
 }
 
 /******************************************************************************
@@ -677,7 +677,7 @@ clear_underlay(
     trace_1(TRACE_DRAW, "clear_underlay(%d)", len);
 
     if(len > 0)
-        {
+    {
         x = len * charwidth - dx;
         ypos = charvrubout_pos;
         yneg = charvrubout_neg;
@@ -687,7 +687,7 @@ clear_underlay(
 
         wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack, x, -ypos -yneg));
         wimpt_safe(os_plot(bbc_MoveCursorRel,                  -x,       +yneg));
-        }
+    }
 }
 
 /******************************************************************************
@@ -751,18 +751,18 @@ ospca(
     S32 nspaces)
 {
     if(nspaces > 0)
-        {
+    {
         if(sqobit)
-            {
+        {
             if(riscos_printing)
                 riscos_movespaces(nspaces);
             else
                 wrchrep(SPACE, nspaces);
             return;
-            }
+        }
 
         riscos_printspaces(nspaces);
-        }
+    }
 }
 
 /* needn't worry about printing */
@@ -899,7 +899,7 @@ please_invert_numeric_slots(
         while(start_coff <= end_coff)
             please_invert_numeric_slot(start_coff++, roff, fg, bg);
     else
-        {
+    {
         tx0 = calcad(start_coff);
         tx1 = tx0;
         ty0 = calrad(roff);
@@ -909,7 +909,7 @@ please_invert_numeric_slots(
             tx1 += colwidth(col_number(start_coff++));
 
         please_invert_textarea(tx0, ty0, tx1, ty1, fg, bg);
-        }
+    }
 }
 
 /******************************************************************************
@@ -1049,13 +1049,13 @@ set_graphics_window_from_textarea(
     trace_4(TRACE_APP_PD4_RENDER, "intersection (%d, %d, %d, %d) (OS)", clipper.x0, clipper.y0, clipper.x1, clipper.y1);
 
     if((clipper.x0 >= clipper.x1)  ||  (clipper.y0 >= clipper.y1))
-        {
+    {
         trace_0(TRACE_APP_PD4_RENDER, "zero size window requested - OS incapable");
         return(FALSE);
-        }
+    }
 
     if(set_gw)
-        {
+    {
         /* limit coordinates for RISC OS */
         clipper.x0 = MAX(clipper.x0, SHRT_MIN);
         clipper.y0 = MAX(clipper.y0, SHRT_MIN);
@@ -1073,7 +1073,7 @@ set_graphics_window_from_textarea(
         /* when setting graphics window, all points are inclusive */
         wimpt_safe(bbc_gwindow(clipper.x0,      clipper.y0,
                                clipper.x1 - dx, clipper.y1 - dy));
-        }
+    }
 
     return(TRUE);
 }
@@ -1110,29 +1110,29 @@ scroll_textarea(
     myassert5x((tx0 <= tx1)  &&  (ty0 >= ty1), "scroll_textarea((%d, %d, %d, %d), %d) is stupid", tx0, ty0, tx1, ty1, nlines);
 
     if(nlines != 0)
-        {
+    {
         box.x0 = texttooffset_x(tx0);
         box.x1 = texttooffset_x(tx1+1);
         ht     = nlines * charvspace;
 
         if(ht > 0)
-            {
+        {
             /* scrolling area down, clear top line(s) */
             box.y0 = texttooffset_y(ty0) + ht;
             box.y1 = texttooffset_y(ty1-1);
             y      = box.y0 - ht;
             uy0    = box.y1 - ht;
             uy1    = box.y1;
-            }
+        }
         else
-            {
+        {
             /* scrolling area up, clear bottom line(s) */
             box.y0 = texttooffset_y(ty0);
             box.y1 = texttooffset_y(ty1-1) + ht;
             y      = box.y0 - ht;
             uy0    = box.y0;
             uy1    = y;
-            }
+        }
 
         riscos_removecaret();
 
@@ -1148,7 +1148,7 @@ scroll_textarea(
                             box.x1, uy1);
 
         riscos_restorecaret();
-        }
+    }
 }
 
 /******************************************************************************
@@ -1239,12 +1239,12 @@ textobjectintersects(
     trace_1(TRACE_CLIP, "y1 >= cliparea.y0 %s", trace_boolstring(y1 >= cliparea.y0));
 
     if(intersects)
-        {
+    {
         thisarea.x0 = x0;
         thisarea.y0 = y0;
         thisarea.x1 = x1;
         thisarea.y1 = y1;
-        }
+    }
 
     return(intersects);
 }
@@ -1269,10 +1269,10 @@ textxintersects(
     trace_1(TRACE_CLIP, "x1 <= cliparea.x0 %s, ", trace_boolstring(x1 <= cliparea.x0));
 
     if(intersects)
-        {
+    {
         thisarea.x0 = x0;
         thisarea.x1 = x1;
-        }
+    }
 
     return(intersects);
 }
@@ -1346,7 +1346,7 @@ riscos_printspaces(
     trace_1(TRACE_DRAW, "riscos_printspaces(%d)", nspaces);
 
     if(nspaces != 0)        /* -ve allowed */
-        {
+    {
         ldx = dx;
         x = nspaces * charwidth - ldx;
         ypos = charvrubout_pos;
@@ -1357,7 +1357,7 @@ riscos_printspaces(
 
         wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -ypos  -yneg));
         wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,        +yneg));
-        }
+    }
 }
 
 extern void
@@ -1369,7 +1369,7 @@ riscos_printspaces_fonts(
     trace_1(TRACE_DRAW, "riscos_printspaces_fonts(%d)", nspaces);
 
     if(nspaces != 0)        /* -ve allowed */
-        {
+    {
         ldx = dx;
         x = (riscos_fonts ? nspaces : nspaces * charwidth) - ldx;
         ypos = charvrubout_pos;
@@ -1380,7 +1380,7 @@ riscos_printspaces_fonts(
 
         wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -ypos  -yneg));
         wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,        +yneg));
-        }
+    }
 }
 
 /******************************************************************************
@@ -1438,48 +1438,48 @@ application_scroll_request(
     caretposallowed = (main_window == caret_window);
 
     switch(ydir)
-        {
-        case +2:
-            application_process_command(N_PageUp);
-            break;
+    {
+    case +2:
+        application_process_command(N_PageUp);
+        break;
 
-        case +1:
-            application_process_command(N_ScrollUp);
-            break;
+    case +1:
+        application_process_command(N_ScrollUp);
+        break;
 
-        default:
-            break;
+    default:
+        break;
 
-        case -1:
-            application_process_command(N_ScrollDown);
-            break;
+    case -1:
+        application_process_command(N_ScrollDown);
+        break;
 
-        case -2:
-            application_process_command(N_PageDown);
-            break;
-            }
+    case -2:
+        application_process_command(N_PageDown);
+        break;
+        }
 
     switch(xdir)
-        {
-        case +2:
-            application_process_command(N_PageRight);
-            break;
+    {
+    case +2:
+        application_process_command(N_PageRight);
+        break;
 
-        case +1:
-            application_process_command(N_ScrollRight);
-            break;
+    case +1:
+        application_process_command(N_ScrollRight);
+        break;
 
-        default:
-            break;
+    default:
+        break;
 
-        case -1:
-            application_process_command(N_ScrollLeft);
-            break;
+    case -1:
+        application_process_command(N_ScrollLeft);
+        break;
 
-        case -2:
-            application_process_command(N_PageLeft);
-            break;
-            }
+    case -2:
+        application_process_command(N_PageLeft);
+        break;
+        }
 
     caretposallowed = TRUE;
 }
@@ -1596,7 +1596,7 @@ openpane(
     wimpt_complain(wimp_open_wind(&o));
 
     if(borbit)
-        {
+    {
         wimp_icreate create;
         S32          x1;
 
@@ -1611,15 +1611,14 @@ openpane(
             x1 = create.i.box.x0 + 16;          /* perhaps unnecessary but I don't trust Neil */
 
         if(create.i.box.x1 != x1)
-            {
+        {
             /* icon size is wrong, so... */
 
             create.i.box.x1 = x1;
 
             redefine_icon(colh_window, (wimp_i)COLH_CONTENTS_LINE, &create);
-            }
         }
-
+    }
 }
 
 /******************************************************************************
@@ -1660,7 +1659,7 @@ application_open_request(
         op->box.y0 = op->box.y1 - max_poss_height;
 
     if(behind != (wimp_w) -2)
-        {
+    {
         /* on mode change, Neil tells us to open windows behind themselves! */
         if((behind == rear__window) || (behind == colh_window))
             behind = main__window;
@@ -1670,16 +1669,16 @@ application_open_request(
 
         /* always open rear_window behind pane colh_window */
         op->behind = colh_window;
-        }
+    }
 
     wimpt_complain(wimp_open_wind(op));
 
     if(first_open)
-        {
+    {
         /* remember first successful open position, bump from there (nicer on < 1024 y OS unit screens) */
         first_open = FALSE;
         riscos_setnextwindowpos(op->box.y1); /* gets bumped */
-        }
+    }
 
     /* reopen pane with corrected coords */
     wimpt_safe(wimp_get_wind_state(rear__window, (wimp_wstate *) op));
@@ -1716,23 +1715,23 @@ application_open_request(
     size_change = 0;
 
     if(old_window_height != window_height)
-        {
+    {
         (void) new_window_height(window_height);
         size_change = 1;
-        }
+    }
 
     if(old_window_width != window_width)
-        {
+    {
         (void) new_window_width(window_width);
         size_change = 1;
-        }
+    }
 
     /* is someone trying to scroll through the document
      * by dragging the scroll bars?
      * SKS - forbid scrolling to have any effect here if open window changed size
     */
     if((scx != curr_scx) && !size_change)
-        {
+    {
         /* work out which column to put at left */
         COL leftcol, o_leftcol, newcurcol;
         COL nfixes, delta;
@@ -1755,7 +1754,7 @@ application_open_request(
         trace_1(TRACE_APP_PD4, "put col %d at left of scrolling area", leftcol);
 
         if(leftcol != o_leftcol)
-            {
+        {
             /* window motion may reposition caret */
             (void) mergebuf();
 
@@ -1763,13 +1762,13 @@ application_open_request(
                 /* caret is in fixed section - do not move */
                 delta = curcol - leftcol;
             else
-                {
+            {
                 /* keep caret at same/similar offset to right of fixed section */
                 delta = curcol - o_leftcol;
 
                 if( delta > numcol - 1 - leftcol)
                     delta = numcol - 1 - leftcol;
-                }
+            }
 
             newcurcol = leftcol + delta;
 
@@ -1783,7 +1782,7 @@ application_open_request(
             /* may need caret motion */
             if(main_window == caret_window)
                 xf_acquirecaret = TRUE;
-            }
+        }
 
         /* note the scroll offset we opened at and the difference
          * between what we did open at and the scroll offset that
@@ -1792,10 +1791,10 @@ application_open_request(
         curr_scx    = scx;
         delta_scx   = scx - compute_scx();
         trace_1(TRACE_APP_PD4, "delta_scx := %d", delta_scx);
-        }
+    }
 
     if((scy != curr_scy) && !size_change)
-        {
+    {
         /* work out which row to put at top */
         ROW toprow, o_toprow, newcurrow;
         ROW nfixes, delta;
@@ -1817,11 +1816,11 @@ application_open_request(
         /* eg. toprow = 42, numrow = 72, rows_available = 30 triggers fudge of 6 */
 
         if(!nfixes  &&  (toprow >= (numrow - 1) - ((ROW) rows_available - 1))  &&  encpln)
-            {
+        {
             trace_0(TRACE_APP_PD4, "put last row at bottom of scrolling area");
 
             toprow += (ROW) rows_available / ((ROW) encpln + 1);
-            }
+        }
 
         trace_1(TRACE_APP_PD4, "put row %d at top of scrolling area", toprow);
 
@@ -1829,7 +1828,7 @@ application_open_request(
             toprow = numrow - 1;
 
         if(toprow != o_toprow)
-            {
+        {
             /* window motion may reposition caret */
             (void) mergebuf();
 
@@ -1837,13 +1836,13 @@ application_open_request(
                 /* caret is in fixed section - do not move */
                 delta = currow - toprow;
             else
-                {
+            {
                 /* keep caret at same/similar offset below fixed section */
                 delta = currow - o_toprow;
 
                 if( delta > numrow - 1 - toprow)
                     delta = numrow - 1 - toprow;
-                }
+            }
 
             newcurrow = toprow + delta;
 
@@ -1858,7 +1857,7 @@ application_open_request(
             /* may need caret motion */
             if(main_window == caret_window)
                 xf_acquirecaret = TRUE;
-            }
+        }
 
         /* note the scroll offset we opened at and the difference
          * between what we did open at and the scroll offset that
@@ -1867,28 +1866,28 @@ application_open_request(
         curr_scy    = scy;
         delta_scy   = scy - compute_scy();
         trace_1(TRACE_APP_PD4, "delta_scy := %d", delta_scy);
-        }
+    }
 
     if(window_height != old_window_height)
-        {
+    {
         /* window motion may reposition caret */
         (void) mergebuf();
 
         if(window_height > old_window_height)
-            {
+        {
             /* Window Manager assumes when making window bigger that
              * we had been clipping to the window itself and not
              * just some subwindow like we do, so add the old unused
              * rectangle to its list that it'll give us next.
             */
             if(old_unused_bit)
-                {
+            {
                 smash    = TRUE;
                 smash_y0 = old_window_height;
-                }
             }
+        }
         else if(unused_bit_at_bottom)
-            {
+        {
             /* When making window smaller it assumes that
              * we will clip to the window itself and not
              * just some subwindow like we do, so add the new unused
@@ -1896,10 +1895,10 @@ application_open_request(
             */
             smash    = TRUE;
             smash_y0 = window_height;
-            }
+        }
 
         if(smash)
-            {
+        {
             r.w      = main__window;
             r.box.x0 = texttooffset_x(-1);              /* lhs slop too */
             r.box.x1 = texttooffset_x(window_width+1);  /* new!, possible bit at right */
@@ -1908,16 +1907,16 @@ application_open_request(
             trace_5(TRACE_APP_PD4, "calling wimp_force_redraw(%d; %d, %d, %d, %d)",
                         r.w, r.box.x0, r.box.y0, r.box.x1, r.box.y1);
             wimpt_safe(wimp_force_redraw(&r));
-            }
         }
+    }
 
     if(window_width != old_window_width)
-        {
+    {
         /* window motion may reposition caret */
         (void) mergebuf();
 
         if(window_width > old_window_width)
-            {
+        {
             r.w      = main__window;
             r.box.x0 = texttooffset_x(old_window_width);
             r.box.x1 = texttooffset_x(window_width+1);  /* new!, possible bit at right */
@@ -1926,18 +1925,18 @@ application_open_request(
             trace_5(TRACE_APP_PD4, "calling wimp_force_redraw(%d; %d, %d, %d, %d)",
                         r.w, r.box.x0, r.box.y0, r.box.x1, r.box.y1);
             wimpt_safe(wimp_force_redraw(&r));
-            }
         }
+    }
 
     draw_screen();          /* which does draw_altered_state() */
 
     /* if newly opened, might need to claim caret on delayed open event */
     if(xf_acquirecaret)
-        {
+    {
         xf_acquirecaret = FALSE;
         xf_caretreposition = TRUE;
         draw_caret();
-        }
+    }
 }
 
 /* suss what RISC OS specific stuff has changed since last draw_screen
@@ -1982,7 +1981,7 @@ draw_altered_state(void)
     trace_2(TRACE_APP_PD4, "computed xext %d (OS), yext %d (OS)", xext, yext);
 
     if((xext != curr_xext)  ||  (yext != curr_yext))
-        {
+    {
         trace_2(TRACE_APP_PD4, "different extents: old xext %d, yext %d", curr_xext, curr_yext);
 
         /* note new extent */
@@ -1999,14 +1998,14 @@ draw_altered_state(void)
         trace_5(TRACE_APP_PD4, "calling wimp_set_extent(%d; %d, %d, %d, %d)",
                     r.w, r.box.x0, r.box.y0, r.box.x1, r.box.y1);
         wimpt_safe(wimp_set_extent(&r));
-        }
+    }
 
     /* now think what to do with the scroll offsets */
     scx = compute_scx();
     scy = compute_scy();
 
     if(((scx + delta_scx) != curr_scx)  ||  ((scy + delta_scy) != curr_scy))
-        {
+    {
         /* note new scroll offsets and zero the deltas */
         curr_scx    = scx;
         curr_scy    = scy;
@@ -2021,7 +2020,7 @@ draw_altered_state(void)
                 wstate.o.box.x1, wstate.o.box.y1);
         trace_2(TRACE_APP_PD4, " %d, %d)", wstate.o.scx, wstate.o.scy);
         wimpt_safe(wimp_open_wind(&wstate.o));
-        }
+    }
 
     return(FALSE);
 }
@@ -2034,12 +2033,12 @@ extern void
 draw_caret(void)
 {
     if(xf_inexpression_box)
-        {
+    {
         mlec_claim_focus(editexpression_formwind->mlec);
         xf_caretreposition = FALSE;
-        }
+    }
     else if(xf_inexpression_line)
-        {
+    {
      /* we must some how give the caret back to the writeable icon, at the place it was lost
         from, probally, reading the caret position on a lose caret notification then using
         that as a param to set_caret_position would do the trick */
@@ -2047,17 +2046,17 @@ draw_caret(void)
         formline_claim_focus();
 
         xf_caretreposition = FALSE;
-        }
+    }
     else
-        {
+    {
         trace_1(TRACE_APP_PD4_RENDER, "draw_caret(): reposition = %s", trace_boolstring(xf_caretreposition));
 
         if(xf_caretreposition  &&  caretposallowed)
-            {
+        {
             xf_caretreposition = FALSE;
             setcaretpos(lastcursorpos_x, lastcursorpos_y);
-            }
         }
+    }
 }
 
 /* RCM: seems only to be called by draw_caret */
@@ -2102,10 +2101,10 @@ riscos_setcaretpos(
         caretbits |= CARET_SYSTEMFONT;
 
     if(wimpt_bpp() < 8) /* can only do non-coloured carets in very simple modes */
-        {
+    {
         caretbits |= CARET_COLOURED | CARET_REALCOLOUR;
         caretbits |= (wimpt_GCOL_for_wimpcolour(getcolour(CARETC)) ^ wimpt_GCOL_for_wimpcolour(getcolour(BACK))) << CARET_COLOURSHIFT;
-        }
+    }
 
     caret.w      = w;
     caret.i      = (wimp_i) -1;         /* never in any icon */
@@ -2138,7 +2137,7 @@ riscos_removecaret(void)
     trace_0(TRACE_APP_PD4_RENDER, "riscos_removecaret()");
 
     if(main_window == caret_window)
-        {
+    {
         wimpt_safe(wimp_get_caret_pos(&caret));
 
         caret_rel_x = caret.x /*- curr_scx*/;   /* +ve */
@@ -2151,7 +2150,7 @@ riscos_removecaret(void)
         caret.y = 100;
 
         wimpt_safe(wimp_set_caret_pos(&caret));
-        }
+    }
 }
 
 /******************************************************************************
@@ -2168,7 +2167,7 @@ riscos_restorecaret(void)
     trace_0(TRACE_APP_PD4_RENDER, "riscos_restorecaret()");
 
     if(main_window == caret_window)
-        {
+    {
         wimpt_safe(wimp_get_caret_pos(&caret));
 
         caret.x = /*curr_scx*/ + caret_rel_x;
@@ -2178,7 +2177,7 @@ riscos_restorecaret(void)
                 caret_rel_x, caret_rel_y, caret.x, caret.y);
 
         wimpt_safe(wimp_set_caret_pos(&caret));
-        }
+    }
 }
 
 /******************************************************************************
@@ -2234,13 +2233,13 @@ filealtered(
     BOOL newstate)
 {
     if(xf_filealtered != newstate)
-        {
+    {
         reportf("filealtered := %d for %s", newstate, report_tstr(currentfilename));
 
         xf_filealtered = newstate;
 
         riscos_settitlebar(currentfilename);
-        }
+    }
 }
 
 /******************************************************************************
@@ -2253,7 +2252,7 @@ extern void
 ensurefontcolours(void)
 {
     if(riscos_fonts  &&  font_colours_invalid)
-        {
+    {
         #ifdef SKS_FONTCOLOURS
         /* should use ColourTrans even on screen: consider
          * user that turns wimp colour 3 red -> fonts get
@@ -2274,7 +2273,7 @@ ensurefontcolours(void)
         (void) font_complain(wimp_setfontcolours(current_fg, current_bg));
         #endif
         font_colours_invalid = FALSE;
-        }
+    }
 }
 
 /******************************************************************************
@@ -2319,7 +2318,7 @@ print_setfontcolours(void)
     int offset;
 
     if(riscos_fonts  &&  font_colours_invalid)
-        {
+    {
         fh = 0;
         bg.word = (int) stat_bg;
         fg.word = (riscos_printer.has_colour  &&  (current_fg == NEGATIVEC)) ? stat_neg : stat_fg;
@@ -2327,7 +2326,7 @@ print_setfontcolours(void)
         trace_2(TRACE_APP_PD4_RENDER, "colourtran_setfontcolours(%8.8X, %8.8X)", fg.word, bg.word);
         (void) print_complain(colourtran_setfontcolours(&fh, &bg, &fg, &offset));
         font_colours_invalid = FALSE;
-        }
+    }
 }
 
 #define XOS_Find (13 + (1<<17))
@@ -2339,7 +2338,7 @@ riscprint_set_printer_data(void)
 
     /* RJM thinks print_pagesize returns 0 if it worked, contrary to SKS's earlier test */
     if(print_pagesize(&riscos_printer.psize) != 0)
-        {
+    {
         /* error in reading paper size - assume a sort of normal A4 (LaserWriter defaults) */
         riscos_printer.psize.bbox.x0 =  18000;
         riscos_printer.psize.bbox.x1 = 577000;
@@ -2348,7 +2347,7 @@ riscprint_set_printer_data(void)
 
         riscos_printer.psize.xsize = riscos_printer.psize.bbox.x0 + riscos_printer.psize.bbox.x1 + riscos_printer.psize.bbox.x0;
         riscos_printer.psize.ysize = riscos_printer.psize.bbox.y0 + riscos_printer.psize.bbox.y1 + riscos_printer.psize.bbox.y0;
-        }
+    }
 
     paper_width_mp  = riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0;
     paper_length_mp = riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0;
@@ -2398,17 +2397,17 @@ riscprint_start(void)
     rs.r[0] = 0x8F; /* OpenOut, Ignore File$Path, give err if a dir.! */
     rs.r[1] = (int) "printer:";
     if(_kernel_swi(OS_Find, &rs, &rs))
-        {
+    {
         reperr(ERR_PRINT_WONT_OPEN, _kernel_last_oserror()->errmess);
         return(FALSE);
-        }
+    }
 
     /* check for RISC OS 2.00 FileSwitch bug (returning a zero handle) */
     if((riscos_printer.job = rs.r[0]) == 0)
-        {
+    {
         reperr_null(ERR_PRINT_WONT_OPEN);
         return(FALSE);
-        }
+    }
 
     trace_1(TRACE_APP_PD4_RENDER, "got print handle %d", riscos_printer.job);
 
@@ -2449,7 +2448,7 @@ riscprint_page(
     where_mp = riscos_printer.where;
 
     if(landscape)
-        {
+    {
         /* landscape output: +90 deg (clockwise) rotation */
         transform.xx =  0;
         transform.xy = -xform;
@@ -2461,9 +2460,9 @@ riscprint_page(
         */
         where_mp.dx += paper_width_mp;
         where_mp.dy += paper_length_mp;
-        }
+    }
     else
-        {
+    {
         /* portrait output: no rotation */
         transform.xx =  xform;
         transform.xy =  0;
@@ -2475,7 +2474,7 @@ riscprint_page(
         */
         where_mp.dx += 0;
         where_mp.dy += paper_length_mp;
-        }
+    }
 
     left_margin_shift_os = charwidth * left_margin_width();
 
@@ -2494,21 +2493,21 @@ riscprint_page(
     size_os.y1  = +4 + 0;
 
     if(landscape)
-        {
+    {
         /* the rectangle has grown left across the physical page - adjust by y0 (adding -ve) */
         where_mp.dx += (S32) muldiv64(size_os.y0, MILLIPOINTS_PER_OS * scale_pct, 100);
 
         /* the now reduced size rectangle starts further down the physical page */
         where_mp.dy -= (S32) muldiv64(left_margin_shift_os, MILLIPOINTS_PER_OS * scale_pct, 100);
-        }
+    }
     else
-        {
+    {
         /* the rectangle has grown down the physical page - adjust by y0 (adding -ve) */
         where_mp.dy += (S32) muldiv64(size_os.y0, MILLIPOINTS_PER_OS * scale_pct, 100);
 
         /* the now reduced size rectangle starts further over to the right on the physical page */
         where_mp.dx += (S32) muldiv64(left_margin_shift_os, MILLIPOINTS_PER_OS * scale_pct, 100);
-        }
+    }
 
     trace_6(TRACE_APP_PD4_RENDER, "print_giverectangle((%d, %d, %d, %d) (os), print_where %d %d (real mp))",
             size_os.x0, size_os.y0, size_os.x1, size_os.y1, where_mp.dx, where_mp.dy);
@@ -2519,16 +2518,16 @@ riscprint_page(
     trace_1(TRACE_APP_PD4_RENDER, "print_giverectangle returned %d", bum);
 
     if(!bum)
-        {
+    {
         trace_0(TRACE_APP_PD4_RENDER, "print_drawpage()");
 
         killcolourcache();
 
         if(curpnm)
-            {
+        {
             (void) sprintf(buffer, "p%d", curpnm);
             pageptr = buffer;
-            }
+        }
         else
             pageptr = NULL;
 
@@ -2541,14 +2540,14 @@ riscprint_page(
                                             &ID));
 
         while(!bum  &&  more)
-            {
+        {
             trace_4(TRACE_APP_PD4_RENDER, "print loop ... gw %d %d %d %d",
                     graphics_window.x0, graphics_window.y0,
                     graphics_window.x1, graphics_window.y1);
 
             #ifdef DEBUG_PRINT_INCHES_GRID
             if(1 /* && trace_is_enabled()*/)
-                {
+            {
                 int x, y;
 
                 setcolour(FORE, BACK);
@@ -2589,7 +2588,7 @@ riscprint_page(
 
                 /* draw an virtual (ie possibly scaled) inches grid */
                 for(x = - (4*180); x < + (usable_x_os + 4*180); x += 180)
-                    {
+                {
                     if(!bum)
                         bum = print_complain(bbc_move(x, + (4*180+90))); /* move across top */
                     if(!bum)
@@ -2598,10 +2597,10 @@ riscprint_page(
                                                       - (usable_y_os +  (4*180+90) + 90)));
                     if(bum)
                         break;
-                    }
+                }
 
                 for(y = + (4*180); y > - (usable_y_os + 4*180); y -= 180)
-                    {
+                {
                     if(!bum)
                         bum = print_complain(bbc_move(- (4*180+90), y)); /* move up left side */
                     if(!bum)
@@ -2610,8 +2609,8 @@ riscprint_page(
                                                       0));
                     if(bum)
                         break;
-                    }
                 }
+            }
             #endif
 
             /* print page */
@@ -2631,8 +2630,8 @@ riscprint_page(
             if(!bum)
                 bum = print_complain(print_getrectangle(&pbox, &more, &ID));
             /* will output showpage etc. when no more rectangles for page */
-            }
         }
+    }
 
     killcolourcache();
 
@@ -2655,22 +2654,22 @@ riscprint_end(
     /* don't deselect - leave that to caller */
 
     if(ok)
-        {
+    {
         /* close neatly */
         bum = print_endjob(riscos_printer.job);
         ok = (bum == NULL);
-        }
+    }
     else
         bum = NULL;
 
     if(!ok)
-        {
+    {
         /* whinge terribly */
         bum2 = print_abortjob(riscos_printer.job);
         bum = bum ? bum : bum2;
         rep_fserr(bum->errmess);
         been_error = FALSE;
-        }
+    }
 
     trace_0(TRACE_APP_PD4_RENDER, "riscprint_end(): closing printer stream");
     rs.r[0] = 0;
@@ -2710,11 +2709,11 @@ riscprint_suspend(void)
     riscos_printer.oldjob = 0;
 
     if(bum)
-        {
+    {
         /* job suspension failure must be severe otherwise no errors may come out */
         (void) print_reset();
         return(rep_fserr(bum->errmess));
-        }
+    }
     else
         myassert2x((dummy_job == 0) || (dummy_job == riscos_printer.job), "riscprint_suspend suspended the wrong job %d not %d!", dummy_job, riscos_printer.job);
 

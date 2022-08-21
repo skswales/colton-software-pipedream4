@@ -122,35 +122,35 @@ gr_pie_addin(
         n_points = gr_travel_dsh_n_items(cp, dsh);
 
     if(!n_points)
-        {
+    {
         gr_chartedit_warning(cp, create_error(GR_CHART_ERR_NOT_ENOUGH_INPUT));
         return(res);
-        }
+    }
 
     /* find how we are going to slice up the pie */
     total = 0.0;
     pct_radial_disp_max = 0.0;
 
     for(point = 0; point < n_points; ++point)
-        {
+    {
         if(gr_travel_dsh_valof(cp, dsh, point, &value))
-            {
+        {
             if(value > 0.0)
-                {
+            {
                 total += value;
                 gr_point_piechdisplstyle_query(cp, series_idx, point, &piechdisplstyle);
                 pct_radial_disp_max = MAX(pct_radial_disp_max, piechdisplstyle.radial_displacement);
-                }
+            }
             else
                 gr_chartedit_warning(cp, create_error(GR_CHART_ERR_NEGATIVE_OR_ZERO_IGNORED));
-            }
         }
+    }
 
     if(total == 0.0)
-        {
+    {
         gr_chartedit_warning(cp, create_error(GR_CHART_ERR_NOT_ENOUGH_INPUT));
         return(res);
-        }
+    }
 
     base_radial_displacement = serp->style.point_piechdispl.radial_displacement;
 
@@ -171,13 +171,13 @@ gr_pie_addin(
     radius = (GR_COORD) (radius / (1.0 + pct_radial_disp_max / 100.0));
 
     for(point = 0; point < n_points; ++point)
-        {
+    {
         id.subno = (U16) gr_point_external_from_key(point);
 
         numval = gr_travel_dsh_valof(cp, dsh, point, &value);
 
         if(numval && (value > 0.0))
-            {
+        {
             beta = _two_pi * (value / total);
 
             if(serp->bits.pie_anticlockwise)
@@ -198,20 +198,20 @@ gr_pie_addin(
             labelling = piechlabelstyle.bits.label_leg | piechlabelstyle.bits.label_val | piechlabelstyle.bits.label_pct;
 
             if(labelling)
-                {
+            {
                 if((res = gr_chart_group_new(cp, &pointStart, &id)) < 0)
                     break;
-                }
+            }
             else
                 pointStart = 0;
 
             thisOrigin = origin;
 
             if(point_radial_displacement != 0.0)
-                {
+            {
                 thisOrigin.x += (GR_COORD) (radius * point_radial_displacement / 100.0 * cos(bisector));
                 thisOrigin.y += (GR_COORD) (radius * point_radial_displacement / 100.0 * sin(bisector));
-                }
+            }
 
             if((res = gr_diag_piesector_new(p_gr_diag, NULL, id,
                                             &thisOrigin, radius,
@@ -221,7 +221,7 @@ gr_pie_addin(
                 break;
 
             if(labelling)
-                {
+            {
                 S32            decimals  = -1;
                 S32            eformat   = FALSE;
                 PC_U8Z         t_trailer = NULL;
@@ -235,22 +235,22 @@ gr_pie_addin(
                 f = gr_riscdiag_font_from_textstyle(&textstyle);
 
                 if(piechlabelstyle.bits.label_pct | piechlabelstyle.bits.label_val)
-                    {
+                {
                     /* convert value into %ge value */
                     if(piechlabelstyle.bits.label_pct)
-                        {
+                    {
                         value *= 100.0; /* care with order else 14.0 -> 0.14 -> ~14.0 */
                         value /= total; /* ALWAYS in 0.0 - 100.0 */
                         decimals = ((S32) value == value) ? 0 : 2;
                         t_trailer  = "%";
-                        }
+                    }
                     else
-                        {
+                    {
                         if(fabs(value) >= U32_MAX)
                             eformat = TRUE;
                         else if(fabs(value) >= 1.0)
                             decimals = ((S32) value == value) ? 0 : 2;
-                        }
+                    }
 
                     gr_numtostr(cv.data.text, elemof32(cv.data.text),
                                 &value,
@@ -261,7 +261,7 @@ gr_pie_addin(
 
                     if(NULL != t_trailer)
                         xstrkat(cv.data.text, elemof32(cv.data.text), t_trailer);
-                    }
+                }
                 else
                     gr_travel_categ_label(cp, point, &cv);
 
@@ -272,7 +272,7 @@ gr_pie_addin(
                 swidth_px = swidth_mp / GR_MILLIPOINTS_PER_PIXIT;
 
                 if(swidth_px)
-                    {
+                {
                     GR_BOX text_box;
                     GR_COORD     width  = swidth_px;
                     GR_COORD     height = textstyle.height;
@@ -286,31 +286,31 @@ gr_pie_addin(
 
                     /* place differently according to whether on right or left of centre vertical */
                     if(fabs(reduce_into_range(&bisector)) <= _pi_div_two)
-                        {
+                    {
                         text_box.x1 = text_box.x0 + width;
-                        }
+                    }
                     else
-                        {
+                    {
                         /* move start point further out to left */
                         text_box.x1 = text_box.x0;
                         text_box.x0 = text_box.x1 - width;
-                        }
+                    }
 
                     text_box.y1 = text_box.y0 + (height * 12) / 10;
 
                     if((res = gr_diag_text_new(p_gr_diag, NULL, id,
                                                &text_box, cv.data.text, &textstyle)) < 0)
                         break;
-                    }
                 }
+            }
 
             if(pointStart)
                 gr_diag_group_end(p_gr_diag, &pointStart);
 
             /* use this angle as the next segment's start angle */
             alpha = beta;
-            }
         }
+    }
 
     gr_diag_group_end(p_gr_diag, &pieStart);
 

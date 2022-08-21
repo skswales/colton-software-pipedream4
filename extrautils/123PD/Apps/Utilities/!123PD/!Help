@@ -1,0 +1,9 @@
+   123PD
+   ~~~~~
+   Purpose: Conversion program for Lotus 1-2-3 .WK1 files to PipeDream
+
+   Setup:
+      Icon                    Action/Meaning                       Default
+      ----                    --------------                       -------
+      File                    Name of file to be processed           nil
+                              (typed or dragged).

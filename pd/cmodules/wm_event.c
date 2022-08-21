@@ -54,12 +54,12 @@ wm_events_get(
     S32 res;
 
     for(;;)
-        {
+    {
         /* start exit sequence; anyone interested in setting up bgNulls
          * better do their thinking in the null query handlers
         */
         if(last_event_was_null)
-            {
+        {
             /* only ask our null query handlers at the end of each real
              * requested null event whether they want to continue having nulls
              * or not; this saves wasted time querying after every single event
@@ -68,12 +68,12 @@ wm_events_get(
             */
             bgNullEventsWanted = (Null_DoQuery() == NULL_EVENTS_REQUIRED);
             bgNullTestWanted   = FALSE;
-            }
+        }
         else
-            {
+        {
             bgNullEventsWanted = FALSE;
             bgNullTestWanted   = 1 /*Null_HandlersPresent()*/;
-            }
+        }
 
         peek = (fgNullEventsWanted || bgNullEventsWanted || bgNullTestWanted);
 
@@ -101,10 +101,10 @@ wm_events_get(
         #endif
 
         if(res)
-            {
+        {
             last_event_was_null = 0;
             continue;
-            }
+        }
 
         /* only allow our processors a look in now at nulls they wanted */
 
@@ -119,11 +119,11 @@ wm_events_get(
             (void) Null_DoEvent();
 
         if(fgNullEventsWanted)
-            {
+        {
             /* we have our desired fg idle, so return */
             res = 0;
             break;
-            }
+        }
 
         /* check bg null requirements to loop again and again */
         if(bgNullEventsWanted)
@@ -132,7 +132,7 @@ wm_events_get(
         /* exiting strangely */
         res = 0;
         break;
-        }
+    }
 
     return(res);
 }

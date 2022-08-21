@@ -1,0 +1,28 @@
+| MakeRiscPkg for 123PD
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 2015 Stuart Swales
+
+| !!! ENSURE EVERYTHING IS BUILT AND CHECKED IN FIRST !!!
+
+IfThere $.Temp Then Else %CDir $.Temp
+
+Set pd$Disc $.Temp.123PD_1_1x
+| Remember to update RiscPkg.Control too
+
+X %Wipe <pd$Disc> ~cfr~v
+
+svn export <Obey$Dir> <pd$Disc>
+
+| The one in RiscPkg is the useful one
+| delete <pd$Disc>.LICENSE
+delete <pd$Disc>.MakeRiscPkg
+
+%Dir <pd$Disc>
+zip -r 123PD_1_1x/zip RiscPkg Apps
+%Back
+
+Filer_OpenDir <pd$Disc>

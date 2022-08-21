@@ -396,10 +396,10 @@ common_list_fillstyle_reref(
     for(pt = collect_first(GR_FILLSTYLE, p_p_list_block, &key);
         pt;
         pt = collect_next( GR_FILLSTYLE, p_p_list_block, &key))
-        {
+    {
         /* add/lose ref to particular picture. DOES NOT destroy stored pattern handle */
         gr_cache_ref((PC_GR_CACHE_HANDLE) &pt->pattern, add);
-        }
+    }
 }
 
 /******************************************************************************
@@ -606,53 +606,53 @@ gr_chart_objid_chartstyle_query(
     assert(desc);
 
     switch(id->name)
+    {
+    default:
+        /* use style of first axes */
+        axes_idx = 0;
+        goto lookup_axes_style;
+
+    case GR_CHART_OBJNAME_AXIS:
+    case GR_CHART_OBJNAME_AXISGRID:
+    case GR_CHART_OBJNAME_AXISTICK:
+        (void) gr_axes_idx_from_external(cp, id->no, &axes_idx);
+
+    lookup_axes_style:;
+        bpt = (P_U8) &cp->axes[axes_idx] + desc->axes_offset;
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_BESTFITSER:
+        series_idx = gr_series_idx_from_external(cp, id->no);
+
+    lookup_series_style:;
         {
-        default:
-            /* use style of first axes */
-            axes_idx = 0;
+        bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
+
+        if((*bpt & 1) == 0 /*!pt->bits.manual*/)
+        {
+            axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
+            using_default = 1;
             goto lookup_axes_style;
-
-        case GR_CHART_OBJNAME_AXIS:
-        case GR_CHART_OBJNAME_AXISGRID:
-        case GR_CHART_OBJNAME_AXISTICK:
-            (void) gr_axes_idx_from_external(cp, id->no, &axes_idx);
-
-        lookup_axes_style:;
-            bpt = (P_U8) &cp->axes[axes_idx] + desc->axes_offset;
-            break;
-
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_BESTFITSER:
-            series_idx = gr_series_idx_from_external(cp, id->no);
-
-        lookup_series_style:;
-            {
-            bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
-
-            if((*bpt & 1) == 0 /*!pt->bits.manual*/)
-                {
-                axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
-                using_default = 1;
-                goto lookup_axes_style;
-                }
-            }
-            break;
-
-        case GR_CHART_OBJNAME_POINT:
-        case GR_CHART_OBJNAME_DROPPOINT:
-            series_idx = gr_series_idx_from_external(cp, id->no);
-
-            bpt = gr_point_list_search(BYTE, cp, series_idx, gr_point_key_from_external(id->subno), (GR_LIST_ID) desc->list_id);
-
-            if(!bpt)
-                {
-                using_default = 1;
-                goto lookup_series_style; /* with series_idx valid */
-                }
-
-            break;
         }
+        break;
+        }
+
+    case GR_CHART_OBJNAME_POINT:
+    case GR_CHART_OBJNAME_DROPPOINT:
+        series_idx = gr_series_idx_from_external(cp, id->no);
+
+        bpt = gr_point_list_search(BYTE, cp, series_idx, gr_point_key_from_external(id->subno), (GR_LIST_ID) desc->list_id);
+
+        if(!bpt)
+        {
+            using_default = 1;
+            goto lookup_series_style; /* with series_idx valid */
+        }
+
+        break;
+    }
 
     memcpy32(style, bpt, desc->style_size);
 
@@ -682,55 +682,55 @@ gr_chart_objid_chartstyle_set(
     assert(desc);
 
     switch(id->name)
+    {
+    default:
+        /* set style of first axes */
+        axes_idx = 0;
+        goto set_axes_style;
+
+    case GR_CHART_OBJNAME_AXIS:
+    case GR_CHART_OBJNAME_AXISGRID:
+    case GR_CHART_OBJNAME_AXISTICK:
+        (void) gr_axes_idx_from_external(cp, id->no, &axes_idx);
+
+    set_axes_style:;
+
+        /* set all series on axes to auto and remove deviant points */
+        for(series_idx = cp->axes[axes_idx].series.stt_idx;
+            series_idx < cp->axes[axes_idx].series.end_idx;
+            series_idx++)
         {
-        default:
-            /* set style of first axes */
-            axes_idx = 0;
-            goto set_axes_style;
-
-        case GR_CHART_OBJNAME_AXIS:
-        case GR_CHART_OBJNAME_AXISGRID:
-        case GR_CHART_OBJNAME_AXISTICK:
-            (void) gr_axes_idx_from_external(cp, id->no, &axes_idx);
-
-        set_axes_style:;
-
-            /* set all series on axes to auto and remove deviant points */
-            for(series_idx = cp->axes[axes_idx].series.stt_idx;
-                series_idx < cp->axes[axes_idx].series.end_idx;
-                series_idx++)
-                {
-                /* remove deviant point data from this series */
-                gr_point_list_delete(cp, series_idx, (GR_LIST_ID) desc->list_id);
-
-                /* set series to auto */
-                bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
-
-                *bpt &= ~1; /*serp->style.point_xxxch.bits.manual = 0;*/
-                }
-
-            bpt = (P_U8) &cp->axes[axes_idx] + desc->axes_offset;
-            break;
-
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_BESTFITSER:
-            series_idx = gr_series_idx_from_external(cp, id->no);
-
             /* remove deviant point data from this series */
             gr_point_list_delete(cp, series_idx, (GR_LIST_ID) desc->list_id);
 
+            /* set series to auto */
             bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
-            break;
 
-        case GR_CHART_OBJNAME_POINT:
-        case GR_CHART_OBJNAME_DROPPOINT:
-            return(gr_point_list_set(cp,
-                                     gr_series_idx_from_external(cp, id->no),
-                                     gr_point_key_from_external(id->subno),
-                                     style,
-                                     (GR_LIST_ID) desc->list_id));
+            *bpt &= ~1; /*serp->style.point_xxxch.bits.manual = 0;*/
         }
+
+        bpt = (P_U8) &cp->axes[axes_idx] + desc->axes_offset;
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_BESTFITSER:
+        series_idx = gr_series_idx_from_external(cp, id->no);
+
+        /* remove deviant point data from this series */
+        gr_point_list_delete(cp, series_idx, (GR_LIST_ID) desc->list_id);
+
+        bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
+        break;
+
+    case GR_CHART_OBJNAME_POINT:
+    case GR_CHART_OBJNAME_DROPPOINT:
+        return(gr_point_list_set(cp,
+                                 gr_series_idx_from_external(cp, id->no),
+                                 gr_point_key_from_external(id->subno),
+                                 style,
+                                 (GR_LIST_ID) desc->list_id));
+    }
 
     if(bpt)
         memcpy32(bpt, style, desc->style_size);
@@ -884,21 +884,21 @@ gr_fillstyle_default(
     };
 
     if(!fill_init)
-        {
+    {
         S32  i;
         P_GR_FILLSTYLE pt = gr_fillstyle_defaults;
 
         fill_init = TRUE;
 
         for(i = 0; i < GR_FILLSTYLE_N_DEFAULTS; ++i, ++pt)
-            {
+        {
             /* NB. you get stuck with the palette entries for the startup mode */
             * (int *) &pt->fg = wimpt_RGB_for_wimpcolour(fill_with_wimp[i]);
             pt->fg.reserved = 0;
             pt->fg.manual   = 0;
             pt->fg.visible  = 1;
-            }
         }
+    }
 
     assert(item >= 0);
 
@@ -917,59 +917,59 @@ gr_chart_objid_fillstyle_query(
     assert(cp);
 
     switch(id->name)
+    {
+    case GR_CHART_OBJNAME_CHART:
+        pt = &cp->chart.areastyle;
+        break;
+
+    case GR_CHART_OBJNAME_PLOTAREA:
+        assert(id->no < GR_CHART_N_PLOTAREAS);
+        pt = &cp->plotarea.area[(id->no < GR_CHART_N_PLOTAREAS) ? id->no : 0].areastyle;
+        break;
+
+    case GR_CHART_OBJNAME_LEGEND:
+        pt = &cp->legend.areastyle;
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+        pt = &gr_seriesp_from_external(cp, id->no)->style.point_fill;
+
+        if(!pt->fg.manual)
         {
-        case GR_CHART_OBJNAME_CHART:
-            pt = &cp->chart.areastyle;
-            break;
-
-        case GR_CHART_OBJNAME_PLOTAREA:
-            assert(id->no < GR_CHART_N_PLOTAREAS);
-            pt = &cp->plotarea.area[(id->no < GR_CHART_N_PLOTAREAS) ? id->no : 0].areastyle;
-            break;
-
-        case GR_CHART_OBJNAME_LEGEND:
-            pt = &cp->legend.areastyle;
-            break;
-
-        case GR_CHART_OBJNAME_SERIES:
-            pt = &gr_seriesp_from_external(cp, id->no)->style.point_fill;
-
-            if(!pt->fg.manual)
-                {
-                using_default = 1;
-                pt = gr_fillstyle_default(id->no);
-                }
-            break;
-
-        case GR_CHART_OBJNAME_DROPSER:
-            pt = &gr_seriesp_from_external(cp, id->no)->style.pdrop_fill;
-
-            if(!pt->fg.manual)
-                {
-                using_default = 1;
-                pt = gr_fillstyle_default(id->no);
-                }
-            break;
-
-        case GR_CHART_OBJNAME_POINT:
-            return(gr_point_fillstyle_query(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
-
-        case GR_CHART_OBJNAME_DROPPOINT:
-            return(gr_pdrop_fillstyle_query(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
-
-        default:
-            myassert1x(0, "gr_chart_objid_fillstyle_query of %s", gr_chart_object_name_from_id_quick(id));
-
             using_default = 1;
-            pt = gr_fillstyle_default(0);
-            break;
+            pt = gr_fillstyle_default(id->no);
         }
+        break;
+
+    case GR_CHART_OBJNAME_DROPSER:
+        pt = &gr_seriesp_from_external(cp, id->no)->style.pdrop_fill;
+
+        if(!pt->fg.manual)
+        {
+            using_default = 1;
+            pt = gr_fillstyle_default(id->no);
+        }
+        break;
+
+    case GR_CHART_OBJNAME_POINT:
+        return(gr_point_fillstyle_query(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    case GR_CHART_OBJNAME_DROPPOINT:
+        return(gr_pdrop_fillstyle_query(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    default:
+        myassert1x(0, "gr_chart_objid_fillstyle_query of %s", gr_chart_object_name_from_id_quick(id));
+
+        using_default = 1;
+        pt = gr_fillstyle_default(0);
+        break;
+    }
 
     *style = *pt;
 
@@ -988,55 +988,55 @@ gr_chart_objid_fillstyle_set(
     assert(cp);
 
     switch(id->name)
-        {
-        case GR_CHART_OBJNAME_CHART:
-            pt = &cp->chart.areastyle;
-            break;
+    {
+    case GR_CHART_OBJNAME_CHART:
+        pt = &cp->chart.areastyle;
+        break;
 
-        case GR_CHART_OBJNAME_PLOTAREA:
-            assert(id->no < GR_CHART_N_PLOTAREAS);
-            if(id->no >= GR_CHART_N_PLOTAREAS)
-                return(1);
-
-            pt = &cp->plotarea.area[id->no].areastyle;
-            break;
-
-        case GR_CHART_OBJNAME_LEGEND:
-            pt = &cp->legend.areastyle;
-            break;
-
-        case GR_CHART_OBJNAME_SERIES:
-            series_idx = gr_series_idx_from_external(cp, id->no);
-
-            gr_point_list_delete(cp, series_idx, GR_LIST_POINT_FILLSTYLE);
-
-            pt = &getserp(cp, series_idx)->style.point_fill;
-            break;
-
-        case GR_CHART_OBJNAME_DROPSER:
-            series_idx = gr_series_idx_from_external(cp, id->no);
-
-            gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_FILLSTYLE);
-
-            pt = &getserp(cp, series_idx)->style.pdrop_fill;
-            break;
-
-        case GR_CHART_OBJNAME_POINT:
-            return(gr_point_fillstyle_set(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
-
-        case GR_CHART_OBJNAME_DROPPOINT:
-            return(gr_pdrop_fillstyle_set(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
-
-        default:
-            myassert1x(0, "gr_chart_objid_fillstyle_set of %s", gr_chart_object_name_from_id_quick(id));
+    case GR_CHART_OBJNAME_PLOTAREA:
+        assert(id->no < GR_CHART_N_PLOTAREAS);
+        if(id->no >= GR_CHART_N_PLOTAREAS)
             return(1);
-        }
+
+        pt = &cp->plotarea.area[id->no].areastyle;
+        break;
+
+    case GR_CHART_OBJNAME_LEGEND:
+        pt = &cp->legend.areastyle;
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+        series_idx = gr_series_idx_from_external(cp, id->no);
+
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_FILLSTYLE);
+
+        pt = &getserp(cp, series_idx)->style.point_fill;
+        break;
+
+    case GR_CHART_OBJNAME_DROPSER:
+        series_idx = gr_series_idx_from_external(cp, id->no);
+
+        gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_FILLSTYLE);
+
+        pt = &getserp(cp, series_idx)->style.pdrop_fill;
+        break;
+
+    case GR_CHART_OBJNAME_POINT:
+        return(gr_point_fillstyle_set(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    case GR_CHART_OBJNAME_DROPPOINT:
+        return(gr_pdrop_fillstyle_set(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    default:
+        myassert1x(0, "gr_chart_objid_fillstyle_set of %s", gr_chart_object_name_from_id_quick(id));
+        return(1);
+    }
 
     gr_fillstyle_pict_change(pt, &style->pattern);
 
@@ -1044,17 +1044,17 @@ gr_chart_objid_fillstyle_set(
 
         /* check validity of style bits */
     if(pt->pattern == GR_FILL_PATTERN_NONE)
-        {
+    {
         /* ensure solid if no pattern to use */
         if(pt->bits.notsolid)
             pt->bits.notsolid = 0;
-        }
+    }
     else
-        {
+    {
         /* if there's a pattern to use, use it */
         if(!pt->bits.pattern)
             pt->bits.pattern = 1;
-        }
+    }
 
     return(1);
 }
@@ -1073,14 +1073,14 @@ gr_linestyle_default(void)
     static int init = FALSE;
 
     if(!init)
-        {
+    {
         init = TRUE;
 
         gr_colour_set_BLACK(gr_linestyle_defaults.fg);
                             gr_linestyle_defaults.fg.manual = 0;
 
         /* leave rest alone. thin solid lines ok */
-        }
+    }
 
     return(&gr_linestyle_defaults);
 }
@@ -1099,118 +1099,118 @@ gr_chart_objid_linestyle_query(
     assert(cp);
 
     switch(id->name)
+    {
+    case GR_CHART_OBJNAME_CHART:
+        pt = &cp->chart.borderstyle;
+        break;
+
+    case GR_CHART_OBJNAME_PLOTAREA:
+        assert(id->no < GR_CHART_N_PLOTAREAS);
+        pt = &cp->plotarea.area[(id->no < GR_CHART_N_PLOTAREAS) ? id->no : 0].borderstyle;
+        break;
+
+    case GR_CHART_OBJNAME_LEGEND:
+        pt = &cp->legend.borderstyle;
+        break;
+
+    case GR_CHART_OBJNAME_AXIS:
+        pt = &gr_axisp_from_external(cp, id->no)->style.axis;
+        break;
+
+    case GR_CHART_OBJNAME_AXISGRID:
+        p_axis = gr_axisp_from_external(cp, id->no);
+
+        switch(id->subno)
         {
-        case GR_CHART_OBJNAME_CHART:
-            pt = &cp->chart.borderstyle;
-            break;
+        case GR_CHART_AXISTICK_MINOR:
+            pt = &p_axis->minor.style.grid;
+            if(pt->fg.manual)
+                break;
 
-        case GR_CHART_OBJNAME_PLOTAREA:
-            assert(id->no < GR_CHART_N_PLOTAREAS);
-            pt = &cp->plotarea.area[(id->no < GR_CHART_N_PLOTAREAS) ? id->no : 0].borderstyle;
-            break;
+            using_default      = 1;
+            linewidth_divisor *= 2;
 
-        case GR_CHART_OBJNAME_LEGEND:
-            pt = &cp->legend.borderstyle;
-            break;
-
-        case GR_CHART_OBJNAME_AXIS:
-            pt = &gr_axisp_from_external(cp, id->no)->style.axis;
-            break;
-
-        case GR_CHART_OBJNAME_AXISGRID:
-            p_axis = gr_axisp_from_external(cp, id->no);
-
-            switch(id->subno)
-                {
-                case GR_CHART_AXISTICK_MINOR:
-                    pt = &p_axis->minor.style.grid;
-                    if(pt->fg.manual)
-                        break;
-
-                    using_default      = 1;
-                    linewidth_divisor *= 2;
-
-                /* deliberate drop thru ... */
-
-                default:
-                case GR_CHART_AXISTICK_MAJOR:
-                    pt = &p_axis->major.style.grid;
-                    if(pt->fg.manual)
-                        break;
-
-                    using_default      = 1;
-                    linewidth_divisor *= 16;
-
-                    pt = &p_axis->style.axis;
-                    break;
-                }
-            break;
-
-        case GR_CHART_OBJNAME_AXISTICK:
-            p_axis = gr_axisp_from_external(cp, id->no);
-
-            switch(id->subno)
-                {
-                case GR_CHART_AXISTICK_MINOR:
-                    pt = &p_axis->minor.style.tick;
-                    if(pt->fg.manual)
-                        break;
-
-                    using_default      = 1;
-                    linewidth_divisor *= 2;
-
-                /* deliberate drop thru ... */
-
-                default:
-                case GR_CHART_AXISTICK_MAJOR:
-                    pt = &p_axis->major.style.tick;
-                    if(pt->fg.manual)
-                        break;
-
-                    using_default      = 1;
-                    linewidth_divisor *= 8;
-
-                    pt = &p_axis->style.axis;
-                    break;
-                }
-            break;
-
-        case GR_CHART_OBJNAME_SERIES:
-            pt = &gr_seriesp_from_external(cp, id->no)->style.point_line;
-            break;
-
-        case GR_CHART_OBJNAME_DROPSER:
-            pt = &gr_seriesp_from_external(cp, id->no)->style.pdrop_line;
-            break;
-
-        case GR_CHART_OBJNAME_BESTFITSER:
-            pt = &gr_seriesp_from_external(cp, id->no)->style.bestfit_line;
-            break;
-
-        case GR_CHART_OBJNAME_POINT:
-            return(gr_point_linestyle_query(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
-
-        case GR_CHART_OBJNAME_DROPPOINT:
-            return(gr_pdrop_linestyle_query(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
+        /* deliberate drop thru ... */
 
         default:
-            myassert1x(0, "gr_chart_objid_linestyle_query of %s", gr_chart_object_name_from_id_quick(id));
-            pt = gr_linestyle_default();
+        case GR_CHART_AXISTICK_MAJOR:
+            pt = &p_axis->major.style.grid;
+            if(pt->fg.manual)
+                break;
+
+            using_default      = 1;
+            linewidth_divisor *= 16;
+
+            pt = &p_axis->style.axis;
             break;
         }
+        break;
+
+    case GR_CHART_OBJNAME_AXISTICK:
+        p_axis = gr_axisp_from_external(cp, id->no);
+
+        switch(id->subno)
+        {
+        case GR_CHART_AXISTICK_MINOR:
+            pt = &p_axis->minor.style.tick;
+            if(pt->fg.manual)
+                break;
+
+            using_default      = 1;
+            linewidth_divisor *= 2;
+
+        /* deliberate drop thru ... */
+
+        default:
+        case GR_CHART_AXISTICK_MAJOR:
+            pt = &p_axis->major.style.tick;
+            if(pt->fg.manual)
+                break;
+
+            using_default      = 1;
+            linewidth_divisor *= 8;
+
+            pt = &p_axis->style.axis;
+            break;
+        }
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+        pt = &gr_seriesp_from_external(cp, id->no)->style.point_line;
+        break;
+
+    case GR_CHART_OBJNAME_DROPSER:
+        pt = &gr_seriesp_from_external(cp, id->no)->style.pdrop_line;
+        break;
+
+    case GR_CHART_OBJNAME_BESTFITSER:
+        pt = &gr_seriesp_from_external(cp, id->no)->style.bestfit_line;
+        break;
+
+    case GR_CHART_OBJNAME_POINT:
+        return(gr_point_linestyle_query(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    case GR_CHART_OBJNAME_DROPPOINT:
+        return(gr_pdrop_linestyle_query(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    default:
+        myassert1x(0, "gr_chart_objid_linestyle_query of %s", gr_chart_object_name_from_id_quick(id));
+        pt = gr_linestyle_default();
+        break;
+    }
 
     if(!pt->fg.manual)
-        {
+    {
         pt = gr_linestyle_default();
 
         using_default = 1;
-        }
+    }
 
     *style = *pt;
 
@@ -1233,98 +1233,98 @@ gr_chart_objid_linestyle_set(
     assert(cp);
 
     switch(id->name)
+    {
+    case GR_CHART_OBJNAME_CHART:
+        pt = &cp->chart.borderstyle;
+        break;
+
+    case GR_CHART_OBJNAME_PLOTAREA:
+        if(id->no >= GR_CHART_N_PLOTAREAS)
+            return(1);
+
+        pt = &cp->plotarea.area[id->no].borderstyle;
+        break;
+
+    case GR_CHART_OBJNAME_LEGEND:
+        pt = &cp->legend.borderstyle;
+        break;
+
+    case GR_CHART_OBJNAME_AXIS:
+        pt = &gr_axisp_from_external(cp, id->no)->style.axis;
+        break;
+
+    case GR_CHART_OBJNAME_AXISGRID:
+        p_axis = gr_axisp_from_external(cp, id->no);
+
+        switch(id->subno)
         {
-        case GR_CHART_OBJNAME_CHART:
-            pt = &cp->chart.borderstyle;
+        case GR_CHART_AXISTICK_MINOR:
+            pt = &p_axis->minor.style.grid;
             break;
 
-        case GR_CHART_OBJNAME_PLOTAREA:
-            if(id->no >= GR_CHART_N_PLOTAREAS)
-                return(1);
-
-            pt = &cp->plotarea.area[id->no].borderstyle;
+        case GR_CHART_AXISTICK_MAJOR:
+            pt = &p_axis->major.style.grid;
             break;
-
-        case GR_CHART_OBJNAME_LEGEND:
-            pt = &cp->legend.borderstyle;
-            break;
-
-        case GR_CHART_OBJNAME_AXIS:
-            pt = &gr_axisp_from_external(cp, id->no)->style.axis;
-            break;
-
-        case GR_CHART_OBJNAME_AXISGRID:
-            p_axis = gr_axisp_from_external(cp, id->no);
-
-            switch(id->subno)
-                {
-                case GR_CHART_AXISTICK_MINOR:
-                    pt = &p_axis->minor.style.grid;
-                    break;
-
-                case GR_CHART_AXISTICK_MAJOR:
-                    pt = &p_axis->major.style.grid;
-                    break;
-
-                default:
-                    return(1);
-                }
-            break;
-
-        case GR_CHART_OBJNAME_AXISTICK:
-            p_axis = gr_axisp_from_external(cp, id->no);
-
-            switch(id->subno)
-                {
-                case GR_CHART_AXISTICK_MINOR:
-                    pt = &p_axis->minor.style.tick;
-                    break;
-
-                case GR_CHART_AXISTICK_MAJOR:
-                    pt = &p_axis->major.style.tick;
-                    break;
-
-                default:
-                    return(1);
-                }
-            break;
-
-        case GR_CHART_OBJNAME_SERIES:
-            series_idx = gr_series_idx_from_external(cp, id->no);
-
-            gr_point_list_delete(cp, series_idx, GR_LIST_POINT_LINESTYLE);
-
-            pt = &getserp(cp, series_idx)->style.point_line;
-            break;
-
-        case GR_CHART_OBJNAME_DROPSER:
-            series_idx = gr_series_idx_from_external(cp, id->no);
-
-            gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_LINESTYLE);
-
-            pt = &getserp(cp, series_idx)->style.pdrop_line;
-            break;
-
-        case GR_CHART_OBJNAME_BESTFITSER:
-            pt = &gr_seriesp_from_external(cp, id->no)->style.bestfit_line;
-            break;
-
-        case GR_CHART_OBJNAME_POINT:
-            return(gr_point_linestyle_set(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
-
-        case GR_CHART_OBJNAME_DROPPOINT:
-            return(gr_pdrop_linestyle_set(cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
 
         default:
-            myassert1x(0, "gr_chart_objid_linestyle_set of %s", gr_chart_object_name_from_id_quick(id));
-            return(0);
+            return(1);
         }
+        break;
+
+    case GR_CHART_OBJNAME_AXISTICK:
+        p_axis = gr_axisp_from_external(cp, id->no);
+
+        switch(id->subno)
+        {
+        case GR_CHART_AXISTICK_MINOR:
+            pt = &p_axis->minor.style.tick;
+            break;
+
+        case GR_CHART_AXISTICK_MAJOR:
+            pt = &p_axis->major.style.tick;
+            break;
+
+        default:
+            return(1);
+        }
+        break;
+
+    case GR_CHART_OBJNAME_SERIES:
+        series_idx = gr_series_idx_from_external(cp, id->no);
+
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_LINESTYLE);
+
+        pt = &getserp(cp, series_idx)->style.point_line;
+        break;
+
+    case GR_CHART_OBJNAME_DROPSER:
+        series_idx = gr_series_idx_from_external(cp, id->no);
+
+        gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_LINESTYLE);
+
+        pt = &getserp(cp, series_idx)->style.pdrop_line;
+        break;
+
+    case GR_CHART_OBJNAME_BESTFITSER:
+        pt = &gr_seriesp_from_external(cp, id->no)->style.bestfit_line;
+        break;
+
+    case GR_CHART_OBJNAME_POINT:
+        return(gr_point_linestyle_set(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    case GR_CHART_OBJNAME_DROPPOINT:
+        return(gr_pdrop_linestyle_set(cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
+
+    default:
+        myassert1x(0, "gr_chart_objid_linestyle_set of %s", gr_chart_object_name_from_id_quick(id));
+        return(0);
+    }
 
     *pt = *style;
 
@@ -1349,51 +1349,51 @@ gr_chart_objid_textstyle_query(
     assert(cp);
 
     switch(id->name)
-        {
-        case GR_CHART_OBJNAME_CHART:
-            /* return the base style for the chart */
-            pt = &cp->text.style.base;
-            break;
+    {
+    case GR_CHART_OBJNAME_CHART:
+        /* return the base style for the chart */
+        pt = &cp->text.style.base;
+        break;
 
-        case GR_CHART_OBJNAME_LEGEND:
-            pt = &cp->legend.textstyle;
-            break;
+    case GR_CHART_OBJNAME_LEGEND:
+        pt = &cp->legend.textstyle;
+        break;
 
-        case GR_CHART_OBJNAME_AXIS:
-        case GR_CHART_OBJNAME_AXISGRID:
-        case GR_CHART_OBJNAME_AXISTICK:
-            pt = &gr_axisp_from_external(cp, id->no)->style.label;
-            break;
+    case GR_CHART_OBJNAME_AXIS:
+    case GR_CHART_OBJNAME_AXISGRID:
+    case GR_CHART_OBJNAME_AXISTICK:
+        pt = &gr_axisp_from_external(cp, id->no)->style.label;
+        break;
 
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_BESTFITSER:
-            pt = &gr_seriesp_from_external(cp, id->no)->style.point_text;
-            break;
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_BESTFITSER:
+        pt = &gr_seriesp_from_external(cp, id->no)->style.point_text;
+        break;
 
-        case GR_CHART_OBJNAME_POINT:
-        case GR_CHART_OBJNAME_DROPPOINT:
-            return(gr_point_textstyle_query(
-                            cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
+    case GR_CHART_OBJNAME_POINT:
+    case GR_CHART_OBJNAME_DROPPOINT:
+        return(gr_point_textstyle_query(
+                        cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
 
-        case GR_CHART_OBJNAME_TEXT:
-            pt = collect_goto_item(GR_TEXTSTYLE, gr_chart_list_get_p_p_list_block(cp, gr_style_common_blks[GR_LIST_CHART_TEXT_TEXTSTYLE]), id->no);
-            break;
+    case GR_CHART_OBJNAME_TEXT:
+        pt = collect_goto_item(GR_TEXTSTYLE, gr_chart_list_get_p_p_list_block(cp, gr_style_common_blks[GR_LIST_CHART_TEXT_TEXTSTYLE]), id->no);
+        break;
 
-        default:
-            myassert1x(0, "gr_chart_objid_textstyle_query of %s", gr_chart_object_name_from_id_quick(id));
-            pt = NULL;
-            break;
+    default:
+        myassert1x(0, "gr_chart_objid_textstyle_query of %s", gr_chart_object_name_from_id_quick(id));
+        pt = NULL;
+        break;
     }
 
     if(!pt || !pt->fg.manual)
-        {
+    {
         using_default = 1;
         pt = &cp->text.style.base;
-        }
+    }
 
     *style = *pt;
 
@@ -1413,47 +1413,47 @@ gr_chart_objid_textstyle_set(
     assert(cp);
 
     switch(id->name)
-        {
-        case GR_CHART_OBJNAME_CHART:
-            /* set the base style for the chart */
-            pt = &cp->text.style.base;
-            break;
+    {
+    case GR_CHART_OBJNAME_CHART:
+        /* set the base style for the chart */
+        pt = &cp->text.style.base;
+        break;
 
-        case GR_CHART_OBJNAME_LEGEND:
-            pt = &cp->legend.textstyle;
-            break;
+    case GR_CHART_OBJNAME_LEGEND:
+        pt = &cp->legend.textstyle;
+        break;
 
-        case GR_CHART_OBJNAME_AXIS:
-        case GR_CHART_OBJNAME_AXISGRID:
-        case GR_CHART_OBJNAME_AXISTICK:
-            pt = &gr_axisp_from_external(cp, id->no)->style.label;
-            break;
+    case GR_CHART_OBJNAME_AXIS:
+    case GR_CHART_OBJNAME_AXISGRID:
+    case GR_CHART_OBJNAME_AXISTICK:
+        pt = &gr_axisp_from_external(cp, id->no)->style.label;
+        break;
 
-        case GR_CHART_OBJNAME_SERIES:
-        case GR_CHART_OBJNAME_DROPSER:
-        case GR_CHART_OBJNAME_BESTFITSER:
-            series_idx = gr_series_idx_from_external(cp, id->no);
+    case GR_CHART_OBJNAME_SERIES:
+    case GR_CHART_OBJNAME_DROPSER:
+    case GR_CHART_OBJNAME_BESTFITSER:
+        series_idx = gr_series_idx_from_external(cp, id->no);
 
-            gr_point_list_delete(cp, series_idx, GR_LIST_POINT_TEXTSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_TEXTSTYLE);
 
-            pt = &getserp(cp, series_idx)->style.point_text;
-            break;
+        pt = &getserp(cp, series_idx)->style.point_text;
+        break;
 
-        case GR_CHART_OBJNAME_POINT:
-        case GR_CHART_OBJNAME_DROPPOINT:
-            return(gr_point_textstyle_set(
-                            cp,
-                            gr_series_idx_from_external(cp, id->no),
-                            gr_point_key_from_external(id->subno),
-                            style));
+    case GR_CHART_OBJNAME_POINT:
+    case GR_CHART_OBJNAME_DROPPOINT:
+        return(gr_point_textstyle_set(
+                        cp,
+                        gr_series_idx_from_external(cp, id->no),
+                        gr_point_key_from_external(id->subno),
+                        style));
 
-        case GR_CHART_OBJNAME_TEXT:
-            return(gr_chart_list_set(cp, id->no, style, GR_LIST_CHART_TEXT_TEXTSTYLE));
+    case GR_CHART_OBJNAME_TEXT:
+        return(gr_chart_list_set(cp, id->no, style, GR_LIST_CHART_TEXT_TEXTSTYLE));
 
-        default:
-            myassert1x(0, "gr_chart_objid_textstyle_set of %s", gr_chart_object_name_from_id_quick(id));
-            return(0);
-        }
+    default:
+        myassert1x(0, "gr_chart_objid_textstyle_set of %s", gr_chart_object_name_from_id_quick(id));
+        return(0);
+    }
 
     *pt = *style;
 
@@ -1522,9 +1522,9 @@ gr_pdrop_point_common_fillstyle_set(
     pt = gr_point_list_search(GR_FILLSTYLE, cp, series_idx, point, list_id);
 
     if(pt)
-        {
+    {
         if(!style)
-            {
+        {
             /* delete this style item */
             PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
             LIST_ITEMNO item;
@@ -1538,26 +1538,26 @@ gr_pdrop_point_common_fillstyle_set(
             collect_subtract_entry(gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp), item);
 
             pt = NULL;
-            }
+        }
         else
-            {
+        {
             /* change the picture ref */
             if(pt->pattern != style->pattern)
-                {
+            {
                 gr_fillstyle_ref_lose(pt);
                 *pt = *style;
                 gr_fillstyle_ref_add(pt);
-                }
+            }
             else
                 *pt = *style;
-            }
+        }
 
         res = 1;
-        }
+    }
     else
-        {
+    {
         if(style)
-            {
+        {
             if((res = gr_point_list_set(cp, series_idx, point, style, list_id)) < 0)
                 return(res);
 
@@ -1566,26 +1566,26 @@ gr_pdrop_point_common_fillstyle_set(
 
             /* add a picture ref */
             gr_fillstyle_ref_add(pt);
-            }
+        }
         else
             /* not present, who cares? */
             res = 1;
-        }
+    }
 
     if(pt)
-        {
+    {
         /* check validity of style bits */
         if(pt->pattern == GR_FILL_PATTERN_NONE)
-            {
+        {
             if(pt->bits.notsolid)
                 pt->bits.notsolid = 0;
-            }
+        }
         else
-            {
+        {
             if(!pt->bits.pattern)
                 pt->bits.pattern = 1;
-            }
         }
+    }
 
     return(res);
 }
@@ -1609,20 +1609,20 @@ gr_pdrop_fillstyle_query(
     pt = gr_point_list_search(GR_FILLSTYLE, cp, series_idx, point, GR_LIST_PDROP_FILLSTYLE);
 
     if(!pt)
-        {
+    {
         using_default = 1;
 
         pt = &getserp(cp, series_idx)->style.pdrop_fill;
 
         if(!pt->fg.manual)
-            {
+        {
             /* use point-derived style ... */
             (void) gr_point_fillstyle_query(cp, series_idx, point, style);
 
             /* ... but still treat as defaulting from here */
             return(using_default);
-            }
         }
+    }
 
     *style = *pt;
 
@@ -1658,20 +1658,20 @@ gr_pdrop_linestyle_query(
     pt = gr_point_list_search(GR_LINESTYLE, cp, series_idx, point, GR_LIST_PDROP_LINESTYLE);
 
     if(!pt)
-        {
+    {
         using_default = 1;
 
         pt = &getserp(cp, series_idx)->style.pdrop_line;
 
         if(!pt->fg.manual)
-            {
+        {
             /* use point-derived style ... */
             (void) gr_point_linestyle_query(cp, series_idx, point, style);
 
             /* ... but still treat as defaulting from here */
             return(using_default);
-            }
         }
+    }
 
     *style = *pt;
 
@@ -1764,12 +1764,12 @@ gr_point_list_fillstyle_enum_for_save(
     for(pt = collect_first(GR_FILLSTYLE, p_p_list_block, &key);
         pt;
         pt = collect_next( GR_FILLSTYLE, p_p_list_block, &key))
-        {
+    {
         S32 cres;
 
         if((cres = gr_fillstyle_make_key_for_save(pt)) < 0) /* 0 is valid, no pict */
             return(cres);
-        }
+    }
 
     return(1);
 }
@@ -1865,7 +1865,7 @@ gr_point_fillstyle_query(
     pt = gr_point_list_search(GR_FILLSTYLE, cp, series_idx, point, GR_LIST_POINT_FILLSTYLE);
 
     if(!pt)
-        {
+    {
         using_default = 1;
 
         serp = getserp(cp, series_idx);
@@ -1876,13 +1876,13 @@ gr_point_fillstyle_query(
                     : gr_axesp_from_series_idx(cp, series_idx)->bits.point_vary)
             pt = gr_fillstyle_default(gr_point_external_from_key(point));
         else
-            {
+        {
             pt = &serp->style.point_fill;
 
             if(!pt->fg.manual)
                 pt = gr_fillstyle_default(gr_series_external_from_idx(cp, series_idx));
-            }
         }
+    }
 
     *style = *pt;
 
@@ -1918,7 +1918,7 @@ gr_point_linestyle_query(
     pt = gr_point_list_search(GR_LINESTYLE, cp, series_idx, point, GR_LIST_POINT_LINESTYLE);
 
     if(!pt)
-        {
+    {
         using_default = 1;
 
         /* use series-derived style */
@@ -1926,7 +1926,7 @@ gr_point_linestyle_query(
 
         if(!pt->fg.manual)
             pt = gr_linestyle_default();
-        }
+    }
 
     *style = *pt;
 
@@ -1962,7 +1962,7 @@ gr_point_textstyle_query(
     pt = gr_point_list_search(GR_TEXTSTYLE, cp, series_idx, point, GR_LIST_POINT_TEXTSTYLE);
 
     if(!pt)
-        {
+    {
         using_default = 1;
 
         /* use series-derived style */
@@ -1970,7 +1970,7 @@ gr_point_textstyle_query(
 
         if(!pt->fg.manual)
             pt = &cp->text.style.base;
-        }
+    }
 
     *style = *pt;
 
@@ -2012,20 +2012,20 @@ gr_point_chartstyle_query(
     bpt = gr_point_list_search(BYTE, cp, series_idx, point, (GR_LIST_ID) desc->list_id);
 
     if(!bpt)
-        {
+    {
         using_default = 1;
 
         /* use series style */
         bpt = (P_BYTE) getserp(cp, series_idx) + desc->ser_offset;
 
         if((*bpt & 1) == 0 /*!pt->bits.manual*/)
-            {
+        {
             /* use axes style */
             axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
 
             bpt = (P_BYTE) &cp->axes[axes_idx] + desc->axes_offset;
-            }
         }
+    }
 
     memcpy32(style, bpt, desc->style_size);
 
@@ -2164,14 +2164,14 @@ gr_series_external_from_idx(
     GR_SERIES_IDX series_idx)
 {
     if(cp->axes_idx_max > 0)
-        {
+    {
         if(series_idx >= cp->axes[1].series.stt_idx)
-            {
+        {
             /* paper over the crack */
             series_idx -= cp->axes[1].series.stt_idx;
             series_idx += cp->axes[0].series.end_idx;
-            }
         }
+    }
 
     return(series_idx + 1);
 }
@@ -2195,10 +2195,10 @@ gr_series_idx_from_external(
         return(series_idx);
 
     if(cp->axes_idx_max > 0)
-        {
+    {
         series_idx -= cp->axes[0].series.end_idx; /* jump over the gap */
         series_idx += cp->axes[1].series.stt_idx;
-        }
+    }
 
     return(series_idx);
 }

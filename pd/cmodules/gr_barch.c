@@ -119,7 +119,7 @@ gr_actualise_series_plain(
     serp = getserp(cp, series_idx);
 
     if(1 /*!serp->valid.limits*/)
-        {
+    {
         GR_CHART_ITEMNO        n_items, item;
         GR_DATASOURCE_FOURSOME dsh;
         GR_CHART_NUMBER        value, valsum;
@@ -149,32 +149,32 @@ gr_actualise_series_plain(
         valsum = 0.0;
 
         for(item = 0; item < n_items; ++item)
-            {
+        {
             if(!gr_travel_dsh_valof(cp, dsh.value_y, item, &value))
                 continue;
 
             if(value <= 0.0)
-                {
+            {
                 if(p_axis->bits.log_scale)
                     continue;
 
                 if(value < 0.0)
                     if(/*cumulative || SKS 15jan97 like Fireworkz now */ p_axes->bits.stacked)
                         continue;
-                }
+            }
 
             if(cumulative)
-                {
+            {
                 valsum += value;
                 value   = valsum;
-                }
+            }
 
             serp->cache.limits_y.min = MIN(serp->cache.limits_y.min, value);
             serp->cache.limits_y.max = MAX(serp->cache.limits_y.max, value);
-            }
+        }
 
         serp->valid.limits = 1;
-        }
+    }
 
     return(total_n_items);
 }
@@ -190,7 +190,7 @@ gr_actualise_series_error1(
     serp = getserp(cp, series_idx);
 
     if(1 /*!serp->valid.limits*/)
-        {
+    {
         GR_CHART_ITEMNO        n_items, item;
         GR_DATASOURCE_FOURSOME dsh;
         GR_CHART_NUMBER        value, valsum;
@@ -221,31 +221,31 @@ gr_actualise_series_error1(
         valsum = errsum = 0.0;
 
         for(item = 0; item < n_items; ++item)
-            {
+        {
             if(!gr_travel_dsh_valof(cp, dsh.value_y, item, &value))
                 continue;
 
             if(value <= 0.0)
-                {
+            {
                 if(p_axis->bits.log_scale)
                     continue;
 
                 if(value < 0.0)
                     if(/*cumulative || SKS 15jan97 like Fireworkz now */ p_axes->bits.stacked)
                         continue;
-                }
+            }
 
             if(cumulative)
-                {
+            {
                 valsum += value;
                 value   = valsum;
-                }
+            }
 
             serp->cache.limits_y.min = MIN(serp->cache.limits_y.min, value);
             serp->cache.limits_y.max = MAX(serp->cache.limits_y.max, value);
 
             if(gr_travel_dsh_valof(cp, dsh.error_y, item, &error))
-                {
+            {
                 error = fabs(error);
 
                 /* SKS after 4.12 30mar92 - correct scaling with errors */
@@ -253,7 +253,7 @@ gr_actualise_series_error1(
                     error += errsum;
 
                 errsum = error;
-                }
+            }
             else
                 error = errsum;
 
@@ -268,10 +268,10 @@ gr_actualise_series_error1(
 
             serp->cache.limits_y.min = MIN(serp->cache.limits_y.min, valincerr);
             serp->cache.limits_y.max = MAX(serp->cache.limits_y.max, valincerr);
-            }
+        }
 
         serp->valid.limits = 1;
-        }
+    }
 
     return(total_n_items);
 }
@@ -317,10 +317,10 @@ gr_value_pos(
         plotval = plotmax;
 
     if(p_axis->bits.log_scale)
-        {
+    {
         plotval = log10(plotval);
         plotmin = log10(plotmin);
-        }
+    }
 
     plotval = plotval - plotmin;
 
@@ -395,7 +395,7 @@ gr_barline_label_point(
     swidth_px = swidth_mp  / GR_MILLIPOINTS_PER_PIXIT;
 
     if(strlen(cv.data.text))
-        {
+    {
         halfwidth  = swidth_px / 2;
         halfheight = textstyle.height / 2;
 
@@ -406,7 +406,7 @@ gr_barline_label_point(
 
         res = gr_diag_text_new(cp->core.p_gr_diag, NULL, id,
                                &box, cv.data.text, &textstyle);
-        }
+    }
 
     return(res);
 }
@@ -458,7 +458,7 @@ gr_barlinech_stacking_init(
     for(series_idx = cp->axes[axes_idx].series.stt_idx;
         series_idx < cp->axes[axes_idx].series.end_idx;
         series_idx++)
-        {
+    {
         serp = getserp(cp, series_idx);
 
         if(!gr_travel_dsh_valof(cp, serp->datasources.dsh[0], point, &value))
@@ -471,16 +471,16 @@ gr_barlinech_stacking_init(
 
         /* something to plot in this category */
         res = 1;
-        }
+    }
 
     if(stacking.total)
         stacking.total /= 100.0; /* so value / total is in 0 .. 100 */
     else
-        {
+    {
         /* nothing plottable as %ge in this category */
         gr_chartedit_warning(cp, create_error(GR_CHART_ERR_NEGATIVE_OR_ZERO_IGNORED));
         return(0);
-        }
+    }
 
     return(res);
 }
@@ -573,40 +573,40 @@ gr_barlinech_point_start(
     lcp->pdrop_id.subno = lcp->point_id.subno;
 
     if(!gr_travel_dsh_valof(cp, lcp->dsh.value_y, point, &value->y))
-        {
+    {
         /* skip this point and start afresh with the line */
         lcp->had_first = FALSE;
         return(0);
-        }
+    }
 
     if(lcp->cumulative)
-        {
+    {
         #if 0 /* SKS 15jan97 like Fireworkz now */
         if(value->y <= 0.0)
             value->y = lcp->old_value.y;*/
         else
         #endif
-            {
+        {
             value->y += lcp->old_value.y;
             lcp->old_value.y = value->y;
-            }
         }
+    }
 
     if(lcp->dsh.error_y != GR_DATASOURCE_HANDLE_NONE)
-        {
+    {
         if(gr_travel_dsh_valof(cp, lcp->dsh.error_y, point, &error->y))
-            {
+        {
             error->y = fabs(error->y);
 
             if(lcp->cumulative)
                 error->y += lcp->old_error.y;
 
             lcp->old_error.y = error->y;
-            }
+        }
         else
             /* SKS 22jan92 says blanks in error record maintain previous error values from that series */
             error->y = lcp->old_error.y;
-        }
+    }
     else
         error->y = 0.0;
 
@@ -615,21 +615,21 @@ gr_barlinech_point_start(
     /* can't plot -ve or zero values on log scaled chart */
     if(p_axes->axis[Y_AXIS_IDX].bits.log_scale)
         if(value->y <= 0.0)
-            {
+        {
             /* SKS after 4.12 30mar92 - skip this point and start afresh with the line */
             lcp->had_first = FALSE;
             return(0);
-            }
+        }
 
     if(stacking.on)
-        {
+    {
         /* don't plot -ve values on stacked plot */
         if(value->y < 0.0)
-            {
+        {
             /* SKS after 4.12 30mar92 - skip this point and start afresh with the line */
             lcp->had_first = FALSE;
             return(0);
-            }
+        }
 
         /* adjust for possible 100% plot */
         if(stacking.total)
@@ -641,7 +641,7 @@ gr_barlinech_point_start(
 
         stacking.value = value->y;
         stacking.error = error->y;
-        }
+    }
 
     return(1);
 }
@@ -716,7 +716,7 @@ gr_barchart_point_addin(
         stacking.valpoint = valpoint.y;
 
     if(value.y < 0.0)
-        {
+    {
         /* plot down from zero line (or side; can't be stacked if -ve!) to point */
         GR_COORD tmppoint_y;
 
@@ -725,15 +725,15 @@ gr_barchart_point_addin(
         toppoint.y = tmppoint_y;
 
         labelling = (0 - labelling);
-        }
+    }
 
     /* map together into 3d world */
     if(cp->d3.bits.use)
-        {
+    {
         gr_map_point(&valpoint, cp, lcp->plotindex);
         gr_map_point(&botpoint, cp, lcp->plotindex);
         gr_map_point(&toppoint, cp, lcp->plotindex);
-        }
+    }
 
     /* map into absolute plot area */
     valpoint.x += cp->plotarea.posn.x;
@@ -753,26 +753,26 @@ gr_barchart_point_addin(
     tbar_halfsize = tbar_halfsize / 2;
 
     if(error.y || (labelling != 0))
-        {
+    {
         /* plot little T centred on bottom or top and/or note for labelling */
         err_box.x0 = (pre_z_shift_box.x1 + pre_z_shift_box.x0) / 2;
         err_box.y0 = 0;         /* move later */
 
         if(cp->d3.bits.use)
-            {
+        {
             F64 z_frac = 0.5;
 
             gr_point_partial_z_shift((P_GR_POINT) &err_box.x0,
                                      (P_GR_POINT) &err_box.x0,
                                      cp, &z_frac);
-            }
+        }
 
         err_box.x1 = err_box.x0;
-        }
+    }
 
     /* error tit on bottom? */
     if(error.y && (value.y < 0.0))
-        {
+    {
         GR_COORD errsize;
 
         /* show error -relative to value (no problem with logs as value -ve) */
@@ -795,10 +795,10 @@ gr_barchart_point_addin(
 
         if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
             return(res);
-        }
+    }
 
     if(cp->d3.bits.use)
-        {
+    {
         /* introduce (small) z shift for non-100% depth centring */
         F64 z_frac;
 
@@ -813,13 +813,13 @@ gr_barchart_point_addin(
         rect_box.y0 = pre_z_shift_box.y0 + zsv.y;
         rect_box.x1 = pre_z_shift_box.x1 + zsv.x;
         rect_box.y1 = pre_z_shift_box.y1 + zsv.y;
-        }
+    }
     else
         rect_box = pre_z_shift_box;
 
     /* the actual box (hiding away in here) */
     if(!point_fillstyle.bits.notsolid)
-        {
+    {
         if(rect_box.y0 != rect_box.y1)
             if((res = gr_diag_rectangle_new(p_gr_diag, NULL, lcp->point_id,
                                             &rect_box, &point_linestyle, &point_fillstyle)) < 0)
@@ -827,7 +827,7 @@ gr_barchart_point_addin(
 
         /* only do 3d if some solid selected */
         if(cp->d3.bits.use)
-            {
+        {
             GR_POINT origin, ps1, ps2;
             F64 z_frac;
 
@@ -866,15 +866,15 @@ gr_barchart_point_addin(
                                                     &origin, &ps1, &ps2,
                                                     &point_linestyle, &point_fillstyle)) < 0)
                     return(res);
-            }
         }
+    }
 
     if(point_fillstyle.pattern)
-        {
+    {
         if(!barchstyle.bits.pictures_stacked)
             res = gr_chart_scaled_picture_add(cp, &lcp->point_id, &rect_box, &point_fillstyle);
         else
-            {
+        {
             PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
             PC_GR_AXIS_TICKS ticksp = &p_axis->major;
             GR_COORD major_spanner_y;
@@ -887,56 +887,56 @@ gr_barchart_point_addin(
             use_major = ticksp->current;
 
             if(frac < 0.020)
-                {
+            {
                 frac = 0.020;
                 use_major = frac * p_axis->current_span;
-                }
+            }
 
             major_spanner_y = (GR_COORD) (frac * cp->plotarea.size.y);
 
             if(value.y < 0.0)
-                {
+            {
                 /* pictures hanging down from top */
                 pict_box.y0 = pict_box.y1 - major_spanner_y;
                 iter = MIN(p_axis->current.max, 0.0);
-                }
+            }
             else
-                {
+            {
                 /* pictures standing up from bottom */
                 pict_box.y1 = pict_box.y0 + major_spanner_y;
                 iter = MAX(p_axis->current.min, 0.0);
-                }
+            }
 
             for(;;)
-                {
+            {
                 BOOL add_pict = TRUE; /* SKS 15jan97 like Fireworkz now */
 
                 if(value.y < 0.0)
-                    {
+                {
                     new_iter = iter - use_major;
 
                     had_last = (new_iter < value.y);
 
                     if(had_last) /* allow rounding of items between ticks */
-                        {
+                    {
                         F64 f64 = iter - use_major / 2;
 
                         add_pict = (f64 > value.y);
-                        }
                     }
+                }
                 else
-                    {
+                {
                     new_iter = p_axis->bits.log_scale ? (iter * use_major) : (iter + use_major);
 
                     had_last = (new_iter > value.y);
 
                     if(had_last) /* allow rounding of items between ticks */
-                        {
+                    {
                         F64 f64 = p_axis->bits.log_scale ? (iter * use_major / 2) : (iter + use_major / 2);
 
                         add_pict = (f64 < value.y);
-                        }
                     }
+                }
 
                 if(!add_pict && !barchstyle.bits.pictures_stacked_clipper)
                     break;
@@ -951,36 +951,36 @@ gr_barchart_point_addin(
 
                 /* shift the pict_box */
                 if(value.y < 0.0)
-                    {
+                {
                     pict_box.y0 -= major_spanner_y;
                     pict_box.y1 -= major_spanner_y;
-                    }
+                }
                 else
-                    {
+                {
                     pict_box.y0 += major_spanner_y;
                     pict_box.y1 += major_spanner_y;
-                    }
                 }
             }
+        }
 
         if(res < 0)
             return(res);
-        }
+    }
 
     /* error tit on top? */
     if(error.y && (value.y >= 0.0))
-        {
+    {
         GR_CHART_NUMBER valincerr;
         GR_COORD        errsize;
 
         /* show error +relative to value */
 
         if(p_axes->axis[Y_AXIS_IDX].bits.log_scale)
-            {
+        {
             valincerr = value.y + error.y;
             errsize   = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &valincerr);
             errsize  -= gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
-            }
+        }
         else
             errsize   = gr_value_pos_rel(cp, axes_idx, Y_AXIS_IDX, &error.y);
 
@@ -1004,15 +1004,15 @@ gr_barchart_point_addin(
 
         /* restore unshifted x posn for possible labelling */
         err_box.x0 += tbar_halfsize;
-        }
+    }
 
     if(labelling != 0)
-        {
+    {
         GR_BOX txt_box = err_box;
 
         if((res = gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box)) < 0)
             return(res);
-        }
+    }
 
     gr_diag_group_end(p_gr_diag, &point_group_start);
 
@@ -1055,26 +1055,26 @@ gr_linechart_vane_new(
     ps2.y = ps1->y + zsv->y;
 
     if(!p_vane->forced)
-        {
+    {
         /* ribbon vanes are always added left to right so just consider forward half without recourse to atn2 */
         alpha = ((F64) ps1->y) / ((F64) ps1->x);
         beta  = ((F64) ps2.y ) / ((F64) ps2.x );
 
         if(p_vane->at_top)
-            {
+        {
             if(alpha > beta)
                 return(1);
-            }
+        }
         else
-            {
+        {
             if(alpha < beta)
                 return(1);
 
             /* SKS after 4.12 30mar92 - to avoid 'Escher' line charts we sometimes need to ignore the bottom drop vane */
             if(p_vane->ignore_bottom)
                 return(1);
-            }
         }
+    }
 
     if((res = gr_diag_parallelogram_new(p_gr_diag, NULL,
                                         p_vane->is_drop ? *p_vane->pdrop_id        : *p_vane->point_id,
@@ -1134,10 +1134,10 @@ gr_linechart_point_addin(
     gr_point_barlinechstyle_query(cp, series_idx, point, &barlinechstyle);
 
     if(lcp->fill_axis)
-        {
+    {
         gr_pdrop_fillstyle_query( cp, series_idx, point, &pdrop_fillstyle);
         gr_pdrop_linestyle_query( cp, series_idx, point, &pdrop_linestyle);
-        }
+    }
 
     /* BODGE: in 2d mode derive line chart line colour from fill colour if point has defaulted */
     /* SKS after 4.12 30mar92 - added else in front of if: only bodge in 2d non-fill-axis mode */
@@ -1172,7 +1172,7 @@ gr_linechart_point_addin(
         stacking.valpoint = valpoint.y;
 
     if(value.y < 0.0)
-        {
+    {
         /* fill down from zero line (or side; can't be stacked if -ve!) to line */
         GR_COORD tmppoint_y;
 
@@ -1181,15 +1181,15 @@ gr_linechart_point_addin(
         toppoint.y = tmppoint_y;
 
         labelling = (0 - labelling);
-        }
+    }
 
     /* map together into 3d world */
     if(cp->d3.bits.use)
-        {
+    {
         gr_map_point(&valpoint, cp, lcp->plotindex);
         gr_map_point(&botpoint, cp, lcp->plotindex);
         gr_map_point(&toppoint, cp, lcp->plotindex);
-        }
+    }
 
     /* map into absolute plot area */
     valpoint.x += cp->plotarea.posn.x;
@@ -1210,26 +1210,26 @@ gr_linechart_point_addin(
     tbar_halfsize = pict_halfsize / 2;
 
     if(error.y || (labelling != 0))
-        {
+    {
         /* plot little T centred on bottom or top and/or note for labelling */
         err_box.x0 = (pre_z_shift_box.x1 + pre_z_shift_box.x0) / 2;
         err_box.y0 = 0;         /* move later */
 
         if(cp->d3.bits.use)
-            {
+        {
             F64 z_frac = 0.5;
 
             gr_point_partial_z_shift((P_GR_POINT) &err_box.x0,
                                      (P_GR_POINT) &err_box.x0,
                                      cp, &z_frac);
-            }
+        }
 
         err_box.x1 = err_box.x0;
-        }
+    }
 
     /* error tit on bottom? (no problem with logs) */
     if(error.y && (value.y < 0.0) && (pass == GR_BARLINECH_RIBBON_PASS))
-        {
+    {
         GR_COORD errsize;
 
         errsize = gr_value_pos_rel(cp, axes_idx, Y_AXIS_IDX, &error.y);
@@ -1251,7 +1251,7 @@ gr_linechart_point_addin(
 
         if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
             return(res);
-        }
+    }
 
     /* preserve valpoint, botpoint and toppoint prior to 3d depth shifting */
     cur_valpoint = valpoint;
@@ -1259,7 +1259,7 @@ gr_linechart_point_addin(
     cur_toppoint = toppoint;
 
     if(cp->d3.bits.use)
-        {
+    {
         /* introduce (small) z shift for non-100% depth centring */
         F64 z_frac;
 
@@ -1289,7 +1289,7 @@ gr_linechart_point_addin(
         z_frac = barlinechstyle.slot_depth_percentage / 100.0;
 
         gr_point_partial_z_shift(&zsv, NULL, cp, &z_frac);
-        }
+    }
 
     intermediate.x = 0; /* 0 -> not used */
 
@@ -1308,11 +1308,11 @@ gr_linechart_point_addin(
     vane_ctl.ignore_bottom = stacking.on ? stacking.drop_filled : 1;
 
     if(lcp->had_first && (pass == GR_BARLINECH_RIBBON_PASS))
-        {
+    {
         GR_POINT ps3;
 
         if(lcp->fill_axis)
-            {
+        {
             GR_POINT delta;
 
             delta.y = 0;
@@ -1322,26 +1322,26 @@ gr_linechart_point_addin(
              * old_bp == cur_tp but neither == zp due to previous series
             */
             if(lcp->old_botpoint.y == cur_toppoint.y)
-                {
+            {
                 if(cp->barlinech.cache.zeropoint_y == cur_toppoint.y)
-                    {
+                {
                     /* not just flat - crossover may exist (dropping from left to right) */
                     intermediate.y = lcp->old_botpoint.y;
                     delta.y        = lcp->old_toppoint.y - cur_botpoint.y; /* +ve */
-                    }
                 }
+            }
             else if(lcp->old_toppoint.y == cur_botpoint.y)
-                {
+            {
                 if(cp->barlinech.cache.zeropoint_y == cur_botpoint.y)
-                    {
+                {
                     /* not just flat - crossover may exist (ascending from left to right) */
                     intermediate.y = lcp->old_toppoint.y;
                     delta.y        = cur_toppoint.y - lcp->old_botpoint.y; /* +ve */
-                    }
                 }
+            }
 
             if(delta.y)
-                {
+            {
                 delta.x = cur_botpoint.x - lcp->old_botpoint.x;
 
                 intermediate.x   = delta.x;
@@ -1353,10 +1353,10 @@ gr_linechart_point_addin(
 
                 if(intermediate.x != 0)
                     intermediate.x += lcp->old_botpoint.x;
-                }
+            }
 
             if(cp->d3.bits.use)
-                {
+            {
                 vane_ctl.at_top = 0;
 
                 /* bottom parallelogram #1 */
@@ -1372,7 +1372,7 @@ gr_linechart_point_addin(
                     return(res);
 
                 if(intermediate.x)
-                    {
+                {
                     /* bottom parallelogram #2 */
 
                     ps1.x = cur_botpoint.x - intermediate.x;
@@ -1384,7 +1384,7 @@ gr_linechart_point_addin(
                     if((res = gr_linechart_vane_new(cp, &vane_ctl,
                                                     &intermediate, &ps1, &zsv)) < 0)
                         return(res);
-                    }
+                }
 
                 vane_ctl.at_top = 1;
 
@@ -1402,7 +1402,7 @@ gr_linechart_point_addin(
                         return(res);
 
                 if(intermediate.x)
-                    {
+                {
                     /* top drop parallelogram #2 before drop trapezoid */
 
                     ps1.x = cur_toppoint.x - intermediate.x;
@@ -1415,8 +1415,8 @@ gr_linechart_point_addin(
                         if((res = gr_linechart_vane_new(cp, &vane_ctl,
                                                         &intermediate, &ps1, &zsv)) < 0)
                             return(res);
-                    }
                 }
+            }
 
             /* front drop trapezoid - with optional intermediate flip */
 
@@ -1435,13 +1435,13 @@ gr_linechart_point_addin(
                 return(res);
 
             stacking.drop_filled = pdrop_fillstyle.fg.visible;
-            }
         }
+    }
 
     if(lcp->had_first && (pass == GR_BARLINECH_RIBBON_PASS))
-        {
+    {
         if(!cp->d3.bits.use)
-            {
+        {
             /* the 2d line joins the actual points */
 
             GR_BOX line_box;
@@ -1453,9 +1453,9 @@ gr_linechart_point_addin(
 
             if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &line_box, &point_linestyle)) < 0)
                 return(res);
-            }
+        }
         else if(!lcp->fill_axis)
-            {
+        {
             /* the 3d non-filled ribbon joins the actual points */
 
             ps1.x = cur_valpoint.x - lcp->old_valpoint.x;
@@ -1468,9 +1468,9 @@ gr_linechart_point_addin(
                                                 &lcp->old_valpoint, &ps1, &ps2,
                                                 &point_linestyle, &point_fillstyle)) < 0)
                 return(res);
-            }
+        }
         else
-            {
+        {
             vane_ctl.at_top = 1;
 
             /* top ribbon parallelogram #1 after drop trapezoid */
@@ -1487,7 +1487,7 @@ gr_linechart_point_addin(
                     return(res);
 
             if(intermediate.x)
-                {
+            {
                 /* top ribbon parallelogram #2 after drop trapezoid */
 
                 ps1.x = cur_toppoint.x - intermediate.x;
@@ -1500,12 +1500,12 @@ gr_linechart_point_addin(
                     if((res = gr_linechart_vane_new(cp, &vane_ctl,
                                                     &intermediate, &ps1, &zsv)) < 0)
                         return(res);
-                }
             }
         }
+    }
 
     if((pass == GR_BARLINECH_RIBBON_PASS) && lcp->fill_axis && cp->d3.bits.use)
-        {
+    {
         /* right side drop parallelogram after ribbon, even for first point */
 
         ps1.x = zsv.x;
@@ -1518,7 +1518,7 @@ gr_linechart_point_addin(
                                             &cur_botpoint, &ps1, &ps2,
                                             &pdrop_linestyle, &pdrop_fillstyle)) < 0)
             return(res);
-        }
+    }
 
     lcp->had_first = 1;
 
@@ -1529,7 +1529,7 @@ gr_linechart_point_addin(
 
     /* pretty picture at front? */
     if(point_fillstyle.pattern && (pass == GR_BARLINECH_POINT_PASS))
-        {
+    {
         GR_BOX pict_box;
 
         pict_box.x0 = cur_valpoint.x - pict_halfsize;
@@ -1539,20 +1539,20 @@ gr_linechart_point_addin(
 
         if((res = gr_chart_scaled_picture_add(cp, &lcp->point_id, &pict_box, &point_fillstyle)) < 0)
             return(res);
-        }
+    }
 
     /* error tit on top? */
     if(error.y && (value.y >= 0.0) && (pass == GR_BARLINECH_RIBBON_PASS))
-        {
+    {
         GR_CHART_NUMBER valincerr;
         GR_COORD        errsize;
 
         if(p_axes->axis[Y_AXIS_IDX].bits.log_scale)
-            {
+        {
             valincerr = value.y + error.y;
             errsize   = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &valincerr);
             errsize  -= gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
-            }
+        }
         else
             errsize = gr_value_pos_rel(cp, axes_idx, Y_AXIS_IDX, &error.y);
 
@@ -1576,15 +1576,15 @@ gr_linechart_point_addin(
 
         /* restore unshifted x posn for possible labelling */
         err_box.x0 += tbar_halfsize;
-        }
+    }
 
     if(labelling != 0)
-        {
+    {
         GR_BOX txt_box = err_box;
 
         if((res = gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box)) < 0)
             return(res);
-        }
+    }
 
     gr_diag_group_end(p_gr_diag, &point_group_start);
 
@@ -1613,7 +1613,7 @@ gr_barlinechart_axes_addin(
     do  {
         if((res = gr_axis_addin_value_y(cp, axes_idx, front)) < 0)
             return(res);
-        }
+    }
     while(axes_idx-- > 0);
 
     gr_diag_group_end(cp->core.p_gr_diag, &axesGroupStart);
@@ -1637,45 +1637,45 @@ gr_barlinechart_addin(
     total_n_points = 0;
 
     for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-        {
+    {
         P_GR_AXES p_axes = &cp->axes[axes_idx];
         P_GR_AXIS yaxisp = &p_axes->axis[Y_AXIS_IDX];
 
         if(p_axes->bits.stacked_pct)
-            {
+        {
             /* negative or zero numbers 'blanked' during stacking */
             yaxisp->actual.min = 0.0;
             yaxisp->actual.max = 100.0;
-            }
+        }
         else if(p_axes->bits.stacked)
-            {
+        {
             /* negative or zero numbers 'blanked' during stacking */
             yaxisp->actual.min = 0.0;
             yaxisp->actual.max = 0.0;
-            }
+        }
         else
-            {
+        {
             yaxisp->actual.min = +GR_CHART_NUMBER_MAX;
             yaxisp->actual.max = -GR_CHART_NUMBER_MAX;
-            }
+        }
 
         for(series_idx = p_axes->series.stt_idx;
             series_idx < p_axes->series.end_idx;
             series_idx++)
-            {
+        {
             serp = getserp(cp, series_idx);
 
             switch(serp->sertype)
-                {
-                case GR_CHART_SERIES_PLAIN_ERROR2:
-                case GR_CHART_SERIES_PLAIN_ERROR1:
-                    n_points = gr_actualise_series_error1(cp, series_idx);
-                    break;
+            {
+            case GR_CHART_SERIES_PLAIN_ERROR2:
+            case GR_CHART_SERIES_PLAIN_ERROR1:
+                n_points = gr_actualise_series_error1(cp, series_idx);
+                break;
 
-                default:
-                    n_points = gr_actualise_series_plain(cp, series_idx);
-                    break;
-                }
+            default:
+                n_points = gr_actualise_series_plain(cp, series_idx);
+                break;
+            }
 
             /* accumulate in number of points in this series */
 
@@ -1684,39 +1684,39 @@ gr_barlinechart_addin(
             if(p_axes->bits.stacked_pct)
                 /* ignore */;
             else if(p_axes->bits.stacked)
-                {
+            {
                 yaxisp->actual.min += serp->cache.limits_y.min;
                 yaxisp->actual.max += serp->cache.limits_y.max;
-                }
+            }
             else
-                {
+            {
                 yaxisp->actual.min = MIN(yaxisp->actual.min,
                                          serp->cache.limits_y.min);
 
                 yaxisp->actual.max = MAX(yaxisp->actual.max,
                                          serp->cache.limits_y.max);
-                }
             }
         }
+    }
 
     /* loop over axes again after total_n_points accumulated,
      * sussing best fit lines and forming Y axis for each axes set
     */
     for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
-        {
+    {
         P_GR_AXES p_axes = &cp->axes[axes_idx];
 
         if(!p_axes->bits.stacked)
             for(series_idx = p_axes->series.stt_idx;
                 series_idx < p_axes->series.end_idx;
                 series_idx++)
-                {
+            {
                 serp = getserp(cp, series_idx);
 
                 if(serp->bits.best_fit_manual
                             ? serp->bits.best_fit
                             : p_axes->bits.best_fit)
-                    {
+                {
                     /* derive best fit line parameters */
                     GR_BARLINESCATCH_LINEST_STATE state;
                     S32 cumulative;
@@ -1750,11 +1750,11 @@ gr_barlinechart_addin(
                     /* store m and c away for fuschia reference */
                     serp->cache.best_fit_c = state.a[0];
                     serp->cache.best_fit_m = state.a[1];
-                    }
                 }
+            }
 
         gr_axis_form_value(cp, axes_idx, Y_AXIS_IDX);
-        }
+    }
 
     gr_axis_form_category(cp, total_n_points);
 
@@ -1763,17 +1763,17 @@ gr_barlinechart_addin(
                                                       (total_n_points ? total_n_points : 1));
 
     if(cp->cache.n_contrib_bars)
-        {
+    {
         n_overlapped = cp->cache.n_contrib_bars - 1;
 
         /* bars in different series may differ in actual width */
         if(cp->d3.bits.use)
-            {
+        {
             cp->barch.cache.slot_width = cp->barlinech.cache.cat_group_width;
             cp->barch.cache.slot_shift = 0;
-            }
+        }
         else
-            {
+        {
             cp->barch.cache.slot_width = (GR_COORD) (
                                           (F64) cp->barlinech.cache.cat_group_width /
                                             (1.0 + n_overlapped *
@@ -1783,17 +1783,17 @@ gr_barlinechart_addin(
             cp->barch.cache.slot_shift = (GR_COORD) (
                                           (F64) cp->barch.cache.slot_width *
                                             (1.0 - (cp->barch.slot_overlap_percentage / 100.0)));
-            }
         }
+    }
 
     if(cp->cache.n_contrib_lines)
-        {
+    {
         cp->linech.cache.slot_start = cp->barlinech.cache.cat_group_width / 2;
 
         if(cp->d3.bits.use)
             cp->linech.cache.slot_shift = 0;
         else
-            {
+        {
             cp->linech.cache.slot_shift  = (GR_COORD) (
                                             (F64) cp->barlinech.cache.cat_group_width *
                                               (cp->linech.slot_shift_percentage / 100.0));
@@ -1801,8 +1801,8 @@ gr_barlinechart_addin(
             cp->linech.cache.slot_shift /= cp->cache.n_contrib_lines;
 
             cp->linech.cache.slot_start -= (cp->linech.cache.slot_shift * cp->cache.n_contrib_lines) / 2;
-            }
         }
+    }
 
     /* add in rear axes and gridlines */
     if((res = gr_barlinechart_axes_addin(cp, total_n_points, 0)) < 0)
@@ -1845,7 +1845,7 @@ gr_barlinechart_addin(
         cp->barlinech.cache.zeropoint_y = (GR_COORD) (p_axes->axis[Y_AXIS_IDX].zero_frac * cp->plotarea.size.y);
 
         if(p_axes->bits.stacked)
-            {
+        {
             P_GR_BARLINESCATCH_SERIES_CACHE lc_array;
             /* SKS after 4.12 30mar92 - was total_n_points (which is garbage) -> crash if total_n_points < n_series */
             U32 n_elem = (end_idx - stt_idx);
@@ -1859,7 +1859,7 @@ gr_barlinechart_addin(
             /* initialise each series' cache once */
 
             for(series_idx = stt_idx; series_idx < end_idx; ++series_idx)
-                {
+            {
                 lcp = &lc_array[series_idx - stt_idx];
 
                 lcp->cp       = cp;
@@ -1872,25 +1872,25 @@ gr_barlinechart_addin(
                 lcp->plotindex = plotindex;
 
                 gr_barlinech_series_init(lcp);
-                }
+            }
 
             /* line charts need multiple passes to be drawn correctly */
 
             for(pass = GR_BARLINECH_RIBBON_PASS; pass <= GR_BARLINECH_POINT_PASS; ENUM_INCR(enum GR_BARLINECH_PASS_TYPE, pass))
-                {
+            {
                 /* reset some bits of each series' cache per pass */
 
                 for(series_idx = stt_idx; series_idx < end_idx; ++series_idx)
-                    {
+                {
                     lcp = &lc_array[series_idx - stt_idx];
 
                     gr_barlinech_pass_init(lcp);
-                    }
+                }
 
                 /* plot points left to right */
 
                 for(point = 0; point < total_n_points; ++point)
-                    {
+                {
                     /* reset stacking cache for each point */
                     if(!gr_barlinech_stacking_init(cp, axes_idx, point))
                         /* 100% plots may have detected no values to plot */
@@ -1899,7 +1899,7 @@ gr_barlinechart_addin(
                     /* plot series from bottom to top of this one point (reverse if -ve pitch) */
 
                     for(series_idx = stt_idx; series_idx < end_idx; ++series_idx)
-                        {
+                    {
                         lcp = &lc_array[series_idx - stt_idx];
 
                         serp = getserp(cp, series_idx);
@@ -1907,35 +1907,35 @@ gr_barlinechart_addin(
                         switch((serp->charttype != GR_CHARTTYPE_NONE)
                                             ? serp->charttype
                                             : p_axes->charttype)
+                        {
+                        default:
+                        case GR_CHARTTYPE_BAR:
+                            if(pass != GR_BARLINECH_POINT_PASS)
                             {
-                            default:
-                            case GR_CHARTTYPE_BAR:
-                                if(pass != GR_BARLINECH_POINT_PASS)
-                                    {
-                                    res = gr_barchart_point_addin(lcp, point);
-                                    bars_plotted  = 1;
-                                    }
-                                else
-                                    res = 1;
-                                break;
-
-                            case GR_CHARTTYPE_LINE:
-                                res = gr_linechart_point_addin(lcp, point, pass);
-                                lines_plotted = 1;
-                                break;
+                                res = gr_barchart_point_addin(lcp, point);
+                                bars_plotted  = 1;
                             }
+                            else
+                                res = 1;
+                            break;
 
-                        if(res < 0)
+                        case GR_CHARTTYPE_LINE:
+                            res = gr_linechart_point_addin(lcp, point, pass);
+                            lines_plotted = 1;
                             break;
                         }
 
+                        if(res < 0)
+                            break;
+                    }
+
                     if(res < 0)
                         break;
-                    }
+                }
 
                 if(res < 0)
                     break;
-                }
+            }
 
             al_ptr_free(lc_array);
 
@@ -1950,9 +1950,9 @@ gr_barlinechart_addin(
             if(bars_plotted || lines_plotted)
                 if(plotindex)
                     --plotindex;
-            }
+        }
         else
-            {
+        {
             GR_BARLINESCATCH_SERIES_CACHE single_series_cache;
             GR_DIAG_OFFSET series_group_start;
 
@@ -1963,7 +1963,7 @@ gr_barlinechart_addin(
             series_idx = end_idx;
 
             while(series_idx > stt_idx)
-                {
+            {
                 --series_idx;
 
                 /* initialise this one series' cache once */
@@ -1989,81 +1989,81 @@ gr_barlinechart_addin(
                 switch((serp->charttype != GR_CHARTTYPE_NONE)
                                     ? serp->charttype
                                     : p_axes->charttype)
-                    {
-                    default:
-                    case GR_CHARTTYPE_BAR:
-                        /* bar charts require but one pass */
+                {
+                default:
+                case GR_CHARTTYPE_BAR:
+                    /* bar charts require but one pass */
 
-                        /* reset some bits of this series' cache for this pass */
+                    /* reset some bits of this series' cache for this pass */
+                    gr_barlinech_pass_init(lcp);
+
+                    /* loop over points in this one series from left to right */
+
+                    for(point = 0; point < total_n_points; ++point)
+                        if((res = gr_barchart_point_addin(lcp, point)) < 0)
+                            break;
+
+                    if((res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_BAR)) < 0)
+                        break;
+
+                    if(barindex)
+                        --barindex;
+
+                    if(plotindex)
+                        --plotindex;
+                    break;
+
+                case GR_CHARTTYPE_LINE:
+                    /* line charts require multiple passes over this one series to be drawn correctly */
+
+                    for(pass = GR_BARLINECH_RIBBON_PASS; pass <= GR_BARLINECH_POINT_PASS; ENUM_INCR(enum GR_BARLINECH_PASS_TYPE, pass))
+                    {
+                        GR_DIAG_OFFSET pass_group_start;
+
+                        /* reset some bits of this series' cache per pass */
                         gr_barlinech_pass_init(lcp);
+
+                        if((res = gr_chart_group_new(cp, &pass_group_start, &lcp->serid)) < 0)
+                            break;
 
                         /* loop over points in this one series from left to right */
 
                         for(point = 0; point < total_n_points; ++point)
-                            if((res = gr_barchart_point_addin(lcp, point)) < 0)
+                            if((res = gr_linechart_point_addin(lcp, point, pass)) < 0)
                                 break;
 
-                        if((res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_BAR)) < 0)
+                        if(res < 0)
                             break;
 
-                        if(barindex)
-                            --barindex;
+                        gr_diag_group_end(cp->core.p_gr_diag, &pass_group_start);
 
-                        if(plotindex)
-                            --plotindex;
-                        break;
-
-                    case GR_CHARTTYPE_LINE:
-                        /* line charts require multiple passes over this one series to be drawn correctly */
-
-                        for(pass = GR_BARLINECH_RIBBON_PASS; pass <= GR_BARLINECH_POINT_PASS; ENUM_INCR(enum GR_BARLINECH_PASS_TYPE, pass))
-                            {
-                            GR_DIAG_OFFSET pass_group_start;
-
-                            /* reset some bits of this series' cache per pass */
-                            gr_barlinech_pass_init(lcp);
-
-                            if((res = gr_chart_group_new(cp, &pass_group_start, &lcp->serid)) < 0)
+                        /* add in best fit line between the ribbon and point passes iff unstacked */
+                        if(pass == GR_BARLINECH_RIBBON_PASS)
+                            if((res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_LINE)) < 0)
                                 break;
-
-                            /* loop over points in this one series from left to right */
-
-                            for(point = 0; point < total_n_points; ++point)
-                                if((res = gr_linechart_point_addin(lcp, point, pass)) < 0)
-                                    break;
-
-                            if(res < 0)
-                                break;
-
-                            gr_diag_group_end(cp->core.p_gr_diag, &pass_group_start);
-
-                            /* add in best fit line between the ribbon and point passes iff unstacked */
-                            if(pass == GR_BARLINECH_RIBBON_PASS)
-                                if((res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_LINE)) < 0)
-                                    break;
-                            }
-
-                        if(lineindex)
-                            --lineindex;
-
-                        if(plotindex)
-                            --plotindex;
-                        break;
                     }
+
+                    if(lineindex)
+                        --lineindex;
+
+                    if(plotindex)
+                        --plotindex;
+                    break;
+                }
 
                 if(res < 0)
                     break;
 
                 gr_diag_group_end(cp->core.p_gr_diag, &series_group_start);
-                }
+            }
 
             if(res < 0)
                 break;
-            }
+        }
 
         if(res < 0)
             break;
-        }
+    }
     while(axes_idx-- > 0);
 
     if(res < 0)

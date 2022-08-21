@@ -112,33 +112,33 @@ wrch_h(
     (void) os_word(10, array);                              /* read char definition */
 
     if(highlights_on & N_ITALIC)
-        {
+    {
         ptr = toprow;
         do { *ptr = *ptr >> 1; } while(++ptr <= midway);    /* stagger top half */
-        }
+    }
 
     if(highlights_on & N_BOLD)
-        {
+    {
         ptr = toprow;
         do { *ptr = *ptr | (*ptr << 1); } while(++ptr <= baseline + 1); /* embolden */
-        }
+    }
 
     if(highlights_on & N_SUPERSCRIPT)
-        {
+    {
         from = toprow + 2;
         ptr = toprow + 1;
         do { *ptr++ = *from; from += 2; } while(ptr <= midway);
 
         do { *ptr++ = '\0'; } while(ptr <= baseline + 1);
-        }
+    }
     else if(highlights_on & N_SUBSCRIPT)
-        {
+    {
         from = baseline;
         ptr = baseline + 1;
         do { *ptr-- = *from; from -=2; } while(ptr > midway);
 
         do { *ptr-- = '\0'; } while(ptr >= toprow);
-        }
+    }
 
     print_complain(bbc_vdu(bbc_MultiPurpose));              /* start to redefine char */
     print_complain(bbc_vdu(victimchar));
@@ -263,65 +263,65 @@ wrch__reallydefinefunny(
     (void) os_word(10, &oldchardef[bitshift][1]);   /* read old definition */
 
     switch(ch)
-        {
-        case COLUMN_DOTS:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,  0,  0,  0, 128+32+8+2));
-            break;
+    {
+    case COLUMN_DOTS:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,  0,  0,  0, 128+32+8+2));
+        break;
 
-        case DOWN_ARROW:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 24, 24, 24, 24, 24, 90, 60, 24));
-            break;
+    case DOWN_ARROW:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 24, 24, 24, 24, 24, 90, 60, 24));
+        break;
 
 #if FALSE
-        case UP_ARROW:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 24, 60, 90, 24, 24, 24, 24, 24));
-            break;
+    case UP_ARROW:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 24, 60, 90, 24, 24, 24, 24, 24));
+        break;
 
-        case LEFT_ARROW:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0, 32, 96,255, 96, 32,  0));
-            break;
+    case LEFT_ARROW:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0, 32, 96,255, 96, 32,  0));
+        break;
 
-        case RIGHT_ARROW:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  4,  6,255,  6,  4,  0));
-            break;
+    case RIGHT_ARROW:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  4,  6,255,  6,  4,  0));
+        break;
 
-        case VERTBAR:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 16, 16, 16, 16));
-            break;
+    case VERTBAR:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 16, 16, 16, 16));
+        break;
 
-        case HORIZBAR:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,255,  0,  0,  0));
-            break;
+    case HORIZBAR:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,255,  0,  0,  0));
+        break;
 
-        case TOPLEFT:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0, 31, 16, 16, 16));
-            break;
+    case TOPLEFT:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0, 31, 16, 16, 16));
+        break;
 
-        case TOPRIGHT:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,240, 16, 16, 16));
-            break;
+    case TOPRIGHT:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch,  0,  0,  0,  0,240, 16, 16, 16));
+        break;
 
-        case BOTLEFT:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 31,  0,  0,  0));
-            break;
+    case BOTLEFT:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 31,  0,  0,  0));
+        break;
 
-        case BOTRIGHT:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,240,  0,  0,  0));
-            break;
+    case BOTRIGHT:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,240,  0,  0,  0));
+        break;
 
-        case DROP_LEFT:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 31, 16, 16, 16));
-            break;
+    case DROP_LEFT:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16, 31, 16, 16, 16));
+        break;
 
-        case DROP_MIDDLE:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,255,  0,  0,  0));
-            break;
+    case DROP_MIDDLE:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,255,  0,  0,  0));
+        break;
 
-        case DROP_RIGHT:
-            wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,240, 16, 16, 16));
-            break;
+    case DROP_RIGHT:
+        wimpt_safe(bbc_vduq(bbc_MultiPurpose, ch, 16, 16, 16, 16,240, 16, 16, 16));
+        break;
 #endif
-        }
+    }
 
     chardefined |= (((U32) 1) << bitshift);
 }
@@ -356,68 +356,68 @@ wrch_definefunny(
     char bitshift;
 
     switch(ch)
-        {
-        case COLUMN_DOTS:
-            bitshift = shf_COLUMN_DOTS;
-            break;
+    {
+    case COLUMN_DOTS:
+        bitshift = shf_COLUMN_DOTS;
+        break;
 
-        case DOWN_ARROW:
-            bitshift = shf_DOWN_ARROW;
-            break;
+    case DOWN_ARROW:
+        bitshift = shf_DOWN_ARROW;
+        break;
 
 #if FALSE
-        case UP_ARROW:
-            bitshift = shf_UP_ARROW;
-            break;
+    case UP_ARROW:
+        bitshift = shf_UP_ARROW;
+        break;
 
-        case LEFT_ARROW:
-            bitshift = shf_LEFT_ARROW;
-            break;
+    case LEFT_ARROW:
+        bitshift = shf_LEFT_ARROW;
+        break;
 
-        case RIGHT_ARROW:
-            bitshift = shf_RIGHT_ARROW;
-            break;
+    case RIGHT_ARROW:
+        bitshift = shf_RIGHT_ARROW;
+        break;
 
-        case VERTBAR:
-            bitshift = shf_VERTBAR;
-            break;
+    case VERTBAR:
+        bitshift = shf_VERTBAR;
+        break;
 
-        case HORIZBAR:
-            bitshift = shf_HORIZBAR;
-            break;
+    case HORIZBAR:
+        bitshift = shf_HORIZBAR;
+        break;
 
-        case TOPLEFT:
-            bitshift = shf_TOPLEFT;
-            break;
+    case TOPLEFT:
+        bitshift = shf_TOPLEFT;
+        break;
 
-        case TOPRIGHT:
-            bitshift = shf_TOPRIGHT;
-            break;
+    case TOPRIGHT:
+        bitshift = shf_TOPRIGHT;
+        break;
 
-        case BOTLEFT:
-            bitshift = shf_BOTLEFT;
-            break;
+    case BOTLEFT:
+        bitshift = shf_BOTLEFT;
+        break;
 
-        case BOTRIGHT:
-            bitshift = shf_BOTRIGHT;
-            break;
+    case BOTRIGHT:
+        bitshift = shf_BOTRIGHT;
+        break;
 
-        case DROP_LEFT:
-            bitshift = shf_DROP_LEFT;
-            break;
+    case DROP_LEFT:
+        bitshift = shf_DROP_LEFT;
+        break;
 
-        case DROP_MIDDLE:
-            bitshift = shf_DROP_MIDDLE;
-            break;
+    case DROP_MIDDLE:
+        bitshift = shf_DROP_MIDDLE;
+        break;
 
-        case DROP_RIGHT:
-            bitshift = shf_DROP_RIGHT;
-            break;
+    case DROP_RIGHT:
+        bitshift = shf_DROP_RIGHT;
+        break;
 #endif
 
-        default:
-            return; /* non-funny char, so exit */
-        }
+    default:
+        return; /* non-funny char, so exit */
+    }
 
     if(!(chardefined & (((U32) 1) << bitshift)))
         wrch__reallydefinefunny(ch, bitshift);
@@ -437,18 +437,18 @@ wrch_undefinefunnies(void)
     U32 bitmask;
 
     while((chardefined != 0)  &&  (bitshift < 32))
-        {
+    {
         bitmask  = ((U32) 1) << bitshift;
 
         if(chardefined & bitmask)
-            {
+        {
             trace_1(TRACE_APP_PD4, "undefining char %d", oldchardef[bitshift][1]);
             wimpt_safe(os_writeN, &oldchardef[bitshift][0], 10));
             chardefined ^= bitmask;
-            }
+        }
 
         bitshift++;
-        }
+    }
 }
 
 #endif
@@ -461,14 +461,14 @@ ack_esc(void)
     trace_0(TRACE_APP_PD4, "ack_esc()");
 
     if(ctrlflag)
-        {
+    {
         #if RISCOS
         fx_x2(126, 0);
         #else
         rdch(FALSE, FALSE);
         #endif
         ctrlflag = 0;
-        }
+    }
 }
 
 extern void
@@ -540,14 +540,14 @@ escape_disable_nowinge(void)
         return(0);
 
     if(--escape_level == 0)
-        {
+    {
         fx_x2(229, 1);          /* Ensure ESCAPE disabled */
 
         was_ctrlflag = ctrlflag;
 
         if(was_ctrlflag)
             ack_esc();          /* clears ctrlflag */
-        }
+    }
 
     return(was_ctrlflag ? ERR_ESCAPE : 0);
 }
@@ -595,10 +595,10 @@ keyinbuffer(void)
     /* When we do get() we'll get ESC */
 
     if(carry != 0)
-        {
+    {
         trace_0(TRACE_APP_PD4, "keyinbuffer returns TRUE due to ESCAPE set");
         return(TRUE);
-        }
+    }
 
     rs.r[0] = 152;      /* Examine keyboard buffer */
     rs.r[1] = 0;
@@ -607,13 +607,13 @@ keyinbuffer(void)
 
 #if TRACE_ALLOWED
     if(!carry)
-        {
+    {
         trace_0(TRACE_APP_PD4, "keyinbuffer returns TRUE");
-        }
+    }
     else
-        {
+    {
         /*trace_0(TRACE_APP_PD4, "keyinbuffer returns FALSE");*/
-        }
+    }
 #endif
 
     return(carry == 0);
@@ -656,11 +656,11 @@ extern void
 reset_mc(void)
 {
     if(mc__initialised)
-        {
+    {
         mc__initialised = FALSE;
 
         close_user_dictionaries(TRUE);
-        }
+    }
 }
 
 /******************************************************************************
@@ -714,18 +714,18 @@ setcolour(
     S32 back)
 {
     if(currently_inverted)
+    {
+        if(fore == FORE  &&  back == BACK)
         {
-          if(fore == FORE  &&  back == BACK)
-            {
             fore = BACK;
             back = FORE;
-            }
+        }
         else if(fore == BACK  &&  back == FORE)
-            {
+        {
             fore = FORE;
             back = BACK;
-            }
         }
+    }
 
     riscos_setcolour(logcol(back), TRUE);
     riscos_setcolour(logcol(fore), FALSE);
@@ -788,11 +788,11 @@ wrchrep(
     coord i)
 {
     if(sqobit)
-        {
+    {
         while(i-- > 0)
             prnout(ch);
         return;
-        }
+    }
 
     while(i-- > 0)
         print_complain(bbc_vdu(ch));

@@ -33,42 +33,42 @@ string_lookup(
     const char * str;
 
     if(stringid > 0)
-        {
+    {
         /* message number */
         base      = +MODULE_MSG_BASE;
         increment = +MODULE_MSG_INCREMENT;
         m_or_e    = 'm';
-        }
+    }
     else if(stringid < 0)
-        {
+    {
         /* error number */
         stringid  = -stringid;
         base      = -MODULE_ERR_BASE;
         increment = +MODULE_ERR_INCREMENT;
         m_or_e    = 'e';
-        }
+    }
     else
         return(NULL);
 
     if(stringid >= base)
-        {
+    {
         /* module range */
         moduleno = stringid / increment;
         stringid = stringid % increment;
         (void) sprintf(tagbuffer, "%c%d" MSGS_LOOKUP_DELIMITER_STR "%d", m_or_e, moduleno, stringid);
-        }
+    }
     else
-        {
+    {
         /* application range */
         (void) sprintf(tagbuffer, "%c%d", m_or_e, stringid);
-        }
+    }
 
     str = msgs_lookup(tagbuffer);
     if(str == tagbuffer)
-        {
+    {
         /* lookup failed */
         return(NULL);
-        }
+    }
 
     return(str);
 }

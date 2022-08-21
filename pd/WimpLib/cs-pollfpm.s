@@ -13,7 +13,7 @@
 
         GET     as_flags_h
 
-        GET     as_regs_h
+        ;GET     as_regs_h
         GET     as_macro_h
 
 XOS_Bit                 * 1 :SHL: 17
@@ -67,7 +67,7 @@ REDRAW_DELAY_PERIOD * 200; /* default (cs) */
         SUB     sp, sp, #4*(4*3)
         RFS     ip
         SFM     f4, 4, [sp, #0]
-        STMFD   sp!, {ip}
+        STR     ip, [sp, #-4]!
 
         TST     v1, #Wimp_Poll_NullMask
         SWIEQ   XOS_ReadMonotonicTime
@@ -92,7 +92,7 @@ wimp_poll_fpm_common_exit
         MOVVS   v1, r0                      ; save error^
         MOVVC   v1, #0                      ; save zero -> no error
 
-        LDMFD   sp!, {ip}
+        LDR     ip, [sp], #4
         WFS     ip
         LFM     f4, 4, [sp, #0]
         ADD     sp, sp, #4*12
@@ -135,7 +135,7 @@ wimp_poll_fpm_common_exit
         SUB     sp, sp, #4*12
         RFS     ip
         SFM     f4, 4, [sp, #0]
-        STMFD   sp!, {ip}
+        STR     ip, [sp, #-4]!
 
 wimp_pollidle_fpm_common ; branched here from null event case of above
 

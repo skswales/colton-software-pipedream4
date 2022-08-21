@@ -287,10 +287,10 @@ do_complex_divide(
 
     /* check for divide by 0 about to trap */
     if(divisor < F64_MIN)
-        {
+    {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
         return(FALSE);
-        }
+    }
 
     out->r = (in1->r * in2->r + in1->i * in2->i) / divisor;
     out->i = (in1->i * in2->r - in1->r * in2->i) / divisor;
@@ -861,15 +861,15 @@ do_arc_cosh_sinh_tanh(
         mult_z_by_i is 1 to multiply by i, -1 to multiply by -i
     */
     if(mult_z_by_i)
-        {
+    {
         F64 t = z->r;
 
         z->r = z->i * -*mult_z_by_i;
         z->i = t    *  *mult_z_by_i;
-        }
+    }
 
     if(type == C_TANH)
-        {
+    {
         /* do temp = (1+z)/(1-z) */
         COMPLEX in1, in2;
 
@@ -880,9 +880,9 @@ do_arc_cosh_sinh_tanh(
 
         if(!do_complex_divide(p_ev_data_res, &in1, &in2, &temp))
             return;
-        }
+    }
     else
-        {
+    {
         /* find z*z */
         out.r = z->r * z->r - z->i * z->i;
         out.i = z->r * z->i * 2.0;
@@ -902,22 +902,22 @@ do_arc_cosh_sinh_tanh(
         /* z + it  */
         temp.r += z->r;
         temp.i += z->i;
-        }
+    }
 
     /* ln it to out */
     if(status_fail(status = complex_lnz(&temp, &out)))
-        {
+    {
         ev_data_set_error(p_ev_data_res, status);
         return;
-        }
+    }
 
     /* now its in out, halve it for arctans */
     if(type == C_TANH)
-        {
+    {
         /* halve it */
         out.r /= 2.0;
         out.i /= 2.0;
-        }
+    }
 
     /* maybe postprocess out
         multiply the output by   i * mult_res_by_i
@@ -926,12 +926,12 @@ do_arc_cosh_sinh_tanh(
         mult_res_by_i is 1 to multiply by i, -1 to multiply by -i
     */
     if(mult_res_by_i)
-        {
+    {
         F64 t = out.r;
 
         out.r = out.i  * -*mult_res_by_i;
         out.i = t      *  *mult_res_by_i;
-        }
+    }
 
     /* output a complex number array */
     complex_result_complex(p_ev_data_res, &out);

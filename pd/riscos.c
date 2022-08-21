@@ -103,75 +103,75 @@ scraptransfer_file(
     FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkimport(&size);
 
     switch(filetype)
+    {
+    case FILETYPE_DIRECTORY:
+    case FILETYPE_APPLICATION:
+        reperr(create_error(FILE_ERR_ISADIR), ms->leaf);
+        break;
+
+    case FILETYPE_PIPEDREAM:
         {
-        case FILETYPE_DIRECTORY:
-        case FILETYPE_APPLICATION:
-            reperr(create_error(FILE_ERR_ISADIR), ms->leaf);
-            break;
+        char grname[BUF_MAX_PATHSTRING];
+        char myname[BUF_MAX_PATHSTRING];
 
-        case FILETYPE_PIPEDREAM:
+        /* check with chart editor to see if he's saving to us - if so invent
+         * relative filename using leafname supplied by chart editor
+        */
+        if(gr_chart_saving_chart(grname))
+        {
+            if(file_is_rooted(grname))
             {
-            char grname[BUF_MAX_PATHSTRING];
-            char myname[BUF_MAX_PATHSTRING];
-
-            /* check with chart editor to see if he's saving to us - if so invent
-             * relative filename using leafname supplied by chart editor
-            */
-            if(gr_chart_saving_chart(grname))
-                {
-                if(file_is_rooted(grname))
-                    {
-                    /* just insert a ref if it is saved */
-                    draw_insert_filename(grname);
-                    break;
-                    }
-
-                /* fault these as we can't store them anywhere safe relative
-                 * to the iconbar or relative to this unsaved file
-                */
-                if(iconbar)
-                    reperr_null(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED));
-                else if(!file_is_rooted(currentfilename))
-                    reperr_null(ERR_CHARTIMPORTNEEDSSAVEDDOC);
-                else
-                    {
-                    U32 prefix_len;
-                    S32 num = 0;
-
-                    file_get_prefix(myname, elemof32(myname), currentfilename);
-
-                    prefix_len = strlen32(myname);
-
-                    do  {
-                        if(++num > 99) /* only two digits in printf string */
-                            break;
-
-                        /* invent a new leafname and stick it on the end */
-                        (void) xsnprintf(myname + prefix_len, elemof32(myname) - prefix_len,
-                                string_lookup(GR_CHART_MSG_DEFAULT_CHARTINNAMEZD),
-                                file_leafname(currentfilename),
-                                num);
-
-                        /* see if there's any file of this name already */
-                        }
-                    while(file_is_file(myname));
-
-                    xferrecv_import_via_file(myname);
-                    }
-                }
-            else
-                xferrecv_import_via_file(NULL); /* can't manage ram load */
+                /* just insert a ref if it is saved */
+                draw_insert_filename(grname);
+                break;
             }
-            break;
 
-        default:
-            if(gr_cache_can_import(filetype))
-                /* fault these as we can't store them anywhere safe */
+            /* fault these as we can't store them anywhere safe relative
+             * to the iconbar or relative to this unsaved file
+            */
+            if(iconbar)
                 reperr_null(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED));
+            else if(!file_is_rooted(currentfilename))
+                reperr_null(ERR_CHARTIMPORTNEEDSSAVEDDOC);
             else
-                xferrecv_import_via_file(NULL); /* can't manage ram load */
-            break;
+            {
+                U32 prefix_len;
+                S32 num = 0;
+
+                file_get_prefix(myname, elemof32(myname), currentfilename);
+
+                prefix_len = strlen32(myname);
+
+                do  {
+                    if(++num > 99) /* only two digits in printf string */
+                        break;
+
+                    /* invent a new leafname and stick it on the end */
+                    (void) xsnprintf(myname + prefix_len, elemof32(myname) - prefix_len,
+                            string_lookup(GR_CHART_MSG_DEFAULT_CHARTINNAMEZD),
+                            file_leafname(currentfilename),
+                            num);
+
+                    /* see if there's any file of this name already */
+                }
+                while(file_is_file(myname));
+
+                xferrecv_import_via_file(myname);
+            }
         }
+        else
+            xferrecv_import_via_file(NULL); /* can't manage ram load */
+        }
+        break;
+
+    default:
+        if(gr_cache_can_import(filetype))
+            /* fault these as we can't store them anywhere safe */
+            reperr_null(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED));
+        else
+            xferrecv_import_via_file(NULL); /* can't manage ram load */
+        break;
+    }
 }
 
 /* now filename is guaranteed to be readable (iff filetype_option > 0) */
@@ -211,7 +211,7 @@ riscos_LoadFile(
         res = mystr_set(&d_load[0].textfield, filename);
 
     if(res)
-        {
+    {
         if(inserting)
             d_load[1].option = 'Y'; /* Insert */
 
@@ -223,12 +223,12 @@ riscos_LoadFile(
         recording = macro_recorder_on && !temp_file;
 
         if(recording)
-            {
+        {
             DHEADER * dhptr = &dialog_head[D_LOAD];
 
             out_comm_start_to_macro_file(N_LoadFile);
             out_comm_parms_to_macro_file(dhptr->dialog_box, dhptr->items, FALSE);
-            }
+        }
 
         zero_struct(load_file_options);
         load_file_options.document_name = filename;
@@ -240,7 +240,7 @@ riscos_LoadFile(
 
         if(recording)
             out_comm_end_to_macro_file(N_LoadFile);
-        }
+    }
 
     if(res && is_current_document())
         draw_screen();
@@ -261,24 +261,24 @@ print_file(
 
     /* yes, we can print these! (sort of) */
     if(PD4_CHART_CHAR == filetype_option)
-        {
+    {
         if(create_new_untitled_document())
-            {
+        {
             ok = draw_insert_filename(filename);
 
             if(!ok)
                 destroy_current_document();
-            }
         }
+    }
     else
         ok = riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/); /* load as new file */
 
     if(ok)
-        {
+    {
         print_document();
 
         destroy_current_document();
-        }
+    }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -308,43 +308,43 @@ riscos_quit_okayed(
     /* Cancel    -> abandon closedown */
 
     if(res == riscdialog_query_SDC_SAVE)
-        {
+    {
         /* loop over all documents in sequence trying to save them */
 
         for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-            {
+        {
             select_document(p_docu);
 
             dbox_note_position_on_completion(TRUE);
 
             /* If punter (or program) cancels any save, he means abort the shutdown */
             if(riscdialog_query_save_existing() == riscdialog_query_CANCEL)
-                {
+            {
                 res = riscdialog_query_CANCEL;
                 break;
-                }
             }
         }
+    }
 
     dbox_noted_position_trash();
 
     /* if not aborted then all modified documents either saved or ignored - delete all documents (must be at least one) */
 
     if((res == riscdialog_query_SDC_SAVE) || (res == riscdialog_query_SDC_DISCARD))
-        {
+    {
         for(;;)
-            {
+        {
             if(NO_DOCUMENT == (p_docu = first_document()))
                 break;
 
             select_document(p_docu);
 
             destroy_current_document();
-            }
+        }
 
         select_document(NO_DOCUMENT);
         return(1);
-        }
+    }
 
     select_document_using_docno(old_docno);
     return(0);
@@ -384,13 +384,13 @@ pd_can_print(
     S32 rft)
 {
     switch(rft)
-        {
-        case FILETYPE_PIPEDREAM:
-            return(TRUE);
+    {
+    case FILETYPE_PIPEDREAM:
+        return(TRUE);
 
-        default:
-            return(FALSE);
-        }
+    default:
+        return(FALSE);
+    }
 }
 
 /*
@@ -402,14 +402,14 @@ pd_can_run(
     S32 rft)
 {
     switch(rft)
-        {
-        case FILETYPE_PIPEDREAM:
-        case FILETYPE_PDMACRO:
-            return(TRUE);
+    {
+    case FILETYPE_PIPEDREAM:
+    case FILETYPE_PDMACRO:
+        return(TRUE);
 
-        default:
-            return(FALSE);
-        }
+    default:
+        return(FALSE);
+    }
 }
 
 /******************************************************************************
@@ -447,9 +447,9 @@ static void
 iconbar_event_EBUT_BRIGHT(void)
 {
     if(host_ctrl_pressed())
-        { /*EMPTY*/ } /* reserved */
+    { /*EMPTY*/ } /* reserved */
     else if(host_shift_pressed())
-        { /*EMPTY*/ } /* reserved */
+    { /*EMPTY*/ } /* reserved */
     else
         application_process_command(N_NewWindow);
 }
@@ -597,43 +597,43 @@ check_if_null_events_wanted(wimp_eventstr * e)
     }
 
     if(!required)
-        {
+    {
         P_DOCU p_docu;
 
         for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-            {
+        {
             if(docu_is_thunk(p_docu))
                 continue;
 
             if(p_docu->Xxf_interrupted)
-                {
+            {
                 trace_0(TRACE_NULL, "nulls wanted for interrupted drawing: ");
                 required = TRUE;
                 break;
-                }
+            }
 
             if(p_docu->Xxf_acquirecaret)
-                {
+            {
                 trace_0(TRACE_NULL, "nulls wanted for caret acquisition: ");
                 required = TRUE;
                 break;
-                }
             }
         }
+    }
 
     if(!required)
         if(browsing_docno != DOCNO_NONE)
-            {
+        {
             trace_0(TRACE_NULL, "nulls wanted for browse: ");
             required = TRUE;
-            }
+        }
 
     if(!required)
         if(pausing_docno != DOCNO_NONE)
-            {
+        {
             trace_0(TRACE_NULL, "nulls wanted for pause: ");
             required = TRUE;
-            }
+        }
 
     win_claim_idle_events(required ? win_ICONBARLOAD : win_IDLE_OFF);
 }
@@ -680,7 +680,7 @@ riscos_sendsheetclosed(
     wimp_msgstr msg;
 
     if(glp)
-        {
+    {
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.b)
                        + sizeof(WIMP_MSGPD_DDETYPEB);
         msg.hdr.my_ref = 0;        /* fresh msg */
@@ -690,7 +690,7 @@ riscos_sendsheetclosed(
         msg.data.pd_dde.type.b.handle = glp->ghan;
 
         wimpt_safe(wimp_sendmessage(wimp_ESEND, &msg, (wimp_t) glp->task));
-        }
+    }
 }
 
 /******************************************************************************
@@ -706,7 +706,7 @@ riscos_sendslotcontents(
     S32 yoff)
 {
     if(glp)
-        {
+    {
         ROW row;
         char buffer[LIN_BUFSIZ];
         const char *ptr;
@@ -726,42 +726,42 @@ riscos_sendslotcontents(
         tcell = travel(glp->col + xoff, row);
 
         if(tcell)
-            {
+        {
             P_EV_RESULT p_ev_result;
 
             if(result_extract(tcell, &p_ev_result) == SL_NUMBER)
-                {
+            {
                 switch(p_ev_result->did_num)
-                    {
-                    case RPN_DAT_WORD8:
-                    case RPN_DAT_WORD16:
-                    case RPN_DAT_WORD32:
-                        msg.data.pd_dde.type.c.content.number = (F64) p_ev_result->arg.integer;
-                        goto send_number;
+                {
+                case RPN_DAT_WORD8:
+                case RPN_DAT_WORD16:
+                case RPN_DAT_WORD32:
+                    msg.data.pd_dde.type.c.content.number = (F64) p_ev_result->arg.integer;
+                    goto send_number;
 
-                    case RPN_DAT_REAL:
-                        msg.data.pd_dde.type.c.content.number = p_ev_result->arg.fp;
-                    send_number:
-                        type = Wimp_MPD_DDE_typeC_type_Number;
-                        nbytes = sizeof(F64);
-                        break;
+                case RPN_DAT_REAL:
+                    msg.data.pd_dde.type.c.content.number = p_ev_result->arg.fp;
+                send_number:
+                    type = Wimp_MPD_DDE_typeC_type_Number;
+                    nbytes = sizeof(F64);
+                    break;
 
-                    default:
-                        break;
-                    }
+                default:
+                    break;
                 }
+            }
 
             if(!nbytes)
-                {
+            {
                 S32 t_justify, t_format, t_opt_DF, t_opt_TH;
 
                 t_justify = tcell->justify;
                 tcell->justify = J_LEFT;
                 if(tcell->type == SL_NUMBER)
-                    {
+                {
                     t_format  = tcell->format;
                     tcell->format = t_format & ~(F_LDS | F_TRS | F_BRAC);
-                    }
+                }
                 else
                     t_format = 0; /* keep compiler dataflow analyser happy */
                 t_opt_DF  = d_options_DF;
@@ -788,19 +788,19 @@ riscos_sendslotcontents(
                     ch = *ptr++;
                     if((ch >= SPACE)  ||  !ch)
                         *to++ = ch;
-                    }
+                }
                 while(ch);
                 ptr = buffer;
-                }
             }
+        }
         else
             ptr = NULLSTR;
 
         if(ptr)
-            {
+        {
             xstrkpy(msg.data.pd_dde.type.c.content.text, elemof32(msg.data.pd_dde.type.c.content.text), ptr);
             nbytes = strlen32p1(msg.data.pd_dde.type.c.content.text);
-            }
+        }
 
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.c.content)
                        + nbytes;
@@ -816,7 +816,7 @@ riscos_sendslotcontents(
         trace_2(TRACE_MODULE_UREF, "sendslotcontents x:%d, y:%d", xoff, yoff);
 
         wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, (wimp_t) glp->task));
-        }
+    }
 }
 
 extern void
@@ -830,9 +830,9 @@ riscos_sendallslots(
         yoff = 0;
         do  {
             riscos_sendslotcontents(glp, xoff, yoff);
-            }
-        while(++yoff <= glp->ysize);
         }
+        while(++yoff <= glp->ysize);
+    }
     while(++xoff <= glp->xsize);
 }
 
@@ -849,7 +849,7 @@ riscos_sendendmarker(
     wimp_msgstr msg;
 
     if(glp)
-        {
+    {
         glp->datasent = FALSE;
 
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.c)
@@ -862,7 +862,7 @@ riscos_sendendmarker(
         msg.data.pd_dde.type.c.type   = Wimp_MPD_DDE_typeC_type_End;
 
         wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, (wimp_t) glp->task));
-        }
+    }
 }
 
 static void
@@ -873,12 +873,12 @@ send_end_markers(void)
     for(lptr = first_in_list(&graphics_link_list);
         lptr;
         lptr = next_in_list(&graphics_link_list))
-        {
+    {
         P_GRAPHICS_LINK_ENTRY glp = (P_GRAPHICS_LINK_ENTRY) lptr->value;
 
         if(glp->datasent)
             riscos_sendendmarker(glp);
-        }
+    }
 }
 
 static os_error *
@@ -933,18 +933,18 @@ strnpcpyind(
     char   c;
 
     if(n)
-        {
+    {
         while(n-- > 0)
-            {
+        {
             c = *b++;
             if(!c)
                 break;
             *a++ = c;
-            }
+        }
 
         *a  = '\0';
         *np = n;
-        }
+    }
 
     return(a);
 }
@@ -969,47 +969,47 @@ iconbar_message_DATAOPEN(
     trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can 'run' a file of type &%4.4X", filetype);
 
     switch(filetype)
+    {
+    case FILETYPE_PDMACRO:
+        /* need this here to stop pause in macro file allowing message bounce
+         * thereby allowing Filer to try to invoke another copy of PipeDream
+         * to run this macro file ...
+        */
+        xferrecv_insertfileok();
+
+        reportf("MDATAOPEN: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
+
+        if(mystr_set(&d_macro_file[0].textfield, filename))
         {
-        case FILETYPE_PDMACRO:
-            /* need this here to stop pause in macro file allowing message bounce
-             * thereby allowing Filer to try to invoke another copy of PipeDream
-             * to run this macro file ...
-            */
+            exec_file(d_macro_file[0].textfield);
+            str_clr( &d_macro_file[0].textfield);
+        }
+
+        break;
+
+    default:
+        if(pd_can_run(filetype))
+        {
+            DOCNO docno;
+
             xferrecv_insertfileok();
 
             reportf("MDATAOPEN: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
 
-            if(mystr_set(&d_macro_file[0].textfield, filename))
-                {
-                exec_file(d_macro_file[0].textfield);
-                str_clr( &d_macro_file[0].textfield);
-                }
+            filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
 
-            break;
-
-        default:
-            if(pd_can_run(filetype))
-                {
-                DOCNO docno;
-
-                xferrecv_insertfileok();
-
-                reportf("MDATAOPEN: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
-
-                filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
-
-                if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
-                    {
-                    front_document_using_docno(docno);
-                    }
-                else
-                    {
-                    (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
-                    }
-                }
-
-            break;
+            if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
+            {
+                front_document_using_docno(docno);
+            }
+            else
+            {
+                (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
+            }
         }
+
+        break;
+    }
 
     return(processed);
 }
@@ -1029,63 +1029,63 @@ iconbar_message_DATALOAD(
     reportf("MDATALOAD: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
+    {
+    case FILETYPE_DIRECTORY:
+    case FILETYPE_APPLICATION:
+        reperr(create_error(FILE_ERR_ISADIR), filename);
+        break;
+
+    case FILETYPE_PIPEDREAM:
+        filetype_option = find_filetype_option(filename); /* checks readability and discriminates PipeDream chart files */
+
+        if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
         {
-        case FILETYPE_DIRECTORY:
-        case FILETYPE_APPLICATION:
-            reperr(create_error(FILE_ERR_ISADIR), filename);
-            break;
+            front_document_using_docno(docno);
+        }
+        else
+        {
+            (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
+        }
 
-        case FILETYPE_PIPEDREAM:
-            filetype_option = find_filetype_option(filename); /* checks readability and discriminates PipeDream chart files */
+        /* delete NOW if was scrap */
+        xferrecv_insertfileok();
+        break;
 
-            if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
-                {
-                front_document_using_docno(docno);
-                }
-            else
-                {
-                (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
-                }
-
-            /* delete NOW if was scrap */
-            xferrecv_insertfileok();
-            break;
-
-        default:
-            if(gr_cache_can_import(filetype))
-                {
-                trace_0(TRACE_APP_PD4, "ignore Draw file as we can't do anything sensible");
-                break;
-                }
-
-            trace_0(TRACE_APP_PD4, "loading file as new file");
-
-            if(filetype == FILETYPE_PDMACRO)
-                {
-                if((filetype_option = file_readable(filename)) > 0)
-                    filetype_option = 'T';
-                }
-            else if(filetype == FILETYPE_CSV)
-                {
-                if((filetype_option = file_readable(filename)) > 0)
-                    filetype_option = CSV_CHAR;
-                }
-            else
-                filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
-
-            if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
-                {
-                front_document_using_docno(docno);
-                }
-            else
-                {
-                (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
-                }
-
-            /* delete NOW if was scrap */
-            xferrecv_insertfileok();
+    default:
+        if(gr_cache_can_import(filetype))
+        {
+            trace_0(TRACE_APP_PD4, "ignore Draw file as we can't do anything sensible");
             break;
         }
+
+        trace_0(TRACE_APP_PD4, "loading file as new file");
+
+        if(filetype == FILETYPE_PDMACRO)
+        {
+            if((filetype_option = file_readable(filename)) > 0)
+                filetype_option = 'T';
+        }
+        else if(filetype == FILETYPE_CSV)
+        {
+            if((filetype_option = file_readable(filename)) > 0)
+                filetype_option = CSV_CHAR;
+        }
+        else
+            filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
+
+        if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
+        {
+            front_document_using_docno(docno);
+        }
+        else
+        {
+            (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
+        }
+
+        /* delete NOW if was scrap */
+        xferrecv_insertfileok();
+        break;
+    }
 
     return(processed);
 }
@@ -1110,13 +1110,13 @@ iconbar_PREQUIT(
 
     /* if any modified, it gets hard */
     if(count)
-        {
+    {
         /* First, acknowledge the message to stop it going any further */
         wimpt_ack_message(m);
 
         /* And then tell the user. */
         if(riscos_quit_okayed(count))
-            {
+        {
             wimp_eventdata ee;
 
             if(flags) /* only RISC OS 3 */
@@ -1129,8 +1129,8 @@ iconbar_PREQUIT(
             wimpt_safe(wimp_get_caret_pos(&ee.key.c));
             ee.key.chcode = akbd_Sh + akbd_Ctl + akbd_Fn12;
             wimpt_safe(wimp_sendmessage(wimp_EKEY, (wimp_msgstr *) &ee, task));
-            }
         }
+    }
 
     return(processed);
 }
@@ -1158,7 +1158,7 @@ iconbar_SAVEDESK(
 
     /* write out commands to desktop save file that will restart app */
     if(user_path[0] != NULLCH)
-        {
+    {
         P_U8 p_u8;
 
         /* need to boot main app first */
@@ -1172,23 +1172,23 @@ iconbar_SAVEDESK(
         p_u8[-2] = NULLCH;
 
         p_main_app = user_path;
-        }
+    }
 
     if(!e)
-        {
+    {
         /* now run app */
         if((e = _kernel_fwrite0(os_file_handle, "Run ")) == NULL)
         if((e = _kernel_fwrite0(os_file_handle, p_main_app)) == NULL)
             e = _kernel_fwrite0(os_file_handle, "\x0A");
-        }
+    }
 
     if(e)
-        {
+    {
         wimpt_complain(e);
 
         /* ack the message to stop desktop save and remove file */
         wimpt_ack_message(m);
-        }
+    }
 
     return(processed);
 }
@@ -1204,244 +1204,244 @@ iconbar_PD_DDE(
     trace_1(TRACE_APP_PD4, "ukprocessor got PD DDE message %d", id);
 
     switch(id)
+    {
+    case Wimp_MPD_DDE_IdentifyMarkedBlock:
         {
-        case Wimp_MPD_DDE_IdentifyMarkedBlock:
-            {
-            trace_0(TRACE_APP_PD4, "IdentifyMarkedBlock");
+        trace_0(TRACE_APP_PD4, "IdentifyMarkedBlock");
 
-            if((blkstart.col != NO_COL)  &&  (blkend.col != NO_COL))
-                {
-                wimp_msgstr msg;
-                char *ptr = msg.data.pd_dde.type.a.text;
-                size_t nbytes = sizeof(WIMP_MSGPD_DDETYPEA_TEXT)-1;
-                ghandle ghan;
-                S32 xsize = (S32) (blkend.col - blkstart.col);
-                S32 ysize = (S32) (blkend.row - blkstart.row);
-                const char *leaf;
-                const char *tag;
-                S32 taglen;
-                P_CELL tcell;
-
-                select_document_using_docno(blk_docno);
-
-                (void) mergebuf_nocheck();
-                filbuf();
-
-                leaf = file_leafname(currentfilename);
-                ptr = strnpcpyind(ptr, leaf, &nbytes);
-
-                tcell = travel(blkstart.col, blkstart.row);
-
-                if(tcell  &&  (tcell->type == SL_TEXT))
-                    tag = tcell->content.text;
-                else
-                    tag = ambiguous_tag_STR;
-
-                taglen = strlen(tag);
-
-                if((size_t) taglen < nbytes)
-                    {
-                    /* need to copy tag before adding to list to avoid moving memory problems */
-                    strcpy(ptr, tag);
-                    tag = ptr;
-                    ptr += taglen + 1;
-
-                    /* create entry on list - even if already there */
-                    ghan = graph_add_entry(m->hdr.my_ref,        /* unique number */
-                                           blk_docno, blkstart.col, blkstart.row,
-                                           xsize, ysize, leaf, tag,
-                                           (int) task);
-
-                    if(ghan > 0)
-                        {
-                        trace_5(TRACE_APP_PD4, "IMB: ghan %d xsize %d ysize %d leafname %s tag %s]",
-                                ghan, xsize, ysize, leaf, tag);
-
-                        msg.data.pd_dde.id                = Wimp_MPD_DDE_ReturnHandleAndBlock;
-                        msg.data.pd_dde.type.a.handle    = ghan;
-                        msg.data.pd_dde.type.a.xsize    = xsize;
-                        msg.data.pd_dde.type.a.ysize    = ysize;
-
-                        /* send message as ack to his one */
-                        msg.hdr.size     = ptr - (char *) &msg;
-                        msg.hdr.your_ref = m->hdr.my_ref;
-                        msg.hdr.action     = Wimp_MPD_DDE;
-                        wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, task));
-                        }
-                    else if(ghan  &&  (ghan != status_nomem()))
-                        reperr_null(ghan);
-                    else
-                        trace_0(TRACE_APP_PD4, "IMB: failed to create ghandle - caller will get bounced msg");
-                    }
-                else
-                    trace_0(TRACE_APP_PD4, "IMB: leafname/tag too long - caller will get bounced msg");
-                }
-            else
-                trace_0(TRACE_APP_PD4, "IMB: no block marked/only one mark set - caller will get bounced msg");
-            }
-            break;
-
-        case Wimp_MPD_DDE_EstablishHandle:
-            {
+        if((blkstart.col != NO_COL)  &&  (blkend.col != NO_COL))
+        {
+            wimp_msgstr msg;
+            char *ptr = msg.data.pd_dde.type.a.text;
+            size_t nbytes = sizeof(WIMP_MSGPD_DDETYPEA_TEXT)-1;
             ghandle ghan;
-            S32 xsize = m->data.pd_dde.type.a.xsize;
-            S32 ysize = m->data.pd_dde.type.a.ysize;
-            const char *tstr = m->data.pd_dde.type.a.text;
-            const char *tag  = tstr + strlen(tstr) + 1;
-            DOCNO docno;
-            COL col;
-            ROW row;
+            S32 xsize = (S32) (blkend.col - blkstart.col);
+            S32 ysize = (S32) (blkend.row - blkstart.row);
+            const char *leaf;
+            const char *tag;
+            S32 taglen;
             P_CELL tcell;
 
-            trace_4(TRACE_APP_PD4, "EstablishHandle: xsize %d, ysize %d, name %s, tag %s", xsize, ysize, tstr, tag);
-
-            if(file_is_rooted(tstr))
-                {
-                docno = find_document_using_wholename(tstr);
-                }
-            else
-                {
-                docno = find_document_using_leafname(tstr);
-
-                if(DOCNO_SEVERAL == docno)
-                    break;
-                }
-
-            if(DOCNO_NONE == docno)
-                break;
-
-            select_document_using_docno(docno);
+            select_document_using_docno(blk_docno);
 
             (void) mergebuf_nocheck();
             filbuf();
 
-            /* find tag in document */
-            init_doc_as_block();
+            leaf = file_leafname(currentfilename);
+            ptr = strnpcpyind(ptr, leaf, &nbytes);
 
-            while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-                {
-                if(tcell->type != SL_TEXT)
-                    continue;
+            tcell = travel(blkstart.col, blkstart.row);
 
-                if(0 != _stricmp(tcell->content.text, tag))
-                    continue;
+            if(tcell  &&  (tcell->type == SL_TEXT))
+                tag = tcell->content.text;
+            else
+                tag = ambiguous_tag_STR;
 
-                col = in_block.col;
-                row = in_block.row;
+            taglen = strlen(tag);
 
-                /* add entry to list */
+            if((size_t) taglen < nbytes)
+            {
+                /* need to copy tag before adding to list to avoid moving memory problems */
+                strcpy(ptr, tag);
+                tag = ptr;
+                ptr += taglen + 1;
+
+                /* create entry on list - even if already there */
                 ghan = graph_add_entry(m->hdr.my_ref,        /* unique number */
-                                       docno, col, row,
-                                       xsize, ysize, tstr, tag,
+                                       blk_docno, blkstart.col, blkstart.row,
+                                       xsize, ysize, leaf, tag,
                                        (int) task);
 
                 if(ghan > 0)
-                    {
-                    trace_5(TRACE_APP_PD4, "EST: ghan %d xsize %d ysize %d name %s tag %s]",
-                            ghan, xsize, ysize, tstr, tag);
+                {
+                    trace_5(TRACE_APP_PD4, "IMB: ghan %d xsize %d ysize %d leafname %s tag %s]",
+                            ghan, xsize, ysize, leaf, tag);
 
-                    m->data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
-                    m->data.pd_dde.type.a.handle = ghan;
+                    msg.data.pd_dde.id                = Wimp_MPD_DDE_ReturnHandleAndBlock;
+                    msg.data.pd_dde.type.a.handle    = ghan;
+                    msg.data.pd_dde.type.a.xsize    = xsize;
+                    msg.data.pd_dde.type.a.ysize    = ysize;
 
-                    /* send same message as ack to his one */
-                    m->hdr.your_ref = m->hdr.my_ref;
-                    m->hdr.action   = Wimp_MPD_DDE;
-                    wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, m, task));
-                    }
+                    /* send message as ack to his one */
+                    msg.hdr.size     = ptr - (char *) &msg;
+                    msg.hdr.your_ref = m->hdr.my_ref;
+                    msg.hdr.action     = Wimp_MPD_DDE;
+                    wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, task));
+                }
+                else if(ghan  &&  (ghan != status_nomem()))
+                    reperr_null(ghan);
                 else
-                    trace_0(TRACE_APP_PD4, "EST: failed to create ghandle - caller will get bounced msg");
+                    trace_0(TRACE_APP_PD4, "IMB: failed to create ghandle - caller will get bounced msg");
+            }
+            else
+                trace_0(TRACE_APP_PD4, "IMB: leafname/tag too long - caller will get bounced msg");
+        }
+        else
+            trace_0(TRACE_APP_PD4, "IMB: no block marked/only one mark set - caller will get bounced msg");
+        }
+        break;
 
+    case Wimp_MPD_DDE_EstablishHandle:
+        {
+        ghandle ghan;
+        S32 xsize = m->data.pd_dde.type.a.xsize;
+        S32 ysize = m->data.pd_dde.type.a.ysize;
+        const char *tstr = m->data.pd_dde.type.a.text;
+        const char *tag  = tstr + strlen(tstr) + 1;
+        DOCNO docno;
+        COL col;
+        ROW row;
+        P_CELL tcell;
+
+        trace_4(TRACE_APP_PD4, "EstablishHandle: xsize %d, ysize %d, name %s, tag %s", xsize, ysize, tstr, tag);
+
+        if(file_is_rooted(tstr))
+        {
+            docno = find_document_using_wholename(tstr);
+        }
+        else
+        {
+            docno = find_document_using_leafname(tstr);
+
+            if(DOCNO_SEVERAL == docno)
                 break;
-                }
-            }
+        }
+
+        if(DOCNO_NONE == docno)
             break;
 
-        case Wimp_MPD_DDE_RequestUpdates:
-        case Wimp_MPD_DDE_StopRequestUpdates:
+        select_document_using_docno(docno);
+
+        (void) mergebuf_nocheck();
+        filbuf();
+
+        /* find tag in document */
+        init_doc_as_block();
+
+        while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+        {
+            if(tcell->type != SL_TEXT)
+                continue;
+
+            if(0 != _stricmp(tcell->content.text, tag))
+                continue;
+
+            col = in_block.col;
+            row = in_block.row;
+
+            /* add entry to list */
+            ghan = graph_add_entry(m->hdr.my_ref,        /* unique number */
+                                   docno, col, row,
+                                   xsize, ysize, tstr, tag,
+                                   (int) task);
+
+            if(ghan > 0)
             {
-            ghandle han = m->data.pd_dde.type.b.handle;
-            P_GRAPHICS_LINK_ENTRY glp;
+                trace_5(TRACE_APP_PD4, "EST: ghan %d xsize %d ysize %d name %s tag %s]",
+                        ghan, xsize, ysize, tstr, tag);
 
-            trace_2(TRACE_APP_PD4, "%sRequestUpdates: handle %d", (id == Wimp_MPD_DDE_StopRequestUpdates) ? "Stop" : "", han);
+                m->data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
+                m->data.pd_dde.type.a.handle = ghan;
 
-            glp = graph_search_list(han);
-
-            if(glp)
-                {
-                /* stop caller getting bounced msg */
-                wimpt_ack_message(m);
-
-                /* flag that updates are/are not required on this handle */
-                glp->update = (id == Wimp_MPD_DDE_RequestUpdates);
-                }
+                /* send same message as ack to his one */
+                m->hdr.your_ref = m->hdr.my_ref;
+                m->hdr.action   = Wimp_MPD_DDE;
+                wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, m, task));
             }
-            break;
+            else
+                trace_0(TRACE_APP_PD4, "EST: failed to create ghandle - caller will get bounced msg");
 
-        case Wimp_MPD_DDE_RequestContents:
-            {
-            ghandle han = m->data.pd_dde.type.b.handle;
-            P_GRAPHICS_LINK_ENTRY glp;
-
-            trace_1(TRACE_APP_PD4, "RequestContents: handle %d", han);
-
-            glp = graph_search_list(han);
-
-            if(glp)
-                {
-                /* stop caller getting bounced msg */
-                wimpt_ack_message(m);
-
-                select_document_using_docno(glp->docno);
-
-                (void) mergebuf_nocheck();
-                filbuf();
-
-                /* fire off all the cells */
-                riscos_sendallslots(glp);
-
-                riscos_sendendmarker(glp);
-                }
-            }
-            break;
-
-        case Wimp_MPD_DDE_GraphClosed:
-            {
-            ghandle han = m->data.pd_dde.type.b.handle;
-            PC_GRAPHICS_LINK_ENTRY glp;
-
-            trace_1(TRACE_APP_PD4, "GraphClosed: handle %d", han);
-
-            glp = graph_search_list(han);
-
-            if(glp)
-                {
-                /* stop caller getting bounced msg */
-                wimpt_ack_message(m);
-
-                /* delete entry from list */
-                graph_remove_entry(han);
-                }
-            }
-            break;
-
-        case Wimp_MPD_DDE_DrawFileChanged:
-            {
-            const char *drawfilename = m->data.pd_dde.type.d.leafname;
-
-            trace_1(TRACE_APP_PD4, "DrawFileChanged: name %s", drawfilename);
-
-            /* don't ack this message: other people may want to see it too */
-
-            /* look for any instances of this DrawFile; update windows with refs */
-            gr_cache_recache(drawfilename);
-            }
-            break;
-
-        default:
-            trace_1(TRACE_APP_PD4, "ignoring PD DDE type %d message", id);
-            processed = FALSE;
             break;
         }
+        }
+        break;
+
+    case Wimp_MPD_DDE_RequestUpdates:
+    case Wimp_MPD_DDE_StopRequestUpdates:
+        {
+        ghandle han = m->data.pd_dde.type.b.handle;
+        P_GRAPHICS_LINK_ENTRY glp;
+
+        trace_2(TRACE_APP_PD4, "%sRequestUpdates: handle %d", (id == Wimp_MPD_DDE_StopRequestUpdates) ? "Stop" : "", han);
+
+        glp = graph_search_list(han);
+
+        if(glp)
+        {
+            /* stop caller getting bounced msg */
+            wimpt_ack_message(m);
+
+            /* flag that updates are/are not required on this handle */
+            glp->update = (id == Wimp_MPD_DDE_RequestUpdates);
+        }
+        break;
+        }
+
+    case Wimp_MPD_DDE_RequestContents:
+        {
+        ghandle han = m->data.pd_dde.type.b.handle;
+        P_GRAPHICS_LINK_ENTRY glp;
+
+        trace_1(TRACE_APP_PD4, "RequestContents: handle %d", han);
+
+        glp = graph_search_list(han);
+
+        if(glp)
+        {
+            /* stop caller getting bounced msg */
+            wimpt_ack_message(m);
+
+            select_document_using_docno(glp->docno);
+
+            (void) mergebuf_nocheck();
+            filbuf();
+
+            /* fire off all the cells */
+            riscos_sendallslots(glp);
+
+            riscos_sendendmarker(glp);
+        }
+        break;
+        }
+
+    case Wimp_MPD_DDE_GraphClosed:
+        {
+        ghandle han = m->data.pd_dde.type.b.handle;
+        PC_GRAPHICS_LINK_ENTRY glp;
+
+        trace_1(TRACE_APP_PD4, "GraphClosed: handle %d", han);
+
+        glp = graph_search_list(han);
+
+        if(glp)
+        {
+            /* stop caller getting bounced msg */
+            wimpt_ack_message(m);
+
+            /* delete entry from list */
+            graph_remove_entry(han);
+        }
+        break;
+        }
+
+    case Wimp_MPD_DDE_DrawFileChanged:
+        {
+        const char *drawfilename = m->data.pd_dde.type.d.leafname;
+
+        trace_1(TRACE_APP_PD4, "DrawFileChanged: name %s", drawfilename);
+
+        /* don't ack this message: other people may want to see it too */
+
+        /* look for any instances of this DrawFile; update windows with refs */
+        gr_cache_recache(drawfilename);
+        }
+        break;
+
+    default:
+        trace_1(TRACE_APP_PD4, "ignoring PD DDE type %d message", id);
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -1453,105 +1453,105 @@ iconbar_message(
     BOOL processed = TRUE;
 
     switch(m->hdr.action)
-        {
-        case wimp_MPREQUIT:
-            processed = iconbar_PREQUIT(m);
-            break;
-
-        case wimp_SAVEDESK:
-            /* SKS 26oct96 added */
-            processed = iconbar_SAVEDESK(m);
-            break;
-
-        case wimp_MDATASAVE:
-            /* initial drag of data from somewhere to icon */
-            scraptransfer_file(&m->data.datasave, 1);
-            break;
-
-        case wimp_MDATAOPEN:
-            /* double-click on object */
-            processed = iconbar_message_DATAOPEN(m);
-            break;
-
-        case wimp_MDATALOAD:
-            /* object dragged to icon bar - load mostly regardless of type */
-            processed = iconbar_message_DATALOAD(m);
-            break;
-
-        case wimp_MPrintTypeOdd:
-            {
-            /* printer broadcast */
-            char * filename;
-            FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkprint(&filename);
-
-            trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%4.4X", filetype);
-
-            if(pd_can_print(filetype))
-                {
-                print_file(filename);
-
-                xferrecv_printfileok(-1);    /* print all done */
-                }
-            }
-            break;
-
-        case wimp_MPrinterChange:
-            trace_0(TRACE_APP_PD4, "ukprocessor got informed of printer driver change");
-            riscprint_set_printer_data();
-            break;
-
-        case wimp_MMODECHANGE:
-            cachemodevariables();
-            cachepalettevariables();
-            break;
-
-        case wimp_PALETTECHANGE:
-            cachepalettevariables();
-            draw_redraw_all_pictures();
-            break;
-
-        case wimp_MINITTASK:
-          if(g_kill_duplicates)
-          {
-              static int seen_my_birth = FALSE;
-              const char *taskname = m->data.taskinit.taskname;
-              trace_1(TRACE_APP_PD4, "MTASKINIT for %s", taskname);
-              if(0 == strcmp(wimpt_get_taskname(), taskname))
-              {
-                  if(seen_my_birth)
-                  {
-                      wimp_msgstr msg;
-                      msg.hdr.size = sizeof(wimp_msghdr);
-                      msg.hdr.your_ref = 0; /* fresh msg */
-                      msg.hdr.action = wimp_MCLOSEDOWN;
-                      trace_1(TRACE_APP_PD4, "Another %s is trying to start! I'll kill it", taskname);
-                      wimpt_safe(wimp_sendmessage(wimp_ESEND, &msg, m->hdr.task));
-                  }
-                  else
-                  {
-                      trace_0(TRACE_APP_PD4, "witnessing our own birth");
-                      seen_my_birth = TRUE;
-                  }
-              }
-          }
+    {
+    case wimp_MPREQUIT:
+        processed = iconbar_PREQUIT(m);
         break;
 
-        case wimp_MHELPREQUEST:
-            trace_0(TRACE_APP_PD4, "ukprocessor got help request for icon bar icon");
-            m->data.helprequest.m.i = 0;
-            riscos_sendhelpreply(m, help_iconbar);
-            break;
+    case wimp_SAVEDESK:
+        /* SKS 26oct96 added */
+        processed = iconbar_SAVEDESK(m);
+        break;
 
-        case Wimp_MPD_DDE:
-            processed = iconbar_PD_DDE(m);
-            break;
+    case wimp_MDATASAVE:
+        /* initial drag of data from somewhere to icon */
+        scraptransfer_file(&m->data.datasave, 1);
+        break;
 
-        default:
-            trace_1(TRACE_APP_PD4, "unprocessed %s message to iconbar handler",
-                    report_wimp_message(m, FALSE));
-            processed = FALSE;
-            break;
+    case wimp_MDATAOPEN:
+        /* double-click on object */
+        processed = iconbar_message_DATAOPEN(m);
+        break;
+
+    case wimp_MDATALOAD:
+        /* object dragged to icon bar - load mostly regardless of type */
+        processed = iconbar_message_DATALOAD(m);
+        break;
+
+    case wimp_MPrintTypeOdd:
+        {
+        /* printer broadcast */
+        char * filename;
+        FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkprint(&filename);
+
+        trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%4.4X", filetype);
+
+        if(pd_can_print(filetype))
+        {
+            print_file(filename);
+
+            xferrecv_printfileok(-1);    /* print all done */
         }
+        break;
+        }
+
+    case wimp_MPrinterChange:
+        trace_0(TRACE_APP_PD4, "ukprocessor got informed of printer driver change");
+        riscprint_set_printer_data();
+        break;
+
+    case wimp_MMODECHANGE:
+        cachemodevariables();
+        cachepalettevariables();
+        break;
+
+    case wimp_PALETTECHANGE:
+        cachepalettevariables();
+        draw_redraw_all_pictures();
+        break;
+
+    case wimp_MINITTASK:
+      if(g_kill_duplicates)
+      {
+          static int seen_my_birth = FALSE;
+          const char *taskname = m->data.taskinit.taskname;
+          trace_1(TRACE_APP_PD4, "MTASKINIT for %s", taskname);
+          if(0 == strcmp(wimpt_get_taskname(), taskname))
+          {
+              if(seen_my_birth)
+              {
+                  wimp_msgstr msg;
+                  msg.hdr.size = sizeof(wimp_msghdr);
+                  msg.hdr.your_ref = 0; /* fresh msg */
+                  msg.hdr.action = wimp_MCLOSEDOWN;
+                  trace_1(TRACE_APP_PD4, "Another %s is trying to start! I'll kill it", taskname);
+                  wimpt_safe(wimp_sendmessage(wimp_ESEND, &msg, m->hdr.task));
+              }
+              else
+              {
+                  trace_0(TRACE_APP_PD4, "witnessing our own birth");
+                  seen_my_birth = TRUE;
+              }
+          }
+      }
+    break;
+
+    case wimp_MHELPREQUEST:
+        trace_0(TRACE_APP_PD4, "ukprocessor got help request for icon bar icon");
+        m->data.helprequest.m.i = 0;
+        riscos_sendhelpreply(m, help_iconbar);
+        break;
+
+    case Wimp_MPD_DDE:
+        processed = iconbar_PD_DDE(m);
+        break;
+
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed %s message to iconbar handler",
+                report_wimp_message(m, FALSE));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -1566,36 +1566,36 @@ iconbar_PD_DDE_bounced(
     trace_1(TRACE_APP_PD4, "ukprocessor got bounced PD DDE message %d", id);
 
     switch(id)
+    {
+    case Wimp_MPD_DDE_SendSlotContents:
         {
-        case Wimp_MPD_DDE_SendSlotContents:
-            {
-            ghandle han = m->data.pd_dde.type.c.handle;
-            P_GRAPHICS_LINK_ENTRY glp;
-            trace_1(TRACE_APP_PD4, "SendSlotContents on handle %d bounced - receiver dead", han);
-            glp = graph_search_list(han);
-            if(glp)
-                /* delete entry from list */
-                graph_remove_entry(han);
-            }
-            break;
-
-        case Wimp_MPD_DDE_ReturnHandleAndBlock:
-            {
-            ghandle han = m->data.pd_dde.type.a.handle;
-            P_GRAPHICS_LINK_ENTRY glp;
-            trace_1(TRACE_APP_PD4, "ReturnHandleAndBlock on handle %d bounced - receiver dead", han);
-            glp = graph_search_list(han);
-            if(glp)
-                /* delete entry from list */
-                graph_remove_entry(han);
-            }
-            break;
-
-        default:
-            trace_1(TRACE_APP_PD4, "ignoring bounced PD DDE type %d message", id);
-            processed = FALSE;
-            break;
+        ghandle han = m->data.pd_dde.type.c.handle;
+        P_GRAPHICS_LINK_ENTRY glp;
+        trace_1(TRACE_APP_PD4, "SendSlotContents on handle %d bounced - receiver dead", han);
+        glp = graph_search_list(han);
+        if(glp)
+            /* delete entry from list */
+            graph_remove_entry(han);
         }
+        break;
+
+    case Wimp_MPD_DDE_ReturnHandleAndBlock:
+        {
+        ghandle han = m->data.pd_dde.type.a.handle;
+        P_GRAPHICS_LINK_ENTRY glp;
+        trace_1(TRACE_APP_PD4, "ReturnHandleAndBlock on handle %d bounced - receiver dead", han);
+        glp = graph_search_list(han);
+        if(glp)
+            /* delete entry from list */
+            graph_remove_entry(han);
+        }
+        break;
+
+    default:
+        trace_1(TRACE_APP_PD4, "ignoring bounced PD DDE type %d message", id);
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -1607,17 +1607,17 @@ iconbar_message_bounced(
     BOOL processed = TRUE;
 
     switch(m->hdr.action)
-        {
-        case Wimp_MPD_DDE:
-            processed = iconbar_PD_DDE_bounced(m);
-            break;
+    {
+    case Wimp_MPD_DDE:
+        processed = iconbar_PD_DDE_bounced(m);
+        break;
 
-        default:
-            trace_1(TRACE_APP_PD4, "unprocessed %s bounced message to iconbar handler",
-                    report_wimp_message(m, FALSE));
-            processed = FALSE;
-            break;
-        }
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed %s bounced message to iconbar handler",
+                report_wimp_message(m, FALSE));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -1639,16 +1639,16 @@ default_event_ENULL(void)
     continue_draw();
 
     if(pausing_docno != DOCNO_NONE)
-        {
+    {
         select_document_using_docno(pausing_docno);
         pausing_null();
-        }
+    }
 
     if(browsing_docno != DOCNO_NONE)
-        {
+    {
         select_document_using_docno(browsing_docno);
         browse_null();
-        }
+    }
 
     return(TRUE);
 }
@@ -1665,41 +1665,41 @@ default_event_handler(
     select_document(NO_DOCUMENT);
 
     switch(e->e)
-        {
-        case wimp_ENULL:
-            processed = default_event_ENULL();
-            break;
+    {
+    case wimp_ENULL:
+        processed = default_event_ENULL();
+        break;
 
-        case wimp_EBUT:
-            /* one presumes only the icon bar stuff gets here ... */
-            iconbar_event_EBUT(e);
-            break;
+    case wimp_EBUT:
+        /* one presumes only the icon bar stuff gets here ... */
+        iconbar_event_EBUT(e);
+        break;
 
-        case wimp_EUSERDRAG:
-            trace_0(TRACE_APP_PD4, "UserDrag: stopping drag as button released");
+    case wimp_EUSERDRAG:
+        trace_0(TRACE_APP_PD4, "UserDrag: stopping drag as button released");
 
-            /* send this to the right guy */
-            select_document_using_docno(drag_docno);
+        /* send this to the right guy */
+        select_document_using_docno(drag_docno);
 
-            application_drag(e->data.dragbox.x0, e->data.dragbox.y0, TRUE);
+        application_drag(e->data.dragbox.x0, e->data.dragbox.y0, TRUE);
 
-            ended_drag();        /* will release nulls */
-            break;
+        ended_drag();        /* will release nulls */
+        break;
 
-        case wimp_ESEND:
-        case wimp_ESENDWANTACK:
-            processed = iconbar_message(&e->data.msg);
-            break;
+    case wimp_ESEND:
+    case wimp_ESENDWANTACK:
+        processed = iconbar_message(&e->data.msg);
+        break;
 
-        case wimp_EACK:
-            processed = iconbar_message_bounced(&e->data.msg);
-            break;
+    case wimp_EACK:
+        processed = iconbar_message_bounced(&e->data.msg);
+        break;
 
-        default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event %s", report_wimp_event(e->e, &e->data));
-            processed = FALSE;
-            break;
-        }
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event %s", report_wimp_event(e->e, &e->data));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -1758,7 +1758,7 @@ rear_close_request(
     trace_0(TRACE_APP_PD4, "rear_close_request()");
 
     if(!justopening)
-        {
+    {
         /* deal with modified files etc before opening any filer windows */
         wanttoclose = riscdialog_warning();
 
@@ -1776,7 +1776,7 @@ rear_close_request(
 
         if(wanttoclose)
             wanttoclose = dependent_links_warning();
-        }
+    }
 
     if(adjustclicked)
         if(file_is_rooted(currentfilename))
@@ -1813,7 +1813,7 @@ main_redraw_request(
 #endif
 
     while(!bum  &&  redrawindex)
-        {
+    {
         killcolourcache();
 
         graphics_window = * ((const GDI_BOX *) &redraw.g);
@@ -1828,7 +1828,7 @@ main_redraw_request(
         application_redraw((RISCOS_REDRAWSTR *) &redraw);
 
         bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
-        }
+    }
 }
 
 /******************************************************************************
@@ -1855,7 +1855,7 @@ main_key_pressed(
       if(ch == ESCAPE)
         kh = ch;
     else if(ch <= CTRL_Z)                /* RISC OS 'Hot Key' here we come */
-        {
+    {
         kh = (ch - 1 + 'A') | ALT_ADDED; /* Uppercase Alt-letter by default */
 
         /* Watch out for useful CtrlChars not produced by Ctrl-letter */
@@ -1866,17 +1866,17 @@ main_key_pressed(
         if( ((ch == CTRL_H)  ||  (ch == CTRL_M))  &&
             (alt_array[0] == NULLCH)  &&
             !host_ctrl_pressed())
-            {
+        {
             if(ch == CTRL_H)
                 kh = RISCOS_BACKSPACE_KEY;
             else
                 kh = ch;
-            }
         }
+    }
     else
-        {
+    {
         if((ch & ~0x00FF) == 0x0100)
-            {
+        {
             /* convert RISC OS Fn keys to our internal representations */
             S32 shift_added = 0;
             S32 ctrl_added  = 0;
@@ -1885,18 +1885,18 @@ main_key_pressed(
 
             /* remap RISC OS shift and control bits to our definitions */
             if(kh & 0x10)
-                {
+            {
                 kh ^= 0x10;
                 shift_added = SHIFT_ADDED;
-                }
+            }
             else
                 shift_added = 0;
 
             if(kh & 0x20)
-                {
+            {
                 kh ^= 0x20;
                 ctrl_added = CTRL_ADDED;
-                }
+            }
             else
                 ctrl_added = 0;
 
@@ -1907,17 +1907,17 @@ main_key_pressed(
                 kh ^= (0x10 ^ 0x00);
 
             kh |= (FN_ADDED | shift_added | ctrl_added);
-            }
+        }
         else if((alt_array[0] != NULLCH)  &&  isalpha(ch))
                                             /* already in Alt-sequence? */
             kh = toupper(ch) | ALT_ADDED;   /* Uppercase Alt-letter */
         else
             kh = ch;
-        }
+    }
 
     /* transform the simple Delete and Home keys into function-like keys */
     if((kh == RISCOS_DELETE_KEY) || (kh == RISCOS_HOME_KEY) || (kh == RISCOS_BACKSPACE_KEY))
-        {
+    {
         S32 shift_added = host_shift_pressed() ? SHIFT_ADDED : 0;
         S32 ctrl_added  = host_ctrl_pressed()  ? CTRL_ADDED  : 0;
 
@@ -1931,14 +1931,14 @@ main_key_pressed(
             assert(0);
 
         kh |= (shift_added | ctrl_added);
-        }
+    }
 
     if(!application_process_key(kh))
-        {
+    {
         /* if unprocessed, send it back from whence it came */
         trace_1(TRACE_APP_PD4, "main_key_pressed: unprocessed app_process_key(&%8X)", ch);
         wimpt_safe(wimp_processkey(ch));
-        }
+    }
 }
 
 /******************************************************************************
@@ -1957,28 +1957,28 @@ draw_insert_filename(
 
     /* try for minimal reference */
     if(NULL != file_get_cwd(cwd_buffer, elemof32(cwd_buffer), currentfilename))
-        {
+    {
         size_t cwd_len = strlen(cwd_buffer);
 
         if(0 == _strnicmp(filename, cwd_buffer, cwd_len))
             filename += cwd_len;
-        }
+    }
 
     filbuf();
 
     if(NULLCH != get_text_at_char())
-        {
+    {
         if( insert_string(d_options_TA, FALSE)  &&
             insert_string("G:", FALSE)          &&
             insert_string(filename, FALSE)      &&
             insert_string(",100", FALSE)        &&
             insert_string(d_options_TA, FALSE)  &&
             Return_fn_core()                    )
-            {
+        {
             draw_screen();
             return(1);
-            }
         }
+    }
 
     return(0);
 }
@@ -1997,53 +1997,53 @@ main_DATALOAD(
     reportf("MDATALOAD(main): file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
+    {
+    case FILETYPE_DIRECTORY:
+    case FILETYPE_APPLICATION:
+        reperr(create_error(FILE_ERR_ISADIR), filename);
+        break;
+
+    case FILETYPE_PDMACRO:
+        if(mystr_set(&d_macro_file[0].textfield, filename))
         {
-        case FILETYPE_DIRECTORY:
-        case FILETYPE_APPLICATION:
-            reperr(create_error(FILE_ERR_ISADIR), filename);
-            break;
+            do_execfile(d_macro_file[0].textfield);
+            str_clr(   &d_macro_file[0].textfield);
+        }
+        break;
 
-        case FILETYPE_PDMACRO:
-            if(mystr_set(&d_macro_file[0].textfield, filename))
-                {
-                do_execfile(d_macro_file[0].textfield);
-                str_clr(   &d_macro_file[0].textfield);
-                }
-            break;
+    case FILETYPE_PIPEDREAM:
+        filetype_option = find_filetype_option(filename); /* checks readability and discriminates PipeDream chart files */
 
-        case FILETYPE_PIPEDREAM:
-            filetype_option = find_filetype_option(filename); /* checks readability and discriminates PipeDream chart files */
-
-            if(PD4_CHART_CHAR == filetype_option)
-                {
-                trace_0(TRACE_APP_PD4, "pd chart about to be loaded via text-at field G mechanism");
-                draw_insert_filename(filename);
-                break;
-                }
-
-            (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
-
-            break;
-
-        default:
-            if(gr_cache_can_import(filetype))
-                {
-                draw_insert_filename(filename);
-                break;
-                }
-
-            if(filetype == FILETYPE_CSV)
-                {
-                if((filetype_option = file_readable(filename)) > 0)
-                    filetype_option = CSV_CHAR;
-                }
-            else
-                filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
-
-            (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
-
+        if(PD4_CHART_CHAR == filetype_option)
+        {
+            trace_0(TRACE_APP_PD4, "pd chart about to be loaded via text-at field G mechanism");
+            draw_insert_filename(filename);
             break;
         }
+
+        (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
+
+        break;
+
+    default:
+        if(gr_cache_can_import(filetype))
+        {
+            draw_insert_filename(filename);
+            break;
+        }
+
+        if(filetype == FILETYPE_CSV)
+        {
+            if((filetype_option = file_readable(filename)) > 0)
+                filetype_option = CSV_CHAR;
+        }
+        else
+            filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
+
+        (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
+
+        break;
+    }
 
     /* this is mandatory */
     xferrecv_insertfileok();
@@ -2093,17 +2093,17 @@ main_HELPREQUEST(
     alt_msg = buffer = abuffer + prefix_len;
 
     if(roff >= 0)
-        {
+    {
         rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
             xstrkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_page_break);
         else
-            {
+        {
             trow = rptr->rowno;
 
             if((coff >= 0)  ||  (coff == OFF_RIGHT))
-                {
+            {
                 COL tcol, scol;
                 U8 sbuf[BUF_MAX_REFERENCE];
                 U8 abuf[BUF_MAX_REFERENCE];
@@ -2113,7 +2113,7 @@ main_HELPREQUEST(
                     chkrpb(trow)  &&  chkfsb()  &&  chkpac(trow))
                         xstrkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_hard_page_break);
                 else
-                    {
+                {
                     msg = (insertref)
                                ? help_insert_a_reference_to
                                : help_position_the_caret_in;
@@ -2123,12 +2123,12 @@ main_HELPREQUEST(
                     (void) write_ref(abuf, elemof32(abuf), current_docno(), tcol, trow);
 
                     if(!insertref)
-                        {
+                    {
                         coff = get_column(tx, trow, 0, TRUE);
                         scol = col_number(coff);
                         trace_2(TRACE_APP_PD4, "will position at row #%d, col #%d", trow, scol);
                         (void) write_ref(sbuf, elemof32(sbuf), current_docno(), scol, trow);
-                        }
+                    }
                     else
                         scol = tcol;
 
@@ -2142,10 +2142,10 @@ main_HELPREQUEST(
                             /* and this set of args */
                             help_click_adjust_to, msg, help_slot,
                             abuf);
-                    }
                 }
+            }
             else if(IN_ROW_BORDER(coff))
-                {
+            {
                 if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
                     trace_0(TRACE_APP_PD4, "no action cos editing in THIS sheet");
                 else
@@ -2155,11 +2155,11 @@ main_HELPREQUEST(
                             (o_roff == roff)
                                   ? help_double_row_border
                                   : (const char *) NULLSTR);
-                }
+            }
             else
                 trace_0(TRACE_APP_PD4, "off left/right");
-            }
         }
+    }
     else
         trace_0(TRACE_APP_PD4, "above sheet data");
 
@@ -2179,41 +2179,41 @@ main_message(
     BOOL processed = TRUE;
 
     switch(action)
-        {
-        case wimp_MDATASAVE:
-            /* possible object dragged into main_window - ask for DATALOAD */
-            scraptransfer_file(&m->data.datasave, 0 /* not iconbar */);
-            break;
+    {
+    case wimp_MDATASAVE:
+        /* possible object dragged into main_window - ask for DATALOAD */
+        scraptransfer_file(&m->data.datasave, 0 /* not iconbar */);
+        break;
 
-        case wimp_MDATALOAD:
-            /* object (possibly scrap) dragged into main_window - insert mostly regardless of type */
-            processed = main_DATALOAD(m);
-            break;
+    case wimp_MDATALOAD:
+        /* object (possibly scrap) dragged into main_window - insert mostly regardless of type */
+        processed = main_DATALOAD(m);
+        break;
 
-        case wimp_MHELPREQUEST:
-            trace_0(TRACE_APP_PD4, "Help request on main_window");
-            processed = main_HELPREQUEST(m);
-            break;
+    case wimp_MHELPREQUEST:
+        trace_0(TRACE_APP_PD4, "Help request on main_window");
+        processed = main_HELPREQUEST(m);
+        break;
 
-        case wimp_MWINDOWINFO:
-            /* help out the iconizer - send him a new message as acknowledgement of his request */
-            m->hdr.size     = sizeof(m->hdr) + sizeof(m->data.windowinfo);
-            m->hdr.your_ref = m->hdr.my_ref;
-            m->hdr.action   = wimp_MWINDOWINFO;
+    case wimp_MWINDOWINFO:
+        /* help out the iconizer - send him a new message as acknowledgement of his request */
+        m->hdr.size     = sizeof(m->hdr) + sizeof(m->data.windowinfo);
+        m->hdr.your_ref = m->hdr.my_ref;
+        m->hdr.action   = wimp_MWINDOWINFO;
 
-            m->data.windowinfo.reserved_0 = 0;
-            (void) strcpy(m->data.windowinfo.sprite, /*"ic_"*/ "dde"); /* dde == PipeDream */
-            (void) strcpy(m->data.windowinfo.title, file_leafname(currentfilename));
+        m->data.windowinfo.reserved_0 = 0;
+        (void) strcpy(m->data.windowinfo.sprite, /*"ic_"*/ "dde"); /* dde == PipeDream */
+        (void) strcpy(m->data.windowinfo.title, file_leafname(currentfilename));
 
-            wimpt_safe(wimp_sendmessage(wimp_ESEND, m, m->hdr.task));
-            break;
+        wimpt_safe(wimp_sendmessage(wimp_ESEND, m, m->hdr.task));
+        break;
 
-        default:
-            trace_1(TRACE_APP_PD4, "unprocessed %s message to main_window",
-                     report_wimp_message(m, FALSE));
-            processed = FALSE;
-            break;
-        }
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed %s message to main_window",
+                 report_wimp_message(m, FALSE));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -2232,96 +2232,96 @@ main_event_handler(
     BOOL processed = TRUE;
 
     if(!select_document_using_callback_handle(handle))
-        {
+    {
         messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to main event handler"), report_ptr_cast(handle));
         return(FALSE);
-        }
+    }
 
     trace_4(TRACE_APP_PD4, TEXT("main_event_handler: event %s, dhan ") PTR_XTFMT TEXT(" window %d, document %d"),
              report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) main_window, current_docno());
 
     switch(e->e)
+    {
+    case wimp_EOPEN:      /* main_window always opened as a pane on top of rear_window */
+    case wimp_ECLOSE:     /* main_window has no close box */
+    case wimp_ESCROLL:    /* or scroll bars - come through fake */
+    case wimp_EPTRLEAVE:
+    case wimp_EPTRENTER:
+        break;
+
+    case wimp_EREDRAW:
+        main_redraw_request(e);
+        break;
+
+    case wimp_EBUT:
+        /* ignore old button state */
+        application_button_click_in_main(e->data.but.m.x,
+                                         e->data.but.m.y,
+                                         e->data.but.m.bbits
+                                        );
+        break;
+
+    case wimp_EKEY:
+        main_key_pressed(e);
+        break;
+
+    case wimp_ESEND:
+    case wimp_ESENDWANTACK:
+        main_message(&e->data.msg);
+        break;
+
+    case wimp_EGAINCARET:
+        trace_2(TRACE_APP_PD4, "GainCaret: new window %d icon %d",
+                e->data.c.w, e->data.c.i);
+        trace_4(TRACE_APP_PD4, " x %d y %d height %8.8X index %d",
+                e->data.c.x, e->data.c.y,
+                e->data.c.height, e->data.c.index);
+        caret_window = e->data.c.w;
+
+        /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
+        if(slotcount_docno != current_docno())
         {
-        case wimp_EOPEN:      /* main_window always opened as a pane on top of rear_window */
-        case wimp_ECLOSE:     /* main_window has no close box */
-        case wimp_ESCROLL:    /* or scroll bars - come through fake */
-        case wimp_EPTRLEAVE:
-        case wimp_EPTRENTER:
-            break;
+            colh_draw_slot_count_in_document(NULL); /* kill the current indicator (if any) */
 
-        case wimp_EREDRAW:
-            main_redraw_request(e);
-            break;
+            slotcount_docno = current_docno();
+        }
+        break;
 
-        case wimp_EBUT:
-            /* ignore old button state */
-            application_button_click_in_main(e->data.but.m.x,
-                                             e->data.but.m.y,
-                                             e->data.but.m.bbits
-                                            );
-            break;
+    case wimp_ELOSECARET:
+        trace_2(TRACE_APP_PD4, "LoseCaret: old window %d icon %d",
+                e->data.c.w, e->data.c.i);
+        trace_4(TRACE_APP_PD4, " x %d y %d height %X index %d",
+                e->data.c.x, e->data.c.y,
+                e->data.c.height, e->data.c.index);
 
-        case wimp_EKEY:
-            main_key_pressed(e);
-            break;
+        /* cancel Alt sequence */
+        alt_array[0] = NULLCH;
 
-        case wimp_ESEND:
-        case wimp_ESENDWANTACK:
-            main_message(&e->data.msg);
-            break;
+        /* don't cancel key expansion or else user won't be able to
+         * set 'Next window', 'other action' etc. on keys
+        */
+        (void) mergebuf_nocheck();
+        filbuf();
 
-        case wimp_EGAINCARET:
-            trace_2(TRACE_APP_PD4, "GainCaret: new window %d icon %d",
-                    e->data.c.w, e->data.c.i);
-            trace_4(TRACE_APP_PD4, " x %d y %d height %8.8X index %d",
-                    e->data.c.x, e->data.c.y,
-                    e->data.c.height, e->data.c.index);
-            caret_window = e->data.c.w;
-
-            /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
-            if(slotcount_docno != current_docno())
-                {
-                colh_draw_slot_count_in_document(NULL); /* kill the current indicator (if any) */
-
-                slotcount_docno = current_docno();
-                }
-            break;
-
-        case wimp_ELOSECARET:
-            trace_2(TRACE_APP_PD4, "LoseCaret: old window %d icon %d",
-                    e->data.c.w, e->data.c.i);
-            trace_4(TRACE_APP_PD4, " x %d y %d height %X index %d",
-                    e->data.c.x, e->data.c.y,
-                    e->data.c.height, e->data.c.index);
-
-            /* cancel Alt sequence */
-            alt_array[0] = NULLCH;
-
-            /* don't cancel key expansion or else user won't be able to
-             * set 'Next window', 'other action' etc. on keys
-            */
-            (void) mergebuf_nocheck();
-            filbuf();
-
-            caret_window = window_NULL;
+        caret_window = window_NULL;
 
 #if FALSE
-            colh_draw_slot_count(NULL);
+        colh_draw_slot_count(NULL);
 
-            /*RCM says: I suppose we could find out which doc (if any) is getting the focus */
-            /*          and only blank the cell count if its not this doc - this would mean */
-            /*          the count wouldn't blank out momentarily if the focus went to an    */
-            /*          edit expression box owned by this document                          */
-            /*          NB The expression editor would need similar ELOSECARET code to this */
+        /*RCM says: I suppose we could find out which doc (if any) is getting the focus */
+        /*          and only blank the cell count if its not this doc - this would mean */
+        /*          the count wouldn't blank out momentarily if the focus went to an    */
+        /*          edit expression box owned by this document                          */
+        /*          NB The expression editor would need similar ELOSECARET code to this */
 #endif
-            break;
+        break;
 
-        default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event to main_window: %s",
-                    report_wimp_event(e->e, &e->data));
-            processed = FALSE;
-            break;
-        }
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event to main_window: %s",
+                report_wimp_event(e->e, &e->data));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -2334,45 +2334,45 @@ rear_event_handler(
     BOOL processed = TRUE;
 
     if(!select_document_using_callback_handle(handle))
-        {
+    {
         messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to rear event handler"), report_ptr_cast(handle));
         return(FALSE);
-        }
+    }
 
     trace_4(TRACE_APP_PD4, TEXT("rear_event_handler: event %s, handle ") PTR_XTFMT TEXT(" window %d, document %d"),
              report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) rear_window, current_docno());
 
     switch(e->e)
-        {
-        case wimp_EPTRLEAVE:
-        case wimp_EPTRENTER:
-            break;
+    {
+    case wimp_EPTRLEAVE:
+    case wimp_EPTRENTER:
+        break;
 
-        case wimp_EOPEN:
-            rear_open_request(e);
-            break;
+    case wimp_EOPEN:
+        rear_open_request(e);
+        break;
 
-        case wimp_ECLOSE:
-            rear_close_request(e);
-            break;
+    case wimp_ECLOSE:
+        rear_close_request(e);
+        break;
 
-        case wimp_ESCROLL:
-            rear_scroll_request(e);
-            break;
+    case wimp_ESCROLL:
+        rear_scroll_request(e);
+        break;
 
-        /* SKS 26oct96 */
-        case wimp_ESEND:
-        case wimp_ESENDWANTACK:
-            main_message(&e->data.msg);
-            break;
+    /* SKS 26oct96 */
+    case wimp_ESEND:
+    case wimp_ESENDWANTACK:
+        main_message(&e->data.msg);
+        break;
 
-    /*    case wimp_EREDRAW:    */
-        default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event to rear_window: %s",
-                    report_wimp_event(e->e, &e->data));
-            processed = FALSE;
-            break;
-        }
+/*    case wimp_EREDRAW:    */
+    default:
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event to rear_window: %s",
+                report_wimp_event(e->e, &e->data));
+        processed = FALSE;
+        break;
+    }
 
     return(processed);
 }
@@ -2417,7 +2417,7 @@ riscos_createmainwindow(void)
     trace_0(TRACE_APP_PD4, "riscos_createmainwindow()");
 
     if(rear_window == window_NULL) /* a window needs creating? */
-        {
+    {
         rear_template = template_copy_new(template_find_new(rear_window_name));
 
         if(NULL == rear_template)
@@ -2438,10 +2438,10 @@ riscos_createmainwindow(void)
 
         /* get extent and scroll offsets set correctly on initial open */
         out_alteredstate = TRUE;
-        }
+    }
 
     if(colh_window == window_NULL) /* a window needs creating? */
-        {
+    {
         colh_template = template_copy_new(template_find_new(colh_window_name));
 
         if(NULL == colh_template)
@@ -2452,10 +2452,10 @@ riscos_createmainwindow(void)
             return(rep_fserr(e->errmess));
 
         colh_position_icons();      /*>>>errors???*/
-        }
+    }
 
     if(main_window == window_NULL) /* a window needs creating? */
-        {
+    {
         main_template = template_copy_new(template_find_new(main_window_name));
 
         if(NULL == main_template)
@@ -2479,7 +2479,7 @@ riscos_createmainwindow(void)
         /* now window created at default size, initialise screen bits */
         if(!screen_initialise())
             return(FALSE);
-        }
+    }
 
     return(TRUE);
 }
@@ -2496,16 +2496,16 @@ riscos_destroymainwindow(void)
     trace_0(TRACE_APP_PD4, "riscos_destroymainwindow()");
 
     if(rear_window != window_NULL)
-        {
+    {
         /* deregister procedures for the rear_window */
 
         win_delete_wind((wimp_w *) &rear_window);
         rear_window = window_NULL;
         wlalloc_dispose(P_P_ANY_PEDANTIC(&rear_template));
-        }
+    }
 
     if(colh_window != window_NULL)
-        {
+    {
         /* deregister procedures for the colh_window */
         riscmenu_detachmenutree(colh_window);
 
@@ -2514,10 +2514,10 @@ riscos_destroymainwindow(void)
         wlalloc_dispose(P_P_ANY_PEDANTIC(&colh_template));
 
         /*>>>should probably give caret away, if this window has it */
-        }
+    }
 
     if(main_window != window_NULL)
-        {
+    {
         /* pretty permanent caret loss */
         if(main_window == caret_window)
             caret_window = window_NULL;
@@ -2528,7 +2528,7 @@ riscos_destroymainwindow(void)
         win_delete_wind((wimp_w *) &main_window);
         main_window = window_NULL;
         wlalloc_dispose(P_P_ANY_PEDANTIC(&main_template));
-        }
+    }
 }
 
 /******************************************************************************
@@ -2557,13 +2557,13 @@ riscos_finalise_once(void)
     trace_0(TRACE_APP_PD4, "riscos_finalise_once()");
 
     if(riscos__initialised)
-        {
+    {
         riscos__initialised = FALSE;
 
         #ifdef HAS_FUNNY_CHARACTERS_FOR_WRCH
         wrch_undefinefunnies();
         #endif
-        }
+    }
 }
 
 /******************************************************************************
@@ -2579,10 +2579,10 @@ riscos_frontmainwindow(
     trace_1(TRACE_APP_PD4, "riscos_frontmainwindow(immediate = %s)", trace_boolstring(immediate));
 
     if(main_window != window_NULL)
-        {
+    {
         xf_frontmainwindow = FALSE;                    /* as immediate event raising calls draw_screen() */
         win_send_front(rear__window, immediate);
-        }
+    }
 }
 
 extern void
@@ -2592,10 +2592,10 @@ riscos_frontmainwindow_atbox(
     trace_1(TRACE_APP_PD4, "riscos_frontmainwindow_atbox(immediate = %s)", trace_boolstring(immediate));
 
     if(main_window != window_NULL)
-        {
+    {
         xf_frontmainwindow = FALSE;                    /* as immediate event raising calls draw_screen() */
         win_send_front_at(rear__window, immediate, (const wimp_box *) &open_box);
-        }
+    }
 }
 
 extern S32
@@ -2722,7 +2722,7 @@ riscos_invalidatemainwindow(void)
     wimp_redrawstr redraw;
 
     if(main__window != window_NULL)
-        {
+    {
         redraw.w      = main__window;
         redraw.box.x0 = -0x07FFFFFF;
         redraw.box.y0 = -0x07FFFFFF;
@@ -2730,10 +2730,10 @@ riscos_invalidatemainwindow(void)
         redraw.box.y1 = +0x07FFFFFF;
 
         wimpt_safe(wimp_force_redraw(&redraw));
-        }
+    }
 
     if(colh_window != window_NULL)
-        {
+    {
         colh_colour_icons();                    /* ensure colours of wimp maintained icons are correct */
 
         redraw.w      = colh_window;
@@ -2743,7 +2743,7 @@ riscos_invalidatemainwindow(void)
         redraw.box.y1 = +0x07FFFFFF;
 
         wimpt_safe(wimp_force_redraw(&redraw)); /* will force icons maintained by us to be redrawn */
-        }
+    }
 }
 
 /******************************************************************************
@@ -2782,17 +2782,17 @@ riscos_readfileinfo(
         wimpt_complain((os_error *) _kernel_last_oserror());
 
     if(res != OSFile_ObjectType_File)
-        {
+    {
         riscos_readtime(rip);
         riscos_settype(rip, FILETYPE_PIPEDREAM);
         rip->length = 0;
-        }
+    }
     else
-        {
+    {
         rip->exec   = fileblk.exec;
         rip->load   = fileblk.load;
         rip->length = fileblk.start;
-        }
+    }
 
     reportf("riscos_readfileinfo(%u:%s): type=%d, length=%u, load=0x%08X, exec=0x%08X",
             strlen(name), name, res, (size_t) rip->length, rip->load, rip->exec);
@@ -2888,7 +2888,7 @@ riscos_sendhelpreply(
     S32 size, length;
 
     if((int) m->data.helprequest.m.i >= -1)
-        {
+    {
         length = strlen(msg) + 1;
         size = offsetof(wimp_msgstr, data.helpreply.text) + length;
 
@@ -2901,7 +2901,7 @@ riscos_sendhelpreply(
         xstrkpy(m->data.helpreply.text, 256 - offsetof(wimp_msgstr, data.helpreply.text), msg);
 
         wimpt_safe(wimp_sendmessage(wimp_ESEND, m, m->hdr.task));
-        }
+    }
     else
         trace_0(TRACE_APP_PD4, "no reply for system icons");
 }
@@ -3031,7 +3031,7 @@ riscos_updatearea(
 #endif
 
     while(!bum  &&  redrawindex)
-        {
+    {
         killcolourcache();
 
         graphics_window = * ((const GDI_BOX *) &redraw.g);
@@ -3044,7 +3044,7 @@ riscos_updatearea(
         redrawproc((RISCOS_REDRAWSTR *) &redraw);
 
         bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
-        }
+    }
 }
 
 /******************************************************************************
@@ -3068,10 +3068,10 @@ riscos_writefileinfo(
     res = _kernel_osfile(OSFile_WriteLoad, name, &fileblk);
 
     if(res != _kernel_ERROR)
-        {
+    {
         fileblk.exec = rip->exec;
         res = _kernel_osfile(OSFile_WriteExec, name, &fileblk);
-        }
+    }
 
     if(res == _kernel_ERROR)
         wimpt_complain((os_error *) _kernel_last_oserror());

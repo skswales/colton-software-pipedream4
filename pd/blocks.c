@@ -140,10 +140,10 @@ block_updref(
     urefb.action = UREF_ADJUST;
 
     while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
-        {
+    {
         set_ev_slr(&slr, in_block.col, in_block.row);
         refs_adjust_add(tcell, &slr, &urefb, TRUE, FALSE);
-        }
+    }
 }
 
 /******************************************************************************
@@ -199,7 +199,7 @@ do_CopyBlock(
     /* if the target block is blank just replicate over it */
     /* if block not blank, insert over all rows */
     if(!is_block_blank(curcol, currow, curcol+colsno-1, currow+rowsno-1))
-        {
+    {
         block_was_blank = 0;
 
         if(!insert_blank_block(0, currow, numcol, rowsno))
@@ -210,13 +210,13 @@ do_CopyBlock(
         */
         if((docno_from == docno_to)  &&  (currow <= blkstart.row))
             rowdiff -= rowsno;
-        }
+    }
     else
-        {
+    {
         urefb.action = UREF_REPLACE;
         ev_uref(&urefb);
         block_was_blank = 1;
-        }
+    }
 
     out_screen = out_rebuildvert = out_rebuildhorz = TRUE;
 
@@ -227,9 +227,9 @@ do_CopyBlock(
     for(newcolumn = curcol, tcol = blkstart.col;
         !ctrlflag  &&  (tcol <= blkend.col);
         tcol++, newcolumn++)
-        {
+    {
         for(roff = 0; !ctrlflag  &&  (roff < rowsno); roff++)
-            {
+        {
             errorval = copyslot(docno_from, tcol, blkstart.row+roff,
                                 docno_to, newcolumn, currow+roff,
                                 coldiff, rowdiff,
@@ -237,8 +237,8 @@ do_CopyBlock(
 
             if(errorval < 0)
                 goto BREAKOUT;
-            }
         }
+    }
 
 BREAKOUT:
 
@@ -249,10 +249,10 @@ BREAKOUT:
 
     /* tell dependents of the blank area they have been affected */
     if(block_was_blank)
-        {
+    {
         urefb.action = UREF_CHANGE;
         ev_uref(&urefb);
-        }
+    }
 
     filealtered(TRUE);
 
@@ -288,13 +288,13 @@ copy_slots_to_eoworld(
     trace_0(TRACE_APP_PD4, "copy_slots_to_eoworld");
 
     for(tcol = 0; !ctrlflag  &&  (tcol < csize); tcol++)
-        {
+    {
         trace_2(TRACE_APP_PD4, "copy_slots_to_eoworld, tcol: %d, numcol: %d", tcol, numcol);
 
         /* copy from fromcol + tcol to o_numcol + tcol */
         /* create a gap in the column to copy the cells to  */
         for(trow = 0; !ctrlflag  &&  (trow < rsize); trow++)
-            {
+        {
             /* RJM 21.11.91 - if at end of both columns, don't bother */
             if(trow > 0 && atend(fromcol+tcol, fromrow+trow) && atend(o_numcol+tcol, trow+BLOCK_UPDREF_ROW))
                 break;
@@ -306,14 +306,14 @@ copy_slots_to_eoworld(
 
             if(errorval < 0)
                 break;
-            }
+        }
 
         if(errorval < 0)
             break;
 
         /* make sure it's compact */
         pack_column(o_numcol + tcol);
-        }
+    }
 
     if((errorval > 0)  &&  ctrlflag)
         errorval = create_error(ERR_ESCAPE);
@@ -359,7 +359,7 @@ copyslot(
     if((docno_from != docno_to) ||
        (cs_oldcol  != tcol) ||
        (cs_oldrow  != trow) )
-        {
+    {
         P_CELL oldslot;
         S32 slotlen;
         char type;
@@ -370,7 +370,7 @@ copyslot(
 
         /* create blank new cell */
         if(!oldslot)
-            {
+        {
             S32 res;
 
             res = createhole(tcol, trow);
@@ -387,7 +387,7 @@ copyslot(
         oldslot = travel_externally(docno_from, cs_oldcol, cs_oldrow);
 
         copycont(newslot, oldslot, slotlen);
-        }
+    }
     else
         newslot = travel_externally(docno_to, tcol, trow);
 
@@ -407,10 +407,10 @@ ClearBlock_fn(void)
 {
     /* fault marked blocks not in this document */
     if((blk_docno != current_docno())  &&  (blkstart.col != NO_COL))
-        {
+    {
         reperr_null(create_error(ERR_NOBLOCKINDOC));
         return;
-        }
+    }
 
     if(!mergebuf())
         return;
@@ -442,19 +442,19 @@ DeleteBlock_fn(void)
 
     /* fault marked blocks not in this document */
     if((blk_docno != current_docno())  &&  (col != NO_COL))
-        {
+    {
         reperr_null(create_error(ERR_NOBLOCKINDOC));
         return;
-        }
+    }
 
     do_delete_block(DO_SAVE, ALLOW_WIDENING, FALSE);      /* does mergebuf() eventually */
 
     if(caret_in_block)
-        {
+    {
         /* move to top left of block */
         chknlr(col, row);
         lecpos = 0;
-        }
+    }
 
     out_rebuildvert = out_screen = TRUE;
     filealtered(TRUE);
@@ -487,36 +487,36 @@ do_delete_block(
         res = save_block_and_delete(DONT_DELETE, DO_SAVE);
 
     if(res)
-        {
+    {
         /* if we can't widen just delete the block */
         if(!allow_widening)
             res = save_block_and_delete(DO_DELETE, DONT_SAVE);
         else
-            {
+        {
             /* can widen so see if we are blank at sides */
 
             /* if blank to the side of the block */
             if( is_block_blank(0, blkstart.row, blkstart.col-1, blkend.row) &&
-                is_block_blank(blkend.col+1,blkstart.row,numcol-1,blkend.row))
-                {
+                is_block_blank(blkend.col+1,blkstart.row,numcol-1,blkend.row) )
+            {
                 /* blank at sides so delete the whole rows */
                 blkstart.col = 0;
                 blkend.col = numcol-1;
                 res = save_block_and_delete(DO_DELETE, DONT_SAVE);
-                }
+            }
             else
-                {
+            {
                 /* not blank so delete the block then create a hole; effectively a clear operation */
                 res = save_block_and_delete(DO_DELETE, DONT_SAVE);
                 if(res)
-                    {
+                {
                     insert_blank_block(blkstart.col, blkstart.row,
                             blkend.col-blkstart.col+1,
                             blkend.row-blkstart.row+1);
-                    }
                 }
             }
         }
+    }
 
     /* delete markers */
     if(res)
@@ -541,16 +541,16 @@ do_fill(
                             : create_error(ERR_NOBLOCK));
 */
     if( (blkend.col == NO_COL)  ||
-        (down ? (blkend.row == blkstart.row) : (blkend.col == blkstart.col)))
-        {
+        (down ? (blkend.row == blkstart.row) : (blkend.col == blkstart.col)) )
+    {
         reperr_null(create_error(ERR_BAD_MARKER));
         return;
-        }
+    }
 
     src_start = blkstart;
 
     if(down)
-        {
+    {
         src_end.col = blkend.col;
         src_end.row = blkstart.row;
 
@@ -559,9 +559,9 @@ do_fill(
 
         res_end.col = blkstart.col;
         res_end.row = blkend.row;
-        }
+    }
     else
-        {
+    {
         src_end.col = blkstart.col;
         src_end.row = blkend.row;
 
@@ -570,7 +570,7 @@ do_fill(
 
         res_end.col = blkend.col;
         res_end.row = blkstart.row;
-        }
+    }
 
     do_the_replicate(&src_start, &src_end,
                      &res_start, &res_end);
@@ -625,17 +625,17 @@ do_the_replicate(
     for(src_col = src_start->col;
         !ctrlflag  &&  (src_col <= src_end->col);
         src_col++)
-        {
+    {
         /* each row in source */
         for(src_row = src_start->row;
             !ctrlflag  &&  (src_row <= src_end->row);
             src_row++)
-            {
+        {
             /* target block is already set up as current block, just need to initialize */
             init_block(res_start, res_end);
 
             while(!ctrlflag  &&  next_in_block(DOWN_COLUMNS))
-                {
+            {
                 tcol = in_block.col + src_col - src_start->col;
                 trow = in_block.row + src_row - src_start->row;
 
@@ -643,25 +643,25 @@ do_the_replicate(
 
                 if(tcol >= numcol)
                     if(!createcol(tcol))
-                        {
+                    {
                         errorval = status_nomem();
                         break;
-                        }
+                    }
 
                 /* copy the cell */
                 if(errorval < 0)
-                    {
+                {
                     slot_free_resources(travel(tcol, trow));
                     createhole(tcol, trow);
-                    }
+                }
                 else
                     errorval = copyslot(docno, src_col, src_row,
                                         docno, tcol, trow,
                                         tcol - src_col, trow - src_row,
                                         TRUE, TRUE);
-                }
             }
         }
+    }
 
     escape_disable();
 
@@ -734,13 +734,13 @@ is_block_blank(
 
     for(tcol=cs; tcol <= ce; tcol++)
         for(trow=rs; trow <= re; trow++)
-            {
+        {
             /* see if past the end of the column */
             if(atend(tcol,trow))
                 break;
             if(!isslotblank(travel(tcol, trow)))
                 return(FALSE);
-            }
+        }
     return(TRUE);
 }
 
@@ -782,24 +782,24 @@ MoveBlock_fn_do(S32 add_refs)
         could be more optimal, not a problem if moving to a gap
     */
     if(docno_from == docno_to)
-        {
+    {
         if((currow > blkstart.row)  &&  (currow <= blkend.row))
-            {
+        {
             /* RJM 27.9.91 is provoked into:
                 if target block is blank no overlap problem cos rows
                 will not be inserted.  Looks like I thought
                 about this before and decided to save precious RAM
             */
             if(!is_block_blank(curcol, currow, curcol+colsize, currow+rowsize))
-                {
+            {
                 reperr_null(create_error(ERR_OVERLAP));
                 return;
-                }
             }
+        }
         /* do nothing if current position is top of block */
         if(curcol == blkstart.col && currow == blkstart.row)
             return;
-        }
+    }
 
     if(!do_CopyBlock(FALSE, add_refs))
         return;
@@ -836,7 +836,7 @@ MoveBlock_fn_do(S32 add_refs)
     do_delete_block(DONT_SAVE, ALLOW_WIDENING, TRUE);
 
     if(docno_to != docno_from)
-        {
+    {
         /* the mergebuf was in the to window */
         reset_numrow();
         slot_in_buffer = FALSE;
@@ -845,7 +845,7 @@ MoveBlock_fn_do(S32 add_refs)
         draw_screen();
         select_document_using_docno(docno_to);
         reset_numrow();
-        }
+    }
 
     /* put markers at cursor pos */
     blkend.col = colsize + (blkstart.col = curcol);
@@ -869,28 +869,28 @@ Paste_fn(void)
     xf_flush = TRUE;
 
     if(latest_word_on_stack <= start_pos_on_stack)
-        {
+    {
         latest_word_on_stack = start_pos_on_stack = 0;
         bleep();
         return;
-        }
+    }
 
     /* find the top entry on the stack */
     lptr = search_list(&deleted_words, latest_word_on_stack);
 
     if(!lptr)
-        {
+    {
         /* no word on list for this number - is there a block? */
         lptr = search_list(&deleted_words, latest_word_on_stack + BLOCK_OFFSET);
 
         if(!lptr)
-            {
+        {
             /* no block either so go home */
             --latest_word_on_stack;
             return;
-            }
+        }
         else if(!xf_inexpression && !xf_inexpression_box && !xf_inexpression_line)
-            {
+        {
             if(!mergebuf())
                 return;
 
@@ -899,14 +899,14 @@ Paste_fn(void)
                 delete_from_list(&deleted_words, BLOCK_OFFSET + latest_word_on_stack--);
 
             return;
-            }
+        }
         else
-            {
+        {
             /* won't recover block when editing expression */
             reperr_null(create_error(ERR_EDITINGEXP));
             return;
-            }
         }
+    }
 
     /* insert word: save old position */
     oldpos.col = curcol;
@@ -942,12 +942,12 @@ PasteListDepth_fn(void)
         return;
 
     while(dialog_box(D_DELETED))
-        {
+    {
         ensure_paste_list_clipped();
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
 /* printf("latest=%ld,oldest=%ld,allowed=%d",latest_word_on_stack,start_pos_on_stack,(int) words_allowed);rdch(1,1); */
 
@@ -985,10 +985,10 @@ recover_deleted_block(
 
     /* put block at column starting at numcol */
     if(!createcol(new_numcol + delete_size_col - 1))
-        {
+    {
         trace_0(TRACE_APP_PD4, "failed to create enough columns for block: leave on list");
         return(reperr_null(create_error(ERR_CANTLOADPASTEBLOCK)));
-        }
+    }
 
     /* copy column lists into end of colstart */
     deregcoltab();
@@ -1019,11 +1019,11 @@ recover_deleted_block(
 
     res = !been_error;
     if(!been_error)
-        {
+    {
         /* delete any leftover contents and structure */
         delcolandentry(new_numcol, numcol - new_numcol);
         al_ptr_free(delete_colstart);
-        }
+    }
 
     reset_numrow();
 
@@ -1055,51 +1055,51 @@ refs_adjust_add(
 
     err = 0;
     if(slot && (update_refs || add_refs))
-        {
+    {
         if(slot->type == SL_NUMBER)
-            {
+        {
             P_EV_CELL p_ev_cell;
 
             /* update references in the copied cell for any move */
             if(ev_travel(&p_ev_cell, slrp) > 0)
-                {
+            {
                 if(update_refs)
                     ev_rpn_adjust_refs(p_ev_cell, upp);
 
                 if(add_refs)
-                    {
+                {
                     if(ev_add_exp_slot_to_tree(p_ev_cell, slrp) < 0)
-                        {
+                    {
                         tree_insert_fail(slrp);
                         err = status_nomem();
-                        }
+                    }
                     else
                         ev_todo_add_slr(slrp, 0);
-                    }
-                }
-            }
-        else if(slot->type != SL_PAGE)
-            {
-            if(update_refs)
-                {
-                uchar * csr = slot->content.text;
-                while(NULL != (csr = find_next_csr(csr)))
-                    {
-                    /*eportf("refs_adjust_add: text_csr_uref");*/
-                    csr = text_csr_uref(csr, upp);
-                    }
-                }
-
-            if(add_refs)
-                {
-                if(draw_tree_str_insertslot((COL) slrp->col, (ROW) slrp->row, 0) < 0)
-                    {
-                    tree_insert_fail(slrp);
-                    err = status_nomem();
-                    }
                 }
             }
         }
+        else if(slot->type != SL_PAGE)
+        {
+            if(update_refs)
+            {
+                uchar * csr = slot->content.text;
+                while(NULL != (csr = find_next_csr(csr)))
+                {
+                    /*eportf("refs_adjust_add: text_csr_uref");*/
+                    csr = text_csr_uref(csr, upp);
+                }
+            }
+
+            if(add_refs)
+            {
+                if(draw_tree_str_insertslot((COL) slrp->col, (ROW) slrp->row, 0) < 0)
+                {
+                    tree_insert_fail(slrp);
+                    err = status_nomem();
+                }
+            }
+        }
+    }
 
     return(err);
 }
@@ -1124,15 +1124,15 @@ remove_deletion(
 
     /* try removing as a string */
     if(delete_from_list(&deleted_words, key))
-        {
+    {
         trace_0(TRACE_APP_PD4, "remove_deletion removed string");
         return;
-        }
+    }
 
     /* try removing as a block */
     lptr = search_list(&deleted_words, key + BLOCK_OFFSET);
     if(lptr)
-        {
+    {
         trace_2(TRACE_APP_PD4, "remove_deletion lptr: %x, lptr->value: %x",
                 (S32) lptr, (S32) lptr->value);
 
@@ -1154,7 +1154,7 @@ remove_deletion(
         delete_from_list(&deleted_words, key + BLOCK_OFFSET);
 
         trace_0(TRACE_APP_PD4, "remove_deletion done delete_from_list");
-        }
+    }
 
     trace_0(TRACE_APP_PD4, "exit remove_deletion");
 }
@@ -1185,7 +1185,7 @@ Replicate_fn(void)
     /* write current block into the source range */
 
     if(MARKER_DEFINED())
-        {
+    {
         U32 out_idx = 0;
 
         out_idx += write_ref(array, elemof32(array), current_docno(), blkstart.col, blkstart.row);
@@ -1194,14 +1194,14 @@ Replicate_fn(void)
             blkend = blkstart;
 
         if((blkend.col != blkstart.col)  ||  (blkend.row != blkstart.row))
-            {
+        {
             array[out_idx++] = SPACE;
             out_idx += write_ref(&array[out_idx], elemof32(array) - out_idx, current_docno(), blkend.col, blkend.row);
-            }
+        }
 
         if(!mystr_set(&d_replicate[0].textfield, array))
             return;
-        }
+    }
 
     /* write current position into the target range */
 
@@ -1211,7 +1211,7 @@ Replicate_fn(void)
         return;
 
     while(dialog_box(D_REPLICATE))
-        {
+    {
         /* get source range */
 
         buff_sofar = (uchar *) d_replicate[0].textfield;
@@ -1255,22 +1255,22 @@ Replicate_fn(void)
 
         if( ((res_end.col-res_start.col > 0)  &&  (src_end.col-src_start.col > 0))  ||
             ((res_end.row-res_start.row > 0)  &&  (src_end.row-src_start.row > 0))  )
-            {
+        {
             reperr_null(create_error(ERR_BAD_RANGE));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         /* check ranges point in right direction */
         if( !check_range(&res_start, &res_end)  ||
             !check_range(&src_start, &src_end)  )
-            {
+        {
             reperr_null(create_error(ERR_BAD_RANGE));
             if(!dialog_box_can_retry())
                 break;
             continue;
-            }
+        }
 
         do_the_replicate(&src_start, &src_end,
                          &res_start, &res_end);
@@ -1279,7 +1279,7 @@ Replicate_fn(void)
 
         if(!dialog_box_can_persist())
             break;
-        }
+    }
 
     dialog_box_end();
 }
@@ -1337,7 +1337,7 @@ save_block_and_delete(
     save_active = do_save && (words_allowed > 0);
 
     if(save_active)
-        {
+    {
         /* allow escape during copying phase */
         escape_enable();
 
@@ -1371,56 +1371,56 @@ save_block_and_delete(
             copyres = eres;
 
         if(copyres < 0)
-            {
+        {
             /* copy cells failed - might be escape or memory problem */
 
             if(lptr)
-                {
+            {
                 --latest_word_on_stack;
                 delete_from_list(&deleted_words, lptr->key);
-                }
+            }
 
             al_ptr_dispose(P_P_ANY_PEDANTIC(&delete_colstart));
 
             if((copyres != create_error(ERR_ESCAPE))  &&  is_deletion)
-                {
+            {
                 if(init_dialog_box(D_SAVE_DELETED)  &&  dialog_box_start())
-                    {
+                {
                     res = dialog_box(D_SAVE_DELETED);
 
                     dialog_box_end();
-                    }
+                }
 
                 if(res)
-                    {
+                {
                     res = (d_save_deleted[0].option == 'Y');
 
                     /* continue with deletion */
                     save_active = FALSE;
-                    }
                 }
+            }
             else
                 res = reperr_null((copyres == STATUS_NOMEM) ? create_error(ERR_CANTSAVEPASTEBLOCK) : copyres);
 
             if(!res)
                 goto FINISH_OFF;
-            }
+        }
 
         /* may have said 'Yes' to continue deletion */
         if(save_active)
-            {
+        {
             ensure_paste_list_clipped();
 
             trace_3(TRACE_APP_PD4, "save_block_and_delete, numcol: %d, curpos.col: %d, *cptr: " PTR_XTFMT,
                     numcol, curpos.col, report_ptr_cast(delete_colstart));
 
             trace_0(TRACE_APP_PD4, "save_block_and_delete: block copied - now curpos.col..numcol-1");
-            }
         }
+    }
 
     /* if it's a deletion, delete it and update refs for a move */
     if(is_deletion)
-        {
+    {
         COL tcol;
         ROW i;
 
@@ -1429,17 +1429,17 @@ save_block_and_delete(
         trace_0(TRACE_APP_PD4, "emptying the deleted block");
         for(tcol = bs.col; tcol <= be.col; tcol++)
             for(i = 0; !ctrlflag  &&  i < delete_size_row; i++)
-                {
+            {
                 trace_2(TRACE_APP_PD4, "killing cell col %d row %d", tcol, bs.row);
                 killslot(tcol, bs.row);
-                }
+            }
 
         trace_0(TRACE_APP_PD4, "recalcing number of rows");
         reset_numrow();
 
         trace_0(TRACE_APP_PD4, "updref cells below which have moved up");
         updref(bs.col, be.row + 1, be.col, LARGEST_ROW_POSSIBLE, 0, -delete_size_row, UREF_UREF, DOCNO_NONE);
-        }
+    }
 
     if(save_active)
         block_updref(DOCNO_NONE, current_docno(),
@@ -1447,7 +1447,7 @@ save_block_and_delete(
                      BLOCK_UPDREF_COL-bs.col, BLOCK_UPDREF_ROW-bs.row);
 
     if(save_active)
-        {
+    {
         trace_0(TRACE_APP_PD4, "removing copied columns from sheet");
 
         /* lose the columns from curpos.col to numcol */
@@ -1464,7 +1464,7 @@ save_block_and_delete(
         memcpy32(delete_colstart, colstart + numcol, array_size_bytes);
 
         regcoltab();
-        }
+    }
 
     /* sort out numrow cos columns disappearing */
     reset_numrow();
@@ -1503,10 +1503,10 @@ set_up_block(
         return(reperr_null(create_error(ERR_NOBLOCK)));
 
     if(blkend.col == NO_COL)
-        {
+    {
         trace_0(TRACE_APP_PD4, "set_up_block forcing single mark to block");
         blkend = blkstart;
-        }
+    }
 
     if(check_block_in_doc && (blk_docno != current_docno()))
         return(reperr_null(create_error(ERR_NOBLOCKINDOC)));
@@ -1568,10 +1568,10 @@ text_csr_uref(
         row |= ABSROWBIT;
 
     if(slr.flags & SLR_BAD_REF)
-        {
+    {
         col |= BADCOLBIT;
         row |= BADROWBIT;
-        }
+    }
 
     /*eportf("text_csr_uref: splat docno %d col 0x%x row 0x%x", docno, col, row);*/
     return(splat_csr(csr, docno, col, row));
@@ -1608,34 +1608,34 @@ TransposeBlock_fn(void)
 
     /* check that nothing gets overwritten */
     if(more_rows > 0)
-        {
+    {
         /* too many rows */
         if(!is_block_blank(blkend.col+1, blkstart.row, new_last_col, new_last_row))
-            {
+        {
             /* need to insert columns here, can't use insert_blank_block */
 
             reperr_null(create_error(ERR_OVERLAP));
             return;
-            }
+        }
 
         /* try creating the last column first cos its more efficient and the thing
             most likely to fail
         */
         if(!createcol(new_last_col))
-            {
+        {
             reperr_null(status_nomem());
             return;
-            }
         }
+    }
     else if(more_rows < 0)
-        {
+    {
         /* too many cols */
         if(!is_block_blank(blkstart.col, blkend.row+1, new_last_col, new_last_row))
             /* RJM on 6.2.91, after 4.11
                 changes numcol-1 to numcol in the following
             */
             insert_blank_block(0,blkend.row+1,numcol,-more_rows);
-        }
+    }
 
     out_screen = out_rebuildvert = out_rebuildhorz = TRUE;
 
@@ -1644,25 +1644,25 @@ TransposeBlock_fn(void)
     for(trow = blkstart.row, latest_down=0;
         !ctrlflag && latest_down < last_down;
         trow++, latest_down++)
-        {
+    {
         S32 latest_right = latest_down + 1;
 
         for(tcol = blkstart.col+latest_right;
             !ctrlflag && latest_right < last_across;
             tcol++, latest_right++)
-            {
+        {
             if(!swap_slots(tcol, trow, blkstart.col+latest_down, blkstart.row+latest_right))
-                {
+            {
                 /* we're in deep doo-doo here - half a block transposed and can't go further */
                 reperr_null(status_nomem());
                 escape_disable();
                 actind_end();
                 return;
-                }
+            }
 
             actind((S32) ((100l * exchanges_done++) / exchanges_to_do));
-            }
         }
+    }
 
     escape_disable();
 
