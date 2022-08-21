@@ -1193,6 +1193,11 @@ array_range_sizes(
     _OutRef_    P_S32 p_x_size,
     _OutRef_    P_S32 p_y_size);
 
+extern void
+array_range_mono_size(
+    _InRef_     PC_SS_DATA p_ss_data_in,
+    _OutRef_    P_S32 p_mono_size);
+
 _Check_return_
 extern S32
 array_scan_element(

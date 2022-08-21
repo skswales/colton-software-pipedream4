@@ -8,7 +8,7 @@
 # Copyright (C) 1998-2015 R W Colton
 
 TEXTUAL_VERSION_NUMBER=4.59
-#TEXTUAL_VERSION_NUMBER=4.59.01
+TEXTUAL_VERSION_NUMBER=4.59.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
@@ -34,10 +34,10 @@ WimpLib=$(PD).WimpLib
 
 AS=ObjAsm
 # --arm to allow assembly of UAL syntax code
-# -cpu=3M to allow assembly of S/UMULL
-ASflags_BASE=-I$(CMODULES).Hdr --arm --cpu=3M --throwback
+# -cpu 3M to allow assembly of S/UMULL
+ASflags_BASE=-I$(PD).common.Hdr --arm --arm_only -cpu 3M --throwback
 # vvv current ObjAsm has noisy useless deprecation warnings
-#ASflags_BASE=-I$(CMODULES).Hdr --arm --cpu=3M
+#ASflags_BASE=-I$(PD).common.Hdr --arm --arm_only -cpu 3M
 ASflags=$(ASflags_BASE)
 
 CC=cc
@@ -185,7 +185,8 @@ o.modules.funclist \
 o.modules.handlist \
 o.modules.im_cache \
 o.modules.im_convert \
-o.modules.mlec
+o.modules.mlec \
+o.modules.muldiv
 #
 AOFM2=\
 o.modules.numform \

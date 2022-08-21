@@ -4,7 +4,7 @@ Priority: Optional
 Licence: Free
 Maintainer: Colton Software <colton-software-pipedream@googlegroups.com>
 Standards-Version: 0.4.0
-Version: 4.59.0
+Version: 4.59.1
 Recommends: PipeDream-Manuals,PipeDream-Examples
 Description: Spreadsheet & Word Processor
  PipeDream offers all the facilities you would expect from the following separate programs:

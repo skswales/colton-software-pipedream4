@@ -8,10 +8,9 @@
 # Copyright (C) 1998-2015 R W Colton
 
 ImageSlot: o.ImageSlot
- link -bin -o $@ $?
- SetType $@ ffc
+ link -Utility -o $@ $?
 
 o.ImageSlot: s.ImageSlot
  @CDir o
- objasm -o $@ -absolute $?
+ objasm -o $@ --arm --arm_only -throwback $?
 

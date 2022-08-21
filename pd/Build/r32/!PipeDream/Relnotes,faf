@@ -86,6 +86,17 @@ href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda
 and Errata</a> for details of changes to functionality.</p>
 
 
+<h4>4.59.01 (01 Oct 2021)</h4>
+
+<p>Much faster M_DETERM() and M_INVERSE() with large matrices.</p>
+
+<p>No longer sets the alias for printing PDChart files when dragged to a
+printer icon - these files cannot be printed that way.</p>
+
+<p>Updated ImageSlot transient utility has RISC OS 4/6 header and Aemulor
+32OK trailing bytes.</p>
+
+
 <h4>4.59 (06 Sep 2021)</h4>
 
 <p>PipeDream can now be set up to be the default handler for any file type

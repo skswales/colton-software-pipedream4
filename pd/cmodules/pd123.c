@@ -334,7 +334,8 @@ static const OPTDEF optqv[] =
 *
 ******************************************************************************/
 
-const OPRDEF pd123__opreqv[] =
+const OPRDEF
+pd123__opreqv[] =
 {
     { LF_CONST,   LO_CONST,  0,      0, "",            0 },
     { LF_SLR,     LO_CONST,  0,      0, "",            0 },
@@ -382,8 +383,8 @@ const OPRDEF pd123__opreqv[] =
     { LF_CHOOSE,  LO_FUNC,  -1,  PD_VP, "choose",      FU_CHOOSE },
     { LF_ISNA,    LO_FUNC,   1,      0, ".isna",       0 },
     { LF_ISERR,   LO_FUNC,   1,      0, ".iserr",      0 },
-    { LF_FALSE,   LO_FUNC,   0,  PD_VP, "0",           0 },
-    { LF_TRUE,    LO_FUNC,   1,  PD_VP, "1",           0 },
+    { LF_FALSE,   LO_FUNC,   0,  PD_VP, "0",           0 }, /* 123:FALSE */
+    { LF_TRUE,    LO_FUNC,   1,  PD_VP, "1",           0 }, /* 123:TRUE */
     { LF_RAND,    LO_FUNC,   0,   PD_3, "rand",        0 },
     { LF_DATE,    LO_FUNC,   3,  PD_VP, "datef",       FU_DATE },
     { LF_TODAY,   LO_FUNC,   0,  PD_PC, "date",        0 },
@@ -453,7 +454,7 @@ const OPRDEF pd123__opreqv[] =
     { LF_CTERM,   LO_FUNC,   3,  PD_PC, "cterm",       0 },
     { LF_SLN,     LO_FUNC,   3,  PD_PC, "sln",         0 },
     { LF_SOY,     LO_FUNC,   4,  PD_PC, "syd",         0 },
-    { LF_DDB,     LO_FUNC,   4,  PD_PC, "ddb",         0 },
+    { LF_DDB,     LO_FUNC,   4,  PD_PC, "ddb",         0 }
 };
 
 /******************************************************************************
@@ -522,6 +523,22 @@ S32 pd123__curpd;                 /* current PipeDream level */
 
 #ifdef UTIL_LTP
 
+static size_t
+read_file_size(FILE * f)
+{
+    size_t n_bytes;
+
+    if(fseek(f, 0L, SEEK_END))
+        return(0);
+
+    n_bytes = (size_t) ftell(f);
+
+    if(fseek(f, 0L, SEEK_SET))
+        return(0);
+
+    return(n_bytes);
+}
+
 int
 main(
     int argc,
@@ -533,7 +550,7 @@ main(
     const char * outfile;
 
     /* banner */
-    printf("Lotus 1-2-3 to PipeDream converter\nColton Software 1988-2020\n");
+    puts("Lotus 1-2-3 to PipeDream converter: (C) 1988-2021 Colton Software");
 
     /* argument checking */
     if(argc < 3)
@@ -547,29 +564,29 @@ main(
 
     if((pd123__fin = fopen(infile, "rb")) == NULL)
     {
-        fprintf(stderr, "Can't open %s\n", infile);
+        fprintf(stderr, "Can't open %s for reading\n", infile);
         exit(EXIT_FAILURE);
     }
 
-    if(fseek(pd123__fin, 0l, SEEK_END))
-        return(PD123_ERR_FILE);
-    length = (size_t) ftell(pd123__fin);
-    if(fseek(pd123__fin, 0l, SEEK_SET))
-        return(PD123_ERR_FILE);
+    if(0 == (length = read_file_size(pd123__fin)))
+    {
+        fprintf(stderr, "Unable to read length of %s\n", infile);
+        return(EXIT_FAILURE);
+    }
 
     if(0 == (lotusf = malloc(length)))
     {
-        printf("Not enough memory for Lotus 1-2-3 file\n");
+        printf("Not enough memory to load %s\n", infile);
         exit(EXIT_FAILURE);
     }
 
     /* read in Lotus 1-2-3 file */
-    fread(lotusf, 1, (U16) length, pd123__fin);
+    fread(lotusf, 1, length, pd123__fin);
     fclose(pd123__fin);
 
     if((pd123__fout = fopen(outfile, "wb")) == NULL)
     {
-        fprintf(stderr, "Can't open %s\n", outfile);
+        fprintf(stderr, "Can't open %s for writing\n", outfile);
         exit(EXIT_FAILURE);
     }
 
@@ -597,9 +614,9 @@ main(
                     break;
                 cr = lotus_xtos(scol, col);
                 scol[cr] = CH_NULL;
-                printf("\rColumn: %s", scol);
+                printf("\nColumn: %s", scol);
             }
-            printf("\n");
+            puts("\n");
         }
     }
 
@@ -621,23 +638,25 @@ main(
     fclose(pd123__fout);
     free(lotusf);
 
-    if(pd123__errexp)
-        fprintf(stderr, "%d bad expressions found\n", pd123__errexp);
-    if(pd123__poorfunc)
-        fprintf(stderr, "Unable to convert %d functions\n", pd123__poorfunc);
-
     if(err)
     {
         remove(outfile);
-    }
-    else
-    {
-        _kernel_osfile_block fileblk;
-        fileblk.load /*r2*/ = 0xDDE /*FILETYPE_PIPEDREAM*/;
-        (void) _kernel_osfile(18 /*SetType*/, outfile, &fileblk);
-        printf("Conversion complete\n");
+        puts("Conversion failed");
+        return(EXIT_FAILURE);
     }
 
+    if(pd123__errexp)
+        fprintf(stderr, "%d bad expressions found\n", pd123__errexp);
+    if(pd123__poorfunc)
+        fprintf(stderr, "Unable to convert %d Lotus 1-2-3 functions to PipeDream\n", pd123__poorfunc);
+
+    {
+    _kernel_osfile_block fileblk;
+    fileblk.load /*r2*/ = 0xDDE /*FILETYPE_PIPEDREAM*/;
+    (void) _kernel_osfile(18 /*SetType*/, outfile, &fileblk);
+    } /*block*/
+
+    puts("Conversion complete");
     return(EXIT_SUCCESS);
 }
 
@@ -1122,6 +1141,8 @@ findrec(
     /* remember start position */
     startpos = curpos;
 
+    //printf("findrec(type=0x%04X, aflag=%d, col=%d, row=%d): curpos=0x%x\n", type, aflag, col, row, curpos-lotusf);
+
     /* search for required opcode */
     do
     {
@@ -1131,12 +1152,16 @@ findrec(
         atpos += 2;
         length = lts_readuword16(atpos);
         atpos += 2;
+        //printf("  @0x%x opcode=0x%04X, length=0x%x\n", (atpos-4)-lotusf, opcode, length);
 
         switch(aflag)
         {
         case TYPE_MATCH:
             if(opcode == type)
+            {
+                //printf("  MATCH\n");
                 return(atpos);
+            }
             break;
 
         case WIDTH_MATCH:
@@ -1149,7 +1174,10 @@ findrec(
                 c = (S32) lts_readuword16(atpos);
                 atpos += 2;
                 if(col == c)
+                {
+                    //printf("  WIDTH_MATCH for c=%d\n", c);
                     return(datapos);
+                }
             }
             break;
 
@@ -1171,7 +1199,10 @@ findrec(
                 /* set maximum column found */
                 pd123__maxcol = MAX(c, pd123__maxcol);
                 if((c == col) && (r > row))
+                {
+                    //printf("  NEXT_ROW for c=%d, r=%d\n", c, r);
                     return(datapos);
+                }
             }
             break;
         }
@@ -1182,9 +1213,12 @@ findrec(
             if(aflag == NEXT_ROW)
             {
                 foundeof = 1;
+                //puts("EOF for NEXT_ROW");
                 return(NULL);
             }
-            curpos = lotusf;
+
+            curpos = lotusf; /* wrap to start and keep trying */
+            //if(curpos != startpos) puts("EOF - wrap to start");
         }
         else
         {
@@ -1193,6 +1227,7 @@ findrec(
     }
     while(curpos != startpos);
 
+    //puts("Not found in whole file");
     return(NULL);
 }
 
@@ -1540,10 +1575,12 @@ readrange(void)
         rec += 6;
         defcwid = (S32) lts_readuword16(rec);
         rec += 2;
+        //printf("L_WINDOW1 found: Default column width = %d\n", defcwid);
     }
     else
-    {
-        defcwid = 0;
+    {   /* Schema2 converter doesn't output this? */
+        defcwid = 12; // now same as PipeDream default - was zero, and PipeDream doesn't like all zeros!
+        //printf("L_WINDOW1 not found: Default column width = %d\n", defcwid);
     }
 
     /* read hidden column vector */
@@ -1570,8 +1607,6 @@ static F64
 lts_readdouble(
     const char *arg)
 {
-#if RISCOS
-
     /* this for the ARM <-> 8087 */
     U32 i;
     union LTS_READDOUBLE_U
@@ -1587,12 +1622,6 @@ lts_readdouble(
         fp.fpbytes[i] = *arg++;
 
     return(fp.fpval);
-
-#elif WINDOWS
-
-    return(* ((PC_F64) arg));
-
-#endif /* OS */
 }
 
 /******************************************************************************
@@ -1605,26 +1634,17 @@ static U16
 lts_readuword16(
     const char *arg)
 {
-#if RISCOS
-
     /* this for the ARM */
-    S32 i;
     union LTS_READUWORD16_U
     {
         U16 uword;
-        char uwbytes[2];
+        char bytes[2];
     } uw;
 
-    for(i = 0; i < 2; ++i)
-        uw.uwbytes[i] = *arg++;
+    uw.bytes[0] = *arg++;
+    uw.bytes[1] = *arg++;
 
     return(uw.uword);
-
-#elif WINDOWS
-
-    return(*((U16 *) arg));
-
-#endif /* OS */
 }
 
 /******************************************************************************
@@ -1637,26 +1657,17 @@ static S16
 lts_readword16(
     const char *arg)
 {
-#if RISCOS
-
     /* this for the ARM */
-    S32 i;
     union LTS_READWORD16_U
     {
         S16 word;
-        char wbytes[2];
+        char bytes[2];
     } w;
 
-    for(i = 0; i < 2; ++i)
-        w.wbytes[i] = *arg++;
+    w.bytes[0] = *arg++;
+    w.bytes[1] = *arg++;
 
     return(w.word);
-
-#elif WINDOWS
-
-    return(*((S16 *) arg));
-
-#endif /* OS */
 }
 
 /******************************************************************************

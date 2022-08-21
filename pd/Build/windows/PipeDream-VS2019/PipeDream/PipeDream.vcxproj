@@ -69,6 +69,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>common/gflags.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsC</CompileAs>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -399,6 +400,7 @@
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\ns-sal.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\pragma.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\pragmari.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_clang.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_gccsdk.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_windows.h" />
     <ClInclude Include="..\..\..\..\cmodules\debug.h" />

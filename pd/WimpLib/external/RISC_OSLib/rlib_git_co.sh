@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -19,7 +21,7 @@ git clone http://gitlab.riscosopen.org/RiscOS/Sources/Toolbox/Toolboxlib.git Too
 popd
 
 pushd gitlab/RiscOS/Sources/Lib/RISC_OSLib
-git checkout RISC_OSLib-5_75
+git checkout RISC_OSLib-5_82
 popd
 
 pushd gitlab/RiscOS/Sources/Toolbox/Toolboxlib

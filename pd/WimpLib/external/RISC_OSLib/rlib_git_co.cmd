@@ -19,7 +19,7 @@ git clone http://gitlab.riscosopen.org/RiscOS/Sources/Toolbox/Toolboxlib.git Too
 popd
 
 pushd gitlab\RiscOS\Sources\Lib\RISC_OSLib
-git checkout RISC_OSLib-5_75
+git checkout RISC_OSLib-5_82
 popd
 
 pushd gitlab\RiscOS\Sources\Toolbox\Toolboxlib

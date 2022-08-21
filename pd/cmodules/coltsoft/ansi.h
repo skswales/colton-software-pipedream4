@@ -40,6 +40,9 @@
 #include <limits.h>
 
 #include <math.h>
+#if 1
+#undef fma /* Norcroft is currently broken w.r.t. __d_fma inline */
+#endif
 
 #include <float.h>
 

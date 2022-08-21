@@ -202,6 +202,8 @@ md64_do MULDIV_DO_DIV
 
         Return "v1-v6","fpbased"
 
+ [ {FALSE} ; Just for diff minimization (not in PipeDream)
+
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern int32_t muldiv64_ceil(int32_t dividend, int32_t multiplier, int32_t divisor);
 
@@ -276,8 +278,6 @@ muldiv64_floor_continue
         Return "v1-v6","fpbased"
  ]
 
- [ {FALSE} ; Just for diff minimization (not in PipeDream)
-
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern int32_t muldiv64_round_floor(int32_t dividend, int32_t multiplier, int32_t divisor);
 
@@ -318,7 +318,8 @@ muldiv64_round_floor_continue
 
         Return "v1-v6","fpbased"
  ]
- ]
+
+ ] ; diff minimization
 
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -341,6 +342,8 @@ muldiv64_zero_result
 
         Return "v1-v6","fpbased"
 
+ [ {FALSE} ; Just for diff minimization (not in PipeDream)
+
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern int32_t muldiv64_remainder(void);
 
@@ -352,6 +355,8 @@ muldiv64_zero_result
         LDR     a1, [a1, #MULDIV_REMAINDER]
 
         Return "","LinkNotStacked"
+
+ ] ; diff minimization
 
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern int32_t muldiv64_overflow(void);
@@ -365,7 +370,7 @@ muldiv64_zero_result
 
         Return "","LinkNotStacked"
 
- [ {TRUE} ; Still used in PipeDream
+ [ {FALSE} ; No longer used in PipeDream (C implementation)
 
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern int32_t muldiv64_limiting(int32_t dividend, int32_t multiplier, int32_t divisor);
@@ -379,12 +384,15 @@ muldiv64_zero_result
         LDR     a2, =muldiv64__statics ; check overflow, limit if overflow != 0
         LDR     a2, [a2, #MULDIV_OVERFLOW]
         CMP     a2, #0
+        Return "","fpbased",EQ
+
         MOV     a2, #&80000000 ; LONG_MAX + 1 (overflowed)
         SUBGT   a1, a2, #1 ; -> +LONG_MAX (0x7FFFFFFF)
         ADDLT   a1, a2, #1 ; -> -LONG_MAX (0x80000001)
 
         Return "","fpbased"
- ]
+
+ ] ; diff minimization
 
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern void muldiv64_init(void);
@@ -410,13 +418,13 @@ muldiv64_zero_result
         ADRL    ip, md64_p1
         STMIA   ip, {a2, a3}
 
+ [ {FALSE} ; Just for diff minimization (not in PipeDream)
         ADRL    ip, md64_p2
         STMIA   ip, {a2, a3}
 
         ADR     ip, md64_p3
         STMIA   ip, {a2, a3}
 
- [ {FALSE} ; Just for diff minimization (not in PipeDream)
         ADR     ip, md64_p4
         STMIA   ip, {a2, a3}
  ]

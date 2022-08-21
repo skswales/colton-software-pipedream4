@@ -747,6 +747,18 @@ array_range_sizes(
     }
 }
 
+extern void
+array_range_mono_size(
+    _InRef_     PC_SS_DATA p_ss_data_in,
+    _OutRef_    P_S32 p_mono_size)
+{
+    S32 x_size, y_size;
+
+    array_range_sizes(p_ss_data_in, &x_size, &y_size);
+
+    *p_mono_size = x_size * y_size;
+}
+
 /******************************************************************************
 *
 * return normalised array elements

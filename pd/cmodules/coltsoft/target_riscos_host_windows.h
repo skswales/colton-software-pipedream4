@@ -121,7 +121,7 @@ typedef unsigned int _Bool;
 #endif /* _MSC_VER */
 #endif /* __cplusplus */
 
-#define __STDC_NO_COMPLEX__ 1 /* only for CROSS_COMPILE - see RISC OS complex.h */
+#define USE_OWN_COMPLEX_IMPL 1 /* only for CROSS_COMPILE - see RISC OS complex.h */
 
 #define inline_when_fast_fp inline
 

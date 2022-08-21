@@ -8,11 +8,15 @@
 
 # set your cross environment up first
 arm-none-eabi-gcc \
- -c ../../*.c ../../cmodules/*.c  \
+ -std=c99 \
  -I../.. \
  -I../../WimpLib/ \
- -I ../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/msvchack \
- -I ../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib \
+ -I../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/clanghack \
+ -I../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib/msvchack \
+ -I../../../../../coltsoft/trunk/cs-nonfree/Acorn/Library/32/CLib \
+ -Os \
+ -mfpu=vfp -mfloat-abi=hard \
  -funsigned-char \
  -fno-builtin \
- -DCROSS_COMPILE -DHOST_GCCSDK -DTARGET_RISCOS -DRELEASED
+ -DCROSS_COMPILE -DHOST_GCCSDK -DTARGET_RISCOS -DRELEASED \
+ -c ../../*.c ../../cmodules/*.c ../../cmodules/riscos/*.c

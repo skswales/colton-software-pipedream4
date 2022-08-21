@@ -175,8 +175,9 @@ gr_pie_addin(
         if(numval && (value > 0.0))
         {
             GR_DIAG_OFFSET pointStart = 0;
-            F64 fraction = value / total;
-            F64 theta = _two_pi * fraction;
+            //F64 fraction = value / total;
+            //F64 theta = _two_pi * fraction;
+            const F64 theta = (_two_pi * value) / total;
 
             if(serp->bits.pie_anticlockwise)
                 beta = alpha + theta;
@@ -206,7 +207,9 @@ gr_pie_addin(
             if(labelling)
                 status_break(res = gr_chart_group_new(cp, &pointStart, id));
 
-            status_break(res = gr_diag_piesector_new(cp->core.p_gr_diag, NULL, id, &thisOrigin, radius, (alpha < beta) ? alpha : beta, (alpha < beta) ? beta : alpha, &linestyle, &fillstyle));
+            status_break(res = gr_diag_piesector_new(cp->core.p_gr_diag, NULL, id, &thisOrigin, radius,
+                                                     fmin(alpha, beta), fmax(alpha, beta),
+                                                     &linestyle, &fillstyle));
 
             res = STATUS_DONE;
 

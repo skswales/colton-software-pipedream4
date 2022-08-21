@@ -30,7 +30,7 @@
 #define SIGUSR2 9
 #define SIGOSERROR 10
 
-#define __STDC_NO_COMPLEX__ 1 /* only for CROSS_COMPILE - see RISC OS complex.h */
+#define USE_OWN_COMPLEX_IMPL 1 /* only for CROSS_COMPILE - see RISC OS complex.h */
 
 #endif /* __target_riscos_host_clang_h */
 

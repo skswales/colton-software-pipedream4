@@ -40,7 +40,7 @@
     _em(_array, _n_cols_in_row, _i_idx, _j_idx)
 
 /* So watch out when using array_range_index() to fill and
- * ss_array_element_index_borrow() for result as those use x=col, y=row args
+ * ss_array_element_index_wr() for result as those use x=col, y=row args
  */
 
 /******************************************************************************
@@ -51,36 +51,68 @@
 
 _Check_return_
 static STATUS
-determinant(
+determinant_0(
     _In_reads_x_(m*m) PC_F64 ap /*[m][m]*/,
     _InVal_     U32 m,
     _OutRef_    P_F64 dp)
 {
-    STATUS status = STATUS_OK;
+    UNREFERENCED_PARAMETER(ap);
+    UNREFERENCED_PARAMETER_InVal_(m);
+    assert(m == 0);
 
-    switch(m)
-    {
-    case 0:
-        *dp = 1.0;
-        break; /* not as silly a question as RJM first thought! (see Bloom, Linear Algebra and Geometry) */
+    *dp = 1.0; /* not as silly a question as RJM first thought! (see Bloom, Linear Algebra and Geometry) */
 
-    case 1:
-        *dp = *ap;
-        break;
+    return(STATUS_OK);
+}
 
-    case 2:
+_Check_return_
+static STATUS
+determinant_1(
+    _In_reads_x_(m*m) PC_F64 ap /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
+{
+    UNREFERENCED_PARAMETER_InVal_(m);
+    assert(m == 1);
+
+    *dp = *ap;
+
+    return(STATUS_OK);
+}
+
+_Check_return_
+static STATUS
+determinant_2(
+    _In_reads_x_(m*m) PC_F64 ap /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
+{
+    UNREFERENCED_PARAMETER_InVal_(m);
+    assert(m == 2);
+
 #define a11 (_Aij(ap, 2, 0, 0))
 #define a12 (_Aij(ap, 2, 0, 1))
 #define a21 (_Aij(ap, 2, 1, 0))
 #define a22 (_Aij(ap, 2, 1, 1))
-        *dp = (a11 * a22) - (a12 * a21);
+    *dp = (a11 * a22) - (a12 * a21);
 #undef a11
 #undef a12
 #undef a21
 #undef a22
-        break;
+ 
+    return(STATUS_OK);
+}
 
-    case 3:
+_Check_return_
+static STATUS
+determinant_3(
+    _In_reads_x_(m*m) PC_F64 ap /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
+{
+    UNREFERENCED_PARAMETER_InVal_(m);
+    assert(m == 3);
+
 #define a11 (_Aij(ap, 3, 0, 0))
 #define a12 (_Aij(ap, 3, 0, 1))
 #define a13 (_Aij(ap, 3, 0, 2))
@@ -90,9 +122,9 @@ determinant(
 #define a31 (_Aij(ap, 3, 2, 0))
 #define a32 (_Aij(ap, 3, 2, 1))
 #define a33 (_Aij(ap, 3, 2, 2))
-        *dp = + a11 * (a22 * a33 - a23 * a32)
-              - a12 * (a21 * a33 - a23 * a31)
-              + a13 * (a21 * a32 - a22 * a31);
+    *dp = + a11 * ((a22 * a33) - (a23 * a32))
+          - a12 * ((a21 * a33) - (a23 * a31))
+          + a13 * ((a21 * a32) - (a22 * a31));
 #undef a11
 #undef a12
 #undef a13
@@ -102,56 +134,187 @@ determinant(
 #undef a31
 #undef a32
 #undef a33
-        break;
+ 
+    return(STATUS_OK);
+}
 
-    default:
-        { /* recurse evaluating minors */
-        P_F64 minor;
-        const U32 minor_m = m - 1;
-        F64 minor_D;
-        U32 col_idx, i_col_idx, o_col_idx;
-        U32 i_row_idx, o_row_idx;
+#define DETERMINANT_GAUSS_ELIMINATION 1
 
-        *dp = 0.0;
+#if !defined(DETERMINANT_GAUSS_ELIMINATION)
 
-        if(NULL == (minor = al_ptr_alloc_elem(F64, minor_m * minor_m, &status)))
-            return(status); /* unable to determine */
+_Check_return_
+static STATUS
+determinant(
+    _In_reads_x_(m*m) PC_F64 ap /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp);
 
-        for(col_idx = 0; col_idx < m; ++col_idx)
+_Check_return_
+static STATUS
+determinant_minors(
+    _In_reads_x_(m*m) PC_F64 ap /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
+{
+    /* recurse evaluating minors */
+    STATUS status = STATUS_OK;
+    P_F64 minor;
+    const U32 minor_m = m - 1;
+    F64 minor_D;
+    U32 col_idx, i_col_idx, o_col_idx;
+    U32 i_row_idx, o_row_idx;
+
+    *dp = 0.0;
+
+    if(NULL == (minor = al_ptr_alloc_elem(F64, minor_m * minor_m, &status)))
+        return(status); /* unable to determine */
+
+    for(col_idx = 0; col_idx < m; ++col_idx)
+    {
+        F64 a1j = _em(ap, m, 0, col_idx);
+
+        if(0.0 == a1j)
+            continue;
+
+        /* build minor by removing all of top row and current column */
+        for(i_col_idx = o_col_idx = 0; o_col_idx < minor_m; ++i_col_idx, ++o_col_idx)
         {
-            F64 a1j = _em(ap, m, 0, col_idx);
+            if(i_col_idx == col_idx)
+                ++i_col_idx;
 
-            if(0.0 == a1j)
-                continue;
-
-            /* build minor by removing all of top row and current column */
-            for(i_col_idx = o_col_idx = 0; o_col_idx < minor_m; ++i_col_idx, ++o_col_idx)
+            for(i_row_idx = 1, o_row_idx = 0; o_row_idx < minor_m; ++i_row_idx, ++o_row_idx)
             {
-                if(i_col_idx == col_idx)
-                    ++i_col_idx;
-
-                for(i_row_idx = 1, o_row_idx = 0; o_row_idx < minor_m; ++i_row_idx, ++o_row_idx)
-                {
-                    f64_copy(_em(minor, minor_m, o_row_idx, o_col_idx), _em(ap, m, i_row_idx, i_col_idx));
-                }
+                f64_copy(_em(minor, minor_m, o_row_idx, o_col_idx), _em(ap, m, i_row_idx, i_col_idx));
             }
-
-            status_break(status = determinant(minor, minor_m, &minor_D));
-
-            if(col_idx & 1) /* cofactor has alternating signs */
-                *dp -= (a1j * minor_D);
-            else
-                *dp += (a1j * minor_D);
         }
 
-        al_ptr_dispose(P_P_ANY_PEDANTIC(&minor));
+        status_break(status = determinant(minor, minor_m, &minor_D));
 
-        break;
-        }
+        if(col_idx & 1) /* cofactor has alternating signs */
+            *dp -= (a1j * minor_D);
+        else
+            *dp += (a1j * minor_D);
     }
+
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&minor));
 
     return(status);
 }
+
+#endif /* DETERMINANT_GAUSS_ELIMINATION */
+
+#if defined(DETERMINANT_GAUSS_ELIMINATION)
+
+_Check_return_
+static STATUS
+determinant_gauss_elimination(
+    _In_reads_x_(m*m) PC_F64 ap_in /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
+{
+    STATUS status = STATUS_OK;
+    U32 curr_row_idx, row_idx, col_idx;
+    P_F64 ap /*[m][m]*/;
+
+    *dp = 1.0;
+
+    /* take a copy as this routine trashes the array, which some callers don't want! */
+    if(NULL == (ap = al_ptr_alloc_elem(F64, m * m, &status)))
+        return(status); /* unable to determine */
+
+    memcpy32(ap, ap_in, (m * m) * sizeof32(F64));
+
+    /* for each row (i==curr_row_idx) */
+    for(curr_row_idx = 0; curr_row_idx < m; ++curr_row_idx)
+    {
+        /* scale the whole row such that the element on the diagonal (Aii) is one */
+        const F64 initial_Aii = _Aij(ap, m, curr_row_idx, curr_row_idx);
+        F64 reciprocal_Aii;
+
+        /* we are going to be dividing by Aii, so check validity */
+        if(!isgreater(fabs(initial_Aii), F64_MIN))
+        {
+            *dp = 0.0; /* this is kosher */
+            break;
+        }
+
+        *dp *= initial_Aii; /* determinant is scaled by this */
+
+        reciprocal_Aii = 1.0 / initial_Aii;
+
+        /* for each column in the current row, scale together */
+        _Aij(ap, m, curr_row_idx, curr_row_idx) = 1.0; /* Aii := one */
+
+        /* note that values to the left of the (i)th column in the current row (and those below) are already zero, so we can skip scaling */
+        for(col_idx = curr_row_idx + 1; col_idx < m; ++col_idx)
+        {
+            _Aij(ap, m, curr_row_idx, col_idx) *= reciprocal_Aii;
+        }
+
+        /* for all succeding rows, subtract a multiple of this scaled current row to make the ith column zero */
+        for(row_idx = curr_row_idx + 1; row_idx < m; ++row_idx)
+        {
+            F64 multiples;
+
+            if(0.0 == _Aij(ap, m, row_idx, curr_row_idx))
+                continue;
+
+            multiples = _Aij(ap, m, row_idx, curr_row_idx); /* as _Aij(ap, m, curr_row_idx, curr_row_idx) is now one */
+
+            _Aij(ap, m, row_idx, curr_row_idx) = 0.0; /* := zero */
+
+            /* note that values to the left of the (i)th column in the current row are zero */
+            for(col_idx = curr_row_idx + 1; col_idx < m; ++col_idx)
+            {
+                _Aij(ap, m, row_idx, col_idx) -= (multiples * _Aij(ap, m, curr_row_idx, col_idx));
+            }
+        }
+    }
+
+    /* should end up with row-echelon form array - lower triangle zero, all diagonal elements one */
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&ap));
+
+    return(status);
+}
+
+#endif /* DETERMINANT_GAUSS_ELIMINATION */
+
+_Check_return_
+static STATUS
+determinant(
+    _In_reads_x_(m*m) PC_F64 ap /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
+{
+    /* orderded for efficiency with higher m */
+    if(m > 3)
+    {
+#if defined(DETERMINANT_GAUSS_ELIMINATION)
+        return(determinant_gauss_elimination(ap, m, dp));
+#else
+        return(determinant_minors(ap, m, dp));
+#endif
+    }
+
+    if(m == 3)
+        return(determinant_3(ap, m, dp));
+
+    switch(m)
+    {
+    case 2:
+        return(determinant_2(ap, m, dp));
+
+    case 1:
+        return(determinant_1(ap, m, dp));
+
+    default:
+        return(determinant_0(ap, m, dp));
+    }
+}
+
+#if RISCOS
+//#define POSSIBLE_VFP_SUPPORT 1
+#endif
 
 /*
 * NUMBER m_determ(square-array)
@@ -209,7 +372,7 @@ PROC_EXEC_PROTO(c_m_determ)
 
         if(status_ok(status = determinant(a, m, &m_determ_result)))
         {
-            ss_data_set_real_try_integer(p_ss_data_res, m_determ_result);
+            ss_data_set_real(p_ss_data_res, m_determ_result);
         }
 
         if(a != nums)
@@ -273,14 +436,15 @@ PROC_EXEC_PROTO(c_m_inverse)
                 goto endpoint;
             }
 
-            _Aij(a, m, i, j) = ss_data_get_real(&ss_data);
+            f64_copy(_Aij(a, m, i, j), ss_data.arg.fp);
         }
     }
 
     if(status_fail(status = determinant(a, m, &D)))
         goto endpoint;
 
-    if(0.0 == D)
+    /* we are going to be dividing by D, so check validity */
+    if(!isgreater(fabs(D), F64_MIN) /*0.0 == D*/)
     {
         status = EVAL_ERR_MATRIX_SINGULAR;
         goto endpoint;
@@ -317,14 +481,14 @@ PROC_EXEC_PROTO(c_m_inverse)
 
                     if(out_j > j) --out_j;
 
-                    _Aij(minor, minor_m, out_i, out_j) = _Aij(a, m, in_i, in_j);
+                    f64_copy(_Aij(minor, minor_m, out_i, out_j), _Aij(a, m, in_i, in_j));
                 }
             }
 
             if(status_fail(status = determinant(minor, minor_m, &minor_D)))
                 goto endpoint;
 
-            _Aij(adj, m, i, j) = minor_D;
+            f64_copy(_Aij(adj, m, i, j), minor_D);
        }
     }
 
@@ -340,15 +504,18 @@ PROC_EXEC_PROTO(c_m_inverse)
 
     /* step 3 - transpose the matrix of cofactors => adjunct(A) (simple to do this in formation of result) */
 
-    /* copy out the inverse(A) == adjunct(A) / determinant(A) */
+    { /* copy out the inverse(A) == adjunct(A) / determinant(A) */
+
     for(i = 0; i < m; ++i)
     {
         for(j = 0; j < m; ++j)
         {
-            P_SS_DATA p_ss_data = ss_array_element_index_wr(p_ss_data_res, j, i); /* NB j,i */
-            ss_data_set_real(p_ss_data, _Aij(adj, m, j, i) / D); /* NB j,i here too for transpose step 3 above */
+            const P_SS_DATA p_ss_data = ss_array_element_index_wr(p_ss_data_res, j, i); /* NB j,i */
+            const PC_F64 p_Aji = &_Aij(adj, m, j, i); /* NB j,i here too for transpose step 3 above */
+            ss_data_set_real(p_ss_data, *p_Aji / D);
         }
     }
+    } /*block*/
 
 endpoint:
 
@@ -408,7 +575,7 @@ PROC_EXEC_PROTO(c_m_mult)
                     (void) array_range_index(&ss_data[0], args[0], elem, iy, EM_REA);
                     (void) array_range_index(&ss_data[1], args[1], ix, elem, EM_REA);
 
-                    if( (DATA_ID_REAL == ss_data[0].data_id) && (DATA_ID_REAL == ss_data[1].data_id) )
+                    if( ss_data_is_real(&ss_data[0]) && ss_data_is_real(&ss_data[1]) )
                     {
                         product += ss_data_get_real(&ss_data[0]) * ss_data_get_real(&ss_data[1]);
                     }
@@ -420,7 +587,7 @@ PROC_EXEC_PROTO(c_m_mult)
                 }
 
                 elep = ss_array_element_index_wr(p_ss_data_res, ix, iy);
-                ss_data_set_real_try_integer(elep, product);
+                ss_data_set_real(elep, product);
             }
         }
     }

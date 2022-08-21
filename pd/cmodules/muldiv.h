@@ -32,19 +32,11 @@ muldiv64(
     _InVal_     S32 numerator,
     _InVal_     S32 denominator);
 
-_Check_return_
-extern S32
-muldiv64_ceil(
-    _InVal_     S32 dividend,
-    _InVal_     S32 numerator,
-    _InVal_     S32 denominator);
+/* no need for muldiv64_remainder, muldiv64_ceil, muldiv64_floor in PipeDream */
 
 _Check_return_
 extern S32
-muldiv64_floor(
-    _InVal_     S32 dividend,
-    _InVal_     S32 numerator,
-    _InVal_     S32 denominator);
+muldiv64_overflow(void);
 
 /* muldiv64, but limit against +/-S32_MAX on overflows */
 
@@ -55,7 +47,7 @@ muldiv64_limiting(
     _InVal_     S32 numerator,
     _InVal_     S32 denominator);
 
-/* no need for muldiv64_round_floor, muldiv64_remainder, muldiv64_overflow in PipeDream */
+/* no need for muldiv64_round_floor in PipeDream */
 
 #if defined(__cplusplus)
 }

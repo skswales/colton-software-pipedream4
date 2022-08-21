@@ -1204,7 +1204,7 @@ draw_do_render(
     trfm[5] = y << 8;
 
     /* no DrawFiles recommendation. Draw module recommends 2 OS units */
-    flatness = (int) muldiv64(2 * GR_RISCDRAW_PER_RISCOS * 1024, (int) GR_SCALE_ONE, (int) (yfactor * 1024));
+    flatness = muldiv64(2 * GR_RISCDRAW_PER_RISCOS * 1024, (int) GR_SCALE_ONE, (int) (yfactor * 1024));
 
     rs.r[0] = flags;
     rs.r[1] = (int) data;

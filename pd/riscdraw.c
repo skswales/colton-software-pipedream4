@@ -445,7 +445,7 @@ new_font_leading(
                                         : paper_length_millipoints;
 
             /* effective paper size including scaling (bigger scale -> less lines + v.v.) */
-            paper_size_millipoints = (S32) muldiv64(paper_size_millipoints, 100, d_print_QS);
+            paper_size_millipoints = muldiv64(paper_size_millipoints, 100, d_print_QS);
 
             /* page length (round down) */
             d_poptions_PL = paper_size_millipoints / global_font_leading_millipoints;
@@ -2729,7 +2729,7 @@ riscprint_page(
     if(!scale_pct)
         return(reperr_null(ERR_BADPRINTSCALE));
 
-    xform = (S32) muldiv64(0x00010000, scale_pct, 100);   /* fixed binary point number 16.16 */
+    xform = muldiv64(0x00010000, scale_pct, 100);   /* fixed binary point number 16.16 */
 
     /* start with rectangle x0,y0 origin at bottom left of printable area */
     where_mp = riscos_printer.where;
@@ -2766,8 +2766,8 @@ riscprint_page(
     left_margin_shift_os = charwidth * left_margin_width();
 
     /* how big the usable area is in scaling OS units (i.e. corresponding to printing OS) */
-    usable_x_os = (S32) muldiv64(((landscape) ? paper_length_millipoints : paper_width_millipoints ), 100, scale_pct * MILLIPOINTS_PER_OS);
-    usable_y_os = (S32) muldiv64(((landscape) ? paper_width_millipoints  : paper_length_millipoints), 100, scale_pct * MILLIPOINTS_PER_OS);
+    usable_x_os = muldiv64(((landscape) ? paper_length_millipoints : paper_width_millipoints ), 100, scale_pct * MILLIPOINTS_PER_OS);
+    usable_y_os = muldiv64(((landscape) ? paper_width_millipoints  : paper_length_millipoints), 100, scale_pct * MILLIPOINTS_PER_OS);
 
     trace_4(TRACE_APP_PD4_RENDER, "usable area %d,%d (os %d%%): header_footer_width %d (os)",
             usable_x_os, usable_y_os, scale_pct, charwidth * header_footer_width);
@@ -2782,18 +2782,18 @@ riscprint_page(
     if(landscape)
     {
         /* the rectangle has grown left across the physical page - adjust by y0 (adding -ve) */
-        where_mp.dx += (S32) muldiv64(size_os.y0, MILLIPOINTS_PER_OS * scale_pct, 100);
+        where_mp.dx += muldiv64(size_os.y0, MILLIPOINTS_PER_OS * scale_pct, 100);
 
         /* the now reduced size rectangle starts further down the physical page */
-        where_mp.dy -= (S32) muldiv64(left_margin_shift_os, MILLIPOINTS_PER_OS * scale_pct, 100);
+        where_mp.dy -= muldiv64(left_margin_shift_os, MILLIPOINTS_PER_OS * scale_pct, 100);
     }
     else
     {
         /* the rectangle has grown down the physical page - adjust by y0 (adding -ve) */
-        where_mp.dy += (S32) muldiv64(size_os.y0, MILLIPOINTS_PER_OS * scale_pct, 100);
+        where_mp.dy += muldiv64(size_os.y0, MILLIPOINTS_PER_OS * scale_pct, 100);
 
         /* the now reduced size rectangle starts further over to the right on the physical page */
-        where_mp.dx += (S32) muldiv64(left_margin_shift_os, MILLIPOINTS_PER_OS * scale_pct, 100);
+        where_mp.dx += muldiv64(left_margin_shift_os, MILLIPOINTS_PER_OS * scale_pct, 100);
     }
 
     trace_6(TRACE_APP_PD4_RENDER, "print_giverectangle((%d, %d, %d, %d) (os), print_where %d %d (real mp))",

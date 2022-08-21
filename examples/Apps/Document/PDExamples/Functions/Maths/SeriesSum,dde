@@ -1,4 +1,4 @@
-%OP%VS4.56.p1 (18-Aug-2016), Colton Software, R9200 7500 3900 8299
+%OP%VS4.59 (06-Sep-2021), Colton Software, R0000 0000 0000 0000
 %OP%TNN
 %OP%WRN
 %OP%GRY
@@ -9,7 +9,7 @@
 %OP%FGHomerton.Medium
 %OP%FS14000
 %OP%PDDefault
-%OP%WC504,2288,380,1882,0,6,0,0
+%OP%WC864,2648,448,1950,0,11,0,0
 %CO:A,8,33%%H2%Example of SERIESSUM function
 
 %R%a
@@ -86,6 +86,11 @@ Cubic polynomial
 
 
 Coefficient array {d,c,b,a}
+
+
+
+
+
 %CO:D,5,0%
 
 
@@ -95,4 +100,7 @@ Coefficient array {d,c,b,a}
 
 
 
-@G:SSum_C01,100@
+
+
+
+@G:Series_C01,100@

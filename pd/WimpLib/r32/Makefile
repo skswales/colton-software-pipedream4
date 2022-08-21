@@ -19,8 +19,8 @@ CMODULES=$(PD).cmodules
 
 AS=ObjAsm
 # --arm to allow assembly of UAL syntax code
-# -cpu=3M to allow assembly of S/UMULL
-ASflags_BASE=-I$(PD).cmodules.Hdr --arm --cpu=3M --throwback
+# -cpu 3M to allow assembly of S/UMULL
+ASflags_BASE=-I$(PD).common.Hdr --arm --arm_only -cpu 3M --throwback
 ASflags=$(ASflags_BASE)
 
 # NB PipeDream uses a global register for its sb variable, so avoid using that in this library code!

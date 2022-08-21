@@ -426,6 +426,23 @@ static S32 (* counter)(S32);
 ******************************************************************************/
 
 #ifdef UTIL_PTL
+
+static size_t
+read_file_size(FILE * f)
+{
+    size_t n_bytes;
+
+    if(fseek(f, 0L, SEEK_END))
+        return(0);
+
+    n_bytes = (size_t) ftell(f);
+
+    if(fseek(f, 0L, SEEK_SET))
+        return(0);
+
+    return(n_bytes);
+}
+
 int
 #if CROSS_COMPILE
 util_ptl_main(
@@ -442,7 +459,7 @@ main(
     const char * outfile;
 
     /* banner */
-    printf("PipeDream to Lotus 1-2-3 converter\nColton Software 1988-2020\n");
+    puts("PipeDream to Lotus 1-2-3 converter: (C) Colton Software 1988-2021");
 
     /* argument checking */
     if(argc < 3)
@@ -456,19 +473,19 @@ main(
 
     if((pd123__fin = fopen(infile, "rb")) == NULL)
     {
-        fprintf(stderr, "Can't open %s\n", infile);
+        fprintf(stderr, "Can't open %s for reading\n", infile);
         exit(EXIT_FAILURE);
     }
 
-    if(fseek(pd123__fin, 0l, SEEK_END))
-        return(PD123_ERR_FILE);
-    pdsize = (size_t) ftell(pd123__fin);
-    if(fseek(pd123__fin, 0l, SEEK_SET))
-        return(PD123_ERR_FILE);
+    if(0 == (pdsize = read_file_size(pd123__fin)))
+    {
+        fprintf(stderr, "Unable to read length of %s\n", infile);
+        return(EXIT_FAILURE);
+    }
 
     if((pdf = malloc(pdsize)) == NULL)
     {
-        printf("Not enough memory for PipeDream file\n");
+        fprintf(stderr, "Not enough memory to load %s\n", infile);
         return(EXIT_FAILURE);
     }
 
@@ -479,12 +496,12 @@ main(
 
     if((pd123__fout = fopen(outfile, "wb")) == NULL)
     {
-        fprintf(stderr, "Can't open %s\n", outfile);
+        fprintf(stderr, "Can't open %s for writing\n", outfile);
         exit(EXIT_FAILURE);
     }
 
     /* set pd level */
-    pd123__curpd = PD_Z88;
+    pd123__curpd = PD_4; //PD_Z88;
     counter = showrow;
 
     /* write out Lotus file */
@@ -512,21 +529,23 @@ main(
     fclose(pd123__fout);
     free(pdf);
 
-    if(!err && pd123__errexp)
-        fprintf(stderr, "%d bad expressions found\n", pd123__errexp);
-
     if(err)
     {
-        remove(*argv);
-    }
-    else
-    {
-        _kernel_osfile_block fileblk;
-        fileblk.load /*r2*/ = 0xDB0 /*FILETYPE_LOTUS123*/;
-        (void) _kernel_osfile(18 /*SetType*/, outfile, &fileblk);
-        printf("Conversion complete\n");
+        remove(outfile);
+        puts("Conversion failed");
+        return(EXIT_FAILURE);
     }
 
+    if(pd123__errexp)
+        fprintf(stderr, "%d bad expressions found\n", pd123__errexp);
+
+    {
+    _kernel_osfile_block fileblk;
+    fileblk.load /*r2*/ = 0xDB0 /*FILETYPE_LOTUS123*/;
+    (void) _kernel_osfile(18 /*SetType*/, outfile, &fileblk);
+    } /*block*/
+
+    puts("Conversion complete");
     return(EXIT_SUCCESS);
 }
 #endif

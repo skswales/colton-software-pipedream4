@@ -575,14 +575,14 @@
     <ClCompile Include="..\..\..\..\cmodules\xustring.c">
       <Filter>Source Files\pd_cmodules</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\cmodules\mathxcpx.c">
-      <Filter>Source Files\pd_cmodules</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\utils\u_reperr.c">
       <Filter>Source Files\pd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\utils\u_strings.c">
       <Filter>Source Files\pd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\mathxcpx.c">
+      <Filter>Source Files\eval_cmodules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -989,7 +989,10 @@
       <Filter>Source Files\pd_cmodules</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\cmodules\mathxcpx.h">
-      <Filter>Source Files\pd_cmodules</Filter>
+      <Filter>Source Files\eval_cmodules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_clang.h">
+      <Filter>Header Files\coltsoft</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

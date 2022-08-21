@@ -235,23 +235,23 @@ typedef P_PC_U8 P_PC_U8Z;
 #define u8_is_ascii7(u8) ( \
     (u8) < 0x80)
 
-typedef signed char S8; typedef S8 * P_S8, ** P_P_S8; typedef const S8 * PC_S8;
+typedef   int8_t  S8; typedef S8 * P_S8, ** P_P_S8; typedef const S8 * PC_S8;
 
-typedef unsigned short U16; typedef U16 * P_U16, ** P_P_U16; typedef const U16 * PC_U16;
+typedef  int16_t S16; typedef S16 * P_S16, ** P_P_S16; typedef const S16 * PC_S16;
 
-typedef signed short S16; typedef S16 * P_S16, ** P_P_S16; typedef const S16 * PC_S16;
+typedef uint16_t U16; typedef U16 * P_U16, ** P_P_U16; typedef const U16 * PC_U16;
 
-typedef unsigned int U32; typedef U32 * P_U32, ** P_P_U32; typedef const U32 * PC_U32;
+typedef  int32_t S32; typedef S32 * P_S32, ** P_P_S32; typedef const S32 * PC_S32;
 
-typedef /*signed*/ int S32; typedef S32 * P_S32, ** P_P_S32; typedef const S32 * PC_S32;
+typedef uint32_t U32; typedef U32 * P_U32, ** P_P_U32; typedef const U32 * PC_U32;
 
 #define P_S32_NONE _P_DATA_NONE(P_S32)
 
-typedef int64_t S64; typedef S64 * P_S64, ** P_P_S64; typedef const S64 * PC_S64;
+typedef  int64_t S64; typedef S64 * P_S64, ** P_P_S64; typedef const S64 * PC_S64;
 
 typedef uint64_t U64; typedef U64 * P_U64, ** P_P_U64; typedef const U64 * PC_U64;
 
-typedef double F64; typedef F64 * P_F64, ** P_P_F64; typedef const F64 * PC_F64;
+typedef double   F64; typedef F64 * P_F64, ** P_P_F64; typedef const F64 * PC_F64;
 
 typedef BOOL * P_BOOL; typedef const BOOL * PC_BOOL;
 

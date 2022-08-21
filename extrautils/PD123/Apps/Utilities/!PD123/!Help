@@ -12,4 +12,4 @@
 
    Syntax:
 
-      *PD123 <infile> <outfile>
+      *u_ptl <infile> <outfile>
