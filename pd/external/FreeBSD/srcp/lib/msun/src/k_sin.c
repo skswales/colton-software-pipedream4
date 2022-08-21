@@ -11,12 +11,13 @@
  * ====================================================
  */
 
-#include "common/gflags.h"
+#include "common/gflags.h" /* COLTON_SOFTWARE */
 
-#if 0 /* SKS */
+#if 1 /* COLTON_SOFTWARE */
+#else /* COLTON_SOFTWARE */
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/lib/msun/src/k_sin.c,v 1.11 2008/02/19 12:54:14 bde Exp $");
-#endif
+__FBSDID("$FreeBSD: head/lib/msun/src/k_sin.c 176408 2008-02-19 12:54:14Z bde $");
+#endif /* COLTON_SOFTWARE */
 
 /* __kernel_sin( x, y, iy)
  * kernel sin function on ~[-pi/4, pi/4] (except on -0), pi/4 ~ 0.7854

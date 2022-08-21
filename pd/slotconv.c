@@ -181,25 +181,25 @@ get_colour_value(
     /*out*/ int * p_b)
 {
     PC_USTR spos = pos;
-    P_USTR epos;
+    PC_USTR epos;
     U32 r, g, b;
 
     *p_r = *p_g = *p_b = 0;
 
-    r = fast_strtoul(pos, &epos);
+    r = fast_ustrtoul(pos, &epos);
     if(pos == epos) return(0);
     pos = epos;
 
     if(*pos++ != ',') return(0);
 
-    g = fast_strtoul(pos, &epos);
+    g = fast_ustrtoul(pos, &epos);
     if(pos == epos)
         return(0);
     pos = epos;
 
     if(*pos++ != ',') return(0);
 
-    b = fast_strtoul(pos, &epos);
+    b = fast_ustrtoul(pos, &epos);
     if(pos == epos)
         return(0);
 
@@ -2101,7 +2101,7 @@ result_to_string(
             break;
 
         case RPN_RES_STRING:
-            bitstr(p_ev_result->arg.string.data, 0, array, fwidth,
+            bitstr(p_ev_result->arg.string.uchars, 0, array, fwidth,
                    expand_refs, expand_ats, expand_ctrl);
             /* bitstr() will return a fonty result if riscos_fonts */
             break;
@@ -2136,33 +2136,40 @@ result_to_string(
             temp = p_ev_result->arg.ev_date;
 
             if(temp.date)
-                {
+            {
                 S32 year, month, day;
+                BOOL valid;
 
-                if(temp.date < 0)
-                    {
-                    array[len++]= '-';
-                    temp.date = -temp.date;
-                    }
-
-                ss_dateval_to_ymd(&temp.date, &year, &month, &day);
+                valid = (ss_dateval_to_ymd(&temp.date, &year, &month, &day) >= 0);
 
                 if(d_options_DF == 'T')
-                    /* generate 21 Mar 1988 */
-                    len += sprintf(array + len, "%d %.3s %.4d",
-                                   day + 1,
-                                   *(asc_months[month]),
-                                   year + 1);
-                else
-                    /* generate 21.3.1988 or 3.21.1988 */
-                    len += sprintf(array + len, "%d.%d.%.4d",
-                                   ((d_options_DF == 'A')) ? (month + 1) : (day + 1),
-                                   ((d_options_DF == 'A')) ? (day + 1) : (month + 1),
-                                   year + 1);
+                {
+                    if(valid)
+                        /* generate 21 Mar 1988 */
+                        len += sprintf(array + len, "%d %.3s %.4d",
+                                       day,
+                                       *(asc_months[month - 1]),
+                                       year);
+                    else
+                        len += sprintf(array + len, "%s %s %s",
+                                       "**", "***", "****");
                 }
+                else
+                {
+                    if(valid)
+                        /* generate 21.3.1988 or 3.21.1988 */
+                        len += sprintf(array + len, "%d.%d.%.4d",
+                                       ((d_options_DF == 'A')) ? month : day,
+                                       ((d_options_DF == 'A')) ? day : month,
+                                       year);
+                    else
+                        len += sprintf(array + len, "%s.%s.%s",
+                                       "**", "**", "****");
+                }
+            }
 
             if(!temp.date || temp.time)
-                {
+            {
                 S32 hour, minute, second;
 
                 /* separate time from date */
@@ -2172,7 +2179,7 @@ result_to_string(
                 ss_timeval_to_hms(&temp.time, &hour, &minute, &second);
 
                 len += sprintf(array + len, "%.2d:%.2d:%.2d", hour, minute, second);
-                }
+            }
 
             if(*justify == J_LCR)
                 *justify = J_LEFT;

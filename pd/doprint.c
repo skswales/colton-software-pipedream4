@@ -834,7 +834,7 @@ print_document(void)
     const char *errp;
     S32 res;
 
-    /* rjm adds on 22.9.91 */
+    /* RJM adds on 22.9.91 */
     load_driver(&d_driver_PD, FALSE);
 
     /* ensure completely recalced */

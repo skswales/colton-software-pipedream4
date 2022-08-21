@@ -77,25 +77,20 @@ date_time_val_to_str(
     temp = *datep;
 
     if(temp.date)
-        {
+    {
         S32 day, month, year;
+        BOOL valid;
 
-        if(temp.date < 0)
-            {
-            op_buf[len++] = '-';
-            temp.date = -temp.date;
-            }
+        valid = (ss_dateval_to_ymd(&temp.date, &year, &month, &day) >= 0); /* year may be -ve without any special case handling here */
 
-        ss_dateval_to_ymd(&temp.date, &year, &month, &day);
-
-        if(american)
-            len += sprintf(op_buf + len, "%d.%d.%d", month + 1, day + 1, year + 1);
+        if(valid)
+            len += sprintf(op_buf + len, "%d.%d.%.4d", american ? month : day, american ? day : month, year);
         else
-            len += sprintf(op_buf + len, "%d.%d.%d", day + 1, month + 1, year + 1);
-        }
+            len += sprintf(op_buf + len, "%s.%s.%s", "**", "**", "****");
+    }
 
     if(!temp.date || temp.time)
-        {
+    {
         S32 hour, minute, second;
 
         /* separate time from date */
@@ -103,18 +98,18 @@ date_time_val_to_str(
             op_buf[len++] = ' ';
 
         if(temp.time < 0)
-            {
+        {
             op_buf[len++] = '-';
             temp.time = -temp.time;
-            }
+        }
 
         ss_timeval_to_hms(&temp.time, &hour, &minute, &second);
 
-        len += sprintf(op_buf + len, "%.2d:%.2d", hour, minute);
-
         if(second)
-            len += sprintf(op_buf + len, ":%.2d", second);
-        }
+            len += sprintf(op_buf + len, "%.2d:%.2d:%.2d", hour, minute, second);
+        else
+            len += sprintf(op_buf + len, "%.2d:%.2d", hour, minute);
+    }
 
     return(len);
 }
@@ -159,7 +154,7 @@ dec_const(
         case RPN_DAT_STRING:
         case RPN_TMP_STRING:
             {
-            PC_U8 ci = p_ev_data->arg.string.data;
+            PC_U8 ci = p_ev_data->arg.string.uchars;
             P_U8 co = op_buf;
 
             *co++ = '"';
@@ -585,7 +580,7 @@ dec_rpn_token(
             len = dec_format_space(op_buf);
 
             /* work out number of arguments */
-            if((narg = rpn_table[dc->cur_rpn.num].nargs) < 0)
+            if((narg = rpn_table[dc->cur_rpn.num].n_args) < 0)
                 narg = (S32) *(dc->cur_rpn.pos + 1);
 
             /* copy in custom/function name */
@@ -911,7 +906,7 @@ fptostr(
     len = sprintf(op_buf, "%.15g", *fpval);
     op_buf[len] = '\0';
 
-    /* search for exponent and remove leading zeroes because
+    /* search for exponent and remove leading zeros because
     they are confusing; remove the + for good measure */
     if((exp = strstr(op_buf, "e")) != NULL)
         {

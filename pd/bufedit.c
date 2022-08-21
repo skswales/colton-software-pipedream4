@@ -1243,7 +1243,7 @@ AutoWidth_fn(void)
                         {
                         /* bug in 4.00 - system font highlights and trailing spaces counted */
                         /* this_width = strlen(array)+2; */
-                        /* changed by rjm 18.10.91 */
+                        /* changed by RJM 18.10.91 */
                         char *aptr;
                         S32 hcount = 0;
 
@@ -2563,7 +2563,7 @@ fndlbr(
                         break;
 
                     /* a rather simplistic consume here */
-                    case 'F': /* rjm added this 7.9.91 cos it seemed like a good idea */
+                    case 'F': /* RJM added this 7.9.91 cos it seemed like a good idea */
                     case 'G':
                         /* skip over internal part */
                         c = tptr;

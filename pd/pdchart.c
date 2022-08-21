@@ -3201,7 +3201,7 @@ pdchart_show_editor(
 
     if(pdchart->ceh)
         {
-        /* already editing this chart! - do NOT winge */
+        /* already editing this chart! - do NOT whinge */
         gr_chartedit_front(&pdchart->ceh);
         return(1);
         }

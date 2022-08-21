@@ -25,6 +25,9 @@ Some SAL2.0 fakes to SAL1.1 - only defined as needed
 #define _Out_writes_(size)                              _Out_cap_(size)
 #define _Out_writes_opt_(size)                          _Out_opt_cap_(size)
 
+#define _Out_writes_to_(size,count)                     _Out_cap_(size)
+#define _Out_writes_to_opt_(size,count)                 _Out_opt_cap_(size)
+
 #define _Out_writes_all_(size)                          _Out_cap_post_count_(size,size)
 
 #define _Out_writes_z_(size)                            _Out_z_cap_(size)
@@ -32,6 +35,8 @@ Some SAL2.0 fakes to SAL1.1 - only defined as needed
 
 #define _Out_writes_bytes_(size)                        _Out_bytecap_(size)
 #define _Out_writes_bytes_opt_(size)                    _Out_opt_bytecap_(size)
+
+#define _Out_writes_bytes_all_(size)                    _Out_bytecap_post_bytecount_(size,size)
 
 #define _Inout_updates_(size)                           _Inout_cap_(size)
 #define _Inout_updates_opt_(size)                       _Inout_opt_cap_(size)
@@ -56,6 +61,8 @@ Some SAL2.0 fakes to SAL1.1 - only defined as needed
 
 #define _Ret_writes_bytes_to_(size, count)              _Ret_bytecap_(size)
 #define _Ret_writes_bytes_to_maybenull_(size, count)    _Ret_opt_bytecap_(size)
+
+#define _Null_terminated_
 
 #endif /* _In_reads_ */
 
@@ -120,12 +127,14 @@ or indeed with CC Norcroft on RISC OS!
 #define _Out_bytecapcount_(countvar)
 #define _Out_bytecapcount_c_(constexpr)
 #define _Out_bytecapcount_x_(complexvar)
+#define _Out_bytecap_post_bytecount_(countvar1,countvar2)
 #define _Out_cap_(countvar)
 #define _Out_cap_c_(constexpr)
 #define _Out_cap_x_(complexexpr)
 #define _Out_capcount_(countvar)
 /*#define _Out_capcount_c_(constexpr)*/
 #define _Out_capcount_x_(complexexpr)
+#define _Out_cap_post_count_(countvar1,countvar2)
 #define _Out_opt_
 #define _Out_opt_bytecap_(countvar) 
 #define _Out_opt_cap_(countvar)

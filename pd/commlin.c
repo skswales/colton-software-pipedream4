@@ -190,7 +190,7 @@ act_on_c(
              * case is buffer ouput - make this interruptible
             */
 
-            /* rjm says caret left/right and delete chars should be faster */
+            /* RJM says caret left/right and delete chars should be faster */
             if(movement || (!in_execfile && !keyinbuffer()))
 #endif
                 {

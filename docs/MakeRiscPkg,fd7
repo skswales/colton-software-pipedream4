@@ -9,7 +9,7 @@
 
 IfThere $.Temp Then Else %CDir $.Temp
 
-Set pd$Disc $.Temp.PDManuals_20140215
+Set pd$Disc $.Temp.PDManuals_20141218
 | Remember to update RiscPkg.Control too
 
 X %Wipe <pd$Disc> ~cfr~v
@@ -22,6 +22,6 @@ settype <pd$Disc>.Apps.Manuals.PipeDream.Tutorial.index/html FAF
 
 | The one in RiscPkg is the useful one for the packaged docs
 delete <pd$Disc>.LICENSE
-delete <pd$Disc>.Make_TS
+delete <pd$Disc>.MakeRiscPkg
 
 Filer_OpenDir <pd$Disc>

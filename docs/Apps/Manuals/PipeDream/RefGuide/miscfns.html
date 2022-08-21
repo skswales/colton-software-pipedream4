@@ -30,8 +30,8 @@
 
 <h2>ALERT</h2>
 
-<p><code>ALERT(<span class="csguide-arg">"message"</span>,<span
-class="csguide-arg">"button1"</span>{,<span
+<p><code>ALERT(<span class="csguide-arg">"message"</span>, <span
+class="csguide-arg">"button1"</span> {, <span
 class="csguide-arg">"button2"</span>})</code></p>
 
 <p>Displays a dialogue box displaying <span
@@ -46,63 +46,6 @@ when <span class="csguide-arg">button2</span> is clicked.</p>
 
 <p>For use only with custom functions.</p>
 
-<h2>COL</h2>
-
-<p><code>COL</code></p>
-
-<p>Returns the number of the column containing the slot in which the function
-is evaluated.</p>
-
-
-
-<p><code>COL(<span class="csguide-arg">slot_ref</span>)</code></p>
-
-<p>Returns the number of the column of <span
-class="csguide-arg">slot_ref</span>.</p>
-
-<p>For example,</p>
-
-<p style="margin-left:2em;"><code>COL(A1)</code></p>
-
-<p>returns 1.</p>
-
-
-
-<p><code>COL(<span class="csguide-arg">range</span>)</code></p>
-
-<p>Returns the number of the starting column of <span
-class="csguide-arg">range</span>.</p>
-
-<p>For example,</p>
-
-<p style="margin-left:2em;"><code>COL(E1F10)</code></p>
-
-<p>returns 5.</p>
-
-<p>This is particularly useful if you have a name which is defined to be a
-range.</p>
-
-<p>For example, typing:</p>
-
-<p style="margin-left:2em;"><code>COL(apples)</code></p>
-
-<p>where <code>apples</code> is a name defined to be a range, returns the
-number of the first column of the range.</p>
-
-<h2>COLS</h2>
-
-<p><code>COLS(<span class="csguide-arg">array</span>)</code></p>
-
-<p>Returns the number of columns in <span class="csguide-arg">array</span>
-which may be a range or an array.</p>
-
-<p>For example,</p>
-
-<p style="margin-left:2em;"><code>COLS({1,2,3})</code></p>
-
-<p>returns 3.</p>
-
-<p>COLS with no parameters returns the number of columns in the file.</p>
 
 <h2>DEREF</h2>
 
@@ -122,10 +65,20 @@ which may be a range or an array.</p>
 
 <p>will always give <code>reference</code>.</p>
 
+
+<h2>FLIP</h2>
+
+<p><code>FLIP(<span class="csguide-arg">array</span>)</code></p>
+
+<p>Swaps rows about the middle row of an <i>array</i>.</p>
+
+<p>e.g. <code>{1;2;3}</code> becomes <code>{3;2;1}</code></p>
+
+
 <h2>IF</h2>
 
-<p><code>IF(<span class="csguide-arg">condition</span>,<span
-class="csguide-arg">then</span>,<span
+<p><code>IF(<span class="csguide-arg">condition</span>, <span
+class="csguide-arg">then</span>, <span
 class="csguide-arg">else</span>)</code></p>
 
 <p>If the value of <span class="csguide-arg">condition</span> is
@@ -138,11 +91,12 @@ class="csguide-arg">then</span>; otherwise, the function evaluates and returns
 <p style="margin-left:2em;"><code>IF(A1=3,"A1 is 3",IF(B1=3,"A1 is not 3, but
 B1 is","Neither slot is 3"))</code></p>
 
+
 <h2>INPUT</h2>
 
-<p><code>INPUT(<span class="csguide-arg">"message"</span>,<span
-class="csguide-arg">"name"</span>,<span
-class="csguide-arg">"button1"</span>{,<span
+<p><code>INPUT(<span class="csguide-arg">"message"</span>, <span
+class="csguide-arg">"name"</span>, <span
+class="csguide-arg">"button1"</span> {, <span
 class="csguide-arg">"button2"</span>})</code></p>
 
 <p>Displays a dialogue box displaying <span class="csguide-arg">message</span>
@@ -160,96 +114,6 @@ when <span class="csguide-arg">button2</span> is clicked.</p>
 
 <p>For use only with custom functions.</p>
 
-<h2>ROUND</h2>
-
-<p><code>ROUND(<span class="csguide-arg">number</span>,<span
-class="csguide-arg">x</span>)</code></p>
-
-<p>Rounds <span class="csguide-arg">number</span> to <span
-class="csguide-arg">x</span> places.</p>
-
-<p>For example:</p>
-
-<p style="margin-left:2em;"><code>ROUND(12345.678,2)</code></p>
-
-<p>returns 12345.68.</p>
-
-<p style="margin-left:2em;"><code>ROUND(12345.678,-2)</code></p>
-
-<p>returns 12300.</p>
-
-<p>ROUND can be used to help the inaccuracy problems often encountered in
-accountancy.</p>
-
-<p>For example, if you have 1.6 in slots A1 and A2, adding them together gives
-the result 3.2, but if all the numbers are being displayed without decimal
-places, it will look as though adding 2+2=3. This is because all calculations
-are performed to the greatest accuracy, but the display of numbers is rounded.
-If you use <code>ROUND(A1,0)</code> and <code>ROUND(A2,0)</code>, PipeDream
-will return 2 from both of these; therefore, what appears on the screen will
-look consistent even though it may not match the original data.</p>
-
-<p>The <span class="csguide-command">Snapshot</span> command is useful with
-ROUND. If you have a column of numbers and you want to have them rounded to a
-particular degree of precision:</p>
-
-<p>1. Insert a new column using <span class="csguide-key">Ctrl-EIC</span>.</p>
-
-<p>2. Use ROUND and the <span class="csguide-command">Replicate Down</span>
-command (<span class="csguide-key">Ctrl-BRD</span>) to create a new column of data.</p>
-
-<p>3. Mark the block and use the <span class="csguide-command">Snapshot</span>
-command (<span class="csguide-key">Ctrl-BSS</span>)to fix the numbers permanently in place.</p>
-
-<p>4. Use the new column in your calculations.</p>
-
-<h2>ROW</h2>
-
-<p><code>ROW</code></p>
-
-<p>Returns the number of the row containing the slot in which the function is
-evaluated.</p>
-
-
-
-<p><code>ROW(<span class="csguide-arg">slot_ref</span>)</code></p>
-
-<p>Returns the number of the row of <span
-class="csguide-arg">slot_ref</span>.</p>
-
-<p>For example,</p>
-
-<p style="margin-left:2em;"><code>ROW(A1)</code></p>
-
-<p>returns 1.</p>
-
-
-
-<p><code>ROW(<span class="csguide-arg">range</span>)</code></p>
-
-<p>Returns the number of the starting row of <span
-class="csguide-arg">range</span>.</p>
-
-<p>For example,</p>
-
-<p style="margin-left:2em;"><code>ROW(E3F10)</code></p>
-
-<p>returns 3.</p>
-
-<h2>ROWS</h2>
-
-<p>ROWS(<span class="csguide-arg">range</span>)</p>
-
-<p>Returns the number of rows in <span class="csguide-arg">range</span>. which
-may be a range or an array.</p>
-
-<p>For example,</p>
-
-<p style="margin-left:2em;"><code>ROWS (A1F1O)</code></p>
-
-<p>returns 10.</p>
-
-<p>ROWS with no parameters returns the number of rows in the file.</p>
 
 <h2>SET_NAME</h2>
 
@@ -259,9 +123,10 @@ class="csguide-arg">any</span>)</code></p>
 <p>Defines <span class="csguide-arg">name</span> to have the value of <span
 class="csguide-arg">any</span>.</p>
 
+
 <h2>SET_VALUE</h2>
 
-<p><code>SET_VALUE(<span class="csguide-arg">slot_ref</span>,<span
+<p><code>SET_VALUE(<span class="csguide-arg">slot_ref</span>, <span
 class="csguide-arg">any</span>)</code></p>
 
 <p>Sets the value of a number slot at <span
@@ -279,8 +144,7 @@ class="csguide-arg">any</span>.</p>
 <p>sets the value of slot E78 to "fred".</p>
 
 
-
-<p><code>SET_VALUE(<span class="csguide-arg">range</span>,<span
+<p><code>SET_VALUE(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">array</span>)</code></p>
 
 <p>Enables you to store an array (<span class="csguide-arg">array</span>) over
@@ -299,7 +163,25 @@ from spreadsheets and significantly reduce the amount of memory being used.</p>
 
 <p>Note that SET_VALUE is the only spreadsheet function which overwrites other
 slots. You need to use it carefully because any data you type into the target
-slots will be overwritten the next time that SET_VALUE recalculates.</p>
+slots will be overwritten the next time that SET_VALUE recalculates. SET_VALUE
+will not overwrite slots which contain formulae.</p>
+
+
+<h2>SORT</h2>
+
+<p><code>SORT(<span class="csguide-arg">array</span>, <span
+class="csguide-arg">number</span>)</code></p>
+
+<p>Sorts the rows in the <i>array</i> in ascending order based on the values
+in column <i>number</i>.</p>
+
+<p>For example, <code>SORT(B1E100,2)</code> sorts rows 1..100 based on the contents of
+column C.</p>
+
+<p>Use with <code>FLIP()</code> to sort in descending order.</p>
+
+<p>Use with <code>TRANSPOSE()</code> to sort by column based on values in rows.</p>
+
 
 <h2>TYPE</h2>
 
@@ -311,6 +193,7 @@ string.</p>
 <p>This will be one of <code>"number"</code>, <code>"text"</code>,
 <code>"array"</code>, <code>"reference"</code>, <code>"error"</code> or
 <code>"date"</code>.</p>
+
 
 <h2>VERSION</h2>
 

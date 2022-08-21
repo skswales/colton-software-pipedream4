@@ -1660,7 +1660,7 @@ InsertFont_fn(void)
         return;
         }
 
-    /* rjm adds this on 5.10.91.  Is it right? Does it need error message?, RCM & SKS 27.11.91 yes it does */
+    /* RJM adds this on 5.10.91.  Is it right? Does it need error message?, RCM & SKS 27.11.91 yes it does */
     if(!riscos_fonts)
         {
         reperr_null(create_error(ERR_SYSTEMFONTSELECTED));

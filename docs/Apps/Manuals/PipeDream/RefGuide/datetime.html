@@ -34,9 +34,9 @@ dates and times in number slots and do calculations with them.</p>
 <p>You can enter dates and times in one of three ways:</p>
 <ul>
   <li>typing the date in the form <code>25.12.1973</code> or
-    <code>25.12.73</code> or the time in the form <code>23:59:59</code></li>
+    <code>25.12.73</code> or the time in the form <code>23:59:59</code>;</li>
   <li>using the NOW function which gives the current date and time or the TODAY
-    function which gives the current date</li>
+    function which gives the current date;</li>
   <li>using the functions DATE and TIME.</li>
 </ul>
 
@@ -77,12 +77,32 @@ as:</p>
 
 
 
-<p>The date functions are shown below:</p>
+<p>The date and time functions are shown below:</p>
+
+<h2>AGE</h2>
+
+<p><code>AGE(<span class="csguide-arg">date1</span>, <span
+class="csguide-arg">date2</span>)</code></p>
+
+<p>Works out the difference between two dates in years and months.
+<span class="csguide-arg">date1</span> should be the more recent date,
+and <span class="csguide-arg">date2</span> the earlier date.</p>
+
+<P>For example:</P>
+
+<P>AGE(26.6.1994, 25.8.1982)</P>
+
+<P>returns the age as a number, expressed as 12.10, that is, someone aged 12
+years and 10 months.</P>
+
+<P>Use INT() to extract the number of years from the result and 100*(n-INT(n))
+to extract the number of months.</P>
+
 
 <h2>DATE</h2>
 
-<p><code>DATE(<span class="csguide-arg">year</span>,<span
-class="csguide-arg">month</span>,<span
+<p><code>DATE(<span class="csguide-arg">year</span>, <span
+class="csguide-arg">month</span>, <span
 class="csguide-arg">day</span>)</code></p>
 
 <p>Builds a date from individual components.</p>
@@ -92,6 +112,7 @@ class="csguide-arg">day</span>)</code></p>
 <p style="margin-left:2em;"><code>DATE(61,3,17)</code></p>
 
 <p>returns <code>17.03.1961</code>.</p>
+
 
 <h2>DATEVALUE</h2>
 
@@ -113,6 +134,7 @@ class="csguide-arg">day</span>)</code></p>
 
 <p>returns <code>17.3.1961 17:15</code>.</p>
 
+
 <h2>DAY</h2>
 
 <p><code>DAY(<span class="csguide-arg">date</span>)</code></p>
@@ -124,6 +146,15 @@ class="csguide-arg">day</span>)</code></p>
 <p style="margin-left:2em;"><code>DAY(17.3.61)</code></p>
 
 <p>returns <code>17</code>.</p>
+
+
+<h2>DAYNAME</h2>
+
+<p>DAYNAME(<span class="csguide-arg">number</span>|<span class="csguide-arg">date</span>)</p>
+
+<p>Returns a day name string corresponding to the <span class="csguide-arg">number</span> or
+<span class="csguide-arg">date</span> (where Sunday is day one).</p>
+
 
 <h2>HOUR</h2>
 
@@ -137,6 +168,7 @@ class="csguide-arg">day</span>)</code></p>
 
 <p>returns <code>18</code>.</p>
 
+
 <h2>MINUTE</h2>
 
 <p><code>MINUTE(<span class="csguide-arg">time</span>)</code></p>
@@ -149,6 +181,7 @@ class="csguide-arg">day</span>)</code></p>
 
 <p>returns <code>33</code>.</p>
 
+
 <h2>MONTH</h2>
 
 <p><code>MONTH(<span class="csguide-arg">date</span>)</code></p>
@@ -160,6 +193,7 @@ class="csguide-arg">day</span>)</code></p>
 <p style="margin-left:2em;">MONTH (2.9.91)</p>
 
 <p>returns 9</p>
+
 
 <h2>MONTHDAYS</h2>
 
@@ -174,12 +208,22 @@ class="csguide-arg">date</span>.</p>
 
 <p>returns <code>29</code>.</p>
 
+
+<h2>MONTHNAME</h2>
+
+<p>MONTHNAME(<span class="csguide-arg">number</span>|<span class="csguide-arg">date</span>)</p>
+
+<p>Returns a month name string corresponding to the <span class="csguide-arg">number</span> or
+<span class="csguide-arg">date</span> (where January is month one).</p>
+
+
 <h2>NOW</h2>
 
 <p><code>NOW</code></p>
 
 <p>Returns today's date and time, in the form <code>2.9.1991
 18:33:04</code>.</p>
+
 
 <h2>SECOND</h2>
 
@@ -193,10 +237,11 @@ class="csguide-arg">date</span>.</p>
 
 <p>returns 4.</p>
 
+
 <h2>TIME</h2>
 
-<p><code>TIME(<span class="csguide-arg">hour</span>,<span
-class="csguide-arg">minute</span>,<span
+<p><code>TIME(<span class="csguide-arg">hour</span>, <span
+class="csguide-arg">minute</span>, <span
 class="csguide-arg">second</span>)</code></p>
 
 <p>Builds a time from individual components.</p>
@@ -206,6 +251,7 @@ class="csguide-arg">second</span>)</code></p>
 <p style="margin-left:2em;"><code>TIME(18,33,04)</code></p>
 
 <p>returns <code>18:33:04</code>.</p>
+
 
 <h2>TIMEVALUE</h2>
 
@@ -219,11 +265,13 @@ class="csguide-arg">second</span>)</code></p>
 
 <p>returns <code>18:33:00</code>.</p>
 
+
 <h2>TODAY</h2>
 
 <p><code>TODAY</code></p>
 
 <p>Returns today's date, in the form <code>2.9.1991</code>.</p>
+
 
 <h2>WEEKDAY</h2>
 
@@ -237,6 +285,14 @@ is 1.</p>
 <p style="margin-left:2em;"><code>WEEKDAY(17.3.61)</code></p>
 
 <p>returns <code>6</code> (Friday).</p>
+
+
+<h2>WEEKNUMBER</h2>
+
+<p>WEEKNUMBER(<span class="csguide-arg">date</span>)</p>
+
+<p>Returns the week number corresponding to the <span class="csguide-arg">date</span>.</p>
+
 
 <h2>YEAR</h2>
 

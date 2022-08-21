@@ -19,10 +19,10 @@
 
 extern U32
 fast_strtoul(
-    _In_z_      PC_USTR p_u8_in,
-    _Out_opt_   P_USTR * endptr)
+    _In_z_      PC_U8Z p_u8_in,
+    _OutRef_opt_ P_P_U8Z endptr)
 {
-    PC_USTR p_u8 = p_u8_in;
+    PC_U8Z p_u8 = p_u8_in;
     int c = *p_u8++;
     BOOL ok = FALSE;
     BOOL overflowed = FALSE;
@@ -49,7 +49,7 @@ fast_strtoul(
         }
 
     if(endptr)
-        *endptr = ok ? (P_USTR) (p_u8 - 1) : (P_USTR) p_u8_in;
+        *endptr = ok ? (P_U8Z) (p_u8 - 1) : (P_U8Z) p_u8_in;
 
     if(overflowed)
         {
@@ -58,6 +58,15 @@ fast_strtoul(
         }
 
     return((hi << 16) | lo);
+}
+
+_Check_return_
+extern U32
+fast_ustrtoul(
+    _In_z_      PC_USTR ustr_in,
+    _OutRef_opt_ P_PC_USTR endptr)
+{
+    return(fast_strtoul((PC_U8Z) ustr_in, (P_P_U8Z) endptr));
 }
 
 /******************************************************************************

@@ -67,19 +67,19 @@ types for exec routines
 
 typedef void (* P_PROC_EXEC) (
     P_EV_DATA args[EV_MAX_ARGS],
-    _InVal_     S32 nargs,
+    _InVal_     S32 n_args,
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InRef_     PC_EV_SLR p_cur_slr);
 
 #define PROC_EXEC_PROTO(_p_proc_exec) \
 extern void _p_proc_exec( \
     P_EV_DATA args[EV_MAX_ARGS], \
-    _InVal_     S32 nargs, \
+    _InVal_     S32 n_args, \
     _InoutRef_  P_EV_DATA p_ev_data_res, \
     _InRef_     PC_EV_SLR p_cur_slr)
 
 #define exec_func_ignore_parms() \
-    (void) (IGNOREPARM(args), IGNOREPARM_InVal_(nargs), IGNOREPARM_InoutRef_(p_ev_data_res), IGNOREPARM_InRef_(p_cur_slr))
+    (void) (IGNOREPARM(args), IGNOREPARM_InVal_(n_args), IGNOREPARM_InoutRef_(p_ev_data_res), IGNOREPARM_InRef_(p_cur_slr))
 
 /* symbol information */
 
@@ -172,7 +172,7 @@ table of RPN items
 typedef struct RPNDEF
 {
     EV_IDNO     rpn_type;
-    S8          nargs;
+    S8          n_args;
     U8          category;
     FUN_PARMS   parms;
     P_PROC_EXEC p_proc_exec;
@@ -378,7 +378,7 @@ typedef struct STAT_BLOCK
     F64 parm;
     F64 parm1;
     F64 result1;
-    EV_DATA result_data;
+    EV_DATA running_data;
 }
 STAT_BLOCK, * P_STAT_BLOCK;
 
@@ -490,7 +490,7 @@ STACK_LOOKUP, * P_STACK_LOOKUP;
 typedef struct STACK_EXECUTING_CUSTOM
 {
     S32 stack_base;
-    S32 nargs;
+    S32 n_args;
     EV_NAMEID custom_num;
     EV_SLR custom_slot;
     EV_SLR next_slot;
@@ -504,7 +504,7 @@ STACK_EXECUTING_CUSTOM, * P_STACK_EXECUTING_CUSTOM;
 typedef struct STACK_PROCESSING_ARRAY
 {
     S32 stack_base;
-    S32 nargs;
+    S32 n_args;
     P_PROC_EXEC exec;
     S32 xpos;
     S32 ypos;
@@ -687,7 +687,7 @@ ev_exec.c external functions
 */
 
 PROC_EXEC_PROTO(c_uplus);
-PROC_EXEC_PROTO(c_umi);
+PROC_EXEC_PROTO(c_uminus);
 PROC_EXEC_PROTO(c_not);
 
 PROC_EXEC_PROTO(c_and);
@@ -705,114 +705,34 @@ PROC_EXEC_PROTO(c_lt);
 PROC_EXEC_PROTO(c_lteq);
 PROC_EXEC_PROTO(c_neq);
 
-PROC_EXEC_PROTO(c_age);
-PROC_EXEC_PROTO(c_avg);
-
-PROC_EXEC_PROTO(c_beta);
-PROC_EXEC_PROTO(c_bin);
-PROC_EXEC_PROTO(c_binom);
-
-PROC_EXEC_PROTO(c_char);
-PROC_EXEC_PROTO(c_choose);
-PROC_EXEC_PROTO(c_code);
-PROC_EXEC_PROTO(c_col);
-PROC_EXEC_PROTO(c_cols);
-PROC_EXEC_PROTO(c_combin);
-PROC_EXEC_PROTO(c_count);
-PROC_EXEC_PROTO(c_cterm);
-
-PROC_EXEC_PROTO(c_date);
-PROC_EXEC_PROTO(c_datevalue);
-PROC_EXEC_PROTO(c_day);
-PROC_EXEC_PROTO(c_dayname);
-PROC_EXEC_PROTO(c_ddb);
-PROC_EXEC_PROTO(c_deref);
-
-PROC_EXEC_PROTO(c_error);
-PROC_EXEC_PROTO(c_exact);
-
-PROC_EXEC_PROTO(c_fact);
-PROC_EXEC_PROTO(c_find);
-PROC_EXEC_PROTO(c_flip);
-PROC_EXEC_PROTO(c_formula_text);
-PROC_EXEC_PROTO(c_fv);
-
-PROC_EXEC_PROTO(c_gammaln);
-
-PROC_EXEC_PROTO(c_hour);
-
 PROC_EXEC_PROTO(c_if);
-PROC_EXEC_PROTO(c_index);
+
+/*
+financial functions that use array processing
+*/
+
 PROC_EXEC_PROTO(c_irr);
-
-PROC_EXEC_PROTO(c_join);
-
-PROC_EXEC_PROTO(c_left);
-PROC_EXEC_PROTO(c_length);
-PROC_EXEC_PROTO(c_lower);
-
-PROC_EXEC_PROTO(c_max);
-PROC_EXEC_PROTO(c_min);
-PROC_EXEC_PROTO(c_median);
-PROC_EXEC_PROTO(c_mid);
-PROC_EXEC_PROTO(c_minute);
 PROC_EXEC_PROTO(c_mirr);
-PROC_EXEC_PROTO(c_month);
-PROC_EXEC_PROTO(c_monthdays);
-PROC_EXEC_PROTO(c_monthname);
-
-PROC_EXEC_PROTO(c_now);
 PROC_EXEC_PROTO(c_npv);
 
-PROC_EXEC_PROTO(c_permut);
-PROC_EXEC_PROTO(c_pmt);
-PROC_EXEC_PROTO(c_proper);
-PROC_EXEC_PROTO(c_pv);
+/*
+mathematical functions that use array processing
+*/
 
-PROC_EXEC_PROTO(c_rand);
-PROC_EXEC_PROTO(c_rank);
-PROC_EXEC_PROTO(c_rate);
-PROC_EXEC_PROTO(c_replace);
-PROC_EXEC_PROTO(c_rept);
-PROC_EXEC_PROTO(c_result);
-PROC_EXEC_PROTO(c_reverse);
-PROC_EXEC_PROTO(c_right);
-PROC_EXEC_PROTO(c_round);
-PROC_EXEC_PROTO(c_row);
-PROC_EXEC_PROTO(c_rows);
+PROC_EXEC_PROTO(c_sum);
 
-PROC_EXEC_PROTO(c_second);
-PROC_EXEC_PROTO(c_set_name);
-PROC_EXEC_PROTO(c_setvalue);
-PROC_EXEC_PROTO(c_sln);
-PROC_EXEC_PROTO(c_sort);
-PROC_EXEC_PROTO(c_spearman);
+/*
+statistical functions that use array processing
+*/
+
+PROC_EXEC_PROTO(c_avg);
+PROC_EXEC_PROTO(c_count);
+PROC_EXEC_PROTO(c_max);
+PROC_EXEC_PROTO(c_min);
 PROC_EXEC_PROTO(c_std);
 PROC_EXEC_PROTO(c_stdp);
-PROC_EXEC_PROTO(c_string);
-PROC_EXEC_PROTO(c_sum);
-PROC_EXEC_PROTO(c_syd);
-
-PROC_EXEC_PROTO(c_term);
-PROC_EXEC_PROTO(c_text);
-PROC_EXEC_PROTO(c_time);
-PROC_EXEC_PROTO(c_timevalue);
-PROC_EXEC_PROTO(c_today);
-PROC_EXEC_PROTO(c_trim);
-PROC_EXEC_PROTO(c_type);
-
-PROC_EXEC_PROTO(c_upper);
-
-PROC_EXEC_PROTO(c_value);
 PROC_EXEC_PROTO(c_var);
 PROC_EXEC_PROTO(c_varp);
-PROC_EXEC_PROTO(c_version);
-
-PROC_EXEC_PROTO(c_weekday);
-PROC_EXEC_PROTO(c_weeknumber);
-PROC_EXEC_PROTO(c_while);
-
-PROC_EXEC_PROTO(c_year);
 
 extern void
 dbase_sub_function(
@@ -850,6 +770,135 @@ stat_block_init(
     F64 parm1);
 
 /*
+ev_func.c external functions
+*/
+
+/*
+lookup and reference functions
+*/
+
+PROC_EXEC_PROTO(c_choose);
+PROC_EXEC_PROTO(c_col);
+PROC_EXEC_PROTO(c_cols);
+/* NO c_hlookup: LOOKUP_HLOOKUP */
+PROC_EXEC_PROTO(c_index);
+/* NO c_lookup: LOOKUP_LOOKUP */
+/* NO c_match: LOOKUP_MATCH */
+PROC_EXEC_PROTO(c_row);
+PROC_EXEC_PROTO(c_rows);
+/* NO c_vlookup: LOOKUP_VLOOKUP */
+
+/*
+miscellaneous functions
+*/
+
+PROC_EXEC_PROTO(c_deref);
+PROC_EXEC_PROTO(c_flip);
+PROC_EXEC_PROTO(c_set_name);
+PROC_EXEC_PROTO(c_setvalue);
+PROC_EXEC_PROTO(c_sort);
+PROC_EXEC_PROTO(c_type);
+PROC_EXEC_PROTO(c_version);
+
+/*
+ev_fndat.c external functions (date and time)
+*/
+
+PROC_EXEC_PROTO(c_age);
+PROC_EXEC_PROTO(c_date);
+PROC_EXEC_PROTO(c_datevalue);
+PROC_EXEC_PROTO(c_day);
+PROC_EXEC_PROTO(c_dayname);
+PROC_EXEC_PROTO(c_hour);
+PROC_EXEC_PROTO(c_minute);
+PROC_EXEC_PROTO(c_month);
+PROC_EXEC_PROTO(c_monthdays);
+PROC_EXEC_PROTO(c_monthname);
+PROC_EXEC_PROTO(c_now);
+PROC_EXEC_PROTO(c_second);
+PROC_EXEC_PROTO(c_time);
+PROC_EXEC_PROTO(c_timevalue);
+PROC_EXEC_PROTO(c_today);
+PROC_EXEC_PROTO(c_weekday);
+PROC_EXEC_PROTO(c_weeknumber);
+PROC_EXEC_PROTO(c_year);
+
+/*
+NO ev_fndba.c (database)
+*/
+
+/* NO c_davg: DBASE_AVG */
+/* NO c_dcount: DBASE_COUNT */
+/* NO c_dcounta: DBASE_COUNTA */
+/* NO c_dmax: DBASE_MAX */
+/* NO c_dmin: DBASE_MIN */
+/* NO c_dproduct: DBASE_PRODUCT */
+/* NO c_dstd: DBASE_STD */
+/* NO c_dstdp: DBASE_STDP */
+/* NO c_dsum: DBASE_SUM */
+/* NO c_dvar: DBASE_VAR */
+/* NO c_dvarp: DBASE_VARP */
+
+/*
+ev_fnfin.c external functions (financial)
+*/
+
+PROC_EXEC_PROTO(c_cterm);
+PROC_EXEC_PROTO(c_ddb);
+PROC_EXEC_PROTO(c_fv);
+PROC_EXEC_PROTO(c_pmt);
+PROC_EXEC_PROTO(c_pv);
+PROC_EXEC_PROTO(c_rate);
+PROC_EXEC_PROTO(c_sln);
+PROC_EXEC_PROTO(c_syd);
+PROC_EXEC_PROTO(c_term);
+
+/*
+ev_fnsta.c external functions (statistical)
+*/
+
+PROC_EXEC_PROTO(c_beta);
+PROC_EXEC_PROTO(c_bin);
+PROC_EXEC_PROTO(c_combin);
+PROC_EXEC_PROTO(c_gammaln);
+PROC_EXEC_PROTO(c_grand);
+PROC_EXEC_PROTO(c_growth);
+PROC_EXEC_PROTO(c_linest);
+PROC_EXEC_PROTO(c_listcount);
+PROC_EXEC_PROTO(c_logest);
+PROC_EXEC_PROTO(c_median);
+PROC_EXEC_PROTO(c_permut);
+PROC_EXEC_PROTO(c_rand);
+PROC_EXEC_PROTO(c_rank);
+PROC_EXEC_PROTO(c_spearman);
+PROC_EXEC_PROTO(c_trend);
+
+/*
+ev_fnstr.c external functions (string)
+*/
+
+PROC_EXEC_PROTO(c_char);
+PROC_EXEC_PROTO(c_code);
+PROC_EXEC_PROTO(c_exact);
+PROC_EXEC_PROTO(c_find);
+PROC_EXEC_PROTO(c_formula_text);
+PROC_EXEC_PROTO(c_join);
+PROC_EXEC_PROTO(c_left);
+PROC_EXEC_PROTO(c_length);
+PROC_EXEC_PROTO(c_lower);
+PROC_EXEC_PROTO(c_mid);
+PROC_EXEC_PROTO(c_proper);
+PROC_EXEC_PROTO(c_replace);
+PROC_EXEC_PROTO(c_rept);
+PROC_EXEC_PROTO(c_reverse);
+PROC_EXEC_PROTO(c_right);
+PROC_EXEC_PROTO(c_string);
+PROC_EXEC_PROTO(c_text);
+PROC_EXEC_PROTO(c_trim);
+PROC_EXEC_PROTO(c_upper);
+PROC_EXEC_PROTO(c_value);
+
+/*
 ev_help.c external functions
 */
 
@@ -874,7 +923,7 @@ array_expand(
 extern EV_IDNO
 array_range_index(
     P_EV_DATA p_ev_data_out,
-    P_EV_DATA p_ev_data_in,
+    _InRef_     PC_EV_DATA p_ev_data_in,
     S32 x,
     S32 y,
     EV_TYPE types);
@@ -882,8 +931,8 @@ array_range_index(
 extern void
 array_range_mono_index(
     P_EV_DATA p_ev_data_out,
-    P_EV_DATA p_ev_data_in,
-    S32 ix,
+    _InRef_     PC_EV_DATA p_ev_data_in,
+    S32 mono_x,
     EV_TYPE types);
 
 extern void
@@ -970,20 +1019,50 @@ two_nums_times(
 ev_math.c external functions
 */
 
+extern void
+round_common(
+    P_EV_DATA args[EV_MAX_ARGS],
+    _InVal_     S32 n_args,
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InVal_     U32 rpn_did_num);
+
+extern void
+product_between(
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InVal_     S32 start,
+    _InVal_     S32 end);
+
+_Check_return_
+extern STATUS
+status_from_errno(void);
+
+/*
+mathematical functions
+*/
+
 PROC_EXEC_PROTO(c_abs);
-PROC_EXEC_PROTO(c_acosh);
-PROC_EXEC_PROTO(c_acosec);
-PROC_EXEC_PROTO(c_acosech);
-PROC_EXEC_PROTO(c_acot);
-PROC_EXEC_PROTO(c_acoth);
-PROC_EXEC_PROTO(c_acos);
-PROC_EXEC_PROTO(c_asec);
-PROC_EXEC_PROTO(c_asech);
-PROC_EXEC_PROTO(c_asinh);
-PROC_EXEC_PROTO(c_asin);
-PROC_EXEC_PROTO(c_atan_2);
-PROC_EXEC_PROTO(c_atanh);
-PROC_EXEC_PROTO(c_atan);
+PROC_EXEC_PROTO(c_exp);
+PROC_EXEC_PROTO(c_fact);
+PROC_EXEC_PROTO(c_int);
+PROC_EXEC_PROTO(c_ln);
+PROC_EXEC_PROTO(c_log);
+PROC_EXEC_PROTO(c_mod);
+PROC_EXEC_PROTO(c_round);
+PROC_EXEC_PROTO(c_sgn);
+PROC_EXEC_PROTO(c_sqr);
+
+/*
+matrix functions
+*/
+
+PROC_EXEC_PROTO(c_m_determ);
+PROC_EXEC_PROTO(c_m_inverse);
+PROC_EXEC_PROTO(c_m_mult);
+PROC_EXEC_PROTO(c_transpose);
+
+/*
+ev_mcpx.c external functions (complex number)
+*/
 
 PROC_EXEC_PROTO(c_c_acos);
 PROC_EXEC_PROTO(c_c_acosh);
@@ -1019,49 +1098,38 @@ PROC_EXEC_PROTO(c_c_tan);
 PROC_EXEC_PROTO(c_c_tanh);
 PROC_EXEC_PROTO(c_c_theta);
 
+/*
+ev_mtri.c external functions (trigonometrical)
+*/
+
+PROC_EXEC_PROTO(c_acosh);
+PROC_EXEC_PROTO(c_acosec);
+PROC_EXEC_PROTO(c_acosech);
+PROC_EXEC_PROTO(c_acot);
+PROC_EXEC_PROTO(c_acoth);
+PROC_EXEC_PROTO(c_acos);
+PROC_EXEC_PROTO(c_asec);
+PROC_EXEC_PROTO(c_asech);
+PROC_EXEC_PROTO(c_asinh);
+PROC_EXEC_PROTO(c_asin);
+PROC_EXEC_PROTO(c_atan_2);
+PROC_EXEC_PROTO(c_atanh);
+PROC_EXEC_PROTO(c_atan);
 PROC_EXEC_PROTO(c_cos);
 PROC_EXEC_PROTO(c_cosh);
 PROC_EXEC_PROTO(c_cosec);
 PROC_EXEC_PROTO(c_cosech);
 PROC_EXEC_PROTO(c_cot);
 PROC_EXEC_PROTO(c_coth);
-
 PROC_EXEC_PROTO(c_deg);
-
-PROC_EXEC_PROTO(c_exp);
-
-PROC_EXEC_PROTO(c_grand);
-PROC_EXEC_PROTO(c_growth);
-
-PROC_EXEC_PROTO(c_int);
-
-PROC_EXEC_PROTO(c_linest);
-PROC_EXEC_PROTO(c_listcount);
-PROC_EXEC_PROTO(c_ln);
-PROC_EXEC_PROTO(c_log);
-PROC_EXEC_PROTO(c_logest);
-
-PROC_EXEC_PROTO(c_m_determ);
-PROC_EXEC_PROTO(c_m_inverse);
-PROC_EXEC_PROTO(c_m_mult);
-
-PROC_EXEC_PROTO(c_mod);
-
 PROC_EXEC_PROTO(c_pi);
-
 PROC_EXEC_PROTO(c_rad);
-
 PROC_EXEC_PROTO(c_sec);
 PROC_EXEC_PROTO(c_sech);
 PROC_EXEC_PROTO(c_sin);
 PROC_EXEC_PROTO(c_sinh);
-PROC_EXEC_PROTO(c_sgn);
-PROC_EXEC_PROTO(c_sqr);
-
 PROC_EXEC_PROTO(c_tan);
 PROC_EXEC_PROTO(c_tanh);
-PROC_EXEC_PROTO(c_transpose);
-PROC_EXEC_PROTO(c_trend);
 
 /*
 ev_name.c

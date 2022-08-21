@@ -375,7 +375,7 @@ gr_chart_save_chart_without_dialog_checking_xfersend(
         p_gr_diag = cp->core.p_gr_diag;
         cp->core.p_gr_diag = NULL;
 
-        /* winge about proper error */
+        /* whinge about proper error */
         gr_chart_save_chart_winge(GR_CHART_MSG_CHARTSAVE_ERROR, res);
 
         res = gr_chart_save_chart_without_dialog_checking_xfersend_core(chp, filename, check_xfersend);

@@ -21,7 +21,7 @@
 
 /******************************************************************************
 *
-* unary plus
+* NUMBER unary plus
 *
 ******************************************************************************/
 
@@ -37,11 +37,11 @@ PROC_EXEC_PROTO(c_uplus)
 
 /******************************************************************************
 *
-* unary minus
+* NUMBER unary minus
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_umi)
+PROC_EXEC_PROTO(c_uminus)
 {
     exec_func_ignore_parms();
 
@@ -53,7 +53,7 @@ PROC_EXEC_PROTO(c_umi)
 
 /******************************************************************************
 *
-* unary not
+* BOOLEAN unary not
 *
 ******************************************************************************/
 
@@ -66,7 +66,7 @@ PROC_EXEC_PROTO(c_not)
 
 /******************************************************************************
 *
-* binary and
+* BOOLEAN binary and
 * res = a && b
 *
 ******************************************************************************/
@@ -80,7 +80,7 @@ PROC_EXEC_PROTO(c_and)
 
 /******************************************************************************
 *
-* binary multiplication
+* VALUE binary multiplication
 * res = a*b
 *
 ******************************************************************************/
@@ -94,7 +94,7 @@ PROC_EXEC_PROTO(c_mul)
 
 /******************************************************************************
 *
-* binary addition
+* VALUE binary addition
 * res = a+b
 *
 ******************************************************************************/
@@ -179,7 +179,7 @@ PROC_EXEC_PROTO(c_add)
 
 /******************************************************************************
 *
-* binary subtraction
+* VALUE binary subtraction
 * res = a-b
 *
 ******************************************************************************/
@@ -260,7 +260,7 @@ PROC_EXEC_PROTO(c_sub)
 
 /******************************************************************************
 *
-* binary division
+* VALUE binary division
 * res = a/b
 *
 ******************************************************************************/
@@ -274,7 +274,7 @@ PROC_EXEC_PROTO(c_div)
 
 /******************************************************************************
 *
-* res = a ^ b
+* NUMBER res = a ^ b
 *
 ******************************************************************************/
 
@@ -311,7 +311,7 @@ PROC_EXEC_PROTO(c_power)
 
 /******************************************************************************
 *
-* res = a|b
+* BOOLEAN res = a|b
 *
 ******************************************************************************/
 
@@ -324,7 +324,7 @@ PROC_EXEC_PROTO(c_or)
 
 /******************************************************************************
 *
-* res = a==b
+* BOOLEAN res = a==b
 *
 ******************************************************************************/
 
@@ -337,7 +337,7 @@ PROC_EXEC_PROTO(c_eq)
 
 /******************************************************************************
 *
-* res = a>b
+* BOOLEAN res = a>b
 *
 ******************************************************************************/
 
@@ -350,7 +350,7 @@ PROC_EXEC_PROTO(c_gt)
 
 /******************************************************************************
 *
-* res = a>=b
+* BOOLEAN res = a>=b
 *
 ******************************************************************************/
 
@@ -363,7 +363,7 @@ PROC_EXEC_PROTO(c_gteq)
 
 /******************************************************************************
 *
-* res = a<b
+* BOOLEAN res = a<b
 *
 ******************************************************************************/
 
@@ -376,7 +376,7 @@ PROC_EXEC_PROTO(c_lt)
 
 /******************************************************************************
 *
-* res = a<=b
+* BOOLEAN res = a<=b
 *
 ******************************************************************************/
 
@@ -389,7 +389,7 @@ PROC_EXEC_PROTO(c_lteq)
 
 /******************************************************************************
 *
-* res = a!=b
+* BOOLEAN res = a!=b
 *
 ******************************************************************************/
 
@@ -402,7 +402,7 @@ PROC_EXEC_PROTO(c_neq)
 
 /******************************************************************************
 *
-* if(num, true_res, false_res)
+* VALUE if(num, true_res, false_res)
 *
 ******************************************************************************/
 
@@ -412,7 +412,7 @@ PROC_EXEC_PROTO(c_if)
 
     if(args[0]->arg.boolean)
         ss_data_resource_copy(p_ev_data_res, args[1]);
-    else if(nargs > 2)
+    else if(n_args > 2)
         ss_data_resource_copy(p_ev_data_res, args[2]);
     else
         ev_data_set_error(p_ev_data_res, EVAL_ERR_NA);
@@ -474,8 +474,7 @@ poke_slot(
 
 /******************************************************************************
 *
-* set the value of a slot
-* set_value(slr/range, value)
+* VALUE set_value(slr/range, value) - set the value of a slot
 *
 ******************************************************************************/
 
@@ -578,7 +577,7 @@ range-ey functions
 static void
 args_array_range_proc(
     P_EV_DATA args[EV_MAX_ARGS],
-    S32 nargs,
+    S32 n_args,
     P_EV_DATA p_ev_data_res,
     EV_IDNO function_id);
 
@@ -641,7 +640,7 @@ PROC_EXEC_PROTO(c_avg)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DAVG);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DAVG);
 }
 
 /******************************************************************************
@@ -654,20 +653,7 @@ PROC_EXEC_PROTO(c_count)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DCOUNT);
-}
-
-/******************************************************************************
-*
-* error(n)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_error)
-{
-    exec_func_ignore_parms();
-
-    ev_data_set_error(p_ev_data_res, create_error(EVAL_ERR_NOTIMPLEMENTED));
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DCOUNT);
 }
 
 /******************************************************************************
@@ -722,7 +708,7 @@ PROC_EXEC_PROTO(c_max)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DMAX);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DMAX);
 }
 
 /******************************************************************************
@@ -735,7 +721,7 @@ PROC_EXEC_PROTO(c_min)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DMIN);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DMIN);
 }
 
 /******************************************************************************
@@ -780,7 +766,7 @@ PROC_EXEC_PROTO(c_std)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DSTD);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DSTD);
 }
 
 /******************************************************************************
@@ -793,7 +779,7 @@ PROC_EXEC_PROTO(c_stdp)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DSTDP);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DSTDP);
 }
 
 /******************************************************************************
@@ -806,7 +792,7 @@ PROC_EXEC_PROTO(c_sum)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DSUM);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DSUM);
 }
 
 /******************************************************************************
@@ -819,7 +805,7 @@ PROC_EXEC_PROTO(c_var)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DVAR);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DVAR);
 }
 
 /******************************************************************************
@@ -832,7 +818,7 @@ PROC_EXEC_PROTO(c_varp)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DVARP);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DVARP);
 }
 
 /******************************************************************************
@@ -844,7 +830,7 @@ PROC_EXEC_PROTO(c_varp)
 static void
 args_array_range_proc(
     P_EV_DATA args[EV_MAX_ARGS],
-    S32 nargs,
+    S32 n_args,
     P_EV_DATA p_ev_data_res,
     EV_IDNO function_id)
 {
@@ -853,7 +839,7 @@ args_array_range_proc(
 
     stat_block_init(&stb, function_id, 0, 0);
 
-    for(i = 0; i < nargs; ++i)
+    for(i = 0; i < n_args; ++i)
         array_range_proc(&stb, args[i]);
 
     array_range_proc_finish(p_ev_data_res, &stb);
@@ -936,7 +922,8 @@ array_range_proc_array(
 /*
 * SKS 27oct96 purchased from Fireworkz
 *
-* helper routine for std/var(p) which accounts for small errors
+* helper routine for std/var(p)
+* which accounts for small errors
 * in our friendly floating point
 */
 
@@ -945,11 +932,12 @@ array_range_proc_stdvar_help(
     P_STAT_BLOCK stbp,
     BOOL n_1)
 {
-    F64 n_sum_x_2 = stbp->temp * (F64) stbp->count;
-    F64 sum_2 = stbp->result_data.arg.fp * stbp->result_data.arg.fp;
-    F64 res = n_sum_x_2 - sum_2;
+    F64 n_sum_x2 = stbp->temp * (F64) stbp->count;
+    F64 sum_2 = stbp->running_data.arg.fp * stbp->running_data.arg.fp;
+    F64 res = n_sum_x2 - sum_2;
 
     res = (res < 0.0) ? 0.0 : res; /* ensure we never go gaga */
+
     res /= (F64) stbp->count;
     res /= n_1 ? (F64) stbp->count - 1.0 : (F64) stbp->count;
 
@@ -974,10 +962,10 @@ array_range_proc_finish(
     case RPN_FNF_DAVG:
         if(stbp->count)
         {
-            if(stbp->result_data.did_num != RPN_DAT_REAL)
-                ev_data_set_real(p_ev_data, (F64) stbp->result_data.arg.integer / (F64) stbp->count);
+            if(stbp->running_data.did_num != RPN_DAT_REAL)
+                ev_data_set_real(p_ev_data, (F64) stbp->running_data.arg.integer / (F64) stbp->count);
             else
-                ev_data_set_real(p_ev_data, stbp->result_data.arg.fp / (F64) stbp->count);
+                ev_data_set_real(p_ev_data, stbp->running_data.arg.fp / (F64) stbp->count);
         }
         break;
 
@@ -986,16 +974,16 @@ array_range_proc_finish(
     case RPN_FNF_DSUM:
         if(stbp->count)
         {
-            switch(stbp->result_data.did_num)
+            switch(stbp->running_data.did_num)
             {
             case RPN_DAT_WORD8:
             case RPN_DAT_WORD16:
             case RPN_DAT_WORD32:
-                ev_data_set_integer(p_ev_data, stbp->result_data.arg.integer);
+                ev_data_set_integer(p_ev_data, stbp->running_data.arg.integer);
                 break;
 
             default:
-                *p_ev_data = stbp->result_data;
+                *p_ev_data = stbp->running_data;
                 break;
             }
         }
@@ -1031,7 +1019,7 @@ array_range_proc_finish(
 
     case RPN_FNF_NPV:
         if(stbp->count)
-            ev_data_set_real(p_ev_data, stbp->result_data.arg.fp);
+            ev_data_set_real(p_ev_data, stbp->running_data.arg.fp);
         break;
 
     case RPN_FNF_MIRR:
@@ -1040,7 +1028,7 @@ array_range_proc_finish(
             ev_data_set_real(p_ev_data,
                              pow(-stbp->result1
                                 * pow(stbp->parm1, (F64) stbp->count1)
-                                / (stbp->result_data.arg.fp * stbp->parm),
+                                / (stbp->running_data.arg.fp * stbp->parm),
                                 1.0 / ((F64) stbp->count_a - 1.0)
                                ) - 1.0);
         }
@@ -1083,7 +1071,7 @@ array_range_proc_item(
             break;
         }
 
-        if(two_nums_type_match(p_ev_data, &stbp->result_data, size_worry) == TWO_INTS)
+        if(two_nums_type_match(p_ev_data, &stbp->running_data, size_worry) == TWO_INTS)
         {
             switch(stbp->function_id)
             {
@@ -1091,22 +1079,22 @@ array_range_proc_item(
             case RPN_FNF_DSUM:
                 /* only dealing with individual narrower integer types here but SKS shows this may eventually overflow WORD16 */
                 if(!stbp->count)
-                    ev_data_set_integer(&stbp->result_data, p_ev_data->arg.integer);
+                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer);
                 else
-                    ev_data_set_integer(&stbp->result_data, p_ev_data->arg.integer + stbp->result_data.arg.integer);
-                trace_1(TRACE_MODULE_EVAL, "DSUM result now int: %d", stbp->result_data.arg.integer);
+                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer + stbp->running_data.arg.integer);
+                trace_1(TRACE_MODULE_EVAL, "DSUM result now int: %d", stbp->running_data.arg.integer);
                 int_done = 1;
                 break;
 
             case RPN_FNF_DMAX:
-                if(!stbp->count || (p_ev_data->arg.integer > stbp->result_data.arg.integer))
-                    ev_data_set_integer(&stbp->result_data, p_ev_data->arg.integer);
+                if(!stbp->count || (p_ev_data->arg.integer > stbp->running_data.arg.integer))
+                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer);
                 int_done = 1;
                 break;
 
             case RPN_FNF_DMIN:
-                if(!stbp->count || (p_ev_data->arg.integer < stbp->result_data.arg.integer))
-                    ev_data_set_integer(&stbp->result_data, p_ev_data->arg.integer);
+                if(!stbp->count || (p_ev_data->arg.integer < stbp->running_data.arg.integer))
+                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer);
                 int_done = 1;
                 break;
             }
@@ -1118,26 +1106,26 @@ array_range_proc_item(
             {
             case RPN_FNF_DAVG:
             case RPN_FNF_DSUM:
-                if(stbp->result_data.did_num == RPN_DAT_REAL)
+                if(stbp->running_data.did_num == RPN_DAT_REAL)
                 {
                     if(!stbp->count)
-                        stbp->result_data.arg.fp  = p_ev_data->arg.fp;
+                        stbp->running_data.arg.fp  = p_ev_data->arg.fp;
                     else
-                        stbp->result_data.arg.fp += p_ev_data->arg.fp;
-                    trace_1(TRACE_MODULE_EVAL, "DSUM result now float: %g", stbp->result_data.arg.fp);
+                        stbp->running_data.arg.fp += p_ev_data->arg.fp;
+                    trace_1(TRACE_MODULE_EVAL, "DSUM result now float: %g", stbp->running_data.arg.fp);
                 }
                 else
                     array_range_proc_item_add(stbp, p_ev_data);
                 break;
 
             case RPN_FNF_DMAX:
-                if(!stbp->count || (p_ev_data->arg.fp > stbp->result_data.arg.fp))
-                    stbp->result_data.arg.fp = p_ev_data->arg.fp;
+                if(!stbp->count || (p_ev_data->arg.fp > stbp->running_data.arg.fp))
+                    stbp->running_data.arg.fp = p_ev_data->arg.fp;
                 break;
 
             case RPN_FNF_DMIN:
-                if(!stbp->count || (p_ev_data->arg.fp < stbp->result_data.arg.fp))
-                    stbp->result_data.arg.fp = p_ev_data->arg.fp;
+                if(!stbp->count || (p_ev_data->arg.fp < stbp->running_data.arg.fp))
+                    stbp->running_data.arg.fp = p_ev_data->arg.fp;
                 break;
 
             case RPN_FNF_DSTD:
@@ -1149,20 +1137,20 @@ array_range_proc_item(
 
                 if(!stbp->count)
                 {
-                    stbp->temp               = x2;
-                    stbp->result_data.arg.fp = p_ev_data->arg.fp;
+                    stbp->temp = x2;
+                    stbp->running_data.arg.fp = p_ev_data->arg.fp;
                 }
                 else
                 {
-                    stbp->temp               += x2;
-                    stbp->result_data.arg.fp += p_ev_data->arg.fp;
+                    stbp->temp += x2;
+                    stbp->running_data.arg.fp += p_ev_data->arg.fp;
                 }
 
                 break;
                 }
 
             case RPN_FNF_NPV:
-                npv_item(p_ev_data, &stbp->count, &stbp->parm, &stbp->temp, &stbp->result_data.arg.fp);
+                npv_item(p_ev_data, &stbp->count, &stbp->parm, &stbp->temp, &stbp->running_data.arg.fp);
                 stbp->count -= 1;
                 break;
 
@@ -1170,7 +1158,7 @@ array_range_proc_item(
                 if(p_ev_data->arg.fp >= 0)
                     npv_item(p_ev_data, &stbp->count1, &stbp->parm1, &stbp->temp1, &stbp->result1);
                 else
-                    npv_item(p_ev_data, &stbp->count,  &stbp->parm,  &stbp->temp,  &stbp->result_data.arg.fp);
+                    npv_item(p_ev_data, &stbp->count,  &stbp->parm,  &stbp->temp,  &stbp->running_data.arg.fp);
                 stbp->count -= 1;
                 break;
 
@@ -1226,7 +1214,7 @@ array_range_proc_item_add(
     P_EV_DATA p_ev_data)
 {
     if(!stbp->count)
-        stbp->result_data = *p_ev_data;
+        stbp->running_data = *p_ev_data;
     else
     {
         P_EV_DATA args[2];
@@ -1234,11 +1222,11 @@ array_range_proc_item_add(
         EV_SLR dummy_slr;
 
         args[0] = p_ev_data;
-        args[1] = &stbp->result_data;
+        args[1] = &stbp->running_data;
 
         c_add(args, 2, &result_data, &dummy_slr);
 
-        stbp->result_data = result_data;
+        stbp->running_data = result_data;
     }
 }
 
@@ -1710,12 +1698,12 @@ stat_block_init(
     case RPN_FNF_DMIN:
     case RPN_FNF_DSUM:
     case RPN_FNF_DAVG:
-        stbp->result_data.did_num     = RPN_DAT_WORD8; /* start with narrowest integer type */
-        stbp->result_data.arg.integer = 0;
+        stbp->running_data.did_num     = RPN_DAT_WORD8; /* start with narrowest integer type */
+        stbp->running_data.arg.integer = 0;
         break;
 
     default:
-        ev_data_set_real(&stbp->result_data, 0.0);
+        ev_data_set_real(&stbp->running_data, 0.0);
         break;
     }
 }

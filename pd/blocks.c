@@ -295,7 +295,7 @@ copy_slots_to_eoworld(
         /* create a gap in the column to copy the slots to  */
         for(trow = 0; !ctrlflag  &&  (trow < rsize); trow++)
             {
-            /* rjm 21.11.91 - if at end of both columns, don't bother */
+            /* RJM 21.11.91 - if at end of both columns, don't bother */
             if(trow > 0 && atend(fromcol+tcol, fromrow+trow) && atend(o_numcol+tcol, trow+BLOCK_UPDREF_ROW))
                 break;
 
@@ -785,7 +785,7 @@ MoveBlock_fn_do(S32 add_refs)
         {
         if((currow > blkstart.row)  &&  (currow <= blkend.row))
             {
-            /* rjm 27.9.91 is provoked into:
+            /* RJM 27.9.91 is provoked into:
                 if target block is blank no overlap problem cos rows
                 will not be inserted.  Looks like I thought
                 about this before and decided to save precious RAM
@@ -1632,7 +1632,7 @@ TransposeBlock_fn(void)
         {
         /* too many cols */
         if(!is_block_blank(blkstart.col, blkend.row+1, new_last_col, new_last_row))
-            /* rjm on 6.2.91, after 4.11
+            /* RJM on 6.2.91, after 4.11
                 changes numcol-1 to numcol in the following
             */
             insert_blank_block(0,blkend.row+1,numcol,-more_rows);

@@ -19,6 +19,8 @@
 
 #include "swis.h" /*C:*/
 
+#define SECS_IN_24 (60 * 60 * 24)
+
 /******************************************************************************
 *
 * set error type into data element
@@ -33,7 +35,7 @@ ev_data_set_error(
 {
     zero_struct_ptr(p_ev_data);
     p_ev_data->did_num = RPN_DAT_ERROR;
-    p_ev_data->arg.ev_error.status  = error;
+    p_ev_data->arg.ev_error.status = error;
     p_ev_data->arg.ev_error.type = ERROR_NORMAL;
     return(error);
 }
@@ -408,7 +410,7 @@ ss_data_compare(
                 break;
 
             case RPN_DAT_STRING:
-                res = stricmp_wild(data1.arg.string.data, data2.arg.string.data);
+                res = stricmp_wild(data1.arg.string.uchars, data2.arg.string.uchars);
                 break;
 
             case RPN_TMP_ARRAY:
@@ -489,7 +491,7 @@ ss_data_free_resources(
     switch(p_ev_data->did_num)
         {
         case RPN_TMP_STRING:
-            str_clr(&p_ev_data->arg.string_wr.data);
+            str_clr(&p_ev_data->arg.string_wr.uchars);
             p_ev_data->did_num = RPN_DAT_BLANK;
             break;
 
@@ -542,17 +544,18 @@ ss_data_resource_copy(
 *
 ******************************************************************************/
 
-#define SECS_IN_24 (60 * 60 * 24)
-
 extern void
 ss_date_normalise(
     _InoutRef_  P_EV_DATE p_ev_date)
 {
-    if(p_ev_date->date && (p_ev_date->time >= SECS_IN_24 || p_ev_date->time < 0))
-    {
-        S32 days;
+    if(EV_DATE_INVALID == p_ev_date->date)
+    {   /* allow hours >= 24 etc */
+        return;
+    }
 
-        days = p_ev_date->time / SECS_IN_24;
+    if((p_ev_date->time >= SECS_IN_24) || (p_ev_date->time < 0))
+    {
+        S32 days = p_ev_date->time / SECS_IN_24;
 
         p_ev_date->date += days;
         p_ev_date->time -= days * SECS_IN_24;
@@ -567,7 +570,7 @@ ss_date_normalise(
 
 /******************************************************************************
 *
-* calculate years, months and days from a date value
+* calculate actual years, months and days from a date value
 *
 ******************************************************************************/
 
@@ -576,7 +579,8 @@ ss_date_normalise(
 #define DAYS_IN_4   ((S32) (365 * 4   + 4   / 4))
 #define DAYS_IN_1   ((S32) (365 * 1))
 
-extern void
+_Check_return_
+extern STATUS
 ss_dateval_to_ymd(
     _InRef_     PC_EV_DATE_DATE p_ev_date_date,
     _OutRef_    P_S32 p_year,
@@ -584,117 +588,238 @@ ss_dateval_to_ymd(
     _OutRef_    P_S32 p_day)
 {
     S32 date = *p_ev_date_date;
+    S32 adjyear = 0;
 
-    *p_year = 0;
+    /* Fireworkz serial number zero == basis date 1.1.0001 */
+    *p_year = 1;
 
-    assert(date>=0);
-
-    if(date == 730484) /* 31.12.2000!!! */
+    if(EV_DATE_INVALID == date)
     {
-        /* SKS for 1.31/00. very sad fudge; NB 31.12.2400 will also fail */
-        *p_year = 2000-1;
-        *p_month = 12-1;
-        *p_day = 31-1;
-        return;
+        *p_month = 1;
+        *p_day = 1;
+        return(EVAL_ERR_NODATE);
     }
 
+    if(date < 0)
+    {
+        /* cater for BCE dates by
+         * adding a bias which is a multiple of 400 years
+         * and adjusting for that at the end
+         */
+#if 1
+        while(date < 0)
+        {
+            date += (DAYS_IN_400 * 1);
+            adjyear += (400 * 1);
+        }
+
+        date += (DAYS_IN_400 * 1); /* add another multiple to be safe */
+        adjyear += (400 * 1);
+#else
+        /* fixed bias covers all BCE dates in the Holocene */
+        date += (DAYS_IN_400 * 25);
+        adjyear = (400 * 25);
+
+        if(date < 0)
+        {
+            *p_month = 1;
+            *p_day = 1;
+            return(EVAL_ERR_NODATE);
+        }
+#endif
+    }
+
+    /* repeated subtraction is good for ARM */
     while(date >= DAYS_IN_400)
     {
-        date  -= DAYS_IN_400;
-        *p_year += 400;
+        date -= DAYS_IN_400;
+        *p_year += 400; /* yields one of 0401,0801,1201,1601,2001,2401,2801... */
     }
 
-    while(date >= DAYS_IN_100)
+    /* NB only do this loop up to three times otherwise we will get caught
+     * by the last year in the cycle being a leap year so
+     * 31.12.1600,2000,2400 etc will fail, so we may as well unroll the loop...
+     */
+    if(date >= DAYS_IN_100)
     {
-        date  -= DAYS_IN_100;
+        date -= DAYS_IN_100;
+        *p_year += 100;
+    }
+    if(date >= DAYS_IN_100)
+    {
+        date -= DAYS_IN_100;
+        *p_year += 100;
+    }
+    if(date >= DAYS_IN_100)
+    {
+        date -= DAYS_IN_100;
         *p_year += 100;
     }
 
     while(date >= DAYS_IN_4)
     {
-        date  -= DAYS_IN_4;
-        *p_year += 4;
+        date -= DAYS_IN_4;
+        *p_year += 4; /* yields one of 0405,... */
     }
 
     while(date >= DAYS_IN_1)
     {
-        if(date == DAYS_IN_1 && LEAP_YEAR(*p_year))
-            break;
+        if(LEAP_YEAR_ACTUAL(*p_year))
+        {
+            assert(date == DAYS_IN_1); /* given the start year being 0001, any leap year, if present, must be at the end of a cycle */
+            if(date == DAYS_IN_1)
+                break;
 
-        date  -= DAYS_IN_1;
+            date -= (DAYS_IN_1 + 1);
+        }
+        else
+        {
+            date -= DAYS_IN_1;
+        }
+
         *p_year += 1;
     }
 
     {
-    S32 days_left = date;
+    const PC_S32 p_days_in_month = (LEAP_YEAR_ACTUAL(*p_year) ? ev_days_in_month_leap : ev_days_in_month);
+    S32 month_index;
+    S32 days_left = (S32) date;
 
-    for(*p_month = 0; *p_month < 11; ++(*p_month))
-        {
-        S32 monthdays = (S32) ev_days[*p_month] + (*p_month == 1 && LEAP_YEAR(*p_year) ? 1 : 0);
+    for(month_index = 0; month_index < 11; ++month_index)
+    {
+        S32 monthdays = p_days_in_month[month_index];
 
-        if(monthdays <= days_left)
-            days_left -= monthdays;
-        else
+        if(monthdays > days_left)
             break;
-        }
 
-    *p_day = days_left;
+        days_left -= monthdays;
+    }
+
+    /* convert index values to actual values (1..31,1..n,0001..9999) */
+    *p_month = (month_index + 1);
+
+    *p_day = (days_left + 1);
     } /*block*/
+
+#if 1
+    if(adjyear)
+        *p_year -= adjyear;
+#endif
+
+#if CHECKING && 1 /* verify that the conversion is reversible */
+    {
+    EV_DATE_DATE test_date;
+    ss_ymd_to_dateval(&test_date, *p_year, *p_month, *p_day);
+    assert(test_date == *p_ev_date_date);
+    } /*block*/
+#endif
+
+    return(STATUS_OK);
 }
 
 /******************************************************************************
 *
-* convert year, month, day to a dateval
+* convert actual day, month, year values (1..31, 1..n, 0001...9999) to a dateval
+*
+* Fireworkz serial number zero == basis date 1.1.0001
 *
 ******************************************************************************/
 
+/*ncr*/
 extern S32
 ss_ymd_to_dateval(
-    _InoutRef_  P_EV_DATE_DATE p_ev_date_date,
+    _OutRef_    P_EV_DATE_DATE p_ev_date_date,
     _In_        S32 year,
     _In_        S32 month,
     _In_        S32 day)
 {
-    /* crunge up -ve months */
-    if(month < 0)
+    /* convert certain actual values (1..31,1..n,0001..9999) to index values */
+    S32 month_index = month - 1;
+    S32 adjdate = 0;
+
+    *p_ev_date_date = 0;
+
+    /* transfer excess months to the years component */
+    if(month_index < 0)
     {
-        year  += (month - 12) / 12;
-        month  = 12 + (month % 12);
+        year += (month_index - 12) / 12;
+        month_index = 12 + (month_index % 12); /* 12 + (-11,-10,..,-1,0) => 0..11 : month_index now positive */
+        month = month_index + 1; /* reduces month into 1..12 */
     }
-    else if(month > 11)
+    else if(month_index > 11)
     {
-        year += month / 12;
-        month = month % 12;
+        year += (month_index / 12);
+        month_index = (month_index % 12); /* reduce month_index into 0..11 */
+        month = month_index + 1; /* reduces month into 1..12 */
     }
 
-    /* -ve years have no meaning here */
-    if(year < 0)
-        return(-1);
-
-    /* get days in previous years */
-    if(year)
+    if(year <= 0)
     {
-        *p_ev_date_date = (U32) year * 365 +
-                                year / 4   -
-                                year / 100 +
-                                year / 400;
+        /* cater for BCE dates by
+         * adding a bias which is a multiple of 400 years
+         * and adjusting for that at the end
+         */
+#if 1
+        while(year <= 0)
+        {
+            adjdate += (DAYS_IN_400 * 1);
+            year += (400 * 1);
+        }
+
+        adjdate += (DAYS_IN_400 * 1); /* add another multiple to be safe */
+        year += (400 * 1);
+
+        if(adjdate <= 0)
+        {
+            *p_ev_date_date = EV_DATE_INVALID;
+            return(-1);
+        }
+#else
+        /* fixed bias covers all BCE dates in the Holocene */
+        adjdate = (DAYS_IN_400 * 25);
+        year += (400 * 25);
+
+        if(year <= 0)
+        {
+            *p_ev_date_date = EV_DATE_INVALID;
+            return(-1);
+        }
+#endif
     }
-    else
-        *p_ev_date_date = 0;
 
+    /* get number of days between basis date 1.1.0001 and the start of this year - i.e. consider *previous* years */
+    assert(year >= 1);
     {
+        const S32 year_minus_1 = year - 1;
+
+        *p_ev_date_date = (year_minus_1 * 365)
+                        + (year_minus_1 / 4)
+                        - (year_minus_1 / 100)
+                        + (year_minus_1 / 400);
+
+        if(*p_ev_date_date < 0)
+        {
+            *p_ev_date_date = EV_DATE_INVALID;
+            return(-1);
+        }
+    }
+
+    /* get number of days between the start of this year and the start of this month - i.e. consider *previous* months */
+    {
+    const PC_S32 p_days_in_month = (LEAP_YEAR_ACTUAL(year) ? ev_days_in_month_leap : ev_days_in_month);
     S32 i;
 
-    for(i = 0; i < month; ++i)
+    for(i = 0; i < month_index; ++i)
     {
-        *p_ev_date_date += ev_days[i];
-
-        if((i == 1) && LEAP_YEAR(year))
-            *p_ev_date_date += 1;
+        *p_ev_date_date += p_days_in_month[i];
     }
     } /*block*/
 
-    *p_ev_date_date += day;
+    /* get number of days between the start of this month and the start of this day - i.e. consider *previous* days */
+    *p_ev_date_date += (day - 1);
+
+    if(adjdate)
+        *p_ev_date_date -= adjdate;
 
     return(0);
 }
@@ -705,16 +830,20 @@ ss_ymd_to_dateval(
 *
 ******************************************************************************/
 
+/*ncr*/
 extern S32
 ss_hms_to_timeval(
-    _InoutRef_  P_EV_DATE_TIME p_ev_date_time,
+    _OutRef_    P_EV_DATE_TIME p_ev_date_time,
     _InVal_     S32 hour,
     _InVal_     S32 minute,
     _InVal_     S32 second)
 {
     /* at least check hour is in range */
     if((S32) labs((long) hour) >= S32_MAX / 3600)
+    {
+        *p_ev_date_time = EV_TIME_INVALID;
         return(-1);
+    }
 
     *p_ev_date_time = ((S32) hour * 3600) + (minute * 60) + second;
 
@@ -723,18 +852,18 @@ ss_hms_to_timeval(
 
 /******************************************************************************
 *
-* read the current time
+* read the current time as actual values
 *
 ******************************************************************************/
 
 extern void
 ss_local_time(
-    _OutRef_opt_ P_S32 p_year,
-    _OutRef_opt_ P_S32 p_month,
-    _OutRef_opt_ P_S32 p_day,
-    _OutRef_opt_ P_S32 p_hour,
-    _OutRef_opt_ P_S32 p_minute,
-    _OutRef_opt_ P_S32 p_second)
+    _OutRef_    P_S32 p_year,
+    _OutRef_    P_S32 p_month,
+    _OutRef_    P_S32 p_day,
+    _OutRef_    P_S32 p_hour,
+    _OutRef_    P_S32 p_minute,
+    _OutRef_    P_S32 p_second)
 {
 #if RISCOS
 
@@ -753,38 +882,26 @@ ss_local_time(
     rs.r[2] = (int) &time_ordinals;
 
     if(NULL == _kernel_swi(Territory_ConvertTimeToOrdinals, &rs, &rs))
-        {
-        if(NULL != p_year)
-            *p_year = time_ordinals.year - 1;
-        if(NULL != p_month)
-            *p_month = time_ordinals.month - 1;
-        if(NULL != p_day)
-            *p_day = time_ordinals.day - 1;
-        if(NULL != p_hour)
-            *p_hour = time_ordinals.hours;
-        if(NULL != p_minute)
-            *p_minute = time_ordinals.minutes;
-        if(NULL != p_second)
-            *p_second = time_ordinals.seconds;
-        }
+    {
+        *p_year = time_ordinals.year;
+        *p_month = time_ordinals.month;
+        *p_day = time_ordinals.day;
+        *p_hour = time_ordinals.hours;
+        *p_minute = time_ordinals.minutes;
+        *p_second = time_ordinals.seconds;
+    }
     else
-        {
+    {
         time_t today_time = time(NULL);
         struct tm * split_timep = localtime(&today_time);
 
-        if(NULL != p_year)
-            *p_year = split_timep->tm_year + (S32) 1900 - 1;
-        if(NULL != p_month)
-            *p_month = split_timep->tm_mon;
-        if(NULL != p_day)
-            *p_day = split_timep->tm_mday - (S32) 1;
-        if(NULL != p_hour)
-            *p_hour = split_timep->tm_hour;
-        if(NULL != p_minute)
-            *p_minute = split_timep->tm_min;
-        if(NULL != p_second)
-            *p_second = split_timep->tm_sec;
-        }
+        *p_year = split_timep->tm_year + (S32) 1900;
+        *p_month = split_timep->tm_mon + (S32) 1;
+        *p_day = split_timep->tm_mday;
+        *p_hour = split_timep->tm_hour;
+        *p_minute = split_timep->tm_min;
+        *p_second = split_timep->tm_sec;
+    }
 
 #elif WINDOWS
 
@@ -792,43 +909,31 @@ ss_local_time(
 
     GetLocalTime(&systemtime);
 
-    if(NULL != p_year)
-        *p_year = systemtime.wYear - 1;
-    if(NULL != p_month)
-        *p_month = systemtime.wMonth - 1;
-    if(NULL != p_day)
-        *p_day = systemtime.wDay - 1;
-    if(NULL != p_hour)
-        *p_hour = systemtime.wHour;
-    if(NULL != p_minute)
-        *p_minute = systemtime.wMinute;
-    if(NULL != p_second)
-        *p_second = systemtime.wSecond;
+    *p_year = systemtime.wYear;
+    *p_month = systemtime.wMonth;
+    *p_day = systemtime.wDay;
+    *p_hour = systemtime.wHour;
+    *p_minute = systemtime.wMinute;
+    *p_second = systemtime.wSecond;
 
 #else
 
     time_t today_time = time(NULL);
     struct tm * split_timep = localtime(&today_time);
 
-    if(NULL != p_year)
-        *p_year = split_timep->tm_year + 1900 - 1;
-    if(NULL != p_month)
-        *p_month = split_timep->tm_mon;
-    if(NULL != p_day)
-        *p_day = split_timep->tm_mday - 1;
-    if(NULL != p_hour)
-        *p_hour = split_timep->tm_hour;
-    if(NULL != p_minute)
-        *p_minute = split_timep->tm_min;
-    if(NULL != p_second)
-        *p_second = split_timep->tm_sec;
+    *p_year = split_timep->tm_year + 1900;
+    *p_month = split_timep->tm_mon + 1;
+    *p_day = split_timep->tm_mday;
+    *p_hour = split_timep->tm_hour;
+    *p_minute = split_timep->tm_min;
+    *p_second = split_timep->tm_sec;
 
-#endif
+#endif /* OS */
 }
 
 extern void
 ss_local_time_as_ev_date(
-    _InoutRef_  P_EV_DATE p_ev_date)
+    _OutRef_    P_EV_DATE p_ev_date)
 {
     S32 year, month, day, hour, minute, second;
     ss_local_time(&year, &month, &day, &hour, &minute, &second);
@@ -836,15 +941,16 @@ ss_local_time_as_ev_date(
     (void) ss_hms_to_timeval(&p_ev_date->time, hour, minute, second);
 }
 
-extern S32
+_Check_return_
+extern S32 /* actual year */
 sliding_window_year(
     _In_        S32 year)
 {
+    S32 modified_year = year;
     S32 local_year, local_century;
+    S32 month, day, hour, minute, second;
 
-    ss_local_time(&local_year, NULL, NULL, NULL, NULL, NULL);
-
-    local_year += 1; /* back to UI space */
+    ss_local_time(&local_year, &month, &day, &hour, &minute, &second);
 
     local_century = (local_year / 100) * 100;
 
@@ -852,15 +958,15 @@ sliding_window_year(
 
 #if 1
     /* default to a year within the sliding window of time about 'now' */
-    if(year > (local_year + 30))
-        year -= 100;
+    if(modified_year > (local_year + 30))
+        modified_year -= 100;
 #else
     /* default to current century */
 #endif
 
-    year += local_century;
+    modified_year += local_century;
 
-    return(year);
+    return(modified_year);
 }
 
 /******************************************************************************
@@ -869,7 +975,8 @@ sliding_window_year(
 *
 ******************************************************************************/
 
-extern void
+_Check_return_
+extern STATUS
 ss_timeval_to_hms(
     _InRef_     PC_EV_DATE_TIME p_ev_date_time,
     _OutRef_    P_S32 p_hour,
@@ -878,13 +985,23 @@ ss_timeval_to_hms(
 {
     S32 time = *p_ev_date_time;
 
-    *p_hour   = (time / 3600);
-    time     -= *p_hour * 3600;
+#if EV_TIME_INVALID != 0
+    if(EV_TIME_INVALID == time)
+    {
+        *p_hour = *p_minute = *p_second = 0;
+        return(EVAL_ERR_NOTIME);
+    }
+#endif
 
-    *p_minute = (time / 60);
+    *p_hour   = (S32) (time / 3600);
+    time     -= (S32) *p_hour * 3600;
+
+    *p_minute = (S32) (time / 60);
     time     -= *p_minute * 60;
 
-    *p_second = time;
+    *p_second = (S32) time;
+
+    return(STATUS_OK);
 }
 
 /******************************************************************************
@@ -898,7 +1015,7 @@ extern BOOL
 ss_string_is_blank(
     _InRef_     PC_EV_DATA p_ev_data)
 {
-    PC_U8 ptr = p_ev_data->arg.string.data;
+    PC_U8 ptr = p_ev_data->arg.string.uchars;
     S32 len = (S32) p_ev_data->arg.string.size;
 
     /*assert(p_ev_data->did_num == RPN_DAT_STRING);*/
@@ -927,7 +1044,7 @@ ss_string_dup(
     /*assert(p_ev_data_src->did_num == RPN_DAT_STRING);*/
     assert(p_ev_data);
 
-    return(ss_string_make_uchars(p_ev_data, p_ev_data_src->arg.string.data, p_ev_data_src->arg.string.size));
+    return(ss_string_make_uchars(p_ev_data, p_ev_data_src->arg.string.uchars, p_ev_data_src->arg.string.size));
 }
 
 /******************************************************************************
@@ -951,17 +1068,17 @@ ss_string_make_uchars(
     /*if(0 != uchars_n)*/
         {
         STATUS status;
-        if(NULL == (p_ev_data->arg.string_wr.data = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*NULLCH*/, &status)))
+        if(NULL == (p_ev_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*NULLCH*/, &status)))
             return(ev_data_set_error(p_ev_data, status));
         assert(uchars);
-        memcpy32(p_ev_data->arg.string_wr.data, uchars, uchars_n);
-        p_ev_data->arg.string_wr.data[uchars_n] = NULLCH;
+        memcpy32(p_ev_data->arg.string_wr.uchars, uchars, uchars_n);
+        p_ev_data->arg.string_wr.uchars[uchars_n] = NULLCH;
         p_ev_data->did_num = RPN_TMP_STRING; /* copy is now owned by the caller */
         }
 #if 0 /* can't do this in PipeDream - gets transferred to a result and then freed */
     else
         { /* SKS 27oct96 optimise empty strings */
-        p_ev_data->arg.string.data = "";
+        p_ev_data->arg.string.uchars = "";
         p_ev_data->did_num = RPN_DAT_STRING;
         }
 #endif
@@ -1072,7 +1189,12 @@ two_nums_type_match(
 days in the month
 */
 
-signed char
-ev_days[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+const S32
+ev_days_in_month[12] =
+{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+const S32
+ev_days_in_month_leap[12] =
+{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /* end of ss_const.c */

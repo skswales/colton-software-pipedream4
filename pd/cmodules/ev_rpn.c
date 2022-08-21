@@ -377,8 +377,8 @@ read_cur_sym(
             return;
 
         case RPN_DAT_STRING:
-            p_ev_data->arg.string.data = p_rpn_content + sizeof(S16);
-            p_ev_data->arg.string.size = ustrlen32(p_ev_data->arg.string.data);
+            p_ev_data->arg.string.uchars = p_rpn_content + sizeof(S16);
+            p_ev_data->arg.string.size = ustrlen32(p_ev_data->arg.string.uchars);
             return;
 
         case RPN_DAT_DATE:

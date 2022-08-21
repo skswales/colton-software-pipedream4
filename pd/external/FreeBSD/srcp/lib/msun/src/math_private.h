@@ -17,10 +17,11 @@
 #ifndef _MATH_PRIVATE_H_
 #define	_MATH_PRIVATE_H_
 
-#if 0 /* SKS */
+#if 1 /* COLTON_SOFTWARE */
+#else /* COLTON_SOFTWARE */
 #include <sys/types.h>
 #include <machine/endian.h>
-#endif /* SKS */
+#endif /* COLTON_SOFTWARE */
 
 /*
  * The original fdlibm code used statements like:

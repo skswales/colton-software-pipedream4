@@ -851,7 +851,7 @@ lterm(void)
 
 		case SYM_FUNC:
 			pd123__csym.symno = SYM_BLANK;
-			switch(pd123__opreqv[pd123__csym.ixf].nargs)
+			switch(pd123__opreqv[pd123__csym.ixf].n_args)
 				{
 				/* zero argument functions */
 				case 0:
@@ -927,7 +927,7 @@ procfunc(
 		return(narg);
 		}
 
-	if((funp->nargs >= 0) && (funp->nargs != (uchar) narg))
+	if((funp->n_args >= 0) && (funp->n_args != (uchar) narg))
 		return(pd123__csym.symno = SYM_BAD);
 
 	pd123__csym.symno = SYM_BLANK;

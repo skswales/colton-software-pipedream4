@@ -2795,7 +2795,7 @@ lookupword(
                 }
 
             wp->fail = INS_WORD;
-            wp->findpos = datap - (P_U8) cp->data /* fix C6.0 winge */;
+            wp->findpos = datap - (P_U8) cp->data /* fix C6.0 whinge */;
             }
         return(0);
         }
@@ -2862,7 +2862,7 @@ lookupword(
                     if(needpos)
                         {
                         wp->fail = 0;
-                        wp->findpos = datap - (P_U8) cp->data - 1 /* fix C6.0 winge */;
+                        wp->findpos = datap - (P_U8) cp->data - 1 /* fix C6.0 whinge */;
                         }
                     return(1);
                     }
@@ -2888,7 +2888,7 @@ lookupword(
                             ? INS_WORD
                             : INS_STARTLET;
 
-                    wp->findpos = datap - (P_U8) cp->data /* fix C6.0 winge */;
+                    wp->findpos = datap - (P_U8) cp->data /* fix C6.0 whinge */;
                     }
                 return(0);
                 }
@@ -2913,7 +2913,7 @@ lookupword(
         strcpy(wp->bodydp, wp->bodyd);
 
         wp->fail = INS_WORD;
-        wp->findpos = datap - (P_U8) cp->data /* fix C6.0 winge */;
+        wp->findpos = datap - (P_U8) cp->data /* fix C6.0 whinge */;
         }
 
     return(0);

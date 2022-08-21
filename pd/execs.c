@@ -270,7 +270,7 @@ alnst1(
     if(protected_slot_in_range(&blkstart, &blkend))
         return;
 
-    /* rjm adds this check on 15.10.91 */
+    /* RJM adds this check on 15.10.91 */
     if(blkstart.col != NO_COL && !set_up_block(TRUE))
         return;
 
@@ -1532,7 +1532,7 @@ protected_slot(
 
 /******************************************************************************
 *
-*  verify no protect slots in block: if there are - winge
+*  verify no protect slots in block: if there are - whinge
 *
 *  note that this corrupts in_block.col & in_block.row
 *
@@ -1817,7 +1817,7 @@ clear_protect_list(void)
         if load a file and marked block exists in some window PD4 whinges about
         marked block not in this document
     */
-    /* rjm 6.11.91, fix for above */
+    /* RJM 6.11.91, fix for above */
     SLR os, oe;
     DOCNO docno = blk_docno;
     os = blkstart;
@@ -1841,7 +1841,7 @@ clear_protect_list(void)
         set_protected_block(&bs, &be);
         }
 
-    /* rjm 6.11.91, fix for above */
+    /* RJM 6.11.91, fix for above */
     blk_docno = docno;
     blkstart = os;
     blkend   = oe;

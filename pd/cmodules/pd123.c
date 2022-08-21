@@ -1248,8 +1248,7 @@ fptostr(
 	reslen = sprintf((char *) resstr, "%.15g", fpval);
 	resstr[reslen] = '\0';
 
-	/* search for exponent and remove leading zeroes because
-	they confuse the Z88; remove the + for good measure */
+	/* search for exponent and remove leading zeros because	they confuse the Z88; remove the + for good measure */
 	if((exp = (uchar *) strstr((char *) resstr, "e")) != NULL)
 		{
 		sign = *(++exp);
@@ -1668,7 +1667,7 @@ scnsym(void)
 
 			case LO_FUNC:
 				/* skip argument count */
-				if(curopr->nargs == -1)
+				if(curopr->n_args == -1)
 					++termp;
 				break;
 
@@ -2068,7 +2067,7 @@ writeexp(
 				uchar argsep = ',';
 
 				/* work out number of arguments */
-				if((narg = curopr->nargs) == -1)
+				if((narg = curopr->n_args) == -1)
 					narg = (S32) *(termp + 1);
 
 				if(argsp < narg)

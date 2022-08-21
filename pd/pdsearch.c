@@ -1024,10 +1024,8 @@ ENDPOINT:
 #if FALSE
     escape_disable();
 
-    /* rcm and rjm try the following on 13.1.92 to clear the persistent escape condition */
-    {
+    /* RCM and RJM try the following on 13.1.92 to clear the persistent escape condition */
     fx_x2(126, 0);
-    }
 #endif
 
     actind_end();

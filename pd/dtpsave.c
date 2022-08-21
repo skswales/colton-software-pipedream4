@@ -98,7 +98,7 @@ dtp_save_slot(
         {
         fwp_save_first_slot_on_line = FALSE;
 
-        /* rjm 28.1.92 ensures that lines being concatenated have space between them */
+        /* RJM 28.1.92 ensures that lines being concatenated have space between them */
         /* try to make formattable paragraphs in DTP mode too, but unformattable tables */
         if(possible_para_dtp  &&  trow > 0)
             {

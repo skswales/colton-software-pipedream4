@@ -33,8 +33,8 @@ example of each financial function in the PipeDream Examples archive.</p>
 
 <h2>CTERM</h2>
 
-<p><code>CTERM(<span class="csguide-arg">interest</span>,<span
-class="csguide-arg">fv</span>,<span class="csguide-arg">pv</span>)</code></p>
+<p><code>CTERM(<span class="csguide-arg">interest</span>, <span
+class="csguide-arg">fv</span>, <span class="csguide-arg">pv</span>)</code></p>
 
 <p>Calculates the number of compounding periods required for an investment at a
 present value (<span class="csguide-arg">pv</span>) to reach a future value
@@ -45,11 +45,12 @@ class="csguide-arg">interest</span>).</p>
 of 10% per year? The answer is calculated with the formula
 <code>CTERM(0.10,2000,1000)</code>. The answer in this case is 7.27 years.</p>
 
+
 <h1>DDB</h1>
 
-<p><code>DDB(<span class="csguide-arg">cost</span>,<span
-class="csguide-arg">salvage</span>,<span
-class="csguide-arg">life</span>,<span
+<p><code>DDB(<span class="csguide-arg">cost</span>, <span
+class="csguide-arg">salvage</span>, <span
+class="csguide-arg">life</span>, <span
 class="csguide-arg">period</span>)</code></p>
 
 <p>Calculates the depreciation allowance on an asset at a specific period of
@@ -60,10 +61,11 @@ time using the double declining balance method.</p>
 formula to find out is <code>DDB(5000,1000,5,1)</code> which returns &pound;2000, the
 depreciation allowance for the first year.</p>
 
+
 <h2>FV</h2>
 
-<p><code>FV(<span class="csguide-arg">payment</span>,<span
-class="csguide-arg">interest</span>,<span
+<p><code>FV(<span class="csguide-arg">payment</span>, <span
+class="csguide-arg">interest</span>, <span
 class="csguide-arg">term</span>)</code></p>
 
 <p>Computes the future value of an investment based on a number of equal
@@ -73,9 +75,10 @@ payments, each earning interest at a periodic rate, over a specified term.</p>
 What is the value of the account after 25 years? The formula
 <code>FV(400,0.05,25)</code> calculates the result, &pound;19,090.84.</p>
 
+
 <h2>IRR</h2>
 
-<p><code>IRR(<span class="csguide-arg">guess</span>,<span
+<p><code>IRR(<span class="csguide-arg">guess</span>, <span
 class="csguide-arg">range</span>)</code></p>
 
 <p>Calculates the internal rate of return of an investment, and series of
@@ -87,6 +90,7 @@ number 500, representing payments returned on the investment. Slot A16 contains
 the number .01, a first guess for the internal rate of return. The formula
 <code>IRR(A16,A1A14)</code> displays the result 0.04, the internal percentage
 rate of return for the cash flows in column A.</p>
+
 
 <h2>MIRR</h2>
 
@@ -111,9 +115,10 @@ the annual incomes in slots B2, B3 and B4, to calculate the investment's
 modified rate of return after 3 years, you would type
 <code>MIRR(B1B4,.10,.12)</code> which would return -0.04804 as the result.</p>
 
+
 <h2>NPV</h2>
 
-<p><code>NPV(<span class="csguide-arg">interest</span>,<span
+<p><code>NPV(<span class="csguide-arg">interest</span>, <span
 class="csguide-arg">range</span>)</code></p>
 
 <p>Calculates the net present value of a series of future cash flows at a fixed
@@ -126,8 +131,8 @@ rate of 10%? The formula <code>NPV(0.10,B10B14)</code> displays the result
 
 <h2>PMT</h2>
 
-<p><code>PMT(<span class="csguide-arg">principal</span>,<span
-class="csguide-arg">interest</span>,<span
+<p><code>PMT(<span class="csguide-arg">principal</span>, <span
+class="csguide-arg">interest</span>, <span
 class="csguide-arg">term</span>)</code></p>
 
 <p>Calculates the payment on a loan given the principal, periodic interest rate
@@ -141,10 +146,11 @@ annual interest rate and a term of 20 years? The formula
 <code>PMT(150000,0.10/12,20*12)</code> returns the correct monthly payment,
 &pound;1447.53.</p>
 
+
 <h2>PV</h2>
 
-<p><code>PV(<span class="csguide-arg">payment</span>,<span
-class="csguide-arg">interest</span>,<span
+<p><code>PV(<span class="csguide-arg">payment</span>, <span
+class="csguide-arg">interest</span>, <span
 class="csguide-arg">term</span>)</code></p>
 
 <p>Computes the present value of a series of equal payments discounted at a
@@ -157,10 +163,11 @@ including the interest that you won't earn? The formula
 <code>PV(2000,0.12,30)</code> returns &pound;16110.37, the cash value of the trust
 fund in today's pounds.</p>
 
+
 <h2>RATE</h2>
 
-<p><code>RATE(<span class="csguide-arg">fv</span>,<span
-class="csguide-arg">pv</span>,<span
+<p><code>RATE(<span class="csguide-arg">fv</span>, <span
+class="csguide-arg">pv</span>, <span
 class="csguide-arg">term</span>)</code></p>
 
 <p>Calculates the periodic interest required for an investment at a present
@@ -175,10 +182,11 @@ The answer is given by the formula <code>RATE(1000000,50000,25*12)</code> . The
 answer is 0.01, which you multiply by 12 to get the annual interest rate of 12%
 (0.12).</p>
 
+
 <h2>SLN</h2>
 
-<p><code>SLN(<span class="csguide-arg">cost</span>,<span
-class="csguide-arg">salvage</span>,<span
+<p><code>SLN(<span class="csguide-arg">cost</span>, <span
+class="csguide-arg">salvage</span>, <span
 class="csguide-arg">life</span>)</code></p>
 
 <p>Computes the straight line depreciation allowance of an asset for any given
@@ -188,11 +196,12 @@ period, given the cost, the predicted salvage value and life of the asset.</p>
 in five years. In any given year, the depreciation allowance is given by the
 formula <code>SLN(500,100,5)</code> which returns &pound;80.00.</p>
 
+
 <h2>SYD</h2>
 
-<p><code>SYD(<span class="csguide-arg">cost</span>,<span
-class="csguide-arg">salvage</span>,<span
-class="csguide-arg">life</span>,<span
+<p><code>SYD(<span class="csguide-arg">cost</span>, <span
+class="csguide-arg">salvage</span>, <span
+class="csguide-arg">life</span>, <span
 class="csguide-arg">period</span>)</code></p>
 
 <p>Determines the depreciation allowance of a given year using the
@@ -202,10 +211,11 @@ sum-of-years' digits method.</p>
 after five years. The depreciation allowance for the first year is given by the
 formula <code>SYD(500,100,5,1)</code> which returns &pound;133.33.</p>
 
+
 <h2>TERM</h2>
 
-<p><code>TERM(<span class="csguide-arg">payment</span>,<span
-class="csguide-arg">interest</span>,<span
+<p><code>TERM(<span class="csguide-arg">payment</span>, <span
+class="csguide-arg">interest</span>, <span
 class="csguide-arg">fv</span>)</code></p>
 
 <p>Computes the number of periods required for regular payments at a fixed

@@ -14,7 +14,7 @@
 #ifndef __ss_const_h
 #define __ss_const_h
 
-#define LEAP_YEAR(year) ( \
+#define LEAP_YEAR_ACTUAL(year) ( \
     (((year) % 4)   ? 0 : 1) &&                     \
     (((year) % 100) ? 1 : (((year) % 400) ? 0 : 1)) )
 
@@ -147,6 +147,14 @@ typedef struct EV_DATE
 }
 EV_DATE, * P_EV_DATE; typedef const EV_DATE * PC_EV_DATE;
 
+static inline void
+ev_date_init(
+    _OutRef_    P_EV_DATE p_ev_date)
+{
+    p_ev_date->date = EV_DATE_INVALID;
+    p_ev_date->time = EV_TIME_INVALID;
+}
+
 /*
 packed date type
 */
@@ -180,14 +188,14 @@ string data (CH_NULL terminated in PipeDream but size field helps)
 typedef struct EV_STRING
 {
     U32 size;
-    P_USTR data;
+    P_USTR uchars;
 }
 EV_STRING, * P_EV_STRING;
 
 typedef struct EV_STRINGC
 {
     U32 size;
-    PC_USTR data;
+    PC_USTR uchars;
 }
 EV_STRINGC, * P_EV_STRINGC;
 
@@ -261,7 +269,8 @@ RISCOS_TIME_ORDINALS;
 ss_const.c
 */
 
-extern signed char ev_days[];
+extern const S32 ev_days_in_month[];
+extern const S32 ev_days_in_month_leap[];
 
 /*
 ss_const.c external functions
@@ -343,45 +352,50 @@ extern void
 ss_date_normalise(
     _InoutRef_  P_EV_DATE datep);
 
-extern void
+_Check_return_
+extern STATUS
 ss_dateval_to_ymd(
     _InRef_     PC_EV_DATE_DATE p_ev_date_date,
     _OutRef_    P_S32 p_day,
     _OutRef_    P_S32 p_month,
     _OutRef_    P_S32 p_year);
 
+/*ncr*/
 extern S32
 ss_ymd_to_dateval(
-    _InoutRef_  P_EV_DATE_DATE p_ev_date_date,
+    _OutRef_    P_EV_DATE_DATE p_ev_date_date,
     _In_        S32 year,
     _In_        S32 month,
     _In_        S32 day);
 
+/*ncr*/
 extern S32
 ss_hms_to_timeval(
-    _InoutRef_  P_EV_DATE_TIME p_ev_date_time,
+    _OutRef_    P_EV_DATE_TIME p_ev_date_time,
     _InVal_     S32 hour,
     _InVal_     S32 minute,
     _InVal_     S32 second);
 
 extern void
 ss_local_time(
-    _OutRef_opt_ P_S32 p_year,
-    _OutRef_opt_ P_S32 p_month,
-    _OutRef_opt_ P_S32 p_day,
-    _OutRef_opt_ P_S32 p_hour,
-    _OutRef_opt_ P_S32 p_minute,
-    _OutRef_opt_ P_S32 p_second);
+    _OutRef_    P_S32 p_year,
+    _OutRef_    P_S32 p_month,
+    _OutRef_    P_S32 p_day,
+    _OutRef_    P_S32 p_hour,
+    _OutRef_    P_S32 p_minute,
+    _OutRef_    P_S32 p_second);
 
 extern void
 ss_local_time_as_ev_date(
-    _InoutRef_  P_EV_DATE p_ev_date);
+    _OutRef_    P_EV_DATE p_ev_date);
 
+_Check_return_
 extern S32
 sliding_window_year(
     _In_        S32 year);
 
-extern void
+_Check_return_
+extern STATUS
 ss_timeval_to_hms(
     _InRef_     PC_EV_DATE_TIME p_ev_date_time,
     _OutRef_    P_S32 p_hour,

@@ -3162,7 +3162,7 @@ range_is_selection(
         if(range->upper.end == mlec->lower.end)                        /* should never happen */
             range->lower.end = mlec->upper.start;
 
-    /*>>>wrong - should winge if no selection */
+    /*>>>wrong - should whinge if no selection */
         }
 
     return(mlec->selectvalid);

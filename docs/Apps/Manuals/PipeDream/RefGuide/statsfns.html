@@ -42,6 +42,37 @@ class="csguide-arg">list</span>.</p>
 <p>Only numeric elements are evaluated so that blank slots do not upset
 averages.</p>
 
+
+<h2>BETA</h2>
+
+<p><code>BETA(<span class="csguide-arg">a</span>, <span
+class="csguide-arg">b</span>)</code></p>
+
+<p>Returns the value of the Beta function for arguments <span
+class="csguide-arg">a</span>, <span class="csguide-arg">b</span>.</p>
+
+<p>One definition of the Beta function is</p>
+
+<p>beta(<i>a</i>, <i>b</i>) = gamma(<i>a</i>) &times; gamma(<i>b</i>) &divide; gamma(<i>a</i> + <i>b</i>)</p>
+
+<p>This special function is actually evaluated by PipeDream using the formula</p>
+
+<p>beta(<i>a</i>, <i>b</i>) = exp( gammaln(<i>a</i>) + gammaln(<i>b</i>) - gammaln(<i>a</i> + <i>b</i>) )</p>
+
+
+<h2>COMBIN</h2>
+
+<p><code>COMBIN(<span class="csguide-arg">n</span>, <span class="csguide-arg">k</span>)</code></p>
+
+<p>This function yields the number of combinations of <span class="csguide-arg">n</span> unlike things taken <span class="csguide-arg">k</span> at a time.</p>
+
+<p>The formula used is:</p>
+
+<p><sub><i>n</i></sub><i>C</i><sub><i>k</i></sub> = <i>n</i>! &divide; ((<i>n</i> - <i>k</i>)! &times; <i>k</i>!)</p>
+
+<p>For very large <span class="csguide-arg">n</span> this is an approximation achieved using logarithms.</p>
+
+
 <h2>COUNT</h2>
 
 <p><code>COUNT(<span class="csguide-arg">list</span>)</code></p>
@@ -49,9 +80,17 @@ averages.</p>
 <p>Counts the number of numeric elements in <span
 class="csguide-arg">list</span>.</p>
 
+
+<h2>GAMMALN</h2>
+
+<p><code>GAMMALN(<span class="csguide-arg">number</span>)</code></p>
+
+<p>This special function yields the natural logarithm of the gamma function of <span class="csguide-arg">number</span>.</p>
+
+
 <h2>GRAND</h2>
 
-<p><code>GRAND(<span class="csguide-arg">m</span>,<span
+<p><code>GRAND(<span class="csguide-arg">m</span>, <span
 class="csguide-arg">s</span>)</code></p>
 
 <p>Returns a random number with gaussian distribution, mean <span
@@ -60,6 +99,7 @@ class="csguide-arg">s</span>.</p>
 
 <p>If <span class="csguide-arg">m</span> is not given, PipeDream assumes 0; if
 <span class="csguide-arg">s</span> is not given, PipeDream assumes 1.</p>
+
 
 <h2>GROWTH</h2>
 
@@ -71,9 +111,10 @@ class="csguide-arg">LOGEST_data</span>) and applies it to <span
 class="csguide-arg">x_data</span> to return estimated <span
 class="csguide-arg">y_data</span>.</p>
 
+
 <h2>LINEST</h2>
 
-<p><code>LINEST(<span class="csguide-arg">known_y's</span>,<span
+<p><code>LINEST(<span class="csguide-arg">known_y's</span>, <span
 class="csguide-arg">known_x's</span>)</code></p>
 
 <p>Calculates the formula of the straight line which best fits your data (<span
@@ -309,9 +350,32 @@ two ways of calculating the result.</p>
 </table>
 </div>
 
+
+<h2>LISTCOUNT</h2>
+
+<p><code>LISTCOUNT(<span class="csguide-arg">array</span>)</code></p>
+
+<p>Returns a two-column array with the first column being a sorted list of
+unique entries from the first column of <span class="csguide-arg">array</span>,
+and the second column giving the number of occurrences of each entry.</p>
+
+<p>If <span class="csguide-arg">array</span> has two columns the second column
+will be treated as a corresponding set of numbers to be added in to the total.</p>
+
+<p>Example:</p>
+
+<p>You have a list of customer names in column <code>A</code> and in column <code>C</code> you have a list of sales figures for individual sales to those customers, then</p>
+
+<p style="margin-left:2em;"><code>SET_VALUE(D1E20,LISTCOUNT({A1A100,C1C100}))</code></p>
+
+<p>would write out 20 rows of customers names and total sales figures in <code>D1E20</code>. <code>{A1A100,C1C100}</code> makes a two column array of 100 rows.</p>
+
+<p>You could use <code>SORT()</code> and <code>FLIP()</code> to sort the result of <code>LISTCOUNT()</code> into order before listing it out.</p>
+
+
 <h2>LOGEST</h2>
 
-<p><code>LOGEST(<span class="csguide-arg">known_y's</span>,<span
+<p><code>LOGEST(<span class="csguide-arg">known_y's</span>, <span
 class="csguide-arg">known_x's</span>)</code></p>
 
 <p>Calculates an exponential curve which fits your data and returns an array
@@ -330,17 +394,42 @@ style="font-size: 120%">&Pi;</span><sup>i=m</sup>(m<sub>i</sub><sup>x<sub>i</sub
 
 <p>This function is simply a logarithmic version of LINEST.</p>
 
+
 <h2>MAX</h2>
 
 <p><code>MAX(<span class="csguide-arg">list</span>)</code></p>
 
 <p>Returns the maximum value in <span class="csguide-arg">list</span>.</p>
 
+
+<h2>MEDIAN</h2>
+
+<p><code>MEDIAN(<span class="csguide-arg">array</span>)</code></p>
+
+<p>Returns the median value in the (not necessarily sorted) range.</p>
+
+<p>If there are an even number of values in the range, the mean of the two middle values is returned.</p>
+
+
 <h2>MIN</h2>
 
 <p><code>MIN(<span class="csguide-arg">list</span>)</code></p>
 
 <p>Returns the minimum value in <span class="csguide-arg">list</span>.</p>
+
+
+<h2>PERMUT</h2>
+
+<p><code>PERMUT(<span class="csguide-arg">n</span>, <span class="csguide-arg">k</span>)</code></p>
+
+<p>This function yields the number of permutations of <span class="csguide-arg">n</span> unlike things taken <span class="csguide-arg">k</span> at a time.</p>
+
+<p>The formula used is:</p>
+
+<p><sub><i>n</i></sub><i>P</i><sub><i>k</i></sub> = <i>n</i>! &divide; (<i>n</i> - <i>k</i>)!</p>
+
+<p>For very large <span class="csguide-arg">n</span> this is an approximation achieved using logarithms.</p>
+
 
 <h2>RAND</h2>
 
@@ -353,11 +442,36 @@ same each time PipeDream starts.</p>
 seed.</p>
 
 
-
 <p><code>RAND(<span class="csguide-arg">number</span>)</code></p>
 
 <p>Generates a random number in the range 0 to 1 using <span
 class="csguide-arg">number</span> as the initial seed.</p>
+
+
+<h2>RANK</h2>
+
+<p><code>RANK(<span class="csguide-arg">array</span> {, <span
+class="csguide-arg">spearflag</span>})</code></p>
+
+<p>Takes an <span class="csguide-arg">array</span> and ranks the values it contains, producing as an output an array with two columns { <i>rank</i>, <i>entries</i> }, where</p>
+
+
+<p><span class="csguide-arg">Rank</span> is the rank of each value (from highest to lowest).</p>
+
+<p><span class="csguide-arg">Entries</span> contains the number of entries of that value in the input array.</p>
+
+<p>If <span class="csguide-arg">spearflag</span> is present and is non-zero, equally ranked entries are adjusted so that the output is suitable for passing to the SPEARMAN() rank correlation function.</p>
+
+
+<h2>SPEARMAN</h2>
+
+<p><code>SPEARMAN(<span class="csguide-arg>array1</span>, <span
+class="csguide-arg>array2</span>)</code></p>
+
+Returns the Spearman's rank correlation coefficient for the two arrays.
+
+The input <span class="csguide-arg>array</span>s can be taken from the RANK() function.
+
 
 <h2>STD</h2>
 
@@ -367,6 +481,7 @@ class="csguide-arg">number</span> as the initial seed.</p>
 class="csguide-arg">list</span>.</p>
 
 <p>This is the square root of the variance. See VAR for the equation used.</p>
+
 
 <h2>STDP</h2>
 
@@ -378,15 +493,17 @@ class="csguide-arg">list</span>.</p>
 <p>This is the square root of the population variance. See VARP for the
 equation used.</p>
 
+
 <h2>TREND</h2>
 
-<p><code>TREND(<span class="csguide-arg">LINEST_data</span>,<span
+<p><code>TREND(<span class="csguide-arg">LINEST_data</span>, <span
 class="csguide-arg">x_data</span>)</code></p>
 
 <p>Takes the result of the LINEST function (<span
 class="csguide-arg">LINEST_data</span>) and applies it to <span
 class="csguide-arg">x_data</span> to return estimated <span
 class="csguide-arg">y_data</span>.</p>
+
 
 <h2>VAR</h2>
 
@@ -407,6 +524,7 @@ class="csguide-arg">n</span>&middot;(<span class="csguide-arg">n</span>-1)</p>
 
 <p>where <span class="csguide-arg">x</span> is each value and <span
 class="csguide-arg">n</span> is the number of values.</p>
+
 
 <h2>VARP</h2>
 

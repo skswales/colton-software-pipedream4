@@ -813,7 +813,7 @@ enum LINE_SEP_LIST_OFFSETS /* fits in U8 */
 exported functions
 */
 
-/* changed by rjm on 22.9.91
+/* changed by RJM on 22.9.91
     force_load parameter added so that if driver is same name as existing it doesn't bother loading it
     so now it is windvar, PRINT_fn can happily call it
 */

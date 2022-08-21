@@ -13,7 +13,7 @@
 
 #include "common/gflags.h"
 
-/* header file (exports - stop winge on release compilation) */
+/* header file (exports - stop whinge on release compilation) */
 #include "strings.h"
 
 #ifndef MAKE_MESSAGE_FILE
@@ -623,24 +623,25 @@ string(421, PropagatedErrStr,                   "Propagated from %s: ");
 
 string(500, function_menu_title,                "Functions");
 string(501, function_menu_entries,              "123456789012|"
-                                                "Database,Date,Financial,Lookup,String|"
-                                                "Complex,Maths,Matrix,Stats,Trig|"
-                                                "Misc|"
-                                                "Control,Custom,Names|"
-                                                ">Define name,Edit name"
-      );
+                                                "Database,"         "Date & time,"
+                                                "Financial,"        "Lookup & reference,"   "String|"
+                                                "Complex number,"   "Mathematical,"
+                                                "Matrix,"           "Statistical,"          "Trigonometrical|"
+                                                "Miscellaneous|"
+                                                "Control,"          "Custom,"               "Names|"
+                                                ">Define name,"     "Edit name"             );
 
 string(502, menu_function_database_title,       "Database");
-string(503, menu_function_date_title,           "Date");
+string(503, menu_function_date_title,           "Date & time");
 string(504, menu_function_financial_title,      "Financial");
 string(505, menu_function_lookup_title,         "Lookup");
 string(506, menu_function_string_title,         "String");
 string(507, menu_function_complex_title,        "Complex");
-string(508, menu_function_maths_title,          "Maths");
+string(508, menu_function_maths_title,          "Maths.");
 string(509, menu_function_matrix_title,         "Matrix");
-string(510, menu_function_stat_title,           "Stats");
-string(511, menu_function_trig_title,           "Trig");
-string(512, menu_function_misc_title,           "Misc");
+string(510, menu_function_stat_title,           "Statistical");
+string(511, menu_function_trig_title,           "Trigonom.");
+string(512, menu_function_misc_title,           "Misc.");
 string(513, menu_function_control_title,        "Control");
 string(514, menu_function_custom_title,         "Custom");
 string(515, menu_function_names_title,          "Names");

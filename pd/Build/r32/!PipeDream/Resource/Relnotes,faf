@@ -71,6 +71,28 @@ obtained from
 
 <H2>Release history</H2>
 
+<H4>4.52/08 (18 Dec 2014)</H4>
+
+<P>Templates adjusted to cater for use of a larger Desktop font for
+readability (used 14pt Homerton.Medium set by Paul Vigay's !MiscSetup).</P>
+
+<P>Replaced PipeDream's flawed date handling code with code backported from Fireworkz.</P>
+
+<P>Formulae may be entered with an optional leading equals sign.</P>
+
+<P>Category names and function categorisation in spreadsheet function menu
+are more consistent with (updated) documentation.</P>
+
+<P>BIN() spreadsheet function has always taken an arbitrary shaped array or
+range of data as its first parameter. Previously only the first column of this
+data would have been binned; now all the supplied data is binned.</P>
+
+<P>BINOM() spreadsheet function removed - this was just a synonym for COMBIN().</P>
+
+<P>BETA(), FACT(), GAMMALN() spreadsheet functions now use the lgamma() function
+provided by the SharedCLibrary (used to be FreeBSD implementation).
+Results may differ around the 15th digit.</P>
+
 <H4>4.52/07 (05 Nov 2014)</H4>
 
 <P>!Run ensures ColourPicker module is available on startup - this module is
@@ -115,6 +137,9 @@ box (like Save) with respect to window / application closing.</P>
 <P>Automatically generated temporary arrays of strings (e.g.
 REPT(text_cell_reference, {1,2,3})) no longer cause heap corruption (problem
 exposed by changes in 4.50/39).</P>
+
+<P>LISTCOUNT() spreadsheet function has been backported from Fireworkz (see
+functions added since 4.50/00 below).</P>
 
 <P>SORT() spreadsheet function no longer masks potential memory full errors
 during creation of temporary data array prior to the sort.</P>
@@ -1125,6 +1150,30 @@ labels.</P>
 displayed in the worksheet. This is useful for annotating worksheets, and
 printing out the formula which created the results shown in the worksheet.</P>
 
+<H4>LISTCOUNT(<i>array</i>)</H4>
+
+<p>Returns a two-column array with the first column being a sorted list of
+unique entries from the first column of <i>array</i>, and the second column
+giving the number of occurrences of each entry.</p>
+
+<p>If <i>array</i> has two columns the second column will be treated as a
+corresponding set of numbers to be added in to the total.</p>
+
+<p>Example:</p>
+
+<p>You have a list of customer names in column <code>A</code> and in column
+<code>C</code> you have a list of sales figures for individual sales to
+those customers, then</p>
+
+<p><code>SET_VALUE(D1E20,LISTCOUNT({A1A100,C1C100}))</code></p>
+
+<p>would write out 20 rows of customers names and total sales figures in
+<code>D1E20</code>. <code>{A1A100,C1C100}</code> makes a two column array of
+100 rows.</p>
+
+<p>You could use <code>SORT()</code> and <code>FLIP</a>()</code> to sort the
+result of <code>LISTCOUNT()</code> into order before listing it out.</p>
+
 <H4>MEDIAN(<I>array</I>)</H4>
 
 <P>Returns the median value in the (not necessarily sorted) range.</P>
@@ -1339,8 +1388,6 @@ in @slot_ref@ chains which fail to complete calculation.</P>
 
 <P>Stack overflows which should raise(SIGSTAK) instead give 'Uncaught trap'.</P>
 
-<P>LISTCOUNT() function has not been successfully backported from Fireworkz.</P>
-
 <P>Pressing ESCAPE whilst dragging a file somewhere to be saved may sometimes
 cause a Data Abort.</P>
 
@@ -1380,15 +1427,6 @@ dialogue cannot reach. Instead, a simple obey file is included called
 <A ID="CopyrightExtra">
 <H4>Portions (Reporter interface code)</H4>
 <P>Copyright (C) 2012-2014 Stuart Swales.</P>
-
-<HR/>
-<H4>Portions (log-gamma function code)</H4>
-<P>Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.</P>
-<PRE>
-"Developed at SunSoft, a Sun Microsystems, Inc. business. Permission to use,
-copy, modify, and distribute this software is freely granted, provided that
-this notice is preserved."
-</PRE>
 
 <HR/>
 <P>End of PipeDream Release Notes</P>

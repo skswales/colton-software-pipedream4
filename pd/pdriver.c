@@ -149,7 +149,7 @@ encode_highlight_field(
 *
 ******************************************************************************/
 
-/* rjm added this STATIC on 22.9.91 */
+/* RJM added this STATIC on 22.9.91 */
 static char *current_driver_name = NULL;
 
 extern void
@@ -175,7 +175,7 @@ load_driver(
     S32 blank_name;
     S32 res;
 
-    /* maybe we already have the driver ? rjm 22.9.91 */
+    /* maybe we already have the driver ? RJM 22.9.91 */
     name = *namep;
 
     blank_name = str_isblank(name);

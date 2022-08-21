@@ -37,37 +37,13 @@
 <p>Returns the absolute positive value of <span
 class="csguide-arg">number</span>.</p>
 
-<h2>BETA</h2>
-
-<p><code>BETA(<span class="csguide-arg">a</span>,<span class="csguide-arg">b</span>)</code></p>
-
-<p>Returns the value of the Beta function for arguments <span class="csguide-arg">a</span>,<span class="csguide-arg">b</span>.</p>
-
-<p>One definition of the Beta function is</p>
-
-<p>beta(<i>a</i>, <i>b</i>) = gamma(<i>a</i>) &times; gamma(<i>b</i>) &divide; gamma(<i>a</i> + <i>b</i>)</p>
-
-<p>This special function is actually evaluated by PipeDream using the formula</p>
-
-<p>beta(<i>a</i>, <i>b</i>) = exp( gammaln(<i>a</i>) + gammaln(<i>b</i>) - gammaln(<i>a</i> + <i>b</i>) )</p>
-
-<h2>COMBIN</h2>
-
-<p><code>COMBIN(<span class="csguide-arg">n</span>,<span class="csguide-arg">k</span>)</code></p>
-
-<p>This function yields the number of combinations of <span class="csguide-arg">n</span> unlike things taken <span class="csguide-arg">k</span> at a time.</p>
-
-<p>The formula used is:</p>
-
-<p><sub><i>n</i></sub><i>C</i><sub><i>k</i></sub> = <i>n</i>! &divide; ((<i>n</i> - <i>k</i>)! &times; <i>k</i>!)</p>
-
-<p>For very large <span class="csguide-arg">n</span> this is an approximation achieved using logarithms.</p>
 
 <h2>EXP</h2>
 
 <p><code>EXP(<span class="csguide-arg">number</span>)</code></p>
 
 <p>Returns the constant e (2.71828184..) raised to the specified power.</p>
+
 
 <h2>FACT</h2>
 
@@ -83,17 +59,13 @@ class="csguide-arg">number</span>.</p>
 
 <p>For very large <span class="csguide-arg">n</span> this is an approximation achieved using logarithms.</p>
 
-<h2>GAMMALN</h2>
-
-<p><code>GAMMALN(<span class="csguide-arg">number</span>)</code></p>
-
-<p>This special function yields the natural logarithm of the gamma function of <span class="csguide-arg">number</span>.</p>
 
 <h2>INT</h2>
 
 <p><code>INT(<span class="csguide-arg">number</span>)</code></p>
 
 <p>Returns the integer part of <span class="csguide-arg">number</span>.</p>
+
 
 <h2>LN</h2>
 
@@ -102,6 +74,7 @@ class="csguide-arg">number</span>.</p>
 <p>Returns the natural logarithm of <span class="csguide-arg">number</span>.
 The number must be positive.</p>
 
+
 <h2>LOG</h2>
 
 <p><code>LOG(<span class="csguide-arg">number</span>)</code></p>
@@ -109,25 +82,59 @@ The number must be positive.</p>
 <p>Returns the logarithm to base 10 of <span
 class="csguide-arg">number</span>. The number must be positive.</p>
 
+
 <h2>MOD</h2>
 
-<p><code>MOD(<span class="csguide-arg">a</span>,<span
+<p><code>MOD(<span class="csguide-arg">a</span>, <span
 class="csguide-arg">b</span>)</code></p>
 
 <p>Gives the remainder after division of <span class="csguide-arg">a</span> by
 <span class="csguide-arg">b</span>.</p>
 
-<h2>PERMUT</h2>
 
-<p><code>PERMUT(<span class="csguide-arg">n</span>,<span class="csguide-arg">k</span>)</code></p>
+<h2>ROUND</h2>
 
-<p>This function yields the number of permutations of <span class="csguide-arg">n</span> unlike things taken <span class="csguide-arg">k</span> at a time.</p>
+<p><code>ROUND(<span class="csguide-arg">number</span>, <span
+class="csguide-arg">x</span>)</code></p>
 
-<p>The formula used is:</p>
+<p>Rounds <span class="csguide-arg">number</span> to <span
+class="csguide-arg">x</span> places.</p>
 
-<p><sub><i>n</i></sub><i>P</i><sub><i>k</i></sub> = <i>n</i>! &divide; (<i>n</i> - <i>k</i>)!</p>
+<p>For example:</p>
 
-<p>For very large <span class="csguide-arg">n</span> this is an approximation achieved using logarithms.</p>
+<p style="margin-left:2em;"><code>ROUND(12345.678,2)</code></p>
+
+<p>returns 12345.68.</p>
+
+<p style="margin-left:2em;"><code>ROUND(12345.678,-2)</code></p>
+
+<p>returns 12300.</p>
+
+<p>ROUND can be used to help the inaccuracy problems often encountered in
+accountancy.</p>
+
+<p>For example, if you have 1.6 in slots A1 and A2, adding them together gives
+the result 3.2, but if all the numbers are being displayed without decimal
+places, it will look as though adding 2+2=3. This is because all calculations
+are performed to the greatest accuracy, but the display of numbers is rounded.
+If you use <code>ROUND(A1,0)</code> and <code>ROUND(A2,0)</code>, PipeDream
+will return 2 from both of these; therefore, what appears on the screen will
+look consistent even though it may not match the original data.</p>
+
+<p>The <span class="csguide-command">Snapshot</span> command is useful with
+ROUND. If you have a column of numbers and you want to have them rounded to a
+particular degree of precision:</p>
+
+<p>1. Insert a new column using <span class="csguide-key">Ctrl-EIC</span>.</p>
+
+<p>2. Use ROUND and the <span class="csguide-command">Replicate Down</span>
+command (<span class="csguide-key">Ctrl-BRD</span>) to create a new column of data.</p>
+
+<p>3. Mark the block and use the <span class="csguide-command">Snapshot</span>
+command (<span class="csguide-key">Ctrl-BSS</span>)to fix the numbers permanently in place.</p>
+
+<p>4. Use the new column in your calculations.</p>
+
 
 <h2>SGN</h2>
 
@@ -137,12 +144,14 @@ class="csguide-arg">b</span>)</code></p>
 class="csguide-arg">number</span> is negative, zero, or positive, non-zero
 respectively.</p>
 
+
 <h2>SQR</h2>
 
 <p><code>SQR(<span class="csguide-arg">number</span>)</code></p>
 
 <p>Returns the positive square root of <span
 class="csguide-arg">number</span>. The number cannot be less than zero.</p>
+
 
 <h2>SUM</h2>
 

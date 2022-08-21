@@ -231,7 +231,7 @@ gr_numtostr(
         else if(*eptr == '-')
             eptr++;
 
-        /* remove leading zeroes from exponent */
+        /* remove leading zeros from exponent */
         tptr = eptr;
         while((*tptr++ == '0')  &&  *tptr)
             ;

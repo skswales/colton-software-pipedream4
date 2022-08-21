@@ -350,7 +350,7 @@ isnewrec(
         return(FALSE);
 
     #if 0
-    /* SKS removed 21.3.90 'cos RJM complained   --   I should think so! rjm, 14.9.91 */
+    /* SKS removed 21.3.90 'cos RJM complained   --   I should think so! RJM, 14.9.91 */
     if((sl->type == SL_TEXT)  &&  (sl->content.text[0] == SPACE))
         return(FALSE);
     #endif
@@ -520,7 +520,7 @@ SortBlock_fn(void)
         /* wait till all is recalced */
         ev_recalc_all();
 
-        /* rjm removes updaterefs option on 14.9.91 */
+        /* RJM removes updaterefs option on 14.9.91 */
 #if 0
         updaterefs = (d_sort[SORT_UPDATE_REFS].option == 'Y');
 #endif

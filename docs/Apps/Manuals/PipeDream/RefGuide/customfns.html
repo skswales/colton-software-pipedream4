@@ -306,6 +306,7 @@ the true and false cases and there is no ENDIF statement.</p>
 <pre>IF(@num&lt;=0,RESULT(1),RESULT(@num))</pre>
 </div>
 
+
 <h3>WHILE - ENDWHILE</h3>
 
 <p>Loops while the condition is true.</p>
@@ -316,6 +317,7 @@ the true and false cases and there is no ENDIF statement.</p>
 <pre>  SET_VALUE(D56,D56+E63)</pre>
 <pre>ENDWHILE</pre>
 </div>
+
 
 <h3>REPEAT - UNTIL</h3>
 
@@ -333,11 +335,12 @@ the true and false cases and there is no ENDIF statement.</p>
 <p>Notice that there is a circular reference in A11. This is allowed in a
 custom function sheet.</p>
 
+
 <h3>FOR</h3>
 
-<p><code>FOR("<span class="csguide-arg">counter_name</span>",<span
-class="csguide-arg">start_n</span>,<span
-class="csguide-arg">end_n</span>{,<span
+<p><code>FOR("<span class="csguide-arg">counter_name</span>", <span
+class="csguide-arg">start_n</span>, <span
+class="csguide-arg">end_n</span> {, <span
 class="csguide-arg">step_n</span>})</code></p>
 
 <p>Loops while incrementing or decrementing a counter. PipeDream defines the
@@ -364,6 +367,7 @@ class="csguide-arg">step_n</span> is not given, the value 1 is used.</p>
 <pre>NEXT</pre>
 </div>
 
+
 <h3>CONTINUE</h3>
 
 <p>Execution continues at the most recent loop.</p>
@@ -372,6 +376,7 @@ class="csguide-arg">step_n</span> is not given, the value 1 is used.</p>
   <li>In a REPEAT loop, it continues at the UNTIL.</li>
   <li>In a FOR loop, it continues at the NEXT.</li>
 </ul>
+
 
 <h3>BREAK</h3>
 
@@ -385,6 +390,7 @@ by giving a parameter.</p>
 <p style="margin-left:2em;"><code>BREAK(2)</code></p>
 
 <p>breaks out of two loops.</p>
+
 
 <p>The following custom functions are provided in the PipeDream Examples
 archive:</p>

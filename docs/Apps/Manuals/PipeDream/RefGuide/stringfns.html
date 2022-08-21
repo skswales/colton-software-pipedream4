@@ -43,6 +43,7 @@ class="csguide-arg">n</span>.</p>
 
 <p>returns <code>"A"</code>.</p>
 
+
 <h2>CODE</h2>
 
 <p><code>CODE(<span class="csguide-arg">"text"</span>)</code></p>
@@ -56,9 +57,10 @@ class="csguide-arg">text</span>.</p>
 
 <p>returns <code>65</code>.</p>
 
+
 <h2>EXACT</h2>
 
-<p><code>EXACT(<span class="csguide-arg">"text1"</span>,<span
+<p><code>EXACT(<span class="csguide-arg">"text1"</span>, <span
 class="csguide-arg">"text2"</span>)</code></p>
 
 <p>If <span class="csguide-arg">text1</span> exactly matches <span
@@ -73,10 +75,20 @@ class="csguide-arg">text2</span>, returns 0.</p>
 
 <p style="margin-left:2em;"><code>EXACT("Word","word")</code> returns 0.</p>
 
+
+<h2>FORMULA_TEXT</h2>
+
+<p><code>FORMULA_TEXT(<span class="csguide-arg">slot_ref</span>)</code></p>
+
+<p>Returns as a string the formula in the slot referenced, so that it can be
+displayed in the worksheet. This is useful for annotating worksheets, and
+printing out the formula which created the results shown in the worksheet.</p>
+
+
 <h2>FIND</h2>
 
-<p><code>FIND(<span class="csguide-arg">"find_text"</span>,<span
-class="csguide-arg">"in_text"</span>{,<span
+<p><code>FIND(<span class="csguide-arg">"find_text"</span>, <span
+class="csguide-arg">"in_text"</span> {, <span
 class="csguide-arg">start_n</span>})</code></p>
 
 <p>Looks for <span class="csguide-arg">find_text</span> in <span
@@ -95,13 +107,14 @@ class="csguide-arg">find_text</span> starts.</p>
 
 <p>FIND is case-sensitive and does not ignore leading and trailing spaces.</p>
 
+
 <h2>JOIN</h2>
 
-<p><code>JOIN(<span class="csguide-arg">"text1"</span>,<span
-class="csguide-arg">"text2"</span>,<span
-class="csguide-arg">"text3"</span>,<span
-class="csguide-arg">"text4"</span>,<span
-class="csguide-arg">"text5"</span>,...)</code></p>
+<p><code>JOIN(<span class="csguide-arg">"text1"</span>, <span
+class="csguide-arg">"text2"</span>, <span
+class="csguide-arg">"text3"</span>, <span
+class="csguide-arg">"text4"</span>, <span
+class="csguide-arg">"text5"</span>, ...)</code></p>
 
 <p>Joins strings together.</p>
 
@@ -111,9 +124,10 @@ class="csguide-arg">"text5"</span>,...)</code></p>
 
 <p>returns <code>"backgammon"</code>.</p>
 
+
 <h2>LEFT</h2>
 
-<p><code>LEFT(<span class="csguide-arg">"text"</span>,<span
+<p><code>LEFT(<span class="csguide-arg">"text"</span>, <span
 class="csguide-arg">n</span>)</code></p>
 
 <p>Returns the leftmost <span class="csguide-arg">n</span> characters of <span
@@ -124,6 +138,7 @@ class="csguide-arg">text</span>.</p>
 <p style="margin-left:2em;"><code>LEFT("rightwing",5)</code></p>
 
 <p>returns <code>"right"</code>.</p>
+
 
 <h2>LENGTH</h2>
 
@@ -138,6 +153,7 @@ class="csguide-arg">text</span>.</p>
 
 <p>returns <code>3</code>.</p>
 
+
 <h2>LOWER</h2>
 
 <p><code>LOWER(<span class="csguide-arg">"text"</span>)</code></p>
@@ -151,10 +167,11 @@ lower-case.</p>
 
 <p>returns <code>"big ben"</code>.</p>
 
+
 <h2>MID</h2>
 
-<p><code>MID(<span class="csguide-arg">"text"</span>,<span
-class="csguide-arg">start_n</span>,<span
+<p><code>MID(<span class="csguide-arg">"text"</span>, <span
+class="csguide-arg">start_n</span>, <span
 class="csguide-arg">chars_n</span>)</code></p>
 
 <p>Returns the middle <span class="csguide-arg">chars_n</span> characters of
@@ -166,6 +183,7 @@ class="csguide-arg">start_n</span>.</p>
 <p style="margin-left:2em;"><code>MID("middle of the road",8,6)</code></p>
 
 <p>returns <code>"of the"</code>.</p>
+
 
 <h2>PROPER</h2>
 
@@ -180,10 +198,11 @@ class="csguide-arg">text</span> upper-case.</p>
 
 <p>returns <code>"Big Ben</code>".</p>
 
+
 <h2>REPLACE</h2>
 
-<p><code>REPLACE("text",<span class="csguide-arg">start_n</span>,<span
-class="csguide-arg">chars_n</span>,<span
+<p><code>REPLACE("text", <span class="csguide-arg">start_n</span>, <span
+class="csguide-arg">chars_n</span>, <span
 class="csguide-arg">"with_text"</span>)</code></p>
 
 <p>Replaces the part of <span class="csguide-arg">text</span> starting at
@@ -198,9 +217,10 @@ class="csguide-arg">with_text</span>.</p>
 
 <p>returns <code>"PipeDream 4 is brilliant</code>".</p>
 
+
 <h2>REPT</h2>
 
-<p><code>REPT(<span class="csguide-arg">"text"</span>,<span
+<p><code>REPT(<span class="csguide-arg">"text"</span>, <span
 class="csguide-arg">n</span>)</code></p>
 
 <p>Repeats <span class="csguide-arg">text</span> <span
@@ -211,6 +231,7 @@ class="csguide-arg">n</span> times.</p>
 <p style="margin-left:2em;"><code>REPT("yo",2)</code></p>
 
 <p>returns <code>"yoyo"</code>.</p>
+
 
 <h2>REVERSE</h2>
 
@@ -224,9 +245,10 @@ class="csguide-arg">n</span> times.</p>
 
 <p>returns <code>"4 3 2 1</code>".</p>
 
+
 <h2>RIGHT</h2>
 
-<p><code>RIGHT(<span class="csguide-arg">"text"</span>,<span
+<p><code>RIGHT(<span class="csguide-arg">"text"</span>, <span
 class="csguide-arg">n</span>)</code></p>
 
 <p>Returns the rightmost <span class="csguide-arg">n</span> characters of
@@ -238,9 +260,10 @@ class="csguide-arg">n</span>)</code></p>
 
 <p>returns "<code>wing"</code>.</p>
 
+
 <h2>STRING</h2>
 
-<p><code>STRING(<span class="csguide-arg">n</span>,<span
+<p><code>STRING(<span class="csguide-arg">n</span>, <span
 class="csguide-arg">decimals</span>)</code></p>
 
 <p>Converts <span class="csguide-arg">n</span> from a number to a string with
@@ -255,6 +278,28 @@ class="csguide-arg">decimals</span>)</code></p>
 <p>See the description of the ROUND function in <a
 href="miscfns.html">Miscellaneous Functions</a>.</p>
 
+
+<h2>TEXT</h2>
+
+<p><code>TEXT(<span class="csguide-arg">number</span>, <span
+class="csguide-arg">string</span>)</code></p>
+
+<p>Returns a string of the <span class="csguide-arg">number</span> in the style specified. This allows
+formatted results other than those provided by PipeDream's style system.</P>
+
+<p><span class="csguide-arg">number</span> may be a number or a date.</p>
+
+<p><span class="csguide-arg">string</span> is a format string in Fireworkz number format style.</p>
+
+<p>Please refer to the Fireworkz Spreadsheet Guide for details.</p>
+
+<p>For example,</p>
+
+<p style="margin-left:2em;"><code>TEXT(1234.567, "&euro;#,###.00")</code> returns <code>&euro;1,234.57</code></p>
+
+<p style="margin-left:2em;"><code>TEXT(1234.567, "g0.###\m")</code> returns <code>1.235km</code></p>
+
+
 <h2>TRIM</h2>
 
 <p><code>TRIM(<span class="csguide-arg">"text"</span>)</code></p>
@@ -262,6 +307,7 @@ href="miscfns.html">Miscellaneous Functions</a>.</p>
 <p>Removes all leading and trailing spaces from <span
 class="csguide-arg">text</span> and converts multiple spaces inside <span
 class="csguide-arg">text</span> into single spaces.</p>
+
 
 <h2>UPPER</h2>
 
@@ -275,6 +321,7 @@ upper-case.</p>
 <p style="margin-left:2em;"><code>UPPER("Big Ben")</code></p>
 
 <p>returns <code>"BIG BEN"</code>.</p>
+
 
 <h2>VALUE</h2>
 

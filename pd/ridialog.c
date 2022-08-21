@@ -1632,7 +1632,7 @@ dproc_aboutprog(
 
 #define sort_FirstColumn      2        /* pairs of on/off(ascending) & text(column) */
 
-/* rjm switches out update refs on 14.9.91 */
+/* RJM switches out update refs on 14.9.91 */
 #if 1
 #define sort_MultiRowRecords  sort_FirstColumn + 2*SORT_FIELD_DEPTH + 0
 #else
@@ -2592,8 +2592,8 @@ dproc_print(
     dialog__setradio(print_Portrait, print_Landscape, &dptr[P_ORIENT]);
     dialog__setnumeric(print_Scale,                   &dptr[P_SCALE]);
 
-        /* rjm on 22.9.91 thinks d_driver_PT is a windvar at this point */
-        /* sks confirms rjm's comment - only the windvars for a particular
+        /* RJM on 22.9.91 thinks d_driver_PT is a windvar at this point */
+        /* SKS confirms RJM's comment - only the windvars for a particular
          * dialog get swapped in and out of the dialog structure
         */
       if(d_driver_PT != driver_riscos)

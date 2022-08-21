@@ -422,6 +422,22 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\ev_fndat.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\ev_fnfin.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\ev_fnsta.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\ev_fnstr.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\ev_func.c"
 					>
 				</File>
@@ -435,6 +451,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\cmodules\ev_mcpx.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\ev_mtri.c"
 					>
 				</File>
 				<File
@@ -1753,26 +1773,6 @@
 			<Filter
 				Name="pd_FreeBSD"
 				>
-				<File
-					RelativePath="..\..\..\..\external\FreeBSD\srcp\lib\msun\src\e_lgamma_r.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\external\FreeBSD\srcp\lib\msun\src\k_cos.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\external\FreeBSD\srcp\lib\msun\src\k_sin.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\external\FreeBSD\srcp\lib\msun\src\math.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\external\FreeBSD\srcp\lib\msun\src\math_private.h"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter

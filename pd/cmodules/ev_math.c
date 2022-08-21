@@ -7,9 +7,7 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Semantic routines for evaluator */
-
-/* MRJC May 1991 */
+/* Mathematical and Matrix function routines for evaluator */
 
 #include "common/gflags.h"
 
@@ -17,7 +15,6 @@
 #include "cmodules/ev_eval.h"
 
 #include "cmodules/mathxtra.h"
-#include "cmodules/mathxtr2.h"
 
 /* local header file */
 #include "ev_evali.h"
@@ -27,12 +24,59 @@
 #include <errno.h>
 
 /*
-internal functions
+internally exported functions
 */
 
+/******************************************************************************
+*
+* computes the product of all integers
+* in the range start..end inclusive
+* start, end assumed to be +ve, non-zero
+*
+******************************************************************************/
+
+extern void
+product_between(
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InVal_     S32 start,
+    _InVal_     S32 end)
+{
+    S32 i;
+
+    if(RPN_DAT_REAL == p_ev_data_res->did_num)
+        p_ev_data_res->arg.fp = start;
+    else
+        p_ev_data_res->arg.integer = start;
+
+    for(i = start + 1; i <= end; ++i)
+        {
+        /* keep in integer where possible */
+        if(RPN_DAT_REAL != p_ev_data_res->did_num)
+            {
+            UMUL64_RESULT result;
+
+            umul64(p_ev_data_res->arg.integer, i, &result);
+
+            if((0 == result.HighPart) && (0 == (result.LowPart >> 31)))
+                { /* result still fits in integer */
+                p_ev_data_res->arg.integer = (S32) result.LowPart;
+                continue;
+                }
+
+            /* have to go to fp now result has outgrown integer and retry the multiply */
+            ev_data_set_real(p_ev_data_res, (F64) p_ev_data_res->arg.integer);
+            }
+
+        p_ev_data_res->arg.fp *= i;
+        }
+
+    if(RPN_DAT_REAL != p_ev_data_res->did_num)
+        p_ev_data_res->did_num = ev_integer_size(p_ev_data_res->arg.integer);
+}
+
 _Check_return_
-static STATUS
-err_from_errno(void)
+extern STATUS
+status_from_errno(void)
 {
     switch(errno)
     {
@@ -44,317 +88,302 @@ err_from_errno(void)
 
 /******************************************************************************
 *
-* acosh(number)
+* Mathematical functions
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_acosh)
+/******************************************************************************
+*
+* NUMBER abs(number)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_abs)
 {
-    const F64 number = args[0]->arg.fp;
+    exec_func_ignore_parms();
+
+    if(RPN_DAT_REAL == args[0]->did_num)
+        ev_data_set_real(p_ev_data_res, fabs(args[0]->arg.fp));
+    else
+        ev_data_set_integer(p_ev_data_res, abs(args[0]->arg.integer));
+}
+
+/******************************************************************************
+*
+* REAL exp(number)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_exp)
+{
+    F64 number = args[0]->arg.fp;
+
+    exec_func_ignore_parms();
+
+    ev_data_set_real(p_ev_data_res, exp(number));
+
+    /* exp() overflowed? - don't test for underflow case */
+    if(p_ev_data_res->arg.fp == HUGE_VAL)
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_OUTOFRANGE);
+}
+
+/******************************************************************************
+*
+* NUMBER fact(n)
+*
+******************************************************************************/
+
+_Check_return_
+static inline F64
+ln_fact(
+    _InVal_     S32 n)
+{
+    return(lgamma(n + 1.0));
+}
+
+PROC_EXEC_PROTO(c_fact)
+{
+    STATUS err = STATUS_OK;
+    const S32 n = args[0]->arg.integer;
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_acosh(number));
+    if(n < 0)
+        err = EVAL_ERR_ARGRANGE;
+    else if(n <= 163) /* SKS 13nov96 bigger range */
+        {
+        /* assume result will be integer to start with */
+        p_ev_data_res->did_num = RPN_DAT_WORD32;
 
-    /* input less than 1 invalid */
-    /* large positive input causes overflow ***in current algorithm*** */
+        /* function will go to fp as necessary */
+        product_between(p_ev_data_res, 1, n);
+        }
+    else
+        {
+        ev_data_set_real(p_ev_data_res, exp(ln_fact(n)));
+
+        if(errno)
+            err = status_from_errno();
+        }
+
+    if(status_fail(err))
+        ev_data_set_error(p_ev_data_res, err);
+}
+
+/******************************************************************************
+*
+* NUMBER int(number)
+*
+* NB truncates towards zero
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_int)
+{
+    exec_func_ignore_parms();
+
+    if(RPN_DAT_REAL == args[0]->did_num)
+    {
+        /* SKS as per Fireworkz, try pre-rounding an ickle bit so INT((0.06-0.04)/0.01) is 2 not 1 */
+        int exponent;
+        F64 mantissa = frexp(args[0]->arg.fp, &exponent);
+        F64 f64;
+        F64 result;
+
+        if(mantissa > (+1.0 - 1E-14))
+            mantissa = +1.0;
+        else if(mantissa < (-1.0 + 1E-14))
+            mantissa = -1.0;
+        f64 = ldexp(mantissa, exponent);
+
+        (void) modf(f64, &result);
+
+        ev_data_set_real(p_ev_data_res, result);
+        real_to_integer_try(p_ev_data_res);
+    }
+    else
+    {   /*NOP*/
+        *p_ev_data_res = *(args[0]);
+    }
+}
+
+/******************************************************************************
+*
+* REAL ln(number)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_ln)
+{
+    F64 number = args[0]->arg.fp;
+
+    exec_func_ignore_parms();
+
+    errno = 0;
+
+    ev_data_set_real(p_ev_data_res, log(number));
+
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_LOG);
 }
 
 /******************************************************************************
 *
-* acosec(number)
+* REAL log(number)
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_acosec)
+PROC_EXEC_PROTO(c_log)
 {
-    const F64 number = args[0]->arg.fp;
+    F64 number = args[0]->arg.fp;
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_acosec(number));
+    ev_data_set_real(p_ev_data_res, log10(number));
 
-    /* input of magnitude less than 1 invalid */
-    if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* acosech(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_acosech)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, mx_acosech(number));
-
-    /* input of zero invalid */
-    /* input of magnitude near zero causes overflow */
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_LOG);
 }
 
 /******************************************************************************
 *
-* acot(number)
+* NUMBER mod(a, b)
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_acot)
+PROC_EXEC_PROTO(c_mod)
 {
-    const F64 number = args[0]->arg.fp;
-
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, mx_acot(number));
+    switch(two_nums_type_match(args[0], args[1], FALSE))
+    {
+    case TWO_INTS:
+        {
+        S32 s32_a = args[0]->arg.integer;
+        S32 s32_b = args[1]->arg.integer;
+        S32 s32_mod_result;
 
-    /* no error cases */
+        /* SKS after 4.11 03feb92 - gave FP error not zero if trap taken */
+        if(s32_b == 0)
+        {
+            ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
+            return;
+        }
+
+        s32_mod_result = (s32_a % s32_b);
+
+        ev_data_set_integer(p_ev_data_res, s32_mod_result);
+        break;
+        }
+
+    case TWO_REALS:
+        {
+        F64 f64_a = args[0]->arg.fp;
+        F64 f64_b = args[1]->arg.fp;
+        F64 f64_mod_result;
+
+        errno = 0;
+
+        f64_mod_result = fmod(f64_a, f64_b);
+
+        ev_data_set_real(p_ev_data_res, f64_mod_result);
+
+        /* would have divided by zero? */
+        if(errno /* == EDOM */)
+            ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
+
+        break;
+        }
+    }
 }
+
+/* a little note from SKS:
+
+ * it seems that fmod(a, b) guarantees the sign of the result
+ * to be the same sign as a, whereas integer ops give an
+ * implementation defined sign for both a / b and a % b.
+*/
 
 /******************************************************************************
 *
-* acoth(number)
+* REAL round(n, decimals)
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_acoth)
+extern void
+round_common(
+    P_EV_DATA args[EV_MAX_ARGS],
+    _InVal_     S32 n_args,
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InVal_     U32 rpn_did_num)
 {
-    const F64 number = args[0]->arg.fp;
+    BOOL negate_result = FALSE;
+    F64 f64, multiplier;
 
-    exec_func_ignore_parms();
+    {
+        S32 decimal_places = 2;
 
-    errno = 0;
+        if(n_args > 1)
+            decimal_places = MIN(15, args[1]->arg.integer);
 
-    ev_data_set_real(p_ev_data_res, mx_acoth(number));
+        switch(args[0]->did_num)
+        {
+        case RPN_DAT_BOOL8:
+        case RPN_DAT_WORD16:
+        case RPN_DAT_WORD32:
+            if(decimal_places >= 0)
+            {   /* if we have an integer number to be rounded at, or to the right of, the decimal, it's already there */
+                /* NOP */
+                *p_ev_data_res = *(args[0]);
+                return;
+            }
 
-    /* input of magnitude less than 1 invalid */
-    /* input of magnitude near 1 causes overflow */
-    if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
+            f64 = (F64) args[0]->arg.integer; /* have to do it like this */
+            break;
+
+        default:
+            f64 = args[0]->arg.fp;
+            break;
+        }
+
+        /* operate on positive number */
+        if(f64 < 0.0)
+        {
+            negate_result = TRUE;
+            f64 = -f64;
+        }
+
+        multiplier = pow(10.0, (F64) decimal_places);
+    }
+
+    f64 = f64 * multiplier;
+
+    switch(rpn_did_num)
+    {
+    default: default_unhandled();
+#if CHECKING
+    case RPN_FNV_ROUND:
+#endif
+        f64 = floor(f64 + 0.5); /* got a positive number here */
+        break;
+    }
+
+    f64 = f64 / multiplier;
+
+    ev_data_set_real(p_ev_data_res, negate_result ? -f64 : f64);
 }
 
-/******************************************************************************
-*
-* asec(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_asec)
+PROC_EXEC_PROTO(c_round)
 {
-    const F64 number = args[0]->arg.fp;
-
     exec_func_ignore_parms();
 
-    errno = 0;
+    round_common(args, n_args, p_ev_data_res, RPN_FNV_ROUND);
 
-    ev_data_set_real(p_ev_data_res, mx_asec(number));
-
-    /* input of values less than 1 invalid */
-    if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* asech(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_asech)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, mx_asech(number));
-
-    /* negative input or positive values greater than one invalid */
-    /* input of zero or small positive value causes overflow */
-    if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* asinh(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_asinh)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    ev_data_set_real(p_ev_data_res, mx_asinh(number));
-
-    /* no error case */
-}
-
-/******************************************************************************
-*
-* atan_2(a, b)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_atan_2)
-{
-    const F64 a = args[0]->arg.fp;
-    const F64 b = args[1]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, atan2(b, a));
-
-    /* both input args zero? */
-    if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* atanh(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_atanh)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, mx_atanh(number));
-
-    /* input of magnitude 1 or greater invalid */
-    /* input of near magnitude 1 causes overflow */
-    if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* cosh(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cosh)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, cosh(number));
-
-    /* large magnitude input causes overflow */
-    if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* cosec(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cosec)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, mx_cosec(number));
-
-    /* various periodic input yields infinity or overflows */
-    /* large magnitude input yields imprecise value */
-    if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* cosech(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cosech)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, mx_cosech(number));
-
-    /* zero | small magnitude input -> infinity | overflows */
-    if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* cot(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cot)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, mx_cot(number));
-
-    /* various periodic input yields infinity or overflows */
-    /* large magnitude input yields imprecise value */
-    if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* coth(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_coth)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, mx_coth(number));
-
-    /* zero | small magnitude input -> infinity | overflows */
-    if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
+    real_to_integer_try(p_ev_data_res);
 }
 
 /******************************************************************************
@@ -382,84 +411,27 @@ PROC_EXEC_PROTO(c_sgn)
 
 /******************************************************************************
 *
-* sec(number)
+* REAL sqr(number)
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_sec)
+PROC_EXEC_PROTO(c_sqr)
 {
-    const F64 number = args[0]->arg.fp;
+    F64 number = args[0]->arg.fp;
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_sec(number));
+    ev_data_set_real(p_ev_data_res, sqrt(number));
 
-    /* various periodic input yields infinity or overflows */
-    /* large magnitude input yields imprecise value */
-    if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
+    if(errno /* == EDOM */)
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_NEG_ROOT);
 }
 
 /******************************************************************************
 *
-* sech(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_sech)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    ev_data_set_real(p_ev_data_res, mx_sech(number));
-
-    /* no error cases */
-}
-
-/******************************************************************************
-*
-* sinh(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_sinh)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    ev_data_set_real(p_ev_data_res, sinh(number));
-
-    /* large magnitude input causes overflow */
-    if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, err_from_errno());
-}
-
-/******************************************************************************
-*
-* tanh(number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_tanh)
-{
-    const F64 number = args[0]->arg.fp;
-
-    exec_func_ignore_parms();
-
-    ev_data_set_real(p_ev_data_res, tanh(number));
-
-    /* no error cases */
-}
-
-/******************************************************************************
-*
-*  Matrices
+*  Matrix functions
 *
 ******************************************************************************/
 
@@ -500,7 +472,7 @@ determinant(
     {
     case 0:
         *dp = 1.0;
-        break; /* not as silly a question as rjm first thought! (see Bloom, Linear Algebra and Geometry) */
+        break; /* not as silly a question as RJM first thought! (see Bloom, Linear Algebra and Geometry) */
 
     case 1:
         *dp = *ap;
@@ -817,34 +789,35 @@ endpoint:
 
 PROC_EXEC_PROTO(c_m_mult)
 {
-    S32 x1s, x2s, y1s, y2s;
+    S32 xs_0, ys_0;
+    S32 xs_1, ys_1;
 
     exec_func_ignore_parms();
 
     /* check it is an array and get x and y sizes */
-    array_range_sizes(args[0], &x1s, &y1s);
-    array_range_sizes(args[1], &x2s, &y2s);
+    array_range_sizes(args[0], &xs_0, &ys_0);
+    array_range_sizes(args[1], &xs_1, &ys_1);
 
-    if(x1s != y2s)
+    if(xs_0 != ys_1)
         {
         /* whinge about dimensions */
         ev_data_set_error(p_ev_data_res, EVAL_ERR_MISMATCHED_MATRICES);
         return;
         }
 
-    if(status_ok(ss_array_make(p_ev_data_res, x2s, y1s)))
+    if(status_ok(ss_array_make(p_ev_data_res, xs_1, ys_0)))
         {
         S32 x, y;
 
-        for(x = 0; x < x2s; x++)
+        for(x = 0; x < xs_1; x++)
             {
-            for(y = 0; y < y1s; y++)
+            for(y = 0; y < ys_0; y++)
                 {
                 F64 product = 0.0;
                 S32 elem;
                 P_EV_DATA elep;
 
-                for(elem = 0; elem < x1s; elem++)
+                for(elem = 0; elem < xs_0; elem++)
                     {
                     EV_DATA data1, data2;
 
@@ -892,1080 +865,6 @@ PROC_EXEC_PROTO(c_transpose)
                 }
             }
         }
-}
-
-/******************************************************************************
-*
-* GROWTH(logest_result_data, known_x's) is pretty trivial
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_growth)
-{
-    S32 x_vars;
-    S32 x, y;
-    S32 err = 0;
-
-    exec_func_ignore_parms();
-
-    array_range_sizes(args[0], &x, &y);
-
-    x_vars = x - 1;
-
-    if( (x < 2  /*at least c,m*/)  ||
-        ((y != 1 /*no stats*/)  &&
-         (y != 3 /*stats*/   )  )  )
-        {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
-        }
-
-    array_range_sizes(args[1], &x, &y);
-
-    /* SKS after 4.12 28apr92 - same reason as TREND() update */
-    if(x == x_vars)
-        {
-        if(status_ok(ss_array_make(p_ev_data_res, 1, y)))
-            {
-            S32 row;
-
-            for(row = 0; row < y; ++row)
-                {
-                EV_DATA x_data;
-                EV_DATA a_data;
-                F64 product; /* NB. product computed carefully using logs */
-                S32 ci;
-                BOOL negative;
-                P_EV_DATA elep;
-
-                /* start with the constant */
-                array_range_index(&a_data, args[0],
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
-
-                if(a_data.did_num != RPN_DAT_REAL)
-                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                errno = 0;
-
-                /* if initial y data was all -ve then this is a possibility ... */
-                negative = (a_data.arg.fp < 0);
-
-                product = fabs(a_data.arg.fp);
-
-                if(product != 0.0)
-                    {
-                    product = log(product);
-                    assert(errno == 0); /* log(+ve) cannot fail ho ho */
-
-                    /* loop across a row multiplying product by coefficients ^ x variables*/
-                    for(ci = 0; ci < x_vars; ++ci)
-                        {
-                        array_range_index(&a_data, args[0],
-                                          ci + 1, /* NB. skip constant! */
-                                          0,
-                                          EM_REA);
-
-                        if(a_data.did_num != RPN_DAT_REAL)
-                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                        array_range_index(&x_data, args[1],
-                                          ci, /* NB. extract from nth col ! */
-                                          row,
-                                          EM_REA);
-
-                        if(x_data.did_num != RPN_DAT_REAL)
-                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                        product += log(a_data.arg.fp) * x_data.arg.fp;
-                        }
-
-                    if(errno /* == EDOM, ERANGE */)
-                        err = EVAL_ERR_BAD_LOG;
-
-                    status_break(err);
-
-                    product = exp(product); /* convert sum of products into a0 * PI(ai ** xi) */
-
-                    if(product == HUGE_VAL) /* don't test for underflow case */
-                        status_break(err = EVAL_ERR_OUTOFRANGE);
-                    }
-
-                if(negative)
-                    product = -product;
-
-                elep = ss_array_element_index_wr(p_ev_data_res, 0, row);
-                ev_data_set_real(elep, product);
-                }
-
-            } /*fi*/
-        }
-    else if(y == x_vars)
-        {
-        if(status_ok(ss_array_make(p_ev_data_res, x, 1)))
-            {
-            S32 col;
-
-            for(col = 0; col < x; ++col)
-                {
-                EV_DATA x_data;
-                EV_DATA a_data;
-                F64 product; /* NB. product computed carefully using logs */
-                S32 ci;
-                BOOL negative;
-                P_EV_DATA elep;
-
-                /* start with the constant */
-                array_range_index(&a_data, args[0],
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
-
-                if(a_data.did_num != RPN_DAT_REAL)
-                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                errno = 0;
-
-                /* if initial y data was all -ve then this is a possibility ... */
-                negative = (a_data.arg.fp < 0);
-
-                product = fabs(a_data.arg.fp);
-
-                if(product != 0.0)
-                    {
-                    product = log(product);
-                    assert(errno == 0); /* log(+ve) cannot fail ho ho */
-
-                    /* loop multiplying product by coefficients ^ x variables*/
-                    for(ci = 0; ci < x_vars; ++ci)
-                        {
-                        array_range_index(&a_data, args[0],
-                                          ci + 1, /* NB. skip constant! */
-                                          0,
-                                          EM_REA);
-
-                        if(a_data.did_num != RPN_DAT_REAL)
-                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                        array_range_index(&x_data, args[1],
-                                          col,
-                                          ci, /* NB. extract from nth row ! */
-                                          EM_REA);
-
-                        if(x_data.did_num != RPN_DAT_REAL)
-                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                        product += log(a_data.arg.fp) * x_data.arg.fp;
-                        }
-
-                    if(errno /* == EDOM, ERANGE */)
-                        err = EVAL_ERR_BAD_LOG;
-
-                    status_break(err);
-
-                    product = exp(product); /* convert sum of products into a0 * PI(ai ** xi) */
-
-                    if(product == HUGE_VAL) /* don't test for underflow case */
-                        status_break(err = EVAL_ERR_OUTOFRANGE);
-                    }
-
-                if(negative)
-                    product = -product;
-
-                elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
-                ev_data_set_real(elep, product);
-                }
-
-            } /*fi*/
-        }
-    else
-        {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
-        }
-
-    if(status_fail(err))
-        {
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, err);
-        }
-}
-
-/******************************************************************************
-*
-* TREND(linest_result_data, known_x's) is pretty trivial
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_trend)
-{
-    S32 x_vars;
-    S32 x, y;
-    S32 err = 0;
-
-    exec_func_ignore_parms();
-
-    array_range_sizes(args[0], &x, &y);
-
-    x_vars = x - 1;
-
-    if( (x < 2  /*at least c,m*/)  ||
-        ((y != 1 /*no stats*/)  &&
-         (y != 3 /*stats*/  )   )  )
-        {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
-        }
-
-    array_range_sizes(args[1], &x, &y);
-
-    /* SKS after 4.12 28apr92 - allow TREND() to receive data
-     * in untransposed form ie. more naturally matched to linest data
-    */
-    if(x == x_vars)
-        {
-        if(status_ok(ss_array_make(p_ev_data_res, 1, y)))
-            {
-            S32 row;
-
-            for(row = 0; row < y; ++row)
-                {
-                EV_DATA x_data;
-                EV_DATA a_data;
-                F64 sum;
-                S32 ci;
-                P_EV_DATA elep;
-
-                /* start with the constant */
-                array_range_index(&a_data, args[0],
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
-
-                if(a_data.did_num != RPN_DAT_REAL)
-                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                sum = a_data.arg.fp;
-
-                /* loop across a row summing coefficients * x variables */
-                for(ci = 0; ci < x_vars; ++ci)
-                    {
-                    array_range_index(&a_data, args[0],
-                                      ci + 1, /* NB. skip constant! */
-                                      0,
-                                      EM_REA);
-
-                    if(a_data.did_num != RPN_DAT_REAL)
-                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                    array_range_index(&x_data, args[1],
-                                      ci, /* NB. extract from nth col! */
-                                      row,
-                                      EM_REA);
-
-                    if(x_data.did_num != RPN_DAT_REAL)
-                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                    sum += a_data.arg.fp * x_data.arg.fp;
-                    }
-
-                status_break(err);
-
-                elep = ss_array_element_index_wr(p_ev_data_res, 0, row);
-                ev_data_set_real(elep, sum);
-                }
-            } /*fi*/
-        }
-    else if(y == x_vars)
-        {
-        if(status_ok(ss_array_make(p_ev_data_res, x, 1)))
-            {
-            S32 col;
-
-            for(col = 0; col < x; ++col)
-                {
-                EV_DATA x_data;
-                EV_DATA a_data;
-                F64 sum;
-                S32 ci;
-                P_EV_DATA elep;
-
-                /* start with the constant */
-                array_range_index(&a_data, args[0],
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
-
-                if(a_data.did_num != RPN_DAT_REAL)
-                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                sum = a_data.arg.fp;
-
-                /* loop down a column summing coefficients * x variables */
-                for(ci = 0; ci < x_vars; ++ci)
-                    {
-                    array_range_index(&a_data, args[0],
-                                      ci + 1, /* NB. skip constant! */
-                                      0,
-                                      EM_REA);
-
-                    if(a_data.did_num != RPN_DAT_REAL)
-                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                    array_range_index(&x_data, args[1],
-                                      col,
-                                      ci, /* NB. extract from nth row! */
-                                      EM_REA);
-
-                    if(x_data.did_num != RPN_DAT_REAL)
-                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                    sum += a_data.arg.fp * x_data.arg.fp;
-                    }
-
-                status_break(err);
-
-                elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
-                ev_data_set_real(elep, sum);
-                }
-
-            } /*fi*/
-        }
-    else
-        {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
-        }
-
-    if(status_fail(err))
-        {
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, err);
-        }
-}
-
-/******************************************************************************
-*
-* linest(known_y's [, known_x's [, stats [, known_a's [, known_ye's ]]]])
-*
-* result is an array of {estimation parameters[;
-*                        estimated errors for the above;
-*                        chi-squared]}
-*
-******************************************************************************/
-
-typedef struct FOR_FIRST_LINEST
-{
-    PC_F64 x; /* const */
-    S32 x_vars;
-    PC_F64 y; /* const */
-    P_F64 a;
-}
-FOR_FIRST_LINEST, * P_FOR_FIRST_LINEST;
-
-PROC_LINEST_DATA_GET_PROTO(static, ligp, client_handle, colID, row)
-{
-    P_FOR_FIRST_LINEST lidatap = (P_FOR_FIRST_LINEST) client_handle;
-
-    switch(colID)
-        {
-        case LINEST_A_COLOFF:
-            assert0();
-            return(0.0);
-
-        case LINEST_Y_COLOFF:
-            return(lidatap->y[row]);
-
-        default:
-            {
-            S32 coloff = colID - LINEST_X_COLOFF;
-            return((lidatap->x + row * lidatap->x_vars) [coloff]);
-            }
-        }
-}
-
-PROC_LINEST_DATA_PUT_PROTO(static, lipp, client_handle, colID, row, value)
-{
-    P_FOR_FIRST_LINEST lidatap = (P_FOR_FIRST_LINEST) client_handle;
-
-    switch(colID)
-        {
-        case LINEST_A_COLOFF:
-            lidatap->a[row] = *value;
-            break;
-
-        default: default_unhandled(); break;
-        }
-
-    return(STATUS_DONE);
-}
-
-typedef struct LINEST_ARRAY
-{
-    P_F64 val;
-    S32 rows;
-    S32 cols;
-}
-LINEST_ARRAY;
-
-PROC_EXEC_PROTO(c_linest)
-{
-    static const LINEST_ARRAY empty = { NULL, 0, 0 };
-
-    LINEST_ARRAY known_y;
-    LINEST_ARRAY known_x;
-    S32 stats;
-    LINEST_ARRAY known_a;
-    LINEST_ARRAY known_e;
-    LINEST_ARRAY result_a;
-    S32 data_in_cols;
-    S32 y_items;
-    S32 x_vars;
-    STATUS status = STATUS_OK;
-    FOR_FIRST_LINEST lidata;
-
-    exec_func_ignore_parms();
-
-    stats    = 0;
-
-    known_y  = empty;
-    known_x  = empty;
-    known_a  = empty;
-    known_e  = empty;
-    result_a = empty;
-
-    switch(nargs)
-        {
-        default:
-        case 5:
-            /* check known_ye's is an array and get x and y sizes */
-            array_range_sizes(args[4], &known_e.cols, &known_e.rows);
-
-            /*FALLTHRU*/
-
-        case 4:
-            /* check known_a's is an array and get x and y sizes */
-            array_range_sizes(args[3], &known_a.cols, &known_a.rows);
-
-            /*FALLTHRU*/
-
-        case 3:
-             stats = (args[2]->arg.fp != 0.0);
-
-            /*FALLTHRU*/
-
-        case 2:
-            /* check known_x's is an array and get x and y sizes */
-            array_range_sizes(args[1], &known_x.cols, &known_x.rows);
-
-            /*FALLTHRU*/
-
-        case 1:
-            /* check known_y's is an array and get x and y sizes */
-            array_range_sizes(args[0], &known_y.cols, &known_y.rows);
-
-            /* y data usually in a column, but allow for a row */
-            data_in_cols = (known_y.rows > known_y.cols);
-            y_items = data_in_cols ? known_y.rows : known_y.cols;
-            break;
-        }
-
-    /* number of independent x variables (usually separate columns,
-     * but can be separate rows if y data is so arranged)
-    */
-    if(nargs < 2)
-        /* we always invent x if not supplied */
-        x_vars = 1;
-    else
-        x_vars = (data_in_cols) ? known_x.cols : known_x.rows;
-
-    /* simple to allocate y and x arrays together */
-    if(NULL == (known_y.val = al_ptr_alloc_elem(F64, (U32) y_items * ((U32) x_vars + 1), &status)))
-        goto endlabel;
-    known_x.val = &known_y.val[y_items];
-
-    result_a.cols = x_vars + 1;
-    result_a.rows = stats ? 3 : 1;
-    if(NULL == (result_a.val = al_ptr_alloc_elem(F64, result_a.cols * (U32) result_a.rows, &status)))
-        goto endlabel;
-
-    if(known_a.cols != 0)
-        {
-        if(known_a.cols > result_a.cols)
-            {
-            status = EVAL_ERR_MISMATCHED_MATRICES;
-            goto endlabel;
-            }
-
-        if(NULL == (known_a.val = al_ptr_alloc_elem(F64, result_a.cols, &status)))
-            goto endlabel;
-        }
-
-    if(known_e.rows != 0)
-        {
-        /* neatly covers both arrangements of y,e */
-        if((known_e.rows > known_y.rows) || (known_e.rows > known_y.rows))
-            {
-            status = EVAL_ERR_MISMATCHED_MATRICES;
-            goto endlabel;
-            }
-
-        if(NULL == (known_e.val = al_ptr_alloc_elem(F64, y_items, &status)))
-            goto endlabel;
-        }
-
-    if(status_ok(ss_array_make(p_ev_data_res, result_a.cols, result_a.rows)))
-        {
-        S32     i, j;
-        EV_DATA data;
-
-        /* copy y data into working array */
-        for(i = 0; i < y_items; ++i)
-            {
-            array_range_index(&data, args[0],
-                              (data_in_cols) ? 0 : i,
-                              (data_in_cols) ? i : 0,
-                              EM_REA);
-
-            if(data.did_num != RPN_DAT_REAL)
-                {
-                status = EVAL_ERR_MATRIX_NOT_NUMERIC;
-                goto endlabel;
-                }
-
-            known_y.val[i] = data.arg.fp;
-            }
-
-        /* copy x data into working array */
-        for(i = 0; i < y_items; ++i)
-            {
-            if(nargs > 1)
-                for(j = 0; j < x_vars; ++j)
-                    {
-                    array_range_index(&data, args[1],
-                                      (data_in_cols) ? j : i,
-                                      (data_in_cols) ? i : j,
-                                      EM_REA);
-
-                    if(data.did_num != RPN_DAT_REAL)
-                        {
-                        status = EVAL_ERR_MATRIX_NOT_NUMERIC;
-                        goto endlabel;
-                        }
-
-                    (known_x.val + i * x_vars)[j] = data.arg.fp;
-                    }
-            else
-                known_x.val[i] = (F64) i + 1.0; /* make simple { 1.0, 2.0, 3.0 ... } */
-            }
-
-        /* <<< ignore the a data for the mo */
-        if(known_a.val)
-            { /*EMPTY*/ }
-
-        /* copy (possibly partial) ye data into working array */
-        if(known_e.val)
-            for(i = 0; i < y_items; ++i)
-                {
-                if(i < ((data_in_cols) ? known_e.rows : known_e.cols))
-                    {
-                    array_range_index(&data, args[4],
-                                      (data_in_cols) ? 0 : i,
-                                      (data_in_cols) ? i : 0,
-                                      EM_REA);
-
-                    if(data.did_num != RPN_DAT_REAL)
-                        {
-                        status = EVAL_ERR_MATRIX_NOT_NUMERIC;
-                        goto endlabel;
-                        }
-
-                    known_e.val[i] = data.arg.fp;
-                    }
-                else
-                    known_e.val[i] = 1.0;
-                }
-
-        /* and then ignore it! */
-
-/* bodgey bit from here ... */
-
-        lidata.x = known_x.val;
-        lidata.x_vars = x_vars;
-
-        lidata.y = known_y.val;
-
-        lidata.a = result_a.val;
-
-        if(status_fail(status = linest(ligp, lipp, (CLIENT_HANDLE) &lidata, x_vars, y_items)))
-            goto endlabel;
-
-/* ... to here */
-
-        /* copy result a data from working array */
-
-        for(j = 0; j < result_a.cols; ++j)
-            {
-            F64 res;
-            P_EV_DATA elep;
-
-            res = (result_a.val + 0 * result_a.cols)[j];
-
-            elep = ss_array_element_index_wr(p_ev_data_res, j, 0); /* NB j,i */
-            ev_data_set_real(elep, res);
-
-            if(stats)
-                {
-                /* estimated estimation errors */
-#if 1 /* until yielded */
-                res = 0;
-#else
-                res = (result_a.val + 1 * result_a.cols)[j];
-#endif
-
-                elep = ss_array_element_index_wr(p_ev_data_res, j, 1); /* NB j,i */
-                ev_data_set_real(elep, res);
-                }
-            }
-
-        if(stats)
-            {
-            /* chi-squared */
-            F64 chi_sq;
-            P_EV_DATA elep;
-
-            chi_sq = 0.0;
-
-            elep = ss_array_element_index_wr(p_ev_data_res, 0, 2); /* NB j,i */
-            ev_data_set_real(elep, chi_sq);
-            }
-
-        } /*fi*/
-
-endlabel:;
-
-    if(status_fail(status))
-        {
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, status);
-        }
-
-    al_ptr_dispose(P_P_ANY_PEDANTIC(&known_e.val));
-    al_ptr_dispose(P_P_ANY_PEDANTIC(&known_a.val));
-    al_ptr_dispose(P_P_ANY_PEDANTIC(&result_a.val));
-    al_ptr_dispose(P_P_ANY_PEDANTIC(&known_y.val)); /* and x too */
-}
-
-/******************************************************************************
-*
-* oh god its logest. what a pathetic excuse of a routine
-* when all you have to do is to tell the user to transform
-* his data in an intelligent manner in the first place
-* and use linest... I blame Excel personally
-*
-* it can't even fit y = k * m ^ -x !
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_logest)
-{
-    EV_DATA y_data;
-    EV_DATA a_data = { RPN_DAT_BLANK };
-    EV_DATA ev_data;
-    P_EV_DATA elep;
-    P_EV_DATA targs0, targs3;
-    F64 val;
-    S32 x, y;
-    S32 col, row;
-    S32 err = 0;
-    S32 sign = 0; /* not yet set */
-
-    exec_func_ignore_parms();
-
-    /* perform quick preprocess of a data, taking logs */
-
-    if(nargs > 3)
-        {
-        array_range_sizes(args[0], &x, &y);
-
-        if(args[3]->did_num == RPN_DAT_RANGE)
-            {
-            if(status_fail(ss_array_make(&a_data, x, y)))
-                return;
-            }
-        else
-            status_assert(ss_data_resource_copy(&a_data, args[3]));
-
-        for(col = 0; col < x; ++col)
-            {
-            if(array_range_index(&ev_data, args[3], col, 0, EM_REA) != RPN_DAT_REAL)
-                {
-                err = EVAL_ERR_MATRIX_NOT_NUMERIC;
-                goto endlabel2;
-                }
-
-            val = ev_data.arg.fp;
-            /* do sign forcing before y transform */
-            if(col == 0)
-                sign = (val < 0) ? -1 : +1;
-            ev_data.arg.fp = log(val);
-
-            *ss_array_element_index_wr(&a_data, col, 0) = ev_data;
-            }
-        }
-
-    /* perform quick preprocess of y data, taking logs */
-
-    array_range_sizes(args[0], &x, &y);
-
-    if(args[0]->did_num == RPN_DAT_RANGE)
-        {
-        if(status_fail(ss_array_make(&y_data, x, y)))
-            return;
-        }
-    else
-        status_assert(ss_data_resource_copy(&y_data, args[0]));
-
-    /* simple layout-independent transform of y data */
-    for(col = 0; col < x; ++col)
-        for(row = 0; row < y; ++row)
-            {
-            if(array_range_index(&ev_data, args[0], col, row, EM_REA) != RPN_DAT_REAL)
-                {
-                err = EVAL_ERR_MATRIX_NOT_NUMERIC;
-                goto endlabel;
-                }
-
-            if(ev_data.arg.fp < 0.0)
-                {
-                if(!sign)
-                    sign = -1;
-                else if(sign != -1)
-                    {
-                    err = EVAL_ERR_MIXED_SIGNS;
-                    goto endlabel;
-                    }
-
-                ev_data.arg.fp = log(-ev_data.arg.fp);
-                }
-            else if(ev_data.arg.fp > 0.0)
-                {
-                if(!sign)
-                    sign = +1;
-                else if(sign != +1)
-                    {
-                    err = EVAL_ERR_MIXED_SIGNS;
-                    goto endlabel;
-                    }
-
-                ev_data.arg.fp = log(ev_data.arg.fp);
-                }
-            /* else 0.0 ... interesting case ... not necessarily wrong but very hard */
-
-            /* poke back transformed data */
-            elep = ss_array_element_index_wr(&y_data, col, row);
-            ev_data_set_real(elep, ev_data.arg.fp);
-            }
-
-    /* ask mrjc whether this is legal */
-    targs0  = args[0];
-    args[0] = &y_data;
-
-    if(nargs > 3)
-        {
-        targs3  = args[3];
-        args[3] = &a_data;
-        }
-    else
-        targs3  = NULL;
-
-    /* call my friend to do the hard work */
-    c_linest(args, nargs, p_ev_data_res, p_cur_slr);
-
-    args[0] = targs0;
-
-    if(targs3)
-        args[3] = targs3;
-
-    /* and transform first row of coefficients insitu using exp, and sign the constant if needed */
-
-    if(p_ev_data_res->did_num == RPN_TMP_ARRAY)
-        {
-        array_range_sizes(p_ev_data_res, &x, &y);
-
-        for(col = 0; col < x; ++col)
-            {
-            elep  = ss_array_element_index_wr(p_ev_data_res, col, 0);
-            assert(elep->did_num == RPN_DAT_REAL);
-            val   = exp(elep->arg.fp);
-            if((col == 0) && (sign == -1))
-                val = -val;
-            elep->arg.fp = val;
-            }
-        }
-
-endlabel:;
-
-    ss_data_free_resources(&y_data);
-
-endlabel2:;
-
-    ss_data_free_resources(&a_data);
-
-    if(err)
-        ev_data_set_error(p_ev_data_res, err);
-}
-
-_Check_return_
-extern double lgamma_r(double, int *);
-
-_Check_return_
-static F64
-ln_fact(
-    _InVal_     S32 n)
-{
-    int sign;
-    return(lgamma_r(n + 1.0, &sign));
-}
-
-/* Beta(a,b) = Gamma(a) * Gamma(b) / Gamma(a+b) */
-
-PROC_EXEC_PROTO(c_beta)
-{
-    STATUS err = STATUS_OK;
-    const F64 z = args[0]->arg.fp;
-    const F64 w = args[1]->arg.fp;
-    F64 beta_result;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    {
-    int sign;
-    const F64 a = lgamma_r(z, &sign);
-    const F64 b = lgamma_r(w, &sign);
-    const F64 c = lgamma_r(z + w, &sign);
-    beta_result = exp(a + b - c);
-    } /*block*/
-
-    ev_data_set_real(p_ev_data_res, beta_result);
-
-    if(errno)
-        err = err_from_errno();
-
-    if(status_fail(err))
-        ev_data_set_error(p_ev_data_res, err);
-}
-
-PROC_EXEC_PROTO(c_binom)
-{
-    /* SKS 02apr99 call my friend to do the hard work */
-    c_combin(args, nargs, p_ev_data_res, p_cur_slr);
-}
-
-/******************************************************************************
-*
-* computes the product of all integers
-* in the range start..end inclusive
-* start, end assumed to be +ve, non-zero
-*
-******************************************************************************/
-
-static void
-product_between(
-    _InoutRef_  P_EV_DATA p_ev_data_res,
-    _InVal_     S32 start,
-    _InVal_     S32 end)
-{
-    S32 i;
-
-    if(RPN_DAT_REAL == p_ev_data_res->did_num)
-        p_ev_data_res->arg.fp = start;
-    else
-        p_ev_data_res->arg.integer = start;
-
-    for(i = start + 1; i <= end; ++i)
-        {
-        /* keep in integer where possible */
-        if(RPN_DAT_REAL != p_ev_data_res->did_num)
-            {
-            UMUL64_RESULT result;
-
-            umul64(p_ev_data_res->arg.integer, i, &result);
-
-            if((0 == result.HighPart) && (0 == (result.LowPart >> 31)))
-                { /* result still fits in integer */
-                p_ev_data_res->arg.integer = (S32) result.LowPart;
-                continue;
-                }
-
-            /* have to go to fp now result has outgrown integer and retry the multiply */
-            ev_data_set_real(p_ev_data_res, (F64) p_ev_data_res->arg.integer);
-            }
-
-        p_ev_data_res->arg.fp *= i;
-        }
-
-    if(RPN_DAT_REAL != p_ev_data_res->did_num)
-        p_ev_data_res->did_num = ev_integer_size(p_ev_data_res->arg.integer);
-}
-
-PROC_EXEC_PROTO(c_combin) /* nCk = n!/((n-k)!*k!) */
-{
-    STATUS err = STATUS_OK;
-    const S32 n = args[0]->arg.integer;
-    const S32 k = args[1]->arg.integer;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    if((n < 0) || (k < 0) || ((n - k) < 0))
-        err = EVAL_ERR_ARGRANGE;
-    else if(n <= 163) /* SKS 02apr99 bigger range */
-        {
-        EV_DATA ev_data_divisor;
-
-        /* assume result will be integer to start with */
-        p_ev_data_res->did_num = RPN_DAT_WORD32;
-
-        /* function will go to fp as necessary */
-        product_between(p_ev_data_res, n - k + 1, n);
-
-        /* calculate divisor in same format as dividend
-         * NB divisor is always smaller than dividend so this is ok
-         */
-        ev_data_divisor.did_num = p_ev_data_res->did_num;
-        product_between(&ev_data_divisor, 1, k);
-
-        if(RPN_DAT_REAL == p_ev_data_res->did_num)
-            {
-            assert(ev_data_divisor.did_num == p_ev_data_res->did_num);
-
-            p_ev_data_res->arg.fp /= ev_data_divisor.arg.fp;
-
-            /* combination always integer result - see if we can get one! */
-            real_to_integer_try(p_ev_data_res);
-            }
-        else
-            {
-            /* no worries about remainders - combination always integer result! */
-            p_ev_data_res->arg.integer /= ev_data_divisor.arg.integer;
-
-            p_ev_data_res->did_num = ev_integer_size(p_ev_data_res->arg.integer);
-            }
-        }
-    else
-        {
-        const F64 ln_numer = ln_fact(n);
-        const F64 ln_denom = ln_fact(n - k) + ln_fact(k);
-
-        ev_data_set_real(p_ev_data_res, exp(ln_numer - ln_denom));
-
-        if(errno)
-            err = err_from_errno();
-        }
-
-    if(status_fail(err))
-        ev_data_set_error(p_ev_data_res, err);
-}
-
-PROC_EXEC_PROTO(c_fact)
-{
-    STATUS err = STATUS_OK;
-    const S32 n = args[0]->arg.integer;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    if(n < 0)
-        err = EVAL_ERR_ARGRANGE;
-    else if(n <= 163) /* SKS 13nov96 bigger range */
-        {
-        /* assume result will be integer to start with */
-        p_ev_data_res->did_num = RPN_DAT_WORD32;
-
-        /* function will go to fp as necessary */
-        product_between(p_ev_data_res, 1, n);
-        }
-    else
-        {
-        ev_data_set_real(p_ev_data_res, exp(ln_fact(n)));
-
-        if(errno)
-            err = err_from_errno();
-        }
-
-    if(status_fail(err))
-        ev_data_set_error(p_ev_data_res, err);
-}
-
-PROC_EXEC_PROTO(c_gammaln)
-{
-    STATUS err = STATUS_OK;
-    const F64 number = args[0]->arg.fp;
-    F64 gammaln_result;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    {
-    int sign;
-    gammaln_result = lgamma_r(number, &sign);
-    } /*block*/
-
-    ev_data_set_real(p_ev_data_res, gammaln_result);
-
-    if(errno)
-        err = err_from_errno();
-
-    if(status_fail(err))
-        ev_data_set_error(p_ev_data_res, err);
-}
-
-PROC_EXEC_PROTO(c_permut) /* nPk = n!/(n-k)! */
-{
-    STATUS err = STATUS_OK;
-    const S32 n = args[0]->arg.integer;
-    const S32 k = args[1]->arg.integer;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    if((n < 0) || (k < 0) || ((n - k) < 0))
-        err = EVAL_ERR_ARGRANGE;
-    else if(n <= 163) /* SKS 02apr99 bigger range */
-        {
-        /* every number in the divisor term (n-k)!
-         * is present in the dividend n! so cancels out
-         * leaving just the product of the numbers from
-         * n-k+1 to n to be calculated
-         */
-
-        /* assume result will be integer to start with */
-        p_ev_data_res->did_num = RPN_DAT_WORD32;
-
-        /* function will go to fp as necessary */
-        product_between(p_ev_data_res, n - k + 1, n);
-        }
-    else
-        {
-        const F64 ln_numer = ln_fact(n);
-        const F64 ln_denom = ln_fact(n - k);
-
-        ev_data_set_real(p_ev_data_res, exp(ln_numer - ln_denom));
-
-        if(errno)
-            err = err_from_errno();
-        }
-
-    if(status_fail(err))
-        ev_data_set_error(p_ev_data_res, err);
 }
 
 /* end of ev_math.c */

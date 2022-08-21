@@ -418,7 +418,7 @@ enum D_PRINT_OFFSETS
 #define SORT_FIELD_COLUMN       0
 #define SORT_FIELD_ASCENDING    1
 
-/* rjm removes update refs 14.9.91 */
+/* RJM removes update refs 14.9.91 */
 #if 1
 #define SORT_MULTI_ROW        (SORT_FIELD_COLUMN + (SORT_FIELD_DEPTH * 2))
 #else

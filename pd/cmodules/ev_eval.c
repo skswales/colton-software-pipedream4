@@ -39,7 +39,7 @@ static S32
 process_control(
     S32 action,
     P_EV_DATA args[],
-    S32 nargs,
+    S32 n_args,
     S32 eval_stack_base);
 
 static S32
@@ -831,11 +831,11 @@ eval_rpn(
                             }
                         }
 
-                    if(arg_ix >= 0 && arg_ix < stkentp->data.stack_executing_custom.nargs)
+                    if(arg_ix >= 0 && arg_ix < stkentp->data.stack_executing_custom.n_args)
                         {
                         /* get pointer to data on stack */
                         p_ev_data = stack_index_ptr_data(stkentp->data.stack_executing_custom.stack_base,
-                                                         stkentp->data.stack_executing_custom.nargs - (S32) arg_ix - 1);
+                                                         stkentp->data.stack_executing_custom.n_args - (S32) arg_ix - 1);
 
                         /* if it's an expanded array, we must
                          * index the relevant array element
@@ -915,7 +915,7 @@ eval_rpn(
                         /* switch to executing the custom */
                         stack_inc(EXECUTING_CUSTOM, cur_slr, stack_ptr[-1].stack_flags);
 
-                        stack_ptr->data.stack_executing_custom.nargs = arg_count;
+                        stack_ptr->data.stack_executing_custom.n_args = arg_count;
                         stack_ptr->data.stack_executing_custom.stack_base = stack_offset(stack_ptr - 3);
                         stack_ptr->data.stack_executing_custom.in_array = (max_x || max_y);
                         stack_ptr->data.stack_executing_custom.xpos =
@@ -962,7 +962,7 @@ eval_rpn(
                     EV_DATA func_result;
 
                     /* establish argument count */
-                    if((arg_count = func_data->nargs) < 0)
+                    if((arg_count = func_data->n_args) < 0)
                         arg_count = (S32) *(rpnb.pos + 1);
 
                     if((arg_types = func_data->arg_types) != NULL)
@@ -999,7 +999,7 @@ eval_rpn(
                         stack_inc(PROCESSING_ARRAY, cur_slr, stack_ptr[-1].stack_flags);
                         stack_ptr->data.stack_processing_array.xpos =
                         stack_ptr->data.stack_processing_array.ypos = 0;
-                        stack_ptr->data.stack_processing_array.nargs = arg_count;
+                        stack_ptr->data.stack_processing_array.n_args = arg_count;
                         stack_ptr->data.stack_processing_array.stack_base = stack_offset(stack_ptr - 3);
                         stack_ptr->data.stack_processing_array.exec = p_proc_exec;
                         stack_ptr->data.stack_processing_array.type_count = type_count;
@@ -1119,18 +1119,18 @@ eval_rpn(
                                     {
                                     case RPN_FNV_ALERT:
                                         res = ev_alert(stack_ptr->slr.docno,
-                                                       args[0]->arg.string.data,
-                                                       args[1]->arg.string.data,
-                                                       arg_count > 2 ? args[2]->arg.string.data : NULL);
+                                                       args[0]->arg.string.uchars,
+                                                       args[1]->arg.string.uchars,
+                                                       arg_count > 2 ? args[2]->arg.string.uchars : NULL);
                                         break;
 
                                     case RPN_FNV_INPUT:
                                         /* save away name to receive result */
-                                        strcpy(stack_alert_input.name_id, args[1]->arg.string.data);
+                                        strcpy(stack_alert_input.name_id, args[1]->arg.string.uchars);
                                         res = ev_input(stack_ptr->slr.docno,
-                                                       args[0]->arg.string.data,
-                                                       args[2]->arg.string.data,
-                                                       arg_count > 3 ? args[3]->arg.string.data : NULL);
+                                                       args[0]->arg.string.uchars,
+                                                       args[2]->arg.string.uchars,
+                                                       arg_count > 3 ? args[3]->arg.string.uchars : NULL);
                                         break;
                                     }
 
@@ -1425,7 +1425,7 @@ custom_sequence(
 static S32
 process_control(
     S32 action,
-    P_EV_DATA args[], S32 nargs,
+    P_EV_DATA args[], S32 n_args,
     S32 eval_stack_base)
 {
     EV_SLR current_slot;
@@ -1595,14 +1595,14 @@ process_control(
             stack_control_loop.origin_slot = current_slot;
             stack_control_loop.end = args[2]->arg.fp;
 
-            if(nargs > 3)
+            if(n_args > 3)
                 stack_control_loop.step = args[3]->arg.fp;
             else
                 stack_control_loop.step = 1.;
 
             if((res = name_make(&stack_control_loop.nameid,
                                 stack_ptr->slr.docno,
-                                args[0]->arg.string.data,
+                                args[0]->arg.string.uchars,
                                 args[1])) < 0)
                 custom_result(NULL, res);
             else if(!process_control_for_cond(&stack_control_loop, 0))
@@ -1646,7 +1646,7 @@ process_control(
             S32 loop_count;
             P_STACK_ENTRY stkentp;
 
-            if(nargs)
+            if(n_args)
                 loop_count = (S32) args[0]->arg.integer;
             else
                 loop_count = 1;
@@ -2443,11 +2443,11 @@ ev_recalc(void)
             */
             case CUSTOM_COMPLETE:
                 {
-                S32 custom_over, nargs;
+                S32 custom_over, n_args;
                 STACK_ENTRY result, state;
 
                 custom_over = 0;
-                nargs = stack_ptr->data.stack_executing_custom.nargs;
+                n_args = stack_ptr->data.stack_executing_custom.n_args;
 
                 if(stack_ptr->data.stack_executing_custom.in_array)
                     {
@@ -2482,7 +2482,7 @@ ev_recalc(void)
                 state = stack_ptr[0];
 
                 /* pop custom arguments from stack */
-                stack_set(stack_offset(stack_ptr) - 1 - nargs);
+                stack_set(stack_offset(stack_ptr) - 1 - n_args);
 
                 /* push custom result */
                 stack_ptr += 1;
@@ -2523,7 +2523,7 @@ ev_recalc(void)
                     /* have we completed array ? */
                     if(stack_ptr->data.stack_processing_array.ypos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.y_size)
                         {
-                        S32 nargs = stack_ptr->data.stack_processing_array.nargs; /* SKS fixed 01may95 in Fireworkz; 21mar12 in PipeDream! */
+                        S32 n_args = stack_ptr->data.stack_processing_array.n_args; /* SKS fixed 01may95 in Fireworkz; 21mar12 in PipeDream! */
                         STACK_ENTRY result, state;
 
                         --stack_ptr;
@@ -2533,7 +2533,7 @@ ev_recalc(void)
                         state  = stack_ptr[0];
 
                         /* remove array arguments from stack */
-                        stack_set(stack_offset(stack_ptr) - 1 - nargs);
+                        stack_set(stack_offset(stack_ptr) - 1 - n_args);
 
                         /* push result of array fuddling on stack;
                          * assume we can push since we just popped
@@ -2555,11 +2555,11 @@ ev_recalc(void)
                 /* get the arguments and array pointers */
                 for(ix = 0, datapp = args_in, typec = stack_processing_array.type_count,
                     typep = stack_processing_array.arg_types;
-                    ix < stack_processing_array.nargs;
+                    ix < stack_processing_array.n_args;
                     ++ix, ++datapp)
                     {
                     *datapp = stack_index_ptr_data(stack_processing_array.stack_base,
-                                                   stack_processing_array.nargs - (S32) ix - 1);
+                                                   stack_processing_array.n_args - (S32) ix - 1);
 
                     /* replace stack array pointer with
                      * pointer to relevant array element
@@ -2602,11 +2602,11 @@ ev_recalc(void)
                 /* call semantic routine with array
                  * elements as arguments instead of arrays
                  */
-                if((res = args_check(stack_processing_array.nargs, args,
+                if((res = args_check(stack_processing_array.n_args, args,
                                      stack_processing_array.type_count, stack_processing_array.arg_types,
                                      resp,
                                      &max_x, &max_y)) == 0)
-                    (*stack_processing_array.exec)(args, stack_processing_array.nargs, resp, &stack_ptr->slr);
+                    (*stack_processing_array.exec)(args, stack_processing_array.n_args, resp, &stack_ptr->slr);
                 else if(res > 0)
                     {
                     ss_data_free_resources(resp);
@@ -2844,8 +2844,8 @@ stack_free_resources(
                 case RPN_TMP_STRING:
                     trace_1(TRACE_MODULE_EVAL,
                             "stack_free_resources freeing string: %s",
-                            stkentp->data.stack_data_item.data.arg.string.data);
-                    str_clr(&stkentp->data.stack_data_item.data.arg.string.data);
+                            stkentp->data.stack_data_item.data.arg.string.uchars);
+                    str_clr(&stkentp->data.stack_data_item.data.arg.string.uchars);
                     break;
 
                 case RPN_TMP_ARRAY:

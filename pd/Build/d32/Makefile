@@ -7,7 +7,7 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2014 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.52/05b
+TEXTUAL_VERSION_NUMBER=4.52/08
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -21,7 +21,7 @@ LIB_MSUN=$(PD).external.FreeBSD.srcp.lib.msun
 
 WimpLib=$(PD).WimpLib
 
-# Can speed up build (especially when using HostFS on RPCemu) by using RAM disc
+# Can speed up build (especially when using HostFS on RPCemu on Windows) by using RAM disc
 # Uncomment these vvv if you want
 
 # INC_RAM_WimpLib=-IRAM:$.WimpLib
@@ -78,33 +78,141 @@ PipeDream:   \
     @.!PipeDream.Resource.RISC_OS.Sprites \
     @.!PipeDream.Resource.RISC_OS.Sprites22
 
-AOF1=o.pdmain o.blocks o.browse o.bufedit o.colh o.commlin o.constr o.cursmov o.dialog o.doprint o.execs
+AOF1=\
+o.pdmain \
+o.blocks \
+o.browse \
+o.bufedit \
+o.colh \
+o.commlin \
+o.constr \
+o.cursmov \
+o.dialog \
+o.doprint \
+o.execs
 #
-AOF2=o.expedit o.help o.link_ev o.lists o.markers o.mcdiff o.numbers o.pdriver o.pdsearch o.progvars
+AOF2=\
+o.expedit \
+o.help \
+o.link_ev \
+o.lists \
+o.markers \
+o.mcdiff \
+o.numbers \
+o.pdriver \
+o.pdsearch \
+o.progvars
 #
-AOF3=o.reperr o.replace o.ridialog o.riscdraw o.riscos o.riscmenu o.scdraw o.slot o.slotconv o.strings
+AOF3=\
+o.reperr \
+o.replace \
+o.ridialog \
+o.riscdraw \
+o.riscos \
+o.riscmenu \
+o.scdraw \
+o.slot \
+o.slotconv \
+o.strings
 #
-AOF4=o.savload o.slector o.viewio o.dtpsave o.userIO o.version o.windvars
+AOF4=\
+o.savload \
+o.slector \
+o.viewio \
+o.dtpsave \
+o.userIO \
+o.version \
+o.windvars
 #
-AOFGR=o.pdchart
+AOFGR=\
+o.pdchart
 #
 AOFD=
 #
 #
-AOFM1=o.modules.aligator o.modules.alloc o.modules.allocblk o.modules.bezier o.modules.collect o.modules.file o.modules.fileutil o.modules.funclist o.modules.handlist o.modules.mlec
+AOFM1=\
+o.modules.aligator \
+o.modules.alloc \
+o.modules.allocblk \
+o.modules.bezier \
+o.modules.collect \
+o.modules.file \
+o.modules.fileutil \
+o.modules.funclist \
+o.modules.handlist \
+o.modules.mlec
 #
-AOFM2=o.modules.numform o.modules.quickblk o.modules.report o.modules.spell o.modules.stringlk o.modules.typepack o.modules.vsload o.modules.wm_event o.modules.wm_null o.modules.xstring
+AOFM2=\
+o.modules.numform \
+o.modules.quickblk \
+o.modules.report \
+o.modules.spell \
+o.modules.stringlk \
+o.modules.typepack \
+o.modules.vsload \
+o.modules.wm_event \
+o.modules.wm_null \
+o.modules.xstring
 #
-AOFM3=o.modules.fontlxtr o.modules.tristate o.modules.wlalloc
+AOFM3=\
+o.modules.fontlxtr \
+o.modules.tristate \
+o.modules.wlalloc
 #
-AOFMA=o.modules.muldivas
+AOFMA=\
+o.modules.muldivas
 #
-AOFMEV=o.modules.ss_const o.modules.ev_comp o.modules.ev_dcom o.modules.ev_docs o.modules.ev_eval o.modules.ev_exec o.modules.ev_func o.modules.ev_help o.modules.ev_math o.modules.ev_mcpx o.modules.ev_name o.modules.ev_rpn o.modules.ev_tabl o.modules.ev_tree o.modules.ev_uref o.modules.k_sin o.modules.k_cos o.modules.e_lgamma_r o.modules.mathxtra o.modules.mathxtr2 o.modules.mathxtr3
+AOFMEV=\
+o.modules.ss_const \
+o.modules.ev_comp \
+o.modules.ev_dcom \
+o.modules.ev_docs \
+o.modules.ev_eval \
+o.modules.ev_exec \
+o.modules.ev_fndat \
+o.modules.ev_fnfin \
+o.modules.ev_fnsta \
+o.modules.ev_fnstr \
+o.modules.ev_func \
+o.modules.ev_help \
+o.modules.ev_math \
+o.modules.ev_mcpx \
+o.modules.ev_mtri \
+o.modules.ev_name \
+o.modules.ev_rpn \
+o.modules.ev_tabl \
+o.modules.ev_tree \
+o.modules.ev_uref \
+o.modules.mathxtra \
+o.modules.mathxtr2 \
+o.modules.mathxtr3
 #
-AOFMGR=o.modules.gr_axis2 o.modules.gr_axisp o.modules.gr_barch o.modules.gr_blgal o.modules.gr_cache o.modules.gr_chart o.modules.gr_chtIO o.modules.gr_coord o.modules.gr_diag o.modules.gr_editc o.modules.gr_editm o.modules.gr_editt o.modules.gr_numcv o.modules.gr_nodbg o.modules.gr_piesg o.modules.gr_rdiag o.modules.gr_rdia2 o.modules.gr_scale o.modules.gr_scatc
+AOFMGR=\
+o.modules.gr_axis2 \
+o.modules.gr_axisp \
+o.modules.gr_barch \
+o.modules.gr_blgal \
+o.modules.gr_cache \
+o.modules.gr_chart \
+o.modules.gr_chtIO \
+o.modules.gr_coord \
+o.modules.gr_diag \
+o.modules.gr_editc \
+o.modules.gr_editm \
+o.modules.gr_editt \
+o.modules.gr_numcv \
+o.modules.gr_nodbg \
+o.modules.gr_piesg \
+o.modules.gr_rdiag \
+o.modules.gr_rdia2 \
+o.modules.gr_scale \
+o.modules.gr_scatc
 #
-AOFMD=o.modules.debug o.modules.myassert
-# o.modules.debug o.modules.myassert
+AOFMD=\
+o.modules.debug \
+o.modules.myassert
+# o.modules.debug \
+# o.modules.myassert
 #
 #
 AOFND=$(AOF1) $(AOF2) $(AOF3) $(AOF4) $(AOFGR) $(AOFM1) $(AOFM2) $(AOFM3) $(AOFMA) $(AOFMEV) $(AOFMGR)
@@ -249,6 +357,14 @@ o.Modules.ev_eval:    $(CMODULES).c.ev_eval
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_eval
 o.Modules.ev_exec:    $(CMODULES).c.ev_exec
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_exec
+o.Modules.ev_fndat:    $(CMODULES).c.ev_fndat
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fndat
+o.Modules.ev_fnfin:    $(CMODULES).c.ev_fnfin
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnfin
+o.Modules.ev_fnsta:    $(CMODULES).c.ev_fnsta
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnsta
+o.Modules.ev_fnstr:    $(CMODULES).c.ev_fnstr
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnstr
 o.Modules.ev_func:    $(CMODULES).c.ev_func
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_func
 o.Modules.ev_help:    $(CMODULES).c.ev_help
@@ -257,6 +373,8 @@ o.Modules.ev_math:    $(CMODULES).c.ev_math
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_math
 o.Modules.ev_mcpx:    $(CMODULES).c.ev_mcpx
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_mcpx
+o.Modules.ev_mtri:    $(CMODULES).c.ev_mtri
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_mtri
 o.Modules.ev_name:    $(CMODULES).c.ev_name
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_name
 o.Modules.ev_rpn:     $(CMODULES).c.ev_rpn
@@ -390,10 +508,15 @@ o.Modules.ev_dcom :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).
 o.Modules.ev_docs :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_eval :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_exec :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_fndat :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_fnfin :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_fnsta :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_fnstr :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_func :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_help :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_math :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_mcpx :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_mtri :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_name :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_rpn :     $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_tabl :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const

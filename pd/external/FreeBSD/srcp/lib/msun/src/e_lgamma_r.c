@@ -12,16 +12,16 @@
  *
  */
 
-#include "common/gflags.h"
+#include "common/gflags.h"/* COLTON_SOFTWARE */
 
-#if 1 /* SKS */
+#if 1 /* COLTON_SOFTWARE */
 __pragma(warning(disable:4127)) /* conditional expression is constant */
 __pragma(warning(disable:4701)) /* potentially uninitialized local variable 'nadj' used */
 __pragma(warning(disable:4723)) /* potential divide by 0 (which is deliberate) */
-#else
+#else /* COLTON_SOFTWARE */
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: src/lib/msun/src/e_lgamma_r.c,v 1.11 2011/10/15 07:00:28 das Exp $");
-#endif
+#endif /* COLTON_SOFTWARE */
 
 /* __ieee754_lgamma_r(x, signgamp)
  * Reentrant version of the logarithm of the Gamma function 

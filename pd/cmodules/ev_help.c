@@ -89,8 +89,8 @@ arg_normalise(
         case RPN_TMP_STRING:
             if(!(type_flags & EM_STR))
                 {
-                trace_1(TRACE_MODULE_EVAL, "arg_normalise freeing string: %s", p_ev_data->arg.string.data);
-                str_clr(&p_ev_data->arg.string_wr.data);
+                trace_1(TRACE_MODULE_EVAL, "arg_normalise freeing string: %s", p_ev_data->arg.string.uchars);
+                str_clr(&p_ev_data->arg.string_wr.uchars);
                 return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
                 }
             break;
@@ -166,7 +166,7 @@ arg_normalise(
                     }
                 else
                     {
-                    p_ev_data->arg.string.data = "";
+                    p_ev_data->arg.string.uchars = "";
                     p_ev_data->arg.string.size = 0;
                     p_ev_data->did_num = RPN_DAT_STRING;
                     }
@@ -395,7 +395,7 @@ end_expand:
 extern EV_IDNO
 array_range_index(
     P_EV_DATA p_ev_data_out,
-    P_EV_DATA p_ev_data_in,
+    _InRef_     PC_EV_DATA p_ev_data_in,
     S32 x,
     S32 y,
     EV_TYPE types)
@@ -405,46 +405,46 @@ array_range_index(
     array_range_sizes(p_ev_data_in, &xs, &ys);
 
     if(x >= xs || y >= ys)
-        ev_data_set_error(p_ev_data_out, EVAL_ERR_SUBSCRIPT);
-    else
     {
-        switch(p_ev_data_in->did_num)
-        {
-        case RPN_TMP_ARRAY:
-        case RPN_RES_ARRAY:
-            ss_array_element_read(p_ev_data_out, p_ev_data_in, x, y);
-            break;
-
-        case RPN_DAT_RANGE:
-            p_ev_data_out->arg.slr = p_ev_data_in->arg.range.s;
-            p_ev_data_out->arg.slr.col += (EV_COL) x;
-            p_ev_data_out->arg.slr.row += (EV_ROW) y;
-            p_ev_data_out->did_num = RPN_DAT_SLR;
-            break;
-
-        default:
-            ev_data_set_error(p_ev_data_out, create_error(EVAL_ERR_SUBSCRIPT));
-            break;
-        }
-
-        status_assert(arg_normalise(p_ev_data_out, types, NULL, NULL));
+        ev_data_set_error(p_ev_data_out, EVAL_ERR_SUBSCRIPT);
+        return(p_ev_data_out->did_num);
     }
+
+    switch(p_ev_data_in->did_num)
+    {
+    case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
+        ss_array_element_read(p_ev_data_out, p_ev_data_in, x, y);
+        break;
+
+    case RPN_DAT_RANGE:
+        p_ev_data_out->arg.slr = p_ev_data_in->arg.range.s;
+        p_ev_data_out->arg.slr.col += (EV_COL) x;
+        p_ev_data_out->arg.slr.row += (EV_ROW) y;
+        p_ev_data_out->did_num = RPN_DAT_SLR;
+        break;
+
+    default:
+        ev_data_set_error(p_ev_data_out, create_error(EVAL_ERR_SUBSCRIPT));
+        break;
+    }
+
+    status_assert(arg_normalise(p_ev_data_out, types, NULL, NULL));
 
     return(p_ev_data_out->did_num);
 }
 
 /******************************************************************************
 *
-* extract an element of array or range
-* using single index (across rows first)
+* extract an element of array or range using single index (across rows first)
 *
 ******************************************************************************/
 
 extern void
 array_range_mono_index(
     P_EV_DATA p_ev_data_out,
-    P_EV_DATA p_ev_data_in,
-    S32 ix,
+    _InRef_     PC_EV_DATA p_ev_data_in,
+    S32 mono_x,
     EV_TYPE types)
 {
     S32 xs, ys;
@@ -452,16 +452,17 @@ array_range_mono_index(
     array_range_sizes(p_ev_data_in, &xs, &ys);
 
     if(!xs || !ys)
+    {
         ev_data_set_error(p_ev_data_out, create_error(EVAL_ERR_SUBSCRIPT));
-    else
-        {
-        S32 x, y;
+        return;
+    }
 
-        y  =      ix / xs;
-        x  = ix - (y * xs);
+    {
+    S32 y  =      mono_x / xs;
+    S32 x  = mono_x - (y * xs);
 
-        array_range_index(p_ev_data_out, p_ev_data_in, x, y, types);
-        }
+    array_range_index(p_ev_data_out, p_ev_data_in, x, y, types);
+    } /*block*/
 }
 
 /******************************************************************************
@@ -1197,8 +1198,8 @@ ev_result_free_resources(
     switch(p_ev_result->did_num)
         {
         case RPN_RES_STRING:
-            trace_1(TRACE_MODULE_EVAL, "ev_result_free_resources freeing string: %s", p_ev_result->arg.string.data);
-            str_clr(&p_ev_result->arg.string_wr.data);
+            trace_1(TRACE_MODULE_EVAL, "ev_result_free_resources freeing string: %s", p_ev_result->arg.string.uchars);
+            str_clr(&p_ev_result->arg.string_wr.uchars);
             p_ev_result->did_num = RPN_DAT_BLANK;
             break;
 
@@ -1294,7 +1295,7 @@ ev_slr_deref(
                         err = ss_string_make_uchars(p_ev_data, ext_ptr, len);
                     else
                         {
-                        p_ev_data->arg.string.data = ext_ptr;
+                        p_ev_data->arg.string.uchars = ext_ptr;
                         p_ev_data->arg.string.size = len;
                         p_ev_data->did_num = RPN_RES_STRING;
                         }

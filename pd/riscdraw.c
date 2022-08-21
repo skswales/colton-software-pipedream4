@@ -373,7 +373,7 @@ new_font_leading(
 }
 
 /*
-rjm and rcm add on 6.10.91
+RJM and RCM add on 6.10.91
 */
 
 extern void
@@ -2337,7 +2337,7 @@ riscprint_set_printer_data(void)
 {
     trace_0(TRACE_APP_PD4_RENDER, "riscprint_set_printer_data()");
 
-    /* rjm thinks print_pagesize returns 0 if it worked, contrary to sks's earlier test */
+    /* RJM thinks print_pagesize returns 0 if it worked, contrary to SKS's earlier test */
     if(print_pagesize(&riscos_printer.psize) != 0)
         {
         /* error in reading paper size - assume a sort of normal A4 (LaserWriter defaults) */
@@ -2665,7 +2665,7 @@ riscprint_end(
 
     if(!ok)
         {
-        /* winge terribly */
+        /* whinge terribly */
         bum2 = print_abortjob(riscos_printer.job);
         bum = bum ? bum : bum2;
         rep_fserr(bum->errmess);

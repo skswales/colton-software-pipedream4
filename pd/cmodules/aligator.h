@@ -465,7 +465,7 @@ typedef struct ARRAY_INIT_BLOCK
 {
     ARRAY_INDEX size_increment;     /* number of array elements to allocate at a time */
     U32         element_size;       /* sizeof32() the type stored */
-    U8          clear_new_block;    /* boolean; zeroes allocated chunks */
+    U8          clear_new_block;    /* boolean; zeros allocated chunks */
     U8          use_alloc;          /* see ARRAY_BLOCK_PARMS */
     U8          _spare[2];
 }
@@ -647,7 +647,7 @@ al_array_garbage_collect(
 _Check_return_
 extern S32 /* number of allocated handles */
 al_array_handle_check(
-    _InVal_     S32 winge /* winge about allocated handles */);
+    _InVal_     S32 whinge /* whinge about allocated handles */);
 
 extern void
 al_array_delete_at(

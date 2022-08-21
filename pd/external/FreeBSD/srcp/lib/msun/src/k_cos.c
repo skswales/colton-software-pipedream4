@@ -11,12 +11,13 @@
  * ====================================================
  */
 
-#include "common/gflags.h"
+#include "common/gflags.h" /* COLTON_SOFTWARE */
 
-#if 0 /* SKS */
+#if 1 /* COLTON_SOFTWARE */
+#else /* COLTON_SOFTWARE */
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/lib/msun/src/k_cos.c,v 1.12 2008/02/19 12:54:14 bde Exp $");
-#endif
+__FBSDID("$FreeBSD: head/lib/msun/src/k_cos.c 176408 2008-02-19 12:54:14Z bde $");
+#endif /* COLTON_SOFTWARE */
 
 /*
  * __kernel_cos( x,  y )

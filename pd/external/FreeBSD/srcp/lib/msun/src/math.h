@@ -17,7 +17,7 @@
 #ifndef _MATH_H_
 #define	_MATH_H_
 
-#if 1 /* SKS */
+#if 1 /* COLTON_SOFTWARE */
 #define u_int32_t uint32_t
 #define u_int64_t uint64_t
 
@@ -47,11 +47,11 @@
 #define __XSI_VISIBLE 0
 
 #define __INTEL_COMPILER 0
-#else
+#else /* COLTON_SOFTWARE */
 #include <sys/cdefs.h>
 #include <sys/_types.h>
 #include <machine/_limits.h>
-#endif /* SKS */
+#endif /* COLTON_SOFTWARE */
 
 /*
  * ANSI/POSIX

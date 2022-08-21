@@ -401,7 +401,6 @@ enum DID_NUMBERS
 
     RPN_FNF_BETA        ,
     RPN_FNF_BIN         ,
-    RPN_FNF_BINOM       ,
     RPN_FNV_BREAK       ,
 
     RPN_FNF_C_ACOS      ,
@@ -476,7 +475,6 @@ enum DID_NUMBERS
     RPN_FNF_ELSEIF      ,
     RPN_FN0_ENDIF       ,
     RPN_FN0_ENDWHILE    ,
-    RPN_FNF_ERROR       ,
     RPN_FNF_EXACT       ,
     RPN_FNF_EXP         ,
 
@@ -1112,7 +1110,7 @@ ev_enum_resource_get(
     S32 name_buf_siz,
     P_U8 arg_out,
     S32 arg_buf_siz,
-    P_S32 nargs);
+    P_S32 n_args);
 
 /*
 ev_tree.c external functions

@@ -160,7 +160,7 @@ save_version_string(
 
     xstrkat(array, elemof32(array), "R9200 7500 3900 8299");
 
-    /* sks 15nov91 - temporarily borrow the data */
+    /* SKS 15nov91 - temporarily borrow the data */
     tmp = d_version[0].textfield;
     d_version[0].textfield = array;
 
@@ -212,14 +212,14 @@ save_options_to_file(
     /* update_dialog_from_fontinfo();*/
     save_opt_to_file(output, d_fonts,    dialog_head[D_FONTS].items);
 
-    /* these two added by rjm on 22.9.91 */
+    /* these two added by RJM on 22.9.91 */
     save_opt_to_file(output, d_driver,   dialog_head[D_DRIVER].items);
     save_opt_to_file(output, d_print,    dialog_head[D_PRINT].items);
 
-    /* this one added by rjm on 16.10.91 */
+    /* this one added by RJM on 16.10.91 */
     save_opt_to_file(output, d_mspace,   dialog_head[D_MSPACE].items);
 
-    /* sks 15nov91 */
+    /* SKS 15nov91 */
     save_opt_to_file(output, d_chart_options, 1);
 
     /* save_window_position */
@@ -302,7 +302,7 @@ save_opt_to_file(
         ch1 = dptr->ch1;
         ch2 = dptr->ch2;
 
-        /* rjm adds on 22.9.91 cos print box may not have complete set of options */
+        /* RJM adds on 22.9.91 cos print box may not have complete set of options */
         if(ch1 == '\0' || ch2 == '\0')
             continue;
 
@@ -1211,7 +1211,7 @@ savefile_core(
                     actind_in_block(goingdown);
                     }
 
-                /* rjm would redirect saving_part_file on 31.8.91, but we still need the slot bits!! */
+                /* RJM would redirect saving_part_file on 31.8.91, but we still need the slot bits!! */
                 if(goingdown)
                     {
                     if(!pd_save_slot(tslot, tcol, trow, output, saving_part_file)  ||
@@ -1517,7 +1517,7 @@ pd_save_slot(
             }
         }
 
-    /* rjm 9.10.91, this plain_slot ensures blocks and row selections aren't saved with silly slot refs
+    /* RJM 9.10.91, this plain_slot ensures blocks and row selections aren't saved with silly slot refs
         it helps the PD4 example database to work, amongst other things
     */
     if(saving_part_file)
@@ -2667,7 +2667,7 @@ comma_convert(
 
             if(lecpos == 0)
                 {
-                /* rjm changes this on 16.1.92 so that ,"", is understood correctly */
+                /* RJM changes this on 16.1.92 so that ,"", is understood correctly */
                 /* *in_quotes = TRUE; */
                 *in_quotes = !*in_quotes;
 
@@ -2842,7 +2842,7 @@ loadfile_core(
             /* PD files build their own column table */
             killcoltab();
 
-            /* sks, rjm 1.9.91 */
+            /* SKS, RJM 1.9.91 */
             update_all_dialog_from_windvars();
             dialog_hardwired_defaults();
             update_all_windvars_from_dialog();
@@ -3278,7 +3278,7 @@ loadfile_core(
         /* delete all the columns at end */
         delcolentry(first_blank, numcol - first_blank);
 
-        /* rjm, 21.11.91 */
+        /* RJM, 21.11.91 */
         reset_numrow();
         }
     else

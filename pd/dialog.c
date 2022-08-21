@@ -478,7 +478,7 @@ DIALOG d_sort[] =
     DNNL(F_TEXT,      '\0','\0', NO_OPT,                      0 ),
     DN(  F_SPECIAL,   '\0','\0', NO_OPT, YESNOSTR,            0 ),
 
-    /* rjm switched out update refs and switches off multi-row records on 14.9.91 */
+    /* RJM switched out update refs and switches off multi-row records on 14.9.91 */
     DN(  F_SPECIAL,   '\0','\0', NO_OPT, NOYESSTR,            0 )
 };
 
@@ -1100,7 +1100,7 @@ save_opt_to_list(
         {
         key = (((S32) dptr->ch1) << 8) + (S32) dptr->ch2;
 
-        /* rjm adds on 22.9.91 */
+        /* RJM adds on 22.9.91 */
         if(key == 0)
             continue;
 
@@ -1194,11 +1194,11 @@ save_options_to_list(void)
     save_opt_to_list(d_options,  dialog_head[D_OPTIONS].items);
     save_opt_to_list(d_poptions, dialog_head[D_POPTIONS].items);
 
-    /* added by rjm on 22.9.91 */
+    /* added by RJM on 22.9.91 */
     save_opt_to_list(d_driver, dialog_head[D_DRIVER].items);
     save_opt_to_list(d_print,  dialog_head[D_PRINT].items);
 
-    /* added by rjm on 16.10.91 */
+    /* added by RJM on 16.10.91 */
     save_opt_to_list(d_mspace, dialog_head[D_MSPACE].items);
 
     save_opt_to_list(d_save + SAV_LINESEP, 1);

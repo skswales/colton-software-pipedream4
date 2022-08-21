@@ -24,10 +24,17 @@
 exported functions
 */
 
+_Check_return_
 extern U32
 fast_strtoul(
-    _In_z_      PC_USTR p_u8_in,
-    _Out_opt_   P_USTR * endptr);
+    _In_z_      PC_U8Z p_u8_in, /* NB NOT USTR */
+    _OutRef_opt_ P_P_U8Z endptr);
+
+_Check_return_
+extern U32
+fast_ustrtoul(
+    _In_z_      PC_USTR ustr_in,
+    _OutRef_opt_ P_PC_USTR endptr);
 
 _Check_return_
 _Ret_writes_bytes_maybenull_(size_b)

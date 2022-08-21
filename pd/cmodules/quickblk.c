@@ -375,8 +375,8 @@ quick_block_vprintf(
 #endif
 
         status_break(status = quick_block_bytes_add(p_quick_block, buffer, len));
-#if WINDOWS
-        { /* Wot a bummer. Microsoft seems to pass args by value not reference so that args ain't updated like Norcroft compiler */
+
+#if WINDOWS /* Microsoft seems to pass args by value not reference so that args ain't updated like Norcroft compiler */
         switch(conversion)
         {
         case 'f':
@@ -388,13 +388,9 @@ quick_block_vprintf(
             {
                 volatile long double ld = va_arg(args, long double); ld=ld;
             }
-            else if(preceding == 'l')
+            else  /* NB floats are promoted to double when passed to variadic functions */
             {
                 volatile double d = va_arg(args, double); d=d;
-            }
-            else
-            {
-                volatile float f = va_arg(args, float); f=f;
             }
             break;
 
@@ -402,24 +398,14 @@ quick_block_vprintf(
         case 'S':
         case 'p':
         case 'n':
-            if(preceding == 'l')
             {
-                volatile char /*__far*/ * lp = va_arg(args, char /*__far*/ *); lp=lp;
-            }
-            else if(preceding == 'h')
-            {
-                volatile char /*__near*/ * hp = va_arg(args, char /*__near*/ *); hp=hp;
-            }
-            else
-            {
-                volatile char * p = va_arg(args, char *); p=p;
-            }
+            volatile char * p = va_arg(args, char *); p=p;
             break;
+            }
 
         case 'c':
         case 'C':
-            {
-            /* chars are widened to int when passing as parameters */
+            { /* chars are promoted to int when passed as parameters */
             volatile int ci = va_arg(args, int); ci=ci;
             break;
             }
@@ -435,18 +421,13 @@ quick_block_vprintf(
             {
                 volatile long li = va_arg(args, long); li=li;
             }
-            else if(preceding == 'h')
-            {
-                volatile short hi = va_arg(args, short); hi=hi;
-            }
-            else
+            else /* NB shorts are promoted to int when passed to variadic functions */
             {
                 volatile int i = va_arg(args, int); i=i;
             }
             break;
         }
-        } /*block*/
-#endif
+#endif /* WINDOWS */
         } /*block*/
 
         format = p_u8; /* skip whole conversion sequence */

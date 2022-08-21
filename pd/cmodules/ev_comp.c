@@ -194,6 +194,7 @@ typedef struct COMPILER_CONTEXT
     SYM_INF         cur;
     P_U8            err_pos;    /* position of error */
     S32             error;      /* reason for non-compilation */
+    S32             n_scanned;  /* number of symbols scanned */
 
     S32             dbs_nest;   /* database function nest count */
     S32             array_nest; /* array nest count */
@@ -286,6 +287,8 @@ ev_compile(
     S32 res;
     P_COMPILER_CONTEXT old_cc;
     struct COMPILER_CONTEXT comp_cont;
+
+    zero_struct(comp_cont);
 
     /* set up current compiler context */
     old_cc = cc;
@@ -510,7 +513,7 @@ func_call(
         /*
          * other functions
          */
-        if(funp->nargs < 0)
+        if(funp->n_args < 0)
             {
             /*
              * variable argument functions
@@ -527,7 +530,7 @@ func_call(
                     out_nameid(nameid);
                 }
             }
-        else if(funp->nargs == 0)
+        else if(funp->n_args == 0)
             {
             /*
              * zero argument functions
@@ -805,7 +808,7 @@ proc_func(
     if(scan_check_next(NULL) != SYM_OBRACKET)
         {
         /* function allowed to be totally devoid ? */
-        if(funp->nargs == -1)
+        if(funp->n_args == -1)
             return(0);
 
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
@@ -844,15 +847,15 @@ proc_func(
     /* functions with fixed number of arguments must
      * have exactly the correct number of arguments
     */
-    if(funp->nargs >= 0)
+    if(funp->n_args >= 0)
         {
-        if(narg != funp->nargs)
+        if(narg != funp->n_args)
             return(set_error(create_error(EVAL_ERR_FUNARGS)));
         }
     /* functions with variable number of arguments must
-     * have at least (-funp->nargs - 1) arguments
+     * have at least (-funp->n_args - 1) arguments
     */
-    else if(narg < -funp->nargs - 1)
+    else if(narg < -funp->n_args - 1)
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
 
     return(narg);
@@ -934,7 +937,7 @@ proc_func_dbs(void)
 *
 * --out--
 * <0  error encountered
-* >=0 OK (nargs)
+* >=0 OK (n_args)
 *
 ******************************************************************************/
 
@@ -1043,7 +1046,7 @@ proc_func_custom(
         cc->cur.did_num = SYM_BLANK;
 
     /* extract custom function name from first argument */
-    if((res = proc_custom_argument(cc->cur_sym.arg.string.data,
+    if((res = proc_custom_argument(cc->cur_sym.arg.string.uchars,
                                   custom_name,
                                   &dummy_type)) < 0)
         return(set_error(res));
@@ -1067,7 +1070,7 @@ proc_func_custom(
     *customidp = p_ev_custom->key;
 
     /* store custom name (first arg to function()) in rpn */
-    out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.data);
+    out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
 
     /* now loop over arguments, commas etc storing
      * the results in the custom definition structure
@@ -1090,13 +1093,13 @@ proc_func_custom(
             cc->cur.did_num = SYM_BLANK;
 
         /* extract argument names and types */
-        if((res = proc_custom_argument(cc->cur_sym.arg.string.data,
+        if((res = proc_custom_argument(cc->cur_sym.arg.string.uchars,
                                        p_ev_custom->args.id[narg],
                                        &p_ev_custom->args.types[narg])) < 0)
             break;
 
         /* output argument text to rpn */
-        out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.data);
+        out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
 
         ++narg;
         }
@@ -1370,12 +1373,10 @@ ss_recog_date_time(
         {
         S32 tres;
 
-        if(year < 100)
+#if (RELEASED || 1) /* you may set the one to zero temporarily for testing Fireworkz serial numbers for years < 0100 in Debug build */
+        if((year >= 0) && (year < 100))
             year = sliding_window_year(year);
-
-        day -= 1;
-        month -= 1;
-        year -= 1;
+#endif
 
         if(american)
             tres = ss_ymd_to_dateval(&p_ev_data->arg.ev_date.date, year, day, month);
@@ -1983,7 +1984,7 @@ recog_string(
 
             *co = NULLCH;
 
-            p_ev_data->arg.string.data = stringp;
+            p_ev_data->arg.string.uchars = stringp;
             p_ev_data->arg.string.size = len;
             p_ev_data->did_num = RPN_TMP_STRING;
 
@@ -2373,7 +2374,7 @@ rec_lterm(void)
 
         case RPN_TMP_STRING:
             cc->cur.did_num = SYM_BLANK;
-            out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.data);
+            out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
             break;
 
         case RPN_DAT_DATE:
@@ -2518,6 +2519,7 @@ scan_check_next(
         {
         cc->err_pos = cc->ip_pos;
         scan_next_symbol();
+        cc->n_scanned += 1;
         }
 
     if(p_sym_inf)
@@ -2540,33 +2542,50 @@ scan_next_symbol(void)
 {
     S32 count, res;
 
-    /* accumulate CRs and space */
+    /* accumulate line separators and spaces */
     cc->cur.sym_cr = 0;
-    do  {
+
+    for(;;)
+    {
+        /* look for EXCEL type equals sign and ignore it (only if we haven't scanned anything yet) */
+        if((cc->n_scanned == 0) && (*cc->ip_pos == '='))
+        {
+            ++cc->ip_pos;
+            continue;
+        }
+
         if(*cc->ip_pos == CR)
             {
             ++cc->ip_pos;
             if(*cc->ip_pos == LF)
                 ++cc->ip_pos;
             ++cc->cur.sym_cr;
+            continue;
             }
-        else if(*cc->ip_pos == LF)
+
+        if(*cc->ip_pos == LF)
             {
             ++cc->ip_pos;
             if(*cc->ip_pos == CR)
                 ++cc->ip_pos;
             ++cc->cur.sym_cr;
+            continue;
             }
 
         cc->cur.sym_space = 0;
-        while(*cc->ip_pos == ' ')
-            {
-            ++cc->ip_pos;
-            ++cc->cur.sym_space;
-            }
+        if(*cc->ip_pos == ' ')
+        {
+            do  {
+                ++cc->ip_pos;
+                ++cc->cur.sym_space;
+                }
+            while(*cc->ip_pos == ' ');
+
+            continue;
         }
-    while(*cc->ip_pos == CR ||
-          *cc->ip_pos == LF);
+
+        break; /* none of the above matched on this pass */
+    }
 
     /* try to scan a data item */
     if(*cc->ip_pos != '-' &&

@@ -280,7 +280,7 @@ typedef struct OPRDEF
 {
 	uchar fno;
 	S32 ftype;
-	S32 nargs;
+	S32 n_args;
 	S32 ltpok;
 	uchar *pdeqv;
 	S32 argix;

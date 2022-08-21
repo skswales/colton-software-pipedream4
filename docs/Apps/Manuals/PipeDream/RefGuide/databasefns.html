@@ -37,7 +37,7 @@ database function in the PipeDream Examples archive.</p>
 
 <p>Database functions all have the form:</p>
 
-<p><code>D<em>function</em>(<span class="csguide-arg">range</span>,<span
+<p><code>D<em>function</em>(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>For example, with:</p>
@@ -158,15 +158,16 @@ condition.</p>
 
 <h2>DAVG</h2>
 
-<p><code>DAVG(<span class="csguide-arg">range</span>,<span
+<p><code>DAVG(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the average of values in the slots in the range for which the
 condition is satisfied.</p>
 
+
 <h2>DCOUNT</h2>
 
-<p><code>DCOUNT(<span class="csguide-arg">range</span>,<span
+<p><code>DCOUNT(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the number of number slots in the range for which the condition is
@@ -174,15 +175,17 @@ satisfied.</p>
 
 <p>Note that this operates on number slots only.</p>
 
+
 <h2>DCOUNTA</h2>
 
 <p>As DCOUNT, but applies to all slots, not just number slots.</p>
 
 <p>Usually DCOUNTA should be used in preference to DCOUNT.</p>
 
+
 <h2>DMAX</h2>
 
-<p><code>DMAX(<span class="csguide-arg">range</span>,<span
+<p><code>DMAX(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the maximum value in the range for which the condition is
@@ -190,15 +193,16 @@ satisfied.</p>
 
 <h2>DMIN</h2>
 
-<p><code>DMIN(<span class="csguide-arg">range</span>,<span
+<p><code>DMIN(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the minimum value in the range for which the condition is
 satisfied.</p>
 
+
 <h2>DSTD</h2>
 
-<p><code>DSTD(<span class="csguide-arg">range</span>,<span
+<p><code>DSTD(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the standard deviation in the range for which the condition is
@@ -206,9 +210,10 @@ satisfied.</p>
 
 <p>This is the square root of the variance. See DVAR for the equation used.</p>
 
+
 <h2>DSTDP</h2>
 
-<p><code>DSTDP(<span class="csguide-arg">range</span>,<span
+<p><code>DSTDP(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the population standard deviation in the range for which the
@@ -219,15 +224,16 @@ equation used.</p>
 
 <h2>DSUM</h2>
 
-<p><code>DSUM(<span class="csguide-arg">range</span>,<span
+<p><code>DSUM(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the sum of the values in the range for which the condition is
 satisfied.</p>
 
+
 <h2>DVAR</h2>
 
-<p><code>DVAR(<span class="csguide-arg">range</span>,<span
+<p><code>DVAR(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the variance of the values in the range for which the condition is
@@ -245,9 +251,10 @@ class="csguide-arg">n</span>&middot;(<span class="csguide-arg">n</span>-1)</p>
 <p>where <span class="csguide-arg">x</span> is each value and <span
 class="csguide-arg">n</span> is the number of values.</p>
 
+
 <h2>DVARP</h2>
 
-<p><code>DVARP(<span class="csguide-arg">range</span>,<span
+<p><code>DVARP(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
 <p>Returns the population variance of the values in the range for which the

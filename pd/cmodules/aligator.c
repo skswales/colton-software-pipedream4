@@ -1011,12 +1011,12 @@ al_array_garbage_collect(
 _Check_return_
 extern S32 /* number of allocated handles */
 al_array_handle_check(
-    _InVal_     S32 winge /* winge about allocated handles */)
+    _InVal_     S32 whinge /* whinge about allocated handles */)
 {
     ARRAY_INDEX count = 0;
     UINT pass;
 
-    IGNOREPARM_InVal_(winge);
+    IGNOREPARM_InVal_(whinge);
 
     for(pass = 1; pass <= 2; ++pass)
     {
@@ -1049,7 +1049,7 @@ al_array_handle_check(
             else
             {
                 trace_1(TRACE_OUT | TRACE_ANY, TEXT("handle ") S32_TFMT TEXT(" not freed"), i);
-                /*myassert1x(!winge, TEXT("al_array_handle_check handle ") S32_TFMT TEXT(" not freed"), i);*/
+                /*myassert1x(!whinge, TEXT("al_array_handle_check handle ") S32_TFMT TEXT(" not freed"), i);*/
             }
         }
 

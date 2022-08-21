@@ -860,7 +860,7 @@ gr_chart_objid_scatchstyle_set(
 
 #define GR_FILLSTYLE_N_DEFAULTS 9
 
-static GR_FILLSTYLE gr_fillstyle_defaults[GR_FILLSTYLE_N_DEFAULTS]; /* starts up all zeroes */
+static GR_FILLSTYLE gr_fillstyle_defaults[GR_FILLSTYLE_N_DEFAULTS]; /* starts up all zeros */
 
 static P_GR_FILLSTYLE  /*const*/
 gr_fillstyle_default(
@@ -1065,7 +1065,7 @@ gr_chart_objid_fillstyle_set(
 *
 ******************************************************************************/
 
-static GR_LINESTYLE gr_linestyle_defaults; /* starts up all zeroes */
+static GR_LINESTYLE gr_linestyle_defaults; /* starts up all zeros */
 
 static P_GR_LINESTYLE  /*const*/
 gr_linestyle_default(void)
