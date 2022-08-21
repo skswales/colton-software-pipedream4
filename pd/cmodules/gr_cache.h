@@ -199,11 +199,15 @@ gr_cache_search_empty(void);
 
 _Check_return_
 extern STATUS
-gr_cache_tagstrip(
+gr_cache_tagstripper_add(
     gr_cache_tagstrip_proc proc,
     P_ANY handle,
-    U32 tag,
-    S32 add);
+    _InVal_     U32 tag);
+
+extern void
+gr_cache_tagstripper_remove(
+    gr_cache_tagstrip_proc proc,
+    P_ANY handle);
 
 /* offset in our internal object/group/diagram (can be large) */
 typedef U32 GR_DIAG_OFFSET;  typedef GR_DIAG_OFFSET * P_GR_DIAG_OFFSET; typedef const GR_DIAG_OFFSET * PC_GR_DIAG_OFFSET;

@@ -858,7 +858,7 @@ draw_cache_file(
     GR_CHART_HANDLE ch;
     P_ANY ext_handle;
     S32 chart_exists;
-    S32 added_stripper = 0;
+    BOOL added_stripper = FALSE;
 
     trace_1(TRACE_APP_PD4, "draw_cache_file(%s)", name);
 
@@ -892,16 +892,16 @@ draw_cache_file(
         /* add tag stripper iff chart not already loaded */
         if(!chart_exists)
             {
-            status_assert(gr_cache_tagstrip(pdchart_tagstrip, &info, wacky_tag, 1));
+            status_assert(gr_cache_tagstripper_add(pdchart_tagstrip, &info, wacky_tag));
 
-            added_stripper = 1;
+            added_stripper = TRUE;
             }
         }
 
     (void) gr_cache_loaded_ensure(&draw_file_key);
 
     if(added_stripper)
-        status_assert(gr_cache_tagstrip(pdchart_tagstrip, &info, wacky_tag, 0));
+        gr_cache_tagstripper_remove(pdchart_tagstrip, &info);
 
     /* if we loaded a live Chart file we'll now want to ensure its dependent docs are loaded too */
 

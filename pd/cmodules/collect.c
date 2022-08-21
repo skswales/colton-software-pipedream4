@@ -345,6 +345,9 @@ _collect_next(
     item = *p_key;
     myassert1x((S32) item >= 0, "collect_next key %ld negative", item);
 
+    if(NULL == p_list_block)
+        return(NULL); /* like PD list_next() */
+
     it = list_nextseq(p_list_block, &item);
 
     *p_key = item;

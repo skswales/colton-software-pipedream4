@@ -7,7 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2014 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.52/08
+#TEXTUAL_VERSION_NUMBER=4.54
+TEXTUAL_VERSION_NUMBER=4.53/01
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -172,10 +173,14 @@ o.modules.ev_exec \
 o.modules.ev_fndat \
 o.modules.ev_fnfin \
 o.modules.ev_fnsta \
+o.modules.ev_fnsta \
+o.modules.ev_fnstm \
 o.modules.ev_fnstr \
 o.modules.ev_func \
 o.modules.ev_help \
 o.modules.ev_math \
+o.modules.ev_matb \
+o.modules.ev_matr \
 o.modules.ev_mcpx \
 o.modules.ev_mtri \
 o.modules.ev_name \
@@ -185,7 +190,8 @@ o.modules.ev_tree \
 o.modules.ev_uref \
 o.modules.mathxtra \
 o.modules.mathxtr2 \
-o.modules.mathxtr3
+o.modules.mathxtr3 \
+o.modules.mathxtr4
 #
 AOFMGR=\
 o.modules.gr_axis2 \
@@ -676,33 +682,33 @@ utils.GB.Messages:   \
         utils.GB.t_strings \
         $(WimpLib).GB.msg_risc \
         $(CMODULES).GB.msg.gr_chart \
-        $(CMODULES).GB.msg.mlec 
-        print  { > $@ } utils.GB.t_reperr 
-        print { >> $@ } utils.GB.t_strings 
-        print { >> $@ } $(WimpLib).GB.msg_risc 
-        print { >> $@ } $(CMODULES).GB.msg.gr_chart 
+        $(CMODULES).GB.msg.mlec
+        print  { > $@ } utils.GB.t_reperr
+        print { >> $@ } utils.GB.t_strings
+        print { >> $@ } $(WimpLib).GB.msg_risc
+        print { >> $@ } $(CMODULES).GB.msg.gr_chart
         print { >> $@ } $(CMODULES).GB.msg.mlec
         SetType $@ Text
 
-utils.GB.t_reperr:       utils.GB.u_reperr 
-        Run <Prefix$Dir>.utils.GB.u_reperr > $@ 
+utils.GB.t_reperr:       utils.GB.u_reperr
+        Run <Prefix$Dir>.utils.GB.u_reperr > $@
 
-utils.GB.t_strings:      utils.GB.u_strings 
-        Run <Prefix$Dir>.utils.GB.u_strings > $@ 
+utils.GB.t_strings:      utils.GB.u_strings
+        Run <Prefix$Dir>.utils.GB.u_strings > $@
 
 utils.GB.u_reperr:   \
         utils.GB.o.reperr \
-        C:o.Stubs 
+        C:o.Stubs
         Link -o $@ -aif \
         utils.GB.o.reperr \
-        C:o.Stubs 
+        C:o.Stubs
 
 utils.GB.u_strings:   \
         utils.GB.o.strings \
-        C:o.Stubs 
+        C:o.Stubs
         Link -o $@ -aif \
         utils.GB.o.strings \
-        C:o.Stubs 
+        C:o.Stubs
 
 utils.GB.o.reperr:   $(PD).h.personal $(PD).h.errdef
 utils.GB.o.reperr:   $(PD).c.reperr
@@ -730,7 +736,7 @@ utils.GB.s22_mrg:   \
         $(PD).utils.GB.spr_pd \
         $(PD).utils.GB.spr_ch22 \
         $(PD).utils.GB.spr_chart \
-        $(WimpLib).GB.spr_risc 
+        $(WimpLib).GB.spr_risc
         ChangeDynamicArea -SpriteSize 256k
         SNew
         SLoad   $(PD).utils.GB.spr_fi22
@@ -759,7 +765,7 @@ utils.GB.s24_mrg:   \
         $(PD).utils.GB.spr_pd \
         $(PD).utils.GB.spr_ch24  \
         $(PD).utils.GB.spr_chart \
-        $(WimpLib).GB.spr_risc 
+        $(WimpLib).GB.spr_risc
         ChangeDynamicArea -SpriteSize 256k
         SNew
         SLoad   $(PD).utils.GB.spr_fi24

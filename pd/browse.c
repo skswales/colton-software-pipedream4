@@ -1714,7 +1714,7 @@ anagram_end(
 {
     mdsp->wants_nulls = FALSE;
 
-    status_assert(Null_EventHandler(anagram_null_handler, mdsp, FALSE, 0));
+    Null_EventHandlerRemove(anagram_null_handler, mdsp);
 
     if(mdsp->res < 0)
         reperr_module(create_error(ERR_SPELL), mdsp->res);
@@ -1845,7 +1845,7 @@ anagram_start(
 {
     mdsp->wants_nulls = TRUE;
 
-    status_assert(Null_EventHandler(anagram_null_handler, mdsp, TRUE, 0));
+    status_assert(Null_EventHandlerAdd(anagram_null_handler, mdsp, 0));
 
     dbox_eventhandler(mdsp->d, anagram_eventhandler, mdsp);
 
@@ -2542,7 +2542,7 @@ mergedict_end(
 {
     mdsp->wants_nulls = FALSE;
 
-    status_assert(Null_EventHandler(mergedict_null_handler, mdsp, FALSE, 0));
+    Null_EventHandlerRemove(mergedict_null_handler, mdsp);
 
     if(mdsp->res < 0)
         reperr_module(create_error(ERR_SPELL), mdsp->res);
@@ -2644,7 +2644,7 @@ mergedict_start(
 {
     mdsp->wants_nulls = TRUE;
 
-    status_assert(Null_EventHandler(mergedict_null_handler, mdsp, TRUE, 0));
+    status_assert(Null_EventHandlerAdd(mergedict_null_handler, mdsp, 0));
 
     dbox_eventhandler(mdsp->d, mergedict_eventhandler, mdsp);
 
@@ -2781,7 +2781,7 @@ dumpdict_end(
 {
     mdsp->wants_nulls = FALSE;
 
-    status_assert(Null_EventHandler(dumpdict_null_handler, mdsp, FALSE, 0));
+    Null_EventHandlerRemove(dumpdict_null_handler, mdsp);
 
     if(dumpdict_file_error)
         reperr(create_error(ERR_CANNOTWRITE), d_user_dump[1].textfield);
@@ -2911,7 +2911,7 @@ dumpdict_start(
 {
     mdsp->wants_nulls = TRUE;
 
-    status_assert(Null_EventHandler(dumpdict_null_handler, mdsp, TRUE, 0));
+    status_assert(Null_EventHandlerAdd(dumpdict_null_handler, mdsp, 0));
 
     dbox_eventhandler(mdsp->d, dumpdict_eventhandler, mdsp);
 

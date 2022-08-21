@@ -79,10 +79,12 @@ Null_DoEvent(void)
     do  {
         /* require to start at head of list? */
         if(item == -1)
+        {
             tag = funclist_first(&null_.event_list,
                                  &proc, &handle, &item, TRUE);
+        }
         else
-            {
+        {
             /* can we call this handler? */
             funclist_readdata_ip(&null_.event_list,
                                  item, &req,
@@ -91,7 +93,7 @@ Null_DoEvent(void)
 
             /* call the handler if required */
             if(req == NULL_EVENTS_REQUIRED)
-                {
+            {
                 P_PROC_NULL_EVENT np = (P_PROC_NULL_EVENT) proc;
 
                 null_event_block.rc = NULL_EVENT;
@@ -100,9 +102,9 @@ Null_DoEvent(void)
                 null_event_block.max_slice = null_.max_slice;
 
                 res = (* np) (&null_event_block);
-                }
+            }
 
-            /* obtain next callee */
+            /* obtain next callee (NB list may have been deleted by that call) */
             tag = funclist_next( &null_.event_list,
                                  &proc, &handle, &item, TRUE);
 
@@ -111,19 +113,19 @@ Null_DoEvent(void)
                 continue;
 
             if(res != NULL_EVENT_COMPLETED)
-                {
+            {
                 /* "null event proc &%p,&%p returned bad value %d", proc, handle, res); */
                 break;
-                }
+            }
 
             /* did this process take longer than allowed? */
             if(monotime_diff(initialTime) >= null_.max_slice)
-                {
+            {
                 res = NULL_EVENT_TIMED_OUT;
                 break;
-                }
             }
         }
+    }
     while(tag);
 
     /* if ended null list set up to restart next time */
@@ -162,7 +164,7 @@ Null_DoQuery(void)
         tag;
         tag = funclist_next( &null_.event_list,
                              &proc, &null_event_block.client_handle, &item, FALSE))
-        {
+    {
         P_PROC_NULL_EVENT np = (P_PROC_NULL_EVENT) proc;
 
         null_event_block.rc = NULL_QUERY;
@@ -178,7 +180,7 @@ Null_DoQuery(void)
                               item, &res2,
                               offsetof(NULL_FUNCLIST_EXTRADATA, req),
                               sizeof(res2));
-        }
+    }
 
     return(res);
 }
@@ -191,38 +193,38 @@ Null_DoQuery(void)
 
 _Check_return_
 extern STATUS
-Null_EventHandler(
+Null_EventHandlerAdd(
     P_PROC_NULL_EVENT proc,
     P_ANY client_handle,
-    _InVal_     BOOL add,
     S32 priority)
 {
-    if(add)
-        {
-        LIST_ITEMNO item;
-        NULL_EVENT_RETURN_CODE res2 = NULL_EVENTS_REQUIRED;
+    LIST_ITEMNO item;
+    NULL_EVENT_RETURN_CODE res2 = NULL_EVENTS_REQUIRED;
 
-        status_return(
-            funclist_add(&null_.event_list,
-                         (funclist_proc) proc, client_handle,
-                         &item,
-                         1 /*non-zero tag*/,
-                         priority,
-                         sizeof(NULL_FUNCLIST_EXTRADATA)));
+    status_return(
+        funclist_add(&null_.event_list,
+                     (funclist_proc) proc, client_handle,
+                     &item,
+                     1 /*non-zero tag*/,
+                     priority,
+                     sizeof(NULL_FUNCLIST_EXTRADATA)));
 
-        /* ensure that if events are given before querying this one responds safely */
-        funclist_writedata_ip(&null_.event_list,
-                              item, &res2,
-                              offsetof(NULL_FUNCLIST_EXTRADATA, req),
-                              sizeof(res2));
-        }
-    else
-        {
-        funclist_remove(&null_.event_list,
-                        (funclist_proc) proc, client_handle);
-        }
+    /* ensure that if events are given before querying this one responds safely */
+    funclist_writedata_ip(&null_.event_list,
+                          item, &res2,
+                          offsetof(NULL_FUNCLIST_EXTRADATA, req),
+                          sizeof(res2));
 
     return(STATUS_OK);
+}
+
+extern void
+Null_EventHandlerRemove(
+    P_PROC_NULL_EVENT proc,
+    P_ANY client_handle)
+{
+    funclist_remove(&null_.event_list,
+                    (funclist_proc) proc, client_handle);
 }
 
 /* end of wm_null.c */

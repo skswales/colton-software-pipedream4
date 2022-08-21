@@ -2937,7 +2937,7 @@ mlec__drag_start(
 
     wimpt_complain(win_drag_box(&dragstr));     /* NB win_drag_box NOT wimp_drag_box */
 
-    status_assert(Null_EventHandler(mlec__drag_null_handler, mlec, TRUE, 0));
+    status_assert(Null_EventHandlerAdd(mlec__drag_null_handler, mlec, 0));
 }
 
 static void
@@ -2947,7 +2947,7 @@ mlec__drag_complete(
 {
     IGNOREPARM(dragboxp);
 
-    status_assert(Null_EventHandler(mlec__drag_null_handler, mlec, FALSE, 0));
+    Null_EventHandlerRemove(mlec__drag_null_handler, mlec);
 }
 
 /******************************************************************************

@@ -1135,7 +1135,7 @@ start_drag(
 
     (void) wimp_drag_box(&dragstr);
 
-    status_assert(Null_EventHandler(drag_null_handler, &drag_docno, TRUE, 0));
+    status_assert(Null_EventHandlerAdd(drag_null_handler, &drag_docno, 0));
 
     switch(dragtype)                                    /* be helpful, tell the user... */
         {
@@ -1170,7 +1170,7 @@ ended_drag(void)
 
         dragtype = NO_DRAG_ACTIVE;
 
-        status_assert(Null_EventHandler(drag_null_handler, &drag_docno, FALSE, 0));
+        Null_EventHandlerRemove(drag_null_handler, &drag_docno);
         }
 }
 

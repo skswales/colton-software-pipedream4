@@ -1514,7 +1514,7 @@ gr_chartedit_selected_object_drag_start(
     dragstr.parent.x1 = cp->core.editsave.open_box.x1;
     dragstr.parent.y1 = cp->core.editsave.open_box.y1;
 
-    if(status_ok(Null_EventHandler(gr_chartedit_selected_object_drag_null_handler, (P_ANY) cp->core.ch, TRUE, 0)))
+    if(status_ok(Null_EventHandlerAdd(gr_chartedit_selected_object_drag_null_handler, (P_ANY) cp->core.ch, 0)))
         {
         wimpt_complain(win_drag_box(&dragstr));     /* NB win_drag_box NOT wimp_drag_box */
 
@@ -1544,7 +1544,7 @@ gr_chartedit_selected_object_drag_complete(
     moveby.x  = drag_curr_point.x - drag_start_point.x;
     moveby.y  = drag_curr_point.y - drag_start_point.y;
 
-    status_assert(Null_EventHandler(gr_chartedit_selected_object_drag_null_handler, (P_ANY) cp->core.ch, FALSE, 0));
+    Null_EventHandlerRemove(gr_chartedit_selected_object_drag_null_handler, (P_ANY) cp->core.ch);
 
     switch(cep->selection.id.name)
         {

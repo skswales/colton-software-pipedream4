@@ -141,4 +141,8 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 %Copy <Obey$Dir>.RiscPkg.Control   <pd$Disc>.RiscPkg.* ~rf~cln~v
 %Copy <Obey$Dir>.RiscPkg.Copyright <pd$Disc>.RiscPkg.* ~rf~cln~v
 
+%Dir <pd$Disc>
+zip -r PipeDream_4_xx_yy/zip RiscPkg Apps
+%Back
+
 Filer_OpenDir <pd$Disc>

@@ -47,10 +47,6 @@ typedef U16 LINK_TYPE;                  /* type for inter-item links */
 
 #endif /* SHORT_INT */
 
-typedef struct LIST_BLOCK LIST_BLOCK, * P_LIST_BLOCK, ** P_P_LIST_BLOCK;
-
-typedef struct LIST_ITEM LIST_ITEM, * P_LIST_ITEM, ** P_P_LIST_ITEM;
-
 /*
 block increment sizes
 */
@@ -90,7 +86,7 @@ typedef struct POOLDESC
 }
 POOLDESC, * pooldp;             /* pool descriptor pointer */
 
-struct LIST_BLOCK
+typedef struct LIST_BLOCK
 {
     OFF_TYPE itemc;             /* offset to current item */
     LIST_ITEMNO item;           /* item number of current pool */
@@ -107,10 +103,11 @@ struct LIST_BLOCK
     OFF_TYPE maxpoolsize;       /* maximum size of a pool */
     OFF_TYPE poolsizeinc;       /* pool size increment */
 
-    P_LIST_BLOCK nextblock;     /* link to next list block */
-};
+    struct LIST_BLOCK * nextblock; /* link to next list block */
+}
+LIST_BLOCK, * P_LIST_BLOCK, ** P_P_LIST_BLOCK;
 
-struct LIST_ITEM
+typedef struct LIST_ITEM
 {
     LINK_TYPE offsetn;          /* offset to next item */
     LINK_TYPE offsetp;          /* offset to previous item */
@@ -120,7 +117,8 @@ struct LIST_ITEM
         LIST_ITEMNO itemfill;   /* fill count */
         U8 inside[1];           /* contents of the item */
     } i;
-};
+}
+LIST_ITEM, * P_LIST_ITEM, ** P_P_LIST_ITEM;
 
 /* overhead per allocated item */
 #define LIST_ITEMOVH   (sizeof(LIST_ITEM) - sizeof(union LIST_ITEM_GUTS))

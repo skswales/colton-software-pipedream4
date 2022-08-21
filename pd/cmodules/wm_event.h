@@ -84,11 +84,15 @@ Null_DoQuery(void);
 
 _Check_return_
 extern STATUS
-Null_EventHandler(
+Null_EventHandlerAdd(
     P_PROC_NULL_EVENT proc,
     P_ANY client_handle,
-    _InVal_     BOOL add,
     S32 priority /*0->default*/);
+
+extern void
+Null_EventHandlerRemove(
+    P_PROC_NULL_EVENT proc,
+    P_ANY client_handle);
 
 #endif /* __wm_event_h */
 

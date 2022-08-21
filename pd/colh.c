@@ -1937,7 +1937,7 @@ colh_pointershape_starttracking(void)
 
     trace_1(TRACE_APP_PD4, "colh_pointershape_starttracking(): track_docno=%u", track_docno);
 
-    status_assert(Null_EventHandler(colh_pointershape_null_handler, &track_docno, TRUE, 0));
+    status_assert(Null_EventHandlerAdd(colh_pointershape_null_handler, &track_docno, 0));
 }
 
 /******************************************************************************
@@ -1953,7 +1953,7 @@ colh_pointershape_endtracking(void)
 {
     trace_1(TRACE_APP_PD4, "colh_pointershape_endtracking(): track_docno=%u", track_docno);
 
-    status_assert(Null_EventHandler(colh_pointershape_null_handler, &track_docno, FALSE, 0));
+    Null_EventHandlerRemove(colh_pointershape_null_handler, &track_docno);
 
     setpointershape(POINTER_DEFAULT);
 }

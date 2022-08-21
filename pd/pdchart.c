@@ -646,7 +646,7 @@ pdchart_dispose(
     /* some twerp may have set off a background process to kill this chart so bash that in */
     /* or else you can imagine the consequences as it accesses ... */
     if(pdchart->recalc.state != PDCHART_UNMODIFIED)
-        status_assert(Null_EventHandler(pdchart_null_handler, pdchart, FALSE, 0));
+        Null_EventHandlerRemove(pdchart_null_handler, pdchart);
 
     al_ptr_dispose(P_P_ANY_PEDANTIC(&pdchart));
 }
@@ -1412,7 +1412,7 @@ pdchart_modify(
         /* and claim some nulls, monitoring till we seem to have
          * recalced areas of interest in this chart
         */
-        if(status_fail(status = Null_EventHandler(pdchart_null_handler, pdchart, TRUE, 0)))
+        if(status_fail(status = Null_EventHandlerAdd(pdchart_null_handler, pdchart, 0)))
             {
             /* fail pathetically */
             pdchart->recalc.state = PDCHART_UNMODIFIED;
@@ -1535,7 +1535,8 @@ null_event_proto(static, pdchart_null_handler)
 
                         /* kill off null process to this chart */
                         pdchart->recalc.state = PDCHART_UNMODIFIED;
-                        status_assert(Null_EventHandler(pdchart_null_handler, p_null_event_block->client_handle, FALSE, 0));
+
+                        Null_EventHandlerRemove(pdchart_null_handler, p_null_event_block->client_handle);
 
                         /* ask chart to rebuild if it hasn't done so since given time */
                         gr_chart_diagram_ensure(&pdchart->ch);

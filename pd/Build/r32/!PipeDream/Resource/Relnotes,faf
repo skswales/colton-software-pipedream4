@@ -66,7 +66,12 @@ any problems.</P>
 <A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A></p>
 
 
-<H4>4.53/10 (07 Jul 2015)</H4>
+<H4>4.53/02 (09 Jul 2015)</H4>
+
+<P>Timing-dependent zero-page access during chart loading fixed.</P>
+
+
+<H4>4.53/01 (07 Jul 2015)</H4>
 
 <P>REPT() spreadsheet function now handles repeat count of zero correctly. Since 4.50/40, this gave an error; prior to that it produced one copy of the string.</P>
 

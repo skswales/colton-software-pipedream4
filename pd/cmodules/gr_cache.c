@@ -1239,37 +1239,37 @@ gr_cache_rebind_and_shift(
 
 _Check_return_
 extern STATUS
-gr_cache_tagstrip(
+gr_cache_tagstripper_add(
     gr_cache_tagstrip_proc proc,
     P_ANY handle,
-    U32 tag,
-    S32 add)
+    _InVal_     U32 tag)
 {
-    if(add)
-        {
-        LIST_ITEMNO item;
+    LIST_ITEMNO item;
 
-        status_return(
-            funclist_add(&gr_cache_tagstrippers,
-                         (funclist_proc) proc, handle,
-                         &item,
-                         1 /*non-zero tag*/,
-                         0,
-                         sizeof(GR_CACHE_TAGSTRIP_EXTRADATA)));
+    status_return(
+        funclist_add(&gr_cache_tagstrippers,
+                     (funclist_proc) proc, handle,
+                     &item,
+                     1 /*non-zero tag*/,
+                     0,
+                     sizeof(GR_CACHE_TAGSTRIP_EXTRADATA)));
 
-        /* write interested tag data */
-        funclist_writedata_ip(&gr_cache_tagstrippers,
-                              item, &tag,
-                              offsetof(GR_CACHE_TAGSTRIP_EXTRADATA, tag),
-                              sizeof(tag));
-        }
-    else
-        {
-        funclist_remove(&gr_cache_tagstrippers,
-                        (funclist_proc) proc, handle);
-        }
+    /* write interested tag data */
+    funclist_writedata_ip(&gr_cache_tagstrippers,
+                          item, &tag,
+                          offsetof(GR_CACHE_TAGSTRIP_EXTRADATA, tag),
+                          sizeof(tag));
 
     return(STATUS_OK);
+}
+
+extern void
+gr_cache_tagstripper_remove(
+    gr_cache_tagstrip_proc proc,
+    P_ANY handle)
+{
+    funclist_remove(&gr_cache_tagstrippers,
+                    (funclist_proc) proc, handle);
 }
 
 /******************************************************************************

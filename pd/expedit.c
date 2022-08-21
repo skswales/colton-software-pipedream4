@@ -1492,7 +1492,7 @@ formwind_pointershape_starttracking(
 
         formwind->tracking = TRUE;
 
-        status_assert(Null_EventHandler(formwind_pointershape_null_handler, formwind, TRUE, 0));
+        status_assert(Null_EventHandlerAdd(formwind_pointershape_null_handler, formwind, 0));
         }
 }
 
@@ -1502,7 +1502,7 @@ formwind_pointershape_endtracking(
 {
     if(formwind->tracking)
         {
-        status_assert(Null_EventHandler(formwind_pointershape_null_handler, formwind, FALSE, 0));
+        Null_EventHandlerRemove(formwind_pointershape_null_handler, formwind);
 
         setpointershape(POINTER_DEFAULT);
 
