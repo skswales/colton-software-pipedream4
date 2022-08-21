@@ -328,7 +328,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DAVG,    0, 1/*dbase*/, 0, 0),
                                                    /*dvag*/ NAS,     arg_dbs },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_day,            arg_DAT },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_dayname,        arg_dan },
+    { RPN_FNV,  -2, EV_RESO_DATE    ,         NAP, c_dayname,        arg_dan },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNT,  0, 1/*dbase*/, 0, 0),
                                                    /*dcount*/ NAS,   arg_dbs },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNTA, 0, 1/*dbase*/, 0, 0),
@@ -498,7 +498,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_VLOOKUP, 0, 0, 0, 0),
                                                    /*vlookup*/ NAS,  arg_hvl },
 
-    { RPN_FNV,   1, EV_RESO_DATE    ,         NAP, c_weekday,        arg_D_I },
+    { RPN_FNV,  -2, EV_RESO_DATE    ,         NAP, c_weekday,        arg_D_I },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weeknumber,     arg_DAT },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_WHILE, EVS_CNT_WHILE),
                                                    /*while*/ NAS,    arg_BOO },

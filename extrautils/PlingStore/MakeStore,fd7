@@ -14,7 +14,7 @@ Set MakeStore$Dir <Obey$Dir>
 
 | NB As this whole bundle will be named in !Store
 Set pd$Release pd-45800
-Set pd$Release pd-45801
+Set pd$Release pd-45802
 
 Set makestore$Disc                       $.Temp.PD4.Store.<pd$Release>
 IfThere $.Temp           Then Else %CDir $.Temp

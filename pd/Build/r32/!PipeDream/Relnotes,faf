@@ -86,6 +86,11 @@ href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda
 and Errata</a> for details of changes to functionality.</p>
 
 
+<h4>4.58.02 (27 Sep 2020)</h4>
+
+<p>Fixed the WEEKDAY() spreadsheet function - it could hang PipeDream.</p>
+
+
 <h4>4.58.01 (24 Sep 2020)</h4>
 
 <p>Fixed Zero Page access during Null events prior to any spreadsheet having
