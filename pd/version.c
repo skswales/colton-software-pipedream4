@@ -18,10 +18,12 @@
  * Build.r32.RiscPkg.Control
  */
 
-#define Version      "4.56"
-#define CurrentDate  "17-Dec-2018"
+#define Version      "4.56.01"
+#define CurrentDate  "21-Dec-2018"
 
 /*
+* 21 Dec 2018 - 4.56.01
+* 17 Dec 2018 - 4.56
 * 01 Aug 2016 - 4.55.04
 * 27 Jul 2016 - 4.55.03
 * 12 Jul 2016 - 4.55.02

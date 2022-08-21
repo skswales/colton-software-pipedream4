@@ -9,7 +9,7 @@
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
-Set pd$Release 20180225
+Set pd$Release 20181217
 | Remember to update RiscPkg.Control too
 
 Set pd$Disc $.Temp.PD4.PDManuals_<pd$Release>

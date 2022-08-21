@@ -152,7 +152,7 @@ string(35, Zd_words_added_to_user_dict_STR,     "%d words added to user dictiona
 string(63, Zs_of_Zs_STR,                        "%s of %s");
 string(64, Zs_complete_STR,                     "... %s complete ...");
 
-string(65, Page_Zd_wait_between_pages_STR,      "Page %d.. Press M=Miss page, A=All pages, ENTER=Print this page, ESC=stop print");
+string(65, Page_Zd_wait_between_pages_STR,      "Page %d.. Press M=Miss page, A=All pages, Return=Print this page, Escape=stop print");
 string(66, Miss_Page_Chars_STR,                 "M"); /* e.g. German has "UU" for Uberspringen (properly umlauted) */
 string(67, All_Pages_Chars_STR,                 "A");
 
@@ -489,44 +489,44 @@ string(307, F10_STR,                            "F10");
 string(308, F11_STR,                            "F11");
 string(309, F12_STR,                            "F12");
 
-string(310, Shift_F1_STR,                       "Shift-F1");
-string(311, Shift_F2_STR,                       "Shift-F2");
-string(312, Shift_F3_STR,                       "Shift-F3");
-string(313, Shift_F4_STR,                       "Shift-F4");
-string(314, Shift_F5_STR,                       "Shift-F5");
-string(315, Shift_F6_STR,                       "Shift-F6");
-string(316, Shift_F7_STR,                       "Shift-F7");
-string(317, Shift_F8_STR,                       "Shift-F8");
-string(318, Shift_F9_STR,                       "Shift-F9");
-string(319, Shift_F10_STR,                      "Shift-F10");
-string(320, Shift_F11_STR,                      "Shift-F11");
-string(321, Shift_F12_STR,                      "Shift-F12");
+string(310, Shift_F1_STR,                       "Shift F1");
+string(311, Shift_F2_STR,                       "Shift F2");
+string(312, Shift_F3_STR,                       "Shift F3");
+string(313, Shift_F4_STR,                       "Shift F4");
+string(314, Shift_F5_STR,                       "Shift F5");
+string(315, Shift_F6_STR,                       "Shift F6");
+string(316, Shift_F7_STR,                       "Shift F7");
+string(317, Shift_F8_STR,                       "Shift F8");
+string(318, Shift_F9_STR,                       "Shift F9");
+string(319, Shift_F10_STR,                      "Shift F10");
+string(320, Shift_F11_STR,                      "Shift F11");
+string(321, Shift_F12_STR,                      "Shift F12");
 
-string(322, Ctrl_F1_STR,                        "Ctrl-F1");
-string(323, Ctrl_F2_STR,                        "Ctrl-F2");
-string(324, Ctrl_F3_STR,                        "Ctrl-F3");
-string(325, Ctrl_F4_STR,                        "Ctrl-F4");
-string(326, Ctrl_F5_STR,                        "Ctrl-F5");
-string(327, Ctrl_F6_STR,                        "Ctrl-F6");
-string(328, Ctrl_F7_STR,                        "Ctrl-F7");
-string(329, Ctrl_F8_STR,                        "Ctrl-F8");
-string(330, Ctrl_F9_STR,                        "Ctrl-F9");
-string(331, Ctrl_F10_STR,                       "Ctrl-F10");
-string(332, Ctrl_F11_STR,                       "Ctrl-F11");
-string(333, Ctrl_F12_STR,                       "Ctrl-F12");
+string(322, Ctrl_F1_STR,                        "Ctrl F1");
+string(323, Ctrl_F2_STR,                        "Ctrl F2");
+string(324, Ctrl_F3_STR,                        "Ctrl F3");
+string(325, Ctrl_F4_STR,                        "Ctrl F4");
+string(326, Ctrl_F5_STR,                        "Ctrl F5");
+string(327, Ctrl_F6_STR,                        "Ctrl F6");
+string(328, Ctrl_F7_STR,                        "Ctrl F7");
+string(329, Ctrl_F8_STR,                        "Ctrl F8");
+string(330, Ctrl_F9_STR,                        "Ctrl F9");
+string(331, Ctrl_F10_STR,                       "Ctrl F10");
+string(332, Ctrl_F11_STR,                       "Ctrl F11");
+string(333, Ctrl_F12_STR,                       "Ctrl F12");
 
-string(334, Ctrl_Shift_F1_STR,                  "Ctrl-Shift-F1");
-string(335, Ctrl_Shift_F2_STR,                  "Ctrl-Shift-F2");
-string(336, Ctrl_Shift_F3_STR,                  "Ctrl-Shift-F3");
-string(337, Ctrl_Shift_F4_STR,                  "Ctrl-Shift-F4");
-string(338, Ctrl_Shift_F5_STR,                  "Ctrl-Shift-F5");
-string(339, Ctrl_Shift_F6_STR,                  "Ctrl-Shift-F6");
-string(340, Ctrl_Shift_F7_STR,                  "Ctrl-Shift-F7");
-string(341, Ctrl_Shift_F8_STR,                  "Ctrl-Shift-F8");
-string(342, Ctrl_Shift_F9_STR,                  "Ctrl-Shift-F9");
-string(343, Ctrl_Shift_F10_STR,                 "Ctrl-Shift-F10");
-string(344, Ctrl_Shift_F11_STR,                 "Ctrl-Shift-F11");
-string(345, Ctrl_Shift_F12_STR,                 "Ctrl-Shift-F12");
+string(334, Ctrl_Shift_F1_STR,                  "Ctrl-Shift F1");
+string(335, Ctrl_Shift_F2_STR,                  "Ctrl-Shift F2");
+string(336, Ctrl_Shift_F3_STR,                  "Ctrl-Shift F3");
+string(337, Ctrl_Shift_F4_STR,                  "Ctrl-Shift F4");
+string(338, Ctrl_Shift_F5_STR,                  "Ctrl-Shift F5");
+string(339, Ctrl_Shift_F6_STR,                  "Ctrl-Shift F6");
+string(340, Ctrl_Shift_F7_STR,                  "Ctrl-Shift F7");
+string(341, Ctrl_Shift_F8_STR,                  "Ctrl-Shift F8");
+string(342, Ctrl_Shift_F9_STR,                  "Ctrl-Shift F9");
+string(343, Ctrl_Shift_F10_STR,                 "Ctrl-Shift F10");
+string(344, Ctrl_Shift_F11_STR,                 "Ctrl-Shift F11");
+string(345, Ctrl_Shift_F12_STR,                 "Ctrl-Shift F12");
 
 /* Month names */
 
@@ -676,39 +676,39 @@ string(529, formwind_menu_title,                "Formula");
 /* more function key-like strings */
 
 string(530,   F_Print_STR,                      "Print");
-string(531,  SF_Print_STR,                      "Shift-Print");
-string(532,  CF_Print_STR,                      "Ctrl-Print");
-string(533, CSF_Print_STR,                      "Ctrl-Shift-Print");
+string(531,  SF_Print_STR,                      "Shift Print");
+string(532,  CF_Print_STR,                      "Ctrl Print");
+string(533, CSF_Print_STR,                      "Ctrl-Shift Print");
 
 string(534,   F_Insert_STR,                     "Insert");
-string(535,  SF_Insert_STR,                     "Shift-Insert");
-string(536,  CF_Insert_STR,                     "Ctrl-Insert");
-string(537, CSF_Insert_STR,                     "Ctrl-Shift-Insert");
+string(535,  SF_Insert_STR,                     "Shift Insert");
+string(536,  CF_Insert_STR,                     "Ctrl Insert");
+string(537, CSF_Insert_STR,                     "Ctrl-Shift Insert");
 
 string(538,   F_Home_STR,                       "Home");
-string(539,  SF_Home_STR,                       "Shift-Home");
-string(540,  CF_Home_STR,                       "Ctrl-Home");
-string(541, CSF_Home_STR,                       "Ctrl-Shift-Home");
+string(539,  SF_Home_STR,                       "Shift Home");
+string(540,  CF_Home_STR,                       "Ctrl Home");
+string(541, CSF_Home_STR,                       "Ctrl-Shift Home");
 
 string(542,   F_Copy_STR,                       "Copy");
-string(543,  SF_Copy_STR,                       "Shift-Copy");
-string(544,  CF_Copy_STR,                       "Ctrl-Copy");
-string(545, CSF_Copy_STR,                       "Ctrl-Shift-Copy");
+string(543,  SF_Copy_STR,                       "Shift Copy");
+string(544,  CF_Copy_STR,                       "Ctrl Copy");
+string(545, CSF_Copy_STR,                       "Ctrl-Shift Copy");
 
 string(546,   F_Delete_STR,                     "Delete");
-string(547,  SF_Delete_STR,                     "Shift-Delete");
-string(548,  CF_Delete_STR,                     "Ctrl-Delete");
-string(549, CSF_Delete_STR,                     "Ctrl-Shift-Delete");
+string(547,  SF_Delete_STR,                     "Shift Delete");
+string(548,  CF_Delete_STR,                     "Ctrl Delete");
+string(549, CSF_Delete_STR,                     "Ctrl-Shift Delete");
 
 string(550,   F_Backspace_STR,                  "Backspace");
-string(551,  SF_Backspace_STR,                  "Shift-Backspace");
-/*string(552,  CF_Backspace_STR,                  "Ctrl-Backspace"); sadly undistinguishable from ^H */
-/*string(553, CSF_Backspace_STR,                  "Ctrl-Shift-Backspace"); ditto */
+string(551,  SF_Backspace_STR,                  "Shift Backspace");
+/*string(552,  CF_Backspace_STR,                  "Ctrl Backspace"); sadly undistinguishable from ^H */
+/*string(553, CSF_Backspace_STR,                  "Ctrl-Shift Backspace"); ditto */
 
 string(554,   F_Tab_STR,                        "Tab");
-string(555,  SF_Tab_STR,                        "Shift-Tab");
-string(556,  CF_Tab_STR,                        "Ctrl-Tab");
-string(557, CSF_Tab_STR,                        "Ctrl-Shift-Tab");
+string(555,  SF_Tab_STR,                        "Shift Tab");
+string(556,  CF_Tab_STR,                        "Ctrl Tab");
+string(557, CSF_Tab_STR,                        "Ctrl-Shift Tab");
 
 string(558, ToNumber_STR,                       "Make number");
 string(559, ToText_STR,                         "Make text");
@@ -730,9 +730,9 @@ string(92, help_iconbar,
 /* Help from a dialog window */
 
 string(93, help_dialog_window,                  "\\Wa PipeDream dialogue box.|M"
-                                                "Click OK or press ENTER to complete.|M"
-                                                "Click Cancel or press ESCAPE to cancel.|M"
-                                                "Use TAB (or Shift-TAB) to move forwards "
+                                                "Click OK or press Return to complete.|M"
+                                                "Click Cancel or press Escape to cancel.|M"
+                                                "Use Tab (or Shift-Tab) to move forwards "
                                                 "(or backwards) between writeable fields.");
 
 /* Help from a PipeDream window */

@@ -49,6 +49,11 @@
 
 <H2 ID="ReleaseHistory">Release History</H2>
 
+<H4>4.56.01 (21 Dec 2018)</H4>
+
+<p>Define Function Key option list reverted to pre-4.56 for compatibility.</p>
+
+
 <H4>4.56 (17 Dec 2018)</H4>
 
 <p>PipeDream menus and keyboard shortcuts are now a little more Style Guide
