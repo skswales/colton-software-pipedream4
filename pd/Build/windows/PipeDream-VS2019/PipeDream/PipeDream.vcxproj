@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\..\..\cmodules\mathxtr4.c" />
     <ClCompile Include="..\..\..\..\cmodules\mathxtra.c" />
     <ClCompile Include="..\..\..\..\cmodules\mlec.c" />
+    <ClCompile Include="..\..\..\..\cmodules\muldiv.c" />
     <ClCompile Include="..\..\..\..\cmodules\myassert.c" />
     <ClCompile Include="..\..\..\..\cmodules\numform.c" />
     <ClCompile Include="..\..\..\..\cmodules\pd123.c">

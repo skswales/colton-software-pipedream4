@@ -97,6 +97,23 @@
     <p>Please refer to the <a href="https://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a> for details of changes to functionality.</p>
 
 
+<h4>4.60.02 (18 Aug 2022)</h4>
+
+<p>PipeDream no longer attempts to parse expressions as ISO 8601 format
+date / times as this was messing up several users' existing spreadsheets.
+The DATEVALUE() spreadsheet function does still recognise such dates.</p>
+
+<p>CSV file loading no longer parses number fields as expressions, so
+dates such as 2022-08-18 are inserted as text rather than as a formula.
+This means that if you have a CSV file with a column of dates in ISO 8601
+format, they can be loaded unchanged and then converted to usable dates
+using the DATEVALUE() spreadsheet function.</p>
+
+<p>Fix for dragging an icon from the Save dialogue box when the file type
+icon is not present in the Wimp Sprite Pool (e.g. TSV) - as elsewhere, the
+generic file_xxx icon is now used for solid drag in these cases.</p>
+
+
 <h4>4.60.01 (04 Aug 2022)</h4>
 
 <p>Loader and Splash had incorrect file types in 4.60 due to a packaging error.</p>
@@ -158,161 +175,6 @@ printer icon - these files cannot be printed that way.</p>
 that it can import. See the !Boot file for details.</p>
 
 <p>ROOL DDE 30b build environment used.</p>
-
-
-<h4>4.58.03 (31 Jan 2021)</h4>
-
-<p>Fixed printing of negative numbers in red to a colour printer.</p>
-
-
-<h4>4.58.02 (27 Sep 2020)</h4>
-
-<p>Fixed the WEEKDAY() spreadsheet function - it could hang PipeDream.</p>
-
-
-<h4>4.58.01 (24 Sep 2020)</h4>
-
-<p>Fixed Zero Page access during Null events prior to any spreadsheet having
-been loaded.</p>
-
-<p>Fixed issue where clicking Adjust on the formula editing line would give
-an inappropriate error.</p>
-
-<p>Changed the icon type of the formula editing line to Writable (from
-Writable/Drag) so that the Window Manager selection processing code is
-enabled on newer OSes. Text may be copied to or from the formula editing
-line via the global clipboard.</p>
-
-<p>Standard selection processing keyboard shortcuts added to the formula
-editing window (see its menu) and the Chart text editing window. These also
-use Home and End as text navigation keys and Delete deletes the character to
-the left of the caret as in the formula editing line.</p>
-
-<p>Copy/Cut/Paste buttons added to Chart text editing window.</p>
-
-<p>Document template files all made slightly wider so that all the initial
-columns are shown fully.</p>
-
-
-<h4>4.58 (29 Jul 2020)</h4>
-
-<p>Spreadsheet functions can now accept text strings longer than 200
-characters as input, and create long text strings as results.</p>
-
-<p>The DAYNAME() and WEEKDAY() spreadsheet functions may now take a mode
-parameter to control the calculation (as Fireworkz).</p>
-
-<p>The REPLACE() spreadsheet functions no longer accepts zero for the
-<em>start_n</em> parameter (interface is one-based; using zero could
-have given unpredictable results).</p>
-
-<p>The first button to the ALERT() and INPUT() spreadsheet functions is mandatory;
-if it is empty, the button is labelled "OK".</p>
-
-<p>The second button to the ALERT() and INPUT() spreadsheet functions is optional;
-if it is present, but empty, the button is labelled "Cancel".</p>
-
-<p><strong>Complex number spreadsheet function added:</strong></p>
-
-<p>C_ROUND(complex number {, decimal places})</p>
-
-<p>This can be particularly useful in conjunction with complex number strings.</p>
-
-<p>Complex number functions now accept OpenDocument / Microsoft Excel-style
-complex number strings (e.g. "2+1i", "1", "-j") as well as 2x1 arrays of
-numbers. The acceptable imaginary numbers suffix is either lower-case i or
-j, and where a function takes a pair of complex numbers and an imaginary
-number suffix is specified on both numbers, both numbers need not use the
-same suffix (this is the same as Fireworkz, whereas Microsoft Excel would
-require both to be the same) and 'i' will dominate.</p>
-
-<p>The C library's complex number functions are used where possible in the
-complex number spreadsheet functions rather than our own implementation of
-these.</p>
-
-<p>Financial function HTML help added.</p>
-
-<p>Colour picker windows opened from the Chart Selection menu
-now open in the correct position.
-Redundant copy of colour selection code removed.</p>
-
-<p>Insert colour dialogue box now has the correct title.</p>
-
-<p>Names of new documents are now based on the name of the template
-from which they were created.</p>
-
-<p>HTML help now provides links to the PipeDream-Manuals for use when they
-are installed.</p>
-
-<p>The HTML help files (and supporting image files) within !PipeDream
-and in the Getting Started section of the Manuals package have been renamed
-to ten characters or fewer to allow correct installation and usage on
-older systems with no long filename support and without truncation enabled.
-Files in the Reference Guide have been renamed so as to be unique within
-their first ten characters, so allowing them to be installed and used on
-older systems so long as truncation is enabled.</p>
-
-<p>PipeDream gives an error for Adjust-click on toolbar buttons where that is not appropriate.</p>
-
-<p>The <code>End</code> key is no longer referred to as the <code>Copy</code> key.</p>
-
-<p>Added Microsoft Word / OpenOffice-compatible keyboard shortcuts Ctrl-L,E,R for Left,Centre,Right Align.</p>
-
-<p>PipeDream sets up some more keyboard shortcuts suggested by the
-Style Guide when in non-Classic mode:<br>
-Ctrl-Z == Clear markers;<br>
-Ctrl-X == Delete block (to paste list);<br>
-Ctrl-C == Copy block to paste list.<br>
-It also sets up some keyboard shortcuts which were unintentionally
-left unmapped in non-Classic mode:<br>
-Shift-left arrow == Previous word;<br>
-Shift-right arrow == Next word;<br>
-Shift-up arrow == Page up;<br>
-Shift-down arrow == Page down;<br>
-Ctrl-left arrow == Start of cell;<br>
-Ctrl-right arrow == End of cell;<br>
-Ctrl-up arrow == Top of column;<br>
-Ctrl-down arrow == Bottom of column;
-</p>
-
-<p>PipeDream dialogue box buttons are now somewhat more Style Guide compliant.</p>
-
-<p>The standard File &gt; Save dialogue box is now Style Guide compliant and less daunting.
-The full File &gt; Save dialogue box is still available from the menu.</p>
-
-<p>!RunImage has been reduced in size by about 10% by stripping C function names.</p>
-
-<p>PipeDream will start up using about 150KB less memory than 4.57.</p>
-
-<p>Updated copy of RISC_OSLib used to avoid (rare) zero page accesses.</p>
-
-<p>IconSprites !SpritesR4 on RISC OS 3, 4 and 6 (alternate pin position).</p>
-
-<p>
-  Application resources have restructured within !PipeDream.
-  PipeDream$Path is set appropriately by the Loader.
-  It is used to locate vital resources needed to run PipeDream e.g. messages, sprites and window templates,
-  to locate most data presented by PipeDream to the user e.g. chart markers, master dictionary, printer drivers
-  and also the user's data e.g. Choices, Key, command files, user dictionaries etc.
-  If &lt;PipeDream$UserPath&gt; is set, this is set as the first path element.
-  PipeDream$TemplatesPath is also set appropriately by the Loader - it does not contain fallback locations.
-  See the Paths page in the <em>Reference Guide</em>.
-</p>
-
-<p>PipeDream uses an external Obey file, ImgConvert,
-to invoke ChangeFSI to convert image files to sprites.
-By doing so, it can give more helpful warnings and
-avoid inadvertently leaving a large Next wimp slot.</p>
-
-<p>If a Lotus 1-2-3 file is dragged to the PipeDream icon,
-PipeDream will check whether the !123PD utility is available.
-If so, PipeDream will invoke it automatically to convert
-a copy of the file to PipeDream format and load that.</p>
-
-<p>The PipeDream to/from Lotus 1-2-3 file converters now
-set the correct RISC OS file type on the converted file.</p>
-
-<p>ROOL DDE 29c build environment used.</p>
 
 
     <h2 id="KnownProblems">Known Problems In This Release</h2>

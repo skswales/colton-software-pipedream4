@@ -39,6 +39,10 @@ copy <rlib_tmp$Dir>.c.event    _src ~CF~N~V
 copy <WimpLib_tmp$Dir>.c.event _dst ~CF~N~V
 gnu-diff --unified > "@.c.event"   _src _dst
 |
+copy <rlib_tmp$Dir>.c.fileicon    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.fileicon _dst ~CF~N~V
+gnu-diff --unified > "@.c.fileicon"   _src _dst
+|
 | copy <rlib_tmp$Dir>.c.flex    _src ~CF~N~V
 | copy <WimpLib_tmp$Dir>.c.flex _dst ~CF~N~V
 | gnu-diff --unified > "@.c.flex"   _src _dst

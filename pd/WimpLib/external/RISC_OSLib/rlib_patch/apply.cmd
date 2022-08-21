@@ -66,6 +66,7 @@ copy %flexlib_tmp_dir%\c\flex    ..\..\..\flex.c
 copy %rlib_tmp_dir%\c\bbc        ..\..\..\bbc.c
 copy %rlib_tmp_dir%\c\dbox       ..\..\..\dbox.c
 copy %rlib_tmp_dir%\c\event      ..\..\..\event.c
+copy %rlib_tmp_dir%\c\fileicon   ..\..\..\fileicon.c
 @rem copy %rlib_tmp_dir%\c\flex       ..\..\..\flex.c
 copy %rlib_tmp_dir%\c\fontlist   ..\..\..\fontlist.c
 copy %rlib_tmp_dir%\c\fontselect ..\..\..\fontselect.c
@@ -89,6 +90,7 @@ copy %rlib_tmp_dir%\s\swi        ..\..\..\swi.s
 ..\..\..\..\external\cs-free\GNU\win32\paatch --unified < bbc.c        ..\..\..\bbc.c
 ..\..\..\..\external\cs-free\GNU\win32\paatch --unified < dbox.c       ..\..\..\dbox.c
 ..\..\..\..\external\cs-free\GNU\win32\paatch --unified < event.c      ..\..\..\event.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < fileicon.c   ..\..\..\fileicon.c
 @rem ..\..\..\..\external\cs-free\GNU\win32\paatch --unified < flex.c       ..\..\..\flex.c
 ..\..\..\..\external\cs-free\GNU\win32\paatch --unified < fontlist.c   ..\..\..\fontlist.c
 ..\..\..\..\external\cs-free\GNU\win32\paatch --unified < fontselect.c ..\..\..\fontselect.c

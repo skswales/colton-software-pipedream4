@@ -250,7 +250,11 @@ init_serial_print(
 #ifndef XPortable_Idle
 #define XPortable_Idle (0x42FC6 | (1U << 17))
 #endif
+#if defined(__CC_NORCROFT)
 extern int __swi(XPortable_Idle) __swi_XPortable_Idle(void);
+#else
+#define __swi_XPortable_Idle() /* nothing */
+#endif
 
 static S32
 pause(void)

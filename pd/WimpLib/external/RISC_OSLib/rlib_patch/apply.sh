@@ -67,6 +67,7 @@ cp -p $flexlib_tmp_dir/c/flex    ../../../flex.c
 cp -p $rlib_tmp_dir/c/bbc        ../../../bbc.c
 cp -p $rlib_tmp_dir/c/dbox       ../../../dbox.c
 cp -p $rlib_tmp_dir/c/event      ../../../event.c
+cp -p $rlib_tmp_dir/c/fileicon   ../../../fileicon.c
 # cp -p $rlib_tmp_dir/c/flex       ../../../flex.c
 cp -p $rlib_tmp_dir/c/fontlist   ../../../fontlist.c
 cp -p $rlib_tmp_dir/c/fontselect ../../../fontselect.c
@@ -91,6 +92,7 @@ patch --unified < $OLDPWD/flex.c       flex.c
 patch --unified < $OLDPWD/bbc.c        bbc.c
 patch --unified < $OLDPWD/dbox.c       dbox.c
 patch --unified < $OLDPWD/event.c      event.c
+patch --unified < $OLDPWD/fileicon.c   fileicon.c
 # patch --unified < $OLDPWD/flex.c       flex.c
 patch --unified < $OLDPWD/fontlist.c   fontlist.c
 patch --unified < $OLDPWD/fontselect.c fontselect.c

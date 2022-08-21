@@ -76,6 +76,7 @@ echo Populate WimpLib with files to be patched from the checked-out copy of RISC
 |P copy "<rlib_tmp$Dir>.c.bbc"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |P copy "<rlib_tmp$Dir>.c.dbox"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |P copy "<rlib_tmp$Dir>.c.event"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.fileicon"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |P | copy "<rlib_tmp$Dir>.c.flex"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |P copy "<rlib_tmp$Dir>.c.fontlist"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |P copy "<rlib_tmp$Dir>.c.fontselect" "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
@@ -99,6 +100,7 @@ patch --unified -i "@.c.flex"       -o "<WimpLib_tmp$Dir>.c.flex"       "<flexli
 patch --unified -i "@.c.bbc"        -o "<WimpLib_tmp$Dir>.c.bbc"        "<rlib_tmp$Dir>.c.bbc"
 patch --unified -i "@.c.dbox"       -o "<WimpLib_tmp$Dir>.c.dbox"       "<rlib_tmp$Dir>.c.dbox"
 patch --unified -i "@.c.event"      -o "<WimpLib_tmp$Dir>.c.event"      "<rlib_tmp$Dir>.c.event"
+patch --unified -i "@.c.fileicon"   -o "<WimpLib_tmp$Dir>.c.fileicon"   "<rlib_tmp$Dir>.c.fileicon"
 | patch --unified -i "@.c.flex"       -o "<WimpLib_tmp$Dir>.c.flex"       "<rlib_tmp$Dir>.c.flex"
 patch --unified -i "@.c.fontlist"   -o "<WimpLib_tmp$Dir>.c.fontlist"   "<rlib_tmp$Dir>.c.fontlist"
 patch --unified -i "@.c.fontselect" -o "<WimpLib_tmp$Dir>.c.fontselect" "<rlib_tmp$Dir>.c.fontselect"

@@ -1904,7 +1904,8 @@ stoslt(
     char justify,
     char format,
     char pageoffset,
-    S32 inserting)
+    BOOL inserting,
+    BOOL parse_as_expression)
 {
     if(type == SL_NUMBER)
     {
@@ -1921,7 +1922,14 @@ stoslt(
             EV_PARMS parms;
             S32 rpn_len;
 
-            if((rpn_len = compile_expression(compiled_out, linbuf, EV_MAX_OUT_LEN, &at_pos, &ev_result, &parms)) < 0)
+            if(parse_as_expression)
+                /* PipeDream, ViewSheet */
+                rpn_len = compile_expression(compiled_out, linbuf, EV_MAX_OUT_LEN, &at_pos, &ev_result, &parms);
+            else
+                /* CSV */
+                rpn_len = compile_constant(linbuf, &ev_result, &parms); /* rpn_len zero -> good result (no RPN output) */
+
+            if(rpn_len < 0)
             {
                 type    = SL_TEXT;
                 justify = J_FREE;
@@ -3766,7 +3774,7 @@ loadfile_core(
 
                 /* if something to put in cell, put it in */
                 if( ((lecpos > 0)  ||  (type == SL_PAGE))  &&
-                    !stoslt(tcol, trow, type, justify, format, pageoffset, p_load_file_options->inserting))
+                    !stoslt(tcol, trow, type, justify, format, pageoffset, p_load_file_options->inserting, (PD4_CHAR == p_load_file_options->filetype_option)))
                 {
                     breakout = TRUE;
                     break;
@@ -4021,8 +4029,7 @@ viewsheet_load_core(
 
                 /* if something to put in cell, put it in */
                 strcpy(linbuf, vslot);
-                if(!stoslt((COL) col, (ROW) row,
-                           type, justify, format, 0, inserting))
+                if(!stoslt((COL) col, (ROW) row, type, justify, format, 0, inserting, TRUE /*parse_as_expression*/))
                 {
                     *p_breakout = TRUE;
                     goto ENDSHEET;

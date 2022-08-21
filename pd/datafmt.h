@@ -3119,6 +3119,12 @@ overheads required by different types of evaluator cell
 #define NUM_VAR_OVH  offsetof(EV_CELL, rpn.var.rpn_str)
 
 extern S32
+compile_constant(
+    P_U8 text_in,
+    P_EV_RESULT p_ev_result,
+    P_EV_PARMS parmsp);
+
+extern S32
 compile_expression(
     char *compiled_out,
     char *text_in,

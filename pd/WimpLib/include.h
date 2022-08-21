@@ -146,8 +146,8 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #include "cs-event.h"   /* includes event.h -> menu.h, wimp.h */
 #endif
 
-#ifndef __fileicon_h
-#include "fileicon.h"   /* includes wimp.h */
+#ifndef __cs_fileicon_h
+#include "cs-fileicon.h" /* includes fileicon.h -> wimp.h */
 #endif
 
 #ifndef __cs_flex_h

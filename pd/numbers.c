@@ -577,6 +577,38 @@ compiled_text_len(
 ******************************************************************************/
 
 extern S32
+compile_constant(
+    P_U8 text_in,
+    P_EV_RESULT p_ev_result,
+    P_EV_PARMS parmsp)
+{
+    EV_OPTBLOCK optblock;
+    EV_DOCNO docno;
+    S32 rpn_len;
+    SS_DATA data;
+
+    docno = (EV_DOCNO) current_docno();
+
+    ev_set_options(&optblock, docno);
+
+    p_ev_result->data_id = DATA_ID_BLANK;
+
+    parmsp->control   = 0;
+    parmsp->circ      = 0;
+
+    if((rpn_len = ss_recog_constant(&data, docno, text_in, &optblock, 0)) > 0)
+    {
+        ss_data_to_result_convert(p_ev_result, &data);
+        rpn_len = 0;
+        parmsp->type = EVS_CON_DATA;
+    }
+    else if(0 == rpn_len)
+        rpn_len = create_error(EVAL_ERR_BADEXPR);
+
+    return(rpn_len);
+}
+
+extern S32
 compile_expression(
     P_U8 compiled_out,
     P_U8 text_in,

@@ -4,7 +4,10 @@
 |
 | Copyright (C) 2012-2022 Stuart Swales
 |
-Copy &.^.^.coltsoft.pipedream__4_60__branch.cs-free.SFryatt.tokenize <Obey$Dir>.Tools.tokenize ~C~VN
+Set pd$configure$tokenize &.^.^.coltsoft.pipedream__4_60__branch.cs-free.SFryatt.tokenize
+IfThere <pd$configure$tokenize> Then Copy <pd$configure$tokenize> <Obey$Dir>.Tools.tokenize ~C~VN
+Unset pd$configure$tokenize
+IfThere <Obey$Dir>.Tools.tokenize Then Else Error 0 Please install a copy of Tokenize from https://www.stevefryatt.org.uk/risc-os/tokenize as <Obey$Dir>.Tools.tokenize
 |
 | <Obey$Dir>.d32._bld_mkdir
 <Obey$Dir>.r32._bld_mkdir

@@ -990,7 +990,7 @@ recog_iso_date(
     ustr_IncByte(pos);
 
     /* two digits are required in an ISO month */
-#if 1
+#if 0 /* don't do this in PipeDream */
     /* some CSV files are seen to only have one */
     if(sbchar_isdigit(PtrGetByte(pos)))
     {
@@ -1027,7 +1027,7 @@ recog_iso_date(
     ustr_IncByte(pos);
 
     /* two digits are required in an ISO day */
-#if 1
+#if 0 /* don't do this in PipeDream */
     /* some CSV files are seen to only have one */
     if(sbchar_isdigit(PtrGetByte(pos)))
     {
@@ -1154,7 +1154,8 @@ extern S32
 ss_recog_date_time(
     _InoutRef_  P_SS_DATA p_ss_data,
     _In_z_      PC_USTR in_str,
-    _InVal_     bool american_date)
+    _InVal_     bool american_date,
+    _InVal_     bool allow_iso_date)
 {
     S32 day, month, year;
     U32 date_scanned;
@@ -1167,7 +1168,7 @@ ss_recog_date_time(
     /* check for a date */
     date_scanned = recog_dmy_date(pos, &day, &month, &year, american_date);
 
-    if((0 == date_scanned) && TRUE /* extra parsing allowed? */)
+    if( (0 == date_scanned) && allow_iso_date /* extra parsing allowed? */ )
         date_scanned = recog_iso_date(pos, &day, &month, &year);
 
     if(0 != date_scanned)
@@ -1189,7 +1190,7 @@ ss_recog_date_time(
                 if(CH_NULL == PtrGetByte(pos))
                     return(PtrDiffBytesS32(pos, in_str)); /* just a date part */
             }
-            else if('T' == PtrGetByte(pos)) /* ISO 8601 */
+            else if( ('T' == PtrGetByte(pos)) && allow_iso_date ) /* ISO 8601 D/T separator */
                 ustr_IncByte(pos);
 
             /* go on to consider a time part */

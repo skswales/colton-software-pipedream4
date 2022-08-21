@@ -149,7 +149,7 @@ PROC_EXEC_PROTO(c_datevalue)
     exec_func_ignore_parms();
 
     if(status_ok(status = date_time_value_common_init(args[0], &quick_ublock)))
-        status = ss_recog_date_time(p_ss_data_res, quick_ublock_ustr(&quick_ublock), false);
+        status = ss_recog_date_time(p_ss_data_res, quick_ublock_ustr(&quick_ublock), false, true);
 
     quick_ublock_dispose(&quick_ublock);
 
@@ -755,7 +755,7 @@ PROC_EXEC_PROTO(c_timevalue)
     exec_func_ignore_parms();
 
     if(status_ok(status = date_time_value_common_init(args[0], &quick_ublock)))
-        status = ss_recog_date_time(p_ss_data_res, quick_ublock_ustr(&quick_ublock), false);
+        status = ss_recog_date_time(p_ss_data_res, quick_ublock_ustr(&quick_ublock), false, true);
 
     quick_ublock_dispose(&quick_ublock);
 

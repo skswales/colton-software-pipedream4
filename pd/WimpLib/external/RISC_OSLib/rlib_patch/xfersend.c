@@ -1,5 +1,5 @@
---- _src	2019-07-29 19:42:18.000000000 +0100
-+++ _dst	2019-07-30 11:45:39.370000000 +0100
+--- _src	2021-12-31 14:59:30.450000000 +0000
++++ _dst	2022-08-18 17:28:13.490000000 +0000
 @@ -32,6 +32,8 @@
   *
   */
@@ -9,6 +9,15 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
+@@ -51,7 +53,7 @@
+ #include "win.h"
+ #include "dbox.h"
+ #include "xfersend.h"
+-#include "fileicon.h"
++#include "cs-fileicon.h"
+ #include "werr.h"
+ #include "menu.h"
+ #include "event.h"
 @@ -59,6 +61,22 @@
  #include "dragasprit.h"
  #include "VerIntern/messages.h"
@@ -390,7 +399,7 @@
  BOOL xfersend_file_is_safe(void)
  {
    return xfersend__fileissafe;
-@@ -654,4 +858,95 @@
+@@ -654,4 +858,91 @@
    return xfersend__msgid;        /* my_ref of last DataSave message */
  }
  
@@ -407,17 +416,13 @@
 +{
 +    os_regset r;
 +    os_error * e;
-+    char temp[32];
++    char icon_name[32];
 +
-+    r.r[0]=filetype;
-+    r.r[1]=(int) temp+4;
-+    r.r[2]=sizeof(temp)-5;
-+    os_swix(OS_ConvertHex4, &r);
-+    memcpy(temp, "file_", 5);
++    fileicon_name(icon_name, filetype);
 +
 +    r.r[0]=0x85;
 +    r.r[1]=1;
-+    r.r[2]=(int) temp;
++    r.r[2]=(int) icon_name;
 +    r.r[3]=(int) &(dr.box);
 +    r.r[4]=0;
 +    e=os_swix(DragASprite_Start, &r);

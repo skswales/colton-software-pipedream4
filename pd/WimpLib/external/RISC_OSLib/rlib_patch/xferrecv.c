@@ -1,5 +1,5 @@
---- _src	2019-07-29 19:42:18.000000000 +0100
-+++ _dst	2019-07-30 11:45:39.260000000 +0100
+--- _src	2021-12-31 14:59:30.440000000 +0000
++++ _dst	2022-08-18 17:22:43.040000000 +0000
 @@ -32,6 +32,10 @@
   *
   */
@@ -11,6 +11,15 @@
  #include <string.h>
  #include <stdio.h>
  
+@@ -44,7 +48,7 @@
+ #include "dbox.h"
+ #include "typdat.h"
+ #include "xfersend.h"
+-#include "fileicon.h"
++#include "cs-fileicon.h"
+ #include "werr.h"
+ #include "menu.h"
+ #include "event.h"
 @@ -78,7 +82,7 @@
  static int xferrecv_msgid ;
  

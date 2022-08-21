@@ -475,6 +475,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\muldiv.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\muldiv.h"
 					>
 				</File>

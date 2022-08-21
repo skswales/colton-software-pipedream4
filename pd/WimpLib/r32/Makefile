@@ -52,6 +52,11 @@ o.cs-event:    $(WimpLib).c.event $(WimpLib).h.event
 o.cs-event:    $(WimpLib).c.cs-event
         $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-event
 
+o.cs-fileicon: $(WimpLib).c.fileicon
+o.cs-fileicon: $(WimpLib).h.cs-fileicon
+o.cs-fileicon: $(WimpLib).c.cs-fileicon
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-fileicon
+
 o.cs-flex:     $(WimpLib).c.flex
 o.cs-flex:     $(WimpLib).h.cs-flex
 o.cs-flex:     $(WimpLib).c.cs-flex
@@ -96,6 +101,7 @@ COLTON_XTRAS=\
 o.cs-bbcx \
 o.cs-event \
 o.cs-flex \
+o.cs-fileicon \
 o.cs-msgs \
 o.cs-resspr \
 o.cs-templat \
@@ -168,9 +174,6 @@ o.drawmod:     $(WimpLib).c.drawmod $(WimpLib).c.nd-drawmod
 o.font:        $(WimpLib).c.font $(WimpLib).c.nd-font
         $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-font
 
-o.fileicon:    $(WimpLib).c.fileicon $(WimpLib).c.nd-fileicon
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-fileicon
-
 o.os:          $(WimpLib).c.os $(WimpLib).c.nd-os
         $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-os
 
@@ -189,7 +192,6 @@ o.werr :       $(WimpLib).c.werr $(WimpLib).c.nd-werr
 WRAPPED=\
 o.drawmod \
 o.font \
-o.fileicon \
 o.os \
 o.pointer \
 o.print \

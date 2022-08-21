@@ -1431,7 +1431,8 @@ recog_n_dt_str_slr_rng(
 {
     S32 len;
 
-    if( ((len = ss_recog_date_time(p_ss_data, in_str, american_date)) == 0) &&
+    /* no ISO dates here or we screw up existing sheets */
+    if( ((len = ss_recog_date_time(p_ss_data, in_str, american_date, false)) == 0) &&
         ((len = ss_recog_number(p_ss_data, in_str)) == 0) &&
         ((len = recog_string(p_ss_data, in_str)) == 0) )
     {
@@ -2432,8 +2433,9 @@ scan_next_symbol(void)
         (*cc->ip_pos != '+') )
     {
         /* check for date and/or time */
-        /*SKS 20191203 moved from below ss_recog_number call to be consistent with Fireworkz (allows ISO dates etc.) */
-        if((res = ss_recog_date_time(&cc->cur_sym, cc->ip_pos, cc->p_optblock->american_date)) > 0)
+        /* SKS 20191203 moved from below ss_recog_number call to be consistent with Fireworkz */
+        /* NB no ISO dates here or we screw up existing sheets */
+        if((res = ss_recog_date_time(&cc->cur_sym, cc->ip_pos, cc->p_optblock->american_date, false)) > 0)
             cc->ip_pos += res;
         /* check for number */
         else if((res = ss_recog_number(&cc->cur_sym, cc->ip_pos)) > 0)

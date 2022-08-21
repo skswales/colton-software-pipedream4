@@ -59,7 +59,7 @@
 
 #include "ridialog.h"
 
-#include "fileicon.h"
+#include "cs-fileicon.h"
 
 /* ----------------------------------------------------------------------- */
 

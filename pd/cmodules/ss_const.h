@@ -669,7 +669,8 @@ extern S32
 ss_recog_date_time(
     _InoutRef_  P_SS_DATA p_ss_data,
     _In_z_      PC_USTR in_str,
-    _InVal_     bool american_date);
+    _InVal_     bool american_date,
+    _InVal_     bool allow_iso_date);
 
 _Check_return_ _Success_(status_ok(return))
 extern STATUS

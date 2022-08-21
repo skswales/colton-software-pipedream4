@@ -18,15 +18,15 @@
 declare complex number type for internal usage
 */
 
-#if (__STDC_VERSION__ < 199901L) || defined(__STDC_NO_COMPLEX__) || defined(USE_OWN_COMPLEX_IMPL)
-
+#if (__STDC_VERSION__ < 199901L) || defined(__STDC_NO_COMPLEX__)
 #if !defined(USE_OWN_COMPLEX_IMPL)
 #define USE_OWN_COMPLEX_IMPL 1 /* for subsequent testing */
 #endif
-
-#endif
+#endif /* __STDC_NO_COMPLEX__ */
 
 #if !defined(USE_OWN_COMPLEX_IMPL)
+
+/* use the standard C99 complex support */
 
 #include <complex.h>
 
@@ -86,6 +86,8 @@ complex_set_ri(
 #define inline_if_native_complex inline
 
 #else /* defined(USE_OWN_COMPLEX_IMPL) */
+
+/* our own implementation, COMPLEX, that works in C89 */
 
 typedef struct COMPLEX
 {

@@ -584,6 +584,9 @@
     <ClCompile Include="..\..\..\..\cmodules\mathxcpx.c">
       <Filter>Source Files\eval_cmodules</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\muldiv.c">
+      <Filter>Source Files\pd_cmodules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\cmodules\pd123.h">
