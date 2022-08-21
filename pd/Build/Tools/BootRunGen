@@ -222,6 +222,7 @@ IF NOT boot% THEN
     PROCo(f%,"|")
     PROCo(f%,"Set pd$Debug 1")
     PROCo(f%,"Set PipeDream$ReportEnable 1")
+    PROCo(f%,"Set PipeDream$TraceEnable 1")
   ENDIF
   :
   IF profile% AND NOT alternate% THEN

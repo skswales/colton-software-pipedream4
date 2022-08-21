@@ -28,7 +28,30 @@ extern wimp_errflags
 wimp_ReportError_wrapped(
     const _kernel_oserror * e,
     wimp_errflags flags,
-    const char * name);
+    const char * name,
+    const char * spritename,
+    const char * spritearea,
+    const char * buttons)
+{
+    wimp_errflags errflags = wimp_ECANCEL;
+    _kernel_swi_regs rs;
+
+    rs.r[0] = (int) e;
+    rs.r[1] = flags;
+    rs.r[2] = (int) name;
+    rs.r[3] = (int) spritename;
+    rs.r[4] = (int) spritearea;
+    rs.r[5] = (int) buttons;
+
+    riscos_hourglass_off();
+
+    (void) _kernel_swi(Wimp_ReportError, &rs, &rs);
+    errflags = (wimp_errflags) rs.r[1];
+
+    riscos_hourglass_on();
+
+    return(errflags);
+}
 
 /*
 exported for macros
@@ -60,6 +83,18 @@ os_set_error(
     return(&e);
 }
 
+/* replacement for one in wimp.c to use new mechanism */
+
+extern os_error *
+wimp_reporterror(
+    os_error * e,
+    wimp_errflags flags,
+    char * name)
+{
+    wimp_errflags flags_dummy;
+    return(wimp_reporterror_rf(e, flags, name, &flags_dummy, NULL));
+}
+ 
 extern os_error *
 wimp_reporterror_rf(
     const _kernel_oserror * e,
@@ -102,11 +137,17 @@ wimp_reporterror_rf(
 
     if(message)
         {
-        flags = (wimp_errflags) (flags | (1 << 4));
+        flags = (wimp_errflags) (flags | wimp_ENOERRORFROM);
         name = message;
         }
 
-    *flags_out = wimp_ReportError_wrapped(e, flags, name);
+    if(wimpt_os_version_query() >= RISC_OS_3_5)
+    {
+        flags = (wimp_errflags) (flags | wimp_EUSECATEGORY); /* new-style */
+        flags = (wimp_errflags) (flags | wimp_ECAT_WARNING); /* error */
+    }
+
+    *flags_out = wimp_ReportError_wrapped(e, flags, name, wimpt_get_spritename(), (const char *) 1 /*Wimp Sprite Area*/, NULL);
 
     return(de_const_cast(os_error *, e));
 }
@@ -163,11 +204,18 @@ wimpt_checkpalette(void)
 #endif
 }
 
-wimp_errflags wimpt_reporterror_rf(os_error * e, wimp_errflags flags)
+static const char * wimpt__spritename;
+
+extern const char *
+wimpt_get_spritename(void)
 {
-  wimp_errflags flags_out;
-  (void) wimp_reporterror_rf(e, flags, wimpt_programname(), &flags_out, NULL);
-  return(flags_out);
+    return(wimpt__spritename);
+}
+
+extern void
+wimpt_set_spritename(const char * spritename)
+{
+    wimpt__spritename = spritename;
 }
 
 static const char * wimpt__taskname;

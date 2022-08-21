@@ -83,6 +83,8 @@ gr_rdiag.c and numbers.c require this to be defined
 
 /* certain bits of PipeDream exported for cmodules use */
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 product_ui_id(void);
 

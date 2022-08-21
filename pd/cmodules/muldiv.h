@@ -12,7 +12,7 @@
 #ifndef __muldiv_h
 #define __muldiv_h
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -20,7 +20,7 @@ extern "C" {
 exported structure
 */
 
-typedef struct _UMUL64_RESULT
+typedef struct UMUL64_RESULT
 {
     U32 LowPart;
     U32 HighPart;
@@ -95,7 +95,7 @@ umul64(
 #define PRAGMA_SIDE_EFFECTS
 #include "coltsoft/pragma.h"
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 

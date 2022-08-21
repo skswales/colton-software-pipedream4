@@ -802,12 +802,11 @@ UserDefinedHigh_fn(void)
 *
 ******************************************************************************/
 
-typedef enum
+enum BLOCK_HIGHLIGHT_PARM
 {
     H_INSERT = FALSE,
     H_DELETE = TRUE
-}
-block_highlight_parm;
+};
 
 static void
 highlight_words_on_line(

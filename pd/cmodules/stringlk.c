@@ -81,7 +81,7 @@ string_lookup_buffer(
 {
     PC_USTR str = string_lookup(stringid);
 
-    safe_strkpy(buffer, elemof_buffer, str ? str : NULLSTR);
+    xstrkpy(buffer, elemof_buffer, str ? str : NULLSTR);
 }
 
 /* end of stringlk.c */

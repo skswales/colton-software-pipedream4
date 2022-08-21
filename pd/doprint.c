@@ -56,7 +56,7 @@ off_highlights(void);
 
 static void
 out_h_string_value_0(
-    LIST *lptr);
+    PC_LIST lptr);
 
 static S32
 printx(void);
@@ -427,7 +427,7 @@ print_document_core_core(
             if(macrofile)
                 {
                 STATUS status;
-                if(NULL != (printing_macro_buffer = al_ptr_alloc_bytes(char, MACROFILE_BUFSIZ, &status)))
+                if(NULL != (printing_macro_buffer = al_ptr_alloc_bytes(char *, MACROFILE_BUFSIZ, &status)))
                     file_buffer(macrofile, printing_macro_buffer, MACROFILE_BUFSIZ);
                 }
             else
@@ -862,7 +862,7 @@ set_pitch(
     char *ptr;
     char ch;
     S32 offset;
-    LIST *lptr;
+    PC_LIST lptr;
 
     if(riscos_printing  ||  !prnbit  ||  !micbit)
         return;
@@ -1226,13 +1226,13 @@ outff(
 
     if(!screen_bit)
         {
-        LIST * lptr = search_list(&highlight_list, E_P);
+        PC_LIST lptr = search_list(&highlight_list, E_P);
 
         if(lptr)
             {
             /* we have string, can we output it? */
 
-            if(do_something  ||  strchr((char *) lptr->value, FORMFEED))
+            if(do_something  ||  strchr((const char *) lptr->value, FORMFEED))
                 {
                 out_h_string_value_0(lptr);
 
@@ -1545,7 +1545,7 @@ print_page(void)
                 if(tslot)
                     {
                     P_DRAW_DIAG p_draw_diag;
-                    drawfrp dfrp;
+                    P_DRAW_FILE_REF dfrp;
                     S32 x, y;
 
                     if( riscos_printing  &&
@@ -1657,7 +1657,7 @@ print_page(void)
 }
 
 /* state to preserve - vague effort to reduce code on ARM */
-typedef struct _riscos_print_save_str
+typedef struct RISCOS_PRINT_SAVE_STR
 {
     SLR saved_in_block;
     BOOL saved_start_block;
@@ -1670,9 +1670,9 @@ typedef struct _riscos_print_save_str
     P_LIST_BLOCK saved_macrolist;
     BOOL saved_had_top;
 }
-riscos_print_save_str;
+RISCOS_PRINT_SAVE_STR;
 
-static riscos_print_save_str riscos_print_save;
+static RISCOS_PRINT_SAVE_STR riscos_print_save;
 
 static void
 initialise_saved_print_state(void)
@@ -1955,7 +1955,7 @@ static BOOL
 out_one_ch(
     U8 ch)
 {
-    LIST * lptr;
+    PC_LIST lptr;
 
     riscos_printing_abort("out_one_ch");
 
@@ -2014,7 +2014,7 @@ out_h_string(
 
 static void
 out_h_string_value_0(
-    LIST * lptr)
+    PC_LIST lptr)
 {
     if(lptr)
         out_h_string(lptr->value, 0);
@@ -2206,7 +2206,7 @@ drvout(
 {
     S32 mask;
     S32 i;
-    LIST * lptr;
+    PC_LIST lptr;
 
     riscos_printing_abort("drvout");
 
@@ -2496,7 +2496,7 @@ off_highlights(void)
 {
     uchar  mask;
     S32    i;
-    LIST * lptr;
+    PC_LIST lptr;
 
     if(riscos_printing)
         return;

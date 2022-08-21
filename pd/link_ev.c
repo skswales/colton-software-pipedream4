@@ -38,15 +38,15 @@ dialog_title_make(
 {
     P_SS_DOC p_ss_doc;
 
-    safe_strkpy(buffer, elemof_buffer, string);
+    xstrkpy(buffer, elemof_buffer, string);
 
     if(NULL != (p_ss_doc = ev_p_ss_doc_from_docno(docno)))
         {
-        safe_strkat(buffer, elemof_buffer, ": [");
+        xstrkat(buffer, elemof_buffer, ": [");
 
-        safe_strkat(buffer, elemof_buffer, p_ss_doc->docu_name.leaf_name);
+        xstrkat(buffer, elemof_buffer, p_ss_doc->docu_name.leaf_name);
 
-        safe_strkat(buffer, elemof_buffer, "]");
+        xstrkat(buffer, elemof_buffer, "]");
         }
 }
 
@@ -66,9 +66,9 @@ static userIO_handle user_alert = NULL;
 extern S32
 ev_alert(
     _InVal_     EV_DOCNO docno,
-    P_U8 message,
-    P_U8 but1_text,
-    P_U8 but2_text)
+    _In_z_      PC_U8Z message,
+    _In_z_      PC_U8Z but1_text,
+    _In_z_      PC_U8Z but2_text)
 {
     S32 res;
     char title[BUF_EV_LONGNAMLEN];
@@ -181,7 +181,7 @@ ev_external_string(
                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                        FALSE /*allow_fonty_result*/, TRUE /*cff*/);
 
-    safe_strkpy(buffer, elemof_buffer, tbuf); /* plain non-fonty string */
+    xstrkpy(buffer, elemof_buffer, tbuf); /* plain non-fonty string */
 
     *outpp = buffer;
 
@@ -250,9 +250,9 @@ static userIO_handle user_input = NULL;
 extern S32
 ev_input(
     _InVal_     EV_DOCNO docno,
-    P_U8 message,
-    P_U8 but1_text,
-    P_U8 but2_text)
+    _In_z_      PC_U8Z message,
+    _In_z_      PC_U8Z but1_text,
+    _In_z_      PC_U8Z but2_text)
 {
     S32 res;
     char title[BUF_EV_LONGNAMLEN];
@@ -301,7 +301,7 @@ ev_input_poll(
 extern S32
 ev_make_slot(
     _InRef_     PC_EV_SLR slrp,
-    P_EV_RESULT resp)
+    P_EV_RESULT p_ev_result)
 {
     P_SLOT sl;
     P_DOCU p_docu;
@@ -312,7 +312,7 @@ ev_make_slot(
     DOCNO old_docno;
 
 #if TRACE_ALLOWED
-    if(tracing(TRACE_MODULE_EVAL))
+    if_constant(tracing(TRACE_MODULE_EVAL))
         {
         char buffer[BUF_EV_LONGNAMLEN];
         ev_trace_slr(buffer, elemof32(buffer), "ev_make_slot $$", slrp);
@@ -363,7 +363,7 @@ ev_make_slot(
                                  format,
                                  NULL,
                                  0,
-                                 resp,
+                                 p_ev_result,
                                  &parms,
                                  0,
                                  TRUE)) < 0)
@@ -537,7 +537,7 @@ ev_travel(
     P_DOCU p_docu;
 
 #if TRACE_ALLOWED
-    if(tracing(TRACE_MODULE_EVAL))
+    if_constant(tracing(TRACE_MODULE_EVAL))
         {
         char buffer[BUF_EV_LONGNAMLEN];
         ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$", p_ev_slr);
@@ -564,7 +564,7 @@ ev_travel(
 #else
 
 #if TRACE_ALLOWED
-    if(tracing(TRACE_MODULE_EVAL))
+    if_constant(tracing(TRACE_MODULE_EVAL))
         {
         char buffer[BUF_EV_LONGNAMLEN];
         ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$", p_ev_slr);

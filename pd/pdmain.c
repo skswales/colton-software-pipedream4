@@ -79,6 +79,7 @@ host_initialise_file_path(void);
 
 static U8 product_name[16] = "PipeDream";
 static U8 product_ui_name[16] = "PipeDream";
+static U8 product_spritename[16] = "!pipedream";
 static U8 user_name[32];
 static U8 organ_name[32];
 
@@ -127,11 +128,11 @@ get_user_info(void)
     make_var_name(var_name, elemof32(var_name), "$User1");
     if(NULL == _kernel_getenv(var_name, env_value, elemof32(env_value)))
         if(0 != strcmp(env_value, "NoInfo"))
-            safe_strkpy(user_name, elemof32(user_name), env_value);
+            xstrkpy(user_name, elemof32(user_name), env_value);
 
     make_var_name(var_name, elemof32(var_name), "$User2");
     if(NULL == _kernel_getenv(var_name, env_value, elemof32(env_value)))
-        safe_strkpy(organ_name, elemof32(organ_name), env_value); /* SKS 13.12.98 */
+        xstrkpy(organ_name, elemof32(organ_name), env_value); /* SKS 13.12.98 */
 }
 
 /******************************************************************************
@@ -235,6 +236,7 @@ main(
     decode_run_options();
 
     /* startup Window Manager interface */
+    wimpt_set_spritename(product_spritename); /* For RISC OS 3.5 and later error reporting */
     wimpt_set_taskname(product_ui_id()); /* Optional; uses wimpt_init() parm when omitted */
 
     riscos_hourglass_on();
@@ -479,24 +481,32 @@ exec_file(
 *
 ******************************************************************************/
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 product_id(void)
 {
     return(product_name);
 }
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 product_ui_id(void)
 {
     return(product_ui_name);
 }
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 user_id(void)
 {
     return(user_name);
 }
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 user_organ_id(void)
 {
@@ -509,8 +519,8 @@ make_var_name(
     _InVal_     U32 elemof_buffer,
     _In_z_      PC_USTR p_u8_suffix)
 {
-    safe_strkpy(var_name, elemof_buffer, product_id());
-    safe_strkat(var_name, elemof_buffer, p_u8_suffix);
+    xstrkpy(var_name, elemof_buffer, product_id());
+    xstrkat(var_name, elemof_buffer, p_u8_suffix);
 }
 
 /*

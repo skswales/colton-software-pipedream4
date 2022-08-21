@@ -76,7 +76,7 @@ replace_one_word(
                                 {
                                 /* insert the (offset+1)th string from wild_string */
                                 uchar *tptr;
-                                LIST *lptr = search_list(&wild_string_list, (S32) offset);
+                                P_LIST lptr = search_list(&wild_string_list, (S32) offset);
 
                                 tptr = lptr ? lptr->value : UNULLSTR;
 

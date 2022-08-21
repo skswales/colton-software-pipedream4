@@ -75,9 +75,9 @@ gr_axis_form_category(
     P_GR_CHART cp,
     _InVal_     GR_POINT_NO total_n_points)
 {
-    GR_AXES_NO axes  = 0;
-    GR_AXIS_NO axis  = X_AXIS;
-    P_GR_AXIS p_axis = &cp->axes[axes].axis[axis];
+    GR_AXES_IDX axes_idx = 0;
+    GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    P_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
     P_GR_AXIS_TICKS ticksp;
 
     /* how far up the interval is the zero line? */
@@ -441,14 +441,14 @@ gr_axis_form_value_lin(
 extern void
 gr_axis_form_value(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis)
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx)
 {
-    P_GR_AXES p_axes = &cp->axes[axes];
-    P_GR_AXIS p_axis = &p_axes->axis[axis];
+    P_GR_AXES p_axes = &cp->axes[axes_idx];
+    P_GR_AXIS p_axis = &p_axes->axis[axis_idx];
 
     if(p_axis->bits.log_scale)
-        gr_axis_form_value_log(p_axes, p_axis, Y_AXIS == axis);
+        gr_axis_form_value_log(p_axes, p_axis, Y_AXIS_IDX == axis_idx);
     else
         gr_axis_form_value_lin(p_axis);
 }

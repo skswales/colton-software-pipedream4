@@ -64,6 +64,10 @@ function__event_menu_proc(
     char *hit,
     BOOL submenurequest);
 
+_Check_return_
+extern BOOL
+pdfontselect_is_active(void);
+
 extern void
 PrinterFont_fn(void);
 

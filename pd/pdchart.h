@@ -37,7 +37,7 @@ private structure defs for pdchart.c
 
 typedef ROW rowcolt; /* big enough to hold either */
 
-typedef enum
+typedef enum PDCHART_RANGE_TYPE
 {
     PDCHART_RANGE_NONE = 0, /* unallocated hole */
 
@@ -58,7 +58,7 @@ there is one of these per added range and each can
 be referenced by many elements of the same chart
 */
 
-typedef struct _PDCHART_DEP
+typedef struct PDCHART_DEP
 {
     PDCHART_RANGE_TYPE type;           /* whether COL or ROW or TXT */
 
@@ -70,7 +70,7 @@ typedef struct _PDCHART_DEP
 
     EV_RANGE             rng;
 
-    struct _PDCHART_DEP_BITS
+    struct PDCHART_DEP_BITS
     {
         int label_first_range : 1;       /* is first element of this dep a category label range? */
         int label_first_item  : 1;       /* are first items in this dep series labels? */
@@ -85,7 +85,7 @@ PDCHART_DEP, * P_PDCHART_DEP, ** P_P_PDCHART_DEP;
 elements in an array belonging to a chart decriptor
 */
 
-typedef struct _PDCHART_ELEMENT
+typedef struct PDCHART_ELEMENT
 {
     PDCHART_RANGE_TYPE type;          /* whether COL or ROW or whatever */
 
@@ -93,7 +93,7 @@ typedef struct _PDCHART_ELEMENT
 
     GR_INT_HANDLE      gr_int_handle; /* something to delete me by */
 
-    struct _PDCHART_ELEMENT_BITS
+    struct PDCHART_ELEMENT_BITS
     {
         int label_first_range : 1;      /* entire range labels? */
         int label_first_item  : 1;      /* is first item a label? */
@@ -102,9 +102,9 @@ typedef struct _PDCHART_ELEMENT
     }
     bits;
 
-    union _PDCHART_ELEMENT_RNG
+    union PDCHART_ELEMENT_RNG
     {
-        struct _PDCHART_ELEMENT_RNG_COL
+        struct PDCHART_ELEMENT_RNG_COL
         {
             EV_DOCNO docno; /* something to remember the range by EVEN IF NO PD DOCUMENT EXISTS! */
             COL     col;
@@ -113,7 +113,7 @@ typedef struct _PDCHART_ELEMENT
         }
         col;
 
-        struct _PDCHART_ELEMENT_RNG_ROW
+        struct PDCHART_ELEMENT_RNG_ROW
         {
             EV_DOCNO docno; /* something to remember the range by EVEN IF NO PD DOCUMENT EXISTS! */
             ROW     row;
@@ -122,7 +122,7 @@ typedef struct _PDCHART_ELEMENT
         }
         row;
 
-        struct _PDCHART_ELEMENT_RNG_TXT
+        struct PDCHART_ELEMENT_RNG_TXT
         {
             EV_DOCNO docno; /* something to remember the range by EVEN IF NO PD DOCUMENT EXISTS! */
             COL     col;
@@ -138,7 +138,7 @@ PDCHART_ELEMENT, * P_PDCHART_ELEMENT, ** P_P_PDCHART_ELEMENT;
 this is in a fixed block
 */
 
-typedef enum
+typedef enum PDCHART_RECALC_STATES
 {
     PDCHART_UNMODIFIED = 0,
     PDCHART_MODIFIED,
@@ -146,23 +146,20 @@ typedef enum
 }
 PDCHART_RECALC_STATES;
 
-typedef struct _PDCHART_HEADER
+typedef struct PDCHART_HEADER
 {
     LIST_ITEMNO         pdchartdatakey; /* our internal handle on this chart */
 
     GR_CHART_HANDLE     ch;             /* which chart we have made */
     GR_CHARTEDIT_HANDLE ceh;            /* if it has an editor window */
 
-    NLISTS_BLK          listed_deps;    /* which dependencies we have added */
-
-    struct _PDCHART_HEADER_RECALC
+    struct PDCHART_HEADER_RECALC
     {
         PDCHART_RECALC_STATES state;
-        MONOTIME              last_mod_time;
     }
     recalc;
 
-    struct _PDCHART_HEADER_ELEM
+    struct PDCHART_HEADER_ELEM
     {
         U32                n_alloc; /* number of elements (not bytes) allocated */
         U32                n;       /* number of elements (not bytes) used so far */
@@ -176,7 +173,7 @@ PDCHART_HEADER, * P_PDCHART_HEADER, ** P_P_PDCHART_HEADER;
 a list of PipeDream charts (so they can be selected from)
 */
 
-typedef struct _PDCHART_LISTED_DATA
+typedef struct PDCHART_LISTED_DATA
 {
     P_PDCHART_HEADER pdchart; /* only need this to find the chart */
 }
@@ -186,7 +183,7 @@ PDCHART_LISTED_DATA, * P_PDCHART_LISTED_DATA;
 a PipeDream shape descriptor for setting up a range to chart
 */
 
-typedef struct _PDCHART_SHAPEDESC
+typedef struct PDCHART_SHAPEDESC
 {
     DOCNO docno;
     SLR stt;
@@ -197,7 +194,7 @@ typedef struct _PDCHART_SHAPEDESC
  *                          and defn_label_ to label_ for block sussing improvement
  *                          NB. this also inverts the sense of what was a poss_label_
 */
-    struct _PDCHART_SHAPEDESC_BITS
+    struct PDCHART_SHAPEDESC_BITS
     {
         int number_top_left     : 1;
         int label_top_left      : 1;
@@ -215,14 +212,14 @@ typedef struct _PDCHART_SHAPEDESC
     }
     bits;
 
-    struct _PDCHART_SHAPEDESC_COLS
+    struct PDCHART_SHAPEDESC_COLS
     {
         COL n, nz_n, min, max;
         NLISTS_BLK nz; /* list of non-empty columns in range */
     }
     cols;
 
-    struct _PDCHART_SHAPEDESC_ROWS
+    struct PDCHART_SHAPEDESC_ROWS
     {
         ROW n, nz_n, min, max;
         NLISTS_BLK nz; /* list of non-empty rows in range */
@@ -231,7 +228,7 @@ typedef struct _PDCHART_SHAPEDESC
 }
 PDCHART_SHAPEDESC;
 
-typedef struct _PDCHART_PROCESS
+typedef struct PDCHART_PROCESS
 {
     int initial   : 1;
     int force_add : 1;
@@ -240,7 +237,7 @@ typedef struct _PDCHART_PROCESS
 }
 PDCHART_PROCESS;
 
-typedef struct _PDCHART_SORT_ELEM
+typedef struct PDCHART_SORT_ELEM
 {
     P_PDCHART_ELEMENT ep;
     U32               gr_order_no;

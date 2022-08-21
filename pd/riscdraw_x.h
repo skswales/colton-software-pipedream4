@@ -41,54 +41,49 @@ clear_textarea(
 extern void
 clear_thistextarea(void);
 
-extern int
+_Check_return_
+extern gcoord
 gcoord_x(
-    int x);
+    coord x);
 
-extern int
+_Check_return_
+extern gcoord
 gcoord_y(
-    int y);
+    coord y);
 
+_Check_return_
 extern int
 gcoord_y_textout(
     int y);
 
-extern BOOLEAN
-graphicsobjectintersects(
-    int x0,
-    int y0,
-    int x1,
-    int y1);
-
-extern BOOLEAN
-textobjectintersects(
-    int x0,
-    int y0,
-    int x1,
-    int y1);
-
+_Check_return_
 extern int
 roundtoceil(
     int a,
     int b);
 
+_Check_return_
 extern int
 roundtofloor(
     int a,
     int b);
 
+_Check_return_
 extern int
 tcoord_x(
     int x);
 
+_Check_return_
 extern int
 tcoord_y(
     int y);
 
+_Check_return_
 extern int
 tcoord_x1(
     int x);
 
+_Check_return_
 extern int
 tcoord_y1(
     int y);

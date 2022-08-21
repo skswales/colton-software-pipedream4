@@ -35,14 +35,14 @@ malloc() replacement
 */
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _al_ptr_alloc(
     _InVal_     U32 n_bytes,
     _OutRef_    P_STATUS p_status);
 
-#define al_ptr_alloc_bytes(__base_type, n_bytes, p_status) ( \
-    (__base_type *) _al_ptr_alloc((n_bytes), p_status) )
+#define al_ptr_alloc_bytes(__ptr_type, n_bytes, p_status) ( \
+    (__ptr_type) _al_ptr_alloc((n_bytes), p_status) )
 
 #define al_ptr_alloc_elem(__base_type, n_elem, p_status) ( \
     (__base_type *) _al_ptr_alloc((n_elem) * sizeof(__base_type), p_status) )
@@ -50,7 +50,7 @@ _al_ptr_alloc(
 #if WINDOWS
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _dsapplib_ptr_alloc(
     _InVal_     U32 n_bytes,
@@ -63,14 +63,14 @@ calloc() replacement
 */
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(n_bytes) /* may be NULL */
+_Ret_writes_maybenull_(n_bytes) /* may be NULL */
 extern P_BYTE
 _al_ptr_calloc(
     _InVal_     U32 n_bytes,
     _OutRef_    P_STATUS p_status);
 
-#define al_ptr_calloc_bytes(__base_type, n_bytes, p_status) ( \
-    (__base_type *) _al_ptr_calloc((n_bytes), p_status) )
+#define al_ptr_calloc_bytes(__ptr_type, n_bytes, p_status) ( \
+    (__ptr_type) _al_ptr_calloc((n_bytes), p_status) )
 
 #define al_ptr_calloc_elem(__base_type, n_elem, p_status) ( \
     (__base_type *) _al_ptr_calloc((n_elem) * sizeof(__base_type), p_status) )
@@ -113,15 +113,15 @@ realloc() replacement
 */
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _al_ptr_realloc(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any,
     _InVal_     U32 n_bytes,
     _OutRef_    P_STATUS p_status);
 
-#define al_ptr_realloc_bytes(__base_type, p_any, n_bytes, p_status) ( \
-    (__base_type *) _al_ptr_realloc(p_any, (n_bytes), p_status) )
+#define al_ptr_realloc_bytes(__ptr_type, p_any, n_bytes, p_status) ( \
+    (__ptr_type) _al_ptr_realloc(p_any, (n_bytes), p_status) )
 
 #define al_ptr_realloc_elem(__base_type, p_any, n_elem, p_status) ( \
     (__base_type *) _al_ptr_realloc(p_any, (n_elem) * sizeof(__base_type), p_status) )
@@ -129,7 +129,7 @@ _al_ptr_realloc(
 #if WINDOWS
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _dsapplib_ptr_realloc(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any,
@@ -144,15 +144,19 @@ definition of al_array_xxx index type
 
 typedef S32 ARRAY_INDEX; typedef ARRAY_INDEX * P_ARRAY_INDEX;
 
+#define ARRAY_INDEX_TFMT S32_TFMT
+
 typedef U32 ARRAY_HANDLE; typedef ARRAY_HANDLE * P_ARRAY_HANDLE, ** P_P_ARRAY_HANDLE; typedef const ARRAY_HANDLE * PC_ARRAY_HANDLE;
 
 #define P_ARRAY_HANDLE_NONE _P_DATA_NONE(P_ARRAY_HANDLE)
+
+#define ARRAY_HANDLE_TFMT TEXT("h:") U32_TFMT
 
 /*
 structure of array space allocator
 */
 
-typedef struct _array_block_parms
+typedef struct ARRAY_BLOCK_PARMS
 {
     /* private to aligator - export only for macros */
     UBF auto_compact            : 1;
@@ -164,30 +168,27 @@ typedef struct _array_block_parms
 #define ALLOC_USE_GLOBAL_ALLOC  1 /* use GlobalAlloc()/GlobalLock()/GlobalFree() for HANDLE based allocation (e.g. clipboard) */
 #define ALLOC_USE_DS_ALLOC      2 /* use Dial Solutions DSAppLib allocator for Draw files */
     UBF use_alloc               : 2;
-    UBF _spare                  : (1+14+13)-2;
-#elif RISCOS
+    UBF _spare                  : (1+14)-2;
+    UBF packed_size_increment   : 13;
+#else
     UBF _spare                  : 1;
     UBF packed_element_size     : 14; /* needed visible for array_element_size32() */
     UBF packed_size_increment   : 13;
+    /* SKS after 1.06 09nov93 reordered to give ARM compiler a good chance to use those wonderful shift operators */
 #endif
-    /* SKS after 1.06 09nov93 reordered to give compiler a good chance to use those wonderful shift operators */
 }
 ARRAY_BLOCK_PARMS;
 
-typedef struct _array_block
+typedef struct ARRAY_BLOCK
 {
     /* private to aligator - export only for macros */
-    P_ANY               p_any;
+    P_BYTE              p_data;
     ARRAY_INDEX         free;
     ARRAY_INDEX         size;
     ARRAY_BLOCK_PARMS   parms;
 
 #if WINDOWS /* SKS 24feb2012 unpacked */
     U32                 element_size;
-    U32                 size_increment;
-#if defined(_WIN64)
-    U32                 _padding; /* round to 8 words */
-#endif
 #endif /* WINDOWS */
 }
 ARRAY_BLOCK, * P_ARRAY_BLOCK; typedef const ARRAY_BLOCK * PC_ARRAY_BLOCK;
@@ -198,17 +199,14 @@ ARRAY_BLOCK, * P_ARRAY_BLOCK; typedef const ARRAY_BLOCK * PC_ARRAY_BLOCK;
 /* return size of an element in array (with valid block) */
 #define array_block_element_size(p_array_block) \
     (p_array_block->element_size)
-
-#define array_block_size_increment(p_array_block) \
-    (p_array_block->size_increment)
-#elif RISCOS
+#else
 /* return size of an element in array (with valid block) */
 #define array_block_element_size(p_array_block) \
     ((U32) p_array_block->parms.packed_element_size)
+#endif /* OS */
 
 #define array_block_size_increment(p_array_block) \
     ((U32) p_array_block->parms.packed_size_increment)
-#endif /* OS */
 
 /*
 different typedef for root allocation allows us to see better in debugger
@@ -216,7 +214,7 @@ eg watch and expand array_root.p_array_block[25]
 and it also makes aligator.c implementation simpler
 */
 
-typedef struct _array_root_block
+typedef struct ARRAY_ROOT_BLOCK
 {
     /* private to aligator - export only for macros */
     PC_ARRAY_BLOCK      p_array_block; /* NB const makes for safer access outside of aligator */
@@ -226,10 +224,6 @@ typedef struct _array_root_block
 
 #if WINDOWS /* SKS 24feb2012 unpacked */
     U32                 element_size;
-    U32                 size_increment;
-#if defined(_WIN64)
-    U32                 _padding; /* round to 8 words */
-#endif
 #endif /* WINDOWS */
 }
 ARRAY_ROOT_BLOCK;
@@ -244,11 +238,11 @@ functions as macros
 
 /* return pointer to first array element */
 #define array_base_no_checks(pc_array_handle, __base_type) ( \
-    ((__base_type *) (array_blockc_no_checks(pc_array_handle)->p_any)) )
+    ((__base_type *) (array_blockc_no_checks(pc_array_handle)->p_data)) )
 
 /* return const pointer to first array element */
 #define array_basec_no_checks(pc_array_handle, __base_type) ( \
-    ((const __base_type *) (array_blockc_no_checks(pc_array_handle)->p_any)) )
+    ((const __base_type *) (array_blockc_no_checks(pc_array_handle)->p_data)) )
 
 /* return const pointer to array block for given handle - NB. for internal use only */
 #define array_blockc_no_checks(pc_array_handle) ( \
@@ -267,12 +261,18 @@ functions as macros
     array_block_element_size(array_blockc_no_checks(pc_array_handle)) )
 
 /* return pointer to array element - NB. pc_array_handle must point to a valid handle */
-#define array_ptr_no_checks(pc_array_handle, __base_type, ele) ( \
-    ((__base_type *) array_blockc_no_checks(pc_array_handle)->p_any) + (ele) )
+#define array_ptr_no_checks(pc_array_handle, __base_type, ele_index) ( \
+    ((__base_type *) array_blockc_no_checks(pc_array_handle)->p_data) + (ele_index) )
+
+#define array_ptr32_no_checks(pc_array_handle, __base_type, ele_index) ( \
+    ((__base_type *) array_blockc_no_checks(pc_array_handle)->p_data) + (ele_index) )
 
 /* return const pointer to array element */
-#define array_ptrc_no_checks(pc_array_handle, __base_type, ele) ( \
-    ((const __base_type *) array_blockc_no_checks(pc_array_handle)->p_any) + (ele) )
+#define array_ptrc_no_checks(pc_array_handle, __base_type, ele_offset) ( \
+    ((const __base_type *) array_blockc_no_checks(pc_array_handle)->p_data) + (ele_offset) )
+
+#define array_ptr32c_no_checks(pc_array_handle, __base_type, ele_offset) ( \
+    ((const __base_type *) array_blockc_no_checks(pc_array_handle)->p_data) + (ele_offset) )
 
 #if CHECKING
 
@@ -280,63 +280,119 @@ functions as macros
 
 _Check_return_
 _Ret_/*opt_*/
-extern P_ANY
-_array_base_check(
+extern P_BYTE /* may be P_BYTE_NONE */
+array_base_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle);
 
 #define array_base(pc_array_handle, __base_type) \
-    ((__base_type *) _array_base_check(pc_array_handle))
+    ((__base_type *) array_base_check(pc_array_handle))
 
 #define array_basec(pc_array_handle, __base_type) \
-    ((const __base_type *) _array_base_check(pc_array_handle))
+    ((const __base_type *) array_base_check(pc_array_handle))
 
 /* return pointer to array block for given handle - NB. for internal use only */
 
 _Check_return_
-_Ret_/*opt_*/
+_Ret_ /* may be P_ARRAY_BLOCK_NONE */
 extern PC_ARRAY_BLOCK
-_array_block(
+array_block_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle);
 
 #define array_blockc(pc_array_handle) \
-    _array_block(pc_array_handle)
+    array_block_check(pc_array_handle)
 
 /* return number of used elements in array */
 
 _Check_return_
 extern ARRAY_INDEX
-_array_elements_check(
+array_elements_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle);
 
 #define array_elements(pc_array_handle) \
-    _array_elements_check(pc_array_handle)
+    array_elements_check(pc_array_handle)
 
 #define array_elements32(pc_array_handle) \
-    (U32) _array_elements_check(pc_array_handle)
+    (U32) array_elements_check(pc_array_handle)
 
 /* return pointer to array element */
 
 _Check_return_
-_Ret_/*opt_*/
-extern PC_ARRAY_BLOCK
-_array_ptr_check(
+_Ret_writes_(ele_size)
+extern P_BYTE /* may be P_BYTE_NONE */
+array_ptr_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
-    _InVal_     ARRAY_INDEX ele);
+    _InVal_     ARRAY_INDEX ele_index,
+    _InVal_     U32 ele_size);
 
-#define array_ptr(pc_array_handle, __base_type, ele) ( \
-    ((__base_type *) _array_ptr_check(pc_array_handle, (ele))->p_any) + (ele) )
+#define array_ptr(pc_array_handle, __base_type, ele_index) ( \
+    ((__base_type *) array_ptr_check(pc_array_handle, (ele_index), sizeof32(__base_type))) )
 
-#define array_ptrc(pc_array_handle, __base_type, ele) ( \
-    ((const __base_type *) _array_ptr_check(pc_array_handle, (ele))->p_any) + (ele) )
+#define array_ptrc(pc_array_handle, __base_type, ele_index) ( \
+    ((const __base_type *) array_ptr_check(pc_array_handle, (ele_index), sizeof32(__base_type))) )
+
+_Check_return_
+_Ret_writes_(ele_size)
+extern P_BYTE /* may be P_BYTE_NONE */
+array_ptr32_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     U32 ele_offset,
+    _InVal_     U32 ele_size);
+
+#define array_ptr32(pc_array_handle, __base_type, ele_offset) ( \
+    ((__base_type *) array_ptr32_check(pc_array_handle, (ele_offset), sizeof32(__base_type))) )
+
+#define array_ptr32c(pc_array_handle, __base_type, ele_offset) ( \
+    ((const __base_type *) array_ptr32_check(pc_array_handle, (ele_offset), sizeof32(__base_type))) )
+
+/* return pointer to n array elements of specified ele_size at given offset */
+_Check_return_
+_Ret_writes_(total_n_bytes) /* may be P_BYTE_NONE */
+extern P_BYTE
+array_range_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     ARRAY_INDEX ele_index,
+    _InVal_     U32 ele_size
+    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) );
+
+_Check_return_
+_Ret_writes_(total_n_bytes) /* may be P_BYTE_NONE */
+extern PC_BYTE
+array_rangec_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     ARRAY_INDEX ele_index,
+    _InVal_     U32 ele_size
+    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) );
+
+/* return pointer to n array elements at given offset - NB. p_handle must point to a valid handle */
+#define array_range(pc_array_handle, __base_type, ele_index, n_elements) \
+    ((__base_type *) array_range_check(pc_array_handle, (ele_index), sizeof32(__base_type) PREFAST_ONLY_ARG(sizeof32(__base_type) * (n_elements))))
+
+#define array_rangec(pc_array_handle, __base_type, ele_index, n_elements) \
+    ((const __base_type *) array_rangec_check(pc_array_handle, (ele_index), sizeof32(__base_type) PREFAST_ONLY_ARG(sizeof32(__base_type) * (n_elements))))
+
+#define array_range_generic(pc_array_handle, ele_size, ele_index, n_elements) \
+    ((P_ANY) array_range_check(pc_array_handle, (ele_index), ele_size PREFAST_ONLY_ARG(ele_size * (n_elements))))
+
+/* return pointer to n bytes at given offset */
+_Check_return_
+_Ret_writes_(n_bytes) /* may be P_BYTE_NONE */
+extern P_BYTE
+array_range_bytes_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     U32 byte_offset
+    PREFAST_ONLY_ARG(_InVal_ U32 n_bytes) );
+
+#define array_range_bytes(pc_array_handle, __ptr_type, byte_offset, n_bytes) \
+    ((__ptr_type) array_range_bytes_check(pc_array_handle, (byte_offset) PREFAST_ONLY_ARG(n_bytes)))
 
 #else /* NOT CHECKING */
 
 /* return pointer to first array element */
 #define array_base(pc_array_handle, __base_type) ( \
-    ((__base_type *) (array_blockc(pc_array_handle)->p_any)) )
+    ((__base_type *) (array_blockc(pc_array_handle)->p_data)) )
 
 #define array_basec(pc_array_handle, __base_type) ( \
-    ((const __base_type *) (array_blockc(pc_array_handle)->p_any)) )
+    ((const __base_type *) (array_blockc(pc_array_handle)->p_data)) )
 
 /* return const pointer to array block for given handle - NB. for internal use only */
 #define array_blockc(pc_array_handle) ( \
@@ -351,11 +407,30 @@ _array_ptr_check(
     (U32) array_blockc(pc_array_handle)->free )
 
 /* return pointer to array element - NB. pc_array_handle must point to a valid handle */
-#define array_ptr(pc_array_handle, __base_type, ele) ( \
-    ((__base_type *) array_blockc(pc_array_handle)->p_any) + (ele) )
+#define array_ptr(pc_array_handle, __base_type, ele_index) ( \
+    ((__base_type *) array_blockc(pc_array_handle)->p_data) + (ele_index) )
 
-#define array_ptrc(pc_array_handle, __base_type, ele) ( \
-    ((const __base_type *) array_blockc(pc_array_handle)->p_any) + (ele) )
+#define array_ptrc(pc_array_handle, __base_type, ele_index) ( \
+    ((const __base_type *) array_blockc(pc_array_handle)->p_data) + (ele_index) )
+
+#define array_ptr32(pc_array_handle, __base_type, ele_offset) ( \
+    ((__base_type *) array_blockc(pc_array_handle)->p_data) + (ele_offset) )
+
+#define array_ptr32c(pc_array_handle, __base_type, ele_offset) ( \
+    ((const __base_type *) array_blockc(pc_array_handle)->p_data) + (ele_offset) )
+
+/* return pointer to n array elements at given offset - NB. p_handle must point to a valid handle */
+#define array_range(pc_array_handle, __base_type, ele_index, n_elements) \
+    array_ptr(pc_array_handle, __base_type, ele_index)
+
+#define array_rangec(pc_array_handle, __base_type, ele_index, n_elements) \
+    array_ptrc(pc_array_handle, __base_type, ele_index)
+
+#define array_range_generic(p_handle, ele_size, ele_index, n_elements) \
+    PtrAddBytes(P_ANY, array_blockc(pc_array_handle)->p_data, (ele_index) * (ele_size))
+
+#define array_range_bytes(pc_array_handle, __ptr_type, byte_offset, n_bytes) \
+    PtrAddBytes(__ptr_type, array_blockc(pc_array_handle)->p_data, byte_offset)
 
 #endif /* CHECKING */
 
@@ -368,8 +443,11 @@ _array_ptr_check(
     (U32) *(pc_array_handle) < array_root.free )
 
 /* return whether given index is valid in array */
-#define array_index_valid(pc_array_handle, ele) ( \
-    (U32) (ele) < array_elements32(pc_array_handle) )
+#define array_index_valid(pc_array_handle, ele_index) ( \
+    (U32) (ele_index) < array_elements32(pc_array_handle) )
+
+#define array_offset_valid(pc_array_handle, ele_offset) ( \
+    (U32) (ele_offset) < array_elements32(pc_array_handle) )
 
 /* return the element index of a pointer to an element in an array */
 #define array_indexof_element(p_handle, __base_type, ptr) ( \
@@ -383,7 +461,7 @@ _array_ptr_check(
 block passed to al_array_alloc/realloc
 */
 
-typedef struct _array_init_block
+typedef struct ARRAY_INIT_BLOCK
 {
     ARRAY_INDEX size_increment;     /* number of array elements to allocate at a time */
     U32         element_size;       /* sizeof32() the type stored */
@@ -418,7 +496,7 @@ _e_s S32 \
 _proc_name( \
     P_ANY p_any)
 
-typedef struct _al_garbage_flags
+typedef struct AL_GARBAGE_FLAGS
 {
     UBF remove_deleted : 1;
     UBF shrink : 1;
@@ -431,14 +509,11 @@ typedef struct _al_garbage_flags
 AL_GARBAGE_FLAGS, * P_AL_GARBAGE_FLAGS;
 
 #define AL_GARBAGE_FLAGS_INIT \
-    { 0, 0, 0,  0, 0, 0, 0 }
+    { 0, 0, 0,  0, 0, 0, 0 } /* this aggregate initialiser gives poor code on Norcroft */
 
-#if defined(UNUSED)
-
-#define AL_GARBAGE_FLAGS_CLEAR(p_al_garbage_flags) \
-    * (P_U32) p_al_garbage_flags = 0
-
-#endif /* UNUSED */
+/* better to do by hand on Norcroft */
+#define AL_GARBAGE_FLAGS_CLEAR(flags) \
+    zero_32(flags)
 
 /*
 exported data
@@ -471,7 +546,7 @@ _al_array_add(
     PREFAST_ONLY_ARG((num_elements) * sizeof32(__base_type)))
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem_x_num_elem)
+_Ret_writes_maybenull_(bytesof_elem_x_num_elem)
 extern P_BYTE
 _al_array_alloc(
     _OutRef_    P_ARRAY_HANDLE p_array_handle,
@@ -514,8 +589,8 @@ _al_array_bfind(
     PREFAST_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem)
-extern P_ANY
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
 _al_array_bsearch(
     _In_        PC_ANY key,
     _InRef_     PC_ARRAY_HANDLE p_array_handle,
@@ -527,8 +602,8 @@ _al_array_bsearch(
     PREFAST_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem)
-extern P_ANY
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
 _al_array_lsearch(
     _In_        PC_ANY key,
     _InRef_     P_ARRAY_HANDLE p_array_handle,
@@ -540,20 +615,15 @@ _al_array_lsearch(
     PREFAST_ONLY_ARG(sizeof32(__base_type))) )
 
 extern void
-__al_array_free(
-    _InVal_     ARRAY_HANDLE array_handle);
+_al_array_dispose(
+    _InoutRef_  P_ARRAY_HANDLE p_array_handle);
 
 static inline void
 al_array_dispose(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle)
 {
-    ARRAY_HANDLE array_handle = *p_array_handle;
-
-    if(0 != array_handle)
-    {
-        *p_array_handle = 0;
-        __al_array_free(array_handle);
-    }
+    if(0 != *p_array_handle)
+        _al_array_dispose(p_array_handle);
 }
 
 _Check_return_
@@ -586,7 +656,7 @@ al_array_delete_at(
     _InVal_     ARRAY_INDEX delete_at);
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem_x_num_elem)
+_Ret_writes_maybenull_(bytesof_elem_x_num_elem)
 extern P_BYTE
 _al_array_insert_before(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
@@ -611,7 +681,7 @@ al_array_check_sorted(
     _In_        P_PROC_QSORT p_proc_compare_qsort);
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem_x_num_elem)
+_Ret_writes_maybenull_(bytesof_elem_x_num_elem)
 extern P_BYTE
 _al_array_extend_by(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
@@ -658,7 +728,7 @@ al_array_trim(
 #if WINDOWS
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(dwBytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(dwBytes, 0) /* may be NULL */
 extern P_BYTE
 GlobalAllocAndLock(
     _InVal_     UINT uFlags,
@@ -682,19 +752,42 @@ simply-typed variants of ARRAY_HANDLE
 #define    ARRAY_HANDLE_L1STR    ARRAY_HANDLE
 #define  P_ARRAY_HANDLE_L1STR  P_ARRAY_HANDLE
 
-#define    ARRAY_HANDLE_USTR     ARRAY_HANDLE
-#define  P_ARRAY_HANDLE_USTR   P_ARRAY_HANDLE
-#define PC_ARRAY_HANDLE_USTR  PC_ARRAY_HANDLE
+#define    ARRAY_HANDLE_UCHARS    ARRAY_HANDLE
+#define  P_ARRAY_HANDLE_UCHARS  P_ARRAY_HANDLE
+#define PC_ARRAY_HANDLE_UCHARS PC_ARRAY_HANDLE
+
+#define uchars_from_h_uchars(pc_array_handle_uchars) \
+    array_basec(pc_array_handle_uchars, _UCHARS)
+
+#define    ARRAY_HANDLE_USTR     ARRAY_HANDLE_UCHARS
+#define  P_ARRAY_HANDLE_USTR   P_ARRAY_HANDLE_UCHARS
+#define PC_ARRAY_HANDLE_USTR  PC_ARRAY_HANDLE_UCHARS
+
+#define ustr_from_h_ustr(pc_array_handle_ustr) \
+    array_basec(pc_array_handle_ustr, _UCHARZ)
 
 #define array_ustr(pc_array_handle_ustr) \
-    array_basec(pc_array_handle_ustr, UCHARZ)
+    ustr_from_h_ustr(pc_array_handle_ustr)
 
 #define    ARRAY_HANDLE_TSTR     ARRAY_HANDLE
 #define  P_ARRAY_HANDLE_TSTR   P_ARRAY_HANDLE
 #define PC_ARRAY_HANDLE_TSTR  PC_ARRAY_HANDLE
 
-#define array_tstr(pc_array_handle_tstr) \
+#define tstr_from_h_tstr(pc_array_handle_tstr) \
     array_basec(pc_array_handle_tstr, TCHARZ)
+
+#define array_tstr(pc_array_handle_tstr) \
+    tstr_from_h_tstr(pc_array_handle_tstr)
+
+#define    ARRAY_HANDLE_WSTR     ARRAY_HANDLE
+#define  P_ARRAY_HANDLE_WSTR   P_ARRAY_HANDLE
+#define PC_ARRAY_HANDLE_WSTR  PC_ARRAY_HANDLE
+
+#define wstr_from_h_wstr(pc_array_handle_wstr) \
+    array_basec(pc_array_handle_wstr, WCHARZ)
+
+#define array_wstr(pc_array_handle_wstr) \
+    wstr_from_h_wstr(pc_array_handle_wstr)
 
 #endif /* __aligator_h */
 

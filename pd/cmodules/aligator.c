@@ -17,6 +17,10 @@
 internal functions
 */
 
+static void
+__al_array_free(
+    _InVal_     ARRAY_HANDLE array_handle);
+
 _Check_return_
 static STATUS
 realloc_array(
@@ -31,7 +35,7 @@ tell_full_event_clients(
 #if TRACE_ALLOWED && defined(AL_PTR_MAP_TO_HANDLE)
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 static P_BYTE
 al_ptr_alloc_us(
     _InVal_     U32 n_bytes,
@@ -42,7 +46,7 @@ al_ptr_free_us(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any);
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 static P_BYTE
 al_ptr_realloc_us(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any,
@@ -150,11 +154,10 @@ aligator_init(void)
     array_root.parms.use_alloc = ALLOC_USE_ALLOC;
 
     array_root.element_size = sizeof32(ARRAY_BLOCK);
-    array_root.size_increment = 256;
 #else
     array_root.parms.packed_element_size = (UBF) sizeof32(ARRAY_BLOCK);
-    array_root.parms.packed_size_increment = 256;
 #endif
+    array_root.parms.packed_size_increment = 256;
     trace_1(TRACE_OUT | TRACE_ANY, TEXT("sizeof32(ARRAY_BLOCK) == %d"), sizeof32(ARRAY_BLOCK));
 
 #ifdef ALIGATOR_USE_ALLOC
@@ -171,7 +174,7 @@ aligator_init(void)
     zero_struct_ptr(p_array_block);
 
 #if 1
-    p_array_block->p_any = P_DATA_NONE;
+    p_array_block->p_data = P_BYTE_NONE;
 #endif
     } /*block*/
 
@@ -195,7 +198,7 @@ aligator_exit(void)
 #if TRACE_ALLOWED && defined(AL_PTR_MAP_TO_HANDLE)
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _al_ptr_alloc(
     _InVal_     U32 n_bytes,
@@ -221,7 +224,7 @@ _al_ptr_alloc(
 }
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 static P_BYTE
 al_ptr_alloc_us(
     _InVal_     U32 n_bytes,
@@ -230,7 +233,7 @@ al_ptr_alloc_us(
 #else
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _al_ptr_alloc(
     _InVal_     U32 n_bytes,
@@ -246,7 +249,7 @@ _al_ptr_alloc(
 
     for(;;)
     {
-        P_BYTE p_byte_malloc = alloc_malloc(n_bytes);
+        P_BYTE p_byte_malloc = (P_BYTE) alloc_malloc(n_bytes);
 
         if(NULL != p_byte_malloc)
         {
@@ -265,12 +268,12 @@ _al_ptr_alloc(
 /******************************************************************************
 *
 * allocate a block of memory, returning a pointer
-* but also clearing the contents of the block to NULLCH
+* but also clearing the contents of the block to zero
 *
 ******************************************************************************/
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(n_bytes) /* may be NULL */
+_Ret_writes_maybenull_(n_bytes) /* may be NULL */
 extern P_BYTE
 _al_ptr_calloc(
     _InVal_     U32 n_bytes,
@@ -334,7 +337,7 @@ al_ptr_free(
 #if TRACE_ALLOWED && defined(AL_PTR_MAP_TO_HANDLE)
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _al_ptr_realloc(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any,
@@ -380,7 +383,7 @@ _al_ptr_realloc(
 }
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 static P_BYTE
 al_ptr_realloc_us(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any,
@@ -390,7 +393,7 @@ al_ptr_realloc_us(
 #else
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes, 0) /* may be NULL */
 extern P_BYTE
 _al_ptr_realloc(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any,
@@ -411,7 +414,7 @@ _al_ptr_realloc(
 
     for(;;)
     {
-        P_BYTE p_byte_realloc = alloc_realloc(p_any, n_bytes);
+        P_BYTE p_byte_realloc = (P_BYTE) alloc_realloc(p_any, n_bytes);
 
         if(NULL != p_byte_realloc)
         {
@@ -463,7 +466,7 @@ _al_array_add(
 ******************************************************************************/
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem_x_num_elem)
+_Ret_writes_maybenull_(bytesof_elem_x_num_elem)
 extern P_BYTE
 _al_array_alloc(
     _OutRef_    P_ARRAY_HANDLE p_array_handle,
@@ -476,7 +479,7 @@ _al_array_alloc(
 
     *p_status = STATUS_OK;
 
-    PREFAST_ONLY_IGNOREPARM_InVal_(bytesof_elem_x_num_elem);
+    PREFAST_ONLY(IGNOREPARM_InVal_(bytesof_elem_x_num_elem));
 
     /* first of all, acquire a handle */
     if(0 != next_free_block)
@@ -509,11 +512,11 @@ _al_array_alloc(
     ARRAY_INDEX array_index;
     P_BYTE p_byte;
 
-    p_array_block->p_any = P_DATA_NONE;
-    p_array_block->free  = 0;
-    p_array_block->size  = 0;
+    p_array_block->p_data = P_BYTE_NONE;
+    p_array_block->free = 0;
+    p_array_block->size = 0;
 
-    assert(p_array_init_block != NULL);
+    PTR_ASSERT(p_array_init_block);
 
     p_array_block->parms.auto_compact     = 0;
     p_array_block->parms.compact_off      = 0;
@@ -523,12 +526,11 @@ _al_array_alloc(
     p_array_block->parms.use_alloc        = (UBF) p_array_init_block->use_alloc;
 #endif
 #if WINDOWS
-    p_array_block->element_size                 = (0 != p_array_init_block->element_size)   ? p_array_init_block->element_size   : 1;
-    p_array_block->size_increment               = (0 != p_array_init_block->size_increment) ? p_array_init_block->size_increment : 1;
-#elif RISCOS
+    p_array_block->element_size                 = (0 != p_array_init_block->element_size)   ?       p_array_init_block->element_size   : 1;
+#else
     p_array_block->parms.packed_element_size    = (0 != p_array_init_block->element_size)   ? (UBF) p_array_init_block->element_size   : 1;
-    p_array_block->parms.packed_size_increment  = (0 != p_array_init_block->size_increment) ? (UBF) p_array_init_block->size_increment : 1;
 #endif
+    p_array_block->parms.packed_size_increment  = (0 != p_array_init_block->size_increment) ? (UBF) p_array_init_block->size_increment : 1;
 
     /* now acquire some memory to go with this handle iff non-zero amount requested */
     if(0 == num_elements)
@@ -542,7 +544,7 @@ _al_array_alloc(
         return(NULL);
     }
 
-    p_byte = PtrAddBytes(P_BYTE, p_array_block->p_any, (array_index * array_block_element_size(p_array_block)));
+    p_byte = PtrAddBytes(P_BYTE, p_array_block->p_data, (array_index * array_block_element_size(p_array_block)));
 
     trace_4(TRACE_MODULE_ALLOC, TEXT("al_array_alloc(n:") U32_TFMT TEXT(" es:") U32_TFMT TEXT(") yields *h:") S32_TFMT TEXT(" -> ") PTR_XTFMT,
             num_elements, p_array_init_block->element_size, *p_array_handle, p_byte);
@@ -657,15 +659,15 @@ _al_array_bfind(
 #endif /* UNUSED_IN_PD */
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem)
-extern P_ANY
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
 _al_array_bsearch(
     _In_        PC_ANY key,
     _InRef_     PC_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch
     PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
-    P_ANY p_any = P_DATA_NONE;
+    P_BYTE p_data = P_DATA_NONE;
 
     if(!array_handle_valid(p_array_handle))
     {
@@ -673,36 +675,36 @@ _al_array_bsearch(
         return(P_DATA_NONE);
     }
 
-    if(*p_array_handle)
-    {
-        PREFAST_ONLY_ASSERT(bytesof_elem == array_element_size32_no_checks(p_array_handle));
+    if(0 == array_elements32_no_checks(p_array_handle))
+        return(P_DATA_NONE);
+        
+    PREFAST_ONLY_ASSERT(bytesof_elem == array_element_size32_no_checks(p_array_handle));
 
-        p_any =
-            bsearch(key,
-                    array_basec_no_checks(p_array_handle, void),
-                    array_elements32_no_checks(p_array_handle),
-                    array_element_size32_no_checks(p_array_handle),
-                    p_proc_bsearch);
+    p_data =
+        bsearch(key,
+                array_basec_no_checks(p_array_handle, void),
+                array_elements32_no_checks(p_array_handle),
+                array_element_size32_no_checks(p_array_handle),
+                p_proc_bsearch);
 
-        if(NULL == p_any)
-            p_any = P_DATA_NONE;
-    }
+    if(NULL == p_data)
+        return(P_DATA_NONE);
 
-    return(p_any);
+    return(p_data);
 }
 
 #if defined(UNUSED_IN_PD)
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem)
-extern P_ANY
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
 _al_array_lsearch(
     _In_        PC_ANY key,
     _InRef_     P_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch
     PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
-    P_ANY p_any = P_DATA_NONE;
+    P_BYTE p_data = P_DATA_NONE;
 
     if(!array_handle_valid(p_array_handle))
     {
@@ -710,23 +712,42 @@ _al_array_lsearch(
         return(P_DATA_NONE);
     }
 
-    if(*p_array_handle)
-    {
-        p_any =
-            _lsearch(key,
-                     array_basec_no_checks(p_array_handle, void),
-                     array_elements32_no_checks(p_array_handle),
-                     array_element_size32_no_checks(p_array_handle),
-                     p_proc_bsearch);
+    if(0 == array_elements32_no_checks(p_array_handle))
+        return(P_DATA_NONE);
 
-        if(NULL == p_any)
-            p_any = P_DATA_NONE;
-    }
+    p_data =
+        _lsearch(key,
+                 array_basec_no_checks(p_array_handle, void),
+                 array_elements32_no_checks(p_array_handle),
+                 array_element_size32_no_checks(p_array_handle),
+                 p_proc_bsearch);
 
-    return(p_any);
+    if(NULL == p_data)
+        return(P_DATA_NONE);
+
+    return(p_data);
 }
 
 #endif /* UNUSED_IN_PD */
+
+/******************************************************************************
+*
+* dispose of an array
+*
+******************************************************************************/
+
+extern void
+_al_array_dispose(
+    _InoutRef_  P_ARRAY_HANDLE p_array_handle)
+{
+    ARRAY_HANDLE array_handle = *p_array_handle;
+
+    if(0 != array_handle)
+    {
+        *p_array_handle = 0;
+        __al_array_free(array_handle);
+    }
+}
 
 /******************************************************************************
 *
@@ -743,7 +764,7 @@ al_array_duplicate(
     STATUS status;
     ARRAY_INIT_BLOCK array_init_block;
     S32 n_elements;
-    P_ANY p_any;
+    P_BYTE p_data;
     PC_ARRAY_BLOCK pc_src_array_block;
     BOOL src_auto_compact;
 
@@ -772,17 +793,17 @@ al_array_duplicate(
     array_init_block.use_alloc        = ALLOC_USE_ALLOC;
 #endif
 
-    p_any = _al_array_alloc(p_dup_array_handle, n_elements, &array_init_block, &status PREFAST_ONLY_ARG(n_elements * array_init_block.element_size));
+    p_data = _al_array_alloc(p_dup_array_handle, n_elements, &array_init_block, &status PREFAST_ONLY_ARG(n_elements * array_init_block.element_size));
 
     /* NB can have handles with no memory */
     if(0 == *p_dup_array_handle)
         return(status);
 
-    if(p_any && n_elements)
+    if(p_data && n_elements)
     {
         const U32 n_bytes = n_elements * array_init_block.element_size;
         PC_BYTE p_src = array_basec_no_checks(pc_src_array_handle, BYTE);
-        memcpy32(p_any, p_src, n_bytes);
+        memcpy32(p_data, p_src, n_bytes);
     }
 
     if(src_auto_compact)
@@ -813,7 +834,7 @@ al_array_empty(
 *
 ******************************************************************************/
 
-extern void
+static void
 __al_array_free(
     _InVal_     ARRAY_HANDLE array_handle)
 {
@@ -848,12 +869,12 @@ __al_array_free(
 #endif
 
     /* free the array itself */
-    if(P_DATA_NONE != p_array_block->p_any)
+    if(P_BYTE_NONE != p_array_block->p_data)
     {
 #if WINDOWS
         if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            HGLOBAL hglobal = GlobalHandle(p_array_block->p_any);
+            HGLOBAL hglobal = GlobalHandle(p_array_block->p_data);
             assert(hglobal);
             if(NULL != hglobal)
             {
@@ -863,22 +884,22 @@ __al_array_free(
         }
         else if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
         {
-            dsapplib_ptr_free(p_array_block->p_any);
+            dsapplib_ptr_free(p_array_block->p_data);
         }
         else /* if(ALLOC_USE_ALLOC == p_array_block->parms.use_alloc) */
 #endif
         {
-            al_ptr_free_us(p_array_block->p_any);
+            al_ptr_free_us(p_array_block->p_data);
         }
 
-        p_array_block->p_any = P_DATA_NONE;
+        p_array_block->p_data = P_BYTE_NONE;
     }
 
 #if CHECKING
     zero_struct_ptr(p_array_block);
 
     /* ensure subsequent references go sprong (and tells us which handle ref'd too!) */
-    p_array_block->p_any = BAD_POINTER_X(P_ANY, array_handle);
+    p_array_block->p_data = BAD_POINTER_X(P_BYTE, array_handle);
 #endif
 
     /* mark entry re-usable */
@@ -926,7 +947,7 @@ al_array_garbage_collect(
         {
             U32 element_size = array_block_element_size(p_array_block);
             ARRAY_INDEX new_free = element_start; /* size we'd be if all after element_start got trimmed off */
-            P_U8 p_out = (P_U8) p_array_block->p_any + (element_start * element_size);
+            P_U8 p_out = PtrAddBytes(P_U8, p_array_block->p_data, (element_start * element_size));
             P_U8 p_in = p_out;
             ARRAY_INDEX i;
 
@@ -969,7 +990,7 @@ al_array_garbage_collect(
 #endif /* WINDOWS */
             {
                 STATUS status;
-                p_array_block->p_any = al_ptr_realloc_us(p_array_block->p_any, p_array_block->free * array_block_element_size(p_array_block), &status);
+                p_array_block->p_data = al_ptr_realloc_us(p_array_block->p_data, p_array_block->free * array_block_element_size(p_array_block), &status);
                 p_array_block->size = p_array_block->free;
                 IGNOREPARM(status);
             }
@@ -1040,7 +1061,7 @@ al_array_handle_check(
             trace_1(TRACE_OUT | TRACE_ANY, S32_TFMT TEXT(" handles not freed"), count);
 
 #if 0 /* <<< enable this to debug which handles have gone walkabout */
-            if(!__myasserted_msg(TEXT("al_array_handle_check"), TEXT(__FILE__), __LINE__, TEXT("OK to list, Cancel to continue."), S32_TFMT TEXT(" handles not freed"), count))
+            if(!__myasserted_msg(TEXT("al_array_handle_check"), __TFILE__, __LINE__, TEXT("OK to list, Cancel to continue."), S32_TFMT TEXT(" handles not freed"), count))
                 break;
 #endif
         }
@@ -1059,7 +1080,6 @@ al_array_delete_at(
 {
     P_ARRAY_BLOCK p_array_block;
     S32 cur_elements;
-    P_ANY p_any;
 
 #if CHECKING
     if(!array_handle_valid(p_array_handle) && (0 != *p_array_handle))
@@ -1105,12 +1125,10 @@ al_array_delete_at(
         if(move_elements) /* copy current contents down */
         {
             const U32 element_size = array_block_element_size(p_array_block);
-            P_ANY p_dst;
+            P_ANY p_dst = (P_U8) p_array_block->p_data + (delete_at * element_size);
+            P_ANY p_src = (P_U8) p_dst + (delete_elements * element_size);
 
-            p_dst = (P_U8) p_array_block->p_any + (delete_at * element_size);
-            p_any = (P_U8) p_dst + (delete_elements * element_size);
-
-            memmove32(p_dst, p_any, move_elements * element_size);
+            memmove32(p_dst, p_src, move_elements * element_size);
         }
 
         assert(p_array_block->free + num_elements >= 0); /* another case of shrinking realloc */
@@ -1119,7 +1137,7 @@ al_array_delete_at(
 }
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem_x_num_elem)
+_Ret_writes_maybenull_(bytesof_elem_x_num_elem)
 extern P_BYTE
 _al_array_insert_before(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
@@ -1147,7 +1165,7 @@ _al_array_insert_before(
 
     /* NB. don't use insert with 0 elements to allocate a handle without memory - use alloc. this realloc simply returns the current pointer, if any */
     if(0 == num_elements)
-        return(p_array_block->p_any);
+        return(p_array_block->p_data);
 
 #if CHECKING
     if(p_array_block->parms.entry_free)
@@ -1186,7 +1204,7 @@ _al_array_insert_before(
     if(status_fail(*p_status = realloc_array(p_array_block, num_elements, &dummy_array_index))) /* don't want the result of the realloc here */
         return(NULL);
 
-    p_byte = PtrAddBytes(P_BYTE, p_array_block->p_any, (insert_before * element_size));
+    p_byte = PtrAddBytes(P_BYTE, p_array_block->p_data, (insert_before * element_size));
 
     if(move_elements) /* copy current contents up */
     {
@@ -1246,7 +1264,7 @@ al_array_check_sorted(
 ******************************************************************************/
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(bytesof_elem_x_num_elem)
+_Ret_writes_maybenull_(bytesof_elem_x_num_elem)
 extern P_BYTE
 _al_array_extend_by(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
@@ -1271,7 +1289,7 @@ _al_array_extend_by(
             return(NULL);
         }
 
-        return(array_blockc_no_checks(p_array_handle)->p_any);
+        return(array_blockc_no_checks(p_array_handle)->p_data);
     }
 
     if(0 == *p_array_handle)
@@ -1307,7 +1325,7 @@ _al_array_extend_by(
     if(status_fail(*p_status = realloc_array(p_array_block, add_elements, &array_index)))
         return(NULL);
 
-    p_byte = PtrAddBytes(P_BYTE, p_array_block->p_any, (array_index * array_block_element_size(p_array_block)));
+    p_byte = PtrAddBytes(P_BYTE, p_array_block->p_data, (array_index * array_block_element_size(p_array_block)));
 
     return(p_byte);
     } /*block*/
@@ -1373,7 +1391,7 @@ al_array_resized_hglobal(
 
     p_array_block = array_block_wr_no_checks(p_array_handle);
 
-    p_array_block->p_any = GlobalLock(hglobal);
+    p_array_block->p_data = (P_BYTE) GlobalLock(hglobal);
     p_array_block->free = size;
     p_array_block->size = size;
 }
@@ -1394,7 +1412,7 @@ al_array_resized_ptr(
 
     p_array_block = array_block_wr_no_checks(p_array_handle);
 
-    p_array_block->p_any = p_data;
+    p_array_block->p_data = (P_BYTE) p_data;
     p_array_block->free = size;
     p_array_block->size = size;
 }
@@ -1436,13 +1454,13 @@ al_array_steal_hglobal(
 
         if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            hglobal = GlobalHandle(p_array_block->p_any);
+            hglobal = GlobalHandle(p_array_block->p_data);
             assert(hglobal);
             if(NULL != hglobal)
                 GlobalUnlock(hglobal);
 
             /* mark the handle as stolen */
-            p_array_block->p_any = P_DATA_NONE;
+            p_array_block->p_data = P_BYTE_NONE;
             p_array_block->parms.use_alloc = ALLOC_USE_ALLOC;
         }
 
@@ -1455,6 +1473,59 @@ al_array_steal_hglobal(
     }
 
     return(hglobal);
+}
+
+#endif /* WINDOWS */
+
+#if WINDOWS
+
+_Check_return_
+_Ret_writes_to_maybenull_(dwBytes, 0) /* may be NULL */
+extern P_BYTE
+GlobalAllocAndLock(
+    _InVal_     UINT uFlags,
+    _InVal_     U32 dwBytes,
+    _Out_       HGLOBAL * const p_hGlobal)
+{
+    HGLOBAL hGlobal = GlobalAlloc(uFlags, dwBytes);
+
+    *p_hGlobal = hGlobal;
+
+    if(NULL == hGlobal)
+    {
+        void_WrapOsBoolChecking(NULL != hGlobal);
+        return(NULL);
+    }
+
+    return((P_BYTE) GlobalLock(hGlobal));
+}
+
+_Check_return_
+_Ret_writes_to_maybenull_(dwBytes, 0) /* may be NULL */
+static P_BYTE
+GlobalReAllocAndLock(
+    _InVal_     UINT uFlags,
+    _InVal_     U32 dwBytes,
+    _Inout_     HGLOBAL * const p_hGlobal)
+{
+    HGLOBAL hGlobal;
+
+    if(0 == *p_hGlobal)
+        return(GlobalAllocAndLock(uFlags, dwBytes, p_hGlobal));
+
+    hGlobal = GlobalReAlloc(*p_hGlobal, dwBytes, uFlags);
+
+    if(NULL == hGlobal)
+    {
+        void_WrapOsBoolChecking(NULL != hGlobal);
+        /* failed to reallocate so better nail the old core back in place (old handle still valid) */
+        (void) GlobalLock(*p_hGlobal);
+        return(NULL);
+    }
+
+    *p_hGlobal = hGlobal;
+
+    return((P_BYTE) GlobalLock(hGlobal));
 }
 
 #endif /* WINDOWS */
@@ -1476,64 +1547,43 @@ al_array_trim(
     if(p_array_block->size != p_array_block->free)
     {
         /* shrink allocation to fit desired size */
+        const U32 n_bytes = p_array_block->free * array_block_element_size(p_array_block);
+        P_BYTE p_new_array;
+
 #if WINDOWS
         if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            HGLOBAL hglobal = GlobalHandle(p_array_block->p_any);
-            assert(hglobal);
+            HGLOBAL hglobal = GlobalHandle(p_array_block->p_data);
+
             if(NULL != hglobal)
             {
                 GlobalUnlock(hglobal);
-
-                hglobal = GlobalReAlloc(hglobal, p_array_block->free * array_block_element_size(p_array_block), GMEM_MOVEABLE);
-
+                p_new_array = GlobalReAllocAndLock(GMEM_MOVEABLE, p_array_block->free * array_block_element_size(p_array_block), &hglobal);
+            }
+            else
+            {
                 assert(hglobal);
-                if(NULL != hglobal)
-                    p_array_block->p_any = GlobalLock(hglobal);
+                p_new_array = NULL;
             }
         }
         else if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
         {
             STATUS status;
-            p_array_block->p_any = _dsapplib_ptr_realloc(p_array_block->p_any, p_array_block->free * array_block_element_size(p_array_block), &status);
+            p_new_array = _dsapplib_ptr_realloc(p_array_block->p_data, n_bytes, &status);
             IGNOREPARM(status);
         }
         else /* if(ALLOC_USE_ALLOC == p_array_block->parms.use_alloc) */
 #endif /* WINDOWS */
         {
             STATUS status;
-            p_array_block->p_any = al_ptr_realloc_us(p_array_block->p_any, p_array_block->free * array_block_element_size(p_array_block), &status);
+            p_new_array = al_ptr_realloc_us(p_array_block->p_data, n_bytes, &status);
             IGNOREPARM(status);
         }
 
         p_array_block->size = p_array_block->free;
+        p_array_block->p_data = p_new_array;
     }
 }
-
-#if WINDOWS
-
-_Check_return_
-_Ret_writes_bytes_to_maybenull_(dwBytes, 0) /* may be NULL */
-extern P_BYTE
-GlobalAllocAndLock(
-    _InVal_     UINT uFlags,
-    _InVal_     U32 dwBytes,
-    _Out_       HGLOBAL * const p_hGlobal)
-{
-    HGLOBAL hGlobal = GlobalAlloc(uFlags, dwBytes);
-
-    *p_hGlobal = hGlobal;
-
-    if(NULL == hGlobal)
-    {
-        void_WrapOsBoolChecking(NULL != hGlobal);
-        return(NULL);
-    }
-
-    return((P_BYTE) GlobalLock(hGlobal));
-}
-
-#endif /* WINDOWS */
 
 /*
 full event clients
@@ -1541,7 +1591,7 @@ full event clients
 
 static ARRAY_HANDLE h_full_clients;
 
-typedef struct _full_event_client
+typedef struct FULL_EVENT_CLIENT
 {
     P_PROC_AL_FULL_EVENT proc;
 }
@@ -1624,7 +1674,8 @@ realloc_array(
     if(num_elements > p_array_block->size - cur_free)
     {
         S32 extra = MAX(num_elements, (S32) array_block_size_increment(p_array_block));
-        P_ANY p_new_array;
+        const U32 n_bytes = (p_array_block->size + extra) * array_block_element_size(p_array_block);
+        P_BYTE p_new_array;
 
         /* prevent auto compaction compacting us */
         p_array_block->parms.compact_off = 1;
@@ -1632,15 +1683,11 @@ realloc_array(
 #if WINDOWS
         if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            const DWORD n_bytes = ((DWORD) p_array_block->size + extra) * array_block_element_size(p_array_block);
             HGLOBAL hglobal = NULL;
 
-#if CHECKING
-            if(IS_BAD_POINTER(p_array_block->p_any)) /* might be reusing debug mutilated one */
-                p_array_block->p_any = P_DATA_NONE; /* restore sanity for clarity */
-#endif
+            CHECKING_ONLY(if(IS_BAD_POINTER(p_array_block->p_data)) p_array_block->p_data = P_BYTE_NONE); /* might be reusing debug mutilated one so restore sanity for clarity */
 
-            if(P_DATA_NONE == p_array_block->p_any)
+            if(P_DATA_NONE == p_array_block->p_data)
             {
                 /* first time allocation */
                 for(;;)
@@ -1655,60 +1702,48 @@ realloc_array(
             else
             {
                 /* resize some already-allocated core */
-                HGLOBAL oldhglobal = GlobalHandle(p_array_block->p_any);
-                assert(oldhglobal);
+                HGLOBAL oldhglobal = GlobalHandle(p_array_block->p_data);
+
                 if(NULL != oldhglobal)
                 {
-                    GlobalUnlock(oldhglobal);
-
                     for(;;)
                     {
-                        if(NULL != (hglobal = GlobalReAlloc(oldhglobal, n_bytes, 0)))
+                        HGLOBAL hglobal = oldhglobal;
+
+                        GlobalUnlock(hglobal);
+
+                        if(NULL != (p_new_array = GlobalReAllocAndLock(GMEM_MOVEABLE, n_bytes, &hglobal)))
                             break;
 
                         if(0 == tell_full_event_clients(n_bytes))
                             break;
                     }
-
-                    if(NULL == hglobal)
-                        /* failed to reallocate so better nail the old core back in place (still has old handle) */
-                        p_array_block->p_any = GlobalLock(oldhglobal);
                 }
-
-                if(NULL != hglobal)
-                    p_new_array = GlobalLock(hglobal);
                 else
+                {
+                    assert(oldhglobal);
                     p_new_array = NULL;
+                }
             }
         }
         else if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
         {
-            const U32 n_bytes = (p_array_block->size + extra) * array_block_element_size(p_array_block);
+            CHECKING_ONLY(if(IS_BAD_POINTER(p_array_block->p_data)) p_array_block->p_data = P_BYTE_NONE); /* might be reusing debug mutilated one so restore sanity for clarity */
 
-#if CHECKING
-            if(IS_BAD_POINTER(p_array_block->p_any)) /* might be reusing debug mutilated one */
-                p_array_block->p_any = P_DATA_NONE; /* restore sanity for clarity */
-#endif
-
-            if(P_DATA_NONE == p_array_block->p_any)
+            if(P_DATA_NONE == p_array_block->p_data)
                 p_new_array = _dsapplib_ptr_alloc(n_bytes, &status);
             else
-                p_new_array = _dsapplib_ptr_realloc(p_array_block->p_any, n_bytes, &status);
+                p_new_array = _dsapplib_ptr_realloc(p_array_block->p_data, n_bytes, &status);
         }
         else /* if(ALLOC_USE_ALLOC == p_array_block->parms.use_alloc) */
 #endif /* WINDOWS */
         {
-            const U32 n_bytes = (p_array_block->size + extra) * array_block_element_size(p_array_block);
+            CHECKING_ONLY(if(IS_BAD_POINTER(p_array_block->p_data)) p_array_block->p_data = P_BYTE_NONE); /* might be reusing debug mutilated one so restore sanity for clarity */
 
-#if CHECKING
-            if(IS_BAD_POINTER(p_array_block->p_any)) /* might be reusing debug mutilated one */
-                p_array_block->p_any = P_DATA_NONE; /* restore sanity for clarity */
-#endif
-
-            if(P_DATA_NONE == p_array_block->p_any)
+            if(P_DATA_NONE == p_array_block->p_data)
                 p_new_array = al_ptr_alloc_us(n_bytes, &status);
             else
-                p_new_array = al_ptr_realloc_us(p_array_block->p_any, n_bytes, &status);
+                p_new_array = al_ptr_realloc_us(p_array_block->p_data, n_bytes, &status);
         }
 
         p_array_block->parms.compact_off = 0;
@@ -1717,7 +1752,7 @@ realloc_array(
             return(status);
 
         p_array_block->size += extra;
-        p_array_block->p_any = p_new_array;
+        p_array_block->p_data = p_new_array;
     }
 
     p_array_block->free = cur_free + num_elements;
@@ -1725,9 +1760,9 @@ realloc_array(
     /* zero contents of newly allocated part of block if wanted */
     if(p_array_block->parms.clear_new_block)
     {
-        P_ANY p_any = (P_U8) p_array_block->p_any + (cur_free * array_block_element_size(p_array_block));
+        P_BYTE p_dst = PtrAddBytes(P_BYTE, p_array_block->p_data, (cur_free * array_block_element_size(p_array_block)));
         const U32 n_bytes = num_elements * array_block_element_size(p_array_block);
-        memset32(p_any, 0, n_bytes);
+        memset32(p_dst, 0, n_bytes);
     }
 
     *p_array_index = cur_free;
@@ -1788,7 +1823,7 @@ tell_full_event_clients(
 
         /* actually do the shrink */
         freed += (p_array_block->size - p_array_block->free) * array_block_element_size(p_array_block);
-        p_array_block->p_any = al_ptr_realloc_us(p_array_block->p_any, p_array_block->free * array_block_element_size(p_array_block), &status);
+        p_array_block->p_data = al_ptr_realloc_us(p_array_block->p_data, p_array_block->free * array_block_element_size(p_array_block), &status);
         p_array_block->size = p_array_block->free;
 
         if(freed >= bytes_needed)
@@ -1836,10 +1871,14 @@ tell_full_event_clients(
 
 #if CHECKING
 
+/*
+Checking functions
+*/
+
 _Check_return_
-_Ret_ /*opt_*/
-extern P_ANY
-_array_base_check(
+_Ret_/*opt_*/
+extern P_BYTE /* may be P_BYTE_NONE */
+array_base_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle)
 {
     PC_ARRAY_BLOCK p_array_block;
@@ -1847,7 +1886,7 @@ _array_base_check(
     if(!array_handle_valid(pc_array_handle))
     {
         myassert3(TEXT("array_base(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle >= free ") S32_TFMT, pc_array_handle, *pc_array_handle, array_root.free);
-        return(P_DATA_NONE);
+        return(P_BYTE_NONE);
     }
 
     p_array_block = array_blockc_no_checks(pc_array_handle);
@@ -1855,35 +1894,35 @@ _array_base_check(
     if(p_array_block->parms.entry_free)
     {
         myassert2(TEXT("array_base(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle has been freed"), pc_array_handle, *pc_array_handle);
-        return(P_DATA_NONE);
+        return(P_BYTE_NONE);
     }
 
     if((U32) p_array_block->free >= ALLOC_SIZE_LIMIT)
     {
         myassert3(TEXT("array_base(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->free);
-        return(P_DATA_NONE);
+        return(P_BYTE_NONE);
     }
 
     if((U32) p_array_block->size >= ALLOC_SIZE_LIMIT)
     {
         myassert3(TEXT("array_base(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->size);
-        return(P_DATA_NONE);
+        return(P_BYTE_NONE);
     }
 
     if((U32) p_array_block->free > (U32) p_array_block->size)
     {
         myassert4(TEXT("array_base(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" and/or size ") S32_TFMT TEXT(" fields"),
                   pc_array_handle, *pc_array_handle, p_array_block->free, p_array_block->size);
-        return(P_DATA_NONE);
+        return(P_BYTE_NONE);
     }
 
-    return(p_array_block->p_any);
+    return(p_array_block->p_data);
 }
 
 _Check_return_
-_Ret_ /*opt_*/
+_Ret_ /* may be P_ARRAY_BLOCK_NONE */
 extern PC_ARRAY_BLOCK
-_array_block(
+array_block_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle)
 {
     PC_ARRAY_BLOCK p_array_block;
@@ -1902,12 +1941,33 @@ _array_block(
         return(P_ARRAY_BLOCK_NONE);
     }
 
+    if((U32) p_array_block->free >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_block(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->free);
+        return(P_ARRAY_BLOCK_NONE);
+    }
+
+    if((U32) p_array_block->size >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_block(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->size);
+        return(P_ARRAY_BLOCK_NONE);
+    }
+
+    if((U32) p_array_block->free > (U32) p_array_block->size)
+    {
+        myassert4(TEXT("array_block(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" and/or size ") S32_TFMT TEXT(" fields"),
+                  pc_array_handle, *pc_array_handle, p_array_block->free, p_array_block->size);
+        return(P_ARRAY_BLOCK_NONE);
+    }
+
     return(p_array_block);
 }
 
+/* as array_block_check() but returns number of elements */
+
 _Check_return_
 extern ARRAY_INDEX
-_array_elements_check(
+array_elements_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle)
 {
     PC_ARRAY_BLOCK p_array_block;
@@ -1948,19 +2008,22 @@ _array_elements_check(
     return(p_array_block->free);
 }
 
+/* as array_block_check() but returns pointer to given element with extra index check */
+
 _Check_return_
-_Ret_ /*opt_*/
-extern PC_ARRAY_BLOCK
-_array_ptr_check(
+_Ret_writes_(ele_size)
+extern P_BYTE /* may be P_BYTE_NONE */
+array_ptr_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
-    _InVal_     ARRAY_INDEX i)
+    _InVal_     ARRAY_INDEX ele_index,
+    _InVal_     U32 ele_size)
 {
     PC_ARRAY_BLOCK p_array_block;
 
     if(!array_handle_valid(pc_array_handle))
     {
         myassert3(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle >= free ") S32_TFMT, pc_array_handle, *pc_array_handle, array_root.free);
-        return(P_ARRAY_BLOCK_NONE);
+        return(P_BYTE_NONE);
     }
 
     p_array_block = array_blockc_no_checks(pc_array_handle);
@@ -1968,33 +2031,225 @@ _array_ptr_check(
     if(p_array_block->parms.entry_free)
     {
         myassert2(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle has been freed"), pc_array_handle, *pc_array_handle);
-        return(P_ARRAY_BLOCK_NONE);
+        return(P_BYTE_NONE);
     }
 
     if((U32) p_array_block->free >= ALLOC_SIZE_LIMIT)
     {
         myassert3(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->free);
-        return(P_ARRAY_BLOCK_NONE);
+        return(P_BYTE_NONE);
     }
 
     if((U32) p_array_block->size >= ALLOC_SIZE_LIMIT)
     {
         myassert3(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->size);
-        return(P_ARRAY_BLOCK_NONE);
+        return(P_BYTE_NONE);
     }
 
     if((U32) p_array_block->free > (U32) p_array_block->size)
     {
         myassert4(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" and/or free ") S32_TFMT TEXT(" fields"),
                   P_ARRAY_BLOCK_NONE, *pc_array_handle, p_array_block->free, p_array_block->size);
-        return(P_ARRAY_BLOCK_NONE);
+        return(P_BYTE_NONE);
     }
 
-    if((U32) i > (U32) p_array_block->free)
-        /*if(((U32) i > 1U) || (p_array_block->free != 0))*/
-            myassert4(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ") S32_TFMT TEXT(" >= free ") S32_TFMT, pc_array_handle, *pc_array_handle, i, p_array_block->free);
+    if((0 != *pc_array_handle) && (ele_size != array_block_element_size(p_array_block)))
+    {
+        myassert4(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ele_size ") S32_TFMT TEXT(" != handle info block ele_size " S32_TFMT),
+                  pc_array_handle, *pc_array_handle, ele_size, array_block_element_size(p_array_block));
+        return(P_BYTE_NONE);
+    }
 
-    return(p_array_block);
+    if((U32) ele_index > (U32) p_array_block->free)
+        /*if(((U32) ele_index > 1U) || (p_array_block->free != 0))*/
+            myassert4(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ") S32_TFMT TEXT(" >= free ") S32_TFMT, pc_array_handle, *pc_array_handle, ele_index, p_array_block->free);
+
+    return(PtrAddBytes(P_BYTE, p_array_block->p_data, (ele_index * ele_size)));
+}
+
+_Check_return_
+_Ret_writes_(ele_size)
+extern P_BYTE /* may be P_BYTE_NONE */
+array_ptr32_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     U32 ele_offset,
+    _InVal_     U32 ele_size)
+{
+    PC_ARRAY_BLOCK p_array_block;
+
+    if(!array_handle_valid(pc_array_handle))
+    {
+        myassert3(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle >= free ") S32_TFMT, pc_array_handle, *pc_array_handle, array_root.free);
+        return(P_BYTE_NONE);
+    }
+
+    p_array_block = array_blockc_no_checks(pc_array_handle);
+
+    if(p_array_block->parms.entry_free)
+    {
+        myassert2(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle has been freed"), pc_array_handle, *pc_array_handle);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->free >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->free);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->size >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->size);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->free > (U32) p_array_block->size)
+    {
+        myassert4(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" and/or free ") S32_TFMT TEXT(" fields"),
+                  P_ARRAY_BLOCK_NONE, *pc_array_handle, p_array_block->free, p_array_block->size);
+        return(P_BYTE_NONE);
+    }
+
+    if((0 != *pc_array_handle) && (ele_size != array_block_element_size(p_array_block)))
+    {
+        myassert4(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ele_size ") S32_TFMT TEXT(" != handle info block ele_size " S32_TFMT),
+                  pc_array_handle, *pc_array_handle, ele_size, array_block_element_size(p_array_block));
+        return(P_BYTE_NONE);
+    }
+
+    if(ele_offset > (U32) p_array_block->free)
+        /*if((ele_offset > 1U) || (p_array_block->free != 0))*/
+            myassert4(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- offset ") U32_TFMT TEXT(" >= free ") U32_TFMT, pc_array_handle, *pc_array_handle, ele_offset, (U32) p_array_block->free);
+
+    return(PtrAddBytes(P_BYTE, p_array_block->p_data, (ele_offset * ele_size)));
+}
+
+_Check_return_
+_Ret_writes_(total_n_bytes)
+extern P_BYTE /* may be P_BYTE_NONE */
+array_range_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     ARRAY_INDEX ele_index,
+    _InVal_     U32 ele_size
+    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) )
+{
+    PC_ARRAY_BLOCK p_array_block;
+
+    if(!array_handle_valid(pc_array_handle))
+    {
+        myassert3(TEXT("array_range(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle >= free 0x") U32_XTFMT, pc_array_handle, *pc_array_handle, array_root.free);
+        return(P_BYTE_NONE);
+    }
+
+    p_array_block = array_blockc_no_checks(pc_array_handle);
+
+    if(p_array_block->parms.entry_free)
+    {
+        myassert2(TEXT("array_range(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle has been freed"), pc_array_handle, *pc_array_handle);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->free >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_range_check(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->free);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->size >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_range(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->size);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->free > (U32) p_array_block->size)
+    {
+        myassert4(TEXT("array_range(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" and/or free " S32_TFMT TEXT(" fields")),
+                  pc_array_handle, *pc_array_handle, p_array_block->free, p_array_block->size);
+        return(P_BYTE_NONE);
+    }
+
+    if((0 != *pc_array_handle) && (ele_size != array_block_element_size(p_array_block)))
+    {
+        myassert4(TEXT("array_range(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ele_size ") S32_TFMT TEXT(" != handle info block ele_size " S32_TFMT),
+                  pc_array_handle, *pc_array_handle, ele_size, array_block_element_size(p_array_block));
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) ele_index > (U32) p_array_block->free)
+    {
+        myassert4(TEXT("array_range(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ") S32_TFMT TEXT(" >= free ") S32_TFMT, pc_array_handle, *pc_array_handle, ele_index, p_array_block->free);
+        return(P_BYTE_NONE);
+    }
+
+    PREFAST_ONLY(IGNOREPARM_InVal_(total_n_bytes));
+
+    return(PtrAddBytes(P_BYTE, p_array_block->p_data, (ele_index * ele_size)));
+}
+
+_Check_return_
+_Ret_writes_(total_n_bytes) /* may be P_BYTE_NONE */
+extern PC_BYTE
+array_rangec_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     ARRAY_INDEX ele_index,
+    _InVal_     U32 ele_size
+    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) )
+{
+    return(array_range_check(pc_array_handle, ele_index, ele_size PREFAST_ONLY_ARG(total_n_bytes)));
+}
+
+_Check_return_
+_Ret_writes_(n_bytes)
+extern P_BYTE /* may be P_BYTE_NONE */
+array_range_bytes_check(
+    _InRef_     PC_ARRAY_HANDLE pc_array_handle,
+    _InVal_     U32 byte_offset
+    PREFAST_ONLY_ARG(_InVal_ U32 n_bytes) )
+{
+    PC_ARRAY_BLOCK p_array_block;
+
+    if(!array_handle_valid(pc_array_handle))
+    {
+        myassert3(TEXT("array_range_bytes(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle >= free 0x") U32_XTFMT, pc_array_handle, *pc_array_handle, array_root.free);
+        return(P_BYTE_NONE);
+    }
+
+    p_array_block = array_blockc_no_checks(pc_array_handle);
+
+    if(p_array_block->parms.entry_free)
+    {
+        myassert2(TEXT("array_range_bytes(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle has been freed"), pc_array_handle, *pc_array_handle);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->free >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_range_bytes(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt free ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->free);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->size >= ALLOC_SIZE_LIMIT)
+    {
+        myassert3(TEXT("array_range_bytes(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" field"), pc_array_handle, *pc_array_handle, p_array_block->size);
+        return(P_BYTE_NONE);
+    }
+
+    if((U32) p_array_block->free > (U32) p_array_block->size)
+    {
+        myassert4(TEXT("array_range_bytes(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- handle info block has corrupt size ") S32_TFMT TEXT(" and/or free " S32_TFMT TEXT(" fields")),
+                  pc_array_handle, *pc_array_handle, p_array_block->free, p_array_block->size);
+        return(P_BYTE_NONE);
+    }
+
+    if(byte_offset > (U32) p_array_block->free * array_block_element_size(p_array_block))
+    {
+        myassert5(TEXT("array_range_bytes(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ") S32_TFMT TEXT(" >= free ") S32_TFMT TEXT(" * ele_size ") S32_TFMT, pc_array_handle, *pc_array_handle, byte_offset, p_array_block->free, array_block_element_size(p_array_block));
+        return(P_BYTE_NONE);
+    }
+
+    PREFAST_ONLY(IGNOREPARM_InVal_(n_bytes));
+
+    return(PtrAddBytes(P_BYTE, p_array_block->p_data, byte_offset));
 }
 
 #endif /* CHECKING */

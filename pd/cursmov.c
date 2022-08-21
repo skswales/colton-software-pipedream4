@@ -550,7 +550,7 @@ adjpud(
     tpoff = pagoff;
 
     if(tpoff == 0)
-        plusab(curpnm, (down) ? 1 : -1);
+        curpnm += (down) ? 1 : -1;
 
     tpoff += (down) ? enclns : -enclns;
 
@@ -1292,9 +1292,7 @@ SwapPosition_fn(void)
 extern void
 GotoSlot_fn(void)
 {
-    char tstr[BUF_EV_INTNAMLEN];
     char *extstr;
-    S32 count, baddoc;
     COL tcol;
     ROW trow;
     DOCNO docno = DOCNO_NONE;
@@ -1310,43 +1308,41 @@ GotoSlot_fn(void)
             ;
         buff_sofar = --extstr;
 
-        baddoc = 0;
-
         if(*extstr++ == '[')
-            {
-            /* read in name to temporary buffer */
-            for(count = 0;
-                *extstr  &&
-                (*extstr != ']')  &&
-                (count < EV_INTNAMLEN);
-                ++count, ++extstr)
-                    tstr[count] = *extstr;
+            { /* read in name to temporary buffer */
+            char tstr_buf[BUF_EV_LONGNAMLEN];
+            U32 count = 0;
+            BOOL baddoc = TRUE;
+
+            while(*extstr  &&  (*extstr != ']')  &&  (count < elemof32(tstr_buf)))
+                tstr_buf[count++] = *extstr++;
 
             if(count  &&  (*extstr == ']'))
                 {
-                tstr[count++] = '\0';
-                if(file_is_rooted(tstr))
+                tstr_buf[count++] = '\0';
+                if(file_is_rooted(tstr_buf))
                     {
-                    docno = find_document_using_wholename(tstr);
+                    docno = find_document_using_wholename(tstr_buf);
+reportf("GotoSlot: rooted %s is docno %d", report_tstr(tstr_buf), docno);
+                    baddoc = (DOCNO_NONE == docno);
                     }
                 else
                     {
-                    docno = find_document_using_leafname(tstr);
-                    if(DOCNO_SEVERAL == docno)
-                        baddoc = 1;
+                    docno = find_document_using_leafname(tstr_buf);
+reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
+                    baddoc = ((DOCNO_SEVERAL == docno) || (DOCNO_NONE == docno));
                     }
-                if(DOCNO_NONE == docno)
-                    baddoc = 1;
-                buff_sofar = extstr;
+                if(!baddoc)
+                    buff_sofar = extstr;
                 }
-            }
 
-        if(baddoc)
-            {
-            reperr_null(create_error(ERR_BAD_SLOT));  /* and let him try again... */
-            if(!dialog_box_can_retry())
-                break;
-            continue;
+            if(baddoc)
+                {
+                reperr_null(create_error(ERR_BAD_SLOT));  /* and let him try again... */
+                if(!dialog_box_can_retry())
+                    break;
+                continue;
+                }
             }
 
         tcol = getcol();            /* assumes buff_sofar set */
@@ -1933,7 +1929,7 @@ filvert(
         if(!on_break && !(saveflags & PAGE))
             {
             P_DRAW_DIAG p_draw_diag;
-            drawfrp dfrp;
+            P_DRAW_FILE_REF dfrp;
 
             /* check for a picture */
             if(draw_file_refs.lbr &&
@@ -1986,7 +1982,7 @@ filvert(
             }
 
         if(saveflags & PICT)
-            plusab(pict_on_screen, ((S32) nextrow + 1) * (rowsonscreen + 1));
+            pict_on_screen += ((S32) nextrow + 1) * (rowsonscreen + 1);
 
         rptr->flags = saveflags;
 

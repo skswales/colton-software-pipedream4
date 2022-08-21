@@ -92,7 +92,7 @@ setpointershape(
 
 static void
 colh_forced_draw_column_headings(
-    riscos_redrawstr *r);
+    RISCOS_REDRAWSTR *r);
 
 static void
 colh_really_draw_column_headings(void);
@@ -431,7 +431,7 @@ colh_draw_column_headings(void)
 
 extern void
 colh_forced_draw_column_headings(
-    riscos_redrawstr *r)
+    RISCOS_REDRAWSTR *r)
 {
     IGNOREPARM(r);
 
@@ -557,7 +557,7 @@ colh_really_draw_column_headings(void)
                 : (wimp_IFORECOL * logcol(BORDERFOREC)) ));  /*FORE*/
 
 #ifndef POUNDS_BLEEDING_RJM
-        safe_strkpy(number.data.sprite_name, elemof32(number.data.sprite_name), "pd4downarro");
+        xstrkpy(number.data.sprite_name, elemof32(number.data.sprite_name), "pd4downarro");
 #else
         number.data.text[0] = 138;      /* a down arrow */
         number.data.text[1] = 0;
@@ -758,7 +758,7 @@ colh_event_handler(
 
     if(!select_document_using_callback_handle(handle))
     {
-        messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to main event handler"), report_ptr_cast(handle));
+        messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to colh event handler"), report_ptr_cast(handle));
         return(FALSE);
     }
 
@@ -1486,7 +1486,7 @@ colh_HELPREQUEST(
     prefix_len = 0;
     #else
     /* default message */
-    safe_strkpy(abuffer, elemof32(abuffer), help_main_window);
+    xstrkpy(abuffer, elemof32(abuffer), help_main_window);
     prefix_len = strlen(abuffer);
     #endif
 
@@ -1728,11 +1728,11 @@ colh_HELPREQUEST(
             }
 
     if(msg)
-        safe_strkpy(buffer, elemof32(abuffer) - prefix_len, msg);
+        xstrkpy(buffer, elemof32(abuffer) - prefix_len, msg);
 
     #if FALSE
     if(append_drag_msg)
-        safe_strkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
+        xstrkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
     #endif
 
     riscos_sendhelpreply(m, (strlen32p1(abuffer) < 240) ? abuffer : alt_msg);

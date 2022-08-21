@@ -298,10 +298,10 @@ gr_chartedit_riscos_menu_handler(
 
                 case GR_CHART_MO_GALLERY_OVERLAYS:
                     {
-                    if(cp->axes_max != 0)
-                        cp->axes_max = 0;
+                    if(cp->axes_idx_max != 0)
+                        cp->axes_idx_max = 0;
                     else
-                        cp->axes_max = 1;
+                        cp->axes_idx_max = 1;
 
                     cp->bits.realloc_series = 1;
                     modified = 1;
@@ -644,7 +644,7 @@ gr_chartedit_riscos_menu_maker(
 
     fade = FALSE;
 
-    if(cp->axes_max > 0)
+    if(cp->axes_idx_max > 0)
         tick_overlay = TRUE;
 
     switch(cp->axes[0].charttype)
@@ -706,7 +706,7 @@ gr_chartedit_riscos_menu_maker(
 
     if(fade)
         /* reinstate default title */
-        safe_strkpy(title, elemof32(title), string_lookup(GR_CHART_MSG_MENUHDR_SELECTION));
+        xstrkpy(title, elemof32(title), string_lookup(GR_CHART_MSG_MENUHDR_SELECTION));
     else
         gr_chart_object_name_from_id(title, elemof32(title), &cep->selection.id);
 
@@ -850,7 +850,7 @@ gr_chartedit_riscos_menu_maker(
 *
 ******************************************************************************/
 
-typedef struct _gr_chartedit_layout
+typedef struct GR_CHARTEDIT_LAYOUT
 {
     F64 in_width;
     F64 in_height;
@@ -860,7 +860,7 @@ typedef struct _gr_chartedit_layout
     F64 pct_margin_right;
     F64 pct_margin_top;
 }
-gr_chartedit_layout;
+GR_CHARTEDIT_LAYOUT;
 
 static const F64 in_increment =  0.10;
 static const F64 in_min_limit =  1.00;
@@ -877,7 +877,7 @@ static const S32 pct_margin_decplaces =    1;
 static void
 gr_chartedit_options_encode(
     wimp_w w,
-    const gr_chartedit_layout * layout)
+    const GR_CHARTEDIT_LAYOUT * const layout)
 {
     F64 tmp;
 
@@ -919,7 +919,7 @@ gr_chartedit_options_process(
     dbox_field f;
     P_GR_CHART  cp;
     S32        ok, persist, pending_reflect_modify;
-    gr_chartedit_layout layout;
+    GR_CHARTEDIT_LAYOUT layout;
 
     d = dbox_new_new(GR_CHARTEDIT_TEM_OPTIONS, &errorp);
     if(!d)
@@ -1105,21 +1105,21 @@ gr_chartedit_options_process(
 *
 ******************************************************************************/
 
-typedef struct _gr_chartedit_series_state
-    {
+typedef struct GR_CHARTEDIT_SERIES_STATE
+{
     int tristate_cumulative : 2;
     int tristate_point_vary : 2;
     int tristate_best_fit   : 2;
     int tristate_fill_axis  : 2;
-    }
-gr_chartedit_series_state;
+}
+GR_CHARTEDIT_SERIES_STATE;
 
 /* encode icons from current structure (not necessarily reflected in chart structure) */
 
 static void
 gr_chartedit_selection_series_encode(
     wimp_w w,
-    const gr_chartedit_series_state * state)
+    const GR_CHARTEDIT_SERIES_STATE * const state)
 {
     riscos_tristate_set(w, GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CUMULATIVE, state->tristate_cumulative);
     riscos_tristate_set(w, GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_POINT_VARY, state->tristate_point_vary);
@@ -1136,10 +1136,10 @@ gr_chartedit_selection_series_process(
     wimp_w       w;
     dbox_field   f;
     P_GR_CHART    cp;
-    GR_SERIES_IX modifying_seridx;
+    GR_SERIES_IDX modifying_series_idx;
     P_GR_SERIES   serp;
     S32          ok, persist, pending_reflect_modify;
-    gr_chartedit_series_state state;
+    GR_CHARTEDIT_SERIES_STATE state;
 
     d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_SERIES, &errorp);
     if(!d)
@@ -1159,7 +1159,7 @@ gr_chartedit_selection_series_process(
     switch(cep->selection.id.name)
         {
         default:
-            modifying_seridx = 0;
+            modifying_series_idx = 0;
             break;
 
         case GR_CHART_OBJNAME_SERIES:
@@ -1167,7 +1167,7 @@ gr_chartedit_selection_series_process(
         case GR_CHART_OBJNAME_BESTFITSER:
         case GR_CHART_OBJNAME_POINT:
         case GR_CHART_OBJNAME_DROPPOINT:
-            modifying_seridx = gr_series_ix_from_external(cp, cep->selection.id.no);
+            modifying_series_idx = gr_series_idx_from_external(cp, cep->selection.id.no);
             break;
         }
 
@@ -1178,7 +1178,7 @@ gr_chartedit_selection_series_process(
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR];
     GR_CHART_OBJID modifying_id;
 
-    gr_chart_objid_from_seridx(cp, modifying_seridx, &modifying_id);
+    gr_chart_objid_from_series_idx(cp, modifying_series_idx, &modifying_id);
 
     gr_chart_object_name_from_id(title, elemof32(title), &modifying_id);
 
@@ -1187,7 +1187,7 @@ gr_chartedit_selection_series_process(
 
     do  {
         /* load current settings into structure */
-        serp = getserp(cp, modifying_seridx);
+        serp = getserp(cp, modifying_series_idx);
 
         state.tristate_cumulative = RISCOS_TRISTATE_DONT_CARE;
         state.tristate_point_vary = RISCOS_TRISTATE_DONT_CARE;
@@ -1228,7 +1228,7 @@ gr_chartedit_selection_series_process(
                         {
                         GR_DATASOURCE_NO ds;
 
-                        serp = getserp(cp, modifying_seridx);
+                        serp = getserp(cp, modifying_series_idx);
 
                         for(ds = 0; ds < GR_SERIES_MAX_DATASOURCES; ++ds)
                             if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
@@ -1268,7 +1268,7 @@ gr_chartedit_selection_series_process(
         if(ok)
             {
             /* set chart from modified structure */
-            serp = getserp(cp, modifying_seridx);
+            serp = getserp(cp, modifying_series_idx);
 
             if(state.tristate_cumulative != RISCOS_TRISTATE_DONT_CARE)
                 {
@@ -1314,38 +1314,38 @@ gr_chartedit_selection_series_process(
 *
 ******************************************************************************/
 
-typedef enum
-    {
+typedef enum GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_TAG
+{
     gr_chartedit_riscos_dboxtcol_callback_linecolour,
     gr_chartedit_riscos_dboxtcol_callback_fillcolour,
     gr_chartedit_riscos_dboxtcol_callback_textcolour,
     gr_chartedit_riscos_dboxtcol_callback_hintcolour
-    }
-gr_chartedit_riscos_dboxtcol_callback_tag;
+}
+GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_TAG;
 
-typedef struct _gr_chartedit_riscos_dboxtcol_callback_info
-    {
+typedef struct GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO
+{
     GR_CHARTEDIT_HANDLE ceh;
     GR_CHART_OBJID      id;
 
-    gr_chartedit_riscos_dboxtcol_callback_tag tag;
+    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_TAG tag;
 
-    union _gr_chartedit_riscos_dboxtcol_callback_info_style
+    union GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO_STYLE
         {
         GR_LINESTYLE line;
         GR_FILLSTYLE fill;
         GR_TEXTSTYLE text;
         }
     style;
-    }
-gr_chartedit_riscos_dboxtcol_callback_info;
+}
+GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO;
 
 static void
 gr_chartedit_riscos_dboxtcol_handler(
     dboxtcol_colour ecol,
     P_ANY handle)
 {
-    gr_chartedit_riscos_dboxtcol_callback_info * i = handle;
+    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO * const i = handle;
     P_GR_CHARTEDITOR cep;
     P_GR_CHART       cp;
     GR_COLOUR       col;
@@ -1435,7 +1435,7 @@ static void
 gr_chartedit_selection_fillcolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    gr_chartedit_riscos_dboxtcol_callback_info i;
+    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
     dboxtcol_colour col;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
@@ -1467,9 +1467,9 @@ gr_chartedit_selection_fillcolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
 
-    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
+    xstrkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
     }
 
     {
@@ -1489,7 +1489,7 @@ static void
 gr_chartedit_selection_hintcolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    gr_chartedit_riscos_dboxtcol_callback_info i;
+    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
     dboxtcol_colour col;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
@@ -1520,9 +1520,9 @@ gr_chartedit_selection_hintcolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
 
-    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_HINTCOLOUR));
+    xstrkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_HINTCOLOUR));
     }
 
     {
@@ -1542,7 +1542,7 @@ static void
 gr_chartedit_selection_linecolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    gr_chartedit_riscos_dboxtcol_callback_info i;
+    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
     dboxtcol_colour col;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
@@ -1570,9 +1570,9 @@ gr_chartedit_selection_linecolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
 
-    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
+    xstrkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
     }
 
     {
@@ -1757,9 +1757,9 @@ gr_chartedit_selection_linestyle_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &modifying_id);
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
 
-    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
+    xstrkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
 
     win_settitle(w, title);
     }
@@ -1798,7 +1798,7 @@ static void
 gr_chartedit_selection_textcolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    gr_chartedit_riscos_dboxtcol_callback_info i;
+    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
     dboxtcol_colour col;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
@@ -1829,7 +1829,7 @@ gr_chartedit_selection_textcolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
 
     switch(i.id.name)
         {
@@ -1843,7 +1843,7 @@ gr_chartedit_selection_textcolour_edit(
         }
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
     }
 
     {

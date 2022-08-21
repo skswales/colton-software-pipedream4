@@ -139,9 +139,12 @@ static NLISTS_BLK
 pdchart_listed_data =
 {
     NULL,
-    sizeof(struct _PDCHART_LISTED_DATA),
-    sizeof(struct _PDCHART_LISTED_DATA) * 32
+    sizeof(struct PDCHART_LISTED_DATA),
+    sizeof(struct PDCHART_LISTED_DATA) * 32
 };
+
+#define pdchart_listed_data_search_key(key) \
+    collect_goto_item(PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, (key))
 
 /*
 the list of chart dependencies
@@ -151,9 +154,12 @@ static NLISTS_BLK
 pdchart_listed_deps =
 {
     NULL,
-    sizeof(struct _PDCHART_DEP),
-    sizeof(struct _PDCHART_DEP) * 16
+    sizeof(struct PDCHART_DEP),
+    sizeof(struct PDCHART_DEP) * 16
 };
+
+#define pdchart_listed_dep_search_key(key) \
+    collect_goto_item(PDCHART_DEP, &pdchart_listed_deps.lbr, (key))
 
 /*
 the 'current' chart. PD functions operate on this
@@ -238,8 +244,8 @@ pdchart_add(
         if(++ix >= pdchart->elem.n)
             goto keep;
 
-    assert(  offsetof(struct _PDCHART_ELEMENT, rng.col.stt_row) ==   offsetof(struct _PDCHART_ELEMENT, rng.row.stt_col));
-    assert(sizeofmemb(struct _PDCHART_ELEMENT, rng.col.stt_row) == sizeofmemb(struct _PDCHART_ELEMENT, rng.row.stt_col));
+    assert(  offsetof(struct PDCHART_ELEMENT, rng.col.stt_row) ==   offsetof(struct PDCHART_ELEMENT, rng.row.stt_col));
+    assert(sizeofmemb(struct PDCHART_ELEMENT, rng.col.stt_row) == sizeofmemb(struct PDCHART_ELEMENT, rng.row.stt_col));
     if(ep->rng.col.stt_row ==  (p->bits.range_over_columns ? p->stt.row : p->stt.col))
         pdcsd.bits.label_first_item = ep->bits.label_first_item;
 
@@ -256,14 +262,14 @@ pdchart_add(
         /* find a contiguous range of columns/rows to add as a block */
         stt_key = end_key;
 
-        if((entryp = collect_first_from(p_p_list_block, &stt_key)) == NULL)
+        if((entryp = collect_first_from(U8, p_p_list_block, &stt_key)) == NULL)
             /* no more ranges */
             break;
 
         if(stt_key /*found*/ < end_key /*desired start*/)
             {
             /* stt_key was in a hole and found the previous item, so do a next */
-            if((entryp = collect_next(p_p_list_block, &stt_key)) == NULL)
+            if((entryp = collect_next(U8, p_p_list_block, &stt_key)) == NULL)
                 break;
             }
 
@@ -274,7 +280,7 @@ pdchart_add(
         do  {
             ++end_key;
 
-            entryp = collect_search(p_p_list_block, end_key);
+            entryp = collect_goto_item(U8, p_p_list_block, end_key);
             }
         while(entryp);
 
@@ -595,7 +601,7 @@ pdchart_dispose(
             while(--pdchartelem >= i_pdchartelem)
                 {
                 /* remove extref and dep for this range if not already done */
-                if((itdep = collect_search(&pdchart_listed_deps.lbr, pdchartelem->itdepkey)) != NULL)
+                if((itdep = pdchart_listed_dep_search_key(pdchartelem->itdepkey)) != NULL)
                     {
                     pdchart_extdependency_dispose(itdep);
 
@@ -708,16 +714,16 @@ pdchart_extdependency_new(
 
 static S32
 pdchart_extract_numeric_result(
-    P_EV_RESULT resp,
-    P_GR_CHART_VALUE val /*out. NULL->nopoke*/)
+    _InRef_     PC_EV_RESULT p_ev_result,
+    _OutRef_opt_ P_GR_CHART_VALUE val /*out. NULL->nopoke*/)
 {
-    switch(resp->did_num)
+    switch(p_ev_result->did_num)
         {
         case RPN_DAT_REAL:
             if(val)
                 {
                 val->type        = GR_CHART_VALUE_NUMBER;
-                val->data.number = resp->arg.fp;
+                val->data.number = p_ev_result->arg.fp;
                 }
             return(1);
 
@@ -727,25 +733,25 @@ pdchart_extract_numeric_result(
             if(val)
                 {
                 val->type        = GR_CHART_VALUE_NUMBER;
-                val->data.number = (F64) resp->arg.integer;
+                val->data.number = (F64) p_ev_result->arg.integer;
                 }
             return(1);
 
         case RPN_RES_ARRAY:
             {
             S32 res;
-            EV_RESULT temp_res;
+            EV_RESULT temp_ev_result;
             EV_DATA temp_data;
 
             /* go via EV_DATA */
-            ev_result_to_data_convert(&temp_data, resp);
+            ev_result_to_data_convert(&temp_data, p_ev_result);
 
-            ev_data_to_result_convert(&temp_res, ss_array_element_index_borrow(&temp_data, 0, 0));
+            ev_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
 
             /* recurse to convert result */
-            res = pdchart_extract_numeric_result(&temp_res, val);
+            res = pdchart_extract_numeric_result(&temp_ev_result, val);
 
-            ev_result_free_resources(&temp_res);
+            ev_result_free_resources(&temp_ev_result);
 
             return(res);
             }
@@ -877,7 +883,7 @@ pdchart_init_shape_suss_holes(
     SLR end;
     TRAVERSE_BLOCK traverse_blk;
     P_SLOT sl;
-    STATUS res = STATUS_OK;
+    STATUS status = STATUS_OK;
 
     end.col = p->end.col - 1; /* make these incl again for PipeDream block routines */
     end.row = p->end.row - 1;
@@ -922,9 +928,9 @@ pdchart_init_shape_suss_holes(
         nlbrp = &p->cols.nz;
         key = col;
 
-        if((entryp = collect_search(&nlbrp->lbr, key)) == NULL)
+        if((entryp = collect_goto_item(U8, &nlbrp->lbr, key)) == NULL)
             {
-            if(NULL == (entryp = collect_add_entry(nlbrp, sizeof32(*entryp), &key, &res)))
+            if(NULL == (entryp = collect_add_entry_elem(U8, nlbrp, &key, &status)))
                 break;
             *entryp = number_slot;
             }
@@ -938,9 +944,9 @@ pdchart_init_shape_suss_holes(
         nlbrp = &p->rows.nz;
         key = row;
 
-        if((entryp = collect_search(&nlbrp->lbr, key)) == NULL)
+        if((entryp = collect_goto_item(U8, &nlbrp->lbr, key)) == NULL)
             {
-            if(NULL == (entryp = collect_add_entry(nlbrp, sizeof32(*entryp), &key, &res)))
+            if(NULL == (entryp = collect_add_entry_elem(U8, nlbrp, &key, &status)))
                 break;
             *entryp = number_slot;
             }
@@ -950,7 +956,7 @@ pdchart_init_shape_suss_holes(
 
     p->bits.something = 1;
 
-    if(res < 0)
+    if(status < 0)
         {
         p->bits.something = 0;
 
@@ -976,7 +982,7 @@ pdchart_init_shape_suss_holes(
             p->bits.something = 0;
         }
 
-    return(res);
+    return(status);
 }
 
 static void
@@ -993,7 +999,7 @@ pdchart_init_shape_from_marked_block(
     P_PDCHART_HEADER pdchart /*const, maybe NULL*/)
 {
     P_SLOT       sl;
-    P_EV_RESULT  resp;
+    P_EV_RESULT  p_ev_result;
     S32          res;
     COL          cols_tx_n;
     ROW          rows_tx_n;
@@ -1035,9 +1041,9 @@ pdchart_init_shape_from_marked_block(
     p->cols.nz_n = 0;
     cols_tx_n    = 0;
 
-    for(entryp = collect_first(&p->cols.nz.lbr, &key);
+    for(entryp = collect_first(U8, &p->cols.nz.lbr, &key);
         entryp;
-        entryp = collect_next( &p->cols.nz.lbr, &key))
+        entryp = collect_next( U8, &p->cols.nz.lbr, &key))
         {
         ++p->cols.nz_n;
 
@@ -1049,9 +1055,9 @@ pdchart_init_shape_from_marked_block(
     p->rows.nz_n = 0;
     rows_tx_n    = 0;
 
-    for(entryp = collect_first(&p->rows.nz.lbr, &key);
+    for(entryp = collect_first(U8, &p->rows.nz.lbr, &key);
         entryp;
-        entryp = collect_next( &p->rows.nz.lbr, &key))
+        entryp = collect_next( U8, &p->rows.nz.lbr, &key))
         {
         ++p->rows.nz_n;
 
@@ -1070,13 +1076,13 @@ pdchart_init_shape_from_marked_block(
     sl = travel_externally(p->docno, p->stt.col, p->stt.row);
 
     if(sl)
-        switch(result_extract(sl, &resp))
+        switch(result_extract(sl, &p_ev_result))
             {
             case SL_PAGE:
                 break;
 
             case SL_NUMBER:
-                if(pdchart_extract_numeric_result(resp, NULL))
+                if(pdchart_extract_numeric_result(p_ev_result, NULL))
                     {
                     p->bits.number_top_left = 1;
                     break;
@@ -1097,13 +1103,13 @@ pdchart_init_shape_from_marked_block(
             sl = travel_externally(p->docno, p->stt.col, row);
 
             if(sl)
-                switch(result_extract(sl, &resp))
+                switch(result_extract(sl, &p_ev_result))
                     {
                     case SL_PAGE:
                         break;
 
                     case SL_NUMBER:
-                        if(pdchart_extract_numeric_result(resp, NULL))
+                        if(pdchart_extract_numeric_result(p_ev_result, NULL))
                             {
                             p->bits.number_left_col = 1;
                             break;
@@ -1128,13 +1134,13 @@ pdchart_init_shape_from_marked_block(
             sl = travel_externally(p->docno, col, p->stt.row);
 
             if(sl)
-                switch(result_extract(sl, &resp))
+                switch(result_extract(sl, &p_ev_result))
                     {
                     case SL_PAGE:
                         break;
 
                     case SL_NUMBER:
-                        if(pdchart_extract_numeric_result(resp, NULL))
+                        if(pdchart_extract_numeric_result(p_ev_result, NULL))
                             {
                             p->bits.number_top_row = 1;
                             break;
@@ -1236,7 +1242,7 @@ pdchart_init_shape_from_marked_block(
             key = p->stt.row;
             }
 
-        entryp = collect_search(p_p_list_block, key);
+        entryp = collect_goto_item(U8, p_p_list_block, key);
         assert(entryp);
         *entryp = 1; /* protect */
         }
@@ -1253,11 +1259,13 @@ pdchart_init_shape_from_marked_block(
                     ? p->stt.col
                     : p->stt.row;
 
-    for(entryp = collect_first_from(p_p_list_block, &key);
+    for(entryp = collect_first_from(U8, p_p_list_block, &key);
         entryp;
-        entryp = collect_next(p_p_list_block, &key))
+        entryp = collect_next(U8, p_p_list_block, &key))
+        {
         if(!*entryp)
             collect_subtract_entry(p_p_list_block, key);
+        }
 
     /* SKS after 4.12 24mar92 - see whether there is any data left after that! */
     if(p->n_ranges == 0)
@@ -1369,7 +1377,7 @@ pdchart_listed_dep_new(
     /* create a new block for all sub-ranges to refer to */
     itdepkey = itdepkey_gen++;
 
-    if(NULL == (*p_itdep = itdep = collect_add_entry(&pdchart_listed_deps, sizeof32(*itdep), &itdepkey, &status)))
+    if(NULL == (*p_itdep = itdep = collect_add_entry_elem(PDCHART_DEP, &pdchart_listed_deps, &itdepkey, &status)))
         return(status);
 
     zero_struct_ptr(itdep);
@@ -1454,7 +1462,7 @@ pdchart_new(
         /* subsequent failure irrelevant to monotonic handle generator */
         pdchartdatakey = pdchartdatakey_gen++;
 
-        if(NULL != (pdchartdata = collect_add_entry(&pdchart_listed_data, sizeof32(*pdchartdata), &pdchartdatakey, &res)))
+        if(NULL != (pdchartdata = collect_add_entry_elem(PDCHART_LISTED_DATA, &pdchart_listed_data, &pdchartdatakey, &res)))
             {
             /* merely store pointer to pdchart header on list */
             pdchartdata->pdchart = pdchart;
@@ -1617,7 +1625,7 @@ pdchart_text_subtract(
 {
     P_PDCHART_DEP itdep;
 
-    itdep = collect_search(&pdchart_listed_deps.lbr, pdchartelem->itdepkey);
+    itdep = pdchart_listed_dep_search_key(pdchartelem->itdepkey);
     assert(itdep);
 
     /* remove this range */
@@ -1645,7 +1653,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
     P_SLOT sl;
     COL col;
     ROW row;
-    P_EV_RESULT resp;
+    P_EV_RESULT p_ev_result;
 
     IGNOREPARM(ch);
 
@@ -1829,10 +1837,10 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
 
 #endif
 
-    switch(result_extract(sl, &resp))
+    switch(result_extract(sl, &p_ev_result))
         {
         case SL_NUMBER:
-            if(pdchart_extract_numeric_result(resp, val))
+            if(pdchart_extract_numeric_result(p_ev_result, val))
                 break;
 
             /* else deliberate drop thru ... */
@@ -1844,7 +1852,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
             expand_slot_for_chart_export(docno, sl, buffer, LIN_BUFSIZ, row);
 
             val->type = GR_CHART_VALUE_TEXT;
-            safe_strkpy(val->data.text, elemof32(val->data.text), buffer);
+            xstrkpy(val->data.text, elemof32(val->data.text), buffer);
             }
             break;
         }
@@ -1858,7 +1866,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
     DOCNO docno;
     P_SLOT sl;
     ROW row;
-    P_EV_RESULT resp;
+    P_EV_RESULT p_ev_result;
 
     IGNOREPARM(ch);
     IGNOREPARM(item);
@@ -1874,10 +1882,10 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
 
         /* boy is this ludicrous & circuitous ... */
 
-        itdep = collect_search(&pdchart_listed_deps.lbr, pdchartelem->itdepkey);
+        itdep = pdchart_listed_dep_search_key(pdchartelem->itdepkey);
         assert(itdep);
 
-        pdchartdata = collect_search(&pdchart_listed_data.lbr, itdep->pdchartdatakey);
+        pdchartdata = pdchart_listed_data_search_key(itdep->pdchartdatakey);
         assert(pdchartdata);
 
         pdchart = pdchartdata->pdchart; /* was your journey really necessary? */
@@ -1898,7 +1906,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
     if(NULL == (sl = travel_externally(docno, pdchartelem->rng.txt.col, row)))
         return(0);
 
-    switch(result_extract(sl, &resp))
+    switch(result_extract(sl, &p_ev_result))
         {
         case SL_PAGE:
             return(0);
@@ -1911,7 +1919,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
             expand_slot_for_chart_export(docno, sl, buffer, LIN_BUFSIZ, row);
 
             val->type = GR_CHART_VALUE_TEXT;
-            safe_strkpy(val->data.text, elemof32(val->data.text), buffer);
+            xstrkpy(val->data.text, elemof32(val->data.text), buffer);
             }
             break;
         }
@@ -2027,10 +2035,10 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
             return;
         }
 
-    itdep = collect_search(&pdchart_listed_deps.lbr, itdepkey);
+    itdep = pdchart_listed_dep_search_key(itdepkey);
     assert(itdep);
 
-    pdchartdata = collect_search(&pdchart_listed_data.lbr, itdep->pdchartdatakey);
+    pdchartdata = pdchart_listed_data_search_key(itdep->pdchartdatakey);
     assert(pdchartdata);
 
     pdchart = pdchartdata->pdchart;
@@ -2691,10 +2699,10 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
             return;
         }
 
-    itdep = collect_search(&pdchart_listed_deps.lbr, itdepkey);
+    itdep = pdchart_listed_dep_search_key(itdepkey);
     assert(itdep);
 
-    pdchartdata = collect_search(&pdchart_listed_data.lbr, itdep->pdchartdatakey);
+    pdchartdata = pdchart_listed_data_search_key(itdep->pdchartdatakey);
     assert(pdchartdata);
 
     pdchart = pdchartdata->pdchart;
@@ -3223,7 +3231,7 @@ pdchart_show_editor_using_handle(
 
     pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
 
-    pdchartdata = collect_search(&pdchart_listed_data.lbr, pdchartdatakey);
+    pdchartdata = pdchart_listed_data_search_key(pdchartdatakey);
 
     return(pdchart_show_editor(pdchartdata->pdchart));
 }
@@ -3260,9 +3268,9 @@ dependent_charts_warning(void)
     LIST_ITEMNO pdchartdatakey;
     P_PDCHART_LISTED_DATA pdchartdata;
 
-    for(pdchartdata = collect_first(&pdchart_listed_data.lbr, &pdchartdatakey);
+    for(pdchartdata = collect_first(PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey);
         pdchartdata;
-        pdchartdata = collect_next( &pdchart_listed_data.lbr, &pdchartdatakey))
+        pdchartdata = collect_next( PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey))
         {
         P_PDCHART_HEADER  pdchart;
         U8                filename[BUF_MAX_PATHSTRING];
@@ -3334,9 +3342,9 @@ pdchart_dependent_documents(
     P_PDCHART_LISTED_DATA pdchartdata;
     S32                   nDepDocs = 0;
 
-    for(pdchartdata = collect_first(&pdchart_listed_data.lbr, &pdchartdatakey);
+    for(pdchartdata = collect_first(PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey);
         pdchartdata;
-        pdchartdata = collect_next( &pdchart_listed_data.lbr, &pdchartdatakey))
+        pdchartdata = collect_next( PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey))
         {
         P_PDCHART_HEADER  pdchart;
         P_PDCHART_ELEMENT ep, last_ep;
@@ -3366,12 +3374,12 @@ pdchart_dependent_documents(
                                 /* loop over draw file references and see who
                                  * (other than us) has a use of this chart
                                 */
-                                drawfrp     dfrp;
+                                P_DRAW_FILE_REF dfrp;
                                 LIST_ITEMNO key;
 
-                                for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+                                for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
                                     dfrp;
-                                    dfrp = collect_next( &draw_file_refs.lbr, &key))
+                                    dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
                                     if(dfrp->draw_file_key == cah)
                                         if(dfrp->docno != cur_docno)
                                             ++nDepDocs;
@@ -3474,7 +3482,8 @@ pdchart_load_dependents(
     IGNOREPARM(chartfilename);
 
     pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
-    pdchartdata    = collect_search(&pdchart_listed_data.lbr, pdchartdatakey);
+
+    pdchartdata = pdchart_listed_data_search_key(pdchartdatakey);
 
     assert(pdchartdata);
     if(!pdchartdata)
@@ -3484,9 +3493,9 @@ pdchart_load_dependents(
 
 #if 1
     /* SKS after 4.12 26mar92 - more helpful on errors perchance - loop over deps of this chart not chart elements */
-    for(itdep = collect_first(&pdchart_listed_deps.lbr, &itdepkey);
+    for(itdep = collect_first(PDCHART_DEP, &pdchart_listed_deps.lbr, &itdepkey);
         itdep;
-        itdep = collect_next( &pdchart_listed_deps.lbr, &itdepkey))
+        itdep = collect_next( PDCHART_DEP, &pdchart_listed_deps.lbr, &itdepkey))
         {
         if(itdep->pdchartdatakey != pdchartdatakey)
             continue;
@@ -3498,7 +3507,7 @@ pdchart_load_dependents(
         /* what is the state of this dependency? */
         P_PDCHART_DEP itdep;
 
-        itdep = collect_search(&pdchart_listed_deps.lbr, &ep->itdepkey);
+        itdep = pdchart_listed_deps_search_key(ep->itdepkey);
 #endif
 
         p_ss_doc = ev_p_ss_doc_from_docno(itdep->rng.s.docno);
@@ -3558,7 +3567,7 @@ pdchart_select_something(
 
     if(!iff_only_one /*|| (list_numitem(pdchart_listed_data) <= 1)*/)
         {
-        if((pdchartdata = collect_first(&pdchart_listed_data.lbr, &pdchartdatakey)) != NULL)
+        if((pdchartdata = collect_first(PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey)) != NULL)
             pdchart_current = pdchartdata->pdchart;
         else
             pdchart_current = NULL;
@@ -3610,9 +3619,9 @@ pdchart_submenu_maker(void)
 
         i = 0;
 
-        for(pdchartdata = collect_first(&pdchart_listed_data.lbr, &pdchartdatakey);
+        for(pdchartdata = collect_first(PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey);
             pdchartdata;
-            pdchartdata = collect_next( &pdchart_listed_data.lbr, &pdchartdatakey))
+            pdchartdata = collect_next( PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey))
             ++i;
 
         if(i == 0)
@@ -3642,9 +3651,9 @@ pdchart_submenu_maker(void)
                         ? strlen(cwd_buffer)
                         : 0;
 
-        for(pdchartdata = collect_first(&pdchart_listed_data.lbr, &pdchartdatakey);
+        for(pdchartdata = collect_first(PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey);
             pdchartdata;
-            pdchartdata = collect_next( &pdchart_listed_data.lbr, &pdchartdatakey))
+            pdchartdata = collect_next( PDCHART_LISTED_DATA, &pdchart_listed_data.lbr, &pdchartdatakey))
             {
             U8Z buffer[BUF_MAX_PATHSTRING];
             P_U8 ptr;
@@ -3664,11 +3673,11 @@ pdchart_submenu_maker(void)
 
             if(len > cl_submenu_MAXWIDTH)
                 {
-                safe_strkpy(tempstring, elemof32(tempstring), iw_menu_prefix);
-                safe_strkat(tempstring, elemof32(tempstring), ptr + (len - cl_submenu_MAXWIDTH) + strlen32(iw_menu_prefix));
+                xstrkpy(tempstring, elemof32(tempstring), iw_menu_prefix);
+                xstrkat(tempstring, elemof32(tempstring), ptr + (len - cl_submenu_MAXWIDTH) + strlen32(iw_menu_prefix));
                 }
             else
-                safe_strkpy(tempstring, elemof32(tempstring), ptr);
+                xstrkpy(tempstring, elemof32(tempstring), ptr);
 
             /* create/extend menu 'unparsed' cos buffer may contain ',' */
             if(cl_submenu == NULL)
@@ -3729,8 +3738,9 @@ pdchart_select_using_handle(
     LIST_ITEMNO           pdchartdatakey;
     P_PDCHART_LISTED_DATA pdchartdata;
 
-    pdchartdatakey  = (LIST_ITEMNO) epdchartdatakey;
-    pdchartdata     = collect_search(&pdchart_listed_data.lbr, pdchartdatakey);
+    pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
+
+    pdchartdata = pdchart_listed_data_search_key(pdchartdatakey);
 
     if(pdchartdata)
         pdchart_current = pdchartdata->pdchart;
@@ -3778,10 +3788,10 @@ ev_docno_ensure_for_pdchart_bodge(void)
 
     name_init(&docu_name);
 
-    safe_strnkpy(path_buffer, elemof32(path_buffer), fullname, leafname - fullname);
+    xstrnkpy(path_buffer, elemof32(path_buffer), fullname, leafname - fullname);
     docu_name.path_name = path_buffer;
 
-    safe_strkpy(leaf_buffer, elemof32(leaf_buffer), leafname);
+    xstrkpy(leaf_buffer, elemof32(leaf_buffer), leafname);
     docu_name.leaf_name = leaf_buffer;
 
     if(file_is_rooted(docu_name.path_name))
@@ -3793,8 +3803,8 @@ ev_docno_ensure_for_pdchart_bodge(void)
     return(docno);
 }
 
-typedef enum
-    {
+enum PDCHART_CONSTRUCT_TABLE_OFFSETS
+{
     PDCHART_CON_RANGE_COL = 0,
     PDCHART_CON_RANGE_ROW,
     PDCHART_CON_RANGE_TXT,
@@ -3804,8 +3814,7 @@ typedef enum
     PDCHART_CON_RANGE_TXT_ORDER,
 
     PDCHART_CON_N_TABLE_OFFSETS
-    }
-PDCHART_CONSTRUCT_TABLE_OFFSETS;
+};
 
 static GR_CONSTRUCT_TABLE_ENTRY
 pdchart_construct_table[PDCHART_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
@@ -3880,7 +3889,7 @@ pdchart_save_external_core(
 
     pdchartdatakey = (LIST_ITEMNO) ext_handle;
 
-    pdchartdata = collect_search(&pdchart_listed_data.lbr, pdchartdatakey);
+    pdchartdata = pdchart_listed_data_search_key(pdchartdatakey);
     assert(pdchartdata);
 
     pdchart = pdchartdata->pdchart;
@@ -3983,7 +3992,7 @@ pdchart_save_external_core(
                 contab_ix = PDCHART_CON_RANGE_ROW;
                 }
 
-            itdep = collect_search(&pdchart_listed_deps.lbr, stt_ep->itdepkey);
+            itdep = pdchart_listed_dep_search_key(stt_ep->itdepkey);
             assert(itdep);
             p_bits = (P_U16) &itdep->bits;
 
@@ -4034,7 +4043,7 @@ pdchart_save_external_core(
 
             rng.s.flags = rng.e.flags = 0;
 
-            itdep = collect_search(&pdchart_listed_deps.lbr, ep->itdepkey);
+            itdep = pdchart_listed_dep_search_key(ep->itdepkey);
             assert(itdep);
             p_bits = (P_U16) &itdep->bits;
 
@@ -4086,7 +4095,7 @@ gr_chart_save_external(
     S32 res;
 
     /* set up as document name */
-    safe_strkpy(pdchart_load_save_docname, elemof32(pdchart_load_save_docname), save_filename);
+    xstrkpy(pdchart_load_save_docname, elemof32(pdchart_load_save_docname), save_filename);
 
     /* register our construct table with chart module */
     gr_chart_construct_table_register(pdchart_construct_table, PDCHART_CON_N_TABLE_OFFSETS);
@@ -4098,18 +4107,18 @@ gr_chart_save_external(
     { /* SKS after 4.12 26mar92 - keep consistent with save_version_string */
     U8 array[LIN_BUFSIZ];
 
-    safe_strkpy(array, elemof32(array), applicationversion);
-    safe_strkat(array, elemof32(array), ", ");
+    xstrkpy(array, elemof32(array), applicationversion);
+    xstrkat(array, elemof32(array), ", ");
 
-    safe_strkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
+    xstrkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
     if(!str_isblank(user_organ_id()))
         {
-        safe_strkat(array, elemof32(array), " - ");
-        safe_strkat(array, elemof32(array), user_organ_id());
+        xstrkat(array, elemof32(array), " - ");
+        xstrkat(array, elemof32(array), user_organ_id());
         }
-    safe_strkat(array, elemof32(array), ", ");
+    xstrkat(array, elemof32(array), ", ");
 
-    safe_strkat(array, elemof32(array), "R9200 7500 3900 8299");
+    xstrkat(array, elemof32(array), "R9200 7500 3900 8299");
 
     res = gr_chart_construct_save_txt(f, PDCHART_CON_VERSION, array);
     }
@@ -4160,8 +4169,8 @@ pdchart_read_range_flags(
     int len;
 
     /* wot a bummer */
-    safe_strkpy(format, elemof32(format), pdchart_range_flags_fmt);
-    safe_strkat(format, elemof32(format), "%n");
+    xstrkpy(format, elemof32(format), pdchart_range_flags_fmt);
+    xstrkat(format, elemof32(format), "%n");
 
     if(sscanf(args, format, p_u16, &len) < 1)
         return(NULL);
@@ -4366,7 +4375,8 @@ pdchart_load_ended(
     pdchart_load_save_docno = DOCNO_NONE;
 
     pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
-    pdchartdata    = collect_search(&pdchart_listed_data.lbr, pdchartdatakey);
+
+    pdchartdata = pdchart_listed_data_search_key(pdchartdatakey);
     assert(pdchartdata);
 
     if(pdchartdata)

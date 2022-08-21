@@ -17,7 +17,7 @@
 exported type
 */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 typedef uintptr_t report_proc;
 #define report_proc_cast(proc) reinterpret_cast<report_proc>(proc)
 #else

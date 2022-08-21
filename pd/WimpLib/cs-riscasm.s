@@ -248,32 +248,6 @@ ctrlflagp
         FunctionReturn "","LinkNotStacked"
 
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; extern wimp_errflags
-; wimp_Reporterror_wrapped(
-; r0 a1    _kernel_oserror * e,
-; r1 a2    wimp_errflags flags,
-; r2 a3    const char * name);
-
-        BeginExternal wimp_ReportError_wrapped
-
-        MOV     ip, lr
-
-        MOV     r3, r0
-        SWI     XHourglass_Off
-        MOV     r0, r3
-
-        SWI     XWimp_ReportError
-        MOVVS   r1, #0 ; nothing clicked if error
-
-        MOV     r3, r1 ; buttons clicked
-
-        SWI     XHourglass_On
-
-        MOV     r0, r3
-
-        MOV     pc, ip
-
-; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern _kernel_oserror *
 ; swi_wimp_slotsize(
 ; r0 a1     /*inout*/ int * currentslot,

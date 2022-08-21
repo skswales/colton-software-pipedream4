@@ -58,19 +58,19 @@ tree_sort_todo(void);
 name use table
 */
 
-DEPTABLE namtab = {0, 0, 0, 0, 0, 0};
+DEPTABLE namtab = { 0, 0, 0, 0, 0, 0 };
 
 /*
 custom function use table
 */
 
-DEPTABLE custom_use_table = {0, 0, 0, 0, 0, 0};
+DEPTABLE custom_use_deptable = { 0, 0, 0, 0, 0, 0 };
 
 /*
 to do table
 */
 
-DEPTABLE todotab = {0, 0, 0, 0, 0, 0};
+DEPTABLE todotab = { 0, 0, 0, 0, 0, 0 };
 
 /*
 flags about all trees
@@ -108,19 +108,19 @@ add_custom_use(
     P_CUSTOM_USE mep;
     EV_TRENT mix;
 
-    if(dep_table_check_add_one(&custom_use_table,
+    if(dep_table_check_add_one(&custom_use_deptable,
                                sizeof32(CUSTOM_USE),
                                MACBLKINC) < 0)
         return(-1);
 
-    mix = custom_use_table.next;
+    mix = custom_use_deptable.next;
     mep = tree_macptr(mix);
     __assume(mep);
     /* create a space to insert */
     memmove32(mep + 1,
               mep,
-              (custom_use_table.next - mix) * sizeof32(CUSTOM_USE));
-    ++custom_use_table.next;
+              (custom_use_deptable.next - mix) * sizeof32(CUSTOM_USE));
+    ++custom_use_deptable.next;
 
     /* copy in new dependency */
     mep->custom_to = grubp->data.arg.nameid;
@@ -269,7 +269,7 @@ ev_add_extdependency(
         return(-1);
 
     if(dep_table_check_add_one(&p_ss_doc->exttab,
-                               sizeof32(struct extentry),
+                               sizeof32(struct EXTENTRY),
                                EXTBLKINC) < 0)
         return(-1);
 
@@ -294,8 +294,7 @@ ev_add_extdependency(
 
 /******************************************************************************
 *
-* add all the dependencies for an
-* expression slot into the tree
+* add all the dependencies for an expression slot into the tree
 *
 ******************************************************************************/
 
@@ -304,7 +303,7 @@ ev_add_exp_slot_to_tree(
     P_EV_SLOT p_ev_slot,
     _InRef_     PC_EV_SLR slrp)
 {
-    struct ev_grub_state grubb;
+    struct EV_GRUB_STATE grubb;
     EV_FLAGS custom_flags, names_flags;
     S32 res;
 
@@ -350,23 +349,23 @@ ev_add_exp_slot_to_tree(
             /* custom function definitions */
             case RPN_FNM_FUNCTION:
                 {
-                P_EV_CUSTOM p_ev_custom;
-                EV_NAMEID custom_num;
+                EV_NAMEID custom_num = custom_def_find(grubb.data.arg.nameid);
 
-                if((custom_num = custom_def_find(grubb.data.arg.nameid)) >= 0)
-                    if((p_ev_custom = custom_ptr(custom_num)) != NULL)
-                        {
-                        P_SS_DOC p_ss_doc;
+                if(custom_num >= 0)
+                    {
+                    P_EV_CUSTOM p_ev_custom = custom_ptr_must(custom_num);
+                    P_SS_DOC p_ss_doc;
 
-                        p_ev_custom->owner  = *slrp;
-                        p_ev_custom->flags &= ~TRF_UNDEFINED;
+                    p_ev_custom->owner  = *slrp;
+                    p_ev_custom->flags &= ~TRF_UNDEFINED;
 
-                        /* mark document as a custom function sheet */
-                        if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) != NULL)
-                            p_ss_doc->flags |= DCF_CUSTOM;
+                    /* mark document as a custom function sheet */
+                    if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) != NULL)
+                        p_ss_doc->flags |= DCF_CUSTOM;
 
-                        ev_todo_add_custom_dependents(grubb.data.arg.nameid);
-                        }
+                    ev_todo_add_custom_dependents(grubb.data.arg.nameid);
+                    }
+
                 break;
                 }
             }
@@ -516,8 +515,8 @@ extern void
 ev_enum_dep_sup_init(
     _OutRef_    P_EV_DEPSUP dsp,
     _InRef_     PC_EV_SLR slrp,
-    S32 category,
-    S32 get_deps)
+    _InVal_     enum EV_DEPSUP_TYPES category,
+    _InVal_     S32 get_deps)
 {
     dsp->item_no = 0;
     dsp->slr = *slrp;
@@ -578,9 +577,9 @@ ev_enum_dep_sup_get(
                     sep   = tree_slrptr(p_ss_doc, six);
                     __assume(sep);
 
-                    if(six < p_ss_doc->slr_table.next         &&
-                       !(sep->flags & TRF_TOBEDEL)      &&
-                       slr_equal(&dsp->slr, &sep->refto))
+                    if( six < p_ss_doc->slr_table.next    &&
+                        !(sep->flags & TRF_TOBEDEL)       &&
+                        slr_equal(&dsp->slr, &sep->refto) )
                         {
                         p_ev_data->did_num = RPN_DAT_SLR;
                         p_ev_data->arg.slr = sep->byslr;
@@ -603,13 +602,17 @@ ev_enum_dep_sup_get(
                     EV_TRENT rix;
 
                     for(rix = 0; rix < p_ss_doc->range_table.next; ++rix, ++rep)
-                        if(!(rep->flags & TRF_TOBEDEL))
-                            if(ev_slr_in_range(&rep->refto, &dsp->slr) && !item_get--)
-                                {
-                                p_ev_data->did_num = RPN_DAT_SLR;
-                                p_ev_data->arg.slr = rep->byslr;
-                                res = 1;
-                                }
+                        {
+                        if(rep->flags & TRF_TOBEDEL)
+                            continue;
+
+                        if(ev_slr_in_range(&rep->refto, &dsp->slr) && !item_get--)
+                            {
+                            p_ev_data->did_num = RPN_DAT_SLR;
+                            p_ev_data->arg.slr = rep->byslr;
+                            res = 1;
+                            }
+                        }
                     }
                 break;
                 }
@@ -619,36 +622,37 @@ ev_enum_dep_sup_get(
                 P_EV_NAME p_ev_name;
 
                 /* look for name references */
-                if((p_ev_name = name_ptr(0)) != NULL)
+                if((p_ev_name = names_def.ptr) != NULL)
                     {
                     EV_TRENT i;
 
                     for(i = 0; i < names_def.next; ++i, ++p_ev_name)
-                        if(!(p_ev_name->flags & TRF_TOBEDEL))
+                        {
+                        S32 got_ref = 0;
+
+                        if(p_ev_name->flags & TRF_TOBEDEL)
+                            continue;
+
+                        switch(p_ev_name->def_data.did_num)
                             {
-                            S32 got_ref;
+                            case RPN_DAT_SLR:
+                                if(slr_equal(&p_ev_name->def_data.arg.slr, &dsp->slr))
+                                    got_ref = 1;
+                                break;
 
-                            got_ref = 0;
-                            switch(p_ev_name->def_data.did_num)
-                                {
-                                case RPN_DAT_SLR:
-                                    if(slr_equal(&p_ev_name->def_data.arg.slr, &dsp->slr))
-                                        got_ref = 1;
-                                    break;
-
-                                case RPN_DAT_RANGE:
-                                    if(ev_slr_in_range(&p_ev_name->def_data.arg.range, &dsp->slr))
-                                        got_ref = 1;
-                                    break;
-                                }
-
-                            if(got_ref && !item_get--)
-                                {
-                                p_ev_data->did_num = RPN_DAT_NAME;
-                                p_ev_data->arg.nameid = p_ev_name->key;
-                                res = 1;
-                                }
+                            case RPN_DAT_RANGE:
+                                if(ev_slr_in_range(&p_ev_name->def_data.arg.range, &dsp->slr))
+                                    got_ref = 1;
+                                break;
                             }
+
+                        if(got_ref && !item_get--)
+                            {
+                            p_ev_data->did_num = RPN_DAT_NAME;
+                            p_ev_data->arg.nameid = p_ev_name->key;
+                            res = 1;
+                            }
+                        }
                     }
 
                 break;
@@ -662,7 +666,7 @@ ev_enum_dep_sup_get(
         /* grub about for supporters of this slot */
         if(ev_travel(&p_ev_slot, &dsp->slr) > 0)
             {
-            struct ev_grub_state grubb;
+            struct EV_GRUB_STATE grubb;
 
             grub_init(&grubb, &dsp->slr);
 
@@ -729,8 +733,12 @@ ev_todo_add_doc_dependents(
             EV_TRENT rix;
 
             for(rix = 0; rix < p_ss_doc->range_table.next; ++rix, ++rep)
-                if(!(rep->flags & TRF_TOBEDEL))
-                    todo_add_slr(&rep->byslr, TODO_SORT);
+                {
+                if(rep->flags & TRF_TOBEDEL)
+                    continue;
+
+                todo_add_slr(&rep->byslr, TODO_SORT);
+                }
             }
 
         /* add slr dependencies */
@@ -739,8 +747,12 @@ ev_todo_add_doc_dependents(
             EV_TRENT six;
 
             for(six = 0; six < p_ss_doc->slr_table.next; ++six, ++sep)
-                if(!(sep->flags & TRF_TOBEDEL))
-                    todo_add_slr(&sep->byslr, TODO_SORT);
+                {
+                if(sep->flags & TRF_TOBEDEL)
+                    continue;
+
+                todo_add_slr(&sep->byslr, TODO_SORT);
+                }
             }
         }
 
@@ -749,14 +761,18 @@ ev_todo_add_doc_dependents(
     todo_add_name_deps_of_slr(&slr, TRUE);
 
     /* look for custom function references */
-    if((p_ev_custom = custom_ptr(0)) != NULL)
+    if((p_ev_custom = custom_def.ptr) != NULL)
         {
         EV_NAMEID i;
 
         for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
-            if(!(p_ev_custom->flags & (TRF_TOBEDEL | TRF_UNDEFINED)))
-                if(p_ev_custom->owner.docno == docno)
-                    todo_add_custom_dependents(p_ev_custom->key);
+            {
+            if(0 != (p_ev_custom->flags & (TRF_TOBEDEL | TRF_UNDEFINED)))
+                continue;
+
+            if(p_ev_custom->owner.docno == docno)
+                todo_add_custom_dependents(p_ev_custom->key);
+            }
         }
 }
 
@@ -845,8 +861,8 @@ ev_tree_close(
 
 PROC_QSORT_PROTO(static, custom_comp, CUSTOM_USE)
 {
-    P_CUSTOM_USE c1 = (P_CUSTOM_USE) arg1;
-    P_CUSTOM_USE c2 = (P_CUSTOM_USE) arg2;
+    const P_CUSTOM_USE c1 = (P_CUSTOM_USE) arg1;
+    const P_CUSTOM_USE c2 = (P_CUSTOM_USE) arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -866,8 +882,8 @@ PROC_QSORT_PROTO(static, custom_comp, CUSTOM_USE)
 
 PROC_QSORT_PROTO(extern, namcomp, NAME_USE)
 {
-    P_NAME_USE name1 = (P_NAME_USE) arg1;
-    P_NAME_USE name2 = (P_NAME_USE) arg2;
+    const P_NAME_USE name1 = (P_NAME_USE) arg1;
+    const P_NAME_USE name2 = (P_NAME_USE) arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -887,8 +903,8 @@ PROC_QSORT_PROTO(extern, namcomp, NAME_USE)
 
 PROC_QSORT_PROTO(static, rngcomp, RANGE_USE)
 {
-    P_RANGE_USE rng1 = (P_RANGE_USE) arg1;
-    P_RANGE_USE rng2 = (P_RANGE_USE) arg2;
+    const P_RANGE_USE rng1 = (P_RANGE_USE) arg1;
+    const P_RANGE_USE rng2 = (P_RANGE_USE) arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -945,7 +961,7 @@ search_for_custom_use(
     /* search for reference */
     if((mep = bsearch(&target,
                       smep,
-                      custom_use_table.sorted,
+                      custom_use_deptable.sorted,
                       sizeof(CUSTOM_USE),
                       custom_comp)) != 0)
         {
@@ -1108,8 +1124,8 @@ search_for_slrdependent(
 
 PROC_QSORT_PROTO(static, slrcomp, SLR_USE)
 {
-    P_SLR_USE slr1 = (P_SLR_USE) arg1;
-    P_SLR_USE slr2 = (P_SLR_USE) arg2;
+    const P_SLR_USE slr1 = (P_SLR_USE) arg1;
+    const P_SLR_USE slr2 = (P_SLR_USE) arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -1155,9 +1171,13 @@ todo_add_dependents(
             EV_TRENT rix;
 
             for(rix = 0; rix < p_ss_doc->range_table.next; ++rix, ++rep)
-                if(!(rep->flags & TRF_TOBEDEL))
-                    if(ev_slr_in_range(&rep->refto, slrp))
-                        todo_add_slr(&rep->byslr, TODO_SORT);
+                {
+                if(rep->flags & TRF_TOBEDEL)
+                    continue;
+
+                if(ev_slr_in_range(&rep->refto, slrp))
+                    todo_add_slr(&rep->byslr, TODO_SORT);
+                }
             }
 
         /* find slr dependents */
@@ -1168,14 +1188,12 @@ todo_add_dependents(
             sep = tree_slrptr(p_ss_doc, six);
             __assume(sep);
 
-            while(six < p_ss_doc->slr_table.next &&
-                  slr_equal(&sep->refto, slrp))
+            for( ; six < p_ss_doc->slr_table.next && slr_equal(&sep->refto, slrp); ++six, ++sep)
                 {
-                if(!(sep->flags & TRF_TOBEDEL))
-                    todo_add_slr(&sep->byslr, TODO_SORT);
+                if(sep->flags & TRF_TOBEDEL)
+                    continue;
 
-                ++sep;
-                ++six;
+                todo_add_slr(&sep->byslr, TODO_SORT);
                 }
             }
         }
@@ -1195,9 +1213,8 @@ todo_add_custom_dependents(
     EV_NAMEID customid)
 {
     EV_NAMEID mix;
-    S32 found_use;
+    S32 found_use = 0;
 
-    found_use = 0;
     if((mix = search_for_custom_use(customid)) >= 0)
         {
         P_CUSTOM_USE mep;
@@ -1208,15 +1225,15 @@ todo_add_custom_dependents(
 
             key.custom_to = customid;
 
-            while(mix < custom_use_table.next && !custom_comp(mep, &key))
+            for( ; mix < custom_use_deptable.next && !custom_comp(mep, &key); ++mix, ++mep)
                 {
-                if(!(mep->flags & TRF_TOBEDEL))
-                    todo_add_slr(&mep->byslr, TODO_SORT);
+                if(mep->flags & TRF_TOBEDEL)
+                    continue;
 
-                ++mep;
-                ++mix;
+                todo_add_slr(&mep->byslr, TODO_SORT);
                 }
             }
+
         found_use = 1;
         }
 
@@ -1234,9 +1251,8 @@ todo_add_name_dependents(
     EV_NAMEID nameid)
 {
     EV_NAMEID nix;
-    S32 found_use;
+    S32 found_use = 0;
 
-    found_use = 0;
     if((nix = search_for_name_use(nameid)) >= 0)
         {
         P_NAME_USE nep;
@@ -1247,15 +1263,15 @@ todo_add_name_dependents(
 
             key.nameto = nameid;
 
-            while(nix < namtab.next && !namcomp(nep, &key))
+            for( ; nix < namtab.next && !namcomp(nep, &key); ++nix, ++nep)
                 {
-                if(!(nep->flags & TRF_TOBEDEL))
-                    todo_add_slr(&nep->byslr, TODO_SORT);
+                if(nep->flags & TRF_TOBEDEL)
+                    continue;
 
-                ++nep;
-                ++nix;
+                todo_add_slr(&nep->byslr, TODO_SORT);
                 }
             }
+
         found_use = 1;
         }
 
@@ -1279,43 +1295,44 @@ todo_add_name_deps_of_slr(
     P_EV_NAME p_ev_name;
 
     /* look for name references */
-    if((p_ev_name = name_ptr(0)) != NULL)
+    if((p_ev_name = names_def.ptr) != NULL)
         {
         EV_NAMEID i;
 
         for(i = 0; i < names_def.next; ++i, ++p_ev_name)
-            if(!(p_ev_name->flags & TRF_TOBEDEL))
+            {
+            S32 got_ref = 0;
+
+            if(p_ev_name->flags & TRF_TOBEDEL)
+                continue;
+
+            switch(p_ev_name->def_data.did_num)
                 {
-                S32 got_ref;
-
-                got_ref = 0;
-                switch(p_ev_name->def_data.did_num)
-                    {
-                    case RPN_DAT_SLR:
-                        if(all_doc)
-                            {
-                            if(p_ev_name->def_data.arg.slr.docno == slrp->docno)
-                                got_ref = 1;
-                            }
-                        else if(slr_equal(&p_ev_name->def_data.arg.slr, slrp))
+                case RPN_DAT_SLR:
+                    if(all_doc)
+                        {
+                        if(p_ev_name->def_data.arg.slr.docno == slrp->docno)
                             got_ref = 1;
-                        break;
+                        }
+                    else if(slr_equal(&p_ev_name->def_data.arg.slr, slrp))
+                        got_ref = 1;
+                    break;
 
-                    case RPN_DAT_RANGE:
-                        if(all_doc)
-                            {
-                            if(p_ev_name->def_data.arg.range.s.docno == slrp->docno)
-                                got_ref = 1;
-                            }
-                        if(ev_slr_in_range(&p_ev_name->def_data.arg.range, slrp))
+                case RPN_DAT_RANGE:
+                    if(all_doc)
+                        {
+                        if(p_ev_name->def_data.arg.range.s.docno == slrp->docno)
                             got_ref = 1;
-                        break;
-                    }
-
-                /* mark all uses of name */
-                if(got_ref)
-                    todo_add_name_dependents(p_ev_name->key);
+                        }
+                    if(ev_slr_in_range(&p_ev_name->def_data.arg.range, slrp))
+                        got_ref = 1;
+                    break;
                 }
+
+            /* mark all uses of name */
+            if(got_ref)
+                todo_add_name_dependents(p_ev_name->key);
+            }
         }
 }
 
@@ -1437,9 +1454,7 @@ extern S32
 todo_get_slr(
     _OutRef_    P_EV_SLR slrp)
 {
-    S32 got_todo;
-
-    got_todo = 0;
+    S32 got_todo = 0;
 
     if(todotab.next)
         tree_sort_todo();
@@ -1564,13 +1579,15 @@ tree_remove_tobedel(
             for(i = dpp->mindel, iep = oep = sep + (i * ent_size);
                 i < dpp->next;
                 ++i, iep += ent_size)
-                if(!(*((EV_FLAGS *)(iep + flag_offset)) & TRF_TOBEDEL))
-                    {
-                    if(oep != iep)
-                        memcpy32(oep, iep, ent_size);
+                {
+                if(*((const EV_FLAGS *)(iep + flag_offset)) & TRF_TOBEDEL)
+                    continue;
 
-                    oep += ent_size;
-                    }
+                if(oep != iep)
+                    memcpy32(oep, iep, ent_size);
+
+                oep += ent_size;
+                }
 
             dpp->mindel = dpp->next = (oep - sep) / ent_size;
             dpp->flags &= ~TRF_TOBEDEL;
@@ -1642,9 +1659,9 @@ tree_sort_all(void)
         p_ss_doc = ev_p_ss_doc_from_docno_must(docno);
 
         tree_remove_tobedel(&p_ss_doc->exttab,
-                            sizeof(struct extentry),
+                            sizeof(struct EXTENTRY),
                             EXTBLKINC,
-                            offsetof(struct extentry, flags));
+                            offsetof(struct EXTENTRY, flags));
 
         tree_sort_ranges(docno);
         tree_sort_slrs(docno);
@@ -1668,15 +1685,15 @@ tree_sort_all(void)
 static void
 tree_sort_customs(void)
 {
-    if(!(tree_flags & TRF_LOCK))
-        {
-        if(tree_sort(&custom_use_table,
-                     sizeof32(CUSTOM_USE),
-                     MACBLKINC,
-                     offsetof32(CUSTOM_USE, flags),
-                     custom_comp))
-            tree_flags |= TRF_BLOWN;
-        }
+    if(tree_flags & TRF_LOCK)
+        return;
+
+    if(tree_sort(&custom_use_deptable,
+                 sizeof32(CUSTOM_USE),
+                 MACBLKINC,
+                 offsetof32(CUSTOM_USE, flags),
+                 custom_comp))
+        tree_flags |= TRF_BLOWN;
 }
 
 /******************************************************************************
@@ -1688,15 +1705,15 @@ tree_sort_customs(void)
 static void
 tree_sort_names(void)
 {
-    if(!(tree_flags & TRF_LOCK))
-        {
-        if(tree_sort(&namtab,
-                     sizeof32(NAME_USE),
-                     NAMBLKINC,
-                     offsetof32(NAME_USE, flags),
-                     namcomp))
-            tree_flags |= TRF_BLOWN;
-        }
+    if(tree_flags & TRF_LOCK)
+        return;
+
+    if(tree_sort(&namtab,
+                 sizeof32(NAME_USE),
+                 NAMBLKINC,
+                 offsetof32(NAME_USE, flags),
+                 namcomp))
+        tree_flags |= TRF_BLOWN;
 }
 
 /******************************************************************************
@@ -1714,15 +1731,15 @@ tree_sort_ranges(
     if((p_ss_doc = ev_p_ss_doc_from_docno(docno)) == NULL)
         return;
 
-    if(!(tree_flags & TRF_LOCK))
-        {
-        if(tree_sort(&p_ss_doc->range_table,
-                     sizeof32(RANGE_USE),
-                     RNGBLKINC,
-                     offsetof32(RANGE_USE, flags),
-                     rngcomp))
-            tree_flags |= TRF_BLOWN;
-        }
+    if(tree_flags & TRF_LOCK)
+        return;
+
+    if(tree_sort(&p_ss_doc->range_table,
+                 sizeof32(RANGE_USE),
+                 RNGBLKINC,
+                 offsetof32(RANGE_USE, flags),
+                 rngcomp))
+        tree_flags |= TRF_BLOWN;
 }
 
 /******************************************************************************
@@ -1740,15 +1757,15 @@ tree_sort_slrs(
     if((p_ss_doc = ev_p_ss_doc_from_docno(docno)) == NULL)
         return;
 
-    if(!(tree_flags & TRF_LOCK))
-        {
-        if(tree_sort(&p_ss_doc->slr_table,
-                     sizeof32(SLR_USE),
-                     SLRBLKINC,
-                     offsetof32(SLR_USE, flags),
-                     slrcomp))
-            tree_flags |= TRF_BLOWN;
-        }
+    if(tree_flags & TRF_LOCK)
+        return;
+
+    if(tree_sort(&p_ss_doc->slr_table,
+                 sizeof32(SLR_USE),
+                 SLRBLKINC,
+                 offsetof32(SLR_USE, flags),
+                 slrcomp))
+        tree_flags |= TRF_BLOWN;
 }
 
 /******************************************************************************

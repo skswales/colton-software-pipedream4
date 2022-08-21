@@ -51,37 +51,29 @@
 #define QUERY                   ((uchar) '?')
 #define DOT                     ((uchar) '.')
 
-typedef enum
+enum HIGHLIGHT_NUMBERS
 {
     HIGH_UNDERLINE      =   FIRST_HIGHLIGHT + 1 - 1,
     HIGH_BOLD           =   FIRST_HIGHLIGHT + 2 - 1,
     HIGH_ITALIC         =   FIRST_HIGHLIGHT + 4 - 1,
     HIGH_SUBSCRIPT      =   FIRST_HIGHLIGHT + 5 - 1,
     HIGH_SUPERSCRIPT    =   FIRST_HIGHLIGHT + 6 - 1
-}
-highlight_numbers;
+};
 
-typedef enum
-    {
+enum HIGHLIGHT_BITS
+{
     N_UNDERLINE     =   1,  /* highlight 1 */
     N_BOLD          =   2,  /* highlight 2 */
     N_ITALIC        =   8,  /* highlight 4 */
     N_SUBSCRIPT     =   16, /* highlight 5 */
     N_SUPERSCRIPT   =   32  /* highlight 6 */
-    }
-highlight_bits;
+};
 
-#define ishighlight(ch)         ((ch <= LAST_HIGHLIGHT)  &&  (FIRST_HIGHLIGHT <= ch))
-extern BOOL
-(ishighlight)(
-    S32 ch);
+#define ishighlight(ch) ( /*BOOL*/ \
+    (ch <= LAST_HIGHLIGHT)  &&  (FIRST_HIGHLIGHT <= ch) )
 
-#define ishighlighttext(ch)     ((ch <= LAST_HIGHLIGHT_TEXT)  &&  (FIRST_HIGHLIGHT_TEXT <= ch))
-extern BOOL
-(ishighlighttext)(
-    S32 ch);
-
-#define inversehighlight(ch) (ishighlight(ch) && (ch != FIRST_HIGHLIGHT  ||  ch != FIRST_HIGHLIGHT+2  ||  ch != FIRST_HIGHLIGHT+1))
+#define ishighlighttext(ch) ( /*BOOL*/ \
+    (ch <= LAST_HIGHLIGHT_TEXT)  &&  (FIRST_HIGHLIGHT_TEXT <= ch) )
 
 #if 0
 #define get_text_at_char() ('@')
@@ -98,9 +90,6 @@ extern BOOL
         : (*d_options_TA == (c)) )
 #endif
 
-#define OS_DEL          ((uchar) '\0')      /* OSCLI delimiter for system() */
-#define OSPRMT          ((uchar) '*')       /* OSCLI prompt */
-
 /******************************************************************************
 * key & function key assignments
 ******************************************************************************/
@@ -112,14 +101,13 @@ extern BOOL
 #define              ALT    -3
 #define DEPRESSED_ESCAPE    0
 
-typedef enum
-    {
+enum EXTRA_CHAR_BITS
+{
     FN_ADDED    = 0x0100, /* function keys */
     SHIFT_ADDED = 0x0200,
     CTRL_ADDED  = 0x0400,
     ALT_ADDED   = 0x0800  /* 'alt' letters */
-    }
-extra_char_bits;
+};
 
 /* function keys starting at F0 .. F15 */
 
@@ -137,8 +125,8 @@ extra_char_bits;
 
 /* Common function key assignments */
 
-typedef enum
-    {
+enum FUNCTION_KEY_VALUES
+{
     PRINT_KEY       = FUNC +  0,    /* 'F0' */
 
     HELP            = FUNC +  1,
@@ -157,8 +145,7 @@ typedef enum
     /* leave F12 well alone */
 
     INSERT_KEY      = FUNC + 13    /* 'F13' */
-    }
-function_key_values;
+};
 
 #define RISCOS_DELETE_KEY 0x7F /* transforms to ... */
 
@@ -241,10 +228,6 @@ function_key_values;
 /*
 exported functions
 */
-
-extern BOOL
-act_on_c(
-    S32 c);
 
 extern void
 exec_file(
@@ -507,7 +490,7 @@ macros
     x_indexcollb(current_p_docu, col)
 
 #define slot_contents(it) \
-    list_itemcontents(struct _slot, it)
+    list_itemcontents(struct SLOT, it)
 
 /*
 allocator parameters
@@ -686,7 +669,7 @@ macro definitions
 * savload.c
 ******************************************************************************/
 
-typedef struct _LOAD_FILE_OPTIONS
+typedef struct LOAD_FILE_OPTIONS
 {
     /* these can be derived from d_load[] options */
     const char * document_name;
@@ -701,7 +684,7 @@ typedef struct _LOAD_FILE_OPTIONS
 }
 LOAD_FILE_OPTIONS, * P_LOAD_FILE_OPTIONS;
 
-typedef struct _SAVE_FILE_OPTIONS
+typedef struct SAVE_FILE_OPTIONS
 {
     /* these can be derived from d_save[] options */
     const char * row_condition; /* NULL -> none */
@@ -783,7 +766,7 @@ restore_current_window_pos(void);
 extern void
 save_current_window_pos(void);
 
-enum _d_save_offsets
+enum D_SAVE_OFFSETS
 {
     SAV_NAME,
     SAV_ROWCOND,
@@ -792,7 +775,7 @@ enum _d_save_offsets
     SAV_FORMAT          /* position of save format option in dialog box */
 };
 
-enum _line_sep_list_offsets /* fits in U8 */
+enum LINE_SEP_LIST_OFFSETS /* fits in U8 */
 {
     LINE_SEP_LF,
     LINE_SEP_CR,
@@ -887,7 +870,7 @@ checkoverwrite(
 extern FILE_HANDLE
 pd_file_open(
     const char * name,
-    file_open_mode mode);
+    FILE_OPEN_MODE mode);
 
 extern int
 pd_file_close(
@@ -950,7 +933,7 @@ dict_number(
     const char *name,
     BOOL create);
 
-typedef struct a_letter
+typedef struct A_LETTER
 {
     uchar letter;
     BOOLEAN used;
@@ -1048,7 +1031,7 @@ remove_overlapped_linked_columns(
 * option page construct offsets
 ******************************************************************************/
 
-enum _d_options_offsets
+enum D_OPTIONS_OFFSETS
 {
     O_DE,       /* title string */
     O_TN,       /* text/numbers */
@@ -1067,7 +1050,7 @@ enum _d_options_offsets
     O_KE        /* kerning on/off */
 };
 
-enum _d_options_thousands_offsets
+enum D_OPTIONS_THOUSANDS_OFFSETS
 {
     TH_BLANK,
     TH_COMMA,
@@ -1075,7 +1058,7 @@ enum _d_options_thousands_offsets
     TH_SPACE
 };
 
-enum _d_poptions_offsets
+enum D_POPTIONS_OFFSETS
 {
     O_PL,   /* page length */
     O_LS,   /* line spacing */
@@ -1089,7 +1072,7 @@ enum _d_poptions_offsets
     O_FO    /* footer string */
 };
 
-enum _d_progvars_offsets
+enum D_PROGVARS_OFFSETS
 {
     OR_AM,      /* auto/manual recalc (SHOULD REALLY BE OR_AN) */
     OR_IO,      /* insert/overtype */
@@ -1125,7 +1108,7 @@ str_isblank( /* is string only spaces? */
  * can get rid of it if we force dialog_header to have all entries
 */
 
-typedef enum
+enum DIALOG_HEADER_OFFSETS
 {
     D_ERROR,
     D_LOAD,
@@ -1198,17 +1181,15 @@ typedef enum
     D_FORMULA_ERROR,
     D_CHART_OPTIONS,
     D_THE_LAST_ONE
-}
-dialog_header_offsets;
+};
 
-typedef enum
+enum D_FONTS_OFFSETS
 {
     D_FONTS_G,
     D_FONTS_X,
     D_FONTS_Y,
     D_FONTS_S
-}
-d_fonts_offsets;
+};
 
 /* offsets in d_driver */
 
@@ -1584,7 +1565,7 @@ save_menu_changes(
 * execs.c
 ******************************************************************************/
 
-typedef enum
+enum FUNCTION_NUMBERS
 {
     N_Quit = 1,
     N_Escape,
@@ -1781,8 +1762,7 @@ typedef enum
 ,   N_ToNumber
 ,   N_ToText
 ,   N_ClearBlock
-}
-function_numbers;
+};
 
 extern void
 Quit_fn(void);
@@ -2408,6 +2388,7 @@ CopyBlock_fn(void);
 extern void
 DeleteBlock_fn(void);
 
+/*ncr*/
 extern S32
 do_delete_block(
     BOOL do_save,
@@ -2417,6 +2398,7 @@ do_delete_block(
 extern void
 ensure_paste_list_clipped(void);
 
+_Check_return_
 extern BOOL
 is_block_blank(
     COL cs,
@@ -2442,15 +2424,18 @@ ReplicateDown_fn(void);
 extern void
 ReplicateRight_fn(void);
 
+_Check_return_
 extern BOOL
 save_block_and_delete(
     BOOL is_deletion,
     BOOL do_save);
 
+_Check_return_
 extern BOOL
 set_up_block(
     BOOL check_block_in_doc);
 
+/*ncr*/
 extern char *
 text_csr_uref(
     uchar * csr,
@@ -2464,17 +2449,16 @@ TransposeBlock_fn(void);
 ******************************************************************************/
 
 extern void
-DefineName_fn(
-    S32 category);
+DefineName_fn(void);
 
 extern void
 EditName_fn(
-    S32 category,
+    _InVal_     enum EV_RESOURCE_TYPES category,
     S32 itemno);
 
 extern void
 PasteName_fn(
-    S32 category,
+    _InVal_     enum EV_RESOURCE_TYPES category,
     S32 itemno);
 
 extern void
@@ -2896,7 +2880,7 @@ compile_expression(
     char *text_in,
     S32 len_out,
     P_S32 at_pos,
-    P_EV_RESULT resp,
+    P_EV_RESULT p_ev_result,
     P_EV_PARMS parmsp);
 
 extern void
@@ -2929,7 +2913,7 @@ draw_find_file(
     COL col,
     ROW row,
     P_P_DRAW_DIAG p_p_draw_diag,
-    drawfrp *drawref);
+    P_P_DRAW_FILE_REF drawref);
 
 extern void
 draw_redraw_all_pictures(void);
@@ -2979,7 +2963,7 @@ extern void
 graph_remove_entry(
     ghandle ghan);
 
-extern graphlinkp
+extern P_GRAPHICS_LINK_ENTRY
 graph_search_list(
     ghandle ghan);
 
@@ -3009,7 +2993,7 @@ merge_compiled_exp(
     char format,
     char *compiled_out,
     S32 rpn_len,
-    P_EV_RESULT resp,
+    P_EV_RESULT p_ev_result,
     P_EV_PARMS parmsp,
     S32 load_flag,
     S32 add_refs);
@@ -3135,7 +3119,7 @@ write_slr_ref(
 * pdsearch.c
 ******************************************************************************/
 
-enum _d_search_offsets
+enum D_SEARCH_OFFSETS
 {
     SCH_TARGET,
     SCH_REPLACE,
@@ -3156,23 +3140,23 @@ do_replace(
 definition of slot structure
 ******************************************************************************/
 
-struct _slot
+struct SLOT
 {
     uchar type;                 /* type of slot */
     uchar flags;                /* error, altered & contains slot refs */
     uchar justify;              /* justify bits and protected bit */
     uchar format;               /* format if it's a number slot */
 
-    union _slot_content
+    union SLOT_CONTENT
     {
         uchar text[1];          /* text slot contents */
 
-        struct
+        struct SLOT_CONTENT_NUMBER
         {
             EV_SLOT guts;
         } number;
 
-        struct _page
+        struct SLOT_CONTENT_PAGE
         {
             S32 cpoff;         /* current page offset */
             S32 condval;       /* value for conditional page eject, 0=unconditional */
@@ -3181,10 +3165,10 @@ struct _slot
     } content;
 };
 
-#define SL_NUMBEROVH    ((S32) (offsetof(struct _slot, content.number.guts)))
-#define SL_PAGEOVH      ((S32) (offsetof(struct _slot, content.page) + \
-                                 sizeof(struct _page)))
-#define SL_SLOTOVH      ((S32)  offsetof(struct _slot, content))
+#define SL_NUMBEROVH    ((S32) (offsetof(struct SLOT, content.number.guts)))
+#define SL_PAGEOVH      ((S32) (offsetof(struct SLOT, content.page) + \
+                                 sizeof(struct SLOT_CONTENT_PAGE)))
+#define SL_SLOTOVH      ((S32)  offsetof(struct SLOT, content))
 #define SL_TEXTOVH      SL_SLOTOVH
 
 /******************************************************************************
@@ -3366,7 +3350,7 @@ font_unstack(
 extern S32
 result_extract(
     P_SLOT sl,
-    P_EV_RESULT *respp);
+    P_EV_RESULT * p_p_ev_result);
 
 extern S32
 result_sign(
@@ -3380,38 +3364,6 @@ new_font_leading(
 
 extern void
 new_font_leading_based_on_y(void);
-
-#if RISCOS
-/* NorCroft is still particularly poor at a->m += b (and a->m++ too)
- * due to high-level optimisation getting &a->m
- *
- *      ADD     ptr, address_of_a, #m
- *      LDR     rn, [ptr]
- *      ADD     rn, rn, b
- *      STR     rn, [ptr]
- *  not
- *      LDR     rn, [address_of_a, #m]
- *      ADD     rn, rn, b
- *      STR     rn, [address_of_a, #m]
-*/
-#define inc(a)          ((a) = (a) + 1)
-#define dec(a)          ((a) = (a) - 1)
-#define plusab(a, b)    ((a) = (a) + (b))
-#define minusab(a, b)   ((a) = (a) - (b))
-#define timesab(a, b)   ((a) = (a) * (b))
-#define andab(a, b)     ((a) = (a) & (b))
-#define orab(a, b)      ((a) = (a) | (b))
-#define bicab(a, b)     ((a) = (a) & ~(b))
-#else
-#define inc(a)          ((a)++)
-#define dec(a)          ((a)--)
-#define plusab(a, b)    ((a) += (b))
-#define minusab(a, b)   ((a) -= (b))
-#define timesab(a, b)   ((a) *= (b))
-#define andab(a, b)     ((a) &= (b))
-#define orab(a, b)      ((a) |= (b))
-#define bicab(a, b)     ((a) &= ~(b))
-#endif
 
 /*
 pdchart.c

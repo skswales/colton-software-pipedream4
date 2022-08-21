@@ -7,7 +7,7 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2014 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.52/05
+TEXTUAL_VERSION_NUMBER=4.52/06
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -93,9 +93,6 @@ AOFND=$(AOF1) $(AOF2) $(AOF3) $(AOF4) $(AOFGR) $(AOFM1) $(AOFM2) $(AOFM3) $(AOFM
 #
 AOFDB=$(AOFD) $(AOFMD)
 #
-#
-# ################################## R e l e a s e #######################################
-#
 # United Kingdom image
 #
 #       Insert -d for debug symbols, -v (multiple times) for interesting output
@@ -104,12 +101,12 @@ AOFDB=$(AOFD) $(AOFMD)
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs
-        @Echo If the link step fails, please look in GB_MapIm for the error
+        @Echo If the link step fails, please look in o.GB_MapIm for the error
         $(LD) -v $(Linkflags) -base &8000 \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs \
-        -map -xref > @.GB_MapIm 2>&1 -symbols @.GB_SymIm
+        -map -xref > @.o.GB_MapIm 2>&1 -symbols @.o.GB_SymIm
         @Info $@
 #
 o.aof_inter: Makefile
@@ -124,7 +121,7 @@ o.aof_GB:   \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs \
-        -map -xref > @.GB_Map00 2>&1 -symbols @.GB_Sym00
+        -map -xref > @.o.GB_Map00 2>&1 -symbols @.o.GB_Sym00
 #
 # working copy of the United Kingdom release sprites file
 #
@@ -221,33 +218,33 @@ o.Modules.collect:    $(CMODULES).c.collect
 o.Modules.debug:      $(CMODULES).c.debug
         $(CC) -o $@ $(CCflags) $(CMODULES).c.debug
 o.Modules.ev_comp:    $(CMODULES).c.ev_comp
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_comp
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_comp
 o.Modules.ev_dcom:    $(CMODULES).c.ev_dcom
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_dcom
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_dcom
 o.Modules.ev_docs:    $(CMODULES).c.ev_docs
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_docs
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_docs
 o.Modules.ev_eval:    $(CMODULES).c.ev_eval
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_eval
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_eval
 o.Modules.ev_exec:    $(CMODULES).c.ev_exec
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_exec
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_exec
 o.Modules.ev_func:    $(CMODULES).c.ev_func
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_func
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_func
 o.Modules.ev_help:    $(CMODULES).c.ev_help
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_help
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_help
 o.Modules.ev_math:    $(CMODULES).c.ev_math
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_math
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_math
 o.Modules.ev_mcpx:    $(CMODULES).c.ev_mcpx
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_mcpx
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_mcpx
 o.Modules.ev_name:    $(CMODULES).c.ev_name
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_name
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_name
 o.Modules.ev_rpn:     $(CMODULES).c.ev_rpn
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_rpn
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_rpn
 o.Modules.ev_tabl:    $(CMODULES).c.ev_tabl
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_tabl
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_tabl
 o.Modules.ev_tree:    $(CMODULES).c.ev_tree
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_tree
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_tree
 o.Modules.ev_uref:    $(CMODULES).c.ev_uref
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_uref
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_uref
 o.Modules.file:       $(CMODULES).c.file
         $(CC) -o $@ $(CCflags) $(CMODULES).c.file
 o.Modules.fileutil:   $(CMODULES).c.fileutil

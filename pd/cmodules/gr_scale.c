@@ -31,19 +31,24 @@ local header
 internal routines
 */
 
-typedef const struct _GR_STYLE_COMMON_BLK * PC_GR_STYLE_COMMON_BLK; /* NB. these are never modified */
+typedef const struct GR_STYLE_COMMON_BLK * PC_GR_STYLE_COMMON_BLK; /* NB. these are never modified */
 
-static P_ANY
-gr_point_list_search(
+_Check_return_
+_Ret_maybenull_
+static P_BYTE
+_gr_point_list_search(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     GR_LIST_ID list_id);
+
+#define gr_point_list_search(__base_type, cp, series_idx, point, list_id) (\
+    (__base_type *) _gr_point_list_search(cp, series_idx, point, list_id) )
 
 static S32
 gr_point_list_set(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_ANY style,
     GR_LIST_ID list_id);
@@ -105,16 +110,16 @@ extern GR_COORD
 /* -------------------------------------------------------------------------------- */
 
 extern void
-gr_chart_objid_from_axes(
+gr_chart_objid_from_axes_idx(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis,
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx,
     _OutRef_    P_GR_CHART_OBJID id)
 {
     gr_chart_objid_clear(id);
     id->name   = GR_CHART_OBJNAME_AXIS;
     id->has_no = 1;
-    id->no     = gr_axes_external_from_ix(cp, axes, axis);
+    id->no     = gr_axes_external_from_idx(cp, axes_idx, axis_idx);
 }
 
 /*
@@ -142,26 +147,26 @@ gr_chart_objid_from_axis_tick(
 }
 
 extern void
-gr_chart_objid_from_seridx(
+gr_chart_objid_from_series_idx(
     P_GR_CHART cp,
-    GR_SERIES_NO seridx,
+    GR_SERIES_IDX series_idx,
     _OutRef_    P_GR_CHART_OBJID id)
 {
     gr_chart_objid_clear(id);
     id->name   = GR_CHART_OBJNAME_SERIES;
     id->has_no = 1;
-    id->no     = gr_series_external_from_ix(cp, seridx);
+    id->no     = gr_series_external_from_idx(cp, series_idx);
 }
 
 extern void
-gr_chart_objid_from_series(
-    GR_SERIES_NO series,
+gr_chart_objid_from_series_no(
+    GR_ESERIES_NO series_no,
     _OutRef_    P_GR_CHART_OBJID id)
 {
     gr_chart_objid_clear(id);
     id->name   = GR_CHART_OBJNAME_SERIES;
     id->has_no = 1;
-    id->no     = series;
+    id->no     = series_no;
 }
 
 extern void
@@ -177,7 +182,7 @@ gr_chart_objid_from_text(
 
 /* -------------------------------------------------------------------------------- */
 
-typedef struct _GR_STYLE_COMMON_BLK
+typedef struct GR_STYLE_COMMON_BLK
 {
     NLISTS_BLK nlb;
 
@@ -187,7 +192,7 @@ typedef struct _GR_STYLE_COMMON_BLK
 
     void (* rerefproc) (
         P_GR_CHART    cp,
-        GR_SERIES_IX seridx,
+        GR_SERIES_IDX series_idx,
         S32          add);
 
     #if TRACE_ALLOWED
@@ -206,7 +211,7 @@ static const GR_STYLE_COMMON_BLK
 gr_chart_text_common_blk =
 {
     { NULL, sizeof(GR_TEXT) + 1024, 16 * (sizeof(GR_TEXT) + 1024) },
-    offsetof(GR_CHART, text) + offsetof(struct _gr_chart_text, lbr),
+    offsetof(GR_CHART, text) + offsetof(struct GR_CHART_TEXT, lbr),
     sizeof(GR_TEXT), NULL
     TRACE_STYLE_CLASS("text object")
 };
@@ -215,7 +220,7 @@ static const GR_STYLE_COMMON_BLK
 gr_chart_text_textstyle_common_blk =
 {
     { NULL, sizeof(GR_TEXTSTYLE), 16 * sizeof(GR_TEXTSTYLE) },
-    offsetof(GR_CHART, text) + offsetof(struct _gr_chart_text, style) + offsetof(struct _gr_chart_text_style, lbr),
+    offsetof(GR_CHART, text) + offsetof(struct GR_CHART_TEXT, style) + offsetof(struct GR_CHART_TEXT_STYLE, lbr),
     sizeof(GR_TEXTSTYLE), NULL
     TRACE_STYLE_CLASS("text object textstyle")
 };
@@ -224,7 +229,7 @@ static const GR_STYLE_COMMON_BLK
 gr_pdrop_fillstyle_common_blk =
 {
     { NULL, sizeof(GR_FILLSTYLE), 16 * sizeof(GR_FILLSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, pdrop_fill),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, pdrop_fill),
     sizeof(GR_FILLSTYLE), gr_pdrop_list_fillstyle_reref
     TRACE_STYLE_CLASS("drop fillstyle")
 };
@@ -233,7 +238,7 @@ static const GR_STYLE_COMMON_BLK
 gr_pdrop_linestyle_common_blk =
 {
     { NULL, sizeof(GR_LINESTYLE), 16 * sizeof(GR_LINESTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, pdrop_line),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, pdrop_line),
     sizeof(GR_LINESTYLE), NULL
     TRACE_STYLE_CLASS("drop linestyle")
 };
@@ -242,7 +247,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_fillstyle_common_blk =
 {
     { NULL, sizeof(GR_FILLSTYLE), 16 * sizeof(GR_FILLSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_fill),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_fill),
     sizeof(GR_FILLSTYLE), gr_point_list_fillstyle_reref
     TRACE_STYLE_CLASS("fillstyle")
 };
@@ -251,7 +256,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_linestyle_common_blk =
 {
     { NULL, sizeof(GR_LINESTYLE), 16 * sizeof(GR_LINESTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_line),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_line),
     sizeof(GR_LINESTYLE), NULL
     TRACE_STYLE_CLASS("linestyle")
 };
@@ -260,7 +265,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_textstyle_common_blk =
 {
     { NULL, sizeof(GR_TEXTSTYLE), 16 * sizeof(GR_TEXTSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_text),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_text),
     sizeof(GR_TEXTSTYLE), NULL
     TRACE_STYLE_CLASS("textstyle")
 };
@@ -269,7 +274,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_barchstyle_common_blk =
 {
     { NULL, sizeof(GR_BARCHSTYLE), 16 * sizeof(GR_BARCHSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_barch),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_barch),
     sizeof(GR_BARCHSTYLE), NULL
     TRACE_STYLE_CLASS("bar chart")
 };
@@ -278,7 +283,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_barlinechstyle_common_blk =
 {
     { NULL, sizeof(GR_BARLINECHSTYLE), 16 * sizeof(GR_BARLINECHSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_barlinech),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_barlinech),
     sizeof(GR_BARLINECHSTYLE), NULL
     TRACE_STYLE_CLASS("bar & line chart")
 };
@@ -287,7 +292,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_linechstyle_common_blk =
 {
     { NULL, sizeof(GR_LINECHSTYLE), 16 * sizeof(GR_LINECHSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_linech),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_linech),
     sizeof(GR_LINECHSTYLE), NULL
     TRACE_STYLE_CLASS("line chart")
 };
@@ -296,7 +301,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_piechdisplstyle_common_blk =
 {
     { NULL, sizeof(GR_PIECHDISPLSTYLE), 16 * sizeof(GR_PIECHDISPLSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_piechdispl),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_piechdispl),
     sizeof(GR_PIECHDISPLSTYLE), NULL
     TRACE_STYLE_CLASS("pie chart displ")
 };
@@ -305,7 +310,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_piechlabelstyle_common_blk =
 {
     { NULL, sizeof(GR_PIECHLABELSTYLE), 16 * sizeof(GR_PIECHLABELSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_piechlabel),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_piechlabel),
     sizeof(GR_PIECHLABELSTYLE), NULL
     TRACE_STYLE_CLASS("pie chart label")
 };
@@ -314,7 +319,7 @@ static const GR_STYLE_COMMON_BLK
 gr_point_scatchstyle_common_blk =
 {
     { NULL, sizeof(GR_SCATCHSTYLE), 16 * sizeof(GR_SCATCHSTYLE) },
-    offsetof(GR_SERIES, lbr) + offsetof(struct _gr_series_lbr, point_scatch),
+    offsetof(GR_SERIES, lbr) + offsetof(struct GR_SERIES_LBR, point_scatch),
     sizeof(GR_SCATCHSTYLE), NULL
     TRACE_STYLE_CLASS("scatter chart")
 };
@@ -388,12 +393,12 @@ common_list_fillstyle_reref(
     LIST_ITEMNO key;
     P_GR_FILLSTYLE pt;
 
-    for(pt = collect_first(p_p_list_block, &key);
+    for(pt = collect_first(GR_FILLSTYLE, p_p_list_block, &key);
         pt;
-        pt = collect_next( p_p_list_block, &key))
+        pt = collect_next( GR_FILLSTYLE, p_p_list_block, &key))
         {
         /* add/lose ref to particular picture. DOES NOT destroy stored pattern handle */
-        gr_cache_ref((/*const*/ P_GR_CACHE_HANDLE) &pt->pattern, add);
+        gr_cache_ref((PC_GR_CACHE_HANDLE) &pt->pattern, add);
         }
 }
 
@@ -451,7 +456,8 @@ gr_chart_list_duplic(
     return(res);
 }
 
-#if 0
+#if defined(UNUSED_KEEP_ALIVE)
+
 extern P_ANY
 gr_chart_list_first(
     P_GR_CHART cp,
@@ -466,25 +472,15 @@ gr_chart_list_first(
 extern P_ANY
 gr_chart_list_next(
     P_GR_CHART cp,
-    /*inout*/ P_LIST_ITEMNO p_key,
+    _InoutRef_  P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id)
 {
     PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
 
     return(collect_next(gr_chart_list_get_p_p_list_block(cp, cbp), p_key));
 }
-#endif
 
-static P_ANY
-gr_chart_list_search(
-    P_GR_CHART cp,
-    LIST_ITEMNO item,
-    GR_LIST_ID list_id)
-{
-    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-
-    return(collect_search(gr_chart_list_get_p_p_list_block(cp, cbp), item));
-}
+#endif /* UNUSED_KEEP_ALIVE */
 
 static S32
 gr_chart_list_set(
@@ -504,7 +500,7 @@ gr_chart_list_set(
 *
 ******************************************************************************/
 
-typedef struct _GR_CHART_OBJID_CHARTSTYLE_DESC
+typedef struct GR_CHART_OBJID_CHARTSTYLE_DESC
 {
     U16 style_size;
     U16 axes_offset;
@@ -520,10 +516,10 @@ bar chart style
 static const GR_CHART_OBJID_CHARTSTYLE_DESC
 gr_chart_objid_barchstyle_desc =
 {
-                                                               sizeof(GR_BARCHSTYLE),
-    offsetof(GR_AXES,   style) + offsetof(struct _gr_axes_style,         barch),
-    offsetof(GR_SERIES, style) + offsetof(struct _gr_series_style, point_barch),
-                                                           GR_LIST_POINT_BARCHSTYLE
+                                                              sizeof(GR_BARCHSTYLE),
+    offsetof(GR_AXES,   style) + offsetof(struct GR_AXES_STYLE,         barch),
+    offsetof(GR_SERIES, style) + offsetof(struct GR_SERIES_STYLE, point_barch),
+                                                          GR_LIST_POINT_BARCHSTYLE
 };
 
 /*
@@ -533,10 +529,10 @@ bar & line chart style
 static const GR_CHART_OBJID_CHARTSTYLE_DESC
 gr_chart_objid_barlinechstyle_desc =
 {
-                                                               sizeof(GR_BARLINECHSTYLE),
-    offsetof(GR_AXES,   style) + offsetof(struct _gr_axes_style,         barlinech),
-    offsetof(GR_SERIES, style) + offsetof(struct _gr_series_style, point_barlinech),
-                                                           GR_LIST_POINT_BARLINECHSTYLE
+                                                              sizeof(GR_BARLINECHSTYLE),
+    offsetof(GR_AXES,   style) + offsetof(struct GR_AXES_STYLE,         barlinech),
+    offsetof(GR_SERIES, style) + offsetof(struct GR_SERIES_STYLE, point_barlinech),
+                                                          GR_LIST_POINT_BARLINECHSTYLE
 };
 
 /*
@@ -546,10 +542,10 @@ line chart style
 static const GR_CHART_OBJID_CHARTSTYLE_DESC
 gr_chart_objid_linechstyle_desc =
 {
-                                                               sizeof(GR_LINECHSTYLE),
-    offsetof(GR_AXES,   style) + offsetof(struct _gr_axes_style,         linech),
-    offsetof(GR_SERIES, style) + offsetof(struct _gr_series_style, point_linech),
-                                                           GR_LIST_POINT_LINECHSTYLE
+                                                              sizeof(GR_LINECHSTYLE),
+    offsetof(GR_AXES,   style) + offsetof(struct GR_AXES_STYLE,         linech),
+    offsetof(GR_SERIES, style) + offsetof(struct GR_SERIES_STYLE, point_linech),
+                                                          GR_LIST_POINT_LINECHSTYLE
 };
 
 /*
@@ -559,19 +555,19 @@ pie chart styles
 static const GR_CHART_OBJID_CHARTSTYLE_DESC
 gr_chart_objid_piechdisplstyle_desc =
 {
-                                                               sizeof(GR_PIECHDISPLSTYLE),
-    offsetof(GR_AXES,   style) + offsetof(struct _gr_axes_style,         piechdispl),
-    offsetof(GR_SERIES, style) + offsetof(struct _gr_series_style, point_piechdispl),
-                                                           GR_LIST_POINT_PIECHDISPLSTYLE
+                                                              sizeof(GR_PIECHDISPLSTYLE),
+    offsetof(GR_AXES,   style) + offsetof(struct GR_AXES_STYLE,         piechdispl),
+    offsetof(GR_SERIES, style) + offsetof(struct GR_SERIES_STYLE, point_piechdispl),
+                                                          GR_LIST_POINT_PIECHDISPLSTYLE
 };
 
 static const GR_CHART_OBJID_CHARTSTYLE_DESC
 gr_chart_objid_piechlabelstyle_desc =
 {
-                                                               sizeof(GR_PIECHLABELSTYLE),
-    offsetof(GR_AXES,   style) + offsetof(struct _gr_axes_style,         piechlabel),
-    offsetof(GR_SERIES, style) + offsetof(struct _gr_series_style, point_piechlabel),
-                                                           GR_LIST_POINT_PIECHLABELSTYLE
+                                                              sizeof(GR_PIECHLABELSTYLE),
+    offsetof(GR_AXES,   style) + offsetof(struct GR_AXES_STYLE,         piechlabel),
+    offsetof(GR_SERIES, style) + offsetof(struct GR_SERIES_STYLE, point_piechlabel),
+                                                          GR_LIST_POINT_PIECHLABELSTYLE
 };
 
 /*
@@ -581,10 +577,10 @@ scatter chart style
 static const GR_CHART_OBJID_CHARTSTYLE_DESC
 gr_chart_objid_scatchstyle_desc =
 {
-                                                               sizeof(GR_SCATCHSTYLE),
-    offsetof(GR_AXES,   style) + offsetof(struct _gr_axes_style,         scatch),
-    offsetof(GR_SERIES, style) + offsetof(struct _gr_series_style, point_scatch),
-                                                           GR_LIST_POINT_SCATCHSTYLE
+                                                              sizeof(GR_SCATCHSTYLE),
+    offsetof(GR_AXES,   style) + offsetof(struct GR_AXES_STYLE,         scatch),
+    offsetof(GR_SERIES, style) + offsetof(struct GR_SERIES_STYLE, point_scatch),
+                                                          GR_LIST_POINT_SCATCHSTYLE
 };
 
 /******************************************************************************
@@ -600,10 +596,10 @@ gr_chart_objid_chartstyle_query(
     /*out*/ P_ANY style,
     P_GR_CHART_OBJID_CHARTSTYLE_DESC desc)
 {
-    P_U8         bpt /*const*/;
-    GR_AXES_NO   axes;
-    GR_SERIES_IX seridx;
-    S32          using_default = 0;
+    P_U8          bpt /*const*/;
+    GR_AXES_IDX   axes_idx;
+    GR_SERIES_IDX series_idx;
+    S32           using_default = 0;
 
     assert(cp);
     assert(style);
@@ -613,30 +609,30 @@ gr_chart_objid_chartstyle_query(
         {
         default:
             /* use style of first axes */
-            axes = 0;
+            axes_idx = 0;
             goto lookup_axes_style;
 
         case GR_CHART_OBJNAME_AXIS:
         case GR_CHART_OBJNAME_AXISGRID:
         case GR_CHART_OBJNAME_AXISTICK:
-            (void) gr_axes_ix_from_external(cp, id->no, &axes);
+            (void) gr_axes_idx_from_external(cp, id->no, &axes_idx);
 
         lookup_axes_style:;
-            bpt = (P_U8) &cp->axes[axes] + desc->axes_offset;
+            bpt = (P_U8) &cp->axes[axes_idx] + desc->axes_offset;
             break;
 
         case GR_CHART_OBJNAME_SERIES:
         case GR_CHART_OBJNAME_DROPSER:
         case GR_CHART_OBJNAME_BESTFITSER:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
         lookup_series_style:;
             {
-            bpt = (P_U8) getserp(cp, seridx) + desc->ser_offset;
+            bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
 
             if((*bpt & 1) == 0 /*!pt->bits.manual*/)
                 {
-                axes = gr_axes_ix_from_seridx(cp, seridx);
+                axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
                 using_default = 1;
                 goto lookup_axes_style;
                 }
@@ -645,14 +641,14 @@ gr_chart_objid_chartstyle_query(
 
         case GR_CHART_OBJNAME_POINT:
         case GR_CHART_OBJNAME_DROPPOINT:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
-            bpt = gr_point_list_search(cp, seridx, gr_point_key_from_external(id->subno), (GR_LIST_ID) desc->list_id);
+            bpt = gr_point_list_search(BYTE, cp, series_idx, gr_point_key_from_external(id->subno), (GR_LIST_ID) desc->list_id);
 
             if(!bpt)
                 {
                 using_default = 1;
-                goto lookup_series_style; /* with seridx valid */
+                goto lookup_series_style; /* with series_idx valid */
                 }
 
             break;
@@ -676,10 +672,10 @@ gr_chart_objid_chartstyle_set(
     PC_ANY style,
     P_GR_CHART_OBJID_CHARTSTYLE_DESC desc)
 {
-    P_U8         bpt;
-    GR_AXES_NO   axes;
-    GR_SERIES_IX seridx;
-    S32          res = 1;
+    P_U8          bpt;
+    GR_AXES_IDX   axes_idx;
+    GR_SERIES_IDX series_idx;
+    S32           res = 1;
 
     assert(cp);
     assert(style);
@@ -689,48 +685,48 @@ gr_chart_objid_chartstyle_set(
         {
         default:
             /* set style of first axes */
-            axes = 0;
+            axes_idx = 0;
             goto set_axes_style;
 
         case GR_CHART_OBJNAME_AXIS:
         case GR_CHART_OBJNAME_AXISGRID:
         case GR_CHART_OBJNAME_AXISTICK:
-            (void) gr_axes_ix_from_external(cp, id->no, &axes);
+            (void) gr_axes_idx_from_external(cp, id->no, &axes_idx);
 
         set_axes_style:;
 
             /* set all series on axes to auto and remove deviant points */
-            for(seridx = cp->axes[axes].series.stt_idx;
-                seridx < cp->axes[axes].series.end_idx;
-                seridx++)
+            for(series_idx = cp->axes[axes_idx].series.stt_idx;
+                series_idx < cp->axes[axes_idx].series.end_idx;
+                series_idx++)
                 {
                 /* remove deviant point data from this series */
-                gr_point_list_delete(cp, seridx, (GR_LIST_ID) desc->list_id);
+                gr_point_list_delete(cp, series_idx, (GR_LIST_ID) desc->list_id);
 
                 /* set series to auto */
-                bpt = (P_U8) getserp(cp, seridx) + desc->ser_offset;
+                bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
 
                 *bpt &= ~1; /*serp->style.point_xxxch.bits.manual = 0;*/
                 }
 
-            bpt = (P_U8) &cp->axes[axes] + desc->axes_offset;
+            bpt = (P_U8) &cp->axes[axes_idx] + desc->axes_offset;
             break;
 
         case GR_CHART_OBJNAME_SERIES:
         case GR_CHART_OBJNAME_DROPSER:
         case GR_CHART_OBJNAME_BESTFITSER:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
             /* remove deviant point data from this series */
-            gr_point_list_delete(cp, seridx, (GR_LIST_ID) desc->list_id);
+            gr_point_list_delete(cp, series_idx, (GR_LIST_ID) desc->list_id);
 
-            bpt = (P_U8) getserp(cp, seridx) + desc->ser_offset;
+            bpt = (P_U8) getserp(cp, series_idx) + desc->ser_offset;
             break;
 
         case GR_CHART_OBJNAME_POINT:
         case GR_CHART_OBJNAME_DROPPOINT:
             return(gr_point_list_set(cp,
-                                     gr_series_ix_from_external(cp, id->no),
+                                     gr_series_idx_from_external(cp, id->no),
                                      gr_point_key_from_external(id->subno),
                                      style,
                                      (GR_LIST_ID) desc->list_id));
@@ -957,13 +953,13 @@ gr_chart_objid_fillstyle_query(
 
         case GR_CHART_OBJNAME_POINT:
             return(gr_point_fillstyle_query(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
         case GR_CHART_OBJNAME_DROPPOINT:
             return(gr_pdrop_fillstyle_query(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
@@ -987,7 +983,7 @@ gr_chart_objid_fillstyle_set(
     PC_GR_FILLSTYLE style)
 {
     P_GR_FILLSTYLE pt;
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
 
     assert(cp);
 
@@ -1010,30 +1006,30 @@ gr_chart_objid_fillstyle_set(
             break;
 
         case GR_CHART_OBJNAME_SERIES:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
-            gr_point_list_delete(cp, seridx, GR_LIST_POINT_FILLSTYLE);
+            gr_point_list_delete(cp, series_idx, GR_LIST_POINT_FILLSTYLE);
 
-            pt = &getserp(cp, seridx)->style.point_fill;
+            pt = &getserp(cp, series_idx)->style.point_fill;
             break;
 
         case GR_CHART_OBJNAME_DROPSER:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
-            gr_point_list_delete(cp, seridx, GR_LIST_PDROP_FILLSTYLE);
+            gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_FILLSTYLE);
 
-            pt = &getserp(cp, seridx)->style.pdrop_fill;
+            pt = &getserp(cp, series_idx)->style.pdrop_fill;
             break;
 
         case GR_CHART_OBJNAME_POINT:
             return(gr_point_fillstyle_set(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
         case GR_CHART_OBJNAME_DROPPOINT:
             return(gr_pdrop_fillstyle_set(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
@@ -1193,13 +1189,13 @@ gr_chart_objid_linestyle_query(
 
         case GR_CHART_OBJNAME_POINT:
             return(gr_point_linestyle_query(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
         case GR_CHART_OBJNAME_DROPPOINT:
             return(gr_pdrop_linestyle_query(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
@@ -1232,7 +1228,7 @@ gr_chart_objid_linestyle_set(
 {
     P_GR_LINESTYLE pt;
     P_GR_AXIS p_axis;
-    GR_SERIES_IX  seridx;
+    GR_SERIES_IDX  series_idx;
 
     assert(cp);
 
@@ -1294,19 +1290,19 @@ gr_chart_objid_linestyle_set(
             break;
 
         case GR_CHART_OBJNAME_SERIES:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
-            gr_point_list_delete(cp, seridx, GR_LIST_POINT_LINESTYLE);
+            gr_point_list_delete(cp, series_idx, GR_LIST_POINT_LINESTYLE);
 
-            pt = &getserp(cp, seridx)->style.point_line;
+            pt = &getserp(cp, series_idx)->style.point_line;
             break;
 
         case GR_CHART_OBJNAME_DROPSER:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
-            gr_point_list_delete(cp, seridx, GR_LIST_PDROP_LINESTYLE);
+            gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_LINESTYLE);
 
-            pt = &getserp(cp, seridx)->style.pdrop_line;
+            pt = &getserp(cp, series_idx)->style.pdrop_line;
             break;
 
         case GR_CHART_OBJNAME_BESTFITSER:
@@ -1315,13 +1311,13 @@ gr_chart_objid_linestyle_set(
 
         case GR_CHART_OBJNAME_POINT:
             return(gr_point_linestyle_set(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
         case GR_CHART_OBJNAME_DROPPOINT:
             return(gr_pdrop_linestyle_set(cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
@@ -1379,12 +1375,12 @@ gr_chart_objid_textstyle_query(
         case GR_CHART_OBJNAME_DROPPOINT:
             return(gr_point_textstyle_query(
                             cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
         case GR_CHART_OBJNAME_TEXT:
-            pt = gr_chart_list_search(cp, id->no, GR_LIST_CHART_TEXT_TEXTSTYLE);
+            pt = collect_goto_item(GR_TEXTSTYLE, gr_chart_list_get_p_p_list_block(cp, gr_style_common_blks[GR_LIST_CHART_TEXT_TEXTSTYLE]), id->no);
             break;
 
         default:
@@ -1411,7 +1407,7 @@ gr_chart_objid_textstyle_set(
     PC_GR_TEXTSTYLE style)
 {
     P_GR_TEXTSTYLE pt;
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
     S32 res = 1;
 
     assert(cp);
@@ -1436,18 +1432,18 @@ gr_chart_objid_textstyle_set(
         case GR_CHART_OBJNAME_SERIES:
         case GR_CHART_OBJNAME_DROPSER:
         case GR_CHART_OBJNAME_BESTFITSER:
-            seridx = gr_series_ix_from_external(cp, id->no);
+            series_idx = gr_series_idx_from_external(cp, id->no);
 
-            gr_point_list_delete(cp, seridx, GR_LIST_POINT_TEXTSTYLE);
+            gr_point_list_delete(cp, series_idx, GR_LIST_POINT_TEXTSTYLE);
 
-            pt = &getserp(cp, seridx)->style.point_text;
+            pt = &getserp(cp, series_idx)->style.point_text;
             break;
 
         case GR_CHART_OBJNAME_POINT:
         case GR_CHART_OBJNAME_DROPPOINT:
             return(gr_point_textstyle_set(
                             cp,
-                            gr_series_ix_from_external(cp, id->no),
+                            gr_series_idx_from_external(cp, id->no),
                             gr_point_key_from_external(id->subno),
                             style));
 
@@ -1475,8 +1471,8 @@ gr_fillstyle_pict_change(
     /*inout*/ P_GR_FILLSTYLE style,
     const GR_FILL_PATTERN_HANDLE * newpict)
 {
-    gr_cache_reref((          P_GR_CACHE_HANDLE) &style->pattern,
-                   (/*const*/ P_GR_CACHE_HANDLE) newpict);
+    gr_cache_reref(( P_GR_CACHE_HANDLE) &style->pattern,
+                   (PC_GR_CACHE_HANDLE) newpict);
 }
 
 extern void
@@ -1496,14 +1492,14 @@ extern void
 gr_fillstyle_ref_add(
     PC_GR_FILLSTYLE style)
 {
-    gr_cache_ref((/*const*/ P_GR_CACHE_HANDLE) &style->pattern, 1);
+    gr_cache_ref((PC_GR_CACHE_HANDLE) &style->pattern, 1);
 }
 
 extern void
 gr_fillstyle_ref_lose(
     PC_GR_FILLSTYLE style)
 {
-    gr_cache_ref((/*const*/ P_GR_CACHE_HANDLE) &style->pattern, 0);
+    gr_cache_ref((PC_GR_CACHE_HANDLE) &style->pattern, 0);
 }
 
 #define gr_point_list_get_p_p_list_block(serp, cbp) \
@@ -1512,7 +1508,7 @@ gr_fillstyle_ref_lose(
 static S32
 gr_pdrop_point_common_fillstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_FILLSTYLE style,
     GR_LIST_ID list_id)
@@ -1523,7 +1519,7 @@ gr_pdrop_point_common_fillstyle_set(
     assert(cp);
 
     /* see if style already exists */
-    pt = gr_point_list_search(cp, seridx, point, list_id);
+    pt = gr_point_list_search(GR_FILLSTYLE, cp, series_idx, point, list_id);
 
     if(pt)
         {
@@ -1539,7 +1535,7 @@ gr_pdrop_point_common_fillstyle_set(
             item = point;
 
             /* don't mangle following entry numbering */
-            collect_subtract_entry(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), item);
+            collect_subtract_entry(gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp), item);
 
             pt = NULL;
             }
@@ -1562,10 +1558,10 @@ gr_pdrop_point_common_fillstyle_set(
         {
         if(style)
             {
-            if((res = gr_point_list_set(cp, seridx, point, style, list_id)) < 0)
+            if((res = gr_point_list_set(cp, series_idx, point, style, list_id)) < 0)
                 return(res);
 
-            pt = gr_point_list_search(cp, seridx, point, list_id);
+            pt = gr_point_list_search(GR_FILLSTYLE, cp, series_idx, point, list_id);
             assert(pt);
 
             /* add a picture ref */
@@ -1603,25 +1599,25 @@ gr_pdrop_point_common_fillstyle_set(
 extern S32
 gr_pdrop_fillstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_FILLSTYLE style)
 {
     PC_GR_FILLSTYLE pt;
     S32 using_default = 0;
 
-    pt = gr_point_list_search(cp, seridx, point, GR_LIST_PDROP_FILLSTYLE);
+    pt = gr_point_list_search(GR_FILLSTYLE, cp, series_idx, point, GR_LIST_PDROP_FILLSTYLE);
 
     if(!pt)
         {
         using_default = 1;
 
-        pt = &getserp(cp, seridx)->style.pdrop_fill;
+        pt = &getserp(cp, series_idx)->style.pdrop_fill;
 
         if(!pt->fg.manual)
             {
             /* use point-derived style ... */
-            (void) gr_point_fillstyle_query(cp, seridx, point, style);
+            (void) gr_point_fillstyle_query(cp, series_idx, point, style);
 
             /* ... but still treat as defaulting from here */
             return(using_default);
@@ -1636,11 +1632,11 @@ gr_pdrop_fillstyle_query(
 extern S32
 gr_pdrop_fillstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_FILLSTYLE style)
 {
-    return(gr_pdrop_point_common_fillstyle_set(cp, seridx, point, style, GR_LIST_PDROP_FILLSTYLE));
+    return(gr_pdrop_point_common_fillstyle_set(cp, series_idx, point, style, GR_LIST_PDROP_FILLSTYLE));
 }
 
 /******************************************************************************
@@ -1652,25 +1648,25 @@ gr_pdrop_fillstyle_set(
 extern S32
 gr_pdrop_linestyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINESTYLE style)
 {
     PC_GR_LINESTYLE pt;
     S32 using_default = 0;
 
-    pt = gr_point_list_search(cp, seridx, point, GR_LIST_PDROP_LINESTYLE);
+    pt = gr_point_list_search(GR_LINESTYLE, cp, series_idx, point, GR_LIST_PDROP_LINESTYLE);
 
     if(!pt)
         {
         using_default = 1;
 
-        pt = &getserp(cp, seridx)->style.pdrop_line;
+        pt = &getserp(cp, series_idx)->style.pdrop_line;
 
         if(!pt->fg.manual)
             {
             /* use point-derived style ... */
-            (void) gr_point_linestyle_query(cp, seridx, point, style);
+            (void) gr_point_linestyle_query(cp, series_idx, point, style);
 
             /* ... but still treat as defaulting from here */
             return(using_default);
@@ -1685,11 +1681,11 @@ gr_pdrop_linestyle_query(
 extern S32
 gr_pdrop_linestyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINESTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_PDROP_LINESTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_PDROP_LINESTYLE));
 }
 
 /******************************************************************************
@@ -1701,19 +1697,19 @@ gr_pdrop_linestyle_set(
 extern S32
 gr_point_list_delete(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id)
 {
     PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    P_P_LIST_BLOCK p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp);
+    P_P_LIST_BLOCK p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp);
 
     trace_3(TRACE_MODULE_GR_CHART,
-            "gr_point_list_delete seridx %u %s list &%p",
-            seridx, cbp->list_name, report_ptr_cast(p_p_list_block));
+            "gr_point_list_delete series_idx %u %s list &%p",
+            series_idx, cbp->list_name, report_ptr_cast(p_p_list_block));
 
     /* remove refs before delete */
     if(cbp->rerefproc)
-        (* cbp->rerefproc) (cp, seridx, 0);
+        (* cbp->rerefproc) (cp, series_idx, 0);
 
     collect_delete(p_p_list_block);
 
@@ -1723,17 +1719,17 @@ gr_point_list_delete(
 extern S32
 gr_point_list_duplic(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id)
 {
     PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
     NLISTS_BLK new_lbr = cbp->nlb;
-    P_P_LIST_BLOCK old_p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp);
+    P_P_LIST_BLOCK old_p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp);
     S32 res;
 
     trace_3(TRACE_MODULE_GR_CHART,
-            "gr_point_list_duplic seridx %u %s list &%p",
-            seridx, cbp->list_name, report_ptr_cast(old_p_p_list_block));
+            "gr_point_list_duplic series_idx %u %s list &%p",
+            series_idx, cbp->list_name, report_ptr_cast(old_p_p_list_block));
 
     assert(NULL == new_lbr.lbr);
     new_lbr.lbr = NULL;
@@ -1745,7 +1741,7 @@ gr_point_list_duplic(
     /* add refs after successful duplic */
     if(res > 0)
         if(cbp->rerefproc)
-            (* cbp->rerefproc) (cp, seridx, 1);
+            (* cbp->rerefproc) (cp, series_idx, 1);
 
     return(res);
 }
@@ -1753,19 +1749,21 @@ gr_point_list_duplic(
 extern S32
 gr_point_list_fillstyle_enum_for_save(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id)
 {
     PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    P_P_LIST_BLOCK p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp);
+    P_P_LIST_BLOCK p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp);
     LIST_ITEMNO key;
     P_GR_FILLSTYLE pt;
 
     trace_3(TRACE_MODULE_GR_CHART,
-            "gr_point_list_fillstyle_enum_for_save seridx %u %s list &%p",
-            seridx, cbp->list_name, report_ptr_cast(p_p_list_block));
+            "gr_point_list_fillstyle_enum_for_save series_idx %u %s list &%p",
+            series_idx, cbp->list_name, report_ptr_cast(p_p_list_block));
 
-    for(pt = collect_first(p_p_list_block, &key); pt; pt = collect_next(p_p_list_block, &key))
+    for(pt = collect_first(GR_FILLSTYLE, p_p_list_block, &key);
+        pt;
+        pt = collect_next( GR_FILLSTYLE, p_p_list_block, &key))
         {
         S32 cres;
 
@@ -1779,74 +1777,72 @@ gr_point_list_fillstyle_enum_for_save(
 extern void
 gr_pdrop_list_fillstyle_reref(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     S32 add)
 {
     assert(cp);
 
-    common_list_fillstyle_reref(&getserp(cp, seridx)->lbr.pdrop_fill, add);
+    common_list_fillstyle_reref(&getserp(cp, series_idx)->lbr.pdrop_fill, add);
 }
 
 extern void
 gr_point_list_fillstyle_reref(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     S32 add)
 {
     assert(cp);
 
-    common_list_fillstyle_reref(&getserp(cp, seridx)->lbr.point_fill, add);
+    common_list_fillstyle_reref(&getserp(cp, series_idx)->lbr.point_fill, add);
 }
 
 extern P_ANY
 gr_point_list_first(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     _OutRef_    P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id)
 {
-    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-
-    return(collect_first(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), p_key));
+    const PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    return(_collect_first(*gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp), p_key PREFAST_ONLY_ARG(cbp->style_size)));
 }
 
 extern P_ANY
 gr_point_list_next(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     _InoutRef_  P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id)
 {
-    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-
-    return(collect_next(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), p_key));
+    const PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    return(_collect_next(*gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp), p_key PREFAST_ONLY_ARG(cbp->style_size)));
 }
 
-static P_ANY
-gr_point_list_search(
+_Check_return_
+_Ret_maybenull_
+static P_BYTE
+_gr_point_list_search(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     GR_LIST_ID list_id)
 {
-    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    LIST_ITEMNO item = point;
-
-    return(collect_search(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), item));
+    const PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    const LIST_ITEMNO item = point;
+    return(collect_goto_item(BYTE, gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp), item));
 }
 
 static S32
 gr_point_list_set(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_ANY style,
     GR_LIST_ID list_id)
 {
-    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    LIST_ITEMNO item = point;
-
-    return(common_list_set(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), item, style, cbp));
+    const PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    const LIST_ITEMNO item = point;
+    return(common_list_set(gr_point_list_get_p_p_list_block(getserp(cp, series_idx), cbp), item, style, cbp));
 }
 
 /******************************************************************************
@@ -1858,7 +1854,7 @@ gr_point_list_set(
 extern S32
 gr_point_fillstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_FILLSTYLE style)
 {
@@ -1866,25 +1862,25 @@ gr_point_fillstyle_query(
     P_GR_SERIES serp;
     S32 using_default = 0;
 
-    pt = gr_point_list_search(cp, seridx, point, GR_LIST_POINT_FILLSTYLE);
+    pt = gr_point_list_search(GR_FILLSTYLE, cp, series_idx, point, GR_LIST_POINT_FILLSTYLE);
 
     if(!pt)
         {
         using_default = 1;
 
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
 
         /* use series-derived style unless varying by point */
         if(serp->bits.point_vary_manual
                     ? serp->bits.point_vary
-                    : gr_axesp_from_seridx(cp, seridx)->bits.point_vary)
+                    : gr_axesp_from_series_idx(cp, series_idx)->bits.point_vary)
             pt = gr_fillstyle_default(gr_point_external_from_key(point));
         else
             {
             pt = &serp->style.point_fill;
 
             if(!pt->fg.manual)
-                pt = gr_fillstyle_default(gr_series_external_from_ix(cp, seridx));
+                pt = gr_fillstyle_default(gr_series_external_from_idx(cp, series_idx));
             }
         }
 
@@ -1896,11 +1892,11 @@ gr_point_fillstyle_query(
 extern S32
 gr_point_fillstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_FILLSTYLE style)
 {
-    return(gr_pdrop_point_common_fillstyle_set(cp, seridx, point, style, GR_LIST_POINT_FILLSTYLE));
+    return(gr_pdrop_point_common_fillstyle_set(cp, series_idx, point, style, GR_LIST_POINT_FILLSTYLE));
 }
 
 /******************************************************************************
@@ -1912,21 +1908,21 @@ gr_point_fillstyle_set(
 extern S32
 gr_point_linestyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINESTYLE style)
 {
     PC_GR_LINESTYLE pt;
     S32 using_default = 0;
 
-    pt = gr_point_list_search(cp, seridx, point, GR_LIST_POINT_LINESTYLE);
+    pt = gr_point_list_search(GR_LINESTYLE, cp, series_idx, point, GR_LIST_POINT_LINESTYLE);
 
     if(!pt)
         {
         using_default = 1;
 
         /* use series-derived style */
-        pt = &getserp(cp, seridx)->style.point_line;
+        pt = &getserp(cp, series_idx)->style.point_line;
 
         if(!pt->fg.manual)
             pt = gr_linestyle_default();
@@ -1940,11 +1936,11 @@ gr_point_linestyle_query(
 extern S32
 gr_point_linestyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINESTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_LINESTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_LINESTYLE));
 }
 
 /******************************************************************************
@@ -1956,21 +1952,21 @@ gr_point_linestyle_set(
 extern S32
 gr_point_textstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_TEXTSTYLE style)
 {
     PC_GR_TEXTSTYLE pt;
     S32           using_default = 0;
 
-    pt = gr_point_list_search(cp, seridx, point, GR_LIST_POINT_TEXTSTYLE);
+    pt = gr_point_list_search(GR_TEXTSTYLE, cp, series_idx, point, GR_LIST_POINT_TEXTSTYLE);
 
     if(!pt)
         {
         using_default = 1;
 
         /* use series-derived style */
-        pt = &getserp(cp, seridx)->style.point_text;
+        pt = &getserp(cp, series_idx)->style.point_text;
 
         if(!pt->fg.manual)
             pt = &cp->text.style.base;
@@ -1984,11 +1980,11 @@ gr_point_textstyle_query(
 extern S32
 gr_point_textstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_TEXTSTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_TEXTSTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_TEXTSTYLE));
 }
 
 /******************************************************************************
@@ -2000,34 +1996,34 @@ gr_point_textstyle_set(
 static S32
 gr_point_chartstyle_query(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     /*out*/ P_ANY style,
     P_GR_CHART_OBJID_CHARTSTYLE_DESC desc)
 {
-    P_U8       bpt /*const*/;
-    GR_AXES_NO axes;
-    S32        using_default = 0;
+    P_BYTE bpt /*const*/;
+    GR_AXES_IDX axes_idx;
+    S32 using_default = 0;
 
     assert(cp);
     assert(style);
     assert(desc);
 
-    bpt = gr_point_list_search(cp, seridx, point, (GR_LIST_ID) desc->list_id);
+    bpt = gr_point_list_search(BYTE, cp, series_idx, point, (GR_LIST_ID) desc->list_id);
 
     if(!bpt)
         {
         using_default = 1;
 
         /* use series style */
-        bpt = (P_U8) getserp(cp, seridx) + desc->ser_offset;
+        bpt = (P_BYTE) getserp(cp, series_idx) + desc->ser_offset;
 
         if((*bpt & 1) == 0 /*!pt->bits.manual*/)
             {
             /* use axes style */
-            axes = gr_axes_ix_from_seridx(cp, seridx);
+            axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
 
-            bpt = (P_U8) &cp->axes[axes] + desc->axes_offset;
+            bpt = (P_BYTE) &cp->axes[axes_idx] + desc->axes_offset;
             }
         }
 
@@ -2039,186 +2035,182 @@ gr_point_chartstyle_query(
 extern S32
 gr_point_barchstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_BARCHSTYLE style)
 {
-    return(gr_point_chartstyle_query(cp, seridx, point, style, &gr_chart_objid_barchstyle_desc));
+    return(gr_point_chartstyle_query(cp, series_idx, point, style, &gr_chart_objid_barchstyle_desc));
 }
 
 extern S32
 gr_point_barchstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_BARCHSTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_BARCHSTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_BARCHSTYLE));
 }
 
 extern S32
 gr_point_barlinechstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_BARLINECHSTYLE style)
 {
-    return(gr_point_chartstyle_query(cp, seridx, point, style, &gr_chart_objid_barlinechstyle_desc));
+    return(gr_point_chartstyle_query(cp, series_idx, point, style, &gr_chart_objid_barlinechstyle_desc));
 }
 
 extern S32
 gr_point_barlinechstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_BARLINECHSTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_BARLINECHSTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_BARLINECHSTYLE));
 }
 
 extern S32
 gr_point_linechstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINECHSTYLE style)
 {
-    return(gr_point_chartstyle_query(cp, seridx, point, style, &gr_chart_objid_linechstyle_desc));
+    return(gr_point_chartstyle_query(cp, series_idx, point, style, &gr_chart_objid_linechstyle_desc));
 }
 
 extern S32
 gr_point_linechstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINECHSTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_LINECHSTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_LINECHSTYLE));
 }
 
 extern S32
 gr_point_piechdisplstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_PIECHDISPLSTYLE style)
 {
-    return(gr_point_chartstyle_query(cp, seridx, point, style, &gr_chart_objid_piechdisplstyle_desc));
+    return(gr_point_chartstyle_query(cp, series_idx, point, style, &gr_chart_objid_piechdisplstyle_desc));
 }
 
 extern S32
 gr_point_piechdisplstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_PIECHDISPLSTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_PIECHDISPLSTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_PIECHDISPLSTYLE));
 }
 
 extern S32
 gr_point_piechlabelstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_PIECHLABELSTYLE style)
 {
-    return(gr_point_chartstyle_query(cp, seridx, point, style, &gr_chart_objid_piechlabelstyle_desc));
+    return(gr_point_chartstyle_query(cp, series_idx, point, style, &gr_chart_objid_piechlabelstyle_desc));
 }
 
 extern S32
 gr_point_piechlabelstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_PIECHLABELSTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_PIECHLABELSTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_PIECHLABELSTYLE));
 }
 
 extern S32
 gr_point_scatchstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_SCATCHSTYLE style)
 {
-    return(gr_point_chartstyle_query(cp, seridx, point, style, &gr_chart_objid_scatchstyle_desc));
+    return(gr_point_chartstyle_query(cp, series_idx, point, style, &gr_chart_objid_scatchstyle_desc));
 }
 
 extern S32
 gr_point_scatchstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_SCATCHSTYLE style)
 {
-    return(gr_point_list_set(cp, seridx, point, style, GR_LIST_POINT_SCATCHSTYLE));
+    return(gr_point_list_set(cp, series_idx, point, style, GR_LIST_POINT_SCATCHSTYLE));
 }
 
 /******************************************************************************
 *
-* convert a seridx into an external series number
+* convert a series index into an external series number
 *
 ******************************************************************************/
 
-extern GR_SERIES_NO
-gr_series_external_from_ix(
+extern GR_ESERIES_NO
+gr_series_external_from_idx(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
-    if(cp->axes_max > 0)
+    if(cp->axes_idx_max > 0)
         {
-        if(seridx >= cp->axes[1].series.stt_idx)
+        if(series_idx >= cp->axes[1].series.stt_idx)
             {
             /* paper over the crack */
-            seridx -= cp->axes[1].series.stt_idx;
-            seridx += cp->axes[0].series.end_idx;
+            series_idx -= cp->axes[1].series.stt_idx;
+            series_idx += cp->axes[0].series.end_idx;
             }
         }
 
-    return(seridx + 1);
+    return(series_idx + 1);
 }
 
 /******************************************************************************
 *
-* convert an external series number into a seridx
+* convert an external series number into a series index
 *
 ******************************************************************************/
 
-extern GR_SERIES_IX
-gr_series_ix_from_external(
+extern GR_SERIES_IDX
+gr_series_idx_from_external(
     PC_GR_CHART cp,
-    GR_SERIES_NO eseries)
+    GR_ESERIES_NO eseries_no)
 {
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx = (GR_SERIES_IDX) (eseries_no - 1);
 
-    assert(eseries != 0);
+    assert(eseries_no != 0);
 
-    seridx = eseries - 1;
+    if(series_idx < cp->axes[0].series.end_idx)
+        return(series_idx);
 
-    if(seridx < cp->axes[0].series.end_idx)
-        return(seridx);
-
-    if(cp->axes_max > 0)
+    if(cp->axes_idx_max > 0)
         {
-        seridx -= cp->axes[0].series.end_idx; /* jump over the gap */
-        seridx += cp->axes[1].series.stt_idx;
+        series_idx -= cp->axes[0].series.end_idx; /* jump over the gap */
+        series_idx += cp->axes[1].series.stt_idx;
         }
 
-    return(seridx);
+    return(series_idx);
 }
 
 extern P_GR_SERIES
 gr_seriesp_from_external(
     PC_GR_CHART cp,
-    GR_SERIES_NO eseries)
+    GR_ESERIES_NO eseries_no)
 {
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx = gr_series_idx_from_external(cp, eseries_no);
 
-    seridx = gr_series_ix_from_external(cp, eseries);
-
-    return(getserp(cp, seridx));
+    return(getserp(cp, series_idx));
 }
 
 /* end of gr_scale.c */

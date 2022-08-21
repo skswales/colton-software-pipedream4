@@ -32,7 +32,7 @@ extern F64
 readval_F64_from_8087(
     _In_bytecount_c_(sizeof(F64)) PC_ANY from)
 {
-    union
+    union READVAL_F64_FROM_8087_U
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -86,7 +86,7 @@ extern F64
 readval_F64_from_ARM(
     _In_bytecount_c_(sizeof(F64)) PC_ANY from)
 {
-    union
+    union READVAL_F64_FROM_ARM_U
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -144,7 +144,7 @@ extern U16
 readval_U16(
     _In_bytecount_c_(sizeof(U16)) PC_ANY from)
 {
-    union
+    union READVAL_U16_U
     {
         U16 u16;
         BYTE bytes[sizeof32(U16)];
@@ -171,7 +171,7 @@ extern U32
 readval_U32(
     _In_bytecount_c_(sizeof(U32)) PC_ANY from)
 {
-    union
+    union READVAL_U32_U
     {
         U32 u32;
         BYTE bytes[sizeof32(U32)];
@@ -200,7 +200,7 @@ extern S16
 readval_S16(
     _In_bytecount_c_(sizeof(S16)) PC_ANY from)
 {
-    union
+    union READVAL_S16_U
     {
         S16 s16;
         BYTE bytes[sizeof32(S16)];
@@ -227,7 +227,7 @@ extern S32
 readval_S32(
     _In_bytecount_c_(sizeof(S32)) PC_ANY from)
 {
-    union
+    union READVAL_S32_U
     {
         S32 s32;
         BYTE bytes[sizeof32(S32)];
@@ -260,7 +260,7 @@ writeval_F64_as_8087(
     _Out_bytecapcount_x_(sizeof(F64)) P_ANY to,
     _InVal_     F64 f64)
 {
-    union
+    union WRITEVAL_F64_AS_8087_U
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -312,7 +312,7 @@ writeval_F64_as_ARM(
     _Out_bytecapcount_x_(sizeof(F64)) P_ANY to,
     _InVal_     F64 f64)
 {
-    union
+    union WRITEVAL_F64_AS_ARM_U
     {
         F64 f64;
         BYTE bytes[sizeof32(F64)];
@@ -368,7 +368,7 @@ writeval_U16(
     _Out_bytecapcount_x_(sizeof(U16)) P_ANY to,
     _InVal_     U16 u16)
 {
-    union
+    union WRITEVAL_U16_U
     {
         U16 u16;
         BYTE bytes[sizeof32(U16)];
@@ -395,7 +395,7 @@ writeval_U32(
     _Out_bytecapcount_x_(sizeof(U32)) P_ANY to,
     _InVal_     U32 u32)
 {
-    union
+    union WRITEVAL_U32_U
     {
         U32 u32;
         BYTE bytes[sizeof32(U32)];
@@ -424,7 +424,7 @@ writeval_S16(
     _Out_bytecapcount_x_(sizeof(S16)) P_ANY to,
     _InVal_     S16 s16)
 {
-    union
+    union WRITEVAL_S16_U
     {
         S16 s16;
         BYTE bytes[sizeof32(S16)];
@@ -451,7 +451,7 @@ writeval_S32(
     _Out_bytecapcount_x_(sizeof(S32)) P_ANY to,
     _InVal_     S32 s32)
 {
-    union
+    union WRITEVAL_S32_U
     {
         S32 s32;
         BYTE bytes[sizeof32(S32)];

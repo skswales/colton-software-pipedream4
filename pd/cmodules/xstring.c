@@ -7,7 +7,7 @@
 /* Copyright (C) 1990-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Library module for string handling (eg MS extensions in RISC OS) */
+/* Library module for string handling */
 
 /* SKS May 1990 */
 
@@ -615,7 +615,7 @@ nth_power[] =
 };
 
 extern S32
-xtos_ubuf(
+xtos_ustr_buf(
     _Out_writes_z_(elemof_buffer) P_USTR buffer /*filled*/,
     _InVal_     U32 elemof_buffer,
     _InVal_     S32 x,
@@ -690,7 +690,7 @@ append up characters from src (until NULLCH found) to dst (subject to dst limit)
 */
 
 extern void
-safe_strkat(
+xstrkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src)
@@ -750,7 +750,7 @@ append up to src_n characters from src (or fewer, if NULLCH found) to dst (subje
 */
 
 extern void
-safe_strnkat(
+xstrnkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,
@@ -812,7 +812,7 @@ copy characters from src (until NULLCH found) to dst (subject to dst limit)
 */
 
 extern void
-safe_strkpy(
+xstrkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src)
@@ -852,7 +852,7 @@ copy up to src_n characters from src (or fewer, if NULLCH found) to dst (subject
 */
 
 extern void
-safe_strnkpy(
+xstrnkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,

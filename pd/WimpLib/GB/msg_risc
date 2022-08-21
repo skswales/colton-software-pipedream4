@@ -24,8 +24,8 @@ wimptT7:Stack overflow
 wimptT10:OS error
 #
 wimpt1:type=%d
-wimpt2:%s has suffered a fatal internal error (%s) and must exit immediately
-wimptT42:%s has suffered a serious internal error (%s). Click OK to exit immediately, losing data, Cancel to attempt to resume execution.
+wimpt2:%s has gone wrong (%s). Click Continue to exit, losing data
+wimptT42:%s has gone wrong (%s). Click Continue to exit, losing data, Cancel to attempt to resume execution.
 #
 winT1:Not enough memory to create window
 #

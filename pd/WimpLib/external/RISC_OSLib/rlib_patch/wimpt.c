@@ -1,5 +1,5 @@
---- _src	2009-05-31 18:58:59 +0100
-+++ _dst	2013-09-04 15:05:27 +0100
+--- _src	2009-05-31 18:58:59.000000000 +0100
++++ _dst	2014-10-28 16:35:10.000000000 +0100
 @@ -72,13 +72,22 @@
  
  os_error * wimpt_poll(wimp_emask mask, wimp_eventstr * result)
@@ -157,7 +157,7 @@
  
  static void handler(int signal)
  {
-@@ -254,6 +331,109 @@
+@@ -254,6 +331,131 @@
      exit(1);
  }
  
@@ -186,11 +186,22 @@
 +{
 +    static const _kernel_oserror er = { 1,
 +    "Stack overflow. "
-+    "Click OK to exit immediately, losing data, Cancel to attempt to resume execution."
++    "Click Continue to exit, losing data, Cancel to attempt to resume execution."
 +    };
 +
-+    if(0 != (wimp_ECANCEL & wimp_ReportError_wrapped(&er, (wimp_errflags) (wimp_EOK | wimp_ECANCEL), programname)))
++    wimp_errflags flags = (wimp_errflags) (wimp_EOK | wimp_ECANCEL);
++    wimp_errflags flags_out;
++
++    /*if(wimpt_os_version_query() >= RISC_OS_3_5)*/
 +    {
++        flags = (wimp_errflags) (flags | wimp_EUSECATEGORY); /* new-style */
++        flags = (wimp_errflags) (flags | wimp_ECAT_STOP); /* error */
++    }
++
++    flags_out = wimp_ReportError_wrapped(&er, flags, programname, "error", (const char *) 1 /*Wimp Sprite Area*/, NULL);
++    if(0 != (wimp_ECANCEL & flags_out))
++    {
++       /* give it your best shot else we come back and die soon */
 +        wimpt_jmp_safepoint(SIGSTAK);
 +    }
 +
@@ -202,11 +213,12 @@
 +/* keep defaults for these in case of msgs death */
 +
 +static const char sudden_death_str[] =
-+    "wimpt2:%s has suffered a fatal internal error (%s) and must exit immediately";
++    "wimpt2:%s has gone wrong (%s). "
++    "Click Continue to exit, losing data";
 +
 +static const char pending_death_str[] =
-+    "wimptT42:%s has suffered a serious internal error (%s). "
-+    "Click OK to exit immediately, losing data, Cancel to attempt to resume execution.";
++    "wimptT42:%s has gone wrong (%s). "
++    "Click Continue to exit, losing data, Cancel to attempt to resume execution.";
 +
 +static void handler(int signum)
 +{
@@ -214,6 +226,7 @@
 +  char causebuffer[64];
 +  const char * cause;
 +  int must_die, jump_back;
++  wimp_errflags flags, flags_out;
 +
 +  switch(signum)
 +  {
@@ -244,7 +257,16 @@
 +          wimpt_programname(),
 +          cause);
 +
-+  jump_back = (0 != (wimp_ECANCEL & wimpt_reporterror_rf(&er, (wimp_errflags) (must_die ? wimp_EOK : wimp_EOK | wimp_ECANCEL))));
++  flags = (wimp_errflags) (must_die ? wimp_EOK : wimp_EOK | wimp_ECANCEL);
++
++  if(wimpt_os_version_query() >= RISC_OS_3_5)
++  {
++    flags = (wimp_errflags) (flags | wimp_EUSECATEGORY); /* new-style */
++    flags = (wimp_errflags) (flags | wimp_ECAT_STOP); /* error */
++  }
++
++  flags_out = wimp_ReportError_wrapped(&er, flags, wimpt_programname(), wimpt_get_spritename(), (const char *) 1 /*Wimp Sprite Area*/, NULL);
++  jump_back = (0 != (wimp_ECANCEL & flags_out));
 +
 +  if(jump_back)
 +    {
@@ -267,7 +289,7 @@
  static int wimpversion = 0;
  
  
-@@ -281,6 +461,11 @@
+@@ -281,6 +483,11 @@
    signal(SIGINT, &escape_handler);
    signal(SIGSEGV, &handler);
    signal(SIGTERM, &handler);
@@ -279,7 +301,7 @@
    signal(SIGOSERROR, &errhandler);
    signal_handlers_installed = 1;
  }
-@@ -315,7 +500,9 @@
+@@ -315,7 +522,9 @@
  
    wimpt_checkmode();
    atexit(wimpt__exit);

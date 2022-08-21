@@ -11,23 +11,7 @@
 
 /* Designed for multiple inclusion */
 
-#if WINDOWS
-
-#if CROSS_COMPILE /* TARGET_WINDOWS */
-
-/* incompatible pragmas */
-#ifndef __pragma_defined
-#define __pragma_defined 1
-#define __pragma(x) /* nothing */
-#endif /* __pragma_defined */
-
-#else /* NOT CROSS_COMPILE */
-
-#include "cmodules/coltsoft/pragmams.h"
-
-#endif /* CROSS_COMPILE */
-
-#elif RISCOS
+#if RISCOS
 
 #if CROSS_COMPILE && defined(HOST_WINDOWS) /* TARGET_RISCOS */
 
@@ -42,6 +26,22 @@
 #endif /* __pragma_defined */
 
 #include "cmodules/coltsoft/pragmari.h"
+
+#endif /* CROSS_COMPILE */
+
+#elif WINDOWS
+
+#if CROSS_COMPILE /* TARGET_WINDOWS */
+
+/* incompatible pragmas */
+#ifndef __pragma_defined
+#define __pragma_defined 1
+#define __pragma(x) /* nothing */
+#endif /* __pragma_defined */
+
+#else /* NOT CROSS_COMPILE */
+
+#include "cmodules/coltsoft/pragmams.h"
 
 #endif /* CROSS_COMPILE */
 

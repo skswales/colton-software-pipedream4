@@ -47,17 +47,15 @@ typedef U16 LINK_TYPE;                  /* type for inter-item links */
 
 #endif /* SHORT_INT */
 
-typedef struct _LIST_BLOCK LIST_BLOCK, * P_LIST_BLOCK, ** P_P_LIST_BLOCK;
+typedef struct LIST_BLOCK LIST_BLOCK, * P_LIST_BLOCK, ** P_P_LIST_BLOCK;
 
-typedef struct _LIST_ITEM LIST_ITEM, * P_LIST_ITEM, ** P_P_LIST_ITEM;
+typedef struct LIST_ITEM LIST_ITEM, * P_LIST_ITEM, ** P_P_LIST_ITEM;
 
 /*
 block increment sizes
 */
 
-#if WINDOWS
-#define HANDLEBLOCKINC 100
-#elif RISCOS
+#if RISCOS
 #   if !defined(SPARSE_OLD_HANDLEBLOCK)
 #       define SPARSE_FLEX_HANDLEBLOCK
 #   endif
@@ -68,7 +66,9 @@ block increment sizes
 #       define HANDLEBLOCKINC 500
 #       define INITMAXHANDLEBLOCK 300
 #   endif
-#endif
+#elif WINDOWS
+#define HANDLEBLOCKINC 100
+#endif /* OS */
 
 #define POOLDBLKSIZEINC 5
 
@@ -80,26 +80,25 @@ data structures
 structure of entry in pool block array
 */
 
-struct POOLDESC
+typedef struct POOLDESC
 {
-    ARRAY_HANDLE poolh;
-    P_U8        pool;
-    LIST_ITEMNO poolitem;
-    OFF_TYPE    poolsize;
-    OFF_TYPE    poolfree;
-};
+    ARRAY_HANDLE h_pool;
+    P_U8 pool;
+    LIST_ITEMNO poolitem;       /* item number of pool */
+    OFF_TYPE poolsize;
+    OFF_TYPE poolfree;
+}
+POOLDESC, * pooldp;             /* pool descriptor pointer */
 
-typedef struct POOLDESC *pooldp;    /* pool descriptor pointer */
-
-struct _LIST_BLOCK
+struct LIST_BLOCK
 {
     OFF_TYPE itemc;             /* offset to current item */
     LIST_ITEMNO item;           /* item number of current pool */
     pooldp poold;               /* pointer to current pool descriptor */
 
-    ARRAY_HANDLE pooldblkh;     /* handle of block of pool descriptors */
+    ARRAY_HANDLE h_pooldesc;    /* handle of pool descriptor array */
     pooldp pooldblkp;           /* pointer to block of pool descriptors */
-    S32 pooldix;                /* number of current pool descriptor */
+    S32 ix_pooldesc;            /* index to current pool descriptor */
     S32 pooldblksize;           /* size of block of pool descriptors */
     S32 pooldblkfree;           /* first free in block of pool descriptors */
 
@@ -111,12 +110,12 @@ struct _LIST_BLOCK
     P_LIST_BLOCK nextblock;     /* link to next list block */
 };
 
-struct _LIST_ITEM
+struct LIST_ITEM
 {
     LINK_TYPE offsetn;          /* offset to next item */
     LINK_TYPE offsetp;          /* offset to previous item */
     U8 flags;
-    union _list_guts
+    union LIST_ITEM_GUTS
     {
         LIST_ITEMNO itemfill;   /* fill count */
         U8 inside[1];           /* contents of the item */
@@ -124,7 +123,7 @@ struct _LIST_ITEM
 };
 
 /* overhead per allocated item */
-#define LIST_ITEMOVH   (sizeof(LIST_ITEM) - sizeof(union _list_guts))
+#define LIST_ITEMOVH   (sizeof(LIST_ITEM) - sizeof(union LIST_ITEM_GUTS))
 
 /* overhead to get to an aligned point (can be subtracted from aligned contents pointer) */
 #define LIST_ALIGNOVH  (LIST_ITEMOVH - (offsetof(LIST_ITEM, flags) + sizeof(((list_item *) 0)->flags)))
@@ -197,9 +196,6 @@ extern S32
 list_garbagecollect(
     P_LIST_BLOCK lp);
 
-extern S32
-list_howmuchpoolspace(void);
-
 extern P_LIST_ITEM
 list_gotoitem(
     P_LIST_BLOCK lp,
@@ -222,6 +218,21 @@ _list_gotoitemcontents(
 #define list_gotoitemcontents(__base_type, p_list_block, item) ( \
     ((__base_type *) _list_gotoitemcontents(p_list_block, item)) )
 
+_Check_return_
+_Ret_maybenull_
+static inline P_ANY
+_list_gotoitemcontents_opt(
+    _InoutRef_  P_LIST_BLOCK lp,
+    _In_        LIST_ITEMNO item)
+{
+    P_LIST_ITEM it = list_gotoitem(lp, item);
+
+    return(it ? list_itemcontents(void, it) : NULL);
+}
+
+#define list_gotoitemcontents_opt(__base_type, p_list_block, item) ( \
+    ((__base_type *) _list_gotoitemcontents_opt(p_list_block, item)) )
+
 extern void
 list_init(
     P_LIST_BLOCK lp,
@@ -231,7 +242,7 @@ list_init(
 extern P_LIST_ITEM
 list_initseq(
     P_LIST_BLOCK lp,
-    P_LIST_ITEMNO itemnop);
+    _OutRef_    P_LIST_ITEMNO itemnop);
 
 _Check_return_
 extern STATUS
@@ -243,7 +254,7 @@ list_insertitems(
 extern P_LIST_ITEM
 list_nextseq(
     P_LIST_BLOCK lp,
-    P_LIST_ITEMNO itemnop);
+    _InoutRef_  P_LIST_ITEMNO itemnop);
 
 extern S32
 list_packlist(
@@ -253,7 +264,7 @@ list_packlist(
 extern P_LIST_ITEM
 list_prevseq(
     P_LIST_BLOCK lp,
-    P_LIST_ITEMNO itemnop);
+    _InoutRef_  P_LIST_ITEMNO itemnop);
 
 extern P_ANY
 list_reallocptr(

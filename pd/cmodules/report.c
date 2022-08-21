@@ -94,10 +94,10 @@ vreportf(
     tail = format + tstrlen32(format);
     wants_continuation = (tail != format) && (tail[-1] == '|');
 
-#if RISCOS
-    (void) vsnprintf(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, format, args);
-#else
-    (void) _vsntprintf_s(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, _TRUNCATE, format, args);
+#if WINDOWS
+    consume_int(_vsntprintf_s(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, _TRUNCATE, format, args));
+#else/* C99 CRT */
+    consume_int(vsnprintf(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, format, args));
 #endif
 
     if(wants_continuation)
@@ -144,17 +144,7 @@ report_output(
     BOOL may_need_newline;
     static const TCHARZ newline_buffer[2] = TEXT("\n");
 
-#if WINDOWS
-    if(!g_report_enabled) return;
-
-    tail = buffer + tstrlen32(buffer);
-    may_need_newline = (tail == buffer) || (tail[-1] != '\n');
-
-    OutputDebugString(buffer);
-
-    if(may_need_newline)
-        OutputDebugString(newline_buffer);
-#elif RISCOS
+#if RISCOS
     PCTSTR ptr;
     U8 ch;
 
@@ -229,7 +219,17 @@ report_output(
 
     if(may_need_newline)
         fputc(0x0A, stderr);
-#endif
+#elif WINDOWS
+    if(!g_report_enabled) return;
+
+    tail = buffer + tstrlen32(buffer);
+    may_need_newline = (tail == buffer) || (tail[-1] != '\n');
+
+    OutputDebugString(buffer);
+
+    if(may_need_newline)
+        OutputDebugString(newline_buffer);
+#endif /* OS */
 }
 
 _Check_return_
@@ -422,7 +422,7 @@ report_wimp_event(
 
     static TCHARZ messagebuffer[512];
 
-    safe_tstrkpy(messagebuffer, elemof32(messagebuffer), report_wimp_event_code(event_code));
+    tstr_xstrkpy(messagebuffer, elemof32(messagebuffer), report_wimp_event_code(event_code));
 
     switch(event_code)
     {
@@ -489,7 +489,7 @@ report_wimp_event(
     }
 
     if(*tempbuffer)
-        safe_tstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
+        tstr_xstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
 
     return(messagebuffer);
 }
@@ -622,7 +622,7 @@ report_wimp_message(
     }
 
     if(*tempbuffer)
-        safe_tstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
+        tstr_xstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
 
     return(messagebuffer);
 }

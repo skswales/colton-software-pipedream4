@@ -25,10 +25,6 @@ local header
 
 #include "gr_chari.h"
 
-#ifndef          __mysignal_h
-#include "coltsoft/mysignal.h"
-#endif
-
 /*
 internal functions
 */
@@ -60,7 +56,7 @@ gr_datasource_insert(
 static GR_DATASOURCE_NO
 gr_series_n_datasources_req(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx);
+    GR_SERIES_IDX series_idx);
 
 /* --------------------------------------------------------------------------------- */
 
@@ -196,7 +192,7 @@ gr_chart_cp_from_ch(
 
     if(ch)
         {
-        cp = collect_search(&gr_charts.lbr, key);
+        cp = collect_goto_item(GR_CHART, &gr_charts.lbr, key);
         myassert1x(cp != NULL, "gr_chart_cp_from_ch: failed to find chart handle &%p", ch);
         }
 
@@ -214,11 +210,11 @@ gr_chart_damage(
     PC_GR_CHART_HANDLE chp,
     P_GR_INT_HANDLE   p_int_handle /*const*/)
 {
-    GR_CHART_HANDLE ch;
+    GR_CHART_HANDLE  ch;
     P_GR_CHART       cp;
     P_GR_DATASOURCE  dsp;
-    GR_AXES_NO      axes;
-    GR_SERIES_IX    seridx;
+    GR_AXES_IDX      axes_idx;
+    GR_SERIES_IDX    series_idx;
     P_GR_SERIES      serp;
 
     trace_4(TRACE_MODULE_GR_CHART, "gr_chart_damage(&%p->&%p, &%p->&%p)]n",
@@ -241,13 +237,13 @@ gr_chart_damage(
 
         if(dsp == &cp->core.category_datasource)
             {
-            for(axes = 0; axes < cp->axes_max; ++axes)
-                for(seridx = cp->axes[axes].series.stt_idx;
-                    seridx < cp->axes[axes].series.end_idx;
-                    seridx++)
+            for(axes_idx = 0; axes_idx < cp->axes_idx_max; ++axes_idx)
+                for(series_idx = cp->axes[axes_idx].series.stt_idx;
+                    series_idx < cp->axes[axes_idx].series.end_idx;
+                    series_idx++)
                     {
                     /* all series in chart depend on this! */
-                    serp = getserp(cp, seridx);
+                    serp = getserp(cp, series_idx);
 
                     * (int *) &serp->valid = 0;
                     }
@@ -262,9 +258,9 @@ gr_chart_damage(
 
                 case GR_CHART_OBJNAME_SERIES:
                     {
-                    seridx = gr_series_ix_from_external(cp, dsp->id.no);
+                    series_idx = gr_series_idx_from_external(cp, dsp->id.no);
 
-                    serp = getserp(cp, seridx);
+                    serp = getserp(cp, series_idx);
 
                     * (int *) &serp->valid = 0;
                     }
@@ -377,7 +373,7 @@ gr_chart_dispose_noncore(
     P_GR_CHART cp)
 {
     S32          plotidx;
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
     P_GR_SERIES   serp;
 
     /* lose refs to pictures */
@@ -392,27 +388,27 @@ gr_chart_dispose_noncore(
     gr_chart_list_delete(cp, GR_LIST_CHART_TEXT);
     gr_chart_list_delete(cp, GR_LIST_CHART_TEXT_TEXTSTYLE);
 
-    for(seridx = 0; seridx < cp->series.n_defined; ++seridx)
+    for(series_idx = 0; series_idx < cp->series.n_defined; ++series_idx)
         {
         /* delete series pictures */
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
         gr_fillstyle_pict_delete(&serp->style.pdrop_fill);
         gr_fillstyle_pict_delete(&serp->style.point_fill);
 
         /* delete all point info from this series */
-        gr_point_list_delete(cp, seridx, GR_LIST_PDROP_FILLSTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_PDROP_LINESTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_FILLSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_PDROP_LINESTYLE);
 
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_FILLSTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_LINESTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_TEXTSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_FILLSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_LINESTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_TEXTSTYLE);
 
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_BARCHSTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_BARLINECHSTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_LINECHSTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_PIECHDISPLSTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_PIECHLABELSTYLE);
-        gr_point_list_delete(cp, seridx, GR_LIST_POINT_SCATCHSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_BARCHSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_BARLINECHSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_LINECHSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_PIECHDISPLSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_PIECHLABELSTYLE);
+        gr_point_list_delete(cp, series_idx, GR_LIST_POINT_SCATCHSTYLE);
         }
 
     al_ptr_dispose(P_P_ANY_PEDANTIC(&cp->series.mh));
@@ -533,7 +529,7 @@ gr_chart_name_query(
 
     cp = gr_chart_cp_from_ch(*chp);
 
-    safe_strkpy(szName, bufsiz, cp->core.currentfilename);
+    xstrkpy(szName, bufsiz, cp->core.currentfilename);
 
     return(1);
 }
@@ -556,7 +552,7 @@ gr_chart_name_set(
 *
 ******************************************************************************/
 
-static const struct _gr_chart_layout
+static const struct GR_CHART_LAYOUT
 gr_chart_layout_default = /* only approx. A8 */
 {
     (GR_COORD) (4.00 * GR_PIXITS_PER_INCH), /* w */
@@ -583,8 +579,8 @@ gr_chart_new(
     GR_CHART_HANDLE ch;
     P_GR_CHART      cp;
     LIST_ITEMNO     key;
-    GR_AXES_NO      axes;
-    GR_AXIS_NO      axis;
+    GR_AXES_IDX     axes_idx;
+    GR_AXIS_IDX     axis_idx;
     STATUS status;
 
     if(!gr_chart_initialised)
@@ -595,7 +591,7 @@ gr_chart_new(
     /* add to list of charts */
     key  = cpkey_gen++;
 
-    if(NULL == (cp = collect_add_entry(&gr_charts, sizeof32(*cp), &key, &status)))
+    if(NULL == (cp = collect_add_entry_elem(GR_CHART, &gr_charts, &key, &status)))
         return(status);
 
     /* convert ch explicitly */
@@ -639,9 +635,9 @@ gr_chart_new(
     cp->axes[1].sertype   = GR_CHART_SERIES_PLAIN;
     cp->axes[1].charttype = GR_CHARTTYPE_LINE;
 
-    for(axes = 0; axes <= GR_AXES_MAX; ++axes)
+    for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
         {
-        P_GR_AXES p_axes = &cp->axes[axes];
+        P_GR_AXES p_axes = &cp->axes[axes_idx];
 
         p_axes->style.barch.slot_width_percentage     = 100.0; /* fill slots widthways */
         p_axes->style.barlinech.slot_depth_percentage =  75.0;
@@ -657,9 +653,9 @@ gr_chart_new(
         p_axes->style.piechlabel.bits.manual          = 1;
         p_axes->style.scatch.bits.manual              = 1;
 
-        for(axis = 0; axis < 3; ++axis)
+        for(axis_idx = 0; axis_idx < 3; ++axis_idx)
             {
-            P_GR_AXIS p_axis = &p_axes->axis[axis];
+            P_GR_AXIS p_axis = &p_axes->axis[axis_idx];
 
             p_axis->bits.incl_zero = 1; /* this is RJM's fault */
 
@@ -674,8 +670,8 @@ gr_chart_new(
             }
         }
 
-    cp->axes[1].axis[X_AXIS].bits.lzr = GR_AXIS_POSITION_TOP;
-    cp->axes[1].axis[Y_AXIS].bits.lzr = GR_AXIS_POSITION_RIGHT;
+    cp->axes[1].axis[X_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_TOP;
+    cp->axes[1].axis[Y_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_RIGHT;
 
     gr_colour_set_BLACK(  cp->chart.borderstyle.fg);
                           cp->chart.borderstyle.fg.manual = 1;
@@ -764,9 +760,9 @@ gr_chart_order_query(
                 LIST_ITEMNO key;
                 P_GR_TEXT t;
 
-                for(t = collect_first(&cp->text.lbr, &key);
+                for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
                     t;
-                    t = collect_next( &cp->text.lbr, &key))
+                    t = collect_next( GR_TEXT, &cp->text.lbr, &key))
                     {
                     P_GR_TEXT_GUTS gutsp;
 
@@ -787,12 +783,12 @@ gr_chart_order_query(
 
             case GR_CHART_OBJNAME_SERIES:
                 {
-                GR_SERIES_IX seridx;
+                GR_SERIES_IDX series_idx;
                 P_GR_SERIES   serp;
 
-                seridx = gr_series_ix_from_external(cp, dsp->id.no);
+                series_idx = gr_series_idx_from_external(cp, dsp->id.no);
 
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 assert(serp->datasources.dsh[dsp->id.subno] == dsh);
 
@@ -811,9 +807,9 @@ gr_chart_query_exists(
     LIST_ITEMNO key;
     P_GR_CHART   cp;
 
-    for(cp = collect_first(&gr_charts.lbr, &key);
+    for(cp = collect_first(GR_CHART, &gr_charts.lbr, &key);
         cp;
-        cp = collect_next( &gr_charts.lbr, &key))
+        cp = collect_next( GR_CHART, &gr_charts.lbr, &key))
         if(cp->core.currentfilename)
             if(0 == _stricmp(cp->core.currentfilename, szName))
                 {
@@ -992,7 +988,7 @@ gr_datasource_insert(
         if((res = gr_text_new(cp, key, NULL, NULL)) < 0)
             return(0);
 
-        t = collect_search(&cp->text.lbr, key);
+        t = gr_text_search_key(cp, key);
         assert(t);
 
         t->bits.live_text = 1;
@@ -1112,7 +1108,7 @@ gr_chart_subtract_datasource_using_dsh(
             case GR_CHART_OBJNAME_SERIES:
                 {
                 GR_CHART_OBJID   id;
-                GR_SERIES_IX     seridx;
+                GR_SERIES_IDX     series_idx;
                 P_GR_SERIES       serp;
                 GR_DATASOURCE_NO ds;
 
@@ -1151,9 +1147,9 @@ gr_chart_subtract_datasource_using_dsh(
                     }
 
                 /* remove from use in a series */
-                seridx = gr_series_ix_from_external(cp, id.no);
+                series_idx = gr_series_idx_from_external(cp, id.no);
 
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 * (int *) &serp->valid = 0;
 
@@ -1173,9 +1169,9 @@ gr_chart_subtract_datasource_using_dsh(
                      * deleted series descriptor out to end of this set
                      * if not already there
                     */
-                    p_axes = gr_axesp_from_seridx(cp, seridx);
+                    p_axes = gr_axesp_from_series_idx(cp, series_idx);
 
-                    if(seridx != --p_axes->series.end_idx)
+                    if(series_idx != --p_axes->series.end_idx)
                         {
                         P_GR_SERIES last_serp;
 
@@ -1199,18 +1195,18 @@ gr_chart_subtract_datasource_using_dsh(
 
 extern S32
 gr_chart_add_series(
-    P_GR_CHART  cp,
-    GR_AXES_NO axes,
-    S32        init)
+    P_GR_CHART cp,
+    GR_AXES_IDX axes_idx,
+    S32 init)
 {
-    P_GR_SERIES   serp;
-    GR_SERIES_IX seridx;
+    P_GR_SERIES serp;
+    GR_SERIES_IDX series_idx;
 
     /* add after this one */
-    seridx = cp->axes[axes].series.end_idx;
+    series_idx = cp->axes[axes_idx].series.end_idx;
 
     /* descriptor doesn't already exist? */
-    if(seridx >= ((axes == 0) ? cp->axes[1].series.stt_idx : cp->series.n_defined))
+    if(series_idx >= ((axes_idx == 0) ? cp->axes[1].series.stt_idx : cp->series.n_defined))
         {
         if(cp->series.n_defined >= cp->series.n_alloc)
             {
@@ -1226,7 +1222,7 @@ gr_chart_add_series(
             cp->series.n_alloc = n_alloc;
             }
 
-        if(axes == 0)
+        if(axes_idx == 0)
             {
             /* have to move existing defined descriptors from higher axes up (maybe 0) */
             serp = getserp(cp, cp->axes[1].series.stt_idx);
@@ -1251,15 +1247,15 @@ gr_chart_add_series(
     /* if not clearly specified the initialise this new
      * element from a lower friend, if available, or defaults
     */
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     if(!serp->internal_bits.descriptor_ok && init) /* won't be set if brand new */
         {
-        if(cp->axes[axes].series.stt_idx == cp->axes[axes].series.end_idx)
+        if(cp->axes[axes_idx].series.stt_idx == cp->axes[axes_idx].series.end_idx)
             {
             /* first addition to axes set */
-            serp->sertype   = cp->axes[axes].sertype;
-            serp->charttype = cp->axes[axes].charttype;
+            serp->sertype   = cp->axes[axes_idx].sertype;
+            serp->charttype = cp->axes[axes_idx].charttype;
             }
         else
             {
@@ -1272,9 +1268,9 @@ gr_chart_add_series(
             }
         }
 
-    serp->datasources.n_req = gr_series_n_datasources_req(cp, seridx);
+    serp->datasources.n_req = gr_series_n_datasources_req(cp, series_idx);
 
-    cp->axes[axes].cache.n_series = ++cp->axes[axes].series.end_idx - cp->axes[axes].series.stt_idx;
+    cp->axes[axes_idx].cache.n_series = ++cp->axes[axes_idx].series.end_idx - cp->axes[axes_idx].series.stt_idx;
 
     cp->series.n = cp->axes[0].cache.n_series + cp->axes[1].cache.n_series;
 
@@ -1286,26 +1282,26 @@ gr_chart_realloc_series(
     P_GR_CHART cp)
 {
     GR_CHART_OBJID   id;
-    GR_SERIES_IX     seridx;
-    P_GR_SERIES       serp;
+    GR_SERIES_IDX    series_idx;
+    P_GR_SERIES      serp;
     GR_DATASOURCE_NO ds;
-    GR_AXES_NO       axes;
-    GR_SERIES_IX     old_n_series_0, old_n_series_1;
-    P_GR_DATASOURCE   dsp, last_dsp;
+    GR_AXES_IDX      axes_idx;
+    GR_SERIES_IDX    old_n_series_0, old_n_series_1;
+    P_GR_DATASOURCE  dsp, last_dsp;
     S32              res;
 
     cp->bits.realloc_series = 0;
 
-    gr_chart_objid_from_series(1, &id);
+    gr_chart_objid_from_series_no(1, &id);
 
     /* clear out data source allocation of all axes but preserve series attributes
      * and as we'll be reshuffling data sources between series destroy series caches
     */
-    for(seridx = 0;
-        seridx < cp->series.n_defined;
-        seridx++)
+    for(series_idx = 0;
+        series_idx < cp->series.n_defined;
+        series_idx++)
         {
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
 
         * (int *) &serp->valid = 0;
 
@@ -1323,10 +1319,10 @@ gr_chart_realloc_series(
     old_n_series_1 = cp->axes[1].series.end_idx - cp->axes[1].series.stt_idx;
 
     /* 'remove' series from axes sets */
-    for(axes = 0; axes <= GR_AXES_MAX; ++axes)
+    for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
         {
-        cp->axes[axes].series.end_idx = cp->axes[axes].series.stt_idx;
-        cp->axes[axes].cache.n_series = 0;
+        cp->axes[axes_idx].series.end_idx = cp->axes[axes_idx].series.stt_idx;
+        cp->axes[axes_idx].cache.n_series = 0;
         }
 
     cp->series.n = 0;
@@ -1335,7 +1331,7 @@ gr_chart_realloc_series(
      * them from the data source array or padding with NONE
     */
 
-    seridx = 0;
+    series_idx = 0;
 
     dsp      = cp->core.datasources.mh;
     last_dsp = dsp + cp->core.datasources.n;
@@ -1348,10 +1344,10 @@ gr_chart_realloc_series(
 #endif
         {
         /* whether to bomb the new descriptor or leave as is: vvv */
-        if((res = gr_chart_add_series(cp, 0, (seridx >= old_n_series_0))) < 0)
+        if((res = gr_chart_add_series(cp, 0, (series_idx >= old_n_series_0))) < 0)
             return(res);
 
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
 
         /* pour as many datasources in as it will take */
         do  {
@@ -1361,7 +1357,7 @@ gr_chart_realloc_series(
                 dsh = GR_DATASOURCE_HANDLE_NONE;
             else
                 {
-                id.no       = gr_series_external_from_ix(cp, seridx);
+                id.no       = gr_series_external_from_idx(cp, series_idx);
                 id.subno    = serp->datasources.n;
 
                 dsh         = dsp->dsh;
@@ -1372,19 +1368,20 @@ gr_chart_realloc_series(
             }
         while(serp->datasources.n < serp->datasources.n_req);
 
-        ++seridx;
+        ++series_idx;
         }
 #if 1
     while(dsp < last_dsp);
 #endif
 
     /* if only one axes set then all series are on that */
-    if(cp->axes_max > 0)
+    if(cp->axes_idx_max > 0)
+        {
         /* loop stripping data sources and therefore series from main axes till a respectable balance is achieved */
         while((cp->axes[0].cache.n_series - cp->axes[1].cache.n_series) > 1)
             {
-            GR_SERIES_IX n_series_strip;
-            GR_SERIES_IX new_seridx;
+            GR_SERIES_IDX n_series_strip;
+            GR_SERIES_IDX new_seridx;
 
             /* find first free descriptor off end of overlay axes */
             new_seridx = cp->axes[1].series.end_idx;
@@ -1399,11 +1396,11 @@ gr_chart_realloc_series(
              * all partially filled series are kept on the main axes
             */
             n_series_strip = 0;
-            seridx = cp->axes[0].series.end_idx;
+            series_idx = cp->axes[0].series.end_idx;
             ds     = 0;
-            while(--seridx >= cp->axes[0].series.stt_idx)
+            while(--series_idx >= cp->axes[0].series.stt_idx)
                 {
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 ds += serp->datasources.n;
 
@@ -1429,9 +1426,9 @@ gr_chart_realloc_series(
                 }
             else
                 {
-                GR_SERIES_IX     stop_at_seridx;
-                GR_SERIES_IX     src_seridx;
-                GR_SERIES_IX     dst_seridx;
+                GR_SERIES_IDX     stop_at_seridx;
+                GR_SERIES_IDX     src_seridx;
+                GR_SERIES_IDX     dst_seridx;
                 GR_DATASOURCE_NO src_ds;
                 GR_DATASOURCE_NO dst_ds;
                 P_GR_SERIES       src_serp;
@@ -1503,15 +1500,16 @@ gr_chart_realloc_series(
 
             /* one more series added to the overlay axes set by allocator */
             }
+        }
 
     /* SKS after 4.12 26mar92 - added overlay reloading helper stuff */
     cp->axes[0].series.start_series = 0;
-    if(cp->axes_max > 0)
+    if(cp->axes_idx_max > 0)
         {
         if(cp->axes[1].series.start_series >= 0) /* auto allocation */
             {
             if(cp->axes[1].cache.n_series != 0)
-                cp->axes[1].series.start_series = gr_series_external_from_ix(cp, cp->axes[1].series.stt_idx);
+                cp->axes[1].series.start_series = gr_series_external_from_idx(cp, cp->axes[1].series.stt_idx);
             else
                 cp->axes[1].series.start_series = 0;
             }
@@ -1522,11 +1520,11 @@ gr_chart_realloc_series(
 #if 0 /* SKS after 4.12 26mar92 - removed, this should only be set on loading and cloning */
     /* all descriptors on main axes set are now ok
     */
-    for(seridx = cp->axes[0].series.stt_idx;
-        seridx < cp->axes[0].series.end_idx;
-        seridx++)
+    for(series_idx = cp->axes[0].series.stt_idx;
+        series_idx < cp->axes[0].series.end_idx;
+        series_idx++)
         {
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
 
         serp->internal_bits.descriptor_ok = 1;
         }
@@ -1535,17 +1533,17 @@ gr_chart_realloc_series(
     /* can now go back over the datasources and reassign series ownership:
      * note that all series on main axes will be correctly assigned still
     */
-    for(seridx = cp->axes[1].series.stt_idx;
-        seridx < cp->axes[1].series.end_idx;
-        seridx++)
+    for(series_idx = cp->axes[1].series.stt_idx;
+        series_idx < cp->axes[1].series.end_idx;
+        series_idx++)
         {
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
 
 #if 0 /* SKS after 4.12 26mar92 - removed, this should only be set on loading and cloning */
         serp->internal_bits.descriptor_ok = 1;
 #endif
 
-        id.no = gr_series_external_from_ix(cp, seridx);
+        id.no = gr_series_external_from_idx(cp, series_idx);
 
         for(ds = 0; ds < serp->datasources.n_req; ++ds)
             if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
@@ -1569,12 +1567,12 @@ gr_chart_realloc_series(
 static GR_DATASOURCE_NO
 gr_series_n_datasources_req(
     P_GR_CHART    cp,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
     GR_DATASOURCE_NO n_req;
     P_GR_SERIES       serp;
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     switch(serp->sertype)
         {
@@ -1616,17 +1614,17 @@ static void
 gr_chart_cache_n_contrib(
     P_GR_CHART cp)
 {
-    GR_AXES_NO   axes;
-    GR_SERIES_IX seridx;
+    GR_AXES_IDX   axes_idx;
+    GR_SERIES_IDX series_idx;
     P_GR_SERIES   serp;
 
     cp->cache.n_contrib_series = 0;
     cp->cache.n_contrib_bars   = 0;
     cp->cache.n_contrib_lines  = 0;
 
-    for(axes = 0; axes <= cp->axes_max; ++axes)
+    for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
         {
-        P_GR_AXES p_axes = &cp->axes[axes];
+        P_GR_AXES p_axes = &cp->axes[axes_idx];
 
         /* only add one effective series holder, one bar place or line
          * place per set of stacked bars on each axes set
@@ -1653,11 +1651,11 @@ gr_chart_cache_n_contrib(
 
             case GR_CHARTTYPE_BAR:
             case GR_CHARTTYPE_LINE:
-                for(seridx = p_axes->series.stt_idx;
-                    seridx < p_axes->series.end_idx;
-                    seridx++)
+                for(series_idx = p_axes->series.stt_idx;
+                    series_idx < p_axes->series.end_idx;
+                    series_idx++)
                     {
-                    serp = getserp(cp, seridx);
+                    serp = getserp(cp, series_idx);
 
                     switch(serp->charttype)
                         {
@@ -1767,9 +1765,9 @@ gr_chart_dsp_from_dsh(
             return(1);
             }
 
-    for(t = collect_first(&cp->text.lbr, &key);
+    for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
         t;
-        t = collect_next( &cp->text.lbr, &key))
+        t = collect_next( GR_TEXT, &cp->text.lbr, &key))
         {
         P_GR_TEXT_GUTS gutsp;
 
@@ -1992,14 +1990,14 @@ gr_travel_categ_label(
 extern GR_DATASOURCE_HANDLE
 gr_travel_series_dsh_from_ds(
     P_GR_CHART        cp,
-    GR_SERIES_IX     seridx,
+    GR_SERIES_IDX     series_idx,
     GR_DATASOURCE_NO ds)
 {
     P_GR_SERIES serp;
 
-    assert(seridx < cp->series.n_defined);
+    assert(series_idx < cp->series.n_defined);
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     return(serp->datasources.dsh[ds]);
 }
@@ -2014,15 +2012,15 @@ gr_travel_series_dsh_from_ds(
 extern void
 gr_travel_series_label(
     P_GR_CHART       cp,
-    GR_SERIES_IX    seridx,
+    GR_SERIES_IDX    series_idx,
     P_GR_CHART_VALUE pValue /*out*/)
 {
     GR_DATASOURCE_NO ds;
     P_GR_SERIES       serp;
 
-    assert(seridx < cp->series.n_defined);
+    assert(series_idx < cp->series.n_defined);
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
 #if 1
     /* SKS after 4.12 01apr92 - why had nobody spotted this before? Get series label from Y value where possible */
@@ -2039,7 +2037,7 @@ gr_travel_series_label(
         {
         /* invent a label, based on series number */
         pValue->type = GR_CHART_VALUE_TEXT;
-        (void) sprintf(pValue->data.text, "S%u", gr_series_external_from_ix(cp, seridx));
+        (void) sprintf(pValue->data.text, "S%u", gr_series_external_from_idx(cp, series_idx));
         }
 }
 
@@ -2053,14 +2051,14 @@ gr_travel_series_label(
 extern GR_CHART_ITEMNO
 gr_travel_series_n_items(
     P_GR_CHART        cp,
-    GR_SERIES_IX     seridx,
+    GR_SERIES_IDX     series_idx,
     GR_DATASOURCE_NO ds)
 {
     P_GR_SERIES serp;
 
-    assert(seridx < cp->series.n_defined);
+    assert(series_idx < cp->series.n_defined);
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     return(gr_travel_dsh_n_items(cp, serp->datasources.dsh[ds]));
 }
@@ -2070,15 +2068,15 @@ gr_travel_series_n_items(
 extern GR_CHART_ITEMNO
 gr_travel_series_n_items_total(
     P_GR_CHART    cp,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
     GR_CHART_ITEMNO  curnum, maxnum;
     GR_DATASOURCE_NO ds;
     P_GR_SERIES       serp;
 
-    assert(seridx < cp->series.n_defined);
+    assert(series_idx < cp->series.n_defined);
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     if(serp->valid.n_items_total)
         return(serp->cache.n_items_total);
@@ -2177,7 +2175,7 @@ static S32
 gr_chart_plotarea_addin(
     P_GR_CHART cp)
 {
-    struct _gr_chart_plotarea * plotarea = &cp->plotarea;
+    struct GR_CHART_PLOTAREA * plotarea = &cp->plotarea;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_OBJID id;
     GR_BOX plotareabox;
@@ -2373,7 +2371,7 @@ extern S32
 gr_chart_legend_addin(
     P_GR_CHART cp)
 {
-    struct _gr_chart_legend * legend = &cp->legend;
+    struct GR_CHART_LEGEND * legend = &cp->legend;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_BOX legendbox;
     GR_BOX legend_margins;
@@ -2381,9 +2379,9 @@ gr_chart_legend_addin(
     GR_CHART_OBJID legend_id = gr_chart_objid_legend;
     GR_CHART_OBJID intern_id;
     GR_CHARTTYPE   charttype;
-    GR_AXES_NO     axes;
+    GR_AXES_IDX    axes_idx;
     P_GR_AXES      p_axes;
-    GR_SERIES_IX   seridx;
+    GR_SERIES_IDX  series_idx;
     P_GR_SERIES    serp;
     GR_POINT curpt, maxpt;
     GR_COORD       maxlegx;
@@ -2414,18 +2412,18 @@ gr_chart_legend_addin(
     switch(charttype)
         {
         case GR_CHARTTYPE_PIE:
-            axes         = 0;
-            seridx       = cp->pie_seridx;
-            n_for_legend = gr_travel_series_n_items_total(cp, seridx);
+            axes_idx = 0;
+            series_idx = cp->pie_series_idx;
+            n_for_legend = gr_travel_series_n_items_total(cp, series_idx);
             break;
 
         default:
             n_for_legend = 0;
 
-            for(axes = 0; axes <= cp->axes_max; ++axes)
+            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
                 {
-                n_for_legend += cp->axes[axes].series.end_idx;
-                n_for_legend -= cp->axes[axes].series.stt_idx;
+                n_for_legend += cp->axes[axes_idx].series.end_idx;
+                n_for_legend -= cp->axes[axes_idx].series.stt_idx;
                 }
             break;
         }
@@ -2581,7 +2579,7 @@ gr_chart_legend_addin(
 
                 gr_chart_objid_clear(&intern_id);
                 intern_id.name      = GR_CHART_OBJNAME_POINT;
-                intern_id.no        = gr_series_external_from_ix(cp, cp->pie_seridx);
+                intern_id.no        = gr_series_external_from_idx(cp, cp->pie_series_idx);
                 intern_id.has_no    = 1;
                 intern_id.has_subno = 1;
 
@@ -2632,17 +2630,17 @@ gr_chart_legend_addin(
             default:
                 /* loop plotting the point marker and series label for each series */
 
-                for(axes = 0; axes <= cp->axes_max; ++axes)
+                for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
                     {
-                    p_axes = &cp->axes[axes];
+                    p_axes = &cp->axes[axes_idx];
 
-                    for(seridx = p_axes->series.stt_idx;
-                        seridx < p_axes->series.end_idx;
-                        seridx++)
+                    for(series_idx = p_axes->series.stt_idx;
+                        series_idx < p_axes->series.end_idx;
+                        series_idx++)
                         {
                         /* loop plotting a rectangle of colour and category label for each category */
 
-                        gr_travel_series_label(cp, seridx, &cv);
+                        gr_travel_series_label(cp, series_idx, &cv);
 
                         swidth_mp = gr_font_stringwidth(f, cv.data.text);
                         swidth_px = swidth_mp / GR_MILLIPOINTS_PER_PIXIT;
@@ -2663,13 +2661,13 @@ gr_chart_legend_addin(
                             if(res == 2)
                                 gr_chart_legend_boxes_prepare(&curpt, &rect_box, &line_box, &pict_box, &text_box, &textstyle, swidth_px);
 
-                            gr_chart_objid_from_series(gr_series_external_from_ix(cp, seridx), &intern_id);
+                            gr_chart_objid_from_series_no(gr_series_external_from_idx(cp, series_idx), &intern_id);
 
                             linestyle_using_default =
                             gr_chart_objid_linestyle_query(cp, &intern_id, &linestyle);
                             gr_chart_objid_fillstyle_query(cp, &intern_id, &fillstyle);
 
-                            serp = getserp(cp, seridx);
+                            serp = getserp(cp, series_idx);
 
                             charttype = (serp->charttype != GR_CHARTTYPE_NONE)
                                                     ? serp->charttype
@@ -2749,7 +2747,7 @@ gr_chart_init_for_build(
     P_GR_CHART cp)
 {
     GR_BOX plotarea;
-    GR_SERIES_NO n_series_deep;
+    S32 /*GR_SERIES_NO*/ n_series_deep;
     GR_POINT new_posn;
 
     /* reflect 3D usability */
@@ -2825,7 +2823,10 @@ gr_chart_init_for_build(
     cp->plotarea.size.y = plotarea.y1 - plotarea.y0;
 }
 
-/*#include <signal.h>*/
+#include <signal.h>
+
+typedef void (__cdecl * P_PROC_SIGNAL) (
+    _In_        int sig);
 
 #include <setjmp.h>
 
@@ -2845,14 +2846,14 @@ gr_chart_build(
     P_GR_CHART cp;
     P_GR_DIAG p_gr_diag;
     S32 res;
-    mysignal_save mss;
+    P_PROC_SIGNAL oldfpe;
 
-    mysignal_start(SIGFPE, gr_chart_signal_handler, &mss, hInst);
+    oldfpe = signal(SIGFPE, gr_chart_signal_handler);
 
-    if(setjmp(gr_chart_jmp_buf))
+    if(0 != setjmp(gr_chart_jmp_buf))
         {
         reportf("*** gr_chart_build: setjmp returned from signal handler ***");
-        mysignal_end(&mss);
+        (void) signal(SIGFPE, oldfpe);
         return(create_error(GR_CHART_ERR_EXCEPTION));
         }
 
@@ -2942,7 +2943,7 @@ gr_chart_build(
         break;
         }
 
-    mysignal_end(&mss);
+    (void) signal(SIGFPE, oldfpe);
 
     return(res);
 }
@@ -2964,20 +2965,20 @@ gr_chart_object_name_from_id(
             break;
 
         case GR_CHART_OBJNAME_CHART:
-            safe_strkpy(out, elemof_buffer, "Chart");
+            xstrkpy(out, elemof_buffer, "Chart");
             break;
 
         case GR_CHART_OBJNAME_PLOTAREA:
             if(id->no == 1)
-                safe_strkpy(out, elemof_buffer, "Wall");
+                xstrkpy(out, elemof_buffer, "Wall");
             else if(id->no == 2)
-                safe_strkpy(out, elemof_buffer, "Floor");
+                xstrkpy(out, elemof_buffer, "Floor");
             else
-                safe_strkpy(out, elemof_buffer, "Plot area");
+                xstrkpy(out, elemof_buffer, "Plot area");
             break;
 
         case GR_CHART_OBJNAME_LEGEND:
-            safe_strkpy(out, elemof_buffer, "Legend");
+            xstrkpy(out, elemof_buffer, "Legend");
             break;
 
         case GR_CHART_OBJNAME_TEXT:
@@ -3157,7 +3158,7 @@ gr_chart_preferred_set(
     PC_GR_CHART_HANDLE chp)
 {
     P_GR_CHART    pcp;
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
     P_GR_SERIES   serp;
     S32          res;
 
@@ -3178,9 +3179,9 @@ gr_chart_preferred_set(
     pcp = gr_chart_cp_from_ch(gr_chart_preferred_ch);
 
     /* run over all series in preferred world and give them the ok */
-    for(seridx = 0; seridx < pcp->series.n_defined; ++seridx)
+    for(series_idx = 0; series_idx < pcp->series.n_defined; ++series_idx)
         {
-        serp = getserp(pcp, seridx);
+        serp = getserp(pcp, series_idx);
 
         serp->internal_bits.descriptor_ok = 1;
         }
@@ -3217,8 +3218,8 @@ gr_chart_clone(
 {
     P_GR_CHART   dst_cp;
     S32          plotidx;
-    GR_SERIES_IX seridx;
-    GR_AXES_NO   axes;
+    GR_SERIES_IDX series_idx;
+    GR_AXES_IDX  axes_idx;
     P_GR_SERIES  dst_serp;
     STATUS       res;
 
@@ -3253,10 +3254,10 @@ gr_chart_clone(
 
     dst_cp->series.n_alloc = 0;
 
-    for(axes = 0; axes <= GR_AXES_MAX; ++axes)
+    for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
         {
-        dst_cp->axes[axes].cache.n_series = dst_cp->axes[axes].series.end_idx - dst_cp->axes[axes].series.stt_idx;
-        dst_cp->series.n_alloc += dst_cp->axes[axes].cache.n_series;
+        dst_cp->axes[axes_idx].cache.n_series = dst_cp->axes[axes_idx].series.end_idx - dst_cp->axes[axes_idx].series.stt_idx;
+        dst_cp->series.n_alloc += dst_cp->axes[axes_idx].cache.n_series;
         }
 
     dst_cp->series.n_defined = dst_cp->series.n_alloc;
@@ -3269,18 +3270,18 @@ gr_chart_clone(
             return(res);
 
         /* copy over in two sections such that destination is packed */
-        for(axes = 0; axes <= GR_AXES_MAX; ++axes)
+        for(axes_idx = 0; axes_idx <= GR_AXES_IDX_MAX; ++axes_idx)
             {
             P_GR_SERIES src_serp;
 
             src_serp = src_cp->series.mh;
             dst_serp = dst_cp->series.mh;
 
-            src_serp += src_cp->axes[axes].series.stt_idx;
-            dst_serp += dst_cp->axes[axes].series.stt_idx;
+            src_serp += src_cp->axes[axes_idx].series.stt_idx;
+            dst_serp += dst_cp->axes[axes_idx].series.stt_idx;
 
             memcpy32(dst_serp, src_serp, sizeof32(*dst_serp) *
-                (dst_cp->axes[axes].series.end_idx - dst_cp->axes[axes].series.stt_idx));
+                (dst_cp->axes[axes_idx].series.end_idx - dst_cp->axes[axes_idx].series.stt_idx));
             }
         }
     }
@@ -3299,27 +3300,27 @@ gr_chart_clone(
     status_accumulate(res, gr_chart_list_duplic(dst_cp, GR_LIST_CHART_TEXT));
     status_accumulate(res, gr_chart_list_duplic(dst_cp, GR_LIST_CHART_TEXT_TEXTSTYLE));
 
-    for(seridx = 0; seridx < dst_cp->series.n_defined; ++seridx)
+    for(series_idx = 0; series_idx < dst_cp->series.n_defined; ++series_idx)
         {
         /* dup refs to series pictures */
-        dst_serp = getserp(dst_cp, seridx);
+        dst_serp = getserp(dst_cp, series_idx);
         gr_fillstyle_ref_add(&dst_serp->style.pdrop_fill);
         gr_fillstyle_ref_add(&dst_serp->style.point_fill);
 
         /* dup all point info from this series - implicit dup of refs to point pictures */
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_PDROP_FILLSTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_PDROP_LINESTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_PDROP_FILLSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_PDROP_LINESTYLE));
 
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_FILLSTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_LINESTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_TEXTSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_FILLSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_LINESTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_TEXTSTYLE));
 
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_BARCHSTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_BARLINECHSTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_LINECHSTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_PIECHDISPLSTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_PIECHLABELSTYLE));
-        status_accumulate(res, gr_point_list_duplic(dst_cp, seridx, GR_LIST_POINT_SCATCHSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_BARCHSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_BARLINECHSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_LINECHSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_PIECHDISPLSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_PIECHLABELSTYLE));
+        status_accumulate(res, gr_point_list_duplic(dst_cp, series_idx, GR_LIST_POINT_SCATCHSTYLE));
         }
 
     dst_cp->bits.realloc_series = 1;
@@ -3340,7 +3341,7 @@ gr_chart_clone_noncore_pict_lose_refs(
 {
     P_GR_CHART    cp;
     S32          plotidx;
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
     P_GR_SERIES   serp;
 
     cp = gr_chart_cp_from_ch(*chp);
@@ -3353,16 +3354,16 @@ gr_chart_clone_noncore_pict_lose_refs(
 
     gr_fillstyle_ref_lose(&cp->legend.areastyle);
 
-    for(seridx = 0; seridx < cp->series.n_defined; ++seridx)
+    for(series_idx = 0; series_idx < cp->series.n_defined; ++series_idx)
         {
         /* lose refs to series pictures */
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
         gr_fillstyle_ref_lose(&serp->style.pdrop_fill);
         gr_fillstyle_ref_lose(&serp->style.point_fill);
 
         /* lose refs to point pictures */
-        gr_pdrop_list_fillstyle_reref(cp, seridx, 0 /*lose*/);
-        gr_point_list_fillstyle_reref(cp, seridx, 0 /*lose*/);
+        gr_pdrop_list_fillstyle_reref(cp, series_idx, 0 /*lose*/);
+        gr_point_list_fillstyle_reref(cp, series_idx, 0 /*lose*/);
         }
 }
 

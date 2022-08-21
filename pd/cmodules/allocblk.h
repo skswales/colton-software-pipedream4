@@ -14,9 +14,9 @@
 #ifndef __allocblk_h
 #define __allocblk_h
 
-typedef struct _ALLOCBLOCK /* really private to implementation, but stop old ARM compiler barfing over debug info */
+typedef struct ALLOCBLOCK /* really private to implementation, but stop old ARM compiler barfing over debug info */
 {
-    struct _ALLOCBLOCK * next;
+    struct ALLOCBLOCK * next;
     U32 hwm;
     U32 size;
 #if !defined(_WIN64)
@@ -41,7 +41,7 @@ alloc_block_dispose(
     _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock);
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes_requested, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes_requested, 0) /* may be NULL */
 extern P_BYTE
 alloc_block_malloc(
     _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock,

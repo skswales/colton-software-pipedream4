@@ -24,6 +24,7 @@
 internal functions
 */
 
+_Check_return_
 static S32
 copyslot(
     DOCNO docno_from,
@@ -39,11 +40,12 @@ copyslot(
 
 static void
 do_the_replicate(
-    P_SLR src_start,
-    P_SLR src_end,
-    P_SLR res_start,
-    P_SLR res_end);
+    _InRef_     PC_SLR src_start,
+    _InRef_     PC_SLR src_end,
+    _InRef_     PC_SLR res_start,
+    _InRef_     PC_SLR res_end);
 
+/*ncr*/
 static BOOL
 insert_blank_block(
     COL atcol,
@@ -51,10 +53,12 @@ insert_blank_block(
     COL colsno,
     ROW rowsno);
 
+_Check_return_
 static BOOL
 recover_deleted_block(
-    saved_block_descriptor *sbdp);
+    SAVED_BLOCK_DESCRIPTOR * sbdp);
 
+/*ncr*/
 static S32
 refs_adjust_add(
     P_SLOT slot,
@@ -148,10 +152,11 @@ block_updref(
 *
 ******************************************************************************/
 
+_Check_return_
 static BOOL
 check_range(
-    P_SLR first,
-    P_SLR second)
+    _InRef_     PC_SLR first,
+    _InRef_     PC_SLR second)
 {
     if(second->col == NO_COL)
         return(TRUE);
@@ -165,6 +170,7 @@ check_range(
 *
 ******************************************************************************/
 
+/*ncr*/
 static BOOL
 do_CopyBlock(
     S32 update_refs,
@@ -264,6 +270,7 @@ copy a block of slots to a new column of to the right
 if it fails it must tidy up the world as if nothing happened
 */
 
+_Check_return_
 static S32
 copy_slots_to_eoworld(
     COL fromcol,
@@ -327,6 +334,7 @@ copy_slots_to_eoworld(
 *
 ******************************************************************************/
 
+_Check_return_
 static S32
 copyslot(
     DOCNO docno_from,
@@ -460,6 +468,7 @@ DeleteBlock_fn(void)
 *
 ******************************************************************************/
 
+/*ncr*/
 extern S32
 do_delete_block(
     BOOL do_save,
@@ -573,10 +582,10 @@ do the hard work in a replicate. Called by Cfunc, BRRfunc, BRDfunc, BREfunc
 
 static void
 do_the_replicate(
-    P_SLR src_start,
-    P_SLR src_end,
-    P_SLR res_start,
-    P_SLR res_end)
+    _InRef_     PC_SLR src_start,
+    _InRef_     PC_SLR src_end,
+    _InRef_     PC_SLR res_start,
+    _InRef_     PC_SLR res_end)
 {
     const DOCNO docno = current_docno();
     COL src_col, tcol;
@@ -684,6 +693,7 @@ ensure_paste_list_clipped(void)
 insert a blank block, with updref
 */
 
+/*ncr*/
 static BOOL
 insert_blank_block(
     COL atcol,
@@ -711,6 +721,7 @@ insert_blank_block(
 is this block all blank
 */
 
+_Check_return_
 extern BOOL
 is_block_blank(
     COL cs,
@@ -851,7 +862,7 @@ MoveBlock_fn_do(S32 add_refs)
 extern void
 Paste_fn(void)
 {
-    LIST * lptr;
+    PC_LIST lptr;
     SLR oldpos;
     S32 tlecpos;
 
@@ -883,7 +894,7 @@ Paste_fn(void)
             if(!mergebuf())
                 return;
 
-            if(recover_deleted_block((saved_block_descriptor *) lptr->value))
+            if(recover_deleted_block((SAVED_BLOCK_DESCRIPTOR *) lptr->value))
                 /* delete entry from stack */
                 delete_from_list(&deleted_words, BLOCK_OFFSET + latest_word_on_stack--);
 
@@ -949,9 +960,10 @@ PasteListDepth_fn(void)
 *
 ******************************************************************************/
 
+_Check_return_
 static BOOL
 recover_deleted_block(
-    saved_block_descriptor *sbdp)
+    SAVED_BLOCK_DESCRIPTOR * sbdp)
 {
     P_COLENTRY delete_colstart = sbdp->del_colstart;
     COL delete_size_col = sbdp->del_col_size;
@@ -1031,6 +1043,7 @@ recover_deleted_block(
 *
 ******************************************************************************/
 
+/*ncr*/
 static S32
 refs_adjust_add(
     P_SLOT slot,
@@ -1102,8 +1115,8 @@ static void
 remove_deletion(
     S32 key)
 {
-    LIST *lptr;
-    saved_block_descriptor *sbdp;
+    PC_LIST lptr;
+    SAVED_BLOCK_DESCRIPTOR * sbdp;
     P_COLENTRY cptr;
     COL csize;
 
@@ -1124,7 +1137,7 @@ remove_deletion(
         trace_2(TRACE_APP_PD4, "remove_deletion lptr: %x, lptr->value: %x",
                 (S32) lptr, (S32) lptr->value);
 
-        sbdp    = (saved_block_descriptor *) lptr->value;
+        sbdp    = (SAVED_BLOCK_DESCRIPTOR *) lptr->value;
 
         cptr    = sbdp->del_colstart;
         csize   = sbdp->del_col_size;
@@ -1290,6 +1303,7 @@ ReplicateRight_fn(void)
  * box asking if user wants to proceed.  If so it returns TRUE, otherwise FALSE
 */
 
+_Check_return_
 extern BOOL
 save_block_and_delete(
     BOOL is_deletion,
@@ -1300,11 +1314,11 @@ save_block_and_delete(
     BOOL res = TRUE;
     S32 array_size_bytes = 0; /* keep compiler dataflow analyser happy */
     S32 copyres, save_active;
-    LIST * lptr = NULL;
+    P_LIST lptr = NULL;
     P_COLENTRY delete_colstart;
     COL delete_size_col;
     ROW delete_size_row;
-    saved_block_descriptor *sbdp;
+    SAVED_BLOCK_DESCRIPTOR * sbdp;
     S32 mres, eres;
 
     trace_0(TRACE_APP_PD4, "save_block_and_delete");
@@ -1333,11 +1347,11 @@ save_block_and_delete(
 
         /* put block on deleted_words list */
         if( (NULL != (delete_colstart = al_ptr_alloc_elem(COLENTRY, delete_size_col, &mres))) &&
-            (NULL != (lptr = add_list_entry(&deleted_words, sizeof(saved_block_descriptor), &mres))) )
+            (NULL != (lptr = add_list_entry(&deleted_words, sizeof32(SAVED_BLOCK_DESCRIPTOR), &mres))) )
             {
             lptr->key = ++latest_word_on_stack + BLOCK_OFFSET;
 
-            sbdp = (saved_block_descriptor *) lptr->value;
+            sbdp = (SAVED_BLOCK_DESCRIPTOR *) lptr->value;
 
             trace_4(TRACE_APP_PD4, "save_block_and_delete saving block: key %d colstart " PTR_XTFMT ", cols %d, rows %d",
                     lptr->key, report_ptr_cast(delete_colstart), delete_size_col, delete_size_row);
@@ -1367,7 +1381,7 @@ save_block_and_delete(
                 delete_from_list(&deleted_words, lptr->key);
                 }
 
-            al_ptr_dispose((void **) &delete_colstart);
+            al_ptr_dispose(P_P_ANY_PEDANTIC(&delete_colstart));
 
             if((copyres != create_error(ERR_ESCAPE))  &&  is_deletion)
                 {
@@ -1387,7 +1401,7 @@ save_block_and_delete(
                     }
                 }
             else
-                res = reperr_null((copyres == status_nomem()) ? create_error(ERR_CANTSAVEPASTEBLOCK) : copyres);
+                res = reperr_null((copyres == STATUS_NOMEM) ? create_error(ERR_CANTSAVEPASTEBLOCK) : copyres);
 
             if(!res)
                 goto FINISH_OFF;
@@ -1478,6 +1492,7 @@ FINISH_OFF:
 ensure valid block
 */
 
+_Check_return_
 extern BOOL
 set_up_block(
     BOOL check_block_in_doc)
@@ -1512,6 +1527,7 @@ set_up_block(
 *
 ******************************************************************************/
 
+/*ncr*/
 extern char *
 text_csr_uref(
     uchar * csr,

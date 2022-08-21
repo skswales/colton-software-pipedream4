@@ -277,7 +277,7 @@ u_strnicmp(
 
 #define NOPT 0xFF
 
-static struct lfins lfstruct[] =
+static struct LFINS lfstruct[] =
 {
 	L_BOF,          2, (uchar *) "\x6\x4",          2,    NOPT,       NULL,
 	L_RANGE,        8, (uchar *) "",                0,    NOPT,       NULL,
@@ -340,11 +340,11 @@ table of valid constructs for slots
 #define BIT_RYT 0x0040
 #define BIT_EXP 0x0080
 
-typedef struct constr *conp;
+typedef struct CONSTR *conp;
 
-static struct constr
+static struct CONSTR
 {
-	uchar *conid;
+	uchar * conid;
 	U16 mask;
 	uchar * (* proccons)(uchar *, uchar *, P_S32 );
 }
@@ -396,7 +396,7 @@ static uchar *expop;
 static uchar *exppos;
 static S32 ecol;
 static S32 erow;
-struct symbol pd123__csym;
+struct SYMBOL pd123__csym;
 
 /* symbol checker macro */
 #define chknxs() ((pd123__csym.symno != SYM_BLANK) ? pd123__csym.symno : nxtsym())
@@ -1128,14 +1128,10 @@ static void
 edout(
     F64 fpval)
 {
-#if WINDOWS
-
-	*(((P_F64) expop)++) = fpval;
-
-#elif RISCOS
+#if RISCOS
 
 	/* this for the ARM <-> 8087 */
-	union
+	union EDOUT_U
 		{
 		F64 fpval;
 		uchar fpbytes[sizeof(F64)];
@@ -1150,7 +1146,11 @@ edout(
 	for(i = 0; i < 4; ++i)
 		*expop++ = fp.fpbytes[i];
 
-#endif
+#elif WINDOWS
+
+	*(((P_F64) expop)++) = fpval;
+
+#endif /* OS */
 }
 
 /******************************************************************************
@@ -1163,14 +1163,10 @@ static void
 euwout(
     U16 wrd)
 {
-#if WINDOWS
-
-	*(((U16 *) expop)++) = wrd;
-
-#elif RISCOS
+#if RISCOS
 
 	/* this for the ARM */
-	union
+	union EUWOUT_U
 		{
 		U16 uword;
 		uchar uwbytes[sizeof(U16)];
@@ -1180,7 +1176,11 @@ euwout(
 	*expop++ = uw.uwbytes[0];
 	*expop++ = uw.uwbytes[1];
 
-#endif
+#elif WINDOWS
+
+	*(((U16 *) expop)++) = wrd;
+
+#endif /* OS */
 }
 
 /******************************************************************************
@@ -1193,14 +1193,10 @@ static void
 ewout(
     S16 wrd)
 {
-#if WINDOWS
-
-	*(((S16 *) expop)++) = wrd;
-
-#elif RISCOS
+#if RISCOS
 
 	/* this for the ARM */
-	union
+	union EWOUT_U
 		{
 		S16 word;
 		uchar wbytes[sizeof(S16)];
@@ -1210,7 +1206,11 @@ ewout(
 	*expop++ = w.wbytes[0];
 	*expop++ = w.wbytes[1];
 
-#endif
+#elif WINDOWS
+
+	*(((S16 *) expop)++) = wrd;
+
+#endif /* OS */
 }
 
 /******************************************************************************
@@ -2091,7 +2091,7 @@ lts_writedouble(
     F64 fpval)
 {
 	S32 err, i;
-	union
+	union LTS_WRITEDOUBLE_U
 		{
 		F64 fpval;
 		char fpbytes[sizeof(F64)];
@@ -2099,13 +2099,7 @@ lts_writedouble(
 
 	fp.fpval = fpval;
 
-#if WINDOWS
-
-	for(i = 0; i < sizeof(F64); ++i)
-		if((err = pd123__foutc(fp.fpbytes[i], pd123__fout)) != 0)
-			return(err);
-
-#elif RISCOS
+#if RISCOS
 
 	for(i = 4; i < sizeof(F64); ++i)
 		if((err = pd123__foutc(fp.fpbytes[i], pd123__fout)) != 0)
@@ -2115,7 +2109,13 @@ lts_writedouble(
 		if((err = pd123__foutc(fp.fpbytes[i], pd123__fout)) != 0)
 			return(err);
 
-#endif
+#elif WINDOWS
+
+	for(i = 0; i < sizeof(F64); ++i)
+		if((err = pd123__foutc(fp.fpbytes[i], pd123__fout)) != 0)
+			return(err);
+
+#endif /* OS */
 
 	return(0);
 }
@@ -2401,7 +2401,7 @@ lts_writeuword(
     U16 aword)
 {
 	S32 err;
-	union
+	union LTS_WRITEUWORD_U
 		{
 		U16 uword;
 		uchar uwbytes[sizeof(U16)];
@@ -2424,7 +2424,7 @@ lts_writeword(
     S16 aword)
 {
 	S32 err;
-	union
+	union LTS_WRITEWORD_U
 		{
 		S16 word;
 		char wbytes[sizeof(S16)];

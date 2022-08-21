@@ -176,7 +176,7 @@ messagef(
 
     err.errnum = 0;
 
-    (void) vsnprintf(err.errmess, elemof32(err.errmess), format, args);
+    consume_int(vsnprintf(err.errmess, elemof32(err.errmess), format, args));
 
     wimpt_complain(&err);
 #endif
@@ -195,7 +195,7 @@ message_output(
 
     err.errnum = 0;
 
-    (void) safe_strkpy(err.errmess, elemof32(err.errmess), buffer);
+    (void) xstrkpy(err.errmess, elemof32(err.errmess), buffer);
 
     wimpt_complain(&err);
 }
@@ -232,8 +232,8 @@ reperr(
             /* if we have an arg then append it if not a %s error */
             if(text)
                 {
-                safe_strkpy(array, elemof32(array), errorp);
-                safe_strkat(array, elemof32(array), " %s");
+                xstrkpy(array, elemof32(array), errorp);
+                xstrkat(array, elemof32(array), " %s");
                 errorp = array;
                 }
             }
@@ -264,7 +264,7 @@ reperr(
 
         err.errnum = 0;
 
-        (void) vsnprintf(err.errmess, elemof32(err.errmess), errorp, args);
+        consume_int(vsnprintf(err.errmess, elemof32(err.errmess), errorp, args));
 
         wimpt_complain(&err);
         }
@@ -349,7 +349,7 @@ reperr_fatal(
 
     err.errnum = 0;
 
-    (void) vsnprintf(err.errmess, elemof32(err.errmess), format, args);
+    consume_int(vsnprintf(err.errmess, elemof32(err.errmess), format, args));
 
     wimpt_noerr(&err);
 #else

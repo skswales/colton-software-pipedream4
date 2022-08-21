@@ -14,8 +14,6 @@
 #ifndef __pd123_ext
 #define __pd123_ext
 
-#ifndef RC_INVOKED
-
 /* flag for other modules */
 #define LOTUSREAD
 
@@ -76,8 +74,6 @@ error definition
 	errorstring(PD123_ERR_EXP,     "Expression not completely converted") \
 	errorstring(PD123_ERR_BADFILE, "Bad input file") \
 	errorstring(PD123_ERR_BIGFILE, "File has too many rows or columns")
-
-#endif /* RC_INVOKED */
 
 /*
 error definition

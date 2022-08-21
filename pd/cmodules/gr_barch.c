@@ -111,21 +111,21 @@ gr_point_partial_z_shift(
 static S32
 gr_actualise_series_plain(
     P_GR_CHART    cp,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
     P_GR_SERIES      serp;
     GR_CHART_ITEMNO total_n_items = 0;
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     if(1 /*!serp->valid.limits*/)
         {
         GR_CHART_ITEMNO        n_items, item;
         GR_DATASOURCE_FOURSOME dsh;
         GR_CHART_NUMBER        value, valsum;
-        PC_GR_AXES              p_axes = gr_axesp_from_seridx(cp, seridx);
-        PC_GR_AXIS              p_axis = &p_axes->axis[Y_AXIS];
-        S32                    cumulative;
+        PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
+        PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
+        S32 cumulative;
 
         cumulative = serp->bits.cumulative_manual
                                 ? serp->bits.cumulative
@@ -134,7 +134,7 @@ gr_actualise_series_plain(
         serp->cache.limits_y.min = +GR_CHART_NUMBER_MAX;
         serp->cache.limits_y.max = -GR_CHART_NUMBER_MAX;
 
-        gr_barlinescatch_get_datasources(cp, seridx, &dsh);
+        gr_barlinescatch_get_datasources(cp, series_idx, &dsh);
 
         total_n_items = 0;
 
@@ -182,12 +182,12 @@ gr_actualise_series_plain(
 static S32
 gr_actualise_series_error1(
     P_GR_CHART    cp,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
     P_GR_SERIES      serp;
     GR_CHART_ITEMNO total_n_items = 0;
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     if(1 /*!serp->valid.limits*/)
         {
@@ -195,9 +195,9 @@ gr_actualise_series_error1(
         GR_DATASOURCE_FOURSOME dsh;
         GR_CHART_NUMBER        value, valsum;
         GR_CHART_NUMBER        error, errsum, valincerr;
-        PC_GR_AXES              p_axes = gr_axesp_from_seridx(cp, seridx);
-        PC_GR_AXIS              p_axis = &p_axes->axis[Y_AXIS];
-        S32                    cumulative;
+        PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
+        PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
+        S32 cumulative;
 
         cumulative = serp->bits.cumulative_manual
                                 ? serp->bits.cumulative
@@ -206,7 +206,7 @@ gr_actualise_series_error1(
         serp->cache.limits_y.min = +GR_CHART_NUMBER_MAX;
         serp->cache.limits_y.max = -GR_CHART_NUMBER_MAX;
 
-        gr_barlinescatch_get_datasources(cp, seridx, &dsh);
+        gr_barlinescatch_get_datasources(cp, series_idx, &dsh);
 
         total_n_items = 0;
 
@@ -297,13 +297,13 @@ gr_categ_pos(
 extern GR_COORD
 gr_value_pos(
     PC_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis,
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx,
     const GR_CHART_NUMBER * value)
 {
-    PC_GR_AXIS p_axis = &cp->axes[axes].axis[axis];
+    PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
     F64 plotval = *value;
-    GR_COORD pos = (axis == Y_AXIS) ? cp->plotarea.size.y : cp->plotarea.size.x;
+    GR_COORD pos = (axis_idx == Y_AXIS_IDX) ? cp->plotarea.size.y : cp->plotarea.size.x;
     F64 plotmin;
     F64 plotmax;
 
@@ -333,13 +333,13 @@ gr_value_pos(
 extern GR_COORD
 gr_value_pos_rel(
     PC_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis,
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx,
     const GR_CHART_NUMBER * value)
 {
-    PC_GR_AXIS p_axis = &cp->axes[axes].axis[axis];
+    PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
     F64 plotval = *value;
-    GR_COORD pos = (axis == Y_AXIS) ? cp->plotarea.size.y : cp->plotarea.size.x;
+    GR_COORD pos = (axis_idx == Y_AXIS_IDX) ? cp->plotarea.size.y : cp->plotarea.size.x;
 
     plotval = plotval / p_axis->current_span;
     pos = (GR_COORD) (plotval * pos);
@@ -356,7 +356,7 @@ gr_value_pos_rel(
 static S32
 gr_barline_label_point(
     P_GR_CHART      cp,
-    GR_SERIES_IX   seridx,
+    GR_SERIES_IDX   series_idx,
     GR_POINT_NO    point,
     GR_CHART_OBJID id,
     PC_F64 value,
@@ -372,7 +372,7 @@ gr_barline_label_point(
     GR_COORD       swidth_px, halfwidth, halfheight;
     S32            res = 1;
 
-    gr_point_textstyle_query(cp, seridx, point, &textstyle);
+    gr_point_textstyle_query(cp, series_idx, point, &textstyle);
 
     if(fabs(*value) >= U32_MAX)
         eformat = TRUE;
@@ -421,7 +421,7 @@ gr_barline_label_point(
 ******************************************************************************/
 
 static
-struct _GR_BARLINECH_STACKING
+struct GR_BARLINECH_STACKING
     {
     S32             on;
     GR_CHART_NUMBER value;
@@ -435,11 +435,11 @@ stacking;
 static S32
 gr_barlinech_stacking_init(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
+    GR_AXES_IDX axes_idx,
     GR_POINT_NO point)
 {
-    GR_SERIES_IX    seridx;
-    PC_GR_SERIES     serp;
+    GR_SERIES_IDX   series_idx;
+    PC_GR_SERIES    serp;
     GR_CHART_NUMBER value;
     S32             res;
 
@@ -450,16 +450,16 @@ gr_barlinech_stacking_init(
     stacking.total       = 0.0;
     stacking.drop_filled = 0; /* 1 would mean no need to consider drawing bottom vanes, but leave 0 for possible -ve pitch */
 
-    if(!cp->axes[axes].bits.stacked_pct)
+    if(!cp->axes[axes_idx].bits.stacked_pct)
         return(1);
 
     res = 0;
 
-    for(seridx = cp->axes[axes].series.stt_idx;
-        seridx < cp->axes[axes].series.end_idx;
-        seridx++)
+    for(series_idx = cp->axes[axes_idx].series.stt_idx;
+        series_idx < cp->axes[axes_idx].series.end_idx;
+        series_idx++)
         {
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
 
         if(!gr_travel_dsh_valof(cp, serp->datasources.dsh[0], point, &value))
             continue;
@@ -485,12 +485,11 @@ gr_barlinech_stacking_init(
     return(res);
 }
 
-typedef enum
-    {
+enum GR_BARLINECH_PASS_TYPE
+{
     GR_BARLINECH_RIBBON_PASS,
     GR_BARLINECH_POINT_PASS
-    }
-GR_BARLINECH_PASS_TYPE;
+};
 
 /******************************************************************************
 *
@@ -520,11 +519,8 @@ static void
 gr_barlinech_series_init(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp)
 {
-    P_GR_SERIES serp;
-    P_GR_AXES   p_axes;
-
-    serp  = getserp(lcp->cp, lcp->seridx);
-    p_axes = gr_axesp_from_seridx(lcp->cp, lcp->seridx);
+    P_GR_SERIES serp = getserp(lcp->cp, lcp->series_idx);
+    P_GR_AXES p_axes = gr_axesp_from_series_idx(lcp->cp, lcp->series_idx);
 
     lcp->cumulative = serp->bits.cumulative_manual
                                 ? serp->bits.cumulative
@@ -538,7 +534,7 @@ gr_barlinech_series_init(
                                 ? serp->bits.best_fit
                                 : p_axes->bits.best_fit;
 
-    gr_chart_objid_from_seridx(lcp->cp, lcp->seridx, &lcp->serid);
+    gr_chart_objid_from_series_idx(lcp->cp, lcp->series_idx, &lcp->serid);
 
     lcp->drop_serid         = lcp->serid;
     lcp->drop_serid.name    = GR_CHART_OBJNAME_DROPSER;
@@ -552,7 +548,7 @@ gr_barlinech_series_init(
 
     lcp->slot_depth_percentage = 0;
 
-    gr_barlinescatch_get_datasources(lcp->cp, lcp->seridx, &lcp->dsh);
+    gr_barlinescatch_get_datasources(lcp->cp, lcp->series_idx, &lcp->dsh);
 }
 
 /******************************************************************************
@@ -569,8 +565,8 @@ gr_barlinech_point_start(
     GR_CHART_NUMPAIR *              error /*out*/)
 {
     P_GR_CHART  cp    = lcp->cp;
-    GR_AXES_NO axes  = lcp->axes;
-    P_GR_AXES   p_axes = &cp->axes[axes];
+    GR_AXES_IDX axes_idx = lcp->axes_idx;
+    P_GR_AXES   p_axes = &cp->axes[axes_idx];
 
     lcp->point_id.subno = (U16) gr_point_external_from_key(point);
 
@@ -617,7 +613,7 @@ gr_barlinech_point_start(
     /* NB. do value & error cumulation before deciding to wimp out */
 
     /* can't plot -ve or zero values on log scaled chart */
-    if(p_axes->axis[Y_AXIS].bits.log_scale)
+    if(p_axes->axis[Y_AXIS_IDX].bits.log_scale)
         if(value->y <= 0.0)
             {
             /* SKS after 4.12 30mar92 - skip this point and start afresh with the line */
@@ -657,9 +653,9 @@ gr_barchart_point_addin(
 {
     S32               res    = 1;
     P_GR_CHART        cp     = lcp->cp;
-    GR_AXES_NO        axes   = lcp->axes;
-    P_GR_AXES         p_axes = &cp->axes[axes];
-    GR_SERIES_IX      seridx = lcp->seridx;
+    GR_AXES_IDX       axes_idx = lcp->axes_idx;
+    P_GR_AXES         p_axes = &cp->axes[axes_idx];
+    GR_SERIES_IDX     series_idx = lcp->series_idx;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_NUMPAIR  value;
     GR_CHART_NUMPAIR  error;
@@ -684,17 +680,17 @@ gr_barchart_point_addin(
     if((res = gr_chart_group_new(cp, &point_group_start, &lcp->point_id)) < 0)
         return(res);
 
-    gr_point_fillstyle_query(cp, seridx, point, &point_fillstyle);
-    gr_point_linestyle_query(cp, seridx, point, &point_linestyle);
+    gr_point_fillstyle_query(cp, series_idx, point, &point_fillstyle);
+    gr_point_linestyle_query(cp, series_idx, point, &point_linestyle);
 
-    gr_point_barchstyle_query(    cp, seridx, point, &barchstyle);
-    gr_point_barlinechstyle_query(cp, seridx, point, &barlinechstyle);
+    gr_point_barchstyle_query(    cp, series_idx, point, &barchstyle);
+    gr_point_barlinechstyle_query(cp, series_idx, point, &barlinechstyle);
 
     bar_width = (GR_COORD) ((F64) cp->barch.cache.slot_width * barchstyle.slot_width_percentage / 100.0);
 
     labelling = 0; /* or +1 */
 
-    valpoint.y = gr_value_pos(cp, axes, Y_AXIS, &value.y);
+    valpoint.y = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
 
     /* create assuming simple origin - 3d transformed using plotarea later */
 
@@ -780,7 +776,7 @@ gr_barchart_point_addin(
         GR_COORD errsize;
 
         /* show error -relative to value (no problem with logs as value -ve) */
-        errsize = gr_value_pos_rel(cp, axes, Y_AXIS, &error.y);
+        errsize = gr_value_pos_rel(cp, axes_idx, Y_AXIS_IDX, &error.y);
 
         /* move to bottom, flipping end down (but always shift same way) */
 
@@ -879,7 +875,7 @@ gr_barchart_point_addin(
             res = gr_chart_scaled_picture_add(cp, &lcp->point_id, &rect_box, &point_fillstyle);
         else
             {
-            PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS];
+            PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
             PC_GR_AXIS_TICKS ticksp = &p_axis->major;
             GR_COORD major_spanner_y;
             F64 frac, use_major;
@@ -979,14 +975,14 @@ gr_barchart_point_addin(
 
         /* show error +relative to value */
 
-        if(p_axes->axis[Y_AXIS].bits.log_scale)
+        if(p_axes->axis[Y_AXIS_IDX].bits.log_scale)
             {
             valincerr = value.y + error.y;
-            errsize   = gr_value_pos(cp, axes, Y_AXIS, &valincerr);
-            errsize  -= gr_value_pos(cp, axes, Y_AXIS, &value.y);
+            errsize   = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &valincerr);
+            errsize  -= gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
             }
         else
-            errsize   = gr_value_pos_rel(cp, axes, Y_AXIS, &error.y);
+            errsize   = gr_value_pos_rel(cp, axes_idx, Y_AXIS_IDX, &error.y);
 
         /* move to top, right way up */
 
@@ -1014,7 +1010,7 @@ gr_barchart_point_addin(
         {
         GR_BOX txt_box = err_box;
 
-        if((res = gr_barline_label_point(cp, seridx, point, lcp->point_id, &value.y, &txt_box)) < 0)
+        if((res = gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box)) < 0)
             return(res);
         }
 
@@ -1025,7 +1021,7 @@ gr_barchart_point_addin(
 
 /* SKS after 4.12 30mar92 - added structure for better control */
 
-typedef struct _VANE_CONTROL
+typedef struct VANE_CONTROL
 {
     PC_GR_LINESTYLE   pdrop_linestyle;
     PC_GR_FILLSTYLE   pdrop_fillstyle;
@@ -1094,13 +1090,13 @@ static S32
 gr_linechart_point_addin(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp,
     GR_CHART_ITEMNO        point,
-    GR_BARLINECH_PASS_TYPE pass)
+    enum GR_BARLINECH_PASS_TYPE pass)
 {
     S32               res    = 1;
     P_GR_CHART        cp     = lcp->cp;
-    GR_AXES_NO        axes   = lcp->axes;
-    P_GR_AXES         p_axes = &cp->axes[axes];
-    GR_SERIES_IX      seridx = lcp->seridx;
+    GR_AXES_IDX       axes_idx = lcp->axes_idx;
+    P_GR_AXES         p_axes = &cp->axes[axes_idx];
+    GR_SERIES_IDX     series_idx = lcp->series_idx;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_NUMPAIR  value;
     GR_CHART_NUMPAIR  error;
@@ -1130,17 +1126,17 @@ gr_linechart_point_addin(
     if((res = gr_chart_group_new(cp, &point_group_start, &lcp->point_id)) < 0)
         return(res);
 
-    gr_point_fillstyle_query(cp, seridx, point, &point_fillstyle);
+    gr_point_fillstyle_query(cp, series_idx, point, &point_fillstyle);
     point_linestyle_using_default =
-    gr_point_linestyle_query(cp, seridx, point, &point_linestyle);
+    gr_point_linestyle_query(cp, series_idx, point, &point_linestyle);
 
-    gr_point_linechstyle_query(   cp, seridx, point, &linechstyle);
-    gr_point_barlinechstyle_query(cp, seridx, point, &barlinechstyle);
+    gr_point_linechstyle_query(   cp, series_idx, point, &linechstyle);
+    gr_point_barlinechstyle_query(cp, series_idx, point, &barlinechstyle);
 
     if(lcp->fill_axis)
         {
-        gr_pdrop_fillstyle_query( cp, seridx, point, &pdrop_fillstyle);
-        gr_pdrop_linestyle_query( cp, seridx, point, &pdrop_linestyle);
+        gr_pdrop_fillstyle_query( cp, series_idx, point, &pdrop_fillstyle);
+        gr_pdrop_linestyle_query( cp, series_idx, point, &pdrop_linestyle);
         }
 
     /* BODGE: in 2d mode derive line chart line colour from fill colour if point has defaulted */
@@ -1150,7 +1146,7 @@ gr_linechart_point_addin(
 
     labelling = 0; /* or +1 */
 
-    valpoint.y = gr_value_pos(cp, axes, Y_AXIS, &value.y);
+    valpoint.y = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
 
     /* create assuming simple origin - 3d transformed using plotarea later */
 
@@ -1236,7 +1232,7 @@ gr_linechart_point_addin(
         {
         GR_COORD errsize;
 
-        errsize = gr_value_pos_rel(cp, axes, Y_AXIS, &error.y);
+        errsize = gr_value_pos_rel(cp, axes_idx, Y_AXIS_IDX, &error.y);
 
         /* move to bottom, flipping end down (but always shift same way) */
 
@@ -1551,14 +1547,14 @@ gr_linechart_point_addin(
         GR_CHART_NUMBER valincerr;
         GR_COORD        errsize;
 
-        if(p_axes->axis[Y_AXIS].bits.log_scale)
+        if(p_axes->axis[Y_AXIS_IDX].bits.log_scale)
             {
             valincerr = value.y + error.y;
-            errsize   = gr_value_pos(cp, axes, Y_AXIS, &valincerr);
-            errsize  -= gr_value_pos(cp, axes, Y_AXIS, &value.y);
+            errsize   = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &valincerr);
+            errsize  -= gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
             }
         else
-            errsize = gr_value_pos_rel(cp, axes, Y_AXIS, &error.y);
+            errsize = gr_value_pos_rel(cp, axes_idx, Y_AXIS_IDX, &error.y);
 
         /* move to top, right way up */
 
@@ -1586,7 +1582,7 @@ gr_linechart_point_addin(
         {
         GR_BOX txt_box = err_box;
 
-        if((res = gr_barline_label_point(cp, seridx, point, lcp->point_id, &value.y, &txt_box)) < 0)
+        if((res = gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box)) < 0)
             return(res);
         }
 
@@ -1603,7 +1599,7 @@ gr_barlinechart_axes_addin(
 {
     GR_CHART_OBJID id = gr_chart_objid_anon;
     GR_DIAG_OFFSET axesGroupStart;
-    GR_AXES_NO     axes;
+    GR_AXES_IDX    axes_idx;
     S32            res;
 
     if((res = gr_chart_group_new(cp, &axesGroupStart, &id)) < 0)
@@ -1612,13 +1608,13 @@ gr_barlinechart_axes_addin(
     if((res = gr_axis_addin_category(cp, total_n_points, front)) < 0)
         return(res);
 
-    axes = cp->axes_max;
+    axes_idx = cp->axes_idx_max;
 
     do  {
-        if((res = gr_axis_addin_value_y(cp, axes, front)) < 0)
+        if((res = gr_axis_addin_value_y(cp, axes_idx, front)) < 0)
             return(res);
         }
-    while(axes-- > 0);
+    while(axes_idx-- > 0);
 
     gr_diag_group_end(cp->core.p_gr_diag, &axesGroupStart);
 
@@ -1631,19 +1627,19 @@ gr_barlinechart_addin(
     P_GR_CHART cp)
 {
     GR_CHART_ITEMNO total_n_points, n_points;
-    GR_AXES_NO      axes;
-    GR_SERIES_IX    seridx;
-    P_GR_SERIES      serp;
-    GR_SERIES_NO    barindex, lineindex, plotindex;
+    GR_AXES_IDX     axes_idx;
+    GR_SERIES_IDX   series_idx;
+    P_GR_SERIES     serp;
+    S32 /*GR_SERIES_NO*/ barindex, lineindex, plotindex;
+    S32 /*GR_SERIES_NO*/ n_overlapped;
     S32             res = 1;
-    GR_SERIES_NO    n_overlapped;
 
     total_n_points = 0;
 
-    for(axes = 0; axes <= cp->axes_max; ++axes)
+    for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
         {
-        P_GR_AXES p_axes  = &cp->axes[axes];
-        P_GR_AXIS yaxisp = &p_axes->axis[Y_AXIS];
+        P_GR_AXES p_axes = &cp->axes[axes_idx];
+        P_GR_AXIS yaxisp = &p_axes->axis[Y_AXIS_IDX];
 
         if(p_axes->bits.stacked_pct)
             {
@@ -1663,21 +1659,21 @@ gr_barlinechart_addin(
             yaxisp->actual.max = -GR_CHART_NUMBER_MAX;
             }
 
-        for(seridx = p_axes->series.stt_idx;
-            seridx < p_axes->series.end_idx;
-            seridx++)
+        for(series_idx = p_axes->series.stt_idx;
+            series_idx < p_axes->series.end_idx;
+            series_idx++)
             {
-            serp = getserp(cp, seridx);
+            serp = getserp(cp, series_idx);
 
             switch(serp->sertype)
                 {
                 case GR_CHART_SERIES_PLAIN_ERROR2:
                 case GR_CHART_SERIES_PLAIN_ERROR1:
-                    n_points = gr_actualise_series_error1(cp, seridx);
+                    n_points = gr_actualise_series_error1(cp, series_idx);
                     break;
 
                 default:
-                    n_points = gr_actualise_series_plain(cp, seridx);
+                    n_points = gr_actualise_series_plain(cp, series_idx);
                     break;
                 }
 
@@ -1706,16 +1702,16 @@ gr_barlinechart_addin(
     /* loop over axes again after total_n_points accumulated,
      * sussing best fit lines and forming Y axis for each axes set
     */
-    for(axes = 0; axes <= cp->axes_max; ++axes)
+    for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
         {
-        P_GR_AXES p_axes = &cp->axes[axes];
+        P_GR_AXES p_axes = &cp->axes[axes_idx];
 
         if(!p_axes->bits.stacked)
-            for(seridx = p_axes->series.stt_idx;
-                seridx < p_axes->series.end_idx;
-                seridx++)
+            for(series_idx = p_axes->series.stt_idx;
+                series_idx < p_axes->series.end_idx;
+                series_idx++)
                 {
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 if(serp->bits.best_fit_manual
                             ? serp->bits.best_fit
@@ -1725,14 +1721,14 @@ gr_barlinechart_addin(
                     GR_BARLINESCATCH_LINEST_STATE state;
                     S32 cumulative;
 
-                    gr_barlinescatch_get_datasources(cp, seridx, &state.dsh);
+                    gr_barlinescatch_get_datasources(cp, series_idx, &state.dsh);
                     state.dsh.value_x = GR_DATASOURCE_HANDLE_NONE;
                     state.dsh.error_x = GR_DATASOURCE_HANDLE_NONE;
 
                     state.cp    = cp;
                     state.y_cum = 0.0;
                     state.x_log = 0;
-                    state.y_log = (p_axes->axis[Y_AXIS].bits.log_scale != 0);
+                    state.y_log = (p_axes->axis[Y_AXIS_IDX].bits.log_scale != 0);
 
                     /* initialise to be on the safe side */
                     serp->cache.best_fit_c = 0.0;
@@ -1757,7 +1753,7 @@ gr_barlinechart_addin(
                     }
                 }
 
-        gr_axis_form_value(cp, axes, Y_AXIS);
+        gr_axis_form_value(cp, axes_idx, Y_AXIS_IDX);
         }
 
     gr_axis_form_category(cp, total_n_points);
@@ -1828,17 +1824,17 @@ gr_barlinechart_addin(
     if(plotindex)
         --plotindex;
 
-    axes = cp->axes_max;
+    axes_idx = cp->axes_idx_max;
 
 #if 0
     if(cp->cache.n_contrib_bars || cp->cache.n_contrib_lines)
 #endif
     do  {
         P_GR_BARLINESCATCH_SERIES_CACHE lcp;
-        GR_BARLINECH_PASS_TYPE          pass;
-        P_GR_AXES     p_axes = &cp->axes[axes];
-        GR_SERIES_IX stt_idx, end_idx;
-        GR_POINT_NO  point;
+        enum GR_BARLINECH_PASS_TYPE pass;
+        P_GR_AXES     p_axes = &cp->axes[axes_idx];
+        GR_SERIES_IDX stt_idx, end_idx;
+        GR_POINT_NO   point;
 
         stt_idx = p_axes->series.stt_idx;
         end_idx = p_axes->series.end_idx;
@@ -1846,7 +1842,7 @@ gr_barlinechart_addin(
         /* bits of cache are per axes set plotting */
 
         /* irrelevant for log scaling */
-        cp->barlinech.cache.zeropoint_y = (GR_COORD) (p_axes->axis[Y_AXIS].zero_frac * cp->plotarea.size.y);
+        cp->barlinech.cache.zeropoint_y = (GR_COORD) (p_axes->axis[Y_AXIS_IDX].zero_frac * cp->plotarea.size.y);
 
         if(p_axes->bits.stacked)
             {
@@ -1862,13 +1858,13 @@ gr_barlinechart_addin(
 
             /* initialise each series' cache once */
 
-            for(seridx = stt_idx; seridx < end_idx; ++seridx)
+            for(series_idx = stt_idx; series_idx < end_idx; ++series_idx)
                 {
-                lcp = &lc_array[seridx - stt_idx];
+                lcp = &lc_array[series_idx - stt_idx];
 
                 lcp->cp       = cp;
-                lcp->axes     = axes;
-                lcp->seridx   = seridx;
+                lcp->axes_idx = axes_idx;
+                lcp->series_idx = series_idx;
                 lcp->n_points = total_n_points;
 
                 lcp->barindex  = barindex;
@@ -1880,13 +1876,13 @@ gr_barlinechart_addin(
 
             /* line charts need multiple passes to be drawn correctly */
 
-            for(pass = GR_BARLINECH_RIBBON_PASS; pass <= GR_BARLINECH_POINT_PASS; ENUM_INCR(GR_BARLINECH_PASS_TYPE, pass))
+            for(pass = GR_BARLINECH_RIBBON_PASS; pass <= GR_BARLINECH_POINT_PASS; ENUM_INCR(enum GR_BARLINECH_PASS_TYPE, pass))
                 {
                 /* reset some bits of each series' cache per pass */
 
-                for(seridx = stt_idx; seridx < end_idx; ++seridx)
+                for(series_idx = stt_idx; series_idx < end_idx; ++series_idx)
                     {
-                    lcp = &lc_array[seridx - stt_idx];
+                    lcp = &lc_array[series_idx - stt_idx];
 
                     gr_barlinech_pass_init(lcp);
                     }
@@ -1896,17 +1892,17 @@ gr_barlinechart_addin(
                 for(point = 0; point < total_n_points; ++point)
                     {
                     /* reset stacking cache for each point */
-                    if(!gr_barlinech_stacking_init(cp, axes, point))
+                    if(!gr_barlinech_stacking_init(cp, axes_idx, point))
                         /* 100% plots may have detected no values to plot */
                         continue;
 
                     /* plot series from bottom to top of this one point (reverse if -ve pitch) */
 
-                    for(seridx = stt_idx; seridx < end_idx; ++seridx)
+                    for(series_idx = stt_idx; series_idx < end_idx; ++series_idx)
                         {
-                        lcp = &lc_array[seridx - stt_idx];
+                        lcp = &lc_array[series_idx - stt_idx];
 
-                        serp = getserp(cp, seridx);
+                        serp = getserp(cp, series_idx);
 
                         switch((serp->charttype != GR_CHARTTYPE_NONE)
                                             ? serp->charttype
@@ -1964,19 +1960,19 @@ gr_barlinechart_addin(
 
             /* plot whole series across from back to front */
 
-            seridx = end_idx;
+            series_idx = end_idx;
 
-            while(seridx > stt_idx)
+            while(series_idx > stt_idx)
                 {
-                --seridx;
+                --series_idx;
 
                 /* initialise this one series' cache once */
 
                 lcp = &single_series_cache;
 
                 lcp->cp       = cp;
-                lcp->axes     = axes;
-                lcp->seridx   = seridx;
+                lcp->axes_idx = axes_idx;
+                lcp->series_idx = series_idx;
                 lcp->n_points = total_n_points;
 
                 lcp->barindex  = barindex;
@@ -1988,7 +1984,7 @@ gr_barlinechart_addin(
                 if((res = gr_chart_group_new(cp, &series_group_start, &lcp->serid)) < 0)
                     break;
 
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 switch((serp->charttype != GR_CHARTTYPE_NONE)
                                     ? serp->charttype
@@ -2020,7 +2016,7 @@ gr_barlinechart_addin(
                     case GR_CHARTTYPE_LINE:
                         /* line charts require multiple passes over this one series to be drawn correctly */
 
-                        for(pass = GR_BARLINECH_RIBBON_PASS; pass <= GR_BARLINECH_POINT_PASS; ENUM_INCR(GR_BARLINECH_PASS_TYPE, pass))
+                        for(pass = GR_BARLINECH_RIBBON_PASS; pass <= GR_BARLINECH_POINT_PASS; ENUM_INCR(enum GR_BARLINECH_PASS_TYPE, pass))
                             {
                             GR_DIAG_OFFSET pass_group_start;
 
@@ -2068,7 +2064,7 @@ gr_barlinechart_addin(
         if(res < 0)
             break;
         }
-    while(axes-- > 0);
+    while(axes_idx-- > 0);
 
     if(res < 0)
         return(res);

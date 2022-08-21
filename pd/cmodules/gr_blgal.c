@@ -45,7 +45,7 @@ internal functions
 
 #if RISCOS
 
-struct _GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE
+typedef struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE
 {
     P_GR_CHART       cp;
     wimp_w          w;
@@ -55,10 +55,10 @@ struct _GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE
     S32             reflect_modify;
 
     GR_CHART_OBJID  modifying_id;
-    GR_AXIS_NO      modifying_axes;
-    GR_SERIES_IX    modifying_seridx;
+    GR_AXIS_IDX     modifying_axes_idx;
+    GR_SERIES_IDX   modifying_series_idx;
 
-    struct _GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE_BITS
+    struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE_BITS
     {
         UBF tristate_cumulative  : 2;                                               /* UNUSED in scatch */
         UBF tristate_point_vary  : 2;
@@ -89,20 +89,18 @@ struct _GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE
     GR_SCATCHSTYLE     scatch;
     S32                scatch_modified;     /* must be separate S32 not bitfield */
 
-    struct _GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE_PIE_XTRA
+    struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE_PIE_XTRA
         {
         S32 anticlockwise;
         F64  start_heading;
         }
     pie_xtra;
     S32 pie_xtra_modified;
-};
+}
+GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE, * P_GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE;
 
-typedef struct _GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE     GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE;
-typedef         GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE * P_GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE;
-
-typedef enum
-    {
+enum GR_CHARTEDIT_GALLERY_BARLINESCATCH_ICONS
+{
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH = 0,
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP,
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_STACK_PICT,
@@ -130,8 +128,7 @@ typedef enum
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_CATEG_X_VAL,
 
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_N_ICONS
-    }
-GR_CHARTEDIT_GALLERY_BARLINESCATCH_ICONS;
+};
 
 #if 0
 static void
@@ -219,9 +216,9 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
     GR_CHART_OBJID id,
     S32            file_id)
 {
-    GR_SERIES_NO    eseries;
-    GR_POINT_NO     epoint;
-    GR_SERIES_IX    seridx;
+    GR_ESERIES_NO   eseries_no;
+    GR_POINT_NO     epoint_no;
+    GR_SERIES_IDX   series_idx;
     GR_FILLSTYLE    fillstyle;
     P_U8            currname;
     char            leafname[BUF_MAX_GENLEAFNAME + MAX_GENLEAFNAME + 1 /* sep_ch */];
@@ -240,12 +237,13 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
             break;
         }
 
-    epoint  = id.subno;
-    eseries = id.no;
-    seridx  = gr_series_ix_from_external(cp, eseries);
+    epoint_no  = id.subno;
+    eseries_no = id.no;
+
+    series_idx = gr_series_idx_from_external(cp, eseries_no);
 
     /* look up point's actual non-inherited style; look up SxPy file if no picture of its own */
-    using_default = gr_point_fillstyle_query(cp, seridx, gr_point_key_from_external(epoint), &fillstyle);
+    using_default = gr_point_fillstyle_query(cp, series_idx, gr_point_key_from_external(epoint_no), &fillstyle);
 
     if(!using_default && (fillstyle.pattern != GR_FILL_PATTERN_NONE))
         return(1);
@@ -255,10 +253,10 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
                             : NULL;
 
     /* first try looking in any SxPx directory on the path (or relative) */
-    (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id + 2), eseries, epoint); /* "markers.S1Px" */
+    (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id + 2), eseries_no, epoint_no); /* "markers.S1Px" */
     {
     const U32 len = strlen(leafname);
-    (void) xsnprintf(leafname + len, elemof32(leafname) - len, string_lookup(file_id + 3), epoint); /* "markers.S1Px.P2" */
+    (void) xsnprintf(leafname + len, elemof32(leafname) - len, string_lookup(file_id + 3), epoint_no); /* "markers.S1Px.P2" */
     } /*block*/
 
     res = (NULL != currname)
@@ -267,7 +265,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
 
     if(res <= 0)
         {
-        (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id + 1), eseries, epoint); /* "markers.S1P2" */
+        (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id + 1), eseries_no, epoint_no); /* "markers.S1P2" */
 
         res = (NULL != currname)
             ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
@@ -303,8 +301,8 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
     S32            file_id,
     S32            msg_id)
 {
-    GR_SERIES_NO    eseries;
-    GR_SERIES_IX    seridx;
+    GR_ESERIES_NO   eseries_no;
+    GR_SERIES_IDX   series_idx;
     GR_FILLSTYLE    fillstyle;
     P_U8            currname;
     char            leafname[BUF_MAX_GENLEAFNAME + MAX_GENLEAFNAME + 1 /* sep_ch */];
@@ -328,8 +326,9 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
             /* deliberate drop thru ... */
 
         case GR_CHART_OBJNAME_SERIES:
-            eseries = id.no;
-            seridx  = gr_series_ix_from_external(cp, eseries);
+            eseries_no = id.no;
+
+            series_idx = gr_series_idx_from_external(cp, eseries_no);
 
             gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
 
@@ -341,7 +340,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
                                         ? cp->core.currentfilename
                                         : NULL;
 
-                (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), eseries); /* "markers.S1 */
+                (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), eseries_no); /* "markers.S1 */
 
                 res = (NULL != currname)
                     ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
@@ -349,7 +348,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
 
                 if(res <= 0)
                     {
-                    messagef(string_lookup(msg_id), eseries, eseries);
+                    messagef(string_lookup(msg_id), eseries_no, eseries_no);
 
                     /* use series 1 markers */
                     (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), 1);
@@ -392,11 +391,11 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
         case GR_CHART_OBJNAME_SERIES:
             {
             /* if vary by point try looking up SxPy files */
-            P_GR_SERIES serp = getserp(cp, seridx);
+            P_GR_SERIES serp = getserp(cp, series_idx);
 
             if(serp->bits.point_vary_manual
                             ? serp->bits.point_vary
-                            : gr_axesp_from_seridx(cp, seridx)->bits.point_vary)
+                            : gr_axesp_from_series_idx(cp, series_idx)->bits.point_vary)
                 {
                 GR_CHART_OBJID point_id;
                 GR_POINT_NO    point, n_points;
@@ -405,7 +404,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
                 point_id.name      = GR_CHART_OBJNAME_POINT;
                 point_id.has_subno = 1;
 
-                n_points = gr_travel_series_n_items_total(cp, seridx);
+                n_points = gr_travel_series_n_items_total(cp, series_idx);
 
                 for(point = 1; point < n_points; ++point)
                     {
@@ -436,18 +435,18 @@ gr_chartedit_gallery_barlinescatch_get_pictures(
         {
         case GR_CHART_OBJNAME_AXIS:
             {
-            GR_AXES_NO     axes;
-            GR_SERIES_IX   seridx;
+            GR_AXES_IDX     axes_idx;
+            GR_SERIES_IDX   series_idx;
             GR_CHART_OBJID id;
             S32            res;
 
-            (void) gr_axes_ix_from_external(cp, modifying_id.no, &axes);
+            (void) gr_axes_idx_from_external(cp, modifying_id.no, &axes_idx);
 
-            for(seridx = cp->axes[axes].series.stt_idx;
-                seridx < cp->axes[axes].series.end_idx;
-                seridx++)
+            for(series_idx = cp->axes[axes_idx].series.stt_idx;
+                series_idx < cp->axes[axes_idx].series.end_idx;
+                series_idx++)
                 {
-                gr_chart_objid_from_seridx(cp, seridx, &id);
+                gr_chart_objid_from_series_idx(cp, series_idx, &id);
                 if(0 >= (res =
                     gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
                         cp, id, file_id, msg_id)))
@@ -479,17 +478,17 @@ gr_chartedit_gallery_barlinescatch_kill_pictures(
         {
         case GR_CHART_OBJNAME_AXIS:
             {
-            GR_AXES_NO     axes;
-            GR_SERIES_IX   seridx;
+            GR_AXES_IDX    axes_idx;
+            GR_SERIES_IDX  series_idx;
             GR_CHART_OBJID id;
 
-            (void) gr_axes_ix_from_external(cp, modifying_id.no, &axes);
+            (void) gr_axes_idx_from_external(cp, modifying_id.no, &axes_idx);
 
-            for(seridx = cp->axes[axes].series.stt_idx;
-                seridx < cp->axes[axes].series.end_idx;
-                seridx++)
+            for(series_idx = cp->axes[axes_idx].series.stt_idx;
+                series_idx < cp->axes[axes_idx].series.end_idx;
+                series_idx++)
                 {
-                gr_chart_objid_from_seridx(cp, seridx, &id);
+                gr_chart_objid_from_series_idx(cp, series_idx, &id);
 
                 gr_chartedit_gallery_barlinescatch_kill_pictures(cp, id);
                 }
@@ -573,7 +572,7 @@ gr_chartedit_gallery_barlinescatch_convert(
 {
     P_GR_CHART    cp;
     P_GR_AXES     p_axes;
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
     P_GR_SERIES   serp;
     S32          sertype_modified = 0;
 
@@ -584,18 +583,18 @@ gr_chartedit_gallery_barlinescatch_convert(
     switch(state->modifying_id.name)
         {
         case GR_CHART_OBJNAME_AXIS:
-            p_axes = &cp->axes[state->modifying_axes];
+            p_axes = &cp->axes[state->modifying_axes_idx];
 
             /* make all series on selected axes part of a xxx chart */
             p_axes->charttype = state->charttype;
             p_axes->sertype   = sertype;
 
             /* ensure all series currently on these axes get blotted */
-            for(seridx = p_axes->series.stt_idx;
-                seridx < p_axes->series.end_idx;
-                seridx++)
+            for(series_idx = p_axes->series.stt_idx;
+                series_idx < p_axes->series.end_idx;
+                series_idx++)
                 {
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 serp->charttype = GR_CHARTTYPE_NONE;
 
@@ -609,7 +608,7 @@ gr_chartedit_gallery_barlinescatch_convert(
             assert(0);
         case GR_CHART_OBJNAME_SERIES:
         case GR_CHART_OBJNAME_POINT:
-            serp = getserp(cp, state->modifying_seridx);
+            serp = getserp(cp, state->modifying_series_idx);
 
             serp->charttype = state->charttype;
 
@@ -731,7 +730,7 @@ gr_chartedit_gallery_barlinescatch_decode(
             {
             S32          cumulative;
             P_GR_AXES     p_axes;
-            GR_SERIES_IX seridx;
+            GR_SERIES_IDX series_idx;
             P_GR_SERIES   serp;
 
             cumulative = (state->bits.tristate_cumulative == RISCOS_TRISTATE_ON);
@@ -741,16 +740,16 @@ gr_chartedit_gallery_barlinescatch_decode(
             switch(state->modifying_id.name)
                 {
                 case GR_CHART_OBJNAME_AXIS:
-                    p_axes = &cp->axes[state->modifying_axes];
+                    p_axes = &cp->axes[state->modifying_axes_idx];
 
                     p_axes->bits.cumulative = cumulative;
 
                     /* blow away serp->valid.use_xxx */
-                    for(seridx = p_axes->series.stt_idx;
-                        seridx < p_axes->series.end_idx;
-                        seridx++)
+                    for(series_idx = p_axes->series.stt_idx;
+                        series_idx < p_axes->series.end_idx;
+                        series_idx++)
                         {
-                        serp = getserp(cp, seridx);
+                        serp = getserp(cp, series_idx);
 
                         /* blow away serp->valid.use_xxx */
                         * (int *) &serp->valid = 0;
@@ -758,7 +757,7 @@ gr_chartedit_gallery_barlinescatch_decode(
                     break;
 
                 default:
-                    serp = getserp(cp, state->modifying_seridx);
+                    serp = getserp(cp, state->modifying_series_idx);
 
                     /* blow away serp->valid.use_xxx */
                     * (int *) &serp->valid = 0;
@@ -781,11 +780,11 @@ gr_chartedit_gallery_barlinescatch_decode(
             switch(state->modifying_id.name)
                 {
                 case GR_CHART_OBJNAME_AXIS:
-                    cp->axes[state->modifying_axes].bits.point_vary = point_vary;
+                    cp->axes[state->modifying_axes_idx].bits.point_vary = point_vary;
                     break;
 
                 default:
-                    serp = getserp(cp, state->modifying_seridx);
+                    serp = getserp(cp, state->modifying_series_idx);
 
                     serp->bits.point_vary        = point_vary;
                     serp->bits.point_vary_manual = 1;
@@ -805,11 +804,11 @@ gr_chartedit_gallery_barlinescatch_decode(
             switch(state->modifying_id.name)
                 {
                 case GR_CHART_OBJNAME_AXIS:
-                    cp->axes[state->modifying_axes].bits.fill_axis = fill_axis;
+                    cp->axes[state->modifying_axes_idx].bits.fill_axis = fill_axis;
                     break;
 
                 default:
-                    serp = getserp(cp, state->modifying_seridx);
+                    serp = getserp(cp, state->modifying_series_idx);
 
                     serp->bits.fill_axis        = fill_axis;
                     serp->bits.fill_axis_manual = 1;
@@ -829,11 +828,11 @@ gr_chartedit_gallery_barlinescatch_decode(
             switch(state->modifying_id.name)
                 {
                 case GR_CHART_OBJNAME_AXIS:
-                    cp->axes[state->modifying_axes].bits.best_fit = best_fit;
+                    cp->axes[state->modifying_axes_idx].bits.best_fit = best_fit;
                     break;
 
                 default:
-                    serp = getserp(cp, state->modifying_seridx);
+                    serp = getserp(cp, state->modifying_series_idx);
 
                     serp->bits.best_fit        = best_fit;
                     serp->bits.best_fit_manual = 1;
@@ -856,23 +855,23 @@ gr_chartedit_gallery_barlinescatch_decode(
             {
             S32          stacked;
             P_GR_AXES     p_axes;
-            GR_SERIES_IX seridx;
+            GR_SERIES_IDX series_idx;
             P_GR_SERIES   serp;
 
             stacked = (state->bits.tristate_stacked == RISCOS_TRISTATE_ON);
 
             state->bits.tristate_stacked = RISCOS_TRISTATE_DONT_CARE;
 
-            p_axes = &cp->axes[state->modifying_axes];
+            p_axes = &cp->axes[state->modifying_axes_idx];
 
             p_axes->bits.stacked = stacked;
 
             /* blow away serp->valid.use_xxx */
-            for(seridx = p_axes->series.stt_idx;
-                seridx < p_axes->series.end_idx;
-                seridx++)
+            for(series_idx = p_axes->series.stt_idx;
+                series_idx < p_axes->series.end_idx;
+                series_idx++)
                 {
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 * (int *) &serp->valid = 0;
                 }
@@ -965,7 +964,7 @@ gr_chartedit_gallery_barlinescatch_decode(
 
                 state->pie_xtra_modified = 0;
 
-                serp = getserp(cp, state->modifying_seridx);
+                serp = getserp(cp, state->modifying_series_idx);
 
                 serp->bits.pie_anticlockwise  = state->pie_xtra.anticlockwise;
                 serp->style.pie_start_heading = state->pie_xtra.start_heading;
@@ -1011,7 +1010,7 @@ gr_chartedit_gallery_barlinescatch_encode(
     unfadeproc3d = cp->d3.bits.on ? win_unfadefield : win_fadefield;
 
     /* on iff overlay present */
-    unfadeprocRO = (cp->axes_max > 0) ? win_unfadefield : win_fadefield;
+    unfadeprocRO = (cp->axes_idx_max > 0) ? win_unfadefield : win_fadefield;
 
     if(state->charttype == GR_CHARTTYPE_PIE)
         {
@@ -1174,15 +1173,15 @@ gr_chartedit_gallery_barlinescatch_getsel(
         case GR_CHART_OBJNAME_SERIES:
         case GR_CHART_OBJNAME_POINT:
         setup_series_or_point:;
-            state->modifying_seridx = gr_series_ix_from_external(cp, state->modifying_id.no);
-            state->modifying_axes   = gr_axes_ix_from_seridx(cp, state->modifying_seridx);
+            state->modifying_series_idx = gr_series_idx_from_external(cp, state->modifying_id.no);
+            state->modifying_axes_idx   = gr_axes_idx_from_series_idx(cp, state->modifying_series_idx);
             if(state->charttype == GR_CHARTTYPE_PIE)
-                cp->pie_seridx = state->modifying_seridx;
+                cp->pie_series_idx = state->modifying_series_idx;
             break;
 
         default:
             /* if unsure, modify first axes set */
-            gr_chart_objid_from_axes(cp, 0, 0, &state->modifying_id);
+            gr_chart_objid_from_axes_idx(cp, 0, 0, &state->modifying_id);
             goto setup_axis;
 
         case GR_CHART_OBJNAME_AXISTICK:
@@ -1195,12 +1194,12 @@ gr_chartedit_gallery_barlinescatch_getsel(
 
         case GR_CHART_OBJNAME_AXIS:
         setup_axis:;
-            (void) gr_axes_ix_from_external(cp, state->modifying_id.no, &state->modifying_axes);
+            (void) gr_axes_idx_from_external(cp, state->modifying_id.no, &state->modifying_axes_idx);
 
             if(state->charttype == GR_CHARTTYPE_PIE)
                 {
                 /* if unsure, modify Series 1 */
-                gr_chart_objid_from_seridx(cp, 0, &state->modifying_id);
+                gr_chart_objid_from_series_idx(cp, 0, &state->modifying_id);
                 goto setup_series_or_point;
                 }
             break;
@@ -1225,7 +1224,7 @@ gr_chartedit_gallery_barlinescatch_getsel(
         gr_chart_objid_piechdisplstyle_query(cp, &state->modifying_id, &state->piechdispl);
         gr_chart_objid_piechlabelstyle_query(cp, &state->modifying_id, &state->piechlabel);
 
-        serp = getserp(cp, state->modifying_seridx);
+        serp = getserp(cp, state->modifying_series_idx);
 
         state->pie_xtra.anticlockwise = serp->bits.pie_anticlockwise;
         state->pie_xtra.start_heading = serp->style.pie_start_heading;
@@ -1415,9 +1414,9 @@ gr_chartedit_gallery_barlinescatch_process(
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
         if(i && (i == f))
             {
-            if(cp->axes_max > 0)
+            if(cp->axes_idx_max > 0)
                 {
-                cp->axes_max = 0;
+                cp->axes_idx_max = 0;
                 cp->bits.realloc_series = 1;
 
                 state->reflect_modify = 1;
@@ -1618,18 +1617,18 @@ gr_chartedit_gallery_bar_process(
 
             if(ok_hit || pict_hit)
                 if(state.modifying_id.name == GR_CHART_OBJNAME_AXIS)
-                    if( cp->axes[state.modifying_axes].charttype != state.charttype)
+                    if( cp->axes[state.modifying_axes_idx].charttype != state.charttype)
                         {
-                        cp->axes[state.modifying_axes].charttype  = state.charttype;
+                        cp->axes[state.modifying_axes_idx].charttype  = state.charttype;
 
                         /* set up grid state on first conversion */
-                        cp->axes[state.modifying_axes].axis[X_AXIS].major.bits.grid = 0;
-                        cp->axes[state.modifying_axes].axis[X_AXIS].minor.bits.grid = 0;
-                        cp->axes[state.modifying_axes].axis[X_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_NONE;
+                        cp->axes[state.modifying_axes_idx].axis[X_AXIS_IDX].major.bits.grid = 0;
+                        cp->axes[state.modifying_axes_idx].axis[X_AXIS_IDX].minor.bits.grid = 0;
+                        cp->axes[state.modifying_axes_idx].axis[X_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_NONE;
 
-                        cp->axes[state.modifying_axes].axis[Y_AXIS].major.bits.grid = 0;
-                        cp->axes[state.modifying_axes].axis[Y_AXIS].minor.bits.grid = 0;
-                        cp->axes[state.modifying_axes].axis[Y_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_NONE;
+                        cp->axes[state.modifying_axes_idx].axis[Y_AXIS_IDX].major.bits.grid = 0;
+                        cp->axes[state.modifying_axes_idx].axis[Y_AXIS_IDX].minor.bits.grid = 0;
+                        cp->axes[state.modifying_axes_idx].axis[Y_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_NONE;
 
                         gr_chartedit_gallery_undo_pie_bodges(cp);
 
@@ -1650,7 +1649,7 @@ gr_chartedit_gallery_bar_process(
                 state.bits.tristate_point_vary    = RISCOS_TRISTATE_OFF;
                 state.bits.tristate_stacked       = RISCOS_TRISTATE_OFF;
                 state.bits.tristate_pictures      = RISCOS_TRISTATE_OFF;
-                cp->axes[state.modifying_axes].bits.stacked_pct = 0;
+                cp->axes[state.modifying_axes_idx].bits.stacked_pct = 0;
                 state.barch.bits.pictures_stacked = 1;
 
                 switch(f - GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_FIRST)
@@ -1688,7 +1687,7 @@ gr_chartedit_gallery_bar_process(
 
                     case 7:
                         state.bits.tristate_stacked       = RISCOS_TRISTATE_ON;
-                        cp->axes[state.modifying_axes].bits.stacked_pct = 1;
+                        cp->axes[state.modifying_axes_idx].bits.stacked_pct = 1;
                         break;
                     }
 
@@ -1802,18 +1801,18 @@ gr_chartedit_gallery_line_process(
 
             if(ok_hit || pict_hit)
                 if(state.modifying_id.name == GR_CHART_OBJNAME_AXIS)
-                    if( cp->axes[state.modifying_axes].charttype != state.charttype)
+                    if( cp->axes[state.modifying_axes_idx].charttype != state.charttype)
                         {
-                        cp->axes[state.modifying_axes].charttype  = state.charttype;
+                        cp->axes[state.modifying_axes_idx].charttype  = state.charttype;
 
                         /* set up grid state on first conversion */
-                        cp->axes[state.modifying_axes].axis[X_AXIS].major.bits.grid = 0;
-                        cp->axes[state.modifying_axes].axis[X_AXIS].minor.bits.grid = 0;
-                        cp->axes[state.modifying_axes].axis[X_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_NONE;
+                        cp->axes[state.modifying_axes_idx].axis[X_AXIS_IDX].major.bits.grid = 0;
+                        cp->axes[state.modifying_axes_idx].axis[X_AXIS_IDX].minor.bits.grid = 0;
+                        cp->axes[state.modifying_axes_idx].axis[X_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_NONE;
 
-                        cp->axes[state.modifying_axes].axis[Y_AXIS].major.bits.grid = 1;
-                        cp->axes[state.modifying_axes].axis[Y_AXIS].minor.bits.grid = 0;
-                        cp->axes[state.modifying_axes].axis[Y_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_RIGHT;
+                        cp->axes[state.modifying_axes_idx].axis[Y_AXIS_IDX].major.bits.grid = 1;
+                        cp->axes[state.modifying_axes_idx].axis[Y_AXIS_IDX].minor.bits.grid = 0;
+                        cp->axes[state.modifying_axes_idx].axis[Y_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_RIGHT;
 
                         gr_chartedit_gallery_undo_pie_bodges(cp);
 
@@ -1988,23 +1987,23 @@ gr_chartedit_gallery_scat_process(
                     cp->axes[0].charttype  = state.charttype;
 
                     /* set up grid state on first conversion */
-                    cp->axes[0].axis[X_AXIS].major.bits.grid = 1;
-                    cp->axes[0].axis[X_AXIS].minor.bits.grid = 0;
-                    cp->axes[0].axis[X_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_TOP;
+                    cp->axes[0].axis[X_AXIS_IDX].major.bits.grid = 1;
+                    cp->axes[0].axis[X_AXIS_IDX].minor.bits.grid = 0;
+                    cp->axes[0].axis[X_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_TOP;
 
-                    cp->axes[0].axis[Y_AXIS].major.bits.grid = 1;
-                    cp->axes[0].axis[Y_AXIS].minor.bits.grid = 0;
-                    cp->axes[0].axis[Y_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_RIGHT;
+                    cp->axes[0].axis[Y_AXIS_IDX].major.bits.grid = 1;
+                    cp->axes[0].axis[Y_AXIS_IDX].minor.bits.grid = 0;
+                    cp->axes[0].axis[Y_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_RIGHT;
 
-                    if(cp->axes_max > 0)
+                    if(cp->axes_idx_max > 0)
                         {
-                        cp->axes[1].axis[X_AXIS].major.bits.grid = 1;
-                        cp->axes[1].axis[X_AXIS].minor.bits.grid = 0;
-                        cp->axes[1].axis[X_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_BOTTOM;
+                        cp->axes[1].axis[X_AXIS_IDX].major.bits.grid = 1;
+                        cp->axes[1].axis[X_AXIS_IDX].minor.bits.grid = 0;
+                        cp->axes[1].axis[X_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_BOTTOM;
 
-                        cp->axes[1].axis[Y_AXIS].major.bits.grid = 1;
-                        cp->axes[1].axis[Y_AXIS].minor.bits.grid = 0;
-                        cp->axes[1].axis[Y_AXIS].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_LEFT;
+                        cp->axes[1].axis[Y_AXIS_IDX].major.bits.grid = 1;
+                        cp->axes[1].axis[Y_AXIS_IDX].minor.bits.grid = 0;
+                        cp->axes[1].axis[Y_AXIS_IDX].minor.bits.tick = GR_AXIS_TICK_POSITION_HALF_LEFT;
                         }
 
                     gr_chartedit_gallery_undo_pie_bodges(cp);
@@ -2156,13 +2155,13 @@ gr_chartedit_gallery_pie_process(
                     cp->axes[0].charttype = GR_CHARTTYPE_PIE;
 
                     /* this is what the book says ... */
-                    if(cp->axes_max > 0)
+                    if(cp->axes_idx_max > 0)
                         {
-                        cp->axes_max = 0;
+                        cp->axes_idx_max = 0;
                         cp->bits.realloc_series = 1;
                         }
 
-                    serp = getserp(cp, state.modifying_seridx);
+                    serp = getserp(cp, state.modifying_series_idx);
 
                     /* normally pies vary by point unless punter insists */
                     if(!serp->bits.point_vary_manual)
@@ -2231,7 +2230,7 @@ gr_chartedit_gallery_pie_process(
                         if(state.modifying_id.name != GR_CHART_OBJNAME_POINT)
                             {
                             /* explode point 1 of whichever series if no point selected */
-                            gr_chart_objid_from_seridx(cp, state.modifying_seridx, &tmp_id);
+                            gr_chart_objid_from_series_idx(cp, state.modifying_series_idx, &tmp_id);
                             tmp_id.name      = GR_CHART_OBJNAME_POINT;
                             tmp_id.has_subno = 1;
                             tmp_id.subno     = 1;
@@ -2255,7 +2254,7 @@ gr_chartedit_gallery_pie_process(
 
                         state.piechdispl_modified = 0;
 
-                        gr_chart_objid_from_seridx(cp, state.modifying_seridx, &tmp_id);
+                        gr_chart_objid_from_series_idx(cp, state.modifying_series_idx, &tmp_id);
 
                         gr_chart_objid_piechdisplstyle_query(cp, &tmp_id, &tmp_style);
                         tmp_style.radial_displacement = state.piechdispl.radial_displacement;
@@ -2304,14 +2303,14 @@ static void
 gr_chartedit_gallery_undo_pie_bodges(
     P_GR_CHART cp)
 {
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
     P_GR_SERIES   serp;
 
-    for(seridx = 0;
-        seridx < cp->series.n_defined;
-        seridx++)
+    for(series_idx = 0;
+        series_idx < cp->series.n_defined;
+        series_idx++)
         {
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
 
         if(serp->internal_bits.point_vary_manual_pie_bodge)
             {

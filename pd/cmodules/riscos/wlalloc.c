@@ -23,7 +23,7 @@ wlalloc_calloc(
     size_t size)
 {
     STATUS status;
-    void * a = al_ptr_calloc_bytes(BYTE, num * size, &status);
+    void * a = al_ptr_calloc_bytes(void *, num * size, &status);
 
     trace_3(TRACE_RISCOS_HOST, "wlalloc_calloc(%d, %d) yields &%p", num, size, a);
 
@@ -65,7 +65,7 @@ wlalloc_malloc(
     size_t size)
 {
     STATUS status;
-    void * a = al_ptr_alloc_bytes(BYTE, size, &status);
+    void * a = al_ptr_alloc_bytes(void *, size, &status);
 
     trace_2(TRACE_RISCOS_HOST, "wlalloc_malloc(%d) yields &%p", size, a);
 
@@ -83,7 +83,7 @@ wlalloc_realloc(
     size_t size)
 {
     STATUS status;
-    void * a = al_ptr_realloc_bytes(BYTE, old_a, size, &status);
+    void * a = al_ptr_realloc_bytes(void *, old_a, size, &status);
 
     trace_3(TRACE_RISCOS_HOST, "wlalloc_realloc(&%p, %d) yields &%p", old_a, size, a);
 

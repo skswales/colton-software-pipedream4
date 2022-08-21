@@ -165,9 +165,9 @@ formline_claim_focus(void);
 
 /* exported types */
 
-typedef struct __formwind_struct
+typedef struct FORMULA_WINDOW
 {
-    struct __mlec_struct * mlec;    /* was editexpression_mlec     */
+    struct MLEC_STRUCT * mlec;      /* was editexpression_mlec     */
     HOST_HWND    mainwindow;        /* editexpression_mainwindow   */
     HOST_HWND    panewindow;        /* editexpression_panewindow   */
     void        *maintemplate;      /* editexpression_maintemplate */
@@ -178,27 +178,13 @@ typedef struct __formwind_struct
     DOCNO        docno;
     BOOL         tracking;
 }
-FORMULA_WINDOW, * formwind_handle;
+FORMULA_WINDOW, * FORMULA_WINDOW_HANDLE, ** P_FORMULA_WINDOW_HANDLE;
 
 extern void
 EditFormula_fn(void);
 
 extern void
 EditFormulaInWindow_fn(void);
-
-extern void
-DefineName_fn(
-    S32 category);
-
-extern void
-EditName_fn(
-    S32 category,
-    S32 itemno);
-
-extern void
-PasteName_fn(
-    S32 category,
-    S32 itemno);
 
 extern void
 expedit_editcurrentslot(

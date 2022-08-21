@@ -51,25 +51,25 @@ static const char * template__require[TEMPLATE__N_BLOCKS];
 header of a template file
 */
 
-typedef struct _template_header
+typedef struct TEMPLATE_HEADER
 {
     int fontDataOffset;
     int reserved0, reserved1, reserved2;
 
     /* followed by template_index_entries */
 }
-template_header;
+TEMPLATE_HEADER;
 
 /*
 index blocks in template file header
 */
 
-typedef struct _template_index_entry
+typedef struct TEMPLATE_INDEX_ENTRY
 {
     int     dataOffset; /* offset of 0 -> end of list */
     size_t  dataSize:16;
     size_t  indDataSize:16; /* SKS pokes this in on loading */
-    union
+    union TEMPLATE_INDEX_ENTRY_BITS
         {
         size_t  indDataOffset; /* offset of indirect data in block */
         int     dataType;
@@ -77,12 +77,12 @@ typedef struct _template_index_entry
     bits;
     char    name[12];  /* NB. may be CR terminated */
 }
-template_index_entry;
+TEMPLATE_INDEX_ENTRY;
 
-#define template__header(b) ((template_header *) template__block[b])
+#define template__header(b) ((TEMPLATE_HEADER *) template__block[b])
 
 #define template__indexentry(b, i) \
-(((template_index_entry *) (template__header(b) + 1)) + (i))
+(((TEMPLATE_INDEX_ENTRY *) (template__header(b) + 1)) + (i))
 
 #define template__indextowindow(b, i) \
 ((wimp_wind *) (template__block[b] + template__indexentry(b, i)->dataOffset))
@@ -108,44 +108,43 @@ static char * template__font_refs;
 there may be fonts!
 */
 
-typedef struct _template_font_entry
+typedef struct TEMPLATE_FONT_ENTRY
 {
     int  xPointSize_x16;
     int  yPointSize_x16;
     char fontName[40];  /* NB. may be CR terminated */
 }
-template_font_entry;
+TEMPLATE_FONT_ENTRY;
 
 #define template__font_data_offset(b) (template__header(b)->fontDataOffset)
 
 #define template__font_entry(b, i) \
-(((template_font_entry *) (template__block[b] + template__font_data_offset(b))) + (i))
+(((TEMPLATE_FONT_ENTRY *) (template__block[b] + template__font_data_offset(b))) + (i))
 
 
-typedef struct _template_font_pair
+typedef struct TEMPLATE_FONT_PAIR
 {
     char physfont;
     char refs;
 }
-template_font_pair;
+TEMPLATE_FONT_PAIR;
 
 #define sizeof_template_font_pair 2
 
 #define template__font_ref(i) \
-((template_font_pair *) (template__font_refs + sizeof_template_font_pair * (i)))
+((TEMPLATE_FONT_PAIR *) (template__font_refs + sizeof_template_font_pair * (i)))
 
 
 static void
 template__atexit(void)
 {
     int i;
-    template_font_pair * fpp;
 
     if(template__font_refs)
         {
         for(i = 0; i < 256; ++i)
             {
-            fpp = template__font_ref(i);
+            TEMPLATE_FONT_PAIR * fpp = template__font_ref(i);
 
             while(fpp->refs)
                 {
@@ -164,8 +163,8 @@ static void
 template__convert_font_ref(unsigned int b, wimp_iconflags * p)
 {
     font                  logfont, physfont;
-    template_font_entry * fep;
-    template_font_pair *  fpp;
+    TEMPLATE_FONT_ENTRY * fep;
+    TEMPLATE_FONT_PAIR *  fpp;
 
     logfont = (font) ((unsigned long) (*p & wimp_IFONTHMASK)) >> (wimp_IFONTHSHIFT);
 
@@ -238,7 +237,7 @@ extern wimp_wind *
 template_copy_new(
     template * templateHandle)
 {
-    template_index_entry * ip;
+    TEMPLATE_INDEX_ENTRY * ip;
     size_t                 w_size, ind_size;
     const wimp_wind *      src_w;
     wimp_wind *            w;
@@ -396,7 +395,7 @@ template_find_new(
     const char * name)
 {
     template *             templateHandle = NULL;
-    template_index_entry * ip, * first_ip;
+    TEMPLATE_INDEX_ENTRY * ip, * first_ip;
     unsigned int           b;
 
     for(b = 0; template__block[b]  &&  !templateHandle; ++b)
@@ -507,7 +506,7 @@ template_readfile(
 
             reportf("template_readfile(%u:%s): length=%u", strlen(filename), filename, fileLength);
 
-            if(fileLength < sizeof(template_header))
+            if(fileLength < sizeof(TEMPLATE_HEADER))
                 {
                 werr(TRUE, msgs_lookup("template6" /*"Template file not found"*/));
                 return;
@@ -728,7 +727,7 @@ template__resolve(
 {
     unsigned int           pass;
     void *                 spriteArea;
-    template_index_entry * ip;
+    TEMPLATE_INDEX_ENTRY * ip;
     wimp_wind *            w;
     size_t                 totalIndSize, indSize;
     size_t                 newIndDataOffset;
@@ -849,7 +848,7 @@ template__resolve(
 
         if(pass == 1)
             {
-            trace_1(TRACE_OUT, "\n\n[template__readfile: need %u bytes indirected workspace]", totalIndSize);
+            trace_1(TRACE_OUT | TRACE_ANY, "\n\n[template__readfile: need %u bytes indirected workspace]", totalIndSize);
 
             if(!totalIndSize)
                 break;      /* no indirected data - huh! */
@@ -908,7 +907,7 @@ template_settitle(
     template * templateHandle,
     const char * title)
 {
-    template_index_entry * ip;
+    TEMPLATE_INDEX_ENTRY * ip;
     wimp_wind *            w;
     size_t                 w_size;
     char *                 ptr;

@@ -198,7 +198,7 @@ doc_bind_docnos(
     stack_release_check();
 
     reportf("%s: names: %d, customs: %d, name uses: %d, custom uses: %d",
-            __func__, names_def.next, custom_def.next, namtab.next, custom_use_table.next);
+            __func__, names_def.next, custom_def.next, namtab.next, custom_use_deptable.next);
 }
 
 /******************************************************************************
@@ -427,8 +427,12 @@ doc_get_dependent_docs(
             EV_TRENT i;
 
             for(i = 0; i < p_ss_doc->slr_table.next; ++i, ++sep)
-                if(!(sep->flags & TRF_TOBEDEL))
-                    ensure_doc_in_list(p_docno_array, &count, sep->byslr.docno);
+                {
+                if(sep->flags & TRF_TOBEDEL)
+                    continue;
+
+                ensure_doc_in_list(p_docno_array, &count, sep->byslr.docno);
+                }
             }
 
         if((rep = tree_rngptr(p_ss_doc, 0)) != NULL)
@@ -436,11 +440,15 @@ doc_get_dependent_docs(
             EV_TRENT i;
 
             for(i = 0; i < p_ss_doc->range_table.next; ++i, ++rep)
-                if(!(rep->flags & TRF_TOBEDEL))
-                    ensure_doc_in_list(p_docno_array, &count, rep->byslr.docno);
+                {
+                if(rep->flags & TRF_TOBEDEL)
+                    continue;
+
+                 ensure_doc_in_list(p_docno_array, &count, rep->byslr.docno);
+                }
             }
 
-        if(p_ss_doc->nam_ref_count && (p_ev_name = name_ptr(0)) != NULL)
+        if(p_ss_doc->nam_ref_count && (p_ev_name = names_def.ptr) != NULL)
             {
             EV_NAMEID i;
 
@@ -475,24 +483,25 @@ doc_get_dependent_docs(
             {
             EV_TRENT i;
 
-            for(i = 0; i < custom_use_table.next; ++i, ++mep)
-                if(!(mep->flags & TRF_TOBEDEL))
+            for(i = 0; i < custom_use_deptable.next; ++i, ++mep)
+                {
+                EV_NAMEID custom_num;
+
+                if(mep->flags & TRF_TOBEDEL)
+                    continue;
+
+                custom_num = custom_def_find(mep->custom_to);
+
+                if(custom_num >= 0)
                     {
-                    EV_NAMEID custom_num;
+                    P_EV_CUSTOM p_ev_custom = custom_ptr_must(custom_num);
 
-                    if((custom_num = custom_def_find(mep->custom_to)) >= 0)
-                        {
-                        P_EV_CUSTOM p_ev_custom;
-
-                        if((p_ev_custom = custom_ptr(custom_num)) != NULL)
-                            {
-                            if(p_ev_custom->owner.docno == *p_docno)
-                                ensure_doc_in_list(p_docno_array,
-                                                   &count,
-                                                   mep->byslr.docno);
-                            }
-                        }
+                    if(p_ev_custom->owner.docno == *p_docno)
+                        ensure_doc_in_list(p_docno_array,
+                                           &count,
+                                           mep->byslr.docno);
                     }
+                }
             }
         }
 
@@ -554,7 +563,7 @@ doc_move_rngref(
 
     if(!(rep->flags & TRF_TOBEDEL) && (rep->refto.s.docno != docno_from))
         {
-        struct ev_grub_state grubb;
+        struct EV_GRUB_STATE grubb;
 
         grubb.slr = rep->byslr;
         grubb.data.arg.range = rep->refto;
@@ -595,7 +604,7 @@ doc_move_slrref(
 
     if(!(sep->flags & TRF_TOBEDEL) && (sep->refto.docno != docno_from))
         {
-        struct ev_grub_state grubb;
+        struct EV_GRUB_STATE grubb;
 
         grubb.slr          = sep->byslr;
         grubb.data.arg.slr = sep->refto;
@@ -834,7 +843,7 @@ ev_doc_establish_doc_from_name(
     if(file_is_rooted(name_given))
         { /* this is rare */
         PTSTR leaf_p_ev_name = file_leafname(name_given);
-        safe_strnkpy(path_name, elemof32(path_name), name_given, leaf_p_ev_name - name_given);
+        xstrnkpy(path_name, elemof32(path_name), name_given, leaf_p_ev_name - name_given);
         docu_name.path_name = path_name;
         docu_name.leaf_name = leaf_p_ev_name;
         docu_name.flags.path_name_supplied = 1;
@@ -917,12 +926,17 @@ ev_doc_get_sup_docs_for_sheet(
             EV_TRENT i;
 
             for(i = 0; i < p_ss_doc->slr_table.next; ++i, ++sep)
-                if(!(sep->flags & TRF_TOBEDEL) && (sep->byslr.docno == *p_docno))
+                {
+                if(sep->flags & TRF_TOBEDEL)
+                    continue;
+
+                if(sep->byslr.docno == *p_docno)
                     {
                     ensure_doc_in_list(p_docno_array, &count, i_docno);
                     this_doc = TRUE;
                     break;
                     }
+                }
             }
 
         if(!this_doc && (rep = tree_rngptr(p_ss_doc, 0)) != NULL)
@@ -930,12 +944,17 @@ ev_doc_get_sup_docs_for_sheet(
             EV_TRENT i;
 
             for(i = 0; i < p_ss_doc->range_table.next; ++i, ++rep)
-                if(!(rep->flags & TRF_TOBEDEL) && (rep->byslr.docno == *p_docno))
+                {
+                if(rep->flags & TRF_TOBEDEL)
+                    continue;
+
+                if(rep->byslr.docno == *p_docno)
                     {
                     ensure_doc_in_list(p_docno_array, &count, i_docno);
                     this_doc = TRUE;
                     break;
                     }
+                }
             }
         }
 
@@ -944,37 +963,39 @@ ev_doc_get_sup_docs_for_sheet(
         EV_TRENT i;
 
         for(i = 0; i < namtab.next; ++i, ++nep)
-            if(!(nep->flags & TRF_TOBEDEL) && (nep->byslr.docno == *p_docno))
+            {
+            if(nep->flags & TRF_TOBEDEL)
+                continue;
+
+            if(nep->byslr.docno == *p_docno)
                 {
-                EV_NAMEID name_num;
+                EV_NAMEID name_num = name_def_find(nep->nameto);
 
-                if((name_num = name_def_find(nep->nameto)) >= 0)
+                if(name_num >= 0)
                     {
-                    P_EV_NAME p_ev_name;
+                    P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
-                    if((p_ev_name = name_ptr(name_num)) != NULL)
+                    switch(p_ev_name->def_data.did_num)
                         {
-                        switch(p_ev_name->def_data.did_num)
-                            {
-                            case RPN_DAT_SLR:
-                                ensure_doc_in_list(p_docno_array,
-                                                   &count,
-                                                   p_ev_name->def_data.arg.slr.docno);
-                                break;
+                        case RPN_DAT_SLR:
+                            ensure_doc_in_list(p_docno_array,
+                                               &count,
+                                               p_ev_name->def_data.arg.slr.docno);
+                            break;
 
-                            case RPN_DAT_RANGE:
-                                ensure_doc_in_list(p_docno_array,
-                                                   &count,
-                                                   p_ev_name->def_data.arg.range.s.docno);
-                                break;
-                            }
-
-                        ensure_doc_in_list(p_docno_array,
-                                           &count,
-                                           p_ev_name->owner.docno);
+                        case RPN_DAT_RANGE:
+                            ensure_doc_in_list(p_docno_array,
+                                               &count,
+                                               p_ev_name->def_data.arg.range.s.docno);
+                            break;
                         }
+
+                    ensure_doc_in_list(p_docno_array,
+                                       &count,
+                                       p_ev_name->owner.docno);
                     }
                 }
+            }
         }
 
     /* find all the supporting custom functions */
@@ -982,24 +1003,26 @@ ev_doc_get_sup_docs_for_sheet(
         {
         EV_TRENT i;
 
-        for(i = 0; i < custom_use_table.next; ++i, ++mep)
-            if(!(mep->flags & TRF_TOBEDEL) && (mep->byslr.docno == *p_docno))
+        for(i = 0; i < custom_use_deptable.next; ++i, ++mep)
+            {
+            if(mep->flags & TRF_TOBEDEL)
+                continue;
+
+            if(mep->byslr.docno == *p_docno)
                 {
-                EV_NAMEID custom_num;
+                EV_NAMEID custom_num = custom_def_find(mep->custom_to);
 
-                if((custom_num = custom_def_find(mep->custom_to)) >= 0)
+                if(custom_num >= 0)
                     {
-                    P_EV_CUSTOM p_ev_custom;
+                    P_EV_CUSTOM p_ev_custom= custom_ptr_must(custom_num);
 
-                    if((p_ev_custom = custom_ptr(custom_num)) != NULL)
-                        {
-                        if(p_ev_custom->owner.docno != DOCNO_NONE)
-                            ensure_doc_in_list(p_docno_array,
-                                               &count,
-                                               p_ev_custom->owner.docno);
-                        }
+                    if(p_ev_custom->owner.docno != DOCNO_NONE)
+                        ensure_doc_in_list(p_docno_array,
+                                           &count,
+                                           p_ev_custom->owner.docno);
                     }
                 }
+            }
         }
 
     return(count);
@@ -1220,10 +1243,10 @@ name_make_wholename(
     buffer[0] = '\0';
 
     if(NULL != p_docu_name->path_name)
-        safe_strkpy(buffer, elemof_buffer, p_docu_name->path_name);
+        xstrkpy(buffer, elemof_buffer, p_docu_name->path_name);
 
     assert(NULL != p_docu_name->leaf_name);
-    safe_strkat(buffer, elemof_buffer, p_docu_name->leaf_name);
+    xstrkat(buffer, elemof_buffer, p_docu_name->leaf_name);
 }
 
 /* end of ev_docs.c */

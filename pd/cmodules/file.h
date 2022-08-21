@@ -87,7 +87,6 @@ macro definitions
 #define BUF_MAX_GENLEAFNAME (MAX_GENLEAFNAME + 1)
 #define BUF_MAX_PATHSTRING  (MAX_PATHSTRING  + 1)
 
-#ifndef RC_INVOKED /* not resource compiler */
 #ifndef ERRDEF_EXPORT /* not errdef export */
 
 /*
@@ -99,22 +98,22 @@ extradata definition
 */
 
 #if WINDOWS
-typedef struct _file_edata_windows
+typedef struct FILE_EDATA_WINDOWS
 {
     S32         openmode;
     OFSTRUCT    of;
 }
-file_edata_windows;
+FILE_EDATA_WINDOWS;
 #endif
 
 #if RISCOS
-typedef struct _file_edata_riscos
+typedef struct FILE_EDATA_RISCOS
 {
     FILETYPE_RISC_OS    filetype;
     BOOL                filetype_modified;
     char                filename[BUF_MAX_PATHSTRING];
 }
-file_edata_riscos;
+FILE_EDATA_RISCOS;
 #endif
 
 typedef struct __FILE_HANDLE
@@ -151,22 +150,22 @@ typedef struct __FILE_HANDLE
     S32                    bufpos;              /* file position of buffer */
 
 #if RISCOS
-    file_edata_riscos riscos;
+    FILE_EDATA_RISCOS   riscos;
 #elif WINDOWS
-    file_edata_windows windows;
+    FILE_EDATA_WINDOWS  windows;
 #endif
 }
 _FILE_HANDLE, * FILE_HANDLE;
 
 /* mode of opening for file */
 
-typedef enum
+typedef enum FILE_OPEN_MODE
 {
     file_open_read      = 0,
     file_open_write     = 1,
     file_open_readwrite = 2
 }
-file_open_mode;
+FILE_OPEN_MODE;
 
 /* position within file */
 
@@ -186,7 +185,7 @@ filepos_t;
 this structure is also private to fileutil.c but needs to be made visible for typedef safety
 */
 
-typedef struct _FILE_PATHENUM
+typedef struct FILE_PATHENUM
 {
     char * res;     /* last result */
     char * ptr;     /* current state */
@@ -199,10 +198,10 @@ FILE_PATHENUM, * P_FILE_PATHENUM, ** P_P_FILE_PATHENUM;
 as does this one
 */
 
-typedef struct _FILE_OBJINFO
+typedef struct FILE_OBJINFO
 {
     #if RISCOS
-    struct _file_objinfo_fileinfo
+    struct FILE_OBJINFO_FILEINFO
     {
         S32       load;
         S32       exec;
@@ -220,7 +219,7 @@ FILE_OBJINFO, * P_FILE_OBJINFO;
 as does this one
 */
 
-typedef struct _FILE_OBJENUM
+typedef struct FILE_OBJENUM
 {
     char              pattern[BUF_MAX_GENLEAFNAME];
     char              subdir[BUF_MAX_PATHSTRING]; /* SKS 25oct96 now cater for long leafnames (was MAX_LEAFNAME) */
@@ -291,7 +290,7 @@ file_length(
 extern S32
 file_open(
     PC_U8 filename,
-    file_open_mode openmode,
+    FILE_OPEN_MODE openmode,
     FILE_HANDLE * fp /*out*/);
 
 extern S32
@@ -592,9 +591,6 @@ can only say for sure about EOF if read last buffer in and not yet at end
     (S32) ((fileposp)->lo) )
 
 #endif /* ERRDEF_EXPORT */
-#endif /* RC_INVOKED */
-
-#ifndef RC_INVOKED /* not resource compiler */
 
 /*
 error definition
@@ -616,8 +612,6 @@ error definition
     errorstring(FILE_ERR_ISAFILE,           "%s is a file") \
     errorstring(FILE_ERR_ISADIR,            "%s is a directory") \
     errorstring(FILE_ERR_NAMETOOLONG,       "Filename %.64s... too long")
-
-#endif /* RC_INVOKED */
 
 /*
 error definition

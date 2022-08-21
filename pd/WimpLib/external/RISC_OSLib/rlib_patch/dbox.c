@@ -1324,7 +1324,7 @@
 +
 +                if(!(ws.flags & wimp_WTOP))
 +                    {
-+                    trace_0(TRACE_OUT, "menu dbox not at front!!!\n");
++                    trace_0(TRACE_OUT | TRACE_ANY, "menu dbox not at front!!!\n");
 +                    /*SKS 08jan97 win_send_front(w, FALSE);*/
 +                    }
 +                }

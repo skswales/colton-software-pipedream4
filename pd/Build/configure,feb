@@ -4,4 +4,5 @@
 |
 | Copyright (C) 2012-2014 Stuart Swales
 |
-<Obey$Dir>._bld_mkdir
+| <Obey$Dir>.d32._bld_mkdir
+<Obey$Dir>.r32._bld_mkdir

@@ -29,7 +29,7 @@
 declare complex number type for internal usage
 */
 
-typedef struct _COMPLEX
+typedef struct COMPLEX
 {
     F64 r, i;
 }

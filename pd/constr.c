@@ -23,16 +23,15 @@
 
 /* structures and parameters for sort */
 
-#define SORT_FIELD struct _sort_field
-
-SORT_FIELD
+struct SORT_FIELD
 {
     COL column;
     BOOL reverse;
 };
 
 /* structure of entry in key list */
-typedef struct _sort_entry
+
+typedef struct SORT_ENTRY
 {
     ROW keyrow;
     ROW rowsinrec;
@@ -42,7 +41,7 @@ SORT_ENTRY, * P_SORT_ENTRY;
 /* static data for sort */
 
 static S32 fields;
-static SORT_FIELD sort_fields[SORT_FIELD_DEPTH];
+static struct SORT_FIELD sort_fields[SORT_FIELD_DEPTH];
 
 /******************************************************************************
 *

@@ -54,22 +54,22 @@
 #define END_MAXITEMSIZE   500
 #define END_MAXPOOLSIZE   5000
 
-typedef struct cacheblock * cachep;
-typedef struct ixofdict * dixp;
-typedef struct _endstruct * endp;
-typedef struct i_endstruct * i_endp;
-typedef struct ixstruct * sixp;
-typedef struct tokword * wrdp;
+typedef struct CACHEBLOCK * CACHEP;
+typedef struct IXOFDICT * DIXP;
+typedef struct ENDSTRUCT * ENDP;
+typedef struct I_ENDSTRUCT * I_ENDP;
+typedef struct IXSTRUCT * SIXP;
+typedef struct TOKWORD * WRDP;
 
 /*
 cached block structure
 */
 
-struct cacheblock
+struct CACHEBLOCK
 {
     S32  usecount;
-    S32 dict;
-    S32 lettix;
+    S32  dict;
+    S32  lettix;
     S32  diskaddress;
     S32  diskspace;
 
@@ -80,9 +80,9 @@ struct cacheblock
 structure of an index to a dictionary
 */
 
-struct ixstruct
+struct IXSTRUCT
 {
-    union
+    union IXSTRUCT_P
         {
         LIST_ITEMNO cacheno;
         S32 disk;
@@ -103,7 +103,7 @@ struct ixstruct
 structure of the index of dictionaries
 */
 
-struct ixofdict
+struct IXOFDICT
 {
     FILE_HANDLE dicthandle;             /* handle of dictionary file */
     ARRAY_HANDLE dicth;                      /* handle of index memory */
@@ -129,7 +129,7 @@ struct ixofdict
 tokenised word structure
 */
 
-struct tokword
+struct TOKWORD
 {
     S32 len;
     S32 lettix;
@@ -151,20 +151,20 @@ struct tokword
 ending structure
 */
 
-typedef struct _endstruct
+typedef struct ENDSTRUCT
 {
     char len;
     char alpha;
     char pos;
     char ending[MAX_ENDLEN + 1];
 }
-endstruct;
+ENDSTRUCT;
 
 /*
 internal ending structure
 */
 
-struct i_endstruct
+struct I_ENDSTRUCT
 {
     char len;
     char alpha;
@@ -216,7 +216,7 @@ static S32
 delreins(
     S32 dict,
     char *word,
-    wrdp wp);
+    WRDP wp);
 
 static S32
 endmatch(
@@ -266,13 +266,13 @@ load_dict_def_now(
 static S32
 lookupword(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     S32 needpos);
 
-static wrdp
+static WRDP
 makeindex(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     char *word);
 
 static S32
@@ -318,7 +318,7 @@ release_dict_entry(
 static S32
 setabval(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     S32 lo_hi);
 
 static void
@@ -328,12 +328,12 @@ stuffcache(
 static void
 tokenise(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     S32 rootlen);
 
 static S32
 writeblock(
-    cachep cp);
+    CACHEP cp);
 
 static S32
 writeindex(
@@ -345,7 +345,7 @@ static variables
 */
 
 static P_LIST_BLOCK cachelp = NULL;             /* list of cached blocks */
-static struct ixofdict dictlist[MAX_DICT];      /* dictionary table */
+static struct IXOFDICT dictlist[MAX_DICT];      /* dictionary table */
 static S32 spell_addword_nestf = 0;             /* addword nest level */
 static S32 compar_dict;                         /* dictionary compar needs */
 static S32 full_event_registered = 0;           /* we've registered interest in full events */
@@ -356,8 +356,8 @@ macro to get index pointer given
 either dictionary number or pointer
 */
 
-#define ixp(dict, ix) array_ptr(&dictlist[(dict)].dicth, struct ixstruct, ix)
-#define ixpdp(dp, ix) array_ptr(&(dp)->dicth, struct ixstruct, ix)
+#define ixp(dict, ix) array_ptr(&dictlist[(dict)].dicth, struct IXSTRUCT, ix)
+#define ixpdp(dp, ix) array_ptr(&(dp)->dicth, struct IXSTRUCT, ix)
 
 #define SPACE 32
 
@@ -377,15 +377,15 @@ spell_addword(
     S32 dict,
     char *word)
 {
-    struct tokword newword;
+    struct TOKWORD newword;
     S32 res, wordsize, err, rootlen;
     char token_start;
     P_U8 newpos, temppos;
     char *ci;
-    cachep cp;
+    CACHEP cp;
     P_LIST_ITEM it;
-    sixp lett;
-    dixp dp;
+    SIXP lett;
+    DIXP dp;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         ((dp = &dictlist[dict])->dicthandle == NULL) )
@@ -443,12 +443,12 @@ spell_addword(
                     else if(!spell_addword_nestf && (rootlen > newword.matchcp))
                         {
                         P_U8 pos;
-                        struct tokword delword;
+                        struct TOKWORD delword;
 
                         delword = newword;
                         strcpy(delword.bodyd, delword.bodydp);
 
-                        cp = (cachep) list_gotoitem(cachelp,
+                        cp = (CACHEP) list_gotoitem(cachelp,
                                                     ixp(dict, delword.lettix)->
                                                     p.cacheno)->i.inside;
 
@@ -504,10 +504,10 @@ spell_addword(
                                          lett->p.cacheno,
                                          lett->blklen +
                                          wordsize +
-                                         sizeof(struct cacheblock),
+                                         sizeof(struct CACHEBLOCK),
                                          FALSE)) != NULL)
                     {
-                    cp = (cachep) it->i.inside;
+                    cp = (CACHEP) it->i.inside;
                     break;
                     }
 
@@ -595,7 +595,7 @@ spell_checkword(
     S32 dict,
     char *word)
 {
-    struct tokword curword;
+    struct TOKWORD curword;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         (dictlist[dict].dicthandle == NULL) )
@@ -628,7 +628,7 @@ spell_close(
 
     if((dicthand = dictlist[dict].dicthandle) == NULL)
         {
-        trace_1(TRACE_OUT /*TRACE_MODULE_SPELL*/, "spell_close called to close non-open dictionary: %d", dict);
+        trace_1(TRACE_OUT | TRACE_MODULE_SPELL, "spell_close called to close non-open dictionary: %d", dict);
         return(create_error(SPELL_ERR_CANTCLOSE));
         }
 
@@ -661,8 +661,8 @@ spell_createdict(
     S32  err;
     S32 dict, nbytes, i, res;
     FILE_HANDLE newdict, def_file;
-    dixp dp;
-    struct ixstruct wix;
+    DIXP dp;
+    struct IXSTRUCT wix;
     char buffer[255 + 1];
 
     /* get a dictionary number */
@@ -779,7 +779,7 @@ spell_createdict(
         for(i = 0; i < dp->n_index; ++i)
             {
             if((err = file_write(&wix,
-                                 sizeof(struct ixstruct),
+                                 sizeof(struct IXSTRUCT),
                                  1,
                                  newdict)) < 0)
                 {
@@ -826,13 +826,13 @@ spell_deleteword(
     S32 dict,
     char *word)
 {
-    struct tokword curword;
+    struct TOKWORD curword;
     S32 res, delsize, err, tokcount, addroot, blockbefore, i;
     char token_start, char_offset;
     P_U8 sp, ep, datap, endword, ci, co;
-    cachep cp;
-    sixp lett;
-    dixp dp;
+    CACHEP cp;
+    SIXP lett;
+    DIXP dp;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         ((dp = &dictlist[dict])->dicthandle == NULL) )
@@ -878,7 +878,7 @@ spell_deleteword(
     /* after succesful find, the pointer points
     at the token of the word found */
     lett = ixp(dict, curword.lettix);
-    cp = (cachep) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
+    cp = (CACHEP) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
     sp = cp->data;
 
     datap = sp + curword.findpos;
@@ -959,7 +959,7 @@ spell_flush(
 
     if((dicthand = dictlist[dict].dicthandle) == NULL)
         {
-        trace_1(TRACE_OUT /*TRACE_MODULE_SPELL*/, "spell_flush called to flush non-open dictionary: %d", dict);
+        trace_1(TRACE_OUT | TRACE_MODULE_SPELL, "spell_flush called to flush non-open dictionary: %d", dict);
         return(create_error(SPELL_ERR_CANTWRITE));
         }
 
@@ -1004,8 +1004,7 @@ spell_full_events(
 
 /******************************************************************************
 *
-* report whether a character is part
-* of a valid spellcheck word
+* report whether a character is part of a valid spellcheck word
 *
 ******************************************************************************/
 
@@ -1014,7 +1013,7 @@ spell_iswordc(
     S32 dict,
     S32 ch)
 {
-    dixp dp;
+    DIXP dp;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         ((dp = &dictlist[dict])->dicthandle == NULL) )
@@ -1026,8 +1025,8 @@ spell_iswordc(
 /******************************************************************************
 *
 * load a dictionary
-* all the dictionary is loaded and
-* locked into place
+*
+* all the dictionary is loaded and locked into place
 *
 ******************************************************************************/
 
@@ -1036,7 +1035,7 @@ spell_load(
     S32 dict)
 {
     S32 err, i;
-    dixp dp;
+    DIXP dp;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         ((dp = &dictlist[dict])->dicthandle == NULL) )
@@ -1077,7 +1076,7 @@ spell_nextword(
     S32 dict,
     char *wordout,
     char *wordin,
-               char *mask,
+    char *mask,
     P_S32 brkflg)
 {
     S32 res, gotw;
@@ -1145,8 +1144,8 @@ spell_opendict(
 {
     S32  fpos, err;
     S32 dict, i, nmemb;
-    dixp dp;
-    sixp lett, tempix;
+    DIXP dp;
+    SIXP lett, tempix;
 
     #ifndef NDEBUG
     {
@@ -1169,7 +1168,7 @@ spell_opendict(
 
     /* dummy loop for structure */
     do  {
-        SC_ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(struct ixstruct), TRUE);
+        SC_ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(struct IXSTRUCT), TRUE);
         /* save dictionary parameters */
         dp = &dictlist[dict];
 
@@ -1181,7 +1180,7 @@ spell_opendict(
             }
 
         /* take copy of name for reopening in setoptions */
-        safe_strkpy(dp->dict_filename, elemof32(dp->dict_filename), name);
+        xstrkpy(dp->dict_filename, elemof32(dp->dict_filename), name);
 
         file_buffer(dp->dicthandle, NULL, BUF_SIZE);
 
@@ -1189,14 +1188,14 @@ spell_opendict(
         if((err = load_dict_def(dict, def_name)) < 0)
             break;
 
-        if(NULL == al_array_alloc(&dp->dicth, struct ixstruct, dp->n_index, &array_init_block, &err))
+        if(NULL == al_array_alloc(&dp->dicth, struct IXSTRUCT, dp->n_index, &array_init_block, &err))
             break;
 
         /* load index */
-        tempix = array_base(&dp->dicth, struct ixstruct);
+        tempix = array_base(&dp->dicth, struct IXSTRUCT);
         nmemb  = dp->n_index;
         if((err = file_read(tempix,
-                            sizeof(struct ixstruct),
+                            sizeof(struct IXSTRUCT),
                             nmemb,
                             dp->dicthandle)) < 0)
             break;
@@ -1264,9 +1263,9 @@ spell_pack(
 {
     S32 err, i;
     S32  diskpoint;
-    cachep cp;
-    dixp olddp, newdp;
-    sixp lettin, lettout;
+    CACHEP cp;
+    DIXP olddp, newdp;
+    SIXP lettin, lettout;
 
     if((err = ensuredict(olddict)) < 0)
         return(err);
@@ -1301,7 +1300,7 @@ spell_pack(
         *lettout = *lettin;
         lettin->letflags &= LET_ONE | LET_TWO;
 
-        cp = (cachep) list_gotoitem(cachelp, lettin->p.cacheno)->i.inside;
+        cp = (CACHEP) list_gotoitem(cachelp, lettin->p.cacheno)->i.inside;
 
         /* output index takes over block read from input index */
         lettin->p.disk  = cp->diskaddress;
@@ -1329,7 +1328,7 @@ spell_prevword(
     S32 dict,
     char *wordout,
     char *wordin,
-               char *mask,
+    char *mask,
     P_S32 brkflg)
 {
     S32 res;
@@ -1379,7 +1378,7 @@ spell_setoptions(
     S32 optionset,
     S32 optionmask)
 {
-    dixp dp;
+    DIXP dp;
     S32  err;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
@@ -1428,7 +1427,6 @@ spell_stats(
 {
     LIST_ITEMNO cacheno;
     P_LIST_ITEM it;
-    cachep cp;
     S32 blksiz;
 
     *cblocks = *largest = 0;
@@ -1438,10 +1436,10 @@ spell_stats(
     if((it = list_initseq(cachelp, &cacheno)) != NULL)
         {
         do  {
-            cp = (cachep) it->i.inside;
+            CACHEP cp = (CACHEP) it->i.inside;
 
             ++(*cblocks);
-            blksiz = sizeof(struct cacheblock) +
+            blksiz = sizeof(struct CACHEBLOCK) +
                      ixp(cp->dict, cp->lettix)->blklen;
             *largest = MAX(*largest, blksiz);
             *totalmem += blksiz;
@@ -1494,7 +1492,7 @@ spell_tolower(
     S32 ch)
 {
     S32 i;
-    dixp dp;
+    DIXP dp;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         ((dp = &dictlist[dict])->dicthandle == NULL) )
@@ -1521,7 +1519,7 @@ spell_toupper(
     S32 ch)
 {
     S32 upper_ch;
-    dixp dp;
+    DIXP dp;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         ((dp = &dictlist[dict])->dicthandle == NULL) )
@@ -1546,8 +1544,8 @@ spell_unlock(
     S32 dict)
 {
     S32 i, n_index;
-    sixp lett;
-    dixp dp;
+    SIXP lett;
+    DIXP dp;
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
         ((dp = &dictlist[dict])->dicthandle == NULL) )
@@ -1622,7 +1620,7 @@ char_ordinal_1(
     S32 dict,
     S32 ch)
 {
-    dixp dp;
+    DIXP dp;
     char i;
 
     if(ch >= 0)
@@ -1654,7 +1652,7 @@ char_ordinal_2(
     S32 dict,
     S32 ch)
 {
-    dixp dp;
+    DIXP dp;
     char i;
 
     if(ch >= 0)
@@ -1686,7 +1684,7 @@ char_ordinal_3(
     S32 dict,
     S32 ch)
 {
-    dixp dp;
+    DIXP dp;
     char i;
 
     if(ch >= 0)
@@ -1723,10 +1721,10 @@ PROC_QSORT_PROTO(static, compar, PC_L1STR)
 *
 ******************************************************************************/
 
-PROC_QSORT_PROTO(static, compar_ending_alpha, endstruct)
+PROC_QSORT_PROTO(static, compar_ending_alpha, ENDSTRUCT)
 {
-    endp end1 = (endp) arg1;
-    endp end2 = (endp) arg2;
+    ENDP end1 = (ENDP) arg1;
+    ENDP end2 = (ENDP) arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -1742,10 +1740,10 @@ PROC_QSORT_PROTO(static, compar_ending_alpha, endstruct)
 *
 ******************************************************************************/
 
-PROC_QSORT_PROTO(static, compar_ending_pos, endstruct)
+PROC_QSORT_PROTO(static, compar_ending_pos, ENDSTRUCT)
 {
-    endp end1 = (endp) arg1;
-    endp end2 = (endp) arg2;
+    ENDP end1 = (ENDP) arg1;
+    ENDP end2 = (ENDP) arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -1771,14 +1769,12 @@ static S32
 decodeword(
     S32 dict,
     char *word,
-    wrdp wp,
+    WRDP wp,
     S32 len)
 {
     P_U8 ci;
     char *co;
-    dixp dp;
-
-    dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
 
     *(word + 0) = (char)
                   spell_tolower(dict,
@@ -1811,7 +1807,7 @@ decodeword(
         *co++ = (char) spell_tolower(dict, ordinal_char_3(dict, *ci++));
 
     /* decode ending */
-    ci = ((i_endp) (list_gotoitem(&dp->dict_end_list,
+    ci = ((I_ENDP) (list_gotoitem(&dp->dict_end_list,
                                   (LIST_ITEMNO) wp->tail)->i.inside))->ending;
 
     while(*ci)
@@ -1882,7 +1878,6 @@ deletecache(
     LIST_ITEMNO cacheno)
 {
     LIST_ITEMNO i;
-    cachep cp;
 
     /* remove cache block */
     trace_2(TRACE_MODULE_SPELL, "deleting cache block: %d, %d items on list",
@@ -1892,7 +1887,7 @@ deletecache(
     /* adjust cache numbers below */
     for(i = list_atitem(cachelp); i < list_numitem(cachelp); ++i)
         {
-        cp = (cachep) list_gotoitem(cachelp, i)->i.inside;
+        CACHEP cp = (CACHEP) list_gotoitem(cachelp, i)->i.inside;
         trace_2(TRACE_MODULE_SPELL, "cp: %p, ixp: %p", report_ptr_cast(cp), report_ptr_cast(ixp(cp->dict, cp->lettix)));
         ixp(cp->dict, cp->lettix)->p.cacheno = i;
 
@@ -1916,19 +1911,19 @@ static S32
 delreins(
     S32 dict,
     char *word,
-    wrdp wp)
+    WRDP wp)
 {
     P_U8 deadwords[MAX_TOKEN - MIN_TOKEN + 1];
     char realword[MAX_WORD + 1];
     S32 wordc = 0, len, i, err;
     char token_start;
     P_U8 datap, ep;
-    cachep cp, ocp;
-    sixp lett;
+    CACHEP cp, ocp;
+    SIXP lett;
 
     token_start = dictlist[dict].token_start;
     lett = ixp(dict, wp->lettix);
-    cp = (cachep) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
+    cp = (CACHEP) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
     datap = ep = cp->data;
 
     datap += wp->findpos;
@@ -1941,11 +1936,11 @@ delreins(
         {
         wp->tail = *datap - token_start;
         len = decodeword(dict, realword, wp, 0);
-        if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &err)))
+        if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(P_U8, len + 1/*NULLCH*/, &err)))
             break;
         strcpy(deadwords[wordc++], realword);
         ocp = cp;
-        cp = (cachep) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
+        cp = (CACHEP) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
         /* SKS: memory allocation can move core */
         datap += (P_U8) cp - (P_U8) ocp;
         ep += (P_U8) cp - (P_U8) ocp;
@@ -1980,7 +1975,7 @@ delreins(
         }
 
     /* add the new word */
-    if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(U8, strlen(word) + 1/*NULLCH*/, &err)))
+    if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(P_U8, strlen(word) + 1/*NULLCH*/, &err)))
         return(err);
     strcpy(deadwords[wordc++], word);
 
@@ -2038,8 +2033,7 @@ endmatch(
 
 /******************************************************************************
 *
-* ensure that any modified parts of a
-* dictionary are written out to the disk
+* ensure that any modified parts of a dictionary are written out to the disk
 *
 ******************************************************************************/
 
@@ -2048,7 +2042,7 @@ ensuredict(
     S32 dict)
 {
     S32 err, allerr, i;
-    dixp dp;
+    DIXP dp;
 
     trace_0(TRACE_MODULE_SPELL, "ensuredict");
 
@@ -2057,9 +2051,7 @@ ensuredict(
         i < dp->n_index;
         ++i)
         {
-        sixp lett;
-
-        lett = ixpdp(dp, i);
+        SIXP lett = ixpdp(dp, i);
 
         trace_1(TRACE_MODULE_SPELL, "ensure letter: %d", i);
         if(lett->letflags & LET_WRITE)
@@ -2094,12 +2086,12 @@ fetchblock(
     S32 dict,
     S32 lettix)
 {
-    cachep newblock;
+    CACHEP newblock;
     P_LIST_ITEM it;
     FILE_HANDLE dicthand;
     S32 err, nbytes;
-    dixp dp;
-    sixp lett;
+    DIXP dp;
+    SIXP lett;
 
     dp = &dictlist[dict];
 
@@ -2132,7 +2124,7 @@ fetchblock(
             trace_0(TRACE_MODULE_SPELL, "fetchblock doing createitem");
             if((it = list_createitem(cachelp,
                                      list_numitem(cachelp),
-                                     sizeof(struct cacheblock) +
+                                     sizeof(struct CACHEBLOCK) +
                                         ixpdp(dp, lettix)->blklen,
                                      FALSE)) != NULL)
                 break;
@@ -2148,7 +2140,7 @@ fetchblock(
     if(err < 0)
         return(err);
 
-    newblock = (cachep) it->i.inside;
+    newblock = (CACHEP) it->i.inside;
     lett = ixpdp(dp, lettix);
 
     /* read the data if there is any */
@@ -2206,7 +2198,7 @@ freecache(
 {
     LIST_ITEMNO cacheno, minno;
     P_LIST_ITEM it;
-    cachep cp;
+    CACHEP cp;
     S32 mincount = 0x7FFFFFFF;
     S32 err, bytes_freed;
 
@@ -2218,7 +2210,7 @@ freecache(
     if((it = list_initseq(cachelp, &cacheno)) != NULL)
         {
         do  {
-            cp = (cachep) it->i.inside;
+            cp = (CACHEP) it->i.inside;
             /* check if block is locked */
             if(lettix != cp->lettix &&
                !(ixp(cp->dict, cp->lettix)->letflags & LET_LOCKED))
@@ -2236,7 +2228,7 @@ freecache(
     if(minno < 0)
         return(status_nomem());
 
-    cp = (cachep) list_gotoitem(cachelp, minno)->i.inside;
+    cp = (CACHEP) list_gotoitem(cachelp, minno)->i.inside;
     bytes_freed = ixp(cp->dict, cp->lettix)->blklen;
 
     #if TRACE_ALLOWED
@@ -2278,7 +2270,7 @@ get_dict_entry(void)
     for(i = 0; i < MAX_DICT; ++i)
         if(dictlist[i].dicthandle == NULL)
             {
-            dixp dp = &dictlist[i];
+            DIXP dp = &dictlist[i];
 
             dp->dicth          = 0;
             dp->dictsize       = 0;
@@ -2361,12 +2353,12 @@ killcache(
 {
     S32 err, flush_err;
     S32 write;
-    cachep cp;
+    CACHEP cp;
     FILE_HANDLE dicthand;
-    sixp lett;
+    SIXP lett;
 
     err = 0;
-    cp = (cachep) list_gotoitem(cachelp, cacheno)->i.inside;
+    cp = (CACHEP) list_gotoitem(cachelp, cacheno)->i.inside;
 
     trace_1(TRACE_MODULE_SPELL, "killcache cacheno: %d", cacheno);
 
@@ -2421,7 +2413,7 @@ load_dict_def(
     S32 dict,
     P_U8 def_name)
 {
-    dixp dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
     char keystr[MAX(sizeof(OLD_KEYSTR), sizeof(KEYSTR))];
     S32 keylen, res, nbytes;
     FILE_HANDLE def_file;
@@ -2481,12 +2473,12 @@ load_dict_def_now(
     S32 dict,
     S32 keylen)
 {
-    dixp dp = &dictlist[dict];
-    endstruct token[MAX_TOKEN - MIN_TOKEN];
+    DIXP dp = &dictlist[dict];
+    ENDSTRUCT token[MAX_TOKEN - MIN_TOKEN];
     char buffer[255 + 1];
     S32 res, i, end;
     char *in, *out;
-    endp ep;
+    ENDP ep;
     S32  filepos;
     S32  err;
 
@@ -2498,7 +2490,7 @@ load_dict_def_now(
     if(read_def_line(def_file, buffer) <= 0)
         return(create_error(SPELL_ERR_BADDEFFILE));
 
-    safe_strkat(dp->dict_name, elemof32(dp->dict_name), buffer);
+    xstrkat(dp->dict_name, elemof32(dp->dict_name), buffer);
 
     /* read character offset */
     if(read_def_line(def_file, buffer) <= 0)
@@ -2645,11 +2637,11 @@ load_dict_def_now(
     for(i = 0, ep = token; i < end; ++i, ++ep)
         {
         P_LIST_ITEM it;
-        i_endp iep;
+        I_ENDP iep;
         S32 bytes;
 
         /* the ending array already has 1 byte reserved */
-        bytes = sizeof(struct i_endstruct) + strlen(ep->ending);
+        bytes = sizeof(struct I_ENDSTRUCT) + strlen(ep->ending);
 
         if((it = list_createitem(&dp->dict_end_list,
                                  (LIST_ITEMNO) i,
@@ -2657,7 +2649,7 @@ load_dict_def_now(
                                  FALSE)) == NULL)
             return(status_nomem());
 
-        iep = (i_endp) it->i.inside;
+        iep = (I_ENDP) it->i.inside;
 
         iep->len   = ep->len;
         iep->alpha = ep->alpha;
@@ -2679,7 +2671,7 @@ load_dict_def_now(
 
     /* set offset parameters */
     dp->index_offset = filepos;
-    dp->data_offset  = filepos + dp->n_index * sizeof(struct ixstruct);
+    dp->data_offset  = filepos + dp->n_index * sizeof(struct IXSTRUCT);
 
     return(0);
 }
@@ -2698,16 +2690,16 @@ load_dict_def_now(
 static S32
 lookupword(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     S32 needpos)
 {
     P_U8 startlim, endlim, midpoint, datap;
     char *co, *ci;
     S32 i, ch, found, bodylen, updown, err;
     char token_start, char_offset;
-    cachep cp;
-    sixp lett;
-    dixp dp;
+    CACHEP cp;
+    SIXP lett;
+    DIXP dp;
     P_LIST_BLOCK dlp;
 
     if(needpos)
@@ -2747,7 +2739,7 @@ lookupword(
 
     /* search the block for the word */
     lett = ixp(dict, wp->lettix);
-    cp = (cachep) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
+    cp = (CACHEP) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
     ++cp->usecount;
 
     /*
@@ -2861,7 +2853,7 @@ lookupword(
                   datap < endlim)
                 {
                 ++datap;
-                if(0 == strcmp(((i_endp) (list_gotoitem(dlp,
+                if(0 == strcmp(((I_ENDP) (list_gotoitem(dlp,
                                                     (LIST_ITEMNO)
                                                     ch - token_start)->
                                           i.inside))->ending,
@@ -2941,17 +2933,15 @@ lookupword(
 *
 ******************************************************************************/
 
-static wrdp
+static WRDP
 makeindex(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     char *word)
 {
     S32 ch, len;
     char *co;
-    dixp dp;
-
-    dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
 
     /* check length */
     len = strlen(word);
@@ -3080,13 +3070,13 @@ nextword(
     S32 dict,
     char *word)
 {
-    struct tokword curword;
+    struct TOKWORD curword;
     S32 err, tokabval, nexthigher, token, curabval, tail, res,
          n_index;
     P_U8 datap, ep;
     char token_start, *co;
-    cachep cp;
-    sixp lett;
+    CACHEP cp;
+    SIXP lett;
     P_LIST_BLOCK dlp;
 
     if(!makeindex(dict, &curword, word))
@@ -3111,7 +3101,7 @@ nextword(
                 return(err);
 
             lett = ixp(dict, curword.lettix);
-            cp = (cachep) list_gotoitem(cachelp,
+            cp = (CACHEP) list_gotoitem(cachelp,
                                         lett->p.cacheno)->i.inside;
             datap = cp->data + curword.findpos;
             ep = cp->data + lett->blklen;
@@ -3162,7 +3152,7 @@ nextword(
                 while(((token = *datap) >= (S32) token_start) && (datap < ep))
                     {
                     ++datap;
-                    tokabval = ((i_endp) (list_gotoitem(dlp,
+                    tokabval = ((I_ENDP) (list_gotoitem(dlp,
                                                         (LIST_ITEMNO)
                                                         token -
                                                         token_start)->
@@ -3234,7 +3224,7 @@ ordinal_char_1(
     S32 dict,
     S32 ord)
 {
-    dixp dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
 
     return(dp->letter_1[ord - dp->char_offset]);
 }
@@ -3252,7 +3242,7 @@ ordinal_char_2(
     S32 dict,
     S32 ord)
 {
-    dixp dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
 
     return(dp->letter_2[ord - dp->char_offset]);
 }
@@ -3270,7 +3260,7 @@ ordinal_char_3(
     S32 dict,
     S32 ord)
 {
-    dixp dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
 
     return(dp->man_token_start ? ord : dp->letter_2[ord - dp->char_offset]);
 }
@@ -3291,13 +3281,13 @@ prevword(
     S32 dict,
     char *word)
 {
-    struct tokword curword;
+    struct TOKWORD curword;
     S32 err, tokabval, nextlower, token, curabval, tail, i, onroot;
     P_U8 sp, ep, datap;
     char token_start, char_offset, *co;
-    cachep cp;
-    sixp lett;
-    dixp dp;
+    CACHEP cp;
+    SIXP lett;
+    DIXP dp;
     P_LIST_BLOCK dlp;
 
     if(!makeindex(dict, &curword, word))
@@ -3323,7 +3313,7 @@ prevword(
                 return(err);
 
             lett = ixp(dict, curword.lettix);
-            cp = (cachep) list_gotoitem(cachelp,
+            cp = (CACHEP) list_gotoitem(cachelp,
                                         lett->p.cacheno)->i.inside;
             sp = cp->data;
 
@@ -3386,7 +3376,7 @@ prevword(
                 while(((token = *datap) >= (S32) token_start) && (datap < ep))
                     {
                     ++datap;
-                    tokabval = ((i_endp) (list_gotoitem(dlp,
+                    tokabval = ((I_ENDP) (list_gotoitem(dlp,
                                                         (LIST_ITEMNO)
                                                         token -
                                                         token_start)->
@@ -3612,7 +3602,7 @@ static void
 release_dict_entry(
     S32 dict)
 {
-    dixp dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
 
     list_free(&dp->dict_end_list);
     list_deregister(&dp->dict_end_list);
@@ -3633,18 +3623,18 @@ release_dict_entry(
 static S32
 setabval(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     S32 lo_hi)
 {
-    dixp dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
     char ending[MAX_WORD + 1];
-    i_endp iep;
+    I_ENDP iep;
     S32 i, abval;
     P_LIST_BLOCK dlp;
 
     /* find entry for ending */
     dlp = &dp->dict_end_list;
-    iep = (i_endp) list_gotoitem(dlp,
+    iep = (I_ENDP) list_gotoitem(dlp,
                                  (LIST_ITEMNO)
                                  wp->tail - dp->token_start)->i.inside;
 
@@ -3653,14 +3643,14 @@ setabval(
         return(iep->alpha);
 
     /* concoct whole ending */
-    safe_strkpy(ending, elemof32(ending), wp->body + wp->matchc);
-    safe_strkat(ending, elemof32(ending), iep->ending);
+    xstrkpy(ending, elemof32(ending), wp->body + wp->matchc);
+    xstrkat(ending, elemof32(ending), iep->ending);
 
     /* work out the alphabetic value of the non-token ending
     that we have - either the next lower, or next higher value */
     for(i = 0, abval = lo_hi ? 0 : 1000; i < (S32) list_numitem(dlp); ++i)
         {
-        iep = (i_endp) (list_gotoitem(dlp, (LIST_ITEMNO) i)->i.inside);
+        iep = (I_ENDP) (list_gotoitem(dlp, (LIST_ITEMNO) i)->i.inside);
 
         if(lo_hi)
             {
@@ -3681,8 +3671,7 @@ setabval(
 
 /******************************************************************************
 *
-* make sure that there are no cache
-* blocks left for a given dictionary
+* make sure that there are no cache blocks left for a given dictionary
 *
 ******************************************************************************/
 
@@ -3691,7 +3680,6 @@ stuffcache(
     S32 dict)
 {
     LIST_ITEMNO i;
-    cachep cp;
 
     trace_0(TRACE_MODULE_SPELL, "stuffcache");
 
@@ -3699,7 +3687,7 @@ stuffcache(
     from this dictionary */
     for(i = 0; i < list_numitem(cachelp); ++i)
         {
-        cp = (cachep) list_gotoitem(cachelp, i)->i.inside;
+        CACHEP cp = (CACHEP) list_gotoitem(cachelp, i)->i.inside;
 
         if(cp->dict == dict)
             {
@@ -3726,12 +3714,11 @@ stuffcache(
 static void
 tokenise(
     S32 dict,
-    wrdp wp,
+    WRDP wp,
     S32 rootlen)
 {
     U8 *endbody, token_start;
     S32 i, maxtail;
-    i_endp curend;
     P_LIST_BLOCK dlp;
 
     /* calculate maximum ending length */
@@ -3748,7 +3735,7 @@ tokenise(
 
     for(i = 0; i < (S32) list_numitem(dlp); ++i)
         {
-        curend = (i_endp) (list_gotoitem(dlp, (LIST_ITEMNO) i)->i.inside);
+        I_ENDP curend = (I_ENDP) (list_gotoitem(dlp, (LIST_ITEMNO) i)->i.inside);
 
         if(maxtail < (S32) curend->len)
             continue;
@@ -3770,11 +3757,11 @@ tokenise(
 
 static S32
 writeblock(
-    cachep cp)
+    CACHEP cp)
 {
     FILE_HANDLE dicthand;
-    dixp dp;
-    sixp lett;
+    DIXP dp;
+    SIXP lett;
 
     trace_2(TRACE_MODULE_SPELL, "writeblock dict: %d, letter: %d", cp->dict, cp->lettix);
 
@@ -3830,19 +3817,17 @@ writeindex(
     S32 dict,
     S32 lettix)
 {
-    dixp dp;
-    S32  err;
-
-    dp = &dictlist[dict];
+    DIXP dp = &dictlist[dict];
+    S32 err;
 
     /* update index entry for letter */
     if((err = file_seek(dp->dicthandle,
-                        dp->index_offset + sizeof(struct ixstruct) * lettix,
+                        dp->index_offset + sizeof(struct IXSTRUCT) * lettix,
                         SEEK_SET)) < 0)
         return(err);
 
     if((err = file_write(ixpdp(dp, lettix),
-                         sizeof(struct ixstruct),
+                         sizeof(struct IXSTRUCT),
                          1,
                          dp->dicthandle)) < 0)
         return(err);

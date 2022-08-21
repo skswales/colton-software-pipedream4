@@ -17,7 +17,7 @@
 
 #define Wimp_MPD_DDE ((wimp_msgaction) 0x0600) /* PipeDream dynamic data exchange */
 
-typedef enum {                              /* ddetype */
+typedef enum WIMP_MSGPD_DDE_ID {            /* ddetype */
 
 /* PD tramsmits */
     Wimp_MPD_DDE_SendSlotContents = 1,      /* C, no reply expected */
@@ -32,51 +32,51 @@ typedef enum {                              /* ddetype */
     Wimp_MPD_DDE_GraphClosed,               /* B; no reply */
     Wimp_MPD_DDE_DrawFileChanged,           /* D; no reply */
     Wimp_MPD_DDE_StopRequestUpdates         /* B; no immediate reply, updates don't SendSlotContents */
-} wimp_msgpd_dde_id;
+} WIMP_MSGPD_DDE_ID;
 
-typedef char wimp_msgpd_ddetypeA_text[236 -4 -12];
+typedef char WIMP_MSGPD_DDETYPEA_TEXT[236 -4 -12];
 
-typedef struct _wimp_msgpd_ddetypeA {
+typedef struct WIMP_MSGPD_DDETYPEA {
     int                         handle;
     int                         xsize;
     int                         ysize;
-    wimp_msgpd_ddetypeA_text    text;       /* leafname & tag, both 0-terminated */
-} wimp_msgpd_ddetypeA;
+    WIMP_MSGPD_DDETYPEA_TEXT    text;       /* leafname & tag, both 0-terminated */
+} WIMP_MSGPD_DDETYPEA;
 
-typedef struct _wimp_msgpd_ddetypeB {
+typedef struct WIMP_MSGPD_DDETYPEB {
     int     handle;
-} wimp_msgpd_ddetypeB;
+} WIMP_MSGPD_DDETYPEB;
 
-typedef enum {
+typedef enum WIMP_MSGPD_DDETYPEC_TYPE {
     Wimp_MPD_DDE_typeC_type_Text,
     Wimp_MPD_DDE_typeC_type_Number,
     Wimp_MPD_DDE_typeC_type_End
-} wimp_msgpd_ddetypeC_type;
+} WIMP_MSGPD_DDETYPEC_TYPE;
 
-typedef struct _wimp_msgpd_ddetypeC {
+typedef struct WIMP_MSGPD_DDETYPEC {
     int                         handle;
     int                         xoff;
     int                         yoff;
-    wimp_msgpd_ddetypeC_type    type;
-    union _wimp_msgpd_ddetypeC_content {
+    WIMP_MSGPD_DDETYPEC_TYPE    type;
+    union WIMP_MSGPD_DDETYPEC_CONTENT {
         char                        text[236 -4 -16]; /* textual content 0-terminated */
         double                      number;
     } content;
-} wimp_msgpd_ddetypeC;
+} WIMP_MSGPD_DDETYPEC;
 
-typedef struct _wimp_msgpd_ddetypeD {
+typedef struct WIMP_MSGPD_DDETYPED {
     char    leafname[236 -4];                   /* leafname of DrawFile, 0-terminated */
-} wimp_msgpd_ddetypeD;
+} WIMP_MSGPD_DDETYPED;
 
-typedef struct _wimp_msgpd_dde {                /* structure used in all PD DDE messages */
-    wimp_msgpd_dde_id id;
+typedef struct WIMP_MSGPD_DDE {                 /* structure used in all PD DDE messages */
+    WIMP_MSGPD_DDE_ID id;
 
-    union _wimp_msgpd_dde_type {
-        wimp_msgpd_ddetypeA a;
-        wimp_msgpd_ddetypeB b;
-        wimp_msgpd_ddetypeC c;
-        wimp_msgpd_ddetypeD d;
-    /*  wimp_msgpd_ddetypeE e;  (no body) */
+    union WIMP_MSGPD_DDE_TYPE {
+        WIMP_MSGPD_DDETYPEA a;
+        WIMP_MSGPD_DDETYPEB b;
+        WIMP_MSGPD_DDETYPEC c;
+        WIMP_MSGPD_DDETYPED d;
+    /*  WIMP_MSGPD_DDETYPEE e;  (no body) */
     } type;
 } wimp_msgpd_dde;
 
@@ -85,7 +85,7 @@ typedef struct _wimp_msgpd_dde {                /* structure used in all PD DDE 
 #endif
 
 #if defined(Wimp_MQuit)
-#error That's the wrong wimp.h - it's from tboxlibs not ACW. Methinks you haven't done the rlib_patch/apply.
+#error That is the wrong wimp.h - it is from tboxlibs not ACW. Methinks you have not done the rlib_patch/apply.
 #endif
 
 #endif /* __cs_wimp_h */

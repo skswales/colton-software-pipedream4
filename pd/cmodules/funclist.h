@@ -54,7 +54,7 @@ funclist_add(
     _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
     funclist_proc proc,
     P_ANY handle,
-    /*out*/ P_LIST_ITEMNO itemnop,
+    _OutRef_    P_LIST_ITEMNO itemnop,
     S32 tag,
     S32 priority,
     _InVal_     U32 extradata);

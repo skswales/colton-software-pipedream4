@@ -129,7 +129,6 @@ S32 saved_index = 0;
 /* ---------------------------- numbers.c ----------------------------------- */
 
 BOOL activity_indicator = FALSE;
-P_LIST_BLOCK draw_file_list = NULL;
 NLISTS_BLK draw_file_refs = { NULL, 0, 0 };
 
 /* ---------------------------- doprint.c ----------------------------------- */

@@ -16,13 +16,11 @@
 
 #define EV_MAX_ARGS         25      /* maximum number of arguments */
 
-/*-------------------------------------------------------------------------*/
-
 /*
 named resources
 */
 
-typedef struct _ev_name
+typedef struct EV_NAME
 {
     EV_NAMEID key;              /* internal id allocated to name */
     char id[BUF_EV_INTNAMLEN];  /* name of resource */
@@ -37,7 +35,7 @@ EV_NAME, * P_EV_NAME;
 user defined custom functions
 */
 
-typedef struct _ev_custom_args
+typedef struct EV_CUSTOM_ARGS
 {
     S32 n;                      /* number of arguments for custom */
     L1_U8Z id[EV_MAX_ARGS][BUF_EV_INTNAMLEN];
@@ -45,7 +43,7 @@ typedef struct _ev_custom_args
 }
 EV_CUSTOM_ARGS, * P_EV_CUSTOM_ARGS;
 
-typedef struct _ev_custom
+typedef struct EV_CUSTOM
 {
     EV_NAMEID key;              /* internal id for custom function */
     char id[BUF_EV_INTNAMLEN];  /* custom function name */
@@ -54,8 +52,6 @@ typedef struct _ev_custom
     EV_CUSTOM_ARGS args;        /* not pointer */
 }
 EV_CUSTOM, * P_EV_CUSTOM, ** P_P_EV_CUSTOM;
-
-/*-------------------------------------------------------------------------*/
 
 /*
 types for sort routines
@@ -69,7 +65,7 @@ typedef int (* sort_proctp) (
 types for exec routines
 */
 
-typedef void (* exec_proctp) (
+typedef void (* P_PROC_EXEC) (
     P_EV_DATA args[EV_MAX_ARGS],
     _InVal_     S32 nargs,
     _InoutRef_  P_EV_DATA p_ev_data_res,
@@ -85,11 +81,9 @@ extern void _p_proc_exec( \
 #define exec_func_ignore_parms() \
     (void) (IGNOREPARM(args), IGNOREPARM_InVal_(nargs), IGNOREPARM_InoutRef_(p_ev_data_res), IGNOREPARM_InRef_(p_cur_slr))
 
-/*-------------------------------------------------------------------------*/
-
 /* symbol information */
 
-typedef struct _SYM_INF
+typedef struct SYM_INF
 {
     EV_IDNO did_num;
     char sym_cr;
@@ -97,22 +91,25 @@ typedef struct _SYM_INF
 }
 SYM_INF, * P_SYM_INF;
 
-typedef struct fun_parmsD
+typedef struct FUN_PARMS
 {
-    unsigned int ex_type : 3;   /* exec, database, control, lookup */
-    unsigned int no_exec : 4;   /* parameter for functions with no exec routine */
-    unsigned int control : 4;   /* custom function control statements */
-    unsigned int datab   : 1;   /* database function */
-    unsigned int var     : 1;   /* function makes rpn variable */
-    unsigned int nodep   : 1;   /* function argument needs no dependency */
+    UBF ex_type : 3;    /* exec, database, control, lookup */
+    UBF no_exec : 4;    /* parameter for functions with no exec routine */
+    UBF control : 4;    /* custom function control statements */
+    UBF datab   : 1;    /* database function */
+    UBF var     : 1;    /* function makes RPN variable */
+    UBF nodep   : 1;    /* function argument needs no dependency */
 }
-fun_parms;
+FUN_PARMS;
+
+#define FP_AGG(ex_type, no_exec, control, datab, var, nodep) \
+    { (ex_type), (no_exec), (control), (datab), (var), (nodep) }
 
 /*
 exec types
 */
 
-enum exec_types
+enum EXEC_TYPES
 {
     EXEC_EXEC = 0,
     EXEC_DBASE,
@@ -125,7 +122,7 @@ enum exec_types
 parameters for non_exec functions
 */
 
-enum exec_control
+enum EXEC_CONTROL
 {
     CONTROL_GOTO,
     CONTROL_RESULT,
@@ -143,7 +140,7 @@ enum exec_control
     CONTROL_ENDIF
 };
 
-enum exec_dbase
+enum EXEC_DBASE
 {
     DBASE_DAVG,
     DBASE_DCOUNT,
@@ -157,7 +154,7 @@ enum exec_dbase
     DBASE_DVARP
 };
 
-enum exec_lookup
+enum EXEC_LOOKUP
 {
     LOOKUP_LOOKUP,
     LOOKUP_HLOOKUP,
@@ -169,34 +166,32 @@ enum exec_lookup
 #define LOOKUP_BREAK_COUNT 100
 
 /*
-table of rpn items
+table of RPN items
 */
 
-typedef struct _rpndef
+typedef struct RPNDEF
 {
     EV_IDNO     rpn_type;
-    signed char nargs;
-    char        category;
-    fun_parms   parms;
-    exec_proctp exec;
-    PC_EV_TYPE arg_types;  /* pointer to argument flags */
+    S8          nargs;
+    U8          category;
+    FUN_PARMS   parms;
+    P_PROC_EXEC p_proc_exec;
+    PC_EV_TYPE  arg_types;  /* pointer to argument flags */
 }
 RPNDEF; typedef const RPNDEF * PC_RPNDEF;
 
 /*
-rpn engine data block
+RPN engine data block
 */
 
-typedef struct rpnstate
+typedef struct RPNSTATE
 {
-    EV_IDNO num;            /* current rpn token number */
-    PC_U8 pos;              /* current position in rpn string */
+    EV_IDNO num;            /* current RPN token number */
+    PC_U8 pos;              /* current position in RPN string */
 }
-* rpnstatep;
+RPNSTATE, * P_RPNSTATE;
 
 #define DECOMP_ERR "Decompiler error"
-
-/*-------------------------------------------------------------------------*/
 
 /*
 compare SLRs
@@ -251,8 +246,6 @@ ranges overlap ?
     ((range2)->e.col >  (range1)->s.col) && \
     ((range2)->e.row >  (range1)->s.row) )
 
-/*-------------------------------------------------------------------------*/
-
 /*
 document flags
 */
@@ -264,7 +257,7 @@ document flags
 recalc todo list
 */
 
-typedef struct _todo_entry
+typedef struct TODO_ENTRY
 {
     EV_SLR slr;             /* slr to be done */
     EV_FLAGS flags;         /* flags about things */
@@ -276,7 +269,7 @@ definition of the structure of
 various dependency lists
 */
 
-typedef struct extentry
+typedef struct EXTENTRY
 {
     EV_RANGE  refto;        /* external reference to */
     U32       exthandle;    /* the outside world's bit */
@@ -286,7 +279,7 @@ typedef struct extentry
 }
 * extentp;
 
-typedef struct _range_use
+typedef struct RANGE_USE
 {
     EV_RANGE  refto;        /* range points to */
     EV_SLR    byslr;        /* slot containing range */
@@ -296,7 +289,7 @@ typedef struct _range_use
 }
 RANGE_USE, * P_RANGE_USE;
 
-typedef struct _slr_use
+typedef struct SLR_USE
 {
     EV_SLR    refto;        /* reference points to */
     EV_SLR    byslr;        /* slot containing reference */
@@ -309,7 +302,7 @@ SLR_USE, * P_SLR_USE;
 structure of name use table
 */
 
-typedef struct _name_use
+typedef struct NAME_USE
 {
     EV_NAMEID nameto;       /* reference to name.. */
     EV_SLR    byslr;        /* slot containing use of name */
@@ -322,7 +315,7 @@ NAME_USE, * P_NAME_USE;
 structure of custom function use table
 */
 
-typedef struct _custom_use
+typedef struct CUSTOM_USE
 {
     EV_NAMEID custom_to;    /* reference to custom.. */
     EV_SLR    byslr;        /* slot containing reference to custom */
@@ -348,25 +341,23 @@ table flags used in definition tables
 #define TRF_UNDEFINED   (EV_FLAGS)      8   /* custom function or name is undefined */
 #define TRF_CHECKUSE    (EV_FLAGS)      16  /* uses of definition must be checked */
 
-/*-------------------------------------------------------------------------*/
-
 /*
 array scanning data
 */
 
-typedef struct _array_scan_block
+typedef struct ARRAY_SCAN_BLOCK
 {
     P_EV_DATA p_ev_data; /* contains an array */
     S32 x_pos;
     S32 y_pos;
 }
-asblock, * asblockp;
+ARRAY_SCAN_BLOCK, * P_ARRAY_SCAN_BLOCK;
 
 /*
 range scanning data
 */
 
-typedef struct _range_scan_block
+typedef struct RANGE_SCAN_BLOCK
 {
     EV_RANGE range;
     EV_COL col_size;
@@ -374,11 +365,9 @@ typedef struct _range_scan_block
     EV_SLR pos;
     EV_SLR slr_of_result;
 }
-rsblock, * rsblockp;
+RANGE_SCAN_BLOCK, * P_RANGE_SCAN_BLOCK;
 
-/*-------------------------------------------------------------------------*/
-
-typedef struct stat_blockD
+typedef struct STAT_BLOCK
 {
     EV_IDNO function_id;
     S32 count;
@@ -391,13 +380,13 @@ typedef struct stat_blockD
     F64 result1;
     EV_DATA result_data;
 }
-stat_block, * stat_blockp;
+STAT_BLOCK, * P_STAT_BLOCK;
 
-typedef struct lookup_blockD
+typedef struct LOOKUP_BLOCK
 {
     EV_DATA target_data;
     EV_DATA result_data;
-    rsblock rsb;
+    RANGE_SCAN_BLOCK rsb;
     S32 in_range;
     S32 in_array;
     S32 lookup_id;
@@ -407,30 +396,31 @@ typedef struct lookup_blockD
     S32 match;
     S32 had_one;
 }
-look_block, * look_blockp;
-
-/*-------------------------------------------------------------------------*/
+LOOKUP_BLOCK, * P_LOOKUP_BLOCK;
 
 /*
 evaluator stack definition
 */
 
-struct stack_visit_slot
+typedef struct STACK_VISIT_SLOT
 {
-    struct ev_grub_state grubb;
-};
+    struct EV_GRUB_STATE grubb;
+}
+STACK_VISIT_SLOT;
 
-struct stack_visit_range
+typedef struct STACK_VISIT_RANGE
 {
     EV_RANGE range;
-};
+}
+STACK_VISIT_RANGE;
 
-struct stack_visit_name
+typedef struct STACK_VISIT_NAME
 {
     EV_NAMEID nameid;
-};
+}
+STACK_VISIT_NAME;
 
-typedef struct stack_in_calc
+typedef struct STACK_IN_CALC
 {
     S32 offset;
     S32 type;
@@ -443,25 +433,27 @@ typedef struct stack_in_calc
     S32 travel_res;
     EV_SERIAL start_calc;
 }
-* stack_sicp;
+STACK_IN_CALC, * P_STACK_IN_CALC;
 
-enum in_calc_types
+enum IN_CALC_TYPES
 {
     INCALC_SLR,
     INCALC_PTR
 };
 
-struct stack_in_eval
+typedef struct STACK_IN_EVAL
 {
     S32 stack_offset;
-};
+}
+STACK_IN_EVAL;
 
-struct stack_data_item
+typedef struct STACK_DATA_ITEM
 {
     EV_DATA data;
-};
+}
+STACK_DATA_ITEM;
 
-typedef struct stack_control_loop
+typedef struct STACK_CONTROL_LOOP
 {
     S32 control_type;
     EV_SLR origin_slot;
@@ -469,27 +461,27 @@ typedef struct stack_control_loop
     F64 end;
     EV_NAMEID nameid;
 }
-* stack_sclp;
+STACK_CONTROL_LOOP, * P_STACK_CONTROL_LOOP;
 
-typedef struct stack_dbase_function
+typedef struct STACK_DBASE
 {
     EV_SLR dbase_slot;
     EV_RANGE dbase_rng;
     S16 cond_pos;
     EV_SLR offset;
-    stat_blockp stbp;
+    P_STAT_BLOCK p_stat_block;
 }
-* stack_dbasep;
+STACK_DBASE, * P_STACK_DBASE;
 
-typedef struct stack_lookup
+typedef struct STACK_LOOKUP
 {
     EV_DATA arg1;
     EV_DATA arg2;
-    look_blockp lkbp;
+    P_LOOKUP_BLOCK p_lookup_block;
 }
-* stack_lkp;
+STACK_LOOKUP, * P_STACK_LOOKUP;
 
-typedef struct _stack_executing_custom
+typedef struct STACK_EXECUTING_CUSTOM
 {
     S32 stack_base;
     S32 nargs;
@@ -503,11 +495,11 @@ typedef struct _stack_executing_custom
 }
 STACK_EXECUTING_CUSTOM, * P_STACK_EXECUTING_CUSTOM;
 
-typedef struct _stack_processing_array
+typedef struct STACK_PROCESSING_ARRAY
 {
     S32 stack_base;
     S32 nargs;
-    exec_proctp exec;
+    P_PROC_EXEC exec;
     S32 xpos;
     S32 ypos;
     S32 type_count;
@@ -515,35 +507,36 @@ typedef struct _stack_processing_array
 }
 STACK_PROCESSING_ARRAY, * P_STACK_PROCESSING_ARRAY;
 
-struct stack_alert_input
+typedef struct STACK_ALERT_INPUT
 {
     S32 alert_input;
     char name_id[BUF_EV_INTNAMLEN];
-};
+}
+STACK_ALERT_INPUT;
 
-typedef struct _stack_entry
+typedef struct STACK_ENTRY
 {
     EV_SLR slr;                 /* slot to which entry relates */
-    EV_FLAGS flags;             /* flags about entry */
+    EV_FLAGS stack_flags;       /* flags about entry */
     char type;                  /* type of impure part of entry */
 
-    union _stack_entry_data
+    union STACK_ENTRY_DATA
     {
-        struct stack_visit_slot         svs;
-        struct stack_visit_name         svn;
-        struct stack_visit_range        svr;
-        struct stack_in_calc            sic;
-        struct stack_in_eval            sie;
-        struct stack_data_item          sdi;
-        struct stack_control_loop       scl;
-        struct stack_dbase_function     sdb;
-        struct stack_lookup             slk;
+        STACK_VISIT_SLOT stack_visit_slot;
+        STACK_VISIT_NAME stack_visit_name;
+        STACK_VISIT_RANGE stack_visit_range;
+        STACK_IN_CALC stack_in_calc;
+        STACK_IN_EVAL stack_in_eval;
+        STACK_DATA_ITEM stack_data_item;
+        STACK_CONTROL_LOOP stack_control_loop;
+        STACK_DBASE stack_dbase;
+        STACK_LOOKUP stack_lookup;
         STACK_EXECUTING_CUSTOM stack_executing_custom;
-        struct _stack_processing_array  spa;
-        struct stack_alert_input        sai;
+        STACK_PROCESSING_ARRAY stack_processing_array;
+        STACK_ALERT_INPUT stack_alert_input;
     } data;
 }
-STACK_ENTRY, * stack_entryp;
+STACK_ENTRY, * P_STACK_ENTRY;
 
 #define STACK_INC 20 /* size of stack increments */
 
@@ -556,7 +549,7 @@ definition of stack entry flags
 #define STF_INCUSTOM        4   /* we are inside a custom */
 #define STF_CIRCSOURCE      8   /* slot is source of circular reference */
 
-enum stack_types
+enum STACK_TYPES
 {
     VISIT_SLOT         ,
     VISIT_SUPPORTRNG   ,
@@ -577,13 +570,11 @@ enum stack_types
    _ERROR
 };
 
-enum recalc_states
+enum RECALC_STATES
 {
     SAME_STATE         = 0,
     NEW_STATE
 };
-
-/*-------------------------------------------------------------------------*/
 
 /*
 ev_comp.c external functions
@@ -819,22 +810,22 @@ PROC_EXEC_PROTO(c_year);
 
 extern void
 dbase_sub_function(
-    stack_dbasep sdbp,
+    P_STACK_DBASE p_stack_dbase,
     P_EV_DATA cond_flagp);
 
 extern void
 dbase_sub_function_finish(
     P_EV_DATA p_ev_data,
-    stack_dbasep sdbp);
+    P_STACK_DBASE p_stack_dbase);
 
 extern S32
 lookup_array_range_proc(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     P_EV_DATA p_ev_data);
 
 extern void
 lookup_block_init(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     _InRef_opt_ P_EV_DATA p_ev_data_target,
     S32 lookup_id,
     S32 choose_count,
@@ -843,11 +834,11 @@ lookup_block_init(
 extern void
 lookup_finish(
     P_EV_DATA p_ev_data_res,
-    stack_lkp slkp);
+    P_STACK_LOOKUP p_stack_lookup);
 
 extern void
 stat_block_init(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     S32 function_id,
     F64 parm,
     F64 parm1);
@@ -897,13 +888,13 @@ array_range_sizes(
 
 extern S32
 array_scan_element(
-    asblockp asbp,
+    _InoutRef_  P_ARRAY_SCAN_BLOCK asbp,
     P_EV_DATA p_ev_data,
     EV_TYPE type_flags);
 
 extern S32
 array_scan_init(
-    asblockp asbp,
+    _OutRef_    P_ARRAY_SCAN_BLOCK asbp,
     P_EV_DATA p_ev_data);
 
 extern STATUS
@@ -937,11 +928,11 @@ range_next(
 extern S32
 range_scan_init(
     _InRef_     PC_EV_RANGE p_ev_range,
-    _OutRef_    rsblockp rsbp);
+    _OutRef_    P_RANGE_SCAN_BLOCK rsbp);
 
 extern S32
 range_scan_element(
-    _InoutRef_  rsblockp rsbp,
+    _InoutRef_  P_RANGE_SCAN_BLOCK rsbp,
     P_EV_DATA p_ev_data,
     EV_TYPE type_flags);
 
@@ -1093,16 +1084,19 @@ ensure_name_in_list(
     _InVal_     EV_DOCNO owner_docno,
     _In_z_      PC_USTR name);
 
+_Check_return_
 extern EV_NAMEID
 find_custom_in_list(
     _InVal_     EV_DOCNO owner_docno,
     _In_z_      PC_USTR custom_name);
 
+_Check_return_
 extern EV_NAMEID
 find_name_in_list(
     _InVal_     EV_DOCNO owner_docno,
     _In_z_      PC_USTR name);
 
+_Check_return_
 extern EV_NAMEID
 custom_def_find(
     EV_NAMEID key);
@@ -1115,6 +1109,10 @@ custom_list_sort(void);
     ? ((P_EV_CUSTOM) custom_def.ptr + (S32) (custom_num)) \
     : NULL )
 
+#define custom_ptr_must(custom_num) ( \
+    ((P_EV_CUSTOM) custom_def.ptr + (S32) (custom_num)) )
+
+_Check_return_
 extern EV_NAMEID
 name_def_find(
     EV_NAMEID key);
@@ -1138,6 +1136,9 @@ name_make(
     ? ((P_EV_NAME) names_def.ptr + (S32) (name_num)) \
     : NULL )
 
+#define name_ptr_must(name_num) ( \
+    ((P_EV_NAME) names_def.ptr + (S32) (name_num)) )
+
 /*
 ev_rpn.c external functions
 */
@@ -1159,7 +1160,7 @@ len_rpn(
 
 extern void
 read_cur_sym(
-    rpnstatep rpnsp,
+    P_RPNSTATE rpnsp,
     P_EV_DATA p_ev_data);
 
 #define read_from_rpn(to, from, size) \
@@ -1190,7 +1191,7 @@ read_slr(
 
 extern EV_IDNO
 rpn_skip(
-    rpnstatep rpnsp);
+    P_RPNSTATE rpnsp);
 
 extern S32
 write_nameid(
@@ -1237,7 +1238,7 @@ type_lookup(
 ev_tree.c
 */
 
-extern DEPTABLE custom_use_table;
+extern DEPTABLE custom_use_deptable;
 
 extern DEPTABLE namtab;
 
@@ -1326,8 +1327,8 @@ todo_remove_slr(
     : NULL )
 
 #define tree_macptr(entry) ( \
-    custom_use_table.ptr \
-    ? (P_CUSTOM_USE) custom_use_table.ptr + (S32) (entry) \
+    custom_use_deptable.ptr \
+    ? (P_CUSTOM_USE) custom_use_deptable.ptr + (S32) (entry) \
     : NULL )
 
 #define tree_namptr(entry) ( \
@@ -1355,8 +1356,6 @@ tree_sort(
 
 extern void
 tree_sort_all(void);
-
-/*-------------------------------------------------------------------------*/
 
 #endif /* __evali_h */
 

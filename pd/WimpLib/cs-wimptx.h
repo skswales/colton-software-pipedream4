@@ -37,9 +37,19 @@
 wimpt.c
 */
 
-extern wimp_errflags
-wimpt_reporterror_rf(os_error *, wimp_errflags);
-/* Like wimp_reporterror, but fills in the program name. */
+/* ----------------------- wimpt_set_spritename ---------------------------
+ * Description:   Sets a sprite name to use when the application reports
+ *                info / warning / errors using the Window Manager
+ *                for RISC OS 3.5 and later.
+ *
+ *                If omitted, the Window Manager looks for !<application>.
+*/
+
+extern void
+wimpt_set_spritename(const char * spritename);
+
+extern const char *
+wimpt_get_spritename(void);
 
 /* ----------------------- wimpt_set_taskname -----------------------------
  * Description:   Sets a name by which the application is registered with

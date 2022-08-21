@@ -35,8 +35,7 @@ static BOOL extended_highlights;
 static BOOL had_subscript;
 static BOOL had_superscript;
 
-#define OPT_TABLE struct _opt_table
-OPT_TABLE
+struct OPT_TABLE
 {
     uchar p_OFFset;     /* offset in d_poptions */
     uchar v_default;
@@ -56,7 +55,7 @@ OPT_TABLE
 #define O_PB    ((uchar) 132)
 #define O_HT    ((uchar) 133)
 
-static OPT_TABLE view_opts[] =
+static struct OPT_TABLE view_opts[] =
 {
     {   O_PL,   66,         'P',    'L',    FALSE   },
     {   O_HE,   255,        'D',    'H',    FALSE   },
@@ -439,7 +438,7 @@ view_get_stored_command(
     P_U8 to;
     S32 ch, add_in;
     S32 number, option;
-    OPT_TABLE *optptr;
+    struct OPT_TABLE *optptr;
 
     ch1 = pd_file_getc(loadinput);
     if(!isupper(ch1))

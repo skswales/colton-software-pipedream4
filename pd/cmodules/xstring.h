@@ -7,7 +7,7 @@
 /* Copyright (C) 1990-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Library module for string handling (eg MS extensions in RISC OS) */
+/* Library module for string handling */
 
 /* SKS May 1990 */
 
@@ -125,7 +125,7 @@ stox(
     _OutRef_    P_S32 p_col);
 
 extern S32
-xtos_ubuf(
+xtos_ustr_buf(
     _Out_writes_z_(elemof_buffer) P_USTR buffer /*filled*/,
     _InVal_     U32 elemof_buffer,
     _InVal_     S32 x,
@@ -141,29 +141,27 @@ xustrlen32(
 strcpy / _s() etc. replacements that ensure NULLCH-termination
 */
 
-#define TRUNCATE U32_MAX
-
 extern void
-safe_strkat(
+xstrkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src);
 
 extern void
-safe_strnkat(
+xstrnkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,
     _InVal_     U32 src_n);
 
 extern void
-safe_strkpy(
+xstrkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src);
 
 extern void
-safe_strnkpy(
+xstrnkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,
@@ -171,21 +169,48 @@ safe_strnkpy(
 
 #if USTR_IS_L1STR
 
-#define safe_ustrkat  safe_strkat
-#define safe_ustrnkat safe_strnkat
-#define safe_ustrkpy  safe_strkpy
-#define safe_ustrnkpy safe_strnkpy
+#define ustr_xstrkat  xstrkat
+#define ustr_xstrnkat xstrnkat
+#define ustr_xstrkpy  xstrkpy
+#define ustr_xstrnkpy xstrnkpy
 
 #endif /* USTR_IS_L1STR */
 
 #if TSTR_IS_L1STR
 
-#define safe_tstrkat  safe_strkat
-#define safe_tstrnkat safe_strnkat
-#define safe_tstrkpy  safe_strkpy
-#define safe_tstrnkpy safe_strnkpy
+#define tstr_xstrkat  xstrkat
+#define tstr_xstrnkat xstrnkat
+#define tstr_xstrkpy  xstrkpy
+#define tstr_xstrnkpy xstrnkpy
 
 #endif /* TSTR_IS_L1STR */
+
+#define ustr_IncByte(ustr__ref) \
+    PtrIncBytes(PC_USTR, ustr__ref, 1)
+
+#define ustr_IncByte_wr(ustr_wr__ref) \
+    PtrIncBytes(P_USTR, ustr_wr__ref, 1)
+
+#define ustr_IncBytes(ustr__ref, add) \
+    PtrIncBytes(PC_USTR, ustr__ref, add)
+
+#define ustr_IncBytes_wr(ustr_wr__ref, add) \
+    PtrIncBytes(P_USTR, ustr_wr__ref, add)
+
+#define ustr_DecByte(ustr__ref) \
+    PtrDecBytes(PC_USTR, ustr__ref, 1)
+
+#define ustr_DecByte_wr(ustr__ref) \
+    PtrDecBytes(P_USTR, ustr__ref, 1)
+
+#define ustr_AddBytes(ustr, add) \
+    PtrAddBytes(PC_USTR, ustr, add)
+
+#define ustr_AddBytes_wr(ustr_wr, add) \
+    PtrAddBytes(P_USTR, ustr_wr, add)
+
+#define ustr_SkipSpaces(ustr__ref) \
+    PtrSkipSpaces(PC_USTR, ustr__ref)
 
 _Check_return_
 extern int __cdecl
@@ -205,14 +230,14 @@ xvsnprintf(
 
 #if USTR_IS_L1STR
 
-#define  xusnprintf  xsnprintf
-#define xuvsnprintf xvsnprintf
+#define  ustr_xsnprintf  xsnprintf
+#define ustr_xvsnprintf xvsnprintf
 
 #else /* USTR_IS_L1STR */
 
 _Check_return_
 extern int __cdecl
-xusnprintf(
+ustr_xsnprintf(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_ _Printf_format_string_ PC_USTR format,
@@ -220,7 +245,7 @@ xusnprintf(
 
 _Check_return_
 extern int __cdecl
-xuvsnprintf(
+ustr_xvsnprintf(
     _Out_writes_z_(dst_n) P_USTR,
     _InVal_     U32 dst_n,
     _In_z_ _Printf_format_string_ PC_USTR format,
@@ -230,14 +255,14 @@ xuvsnprintf(
 
 #if TSTR_IS_L1STR
 
-#define  xtsnprintf  xsnprintf
-#define xtvsnprintf xvsnprintf
+#define  tstr_xsnprintf  xsnprintf
+#define tstr_xvsnprintf xvsnprintf
 
 #else /* TSTR_IS_L1STR */
 
 _Check_return_
 extern int __cdecl
-xtsnprintf(
+tstr_xsnprintf(
     _Out_writes_z_(dst_n) PTSTR dst,
     _InVal_     U32 dst_n,
     _In_z_ _Printf_format_string_ PCTSTR format,
@@ -245,7 +270,7 @@ xtsnprintf(
 
 _Check_return_
 extern int __cdecl
-xtvsnprintf(
+tstr_xvsnprintf(
     _Out_writes_z_(dst_n) PTSTR,
     _InVal_     U32 dst_n,
     _In_z_ _Printf_format_string_ PCTSTR format,

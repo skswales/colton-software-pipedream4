@@ -241,7 +241,7 @@ string(101, help_colh_inexpression_line,        "You are editing a formula in th
 
 string(102, help_colh_inexpression_box,         "You are editing a formula in the formula window so this button cannot perform its associated command.");
 
-string(103, help_top_left_corner,               "Double-click SELECT in this icon to mark the sheet.|M"
+string(103, help_top_left_corner,               "Click SELECT in this icon to mark the sheet.|M"
                                                 "Click ADJUST to clear a marked block.|M");
 
 string(104, help_col_border,                    "Drag SELECT along the column border to mark all rows in those columns.|M"
@@ -657,7 +657,10 @@ string(525, menu_function_numinfo_range_title,  "Ranges");
 string(526, menu_function_numinfo_name_title,   "Names");
 
 string(527, menu_function_textinfo_title,       "Text slot");
-string(528, menu_function_textinfo_entries,     "Compile/Show error");
+string(528, menu_function_textinfo_entries,     "Compile/Show error,"
+                                                "Dependent slots,Dependent ranges,Dependent names");
+
+string(560, menu_function_textinfo_title_blank, "Empty slot");
 
 string(529, formwind_menu_title,                "Formula");
 
@@ -754,7 +757,7 @@ string(928, colh_button_leadtrail,              "Click SELECT to apply leading c
 string(929, colh_button_decplaces,              "Click SELECT to vary the number of decimal places displayed in the current slot or marked block.");
 /* use 930 as next help */
 
-/* use 560 as next if adding at end */
+/* use 561 as next if adding at end */
 
 /* use 428 as next in middle */
 

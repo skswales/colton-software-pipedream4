@@ -66,10 +66,10 @@ vtracef(
     if(!tracing(mask))
         return;
 
-#if RISCOS
-    (void) vsnprintf(trace_buffer, elemof32(trace_buffer), format, args);
-#else
-    (void) _vsntprintf_s(trace_buffer, elemof32(trace_buffer), _TRUNCATE, format, args);
+#if WINDOWS
+    consume_int(_vsntprintf_s(trace_buffer, elemof32(trace_buffer), _TRUNCATE, format, args));
+#else /* C99 CRT */
+    consume_int(vsnprintf(trace_buffer, elemof32(trace_buffer), format, args));
 #endif
 
     report_output(trace_buffer);

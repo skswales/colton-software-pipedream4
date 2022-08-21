@@ -577,8 +577,8 @@ enhancements to win.c
 data structure for win-controlled windows - exists as long as window, even if hidden
 */
 
-typedef struct win__str {
-  struct win__str *link;
+typedef struct WIN__STR {
+  struct WIN__STR *link;
 
   wimp_w w;
   win_new_event_handler proc;
@@ -587,31 +587,31 @@ typedef struct win__str {
   void *menuh;
 
   wimp_w parentw;  /* parent window handle if a child */
-  struct _win__child_str *children; /* windows can have children hanging off them */
+  struct WIN__CHILD_STR *children; /* windows can have children hanging off them */
 
   wimp_i menuhi_i; /* icon to which menu is registered */
   void * menuhi;   /* registered icon menu (if any) */
 
   /* extra data follows here */
-} win__str;
+} WIN__STR;
 
-#define WIN_OFFSET_MENUH    ((int) offsetof(win__str, menuh)    - (int) sizeof(win__str))
-#define WIN_OFFSET_PARENTW  ((int) offsetof(win__str, parentw)  - (int) sizeof(win__str))
-#define WIN_OFFSET_CHILDREN ((int) offsetof(win__str, children) - (int) sizeof(win__str))
+#define WIN_OFFSET_MENUH    ((int) offsetof(WIN__STR, menuh)    - (int) sizeof(WIN__STR))
+#define WIN_OFFSET_PARENTW  ((int) offsetof(WIN__STR, parentw)  - (int) sizeof(WIN__STR))
+#define WIN_OFFSET_CHILDREN ((int) offsetof(WIN__STR, children) - (int) sizeof(WIN__STR))
 
-static win__str *win__window_list = NULL;
+static WIN__STR * win__window_list = NULL;
 
 /*
 data structure for child windows hanging off a parent window
 */
 
-typedef struct _win__child_str
+typedef struct WIN__CHILD_STR
 {
-    struct _win__child_str *link;
+    struct WIN__CHILD_STR *link;
     wimp_w w; /* window handle of child */
     int x, y; /* offsets of child x0,y1 from parent x0,y1 */
 }
-win__child_str;
+WIN__CHILD_STR;
 
 static wimp_w win__drag_w = 0;
 
@@ -620,7 +620,7 @@ static wimp_w win_submenu_w = 0;
 static BOOL win__register_new(wimp_w w, win_new_event_handler eventproc, void *handle, int new_proc)
 {
     /* search list to see if it's already there */
-    win__str *p = (win__str *) &win__window_list;
+    WIN__STR *p = (WIN__STR *) &win__window_list;
     BOOL new_thing = TRUE;
 
     while((p = p->link) != NULL)
@@ -633,7 +633,7 @@ static BOOL win__register_new(wimp_w w, win_new_event_handler eventproc, void *h
     }
 
     if(new_thing)
-        p = wlalloc_calloc(1, sizeof(win__str)); /* zeroing */
+        p = wlalloc_calloc(1, sizeof(WIN__STR)); /* zeroing */
 
     if(p)
     {
@@ -665,12 +665,14 @@ BOOL win_register_new_event_handler(wimp_w w, win_new_event_handler newproc, voi
   }
 }
 
+#define win__str WIN__STR
+
 #include "win.c"
 
 extern os_error *
 win_drag_box(wimp_dragstr * dr)
 {
-    win__str *p = win__find(dr->window);
+    WIN__STR *p = win__find(dr->window);
 
     /* MUST be valid, unlike what PRM doc says, due to changed event handling here */
     myassert1x(p != NULL, "win_drag_box for unregistered window &%p", dr->window);
@@ -683,7 +685,7 @@ win_drag_box(wimp_dragstr * dr)
 extern void
 win_setmenuhi(wimp_w w, wimp_i i, void *handle)
 {
-    win__str *p;
+    WIN__STR *p;
 
     if(i == (wimp_i) -1)
         {
@@ -703,7 +705,7 @@ win_setmenuhi(wimp_w w, wimp_i i, void *handle)
 extern void *
 win_getmenuhi(wimp_w w, wimp_i i) /* 0 if not set */
 {
-    win__str *p;
+    WIN__STR *p;
 
     if(i == (wimp_i) -1)
         return(win_getmenuh(w));
@@ -726,9 +728,9 @@ win_getmenuhi(wimp_w w, wimp_i i) /* 0 if not set */
 extern BOOL
 win_register_child(wimp_w parentw, wimp_w w)
 {
-    win__str *parp = win__find(parentw);
-    win__str *chip = win__find(w);
-    win__child_str *c;
+    WIN__STR *parp = win__find(parentw);
+    WIN__STR *chip = win__find(w);
+    WIN__CHILD_STR *c;
     wimp_wstate     wstate;
     int             parx, pary;
 
@@ -743,7 +745,7 @@ win_register_child(wimp_w parentw, wimp_w w)
         return(FALSE);
 
     /* search parent's child list to see if it's already there */
-    c = (win__child_str *) &parp->children;
+    c = (WIN__CHILD_STR *) &parp->children;
 
     while((c = c->link) != NULL)
         if(c->w == w)
@@ -752,7 +754,7 @@ win_register_child(wimp_w parentw, wimp_w w)
 
     if(!c)
     {
-        c = wlalloc_calloc(1, sizeof(win__child_str)); /* zeroing */
+        c = wlalloc_calloc(1, sizeof(WIN__CHILD_STR)); /* zeroing */
 
         if(c)
         {
@@ -793,10 +795,10 @@ win_register_child(wimp_w parentw, wimp_w w)
 extern BOOL
 win_deregister_child(wimp_w w)
 {
-    win__str *parp;
-    win__str *chip = win__find(w);
-    win__child_str *pp;
-    win__child_str *cp;
+    WIN__STR *parp;
+    WIN__STR *chip = win__find(w);
+    WIN__CHILD_STR *pp;
+    WIN__CHILD_STR *cp;
 
     tracef1("win_deregister_child(child %p): ", w);
 
@@ -815,7 +817,7 @@ win_deregister_child(wimp_w w)
     chip->parentw = NULL_WIMP_W;
 
     /* remove child window from parent's list */
-    pp = (win__child_str *) &parp->children;
+    pp = (WIN__CHILD_STR *) &parp->children;
 
     while((cp = pp->link) != NULL)
     {
@@ -864,8 +866,8 @@ win_close_wind(wimp_w w)
 {
     os_error * e = NULL;
     os_error * e1;
-    win__str *p = win__find(w);
-    win__child_str *c;
+    WIN__STR *p = win__find(w);
+    WIN__CHILD_STR *c;
 
     if(!p)
         return(NULL);
@@ -893,7 +895,7 @@ win_close_wind(wimp_w w)
         win_deregister_child(w);
 
     /* loop closing child windows */
-    c = (win__child_str *) &p->children;
+    c = (WIN__CHILD_STR *) &p->children;
     while((c = c->link) != NULL)
     {
         e1 = win_close_wind(c->w);
@@ -917,7 +919,7 @@ win_delete_wind(wimp_w * wp)
 {
     os_error * e;
     os_error * e1;
-    win__str *p;
+    WIN__STR *p;
     wimp_w w = *wp;
 
     if(!w)
@@ -1011,8 +1013,8 @@ win_open_wind(wimp_openstr * o)
     wimp_w           w = o->w;
     os_error * e;
     os_error * e1 = NULL;
-    win__str *       p = win__find(w);
-    win__child_str * c;
+    WIN__STR *       p = win__find(w);
+    WIN__CHILD_STR * c;
     wimp_openstr     childo;
     wimp_wstate      wstate;
     wimp_w           behind = o->behind;
@@ -1036,7 +1038,7 @@ win_open_wind(wimp_openstr * o)
             }
 
             /* loop trying to open child windows at new positions */
-            c = (win__child_str *) &p->children;
+            c = (WIN__CHILD_STR *) &p->children;
             while((c = c->link) != NULL)
             {
                 childo.w      = c->w;
@@ -1062,7 +1064,7 @@ win_open_wind(wimp_openstr * o)
     if(p)
     {
         /* loop reopening panes with now-corrected coords */
-        c = (win__child_str *) &p->children;
+        c = (WIN__CHILD_STR *) &p->children;
         while((c = c->link) != NULL)
         {
             wimpt_safe(wimp_get_wind_state(c->w, &wstate));

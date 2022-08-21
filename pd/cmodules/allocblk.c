@@ -38,7 +38,7 @@ alloc_block_create(
     P_ALLOCBLOCK lpAllocBlock;
     const U32 n_bytes_alloc = ALLOCBLOCK_ROUNDUP(n_bytes_wanted);
 
-    if(NULL != (*lplpAllocBlock = lpAllocBlock = al_ptr_alloc_bytes(ALLOCBLOCK, n_bytes_alloc, &status)))
+    if(NULL != (*lplpAllocBlock = lpAllocBlock = al_ptr_alloc_bytes(P_ALLOCBLOCK, n_bytes_alloc, &status)))
     {
         lpAllocBlock->next = NULL;
         lpAllocBlock->hwm = ALLOCBLOCK_ROUNDUP(sizeof32(*lpAllocBlock));
@@ -85,7 +85,7 @@ __pragma(warning(pop))
 ******************************************************************************/
 
 _Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes_requested, 0) /* may be NULL */
+_Ret_writes_to_maybenull_(n_bytes_requested, 0) /* may be NULL */
 extern P_BYTE
 alloc_block_malloc(
     _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock,
@@ -102,7 +102,7 @@ alloc_block_malloc(
         U32 new_block_size = lpAllocBlock->size;
         P_ALLOCBLOCK new_lpAllocBlock;
 
-        if(NULL == (new_lpAllocBlock = al_ptr_alloc_bytes(ALLOCBLOCK, new_block_size, p_status)))
+        if(NULL == (new_lpAllocBlock = al_ptr_alloc_bytes(P_ALLOCBLOCK, new_block_size, p_status)))
             return(NULL);
 
         new_lpAllocBlock->next = lpAllocBlock;

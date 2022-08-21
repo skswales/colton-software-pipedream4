@@ -143,7 +143,7 @@ gr_chartedit_cep_from_ceh(
 
     if(ceh)
         {
-        cep = collect_search(&gr_chart_editors.lbr, (LIST_ITEMNO) ceh);
+        cep = collect_goto_item(GR_CHARTEDITOR, &gr_chart_editors.lbr, (LIST_ITEMNO) ceh);
 
         myassert1x(cep != NULL, "gr_chartedit_cep_from_ceh: failed to find chart editor handle &%p", ceh);
         }
@@ -208,9 +208,9 @@ gr_chartedit_dispose(
     /* kill the link from chart to editor */
     cp->core.ceh = 0;
 
-    for(t = collect_first(&cp->text.lbr, &key);
+    for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
         t;
-        t = collect_next(&cp->text.lbr, &key))
+        t = collect_next( GR_TEXT, &cp->text.lbr, &key))
         {
         /* kill off the editing window for this object if there is one */
         if(t->bits.being_edited)
@@ -303,7 +303,7 @@ gr_chartedit_new(
     /* add to list of chart editors */
     key = cepkey_gen++;
 
-    if(NULL == (cep = collect_add_entry(&gr_chart_editors, sizeof32(*cep), &key, &res)))
+    if(NULL == (cep = collect_add_entry_elem(GR_CHARTEDITOR, &gr_chart_editors, &key, &res)))
         return(res);
 
     zero_struct_ptr(cep);
@@ -864,7 +864,7 @@ gr_chartedit_selection_make_repr(
             if((cep->selection.box.y1 - cep->selection.box.y0) < 2 * GR_PIXITS_PER_RISCOS)
                 cep->selection.box.y1 = cep->selection.box.y0  + 2 * GR_PIXITS_PER_RISCOS;
 
-            gr_box_xform((P_GR_BOX) &draw_box, &cep->selection.box, &gr_riscdiag_riscDraw_from_pixit_xformer);
+            draw_box_from_gr_box(&draw_box, &cep->selection.box);
 
             res = gr_riscdiag_rectangle_new(&cep->selection.p_gr_diag->gr_riscdiag, &selectionPathStart,
                                             &draw_box, &linestyle, NULL);
@@ -896,7 +896,7 @@ static S32
 gr_riscdiag_path_render(
     P_GR_RISCDIAG p_gr_riscdiag,
     GR_DIAG_OFFSET pathStart,
-    gr_riscdiag_renderinfocp rip)
+    PC_GR_RISCDIAG_RENDERINFO rip)
 {
     P_DRAW_OBJECT pObject;
     P_DRAW_DASH_HEADER line_dash_pattern = NULL;
@@ -995,7 +995,7 @@ gr_chartedit_selection_xor_core(
 {
     P_GR_CHART cp;
     wimp_redrawstr r;
-    gr_riscdiag_renderinfo rin;
+    GR_RISCDIAG_RENDERINFO rin;
 
     if(!cep->selection.p_gr_diag->gr_riscdiag.draw_diag.length)
         return;
@@ -1145,7 +1145,7 @@ gr_chartedit_setwintitle(
         gr_chartedit_notify(cep, GR_CHARTEDIT_NOTIFY_TITLEREQ, &t);
 
         if(cp->core.modified)
-            safe_strkat(t.title, elemof32(t.title), " *");
+            xstrkat(t.title, elemof32(t.title), " *");
 
         win_settitle(cep->riscos.w, t.title);
         }
@@ -1629,7 +1629,7 @@ gr_chartedit_riscos_button_click(
                         if(cp->d3.bits.use)
                             ++eaxes;
 
-                        eaxes *= (cp->axes_max + 1);
+                        eaxes *= (cp->axes_idx_max + 1);
 
                         ++id.no;
 
@@ -1656,7 +1656,7 @@ gr_chartedit_riscos_button_click(
                         /* deliberate drop thru ... */
 
                     case GR_CHART_OBJNAME_LEGEND:
-                        gr_chart_objid_from_series(0, &id);
+                        gr_chart_objid_from_series_no(0, &id);
                         goto select_next_series;
                         break;
 
@@ -1680,11 +1680,11 @@ gr_chartedit_riscos_button_click(
                     case GR_CHART_OBJNAME_POINT:
                     case GR_CHART_OBJNAME_DROPPOINT:
                         {
-                        GR_SERIES_IX seridx;
+                        GR_SERIES_IDX series_idx;
 
-                        seridx = gr_series_ix_from_external(cp, id.no);
+                        series_idx = gr_series_idx_from_external(cp, id.no);
 
-                        if(++id.subno > (U32) gr_travel_series_n_items_total(cp, seridx))
+                        if(++id.subno > (U32) gr_travel_series_n_items_total(cp, series_idx))
                             {
                             /* try finding P1 of next series */
                             id.subno = 1;
@@ -1701,7 +1701,7 @@ gr_chartedit_riscos_button_click(
 
                         key = id.no;
 
-                        if((t = collect_next(&cp->text.lbr, &key)) == NULL)
+                        if((t = collect_next(GR_TEXT, &cp->text.lbr, &key)) == NULL)
                             goto default_case;
 
                         id.no = (U8) key;

@@ -41,9 +41,9 @@ add_path_using_dir( /* never relative to current document */
         return(file_readable(src) > 0);
 
     /* first try looking up dir.src along path */
-    safe_strkpy(buffer, elemof32(buffer), dir);
-    safe_strkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
-    safe_strkat(buffer, elemof32(buffer), src);
+    xstrkpy(buffer, elemof32(buffer), dir);
+    xstrkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
+    xstrkat(buffer, elemof32(buffer), src);
 
     res = file_find_on_path(filename, elemof_buffer, buffer);
 
@@ -76,9 +76,9 @@ add_path_or_relative_using_dir( /* may be relative to current document */
         return(file_readable(src) > 0);
 
     /* first try looking up dir.src along path */
-    safe_strkpy(buffer, elemof32(buffer), dir);
-    safe_strkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
-    safe_strkat(buffer, elemof32(buffer), src);
+    xstrkpy(buffer, elemof32(buffer), dir);
+    xstrkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
+    xstrkat(buffer, elemof32(buffer), src);
 
     res = file_find_on_path_or_relative(filename, elemof_buffer, buffer, currentfilename);
 
@@ -111,8 +111,8 @@ add_prefix_to_name_using_dir(
         if(file_is_dir(buffer) > 0)
             {
             /* dir of that name exists, so add file */
-            safe_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
-            safe_strkat(buffer, elemof_buffer, name);
+            xstrkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
+            xstrkat(buffer, elemof_buffer, name);
             return(buffer);
             }
         }
@@ -133,24 +133,24 @@ add_choices_write_prefix_to_name_using_dir(
 
     if(file_is_rooted(name))
         {
-        safe_strkpy(buffer, elemof_buffer, name);
+        xstrkpy(buffer, elemof_buffer, name);
         return(buffer);
         }
 
-    safe_strkpy(buffer, elemof_buffer, "<Choices$Write>" FILE_DIR_SEP_STR "PipeDream");
+    xstrkpy(buffer, elemof_buffer, "<Choices$Write>" FILE_DIR_SEP_STR "PipeDream");
 
     (void) file_create_directory(buffer);
 
     if(NULL != dir)
         {
-        safe_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
-        safe_strkat(buffer, elemof_buffer, dir);
+        xstrkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
+        xstrkat(buffer, elemof_buffer, dir);
 
         (void) file_create_directory(buffer);
         }
 
-    safe_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
-    safe_strkat(buffer, elemof_buffer, name);
+    xstrkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
+    xstrkat(buffer, elemof_buffer, name);
 
     return(buffer);
 }
@@ -183,7 +183,7 @@ checkoverwrite(
 extern FILE_HANDLE
 pd_file_open(
     const char * name,
-    file_open_mode mode)
+    FILE_OPEN_MODE mode)
 {
     FILE_HANDLE file;
     S32 res;

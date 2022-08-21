@@ -46,8 +46,8 @@ PROC_EXEC_PROTO(c_age)
 
     exec_func_ignore_parms();
 
-    ev_date.date = args[0]->arg.date.date - args[1]->arg.date.date;
-    ev_date.time = args[0]->arg.date.time - args[1]->arg.date.time;
+    ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.ev_date.date;
+    ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.ev_date.time;
     ss_date_normalise(&ev_date);
 
     ss_dateval_to_ymd(&ev_date.date, &year, &month, &day);
@@ -160,7 +160,7 @@ PROC_EXEC_PROTO(c_char)
 
 PROC_EXEC_PROTO(c_choose)
 {
-    look_block lkb;
+    LOOKUP_BLOCK lkb;
     S32 res, i;
 
     exec_func_ignore_parms();
@@ -420,9 +420,9 @@ PROC_EXEC_PROTO(c_date)
         our_year = sliding_window_year(our_year);
 
     p_ev_data_res->did_num = RPN_DAT_DATE;
-    p_ev_data_res->arg.date.time = EV_TIME_INVALID;
+    p_ev_data_res->arg.ev_date.time = EV_TIME_INVALID;
 
-    if(ss_ymd_to_dateval(&p_ev_data_res->arg.date.date, our_year - 1, month - 1, day - 1) < 0)
+    if(ss_ymd_to_dateval(&p_ev_data_res->arg.ev_date.date, our_year - 1, month - 1, day - 1) < 0)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
         return;
@@ -446,7 +446,7 @@ PROC_EXEC_PROTO(c_datevalue)
     memcpy32(buffer, args[0]->arg.string.data, len);
     buffer[len] = NULLCH;
 
-    if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_INVALID == p_ev_data_res->arg.date.date))
+    if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_INVALID == p_ev_data_res->arg.ev_date.date))
         ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_DATE);
 }
 
@@ -463,13 +463,13 @@ PROC_EXEC_PROTO(c_day)
 
     exec_func_ignore_parms();
 
-    if(EV_DATE_INVALID == args[0]->arg.date.date)
+    if(EV_DATE_INVALID == args[0]->arg.ev_date.date)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
         return;
     }
 
-    ss_dateval_to_ymd(&args[0]->arg.date.date, &year, &month, &day);
+    ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day);
 
     day_result = day + 1;
 
@@ -503,12 +503,12 @@ PROC_EXEC_PROTO(c_dayname)
     switch(args[0]->did_num)
     {
     case RPN_DAT_DATE:
-        if(EV_DATE_INVALID == args[0]->arg.date.date)
+        if(EV_DATE_INVALID == args[0]->arg.ev_date.date)
         {
             ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
             return;
         }
-        day = ((args[0]->arg.date.date + 1) % 7) + 1;
+        day = ((args[0]->arg.ev_date.date + 1) % 7) + 1;
         break;
 
     case RPN_DAT_WORD8:
@@ -617,10 +617,10 @@ PROC_EXEC_PROTO(c_dollar)
         status = quick_ublock_ustr_add(&quick_ublock_format, USTR_TEXT("#,,###0"));
 
     if((decimal_places > 0) && status_ok(status))
-        status = quick_ublock_u8_add(&quick_ublock_format, '.');
+        status = quick_ublock_a7char_add(&quick_ublock_format, '.');
 
     for(i = 0; (i < decimal_places) && status_ok(status); ++i)
-        status = quick_ublock_u8_add(&quick_ublock_format, '#');
+        status = quick_ublock_a7char_add(&quick_ublock_format, '#');
 
     if(status_ok(status))
         status = quick_ublock_nullch_add(&quick_ublock_format);
@@ -798,10 +798,10 @@ PROC_EXEC_PROTO(c_fixed)
     status = quick_ublock_ustr_add(&quick_ublock_format, no_commas ? USTR_TEXT("0") : USTR_TEXT("#,,###0"));
 
     if((decimal_places > 0) && status_ok(status))
-        status = quick_ublock_u8_add(&quick_ublock_format, '.');
+        status = quick_ublock_a7char_add(&quick_ublock_format, '.');
 
     for(i = 0; (i < decimal_places) && status_ok(status); ++i)
-        status = quick_ublock_u8_add(&quick_ublock_format, '#');
+        status = quick_ublock_a7char_add(&quick_ublock_format, '#');
 
     if(status_ok(status))
         status = quick_ublock_nullch_add(&quick_ublock_format);
@@ -990,7 +990,7 @@ PROC_EXEC_PROTO(c_hour)
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.date.time, &hour, &minute, &second);
+    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hour, &minute, &second);
 
     hour_result = hour;
 
@@ -1328,7 +1328,7 @@ PROC_EXEC_PROTO(c_join)
     if(0 == len)
         return;
 
-    if(NULL == (p_u8 = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &status)))
+    if(NULL == (p_u8 = al_ptr_alloc_bytes(P_U8, len + 1/*NULLCH*/, &status)))
     {
         ev_data_set_error(p_ev_data_res, status);
         return;
@@ -1397,8 +1397,84 @@ PROC_EXEC_PROTO(c_length)
 
 PROC_EXEC_PROTO(c_listcount)
 {
-    /* never got this to work in PipeDream */
+    STATUS status = STATUS_OK;
+    EV_DATA ev_data_temp_array;
+
     exec_func_ignore_parms();
+
+    ev_data_set_blank(&ev_data_temp_array);
+
+    for(;;)
+    {
+        S32 xs, ys, n_unique = 0, y = 0;
+
+        status_assert(ss_data_resource_copy(&ev_data_temp_array, args[0]));
+        data_ensure_constant(&ev_data_temp_array);
+
+        if(RPN_DAT_ERROR == ev_data_temp_array.did_num)
+        {
+            ss_data_free_resources(p_ev_data_res);
+            *p_ev_data_res = ev_data_temp_array;
+            return;
+        }
+
+        status_break(status = array_sort(&ev_data_temp_array, 0));
+
+        status_break(status = ss_array_make(p_ev_data_res, 0, 0));
+
+        array_range_sizes(&ev_data_temp_array, &xs, &ys);
+
+        while(y < ys && status_ok(status))
+        {
+            EV_DATA ev_data;
+            F64 count = 0;
+
+            array_range_index(&ev_data, &ev_data_temp_array, 0, y, EM_CONST);
+
+            while(status_ok(status))
+            {
+                EV_DATA ev_data_t;
+                array_range_index(&ev_data_t, &ev_data_temp_array, 0, y, EM_CONST);
+                if(ss_data_compare(&ev_data, &ev_data_t))
+                {
+                    if(status_ok(status = ss_array_element_make(p_ev_data_res, 1, n_unique)))
+                    {
+                        P_EV_DATA p_ev_data = ss_array_element_index_wr(p_ev_data_res, 0, n_unique);
+                        status_assert(ss_data_resource_copy(p_ev_data, &ev_data));
+                        ev_data_set_real(&p_ev_data[1], count);
+                        real_to_integer_try(&p_ev_data[1]);
+                        n_unique += 1;
+                    }
+                    break;
+                }
+                else if(xs > 1)
+                {
+                    EV_DATA ev_data_count;
+                    if(RPN_DAT_REAL == array_range_index(&ev_data_count, &ev_data_temp_array, xs-1, y, EM_REA))
+                        count += ev_data_count.arg.fp; /* SKS 19may97 was just using [1, y] before */
+                    ss_data_free_resources(&ev_data_count);
+                }
+                else
+                    count += 1.0;
+
+                y += 1;
+                ss_data_free_resources(&ev_data_t);
+            }
+
+            ss_data_free_resources(&ev_data);
+        }
+
+        break;
+        /*NOTREACHED*/
+    }
+
+    ss_data_free_resources(&ev_data_temp_array);
+
+    if(status_fail(status))
+    {
+        ss_data_free_resources(p_ev_data_res);
+        ev_data_set_error(p_ev_data_res, status);
+    }
 }
 
 /******************************************************************************
@@ -1433,8 +1509,8 @@ ss_data_array_flatten(
     if(p_ev_data->did_num == RPN_TMP_ARRAY)
     {
         /* this is just so easy given the current array representation */
-        p_ev_data->arg.array.y_size *= p_ev_data->arg.array.x_size;
-        p_ev_data->arg.array.x_size = 1;
+        p_ev_data->arg.ev_array.y_size *= p_ev_data->arg.ev_array.x_size;
+        p_ev_data->arg.ev_array.x_size = 1;
     }
 }
 
@@ -1544,7 +1620,7 @@ PROC_EXEC_PROTO(c_minute)
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.date.time, &hour, &minute, &second);
+    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hour, &minute, &second);
 
     minute_result = minute;
 
@@ -1564,13 +1640,13 @@ PROC_EXEC_PROTO(c_month)
 
     exec_func_ignore_parms();
 
-    if(EV_DATE_INVALID == args[0]->arg.date.date)
+    if(EV_DATE_INVALID == args[0]->arg.ev_date.date)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
         return;
     }
 
-    ss_dateval_to_ymd(&args[0]->arg.date.date, &year, &month, &day);
+    ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day);
 
     month_result = month + 1;
 
@@ -1590,13 +1666,13 @@ PROC_EXEC_PROTO(c_monthdays)
 
     exec_func_ignore_parms();
 
-    if(EV_DATE_INVALID == args[0]->arg.date.date)
+    if(EV_DATE_INVALID == args[0]->arg.ev_date.date)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
         return;
     }
 
-    ss_dateval_to_ymd(&args[0]->arg.date.date, &year, &month, &day);
+    ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day);
 
     monthdays_result = ev_days[month];
 
@@ -1640,7 +1716,7 @@ PROC_EXEC_PROTO(c_monthname)
     case RPN_DAT_DATE:
         {
         S32 year, day;
-        ss_dateval_to_ymd(&args[0]->arg.date.date, &year, &month, &day);
+        ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day);
         break;
         }
 
@@ -1697,7 +1773,7 @@ PROC_EXEC_PROTO(c_now)
     exec_func_ignore_parms();
 
     p_ev_data_res->did_num = RPN_DAT_DATE;
-    ss_local_time_as_ev_date(&p_ev_data_res->arg.date);
+    ss_local_time_as_ev_date(&p_ev_data_res->arg.ev_date);
 }
 
 #if 0 /* just for diff minimization */
@@ -1999,15 +2075,15 @@ PROC_EXEC_PROTO(c_rate)
 PROC_EXEC_PROTO(c_rept)
 {
     U8Z buffer[BUF_EV_MAX_STRING_LEN];
-    const S32 len = args[0]->arg.string.size;
+    const U32 len = args[0]->arg.string.size;
     S32 n = args[1]->arg.integer;
     P_U8 p_u8 = buffer;
     S32 x;
 
     exec_func_ignore_parms();
 
-    if( n > (S32) (elemof32(buffer)-1) / len)
-        n = (S32) (elemof32(buffer)-1) / len;
+    if( n > (S32) ((elemof32(buffer)-1) / len))
+        n = (S32) ((elemof32(buffer)-1) / len);
 
     if(n <= 0)
     {
@@ -2021,7 +2097,7 @@ PROC_EXEC_PROTO(c_rept)
         p_u8 += len;
     }
 
-    status_assert(ss_string_make_uchars(p_ev_data_res, buffer, n * len));
+    status_assert(ss_string_make_uchars(p_ev_data_res, buffer, (U32) n * len));
 }
 
 /******************************************************************************
@@ -2063,7 +2139,7 @@ PROC_EXEC_PROTO(c_replace)
         }
 
         if(status_ok(status))
-            status_assert(ss_string_make_uchars(p_ev_data_res, quick_ublock_uptrc(&quick_ublock_result), quick_ublock_bytes(&quick_ublock_result)));
+            status_assert(ss_string_make_uchars(p_ev_data_res, quick_ublock_uptr(&quick_ublock_result), quick_ublock_bytes(&quick_ublock_result)));
     }
 
     if(status_fail(status))
@@ -2265,7 +2341,7 @@ PROC_EXEC_PROTO(c_second)
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.date.time, &hour, &minute, &second);
+    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hour, &minute, &second);
 
     second_result = second;
 
@@ -2294,8 +2370,9 @@ PROC_EXEC_PROTO(c_set_name)
     }
 
     name_num = name_def_find(name_key);
+    assert(name_num >= 0);
 
-    status_assert(ss_data_resource_copy(p_ev_data_res, &name_ptr(name_num)->def_data));
+    status_assert(ss_data_resource_copy(p_ev_data_res, &name_ptr_must(name_num)->def_data));
 }
 
 /******************************************************************************
@@ -2334,6 +2411,9 @@ PROC_EXEC_PROTO(c_sort)
 
     status_assert(ss_data_resource_copy(p_ev_data_res, args[0]));
     data_ensure_constant(p_ev_data_res);
+
+    if(RPN_DAT_ERROR == p_ev_data_res->did_num)
+        return;
 
     if(status_fail(status = array_sort(p_ev_data_res, x_coord)))
     {
@@ -2487,7 +2567,7 @@ ev_numform(
     _In_z_      PC_USTR ustr,
     _InRef_     PC_EV_DATA p_ev_data)
 {
-    NUMFORM_PARMS numform_parms;
+    NUMFORM_PARMS numform_parms /*= NUMFORM_PARMS_INIT*/;
 
     numform_parms.ustr_numform_numeric =
     numform_parms.ustr_numform_datetime =
@@ -2538,9 +2618,9 @@ PROC_EXEC_PROTO(c_time)
     exec_func_ignore_parms();
 
     p_ev_data_res->did_num = RPN_DAT_DATE;
-    p_ev_data_res->arg.date.date = EV_DATE_INVALID;
+    p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
 
-    if(ss_hms_to_timeval(&p_ev_data_res->arg.date.time,
+    if(ss_hms_to_timeval(&p_ev_data_res->arg.ev_date.time,
                          args[0]->arg.integer,
                          args[1]->arg.integer,
                          args[2]->arg.integer) < 0)
@@ -2549,7 +2629,7 @@ PROC_EXEC_PROTO(c_time)
         return;
     }
 
-    ss_date_normalise(&p_ev_data_res->arg.date);
+    ss_date_normalise(&p_ev_data_res->arg.ev_date);
 }
 
 /******************************************************************************
@@ -2569,7 +2649,7 @@ PROC_EXEC_PROTO(c_timevalue)
     memcpy32(buffer, args[0]->arg.string.data, len);
     buffer[len] = NULLCH;
 
-    if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_INVALID != p_ev_data_res->arg.date.date))
+    if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_INVALID != p_ev_data_res->arg.ev_date.date))
         ev_data_set_error(p_ev_data_res, EVAL_ERR_BADTIME);
 }
 
@@ -2586,7 +2666,7 @@ PROC_EXEC_PROTO(c_today)
     c_now(args, nargs, p_ev_data_res, p_cur_slr);
 
     if(RPN_DAT_DATE == p_ev_data_res->did_num)
-        p_ev_data_res->arg.date.time = EV_TIME_INVALID;
+        p_ev_data_res->arg.ev_date.time = EV_TIME_INVALID;
 }
 
 /******************************************************************************
@@ -2785,13 +2865,13 @@ PROC_EXEC_PROTO(c_weekday)
 
     exec_func_ignore_parms();
 
-    if(EV_DATE_INVALID == args[0]->arg.date.date)
+    if(EV_DATE_INVALID == args[0]->arg.ev_date.date)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
         return;
     }
 
-    weekday = (args[0]->arg.date.date + 1) % 7;
+    weekday = (args[0]->arg.ev_date.date + 1) % 7;
 
     ev_data_set_integer(p_ev_data_res, weekday + 1);
 }
@@ -2804,7 +2884,7 @@ PROC_EXEC_PROTO(c_weekday)
 
 #if RISCOS
 
-typedef struct _FIVEBYTE
+typedef struct FIVEBYTE
 {
     U8 utc[5];
 }
@@ -2817,7 +2897,7 @@ fivebytetime_from_date(
     _InRef_     PC_EV_DATE_DATE p_ev_date_date)
 {
     S32 year, month, day;
-    riscos_time_ordinals time_ordinals;
+    RISCOS_TIME_ORDINALS time_ordinals;
     _kernel_swi_regs rs;
 
     ss_dateval_to_ymd(p_ev_date_date, &year, &month, &day);
@@ -2849,7 +2929,7 @@ PROC_EXEC_PROTO(c_weeknumber)
 #if RISCOS
     FIVEBYTE fivebyte;
 
-    if(status_ok(status = fivebytetime_from_date(&fivebyte, &args[0]->arg.date.date)))
+    if(status_ok(status = fivebytetime_from_date(&fivebyte, &args[0]->arg.ev_date.date)))
     {
         U8Z buffer[32];
         _kernel_swi_regs rs;
@@ -2911,13 +2991,13 @@ PROC_EXEC_PROTO(c_year)
 
     exec_func_ignore_parms();
 
-    if(EV_DATE_INVALID == args[0]->arg.date.date)
+    if(EV_DATE_INVALID == args[0]->arg.ev_date.date)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
         return;
     }
 
-    ss_dateval_to_ymd(&args[0]->arg.date.date, &year, &month, &day);
+    ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day);
 
     year_result = year + 1;
 

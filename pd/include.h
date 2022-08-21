@@ -11,7 +11,7 @@
 #define __include_h
 
 #if defined(SB_GLOBAL_REGISTER)
-/*extern*/ __global_reg(6) struct _DOCU * current_p_docu; /* keep current_p_docu in APCS v6 register (== ARM r9) */
+/*extern*/ __global_reg(6) struct DOCU * current_p_docu; /* keep current_p_docu in APCS v6 register (== ARM r9) */
 #endif
 
 /* standard includes for all programs */
@@ -39,6 +39,7 @@ typedef U8 DOCNO; typedef DOCNO * P_DOCNO; /* NB now exactly the same as EV_DOCN
 #include "cmodules/handlist.h"
 #include "cmodules/ev_eval.h"
 #include "cmodules/file.h"
+#include "cmodules/gr_cache.h"
 #include "cmodules/gr_coord.h"
 #include "cmodules/gr_chart.h"
 #include "cmodules/monotime.h"
@@ -48,20 +49,20 @@ typedef U8 DOCNO; typedef DOCNO * P_DOCNO; /* NB now exactly the same as EV_DOCN
 #include "cmodules/xstring.h"
 
 #if defined(SB_GLOBAL_REGISTER)
-extern struct _DOCU * current_p_docu_backup;
+extern struct DOCU * current_p_docu_backup;
 #define current_p_docu_global_register_assign(p_docu_new) \
     current_p_docu = current_p_docu_backup = (p_docu_new)
 #define current_p_docu_global_register_restore_from_backup() \
     current_p_docu = current_p_docu_backup
 #define current_p_docu_global_register_stash_block_start() \
     { \
-    struct _DOCU * current_p_docu_stash = current_p_docu
+    struct DOCU * current_p_docu_stash = current_p_docu
 #define current_p_docu_global_register_stash_block_end() \
     current_p_docu = current_p_docu_stash; \
     } \
     /*EMPTY*/
 #else
-extern struct _DOCU * current_p_docu; /* keep current_p_docu in global data (no backup needed) */
+extern struct DOCU * current_p_docu; /* keep current_p_docu in global data (no backup needed) */
 #define current_p_docu_global_register_assign(p_docu_new) \
     current_p_docu = (p_docu_new)
 #define current_p_docu_global_register_restore_from_backup() /*EMPTY*/

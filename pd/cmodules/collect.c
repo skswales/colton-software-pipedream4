@@ -31,8 +31,10 @@
 *
 ******************************************************************************/
 
-extern P_ANY
-collect_add_entry(
+_Check_return_
+_Ret_writes_maybenull_(size)
+extern P_BYTE
+_collect_add_entry(
     _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
     _InoutRef_opt_ P_LIST_ITEMNO key,
@@ -141,7 +143,7 @@ collect_copy(
 {
     LIST_ITEMNO key = 0;
 
-    if(collect_first(old_p_p_list_block, &key))
+    if(NULL != collect_first(BYTE, old_p_p_list_block, &key))
         {
         do  {
             S32 entry_size = list_entsize(*old_p_p_list_block, list_atitem(*old_p_p_list_block));
@@ -149,7 +151,7 @@ collect_copy(
             PC_ANY old_entp;
             P_ANY new_entp;
 
-            if(NULL == (new_entp = collect_add_entry(new_nlbrp, entry_size, &key, &status)))
+            if(NULL == (new_entp = _collect_add_entry(new_nlbrp, entry_size, &key, &status)))
                 {
                 collect_delete(&new_nlbrp->lbr);
                 return(status);
@@ -160,7 +162,7 @@ collect_copy(
 
             memcpy32(new_entp, old_entp, entry_size);
             }
-        while(collect_next(old_p_p_list_block, &key));
+        while(collect_next(BYTE, old_p_p_list_block, &key));
         }
 
     return(STATUS_DONE);
@@ -218,18 +220,21 @@ collect_delete_entry(
 *
 ******************************************************************************/
 
-extern P_ANY
-collect_first(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _OutRef_opt_ P_LIST_ITEMNO key)
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_first(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _OutRef_    P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item = 0;
 
-    it = list_initseq(*p_p_list_block, &item);
+    it = list_initseq(p_list_block, &item);
 
-    if(key)
-        *key = item;
+    if(p_key)
+        *p_key = item;
 
     return(it ? list_itemcontents(void, it) : NULL);
 }
@@ -247,24 +252,24 @@ collect_first(
 *
 ******************************************************************************/
 
-extern P_ANY
-collect_first_from(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _InoutRef_opt_ P_LIST_ITEMNO key)
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_first_from(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _InoutRef_  P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
-    LIST_ITEMNO item = 0;
+    LIST_ITEMNO item;
 
-    if(key)
-        {
-        item = *key;
-        myassert1x((S32) item >= 0, "collect_first key %ld negative", item);
-        }
+    assert(p_key);
+    item = *p_key;
+    myassert1x((S32) item >= 0, "collect_first_from key %ld negative", item);
 
-    it = list_initseq(*p_p_list_block, &item);
+    it = list_initseq(p_list_block, &item);
 
-    if(key)
-        *key = item;
+    *p_key = item;
 
     return(it ? list_itemcontents(void, it) : NULL);
 }
@@ -277,8 +282,8 @@ collect_first_from(
 *
 ******************************************************************************/
 
-extern P_ANY
-collect_insert_entry(
+extern P_BYTE
+_collect_insert_entry(
     _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
     _InVal_     LIST_ITEMNO key,
@@ -325,26 +330,24 @@ collect_insert_entry(
 *
 ******************************************************************************/
 
-extern P_ANY
-collect_next(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _InoutRef_opt_ P_LIST_ITEMNO key)
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_next(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _InoutRef_  P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item;
 
-    if(key)
-        {
-        item = *key;
-        myassert1x((S32) item >= 0, "collect_next key %ld negative", item);
-        }
-    else
-        item = list_atitem(*p_p_list_block);
+    assert(p_key);
+    item = *p_key;
+    myassert1x((S32) item >= 0, "collect_next key %ld negative", item);
 
-    it = list_nextseq(*p_p_list_block, &item);
+    it = list_nextseq(p_list_block, &item);
 
-    if(key)
-        *key = item;
+    *p_key = item;
 
     return(it ? list_itemcontents(void, it) : NULL);
 }
@@ -359,26 +362,24 @@ collect_next(
 *
 ******************************************************************************/
 
-extern P_ANY
-collect_prev(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _InoutRef_opt_ P_LIST_ITEMNO key)
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_prev(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _InoutRef_  P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item;
 
-    if(key)
-        {
-        item = *key;
-        myassert1x((S32) item >= 0, "collect_prev key %ld negative", item);
-        }
-    else
-        item = list_atitem(*p_p_list_block);
+    assert(p_key);
+    item = *p_key;
+    myassert1x((S32) item >= 0, "collect_prev key %ld negative", item);
 
-    it = list_prevseq(*p_p_list_block, &item);
+    it = list_prevseq(p_list_block, &item);
 
-    if(key)
-        *key = item;
+    *p_key = item;
 
     return(it ? list_itemcontents(void, it) : NULL);
 }

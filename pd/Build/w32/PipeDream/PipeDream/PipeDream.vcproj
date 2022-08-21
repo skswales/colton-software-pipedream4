@@ -502,6 +502,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\gr_cache.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\gr_chari.h"
 					>
 				</File>
@@ -1747,7 +1751,7 @@
 				</Filter>
 			</Filter>
 			<Filter
-				Name="pd-FreeBSD"
+				Name="pd_FreeBSD"
 				>
 				<File
 					RelativePath="..\..\..\..\external\FreeBSD\srcp\lib\msun\src\e_lgamma_r.c"
@@ -1825,10 +1829,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\cmodules\coltsoft\mathnums.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\cmodules\coltsoft\mysignal.h"
 					>
 				</File>
 				<File

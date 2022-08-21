@@ -214,12 +214,12 @@ alnsto_block(
 
             case PROTECTED:
                 /* set protected bit */
-                orab(tslot->justify, PROTECTED);
+                tslot->justify |= PROTECTED;
                 break;
 
             case J_BITS:
                 /* clear protected bit */
-                andab(tslot->justify, J_BITS);
+                tslot->justify &= J_BITS;
                 break;
 
             default:
@@ -826,24 +826,24 @@ SplitLine_fn(void)
     else
         {
         if(actually_splitting)
-            inc(currow);
+            currow++;
 
         internal_process_command(N_InsertRowInColumn);
 
         if(actually_splitting)
-            dec(currow);
+            currow--;
         }
 
     if(actually_splitting)
         {
-        inc(currow);
+        currow++;
 
         buffer_altered = slot_in_buffer = TRUE;
 
         if(!mergebuf_nocheck())
             return;
 
-        dec(currow);
+        currow--;
         }
 }
 
@@ -891,7 +891,7 @@ JoinLines_fn(void)
         thislen = strlen(linbuf);
         memcpy32(temparray, linbuf, thislen);
 
-        inc(currow);
+        currow++;
 
         filbuf();
 
@@ -900,7 +900,7 @@ JoinLines_fn(void)
         /* SKS after 4.11 25jan92 - was >=, but MAXFLD is LIN_BUFSIZ-1 */
         if(thislen + nextlen > MAXFLD)
             {
-            dec(currow);
+            currow--;
             slot_in_buffer = FALSE;
             filbuf();
             reperr_null(create_error(ERR_LINETOOLONG));
@@ -911,7 +911,7 @@ JoinLines_fn(void)
         memcpy32( linbuf,           temparray, thislen);
 
         buffer_altered = slot_in_buffer = TRUE;
-        dec(currow);
+        currow--;
 
         if(!mergebuf())
             return;
@@ -982,21 +982,21 @@ JoinLines_fn(void)
             }
         else if(actually_joining)
             {
-            inc(currow);
+            currow++;
             internal_process_command(N_DeleteRowInColumn);     /* get rid of slot */
             internal_process_command(N_InsertRowInColumn);     /* and leave a hole */
-            dec(currow);
+            currow--;
             }
         }
     else
         {
         if(actually_joining)
-            inc(currow);
+            currow++;
 
         internal_process_command(N_DeleteRowInColumn);
 
         if(actually_joining)
-            dec(currow);
+            currow--;
         }
 
     dont_save = FALSE;
@@ -1409,7 +1409,7 @@ CopyBlockToPasteList_fn(void)
 
     old_docno = change_document_using_docno(blk_docno);
 
-    save_block_and_delete(FALSE, TRUE);
+    (void) save_block_and_delete(FALSE, TRUE);
 
     select_document_using_docno(old_docno);
 }
@@ -1672,9 +1672,9 @@ save_names_to_file(
         itemno = -1
        )
         {
-        safe_strkpy(array, elemof32(array), namebuf);
-        safe_strkat(array, elemof32(array), ",");
-        safe_strkat(array, elemof32(array), argbuf);
+        xstrkpy(array, elemof32(array), namebuf);
+        xstrkat(array, elemof32(array), ",");
+        xstrkat(array, elemof32(array), argbuf);
         (void) mystr_set(&d_names_dbox[0].textfield, array);
         save_opt_to_file(output, d_names_dbox, 1);
         }
@@ -1811,7 +1811,7 @@ extern void
 clear_protect_list(void)
 {
     SLR bs, be;
-    LIST *lptr;
+    P_LIST lptr;
 
     /* bug in 4.01:
         if load a file and marked block exists in some window PD4 whinges about
@@ -1900,7 +1900,7 @@ clear the linked column, setting linked columns
 extern void
 clear_linked_columns(void)
 {
-    LIST * lptr;
+    P_LIST lptr;
 
     for(lptr = first_in_list(&linked_columns);
         lptr;

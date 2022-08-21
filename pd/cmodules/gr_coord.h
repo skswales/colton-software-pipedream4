@@ -18,7 +18,10 @@
 structure
 */
 
-/* coordinates are large signed things */
+/*
+coordinates are large signed things
+*/
+
 typedef S32 GR_COORD; typedef GR_COORD * P_GR_COORD;
 
 #define GR_COORD_MAX S32_MAX
@@ -27,17 +30,23 @@ typedef S32 GR_COORD; typedef GR_COORD * P_GR_COORD;
 points, or simply pairs of coordinates
 */
 
-typedef struct _GR_POINT
+typedef struct GR_POINT
 {
     GR_COORD x, y;
 }
 GR_POINT, * P_GR_POINT; typedef const GR_POINT * PC_GR_POINT;
 
+typedef struct GR_SIZE
+{
+    GR_COORD cx, cy;
+}
+GR_SIZE, * P_GR_SIZE; typedef const GR_SIZE * PC_GR_SIZE;
+
 /*
 boxes, or simply pairs of points
 */
 
-typedef struct _GR_BOX
+typedef struct GR_BOX
 {
     GR_COORD x0, y0, x1, y1;
 }
@@ -49,7 +58,7 @@ ordered rectangles
 
 #if defined(UNUSED)
 
-typedef struct _GR_RECT
+typedef struct GR_RECT
 {
     GR_POINT tl, br;
 }
@@ -65,7 +74,7 @@ typedef S32 GR_SCALE; /* signed 16.16 fixed point number */
 
 #define GR_MAX_FOR_SCALE 0x7FFF     /* maximum number that can be converted to this representation */
 
-typedef struct _gr_bin16_pair
+typedef struct GR_SCALE_PAIR
 {
     GR_SCALE x, y;
 }
@@ -75,7 +84,7 @@ GR_SCALE_PAIR, * P_GR_SCALE_PAIR; typedef const GR_SCALE_PAIR * PC_GR_SCALE_PAIR
 matrix transforms
 */
 
-typedef struct _GR_XFORMMATRIX
+typedef struct GR_XFORMMATRIX
 {
     GR_SCALE a, b;
     GR_SCALE c, d;

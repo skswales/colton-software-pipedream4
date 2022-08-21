@@ -270,12 +270,17 @@ riscdialog_front_dialog(void)
 extern BOOL
 riscdialog_warning(void)
 {
-    if(NULL == dialog__dbox)
-        return(TRUE);
+    if(NULL != dialog__dbox)
+    {
+        riscdialog_front_dialog();
 
-    riscdialog_front_dialog();
+        return(reperr_null(ERR_ALREADY_IN_DIALOG));
+    }
 
-    return(reperr_null(ERR_ALREADY_IN_DIALOG));
+    if(pdfontselect_is_active())
+        return(reperr_null(ERR_ALREADY_IN_DIALOG));
+
+    return(TRUE);
 }
 
 /******************************************************************************
@@ -902,10 +907,7 @@ dialog__initkeyfromstring(
     P_P_LIST_BLOCK listpp,
     PC_U8 str)
 {
-    LIST * lptr;
-    LIST_ITEMNO key;
-
-    key = 0;
+    PC_LIST lptr;
 
     for(lptr = first_in_list(listpp);
         lptr;
@@ -925,7 +927,7 @@ dialog__bumpstring(
     P_P_LIST_BLOCK listpp,
     P_LIST_ITEMNO key)
 {
-    LIST * entry;
+    P_LIST entry;
 
     trace_0(TRACE_APP_DIALOG, "bump that string - ");
 
@@ -1693,7 +1695,7 @@ dproc_loadtemplate(
 {
     dbox_field  f;
     LIST_ITEMNO key;
-    LIST *      entry;
+    P_LIST entry;
 
     if(!str_isblank(dptr[0].textfield))
         key = dialog__initkeyfromstring(&ltemplate_or_driver_list, dptr[0].textfield);
@@ -1734,7 +1736,7 @@ dproc_createdict(
     DIALOG *dptr)
 {
     dbox_field  f;
-    LIST *      entry;
+    P_LIST entry;
     LIST_ITEMNO language_key;
 
     assert_dialog(1, D_USER_CREATE);
@@ -1771,7 +1773,7 @@ dproc_createdict(
 *
 ******************************************************************************/
 
-typedef enum
+enum LOADFILE_OFFSETS
 {
     loadfile_Name = 4,
     loadfile_Slot,
@@ -1788,8 +1790,7 @@ typedef enum
     loadfile_VIEW,
     loadfile_Paragraph
 #define loadfile_filetype_end loadfile_Paragraph
-}
-loadfile_offsets;
+};
 
 extern void
 dproc_loadfile(
@@ -1819,7 +1820,7 @@ dproc_loadfile(
 *
 ******************************************************************************/
 
-typedef enum
+enum SAVEFILE_OFFSETS
 {
     savefile_Name = 1,    /* == xfersend_FName */
     savefile_Icon,        /* == xfersend_FIcon */
@@ -1840,15 +1841,14 @@ typedef enum
     savefile_VIEW,
     savefile_Paragraph
 #define savefile_filetype_end savefile_Paragraph
-}
-savefile_offsets;
+};
 
-typedef struct _savefile_callback_info
+typedef struct SAVEFILE_CALLBACK_INFO
 {
     DIALOG *   dptr;
     DOCNO      docno;
 }
-savefile_callback_info;
+SAVEFILE_CALLBACK_INFO;
 
 /* xfersend calling us to handle clicks on the dbox fields */
 
@@ -1859,7 +1859,7 @@ savefile_clickproc(
     int *filetypep,
     void * handle)
 {
-    savefile_callback_info * i = handle;
+    SAVEFILE_CALLBACK_INFO * i = handle;
     DIALOG * dptr;
     PC_U8 optlistptr;
 
@@ -1894,7 +1894,7 @@ savefile_saveproc(
     _In_z_      /*const*/ char * filename /*low lifetime*/,
     void * handle)
 {
-    savefile_callback_info * i = (savefile_callback_info *) handle;
+    SAVEFILE_CALLBACK_INFO * i = (SAVEFILE_CALLBACK_INFO *) handle;
     DIALOG * dptr;
     wimp_eventstr * e;
     wimp_mousestr ms;
@@ -1981,7 +1981,7 @@ savefile_printproc(
     _In_z_      /*const*/ char * filename,
     void * handle)
 {
-    savefile_callback_info * i = (savefile_callback_info *) handle;
+    SAVEFILE_CALLBACK_INFO * i = (SAVEFILE_CALLBACK_INFO *) handle;
     BOOL recording;
     BOOL res;
 
@@ -2018,7 +2018,7 @@ dproc_savefile(
     DIALOG * dptr)
 {
     wimp_caretstr current;
-    savefile_callback_info i;
+    SAVEFILE_CALLBACK_INFO i;
     PCTSTR filename = riscos_obtainfilename(dptr[SAV_NAME].textfield);
     FILETYPE_RISC_OS filetype = currentfiletype(dptr[SAV_FORMAT].option);
     S32 estsize = 42;
@@ -2695,7 +2695,7 @@ dproc_printconfig(
 {
     dbox_field  f;
     LIST_ITEMNO key;
-    LIST *      entry;
+    P_LIST entry;
 
     assert_dialog(6, D_DRIVER);
 

@@ -29,12 +29,12 @@
 extern S32
 ev_data_set_error(
     _OutRef_    P_EV_DATA p_ev_data,
-    _InVal_     S32 error)
+    _InVal_     STATUS error)
 {
     zero_struct_ptr(p_ev_data);
-    p_ev_data->did_num        = RPN_DAT_ERROR;
-    p_ev_data->arg.error.num  = error;
-    p_ev_data->arg.error.type = ERROR_NORMAL;
+    p_ev_data->did_num = RPN_DAT_ERROR;
+    p_ev_data->arg.ev_error.status  = error;
+    p_ev_data->arg.ev_error.type = ERROR_NORMAL;
     return(error);
 }
 
@@ -105,13 +105,13 @@ ss_array_free(
 {
     S32 x, y;
 
-    for(y = 0; y < p_ev_data->arg.array.y_size; ++y)
-        for(x = 0; x < p_ev_data->arg.array.x_size; ++x)
+    for(y = 0; y < p_ev_data->arg.ev_array.y_size; ++y)
+        for(x = 0; x < p_ev_data->arg.ev_array.x_size; ++x)
             ss_data_free_resources(ss_array_element_index_wr(p_ev_data, x, y));
 
     p_ev_data->did_num = RPN_DAT_BLANK;
 
-    al_ptr_dispose(P_P_ANY_PEDANTIC(&p_ev_data->arg.array.elements));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&p_ev_data->arg.ev_array.elements));
 }
 
 /******************************************************************************
@@ -128,9 +128,9 @@ ss_array_dup(
     STATUS status = STATUS_OK;
 
     p_ev_data->did_num = RPN_TMP_ARRAY;
-    p_ev_data->arg.array.x_size = 0;
-    p_ev_data->arg.array.y_size = 0;
-    p_ev_data->arg.array.elements = NULL;
+    p_ev_data->arg.ev_array.x_size = 0;
+    p_ev_data->arg.ev_array.y_size = 0;
+    p_ev_data->arg.ev_array.elements = NULL;
 
     if(status_fail(status = array_copy(p_ev_data, p_ev_data_in)))
         ss_array_free(p_ev_data);
@@ -155,14 +155,14 @@ ss_array_element_index_wr(
     _InVal_     S32 x,
     _InVal_     S32 y)
 {
-    assert(x < p_ev_data->arg.array.x_size && y < p_ev_data->arg.array.y_size);
+    assert(x < p_ev_data->arg.ev_array.x_size && y < p_ev_data->arg.ev_array.y_size);
 
-    if(x >= p_ev_data->arg.array.x_size || y >= p_ev_data->arg.array.y_size)
+    if(x >= p_ev_data->arg.ev_array.x_size || y >= p_ev_data->arg.ev_array.y_size)
         return(NULL);
 
-    assert(NULL != p_ev_data->arg.array.elements);
+    assert(NULL != p_ev_data->arg.ev_array.elements);
 
-    return(p_ev_data->arg.array.elements + (y * p_ev_data->arg.array.x_size) + x);
+    return(p_ev_data->arg.ev_array.elements + (y * p_ev_data->arg.ev_array.x_size) + x);
 }
 
 /******************************************************************************
@@ -179,14 +179,14 @@ ss_array_element_index_borrow(
     _InVal_     S32 x,
     _InVal_     S32 y)
 {
-    assert(x < p_ev_data->arg.array.x_size && y < p_ev_data->arg.array.y_size);
+    assert(x < p_ev_data->arg.ev_array.x_size && y < p_ev_data->arg.ev_array.y_size);
 
-    if(x >= p_ev_data->arg.array.x_size || y >= p_ev_data->arg.array.y_size)
+    if(x >= p_ev_data->arg.ev_array.x_size || y >= p_ev_data->arg.ev_array.y_size)
         return(NULL);
 
-    assert(NULL != p_ev_data->arg.array.elements);
+    assert(NULL != p_ev_data->arg.ev_array.elements);
 
-    return(p_ev_data->arg.array.elements + (y * p_ev_data->arg.array.x_size) + x);
+    return(p_ev_data->arg.ev_array.elements + (y * p_ev_data->arg.ev_array.x_size) + x);
 }
 
 /******************************************************************************
@@ -201,8 +201,8 @@ ss_array_element_make(
     _InVal_     S32 x,
     _InVal_     S32 y)
 {
-    const S32 old_xs = p_ev_data->arg.array.x_size;
-    const S32 old_ys = p_ev_data->arg.array.y_size;
+    const S32 old_xs = p_ev_data->arg.ev_array.x_size;
+    const S32 old_ys = p_ev_data->arg.ev_array.y_size;
     S32 new_xs;
     S32 new_ys;
     S32 new_size;
@@ -230,20 +230,20 @@ ss_array_element_make(
     STATUS status;
     P_EV_DATA newp;
 
-    if(NULL == (newp = al_ptr_realloc_elem(EV_DATA, p_ev_data->arg.array.elements, new_size, &status)))
+    if(NULL == (newp = al_ptr_realloc_elem(EV_DATA, p_ev_data->arg.ev_array.elements, new_size, &status)))
         return(status);
 
     trace_1(TRACE_MODULE_EVAL, TEXT("array realloced, now: %d entries"), new_xs * new_ys);
 
-    p_ev_data->arg.array.elements = newp;
+    p_ev_data->arg.ev_array.elements = newp;
     } /*block*/
 
     { /* set all new array elements to blank */
     P_EV_DATA p_ev_data_s, p_ev_data_e, p_ev_data_t;
 
     /* set up new sizes */
-    p_ev_data->arg.array.x_size = new_xs;
-    p_ev_data->arg.array.y_size = new_ys;
+    p_ev_data->arg.ev_array.x_size = new_xs;
+    p_ev_data->arg.ev_array.y_size = new_ys;
 
     if(old_xs < 1 || old_ys < 1)
         p_ev_data_s = ss_array_element_index_wr(p_ev_data, 0, 0);
@@ -273,16 +273,12 @@ ss_array_element_read(
     _InVal_     S32 x,
     _InVal_     S32 y)
 {
-    assert(p_ev_data_src->did_num == RPN_TMP_ARRAY);
-    assert(x < p_ev_data_src->arg.array.x_size);
-    assert(y < p_ev_data_src->arg.array.y_size);
+    assert((p_ev_data_src->did_num == RPN_TMP_ARRAY) || (p_ev_data_src->did_num == RPN_RES_ARRAY));
 
-    {
-    S32 element = (y * p_ev_data_src->arg.array.x_size) + x;
-    PC_EV_DATA p_ev_array_data = &p_ev_data_src->arg.array.elements[element];
-    *p_ev_data = *p_ev_array_data;
+    *p_ev_data = *ss_array_element_index_borrow(p_ev_data_src, x, y);
     /*p_ev_data->local_data = 0;*/
-    } /*block*/
+    if(RPN_TMP_STRING == p_ev_data->did_num)
+        p_ev_data->did_num = RPN_DAT_STRING;
 }
 
 /******************************************************************************
@@ -300,9 +296,9 @@ ss_array_make(
     STATUS status = STATUS_OK;
 
     p_ev_data->did_num = RPN_TMP_ARRAY;
-    p_ev_data->arg.array.x_size = 0;
-    p_ev_data->arg.array.y_size = 0;
-    p_ev_data->arg.array.elements = NULL;
+    p_ev_data->arg.ev_array.x_size = 0;
+    p_ev_data->arg.ev_array.y_size = 0;
+    p_ev_data->arg.ev_array.elements = NULL;
 
     if(ss_array_element_make(p_ev_data, x_size - 1, y_size - 1) < 0)
     {
@@ -417,22 +413,22 @@ ss_data_compare(
 
             case RPN_TMP_ARRAY:
                 {
-                if(data1.arg.array.y_size < data2.arg.array.y_size)
+                if(data1.arg.ev_array.y_size < data2.arg.ev_array.y_size)
                     res = -1;
-                else if(data1.arg.array.y_size > data2.arg.array.y_size)
+                else if(data1.arg.ev_array.y_size > data2.arg.ev_array.y_size)
                     res = 1;
-                else if(data1.arg.array.x_size < data2.arg.array.x_size)
+                else if(data1.arg.ev_array.x_size < data2.arg.ev_array.x_size)
                     res = -1;
-                else if(data1.arg.array.x_size > data2.arg.array.x_size)
+                else if(data1.arg.ev_array.x_size > data2.arg.ev_array.x_size)
                     res = 1;
 
                 if(!res)
                     {
                     S32 x, y;
 
-                    for(y = 0; y < data1.arg.array.y_size; ++y)
+                    for(y = 0; y < data1.arg.ev_array.y_size; ++y)
                         {
-                        for(x = 0; x < data1.arg.array.x_size; ++x)
+                        for(x = 0; x < data1.arg.ev_array.x_size; ++x)
                             {
                             if((res = ss_data_compare(ss_array_element_index_borrow(&data1, x, y),
                                                       ss_array_element_index_borrow(&data2, x, y))) != 0)
@@ -447,13 +443,13 @@ ss_data_compare(
                 }
 
             case RPN_DAT_DATE:
-                if(data1.arg.date.date < data2.arg.date.date)
+                if(data1.arg.ev_date.date < data2.arg.ev_date.date)
                     res = -1;
-                else if(data1.arg.date.date == data2.arg.date.date)
+                else if(data1.arg.ev_date.date == data2.arg.ev_date.date)
                     {
-                    if(data1.arg.date.time < data2.arg.date.time)
+                    if(data1.arg.ev_date.time < data2.arg.ev_date.time)
                         res = -1;
-                    else if(data1.arg.date.time == data2.arg.date.time)
+                    else if(data1.arg.ev_date.time == data2.arg.ev_date.time)
                         res = 0;
                     else
                         res = 1;
@@ -463,9 +459,9 @@ ss_data_compare(
                 break;
 
             case RPN_DAT_ERROR:
-                if(data1.arg.error.num < data2.arg.error.num)
+                if(data1.arg.ev_error.status < data2.arg.ev_error.status)
                     res = -1;
-                else if(data1.arg.error.num == data2.arg.error.num)
+                else if(data1.arg.ev_error.status == data2.arg.ev_error.status)
                     res = 0;
                 else
                     res = 1;
@@ -493,7 +489,7 @@ ss_data_free_resources(
     switch(p_ev_data->did_num)
         {
         case RPN_TMP_STRING:
-            str_clr(&p_ev_data->arg.string.data);
+            str_clr(&p_ev_data->arg.string_wr.data);
             p_ev_data->did_num = RPN_DAT_BLANK;
             break;
 
@@ -743,7 +739,7 @@ ss_local_time(
 #if RISCOS
 
     /* localtime doesn't work well on RISCOS */
-    riscos_time_ordinals time_ordinals;
+    RISCOS_TIME_ORDINALS time_ordinals;
     _kernel_swi_regs rs;
     U8Z buffer[8];
 
@@ -902,8 +898,8 @@ extern BOOL
 ss_string_is_blank(
     _InRef_     PC_EV_DATA p_ev_data)
 {
-    PC_U8 ptr = p_ev_data->arg.stringc.data;
-    S32 len = p_ev_data->arg.stringc.size;
+    PC_U8 ptr = p_ev_data->arg.string.data;
+    S32 len = (S32) p_ev_data->arg.string.size;
 
     /*assert(p_ev_data->did_num == RPN_DAT_STRING);*/
 
@@ -944,22 +940,22 @@ _Check_return_
 extern STATUS
 ss_string_make_uchars(
     _OutRef_    P_EV_DATA p_ev_data,
-    _In_reads_(len) PC_UCHARS uchars,
-    _In_        S32 len)
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _In_        U32 uchars_n)
 {
     assert(p_ev_data);
-    assert(len >= 0);
+    assert((S32) uchars_n >= 0);
 
-    len = MIN(len, EV_MAX_STRING_LEN); /* SKS 27oct96 limit in any case */
+    uchars_n = MIN(uchars_n, EV_MAX_STRING_LEN); /* SKS 27oct96 limit in any case */
 
-    /*if(0 != len)*/
+    /*if(0 != uchars_n)*/
         {
         STATUS status;
-        if(NULL == (p_ev_data->arg.string.data = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &status)))
+        if(NULL == (p_ev_data->arg.string_wr.data = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*NULLCH*/, &status)))
             return(ev_data_set_error(p_ev_data, status));
         assert(uchars);
-        memcpy32(p_ev_data->arg.string.data, uchars, len);
-        p_ev_data->arg.string.data[len] = NULLCH;
+        memcpy32(p_ev_data->arg.string_wr.data, uchars, uchars_n);
+        p_ev_data->arg.string_wr.data[uchars_n] = NULLCH;
         p_ev_data->did_num = RPN_TMP_STRING; /* copy is now owned by the caller */
         }
 #if 0 /* can't do this in PipeDream - gets transferred to a result and then freed */
@@ -970,7 +966,7 @@ ss_string_make_uchars(
         }
 #endif
 
-    p_ev_data->arg.string.size = len;
+    p_ev_data->arg.string.size = uchars_n;
 
     return(STATUS_OK);
 }
@@ -991,7 +987,7 @@ ss_string_make_ustr(
 *
 ******************************************************************************/
 
-enum two_num_action
+enum TWO_NUM_ACTION
 {
     TN_NOP,
     TN_R1,
@@ -1001,7 +997,7 @@ enum two_num_action
     TN_MIX
 };
 
-enum two_num_index
+enum TWO_NUM_INDEX
 {
     TN_REAL,
     TN_WORD8,

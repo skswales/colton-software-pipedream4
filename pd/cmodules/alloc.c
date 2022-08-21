@@ -9,7 +9,7 @@
 
 /* Allocation in an extensible flex block for RISC OS */
 
-/* Stuart K. Swales 23-Aug-1989 */
+/* SKS 23-Aug-1989 */
 
 #include "common/gflags.h"
 
@@ -17,19 +17,11 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "myassert.h"
-
 #if RISCOS
 
 /*
 set consistent set of flags for alloc.h
 */
-
-#if defined(VALIDATE_MAIN_ALLOCS) || defined(VALIDATE_FIXED_ALLOCS)
-#if !defined(CHECK_ALLOCS)
-#define  CHECK_ALLOCS
-#endif
-#endif
 
 #if defined(TRACE_MAIN_ALLOCS) || defined(TRACE_FIXED_ALLOCS)
 #if !defined(CHECK_ALLOCS)
@@ -40,10 +32,32 @@ set consistent set of flags for alloc.h
 #endif
 #endif
 
+#if defined(VALIDATE_MAIN_ALLOCS) || defined(VALIDATE_FIXED_ALLOCS)
+#if !defined(CHECK_ALLOCS)
+#define  CHECK_ALLOCS
+#endif
+#endif
+
 #if defined(CHECK_ALLOCS) || defined(TRACE_ALLOCS)
 #undef   TRACE_ALLOWED
 #define  TRACE_ALLOWED 1
+#include "debug.h"
 #endif
+
+/* various options */
+/*defined(startguardsize)*/
+/*defined(endguardsize)*/
+/*defined(ALLOC_CLEAR_FREE)*/
+/*defined(ALLOC_NOISE_THRESHOLD)*/
+/*defined(ALLOC_RELEASE_STORE_INFREQUENTLY)*/
+/*defined(ALLOC_TRACK_PROCESS_USE)*/
+/*defined(ALLOC_TRACK_USAGE)*/
+/*defined(USE_HEAP_SWIS)*/
+/*defined(TEST_REALLOC_RARE_PROCESSES)*/
+/*defined(VALIDATE_MAIN_ALLOCS_START)*/
+
+/* untested options */
+/*defined(REDIRECT_RISCOS_KERNEL_ALLOCS)*/
 
 /*
 internal definitions
@@ -91,18 +105,18 @@ internal definitions
 
 #define ALLOC_HEAP_FLAGS int
 
-typedef struct _ALLOC_HEAP_DESC
+typedef struct ALLOC_HEAP_DESC
 {
-    struct _RISCOS_HEAP * heap;
-    U32                   minsize;
-    U32                   increment;
-    ALLOC_HEAP_FLAGS      flags;
+    struct RISCOS_HEAP *    heap;
+    U32                     minsize;
+    U32                     increment;
+    ALLOC_HEAP_FLAGS        flags;
 }
-ALLOC_HEAP_DESC, * P_ALLOC_HEAP_DESC;
+ALLOC_HEAP_DESC, * P_ALLOC_HEAP_DESC; typedef const ALLOC_HEAP_DESC * PC_ALLOC_HEAP_DESC;
 
 /* Interface to RISC OS Heap Manager */
 
-typedef enum _RISCOS_HEAPREASONCODES
+enum RISCOS_HEAPREASONCODES
 {
     HeapReason_Init          = 0,
     HeapReason_Desc          = 1,
@@ -111,10 +125,9 @@ typedef enum _RISCOS_HEAPREASONCODES
     HeapReason_ExtendBlock   = 4,
     HeapReason_ExtendHeap    = 5,
     HeapReason_ReadBlockSize = 6
-}
-RISCOS_HEAPREASONCODES;
+};
 
-typedef struct _RISCOS_HEAP
+typedef struct RISCOS_HEAP
 {
     U32 magic;  /* ID word */
     U32 free;   /* offset to first block on free list ***from this location*** */
@@ -125,7 +138,7 @@ typedef struct _RISCOS_HEAP
 }
 RISCOS_HEAP, * P_RISCOS_HEAP;
 
-typedef struct _RISCOS_USED_BLOCK
+typedef struct RISCOS_USED_BLOCK
 {
     U32 size;   /* rounded size of used block */
 
@@ -145,7 +158,7 @@ amount of core allocated to this object
 #define blocksize(core) ( \
     blockhdrp(core)->size - sizeof32(RISCOS_USED_BLOCK) )
 
-typedef struct _RISCOS_FREE_BLOCK
+typedef struct RISCOS_FREE_BLOCK
 {
     U32 free;   /* offset to next block on free list ***from this location*** */
     U32 size;   /* size of free block */
@@ -167,9 +180,12 @@ RISC OS only maintains size field on used blocks
     ((n) + (sizeof32(RISCOS_FREE_BLOCK)-1)) & ~(sizeof32(RISCOS_FREE_BLOCK)-1) )
 
 #if defined(CHECK_ALLOCS)
-#define FILL_BYTE 0x55
-#define FILL_WORD ( \
-    (((((FILL_BYTE << 8) + FILL_BYTE) << 8) + FILL_BYTE) << 8) + FILL_BYTE )
+#define SG_FILL_BYTE 0xDDU
+#define SG_FILL_WORD ( \
+    (((((SG_FILL_BYTE << 8) | SG_FILL_BYTE) << 8) | SG_FILL_BYTE) << 8) | SG_FILL_BYTE )
+#define EG_FILL_BYTE 0xEEU
+#define EG_FILL_WORD ( \
+    (((((EG_FILL_BYTE << 8) | EG_FILL_BYTE) << 8) | EG_FILL_BYTE) << 8) | EG_FILL_BYTE )
 #if !defined(startguardsize)
 #define startguardsize 0x10
 #endif
@@ -201,45 +217,36 @@ static P_ANY
 alloc__calloc(
     _InVal_     U32 num,
     _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp);
-
-static void
-alloc__dispose(
-    P_P_ANY p_usrcore,
-    P_ALLOC_HEAP_DESC ahp);
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static void
 alloc__free(
     P_ANY usrcore,
-    P_ALLOC_HEAP_DESC ahp);
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static P_ANY
 alloc__malloc(
     _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp);
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static P_ANY
 alloc__realloc(
     P_ANY usrcore,
     _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp);
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static U32
 alloc__size(
     P_ANY usrcore,
-    P_ALLOC_HEAP_DESC ahp);
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static void
 alloc__validate(
     P_ANY usrcore,
-    const char * msg,
-    P_ALLOC_HEAP_DESC ahp);
+    _In_z_      PCTSTR msg,
+    _InoutRef_  P_ALLOC_HEAP_DESC ahp);
 
 #if defined(FULL_ANSI)
-
-static void
-alloc__ini_dispose(
-    P_P_ANY ap);
 
 static U32
 alloc__ini_size(
@@ -248,7 +255,7 @@ alloc__ini_size(
 static void
 alloc__ini_validate(
     P_ANY a,
-    const char * msg);
+    _In_z_      PCTSTR msg);
 
 #endif
 
@@ -256,10 +263,6 @@ static P_ANY
 alloc__main_calloc(
     _InVal_     U32 num,
     _InVal_     U32 size);
-
-static void
-alloc__main_dispose(
-    P_P_ANY ap);
 
 static void
 alloc__main_free(
@@ -281,7 +284,7 @@ alloc__main_size(
 static void
 alloc__main_validate(
     P_ANY a,
-    const char * msg);
+    _In_z_      PCTSTR msg);
 
 #if defined(REDIRECT_RISCOS_KERNEL_ALLOCS)
 
@@ -299,40 +302,47 @@ alloc__riscos_kernel_malloc(
 
 static void
 alloc_validate_heap(
-    P_ALLOC_HEAP_DESC ahp,
-    const char * routine,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp,
+    _In_z_      PCTSTR routine,
+    _In_        int set_guards);
+
+static void
+alloc_validate_block(
+    _InRef_     PC_ALLOC_HEAP_DESC ahp,
+    P_ANY usrcore,
+    _In_z_      PCTSTR routine,
     _In_        int set_guards);
 
 #endif
 
 static P_ANY
 riscos_ptr_alloc(
-    _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp);
+    _In_        U32 size,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static void
 riscos_ptr_free(
-    RISCOS_USED_BLOCK * p_used,
-    P_ALLOC_HEAP_DESC ahp);
+    P_RISCOS_USED_BLOCK p_used,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static P_ANY
 riscos_ptr_realloc_grow(
     P_ANY p_any,
     _InVal_     U32 new_blksize,
     _InVal_     U32 cur_blksize,
-    P_ALLOC_HEAP_DESC ahp);
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
 static P_ANY
 riscos_ptr_realloc_shrink(
     P_ANY p_any,
     _InVal_     U32 new_blksize,
     _InVal_     U32 cur_blksize,
-    P_ALLOC_HEAP_DESC ahp);
+    _InRef_     PC_ALLOC_HEAP_DESC ahp);
 
-#define P_HEAP_HWM(p_heap) ( \
-    (P_U8) p_heap + p_heap->hwm ) /* P_U8 */
+#define P_HEAP_HWM(p_heap) ( /* P_U8 */ \
+    PtrAddBytes(P_U8, p_heap, p_heap->hwm) )
 
-typedef union _P_RISCOS_HEAP_DATA
+typedef union P_RISCOS_HEAP_DATA
 {
     P_U8 c;
     P_RISCOS_FREE_BLOCK f;
@@ -341,7 +351,7 @@ typedef union _P_RISCOS_HEAP_DATA
 }
 P_RISCOS_HEAP_DATA;
 
-typedef union _P_RISCOS_HEAP_FREE_DATA
+typedef union P_RISCOS_HEAP_FREE_DATA
 {
     P_U8 c;
     P_RISCOS_FREE_BLOCK f;
@@ -349,13 +359,13 @@ typedef union _P_RISCOS_HEAP_FREE_DATA
 }
 P_RISCOS_HEAP_FREE_DATA;
 
-#define P_END_OF_FREE(p_free_block) ( \
-    p_free_block.c + p_free_block.f->size ) /* P_U8 */
+#define P_END_OF_FREE(p_free_block) ( /* P_U8 */ \
+    p_free_block.c + p_free_block.f->size )
 
-#define P_NEXT_FREE(p_free_block) ( \
-    p_free_block.c + p_free_block.f->free ) /* P_U8 */
+#define P_NEXT_FREE(p_free_block) ( /* P_U8 */ \
+    p_free_block.c + p_free_block.f->free )
 
-typedef union _P_RISCOS_HEAP_USED_DATA
+typedef union P_RISCOS_HEAP_USED_DATA
 {
     P_U8 c;
     P_RISCOS_USED_BLOCK u;
@@ -363,8 +373,8 @@ typedef union _P_RISCOS_HEAP_USED_DATA
 }
 P_RISCOS_HEAP_USED_DATA;
 
-#define P_END_OF_USED(p_used_block) ( \
-    p_used_block.c + p_used_block.u->size ) /* P_U8 */
+#define P_END_OF_USED(p_used_block) ( /* P_U8 */ \
+    p_used_block.c + p_used_block.u->size )
 
 #if defined(ALLOC_CLEAR_FREE)
 #define CLEAR_FREE(p_free_block) \
@@ -373,13 +383,14 @@ P_RISCOS_HEAP_USED_DATA;
 #define CLEAR_FREE(p_free_block)
 #endif
 
-struct _FLEX_USED_BLOCK
+struct FLEX_USED_BLOCK
 {
-    void * anchor; U32 b;
+    void * anchor;
+    U32 size;
 };
 
 #define RHM_SIZEOF_FLEX_USED_BLOCK \
-    round_heapmgr(sizeof32(struct _FLEX_USED_BLOCK))
+    round_heapmgr(sizeof32(struct FLEX_USED_BLOCK))
 
 /* ----------------------------------------------------------------------- */
 
@@ -405,7 +416,7 @@ alloc_main_heap_desc =
 {
     NULL,    /* heap */
     0,       /* minsize */
-    0x8000,  /* increment (32KB) */
+    0x8000,  /* increment (a 32K lump) */
 #if defined(TRACE_MAIN_ALLOCS)
     alloc_trace_on |
 #endif
@@ -414,19 +425,19 @@ alloc_main_heap_desc =
 #endif
 #if defined(VALIDATE_MAIN_ALLOCS)
     alloc_validate_on |
-    /*alloc_validate_heap_before_alloc |*/
-    /*alloc_validate_heap_before_free |*/
-    /*alloc_validate_heap_on_size |*/
-    alloc_validate_block_before_realloc |
-    alloc_validate_block_before_free |
-    alloc_validate_block_on_size |
+    alloc_validate_heap_before_alloc |
+    alloc_validate_heap_before_free |
+    alloc_validate_heap_on_size |
+  /*alloc_validate_block_before_realloc |**/
+  /*alloc_validate_block_before_free |*/
+  /*alloc_validate_block_on_size |*/
     alloc_validate_heap_blocks |
 #endif
     0 /* flags */
 };
 
 U32
-alloc_main_heap_minsize = 0x8000U - RHM_SIZEOF_FLEX_USED_BLOCK; /* (32KB minus flex block overhead) */
+alloc_main_heap_minsize = 0x8000U - RHM_SIZEOF_FLEX_USED_BLOCK; /* 32KB (minus flex block overhead) */
 
 /*
 the main heap function set
@@ -436,7 +447,6 @@ ALLOC_FUNCTION_SET
 alloc_main =
 {
     calloc,
-    alloc__ini_dispose,
     free,
     malloc,
     realloc,
@@ -456,7 +466,6 @@ static const ALLOC_FUNCTION_SET
 alloc_main_redirected =
 {
     alloc__main_calloc,
-    alloc__main_dispose,
     alloc__main_free,
     alloc__main_malloc,
     alloc__main_realloc,
@@ -468,7 +477,7 @@ alloc_main_redirected =
 static _kernel_oserror *
 alloc_winge(
     _kernel_oserror * e,
-    const char * routine)
+    _In_z_      PCTSTR* routine)
 {
     myassert2x(e == NULL, TEXT("alloc__%s error: %s"), routine, e->errmess);
     return(e);
@@ -479,7 +488,7 @@ alloc_winge(
 
 static BOOL
 alloc_initialise_heap(
-    P_ALLOC_HEAP_DESC ahp)
+    _InoutRef_  P_ALLOC_HEAP_DESC ahp)
 {
 #if defined(USE_HEAP_SWIS)
     _kernel_swi_regs rs;
@@ -490,7 +499,6 @@ alloc_initialise_heap(
 
     /* ensure minsize a multiple of heap granularity - it must already have space for the RISCOS_HEAP */
     ahp->minsize = round_heapmgr(ahp->minsize);
- reportf("ahp->minsize := %d", ahp->minsize);
 
     new_size = ahp->minsize;
 
@@ -506,12 +514,11 @@ alloc_initialise_heap(
         return(FALSE);
 
     /* once alloc is running in a fixed block at start of flex, we must stop the C runtime from moving us */
-    /* NB if flex is running in a dynamic area, the C runtime is free to grow in any case */
     flex_set_budge(0);
 
     heap = ahp->heap;
 
-    trace_4(TRACE_MODULE_ALLOC, TEXT("alloc_initialise_heap got heap at &%p->&%p, size %u,&%4.4x"), report_ptr_cast(ahp), report_ptr_cast(heap), new_size, new_size);
+    trace_4(TRACE_MODULE_ALLOC, TEXT("alloc_initialise_heap(ahp:") PTR_XTFMT TEXT(") allocated heap ") PTR_XTFMT TEXT(", size ") U32_TFMT TEXT(",") U32_XTFMT, report_ptr_cast(ahp), report_ptr_cast(heap), new_size, new_size);
 
 #if defined(USE_HEAP_SWIS)
     rs.r[0] = HeapReason_Init;
@@ -638,25 +645,21 @@ alloc_initialise_heap(
 *
 ******************************************************************************/
 
-#pragma no_check_stack
+#if !RELEASED
+#define PRAGMA_CHECK_STACK_OFF
+#include "coltsoft/pragma.h"
+#endif
 
+_Check_return_
 static int
 alloc_needtoallocate(
-    _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp)
+    _InVal_     U32 need,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    P_RISCOS_HEAP heap = ahp->heap;
-    U32 current_hwm, current_size;
-    U32 spare, need, delta;
+    const P_RISCOS_HEAP heap = ahp->heap;
+    U32 spare = heap->size - heap->hwm;
 
-    current_hwm  = heap->hwm;
-    current_size = heap->size;
-    spare        = current_size - current_hwm;
-    need         = round_heapmgr(size + HEAPMGR_OVERHEAD);
-
-    trace_6(TRACE_MODULE_ALLOC,
-            TEXT("alloc_needtoallocate(%u,&%4.4x): current_hwm = &%x, current_size = &%x, spare = %u,&%4.4x"),
-            size, size, heap->hwm, heap->size, spare, spare);
+    trace_8(TRACE_MODULE_ALLOC, TEXT("alloc_needtoallocate(") U32_TFMT TEXT(",") U32_XTFMT TEXT(" in heap ") PTR_XTFMT TEXT("): hwmp=") PTR_XTFMT TEXT(", size=") U32_TFMT TEXT(",") U32_XTFMT TEXT(", spare=") U32_TFMT TEXT(",") U32_XTFMT, need, need, report_ptr_cast(heap), report_ptr_cast(P_HEAP_HWM(heap)), heap->size, heap->size, spare, spare);
 
     assert((int) need > 0);
     if(need <= spare)
@@ -666,22 +669,21 @@ alloc_needtoallocate(
     if(ahp->flags & alloc_heap_fixed_size)
         return(FALSE);
 
-    delta = need - spare;
+    {
+    U32 new_size = heap->hwm + need;
+
     if(ahp->increment)
     {
-    if(delta <= ahp->increment)
-        delta = ahp->increment;
-    else
-    {
-        delta = ahp->increment * (1U + (delta / ahp->increment));
-        /*reportf("*** allocating big block - need=%d, spare=%d, delta=%d", need, spare, delta);*/
-    }
+        new_size += RHM_SIZEOF_FLEX_USED_BLOCK;
+        new_size  = div_round_ceil_u(new_size, ahp->increment) * ahp->increment;
+        new_size -= RHM_SIZEOF_FLEX_USED_BLOCK;
     }
 
     trace_on();
-    trace_4(TRACE_MODULE_ALLOC| TRACE_APP_MEMORY_USE, TEXT("extending heap (&%p->&%p) by %u,&%4.4x"), report_ptr_cast(ahp), report_ptr_cast(heap), delta, delta);
+    trace_5(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("extending heap ") PTR_XTFMT TEXT(" from size=") U32_TFMT TEXT(",") U32_XTFMT TEXT(" to ") U32_TFMT TEXT(",") U32_XTFMT, report_ptr_cast(heap), heap->size, heap->size, new_size, new_size);
     /*alloc_validate_heap(ahp, "pre heap extension", 0);*/
-    if(!flex_realloc((flex_ptr) &ahp->heap, current_size + delta))
+
+    if(!flex_realloc((flex_ptr) &ahp->heap, new_size))
     {
         trace_0(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("*** heap extension failed - return FALSE"));
         trace_off();
@@ -689,17 +691,85 @@ alloc_needtoallocate(
     }
 
     heap->size = flex_size((flex_ptr) &ahp->heap);
+    } /*block*/
 
-    trace_4(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("heap (&%p->&%p) now size %u,&%4.4x"), report_ptr_cast(ahp), report_ptr_cast(heap), heap->size, heap->size);
+    trace_3(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("heap ") PTR_XTFMT TEXT(" extended to size ") U32_TFMT TEXT(",") U32_XTFMT, report_ptr_cast(ahp->heap), heap->size, heap->size);
     trace_off();
     return(TRUE);
 }
 
-#pragma check_stack
+#if !RELEASED
+#define PRAGMA_CHECK_STACK_ON
+#include "coltsoft/pragma.h"
+#endif
 
+/******************************************************************************
+*
+* release the free store at the top of the
+* heap and flex area back to the free pool
+*
+******************************************************************************/
+
+static void
+alloc_freeextrastore(
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
+{
+    const P_RISCOS_HEAP heap = ahp->heap;
+
+    /* wiggling prohibited? */
+    if(ahp->flags & alloc_heap_compact_disabled)
+        return;
+
+    /* must not wiggle some heaps */
+    if(ahp->flags & alloc_heap_dont_compact)
+        return;
+
+    {
+    U32 new_size = heap->hwm;
+    U32 spare;
+
+    new_size += RHM_SIZEOF_FLEX_USED_BLOCK;
+    new_size  = div_round_ceil_u(new_size, ahp->increment) * ahp->increment;
+    new_size -= RHM_SIZEOF_FLEX_USED_BLOCK;
+
+    /* don't let heap size fall too low */
+    if(new_size <= ahp->minsize)
+        new_size = ahp->minsize;
+
+    if(new_size >= heap->size)
+    {
+        assert(new_size == heap->size);
+        return;
+    }
+
+    spare = heap->size - new_size;
+
+    trace_on();
+
+    if((spare >= (U32) flex_granularity) || (spare + (U32) flex_storefree() >= (U32) flex_granularity))
+    {
+        trace_1(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("alloc_freeextrastore: contracting heap ") PTR_XTFMT TEXT(" to free some space"), report_ptr_cast(heap));
+
+        if(!flex_realloc((flex_ptr) &ahp->heap, new_size))
+        {
+            trace_0(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("*** heap contraction failed"));
+            trace_off();
+            return;
+        }
+
+        heap->size = flex_size((flex_ptr) &ahp->heap);
+
+        trace_3(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("heap ") PTR_XTFMT TEXT(" contracted to size ") U32_TFMT TEXT(",") U32_XTFMT, report_ptr_cast(ahp->heap), heap->size, heap->size);
+    }
+
+    trace_off();
+    } /*block*/
+}
+
+_Check_return_
 extern STATUS
 alloc_ensure_froth(
-    U32 froth_size)
+    _In_        U32 froth_size)
 {
     assert(froth_size >= 0x1000);
 
@@ -713,53 +783,7 @@ alloc_ensure_froth(
 
 /******************************************************************************
 *
-* release the free store at the top of the
-* heap and flex area back to the free pool
-*
-******************************************************************************/
-
-static void
-alloc_freeextrastore(
-    P_ALLOC_HEAP_DESC ahp)
-{
-    U32 current_hwm, current_size;
-    U32 spare;
-
-    /* must not wiggle fixed heaps */
-    if(ahp->flags & alloc_heap_fixed_size)
-        return;
-
-    current_hwm = ahp->heap->hwm;
-
-    /* don't let heap size fall too low */
-    if(current_hwm <= ahp->minsize)
-        current_size = ahp->minsize;
-    else
-        current_size = ahp->heap->size;
-
-    spare = current_size - current_hwm;
-
-    if((int) spare + flex_storefree() >= flex_granularity)
-        {
-        trace_0(TRACE_MODULE_ALLOC, "alloc_freeextrastore: contracting heap to free some space");
-
-        if(!flex_realloc((flex_ptr) &ahp->heap, current_hwm))
-            {
-            trace_0(TRACE_MODULE_ALLOC, "*** heap contraction failed");
-            return;
-            }
-
-        ahp->heap->size = flex_size((flex_ptr) &ahp->heap);
-
-        trace_4(TRACE_MODULE_ALLOC,
-                "heap (&%p->&%p) now contracted to size %u,&%4.4x",
-                report_ptr_cast(ahp), report_ptr_cast(ahp->heap), ahp->heap->size, ahp->heap->size);
-        }
-}
-
-/******************************************************************************
-*
-*  initialise allocators
+* initialise allocators
 *
 ******************************************************************************/
 
@@ -783,7 +807,7 @@ alloc_init(void)
     trace_on();
 #endif
 
-    trace_0(TRACE_MODULE_ALLOC, "alloc_init()");
+    trace_0(TRACE_MODULE_ALLOC, TEXT("alloc_init()"));
 
 #if defined(USE_BOUND_LIBRARY)
     __heap_checking_on_all_allocates(TRUE);
@@ -791,16 +815,18 @@ alloc_init(void)
 #endif
 
     for(;;) /* loop for structure */
-        {
-        reportf("g_dynamic_area_limit: %d", g_dynamic_area_limit);
+    {
+        /*reportf("g_dynamic_area_limit: %d", g_dynamic_area_limit);*/
         if((alloc_dynamic_area_handle = flex_init(de_const_cast(char *, g_dynamic_area_name), 0, g_dynamic_area_limit)) < 0)
             break;
 
-        flex_set_deferred_compaction(TRUE);
-
         if(alloc_main_heap_minsize)
-            {
+        {
             alloc_main_heap_desc.minsize = alloc_main_heap_minsize;
+
+            /* SKS 27sep94 attempt to get memory back for 2MB owners. Made sensible for other systems 10nov96 */
+            if(0x4000 == flex_granularity)
+                alloc_main_heap_desc.increment = 0x2000;
 
             if(!alloc_initialise_heap(&alloc_main_heap_desc))
                 break;
@@ -808,15 +834,48 @@ alloc_init(void)
             /* redirect alloc main functions */
             alloc_main = alloc_main_redirected;
 
-            #if defined(REDIRECT_KERNEL_ALLOCS)
-            _kernel_register_allocs(alloc__kernel_malloc, alloc__kernel_free);
-            #endif
+#if defined(VALIDATE_MAIN_ALLOCS_START)
+            alloc_main_heap_desc.flags |= alloc_validate_enabled;
+#endif
+
+#if defined(REDIRECT_RISCOS_KERNEL_ALLOCS)
+            _kernel_register_allocs(alloc__riscos_kernel_malloc, alloc__riscos_kernel_free);
+#endif
+
+#if 0
+            {
+            void * p_data = NULL;
+            unsigned n_words = 8*1024;
+
+            while(n_words >= 2*1024)
+            {
+                unsigned n_words_got = _kernel_alloc(n_words, &p_data);
+
+                if(NULL != p_data)
+                {
+                    n_words = n_words_got;
+                    break;
+                }
+
+                n_words -= 128; /* try 512 bytes less */
             }
+
+#if defined(ALLOC_TRACK_USAGE)
+            freopen("$.poo", "wb", stderr);
+
+            fprintf(stderr, TEXT("alloc_init: malloc ") PTR_XTFMT TEXT(" ") U32_XTFMT TEXT(" words"), p_data, n_words);
+#endif
+
+            } /*block*/
+#endif
+
+        }
 
         status = STATUS_OK;
 
         break; /* always - loop only for structure */
-        }
+        /*NOTREACHED*/
+    }
 
 #if defined(TRACE_ALLOCS)
     trace_off();
@@ -834,8 +893,21 @@ alloc_init(void)
 extern void
 alloc_tidy_up(void)
 {
+    int heap_compact_disabled = alloc_main_heap_desc.flags & alloc_heap_compact_disabled;
+    alloc_main_heap_desc.flags &= ~alloc_heap_compact_disabled;
     alloc_freeextrastore(&alloc_main_heap_desc);
+    alloc_main_heap_desc.flags |= heap_compact_disabled;
 }
+
+extern void
+alloc_track_stop(void)
+{
+#if defined(ALLOC_TRACK_USAGE)
+    fclose(stderr);
+#endif
+}
+
+#if TRACE_ALLOWED
 
 /******************************************************************************
 *
@@ -843,22 +915,18 @@ alloc_tidy_up(void)
 *
 ******************************************************************************/
 
-#if TRACE_ALLOWED
-
 extern void
 alloc_traversefree(
-    int which)
+    _In_        int which)
 {
-    P_ALLOC_HEAP_DESC ahp;
+    const PC_ALLOC_HEAP_DESC ahp = &alloc_main_heap_desc;
 
     IGNOREPARM(which);
-
-    ahp = &alloc_main_heap_desc;
 
     alloc_validate_heap(ahp, "traversefree", 0);
 }
 
-#endif
+#endif /* TRACE_ALLOWED */
 
 /******************************************************************************
 *
@@ -866,232 +934,285 @@ alloc_traversefree(
 *
 ******************************************************************************/
 
-#if !TRACE_ALLOWED
-#else
-static void
-alloc_validate_block(
-    P_ALLOC_HEAP_DESC ahp,
-    P_ANY usrcore,
-    const char * routine,
-    _In_        int set_guards);
-#endif
-
 static void
 alloc_validate_heap(
-    P_ALLOC_HEAP_DESC ahp,
-    const char * routine,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp,
+    _In_z_      PCTSTR routine,
     _In_        int set_guards)
 {
 #if !TRACE_ALLOWED
-    IGNOREPARM(ahp);
+    IGNOREPARM_InRef_(ahp);
     IGNOREPARM(routine);
     IGNOREPARM(set_guards);
 #else
-    union
-    {
-        const char *              c;
-        const RISCOS_FREE_BLOCK * f;
-        const RISCOS_USED_BLOCK * u;
-        const void *              v;
-    } p;
-    const char * freep;
-    const char * hwmp;
-    const char * endp;
+    const P_RISCOS_HEAP heap = ahp->heap;
+    P_RISCOS_HEAP_DATA p;
+    P_U8 freep;
+    P_U8 hwmp;
+    P_U8 endp;
     U32 current_hwm, current_size;
-    const char * usrcore;
+    P_U8 usrcore;
     U32 syssize, usrsize, offset;
+    U32 largest_free = 0;
+    U32 total_free = 0;
 
     /* validate heap */
 
-    p.v          = ahp->heap + 1;
-    offset       = ahp->heap->free;
-    freep        = offset ? ((char *) &ahp->heap->free + offset) : NULL;
+    p.v          = heap + 1;
+    offset       = heap->free;
+    freep        = offset ? PtrAddBytes(P_U8, &heap->free, offset) : NULL;
 
-    current_hwm  = ahp->heap->hwm;
-    hwmp         = (char *) ahp->heap + current_hwm;
+    current_hwm  = heap->hwm;
+    hwmp         = P_HEAP_HWM(heap);
 
-    current_size = ahp->heap->size;
-    endp         = (char *) ahp->heap + current_size;
+    current_size = heap->size;
+    endp         = PtrAddBytes(P_U8, heap, current_size);
 
-    trace_6(TRACE_MODULE_ALLOC,
-            " heap (&%p->&%p) size &%4.4x,&%p hwm &%4.4x,&%p\n*** free/used blocks ***:",
-            report_ptr_cast(ahp), report_ptr_cast(ahp->heap), current_size, report_ptr_cast(endp), current_hwm, report_ptr_cast(hwmp));
+    trace_5(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT(" heap ") PTR_XTFMT TEXT(" size=") U32_TFMT TEXT(",") U32_XTFMT TEXT(" endp=") PTR_XTFMT TEXT(" hwmp=") PTR_XTFMT TEXT("\n*** free/used blocks ***:"), report_ptr_cast(heap), current_size, current_size, report_ptr_cast(endp), report_ptr_cast(hwmp));
 
-    myassert5x(current_hwm < INT_MAX, "alloc__%s: heap (&%p->&%p) has corrupt hwm %u,&%4.4x",
-              routine, ahp, ahp->heap,
-              current_hwm, current_hwm);
+    if(current_hwm >= (U32) S32_MAX)
+        myassert4(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" has corrupt hwm ") U32_TFMT TEXT(",") U32_XTFMT,
+                  routine, report_ptr_cast(heap),
+                  current_hwm, current_hwm);
 
-    myassert5x(current_size < INT_MAX, "alloc__%s: heap (&%p->&%p) has corrupt size %u,&%4.4x",
-               routine, ahp, ahp->heap,
-               current_size, current_size);
+    if(current_size >= (U32) S32_MAX)
+        myassert4(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" has corrupt size ") U32_TFMT TEXT(",") U32_XTFMT,
+                  routine, report_ptr_cast(heap),
+                  current_size, current_size);
 
-    myassert7x(current_hwm <= current_size, "alloc__%s: heap (&%p->&%p) has corrupt hwm %u,&%4.4x > size %u,&%4.4x",
-               routine, ahp, ahp->heap,
-               current_hwm, current_hwm,
-               current_size, current_size);
+    if(current_hwm > current_size)
+        myassert6(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" has corrupt hwm ") U32_TFMT TEXT(",") U32_XTFMT TEXT(" > size ") U32_TFMT TEXT(",") U32_XTFMT,
+                  routine, report_ptr_cast(heap),
+                  current_hwm, current_hwm,
+                  current_size, current_size);
 
     if(offset)
-        myassert7x((offset <= current_hwm)  &&  (offset >= sizeof32(RISCOS_HEAP) - offsetof32(RISCOS_HEAP, size)),
-                   "alloc__%s: heap (&%p->&%p) has corrupt initial free link %u,&%4.4x (hwm %u,&%4.4x)",
-                   routine, ahp, ahp->heap,
-                   offset, offset,
-                   current_hwm, current_hwm);
+        if((offset > current_hwm)  ||  (offset < sizeof32(RISCOS_HEAP) - offsetof32(RISCOS_HEAP, size)))
+            myassert6(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" has corrupt initial free link ") U32_TFMT TEXT(",") U32_XTFMT TEXT(" (hwm ") U32_TFMT TEXT(",") U32_XTFMT TEXT(")"),
+                      routine, report_ptr_cast(heap),
+                      offset, offset,
+                      current_hwm, current_hwm);
 
     do  {
         if(p.c == hwmp)
-            {
-            trace_3(TRACE_MODULE_ALLOC,
-                    "  (last free block &%p,%u,&%4.4x)",
-                    p.c, endp - hwmp, endp - hwmp);
+        {
+            syssize = endp - hwmp;
+
+            /*largest_free = MAX(largest_free, syssize);*/
+            total_free += syssize;
+
+            tracef(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("  (free ") PTR_XTFMT TEXT(",%5u,") U32_XTFMT TEXT(" lge %5u,") U32_XTFMT TEXT(" tot %5u,") U32_XTFMT TEXT(" --- above hwm)"), p.v, syssize, syssize, largest_free, largest_free, total_free, total_free);
 
             p.c = endp;
-            }
+        }
         else if(p.c == freep)
-            {
+        {
             offset  = p.f->free;
             syssize = p.f->size;
 
-            trace_3(TRACE_MODULE_ALLOC,
-                    "  (free &%p,%u,&%4.4x)",
-                    report_ptr_cast(p.f), syssize, syssize);
+            largest_free = MAX(largest_free, syssize);
+            total_free += syssize;
+
+            if(syssize >= ALLOC_NOISE_THRESHOLD)
+                tracef(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("  (free ") PTR_XTFMT TEXT(",%5u,") U32_XTFMT TEXT(" lge %5u,") U32_XTFMT TEXT(" tot %5u,") U32_XTFMT TEXT(")"), p.v, syssize, syssize, largest_free, largest_free, total_free, total_free);
 
             if(offset)
+            {
                 freep += offset;
+
+                if((offset & 3) != 0)
+                    myassert5(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" free block ") PTR_XTFMT TEXT(" has non-word aligned next free block offset ") U32_TFMT TEXT(",") U32_XTFMT,
+                              routine, report_ptr_cast(heap),
+                              p.v, offset, offset);
+
+                if((freep < p.c + syssize)  ||  (freep > hwmp))
+                    myassert5(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" free block ") PTR_XTFMT TEXT(" has corrupt next free block offset ") U32_TFMT TEXT(",") U32_XTFMT,
+                              routine, report_ptr_cast(heap),
+                              p.v, offset, offset);
+            }
             else
                 freep = NULL;
 
-            if(offset)
-                myassert6x(((offset & 3) == 0)  &&  (freep >= p.c)  &&  (freep < hwmp),
-                           "alloc__%s: heap (&%p->&%p) free block &%p has corrupt offset %u,&%4.4x",
-                           routine, ahp, ahp->heap,
-                           p.c, offset, offset);
+            if((syssize & 3) != 0)
+                myassert5(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" free block ") PTR_XTFMT TEXT(" has non-word aligned size ") U32_TFMT TEXT(",") U32_XTFMT,
+                          routine, report_ptr_cast(heap),
+                          p.v, syssize, syssize);
 
-            myassert6x(((syssize & 3) == 0)  &&  (p.c + syssize > p.c)  &&  (p.c + syssize <= hwmp),
-                       "alloc__%s: heap (&%p->&%p) free block &%p has corrupt size %u,&%4.4x",
-                       routine, ahp, ahp->heap,
-                       p.c, syssize, syssize);
+            if((p.c + syssize <= p.c)  ||  (p.c + syssize > hwmp))
+                myassert5(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" free block ") PTR_XTFMT TEXT(" has corrupt size ") U32_TFMT TEXT(",") U32_XTFMT,
+                          routine, report_ptr_cast(heap),
+                          p.v, syssize, syssize);
 
             p.c += syssize;
-            }
+        }
         else
-            {
+        {
             syssize = p.u->size;
 
             usrsize = syssize - sizeof32(*p.u) - (startguardsize + endguardsize);
 
-            usrcore = (char *) (p.u + 1) + startguardsize;
+            usrcore = PtrAddBytes(P_U8, (p.u + 1), startguardsize);
 
-            trace_6(TRACE_MODULE_ALLOC,
-                    "  (used &%p &%p size %u,&%4.4x %u,&%4.4x)",
-                    report_ptr_cast(p.u), report_ptr_cast(usrcore), syssize, syssize, usrsize, usrsize);
+            if(syssize >= ALLOC_NOISE_THRESHOLD)
+                trace_6(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("  (used ") PTR_XTFMT TEXT(",%5u,") U32_XTFMT TEXT(" usr ") PTR_XTFMT TEXT(",%5u,") U32_XTFMT TEXT(")"), p.v, syssize, syssize, usrcore, usrsize, usrsize);
 
-            myassert9x(((syssize & 3) == 0)  ||  (p.c + syssize > p.c)  &&  (p.c + syssize <= hwmp),
-                       "alloc__%s: heap (&%p->&%p) used block &%p &%p has corrupt size %u,&%4.4x %u,&%4.4x",
-                       routine, ahp, ahp->heap,
-                       p.c, usrcore,
-                       syssize, syssize,
-                       usrsize, usrsize);
+            if((syssize & 3) != 0)
+                myassert8(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" used block ") PTR_XTFMT TEXT(" ") PTR_XTFMT TEXT(" has non-word aligned size ") U32_TFMT TEXT(",") U32_XTFMT TEXT(" ") U32_TFMT TEXT(",") U32_XTFMT,
+                          routine, report_ptr_cast(heap),
+                          p.v, usrcore,
+                          syssize, syssize,
+                          usrsize, usrsize);
 
-            if(ahp->flags & alloc_validate_heap_blocks)
-                alloc_validate_block(ahp, de_const_cast(P_ANY, usrcore), routine, set_guards);
+            if((p.c + syssize <= p.c)  ||  (p.c + syssize > hwmp))
+                myassert8(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(" used block ") PTR_XTFMT TEXT(" ") PTR_XTFMT TEXT(" has corrupt size ") U32_TFMT TEXT(",") U32_XTFMT TEXT(" ") U32_TFMT TEXT(",") U32_XTFMT,
+                          routine, report_ptr_cast(heap),
+                          p.v, usrcore,
+                          syssize, syssize,
+                          usrsize, usrsize);
+
+            if((ahp->flags & alloc_validate_heap_blocks) || set_guards)
+                alloc_validate_block(ahp, usrcore, routine, set_guards);
 
             p.c += syssize;
-            }
         }
+    }
     while(p.c != endp);
 
-    trace_0(TRACE_MODULE_ALLOC, "  -- heap validated");
+    trace_0(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("  -- heap validated"));
 
 #endif /* TRACE_ALLOWED */
 }
 
 static void
 alloc_validate_block(
-    P_ALLOC_HEAP_DESC ahp,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp,
     P_ANY usrcore,
-    const char * routine,
+    _In_z_      PCTSTR routine,
     _In_        int set_guards)
 {
 #if !TRACE_ALLOWED
-    IGNOREPARM(ahp);
+    IGNOREPARM_InRef_(ahp);
     IGNOREPARM(usrcore);
     IGNOREPARM(routine);
     IGNOREPARM(set_guards);
 #else
-    const char *              core;
-    const RISCOS_USED_BLOCK * syscore;
-    U32                       syssize, size, usrsize;
-    int                       valid_size = 1;
+    const P_RISCOS_HEAP heap = ahp->heap;
+    P_U8 syscore;
+    P_RISCOS_USED_BLOCK p_used_block;
+    U32 blksize, syssize, usrsize;
+    int valid_size = 1;
+#if defined(CHECK_ALLOCS)
+    U32 actualusrsize;
+#else
+    IGNOREPARM(set_guards);
+#endif
 
-    core    = usrcore;
-    core   -= startguardsize;
-    syscore = blockhdrp(core);
+    syscore      = PtrSubBytes(P_U8, usrcore, startguardsize);
+    p_used_block = blockhdrp(syscore);
 
-    syssize = syscore->size;
-    size    = syssize - sizeof32(*syscore);
-    usrsize = size - (startguardsize + endguardsize);
+    if( ((uintptr_t) p_used_block <  (uintptr_t) heap)              ||
+        ((uintptr_t) p_used_block >= (uintptr_t) heap + heap->size) )
+    {
+        myassert4(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(", blk(") PTR_XTFMT TEXT("), usr(") PTR_XTFMT TEXT(") block is not in heap"),
+                  routine, report_ptr_cast(heap),
+                  p_used_block, usrcore);
 
-    if(!(syssize  &&  ((syssize & 3) == 0)  &&  (syssize < INT_MAX)))
-        {
-        myassert9x(0, "alloc__%s(&%p->&%p): object &%p &%p has corrupt size %u,&%4.4x %u,&%4.4x (can't check endguard)",
-                    routine, ahp, !ahp ? NULL : ahp->heap,
-                    syscore, usrcore,
-                    syssize, syssize,
-                    usrsize, usrsize);
+        return;
+    }
+
+    blksize = p_used_block->size;
+    syssize = blksize - sizeof32(*p_used_block);
+    usrsize = syssize - (startguardsize + endguardsize);
+
+    if(((syssize & 3) != 0) || ((U32) syssize >= (U32) S32_MAX))
+    {
+        myassert8(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(", blk(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT("), usr(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT(") block has corrupt size (can't check endguard)"),
+                  routine, report_ptr_cast(heap),
+                  p_used_block, blksize, blksize,
+                  usrcore, usrsize, usrsize);
 
         valid_size = 0;
-        }
+    }
 
 #if defined(CHECK_ALLOCS)
     {
-    PC_S32 end32p;
-    PC_S32 ptr32p;
-    PC_S32 start32p;
-    const char * end;
-    const char * ptr;
-    const char * start;
+    P_U32 end32p;
+    P_U32 ptr32p;
+    P_U32 start32p;
+    P_U8 end;
+    P_U8 ptr;
+    P_U8 start;
 
-    end32p   = (P_S32 ) (core + startguardsize); /* give offsets relative to start of guts */
+    start32p = (P_U32) syscore;
+    end32p   = PtrAddBytes(P_U32, syscore, startguardsize); /* give offsets relative to start of guts */
     ptr32p   = end32p;
-    start32p = (P_S32 ) core;
 
-    while(ptr32p > start32p)
+    while(--ptr32p > start32p) /* omit first start guard word as it contains size */
+    {
+        if(set_guards)
+            *ptr32p = SG_FILL_WORD;
+        else if(*ptr32p != SG_FILL_WORD)
         {
-        --ptr32p;
+            myassert12(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(", blk(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT("), usr(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT(") block has fault at startguard offset ") U32_TFMT TEXT(",") U32_XTFMT TEXT(": ") U32_XTFMT TEXT(" != SG_FILL_WORD ") U32_XTFMT,
+                       routine, report_ptr_cast(heap),
+                       p_used_block, blksize, blksize,
+                       usrcore, usrsize, usrsize,
+                       (end32p - ptr32p) * sizeof32(*ptr32p),
+                       (end32p - ptr32p) * sizeof32(*ptr32p),
+                       (int) *ptr32p, SG_FILL_WORD);
 
-        if(myassert(*ptr32p == FILL_WORD))
-            myasserted("alloc__%s(&%p->&%p): object &%p &%p, size %u,&%4.4x %u,&%4.4x, fault at startguard offset %u,&%4.4x: &%8.8X != FILL_WORD &%8.8X",
-                        routine, ahp, !ahp ? NULL : ahp->heap,
-                        syscore, usrcore,
-                        syssize, syssize,
-                        usrsize, usrsize,
-                        (end32p - ptr32p) * sizeof32(*ptr32p),
-                        (end32p - ptr32p) * sizeof32(*ptr32p),
-                        (int) *ptr32p, FILL_WORD);
-        }
-
-    if(valid_size)
-        {
-        end   = core + size;
-        ptr   = end - endguardsize;
-        start = ptr; /* give offsets relative to start of endguard */
-
-        while(ptr < end)
-            {
-            if(myassert(*ptr == FILL_BYTE))
-                myasserted("alloc__%s(&%p->&%p): object &%p &%p, size %u,&%4.4x %u,&%4.4x, fault at endguard offset %u,&%4.4x: &%2.2X != FILL_BYTE &%2.2X",
-                            routine, ahp, !ahp ? NULL : ahp->heap,
-                            syscore, usrcore,
-                            syssize, syssize,
-                            usrsize, usrsize,
-                            (ptr - start) * sizeof32(*ptr),
-                            (ptr - start) * sizeof32(*ptr),
-                            *ptr, FILL_BYTE);
-
-            ++ptr;
-            }
+            *ptr32p = SG_FILL_WORD; /* repair, so we don't see it again */
         }
     }
+
+    actualusrsize = 0; /* keep dataflower happy */
+
+    /*CONSTANTCONDITION*/
+    if_constant(0 == startguardsize)
+        valid_size = 0;
+
+    if(valid_size)
+    {
+        /* actual size stored in first start guard word */
+        actualusrsize = * (P_U32) start32p;
+
+        if(round_heapmgr(actualusrsize + (startguardsize + endguardsize) + HEAPMGR_OVERHEAD) != blksize)
+        {
+            myassert10(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(", blk(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT("), usr(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT(") block inconsistent with alloc size ") U32_TFMT TEXT(",") U32_XTFMT TEXT(" (can't check endguard)"),
+                       routine, report_ptr_cast(heap),
+                       p_used_block, blksize, blksize,
+                       usrcore, usrsize, usrsize,
+                       actualusrsize, actualusrsize);
+
+            valid_size = 0;
+        }
+    }
+
+    if(valid_size)
+    {
+        start = PtrAddBytes(P_U8, usrcore, actualusrsize); /* now tests from end of user's block, not rounding up */
+        end   = PtrAddBytes(P_U8, p_used_block, blksize);  /* but all the way up to the top still */
+        ptr   = start;
+
+        do  {
+            if(set_guards)
+                *ptr = EG_FILL_BYTE;
+            else if(*ptr != EG_FILL_BYTE)
+            {
+                myassert12(TEXT("alloc__%s: heap ") PTR_XTFMT TEXT(", blk(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT("), usr(") PTR_XTFMT TEXT(",") U32_TFMT TEXT(",") U32_XTFMT TEXT(") block has fault at endguard offset ") U32_TFMT TEXT(",") U32_XTFMT TEXT(": 0x%.2X != FILL_BYTE 0x%.2X"),
+                           routine, report_ptr_cast(heap),
+                           p_used_block, blksize, blksize,
+                           usrcore, usrsize, usrsize,
+                           (ptr - start) * sizeof32(*ptr),
+                           (ptr - start) * sizeof32(*ptr),
+                           *ptr, EG_FILL_BYTE);
+
+                *ptr = EG_FILL_BYTE; /* repair, so we don't see it again */
+            }
+        }
+        while(++ptr < end);
+    }
+    } /*block*/
 #endif /* CHECK_ALLOCS */
 
 #endif /* TRACE_ALLOWED */
@@ -1099,55 +1220,32 @@ alloc_validate_block(
 
 #if defined(FULL_ANSI)
 
-static void
-alloc__ini_dispose(
-    void ** ap)
-{
-    void * a;
-
-    if(ap)
-        {
-        a = *ap;
-
-        if(a)
-            {
-            *ap = NULL;
-
-            free(a);
-            }
-        }
-}
-
 static U32
 alloc__ini_size(
-    const void * a)
+    P_ANY usrcore)
 {
-    IGNOREPARM(a);
-    myassert1x(a == (const void *) 1, "unable to yield size for block &%p", a);
+    myassert1x(usrcore == (P_ANY) 1, TEXT("unable to yield size for block ") PTR_XTFMT, usrcore);
     return(0);
 }
 
 static void
 alloc__ini_validate(
-    P_ANY a,
-    const char * msg)
+    P_ANY usrcore,
+    _In_z_      PCTSTR msg)
 {
-    IGNOREPARM(a);
+    IGNOREPARM(usrcore);
     IGNOREPARM(msg);
 }
 
-#endif /* FULL_ANSI */
+#endif
 
 /******************************************************************************
 *
-* allocates space for an array of nmemb objects, each of whose size is
-* 'size'. The space is initialised to all bits zero.
-*
-* Returns: either a null pointer or a pointer to the allocated space.
+* these allocation routines cause flex blocks to move
 *
 ******************************************************************************/
 
-static void *
+static P_ANY
 alloc__main_calloc(
     _InVal_     U32 num,
     _InVal_     U32 size)
@@ -1156,67 +1254,22 @@ alloc__main_calloc(
 }
 
 static void
-alloc__main_dispose(
-    void ** ap)
-{
-    alloc__dispose(ap, &alloc_main_heap_desc);
-}
-
-/******************************************************************************
-*
-* causes the space pointed to by ptr to be deallocated (i.e., made
-* available for further allocation). If ptr is a null pointer, no action
-* occurs. Otherwise, if ptr does not match a pointer earlier returned by
-* calloc, malloc or realloc or if the space has been deallocated by a call
-* to free or realloc, the behaviour is undefined.
-*
-******************************************************************************/
-
-static void
 alloc__main_free(
-    void * a)
+    P_ANY a)
 {
     alloc__free(a, &alloc_main_heap_desc);
 }
 
-/******************************************************************************
-*
-* allocates space for an object whose size is specified by 'size' and whose
-* value is indeterminate.
-*
-* Returns: either a null pointer or a pointer to the allocated space.
-*
-******************************************************************************/
-
-static void *
+static P_ANY
 alloc__main_malloc(
     _InVal_     U32 size)
 {
     return(alloc__malloc(size, &alloc_main_heap_desc));
 }
 
-/******************************************************************************
-*
-* changes the size of the object pointed to by ptr to the size specified by
-* size. The contents of the object shall be unchanged up to the lesser of
-* the new and old sizes. If the new size is larger, the value of the newly
-* allocated portion of the object is indeterminate. If ptr is a null
-* pointer, the realloc function behaves like a call to malloc for the
-* specified size. Otherwise, if ptr does not match a pointer earlier
-* returned by calloc, malloc or realloc, or if the space has been
-* deallocated by a call to free or realloc, the behaviour is undefined.
-* If the space cannot be allocated, the object pointed to by ptr is
-* unchanged. If size is zero and ptr is not a null pointer, the object it
-* points to is freed.
-*
-* Returns: either a null pointer or a pointer to the possibly moved
-*          allocated space.
-*
-******************************************************************************/
-
-static void *
+static P_ANY
 alloc__main_realloc(
-    void * a,
+    P_ANY a,
     _InVal_     U32 size)
 {
     return(alloc__realloc(a, size, &alloc_main_heap_desc));
@@ -1224,15 +1277,15 @@ alloc__main_realloc(
 
 static U32
 alloc__main_size(
-    void * a)
+    P_ANY a)
 {
     return(alloc__size(a, &alloc_main_heap_desc));
 }
 
 static void
 alloc__main_validate(
-    void * a,
-    const char * msg)
+    P_ANY a,
+    _In_z_      PCTSTR msg)
 {
     alloc__validate(a, msg, &alloc_main_heap_desc);
 }
@@ -1246,59 +1299,24 @@ alloc__main_validate(
 *
 ******************************************************************************/
 
-static void *
+static P_ANY
 alloc__calloc(
     _InVal_     U32 num,
     _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    U32 nbytes;
-    void * a;
+    U32 n_bytes;
+    P_ANY a;
 
     /* not very good - could get overflow in calc */
-    nbytes = num * size;
-        
-    nbytes = (nbytes + (sizeof32(S32) - 1)) & ~(sizeof32(S32) - 1);
+    n_bytes = (num * size + (sizeof32(S32) - 1)) & ~(sizeof32(S32) - 1);
 
-    a = alloc__malloc(nbytes, ahp);
+    a = alloc__malloc(n_bytes, ahp);
 
     if(a)
-        memset32(a, 0, nbytes);
+        memset32(a, 0, n_bytes);
 
     return(a);
-}
-
-static void
-alloc__dispose(
-    void ** ap,
-    P_ALLOC_HEAP_DESC ahp)
-{
-    void * a;
-
-    alloc_trace_on_do(ahp);
-
-#if defined(CHECK_ALLOCS)
-    if(!ap || !*ap)
-        {
-        if(ahp->flags & alloc_validate_enabled)
-            if(ahp->flags & alloc_validate_heap_before_free)
-                alloc_validate_heap(ahp, "dispose");
-        }
-#endif
-
-    if(ap)
-        {
-        a = *ap;
-
-        if(a)
-            {
-            *ap = NULL;
-
-            alloc__free(a, ahp);
-            }
-        }
-
-    alloc_trace_off_do(ahp);
 }
 
 /******************************************************************************
@@ -1313,68 +1331,35 @@ alloc__dispose(
 
 static void
 alloc__free(
-    void * usrcore,
-    P_ALLOC_HEAP_DESC ahp)
+    P_ANY usrcore,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
     P_RISCOS_HEAP_USED_DATA b;
 
+    if(NULL == usrcore)
+        return;
+
     alloc_trace_on_do(ahp);
 
-    trace_3(TRACE_MODULE_ALLOC,
-            "alloc__free(&%p) (&%p->&%p)",
-            report_ptr_cast(usrcore), report_ptr_cast(ahp), report_ptr_cast(ahp->heap));
+    trace_2(TRACE_MODULE_ALLOC, TEXT("alloc__free(") PTR_XTFMT TEXT(" in heap ") PTR_XTFMT TEXT(")"), usrcore, report_ptr_cast(ahp->heap));
 
-#if defined(CHECK_ALLOCS)
     if(ahp->flags & alloc_validate_enabled)
-        if(ahp->flags & alloc_validate_heap_before_free)
-            alloc_validate_heap(ahp, "free");
-#endif
-
-    if(!usrcore)
-        {
-        alloc_trace_off_do(ahp);
-        return;
-        }
-
     {
-    uintptr_t heap_start = (uintptr_t) ((ahp->heap) + 1);
-    uintptr_t heap_hwm   = ((uintptr_t) ahp->heap) + ahp->heap->hwm;
-    uintptr_t core       = (uintptr_t) usrcore;
-    if((core < heap_start) || (core >= heap_hwm))
-    {
-        reportf("alloc__free(0x%8.8X): outwith heap 0x%8.8X..0x%8.8X", core, heap_start, heap_hwm);
-        alloc_trace_off_do(ahp);
-        return;
-    }
-    } /*block*/
-
-#if defined(CHECK_ALLOCS)
-    if(ahp->flags & alloc_validate_enabled)
         if(ahp->flags & alloc_validate_block_before_free)
-            alloc_validate_block(ahp, a, "free");
-#endif
+            alloc_validate_block(ahp, usrcore, "free BLK", 0);
+
+        if(ahp->flags & alloc_validate_heap_before_free)
+            alloc_validate_heap(ahp, "free", 0);
+    }
 
     b.v = usrcore;
     b.c -= startguardsize;
 
-#if !defined(USE_HEAP_SWIS)
     riscos_ptr_free(b.u - 1, ahp);
-#else
-    {
-    _kernel_swi_regs  r;
-    _kernel_oserror * e;
-    r.r[0] = HeapReason_Free;
-    r.r[1] = (int) ahp->heap;
-    r.r[2] = (int) b.c;
-    e = alloc_winge(_kernel_swi(OS_Heap, &r, &r), "free");
-    }
-#endif
 
-#if defined(POST_CHECK_ALLOCS)
     if(ahp->flags & alloc_validate_enabled)
         if(ahp->flags & alloc_validate_heap_after_free)
-            alloc_validate_heap(ahp, "AFTER_free");
-#endif
+            alloc_validate_heap(ahp, "AFTER_free", 0);
 
     alloc_freeextrastore(ahp);
 
@@ -1390,12 +1375,15 @@ alloc__free(
 *
 ******************************************************************************/
 
-#pragma no_check_stack
+#if !RELEASED
+#define PRAGMA_CHECK_STACK_OFF
+#include "coltsoft/pragma.h"
+#endif
 
-static void *
+static P_ANY
 alloc__malloc(
     _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
     P_U8 syscore;
     P_U8 usrcore;
@@ -1403,92 +1391,55 @@ alloc__malloc(
 
     alloc_trace_on_do(ahp);
 
-    trace_3(TRACE_MODULE_ALLOC,
-            "alloc__malloc(%u, (&%p->&%p)) ",
-            size, report_ptr_cast(ahp), report_ptr_cast(ahp->heap));
+    trace_3(TRACE_MODULE_ALLOC, TEXT("alloc__malloc(") U32_TFMT TEXT(",") U32_XTFMT TEXT(" in heap ") PTR_XTFMT TEXT(") |"), size, size, report_ptr_cast(ahp->heap));
 
-#if defined(CHECK_ALLOCS)
     if(ahp->flags & alloc_validate_enabled)
-        if(ahp->flags & alloc_validate_heap_on_alloc)
-            alloc_validate_heap(ahp, "malloc");
-#endif
+        if(ahp->flags & alloc_validate_heap_before_alloc)
+            alloc_validate_heap(ahp, "malloc", 0);
 
-    if(!size)
-        {
-        trace_0(TRACE_MODULE_ALLOC, "yields NULL because zero size");
+    if(0 == size)
+    {
+        trace_0(TRACE_MODULE_ALLOC, TEXT("|yields NULL because zero size"));
         alloc_trace_off_do(ahp);
         return(NULL);
-        }
+    }
 
     usrsize = size;
-    syssize = usrsize + startguardsize + endguardsize;
+    syssize = usrsize + (startguardsize + endguardsize);
 
-#if !defined(USE_HEAP_SWIS)
     syscore = riscos_ptr_alloc(syssize, ahp);
-#else
-    {
-    _kernel_swi_regs  r;
-    _kernel_oserror * e;
-    r.r[0] = HeapReason_Get;
-    r.r[1] = (int) ahp->heap;
-    /* no r2 */
-    r.r[3] = syssize;
-    e = _kernel_swi(OS_Heap, &r, &r);
-
-    if(e)
-        {
-        if(!alloc_needtoallocate(syssize, ahp))
-            {
-            trace_0(TRACE_MODULE_ALLOC, "yields NULL because heap extension failed");
-            alloc_trace_off_do(ahp);
-            return(NULL);
-            }
-
-        r.r[0] = HeapReason_Get;
-        r.r[1] = (int) ahp->heap;
-        /* no r2 */
-        r.r[3] = syssize;
-        e = alloc_winge(_kernel_swi(OS_Heap, &r, &r), "malloc");
-
-#if TRACE_ALLOWED
-        if(myassert(!e  &&  r.r[2]))
-            myasserted("alloc__malloc(%u) failed unexpectedly after heap (&%p->&%p) extension",
-                        size, ahp, ahp->heap);
-#endif
-
-        if(e)
-            {
-            trace_0(TRACE_MODULE_ALLOC, "yields NULL because of error");
-            alloc_trace_off_do(ahp);
-            return(NULL);
-            }
-        }
-
-    syscore = (char *) r.r[2];
-    }
-#endif
 
     usrcore = syscore + startguardsize;
 
 #if defined(CHECK_ALLOCS)
-    if(ahp->flags & alloc_validate_on) /* regardless of enable state */
-        memset32(core, FILL_BYTE, blocksize(core));
+    if(ahp->flags & alloc_validate_enabled) /* no longer regardless of enable state; relies on enabling setting guards */
+    {
+        memset32(syscore, SG_FILL_BYTE, startguardsize);
+        memset32(syscore + startguardsize, EG_FILL_BYTE, blocksize(syscore) - startguardsize);
+    }
+
+    /* store requested size in the first start guard word */
+    /*CONSTANTCONDITION*/
+    if_constant(startguardsize)
+        * (P_U32) (void *) syscore = usrsize;
 #endif
 
-#if defined(POST_CHECK_ALLOCS)
     if(ahp->flags & alloc_validate_enabled)
-        if(ahp->flags & alloc_validate_heap_on_alloc)
-            alloc_validate_heap(ahp, "AFTER_malloc");
-#endif
+    {
+        if(ahp->flags & alloc_validate_block_after_alloc)
+            alloc_validate_block(ahp, usrcore, "AFTER_malloc BLK", 0);
 
-    trace_1(TRACE_MODULE_ALLOC, " yields &%p", usrcore);
+        if(ahp->flags & alloc_validate_heap_after_alloc)
+            alloc_validate_heap(ahp, "AFTER_malloc", 0);
+    }
+
+    trace_1(TRACE_MODULE_ALLOC, TEXT("|yields ") PTR_XTFMT, usrcore);
 
     alloc_trace_off_do(ahp);
-
     return(usrcore);
 }
 
-#if defined(REDIRECT_KERNEL_ALLOCS)
+#if defined(REDIRECT_RISCOS_KERNEL_ALLOCS)
 
 /* All this turns out to do is to redirect the procs used by
  * the kernel part of the C library away from malloc/free!
@@ -1496,22 +1447,25 @@ alloc__malloc(
 */
 
 static void
-alloc__kernel_free(
+alloc__riscos_kernel_free(
     void * a)
 {
     alloc__free(a, &alloc_main_heap_desc);
 }
 
 static void *
-alloc__kernel_malloc(
-    size_t size)
+alloc__riscos_kernel_malloc(
+    _In_        size_t size)
 {
     return(alloc__malloc(size, &alloc_main_heap_desc));
 }
 
 #endif
 
-#pragma check_stack
+#if !RELEASED
+#define PRAGMA_CHECK_STACK_ON
+#include "coltsoft/pragma.h"
+#endif
 
 /******************************************************************************
 *
@@ -1527,251 +1481,205 @@ alloc__kernel_malloc(
 * unchanged. If size is zero and ptr is not a null pointer, the object it
 * points to is freed.
 *
-* Returns: either a null pointer or a pointer to the possibly moved
-*          allocated space.
+* Returns: either a null pointer or a pointer to the possibly moved allocated space.
 *
 ******************************************************************************/
 
-static void *
+static P_ANY
 alloc__realloc(
-    void * usrcore,
+    P_ANY usrcore,
     _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    char * syscore;
+    P_U8 syscore;
     U32 syssize, usrsize, new_blksize, current_blksize;
 
     alloc_trace_on_do(ahp);
 
     /* shrinking to zero size? */
 
-    if(!size)
+    if(0 == size)
+    {
+        if(NULL == usrcore)
         {
-        if(usrcore)
-            {
-            trace_0(TRACE_MODULE_ALLOC, "alloc__realloc -> alloc__free because zero size: ");
-            alloc__free(usrcore, ahp);
-            }
-
-        trace_0(TRACE_MODULE_ALLOC, "yields NULL because zero size");
-        alloc_trace_off_do(ahp);
-        return(NULL);
+            trace_0(TRACE_MODULE_ALLOC, TEXT("alloc__realloc(NULL,0) yields NULL because zero size"));
+            alloc_trace_off_do(ahp);
+            return(NULL);
         }
+        else
+        {
+            trace_0(TRACE_MODULE_ALLOC, TEXT("alloc__realloc(p,0) -> alloc__free(p) because zero size"));
+            alloc_trace_off_do(ahp);
+            alloc__free(usrcore, ahp);
+            return(NULL);
+        }
+    }
 
     /* first-time allocation? */
 
-    if(!usrcore)
-        {
-        trace_0(TRACE_MODULE_ALLOC, "alloc__realloc -> alloc__malloc because NULL pointer: ");
+    if(NULL == usrcore)
+    {
+        trace_0(TRACE_MODULE_ALLOC, TEXT("alloc__realloc(NULL,n) -> alloc__malloc(n) because NULL pointer"));
         alloc_trace_off_do(ahp);
         return(alloc__malloc(size, ahp));
-        }
+    }
 
     /* a real realloc */
 
-    trace_4(TRACE_MODULE_ALLOC,
-            "alloc__realloc(&%p, %u, (&%p->&%p)) ",
-            usrcore, size, report_ptr_cast(ahp), report_ptr_cast(ahp->heap));
+    trace_4(TRACE_MODULE_ALLOC, TEXT("alloc__realloc(") PTR_XTFMT TEXT(", ") U32_TFMT TEXT(",") U32_XTFMT TEXT(" in heap ") PTR_XTFMT TEXT(")) |"), usrcore, size, size, report_ptr_cast(ahp->heap));
 
-    {
-    uintptr_t heap_start = (uintptr_t) ((ahp->heap) + 1);
-    uintptr_t heap_hwm   = ((uintptr_t) ahp->heap) + ahp->heap->hwm;
-    uintptr_t core       = (uintptr_t) usrcore;
-    if((core < heap_start) || (core >= heap_hwm))
-    {
-        reportf("alloc__realloc(0x%8.8X): outwith heap 0x%8.8X..0x%8.8X", core, heap_start, heap_hwm);
-        alloc_trace_off_do(ahp);
-        return(NULL);
-    }
-    } /*block*/
-
-#if defined(CHECK_ALLOCS)
     if(ahp->flags & alloc_validate_enabled)
-        {
-        if(ahp->flags & alloc_validate_heap_before_alloc)
-            alloc_validate_heap(ahp, "realloc");
+    {
+        if(ahp->flags & alloc_validate_block_before_realloc)
+            alloc_validate_block(ahp, usrcore, "realloc BLK", 0);
 
-        if(ahp->flags & alloc_validate_block_before_alloc)
-            alloc_validate_block(ahp, a, "realloc");
-        }
-#endif
+        if(ahp->flags & alloc_validate_heap_before_alloc)
+            alloc_validate_heap(ahp, "realloc", 0);
+    }
 
     usrsize = size;
+    syssize = usrsize + (startguardsize + endguardsize);
 
-    syscore = (P_U8) usrcore - startguardsize;
-    syssize = usrsize - startguardsize + endguardsize;
+    syscore = PtrSubBytes(P_U8, usrcore, startguardsize);
 
     /* must use actual full block sizes */
     new_blksize     = round_heapmgr(syssize + HEAPMGR_OVERHEAD);
     current_blksize = blocksize(syscore) + HEAPMGR_OVERHEAD;
 
-    /* loop for structure */
-    for(;;)
-        {
-        /* block not changing allocated size? */
+    /* block not changing allocated size? (trivial shrink/grow) */
 
-        if(new_blksize == current_blksize)
-            {
-            trace_1(TRACE_MODULE_ALLOC,
-                    "yields &%p (not moved, same allocated size)",
-                    usrcore);
-            break;
-            }
+    if(new_blksize == current_blksize)
+    {
+        trace_1(TRACE_MODULE_ALLOC, TEXT("|(not moved, same allocated size) yields ") PTR_XTFMT, usrcore);
 
-        /* block shrinking? */
+#if defined(CHECK_ALLOCS)
+        /* block not moved - just consider size update and endguard fill */
+        /*CONSTANTCONDITION*/
+        if_constant(startguardsize)
+            * (P_U32) (void *) syscore = usrsize;
 
-        if(new_blksize < current_blksize)
-            {
-#if !defined(USE_HEAP_SWIS)
-            if((syscore = riscos_ptr_realloc_shrink(syscore, new_blksize, current_blksize, ahp)) == NULL)
-            {
-                alloc_trace_off_do(ahp);
-                return(NULL);
-            }
-#else
-            _kernel_swi_regs  r;
-            _kernel_oserror * e;
-
-            r.r[0] = HeapReason_ExtendBlock;
-            r.r[1] = (int) ahp->heap;
-            r.r[2] = (int) syscore;
-            r.r[3] = (int) (new_blksize - current_blksize);
-            e = alloc_winge(_kernel_swi(OS_Heap, &r, &r), "realloc(shrink)");
-
-            if(e)
-                {
-                trace_0(TRACE_MODULE_ALLOC, "yields NULL because of error in shrink");
-                alloc_trace_off_do(ahp);
-                return(NULL);
-                }
-
-            syscore = (char *) r.r[2];
+        if(ahp->flags & alloc_validate_enabled)
+            memset32(PtrAddBytes(P_U8, usrcore, usrsize), EG_FILL_BYTE, (PtrAddBytes(P_U8, blockhdrp(syscore), new_blksize) - PtrAddBytes(P_U8, usrcore, usrsize)));
 #endif
 
-            alloc_freeextrastore(ahp);
+        if(ahp->flags & alloc_validate_enabled)
+        {
+            if(ahp->flags & alloc_validate_block_after_realloc)
+                alloc_validate_block(ahp, usrcore, "AFTER_=_realloc BLK", 0);
 
-            usrcore = syscore + startguardsize;
+            if(ahp->flags & alloc_validate_heap_after_realloc)
+                alloc_validate_heap(ahp, "AFTER_=_realloc", 0);
+        }
 
-            trace_1(TRACE_MODULE_ALLOC, "yields &%p (shrunk)", usrcore);
-            break;
-            }
+        alloc_trace_off_do(ahp);
+        return(usrcore);
+    }
 
-        /* block is growing */
+    /* block shrinking? */
 
-        /* new_blksize > current_blksize */
-
-#if !defined(USE_HEAP_SWIS)
-        if((syscore = riscos_ptr_realloc_grow(syscore, new_blksize, current_blksize, ahp)) == NULL)
+    if(new_blksize < current_blksize)
+    {
+        if(NULL == (syscore = riscos_ptr_realloc_shrink(syscore, new_blksize, current_blksize, ahp)))
         {
             alloc_trace_off_do(ahp);
             return(NULL);
         }
-#else
-        {
-        _kernel_swi_regs  r;
-        _kernel_oserror * e;
-
-        r.r[0] = HeapReason_ExtendBlock;
-        r.r[1] = (int) ahp->heap;
-        r.r[2] = (int) syscore;
-        r.r[3] = (int) (new_blksize - current_blksize);
-        e = _kernel_swi(OS_Heap, &r, &r);
-
-        if(e)
-            {
-            if(!alloc_needtoallocate(new_blksize, ahp))
-                {
-                trace_0(TRACE_MODULE_ALLOC, "yields NULL because heap extension failed");
-                alloc_trace_off_do(ahp);
-                return(NULL);
-                }
-
-            r.r[0] = HeapReason_ExtendBlock;
-            r.r[1] = (int) ahp->heap;
-            r.r[2] = (int) syscore;
-            r.r[3] = (int) (new_blksize - current_blksize);
-            e = alloc_winge(_kernel_swi(OS_Heap, &r, &r), "realloc(growth)");
-
-#if TRACE_ALLOWED
-            if(myassert(!e  &&  r.r[2]))
-                myasserted("alloc__realloc(&%p, %u) failed unexpectedly after heap (&%p->&%p) extension",
-                            usrcore, usrsize, ahp, ahp->heap);
-#endif
-
-            if(e)
-                {
-                trace_0(TRACE_MODULE_ALLOC, "yields NULL because of error in growth");
-                alloc_trace_off_do(ahp);
-                return(NULL);
-                }
-            }
-
-        syscore = (char *) r.r[2];
-        }
-#endif
 
         alloc_freeextrastore(ahp);
 
         usrcore = syscore + startguardsize;
 
-        trace_1(TRACE_MODULE_ALLOC, "yields &%p (grown)", usrcore);
-
-        break; /* always - loop only for structure */
-        }
+        trace_1(TRACE_MODULE_ALLOC, TEXT("|(shrunk) yields ") PTR_XTFMT, usrcore);
 
 #if defined(CHECK_ALLOCS)
-    /* startguard always copied safely on realloc - just consider endguard fill */
+        /* startguard always copied safely on realloc - just consider size update and endguard fill */
+        /*CONSTANTCONDITION*/
+        if_constant(startguardsize)
+            * (P_U32) syscore = usrsize;
 
-    if(ahp->flags & alloc_validate_on) /* regardless of enable state */
-        memset32(syscore + (blocksize(syscore) - endguardsize), FILL_BYTE, endguardsize);
+        if(ahp->flags & alloc_validate_enabled)
+            memset32(PtrAddBytes(P_U8, usrcore, usrsize), EG_FILL_BYTE, (PtrAddBytes(P_U8, blockhdrp(syscore), new_blksize) - PtrAddBytes(P_U8, usrcore, usrsize)));
 #endif
 
-#if defined(POST_CHECK_ALLOCS)
+        if(ahp->flags & alloc_validate_enabled)
+        {
+            if(ahp->flags & alloc_validate_block_after_realloc)
+                alloc_validate_block(ahp, usrcore, "AFTER_-_realloc BLK", 0);
+
+            if(ahp->flags & alloc_validate_heap_after_realloc)
+                alloc_validate_heap(ahp, "AFTER_-_realloc", 0);
+        }
+
+        alloc_trace_off_do(ahp);
+        return(usrcore);
+    }
+
+    /* block is growing */
+
+    /* new_blksize > current_blksize */
+
+    if(NULL == (syscore = riscos_ptr_realloc_grow(syscore, new_blksize, current_blksize, ahp)))
+    {
+        alloc_trace_off_do(ahp);
+        return(NULL);
+    }
+
+    alloc_freeextrastore(ahp);
+
+    usrcore = syscore + startguardsize;
+
+    trace_1(TRACE_MODULE_ALLOC, TEXT("| (grown) yields ") PTR_XTFMT, usrcore);
+
+#if defined(CHECK_ALLOCS)
+    /* startguard always copied safely on realloc - just consider size update and endguard fill */
+    /*CONSTANTCONDITION*/
+    if_constant(startguardsize)
+        * (P_U32) (void *) syscore = usrsize;
+
     if(ahp->flags & alloc_validate_enabled)
-        if(ahp->flags & alloc_validate_heap_on_alloc)
-            alloc_validate_heap(ahp, "AFTER_realloc");
+        memset32(PtrAddBytes(P_U8, usrcore, usrsize), EG_FILL_BYTE, (PtrAddBytes(P_U8, blockhdrp(syscore), new_blksize) - PtrAddBytes(P_U8, usrcore, usrsize)));
 #endif
+
+    if(ahp->flags & alloc_validate_enabled)
+    {
+        if(ahp->flags & alloc_validate_block_after_realloc)
+            alloc_validate_block(ahp, usrcore, "AFTER_+_realloc BLK", 0);
+
+        if(ahp->flags & alloc_validate_heap_after_realloc)
+            alloc_validate_heap(ahp, "AFTER_+_realloc", 0);
+    }
 
     alloc_trace_off_do(ahp);
-
     return(usrcore);
 }
 
 static U32
 alloc__size(
     P_ANY usrcore,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    const char * syscore;
+    P_U8 syscore;
     U32 size;
+
+    if(!usrcore)
+        return(0);
 
     alloc_trace_on_do(ahp);
 
-#if defined(CHECK_ALLOCS)
     if(ahp->flags & alloc_validate_enabled)
-        if(ahp->flags & alloc_validate_heap_on_size)
-            alloc_validate_heap(ahp, "size");
-#endif
-
-    if(!usrcore)
-        {
-        alloc_trace_off_do(ahp);
-        return(0);
-        }
-
-#if defined(CHECK_ALLOCS)
-    if(ahp->flags & alloc_validate_enabled)
+    {
         if(ahp->flags & alloc_validate_block_on_size)
-            alloc_validate_block(ahp, a, "size");
-#else
-    IGNOREPARM(ahp);
-#endif
+            alloc_validate_block(ahp, usrcore, "size", 0);
+
+        if(ahp->flags & alloc_validate_heap_on_size)
+            alloc_validate_heap(ahp, "size", 0);
+    }
 
     syscore = usrcore;
     syscore -= startguardsize;
 
     size = blocksize(syscore);
-    size -= startguardsize + endguardsize;
+    size -= (startguardsize + endguardsize);
 
     alloc_trace_off_do(ahp);
 
@@ -1781,33 +1689,50 @@ alloc__size(
 static void
 alloc__validate(
     P_ANY a,
-    const char * msg,
-    P_ALLOC_HEAP_DESC ahp)
+    _In_z_      PCTSTR msg,
+    _InoutRef_  P_ALLOC_HEAP_DESC ahp)
 {
     switch((int) a)
-        {
-        case 0:
+    {
+    case 0:
+        if(ahp->flags & alloc_validate_enabled)
             alloc_validate_heap(ahp, msg, 0);
-            break;
+        break;
 
-        case 1:
-            ahp->flags = (ALLOC_HEAP_FLAGS) (ahp->flags | alloc_validate_enabled);
-            break;
+    case 1:
+        if((ahp->flags & alloc_validate_enabled) == 0)
+        {
+            ahp->flags |= alloc_validate_enabled;
 
-        default:
-            alloc_validate_block(ahp, a, msg, 0);
-            break;
+            alloc_validate_heap(ahp, msg, 1); /* ensure all currently allocated blocks get guards */
         }
+        else
+            alloc_validate_heap(ahp, msg, 0);
+        break;
+
+    case 2:
+        ahp->flags &= ~alloc_validate_enabled;
+        break;
+
+    default:
+        alloc_validate_block(ahp, a, msg, 0);
+        break;
+    }
 }
+
+#if !RELEASED
+#define PRAGMA_CHECK_STACK_OFF
+#include "coltsoft/pragma.h"
+#endif
 
 #if defined(USE_HEAP_SWIS)
 
 static P_ANY
 riscos_ptr_alloc(
     _InVal_     U32 size,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    P_RISCOS_HEAP heap = ahp->heap;
+    const P_RISCOS_HEAP heap = ahp->heap;
     _kernel_swi_regs rs;
     P_ANY p_any;
 
@@ -1821,7 +1746,7 @@ riscos_ptr_alloc(
     {
         if(!alloc_needtoallocate(round_heapmgr(HEAPMGR_OVERHEAD + size), ahp))
         {
-            trace_0(TRACE_MODULE_ALLOC, TEXT("yields NULL because heap extension failed"));
+            trace_0(TRACE_MODULE_ALLOC, TEXT("|yields NULL because heap extension failed"));
             return(NULL);
         }
 
@@ -1831,7 +1756,7 @@ riscos_ptr_alloc(
         rs.r[3] =       size;
         p_any   = alloc_winge(_kernel_swi(OS_Heap, &rs, &rs), "malloc 2") ? NULL : (P_ANY) rs.r[2];
 
-        myassert3x(p_any, TEXT("alloc__malloc(%u) failed unexpectedly after heap (&%p->&%p) extension"), size, ahp, heap);
+        myassert1x(p_any, TEXT("alloc__malloc(%u) failed unexpectedly after heap extension"), size);
     }
 
     return(p_any);
@@ -1840,9 +1765,9 @@ riscos_ptr_alloc(
 static void
 riscos_ptr_free(
     P_RISCOS_USED_BLOCK p_used,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    P_RISCOS_HEAP heap = ahp->heap;
+    const P_RISCOS_HEAP heap = ahp->heap;
     _kernel_swi_regs rs;
 
     rs.r[0] = HeapReason_Free;
@@ -1856,9 +1781,9 @@ riscos_ptr_realloc_grow(
     P_ANY p_used,
     _InVal_     U32 new_blksize,
     _InVal_     U32 cur_blksize,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    P_RISCOS_HEAP heap = ahp->heap;
+    const P_RISCOS_HEAP heap = ahp->heap;
     U32 size_diff = new_blksize - cur_blksize;
     _kernel_swi_regs rs;
     P_ANY p_any;
@@ -1873,7 +1798,7 @@ riscos_ptr_realloc_grow(
     {
         if(!alloc_needtoallocate(new_blksize, ahp))
         {
-            trace_0(TRACE_MODULE_ALLOC, TEXT("yields NULL because heap extension failed"));
+            trace_0(TRACE_MODULE_ALLOC, TEXT("|yields NULL because heap extension failed"));
             return(NULL);
         }
 
@@ -1883,7 +1808,7 @@ riscos_ptr_realloc_grow(
         rs.r[3] =       size_diff;
         p_any   = alloc_winge(_kernel_swi(OS_Heap, &rs, &rs), "realloc(growth) 2") ? NULL : (P_ANY) rs.r[2];
 
-        myassert3x(p_any, TEXT("alloc__realloc(%u) failed unexpectedly after heap (&%p->&%p) extension"), new_blksize - cur_blksize, ahp, heap);
+        myassert1x(p_any, TEXT("alloc__realloc(%u) failed unexpectedly after heap extension"), new_blksize - cur_blksize);
     }
 
     alloc_freeextrastore(ahp);
@@ -1896,9 +1821,9 @@ riscos_ptr_realloc_shrink(
     P_ANY p_any,
     _InVal_     U32 new_blksize,
     _InVal_     U32 cur_blksize,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    P_RISCOS_HEAP heap = ahp->heap;
+    const P_RISCOS_HEAP heap = ahp->heap;
     U32 size_diff = new_blksize - cur_blksize;
     _kernel_swi_regs rs;
 
@@ -1911,7 +1836,7 @@ riscos_ptr_realloc_shrink(
     return(p_any);
 }
 
-#else
+#else /* USE_HEAP_SWIS */
 
 #if TRACE_ALLOWED && (PERSONAL_TRACE_FLAGS & TRACE_MODULE_ALLOC) && defined(ALLOC_TRACK_PROCESS_USE)
 
@@ -1921,7 +1846,7 @@ static int used_process = 0;
 
 static void
 USED_PROCESS(
-    _InVal_     int n)
+    _In_        int n)
 {
     used_process = n;
 
@@ -1941,11 +1866,10 @@ USED_PROCESS(
 
 static P_ANY
 riscos_ptr_alloc(
-    _InVal_     U32 size_requested,
-    P_ALLOC_HEAP_DESC ahp)
+    _In_        U32 size,
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    U32 size;
-    P_RISCOS_HEAP heap = ahp->heap;
+    const P_RISCOS_HEAP heap = ahp->heap;
     P_RISCOS_HEAP_FREE_DATA p_free_block;
     P_RISCOS_HEAP_USED_DATA p_used_block;
     U32 * p_free_offset;
@@ -1956,12 +1880,12 @@ riscos_ptr_alloc(
 #endif
 
     /* block needs to be this big */
-    size = round_heapmgr(HEAPMGR_OVERHEAD + size_requested);
+    size = round_heapmgr(HEAPMGR_OVERHEAD + size);
 
     /* scan free list for first fit */
     p_free_block.v = p_free_offset = &heap->free;
 
-    while((next_free_offset = *p_free_offset) != 0)
+    while(NULL != (next_free_offset = *p_free_offset))
     {
         assert(next_free_offset < heap->size);
         p_free_block.c += next_free_offset;
@@ -1999,7 +1923,7 @@ riscos_ptr_alloc(
     /* trivial allocation at hwm */
     if(!alloc_needtoallocate(size, ahp))
     {
-        trace_0(TRACE_MODULE_ALLOC, TEXT("yields NULL because heap extension failed"));
+        trace_0(TRACE_MODULE_ALLOC, TEXT("|yields NULL because heap extension failed"));
         return(NULL);
     }
 
@@ -2013,9 +1937,9 @@ riscos_ptr_alloc(
 static void
 riscos_ptr_free(
     P_RISCOS_USED_BLOCK p_used,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    P_RISCOS_HEAP heap = ahp->heap;
+    const P_RISCOS_HEAP heap = ahp->heap;
     P_RISCOS_HEAP_FREE_DATA p_free_block;
     P_RISCOS_HEAP_USED_DATA p_used_block;
     U32 * p_free_offset;
@@ -2026,7 +1950,7 @@ riscos_ptr_free(
     /* scan free list for insertion/coalescing */
     p_free_block.v = p_free_offset = &heap->free;
 
-    while((next_free_offset = *p_free_offset) != 0)
+    while(NULL != (next_free_offset = *p_free_offset))
     {
         assert(next_free_offset < heap->size);
         p_free_block.c += next_free_offset;
@@ -2109,10 +2033,10 @@ riscos_ptr_realloc_grow(
     P_ANY p_any,
     _InVal_     U32 new_blksize,
     _InVal_     U32 cur_blksize,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
-    P_RISCOS_HEAP heap = ahp->heap;
-    U32 size_diff = new_blksize - cur_blksize;
+    const P_RISCOS_HEAP heap = ahp->heap;
+    U32   size_diff = new_blksize - cur_blksize;
     P_RISCOS_HEAP_USED_DATA p_used_block, p_new_used_block;
     P_RISCOS_HEAP_FREE_DATA p_free_block, p_lower_free_block, p_upper_free_block, p_fit_free_block;
     U32 * p_free_offset;
@@ -2120,7 +2044,7 @@ riscos_ptr_realloc_grow(
     U32   next_free_offset;
 
 #if defined(ALLOC_TRACK_USAGE)
-    fprintf(stderr, "realloc:&%p, %x, %x", p_any, new_blksize, cur_blksize);
+    fprintf(stderr, "realloc:") PTR_XTFMT TEXT(", %x, %x", p_any, new_blksize, cur_blksize);
 #endif
 
     p_used_block.v = p_any;
@@ -2148,7 +2072,7 @@ riscos_ptr_realloc_grow(
                     USED_PROCESS(2);
                     if(!alloc_needtoallocate(size_diff, ahp))
                     {
-                        trace_0(TRACE_MODULE_ALLOC, TEXT("yields NULL because heap extension failed (1a)"));
+                        trace_0(TRACE_MODULE_ALLOC, TEXT("|yields NULL because heap extension failed (1a)"));
                         return(NULL);
                     }
                     break;
@@ -2165,7 +2089,7 @@ riscos_ptr_realloc_grow(
                     if(heap->size - (heap->hwm - p_free_block.f->size) < size_diff)
                         if(!alloc_needtoallocate(size_diff - p_free_block.f->size, ahp))
                         {
-                            trace_0(TRACE_MODULE_ALLOC, TEXT("yields NULL because heap extension failed (1b)"));
+                            trace_0(TRACE_MODULE_ALLOC, TEXT("|yields NULL because heap extension failed (1b)"));
                             return(NULL);
                         }
 
@@ -2414,7 +2338,7 @@ riscos_ptr_realloc_grow(
 
         if(!alloc_needtoallocate(new_blksize, ahp))
         {
-            trace_0(TRACE_MODULE_ALLOC, TEXT("yields NULL because heap extension failed (2)"));
+            trace_0(TRACE_MODULE_ALLOC, TEXT("|yields NULL because heap extension failed (2)"));
             return(NULL);
         }
 
@@ -2435,7 +2359,7 @@ riscos_ptr_realloc_shrink(
     P_ANY p_any,
     _InVal_     U32 new_blksize,
     _InVal_     U32 cur_blksize,
-    P_ALLOC_HEAP_DESC ahp)
+    _InRef_     PC_ALLOC_HEAP_DESC ahp)
 {
     P_RISCOS_HEAP_USED_DATA p_used_block;
 
@@ -2454,6 +2378,58 @@ riscos_ptr_realloc_shrink(
 }
 
 #endif /* USE_HEAP_SWIS */
+
+#if !RELEASED
+#define PRAGMA_CHECK_STACK_ON
+#include "coltsoft/pragma.h"
+#endif
+
+/*
+the barfing heap function set
+*/
+
+static P_ANY
+alloc__barf_calloc(
+    _InVal_     U32 num,
+    _InVal_     U32 size)
+{
+    assert0();
+    return(alloc__calloc(num, size, &alloc_main_heap_desc));
+}
+
+static void
+alloc__barf_free(
+    P_ANY a)
+{
+    assert0();
+    alloc__free(a, &alloc_main_heap_desc);
+}
+
+static P_ANY
+alloc__barf_malloc(
+    _InVal_     U32 size)
+{
+    assert0();
+    return(alloc__malloc(size, &alloc_main_heap_desc));
+}
+
+static P_ANY
+alloc__barf_realloc(
+    P_ANY a,
+    _InVal_     U32 size)
+{
+    assert0();
+    return(alloc__realloc(a, size, &alloc_main_heap_desc));
+}
+
+ALLOC_FUNCTION_SET
+alloc_barf =
+{
+    alloc__barf_calloc,
+    alloc__barf_free,
+    alloc__barf_malloc,
+    alloc__barf_realloc
+};
 
 #endif /* RISCOS */
 

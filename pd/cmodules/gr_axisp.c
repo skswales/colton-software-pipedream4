@@ -41,66 +41,66 @@ local header
 
 /******************************************************************************
 *
-* convert an axes,axidx pair into an external axes number
+* convert an axes,axis index pair into an external axes number
 *
 ******************************************************************************/
 
-extern GR_AXES_NO
-gr_axes_external_from_ix(
+extern GR_EAXES_NO
+gr_axes_external_from_idx(
     PC_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis)
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx)
 {
     assert(cp);
 
     if(cp->d3.bits.use)
-        return((axes * 3) + axis + 1);
+        return((GR_EAXES_NO) ((axes_idx * 3) + axis_idx + 1));
 
-    return((axes * 2) + axis + 1);
+    return((GR_EAXES_NO) ((axes_idx * 2) + axis_idx + 1));
 }
 
 /******************************************************************************
 *
-* convert an external axes number into an axes,axidx pair
+* convert an external axes number into an axes,axis index pair
 *
 ******************************************************************************/
 
-extern GR_AXIS_NO
-gr_axes_ix_from_external(
+extern GR_AXIS_IDX
+gr_axes_idx_from_external(
     PC_GR_CHART cp,
-    GR_AXES_NO eaxes,
-    _OutRef_    P_GR_AXES_NO axes)
+    GR_EAXES_NO eaxes_no,
+    _OutRef_    P_GR_AXES_IDX p_axes_idx)
 {
     assert(cp);
 
-    myassert0x(eaxes != 0, "external axes 0");
+    myassert0x(eaxes_no != 0, "external axes 0");
 
-    eaxes -= 1;
+    eaxes_no -= 1;
 
     if(cp->d3.bits.use)
         {
-        myassert1x(eaxes < 6, "external axes id %d > 6", eaxes);
-        *axes = eaxes / 3;
-        return(eaxes % 3);
+        myassert1x(eaxes_no < 6, "external axes id %d > 6", eaxes_no);
+        *p_axes_idx = eaxes_no / 3;
+        return(eaxes_no % 3);
         }
 
-    myassert1x(eaxes < 4, "external axes id > 4", eaxes);
-    *axes = eaxes / 2;
-    return(eaxes % 2);
+    myassert1x(eaxes_no < 4, "external axes id > 4", eaxes_no);
+    *p_axes_idx = eaxes_no / 2;
+    return(eaxes_no % 2);
 }
 
 /******************************************************************************
 *
-* return the axes index of a seridx
+* return the axes index of a series index
 *
 ******************************************************************************/
 
-extern GR_AXES_NO
-gr_axes_ix_from_seridx(
+extern GR_AXES_IDX
+gr_axes_idx_from_series_idx(
     PC_GR_CHART   cp,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
-    if(seridx < cp->axes[0].series.end_idx)
+    if(series_idx < cp->axes[0].series.end_idx)
         return(0);
 
     return(1);
@@ -108,36 +108,34 @@ gr_axes_ix_from_seridx(
 
 /******************************************************************************
 *
-* return the axes ptr of a seridx
+* return the axes ptr of a series index
 *
 ******************************************************************************/
 
 extern P_GR_AXES
-gr_axesp_from_seridx(
+gr_axesp_from_series_idx(
     P_GR_CHART    cp,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
-    GR_AXES_NO axes;
+    GR_AXES_IDX axes_idx;
 
-    if(seridx < cp->axes[0].series.end_idx)
-        axes = 0;
+    if(series_idx < cp->axes[0].series.end_idx)
+        axes_idx = 0;
     else
-        axes = 1;
+        axes_idx = 1;
 
-    return(&cp->axes[axes]);
+    return(&cp->axes[axes_idx]);
 }
 
 extern P_GR_AXIS
 gr_axisp_from_external(
-    P_GR_CHART    cp,
-    GR_AXES_NO   eaxes)
+    P_GR_CHART cp,
+    GR_EAXES_NO eaxes_no)
 {
-    GR_AXES_NO axes;
-    GR_AXIS_NO axis;
+    GR_AXES_IDX axes_idx;
+    GR_AXIS_IDX axis_idx = gr_axes_idx_from_external(cp, eaxes_no, &axes_idx);
 
-    axis = gr_axes_ix_from_external(cp, eaxes, &axes);
-
-    return(&cp->axes[axes].axis[axis]);
+    return(&cp->axes[axes_idx].axis[axis_idx]);
 }
 
 /* allow for logs of numbers (especially those not in same base as FP representation) becoming imprecise */
@@ -188,7 +186,7 @@ gr_numtopowstr(
 
     if(value == 0.0)
         {
-        safe_strkpy(buffer, elemof_buffer, "0");
+        xstrkpy(buffer, elemof_buffer, "0");
         return(1);
         }
 
@@ -221,7 +219,7 @@ gr_numtopowstr(
 *
 ******************************************************************************/
 
-typedef struct _gr_axis_iterator
+typedef struct GR_AXIS_ITERATOR
 {
     F64 iter;
     F64 step;
@@ -328,12 +326,12 @@ gr_axis_addin_category_grids(
     S32              front,
     BOOL             major)
 {
-    const GR_AXES_NO axes   = 0;
-    const GR_AXIS_NO axis   = X_AXIS;
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    const GR_AXES_IDX axes_idx = 0;
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = major ? &p_axis->major : &p_axis->minor;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob    = (front ? 0 : cp->cache.n_contrib_series);
+    S32 /*GR_SERIES_NO*/ fob = (front ? 0 : cp->cache.n_contrib_series);
     GR_CHART_OBJID   id;
     GR_DIAG_OFFSET   gridStart;
     GR_POINT_NO      point;
@@ -535,12 +533,12 @@ gr_axis_addin_category_labels(
     S32              front)
 {
 /*  const S32        major  = 1; */
-    const GR_AXES_NO axes   = 0;
-    const GR_AXIS_NO axis   = X_AXIS;
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    const GR_AXES_IDX axes_idx = 0;
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = &p_axis->major;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob    = (front ? 0 : cp->cache.n_contrib_series);
+    S32 /*GR_SERIES_NO*/ fob = (front ? 0 : cp->cache.n_contrib_series);
     GR_DIAG_OFFSET   labelStart;
     GR_POINT_NO      point;
     S32              step;
@@ -657,12 +655,12 @@ gr_axis_addin_category_ticks(
     S32              front,
     S32              major)
 {
-    const GR_AXES_NO axes   = 0;
-    const GR_AXIS_NO axis   = X_AXIS;
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    const GR_AXES_IDX axes_idx = 0;
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = major ? &p_axis->major : &p_axis->minor;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob    = (front ? 0 : cp->cache.n_contrib_series);
+    S32 /*GR_SERIES_NO*/ fob = (front ? 0 : cp->cache.n_contrib_series);
     GR_CHART_OBJID   id;
     GR_DIAG_OFFSET   tickStart;
     GR_POINT_NO      point;
@@ -751,11 +749,11 @@ gr_axis_addin_category(
     GR_POINT_NO total_n_points,
     S32 front)
 {
-    const GR_AXES_NO axes  = 0;
-    const GR_AXIS_NO axis  = X_AXIS;
-    PC_GR_AXIS       p_axis = &cp->axes[axes].axis[axis];
+    const GR_AXES_IDX axes_idx = 0;
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob   = front ? 0 : cp->cache.n_contrib_series;
+    S32 /*GR_SERIES_NO*/ fob = front ? 0 : cp->cache.n_contrib_series;
     GR_DIAG_OFFSET   axisStart;
     GR_CHART_OBJID   id;
     GR_COORD         axis_ypos;
@@ -770,7 +768,7 @@ gr_axis_addin_category(
 
         case GR_AXIS_POSITION_ZERO:
             axis_ypos = (GR_COORD) ((F64) cp->plotarea.size.y *
-                                    cp->axes[axes].axis[Y_AXIS /*NB*/].zero_frac);
+                                    cp->axes[axes_idx].axis[Y_AXIS_IDX /*NB*/].zero_frac);
             break;
 
         default:
@@ -798,7 +796,7 @@ gr_axis_addin_category(
             break;
         }
 
-    gr_chart_objid_from_axes(cp, axes, axis, &id);
+    gr_chart_objid_from_axes_idx(cp, axes_idx, axis_idx, &id);
 
     if((res = gr_chart_group_new(cp, &axisStart, &id)) < 0)
         return(res);
@@ -865,15 +863,15 @@ value X axis - major and minor grids
 
 static S32
 gr_axis_addin_value_grids_x(
-    P_GR_CHART        cp,
+    P_GR_CHART       cp,
     P_GR_CHART_OBJID p_id /*const*/,
-    GR_AXES_NO       axes,
+    GR_AXES_IDX      axes_idx,
     GR_COORD         axis_ypos,
     S32              front,
     S32              major)
 {
-    const GR_AXIS_NO axis   = X_AXIS;
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = major ? &p_axis->major : &p_axis->minor;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_OBJID   id;
@@ -934,7 +932,7 @@ gr_axis_addin_value_grids_x(
         GR_COORD xpos;
         GR_BOX line_box;
 
-        xpos = gr_value_pos(cp, axes, axis, &iterator.iter);
+        xpos = gr_value_pos(cp, axes_idx, axis_idx, &iterator.iter);
 
         /* vertical grid line across entire y span */
         line_box.x0  = xpos;
@@ -964,18 +962,18 @@ value Y axis - major and minor grids
 
 static S32
 gr_axis_addin_value_grids_y(
-    P_GR_CHART        cp,
+    P_GR_CHART       cp,
     P_GR_CHART_OBJID p_id /*const*/,
-    GR_AXES_NO       axes,
+    GR_AXES_IDX      axes_idx,
     GR_COORD         axis_xpos,
     S32              front,
     S32              major)
 {
-    const GR_AXIS_NO axis   = Y_AXIS;
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = Y_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = major ? &p_axis->major : &p_axis->minor;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob    = (front ? 0 : cp->cache.n_contrib_series);
+    S32 /*GR_SERIES_NO*/ fob = (front ? 0 : cp->cache.n_contrib_series);
     GR_CHART_OBJID   id;
     GR_DIAG_OFFSET   gridStart;
     GR_AXIS_ITERATOR iterator;
@@ -1047,7 +1045,7 @@ gr_axis_addin_value_grids_y(
         GR_COORD ypos;
         GR_BOX line_box;
 
-        ypos = gr_value_pos(cp, axes, axis, &iterator.iter);
+        ypos = gr_value_pos(cp, axes_idx, axis_idx, &iterator.iter);
 
         if(draw_main)
             {
@@ -1129,13 +1127,13 @@ static S32
 gr_axis_addin_value_labels_x(
     P_GR_CHART        cp,
     P_GR_CHART_OBJID p_id /*const*/,
-    GR_AXES_NO       axes,
+    GR_AXES_IDX      axes_idx,
     GR_COORD         axis_ypos,
     S32              front)
 {
     const S32        major  = 1;
-    const GR_AXIS_NO axis   = X_AXIS;
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = &p_axis->major;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_DIAG_OFFSET   labelStart;
@@ -1174,7 +1172,7 @@ gr_axis_addin_value_labels_x(
         GR_MILLIPOINT swidth_mp;
         GR_COORD swidth_px;
 
-        xpos = gr_value_pos(cp, axes, axis, &iterator.iter);
+        xpos = gr_value_pos(cp, axes_idx, axis_idx, &iterator.iter);
 
         text_box.x0  = xpos;
         text_box.y0  = axis_ypos;
@@ -1250,18 +1248,18 @@ value Y axis - labels next to ticks
 
 static S32
 gr_axis_addin_value_labels_y(
-    P_GR_CHART        cp,
+    P_GR_CHART       cp,
     P_GR_CHART_OBJID p_id /*const*/,
-    GR_AXES_NO       axes,
+    GR_AXES_IDX      axes_idx,
     GR_COORD         axis_xpos,
     S32              front)
 {
     const S32        major  = 1;
-    const GR_AXIS_NO axis   = Y_AXIS;
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = Y_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = &p_axis->major;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob    = (front ? 0 : cp->cache.n_contrib_series);
+    S32 /*GR_SERIES_NO*/ fob = (front ? 0 : cp->cache.n_contrib_series);
     GR_DIAG_OFFSET   labelStart;
     GR_AXIS_ITERATOR iterator;
     GR_COORD         last_y1 = S32_MIN;
@@ -1300,7 +1298,7 @@ gr_axis_addin_value_labels_y(
         GR_MILLIPOINT swidth_mp;
         GR_COORD swidth_px;
 
-        ypos = gr_value_pos(cp, axes, axis, &iterator.iter);
+        ypos = gr_value_pos(cp, axes_idx, axis_idx, &iterator.iter);
 
         text_box.x0  = axis_xpos;
         text_box.y0  = ypos;
@@ -1380,20 +1378,20 @@ value X & Y axis - major and minor ticks
 
 static S32
 gr_axis_addin_value_ticks(
-    P_GR_CHART        cp,
-    GR_AXIS_NO       axes,
-    GR_AXIS_NO       axis,
+    P_GR_CHART       cp,
+    GR_AXES_IDX      axes_idx,
+    GR_AXIS_IDX      axis_idx,
     P_GR_CHART_OBJID p_id /*const*/,
-    P_GR_POINT axis_pos,
+    P_GR_POINT       axis_pos,
     S32              front,
     S32              major,
     GR_COORD         ticksize,
     S32              doing_x)
 {
-    PC_GR_AXIS       p_axis  = &cp->axes[axes].axis[axis];
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = major ? &p_axis->major : &p_axis->minor;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob    = (front ? 0 : cp->cache.n_contrib_series);
+    S32 /*GR_SERIES_NO*/ fob = (front ? 0 : cp->cache.n_contrib_series);
     GR_CHART_OBJID   id;
     GR_AXIS_ITERATOR iterator;
     GR_DIAG_OFFSET   tickStart;
@@ -1420,7 +1418,7 @@ gr_axis_addin_value_ticks(
         GR_COORD pos;
         GR_BOX line_box;
 
-        pos = gr_value_pos(cp, axes, axis, &iterator.iter);
+        pos = gr_value_pos(cp, axes_idx, axis_idx, &iterator.iter);
 
         line_box.x0  = doing_x ? pos         : axis_pos->x;
         line_box.y0  = doing_x ? axis_pos->y : pos;
@@ -1460,15 +1458,15 @@ value X axis - major and minor ticks
 
 static S32
 gr_axis_addin_value_ticks_x(
-    P_GR_CHART        cp,
+    P_GR_CHART       cp,
     P_GR_CHART_OBJID p_id /*const*/,
-    GR_AXES_NO       axes,
+    GR_AXES_IDX      axes_idx,
     GR_COORD         axis_ypos,
     S32              front,
     S32              major)
 {
-    const GR_AXIS_NO axis = X_AXIS;
-    PC_GR_AXIS p_axis = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = major ? &p_axis->major : &p_axis->minor;
     GR_POINT axis_pos;
     GR_COORD ticksize, ticksize_top, ticksize_bottom;
@@ -1487,7 +1485,7 @@ gr_axis_addin_value_ticks_x(
     axis_pos.y = axis_ypos - ticksize_bottom;
     ticksize   = ticksize_top + ticksize_bottom;
 
-    return(gr_axis_addin_value_ticks(cp, axes, axis, p_id, &axis_pos, front, major, ticksize, TRUE /*doing_x*/));
+    return(gr_axis_addin_value_ticks(cp, axes_idx, axis_idx, p_id, &axis_pos, front, major, ticksize, TRUE /*doing_x*/));
 }
 
 /*
@@ -1496,15 +1494,15 @@ value Y axis - major and minor ticks
 
 static S32
 gr_axis_addin_value_ticks_y(
-    P_GR_CHART        cp,
+    P_GR_CHART       cp,
     P_GR_CHART_OBJID p_id /*const*/,
-    GR_AXES_NO       axes,
+    GR_AXES_IDX      axes_idx,
     GR_COORD         axis_xpos,
     S32              front,
     S32              major)
 {
-    const GR_AXIS_NO axis = Y_AXIS;
-    PC_GR_AXIS p_axis = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = Y_AXIS_IDX;
+    PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
     PC_GR_AXIS_TICKS ticksp = major ? &p_axis->major : &p_axis->minor;
     GR_POINT axis_pos;
     GR_COORD ticksize, ticksize_left, ticksize_right;
@@ -1521,7 +1519,7 @@ gr_axis_addin_value_ticks_y(
     axis_pos.x = axis_xpos - ticksize_left;
     ticksize   = ticksize_left + ticksize_right;
 
-    return(gr_axis_addin_value_ticks(cp, axes, axis, p_id, &axis_pos, front, major, ticksize, FALSE /*doing_x*/));
+    return(gr_axis_addin_value_ticks(cp, axes_idx, axis_idx, p_id, &axis_pos, front, major, ticksize, FALSE /*doing_x*/));
 }
 
 /******************************************************************************
@@ -1533,11 +1531,11 @@ gr_axis_addin_value_ticks_y(
 extern S32
 gr_axis_addin_value_x(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
+    GR_AXES_IDX axes_idx,
     S32 front)
 {
-    const GR_AXIS_NO axis  = X_AXIS;
-    PC_GR_AXIS       p_axis = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = X_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_OBJID   id;
     GR_COORD         axis_ypos;
@@ -1553,7 +1551,7 @@ gr_axis_addin_value_x(
 
         case GR_AXIS_POSITION_ZERO:
             axis_ypos = (GR_COORD) ((F64) cp->plotarea.size.y *
-                                    cp->axes[axes].axis[Y_AXIS /*NB*/].zero_frac);
+                                    cp->axes[axes_idx].axis[Y_AXIS_IDX /*NB*/].zero_frac);
             break;
 
         default:
@@ -1580,17 +1578,17 @@ gr_axis_addin_value_x(
             break;
         }
 
-    gr_chart_objid_from_axes(cp, axes, axis, &id);
+    gr_chart_objid_from_axes_idx(cp, axes_idx, axis_idx, &id);
 
     if((res = gr_chart_group_new(cp, &axisStart, &id)) < 0)
         return(res);
 
     /* minor ticks */
-    if((res = gr_axis_addin_value_grids_x(cp, &id, axes, axis_ypos, front, 0)) < 0)
+    if((res = gr_axis_addin_value_grids_x(cp, &id, axes_idx, axis_ypos, front, 0)) < 0)
         return(res);
 
     /* major grids */
-    if((res = gr_axis_addin_value_grids_x(cp, &id, axes, axis_ypos, front, 1)) < 0)
+    if((res = gr_axis_addin_value_grids_x(cp, &id, axes_idx, axis_ypos, front, 1)) < 0)
         return(res);
 
     if(draw_main)
@@ -1614,15 +1612,15 @@ gr_axis_addin_value_x(
             return(res);
 
         /* minor ticks */
-        if((res = gr_axis_addin_value_ticks_x(cp, &id, axes, axis_ypos, front, 0)) < 0)
+        if((res = gr_axis_addin_value_ticks_x(cp, &id, axes_idx, axis_ypos, front, 0)) < 0)
             return(res);
 
         /* major ticks */
-        if((res = gr_axis_addin_value_ticks_x(cp, &id, axes, axis_ypos, front, 1)) < 0)
+        if((res = gr_axis_addin_value_ticks_x(cp, &id, axes_idx, axis_ypos, front, 1)) < 0)
             return(res);
 
         /* labels */
-        if((res = gr_axis_addin_value_labels_x(cp, &id, axes, axis_ypos, front)) < 0)
+        if((res = gr_axis_addin_value_labels_x(cp, &id, axes_idx, axis_ypos, front)) < 0)
             return(res);
         }
 
@@ -1640,13 +1638,13 @@ gr_axis_addin_value_x(
 extern S32
 gr_axis_addin_value_y(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
+    GR_AXES_IDX axes_idx,
     S32 front)
 {
-    const GR_AXIS_NO axis  = Y_AXIS;
-    PC_GR_AXIS       p_axis = &cp->axes[axes].axis[axis];
+    const GR_AXIS_IDX axis_idx = Y_AXIS_IDX;
+    PC_GR_AXIS       p_axis = &cp->axes[axes_idx].axis[axis_idx];
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_NO     fob   = (front ? 0 : cp->cache.n_contrib_series);
+    S32 /*GR_SERIES_NO*/ fob = (front ? 0 : cp->cache.n_contrib_series);
     GR_CHART_OBJID   id;
     GR_COORD         axis_xpos;
     GR_DIAG_OFFSET   axisStart;
@@ -1661,7 +1659,7 @@ gr_axis_addin_value_y(
 
         case GR_AXIS_POSITION_ZERO:
             axis_xpos = (GR_COORD) ((F64) cp->plotarea.size.x *
-                                    cp->axes[axes].axis[X_AXIS /*NB*/].zero_frac);
+                                    cp->axes[axes_idx].axis[X_AXIS_IDX /*NB*/].zero_frac);
             break;
 
         default:
@@ -1691,17 +1689,17 @@ gr_axis_addin_value_y(
             break;
         }
 
-    gr_chart_objid_from_axes(cp, axes, axis, &id);
+    gr_chart_objid_from_axes_idx(cp, axes_idx, axis_idx, &id);
 
     if((res = gr_chart_group_new(cp, &axisStart, &id)) < 0)
         return(res);
 
     /* minor ticks */
-    if((res = gr_axis_addin_value_grids_y(cp, &id, axes, axis_xpos, front, 0)) < 0)
+    if((res = gr_axis_addin_value_grids_y(cp, &id, axes_idx, axis_xpos, front, 0)) < 0)
         return(res);
 
     /* major grids */
-    if((res = gr_axis_addin_value_grids_y(cp, &id, axes, axis_xpos, front, 1)) < 0)
+    if((res = gr_axis_addin_value_grids_y(cp, &id, axes_idx, axis_xpos, front, 1)) < 0)
         return(res);
 
     if(draw_main)
@@ -1729,15 +1727,15 @@ gr_axis_addin_value_y(
             return(res);
 
         /* minor ticks */
-        if((res = gr_axis_addin_value_ticks_y(cp, &id, axes, axis_xpos, front, 0)) < 0)
+        if((res = gr_axis_addin_value_ticks_y(cp, &id, axes_idx, axis_xpos, front, 0)) < 0)
             return(res);
 
         /* major ticks */
-        if((res = gr_axis_addin_value_ticks_y(cp, &id, axes, axis_xpos, front, 1)) < 0)
+        if((res = gr_axis_addin_value_ticks_y(cp, &id, axes_idx, axis_xpos, front, 1)) < 0)
             return(res);
 
         /* labels */
-        if((res = gr_axis_addin_value_labels_y(cp, &id, axes, axis_xpos, front)) < 0)
+        if((res = gr_axis_addin_value_labels_y(cp, &id, axes_idx, axis_xpos, front)) < 0)
             return(res);
         }
 
@@ -1752,18 +1750,18 @@ gr_axis_addin_value_y(
 *
 ******************************************************************************/
 
-typedef struct _gr_chartedit_cat_axis_state
+typedef struct GR_CHARTEDIT_CAT_AXIS_STATE
 {
     wimp_w w;
 
-    struct _gr_chartedit_cat_axis_state_axis
+    struct GR_CHARTEDIT_CAT_AXIS_STATE_AXIS
         {
         UBF lzr : GR_AXIS_POSITION_LZR_BITS;
         UBF arf : GR_AXIS_POSITION_ARF_BITS;
         }
     axis;
 
-    struct _gr_chartedit_cat_axis_state_ticks
+    struct GR_CHARTEDIT_CAT_AXIS_STATE_TICKS
         {
         S32 val;
         S32 delta;
@@ -1774,7 +1772,7 @@ typedef struct _gr_chartedit_cat_axis_state
         }
     major, minor;
 }
-gr_chartedit_cat_axis_state;
+GR_CHARTEDIT_CAT_AXIS_STATE;
 
 static const UBF /*GR_AXIS_POSITION_LZR*/
 gr_chartedit_selection_axis_lzrs[] =
@@ -1811,9 +1809,9 @@ gr_chartedit_selection_axis_ticks[] =
 
 static void
 gr_chartedit_selection_cat_axis_encode(
-    const gr_chartedit_cat_axis_state * state)
+    const GR_CHARTEDIT_CAT_AXIS_STATE * const state)
 {
-    const struct _gr_chartedit_cat_axis_state_ticks * smp;
+    const struct GR_CHARTEDIT_CAT_AXIS_STATE_TICKS * smp;
     wimp_w w = state->w;
     S32 i;
 
@@ -1867,17 +1865,17 @@ gr_chartedit_selection_cat_axis_process(
     dbox_field     f;
     P_GR_CHART      cp;
     S32            ok, persist;
-    gr_chartedit_cat_axis_state state;
-    GR_AXES_NO     modifying_axes;
-    GR_AXIS_NO     modifying_axis;
+    GR_CHARTEDIT_CAT_AXIS_STATE state;
+    GR_AXES_IDX     modifying_axes_idx;
+    GR_AXIS_IDX     modifying_axis_idx;
     P_GR_AXES       p_axes;
     P_GR_AXIS       p_axis;
     P_GR_AXIS_TICKS mmp;
-    struct _gr_chartedit_cat_axis_state_ticks * smp;
+    struct GR_CHARTEDIT_CAT_AXIS_STATE_TICKS * smp;
 
     cp = gr_chart_cp_from_ch(cep->ch);
 
-    modifying_axis = gr_axes_ix_from_external(cp, id.no, &modifying_axes);
+    modifying_axis_idx = gr_axes_idx_from_external(cp, id.no, &modifying_axes_idx);
 
     d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS, &errorp);
     if(!d)
@@ -1894,8 +1892,8 @@ gr_chartedit_selection_cat_axis_process(
 
     do  {
         /* load current settings into structure */
-        p_axes = &cp->axes[modifying_axes];
-        p_axis = &p_axes->axis[modifying_axis];
+        p_axes = &cp->axes[modifying_axes_idx];
+        p_axis = &p_axes->axis[modifying_axis_idx];
 
         state.axis.lzr = p_axis->bits.lzr;
         state.axis.arf = p_axis->bits.arf;
@@ -2073,8 +2071,8 @@ gr_chartedit_selection_cat_axis_process(
         if(ok)
             {
             /* set chart from modified structure */
-            p_axes = &cp->axes[modifying_axes];
-            p_axis = &p_axes->axis[modifying_axis];
+            p_axes = &cp->axes[modifying_axes_idx];
+            p_axis = &p_axes->axis[modifying_axis_idx];
 
             p_axis->bits.lzr = state.axis.lzr;
             p_axis->bits.arf = state.axis.arf;
@@ -2111,11 +2109,11 @@ gr_chartedit_selection_cat_axis_process(
 *
 ******************************************************************************/
 
-typedef struct _gr_chartedit_axis_state
+typedef struct GR_CHARTEDIT_AXIS_STATE
     {
     wimp_w w;
 
-    struct _gr_chartedit_axis_state_axis
+    struct GR_CHARTEDIT_AXIS_STATE_AXIS
         {
         S32 manual, zero, log_scale, log_scale_modified, pow_label;
         F64 min, max, delta;
@@ -2125,7 +2123,7 @@ typedef struct _gr_chartedit_axis_state
         }
     axis;
 
-    struct _gr_chartedit_axis_state_ticks
+    struct GR_CHARTEDIT_AXIS_STATE_TICKS
         {
         F64 val, delta;
         S32 manual, grid;
@@ -2134,7 +2132,7 @@ typedef struct _gr_chartedit_axis_state
         }
     major, minor;
 
-    struct _gr_chartedit_axis_state_series
+    struct GR_CHARTEDIT_AXIS_STATE_SERIES
         {
         S32 cumulative;
         S32 cumulative_modified;
@@ -2150,7 +2148,7 @@ typedef struct _gr_chartedit_axis_state
         }
     series;
     }
-gr_chartedit_axis_state;
+GR_CHARTEDIT_AXIS_STATE;
 
 static const F64 dbl_min_limit     = -DBL_MAX;
 static const F64 dbl_max_limit     = +DBL_MAX;
@@ -2170,9 +2168,9 @@ static const F64 dbl_log_minor_max_interval_limit = +1.0E+307; /* very large add
 
 static void
 gr_chartedit_selection_axis_encode(
-    const gr_chartedit_axis_state * state)
+    const GR_CHARTEDIT_AXIS_STATE * state)
 {
-    const struct _gr_chartedit_axis_state_ticks * smp;
+    const struct GR_CHARTEDIT_AXIS_STATE_TICKS * smp;
     wimp_w w = state->w;
     S32 i;
 
@@ -2241,13 +2239,13 @@ gr_chartedit_selection_axis_process(
     P_GR_CHART      cp;
     S32            ok, persist;
     GR_CHART_OBJID id;
-    gr_chartedit_axis_state state;
-    GR_AXES_NO     modifying_axes;
-    GR_AXIS_NO     modifying_axis;
+    GR_CHARTEDIT_AXIS_STATE state;
+    GR_AXES_IDX     modifying_axes_idx;
+    GR_AXIS_IDX     modifying_axis_idx;
     P_GR_AXES       p_axes;
     P_GR_AXIS       p_axis;
     P_GR_AXIS_TICKS mmp;
-    struct _gr_chartedit_axis_state_ticks * smp;
+    struct GR_CHARTEDIT_AXIS_STATE_TICKS * smp;
 
     cp = gr_chart_cp_from_ch(cep->ch);
 
@@ -2271,30 +2269,30 @@ gr_chartedit_selection_axis_process(
         case GR_CHART_OBJNAME_POINT:
         case GR_CHART_OBJNAME_DROPPOINT:
             {
-            GR_SERIES_IX seridx;
-            GR_AXES_NO   axes;
+            GR_SERIES_IDX series_idx;
+            GR_AXES_IDX axes_idx;
 
-            seridx = gr_series_ix_from_external(cp, cep->selection.id.no);
-            axes   = gr_axes_ix_from_seridx(cp, seridx);
+            series_idx = gr_series_idx_from_external(cp, cep->selection.id.no);
+            axes_idx = gr_axes_idx_from_series_idx(cp, series_idx);
 
             gr_chart_objid_clear(&id);
             id.name = GR_CHART_OBJNAME_AXIS;
-            id.no   = gr_axes_external_from_ix(cp, axes, Y_AXIS);
+            id.no   = gr_axes_external_from_idx(cp, axes_idx, Y_AXIS_IDX);
             }
             break;
 
         default:
             gr_chart_objid_clear(&id);
             id.name = GR_CHART_OBJNAME_AXIS;
-            id.no   = gr_axes_external_from_ix(cp, 0, Y_AXIS);
+            id.no   = gr_axes_external_from_idx(cp, 0, Y_AXIS_IDX);
             break;
         }
 
-    modifying_axis = gr_axes_ix_from_external(cp, id.no, &modifying_axes);
+    modifying_axis_idx = gr_axes_idx_from_external(cp, id.no, &modifying_axes_idx);
 
-    if( (cp->axes[modifying_axes].charttype != GR_CHARTTYPE_SCAT) &&
-        (cp->axes[0].charttype              != GR_CHARTTYPE_SCAT))
-        if(modifying_axis == 0)
+    if( (cp->axes[modifying_axes_idx].charttype != GR_CHARTTYPE_SCAT) &&
+        (cp->axes[0].charttype                  != GR_CHARTTYPE_SCAT) )
+        if(modifying_axis_idx == 0)
             {
             gr_chartedit_selection_cat_axis_process(cep, id); /* give him a hand with id processing */
             return;
@@ -2317,8 +2315,8 @@ gr_chartedit_selection_axis_process(
 
     do  {
         /* load current settings into structure */
-        p_axes = &cp->axes[modifying_axes];
-        p_axis = &p_axes->axis[modifying_axis];
+        p_axes = &cp->axes[modifying_axes_idx];
+        p_axis = &p_axes->axis[modifying_axis_idx];
 
         state.axis.manual    = p_axis->bits.manual;
         state.axis.min       = p_axis->bits.manual ? p_axis->punter.min : p_axis->current.min;
@@ -2650,12 +2648,12 @@ gr_chartedit_selection_axis_process(
 
         if(ok)
             {
-            GR_SERIES_IX seridx;
-            P_GR_SERIES   serp;
+            GR_SERIES_IDX series_idx;
+            P_GR_SERIES serp;
 
             /* set chart from modified structure */
-            p_axes = &cp->axes[modifying_axes];
-            p_axis = &p_axes->axis[modifying_axis];
+            p_axes = &cp->axes[modifying_axes_idx];
+            p_axis = &p_axes->axis[modifying_axis_idx];
 
             p_axis->bits.manual     = state.axis.manual;
             if(p_axis->bits.manual)
@@ -2692,11 +2690,11 @@ gr_chartedit_selection_axis_process(
             p_axes->bits.stacked    = state.series.stacked;
 
             /* reflect into series on these axes */
-            for(seridx = cp->axes[modifying_axes].series.stt_idx;
-                seridx < cp->axes[modifying_axes].series.end_idx;
-                seridx++)
+            for(series_idx = cp->axes[modifying_axes_idx].series.stt_idx;
+                series_idx < cp->axes[modifying_axes_idx].series.end_idx;
+                series_idx++)
                 {
-                serp = getserp(cp, seridx);
+                serp = getserp(cp, series_idx);
 
                 if( state.series.stacked_modified     ||
                     state.series.cumulative_modified  ||

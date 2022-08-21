@@ -1,0 +1,33 @@
+| _bld_mkdir (r32)
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 2013-2014 Stuart Swales
+|
+dir <Obey$Dir>
+|
+cdir            o
+copy ^.!!!waste o.!!!waste ~CF~V
+settype         o.!!!waste Obey
+|
+cdir            o.modules
+copy ^.!!!waste o.modules.!!!waste ~CF~V
+settype         o.modules.!!!waste Obey
+|
+cdir            utils
+cdir            utils.GB
+cdir            utils.GB.o
+copy ^.!!!waste utils.GB.o.!!!waste ~CF~V
+settype         utils.GB.o.!!!waste obey
+|
+back
+|
+dir <Obey$Dir>.^.^.WimpLib.r32
+|
+cdir                       o
+copy <Obey$Dir>.^.!!!waste o.!!!waste ~CF~V
+settype                    o.!!!waste Obey
+|
+back

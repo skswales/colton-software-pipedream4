@@ -16,7 +16,10 @@
 structure
 */
 
-/* coordinates are large signed things */
+/*
+Draw coordinates are large signed things
+*/
+
 typedef S32 DRAW_COORD; typedef DRAW_COORD * P_DRAW_COORD; typedef const DRAW_COORD * PC_DRAW_COORD;
 
 #define DRAW_COORD_MAX S32_MAX
@@ -25,17 +28,23 @@ typedef S32 DRAW_COORD; typedef DRAW_COORD * P_DRAW_COORD; typedef const DRAW_CO
 points, or simply pairs of coordinates
 */
 
-typedef struct _DRAW_POINT
+typedef struct DRAW_POINT
 {
     DRAW_COORD x, y;
 }
 DRAW_POINT, * P_DRAW_POINT; typedef const DRAW_POINT * PC_DRAW_POINT;
 
+typedef struct DRAW_SIZE
+{
+    DRAW_COORD cx, cy;
+}
+DRAW_SIZE, * P_DRAW_SIZE; typedef const DRAW_SIZE * PC_DRAW_SIZE;
+
 /*
 boxes, or simply pairs of points
 */
 
-typedef struct _DRAW_BOX
+typedef struct DRAW_BOX
 {
     DRAW_COORD x0, y0, x1, y1;
 }
@@ -45,7 +54,7 @@ DRAW_BOX, * P_DRAW_BOX; typedef const DRAW_BOX * PC_DRAW_BOX;
 matrix transforms
 */
 
-typedef struct _DRAW_TRANSFORM
+typedef struct DRAW_TRANSFORM
 {
     S32 a, b, c, d;
     S32 e, f;
@@ -56,7 +65,7 @@ DRAW_TRANSFORM;
 Draw file header
 */
 
-typedef struct _DRAW_FILE_HEADER
+typedef struct DRAW_FILE_HEADER
 {
     U8 title[4];                    /* 1 word   */ /* 'Draw' */
     S32 major_stamp;                /* 1 word   */
@@ -81,7 +90,7 @@ Draw object header (sans bounding box)
     U32 type;                       /* 1 word   */ \
     U32 size                        /* 1 word   */
 
-typedef struct _DRAW_OBJECT_HEADER_NO_BBOX
+typedef struct DRAW_OBJECT_HEADER_NO_BBOX
 {
     DRAW_OBJECT_HEADER_NO_BBOX_;    /* 2 words  */
 }                                   /* 2 words  */
@@ -96,7 +105,7 @@ Draw object header (with bounding box)
     U32 size;                       /* 1 word   */ \
     DRAW_BOX bbox                   /* 4 words  */
 
-typedef struct _DRAW_OBJECT_HEADER
+typedef struct DRAW_OBJECT_HEADER
 {
     DRAW_OBJECT_HEADER_;            /* 6 words  */
 }                                   /* 6 words  */
@@ -117,7 +126,7 @@ A (RISC OS) font list
 /* NB Just a byte on RISC OS, but we need to cater for Windows font tables with >= 256 entries */
 typedef U16 DRAW_FONT_REF16;        /* 2 bytes  */
 
-typedef struct _DRAW_OBJECT_FONTLIST
+typedef struct DRAW_OBJECT_FONTLIST
 {
 #define DRAW_OBJECT_TYPE_FONTLIST 0
     DRAW_OBJECT_HEADER_NO_BBOX_;
@@ -126,7 +135,7 @@ DRAW_OBJECT_FONTLIST, * P_DRAW_OBJECT_FONTLIST;
 
 /* followed by a number of DRAW_FONTLIST_ELEM */
 
-typedef struct _DRAW_FONTLIST_ELEM
+typedef struct DRAW_FONTLIST_ELEM
 {
     U8 fontref8;                    /* 1 byte   */
     U8Z szHostFontName[31];         /* >= 2 bytes */ /* Latin-1 string, NULLCH terminated (size only for compiler and debugger - do not use sizeof()) */
@@ -137,7 +146,7 @@ DRAW_FONTLIST_ELEM, * P_DRAW_FONTLIST_ELEM; typedef const DRAW_FONTLIST_ELEM * P
 A text object
 */
 
-typedef struct _DRAW_TEXT_STYLE
+typedef struct DRAW_TEXT_STYLE
 {
     DRAW_FONT_REF16 fontref16;      /* 2 bytes  */
     U16 reserved16;                 /* 2 bytes  */
@@ -149,7 +158,7 @@ DRAW_TEXT_STYLE;
 #define draw_fontsize_from_mp(mp) ( \
     ((mp) * 64) / 100 )
 
-typedef struct _DRAW_OBJECT_TEXT
+typedef struct DRAW_OBJECT_TEXT
 {
 #define DRAW_OBJECT_TYPE_TEXT 1
     DRAW_OBJECT_HEADER_;            /* 6 words  */
@@ -169,7 +178,7 @@ DRAW_OBJECT_TEXT;
 A path object
 */
 
-typedef struct _DRAW_PATH_STYLE
+typedef struct DRAW_PATH_STYLE
 {
     U8 flags;                       /* 1 byte   */  /* bit 0..1 join         */
                                                     /* bit 2..3 end cap      */
@@ -211,7 +220,7 @@ typedef struct _DRAW_PATH_STYLE
 }                                   /* 1 word   */
 DRAW_PATH_STYLE;
 
-typedef struct _DRAW_OBJECT_PATH
+typedef struct DRAW_OBJECT_PATH
 {
 #define DRAW_OBJECT_TYPE_PATH 2
     DRAW_OBJECT_HEADER_;            /* 6 words  */
@@ -225,7 +234,7 @@ DRAW_OBJECT_PATH, * P_DRAW_OBJECT_PATH;
 
 /* followed by optional dash header + elements and then path elements */
 
-typedef struct _DRAW_DASH_HEADER
+typedef struct DRAW_DASH_HEADER
 {
     U32 dashstart;                  /* 1 word   */  /* distance into pattern */
     U32 dashcount;                  /* 1 word   */  /* number of elements    */
@@ -238,7 +247,7 @@ DRAW_DASH_HEADER, * P_DRAW_DASH_HEADER; typedef const DRAW_DASH_HEADER * PC_DRAW
 Elements within a path
 */
 
-typedef struct _DRAW_PATH_MOVE
+typedef struct DRAW_PATH_MOVE
 {
 #define DRAW_PATH_TYPE_MOVE     2 /* move to (x,y), starts new subpath */
     U32 tag;
@@ -246,7 +255,7 @@ typedef struct _DRAW_PATH_MOVE
 }
 DRAW_PATH_MOVE;
 
-typedef struct _DRAW_PATH_LINE
+typedef struct DRAW_PATH_LINE
 {
 #define DRAW_PATH_TYPE_LINE     8 /* line to (x,y) */
     U32 tag;
@@ -254,7 +263,7 @@ typedef struct _DRAW_PATH_LINE
 }
 DRAW_PATH_LINE;
 
-typedef struct _DRAW_PATH_CURVE
+typedef struct DRAW_PATH_CURVE
 {
 #define DRAW_PATH_TYPE_CURVE    6 /* bezier curve to (x3,y3) with 2 control points */
     U32 tag;
@@ -264,14 +273,14 @@ typedef struct _DRAW_PATH_CURVE
 }
 DRAW_PATH_CURVE;
 
-typedef struct _DRAW_PATH_CLOSE
+typedef struct DRAW_PATH_CLOSE
 {
 #define DRAW_PATH_TYPE_CLOSE    5 /* close current subpath with a line */
     U32 tag;
 }
 DRAW_PATH_CLOSE;
 
-typedef struct _DRAW_PATH_TERM
+typedef struct DRAW_PATH_TERM
 {
 #define DRAW_PATH_TYPE_TERM     0 /* end of path */
     U32 tag;
@@ -282,12 +291,12 @@ DRAW_PATH_TERM;
 A RISC OS sprite
 */
 
-typedef struct _DRAW_OBJECT_SPRITE
+typedef struct DRAW_OBJECT_SPRITE
 {
 #define DRAW_OBJECT_TYPE_SPRITE 5
     DRAW_OBJECT_HEADER_;            /* 6 words  */
 
-    struct _DRAW_OBJECT_SPRITE_SPRITE /* same as sprite_header */
+    struct DRAW_OBJECT_SPRITE_SPRITE /* same as sprite_header */
     {
         S32 next;       /*  Offset to next sprite                */
         char name[12];  /*  Sprite name                          */
@@ -307,7 +316,7 @@ DRAW_OBJECT_SPRITE, * P_DRAW_OBJECT_SPRITE;
 A group of objects
 */
 
-typedef struct _DRAW_GROUP
+typedef struct DRAW_OBJECT_GROUP
 {
 #define DRAW_OBJECT_TYPE_GROUP 6
     DRAW_OBJECT_HEADER_;            /* 6 words  */
@@ -320,7 +329,7 @@ DRAW_OBJECT_GROUP;
 A tagged object
 */
 
-typedef struct _DRAW_OBJECT_TAG
+typedef struct DRAW_OBJECT_TAG
 {
 #define DRAW_OBJECT_TYPE_TAG 7
     DRAW_OBJECT_HEADER_;            /* 6 words  */
@@ -343,7 +352,7 @@ DRAW_OBJECT_TAG;
 A JPEG object
 */
 
-typedef struct _DRAW_OBJECT_JPEG
+typedef struct DRAW_OBJECT_JPEG
 {
 #define DRAW_OBJECT_TYPE_JPEG 16 /*RO3*/
     DRAW_OBJECT_HEADER_;            /* 6 words  */
@@ -364,7 +373,7 @@ Dial Solutions extensions
 #define DRAW_OBJECT_TYPE_DS_WINFONTLIST 0x310
 
 /* this could have been cast to a LOGFONT on 16-bit Windows */
-typedef struct _DRAW_WINDOWS_LOGFONT
+typedef struct DRAW_WINDOWS_LOGFONT
 {
     S16 lfHeight;
     S16 lfWidth;
@@ -383,7 +392,7 @@ typedef struct _DRAW_WINDOWS_LOGFONT
 }
 DRAW_WINDOWS_LOGFONT;
 
-typedef struct _DRAW_WIN_FONTLIST_ELEM
+typedef struct DRAW_WIN_FONTLIST_ELEM
 {
     DRAW_FONT_REF16 fontref16;
     DRAW_WINDOWS_LOGFONT logfont;
@@ -460,7 +469,7 @@ typedef BITMAPINFO * P_BITMAPINFO;
 #endif
 
 /* same structure (but different member names) as sprite_area from RISC_OSLib:sprite.h */
-typedef struct _spriteareaheader /* ie NOT a spritefileheader */
+typedef struct SAH /* ie NOT a spritefileheader */
 {
     S32 area_size; /* this word omitted from Sprite (FF9) files */
     S32 number_of_sprites;
@@ -469,7 +478,7 @@ typedef struct _spriteareaheader /* ie NOT a spritefileheader */
 }
 SAH, * P_SAH;
 
-typedef struct _spritecontrolblock
+typedef struct SCB
 {
     S32 offset_to_next;
     char name[12];
@@ -483,7 +492,7 @@ typedef struct _spritecontrolblock
 }
 SCB, * P_SCB; typedef const SCB * PC_SCB;
 
-typedef struct _SPRITE_TYPE
+typedef struct SPRITE_TYPE
 {
     unsigned int sprite_type_bit : 1;
     unsigned int h_dpi           : 13;

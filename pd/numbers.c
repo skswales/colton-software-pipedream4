@@ -29,13 +29,13 @@ internal functions
 static void
 draw_adjust_file_ref(
     P_DRAW_DIAG dfp,
-    drawfrp dfrp);
+    P_DRAW_FILE_REF dfrp);
 
-static drawfrp
+static P_DRAW_FILE_REF
 draw_search_refs(
     S32 extdep_key);
 
-static drawfrp
+static P_DRAW_FILE_REF
 draw_search_refs_slot(
     _InRef_     PC_EV_SLR p_slr);
 
@@ -222,13 +222,13 @@ bash_slots_about_a_bit(
             default:
             case bash_snapshot:
                 {
-                P_EV_RESULT resp;
+                P_EV_RESULT p_ev_result;
 
-                switch(result_extract(tslot, &resp))
+                switch(result_extract(tslot, &p_ev_result))
                     {
                     case SL_NUMBER:
                         /* leave strings as text slots */
-                        if(resp->did_num != RPN_RES_STRING)
+                        if(p_ev_result->did_num != RPN_RES_STRING)
                             xf_inexpression = TRUE;
 
                         /* poke the minus/brackets flag to minus */
@@ -238,7 +238,7 @@ bash_slots_about_a_bit(
                          * their formula (same difference for constant arrays, but
                          * not for calculated arrays)
                          */
-                        if(resp->did_num == RPN_RES_ARRAY)
+                        if(p_ev_result->did_num == RPN_RES_ARRAY)
                             {
                             EV_DATA data;
                             const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
@@ -246,7 +246,7 @@ bash_slots_about_a_bit(
 
                             ev_set_options(&optblock, cur_docno);
 
-                            ev_result_to_data_convert(&data, resp);
+                            ev_result_to_data_convert(&data, p_ev_result);
 
                             ev_decode_data(linbuf, cur_docno, &data, &optblock);
                             break;
@@ -542,7 +542,7 @@ compile_expression(
     P_U8 text_in,
     S32 len_out,
     P_S32 at_pos,
-    P_EV_RESULT resp,
+    P_EV_RESULT p_ev_result,
     P_EV_PARMS parmsp)
 {
     EV_OPTBLOCK optblock;
@@ -561,11 +561,11 @@ compile_expression(
     /* get sensible defaults for result and parms */
     if(d_progvars[OR_AM].option != 'A')
         {
-        resp->did_num = RPN_DAT_WORD8;
-        resp->arg.integer = 0;
+        p_ev_result->did_num = RPN_DAT_WORD8;
+        p_ev_result->arg.integer = 0;
         }
     else
-        resp->did_num = RPN_DAT_BLANK;
+        p_ev_result->did_num = RPN_DAT_BLANK;
 
     parmsp->control   = 0;
     parmsp->circ      = 0;
@@ -574,7 +574,7 @@ compile_expression(
         rpn_len = create_error(EVAL_ERR_BADEXPR);
     else if((rpn_len = ss_recog_constant(&data, docno, text_in, &optblock, 0)) > 0)
         {
-        ev_data_to_result_convert(resp, &data);
+        ev_data_to_result_convert(p_ev_result, &data);
         rpn_len = 0;
         parmsp->type = EVS_CON_DATA;
         }
@@ -612,7 +612,7 @@ draw_add_file_ref(
     ROW row)
 {
     P_DRAW_DIAG dfp;
-    drawfrp dfrp;
+    P_DRAW_FILE_REF dfrp;
     EV_RANGE rng;
     S32 res;
     S32 ext_dep_han;
@@ -634,7 +634,7 @@ draw_add_file_ref(
 
         /* key into list using external dependency handle */
 
-        if(NULL == (dfrp = collect_add_entry(&draw_file_refs, sizeof32(*dfrp), (P_LIST_ITEMNO) &ext_dep_han, &res)))
+        if(NULL == (dfrp = collect_add_entry_elem(DRAW_FILE_REF, &draw_file_refs, (P_LIST_ITEMNO) &ext_dep_han, &res)))
             {
             ev_del_extdependency(rng.s.docno, ext_dep_han);
             return(res);
@@ -677,7 +677,7 @@ draw_add_file_ref(
 static void
 draw_adjust_file_ref(
     P_DRAW_DIAG p_draw_diag,
-    drawfrp dfrp)
+    P_DRAW_FILE_REF dfrp)
 {
     P_DOCU p_docu;
     coord coff, roff;
@@ -781,14 +781,14 @@ extern void
 draw_redraw_all_pictures(void)
 {
     LIST_ITEMNO key;
-    drawfrp dfrp;
+    P_DRAW_FILE_REF dfrp;
     P_DRAW_DIAG dfp;
 
     trace_0(TRACE_APP_PD4, "draw_redraw_all_pictures()");
 
-    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         dfrp;
-        dfrp = collect_next( &draw_file_refs.lbr, &key))
+        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
         dfp = gr_cache_search(&dfrp->draw_file_key);
 
@@ -806,15 +806,15 @@ gr_cache_recache_proto(static, draw_file_recached)
 {
     /* search draw file ref list and reload scale info, cause redraw etc. */
     LIST_ITEMNO key;
-    drawfrp     dfrp;
+    P_DRAW_FILE_REF dfrp;
     P_DRAW_DIAG dfp;
 
     IGNOREPARM(handle);
     IGNOREPARM(cres);
 
-    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         dfrp;
-        dfrp = collect_next( &draw_file_refs.lbr, &key))
+        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
         if(dfrp->draw_file_key == cah)
             {
@@ -850,7 +850,7 @@ draw_cache_file(
 {
     GR_CACHE_HANDLE draw_file_key;
     U32 wacky_tag = GR_RISCDIAG_WACKYTAG;
-    struct _PDCHART_TAGSTRIP_INFO info;
+    struct PDCHART_TAGSTRIP_INFO info;
     U8  namebuf[BUF_MAX_PATHSTRING];
     S32 res;
     GR_CHART_HANDLE ch;
@@ -877,8 +877,7 @@ draw_cache_file(
         return(pdchart_show_editor_using_handle(ext_handle));
         }
 
-    if((res = gr_cache_entry_query(&draw_file_key, namebuf)) < 0)
-        return(res);
+    (void) gr_cache_entry_query(&draw_file_key, namebuf);
 
     if(!draw_file_key)
         {
@@ -980,16 +979,16 @@ draw_find_file(
     COL col,
     ROW row,
     P_P_DRAW_DIAG p_p_draw_diag,
-    drawfrp *drawref)
+    P_P_DRAW_FILE_REF p_p_draw_file_ref)
 {
     LIST_ITEMNO key;
-    drawfrp dfrp;
+    P_DRAW_FILE_REF dfrp;
 
     trace_3(TRACE_APP_PD4, "draw_find_file: docno %d %d, %d", docno, col, row);
 
-    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         dfrp;
-        dfrp = collect_next( &draw_file_refs.lbr, &key))
+        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
         trace_3(TRACE_APP_PD4, "draw_find_file found docno: %d, col: %d, row: %d",
                 dfrp->docno, dfrp->col, dfrp->row);
@@ -1007,8 +1006,8 @@ draw_find_file(
                 if(p_p_draw_diag)
                     *p_p_draw_diag = p_draw_diag;
 
-                if(drawref)
-                    *drawref = dfrp;
+                if(p_p_draw_file_ref)
+                    *p_p_draw_file_ref = dfrp;
 
                 return(1);
                 }
@@ -1028,7 +1027,7 @@ static void
 draw_remove_ref(
     S32 ext_dep_han)
 {
-    drawfrp dfrp;
+    P_DRAW_FILE_REF dfrp;
 
     if((dfrp = draw_search_refs(ext_dep_han)) != NULL)
         {
@@ -1050,30 +1049,29 @@ draw_remove_ref(
 *
 ******************************************************************************/
 
-static drawfrp
+static P_DRAW_FILE_REF
 draw_search_refs(
     S32 ext_dep_han)
 {
-    return(collect_search(&draw_file_refs.lbr, (LIST_ITEMNO) ext_dep_han));
+    return(collect_goto_item(DRAW_FILE_REF, &draw_file_refs.lbr, (LIST_ITEMNO) ext_dep_han));
 }
 
 /******************************************************************************
 *
-* search list of draw refs for
-* entry for given slot
+* search list of draw refs for entry for given slot
 *
 ******************************************************************************/
 
-static drawfrp
+static P_DRAW_FILE_REF
 draw_search_refs_slot(
     _InRef_     PC_EV_SLR p_slr)
 {
     LIST_ITEMNO key;
-    drawfrp     dfrp;
+    P_DRAW_FILE_REF dfrp;
 
-    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         dfrp;
-        dfrp = collect_next( &draw_file_refs.lbr, &key))
+        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
         if( (dfrp->docno == p_slr->docno) &&
             (dfrp->col == p_slr->col) &&
@@ -1145,7 +1143,7 @@ draw_str_insertslot(
             {
             char namebuf[BUF_MAX_PATHSTRING];
 
-            safe_strnkpy(namebuf, elemof32(namebuf), name, len);
+            xstrnkpy(namebuf, elemof32(namebuf), name, len);
 
             trace_0(TRACE_APP_PD4, "draw_str_insertslot found draw file ref");
             if((res = draw_cache_file(namebuf, &x, &y, col, row, 0, 0)) >= 0)
@@ -1215,9 +1213,9 @@ PROC_UREF_PROTO(static, draw_uref)
         case UREF_SWAPSLOT:
         case UREF_CLOSE:
             {
-            drawfrp dfrp;
+            P_DRAW_FILE_REF dfrp = draw_search_refs(inthandle);
 
-            if((dfrp = draw_search_refs(inthandle)) != NULL)
+            if(dfrp != NULL)
                 {
                 switch(upp->action)
                     {
@@ -1454,23 +1452,19 @@ getcol(void)
 extern BOOL
 dependent_links_warning(void)
 {
-    LIST *lptr;
-    graphlinkp glp;
+    PC_LIST lptr;
     const DOCNO docno = current_docno();
     S32 nLinks = 0;
 
-    do  {
-        for(lptr = first_in_list(&graphics_link_list);
-            lptr;
-            lptr = next_in_list(&graphics_link_list))
-            {
-            glp = (graphlinkp) lptr->value;
+    for(lptr = first_in_list(&graphics_link_list);
+        lptr;
+        lptr = next_in_list(&graphics_link_list))
+        {
+        PC_GRAPHICS_LINK_ENTRY glp = (P_GRAPHICS_LINK_ENTRY) lptr->value;
 
-            if(glp->docno == docno)
-                ++nLinks;
-            }
+        if(glp->docno == docno)
+            ++nLinks;
         }
-    while(lptr);
 
     if(nLinks)
         return(riscdialog_query_YN(close_dependent_links_winge_STR) == riscdialog_query_YES);
@@ -1498,22 +1492,22 @@ graph_add_entry(
 {
     S32 leaflen = strlen(leaf);
     S32 taglen  = strlen(tag);
-    LIST *lptr;
-    graphlinkp glp;
+    P_LIST lptr;
+    P_GRAPHICS_LINK_ENTRY glp;
     P_U8 ptr;
     S32 res;
     EV_RANGE rng;
 
     /* extra +1 accounted for in sizeof() */
     lptr = add_list_entry(&graphics_link_list,
-                          sizeof(struct graphics_link_entry) + leaflen + taglen + 1,
+                          sizeof32(struct GRAPHICS_LINK_ENTRY) + leaflen + taglen + 1,
                           &res);
 
     if(!lptr)
         return(res);
 
     lptr->key = (S32) ghan;
-    glp = (graphlinkp) (lptr->value);
+    glp = (P_GRAPHICS_LINK_ENTRY) (lptr->value);
 
     glp->docno = docno;
     glp->col    = col;
@@ -1557,14 +1551,13 @@ extern BOOL
 graph_active_present(
     _InVal_     DOCNO docno)
 {
-    LIST *lptr;
-    graphlinkp glp;
+    PC_LIST lptr;
 
     for(lptr = first_in_list(&graphics_link_list);
         lptr;
         lptr = next_in_list(&graphics_link_list))
         {
-        glp = (graphlinkp) lptr->value;
+        PC_GRAPHICS_LINK_ENTRY glp = (PC_GRAPHICS_LINK_ENTRY) lptr->value;
 
         if(glp->update  &&  ((docno == DOCNO_NONE)  ||  (glp->docno == docno)))
             return(TRUE);
@@ -1583,9 +1576,9 @@ extern void
 graph_remove_entry(
     ghandle han)
 {
-    graphlinkp glp;
+    PC_GRAPHICS_LINK_ENTRY glp = graph_search_list(han);
 
-    if((glp = graph_search_list(han)) != NULL)
+    if(glp != NULL)
         {
         /* remove external dependency */
         ev_del_extdependency(glp->docno,
@@ -1600,25 +1593,24 @@ graph_remove_entry(
 *
 ******************************************************************************/
 
-extern graphlinkp
+extern P_GRAPHICS_LINK_ENTRY
 graph_search_list(
     ghandle han)
 {
-    LIST *lptr = search_list(&graphics_link_list, (S32) han);
+    P_LIST lptr = search_list(&graphics_link_list, (S32) han);
 
-    return(lptr ? (graphlinkp) (lptr->value) : NULL);
+    return(lptr ? (P_GRAPHICS_LINK_ENTRY) (lptr->value) : NULL);
 }
 
 /******************************************************************************
 *
-* send a block of slots off to
-* graphics link
+* send a block of slots off to graphics link
 *
 ******************************************************************************/
 
 static void
 graph_send_block(
-    graphlinkp glp,
+    P_GRAPHICS_LINK_ENTRY glp,
     COL scol,
     ROW srow,
     COL ecol,
@@ -1668,9 +1660,9 @@ PROC_UREF_PROTO(static, graph_uref)
         case UREF_SWAPSLOT:
         case UREF_CLOSE:
             {
-            graphlinkp glp;
+            P_GRAPHICS_LINK_ENTRY glp = graph_search_list((ghandle) exthandle);
 
-            if((glp = graph_search_list((ghandle) exthandle)) != NULL)
+            if(glp != NULL)
                 {
                 DOCNO old_docno = change_document_using_docno(glp->docno);
 
@@ -1748,7 +1740,7 @@ mark_slot(
 {
     if(tslot)
         {
-        orab(tslot->flags, SL_ALTERED);
+        tslot->flags |= SL_ALTERED;
         xf_drawsome = TRUE;
         trace_0(TRACE_APP_PD4, "slot marked altered");
         }
@@ -1883,7 +1875,7 @@ merge_compiled_exp(
     char format,
     P_U8 compiled_out,
     S32 rpn_len,
-    P_EV_RESULT resp,
+    P_EV_RESULT p_ev_result,
     P_EV_PARMS parmsp,
     S32 load_flag,
     S32 add_refs)
@@ -1915,10 +1907,10 @@ merge_compiled_exp(
     else
         {
         /* copy across data */
-        tslot->justify                    = justify;
-        tslot->format                     = format;
-        tslot->content.number.guts.result = *resp;
-        tslot->content.number.guts.parms  = *parmsp;
+        tslot->justify                       = justify;
+        tslot->format                        = format;
+        tslot->content.number.guts.ev_result = *p_ev_result;
+        tslot->content.number.guts.parms     = *parmsp;
 
         add_to_tree = 0;
         switch(parmsp->type)
@@ -2383,7 +2375,7 @@ readfxy(
         #if TRACE_ALLOWED
         {
         char namebuf[BUF_MAX_PATHSTRING];
-        safe_strnkpy(namebuf, elemof32(namebuf), *name, namelen);
+        xstrnkpy(namebuf, elemof32(namebuf), *name, namelen);
         trace_3(TRACE_APP_PD4, "readfxy name: %s, xp: %g, yp: %g", namebuf, *xp, *yp);
         }
         #endif
@@ -2431,7 +2423,7 @@ row_select(
                     res = 1;
                 break;
             case RPN_DAT_ERROR:
-                res = result.arg.error.num;
+                res = result.arg.ev_error.status;
                 break;
             }
         }
@@ -2668,7 +2660,7 @@ text_slot_add_dependency(
 {
     uchar * csr;
     P_SLOT sl;
-    struct ev_grub_state grubb;
+    struct EV_GRUB_STATE grubb;
 
     if((sl = travel(col, row)) == NULL)
         return(0);
@@ -2728,9 +2720,9 @@ write_col(
     _InVal_     U32 elemof_buffer,
                 COL col)
 {
-    return(xtos_ubuf(buffer, elemof_buffer,
-                     col & COLNOBITS /* ignore bad and absolute */,
-                     1 /*uppercase*/));
+    return(xtos_ustr_buf(buffer, elemof_buffer,
+                         col & COLNOBITS /* ignore bad and absolute */,
+                         1 /*uppercase*/));
 }
 
 /******************************************************************************

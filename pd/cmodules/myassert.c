@@ -43,9 +43,9 @@ hard_assertion = 1000; /* an OLE server really needs this */
 
 #define ASSERTION_FAILURE_PREFIX TEXT("Runtime failure: %s in file %s, line ") U32_TFMT TEXT(".")
 
-#if WINDOWS
+#if RISCOS
 #define ASSERTION_FAILURE_YN TEXT("Click OK to exit immediately, losing data, Cancel to attempt to resume execution.")
-#elif RISCOS
+#elif WINDOWS
 #define ASSERTION_FAILURE_YN TEXT("Click OK to exit immediately, losing data, Cancel to attempt to resume execution.")
 #else
 #define ASSERTION_FAILURE_YN TEXT("")
@@ -62,7 +62,7 @@ __myasserted(
     _In_z_      PCTSTR p_function,
     _In_z_      PCTSTR p_file,
     _InVal_     U32 line_no,
-    _In_z_      PCTSTR format,
+    _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        ...)
 {
     va_list va;
@@ -70,6 +70,25 @@ __myasserted(
 
     va_start(va, format);
     crash_and_burn = __vmyasserted(p_function, p_file, line_no, NULL, format, va);
+    va_end(va);
+
+    return(crash_and_burn);
+}
+
+extern BOOL __cdecl
+__myasserted_msg(
+    _In_z_      PCTSTR p_function,
+    _In_z_      PCTSTR p_file,
+    _InVal_     U32 line_no,
+    _In_z_      PCTSTR message,
+    _In_z_ _Printf_format_string_ PCTSTR format,
+    /**/        ...)
+{
+    va_list va;
+    BOOL crash_and_burn;
+
+    va_start(va, format);
+    crash_and_burn = __vmyasserted(p_function, p_file, line_no, message, format, va);
     va_end(va);
 
     return(crash_and_burn);
@@ -89,25 +108,6 @@ __myasserted_EQ(
     return(__myasserted(p_function, p_file, line_no, U32_TFMT TEXT("==") U32_TFMT, val1, val2));
 }
 
-extern BOOL __cdecl
-__myasserted_msg(
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
-    _InVal_     U32 line_no,
-    _In_z_      PCTSTR message,
-    _In_z_      PCTSTR format,
-    /**/        ...)
-{
-    va_list va;
-    BOOL crash_and_burn;
-
-    va_start(va, format);
-    crash_and_burn = __vmyasserted(p_function, p_file, line_no, message, format, va);
-    va_end(va);
-
-    return(crash_and_burn);
-}
-
 extern BOOL
 __vmyasserted(
     _In_z_      PCTSTR p_function,
@@ -118,7 +118,76 @@ __vmyasserted(
     /**/        va_list va_in)
 {
 
-#if WINDOWS
+#if RISCOS
+
+    va_list va;
+    _kernel_oserror err;
+    PTSTR p = err.errmess;
+    PTSTR p_out;
+    wimp_errflags flags;
+
+    /* we need to know how to copy this! */
+#if !RISCOS
+    va = va_in;
+#else
+    va[0] = va_in[0];
+#endif
+
+    err.errnum = 0;
+
+    /* test output string for overrun of wimp error box */
+    if(!IS_P_DATA_NONE(format))
+    {
+        consume_int(vsnprintf(p, elemof32(err.errmess), format, va));
+
+        /* unbeknown to SKS, vsprintf modifies va, so reload necessary ... */
+#if !RISCOS
+        va = va_in;
+#else
+        va[0] = va_in[0];
+#endif
+
+        if(strlen(p) > 32)
+        {
+            /* make a hole to put the first prefix in */
+            memmove32(p +  sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1 /*to*/, p /*from*/, strlen32(p) + 1);
+
+            /* plonk it in */
+            memcpy32(p, ASSERTION_FAILURE_PREFIX_RISCOS, sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1);
+
+            (void) wimp_reporterror_rf(&err, wimp_EOK, product_ui_id(), &flags, NULL);
+
+            format = NULL;
+        }
+    }
+
+    p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), ASSERTION_FAILURE_PREFIX TEXT(" - "), p_function, p_file, line_no);
+
+    p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), TEXT("%s"), message ? message : ASSERTION_FAILURE_YN);
+
+    p_out = p;
+
+    if(!IS_P_DATA_NONE(format))
+    {
+        *p++ = ' ';
+        consume_int(vsnprintf(p, elemof32(err.errmess) - (p - err.errmess), format, va));
+    }
+
+    (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL | wimp_ENOERRORFROM), product_ui_id(), &flags, NULL);
+
+    if(flags & wimp_EOK)
+    {
+        tstr_xstrkpy(err.errmess, elemof32(err.errmess), message ? message : ASSERTION_TRAP_QUERY);
+
+        (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL), product_ui_id(), &flags, NULL);
+
+        if(flags & wimp_EOK)
+            return(TRUE);
+
+        exit(EXIT_FAILURE);
+    }
+
+#elif WINDOWS
 
     TCHARZ szBuffer[1024];
     size_t len = 0;
@@ -137,7 +206,7 @@ __vmyasserted(
         szBuffer[len++] = '\n';
         szBuffer[len++] = '\n';
         p_out = szBuffer + len;
-        (void) _vsntprintf_s(p_out, elemof32(szBuffer) - len, _TRUNCATE, format, va_in);
+        consume_int(_vsntprintf_s(p_out, elemof32(szBuffer) - len, _TRUNCATE, format, va_in));
     }
 
 #if TRACE_ALLOWED
@@ -189,75 +258,6 @@ __vmyasserted(
     }
 
     hard_assertion--;
-
-#elif RISCOS
-
-    va_list va;
-    _kernel_oserror err;
-    PTSTR p = err.errmess;
-    PTSTR p_out;
-    wimp_errflags flags;
-
-    /* we need to know how to copy this! */
-#if !RISCOS
-    va = va_in;
-#else
-    va[0] = va_in[0];
-#endif
-
-    err.errnum = 0;
-
-    /* test output string for overrun of wimp error box */
-    if(!IS_P_DATA_NONE(format))
-    {
-        (void) vsnprintf(p, elemof32(err.errmess), format, va);
-
-        /* unbeknown to SKS, vsprintf modifies va, so reload necessary ... */
-#if !RISCOS
-        va = va_in;
-#else
-        va[0] = va_in[0];
-#endif
-
-        if(strlen(p) > 32)
-        {
-            /* make a hole to put the first prefix in */
-            memmove32(p +  sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1 /*to*/, p /*from*/, strlen32(p) + 1);
-
-            /* plonk it in */
-            memcpy32(p, ASSERTION_FAILURE_PREFIX_RISCOS, sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1);
-
-            (void) wimp_reporterror_rf(&err, wimp_EOK, product_ui_id(), &flags, NULL);
-
-            format = NULL;
-        }
-    }
-
-    p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), ASSERTION_FAILURE_PREFIX TEXT(" - "), p_function, p_file, line_no);
-
-    p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), TEXT("%s"), message ? message : ASSERTION_FAILURE_YN);
-
-    p_out = p;
-
-    if(!IS_P_DATA_NONE(format))
-    {
-        *p++ = ' ';
-        (void) vsnprintf(p, elemof32(err.errmess) - (p - err.errmess), format, va);
-    }
-
-    (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL | wimp_ENOERRORFROM), product_ui_id(), &flags, NULL);
-
-    if(flags & wimp_EOK)
-    {
-        safe_tstrkpy(err.errmess, elemof32(err.errmess), message ? message : ASSERTION_TRAP_QUERY);
-
-        (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL), product_ui_id(), &flags, NULL);
-
-        if(flags & wimp_EOK)
-            return(TRUE);
-
-        exit(EXIT_FAILURE);
-    }
 
 #else
 
@@ -338,7 +338,7 @@ __WrapOsBool(
 
         if(hard_assertion)
         {   /* best not to do assert message box in this state */
-            trace_7(TRACE_OUT,
+            trace_7(TRACE_OUT | TRACE_ANY,
                     TEXT("%s\n")
                     TEXT("FAILED: err=%d:0x%08X %s at %s(%d)"),
                     tstr,

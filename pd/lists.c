@@ -39,7 +39,7 @@ searchkey(
 
 _Check_return_
 _Ret_maybenull_
-extern LIST *
+extern P_LIST
 add_list_entry(
     _InoutRef_  P_P_LIST_BLOCK list,
     _InVal_     S32 size,
@@ -57,11 +57,11 @@ add_list_entry(
     /* allocate new list if pointer is null */
     if(NULL == *list)
     {
-        STATUS res;
+        STATUS status;
 
-        if(NULL == (*list = al_ptr_alloc_elem(LIST_BLOCK, 1, &res)))
+        if(NULL == (*list = al_ptr_alloc_elem(LIST_BLOCK, 1, &status)))
         {
-            *resp = res;
+            *resp = status;
             return(NULL);
         }
 
@@ -79,7 +79,7 @@ add_list_entry(
     {
         *resp = STATUS_DONE;
 
-        return((LIST *) it->i.inside);
+        return((P_LIST) it->i.inside);
     }
 
     *resp = status_nomem();
@@ -105,8 +105,8 @@ add_to_list(
     _In_opt_z_  PC_U8Z str)
 {
     U32 n_bytes;
-    LIST * lpt;
-    STATUS res;
+    P_LIST lpt;
+    STATUS status;
 
     trace_3(TRACE_APP_PD4, "add_to_list(" PTR_XTFMT ", %d, %s, " PTR_XTFMT ")", report_ptr_cast(list), key, trace_string(str));
 
@@ -115,13 +115,13 @@ add_to_list(
 
     n_bytes = strlen32(str) + 1/*NULLCH*/;
 
-    if(NULL != (lpt = add_list_entry(list, n_bytes, &res)))
+    if(NULL != (lpt = add_list_entry(list, n_bytes, &status)))
     {
         lpt->key = key;
         memcpy32(lpt->value, str, n_bytes);
     }
 
-    return(res);
+    return(status);
 }
 
 /******************************************************************************
@@ -187,7 +187,7 @@ duplicate_list(
 {
     LIST_ITEMNO item, nitems;
     P_LIST_ITEM it;
-    LIST *s_lptr, *d_lptr;
+    P_LIST s_lptr, d_lptr;
     S32 res;
 
     delete_list(dst);
@@ -203,7 +203,7 @@ duplicate_list(
 
             if(it)
                 {
-                s_lptr = (LIST *) it->i.inside;
+                s_lptr = (P_LIST) it->i.inside;
 
                 if(NULL == (d_lptr = add_list_entry(dst, strlen((char *) s_lptr->value) + 1, &res)))
                     {
@@ -213,7 +213,7 @@ duplicate_list(
 
                 /* new item creation may have moved source */
                 it = list_gotoitem(*src, item);
-                s_lptr = (LIST *) it->i.inside;
+                s_lptr = (P_LIST) it->i.inside;
 
                 d_lptr->key = s_lptr->key;
                 strcpy((char *) d_lptr->value, (char *) s_lptr->value);
@@ -282,7 +282,7 @@ list_next(
 
 _Check_return_
 _Ret_maybenull_
-extern LIST *
+extern P_LIST
 search_list(
     _InoutRef_  P_P_LIST_BLOCK list,
     _InVal_     S32 key)
@@ -293,7 +293,7 @@ search_list(
     if((item = searchkey(list, key, &it)) < 0)
         return(NULL);
 
-    return((LIST *) it->i.inside);
+    return((P_LIST) it->i.inside);
 }
 
 /******************************************************************************
@@ -324,9 +324,9 @@ searchkey(
             continue;
 
         trace_3(TRACE_APP_PD4, "comparing item %d key %d with key %d",
-                i, ((LIST *) it->i.inside)->key, key);
+                i, ((P_LIST) it->i.inside)->key, key);
 
-        if(((LIST *) it->i.inside)->key == key)
+        if(((P_LIST) it->i.inside)->key == key)
             {
             trace_1(TRACE_APP_PD4, "key matched at item %d", i);
             *itp = it;

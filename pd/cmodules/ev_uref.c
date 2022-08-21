@@ -486,44 +486,44 @@ ev_uref(
 {
     trace_0(TRACE_MODULE_UREF, "ev_uref in -- ");
 
-    #if TRACE_ALLOWED
-        switch(upp->action)
-            {
-            case UREF_CHANGE:
-                trace_0(TRACE_MODULE_UREF, "UREF_CHANGE ");
-                break;
-            case UREF_UREF:
-                trace_0(TRACE_MODULE_UREF, "UREF_UREF ");
-                break;
-            case UREF_DELETE:
-                trace_0(TRACE_MODULE_UREF, "UREF_DELETE ");
-                break;
-            case UREF_SWAP:
-                trace_0(TRACE_MODULE_UREF, "UREF_SWAP ");
-                break;
-            case UREF_CHANGEDOC:
-                trace_0(TRACE_MODULE_UREF, "UREF_CHANGEDOC ");
-                break;
-            case UREF_REPLACE:
-                trace_0(TRACE_MODULE_UREF, "UREF_REPLACE ");
-                break;
-            case UREF_SWAPSLOT:
-                trace_0(TRACE_MODULE_UREF, "UREF_SWAPSLOT ");
-                break;
-            case UREF_CLOSE:
-                trace_0(TRACE_MODULE_UREF, "UREF_CLOSE ");
-                break;
-            case UREF_REDRAW:
-                trace_0(TRACE_MODULE_UREF, "UREF_REDRAW ");
-                break;
-            case UREF_RENAME:
-                trace_0(TRACE_MODULE_UREF, "UREF_RENAME ");
-                break;
-            default:
-                assert(0);
-                break;
-            }
-    #endif
+#if TRACE_ALLOWED
+    switch(upp->action)
+        {
+        case UREF_CHANGE:
+            trace_0(TRACE_MODULE_UREF, "UREF_CHANGE ");
+            break;
+        case UREF_UREF:
+            trace_0(TRACE_MODULE_UREF, "UREF_UREF ");
+            break;
+        case UREF_DELETE:
+            trace_0(TRACE_MODULE_UREF, "UREF_DELETE ");
+            break;
+        case UREF_SWAP:
+            trace_0(TRACE_MODULE_UREF, "UREF_SWAP ");
+            break;
+        case UREF_CHANGEDOC:
+            trace_0(TRACE_MODULE_UREF, "UREF_CHANGEDOC ");
+            break;
+        case UREF_REPLACE:
+            trace_0(TRACE_MODULE_UREF, "UREF_REPLACE ");
+            break;
+        case UREF_SWAPSLOT:
+            trace_0(TRACE_MODULE_UREF, "UREF_SWAPSLOT ");
+            break;
+        case UREF_CLOSE:
+            trace_0(TRACE_MODULE_UREF, "UREF_CLOSE ");
+            break;
+        case UREF_REDRAW:
+            trace_0(TRACE_MODULE_UREF, "UREF_REDRAW ");
+            break;
+        case UREF_RENAME:
+            trace_0(TRACE_MODULE_UREF, "UREF_RENAME ");
+            break;
+        default:
+            assert(0);
+            break;
+        }
+#endif
 
     /* blow up the evaluator when things move under its feet */
     switch(upp->action)
@@ -531,6 +531,7 @@ ev_uref(
         case UREF_CHANGE:
         case UREF_REDRAW:
             break;
+
         case UREF_REPLACE:
         case UREF_UREF:
         case UREF_DELETE:
@@ -635,7 +636,7 @@ ev_uref(
                                 /* refs to deleted area must be removed */
                                 if(res == DEP_DELETE && upp->action != UREF_REPLACE)
                                     {
-                                    eep->flags          |= TRF_TOBEDEL;
+                                    eep->flags |= TRF_TOBEDEL;
                                     p_ss_doc->exttab.flags |= TRF_TOBEDEL;
                                     p_ss_doc->exttab.mindel = MIN(p_ss_doc->exttab.mindel, i);
                                     continue;
@@ -677,7 +678,7 @@ ev_uref(
                             /* refs contained by deleted area must be removed */
                             if(ev_match_slr(&rep->byslr, upp) == DEP_DELETE)
                                 {
-                                rep->flags          |= TRF_TOBEDEL;
+                                rep->flags |= TRF_TOBEDEL;
                                 p_ss_doc->range_table.flags |= TRF_TOBEDEL;
                                 p_ss_doc->range_table.mindel = MIN(p_ss_doc->range_table.mindel, i);
                                 continue;
@@ -759,7 +760,7 @@ ev_uref(
                             */
                             if(ev_match_slr(&sep->byslr, upp) == DEP_DELETE)
                                 {
-                                sep->flags          |= TRF_TOBEDEL;
+                                sep->flags |= TRF_TOBEDEL;
                                 p_ss_doc->slr_table.flags |= TRF_TOBEDEL;
                                 p_ss_doc->slr_table.mindel = MIN(p_ss_doc->slr_table.mindel, i);
                                 continue;
@@ -835,10 +836,11 @@ ev_uref(
             if((nep = tree_namptr(0)) != NULL)
                 {
                 EV_TRENT i;
-                S32 check_use, un_sort;
+                S32 check_use = 0, un_sort = 0;
 
                 name_list_sort();
-                for(i = 0, check_use = un_sort = 0; i < namtab.next; ++i, ++nep)
+
+                for(i = 0; i < namtab.next; ++i, ++nep)
                     {
                     S32 res;
 
@@ -885,7 +887,7 @@ ev_uref(
         case UREF_REPLACE:
         case UREF_SWAPSLOT:
         case UREF_CLOSE:
-            if((p_ev_name = name_ptr(0)) != NULL)
+            if((p_ev_name = names_def.ptr) != NULL)
                 {
                 EV_NAMEID i;
 
@@ -959,10 +961,11 @@ ev_uref(
             if((mep = tree_macptr(0)) != NULL)
                 {
                 EV_TRENT i;
-                S32 check_use, un_sort;
+                S32 check_use = 0, un_sort = 0;
 
                 custom_list_sort();
-                for(i = 0, check_use = un_sort = 0; i < custom_use_table.next; ++i, ++mep)
+
+                for(i = 0; i < custom_use_deptable.next; ++i, ++mep)
                     {
                     S32 res;
 
@@ -972,9 +975,9 @@ ev_uref(
                     /* custom uses contained by deleted area must be removed */
                     if((res = ev_match_slr(&mep->byslr, upp)) == DEP_DELETE)
                         {
-                        mep->flags   |= TRF_TOBEDEL;
-                        custom_use_table.flags |= TRF_TOBEDEL;
-                        custom_use_table.mindel = MIN(custom_use_table.mindel, i);
+                        mep->flags |= TRF_TOBEDEL;
+                        custom_use_deptable.flags |= TRF_TOBEDEL;
+                        custom_use_deptable.mindel = MIN(custom_use_deptable.mindel, i);
                         check_use = 1;
                         }
                     else if(res == DEP_UPDATE)
@@ -987,7 +990,7 @@ ev_uref(
                 if(check_use)
                     custom_def.flags |= TRF_CHECKUSE;
                 if(un_sort)
-                    custom_use_table.sorted = 0;
+                    custom_use_deptable.sorted = 0;
                 }
             break;
         }
@@ -1009,7 +1012,7 @@ ev_uref(
         case UREF_REPLACE:
         case UREF_SWAPSLOT:
         case UREF_CLOSE:
-            if((p_ev_custom = custom_ptr(0)) != NULL)
+            if((p_ev_custom = custom_def.ptr) != NULL)
                 {
                 EV_NAMEID i;
 
@@ -1027,7 +1030,7 @@ ev_uref(
                         if(!ev_todo_add_custom_dependents(p_ev_custom->key))
                             {
                             ev_p_ss_doc_from_docno_must(p_ev_custom->owner.docno)->custom_ref_count -= 1;
-                            p_ev_custom->flags  |= TRF_TOBEDEL;
+                            p_ev_custom->flags |= TRF_TOBEDEL;
                             custom_def.flags |= TRF_TOBEDEL;
                             custom_def.mindel = MIN(custom_def.mindel, i);
 

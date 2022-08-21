@@ -32,7 +32,7 @@
 extern S32 nDocuments;
 
 #if !defined(SB_GLOBAL_REGISTER)
-extern struct _DOCU * current_p_docu;
+extern struct DOCU * current_p_docu;
 #endif
 
 extern P_DOCU document_list;
@@ -168,7 +168,6 @@ extern S32 saved_index;
 /* --------------------------- numbers.c --------------------------------- */
 
 extern BOOL activity_indicator;
-extern P_LIST_BLOCK draw_file_list;
 extern NLISTS_BLK draw_file_refs;
 
 /* --------------------------- doprint.c --------------------------------- */

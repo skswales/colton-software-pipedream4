@@ -14,7 +14,6 @@
 #ifndef __gr_chart_h
 #define __gr_chart_h
 
-#ifndef RC_INVOKED /* not resource compiler */
 #ifndef ERRDEF_EXPORT /* not errdef export */
 
 /*
@@ -24,179 +23,6 @@ required includes
 #ifdef  __file_h
 #include "file.h"
 #endif
-
-/*
-exported typedefs from gr_cache.c
-*/
-
-typedef struct _DRAW_DIAG
-{
-    void * data;
-    U32 length;
-}
-DRAW_DIAG, * P_DRAW_DIAG, ** P_P_DRAW_DIAG; typedef const DRAW_DIAG * PC_DRAW_DIAG;
-
-#if RISCOS
-
-/*
-gr_cache tagstrip
-*/
-
-typedef struct _GR_CACHE_TAGSTRIP_INFO * P_GR_CACHE_TAGSTRIP_INFO;
-
-typedef S32 (* gr_cache_tagstrip_proc) (
-    P_ANY handle,
-    P_GR_CACHE_TAGSTRIP_INFO p_info);
-
-#define gr_cache_tagstrip_proto(_e_s, _p_proc_gr_cache_tagstrip) \
-_e_s S32 _p_proc_gr_cache_tagstrip( \
-    P_ANY handle, \
-    P_GR_CACHE_TAGSTRIP_INFO p_info)
-
-#endif /* RISCOS */
-
-/*
-exports from gr_cache.c
-*/
-
-/*
-abstract cache handle for export
-*/
-
-typedef struct _GR_CACHE_HANDLE * GR_CACHE_HANDLE, ** P_GR_CACHE_HANDLE;
-
-#define GR_CACHE_HANDLE_NONE ((GR_CACHE_HANDLE) 0)
-
-typedef void (* gr_cache_recache_proc) (
-    P_ANY handle,
-    GR_CACHE_HANDLE cah,
-    S32 cres);
-
-#define gr_cache_recache_proto(_e_s, _p_proc_gr_cache_recache) \
-_e_s void _p_proc_gr_cache_recache( \
-    P_ANY handle, \
-    GR_CACHE_HANDLE cah, \
-    S32 cres)
-
-/*
-exported functions from gr_cache.c
-*/
-
-extern void
-draw_diag_dispose(
-    _Inout_     P_DRAW_DIAG p_draw_diag);
-
-extern void
-draw_diag_give_away(
-    _Out_       P_DRAW_DIAG p_draw_diag_to,
-    _Inout_     P_DRAW_DIAG p_draw_diag_from);
-
-extern BOOL
-gr_cache_can_import(
-    FILETYPE_RISC_OS filetype);
-
-_Check_return_
-extern STATUS
-gr_cache_entry_ensure(
-    /*out*/ P_GR_CACHE_HANDLE cahp,
-    PC_U8 name);
-
-extern S32
-gr_cache_entry_query(
-    /*out*/ P_GR_CACHE_HANDLE cahp,
-    PC_U8 name);
-
-extern S32
-gr_cache_entry_remove(
-    P_GR_CACHE_HANDLE cahp /*inout*/);
-
-extern S32
-gr_cache_entry_rename(
-    P_GR_CACHE_HANDLE cahp /*const*/,
-    PC_U8 name);
-
-extern S32
-gr_cache_entry_set_autokill(
-    P_GR_CACHE_HANDLE cahp /*const*/);
-
-extern S32
-gr_cache_error_query(
-    P_GR_CACHE_HANDLE cahp /*const*/);
-
-extern S32
-gr_cache_error_set(
-    P_GR_CACHE_HANDLE cahp /*const*/,
-    S32 err);
-
-extern S32
-gr_cache_file_is_chart(
-    PC_U8 name);
-
-extern S32
-gr_cache_filehan_is_chart(
-    FILE_HANDLE fin);
-
-extern S32
-gr_cache_fileheader_is_chart(
-    _In_reads_bytes_(bytesof_buffer) PC_ANY data,
-    _InVal_     U32 bytesof_buffer);
-
-extern P_DRAW_DIAG
-gr_cache_loaded_ensure(
-    P_GR_CACHE_HANDLE cahp /*const*/);
-
-extern S32
-gr_cache_name_query(
-    P_GR_CACHE_HANDLE cahp /*const*/,
-    char * buffer /*out*/,
-    size_t buflen);
-
-extern S32
-gr_cache_recache(
-    PC_U8 name);
-
-extern S32
-gr_cache_recache_key(
-    P_GR_CACHE_HANDLE cahp /*const*/);
-
-extern S32
-gr_cache_recache_inform(
-    P_GR_CACHE_HANDLE cahp /*const*/,
-    gr_cache_recache_proc proc,
-    P_ANY handle);
-
-extern S32
-gr_cache_ref(
-    P_GR_CACHE_HANDLE cahp /*const*/,
-    S32 add);
-
-extern S32
-gr_cache_refs(
-    PC_U8 name);
-
-extern S32
-gr_cache_reref(
-    /*inout*/ P_GR_CACHE_HANDLE cahp,
-    P_GR_CACHE_HANDLE new_cahp /*const*/);
-
-extern P_DRAW_DIAG
-gr_cache_search(
-    P_GR_CACHE_HANDLE cahp /*const*/);
-
-extern P_DRAW_DIAG
-gr_cache_search_empty(void);
-
-_Check_return_
-extern STATUS
-gr_cache_tagstrip(
-    gr_cache_tagstrip_proc proc,
-    P_ANY handle,
-    U32 tag,
-    S32 add);
-
-/*
-end of exports from gr_cache.c
-*/
 
 /*
 exported types
@@ -264,7 +90,7 @@ convert from points to RISC OS Draw units
 colour definition: RGB bytes range from 0x00 (full black) to 0xFF (full colour)
 */
 
-typedef struct _gr_colour
+typedef struct GR_COLOUR
 {
     UBF manual   : 1;  /* colour has been set manually, now non-automatic */
     UBF visible  : 1;
@@ -320,11 +146,11 @@ GR_COLOUR; /* sys indep size U32 */
 style for lines in objects
 */
 
-typedef struct _gr_line_pattern_handle * GR_LINE_PATTERN_HANDLE;
+typedef struct GR_LINE_PATTERN_HANDLE * GR_LINE_PATTERN_HANDLE;
 
 #define GR_LINE_PATTERN_STANDARD ((GR_LINE_PATTERN_HANDLE) 0)
 
-typedef struct _gr_linestyle
+typedef struct GR_LINESTYLE
 {
     GR_COLOUR              fg; /* principal line colour */
 
@@ -349,17 +175,17 @@ style for fills in objects
 /* NB. on RISC OS no way to pattern fill a Draw object */
 /* On WINDOWS, it's very hard, you've got window relative brushOrigin poo to deal with unless make a new context per object! */
 
-typedef struct _gr_fill_pattern_handle * GR_FILL_PATTERN_HANDLE;
+typedef struct GR_FILL_PATTERN_HANDLE * GR_FILL_PATTERN_HANDLE;
 
 #define GR_FILL_PATTERN_NONE ((GR_FILL_PATTERN_HANDLE) 0)
 
-typedef struct _gr_fillstyle
+typedef struct GR_FILLSTYLE
 {
     GR_COLOUR              fg; /* principal colour for fill */
 
     GR_FILL_PATTERN_HANDLE pattern; /* zero -> no pattern */
 
-    struct _gr_fillstyle_bits
+    struct GR_FILLSTYLE_BITS
     {
         UBF isotropic  : 1;
         UBF norecolour : 1;
@@ -382,7 +208,7 @@ GR_FILLSTYLE, * P_GR_FILLSTYLE; typedef const GR_FILLSTYLE * PC_GR_FILLSTYLE;
 style for strings
 */
 
-typedef struct _gr_textstyle
+typedef struct GR_TEXTSTYLE
 {
     GR_COLOUR fg;
     GR_COLOUR bg;
@@ -398,41 +224,7 @@ GR_TEXTSTYLE, * P_GR_TEXTSTYLE; typedef const GR_TEXTSTYLE * PC_GR_TEXTSTYLE;
 diagram
 */
 
-typedef U32 GR_DIAG_OFFSET; /* offset in an object/group/diagram (can be large) */
-typedef GR_DIAG_OFFSET * P_GR_DIAG_OFFSET; typedef const GR_DIAG_OFFSET * PC_GR_DIAG_OFFSET;
-
-typedef struct _GR_RISCDIAG_TAGSTRIP_INFO
-{
-    void **        ppDiag; /* flex_alloc'ed */
-    U32            tag;
-    S32            PRM_conformant;
-    GR_DIAG_OFFSET thisObject;
-    GR_DIAG_OFFSET goopOffset;
-    U32 goopSize;
-}
-GR_RISCDIAG_TAGSTRIP_INFO;
-
-typedef struct _GR_CACHE_TAGSTRIP_INFO
-{
-    GR_RISCDIAG_TAGSTRIP_INFO r;
-
-    GR_CACHE_HANDLE           cah;
-}
-GR_CACHE_TAGSTRIP_INFO;
-
-typedef struct _gr_riscdiag
-{
-    DRAW_DIAG draw_diag; /* data is actually a flex anchor */
-
-    U32 dd_allocsize;
-
-    DRAW_DIAG_OFFSET dd_fontListR;
-/*  DRAW_DIAG_OFFSET dd_fontListW; */
-    DRAW_DIAG_OFFSET dd_rootGroupStart;
-}
-GR_RISCDIAG, * P_GR_RISCDIAG; typedef const GR_RISCDIAG * PC_GR_RISCDIAG;
-
-typedef struct _gr_diag
+typedef struct GR_DIAG
 {
     ARRAY_HANDLE handle;
 
@@ -450,22 +242,22 @@ exports from gr_chart.c
 abstract chart handle for export
 */
 
-typedef struct _gr_chart_handle * GR_CHART_HANDLE, ** P_GR_CHART_HANDLE; typedef const GR_CHART_HANDLE * PC_GR_CHART_HANDLE;
+typedef struct GR_CHART_HANDLE * GR_CHART_HANDLE, ** P_GR_CHART_HANDLE; typedef const GR_CHART_HANDLE * PC_GR_CHART_HANDLE;
 
 /*
 abstract chart comms handle for export
 */
 
-typedef struct _gr_int_handle * GR_INT_HANDLE, ** P_GR_INT_HANDLE;
+typedef struct GR_INT_HANDLE * GR_INT_HANDLE, ** P_GR_INT_HANDLE;
 
 typedef S32                       GR_CHART_ITEMNO;
-typedef /*unsigned*/ S32          GR_SERIES_NO;
-typedef /*unsigned*/ S32          GR_AXIS_NO;
+typedef /*unsigned*/ S32          GR_ESERIES_NO;
+typedef /*unsigned*/ S32          GR_EAXES_NO;
 
 typedef F64 GR_CHART_NUMBER;
 #define GR_CHART_NUMBER_MAX DBL_MAX
 
-typedef struct _gr_chart_numpair
+typedef struct GR_CHART_NUMPAIR
 {
     GR_CHART_NUMBER x, y;
 }
@@ -475,7 +267,7 @@ GR_CHART_NUMPAIR;
 values that are passed from data source to chart via callbacks
 */
 
-typedef enum
+typedef enum GR_CHART_VALUE_TYPE
 {
     GR_CHART_VALUE_NONE    = 0,   /* value unavailable or not convertible to usable format */
     GR_CHART_VALUE_TEXT    = 1,
@@ -488,18 +280,18 @@ GR_CHART_VALUE_TYPE;
 special item numbers for callback info
 */
 
-typedef enum
+typedef enum GR_CHART_SPECIAL_ITEMNO
 {
     GR_CHART_ITEMNO_N_ITEMS = -1,
     GR_CHART_ITEMNO_LABEL   = -2
 }
 GR_CHART_SPECIAL_ITEMNO;
 
-typedef struct _gr_chart_value
+typedef struct GR_CHART_VALUE
 {
     GR_CHART_VALUE_TYPE type;
 
-    union _gr_chart_value_data
+    union GR_CHART_VALUE_DATA
     {
         GR_CHART_NUMBER number;
         char            text[256]; /* fixed so callbacks can check to not overwrite */
@@ -691,7 +483,7 @@ exports from gr_chtIO.c
 construct table for clients
 */
 
-typedef struct _GR_CONSTRUCT_TABLE_ENTRY
+typedef struct GR_CONSTRUCT_TABLE_ENTRY
 {
     P_U8  txt_id;
     U16   arg_type_save;
@@ -776,13 +568,13 @@ exports from gr_editc.c
 abstract chart editor handle for export
 */
 
-typedef struct _gr_chartedit_handle * GR_CHARTEDIT_HANDLE, ** P_GR_CHARTEDIT_HANDLE; typedef const GR_CHARTEDIT_HANDLE * PC_GR_CHARTEDIT_HANDLE;
+typedef struct GR_CHARTEDIT_HANDLE * GR_CHARTEDIT_HANDLE, ** P_GR_CHARTEDIT_HANDLE; typedef const GR_CHARTEDIT_HANDLE * PC_GR_CHARTEDIT_HANDLE;
 
 /*
 values that are passed from chart editor to owner via callbacks
 */
 
-typedef enum
+typedef enum GR_CHARTEDIT_NOTIFY_TYPE
 {
     GR_CHARTEDIT_NOTIFY_RESIZEREQ,
     GR_CHARTEDIT_NOTIFY_CLOSEREQ,
@@ -791,13 +583,13 @@ typedef enum
 }
 GR_CHARTEDIT_NOTIFY_TYPE;
 
-typedef struct _gr_chartedit_notify_resize_str
+typedef struct GR_CHARTEDIT_NOTIFY_RESIZE_STR
 {
     GR_POINT new_size, old_size;
 }
 GR_CHARTEDIT_NOTIFY_RESIZE_STR;
 
-typedef struct _gr_chartedit_notify_title_str
+typedef struct GR_CHARTEDIT_NOTIFY_TITLE_STR
 {
     char title[256];
 }
@@ -920,9 +712,6 @@ end of exports from gr_scale.c
 */
 
 #endif /* ERRDEF_EXPORT */
-#endif /* RC_INVOKED */
-
-#ifndef RC_INVOKED /* not resource compiler */
 
 /*
 error definition
@@ -936,8 +725,6 @@ error definition
     errorstring(GR_CHART_ERR_NEGATIVE_OR_ZERO_IGNORED,  "Negative or zero data ignored") \
     errorstring(GR_CHART_ERR_ALREADY_EDITING,           "Already editing chart") \
     errorstring(GR_CHART_ERR_EXCEPTION,                 "Arithmetic overflow in chart creation") \
-
-#endif /* RC_INVOKED */
 
 /*
 error definition
@@ -964,7 +751,8 @@ message definition (keep consistent with CModules.*.msg.gr_chart)
 
 #define GR_CHART_MSG_MENUHDR_CHART      8000
 #define GR_CHART_MSG_MENU_CHART         8001
-typedef enum
+
+enum GR_CHART_MO_CHART_ENUM
 {
     GR_CHART_MO_CHART_OPTIONS = 1,
     GR_CHART_MO_CHART_SAVE,
@@ -975,21 +763,21 @@ typedef enum
 
     GR_CHART_MO_CHART_TRACE, /* always defined, often unused */
     GR_CHART_MO_CHART_DEBUG  /* ditto */
-}
-GR_CHART_MO_CHART_enum;
+};
 
 #define GR_CHART_MSG_MENUHDR_SAVE       8010
 #define GR_CHART_MSG_MENU_SAVE          8011
-typedef enum
+
+enum GR_CHART_MO_SAVE_ENUM
 {
     GR_CHART_MO_SAVE_CHART = 1,
     GR_CHART_MO_SAVE_DRAWFILE
-}
-GR_CHART_MO_SAVE_enum;
+};
 
 #define GR_CHART_MSG_MENUHDR_GALLERY    8020
 #define GR_CHART_MSG_MENU_GALLERY       8021
-typedef enum
+
+enum GR_CHART_MO_GALLERY_ENUM
 {
     GR_CHART_MO_GALLERY_PIE = 1,
     GR_CHART_MO_GALLERY_BAR,
@@ -999,12 +787,12 @@ typedef enum
     GR_CHART_MO_GALLERY_PREFERRED,
     GR_CHART_MO_GALLERY_SET_PREFERRED,
     GR_CHART_MO_GALLERY_SAVE_PREFERRED
-}
-GR_CHART_MO_GALLERY_ENUM;
+};
 
 #define GR_CHART_MSG_MENUHDR_SELECTION  8030
 #define GR_CHART_MSG_MENU_SELECTION     8031
-typedef enum
+
+enum GR_CHART_MO_SELECTION_ENUM
 {
     GR_CHART_MO_SELECTION_FILLSTYLE = 1,
     GR_CHART_MO_SELECTION_FILLCOLOUR,
@@ -1016,28 +804,27 @@ typedef enum
     GR_CHART_MO_SELECTION_HINTCOLOUR,
     GR_CHART_MO_SELECTION_AXIS,
     GR_CHART_MO_SELECTION_SERIES
-}
-GR_CHART_MO_SELECTION_enum;
+};
 
 #define GR_CHART_MSG_MENUHDR_SELECTION_TEXT 8035
 #define GR_CHART_MSG_MENU_SELECTION_TEXT    8036
-typedef enum
+
+enum GR_CHART_MO_SELECTION_TEXT_ENUM
 {
     GR_CHART_MO_SELECTION_TEXT_EDIT = 1,
     GR_CHART_MO_SELECTION_TEXT_DELETE,
     GR_CHART_MO_SELECTION_TEXT_FORMAT
-}
-GR_CHART_MO_SELECTION_TEXT_enum;
+};
 
 #define GR_CHART_MSG_MENUHDR_LEGEND     8040
 #define GR_CHART_MSG_MENU_LEGEND        8041
-typedef enum
+
+enum GR_CHART_MO_LEGEND_ENUM
 {
     GR_CHART_MO_LEGEND_ARRANGE = 1
-}
-GR_CHART_MO_LEGEND_enum;
+};
 
-typedef enum
+enum GR_CHART_MSG_ID
 {
     GR_CHART_MSG_DEFAULT_CHARTLEAFNAME   = 8100,
     GR_CHART_MSG_CHARTSAVE_ERROR         = 8101,
@@ -1067,8 +854,7 @@ typedef enum
     GR_CHART_MSG_DEFAULT_FONTWIDTH       = 8131,
     GR_CHART_MSG_DEFAULT_FONTHEIGHT      = 8132,
     GR_CHART_MSG_DEFAULT_CHARTINNAMEZD   = 8133
-}
-GR_CHART_MSG_ID;
+};
 
 extern STATUS
 draw_do_render(

@@ -261,7 +261,7 @@ table of PipeDream options page
 constructs and equivalents
 */
 
-typedef struct optdef
+typedef struct OPTDEF
 {
 	uchar *optstr;
 	U16 opcode;
@@ -276,7 +276,7 @@ table of LOTUS operators
 and equivalents
 */
 
-typedef struct oprdef
+typedef struct OPRDEF
 {
 	uchar fno;
 	S32 ftype;
@@ -300,7 +300,7 @@ index of argument modifiers
 scanner communication
 */
 
-struct symbol
+struct SYMBOL
 {
 	S32 symno;
 	F64 fpval;
@@ -325,11 +325,10 @@ struct symbol
 #define SYM_FUNC -6
 
 /*
-table of lotus opcodes giving
-123 file structure
+table of lotus opcodes giving 1-2-3 file structure
 */
 
-struct lfins
+struct LFINS
 {
 	uchar opcode;
 	S32 length;
@@ -339,7 +338,7 @@ struct lfins
 	S32 (* writefunc)();
 };
 
-typedef struct lfins *lfip;
+typedef struct LFINS *lfip;
 
 /*
 external definitions
@@ -351,7 +350,7 @@ extern S32           pd123__errexp;
 extern FILE *        pd123__fin;
 extern FILE *        pd123__fout;
 extern S32           pd123__maxcol;
-extern struct oprdef pd123__opreqv[];
+extern struct OPRDEF pd123__opreqv[];
 extern S32           pd123__poorfunc;
 
 extern S32
@@ -377,7 +376,7 @@ pd123__searchdefo(
 
 /* 123pd.c */
 extern uchar         pd123__hidvec[];
-extern struct symbol pd123__csym;
+extern struct SYMBOL pd123__csym;
 
 extern S32
 pd123__scnslr(

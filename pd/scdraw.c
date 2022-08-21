@@ -674,7 +674,7 @@ draw_screen(void)
 static void
 really_draw_picture(
     P_DRAW_DIAG p_draw_diag,
-    drawfrp dfrp,
+    P_DRAW_FILE_REF dfrp,
     S32 x0,
     S32 y0,
     S32 x1,
@@ -746,7 +746,7 @@ maybe_draw_pictures(void)
     COL tcol;
     ROW trow;
     P_DRAW_DIAG p_draw_diag;
-    drawfrp dfrp;
+    P_DRAW_FILE_REF dfrp;
     S32 x0, x1, y0, y1;
     P_SCRCOL cptr;
     P_SCRROW rptr;
@@ -959,7 +959,7 @@ draw_screen_below(
         if( (roff < rowsonscreen) &&
             (draw_screen_timeout() || keyinbuffer()))
             {
-            trace_1(TRACE_OUT /*TRACE_MAYBE*/, "*** draw_screen_below interrupted: leaving out_below set, rowtoend = %d", roff);
+            trace_1(TRACE_OUT | TRACE_ANY, "*** draw_screen_below interrupted: leaving out_below set, rowtoend = %d", roff);
             rowtoend = roff;
             xf_interrupted = out_below = TRUE;
             break;
@@ -1824,7 +1824,7 @@ draw_altered_slots(void)
 
                     if(draw_screen_timeout() || keyinbuffer())
                         {
-                        trace_0(TRACE_OUT /*TRACE_DRAW*/, "*** draw_altered_slots interrupted - leaving xf_drawsome set");
+                        trace_0(TRACE_OUT | TRACE_ANY, "*** draw_altered_slots interrupted - leaving xf_drawsome set");
                         xf_interrupted = TRUE;
                         return;
                         }
@@ -2499,7 +2499,8 @@ font_paint_justify(
 extern S32
 justifyline(
     uchar * str,
-    S32 fwidth, uchar type,
+    S32 fwidth,
+    uchar type,
     uchar * out_array)
 {
     uchar * from;
@@ -2720,8 +2721,8 @@ justifyline(
 *
 ******************************************************************************/
 
-typedef struct _font_scoordbuff
-    {
+typedef struct FONT_SCOORDBUFF
+{
     int x1;
     int y1;
     int x2;
@@ -2731,14 +2732,14 @@ typedef struct _font_scoordbuff
     int bby1;
     int bbx2;
     int bby2;
-    }
-font_scoordbuff;
+}
+FONT_SCOORDBUFF;
 
 extern S32
 font_width(
     char *str)
 {
-    font_scoordbuff c;
+    FONT_SCOORDBUFF c;
     _kernel_swi_regs rs;
     int plottype = (1 << 8);
 

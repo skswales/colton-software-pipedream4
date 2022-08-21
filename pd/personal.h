@@ -7,11 +7,6 @@
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-#define PERSONAL_TRACE_FLAGS ( 0 | \
-    TRACE_RISCOS_HOST | \
-    TRACE_APP_PD4 | \
-    0 )
-
 /* See master list in debug.h. Copy these as needed into PERSONAL_TRACE_FLAGS */
 
 #define PERSONAL_TRACE_FLAGS_PARKING ( 0 | \
@@ -48,8 +43,21 @@
     TRACE_WM_EVENT          | \
     0 )
 
+#define PERSONAL_TRACE_FLAGS ( 0 | \
+    TRACE_RISCOS_HOST       | \
+    TRACE_APP_PD4           | \
+    TRACE_MODULE_ALLOC      | \
+    0 )
+
 #define TRACE_DOC 1
 
 #define STUART 1
+
+#if !RELEASED && STUART && 1
+#define TRACE_MAIN_ALLOCS 1
+#define VALIDATE_MAIN_ALLOCS 1
+#define VALIDATE_MAIN_ALLOCS_START 1
+#define ALLOC_CLEAR_FREE 1
+#endif
 
 /* end of personal.h */

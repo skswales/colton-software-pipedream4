@@ -14,7 +14,16 @@ __myasserted(
     _In_z_      PCTSTR p_function,
     _In_z_      PCTSTR p_file,
     _InVal_     U32 line_no,
-    _In_z_      PCTSTR format,
+    _In_z_ _Printf_format_string_ PCTSTR format,
+    /**/        ...);
+
+extern BOOL __cdecl
+__myasserted_msg(
+    _In_z_      PCTSTR p_function,
+    _In_z_      PCTSTR p_file,
+    _InVal_     U32 line_no,
+    _In_z_      PCTSTR message,
+    _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        ...);
 
 extern BOOL
@@ -24,15 +33,6 @@ __myasserted_EQ(
     _InVal_     U32 line_no,
     _InVal_     U32 val1,
     _InVal_     U32 val2);
-
-extern BOOL __cdecl
-__myasserted_msg(
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
-    _InVal_     U32 line_no,
-    _In_z_      PCTSTR message,
-    _In_z_      PCTSTR format,
-    /**/        ...);
 
 extern BOOL
 __vmyasserted(
@@ -119,12 +119,24 @@ __WrapOsBool(
 #undef myassert7
 #endif
 
+#ifdef myassert8
+#undef myassert8
+#endif
+
 #ifdef myassert9
 #undef myassert9
 #endif
 
+#ifdef myassert10
+#undef myassert10
+#endif
+
 #ifdef myassert11
 #undef myassert11
+#endif
+
+#ifdef myassert12
+#undef myassert12
 #endif
 
 #ifdef myassert13
@@ -165,14 +177,6 @@ __WrapOsBool(
 
 #ifdef myassert9x
 #undef myassert9x
-#endif
-
-#ifdef myassert11x
-#undef myassert11x
-#endif
-
-#ifdef myassert13x
-#undef myassert13x
 #endif
 
 #ifdef assert_EQ
@@ -231,11 +235,20 @@ __WrapOsBool(
 #define myassert7(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) { \
     if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7)) \
         __crash_and_burn_here();}
+#define myassert8(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) { \
+    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)) \
+        __crash_and_burn_here(); }
 #define myassert9(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) { \
     if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)) \
         __crash_and_burn_here(); }
+#define myassert10(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) { \
+    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)) \
+        __crash_and_burn_here(); }
 #define myassert11(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) { \
     if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)) \
+        __crash_and_burn_here(); }
+#define myassert12(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) { \
+    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)) \
         __crash_and_burn_here(); }
 #define myassert13(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) { \
     if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)) \
@@ -276,14 +289,6 @@ __WrapOsBool(
 #define myassert9x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) { \
     if_constant(!(exp)) \
         myassert9(      format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
-    __analysis_assume(exp); }
-#define myassert11x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) { \
-    if_constant(!(exp)) \
-        myassert11(      format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) \
-    __analysis_assume(exp); }
-#define myassert13x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) { \
-    if_constant(!(exp)) \
-        myassert13(      format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) \
     __analysis_assume(exp); }
 
 #define assert_EQ(exp1, exp2) { \
@@ -337,8 +342,11 @@ _status_assert(
 #define myassert5(format, arg1, arg2, arg3, arg4, arg5)
 #define myassert6(format, arg1, arg2, arg3, arg4, arg5, arg6)
 #define myassert7(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+#define myassert8(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 #define myassert9(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+#define myassert10(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 #define myassert11(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+#define myassert12(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
 #define myassert13(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)
 
 #define myassert0x(exp, format) __analysis_assume(exp)
@@ -350,8 +358,6 @@ _status_assert(
 #define myassert6x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6) __analysis_assume(exp)
 #define myassert7x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) __analysis_assume(exp)
 #define myassert9x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) __analysis_assume(exp)
-#define myassert11x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) __analysis_assume(exp)
-#define myassert13x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) __analysis_assume(exp)
 
 #define assert_EQ(exp1, exp2)
 

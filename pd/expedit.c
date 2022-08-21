@@ -65,7 +65,7 @@ formline_cursor_setpos(
 
 static S32
 formwind_create_fill_open(
-    formwind_handle *formwindp,
+    P_FORMULA_WINDOW_HANDLE formwindp,
     _InVal_     DOCNO docno,
     char *text,
     S32 cursorcol,
@@ -75,20 +75,20 @@ formwind_create_fill_open(
 
 static S32
 formwind_create(
-    formwind_handle *formwindp,
+    P_FORMULA_WINDOW_HANDLE formwindp,
     _InVal_     DOCNO docno);
 
 static void
 formwind_destroy(
-    formwind_handle *formwindp);
+    P_FORMULA_WINDOW_HANDLE formwindp);
 
 static void
 formwind_open_infront_withfocus(
-    formwind_handle formwind);
+    FORMULA_WINDOW_HANDLE formwind);
 
 static S32
 formwind_settext(
-    formwind_handle formwind,
+    FORMULA_WINDOW_HANDLE formwind,
     char *text,
     S32 cursorcol,
     S32 cursorrow,
@@ -101,7 +101,7 @@ formwind_event_handler(
 
 static void
 formwind_open_window(
-    formwind_handle formwind,
+    FORMULA_WINDOW_HANDLE formwind,
     wimp_openstr *main);
 
 static void
@@ -121,18 +121,18 @@ formwind_buildtitlestring(
 
 static void
 formwind_setextent(
-    formwind_handle formwind,
+    FORMULA_WINDOW_HANDLE formwind,
     wimp_box paneWorkArea);
 
 mlec_event_proto(static, formwind_mlec_event_handler); /* callback function */
 
 static void
 formwind_pointershape_starttracking(
-    formwind_handle formwind);
+    FORMULA_WINDOW_HANDLE formwind);
 
 static void
 formwind_pointershape_endtracking(
-    formwind_handle formwind);
+    FORMULA_WINDOW_HANDLE formwind);
 
 null_event_proto(static, formwind_pointershape_null_handler); /* callback function */
 
@@ -859,7 +859,7 @@ formline_canceledit(void)
 
 static S32
 formwind_create_fill_open(
-    formwind_handle *formwindp,
+    P_FORMULA_WINDOW_HANDLE formwindp,
     _InVal_     DOCNO docno,
     char *text,
     S32 cursorcol,
@@ -888,12 +888,12 @@ formwind_create_fill_open(
 
 static S32
 formwind_create(
-    formwind_handle *formwindp,
+    P_FORMULA_WINDOW_HANDLE formwindp,
     _InVal_     DOCNO docno)
 {
     S32              err = 0;
-    formwind_handle  formwind;
-    mlec_handle      mlec;
+    FORMULA_WINDOW_HANDLE  formwind;
+    MLEC_HANDLE      mlec;
     template        *templatehanmain;
     template        *templatehanpane;
     wimp_wind       *templatemain;
@@ -994,7 +994,7 @@ formwind_create(
       /*    mlec_create gave an error */
         }
   /*else                            */
-  /*    no room for formwind_handle */
+  /*    no room for FORMULA_WINDOW_HANDLE */
 
     formwind_destroy(formwindp);        /* destroys as much as we created */
 
@@ -1008,7 +1008,7 @@ formwind_create(
 
 static void
 formwind_destroy(
-    formwind_handle *formwindp)
+    P_FORMULA_WINDOW_HANDLE formwindp)
 {
     if(*formwindp)
         {
@@ -1042,7 +1042,7 @@ formwind_destroy(
 
 static void
 formwind_open_infront_withfocus(
-    formwind_handle formwind)
+    FORMULA_WINDOW_HANDLE formwind)
 {
     wimp_wstate  state;
 
@@ -1063,7 +1063,7 @@ formwind_open_infront_withfocus(
 
 static S32
 formwind_settext(
-    formwind_handle formwind,
+    FORMULA_WINDOW_HANDLE formwind,
     char *text,
     S32 cursorcol, S32 cursorrow,
     BOOL newline)
@@ -1101,7 +1101,7 @@ formwind_event_handler(
     wimp_eventstr *e,
     void *handle)
 {
-    mlec_handle mlec;
+    MLEC_HANDLE mlec;
 
     if(!select_document_using_callback_handle(handle))
         return(FALSE);
@@ -1170,7 +1170,7 @@ formwind_event_handler(
 #if TRUE
 static void
 formwind_open_window(
-    formwind_handle formwind,
+    FORMULA_WINDOW_HANDLE formwind,
     wimp_openstr *open)
 {
     wimp_wstate   main, pane;
@@ -1227,10 +1227,10 @@ formwind_open_window(
 #else
 static void
 formwind_open_window(
-    formwind_handle formwind,
+    FORMULA_WINDOW_HANDLE formwind,
     wimp_openstr *main)
 {
-    mlec_handle mlec = formwind->mlec;
+    MLEC_HANDLE mlec = formwind->mlec;
     wimp_wstate pane;
     wimp_wstate oldmain;
 
@@ -1401,7 +1401,7 @@ formwind_mergebacktext(
 
 static void
 formwind_setextent(
-    formwind_handle formwind,
+    FORMULA_WINDOW_HANDLE formwind,
     wimp_box paneWorkArea)
 {
     wimp_redrawstr  blk;
@@ -1418,9 +1418,9 @@ formwind_setextent(
 
 mlec_event_proto(static, formwind_mlec_event_handler)
 {
-    formwind_handle formwind = handle;
+    FORMULA_WINDOW_HANDLE formwind = handle;
     DOCNO old_docno;
-    mlec_event_return_code res = mlec_event_unknown;
+    MLEC_EVENT_RETURN_CODE res = mlec_event_unknown;
 
     trace_1(TRACE_APP_EXPEDIT, "formwind_mlec_event_handler, rc=%d", rc);
 
@@ -1484,7 +1484,7 @@ mlec_event_proto(static, formwind_mlec_event_handler)
 
 static void
 formwind_pointershape_starttracking(
-    formwind_handle formwind)
+    FORMULA_WINDOW_HANDLE formwind)
 {
     if(!formwind->tracking)
         {
@@ -1498,7 +1498,7 @@ formwind_pointershape_starttracking(
 
 static void
 formwind_pointershape_endtracking(
-    formwind_handle formwind)
+    FORMULA_WINDOW_HANDLE formwind)
 {
     if(formwind->tracking)
         {
@@ -1518,7 +1518,7 @@ formwind_pointershape_endtracking(
 
 null_event_proto(static, formwind_pointershape_null_handler)
 {
-    formwind_handle formwind = (formwind_handle) p_null_event_block->client_handle;
+    FORMULA_WINDOW_HANDLE formwind = (FORMULA_WINDOW_HANDLE) p_null_event_block->client_handle;
 
     trace_1(TRACE_APP_EXPEDIT, "formwind_pointershape_null_handler, rc=%d", p_null_event_block->rc);
 
@@ -1680,16 +1680,13 @@ cvt_offset_to_colrow(
 ******************************************************************************/
 
 extern void
-DefineName_fn(
-    S32 category)
+DefineName_fn(void)
 {
     char        *name;
     char        *contents;
     EV_OPTBLOCK  optblock;
     EV_DOCNO     cur_docno;
     S32          err;
-
-    IGNOREPARM(category);
 
     trace_0(TRACE_APP_EXPEDIT, "DefineName_fn()");
 
@@ -1735,7 +1732,7 @@ DefineName_fn(
 
 extern void
 EditName_fn(
-    S32 category,
+    _InVal_     enum EV_RESOURCE_TYPES category,
     S32 itemno)
 {
     char        *contents = NULL; /* SKS 04nov95 for 450 keep dataflower (and below comment) happy */
@@ -1813,7 +1810,7 @@ EditName_fn(
 
 extern void
 PasteName_fn(
-    S32 category,
+    _InVal_     enum EV_RESOURCE_TYPES category,
     S32 itemno)
 {
     EV_RESOURCE resource;
@@ -1841,12 +1838,12 @@ PasteName_fn(
 
             if(argcount)
                 {
-                safe_strkat(namebuf, elemof32(namebuf), "(");
+                xstrkat(namebuf, elemof32(namebuf), "(");
 
                 for(i = argcount; i > 1; i--)
-                    safe_strkat(namebuf, elemof32(namebuf), ",");
+                    xstrkat(namebuf, elemof32(namebuf), ",");
 
-                safe_strkat(namebuf, elemof32(namebuf), ")");
+                xstrkat(namebuf, elemof32(namebuf), ")");
                 }
 
             if(insert_string_check_numeric(namebuf, FALSE))     /* insert function, starts an editor if current slot */

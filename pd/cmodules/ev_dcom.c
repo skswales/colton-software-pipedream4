@@ -39,7 +39,7 @@ fptostr(
 
 #define MAXSTACK 100
 
-typedef struct decompiler_context
+typedef struct DECOMPILER_CONTEXT
 {
     EV_DOCNO        docno;          /* document number of decompile data */
 
@@ -50,13 +50,13 @@ typedef struct decompiler_context
     EV_DATA         cur_sym;        /* current symbol */
     SYM_INF         cur;            /* information about current rpn item */
 
-    struct rpnstate cur_rpn;        /* rpn state */
+    RPNSTATE        cur_rpn;        /* rpn state */
 
     PC_EV_OPTBLOCK  p_optblock;     /* pointer to options block */
 }
-* decomp_contp;
+* P_DECOMPILER_CONTEXT;
 
-static decomp_contp dc = NULL;
+static P_DECOMPILER_CONTEXT dc = NULL;
 
 /******************************************************************************
 *
@@ -159,10 +159,9 @@ dec_const(
         case RPN_DAT_STRING:
         case RPN_TMP_STRING:
             {
-            P_U8 ci, co;
+            PC_U8 ci = p_ev_data->arg.string.data;
+            P_U8 co = op_buf;
 
-            co = op_buf;
-            ci = p_ev_data->arg.string.data;
             *co++ = '"';
             while(*ci)
                 {
@@ -176,7 +175,7 @@ dec_const(
             }
 
         case RPN_DAT_DATE:
-            len = date_time_val_to_str(op_buf, &p_ev_data->arg.date, dc->p_optblock->american_date);
+            len = date_time_val_to_str(op_buf, &p_ev_data->arg.ev_date, dc->p_optblock->american_date);
             break;
 
         case RPN_RES_ARRAY:
@@ -187,17 +186,17 @@ dec_const(
             *op_buf = '{';
             len = 1;
 
-            for(iy = 0; iy < p_ev_data->arg.array.y_size; ++iy)
+            for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
                 {
-                for(ix = 0; ix < p_ev_data->arg.array.x_size; ++ix)
+                for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
                     {
                     len += dec_const(op_buf + len, ss_array_element_index_borrow(p_ev_data, ix, iy));
 
-                    if(ix + 1 < p_ev_data->arg.array.x_size)
+                    if(ix + 1 < p_ev_data->arg.ev_array.x_size)
                         op_buf[len++] = ',';
                     }
 
-                if(iy + 1 < p_ev_data->arg.array.y_size)
+                if(iy + 1 < p_ev_data->arg.ev_array.y_size)
                     op_buf[len++] = ';';
                 }
 
@@ -208,13 +207,12 @@ dec_const(
 
         case RPN_DAT_NAME:
             {
-            EV_NAMEID name_num;
+            EV_NAMEID name_num = name_def_find(p_ev_data->arg.nameid);
 
-            if((name_num = name_def_find(p_ev_data->arg.nameid)) >= 0)
+            if(name_num >= 0)
                 {
-                P_EV_NAME p_ev_name;
+                P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
-                p_ev_name = name_ptr(name_num);
                 if(p_ev_name->owner.docno != dc->docno)
                     len = ev_write_docname(op_buf, p_ev_name->owner.docno, dc->docno);
                 else
@@ -346,7 +344,7 @@ dec_pushstr(
     S32 len)
 {
     STATUS status;
-    P_U8 newp;
+    P_U8Z newp;
 
     /* make stack big enough */
     if(dc->arg_sp == dc->arg_stk_siz)
@@ -361,7 +359,7 @@ dec_pushstr(
         }
 
     /* allocate space for argument */
-    if(NULL == (newp = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &status)))
+    if(NULL == (newp = al_ptr_alloc_bytes(P_U8Z, len + 1/*NULLCH*/, &status)))
         return(status);
 
     /* copy argument into block */
@@ -598,9 +596,10 @@ dec_rpn_token(
 
                 /* read custom id */
                 read_nameid(&custom_id, dc->cur_rpn.pos + 2);
-                custom_num = custom_def_find(custom_id);
 
-                p_ev_custom = custom_ptr(custom_num);
+                custom_num = custom_def_find(custom_id);
+                assert(custom_num >= 0);
+                p_ev_custom = custom_ptr_must(custom_num);
 
                 if(p_ev_custom->owner.docno != dc->docno)
                     len += ev_write_docname(op_buf + len,
@@ -733,7 +732,7 @@ ev_dec_slr(
     if(slrp->flags & SLR_ABS_COL)
         *op_pos++ = '$';
 
-    op_pos += xtos_ubuf(op_pos, BUF_EV_INTNAMLEN, slrp->col, upper_case);
+    op_pos += xtos_ustr_buf(op_pos, BUF_EV_INTNAMLEN, slrp->col, upper_case);
 
     if(slrp->flags & SLR_ABS_ROW)
         *op_pos++ = '$';
@@ -756,8 +755,8 @@ ev_decode_data(
     P_EV_DATA p_ev_data,
     _InRef_     PC_EV_OPTBLOCK p_optblock)
 {
-    struct decompiler_context decomp_cont;
-    decomp_contp old_dc;
+    struct DECOMPILER_CONTEXT decomp_cont;
+    P_DECOMPILER_CONTEXT old_dc;
     S32 len;
 
     old_dc = dc;
@@ -795,7 +794,7 @@ ev_decode_slot(
             {
             EV_DATA data;
 
-            ev_result_to_data_convert(&data, &p_ev_slot->result);
+            ev_result_to_data_convert(&data, &p_ev_slot->ev_result);
             ev_decode_data(txt_out, docno, &data, p_optblock);
             res = 0;
             break;
@@ -831,8 +830,8 @@ ev_decompile(
     _InRef_     PC_EV_OPTBLOCK p_optblock)
 {
     S32 len, res;
-    struct decompiler_context decomp_cont;
-    decomp_contp old_dc;
+    struct DECOMPILER_CONTEXT decomp_cont;
+    P_DECOMPILER_CONTEXT old_dc;
     char op_buf[EV_MAX_OUT_LEN];
 
     /* set up decompiler context */

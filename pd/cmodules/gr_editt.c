@@ -85,9 +85,9 @@ gr_chartedit_text_editor_make(
     LIST_ITEMNO key,
     BOOL submenu);
 
-typedef struct __mlsubmenu_struct * mlsubmenu_handle;
+typedef struct MLSUBMENU_STRUCT * MLSUBMENU_HANDLE;
 
-typedef mlsubmenu_handle * P_MLSUBMENU_HANDLE;
+typedef MLSUBMENU_HANDLE * P_MLSUBMENU_HANDLE;
 
 static void
 mlsubmenu_destroy(
@@ -103,7 +103,7 @@ extern S32
 gr_text_addin(
     P_GR_CHART cp)
 {
-    struct _gr_chart_text * text = &cp->text;
+    struct GR_CHART_TEXT * text = &cp->text;
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_OBJID id = gr_chart_objid_anon;
     GR_DIAG_OFFSET textsStart;
@@ -118,9 +118,9 @@ gr_text_addin(
     if((res = gr_chart_group_new(cp, &textsStart, &id)) < 0)
         return(res);
 
-    for(t = collect_first(&text->lbr, &key);
+    for(t = collect_first(GR_TEXT, &text->lbr, &key);
         t;
-        t = collect_next( &text->lbr, &key))
+        t = collect_next( GR_TEXT, &text->lbr, &key))
         {
         /* ignore ones we aren't using */
         if(t->bits.unused)
@@ -187,7 +187,7 @@ gr_text_key_for_new(
         {
         --key;
 
-        if((t = collect_search(&cp->text.lbr, key)) != NULL)
+        if((t = gr_text_search_key(cp, key)) != NULL)
             if(!t || t->bits.unused)
                 return(key);
         }
@@ -224,7 +224,7 @@ gr_text_new(
 
     new_lbr.lbr = cp->text.lbr;
 
-    if(NULL == (t = collect_add_entry(&new_lbr, nBytes, &key, &status)))
+    if(NULL == (t = collect_add_entry_bytes(GR_TEXT, &new_lbr, nBytes, &key, &status)))
         return(status);
 
     cp->text.lbr = new_lbr.lbr;
@@ -269,7 +269,7 @@ gr_text_box_query(
 {
     P_GR_TEXT t;
 
-    if((t = collect_search(&cp->text.lbr, key)) != NULL)
+    if((t = gr_text_search_key(cp, key)) != NULL)
         *p_box = t->box;
 }
 
@@ -281,7 +281,7 @@ gr_text_box_set(
 {
     P_GR_TEXT t;
 
-    if((t = collect_search(&cp->text.lbr, key)) != NULL)
+    if((t = gr_text_search_key(cp, key)) != NULL)
         {
         t->box = *p_box;
 
@@ -297,23 +297,23 @@ gr_text_box_set(
 *
 ******************************************************************************/
 
-typedef enum
+typedef enum MLSUBMENU_STATES
 {
     MLSUBMENU_WAIT = 0,
     MLSUBMENU_ENDED_CANCEL,
     MLSUBMENU_ENDED_OK
 }
-mlsubmenu_states;
+MLSUBMENU_STATES;
 
-typedef struct __mlsubmenu_struct
+typedef struct MLSUBMENU_STRUCT
 {
-    mlec_handle mlec;
+    MLEC_HANDLE mlec;
     wimp_w      panewindow;
     wimp_wind * panetemplate;
 
-    mlsubmenu_states state;
+    MLSUBMENU_STATES state;
 }
-_mlsubmenu_struct;
+MLSUBMENU_STRUCT;
 
 #define MLSUBMENU_BUTTON_OK      ((wimp_i) 1)
 #define MLSUBMENU_BUTTON_CANCEL  ((wimp_i) 2)
@@ -334,8 +334,8 @@ mlsubmenu_create(
 {
     STATUS           res;
     int              err = 0;
-    mlsubmenu_handle mlsubmenu;
-    mlec_handle      mlec;
+    MLSUBMENU_HANDLE mlsubmenu;
+    MLEC_HANDLE      mlec;
     template *       templatehanpane;
     wimp_wind *      templatepane;
     wimp_w           pane_win_handle;
@@ -343,7 +343,7 @@ mlsubmenu_create(
 
     trace_0(TRACE_MODULE_GR_CHART, "mlsubmenu_create - in");
 
-    if(NULL == (*mlsubmenup = mlsubmenu = al_ptr_calloc_elem(struct __mlsubmenu_struct, 1, &res)))
+    if(NULL == (*mlsubmenup = mlsubmenu = al_ptr_calloc_elem(struct MLSUBMENU_STRUCT, 1, &res)))
         return(res);
 
     mlsubmenu->state        = MLSUBMENU_ENDED_CANCEL;
@@ -428,7 +428,7 @@ mlsubmenu_process(
     P_MLSUBMENU_HANDLE mlsubmenup,
     BOOL submenu)
 {
-    mlsubmenu_handle mlsubmenu = * mlsubmenup;
+    MLSUBMENU_HANDLE mlsubmenu = * mlsubmenup;
 
     if(submenu)
         {
@@ -524,7 +524,7 @@ mlsubmenu_destroy(
 
 mlec_event_proto(static, mlsubmenu_mlec_event_handler)
 {
-    mlsubmenu_handle mlsubmenu = handle;
+    MLSUBMENU_HANDLE mlsubmenu = handle;
 
     trace_1(TRACE_MODULE_GR_CHART, "mlsubmenu_mlec_event_handler, rc=%d", rc);
 
@@ -607,27 +607,30 @@ mlec_event_proto(static, mlsubmenu_mlec_event_handler)
 *
 ******************************************************************************/
 
-typedef struct _fillstyle_entry
+typedef struct FILLSTYLE_ENTRY
 {
     GR_CACHE_HANDLE cah;
     char            leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 now cater for long leafnames (was BUF_MAX_LEAFNAME) */
 }
-fillstyle_entry, * fillstyle_entryp; typedef const fillstyle_entry * fillstyle_entrycp;
+FILLSTYLE_ENTRY, * P_FILLSTYLE_ENTRY; typedef const FILLSTYLE_ENTRY * PC_FILLSTYLE_ENTRY;
 
 static NLISTS_BLK fillstyle_list =
 {
     NULL,
-    sizeof(fillstyle_entry),
-    sizeof(fillstyle_entry) * 16
+    sizeof(FILLSTYLE_ENTRY),
+    sizeof(FILLSTYLE_ENTRY) * 16
 };
+
+#define fillstyle_list_search_key(key) \
+    collect_goto_item(FILLSTYLE_ENTRY, &fillstyle_list.lbr, (key))
 
 static GR_FILL_PATTERN_HANDLE
 gr_chartedit_riscos_fillstyle_pattern_query(
     const LIST_ITEMNO new_fillstyle_key)
 {
-    fillstyle_entrycp entryp;
+    PC_FILLSTYLE_ENTRY entryp;
 
-    if((entryp = collect_search(&fillstyle_list.lbr, new_fillstyle_key)) != NULL)
+    if((entryp = fillstyle_list_search_key(new_fillstyle_key)) != NULL)
         return((GR_FILL_PATTERN_HANDLE) entryp->cah);
 
     return(GR_FILL_PATTERN_NONE);
@@ -644,14 +647,14 @@ gr_chartedit_encode_selected_fillstyle(
      * use tristates but RISC OS doesn't have the concept)
     */
     P_GR_CHART         cp;
-    fillstyle_entrycp entryp;
+    PC_FILLSTYLE_ENTRY entryp;
     const char *      leafname = "";
     void           (* fadeproc) (wimp_w w, wimp_i i);
 
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
 
-    if((entryp = collect_search(&fillstyle_list.lbr, fillstyle_key)) != NULL)
+    if((entryp = fillstyle_list_search_key(fillstyle_key)) != NULL)
         leafname = entryp->leafname;
 
     win_setfield(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME, leafname);
@@ -688,7 +691,7 @@ gr_chartedit_build_fillstyle_list(
     U8               fullname[BUF_MAX_PATHSTRING];
     P_FILE_OBJENUM   enumstrp;
     P_FILE_OBJINFO   infostrp;
-    fillstyle_entryp entryp;
+    P_FILLSTYLE_ENTRY entryp;
     S32              res;
 
     cp = gr_chart_cp_from_ch(cep->ch);
@@ -707,20 +710,14 @@ gr_chartedit_build_fillstyle_list(
         case GR_CHART_OBJNAME_SERIES:
         case GR_CHART_OBJNAME_POINT:
             {
-            GR_SERIES_IX seridx;
-            PC_GR_AXES    p_axes;
-
-            seridx = gr_series_ix_from_external(cp, id->no);
-            p_axes  = gr_axesp_from_seridx(cp, seridx);
+            GR_SERIES_IDX series_idx = gr_series_idx_from_external(cp, id->no);
+            PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
 
             if( (p_axes->charttype == GR_CHARTTYPE_LINE) ||
                 (p_axes->charttype == GR_CHARTTYPE_SCAT) )
                 {
-                P_GR_SERIES   serp;
-                GR_CHARTTYPE charttype;
-
-                serp = getserp(cp, seridx);
-                charttype = serp->charttype;
+                P_GR_SERIES serp = getserp(cp, series_idx);
+                GR_CHARTTYPE charttype = serp->charttype;
 
                 if( (charttype == GR_CHARTTYPE_NONE) ||
                     (charttype == p_axes->charttype)  )
@@ -763,8 +760,8 @@ gr_chartedit_build_fillstyle_list(
 
             file_find_query_dirname(&enumstrp, fullname, elemof32(fullname));
 
-            safe_strkat(fullname, elemof32(fullname), FILE_DIR_SEP_STR);
-            safe_strkat(fullname, elemof32(fullname), leafname);
+            xstrkat(fullname, elemof32(fullname), FILE_DIR_SEP_STR);
+            xstrkat(fullname, elemof32(fullname), leafname);
 
             trace_1(TRACE_MODULE_GR_CHART, "fullname is '%s'", fullname);
 
@@ -773,7 +770,7 @@ gr_chartedit_build_fillstyle_list(
             /* create a list entry (add to end), returns a key */
             new_key = -1;
 
-            if(NULL != (entryp = collect_add_entry(&fillstyle_list, sizeof32(*entryp), &new_key, &res)))
+            if(NULL != (entryp = collect_add_entry_elem(FILLSTYLE_ENTRY, &fillstyle_list, &new_key, &res)))
                 {
                 /* note key if we added current picture to list. doesn't matter
                  * about matching GR_CACHE_HANDLE_NONE as that's trapped below
@@ -782,7 +779,7 @@ gr_chartedit_build_fillstyle_list(
                     current_key = new_key;
 
                 entryp->cah = new_cah;
-                safe_strkpy(entryp->leafname, elemof32(entryp->leafname), leafname);
+                xstrkpy(entryp->leafname, elemof32(entryp->leafname), leafname);
                 }
             }
         }
@@ -796,7 +793,7 @@ gr_chartedit_build_fillstyle_list(
 
         current_key = 0;
 
-        if(NULL != (entryp = collect_insert_entry(&fillstyle_list, sizeof32(*entryp), current_key, &res)))
+        if(NULL != (entryp = collect_insert_entry_elem(FILLSTYLE_ENTRY, &fillstyle_list, current_key, &res)))
             {
             entryp->cah = current_cah;
             strcpy(entryp->leafname, file_leafname(fullname));
@@ -893,7 +890,7 @@ fillstyle_event_handler(
         {
         case wimp_EREDRAW:
             {
-            fillstyle_entrycp entryp;
+            PC_FILLSTYLE_ENTRY entryp;
             GR_CACHE_HANDLE   cah;
             wimp_redrawstr    r;
             wimp_icon         picture;
@@ -905,7 +902,7 @@ fillstyle_event_handler(
 
             cah = 0;
 
-            if((entryp = collect_search(&fillstyle_list.lbr, *keyp)) != NULL)
+            if((entryp = fillstyle_list_search_key(*keyp)) != NULL)
                 cah = entryp->cah;
 
             /* only redrawing required is of the 'picture' (a draw file identified by cah), */
@@ -942,7 +939,7 @@ gr_chartedit_selection_fillstyle_edit(
     P_GR_CHART    cp;
     GR_FILLSTYLE fillstyle;
     LIST_ITEMNO  fillstyle_key;
-    fillstyle_entrycp entryp;
+    PC_FILLSTYLE_ENTRY entryp;
     S32          disallow_piccie = 0;
     S32          res = 1;
 
@@ -985,9 +982,9 @@ gr_chartedit_selection_fillstyle_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &cep->selection.id);
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
 
-    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
+    xstrkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
 
     win_settitle(w, title);
     }
@@ -1014,9 +1011,9 @@ gr_chartedit_selection_fillstyle_edit(
 
         fillstyle_key = 0;
 
-        for(entryp = collect_first(&fillstyle_list.lbr, &key);
+        for(entryp = collect_first(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &key);
             entryp;
-            entryp = collect_next(&fillstyle_list.lbr, &key))
+            entryp = collect_next( FILLSTYLE_ENTRY, &fillstyle_list.lbr, &key))
             if((GR_CACHE_HANDLE) fillstyle.pattern == entryp->cah)
                 {
                 fillstyle_key = key;
@@ -1065,16 +1062,18 @@ gr_chartedit_selection_fillstyle_edit(
                         if(!last_key)
                             break;
 
-                        if((entryp = (f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC
-                                         ?  collect_next
-                                         :  collect_prev)
-                                    (&fillstyle_list.lbr, &fillstyle_key)) == NULL)
+                        if(f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC)
+                            entryp = collect_next(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &fillstyle_key);
+                        else
+                            entryp = collect_prev(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &fillstyle_key);
+
+                        if(NULL == entryp)
                             {
                             /* either: 'next' whilst showing last item or 'prev' whilst showing first item, */
                             /*         so wrap to other end of list                                         */
                             fillstyle_key = (f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC ? 0 : last_key - 1);
 
-                            if((entryp = collect_search(&fillstyle_list.lbr, fillstyle_key)) == NULL)
+                            if((entryp = fillstyle_list_search_key(fillstyle_key)) == NULL)
                                 {
                                 fillstyle_key = 0;
                                 assert(0);  /* SKS is more paranoid */
@@ -1133,16 +1132,14 @@ gr_chartedit_selection_fillstyle_edit(
 *
 ******************************************************************************/
 
-struct _GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO
+typedef struct GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO
 {
     GR_CHARTEDIT_HANDLE ceh;
     GR_CHART_OBJID      id;
 
     GR_TEXTSTYLE        style;
-};
-
-typedef struct _GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO     GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO;
-typedef         GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO * P_GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO;
+}
+GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO, * P_GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO;
 
 extern void
 gr_chartedit_fontselect_kill(
@@ -1172,7 +1169,7 @@ gr_chartedit_fontselect_try_me(
         return;
 
     zero_struct(new_style.szFontName);
-    safe_strkpy(new_style.szFontName, sizeof32(new_style.szFontName), font_name);
+    xstrkpy(new_style.szFontName, sizeof32(new_style.szFontName), font_name);
 
     new_style.width  = (GR_COORD) (*width  * GR_PIXITS_PER_POINT);
     new_style.height = (GR_COORD) (*height * GR_PIXITS_PER_POINT);
@@ -1267,7 +1264,7 @@ gr_chartedit_selection_textstyle_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
 
     switch(i.id.name)
         {
@@ -1281,7 +1278,7 @@ gr_chartedit_selection_textstyle_edit(
         }
 
     if(appendage)
-        safe_strkat(title, elemof32(title), string_lookup(appendage));
+        xstrkat(title, elemof32(title), string_lookup(appendage));
     }
 
     {
@@ -1342,7 +1339,7 @@ gr_text_delete(
     P_GR_TEXT        t;
     P_GR_TEXT_GUTS   gutsp;
 
-    t = collect_search(&cp->text.lbr, key);
+    t = gr_text_search_key(cp, key);
     assert(t);
 
     if(t->bits.live_text)
@@ -1366,16 +1363,15 @@ gr_text_delete(
     collect_subtract_entry(&cp->text.style.lbr, key);
 }
 
-typedef enum
+enum GR_OBJECT_DRAG_TYPE
 {
     GR_OBJECT_DRAG_REPOSITION = 0,
     GR_OBJECT_DRAG_RESIZE     = 1
-}
-GR_OBJECT_DRAG_TYPE;
+};
 
 static GR_POINT drag_start_point;
 static GR_POINT drag_curr_point;
-static GR_OBJECT_DRAG_TYPE drag_type;
+static enum GR_OBJECT_DRAG_TYPE drag_type;
 
 /* ------------------------------------------------------------------------- */
 /*                                                                           */
@@ -1685,7 +1681,7 @@ gr_chartedit_text_editor_kill(
 {
     P_GR_TEXT t;
 
-    if((t = collect_search(&cp->text.lbr, key)) != NULL)
+    if((t = gr_text_search_key(cp, key)) != NULL)
         {
         if(t->bits.being_edited)
             {
@@ -1712,10 +1708,10 @@ gr_chartedit_text_editor_make(
 {
     P_GR_TEXT         t;
     P_GR_TEXT_GUTS    gutsp;
-    mlsubmenu_handle mlsubmenu;
+    MLSUBMENU_HANDLE mlsubmenu;
     S32              res = 1;
 
-    if((t = collect_search(&cp->text.lbr, key)) == NULL)
+    if((t = gr_text_search_key(cp, key)) == NULL)
         /* wot? */
         return(1);
 
@@ -1764,7 +1760,7 @@ gr_chartedit_text_editor_make(
         edit_lbr.lbr = cp->text.lbr; /* for API */
 
         /* overwrite existing entry */
-        if(NULL != (t = collect_add_entry(&edit_lbr, nBytes + sizeof32(GR_TEXT), &key, &res)))
+        if(NULL != (t = collect_add_entry_bytes(GR_TEXT, &edit_lbr, nBytes + sizeof32(GR_TEXT), &key, &res)))
             {
             P_GR_TEXT_GUTS gutsp;
 
@@ -1811,7 +1807,7 @@ gr_chartedit_text_new_and_edit(
     if((res = gr_text_new(cp, key, text, point)) < 0)
         return(res);
 
-    t = collect_search(&cp->text.lbr, key);
+    t = gr_text_search_key(cp, key);
     assert(t);
 
     t->bits.unused = 1; /* as yet */

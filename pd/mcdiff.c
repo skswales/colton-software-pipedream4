@@ -219,7 +219,7 @@ static U32 chardefined = 0;
 
 /* shift factors to get bits in the chardefined bitset */
 
-typedef enum
+enum CHARSHIFTFACTORS
 {
     shf_COLUMN_DOTS,
     shf_DOWN_ARROW,
@@ -238,8 +238,7 @@ typedef enum
     shf_DROP_RIGHT,
 #endif
     shf_last
-}
-charshiftfactors;
+};
 
 static uchar oldchardef[shf_last][10];  /* bbc_MultiPurpose, ch, def[8] */
 

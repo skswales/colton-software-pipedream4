@@ -181,7 +181,7 @@ ev_stox(
 * compiler IO variables
 */
 
-typedef struct compiler_context
+typedef struct COMPILER_CONTEXT
 {
     EV_DOCNO        docno;      /* owner document of expression */
     P_U8            ip_pos;     /* position in input */
@@ -202,12 +202,12 @@ typedef struct compiler_context
     P_U8            op_pos;     /* position in output */
     S32             op_maxlen;  /* maximum length of output */
 
-    fun_parms       parms;      /* things about compiled expression */
+    FUN_PARMS       parms;      /* things about compiled expression */
     PC_EV_OPTBLOCK  p_optblock; /* pointer to options */
 }
-* comp_contp;
+* P_COMPILER_CONTEXT;
 
-static comp_contp cc = NULL;
+static P_COMPILER_CONTEXT cc = NULL;
 
 /******************************************************************************
 *
@@ -284,8 +284,8 @@ ev_compile(
     _InRef_     PC_EV_OPTBLOCK p_optblock)
 {
     S32 res;
-    comp_contp old_cc;
-    struct compiler_context comp_cont;
+    P_COMPILER_CONTEXT old_cc;
+    struct COMPILER_CONTEXT comp_cont;
 
     /* set up current compiler context */
     old_cc = cc;
@@ -333,7 +333,7 @@ ev_compile(
         /* we are allowed to fill the buffer with cc->op_maxlen bytes */
         if(cc->op_pos - cc->op_start > cc->op_maxlen)
             {
-            trace_2(TRACE_OUT, "ev_compile: expression too long %d %d", cc->op_pos - cc->op_start, cc->op_maxlen);
+            trace_2(TRACE_MODULE_EVAL | TRACE_OUT, "ev_compile: expression too long %d %d", cc->op_pos - cc->op_start, cc->op_maxlen);
             res = create_error(EVAL_ERR_EXPTOOLONG);
             }
         else
@@ -1051,21 +1051,23 @@ proc_func_custom(
     /* does the custom function already exist ? */
     if((custom_num = find_custom_in_list(cc->docno, custom_name)) >= 0)
         {
-        p_ev_custom = custom_ptr(custom_num);
+        p_ev_custom = custom_ptr_must(custom_num);
         if(!(p_ev_custom->flags & TRF_UNDEFINED))
             return(set_error(create_error(EVAL_ERR_CUSTOMEXISTS)));
         }
     /* ensure custom function is in list */
-    else if((custom_num = ensure_custom_in_list(cc->docno, custom_name)) < 0)
-        return(set_error(status_nomem()));
+    else if((custom_num = ensure_custom_in_list(cc->docno, custom_name)) >= 0)
+        {
+        p_ev_custom = custom_ptr_must(custom_num);
+        }
     else
-        p_ev_custom = custom_ptr(custom_num);
+        return(set_error(status_nomem()));
 
     /* send custom identifier home */
     *customidp = p_ev_custom->key;
 
     /* store custom name (first arg to function()) in rpn */
-    out_string_free(&sym_inf, &cc->cur_sym.arg.string.data);
+    out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.data);
 
     /* now loop over arguments, commas etc storing
      * the results in the custom definition structure
@@ -1094,7 +1096,7 @@ proc_func_custom(
             break;
 
         /* output argument text to rpn */
-        out_string_free(&sym_inf, &cc->cur_sym.arg.string.data);
+        out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.data);
 
         ++narg;
         }
@@ -1219,9 +1221,9 @@ recog_array(
         S32 x, y;
 
         p_ev_data->did_num = RPN_TMP_ARRAY;
-        p_ev_data->arg.array.x_size = 0;
-        p_ev_data->arg.array.y_size = 0;
-        p_ev_data->arg.array.elements = NULL;
+        p_ev_data->arg.ev_array.x_size = 0;
+        p_ev_data->arg.ev_array.y_size = 0;
+        p_ev_data->arg.ev_array.elements = NULL;
 
         y = 0;
         do  {
@@ -1294,7 +1296,7 @@ recog_array_row(
             }
 
         /* can't expand array on subsequent rows */
-        if(*y && *x >= p_ev_data_out->arg.array.x_size)
+        if(*y && *x >= p_ev_data_out->arg.ev_array.x_size)
             {
             res = create_error(EVAL_ERR_SUBSCRIPT);
             break;
@@ -1360,8 +1362,8 @@ ss_recog_date_time(
     S32 hour, minute, second, time_scanned;
     PC_U8 pos = in_str;
 
-    p_ev_data->arg.date.date = EV_DATE_INVALID;
-    p_ev_data->arg.date.time = EV_TIME_INVALID;
+    p_ev_data->arg.ev_date.date = EV_DATE_INVALID;
+    p_ev_data->arg.ev_date.time = EV_TIME_INVALID;
 
     /* check for a date */
     if((date_scanned = recog_date(pos, &day, &month, &year)) != 0)
@@ -1376,9 +1378,9 @@ ss_recog_date_time(
         year -= 1;
 
         if(american)
-            tres = ss_ymd_to_dateval(&p_ev_data->arg.date.date, year, day, month);
+            tres = ss_ymd_to_dateval(&p_ev_data->arg.ev_date.date, year, day, month);
         else
-            tres = ss_ymd_to_dateval(&p_ev_data->arg.date.date, year, month, day);
+            tres = ss_ymd_to_dateval(&p_ev_data->arg.ev_date.date, year, month, day);
 
         if(tres >= 0)
             {
@@ -1386,20 +1388,20 @@ ss_recog_date_time(
             p_ev_data->did_num = RPN_DAT_DATE;
             }
         else
-            p_ev_data->arg.date.date = 0;
+            p_ev_data->arg.ev_date.date = 0;
         }
 
     /* check for a time */
     second = 0;
     if((time_scanned = recog_time(pos, &hour, &minute, &second)) != 0)
         {
-        if(ss_hms_to_timeval(&p_ev_data->arg.date.time, hour, minute, second) >= 0)
+        if(ss_hms_to_timeval(&p_ev_data->arg.ev_date.time, hour, minute, second) >= 0)
             {
             pos += time_scanned;
             p_ev_data->did_num = RPN_DAT_DATE;
             }
 
-        ss_date_normalise(&p_ev_data->arg.date);
+        ss_date_normalise(&p_ev_data->arg.ev_date);
         }
 
     return(pos - in_str);
@@ -1671,7 +1673,7 @@ recog_name(
         else
             {
             p_ev_data->did_num = RPN_DAT_NAME;
-            p_ev_data->arg.nameid = name_ptr(name_num)->key;
+            p_ev_data->arg.nameid = name_ptr_must(name_num)->key;
             }
         }
 
@@ -1865,12 +1867,21 @@ recog_slr_range(
         {
         char doc_temp[BUF_EV_LONGNAMLEN];
         S32 len1;
-        PC_U8 pos;
+        PC_U8 pos = in_str + len;
+        S32 len_colon = 0;
+
+        /* allow foreign range input */
+        if(CH_COLON == PtrGetByte(pos))
+        {
+            len_colon = 1;
+            ustr_IncByte(pos);
+        }
+        else
+            len_colon = 0;
 
         /* check for a second external reference, and
          * allow it if it's the same as the one passed in
          */
-        pos = in_str + len;
         if(doc_name[0] && (len1 = recog_extref(doc_temp, elemof32(doc_temp), pos, 1)) != 0)
             if(0 == _stricmp(doc_name, doc_temp))
                 len += len1;
@@ -1896,7 +1907,7 @@ recog_slr_range(
                 p_ev_data->arg.range.s = s_slr;
                 p_ev_data->arg.range.e = e_slr;
                 p_ev_data->did_num = RPN_DAT_RANGE;
-                len += len1;
+                len += len1 + len_colon;
                 }
             else
                 len = 0;
@@ -1952,7 +1963,7 @@ recog_string(
             }
 
         /* allocate memory for string */
-        if(NULL != (stringp = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &res)))
+        if(NULL != (stringp = al_ptr_alloc_bytes(P_U8, len + 1/*NULLCH*/, &res)))
             {
             ci = in_str + 1;
             co = stringp;
@@ -2362,13 +2373,13 @@ rec_lterm(void)
 
         case RPN_TMP_STRING:
             cc->cur.did_num = SYM_BLANK;
-            out_string_free(&sym_inf, &cc->cur_sym.arg.string.data);
+            out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.data);
             break;
 
         case RPN_DAT_DATE:
             cc->cur.did_num = SYM_BLANK;
             out_idno_format(&sym_inf);
-            out_to_rpn(sizeof32(EV_DATE), &cc->cur_sym.arg.date);
+            out_to_rpn(sizeof32(EV_DATE), &cc->cur_sym.arg.ev_date);
             break;
 
         case SYM_OARRAY:
@@ -2450,11 +2461,9 @@ rec_lterm(void)
             /* is it a custom function call ? */
             if(scan_check_next(NULL) == SYM_OBRACKET)
                 {
-                EV_NAMEID custom_num;
-                P_EV_CUSTOM p_ev_custom;
-
                 /* must be a custom function - establish reference */
-                custom_num = ensure_custom_in_list(refto_docno, ident);
+                EV_NAMEID custom_num = ensure_custom_in_list(refto_docno, ident);
+                P_EV_CUSTOM p_ev_custom;
 
                 if(custom_num < 0)
                     {
@@ -2462,16 +2471,14 @@ rec_lterm(void)
                     break;
                     }
 
-                p_ev_custom = custom_ptr(custom_num);
+                p_ev_custom = custom_ptr_must(custom_num);
                 sym_inf.did_num = RPN_FNM_CUSTOMCALL;
                 func_call(&sym_inf, p_ev_custom->key);
                 }
             else
                 {
-                EV_NAMEID name_num;
+                EV_NAMEID name_num = ensure_name_in_list(refto_docno, ident);
                 P_EV_NAME p_ev_name;
-
-                name_num = ensure_name_in_list(refto_docno, ident);
 
                 if(name_num < 0)
                     {
@@ -2479,7 +2486,7 @@ rec_lterm(void)
                     break;
                     }
 
-                p_ev_name = name_ptr(name_num);
+                p_ev_name = name_ptr_must(name_num);
                 sym_inf.did_num = RPN_DAT_NAME;
                 out_idno_format(&sym_inf);
                 out_nameid(p_ev_name->key);

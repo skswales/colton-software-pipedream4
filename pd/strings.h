@@ -549,6 +549,7 @@ stringdef(menu_function_numinfo_range_title)
 stringdef(menu_function_numinfo_name_title)
 stringdef(menu_function_textinfo_title)
 stringdef(menu_function_textinfo_entries)
+stringdef(menu_function_textinfo_title_blank)
 stringdef(formwind_menu_title)
 
 stringdef(F_Print_STR)

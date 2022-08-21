@@ -20,9 +20,9 @@
 /* local header file */
 #include "handlist.h"
 
-#define FILLSIZE (sizeof(union _list_guts))
+#define FILLSIZE (sizeof(union LIST_ITEM_GUTS))
 
-typedef struct handle_block_entry
+typedef struct HANDLE_BLOCK_ENTRY
 {
     P_ANY pointer;
 }
@@ -245,7 +245,7 @@ list_createitem(
         if(it && (it->flags & LIST_FILL))
             {
             /* save parameters for address reconstruction */
-            poolsave = lp->pooldix;
+            poolsave = lp->ix_pooldesc;
             offsetsave = lp->itemc;
 
             if((itemcur + it->i.itemfill) > item)
@@ -670,7 +670,7 @@ list_gotoitem(
 
     /* load pool descriptor pointer */
     if((pdp = lp->poold) == NULL)
-        if((pdp = getpooldp(lp, lp->pooldix)) == NULL)
+        if((pdp = getpooldp(lp, lp->ix_pooldesc)) == NULL)
             return(NULL);
 
     /* get to correct item */
@@ -695,7 +695,7 @@ list_gotoitem(
         {
         do
             {
-            --lp->pooldix;
+            --lp->ix_pooldesc;
             --lp->poold;
             --pdp;
             }
@@ -720,16 +720,16 @@ list_gotoitem(
                     goto there;
                 }
 
-            if((lp->pooldix + 1 < lp->pooldblkfree) &&
+            if((lp->ix_pooldesc + 1 < lp->pooldblkfree) &&
                (item >= (pdp + 1)->poolitem))
                 {
                 do
                     {
-                    ++lp->pooldix;
+                    ++lp->ix_pooldesc;
                     ++lp->poold;
                     ++pdp;
                     }
-                while((lp->pooldix + 1 < lp->pooldblkfree) &&
+                while((lp->ix_pooldesc + 1 < lp->pooldblkfree) &&
                       (item >= (pdp + 1)->poolitem));
 
                 i = pdp->poolitem;
@@ -758,34 +758,6 @@ there:
 
 /******************************************************************************
 *
-* calculate how much free space is distributed in the pools
-*
-******************************************************************************/
-
-extern S32
-list_howmuchpoolspace(void)
-{
-    P_LIST_BLOCK lp;
-    pooldp pdp;
-    S32 res;
-    S32 i;
-
-    validatepools();
-
-    for(lp = firstblock, res = 0; lp; lp = lp->nextblock)
-        for(i = 0, pdp = getpooldp(lp, 0);
-            pdp && i < lp->pooldblkfree;
-            ++i, ++pdp)
-            if(pdp->poolh)
-                res += pdp->poolsize - pdp->poolfree;
-
-    trace_1(TRACE_MODULE_LIST, "list_howmuchpoolspace: %d bytes", res);
-
-    return(res);
-}
-
-/******************************************************************************
-*
 * internal gotoitem
 *
 * igotoitem only returns a null pointer if there is no item at all in
@@ -805,7 +777,7 @@ list_igotoitem(
 
     return((it = list_gotoitem(lp, item)) != NULL
                  ? it
-                 : lp ? convofftoptr(lp, lp->pooldix, lp->itemc)
+                 : lp ? convofftoptr(lp, lp->ix_pooldesc, lp->itemc)
                       : NULL);
 }
 
@@ -822,8 +794,8 @@ list_init(
     S32 maxpoolsize)
 {
     lp->itemc = 0;
-    lp->pooldblkh = 0;
-    lp->pooldix = 0;
+    lp->h_pooldesc = 0;
+    lp->ix_pooldesc = 0;
     lp->pooldblksize = 0;
     lp->pooldblkfree = 0;
     lp->item = 0;
@@ -847,7 +819,7 @@ list_init(
 extern P_LIST_ITEM
 list_initseq(
     P_LIST_BLOCK lp,
-    P_LIST_ITEMNO itemnop)
+    _OutRef_    P_LIST_ITEMNO itemnop)
 {
     P_LIST_ITEM it;
 
@@ -922,7 +894,7 @@ list_insertitems(
 extern P_LIST_ITEM
 list_nextseq(
     P_LIST_BLOCK lp,
-    P_LIST_ITEMNO itemnop)
+    _InoutRef_  P_LIST_ITEMNO itemnop)
 {
     P_LIST_ITEM it;
     P_U8 pp;
@@ -1005,10 +977,10 @@ list_packlist(
         pdp && i < lp->pooldblkfree && space_found < needed;
         ++i, ++pdp)
         {
-        trace_4(TRACE_MODULE_LIST, "list_packlist: consider pdp &%p, poolh %d, size %d, free %d",
-                report_ptr_cast(pdp), pdp->poolh, pdp->poolsize, pdp->poolfree);
+        trace_4(TRACE_MODULE_LIST, "list_packlist: consider pdp &%p, h_pool %d, size %d, free %d",
+                report_ptr_cast(pdp), pdp->h_pool, pdp->poolsize, pdp->poolfree);
 
-        if(pdp->poolh  &&  (pdp->poolsize > pdp->poolfree))
+        if(pdp->h_pool  &&  (pdp->poolsize > pdp->poolfree))
             {
             space_found += (S32) pdp->poolsize - pdp->poolfree;
             reallocpool(lp, pdp->poolfree, i);
@@ -1024,16 +996,16 @@ list_packlist(
     if(space_found < needed &&
        lp->pooldblksize > lp->pooldblkfree + 1)
         {
-        ARRAY_HANDLE newpdh;
+        ARRAY_HANDLE new_h_pooldesc;
 
         /* unlock descriptor block for realloc */
         if(lp->pooldblkp)
             lp->pooldblkp = lp->poold = NULL;
 
-        newpdh = list_reallochandle(lp->pooldblkh, sizeof(struct POOLDESC) * ((S32) lp->pooldblkfree + 1));
+        new_h_pooldesc = list_reallochandle(lp->h_pooldesc, sizeof(struct POOLDESC) * ((S32) lp->pooldblkfree + 1));
         space_found += ((S32) lp->pooldblksize - lp->pooldblkfree - 1) * sizeof(struct POOLDESC);
         lp->pooldblksize = lp->pooldblkfree + 1;
-        lp->pooldblkh = newpdh;
+        lp->h_pooldesc = new_h_pooldesc;
         }
 
     trace_2(TRACE_MODULE_LIST, "list_packlist: found %d, in lp &%p", space_found, report_ptr_cast(lp));
@@ -1043,14 +1015,14 @@ list_packlist(
 
 /******************************************************************************
 *
-* get next item in sequence
+* get prev item in sequence
 *
 ******************************************************************************/
 
 extern P_LIST_ITEM
 list_prevseq(
     P_LIST_BLOCK lp,
-    P_LIST_ITEMNO itemnop)
+    _InoutRef_  P_LIST_ITEMNO itemnop)
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item;
@@ -1083,17 +1055,18 @@ list_prevseq(
 *
 ******************************************************************************/
 
-extern ARRAY_HANDLE
+_Check_return_
+static ARRAY_HANDLE
 list_reallochandle(
     ARRAY_HANDLE hand,
     S32 bytes)
 {
     trace_2(TRACE_MODULE_LIST, "list_reallochandle(%d, %d)", hand, bytes);
 
-    validatepools();
-
     if(!hand)
         return(list_allochandle(bytes));
+
+    validatepools();
 
     if(!bytes)
         {
@@ -1327,16 +1300,16 @@ allocitem(
     P_LIST_ITEM it, nextsl, prevsl;
 
     if((pdp = lp->poold) == NULL)
-        pdp = getpooldp(lp, lp->pooldix);
+        pdp = getpooldp(lp, lp->ix_pooldesc);
 
     /* create a pool if we have none */
     if(!lp->poold)
         {
-        if(!allocpool(lp, lp->pooldix, lp->poolsizeinc))
+        if(!allocpool(lp, lp->ix_pooldesc, lp->poolsizeinc))
             return(NULL);
         else
             if((pdp = lp->poold) == NULL)
-                pdp = getpooldp(lp, lp->pooldix);
+                pdp = getpooldp(lp, lp->ix_pooldesc);
         }
 
     size += LIST_ITEMOVH;
@@ -1366,11 +1339,11 @@ allocitem(
             }
         else if(!reallocpool(lp,
                              pdp->poolsize + lp->poolsizeinc,
-                             lp->pooldix))
+                             lp->ix_pooldesc))
             return(NULL);
 
         /* reload pool descriptor pointer */
-        pdp = getpooldp(lp, lp->pooldix);
+        pdp = getpooldp(lp, lp->ix_pooldesc);
         }
 
     #ifdef SPARSE_DEBUG
@@ -1431,26 +1404,28 @@ allocpool(
 {
     pooldp pdp, pdpi;
     S32 i;
-    ARRAY_HANDLE poolh;
+    ARRAY_HANDLE h_pool;
 
     /* check that pool descriptor block is large enough */
     if(lp->pooldblkfree >= lp->pooldblksize)
         {
-        if(!lp->pooldblkh)
+        if(0 == lp->h_pooldesc)
             {
-            lp->pooldblkh = list_allochandle(sizeof(struct POOLDESC) * (S32) POOLDBLKSIZEINC);
-            if(!lp->pooldblkh)
+            lp->h_pooldesc = list_allochandle(sizeof(struct POOLDESC) * (S32) POOLDBLKSIZEINC);
+            if(0 == lp->h_pooldesc)
                 return(NULL);
+
+            /*al_array_auto_compact_set(&lp->h_pooldesc);*/
 
             lp->pooldblksize = POOLDBLKSIZEINC;
 
             #ifdef SPARSE_DEBUG
-            trace_1(TRACE_MODULE_LIST, "allocpool allocated dblkh: %d", lp->pooldblkh);
+            trace_1(TRACE_MODULE_LIST, "allocpool allocated h_pooldesc: %d", lp->h_pooldesc);
             #endif
             }
         else
             {
-            ARRAY_HANDLE newpdh;
+            ARRAY_HANDLE new_h_pooldesc;
 
             /* unlock descriptor block for realloc */
             if(lp->pooldblkp)
@@ -1458,31 +1433,34 @@ allocpool(
                 lp->pooldblkp = lp->poold = NULL;
                 }
 
-            newpdh = list_reallochandle(lp->pooldblkh, sizeof(struct POOLDESC) * ((S32) lp->pooldblksize + POOLDBLKSIZEINC));
-            if(!newpdh)
+            new_h_pooldesc = list_reallochandle(lp->h_pooldesc, sizeof(struct POOLDESC) * ((S32) lp->pooldblksize + POOLDBLKSIZEINC));
+            if(0 == new_h_pooldesc)
                 return(NULL);
 
             #ifdef SPARSE_DEBUG
-            trace_1(TRACE_MODULE_LIST, "allocpool reallocated dblkh: %d", lp->pooldblkh);
+            trace_1(TRACE_MODULE_LIST, "allocpool reallocated h_pooldesc: %d", lp->h_pooldesc);
             #endif
 
             lp->pooldblksize += POOLDBLKSIZEINC;
-            lp->pooldblkh = newpdh;
+            lp->h_pooldesc = new_h_pooldesc;
             }
         }
 
     #if 1
     /* packlist now never frees the dblkfree+1 entry; not only could
      * it free the entry we had just allocated but thrashing could occur:
-     * expand dblk; poolh allochandle fails; caller calls packlist, freeing dblk;
+     * expand dblk; h_pool allochandle fails; caller calls packlist, freeing dblk;
      * recalls allocpool which expands dblk etc etc
      * MRJC 23.9.91
      */
-    if((poolh = list_allochandle((S32) size)) == 0)
+    h_pool = list_allochandle((S32) size);
+    if(0 == h_pool)
         return(NULL);
 
+    /*al_array_auto_compact_set(&h_pool);*/
+
     pdp = getpooldp(lp, lp->pooldblkfree++);
-    pdp->poolh = 0;
+    pdp->h_pool = 0;
     pdp->poolsize = 0;
     pdp->poolitem = 0;
     pdp->poolfree = 0;
@@ -1493,15 +1471,15 @@ allocpool(
      * create dummy entry so that packer does not try to discard
     */
     pdp = getpooldp(lp, lp->pooldblkfree++);
-    pdp->poolh = 0;
+    pdp->h_pool = 0;
     pdp->poolsize = 0;
     pdp->poolitem = 0;
     pdp->poolfree = 0;
     pdp->pool = NULL;
 
     /* allocate a pool */
-    poolh = list_allochandle((S32) size);
-    if(!poolh)
+    h_pool = list_allochandle((S32) size);
+    if(0 == h_pool)
         {
         --lp->pooldblkfree;
         return(NULL);
@@ -1518,15 +1496,15 @@ allocpool(
         i > poolix; --i, --pdpi)
             *pdpi = *(pdpi - 1);
 
-    if((lp->pooldix >= poolix) &&
-       (lp->pooldix != lp->pooldblkfree - 1))
+    if((lp->ix_pooldesc >= poolix) &&
+       (lp->ix_pooldesc != lp->pooldblkfree - 1))
         {
-        ++lp->pooldix;
+        ++lp->ix_pooldesc;
         if(lp->poold)
             ++lp->poold;
         }
 
-    pdp->poolh = poolh;
+    pdp->h_pool = h_pool;
     pdp->poolsize = size;
     pdp->poolitem = 0;
     pdp->poolfree = 0;
@@ -1578,7 +1556,7 @@ deallocitem(
     LIST_ITEMNO trailfill;
 
     if((pdp = lp->poold) == NULL)
-        pdp = getpooldp(lp, lp->pooldix);
+        pdp = getpooldp(lp, lp->ix_pooldesc);
 
     if((pp = pdp->pool) == NULL)
         pp = getpoolptr(pdp);
@@ -1593,7 +1571,7 @@ deallocitem(
             size = pdp->poolfree - itoff;
         else
             {
-            deallocpool(lp, lp->pooldix);
+            deallocpool(lp, lp->ix_pooldesc);
             return;
             }
         }
@@ -1607,10 +1585,10 @@ deallocitem(
         if(!it->offsetp &&
            !nextsl->offsetn &&
            (nextsl->flags & LIST_FILL) &&
-           ((lp->pooldix + 1) == lp->pooldblkfree))
+           ((lp->ix_pooldesc + 1) == lp->pooldblkfree))
             {
             trailfill = list_leapnext(nextsl);
-            deallocpool(lp, lp->pooldix);
+            deallocpool(lp, lp->ix_pooldesc);
             lp->numitem -= trailfill;
 
             #ifdef SPARSE_DEBUG
@@ -1653,7 +1631,7 @@ deallocpool(
     pdp = getpooldp(lp, poolix);
 
     /* the pool is dead, kill the pool */
-    al_array_dispose(&pdp->poolh);
+    al_array_dispose(&pdp->h_pool);
 
     /* remove descriptor */
     for(i = poolix; i < lp->pooldblkfree - 1; ++i, ++pdp)
@@ -1662,21 +1640,21 @@ deallocpool(
     if(!--lp->pooldblkfree)
         {
         /* deallocate pool descriptor block */
-        al_array_dispose(&lp->pooldblkh);
+        al_array_dispose(&lp->h_pooldesc);
 
         lp->pooldblksize = 0;
         lp->pooldblkfree = 0;
-        lp->pooldix = 0;
+        lp->ix_pooldesc = 0;
         lp->itemc = 0;
         lp->item = lp->numitem = 0;
         lp->pooldblkp = lp->poold = NULL;
         }
-    else if(lp->pooldix >= lp->pooldblkfree)
+    else if(lp->ix_pooldesc >= lp->pooldblkfree)
         {
         /* make sure not pointing past the end */
-        --lp->pooldix;
+        --lp->ix_pooldesc;
         --lp->poold;
-        lp->item = getpooldp(lp, lp->pooldix)->poolitem;
+        lp->item = getpooldp(lp, lp->ix_pooldesc)->poolitem;
         lp->itemc = 0;
         }
 
@@ -1742,24 +1720,22 @@ getpooldp(
 {
     pooldp pdp;
 
-    if(!lp->pooldblkp)
+    if(NULL == lp->pooldblkp)
         {
-        if(!lp->pooldblkh)
+        if(0 == lp->h_pooldesc)
             return(NULL);
-        else
-            {
-            lp->pooldblkp = array_base(&lp->pooldblkh, struct POOLDESC);
 
-            #ifdef SPARSE_DEBUG
-            trace_1(TRACE_MODULE_LIST, "loaded new pooldblkp: %x", (S32) lp->pooldblkp);
-            #endif
-            }
+        lp->pooldblkp = array_base(&lp->h_pooldesc, struct POOLDESC);
+
+        #ifdef SPARSE_DEBUG
+        trace_1(TRACE_MODULE_LIST, "loaded new pooldblkp: %x", (S32) lp->pooldblkp);
+        #endif
         }
 
     pdp = (poolix >= lp->pooldblkfree) ? NULL : lp->pooldblkp + poolix;
 
     /* set temporary pointer save */
-    if(poolix == lp->pooldix)
+    if(poolix == lp->ix_pooldesc)
         lp->poold = pdp;
 
     return(pdp);
@@ -1777,10 +1753,10 @@ getpoolptr(
 {
     if(!pdp->pool)
         {
-        if(!pdp->poolh)
+        if(0 == pdp->h_pool)
             return(NULL);
 
-        pdp->pool = array_base(&pdp->poolh, U8);
+        pdp->pool = array_base(&pdp->h_pool, U8);
 
         #ifdef SPARSE_DEBUG
         trace_1(TRACE_MODULE_LIST, "loading poolptr %p", pdp->pool);
@@ -1814,7 +1790,7 @@ reallocitem(
         }
 
     if((pdp = lp->poold) == NULL)
-        pdp = getpooldp(lp, lp->pooldix);
+        pdp = getpooldp(lp, lp->ix_pooldesc);
 
     /* create a pool if we have none */
     if(!pdp)
@@ -1848,12 +1824,12 @@ reallocitem(
             }
         else if(!reallocpool(lp,
                              pdp->poolsize + lp->poolsizeinc,
-                             lp->pooldix))
+                             lp->ix_pooldesc))
             return(NULL);
 
         /* re-load descriptor pointer */
         if((pdp = lp->poold) == NULL)
-            pdp = getpooldp(lp, lp->pooldix);
+            pdp = getpooldp(lp, lp->ix_pooldesc);
         }
 
     /* adjust pool for space needed */
@@ -1888,7 +1864,7 @@ reallocpool(
     OFF_TYPE size,
     S32 ix)
 {
-    ARRAY_HANDLE mh;
+    ARRAY_HANDLE new_h_pool;
     pooldp pdp;
 
     pdp = getpooldp(lp, ix);
@@ -1899,21 +1875,19 @@ reallocpool(
     #endif
 
     if(pdp->pool)
-        {
         pdp->pool = NULL;
-        }
 
     #ifdef SPARSE_DEBUG
-    trace_2(TRACE_MODULE_LIST, "reallocpool * pdp->pool: %d, pooldblkh: %d",
-            pdp->pool, lp->pooldblkh);
+    trace_2(TRACE_MODULE_LIST, "reallocpool * pdp->pool: %d, h_pooldesc: %d",
+            pdp->pool, lp->h_pooldesc);
     #endif
 
-    mh = list_reallochandle(pdp->poolh, (S32) size);
-    if(!mh)
+    new_h_pool = list_reallochandle(pdp->h_pool, (S32) size);
+    if(0 == new_h_pool)
         return(NULL);
 
     pdp = getpooldp(lp, ix);
-    pdp->poolh = mh;
+    pdp->h_pool = new_h_pool;
     pdp->poolsize = size;
 
     /* clear pool pointer again; freepoolspace may reload the pool pointer
@@ -1923,8 +1897,8 @@ reallocpool(
     pdp->pool = NULL;
 
     #ifdef SPARSE_DEBUG
-    trace_2(TRACE_MODULE_LIST, "reallocpool *** poolh: %d, pdp->pool: %x",
-            pdp->poolh, (S32) pdp->pool);
+    trace_2(TRACE_MODULE_LIST, "reallocpool *** h_pool: %d, pdp->pool: %x",
+            pdp->h_pool, (S32) pdp->pool);
     trace_2(TRACE_MODULE_LIST, "reallocpool *** pdp: %x, pool: %x",
             (S32) pdp, (S32) getpoolptr(pdp));
     #endif
@@ -1953,7 +1927,7 @@ splitpool(
     #endif
 
     if((pdp = lp->poold) == NULL)
-        pdp = getpooldp(lp, lp->pooldix);
+        pdp = getpooldp(lp, lp->ix_pooldesc);
 
     #ifdef SPARSE_DEBUG
     trace_1(TRACE_MODULE_LIST, "Existing pdp: %x", (S32) pdp);
@@ -1965,14 +1939,14 @@ splitpool(
     if(justadd)
         {
         /* free space in old pool for efficiency */
-        reallocpool(lp, pdp->poolfree, lp->pooldix);
+        reallocpool(lp, pdp->poolfree, lp->ix_pooldesc);
         newsize = lp->poolsizeinc;
         }
     else
         newsize = pdp->poolsize / 2 + lp->maxitemsize;
 
     /* allocate new pool */
-    if((newpp = allocpool(lp, lp->pooldix + 1, newsize)) == NULL)
+    if((newpp = allocpool(lp, lp->ix_pooldesc + 1, newsize)) == NULL)
         return(NULL);
 
     #ifdef SPARSE_DEBUG
@@ -1980,14 +1954,14 @@ splitpool(
     #endif
 
     /* re-load pointer */
-    pdp = getpooldp(lp, lp->pooldix);
+    pdp = getpooldp(lp, lp->ix_pooldesc);
 
     #ifdef SPARSE_DEBUG
     trace_1(TRACE_MODULE_LIST, "Pdp after newpp alloced: %x", (S32) pdp);
     #endif
 
     /* load pointer for new pool */
-    newpdp = getpooldp(lp, lp->pooldix + 1);
+    newpdp = getpooldp(lp, lp->ix_pooldesc + 1);
 
     #ifdef SPARSE_DEBUG
     trace_1(TRACE_MODULE_LIST, "Newpdp: %x", (S32) newpdp);
@@ -2003,7 +1977,7 @@ splitpool(
 
         #ifdef SPARSE_DEBUG
         trace_2(TRACE_MODULE_LIST, "Existing pdp->pool: %x, poolix: %d",
-                (S32) pdp->pool, lp->pooldix);
+                (S32) pdp->pool, lp->ix_pooldesc);
         #endif
 
         /* get address of current pool */
@@ -2061,20 +2035,20 @@ splitpool(
         if(lp->itemc >= pdp->poolfree)
             {
             lp->itemc -= pdp->poolfree;
-            ++lp->pooldix;
+            ++lp->ix_pooldesc;
             lp->poold = NULL;
             }
         }
     else
         {
         lp->itemc = 0;
-        ++lp->pooldix;
+        ++lp->ix_pooldesc;
         lp->poold = NULL;
         newpdp->poolitem = lp->item;
         }
 
     /* re-load pointers */
-    pdp = getpooldp(lp, lp->pooldix);
+    pdp = getpooldp(lp, lp->ix_pooldesc);
     return(getpoolptr(pdp));
 }
 
@@ -2093,10 +2067,10 @@ updatepoolitems(
     S32 i;
 
     if((pdp = lp->poold) == NULL)
-        if((pdp = getpooldp(lp, lp->pooldix)) == NULL)
+        if((pdp = getpooldp(lp, lp->ix_pooldesc)) == NULL)
             return;
 
-    for(i = lp->pooldix; i < lp->pooldblkfree; ++i, ++pdp)
+    for(i = lp->ix_pooldesc; i < lp->pooldblkfree; ++i, ++pdp)
         if(pdp->poolitem > lp->item)
             pdp->poolitem += change;
 
@@ -2148,11 +2122,11 @@ valfatal(
             break;
 
         case 5:
-            ptr = "!lp->pooldblkh but lp->pooldblkp &%p";
+            ptr = "!lp->h_pooldesc but lp->pooldblkp &%p";
             break;
 
         case 6:
-            ptr = "lp->pooldblkh %d not in handleblock (size %d)";
+            ptr = "lp->h_pooldesc %d not in handleblock (size %d)";
             break;
 
         case 7:
@@ -2168,11 +2142,11 @@ valfatal(
             break;
 
         case 10:
-            ptr = "!pdp->poolh but pdp->pool &%p";
+            ptr = "!pdp->h_pool but pdp->pool &%p";
             break;
 
         case 11:
-            ptr = "pdp->poolh %d not in handleblock (size %d)";
+            ptr = "pdp->h_pool %d not in handleblock (size %d)";
             break;
 
         case 12:
@@ -2239,16 +2213,16 @@ _validatepool(
 
     desc_was_locked = (lp->pooldblkp != NULL);
 
-    trace_2(TRACE_MODULE_LIST, ": descriptor handle %d ptr &%p", lp->pooldblkh, lp->pooldblkp);
+    trace_2(TRACE_MODULE_LIST, ": descriptor handle %d ptr &%p", lp->h_pooldesc, lp->pooldblkp);
 
-    if(lp->pooldblkh)
+    if(lp->h_pooldesc)
         {
-        if((U32) lp->pooldblkh >= (U32) handlefree)
+        if((U32) lp->h_pooldesc >= (U32) handlefree)
             /* not in table */
-            valfatal(6, (P_ANY) lp->pooldblkh, (P_ANY) handlefree);
+            valfatal(6, (P_ANY) lp->h_pooldesc, (P_ANY) handlefree);
 
         if(lp->pooldblkp)
-            if(lp->pooldblkp != (ptr = array_base(&lp->pooldblkh, struct POOLDESC)))
+            if(lp->pooldblkp != (ptr = array_base(&lp->h_pooldesc, struct POOLDESC)))
                 /* cached ptr different to that in table */
                 valfatal(7, lp->pooldblkp, ptr);
         }
@@ -2268,7 +2242,7 @@ _validatepool(
             valfatal(4, lp->pooldblkp, fl_end);
         }
 
-    pdp = lp->pooldblkp = array_base(&lp->pooldblkh, struct POOLDESC);
+    pdp = lp->pooldblkp = array_base(&lp->h_pooldesc, struct POOLDESC);
 
     if(pdp)
         {
@@ -2278,16 +2252,16 @@ _validatepool(
             {
             pool_was_locked = (pdp->pool != NULL);
 
-            trace_5(TRACE_MODULE_LIST, "Validating pool (&%p[%d] = &%p): handle %d ptr &%p", lp->pooldblkp, i, pdp, pdp->poolh, pdp->pool);
+            trace_5(TRACE_MODULE_LIST, "Validating pool (&%p[%d] = &%p): handle %d ptr &%p", lp->pooldblkp, i, pdp, pdp->h_pool, pdp->pool);
 
-            if(pdp->poolh)
+            if(pdp->h_pool)
                 {
-                if((U32) pdp->poolh >= (U32) handlefree)
+                if((U32) pdp->h_pool >= (U32) handlefree)
                     /* not in table */
-                    valfatal(10, (void *) pdp->poolh, (void *) handlefree);
+                    valfatal(10, (void *) pdp->h_pool, (void *) handlefree);
 
                 if(pdp->pool)
-                    if(pdp->pool != (ptr = array_base(&pdp->poolh, U8)))
+                    if(pdp->pool != (ptr = array_base(&pdp->h_pool, U8)))
                         /* cached ptr different to that in table */
                         valfatal(11, pdp->pool, ptr);
                 }

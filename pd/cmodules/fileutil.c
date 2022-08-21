@@ -58,7 +58,7 @@ file_add_prefix_to_name(
     if(!file_is_rooted(srcfilename))
         file_get_prefix(destfilename, elemof_buffer, currentfilename);
 
-    safe_strkat(destfilename, elemof_buffer, srcfilename);
+    xstrkat(destfilename, elemof_buffer, srcfilename);
 
     return(destfilename);
 }
@@ -82,9 +82,9 @@ file_combined_path(
     if(search_path && *search_path)
         {
         if(*destpath)
-            safe_strkat(destpath, elemof_buffer, FILE_PATH_SEP_STR);
+            xstrkat(destpath, elemof_buffer, FILE_PATH_SEP_STR);
 
-        safe_strkat(destpath, elemof_buffer, search_path);
+        xstrkat(destpath, elemof_buffer, search_path);
         }
 
     return(*destpath ? destpath : NULL);
@@ -188,11 +188,11 @@ file_find_first_subdir(
     /* initialise object enumeration structure */
 
     if(subdir)
-        safe_strkpy(p->subdir, elemof32(p->subdir), subdir);
+        xstrkpy(p->subdir, elemof32(p->subdir), subdir);
     else
         *p->subdir = NULLCH;
 
-    safe_strkpy(p->pattern, elemof32(p->pattern), pattern);
+    xstrkpy(p->pattern, elemof32(p->pattern), pattern);
 
     #if WINDOWS
     AnsiToOem(p->pattern, p->pattern);
@@ -259,12 +259,12 @@ file_find_next(
                 {
                 if(dirname == p->pathenum->res)
                 {
-                    safe_strkpy(array, elemof32(array), dirname);
+                    xstrkpy(array, elemof32(array), dirname);
                     dirname = array;
                 }
 
-                safe_strkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
-                safe_strkat(dirname, elemof32(array), p->subdir);
+                xstrkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
+                xstrkat(dirname, elemof32(array), p->subdir);
                 /* dirname IS valid, cos we checked it when p->state was 2 */
                 }
 
@@ -316,12 +316,12 @@ file_find_next(
                 {
                 if(dirname == p->pathenum->res)
                 {
-                    safe_strkpy(array, elemof32(array), dirname);
+                    xstrkpy(array, elemof32(array), dirname);
                     dirname = array;
                 }
 
-                safe_strkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
-                safe_strkat(dirname, elemof32(array), p->subdir);
+                xstrkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
+                xstrkat(dirname, elemof32(array), p->subdir);
 
                 if(!file_is_dir(dirname))
                     {
@@ -446,7 +446,7 @@ file_find_query_dirname(
 
     if(dirname == p->pathenum->res)
     {
-        safe_strkpy(destpath, elemof_buffer, dirname);
+        xstrkpy(destpath, elemof_buffer, dirname);
         dirname = destpath;
     }
 
@@ -454,8 +454,8 @@ file_find_query_dirname(
 
     if(*p->subdir) /* not empty? */
     {
-        safe_strkat(dirname, elemof_buffer, FILE_DIR_SEP_STR);
-        safe_strkat(dirname, elemof_buffer, p->subdir);
+        xstrkat(dirname, elemof_buffer, FILE_DIR_SEP_STR);
+        xstrkat(dirname, elemof_buffer, p->subdir);
     }
 
     return(destpath);
@@ -475,7 +475,7 @@ file_objinfo_name(
     name = oip->ansiname;
     #endif
 
-    safe_strkpy(destname, elemof_buffer, name);
+    xstrkpy(destname, elemof_buffer, name);
 }
 
 extern U32
@@ -559,8 +559,8 @@ file_find_on_path(
         pathelem != NULL;
         pathelem = file_path_element_next(&path))
         {
-        safe_strkpy(filename, elemof_buffer, pathelem);
-        safe_strkat(filename, elemof_buffer, srcfilename);
+        xstrkpy(filename, elemof_buffer, pathelem);
+        xstrkat(filename, elemof_buffer, srcfilename);
 
         if(0 == (res = file_readable(filename)))
             continue;
@@ -612,8 +612,8 @@ file_find_on_path_or_relative(
         pathelem != NULL;
         pathelem = file_path_element_next(&path))
         {
-        safe_strkpy(filename, elemof_buffer, pathelem);
-        safe_strkat(filename, elemof_buffer, srcfilename);
+        xstrkpy(filename, elemof_buffer, pathelem);
+        xstrkat(filename, elemof_buffer, srcfilename);
 
         if(0 == (res = file_readable(filename)))
             continue;
@@ -676,8 +676,8 @@ file_find_dir_on_path(
         {
         if(file_is_dir(pathelem))
             {
-            safe_strkpy(filename, elemof_buffer, pathelem);
-            safe_strkat(filename, elemof_buffer, srcfilename);
+            xstrkpy(filename, elemof_buffer, pathelem);
+            xstrkat(filename, elemof_buffer, srcfilename);
 
             if((res = file_is_dir(filename)) != 0)
                 break;
@@ -714,7 +714,7 @@ file_get_cwd(
         PC_U8 leafp = file_leafname(namep);
         S32 nchars = leafp - namep;
         if(nchars)
-            safe_strnkpy(destpath, elemof_buffer, namep, nchars);
+            xstrnkpy(destpath, elemof_buffer, namep, nchars);
         }
 
     res = *destpath ? destpath : NULL;
@@ -768,7 +768,7 @@ file_get_prefix(
         {
         if(file_is_dir(pathelem))
             {
-            safe_strkpy(destpath, elemof_buffer, pathelem);
+            xstrkpy(destpath, elemof_buffer, pathelem);
             break;
             }
 
@@ -1001,7 +1001,7 @@ file_path_element_first(
     p->ptr = p->path;
     p->pushed = NULLCH;
 
-    safe_strnkpy(p->path, BUF_MAX_PATHSTRING, path, ptr - path);
+    xstrnkpy(p->path, BUF_MAX_PATHSTRING, path, ptr - path);
 
     return(file_path_element_next(pp));
 }
@@ -1231,7 +1231,7 @@ file__make_usable_dir(
         #endif
                 {
                 /* need to strip off that carefully placed dir sep */
-                safe_strnkpy(buffer, elemof_buffer, dirname, ptr - dirname); /* no -1 ... */
+                xstrnkpy(buffer, elemof_buffer, dirname, ptr - dirname); /* no -1 ... */
                 dirname = buffer;
                 }
         }
@@ -1239,8 +1239,8 @@ file__make_usable_dir(
     else if(ch == FILE_ROOT_CH)
         {
         /* need to add csd symbol on end */
-        safe_strkpy(buffer, elemof_buffer, dirname);
-        safe_strkat(buffer, elemof_buffer, "@");
+        xstrkpy(buffer, elemof_buffer, dirname);
+        xstrkat(buffer, elemof_buffer, "@");
         dirname = buffer;
         }
     #endif

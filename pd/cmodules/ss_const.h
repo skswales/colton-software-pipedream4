@@ -80,7 +80,7 @@ evaluator data types
 slr type for evaluator
 */
 
-typedef struct _ev_slr
+typedef struct EV_SLR
 {
     EV_COL      col;
     EV_ROW      row;
@@ -102,7 +102,7 @@ packed slr type
 range type
 */
 
-typedef struct _ev_range
+typedef struct EV_RANGE
 {
     EV_SLR s;
     EV_SLR e;
@@ -122,11 +122,11 @@ packed range type
 array structure
 */
 
-typedef struct _ev_array
+typedef struct EV_ARRAY
 {
     S32 x_size;                 /* x dimension of array */
     S32 y_size;                 /* y dimension of array */
-    struct _ev_data * elements;
+    struct EV_DATA * elements;
 }
 EV_ARRAY, * P_EV_ARRAY; typedef const EV_ARRAY * PC_EV_ARRAY;
 
@@ -140,7 +140,7 @@ typedef S32 EV_DATE_DATE; typedef EV_DATE_DATE * P_EV_DATE_DATE; typedef const E
 typedef S32 EV_DATE_TIME; typedef EV_DATE_TIME * P_EV_DATE_TIME; typedef const EV_DATE_TIME * PC_EV_DATE_TIME;
 #define EV_TIME_INVALID 0 /*S32_MIN*/
 
-typedef struct _ev_date
+typedef struct EV_DATE
 {
     EV_DATE_DATE date;
     EV_DATE_TIME time;
@@ -158,9 +158,9 @@ packed date type
 evaluator error type
 */
 
-typedef struct _ev_err
+typedef struct EV_ERROR
 {
-    SBF         num   : 16;
+    SBF         status : 16; /* packed to keep EV_CONSTANT size down */
     UBF         spare : 8-2;
     UBF         type  : 2;
     UBF         docno : 8; /* packed to keep EV_CONSTANT size down */
@@ -174,19 +174,19 @@ EV_ERROR, * P_EV_ERROR;
 #define ERROR_PROPAGATED 2
 
 /*
-string data (is NULLCH terminated in PipeDream but size field helps)
+string data (CH_NULL terminated in PipeDream but size field helps)
 */
 
-typedef struct _ev_string
+typedef struct EV_STRING
 {
-    S32 size;
+    U32 size;
     P_USTR data;
 }
 EV_STRING, * P_EV_STRING;
 
-typedef struct _ev_stringc
+typedef struct EV_STRINGC
 {
-    S32 size;
+    U32 size;
     PC_USTR data;
 }
 EV_STRINGC, * P_EV_STRINGC;
@@ -196,15 +196,16 @@ EV_STRINGC, * P_EV_STRINGC;
 * see the dependent EV_DATA type below
 */
 
-typedef union _ev_constant
+typedef union EV_CONSTANT
 {
-    F64 fp;                 /* floating point */
-    EV_STRING string;       /* string */
-    EV_ARRAY array;         /* array */
-    EV_DATE date;           /* date */
-    EV_ERROR error;         /* error */
-    S32 integer;            /* integer */
-    BOOL boolean;           /* alias: shadows integer */
+    F64             fp;             /* floating point */
+    S32             integer;        /* integer */
+    BOOL            boolean;        /* alias: shadows integer */
+    EV_STRING       string_wr;      /* string constant (writeable) */
+    EV_STRINGC      string;         /* string constant (const) */
+    EV_ARRAY        ev_array;       /* array */
+    EV_DATE         ev_date;        /* date */
+    EV_ERROR        ev_error;       /* error */
 }
 EV_CONSTANT, * P_EV_CONSTANT;
 
@@ -212,26 +213,27 @@ EV_CONSTANT, * P_EV_CONSTANT;
 evaluator mixed data type
 */
 
-typedef union _ev_data_arg
+typedef union EV_DATA_ARG
 {
-    F64 fp;                 /* floating point */
-    EV_STRINGC stringc;     /* string variable (with const data) */
-    EV_STRING string;       /* string variable (writable variant) */
-    EV_STRING string_wr;    /* string variable (alias) */
-    EV_ARRAY array;         /* array */
-    EV_DATE date;           /* date */
-    EV_ERROR error;         /* error */
-    S32 integer;            /* integer values */
-    BOOL boolean;           /* alias: shadows integer */
+    F64             fp;             /* floating point */
+    S32             integer;        /* integer values */
+    BOOL            boolean;        /* alias: shadows integer */
+    EV_STRING       string_wr;      /* string (writeable) */
+    EV_STRINGC      string;         /* string (const) */
+    EV_ARRAY        ev_array;       /* array */
+    EV_DATE         ev_date;        /* date */
+    EV_ERROR        ev_error;       /* error */
 
-    EV_SLR slr;             /* slot reference */
-    EV_RANGE range;         /* range */
-    EV_NAMEID nameid;       /* id of named resource */
-    S16 cond_pos;           /* position of conditional expression */
+    EV_CONSTANT     ev_constant;    /* all the above, as copied by ev_data_to_result_convert() */
+
+    EV_SLR          slr;            /* slot reference */
+    EV_RANGE        range;          /* range */
+    EV_NAMEID       nameid;         /* id of named resource */
+    S16             cond_pos;       /* position of conditional expression */
 }
 EV_DATA_ARG;
 
-typedef struct _ev_data
+typedef struct EV_DATA
 {
     EV_IDNO did_num;            /* type of result in union SYM_, RPN_*/
 
@@ -240,7 +242,7 @@ typedef struct _ev_data
 EV_DATA, * P_EV_DATA; typedef const EV_DATA * PC_EV_DATA;
 
 #if RISCOS
-typedef struct _riscos_time_ordinals
+typedef struct RISCOS_TIME_ORDINALS
 {
     S32 centiseconds;
     S32 seconds;
@@ -252,7 +254,7 @@ typedef struct _riscos_time_ordinals
     S32 day_of_week;
     S32 day_of_year;
 }
-riscos_time_ordinals;
+RISCOS_TIME_ORDINALS;
 #endif
 
 /*
@@ -269,7 +271,7 @@ ss_const.c external functions
 extern S32
 ev_data_set_error(
     _OutRef_    P_EV_DATA p_ev_data,
-    _InVal_     S32 error);
+    _InVal_     STATUS error);
 
 extern void
 real_to_integer_force(
@@ -401,8 +403,8 @@ _Check_return_
 extern STATUS
 ss_string_make_uchars(
     _OutRef_    P_EV_DATA p_ev_data,
-    _In_reads_(len) PC_UCHARS uchars,
-    _In_        S32 len);
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _In_        U32 uchars_n);
 
 _Check_return_
 extern STATUS
@@ -416,7 +418,7 @@ two_nums_type_match(
     _InoutRef_  P_EV_DATA p_ev_data2,
     _InVal_     BOOL size_worry);
 
-enum two_num_types
+enum TWO_NUM_TYPES
 {
     TWO_INTS,
     TWO_REALS,

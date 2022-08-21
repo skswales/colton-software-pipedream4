@@ -60,10 +60,10 @@ mathxtra_range_error(
     return((x < 0) ? -F64_HUGE_VAL : +F64_HUGE_VAL);
 }
 
-#if WINDOWS
-#define F64_MIN_RECIP F64_ONE / F64_MAX
-#elif RISCOS
+#if RISCOS
 #define F64_MIN_RECIP F64_MIN
+#elif WINDOWS
+#define F64_MIN_RECIP F64_ONE / F64_MAX
 #endif
 
 /******************************************************************************

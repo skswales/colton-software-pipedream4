@@ -71,13 +71,63 @@ obtained from
 
 <H2>Release history</H2>
 
+<H4>4.52/06 (01 Nov 2014)</H4>
+
+<P>Splash screen now creates a window in which to render objects.</P>
+
+<P>Improve appearance of toolbar on RISC&nbsp;OS 4.39 when 'Apply to sprite
+icons' effect is selected.</P>
+
+<P>Use newer error reporting mechanism on RISC&nbsp;OS 3.5 and later.</P>
+
+<P>Yes / No query dialogue boxes, anagram and browsing, alert and input
+dialogue boxes and the formula editing window no longer have a close icon
+(and thereby possibly unwanted iconise icon) on the title bar.</P>
+
+<P>Multi-line formula editing (and chart text) window now uses Corpus.Medium
+rather than VDU 5 font if possible.</P>
+
+<P>Function menu substitutes non-break space for space when displaying slot
+/ range content to get around Window Manager attempts to right-justify
+certain keywords.</P>
+
+<P>Function menu extended to show dependent slots / ranges / names for text
+and empty slots as well as number slots.</P>
+
+<P>Function menu no longer attempts to show dependent slots / ranges / names
+for slots in custom function sheets as this is meaningless.</P>
+
+<P>Font Selector dialogue box is now closed when another dialogue box is
+opened.</P>
+
+<P>Font Selector dialogue box now acts as a persistent 'standalone' dialogue
+box (like Save) with respect to window / application closing.</P>
+
+<P>Font Selector dialogue box no longer opens when another persistent
+'standalone' dialogue box such as Save is already open.</P>
+
+<P>Automatically generated temporary arrays of strings (e.g.
+REPT(text_cell_reference, {1,2,3})) no longer cause heap corruption (problem
+exposed by changes in 4.50/39).</P>
+
+<P>SORT() spreadsheet function no longer masks potential memory full errors
+during creation of temporary data array prior to the sort.</P>
+
+
+<H4>4.52/05a (17 Jul 2014)</H4>
+
+<P>Problem with Ctrl-CGS (Goto Slot) and long document names fixed.</P>
+
+
 <H4>4.52/05 (16 Jul 2014)</H4>
 
 <P>Problem with ROUND() spreadsheet function fixed.</P>
 
-<P>Improved text and layout of Save/Discard/Cancel dialogue box on exit with modified document(s).</P>
+<P>Improved text and layout of Save/Discard/Cancel dialogue box on exit with
+modified document(s).</P>
 
-<P>PD4Keys command file is no longer shipped - it was only there to revert from PD3Keys.</P>
+<P>PD4Keys command file is no longer shipped - it was only there to revert
+from PD3Keys.</P>
 
 
 <H4>4.52/04 (04 Jul 2014)</H4>

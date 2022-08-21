@@ -58,28 +58,28 @@ static const DRAW_PATH_STYLE gr_riscdiag_path_style_default =
 
 /* keep consistent with &.CModules.GB.spr.gr_chart (sprites gr_ec_lstyp1..4, 0 is solid) */
 
-static const struct _linestyle_riscos_dash_2 { DRAW_DASH_HEADER hdr; S32 pattern[2]; }
+static const struct LINESTYLE_RISCOS_DASH_2 { DRAW_DASH_HEADER hdr; S32 pattern[2]; }
 gr_linestyle_riscos_dash =
 {
     { gr_riscDraw_from_point(0) /* start distance */, 2 /* count */ },
     { gr_riscDraw_from_point(8), gr_riscDraw_from_point(8) }
 };
 
-static const struct _linestyle_riscos_dash_2
+static const struct LINESTYLE_RISCOS_DASH_2
 gr_linestyle_riscos_dot =
 {
     { gr_riscDraw_from_point(0) /* start distance */, 2 /* count */ },
     { gr_riscDraw_from_point(2), gr_riscDraw_from_point(2) }
 };
 
-static const struct _linestyle_riscos_dash_4 { DRAW_DASH_HEADER hdr; S32 pattern[4]; }
+static const struct LINESTYLE_RISCOS_DASH_4 { DRAW_DASH_HEADER hdr; S32 pattern[4]; }
 gr_linestyle_riscos_dash_dot =
 {
     { gr_riscDraw_from_point(0) /* start distance */, 4 /* count */ },
     { gr_riscDraw_from_point(8), gr_riscDraw_from_point(2), gr_riscDraw_from_point(2), gr_riscDraw_from_point(2) }
 };
 
-static const struct _linestyle_riscos_dash_6 { DRAW_DASH_HEADER hdr; S32 pattern[6]; }
+static const struct LINESTYLE_RISCOS_DASH_6 { DRAW_DASH_HEADER hdr; S32 pattern[6]; }
 gr_linestyle_riscos_dash_dot_dot =
 {
     { gr_riscDraw_from_point(0) /* start distance */, 6 /* count */ },
@@ -249,7 +249,7 @@ gr_riscdiag_path_recompute_bbox(
 *
 ******************************************************************************/
 
-struct _gr_riscdiag_parallelogram_guts
+struct GR_RISCDIAG_PARALLELOGRAM_GUTS
 {
     DRAW_PATH_MOVE  bl;  /* move to bottom left  */
     DRAW_PATH_LINE  br;  /* line to bottom right */
@@ -265,19 +265,19 @@ extern STATUS
 gr_riscdiag_parallelogram_new(
     P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_DRAW_DIAG_OFFSET epParaStart,
-    PC_DRAW_POINT pOrigin,
-    PC_DRAW_POINT pSize1,
-    PC_DRAW_POINT pSize2,
+    _InRef_     PC_DRAW_POINT pOriginBL,
+    _InRef_     PC_DRAW_POINT pOffsetBR,
+    _InRef_     PC_DRAW_POINT pOffsetTR,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle)
 {
-    struct _gr_riscdiag_parallelogram_guts * pPara;
+    struct GR_RISCDIAG_PARALLELOGRAM_GUTS * pPara;
     DRAW_DIAG_OFFSET  paraStart;
     P_DRAW_DIAG_OFFSET pParaStart = epParaStart ? epParaStart : &paraStart;
     STATUS status;
     U32 para_line_diff;
 
-    para_line_diff = ((pSize1->x == pSize2->x) && (pSize1->y == pSize2->y))
+    para_line_diff = ((pOffsetBR->x == pOffsetTR->x) && (pOffsetBR->y == pOffsetTR->y))
                                         ? 3 * sizeof(DRAW_PATH_LINE)
                                         : 0;
 
@@ -285,11 +285,11 @@ gr_riscdiag_parallelogram_new(
         return(status);
 
     pPara->bl.tag    = DRAW_PATH_TYPE_MOVE;
-    pPara->bl.pt     = *pOrigin;
+    pPara->bl.pt     = *pOriginBL;
 
     pPara->br.tag    = DRAW_PATH_TYPE_LINE;
-    pPara->br.pt.x   = (pOrigin->x + pSize1->x);
-    pPara->br.pt.y   = (pOrigin->y + pSize1->y);
+    pPara->br.pt.x   = (pOriginBL->x + pOffsetBR->x);
+    pPara->br.pt.y   = (pOriginBL->y + pOffsetBR->y);
 
     if(para_line_diff)
         /* knock pointer back to write end correctly */
@@ -297,12 +297,12 @@ gr_riscdiag_parallelogram_new(
     else
         {
         pPara->tr.tag    = DRAW_PATH_TYPE_LINE;
-        pPara->tr.pt.x   = (pOrigin->x + pSize2->x);
-        pPara->tr.pt.y   = (pOrigin->y + pSize2->y);
+        pPara->tr.pt.x   = (pOriginBL->x + pOffsetTR->x);
+        pPara->tr.pt.y   = (pOriginBL->y + pOffsetTR->y);
 
         pPara->tl.tag    = DRAW_PATH_TYPE_LINE;
-        pPara->tl.pt.x   = (pOrigin->x + pSize2->x - pSize1->x);
-        pPara->tl.pt.y   = (pOrigin->y + pSize2->y - pSize1->y);
+        pPara->tl.pt.x   = (pOriginBL->x + pOffsetTR->x - pOffsetBR->x);
+        pPara->tl.pt.y   = (pOriginBL->y + pOffsetTR->y - pOffsetBR->y);
 
         pPara->bl2.tag   = DRAW_PATH_TYPE_LINE;
         pPara->bl2.pt    = pPara->bl.pt;
@@ -420,11 +420,10 @@ gr_riscdiag_scaled_diagram_add(
     P_DRAW_DIAG diag,
     PC_GR_FILLSTYLE  fillstyle)
 {
-    GR_RISCDIAG gr_riscdiag;
+    GR_RISCDIAG source_gr_riscdiag;
     STATUS status;
     U32 diagLength;
     DRAW_DIAG_OFFSET diagStart, groupStart;
-    P_BYTE pDiagCopy;
     DRAW_DIAG_OFFSET thisObject, endObject;
     P_DRAW_OBJECT pObject;
     P_DRAW_FILE_HEADER pDiagHdr;
@@ -465,16 +464,94 @@ gr_riscdiag_scaled_diagram_add(
     /* scan the diagram to be copied for a font table */
 
     /* steal source diagram away from its rightful owner */
-    gr_riscdiag_diagram_setup_from_draw_diag(&gr_riscdiag, diag);
+    gr_riscdiag_diagram_setup_from_draw_diag(&source_gr_riscdiag, diag);
 
-    if(gr_riscdiag_fontlist_scan(&gr_riscdiag, GR_RISCDIAG_OBJECT_FIRST, GR_RISCDIAG_OBJECT_LAST))
+#if 0
+    { /* never put the file header, font lists or RISC OS 3 crap object in our diagram */
+    U32 total_skip_size;
+    P_U8 pDiagCopy = NULL; /* keep dataflower happy */
+    UINT pass;
+
+    total_skip_size = sizeof32(DRAW_FILE_HEADER);
+
+    for(pass = 1; pass <= 2; ++pass)
+    {
+        DRAW_DIAG_OFFSET sttObject = gr_riscdiag_normalise_stt(&source_gr_riscdiag, DRAW_DIAG_OFFSET_FIRST);
+        DRAW_DIAG_OFFSET endObject = gr_riscdiag_normalise_end(&source_gr_riscdiag, DRAW_DIAG_OFFSET_LAST);
+        DRAW_DIAG_OFFSET s = sttObject; /* after normalisation */
+
+        if(gr_riscdiag_object_first(&source_gr_riscdiag, &sttObject, &endObject, &pObject, FALSE)) /* flat scan good enough for what I want */
+        {
+            do {
+                switch(*DRAW_OBJHDR(U32, pObject.p_byte, type))
+                {
+                /* these skipped objects can't be grouped (which they never are) otherwise the group header(s) would need patching too! */
+                case DRAW_OBJECT_TYPE_FONTLIST:
+                    source_gr_riscdiag.dd_fontListR = sttObject;
+reportf(TEXT("sda: ") PTR_XTFMT TEXT(" fontListR at %d"), &source_gr_riscdiag, sttObject);
+                    goto skip_object;
+
+                case DRAW_OBJECT_TYPE_DS_WINFONTLIST:
+                    source_gr_riscdiag.dd_fontListW = sttObject;
+reportf(TEXT("sda: ") PTR_XTFMT TEXT(" fontListW at %d"), &source_gr_riscdiag, sttObject);
+                    goto skip_object;
+
+                case DRAW_OBJECT_TYPE_OPTIONS:
+                    source_gr_riscdiag.dd_options = sttObject;
+reportf(TEXT("sda: ") PTR_XTFMT TEXT(" options at %d"), &source_gr_riscdiag, sttObject);
+                skip_object:;
+                    if(pass == 1)
+                        total_skip_size += *DRAW_OBJHDR(U32, pObject.p_byte, size);
+                    else
+                    {
+                        /* flush out whatever we had so far */
+                        U32 n_bytes = sttObject - s;
+                        if(n_bytes)
+                        {
+                            memcpy32(pDiagCopy, gr_riscdiag_getoffptr(BYTE, &source_gr_riscdiag, s), n_bytes);
+                            pDiagCopy += n_bytes;
+                        }
+                        s = sttObject + *DRAW_OBJHDR(U32, pObject.p_byte, size); /* next object to be output starts here */
+                    }
+                    break;
+
+                default:
+reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OBJHDR(U32, pObject.p_byte, type), sttObject);
+                    break;
+                }
+            }
+            while(gr_riscdiag_object_next(&source_gr_riscdiag, &sttObject, &endObject, &pObject, FALSE));
+
+            if(pass == 1)
+            {
+                U32 n_bytes = diagLength - total_skip_size;
+                if(0 == n_bytes)
+                    break;
+                if(NULL == (pDiagCopy = gr_riscdiag_ensure(U8, p_gr_riscdiag, n_bytes, &status)))
+                    return(status);
+            }
+            else
+            {
+                /* flush out end objects */
+                U32 n_bytes = diagLength - s;
+                if(n_bytes)
+                    memcpy32(pDiagCopy, gr_riscdiag_getoffptr(BYTE, &source_gr_riscdiag, s), n_bytes);
+            }
+        }
+    }
+    } /*block*/
+#else
+    {
+    P_U8 pDiagCopy = NULL; /* keep dataflower happy */
+
+    if(gr_riscdiag_fontlist_scan(&source_gr_riscdiag, GR_RISCDIAG_OBJECT_FIRST, GR_RISCDIAG_OBJECT_LAST))
         {
         /* never put the font list in our diagram */
         P_DRAW_OBJECT_FONTLIST pFontList;
         U32 fontListSize;
         U32 nBytesBefore, nBytesAfter;
 
-        pFontList = gr_riscdiag_getoffptr(DRAW_OBJECT_FONTLIST, &gr_riscdiag, gr_riscdiag.dd_fontListR);
+        pFontList = gr_riscdiag_getoffptr(DRAW_OBJECT_FONTLIST, &source_gr_riscdiag, source_gr_riscdiag.dd_fontListR);
 
         fontListSize = pFontList->size;
         diagLength  -= fontListSize;
@@ -483,11 +560,11 @@ gr_riscdiag_scaled_diagram_add(
             return(status);
 
         /* must reload after that realloc */
-        pObject.p_byte = gr_riscdiag_getoffptr(BYTE, &gr_riscdiag, sizeof(DRAW_FILE_HEADER)); /* first bit to copy from */
-        pFontList = gr_riscdiag_getoffptr(DRAW_OBJECT_FONTLIST, &gr_riscdiag, gr_riscdiag.dd_fontListR);
+        pObject.p_byte = gr_riscdiag_getoffptr(BYTE, &source_gr_riscdiag, sizeof(DRAW_FILE_HEADER)); /* first bit to copy from */
+        pFontList = gr_riscdiag_getoffptr(DRAW_OBJECT_FONTLIST, &source_gr_riscdiag, source_gr_riscdiag.dd_fontListR);
 
-        nBytesBefore = gr_riscdiag.dd_fontListR - sizeof(DRAW_FILE_HEADER);
-        nBytesAfter  = gr_riscdiag.draw_diag.length - (gr_riscdiag.dd_fontListR + fontListSize);
+        nBytesBefore = source_gr_riscdiag.dd_fontListR - sizeof(DRAW_FILE_HEADER);
+        nBytesAfter  = source_gr_riscdiag.draw_diag.length - (source_gr_riscdiag.dd_fontListR + fontListSize);
         /* two part copy needed - if font list grouped then we won't have found it (which
          * is a good job otherwise the group header(s) would have needed patching too!
         */
@@ -506,9 +583,12 @@ gr_riscdiag_scaled_diagram_add(
             return(status);
 
         memcpy32(pDiagCopy,
-                      PtrAddBytes(PC_BYTE, gr_riscdiag.draw_diag.data, sizeof32(DRAW_FILE_HEADER)),
+                      PtrAddBytes(PC_BYTE, source_gr_riscdiag.draw_diag.data, sizeof32(DRAW_FILE_HEADER)),
                       diagLength);
         }
+    } /*block*/
+
+#endif
 
     trace_2(TRACE_MODULE_GR_CHART, "gr_riscdiag_scaled_diagram_add: diag copy start %d end %d",
             diagStart, p_gr_riscdiag->draw_diag.length);
@@ -533,7 +613,7 @@ gr_riscdiag_scaled_diagram_add(
                     DRAW_FONT_REF16 old_fontref, new_fontref;
                     PC_U8 old_fontname;
                     old_fontref  = pObjectText->textstyle.fontref16;
-                    old_fontname = gr_riscdiag_fontlist_name(&gr_riscdiag, gr_riscdiag.dd_fontListR, old_fontref);
+                    old_fontname = gr_riscdiag_fontlist_name(&source_gr_riscdiag, source_gr_riscdiag.dd_fontListR, old_fontref);
                     new_fontref  = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, p_gr_riscdiag->dd_fontListR, old_fontname);
                     * (P_U32) &pObjectText->textstyle = new_fontref;
                     trace_3(TRACE_MODULE_GR_CHART, "converted copy ref %d to font %s to main ref %d",
@@ -548,7 +628,7 @@ gr_riscdiag_scaled_diagram_add(
         while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
 
     /* now can give source diagram back to its rightful owner */
-    draw_diag_give_away(diag, &gr_riscdiag.draw_diag);
+    draw_diag_give_away(diag, &source_gr_riscdiag.draw_diag);
 
     /* can now close the group */
     gr_riscdiag_group_end(p_gr_riscdiag, &groupStart);
@@ -914,7 +994,7 @@ gr_riscdiag_shift_diagram(
 *
 ******************************************************************************/
 
-struct _gr_riscdiag_rectangle_guts
+struct GR_RISCDIAG_RECTANGLE_GUTS
 {
     DRAW_PATH_MOVE  bl;  /* move to bottom left  */
     DRAW_PATH_LINE  br;  /* line to bottom right */
@@ -934,7 +1014,7 @@ gr_riscdiag_rectangle_new(
     PC_GR_LINESTYLE  linestyle,
     PC_GR_FILLSTYLE  fillstyle)
 {
-    struct _gr_riscdiag_rectangle_guts * pRect;
+    struct GR_RISCDIAG_RECTANGLE_GUTS * pRect;
     DRAW_DIAG_OFFSET  rectStart;
     P_DRAW_DIAG_OFFSET pRectStart = epRectStart ? epRectStart : &rectStart;
     STATUS status;
@@ -1097,7 +1177,7 @@ gr_riscdiag_string_new(
     if(bg.visible)
         {
         /* poke background box path */
-        struct _gr_riscdiag_rectangle_guts * pRect;
+        struct GR_RISCDIAG_RECTANGLE_GUTS * pRect;
         S32 bot_y, top_y;
 
         gr_riscdiag_string_recompute_bbox(p_gr_riscdiag, *pTextStart);
@@ -1342,7 +1422,7 @@ gr_riscdiag_diagram_tagged_object_strip(
 *
 ******************************************************************************/
 
-struct _gr_riscdiag_trapezoid_guts
+struct GR_RISCDIAG_TRAPEZOID_GUTS
 {
     DRAW_PATH_MOVE  bl;  /* move to bottom left  */
     DRAW_PATH_LINE  br;  /* line to bottom right */
@@ -1358,14 +1438,14 @@ extern STATUS
 gr_riscdiag_trapezoid_new(
     P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_DRAW_DIAG_OFFSET epTrapStart,
-    PC_DRAW_POINT pOrigin,
-    PC_DRAW_POINT pSize1,
-    PC_DRAW_POINT pSize2,
-    PC_DRAW_POINT pSize3,
+    _InRef_     PC_DRAW_POINT pOriginBL,
+    _InRef_     PC_DRAW_POINT pOffsetBR,
+    _InRef_     PC_DRAW_POINT pOffsetTR,
+    _InRef_     PC_DRAW_POINT pOffsetTL,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle)
 {
-    struct _gr_riscdiag_trapezoid_guts * pTrap;
+    struct GR_RISCDIAG_TRAPEZOID_GUTS * pTrap;
     DRAW_DIAG_OFFSET  trapStart;
     P_DRAW_DIAG_OFFSET pTrapStart = epTrapStart ? epTrapStart : &trapStart;
     S32 res;
@@ -1374,19 +1454,19 @@ gr_riscdiag_trapezoid_new(
         return(res);
 
     pTrap->bl.tag    = DRAW_PATH_TYPE_MOVE;
-    pTrap->bl.pt     = *pOrigin;
+    pTrap->bl.pt     = *pOriginBL;
 
     pTrap->br.tag    = DRAW_PATH_TYPE_LINE;
-    pTrap->br.pt.x   = (pOrigin->x + pSize1->x);
-    pTrap->br.pt.y   = (pOrigin->y + pSize1->y);
+    pTrap->br.pt.x   = (pOriginBL->x + pOffsetBR->x);
+    pTrap->br.pt.y   = (pOriginBL->y + pOffsetBR->y);
 
     pTrap->tr.tag    = DRAW_PATH_TYPE_LINE;
-    pTrap->tr.pt.x   = (pOrigin->x + pSize2->x);
-    pTrap->tr.pt.y   = (pOrigin->y + pSize2->y);
+    pTrap->tr.pt.x   = (pOriginBL->x + pOffsetTR->x);
+    pTrap->tr.pt.y   = (pOriginBL->y + pOffsetTR->y);
 
     pTrap->tl.tag    = DRAW_PATH_TYPE_LINE;
-    pTrap->tl.pt.x   = (pOrigin->x + pSize3->x);
-    pTrap->tl.pt.y   = (pOrigin->y + pSize3->y);
+    pTrap->tl.pt.x   = (pOriginBL->x + pOffsetTL->x);
+    pTrap->tl.pt.y   = (pOriginBL->y + pOffsetTL->y);
 
     pTrap->bl2.tag   = DRAW_PATH_TYPE_LINE;
     pTrap->bl2.pt    = pTrap->bl.pt;

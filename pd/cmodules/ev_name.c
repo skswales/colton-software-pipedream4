@@ -55,9 +55,8 @@ static EV_NAMEID next_name_key  = 0;
 
 /******************************************************************************
 *
-* when two documents merge via the change document
-* mechanism, this routine is called to sort out
-* name and custom definitions
+* when two documents merge via the change document mechanism,
+* this routine is called to sort out name and custom definitions
 *
 ******************************************************************************/
 
@@ -69,23 +68,23 @@ change_doc_mac_nam(
     P_EV_CUSTOM p_ev_custom;
     P_EV_NAME p_ev_name;
 
-    while((p_ev_custom = custom_ptr(0)) != NULL)
+    while((p_ev_custom = custom_def.ptr) != NULL)
         {
         EV_NAMEID i;
 
         for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
             {
-            EV_NAMEID new_num;
+            if(p_ev_custom->flags & TRF_TOBEDEL)
+                continue;
 
-            if(!(p_ev_custom->flags & TRF_TOBEDEL) &&
-                 p_ev_custom->owner.docno == docno_from &&
-                (p_ev_custom->flags & TRF_UNDEFINED))
+            if( (p_ev_custom->owner.docno == docno_from) &&
+                (p_ev_custom->flags & TRF_UNDEFINED) )
                 {
-                if((new_num = find_custom_in_list(docno_to, p_ev_custom->id)) >= 0)
-                    {
-                    P_EV_CUSTOM t_p_ev_custom;
+                EV_NAMEID new_num = find_custom_in_list(docno_to, p_ev_custom->id);
 
-                    t_p_ev_custom = custom_ptr(new_num);
+                if(new_num >= 0)
+                    {
+                    P_EV_CUSTOM t_p_ev_custom = custom_ptr_must(new_num);
 
                     custom_change_id(t_p_ev_custom->key, p_ev_custom->key);
                     p_ev_custom->flags |= TRF_TOBEDEL;
@@ -101,25 +100,28 @@ change_doc_mac_nam(
                     }
                 }
             }
+
         if(i >= custom_def.next)
             break;
         }
 
-    while((p_ev_name = name_ptr(0)) != NULL)
+    while((p_ev_name = names_def.ptr) != NULL)
         {
         EV_NAMEID i;
 
         for(i = 0; i < names_def.next; ++i, ++p_ev_name)
             {
-            EV_NAMEID new_num;
+            if(p_ev_name->flags & TRF_TOBEDEL)
+                continue;
 
-            if(!(p_ev_name->flags & TRF_TOBEDEL) &&
-                 p_ev_name->owner.docno == docno_from &&
-                (p_ev_name->flags & TRF_UNDEFINED))
+            if( (p_ev_name->owner.docno == docno_from) &&
+                (p_ev_name->flags & TRF_UNDEFINED) )
                 {
-                if((new_num = find_name_in_list(docno_to, p_ev_name->id)) >= 0)
+                EV_NAMEID new_num = find_name_in_list(docno_to, p_ev_name->id);
+
+                if(new_num >= 0)
                     {
-                    P_EV_NAME t_p_ev_name = name_ptr(new_num);
+                    P_EV_NAME t_p_ev_name = name_ptr_must(new_num);
 
                     name_change_id(t_p_ev_name->key, p_ev_name->key);
                     p_ev_name->flags |= TRF_TOBEDEL;
@@ -135,6 +137,7 @@ change_doc_mac_nam(
                     }
                 }
             }
+
         if(i >= names_def.next)
             break;
         }
@@ -171,7 +174,7 @@ ensure_custom_in_list(
 
     new_entry = custom_def.next++;
 
-    p_ev_custom = custom_ptr(new_entry);
+    p_ev_custom = custom_ptr_must(new_entry);
 
     p_ev_custom->key = next_custom_key++;
     p_ev_custom->owner.docno = owner_docno;
@@ -219,7 +222,7 @@ ensure_name_in_list(
 
     new_entry = names_def.next++;
 
-    p_ev_name = name_ptr(new_entry);
+    p_ev_name = name_ptr_must(new_entry);
 
     p_ev_name->key         = next_name_key++;
     p_ev_name->owner.docno = owner_docno;
@@ -292,13 +295,16 @@ ev_name_make(
     res = 0;
     if(undefine)
         {
-        EV_NAMEID name_num;
+        EV_NAMEID name_num = find_name_in_list(doc_from, name_text);
 
-        if((name_num = find_name_in_list(doc_from, name_text)) >= 0)
+        if(name_num >= 0)
             {
-            P_EV_NAME p_ev_name = name_ptr(name_num);
+            P_EV_NAME p_ev_name = name_ptr_must(name_num);
+
             ev_todo_add_name_dependents(p_ev_name->key);
+
             ss_data_free_resources(&p_ev_name->def_data);
+
             p_ev_name->flags |= TRF_UNDEFINED;
             }
         else
@@ -334,6 +340,7 @@ ev_name_make(
 *
 ******************************************************************************/
 
+_Check_return_
 extern EV_NAMEID
 find_custom_in_list(
     _InVal_     EV_DOCNO owner_docno,
@@ -342,7 +349,7 @@ find_custom_in_list(
     EV_NAMEID i;
     P_EV_CUSTOM p_ev_custom;
 
-    if((p_ev_custom = custom_ptr(0)) == NULL)
+    if((p_ev_custom = custom_def.ptr) == NULL)
         return(-1);
 
     for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
@@ -350,9 +357,11 @@ find_custom_in_list(
         if(p_ev_custom->flags & TRF_TOBEDEL)
             continue;
 
-        if(owner_docno == p_ev_custom->owner.docno)
-            if(0 == _stricmp(p_ev_custom->id, custom_name))
-                return(i);
+        if(owner_docno != p_ev_custom->owner.docno)
+            continue;
+
+        if(0 == _stricmp(p_ev_custom->id, custom_name))
+            return(i);
        }
 
     return(-1);
@@ -368,6 +377,7 @@ find_custom_in_list(
 *
 ******************************************************************************/
 
+_Check_return_
 extern EV_NAMEID
 find_name_in_list(
     _InVal_     EV_DOCNO owner_docno,
@@ -376,7 +386,7 @@ find_name_in_list(
     EV_NAMEID i;
     P_EV_NAME p_ev_name;
 
-    if((p_ev_name = name_ptr(0)) == NULL)
+    if((p_ev_name = names_def.ptr) == NULL)
         return(-1);
 
     for(i = 0; i < names_def.next; ++i, ++p_ev_name)
@@ -384,9 +394,11 @@ find_name_in_list(
         if(p_ev_name->flags & TRF_TOBEDEL)
             continue;
 
-        if(owner_docno == p_ev_name->owner.docno)
-            if(0 == _stricmp(p_ev_name->id, name))
-                return(i);
+        if(owner_docno != p_ev_name->owner.docno)
+            continue;
+
+        if(0 == _stricmp(p_ev_name->id, name))
+            return(i);
         }
 
     return(-1);
@@ -406,21 +418,25 @@ custom_change_id(
     EV_TRENT i;
     P_CUSTOM_USE mep;
 
-    if((mep = tree_macptr(0)) != NULL)
-        for(i = 0; i < custom_use_table.next; ++i, ++mep)
+    if((mep = tree_macptr(0)) == NULL)
+        return;
+
+    for(i = 0; i < custom_use_deptable.next; ++i, ++mep)
+        {
+        if(mep->flags & TRF_TOBEDEL)
+            continue;
+
+        if(mep->custom_to == id_from)
             {
-            if(!(mep->flags & TRF_TOBEDEL) &&
-               mep->custom_to == id_from)
-                {
-                P_EV_SLOT p_ev_slot;
+            P_EV_SLOT p_ev_slot;
 
-                if(ev_travel(&p_ev_slot, &mep->byslr) > 0)
-                    write_nameid(id_to, p_ev_slot->rpn.var.rpn_str + mep->byoffset);
+            if(ev_travel(&p_ev_slot, &mep->byslr) > 0)
+                write_nameid(id_to, p_ev_slot->rpn.var.rpn_str + mep->byoffset);
 
-                mep->custom_to = id_to;
-                custom_use_table.sorted = 0;
-                }
+            mep->custom_to = id_to;
+            custom_use_deptable.sorted = 0;
             }
+        }
 }
 
 /******************************************************************************
@@ -433,18 +449,18 @@ custom_change_id(
 *
 ******************************************************************************/
 
+_Check_return_
 extern EV_NAMEID
 custom_def_find(
     EV_NAMEID key)
 {
     EV_CUSTOM temp;
     P_EV_CUSTOM p_ev_custom, custom_listp;
-    EV_NAMEID res;
 
     custom_list_sort();
 
     temp.key = key;
-    if((custom_listp = custom_ptr(0)) == NULL)
+    if((custom_listp = custom_def.ptr) == NULL)
         return(-1);
 
     if((p_ev_custom = bsearch(&temp,
@@ -454,11 +470,9 @@ custom_def_find(
                          customid_lookcomp)
        ) == NULL
       )
-        res = -1;
-    else
-        res = p_ev_custom - custom_listp;
+        return(-1);
 
-    return(res);
+    return(p_ev_custom - custom_listp);
 }
 
 /******************************************************************************
@@ -470,15 +484,14 @@ custom_def_find(
 extern void
 custom_list_sort(void)
 {
-    /* check through custom table to see if the deletion of
-     * a custom use has rendered the definition record
-     * useless
+    /* check through custom table to see if the deletion of a
+     * custom use has rendered the definition record useless
      */
     if((custom_def.flags & TRF_CHECKUSE) && !(custom_def.flags & TRF_DELHOLD))
         {
         P_EV_CUSTOM p_ev_custom;
 
-        if((p_ev_custom = custom_ptr(0)) != NULL)
+        if((p_ev_custom = custom_def.ptr) != NULL)
             {
             EV_NAMEID i;
 
@@ -487,9 +500,7 @@ custom_list_sort(void)
                 if(p_ev_custom->flags & TRF_TOBEDEL)
                     continue;
 
-                /* custom reference must be undefined
-                 * before we can delete it
-                 */
+                /* custom reference must be undefined before we can delete it */
                 if(!(p_ev_custom->flags & TRF_UNDEFINED))
                     continue;
 
@@ -581,21 +592,25 @@ name_change_id(
     EV_TRENT i;
     P_NAME_USE nep;
 
-    if((nep = tree_namptr(0)) != NULL)
-        for(i = 0; i < namtab.next; ++i, ++nep)
+    if((nep = tree_namptr(0)) == NULL)
+        return;
+
+    for(i = 0; i < namtab.next; ++i, ++nep)
+        {
+        if(nep->flags & TRF_TOBEDEL)
+            continue;
+
+        if(nep->nameto == id_from)
             {
-            if(!(nep->flags & TRF_TOBEDEL) &&
-               nep->nameto == id_from)
-                {
-                P_EV_SLOT p_ev_slot;
+            P_EV_SLOT p_ev_slot;
 
-                if(ev_travel(&p_ev_slot, &nep->byslr) > 0)
-                    write_nameid(id_to, p_ev_slot->rpn.var.rpn_str + nep->byoffset);
+            if(ev_travel(&p_ev_slot, &nep->byslr) > 0)
+                write_nameid(id_to, p_ev_slot->rpn.var.rpn_str + nep->byoffset);
 
-                nep->nameto = id_to;
-                namtab.sorted = 0;
-                }
+            nep->nameto = id_to;
+            namtab.sorted = 0;
             }
+        }
 }
 
 /******************************************************************************
@@ -608,18 +623,18 @@ name_change_id(
 *
 ******************************************************************************/
 
+_Check_return_
 extern EV_NAMEID
 name_def_find(
     EV_NAMEID key)
 {
     EV_NAME temp;
     P_EV_NAME p_ev_name, name_listp;
-    EV_NAMEID res;
 
     name_list_sort();
 
     temp.key = key;
-    if((name_listp = name_ptr(0)) == NULL)
+    if((name_listp = names_def.ptr) == NULL)
         return(-1);
 
     if((p_ev_name =
@@ -630,11 +645,9 @@ name_def_find(
                     nameid_lookcomp)
        ) == NULL
       )
-        res = -1;
-    else
-        res = p_ev_name - name_listp;
+        return(-1);
 
-    return(res);
+    return(p_ev_name - name_listp);
 }
 
 /******************************************************************************
@@ -662,15 +675,14 @@ name_free_resources(
 extern void
 name_list_sort(void)
 {
-    /* check through name table to see if the deletion of
-     * a name use has rendered the definition record
-     * useless
+    /* check through name table to see if the deletion of a
+     * name use has rendered the definition record useless
      */
     if((names_def.flags & TRF_CHECKUSE) && !(names_def.flags & TRF_DELHOLD))
         {
         P_EV_NAME p_ev_name;
 
-        if((p_ev_name = name_ptr(0)) != NULL)
+        if((p_ev_name = names_def.ptr) != NULL)
             {
             EV_NAMEID i;
 
@@ -679,9 +691,7 @@ name_list_sort(void)
                 if(p_ev_name->flags & TRF_TOBEDEL)
                     continue;
 
-                /* custom reference must be undefined
-                 * before we can delete it
-                 */
+                /* name must be undefined before we can delete it */
                 if(!(p_ev_name->flags & TRF_UNDEFINED))
                     continue;
 
@@ -746,11 +756,11 @@ name_make(
 
     if(ident_validate(name) >= 0)
         {
-        EV_NAMEID name_num;
+        EV_NAMEID name_num = ensure_name_in_list(docno, name);
 
-        if((name_num = ensure_name_in_list(docno, name)) >= 0)
+        if(name_num >= 0)
             {
-            P_EV_NAME p_ev_name = name_ptr(name_num);
+            P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
             /* free any resources owned by the name at the moment */
             name_free_resources(p_ev_name);

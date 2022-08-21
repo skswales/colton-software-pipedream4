@@ -31,27 +31,23 @@ typedef U32                 EV_SERIAL;
 #error Needs sizeof things defining
 #endif
 
-/*-------------------------------------------------------------------------*/
-
 /*
 name block
 */
 
-typedef struct _docu_name_flags
+typedef struct DOCU_NAME_FLAGS
 {
     U8 path_name_supplied /*UBF : 1*/;
 }
 DOCU_NAME_FLAGS;
 
-typedef struct _docu_name
+typedef struct DOCU_NAME
 {
     PTSTR path_name;
     PTSTR leaf_name;
     DOCU_NAME_FLAGS flags;
 }
 DOCU_NAME, * P_DOCU_NAME; typedef const DOCU_NAME * PC_DOCU_NAME;
-
-/*-------------------------------------------------------------------------*/
 
 /*
 slot/range flags
@@ -67,29 +63,29 @@ slot/range flags
 evaluator result type - stored in slot
 */
 
-typedef struct _ev_result
+typedef struct EV_RESULT
 {
     EV_IDNO did_num;
 
     EV_CONSTANT arg;
 }
-EV_RESULT, * P_EV_RESULT;
+EV_RESULT, * P_EV_RESULT; typedef const EV_RESULT * PC_EV_RESULT;
 
 /*
 definition of expression parameters
 */
 
-typedef struct _ev_parms
+typedef struct EV_PARMS
 {
-    unsigned int type    : 2;
-    unsigned int control : 4;
-    unsigned int circ    : 1;
+    UBF type    : 2;
+    UBF control : 4;
+    UBF circ    : 1;
 }
 EV_PARMS, * P_EV_PARMS;
 
 /* expression types */
 
-enum exp_types
+enum EXP_TYPES
 {
     EVS_CON_DATA = 1,           /* constant data (no rpn field) */
     EVS_CON_RPN     ,           /* constant rpn */
@@ -98,7 +94,7 @@ enum exp_types
 
 /* control statement types */
 
-enum control_types
+enum CONTROL_TYPES
 {
     EVS_CNT_NONE   = 1,
     EVS_CNT_IFC       ,
@@ -117,23 +113,23 @@ enum control_types
 evaluator's view of a slot
 */
 
-typedef struct _ev_slot
+typedef struct EV_SLOT
 {
-    EV_RESULT result;           /* result of expression */
+    EV_RESULT ev_result;        /* result of expression */
     EV_PARMS parms;             /* parameters about slot */
 
     /* members below this point may  or may not be present,
      * depending on the type of slot; flags tells the slot type
      */
-    union _ev_slot_rpn
+    union EV_SLOT_RPN
     {
-        struct _ev_slot_rpn_var
+        struct EV_SLOT_RPN_VAR
         {
             EV_SERIAL visited;          /* slot was last visited on.. */
             char rpn_str[1];            /* rpn string of expression */
         } var;
 
-        struct _ev_slot_rpn_con
+        struct EV_SLOT_RPN_CON
         {
             char rpn_str[1];
         } con;
@@ -146,7 +142,7 @@ EV_SLOT, * P_EV_SLOT, ** P_P_EV_SLOT;
 evaluator option block
 */
 
-typedef struct _ev_optblock
+typedef struct EV_OPTBLOCK
 {
     UBF american_date : 1;
     UBF upper_case : 1;
@@ -156,13 +152,11 @@ typedef struct _ev_optblock
 }
 EV_OPTBLOCK, * P_EV_OPTBLOCK; typedef const EV_OPTBLOCK * PC_EV_OPTBLOCK;
 
-/*-------------------------------------------------------------------------*/
-
 /*
 uref things
 */
 
-typedef struct _uref_parm
+typedef struct UREF_PARM
 {
     EV_SLR slr1;
     EV_SLR slr2;
@@ -186,7 +180,7 @@ _e_s void _p_proc_uref( \
     S32 inthandle, \
     S32 status)
 
-enum uref_actions
+enum UREF_ACTIONS
 {
     UREF_UREF = 0  ,
     UREF_DELETE    ,
@@ -206,7 +200,7 @@ enum uref_actions
 internal communication in uref
 */
 
-enum uref_comms
+enum UREF_COMMS
 {
     DEP_DELETE    ,             /* dependent needs deleting */
     DEP_UPDATE    ,             /* dependent reference needs updating */
@@ -214,13 +208,11 @@ enum uref_comms
     DEP_NONE                    /* no action for dependent */
 };
 
-/*-------------------------------------------------------------------------*/
-
 /*
 grubber state block
 */
 
-typedef struct ev_grub_state
+typedef struct EV_GRUB_STATE
 {
     S32 offset;            /* offset into rpn of slot being grubbed */
     EV_SLR slr;             /* slr being grubbed in */
@@ -230,13 +222,11 @@ typedef struct ev_grub_state
 }
 * P_EV_GRUB;
 
-/*-------------------------------------------------------------------------*/
-
 /*
 evaluator resource enumeration
 */
 
-enum resource_types
+enum EV_RESOURCE_TYPES
 {
     EV_RESO_COMPLEX    ,
     EV_RESO_DATABASE   ,
@@ -255,9 +245,9 @@ enum resource_types
     EV_RESO_NOTME
 };
 
-typedef struct _ev_resource
+typedef struct EV_RESOURCE
 {
-    S32 category;
+    enum EV_RESOURCE_TYPES category;
     EV_DOCNO docno_to;
     EV_DOCNO docno_from;
     S32 item_no;
@@ -265,36 +255,32 @@ typedef struct _ev_resource
 }
 EV_RESOURCE, * P_EV_RESOURCE;
 
-/*-------------------------------------------------------------------------*/
-
 /*
 evaluator dependents/supporters enumeration
 */
 
-typedef struct _ev_depsup
+enum EV_DEPSUP_TYPES
+{
+    EV_DEPSUP_SLR,
+    EV_DEPSUP_RANGE,
+    EV_DEPSUP_NAME
+};
+
+typedef struct EV_DEPSUP
 {
     S32 item_no;
     S32 get_deps;
-    S32 category;
+    enum EV_DEPSUP_TYPES category;
     EV_SLR slr;
     EV_TRENT tab_pos;
 }
 EV_DEPSUP, * P_EV_DEPSUP;
 
-enum depsup_types
-{
-    EV_DEPSUP_SLR  ,
-    EV_DEPSUP_RANGE,
-    EV_DEPSUP_NAME
-};
-
-/*-------------------------------------------------------------------------*/
-
 /*
 tree structures
 */
 
-typedef struct _deptable
+typedef struct DEPTABLE
 {
     P_ANY ptr;                          /* pointer to table */
     EV_TRENT next;                      /* next free entry in table */
@@ -311,7 +297,7 @@ DEPTABLE, * P_DEPTABLE;
 * structures, indexed by document number
 */
 
-typedef struct _ss_doc
+typedef struct SS_DOC
 {
     DOCU_NAME docu_name;                /* document name details */
     EV_FLAGS flags;                     /* flags about documents */
@@ -329,13 +315,11 @@ typedef struct _ss_doc
 }
 SS_DOC, * P_SS_DOC;
 
-/*-------------------------------------------------------------------------*/
-
 /*
 rpn atomic numbers
 */
 
-enum did_numbers
+enum DID_NUMBERS
 {
     /* data */
     RPN_DAT_REAL        =0,
@@ -524,7 +508,7 @@ enum did_numbers
     RPN_FNV_LEFT        ,
     RPN_FNF_LENGTH      ,
     RPN_FNV_LINEST      ,
-  /*RPN_FNF_LISTCOUNT   ,*/
+    RPN_FNF_LISTCOUNT   ,
     RPN_FNF_LN          ,
     RPN_FNF_LOG         ,
     RPN_FNV_LOGEST      ,
@@ -642,7 +626,7 @@ enum did_numbers
 types of rpn atoms
 */
 
-enum rpn_types
+enum RPN_TYPES
 {
     RPN_DAT     =0,         /* data */
     RPN_CON     ,           /* constant slots */
@@ -680,8 +664,6 @@ type mask bits
 #define EM_CONST    (EM_REA | EM_INT |          EM_STR | EM_DAT          | EM_BLK | EM_ERR)
 
 typedef S16 EV_TYPE; typedef EV_TYPE * P_EV_TYPE; typedef const EV_TYPE * PC_EV_TYPE;
-
-/*-------------------------------------------------------------------------*/
 
 /*
 should really be in ss_const.h but need RPN_DAT_xxx
@@ -914,7 +896,7 @@ ev_help.c external functions
 
 extern void
 ev_data_to_result_convert(
-    P_EV_RESULT resp,
+    _OutRef_    P_EV_RESULT p_ev_result,
     _InRef_     PC_EV_DATA p_ev_data);
 
 extern S32
@@ -928,7 +910,7 @@ ev_exp_copy(
 
 extern void
 ev_exp_free_resources(
-    P_EV_SLOT p_ev_slot);
+    _InoutRef_  P_EV_SLOT p_ev_slot);
 
 extern S32
 ev_proc_conditional_rpn(
@@ -940,12 +922,12 @@ ev_proc_conditional_rpn(
 
 extern S32
 ev_result_free_resources(
-    P_EV_RESULT resp);
+    _InoutRef_  P_EV_RESULT p_ev_result);
 
 extern void
 ev_result_to_data_convert(
-    P_EV_DATA p_ev_data,
-    P_EV_RESULT resp);
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     PC_EV_RESULT p_ev_result);
 
 extern S32
 ev_slr_deref(
@@ -967,9 +949,9 @@ link_ev.c external functions
 extern S32
 ev_alert(
     _InVal_     EV_DOCNO docno,
-    P_U8 message,
-    P_U8 but1_text,
-    P_U8 but2_text);
+    _In_z_      PC_U8Z message,
+    _In_z_      PC_U8Z but1_text,
+    _In_z_      PC_U8Z but2_text);
 
 extern void
 ev_alert_close(void);
@@ -1004,9 +986,9 @@ ev_ext_uref(
 extern S32
 ev_input(
     _InVal_     EV_DOCNO docno,
-    P_U8 message,
-    P_U8 but1_text,
-    P_U8 but2_text);
+    _In_z_      PC_U8Z message,
+    _In_z_      PC_U8Z but1_text,
+    _In_z_      PC_U8Z but2_text);
 
 extern void
 ev_input_close(void);
@@ -1019,7 +1001,7 @@ ev_input_poll(
 extern S32
 ev_make_slot(
     _InRef_     PC_EV_SLR p_ev_slr,
-    P_EV_RESULT resp);
+    P_EV_RESULT p_ev_result);
 
 _Check_return_
 extern EV_COL
@@ -1072,7 +1054,7 @@ ev_travel(
 extern DOCNO
 docu_array_size;
 
-enum name_success
+enum NAME_SUCCESS
 {
     NAME_OK = 0,
     NAME_MANY  ,
@@ -1116,8 +1098,8 @@ ev_tabl.c
 
 extern void
 ev_enum_resource_init(
-    P_EV_RESOURCE resop,
-    S32 category,
+    _OutRef_    P_EV_RESOURCE resop,
+    _InVal_     enum EV_RESOURCE_TYPES category,
     _InVal_     EV_DOCNO docno_to,
     _InVal_     EV_DOCNO docno_from,
     _InRef_     PC_EV_OPTBLOCK p_optblock);
@@ -1162,8 +1144,8 @@ extern void
 ev_enum_dep_sup_init(
     _OutRef_    P_EV_DEPSUP dsp,
     _InRef_     PC_EV_SLR p_ev_slr,
-    S32 category,
-    S32 get_deps);
+    _InVal_     enum EV_DEPSUP_TYPES category,
+    _InVal_     S32 get_deps);
 
 extern S32
 ev_enum_dep_sup_get(
@@ -1215,10 +1197,6 @@ outside evaluator
 */
 
 #endif /* ERRDEF_EXPORT */
-
-/*-------------------------------------------------------------------------*/
-
-#ifndef RC_INVOKED
 
 /*
 error definition
@@ -1284,8 +1262,6 @@ error definition
     errorstring(EVAL_ERR_MATRIX_NOT_SQUARE,   "Matrix is not square") \
     errorstring(EVAL_ERR_MATRIX_SINGULAR,     "Matrix is singular") \
     errorstring(EVAL_ERR_NO_VALID_DATA,       "No valid data found")
-
-#endif /* RC_INVOKED */
 
 /*
 error definition
@@ -1355,8 +1331,6 @@ error definition
 #define EVAL_ERR_NO_VALID_DATA       (-2059)
 
 #define EVAL_ERR_END                 (-2060)
-
-/*-------------------------------------------------------------------------*/
 
 #endif /* __ev_eval_h */
 

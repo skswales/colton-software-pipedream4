@@ -18,7 +18,7 @@
 #include "funclist.h"
 
 static
-struct _NULL_EVENT_STATICS
+struct NULL_EVENT_STATICS
 {
     MONOTIMEDIFF max_slice;
 
@@ -35,11 +35,11 @@ null_ =
 data stored for us by funclist
 */
 
-typedef struct _null_funclist_extradata
+typedef struct NULL_FUNCLIST_EXTRADATA
 {
     NULL_EVENT_RETURN_CODE req; /* stores whether handler had null requests or not */
 }
-null_funclist_extradata;
+NULL_FUNCLIST_EXTRADATA;
 
 /******************************************************************************
 *
@@ -86,7 +86,7 @@ Null_DoEvent(void)
             /* can we call this handler? */
             funclist_readdata_ip(&null_.event_list,
                                  item, &req,
-                                 offsetof(null_funclist_extradata, req),
+                                 offsetof(NULL_FUNCLIST_EXTRADATA, req),
                                  sizeof(req));
 
             /* call the handler if required */
@@ -176,7 +176,7 @@ Null_DoQuery(void)
         /* remember handler request for interlock */
         funclist_writedata_ip(&null_.event_list,
                               item, &res2,
-                              offsetof(null_funclist_extradata, req),
+                              offsetof(NULL_FUNCLIST_EXTRADATA, req),
                               sizeof(res2));
         }
 
@@ -208,12 +208,12 @@ Null_EventHandler(
                          &item,
                          1 /*non-zero tag*/,
                          priority,
-                         sizeof(null_funclist_extradata)));
+                         sizeof(NULL_FUNCLIST_EXTRADATA)));
 
         /* ensure that if events are given before querying this one responds safely */
         funclist_writedata_ip(&null_.event_list,
                               item, &res2,
-                              offsetof(null_funclist_extradata, req),
+                              offsetof(NULL_FUNCLIST_EXTRADATA, req),
                               sizeof(res2));
         }
     else

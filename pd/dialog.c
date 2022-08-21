@@ -1228,7 +1228,7 @@ save_options_to_list(void)
 static void
 recover_options_from_list(void)
 {
-    LIST *lptr;
+    PC_LIST lptr;
     DIALOG *dptr;
     S32 key;
     uchar ch1, ch2;
@@ -1946,6 +1946,9 @@ dialog_box_end(void)
 extern BOOL
 dialog_box_start(void)
 {
+    /* ensure font selector goes bye-bye */
+    pdfontselect_finalise(TRUE);
+
     if(riscdialog_in_dialog())
         {
         riscdialog_front_dialog();

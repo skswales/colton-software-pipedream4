@@ -55,7 +55,7 @@ structure
 
 #define NULL_EVENT_RETURN_CODE int
 
-typedef struct _NULL_EVENT_BLOCK
+typedef struct NULL_EVENT_BLOCK
 {
     NULL_EVENT_RETURN_CODE rc;      /*OUT*/
 

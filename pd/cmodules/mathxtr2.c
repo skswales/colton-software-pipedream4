@@ -185,7 +185,7 @@ linest(
     F64   a_ir, a_jr;
     S32   res;
                                 /* X,  V,  M */
-    if(NULL == (X = al_ptr_alloc_bytes(F64, (1 + 1 + m) * m * sizeof32(*X), &res)))
+    if(NULL == (X = al_ptr_alloc_bytes(P_F64, (1 + 1 + m) * m * sizeof32(*X), &res)))
         return(res);
 
     V = X + m;

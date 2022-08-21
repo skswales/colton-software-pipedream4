@@ -373,7 +373,7 @@ static DOCU initial_docu_data =
     /* void * colh_template (should be wimp_wind *) */
 
     NULL,
-    /* formwind_handle editexpression_formwind */
+    /* FORMULA_WINDOW_HANDLE editexpression_formwind */
 
     0,
     /* coord lastcursorpos_x */

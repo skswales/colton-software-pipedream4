@@ -14,8 +14,6 @@
 #ifndef __vsload_h
 #define __vsload_h
 
-#ifndef RC_INVOKED
-
 /*
 functions
 */
@@ -58,8 +56,6 @@ error definition
 
 #define VSLOAD_ERRLIST_DEF \
     errorstring(VSLOAD_ERR_CANTREAD, "ViewSheet: Can't read file")
-
-#endif /* RC_INVOKED */
 
 /*
 error definition

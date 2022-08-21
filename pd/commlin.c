@@ -90,6 +90,7 @@ application_process_command(
 *
 ******************************************************************************/
 
+_Check_return_
 extern BOOL
 application_process_key(
     S32 c)
@@ -125,6 +126,7 @@ static MENU * last_command_menup;
 *
 ******************************************************************************/
 
+/*ncr*/
 extern BOOL
 act_on_c(
     S32 c)
@@ -1051,15 +1053,17 @@ headline_initialise_once(void)
     resize_menus(short_menus());
 }
 
-/* *********************************************************************** */
+/******************************************************************************
+*
+* Read the beginning of the command buffer, find and return function number.
+* If there is a function return its number (offset in function table) otherwise
+* generate an error and return a flag indicating error
+*
+* If the lookup is successful, cbuff_offset is set to point at the first
+* parameter position.
+*
+******************************************************************************/
 
-/* read the beginning of the command buffer, find and return function number.
- * If there is a function return its number (offset in function table) otherwise
- * generate an error and return a flag indicating error
-
- * If the lookup is successful, cbuff_offset is set to point at the first
- * parameter position.
-*/
 
 static MENU *
 lukucm(
@@ -1118,7 +1122,7 @@ extern BOOL
 schkvl(
     S32 c)
 {
-    LIST *lptr;
+    P_LIST lptr;
     MENU_HEAD *firstmhptr, *mhptr;
 
     lptr = search_list(&first_key, c);
@@ -1236,7 +1240,7 @@ static MENU *
 part_command(
     BOOL allow_redef)
 {
-    LIST *lptr;
+    PC_LIST lptr;
     const char *aptr, *bptr;
     char a, b;
 
@@ -1487,6 +1491,7 @@ alt_letter(
 *
 ******************************************************************************/
 
+_Check_return_
 extern BOOL
 get_menu_item(
     MENU_HEAD *header,
@@ -1766,8 +1771,8 @@ really_out_comm_start(void)
 
     if(macro_command_name)
         {
-        safe_strkpy(array, elemof32(array), "\\");
-        safe_strkat(array, elemof32(array), macro_command_name);
+        xstrkpy(array, elemof32(array), "\\");
+        xstrkat(array, elemof32(array), macro_command_name);
         macro_command_name = NULL;
         if(output_string_to_macro_file(array))
             return(strlen(array));
@@ -1790,9 +1795,9 @@ out_comm_end_to_macro_file(
         {
         sofar = really_out_comm_start();
                     /* 0123456789 */
-        safe_strkpy(array, elemof32(array), "|m        ");
-        safe_strkpy(array + (10 - sofar), elemof32(array) - (10 - sofar), *mptr->title);
-        safe_strkat(array, elemof32(array), CR_STR);
+        xstrkpy(array, elemof32(array), "|m        ");
+        xstrkpy(array + (10 - sofar), elemof32(array) - (10 - sofar), *mptr->title);
+        xstrkat(array, elemof32(array), CR_STR);
 
         macro_needs_lf = FALSE;
 
@@ -1813,7 +1818,7 @@ cvt_string_arg_for_macro_file(
     U32 offset = 0;
     U8 ch;
 
-    safe_strkpy(ptr, elemof_buffer, "|i \"");
+    xstrkpy(ptr, elemof_buffer, "|i \"");
     offset = strlen(ptr);
 
     while((ch = *arg++) != '\0')
@@ -1826,7 +1831,7 @@ cvt_string_arg_for_macro_file(
             ptr[offset++] = ch;
         }
 
-    safe_strkpy(&ptr[offset], elemof_buffer - offset, "\" ");
+    xstrkpy(&ptr[offset], elemof_buffer - offset, "\" ");
 }
 
 /* output the dialog box parameters to the macro file */

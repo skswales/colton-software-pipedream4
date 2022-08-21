@@ -31,7 +31,7 @@
 internal structure
 */
 
-typedef struct _FUNCLIST_HANDLER
+typedef struct FUNCLIST_HANDLER
 {
     funclist_proc proc;     /* procedure to call */
     P_ANY          handle;   /* handle to call with */
@@ -40,7 +40,7 @@ typedef struct _FUNCLIST_HANDLER
 
     /* extra data may follow */
 }
-* P_FUNCLIST_HANDLER;
+FUNCLIST_HANDLER, * P_FUNCLIST_HANDLER;
 
 /******************************************************************************
 *
@@ -62,21 +62,17 @@ funclist_add(
     _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
     funclist_proc proc,
     P_ANY handle,
-    /*out*/ P_LIST_ITEMNO itemnop,
+    _OutRef_    P_LIST_ITEMNO itemnop,
     S32 tag,
     S32 priority,
     _InVal_     U32 extradata)
 {
     P_FUNCLIST_HANDLER hp;
-    LIST_ITEMNO itemno;
     NLISTS_BLK new_nlb;
     STATUS status;
 
     if(!priority)
         priority = FUNCLIST_DEFAULT_PRIORITY;
-
-    if(!itemnop)
-        itemnop = &itemno;
 
     trace_3(TRACE_MODULE_FUNCLIST,
             "funclist_add(&%p, (&%p,&%p))", report_ptr_cast(p_p_list_block), report_procedure_name(report_proc_cast(*proc)), report_ptr_cast(handle));
@@ -85,9 +81,9 @@ funclist_add(
 
     if(NULL != *p_p_list_block)
         {
-        for(hp = collect_first(p_p_list_block, itemnop);
+        for(hp = collect_first(FUNCLIST_HANDLER, p_p_list_block, itemnop);
             hp;
-            hp = collect_next( p_p_list_block, itemnop))
+            hp = collect_next( FUNCLIST_HANDLER, p_p_list_block, itemnop))
             {
             if(hp->priority < priority)
                 {
@@ -118,7 +114,7 @@ funclist_add(
     new_nlb.maxitemsize = (sizeof32(*hp) + 256);
     new_nlb.maxpoolsize = new_nlb.maxitemsize * 8;
 
-    if(NULL == (hp = collect_insert_entry(&new_nlb, sizeof32(*hp) + extradata, *itemnop, &status)))
+    if(NULL == (hp = collect_insert_entry_bytes(FUNCLIST_HANDLER, &new_nlb, sizeof32(*hp) + extradata, *itemnop, &status)))
         return(status);
 
     *p_p_list_block = new_nlb.lbr;
@@ -166,7 +162,7 @@ funclist_first(
             if(*itemnop)
                 --(*itemnop);
 
-        if((hp = collect_first_from(p_p_list_block, itemnop)) != NULL)
+        if((hp = collect_first_from(FUNCLIST_HANDLER, p_p_list_block, itemnop)) != NULL)
             {
             trace_3(TRACE_MODULE_FUNCLIST,
                     " yields (&%p,&%p) %d", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
@@ -209,7 +205,12 @@ funclist_next(
     trace_2(TRACE_MODULE_FUNCLIST,
             "funclist_next(&%p, %s)", report_ptr_cast(p_p_list_block), trace_boolstring(ascending));
 
-    if((hp = (ascending ? collect_next : collect_prev) (p_p_list_block, itemnop)) != NULL)
+    if(ascending)
+        hp = collect_next(FUNCLIST_HANDLER, p_p_list_block, itemnop);
+    else
+        hp = collect_prev(FUNCLIST_HANDLER, p_p_list_block, itemnop);
+
+    if(NULL != hp)
         {
         trace_3(TRACE_MODULE_FUNCLIST,
                 " yields (&%p,&%p) %d", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
@@ -252,7 +253,7 @@ funclist_readdata_ip(
             report_ptr_cast(p_p_list_block), itemno, offset, nbytes, report_ptr_cast(dest));
 
     /* got position of handler on list */
-    if((hp = collect_search(p_p_list_block, itemno)) != NULL)
+    if((hp = collect_goto_item(FUNCLIST_HANDLER, p_p_list_block, itemno)) != NULL)
         {
         trace_1(TRACE_MODULE_FUNCLIST, " from &%p", PtrAddBytes(PC_BYTE, (hp + 1), offset));
         memcpy32(dest, PtrAddBytes(PC_BYTE, (hp + 1), offset), nbytes);
@@ -284,9 +285,9 @@ funclist_remove(
 
     /* search for handler on list */
 
-    for(hp = collect_first(p_p_list_block, &itemno);
+    for(hp = collect_first(FUNCLIST_HANDLER, p_p_list_block, &itemno);
         hp;
-        hp = collect_next(p_p_list_block, &itemno))
+        hp = collect_next( FUNCLIST_HANDLER, p_p_list_block, &itemno))
         {
         if((hp->proc == proc) && (hp->handle == handle))
             {
@@ -327,7 +328,7 @@ funclist_writedata_ip(
             report_ptr_cast(p_p_list_block), itemno, offset, nbytes, report_ptr_cast(from));
 
     /* got position of handler on list */
-    if((hp = collect_search(p_p_list_block, itemno)) != NULL)
+    if((hp = collect_goto_item(FUNCLIST_HANDLER, p_p_list_block, itemno)) != NULL)
         {
         trace_1(TRACE_MODULE_FUNCLIST, " to &%p", PtrAddBytes(P_BYTE, (hp + 1), offset));
         memcpy32(PtrAddBytes(P_BYTE, (hp + 1), offset), from, nbytes);

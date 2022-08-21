@@ -59,6 +59,8 @@
 #include "cs-xferrecv.h"
 #endif
 
+#include "cmodules/riscos/wlalloc.h"
+
 #include "cmodules/riscos/osfile.h"
 
 #ifdef PROFILING
@@ -432,8 +434,8 @@ iconbar_event_EBUT_BLEFT(void)
         TCHARZ filename[BUF_MAX_PATHSTRING];
 
         /* open the user's Choices directory viewer, from where they can find CmdFiles, Templates etc. */
-        safe_tstrkpy(filename, elemof32(filename), TEXT("<Choices$Write>") FILE_DIR_SEP_STR TEXT("PipeDream") FILE_DIR_SEP_STR);
-        safe_tstrkat(filename, elemof32(filename), TEXT("X"));
+        tstr_xstrkpy(filename, elemof32(filename), TEXT("<Choices$Write>") FILE_DIR_SEP_STR TEXT("PipeDream") FILE_DIR_SEP_STR);
+        tstr_xstrkat(filename, elemof32(filename), TEXT("X"));
 
         filer_opendir(filename);
     }
@@ -481,7 +483,7 @@ iconbar_new_sprite(
 
     bi.spritename[0] = 'S';
     bi.spritename[1] = '\0';
-    safe_strkat(bi.spritename, elemof32(bi.spritename), spritename);
+    xstrkat(bi.spritename, elemof32(bi.spritename), spritename);
 
     i.w = -1; /* icon bar, right hand side */
 
@@ -520,7 +522,7 @@ iconbar_initialise(
     trace_1(TRACE_APP_PD4, "iconbar_initialise(%s)", appname);
 
     /* make name of icon bar icon sprite */
-    safe_strkat(iconbar_spritename, elemof32(iconbar_spritename), appname);
+    xstrkat(iconbar_spritename, elemof32(iconbar_spritename), appname);
 
     win_register_new_event_handler(win_ICONBAR,
                                    default_event_handler,
@@ -673,14 +675,14 @@ actions_before_exiting(wimp_eventstr * e)
 
 extern void
 riscos_sendsheetclosed(
-    const graphlinkp glp)
+    _InRef_opt_ PC_GRAPHICS_LINK_ENTRY glp)
 {
     wimp_msgstr msg;
 
     if(glp)
         {
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.b)
-                       + sizeof(wimp_msgpd_ddetypeB);
+                       + sizeof(WIMP_MSGPD_DDETYPEB);
         msg.hdr.my_ref = 0;        /* fresh msg */
         msg.hdr.action = Wimp_MPD_DDE;
 
@@ -699,7 +701,8 @@ riscos_sendsheetclosed(
 
 extern void
 riscos_sendslotcontents(
-    const graphlinkp glp, S32 xoff,
+    _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp,
+    S32 xoff,
     S32 yoff)
 {
     if(glp)
@@ -709,11 +712,12 @@ riscos_sendslotcontents(
         const char *ptr;
         char *to, ch;
         S32 nbytes;
-        wimp_msgpd_ddetypeC_type type;
+        WIMP_MSGPD_DDETYPEC_TYPE type;
         wimp_msgstr msg;
         P_SLOT tslot;
 
         glp->datasent = TRUE;
+
         nbytes = 0;
         type = Wimp_MPD_DDE_typeC_type_Text;
         row = glp->row + yoff;
@@ -723,23 +727,25 @@ riscos_sendslotcontents(
 
         if(tslot)
             {
-            P_EV_RESULT resp;
+            P_EV_RESULT p_ev_result;
 
-            if(result_extract(tslot, &resp) == SL_NUMBER)
+            if(result_extract(tslot, &p_ev_result) == SL_NUMBER)
                 {
-                switch(resp->did_num)
+                switch(p_ev_result->did_num)
                     {
                     case RPN_DAT_WORD8:
                     case RPN_DAT_WORD16:
                     case RPN_DAT_WORD32:
-                        msg.data.pd_dde.type.c.content.number = (F64) resp->arg.integer;
+                        msg.data.pd_dde.type.c.content.number = (F64) p_ev_result->arg.integer;
                         goto send_number;
+
                     case RPN_DAT_REAL:
-                        msg.data.pd_dde.type.c.content.number = resp->arg.fp;
+                        msg.data.pd_dde.type.c.content.number = p_ev_result->arg.fp;
                     send_number:
                         type = Wimp_MPD_DDE_typeC_type_Number;
                         nbytes = sizeof(F64);
                         break;
+
                     default:
                         break;
                     }
@@ -792,7 +798,7 @@ riscos_sendslotcontents(
 
         if(ptr)
             {
-            safe_strkpy(msg.data.pd_dde.type.c.content.text, elemof32(msg.data.pd_dde.type.c.content.text), ptr);
+            xstrkpy(msg.data.pd_dde.type.c.content.text, elemof32(msg.data.pd_dde.type.c.content.text), ptr);
             nbytes = strlen32p1(msg.data.pd_dde.type.c.content.text);
             }
 
@@ -815,7 +821,7 @@ riscos_sendslotcontents(
 
 extern void
 riscos_sendallslots(
-    const graphlinkp glp)
+    _InoutRef_  P_GRAPHICS_LINK_ENTRY glp)
 {
     S32 xoff, yoff;
 
@@ -838,7 +844,7 @@ riscos_sendallslots(
 
 static void
 riscos_sendendmarker(
-    const graphlinkp glp)
+    _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp)
 {
     wimp_msgstr msg;
 
@@ -847,7 +853,7 @@ riscos_sendendmarker(
         glp->datasent = FALSE;
 
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.c)
-                       + sizeof(wimp_msgpd_ddetypeC);
+                       + sizeof(WIMP_MSGPD_DDETYPEC);
         msg.hdr.my_ref = 0;        /* fresh msg */
         msg.hdr.action = Wimp_MPD_DDE;
 
@@ -862,14 +868,13 @@ riscos_sendendmarker(
 static void
 send_end_markers(void)
 {
-    LIST *lptr;
-    graphlinkp glp;
+    P_LIST lptr;
 
     for(lptr = first_in_list(&graphics_link_list);
         lptr;
         lptr = next_in_list(&graphics_link_list))
         {
-        glp = (graphlinkp) lptr->value;
+        P_GRAPHICS_LINK_ENTRY glp = (P_GRAPHICS_LINK_ENTRY) lptr->value;
 
         if(glp->datasent)
             riscos_sendendmarker(glp);
@@ -1208,7 +1213,7 @@ iconbar_PD_DDE(
                 {
                 wimp_msgstr msg;
                 char *ptr = msg.data.pd_dde.type.a.text;
-                size_t nbytes = sizeof(wimp_msgpd_ddetypeA_text)-1;
+                size_t nbytes = sizeof(WIMP_MSGPD_DDETYPEA_TEXT)-1;
                 ghandle ghan;
                 S32 xsize = (S32) (blkend.col - blkstart.col);
                 S32 ysize = (S32) (blkend.row - blkstart.row);
@@ -1279,8 +1284,8 @@ iconbar_PD_DDE(
         case Wimp_MPD_DDE_EstablishHandle:
             {
             ghandle ghan;
-            S32 xsize       = m->data.pd_dde.type.a.xsize;
-            S32 ysize       = m->data.pd_dde.type.a.ysize;
+            S32 xsize = m->data.pd_dde.type.a.xsize;
+            S32 ysize = m->data.pd_dde.type.a.ysize;
             const char *tstr = m->data.pd_dde.type.a.text;
             const char *tag  = tstr + strlen(tstr) + 1;
             DOCNO docno;
@@ -1355,7 +1360,7 @@ iconbar_PD_DDE(
         case Wimp_MPD_DDE_StopRequestUpdates:
             {
             ghandle han = m->data.pd_dde.type.b.handle;
-            graphlinkp glp;
+            P_GRAPHICS_LINK_ENTRY glp;
 
             trace_2(TRACE_APP_PD4, "%sRequestUpdates: handle %d", (id == Wimp_MPD_DDE_StopRequestUpdates) ? "Stop" : "", han);
 
@@ -1375,7 +1380,7 @@ iconbar_PD_DDE(
         case Wimp_MPD_DDE_RequestContents:
             {
             ghandle han = m->data.pd_dde.type.b.handle;
-            graphlinkp glp;
+            P_GRAPHICS_LINK_ENTRY glp;
 
             trace_1(TRACE_APP_PD4, "RequestContents: handle %d", han);
 
@@ -1402,7 +1407,7 @@ iconbar_PD_DDE(
         case Wimp_MPD_DDE_GraphClosed:
             {
             ghandle han = m->data.pd_dde.type.b.handle;
-            graphlinkp glp;
+            PC_GRAPHICS_LINK_ENTRY glp;
 
             trace_1(TRACE_APP_PD4, "GraphClosed: handle %d", han);
 
@@ -1565,7 +1570,7 @@ iconbar_PD_DDE_bounced(
         case Wimp_MPD_DDE_SendSlotContents:
             {
             ghandle han = m->data.pd_dde.type.c.handle;
-            graphlinkp glp;
+            P_GRAPHICS_LINK_ENTRY glp;
             trace_1(TRACE_APP_PD4, "SendSlotContents on handle %d bounced - receiver dead", han);
             glp = graph_search_list(han);
             if(glp)
@@ -1577,7 +1582,7 @@ iconbar_PD_DDE_bounced(
         case Wimp_MPD_DDE_ReturnHandleAndBlock:
             {
             ghandle han = m->data.pd_dde.type.a.handle;
-            graphlinkp glp;
+            P_GRAPHICS_LINK_ENTRY glp;
             trace_1(TRACE_APP_PD4, "ReturnHandleAndBlock on handle %d bounced - receiver dead", han);
             glp = graph_search_list(han);
             if(glp)
@@ -1820,7 +1825,7 @@ main_redraw_request(
         #endif
 
         /* redraw area, not update */
-        application_redraw((riscos_redrawstr *) &redraw);
+        application_redraw((RISCOS_REDRAWSTR *) &redraw);
 
         bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
         }
@@ -2081,7 +2086,7 @@ main_HELPREQUEST(
     trace_1(TRACE_APP_PD4, " roff %d", roff);
 
     /* default message */
-    safe_strkpy(abuffer, elemof32(abuffer), help_main_window);
+    xstrkpy(abuffer, elemof32(abuffer), help_main_window);
 
     prefix_len = strlen(abuffer); /* remember a possible cut place */
 
@@ -2092,7 +2097,7 @@ main_HELPREQUEST(
         rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
-            safe_strkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_page_break);
+            xstrkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_page_break);
         else
             {
             trow = rptr->rowno;
@@ -2106,7 +2111,7 @@ main_HELPREQUEST(
 
                 if( !insertref  &&
                     chkrpb(trow)  &&  chkfsb()  &&  chkpac(trow))
-                        safe_strkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_hard_page_break);
+                        xstrkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_hard_page_break);
                 else
                     {
                     msg = (insertref)
@@ -2159,7 +2164,7 @@ main_HELPREQUEST(
         trace_0(TRACE_APP_PD4, "above sheet data");
 
     if(append_drag_msg && (strlen32p1(abuffer) + strlen32(help_drag_file_to_insert) < 240))
-         safe_strkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
+         xstrkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
 
     riscos_sendhelpreply(m, (strlen32p1(abuffer) < 240) ? abuffer : alt_msg);
 
@@ -2330,7 +2335,7 @@ rear_event_handler(
 
     if(!select_document_using_callback_handle(handle))
         {
-        messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to main event handler"), report_ptr_cast(handle));
+        messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to rear event handler"), report_ptr_cast(handle));
         return(FALSE);
         }
 
@@ -2469,8 +2474,7 @@ riscos_createmainwindow(void)
                                     (wimp_i)COLH_FUNCTION_SELECTOR,
                                     function__event_menu_filler,
                                     function__event_menu_proc,
-				     (void *)(uintptr_t)current_docno()
-                                   );
+				                    (void *)(uintptr_t)docno);
 
         /* now window created at default size, initialise screen bits */
         if(!screen_initialise())
@@ -2497,7 +2501,7 @@ riscos_destroymainwindow(void)
 
         win_delete_wind((wimp_w *) &rear_window);
         rear_window = window_NULL;
-        al_ptr_dispose(P_P_ANY_PEDANTIC(&rear_template));
+        wlalloc_dispose(P_P_ANY_PEDANTIC(&rear_template));
         }
 
     if(colh_window != window_NULL)
@@ -2507,7 +2511,7 @@ riscos_destroymainwindow(void)
 
         win_delete_wind((wimp_w *) &colh_window);
         colh_window = window_NULL;
-        al_ptr_dispose(P_P_ANY_PEDANTIC(&colh_template));
+        wlalloc_dispose(P_P_ANY_PEDANTIC(&colh_template));
 
         /*>>>should probably give caret away, if this window has it */
         }
@@ -2523,7 +2527,7 @@ riscos_destroymainwindow(void)
 
         win_delete_wind((wimp_w *) &main_window);
         main_window = window_NULL;
-        al_ptr_dispose(P_P_ANY_PEDANTIC(&main_template));
+        wlalloc_dispose(P_P_ANY_PEDANTIC(&main_template));
         }
 }
 
@@ -2766,7 +2770,7 @@ riscos_obtainfilename(
 
 extern BOOL
 riscos_readfileinfo(
-    riscos_fileinfo * rip /*out*/,
+    RISCOS_FILEINFO * const rip /*out*/,
     const char * name)
 {
     _kernel_osfile_block fileblk;
@@ -2804,7 +2808,7 @@ riscos_readfileinfo(
 
 extern void
 riscos_readtime(
-    riscos_fileinfo * rip /*inout*/)
+    RISCOS_FILEINFO * const rip /*inout*/)
 {
     rip->exec = 3;           /* cs since 1900 */
     (void) _kernel_osword(14, (int *) rip); /* sets exec and LSB of load */
@@ -2894,7 +2898,7 @@ riscos_sendhelpreply(
 
         trace_2(TRACE_APP_PD4, "helpreply is %d long, %s", size, msg);
 
-        safe_strkpy(m->data.helpreply.text, 256 - offsetof(wimp_msgstr, data.helpreply.text), msg);
+        xstrkpy(m->data.helpreply.text, 256 - offsetof(wimp_msgstr, data.helpreply.text), msg);
 
         wimpt_safe(wimp_sendmessage(wimp_ESEND, m, m->hdr.task));
         }
@@ -2957,11 +2961,11 @@ riscos_settitlebar(
 #endif
 
     /* carefully copy information into the title string */
-    safe_strkpy(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, product_ui_id());
-    safe_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, ":" TITLE_SPACE);
-    safe_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, documentname);
+    xstrkpy(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, product_ui_id());
+    xstrkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, ":" TITLE_SPACE);
+    xstrkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, documentname);
     if(xf_filealtered)
-        safe_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, TITLE_SPACE "*");
+        xstrkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, TITLE_SPACE "*");
     trace_1(TRACE_APP_PD4, "poked main document title to be '%s'", current_p_docu->Xwindow_title);
 
     if(rear_window != window_NULL)
@@ -2976,7 +2980,7 @@ riscos_settitlebar(
 
 extern void
 riscos_settype(
-    riscos_fileinfo * rip /*inout*/,
+    RISCOS_FILEINFO * const rip /*inout*/,
     int filetype)
 {
     rip->load = (rip->load & 0x000000FF) | (filetype << 8) | 0xFFF00000;
@@ -2992,7 +2996,7 @@ riscos_settype(
 
 extern void
 riscos_updatearea(
-    riscos_redrawproc redrawproc,
+    RISCOS_REDRAWPROC redrawproc,
     wimp_w w,
     int x0,
     int y0,
@@ -3037,7 +3041,7 @@ riscos_updatearea(
         #endif
 
         /* we are updating area */
-        redrawproc((riscos_redrawstr *) &redraw);
+        redrawproc((RISCOS_REDRAWSTR *) &redraw);
 
         bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
         }
@@ -3051,7 +3055,7 @@ riscos_updatearea(
 
 extern void
 riscos_writefileinfo(
-    const riscos_fileinfo * rip,
+    const RISCOS_FILEINFO * const rip,
     const char * name)
 {
     _kernel_osfile_block fileblk;

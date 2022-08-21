@@ -201,7 +201,7 @@ file_buffer(
         if(bufsize)
             {
             STATUS status;
-            buffer = al_ptr_alloc_bytes(void, bufsize, &status);
+            buffer = al_ptr_alloc_bytes(void *, bufsize, &status);
             if(!buffer)
                 return(file__set_error(file_handle, create_error(FILE_ERR_HANDLEUNBUFFERED)));
             }
@@ -694,7 +694,7 @@ file_length(
 extern S32
 file_open(
     PC_U8 filename,
-    file_open_mode openmode,
+    FILE_OPEN_MODE openmode,
     /*out*/ FILE_HANDLE * p_file_handle)
 {
 #if RISCOS

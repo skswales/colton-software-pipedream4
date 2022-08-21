@@ -253,28 +253,25 @@ extern void
 dproc_formula_error(
     DIALOG *dptr);
 
-typedef enum _riscdialog_query_YN_REPLY
+enum RISCDIALOG_QUERY_YN_REPLY
 {
     riscdialog_query_YES     = 1,
     riscdialog_query_CANCEL  = 2,
     riscdialog_query_NO      = 3
-}
-riscdialog_query_YN_REPLY;
+};
 
-typedef enum _riscdialog_query_DC_REPLY
+enum RISCDIALOG_QUERY_DC_REPLY
 {
     riscdialog_query_DC_DISCARD = 1
   /*riscdialog_query_DC_CANCEL  = 2*/
-}
-riscdialog_query_DC_REPLY;
+};
 
-typedef enum _riscdialog_query_SDC_REPLY
+enum RISCDIALOG_QUERY_SDC_REPLY
 {
     riscdialog_query_SDC_SAVE    = 1,
   /*riscdialog_query_SDC_CANCEL  = 2*/
     riscdialog_query_SDC_DISCARD = 3
-}
-riscdialog_query_SDC_REPLY;
+};
 
 #endif  /* __pd__riscdialog_h */
 

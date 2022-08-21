@@ -30,14 +30,13 @@
 #define Profiler_Fini                   0x088006
 #endif
 
-typedef enum _PROFILE_SORT_BY
+enum PROFILE_SORT_BY
 {
     PROFILE_SORT_BY_NONE = 0,
     PROFILE_SORT_BY_ADDR,
     PROFILE_SORT_BY_COUNT,
     PROFILE_SORT_BY_NAME
-}
-PROFILE_SORT_BY;
+};
 
 static inline _kernel_oserror *
 profile_init(void)
@@ -62,7 +61,7 @@ profile_off(void)
 
 static inline _kernel_oserror *
 profile_output(
-    PROFILE_SORT_BY sort_by,
+    enum PROFILE_SORT_BY sort_by,
     const char * filename,
     const char * sep)
 {

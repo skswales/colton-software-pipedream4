@@ -91,12 +91,12 @@ riscos_rambufferinfo(
 
 extern BOOL
 riscos_readfileinfo(
-    riscos_fileinfo *rip /*out*/,
+    RISCOS_FILEINFO * const rip /*out*/,
     const char *name);
 
 extern void
 riscos_readtime(
-    riscos_fileinfo *rip /*inout*/);
+    RISCOS_FILEINFO * const rip /*inout*/);
 
 extern void
 riscos_removecaret(void);
@@ -121,17 +121,17 @@ riscos_sendhelpreply(
 
 extern void
 riscos_sendslotcontents(
-    const graphlinkp glp,
+    _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp,
     int xoff,
     int yoff);
 
 extern void
 riscos_sendallslots(
-    const graphlinkp glp);
+    _InoutRef_  P_GRAPHICS_LINK_ENTRY glp);
 
 extern void
 riscos_sendsheetclosed(
-    const graphlinkp glp);
+    _InRef_opt_ PC_GRAPHICS_LINK_ENTRY glp);
 
 extern void
 riscos_setcaretpos(
@@ -162,12 +162,12 @@ riscos_settitlebar(
 
 extern void
 riscos_settype(
-    riscos_fileinfo *rip /*inout*/,
+    RISCOS_FILEINFO * const rip /*inout*/,
     int filetype);
 
 extern void
 riscos_updatearea(
-    riscos_redrawproc redrawproc,
+    RISCOS_REDRAWPROC redrawproc,
     wimp_w w,
     int x0,
     int y0,
@@ -176,7 +176,7 @@ riscos_updatearea(
 
 extern void
 riscos_writefileinfo(
-    const riscos_fileinfo *rip,
+    const RISCOS_FILEINFO * const rip,
     const char *name);
 
 extern void

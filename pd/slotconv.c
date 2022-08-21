@@ -40,14 +40,14 @@ need to know about ev_dec_range()
 entry in the font list
 */
 
-typedef struct font_cache_entry
+typedef struct FONT_CACHE_ENTRY
 {
     font handle;
     S32 xsize;
     S32 ysize;
     /* U8Z name[] follows */
 }
-* fep;
+* P_FONT_CACHE_ENTRY;
 
 /*
 local routines
@@ -55,7 +55,7 @@ local routines
 
 static font
 font_cache(
-    _In_reads_bytes_(namlen) const char *name,
+    _In_reads_bytes_(namlen) const char * name,
     S32 namlen,
     S32 xs,
     S32 ys);
@@ -71,7 +71,7 @@ font_derive(
     _In_z_      const char * supplement,
     _InVal_     BOOL add);
 
-static fep
+static P_FONT_CACHE_ENTRY
 font_find_block(
     _InVal_     font fonthan);
 
@@ -113,7 +113,7 @@ font_super_sub(
 
 static void
 result_to_string(
-    P_EV_RESULT resp,
+    _InRef_     PC_EV_RESULT p_ev_result,
     _InVal_     DOCNO docno,
     char *array_start,
     char *array,
@@ -329,7 +329,7 @@ bitstr(
 
                 case HIGH_BOLD:
                     {
-                    fep fp = font_find_block(current_font);
+                    P_FONT_CACHE_ENTRY fp = font_find_block(current_font);
 
                     trace_2(TRACE_APP_PD4, "bitstr highlight 2 bold B->%d I=%d", !hilite_state[1], hilite_state[3]);
 
@@ -409,7 +409,7 @@ bitstr(
 
                 case HIGH_ITALIC:
                     {
-                    fep fp = font_find_block(current_font);
+                    P_FONT_CACHE_ENTRY fp = font_find_block(current_font);
 
                     trace_2(TRACE_APP_PD4, "bitstr highlight 4 italic B=%d I->%d", hilite_state[1], !hilite_state[3]);
 
@@ -726,7 +726,7 @@ bitstr(
                     /* read current font if none given */
                     if(isdigit(*name))
                         {
-                        fep fp = font_find_block(current_font);
+                        P_FONT_CACHE_ENTRY fp = font_find_block(current_font);
 
                         if(NULL != fp)
                             {
@@ -743,7 +743,7 @@ bitstr(
                     /* read current size if none given */
                     if(x == -1)
                         {
-                        fep fp = font_find_block(current_font);
+                        P_FONT_CACHE_ENTRY fp = font_find_block(current_font);
 
                         if(NULL != fp)
                             {
@@ -818,7 +818,7 @@ bitstr(
                     char namebuf[BUF_MAX_PATHSTRING];
                     GR_CACHE_HANDLE cah;
 
-                    safe_strnkpy(namebuf, elemof32(namebuf), name, len);
+                    xstrnkpy(namebuf, elemof32(namebuf), name, len);
 
                     err = 0;
 
@@ -873,7 +873,7 @@ bitstr(
                 if(isdigit(*from))
                     {
                     S32 key = (S32) atoi(from);
-                    LIST *lptr = search_list(&first_macro, key);
+                    P_LIST lptr = search_list(&first_macro, key);
 
                     if(lptr)
                         {
@@ -1017,7 +1017,7 @@ expand_lcr(
             {
             if(SLRLD1 == (*tptr++ = *from++))
                 { /* copy the rest of the CSR over */
-                tiny_memcpy32(tptr, from, COMPILED_TEXT_SLR_SIZE-1);
+                short_memcpy32nz(tptr, from, COMPILED_TEXT_SLR_SIZE-1);
                 tptr += COMPILED_TEXT_SLR_SIZE-1;
                 from += COMPILED_TEXT_SLR_SIZE-1;
                 }
@@ -1092,7 +1092,7 @@ expand_slot(
     char justify = tslot->justify & J_BITS;
     char *array_start;
     S32 old_riscos_fonts;
-    P_EV_RESULT resp;
+    P_EV_RESULT p_ev_result;
     DOCNO old_docno;
 
     /* switch to target document */
@@ -1113,7 +1113,7 @@ expand_slot(
             font_insert_change(slot_font, &array);
         }
 
-    switch(result_extract(tslot, &resp))
+    switch(result_extract(tslot, &p_ev_result))
         {
         case SL_TEXT:
             if(justify == J_LCR)
@@ -1153,7 +1153,7 @@ expand_slot(
                 }
             else
                 {
-                result_to_string(resp, docno, array_start, array,
+                result_to_string(p_ev_result, docno, array_start, array,
                                  tslot->format,
                                  fwidth, &justify,
                                  expand_refs, expand_ats, expand_ctrl);
@@ -1190,13 +1190,13 @@ font_cache(
 {
     char namebuf[BUF_MAX_PATHSTRING];
     U32 namelen_p1;
-    LIST *lptr;
-    fep fp;
+    P_LIST lptr;
+    P_FONT_CACHE_ENTRY fp;
     P_U8Z fp_name;
     font fonthan;
     S32 res;
 
-    safe_strnkpy(namebuf, elemof32(namebuf), name, namlen);
+    xstrnkpy(namebuf, elemof32(namebuf), name, namlen);
 
     trace_3(TRACE_APP_PD4, "font_cache %s, x:%d, y:%d ************", report_l1str(namebuf), xs, ys);
 
@@ -1205,7 +1205,7 @@ font_cache(
         lptr;
         lptr = next_in_list(&font_cache_list))
         {
-        fp = (fep) lptr->value;
+        fp = (P_FONT_CACHE_ENTRY) lptr->value;
 
         fp_name = (P_U8Z) (fp + 1);
 
@@ -1243,7 +1243,7 @@ font_cache(
 
     namelen_p1 = strlen32p1(namebuf);
 
-    if(NULL == (lptr = add_list_entry(&font_cache_list, sizeof(struct font_cache_entry) + namelen_p1, &res)))
+    if(NULL == (lptr = add_list_entry(&font_cache_list, sizeof32(struct FONT_CACHE_ENTRY) + namelen_p1, &res)))
         {
         trace_4(TRACE_APP_PD4, "font_cache failed to add entry for uncached font: (handle:%d) size: %d,%d  %s",
                 fonthan, xs, ys, report_l1str(namebuf));
@@ -1256,7 +1256,7 @@ font_cache(
     /* change key so we don't find it */
     lptr->key = 0;
 
-    fp = (fep) lptr->value;
+    fp = (P_FONT_CACHE_ENTRY) lptr->value;
     fp->handle = fonthan;
     fp->xsize = xs;
     fp->ysize = ys;
@@ -1379,7 +1379,7 @@ extern void
 font_close_all(
     _InVal_     BOOL shutdown)
 {
-    LIST * lptr;
+    P_LIST lptr;
 
     if(shutdown)
         lptr = NULL; /* just for breakpoint */
@@ -1388,7 +1388,7 @@ font_close_all(
 
     while(NULL != lptr)
     {
-        fep fp = (fep) lptr->value;
+        P_FONT_CACHE_ENTRY fp = (P_FONT_CACHE_ENTRY) lptr->value;
 
         if(fp->handle > 0)
         {
@@ -1452,7 +1452,7 @@ font_derive(
     _In_z_      const char * supplement,
     _InVal_     BOOL add)
 {
-    fep fp;
+    P_FONT_CACHE_ENTRY fp;
     char namebuf[BUF_MAX_PATHSTRING];
 
     trace_4(TRACE_APP_PD4, "font_derive: handle: %d, name: %s %s supplement: %s",
@@ -1464,8 +1464,8 @@ font_derive(
     /* should we add or remove the supplement ? */
     if(add)
     {
-        safe_strkpy(namebuf, elemof32(namebuf), name);
-        safe_strkat(namebuf, elemof32(namebuf), supplement);
+        xstrkpy(namebuf, elemof32(namebuf), name);
+        xstrkat(namebuf, elemof32(namebuf), supplement);
     }
     else
     {
@@ -1512,11 +1512,11 @@ font_expand_for_break(
 *
 ******************************************************************************/
 
-static fep
+static P_FONT_CACHE_ENTRY
 font_find_block(
     _InVal_     font fonthan)
 {
-    LIST *lptr;
+    P_LIST lptr;
 
     trace_1(TRACE_APP_PD4, "font_find_block: %d", fonthan);
 
@@ -1524,9 +1524,7 @@ font_find_block(
         lptr;
         lptr = next_in_list(&font_cache_list))
         {
-        fep fp;
-
-        fp = (fep) lptr->value;
+        P_FONT_CACHE_ENTRY fp = (P_FONT_CACHE_ENTRY) lptr->value;
 
         if(fp->handle == fonthan)
             {
@@ -1699,7 +1697,7 @@ font_insert_shift(
     *(*pto)++ = (char) (shift & 0xFF);
     *(*pto)++ = (char) ((shift >> 8) & 0xFF);
     *(*pto)++ = (char) ((shift >> 16) & 0xFF);
-    plusab(current_shift, shift);
+    current_shift += shift;
 }
 
 /******************************************************************************
@@ -1817,16 +1815,16 @@ font_strip(
     if(NULL == place)
         {
         if(newname != fontname)
-            safe_strkpy(newname, elemof_newname, fontname);
+            xstrkpy(newname, elemof_newname, fontname);
         return(STATUS_OK); /* supplement not stripped */
         }
 
     if(newname != fontname)
-        safe_strnkpy(newname, elemof_newname, fontname, place - fontname);
+        xstrnkpy(newname, elemof_newname, fontname, place - fontname);
     else
         newname[place - fontname] = NULLCH;
 
-    safe_strkat(newname, elemof_newname, place + strlen(strip));
+    xstrkat(newname, elemof_newname, place + strlen(strip));
     return(STATUS_DONE); /* supplement stripped */
 }
 
@@ -1899,7 +1897,7 @@ font_super_sub(
             }
         else
             { /* not in either super or subs */
-            fep fp = font_find_block(current_font);
+            P_FONT_CACHE_ENTRY fp = font_find_block(current_font);
 
             if(NULL != fp)
                 {
@@ -1991,10 +1989,10 @@ is_font_change(
 extern S32
 result_extract(
     P_SLOT sl,
-    P_EV_RESULT *respp)
+    P_EV_RESULT * p_p_ev_result)
 {
     if(sl->type == SL_NUMBER)
-        *respp = &sl->content.number.guts.result;
+        *p_p_ev_result = &sl->content.number.guts.ev_result;
 
     return(sl->type);
 }
@@ -2012,28 +2010,27 @@ extern S32
 result_sign(
     P_SLOT sl)
 {
-    P_EV_RESULT resp;
-    S32 res;
-
-    res = 0;
+    S32 res = 0;
+    P_EV_RESULT p_ev_result;
 
     if(!ev_doc_is_custom_sheet(current_docno()) &&
-       result_extract(sl, &resp) == SL_NUMBER)
+       result_extract(sl, &p_ev_result) == SL_NUMBER)
         {
-        switch(resp->did_num)
+        switch(p_ev_result->did_num)
             {
             case RPN_DAT_REAL:
-                if(resp->arg.fp < 0)
+                if(p_ev_result->arg.fp < 0.0)
                     res = -1;
-                else if(resp->arg.fp > 0)
+                else if(p_ev_result->arg.fp > 0.0)
                     res = 1;
                 break;
+
             case RPN_DAT_WORD8:
             case RPN_DAT_WORD16:
             case RPN_DAT_WORD32:
-                if(resp->arg.integer < 0)
+                if(p_ev_result->arg.integer < 0)
                     res = -1;
-                else if(resp->arg.integer > 0)
+                else if(p_ev_result->arg.integer > 0)
                     res = 1;
                 break;
             }
@@ -2050,7 +2047,7 @@ result_sign(
 
 static void
 result_to_string(
-    P_EV_RESULT resp,
+    _InRef_     PC_EV_RESULT p_ev_result,
     _InVal_     DOCNO docno,
     char *array_start,
     char *array,
@@ -2061,18 +2058,18 @@ result_to_string(
     BOOL expand_ats,
     BOOL expand_ctrl)
 {
-    switch(resp->did_num)
+    switch(p_ev_result->did_num)
         {
         F64 number;
 
         case RPN_DAT_WORD8:
         case RPN_DAT_WORD16:
         case RPN_DAT_WORD32:
-            number = (F64) resp->arg.integer;
+            number = (F64) p_ev_result->arg.integer;
             goto num_print;
 
         case RPN_DAT_REAL:
-            number = resp->arg.fp;
+            number = p_ev_result->arg.fp;
 
         num_print:
             /* try to print number fully expanded - if not possible
@@ -2104,7 +2101,7 @@ result_to_string(
             break;
 
         case RPN_RES_STRING:
-            bitstr(resp->arg.string.data, 0, array, fwidth,
+            bitstr(p_ev_result->arg.string.data, 0, array, fwidth,
                    expand_refs, expand_ats, expand_ctrl);
             /* bitstr() will return a fonty result if riscos_fonts */
             break;
@@ -2115,18 +2112,18 @@ result_to_string(
 
         case RPN_RES_ARRAY:
             {
-            EV_RESULT temp_res;
+            EV_RESULT temp_ev_result;
             EV_DATA temp_data;
 
             /* go via EV_DATA */
-            ev_result_to_data_convert(&temp_data, resp);
+            ev_result_to_data_convert(&temp_data, p_ev_result);
 
-            ev_data_to_result_convert(&temp_res, ss_array_element_index_borrow(&temp_data, 0, 0));
+            ev_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
 
-            result_to_string(&temp_res, docno, array_start, array, format, fwidth, justify,
+            result_to_string(&temp_ev_result, docno, array_start, array, format, fwidth, justify,
                              expand_refs, expand_ats, expand_ctrl);
 
-            ev_result_free_resources(&temp_res);
+            ev_result_free_resources(&temp_ev_result);
             break;
             }
 
@@ -2136,7 +2133,7 @@ result_to_string(
             EV_DATE temp;
 
             len = 0;
-            temp = resp->arg.date;
+            temp = p_ev_result->arg.ev_date;
 
             if(temp.date)
                 {
@@ -2188,13 +2185,13 @@ result_to_string(
             {
             S32 len = 0;
 
-            if(resp->arg.error.type == ERROR_PROPAGATED)
+            if(p_ev_result->arg.ev_error.type == ERROR_PROPAGATED)
             {
                 U8 buffer_slr[BUF_EV_MAX_SLR_LEN];
                 EV_SLR ev_slr; /* unpack */
-                ev_slr.col = resp->arg.error.col;
-                ev_slr.row = resp->arg.error.row;
-                ev_slr.docno = resp->arg.error.docno;
+                ev_slr.col = p_ev_result->arg.ev_error.col;
+                ev_slr.row = p_ev_result->arg.ev_error.row;
+                ev_slr.docno = p_ev_result->arg.ev_error.docno;
                 ev_slr.flags = 0;
                 (void) ev_dec_slr(buffer_slr, docno, &ev_slr, TRUE);
                 len += sprintf(array + len,
@@ -2202,14 +2199,14 @@ result_to_string(
                                buffer_slr);
             }
             else
-            if(resp->arg.error.type == ERROR_CUSTOM)
+            if(p_ev_result->arg.ev_error.type == ERROR_CUSTOM)
             {
                 len += sprintf(array + len,
                                CustFuncErrStr,
-                               resp->arg.error.row + 1);
+                               p_ev_result->arg.ev_error.row + 1);
             }
 
-            strcpy(array + len, reperr_getstr(resp->arg.error.num));
+            strcpy(array + len, reperr_getstr(p_ev_result->arg.ev_error.status));
             *justify = J_LEFT;
             break;
             }

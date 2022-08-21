@@ -297,7 +297,7 @@ static char isolics[] =
 *
 ******************************************************************************/
 
-static struct optdef optqv[] =
+static struct OPTDEF optqv[] =
 {
 	(uchar *) "AM",  L_CALCMODE,  0,  0xFF,   wrcalcmode,
 	(uchar *) "RC", L_CALCORDER,  0,     0,   wrcalcord,
@@ -322,7 +322,7 @@ static struct optdef optqv[] =
 *
 ******************************************************************************/
 
-struct oprdef pd123__opreqv[] =
+struct OPRDEF pd123__opreqv[] =
 {
 	LF_CONST,   LO_CONST,  0,      0, (uchar *) "",            0,
 	LF_SLR,     LO_CONST,  0,      0, (uchar *) "",            0,
@@ -760,10 +760,10 @@ static S32
 chksym(void)
 {
 	cursym = *termp;
-	curopr = (struct oprdef *) bsearch((uchar *) &cursym,
+	curopr = (struct OPRDEF *) bsearch(&cursym,
 									   (uchar *) pd123__opreqv,
 									   elemof(pd123__opreqv),
-									   sizeof(struct oprdef), compopr);
+									   sizeof(struct OPRDEF), compopr);
 	return(cursym);
 }
 
@@ -1538,15 +1538,11 @@ static F64
 lts_readdouble(
     uchar huge *arg)
 {
-#if WINDOWS
-
-	return(* ((PC_F64) arg));
-
-#elif RISCOS
+#if RISCOS
 
 	/* this for the ARM <-> 8087 */
 	U32 i;
-	union
+	union LTS_READDOUBLE_U
 		{
 		F64 fpval;
 		uchar fpbytes[8];
@@ -1560,7 +1556,11 @@ lts_readdouble(
 
 	return(fp.fpval);
 
-#endif
+#elif WINDOWS
+
+	return(* ((PC_F64) arg));
+
+#endif /* OS */
 }
 
 /******************************************************************************
@@ -1573,15 +1573,11 @@ static U16
 lts_readuword16(
     uchar huge *arg)
 {
-#if WINDOWS
-
-	return(*((U16 huge *) arg));
-
-#elif RISCOS
+#if RISCOS
 
 	/* this for the ARM */
 	S32 i;
-	union
+	union LTS_READUWORD16_U
 		{
 		U16 uword;
 		uchar uwbytes[2];
@@ -1592,7 +1588,11 @@ lts_readuword16(
 
 	return(uw.uword);
 
-#endif
+#elif WINDOWS
+
+	return(*((U16 huge *) arg));
+
+#endif /* OS */
 }
 
 /******************************************************************************
@@ -1605,15 +1605,11 @@ static S16
 lts_readword16(
     uchar huge *arg)
 {
-#if WINDOWS
-
-	return(*((S16 huge *) arg));
-
-#elif RISCOS
+#if RISCOS
 
 	/* this for the ARM */
 	S32 i;
-	union
+	union LTS_READWORD16_U
 		{
 		S16 word;
 		uchar wbytes[2];
@@ -1624,7 +1620,11 @@ lts_readword16(
 
 	return(w.word);
 
-#endif
+#elif WINDOWS
+
+	return(*((S16 huge *) arg));
+
+#endif /* OS */
 }
 
 /******************************************************************************

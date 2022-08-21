@@ -72,7 +72,7 @@ gr_pie_addin(
     P_GR_CHART cp)
 {
     P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_SERIES_IX         seridx;
+    GR_SERIES_IDX         series_idx;
     P_GR_SERIES          serp;
     GR_CHART_OBJID       serid;
     GR_POINT origin, thisOrigin;
@@ -92,15 +92,15 @@ gr_pie_addin(
     S32                  numval, labelling;
     S32                  res = 1;
 
-    seridx = cp->pie_seridx;
-    serp   = getserp(cp, seridx);
+    series_idx = cp->pie_series_idx;
+    serp = getserp(cp, series_idx);
 
     /* always centre in plot area */
     origin.x = cp->plotarea.posn.x + cp->plotarea.size.x / 2;
     origin.y = cp->plotarea.posn.y + cp->plotarea.size.y / 2;
 
     /* query point 1 for base textstyle for pie */
-    gr_point_textstyle_query(cp, seridx, 1, &textstyle);
+    gr_point_textstyle_query(cp, series_idx, 1, &textstyle);
 
     /* use about 90% of the available area */
     radius  = MIN(cp->plotarea.size.x, cp->plotarea.size.y) / 2;
@@ -114,7 +114,7 @@ gr_pie_addin(
      * ii) if there were more category labels than values in S1
      *     then the values would all be zero anyhow
     */
-    dsh = gr_travel_series_dsh_from_ds(cp, seridx, 0);
+    dsh = gr_travel_series_dsh_from_ds(cp, series_idx, 0);
 
     if(dsh == GR_DATASOURCE_HANDLE_NONE)
         n_points = 0;
@@ -138,7 +138,7 @@ gr_pie_addin(
             if(value > 0.0)
                 {
                 total += value;
-                gr_point_piechdisplstyle_query(cp, seridx, point, &piechdisplstyle);
+                gr_point_piechdisplstyle_query(cp, series_idx, point, &piechdisplstyle);
                 pct_radial_disp_max = MAX(pct_radial_disp_max, piechdisplstyle.radial_displacement);
                 }
             else
@@ -156,7 +156,7 @@ gr_pie_addin(
 
     pct_radial_disp_max += base_radial_displacement;
 
-    gr_chart_objid_from_seridx(cp, seridx, &serid);
+    gr_chart_objid_from_series_idx(cp, series_idx, &serid);
 
     if((res = gr_chart_group_new(cp, &pieStart, &serid)) < 0)
         return(res);
@@ -187,11 +187,11 @@ gr_pie_addin(
 
             bisector = (alpha + beta) / 2;
 
-            gr_point_fillstyle_query(cp, seridx, point, &fillstyle);
-            gr_point_linestyle_query(cp, seridx, point, &linestyle);
+            gr_point_fillstyle_query(cp, series_idx, point, &fillstyle);
+            gr_point_linestyle_query(cp, series_idx, point, &linestyle);
 
-            gr_point_piechdisplstyle_query(cp, seridx, point, &piechdisplstyle);
-            gr_point_piechlabelstyle_query(cp, seridx, point, &piechlabelstyle);
+            gr_point_piechdisplstyle_query(cp, series_idx, point, &piechdisplstyle);
+            gr_point_piechlabelstyle_query(cp, series_idx, point, &piechlabelstyle);
 
             point_radial_displacement = piechdisplstyle.radial_displacement + base_radial_displacement;
 
@@ -230,7 +230,7 @@ gr_pie_addin(
                 GR_MILLIPOINT  swidth_mp;
                 GR_COORD       swidth_px;
 
-                gr_point_textstyle_query(cp, seridx, point, &textstyle);
+                gr_point_textstyle_query(cp, series_idx, point, &textstyle);
 
                 f = gr_riscdiag_font_from_textstyle(&textstyle);
 
@@ -260,7 +260,7 @@ gr_pie_addin(
                                 ','    /* ths_ch */);
 
                     if(NULL != t_trailer)
-                        safe_strkat(cv.data.text, elemof32(cv.data.text), t_trailer);
+                        xstrkat(cv.data.text, elemof32(cv.data.text), t_trailer);
                     }
                 else
                     gr_travel_categ_label(cp, point, &cv);

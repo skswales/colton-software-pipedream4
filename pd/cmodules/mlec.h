@@ -22,7 +22,6 @@
 
 #ifndef MLEC_OFF
 
-#ifndef RC_INVOKED /* not resource compiler */
 #ifndef ERRDEF_EXPORT /* not errdef export */
 
 #ifndef __cs_wimp_h
@@ -31,21 +30,47 @@
 
 /* exported types */
 
-typedef struct __mlec_struct * mlec_handle;
+typedef struct MLEC_STRUCT * MLEC_HANDLE;
 
-/* exported routines */
+#define MLEC_ATTRIBUTE_LINESPACE 0
+#define MLEC_ATTRIBUTE_CHARHEIGHT 1
+#define MLEC_ATTRIBUTE_CARETHEIGHTPOS 2
+#define MLEC_ATTRIBUTE_CARETHEIGHTNEG 3
+#define MLEC_ATTRIBUTE_MARGIN_LEFT 4
+#define MLEC_ATTRIBUTE_MARGIN_TOP 5
+#define MLEC_ATTRIBUTE_BG_RGB 6
+#define MLEC_ATTRIBUTE_FG_RGB 7
+#define MLEC_ATTRIBUTE_MAX 8
+
+#define MLEC_ATTRIBUTE int
+
+/*
+Exported routines
+*/
+
+_Check_return_
+extern int
+mlec_attribute_query(
+    /*_In_*/    MLEC_HANDLE mlec,
+    _InVal_     MLEC_ATTRIBUTE attribute);
+
+extern void
+mlec_attribute_set(
+    /*_Inout_*/ MLEC_HANDLE mlec,
+    _InVal_     MLEC_ATTRIBUTE attribute,
+    _InVal_     int value);
 
 extern int
 mlec_create(
-    mlec_handle *mlecp);
+    MLEC_HANDLE *mlecp);
 
 extern void
 mlec_destroy(
-    mlec_handle *mlecp);
+    MLEC_HANDLE *mlecp);
 
 extern void
 mlec_attach(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_w main_win_handle,
     wimp_w pane_win_handle,
     wimp_box paneWorkArea,
@@ -53,15 +78,15 @@ mlec_attach(
 
 extern void
 mlec_detach(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 extern void
 mlec_claim_focus(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 extern void
 mlec_release_focus(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 /*   mlec_attach_eventhandler - see further down this file */
 
@@ -69,19 +94,19 @@ mlec_release_focus(
 
 extern int
 mlec_GetText(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *buffptr,
     int buffsize);
 
 extern int
 mlec_GetTextLen(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 #endif
 
 extern int
 mlec_SetText(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *text);
 
 extern BOOL
@@ -91,27 +116,27 @@ mlec__event_handler(
 
 extern int
 mlec__insert_char(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char ch);
 
 extern int
 mlec__insert_text(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *text);
 
 extern int
 mlec__insert_newline(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 extern void
 mlec__cursor_getpos(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int * p_col,
     int * p_row);
 
 extern void
 mlec__cursor_setpos(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int col,
     int row);
 
@@ -119,21 +144,21 @@ mlec__cursor_setpos(
 
 extern void
 mlec__selection_adjust(
-    mlec_handle mlec, 
+    MLEC_HANDLE mlec, 
     int col,
     int row);
 
 extern void
 mlec__selection_clear(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 extern void
 mlec__selection_delete(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 #endif
 
-typedef enum
+typedef enum MLEC_EVENT_REASON_CODE
 {
     Mlec_IsOpen            = 1,
     Mlec_IsClose           = 2,
@@ -142,9 +167,9 @@ typedef enum
     Mlec_IsClick           = 5,
     Mlec_IsWorkAreaChanged = 6
 }
-mlec_event_reason_code;
+MLEC_EVENT_REASON_CODE;
 
-typedef enum
+typedef enum MLEC_EVENT_RETURN_CODE
 {
     mlec_event_unknown         = 0x00,
 
@@ -166,30 +191,27 @@ typedef enum
     /* from IsWorkAreaChanged */
     mlec_event_workareachanged = 0x60
 }
-mlec_event_return_code;
+MLEC_EVENT_RETURN_CODE;
 
-typedef mlec_event_return_code (* mlec_event_proc) (
-    mlec_event_reason_code rc,
+typedef MLEC_EVENT_RETURN_CODE (* MLEC_EVENT_PROC) (
+    MLEC_EVENT_REASON_CODE rc,
     P_ANY handle,
     P_ANY p_eventdata);
 
 #define mlec_event_proto(_e_s, _p_proc_mlec_event) \
-_e_s mlec_event_return_code _p_proc_mlec_event( \
-    mlec_event_reason_code rc, \
+_e_s MLEC_EVENT_RETURN_CODE _p_proc_mlec_event( \
+    MLEC_EVENT_REASON_CODE rc, \
     P_ANY handle, \
     P_ANY p_eventdata) \
 
 extern void
 mlec_attach_eventhandler(
-    mlec_handle mlec,
-    mlec_event_proc proc,
+    MLEC_HANDLE mlec,
+    MLEC_EVENT_PROC proc,
     P_ANY handle,
     S32 add);
 
 #endif /* ERRDEF_EXPORT */
-#endif /* RC_INVOKED */
-
-#ifndef RC_INVOKED /* not resource compiler */
 
 /*
 error definition
@@ -201,8 +223,6 @@ error definition
     errorstring(MLEC_ERR_NOPASTEBUFFER    , "Program error - No paste buffer") \
     errorstring(MLEC_ERR_BUFFERWENT_AWOL  , "Program error - Paste buffer went AWOL") \
     errorstring(MLEC_ERR_INVALID_PASTE_OP , "Program error - Invalid paste buffer operation")
-
-#endif /* RC_INVOKED */
 
 /*
 error definition

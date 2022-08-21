@@ -252,14 +252,14 @@ extern void
 close_user_dictionaries(
     BOOL force)
 {
-    LIST * lptr;
-    S32    res;
-
     if( force  ||
         (mergedict_mds.dict == -1  &&  anagram_mds.dict == -1  &&  dumpdict_mds.dict == -1))
+        {
+            PC_LIST lptr;
+
             while((lptr = first_in_list(&first_user_dict)) != NULL)
                 {
-                res = close_dict_always((S32) lptr->key);
+                S32 res = close_dict_always((S32) lptr->key);
 
                 if(res < 0)
                     {
@@ -267,6 +267,7 @@ close_user_dictionaries(
                     been_error = FALSE;
                     }
                 }
+        }
 }
 
 /******************************************************************************
@@ -280,14 +281,13 @@ flush_user_dictionaries(void);
 extern void
 flush_user_dictionaries(void)
 {
-    LIST * lptr;
-    S32    res;
+    PC_LIST lptr;
 
     for(lptr = first_in_list(&first_user_dict);
         lptr;
         lptr = next_in_list(&first_user_dict))
         {
-        res = spell_flush((S32) lptr->key);
+        S32 res = spell_flush((S32) lptr->key);
 
         if(res < 0)
             {
@@ -378,7 +378,7 @@ dict_number(
     const char * name,
     BOOL create)
 {
-    LIST *lptr;
+    PC_LIST lptr;
     S32 dict, res;
     char *leaf;
     char fulldictname[BUF_MAX_PATHSTRING];
@@ -1677,9 +1677,9 @@ add_error_to_box(
     bleep();
 
     add_word_to_box(mdsp, NULLSTR);
-    safe_strkpy(buffer, elemof32(buffer), "*** ");
-    safe_strkat(buffer, elemof32(buffer), reperr_getstr(mdsp->res));
-    safe_strkat(buffer, elemof32(buffer), " ***");
+    xstrkpy(buffer, elemof32(buffer), "*** ");
+    xstrkat(buffer, elemof32(buffer), reperr_getstr(mdsp->res));
+    xstrkat(buffer, elemof32(buffer), " ***");
     add_word_to_box(mdsp, buffer);
 
     /* error now reported, clear down and pause */
@@ -2010,22 +2010,28 @@ static BOOL
 not_in_user_dicts_or_list(
     const char *word)
 {
-    LIST *lptr;
-    S32 res;
+    PC_LIST lptr;
 
     for(lptr = first_in_list(&first_spell);
         lptr;
         lptr = next_in_list(&first_spell))
-            if(0 == _stricmp((char *) lptr->value, word))
-                return(FALSE);
+        {
+        if(0 == _stricmp((char *) lptr->value, word))
+            return(FALSE);
+        }
 
     for(lptr = first_in_list(&first_user_dict);
         lptr;
         lptr = next_in_list(&first_user_dict))
-            if((res = spell_checkword((S32) lptr->key, (char *) word)) > 0)
-                return(FALSE);
-            else if((res < 0)  &&  (res != create_error(SPELL_ERR_BADWORD)))
-                reperr_module(create_error(ERR_SPELL), res);
+        {
+        S32 res;
+
+        if((res = spell_checkword((S32) lptr->key, (char *) word)) > 0)
+            return(FALSE);
+
+        if((res < 0)  &&  (res != create_error(SPELL_ERR_BADWORD)))
+            reperr_module(create_error(ERR_SPELL), res);
+        }
 
     return(TRUE);
 }
@@ -2282,7 +2288,7 @@ CheckDocument_fn(void)
             d_check[C_CHANGE].option = d_check[C_BROWSE].option = 'N';
 
             /* take a copy of just the misplet worm */
-            safe_strnkpy(original, elemof32(original), linbuf + sch_stt_offset, strlen(array));
+            xstrnkpy(original, elemof32(original), linbuf + sch_stt_offset, strlen(array));
             trace_1(TRACE_APP_PD4, "CheckDocument_fn: misplet word is '%s'", original);
 
             word_to_invert = original;
@@ -3159,13 +3165,11 @@ DisplayOpenDicts_fn(void)
 {
     merge_dump_strukt *mdsp = &browse_mds;
     dbox_field f;
-    S32 i;
-    LIST *lptr;
 
     if(init_box(mdsp, "merging", Opened_user_dictionaries_STR, FALSE))
         {
-        i = 1;    /* put one line of space at top */
-        lptr = first_in_list(&first_user_dict);
+        S32 i = 1; /* put one line of space at top */
+        PC_LIST lptr = first_in_list(&first_user_dict);
 
         do  {
             if(lptr)

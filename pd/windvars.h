@@ -14,7 +14,7 @@
 #ifndef __windvars_h
 #define __windvars_h
 
-typedef struct _SS_INSTANCE_DATA
+typedef struct SS_INSTANCE_DATA
 {
     SS_DOC ss_doc;
 }
@@ -28,9 +28,9 @@ all the document data collected together into one single object
 NB if you change this remember to recompile everything!
 */
 
-typedef struct _DOCU
+typedef struct DOCU
 {
-    struct _DOCU * link;                /* pointer to next document or NO_DOCUMENT */
+    struct DOCU * link;                 /* pointer to next document or NO_DOCUMENT */
 
     DOCNO docno;
 
@@ -38,7 +38,7 @@ typedef struct _DOCU
     PTSTR Xcurrentfilename;
 
     #define currentfileinfo             (current_p_docu->Xcurrentfileinfo)
-    riscos_fileinfo Xcurrentfileinfo;
+    RISCOS_FILEINFO Xcurrentfileinfo;
 
     #define xf_loaded_from_path         (current_p_docu->Xxf_loaded_from_path)
     BOOLEAN Xxf_loaded_from_path;
@@ -371,7 +371,7 @@ typedef struct _DOCU
     void * Xcolh_template;              /* should be wimp_wind * but ... */
 
     #define editexpression_formwind     (current_p_docu->Xeditexpression_formwind)
-    struct __formwind_struct * Xeditexpression_formwind;     /* should be formwind_handle but ... */
+    struct FORMULA_WINDOW * Xeditexpression_formwind; /* should be FORMULA_WINDOW_HANDLE but ... */
 
     #define lastcursorpos_x             (current_p_docu->Xlastcursorpos_x)
     coord  Xlastcursorpos_x;
@@ -685,10 +685,10 @@ DOCU, * P_DOCU;
 
 /* special values of P_DOCU types */
 
-#if CROSS_COMPILE && defined(HOST_WINDOWS)
-#define NO_DOCUMENT ((P_DOCU) 0x00000003) /* Hmm... the below value freaks out Code Analysis */
+#if CROSS_COMPILE && defined(_PREFAST_)
+#define NO_DOCUMENT ((P_DOCU) NULL) /* Hmm... the below value freaks out Code Analysis */
 #else
-#define NO_DOCUMENT ((P_DOCU) 0xFC000003) /* trap if accessed - unaligned and very large (but still ARM rotated small constant) */
+#define NO_DOCUMENT BAD_POINTER_X(P_DOCU, 3) /* trap if accessed - unaligned and very large (but still ARM rotated small constant) */
 #endif
 
 /*

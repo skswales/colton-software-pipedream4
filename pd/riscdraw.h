@@ -39,7 +39,7 @@ application_open_request(
 
 extern void
 application_redraw(
-    riscos_redrawstr *r);
+    RISCOS_REDRAWSTR *r);
 
 extern void
 application_scroll_request(
@@ -80,18 +80,17 @@ draw_grid_vbar(
 extern void
 ensurefontcolours(void);
 
-extern S32
+_Check_return_
+extern gcoord
 gcoord_x(
-    S32 tx);
+    coord x);
 
-extern S32
+_Check_return_
+extern gcoord
 gcoord_y(
-    S32 ty);
+    coord y);
 
-extern S32
-gcoord_y_fontout(
-    S32 ty);
-
+_Check_return_
 extern S32
 gcoord_y_textout(
     S32 ty);
@@ -153,19 +152,15 @@ please_redraw_textline(
 
 extern void
 please_update_textarea(
-    riscos_redrawproc proc,
+    RISCOS_REDRAWPROC proc,
     S32 tx0,
     S32 ty0,
     S32 tx1,
     S32 ty1);
 
 extern void
-please_update_thistextarea(
-    riscos_redrawproc proc);
-
-extern void
 please_update_window(
-    riscos_redrawproc proc,
+    RISCOS_REDRAWPROC proc,
     wimp_w window,
     S32 gx0,
     S32 gy0,
@@ -229,30 +224,37 @@ set_graphics_window_from_textarea(
     S32 ty1,
     BOOL set_gw);
 
+_Check_return_
 extern S32
 tcoord_x(
     S32 x);
 
+_Check_return_
 extern S32
 tcoord_y(
     S32 y);
 
+_Check_return_
 extern S32
 tcoord_x_remainder(
     S32 x);
 
+_Check_return_
 extern S32
 tcoord_x1(
     S32 x);
 
+_Check_return_
 extern S32
 tcoord_y1(
     S32 y);
 
+_Check_return_
 extern S32
 tsize_x(
     S32 x);
 
+_Check_return_
 extern S32
 tsize_y(
     S32 y);
@@ -269,17 +271,21 @@ textxintersects(
     S32 tx0,
     S32 tx1);
 
+_Check_return_
 extern S32
 texttooffset_x(
     S32 tx);
 
+_Check_return_
 extern S32
 texttooffset_y(
     S32 ty);
 
+_Check_return_
 extern S32
 windowheight(void);
 
+_Check_return_
 extern S32
 windowwidth(void);
 
@@ -305,7 +311,7 @@ riscprint_page(
     BOOL landscape,
     S32 scale,
     S32 sequence,
-    riscos_printproc pageproc);
+    RISCOS_PRINTPROC pageproc);
 
 /*
 exported variables
@@ -329,9 +335,6 @@ extern S32 log2bpp;
 #define CARET_SYSTEMFONT    (1 << 24)
 #define CARET_COLOURSHIFT   16              /* bits 16..23 */
 #define CARET_BODGE_Y       (charheight/4)  /* extra bits on top & bottom of caret */
-
-/* The Window Manager default */
-#define CARET_DEFAULT_COLOUR    11
 
 #endif  /* __riscdraw_h */
 

@@ -15,12 +15,12 @@
 data definition
 */
 
-typedef struct _list
+typedef struct LIST
 {
     S32 key;
     uchar value[1];
 }
-LIST;
+LIST, * P_LIST; typedef const LIST * PC_LIST;
 
 /*
 function declarations
@@ -28,7 +28,7 @@ function declarations
 
 _Check_return_
 _Ret_maybenull_
-extern LIST *
+extern P_LIST
 add_list_entry(
     _InoutRef_  P_P_LIST_BLOCK list,
     _InVal_     S32 size,
@@ -59,7 +59,7 @@ duplicate_list(
 
 _Check_return_
 _Ret_maybenull_
-extern LIST *
+extern P_LIST
 search_list(
     _InoutRef_  P_P_LIST_BLOCK first_one,
     _InVal_     S32 target);

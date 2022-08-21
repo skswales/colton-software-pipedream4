@@ -11,7 +11,7 @@
 #define __include_h
 
 #if defined(SB_GLOBAL_REGISTER)
-/*extern*/ __global_reg(6) struct _DOCU * current_p_docu; /* keep current_p_docu in v6 register (so don't let WimpLib corrupt it) */
+/*extern*/ __global_reg(6) struct DOCU * current_p_docu; /* keep current_p_docu in v6 register (so don't let WimpLib corrupt it) */
 #endif
 
 #define COMPILING_WIMPLIB 1

@@ -235,7 +235,7 @@ killcolourcache(void)
 
 extern void
 application_redraw(
-    riscos_redrawstr *r)
+    RISCOS_REDRAWSTR *r)
 {
     #if TRACE_ALLOWED
     wimp_redrawstr * redrawstr = (wimp_redrawstr *) r;
@@ -540,6 +540,7 @@ new_grid_state(void)
 *
 ******************************************************************************/
 
+_Check_return_
 extern coord
 windowheight(void)
 {
@@ -570,6 +571,7 @@ windowheight(void)
     return(height);
 }
 
+_Check_return_
 extern coord
 windowwidth(void)
 {
@@ -713,6 +715,7 @@ clear_underlay(
 *
 ******************************************************************************/
 
+_Check_return_
 extern S32
 gcoord_x(
     S32 x)
@@ -722,6 +725,7 @@ gcoord_x(
 
 #define gc_y(y) (textcell_yorg - (y+1) * charvspace)
 
+_Check_return_
 extern S32
 gcoord_y(
     S32 y)
@@ -729,6 +733,9 @@ gcoord_y(
     return(gc_y(y));
 }
 
+#ifdef UNUSED
+
+_Check_return_
 extern S32
 gcoord_y_fontout(
     S32 y)
@@ -736,6 +743,9 @@ gcoord_y_fontout(
     return(gc_y(y) + fontbaselineoffset);
 }
 
+#endif /* UNUSED */
+
+_Check_return_
 extern S32
 gcoord_y_textout(
     S32 y)
@@ -785,7 +795,7 @@ ospca_fonts(
 
 static void
 redraw_clear_area(
-    riscos_redrawstr *r)
+    RISCOS_REDRAWSTR * r)
 {
     trace_4(TRACE_APP_PD4_RENDER, "redraw_cleararea: graphics window %d, %d, %d, %d",
             graphics_window.x0, graphics_window.y0,
@@ -826,7 +836,7 @@ please_clear_textarea(
 
 static void
 redraw_invert_area(
-    riscos_redrawstr *r)
+    RISCOS_REDRAWSTR *r)
 {
     S32 invertEORcolour;
 
@@ -921,18 +931,18 @@ please_invert_numeric_slots(
 *
 ******************************************************************************/
 
-static riscos_redrawproc updatearea_proc;
+static RISCOS_REDRAWPROC updatearea_proc;
 
 static void
 updatearea_wrapper(
-    riscos_redrawstr *r)
+    RISCOS_REDRAWSTR *r)
 {
     updatearea_proc(r);
 }
 
 extern void
 please_update_textarea(
-    riscos_redrawproc proc,
+    RISCOS_REDRAWPROC proc,
     S32 tx0,
     S32 ty0,
     S32 tx1,
@@ -954,15 +964,8 @@ please_update_textarea(
 }
 
 extern void
-please_update_thistextarea(
-    riscos_redrawproc proc)
-{
-    please_update_textarea(proc, thisarea.x0, thisarea.y0, thisarea.x1, thisarea.y1);
-}
-
-extern void
 please_update_window(
-    riscos_redrawproc proc,
+    RISCOS_REDRAWPROC proc,
     wimp_w window,
     S32 gx0,
     S32 gy0,
@@ -2316,7 +2319,7 @@ ensurefontcolours(void)
 *
 ******************************************************************************/
 
-static struct _riscos_printing_statics
+static struct RISCOS_PRINTING_STATICS
 {
     int  job;
     int  oldjob;
@@ -2453,7 +2456,7 @@ riscprint_page(
     BOOL landscape,
     S32 scale_pct,
     S32 sequence,
-    riscos_printproc pageproc)
+    RISCOS_PRINTPROC pageproc)
 {
     print_box size_os;
     print_box pbox;

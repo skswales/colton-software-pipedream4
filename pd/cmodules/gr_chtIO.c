@@ -278,7 +278,7 @@ gr_chart_save_chart_winge(
     string_lookup_buffer(error_id, errfmt, elemof32(errfmt));
 
     if(poss_file_err)
-        safe_strkat(errfmt, elemof32(errfmt), " because %s");
+        xstrkat(errfmt, elemof32(errfmt), " because %s");
 
     messagef(errfmt, string_lookup(res), poss_file_err);
 }
@@ -504,7 +504,7 @@ gr_fillstyle_create_pict_for_load(
     /* use external handle as key into list */
     key = ekey;
 
-    if(NULL == (cahp = collect_add_entry(&fillstyle_translation_table, sizeof32(*cahp), &key, &res)))
+    if(NULL == (cahp = collect_add_entry_elem(GR_CACHE_HANDLE, &fillstyle_translation_table, &key, &res)))
         return(res);
 
     /* stick cache handle on the list */
@@ -527,7 +527,7 @@ gr_fillstyle_translate_pict_for_load(
     key = (LIST_ITEMNO) fillstyle->pattern; /* small non-zero integer here! */
 
     if(key)
-        cahp = collect_search(&fillstyle_translation_table.lbr, key);
+        cahp = collect_goto_item(GR_CACHE_HANDLE, &fillstyle_translation_table.lbr, key);
     else
         cahp = NULL;
 
@@ -564,7 +564,7 @@ gr_fillstyle_translate_pict_for_save(
     if(!key)
         return(0);
 
-    if((p_u32 = collect_search(&fillstyle_translation_table.lbr, key)) == NULL)
+    if((p_u32 = collect_goto_item(U32, &fillstyle_translation_table.lbr, key)) == NULL)
         return(0);
 
     return(*p_u32);
@@ -591,9 +591,9 @@ gr_fillstyle_make_key_for_save(
     if(!key)
         return(0);
 
-    if((p_u32 = collect_search(&fillstyle_translation_table.lbr, key)) == NULL)
+    if((p_u32 = collect_goto_item(U32, &fillstyle_translation_table.lbr, key)) == NULL)
         {
-        if(NULL == (p_u32 = collect_add_entry(&fillstyle_translation_table, sizeof32(*p_u32), &key, &status)))
+        if(NULL == (p_u32 = collect_add_entry_elem(U32, &fillstyle_translation_table, &key, &status)))
             return(status);
 
         *p_u32 = fillstyle_translation_ekey++;
@@ -615,7 +615,7 @@ gr_fillstyle_table_make_for_save(
 {
     S32          res;
     U32          plotidx;
-    GR_SERIES_IX seridx;
+    GR_SERIES_IDX series_idx;
     P_GR_SERIES   serp;
 
     /* note refs to pictures */
@@ -630,19 +630,19 @@ gr_fillstyle_table_make_for_save(
         if((res = gr_fillstyle_make_key_for_save(&cp->legend.areastyle)) < 0)
             return(res);
 
-    for(seridx = 0; seridx < cp->series.n_defined; ++seridx)
+    for(series_idx = 0; series_idx < cp->series.n_defined; ++series_idx)
         {
         /* note refs to series pictures */
-        serp = getserp(cp, seridx);
+        serp = getserp(cp, series_idx);
         if((res = gr_fillstyle_make_key_for_save(&serp->style.pdrop_fill)) < 0) /* this may be overenthusiastic */
             return(res);
         if((res = gr_fillstyle_make_key_for_save(&serp->style.point_fill)) < 0)
             return(res);
 
         /* note refs to all point info from this series */
-        if((res = gr_point_list_fillstyle_enum_for_save(cp, seridx, GR_LIST_PDROP_FILLSTYLE)) < 0) /* this may be overenthusiastic */
+        if((res = gr_point_list_fillstyle_enum_for_save(cp, series_idx, GR_LIST_PDROP_FILLSTYLE)) < 0) /* this may be overenthusiastic */
             return(res);
-        if((res = gr_point_list_fillstyle_enum_for_save(cp, seridx, GR_LIST_POINT_FILLSTYLE)) < 0)
+        if((res = gr_point_list_fillstyle_enum_for_save(cp, series_idx, GR_LIST_POINT_FILLSTYLE)) < 0)
             return(res);
         }
 
@@ -662,8 +662,8 @@ gr_fillstyle_table_make_for_save(
 NB. this table of offsets must be kept in touch with the table of entries they index into
 */
 
-typedef enum
-    {
+enum GR_CONSTRUCT_ARG_TYPE
+{
     GR_ARG_UNKNOWN = 0,
 
     GR_ARG_OBJID,
@@ -699,8 +699,7 @@ typedef enum
     GR_ARG_TEXTCONTENTS,
 
     GR_ARG_N_TYPES
-    }
-GR_CONSTRUCT_ARG_TYPE;
+};
 
 /*
 * NB. arg formats must remain constant from day 1 is so far as
@@ -797,22 +796,21 @@ gr_construct_arg_format[GR_ARG_N_TYPES + 1 /*end marker*/] =
 ,   NULL
 };
 
-typedef enum
-    {
+enum GR_CONSTRUCT_OBJ_TYPE
+{
     GR_STR_NONE = 0,
     GR_STR_CHART,    /* poke field in cp */
-    GR_STR_AXES,     /* poke field in cp->axes[axes] */
-    GR_STR_AXIS,     /* poke field in cp->axes[axes].axis[axis] */
-    GR_STR_SERIES    /* poke field in cp->...series.mh[seridx]  */
-    }
-GR_CONSTRUCT_OBJ_TYPE;
+    GR_STR_AXES,     /* poke field in cp->axes[axes_idx] */
+    GR_STR_AXIS,     /* poke field in cp->axes[axes_idx].axis[axis_idx] */
+    GR_STR_SERIES    /* poke field in cp->...series.mh[series_idx]  */
+};
 
 /*
 NB. this table of offsets must be kept in touch with the table of entries they index into
 */
 
-typedef enum
-    {
+typedef enum GR_CONSTRUCT_TABLE_OFFSET
+{
     GR_CON_OBJID = 0,
     GR_CON_OBJID_N,
     GR_CON_OBJID_NN,
@@ -899,7 +897,7 @@ typedef enum
     GR_CON_TEXTCONTENTS,
 
     GR_CON_N_TABLE_OFFSETS
-    }
+}
 GR_CONSTRUCT_TABLE_OFFSET;
 
 /*
@@ -926,26 +924,26 @@ gr_construct_table[GR_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
     gr_chart
     */
 
-    gr_contab_entry("CAM,G,", GR_ARG_S32,                       GR_STR_CHART,  offsetof(GR_CHART, axes_max),             GR_CON_AXES_MAX),
+    gr_contab_entry("CAM,G,", GR_ARG_S32,                       GR_STR_CHART,  offsetof(GR_CHART, axes_idx_max),    GR_CON_AXES_MAX),
 
-    gr_contab_entry("CLS,G,", GR_ARG_S32_2,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct _gr_chart_core, layout) + offsetof(struct _gr_chart_layout, width),   GR_CON_CORE_LAYOUT), /* and height too */
-    gr_contab_entry("CLM,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct _gr_chart_core, layout) + offsetof(struct _gr_chart_layout, margins), GR_CON_CORE_MARGINS),
+    gr_contab_entry("CLS,G,", GR_ARG_S32_2,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, layout) + offsetof(struct GR_CHART_LAYOUT, width),   GR_CON_CORE_LAYOUT), /* and height too */
+    gr_contab_entry("CLM,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, layout) + offsetof(struct GR_CHART_LAYOUT, margins), GR_CON_CORE_MARGINS),
 
 #if RISCOS
-    gr_contab_entry("RSB,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct _gr_chart_core, editsave) + offsetof(struct _gr_chart_core_editsave, open_box), GR_CON_EDITSAVE_BOX),
-    gr_contab_entry("RSS,G,", GR_ARG_S32_2,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct _gr_chart_core, editsave) + offsetof(struct _gr_chart_core_editsave, open_scx), GR_CON_EDITSAVE_SCROLLS), /* and open_scy too */
+    gr_contab_entry("RSB,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, editsave) + offsetof(struct GR_CHART_EDITSAVE, open_box), GR_CON_EDITSAVE_BOX),
+    gr_contab_entry("RSS,G,", GR_ARG_S32_2,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, editsave) + offsetof(struct GR_CHART_EDITSAVE, open_scx), GR_CON_EDITSAVE_SCROLLS), /* and open_scy too */
 #endif
 
-    gr_contab_entry("LGB,G,", GR_ARG_UBF32,                     GR_STR_CHART,  offsetof(GR_CHART, legend) + offsetof(struct _gr_chart_legend, bits),         GR_CON_LEGEND_BITS),
-    gr_contab_entry("LGC,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, legend) + offsetof(struct _gr_chart_legend, posn),         GR_CON_LEGEND_POSN), /* and size too */
+    gr_contab_entry("LGB,G,", GR_ARG_UBF32,                     GR_STR_CHART,  offsetof(GR_CHART, legend) + offsetof(struct GR_CHART_LEGEND, bits),         GR_CON_LEGEND_BITS),
+    gr_contab_entry("LGC,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, legend) + offsetof(struct GR_CHART_LEGEND, posn),         GR_CON_LEGEND_POSN), /* and size too */
 
-    gr_contab_entry("D3B,G,", GR_ARG_UBF32,                     GR_STR_CHART,  offsetof(GR_CHART, d3) + offsetof(struct _gr_chart_d3, bits),                 GR_CON_D3_BITS),
-    gr_contab_enLSD("D3P,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, d3) + offsetof(struct _gr_chart_d3, pitch),                GR_CON_D3_PITCH),
-    gr_contab_enLSD("D3R,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, d3) + offsetof(struct _gr_chart_d3, roll),                 GR_CON_D3_ROLL),
+    gr_contab_entry("D3B,G,", GR_ARG_UBF32,                     GR_STR_CHART,  offsetof(GR_CHART, d3) + offsetof(struct GR_CHART_D3, bits),                 GR_CON_D3_BITS),
+    gr_contab_enLSD("D3P,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, d3) + offsetof(struct GR_CHART_D3, pitch),                GR_CON_D3_PITCH),
+    gr_contab_enLSD("D3R,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, d3) + offsetof(struct GR_CHART_D3, roll),                 GR_CON_D3_ROLL),
 
-    gr_contab_enLSD("B2O,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, barch) + offsetof(struct _gr_chart_barch, slot_overlap_percentage), GR_CON_BARCH_SLOT_2D_OVERLAP),
+    gr_contab_enLSD("B2O,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, barch) + offsetof(struct GR_CHART_BARCH, slot_overlap_percentage), GR_CON_BARCH_SLOT_2D_OVERLAP),
 
-    gr_contab_enLSD("L2S,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, linech) + offsetof(struct _gr_chart_linech, slot_shift_percentage), GR_CON_LINECH_SLOT_2D_SHIFT),
+    gr_contab_enLSD("L2S,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_CHART,  offsetof(GR_CHART, linech) + offsetof(struct GR_CHART_LINECH, slot_shift_percentage), GR_CON_LINECH_SLOT_2D_SHIFT),
 
     /*
     GR_AXES
@@ -955,7 +953,7 @@ gr_construct_table[GR_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
     gr_contab_entry("ASS,G,", GR_ARG_S32,                       GR_STR_AXES,   offsetof(GR_AXES, sertype),   GR_CON_AXES_SERIES_TYPE), /* default series type */
     gr_contab_entry("AST,G,", GR_ARG_S32,                       GR_STR_AXES,   offsetof(GR_AXES, charttype), GR_CON_AXES_CHART_TYPE),  /* default series chart type */
     /* SKS after 4.12 26mar92 - new construct for overlay loading */
-    gr_contab_entry("AFS,G,", GR_ARG_S32,                       GR_STR_AXES,   offsetof(GR_AXES, series) + offsetof(struct _gr_axes_series, start_series), GR_CON_AXES_START_SERIES),
+    gr_contab_entry("AFS,G,", GR_ARG_S32,                       GR_STR_AXES,   offsetof(GR_AXES, series) + offsetof(struct GR_AXES_SERIES, start_series), GR_CON_AXES_START_SERIES),
 
     /*
     GR_AXIS
@@ -975,10 +973,10 @@ gr_construct_table[GR_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
     GR_SERIES
     */
 
-    gr_contab_entry("SEB,G,", GR_ARG_UBF32,                     GR_STR_SERIES, offsetof(GR_SERIES, bits),                                                         GR_CON_SERIES_BITS),
-    gr_contab_enLSD("SEP,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_SERIES, offsetof(GR_SERIES, style) + offsetof(struct _gr_series_style, pie_start_heading), GR_CON_SERIES_PIE_HEADING),
-    gr_contab_entry("SES,G,", GR_ARG_S32,                       GR_STR_SERIES, offsetof(GR_SERIES, sertype),                                                      GR_CON_SERIES_SERIES_TYPE),
-    gr_contab_entry("SET,G,", GR_ARG_S32,                       GR_STR_SERIES, offsetof(GR_SERIES, charttype),                                                    GR_CON_SERIES_CHART_TYPE),
+    gr_contab_entry("SEB,G,", GR_ARG_UBF32,                     GR_STR_SERIES, offsetof(GR_SERIES, bits),                                                        GR_CON_SERIES_BITS),
+    gr_contab_enLSD("SEP,G,", GR_ARG_F64_SAVE, GR_ARG_F64_LOAD, GR_STR_SERIES, offsetof(GR_SERIES, style) + offsetof(struct GR_SERIES_STYLE, pie_start_heading), GR_CON_SERIES_PIE_HEADING),
+    gr_contab_entry("SES,G,", GR_ARG_S32,                       GR_STR_SERIES, offsetof(GR_SERIES, sertype),                                                     GR_CON_SERIES_SERIES_TYPE),
+    gr_contab_entry("SET,G,", GR_ARG_S32,                       GR_STR_SERIES, offsetof(GR_SERIES, charttype),                                                   GR_CON_SERIES_CHART_TYPE),
 
     /*
     harder to poke, more generic types
@@ -1022,17 +1020,17 @@ gr_chart_construct_table_register(
 static GR_CHART_OBJID
 gr_load_save_objid;
 
-static GR_AXES_NO
-gr_load_save_use_axes;
+static GR_AXES_IDX
+gr_load_save_use_axes_idx;
 
-static GR_AXIS_NO
-gr_load_save_use_axis;
+static GR_AXIS_IDX
+gr_load_save_use_axis_idx;
 
-static GR_SERIES_IX
-gr_load_save_use_seridx;
+static GR_SERIES_IDX
+gr_load_save_use_series_idx;
 
 static S32
-gr_load_save_use_seridx_ok;
+gr_load_save_use_series_idx_ok;
 
 /*
 a three state object:
@@ -1049,10 +1047,10 @@ gr_load_save_id_change(
     P_GR_CHART cp,
     S32 in_save)
 {
-    gr_load_save_use_axes      = 0;
-    gr_load_save_use_axis      = 0;
-    gr_load_save_use_seridx    = 0;
-    gr_load_save_use_seridx_ok = 0;
+    gr_load_save_use_axes_idx      = 0;
+    gr_load_save_use_axis_idx      = 0;
+    gr_load_save_use_series_idx    = 0;
+    gr_load_save_use_series_idx_ok = 0;
 
     /* now we have to work out what this 'selected' for direct pokers */
     switch(gr_load_save_objid.name)
@@ -1071,10 +1069,10 @@ gr_load_save_id_change(
         case GR_CHART_OBJNAME_DROPPOINT:
         case GR_CHART_OBJNAME_BESTFITSER:
             {
-            GR_SERIES_IX seridx;
+            GR_SERIES_IDX series_idx;
 
             if(in_save)
-                seridx = gr_series_ix_from_external(cp, gr_load_save_objid.no);
+                series_idx = gr_series_idx_from_external(cp, gr_load_save_objid.no);
             else
                 {
                 P_GR_SERIES serp;
@@ -1083,26 +1081,26 @@ gr_load_save_id_change(
                 /* SKS after 4.12 26mar92 - series are loaded contiguously into axes set 0 and
                  * eventually split with explicit split point to preserve overlay series styles
                 */
-                seridx = gr_load_save_objid.no - 1;
+                series_idx = gr_load_save_objid.no - 1;
 
-                if(seridx >= cp->axes[0].series.end_idx)
+                if(series_idx >= cp->axes[0].series.end_idx)
                     {
                     if((res = gr_chart_add_series(cp, 0, 1 /*init if new*/)) < 0)
                         return(res);
 
                     /* NB. convert using fn as allocation may have changed */
-                    seridx = gr_series_ix_from_external(cp, gr_load_save_objid.no);
+                    series_idx = gr_series_idx_from_external(cp, gr_load_save_objid.no);
 
-                    serp = getserp(cp, seridx);
+                    serp = getserp(cp, series_idx);
 
                     /* don't auto-reinitialise descriptors created by loading */
                     serp->internal_bits.descriptor_ok = 1;
                     }
                 }
 
-            gr_load_save_use_axes      = gr_axes_ix_from_seridx(cp, seridx);
-            gr_load_save_use_seridx    = seridx;
-            gr_load_save_use_seridx_ok = 1;
+            gr_load_save_use_axes_idx      = gr_axes_idx_from_series_idx(cp, series_idx);
+            gr_load_save_use_series_idx    = series_idx;
+            gr_load_save_use_series_idx_ok = 1;
             }
             break;
 
@@ -1111,7 +1109,7 @@ gr_load_save_id_change(
         case GR_CHART_OBJNAME_AXISTICK:
             /* can poke unused axes ok */
 
-            gr_load_save_use_axis = gr_axes_ix_from_external(cp, gr_load_save_objid.no, &gr_load_save_use_axes);
+            gr_load_save_use_axis_idx = gr_axes_idx_from_external(cp, gr_load_save_objid.no, &gr_load_save_use_axes_idx);
             break;
         }
 
@@ -1168,7 +1166,7 @@ gr_construct_save(
         case GR_STR_AXES:
             assert(!gr_load_save_id_out_pending);
             assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes] : NULL;
+            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx] : NULL;
             if(!p0)
                 return(1);
             break;
@@ -1176,7 +1174,7 @@ gr_construct_save(
         case GR_STR_AXIS:
             assert(!gr_load_save_id_out_pending);
             assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes].axis[gr_load_save_use_axis] : NULL;
+            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx].axis[gr_load_save_use_axis_idx] : NULL;
             if(!p0)
                 return(1);
             break;
@@ -1184,8 +1182,8 @@ gr_construct_save(
         case GR_STR_SERIES:
             assert(!gr_load_save_id_out_pending);
             assert(cp);
-            assert(gr_load_save_use_seridx_ok);
-            p0 = (cp && gr_load_save_use_seridx_ok) ? getserp(cp, gr_load_save_use_seridx) : NULL;
+            assert(gr_load_save_use_series_idx_ok);
+            p0 = (cp && gr_load_save_use_series_idx_ok) ? getserp(cp, gr_load_save_use_series_idx) : NULL;
             if(!p0)
                 return(1);
             break;
@@ -1577,9 +1575,9 @@ gr_fillstyle_table_save(
         {
         LIST_ITEMNO key;
 
-        for(p_u32 = collect_first(&fillstyle_translation_table.lbr, &key);
+        for(p_u32 = collect_first(U32, &fillstyle_translation_table.lbr, &key);
             p_u32;
-            p_u32 = collect_next( &fillstyle_translation_table.lbr, &key))
+            p_u32 = collect_next( U32, &fillstyle_translation_table.lbr, &key))
             {
             if(ekey == *p_u32)
                 {
@@ -1722,12 +1720,12 @@ gr_chart_save_legend(
 *
 ******************************************************************************/
 
-typedef struct _GR_CHART_SAVE_POINT_DATA_LIST
+typedef struct GR_CHART_SAVE_POINT_DATA_LIST
 {
     const GR_LIST_ID          list_id;
     GR_CONSTRUCT_TABLE_OFFSET contab_ix;
     LIST_ITEMNO               key;
-    struct _GR_CHART_SAVE_POINT_DATA_LIST_BITS
+    struct GR_CHART_SAVE_POINT_DATA_LIST_BITS
         {
         UBF def_save : 1;
         UBF cur_save : 1;
@@ -1736,27 +1734,27 @@ typedef struct _GR_CHART_SAVE_POINT_DATA_LIST
 }
 * P_GR_CHART_SAVE_POINT_DATA_LIST;
 
-typedef struct _GR_CHART_SAVE_POINT_DATA
+typedef struct GR_CHART_SAVE_POINT_DATA
 {
     P_GR_CHART_SAVE_POINT_DATA_LIST list;
     U32                             list_n;
 }
 * P_GR_CHART_SAVE_POINT_DATA;
 
-static struct _GR_CHART_SAVE_POINT_DATA_LIST
+static struct GR_CHART_SAVE_POINT_DATA_LIST
 gr_chart_save_pdrop_data_list[] =
 {
     { GR_LIST_PDROP_FILLSTYLE,      GR_CON_FILLSTYLE,      0, 0 },
     { GR_LIST_PDROP_LINESTYLE,      GR_CON_LINESTYLE,      0, 0 }
 };
 
-static struct _GR_CHART_SAVE_POINT_DATA
+static struct GR_CHART_SAVE_POINT_DATA
 gr_chart_save_pdrop_data =
 {
     gr_chart_save_pdrop_data_list, elemof32(gr_chart_save_pdrop_data_list)
 };
 
-static struct _GR_CHART_SAVE_POINT_DATA_LIST
+static struct GR_CHART_SAVE_POINT_DATA_LIST
 gr_chart_save_point_data_list[] =
 {
     { GR_LIST_POINT_FILLSTYLE,       GR_CON_FILLSTYLE,       0, 1 },
@@ -1771,7 +1769,7 @@ gr_chart_save_point_data_list[] =
     { GR_LIST_POINT_SCATCHSTYLE,     GR_CON_SCATCHSTYLE,     0, 0 }
 };
 
-static struct _GR_CHART_SAVE_POINT_DATA
+static struct GR_CHART_SAVE_POINT_DATA
 gr_chart_save_point_data =
 {
     gr_chart_save_point_data_list, elemof32(gr_chart_save_point_data_list)
@@ -1805,7 +1803,7 @@ static S32
 gr_chart_save_points(
     P_GR_CHART    cp,
     FILE_HANDLE  f,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     P_GR_CHART_SAVE_POINT_DATA p_data)
 {
     LIST_ITEMNO max_key = gr_point_key_from_external(GR_CHART_OBJID_SUBNO_MAX) + 1; /* off the end of saveable range */
@@ -1830,7 +1828,7 @@ gr_chart_save_points(
                 if(((first
                         ? gr_point_list_first
                         : gr_point_list_next )
-                        (cp, seridx, &p_data->list[ix].key, p_data->list[ix].list_id)) == NULL)
+                        (cp, series_idx, &p_data->list[ix].key, p_data->list[ix].list_id)) == NULL)
                     /* ensure key becomes end jammed if point data not found */
                     p_data->list[ix].key = max_key;
                 else
@@ -1872,7 +1870,7 @@ static S32
 gr_chart_save_points_and_pdrops(
     P_GR_CHART    cp,
     FILE_HANDLE  f,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
     S32 res;
 
@@ -1880,12 +1878,12 @@ gr_chart_save_points_and_pdrops(
 
     gr_load_save_objid.name = GR_CHART_OBJNAME_POINT;
 
-    if((res = gr_chart_save_points(cp, f, seridx, &gr_chart_save_point_data)) < 0)
+    if((res = gr_chart_save_points(cp, f, series_idx, &gr_chart_save_point_data)) < 0)
         return(res);
 
     gr_load_save_objid.name = GR_CHART_OBJNAME_DROPPOINT;
 
-    if((res = gr_chart_save_points(cp, f, seridx, &gr_chart_save_pdrop_data)) < 0)
+    if((res = gr_chart_save_points(cp, f, series_idx, &gr_chart_save_pdrop_data)) < 0)
         return(res);
 
     return(1);
@@ -1895,14 +1893,14 @@ static S32
 gr_chart_save_series(
     P_GR_CHART cp,
     FILE_HANDLE f,
-    GR_SERIES_IX seridx)
+    GR_SERIES_IDX series_idx)
 {
     U32 contab_ix;
     S32 res;
     P_GR_SERIES serp;
     GR_CHARTTYPE charttype;
 
-    gr_chart_objid_from_seridx(cp, seridx, &gr_load_save_objid);
+    gr_chart_objid_from_series_idx(cp, series_idx, &gr_load_save_objid);
 
     if((res = gr_save_id_now(cp, f)) < 0)
         return(res);
@@ -1920,7 +1918,7 @@ gr_chart_save_series(
     if((res = gr_construct_save(cp, f, GR_CON_TEXTSTYLE)) < 0)
         return(res);
 
-    serp = getserp(cp, seridx);
+    serp = getserp(cp, series_idx);
 
     charttype = cp->axes[0].charttype;
 
@@ -1933,7 +1931,7 @@ gr_chart_save_series(
         default:
         case GR_CHARTTYPE_BAR:
         case GR_CHARTTYPE_LINE:
-            charttype = cp->axes[gr_load_save_use_axes].charttype;
+            charttype = cp->axes[gr_load_save_use_axes_idx].charttype;
 
             if(charttype != GR_CHARTTYPE_LINE)
                 charttype = GR_CHARTTYPE_BAR;
@@ -2027,7 +2025,7 @@ gr_chart_save_series(
     point data
     */
 
-    if((res = gr_chart_save_points_and_pdrops(cp, f, seridx)) < 0)
+    if((res = gr_chart_save_points_and_pdrops(cp, f, series_idx)) < 0)
         return(res);
 
     return(1);
@@ -2037,14 +2035,14 @@ static S32
 gr_chart_save_axis(
     P_GR_CHART cp,
     FILE_HANDLE f,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis)
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx)
 {
     U32 contab_ix;
     S32 res;
     U32 mmix;
 
-    gr_chart_objid_from_axes(cp, axes, axis, &gr_load_save_objid);
+    gr_chart_objid_from_axes_idx(cp, axes_idx, axis_idx, &gr_load_save_objid);
 
     if((res = gr_save_id_now(cp, f)) < 0)
         return(res);
@@ -2087,13 +2085,13 @@ static S32
 gr_chart_save_axes(
     P_GR_CHART cp,
     FILE_HANDLE f,
-    GR_AXES_NO axes)
+    GR_AXES_IDX axes_idx)
 {
     U32 contab_ix;
     GR_CHARTTYPE charttype;
     S32 res;
 
-    gr_chart_objid_from_axes(cp, axes, 0, &gr_load_save_objid);
+    gr_chart_objid_from_axes_idx(cp, axes_idx, 0, &gr_load_save_objid);
 
     if((res = gr_save_id_now(cp, f)) < 0)
         return(res);
@@ -2120,7 +2118,7 @@ gr_chart_save_axes(
         default:
         case GR_CHARTTYPE_BAR:
         case GR_CHARTTYPE_LINE:
-            charttype = cp->axes[gr_load_save_use_axes].charttype;
+            charttype = cp->axes[gr_load_save_use_axes_idx].charttype;
 
             if(charttype != GR_CHARTTYPE_LINE)
                 charttype = GR_CHARTTYPE_BAR;
@@ -2168,30 +2166,30 @@ gr_chart_save_texts(
     LIST_ITEMNO key;
     P_GR_TEXT    t;
 
-    for(t = collect_first(&cp->text.lbr, &key);
+    for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
         t;
-        t = collect_next( &cp->text.lbr, &key))
+        t = collect_next( GR_TEXT, &cp->text.lbr, &key))
         {
-        if(!t->bits.unused)
-            {
-            gr_chart_objid_from_text(key, &gr_load_save_objid);
+        if(t->bits.unused)
+            continue;
 
-            if((res = gr_save_id(cp, f)) < 0)
+        gr_chart_objid_from_text(key, &gr_load_save_objid);
+
+        if((res = gr_save_id(cp, f)) < 0)
+            return(res);
+
+        /* we have to add static texts; live texts will be added by punter reload */
+        if(!t->bits.live_text)
+            if((res = gr_construct_save(cp, f, GR_CON_TEXTCONTENTS,
+                                        /* extra extra */
+                                        (t + 1))) < 0)
                 return(res);
 
-            /* we have to add static texts; live texts will be added by punter reload */
-            if(!t->bits.live_text)
-                if((res = gr_construct_save(cp, f, GR_CON_TEXTCONTENTS,
-                                            /* extra extra */
-                                            (t + 1))) < 0)
-                    return(res);
+        if((res = gr_construct_save(cp, f,  GR_CON_TEXTPOS)) < 0)
+            return(res);
 
-            if((res = gr_construct_save(cp, f,  GR_CON_TEXTPOS)) < 0)
-                return(res);
-
-            if((res = gr_construct_save(cp, f, GR_CON_TEXTSTYLE)) < 0)
-                return(res);
-            }
+        if((res = gr_construct_save(cp, f, GR_CON_TEXTSTYLE)) < 0)
+            return(res);
         }
 
     return(1);
@@ -2210,9 +2208,9 @@ gr_chart_save_internal(
     FILE_HANDLE f,
     P_U8 filename /*const*/)
 {
-    GR_AXES_NO axes;
-    GR_AXIS_NO axis;
-    S32        res;
+    GR_AXES_IDX axes_idx;
+    GR_AXIS_IDX axis_idx;
+    S32 res;
 
     if((res = gr_fillstyle_table_save(cp, f, filename)) < 0)
         return(res);
@@ -2239,14 +2237,14 @@ gr_chart_save_internal(
             break;
 
         case GR_CHARTTYPE_SCAT:
-            for(axes = 0; axes <= cp->axes_max; ++axes)
+            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
                 {
-                if((res = gr_chart_save_axes(cp, f, axes)) < 0)
+                if((res = gr_chart_save_axes(cp, f, axes_idx)) < 0)
                     return(res);
 
                 /* output value X and Y axes */
-                for(axis = 0; axis <= 1; ++axis)
-                    if((res = gr_chart_save_axis(cp, f, axes, axis)) < 0)
+                for(axis_idx = 0; axis_idx <= 1; ++axis_idx)
+                    if((res = gr_chart_save_axis(cp, f, axes_idx, axis_idx)) < 0)
                         return(res);
                 }
             break;
@@ -2254,21 +2252,21 @@ gr_chart_save_internal(
         default:
         case GR_CHARTTYPE_BAR:
         case GR_CHARTTYPE_LINE:
-            for(axes = 0; axes <= cp->axes_max; ++axes)
+            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
                 {
-                if((res = gr_chart_save_axes(cp, f, axes)) < 0)
+                if((res = gr_chart_save_axes(cp, f, axes_idx)) < 0)
                     return(res);
 
                 /* output category X and 1 or 2 value Y axes.
                  * ignore Z axes as they are currently irrelevant
                 */
-                for(axis = 0; axis <= 1; ++axis)
+                for(axis_idx = 0; axis_idx <= 1; ++axis_idx)
                     {
                     /* it is pointless outputting the second, identical, category axis */
-                    if((axis == 0) && (axes == 1))
+                    if((axis_idx == 0) && (axes_idx == 1))
                         continue;
 
-                    if((res = gr_chart_save_axis(cp, f, axes, axis)) < 0)
+                    if((res = gr_chart_save_axis(cp, f, axes_idx, axis_idx)) < 0)
                         return(res);
                     }
                 }
@@ -2277,12 +2275,12 @@ gr_chart_save_internal(
 
     switch(cp->axes[0].charttype)
         {
-        GR_SERIES_IX seridx;
+        GR_SERIES_IDX series_idx;
 
         case GR_CHARTTYPE_PIE:
             /* just the one series */
-            seridx = cp->pie_seridx;
-            if((res = gr_chart_save_series(cp, f, seridx)) < 0)
+            series_idx = cp->pie_series_idx;
+            if((res = gr_chart_save_series(cp, f, series_idx)) < 0)
                 return(res);
             break;
 
@@ -2290,11 +2288,11 @@ gr_chart_save_internal(
         default:
         case GR_CHARTTYPE_BAR:
         case GR_CHARTTYPE_LINE:
-            for(axes = 0; axes <= cp->axes_max; ++axes)
-                for(seridx = cp->axes[axes].series.stt_idx;
-                    seridx < cp->axes[axes].series.end_idx;
-                    seridx++)
-                        if((res = gr_chart_save_series(cp, f, seridx)) < 0)
+            for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
+                for(series_idx = cp->axes[axes_idx].series.stt_idx;
+                    series_idx < cp->axes[axes_idx].series.end_idx;
+                    series_idx++)
+                        if((res = gr_chart_save_series(cp, f, series_idx)) < 0)
                             return(res);
             break;
         }
@@ -2307,7 +2305,7 @@ gr_chart_save_internal(
     return(res);
 }
 
-static struct _construct_quick_cvt
+static struct CONSTRUCT_QUICK_CVT
 {
     P_U8 str;
     U8   ch;
@@ -2508,22 +2506,22 @@ gr_construct_load_this(
 
         case GR_STR_AXES:
             assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes] : NULL;
+            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx] : NULL;
             if(!p0)
                 return(1);
             break;
 
         case GR_STR_AXIS:
             assert(cp);
-            p0 = cp ? &cp->axes[gr_load_save_use_axes].axis[gr_load_save_use_axis] : NULL;
+            p0 = cp ? &cp->axes[gr_load_save_use_axes_idx].axis[gr_load_save_use_axis_idx] : NULL;
             if(!p0)
                 return(1);
             break;
 
         case GR_STR_SERIES:
             assert(cp);
-            assert(gr_load_save_use_seridx_ok);
-            p0 = (cp && gr_load_save_use_seridx_ok) ? getserp(cp, gr_load_save_use_seridx) : NULL;
+            assert(gr_load_save_use_series_idx_ok);
+            p0 = (cp && gr_load_save_use_series_idx_ok) ? getserp(cp, gr_load_save_use_series_idx) : NULL;
             if(!p0)
                 return(1);
             break;
@@ -2912,9 +2910,9 @@ gr_chart_construct_tagstrip_process(
         }
 
     /* SKS after 4.12 26mar92 - end of that lot, post-process overlay chart to preserve styles */
-    if(cp->axes_max > 0)
+    if(cp->axes_idx_max > 0)
         {
-        GR_SERIES_NO first_overlay_series;
+        GR_ESERIES_NO first_overlay_series;
 
         first_overlay_series = cp->axes[1].series.start_series;
         if(first_overlay_series < 0)
@@ -2923,9 +2921,9 @@ gr_chart_construct_tagstrip_process(
         if(first_overlay_series /*>= 0*/ && (first_overlay_series <= cp->series.n_defined))
             {
             /* split between axes 0 and 1 sets */
-            GR_SERIES_IX first_overlay_seridx;
+            GR_SERIES_IDX first_overlay_seridx;
 
-            first_overlay_seridx = gr_series_ix_from_external(cp, first_overlay_series);
+            first_overlay_seridx = gr_series_idx_from_external(cp, first_overlay_series);
 
             cp->axes[1].series.end_idx = cp->axes[0].series.end_idx;
             cp->axes[1].series.stt_idx = first_overlay_seridx;

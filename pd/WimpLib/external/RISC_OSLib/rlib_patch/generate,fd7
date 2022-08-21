@@ -16,6 +16,9 @@ Set WimpLib_tmp$Dir $._coltsoft.pd-nonfree.WimpLib
 |
 IfThere <WimpLib_tmp$Dir> Then Else Error WimpLib_tmp$Dir not present
 |
+echo This script requires GNU diff - install DiffUtils (temporarily if needs be)
+diff --version
+|
 cdir c
 |
 copy <flexlib_tmp$Dir>.c.flex _src ~CF~N~V

@@ -85,7 +85,7 @@ All types are upper case
 
 Structures are defined thus:
 
-    typedef struct _FRED
+    typedef struct FRED
     {
     }
     FRED;
@@ -109,7 +109,7 @@ larger by 1 and prefixed with BUF_:
 
 Where the parameters of a function include a source and a destination,
 the destination should appear first in the parameter list,
-as it does for example safe_strkpy(dst, elemof_dst, src)
+as it does for example xstrkpy(dst, elemof_dst, src)
 
 When you have start and end pointers / indexes they must be
 inclusive, exclusive whether they point to memory, slots, arrays or anything
@@ -483,7 +483,7 @@ buffer sizes for printf conversions
 remove const from pointer
 */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 #define de_const_cast(__type, __expr) (const_cast < __type > ( __expr ))
 #else
 #define de_const_cast(__type, __expr) (( /*de-const*/ __type ) ( __expr ))
@@ -520,22 +520,34 @@ bsearch() / bfind()
 */
 
 typedef /*_Check_return_*/ int (__cdecl * P_PROC_BSEARCH) (
-    _Pre_valid_ const void * key,
-    _Pre_valid_ const void * datum);
+    _Pre_valid_ const void * _key,
+    _Pre_valid_ const void * _datum);
 
 #define PROC_BSEARCH_PROTO(_e_s, _proc_bsearch, __key_base_type, __datum_base_type) \
 _Check_return_ \
 _e_s int __cdecl _proc_bsearch( \
-    _In_bytecount_c_(sizeof(__key_base_type))   const void * key, \
-    _In_bytecount_c_(sizeof(__datum_base_type)) const void * datum)
+    _In_bytecount_c_(sizeof(__key_base_type))   const void * _key, \
+    _In_bytecount_c_(sizeof(__datum_base_type)) const void * _datum)
+
+#define BSEARCH_KEY(__key_ptr_type) ((__key_ptr_type) \
+    _key)
+
+#define BSEARCH_KEY_VAR_DECL(__key_ptr_type, __var_name) \
+    __key_ptr_type __var_name = BSEARCH_KEY(__key_ptr_type)
+
+#define BSEARCH_DATUM(__datum_ptr_type) ((__datum_ptr_type) \
+    _datum)
+
+#define BSEARCH_DATUM_VAR_DECL(__datum_ptr_type, __var_name) \
+    __datum_ptr_type __var_name = BSEARCH_DATUM(__datum_ptr_type)
 
 /* for NULLCH-terminated string lookup */
 /* Removing z_ avoids the C6510 'Invalid annotation: 'NullTerminated'' warning */
 #define PROC_BSEARCH_PROTO_Z(_e_s, _proc_bsearch, __key_base_type, __datum_base_type) \
 _Check_return_ \
 _e_s int __cdecl _proc_bsearch( \
-    _Pre_valid_ /*_In_z_*/ /*__key_base_type unused*/ const void *key_in, \
-    _In_bytecount_c_(sizeof(__datum_base_type)) const void *datum_in)
+    _Pre_valid_ /*_In_z_*/ /*__key_base_type unused*/ const void * _key, \
+    _In_bytecount_c_(sizeof(__datum_base_type)) const void * _datum)
 
 /*
 qsort()
@@ -572,6 +584,7 @@ _e_s_ int __cdecl _proc_qsort_s( \
 #define HOST_WND_NONE ((HOST_WND) 0)
 
 #define HOST_FONT int   /* font */
+#define HOST_FONT_NONE ((HOST_FONT) 0)
 #endif
 
 /*
@@ -588,13 +601,13 @@ typedef S32 GDI_COORD; typedef GDI_COORD * P_GDI_COORD; typedef const GDI_COORD 
 points, or simply pairs of coordinates
 */
 
-typedef struct _GDI_POINT
+typedef struct GDI_POINT
 {
     GDI_COORD x, y;
 }
 GDI_POINT, * P_GDI_POINT; typedef const GDI_POINT * PC_GDI_POINT;
 
-typedef struct _GDI_SIZE
+typedef struct GDI_SIZE
 {
     GDI_COORD cx, cy;
 }
@@ -604,7 +617,7 @@ GDI_SIZE, * P_GDI_SIZE; typedef const GDI_SIZE * PC_GDI_SIZE;
 boxes, or simply pairs of points
 */
 
-typedef struct _GDI_BOX
+typedef struct GDI_BOX
 {
     GDI_COORD x0, y0, x1, y1;
 }
@@ -618,7 +631,7 @@ GDI_BOX, * P_GDI_BOX; typedef const GDI_BOX * PC_GDI_BOX;
 ordered rectangles
 */
 
-typedef struct _GDI_RECT
+typedef struct GDI_RECT
 {
     GDI_POINT tl, br;
 }
@@ -655,19 +668,18 @@ memcpy32(
 }
 
 static inline void
-tiny_memcpy32(
-    _Out_writes_bytes_(n_bytes) P_ANY dst,
-    _In_reads_bytes_(n_bytes) PC_ANY src,
-    _InVal_     U32 n_bytes) /* must be non-zero */
+short_memcpy32nz(
+    _Out_writes_bytes_(n_bytes) P_ANY dst_in,
+    _In_reads_bytes_(n_bytes) PC_ANY src_in,
+    _InVal_     U32 n_bytes) /* NB not zero */
 {
-    P_BYTE to = (P_BYTE) dst;
-    PC_BYTE from = (PC_BYTE) src;
-    PC_BYTE from_end = from + n_bytes;
+    P_BYTE dst = (P_BYTE) dst_in;
+    PC_BYTE src = (PC_BYTE) src_in;
+    const PC_BYTE end_src = src + n_bytes;
 
-    do  {
-        *to++ = *from++;
-        }
-    while(from != from_end);
+    do
+        *dst++ = *src++;
+    while(src < end_src);
 }
 
 static inline void
@@ -714,6 +726,12 @@ memset32(
 #define PREFAST_ONLY_ZERO(_ptr, _size) /* nothing */
 #define PREFAST_ONLY_ZERO_STRUCT(_struct) /* nothing */
 #define PREFAST_ONLY_ZERO_STRUCT_PTR(_ptr) /* nothing */
+#endif
+
+#if defined(_PREFAST_)
+#define PREFAST_ONLY(stmt)      stmt
+#else
+#define PREFAST_ONLY(stmt)      /* stmt omitted in normal build */
 #endif
 
 #if defined(_PREFAST_)
@@ -856,6 +874,7 @@ UCS-4 character definitions
 UCS-4 0000..001F C0 Controls
 */
 
+#define CH_NULL                     0x00
 #define CH_INLINE                   0x07    /* Fireworkz inline identifier code */
 #define CH_TAB                      0x09
 #define CH_ESCAPE                   0x1B
@@ -864,13 +883,46 @@ UCS-4 0000..001F C0 Controls
 UCS-4 0020..007F Basic Latin
 */
 
-#define CH_SPACE                    0x20
-#define CH_QUOTATION_MARK           0x22
-#define CH_APOSTROPHE               0x27
-#define CH_HYPHEN_MINUS             0x2D
-#define CH_LOW_LINE                 0x5F
+#define CH_SPACE                    0x20    /*   */
+#define CH_EXCLAMATION_MARK         0x21    /* ! */
+#define CH_QUOTATION_MARK           0x22    /* " */
+#define CH_NUMBER_SIGN              0x23    /* # */ /*hash*/
+#define CH_HASH                     CH_NUMBER_SIGN
+#define CH_DOLLAR_SIGN              0x24    /* $ */
+#define CH_PERCENT_SIGN             0x25    /* % */
+#define CH_AMPERSAND                0x26    /* & */
+#define CH_APOSTROPHE               0x27    /* ' */
+#define CH_LEFT_PARENTHESIS         0x28    /* ( */
+#define CH_RIGHT_PARENTHESIS        0x29    /* ) */
+#define CH_ASTERISK                 0x2A    /* * */
+#define CH_PLUS_SIGN                0x2B    /* + */
+#define CH_COMMA                    0x2C    /* , */
+#define CH_HYPHEN_MINUS             0x2D    /* - */
+#define CH_MINUS_SIGN               CH_HYPHEN_MINUS
+#define CH_FULL_STOP                0x2E    /* . */
+#define CH_SOLIDUS                  0x2F    /* / */ /*slash*/
+#define CH_FORWARDS_SLASH           CH_SOLIDUS
+#define CH_DIGIT_ZERO               0x30    /* 0 */
+#define CH_DIGIT_NINE               0x39    /* 9 */
+#define CH_COLON                    0x3A    /* : */
+#define CH_SEMICOLON                0x3B    /* ; */
+#define CH_LESS_THAN_SIGN           0x3C    /* < */
+#define CH_EQUALS_SIGN              0x3D    /* = */
+#define CH_GREATER_THAN_SIGN        0x3E    /* > */
+#define CH_COMMERCIAL_AT            0x40    /* @ */
+#define CH_QUESTION_MARK            0x3F    /* ? */
+#define CH_LEFT_SQUARE_BRACKET      0x5B    /* [ */
+#define CH_REVERSE_SOLIDUS          0x5C    /* \ */ /*backslash*/
+#define CH_BACKWARDS_SLASH          CH_REVERSE_SOLIDUS
+#define CH_RIGHT_SQUARE_BRACKET     0x5D    /* ] */
+#define CH_CIRCUMFLEX_ACCENT        0x5E    /* ^ */
+#define CH_LOW_LINE                 0x5F    /* _ */ /*underscore*/
 #define CH_UNDERSCORE               CH_LOW_LINE
-#define CH_DELETE                   0x7F    /* NB DELETE is defined in winnt.h */
+#define CH_LEFT_CURLY_BRACKET       0x7B    /* { */
+#define CH_VERTICAL_LINE            0x7C    /* | */
+#define CH_RIGHT_CURLY_BRACKET      0x7D    /* } */
+#define CH_TILDE                    0x7E    /* ~ */
+#define CH_DELETE                   0x7F
 
 /*
 UCS-4 0080..009F C1 Controls
@@ -963,11 +1015,23 @@ typedef char align_t;
 
 #define consume_bool(expr) consume(BOOL, expr)
 
+#define consume_int(expr) consume(int, expr) /* quite useful for printf() etc */
+
 /*
 a pointer that will hopefully give a trap when dereferenced even when not CHECKING
 */
 
-#if defined(_WIN64)
+#if RISCOS
+
+/* doesn't seem to be anything at 3GB */
+
+#define BAD_POINTER_X(__ptr_type, X) ((__ptr_type) \
+    (uintptr_t) (0xC0000000U | (X)))
+
+#define BAD_POINTER_X_RANGE ( \
+    (uintptr_t) (0x3FFFFFFFU))
+
+#elif defined(_WIN64)
 
 #define BAD_POINTER_X(__ptr_type, X) ((__ptr_type) \
     (uintptr_t) (0xFF00000000000000U | (X)))
@@ -1013,6 +1077,8 @@ a pointer that will hopefully give a trap when dereferenced even when not CHECKI
 #define _P_DATA_NONE(__ptr_type) ( \
     PTR_NONE_X(__ptr_type, 0))
 
+#define PTR_ASSERT(p) \
+    assert(NULL != (p))
 /*
 round up v if needed to the next r (r must be a power of 2)
 */
@@ -1085,6 +1151,12 @@ Enumeration handling
 
 #define ENUM_UNPACK(__enum_type, packed_value) \
     ((__enum_type) (packed_value))
+
+#if CHECKING
+#define CHECKING_ONLY(stmt)     stmt
+#else
+#define CHECKING_ONLY(stmt)     /* stmt omitted in normal build */
+#endif
 
 #if CHECKING
 #define CHECKING_ONLY_ARG(arg) , arg

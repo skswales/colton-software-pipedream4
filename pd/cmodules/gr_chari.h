@@ -53,7 +53,7 @@ required includes
 
 #if RISCOS
 
-typedef struct _GR_RISCDIAG_TAGSTRIP_INFO * P_GR_RISCDIAG_TAGSTRIP_INFO;
+typedef struct GR_RISCDIAG_TAGSTRIP_INFO * P_GR_RISCDIAG_TAGSTRIP_INFO;
 
 typedef S32 (* gr_riscdiag_tagstrip_proc) (
     P_ANY handle,
@@ -77,9 +77,8 @@ _e_s S32 _p_proc_gr_riscdiag_tagstrip( \
 #endif
 
 typedef /*unsigned*/ int GR_DATASOURCE_NO;
-typedef /*unsigned*/ int GR_AXES_NO; typedef GR_AXES_NO * P_GR_AXES_NO;
 
-typedef struct _gr_minmax_number
+typedef struct GR_MINMAX_NUMBER
 {
     GR_CHART_NUMBER min, max;
 }
@@ -88,13 +87,13 @@ GR_MINMAX_NUMBER;
 /*
 an index into the series table of a chart
 */
-typedef /*unsigned*/ int GR_SERIES_IX;
+typedef /*unsigned*/ int GR_SERIES_IDX;
 
 /*
 chart object 'names'
 */
 
-typedef enum
+typedef enum GR_CHART_OBJID_NAME
 {
     GR_CHART_OBJNAME_ANON       = 0,
 
@@ -124,7 +123,7 @@ GR_CHART_OBJID_NAME;
 this is a 32-bit id
 */
 
-typedef struct _GR_CHART_OBJID
+typedef struct GR_CHART_OBJID
 {
     UBF name      : 4; /*GR_CHART_OBJID_NAME :  C can't use enum as synonym for int in bitfields*/
 
@@ -159,7 +158,7 @@ an array of data sources is held on a per chart basis
 #define GR_DATASOURCE_HANDLE_START   ((GR_INT_HANDLE) 1) /* used for internal label adding */
 #define GR_DATASOURCE_HANDLE_TEXTS   ((GR_INT_HANDLE) 2) /* used for external texts adding */
 
-typedef struct _gr_datasource
+typedef struct GR_DATASOURCE
 {
     GR_DATASOURCE_HANDLE dsh;        /* unique non-repeating number */
 
@@ -169,14 +168,14 @@ typedef struct _gr_datasource
     GR_CHART_OBJID       id;         /* object using this data source */
 
     /* validity bits for cached items */
-    struct _gr_datasource_valid
+    struct GR_DATASOURCE_VALID
     {
         UBF n_items : 1;
     }
     valid;
 
     /* cached items */
-    struct _gr_datasource_cache
+    struct GR_DATASOURCE_CACHE
     {
         GR_CHART_ITEMNO n_items;
     }
@@ -188,7 +187,7 @@ GR_DATASOURCE, * P_GR_DATASOURCE, ** P_P_GR_DATASOURCE; typedef const GR_DATASOU
 a clutch of datasources for plotting porpoises
 */
 
-typedef struct _GR_DATASOURCE_FOURSOME
+typedef struct GR_DATASOURCE_FOURSOME
 {
     GR_DATASOURCE_HANDLE value_x, value_y;
     GR_DATASOURCE_HANDLE error_x, error_y;
@@ -199,9 +198,9 @@ GR_DATASOURCE_FOURSOME, * P_GR_DATASOURCE_FOURSOME;
 style options for bar charts
 */
 
-typedef struct _gr_barchstyle
+typedef struct GR_BARCHSTYLE
 {
-    struct _gr_series_barchstyle_bits
+    struct GR_BARCHSTYLE_BITS
     {
         UBF manual                   : 1; /* MUST BE FIRST BIT IN FIRST WORD OF STRUCTURE */
 
@@ -220,9 +219,9 @@ GR_BARCHSTYLE, * P_GR_BARCHSTYLE; typedef const GR_BARCHSTYLE * PC_GR_BARCHSTYLE
 style options for line charts
 */
 
-typedef struct _gr_linechstyle
+typedef struct GR_LINECHSTYLE
 {
-    struct _gr_series_linechstyle_bits
+    struct GR_LINECHSTYLE_BITS
     {
         UBF manual    : 1; /* MUST BE FIRST BIT IN FIRST WORD OF STRUCTURE */
 
@@ -238,9 +237,9 @@ GR_LINECHSTYLE, * P_GR_LINECHSTYLE; typedef const GR_LINECHSTYLE * PC_GR_LINECHS
 style options common to both bar and line charts
 */
 
-typedef struct _gr_barlinechstyle
+typedef struct GR_BARLINECHSTYLE
 {
-    struct _gr_series_barlinechstyle_bits
+    struct GR_BARLINECHSTYLE_BITS
     {
         UBF manual    : 1; /* MUST BE FIRST BIT IN FIRST WORD OF STRUCTURE */
 
@@ -260,9 +259,9 @@ GR_BARLINECHSTYLE, * P_GR_BARLINECHSTYLE; typedef const GR_BARLINECHSTYLE * PC_G
 style options for pie charts
 */
 
-typedef struct _gr_piechdiscplstyle
+typedef struct GR_PIECHDISPLSTYLE
 {
-    struct _gr_series_piechdisplstyle_bits
+    struct GR_PIECHDISPLSTYLE_BITS
     {
         UBF manual                   : 1; /* MUST BE FIRST BIT IN FIRST WORD OF STRUCTURE */
 
@@ -274,9 +273,9 @@ typedef struct _gr_piechdiscplstyle
 }
 GR_PIECHDISPLSTYLE, * P_GR_PIECHDISPLSTYLE; typedef const GR_PIECHDISPLSTYLE * PC_GR_PIECHDISPLSTYLE;
 
-typedef struct _gr_piechlabelstyle
+typedef struct GR_PIECHLABELSTYLE
 {
-    struct _gr_series_piechlabelstyle_bits
+    struct GR_PIECHLABELSTYLE_BITS
     {
         UBF manual                   : 1; /* MUST BE FIRST BIT IN FIRST WORD OF STRUCTURE */
 
@@ -294,9 +293,9 @@ GR_PIECHLABELSTYLE, * P_GR_PIECHLABELSTYLE; typedef const GR_PIECHLABELSTYLE * P
 style options for scatter charts
 */
 
-typedef struct _gr_scatchstyle
+typedef struct GR_SCATCHSTYLE
 {
-    struct _gr_series_scatchstyle_bits
+    struct GR_SCATCHSTYLE_BITS
     {
         UBF manual    : 1; /* MUST BE FIRST BIT IN FIRST WORD OF STRUCTURE */
 
@@ -318,7 +317,7 @@ GR_SCATCHSTYLE, * P_GR_SCATCHSTYLE; typedef const GR_SCATCHSTYLE * PC_GR_SCATCHS
 base plot style for axes/series
 */
 
-typedef enum
+typedef enum GR_CHARTTYPE
 {
     GR_CHARTTYPE_NONE = 0,
 
@@ -337,7 +336,7 @@ series (one or more per axes set)
 type of a series
 */
 
-typedef enum
+typedef enum GR_SERIES_TYPE
 {
     GR_CHART_SERIES_PLAIN  = 0,    /* requires 1 value source */
     GR_CHART_SERIES_PLAIN_ERROR1,  /* requires 1 value source and 1 error source */
@@ -354,14 +353,14 @@ typedef enum
 }
 GR_SERIES_TYPE;
 
-typedef struct _gr_series
+typedef struct GR_SERIES
 {
     /* cloning of series descriptors starts here */
 
     GR_SERIES_TYPE sertype;         /* determine number of sources needed and how used */
     GR_CHARTTYPE   charttype;       /* base type */
 
-    struct _gr_series_bits
+    struct GR_SERIES_BITS
     {
         UBF cumulative        : 1; /* s(n) = sum(s(i)...s(1)) for s(i) >= 0 */
         UBF cumulative_manual : 1; /* whether derived from axes default or set by punter */
@@ -381,7 +380,7 @@ typedef struct _gr_series
     }
     bits; /* U32 for sys indep expansion */
 
-    struct _gr_series_style
+    struct GR_SERIES_STYLE
     {
         F64                pie_start_heading;
 
@@ -407,7 +406,7 @@ typedef struct _gr_series
 
 #define GR_SERIES_CLONE_END internal_bits
 
-    struct _gr_series_internal_bits
+    struct GR_SERIES_INTERNAL_BITS
     {
         UBF point_vary_manual_pie_bodge : 1;
 
@@ -418,7 +417,7 @@ typedef struct _gr_series
     internal_bits;
 
 #define GR_SERIES_MAX_DATASOURCES 4
-    struct _gr_series_datasources
+    struct GR_SERIES_DATASOURCES
     {
         GR_DATASOURCE_NO     n;     /* how many data sources are contributing to this series */
         GR_DATASOURCE_NO     n_req; /* how many data sources are required to contribute to this series */
@@ -426,7 +425,7 @@ typedef struct _gr_series
     }
     datasources;
 
-    struct _gr_series_lbr
+    struct GR_SERIES_LBR
     {
         P_LIST_BLOCK pdrop_fill;
         P_LIST_BLOCK pdrop_line;
@@ -445,7 +444,7 @@ typedef struct _gr_series
     lbr;
 
     /* validity bits for cached items */
-    struct _gr_series_valid
+    struct GR_SERIES_VALID
     {
         UBF n_items_total : 1;
 
@@ -456,7 +455,7 @@ typedef struct _gr_series
     valid;
 
     /* cached items */
-    struct _gr_series_cache
+    struct GR_SERIES_CACHE
     {
         /* number of items contributing to the series */
         GR_CHART_ITEMNO  n_items_total;
@@ -514,9 +513,9 @@ where ticks are drawn on the axis
 
 #define GR_AXIS_TICK_SHAPE_BITS           3 /* several spare entries */
 
-typedef struct _gr_axis_ticks
+typedef struct GR_AXIS_TICKS
 {
-    struct _gr_axis_ticks_bits
+    struct GR_AXIS_TICKS_BITS
     {
         UBF decimals : 10; /* for use in decimal places rounding of value labels */
 
@@ -532,7 +531,7 @@ typedef struct _gr_axis_ticks
     GR_CHART_NUMBER punter;
     GR_CHART_NUMBER current;
 
-    struct _gr_axis_ticks_style
+    struct GR_AXIS_TICKS_STYLE
     {
         GR_LINESTYLE grid;
         GR_LINESTYLE tick;
@@ -541,7 +540,7 @@ typedef struct _gr_axis_ticks
 }
 GR_AXIS_TICKS, * P_GR_AXIS_TICKS; typedef const GR_AXIS_TICKS * PC_GR_AXIS_TICKS;
 
-typedef struct _gr_axis
+typedef struct GR_AXIS
 {
     GR_MINMAX_NUMBER punter;  /* punter specified min/max for this axis */
     GR_MINMAX_NUMBER actual;  /* actual min/max for the assoc data */
@@ -551,7 +550,7 @@ typedef struct _gr_axis
     GR_CHART_NUMBER  zero_frac;    /* how far up the axis is the zero line? */
     GR_CHART_NUMBER  current_frac; /* major span as a fraction of the current span */
 
-    struct _gr_axis_bits
+    struct GR_AXIS_BITS
     {
         UBF manual       : 1; /* if punter has specified values */
         UBF incl_zero    : 1; /* axis scaling forced to include zero */
@@ -571,7 +570,7 @@ typedef struct _gr_axis
     }
     bits; /* U32 for sys indep expansion */
 
-    struct _gr_axis_style
+    struct GR_AXIS_STYLE
     {
         GR_LINESTYLE axis;
         GR_TEXTSTYLE label;
@@ -582,7 +581,7 @@ typedef struct _gr_axis
 }
 GR_AXIS, * P_GR_AXIS; typedef const GR_AXIS * PC_GR_AXIS;
 
-enum
+enum GR_CHART_AXISTICKS
 {
     GR_CHART_AXISTICK_MAJOR = 1,
     GR_CHART_AXISTICK_MINOR
@@ -592,12 +591,12 @@ enum
 descriptor for an axes set and how series belonging to it are plotted
 */
 
-typedef struct _gr_axes
+typedef struct GR_AXES
 {
     GR_SERIES_TYPE sertype;         /* default series type for series creation on these axes */
     GR_CHARTTYPE   charttype;       /* default chart type ... */
 
-    struct _gr_axes_bits
+    struct GR_AXES_BITS
     {
         UBF cumulative  : 1;        /* default series cumulative state */
         UBF point_vary  : 1;        /* default series vary style by point state */
@@ -611,17 +610,17 @@ typedef struct _gr_axes
     }
     bits; /* U32 for sys indep expansion */
 
-    struct _gr_axes_series
+    struct GR_AXES_SERIES
     {
         /* SKS after 4.12 26mar92 - what series no this axes set should start at (-ve -> user forced, +ve auto) */
         S32 start_series;
 
-        S32 stt_idx; /* what seridx this axes set starts at */
+        S32 stt_idx; /* what series_idx this axes set starts at */
         S32 end_idx;
     }
     series;
 
-    struct _gr_axes_style
+    struct GR_AXES_STYLE
     {
         GR_BARCHSTYLE      barch;
         GR_BARLINECHSTYLE  barlinech;
@@ -632,22 +631,25 @@ typedef struct _gr_axes
     }
     style;
 
-    struct _gr_axes_cache
+    struct GR_AXES_CACHE
     {
-        GR_SERIES_NO n_contrib_bars;
-        GR_SERIES_NO n_contrib_lines;
-        GR_SERIES_NO n_series; /* for loading and shaving */
+        S32 /*GR_SERIES_NO*/ n_contrib_bars;
+        S32 /*GR_SERIES_NO*/ n_contrib_lines;
+        S32 /*GR_SERIES_NO*/ n_series; /* for loading and shaving */
     }
     cache;
 
-#define X_AXIS 0
-#define Y_AXIS 1
-#define Z_AXIS 2
+#define X_AXIS_IDX 0
+#define Y_AXIS_IDX 1
+#define Z_AXIS_IDX 2
     GR_AXIS axis[3]; /* x, y, z */
 }
-GR_AXES, * P_GR_AXES; typedef const struct _gr_axes * PC_GR_AXES;
+GR_AXES, * P_GR_AXES; typedef const GR_AXES * PC_GR_AXES;
 
-enum
+typedef S32 GR_AXIS_IDX;
+typedef S32 GR_AXES_IDX; typedef GR_AXES_IDX * P_GR_AXES_IDX;
+
+enum GR_CHART_PLOTAREAS
 {
     GR_CHART_PLOTAREA_REAR = 0,
     GR_CHART_PLOTAREA_WALL,
@@ -660,9 +662,9 @@ enum
 a chart
 */
 
-typedef struct _gr_chart
+typedef struct GR_CHART
 {
-    struct _gr_chart_core /* the core of the chart - preserve over clone */
+    struct GR_CHART_CORE /* the core of the chart - preserve over clone */
     {
         GR_CHART_HANDLE     ch;              /* the handle under which this structure is exported */
 
@@ -674,7 +676,7 @@ typedef struct _gr_chart
 
         P_ANY               ext_handle;      /* a handle which the creator of the chart passed us */
 
-        struct _gr_chart_datasources
+        struct GR_CHART_DATASOURCES
         {
             GR_DATASOURCE_NO n;        /* number in use */
             GR_DATASOURCE_NO n_alloc;  /* how many data sources handle has been allocated for */
@@ -682,12 +684,12 @@ typedef struct _gr_chart
         }
         datasources;
 
-        struct _gr_chart_layout
+        struct GR_CHART_LAYOUT
         {
             GR_COORD width;
             GR_COORD height;
 
-            struct _gr_chart_layout_margins
+            struct GR_CHART_LAYOUT_MARGINS
             {
                 GR_COORD left;
                 GR_COORD bottom;
@@ -704,7 +706,7 @@ typedef struct _gr_chart
 
         S32 modified;
 
-        struct _gr_chart_core_editsave
+        struct GR_CHART_EDITSAVE
         {
 #if RISCOS
             wimp_box  open_box;
@@ -717,19 +719,19 @@ typedef struct _gr_chart
     }
     core;
 
-    struct _gr_chart_chart           /* attributes of 'chart' object */
+    struct GR_CHART_CHART           /* attributes of 'chart' object */
     {
         GR_FILLSTYLE areastyle;
         GR_LINESTYLE borderstyle;
     }
     chart;
 
-    struct _gr_chart_plotarea        /* attributes of 'plotarea' object */
+    struct GR_CHART_PLOTAREA        /* attributes of 'plotarea' object */
     {
         GR_POINT posn;              /* offset of plotted area in chart */
         GR_POINT size;              /* how big the plotted area is */
 
-        struct _gr_chart_plotarea_area
+        struct GR_CHART_PLOTAREA_AREA
         {
             GR_FILLSTYLE areastyle;
             GR_LINESTYLE borderstyle;
@@ -738,9 +740,9 @@ typedef struct _gr_chart
     }
     plotarea;
 
-    struct _gr_chart_legend          /* attributes of 'legend' object */
+    struct GR_CHART_LEGEND          /* attributes of 'legend' object */
     {
-        struct _gr_chart_legend_bits
+        struct GR_CHART_LEGEND_BITS
         {
             UBF on       : 1;
             UBF in_rows  : 1;
@@ -768,26 +770,26 @@ typedef struct _gr_chart
     }
     legend;
 
-    struct _gr_chart_series
+    struct GR_CHART_SERIES
     {
-        GR_SERIES_IX n;
-        GR_SERIES_IX n_alloc;   /* how many series handle has been allocated for */
-        GR_SERIES_IX n_defined; /* how many are defined */
+        GR_SERIES_IDX n;
+        GR_SERIES_IDX n_alloc;   /* how many series handle has been allocated for */
+        GR_SERIES_IDX n_defined; /* how many are defined */
         P_GR_SERIES   mh;       /* ptr to series descriptor array */
 
-        GR_SERIES_NO overlay_start; /* 0 -> auto */
+        GR_ESERIES_NO overlay_start; /* 0 -> auto */
     }
     series;
 
-#define GR_AXES_MAX 1
-    GR_AXES_NO        axes_max;              /* how many axes sets are in use (-1 as there's always at least one) */
-    GR_AXES           axes[GR_AXES_MAX + 1]; /* two independent sets of axes you can plot on (these hold series descriptors) */
+#define GR_AXES_IDX_MAX 1
+    GR_AXES_IDX       axes_idx_max; /* how many axes sets are in use (-1 as there's always at least one) */
+    GR_AXES           axes[GR_AXES_IDX_MAX + 1]; /* two independent sets of axes you can plot on (these hold series descriptors) */
 
-    struct _gr_chart_text
+    struct GR_CHART_TEXT
     {
         P_LIST_BLOCK    lbr; /* list of gr_texts */
 
-        struct _gr_chart_text_style
+        struct GR_CHART_TEXT_STYLE
         {
             P_LIST_BLOCK    lbr; /* list of attributes for the gr_texts */
 
@@ -797,7 +799,7 @@ typedef struct _gr_chart
     }
     text;
 
-    struct _gr_chart_bits
+    struct GR_CHART_BITS
     {
         UBF realloc_series : 1; /* need to reallocate ds to series */
 
@@ -805,9 +807,9 @@ typedef struct _gr_chart
     }
     bits;
 
-    struct _gr_chart_d3
+    struct GR_CHART_D3
     {
-        struct _gr_chart_d3_bits
+        struct GR_CHART_D3_BITS
         {
             UBF on       : 1; /* 3-D embellishment? applies to whole chart */
             UBF use      : 1; /* whether 3D is in use, eg pie & scat turn off */
@@ -820,7 +822,7 @@ typedef struct _gr_chart
         F64 roll;             /* angle pitched about the vertical axis, bringing side into view */
 
         /* validity bits for cached items */
-        struct _gr_chart_d3_valid
+        struct GR_CHART_D3_VALID
         {
             UBF vector : 1;
 
@@ -829,7 +831,7 @@ typedef struct _gr_chart
         valid;
 
         /* cached items */
-        struct _gr_chart_d3_cache
+        struct GR_CHART_D3_CACHE
         {
             GR_POINT vector;            /* how much a point is displaced by per series in depth */
 
@@ -839,19 +841,19 @@ typedef struct _gr_chart
     }
     d3;
 
-    struct _gr_chart_cache
+    struct GR_CHART_CACHE
     {
-        GR_SERIES_NO n_contrib_series; /* how many series are contributing to this chart from all axes */
-        GR_SERIES_NO n_contrib_bars;
-        GR_SERIES_NO n_contrib_lines;
+        S32 /*GR_SERIES_NO*/ n_contrib_series; /* how many series are contributing to this chart from all axes */
+        S32 /*GR_SERIES_NO*/ n_contrib_bars;
+        S32 /*GR_SERIES_NO*/ n_contrib_lines;
     }
     cache;
 
-    struct _gr_chart_barch
+    struct GR_CHART_BARCH
     {
         F64 slot_overlap_percentage;
 
-        struct _gr_chart_barch_cache
+        struct GR_CHART_BARCH_CACHE
         {
             GR_COORD slot_width;
             GR_COORD slot_shift;
@@ -860,9 +862,9 @@ typedef struct _gr_chart
     }
     barch;
 
-    struct _gr_chart_barlinech
+    struct GR_CHART_BARLINECH
     {
-        struct _gr_chart_barlinech_cache
+        struct GR_CHART_BARLINECH_CACHE
         {
             GR_COORD cat_group_width;
             GR_COORD zeropoint_y;
@@ -871,11 +873,11 @@ typedef struct _gr_chart
     }
     barlinech;
 
-    struct _gr_chart_linech
+    struct GR_CHART_LINECH
     {
         F64 slot_shift_percentage;
 
-        struct _gr_chart_line_cache
+        struct GR_CHART_LINECH_CACHE
         {
             GR_COORD slot_start;
             GR_COORD slot_shift;
@@ -884,15 +886,15 @@ typedef struct _gr_chart
     }
     linech;
 
-    GR_SERIES_IX pie_seridx;
+    GR_SERIES_IDX pie_series_idx;
     }
 GR_CHART, * P_GR_CHART; typedef const GR_CHART * PC_GR_CHART;
 
-typedef struct _gr_text
+typedef struct GR_TEXT
 {
     GR_BOX box;
 
-    struct _gr_text_bits
+    struct GR_TEXT_BITS
     {
         UBF being_edited : 1;  /* use during discard to destroy any editors of text objects */
         UBF unused       : 1;
@@ -906,7 +908,10 @@ typedef struct _gr_text
 }
 GR_TEXT, * P_GR_TEXT; typedef const GR_TEXT * PC_GR_TEXT;
 
-typedef union _gr_text_gutsp
+#define gr_text_search_key(p_gr_chart, key) \
+    collect_goto_item(GR_TEXT, &(p_gr_chart)->text.lbr, (key))
+
+typedef union P_GR_TEXT_GUTS
 {
     P_GR_DATASOURCE dsp;
     P_U8            textp;
@@ -920,11 +925,11 @@ structure used for caching series data as we go across a chart
 also used for line of best fit data
 */
 
-typedef struct _GR_BARLINESCATCH_SERIES_CACHE
+typedef struct GR_BARLINESCATCH_SERIES_CACHE
 {
     P_GR_CHART              cp;
-    GR_AXES_NO              axes;
-    GR_SERIES_IX            seridx;
+    GR_AXES_IDX             axes_idx;
+    GR_SERIES_IDX           series_idx;
     GR_POINT_NO             n_points;
 
     S32                     barindex;
@@ -961,7 +966,7 @@ GR_BARLINESCATCH_SERIES_CACHE, * P_GR_BARLINESCATCH_SERIES_CACHE;
 structure used for callback from linest()
 */
 
-typedef struct _GR_BARLINESCATCH_LINEST_STATE
+typedef struct GR_BARLINESCATCH_LINEST_STATE
 {
     GR_DATASOURCE_FOURSOME dsh;
     P_GR_CHART             cp;
@@ -981,7 +986,7 @@ internally exported functions from gr_chart.c
 extern S32
 gr_chart_add_series(
     P_GR_CHART  cp,
-    GR_AXES_NO axes,
+    GR_AXES_IDX axes_idx,
     S32        init);
 
 extern P_GR_CHART
@@ -1017,11 +1022,6 @@ gr_chart_realloc_series(
     P_GR_CHART cp);
 
 extern S32
-gr_chart_set_n_axes(
-    P_GR_CHART  cp,
-    GR_AXES_NO axes);
-
-extern S32
 gr_chart_subtract_datasource_using_dsh(
     P_GR_CHART cp,
     GR_DATASOURCE_HANDLE dsh);
@@ -1038,11 +1038,6 @@ gr_chart_scaled_picture_add(
     PC_GR_CHART_OBJID id,
     PC_GR_BOX box,
     PC_GR_FILLSTYLE style);
-
-extern GR_CHART_ITEMNO
-gr_travel_axes_n_items_total(
-    P_GR_CHART cp,
-    GR_AXES_NO axes);
 
 extern void
 gr_travel_categ_label(
@@ -1086,25 +1081,25 @@ gr_travel_dsp(
 extern GR_DATASOURCE_HANDLE
 gr_travel_series_dsh_from_ds(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_DATASOURCE_NO ds);
 
 extern void
 gr_travel_series_label(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     /*out*/ P_GR_CHART_VALUE pValue);
 
 extern GR_CHART_ITEMNO
 gr_travel_series_n_items(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_DATASOURCE_NO ds);
 
 extern GR_CHART_ITEMNO
 gr_travel_series_n_items_total(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx);
+    GR_SERIES_IDX series_idx);
 
 /*
 internally exported variables from gr_chart.c
@@ -1123,11 +1118,11 @@ extern const GR_CHART_OBJID
 gr_chart_objid_legend;
 
 /*
-get a series descriptor pointer from seridx on a chart
+get a series descriptor pointer from series_idx on a chart
 */
 
-#define getserp(cp, seridx) \
-    ((cp)->series.mh + (seridx))
+#define getserp(cp, series_idx) \
+    ((cp)->series.mh + (series_idx))
 
 /*
 end of internal exports from gr_chart.c
@@ -1164,7 +1159,7 @@ internal exports from gr_editc.c
 a chart editor structure
 */
 
-typedef struct _gr_charteditor
+typedef struct GR_CHARTEDITOR
 {
     GR_CHARTEDIT_HANDLE      ceh;           /* the handle under which this structure is exported */
 
@@ -1175,7 +1170,7 @@ typedef struct _gr_charteditor
 
     GR_POINT                size;         /* oh yes, this is needed */
 
-    struct _gr_chartedit_selection
+    struct GR_CHARTEDITOR_SELECTION
     {
         GR_CHART_OBJID           id;        /* which object got selected? */
 
@@ -1192,7 +1187,7 @@ typedef struct _gr_charteditor
 #if RISCOS
     /* RISC OS specifics */
 
-    struct _gr_chartedit_riscos
+    struct GR_CHARTEDITOR_RISCOS
     {
         wimp_wind * ww;        /* a template_copy'ed window definition (keep for indirected data) */
         wimp_w      w;         /* wimp handle of chart editing window */
@@ -1219,11 +1214,6 @@ typedef struct _gr_charteditor
 #elif WINDOWS
     /* WINDOWS specifics */
 
-    struct _gr_chartedit_windows
-    {
-        char foo;
-    }
-    windows;
 #endif
 
 }
@@ -1422,32 +1412,32 @@ end of internal exports from gr_editt.c
 internal exports from P_GR_AXIS.c -- axis processing
 */
 
-extern GR_AXES_NO
-gr_axes_external_from_ix(
+extern GR_EAXES_NO
+gr_axes_external_from_idx(
     PC_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis);
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx);
 
-extern GR_AXIS_NO
-gr_axes_ix_from_external(
+extern GR_AXIS_IDX
+gr_axes_idx_from_external(
     PC_GR_CHART cp,
-    GR_AXES_NO eaxes,
-    _OutRef_    P_GR_AXES_NO axes);
+    GR_EAXES_NO eaxes_no,
+    _OutRef_    P_GR_AXES_IDX p_axes_idx);
 
-extern GR_AXES_NO
-gr_axes_ix_from_seridx(
+extern GR_AXES_IDX
+gr_axes_idx_from_series_idx(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx);
+    GR_SERIES_IDX series_idx);
 
 extern P_GR_AXES
-gr_axesp_from_seridx(
+gr_axesp_from_series_idx(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx);
+    GR_SERIES_IDX series_idx);
 
 extern P_GR_AXIS
 gr_axisp_from_external(
     P_GR_CHART cp,
-    GR_AXES_NO eaxes);
+    GR_EAXES_NO eaxes_no);
 
 extern S32
 gr_axis_addin_category(
@@ -1458,13 +1448,13 @@ gr_axis_addin_category(
 extern S32
 gr_axis_addin_value_x(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
+    GR_AXES_IDX axes_idx,
     S32 front);
 
 extern S32
 gr_axis_addin_value_y(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
+    GR_AXES_IDX axes_idx,
     S32 front);
 
 extern void
@@ -1475,8 +1465,8 @@ gr_axis_form_category(
 extern void
 gr_axis_form_value(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis);
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx);
 
 extern void
 gr_chartedit_selection_axis_process(
@@ -1498,7 +1488,7 @@ internal exports from gr_diag.c -- diagram building
 internally exported structure from gr_diag.c
 */
 
-typedef struct _gr_diag_process_t
+typedef struct GR_DIAG_PROCESS_T
 {
     UBF recurse : 1;          /* recurse into group objects */
     UBF recompute : 1;        /* ensure object bboxes recomputed */
@@ -1519,7 +1509,7 @@ an id stored in the diagram
 diagram
 */
 
-typedef struct _GR_DIAG_DIAGHEADER
+typedef struct GR_DIAG_DIAGHEADER
 {
     GR_BOX bbox;
 
@@ -1561,7 +1551,7 @@ typedef U32 GR_DIAG_OBJTYPE;
     GR_DIAG_OBJID_T    objid; \
     GR_DIAG_OFFSET     sys_off /* offset in system-dependent representation of corresponding object */
 
-typedef struct _gr_diag_objhdr
+typedef struct GR_DIAG_OBJHDR
 {
     GR_DIAG_OBJHDR_DEF;
 }
@@ -1571,7 +1561,7 @@ GR_DIAG_OBJHDR;
 groups are simply encapulators
 */
 
-typedef struct _gr_diag_objgroup
+typedef struct GR_DIAG_OBJGROUP
 {
     GR_DIAG_OBJHDR_DEF;
     L1_U8Z name[12];
@@ -1586,55 +1576,55 @@ objects with position
     GR_DIAG_OBJHDR_DEF; \
     GR_POINT pos
 
-typedef struct _gr_diag_posobjhdr
+typedef struct GR_DIAG_POSOBJHDR
 {
     GR_DIAG_POSOBJHDR_DEF;
 }
 GR_DIAG_POSOBJHDR;
 
-typedef struct _gr_diag_objline
+typedef struct GR_DIAG_OBJLINE
 {
     GR_DIAG_POSOBJHDR_DEF;
 
-    GR_POINT          d;
+    GR_SIZE           d;
     GR_LINESTYLE      linestyle;
 }
 GR_DIAG_OBJLINE;
 
-typedef struct _gr_diag_objrectangle
+typedef struct GR_DIAG_OBJRECTANGLE
 {
     GR_DIAG_POSOBJHDR_DEF;
 
-    GR_POINT          wid_hei;
+    GR_SIZE           wid_hei;
     GR_LINESTYLE      linestyle;
     GR_FILLSTYLE      fillstyle;
 }
 GR_DIAG_OBJRECTANGLE;
 
-typedef struct _gr_diag_objparallelogram
+typedef struct GR_DIAG_OBJPARALLELOGRAM
 {
-    GR_DIAG_POSOBJHDR_DEF;
+    GR_DIAG_POSOBJHDR_DEF; /* pos == BL */
 
-    GR_POINT          wid_hei1;
-    GR_POINT          wid_hei2;
+    GR_POINT          offset_BR;
+    GR_POINT          offset_TR;
     GR_LINESTYLE      linestyle;
     GR_FILLSTYLE      fillstyle;
 }
 GR_DIAG_OBJPARALLELOGRAM;
 
-typedef struct _gr_diag_objtrapezoid
+typedef struct GR_DIAG_OBJTRAPEZOID
 {
-    GR_DIAG_POSOBJHDR_DEF;
+    GR_DIAG_POSOBJHDR_DEF; /* pos == BL */
 
-    GR_POINT          wid_hei1;
-    GR_POINT          wid_hei2;
-    GR_POINT          wid_hei3;
+    GR_POINT          offset_BR;
+    GR_POINT          offset_TR;
+    GR_POINT          offset_TL;
     GR_LINESTYLE      linestyle;
     GR_FILLSTYLE      fillstyle;
 }
 GR_DIAG_OBJTRAPEZOID;
 
-typedef struct _gr_diag_objpiesector
+typedef struct GR_DIAG_OBJPIESECTOR
 {
     GR_DIAG_POSOBJHDR_DEF;
 
@@ -1647,41 +1637,41 @@ typedef struct _gr_diag_objpiesector
 }
 GR_DIAG_OBJPIESECTOR;
 
-typedef struct _gr_diag_objpicture
+typedef struct GR_DIAG_OBJPICTURE
 {
     GR_DIAG_POSOBJHDR_DEF;
 
-    GR_POINT          wid_hei;
+    GR_SIZE           wid_hei;
     GR_CACHE_HANDLE   picture;
     GR_FILLSTYLE      fillstyle;
 }
 GR_DIAG_OBJPICTURE;
 
-typedef struct _gr_diag_objtext
+typedef struct GR_DIAG_OBJTEXT
 {
     GR_DIAG_POSOBJHDR_DEF;
 
-    GR_POINT          wid_hei;
+    GR_SIZE           wid_hei;
     GR_TEXTSTYLE      textstyle;
 
     /* data stored in here */
 }
 GR_DIAG_OBJTEXT;
 
-typedef union _gr_diag_objectp
+typedef union P_GR_DIAG_OBJECT
 {
-    P_BYTE                    p_byte;
+    P_BYTE                     p_byte;
 
-    GR_DIAG_OBJHDR *          hdr;
+    GR_DIAG_OBJHDR *           hdr;
 
-    GR_DIAG_OBJGROUP *        group;
-    GR_DIAG_OBJLINE *         line;
-    GR_DIAG_OBJRECTANGLE *    rect;
-    GR_DIAG_OBJPARALLELOGRAM *para;
-    GR_DIAG_OBJTRAPEZOID     *trap;
-    GR_DIAG_OBJPIESECTOR *    pie;
-    GR_DIAG_OBJPICTURE *      pict;
-    GR_DIAG_OBJTEXT *         text;
+    GR_DIAG_OBJGROUP *         group;
+    GR_DIAG_OBJLINE *          line;
+    GR_DIAG_OBJRECTANGLE *     rect;
+    GR_DIAG_OBJPARALLELOGRAM * para;
+    GR_DIAG_OBJTRAPEZOID *     trap;
+    GR_DIAG_OBJPIESECTOR *     pie;
+    GR_DIAG_OBJPICTURE *       pict;
+    GR_DIAG_OBJTEXT *          text;
 }
 P_GR_DIAG_OBJECT, * P_P_GR_DIAG_OBJECT;
 
@@ -1747,8 +1737,8 @@ gr_diag_line_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
-    PC_GR_LINESTYLE linestyle);
+    _InRef_     PC_GR_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle);
 
 extern U32
 gr_diag_object_base_size(
@@ -1815,11 +1805,11 @@ gr_diag_parallelogram_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_POINT pOrigin,
-    PC_GR_POINT ps1,
-    PC_GR_POINT ps2,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle);
+    _InRef_     PC_GR_POINT pOriginBL,
+    _InRef_     PC_GR_POINT pOffsetBR,
+    _InRef_     PC_GR_POINT pOffsetTR,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
 
 _Check_return_
 extern STATUS
@@ -1827,12 +1817,12 @@ gr_diag_piesector_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_POINT pPos,
-    GR_COORD radius,
-    PC_F64 alpha,
-    PC_F64 beta,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle);
+    _InRef_     PC_GR_POINT pPos,
+    _InVal_     GR_COORD radius,
+    _InRef_     PC_F64 alpha,
+    _InRef_     PC_F64 beta,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
 
 _Check_return_
 extern STATUS
@@ -1840,9 +1830,9 @@ gr_diag_rectangle_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle);
+    _InRef_     PC_GR_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
 
 _Check_return_
 extern STATUS
@@ -1852,7 +1842,7 @@ gr_diag_scaled_picture_add(
     GR_DIAG_OBJID_T objid,
     PC_GR_BOX pBox,
     GR_CACHE_HANDLE picture,
-    PC_GR_FILLSTYLE fillstyle);
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
 
 _Check_return_
 extern STATUS
@@ -1860,9 +1850,9 @@ gr_diag_text_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
+    _InRef_     PC_GR_BOX pBox,
     PC_USTR szText,
-    PC_GR_TEXTSTYLE textstyle);
+    _InRef_     PC_GR_TEXTSTYLE textstyle);
 
 _Check_return_
 extern STATUS
@@ -1870,12 +1860,12 @@ gr_diag_trapezoid_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_POINT pOrigin,
-    PC_GR_POINT ps1,
-    PC_GR_POINT ps2,
-    PC_GR_POINT ps3,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle);
+    _InRef_     PC_GR_POINT pOriginBL,
+    _InRef_     PC_GR_POINT pOffsetBR,
+    _InRef_     PC_GR_POINT pOffsetTR,
+    _InRef_     PC_GR_POINT pOffsetTL,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
 
 /*
 internally exported functions as macros from gr_diag.c
@@ -1934,15 +1924,15 @@ gr_point_partial_z_shift(
 extern GR_COORD
 gr_value_pos(
     PC_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis,
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx,
     const GR_CHART_NUMBER * value);
 
 extern GR_COORD
 gr_value_pos_rel(
     PC_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis,
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx,
     const GR_CHART_NUMBER * value);
 
 /*
@@ -2019,7 +2009,7 @@ PROC_LINEST_DATA_PUT_PROTO(extern, gr_barlinescatch_linest_putproc, client_handl
 extern void
 gr_barlinescatch_get_datasources(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     /*out*/ P_GR_DATASOURCE_FOURSOME dsh);
 
 extern S32
@@ -2038,7 +2028,7 @@ internal exports from gr_rdiag.c -- RISC OS Draw file creation
 internally exported structure from gr_rdiag.c
 */
 
-typedef struct _gr_riscdiag_process_t
+typedef struct GR_RISCDIAG_PROCESS_T
 {
     UBF recurse:1;    /* recurse into group objects */
     UBF recompute:1;  /* ensure object bboxes recomputed if possible (some object sizes defined by their bbox) */
@@ -2047,7 +2037,7 @@ typedef struct _gr_riscdiag_process_t
 }
 GR_RISCDIAG_PROCESS_T;
 
-typedef struct _GR_RISCDIAG_RISCOS_FONTLIST_ENTRY
+typedef struct GR_RISCDIAG_RISCOS_FONTLIST_ENTRY
 {
     L1_U8Z szHostFontName[64];
 }
@@ -2057,16 +2047,14 @@ GR_RISCDIAG_RISCOS_FONTLIST_ENTRY, * P_GR_RISCDIAG_RISCOS_FONTLIST_ENTRY; typede
 rendering information
 */
 
-typedef struct _gr_riscdiag_renderinfo
+typedef struct GR_RISCDIAG_RENDERINFO
 {
     GR_POINT       origin;   /* database origin wants to be moved to here in output space */
     GR_SCALE_PAIR  scale16;
     S32            action;
     GR_BOX         cliprect; /* output space clipping rectangle */
 }
-gr_riscdiag_renderinfo;
-
-typedef const gr_riscdiag_renderinfo * gr_riscdiag_renderinfocp;
+GR_RISCDIAG_RENDERINFO; typedef const GR_RISCDIAG_RENDERINFO * PC_GR_RISCDIAG_RENDERINFO;
 
 /*
 RISC OS Draw object 'names'
@@ -2097,7 +2085,7 @@ RISC OS Draw allocation
 */
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(size)
+_Ret_writes_maybenull_(size)
 extern P_BYTE
 _gr_riscdiag_ensure(
     _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
@@ -2106,6 +2094,18 @@ _gr_riscdiag_ensure(
 
 #define gr_riscdiag_ensure(__base_type, p_gr_riscdiag, size, p_status) ( \
     (__base_type *) _gr_riscdiag_ensure(p_gr_riscdiag, size, p_status) )
+
+_Check_return_
+extern DRAW_DIAG_OFFSET
+gr_riscdiag_normalise_stt(
+    _InRef_     P_GR_RISCDIAG p_gr_riscdiag,
+    _InVal_     DRAW_DIAG_OFFSET sttObject_in);
+
+_Check_return_
+extern DRAW_DIAG_OFFSET
+gr_riscdiag_normalise_end(
+    _InRef_     P_GR_RISCDIAG p_gr_riscdiag,
+    _InVal_     DRAW_DIAG_OFFSET endObject_in);
 
 /*
 RISC OS Draw diagram
@@ -2155,7 +2155,7 @@ gr_riscdiag_diagram_setup_from_draw_diag(
 RISC OS Draw objects
 */
 
-typedef union _draw_objectp
+typedef union P_DRAW_OBJECT
 {
     P_BYTE p_byte;
 
@@ -2287,6 +2287,12 @@ internally exported functions as macros from gr_rdiag.c
 #define gr_riscdiag_query_offset(p_gr_riscdiag) ( \
     (p_gr_riscdiag)->draw_diag.length )
 
+#define DRAW_OBJHDR(__base_type, pObject, field) \
+    PtrAddBytes(__base_type *, pObject, offsetof32(DRAW_OBJECT_HEADER, field))
+
+#define DRAW_OBJBOX(pObject, field) \
+    PtrAddBytes(P_S32, pObject, offsetof32(DRAW_OBJECT_HEADER, bbox) + offsetof32(DRAW_BOX, field))
+
 /*
 end of internal exports from gr_rdiag.c
 */
@@ -2364,9 +2370,9 @@ extern STATUS
 gr_riscdiag_parallelogram_new(
     P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_GR_DIAG_OFFSET pRectStart,
-    PC_DRAW_POINT pOrigin,
-    PC_DRAW_POINT pSize1,
-    PC_DRAW_POINT pSize2,
+    _InRef_     PC_DRAW_POINT pOriginBL,
+    _InRef_     PC_DRAW_POINT pOffsetBR,
+    _InRef_     PC_DRAW_POINT pOffsetTR,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle);
 
@@ -2410,12 +2416,28 @@ extern STATUS
 gr_riscdiag_trapezoid_new(
     P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_GR_DIAG_OFFSET pRectStart,
-    PC_DRAW_POINT pOrigin,
-    PC_DRAW_POINT pSize1,
-    PC_DRAW_POINT pSize2,
-    PC_DRAW_POINT pSize3,
+    _InRef_     PC_DRAW_POINT pOriginBL,
+    _InRef_     PC_DRAW_POINT pOffsetBR,
+    _InRef_     PC_DRAW_POINT pOffsetTR,
+    _InRef_     PC_DRAW_POINT pOffsetTL,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle);
+
+static inline void
+draw_box_from_gr_box(
+    _OutRef_    P_DRAW_BOX p_draw_box,
+    _InRef_     PC_GR_BOX p_gr_box)
+{
+    gr_box_xform((P_GR_BOX) p_draw_box, p_gr_box, &gr_riscdiag_riscDraw_from_pixit_xformer);
+}
+
+static inline void
+draw_point_from_gr_point(
+    _OutRef_    P_DRAW_POINT p_draw_point,
+    _InRef_     PC_GR_POINT p_gr_point)
+{
+    gr_point_xform((P_GR_POINT) p_draw_point, p_gr_point, &gr_riscdiag_riscDraw_from_pixit_xformer);
+}
 
 /*
 RISC OS Draw tagged objects
@@ -2467,7 +2489,7 @@ DO NOT CHANGE THESE ENUMS UNLESS FULL RECOMPILATION DONE
 KEEP CONSISTENT WITH gr_style_common_blks[] in GR_SCALE.C
 */
 
-typedef enum
+typedef enum GR_LIST_ID
 {
     GR_LIST_CHART_TEXT = 0,
     GR_LIST_CHART_TEXT_TEXTSTYLE,
@@ -2545,21 +2567,21 @@ gr_chart_list_duplic(
 extern P_ANY
 gr_chart_list_first(
     P_GR_CHART cp,
-    P_LIST_ITEMNO p_key,
+    _OutRef_    P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id);
 
 extern P_ANY
 gr_chart_list_next(
     P_GR_CHART cp,
-    P_LIST_ITEMNO p_key,
+    _InoutRef_  P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id);
 #endif
 
 extern void
-gr_chart_objid_from_axes(
+gr_chart_objid_from_axes_idx(
     P_GR_CHART cp,
-    GR_AXES_NO axes,
-    GR_AXIS_NO axis,
+    GR_AXES_IDX axes_idx,
+    GR_AXIS_IDX axis_idx,
     _OutRef_    P_GR_CHART_OBJID id);
 
 extern void
@@ -2573,14 +2595,14 @@ gr_chart_objid_from_axis_tick(
     BOOL major);
 
 extern void
-gr_chart_objid_from_seridx(
+gr_chart_objid_from_series_idx(
     P_GR_CHART cp,
-    GR_SERIES_NO seridx,
+    GR_SERIES_IDX series_idx,
     _OutRef_    P_GR_CHART_OBJID id);
 
 extern void
-gr_chart_objid_from_series(
-    GR_SERIES_NO series,
+gr_chart_objid_from_series_no(
+    GR_ESERIES_NO series_no,
     _OutRef_    P_GR_CHART_OBJID id);
 
 extern void
@@ -2716,28 +2738,28 @@ gr_fillstyle_ref_lose(
 extern S32
 gr_pdrop_fillstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_FILLSTYLE style);
 
 extern S32
 gr_pdrop_fillstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_FILLSTYLE style);
 
 extern S32
 gr_pdrop_linestyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINESTYLE style);
 
 extern S32
 gr_pdrop_linestyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINESTYLE style);
 
@@ -2748,187 +2770,187 @@ gr_pdrop_linestyle_set(
 extern S32
 gr_point_list_delete(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id);
 
 extern S32
 gr_point_list_duplic(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id);
 
 extern S32
 gr_point_list_fillstyle_enum_for_save(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id);
 
 extern void
 gr_pdrop_list_fillstyle_reref(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     S32 add);
 
 extern void
 gr_point_list_fillstyle_reref(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     S32 add);
 
 extern P_ANY
 gr_point_list_first(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     _OutRef_    P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id);
 
 extern P_ANY
 gr_point_list_next(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     _InoutRef_  P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id);
 
 extern S32
 gr_point_fillstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_FILLSTYLE style);
 
 extern S32
 gr_point_fillstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_FILLSTYLE style);
 
 extern S32
 gr_point_linestyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINESTYLE style);
 
 extern S32
 gr_point_linestyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINESTYLE style);
 
 extern S32
 gr_point_textstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_TEXTSTYLE style);
 
 extern S32
 gr_point_textstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_TEXTSTYLE style);
 
 extern S32
 gr_point_barchstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_BARCHSTYLE style);
 
 extern S32
 gr_point_barchstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_BARCHSTYLE style);
 
 extern S32
 gr_point_barlinechstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_BARLINECHSTYLE style);
 
 extern S32
 gr_point_barlinechstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_BARLINECHSTYLE style);
 
 extern S32
 gr_point_linechstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINECHSTYLE style);
 
 extern S32
 gr_point_linechstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINECHSTYLE style);
 
 extern S32
 gr_point_piechdisplstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_PIECHDISPLSTYLE style);
 
 extern S32
 gr_point_piechdisplstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_PIECHDISPLSTYLE style);
 
 extern S32
 gr_point_piechlabelstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_PIECHLABELSTYLE style);
 
 extern S32
 gr_point_piechlabelstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_PIECHLABELSTYLE style);
 
 extern S32
 gr_point_scatchstyle_query(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_SCATCHSTYLE style);
 
 extern S32
 gr_point_scatchstyle_set(
     P_GR_CHART cp,
-    GR_SERIES_IX seridx,
+    GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_SCATCHSTYLE style);
 
-extern GR_SERIES_NO
-gr_series_external_from_ix(
+extern GR_ESERIES_NO
+gr_series_external_from_idx(
     PC_GR_CHART cp,
-    GR_SERIES_IX seridx);
+    GR_SERIES_IDX series_idx);
 
-extern GR_SERIES_IX
-gr_series_ix_from_external(
+extern GR_SERIES_IDX
+gr_series_idx_from_external(
     PC_GR_CHART cp,
-    GR_SERIES_NO eseries);
+    GR_ESERIES_NO eseries_no);
 
 extern P_GR_SERIES
 gr_seriesp_from_external(
     PC_GR_CHART cp,
-    GR_SERIES_NO eseries);
+    GR_ESERIES_NO eseries_no);
 
 /*
 end of internal exports from gr_scale.c

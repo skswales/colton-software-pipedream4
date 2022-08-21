@@ -48,7 +48,7 @@ Useful constants for 90 degree arcs
 Data Group : static variables used in arc drawing
 */
 
-static struct _bezier_arc_statics
+static struct BEZIER_ARC_STATICS
 {
     U32         segments;  /* Number of segments */
     DRAW_POINT  centre;    /* Centre of arc */

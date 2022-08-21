@@ -122,16 +122,16 @@ PROC_EXEC_PROTO(c_add)
                 case RPN_DAT_DATE:
                     p_ev_data_res->did_num = RPN_DAT_DATE;
 
-                    if(args[1]->arg.date.date)
+                    if(EV_DATE_INVALID != args[1]->arg.ev_date.date)
                         {
-                        p_ev_data_res->arg.date.date = args[1]->arg.date.date + args[0]->arg.integer;
-                        p_ev_data_res->arg.date.time = args[1]->arg.date.time;
+                        p_ev_data_res->arg.ev_date.date = args[1]->arg.ev_date.date + args[0]->arg.integer;
+                        p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time;
                         }
                     else
                         {
-                        p_ev_data_res->arg.date.date = 0;
-                        p_ev_data_res->arg.date.time = args[1]->arg.date.time + args[0]->arg.integer;
-                        ss_date_normalise(&p_ev_data_res->arg.date);
+                        p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                        p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time + args[0]->arg.integer;
+                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
                         }
                     break;
                 }
@@ -151,25 +151,25 @@ PROC_EXEC_PROTO(c_add)
                 case RPN_DAT_WORD32:
                     p_ev_data_res->did_num = RPN_DAT_DATE;
 
-                    if(args[0]->arg.date.date)
+                    if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
                         {
-                        p_ev_data_res->arg.date.date = args[0]->arg.date.date + args[1]->arg.integer;
-                        p_ev_data_res->arg.date.time = args[0]->arg.date.time;
+                        p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.integer;
+                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
                         }
                     else
                         {
-                        p_ev_data_res->arg.date.date = 0;
-                        p_ev_data_res->arg.date.time = args[0]->arg.date.time + args[1]->arg.integer;
-                        ss_date_normalise(&p_ev_data_res->arg.date);
+                        p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.integer;
+                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
                         }
                     break;
 
                 /* date + date */
                 case RPN_DAT_DATE:
                     p_ev_data_res->did_num = RPN_DAT_DATE;
-                    p_ev_data_res->arg.date.date = args[0]->arg.date.date + args[1]->arg.date.date;
-                    p_ev_data_res->arg.date.time = args[0]->arg.date.time + args[1]->arg.date.time;
-                    ss_date_normalise(&p_ev_data_res->arg.date);
+                    p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.ev_date.date;
+                    p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.ev_date.time;
+                    ss_date_normalise(&p_ev_data_res->arg.ev_date);
                     break;
                 }
 
@@ -220,35 +220,35 @@ PROC_EXEC_PROTO(c_sub)
                 case RPN_DAT_WORD32:
                     p_ev_data_res->did_num = RPN_DAT_DATE;
 
-                    if(args[0]->arg.date.date)
+                    if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
                         {
-                        p_ev_data_res->arg.date.date = args[0]->arg.date.date - args[1]->arg.integer;
-                        p_ev_data_res->arg.date.time = args[0]->arg.date.time;
+                        p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.integer;
+                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
                         }
                     else
                         {
-                        p_ev_data_res->arg.date.date = 0;
-                        p_ev_data_res->arg.date.time = args[0]->arg.date.time - args[1]->arg.integer;
-                        ss_date_normalise(&p_ev_data_res->arg.date);
+                        p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                        p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.integer;
+                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
                         }
                     break;
 
                 /* date - date */
                 case RPN_DAT_DATE:
                     p_ev_data_res->did_num = RPN_DAT_DATE;
-                    p_ev_data_res->arg.date.date = args[0]->arg.date.date - args[1]->arg.date.date;
-                    p_ev_data_res->arg.date.time = args[0]->arg.date.time - args[1]->arg.date.time;
+                    p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.ev_date.date;
+                    p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.ev_date.time;
 
-                    if(p_ev_data_res->arg.date.date && p_ev_data_res->arg.date.time)
+                    if(p_ev_data_res->arg.ev_date.date && p_ev_data_res->arg.ev_date.time)
                         {
-                        ss_date_normalise(&p_ev_data_res->arg.date);
+                        ss_date_normalise(&p_ev_data_res->arg.ev_date);
                         }
                     else
                         {
                         ev_data_set_integer(p_ev_data_res,
-                                            (p_ev_data_res->arg.date.date
-                                                 ? p_ev_data_res->arg.date.date
-                                                 : p_ev_data_res->arg.date.time));
+                                            (p_ev_data_res->arg.ev_date.date
+                                                 ? p_ev_data_res->arg.ev_date.date
+                                                 : p_ev_data_res->arg.ev_date.time));
                         }
 
                     break;
@@ -418,8 +418,6 @@ PROC_EXEC_PROTO(c_if)
         ev_data_set_error(p_ev_data_res, EVAL_ERR_NA);
 }
 
-/*-------------------------------------------------------------------------*/
-
 /******************************************************************************
 *
 * set the value of a slot
@@ -447,17 +445,17 @@ poke_slot(
     else
         {
         EV_DATA temp;
-        EV_RESULT result;
+        EV_RESULT ev_result;
 
-        ev_result_free_resources(&p_ev_slot->result);
+        ev_result_free_resources(&p_ev_slot->ev_result);
 
         /* make sure we have a copy of data */
         ss_data_resource_copy(&temp, p_ev_data);
 
-        ev_data_to_result_convert(&result, &temp);
+        ev_data_to_result_convert(&ev_result, &temp);
 
-        if((res = ev_make_slot(slrp, &result)) < 0)
-            ev_result_free_resources(&result);
+        if((res = ev_make_slot(slrp, &ev_result)) < 0)
+            ev_result_free_resources(&ev_result);
         else
             {
             UREF_PARM urefb;
@@ -506,7 +504,7 @@ PROC_EXEC_PROTO(c_setvalue)
 
         case RPN_DAT_RANGE:
             {
-            rsblock rsb;
+            RANGE_SCAN_BLOCK rsb;
             EV_SLR top_left;
 
             if((err = range_scan_init(&args[0]->arg.range, &rsb)) >= 0)
@@ -573,8 +571,6 @@ PROC_EXEC_PROTO(c_setvalue)
         }
 }
 
-/*-------------------------------------------------------------------------*/
-
 /*
 range-ey functions
 */
@@ -588,37 +584,37 @@ args_array_range_proc(
 
 static void
 array_range_proc(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data);
 
 static void
 array_range_proc_array(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data);
 
 static void
 array_range_proc_finish(
     _OutRef_    P_EV_DATA p_ev_data,
-    stat_blockp stbp);
+    P_STAT_BLOCK stbp);
 
 static void
 array_range_proc_item(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data);
 
 static void
 array_range_proc_item_add(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data);
 
 static S32
 lookup_array_range_proc_array(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     P_EV_DATA p_ev_data);
 
 static S32
 lookup_array_range_proc_item(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     P_EV_DATA p_ev_data);
 
 static EV_IDNO
@@ -630,10 +626,10 @@ npv_calc(
 static void
 npv_item(
     P_EV_DATA p_ev_data,
-    P_S32 countp,
-    P_F64 parmp,
-    P_F64 tempp,
-    P_F64 resp);
+    P_S32 p_count,
+    P_F64 p_parm,
+    P_F64 p_temp,
+    P_F64 p_result);
 
 /******************************************************************************
 *
@@ -750,7 +746,7 @@ PROC_EXEC_PROTO(c_min)
 
 PROC_EXEC_PROTO(c_mirr)
 {
-    stat_block stb;
+    STAT_BLOCK stb;
 
     exec_func_ignore_parms();
 
@@ -839,8 +835,6 @@ PROC_EXEC_PROTO(c_varp)
     args_array_range_proc(args, nargs, p_ev_data_res, RPN_FNF_DVARP);
 }
 
-/*-------------------------------------------------------------------------*/
-
 /******************************************************************************
 *
 * process the arguments of the statistical functions
@@ -855,7 +849,7 @@ args_array_range_proc(
     EV_IDNO function_id)
 {
     S32 i;
-    stat_block stb;
+    STAT_BLOCK stb;
 
     stat_block_init(&stb, function_id, 0, 0);
 
@@ -874,7 +868,7 @@ args_array_range_proc(
 
 static void
 array_range_proc(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data)
 {
     switch(p_ev_data->did_num)
@@ -886,7 +880,7 @@ array_range_proc(
 
         case RPN_DAT_RANGE:
             {
-            rsblock rsb;
+            RANGE_SCAN_BLOCK rsb;
 
             if(range_scan_init(&p_ev_data->arg.range, &rsb) >= 0)
                 {
@@ -924,10 +918,10 @@ array_range_proc(
 
 static void
 array_range_proc_array(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data)
 {
-    asblock asb;
+    ARRAY_SCAN_BLOCK asb;
 
     if(array_scan_init(&asb, p_ev_data))
         {
@@ -948,7 +942,7 @@ array_range_proc_array(
 
 static F64
 array_range_proc_stdvar_help(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     BOOL n_1)
 {
     F64 n_sum_x_2 = stbp->temp * (F64) stbp->count;
@@ -971,7 +965,7 @@ array_range_proc_stdvar_help(
 static void
 array_range_proc_finish(
     _OutRef_    P_EV_DATA p_ev_data,
-    stat_blockp stbp)
+    P_STAT_BLOCK stbp)
 {
     ev_data_set_real(p_ev_data, 0.0);
 
@@ -1065,7 +1059,7 @@ array_range_proc_finish(
 
 static void
 array_range_proc_item(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data)
 {
     switch(p_ev_data->did_num)
@@ -1228,7 +1222,7 @@ array_range_proc_item(
 
 static void
 array_range_proc_item_add(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     P_EV_DATA p_ev_data)
 {
     if(!stbp->count)
@@ -1256,14 +1250,14 @@ array_range_proc_item_add(
 
 extern void
 dbase_sub_function(
-    stack_dbasep sdbp,
+    P_STACK_DBASE p_stack_dbase,
     P_EV_DATA cond_flagp)
 {
     EV_SLR cur_slot;
 
-    cur_slot      = sdbp->dbase_rng.s;
-    cur_slot.col += sdbp->offset.col;
-    cur_slot.row += sdbp->offset.row;
+    cur_slot      = p_stack_dbase->dbase_rng.s;
+    cur_slot.col += p_stack_dbase->offset.col;
+    cur_slot.row += p_stack_dbase->offset.row;
 
     /* work out state of condition */
     if((arg_normalise(cond_flagp, EM_REA, NULL, NULL) == RPN_DAT_REAL) &&
@@ -1281,7 +1275,7 @@ dbase_sub_function(
 #endif
 
         ev_slr_deref(&data, &cur_slot, FALSE);
-        array_range_proc(sdbp->stbp, &data);
+        array_range_proc(p_stack_dbase->p_stat_block, &data);
         }
 #if TRACE_ALLOWED
     else if(tracing(TRACE_MODULE_EVAL))
@@ -1302,9 +1296,9 @@ dbase_sub_function(
 extern void
 dbase_sub_function_finish(
     P_EV_DATA p_ev_data,
-    stack_dbasep sdbp)
+    P_STACK_DBASE p_stack_dbase)
 {
-    array_range_proc_finish(p_ev_data, sdbp->stbp);
+    array_range_proc_finish(p_ev_data, p_stack_dbase->p_stat_block);
 }
 
 /******************************************************************************
@@ -1320,7 +1314,7 @@ dbase_sub_function_finish(
 
 extern S32
 lookup_array_range_proc(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     P_EV_DATA p_ev_data)
 {
     S32 res = 0;
@@ -1409,11 +1403,11 @@ lookup_array_range_proc(
 
 static S32
 lookup_array_range_proc_array(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     P_EV_DATA p_ev_data)
 {
     S32 res = 0;
-    asblock asb;
+    ARRAY_SCAN_BLOCK asb;
 
     if(array_scan_init(&asb, p_ev_data))
         {
@@ -1454,7 +1448,7 @@ lookup_array_range_proc_array(
 
 static S32
 lookup_array_range_proc_item(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     P_EV_DATA p_ev_data)
 {
     S32 res;
@@ -1501,7 +1495,7 @@ lookup_array_range_proc_item(
 
 extern void
 lookup_block_init(
-    look_blockp lkbp,
+    P_LOOKUP_BLOCK lkbp,
     _InRef_opt_ P_EV_DATA p_ev_data_target,
     S32 lookup_id,
     S32 choose_count,
@@ -1546,17 +1540,17 @@ lookup_block_init(
 extern void
 lookup_finish(
     P_EV_DATA p_ev_data_res,
-    stack_lkp slkp)
+    P_STACK_LOOKUP p_stack_lookup)
 {
-    switch(slkp->lkbp->lookup_id)
+    switch(p_stack_lookup->p_lookup_block->lookup_id)
         {
         case LOOKUP_LOOKUP:
             {
             EV_DATA data;
 
             array_range_mono_index(&data,
-                                   &slkp->arg2,
-                                   slkp->lkbp->count - 1,
+                                   &p_stack_lookup->arg2,
+                                   p_stack_lookup->p_lookup_block->count - 1,
                                    EM_REA | EM_SLR | EM_STR | EM_DAT | EM_BLK | EM_INT);
             /* MRJC 27.3.92 */
             ss_data_resource_copy(p_ev_data_res, &data);
@@ -1565,33 +1559,33 @@ lookup_finish(
 
         case LOOKUP_HLOOKUP:
             {
-            if(slkp->lkbp->result_data.did_num != RPN_DAT_SLR)
+            if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
                 ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
             else
                 {
-                ss_data_resource_copy(p_ev_data_res, &slkp->lkbp->result_data);
-                p_ev_data_res->arg.slr.row += (EV_ROW) slkp->arg2.arg.integer;
+                ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
+                p_ev_data_res->arg.slr.row += (EV_ROW) p_stack_lookup->arg2.arg.integer;
                 }
             break;
             }
 
         case LOOKUP_VLOOKUP:
             {
-            if(slkp->lkbp->result_data.did_num != RPN_DAT_SLR)
+            if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
                 ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
             else
                 {
-                ss_data_resource_copy(p_ev_data_res, &slkp->lkbp->result_data);
-                p_ev_data_res->arg.slr.col += (EV_COL) slkp->arg2.arg.integer;
+                ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
+                p_ev_data_res->arg.slr.col += (EV_COL) p_stack_lookup->arg2.arg.integer;
                 }
             break;
             }
 
         case LOOKUP_MATCH:
-            if(slkp->lkbp->in_array)
-                ev_data_set_integer(p_ev_data_res, slkp->lkbp->count);
+            if(p_stack_lookup->p_lookup_block->in_array)
+                ev_data_set_integer(p_ev_data_res, p_stack_lookup->p_lookup_block->count);
             else
-                ss_data_resource_copy(p_ev_data_res, &slkp->lkbp->result_data);
+                ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
             break;
         }
 }
@@ -1608,7 +1602,7 @@ npv_calc(
     P_F64 intp,
     P_EV_DATA array)
 {
-    stat_block stb;
+    STAT_BLOCK stb;
 
     stat_block_init(&stb, RPN_FNF_NPV, *intp + 1, 0);
 
@@ -1621,31 +1615,30 @@ npv_calc(
 
 /******************************************************************************
 *
-* process an individual item
-* for npv/mirr
+* process an individual item for npv/mirr
 *
 ******************************************************************************/
 
 static void
 npv_item(
     P_EV_DATA p_ev_data,
-    P_S32 countp,
-    P_F64 parmp,
-    P_F64 tempp,
-    P_F64 resp)
+    P_S32 p_count,
+    P_F64 p_parm,
+    P_F64 p_temp,
+    P_F64 p_result)
 {
-    if(!*countp)
+    if(!*p_count)
     {
-        *tempp  = *parmp;                   /* interest */
-        *resp   = p_ev_data->arg.fp / *parmp;   /* interest */
+        *p_temp    = *p_parm;                       /* interest */
+        *p_result  = p_ev_data->arg.fp / *p_parm;   /* interest */
     }
     else
     {
-        *tempp *= *parmp;                   /* interest */
-        *resp  += p_ev_data->arg.fp / *tempp;
+        *p_temp   *= *p_parm;                       /* interest */
+        *p_result += p_ev_data->arg.fp / *p_temp;
     }
 
-    *countp += 1;
+    *p_count += 1;
 }
 
 /******************************************************************************
@@ -1656,7 +1649,7 @@ npv_item(
 
 extern void
 stat_block_init(
-    stat_blockp stbp,
+    P_STAT_BLOCK stbp,
     S32 function_id,
     F64 parm,
     F64 parm1)

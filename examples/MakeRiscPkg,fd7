@@ -5,9 +5,11 @@
 | To view a copy of this license, visit:
 | http://creativecommons.org/licenses/by-sa/4.0/deed.en_GB
 
+| !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
+
 IfThere $.Temp Then Else %CDir $.Temp
 
-Set pd$Disc $.Temp.PDExamples_20140215
+Set pd$Disc $.Temp.PDExamples_20141101
 | Remember to update RiscPkg.Control too
 
 X %Wipe <pd$Disc> ~cfr~v
@@ -16,6 +18,6 @@ svn export <Obey$Dir> <pd$Disc>
 
 | The one in RiscPkg is the useful one for the packaged examples
 delete <pd$Disc>.LICENSE
-delete <pd$Disc>.Make_TS
+delete <pd$Disc>.MakeRiscPkg
 
 Filer_OpenDir <pd$Disc>

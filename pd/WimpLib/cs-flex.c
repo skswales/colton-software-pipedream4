@@ -30,7 +30,7 @@
 
 /* the well-known implementation of flex has allocated block preceded by: */
 
-typedef struct _FLEX_BLOCK
+typedef struct FLEX_BLOCK
 {
     flex_ptr    anchor;
     int         size;           /* exact size of allocation in bytes */
@@ -243,7 +243,7 @@ flex_granularity_floor(int n)
 
 /* can get better code for loading structure members on ARM Norcroft */
 
-static struct flex_
+static struct FLEX_STATICS
 {
     char *          start;          /* start of flex memory */
     char *          freep;          /* free flex memory */

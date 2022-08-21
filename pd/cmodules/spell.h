@@ -14,8 +14,6 @@
 #ifndef __spell_h
 #define __spell_h
 
-#ifndef RC_INVOKED
-
 /*
 function declarations
 */
@@ -165,8 +163,6 @@ error definition
     errorstring(SPELL_ERR_DEFCHARERR,    "Spell: Bad character in dictionary definition file") \
     errorstring(SPELL_ERR_CANTOPENDEFN,  "Spell: Can't open dictionary definition file") \
     errorstring(SPELL_ERR_CANTCLOSEDEFN, "Spell: Can't close dictionary definition file")
-
-#endif /* RC_INVOKED */
 
 /*
 error definition

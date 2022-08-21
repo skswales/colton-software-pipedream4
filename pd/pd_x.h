@@ -18,46 +18,34 @@ exported functions
 from pdmain.c
 */
 
-extern BOOL
-act_on_c(
-    S32 c);
-
-extern void
-application_process_command(
-    S32 c);
-
-extern BOOL
-application_process_key(
-    S32 c);
-
 extern int
 main(
     int argc,
     char *argv[]);
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 product_id(void);
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 product_ui_id(void);
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 user_id(void);
 
+_Check_return_
+_Ret_z_
 extern PC_USTR
 user_organ_id(void);
 
 /*
 from mcdiff.c
 */
-
-extern gcoord
-gcoord_x(
-    coord x);
-
-extern gcoord
-gcoord_y(
-    coord y);
 
 extern void
 wrch_definefunny(
@@ -70,6 +58,21 @@ wrch_undefinefunnies(void);
 from commlin.c
 */
 
+/*ncr*/
+extern BOOL
+act_on_c(
+    S32 c);
+
+extern void
+application_process_command(
+    S32 c);
+
+_Check_return_
+extern BOOL
+application_process_key(
+    S32 c);
+
+_Check_return_
 extern BOOL
 get_menu_item(
     MENU_HEAD *header,

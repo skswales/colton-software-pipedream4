@@ -91,7 +91,7 @@ grub_next(
 {
     S32 res, data_offset, nodep;
     PC_U8 rpn_start, at_pos;
-    struct rpnstate cur_rpn;
+    RPNSTATE cur_rpn;
 
     switch(p_ev_slot->parms.type)
         {
@@ -257,7 +257,7 @@ ev_rpn_adjust_refs(
 
         case EVS_VAR_RPN:
             {
-            struct rpnstate cur_rpn;
+            RPNSTATE cur_rpn;
             S32 in_cond = 0;
 
             cur_rpn.pos = p_ev_slot->rpn.var.rpn_str;
@@ -318,7 +318,7 @@ extern S32
 len_rpn(
     PC_U8 rpn_str)
 {
-    struct rpnstate cur_rpn;
+    RPNSTATE cur_rpn;
     S32 len;
 
     cur_rpn.pos = rpn_str;
@@ -345,7 +345,7 @@ len_rpn(
 
 extern void
 read_cur_sym(
-    rpnstatep rpnsp,
+    P_RPNSTATE rpnsp,
     P_EV_DATA p_ev_data)
 {
     PC_U8 p_rpn_content = rpnsp->pos + sizeof32(EV_IDNO);
@@ -377,12 +377,12 @@ read_cur_sym(
             return;
 
         case RPN_DAT_STRING:
-            p_ev_data->arg.stringc.data = p_rpn_content + sizeof(S16);
-            p_ev_data->arg.stringc.size = strlen32(p_ev_data->arg.stringc.data);
+            p_ev_data->arg.string.data = p_rpn_content + sizeof(S16);
+            p_ev_data->arg.string.size = ustrlen32(p_ev_data->arg.string.data);
             return;
 
         case RPN_DAT_DATE:
-            read_date(&p_ev_data->arg.date, p_rpn_content);
+            read_date(&p_ev_data->arg.ev_date, p_rpn_content);
             return;
 
         case RPN_DAT_NAME:
@@ -504,7 +504,7 @@ read_slr(
 
 extern EV_IDNO
 rpn_skip(
-    rpnstatep rpnsp)
+    P_RPNSTATE rpnsp)
 {
     if(rpnsp->num != -1)
         {

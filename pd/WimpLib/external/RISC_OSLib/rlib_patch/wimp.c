@@ -1,5 +1,5 @@
---- _src	2010-11-30 10:29:09 +0100
-+++ _dst	2013-08-31 18:30:02 +0100
+--- _src	2010-11-30 10:29:09.000000000 +0100
++++ _dst	2014-10-27 13:09:39.000000000 +0100
 @@ -34,6 +34,8 @@
   * History: IDJ: 07-Feb-92: prepared for source release
   */
@@ -254,15 +254,19 @@
    r.r[1] = (int) i;
    e = os_swix(PlotIcon, &r);
    return e;
-@@ -673,18 +754,70 @@
- 
- os_error *wimp_reporterror(os_error* er, wimp_errflags flags, char *name)
- {
--  return os_swi3(os_X | ReportError, (int) er, flags, (int) name);
-+  wimp_errflags flags_dummy;
-+  return(wimp_reporterror_rf(er, flags, name, &flags_dummy, NULL));
+@@ -671,20 +752,75 @@
+   return os_swix(BlockCopy, &r);
  }
  
++#ifndef SKS_ACW
++
+ os_error *wimp_reporterror(os_error* er, wimp_errflags flags, char *name)
+ {
+   return os_swi3(os_X | ReportError, (int) er, flags, (int) name);
+ }
+ 
++#endif /* SKS_ACW */
++
  os_error *wimp_sendmessage(wimp_etype code, wimp_msgstr* m, wimp_t dest)
  {
 -  return os_swi3(os_X | SendMessage, code, (int) m, dest);
@@ -328,7 +332,7 @@
  }
  
  os_error *wimp_create_submenu(wimp_menustr *sub, int x, int y)
-@@ -699,6 +832,8 @@
+@@ -699,6 +835,8 @@
    return e;
  }
  
@@ -337,7 +341,7 @@
  os_error *wimp_slotsize(int *currentslot /*inout*/,
                          int *nextslot /*inout*/,
                          int *freepool /*out*/) {
-@@ -708,6 +843,8 @@
+@@ -708,6 +846,8 @@
    return e;
  }
  

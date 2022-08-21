@@ -38,7 +38,7 @@
 #endif
 
 _Check_return_
-static inline DRAW_DIAG_OFFSET
+extern DRAW_DIAG_OFFSET
 gr_riscdiag_normalise_stt(
     _InRef_     P_GR_RISCDIAG p_gr_riscdiag,
     _InVal_     DRAW_DIAG_OFFSET sttObject_in)
@@ -58,7 +58,7 @@ gr_riscdiag_normalise_stt(
 }
 
 _Check_return_
-static inline DRAW_DIAG_OFFSET
+extern DRAW_DIAG_OFFSET
 gr_riscdiag_normalise_end(
     _InRef_     P_GR_RISCDIAG p_gr_riscdiag,
     _InVal_     DRAW_DIAG_OFFSET endObject_in)
@@ -415,7 +415,7 @@ gr_riscdiag_diagram_setup_from_draw_diag(
 ******************************************************************************/
 
 _Check_return_
-_Ret_writes_bytes_maybenull_(size)
+_Ret_writes_maybenull_(size)
 extern P_BYTE
 _gr_riscdiag_ensure(
     _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
@@ -481,19 +481,19 @@ _gr_riscdiag_ensure(
 *
 ******************************************************************************/
 
-typedef struct _draw_fontlistelem
+typedef struct DRAW_FONTLISTELEM
 {
     U8 fontref8;
     char name[32]; /* String, NULLCH terminated (size only for compiler and debugger - do not use sizeof()) */
 }
-draw_fontlistelem;
+DRAW_FONTLISTELEM;
 
-typedef union _draw_fontlistelemp
+typedef union P_DRAW_FONTLISTELEM
 {
     char *              p_byte;
-    draw_fontlistelem * elem;
+    DRAW_FONTLISTELEM * elem;
 }
-draw_fontlistelemp;
+P_DRAW_FONTLISTELEM;
 
 _Check_return_
 extern DRAW_FONT_REF16
@@ -504,7 +504,7 @@ gr_riscdiag_fontlist_lookup(
 {
     P_DRAW_OBJECT_FONTLIST pFontList;
     DRAW_DIAG_OFFSET     nextObject, thisOffset;
-    draw_fontlistelemp pFontListElem;
+    P_DRAW_FONTLISTELEM pFontListElem;
     size_t             thislen;
     DRAW_FONT_REF16    fontRefNum = 0; /* will have to use system font unless request matched */
 
@@ -534,7 +534,7 @@ gr_riscdiag_fontlist_lookup(
             break;
             }
 
-        thislen = offsetof(draw_fontlistelem, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
+        thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
 
         thisOffset += thislen;
 
@@ -571,7 +571,7 @@ gr_riscdiag_fontlist_name(
 {
     P_DRAW_OBJECT_FONTLIST pFontList;
     DRAW_DIAG_OFFSET     nextObject, thisOffset;
-    draw_fontlistelemp pFontListElem;
+    P_DRAW_FONTLISTELEM pFontListElem;
     size_t             thislen;
     PC_U8             szFontName = NULL;
 
@@ -598,7 +598,7 @@ gr_riscdiag_fontlist_name(
             break;
             }
 
-        thislen = offsetof(draw_fontlistelem, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
+        thislen = offsetof(DRAW_FONTLISTELEM, name) + strlen(pFontListElem.elem->name) + 1; /* for NULLCH */
 
         thisOffset += thislen;
 
@@ -1106,8 +1106,16 @@ gr_riscdiag_object_reset_bbox_between(
         /* font tables do not have bboxes - beware! */
         switch(objectType)
             {
-            case DRAW_OBJECT_TYPE_FONTLIST:
+            case DRAW_OBJECT_TYPE_FONTLIST: /* font tables do not have bounding boxes - beware! */
                 p_gr_riscdiag->dd_fontListR = thisObject;
+                break;
+
+            case DRAW_OBJECT_TYPE_DS_WINFONTLIST: /* these have an invalid bounding box (usually all-zeros from us, crossed max from Oak Draw) */
+                p_gr_riscdiag->dd_fontListW = thisObject;
+                break;
+
+            case DRAW_OBJECT_TYPE_OPTIONS: /* these have an invalid bounding box (usually all-zeros) */
+                p_gr_riscdiag->dd_options = thisObject;
                 break;
 
             case DRAW_OBJECT_TYPE_GROUP:
@@ -1144,10 +1152,6 @@ gr_riscdiag_object_reset_bbox_between(
 
                 draw_box_union(pBox, NULL, &PtrAddBytes(P_DRAW_OBJECT_HEADER, pObject.p_byte, tagHdrSize)->bbox);
                 }
-                break;
-
-            case DRAW_OBJECT_TYPE_OPTIONS:
-                /* this seems to get in the way somewhat */
                 break;
 
             default:

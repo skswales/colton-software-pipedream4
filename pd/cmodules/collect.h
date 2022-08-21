@@ -24,7 +24,7 @@ requires
 exported types
 */
 
-typedef struct _nlists_blk
+typedef struct NLISTS_BLK
 {
     P_LIST_BLOCK lbr;
 
@@ -38,12 +38,20 @@ NLISTS_BLK, * P_NLISTS_BLK;
 external functions
 */
 
-extern P_ANY
-collect_add_entry(
+_Check_return_
+_Ret_writes_maybenull_(size)
+extern P_BYTE
+_collect_add_entry(
     _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
     _InoutRef_opt_ P_LIST_ITEMNO key,
     _OutRef_    P_STATUS p_status);
+
+#define collect_add_entry_bytes(__base_type, p_list_block, size, key, p_status) ( \
+    (__base_type *) _collect_add_entry(p_list_block, size, key, p_status) )
+
+#define collect_add_entry_elem(__base_type, p_list_block, key, p_status) ( \
+    (__base_type *) _collect_add_entry(p_list_block, sizeof32(__base_type), key, p_status) )
 
 _Check_return_
 extern STATUS
@@ -71,35 +79,71 @@ collect_delete_entry(
     _InRef_     P_P_LIST_BLOCK p_p_list_block,
     _InVal_     LIST_ITEMNO key);
 
-extern P_ANY
-collect_first(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _OutRef_opt_ P_LIST_ITEMNO key);
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_first(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _OutRef_    P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
-extern P_ANY
-collect_first_from(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _InoutRef_opt_ P_LIST_ITEMNO key);
+#define collect_first(__base_type, p_p_list_block, p_key) ( \
+    (__base_type *) _collect_first(*(p_p_list_block), p_key \
+    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
 
-extern P_ANY
-collect_insert_entry(
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_first_from(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _InoutRef_  P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+
+#define collect_first_from(__base_type, p_p_list_block, p_key) ( \
+    (__base_type *) _collect_first_from(*(p_p_list_block), p_key \
+    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+
+#define collect_goto_item(__base_type, p_p_list_block, p_key) \
+    list_gotoitemcontents_opt(__base_type, *(p_p_list_block), p_key)
+
+_Check_return_
+_Ret_writes_to_maybenull_(size, 0)
+extern P_BYTE
+_collect_insert_entry(
     _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
     _InVal_     LIST_ITEMNO key,
     _OutRef_    P_STATUS p_status);
 
-extern P_ANY
-collect_next(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _InoutRef_opt_ P_LIST_ITEMNO key);
+#define collect_insert_entry_bytes(__base_type, p_list_block, size, key, p_status) ( \
+    (__base_type *) _collect_insert_entry(p_list_block, size, key, p_status) )
 
-extern P_ANY
-collect_prev(
-    _InRef_     P_P_LIST_BLOCK p_p_list_block,
-    _InoutRef_opt_ P_LIST_ITEMNO key);
+#define collect_insert_entry_elem(__base_type, p_list_block, key, p_status) ( \
+    (__base_type *) _collect_insert_entry(p_list_block, sizeof32(__base_type), key, p_status) )
 
-#define collect_search(p_p_list_block, key) \
-    _list_gotoitemcontents(*p_p_list_block, key)
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_next(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _InoutRef_  P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+
+#define collect_next(__base_type, p_p_list_block, p_key) ( \
+    (__base_type *) _collect_next(*(p_p_list_block), p_key \
+    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+
+_Check_return_
+_Ret_writes_maybenull_(bytesof_elem)
+extern P_BYTE
+_collect_prev(
+    _InRef_     P_LIST_BLOCK p_list_block,
+    _InoutRef_  P_LIST_ITEMNO p_key
+    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+
+#define collect_prev(__base_type, p_p_list_block, p_key) ( \
+    (__base_type *) _collect_prev(*(p_p_list_block), p_key \
+    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
 
 extern void
 collect_subtract_entry(

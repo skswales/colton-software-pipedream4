@@ -68,58 +68,86 @@
 #include "file.h"
 #include "stringlk.h"
 
+#ifndef __font_h
+#include "font.h"
+#endif
+
+/* Font_Paint options */
+#define FONT_PAINT_JUSTIFY          0x000001 /* justify text */
+#define FONT_PAINT_RUBOUT           0x000002 /* rub-out box required */
+                                 /* 0x000004    not used */
+                                 /* 0x000008    not used */
+#define FONT_PAINT_OSCOORDS         0x000010 /* OS coords supplied (otherwise 1/72000 inch) */
+#define FONT_PAINT_RUBOUTBLOCK      0x000020
+#define FONT_PAINT_USE_LENGTH       0x000080 /*r7*/
+#define FONT_PAINT_USE_HANDLE       0x000100 /*r0*/
+#define FONT_PAINT_KERNING          0x000200
+
+/* Font_ScanString options */
+#define FONT_SCANSTRING_USE_LENGTH  0x000080 /*r7*/
+#define FONT_SCANSTRING_USE_HANDLE  0x000100 /*r0*/
+#define FONT_SCANSTRING_KERNING     0x000200
+#define FONT_SCANSTRING_FIND        0x020000
+
 #include "mlec.h"
 
 #ifndef          __wm_event_h
 #include "cmodules/wm_event.h"
 #endif
 
-typedef struct
+typedef struct BUFF_REGION
 {
     int            start;
     int            end;
-}   buff_region;
+}
+BUFF_REGION;
 
-typedef struct
+typedef struct CURSOR_POSITION
 {
     int            lcol;        /* logical col                        */
     int            pcol;        /* physical col ie MIN(lcol, linelen) */
     int            row;         /* row number                         */
-}   cursor_position;
+}
+CURSOR_POSITION;
 
-typedef struct
+typedef struct MARK_POSITION
 {
     int            col;         /* a physical col number (I think) */
     int            row;         /* row number                      */
-}   mark_position;
+}
+MARK_POSITION;
 
 #if SUPPORT_SELECTION || SUPPORT_LOADSAVE || SUPPORT_CUTPASTE || SUPPORT_GETTEXT
 typedef struct
 {
-    mark_position  markstart;   /* start of marked text ie closest_to_text_home_of(cursor, selectanchor) */
+    MARK_POSITION  markstart;   /* start of marked text ie closest_to_text_home_of(cursor, selectanchor) */
     int            marklines;   /* number of line-ends in range (>=0) */
-    buff_region    lower;
-    buff_region    upper;
-}   marked_text;
+    BUFF_REGION    lower;
+    BUFF_REGION    upper;
+}
+MARKED_TEXT;
 #endif
 
-typedef struct __mlec_struct
+typedef struct RGB
+{
+    U8 r;
+    U8 g;
+    U8 b;
+    U8 transparent;
+}
+RGB, * P_RGB; typedef const RGB * PC_RGB;
+
+typedef struct MLEC_STRUCT
 {
     char            *buffptr;      /* ptr to the text buffer held in flex space                            */
     int              buffsiz;      /* the size we asked for                                                */
-    buff_region      lower;        /* all characters left of, and rows above the physical cursor position  */
-    buff_region      upper;        /* all characters right of, and rows below the physical cursor position */
-    cursor_position  cursor;       /* cursor row number and logical & physical column number               */
+    BUFF_REGION      lower;        /* all characters left of, and rows above the physical cursor position  */
+    BUFF_REGION      upper;        /* all characters right of, and rows below the physical cursor position */
+    CURSOR_POSITION  cursor;       /* cursor row number and logical & physical column number               */
     int              maxcol;       /* length of longest line (sort of!)                                    */
     int              linecount;    /* number of line terminators ie 1 less than number of display lines    */
 
-    int              leftmargin;   /* eg 32 */
-    int              topmargin;    /* eg 16 */
-    int              linespace;    /* eg 32 */
     int              charwidth;    /* eg 16 } graphics mode specific */
-    int              charheight;   /* eg 32 } graphics mode specific */
-    int              pixwidth;
-    int              pixheight;
     int              termwidth;    /* on screen representation of an EOL char in a selection, typically charwidth/4 */
 
     wimp_w           main;
@@ -132,19 +160,24 @@ typedef struct __mlec_struct
 #endif
     wimp_box         paneextent;   /* work area limits */
 
-    mlec_event_proc  callbackproc;
-    P_ANY             callbackhand;
+    HOST_FONT        host_font;
+
+    MLEC_EVENT_PROC  callbackproc;
+    P_ANY            callbackhand;
 
 #if SUPPORT_SELECTION
     BOOL             selectvalid;
-    mark_position    selectanchor;
+    MARK_POSITION    selectanchor;
     int              selectEORcol; /* do gcol(3,selectEORcol) to show selection, repeat to remove */
 #endif
 
 #if SUPPORT_PANEMENU
     BOOL             panemenu;
 #endif
-}   _mlec_struct;
+
+    int              attributes[MLEC_ATTRIBUTE_MAX];
+}
+MLEC_STRUCT;
 
 #if SUPPORT_LOADSAVE
 #define lineterm_CR    "\r"
@@ -155,7 +188,7 @@ typedef struct __mlec_struct
 
 #if FALSE
 #if SUPPORT_CUTPASTE
-extern mlec_handle paste;      /* The paste buffer */
+extern MLEC_HANDLE paste;      /* The paste buffer */
 #endif
 #endif
 
@@ -165,114 +198,114 @@ extern mlec_handle paste;      /* The paste buffer */
 
 static void
 mlec__mouse_click(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_mousestr *mousep);
 
 static void
 mlec__redraw_loop(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_down(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_left(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_right(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_up(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_lineend(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_linehome(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_tab_left(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_textend(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_texthome(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_wordleft(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__cursor_wordright(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static int
 mlec__insert_tab(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__delete_left(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__delete_right(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__delete_line(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__delete_lineend(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__delete_linehome(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 void
 scroll_until_cursor_visible(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 void
 show_caret(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 void
 build_caretstr(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_caretstr *carrotp);
 
 static void
 move_cursor(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int col,
     int row);
 
 void
 word_left(
-    mlec_handle mlec,
-    mark_position *startp);
+    MLEC_HANDLE mlec,
+    MARK_POSITION *startp);
 
 void
 word_limits(
-    mlec_handle mlec,
-    mark_position *startp,
-    mark_position *endp);
+    MLEC_HANDLE mlec,
+    MARK_POSITION *startp,
+    MARK_POSITION *endp);
 
 static void
 render_line(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int lineCol,
     int x,
     int y,
@@ -282,82 +315,82 @@ render_line(
 
 static void
 report_error(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int err);
 
 static int checkspace_deletealltext(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int size);
 
 static int checkspace_delete_selection(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int size);
 
 void force_redraw_eoline(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 void force_redraw_eotext(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 #if SUPPORT_SELECTION
 
 extern void
 mlec__selection_adjust(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int col,
     int row);
 
 extern void
 mlec__selection_clear(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 extern void
 mlec__selection_delete(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__select_word(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__drag_start(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 static void
 mlec__drag_complete(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_box *dragboxp);
 
 null_event_proto(static, mlec__drag_null_handler); /* callback function */
 
 void
 clear_selection(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 void
 delete_selection(
-    mlec_handle mlec);
+    MLEC_HANDLE mlec);
 
 #define remove_selection(mlec) if(mlec->selectvalid) { mlec__selection_delete(mlec); return; }
 
 BOOL range_is_selection(
-    mlec_handle mlec,
-    marked_text *range);
+    MLEC_HANDLE mlec,
+    MARKED_TEXT *range);
 
 void find_offset(
-    mlec_handle mlec,
-    mark_position *find,
+    MLEC_HANDLE mlec,
+    MARK_POSITION *find,
     int *offsetp);
 
 static void mlec__update_loop(
-    mlec_handle mlec,
-    mark_position mark1,
-    cursor_position mark2);
+    MLEC_HANDLE mlec,
+    MARK_POSITION mark1,
+    CURSOR_POSITION mark2);
 
 void show_selection(
-    mlec_handle mlec,
-    mark_position markstart,
-    mark_position markend,
+    MLEC_HANDLE mlec,
+    MARK_POSITION markstart,
+    MARK_POSITION markend,
     int orgx,
     int orgy,
     wimp_box screenBB);
@@ -372,19 +405,19 @@ void show_selection(
 
 int
 mlec__atcursor_load(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename);
 
 int
 mlec__alltext_save(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename,
     FILETYPE_RISC_OS filetype,
     char *lineterm);
 
 int
 mlec__selection_save(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename,
     FILETYPE_RISC_OS filetype,
     char *lineterm);
@@ -394,53 +427,54 @@ mlec__selection_save(
 #if SUPPORT_CUTPASTE
 
 int
-mlec__atcursor_paste(mlec_handle mlec);
+mlec__atcursor_paste(MLEC_HANDLE mlec);
 
 int
-mlec__selection_copy(mlec_handle mlec);
+mlec__selection_copy(MLEC_HANDLE mlec);
 
 int
-mlec__selection_cut(mlec_handle mlec);
+mlec__selection_cut(MLEC_HANDLE mlec);
 
 #endif
 
 #if SUPPORT_LOADSAVE || SUPPORT_CUTPASTE || SUPPORT_GETTEXT
 
-typedef union
+typedef union XFER_HANDLE
 {
     FILE_HANDLE f;      /* a file           */
-    mlec_handle p;      /* the paste buffer */
+    MLEC_HANDLE p;      /* the paste buffer */
     struct
     {
     char *ptr;
     int   siz;
     int   len;
     }           s;      /* a string         */
-}   xfer_handle;
+}
+XFER_HANDLE, * P_XFER_HANDLE;
 
 void
 range_is_alltext(
-    mlec_handle mlec,
-    marked_text *range);
+    MLEC_HANDLE mlec,
+    MARKED_TEXT *range);
 
 int
 text_in(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename,
-    int (*openp)(char *filename, P_FILETYPE_RISC_OS filetypep, int *filesizep, xfer_handle *xferhandlep),
-    int (*readp)(xfer_handle *xferhandlep, char *dataptr, int datasize),
-    int (*closep)(xfer_handle *xferhandlep)
+    int (*openp)(char *filename, P_FILETYPE_RISC_OS filetypep, int *filesizep, P_XFER_HANDLE xferhandlep),
+    int (*readp)(P_XFER_HANDLE xferhandlep, char *dataptr, int datasize),
+    int (*closep)(P_XFER_HANDLE xferhandlep)
     );
 
 int
 text_out(
-    mlec_handle mlec,
-    xfer_handle *xferhandlep,
-    marked_text range,
+    MLEC_HANDLE mlec,
+    P_XFER_HANDLE xferhandlep,
+    MARKED_TEXT range,
     char *lineterm,
-    int (*sizep)(xfer_handle *xferhandlep, int xfersize),
-    int (*writep)(xfer_handle *xferhandlep, char *dataptr, int datasize),
-    int (*closep)(xfer_handle *xferhandlep)
+    int (*sizep)(P_XFER_HANDLE xferhandlep, int xfersize),
+    int (*writep)(P_XFER_HANDLE xferhandlep, char *dataptr, int datasize),
+    int (*closep)(P_XFER_HANDLE xferhandlep)
     );
 
 #endif
@@ -452,38 +486,38 @@ file_read_open(
     char *filename,
     P_FILETYPE_RISC_OS filetypep/*out*/,
     int *filesizep/*out*/,
-    xfer_handle *xferhandlep/*out*/);
+    P_XFER_HANDLE xferhandlep/*out*/);
 
 static int
 file_read_getblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize);
 
 static int
 file_read_close(
-    xfer_handle *xferhandlep);
+    P_XFER_HANDLE xferhandlep);
 
 static int
 file_write_open(
-    xfer_handle *xferhandlep/*out*/,
+    P_XFER_HANDLE xferhandlep/*out*/,
     char *filename,
     FILETYPE_RISC_OS filetype);
 
 static int
 file_write_size(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     int xfersize);
 
 static int
 file_write_putblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize);
 
 static int
 file_write_close(
-    xfer_handle *xferhandlep);
+    P_XFER_HANDLE xferhandlep);
 
 #endif
 
@@ -494,38 +528,38 @@ paste_read_open(
     char *filename,
     P_FILETYPE_RISC_OS filetypep/*out*/,
     int *filesizep/*out*/,
-    xfer_handle *xferhandlep/*out*/);
+    P_XFER_HANDLE xferhandlep/*out*/);
 
 static int
 paste_read_getblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize);
 
 static int
 paste_read_close(
-    xfer_handle *xferhandlep);
+    P_XFER_HANDLE xferhandlep);
 
 static int
 paste_write_open(
-    xfer_handle *xferhandlep/*out*/);
+    P_XFER_HANDLE xferhandlep/*out*/);
 
 static int
 paste_write_size(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     int xfersize);
 
 static int
 paste_write_putblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize);
 
 static int
 paste_write_close(
-    xfer_handle *xferhandlep);
+    P_XFER_HANDLE xferhandlep);
 
-static mlec_handle paste = NULL;        /* The paste buffer is created automatically by paste_write_open() */
+static MLEC_HANDLE paste = NULL;        /* The paste buffer is created automatically by paste_write_open() */
                                         /* when mlec__selection_copy() or mlec__selection_cut() are used/  */
 
 #endif
@@ -534,24 +568,24 @@ static mlec_handle paste = NULL;        /* The paste buffer is created automatic
 
 static int
 string_write_open(
-    xfer_handle *xferhandlep/*out*/,
+    P_XFER_HANDLE xferhandlep/*out*/,
     char *buffptr,
     int buffsiz);
 
 static int
 string_write_size(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     int xfersize);
 
 static int
 string_write_putblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize);
 
 static int
 string_write_close(
-    xfer_handle *xferhandlep);
+    P_XFER_HANDLE xferhandlep);
 
 #endif
 
@@ -595,6 +629,57 @@ mlec__saveselection(
 
 #define TAB_MASK 3      /* ie insert 1..4 spaces */
 
+_Check_return_
+extern int
+mlec_attribute_query(
+    /*_In_*/    MLEC_HANDLE mlec,
+    _InVal_     MLEC_ATTRIBUTE attribute)
+{
+    assert((attribute >= 0) && (attribute < MLEC_ATTRIBUTE_MAX));
+
+    return(mlec->attributes[attribute]);
+}
+
+extern void
+mlec_attribute_set(
+    /*_Inout_*/ MLEC_HANDLE mlec,
+    _InVal_     MLEC_ATTRIBUTE attribute,
+    _InVal_     int value)
+{
+    assert((attribute >= 0) && (attribute < MLEC_ATTRIBUTE_MAX));
+
+    mlec->attributes[attribute] = value;
+}
+
+_Check_return_
+static HOST_FONT
+mlec_get_host_font(void)
+{
+    HOST_FONT host_font = HOST_FONT_NONE;
+
+    /*U32 size_x = 0;*/
+    U32 size_y = 12;
+
+    /* RISC OS font manager needs 16x fontsize */
+    /*U32 x16_size_x = 16 * 0;*/
+    U32 x16_size_y = 16 * size_y;
+
+    /* c.f. host_font_find() in Fireworkz */
+    _kernel_swi_regs rs;
+    _kernel_oserror * p_kernel_oserror;
+
+    rs.r[1] = (int) "\\F" "Corpus.Medium" "\\E" "Latin1";
+    rs.r[2] = /*x16_size_x ? x16_size_x :*/ x16_size_y;
+    rs.r[3] = x16_size_y;
+    rs.r[4] = 0;
+    rs.r[5] = 0;
+
+    if(NULL == (p_kernel_oserror = (_kernel_swi(/*Font_FindFont*/ 0x040081, &rs, &rs))))
+        host_font = (HOST_FONT) rs.r[0];
+
+    return(host_font);
+}
+
 /******************************************************************************
 *
 * Create the data structures for an mlec (multi-line edit control).
@@ -603,17 +688,18 @@ mlec__saveselection(
 
 int
 mlec_create(
-    mlec_handle *mlecp)
+    MLEC_HANDLE *mlecp)
 {
+    static const RGB rgb_background = { 0xFF, 0xFF, 0xFF }; /* white */
+    static const RGB rgb_foreground = { 0x00, 0x00, 0x00 }; /* black */
+
     STATUS status;
-    mlec_handle mlec;
-    int         buffsiz = DEFAULT_MLEC_BUFFSIZE;
+    MLEC_HANDLE mlec;
+    int buffsiz = DEFAULT_MLEC_BUFFSIZE;
 
     trace_0(TRACE_MODULE_MLEC, "mlec_create");
 
-    *mlecp = mlec = al_ptr_alloc_elem(_mlec_struct, 1, &status);
-
-    if(mlec)
+    if(NULL != (*mlecp = mlec = al_ptr_alloc_elem(MLEC_STRUCT, 1, &status)))
         {
         if(flex_alloc((flex_ptr)&mlec->buffptr, buffsiz))
             {
@@ -626,14 +712,24 @@ mlec_create(
             /* home cursor */
             mlec->cursor.lcol = mlec->cursor.pcol = mlec->cursor.row = 0;
 
-            mlec->leftmargin  = 2; /*32;*/
-            mlec->topmargin   = 4; /*16;*/
-            mlec->linespace   = 32;
+            mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT]  = 4; /*2;*/ /*32;*/
+            mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP]   = 4; /*16;*/
 
-            mlec->charwidth   = 16;     /*>>>screen mode dependant*/
-            mlec->charheight  = 32;     /*>>>screen mode dependant*/
-            mlec->pixwidth    = 1;      /*>>>is this good enough, probably only used to convert exclusive bounding box edge */
-            mlec->pixheight   = 1;      /*>>>into inclusive bbc_rectangle edge */
+            mlec->host_font = mlec_get_host_font();
+
+            if(HOST_FONT_NONE != mlec->host_font)
+                mlec->charwidth = 18; /* fixed pitch font */
+            else
+                mlec->charwidth = 16; /* System font */
+
+            mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT]  = 32;
+
+            mlec->attributes[MLEC_ATTRIBUTE_LINESPACE]      = mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
+            mlec->attributes[MLEC_ATTRIBUTE_CARETHEIGHTPOS] = mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] + 4;
+            mlec->attributes[MLEC_ATTRIBUTE_CARETHEIGHTNEG] = 4;
+
+            mlec->attributes[MLEC_ATTRIBUTE_BG_RGB] = * (PC_S32) &rgb_background;
+            mlec->attributes[MLEC_ATTRIBUTE_FG_RGB] = * (PC_S32) &rgb_foreground;
 
             mlec->termwidth   = mlec->charwidth/4;
 #if FALSE
@@ -680,13 +776,16 @@ mlec_create(
 
 void
 mlec_destroy(
-    mlec_handle *mlecp)
+    MLEC_HANDLE *mlecp)
 {
-    mlec_handle mlec = *mlecp;
+    MLEC_HANDLE mlec = *mlecp;
 
     if(mlec)
         {
         /*>>>I suppose we could call detach???*/
+
+        if(HOST_FONT_NONE != mlec->host_font)
+            font_lose(mlec->host_font);
 
         flex_dispose((flex_ptr)&mlec->buffptr);
 
@@ -709,7 +808,7 @@ mlec_destroy(
 
 void
 mlec_attach(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_w main_win_handle,
     wimp_w pane_win_handle,
     wimp_box paneWorkArea,
@@ -752,7 +851,7 @@ mlec_attach(
 
 void
 mlec_detach(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
 #if SUPPORT_PANEMENU
     if(mlec->panemenu)
@@ -782,8 +881,8 @@ mlec_detach(
 
 void
 mlec_attach_eventhandler(
-    mlec_handle mlec,
-    mlec_event_proc proc,
+    MLEC_HANDLE mlec,
+    MLEC_EVENT_PROC proc,
     P_ANY handle,
     S32 add)
 {
@@ -814,13 +913,13 @@ mlec_attach_eventhandler(
 
 int
 mlec_GetText(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *buffptr,
     int buffsize)
 {
     int         err;
-    marked_text range;
-    xfer_handle handle;
+    MARKED_TEXT range;
+    XFER_HANDLE handle;
 
     range_is_alltext(mlec, &range);
 
@@ -831,9 +930,9 @@ mlec_GetText(
 
 int
 mlec_GetTextLen(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
-    marked_text range;
+    MARKED_TEXT range;
 
     range_is_alltext(mlec, &range);
 
@@ -844,7 +943,7 @@ mlec_GetTextLen(
 
 static int
 string_write_open(
-    xfer_handle *xferhandlep/*out*/,
+    P_XFER_HANDLE xferhandlep/*out*/,
     char *buffptr,
     int buffsiz)
 {
@@ -857,7 +956,7 @@ string_write_open(
 
 static int
 string_write_size(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     int xfersize)
 {
     /* xfersize is the total number of printable chars & lineterm chars that will be output */
@@ -871,7 +970,7 @@ string_write_size(
 
 static int
 string_write_putblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize)
 {
@@ -892,7 +991,7 @@ string_write_putblock(
 
 static int
 string_write_close(
-    xfer_handle *xferhandlep)
+    P_XFER_HANDLE xferhandlep)
 {
     /* terminate the string */
 
@@ -909,7 +1008,7 @@ string_write_close(
 
 int
 mlec_SetText(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *text)
 {
     int err;
@@ -957,7 +1056,7 @@ mlec_SetText(
 
 BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
 {
-    mlec_handle mlec = (mlec_handle)handle;
+    MLEC_HANDLE mlec = (MLEC_HANDLE)handle;
 
     /* Process the event */
     switch (e->e)
@@ -1171,7 +1270,7 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
 
 static void
 mlec__mouse_click(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_mousestr *mousep)
 {
     wimp_wstate r;
@@ -1186,8 +1285,8 @@ mlec__mouse_click(
 
     trace_2(TRACE_MODULE_MLEC, "(%d,%d)",x,y);
 
-    x = ( x - mlec->leftmargin +8 ) / 16;                 /* 8=half char width, 16=char width*/
-    y = (-y - mlec->topmargin -1) / mlec->linespace;
+    x = ( x - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] +8 ) / 16;                 /* 8=half char width, 16=char width*/
+    y = (-y - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] -1) / mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
 
     /* Decode the mouse buttons */
     if(mousep->bbits & wimp_BCLICKLEFT)         /* 0x400 Single 'select' */
@@ -1234,6 +1333,47 @@ mlec__mouse_click(
 #endif
 }
 
+typedef union RISCOS_PALETTE_U
+{
+    unsigned int word;
+
+    struct RISCOS_PALETTE_U_BYTES
+    {
+        char gcol;
+        char red;
+        char green;
+        char blue;
+    } bytes;
+}
+RISCOS_PALETTE_U;
+
+static void
+host_setfontcolours_for_mlec(
+    _InRef_     PC_RGB p_rgb_foreground,
+    _InRef_     PC_RGB p_rgb_background)
+{
+    RISCOS_PALETTE_U rgb_fg;
+    RISCOS_PALETTE_U rgb_bg;
+    _kernel_swi_regs rs;
+
+    rgb_fg.bytes.gcol  = 0;
+    rgb_fg.bytes.red   = p_rgb_foreground->r;
+    rgb_fg.bytes.green = p_rgb_foreground->g;
+    rgb_fg.bytes.blue  = p_rgb_foreground->b;
+
+    rgb_bg.bytes.gcol  = 0;
+    rgb_bg.bytes.red   = p_rgb_background->r;
+    rgb_bg.bytes.green = p_rgb_background->g;
+    rgb_bg.bytes.blue  = p_rgb_background->b;
+
+    rs.r[0] = 0;
+    rs.r[1] = rgb_bg.word;
+    rs.r[2] = rgb_fg.word;
+    rs.r[3] = 14; /* max offset - some magic number, !Draw uses 14 */
+
+    (void) _kernel_swi(ColourTrans_SetFontColours, &rs, &rs);
+}
+
 /******************************************************************************
 *
 * Redraw any invalid rectangles in the pane window
@@ -1242,7 +1382,7 @@ mlec__mouse_click(
 *
 ******************************************************************************/
 
-static void mlec__redraw_loop(mlec_handle mlec)
+static void mlec__redraw_loop(MLEC_HANDLE mlec)
 {
     BOOL            more;
     wimp_redrawstr  r;
@@ -1257,7 +1397,10 @@ static void mlec__redraw_loop(mlec_handle mlec)
     char *ptr;
 
 #if SUPPORT_SELECTION
-    mark_position markstart, markend;   /* only valid if mlec->selectvalid == TRUE */
+    MARK_POSITION markstart, markend;   /* only valid if mlec->selectvalid == TRUE */
+
+    markstart.col = 0; markstart.row = 0; /* keep dataflower happy */
+    markend.col   = 0; markend.row   = 0;
 
     if(mlec->selectvalid)
         {
@@ -1302,14 +1445,22 @@ static void mlec__redraw_loop(mlec_handle mlec)
         int orgx=r.box.x0-r.scx;       /* graphics units */
         int orgy=r.box.y1-r.scy;       /*>>>> could be put outside loop?*/
 
+        RGB rgb_foreground, rgb_background;
+
         /* bounding box of characters 0..cursor.pcol-1 on row cursor.row */
 
-        cursor.x0 = orgx      + mlec->leftmargin;
+        cursor.x0 = orgx      + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT];
         cursor.x1 = cursor.x0 + mlec->cursor.pcol * mlec->charwidth;
-        cursor.y1 = orgy      - mlec->topmargin - mlec->linespace * mlec->cursor.row;
-        cursor.y0 = cursor.y1 - mlec->charheight;
+        cursor.y1 = orgy      - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * mlec->cursor.row;
+        cursor.y0 = cursor.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
 
         screenBB = r.g;
+
+        * (P_S32) &rgb_background = mlec->attributes[MLEC_ATTRIBUTE_BG_RGB];
+        * (P_S32) &rgb_foreground = mlec->attributes[MLEC_ATTRIBUTE_FG_RGB];
+
+        if(HOST_FONT_NONE != mlec->host_font)
+            host_setfontcolours_for_mlec(&rgb_foreground, &rgb_background);
 
         {
         /* Render characters to the right of the cursor and the lines below it */
@@ -1318,7 +1469,7 @@ static void mlec__redraw_loop(mlec_handle mlec)
 
         lineBB.x0 = lineBB.x1 = cursor.x1;
         lineBB.y1 = cursor.y1;
-        lineBB.y0 = lineBB.y1 - mlec->charheight;
+        lineBB.y0 = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
 
         ptr    = upper_start;
 
@@ -1333,8 +1484,8 @@ static void mlec__redraw_loop(mlec_handle mlec)
                     lineCol = 0; lineRow++;
 
                     lineBB.x0  = cursor.x0;
-                    lineBB.y1 -= mlec->linespace;
-                    lineBB.y0  = lineBB.y1 - mlec->charheight;
+                    lineBB.y1 -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
+                    lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
                     break;
                     }
                 }
@@ -1349,8 +1500,8 @@ static void mlec__redraw_loop(mlec_handle mlec)
             lineCol = 0; lineRow++;
 
             lineBB.x0  = cursor.x0;
-            lineBB.y1 -= mlec->linespace;
-            lineBB.y0  = lineBB.y1 - mlec->charheight;
+            lineBB.y1 -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
+            lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
             }
 
         /* remaining lines are below the graphics window */
@@ -1363,7 +1514,7 @@ static void mlec__redraw_loop(mlec_handle mlec)
 
         lineBB.x0 = lineBB.x1 = cursor.x0;
         lineBB.y1 = cursor.y1;
-        lineBB.y0 = lineBB.y1 - mlec->charheight;
+        lineBB.y0 = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
 
         linestart = lower_row;
         lineend   = lower_end;
@@ -1378,8 +1529,8 @@ static void mlec__redraw_loop(mlec_handle mlec)
 
             lineRow--;
 
-            lineBB.y1 += mlec->linespace;
-            lineBB.y0  = lineBB.y1 - mlec->charheight;
+            lineBB.y1 += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
+            lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
             }
 
         /* Render lines that fall within the current graphics window */
@@ -1395,8 +1546,8 @@ static void mlec__redraw_loop(mlec_handle mlec)
 
             lineRow--;
 
-            lineBB.y1 += mlec->linespace;
-            lineBB.y0 = lineBB.y1 - mlec->charheight;
+            lineBB.y1 += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
+            lineBB.y0 = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
             }
 
         /* remaining lines are above the graphics window */
@@ -1409,8 +1560,8 @@ static void mlec__redraw_loop(mlec_handle mlec)
 
 #if FALSE
         {
-        int x = orgx + mlec->leftmargin + mlec->charwidth * mlec->maxcol;
-        int y = orgy - mlec->topmargin  - mlec->linespace * (mlec->linecount + 1);      /* lowest scan line on last row */
+        int x = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * mlec->maxcol;
+        int y = orgy - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP]  - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * (mlec->linecount + 1);      /* lowest scan line on last row */
 
         bbc_move(orgx,y - mlec->pixheight); bbc_drawby(200 * mlec->charwidth, 0);       /* draw line on first unused scanline */
         bbc_move(x,y); bbc_drawby(0, 200);
@@ -1429,7 +1580,7 @@ static void mlec__redraw_loop(mlec_handle mlec)
 *
 ******************************************************************************/
 
-static void mlec__cursor_down(mlec_handle mlec)
+static void mlec__cursor_down(MLEC_HANDLE mlec)
 {
     char *buff = mlec->buffptr;
     BOOL  found;
@@ -1471,7 +1622,7 @@ static void mlec__cursor_down(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__cursor_left(mlec_handle mlec)
+static void mlec__cursor_left(MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
 
@@ -1510,7 +1661,7 @@ static void mlec__cursor_left(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__cursor_right(mlec_handle mlec)
+static void mlec__cursor_right(MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
 
@@ -1540,7 +1691,7 @@ static void mlec__cursor_right(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__cursor_up(mlec_handle mlec)
+static void mlec__cursor_up(MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
 
@@ -1578,7 +1729,7 @@ static void mlec__cursor_up(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__cursor_lineend(mlec_handle mlec)
+static void mlec__cursor_lineend(MLEC_HANDLE mlec)
 {
     char *buff = mlec->buffptr;
 
@@ -1605,7 +1756,7 @@ static void mlec__cursor_lineend(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__cursor_linehome(mlec_handle mlec)
+static void mlec__cursor_linehome(MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
 
@@ -1635,7 +1786,7 @@ static void mlec__cursor_linehome(mlec_handle mlec)
 *
 ******************************************************************************/
 
-static void mlec__cursor_tab_left(mlec_handle mlec)
+static void mlec__cursor_tab_left(MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
 
@@ -1658,7 +1809,7 @@ static void mlec__cursor_tab_left(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__cursor_textend(mlec_handle mlec)
+static void mlec__cursor_textend(MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
 
@@ -1689,7 +1840,7 @@ static void mlec__cursor_textend(mlec_handle mlec)
 
 static void
 mlec__cursor_texthome(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
 
@@ -1713,7 +1864,7 @@ mlec__cursor_texthome(
 
 void
 mlec__cursor_getpos(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int * p_col,
     int * p_row)
 {
@@ -1722,7 +1873,7 @@ mlec__cursor_getpos(
 
 void
 mlec__cursor_setpos(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int col,
     int row)
 {
@@ -1735,9 +1886,9 @@ mlec__cursor_setpos(
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__cursor_wordleft(mlec_handle mlec)
+static void mlec__cursor_wordleft(MLEC_HANDLE mlec)
 {
-    mark_position wordstart;
+    MARK_POSITION wordstart;
 
     word_left(mlec, &wordstart);
 
@@ -1750,9 +1901,9 @@ static void mlec__cursor_wordleft(mlec_handle mlec)
         mlec__cursor_setpos(mlec, wordstart.col, wordstart.row);
 }
 
-static void mlec__cursor_wordright(mlec_handle mlec)
+static void mlec__cursor_wordright(MLEC_HANDLE mlec)
 {
-    mark_position wordstart, wordend;
+    MARK_POSITION wordstart, wordend;
 
     word_limits(mlec, &wordstart, &wordend);
 
@@ -1784,7 +1935,7 @@ static void mlec__cursor_wordright(mlec_handle mlec)
 
 int
 mlec__insert_char(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char ch)
 {
     int err;
@@ -1807,7 +1958,7 @@ mlec__insert_char(
     return(err);
 }
 
-int mlec__insert_newline(mlec_handle mlec)
+int mlec__insert_newline(MLEC_HANDLE mlec)
 {
     int err;
 
@@ -1837,7 +1988,7 @@ int mlec__insert_newline(mlec_handle mlec)
 *
 ******************************************************************************/
 
-static int mlec__insert_tab(mlec_handle mlec)
+static int mlec__insert_tab(MLEC_HANDLE mlec)
 {
     int err;
 
@@ -1877,7 +2028,7 @@ static int mlec__insert_tab(mlec_handle mlec)
 
 int
 mlec__insert_text(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *text)
 {
     int err;
@@ -1937,7 +2088,7 @@ mlec__insert_text(
 *
 ******************************************************************************/
 
-static void mlec__delete_left(mlec_handle mlec)
+static void mlec__delete_left(MLEC_HANDLE mlec)
 {
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete char left of cursor                                     */
@@ -1976,7 +2127,7 @@ static void mlec__delete_left(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__delete_right(mlec_handle mlec)
+static void mlec__delete_right(MLEC_HANDLE mlec)
 {
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete char right of cursor                                    */
@@ -2002,7 +2153,7 @@ static void mlec__delete_right(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__delete_line(mlec_handle mlec)
+static void mlec__delete_line(MLEC_HANDLE mlec)
 {
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete cursor line                                             */
@@ -2043,7 +2194,7 @@ static void mlec__delete_line(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__delete_lineend(mlec_handle mlec)
+static void mlec__delete_lineend(MLEC_HANDLE mlec)
 {
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete from cursor to end-of-line                              */
@@ -2073,7 +2224,7 @@ static void mlec__delete_lineend(mlec_handle mlec)
     scroll_until_cursor_visible(mlec);
 }
 
-static void mlec__delete_linehome(mlec_handle mlec)
+static void mlec__delete_linehome(MLEC_HANDLE mlec)
 {
     remove_selection(mlec);                     /* if got selection, delete it, scroll_until_cursor_visible, then quit */
                                                 /* else delete from cursor to start-of-line                            */
@@ -2111,7 +2262,7 @@ static void mlec__delete_linehome(mlec_handle mlec)
 
 static void
 mlec__main_button(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_i icon)
 {
     if(mlec->main != window_NULL)
@@ -2136,7 +2287,7 @@ mlec__main_button(
 *
 ******************************************************************************/
 
-void mlec_claim_focus(mlec_handle mlec)
+void mlec_claim_focus(MLEC_HANDLE mlec)
 {
     wimp_caretstr current;
     wimp_caretstr carrot;    /* nyeeeer, whats up doc? */
@@ -2161,7 +2312,7 @@ void mlec_claim_focus(mlec_handle mlec)
         }
 }
 
-void mlec_release_focus(mlec_handle mlec)
+void mlec_release_focus(MLEC_HANDLE mlec)
 {
     wimp_caretstr current;
 
@@ -2185,7 +2336,7 @@ void mlec_release_focus(mlec_handle mlec)
         }
 }
 
-void scroll_until_cursor_visible(mlec_handle mlec)
+void scroll_until_cursor_visible(MLEC_HANDLE mlec)
 {
     trace_0(TRACE_MODULE_MLEC, "scroll_until_cursor_visible - ");
 
@@ -2194,8 +2345,8 @@ void scroll_until_cursor_visible(mlec_handle mlec)
     /* May need to enlarge the window extent to fit the text. */
     {
     BOOL            change  =   FALSE;
-    int             extentx =   mlec->leftmargin + mlec->charwidth * mlec->maxcol;
-    int             extenty = - mlec->topmargin  - mlec->linespace * (mlec->linecount + 1); /* -ve */
+    int             extentx =   mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * mlec->maxcol;
+    int             extenty = - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP]  - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * (mlec->linecount + 1); /* -ve */
     wimp_redrawstr  blk;
 
     trace_4(TRACE_MODULE_MLEC, "window extent (%d,%d,%d,%d)",mlec->paneextent.x0,mlec->paneextent.y0,
@@ -2236,9 +2387,9 @@ void scroll_until_cursor_visible(mlec_handle mlec)
         int       visible_height = state.o.box.y1 - state.o.box.y0;
         BOOL      done           = FALSE;
 
-        curshape.x0 = curshape.x1 =  mlec->leftmargin + mlec->cursor.pcol * mlec->charwidth;
-        curshape.y1               = -mlec->topmargin  - mlec->linespace * mlec->cursor.row;
-        curshape.y0               =  curshape.y1      - mlec->linespace;
+        curshape.x0 = curshape.x1 =  mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->cursor.pcol * mlec->charwidth;
+        curshape.y1               = -mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP]  - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * mlec->cursor.row;
+        curshape.y0               =  curshape.y1      - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
         trace_4(TRACE_MODULE_MLEC, "wimp_get_window_state returns: visible area=(%d,%d, %d,%d)",state.o.box.x0,state.o.box.y0,
                                                                                                 state.o.box.x1,state.o.box.y1);
         trace_2(TRACE_MODULE_MLEC, "scroll offset=(%d,%d)", state.o.scx,state.o.scy);
@@ -2259,13 +2410,13 @@ void scroll_until_cursor_visible(mlec_handle mlec)
 
         while(state.o.scy < curshape.y1)
             {
-            state.o.scy += mlec->linespace;
+            state.o.scy += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
             done = TRUE;
             }
 
         while((state.o.scy - visible_height) > curshape.y0)
             {
-            state.o.scy -= mlec->linespace;
+            state.o.scy -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
             done = TRUE;
             }
 
@@ -2285,7 +2436,7 @@ void scroll_until_cursor_visible(mlec_handle mlec)
     }
 }
 
-void show_caret(mlec_handle mlec)
+void show_caret(MLEC_HANDLE mlec)
 {
     wimp_caretstr current;
 
@@ -2331,19 +2482,22 @@ void show_caret(mlec_handle mlec)
 
 void
 build_caretstr(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_caretstr *carrotp)
 {
     int caretXoffset = mlec->cursor.pcol * mlec->charwidth;
-    int caretheight  = mlec->linespace;        /*>>> or should this be charHeight ie 32 */
-    int caretYoffset = mlec->cursor.row * mlec->linespace + 32; /*>>>what magic number is this?*/
+    int caretheight  = mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];        /*>>> or should this be charHeight ie 32 */
+    int caretYoffset = mlec->cursor.row * mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] + 32; /*>>>what magic number is this?*/
 
     carrotp->w = mlec->pane;
     carrotp->i = (wimp_i)-1;
-    carrotp->x =  caretXoffset + mlec->leftmargin;
-    carrotp->y = -caretYoffset - mlec->topmargin - 4;   /*>>> -4 and                                           */
-    carrotp->height= 0x01000000 | (caretheight + 8);    /*>>> +8 to make cursor start one pixel row below text */
-    carrotp->index = 0;                                 /*>>> and finish one pixel row above it                */
+    carrotp->x =  caretXoffset + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT];
+    carrotp->y = -caretYoffset - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] - 4;   /*>>> -4 and                                           */
+    carrotp->height= caretheight + 8; /*>>> +8 to make cursor start one pixel row below text */
+    carrotp->index = 0;               /*>>> and finish one pixel row above it                */
+
+    if(HOST_FONT_NONE == mlec->host_font)
+        carrotp->height |= 0x01000000;  /* VDU 5 style caret if no font */
 
 #if SUPPORT_SELECTION
     if(mlec->selectvalid)
@@ -2353,7 +2507,7 @@ build_caretstr(
 
 static void
 move_cursor(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int col,
     int row)
 {
@@ -2437,8 +2591,8 @@ move_cursor(
 
 void
 word_left(
-    mlec_handle mlec,
-    mark_position *startp)
+    MLEC_HANDLE mlec,
+    MARK_POSITION *startp)
 {
     char *sptr = &mlec->buffptr[mlec->lower.end];       /* 1 byte past character to left of cursor */
     int   scol = mlec->cursor.pcol;
@@ -2467,9 +2621,9 @@ word_left(
 
 void
 word_limits(
-    mlec_handle mlec,
-    mark_position *startp,
-    mark_position *endp)
+    MLEC_HANDLE mlec,
+    MARK_POSITION *startp,
+    MARK_POSITION *endp)
 {
   /*char *lower_start = &mlec->buffptr[mlec->lower.start];*/                  /* first character                         */
     char *lower_end   = &mlec->buffptr[mlec->lower.end];                      /* 1 byte past character to left of cursor */
@@ -2516,7 +2670,7 @@ word_limits(
 
 static void
 render_line(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int lineCol,
     int x,
     int y,
@@ -2565,15 +2719,32 @@ render_line(
 
     if (showcnt > 0)
         {
-        bbc_move(x, y-wimpt_dy());
-
-        /* SKS after PD 4.12 27mar92 - convert CtrlChar on fly */
-        while(showcnt--)
+        if(HOST_FONT_NONE != mlec->host_font)
             {
-            char ch = *showptr++;
-            if((ch < 0x20) || (ch == 0x7F))
-                ch = '.';
-            bbc_vdu(ch);
+            const int base_line_shift = -24;
+            _kernel_swi_regs rs;
+
+            rs.r[0] = mlec->host_font;
+            rs.r[1] = (int) showptr;
+            rs.r[2] = FONT_PAINT_USE_LENGTH /*r7*/ | FONT_PAINT_USE_HANDLE /*r0*/ | FONT_PAINT_OSCOORDS;
+            rs.r[3] = x;
+            rs.r[4] = y + base_line_shift;
+            rs.r[7] = showcnt;
+
+            (void) _kernel_swi(/*Font_Paint*/ 0x40086, &rs, &rs);
+            }
+        else
+        {
+            bbc_move(x, y-wimpt_dy());
+
+            /* SKS after PD 4.12 27mar92 - convert CtrlChar on fly */
+            while(showcnt--)
+                {
+                char ch = *showptr++;
+                if((ch < 0x20) || (ch == 0x7F))
+                    ch = '.';
+                bbc_vdu(ch);
+                }
             }
         }
 
@@ -2604,7 +2775,7 @@ render_line(
 
 static void
 report_error(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int err)
 {
     mlec = mlec;
@@ -2613,7 +2784,7 @@ report_error(
 
 static int
 checkspace_deletealltext(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int size)
 {
     int shortfall = size - (mlec->upper.end - mlec->lower.start);
@@ -2637,7 +2808,7 @@ checkspace_deletealltext(
 
 static int
 checkspace_delete_selection(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int size)
 {
     int shortfall;
@@ -2663,7 +2834,7 @@ checkspace_delete_selection(
 }
 
 #if FALSE
-void force_redraw(mlec_handle mlec)
+void force_redraw(MLEC_HANDLE mlec)
 {
     wimp_redrawstr redraw;
 
@@ -2687,7 +2858,7 @@ void force_redraw(mlec_handle mlec)
 *
 ******************************************************************************/
 
-void force_redraw_eoline(mlec_handle mlec)
+void force_redraw_eoline(MLEC_HANDLE mlec)
 {
     wimp_redrawstr redraw;
 
@@ -2695,10 +2866,10 @@ void force_redraw_eoline(mlec_handle mlec)
 
     /* invalidate right of cursor to eol */
     redraw.w      =  mlec->pane;
-    redraw.box.x0 =  mlec->leftmargin + mlec->cursor.pcol * mlec->charwidth;
+    redraw.box.x0 =  mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->cursor.pcol * mlec->charwidth;
     redraw.box.x1 =  0x1FFFFFFF;
-    redraw.box.y1 = -mlec->topmargin - mlec->linespace * mlec->cursor.row;
-    redraw.box.y0 =  redraw.box.y1   - mlec->linespace; /*>>>actually charheight??*/
+    redraw.box.y1 = -mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * mlec->cursor.row;
+    redraw.box.y0 =  redraw.box.y1   - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE]; /*>>>actually charheight??*/
 
     (void)wimp_force_redraw(&redraw);
 }
@@ -2713,7 +2884,7 @@ void force_redraw_eoline(mlec_handle mlec)
 *
 ******************************************************************************/
 
-void force_redraw_eotext(mlec_handle mlec)
+void force_redraw_eotext(MLEC_HANDLE mlec)
 {
     wimp_redrawstr redraw;
     int            y;
@@ -2722,16 +2893,16 @@ void force_redraw_eotext(mlec_handle mlec)
 
     /* invalidate right of cursor to eol */
     redraw.w      =  mlec->pane;
-    redraw.box.x0 =  mlec->leftmargin + mlec->cursor.pcol * mlec->charwidth;    /* left  (inc)  */
+    redraw.box.x0 =  mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->cursor.pcol * mlec->charwidth;    /* left  (inc)  */
     redraw.box.x1 =  0x1FFFFFFF;                                                /* right (exc)  */
-    redraw.box.y1 = -mlec->topmargin - mlec->linespace * mlec->cursor.row;      /* top   (exe)  */
-    redraw.box.y0 =  y = redraw.box.y1 - mlec->linespace;                       /* bottom (inc) */
+    redraw.box.y1 = -mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * mlec->cursor.row;      /* top   (exe)  */
+    redraw.box.y0 =  y = redraw.box.y1 - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];                       /* bottom (inc) */
 
     (void)wimp_force_redraw(&redraw);
 
     /* invalidate rows below cursor (must reinit all fields, cos wimp_force_redraw shits on structure) */
     redraw.w      =  mlec->pane;
-    redraw.box.x0 =  mlec->leftmargin;                                          /* left  (inc)  */
+    redraw.box.x0 =  mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT];                                          /* left  (inc)  */
     redraw.box.x1 =  0x1FFFFFFF;                                                /* right (exc)  */
     redraw.box.y1 =  y;                                                         /* top   (exe)  */
     redraw.box.y0 = -0x1FFFFFFF;                                                /* bottom (inc) */
@@ -2743,7 +2914,7 @@ void force_redraw_eotext(mlec_handle mlec)
 
 static void
 mlec__drag_start(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     wimp_wstate  state;
     wimp_dragstr dragstr;
@@ -2760,9 +2931,9 @@ mlec__drag_start(
     dragstr.box.y1    = my+30;
 #endif
     dragstr.parent.x0 = state.o.box.x0 - mlec->charwidth;
-    dragstr.parent.y0 = state.o.box.y0 - mlec->linespace;
+    dragstr.parent.y0 = state.o.box.y0 - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
     dragstr.parent.x1 = state.o.box.x1 + mlec->charwidth;
-    dragstr.parent.y1 = state.o.box.y1 + mlec->linespace;
+    dragstr.parent.y1 = state.o.box.y1 + mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
 
     wimpt_complain(win_drag_box(&dragstr));     /* NB win_drag_box NOT wimp_drag_box */
 
@@ -2771,7 +2942,7 @@ mlec__drag_start(
 
 static void
 mlec__drag_complete(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     wimp_box *dragboxp)
 {
     IGNOREPARM(dragboxp);
@@ -2787,7 +2958,7 @@ mlec__drag_complete(
 
 null_event_proto(static, mlec__drag_null_handler)
 {
-    mlec_handle mlec = (mlec_handle) p_null_event_block->client_handle;
+    MLEC_HANDLE mlec = (MLEC_HANDLE) p_null_event_block->client_handle;
 
     switch(p_null_event_block->rc)
         {
@@ -2807,8 +2978,8 @@ null_event_proto(static, mlec__drag_null_handler)
             x = mouse.x - orgx;       /* mouse position relative to */
             y = mouse.y - orgy;       /* window origin              */
 
-            x = ( x - mlec->leftmargin +8 ) / 16;                 /* 8=half char width, 16=char width*/
-            y = (-y - mlec->topmargin -1) / mlec->linespace;
+            x = ( x - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] +8 ) / 16;                 /* 8=half char width, 16=char width*/
+            y = (-y - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] -1) / mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
 
             mlec__selection_adjust(mlec, x,y);
             }
@@ -2831,11 +3002,11 @@ null_event_proto(static, mlec__drag_null_handler)
 
 extern void
 mlec__selection_adjust(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     int col,
     int row)
 {
-    mark_position old;
+    MARK_POSITION old;
 
     trace_2(TRACE_MODULE_MLEC, "adjust selection to (%d,%d)",col,row);
 
@@ -2864,7 +3035,7 @@ mlec__selection_adjust(
 
 extern void
 mlec__selection_clear(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     clear_selection(mlec);
     show_caret(mlec);   /* do show_caret, not scroll_until_cursor_visible, so the window won't scroll */
@@ -2872,7 +3043,7 @@ mlec__selection_clear(
 
 extern void
 mlec__selection_delete(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     delete_selection(mlec);
     scroll_until_cursor_visible(mlec);
@@ -2880,9 +3051,9 @@ mlec__selection_delete(
 
 static void
 mlec__select_word(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
-    mark_position wordstart, wordend;
+    MARK_POSITION wordstart, wordend;
 
     word_limits(mlec, &wordstart, &wordend);
 
@@ -2914,7 +3085,7 @@ mlec__select_word(
 
 void
 clear_selection(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     if(mlec->selectvalid)
         {
@@ -2925,9 +3096,9 @@ clear_selection(
 
 void
 delete_selection(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
-    marked_text range;
+    MARKED_TEXT range;
 
     if(range_is_selection(mlec, &range))
         {
@@ -2958,12 +3129,12 @@ delete_selection(
 
 BOOL
 range_is_selection(
-    mlec_handle mlec,
-    marked_text *range)
+    MLEC_HANDLE mlec,
+    MARKED_TEXT *range)
 {
     if(mlec->selectvalid)
         {
-        mark_position markstart, markend;
+        MARK_POSITION markstart, markend;
 
         if((mlec->selectanchor.row < mlec->cursor.row) ||
            ((mlec->selectanchor.row == mlec->cursor.row) && (mlec->selectanchor.col < mlec->cursor.pcol))
@@ -3004,8 +3175,8 @@ range_is_selection(
 
 void
 find_offset(
-    mlec_handle mlec,
-    mark_position *find,
+    MLEC_HANDLE mlec,
+    MARK_POSITION *find,
     int *offsetp)
 {
     char *buff = mlec->buffptr;
@@ -3091,13 +3262,13 @@ find_offset(
 
 static void
 mlec__update_loop(
-    mlec_handle mlec,
-    mark_position mark1,
-    cursor_position mark2)
+    MLEC_HANDLE mlec,
+    MARK_POSITION mark1,
+    CURSOR_POSITION mark2)
 {
     wimp_redrawstr r;
     BOOL           more;
-    mark_position  markstart, markend;
+    MARK_POSITION  markstart, markend;
 
     /* quit now if null region, as doing the wimp_update_wind loop causes the caret to flicker */
     if((mark1.col == mark2.pcol) && (mark1.row == mark2.row))
@@ -3119,8 +3290,8 @@ mlec__update_loop(
     r.box.x0 = -0x1FFFFFFF;
     r.box.x1 =  0x1FFFFFFF;
 
-    r.box.y1 = -mlec->topmargin - mlec->linespace * markstart.row;
-    r.box.y0 = -mlec->topmargin - mlec->linespace * (markend.row + 1);
+    r.box.y1 = -mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * markstart.row;
+    r.box.y0 = -mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * (markend.row + 1);
 
     wimp_update_wind(&r, &more);
  trace_4(TRACE_MODULE_MLEC, "wimp_update_wind returns: (%d,%d,%d,%d) ",r.box.x0,r.box.y0,r.box.x1,r.box.y1);
@@ -3147,7 +3318,7 @@ mycolourtran_returnColourNumber(
     return(_kernel_swi(ColourTrans_ReturnColourNumber, &rs, &rs) ? 0 : rs.r[0]);
 }
 
-extern void
+static void
 host_set_EOR_for_mlec(void)
 {
     wimp_paletteword os_rgb_foreground;
@@ -3176,9 +3347,9 @@ host_set_EOR_for_mlec(void)
 
 void
 show_selection(
-    mlec_handle mlec,
-    mark_position markstart,
-    mark_position markend,
+    MLEC_HANDLE mlec,
+    MARK_POSITION markstart,
+    MARK_POSITION markend,
     int orgx,
     int orgy,
     wimp_box screenBB)
@@ -3200,10 +3371,10 @@ show_selection(
 
     /* bounding box of characters 0..cursor.pcol-1 on row cursor.row */
 
-    cursor.x0 = orgx      + mlec->leftmargin;
+    cursor.x0 = orgx      + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT];
     cursor.x1 = cursor.x0 + mlec->cursor.pcol * mlec->charwidth;
-    cursor.y1 = orgy      - mlec->topmargin - mlec->linespace * mlec->cursor.row;
-    cursor.y0 = cursor.y1 - mlec->charheight;
+    cursor.y1 = orgy      - mlec->attributes[MLEC_ATTRIBUTE_MARGIN_TOP] - mlec->attributes[MLEC_ATTRIBUTE_LINESPACE] * mlec->cursor.row;
+    cursor.y0 = cursor.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
 
     host_set_EOR_for_mlec();
 
@@ -3214,7 +3385,7 @@ show_selection(
 
     lineBB.x0 = lineBB.x1 = cursor.x1;
     lineBB.y1 = cursor.y1;
-    lineBB.y0 = lineBB.y1 - mlec->charheight;
+    lineBB.y0 = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
 
     ptr    = upper_start;
 
@@ -3238,7 +3409,7 @@ show_selection(
             {
             if(lineRow == markstart.row)
                 {
-                int start = orgx + mlec->leftmargin + mlec->charwidth * markstart.col;
+                int start = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markstart.col;
 
                 if(lineBB.x0 < start)
                     lineBB.x0 = start;
@@ -3246,7 +3417,7 @@ show_selection(
 
             if(lineRow == markend.row)
                 {
-                int end = orgx + mlec->leftmargin + mlec->charwidth * markend.col;
+                int end = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markend.col;
 
                 if(lineBB.x1 > end)
                     lineBB.x1 = end;
@@ -3257,15 +3428,15 @@ show_selection(
                 /* NB lineBB is (L,B,R,T) edges which are (inc,inc,exc,exc), bbc_RectangleFill takes (inc,inc,inc,inc) */
 
                 bbc_move(lineBB.x0, lineBB.y0);
-                os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - mlec->pixwidth, lineBB.y1 - mlec->pixheight);
+                os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1);
                 }
             }
 
         lineCol = 0; lineRow++;
 
         lineBB.x0  = cursor.x0;
-        lineBB.y1 -= mlec->linespace;
-        lineBB.y0  = lineBB.y1 - mlec->charheight;
+        lineBB.y1 -= mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
+        lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
         }
 
     /* remaining lines are below the graphics window */
@@ -3278,7 +3449,7 @@ show_selection(
 
     lineBB.x0 = lineBB.x1 = cursor.x0;      /* NB x0 & x1 the same ie no CR width */
     lineBB.y1 = cursor.y1;
-    lineBB.y0 = lineBB.y1 - mlec->charheight;
+    lineBB.y0 = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
 
     ptr = lower_end;
 
@@ -3300,7 +3471,7 @@ show_selection(
             {
             if(lineRow == markstart.row)
                 {
-                int start = orgx + mlec->leftmargin + mlec->charwidth * markstart.col;
+                int start = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markstart.col;
 
                 if(lineBB.x0 < start)
                     lineBB.x0 = start;
@@ -3308,7 +3479,7 @@ show_selection(
 
             if(lineRow == markend.row)
                 {
-                int end = orgx + mlec->leftmargin + mlec->charwidth * markend.col;
+                int end = orgx + mlec->attributes[MLEC_ATTRIBUTE_MARGIN_LEFT] + mlec->charwidth * markend.col;
 
                 if(lineBB.x1 > end)
                     lineBB.x1 = end;
@@ -3319,7 +3490,7 @@ show_selection(
                 /* NB lineBB is (L,B,R,T) edges which are (inc,inc,exc,exc), bbc_RectangleFill takes (inc,inc,inc,inc) */
 
                 bbc_move(lineBB.x0, lineBB.y0);
-                os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - mlec->pixwidth, lineBB.y1 - mlec->pixheight);
+                os_plot(bbc_RectangleFill + bbc_DrawAbsFore, lineBB.x1 - 1, lineBB.y1 - 1);
                 }
             }
 
@@ -3327,8 +3498,8 @@ show_selection(
 
         lineBB.x0  = cursor.x0;
         lineBB.x1  = lineBB.x0 + mlec->termwidth; /* cos CR has width */
-        lineBB.y1 += mlec->linespace;
-        lineBB.y0  = lineBB.y1 - mlec->charheight;
+        lineBB.y1 += mlec->attributes[MLEC_ATTRIBUTE_LINESPACE];
+        lineBB.y0  = lineBB.y1 - mlec->attributes[MLEC_ATTRIBUTE_CHARHEIGHT];
         }
 
     /* remaining lines are above the graphics window */
@@ -3351,7 +3522,7 @@ show_selection(
 
 int
 mlec__atcursor_load(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename)
 {
     trace_1(TRACE_MODULE_MLEC, "mlec__atcursor_load('%s')", filename);
@@ -3361,14 +3532,14 @@ mlec__atcursor_load(
 
 int
 mlec__alltext_save(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename,
     FILETYPE_RISC_OS filetype,
     char *lineterm)
 {
     int         err;
-    marked_text range;
-    xfer_handle handle;
+    MARKED_TEXT range;
+    XFER_HANDLE handle;
 
     range_is_alltext(mlec, &range);
 
@@ -3379,14 +3550,14 @@ mlec__alltext_save(
 
 int
 mlec__selection_save(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename,
     FILETYPE_RISC_OS filetype,
     char *lineterm)
 {
     int         err;
-    marked_text range;
-    xfer_handle handle;
+    MARKED_TEXT range;
+    XFER_HANDLE handle;
 
     if(range_is_selection(mlec, &range))
         {
@@ -3404,7 +3575,7 @@ file_read_open(
     char *filename,
     P_FILETYPE_RISC_OS filetypep/*out*/,
     int *filesizep/*out*/,
-    xfer_handle *xferhandlep/*out*/)
+    P_XFER_HANDLE xferhandlep/*out*/)
 {
     int err;
 
@@ -3423,7 +3594,7 @@ file_read_open(
 
 static int
 file_read_getblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize)
 {
@@ -3432,14 +3603,14 @@ file_read_getblock(
 
 static int
 file_read_close(
-    xfer_handle *xferhandlep)
+    P_XFER_HANDLE xferhandlep)
 {
     return(file_close(&(xferhandlep->f)));
 }
 
 static int
 file_write_open(
-    xfer_handle *xferhandlep/*out*/,
+    P_XFER_HANDLE xferhandlep/*out*/,
     char *filename,
     FILETYPE_RISC_OS filetype)
 {
@@ -3453,7 +3624,7 @@ file_write_open(
 
 static int
 file_write_size(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     int xfersize)
 {
     IGNOREPARM(xferhandlep);
@@ -3464,7 +3635,7 @@ file_write_size(
 
 static int
 file_write_putblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize)
 {
@@ -3473,7 +3644,7 @@ file_write_putblock(
 
 static int
 file_write_close(
-    xfer_handle *xferhandlep)
+    P_XFER_HANDLE xferhandlep)
 {
     return(file_close(&(xferhandlep->f)));
 }
@@ -3484,7 +3655,7 @@ file_write_close(
 
 int
 mlec__atcursor_paste(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     trace_0(TRACE_MODULE_MLEC, "mlec__atcursor_paste");
 
@@ -3501,11 +3672,11 @@ mlec__atcursor_paste(
 
 int
 mlec__selection_copy(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     int         err;
-    marked_text range;
-    xfer_handle handle;
+    MARKED_TEXT range;
+    XFER_HANDLE handle;
 
     reject_if_paste_buffer(mlec);
 
@@ -3530,7 +3701,7 @@ mlec__selection_copy(
 
 int
 mlec__selection_cut(
-    mlec_handle mlec)
+    MLEC_HANDLE mlec)
 {
     int err;
 
@@ -3545,9 +3716,9 @@ paste_read_open(
     char *filename,
     P_FILETYPE_RISC_OS filetypep/*out*/,
     int *filesizep/*out*/,
-    xfer_handle *xferhandlep/*out*/)
+    P_XFER_HANDLE xferhandlep/*out*/)
 {
-    marked_text range;
+    MARKED_TEXT range;
 
     IGNOREPARM(filename);
 
@@ -3574,17 +3745,17 @@ paste_read_open(
 
 static int
 paste_read_getblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize)
 {
-    mlec_handle mlec = xferhandlep->p;
+    MLEC_HANDLE mlec = xferhandlep->p;
 
     datasize = datasize;
 
     if(mlec)
         {
-        marked_text  range;
+        MARKED_TEXT  range;
         char        *buff = mlec->buffptr;
         int          i;
 
@@ -3604,7 +3775,7 @@ paste_read_getblock(
 
 static int
 paste_read_close(
-    xfer_handle *xferhandlep)
+    P_XFER_HANDLE xferhandlep)
 {
     xferhandlep->p = NULL;
     return(0);
@@ -3612,7 +3783,7 @@ paste_read_close(
 
 static int
 paste_write_open(
-    xfer_handle *xferhandlep/*out*/)
+    P_XFER_HANDLE xferhandlep/*out*/)
 {
     if(!paste)
         status_return(mlec_create(&paste));
@@ -3627,7 +3798,7 @@ paste_write_open(
 
 static int
 paste_write_size(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     int xfersize)
 {
     /* Since paste_write_open does mlec_SetText(paste, "") to clear all text (and selection!), */
@@ -3638,11 +3809,11 @@ paste_write_size(
 
 static int
 paste_write_putblock(
-    xfer_handle *xferhandlep,
+    P_XFER_HANDLE xferhandlep,
     char *dataptr,
     int datasize)
 {
-    mlec_handle mlec = xferhandlep->p;
+    MLEC_HANDLE mlec = xferhandlep->p;
 
     if(mlec)
         {
@@ -3662,7 +3833,7 @@ paste_write_putblock(
 
 static int
 paste_write_close(
-    xfer_handle *xferhandlep)
+    P_XFER_HANDLE xferhandlep)
 {
     xferhandlep->p = NULL;
     return(0);
@@ -3674,8 +3845,8 @@ paste_write_close(
 
 void
 range_is_alltext(
-    mlec_handle mlec,
-    marked_text *range)
+    MLEC_HANDLE mlec,
+    MARKED_TEXT *range)
 {
     range->markstart.col = range->markstart.row = 0;
     range->marklines     = mlec->linecount;
@@ -3685,15 +3856,15 @@ range_is_alltext(
 
 int
 text_in(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     char *filename,
-    int (*openp)(char *filename, P_FILETYPE_RISC_OS filetypep, int *filesizep, xfer_handle *xferhandlep),
-    int (*readp)(xfer_handle *xferhandlep, char *dataptr, int datasize),
-    int (*closep)(xfer_handle *xferhandlep)
+    int (*openp)(char *filename, P_FILETYPE_RISC_OS filetypep, int *filesizep, P_XFER_HANDLE xferhandlep),
+    int (*readp)(P_XFER_HANDLE xferhandlep, char *dataptr, int datasize),
+    int (*closep)(P_XFER_HANDLE xferhandlep)
     )
 {
     int err;
-    xfer_handle handle;
+    XFER_HANDLE handle;
     FILETYPE_RISC_OS filetype;
     int filesize;
 
@@ -3721,13 +3892,13 @@ text_in(
 
 int
 text_out(
-    mlec_handle mlec,
-    xfer_handle *xferhandlep,
-    marked_text range,
+    MLEC_HANDLE mlec,
+    P_XFER_HANDLE xferhandlep,
+    MARKED_TEXT range,
     char *lineterm,
-    int (*sizep)(xfer_handle *xferhandlep, int xfersize),
-    int (*writep)(xfer_handle *xferhandlep, char *dataptr, int datasize),
-    int (*closep)(xfer_handle *xferhandlep)
+    int (*sizep)(P_XFER_HANDLE xferhandlep, int xfersize),
+    int (*writep)(P_XFER_HANDLE xferhandlep, char *dataptr, int datasize),
+    int (*closep)(P_XFER_HANDLE xferhandlep)
     )
 {
     int err;
@@ -3854,7 +4025,7 @@ static void mlec__event_menu_maker(const char *menu_title)
 
 menu mlec__event_menu_filler(void *handle)
 {
-    mlec_handle mlec = (mlec_handle)handle;
+    MLEC_HANDLE mlec = (MLEC_HANDLE)handle;
 
     if(mlec_menu_root)
         {
@@ -3886,7 +4057,7 @@ mlec__save_dbox = NULL;
 
 static void
 mlec__event_save(
-    mlec_handle mlec,
+    MLEC_HANDLE mlec,
     BOOL selection)
 {
     if(0 != (mlec__save_dbox = dbox_new("xfer_send")))
@@ -3913,7 +4084,7 @@ mlec__event_save(
 
 BOOL mlec__event_menu_proc(void *handle, char *hit, BOOL submenurequest)
 {
-    mlec_handle mlec = (mlec_handle)handle;
+    MLEC_HANDLE mlec = (MLEC_HANDLE)handle;
     int         err  = 0;
 
     IGNOREPARM(submenurequest);
@@ -3986,7 +4157,7 @@ BOOL mlec__saveall(/*const*/ char *filename, void *handle)
 {
     /* Reorder params and bend types as needed */
 
-    mlec_handle mlec = (mlec_handle)handle;
+    MLEC_HANDLE mlec = (MLEC_HANDLE)handle;
     int         err;
 
     if((err = mlec__alltext_save(mlec, filename, FILETYPE_TEXT, lineterm_LF)) < 0)
@@ -4002,7 +4173,7 @@ BOOL mlec__saveselection(/*const*/ char *filename, void *handle)
 {
     /* Reorder params and bend types as needed */
 
-    mlec_handle mlec = (mlec_handle)handle;
+    MLEC_HANDLE mlec = (MLEC_HANDLE)handle;
     int         err;
 
     if((err = mlec__selection_save(mlec, filename, FILETYPE_TEXT, lineterm_LF)) < 0)

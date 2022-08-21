@@ -14,7 +14,7 @@
 RISC OS file types
 */
 
-typedef enum _RISC_OS_FILETYPE
+typedef enum FILETYPE_RISC_OS
 {
     FILETYPE_WINDOWS_BMP = 0x69C, /* As Allocated by Acorn PMF */
     FILETYPE_FWP         = 0xAF8,

@@ -9,73 +9,44 @@
 
 /******************************************************************************
 *
-* quick_block allocation module (both BYTE- and TCHAR-based)
+* quick_block allocation module (BYTE-based)
 *
 * efficient routines for handling temporary buffers
 *
 * you supply a 'static' buffer; if the item to be added to the buffer
 * would overflow the supplied buffer, a handle-based buffer is allocated
 *
-* SKS November 2006 split out of aligator
+* SKS November 2006 split out of aligator.c
 *
 ******************************************************************************/
 
 #include "common/gflags.h"
 
-/*#include "ob_skel/flags.h"*/
+#ifndef          __quickblk_h
+#include "cmodules/quickblk.h"
+#endif
+
+/* dispose of a quick_block is inline */
 
 /******************************************************************************
 *
-* BYTE-based quick block
-*
-******************************************************************************/
-
-/******************************************************************************
-*
-* add some bytes to a quick_block
-*
-******************************************************************************/
-
-_Check_return_
-extern STATUS
-quick_block_bytes_add(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
-    _In_reads_bytes_(n_bytes) PC_ANY p_any_in,
-    _InVal_     U32 n_bytes)
-{
-    STATUS status = STATUS_OK;
-
-    if(0 != n_bytes) /* SKS 23may06 - adding 0 bytes is ok */
-    {
-        P_U8 p_u8;
-
-        assert(n_bytes < 0xF0000000U); /* check possible -ve client */
-
-        if(NULL != (p_u8 = quick_block_extend_by(p_quick_block, n_bytes, &status)))
-            memcpy32(p_u8, p_any_in, n_bytes);
-    }
-
-    return(status);
-}
-
-/******************************************************************************
-*
-* dispose of a quick_block of data but leave converted text in place (see charts)
+* dispose of a quick_block of data but leave as much text in place as possible (see charts)
 *
 ******************************************************************************/
 
 extern void
-quick_block_dispose_leaving_text_valid(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block)
+quick_block_dispose_leaving_buffer_valid(
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*disposed*/)
 {
     /* have we overflowed the buffer and gone into handle allocation? */
-    if(0 != p_quick_block->h_array_buffer)
+    if(0 != quick_block_array_handle_ref(p_quick_block))
     {   /* copy as much stuff as possible back down before deleting the handle */
-        U32 n = MIN((U32) p_quick_block->static_buffer_size, array_elements32(&p_quick_block->h_array_buffer));
+        const U32 n = MIN(p_quick_block->static_buffer_size, array_elements32(&quick_block_array_handle_ref(p_quick_block)));
+        PC_BYTE p_data = array_rangec(&quick_block_array_handle_ref(p_quick_block), BYTE, 0, n);
 
-        memcpy32(p_quick_block->p_static_buffer, array_basec(&p_quick_block->h_array_buffer, BYTE), n);
+        memcpy32(p_quick_block->p_static_buffer, p_data, n);
 
-        al_array_dispose(&p_quick_block->h_array_buffer);
+        al_array_dispose(&quick_block_array_handle_ref(p_quick_block));
     }
 
     p_quick_block->static_buffer_used = 0;
@@ -89,49 +60,21 @@ quick_block_dispose_leaving_text_valid(
 
 extern void
 quick_block_empty(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block)
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*emptied*/)
 {
-    if(p_quick_block->h_array_buffer)
+    if(0 != quick_block_array_handle_ref(p_quick_block))
     {
-#if QUICK_BLOCK_CHECK /* SKS 23jan95 trash buffer on empty */
-        __aqb_fill(array_base(&p_quick_block->h_array_buffer, U8), array_elements32(&p_quick_block->h_array_buffer));
+#if CHECKING_QUICK_BLOCK
+        /* trash handle on empty when CHECKING_QUICK_BLOCK */
+        const U32 n_bytes = array_elements32(&quick_block_array_handle_ref(p_quick_block));
+        _do_aqb_fill(array_range(&quick_block_array_handle_ref(p_quick_block), BYTE, 0, n_bytes), n_bytes);
 #endif
-        al_array_empty(&p_quick_block->h_array_buffer);
+        al_array_empty(&quick_block_array_handle_ref(p_quick_block));
     }
-    else
-    {
-#if QUICK_BLOCK_CHECK /* SKS 23jan95 trash buffer on exit */
-        if(p_quick_block->static_buffer_size)
-            __aqb_fill(p_quick_block->p_static_buffer, p_quick_block->static_buffer_size);
-#endif
-        p_quick_block->static_buffer_used = 0;
-    }
-}
 
-/******************************************************************************
-*
-* ensure that the given quick_block is not NULLCH terminated
-*
-******************************************************************************/
-
-extern void
-quick_block_nullch_strip(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block)
-{
-    const U32 len = quick_block_bytes(p_quick_block);
-
-    if(len)
-    {
-        P_U8 p_u8 = quick_block_ptr(p_quick_block);
-
-        if(p_u8[len-1] == NULLCH)
-        {
-#if QUICK_BLOCK_CHECK
-            p_u8[len-1] = 0xEE; /* SKS 23jan95 trash terminator */
-#endif
-            quick_block_shrink_by(p_quick_block, -1);
-        }
-    }
+    /* trash buffer on empty when CHECKING_QUICK_BLOCK */
+    _do_aqb_fill(p_quick_block->p_static_buffer, p_quick_block->static_buffer_size);
+    p_quick_block->static_buffer_used = 0;
 }
 
 /******************************************************************************
@@ -146,211 +89,156 @@ quick_block_nullch_strip(
 ******************************************************************************/
 
 _Check_return_
-_Ret_maybenull_
-extern P_U8
+_Ret_writes_maybenull_(extend_by) /* may be NULL */
+extern P_BYTE
 quick_block_extend_by(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
-    _InVal_     U32 size_wanted,
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*extended*/,
+    _InVal_     U32 extend_by,
     _OutRef_    P_STATUS p_status)
 {
     *p_status = STATUS_OK;
 
-    if(0 == size_wanted) /* SKS 23may96 - realloc by 0 is ok, but return a non-NULL rubbish pointer */
-        return((P_U8) (uintptr_t) 1);
+    if(0 == extend_by) /* realloc by 0 is OK, but return a non-NULL rubbish pointer */
+        return((P_BYTE) (uintptr_t) 1);
 
-    assert(size_wanted < 0xF0000000U); /* real world use always +ve; check possible -ve client */
+    assert(extend_by < 0xF0000000U); /* real world use always +ve; check possible -ve client */
 
 #if 0
-    if(size_wanted < 0)
+    if((S32) extend_by < 0)
     {
-        quick_block_shrink_by(p_quick_block, size_wanted);
-        return((P_U8) (uintptr_t) 1);
+        quick_block_shrink_by(p_quick_block, (S32) extend_by);
+        return((P_BYTE) (uintptr_t) 1);
     }
 #endif
 
-    if(p_quick_block->h_array_buffer)
-        return(al_array_extend_by(&p_quick_block->h_array_buffer, U8, size_wanted, PC_ARRAY_INIT_BLOCK_NONE, p_status));
-
-    if(size_wanted <= p_quick_block->static_buffer_size - p_quick_block->static_buffer_used)
+    /* does the request fit in the current buffer? */
+    if(extend_by <= (p_quick_block->static_buffer_size - p_quick_block->static_buffer_used))
     {
-        P_U8 p_output = (P_U8) p_quick_block->p_static_buffer + p_quick_block->static_buffer_used;
-        p_quick_block->static_buffer_used += size_wanted;
+        P_BYTE p_output = PtrAddBytes(P_BYTE, p_quick_block->p_static_buffer, p_quick_block->static_buffer_used);
+        p_quick_block->static_buffer_used += extend_by;
         return(p_output);
     }
 
-    {
-    static /*poked*/ ARRAY_INIT_BLOCK array_init_block = aib_init(4, sizeof32(U8), FALSE);
+    if(0 != quick_block_array_handle_ref(p_quick_block))
+        return(al_array_extend_by(&quick_block_array_handle_ref(p_quick_block), BYTE, extend_by, PC_ARRAY_INIT_BLOCK_NONE, p_status));
+
+    { /* transition from static buffer to array handle */
+    static /*poked*/ ARRAY_INIT_BLOCK array_init_block = aib_init(4, sizeof32(BYTE), FALSE);
     S32 incr = p_quick_block->static_buffer_size / 4;
-    P_U8 p_output;
+    P_BYTE p_output;
 
     if( incr < 4)
         incr = 4;
 
     array_init_block.size_increment = incr;
 
-    if(NULL != (p_output = al_array_alloc(&p_quick_block->h_array_buffer, U8, p_quick_block->static_buffer_used + size_wanted, &array_init_block, p_status)))
+    if(NULL != (p_output = al_array_alloc(&quick_block_array_handle_ref(p_quick_block), BYTE,
+                                          p_quick_block->static_buffer_used + extend_by, &array_init_block, p_status)))
     {
         memcpy32(p_output, p_quick_block->p_static_buffer, p_quick_block->static_buffer_used);
-#if QUICK_BLOCK_CHECK
-        __aqb_fill(p_quick_block->p_static_buffer, p_quick_block->static_buffer_size);
-#endif
+
         p_output += p_quick_block->static_buffer_used;
-        p_quick_block->static_buffer_used = 0;
+
+        p_quick_block->static_buffer_used = p_quick_block->static_buffer_size; /* indicate static buffer full for fast add etc */
+
+        /* trash buffer once copied when CHECKING_QUICK_BLOCK */
+        _do_aqb_fill(p_quick_block->p_static_buffer, p_quick_block->static_buffer_size);
     }
 
     return(p_output);
     } /*block*/
 }
 
+/******************************************************************************
+*
+* shrink quick_block by this many (NB -ve)
+*
+******************************************************************************/
+
 extern void
 quick_block_shrink_by(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
-    _In_        S32 size_wanted)
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*shrunk*/,
+    _InVal_     S32 shrink_by)
 {
-    assert(size_wanted <= 0);
+    U32 shrink_by_pos;
 
-    if(size_wanted >= 0)
+    assert(shrink_by <= 0);
+
+    if(shrink_by >= 0)
         return;
 
-    if(p_quick_block->h_array_buffer)
-        al_array_shrink_by(&p_quick_block->h_array_buffer, size_wanted);
+    if(0 != quick_block_array_handle_ref(p_quick_block))
+    {
+        al_array_shrink_by(&quick_block_array_handle_ref(p_quick_block), shrink_by);
+        return;
+    }
+
+    shrink_by_pos = (U32) -(shrink_by);
+
+    if(p_quick_block->static_buffer_used >= shrink_by_pos)
+    {
+        p_quick_block->static_buffer_used -= shrink_by_pos;
+        /* trash invalidated section when CHECKING_QUICK_BLOCK */
+        _do_aqb_fill(p_quick_block->p_static_buffer + p_quick_block->static_buffer_used, shrink_by_pos);
+    }
     else
     {
-        p_quick_block->static_buffer_used += size_wanted;
-        assert((S32) p_quick_block->static_buffer_used >= 0);
+        assert(p_quick_block->static_buffer_used >= shrink_by_pos);
+        p_quick_block->static_buffer_used = 0;
+        /* trash invalidated section when CHECKING_QUICK_BLOCK */
+        _do_aqb_fill(p_quick_block->p_static_buffer, p_quick_block->static_buffer_size);
     }
 }
 
 /******************************************************************************
 *
-* add a string to a quick_block
+* add a byte to a quick_block
 *
 ******************************************************************************/
 
 _Check_return_
 extern STATUS
-quick_block_string_add(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
-    _In_z_      PC_U8Z p_u8)
+quick_block_byte_add(
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*appended*/,
+    _InVal_     BYTE u8)
 {
-    return(quick_block_bytes_add(p_quick_block, p_u8, strlen32(p_u8)));
-}
+    STATUS status = STATUS_OK;
+    P_BYTE p_byte;
 
-_Check_return_
-extern STATUS
-quick_block_string_with_nullch_add(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
-    _In_z_      PC_U8Z p_u8)
-{
-    return(quick_block_bytes_add(p_quick_block, p_u8, strlen32p1(p_u8)));
-}
-
-/******************************************************************************
-*
-* add a u8 to a quick_block
-*
-******************************************************************************/
-
-_Check_return_
-extern STATUS
-quick_block_u8_add(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
-   _InVal_      U8 u8)
-{
-    STATUS status;
-    P_U8 p_u8;
-
-    if(NULL != (p_u8 = quick_block_extend_by(p_quick_block, 1, &status)))
-        *p_u8 = u8;
+    if(!quick_block_byte_add_fast(p_quick_block, u8))
+        if(NULL != (p_byte = quick_block_extend_by(p_quick_block, 1, &status)))
+            *p_byte = u8;
 
     return(status);
 }
 
-static U8 u8_large_buffer[4 * 1024];
-
-_Check_return_
-_Ret_z_ /* never NULL */
-static PC_L1STR /*low-lifetime*/
-_l1str_from_wchars(
-    _In_reads_(n_wchars) PCWCH pwch,
-    _In_        U32 n_wchars)
-{
-    int avail = 0;
-    int used = 0;
-    P_U8Z dstptr;
-    int n;
-
-    if(0 == n_wchars)
-        return(empty_string);
-
-#if CHECKING
-    if(NULL == pwch)
-        return(("<<l1str_from_wstr - NULL>>"));
-#endif
-
-    avail = elemof32(u8_large_buffer);
-    used = 0;
-
-    dstptr = &u8_large_buffer[used];
-
-#if WINDOWS && 0
-
-    n = WideCharToMultiByte(CP_ACP /*CodePage*/, 0 /*dwFlags*/,
-                            pwch, n_wchars /*tstrlen32(wstr) + NULLCH*/, (PSTR) dstptr, avail,
-                            NULL /*lpDefaultChar*/, NULL /*lpUsedDefaultChar*/);
-
-    if(n > 0)
-    {
-        used += n;
-        avail -= n;
-    }
-
-#else /* portable */
-
-    for(n = 0; n < avail; n++)
-    {
-        WCHAR ch;
-        if((U32) n >= n_wchars)
-            break;
-        ch = pwch[n];
-        if(NULLCH == ch)
-            break; /* unexpected end of string */
-        if(0 != (ch & 0xFF00))
-            dstptr[n] = '?';
-        else
-            dstptr[n] = (U8) (ch & 0xFF);
-        used++;
-    }
-
-#endif /* OS */
-
-    if(used < avail)
-        dstptr[used] = NULLCH;
-
-    if(used == avail)
-        dstptr[used - 1] = NULLCH;
-
-    return(dstptr);
-}
-
 /******************************************************************************
 *
-* add some WCHARs to a quick_block
+* add some bytes to a quick_block
 *
 ******************************************************************************/
 
 _Check_return_
 extern STATUS
-quick_block_wchars_add(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
-    _In_reads_(len) PCWCH pwch_in,
-    _InVal_     U32 len)
+quick_block_bytes_add(
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*appended*/,
+    _In_reads_bytes_(n_bytes) PC_ANY p_any,
+    _InVal_     U32 n_bytes)
 {
-    if(0 != len) /* SKS 23may06 - adding 0 WCHARs is ok */
+    if(0 != n_bytes) /* adding 0 bytes is OK */
     {
-        PC_L1STR l1str = _l1str_from_wchars(pwch_in, len);
+        STATUS status;
+        P_BYTE p_byte;
 
-        return(quick_block_bytes_add(p_quick_block, l1str, strlen32(l1str)));
+        assert(n_bytes < 0xF0000000U); /* check possible -ve client */
+
+        if(NULL == (p_byte = quick_block_extend_by(p_quick_block, n_bytes, &status)))
+            return(status);
+
+        if(n_bytes < 16)
+            short_memcpy32nz(p_byte, p_any, n_bytes);
+        else
+            memcpy32(p_byte, p_any, n_bytes);
     }
 
     return(STATUS_OK);
@@ -358,16 +246,51 @@ quick_block_wchars_add(
 
 /******************************************************************************
 *
-* sprintf/vsprintf into ARRAY_QUICK_BLOCKs
+* CH_NULL terminate the given quick_block
 *
-* NB. does NOT add terminating NULLCH
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+quick_block_nullch_add(
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*appended*/)
+{
+    return(quick_block_byte_add(p_quick_block, CH_NULL));
+}
+
+/******************************************************************************
+*
+* ensure that the given quick_block is not CH_NULL-terminated
+*
+******************************************************************************/
+
+extern void
+quick_block_nullch_strip(
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*stripped*/)
+{
+    const U32 n_bytes = quick_block_bytes(p_quick_block);
+
+    if(0 != n_bytes)
+    {
+        PC_BYTE p_byte = quick_block_ptr_wr(p_quick_block);
+
+        if(CH_NULL == p_byte[n_bytes-1])
+            quick_block_shrink_by(p_quick_block, -1);
+    }
+}
+
+/******************************************************************************
+*
+* sprintf into quick_block
+*
+* NB. does NOT add terminating CH_NULL
 *
 ******************************************************************************/
 
 _Check_return_
 extern STATUS __cdecl
 quick_block_printf(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*appended*/,
     _In_z_ _Printf_format_string_ PC_U8Z format,
     /**/        ...)
 {
@@ -381,33 +304,40 @@ quick_block_printf(
     return(status);
 }
 
+/******************************************************************************
+*
+* vsprintf into quick_block
+*
+* NB. does NOT add terminating CH_NULL
+*
+******************************************************************************/
+
 _Check_return_
 extern STATUS
 quick_block_vprintf(
-    _InoutRef_  P_QUICK_BLOCK p_quick_block,
+    _InoutRef_  P_QUICK_BLOCK p_quick_block /*appended*/,
     _In_z_ _Printf_format_string_ PC_U8Z format,
     /**/        va_list args)
 {
     PC_U8Z p_u8;
     STATUS status = STATUS_OK;
-
-    /* loop finding format specifications */
-    while(NULL != (p_u8 = strchr(format, '%')))
-    {
 #if WINDOWS
-        U8 preceding;
-        U8 conversion;
+    U8 preceding;
+    U8 conversion;
 #endif
 
+    /* loop finding format specifications */
+    while(NULL != (p_u8 = strchr(format, CH_PERCENT_SIGN)))
+    {
         /* output what we have so far */
         if(p_u8 - format)
             status_break(status = quick_block_bytes_add(p_quick_block, format, PtrDiffBytesU32(p_u8, format)));
 
         format = p_u8 + 1; /* skip the % */
 
-        if(*format == '%')
+        if(CH_PERCENT_SIGN == *format)
         {
-            status_break(status = quick_block_u8_add(p_quick_block, '%'));
+            status_break(status = quick_block_byte_add(p_quick_block, CH_PERCENT_SIGN));
             format++; /* skip the escaped % too */
             continue;
         }
@@ -432,15 +362,15 @@ quick_block_vprintf(
         U8Z buffer_format[32];
         S32 len;
 
-        safe_strnkpy(buffer_format, elemof32(buffer_format), format - 1, PtrDiffBytesU32(p_u8, format) + 1);
+        xstrnkpy(buffer_format, elemof32(buffer_format), format - 1, PtrDiffBytesU32(p_u8, format) + 1);
 
-#if RISCOS
-        len = vsnprintf(buffer, elemof32(buffer), buffer_format, args /* will be updated accordingly */);
-        if(len >= elemof32(buffer))
-            len = strlen32(buffer); /* limit transfer to what actually was achieved */
-#elif WINDOWS
+#if WINDOWS
         len = _vsnprintf_s(buffer, elemof32(buffer), _TRUNCATE, buffer_format, args /* will be updated accordingly */);
         if(-1 == len)
+            len = strlen32(buffer); /* limit transfer to what actually was achieved */
+#else /* C99 CRT */
+        len = vsnprintf(buffer, elemof32(buffer), buffer_format, args /* will be updated accordingly */);
+        if(len >= elemof32(buffer))
             len = strlen32(buffer); /* limit transfer to what actually was achieved */
 #endif
 
@@ -524,21 +454,22 @@ quick_block_vprintf(
 
     /* output trailing fragment */
     if(*format && status_ok(status))
-        status = quick_block_string_add(p_quick_block, format);
+        status = quick_block_bytes_add(p_quick_block, format, strlen32(format));
 
     return(status);
 }
 
-/******************************************************************************
-*
-* TCHAR-based quick block
-*
-******************************************************************************/
+/*
+UCHARS-based quick block (for Fireworkz-derived numform and evaluator functions)
+*/
 
-#if TSTR_IS_L1STR
-
-/* defined as macros */
-
-#endif /* TSTR_IS_L1STR */
+_Check_return_
+extern STATUS
+quick_ublock_ustr_add(
+    _InoutRef_      P_QUICK_UBLOCK p_quick_ublock,
+    _In_z_          PC_USTR ustr)
+{
+    return(quick_ublock_uchars_add(p_quick_ublock, ustr, ustrlen32(ustr)));
+}
 
 /* end of quickblk.c */

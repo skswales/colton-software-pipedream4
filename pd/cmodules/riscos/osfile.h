@@ -18,8 +18,8 @@
 OS_File reason codes
 */
 
-typedef enum
-    {
+enum OSFile_ReasonCode
+{
     OSFile_Load            = 0xFF,    /* Uses File$Path */
     OSFile_Save            = 0,
     OSFile_WriteInfo       = 1,
@@ -41,40 +41,38 @@ typedef enum
     OSFile_ReadNoPath      = 17,      /* No nonsense read */
     OSFile_SetType         = 18,
     OSFile_MakeError       = 19
-    }
-OSFile_ReasonCode;
+};
 
 /*
 object types
 */
-typedef enum
-    {
+
+enum OSFile_ObjectType
+{
     OSFile_ObjectType_None = 0,
     OSFile_ObjectType_File = 1,
     OSFile_ObjectType_Dir  = 2
-    }
-OSFile_ObjectType;
+};
 
 /*
 object attributes
 */
 
-typedef enum
-    {
+enum OSFile_ObjectAttribute
+{
     OSFile_ObjectAttribute_read         = (1 << 0),
     OSFile_ObjectAttribute_write        = (1 << 1),
     OSFile_ObjectAttribute_locked       = (1 << 3),
     OSFile_ObjectAttribute_public_read  = (1 << 4),
     OSFile_ObjectAttribute_public_write = (1 << 5)
-    }
-OSFile_ObjectAttribute;
+};
 
 /*
 OS_GBPB reason codes
 */
 
-typedef enum
-    {
+enum OSGBPB_ReasonCode
+{
     OSGBPB_WriteAtGiven          = 1,
     OSGBPB_WriteAtPTR            = 2,
     OSGBPB_ReadFromGiven         = 3,
@@ -88,15 +86,14 @@ typedef enum
     OSGBPB_ReadDirEntries        = 9,
     OSGBPB_ReadDirEntriesInfo    = 10,
     OSGBPB_ReadDirEntriesCatInfo = 11
-    }
-OSGBPB_ReasonCode;
+};
 
 /*
 OS_Args reason codes
 */
 
-typedef enum
-    {
+enum OSArgs_ReasonCode
+{
     OSArgs_ReadPTR    = 0,
     OSArgs_SetPTR     = 1,
     OSArgs_ReadEXT    = 2,
@@ -107,24 +104,22 @@ typedef enum
 
     OSArgs_ReadInfo   = 0xFE,
     OSArgs_Flush      = 0xFF
-    }
-OSArgs_ReasonCode;
+};
 
 /*
 OS_Find reason codes
 */
 
-typedef enum
-    {
+enum OSFind_ReasonCode
+{
     OSFind_CloseFile    = 0x00,
     OSFind_OpenRead     = 0x40,
     OSFind_CreateUpdate = 0x80,
     OSFind_OpenUpdate   = 0xC0
-    }
-OSFind_ReasonCode;
+};
 
-typedef enum
-    {
+enum OSFind_ExtraRCBits
+{
     OSFind_UseFilePath  = 0x00, /* these four are mutually exclusive */
     OSFind_UsePath      = 0x01,
     OSFind_UsePathVar   = 0x02,
@@ -133,8 +128,7 @@ typedef enum
     OSFind_EnsureNoDir  = 0x04,
 
     OSFind_EnsureOpen   = 0x08  /* gives error instead of handle = 0 return */
-    }
-OSFind_ExtraRCBits;
+};
 
 #endif /* __osfile_h */
 

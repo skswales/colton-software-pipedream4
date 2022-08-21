@@ -621,7 +621,7 @@ PROC_EXEC_PROTO(c_m_determ)
     if(m <= 3)
         a = nums;
     else
-        a = al_ptr_alloc_bytes(F64, m * (m * sizeof32(*a)), &status);
+        a = al_ptr_alloc_bytes(P_F64, m * (m * sizeof32(*a)), &status);
 
     if(NULL != a)
     {
@@ -692,12 +692,12 @@ PROC_EXEC_PROTO(c_m_inverse)
     if(status_fail(ss_array_make(p_ev_data_res, m, m)))
         return;
 
-    if(NULL == (a = al_ptr_alloc_bytes(F64, m * (m * sizeof32(*a)), &status)))
+    if(NULL == (a = al_ptr_alloc_bytes(P_F64, m * (m * sizeof32(*a)), &status)))
         goto endpoint;
 
     assert(&_Aij(a, m, m - 1, m - 1) + 1 == &a[m * m]);
 
-    if(NULL == (adj = al_ptr_alloc_bytes(F64, m * (m * sizeof32(*adj)), &status)))
+    if(NULL == (adj = al_ptr_alloc_bytes(P_F64, m * (m * sizeof32(*adj)), &status)))
         goto endpoint;
 
     /* load up the matrix (a) */
@@ -731,7 +731,7 @@ PROC_EXEC_PROTO(c_m_inverse)
     /* step 1 - compute matrix of minors */
     minor_m = m - 1;
 
-    if(NULL == (minor = al_ptr_alloc_bytes(F64, minor_m * (minor_m * sizeof32(*minor)), &status)))
+    if(NULL == (minor = al_ptr_alloc_bytes(P_F64, minor_m * (minor_m * sizeof32(*minor)), &status)))
         goto endpoint;
 
     for(i = 0; i < m; ++i)
@@ -1255,18 +1255,18 @@ PROC_EXEC_PROTO(c_trend)
 *
 ******************************************************************************/
 
-typedef struct _for_first_linest
+typedef struct FOR_FIRST_LINEST
 {
     PC_F64 x; /* const */
     S32 x_vars;
     PC_F64 y; /* const */
     P_F64 a;
 }
-for_first_linest;
+FOR_FIRST_LINEST, * P_FOR_FIRST_LINEST;
 
 PROC_LINEST_DATA_GET_PROTO(static, ligp, client_handle, colID, row)
 {
-    for_first_linest * lidatap = (for_first_linest *) client_handle;
+    P_FOR_FIRST_LINEST lidatap = (P_FOR_FIRST_LINEST) client_handle;
 
     switch(colID)
         {
@@ -1287,7 +1287,7 @@ PROC_LINEST_DATA_GET_PROTO(static, ligp, client_handle, colID, row)
 
 PROC_LINEST_DATA_PUT_PROTO(static, lipp, client_handle, colID, row, value)
 {
-    for_first_linest * lidatap = (for_first_linest *) client_handle;
+    P_FOR_FIRST_LINEST lidatap = (P_FOR_FIRST_LINEST) client_handle;
 
     switch(colID)
         {
@@ -1301,29 +1301,29 @@ PROC_LINEST_DATA_PUT_PROTO(static, lipp, client_handle, colID, row, value)
     return(STATUS_DONE);
 }
 
-typedef struct _liarray
+typedef struct LINEST_ARRAY
 {
     P_F64 val;
     S32 rows;
     S32 cols;
 }
-liarray;
+LINEST_ARRAY;
 
 PROC_EXEC_PROTO(c_linest)
 {
-    static const liarray empty = { NULL, 0, 0 };
+    static const LINEST_ARRAY empty = { NULL, 0, 0 };
 
-    liarray known_y;
-    liarray known_x;
-    S32     stats;
-    liarray known_a;
-    liarray known_e;
-    liarray result_a;
-    S32     data_in_cols;
-    S32     y_items;
-    S32     x_vars;
+    LINEST_ARRAY known_y;
+    LINEST_ARRAY known_x;
+    S32 stats;
+    LINEST_ARRAY known_a;
+    LINEST_ARRAY known_e;
+    LINEST_ARRAY result_a;
+    S32 data_in_cols;
+    S32 y_items;
+    S32 x_vars;
     STATUS status = STATUS_OK;
-    for_first_linest lidata;
+    FOR_FIRST_LINEST lidata;
 
     exec_func_ignore_parms();
 

@@ -223,11 +223,9 @@ vtracef(
 extern int trace__count; /* exported only for tracing() */
 
 #define tracing(mask) ( \
-    (0 != ((mask) & TRACE_OUT)) \
-        ? 1 \
-        : (0 != trace__count) \
-            ? (0 != ((mask) & PERSONAL_TRACE_FLAGS)) \
-            : 0 )
+    (0 != ((mask) & PERSONAL_TRACE_FLAGS)) \
+        ? ((0 != ((mask) & TRACE_OUT)) || (0 != trace__count)) \
+        : 0 )
 
 /* you can use a variable format string in these ones ... */
 

@@ -195,7 +195,8 @@ gr_diag_create_riscdiag_between(
             case GR_DIAG_OBJTYPE_TEXT:
                 {
                 GR_BOX   box;
-                GR_POINT point, size;
+                GR_POINT point;
+                GR_SIZE  size;
                 DRAW_POINT draw_point;
                 char szText[256], szFontName[64];
                 GR_COORD  fsizex, fsizey;
@@ -214,8 +215,8 @@ gr_diag_create_riscdiag_between(
 
                 box.x0 = point.x;
                 box.y0 = point.y;
-                box.x1 = point.x + size.x;
-                box.y1 = point.y + size.y;
+                box.x1 = point.x + size.cx;
+                box.y1 = point.y + size.cy;
 
                 /* loop for structure */
                 for(;;)
@@ -253,7 +254,7 @@ gr_diag_create_riscdiag_between(
 
                         textoff += seglen;
 
-                        safe_strnkpy(szText, elemof32(szText), textp, seglen);
+                        xstrnkpy(szText, elemof32(szText), textp, seglen);
 
                         gr_point_xform((P_GR_POINT) &draw_point, &point, &gr_riscdiag_riscDraw_from_pixit_xformer);
 
@@ -284,13 +285,13 @@ gr_diag_create_riscdiag_between(
 
                 box.x0 = pObject.rect->pos.x;
                 box.y0 = pObject.rect->pos.y;
-                box.x1 = pObject.rect->pos.x + pObject.rect->wid_hei.x;
-                box.y1 = pObject.rect->pos.y + pObject.rect->wid_hei.y;
+                box.x1 = pObject.rect->pos.x + pObject.rect->wid_hei.cx;
+                box.y1 = pObject.rect->pos.y + pObject.rect->wid_hei.cy;
 
                 linestyle = pObject.rect->linestyle;
                 fillstyle = pObject.rect->fillstyle;
 
-                gr_box_xform((P_GR_BOX) &draw_box, &box, &gr_riscdiag_riscDraw_from_pixit_xformer);
+                draw_box_from_gr_box(&draw_box, &box);
 
                 status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &sys_off,
                                                    &draw_box, &linestyle, &fillstyle);
@@ -299,79 +300,71 @@ gr_diag_create_riscdiag_between(
 
             case GR_DIAG_OBJTYPE_LINE:
                 {
-                GR_POINT origin, ps1;
-                DRAW_POINT draw_origin, draw_ps1;
+                GR_POINT origin_BL, offset_BR;
+                DRAW_POINT draw_origin_BL, draw_offset_BR;
                 GR_LINESTYLE linestyle;
 
-                origin.x  = pObject.line->pos.x;
-                origin.y  = pObject.line->pos.y;
-                ps1.x     = pObject.line->d.x;
-                ps1.y     = pObject.line->d.y;
+                origin_BL = pObject.line->pos;
+                offset_BR.x = pObject.line->d.cx;
+                offset_BR.y = pObject.line->d.cy;
 
                 linestyle = pObject.line->linestyle;
 
-                gr_point_xform((P_GR_POINT) &draw_origin, &origin, &gr_riscdiag_riscDraw_from_pixit_xformer);
-                gr_point_xform((P_GR_POINT) &draw_ps1, &ps1, &gr_riscdiag_riscDraw_from_pixit_xformer);
+                draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
+                draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
 
                 status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
-                                                       &draw_origin, &draw_ps1, &draw_ps1,
+                                                       &draw_origin_BL, &draw_offset_BR, &draw_offset_BR,
                                                        &linestyle, NULL);
                 }
                 break;
 
             case GR_DIAG_OBJTYPE_PARALLELOGRAM:
                 {
-                GR_POINT origin, ps1, ps2;
-                DRAW_POINT draw_origin, draw_ps1, draw_ps2;
+                GR_POINT origin_BL, offset_BR, offset_TR;
+                DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR;
                 GR_LINESTYLE linestyle;
                 GR_FILLSTYLE fillstyle;
 
-                origin.x  = pObject.para->pos.x;
-                origin.y  = pObject.para->pos.y;
-                ps1.x     = pObject.para->wid_hei1.x;
-                ps1.y     = pObject.para->wid_hei1.y;
-                ps2.x     = pObject.para->wid_hei2.x;
-                ps2.y     = pObject.para->wid_hei2.y;
+                origin_BL = pObject.para->pos;
+                offset_BR = pObject.para->offset_BR;
+                offset_TR = pObject.para->offset_TR;
 
                 linestyle = pObject.para->linestyle;
                 fillstyle = pObject.para->fillstyle;
 
-                gr_point_xform((P_GR_POINT) &draw_origin, &origin, &gr_riscdiag_riscDraw_from_pixit_xformer);
-                gr_point_xform((P_GR_POINT) &draw_ps1, &ps1, &gr_riscdiag_riscDraw_from_pixit_xformer);
-                gr_point_xform((P_GR_POINT) &draw_ps2, &ps2, &gr_riscdiag_riscDraw_from_pixit_xformer);
+                draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
+                draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
+                draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
 
                 status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
-                                                       &draw_origin, &draw_ps1, &draw_ps2,
+                                                       &draw_origin_BL, &draw_offset_BR, &draw_offset_TR,
                                                        &linestyle, &fillstyle);
                 }
                 break;
 
             case GR_DIAG_OBJTYPE_TRAPEZOID:
                 {
-                GR_POINT origin, ps1, ps2, ps3;
-                DRAW_POINT draw_origin, draw_ps1, draw_ps2, draw_ps3;
+                GR_POINT origin_BL, offset_BR, offset_TR, offset_TL;
+                DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR, draw_offset_TL;
                 GR_LINESTYLE linestyle;
                 GR_FILLSTYLE fillstyle;
 
-                origin.x  = pObject.trap->pos.x;
-                origin.y  = pObject.trap->pos.y;
-                ps1.x     = pObject.trap->wid_hei1.x;
-                ps1.y     = pObject.trap->wid_hei1.y;
-                ps2.x     = pObject.trap->wid_hei2.x;
-                ps2.y     = pObject.trap->wid_hei2.y;
-                ps3.x     = pObject.trap->wid_hei3.x;
-                ps3.y     = pObject.trap->wid_hei3.y;
+                origin_BL = pObject.trap->pos;
+                offset_BR = pObject.trap->offset_BR;
+                offset_TR = pObject.trap->offset_TR;
+                offset_TL = pObject.trap->offset_TL;
 
                 linestyle = pObject.trap->linestyle;
                 fillstyle = pObject.trap->fillstyle;
 
-                gr_point_xform((P_GR_POINT) &draw_origin, &origin, &gr_riscdiag_riscDraw_from_pixit_xformer);
-                gr_point_xform((P_GR_POINT) &draw_ps1, &ps1, &gr_riscdiag_riscDraw_from_pixit_xformer);
-                gr_point_xform((P_GR_POINT) &draw_ps2, &ps2, &gr_riscdiag_riscDraw_from_pixit_xformer);
-                gr_point_xform((P_GR_POINT) &draw_ps3, &ps3, &gr_riscdiag_riscDraw_from_pixit_xformer);
+                draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
+                draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
+                draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
+                draw_point_from_gr_point(&draw_offset_TL, &offset_TL);
 
                 status = gr_riscdiag_trapezoid_new(p_gr_riscdiag, &sys_off,
-                                                   &draw_origin, &draw_ps1, &draw_ps2, &draw_ps3,
+                                                   &draw_origin_BL, &draw_offset_BR, &draw_offset_TR, &draw_offset_TL,
                                                    &linestyle, &fillstyle);
                 }
                 break;
@@ -393,7 +386,7 @@ gr_diag_create_riscdiag_between(
                 linestyle = pObject.pie->linestyle;
                 fillstyle = pObject.pie->fillstyle;
 
-                gr_point_xform((P_GR_POINT) &draw_origin, &pos, &gr_riscdiag_riscDraw_from_pixit_xformer);
+                draw_point_from_gr_point(&draw_origin, &pos);
                 draw_radius = gr_riscDraw_from_pixit(radius);
 
                 status = gr_riscdiag_piesector_new(p_gr_riscdiag, &sys_off,
@@ -414,8 +407,8 @@ gr_diag_create_riscdiag_between(
 
                 box.x0 = pObject.pict->pos.x;
                 box.y0 = pObject.pict->pos.y;
-                box.x1 = pObject.pict->pos.x + pObject.pict->wid_hei.x;
-                box.y1 = pObject.pict->pos.y + pObject.pict->wid_hei.y;
+                box.x1 = pObject.pict->pos.x + pObject.pict->wid_hei.cx;
+                box.y1 = pObject.pict->pos.y + pObject.pict->wid_hei.cy;
 
                 picture   = pObject.pict->picture;
 
@@ -482,7 +475,7 @@ gr_diag_ensure_riscdiag_font_tableR_entry_for_TEXT(
     GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
     zero_struct(f);
-    safe_strkpy(f.szHostFontName, sizeof32(f.szHostFontName), _l1str_from_tstr(pszFontName));
+    xstrkpy(f.szHostFontName, sizeof32(f.szHostFontName), _l1str_from_tstr(pszFontName));
 
     return(gr_diag_ensure_riscdiag_font_tableR_entry(&f, p_array_handle));
 }
@@ -518,7 +511,7 @@ gr_diag_ensure_riscdiag_font_tableR_entries_for_PICTURE(
             GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
             zero_struct(f);
-            safe_strkpy(f.szHostFontName, sizeof32(f.szHostFontName), pFontListElem->szHostFontName);
+            xstrkpy(f.szHostFontName, sizeof32(f.szHostFontName), pFontListElem->szHostFontName);
 
             status_break(status = gr_diag_ensure_riscdiag_font_tableR_entry(&f, p_array_handle));
 
@@ -694,7 +687,7 @@ gr_diag_diagram_new(
 
         if(NULL != (pDiagHdr = (P_GR_DIAG_DIAGHEADER) al_array_alloc(&p_gr_diag->handle, BYTE, n_bytes, &array_init_block, p_status)))
             {
-            safe_tstrkpy(pDiagHdr->szCreatorName, elemof32(pDiagHdr->szCreatorName), szCreatorName);
+            tstr_xstrkpy(pDiagHdr->szCreatorName, elemof32(pDiagHdr->szCreatorName), szCreatorName);
             gr_box_make_bad(&pDiagHdr->bbox);
             }
         else
@@ -827,8 +820,8 @@ gr_diag_line_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
-    PC_GR_LINESTYLE linestyle)
+    _InRef_     PC_GR_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle)
 {
     P_GR_DIAG_OBJECT pObject;
     S32             res;
@@ -836,11 +829,11 @@ gr_diag_line_new(
     if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_LINE, 0)) < 0)
         return(res);
 
-    pObject.line->pos.x     = pBox->x0;
-    pObject.line->pos.y     = pBox->y0;
+    pObject.line->pos.x = pBox->x0;
+    pObject.line->pos.y = pBox->y0;
 
-    pObject.line->d.x       = pBox->x1 - pBox->x0;
-    pObject.line->d.y       = pBox->y1 - pBox->y0;
+    pObject.line->d.cx = pBox->x1 - pBox->x0;
+    pObject.line->d.cy = pBox->y1 - pBox->y0;
 
     pObject.line->linestyle = *linestyle;
 
@@ -1034,7 +1027,7 @@ gr_diag_object_end(
         {
         /* destroy object and contents if nothing in it */
         al_array_shrink_by(&p_gr_diag->handle, - (S32) n_bytes);
-        trace_3(0 | TRACE_OUT, TEXT("object_end: destroying type ") U32_TFMT TEXT(" n_bytes ") U32_XTFMT TEXT(" at ") U32_XTFMT, pObject.hdr->tag, n_bytes, *pObjectStart);
+        trace_3(TRACE_OUT | TRACE_ANY, TEXT("object_end: destroying type ") U32_TFMT TEXT(" n_bytes ") U32_XTFMT TEXT(" at ") U32_XTFMT, pObject.hdr->tag, n_bytes, *pObjectStart);
         n_bytes = 0;
         }
     else
@@ -1355,11 +1348,11 @@ gr_diag_parallelogram_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET  pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_POINT pOrigin,
-    PC_GR_POINT ps1,
-    PC_GR_POINT ps2,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle)
+    _InRef_     PC_GR_POINT pOriginBL,
+    _InRef_     PC_GR_POINT pOffsetBR,
+    _InRef_     PC_GR_POINT pOffsetTR,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
     S32             res;
@@ -1367,10 +1360,10 @@ gr_diag_parallelogram_new(
     if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_PARALLELOGRAM, 0)) < 0)
         return(res);
 
-    pObject.para->pos       = *pOrigin;
+    pObject.para->pos       = *pOriginBL;
 
-    pObject.para->wid_hei1  = *ps1;
-    pObject.para->wid_hei2  = *ps2;
+    pObject.para->offset_BR = *pOffsetBR;
+    pObject.para->offset_TR = *pOffsetTR;
 
     pObject.para->linestyle = *linestyle;
     pObject.para->fillstyle = *fillstyle;
@@ -1389,12 +1382,12 @@ gr_diag_piesector_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_POINT pPos,
-    GR_COORD radius,
-    PC_F64 alpha,
-    PC_F64 beta,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle)
+    _InRef_     PC_GR_POINT pPos,
+    _InVal_     GR_COORD radius,
+    _InRef_     PC_F64 alpha,
+    _InRef_     PC_F64 beta,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
     S32             res;
@@ -1425,9 +1418,9 @@ gr_diag_rectangle_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle)
+    _InRef_     PC_GR_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
     S32             res;
@@ -1435,11 +1428,11 @@ gr_diag_rectangle_new(
     if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_RECTANGLE, 0)) < 0)
         return(res);
 
-    pObject.rect->pos.x     = pBox->x0;
-    pObject.rect->pos.y     = pBox->y0;
+    pObject.rect->pos.x = pBox->x0;
+    pObject.rect->pos.y = pBox->y0;
 
-    pObject.rect->wid_hei.x = pBox->x1 - pBox->x0;
-    pObject.rect->wid_hei.y = pBox->y1 - pBox->y0;
+    pObject.rect->wid_hei.cx = pBox->x1 - pBox->x0;
+    pObject.rect->wid_hei.cy = pBox->y1 - pBox->y0;
 
     pObject.rect->linestyle = *linestyle;
     pObject.rect->fillstyle = *fillstyle;
@@ -1460,7 +1453,7 @@ gr_diag_scaled_picture_add(
     GR_DIAG_OBJID_T objid,
     PC_GR_BOX pBox,
     GR_CACHE_HANDLE picture,
-    PC_GR_FILLSTYLE fillstyle)
+    _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
     S32             res;
@@ -1468,13 +1461,13 @@ gr_diag_scaled_picture_add(
     if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_PICTURE, 0)) < 0)
         return(res);
 
-    pObject.pict->pos.x     = pBox->x0;
-    pObject.pict->pos.y     = pBox->y0;
+    pObject.pict->pos.x = pBox->x0;
+    pObject.pict->pos.y = pBox->y0;
 
-    pObject.pict->wid_hei.x = pBox->x1 - pBox->x0;
-    pObject.pict->wid_hei.y = pBox->y1 - pBox->y0;
+    pObject.pict->wid_hei.cx = pBox->x1 - pBox->x0;
+    pObject.pict->wid_hei.cy = pBox->y1 - pBox->y0;
 
-    pObject.pict->picture   = picture;
+    pObject.pict->picture = picture;
 
     pObject.pict->fillstyle = *fillstyle;
 
@@ -1486,9 +1479,9 @@ gr_diag_text_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
+    _InRef_     PC_GR_BOX pBox,
     PC_USTR szText,
-    PC_GR_TEXTSTYLE textstyle)
+    _InRef_     PC_GR_TEXTSTYLE textstyle)
 {
     U32 size;
     P_GR_DIAG_OBJECT pObject;
@@ -1505,8 +1498,8 @@ gr_diag_text_new(
     pObject.text->pos.x = pBox->x0;
     pObject.text->pos.y = pBox->y0;
 
-    pObject.text->wid_hei.x = pBox->x1 - pBox->x0;
-    pObject.text->wid_hei.y = pBox->y1 - pBox->y0;
+    pObject.text->wid_hei.cx = pBox->x1 - pBox->x0;
+    pObject.text->wid_hei.cy = pBox->y1 - pBox->y0;
 
     pObject.text->textstyle = *textstyle;
 
@@ -1526,12 +1519,12 @@ gr_diag_trapezoid_new(
     P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET  pObjectStart,
     GR_DIAG_OBJID_T objid,
-    PC_GR_POINT pOrigin,
-    PC_GR_POINT ps1,
-    PC_GR_POINT ps2,
-    PC_GR_POINT ps3,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle)
+    _InRef_     PC_GR_POINT pOriginBL,
+    _InRef_     PC_GR_POINT pOffsetBR,
+    _InRef_     PC_GR_POINT pOffsetTR,
+    _InRef_     PC_GR_POINT pOffsetTL,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
     S32             res;
@@ -1539,11 +1532,11 @@ gr_diag_trapezoid_new(
     if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_TRAPEZOID, 0)) < 0)
         return(res);
 
-    pObject.trap->pos       = *pOrigin;
+    pObject.trap->pos       = *pOriginBL;
 
-    pObject.trap->wid_hei1  = *ps1;
-    pObject.trap->wid_hei2  = *ps2;
-    pObject.trap->wid_hei3  = *ps3;
+    pObject.trap->offset_BR = *pOffsetBR;
+    pObject.trap->offset_TR = *pOffsetTR;
+    pObject.trap->offset_TL = *pOffsetTL;
 
     pObject.trap->linestyle = *linestyle;
     pObject.trap->fillstyle = *fillstyle;

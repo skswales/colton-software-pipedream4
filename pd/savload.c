@@ -81,7 +81,7 @@ viewsheet_load_core(
 
 /* ----------------------------------------------------------------------- */
 
-typedef enum
+enum PD_CONSTRUCT_OFFSETS
 {
     C_FREE      = 0,    /* must be same as J_FREE */
     C_LEFT      = 1,    /* must be same as J_LEFT */
@@ -101,10 +101,9 @@ typedef enum
     C_OPT       = 15,
     C_PAGE      = 16,
     C_LF        = 17
-}
-pd_construct_offsets;
+};
 
-static const struct _CONTAB { U32 len; const char * str; } contab[] =
+static const struct CONTAB { U32 len; const char * str; } contab[] =
 {
     { 2, "F%"   },  /* free align */
     { 2, "L%"   },  /* left align */
@@ -148,18 +147,18 @@ save_version_string(
     uchar array[LIN_BUFSIZ];
     char *tmp;
 
-    safe_strkpy(array, elemof32(array), applicationversion);
-    safe_strkat(array, elemof32(array), ", ");
+    xstrkpy(array, elemof32(array), applicationversion);
+    xstrkat(array, elemof32(array), ", ");
 
-    safe_strkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
+    xstrkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
     if(!str_isblank(user_organ_id()))
         {
-        safe_strkat(array, elemof32(array), " - ");
-        safe_strkat(array, elemof32(array), user_organ_id());
+        xstrkat(array, elemof32(array), " - ");
+        xstrkat(array, elemof32(array), user_organ_id());
         }
-    safe_strkat(array, elemof32(array), ", ");
+    xstrkat(array, elemof32(array), ", ");
 
-    safe_strkat(array, elemof32(array), "R9200 7500 3900 8299");
+    xstrkat(array, elemof32(array), "R9200 7500 3900 8299");
 
     /* sks 15nov91 - temporarily borrow the data */
     tmp = d_version[0].textfield;
@@ -201,7 +200,7 @@ save_options_to_file(
 {
     char buffer[BUF_MAX_PATHSTRING];
     char *tmp;
-    LIST *lptr;
+    PC_LIST lptr;
 
     update_all_dialog_from_windvars();
 
@@ -359,7 +358,7 @@ save_opt_to_file(
                 if(0 == strcmp(ptr1, ptr2))
                     continue;
 
-                safe_strkat(linbuf, LIN_BUFSIZ, ptr1);
+                xstrkat(linbuf, LIN_BUFSIZ, ptr1);
 #else
                 /* default options are blank, except leading,trailing characters */
 
@@ -374,7 +373,7 @@ save_opt_to_file(
                     continue;
 
                 if(dptr->textfield)
-                    safe_strkat(linbuf, LIN_BUFSIZ, dptr->textfield);
+                    xstrkat(linbuf, LIN_BUFSIZ, dptr->textfield);
 #endif
                 break;
 
@@ -382,7 +381,7 @@ save_opt_to_file(
                 break;
             }
 
-        safe_strkat(linbuf, LIN_BUFSIZ, CR_STR);
+        xstrkat(linbuf, LIN_BUFSIZ, CR_STR);
 
         /* output the string, expanding inline hilites */
         ptr = linbuf;
@@ -433,7 +432,7 @@ addcurrentdir(
     _InVal_     U32 elemof_buffer,
     const char *filename)
 {
-    safe_strkpy(name, elemof_buffer, filename);
+    xstrkpy(name, elemof_buffer, filename);
 }
 
 /******************************************************************************
@@ -877,7 +876,7 @@ savefile_core(
     BOOL saving_whole_file = (PD4_CHAR == p_save_file_options->filetype_option) || (current_filetype_option == p_save_file_options->filetype_option);
     BOOL saving_part_file = p_save_file_options->saving_block  ||  (NULL != p_save_file_options->row_condition);
     FILE_HANDLE output;
-    riscos_fileinfo fileinfo = currentfileinfo;
+    RISCOS_FILEINFO fileinfo = currentfileinfo;
     BOOL goingdown = TRUE; /* for PD4 */
     BOOL all_ok = TRUE;
     ROW timer = 0;
@@ -1082,14 +1081,14 @@ savefile_core(
                     {
                     S32 len;
                     S32 at_pos;        /* error position in source, not used, may be useful one day */
-                    EV_RESULT result;
+                    EV_RESULT ev_result;
                     EV_PARMS parms;
 
                     if((len = compile_expression(rowselection,
                                                  de_const_cast(char *, p_save_file_options->row_condition),
                                                  EV_MAX_OUT_LEN,
                                                  &at_pos,
-                                                 &result,
+                                                 &ev_result,
                                                  &parms)) < 0 ||
                        parms.type == EVS_CON_DATA)
                         {
@@ -1418,9 +1417,9 @@ collup(
     char array[LIN_BUFSIZ];
     P_S32 widp, wwidp;
 
-    (void) xtos_ubuf(colnoarray, elemof32(colnoarray),
-                     tcol & COLNOBITS /* ignore bad and absolute */,
-                     1 /*uppercase*/);
+    (void) xtos_ustr_buf(colnoarray, elemof32(colnoarray),
+                         tcol & COLNOBITS /* ignore bad and absolute */,
+                         1 /*uppercase*/);
 
     /* note that to get the wrapwidth, we cannot call colwrapwidth here because it would not return a zero value */
     readpcolvars(tcol, &widp, &wwidp);
@@ -1797,11 +1796,11 @@ stoslt(
             {
             char compiled_out[EV_MAX_OUT_LEN];
             S32 at_pos;        /* error position in source, not used, may be useful one day */
-            EV_RESULT result;
+            EV_RESULT ev_result;
             EV_PARMS parms;
             S32 rpn_len;
 
-            if((rpn_len = compile_expression(compiled_out, linbuf, EV_MAX_OUT_LEN, &at_pos, &result, &parms)) < 0)
+            if((rpn_len = compile_expression(compiled_out, linbuf, EV_MAX_OUT_LEN, &at_pos, &ev_result, &parms)) < 0)
                 {
                 type    = SL_TEXT;
                 justify = J_FREE;
@@ -1811,7 +1810,8 @@ stoslt(
                 EV_SLR slr;
 
                 set_ev_slr(&slr, tcol, trow);
-                if(merge_compiled_exp(&slr, justify, format, compiled_out, rpn_len, &result, &parms, TRUE, !inserting) < 0)
+
+                if(merge_compiled_exp(&slr, justify, format, compiled_out, rpn_len, &ev_result, &parms, TRUE, !inserting) < 0)
                     {
                     slot_in_buffer = buffer_altered = FALSE;
                     return(reperr_null(status_nomem()));
@@ -1851,7 +1851,7 @@ stoslt(
             P_SLOT tslot;
 
             /* type is not text */
-            if((tslot = createslot(tcol, trow, sizeof(struct _page), type)) == NULL)
+            if((tslot = createslot(tcol, trow, sizeof(struct SLOT_CONTENT_PAGE), type)) == NULL)
                 {
                 slot_in_buffer = buffer_altered = FALSE;
                 return(reperr_null(status_nomem()));
@@ -2249,7 +2249,7 @@ loadfile_recurse_load_supporting_documents(
             char leaf_name[BUF_MAX_PATHSTRING];
 
             /* copy out so that it doesn't get overwritten */
-            safe_strkpy(leaf_name, elemof32(leaf_name), file_leafname(sup_doc_filename));
+            xstrkpy(leaf_name, elemof32(leaf_name), file_leafname(sup_doc_filename));
 
             try_path = add_path_using_dir(sup_doc_filename, elemof32(sup_doc_filename), leaf_name, EXTREFS_SUBDIR_STR);
             } /*block*/
@@ -2270,7 +2270,7 @@ loadfile_recurse_load_supporting_documents(
                 }
 
             if(0 == filetype_option)
-                safe_strkpy(sup_doc_filename, elemof32(sup_doc_filename), p_ss_doc->docu_name.leaf_name); /* restore a better filename for error */
+                xstrkpy(sup_doc_filename, elemof32(sup_doc_filename), p_ss_doc->docu_name.leaf_name); /* restore a better filename for error */
             }
 
         if(0 == filetype_option)
@@ -3474,7 +3474,7 @@ rename_document_prep_docu_name_flags(
 
         p_docu_name->flags.path_name_supplied = 1;
 
-        safe_strkpy(dir_name, elemof32(dir_name), p_docu_name->path_name);
+        xstrkpy(dir_name, elemof32(dir_name), p_docu_name->path_name);
         trail_ptr = dir_name + strlen32(dir_name) - 1;
         if(*trail_ptr == FILE_DIR_SEP_CH) /* overwrite trailing '.' but NOT ':' */
             *trail_ptr = NULLCH;

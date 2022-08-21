@@ -243,7 +243,7 @@ createcol(
         */
         regtempcoltab(newblock, numcol);
 
-        al_ptr_dispose((void **) &colstart);
+        al_ptr_dispose(P_P_ANY_PEDANTIC(&colstart));
 
         colsintable = newsize;
         colstart    = newblock;
@@ -366,11 +366,11 @@ createslot(
 
         if(type == SL_NUMBER)
             {
-            P_EV_RESULT resp;
+            P_EV_RESULT p_ev_result;
 
-            result_extract(sl, &resp);
-            resp->did_num = RPN_DAT_WORD8;
-            resp->arg.integer = 0;
+            result_extract(sl, &p_ev_result);
+            p_ev_result->did_num = RPN_DAT_WORD8;
+            p_ev_result->arg.integer = 0;
             }
         }
 
@@ -489,7 +489,7 @@ delcolentry(
               colstart + tcol + size,
               (numcol - (tcol + size)) * sizeof32(COLENTRY));
 
-    minusab(numcol, size);
+    numcol -= size;
 
     /* reregister table */
     regcoltab();
@@ -693,7 +693,7 @@ killcoltab(void)
 {
     deregcoltab();
 
-    al_ptr_dispose((void **) &colstart);
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&colstart));
 
     numcol = colsintable = 0;
     colstart = NULL;
@@ -1596,7 +1596,7 @@ tree_insert_fail(
 static void
 update_marks(
     _InVal_     DOCNO docno,
-    P_SLR slot,
+    _InoutRef_  P_SLR slot,
     COL mrksco,
     COL mrkeco,
     ROW mrksro,
@@ -1610,8 +1610,8 @@ update_marks(
     if( slot->col <= mrkeco  &&  slot->col >= mrksco  &&
         slot->row <= mrkero  &&  slot->row >= mrksro)
         {
-        plusab(slot->row, rowdiff);
-        plusab(slot->col, coldiff);
+        slot->row += rowdiff;
+        slot->col += coldiff;
         }
 
     if((slot->row > numrow-1)  &&  (slot->row < LARGEST_ROW_POSSIBLE))

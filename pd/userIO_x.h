@@ -16,17 +16,17 @@
 
 /* exported types */
 
-typedef struct __userIO_struct * userIO_handle;
+typedef struct USERIO_STRUCT * userIO_handle;
 
 /* exported routines */
 
 extern S32
 userIO_alert_user_open(
     userIO_handle *userp,
-    char *title,
-    char *message,
-    char *button1,
-    char *button2);
+    const char *title,
+    const char *message,
+    const char *button1,
+    const char *button2);
 
 extern S32
 userIO_alert_user_poll(
@@ -39,10 +39,10 @@ userIO_alert_user_close(
 extern S32
 userIO_input_from_user_open(
     userIO_handle *userp,
-    char *title,
-    char *message,
-    char *button1,
-    char *button2);
+    const char *title,
+    const char *message,
+    const char *button1,
+    const char *button2);
 
 extern S32
 userIO_input_from_user_poll(

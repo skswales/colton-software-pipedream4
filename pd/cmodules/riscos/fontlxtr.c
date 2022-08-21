@@ -130,19 +130,19 @@ fontselect_check_open(
     return(FALSE);
 }
 
-typedef enum
+typedef enum FONTSELECT_STATES
 {
     FONTSELECT_WAIT = 0,
     FONTSELECT_ENDED
 }
-fontselect_states;
+FONTSELECT_STATES;
 
-static struct _fontselect
+static struct FONTSELECT
 {
     wimp_w            w;
-    fontselect_states state;
+    FONTSELECT_STATES state;
 
-    fontselect_try_fn try_fn;
+    FONTSELECT_TRY_FN try_fn;
     void *            try_handle;
 }
 fontselect;
@@ -253,9 +253,9 @@ fontselect_process(
     const char * font_name,
     PC_F64 width,
     PC_F64 height,
-    fontselect_init_fn init_fn,
+    FONTSELECT_INIT_FN init_fn,
     void * init_handle,
-    fontselect_try_fn try_fn,
+    FONTSELECT_TRY_FN try_fn,
     void * try_handle)
 {
     if(!fontselect_prepare_process())
@@ -316,7 +316,7 @@ fontlist_enumerate(
             U32 weight_offset;
             fontlist_node * weight;
 
-            safe_strkpy(szFontName, elemof32(szFontName), typeface->name);
+            xstrkpy(szFontName, elemof32(szFontName), typeface->name);
 
             weight_offset = strlen(szFontName);
 
@@ -336,8 +336,8 @@ fontlist_enumerate(
                     U32 style_offset;
                     fontlist_node * style;
 
-                    safe_strkpy(szFontName + weight_offset, elemof32(szFontName) - weight_offset, ".");
-                    safe_strkat(szFontName + weight_offset, elemof32(szFontName) - weight_offset, weight->name);
+                    xstrkpy(szFontName + weight_offset, elemof32(szFontName) - weight_offset, ".");
+                    xstrkat(szFontName + weight_offset, elemof32(szFontName) - weight_offset, weight->name);
 
                     style_offset = strlen(szFontName);
 
@@ -350,8 +350,8 @@ fontlist_enumerate(
 
                     if(style)
                         do  {
-                            safe_strkpy(szFontName + style_offset, elemof32(szFontName) - style_offset, ".");
-                            safe_strkat(szFontName + style_offset, elemof32(szFontName) - style_offset, style->name);
+                            xstrkpy(szFontName + style_offset, elemof32(szFontName) - style_offset, ".");
+                            xstrkat(szFontName + style_offset, elemof32(szFontName) - style_offset, style->name);
 
                             (* enumproc) (enumhandle, szFontName, ++seqno);
 

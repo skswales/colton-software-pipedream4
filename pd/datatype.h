@@ -41,12 +41,12 @@ typedef int coord;      /* coordinate type for screen, MUST BE SIGNED */
 typedef int gcoord;     /* graphics coordinate type */
 
 /*
-Column types
+Column & Row types
 */
 
 /*
- * 29 bit quantities, 30th bit for absolute, 31th for bad
- * -ve used for falling out of loops
+ * 29 bit quantities, bit 29 indicates absolute, bit 30 indicates bad
+ * -ve (bit 31) used for falling out of loops
 */
 
 typedef S32 COL; typedef COL * P_COL;
@@ -57,6 +57,8 @@ typedef S32 COL; typedef COL * P_COL;
 #define ABSCOLBIT               ((COL) (1 << 29))
 #define BADCOLBIT               ((COL) (1 << 30))
 
+#define COL_TFMT S32_TFMT
+
 typedef S32 ROW; typedef ROW * P_ROW;
 
 #define NO_ROW                  ((ROW) ((1 << 30) -1)
@@ -64,6 +66,8 @@ typedef S32 ROW; typedef ROW * P_ROW;
 #define ROWNOBITS               LARGEST_ROW_POSSIBLE
 #define ABSROWBIT               ((ROW) (1 << 29))
 #define BADROWBIT               ((ROW) (1 << 30))
+
+#define ROW_TFMT S32_TFMT
 
 /******************************************************************************
 * other constants
@@ -92,7 +96,7 @@ typedef S32 ROW; typedef ROW * P_ROW;
 #define BUF_MAX_REFERENCE (BUF_MAX_PATHSTRING + 2 + 8 + 1 + 10)
 
 /* maximum size of a low level slot */
-#define MAX_SLOTSIZE (EV_MAX_OUT_LEN + sizeof(struct _slot))
+#define MAX_SLOTSIZE (EV_MAX_OUT_LEN + sizeof(struct SLOT))
 
 /* ----------------------------------------------------------------------- */
 
@@ -100,14 +104,14 @@ typedef S32 ROW; typedef ROW * P_ROW;
 
 #define DOCNO EV_DOCNO /* NB packed */
 
-typedef struct _CR_SLR /* SLR with just col, row */
+typedef struct SLR /* SLR with just col, row */
 {
     COL col;
     ROW row;
 }
 SLR, * P_SLR; typedef const SLR * PC_SLR;
 
-typedef struct _FULL_SLR /* SLR with col, row and an EV_DOCNO for completeness */
+typedef struct FULL_SLR /* SLR with col, row and an EV_DOCNO for completeness */
 {
     COL col;
     ROW row;
@@ -121,14 +125,14 @@ FULL_SLR, * P_FULL_SLR; typedef const FULL_SLR * PC_FULL_SLR;
 a type to go traversing blocks with
 */
 
-typedef enum
+typedef enum TRAVERSE_BLOCK_DIRECTION
 {
     TRAVERSE_ACROSS_ROWS,
     TRAVERSE_DOWN_COLUMNS
 }
 TRAVERSE_BLOCK_DIRECTION;
 
-typedef struct _TRAVERSE_BLOCK
+typedef struct TRAVERSE_BLOCK
 {
     /* contents are private to traversal routines */
     DOCNO docno;
@@ -138,7 +142,7 @@ typedef struct _TRAVERSE_BLOCK
     TRAVERSE_BLOCK_DIRECTION direction;
     BOOL start;
     P_LIST_ITEM it; /* for fast traversal */
-    struct _DOCU * p_docu;
+    struct DOCU * p_docu;
 }
 TRAVERSE_BLOCK, * TRAVERSE_BLOCKP;
 
@@ -155,13 +159,13 @@ TRAVERSE_BLOCK, * TRAVERSE_BLOCKP;
 * slot.c
 ******************************************************************************/
 
-typedef struct _slot *P_SLOT; /* slot pointer type */
+typedef struct SLOT * P_SLOT; /* slot pointer type */
 
 /*
 column entry for use in sparse matrix
 */
 
-typedef struct colentry
+typedef struct COLENTRY
 {
     LIST_BLOCK lb;
     S32 wrapwidth;
@@ -172,13 +176,13 @@ COLENTRY, * P_COLENTRY;
 
 /* object on deleted words list describing a block */
 
-typedef struct _saved_block_descriptor
+typedef struct SAVED_BLOCK_DESCRIPTOR
 {
     P_COLENTRY del_colstart;
     COL del_col_size;
     ROW del_row_size;
 }
-saved_block_descriptor;
+SAVED_BLOCK_DESCRIPTOR;
 
 /* ------------------------------ commlin.c ------------------------------ */
 
@@ -203,7 +207,7 @@ saved_block_descriptor;
 #define ALWAYS_SHORT 2048 /* some commands can't be removed from short menus */
 #define DO_MERGEBUF  4096 /* mergebuf() prior to command */
 
-typedef struct _menu
+typedef struct MENU
 {
     PC_U8 *title;
     const char *command;
@@ -214,7 +218,7 @@ typedef struct _menu
 }
 MENU;
 
-typedef struct _menu_head
+typedef struct MENU_HEAD
 {
     PC_U8 *name;
     MENU *tail;
@@ -230,7 +234,7 @@ MENU_HEAD;
 
 /* horizontal and vertical screen tables */
 
-typedef struct _scrrow
+typedef struct SCRROW
 {
     ROW rowno;
     S32 page;
@@ -238,7 +242,7 @@ typedef struct _scrrow
 }
 SCRROW, * P_SCRROW;
 
-typedef struct _scrcol
+typedef struct SCRCOL
 {
     COL colno;
     uchar flags;
@@ -247,10 +251,9 @@ SCRCOL, * P_SCRCOL;
 
 /* ------------------------------ dialog.c ------------------------------- */
 
-/* Saves acres of superfluous code masking */
 typedef S32 optiontype;
 
-typedef struct _dialog_entry
+typedef struct DIALOG
 {
     uchar type;         /* type of field, text, number, special */
     uchar ch1;          /* first character of save option string */
@@ -267,7 +270,7 @@ DIALOG;
 
 typedef void (* dialog_proc) (DIALOG *dptr);
 
-typedef struct _dheader
+typedef struct DHEADER
 {
     DIALOG * dialog_box;
     S32 items;
@@ -281,7 +284,7 @@ DHEADER;
 
 #define SAVE_DEPTH 5
 
-typedef struct _savpos
+typedef struct SAVPOS
 {
     COL ref_col;
     ROW ref_row;
@@ -291,7 +294,7 @@ SAVPOS;
 
 /* --------------------------- pdriver.c -------------------------------- */
 
-typedef struct _driver
+typedef struct DRIVER
 {
     BOOL (* out) (_InVal_ U8 ch);
     BOOL (* on)  (void);
@@ -305,7 +308,7 @@ DRIVER;
 structure of reference to a draw file
 */
 
-typedef struct _draw_file_ref
+typedef struct DRAW_FILE_REF
 {
     GR_CACHE_HANDLE draw_file_key;
     EV_DOCNO docno;
@@ -316,14 +319,14 @@ typedef struct _draw_file_ref
     S32 xsize_os;
     S32 ysize_os;
 }
-* drawfrp;
+DRAW_FILE_REF, * P_DRAW_FILE_REF, ** P_P_DRAW_FILE_REF;
 
 /*
  * structure of an entry in the graphics link list
  * ghandle of entry used as key
 */
 
-typedef struct graphics_link_entry
+typedef struct GRAPHICS_LINK_ENTRY
 {
     DOCNO docno;            /* where the block is */
     COL col;
@@ -339,30 +342,28 @@ typedef struct graphics_link_entry
     S32 ysize;
     char text[1];           /* leafname & tag, 0-terminated */
 }
-* graphlinkp;
+GRAPHICS_LINK_ENTRY, * P_GRAPHICS_LINK_ENTRY; typedef const GRAPHICS_LINK_ENTRY * PC_GRAPHICS_LINK_ENTRY;
 
 /* --------------------------- riscos.c ---------------------------------- */
 
 /* Abstract objects for export */
-/*typedef struct riscos__window *    riscos_window;*//*use wimp_w*/
-typedef struct riscos__eventstr *  riscos_eventstr;
-typedef struct riscos__redrawstr * riscos_redrawstr;
+typedef struct RISCOS__REDRAWSTR * RISCOS_REDRAWSTR;
 
-typedef struct _riscos_fileinfo
+typedef struct RISCOS_FILEINFO
 {
     unsigned int exec; /* order important! */
     unsigned int load;
     unsigned int length;
 }
-riscos_fileinfo;
+RISCOS_FILEINFO;
 
-typedef void (* riscos_redrawproc) (riscos_redrawstr * redrawstr);
+typedef void (* RISCOS_REDRAWPROC) (RISCOS_REDRAWSTR * redrawstr);
 
-typedef void (* riscos_printproc) (void);
+typedef void (* RISCOS_PRINTPROC) (void);
 
 /* ----------------------------------------------------------------------- */
 
-enum _driver_types
+enum DRIVER_TYPES
 {
     driver_riscos,
     driver_parallel,
@@ -373,7 +374,7 @@ enum _driver_types
 
 /* set of colours used by PipeDream */
 
-enum _d_colour_offsets
+enum D_COLOUR_OFFSETS
 {
     FORE,
     BACK,
@@ -394,7 +395,7 @@ enum _d_colour_offsets
 
 /* the following are entries in the print dialog box */
 
-enum _d_print_offsets
+enum D_PRINT_OFFSETS
 {
     P_PSFON,
     P_PSFNAME,
@@ -425,7 +426,7 @@ enum _d_print_offsets
 #define SORT_MULTI_ROW          (SORT_UPDATE_REFS + 1)
 #endif
 
-typedef struct _PDCHART_TAGSTRIP_INFO
+typedef struct PDCHART_TAGSTRIP_INFO
 {
     /*
     out

@@ -24,7 +24,7 @@
 #define uchar char
 #endif
 
-struct vsfileheader
+struct VSFILEHEADER
 {
     uchar maxrow;
     uchar scmode;
@@ -46,7 +46,7 @@ struct vsfileheader
     uchar fileid;
 };
 
-struct rowtabentry
+struct ROWTABENTRY
 {
     uchar colsinrow;
     uchar offtoco1;
@@ -68,10 +68,10 @@ vsxtos(
 static data
 */
 
-static struct vsfileheader * vsp    = NULL;
+static struct VSFILEHEADER * vsp    = NULL;
 static char *                outbuf = NULL;
 
-struct vsfunc
+struct VSFUNC
 {
     char * name;
     char   flags;
@@ -80,7 +80,7 @@ struct vsfunc
 #define BRACKET 0
 #define NO_SUM 1
 
-static struct vsfunc vsfuncs[] =
+static struct VSFUNC vsfuncs[] =
 {
     "abs(",     BRACKET,
     "acs(",     BRACKET,
@@ -121,11 +121,11 @@ vsload_fileheader_isvsfile(
     _In_reads_(size) PC_U8 ptr,
     _InVal_     U32 size)
 {
-    const struct vsfileheader * p_vsfh;
+    const struct VSFILEHEADER * p_vsfh;
 
     if(size >= sizeof32(*p_vsfh))
     {
-        p_vsfh = (const struct vsfileheader *) ptr;
+        p_vsfh = (const struct VSFILEHEADER *) ptr;
 
         trace_3(TRACE_APP_PD4, "vsload_fileheader_isvsfile curwin: %d, fileid: %d, scmode: %d",
                 p_vsfh->curwin, p_vsfh->fileid, p_vsfh->scmode);
@@ -144,7 +144,7 @@ extern S32
 vsload_isvsfile(
     FILE_HANDLE fin)
 {
-    U8 vsfh[sizeof(struct vsfileheader)];
+    U8 vsfh[sizeof(struct VSFILEHEADER)];
     filepos_t pos;
     S32 bytes_read;
     S32 res;
@@ -200,7 +200,7 @@ vsload_loadvsfile(
         return(create_error(VSLOAD_ERR_CANTREAD));
 
     /* allocate memory to receive it */
-    if(NULL == (vsp = al_ptr_alloc_bytes(struct vsfileheader, vsfsize, &res)))
+    if(NULL == (vsp = al_ptr_alloc_bytes(struct VSFILEHEADER *, vsfsize, &res)))
         return(res);
 
     /* loop for structure */
@@ -219,7 +219,7 @@ vsload_loadvsfile(
             break;
             }
 
-        if(NULL == (outbuf = al_ptr_alloc_bytes(char, (S32) VS_MAXSLOTLEN + 1, &res)))
+        if(NULL == (outbuf = al_ptr_alloc_bytes(char *, (S32) VS_MAXSLOTLEN + 1, &res)))
             break;
 
         res = vsp->maxrow;
@@ -373,7 +373,7 @@ vsload_travel(
     P_S32 minus)
 {
     char *vsdp, *rtbp, *slotcont;
-    struct rowtabentry * rixp;
+    struct ROWTABENTRY * rixp;
     U16 coloff;
     char * res;
 
@@ -387,7 +387,7 @@ vsload_travel(
     vsdp = (char *) (vsp + 1);
 
     rtbp = vsdp + readval_S16(&vsp->rtbpn1);
-    rixp = (struct rowtabentry *) (rtbp + row * 3);
+    rixp = (struct ROWTABENTRY *) (rtbp + row * 3);
     if(col >= (S32) rixp->colsinrow)
         return(NULL);
 

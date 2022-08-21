@@ -86,9 +86,9 @@ fontlist_enumerate(
  *                const char * font_name   -- The font name to set the window contents to (only if SETFONT is set)
  *                const double * width     -- The width in point size of the font
  *                const double * height    --
- *                fontselect_init_fn init_fn
+ *                FONTSELECT_INIT_FN init_fn
  *                void *             init_handle
- *                fontselect_try_fn try_me
+ *                FONTSELECT_TRY_FN try_me
  *                void *            try_handle
  *
  * Returns:       If the function call was successful it returns 1.
@@ -99,11 +99,11 @@ fontlist_enumerate(
  *                    If fontselect_SETTITLE is set then the title of the window will be set, otherwise title is ignored.
  */
 
-typedef void (* fontselect_init_fn) (
+typedef void (* FONTSELECT_INIT_FN) (
     wimp_w fontselect_wind,
     void * init_handle);
 
-typedef BOOL /* processed */ (* fontselect_try_fn) (
+typedef BOOL /* processed */ (* FONTSELECT_TRY_FN) (
     const char * font_name,
     PC_F64 width,
     PC_F64 height,
@@ -118,9 +118,9 @@ fontselect_process(
     const char * font_name,
     PC_F64 width,
     PC_F64 height,
-    fontselect_init_fn init_fn,
+    FONTSELECT_INIT_FN init_fn,
     void * init_handle,
-    fontselect_try_fn  try_me,
+    FONTSELECT_TRY_FN  try_me,
     void * try_handle);
 
 /* ----------------------- fontselect_prepare_process -------------------------

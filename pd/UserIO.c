@@ -34,11 +34,11 @@
 static S32
 io_create(
     userIO_handle *userp,
-    char *ident,
-    char *title,
-    char *message,
-    char *button1,
-    char *button2);
+    const char *ident,
+    const char *title,
+    const char *message,
+    const char *button1,
+    const char *button2);
 
 static void
 io_destroy(
@@ -63,12 +63,13 @@ io_event_handler(
     wimp_eventstr *e,
     void *handle);
 
-typedef struct __userIO_struct
+typedef struct USERIO_STRUCT
 {
     wimp_w  window;
     void   *template;
     S32     button;
-}   _userIO_struct;
+}
+USERIO_STRUCT;
 
 #define userIO_ButtonL 0
 #define userIO_ButtonM 3
@@ -87,10 +88,10 @@ typedef struct __userIO_struct
 extern S32
 userIO_alert_user_open(
     userIO_handle *userp,
-    char *title,
-    char *message,
-    char *button1,
-    char *button2)
+    const char *title,
+    const char *message,
+    const char *button1,
+    const char *button2)
 {
     S32   err;
 
@@ -131,10 +132,10 @@ userIO_alert_user_close(
 extern S32
 userIO_input_from_user_open(
     userIO_handle *userp,
-    char *title,
-    char *message,
-    char *button1,
-    char *button2)
+    const char *title,
+    const char *message,
+    const char *button1,
+    const char *button2)
 {
     S32   err;
 
@@ -169,11 +170,11 @@ userIO_input_from_user_close(
 static S32
 io_create(
     userIO_handle *userp,
-    char *ident,
-    char *title,
-    char *message,
-    char *button1,
-    char *button2)
+    const char *ident,
+    const char *title,
+    const char *message,
+    const char *button1,
+    const char *button2)
 {
     userIO_handle  user;
     template      *templatehan;
@@ -181,7 +182,7 @@ io_create(
     wimp_w         window;
     S32            err = STATUS_NOMEM;     /* a useful default value */
 
-    *userp = user = al_ptr_alloc_elem(_userIO_struct, 1, &err);
+    *userp = user = al_ptr_alloc_elem(USERIO_STRUCT, 1, &err);
 
     if(user)
         {
@@ -201,7 +202,7 @@ io_create(
                     {
                     user->window = window;
 
-                    win_settitle(window, title);
+                    win_settitle(window, de_const_cast(char *, title));
 
                     win_setfield(window, (wimp_i)userIO_Message, message);
                     win_setfield(window, (wimp_i)userIO_UserText, "");

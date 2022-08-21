@@ -136,10 +136,13 @@ static const EV_TYPE arg_txt[]  = { 2, EM_REA | EM_STR | EM_DAT,
 ******************************************************************************/
 
 #define NAI 0              /* na integer */
-#define NAP {EXEC_EXEC, 0, 0, 0, 0, 0}   /* na parms */
+#define NAP FP_AGG(EXEC_EXEC, 0, 0, 0, 0, 0)    /* na parms */
 #define NAS NULL           /* na semantic address */
 #define NAA NULL           /* na argument flags address */
 #define NAT 0              /* na type */
+
+#define EXCTRL(a, b) \
+    FP_AGG(EXEC_CONTROL, (a), (b), 0, 0, 0)
 
 /*    [type]
                [#args]
@@ -216,7 +219,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acoth,          arg_num },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acos,           arg_num },
     { RPN_FNF,   2, EV_RESO_DATE    ,         NAP, c_age,            arg_dat },
-    { RPN_FNV,  -3, EV_RESO_MISC    , {EXEC_ALERT, 0, 0, 0, 0, 0},
+    { RPN_FNV,  -3, EV_RESO_MISC    , FP_AGG(EXEC_ALERT, 0, 0, 0, 0, 0),
                                                    /*alert*/ NAS,    arg_str },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asec,           arg_num },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asech,          arg_num },
@@ -230,7 +233,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   2, EV_RESO_MATHS   ,         NAP, c_beta,           arg_num },
     { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_bin,            arg_ary },
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_binom,          arg_int },
-    { RPN_FNV,  -1, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_BREAK, 0, 0, 0, 0},
+    { RPN_FNV,  -1, EV_RESO_CONTROL , EXCTRL(CONTROL_BREAK, 0),
                                                    /*break*/ NAS,    arg_int },
 
     { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acos,         arg_cpx },
@@ -270,12 +273,12 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_char,           arg_int },
     { RPN_FNV,  -2, EV_RESO_LOOKUP  ,         NAP, c_choose,         arg_cho },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_code,           arg_str },
-    { RPN_FNV,  -1, EV_RESO_MISC    , {EXEC_EXEC, 0, 0, 0, 1, 1},
+    { RPN_FNV,  -1, EV_RESO_MISC    , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
                                                    c_col,            arg_rco },
-    { RPN_FNV,  -1, EV_RESO_MISC    , {EXEC_EXEC, 0, 0, 0, 1, 1},
+    { RPN_FNV,  -1, EV_RESO_MISC    , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
                                                    c_cols,           arg_ary },
     { RPN_FNF,   2, EV_RESO_MATHS   ,         NAP, c_combin,         arg_int },
-    { RPN_FN0,   0, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_CONTINUE, 0, 0, 0, 0},
+    { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_CONTINUE, 0),
                                                    /*continue*/ NAS, NAA },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cos,            arg_num },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cosec,          arg_num },
@@ -288,39 +291,39 @@ const RPNDEF rpn_table[] =
 
     { RPN_FNF,   3, EV_RESO_DATE    ,         NAP, c_date,           arg_int },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_datevalue,      arg_str },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DAVG,    0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DAVG,    0, 1/*dbase*/, 0, 0),
                                                    /*dvag*/ NAS,     arg_dbs },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_day,            arg_dat },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_dayname,        arg_dmn },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DCOUNT,  0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNT,  0, 1/*dbase*/, 0, 0),
                                                    /*dcount*/ NAS,   arg_dbs },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DCOUNTA, 0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNTA, 0, 1/*dbase*/, 0, 0),
                                                    /*dcounta*/ NAS,  arg_dbs },
     { RPN_FNF,   4, EV_RESO_FINANCE ,         NAP, c_ddb,            arg_num },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_deg,            arg_num },
     { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_deref,          arg_drf },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DMAX,    0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DMAX,    0, 1/*dbase*/, 0, 0),
                                                    /*dmax*/ NAS,     arg_dbs },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DMIN,    0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DMIN,    0, 1/*dbase*/, 0, 0),
                                                    /*dmin*/ NAS,     arg_dbs },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DSTD,    0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DSTD,    0, 1/*dbase*/, 0, 0),
                                                    /*dstd*/ NAS,     arg_dbs },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DSTDP,   0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DSTDP,   0, 1/*dbase*/, 0, 0),
                                                    /*dstdp*/ NAS,    arg_dbs },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DSUM,    0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DSUM,    0, 1/*dbase*/, 0, 0),
                                                    /*dsum*/ NAS,     arg_dbs },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DVAR,    0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DVAR,    0, 1/*dbase*/, 0, 0),
                                                    /*dvar*/ NAS,     arg_dbs },
-    { RPN_FNF,   2, EV_RESO_DATABASE, {EXEC_DBASE, DBASE_DVARP,   0, 1, 0, 0},
+    { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DVARP,   0, 1/*dbase*/, 0, 0),
                                                    /*dvarp*/ NAS,    arg_dbs },
 
-    { RPN_FN0,   0, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_ELSE, EVS_CNT_ELSE, 0, 0, 0},
+    { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_ELSE, EVS_CNT_ELSE),
                                                    /*else*/ NAS,     NAA },
-    { RPN_FNF,   1, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_ELSEIF, EVS_CNT_ELSEIF, 0, 0, 0},
+    { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_ELSEIF, EVS_CNT_ELSEIF),
                                                    /*elseif*/ NAS,   arg_int },
-    { RPN_FN0,   0, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_ENDIF, EVS_CNT_ENDIF, 0, 0, 0},
+    { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_ENDIF, EVS_CNT_ENDIF),
                                                    /*endif*/ NAS,    NAA },
-    { RPN_FN0,   0, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_ENDWHILE, EVS_CNT_ENDWHILE, 0, 0, 0},
+    { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_ENDWHILE, EVS_CNT_ENDWHILE),
                                                    /*endwhile*/ NAS, NAA },
     { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_error,          arg_int },
     { RPN_FNF,   2, EV_RESO_STRING  ,         NAP, c_exact,          arg_str },
@@ -329,28 +332,28 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_fact,           arg_int },
     { RPN_FNV,  -3, EV_RESO_STRING  ,         NAP, c_find,           arg_fnd },
     { RPN_FNF,   1, EV_RESO_MISC,             NAP, c_flip,           arg_ary },
-    { RPN_FNV,  -4, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_FOR, EVS_CNT_FOR, 0, 0, 0},
+    { RPN_FNV,  -4, EV_RESO_CONTROL , EXCTRL(CONTROL_FOR, EVS_CNT_FOR),
                                                    /*for*/ NAS,      arg_for },
     { RPN_FNF,   1, EV_RESO_STRING,           NAP, c_formula_text,   arg_slr },
     { RPN_FNM,  -1, EV_RESO_CONTROL ,         NAP, /*function*/ NAS, NAA },
     { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_fv,             arg_num },
 
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_gammaln,        arg_num },
-    { RPN_FNF,   1, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_GOTO, 0, 0, 0, 0},
+    { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_GOTO, 0),
                                                    /*goto*/ NAS,     arg_slr },
-    { RPN_FNV,  -1, EV_RESO_STATS   , {EXEC_EXEC, 0, 0, 0, 1, 0},
+    { RPN_FNV,  -1, EV_RESO_STATS   , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 0),
                                                    c_grand,          arg_num },
     { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_growth,         arg_trd },
 
-    { RPN_FNF,   3, EV_RESO_LOOKUP  , {EXEC_LOOKUP, LOOKUP_HLOOKUP, 0, 0, 0, 0},
+    { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_HLOOKUP, 0, 0, 0, 0),
                                                    /*hlookup*/ NAS,  arg_hvl },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_hour,           arg_dat },
 
     { RPN_FNV,  -3, EV_RESO_MISC    ,         NAP, c_if,             arg_if },
-    { RPN_FNF,   1, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_IF, EVS_CNT_IFC, 0, 0, 0},
+    { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_IF, EVS_CNT_IFC),
                                                    /*if*/ NAS,       arg_int },
     { RPN_FNV,  -4, EV_RESO_LOOKUP  ,         NAP, c_index,          arg_idx },
-    { RPN_FNV,  -4, EV_RESO_MISC    , {EXEC_ALERT, 0, 0, 0, 0, 0},
+    { RPN_FNV,  -4, EV_RESO_MISC    , FP_AGG(EXEC_ALERT, 0, 0, 0, 0, 0),
                                                    /*input*/ NAS,    arg_str },
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_int,            arg_ion },
     { RPN_FNF,   2, EV_RESO_FINANCE ,         NAP, c_irr,            arg_npv },
@@ -360,11 +363,11 @@ const RPNDEF rpn_table[] =
     { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_left,           arg_stn },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_length,         arg_str },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_linest,         arg_llg },
-  /*{ RPN_FNF,   1, EV_RESO_STATS,            NAP, c_listcount,      arg_ary },*/
+    { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_listcount,      arg_ary },
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_ln,             arg_num },
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_log,            arg_num },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_logest,         arg_llg },
-    { RPN_FNF,   3, EV_RESO_LOOKUP  , {EXEC_LOOKUP, LOOKUP_LOOKUP,  0, 0, 0, 0},
+    { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_LOOKUP, 0, 0, 0, 0),
                                                    /*lookup*/ NAS,   arg_lkp },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_lower,          arg_str },
 
@@ -372,7 +375,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_MATRIX  ,         NAP, c_m_inverse,      arg_ary },
     { RPN_FNF,   2, EV_RESO_MATRIX  ,         NAP, c_m_mult,         arg_ary },
 
-    { RPN_FNF,   3, EV_RESO_LOOKUP  , {EXEC_LOOKUP, LOOKUP_MATCH,   0, 0, 0, 0},
+    { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_MATCH, 0, 0, 0, 0),
                                                    /*match*/ NAS,    arg_hvl },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_max,            arg_mix },
     { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_median,         arg_ary },
@@ -385,7 +388,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_monthdays,      arg_dat },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_monthname,      arg_dmn },
 
-    { RPN_FN0,   0, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_NEXT, EVS_CNT_NEXT, 0, 0, 0},
+    { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_NEXT, EVS_CNT_NEXT),
                                                    /*next*/ NAS,     NAA },
     { RPN_FN0,   0, EV_RESO_DATE    ,         NAP, c_now,            NAA },
     { RPN_FNF,   2, EV_RESO_FINANCE ,         NAP, c_npv,            arg_npv },
@@ -397,29 +400,29 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_pv,             arg_num },
 
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_rad,            arg_num },
-    { RPN_FNV,  -1, EV_RESO_STATS   , {EXEC_EXEC, 0, 0, 0, 1, 0},
+    { RPN_FNV,  -1, EV_RESO_STATS   , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 0),
                                                    c_rand,           arg_num },
     { RPN_FNV,  -2, EV_RESO_STATS,            NAP, c_rank,           arg_rnk },
     { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_rate,           arg_num },
-    { RPN_FN0,   0, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_REPEAT, EVS_CNT_REPEAT, 0, 0, 0},
+    { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_REPEAT, EVS_CNT_REPEAT),
                                                    /*repeat*/ NAS,   NAA },
     { RPN_FNF,   4, EV_RESO_STRING  ,         NAP, c_replace,        arg_rpl },
     { RPN_FNF,   2, EV_RESO_STRING  ,         NAP, c_rept,           arg_stn },
-    { RPN_FNF,   1, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_RESULT, 0, 0, 0, 0},
+    { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_RESULT, 0),
                                                    /*result*/ NAS,   arg_res },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_reverse,        arg_str },
     { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_right,          arg_stn },
     { RPN_FNV,  -2, EV_RESO_MISC    ,         NAP, c_round,          arg_ndp },
-    { RPN_FNV,  -1, EV_RESO_MISC    , {EXEC_EXEC, 0, 0, 0, 1, 1},
+    { RPN_FNV,  -1, EV_RESO_MISC    , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
                                                    c_row,            arg_rco },
-    { RPN_FNV,  -1, EV_RESO_MISC    , {EXEC_EXEC, 0, 0, 0, 1, 1},
+    { RPN_FNV,  -1, EV_RESO_MISC    , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
                                                    c_rows,           arg_ary },
 
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sec,            arg_num },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sech,           arg_num },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_second,         arg_dat },
     { RPN_FNF,   2, EV_RESO_MISC    ,         NAP, c_set_name,       arg_setn },
-    { RPN_FNF,   2, EV_RESO_MISC    , {EXEC_EXEC, 0, 0, 0, 0, 1},
+    { RPN_FNF,   2, EV_RESO_MISC    , FP_AGG(EXEC_EXEC, 0, 0, 0, 0, 1/*nodep*/),
                                                    c_setvalue,       arg_setv },
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_sgn,            arg_num },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sin,            arg_num },
@@ -446,7 +449,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_trim,           arg_str },
     { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_type,           arg_any },
 
-    { RPN_FNF,   1, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_UNTIL, EVS_CNT_UNTIL, 0, 0, 0},
+    { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_UNTIL, EVS_CNT_UNTIL),
                                                    /*until*/ NAS,    arg_int },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_upper,          arg_str },
 
@@ -454,12 +457,12 @@ const RPNDEF rpn_table[] =
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_var,            arg_nls },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_varp,           arg_nls },
     { RPN_FN0,   0, EV_RESO_MISC    ,         NAP, c_version,        NAA },
-    { RPN_FNF,   3, EV_RESO_LOOKUP  , {EXEC_LOOKUP, LOOKUP_VLOOKUP, 0, 0, 0, 0},
+    { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_VLOOKUP, 0, 0, 0, 0),
                                                    /*vlookup*/ NAS,  arg_hvl },
 
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weekday,        arg_dat },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weeknumber,     arg_dat },
-    { RPN_FNF,   1, EV_RESO_CONTROL , {EXEC_CONTROL, CONTROL_WHILE, EVS_CNT_WHILE, 0, 0, 0},
+    { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_WHILE, EVS_CNT_WHILE),
                                                    /*while*/ NAS,    arg_int },
 
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_year,           arg_dat },
@@ -473,7 +476,7 @@ const RPNDEF rpn_table[] =
 lowercase ASCII sorted compiler function lookup
 */
 
-typedef struct lookdef
+typedef struct LOOKDEF
 {
     PC_USTR id;
     EV_IDNO did_num;
@@ -628,7 +631,7 @@ look_table[] =
     { "left",       RPN_FNV_LEFT        },
     { "length",     RPN_FNF_LENGTH      },
     { "linest",     RPN_FNV_LINEST      },
-  /*{ "listcount",  RPN_FNF_LISTCOUNT   },*/
+    { "listcount",  RPN_FNF_LISTCOUNT   },
     { "ln",         RPN_FNF_LN          },
     { "log",        RPN_FNF_LOG         },
     { "logest",     RPN_FNV_LOGEST      },
@@ -733,7 +736,7 @@ look_table[] =
 definition of types available
 */
 
-typedef struct _types
+typedef struct TYPES
 {
     U8Z id[10];
     EV_TYPE types;
@@ -759,15 +762,14 @@ type_table[] =
 *
 * initialise resource enumerator
 *
-* docno is only relevant for names
-* and custom functions
+* docno is only relevant for names and custom functions
 *
 ******************************************************************************/
 
 extern void
 ev_enum_resource_init(
-    P_EV_RESOURCE resop,
-    S32 category,
+    _OutRef_    P_EV_RESOURCE resop,
+    _InVal_     enum EV_RESOURCE_TYPES category,
     _InVal_     EV_DOCNO docno_to,
     _InVal_     EV_DOCNO docno_from,
     _InRef_     PC_EV_OPTBLOCK p_optblock)
@@ -826,7 +828,7 @@ ev_enum_resource_get(
             char doc_name_buf[BUF_EV_LONGNAMLEN];
             S32 item_at;
 
-            for(custom_num = 0, p_ev_custom = custom_ptr(0), item_at = 0;
+            for(custom_num = 0, p_ev_custom = custom_def.ptr, item_at = 0;
                 custom_num < custom_def.next;
                 ++custom_num, ++p_ev_custom)
                 {
@@ -865,7 +867,7 @@ ev_enum_resource_get(
             char doc_name_buf[BUF_EV_LONGNAMLEN];
             S32 item_at;
 
-            for(name_num = 0, p_ev_name = name_ptr(0), item_at = 0;
+            for(name_num = 0, p_ev_name = names_def.ptr, item_at = 0;
                 name_num < names_def.next;
                 ++name_num, ++p_ev_name)
                 {
@@ -910,7 +912,7 @@ ev_enum_resource_get(
                    rpn_num == RPN_FNF_C_RADIUS)
                     x = 1;
 
-                if(rpn_p->category == (unsigned) resop->category)
+                if(rpn_p->category == (U8) resop->category)
                     {
                     if(item_at == item_get)
                         {
@@ -949,9 +951,9 @@ ev_enum_resource_get(
 
 PROC_BSEARCH_PROTO(static, func_lookcomp, U8Z, LOOKDEF)
 {
-    PC_USTR key_id = (PC_USTR) key;
-    PC_LOOKDEF p_lookdef = (PC_LOOKDEF) datum;
-    PC_USTR datum_id = p_lookdef->id;
+    BSEARCH_KEY_VAR_DECL(PC_USTR, key_id);
+    BSEARCH_DATUM_VAR_DECL(PC_LOOKDEF, datum);
+    PC_USTR datum_id = datum->id;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -1033,9 +1035,9 @@ type_from_flags(
 
 PROC_BSEARCH_PROTO(static, type_lookcomp, U8Z, TYPES)
 {
-    PC_USTR key_id = (PC_USTR) key;
-    PC_TYPES p_types = (PC_TYPES) datum;
-    PC_USTR datum_id = p_types->id;
+    BSEARCH_KEY_VAR_DECL(PC_USTR, key_id);
+    BSEARCH_DATUM_VAR_DECL(PC_TYPES, datum);
+    PC_USTR datum_id = datum->id;
 
     /* NB no current_p_docu global register furtling required */
 
