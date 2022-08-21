@@ -4,23 +4,26 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2018 Stuart Swales
+| Copyright (C) 2013-2019 Stuart Swales
 |
 dir <Obey$Dir>
 |
 cdir            o
 copy ^.!!!waste o.!!!waste ~CF~V
 settype         o.!!!waste Obey
+access          o.!!!waste LR/R
 |
 cdir            o.modules
 copy ^.!!!waste o.modules.!!!waste ~CF~V
 settype         o.modules.!!!waste Obey
+access          o.modules.!!!waste LR/R
 |
 cdir            utils
 cdir            utils.UK
 cdir            utils.UK.o
 copy ^.!!!waste utils.UK.o.!!!waste ~CF~V
 settype         utils.UK.o.!!!waste obey
+access          utils.UK.o.!!!waste LR/R
 |
 back
 |
@@ -29,5 +32,6 @@ dir <Obey$Dir>.^.^.WimpLib.r32
 cdir                       o
 copy <Obey$Dir>.^.!!!waste o.!!!waste ~CF~V
 settype                    o.!!!waste Obey
+access                     o.!!!waste LR/R
 |
 back

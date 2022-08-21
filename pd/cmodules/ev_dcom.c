@@ -31,7 +31,7 @@ dec_popptr(
 static S32
 fptostr(
     P_U8 op_buf,
-    PC_F64 fpval);
+    _InVal_     F64 fpval);
 
 /*
 * decompiler variables
@@ -47,7 +47,7 @@ typedef struct DECOMPILER_CONTEXT
     S32             arg_stk_siz;    /* current size of argument stack */
     S32             arg_sp;         /* argument stack pointer */
 
-    EV_DATA         cur_sym;        /* current symbol */
+    SS_DATA         cur_sym;        /* current symbol */
     SYM_INF         cur;            /* information about current rpn item */
 
     RPNSTATE        cur_rpn;        /* rpn state */
@@ -57,62 +57,6 @@ typedef struct DECOMPILER_CONTEXT
 * P_DECOMPILER_CONTEXT;
 
 static P_DECOMPILER_CONTEXT dc = NULL;
-
-/******************************************************************************
-*
-* convert date/time value to a string
-*
-******************************************************************************/
-
-static S32
-date_time_val_to_str(
-    P_U8 op_buf,
-    _InRef_     PC_EV_DATE datep,
-    _InVal_     BOOL american)
-{
-    S32 len;
-    EV_DATE temp;
-
-    len = 0;
-    temp = *datep;
-
-    if(temp.date)
-    {
-        S32 day, month, year;
-        BOOL valid;
-
-        valid = (ss_dateval_to_ymd(&temp.date, &year, &month, &day) >= 0); /* year may be -ve without any special case handling here */
-
-        if(valid)
-            len += sprintf(op_buf + len, "%d.%d.%.4d", american ? month : day, american ? day : month, year);
-        else
-            len += sprintf(op_buf + len, "%s.%s.%s", "**", "**", "****");
-    }
-
-    if(!temp.date || temp.time)
-    {
-        S32 hours, minutes, seconds;
-
-        /* separate time from date */
-        if(temp.date)
-            op_buf[len++] = ' ';
-
-        if(temp.time < 0)
-        {
-            op_buf[len++] = '-';
-            temp.time = -temp.time;
-        }
-
-        status_consume(ss_timeval_to_hms(&temp.time, &hours, &minutes, &seconds));
-
-        if(0 != seconds)
-            len += sprintf(op_buf + len, "%.2d:%.2d:%.2d", hours, minutes, seconds);
-        else
-            len += sprintf(op_buf + len, "%.2d:%.2d", hours, minutes);
-    }
-
-    return(len);
-}
 
 /******************************************************************************
 *
@@ -126,35 +70,38 @@ date_time_val_to_str(
 static S32
 dec_const(
     P_U8 op_buf,
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
     S32 len;
 
-    switch(p_ev_data->did_num)
+    switch(ss_data_get_data_id(p_ss_data))
     {
-    case RPN_DAT_REAL:
-        len = fptostr(op_buf, &p_ev_data->arg.fp);
+    case DATA_ID_REAL:
+        len = fptostr(op_buf, p_ss_data->arg.fp);
         break;
 
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
-        len = sprintf(op_buf, "%d", p_ev_data->arg.integer);
+    case DATA_ID_LOGICAL:
+        len = sprintf(op_buf, "%d", ss_data_get_logical(p_ss_data)); /* temp? */
         break;
 
-    case RPN_DAT_SLR:
-        len = ev_dec_slr(op_buf, dc->docno, &p_ev_data->arg.slr, dc->p_optblock->upper_case_slr);
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        len = sprintf(op_buf, "%d", ss_data_get_integer(p_ss_data));
         break;
 
-    case RPN_DAT_RANGE:
-        len = ev_dec_range(op_buf, dc->docno, &p_ev_data->arg.range, dc->p_optblock->upper_case_slr);
+    case DATA_ID_SLR:
+        len = ev_dec_slr(op_buf, dc->docno, &p_ss_data->arg.slr, dc->p_optblock->upper_case_slr);
         break;
 
-    case RPN_RES_STRING:
+    case DATA_ID_RANGE:
+        len = ev_dec_range(op_buf, dc->docno, &p_ss_data->arg.range, dc->p_optblock->upper_case_slr);
+        break;
+
     case RPN_DAT_STRING:
     case RPN_TMP_STRING:
+    case RPN_RES_STRING:
         {
-        PC_U8 ci = p_ev_data->arg.string.uchars;
+        PC_U8 ci = ss_data_get_string(p_ss_data);
         P_U8 co = op_buf;
 
         *co++ = '"';
@@ -169,29 +116,29 @@ dec_const(
         break;
         }
 
-    case RPN_DAT_DATE:
-        len = date_time_val_to_str(op_buf, &p_ev_data->arg.ev_date, dc->p_optblock->american_date);
+    case DATA_ID_DATE:
+        len = ss_date_decode(op_buf, &p_ss_data->arg.ss_date, dc->p_optblock->american_date);
         break;
 
-    case RPN_RES_ARRAY:
     case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
         {
         S32 ix, iy;
 
         *op_buf = '{';
         len = 1;
 
-        for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
+        for(iy = 0; iy < p_ss_data->arg.ss_array.y_size; ++iy)
         {
-            for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
+            for(ix = 0; ix < p_ss_data->arg.ss_array.x_size; ++ix)
             {
-                len += dec_const(op_buf + len, ss_array_element_index_borrow(p_ev_data, ix, iy));
+                len += dec_const(op_buf + len, ss_array_element_index_borrow(p_ss_data, ix, iy));
 
-                if(ix + 1 < p_ev_data->arg.ev_array.x_size)
+                if(ix + 1 < p_ss_data->arg.ss_array.x_size)
                     op_buf[len++] = ',';
             }
 
-            if(iy + 1 < p_ev_data->arg.ev_array.y_size)
+            if(iy + 1 < p_ss_data->arg.ss_array.y_size)
                 op_buf[len++] = ';';
         }
 
@@ -200,9 +147,9 @@ dec_const(
         break;
         }
 
-    case RPN_DAT_NAME:
+    case DATA_ID_NAME:
         {
-        EV_NAMEID name_num = name_def_find(p_ev_data->arg.nameid);
+        EV_NAMEID name_num = name_def_find(p_ss_data->arg.nameid);
 
         if(name_num >= 0)
         {
@@ -222,7 +169,7 @@ dec_const(
         }
 
     default:
-    case RPN_DAT_BLANK:
+    case DATA_ID_BLANK:
         len = 0;
         break;
     }
@@ -432,7 +379,7 @@ dec_rpn_token(
 
     case RPN_FRM:
         {
-        switch(dc->cur.did_num)
+        switch(dc->cur.sym_idno)
         {
         /* brackets must be added to top argument on stack */
         case RPN_FRM_BRACKETS:
@@ -515,7 +462,7 @@ dec_rpn_token(
         PC_USTR fname;
 
         len     = dec_format_space(op_buf);
-        fname   = func_name(dc->cur.did_num);
+        fname   = func_name(dc->cur.sym_idno);
         fun_len = strlen(fname);
         strcpy(op_buf + len, fname);
         len    += fun_len;
@@ -543,7 +490,7 @@ dec_rpn_token(
             len = len1;
             len += dec_format_space(op_buf + len);
 
-            fname = func_name(dc->cur.did_num);
+            fname = func_name(dc->cur.sym_idno);
             fun_len = strlen(fname);
             strcpy(op_buf + len, fname);
             len += fun_len;
@@ -564,7 +511,7 @@ dec_rpn_token(
 
         len = dec_format_space(op_buf);
 
-        fname = func_name(dc->cur.did_num);
+        fname = func_name(dc->cur.sym_idno);
         fun_len = strlen(fname);
         strcpy(op_buf + len, fname);
         len += fun_len;
@@ -584,7 +531,7 @@ dec_rpn_token(
             narg = (S32) *(dc->cur_rpn.pos + 1);
 
         /* copy in custom/function name */
-        if(dc->cur.did_num == RPN_FNM_CUSTOMCALL)
+        if(dc->cur.sym_idno == RPN_FNM_CUSTOMCALL)
         {
             EV_NAMEID custom_id, custom_num;
             P_EV_CUSTOM p_ev_custom;
@@ -608,7 +555,7 @@ dec_rpn_token(
         {
             PC_USTR fname;
 
-            fname = func_name(dc->cur.did_num);
+            fname = func_name(dc->cur.sym_idno);
             fun_len = strlen(fname);
             strcpy(op_buf + len, fname);
             len += fun_len;
@@ -616,7 +563,7 @@ dec_rpn_token(
 
         fun_len = len;
         first   = 1;
-        if(narg || dc->cur.did_num == RPN_FNM_CUSTOMCALL)
+        if(narg || dc->cur.sym_idno == RPN_FNM_CUSTOMCALL)
         {
             op_buf[fun_len++] = '(';
             op_buf[fun_len]   = ')';
@@ -747,7 +694,7 @@ extern S32
 ev_decode_data(
     P_U8 txt_out,
     _InVal_     EV_DOCNO docno_from,
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     _InRef_     PC_EV_OPTBLOCK p_optblock)
 {
     struct DECOMPILER_CONTEXT decomp_cont;
@@ -761,7 +708,7 @@ ev_decode_data(
     dc->docno = docno_from;
     dc->p_optblock = p_optblock;
 
-    len = dec_const(txt_out, p_ev_data);
+    len = dec_const(txt_out, p_ss_data);
     txt_out[len] = CH_NULL;
 
     dc = old_dc;
@@ -787,7 +734,7 @@ ev_decode_slot(
     {
     case EVS_CON_DATA:
         {
-        EV_DATA data;
+        SS_DATA data;
 
         ev_result_to_data_convert(&data, &p_ev_cell->ev_result);
         ev_decode_data(txt_out, docno, &data, p_optblock);
@@ -846,13 +793,13 @@ ev_decompile(
     /* set up symbol info */
     dc->cur.sym_space = 0;
     dc->cur.sym_cr    = 0;
-    dc->cur.did_num   = rpn_check(&dc->cur_rpn);
+    dc->cur.sym_idno   = rpn_check(&dc->cur_rpn);
 
     do  {
         if((res = dec_rpn_token(op_buf, &len)) < 0)
             break;
 
-        if((dc->cur.did_num = rpn_skip(&dc->cur_rpn)) == RPN_FRM_END)
+        if((dc->cur.sym_idno = rpn_skip(&dc->cur_rpn)) == RPN_FRM_END)
             break;
 
         if(len >= 0)
@@ -898,12 +845,12 @@ ev_decompile(
 static S32
 fptostr(
     P_U8 op_buf,
-    PC_F64 fpval)
+    _InVal_     F64 fpval)
 {
     P_U8 exp;
     S32 len;
 
-    len = sprintf(op_buf, "%.15g", *fpval);
+    len = sprintf(op_buf, "%.15g", fpval);
     op_buf[len] = CH_NULL;
 
     /* search for exponent and remove leading zeros because

@@ -563,6 +563,9 @@
     <ClCompile Include="..\..\..\..\cmodules\riscos\colourpick.c">
       <Filter>Source Files\pd_cmodules_riscos</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\ev_arith.c">
+      <Filter>Source Files\eval_cmodules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\cmodules\pd123.h">
@@ -1403,6 +1406,12 @@
     </None>
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\toolb.html,faf">
       <Filter>Source Files\Help\HTMLHelp</Filter>
+    </None>
+    <None Include="..\..\..\..\RelHistPrev.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\datetime.html,faf">
+      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
     </None>
   </ItemGroup>
 </Project>

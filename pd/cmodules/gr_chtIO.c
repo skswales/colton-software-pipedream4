@@ -186,7 +186,7 @@ gr_chart_save_chart_with_dialog(
 
         dbox_show(gr_chart__save_dbox);
 
-        (void) xfersend_x(FILETYPE_PIPEDREAM,
+        (void) xfersend_x(gr_chart_save_as_filetype(),
                filename ? filename :
                (char *) string_lookup(GR_CHART_MSG_DEFAULT_CHARTLEAFNAME),
                diagsize,
@@ -321,7 +321,7 @@ gr_chart_save_chart_without_dialog_checking_xfersend_core(
     if(res <= 0)
         return(res ? res : create_error(FILE_ERR_CANTOPEN));
 
-    file_set_type(f, FILETYPE_PIPEDREAM);
+    file_set_type(f, gr_chart_save_as_filetype());
 
     res = gr_nodbg_chart_save(cp, f, save_filename);
 
@@ -1541,8 +1541,8 @@ gr_construct_save(
         {
             alignment = alignment - (res32 & alignmask);
             do  {
-                trace_0(TRACE_MODULE_FILE, "GR_ARG_PAD outputting CH_SPACE");
-                *out++ = CH_SPACE;
+                trace_0(TRACE_MODULE_FILE, "GR_ARG_PAD outputting digit zero");
+                *out++ = CH_DIGIT_ZERO;
             }
             while(--alignment);
         }
@@ -2805,20 +2805,20 @@ gr_construct_load(
 _Check_return_
 static S32
 gr_chart_construct_getc(
-    P_IMAGE_CACHE_TAGSTRIP_INFO p_info)
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_image_cache_tagstrip_info)
 {
     GR_DIAG_OFFSET offset;
     P_U8 p;
     U8   c;
 
-    if(!p_info->r.goopSize)
+    if(0 == p_image_cache_tagstrip_info->r.goopSize)
         return(EOF);
 
-    --p_info->r.goopSize;
+    --p_image_cache_tagstrip_info->r.goopSize;
 
-    offset = p_info->r.goopOffset++;
+    offset = p_image_cache_tagstrip_info->r.goopOffset++;
 
-    p = *p_info->r.ppDiag; /* this is a void **, so * yields a void * */
+    p = *(p_image_cache_tagstrip_info->r.ppDiag); /* this is a void **, so * yields a void * */
 
     c = p[offset];
 
@@ -2827,17 +2827,17 @@ gr_chart_construct_getc(
 
 static void
 gr_chart_construct_ungetc(
-    P_IMAGE_CACHE_TAGSTRIP_INFO p_info)
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_image_cache_tagstrip_info)
 {
-    ++p_info->r.goopSize;
+    ++p_image_cache_tagstrip_info->r.goopSize;
 
-    --p_info->r.goopOffset;
+    --p_image_cache_tagstrip_info->r.goopOffset;
 }
 
 _Check_return_
 static S32
 gr_chart_construct_gets(
-    P_IMAGE_CACHE_TAGSTRIP_INFO p_info,
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_image_cache_tagstrip_info,
     P_U8 buffer,
     U32 bufsize)
 {
@@ -2846,13 +2846,13 @@ gr_chart_construct_gets(
 
     *buffer = CH_NULL;
 
-    if(!bufsize)
+    if(0 == bufsize)
         return(0);
 
     --bufsize;
 
     do  {
-        res = gr_chart_construct_getc(p_info);
+        res = gr_chart_construct_getc(p_image_cache_tagstrip_info);
 
         if(res == EOF)
         {
@@ -2866,14 +2866,14 @@ gr_chart_construct_gets(
         if(res == '\x0A')
         {
             /* got line terminator, read ahead */
-            newres = gr_chart_construct_getc(p_info);
+            newres = gr_chart_construct_getc(p_image_cache_tagstrip_info);
 
             if(newres == EOF)
                 /* that EOF will terminate next line immediately */
                 return(count);
 
             /* sod alternate line terminators */
-            gr_chart_construct_ungetc(p_info);
+            gr_chart_construct_ungetc(p_image_cache_tagstrip_info);
             break;
         }
 
@@ -2889,7 +2889,7 @@ _Check_return_
 extern STATUS
 gr_chart_construct_tagstrip_process(
     P_GR_CHART_HANDLE chp,
-    P_IMAGE_CACHE_TAGSTRIP_INFO p_info)
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_image_cache_tagstrip_info)
 {
     U8  args[BUF_MAX_LOADSAVELINE];
     S32 res;
@@ -2898,7 +2898,7 @@ gr_chart_construct_tagstrip_process(
     cp = gr_chart_cp_from_ch(*chp);
     assert(cp);
 
-    while((res = gr_chart_construct_gets(p_info, args, sizeof(args)-1)) != EOF)
+    while((res = gr_chart_construct_gets(p_image_cache_tagstrip_info, args, sizeof(args)-1)) != EOF)
     {
         status_return(gr_construct_load(cp, args));
     }

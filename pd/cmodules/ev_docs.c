@@ -457,9 +457,9 @@ doc_get_dependent_docs(
                 if(p_ev_name->flags & TRF_TOBEDEL)
                     continue;
 
-                switch(p_ev_name->def_data.did_num)
+                switch(p_ev_name->def_data.data_id)
                 {
-                case RPN_DAT_SLR:
+                case DATA_ID_SLR:
                     /* if name refers to this document */
                     if(p_ev_name->def_data.arg.slr.docno == *p_docno)
                         ensure_refs_to_name_in_list(p_docno_array,
@@ -467,7 +467,7 @@ doc_get_dependent_docs(
                                                     p_ev_name->key);
                     break;
 
-                case RPN_DAT_RANGE:
+                case DATA_ID_RANGE:
                     /* if name refers to this document */
                     if(p_ev_name->def_data.arg.range.s.docno == *p_docno)
                         ensure_refs_to_name_in_list(p_docno_array,
@@ -568,7 +568,7 @@ doc_move_rngref(
 
         grubb.slr = rep->byslr;
         grubb.data.arg.range = rep->refto;
-        grubb.data.did_num = RPN_DAT_RANGE;
+        grubb.data.data_id = DATA_ID_RANGE;
         grubb.byoffset = rep->byoffset;
 
         if((res = ev_add_rngdependency(&grubb)) < 0)
@@ -610,7 +610,7 @@ doc_move_slrref(
 
         grubb.slr          = sep->byslr;
         grubb.data.arg.slr = sep->refto;
-        grubb.data.did_num = RPN_DAT_SLR;
+        grubb.data.data_id = DATA_ID_SLR;
         grubb.byoffset     = sep->byoffset;
 
         if((res = ev_add_slrdependency(&grubb)) < 0)
@@ -977,15 +977,15 @@ ev_doc_get_sup_docs_for_sheet(
                 {
                     P_EV_NAME p_ev_name = name_ptr_must(name_num);
 
-                    switch(p_ev_name->def_data.did_num)
+                    switch(p_ev_name->def_data.data_id)
                     {
-                    case RPN_DAT_SLR:
+                    case DATA_ID_SLR:
                         ensure_doc_in_list(p_docno_array,
                                            &count,
                                            p_ev_name->def_data.arg.slr.docno);
                         break;
 
-                    case RPN_DAT_RANGE:
+                    case DATA_ID_RANGE:
                         ensure_doc_in_list(p_docno_array,
                                            &count,
                                            p_ev_name->def_data.arg.range.s.docno);

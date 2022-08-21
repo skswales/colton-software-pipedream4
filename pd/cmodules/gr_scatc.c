@@ -1067,7 +1067,7 @@ PROC_LINEST_DATA_PUT_PROTO(extern, gr_barlinescatch_linest_putproc, client_handl
     switch(colID)
     {
     case LINEST_A_COLOFF:
-        state->a[row] = *value;
+        state->a[row] = value;
         break;
 
     default: default_unhandled();

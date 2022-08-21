@@ -367,7 +367,8 @@ createslot(
             P_EV_RESULT p_ev_result;
 
             result_extract(sl, &p_ev_result);
-            p_ev_result->did_num = RPN_DAT_WORD8;
+
+            p_ev_result->data_id = DATA_ID_WORD16;
             p_ev_result->arg.integer = 0;
         }
     }

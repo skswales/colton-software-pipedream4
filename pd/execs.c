@@ -1311,8 +1311,8 @@ domacrofile_fn_prepare(void)
     delete_list(&macros_list);
 
     macros_list_key = 0;
-    status_assert(enumerate_dir_to_list(&macros_list, &macros_list_key, NULL, FILETYPE_PDMACRO)); /* ones adjacent to current document as there won't be any on path here */
-    status_assert(enumerate_dir_to_list(&macros_list, &macros_list_key, MACROS_SUBDIR_STR, FILETYPE_PDMACRO)); /* ones in the given sub-directoryboth here and on path */
+    status_assert(enumerate_dir_to_list(&macros_list, &macros_list_key, NULL, FILETYPE_PD_MACRO)); /* ones adjacent to current document as there won't be any on path here */
+    status_assert(enumerate_dir_to_list(&macros_list, &macros_list_key, MACROS_SUBDIR_STR, FILETYPE_PD_MACRO)); /* ones in the given sub-directoryboth here and on path */
 
     return(dialog_box_start());
 }

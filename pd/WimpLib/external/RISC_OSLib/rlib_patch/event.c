@@ -1,6 +1,6 @@
---- _src	2003-01-16 13:43:31.000000000 +0100
-+++ _dst	2016-09-16 15:15:40.130000000 +0100
-@@ -76,21 +76,26 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:38.840000000 +0100
+@@ -73,21 +73,26 @@
    menu m;
    event_menu_maker maker;
    event_menu_proc event;
@@ -32,7 +32,7 @@
      }
    }
    else
-@@ -100,12 +105,15 @@
+@@ -97,12 +102,15 @@
      p->m = m;
      p->maker = menumaker;
      p->event = eventproc;
@@ -49,7 +49,7 @@
  BOOL event_attachmenu(event_w w, menu m, event_menu_proc eventproc, void* handle)
  {
    return event__attach(w, m, 0, eventproc, handle);
-@@ -116,8 +124,39 @@
+@@ -113,8 +121,39 @@
    return event__attach(w, 0, menumaker, eventproc, handle);
  }
  
@@ -89,7 +89,7 @@
  static wimp_w event__current_menu_window = 0;
    /* 0 if no menu currently visible */
  static menu event__current_menu;
-@@ -127,89 +166,243 @@
+@@ -124,89 +163,243 @@
  static BOOL event__last_was_menu_hit = FALSE;
  static BOOL event__recreation;
  
@@ -390,7 +390,7 @@
    if (e->e == wimp_ENULL)
    {
      int dummy_time;
-@@ -224,12 +417,14 @@
+@@ -221,12 +414,14 @@
      if ((event_getmask() & wimp_EMNULL) != 0)
         return TRUE;
    }
@@ -405,7 +405,7 @@
    else if (e->e == wimp_ENULL)
    {
      /* machine idle: say so */
-@@ -240,12 +435,20 @@
+@@ -237,12 +432,20 @@
      /* Assume it's a menu being moved */
      wimpt_complain(wimp_open_wind(&e->data.o));
    }
@@ -426,7 +426,7 @@
    if (event__last_was_menu_hit && wimpt_last_event()->e == wimp_EMENU)
    {
      wimp_mousestr m;
-@@ -276,6 +479,8 @@
+@@ -273,6 +476,8 @@
        }
      }
    }
@@ -435,7 +435,7 @@
    tracef0("doing poll.\n");
    wimpt_complain(wimpt_poll(mask, result));
    tracef0("poll done.\n");
-@@ -284,7 +489,9 @@
+@@ -281,7 +486,9 @@
  void event_process(void)
  {
    tracef0("event_process.\n");
@@ -445,7 +445,7 @@
    {
      wimp_eventstr e;
      event__poll(event_getmask(), &e);
-@@ -292,6 +499,8 @@
+@@ -289,6 +496,8 @@
    }
  }
  
@@ -454,7 +454,7 @@
  #ifndef UROM
  BOOL event_anywindows()
  {
-@@ -299,8 +508,15 @@
+@@ -296,8 +505,15 @@
  }
  #endif
  

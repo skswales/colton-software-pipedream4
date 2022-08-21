@@ -2769,7 +2769,7 @@ cal_offset_in_slot(
         if( swidth_mp > fwidth_mp)
         {
             swidth_mp = font_truncate(tbuf, fwidth_mp + cw_to_millipoints(fwidth_adjust_ch));
-            IGNOREVAR(swidth_mp);
+            UNREFERENCED_LOCAL_VARIABLE(swidth_mp);
 
             justify = 0;
         }

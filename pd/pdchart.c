@@ -53,6 +53,8 @@ null_event_proto(static, pdchart_null_handler);
 
 image_cache_tagstrip_proto(extern, pdchart_tagstrip);
 
+image_cache_tagstrip_proto(extern, pdchart_tagstrip_legacy);
+
 gr_chart_travel_proto(static, pdchart_travel_for_input);
 
 gr_chart_travel_proto(static, pdchart_travel_for_text_input);
@@ -730,9 +732,9 @@ pdchart_extract_numeric_result(
     _InRef_     PC_EV_RESULT p_ev_result,
     _OutRef_opt_ P_GR_CHART_VALUE val /*out. NULL->nopoke*/)
 {
-    switch(p_ev_result->did_num)
+    switch(p_ev_result->data_id)
     {
-    case RPN_DAT_REAL:
+    case DATA_ID_REAL:
         if(val)
         {
             val->type        = GR_CHART_VALUE_NUMBER;
@@ -740,9 +742,9 @@ pdchart_extract_numeric_result(
         }
         return(1);
 
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
         if(val)
         {
             val->type        = GR_CHART_VALUE_NUMBER;
@@ -754,12 +756,12 @@ pdchart_extract_numeric_result(
         {
         BOOL res;
         EV_RESULT temp_ev_result;
-        EV_DATA temp_data;
+        SS_DATA temp_data;
 
-        /* go via EV_DATA */
+        /* go via SS_DATA */
         ev_result_to_data_convert(&temp_data, p_ev_result);
 
-        ev_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
+        ss_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
 
         /* recurse to convert result */
         res = pdchart_extract_numeric_result(&temp_ev_result, val);
@@ -4353,10 +4355,10 @@ gr_ext_construct_load_this(
 
 image_cache_tagstrip_proto(extern, pdchart_tagstrip)
 {
-    P_PDCHART_TAGSTRIP_INFO p_tag_info = handle;
+    P_PDCHART_TAGSTRIP_INFO p_pdchart_tagstrip_info = (P_PDCHART_TAGSTRIP_INFO) handle;
     STATUS res;
 
-    p_tag_info->pdchartdatakey = NULL;
+    p_pdchart_tagstrip_info->pdchartdatakey = NULL;
 
     if((res = pdchart_new(&pdchart_load_save_pdchart, 0, 0, 0)) < 0)
     {
@@ -4365,7 +4367,7 @@ image_cache_tagstrip_proto(extern, pdchart_tagstrip)
     }
 
     /* name needed for doc creation */
-    image_cache_name_query(&p_info->image_cache_handle, pdchart_load_save_docname, sizeof(pdchart_load_save_docname)-1);
+    image_cache_name_query(&p_image_cache_tagstrip_info->image_cache_handle, pdchart_load_save_docname, sizeof(pdchart_load_save_docname)-1);
 
     /* set the name up in the newly created chart */
     if(status_fail(res = gr_chart_name_set(&pdchart_load_save_pdchart->ch, pdchart_load_save_docname)))
@@ -4378,11 +4380,16 @@ image_cache_tagstrip_proto(extern, pdchart_tagstrip)
         return(status_nomem());
 
     /* get chart module to process constructs for both it and us */
-    res = gr_chart_construct_tagstrip_process(&pdchart_load_save_pdchart->ch, p_info);
+    res = gr_chart_construct_tagstrip_process(&pdchart_load_save_pdchart->ch, p_image_cache_tagstrip_info);
 
-    p_tag_info->pdchartdatakey = (P_ANY) pdchart_load_save_pdchart->pdchartdatakey;
+    p_pdchart_tagstrip_info->pdchartdatakey = (P_ANY) pdchart_load_save_pdchart->pdchartdatakey;
 
     return(res);
+}
+
+image_cache_tagstrip_proto(extern, pdchart_tagstrip_legacy)
+{
+    return(pdchart_tagstrip(p_image_cache_tagstrip_info, handle));
 }
 
 /******************************************************************************
@@ -4431,6 +4438,16 @@ pdchart_load_ended(
             status_assert(pdchart_modify(pdchart));
         }
     }
+}
+
+/*
+required functions
+*/
+
+extern FILETYPE_RISC_OS
+gr_chart_save_as_filetype(void)
+{
+    return((d_progvars[OR_CF].option) ? FILETYPE_PD_CHART : FILETYPE_PIPEDREAM);
 }
 
 /* end of pdchart.c */

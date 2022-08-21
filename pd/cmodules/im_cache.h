@@ -34,13 +34,13 @@ image cache tagstrip
 typedef struct IMAGE_CACHE_TAGSTRIP_INFO * P_IMAGE_CACHE_TAGSTRIP_INFO;
 
 typedef S32 (* image_cache_tagstrip_proc) (
-    P_ANY handle,
-    P_IMAGE_CACHE_TAGSTRIP_INFO p_info);
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_image_cache_tagstrip_info,
+    P_ANY handle);
 
 #define image_cache_tagstrip_proto(_e_s, _p_proc_image_cache_tagstrip) \
 _e_s S32 _p_proc_image_cache_tagstrip( \
-    P_ANY handle, \
-    P_IMAGE_CACHE_TAGSTRIP_INFO p_info)
+    P_IMAGE_CACHE_TAGSTRIP_INFO p_image_cache_tagstrip_info, \
+    P_ANY handle)
 
 #endif /* RISCOS */
 
@@ -218,7 +218,7 @@ typedef struct GR_RISCDIAG_TAGSTRIP_INFO
     S32            PRM_conformant;
     GR_DIAG_OFFSET thisObject;
     GR_DIAG_OFFSET goopOffset;
-    U32 goopSize;
+    U32            goopSize;
 }
 GR_RISCDIAG_TAGSTRIP_INFO;
 

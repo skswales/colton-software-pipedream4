@@ -54,7 +54,7 @@ reporting_is_enabled(void)
     if(!g_report_enabled)
         return(FALSE);
 
-#if RISCOS
+#if RISCOS && !CROSS_COMPILE
     if( !try_reporter &&
         !try_rpcemu_report &&
         (0 == stderr->__file) /* not redirected? */ )

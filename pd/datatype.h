@@ -29,14 +29,6 @@ typedef S32 ghandle;
 
 /* ----------------------------------------------------------------------- */
 
-typedef time_t DATE;
-
-/* time */
-
-#define YEAR_OFFSET 80
-
-/* ----------------------------------------------------------------------- */
-
 typedef int coord;      /* coordinate type for screen, MUST BE SIGNED */
 typedef int gcoord;     /* graphics coordinate type */
 typedef int tcoord;     /* text cell coordinate type */

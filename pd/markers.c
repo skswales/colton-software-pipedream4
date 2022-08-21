@@ -820,7 +820,7 @@ more_in_block(
         {
             /* off bottom so would reset and step to next column */
             row = start_bl.row;
-            IGNOREVAR(row);
+            UNREFERENCED_LOCAL_VARIABLE(row);
 
             if(++col > end_bl.col)
                 return(FALSE);                  /* off side too */
@@ -832,7 +832,7 @@ more_in_block(
         {
             /* off rhs so would reset and step to next row */
             col = start_bl.col;
-            IGNOREVAR(col);
+            UNREFERENCED_LOCAL_VARIABLE(col);
 
             if(++row > end_bl.row)
                 return(FALSE);                  /* off bottom too */
@@ -1250,7 +1250,7 @@ ended_drag(void)
     {
         _kernel_swi_regs rs;
         rs.r[0] = 0 /* turn autoscroll off */ ;
-        rs.r[1] = NULL;
+        rs.r[1] = 0;
         void_WrapOsErrorReporting(_kernel_swi(Wimp_AutoScroll, &rs, &rs));
 
         drag_autoscroll = FALSE;
@@ -1962,7 +1962,7 @@ process_autoscroll_before_drag(
             "Pointer is %s%s%s%s%s%s%s;"
             "Some work area %s%s%s%s",
             (rs.r[0] & (1<<8)) ? "has" : "not",
-            (rs.r[0] & (1<<9)) ? "outside the window‘s visible area," : "",
+            (rs.r[0] & (1<<9)) ? "outside the window's visible area," : "",
             (rs.r[0] & (1<<10)) ? "within one or two pause zones," : "",
             (rs.r[0] & (1<<11)) ? "within the centre zone," : "",
             (rs.r[0] & (1<<12)) ? "left of the centre zone," : "",

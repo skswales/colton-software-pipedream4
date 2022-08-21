@@ -1279,8 +1279,8 @@ gr_chartedit_fontselect_kill(
 static void
 gr_chartedit_fontselect_try_me(
     PC_U8 font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     P_GR_CHARTEDIT_RISCOS_FONTSELECT_CALLBACK_INFO i)
 {
     P_GR_CHARTEDITOR cep;
@@ -1296,8 +1296,8 @@ gr_chartedit_fontselect_try_me(
     zero_struct(new_style.szFontName);
     xstrkpy(new_style.szFontName, sizeof32(new_style.szFontName), font_name);
 
-    new_style.width  = (GR_COORD) (*width  * GR_PIXITS_PER_POINT);
-    new_style.height = (GR_COORD) (*height * GR_PIXITS_PER_POINT);
+    new_style.width  = (GR_COORD) (width  * GR_PIXITS_PER_POINT);
+    new_style.height = (GR_COORD) (height * GR_PIXITS_PER_POINT);
 
     modify = memcmp(&new_style, cur_style, sizeof(new_style));
 
@@ -1319,8 +1319,8 @@ gr_chartedit_fontselect_try_me(
 static BOOL
 gr_chartedit_fontselect_unknown_fn(
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     const wimp_eventstr * e,
     P_ANY try_handle,
     BOOL try_anyway)
@@ -1419,9 +1419,9 @@ gr_chartedit_selection_textstyle_edit(
 
     fontselect_process(title,                                    /* win title   */
                        fontselect_SETFONT | fontselect_SETTITLE, /* flags       */
-                       i.style.szFontName,                       /* font_name   */
-                       &width, /* font width  */
-                       &height, /* font height */
+                       i.style.szFontName, /* font name */
+                       width, /* font width */
+                       height, /* font height */
                        NULL, NULL,
                        gr_chartedit_fontselect_unknown_fn, &i);
 

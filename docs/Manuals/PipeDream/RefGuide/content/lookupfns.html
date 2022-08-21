@@ -114,6 +114,13 @@
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>INDEX(A1C3,2,2,2,2)</code></p>
     <p>returns an array containing <code>{B2,C2;B3,C3}</code>.</p>
+    <h5>Revisions</h5>
+    <p>Starting with 4.56, this function will now accept zero for the column and/or row number.<br />
+    If the column number is zero, the whole of the specified row(s) is returned.<br />
+    If the row number is zero, the whole of the specified column(s) is returned.</p>
+    <p>Starting with 4.56, this function will now accept zero for the optional column and/or row size.<br />
+    If the column size is zero, the rest of the specified row(s) beginning at the given column number is returned.<br />
+    If the row size is zero, the whole of the specified column(s) beginning at the given row number is returned.</p>
 
     <h2 class="csg-function" id="LOOKUP">LOOKUP</h2>
     <h5>Syntax:</h5>

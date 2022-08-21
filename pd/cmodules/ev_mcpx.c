@@ -21,21 +21,6 @@
 /* local header file */
 #include "ev_evali.h"
 
-#if __STDC_VERSION__ < 199901L
-
-#if WINDOWS
-
-_Check_return_
-static double
-log2(_InVal_ double d)
-{
-    return(log(d) * _log2_e);
-}
-
-#endif /* OS */
-
-#endif /* __STDC_VERSION__ */
-
 /*
 declare complex number type for internal usage
 */
@@ -52,7 +37,7 @@ internal functions
 
 static void
 complex_result_reals(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     F64 real_part,
     _InVal_     F64 imag_part);
 
@@ -60,7 +45,7 @@ complex_result_reals(
 
 static void
 complex_result_reals_string(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     F64 real_part,
     _InVal_     F64 imag_part,
     _InVal_     U8 imag_suffix_char);
@@ -102,36 +87,36 @@ complex_one_half = { 0.5, 0.0 };
 _Check_return_
 static STATUS
 complex_check_arg_array(
-    /**/        P_EV_DATA p_ev_data_res,
+    /**/        P_SS_DATA p_ss_data_res,
     _OutRef_    P_COMPLEX n,
-    _InRef_     P_EV_DATA p_ev_data_in)
+    _InRef_     P_SS_DATA p_ss_data_in)
 {
-    if(RPN_DAT_REAL == p_ev_data_in->did_num)
+    if(ss_data_is_real(p_ss_data_in))
     {
-        n->r = p_ev_data_in->arg.fp;
+        n->r = ss_data_get_real(p_ss_data_in);
         n->i = 0.0;
         return(STATUS_OK);
     }
 
-    if(RPN_TMP_ARRAY == p_ev_data_in->did_num)
+    if(RPN_TMP_ARRAY == ss_data_get_data_id(p_ss_data_in))
     {
-        EV_DATA ev_data1, ev_data2;
+        SS_DATA ss_data_1, ss_data_2;
 
         /* extract elements from the array */
-        const EV_IDNO t1 = array_range_index(&ev_data1, p_ev_data_in, 0, 0, EM_REA);
-        const EV_IDNO t2 = array_range_index(&ev_data2, p_ev_data_in, 1, 0, EM_REA);
+        const EV_IDNO t1 = array_range_index(&ss_data_1, p_ss_data_in, 0, 0, EM_REA);
+        const EV_IDNO t2 = array_range_index(&ss_data_2, p_ss_data_in, 1, 0, EM_REA);
 
-        if((RPN_DAT_REAL == t1) && (RPN_DAT_REAL == t2))
+        if( (DATA_ID_REAL == t1) && (DATA_ID_REAL == t2) )
         {
-            n->r = ev_data1.arg.fp;
-            n->i = ev_data2.arg.fp;
+            n->r = ss_data_get_real(&ss_data_1);
+            n->i = ss_data_get_real(&ss_data_2);
             return(STATUS_OK);
         }
     }
 
     n->r = 0.0;
     n->i = 0.0;
-    return(ev_data_set_error(p_ev_data_res, EVAL_ERR_BADCOMPLEX));
+    return(ss_data_set_error(p_ss_data_res, EVAL_ERR_BADCOMPLEX));
 }
 
 #if defined(COMPLEX_STRING)
@@ -270,10 +255,10 @@ complex_check_arg_ustr(
 _Check_return_
 static STATUS
 complex_check_arg_string(
-    /**/        P_EV_DATA p_ev_data_res,
+    /**/        P_SS_DATA p_ss_data_res,
     _OutRef_    P_COMPLEX n,
     _OutRef_    P_U8 p_imag_suffix_char,
-    _InRef_     P_EV_DATA p_ev_data_in)
+    _InRef_     P_SS_DATA p_ss_data_in)
 {
     STATUS status;
     QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 50);
@@ -283,11 +268,11 @@ complex_check_arg_string(
     n->i = 0.0;
     *p_imag_suffix_char = CH_NULL;
 
-    if(RPN_DAT_STRING != p_ev_data_in->did_num)
-        return(ev_data_set_error(p_ev_data_res, EVAL_ERR_BADCOMPLEX));
+    if(DATA_ID_STRING != ss_data_get_data_id(p_ss_data_in))
+        return(ss_data_set_error(p_ss_data_res, EVAL_ERR_BADCOMPLEX));
 
     /* need a CH_NULL-terminated string to parse */
-    if(status_ok(status = quick_ublock_uchars_add(&quick_ublock, p_ev_data_in->arg.string.uchars, p_ev_data_in->arg.string.size)))
+    if(status_ok(status = quick_ublock_uchars_add(&quick_ublock, ss_data_get_string(p_ss_data_in), ss_data_get_string_size(p_ss_data_in))))
         status = quick_ublock_nullch_add(&quick_ublock);
 
     if(status_ok(status))
@@ -296,7 +281,7 @@ complex_check_arg_string(
     quick_ublock_dispose(&quick_ublock);
 
     if(status_fail(status))
-        return(ev_data_set_error(p_ev_data_res, status));
+        return(ss_data_set_error(p_ss_data_res, status));
 
     return(STATUS_OK);
 }
@@ -304,12 +289,12 @@ complex_check_arg_string(
 _Check_return_
 static STATUS
 complex_check_arg_string_pair(
-    /**/        P_EV_DATA p_ev_data_res,
+    /**/        P_SS_DATA p_ss_data_res,
     _OutRef_    P_COMPLEX n1,
     _OutRef_    P_COMPLEX n2,
     _OutRef_    P_U8 p_imag_suffix_char,
-    _InRef_     P_EV_DATA p_ev_data_1,
-    _InRef_     P_EV_DATA p_ev_data_2)
+    _InRef_     P_SS_DATA p_ss_data_1,
+    _InRef_     P_SS_DATA p_ss_data_2)
 {
     U8 imag_suffix_char_1, imag_suffix_char_2;
 
@@ -317,8 +302,8 @@ complex_check_arg_string_pair(
 
     *p_imag_suffix_char = CH_NULL;
 
-    status_return(complex_check_arg_string(p_ev_data_res, n1, &imag_suffix_char_1, p_ev_data_1));
-    status_return(complex_check_arg_string(p_ev_data_res, n2, &imag_suffix_char_2, p_ev_data_2));
+    status_return(complex_check_arg_string(p_ss_data_res, n1, &imag_suffix_char_1, p_ss_data_1));
+    status_return(complex_check_arg_string(p_ss_data_res, n2, &imag_suffix_char_2, p_ss_data_2));
 
     if((CH_NULL == imag_suffix_char_1) && (CH_NULL == imag_suffix_char_2))
          *p_imag_suffix_char = 'i';
@@ -332,7 +317,7 @@ complex_check_arg_string_pair(
 #if 1
         *p_imag_suffix_char = 'i';
 #else
-        return(ev_data_set_error(p_ev_data_res, EVAL_ERR_MIXED_SUFFIXES));
+        return(ss_data_set_error(p_ss_data_res, EVAL_ERR_MIXED_SUFFIXES));
 #endif
 
     return(STATUS_OK);
@@ -343,56 +328,56 @@ complex_check_arg_string_pair(
 _Check_return_
 static STATUS
 complex_check_arg(
-    /**/        P_EV_DATA p_ev_data_res,
+    /**/        P_SS_DATA p_ss_data_res,
     _OutRef_    P_COMPLEX n,
     _OutRef_    P_U8 p_imag_suffix_char,
-    _InRef_     P_EV_DATA p_ev_data)
+    _InRef_     P_SS_DATA p_ss_data)
 {
 #if defined(COMPLEX_STRING)
-    if(RPN_DAT_STRING == p_ev_data->did_num)
-        return(complex_check_arg_string(p_ev_data_res, n, p_imag_suffix_char, p_ev_data));
+    if(DATA_ID_STRING == ss_data_get_data_id(p_ss_data))
+        return(complex_check_arg_string(p_ss_data_res, n, p_imag_suffix_char, p_ss_data));
 #endif /* COMPLEX_STRING */
 
     *p_imag_suffix_char = CH_NULL;
 
-    return(complex_check_arg_array(p_ev_data_res, n, p_ev_data));
+    return(complex_check_arg_array(p_ss_data_res, n, p_ss_data));
 }
 
 _Check_return_
 static STATUS
 complex_check_arg_pair(
-    /**/        P_EV_DATA p_ev_data_res,
+    /**/        P_SS_DATA p_ss_data_res,
     _OutRef_    P_COMPLEX n1,
     _OutRef_    P_COMPLEX n2,
     _OutRef_    P_U8 p_imag_suffix_char,
-    _InRef_     P_EV_DATA p_ev_data_1,
-    _InRef_     P_EV_DATA p_ev_data_2)
+    _InRef_     P_SS_DATA p_ss_data_1,
+    _InRef_     P_SS_DATA p_ss_data_2)
 {
 #if defined(COMPLEX_STRING)
     /* easy if both are strings */
-    if((RPN_DAT_STRING == p_ev_data_1->did_num) && (RPN_DAT_STRING == p_ev_data_2->did_num))
-        return(complex_check_arg_string_pair(p_ev_data_res, n1, n2, p_imag_suffix_char, p_ev_data_1, p_ev_data_2));
+    if( (DATA_ID_STRING == ss_data_get_data_id(p_ss_data_1)) && (DATA_ID_STRING == ss_data_get_data_id(p_ss_data_2)) )
+        return(complex_check_arg_string_pair(p_ss_data_res, n1, n2, p_imag_suffix_char, p_ss_data_1, p_ss_data_2));
 
     *p_imag_suffix_char = CH_NULL;
 
     CODE_ANALYSIS_ONLY((n2->r = 0.0, n2->i = 0.0));
 
-    if(RPN_DAT_STRING == p_ev_data_1->did_num)
-        status_return(complex_check_arg_string(p_ev_data_res, n1, p_imag_suffix_char, p_ev_data_1));
+    if(DATA_ID_STRING == ss_data_get_data_id(p_ss_data_1))
+        status_return(complex_check_arg_string(p_ss_data_res, n1, p_imag_suffix_char, p_ss_data_1));
     else
-        status_return(complex_check_arg_array(p_ev_data_res, n1, p_ev_data_1));
+        status_return(complex_check_arg_array(p_ss_data_res, n1, p_ss_data_1));
 
-    if(RPN_DAT_STRING == p_ev_data_2->did_num)
-        return(complex_check_arg_string(p_ev_data_res, n2, p_imag_suffix_char, p_ev_data_2));
+    if(DATA_ID_STRING == ss_data_get_data_id(p_ss_data_2))
+        return(complex_check_arg_string(p_ss_data_res, n2, p_imag_suffix_char, p_ss_data_2));
     else
-        return(complex_check_arg_array(p_ev_data_res, n2, p_ev_data_2));
+        return(complex_check_arg_array(p_ss_data_res, n2, p_ss_data_2));
 #else
     *p_imag_suffix_char = CH_NULL;
 
     CODE_ANALYSIS_ONLY((n2->r = 0.0, n2->i = 0.0));
 
-    status_return(complex_check_arg_array(p_ev_data_res, n1, p_ev_data_1));
-           return(complex_check_arg_array(p_ev_data_res, n2, p_ev_data_2));
+    status_return(complex_check_arg_array(p_ss_data_res, n1, p_ss_data_1));
+           return(complex_check_arg_array(p_ss_data_res, n2, p_ss_data_2));
 #endif /* COMPLEX_STRING */
 }
 
@@ -433,21 +418,21 @@ complex_lnz(
 
 static inline void
 complex_result_complex(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     PC_COMPLEX z,
     _InVal_     U8 imag_suffix_char)
 {
 #if defined(COMPLEX_STRING)
     if(CH_NULL != imag_suffix_char)
     {
-        complex_result_reals_string(p_ev_data, z->r, z->i, imag_suffix_char);
+        complex_result_reals_string(p_ss_data, z->r, z->i, imag_suffix_char);
         return;
     }
 #else
     UNREFERENCED_PARAMETER_InVal_(imag_suffix_char);
 #endif
 
-    complex_result_reals(p_ev_data, z->r, z->i);
+    complex_result_reals(p_ss_data, z->r, z->i);
 }
 
 /******************************************************************************
@@ -458,31 +443,31 @@ complex_result_complex(
 
 static void
 complex_result_reals(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     F64 real_part,
     _InVal_     F64 imag_part)
 {
-    P_EV_DATA elep;
+    P_SS_DATA elep;
 
-    if(status_fail(ss_array_make(p_ev_data, 2, 1)))
+    if(status_fail(ss_array_make(p_ss_data, 2, 1)))
         return;
 
-    elep = ss_array_element_index_wr(p_ev_data, 0, 0);
-    ev_data_set_real(elep, real_part);
+    elep = ss_array_element_index_wr(p_ss_data, 0, 0);
+    ss_data_set_real(elep, real_part);
 
-    elep = ss_array_element_index_wr(p_ev_data, 1, 0);
-    ev_data_set_real(elep, imag_part);
+    elep = ss_array_element_index_wr(p_ss_data, 1, 0);
+    ss_data_set_real(elep, imag_part);
 }
 
 #if defined(COMPLEX_STRING)
 
 static inline void
 complex_result_complex_string(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     PC_COMPLEX z,
     _InVal_     U8 imag_suffix_char)
 {
-    complex_result_reals_string(p_ev_data, z->r, z->i, imag_suffix_char);
+    complex_result_reals_string(p_ss_data, z->r, z->i, imag_suffix_char);
 }
 
 static U32 /* bytes currently in output */
@@ -525,7 +510,7 @@ decode_fp(
 
 static void
 complex_result_reals_string(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     F64 real_part,
     _InVal_     F64 imag_part,
     _InVal_     U8 imag_suffix_char)
@@ -578,9 +563,9 @@ complex_result_reals_string(
     }
 
     if(status_fail(status))
-        ev_data_set_error(p_ev_data, status);
+        ss_data_set_error(p_ss_data, status);
     else
-        status_assert(ss_string_make_uchars(p_ev_data, quick_ublock_uchars(&quick_ublock), quick_ublock_bytes(&quick_ublock)));
+        status_assert(ss_string_make_uchars(p_ss_data, quick_ublock_uchars(&quick_ublock), quick_ublock_bytes(&quick_ublock)));
 
     quick_ublock_dispose(&quick_ublock);
 }
@@ -625,14 +610,14 @@ PROC_EXEC_PROTO(c_c_add)
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ev_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
         return;
 
     add_result.r = in1.r + in2.r;
     add_result.i = in1.i + in2.i;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &add_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &add_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -650,14 +635,14 @@ PROC_EXEC_PROTO(c_c_sub)
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ev_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
         return;
 
     sub_result.r = in1.r - in2.r;
     sub_result.i = in1.i - in2.i;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &sub_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &sub_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -675,14 +660,14 @@ PROC_EXEC_PROTO(c_c_mul)
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ev_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
         return;
 
     mul_result.r = in1.r * in2.r - in1.i * in2.i;
     mul_result.i = in1.i * in2.r + in1.r * in2.i;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &mul_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &mul_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -695,7 +680,7 @@ PROC_EXEC_PROTO(c_c_mul)
 _Check_return_ _Success_(return)
 static BOOL
 do_complex_divide(
-    /**/        P_EV_DATA p_ev_data_res,
+    /**/        P_SS_DATA p_ss_data_res,
     _InRef_     PC_COMPLEX in1,
     _InRef_     PC_COMPLEX in2,
     _OutRef_    P_COMPLEX out)
@@ -706,7 +691,7 @@ do_complex_divide(
     /* check for divide by zero about to trap */
     if(divisor < F64_MIN)
     {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
+        ss_data_set_error(p_ss_data_res, EVAL_ERR_DIVIDEBY0);
         return(FALSE);
     }
 
@@ -724,14 +709,14 @@ PROC_EXEC_PROTO(c_c_div)
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ev_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
         return;
 
-    if(!do_complex_divide(p_ev_data_res, &in1, &in2, &div_result))
+    if(!do_complex_divide(p_ss_data_res, &in1, &in2, &div_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &div_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &div_result, imag_suffix_char);
 }
 
 #if 0 /* just for diff minimization */
@@ -746,47 +731,47 @@ PROC_EXEC_PROTO(c_c_div)
 
 static inline void
 c_c_complex_common(
-    _In_reads_(n_args) P_EV_DATA args[],
+    _In_reads_(n_args) P_SS_DATA args[],
     _InVal_     S32 n_args,
-    _OutRef_    P_EV_DATA p_ev_data_res,
+    _OutRef_    P_SS_DATA p_ss_data_res,
     _InVal_     U8 default_imag_suffix_char)
 {
     COMPLEX complex_result;
     U8 imag_suffix_char = default_imag_suffix_char;
 
     assert(n_args > 0);
-    complex_result.r = args[0]->arg.fp;
+    complex_result.r = ss_data_get_real(args[0]);
 
-    complex_result.i = (n_args > 1) ? args[1]->arg.fp : 0.0;
+    complex_result.i = (n_args > 1) ? ss_data_get_real(args[1]) : 0.0;
 
     if(n_args > 2)
     {
-        PC_UCHARS uchars = args[2]->arg.string.uchars;
+        PC_UCHARS uchars = ss_data_get_string(args[2]);
 
-        if( (1 != args[2]->arg.string.size) || ((PtrGetByte(uchars) != 'i') && (PtrGetByte(uchars) != 'j')) )
+        if( (1 != ss_data_get_string_size(args[2])) || ((PtrGetByte(uchars) != 'i') && (PtrGetByte(uchars) != 'j')) )
         {
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_BADCOMPLEX);
+            ss_data_set_error(p_ss_data_res, EVAL_ERR_BADCOMPLEX);
             return;
         }
 
         imag_suffix_char = PtrGetByte(uchars);
     }
 
-    complex_result_complex(p_ev_data_res, &complex_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &complex_result, imag_suffix_char);
 }
 
 PROC_EXEC_PROTO(c_c_complex)
 {
     exec_func_ignore_parms();
 
-    c_c_complex_common(args, n_args, p_ev_data_res, CH_NULL /* only a string result if suffix supplied */);
+    c_c_complex_common(args, n_args, p_ss_data_res, CH_NULL /* only a string result if suffix supplied */);
 }
 
 PROC_EXEC_PROTO(c_odf_complex)
 {
     exec_func_ignore_parms();
 
-    c_c_complex_common(args, n_args, p_ev_data_res, 'i' /* always a string result, may be overridden */);
+    c_c_complex_common(args, n_args, p_ss_data_res, 'i' /* always a string result, may be overridden */);
 }
 
 /******************************************************************************
@@ -803,13 +788,13 @@ PROC_EXEC_PROTO(c_c_conjugate)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     conjugate_result.r =   in.r;
     conjugate_result.i = - in.i;
 
-    complex_result_complex(p_ev_data_res, &conjugate_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &conjugate_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -826,10 +811,10 @@ PROC_EXEC_PROTO(c_c_real)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    ev_data_set_real(p_ev_data_res, in.r);
+    ss_data_set_real(p_ss_data_res, in.r);
 }
 
 /******************************************************************************
@@ -846,10 +831,10 @@ PROC_EXEC_PROTO(c_c_imaginary)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    ev_data_set_real(p_ev_data_res, in.i);
+    ss_data_set_real(p_ss_data_res, in.i);
 }
 
 #endif
@@ -869,12 +854,12 @@ PROC_EXEC_PROTO(c_c_radius)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    radius_result = mx_fhypot(in.r, in.i); /* SKS does carefully */
+    radius_result = hypot(in.r, in.i); /* SKS does carefully */
 
-    ev_data_set_real(p_ev_data_res, radius_result);
+    ss_data_set_real(p_ss_data_res, radius_result);
 }
 
 /******************************************************************************
@@ -892,12 +877,12 @@ PROC_EXEC_PROTO(c_c_theta)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     theta_result = atan2(in.i, in.r); /* note silly C library ordering */
 
-    ev_data_set_real(p_ev_data_res, theta_result);
+    ss_data_set_real(p_ss_data_res, theta_result);
 }
 
 #if 0 /* just for diff minimization */
@@ -916,34 +901,31 @@ PROC_EXEC_PROTO(c_c_round)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     { /* round components separately to the desired number of decimal places */
-    EV_DATA number, decimal_places;
-    P_EV_DATA local_args[2];
+    SS_DATA number, decimal_places;
+    P_SS_DATA local_args[2];
 
     local_args[0] = &number;
     local_args[1] = &decimal_places;
 
-    if(n_args > 1)
-        ev_data_set_integer(&decimal_places, MIN(15, args[1]->arg.integer));
-    else
-        ev_data_set_integer(&decimal_places, 2);
+    ss_data_set_integer(&decimal_places, (n_args > 1) ? MIN(15, ss_data_get_integer(args[1])) : 2);
 
-    ev_data_set_real(&number, in.r);
-    round_common(local_args, 2, p_ev_data_res, RPN_FNV_ROUND);
-    assert(RPN_DAT_REAL == p_ev_data_res->did_num);
-    round_result.r = p_ev_data_res->arg.fp;
+    ss_data_set_real(&number, in.r);
+    round_common(local_args, 2, p_ss_data_res, RPN_FNV_ROUND);
+    assert(ss_data_is_real(p_ss_data_res));
+    round_result.r = ss_data_get_real(p_ss_data_res);
 
-    ev_data_set_real(&number, in.i);
-    round_common(local_args, 2, p_ev_data_res, RPN_FNV_ROUND);
-    assert(RPN_DAT_REAL == p_ev_data_res->did_num);
-    round_result.i = p_ev_data_res->arg.fp;
+    ss_data_set_real(&number, in.i);
+    round_common(local_args, 2, p_ss_data_res, RPN_FNV_ROUND);
+    assert(ss_data_is_real(p_ss_data_res));
+    round_result.i = ss_data_get_real(p_ss_data_res);
     } /*block*/
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &round_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &round_result, imag_suffix_char);
 }
 
 #endif
@@ -964,17 +946,14 @@ PROC_EXEC_PROTO(c_c_ln)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(status_fail(status = complex_lnz(&in, &ln_result)))
-    {
-        ev_data_set_error(p_ev_data_res, status);
-        return;
-    }
+    status = complex_lnz(&in, &ln_result);
+    exec_func_status_return(p_ss_data_res, status);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &ln_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &ln_result, imag_suffix_char);
 }
 
 #if 0 /* just for diff minimization */
@@ -1019,17 +998,14 @@ PROC_EXEC_PROTO(c_c_log_10)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(status_fail(status = complex_log10_z(&in, &log10_result)))
-    {
-        ev_data_set_error(p_ev_data_res, status);
-        return;
-    }
+    status = complex_log10_z(&in, &log10_result);
+    exec_func_status_return(p_ss_data_res, status);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &log10_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &log10_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1068,17 +1044,14 @@ PROC_EXEC_PROTO(c_c_log_2)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(status_fail(status = complex_log2_z(&in, &log2_result)))
-    {
-        ev_data_set_error(p_ev_data_res, status);
-        return;
-    }
+    status = complex_log2_z(&in, &log2_result);
+    exec_func_status_return(p_ss_data_res, status);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &log2_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &log2_result, imag_suffix_char);
 }
 
 #endif
@@ -1116,17 +1089,14 @@ PROC_EXEC_PROTO(c_c_power)
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ev_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
         return;
 
-    if(status_fail(status = do_complex_power(&in1, &in2, &power_result)))
-    {
-        ev_data_set_error(p_ev_data_res, status);
-        return;
-    }
+    status = do_complex_power(&in1, &in2, &power_result);
+    exec_func_status_return(p_ss_data_res, status);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &power_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &power_result, imag_suffix_char);
 }
 
 #if 0 /* just for diff minimization */
@@ -1140,17 +1110,14 @@ PROC_EXEC_PROTO(c_c_sqrt)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(status_fail(status = do_complex_power(&in, &complex_one_half, &power_result)))
-    {
-        ev_data_set_error(p_ev_data_res, status);
-        return;
-    }
+    status = do_complex_power(&in, &complex_one_half, &power_result);
+    exec_func_status_return(p_ss_data_res, status);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &power_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &power_result, imag_suffix_char);
 }
 
 #endif
@@ -1171,7 +1138,7 @@ PROC_EXEC_PROTO(c_c_exp)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     /* make exp(a) */
@@ -1181,7 +1148,7 @@ PROC_EXEC_PROTO(c_c_exp)
     exp_result.i = ea * sin(in.i);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &exp_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &exp_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1212,13 +1179,13 @@ PROC_EXEC_PROTO(c_c_sin)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sin(&in, &sin_result);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &sin_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &sin_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1249,13 +1216,13 @@ PROC_EXEC_PROTO(c_c_cos)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_cos(&in, &cos_result);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &cos_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &cos_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1272,17 +1239,17 @@ PROC_EXEC_PROTO(c_c_tan)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sin(&in, &sin);
     do_complex_cos(&in, &cos);
 
-    if(!do_complex_divide(p_ev_data_res, &sin, &cos, &tan_result))
+    if(!do_complex_divide(p_ss_data_res, &sin, &cos, &tan_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &tan_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &tan_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1299,16 +1266,16 @@ PROC_EXEC_PROTO(c_c_cosec)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sin(&in, &temp);
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &temp, &cosec_result))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &cosec_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &cosec_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &cosec_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1325,16 +1292,16 @@ PROC_EXEC_PROTO(c_c_sec)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_cos(&in, &temp);
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &temp, &sec_result))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &sec_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &sec_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &sec_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1351,17 +1318,17 @@ PROC_EXEC_PROTO(c_c_cot)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sin(&in, &sin);
     do_complex_cos(&in, &cos);
 
-    if(!do_complex_divide(p_ev_data_res, &cos, &sin, &cot_result))
+    if(!do_complex_divide(p_ss_data_res, &cos, &sin, &cot_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &cot_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &cot_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1392,13 +1359,13 @@ PROC_EXEC_PROTO(c_c_sinh)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sinh(&in, &sinh_result);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &sinh_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &sinh_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1429,13 +1396,13 @@ PROC_EXEC_PROTO(c_c_cosh)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_cosh(&in, &cosh_result);
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &cosh_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &cosh_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1452,17 +1419,17 @@ PROC_EXEC_PROTO(c_c_tanh)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sinh(&in, &sin);
     do_complex_cosh(&in, &cos);
 
-    if(!do_complex_divide(p_ev_data_res, &sin, &cos, &tanh_result))
+    if(!do_complex_divide(p_ss_data_res, &sin, &cos, &tanh_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &tanh_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &tanh_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1479,16 +1446,16 @@ PROC_EXEC_PROTO(c_c_cosech)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sinh(&in, &temp);
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &temp, &cosech_result))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &cosech_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &cosech_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &cosech_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1505,16 +1472,16 @@ PROC_EXEC_PROTO(c_c_sech)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_cosh(&in, &temp);
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &temp, &sech_result))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &sech_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &sech_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &sech_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1531,17 +1498,17 @@ PROC_EXEC_PROTO(c_c_coth)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
     do_complex_sinh(&in, &sin);
     do_complex_cosh(&in, &cos);
 
-    if(!do_complex_divide(p_ev_data_res, &cos, &sin, &coth_result))
+    if(!do_complex_divide(p_ss_data_res, &cos, &sin, &coth_result))
         return;
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &coth_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &coth_result, imag_suffix_char);
 }
 
 /******************************************************************************
@@ -1575,7 +1542,7 @@ PROC_EXEC_PROTO(c_c_coth)
 
 static void
 do_arc_cosh_sinh_tanh(
-    P_EV_DATA p_ev_data_res,
+    P_SS_DATA p_ss_data_res,
     _InVal_     S32 type,
     _InoutRef_  P_COMPLEX z,
     _InVal_     U8 imag_suffix_char,
@@ -1611,7 +1578,7 @@ do_arc_cosh_sinh_tanh(
         in2.r = 1.0 - z->r;
         in2.i = - z->i;
 
-        if(!do_complex_divide(p_ev_data_res, &in1, &in2, &temp))
+        if(!do_complex_divide(p_ss_data_res, &in1, &in2, &temp))
             return;
     }
     else
@@ -1628,7 +1595,7 @@ do_arc_cosh_sinh_tanh(
         half.i = 0.0;
         if(status_fail(status = do_complex_power(&out, &half, &temp)))
         {
-            ev_data_set_error(p_ev_data_res, status);
+            ss_data_set_error(p_ss_data_res, status);
             return;
         }
 
@@ -1640,7 +1607,7 @@ do_arc_cosh_sinh_tanh(
     /* ln it to out */
     if(status_fail(status = complex_lnz(&temp, &out)))
     {
-        ev_data_set_error(p_ev_data_res, status);
+        ss_data_set_error(p_ss_data_res, status);
         return;
     }
 
@@ -1667,7 +1634,7 @@ do_arc_cosh_sinh_tanh(
     }
 
     /* output a complex number */
-    complex_result_complex(p_ev_data_res, &out, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &out, imag_suffix_char);
 }
 
 /*
@@ -1685,10 +1652,10 @@ PROC_EXEC_PROTO(c_c_atan)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &z, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, imag_suffix_char, &c_catan_z, &c_catan_res);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, &c_catan_z, &c_catan_res);
 }
 
 /*
@@ -1703,10 +1670,10 @@ PROC_EXEC_PROTO(c_c_atanh)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &z, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, imag_suffix_char, NULL, NULL);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, NULL, NULL);
 }
 
 /*
@@ -1723,10 +1690,10 @@ PROC_EXEC_PROTO(c_c_acos)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &z, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, imag_suffix_char, NULL, &c_cacos_res);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, &c_cacos_res);
 }
 
 /*
@@ -1741,10 +1708,10 @@ PROC_EXEC_PROTO(c_c_acosh)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &z, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, imag_suffix_char, NULL, NULL);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, NULL);
 }
 
 /*
@@ -1762,10 +1729,10 @@ PROC_EXEC_PROTO(c_c_asin)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &z, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, imag_suffix_char, &c_asin_z, &c_asin_res);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, &c_asin_z, &c_asin_res);
 }
 
 /*
@@ -1780,10 +1747,10 @@ PROC_EXEC_PROTO(c_c_asinh)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &z, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, imag_suffix_char, NULL, NULL);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, NULL, NULL);
 }
 
 /*
@@ -1801,13 +1768,13 @@ PROC_EXEC_PROTO(c_c_acot)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, imag_suffix_char, &c_cacot_z, &c_cacot_res);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, &c_cacot_z, &c_cacot_res);
 }
 
 /*
@@ -1822,13 +1789,13 @@ PROC_EXEC_PROTO(c_c_acoth)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, imag_suffix_char, NULL, NULL);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, NULL, NULL);
 }
 
 /*
@@ -1845,13 +1812,13 @@ PROC_EXEC_PROTO(c_c_asec)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, imag_suffix_char, NULL, &c_casec_res);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, &c_casec_res);
 }
 
 /*
@@ -1866,13 +1833,13 @@ PROC_EXEC_PROTO(c_c_asech)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, imag_suffix_char, NULL, NULL);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, NULL);
 }
 
 /*
@@ -1890,13 +1857,13 @@ PROC_EXEC_PROTO(c_c_acosec)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, imag_suffix_char, &c_acosec_z, &c_acosec_res);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, &c_acosec_z, &c_acosec_res);
 }
 
 /*
@@ -1911,13 +1878,13 @@ PROC_EXEC_PROTO(c_c_acosech)
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ev_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
         return;
 
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
+    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
         return;
 
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, imag_suffix_char, NULL, NULL);
+    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, NULL, NULL);
 }
 
 /* [that's enough complex algebra - Ed] */

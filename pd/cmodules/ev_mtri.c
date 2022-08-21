@@ -36,17 +36,17 @@
 
 PROC_EXEC_PROTO(c_acos)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, acos(number));
+    ss_data_set_real(p_ss_data_res, acos(number));
 
     /* input of magnitude greater than 1 invalid */
     if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
 }
 
 /******************************************************************************
@@ -57,17 +57,17 @@ PROC_EXEC_PROTO(c_acos)
 
 PROC_EXEC_PROTO(c_acosec)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_acosec(number));
+    ss_data_set_real(p_ss_data_res, mx_acosec(number));
 
     /* input of magnitude less than 1 invalid */
     if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -78,18 +78,18 @@ PROC_EXEC_PROTO(c_acosec)
 
 PROC_EXEC_PROTO(c_acosech)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_acosech(number));
+    ss_data_set_real(p_ss_data_res, mx_acosech(number));
 
     /* input of zero invalid */
     /* input of magnitude near zero causes overflow */
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -100,18 +100,18 @@ PROC_EXEC_PROTO(c_acosech)
 
 PROC_EXEC_PROTO(c_acosh)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_acosh(number));
+    ss_data_set_real(p_ss_data_res, acosh(number));
 
     /* input less than 1 invalid */
     /* large positive input causes overflow ***in current algorithm*** */
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -122,11 +122,11 @@ PROC_EXEC_PROTO(c_acosh)
 
 PROC_EXEC_PROTO(c_acot)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, mx_acot(number));
+    ss_data_set_real(p_ss_data_res, mx_acot(number));
 
     /* no error cases */
 }
@@ -139,18 +139,18 @@ PROC_EXEC_PROTO(c_acot)
 
 PROC_EXEC_PROTO(c_acoth)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_acoth(number));
+    ss_data_set_real(p_ss_data_res, mx_acoth(number));
 
     /* input of magnitude less than 1 invalid */
     /* input of magnitude near 1 causes overflow */
     if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -161,17 +161,17 @@ PROC_EXEC_PROTO(c_acoth)
 
 PROC_EXEC_PROTO(c_asec)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_asec(number));
+    ss_data_set_real(p_ss_data_res, mx_asec(number));
 
     /* input of values less than 1 invalid */
     if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -182,18 +182,18 @@ PROC_EXEC_PROTO(c_asec)
 
 PROC_EXEC_PROTO(c_asech)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_asech(number));
+    ss_data_set_real(p_ss_data_res, mx_asech(number));
 
     /* negative input or positive values greater than one invalid */
     /* input of zero or small positive value causes overflow */
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -204,17 +204,17 @@ PROC_EXEC_PROTO(c_asech)
 
 PROC_EXEC_PROTO(c_asin)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, asin(number));
+    ss_data_set_real(p_ss_data_res, asin(number));
 
     /* input of magnitude greater than 1 invalid */
     if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
 }
 
 /******************************************************************************
@@ -225,11 +225,11 @@ PROC_EXEC_PROTO(c_asin)
 
 PROC_EXEC_PROTO(c_asinh)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, mx_asinh(number));
+    ss_data_set_real(p_ss_data_res, asinh(number));
 
     /* no error case */
 }
@@ -242,11 +242,11 @@ PROC_EXEC_PROTO(c_asinh)
 
 PROC_EXEC_PROTO(c_atan)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, atan(number));
+    ss_data_set_real(p_ss_data_res, atan(number));
 
     /* no error cases */
 }
@@ -259,18 +259,18 @@ PROC_EXEC_PROTO(c_atan)
 
 PROC_EXEC_PROTO(c_atanh)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_atanh(number));
+    ss_data_set_real(p_ss_data_res, atanh(number));
 
     /* input of magnitude 1 or greater invalid */
     /* input of near magnitude 1 causes overflow */
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -281,18 +281,18 @@ PROC_EXEC_PROTO(c_atanh)
 
 PROC_EXEC_PROTO(c_atan_2)
 {
-    const F64 a = args[0]->arg.fp;
-    const F64 b = args[1]->arg.fp;
+    const F64 a = ss_data_get_real(args[0]);
+    const F64 b = ss_data_get_real(args[1]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, atan2(b, a));
+    ss_data_set_real(p_ss_data_res, atan2(b, a));
 
     /* both input args zero? */
     if(errno /* == EDOM */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -303,17 +303,17 @@ PROC_EXEC_PROTO(c_atan_2)
 
 PROC_EXEC_PROTO(c_cos)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, cos(number));
+    ss_data_set_real(p_ss_data_res, cos(number));
 
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_ACCURACY_LOST);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_ACCURACY_LOST);
 }
 
 /******************************************************************************
@@ -324,18 +324,18 @@ PROC_EXEC_PROTO(c_cos)
 
 PROC_EXEC_PROTO(c_cosec)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_cosec(number));
+    ss_data_set_real(p_ss_data_res, mx_cosec(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -346,17 +346,17 @@ PROC_EXEC_PROTO(c_cosec)
 
 PROC_EXEC_PROTO(c_cosech)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_cosech(number));
+    ss_data_set_real(p_ss_data_res, mx_cosech(number));
 
     /* zero | small magnitude input -> infinity | overflows */
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -367,17 +367,17 @@ PROC_EXEC_PROTO(c_cosech)
 
 PROC_EXEC_PROTO(c_cosh)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, cosh(number));
+    ss_data_set_real(p_ss_data_res, cosh(number));
 
     /* large magnitude input causes overflow */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -388,18 +388,18 @@ PROC_EXEC_PROTO(c_cosh)
 
 PROC_EXEC_PROTO(c_cot)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_cot(number));
+    ss_data_set_real(p_ss_data_res, mx_cot(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -410,17 +410,17 @@ PROC_EXEC_PROTO(c_cot)
 
 PROC_EXEC_PROTO(c_coth)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_coth(number));
+    ss_data_set_real(p_ss_data_res, mx_coth(number));
 
     /* zero | small magnitude input -> infinity | overflows */
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -431,11 +431,11 @@ PROC_EXEC_PROTO(c_coth)
 
 PROC_EXEC_PROTO(c_deg)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, number * _degrees_per_radian);
+    ss_data_set_real(p_ss_data_res, number * _degrees_per_radian);
 }
 
 /******************************************************************************
@@ -448,7 +448,7 @@ PROC_EXEC_PROTO(c_pi)
 {
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, _pi);
+    ss_data_set_real(p_ss_data_res, _pi);
 }
 
 /******************************************************************************
@@ -459,11 +459,11 @@ PROC_EXEC_PROTO(c_pi)
 
 PROC_EXEC_PROTO(c_rad)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, number * _radians_per_degree);
+    ss_data_set_real(p_ss_data_res, number * _radians_per_degree);
 }
 
 /******************************************************************************
@@ -474,18 +474,18 @@ PROC_EXEC_PROTO(c_rad)
 
 PROC_EXEC_PROTO(c_sec)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, mx_sec(number));
+    ss_data_set_real(p_ss_data_res, mx_sec(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -496,11 +496,11 @@ PROC_EXEC_PROTO(c_sec)
 
 PROC_EXEC_PROTO(c_sech)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, mx_sech(number));
+    ss_data_set_real(p_ss_data_res, mx_sech(number));
 
     /* no error cases */
 }
@@ -513,17 +513,17 @@ PROC_EXEC_PROTO(c_sech)
 
 PROC_EXEC_PROTO(c_sin)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, sin(number));
+    ss_data_set_real(p_ss_data_res, sin(number));
 
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_ACCURACY_LOST);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_ACCURACY_LOST);
 }
 
 /******************************************************************************
@@ -534,17 +534,17 @@ PROC_EXEC_PROTO(c_sin)
 
 PROC_EXEC_PROTO(c_sinh)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, sinh(number));
+    ss_data_set_real(p_ss_data_res, sinh(number));
 
     /* large magnitude input causes overflow */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, status_from_errno());
+        exec_func_status_return(p_ss_data_res, status_from_errno());
 }
 
 /******************************************************************************
@@ -555,17 +555,17 @@ PROC_EXEC_PROTO(c_sinh)
 
 PROC_EXEC_PROTO(c_tan)
 {
-    F64 number = args[0]->arg.fp;
+    F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, tan(number));
+    ss_data_set_real(p_ss_data_res, tan(number));
 
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_ACCURACY_LOST);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_ACCURACY_LOST);
 }
 
 /******************************************************************************
@@ -576,11 +576,11 @@ PROC_EXEC_PROTO(c_tan)
 
 PROC_EXEC_PROTO(c_tanh)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
-    ev_data_set_real(p_ev_data_res, tanh(number));
+    ss_data_set_real(p_ss_data_res, tanh(number));
 
     /* no error cases */
 }

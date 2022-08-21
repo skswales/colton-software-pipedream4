@@ -7,8 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.56
-TEXTUAL_VERSION_NUMBER=4.56.02
+TEXTUAL_VERSION_NUMBER=4.57
+#TEXTUAL_VERSION_NUMBER=4.57.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
@@ -89,9 +89,11 @@ PipeDream:   \
     @.!PipeDream.Resources.UK.tem_s \
     @.!PipeDream.Resources.UK.Sprites \
     @.!PipeDream.Resources.UK.Sprites11 \
-    @.!PipeDream.Resources.UK.Sprites22
+    @.!PipeDream.Resources.UK.Sprites22 \
+    @.!PipeDream.Resources.Neutral.BuildVer
 
 AOF1=\
+o.version \
 o.pdmain \
 o.blocks \
 o.browse \
@@ -137,7 +139,6 @@ o.viewio \
 o.dtpsave \
 o.userdict \
 o.userIO \
-o.version \
 o.windvars
 #
 AOFGR=\
@@ -184,6 +185,7 @@ o.modules.muldivas
 AOFMEV=\
 o.modules.ss_const \
 o.modules.ss_date \
+o.modules.ev_arith \
 o.modules.ev_comp \
 o.modules.ev_dcom \
 o.modules.ev_docs \
@@ -381,6 +383,8 @@ o.Modules.collect:    $(CMODULES).c.collect
         $(CC) -o $@ $(CCflags) $(CMODULES).c.collect
 o.Modules.debug:      $(CMODULES).c.debug
         $(CC) -o $@ $(CCflags) $(CMODULES).c.debug
+o.Modules.ev_arith:    $(CMODULES).c.ev_arith
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_arith
 o.Modules.ev_comp:    $(CMODULES).c.ev_comp
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_comp
 o.Modules.ev_dcom:    $(CMODULES).c.ev_dcom
@@ -951,5 +955,8 @@ utils.UK.Sprites24:   \
         SSave   $@
        -SNew
        -ChangeDynamicArea -SpriteSize 32k
+
+@.!PipeDream.Resources.Neutral.BuildVer: o.version
+        decaof -a o.version > $@
 
 # end of Makefile

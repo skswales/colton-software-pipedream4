@@ -5,7 +5,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Copyright (C) 2013-2018 Stuart Swales
+Copyright (C) 2013-2019 Stuart Swales
 
 Note that any files that appear in this directory or any subdirectory
 thereof as a result of checking out, pruning and patching a copy of
@@ -14,10 +14,10 @@ RISC_OSLib are NOT covered by the above licence.
 Many WimpLib source files are *pruned* and *patched* copies of files from
 RISC_OSLib from RISC OS Open.
 
-To create, first acquire a RISC OS CVS client.
+To create, first acquire a RISC OS git client (install Simplegit-Libgit2 with PackMan).
 
-Run rlib_cvs_co to checkout the apache/RiscOS/Sources/Lib/RISC_OSLib/rlib
-module.
+Run rlib_git_co to checkout the RiscOS/Sources/Lib/RISC_OSLib
+component from ROOL.
 
 Run rlib_patch.apply to copy just the files that PipeDream needs to build
 WimpLib and apply the required set of patches.
@@ -25,5 +25,5 @@ WimpLib and apply the required set of patches.
 NB VerIntern is just placed at the top level, one up from normal, to
 simplify PipeDream's include path.
 
-Once you've done that you may wish to move the 'apache' directory to some
+Once you've done that you may wish to move the 'gitlab' directory to some
 reference location to save space & speed find results

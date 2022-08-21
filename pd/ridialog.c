@@ -3762,7 +3762,7 @@ static STATUS
 ss_numform(
     _InoutRef_  P_QUICK_UBLOCK p_quick_ublock,
     _In_z_      PC_USTR ustr,
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
     NUMFORM_PARMS numform_parms /*= NUMFORM_PARMS_INIT*/;
 
@@ -3772,10 +3772,10 @@ ss_numform(
 
     numform_parms.p_numform_context = get_p_numform_context();
 
-    return(numform(p_quick_ublock, P_QUICK_UBLOCK_NONE, p_ev_data, &numform_parms));
+    return(numform(p_quick_ublock, P_QUICK_UBLOCK_NONE, p_ss_data, &numform_parms));
 }
 
-/* output ev_data using the format we just selected */
+/* output ss_data using the format we just selected */
 
 static void
 D_N_P_format_common(
@@ -3783,7 +3783,7 @@ D_N_P_format_common(
     _InVal_     U32 sample_n,
     _In_reads_(format_n) PC_UCHARS format,
     _InVal_     U32 format_n,
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
     STATUS status;
     QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 64);
@@ -3794,7 +3794,7 @@ D_N_P_format_common(
     /* like c_text */
     if(status_ok(status = quick_ublock_uchars_add(&quick_ublock_format, format, format_n)))
         if(status_ok(status = quick_ublock_nullch_add(&quick_ublock_format)))
-            status = ss_numform(&quick_ublock_result, quick_ublock_ustr(&quick_ublock_format), p_ev_data);
+            status = ss_numform(&quick_ublock_result, quick_ublock_ustr(&quick_ublock_format), p_ss_data);
 
     if(status_fail(status))
         xstrkpy(sample, sample_n, reperr_getstr(status));
@@ -3806,14 +3806,14 @@ static void
 display_D_N_P_sample(
     _InVal_     dbox_field f_format,
     _InVal_     dbox_field f_sample,
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
     char format[256];
     char sample[256];
 
     dbox_getfield(dialog__dbox, f_format, format, sizeof32(format));
 
-    D_N_P_format_common(sample, sizeof32(sample), format, strlen32(format), p_ev_data);
+    D_N_P_format_common(sample, sizeof32(sample), format, strlen32(format), p_ss_data);
 
     dbox_setfield(dialog__dbox, f_sample, sample);
 }
@@ -3826,7 +3826,7 @@ dproc_insert_page_number(
     const P_P_LIST_BLOCK list = &page_number_formats_list;
     LIST_ITEMNO key;
     P_LIST entry;
-    EV_DATA ev_data;
+    SS_DATA ss_data;
 
     assert_dialog(1, D_INSERT_PAGE_NUMBER);
 
@@ -3839,8 +3839,8 @@ dproc_insert_page_number(
 
     dialog__setfield_str(insert_page_number_Format, entry ? entry->value : NULL);
 
-    ev_data_set_integer(&ev_data, curpnm);
-    display_D_N_P_sample(insert_page_number_Format, insert_page_number_Sample, &ev_data);
+    ss_data_set_integer(&ss_data, curpnm);
+    display_D_N_P_sample(insert_page_number_Format, insert_page_number_Sample, &ss_data);
 
     while(((f = dialog__fillin(TRUE)) != dbox_CLOSE)  &&  (f != dbox_OK))
     {
@@ -3848,7 +3848,7 @@ dproc_insert_page_number(
         {
             dialog__bumpstring(insert_page_number_Format, f, list, &key);
 
-            display_D_N_P_sample(insert_page_number_Format, insert_page_number_Sample, &ev_data);
+            display_D_N_P_sample(insert_page_number_Format, insert_page_number_Sample, &ss_data);
         }
         else
             trace_1(TRACE_APP_DIALOG, "unprocessed insert_page_number action %d", f);
@@ -3877,7 +3877,7 @@ dproc_insert_date(
     const P_P_LIST_BLOCK list = &date_formats_list;
     LIST_ITEMNO key;
     P_LIST entry;
-    EV_DATA ev_data;
+    SS_DATA ss_data;
 
     assert_dialog(1, D_INSERT_DATE);
 
@@ -3891,9 +3891,9 @@ dproc_insert_date(
     dialog__setfield_str(insert_date_Format, entry ? entry->value : NULL);
 
     /* like c_now */
-    ev_data.did_num = RPN_DAT_DATE;
-    ss_local_time_as_ev_date(&ev_data.arg.ev_date);
-    display_D_N_P_sample(insert_date_Format, insert_date_Sample, &ev_data);
+    ss_data.data_id = DATA_ID_DATE;
+    ss_date_set_from_local_time(&ss_data.arg.ss_date);
+    display_D_N_P_sample(insert_date_Format, insert_date_Sample, &ss_data);
 
     while(((f = dialog__fillin(TRUE)) != dbox_CLOSE)  &&  (f != dbox_OK))
     {
@@ -3901,7 +3901,7 @@ dproc_insert_date(
         {
             dialog__bumpstring(insert_date_Format, f, list, &key);
 
-            display_D_N_P_sample(insert_date_Format, insert_date_Sample, &ev_data);
+            display_D_N_P_sample(insert_date_Format, insert_date_Sample, &ss_data);
         }
         else
             trace_1(TRACE_APP_DIALOG, "unprocessed insert_date action %d", f);
@@ -3930,7 +3930,7 @@ dproc_insert_time(
     const P_P_LIST_BLOCK list = &time_formats_list;
     LIST_ITEMNO key;
     P_LIST entry;
-    EV_DATA ev_data;
+    SS_DATA ss_data;
 
     assert_dialog(1, D_INSERT_TIME);
 
@@ -3944,9 +3944,9 @@ dproc_insert_time(
     dialog__setfield_str(insert_time_Format, entry ? entry->value : NULL);
 
     /* like c_now */
-    ev_data.did_num = RPN_DAT_DATE;
-    ss_local_time_as_ev_date(&ev_data.arg.ev_date);
-    display_D_N_P_sample(insert_time_Format, insert_time_Sample, &ev_data);
+    ss_data.data_id = DATA_ID_DATE;
+    ss_date_set_from_local_time(&ss_data.arg.ss_date);
+    display_D_N_P_sample(insert_time_Format, insert_time_Sample, &ss_data);
 
     while(((f = dialog__fillin(TRUE)) != dbox_CLOSE)  &&  (f != dbox_OK))
     {
@@ -3954,7 +3954,7 @@ dproc_insert_time(
         {
             dialog__bumpstring(insert_time_Format, f, list, &key);
 
-            display_D_N_P_sample(insert_time_Format, insert_time_Sample, &ev_data);
+            display_D_N_P_sample(insert_time_Format, insert_time_Sample, &ss_data);
         }
         else
             trace_1(TRACE_APP_DIALOG, "unprocessed insert_time action %d", f);

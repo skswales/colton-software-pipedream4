@@ -1861,6 +1861,9 @@ gr_chartedit_riscos_Message_DataSave(
         messagef(string_lookup(FILE_ERR_ISADIR), user_message->data.data_save.leaf_name);
         break;
 
+    case FILETYPE_PD_CHART:
+        break;
+
     case FILETYPE_PIPEDREAM:
         /* can't detect at this point whether 'tis bog standard or a chart */
         break;
@@ -1992,6 +1995,7 @@ gr_chartedit_riscos_Message_DataLoad(
         messagef(string_lookup(FILE_ERR_ISADIR), filename);
         break;
 
+    case FILETYPE_PD_CHART:
     case FILETYPE_PIPEDREAM:
         break;
 

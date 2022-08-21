@@ -13,7 +13,7 @@
 
 #if RISCOS
 
-#if CROSS_COMPILE && defined(HOST_WINDOWS) /* TARGET_RISCOS */
+#if CROSS_COMPILE /* TARGET_RISCOS */
 
 /* incompatible pragmas */
 

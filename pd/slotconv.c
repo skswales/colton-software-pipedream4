@@ -32,6 +32,8 @@ need to know about ev_dec_range()
 
 #include "cmodules/ev_evali.h"
 
+#include <time.h>
+
 /*
 entry in the font list
 */
@@ -1008,7 +1010,7 @@ static STATUS
 ss_numform(
     _InoutRef_  P_QUICK_UBLOCK p_quick_ublock,
     _In_z_      PC_USTR ustr,
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
     NUMFORM_PARMS numform_parms /*= NUMFORM_PARMS_INIT*/;
 
@@ -1018,7 +1020,7 @@ ss_numform(
 
     numform_parms.p_numform_context = get_p_numform_context();
 
-    return(numform(p_quick_ublock, P_QUICK_UBLOCK_NONE, p_ev_data, &numform_parms));
+    return(numform(p_quick_ublock, P_QUICK_UBLOCK_NONE, p_ss_data, &numform_parms));
 }
 
 /* skip the format to the trailing text-at chars (date/time format ought not to include any!) */
@@ -1040,14 +1042,14 @@ bitstr_text_at_D_N_P_format_count(
     return(n_chars);
 }
 
-/* output ev_data using the format we just detected */
+/* output ss_data using the format we just detected */
 
 static void
 bitstr_text_at_D_N_P_format_common(
     /*out*/     P_U8Z to,
     _In_reads_(n_chars) PC_UCHARS format,
     _InVal_     U32 n_chars,
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
     STATUS status;
     QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 64);
@@ -1058,7 +1060,7 @@ bitstr_text_at_D_N_P_format_common(
     /* like c_text */
     if(status_ok(status = quick_ublock_uchars_add(&quick_ublock_format, format, n_chars)))
         if(status_ok(status = quick_ublock_nullch_add(&quick_ublock_format)))
-            status = ss_numform(&quick_ublock_result, quick_ublock_ustr(&quick_ublock_format), p_ev_data);
+            status = ss_numform(&quick_ublock_result, quick_ublock_ustr(&quick_ublock_format), p_ss_data);
 
     if(status_fail(status))
         strcpy(to, reperr_getstr(status));
@@ -1070,7 +1072,7 @@ static void
 bitstr_text_at_D_classic(
     /*out*/ P_U8 to)
 {
-    DATE now;
+    time_t now;
     struct tm * temp_time;
     int month, mday, year;
 
@@ -1117,7 +1119,7 @@ bitstr_text_at_D(
 
     if((':' == from[1]) && (0 != (n_chars = bitstr_text_at_D_N_P_format_count(from + 2, text_at_char))))
     {
-        EV_DATA ev_data;
+        SS_DATA ss_data;
 
         if(!expand_ats_1)
             return(TEXT_AT_FIELD_UNEXPANDED);
@@ -1126,10 +1128,10 @@ bitstr_text_at_D(
         ++from; /* skip the colon to the format */
 
         /* like c_now */
-        ev_data.did_num = RPN_DAT_DATE;
-        ss_local_time_as_ev_date(&ev_data.arg.ev_date);
+        ss_data.data_id = DATA_ID_DATE;
+        ss_date_set_from_local_time(&ss_data.arg.ss_date);
 
-        bitstr_text_at_D_N_P_format_common(to, from, n_chars, &ev_data);
+        bitstr_text_at_D_N_P_format_common(to, from, n_chars, &ss_data);
 
         from += n_chars; /* pointing at the trailing text-at chars */
     }
@@ -1372,7 +1374,7 @@ bitstr_text_at_N(
 
     if((':' == from[1]) && (0 != (n_chars = bitstr_text_at_D_N_P_format_count(from + 2, text_at_char))))
     {
-        EV_DATA ev_data;
+        SS_DATA ss_data;
 
         if(!expand_ats_1)
             return(TEXT_AT_FIELD_UNEXPANDED);
@@ -1381,10 +1383,10 @@ bitstr_text_at_N(
         ++from; /* skip the colon to the format */
 
         /* like c_now */
-        ev_data.did_num = RPN_DAT_DATE;
-        ss_local_time_as_ev_date(&ev_data.arg.ev_date);
+        ss_data.data_id = DATA_ID_DATE;
+        ss_date_set_from_local_time(&ss_data.arg.ss_date);
 
-        bitstr_text_at_D_N_P_format_common(to, from, n_chars, &ev_data);
+        bitstr_text_at_D_N_P_format_common(to, from, n_chars, &ss_data);
 
         from += n_chars; /* pointing at the trailing text-at chars */
     }
@@ -1430,7 +1432,7 @@ bitstr_text_at_P(
 
     if((':' == from[1]) && (0 != (n_chars = bitstr_text_at_D_N_P_format_count(from + 2, text_at_char))))
     {
-        EV_DATA ev_data;
+        SS_DATA ss_data;
 
         if(!expand_ats_2)
             return(TEXT_AT_FIELD_UNEXPANDED);
@@ -1438,9 +1440,9 @@ bitstr_text_at_P(
         ++from; /* skip the letter */
         ++from; /* skip the colon to the format */
 
-        ev_data_set_integer(&ev_data, curpnm);
+        ss_data_set_integer(&ss_data, curpnm);
 
-        bitstr_text_at_D_N_P_format_common(to, from, n_chars, &ev_data);
+        bitstr_text_at_D_N_P_format_common(to, from, n_chars, &ss_data);
 
         from += n_chars; /* pointing at the trailing text-at chars */
     }
@@ -2591,21 +2593,21 @@ result_sign(
     S32 res = 0;
     P_EV_RESULT p_ev_result;
 
-    if(!ev_doc_is_custom_sheet(current_docno()) &&
-       result_extract(sl, &p_ev_result) == SL_NUMBER)
+    if( !ev_doc_is_custom_sheet(current_docno()) &&
+        (result_extract(sl, &p_ev_result) == SL_NUMBER) )
     {
-        switch(p_ev_result->did_num)
+        switch(p_ev_result->data_id)
         {
-        case RPN_DAT_REAL:
+        case DATA_ID_REAL:
             if(p_ev_result->arg.fp < 0.0)
                 res = -1;
             else if(p_ev_result->arg.fp > 0.0)
                 res = 1;
             break;
 
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
+        case DATA_ID_LOGICAL:
+        case DATA_ID_WORD16:
+        case DATA_ID_WORD32:
             if(p_ev_result->arg.integer < 0)
                 res = -1;
             else if(p_ev_result->arg.integer > 0)
@@ -2637,15 +2639,15 @@ result_to_string(
 {
     F64 number;
 
-    switch(p_ev_result->did_num)
+    switch(p_ev_result->data_id)
     {
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
         number = (F64) p_ev_result->arg.integer;
         goto num_print;
 
-    case RPN_DAT_REAL:
+    case DATA_ID_REAL:
         number = p_ev_result->arg.fp;
 
     num_print:
@@ -2685,19 +2687,19 @@ result_to_string(
         /* NB bitstr() will return a fonty result if riscos_fonts */
         break;
 
-    case RPN_DAT_BLANK:
+    case DATA_ID_BLANK:
         array[0] = CH_NULL;
         break;
 
     case RPN_RES_ARRAY:
         {
         EV_RESULT temp_ev_result;
-        EV_DATA temp_data;
+        SS_DATA temp_data;
 
-        /* go via EV_DATA */
+        /* go via SS_DATA */
         ev_result_to_data_convert(&temp_data, p_ev_result);
 
-        ev_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
+        ss_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
 
         result_to_string(
             &temp_ev_result, docno, array_start, array, format, fwidth, justify,
@@ -2708,20 +2710,20 @@ result_to_string(
         break;
         }
 
-    case RPN_DAT_DATE:
+    case DATA_ID_DATE:
         {
         S32 len;
-        EV_DATE temp;
+        SS_DATE temp;
 
         len = 0;
-        temp = p_ev_result->arg.ev_date;
+        temp = p_ev_result->arg.ss_date;
 
         if(temp.date)
         {
             S32 year, month, day;
             BOOL valid;
 
-            valid = (ss_dateval_to_ymd(&temp.date, &year, &month, &day) >= 0);
+            valid = (ss_dateval_to_ymd(temp.date, &year, &month, &day) >= 0);
 
             if(d_options_DF == 'T')
             {
@@ -2761,7 +2763,7 @@ result_to_string(
             if(temp.date)
                 array[len++] = ' ';
 
-            status_consume(ss_timeval_to_hms(&temp.time, &hours, &minutes, &seconds));
+            status_consume(ss_timeval_to_hms(temp.time, &hours, &minutes, &seconds));
 
             /*len +=*/ consume_int(sprintf(array + len, "%.2d:%.2d:%.2d", hours, minutes, seconds));
         }
@@ -2773,17 +2775,17 @@ result_to_string(
 
     default:
         assert(0);
-    case RPN_DAT_ERROR:
+    case DATA_ID_ERROR:
         {
         S32 len = 0;
 
-        if(p_ev_result->arg.ev_error.type == ERROR_PROPAGATED)
+        if(p_ev_result->arg.ss_error.type == ERROR_PROPAGATED)
         {
             U8 buffer_slr[BUF_EV_MAX_SLR_LEN];
             EV_SLR ev_slr; /* unpack */
-            ev_slr.col = p_ev_result->arg.ev_error.col;
-            ev_slr.row = p_ev_result->arg.ev_error.row;
-            ev_slr.docno = p_ev_result->arg.ev_error.docno;
+            ev_slr.col = p_ev_result->arg.ss_error.col;
+            ev_slr.row = p_ev_result->arg.ss_error.row;
+            ev_slr.docno = p_ev_result->arg.ss_error.docno;
             ev_slr.flags = 0;
             (void) ev_dec_slr(buffer_slr, docno, &ev_slr, TRUE);
             len += sprintf(array + len,
@@ -2791,14 +2793,14 @@ result_to_string(
                            buffer_slr);
         }
         else
-        if(p_ev_result->arg.ev_error.type == ERROR_CUSTOM)
+        if(p_ev_result->arg.ss_error.type == ERROR_CUSTOM)
         {
             len += sprintf(array + len,
                            CustFuncErrStr,
-                           p_ev_result->arg.ev_error.row + 1);
+                           p_ev_result->arg.ss_error.row + 1);
         }
 
-        strcpy(array + len, reperr_getstr(p_ev_result->arg.ev_error.status));
+        strcpy(array + len, reperr_getstr(p_ev_result->arg.ss_error.status));
         *justify = J_LEFT;
         break;
         }

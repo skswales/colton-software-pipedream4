@@ -130,16 +130,16 @@ extern void
 gr_numtostr(
     _Out_writes_z_(elemof_buffer) P_U8Z array,
     _InVal_     U32 elemof_buffer,
-    _InRef_     PC_F64 pValue,
+    _InVal_     F64 value_in,
     S32 eformat,
     S32 decimals,
     char decimal_point_ch /* CH_NULL -> default (.)    */,
     char thousands_sep_ch /* CH_NULL -> default (none) */)
 {
-    F64 value = *pValue;
+    F64 value = value_in;
     P_U8 nextprint, numptr;
     P_U8 eptr, tptr, dotptr;
-    S32 negative;
+    S32 negative = FALSE;
     S32 inc;
 
     if(value < 0.0)
@@ -147,8 +147,6 @@ gr_numtostr(
         value = fabs(value);
         negative = TRUE;
     }
-    else
-        negative = FALSE;
 
     if(!decimal_point_ch)
         decimal_point_ch = '.';

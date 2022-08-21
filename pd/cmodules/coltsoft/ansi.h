@@ -16,10 +16,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#if CROSS_COMPILE && defined(HOST_WINDOWS)
-#define __func__ __FUNCTION__ /* MSVC is not yet C99 compliant */
-#endif
-
 #ifndef __arm
 #ifndef __stdint_ll
 #define __stdint_ll /* DO need 64-bit integer base types even though cross ain't C99 */
@@ -27,7 +23,9 @@
 #endif
 #endif
 
-#include <inttypes.h> /* C99 header */
+/* C99 headers */
+#include <inttypes.h>
+#include <stdbool.h>
 
 #ifdef __stdint_ll_hack_defined
 #undef __stdint_ll_hack_defined
@@ -45,8 +43,6 @@
 
 #include <float.h>
 
-#include <time.h>
-#include <locale.h>
 #include <errno.h>
 
 #endif /* __ansi_h */

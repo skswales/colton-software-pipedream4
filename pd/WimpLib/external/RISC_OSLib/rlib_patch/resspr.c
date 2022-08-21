@@ -1,6 +1,6 @@
---- _src	2009-05-31 18:58:59.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.740000000 +0100
-@@ -36,6 +36,8 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.040000000 +0100
+@@ -33,6 +33,8 @@
   */
  
  
@@ -9,7 +9,7 @@
  #include <stdlib.h>
  #include <stdio.h>
  #include <string.h>
-@@ -64,7 +66,11 @@
+@@ -61,7 +63,11 @@
  
  static int sprite_load(char *name)
  {
@@ -19,5 +19,5 @@
 +    char file_name[256]; /* long enough for <ProgramName$Dir>.SpritesXX */
 +#endif /* SKS_ACW */
      res_findname(name, file_name);
-     
+ 
  #ifdef SPRITES11

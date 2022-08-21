@@ -143,6 +143,11 @@ REM IF boot% THEN
   PROCs(f%,"Alias$@RunType_D21",   "Run <"+product$+"$Dir>.!Run -Command %%*0",boot%)
   :
   PROCo(f%,"|")
+  PROCs(f%,"File$Type_A77","PDChart",boot%)
+  PROCs(f%,"Alias$@RunType_A77",  "Run <"+product$+"$Dir>.!Run %%*0",boot%)
+  PROCs(f%,"Alias$@PrintType_A77","Run <"+product$+"$Dir>.!Run -Print %%*0",boot%)
+  :
+  PROCo(f%,"|")
   REM Never override any other definition of file types we do not actually own
   PROCs(f%,"File$Type_DB0","LotusWK1",TRUE)
   :
@@ -153,6 +158,7 @@ REM IF boot% THEN
   PROCo(f%,"|")
   PROCo(f%,"DOSMap BMP &69C")
   PROCo(f%,"DOSMap DIB &69C")
+  PROCo(f%,"DOSMap A77 &A77")
   PROCo(f%,"DOSMap AFF &AFF")
   PROCo(f%,"DOSMap XLS &BA6")
   REM PROCo(f%,"DOSMap FWK &BDF")
@@ -170,12 +176,12 @@ REM IF boot% THEN
 REM Go for the minimal version we can cope with
 REM NB FPEmulator 4.09 in RISC OS 4.02 ROM (also in 4.39 ROM) has poor precision
 REM FPEmulator 4.10 in RISC OS 4.39 ROM is better
-REM FPEmulator 4.35 is the latest ROOL seen to date (Apr 2016)
+REM FPEmulator 4.36 is the latest ROOL seen to date (Apr 2018)
 FPEVersion$="FPEmulator 4.10"
 :
 REM Go for the minimal version we can cope with using the Stubs we built with
 REM and the required functionality (we need working C99 functions)
-REM SharedCLibrary 5.92 is the latest ROOL seen to date (May 2016)
+REM SharedCLibrary 5.95 is the latest ROOL seen to date (Apr 2018)
 CLibVersion$="SharedCLibrary 5.45"
 :
 IF NOT boot% THEN
@@ -235,7 +241,7 @@ IF NOT boot% THEN
   PROCo(f%,FNif_z_then(product$+"$UserPath")+"Else Set "+product$+"$Path <"+product$+"$UserPath>,<"+product$+"$Path>")
   :
   PROCo(f%,"|")
-  PROCo(f%,"Set "+product$+"$Web "+"http://croftnuisk.co.uk/coltsoft/pipedream/")
+  PROCo(f%,"Set "+product$+"$Web "+"https://croftnuisk.co.uk/coltsoft/pipedream/")
   :
   PROCo(f%,"|")
   PROCo(f%,"WimpSlot -min 32K -max 32K")

@@ -54,7 +54,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(ProgramFiles)\Microsoft Visual Studio 14.0\VC\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\WimpLib;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(ProgramFiles)\Microsoft Visual Studio 14.0\VC\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CROSS_COMPILE;HOST_WINDOWS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <MinimalRebuild>false</MinimalRebuild>
@@ -86,7 +86,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(ProgramFiles)\Microsoft Visual Studio 14.0\VC\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\WimpLib;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(ProgramFiles)\Microsoft Visual Studio 14.0\VC\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CROSS_COMPILE;HOST_WINDOWS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <ExceptionHandling />
@@ -121,6 +121,7 @@
     <ClCompile Include="..\..\..\..\cmodules\bezier.c" />
     <ClCompile Include="..\..\..\..\cmodules\collect.c" />
     <ClCompile Include="..\..\..\..\cmodules\debug.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_arith.c" />
     <ClCompile Include="..\..\..\..\cmodules\ev_comp.c" />
     <ClCompile Include="..\..\..\..\cmodules\ev_dcom.c" />
     <ClCompile Include="..\..\..\..\cmodules\ev_docs.c" />
@@ -628,6 +629,7 @@
     <None Include="..\..\..\..\..\extrautils\Relnotes,faf" />
     <None Include="..\..\..\..\cmodules\GB\msg\gr_chart" />
     <None Include="..\..\..\..\cmodules\GB\msg\mlec" />
+    <None Include="..\..\..\..\RelHistPrev.html" />
     <None Include="..\..\..\..\WimpLib\cs-pollfpm.s" />
     <None Include="..\..\..\..\WimpLib\cs-riscasm.s" />
     <None Include="..\..\..\..\WimpLib\GB\msg_risc" />
@@ -639,6 +641,7 @@
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\complex.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\custom.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\database.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\datetime.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\index.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\lookup.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\math.html,faf" />

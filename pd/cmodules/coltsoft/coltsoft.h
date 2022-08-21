@@ -175,7 +175,7 @@ void
 */
 
 typedef void * P_ANY, ** P_P_ANY; typedef const void * PC_ANY;
-#if defined(__cplusplus) || defined(__CC_NORCROFT) || defined(__GNUC__)
+#if defined(__cplusplus) || defined(__CC_NORCROFT) || defined(__GNUC__) || defined(__clang__)
 #define P_P_ANY_PEDANTIC(pp) ((P_P_ANY) (pp)) /* needs cast */
 #else
 #define P_P_ANY_PEDANTIC(pp) (pp)
@@ -386,8 +386,8 @@ typedef U32 SBCHAR_CODEPAGE; /* for translation between code pages */
 
 /*
 RISC OS non-UNICODE build
-TCHAR is Latin-N
-UCHARZ is Latin-N
+TCHAR/TSTR is Latin-N
+UCHARS/USTR is the same
 */
 
 /*
@@ -578,23 +578,23 @@ buffer sizes for printf conversions
 
 /* 32-bit difference between two pointers in bytes */
 
-#define PtrDiffBytesU32(ptr, base) /*num*/ \
+#define PtrDiffBytesU32(ptr, base) /*U32 num*/ \
     ((U32) (((uintptr_t)(ptr)) - ((uintptr_t)(base))))
 
-#define PtrDiffBytesS32(ptr, base) /*num*/ \
+#define PtrDiffBytesS32(ptr, base) /*S32 num*/ \
     ((S32) (((uintptr_t)(ptr)) - ((uintptr_t)(base))))
 
 /* 32-bit difference between two pointers in elements */
 
-#define PtrDiffElemU32(ptr, base) /*num*/ \
+#define PtrDiffElemU32(ptr, base) /*U32 num*/ \
     ((U32) ((ptr) - (base)))
 
-#define PtrDiffElemS32(ptr, base) /*num*/ \
+#define PtrDiffElemS32(ptr, base) /*S32 num*/ \
     ((S32) ((ptr) - (base)))
 
 /* size_t difference between two pointers in elements */
 
-#define PtrDiffElem(ptr, base) /*num*/ \
+#define PtrDiffElem(ptr, base) /*size_t num*/ \
     ((size_t) ((ptr) - (base)))
 
 /*
@@ -1263,11 +1263,11 @@ idiv_floor_fn(
 #define UNREFERENCED_PARAMETER_OutRef_(p)               (void)(p)
 #define UNREFERENCED_PARAMETER_InVal_(p)                (void)(p)
 
-#define IGNOREVAR(v)                        (void)(v)
+#define UNREFERENCED_LOCAL_VARIABLE(v)                  (void)(v)
 
 #define consume(__base_type, expr) \
     do { \
-    __base_type __v = (expr); IGNOREVAR(__v); \
+    __base_type __v = (expr); UNREFERENCED_LOCAL_VARIABLE(__v); \
     } while_constant(0)
 
 #define consume_ptr(expr) consume(PC_ANY, expr)
@@ -1437,6 +1437,10 @@ extern void
 profile_ensure_frame(void); /* ensure procedure gets a stack frame we can trace out of at the cost of two branches */
 #else
 #define profile_ensure_frame() /* nothing */
+#endif
+
+#if __STDC_VERSION__ < 199901L
+#include "cmodules/mathxtra.h" /* for isless() etc when not C99 */
 #endif
 
 #endif /* __coltsoft_h */

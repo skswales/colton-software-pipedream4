@@ -764,7 +764,8 @@ DIALOG d_progvars[] =
 {
     DN(  F_SPECIAL,   'A','N',  NO_OPT, ANSTR,                0 ), /* auto/manual recalc */
     DN(  F_NUMBER,    'I','O',  NO_OPT, ONESTR,               0 ),
-    DN(  F_SPECIAL,   'A','C',  NO_OPT, AMSTR,                0 )  /* auto/manual recalc charts */
+    DN(  F_SPECIAL,   'A','C',  NO_OPT, AMSTR,                0 ), /* auto/manual recalc charts */
+    DN(  F_NUMBER,    'C','D',  NO_OPT, ONESTR,               0 )  /* new/old chart format (1/0) */
 };
 
 /* This is a dummy dialog box, used only for loading and saving protect info.

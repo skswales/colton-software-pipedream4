@@ -840,6 +840,13 @@ draw_do_render(
     F64 yfactor,
     P_GDI_BOX graphics_window);
 
+/*
+required functions
+*/
+
+extern FILETYPE_RISC_OS
+gr_chart_save_as_filetype(void);
+
 #endif /* __gr_chart_h */
 
 /* end of gr_chart.h */

@@ -343,6 +343,9 @@ mx_sech(
 *
 ******************************************************************************/
 
+#if __STDC_VERSION__ >= 199901L
+/* Use C99 acosh() */
+#else
 /******************************************************************************
 *
 * computes the principal value of the inverse hyperbolic cosine of x.
@@ -389,6 +392,8 @@ mx_acosh(
 
     return(log(x + sqrt((x * x) - F64_ONE)));
 }
+
+#endif /* __STDC_VERSION__ */
 
 /******************************************************************************
 *
@@ -537,6 +542,9 @@ mx_asech(
     return(y);
 }
 
+#if __STDC_VERSION__ >= 199901L
+/* Use C99 asinh() */
+#else
 /******************************************************************************
 *
 * computes the value of the inverse hyperbolic sine of x.
@@ -577,6 +585,11 @@ mx_asinh(
     return(log(x + sqrt((x * x) + F64_ONE)));
 }
 
+#endif /* __STDC_VERSION__ */
+
+#if __STDC_VERSION__ >= 199901L
+/* Use C99 atanh() */
+#else
 /******************************************************************************
 *
 * computes the inverse hyperbolic tangent of x.
@@ -624,6 +637,12 @@ mx_atanh(
     return((negative) ? -y : +y);
 }
 
+#endif /* __STDC_VERSION__ */
+
+
+#if __STDC_VERSION__ >= 199901L
+/* Use C99 hypot() */
+#else
 /******************************************************************************
 *
 * carefully evaluate the hypotenuse of a triangle
@@ -650,5 +669,7 @@ mx_fhypot(
     else
         return(abs_y * sqrt(F64_ONE + mx_fsquare(abs_x / abs_y)));
 }
+
+#endif /* __STDC_VERSION__ */
 
 /* end of mathxtra.c */

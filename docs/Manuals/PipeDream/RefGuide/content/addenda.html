@@ -37,14 +37,59 @@
     </p>
 
 
+    <h2>Spreadsheet functions added since documentation printed</h2>
+
+    <h3>Mathematical functions</h3>
+
+    <h4><a href="mathfns.html#BASE">BASE</a></h4>
+    <p>Converts a number to a specified base.</p>
+    <p>Added in 4.57.</p>
+
+    <h4><a href="mathfns.html#CEILING">CEILING</a></h4>
+    <p>Rounds a number to a given multiple towards +infinity (or away from zero, if both are negative).
+    <p>Added in 4.53.</p>
+
+    <h4><a href="mathfns.html#DECIMAL">DECIMAL</a></h4>
+    <p>Converts a number in a given base to its corresponding decimal value.</p>
+    <p>Added in 4.57.</p>
+
+    <h4><a href="mathfns.html#FLOOR">FLOOR</a></h4>
+    <p>Rounds a number to a given multiple towards -infinity (or towards zero, if both are negative).
+    <p>Added in 4.53.</p>
+
+    <h4><a href="mathfns.html#SERIESSUM">SERIESSUM</a></h4>
+    <p>Returns the sum of the given power series for a given value.</p>
+    <p>Added in 4.56.</p>
+
+    <h3>Statistical functions</h3>
+
+    <h4><a href="statsfns.html#COUNTA">COUNTA</a></h4>
+    <p>Returns the number of all the values in a list regardless of their type.</p>
+    <p>Added in 4.54.</p>
+
+    <h4><a href="statsfns.html#LISTCOUNT">LISTCOUNT</a></h4>
+    <p>Returns an array containing a sorted list of unique entries in a list and their associated count.</p>
+    <p>Added in 4.52/06.</p>
+
+
     <h2>Spreadsheet functions behaviour and interface changes since documentation printed</h2>
 
     <h3>Financial functions</h3>
 
     <h4><a href="financialfns.html#DDB">DDB</a></h4>
-
     <p>Starting with 4.56, this function will accept an extra parameter, <span class="csg-function-parameter">factor</span> (optional).</p>
 
+    <p>Starting with 4.57, this function may now use a non-integer period for calculation.</p>
+
+    <h3>Lookup functions</h3>
+
+    <h4><a href="lookupfns.html#INDEX">INDEX</a></h4>
+    <p>Starting with 4.56, this function will now accept zero for the column and/or row number.<br />
+    If the column number is zero, the whole of the specified row(s) is returned.<br />
+    If the row number is zero, the whole of the specified column(s) is returned.</p>
+    <p>Starting with 4.56, this function will now accept zero for the optional column and/or row size.<br />
+    If the column size is zero, the rest of the specified row(s) beginning at the given column number is returned.<br />
+    If the row size is zero, the whole of the specified column(s) beginning at the given row number is returned.</p>
 
     <!-- h2>Printed documentation errata and notes --- TO DO --- </!--h2 -->
 

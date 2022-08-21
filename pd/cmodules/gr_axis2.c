@@ -31,12 +31,12 @@ local header
 /*ncr*/
 extern F64
 _splitlognum(
-    _InRef_     PC_F64 logval,
+    _InVal_     F64 logval,
     _OutRef_    P_F64 exponent /*out*/)
 {
     F64 mantissa;
 
-    mantissa = modf(*logval, exponent);
+    mantissa = modf(logval, exponent);
 
     /*
     NB. consider numbers such as log10(0.2) ~ -0.698 = (-1.0 exp) + (0.30103 man)
@@ -203,14 +203,14 @@ gr_axis_form_value_log(
             /* first try and split punter value up as base 10 animacule */
             test = log10(p_axis_ticks->punter);
 
-            test = _splitlognum(&test, &exponent);
+            test = _splitlognum(test, &exponent);
 
             /* was number close enough to a power of the base? */
             if(test < LOG_SIG_EPS)
             {
                 test = log10(p_axis_ticks->current);
 
-                (void) _splitlognum(&test, &test);
+                (void) _splitlognum(test, &test);
 
                 test = p_axis_ticks->punter / test;
 
@@ -225,7 +225,7 @@ gr_axis_form_value_log(
                 /* try base 2 */
                 test = log(p_axis_ticks->punter) / log(2.0);
 
-                test = _splitlognum(&test, &exponent);
+                test = _splitlognum(test, &exponent);
 
                 /* was number close enough to a power of the base? */
                 if(test < LOG_SIG_EPS)
@@ -375,7 +375,7 @@ gr_axis_form_value_lin(
     int    decimals;
 
     log10_major = log10(major_interval);
-    log10_major = _splitlognum(&log10_major, &exponent);
+    log10_major = _splitlognum(log10_major, &exponent);
     decimals    = (int) floor(exponent);
     p_axis->major.bits.decimals = (decimals < 0) ? -decimals : 0;
     }
@@ -466,14 +466,14 @@ gr_axis_form_value(
 _Check_return_
 static inline BOOL
 gr_lin_major_test(
-    _InRef_     PC_F64 p_mantissa,
-    _InRef_     PC_F64 p_cutoff,
-    _InoutRef_  P_F64 p_test,
-    _InRef_     PC_F64 p_divisor)
+    _InVal_     F64 mantissa,
+    _InVal_     F64 cutoff,
+    _InVal_     F64 divisor,
+    _InoutRef_  P_F64 p_test)
 {
-    if(*p_mantissa < *p_cutoff)
+    if(mantissa < cutoff)
     {
-        *p_test = *p_test / *p_divisor;
+        *p_test = *p_test / divisor;
         return(TRUE);
     }
 
@@ -509,17 +509,17 @@ gr_lin_major(
 
     test = log10(fabs(span));
 
-    mantissa = _splitlognum(&test, &exponent);
+    mantissa = _splitlognum(test, &exponent);
 
     test = pow(10.0, exponent);
 
-    if(gr_lin_major_test(&mantissa, &cutoff[0], &test, &divisor[0]))
+    if(gr_lin_major_test(mantissa, cutoff[0], divisor[0], &test))
         return(test);
 
-    if(gr_lin_major_test(&mantissa, &cutoff[1], &test, &divisor[1]))
+    if(gr_lin_major_test(mantissa, cutoff[1], divisor[1], &test))
         return(test);
 
-    if(gr_lin_major_test(&mantissa, &cutoff[2], &test, &divisor[2]))
+    if(gr_lin_major_test(mantissa, cutoff[2], divisor[2], &test))
         return(test);
 
     return(test);

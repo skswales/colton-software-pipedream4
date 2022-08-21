@@ -2524,6 +2524,10 @@
 				Name="eval_cmodules"
 				>
 				<File
+					RelativePath="..\..\..\..\cmodules\ev_arith.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\ev_comp.c"
 					>
 				</File>

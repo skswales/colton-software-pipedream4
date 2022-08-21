@@ -5,7 +5,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Copyright (C) 2013-2018 Stuart Swales
+Copyright (C) 2013-2019 Stuart Swales
 
 Prerequisites
 -------------
@@ -14,7 +14,7 @@ Acorn C/C++ Release 25 or later (!Amu, C compiler, headers, libraries, linker).
 
 InfoZip (install with PackMan) for creating a zip of the final build.
 
-A RISC OS CVS client to download a copy of RISC_OSLib.
+A RISC OS git client (install Simplegit-Libgit2 with PackMan) to download a copy of RISC_OSLib.
 
 patch (install with PackMan) to patch that copy of RISC_OSLib for use with
 PipeDream.

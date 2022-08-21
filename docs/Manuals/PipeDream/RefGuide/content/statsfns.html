@@ -64,6 +64,45 @@
         gammaln(<span class="csg-function-formula-variable">a</span> + <span class="csg-function-formula-variable">b</span>) )
     </p>
 
+    <h2 class="csg-function" id="BIN">BIN</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        BIN(<span class="csg-function-parameter">data</span>:<span class="csg-function-parameter-type">Array|Range</span>,
+        <span class="csg-function-parameter">bins</span>:<span class="csg-function-parameter-type">Array|Range</span>)
+    </p>
+    <p>
+        The <span class="csg-function-parameter">bins</span> array (or range of cells)
+        defines a set of bins into which the values from the
+        <span class="csg-function-parameter">data</span> array (or range of cells) is counted.
+    </p>
+    <p>
+        For example, if <span class="csg-function-parameter">bins</span> is {20,40,60,80},
+        the returned array gives the number of elements of
+        <span class="csg-function-parameter">data</span> that have:
+    </p>
+    <ul style="list-style-type: none;">
+        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; value &le;20</li>
+        <li>20&lt; value &le;40</li>
+        <li>40&lt; value &le;60</li>
+        <li>60&lt; value &le;80</li>
+        <li>80&lt; value </li>
+    </ul>
+    <p>
+        The returned array will therefore always have one more element than the
+        <span class="csg-function-parameter">bins</span> array (or range of cells).
+        Neither data nor bins need be sorted.
+    </p>
+    <p>One common use of this function is to organise data for making a histogram.</p>
+    <h5>Example:</h5>
+    <p>
+        With data in <code>A1A100</code>, and bin categories in <code>B1B5</code>,
+        the following formula would provide the basis for a bar chart:
+    </p>
+    <pre class="csg-sample-indent">SET_VALUE(C1C6, BIN(A1A100, B1B5))</pre>
+    <p>You would then make a bar chart from the range <code>B1C6</code>, using column B as labels.</p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
+
     <h2 class="csg-function" id="COMBIN">COMBIN</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">
@@ -88,6 +127,14 @@
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">COUNT(<span class="csg-function-parameter">list</span>)</p>
     <p>Counts the number of numeric elements in the <span class="csg-function-parameter">list</span>.</p>
+
+    <h2 class="csg-function" id="COUNTA">COUNTA</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">COUNTA(<span class="csg-function-parameter">list</span>)</p>
+    <p>Returns the number of all the values in the <span class="csg-function-parameter">list</span> regardless of their type.</p>
+
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.54.</p>
 
     <h2 class="csg-function" id="GAMMALN">GAMMALN</h2>
     <h5>Syntax:</h5>
@@ -377,6 +424,9 @@
     <p>would write out 20 rows of customers names and total sales figures in <code>D1E20</code>. <code>{A1A100,C1C100}</code> makes a two column array of 100 rows.</p>
     <p>You could use <code>SORT()</code> and <code>FLIP()</code> to sort the result of <code>LISTCOUNT()</code> into order before listing it out.</p>
 
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.52/06.</p>
+
     <h2 class="csg-function" id="LOGEST">LOGEST</h2>
     <h5>Syntax:</h5>
     <p class="csg-function-declaration">
@@ -413,6 +463,8 @@
     <p class="csg-function-declaration">MEDIAN(<span class="csg-function-parameter">array_or_range</span>)</p>
     <p>Returns the median value in the array (or range or cells).</p>
     <p>If there are an even number of values in the array, the mean of the two middle values is returned.</p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
 
     <h2 class="csg-function" id="MIN">MIN</h2>
     <h5>Syntax:</h5>
@@ -461,6 +513,8 @@
         If <span class="csg-function-parameter">spearflag</span> is present and is non-zero,
         equally ranked entries are adjusted so that the output is suitable for passing to the SPEARMAN() rank correlation function.
     </p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
 
     <h2 class="csg-function" id="SPEARMAN">SPEARMAN</h2>
     <h5>Syntax:</h5>
@@ -475,11 +529,13 @@
         <i>r<sub>s</sub></i> =
         1 -
         <span class="csg-function-formula-outer-parentheses">(</span>
-        6 &middot; <span class="csg-greek-symbol style="font-size: 110%">&Sigma;</span><sup class="csg-function-formula-variable">i=n</sup> <span class="csg-function-formula-variable">d<sub>i</sub></span><sup>2</sup>
+        6 &middot; <span class="csg-greek-symbol" style="font-size: 110%">&Sigma;</span><sup class="csg-function-formula-variable">i=n</sup> <span class="csg-function-formula-variable">d<sub>i</sub></span><sup>2</sup>
         &nbsp;&divide;&nbsp;
         (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span><sup>2</sup> - 1))
         <span class="csg-function-formula-outer-parentheses">)</span>
     </p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
 
     <h2 class="csg-function" id="STD">STD</h2>
     <h5>Syntax:</h5>

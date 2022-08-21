@@ -1,6 +1,6 @@
---- _src	2009-06-11 22:49:21.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.240000000 +0100
-@@ -48,6 +48,7 @@
+--- _src	2019-07-29 20:14:14.000000000 +0100
++++ _dst	2019-07-30 11:45:38.670000000 +0100
+@@ -45,6 +45,7 @@
   *   17-Sep-97: Defered compaction support added.
   */
  
@@ -8,7 +8,7 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
-@@ -58,8 +59,11 @@
+@@ -55,8 +56,11 @@
  #include <stdio.h>
  #include "kernel.h"
  #include "swis.h"
@@ -20,7 +20,7 @@
  #include "flex.h"
  #include "swiextra.h"
  
-@@ -76,6 +80,14 @@
+@@ -73,6 +77,14 @@
  static char *program_name = 0;
  static int  *error_fd = 0;
  
@@ -35,7 +35,7 @@
  #define MSGS_flex1 "flex1", "Flex memory error"
  #define MSGS_flex2 "flex2", "Not enough memory, or not within *desktop world"
  #define MSGS_flex3 "flex3", "Flex not initialised"
-@@ -120,6 +132,7 @@
+@@ -117,6 +129,7 @@
          return (char *)r.r[2];
  }
  
@@ -43,7 +43,7 @@
  
  /* This implementation goes above the original value of GetEnv,
  to memory specifically requested from the Wimp (about which the
-@@ -133,6 +146,8 @@
+@@ -130,6 +143,8 @@
                          /* then the actual store follows. */
  } flex__rec;
  
@@ -52,7 +52,7 @@
  static void flex__fail(int i)
  {
    werr(TRUE, msgs_lookup(MSGS_flex1));
-@@ -147,16 +162,21 @@
+@@ -144,16 +159,21 @@
      werr(TRUE, msgs_lookup(MSGS_flex3));
  }
  
@@ -74,7 +74,7 @@
  static unsigned int flex_to_compact;      /* offset from base of flex block to first free block.       */
                                            /* or NO_COMPACTION_NEEDED if there are no free blocks.      */
  static char         flex_needscompaction; /* = 1 if compaction is deferred until allocations or        */
-@@ -207,6 +227,16 @@
+@@ -204,6 +224,16 @@
    char *prev = flex__lim;
    int got = 0;
  
@@ -91,7 +91,7 @@
    if (flex__area_num)
    {
       if (_swix(OS_ChangeDynamicArea, _INR(0,1)|_OUT(1), flex__area_num, n, &got))
-@@ -220,6 +250,10 @@
+@@ -217,6 +247,10 @@
       flex__wimpslot(&flex__lim);
    }
  
@@ -102,7 +102,7 @@
    if (flex__lim < prev + n)
    {
     flex__lim = prev;             /* restore starting state:
-@@ -239,17 +273,50 @@
+@@ -236,17 +270,50 @@
  {
    /* Gives away memory, lowering flex__lim, if possible. */
  
@@ -153,7 +153,7 @@
  }
  
  static BOOL flex__ensure(int n)
-@@ -328,6 +395,7 @@
+@@ -325,6 +392,7 @@
            if (debugfileptr) fprintf(debugfileptr, "Failed in flex_reanchor\n");
          #endif
          flex__fail(6);
@@ -161,7 +161,7 @@
        }
        *(p->anchor) = ((char*) (p + 1)) + by;
      }
-@@ -365,6 +433,8 @@
+@@ -362,6 +430,8 @@
        if (debugfileptr) fprintf(debugfileptr, "Failed in flex_free\n");
      #endif
      flex__fail(0);
@@ -170,7 +170,7 @@
    }
  
    if (flex_needscompaction)
-@@ -510,6 +580,7 @@
+@@ -507,6 +577,7 @@
        if (debugfileptr) fprintf(debugfileptr, "Failed in flex_size\n");
      #endif
      flex__fail(4);
@@ -178,7 +178,7 @@
    }
  
    return(p->size);
-@@ -569,6 +640,7 @@
+@@ -566,6 +637,7 @@
        if (debugfileptr) fprintf(debugfileptr, "Failed in flex_midextend (1)\n");
      #endif
      flex__fail(1);
@@ -186,7 +186,7 @@
    }
  
    if (at > p->size)
-@@ -577,6 +649,7 @@
+@@ -574,6 +646,7 @@
        if (debugfileptr) fprintf(debugfileptr, "Failed in flex_midextend (2)\n");
      #endif
      flex__fail(2);
@@ -194,7 +194,7 @@
    }
  
    if (by < 0 && (-by) > at)
-@@ -585,6 +658,7 @@
+@@ -582,6 +655,7 @@
        if (debugfileptr) fprintf(debugfileptr, "Failed in flex_midextend (3)\n");
      #endif
      flex__fail(3);
@@ -202,7 +202,7 @@
    }
  
    if (by == 0)
-@@ -673,10 +747,13 @@
+@@ -670,10 +744,13 @@
  
    if (p->anchor != from_anchor)
    {
@@ -217,7 +217,7 @@
    }
  
    p->anchor = to_anchor;
-@@ -933,8 +1010,15 @@
+@@ -930,8 +1007,15 @@
  
    flex__lim = (char*) -1;
  
@@ -233,7 +233,7 @@
    err = _swix(OS_DynamicArea,
                _INR(0,8)|_OUT(1)|_OUT(3),
                OS_DynamicArea_Create,
-@@ -982,6 +1066,8 @@
+@@ -979,6 +1063,8 @@
    return flex__area_num;
  }
  
@@ -242,7 +242,7 @@
  /*************************************************/
  /* flex_save_heap_info()                         */
  /*                                               */
-@@ -1027,6 +1113,8 @@
+@@ -1024,6 +1110,8 @@
    }
  }
  

@@ -1,6 +1,6 @@
---- _src	2011-08-06 21:05:17.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.680000000 +0100
-@@ -34,6 +34,10 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.010000000 +0100
+@@ -31,6 +31,10 @@
   * History: IDJ: 06-Feb-92: prepared for source release
   */
  
@@ -11,7 +11,7 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
-@@ -94,21 +98,28 @@
+@@ -91,21 +95,28 @@
    }
  }
  
@@ -43,7 +43,7 @@
  }
  
  static void menu__copydata(menu from, menu to)
-@@ -134,8 +145,18 @@
+@@ -131,8 +142,18 @@
  
  /* The work area is allocated on the stack, with the following limits: */
  
@@ -62,7 +62,7 @@
  
  typedef struct {
    menu__str m;
-@@ -146,9 +167,10 @@
+@@ -143,9 +164,10 @@
  
  static void menu__initworkarea(menu__workarea *w)
  {
@@ -74,7 +74,7 @@
    w->m.maxentrywidth = 0;
    /* insert a NIL in the entrySpace to distinguish sub-Menu pointers
    from text space. */
-@@ -163,14 +185,18 @@
+@@ -160,14 +182,18 @@
    menu__itemptr(&w->m, w->m.nitems-1)->flags &= ~wimp_MLAST;
  }
  
@@ -95,7 +95,7 @@
  }
  
  /* -------- Creating menu descriptions. -------- */
-@@ -420,21 +446,34 @@
+@@ -417,21 +443,34 @@
    menu__doextend(&menu__w, descr);
    m = malloc(sizeof(menu__str));
    if (m == 0) {
@@ -131,7 +131,7 @@
    if (recursive != 0) {
      menu *a = (menu*) ((*m)->entryspace);
      while (1) {
-@@ -443,6 +482,7 @@
+@@ -440,6 +479,7 @@
        menu_dispose(&subm, 1);
      }
    }
@@ -139,7 +139,7 @@
    menu__disposespace(*m);
    free(*m);
  }
-@@ -473,6 +513,8 @@
+@@ -470,6 +510,8 @@
    }
  }
  
@@ -148,7 +148,7 @@
  void menu_make_writeable(menu m, int entry, char *buffer, int bufferlength,
                           char *validstring)
  {
-@@ -504,9 +546,11 @@
+@@ -501,9 +543,11 @@
    p->data.indirectsprite.nameisname = 1;
  }
  
@@ -160,7 +160,7 @@
    int i;
    wimp_menuitem *p = menu__itemptr(m, place-1);
    menu__workarea menu__w;
-@@ -527,6 +571,11 @@
+@@ -524,6 +568,11 @@
      }
    }
    menu__copyworkarea(&menu__w, m);
@@ -172,7 +172,7 @@
  }
  
  void *menu_syshandle(menu m)
-@@ -534,4 +583,131 @@
+@@ -531,4 +580,131 @@
    return (void *) m->m;
  }
  

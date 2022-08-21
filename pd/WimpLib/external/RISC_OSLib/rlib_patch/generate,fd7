@@ -4,7 +4,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2018 Stuart Swales
+| Copyright (C) 2013-2019 Stuart Swales
 |
 echo This script requires GNU diff - install DiffUtils (temporarily if needs be) to acquire
 IfThere $.coltsoft.trunk.cs-free.GNU.riscos.diff Then Set alias$gnu-diff Run $.coltsoft.trunk.cs-free.GNU.riscos.diff %%*0
@@ -14,8 +14,8 @@ echo <Obey$Dir>
 |
 dir <Obey$Dir>
 |
-Set flexlib_tmp$Dir <Obey$Dir>.^.apache.RiscOS.Sources.Toolbox.Libs.flexlib
-Set rlib_tmp$Dir <Obey$Dir>.^.apache.RiscOS.Sources.Lib.RISC_OSLib.rlib
+Set flexlib_tmp$Dir <Obey$Dir>.^.gitlab.RiscOS.Sources.Toolbox.ToolboxLib.flexlib
+Set rlib_tmp$Dir <Obey$Dir>.^.gitlab.RiscOS.Sources.Lib.RISC_OSLib.rlib
 Set WimpLib_tmp$Dir $._coltsoft.pd-nonfree.WimpLib
 |
 IfThere <WimpLib_tmp$Dir> Then Else Error WimpLib_tmp$Dir not present

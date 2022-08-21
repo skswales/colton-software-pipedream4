@@ -1596,7 +1596,7 @@ select_document(
             }
         }
 
-        assert(found); IGNOREVAR(found);
+        assert(found); UNREFERENCED_LOCAL_VARIABLE(found);
     }
 
     current_p_docu_global_register_assign(p_docu_new);

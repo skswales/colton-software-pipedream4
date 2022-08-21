@@ -22,21 +22,23 @@ exported functions
 */
 
 _Check_return_
-extern F64
+extern double
 normal_distribution(void);
 
+/* Generates a random number on [0,1) */ 
+
 _Check_return_
-extern F64
+extern double
 uniform_distribution(void);
 
 extern void
 uniform_distribution_seed(
-    _InVal_     unsigned int seed);
+    const unsigned int seed);
 
 /*ncr*/
-extern BOOL
+extern bool
 uniform_distribution_test_seeded(
-    _InVal_     BOOL fEnsure);
+    const bool fEnsure);
 
 #endif /* __mathxtr3_h */
 

@@ -1,6 +1,6 @@
---- _src	2009-05-31 18:58:59.000000000 +0100
-+++ _dst	2016-09-16 14:50:27.020000000 +0100
-@@ -35,6 +35,8 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.370000000 +0100
+@@ -32,6 +32,8 @@
   *
   */
  
@@ -9,7 +9,7 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
-@@ -62,6 +64,22 @@
+@@ -59,6 +61,22 @@
  #include "dragasprit.h"
  #include "VerIntern/messages.h"
  
@@ -32,7 +32,7 @@
  static int rcvbufsize;
  static int xfersend__msgid = 0;           /* my_ref of last DataSave message */
  static xfersend_saveproc xfersend__saveproc;
-@@ -72,7 +90,9 @@
+@@ -69,7 +87,9 @@
  static int xfersend__estsize = 0;
  static wimp_t xfersend__receiver;
  static BOOL xfersend__fileissafe;
@@ -42,7 +42,7 @@
  
  static int Unused; /*future expansion?*/
  
-@@ -111,9 +131,43 @@
+@@ -108,9 +128,43 @@
  }
  #endif
  
@@ -87,7 +87,7 @@
    handle = handle;
  
    switch (e->e)
-@@ -122,10 +176,19 @@
+@@ -119,10 +173,19 @@
      { /* finish my drag */
        tracef0 ("drag event received.\n");
        #if USE_DRAGASPRITE
@@ -107,7 +107,7 @@
        if (xfersend__mousestr.w != -1)
        {
          wimp_msgstr msg;
-@@ -146,8 +209,8 @@
+@@ -143,8 +206,8 @@
            int i, tail, namelen;
            char name[256];
  
@@ -118,7 +118,7 @@
            tail = strlen (name); /* point at the zero */
            while (tail > 0 && name[tail-1] != '.' && name[tail-1] != ':')
                 tail--;
-@@ -175,8 +238,8 @@
+@@ -172,8 +235,8 @@
  
      case wimp_ESEND:
      case wimp_ESENDWANTACK:
@@ -129,7 +129,7 @@
  
        if (e->data.msg.hdr.your_ref == xfersend__msgid)
          switch (e->data.msg.hdr.action)
-@@ -205,6 +268,9 @@
+@@ -202,6 +265,9 @@
  
                if (xfersend__sendproc (xfersend__savehandle, &rcvbufsize))
                {
@@ -139,7 +139,7 @@
                  /* See sendbuf for all the real work for this case... */
  
                  tracef0 ("The send succeeded; send final RAMTRANSMIT.\n");
-@@ -234,24 +300,30 @@
+@@ -231,24 +297,30 @@
  
            case wimp_MPrintTypeOdd: /*was dropped on a printer application with
                queue empty - print immediately*/
@@ -179,7 +179,7 @@
                wimpt_noerr (wimp_sendmessage (wimp_ESEND, &xfersend__msg,
                    xfersend__printer));
                if (xfersend__close) xfersend__winclose ();
-@@ -264,6 +336,7 @@
+@@ -261,6 +333,7 @@
              return TRUE;
            break;
  
@@ -187,7 +187,7 @@
            case wimp_MPrintError:
              if (e->data.msg.hdr.size > 24)
                werr(FALSE, &e->data.msg.data.chars[4]);
-@@ -271,6 +344,7 @@
+@@ -268,6 +341,7 @@
              if (xfersend__close) xfersend__winclose ();
              return TRUE;
            break;
@@ -195,7 +195,7 @@
  
            case wimp_MDATASAVEOK:
              tracef4 ("datasaveok %i %i %i %i.\n",
-@@ -286,25 +360,31 @@
+@@ -283,25 +357,31 @@
              tracef1 ("it's the datasaveok, to file '%s'.\n",
                  (int) &e->data.msg.data.datasaveok.name[0]);
  
@@ -234,7 +234,7 @@
              }
              else
                /* he has already reported the error: nothing more to do. */
-@@ -324,6 +404,7 @@
+@@ -321,6 +401,7 @@
        {
          tracef0 ("no printer manager - printing direct\n");
  
@@ -242,7 +242,7 @@
          if (xfersend__printproc != NULL)
            (void) (*xfersend__printproc) (e->data.msg.data.print.name,
                xfersend__savehandle);
-@@ -332,9 +413,31 @@
+@@ -329,9 +410,31 @@
            tracef0 ("no printing function supplied\n");
  
          return TRUE;
@@ -275,7 +275,7 @@
    return FALSE;
  }
  
-@@ -426,6 +529,105 @@
+@@ -423,6 +526,105 @@
   return sendbuf__state != 2;  /* OK unless state = broken */
  }
  
@@ -381,7 +381,7 @@
  BOOL xfersend (int filetype, char *filename, int estsize,
     xfersend_saveproc saver, xfersend_sendproc sender, xfersend_printproc printer,
     wimp_eventstr *e, void *handle)
-@@ -636,6 +838,8 @@
+@@ -633,6 +835,8 @@
  }
  #endif
  
@@ -390,7 +390,7 @@
  BOOL xfersend_file_is_safe(void)
  {
    return xfersend__fileissafe;
-@@ -657,4 +861,95 @@
+@@ -654,4 +858,95 @@
    return xfersend__msgid;        /* my_ref of last DataSave message */
  }
  

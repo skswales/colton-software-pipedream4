@@ -1,6 +1,6 @@
---- _src	2009-05-31 18:58:59.000000000 +0100
-+++ _dst	2016-10-27 13:28:40.010000000 +0100
-@@ -72,13 +72,22 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.230000000 +0100
+@@ -69,13 +69,22 @@
  
  os_error * wimpt_poll(wimp_emask mask, wimp_eventstr * result)
  {
@@ -23,7 +23,7 @@
      int next_alarm_time;
      if (alarm_next(&next_alarm_time) != 0 && ((event_getmask() & wimp_EMNULL))!=0)
      {
-@@ -87,11 +96,36 @@
+@@ -84,11 +93,36 @@
        r = wimp_pollidle(mask & ~wimp_EMNULL, result, next_alarm_time);
      }
      else
@@ -62,7 +62,7 @@
      wimpt__last_event = *result;
      return(r);
    }
-@@ -119,11 +153,22 @@
+@@ -116,11 +150,22 @@
  
  /* -------- Control of graphics environment -------- */
  
@@ -85,7 +85,7 @@
  static int wimpt__read_screen_mode(void)
  {
    int x, y;
-@@ -146,24 +191,48 @@
+@@ -143,24 +188,48 @@
    if (old != wimpt__mode) changed = TRUE;
  
    old = wimpt__dx;
@@ -135,7 +135,7 @@
  {
    wimp_redrawstr r;
    r.w = (wimp_w) -1;
-@@ -177,6 +246,11 @@
+@@ -174,6 +243,11 @@
  }
  #endif
  
@@ -147,7 +147,7 @@
  int wimpt_mode(void)
  {
    return(wimpt__mode);
-@@ -211,6 +285,8 @@
+@@ -208,6 +282,8 @@
    return programname;
  }
  
@@ -156,7 +156,7 @@
  void wimpt_reporterror(os_error *e, wimp_errflags f)
  {
    if (!programname)
-@@ -224,9 +300,13 @@
+@@ -221,9 +297,13 @@
    return e;
  }
  
@@ -170,7 +170,7 @@
  
  static void escape_handler(int sig)
  {
-@@ -234,6 +314,7 @@
+@@ -231,6 +311,7 @@
    (void) signal(SIGINT, &escape_handler);
  }
  
@@ -178,7 +178,7 @@
  
  static void handler(int signal)
  {
-@@ -254,6 +335,8 @@
+@@ -251,6 +332,8 @@
      exit(1);
  }
  
@@ -187,7 +187,7 @@
  static int wimpversion = 0;
  
  
-@@ -281,6 +364,11 @@
+@@ -278,6 +361,11 @@
    signal(SIGINT, &escape_handler);
    signal(SIGSEGV, &handler);
    signal(SIGTERM, &handler);
@@ -199,7 +199,7 @@
    signal(SIGOSERROR, &errhandler);
    signal_handlers_installed = 1;
  }
-@@ -315,7 +403,9 @@
+@@ -312,7 +400,9 @@
  
    wimpt_checkmode();
    atexit(wimpt__exit);

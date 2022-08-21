@@ -17,7 +17,20 @@
 
 #include "muldiv.h"
 
+#if RISCOS
+_Check_return_
+static inline S32
+muldiv64_a_b_GR_SCALE_ONE(
+    _InVal_     S32 a,
+    _InVal_     S32 b)
+{
+    /* NB contorted order to save register juggling on ARM Norcroft */
+    const int64_t numerator = ((int64_t) b * a);
+    return((S32) (numerator >> 16));
+}
+#else
 #define muldiv64_a_b_GR_SCALE_ONE(a, b) muldiv64(a, b, GR_SCALE_ONE)
+#endif /*OS*/
 
 /******************************************************************************
 *
@@ -178,7 +191,7 @@ gr_box_rotate(
     _OutRef_    P_GR_BOX xbox,
     _InRef_     PC_GR_BOX abox,
     _InRef_     PC_GR_POINT spoint,
-    _InRef_     PC_F64 angle)
+    _InVal_     F64 angle)
 {
     GR_XFORMMATRIX xform;
     return(gr_box_xform(xbox, abox, gr_xform_make_rotation(&xform, spoint, angle)));
@@ -409,7 +422,7 @@ gr_point_rotate(
     _OutRef_    P_GR_POINT xpoint,
     _InRef_     PC_GR_POINT apoint,
     _InRef_     PC_GR_POINT spoint,
-    _InRef_     PC_F64 angle)
+    _InVal_     F64 angle)
 {
     GR_XFORMMATRIX xform;
     return(gr_point_xform(xpoint, apoint, gr_xform_make_rotation(&xform, spoint, angle)));
@@ -552,10 +565,10 @@ extern P_GR_XFORMMATRIX
 gr_xform_make_rotation(
     _OutRef_    P_GR_XFORMMATRIX xform,
     _InRef_     PC_GR_POINT spoint,
-    _InRef_     PC_F64 angle)
+    _InVal_     F64 angle)
 {
-    F64 c = cos(*angle);
-    F64 s = sin(*angle);
+    const F64 c = cos(angle);
+    const F64 s = sin(angle);
 
     xform->a = gr_scale_from_f64(+c);
     xform->b = gr_scale_from_f64(+s);

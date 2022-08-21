@@ -26,7 +26,7 @@ internal functions
 
 static void
 read_date(
-    _OutRef_    P_EV_DATE datep,
+    _OutRef_    P_SS_DATE datep,
     PC_U8 ip_pos);
 
 /*
@@ -34,27 +34,27 @@ macros to select efficient reading routines
 */
 
 #if EV_COL_BITS == 32
-#define read_colt(pos) (EV_COL) readval_U32((pos))
+#define read_ev_col(pos) (EV_COL) readval_U32((pos))
 #else
-#define read_colt(pos) (EV_COL) readuword_LE((pos), sizeof32(EV_COL))
+#define read_ev_col(pos) (EV_COL) readuword_LE((pos), sizeof32(EV_COL))
 #endif
 
-#if DOCNO_SIZE == 8
-#define read_docno(pos) (EV_DOCNO) (* ((PC_U8) pos))
+#if EV_DOCNO_BITS == 8
+#define read_ev_docno(pos) (EV_DOCNO) (* ((PC_U8) pos))
 #else
-#define read_docno(pos) (EV_DOCNO) readuword_LE((pos), sizeof32(EV_DOCNO))
+#define read_ev_docno(pos) (EV_DOCNO) readuword_LE((pos), sizeof32(EV_DOCNO))
 #endif
 
-#if FLAGS_SIZE == 8
-#define read_flags(pos) (EV_FLAGS) (* ((PC_U8) pos))
+#if EV_FLAGS_BITS == 8
+#define read_ev_flags(pos) (EV_FLAGS) (* ((PC_U8) pos))
 #else
-#define read_flags(pos) (EV_FLAGS) readuword_LE((pos), sizeof32(EV_FLAGS))
+#define read_ev_flags(pos) (EV_FLAGS) readuword_LE((pos), sizeof32(EV_FLAGS))
 #endif
 
 #if EV_ROW_BITS == 32
-#define read_rowt(pos) (EV_ROW) readval_U32((pos))
+#define read_ev_row(pos) (EV_ROW) readval_U32((pos))
 #else
-#define read_rowt(pos) (EV_ROW) readuword_LE((pos), sizeof32(EV_ROW))
+#define read_ev_row(pos) (EV_ROW) readuword_LE((pos), sizeof32(EV_ROW))
 #endif
 
 /******************************************************************************
@@ -124,9 +124,9 @@ grub_next(
 
         switch(cur_rpn.num)
         {
-        case RPN_DAT_SLR:
-        case RPN_DAT_RANGE:
-        case RPN_DAT_NAME:
+        case DATA_ID_SLR:
+        case DATA_ID_RANGE:
+        case DATA_ID_NAME:
             read_cur_sym(&cur_rpn, &grubp->data);
             if(nodep)
                 res = RPN_FRM_NODEP;
@@ -157,13 +157,13 @@ grub_next(
         case RPN_FNV_ROWS:
             /* if it has an argument, ignore since
              * this contains the dependency - already returned
-             * in RPN_DAT_SLR case above
+             * in DATA_ID_SLR case above
              */
             if(!*(cur_rpn.pos + 1))
             {
                 /* return self-reference */
                 grubp->data.arg.slr = grubp->slr;
-                grubp->data.did_num = RPN_DAT_SLR;
+                grubp->data.data_id = DATA_ID_SLR;
                 res = cur_rpn.num;
                 at_pos = NULL;
             }
@@ -173,7 +173,7 @@ grub_next(
         case RPN_FNM_CUSTOMCALL:
         case RPN_FNM_FUNCTION:
             read_nameid(&grubp->data.arg.nameid, cur_rpn.pos + 2);
-            res = grubp->data.did_num = cur_rpn.num;
+            res = grubp->data.data_id = cur_rpn.num;
             data_offset = 2;
             break;
 
@@ -277,7 +277,7 @@ ev_rpn_adjust_refs(
                 in_cond = 1;
                 continue;
 
-            case RPN_DAT_SLR:
+            case DATA_ID_SLR:
                 {
                 P_U8 p_u8 = de_const_cast(P_U8, cur_rpn.pos + 1);
                 EV_SLR slr;
@@ -288,7 +288,7 @@ ev_rpn_adjust_refs(
                 break;
                 }
 
-            case RPN_DAT_RANGE:
+            case DATA_ID_RANGE:
                 {
                 P_U8 p_u8 = de_const_cast(P_U8, cur_rpn.pos + 1);
                 EV_RANGE rng;
@@ -345,58 +345,60 @@ len_rpn(
 extern void
 read_cur_sym(
     P_RPNSTATE rpnsp,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     PC_U8 p_rpn_content = rpnsp->pos + sizeof32(EV_IDNO);
 
-    switch(p_ev_data->did_num = rpnsp->num)
+    ss_data_set_data_id(p_ss_data, rpnsp->num);
+
+    switch(ss_data_get_data_id(p_ss_data))
     {
-    case RPN_DAT_REAL:
-        read_from_rpn(&p_ev_data->arg.fp, p_rpn_content, sizeof32(F64));
+    case DATA_ID_REAL:
+        read_from_rpn(&p_ss_data->arg.fp, p_rpn_content, sizeof32(F64));
         return;
 
-    case RPN_DAT_WORD8:
+    case DATA_ID_LOGICAL:
         {
-        S8 s8;
-        read_from_rpn(&s8, p_rpn_content, sizeof32(S8));
-        p_ev_data->arg.integer = (S32) s8;
+        U8 u8;
+        read_from_rpn(&u8, p_rpn_content, sizeof32(U8)); /* 0 or 1 */
+        p_ss_data->arg.integer = (S32) (U32) u8;
         return;
         }
 
-    case RPN_DAT_WORD16:
+    case DATA_ID_WORD16:
         {
         S16 s16;
         read_from_rpn(&s16, p_rpn_content, sizeof32(S16));
-        p_ev_data->arg.integer = (S32) s16;
+        p_ss_data->arg.integer = (S32) s16;
         return;
         }
 
-    case RPN_DAT_WORD32:
-        read_from_rpn(&p_ev_data->arg.integer, p_rpn_content, sizeof32(S32));
+    case DATA_ID_WORD32:
+        read_from_rpn(&p_ss_data->arg.integer, p_rpn_content, sizeof32(S32));
         return;
 
-    case RPN_DAT_SLR:
-        read_slr(&p_ev_data->arg.slr, p_rpn_content);
+    case DATA_ID_DATE:
+        read_date(&p_ss_data->arg.ss_date, p_rpn_content);
         return;
 
-    case RPN_DAT_RANGE:
-        read_range(&p_ev_data->arg.range, p_rpn_content);
+    case DATA_ID_BLANK:
+        return;
+
+    case DATA_ID_SLR:
+        read_slr(&p_ss_data->arg.slr, p_rpn_content);
+        return;
+
+    case DATA_ID_RANGE:
+        read_range(&p_ss_data->arg.range, p_rpn_content);
+        return;
+
+    case DATA_ID_NAME:
+        read_nameid(&p_ss_data->arg.nameid, p_rpn_content);
         return;
 
     case RPN_DAT_STRING:
-        p_ev_data->arg.string.uchars = p_rpn_content + sizeof32(S16);
-        p_ev_data->arg.string.size = ustrlen32(p_ev_data->arg.string.uchars);
-        return;
-
-    case RPN_DAT_DATE:
-        read_date(&p_ev_data->arg.ev_date, p_rpn_content);
-        return;
-
-    case RPN_DAT_NAME:
-        read_nameid(&p_ev_data->arg.nameid, p_rpn_content);
-        return;
-
-    case RPN_DAT_BLANK:
+        p_ss_data->arg.string.uchars = p_rpn_content + sizeof32(S16);
+        p_ss_data->arg.string.size = ustrlen32(p_ss_data->arg.string.uchars);
         return;
     }
 }
@@ -409,7 +411,7 @@ read_cur_sym(
 
 static void
 read_date(
-    _OutRef_    P_EV_DATE datep,
+    _OutRef_    P_SS_DATE datep,
     PC_U8 ip_pos)
 {
     datep->date = (S32) readuword_LE(ip_pos, sizeof32(U32));
@@ -457,27 +459,27 @@ read_range(
     _OutRef_    P_EV_RANGE rngp,
     PC_U8 ip_pos)
 {
-    rngp->s.docno = read_docno(ip_pos);
+    rngp->s.docno = read_ev_docno(ip_pos);
     ip_pos       += sizeof(EV_DOCNO);
 
-    rngp->s.col   = read_colt(ip_pos);
+    rngp->s.col   = read_ev_col(ip_pos);
     ip_pos       += sizeof(EV_COL);
 
-    rngp->s.row   = read_rowt(ip_pos);
+    rngp->s.row   = read_ev_row(ip_pos);
     ip_pos       += sizeof(EV_ROW);
 
-    rngp->s.flags = read_flags(ip_pos);
+    rngp->s.flags = read_ev_flags(ip_pos);
     ip_pos       += sizeof(EV_FLAGS);
 
     rngp->e.docno = rngp->s.docno;
 
-    rngp->e.col   = read_colt(ip_pos);
+    rngp->e.col   = read_ev_col(ip_pos);
     ip_pos       += sizeof(EV_COL);
 
-    rngp->e.row   = read_rowt(ip_pos);
+    rngp->e.row   = read_ev_row(ip_pos);
     ip_pos       += sizeof(EV_ROW);
 
-    rngp->e.flags = read_flags(ip_pos);
+    rngp->e.flags = read_ev_flags(ip_pos);
 }
 
 /******************************************************************************
@@ -491,16 +493,16 @@ read_slr(
     _OutRef_    P_EV_SLR slrp,
     PC_U8 ip_pos)
 {
-    slrp->docno = read_docno(ip_pos);
+    slrp->docno = read_ev_docno(ip_pos);
     ip_pos     += sizeof(EV_DOCNO);
 
-    slrp->col   = read_colt(ip_pos);
+    slrp->col   = read_ev_col(ip_pos);
     ip_pos     += sizeof(EV_COL);
 
-    slrp->row   = read_rowt(ip_pos);
+    slrp->row   = read_ev_row(ip_pos);
     ip_pos     += sizeof(EV_ROW);
 
-    slrp->flags = read_flags(ip_pos);
+    slrp->flags = read_ev_flags(ip_pos);
 }
 
 /******************************************************************************
@@ -524,35 +526,34 @@ rpn_skip(
         case RPN_DAT:
             switch(rpnsp->num)
             {
-            case RPN_DAT_REAL:
+            case DATA_ID_REAL:
                 rpnsp->pos += sizeof32(F64);
                 break;
-            case RPN_DAT_WORD8:
-                rpnsp->pos += sizeof32(S8);
+            case DATA_ID_LOGICAL:
+                rpnsp->pos += sizeof32(U8);
                 break;
-            case RPN_DAT_WORD16:
+            case DATA_ID_WORD16:
                 rpnsp->pos += sizeof32(S16);
                 break;
-            case RPN_DAT_WORD32:
+            case DATA_ID_WORD32:
                 rpnsp->pos += sizeof32(S32);
                 break;
-            case RPN_DAT_SLR:
+            case DATA_ID_DATE:
+                rpnsp->pos += PACKED_DATESIZE;
+                break;
+            case DATA_ID_SLR:
                 rpnsp->pos += PACKED_SLRSIZE;
                 break;
-            case RPN_DAT_RANGE:
+            case DATA_ID_RANGE:
                 rpnsp->pos += PACKED_RNGSIZE;
+                break;
+            case DATA_ID_NAME:
+                rpnsp->pos += sizeof32(EV_NAMEID);
                 break;
             case RPN_DAT_STRING:
                 rpnsp->pos += readval_S16(rpnsp->pos);
                 break;
-            case RPN_DAT_DATE:
-                rpnsp->pos += PACKED_DATESIZE;
-                break;
-            case RPN_DAT_NAME:
-                rpnsp->pos += sizeof32(EV_NAMEID);
-                break;
-
-            case RPN_DAT_BLANK:
+            case DATA_ID_BLANK:
             default:
                 break;
             }

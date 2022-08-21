@@ -683,7 +683,7 @@ fwp_load_preinit(
             {
                 no_ruler = FALSE;
                 c = fwp_get_ruler(loadinput);
-                IGNOREVAR(c);
+                UNREFERENCED_LOCAL_VARIABLE(c);
                 break;
             }
             /* deliberate fall through */ /* if we don't want rulers */

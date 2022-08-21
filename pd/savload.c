@@ -2530,7 +2530,6 @@ reject_this_filetype(
     case FILETYPE_DATAPOWERGPH:
     case FILETYPE_RTF:
     case FILETYPE_LOTUS123:
-    case FILETYPE_TIFF:
         /* we know that it's not sensible to try to load these ones */
         return(TRUE);
 
@@ -2540,74 +2539,129 @@ reject_this_filetype(
 }
 
 _Check_return_
+static int
+try_memcmp32(
+    _In_reads_bytes_(n_bytes) PC_BYTE p_data,
+    _InVal_     U32 n_bytes,
+    _In_reads_bytes_(n_bytes_compare) PC_BYTE p_data_compare,
+    _InVal_     U32 n_bytes_compare)
+{
+    if(n_bytes < n_bytes_compare)
+        return(-1); /* not enough data to compare with pattern */
+
+    return(memcmp32(p_data, p_data_compare, n_bytes_compare));
+}
+
+_Check_return_
 static FILETYPE_RISC_OS
 filetype_from_data(
-    PC_BYTE buffer)
+    _In_reads_bytes_(n_bytes) PC_BYTE p_data,
+    _InVal_     U32 n_bytes)
 {
-    static const BYTE buffer_fireworkz[]    = { '{',    'V',    'e',    'r',    's',    'i',    'o',    'n',   ':' };
     static const BYTE buffer_pipedream[]    = { '%',    'O',    'P',    '%' };
     static const BYTE buffer_pipedream_2[]  = { '%',    'C',    'O',    ':' };
-    static const BYTE buffer_rtf[]          = { '{',    '\\',   'r',    't',    'f' };
-    static const BYTE buffer_acorn_draw[]   = { 'D',    'r',    'a',    'w',    '\xC9' };
+    static const BYTE buffer_acorn_draw[]   = { 'D',    'r',    'a',    'w',
+                                                '\xC9', '\x00', '\x00', '\x00' };
+    static const BYTE buffer_t5_draw_0C[]   = { 'F',    'w',    'k',    'z',
+                                                'H',    'y',    'b',    'r',
+                                                'i',    'd',    ' ',    ' ' };
+    static const BYTE buffer_pd_chart_0C[]  = { 'P',    'D',    'r',    'e',
+                                                'a',    'm',    'C',    'h',
+                                                'a',    'r',    't',    's' };
+    static const BYTE buffer_jfif_00[]      = { '\xFF', '\xD8', /*SOI*/ '\xFF', '\xE0' /*APP0*/ };
+    static const BYTE buffer_jfif_06[]      = { 'J',    'F',    'I',    'F',    '\x00' /*JFIF*/ };
+    static const BYTE buffer_dib_00[]       = { 'B',    'M' };
+    static const BYTE buffer_dib_0E[]       = { '\x28', '\x00', '\x00', '\x00' /*BITMAPINFOHEADER*/ };
+    static const BYTE buffer_dibv4_0E[]     = { '\x6C', '\x00', '\x00', '\x00' /*BITMAPV4HEADER*/ };
+    static const BYTE buffer_dibv5_0E[]     = { '\x7C', '\x00', '\x00', '\x00' /*BITMAPV5HEADER*/ };
+    static const BYTE buffer_fireworkz[]    = { '{',    'V',    'e',    'r',    's',    'i',    'o',    'n',   ':' };
     static const BYTE buffer_acorn_sprite[] = { '\x01', '\x00', '\x00', '\x00', '\x10', '\x00', '\x00', '\x00' }; /* assumes only one sprite and no extension area */
-    static const BYTE buffer_jfif_0[]       = { '\xFF', '\xD8', /*SOI*/ '\xFF', '\xE0' /*APP0*/ };
-    static const BYTE buffer_jfif_6[]       = { 'J',    'F',    'I',    'F',    '\x00' /*JFIF*/ };
-    static const BYTE buffer_tiff_LE[]      = { 'I',    'I',    '*',    '\x00' };
-    static const BYTE buffer_tiff_BE[]      = { 'M',    'M',    '\x00', '*'    };
-    static const BYTE buffer_png[]          = { '\x89', 'P',    'N',    'G',    '\x0D', '\x0A', '\x1A', '\x0A' };
-    static const BYTE buffer_gif87a[]       = { 'G',    'I',    'F',    '8',    '7',    'a' };
-    static const BYTE buffer_gif89a[]       = { 'G',    'I',    'F',    '8',    '9',    'a' };
     static const BYTE buffer_compound_file[]= { '\xD0', '\xCF', '\x11', '\xE0', '\xA1', '\xB1', '\x1A', '\xE1' };
     static const BYTE buffer_excel_biff4w[] = { '\x09', '\x04', '\x06', '\x00', '\x00', '\x04', '\x00', '\x01' };
     static const BYTE buffer_excel_biff4[]  = { '\x09', '\x04', '\x06', '\x00', '\x00', '\x00', '\x02', '\x00' };
     static const BYTE buffer_excel_biff3[]  = { '\x09', '\x02', '\x06', '\x00', '\x00', '\x00', '\x02', '\x00' };
     static const BYTE buffer_excel_biff2[]  = { '\x09', '\x00', '\x06', '\x00', '\x00', '\x00', '\x02', '\x00' };
+    static const BYTE buffer_png[]          = { '\x89', 'P',    'N',    'G',    '\x0D', '\x0A', '\x1A', '\x0A' };
+    static const BYTE buffer_gif87a[]       = { 'G',    'I',    'F',    '8',    '7',    'a' };
+    static const BYTE buffer_gif89a[]       = { 'G',    'I',    'F',    '8',    '9',    'a' };
+    static const BYTE buffer_rtf[]          = { '{',    '\\',   'r',    't',    'f' };
+    static const BYTE buffer_tiff_LE[]      = { 'I',    'I',    '*',    '\x00' };
+    static const BYTE buffer_tiff_BE[]      = { 'M',    'M',    '\x00', '*'    };
     static const BYTE buffer_lotus_wk1[]    = { '\x00', '\x00', '\x02', '\x00' /*BOF*/ };
     static const BYTE buffer_lotus_wk3[]    = { '\x00', '\x00', '\x1A', '\x00' /*BOF*/ };
     static const BYTE buffer_acorn_sid[]    = { '%',    '%' };
 
     FILETYPE_RISC_OS filetype = FILETYPE_UNDETERMINED;
 
-    if(0 == memcmp32(buffer, buffer_fireworkz, sizeof32(buffer_fireworkz)))
+    if(0 == try_memcmp32(p_data, n_bytes, buffer_pipedream, sizeof32(buffer_pipedream)))
+        return(FILETYPE_PIPEDREAM);
+    if(0 == try_memcmp32(p_data, n_bytes, buffer_pipedream_2, sizeof32(buffer_pipedream_2)))
+        return(FILETYPE_PIPEDREAM);
+
+    if(0 == try_memcmp32(p_data, n_bytes, buffer_acorn_draw, sizeof32(buffer_acorn_draw)))
+    {
+        if( (n_bytes > (0x0C + sizeof32(buffer_t5_draw_0C))) &&
+            (0 == try_memcmp32(&p_data[0x0C], n_bytes - 0x0C, buffer_t5_draw_0C, sizeof32(buffer_t5_draw_0C))) )
+            return(FILETYPE_T5_DRAW);
+
+        if( (n_bytes > (0x0C + sizeof32(buffer_pd_chart_0C))) &&
+            (0 == try_memcmp32(&p_data[0x0C], n_bytes - 0x0C, buffer_pd_chart_0C, sizeof32(buffer_pd_chart_0C))) )
+            return(FILETYPE_PD_CHART);
+
+        return(FILETYPE_DRAW);
+    }
+
+    if( (n_bytes > (0x06 + sizeof32(buffer_jfif_06))) &&
+        (0 == try_memcmp32(&p_data[0x00], n_bytes,        buffer_jfif_00, sizeof32(buffer_jfif_00))) &&
+        (0 == try_memcmp32(&p_data[0x06], n_bytes - 0x06, buffer_jfif_06, sizeof32(buffer_jfif_06))) )
+        return(FILETYPE_JPEG);
+
+    if( (n_bytes > (0x0E + sizeof32(buffer_dib_0E))) &&
+        (0 == try_memcmp32(&p_data[0x00], n_bytes,        buffer_dib_00, sizeof32(buffer_dib_00))) &&
+        (0 == try_memcmp32(&p_data[0x0E], n_bytes - 0x0E, buffer_dib_0E, sizeof32(buffer_dib_0E))) )
+        return(FILETYPE_BMP);
+
+    if( (n_bytes > (0x0E + sizeof32(buffer_dibv4_0E))) &&
+        (0 == try_memcmp32(&p_data[0x00], n_bytes,        buffer_dib_00,   sizeof32(buffer_dib_00)))   &&
+        (0 == try_memcmp32(&p_data[0x0E], n_bytes - 0x0E, buffer_dibv4_0E, sizeof32(buffer_dibv4_0E))) )
+        return(FILETYPE_BMP);
+
+    if( (n_bytes > (0x0E + sizeof32(buffer_dibv5_0E))) &&
+        (0 == try_memcmp32(&p_data[0x00], n_bytes,        buffer_dib_00,   sizeof32(buffer_dib_00)))   &&
+        (0 == try_memcmp32(&p_data[0x0E], n_bytes - 0x0E, buffer_dibv5_0E, sizeof32(buffer_dibv5_0E))) )
+        return(FILETYPE_BMP);
+
+    if(0 == try_memcmp32(p_data, n_bytes, buffer_fireworkz, sizeof32(buffer_fireworkz)))
         filetype = FILETYPE_T5_FIREWORKZ;
-    else if(0 == memcmp32(buffer, buffer_pipedream, sizeof32(buffer_pipedream)))
-        filetype = FILETYPE_PIPEDREAM;
-    else if(0 == memcmp32(buffer, buffer_pipedream_2, sizeof32(buffer_pipedream_2)))
-        filetype = FILETYPE_PIPEDREAM;
-    else if(0 == memcmp32(buffer, buffer_rtf, sizeof32(buffer_rtf)))
-        filetype = FILETYPE_RTF;
-    else if(0 == memcmp32(buffer, buffer_acorn_draw, sizeof32(buffer_acorn_draw)))
-        filetype = FILETYPE_DRAW;
-    else if(0 == memcmp32(buffer, buffer_acorn_sprite, sizeof32(buffer_acorn_sprite)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_acorn_sprite, sizeof32(buffer_acorn_sprite)))
         filetype = FILETYPE_SPRITE;
-    else if( (0 == memcmp32(&buffer[0], buffer_jfif_0, sizeof32(buffer_jfif_0))) &&
-             (0 == memcmp32(&buffer[6], buffer_jfif_6, sizeof32(buffer_jfif_6))) )
-        filetype = FILETYPE_JPEG;
-    else if(0 == memcmp32(buffer, buffer_tiff_LE, sizeof32(buffer_tiff_LE)))
-        filetype = FILETYPE_TIFF;
-    else if(0 == memcmp32(buffer, buffer_tiff_BE, sizeof32(buffer_tiff_BE)))
-        filetype = FILETYPE_TIFF;
-    else if(0 == memcmp32(buffer, buffer_png, sizeof32(buffer_png)))
-        filetype = FILETYPE_PNG;
-    else if(0 == memcmp32(buffer, buffer_gif87a, sizeof32(buffer_gif87a)))
-        filetype = FILETYPE_GIF;
-    else if(0 == memcmp32(buffer, buffer_gif89a, sizeof32(buffer_gif89a)))
-        filetype = FILETYPE_GIF;
-    else if(0 == memcmp32(buffer, buffer_compound_file, sizeof32(buffer_compound_file)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_compound_file, sizeof32(buffer_compound_file)))
         filetype = FILETYPE_MS_XLS; /*detect_compound_document_file(file_handle);*/
-    else if(0 == memcmp32(buffer, buffer_excel_biff4w, sizeof32(buffer_excel_biff4w)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_excel_biff4w, sizeof32(buffer_excel_biff4w)))
         filetype = FILETYPE_MS_XLS;
-    else if(0 == memcmp32(buffer, buffer_excel_biff4, sizeof32(buffer_excel_biff4)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_excel_biff4, sizeof32(buffer_excel_biff4)))
         filetype = FILETYPE_MS_XLS;
-    else if(0 == memcmp32(buffer, buffer_excel_biff3, sizeof32(buffer_excel_biff3)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_excel_biff3, sizeof32(buffer_excel_biff3)))
         filetype = FILETYPE_MS_XLS;
-    else if(0 == memcmp32(buffer, buffer_excel_biff2, sizeof32(buffer_excel_biff2)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_excel_biff2, sizeof32(buffer_excel_biff2)))
         filetype = FILETYPE_MS_XLS;
-    else if(0 == memcmp32(buffer, buffer_lotus_wk1, sizeof32(buffer_lotus_wk1)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_png, sizeof32(buffer_png)))
+        filetype = FILETYPE_PNG;
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_gif87a, sizeof32(buffer_gif87a)))
+        filetype = FILETYPE_GIF;
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_gif89a, sizeof32(buffer_gif89a)))
+        filetype = FILETYPE_GIF;
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_rtf, sizeof32(buffer_rtf)))
+        filetype = FILETYPE_RTF;
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_tiff_LE, sizeof32(buffer_tiff_LE)))
+        filetype = FILETYPE_TIFF;
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_tiff_BE, sizeof32(buffer_tiff_BE)))
+        filetype = FILETYPE_TIFF;
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_lotus_wk1, sizeof32(buffer_lotus_wk1)))
         filetype = FILETYPE_LOTUS123;
-    else if(0 == memcmp32(buffer, buffer_lotus_wk3, sizeof32(buffer_lotus_wk3)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_lotus_wk3, sizeof32(buffer_lotus_wk3)))
         filetype = FILETYPE_LOTUS123;
-    else if(0 == memcmp32(buffer, buffer_acorn_sid, sizeof32(buffer_acorn_sid)))
+    else if(0 == try_memcmp32(p_data, n_bytes, buffer_acorn_sid, sizeof32(buffer_acorn_sid)))
         filetype = FILETYPE_SID;
 
     return(filetype);
@@ -2635,9 +2689,8 @@ find_filetype_option(
     S32 filetype_option;
 
     /* do we know that we can't handle it? */
-    if(FILETYPE_UNDETERMINED != filetype)
-        if(reject_this_filetype(filetype))
-            return(ERR_CANT_LOAD_FILETYPE);
+    if(reject_this_filetype(filetype))
+        return(ERR_CANT_LOAD_FILETYPE);
 
     /* centralise handling for this one to check readability */
     if(FILETYPE_CSV == filetype)
@@ -2704,7 +2757,7 @@ find_filetype_option(
     }
 
     /* ignore filetype we've got to this point and scan the buffer for other known patterns */
-    filetype = filetype_from_data(array);
+    filetype = filetype_from_data(array, size);
 
     /* do we now know that we can't handle it? */
     if(reject_this_filetype(filetype))
@@ -2942,6 +2995,10 @@ rft_from_filetype_option(
 
     case TAB_CHAR:
         res = FILETYPE_TEXT;
+        break;
+
+    case PD4_CHART_CHAR:
+        res = gr_chart_save_as_filetype();
         break;
 
     /* case VIEWSHEET_CHAR: */
@@ -3675,9 +3732,12 @@ loadfile_core(
 
     actind_end();
 
+    /* update from d_progvars[] */
     recalc_state_may_have_changed();
     chart_recalc_state_may_have_changed();
+    chart_format_state_may_have_changed();
     insert_overtype_state_may_have_changed();
+
     update_variables();
 
     filealtered(p_load_file_options->temp_file  ||  p_load_file_options->inserting);

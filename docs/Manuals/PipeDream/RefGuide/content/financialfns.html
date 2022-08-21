@@ -31,6 +31,7 @@
         There is an example of each financial function in the PipeDream Examples.
     </p>
 
+
     <h2 class="csg-function" id="CTERM">CTERM</h2>
     <p>
         Returns the number of compounding periods (usually years)
@@ -66,6 +67,7 @@
         The answer in this case is 7.27 years.
     </p>
 
+
     <h2 class="csg-function" id="DDB">DDB</h2>
     <p>Returns the calculated depreciation allowance on an asset at a specific period of time using the double declining balance method.</p>
     <h5>Syntax:</h5>
@@ -74,7 +76,7 @@
         <span class="csg-function-parameter">salvage&nbsp;</span>,
         <span class="csg-function-parameter">life</span>,
         <span class="csg-function-parameter">period</span>,
-        {,&nbsp;<span class="csg-function-parameter">factor</span>:<span class="csg-function-parameter-type">number</span>})
+        {,&nbsp;<span class="csg-function-parameter">factor</span>:<span class="csg-function-parameter-type">Number</span>})
     </p>
     <table>
         <tr>
@@ -106,6 +108,8 @@
     </p>
     <h5>Revision:</h5>
     <p>Starting with 4.56, this function accepts an optional extra parameter, <span class="csg-function-parameter">factor</span>.</p>
+    <p>Starting with 4.57, this function may now use a non-integer period for calculation.</p>
+
 
     <h2 class="csg-function" id="FV">FV</h2>
     <p>Computes the future value of an investment based on a number of equal payments, each earning interest at a periodic rate, over a specified term.</p>
@@ -138,6 +142,7 @@
         The formula <code>FV(400,0.05,25)</code> calculates the result, &pound;19,090.84.
     </p>
 
+
     <h2 class="csg-function" id="IRR">IRR</h2>
     <p>Returns the calculated internal rate of return of an initial series of expected returns, based on an initial guess.</p>
     <h5>Syntax:</h5>
@@ -165,6 +170,7 @@
         Cell A16 contains the number 0.01, a first guess for the internal rate of return (1%).
         The formula <code>IRR(A16,A1A14)</code> displays the result 0.04, the internal percentage rate of return (4%) for the cash flows in column A.
     </p>
+
 
     <h2 class="csg-function" id="MIRR">MIRR</h2>
     <p>Returns the modified internal rate of return for a series of periodic cash flows.</p>
@@ -200,6 +206,7 @@
         <code>MIRR(B1B4,.10,.12)</code> which would return -0.04804 as the result.
     </p>
 
+
     <h2 class="csg-function" id="NPV">NPV</h2>
     <p>Returns the net present value of a series of future receipts at a fixed periodic interest rate.</p>
     <h5>Syntax:</h5>
@@ -230,6 +237,7 @@
         What is the net present value of the cash flows given a discount rate of 10%?
         The formula <code>NPV(0.10,B10B14)</code> displays the result &pound;454.89, the present value of the future cash flows.
     </p>
+
 
     <h2 class="csg-function" id="PMT">PMT</h2>
     <p>Returns the payment on a loan.</p>
@@ -263,6 +271,7 @@
         The formula <code>PMT(150000,0.10/12,20*12)</code> returns the correct monthly payment, &pound;1447.53.
     </p>
 
+
     <h2 class="csg-function" id="PV">PV</h2>
     <p>Computes the present value of a series of equal payments discounted at a periodic interest rate for a term.</p>
     <h5>Syntax:</h5>
@@ -293,6 +302,7 @@
         Given that you could earn 12% by investing your money elsewhere, what is the present value of the trust fund, including the interest that you won&rsquo;t earn?
         The formula <code>PV(2000,0.12,30)</code> returns &pound;16110.37, the cash value of the trust fund in today&rsquo;s pounds.
     </p>
+
 
     <h2 class="csg-function" id="RATE">RATE</h2>
     <p>Returns the periodic interest rate required for an investment at a present value to reach a future value within a given period of time.</p>
@@ -330,6 +340,7 @@
         The answer is 0.01, which you multiply by 12 to get the annual interest rate of 12% (0.12).
     </p>
 
+
     <h2 class="csg-function" id="SLN">SLN</h2>
     <p>Computes the straight line depreciation allowance of an asset for any given period.</p>
     <h5>Syntax:</h5>
@@ -364,6 +375,7 @@
         In any given year, the depreciation allowance is given by the formula
         <code>SLN(500,100,5)</code> which returns &pound;80.00.
     </p>
+
 
     <h2 class="csg-function" id="SYD">SYD</h2>
     <p>Determines the depreciation allowance of a given year using the sum-of-years&rsquo; digits method.</p>
@@ -404,6 +416,7 @@
         <code>SYD(500,100,5,1)</code> which returns &pound;133.33.
     </p>
 
+
     <h2 class="csg-function" id="TERM">TERM</h2>
     <p>Computes how many periods it will take regular equal payments at a fixed periodic interest rate to reach a future value.</p>
     <h5>Syntax:</h5>
@@ -433,6 +446,7 @@
         Given that you can invest &pound;5000 a year into a pension fund, at 10% annual interest, how long will it take to accumulate &pound;1,000,000?
         The formula <code>TERM(5000,0.10,1000000)</code> returns the answer, 31.94 years.
     </p>
+
 
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">

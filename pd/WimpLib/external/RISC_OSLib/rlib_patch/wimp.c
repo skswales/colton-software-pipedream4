@@ -1,6 +1,6 @@
---- _src	2010-11-30 10:29:09.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.870000000 +0100
-@@ -34,6 +34,8 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.210000000 +0100
+@@ -31,6 +31,8 @@
   * History: IDJ: 07-Feb-92: prepared for source release
   */
  
@@ -9,7 +9,7 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
-@@ -43,13 +45,68 @@
+@@ -40,13 +42,68 @@
  #include <stdarg.h>
  
  #include "os.h"
@@ -79,7 +79,7 @@
  #define Initialise          0x000400C0
  #define CreateWindow        0x000400C1
  #define CreateIcon          0x000400C2
-@@ -102,6 +159,9 @@
+@@ -99,6 +156,9 @@
  #define TransferBlock       (0x000400c0+49)
  #define ReadSysInfo         (0x000400c0+50)
  #define SetFontColours      (0x000400c0+51)
@@ -89,7 +89,7 @@
  
  #pragma -s1
  
-@@ -121,7 +181,7 @@
+@@ -118,7 +178,7 @@
  #pragma -s0
  
  #ifndef UROM
@@ -98,7 +98,7 @@
  {
    os_regset r;
    os_error *e;
-@@ -145,6 +205,8 @@
+@@ -142,6 +202,8 @@
  }
  #endif
  
@@ -107,7 +107,7 @@
  #pragma -s1
  
  os_error * wimp_create_wind(wimp_wind * w, wimp_w * result)
-@@ -196,6 +258,7 @@
+@@ -193,6 +255,7 @@
      j[0] = (int)w;
      j[1] = (int)i;
  
@@ -115,7 +115,7 @@
      r.r[1] = (int) j;
  
      e = os_swix(DeleteIcon, &r);
-@@ -208,6 +271,7 @@
+@@ -205,6 +268,7 @@
      os_regset r;
      os_error *e;
  
@@ -123,7 +123,7 @@
      r.r[1] = (int)o;
  
      e = os_swix(OpenWindow, &r);
-@@ -221,6 +285,7 @@
+@@ -218,6 +282,7 @@
      os_regset r;
      os_error *e;
  
@@ -131,7 +131,7 @@
      r.r[1] = (int)&w;
  
      e = os_swix(CloseWindow, &r);
-@@ -238,6 +303,7 @@
+@@ -235,6 +300,7 @@
  
      e = os_swix(RedrawWindow, &r);
  
@@ -139,7 +139,7 @@
      *result = r.r[0];
  
      return(e);
-@@ -253,6 +319,7 @@
+@@ -250,6 +316,7 @@
  
      e = os_swix(UpdateWindow, &r);
  
@@ -147,7 +147,7 @@
      *result = r.r[0];
  
      return(e);
-@@ -268,6 +335,7 @@
+@@ -265,6 +332,7 @@
  
      e = os_swix(GetRectangle, &r);
  
@@ -155,7 +155,7 @@
      *result = r.r[0];
  
      return(e);
-@@ -281,6 +349,7 @@
+@@ -278,6 +346,7 @@
  
      result->o.w = w;
  
@@ -163,7 +163,7 @@
      r.r[1] = (int)result;
  
      e = os_swix(GetWindowState, &r);
-@@ -294,6 +363,7 @@
+@@ -291,6 +360,7 @@
      os_regset r;
      os_error *e;
  
@@ -171,7 +171,7 @@
      r.r[1] = (int)result;
      e = os_swix(GetWindowInfo, &r);
  
-@@ -321,6 +391,7 @@
+@@ -318,6 +388,7 @@
      b.flags_v = value;
      b.flags_m = mask;
  
@@ -179,7 +179,7 @@
      r.r[1] = (int)&b;
  
      e = os_swix(SetIconState, &r);
-@@ -349,6 +420,7 @@
+@@ -346,6 +417,7 @@
  
    e = os_swix(GetIconState, &r);
  
@@ -187,7 +187,7 @@
    *result = b.icon_s;
  
    return(e);
-@@ -370,6 +442,7 @@
+@@ -367,6 +439,7 @@
  
    e = os_swix(GetPointerInfo, &r);
  
@@ -195,7 +195,7 @@
    *result = m.m;
    return(e);
  }
-@@ -380,6 +453,7 @@
+@@ -377,6 +450,7 @@
    os_regset r;
    os_error *e;
  
@@ -203,7 +203,7 @@
    r.r[1] = (int)d;
  
    e = os_swix(DragBox, &r);
-@@ -413,6 +487,7 @@
+@@ -410,6 +484,7 @@
    os_regset r;
    os_error *e;
  
@@ -211,7 +211,7 @@
    r.r[1] = (int)c;
  
    e = os_swix(GetCaretPosition, &r);
-@@ -426,6 +501,7 @@
+@@ -423,6 +498,7 @@
    os_regset r;
    os_error *e;
  
@@ -219,7 +219,7 @@
    r.r[1] = (int)m;
    r.r[2] = x;
    r.r[3] = y;
-@@ -500,6 +576,7 @@
+@@ -497,6 +573,7 @@
    os_regset r;
    os_error *e;
  
@@ -227,7 +227,7 @@
    r.r[1] = (int)name;
  
    e = os_swix(OpenTemplate, &r);
-@@ -530,7 +607,9 @@
+@@ -527,7 +604,9 @@
  
  os_error *wimp_processkey(int chcode)
  {
@@ -238,7 +238,7 @@
  }
  
  #ifndef UROM
-@@ -574,6 +653,7 @@
+@@ -571,6 +650,7 @@
    os_regset r;
    os_error *e;
  
@@ -246,7 +246,7 @@
    r.r[1] = (int) re;
    e = os_swix(GetWindowOutline, &r);
    return e;
-@@ -584,6 +664,7 @@
+@@ -581,6 +661,7 @@
    os_regset r;
    os_error *e;
  
@@ -254,7 +254,7 @@
    r.r[1] = (int) i;
    e = os_swix(PlotIcon, &r);
    return e;
-@@ -671,20 +752,75 @@
+@@ -668,20 +749,75 @@
    return os_swix(BlockCopy, &r);
  }
  
@@ -332,7 +332,7 @@
  }
  
  os_error *wimp_create_submenu(wimp_menustr *sub, int x, int y)
-@@ -699,6 +835,8 @@
+@@ -696,6 +832,8 @@
    return e;
  }
  
@@ -341,7 +341,7 @@
  os_error *wimp_slotsize(int *currentslot /*inout*/,
                          int *nextslot /*inout*/,
                          int *freepool /*out*/) {
-@@ -708,6 +846,8 @@
+@@ -705,6 +843,8 @@
    return e;
  }
  

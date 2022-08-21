@@ -321,6 +321,7 @@ stringdef(Bottom_file_STR)
 stringdef(Recalculate_STR)
 stringdef(Auto_recalculation_STR)
 stringdef(Auto_chart_recalculation_STR)
+stringdef(New_chart_files_STR)
 
 stringdef(RepeatCommand_STR)
 stringdef(About_STR)

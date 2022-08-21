@@ -114,6 +114,113 @@ mx_sech(
 #define PRAGMA_SIDE_EFFECTS
 #include "coltsoft/pragma.h"
 
+#if defined(_MSC_VER)
+#if _MSC_VER < 1800 /* < VS2013 */
+
+extern double FreeBSD_erf(double);
+
+#define erf FreeBSD_erf
+
+extern double FreeBSD_erfc(double);
+
+#define erfc FreeBSD_erfc
+
+#endif
+#endif /* _MSC_VER */
+
+_Check_return_
+extern double FreeBSD_jn(int, double);
+
+#define bessel_jn(n, x) FreeBSD_jn(n, x)
+
+_Check_return_
+extern double FreeBSD_yn(int, double);
+
+#define bessel_yn(n, x) FreeBSD_yn(n, x)
+
+
+#if __STDC_VERSION__ < 199901L
+
+#define acosh(d) mx_acosh(d)
+#define asinh(d) mx_asinh(d)
+#define atanh(d) mx_atanh(d)
+
+#if !defined(CROSS_COMPILE)
+
+_Check_return_
+static inline bool
+isunordered(_InVal_ double a, _InVal_ double b)
+{
+    return(isnan(a) || isnan(b));
+}
+
+_Check_return_
+static inline bool
+isgreater(_InVal_ double a, _InVal_ double b)
+{
+    if(isnan(a) || isnan(b))
+        return(!isnan(b));
+
+    return(a > b);
+}
+
+_Check_return_
+static inline bool
+isless(_InVal_ double a, _InVal_ double b)
+{
+    if(isnan(a) || isnan(b))
+        return(!isnan(b));
+
+    return(a < b);
+}
+
+_Check_return_
+static inline double
+fmax(_InVal_ double a, _InVal_ double b)
+{
+    if(isnan(a))
+        return(b);
+
+    return(isgreater(a, b) ? a : b);
+}
+
+_Check_return_
+static inline double
+fmin(_InVal_ double a, _InVal_ double b)
+{
+    if(isnan(a))
+        return(b);
+
+    return(isless(a, b) ? a : b);
+}
+
+_Check_return_
+static inline double
+exp2(_InVal_ double d)
+{
+    return(pow(2.0, d));
+}
+
+#endif /* CROSS_COMPILE */
+
+#if WINDOWS
+
+#ifndef                   __mathnums_h
+#include "cmodules/coltsoft/mathnums.h" /* for _log2_e */
+#endif
+
+_Check_return_
+static inline double
+log2(_InVal_ double d)
+{
+    return(log(d) * _log2_e);
+}
+
+#endif /* OS */
+
+#endif /* __STDC_VERSION__ */
+
+
 #endif /* __mathxtra_h */
 
 /* end of mathxtra.h  */

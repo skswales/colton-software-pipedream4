@@ -56,13 +56,13 @@ required includes
 typedef struct GR_RISCDIAG_TAGSTRIP_INFO * P_GR_RISCDIAG_TAGSTRIP_INFO;
 
 typedef S32 (* gr_riscdiag_tagstrip_proc) (
-    P_ANY handle,
-    P_GR_RISCDIAG_TAGSTRIP_INFO p_info);
+    P_GR_RISCDIAG_TAGSTRIP_INFO p_image_cache_tagstrip_info,
+    P_ANY handle);
 
 #define gr_riscdiag_tagstrip_proto(_e_s, _p_proc_gr_riscdiag_tagstrip) \
 _e_s S32 _p_proc_gr_riscdiag_tagstrip( \
-    P_ANY handle, \
-    P_GR_RISCDIAG_TAGSTRIP_INFO p_info)
+    P_GR_RISCDIAG_TAGSTRIP_INFO p_image_cache_tagstrip_info, \
+    P_ANY handle)
 
 #endif
 
@@ -461,8 +461,8 @@ gr_diag_piesector_new(
     _InVal_     GR_DIAG_OBJID_T objid,
     _InRef_     PC_GR_POINT pPos,
     _InVal_     GR_COORD radius,
-    _InRef_     PC_F64 alpha,
-    _InRef_     PC_F64 beta,
+    _InVal_     F64 alpha,
+    _InVal_     F64 beta,
     _InRef_     PC_GR_LINESTYLE linestyle,
     _InRef_     PC_GR_FILLSTYLE fillstyle);
 
@@ -1971,7 +1971,7 @@ gr_lin_major(
 /*ncr*/
 extern F64
 _splitlognum(
-    _InRef_     PC_F64 logval,
+    _InVal_     F64 logval,
     _OutRef_    P_F64 exponent /*out*/);
 
 /*
@@ -2491,8 +2491,8 @@ gr_riscdiag_piesector_new(
     _OutRef_    P_GR_DIAG_OFFSET pObjectStart,
     PC_DRAW_POINT pPos,
     DRAW_COORD radius,
-    PC_F64 alpha,
-    PC_F64 beta,
+    _InVal_     F64 alpha,
+    _InVal_     F64 beta,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle);
 
@@ -2563,15 +2563,15 @@ gr_riscdiag_diagram_tagged_object_strip(
 
 _Check_return_
 extern STATUS
-gr_riscdiag_wackytag_save_start(
+gr_riscdiag_tag_pd_chart_code_save_start(
     FILE_HANDLE file_handle,
-    _OutRef_    P_DRAW_DIAG_OFFSET p_offset);
+    _OutRef_    P_DRAW_DIAG_OFFSET p_tag_object_offset);
 
 _Check_return_
 extern STATUS
-gr_riscdiag_wackytag_save_end(
+gr_riscdiag_tag_pd_chart_code_save_end(
     FILE_HANDLE file_handle,
-    _InRef_     PC_DRAW_DIAG_OFFSET p_offset);
+    _InRef_     PC_DRAW_DIAG_OFFSET p_tag_object_offset);
 
 /*
 RISC OS Draw JPEG objects
@@ -3130,7 +3130,7 @@ extern void
 gr_numtostr(
     _Out_writes_z_(elemof_buffer) P_U8Z array,
     _InVal_     U32 elemof_buffer,
-    _InRef_     PC_F64 pValue,
+    _InVal_     F64 pValue,
     S32 eformat,
     S32 decimals,
     char decimal_point_ch,  /* CH_NULL -> default (.)    */

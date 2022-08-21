@@ -89,6 +89,7 @@ typedef struct WIMP_MSGPD_DDE {                 /* structure used in all PD DDE 
 #endif
 
 #define WimpOpenWindowBlock struct _WimpOpenWindowBlock /* opaque for headers where it's not needed */
+struct _WimpOpenWindowBlock;
 #define WimpWindow struct _WimpWindow
 #define WimpWindowWithBitset struct _WimpWindowWithBitset
 
@@ -98,7 +99,7 @@ typedef wimp_box BBox;
 
 /* Allow use of tboxlibs names and structures in client code and WimpLib extension code if needed for sanity & clarity */
 
-#if defined(HOST_WINDOWS)
+#if CROSS_COMPILE
 #include "../tboxlibs/wimp.h" /* C: tboxlibs */
 #else
 #include "C:wimp.h" /* C: tboxlibs */

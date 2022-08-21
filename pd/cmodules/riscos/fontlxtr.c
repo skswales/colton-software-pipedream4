@@ -216,7 +216,7 @@ fontselect_xtra_unknown_fn(
 
     if(!processed)
         /* send the uk event anyway if not already done so */
-        processed = (* fontselect.try_fn) (font_name, &width, &height, e, fontselect.try_handle, try_anyway);
+        processed = (* fontselect.try_fn) (font_name, width, height, e, fontselect.try_handle, try_anyway);
 
     if(!processed && (e->e == Wimp_EKeyPressed))
         /* send it on */
@@ -260,8 +260,8 @@ fontselect_process(
     const char * title,
     int flags,
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     FONTSELECT_INIT_FN init_fn,
     void * init_handle,
     FONTSELECT_TRY_FN try_fn,
@@ -279,9 +279,9 @@ fontselect_process(
     fontselect.window_handle = (HOST_WND)
         fontselect_selector((char *) title,                   /* win title   */
                             flags,                            /* flags       */
-                            (char *) font_name,               /* font_name   */
-                            *width,                           /* font width  */
-                            *height,                          /* font height */
+                            (char *) font_name,               /* font name   */
+                            width,                            /* font width  */
+                            height,                           /* font height */
                             fontselect_xtra_unknown_fn);
 
     fontselect.state = (fontselect.window_handle != HOST_WND_NONE)

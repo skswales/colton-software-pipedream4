@@ -27,6 +27,7 @@
 #include "res.h"        /* includes <stdio.h> */
 #endif
 
+#include <locale.h>     /* for setlocale */
 #include <signal.h>     /* for SIGSTAK */
 
 #include "riscos_x.h"

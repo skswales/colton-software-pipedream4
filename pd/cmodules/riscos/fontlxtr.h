@@ -105,8 +105,8 @@ typedef void (* FONTSELECT_INIT_FN) (
 
 typedef BOOL /* processed */ (* FONTSELECT_TRY_FN) (
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     const wimp_eventstr * e,
     void * try_handle,
     BOOL try_anyway);
@@ -116,8 +116,8 @@ fontselect_process(
     const char * title,
     int flags,
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     FONTSELECT_INIT_FN init_fn,
     void * init_handle,
     FONTSELECT_TRY_FN  try_me,

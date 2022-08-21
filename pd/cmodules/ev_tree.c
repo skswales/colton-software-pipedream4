@@ -322,20 +322,20 @@ ev_add_exp_slot_to_tree(
     res = 0;
     while(res >= 0 && grub_next(p_ev_cell, &grubb) != RPN_FRM_END)
     {
-        switch(grubb.data.did_num)
+        switch(grubb.data.data_id)
         {
-        case RPN_DAT_SLR:
+        case DATA_ID_SLR:
             if(ev_add_slrdependency(&grubb) < 0)
                 res = -1;
             break;
 
-        case RPN_DAT_RANGE:
+        case DATA_ID_RANGE:
             if(ev_add_rngdependency(&grubb) < 0)
                 res = -1;
             break;
 
         /* record use of a name */
-        case RPN_DAT_NAME:
+        case DATA_ID_NAME:
             if(add_namuse(&grubb) < 0)
                 res = -1;
             break;
@@ -543,7 +543,7 @@ extern S32
 ev_enum_dep_sup_get(
     P_EV_DEPSUP dsp,
     P_S32 item_no,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     S32 res, item_get;
 
@@ -580,8 +580,8 @@ ev_enum_dep_sup_get(
                     !(sep->flags & TRF_TOBEDEL)       &&
                     slr_equal(&dsp->slr, &sep->refto) )
                 {
-                    p_ev_data->did_num = RPN_DAT_SLR;
-                    p_ev_data->arg.slr = sep->byslr;
+                    p_ss_data->arg.slr = sep->byslr;
+                    ss_data_set_data_id(p_ss_data, DATA_ID_SLR);
                     res = 1;
                 }
             }
@@ -607,8 +607,8 @@ ev_enum_dep_sup_get(
 
                     if(ev_slr_in_range(&rep->refto, &dsp->slr) && !item_get--)
                     {
-                        p_ev_data->did_num = RPN_DAT_SLR;
-                        p_ev_data->arg.slr = rep->byslr;
+                        p_ss_data->arg.slr = rep->byslr;
+                        ss_data_set_data_id(p_ss_data, DATA_ID_SLR);
                         res = 1;
                     }
                 }
@@ -632,14 +632,14 @@ ev_enum_dep_sup_get(
                     if(p_ev_name->flags & TRF_TOBEDEL)
                         continue;
 
-                    switch(p_ev_name->def_data.did_num)
+                    switch(p_ev_name->def_data.data_id)
                     {
-                    case RPN_DAT_SLR:
+                    case DATA_ID_SLR:
                         if(slr_equal(&p_ev_name->def_data.arg.slr, &dsp->slr))
                             got_ref = 1;
                         break;
 
-                    case RPN_DAT_RANGE:
+                    case DATA_ID_RANGE:
                         if(ev_slr_in_range(&p_ev_name->def_data.arg.range, &dsp->slr))
                             got_ref = 1;
                         break;
@@ -647,8 +647,8 @@ ev_enum_dep_sup_get(
 
                     if(got_ref && !item_get--)
                     {
-                        p_ev_data->did_num = RPN_DAT_NAME;
-                        p_ev_data->arg.nameid = p_ev_name->key;
+                        p_ss_data->arg.nameid = p_ev_name->key;
+                        ss_data_set_data_id(p_ss_data, DATA_ID_NAME);
                         res = 1;
                     }
                 }
@@ -671,29 +671,29 @@ ev_enum_dep_sup_get(
 
             while(res < 0 && grub_next(p_ev_cell, &grubb) != RPN_FRM_END)
             {
-                switch(grubb.data.did_num)
+                switch(grubb.data.data_id)
                 {
-                case RPN_DAT_SLR:
+                case DATA_ID_SLR:
                     if(dsp->category == EV_DEPSUP_SLR)
                         if(!item_get--)
                         {
-                            *p_ev_data = grubb.data;
+                            *p_ss_data = grubb.data;
                             res = 1;
                         }
                     break;
-                case RPN_DAT_RANGE:
+                case DATA_ID_RANGE:
                     if(dsp->category == EV_DEPSUP_RANGE)
                         if(!item_get--)
                         {
-                            *p_ev_data = grubb.data;
+                            *p_ss_data = grubb.data;
                             res = 1;
                         }
                     break;
-                case RPN_DAT_NAME:
+                case DATA_ID_NAME:
                     if(dsp->category == EV_DEPSUP_NAME)
                         if(!item_get--)
                         {
-                            *p_ev_data = grubb.data;
+                            *p_ss_data = grubb.data;
                             res = 1;
                             }
                     break;
@@ -1305,9 +1305,9 @@ todo_add_name_deps_of_slr(
             if(p_ev_name->flags & TRF_TOBEDEL)
                 continue;
 
-            switch(p_ev_name->def_data.did_num)
+            switch(p_ev_name->def_data.data_id)
             {
-            case RPN_DAT_SLR:
+            case DATA_ID_SLR:
                 if(all_doc)
                 {
                     if(ev_slr_docno(&p_ev_name->def_data.arg.slr) == ev_slr_docno(slrp))
@@ -1317,7 +1317,7 @@ todo_add_name_deps_of_slr(
                     got_ref = 1;
                 break;
 
-            case RPN_DAT_RANGE:
+            case DATA_ID_RANGE:
                 if(all_doc)
                 {
                     if(ev_slr_docno(&p_ev_name->def_data.arg.range.s) == ev_slr_docno(slrp))

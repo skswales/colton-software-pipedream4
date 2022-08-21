@@ -8,8 +8,8 @@
 ; Copyright (C) 1998-2015 R W Colton
 
         GET     as_flags_h
-
-        ;GET     as_regs_h
+        GET     Hdr:ListOpts
+        GET     Hdr:APCS.APCS-32
         GET     as_macro_h
 
 XOS_Bit                 * 1 :SHL: 17
@@ -57,7 +57,7 @@ ctrlflagp
         MOV     r3, #0
         SWI     XOS_Control
 
-        FunctionReturn "", "fpbased"
+        Return "", "fpbased"
 
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; Will be in SVC32 on 32-bit systems
@@ -92,7 +92,7 @@ ctrlflagp
         MOVEQ   a1, #0
         MOVNE   a1, r3
 
-        FunctionReturn "", "fpbased"
+        Return "", "fpbased"
 
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; Will be in SVC32 / IRQ32 on 32-bit systems
@@ -121,7 +121,7 @@ ctrlflagp
 
         SWI     XOS_ReadMonotonicTime
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++
 ; extern _kernel_oserror *
@@ -136,7 +136,7 @@ ctrlflagp
         SWI     XOS_WriteN
         MOVVC   a1, #0
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++
 ; extern _kernel_oserror *
@@ -152,7 +152,7 @@ ctrlflagp
         SWI     XOS_Plot
         MOVVC   a1, #0
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -160,7 +160,7 @@ ctrlflagp
 
         SWI     XHourglass_Off
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++
 
@@ -170,7 +170,7 @@ ctrlflagp
 
         SWI     XHourglass_On
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++
 
@@ -180,7 +180,7 @@ ctrlflagp
 
         SWI     XHourglass_Percentage
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
         BeginExternal visdelay_percent ; (a1 = p) keep PDM happy
 
@@ -194,7 +194,7 @@ ctrlflagp
 
         SWI     XHourglass_Smash
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++
 
@@ -204,7 +204,7 @@ ctrlflagp
 
         SWI     XHourglass_Start
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; ++++++++++++++++++++++++
 
@@ -224,7 +224,7 @@ ctrlflagp
         SWI     XFont_LoseFont
         MOVVC   a1, #0
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern _kernel_oserror *
@@ -238,7 +238,7 @@ ctrlflagp
         SWI     XFont_SetFont
         MOVVC   a1, #0
 
-        FunctionReturn "","LinkNotStacked"
+        Return "","LinkNotStacked"
 
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; extern _kernel_oserror *
@@ -275,7 +275,7 @@ ctrlflagp
 
         MOVVC   a1, #0          ; no error
 
-        FunctionReturn "v1-v6", "fpbased"
+        Return "v1-v6", "fpbased"
 
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

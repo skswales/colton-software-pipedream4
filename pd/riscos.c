@@ -95,7 +95,7 @@ static BOOL g_kill_duplicates = FALSE;
 /* ask for scrap file load: all errors have been reported locally */
 
 static void
-scraptransfer_file_PipeDream(
+scraptransfer_file_PDChart(
     _InVal_     BOOL iconbar)
 {
     char grname[BUF_MAX_PATHSTRING];
@@ -153,6 +153,12 @@ scraptransfer_file_PipeDream(
 }
 
 static void
+scraptransfer_file_PipeDream(void)
+{
+    xferrecv_import_via_file(NULL); /* can't manage RAM load */
+}
+
+static void
 scraptransfer_file_others(
     _InVal_       FILETYPE_RISC_OS filetype)
 {
@@ -178,8 +184,12 @@ scraptransfer_file(
         reperr(FILE_ERR_ISADIR, data_save->leaf_name);
         break;
 
+    case FILETYPE_PD_CHART:
+        scraptransfer_file_PDChart(iconbar);
+        break;
+
     case FILETYPE_PIPEDREAM:
-        scraptransfer_file_PipeDream(iconbar);
+        scraptransfer_file_PipeDream();
         break;
 
     default:
@@ -398,10 +408,11 @@ can we print a file of this filetype?
 
 static BOOL
 pd_can_print(
-    S32 rft)
+    _InVal_     FILETYPE_RISC_OS rft)
 {
     switch(rft)
     {
+    case FILETYPE_PD_CHART:
     case FILETYPE_PIPEDREAM:
         return(TRUE);
 
@@ -416,12 +427,13 @@ can we 'run' a file of this filetype?
 
 static BOOL
 pd_can_run(
-    S32 rft)
+    _InVal_     FILETYPE_RISC_OS rft)
 {
     switch(rft)
     {
+    case FILETYPE_PD_CHART:
+    case FILETYPE_PD_MACRO:
     case FILETYPE_PIPEDREAM:
-    case FILETYPE_PDMACRO:
         return(TRUE);
 
     default:
@@ -764,15 +776,15 @@ riscos_sendcellcontents(
 
             if(result_extract(tcell, &p_ev_result) == SL_NUMBER)
             {
-                switch(p_ev_result->did_num)
+                switch(p_ev_result->data_id)
                 {
-                case RPN_DAT_WORD8:
-                case RPN_DAT_WORD16:
-                case RPN_DAT_WORD32:
+                case DATA_ID_LOGICAL:
+                case DATA_ID_WORD16:
+                case DATA_ID_WORD32:
                     user_message.data.pd_dde.type.c.content.number = (F64) p_ev_result->arg.integer;
                     goto send_number;
 
-                case RPN_DAT_REAL:
+                case DATA_ID_REAL:
                     user_message.data.pd_dde.type.c.content.number = p_ev_result->arg.fp;
                 send_number:
                     type = Wimp_MPD_DDE_typeC_type_Number;
@@ -1018,7 +1030,7 @@ iconbar_event_Message_DataLoad_PipeDream(
     {
         front_document_using_docno(docno);
     }
-    else if(FILETYPE_PDMACRO == filetype)
+    else if(FILETYPE_PD_MACRO == filetype)
     {
         STATUS filetype_option = 'T';
 
@@ -1081,7 +1093,8 @@ iconbar_event_Message_DataLoad(
         reperr(FILE_ERR_ISADIR, filename);
         break;
 
-    case FILETYPE_PDMACRO:
+    case FILETYPE_PD_CHART:
+    case FILETYPE_PD_MACRO:
     case FILETYPE_PIPEDREAM:
         iconbar_event_Message_DataLoad_PipeDream(filename, filetype);
         break;
@@ -1146,7 +1159,7 @@ iconbar_event_Message_DataOpen(
     {
         front_document_using_docno(docno);
     }
-    else if(FILETYPE_PDMACRO == filetype)
+    else if(FILETYPE_PD_MACRO == filetype)
     {
         iconbar_event_Message_DataOpen_PDMacro(filename);
     }
@@ -2477,10 +2490,11 @@ main_event_Message_DataLoad(
         reperr(FILE_ERR_ISADIR, filename);
         break;
 
-    case FILETYPE_PDMACRO:
+    case FILETYPE_PD_MACRO:
         main_event_Message_DataLoad_PDMacro(filename);
         break;
 
+    case FILETYPE_PD_CHART:
     case FILETYPE_PIPEDREAM:
         main_event_Message_DataLoad_PipeDream(filename, filetype);
         break;
@@ -2558,7 +2572,7 @@ main_event_Message_HelpRequest(
                                ? help_insert_a_reference_to
                                : help_position_the_caret_in;
 
-                    if(coff == OFF_RIGHT);
+                    if(coff == OFF_RIGHT)
                         coff = get_column(tx, trow, 0, FALSE);
 
                     assert(horzvec_entry_valid(coff));

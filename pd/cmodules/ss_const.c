@@ -29,14 +29,14 @@
 
 /*ncr*/
 extern S32
-ev_data_set_error(
-    _OutRef_    P_EV_DATA p_ev_data,
+ss_data_set_error(
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     STATUS error)
 {
-    zero_struct_ptr(p_ev_data);
-    p_ev_data->did_num = RPN_DAT_ERROR;
-    p_ev_data->arg.ev_error.status = error;
-    p_ev_data->arg.ev_error.type = ERROR_NORMAL;
+    zero_struct_ptr(p_ss_data);
+    ss_data_set_data_id(p_ss_data, DATA_ID_ERROR);
+    p_ss_data->arg.ss_error.status = error;
+    p_ss_data->arg.ss_error.type = ERROR_NORMAL;
     return(error);
 }
 
@@ -52,33 +52,41 @@ ev_data_set_error(
 /* rounds at the given significant place before floor-ing */
 
 _Check_return_
+static F64
+real_floor_try_additional_rounding(
+    _InVal_     F64 f64)
+{
+    F64 adjusted_value = f64; /* value to be floor()ed, unless tweaked */
+    int exponent;
+    const F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
+
+    if(exponent >= 0) /* no need to do more for negative exponents here */
+    {
+        const int mantissa_digits_minus_n = DBL_MANT_DIG - 3;
+        const int exponent_minus_mdmn = exponent - mantissa_digits_minus_n;
+        const F64 rounding_value = copysign(pow(2.0, exponent_minus_mdmn), mantissa);
+
+        adjusted_value = f64 + rounding_value; /* adjusted result */
+    }
+
+    return(floor(adjusted_value));
+}
+
+_Check_return_
 extern F64
 real_floor(
     _InVal_     F64 f64)
 {
-    F64 floor_value;
-
-    /*if(global_preferences.ss_calc_additional_rounding)*/
-    {
-        int exponent;
-        F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
-        const int mantissa_digits_minus_n = (DBL_MANT_DIG - 3);
-        const int exponent_minus_mdmn = exponent - mantissa_digits_minus_n;
-
-        if(exponent >= 0) /* no need to do more for negative exponents here */
-        {
-            const F64 rounding_value = copysign(pow(2.0, exponent_minus_mdmn), mantissa);
-            const F64 adjusted_value = f64 + rounding_value;
-
-            /* adjusted result */
-            floor_value = floor(adjusted_value);
-            return(floor_value);
-        }
-    }
-
     /* standard result */
-    floor_value = floor(f64);
-    return(floor_value);
+    F64 floor_value = floor(f64);
+
+    /* first do the cheap step to see if we're already at an integer */
+    if(floor_value == f64)
+        return(f64);
+
+    /* if(!global_preferences.ss_calc_additional_rounding) return(floor_value); */
+    /* if not already an integer, and allowed, then do the more expensive bit */
+    return(real_floor_try_additional_rounding(f64));
 }
 
 /******************************************************************************
@@ -95,110 +103,118 @@ real_floor(
 /* rounds at the given significant place before truncating */
 
 _Check_return_
+static F64
+real_trunc_try_additional_rounding(
+    _InVal_     F64 f64)
+{
+    F64 adjusted_value = f64; /* value to be trunc()ed, unless tweaked */
+    int exponent;
+    const F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
+
+    if(exponent >= 0) /* no need to do more for negative exponents here */
+    {
+        const int mantissa_digits_minus_n = DBL_MANT_DIG - 3;
+        const int exponent_minus_mdmn = exponent - mantissa_digits_minus_n;
+        const F64 rounding_value = copysign(pow(2.0, exponent_minus_mdmn), mantissa);
+
+        adjusted_value = f64 + rounding_value; /* adjusted result */
+    }
+
+    return(trunc(adjusted_value));
+}
+
+_Check_return_
 extern F64
 real_trunc(
     _InVal_     F64 f64)
 {
-    F64 trunc_value;
-
-    /*if(global_preferences.ss_calc_additional_rounding)*/
-    {
-        int exponent;
-        F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
-        const int mantissa_digits_minus_n = (DBL_MANT_DIG - 3);
-        const int exponent_minus_mdmn = exponent - mantissa_digits_minus_n;
-
-        if(exponent >= 0) /* no need to do more for negative exponents here */
-        {
-            const F64 rounding_value = copysign(pow(2.0, exponent_minus_mdmn), mantissa);
-            const F64 adjusted_value = f64 + rounding_value;
-
-            /* adjusted result */
-            (void) modf(adjusted_value, &trunc_value);
-            return(trunc_value);
-        }
-    }
-
     /* standard result */
-    (void) modf(f64, &trunc_value);
-    return(trunc_value);
+    F64 trunc_value = trunc(f64);
+
+    /* first do the cheap step to see if we're already at an integer */
+    if(trunc_value == f64)
+        return(f64);
+
+    /* if(!global_preferences.ss_calc_additional_rounding) return(trunc_value); */
+    /* if not already an integer, and allowed, then do the more expensive bit */
+    return(real_trunc_try_additional_rounding(f64));
 }
 
 /******************************************************************************
 *
-* force conversion of fp to integer
+* force conversion of real to integer
+*
+* NB ss_data_real_to_integer_force uses real_floor() NOT real_trunc()
 *
 ******************************************************************************/
 
 /*ncr*/
 extern STATUS
-real_to_integer_force(
-    _InoutRef_  P_EV_DATA p_ev_data)
+ss_data_real_to_integer_force(
+    _InoutRef_  P_SS_DATA p_ss_data)
 {
+    F64 f64;
     F64 floor_value;
     S32 s32;
 
-    assert(RPN_DAT_REAL == p_ev_data->did_num);
-    if(RPN_DAT_REAL != p_ev_data->did_num)
+    assert(ss_data_is_real(p_ss_data));
+    if(DATA_ID_REAL != ss_data_get_data_id(p_ss_data))
         return(STATUS_OK); /* no conversion */
 
-    if(p_ev_data->arg.fp > (F64) S32_MAX)
+    f64 = ss_data_get_real(p_ss_data);
+
+    if(fabs(f64) > (F64) S32_MAX)
     {
-        ev_data_set_integer(p_ev_data, S32_MAX);
+        ss_data_set_integer(p_ss_data, (f64 < 0.0) ? -S32_MAX : S32_MAX);
         return(STATUS_OK); /* out of range */
     }
-    else if(p_ev_data->arg.fp < (F64) -S32_MAX) /* NB NOT S32_MIN */
+
+    floor_value = real_floor(f64);
+
+    s32 = (S32) floor_value;
+
+    if(s32 == S32_MIN)
     {
-        ev_data_set_integer(p_ev_data, -S32_MAX);
+        ss_data_set_integer(p_ss_data, -S32_MAX);
         return(STATUS_OK); /* out of range */
     }
-    else
-    {
-        floor_value = floor(p_ev_data->arg.fp);
 
-        s32 = (S32) floor_value;
-
-        if(s32 == S32_MIN)
-        {
-            ev_data_set_integer(p_ev_data, -S32_MAX);
-            return(STATUS_OK); /* out of range */
-        }
-    }
-
-    ev_data_set_integer(p_ev_data, s32);
+    ss_data_set_integer(p_ss_data, s32);
     return(STATUS_DONE); /* converted OK */
 }
 
 /******************************************************************************
 *
-* try to make an integer from an fp
+* try to make an integer from a real if appropriate
 *
 ******************************************************************************/
 
 /*ncr*/
 extern BOOL
-real_to_integer_try(
-    _InoutRef_  P_EV_DATA p_ev_data)
+ss_data_real_to_integer_try(
+    _InoutRef_  P_SS_DATA p_ss_data)
 {
+    F64 f64;
     F64 floor_value;
+    S32 s32;
 
-    if(p_ev_data->did_num != RPN_DAT_REAL)
+    if(DATA_ID_REAL != ss_data_get_data_id(p_ss_data))
         return(FALSE);
 
-    floor_value = floor(p_ev_data->arg.fp);
+    f64 = ss_data_get_real(p_ss_data);
 
-    if( (floor_value >  S32_MAX) ||
-        (floor_value < -S32_MAX) ) /* NB NOT S32_MIN */
+    floor_value = real_floor(f64);
+
+    if(fabs(floor_value) > (F64) S32_MAX)
         return(FALSE);
 
-    if(floor_value == p_ev_data->arg.fp)
-    {
-        S32 s32 = (S32) floor_value;
-        ev_data_set_integer(p_ev_data, s32);
-        return(TRUE); /* converted OK */
-    }
+    if(floor_value != f64)
+        return(FALSE); /* unmodified */
 
-    return(FALSE); /* unmodified */
+    s32 = (S32) floor_value;
+
+    ss_data_set_integer(p_ss_data, s32);
+    return(TRUE); /* converted OK */
 }
 
 /******************************************************************************
@@ -209,17 +225,17 @@ real_to_integer_try(
 
 extern void
 ss_array_free(
-    _InoutRef_  P_EV_DATA p_ev_data)
+    _InoutRef_  P_SS_DATA p_ss_data)
 {
     S32 ix, iy;
 
-    for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
-        for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
-            ss_data_free_resources(ss_array_element_index_wr(p_ev_data, ix, iy));
+    for(iy = 0; iy < p_ss_data->arg.ss_array.y_size; ++iy)
+        for(ix = 0; ix < p_ss_data->arg.ss_array.x_size; ++ix)
+            ss_data_free_resources(ss_array_element_index_wr(p_ss_data, ix, iy));
 
-    p_ev_data->did_num = RPN_DAT_BLANK;
+    ss_data_set_data_id(p_ss_data, DATA_ID_BLANK);
 
-    al_ptr_dispose(P_P_ANY_PEDANTIC(&p_ev_data->arg.ev_array.elements));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&p_ss_data->arg.ss_array.elements));
 }
 
 /******************************************************************************
@@ -230,21 +246,21 @@ ss_array_free(
 
 extern STATUS
 ss_array_dup(
-    _OutRef_    P_EV_DATA p_ev_data,
-    _InRef_     PC_EV_DATA p_ev_data_in)
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InRef_     PC_SS_DATA p_ss_data_in)
 {
     STATUS status = STATUS_OK;
 
-    p_ev_data->did_num = RPN_TMP_ARRAY;
-    p_ev_data->arg.ev_array.x_size = 0;
-    p_ev_data->arg.ev_array.y_size = 0;
-    p_ev_data->arg.ev_array.elements = NULL;
+    ss_data_set_data_id(p_ss_data, RPN_TMP_ARRAY);
+    p_ss_data->arg.ss_array.x_size = 0;
+    p_ss_data->arg.ss_array.y_size = 0;
+    p_ss_data->arg.ss_array.elements = NULL;
 
-    if(status_fail(status = array_copy(p_ev_data, p_ev_data_in)))
-        ss_array_free(p_ev_data);
+    if(status_fail(status = array_copy(p_ss_data, p_ss_data_in)))
+        ss_array_free(p_ss_data);
 
     if(status_fail(status))
-        return(ev_data_set_error(p_ev_data, status));
+        return(ss_data_set_error(p_ss_data, status));
 
     return(STATUS_OK);
 }
@@ -257,20 +273,20 @@ ss_array_dup(
 
 _Check_return_
 _Ret_/*maybenull*/
-extern P_EV_DATA
+extern P_SS_DATA
 ss_array_element_index_wr(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     S32 ix,
     _InVal_     S32 iy)
 {
-    assert((ix < p_ev_data->arg.ev_array.x_size) && (iy < p_ev_data->arg.ev_array.y_size));
+    assert((ix < p_ss_data->arg.ss_array.x_size) && (iy < p_ss_data->arg.ss_array.y_size));
 
-    if((ix >= p_ev_data->arg.ev_array.x_size) || (iy >= p_ev_data->arg.ev_array.y_size))
+    if((ix >= p_ss_data->arg.ss_array.x_size) || (iy >= p_ss_data->arg.ss_array.y_size))
         return(NULL);
 
-    assert(NULL != p_ev_data->arg.ev_array.elements);
+    assert(NULL != p_ss_data->arg.ss_array.elements);
 
-    return(p_ev_data->arg.ev_array.elements + (iy * p_ev_data->arg.ev_array.x_size) + ix);
+    return(p_ss_data->arg.ss_array.elements + (iy * p_ss_data->arg.ss_array.x_size) + ix);
 }
 
 /******************************************************************************
@@ -281,20 +297,20 @@ ss_array_element_index_wr(
 
 _Check_return_
 _Ret_/*maybenull*/
-extern PC_EV_DATA
+extern PC_SS_DATA
 ss_array_element_index_borrow(
-    _InRef_     PC_EV_DATA p_ev_data,
+    _InRef_     PC_SS_DATA p_ss_data,
     _InVal_     S32 ix,
     _InVal_     S32 iy)
 {
-    assert((ix < p_ev_data->arg.ev_array.x_size) && (iy < p_ev_data->arg.ev_array.y_size));
+    assert((ix < p_ss_data->arg.ss_array.x_size) && (iy < p_ss_data->arg.ss_array.y_size));
 
-    if((ix >= p_ev_data->arg.ev_array.x_size) || (iy >= p_ev_data->arg.ev_array.y_size))
+    if((ix >= p_ss_data->arg.ss_array.x_size) || (iy >= p_ss_data->arg.ss_array.y_size))
         return(NULL);
 
-    assert(NULL != p_ev_data->arg.ev_array.elements);
+    assert(NULL != p_ss_data->arg.ss_array.elements);
 
-    return(p_ev_data->arg.ev_array.elements + (iy * p_ev_data->arg.ev_array.x_size) + ix);
+    return(p_ss_data->arg.ss_array.elements + (iy * p_ss_data->arg.ss_array.x_size) + ix);
 }
 
 /******************************************************************************
@@ -305,12 +321,12 @@ ss_array_element_index_borrow(
 
 extern STATUS
 ss_array_element_make(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     S32 ix,
     _InVal_     S32 iy)
 {
-    const S32 old_xs = p_ev_data->arg.ev_array.x_size;
-    const S32 old_ys = p_ev_data->arg.ev_array.y_size;
+    const S32 old_xs = p_ss_data->arg.ss_array.x_size;
+    const S32 old_ys = p_ss_data->arg.ss_array.y_size;
     S32 new_xs;
     S32 new_ys;
     S32 new_size;
@@ -336,33 +352,33 @@ ss_array_element_make(
 
     {
     STATUS status;
-    P_EV_DATA newp;
+    P_SS_DATA newp;
 
-    if(NULL == (newp = al_ptr_realloc_elem(EV_DATA, p_ev_data->arg.ev_array.elements, new_size, &status)))
+    if(NULL == (newp = al_ptr_realloc_elem(SS_DATA, p_ss_data->arg.ss_array.elements, new_size, &status)))
         return(status);
 
     trace_1(TRACE_MODULE_EVAL, TEXT("array realloced, now: %d entries"), new_xs * new_ys);
 
-    p_ev_data->arg.ev_array.elements = newp;
+    p_ss_data->arg.ss_array.elements = newp;
     } /*block*/
 
     { /* set all new array elements to blank */
-    P_EV_DATA p_ev_data_s, p_ev_data_e, p_ev_data_t;
+    P_SS_DATA p_ss_data_s, p_ss_data_e, p_ss_data_t;
 
     /* set up new sizes */
-    p_ev_data->arg.ev_array.x_size = new_xs;
-    p_ev_data->arg.ev_array.y_size = new_ys;
+    p_ss_data->arg.ss_array.x_size = new_xs;
+    p_ss_data->arg.ss_array.y_size = new_ys;
 
     if(old_xs < 1 || old_ys < 1)
-        p_ev_data_s = ss_array_element_index_wr(p_ev_data, 0, 0);
+        p_ss_data_s = ss_array_element_index_wr(p_ss_data, 0, 0);
     else
-        p_ev_data_s = ss_array_element_index_wr(p_ev_data, old_xs - 1, old_ys - 1) + 1;
+        p_ss_data_s = ss_array_element_index_wr(p_ss_data, old_xs - 1, old_ys - 1) + 1;
 
     /* use new stored size to get pointer to end of new array */
-    p_ev_data_e = ss_array_element_index_wr(p_ev_data, new_xs - 1, new_ys - 1);
+    p_ss_data_e = ss_array_element_index_wr(p_ss_data, new_xs - 1, new_ys - 1);
 
-    for(p_ev_data_t = p_ev_data_s; p_ev_data_t <= p_ev_data_e; ++p_ev_data_t)
-        p_ev_data_t->did_num = RPN_DAT_BLANK;
+    for(p_ss_data_t = p_ss_data_s; p_ss_data_t <= p_ss_data_e; ++p_ss_data_t)
+        p_ss_data_t->data_id = DATA_ID_BLANK;
 
     return(STATUS_OK);
     } /*block*/
@@ -376,17 +392,17 @@ ss_array_element_make(
 
 extern void
 ss_array_element_read(
-    _OutRef_    P_EV_DATA p_ev_data,
-    _InRef_     PC_EV_DATA p_ev_data_src,
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InRef_     PC_SS_DATA p_ss_data_src,
     _InVal_     S32 ix,
     _InVal_     S32 iy)
 {
-    assert((p_ev_data_src->did_num == RPN_TMP_ARRAY) || (p_ev_data_src->did_num == RPN_RES_ARRAY));
+    assert( (ss_data_get_data_id(p_ss_data_src) == RPN_TMP_ARRAY) || (ss_data_get_data_id(p_ss_data_src) == RPN_RES_ARRAY) );
 
-    *p_ev_data = *ss_array_element_index_borrow(p_ev_data_src, ix, iy);
-    /*p_ev_data->local_data = 0;*/
-    if(RPN_TMP_STRING == p_ev_data->did_num)
-        p_ev_data->did_num = RPN_DAT_STRING;
+    *p_ss_data = *ss_array_element_index_borrow(p_ss_data_src, ix, iy);
+    /*p_ss_data->local_data = 0;*/
+    if(RPN_TMP_STRING == ss_data_get_data_id(p_ss_data))
+        ss_data_set_data_id(p_ss_data, RPN_DAT_STRING);
 }
 
 /******************************************************************************
@@ -397,66 +413,92 @@ ss_array_element_read(
 
 extern STATUS
 ss_array_make(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     S32 x_size,
     _InVal_     S32 y_size)
 {
     STATUS status = STATUS_OK;
 
-    p_ev_data->did_num = RPN_TMP_ARRAY;
-    p_ev_data->arg.ev_array.x_size = 0;
-    p_ev_data->arg.ev_array.y_size = 0;
-    p_ev_data->arg.ev_array.elements = NULL;
+    ss_data_set_data_id(p_ss_data, RPN_TMP_ARRAY);
+    p_ss_data->arg.ss_array.x_size = 0;
+    p_ss_data->arg.ss_array.y_size = 0;
+    p_ss_data->arg.ss_array.elements = NULL;
 
-    if(ss_array_element_make(p_ev_data, x_size - 1, y_size - 1) < 0)
+    if(ss_array_element_make(p_ss_data, x_size - 1, y_size - 1) < 0)
     {
-        ss_array_free(p_ev_data);
+        ss_array_free(p_ss_data);
         status = status_nomem();
     }
 
     if(status_fail(status))
-        return(ev_data_set_error(p_ev_data, status));
+        return(ss_data_set_error(p_ss_data, status));
 
     return(STATUS_OK);
 }
 
 /******************************************************************************
 *
-* copies input data item to out, setting equal type numbers for equivalent types
+* sets equal type numbers for equivalent types
 *
 ******************************************************************************/
 
 static void
-type_equate(
-    _OutRef_    P_EV_DATA p_ev_data_out,
-    _InRef_     PC_EV_DATA p_ev_data_in)
+type_equate_non_number(
+    _InoutRef_  P_SS_DATA p_ss_data)
 {
-    *p_ev_data_out = *p_ev_data_in;
-
-    switch(p_ev_data_out->did_num)
+    switch(ss_data_get_data_id(p_ss_data))
     {
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
-        p_ev_data_out->did_num = RPN_DAT_WORD32; /* NB all integers returned from type_equate() are promoted to widest type */
-        break;
-
     case RPN_RES_ARRAY:
-        p_ev_data_out->did_num = RPN_TMP_ARRAY;
-        break;
+        /* flatten ARRAY types */
+        ss_data_set_data_id(p_ss_data, RPN_TMP_ARRAY);
+        return;
 
     case RPN_DAT_STRING:
-    case RPN_RES_STRING:
     case RPN_TMP_STRING:
-        if(ss_string_is_blank(p_ev_data_out))
-            ev_data_set_WORD32(p_ev_data_out, 0);
-        else
-            p_ev_data_out->did_num = RPN_DAT_STRING;
-        break;
+    case RPN_RES_STRING:
+        if(!ss_string_is_blank(p_ss_data))
+        {   /* flatten STRING types */
+            ss_data_set_data_id(p_ss_data, RPN_DAT_STRING);
+            return;
+        }
 
-    case RPN_DAT_BLANK:
-        ev_data_set_WORD32(p_ev_data_out, 0);
-        break;
+        /*FALLTHRU*/
+
+    case DATA_ID_BLANK:
+        ss_data_set_WORD32(p_ss_data, 0); /* blanks_equal_zero in PipeDream */
+        return;
+
+    default:
+        return;
+    }
+}
+
+static inline void
+type_equate(
+    _InoutRef_  P_SS_DATA p_ss_data)
+{
+    /* deal with number cases quickest (look at ARM DecAOF output in context before tweaking at all!) */
+    const EV_IDNO data_id = ss_data_get_data_id(p_ss_data);
+
+    switch(data_id)
+    {
+    case DATA_ID_REAL:
+        return;
+
+    case DATA_ID_WORD32:
+        return;
+    }
+
+    switch(data_id)
+    {
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+        ss_data_set_data_id(p_ss_data, DATA_ID_WORD32); /* NB all integers returned from type_equate() are promoted to widest type */
+        return;
+
+    default:
+        type_equate_non_number(p_ss_data);
+        return;
     }
 }
 
@@ -465,123 +507,215 @@ type_equate(
 * compare two results
 *
 * --out--
-* <0 p_ev_data1 < p_ev_data2
-* =0 p_ev_data1 = p_ev_data2
-* >0 p_ev_data1 > p_ev_data2
+* <0 p_ss_data_1 < p_ss_data_2
+* =0 p_ss_data_1 = p_ss_data_2
+* >0 p_ss_data_1 > p_ss_data_2
 *
 ******************************************************************************/
 
-extern S32
-ss_data_compare(
-    _InRef_     PC_EV_DATA p_ev_data1,
-    _InRef_     PC_EV_DATA p_ev_data2)
+static S32
+ss_data_compare_data_ids(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
 {
-    EV_DATA data1, data2;
+    S32 res;
+
+    if(ss_data_get_data_id(p_ss_data_1) < ss_data_get_data_id(p_ss_data_2))
+        res = -1;
+    else if(ss_data_get_data_id(p_ss_data_1) > ss_data_get_data_id(p_ss_data_2))
+        res = 1;
+    else
+        res = 0;
+
+    return(res);
+}
+
+_Check_return_
+static S32
+ss_data_compare_reals_unordered(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    F64 f64_1 = ss_data_get_real(p_ss_data_1);
+    F64 f64_2 = ss_data_get_real(p_ss_data_2);
+
+    /* This will stick NaNs up at the top of a sort ("To +infinity and beyond...") */
+    if(isnan(f64_2))
+    {
+        if(isnan(f64_1))
+            return(0);
+
+        /* else */
+            return(-1); /* f1 '<' f2 */
+    }
+
+    /* if(isnan(f64_1)) */
+        return(1); /* f1 '>' f2 */
+}
+
+_Check_return_
+static S32
+ss_data_compare_reals(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    /* NB Do not muck about with this without watching the generated code ... */
+
+    /* NaNs, being unordered, are never equal to each other or anything else */
+    if(!isunordered(ss_data_get_real(p_ss_data_1), ss_data_get_real(p_ss_data_2)))
+    {
+        if(ss_data_get_real(p_ss_data_1) == ss_data_get_real(p_ss_data_2))
+            return(0);
+
+        /* Handle +/-inf */
+        if(isless(ss_data_get_real(p_ss_data_1), ss_data_get_real(p_ss_data_2)))
+            return(-1);
+
+        /* else if(isgreater(ss_data_get_real(p_ss_data_1), ss_data_get_real(p_ss_data_2))) */
+            return(1);
+    }
+
+    return(ss_data_compare_reals_unordered(p_ss_data_1, p_ss_data_2));
+}
+
+_Check_return_
+static inline S32
+ss_data_compare_integers(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    if(p_ss_data_1->arg.integer == p_ss_data_2->arg.integer)
+        return(0);
+
+    if(p_ss_data_1->arg.integer < p_ss_data_2->arg.integer)
+        return(-1);
+
+    /* if(p_ss_data_1->arg.integer > p_ss_data_2->arg.integer) */
+        return(1);
+}
+
+static inline S32
+ss_data_compare_dates(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    return(ss_date_compare(&p_ss_data_1->arg.ss_date, &p_ss_data_2->arg.ss_date));
+}
+
+static S32
+ss_data_compare_errors(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    S32 res;
+
+    if(p_ss_data_1->arg.ss_error.status == p_ss_data_2->arg.ss_error.status)
+        res = 0;
+    else if(p_ss_data_1->arg.ss_error.status < p_ss_data_2->arg.ss_error.status)
+        res = -1;
+    else /* if(p_ss_data_1->arg.ss_error.status > p_ss_data_2->arg.ss_error.status) */
+        res = 1;
+
+    return(res);
+}
+
+static S32
+ss_data_compare_strings(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    S32 res;
+
+    res = stricmp_wild(ss_data_get_string(p_ss_data_1), ss_data_get_string(p_ss_data_2));
+
+    return(res);
+}
+
+static S32
+ss_data_compare_blanks(void)
+{
+    return(0);
+}
+
+static S32
+ss_data_compare_arrays(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    S32 ix, iy;
     S32 res = 0;
 
-    /* eliminate equivalent types */
-    type_equate(&data1, p_ev_data1);
-    type_equate(&data2, p_ev_data2);
-    two_nums_type_match(&data1, &data2, FALSE);
+    if(p_ss_data_1->arg.ss_array.y_size < p_ss_data_2->arg.ss_array.y_size)
+        return(-1);
+    else if(p_ss_data_1->arg.ss_array.y_size > p_ss_data_2->arg.ss_array.y_size)
+        return(1);
+    else if(p_ss_data_1->arg.ss_array.x_size < p_ss_data_2->arg.ss_array.x_size)
+        return(-1);
+    else if(p_ss_data_1->arg.ss_array.x_size > p_ss_data_2->arg.ss_array.x_size)
+        return(1);
 
-    if(data1.did_num != data2.did_num)
-    {
-        if(data1.did_num < data2.did_num)
-            res = -1;
-        else
-            res = 1;
-    }
     else
-    {
-        switch(data1.did_num)
+    {   /* arrays are the same size; compare each element */
+        for(iy = 0; iy < p_ss_data_1->arg.ss_array.y_size; ++iy)
         {
-        case RPN_DAT_REAL:
-            if(data1.arg.fp < data2.arg.fp)
-                res = -1;
-            else if(data1.arg.fp == data2.arg.fp)
-                res = 0;
-            else
-                res = 1;
-            break;
-
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-            if(data1.arg.integer < data2.arg.integer)
-                res = -1;
-            else if(data1.arg.integer == data2.arg.integer)
-                res = 0;
-            else
-                res = 1;
-            break;
-
-        case RPN_DAT_STRING:
-            res = stricmp_wild(data1.arg.string.uchars, data2.arg.string.uchars);
-            break;
-
-        case RPN_TMP_ARRAY:
+            for(ix = 0; ix < p_ss_data_1->arg.ss_array.x_size; ++ix)
             {
-            if(data1.arg.ev_array.y_size < data2.arg.ev_array.y_size)
-                res = -1;
-            else if(data1.arg.ev_array.y_size > data2.arg.ev_array.y_size)
-                res = 1;
-            else if(data1.arg.ev_array.x_size < data2.arg.ev_array.x_size)
-                res = -1;
-            else if(data1.arg.ev_array.x_size > data2.arg.ev_array.x_size)
-                res = 1;
-
-            if(!res)
-            {
-                S32 ix, iy;
-
-                for(iy = 0; iy < data1.arg.ev_array.y_size; ++iy)
-                {
-                    for(ix = 0; ix < data1.arg.ev_array.x_size; ++ix)
-                    {
-                        if((res = ss_data_compare(ss_array_element_index_borrow(&data1, ix, iy),
-                                                  ss_array_element_index_borrow(&data2, ix, iy))) != 0)
-                            goto end_array_comp;
-                    }
-                }
-
-                end_array_comp:
-                    ;
+                res = ss_data_compare(ss_array_element_index_borrow(p_ss_data_1, ix, iy),
+                                      ss_array_element_index_borrow(p_ss_data_2, ix, iy));
+                if(0 != res)
+                    return(res);
             }
-            break;
-            }
-
-        case RPN_DAT_DATE:
-            if(data1.arg.ev_date.date < data2.arg.ev_date.date)
-                res = -1;
-            else if(data1.arg.ev_date.date == data2.arg.ev_date.date)
-            {
-                if(data1.arg.ev_date.time < data2.arg.ev_date.time)
-                    res = -1;
-                else if(data1.arg.ev_date.time == data2.arg.ev_date.time)
-                    res = 0;
-                else
-                    res = 1;
-            }
-            else
-                res = 1;
-            break;
-
-        case RPN_DAT_ERROR:
-            if(data1.arg.ev_error.status < data2.arg.ev_error.status)
-                res = -1;
-            else if(data1.arg.ev_error.status == data2.arg.ev_error.status)
-                res = 0;
-            else
-                res = 1;
-            break;
-
-        case RPN_DAT_BLANK:
-            res = 0;
-            break;
         }
     }
 
     return(res);
+}
+
+extern S32
+ss_data_compare(
+    _InRef_     PC_SS_DATA p_ss_data_1,
+    _InRef_     PC_SS_DATA p_ss_data_2)
+{
+    SS_DATA ss_data_1 = *p_ss_data_1;
+    SS_DATA ss_data_2 = *p_ss_data_2;
+
+    /* eliminate equivalent types */
+    type_equate(&ss_data_1);
+    type_equate(&ss_data_2);
+
+    two_nums_type_match(&ss_data_1, &ss_data_2, FALSE);
+
+    if(ss_data_get_data_id(&ss_data_1) != ss_data_get_data_id(&ss_data_2))
+        return(ss_data_compare_data_ids(&ss_data_1, &ss_data_2));
+
+    switch(ss_data_1.data_id)
+    {
+    case DATA_ID_REAL:
+        return(ss_data_compare_reals(&ss_data_1, &ss_data_2));
+
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        return(ss_data_compare_integers(&ss_data_1, &ss_data_2));
+
+    case DATA_ID_DATE:
+        return(ss_data_compare_dates(&ss_data_1, &ss_data_2));
+
+    case DATA_ID_ERROR:
+        return(ss_data_compare_errors(&ss_data_1, &ss_data_2));
+
+    case RPN_DAT_STRING:
+        return(ss_data_compare_strings(&ss_data_1, &ss_data_2));
+
+    case DATA_ID_BLANK:
+        return(ss_data_compare_blanks());
+
+    case RPN_TMP_ARRAY:
+        return(ss_data_compare_arrays(&ss_data_1, &ss_data_2));
+
+    default: default_unhandled();
+        return(0);
+    }
 }
 
 /******************************************************************************
@@ -592,54 +726,117 @@ ss_data_compare(
 
 extern void
 ss_data_free_resources(
-    _InoutRef_  P_EV_DATA p_ev_data)
+    _InoutRef_  P_SS_DATA p_ss_data)
 {
-    switch(p_ev_data->did_num)
+    switch(ss_data_get_data_id(p_ss_data))
     {
     case RPN_TMP_STRING:
-        str_clr(&p_ev_data->arg.string_wr.uchars);
-        p_ev_data->did_num = RPN_DAT_BLANK;
+        str_clr(&p_ss_data->arg.string_wr.uchars);
+        ss_data_set_data_id(p_ss_data, DATA_ID_BLANK);
         break;
 
     case RPN_TMP_ARRAY:
-        ss_array_free(p_ev_data);
-        p_ev_data->did_num = RPN_DAT_BLANK;
+        ss_array_free(p_ss_data);
+        ss_data_set_data_id(p_ss_data, DATA_ID_BLANK);
         break;
     }
 }
 
 /******************************************************************************
 *
-* given a data item, make a copy of
-* it so we can be sure we own it
+* given a data item, make a copy of it so we can be sure we own it
 *
 ******************************************************************************/
 
 extern S32
 ss_data_resource_copy(
-    _OutRef_    P_EV_DATA p_ev_data_out,
-    _InRef_     PC_EV_DATA p_ev_data_in)
+    _OutRef_    P_SS_DATA p_ss_data_out,
+    _InRef_     PC_SS_DATA p_ss_data_in)
 {
     /* we get our own copy of handle based resources */
-    switch(p_ev_data_in->did_num)
+    switch(ss_data_get_data_id(p_ss_data_in))
     {
     case RPN_DAT_STRING:
     case RPN_TMP_STRING:
     case RPN_RES_STRING:
-        (void) ss_string_dup(p_ev_data_out, p_ev_data_in);
+        (void) ss_string_dup(p_ss_data_out, p_ss_data_in);
         break;
 
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
-        (void) ss_array_dup(p_ev_data_out, p_ev_data_in);
+        (void) ss_array_dup(p_ss_data_out, p_ss_data_in);
         break;
 
     default:
-        *p_ev_data_out = *p_ev_data_in;
+        *p_ss_data_out = *p_ss_data_in;
         break;
     }
 
-    return(p_ev_data_out->did_num);
+    return(ss_data_get_data_id(p_ss_data_out));
+}
+
+/******************************************************************************
+*
+* decode data (which must be a number type) as a Logical value
+*
+******************************************************************************/
+
+_Check_return_
+extern bool
+ss_data_get_logical(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    /* deal with expected cases first - again, consult ARM DecAOF output before tweaking */
+    switch(ss_data_get_data_id(p_ss_data))
+    {
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        return(0 != ss_data_get_integer(p_ss_data));
+    }
+
+    switch(ss_data_get_data_id(p_ss_data))
+    {
+    case DATA_ID_REAL:
+        return(0.0 != ss_data_get_real(p_ss_data));
+
+#if 0 /* diff minimization */
+    case DATA_ID_LOGICAL:
+        assert((p_ss_data->arg.logical_integer == 0U /*false*/) || (p_ss_data->arg.logical_integer == 1U /*true*/)); /* verify full width */
+        return(p_ss_data->arg.logical_bool);
+#endif
+
+
+    default: default_unhandled();
+        assert(ss_data_is_number(p_ss_data));
+        return(FALSE);
+    }
+}
+
+extern void
+ss_data_set_logical(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InVal_     bool logical)
+{
+    p_ss_data->arg.logical_integer = 0U; /* set a full width integer in case bool is smaller */
+    p_ss_data->arg.logical_bool = logical;
+    assert((p_ss_data->arg.logical_integer == 0U /*false*/) || (p_ss_data->arg.logical_integer == 1U /*true*/)); /* verify full width */
+    ss_data_set_data_id(p_ss_data, DATA_ID_LOGICAL);
+}
+
+/******************************************************************************
+*
+* decode data (which must be a number type) as a REAL value
+*
+******************************************************************************/
+
+_Check_return_
+extern F64
+ss_data_get_number(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_number(p_ss_data));
+    return(ss_data_is_real(p_ss_data) ? ss_data_get_real(p_ss_data) : (F64) ss_data_get_integer(p_ss_data));
 }
 
 /******************************************************************************
@@ -651,12 +848,12 @@ ss_data_resource_copy(
 _Check_return_
 extern BOOL
 ss_string_is_blank(
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
-    PC_U8 ptr = p_ev_data->arg.string.uchars;
-    S32 len = (S32) p_ev_data->arg.string.size;
+    PC_U8 ptr = ss_data_get_string(p_ss_data);
+    S32 len = (S32) ss_data_get_string_size(p_ss_data);
 
-    /*assert(p_ev_data->did_num == RPN_DAT_STRING);*/
+    /*assert(DATA_ID_STRING);*/
 
     if(ptr != NULL)
         while(--len >= 0)
@@ -675,14 +872,14 @@ ss_string_is_blank(
 _Check_return_
 extern STATUS
 ss_string_dup(
-    _OutRef_    P_EV_DATA p_ev_data,
-    _InRef_     PC_EV_DATA p_ev_data_src)
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InRef_     PC_SS_DATA p_ss_data_src)
 {
-    assert(p_ev_data_src);
-    /*assert(p_ev_data_src->did_num == RPN_DAT_STRING);*/
-    assert(p_ev_data);
+    PTR_ASSERT(p_ss_data_src);
+    /*assert(ss_data_get_data_id(p_ss_data_src) == DATA_ID_STRING);*/
+    PTR_ASSERT(p_ss_data);
 
-    return(ss_string_make_uchars(p_ev_data, p_ev_data_src->arg.string.uchars, p_ev_data_src->arg.string.size));
+    return(ss_string_make_uchars(p_ss_data, ss_data_get_string(p_ss_data_src), ss_data_get_string_size(p_ss_data_src)));
 }
 
 /******************************************************************************
@@ -694,11 +891,11 @@ ss_string_dup(
 _Check_return_
 extern STATUS
 ss_string_make_uchars(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _In_reads_opt_(uchars_n) PC_UCHARS uchars,
     _In_        U32 uchars_n)
 {
-    assert(p_ev_data);
+    assert(p_ss_data);
     assert((S32) uchars_n >= 0);
 
     uchars_n = MIN(uchars_n, EV_MAX_STRING_LEN); /* SKS 27oct96 limit in any case */
@@ -706,24 +903,24 @@ ss_string_make_uchars(
     /*if(0 != uchars_n)*/
     {
         STATUS status;
-        if(NULL == (p_ev_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*CH_NULL*/, &status)))
-            return(ev_data_set_error(p_ev_data, status));
+        if(NULL == (p_ss_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*CH_NULL*/, &status)))
+            return(ss_data_set_error(p_ss_data, status));
         if(NULL == uchars)
-            PtrPutByte(p_ev_data->arg.string_wr.uchars, CH_NULL); /* allows append (like ustr_set_n()) */
+            PtrPutByte(p_ss_data->arg.string_wr.uchars, CH_NULL); /* allows append (like ustr_set_n()) */
         else
-            memcpy32(p_ev_data->arg.string_wr.uchars, uchars, uchars_n);
-        p_ev_data->arg.string_wr.uchars[uchars_n] = CH_NULL;
-        p_ev_data->did_num = RPN_TMP_STRING; /* copy is now owned by the caller */
+            memcpy32(p_ss_data->arg.string_wr.uchars, uchars, uchars_n);
+        p_ss_data->arg.string_wr.uchars[uchars_n] = CH_NULL;
+        ss_data_set_data_id(p_ss_data, RPN_TMP_STRING); /* copy is now owned by the caller */
     }
 #if 0 /* can't do this in PipeDream - gets transferred to a result and then freed */
     else
     {   /* SKS 27oct96 optimise empty strings */
-        p_ev_data->arg.string.uchars = "";
-        p_ev_data->did_num = RPN_DAT_STRING;
+        p_ss_data->arg.string.uchars = "";
+        ss_data_set_data_id(p_ss_data, DATA_ID_STRING);
     }
 #endif
 
-    p_ev_data->arg.string.size = uchars_n;
+    p_ss_data->arg.string.size = uchars_n;
 
     return(STATUS_OK);
 }
@@ -731,20 +928,43 @@ ss_string_make_uchars(
 _Check_return_
 extern STATUS
 ss_string_make_ustr(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _In_z_      PC_USTR ustr)
 {
-    return(ss_string_make_uchars(p_ev_data, ustr, ustrlen32(ustr)));
+    return(ss_string_make_uchars(p_ss_data, ustr, ustrlen32(ustr)));
 }
 
 _Check_return_
 extern U32
 ss_string_skip_leading_whitespace(
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
-    assert(RPN_DAT_STRING == p_ev_data->did_num);
+    assert(ss_data_is_string(p_ss_data));
 
-    return(ss_string_skip_leading_whitespace_uchars(p_ev_data->arg.string.uchars, p_ev_data->arg.string.size));
+    return(ss_string_skip_leading_whitespace_uchars(ss_data_get_string(p_ss_data), ss_data_get_string_size(p_ss_data)));
+}
+
+/* test character for 'space' in a spreadsheet text string - not necessarily same as Unicode classification, for instance */
+
+_Check_return_
+static inline BOOL
+ss_string_ucs4_is_space(
+    _InVal_     UCS4 ucs4)
+{
+    if(ucs4 > CH_SPACE)
+        return(FALSE);
+
+    switch(ucs4)
+    {  /* just these are as defined as 'space' by OpenFormula */
+    case UCH_CHARACTER_TABULATION:
+    case UCH_LINE_FEED:
+    case UCH_CARRIAGE_RETURN:
+    case UCH_SPACE:
+        return(TRUE);
+
+    default:
+        return(FALSE);
+    }
 }
 
 _Check_return_
@@ -753,28 +973,32 @@ ss_string_skip_leading_whitespace_uchars(
     _In_reads_(uchars_n) PC_UCHARS uchars,
     _InRef_     U32 uchars_n)
 {
-    U32 wss = 0;
+    return(ss_string_skip_internal_whitespace_uchars(uchars, uchars_n, 0U));
+}
+
+_Check_return_
+extern U32
+ss_string_skip_internal_whitespace_uchars(
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _InRef_     U32 uchars_n,
+    _InVal_     U32 uchars_idx)
+{
+    U32 buf_idx = uchars_idx;
+    U32 wss;
 
     assert((0 == uchars_n) || (!IS_PTR_NULL_OR_NONE(uchars)));
 
-    while(wss < uchars_n)
+    while(buf_idx < uchars_n)
     {
-        switch(PtrGetByteOff(uchars, wss))
-        {
-        case CH_TAB:
-        case LF:
-        case CR:
-        case CH_SPACE:
-            wss++;
-            continue;
+        const U8 u8 = PtrGetByteOff(uchars, buf_idx);
 
-        default:
+        if(!ss_string_ucs4_is_space(u8))
             break;
-        }
 
-        break;
+        ++buf_idx;
     }
 
+    wss = buf_idx - uchars_idx;
     return(wss);
 }
 
@@ -824,38 +1048,38 @@ enum TWO_NUM_INDEX
 
 static const U8
 tn_worry[5][5] =
-{
-    { TN_NOP, TN_R1,  TN_R1,  TN_R1,  TN_MIX },
-    { TN_R2,  TN_I,   TN_I,   TN_RB,  TN_MIX },
-    { TN_R2,  TN_I,   TN_I,   TN_RB,  TN_MIX },
-    { TN_R2,  TN_RB,  TN_RB,  TN_RB,  TN_MIX },
-    { TN_MIX, TN_MIX, TN_MIX, TN_MIX, TN_MIX },
+{ /*  REAL    L8      W16     W32     OTH */
+    { TN_NOP, TN_R1,  TN_R1,  TN_R1,  TN_MIX }, /* REAL */
+    { TN_R2,  TN_I,   TN_I,   TN_RB,  TN_MIX }, /* L8 */
+    { TN_R2,  TN_I,   TN_I,   TN_RB,  TN_MIX }, /* W16 */
+    { TN_R2,  TN_RB,  TN_RB,  TN_RB,  TN_MIX }, /* W32 */
+    { TN_MIX, TN_MIX, TN_MIX, TN_MIX, TN_MIX }, /* OTH */
 };
 
 static const U8
 tn_no_worry[5][5] =
-{
-    { TN_NOP, TN_R1,  TN_R1,  TN_R1,  TN_MIX },
-    { TN_R2,  TN_I,   TN_I,   TN_I,   TN_MIX },
-    { TN_R2,  TN_I,   TN_I,   TN_I,   TN_MIX },
-    { TN_R2,  TN_I,   TN_I,   TN_I,   TN_MIX },
-    { TN_MIX, TN_MIX, TN_MIX, TN_MIX, TN_MIX },
+{ /*  REAL    L8      W16     W32     OTH */
+    { TN_NOP, TN_R1,  TN_R1,  TN_R1,  TN_MIX }, /* REAL */
+    { TN_R2,  TN_I,   TN_I,   TN_I,   TN_MIX }, /* L8 */
+    { TN_R2,  TN_I,   TN_I,   TN_I,   TN_MIX }, /* W16 */
+    { TN_R2,  TN_I,   TN_I,   TN_I,   TN_MIX }, /* W32 */
+    { TN_MIX, TN_MIX, TN_MIX, TN_MIX, TN_MIX }, /* OTH */
 };
 
 extern S32
 two_nums_type_match(
-    _InoutRef_  P_EV_DATA p_ev_data1,
-    _InoutRef_  P_EV_DATA p_ev_data2,
+    _InoutRef_  P_SS_DATA p_ss_data_1,
+    _InoutRef_  P_SS_DATA p_ss_data_2,
     _InVal_     BOOL size_worry)
 {
-    S32 did1 = MIN(4, p_ev_data1->did_num);
-    S32 did2 = MIN(4, p_ev_data2->did_num);
+    const S32 did1 = MIN(4, ss_data_get_data_id(p_ss_data_1));
+    const S32 did2 = MIN(4, ss_data_get_data_id(p_ss_data_2));
     const U8 (*p_tn_array)[5] = (size_worry) ? tn_worry : tn_no_worry;
 
-    myassert0x(RPN_DAT_REAL   == 0 &&
-               RPN_DAT_WORD8  == 1 &&
-               RPN_DAT_WORD16 == 2 &&
-               RPN_DAT_WORD32 == 3,
+    myassert0x(DATA_ID_REAL    == 0 &&
+               DATA_ID_LOGICAL == 1 &&
+               DATA_ID_WORD16  == 2 &&
+               DATA_ID_WORD32  == 3,
                "two_nums_type_match RPN_DAT_types have moved");
 
     switch(p_tn_array[did2][did1])
@@ -863,26 +1087,127 @@ two_nums_type_match(
     case TN_NOP:
         return(TWO_REALS);
 
+    case TN_I:
+        return(TWO_INTS);
+    }
+
+    switch(p_tn_array[did2][did1])
+    {
     case TN_R1:
-        ev_data_set_real(p_ev_data1, (F64) p_ev_data1->arg.integer);
+        ss_data_set_real(p_ss_data_1, (F64) ss_data_get_integer(p_ss_data_1));
         return(TWO_REALS);
 
     case TN_R2:
-        ev_data_set_real(p_ev_data2, (F64) p_ev_data2->arg.integer);
+        ss_data_set_real(p_ss_data_2, (F64) ss_data_get_integer(p_ss_data_2));
         return(TWO_REALS);
 
     case TN_RB:
-        ev_data_set_real(p_ev_data1, (F64) p_ev_data1->arg.integer);
-        ev_data_set_real(p_ev_data2, (F64) p_ev_data2->arg.integer);
+        ss_data_set_real(p_ss_data_1, (F64) ss_data_get_integer(p_ss_data_1));
+        ss_data_set_real(p_ss_data_2, (F64) ss_data_get_integer(p_ss_data_2));
         return(TWO_REALS);
 
-    case TN_I:
-        return(TWO_INTS);
-
     default:
+#if CHECKING
+        default_unhandled();
     case TN_MIX:
+#endif
         return(TWO_MIXED);
     }
+}
+
+/******************************************************************************
+*
+* add, subtract or multiply two 32-bit signed integers, 
+* checking for overflow and also returning
+* a signed 64-bit result that the caller may consult
+* e.g. to promote to fp
+*
+******************************************************************************/
+
+_Check_return_
+static inline int32_t
+int32_from_int64_possible_overflow(
+    _In_        const int64_t int64,
+    _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
+{
+    p_int64_with_int32_overflow->int64_result = int64;
+
+    /* if both the top word and the MSB of the low word of the result
+     * are all zeros (+ve) or all ones (-ve) then
+     * the result still fits in 32-bit integer
+     */
+
+#if WINDOWS && (BYTE_ORDER == LITTLE_ENDIAN)
+    /* try to stop Microsoft compiler generating a redundant generic shift by 32 call */
+    if(false == (p_int64_with_int32_overflow->f_overflow = (
+                (((const int32_t *) &int64)[1])  -  (((int32_t) int64) >> 31)
+                ) ) )
+    {
+        return((int32_t) int64);
+    }
+
+    return((int64 < 0) ? INT32_MIN : INT32_MAX);
+#elif RISCOS
+    /* two instructions on ARM Norcroft - SUBS r0, r0, r1 ASR #31; MOVNE r0, #1 */
+    if(false == (p_int64_with_int32_overflow->f_overflow = (
+                ((int32_t) (int64 >> 32))  -  (((int32_t) int64) >> 31)
+                ) ) )
+    {
+        return((int32_t) int64);
+    }
+  
+    /* just test sign bit of 64-bit result - single instruction TST r1 on ARM Norcroft (compare does full subtraction) */
+    return(((uint32_t) (int64 >> 32) & 0x80000000U) ? INT32_MIN : INT32_MAX);
+#else
+    /* portable version */
+    if(false == (p_int64_with_int32_overflow->f_overflow = (
+                ((int32_t) (int64 >> 32))  !=  (((int32_t) int64) >> 31)
+                ) ) )
+    {
+        return((int32_t) int64);
+    }
+
+    return((int64 < 0) ? INT32_MIN : INT32_MAX);
+#endif
+}
+
+_Check_return_
+extern int32_t
+int32_add_check_overflow(
+    _In_        const int32_t addend_a,
+    _In_        const int32_t addend_b,
+    _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
+{
+    /* NB contorted order to save register juggling on ARM Norcroft */
+    const int64_t int64 = (int64_t) addend_b + addend_a;
+
+    return(int32_from_int64_possible_overflow(int64, p_int64_with_int32_overflow));
+}
+
+_Check_return_
+extern int32_t
+int32_subtract_check_overflow(
+    _In_        const int32_t minuend,
+    _In_        const int32_t subtrahend,
+    _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
+{
+    const int64_t int64 = (int64_t) minuend - subtrahend;
+
+    return(int32_from_int64_possible_overflow(int64, p_int64_with_int32_overflow));
+}
+
+_Check_return_
+extern int32_t
+int32_multiply_check_overflow(
+    _In_        const int32_t multiplicand_a,
+    _In_        const int32_t multiplicand_b,
+    _OutRef_    P_INT64_WITH_INT32_OVERFLOW p_int64_with_int32_overflow)
+{
+    /* NB contorted order to save register juggling on ARM Norcroft */
+    /* ARM Norcroft should generate a call to _ll_mullss: "Create a 64-bit number by multiplying two int32_t numbers" */
+    const int64_t int64 = (int64_t) multiplicand_b * multiplicand_a;
+
+    return(int32_from_int64_possible_overflow(int64, p_int64_with_int32_overflow));
 }
 
 /* end of ss_const.c */

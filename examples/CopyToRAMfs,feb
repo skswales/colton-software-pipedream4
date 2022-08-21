@@ -1,0 +1,2 @@
+Copy <Obey$Dir>.Apps.Document.PDExamples  RAM:$.PDExamples  ~c f~nr~v
+Filer_OpenDir                             RAM:$.PDExamples

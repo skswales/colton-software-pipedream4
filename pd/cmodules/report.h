@@ -43,7 +43,7 @@ reportf(
 extern void
 vreportf(
     _In_z_ _Printf_format_string_ PCTSTR format,
-    /**/        va_list arg);
+    /**/        va_list args);
 
 #if defined(__CC_NORCROFT)
 #pragma no_check_printf_formats

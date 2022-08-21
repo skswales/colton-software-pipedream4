@@ -924,13 +924,13 @@ ev_uref(
                     /* check for the definition of the name
                      * itself being in the uref area
                      */
-                    switch(p_ev_name->def_data.did_num)
+                    switch(p_ev_name->def_data.data_id)
                     {
-                    case RPN_DAT_SLR:
+                    case DATA_ID_SLR:
                         if(ev_match_slr(&p_ev_name->def_data.arg.slr, upp) != DEP_NONE)
                             ev_todo_add_name_dependents(p_ev_name->key);
                         break;
-                    case RPN_DAT_RANGE:
+                    case DATA_ID_RANGE:
                         if(ev_match_rng(&p_ev_name->def_data.arg.range, upp) != DEP_NONE)
                             ev_todo_add_name_dependents(p_ev_name->key);
                         break;

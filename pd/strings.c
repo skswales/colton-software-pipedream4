@@ -309,6 +309,7 @@ string(250, Auto_check_STR,                     "Auto check");
 string(254, Display_user_dictionaries_STR,      "Dictionaries");
 string(208, Auto_recalculation_STR,             "Auto recalc");
 string(420, Auto_chart_recalculation_STR,       "Auto chart update");
+string(434, New_chart_files_STR,                "New chart files");
 string(201, Colours_STR,                        "Colours");
 string(181, Overtype_STR,                       "Overtype");
 string(141, Size_of_paste_list_STR,             "Paste depth");

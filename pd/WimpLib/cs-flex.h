@@ -13,7 +13,7 @@
 #ifndef __flex_h
 #if defined(__CC_NORCROFT)
 #include "C:flex.h" /* tboxlibs */
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 #include "./flex.h" /* copy from tboxlibs to WimpLib to simplify include path */
 #else /* MSVC */
 #include "\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs\flex.h" /* tboxlibs */

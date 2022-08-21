@@ -69,9 +69,9 @@ evaluator result type - stored in cell
 
 typedef struct EV_RESULT
 {
-    EV_IDNO did_num;
+    EV_IDNO data_id;
 
-    EV_CONSTANT arg;
+    SS_CONSTANT arg;
 }
 EV_RESULT, * P_EV_RESULT; typedef const EV_RESULT * PC_EV_RESULT;
 
@@ -220,7 +220,7 @@ typedef struct EV_GRUB_STATE
 {
     S32 offset;             /* offset into rpn of cell being grubbed */
     EV_SLR slr;             /* slr being grubbed in */
-    EV_DATA data;           /* data element grubbed */
+    SS_DATA data;           /* data element grubbed */
     S16 byoffset;           /* rpn offset for use external to grubber */
     S32 in_cond;            /* in condition flag */
 }
@@ -341,34 +341,32 @@ SS_DOC, * P_SS_DOC;
 }
 
 /*
-rpn atomic numbers
+RPN atomic numbers
 */
 
 enum DID_NUMBERS
 {
+    DATA_ID_WORD8_UNUSED = 0, /* now unused in PipeDream */
+
     /* data */
-    RPN_DAT_REAL        =0,
-    RPN_DAT_WORD8       ,
-    RPN_DAT_WORD16      ,
-    RPN_DAT_WORD32      ,
-    RPN_DAT_SLR         ,
-    RPN_DAT_RANGE       ,
-    RPN_DAT_DATE        ,
-    RPN_DAT_NAME        ,
-    RPN_DAT_BLANK       ,
-    RPN_DAT_ERROR       ,
-#define RPN_DAT_BOOL8 RPN_DAT_WORD8 /* synonym in PipeDream */
+    DATA_ID_REAL        = 0,
+    DATA_ID_LOGICAL     = 1,
+    DATA_ID_WORD16      = 2,
+    DATA_ID_WORD32      = 3,
+    DATA_ID_SLR         = 4,
+    DATA_ID_RANGE       = 5,
+    DATA_ID_DATE        = 6,
+    DATA_ID_NAME        = 7,
+    DATA_ID_BLANK       = 8,
+    DATA_ID_ERROR       = 9,
 
-    /* handle based resources owned by RPN */
-    RPN_DAT_STRING      ,
+    RPN_DAT_STRING      , /* handle based resources owned by RPN */
+    DATA_ID_STRING      = RPN_DAT_STRING, /* for functions imported from Fireworkz */
+    RPN_TMP_STRING      ,  /* temporary handle based resources */
+    RPN_RES_STRING      ,  /* handle based resources owned by a result */
 
-    /* temporary handle based resources */
-    RPN_TMP_STRING      ,
-    RPN_TMP_ARRAY       ,
-
-    /* handle based resources owned by a result */
-    RPN_RES_STRING      ,
-    RPN_RES_ARRAY       ,
+    RPN_TMP_ARRAY       ,  /* temporary handle based resources */
+    RPN_RES_ARRAY       ,  /* handle based resources owned by a result */
 
     /* local argument */
     RPN_LCL_ARGUMENT    ,
@@ -424,6 +422,7 @@ enum DID_NUMBERS
     RPN_FNF_ATN         ,
     RPN_FNV_AVG         ,
 
+    RPN_FNV_BASE        ,
     RPN_FNF_BETA        ,
     RPN_FNF_BIN         ,
     RPN_FNV_BREAK       ,
@@ -488,6 +487,7 @@ enum DID_NUMBERS
     RPN_FNF_DCOUNT      ,
     RPN_FNF_DCOUNTA     ,
     RPN_FNV_DDB         ,
+    RPN_FNF_DECIMAL     ,
     RPN_FNF_DEG         ,
     RPN_FNF_DEREF       ,
     RPN_FNF_DMAX        ,
@@ -680,111 +680,269 @@ enum RPN_TYPES
 type mask bits
 */
 
-#define EM_REA      1
-#define EM_SLR      2       /* if not set, SLRs are dereferenced first */
-#define EM_STR      4
-#define EM_DAT      8
-#define EM_ARY      16      /* if not set, operator called for each element */
-#define EM_BLK      32      /* if not set, blanks converted to real 0 */
-#define EM_AR0      64      /* if set, element 0,0 of arrays returned */
-#define EM_CDX      128     /* conditional subexpression */
-#define EM_ERR      256
-#define EM_INT      512     /* function wants integers */
+enum type_mask_bits
+{
+    EM_REA      = 1U,
+    EM_SLR      = 2U,      /* if not set, SLRs are dereferenced first */
+    EM_STR      = 4U,
+    EM_DAT      = 8U,
+    EM_ARY      = 16U,     /* if not set, operator called for each element */
+    EM_BLK      = 32U,     /* if not set, blanks converted to real 0 */
+    EM_AR0      = 64U,     /* if set, element 0,0 of arrays returned */
+    EM_CDX      = 128U,    /* conditional subexpression */
+    EM_ERR      = 256U,
+    EM_INT      = 512U,    /* function wants integers */
 
-#define EM_ANY      (EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_ERR | EM_INT)
-#define EM_CONST    (EM_REA          | EM_STR | EM_DAT          | EM_BLK | EM_ERR | EM_INT)
+    EM_LOGICAL  = (EM_REA                                                       | EM_INT),
+    EM_CONST    = (EM_REA          | EM_STR | EM_DAT          | EM_BLK | EM_ERR | EM_INT),
+    EM_ANY      = (EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_ERR | EM_INT)
+};
 
-typedef S16 EV_TYPE; typedef EV_TYPE * P_EV_TYPE; typedef const EV_TYPE * PC_EV_TYPE;
+typedef U16 EV_TYPE; typedef EV_TYPE * P_EV_TYPE; typedef const EV_TYPE * PC_EV_TYPE; /* we don't build huge arrays of them or structures containing them so U32 would stop masking */
 
 /*
 should really be in ss_const.h but need RPN_DAT_xxx
 */
 
+/* use this for minimising need for overflow detection in calculations */
+
+_Check_return_
 static inline EV_IDNO
 ev_integer_size(
     _InVal_     S32 integer)
 {
-    if( (integer <=   (S32) S8_MAX) &&
-        (integer >=   (S32) S8_MIN) )
-        return(RPN_DAT_WORD8);
+    const S32 abs_integer = abs(integer);
 
     /* S16_MAX + 1 for ARM immediate constant */
-    if( (integer <   ((S32) S16_MAX + 1)) &&
-        (integer > - ((S32) S16_MAX + 1)) /*NB NOT S16_MIN */ )
-        return(RPN_DAT_WORD16);
+    if(abs_integer >= ((S32) S16_MAX + 1))
+      return(DATA_ID_WORD32);
 
-    return(RPN_DAT_WORD32);
+    return(DATA_ID_WORD16);
 }
 
 static inline void
-ev_data_init(
-    _OutRef_    P_EV_DATA p_ev_data)
+ss_data_init(
+    _OutRef_    P_SS_DATA p_ss_data)
 {
-    zero_struct_ptr(p_ev_data);
-    p_ev_data->did_num = RPN_DAT_BLANK;
+    zero_struct_ptr(p_ss_data);
+    p_ss_data->data_id = DATA_ID_BLANK;
+}
+
+#define ss_data_get_data_id(p_ss_data) /*EV_IDNO*/ \
+    (p_ss_data)->data_id
+
+#define ss_data_set_data_id(p_ss_data, ev_idno) \
+    (p_ss_data)->data_id = (ev_idno)
+
+_Check_return_
+static inline BOOL
+ss_data_is_array(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    return( (RPN_TMP_ARRAY == ss_data_get_data_id(p_ss_data)) || (RPN_RES_ARRAY == ss_data_get_data_id(p_ss_data)) );
 }
 
 _Check_return_
 static inline BOOL
-ev_data_is_error(
-    _InRef_     PC_EV_DATA p_ev_data)
+ss_data_is_blank(
+    _InRef_     PC_SS_DATA p_ss_data)
 {
-    return(RPN_DAT_ERROR == p_ev_data->did_num);
+    return(DATA_ID_BLANK == ss_data_get_data_id(p_ss_data));
+}
+
+_Check_return_
+static inline BOOL
+ss_data_is_date(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    return(DATA_ID_DATE == ss_data_get_data_id(p_ss_data));
+}
+
+_Check_return_
+static inline BOOL
+ss_data_is_error(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    return(DATA_ID_ERROR == ss_data_get_data_id(p_ss_data));
+}
+
+_Check_return_
+static inline BOOL
+ss_data_is_integer(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    switch(ss_data_get_data_id(p_ss_data))
+    {
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        return(TRUE);
+
+    default:
+        return(FALSE);
+    }
+}
+
+_Check_return_
+static inline BOOL
+ss_data_is_number(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    switch(ss_data_get_data_id(p_ss_data))
+    {
+    case DATA_ID_REAL:
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        return(TRUE);
+
+    default:
+        return(FALSE);
+    }
+}
+
+_Check_return_
+static inline BOOL
+ss_data_is_real(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    return(DATA_ID_REAL == ss_data_get_data_id(p_ss_data));
+}
+
+_Check_return_
+static inline BOOL
+ss_data_is_string(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    return( (RPN_DAT_STRING >= ss_data_get_data_id(p_ss_data)) || (RPN_RES_STRING <= ss_data_get_data_id(p_ss_data)) );
+}
+
+_Check_return_
+static inline S32
+ss_data_get_integer(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert( (ss_data_get_data_id(p_ss_data) >= DATA_ID_LOGICAL) && (ss_data_get_data_id(p_ss_data) <= DATA_ID_WORD32) );
+    return(p_ss_data->arg.integer);
+}
+
+_Check_return_
+static inline F64
+ss_data_get_real(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_real(p_ss_data));
+    return(p_ss_data->arg.fp);
+}
+
+_Check_return_
+static inline PC_SS_DATE
+ss_data_get_date(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_date(p_ss_data));
+    return(&p_ss_data->arg.ss_date);
+}
+
+_Check_return_
+static inline PC_USTR
+ss_data_get_string(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_string(p_ss_data));
+    return(p_ss_data->arg.string.uchars);
+}
+
+_Check_return_
+static inline U32
+ss_data_get_string_size(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_string(p_ss_data));
+    return(p_ss_data->arg.string.size);
 }
 
 static inline void
-ev_data_set_blank(
-    _OutRef_    P_EV_DATA p_ev_data)
+ss_data_set_blank(
+    _OutRef_    P_SS_DATA p_ss_data)
 {
-    CODE_ANALYSIS_ONLY(zero_struct_ptr(p_ev_data)); /* keep dataflower happy */
-    p_ev_data->did_num = RPN_DAT_BLANK;
+    CODE_ANALYSIS_ONLY(zero_struct_ptr(p_ss_data)); /* keep dataflower happy */
+    ss_data_set_data_id(p_ss_data, DATA_ID_BLANK);
 }
 
 static inline void
-ev_data_set_boolean(
-    _OutRef_    P_EV_DATA p_ev_data,
-    _InVal_     BOOL boolean)
+ss_data_set_date(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InVal_     SS_DATE_DATE ss_date_date,
+    _InVal_     SS_DATE_TIME ss_date_time)
 {
-    p_ev_data->did_num = RPN_DAT_BOOL8;
-    p_ev_data->arg.boolean = boolean;
+    p_ss_data->arg.ss_date.date = ss_date_date;
+    p_ss_data->arg.ss_date.time = ss_date_time;
+    ss_data_set_data_id(p_ss_data, DATA_ID_DATE);
 }
 
 static inline void
-ev_data_set_integer(
-    _OutRef_    P_EV_DATA p_ev_data,
+ss_data_set_integer(
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     S32 s32)
 {
-    p_ev_data->arg.integer = s32;
-    p_ev_data->did_num = ev_integer_size(s32);
+    p_ss_data->arg.integer = s32;
+    ss_data_set_data_id(p_ss_data, ev_integer_size(s32));
 }
 
-static inline void
-ev_data_set_WORD32( /* set the widest integer type */
-    _OutRef_    P_EV_DATA p_ev_data,
+static inline EV_IDNO
+ss_data_set_integer_rid(
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     S32 s32)
 {
-    p_ev_data->did_num = RPN_DAT_WORD32;
-    p_ev_data->arg.integer = s32;
+    p_ss_data->arg.integer = s32;
+    return(ss_data_set_data_id(p_ss_data, ev_integer_size(s32)));
 }
 
 static inline void
-ev_data_set_real(
-    _OutRef_    P_EV_DATA p_ev_data,
-    _InVal_     F64 f64)
+ss_data_set_integer_size(
+    _InoutRef_  P_SS_DATA p_ss_data)
 {
-    p_ev_data->did_num = RPN_DAT_REAL;
-    p_ev_data->arg.fp = f64;
+    ss_data_set_data_id(p_ss_data, ev_integer_size(ss_data_get_integer(p_ss_data)));
 }
 
 static inline void
-ev_data_set_real_ti(
-    _OutRef_    P_EV_DATA p_ev_data,
+ss_data_set_WORD32( /* set the widest integer type */
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InVal_     S32 s32)
+{
+    p_ss_data->arg.integer = s32;
+    ss_data_set_data_id(p_ss_data, DATA_ID_WORD32);
+}
+
+static inline void
+ss_data_set_real(
+    _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     F64 f64)
 {
-    p_ev_data->did_num = RPN_DAT_REAL;
-    p_ev_data->arg.fp = f64;
+    p_ss_data->arg.fp = f64;
+    ss_data_set_data_id(p_ss_data, DATA_ID_REAL);
+}
 
-    (void) real_to_integer_try(p_ev_data);
+_Check_return_
+static inline EV_TYPE
+ss_data_set_real_rid(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InVal_     F64 f64)
+{
+    p_ss_data->arg.fp = f64;
+    ss_data_set_data_id(p_ss_data, DATA_ID_REAL);
+    return(DATA_ID_REAL);
+}
+
+static inline void
+ss_data_set_real_try_integer(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _InVal_     F64 f64)
+{
+    ss_data_set_real(p_ss_data, f64);
+
+    (void) ss_data_real_to_integer_try(p_ss_data);
 }
 
 /*
@@ -812,7 +970,7 @@ ev_name_check(
 
 extern S32
 ss_recog_constant(
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z txt_in,
     _InRef_     PC_EV_OPTBLOCK p_optblock,
@@ -826,7 +984,7 @@ extern S32
 ev_decode_data(
     P_U8 txt_out,
     _InVal_     EV_DOCNO docno_from,
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     _InRef_     PC_EV_OPTBLOCK p_optblock);
 
 extern S32
@@ -939,7 +1097,7 @@ ev_eval.c external functions
 
 extern S32
 ev_eval_rpn(
-    P_EV_DATA resultp,
+    P_SS_DATA resultp,
     _InRef_     PC_EV_SLR p_ev_slr,
     PC_U8 rpn_in);
 
@@ -948,9 +1106,9 @@ ev_help.c external functions
 */
 
 extern void
-ev_data_to_result_convert(
+ss_data_to_result_convert(
     _OutRef_    P_EV_RESULT p_ev_result,
-    _InRef_     PC_EV_DATA p_ev_data);
+    _InRef_     PC_SS_DATA p_ss_data);
 
 extern S32
 ev_is_formula(
@@ -979,12 +1137,12 @@ ev_result_free_resources(
 
 extern void
 ev_result_to_data_convert(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     PC_EV_RESULT p_ev_result);
 
 extern S32
 ev_slr_deref(
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     _InRef_     PC_EV_SLR p_ev_slr,
     S32 copy_ext);
 
@@ -1095,7 +1253,7 @@ ev_recalc_status(
 
 extern void
 ev_report_ERROR_CUSTOM(
-    _InRef_     PC_EV_DATA p_ev_data);
+    _InRef_     PC_SS_DATA p_ss_data);
 
 extern void
 ev_set_options(
@@ -1217,7 +1375,7 @@ extern S32
 ev_enum_dep_sup_get(
     P_EV_DEPSUP dsp,
     P_S32 item_no,
-    P_EV_DATA p_ev_data);
+    P_SS_DATA p_ss_data);
 
 extern void
 ev_todo_add_doc_dependents(

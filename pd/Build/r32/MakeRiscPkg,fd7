@@ -7,8 +7,8 @@
 | Copyright (C) 1991-1998 Colton Software Limited
 | Copyright (C) 1998-2015 R W Colton
 
-Set pd$Release 4_56_00
-Set pd$Release 4_56_02
+Set pd$Release 4_57_00
+|Set pd$Release 4_57_01
 | the master list is in version.c
 
 Set pd$Disc $.Temp.PD4.PipeDream_<pd$Release>
@@ -55,6 +55,7 @@ Set ap$Resource$Dir  <Obey$Dir>.^.^.Utils
 | Language-independent
 %CDir                                               <pd$Disc>.Z.Resources.Neutral
 %Copy <pd$Resources$Dir>.Neutral.!Sprite            <pd$Disc>.Z.Resources.Neutral.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.Neutral.BuildVer           <pd$Disc>.Z.Resources.Neutral.* ~rf~cln~v
 %Copy <pd$Resources$Dir>.Neutral.ImageSlot          <pd$Disc>.Z.Resources.Neutral.* ~rf~cln~v
 %Copy <pd$Resources$Dir>.Neutral.Loader             <pd$Disc>.Z.Resources.Neutral.* ~rf~cln~v
 |

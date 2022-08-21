@@ -1,55 +1,111 @@
-!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
-<HEAD>
-<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
-<TITLE>PipeDream - Release Notes</TITLE>
-</HEAD>
-<BODY>
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>PipeDream - Release Notes</title>
+</head>
+<body>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!-- Copyright (C) 1989-1998 Colton Software Limited,
    - Copyright (C) 1998-2015 R W Colton -->
 
-<H1>PipeDream - Release Notes</H1>
+<h1>Colton Software PipeDream - Release Notes</h1>
 
-<UL style="list-style: none">
-<LI><A HREF="#Copyright">Copyright</A></LI>
-<LI><A HREF="#Licence">Licence</A></LI>
-<LI><A HREF="#ReleaseHistory">Release History</A></LI>
-<LI><A HREF="#KnownProblems">Known Problems</A></LI>
-<LI><A HREF="#OnlineResources">Online Resources</A></LI>
-<LI><A HREF="#Support">Support</A></LI>
-</UL>
+<ul style="list-style: none">
+<li><a href="#Copyright">Copyright</a></li>
+<li><a href="#Licence">Licence</a></li>
+<li><a href="#ReleaseHistory">Release History</a></li>
+<li><a href="#KnownProblems">Known Problems</a></li>
+<li><a href="#OnlineResources">Online Resources</a></li>
+<li><a href="#Support">Support</a></li>
+</ul>
 
-<H2 ID="Copyright">Copyright</H2>
+<h2 ID="Copyright">Copyright</h2>
 
-    <P>
-        Copyright (C) 1987-2019 Colton Software<BR />
-        <A HREF="file:/PipeDreamRes:Help/HTML/licence.html#CopyrightExtra">Additional copyright information</A>
-    </P>
+    <p>
+        Copyright (C) 1987-2019 Colton Software<br />
+        <a href="file:/PipeDreamRes:Help/HTML/licence.html#CopyrightExtra">Additional copyright information</a>
+    </p>
 
 
-<H2 ID="Licence">Licence</H2>
+<h2 ID="Licence">Licence</h2>
 
-    <P>Thanks to Richard Colton, PipeDream is now open source and completely free to use!</P>
+    <p>Thanks to Richard Colton, PipeDream is now open source and completely free to use!</p>
 
-    <P>
+    <p>
         PipeDream is made available to you under the terms of the
         <a title="MPL 2.0" href="http://mozilla.org/MPL/2.0/">Mozilla Public License, v. 2.0</a> .<br />
-        <A HREF="file:/PipeDreamRes:Help/HTML/licence.html">Additional licence information</A> .
-    </P>
+        <a href="file:/PipeDreamRes:Help/HTML/licence.html">Additional licence information</a> .
+    </p>
 
-    <P>
+    <p>
         The PipeDream source code may be freely downloaded from
         its Subversion repository, kindly hosted on riscos.info:
         svn://svn.riscos.info/pipedream .
-    </P>
+    </p>
 
 
-<H2 ID="ReleaseHistory">Release History</H2>
+<h2 ID="ReleaseHistory">Release History</h2>
 
-<H4>4.56.02 (19 Mar 2019)</H4>
+<p>Please refer to the <a
+href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda
+and Errata</a> for details of changes to functionality.</p>
+
+
+<h4>4.57 (20 Dec 2019)</h4>
+
+<h4>Mathematical spreadsheet functions added:</h4>
+
+<p>
+    BASE(),
+    DECIMAL().
+</p>
+
+<p>The DDB() spreadsheet function may now use a non-integer period for
+calculation.</p>
+
+<p>Formatting a very large number with a small radix using the TEXT()
+spreadsheet function no longer overflows the temporary buffer causing
+subsequent error.</p>
+
+<p>Checks for integer overflow when adding to/subtracting from date/time
+components.</p>
+
+<p>Checks for attempt to divide by a denormalised (i.e. very very small)
+number; this would previously have given FP error rather than Divide by zero
+error.</p>
+
+<p>PipeDream accepts dates entered in ISO 8601 date format (or as dd/mm/yy)
+when either typed or imported from CSV.</p>
+
+<p>Note: PipeDream allows single digits in dates when checking against the
+ISO 8601 date format, where two digits are strictly required in the month
+and day components, for compatibility with some CSV files from odd sources
+(banking data). </p>
+
+<p>PipeDream chart files now use a newly allocated file type, &amp;A77
+(PDChart). This can help other applications identify PipeDream chart files
+as trivially renderable using the Drawfile module. A Draw tag from the newly
+allocated Colton Software vendor range is used to identify the block of
+PipeDream instructions used to generate the chart. Chart files are now
+padded at the end to a multiple of four bytes with the digit zero rather
+than space.</p>
+
+<p>Note: PipeDream will continue to attempt to load previously saved chart
+files of file type &amp;DDE (PDream) as before, although they will be
+immediately re-saved with the new file type and use the new Draw tag unless
+Choices &gt; 'New chart files' is unticked.</p>
+
+<p>Some missing spreadsheet function documentation added.</p>
+
+<p>ROOL DDE 29a build environment used.</p>
+
+
+<h4>4.56.02 (19 Mar 2019)</h4>
 
 <p>Fix CHOOSE() when used with range or array parameters.
 This had been broken since 4.52/04.</p>
@@ -57,16 +113,16 @@ This had been broken since 4.52/04.</p>
 <p>ROOL DDE 28 build environment used.</p>
 
 
-<H4>4.56.01 (21 Dec 2018)</H4>
+<h4>4.56.01 (21 Dec 2018)</h4>
 
 <p>Define Function Key option list reverted to pre-4.56 for compatibility.</p>
 
 
-<H4>4.56 (17 Dec 2018)</H4>
+<h4>4.56 (17 Dec 2018)</h4>
 
 <p>PipeDream menus and keyboard shortcuts are now a little more Style Guide
 compliant. Existing users may wish to head to the iconbar menu and turn on
-'Classic menus' and 'Save Choices'.
+'Classic menus' and 'Save Choices'.</p>
 
 <p>Fixed chart text object editing bug.</p>
 
@@ -297,7 +353,7 @@ use RISC OS Style Guide compliant appearance and size.</p>
 <p>ROOL DDE 27 build environment used.</p>
 
 
-<H4>4.55.04 (01 Aug 2016)</H4>
+<h4>4.55.04 (01 Aug 2016)</h4>
 
 <p>CODE() spreadsheet function extended to accept empty string as input (in
 which case it returns zero).</p>
@@ -307,7 +363,7 @@ which case it returns zero).</p>
 to Reporter module if it is loaded and enabled.</p>
 
 
-<H4>4.55.03 (27 Jul 2016)</H4>
+<h4>4.55.03 (27 Jul 2016)</h4>
 
 <p>Choosing a spreadsheet function from the function selector menu enters
 the formula editing line when clicked on an empty cell regardless of the New
@@ -317,7 +373,7 @@ cell format option.</p>
 the Mozilla Public License, v. 2.0.</p>
 
 
-<H4>4.55.02 (12 Jul 2016)</H4>
+<h4>4.55.02 (12 Jul 2016)</h4>
 
 <p>Formula editing window (obtained by pressing Ctrl-Return in the formula
 line) uses DejaVuSans.Mono if it is available AND a Unicode Font Manager is
@@ -335,13 +391,13 @@ number cell. This had been broken since 4.52/08 when leading equals sign was
 first allowed. Trailing spaces before an internal newline are omitted.</p>
 
 
-<H4>4.55.01 (03 Jul 2016)</H4>
+<h4>4.55.01 (03 Jul 2016)</h4>
 
 <p>Check overwrite file dialogue box will take priority over any possibly
 persisting Save dialogue box.</p>
 
 
-<H4>4.55 (21 May 2016)</H4>
+<h4>4.55 (21 May 2016)</h4>
 
 <p>PipeDream chart files are now PRM-conformant Draw files and can be loaded
 by Draw, Vector and Fireworkz when the file type is set to Draw. They can
@@ -379,18 +435,18 @@ dictionary that now ships with PipeDream contains words with -<EM>ise</EM>
 style endings which are common in written British English. A Master
 dictionary containing words with -<EM>ize</EM> style endings (<A
 HREF="https://en.wikipedia.org/wiki/Oxford_spelling">Oxford English
-Dictionary spelling</A>) may be obtained from the web site and substituted
+Dictionary spelling</a>) may be obtained from the web site and substituted
 for that shipped with PipeDream. The old PipeDream dictionary containing
 both -<EM>ise</EM> and -<EM>ize</EM> style endings may also be obtained from
 the web site.</p>
 
 
-<H4>4.54 (22 Nov 2015)</H4>
+<h4>4.54 (22 Nov 2015)</h4>
 
 <p>Dialogue box fields and buttons in Templates updated to conform to Style
 Guide Issue 3. These still work OK if a slightly larger Desktop font for is
 selected for readability (tested with 14pt Homerton.Medium set by Paul
-Vigay's !MiscSetup) and also with RISC OS 4.39 styled icons.</P>
+Vigay's !MiscSetup) and also with RISC OS 4.39 styled icons.</p>
 
 <p><strong>IMPORTANT</strong>: Quit query dialogue box buttons have been
 reordered to be Style Guide Issue 3 compliant (Discard / Cancel / Save).
@@ -438,8 +494,8 @@ its top left corner (or bottom right corner as before).</p>
 
 <p>Cancel buttons in chart style dialogue boxes.</p>
 
-<P>Chart dialogue boxes no longer have a close icon (and thereby possibly
-unwanted iconise icon) on the title bar.</P>
+<p>Chart dialogue boxes no longer have a close icon (and thereby possibly
+unwanted iconise icon) on the title bar.</p>
 
 <p>Dashed lines in charts work correctly.</p>
 
@@ -459,85 +515,84 @@ automatically detected as such.</p>
 <p>ROOL DDE 26 build environment used.</p>
 
 
-<H4>Previous versions</H4> <p>The full release history may be found <A
-HREF="http://croftnuisk.co.uk/coltsoft/pipedream/release_history">online</A>;
+<h4>Previous versions</h4> <p>The full release history may be found <A
+HREF="http://croftnuisk.co.uk/coltsoft/pipedream/release_history">online</a>;
 just the last few revisions of PipeDream are documented here.</p>
 
 
-<H2 ID="KnownProblems">Known Problems In This Release</H2>
+<h2 ID="KnownProblems">Known Problems In This Release</h2>
 
-<P>It is still possible (and has been since PipeDream 3) to create circular
-dependencies in @slot_ref@ chains which fail to complete calculation.</P>
+<p>It is still possible (and has been since PipeDream 3) to create circular
+dependencies in @slot_ref@ chains which fail to complete calculation.</p>
 
-<P>Pressing ESCAPE whilst dragging a file somewhere to be saved may
-sometimes cause a Data Abort.</P>
+<p>Pressing ESCAPE whilst dragging a file somewhere to be saved may
+sometimes cause a Data Abort.</p>
 
-<P>There is a problem whereby a document does not reload a newly created
+<p>There is a problem whereby a document does not reload a newly created
 chart properly. If an chart is created and a copy of the chart is saved out
 as a Draw file (with a different name) then the chart will not reload after
 being closed down. It will reload successfully if PipeDream is
-restarted.</P>
+restarted.</p>
 
-<P>Exporting charts directly to other applications (e.g. EasyWriter) as Draw
+<p>Exporting charts directly to other applications (e.g. EasyWriter) as Draw
 files via the Message_RAMFetch / Message_RAMTransfer mechanism only works if
 the application being exported to asks for the whole file in one go as the
 protocol is stopped by PipeDream after the first Message_RAMFetch is
-responded to.</P>
+responded to.</p>
 
 
-<H2>Warnings</H2>
+<h2>Warnings</h2>
 
-<P>When using Virtualise or a similar virtual memory manager on RISC PCs,
+<p>When using Virtualise or a similar virtual memory manager on RISC PCs,
 install Virtualise *before* PipeDream is loaded. This is required because
 PipeDream optimises its memory handling differently when VM is active on its
 area - the only way it knows this is by comparing the maximum size of the
 area with what it should be were VM not active i.e. Virtualise must have
 been allowed to alter the maximum size of an area before PipeDream is
-loaded.</P>
+loaded.</p>
 
 
-<H2>32-bit !System</H2>
+<h2>32-bit !System</h2>
 
-<P>Please note that the latest distribution of !System for use with
+<p>Please note that the latest distribution of !System for use with
 pre-RISC&nbsp;OS&nbsp;5 computers may be found on the RISC&nbsp;OS Open web
-site at:<BR/> &nbsp;<BR/> <A
-HREF="https://www.riscosopen.org/content/downloads/other-zipfiles">https://www.riscosopen.org/content/downloads/other-zipfiles</A><BR/>
-&nbsp;<BR/> under the heading: <STRONG>System resources</STRONG></P>
+site at:<br/> &nbsp;<br/> <A
+HREF="https://www.riscosopen.org/content/downloads/other-zipfiles">https://www.riscosopen.org/content/downloads/other-zipfiles</a><br/>
+&nbsp;<br/> under the heading: <STRONG>System resources</STRONG></p>
 
-<P>NB Do NOT use the standard merge dialogue in
-!Boot &gt; Configuration &gt; System Merge</P>
+<p>NB Do NOT use the standard merge dialogue in
+!Boot &gt; Configuration &gt; System Merge</p>
 
-<P>because part of the update must refresh files in a directory that the
-merge dialogue cannot reach.</P>
+<p>because part of the update must refresh files in a directory that the
+merge dialogue cannot reach.</p>
 
-<P>Instead, a simple obey file is included called !SysMerge. Just double
-click on !SysMerge.</P>
-
-
-<H2 ID="OnlineResources">Online Resources</H2>
-
-<P>Many resources for PipeDream are freely available <A
-HREF="http://croftnuisk.co.uk/coltsoft/pipedream/">online</A>:</P>
-
-<UL>
-<LI><A HREF="http://croftnuisk.co.uk/coltsoft-docs/pipedream/tutorial/index.html">Tutorial</A>;</LI>
-<LI><A HREF="http://croftnuisk.co.uk/coltsoft-docs/pipedream/refguide/index.html">Reference Guide</A>;</LI>
-<LI><A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/hints_and_tips">Hints&nbsp;&amp;&nbsp;Tips</A>;</LI>
-<LI><A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda&nbsp;&amp;&nbsp;Errata</A> - updates since the documentation was printed, and errata therein;</LI>
-<LI><A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/downloads/">Downloads</A> - updated PipeDream packages, including example files used in the PipeDream Tutorial.</LI>
-</UL>
+<p>Instead, a simple obey file is included called !SysMerge. Just double
+click on !SysMerge.</p>
 
 
-<H2 ID="Support">Support</H2>
+<h2 ID="OnlineResources">Online Resources</h2>
 
-<P>As PipeDream is now completely free to use, support is a self-help affair.<BR />
-There is a Google Group <strong>colton-software-pipedream</strong> where you may seek help from other users:<BR />
-web site: <A HREF="http://groups.google.com/group/colton-software-pipedream">http://groups.google.com/group/colton-software-pipedream</A><BR />
-e-mail: <A HREF="mailto:colton-software-pipedream@googlegroups.com">colton-software-pipedream@googlegroups.com</A><BR />
-Please include files which demonstrate any problems (using a Spark or ZIP archive).</P>
+<p>Many resources for PipeDream are freely available <A
+HREF="http://croftnuisk.co.uk/coltsoft/pipedream/">online</a>:</p>
+
+<ul>
+<li><a href="http://croftnuisk.co.uk/coltsoft-docs/pipedream/tutorial/index.html">Tutorial</a>;</li>
+<li><a href="http://croftnuisk.co.uk/coltsoft-docs/pipedream/refguide/index.html">Reference Guide</a>;</li>
+<li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/hints_and_tips">Hints&nbsp;&amp;&nbsp;Tips</a>;</li>
+<li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda&nbsp;&amp;&nbsp;Errata</a> - updates since the documentation was printed, and errata therein;</li>
+<li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/downloads/">Downloads</a> - updated PipeDream packages, including example files used in the PipeDream Tutorial.</li>
+</ul>
 
 
-<P>End of PipeDream Release Notes</P>
-</BODY>
-</HTML>
+<h2 ID="Support">Support</h2>
 
+<p>As PipeDream is now completely free to use, support is a self-help affair.<br />
+There is a Google Group <strong>colton-software-pipedream</strong> where you may seek help from other users:<br />
+web site: <a href="http://groups.google.com/group/colton-software-pipedream">http://groups.google.com/group/colton-software-pipedream</a><br />
+e-mail: <a href="mailto:colton-software-pipedream@googlegroups.com">colton-software-pipedream@googlegroups.com</a><br />
+Please include files which demonstrate any problems (using a Spark or ZIP archive).</p>
+
+
+<p>End of PipeDream Release Notes</p>
+</body>
+</html>

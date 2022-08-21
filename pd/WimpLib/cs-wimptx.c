@@ -284,7 +284,9 @@ wimptx_set_safepoint(jmp_buf * safe)
     program_safepoint = safe;
 }
 
+#if !CROSS_COMPILE
 #pragma no_check_stack
+#endif
 
 static void
 wimptx_jmp_safepoint(int signum)
@@ -304,7 +306,9 @@ wimptx_internal_stack_overflow_handler(int sig)
     exit(EXIT_FAILURE);
 }
 
+#if !CROSS_COMPILE
 #pragma check_stack
+#endif
 
 static void wimptx_signal_handler(int sig);
 #define handler wimptx_signal_handler

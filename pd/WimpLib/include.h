@@ -75,19 +75,23 @@
 
 /* useful max/min macros */
 #ifndef max
-#define max(A,B) ((A) > (B) ? (A) : (B))
+#define max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 #ifndef min
-#define min(A,B) ((A) < (B) ? (A) : (B))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 /* always redirect WimpLib allocs */
 #include "cmodules/riscos/wlalloc.h"
 
 /* RISC OS can check parameters for matching format */
+#if !CROSS_COMPILE
 #pragma check_printf_formats
+#endif
 extern void messagef(_In_z_ _Printf_format_string_ PCTSTR format, ...); /* to message box */
+#if !CROSS_COMPILE
 #pragma no_check_printf_formats
+#endif
 extern void message_output(_In_z_ PCTSTR buffer);
 
 #if defined(INCLUDE_FOR_NO_DELTA) && 0

@@ -230,7 +230,7 @@ ensure_name_in_list(
      */
     p_ev_name->owner.col   = EV_MAX_COL - 1;
     p_ev_name->owner.row   = EV_MAX_ROW - 1;
-    p_ev_name->def_data.did_num = RPN_DAT_BLANK;
+    p_ev_name->def_data.data_id = DATA_ID_BLANK;
     p_ev_name->flags       = TRF_UNDEFINED;
     p_ev_name->visited     = 0;
     strcpy(p_ev_name->id, name);
@@ -337,7 +337,7 @@ ev_name_make(
     }
     else
     {
-        EV_DATA data;
+        SS_DATA data;
 
         if((res = ss_recog_constant(&data, doc_from, name_def_text, p_optblock, 1)) > 0)
         {
@@ -585,16 +585,16 @@ nam_ref_count_update(
     P_EV_NAME p_ev_name,
     S32 update)
 {
-    switch(p_ev_name->def_data.did_num)
+    switch(p_ev_name->def_data.data_id)
     {
-    case RPN_DAT_SLR:
+    case DATA_ID_SLR:
         ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.slr.docno)->nam_ref_count += update;
         trace_2(TRACE_MODULE_EVAL,
                 "nam_ref_count_update doc: %d, ref now: %d",
                 p_ev_name->def_data.arg.slr.docno, ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.slr.docno)->nam_ref_count);
         break;
 
-    case RPN_DAT_RANGE:
+    case DATA_ID_RANGE:
         ev_p_ss_doc_from_docno_must(p_ev_name->def_data.arg.range.s.docno)->nam_ref_count += update;
         trace_2(TRACE_MODULE_EVAL,
                 "nam_ref_count_update doc: %d, ref now: %d",
@@ -688,7 +688,7 @@ name_free_resources(
 {
     nam_ref_count_update(p_ev_name, -1);
     ss_data_free_resources(&p_ev_name->def_data);
-    p_ev_name->def_data.did_num = RPN_DAT_BLANK;
+    p_ev_name->def_data.data_id = DATA_ID_BLANK;
 }
 
 /******************************************************************************
@@ -775,7 +775,7 @@ name_make(
     EV_NAMEID *nameidp,
     _InVal_     EV_DOCNO docno,
     _In_z_      PC_USTR name,
-    P_EV_DATA p_ev_data_in)
+    P_SS_DATA p_ss_data_in)
 {
     S32 res = 0;
 
@@ -790,10 +790,10 @@ name_make(
             /* free any resources owned by the name at the moment */
             name_free_resources(p_ev_name);
 
-            ss_data_resource_copy(&p_ev_name->def_data, p_ev_data_in);
+            ss_data_resource_copy(&p_ev_name->def_data, p_ss_data_in);
 
             /* dereference names and slrs inside arrays */
-            if(p_ev_name->def_data.did_num == RPN_TMP_ARRAY)
+            if(p_ev_name->def_data.data_id == RPN_TMP_ARRAY)
                 data_limit_types(&p_ev_name->def_data, FALSE);
             ev_todo_add_name_dependents(p_ev_name->key);
             p_ev_name->flags &= ~TRF_UNDEFINED;

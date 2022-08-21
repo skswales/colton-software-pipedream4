@@ -50,6 +50,8 @@
     <p class="csg-function-declaration">FLIP(<span class="csg-function-parameter">array_or_range</span>)</p>
     <p>Swaps rows about the middle row of an array (or range of cells).</p>
     <p>e.g. <code>{1;2;3}</code> becomes <code>{3;2;1}</code></p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
 
     <h2 class="csg-function" id="IF">IF</h2>
     <h5>Syntax:</h5>
@@ -136,6 +138,8 @@
     <p>For example, <code>SORT(B1E100,2)</code> sorts rows 1..100 based on the contents of column C.</p>
     <p>Use with <code>FLIP()</code> to sort in descending order.</p>
     <p>Use with <code>TRANSPOSE()</code> to sort by column based on values in rows.</p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
 
     <h2 class="csg-function" id="TYPE">TYPE</h2>
     <h5>Syntax:</h5>

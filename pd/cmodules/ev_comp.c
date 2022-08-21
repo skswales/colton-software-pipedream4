@@ -70,65 +70,55 @@ proc_custom_argument(
 
 static S32
 recog_array(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
-    S32 american,
+    _InVal_     bool american_date,
     S32 refs_ok,
     S32 names_ok);
 
 static S32
 recog_array_row(
-    _InoutRef_  P_EV_DATA p_ev_data_out,
+    _InoutRef_  P_SS_DATA p_ss_data_out,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
-    S32 american,
+    _InVal_     bool american_date,
     S32 refs_ok,
     S32 names_ok,
     P_S32 x,
     P_S32 y);
 
-_Check_return_
-static U32
-recog_dt(
-    _In_z_      PC_USTR spos,
-    _OutRef_    P_S32 one,
-    _OutRef_    P_S32 two,
-    _OutRef_    P_S32 three,
-    char separator,
-    S32 count);
-
 static S32
 recog_n_dt_str_slr_rng(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     PC_U8 in_str,
-    S32 american,
+    _InVal_     bool american_date,
     S32 refs_ok,
     S32 names_ok);
 
 static S32
 recog_name(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
     P_U8 doc_name);
 
 static S32
 ss_recog_number(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _In_z_      PC_U8Z in_str);
 
 static S32
 recog_slr_range(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
     P_U8 doc_name);
 
 static S32
 recog_string(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _In_z_      PC_U8Z in_str);
 
 static void
@@ -189,7 +179,7 @@ typedef struct COMPILER_CONTEXT
     char ident[BUF_EV_INTNAMLEN];     /* scanned identifier */
     EV_FLAGS        type_flags; /* local argument type qualifier */
 
-    EV_DATA         cur_sym;    /* details of symbol scanned */
+    SS_DATA         cur_sym;    /* details of symbol scanned */
     SYM_INF         cur;
     P_U8            err_pos;    /* position of error */
     S32             error;      /* reason for non-compilation */
@@ -310,7 +300,7 @@ ev_compile(
     cc->op_maxlen     = maxlen;
     cc->parms.var     = 0;
     cc->parms.control = 0;
-    cc->cur.did_num   = SYM_BLANK;
+    cc->cur.sym_idno   = SYM_BLANK;
     cc->error         = 0;
     cc->dbs_nest      = 0;
     cc->array_nest    = 0;
@@ -323,7 +313,7 @@ ev_compile(
     /* set scanner position */
     *at_pos = cc->ip_pos - txt_in;
 
-    if(cc->cur.did_num != RPN_FRM_END)
+    if(cc->cur.sym_idno != RPN_FRM_END)
     {
         res = cc->error;
         *at_pos = cc->err_pos - txt_in;
@@ -406,7 +396,7 @@ ev_name_check(
 
 extern S32
 ss_recog_constant(
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno,
     _In_z_      PC_U8Z in_str,
     _InRef_     PC_EV_OPTBLOCK p_optblock,
@@ -422,8 +412,8 @@ ss_recog_constant(
         while(*in_pos == ' ')
             ++in_pos;
 
-        if( (len = recog_n_dt_str_slr_rng(p_ev_data, docno, in_pos, p_optblock->american_date, refs_ok, 0)) > 0 ||
-            (len = recog_array(p_ev_data, docno, in_pos, p_optblock->american_date, 0, 0)) > 0 )
+        if( (len = recog_n_dt_str_slr_rng(p_ss_data, docno, in_pos, p_optblock->american_date, refs_ok, 0)) > 0 ||
+            (len = recog_array(p_ss_data, docno, in_pos, p_optblock->american_date, 0, 0)) > 0 )
         {
             in_pos += len;
 
@@ -436,7 +426,7 @@ ss_recog_constant(
             if(!*in_pos)
                 res = 1;
             else
-                ss_data_free_resources(p_ev_data);
+                ss_data_free_resources(p_ss_data);
         }
         else
             res = len;
@@ -458,7 +448,7 @@ func_call(
 {
     PC_RPNDEF funp;
 
-    funp = &rpn_table[p_sym_inf->did_num];
+    funp = &rpn_table[p_sym_inf->sym_idno];
 
     if(funp->parms.datab)
     {
@@ -474,7 +464,7 @@ func_call(
 
         cc->dbs_nest -= 1;
     }
-    else if(p_sym_inf->did_num == RPN_FNV_IF)
+    else if(p_sym_inf->sym_idno == RPN_FNV_IF)
     {
         S32 narg;
         EV_IDNO which_if;
@@ -484,14 +474,14 @@ func_call(
          */
         if((narg = proc_func_if(&which_if)) >= 0)
         {
-            p_sym_inf->did_num = which_if;
+            p_sym_inf->sym_idno = which_if;
             out_idno_format(p_sym_inf);
 
             if(which_if == RPN_FNV_IF)
                 out_byte((U8) (S8) narg);
         }
     }
-    else if(p_sym_inf->did_num == RPN_FNM_FUNCTION)
+    else if(p_sym_inf->sym_idno == RPN_FNM_FUNCTION)
     {
         /*
          * custom definitions
@@ -524,7 +514,7 @@ func_call(
                 out_byte((U8) (S8) narg);
 
                 /* custom calls have their id tagged on t'end */
-                if(p_sym_inf->did_num == RPN_FNM_CUSTOMCALL)
+                if(p_sym_inf->sym_idno == RPN_FNM_CUSTOMCALL)
                     out_nameid(nameid);
             }
         }
@@ -545,9 +535,8 @@ func_call(
         }
     }
 
-    /* done at the end cos p_sym_inf->did_num
-     * may be adjusted */
-    funp = &rpn_table[p_sym_inf->did_num];
+    /* done at the end cos p_sym_inf->sym_idno may be adjusted */
+    funp = &rpn_table[p_sym_inf->sym_idno];
 
     /* accumulate flags */
     cc->parms.control  = funp->parms.control;
@@ -680,7 +669,7 @@ out_idno_format(
             *cc->op_pos++ = p_sym_inf->sym_space;
         }
 
-    out_idno(p_sym_inf->did_num);
+    out_idno(p_sym_inf->sym_idno);
 }
 
 /******************************************************************************
@@ -738,7 +727,7 @@ out_string_free(
 {
     S32 len;
 
-    p_sym_inf->did_num = RPN_DAT_STRING;
+    p_sym_inf->sym_idno = RPN_DAT_STRING;
     out_idno_format(p_sym_inf);
 
     len = strlen(*stringpp) + 1;
@@ -815,7 +804,7 @@ proc_func(
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
     }
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     narg = 0;
     nodep = funp->parms.nodep;
@@ -836,14 +825,14 @@ proc_func(
             ++narg;
             if(scan_check_next(NULL) != SYM_COMMA)
                 break;
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
         }
     }
 
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     /* functions with fixed number of arguments must
      * have exactly the correct number of arguments
@@ -875,10 +864,10 @@ proc_func_arg_maybe_blank(void)
 
     scan_check_next(&sym_inf);
 
-    if(sym_inf.did_num == SYM_COMMA ||
-       sym_inf.did_num == SYM_CBRACKET)
+    if(sym_inf.sym_idno == SYM_COMMA ||
+       sym_inf.sym_idno == SYM_CBRACKET)
     {
-        sym_inf.did_num = RPN_DAT_BLANK;
+        sym_inf.sym_idno = DATA_ID_BLANK;
         out_idno_format(&sym_inf);
     }
     else
@@ -900,7 +889,7 @@ proc_func_dbs(void)
     if(scan_check_next(NULL) != SYM_OBRACKET)
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     proc_func_arg_maybe_blank();
 
@@ -908,7 +897,7 @@ proc_func_dbs(void)
     if(scan_check_next(NULL) != SYM_COMMA)
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     out_idno(RPN_FRM_COND);
     dbase_start = cc->op_pos;
@@ -927,7 +916,7 @@ proc_func_dbs(void)
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     return(0);
 }
@@ -951,7 +940,7 @@ proc_func_if(
     if(scan_check_next(NULL) != SYM_OBRACKET)
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     proc_func_arg_maybe_blank();
 
@@ -960,7 +949,7 @@ proc_func_if(
         /* check for single argument if */
         if(scan_check_next(NULL) == SYM_CBRACKET)
         {
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
             *which_if = RPN_FNF_IFC;
             return(1);
         }
@@ -968,7 +957,7 @@ proc_func_if(
             return(set_error(create_error(EVAL_ERR_BADEXPR)));
     }
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     /* two or three-part if */
     *which_if = RPN_FNV_IF;
@@ -987,7 +976,7 @@ proc_func_if(
     /* did he give up with 2 arguments? */
     if(scan_check_next(NULL) == SYM_CBRACKET)
     {
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
         return(2);
     }
 
@@ -1000,7 +989,7 @@ proc_func_if(
     if(scan_check_next(NULL) != SYM_COMMA)
         return(set_error(create_error(EVAL_ERR_BADEXPR)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     /* next argument */
     proc_func_arg_maybe_blank();
@@ -1010,7 +999,7 @@ proc_func_if(
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     /* we did the full three arguments */
     return(3);
@@ -1038,18 +1027,18 @@ proc_func_custom(
     if(scan_check_next(NULL) != SYM_OBRACKET)
         return(set_error(create_error(EVAL_ERR_FUNARGS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     /* scan first argument which must be custom function name */
     if(scan_check_next(&sym_inf) != RPN_TMP_STRING)
         return(set_error(create_error(EVAL_ERR_ARGTYPE)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     /* extract custom function name from first argument */
-    if((res = proc_custom_argument(cc->cur_sym.arg.string.uchars,
-                                  custom_name,
-                                  &dummy_type)) < 0)
+    if((res = proc_custom_argument(ss_data_get_string(&cc->cur_sym),
+                                   custom_name,
+                                   &dummy_type)) < 0)
         return(set_error(res));
 
     /* does the custom function already exist ? */
@@ -1083,7 +1072,7 @@ proc_func_custom(
     narg = 0;
     while(scan_check_next(NULL) == SYM_COMMA && narg < EV_MAX_ARGS)
     {
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
         if(scan_check_next(&sym_inf) != RPN_TMP_STRING)
         {
@@ -1091,10 +1080,10 @@ proc_func_custom(
             break;
         }
         else
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
 
         /* extract argument names and types */
-        if((res = proc_custom_argument(cc->cur_sym.arg.string.uchars,
+        if((res = proc_custom_argument(ss_data_get_string(&cc->cur_sym),
                                        p_ev_custom->args.id[narg],
                                        &p_ev_custom->args.types[narg])) < 0)
             break;
@@ -1114,7 +1103,7 @@ proc_func_custom(
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
     else
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
     /* return number of args to function() */
     return(narg + 1);
@@ -1210,10 +1199,10 @@ proc_custom_argument(
 
 static S32
 recog_array(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
-    S32 american,
+    _InVal_     bool american_date,
     S32 refs_ok,
     S32 names_ok)
 {
@@ -1224,18 +1213,18 @@ recog_array(
     {
         S32 x, y;
 
-        p_ev_data->did_num = RPN_TMP_ARRAY;
-        p_ev_data->arg.ev_array.x_size = 0;
-        p_ev_data->arg.ev_array.y_size = 0;
-        p_ev_data->arg.ev_array.elements = NULL;
+        ss_data_set_data_id(p_ss_data, RPN_TMP_ARRAY);
+        p_ss_data->arg.ss_array.x_size = 0;
+        p_ss_data->arg.ss_array.y_size = 0;
+        p_ss_data->arg.ss_array.elements = NULL;
 
         y = 0;
         do  {
             x = 0;
-            if((res = recog_array_row(p_ev_data,
+            if((res = recog_array_row(p_ss_data,
                                       docno_from,
                                       in_pos,
-                                      american,
+                                      american_date,
                                       refs_ok,
                                       names_ok,
                                       &x, &y)) >= 0)
@@ -1245,7 +1234,7 @@ recog_array(
             }
             else
             {
-                ss_array_free(p_ev_data);
+                ss_array_free(p_ss_data);
                 break;
             }
         }
@@ -1267,10 +1256,10 @@ recog_array(
 
 static S32
 recog_array_row(
-    _InoutRef_  P_EV_DATA p_ev_data_out,
+    _InoutRef_  P_SS_DATA p_ss_data_out,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
-    S32 american,
+    _InVal_     bool american_date,
     S32 refs_ok,
     S32 names_ok,
     P_S32 x,
@@ -1281,7 +1270,7 @@ recog_array_row(
 
     do  {
         S32 len;
-        EV_DATA data;
+        SS_DATA data;
 
         /* skip separator */
         ++in_pos;
@@ -1290,8 +1279,8 @@ recog_array_row(
         while(*in_pos == ' ')
             ++in_pos;
 
-        data.did_num = RPN_DAT_BLANK;
-        if((len = recog_n_dt_str_slr_rng(&data, docno_from, in_pos, american, refs_ok, names_ok)) > 0)
+        data.data_id = DATA_ID_BLANK;
+        if((len = recog_n_dt_str_slr_rng(&data, docno_from, in_pos, american_date, refs_ok, names_ok)) > 0)
             in_pos += len;
         else if(len < 0)
         {
@@ -1300,15 +1289,15 @@ recog_array_row(
         }
 
         /* can't expand array on subsequent rows */
-        if(*y && *x >= p_ev_data_out->arg.ev_array.x_size)
+        if(*y && *x >= p_ss_data_out->arg.ss_array.x_size)
         {
             res = create_error(EVAL_ERR_SUBSCRIPT);
             break;
         }
 
         /* put data into array */
-        if(ss_array_element_make(p_ev_data_out, *x, *y) >= 0)
-            *ss_array_element_index_wr(p_ev_data_out, *x, *y) = data;
+        if(ss_array_element_make(p_ss_data_out, *x, *y) >= 0)
+            *ss_array_element_index_wr(p_ss_data_out, *x, *y) = data;
         else
         {
             res = status_nomem();
@@ -1324,172 +1313,6 @@ recog_array_row(
     while(*in_pos == ',');
 
     return(res > 0 ? in_pos - in_str : res);
-}
-
-/******************************************************************************
-*
-* try to recognise date or time
-*
-* --out--
-* =0 no date or time found
-* >0 # chars scanned
-*
-******************************************************************************/
-
-_Check_return_
-static inline U32
-recog_date(
-    _In_z_      PC_USTR spos,
-    _OutRef_    P_S32 one,
-    _OutRef_    P_S32 two,
-    _OutRef_    P_S32 three)
-{
-    return(recog_dt(spos, one, two, three, '.', 3));
-}
-
-_Check_return_
-static inline U32
-recog_time(
-    _In_z_      PC_USTR spos,
-    _OutRef_    P_S32 one,
-    _OutRef_    P_S32 two,
-    _OutRef_    P_S32 three)
-{
-    return(recog_dt(spos, one, two, three, ':', 2));
-}
-
-extern S32
-ss_recog_date_time(
-    _InoutRef_  P_EV_DATA p_ev_data,
-    PC_U8 in_str,
-    S32 american)
-{
-    S32 day, month, year, date_scanned;
-    S32 hours, minutes, seconds;
-    U32 time_scanned;
-    PC_U8 pos = in_str;
-
-    p_ev_data->arg.ev_date.date = EV_DATE_NULL;
-    p_ev_data->arg.ev_date.time = EV_TIME_NULL;
-
-    /* check for a date */
-    if((date_scanned = recog_date(pos, &day, &month, &year)) != 0)
-    {
-        S32 tres;
-
-#if (RELEASED || 1) /* you may set the one to zero temporarily for testing Fireworkz serial numbers for years < 0100 in Debug build */
-        if((year >= 0) && (year < 100))
-            year = sliding_window_year(year);
-#endif
-
-        if(american)
-            tres = ss_ymd_to_dateval(&p_ev_data->arg.ev_date.date, year, day, month);
-        else
-            tres = ss_ymd_to_dateval(&p_ev_data->arg.ev_date.date, year, month, day);
-
-        if(tres >= 0)
-        {
-            pos += date_scanned;
-            p_ev_data->did_num = RPN_DAT_DATE;
-        }
-        else
-            p_ev_data->arg.ev_date.date = 0;
-    }
-
-    /* check for a time */
-    seconds = 0;
-    if((time_scanned = recog_time(pos, &hours, &minutes, &seconds)) != 0)
-    {
-        if(ss_hms_to_timeval(&p_ev_data->arg.ev_date.time, hours, minutes, seconds) >= 0)
-        {
-            pos += time_scanned;
-            p_ev_data->did_num = RPN_DAT_DATE;
-        }
-
-        ss_date_normalise(&p_ev_data->arg.ev_date);
-    }
-
-    return(pos - in_str);
-}
-
-/******************************************************************************
-*
-* read a three part date or two or three part time value
-*
-******************************************************************************/
-
-_Check_return_
-static U32
-recog_dt(
-    _In_z_      PC_USTR spos,
-    _OutRef_    P_S32 one,
-    _OutRef_    P_S32 two,
-    _OutRef_    P_S32 three,
-    char separator,
-    S32 count)
-{
-    PC_USTR pos = spos;
-    P_U8 epos;
-    S32 scan_val;
-    S32 another;
-
-    *one = *two = *three = 0;
-
-    while(' ' == *pos++)
-    { /*EMPTY*/ }
-    if(CH_NULL == *--pos)
-        return(0);
-
-    scan_val = (S32) strtol(pos, &epos, 10);
-
-    if(epos == pos)
-        return(0);
-
-    *one = (S32) scan_val;
-    --count;
-
-    another = 0;
-    if(*epos == separator)
-    {
-        ++epos;
-        another = 1;
-    }
-    else if(count)
-        return(0);
-
-    if(another)
-    {
-        pos = epos;
-        scan_val = (S32) strtol(pos, &epos, 10);
-
-        if(epos == pos)
-            return(0);
-
-        *two = (S32) scan_val;
-        --count;
-
-        another = 0;
-        if(*epos == separator)
-        {
-            ++epos;
-            another = 1;
-        }
-        else if(count)
-            return(0);
-    }
-
-    if(another)
-    {
-        pos = epos;
-        scan_val = (S32) strtol(pos, &epos, 10);
-
-        if(epos == pos)
-            return(0);
-
-        *three = (S32) scan_val;
-    }
-
-    return(epos - spos);
 }
 
 /******************************************************************************
@@ -1601,18 +1424,18 @@ recog_ident(
 
 static S32
 recog_n_dt_str_slr_rng(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     PC_U8 in_str,
-    S32 american,
+    _InVal_     bool american_date,
     S32 refs_ok,
     S32 names_ok)
 {
     S32 len;
 
-    if((len = ss_recog_number(p_ev_data, in_str)) == 0 &&
-       (len = ss_recog_date_time(p_ev_data, in_str, american)) == 0 &&
-       (len = recog_string(p_ev_data, in_str)) == 0)
+    if( ((len = ss_recog_date_time(p_ss_data, in_str, american_date)) == 0) &&
+        ((len = ss_recog_number(p_ss_data, in_str)) == 0) &&
+        ((len = recog_string(p_ss_data, in_str)) == 0) )
     {
         if(refs_ok)
         {
@@ -1625,7 +1448,7 @@ recog_n_dt_str_slr_rng(
             {
                 S32 len1;
 
-                len1 = recog_slr_range(p_ev_data, docno_from, in_str + len, doc_name);
+                len1 = recog_slr_range(p_ss_data, docno_from, in_str + len, doc_name);
 
                 if(len1 > 0)
                     len += len1;
@@ -1633,7 +1456,7 @@ recog_n_dt_str_slr_rng(
                     len = len1;
                 else if(names_ok)
                 {
-                    len1 = recog_name(p_ev_data, docno_from, in_str + len, doc_name);
+                    len1 = recog_name(p_ss_data, docno_from, in_str + len, doc_name);
 
                     if(len1 >= 0)
                         len += len1;
@@ -1656,7 +1479,7 @@ recog_n_dt_str_slr_rng(
 
 static S32
 recog_name(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
     P_U8 doc_name)
@@ -1676,8 +1499,8 @@ recog_name(
             len = 0;
         else
         {
-            p_ev_data->did_num = RPN_DAT_NAME;
-            p_ev_data->arg.nameid = name_ptr_must(name_num)->key;
+            p_ss_data->arg.nameid = name_ptr_must(name_num)->key;
+            ss_data_set_data_id(p_ss_data, DATA_ID_NAME);
         }
     }
 
@@ -1696,7 +1519,7 @@ recog_name(
 
 static S32
 ss_recog_number(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _In_z_      PC_U8Z in_str_in)
 {
     S32 res = 0;
@@ -1724,9 +1547,9 @@ ss_recog_number(
 
             if(!try_fp)
             {
-                ev_data_set_integer(p_ev_data, (negative ? - (S32) u32 : (S32) u32));
+                ss_data_set_integer(p_ss_data, (negative ? - (S32) u32 : (S32) u32));
                 res = PtrDiffBytesS32(ep, in_str_in);
-                /*reportf("recog_number(%s) X scanned %d", in_str_in, p_ev_data->arg.integer);*/
+                /*reportf("recog_number(%s) X scanned %d", in_str_in, ss_data_get_integer(p_ss_data));*/
             }
             else
             {   /* just quickly check that it's not a date without the strtod overhead (NB Fireworkz doesn't need this step) */
@@ -1754,9 +1577,9 @@ ss_recog_number(
                             try_fp = FALSE;
                             f64 = frac_u32 / tens_array[frac_digits - 1];
                             f64 += u32;
-                            ev_data_set_real(p_ev_data, negative ? -f64 : f64);
+                            ss_data_set_real(p_ss_data, negative ? -f64 : f64);
                             res = PtrDiffBytesS32(ep, in_str_in);
-                            /*reportf("recog_number(%s) X.Y scanned %g from %u. %u(%u digits)", in_str_in, p_ev_data->arg.fp, u32, frac_u32, frac_digits);*/
+                            /*reportf("recog_number(%s) X.Y scanned %g from %u. %u(%u digits)", in_str_in, ss_data_get_real(p_ss_data), u32, frac_u32, frac_digits);*/
                         }
                     }
 #else
@@ -1779,10 +1602,10 @@ ss_recog_number(
         /* must have scanned something and not be a date */
         if((ep != in_str) && (*ep != '.') && (*ep != ':'))
         {
-            ev_data_set_real(p_ev_data, negative ? -f64 : f64);
-            /*real_to_integer_try(p_ev_data);*//*SKS for t5 1.30 why the hell did it bother? means you cant preserve 1.0 typed in */
+            ss_data_set_real(p_ss_data, negative ? -f64 : f64);
+            /*ss_data_real_to_integer_try(p_ss_data);*//*SKS for t5 1.30 why the hell did it bother? means you cant preserve 1.0 typed in */
             res = PtrDiffBytesS32(ep, in_str_in);
-            /*reportf("recog_number(%s) FP scanned %g", in_str_in, p_ev_data->arg.fp);*/
+            /*reportf("recog_number(%s) FP scanned %g", in_str_in, ss_data_get_real(p_ss_data));*/
         }
     }
 
@@ -1865,7 +1688,7 @@ recog_slr(
 
 static S32
 recog_slr_range(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _InVal_     EV_DOCNO docno_from,
     _In_z_      PC_U8Z in_str,
     P_U8 doc_name)
@@ -1929,9 +1752,9 @@ recog_slr_range(
 
             if((s_slr.col < e_slr.col) && (s_slr.row < e_slr.row))
             {
-                p_ev_data->arg.range.s = s_slr;
-                p_ev_data->arg.range.e = e_slr;
-                p_ev_data->did_num = RPN_DAT_RANGE;
+                p_ss_data->arg.range.s = s_slr;
+                p_ss_data->arg.range.e = e_slr;
+                ss_data_set_data_id(p_ss_data, DATA_ID_RANGE);
 
                 len = (/*len_ext_1 +*/ len_slr_1) + len_colon + (len_ext_2 + len_slr_2); /* all components for range */
             }
@@ -1939,8 +1762,8 @@ recog_slr_range(
         }
         else
         {
-            p_ev_data->arg.slr = s_slr;
-            p_ev_data->did_num = RPN_DAT_SLR;
+            p_ss_data->arg.slr = s_slr;
+            ss_data_set_data_id(p_ss_data, DATA_ID_SLR);
 
             len = /*len_ext_1 +*/ len_slr_1; /* all components for SLR */
         } /*fi*/
@@ -1963,7 +1786,7 @@ recog_slr_range(
 
 static S32
 recog_string(
-    _InoutRef_  P_EV_DATA p_ev_data,
+    _InoutRef_  P_SS_DATA p_ss_data,
     _In_z_      PC_U8Z in_str)
 {
     S32 res = 0;
@@ -2012,9 +1835,9 @@ recog_string(
 
             *co = CH_NULL;
 
-            p_ev_data->arg.string.uchars = stringp;
-            p_ev_data->arg.string.size = len;
-            p_ev_data->did_num = RPN_TMP_STRING;
+            p_ss_data->arg.string.uchars = stringp;
+            p_ss_data->arg.string.size = len;
+            ss_data_set_data_id(p_ss_data, RPN_TMP_STRING);
 
             res = ci - in_str;
         }
@@ -2040,7 +1863,7 @@ rec_array(
     *x_size = 0;
 
     do  {
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
         rec_array_row(cur_y, x_size);
         ++cur_y;
     }
@@ -2067,14 +1890,14 @@ rec_array_row(
     do  {
         EV_IDNO next;
 
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
         next = scan_check_next(NULL);
 
         if(next == SYM_COMMA     ||
            next == SYM_SEMICOLON ||
            next == SYM_CARRAY)
-            out_idno(RPN_DAT_BLANK);
+            out_idno(DATA_ID_BLANK);
         else
             rec_expr();
         ++cur_x;
@@ -2095,7 +1918,7 @@ rec_array_row(
             S32 i;
 
             for(i = cur_x; i < *x_size; ++i)
-                out_idno(RPN_DAT_BLANK);
+                out_idno(DATA_ID_BLANK);
         }
     }
 }
@@ -2125,7 +1948,7 @@ rec_aterm(void)
 
         if(!cc->error)
         {
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
             rec_bterm();
             out_idno_format(&sym_inf);
 
@@ -2158,7 +1981,7 @@ rec_bterm(void)
         case RPN_REL_GT:
         case RPN_REL_LTEQUAL:
         case RPN_REL_GTEQUAL:
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
             break;
         default:
             return;
@@ -2186,7 +2009,7 @@ rec_cterm(void)
         {
         case RPN_BOP_PLUS:
         case RPN_BOP_MINUS:
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
             break;
         default:
             return;
@@ -2214,7 +2037,7 @@ rec_dterm(void)
         {
         case RPN_BOP_TIMES:
         case RPN_BOP_DIVIDE:
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
             break;
         default:
             return;
@@ -2238,7 +2061,7 @@ rec_eterm(void)
     rec_fterm();
     while(scan_check_next(&sym_inf) == RPN_BOP_POWER)
     {
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
         rec_fterm();
         out_idno_format(&sym_inf);
     }
@@ -2272,7 +2095,7 @@ rec_expr(void)
 
         if(!cc->error)
         {
-            cc->cur.did_num = SYM_BLANK;
+            cc->cur.sym_idno = SYM_BLANK;
             rec_aterm();
             out_idno_format(&sym_inf);
 
@@ -2296,13 +2119,13 @@ rec_fterm(void)
     switch(scan_check_next(&sym_inf))
     {
     case RPN_BOP_PLUS:
-        sym_inf.did_num = RPN_UOP_UPLUS;
+        sym_inf.sym_idno = RPN_UOP_UPLUS;
         goto proc_op;
     case RPN_BOP_MINUS:
-        sym_inf.did_num = RPN_UOP_UMINUS;
+        sym_inf.sym_idno = RPN_UOP_UMINUS;
     case RPN_UOP_NOT:
     proc_op:
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
         rec_fterm();
         out_idno_format(&sym_inf);
         return;
@@ -2325,14 +2148,14 @@ rec_gterm(void)
 
     if(scan_check_next(&sym_inf) == SYM_OBRACKET)
     {
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
         rec_expr();
         if(scan_check_next(NULL) != SYM_CBRACKET)
             set_error(create_error(EVAL_ERR_CBRACKETS));
         else
         {
-            cc->cur.did_num = SYM_BLANK;
-            sym_inf.did_num = RPN_FRM_BRACKETS;
+            cc->cur.sym_idno = SYM_BLANK;
+            sym_inf.sym_idno = RPN_FRM_BRACKETS;
             out_idno_format(&sym_inf);
         }
     }
@@ -2361,51 +2184,51 @@ rec_lterm(void)
 
     switch(scan_check_next(&sym_inf))
     {
-    case RPN_DAT_REAL:
-        cc->cur.did_num = SYM_BLANK;
+    case DATA_ID_REAL:
+        cc->cur.sym_idno = SYM_BLANK;
         out_idno_format(&sym_inf);
         out_to_rpn(sizeof32(F64), &cc->cur_sym.arg.fp);
         break;
 
-    case RPN_DAT_WORD8:
-        cc->cur.did_num = SYM_BLANK;
+    case DATA_ID_LOGICAL:
+        cc->cur.sym_idno = SYM_BLANK;
         out_idno_format(&sym_inf);
-        out_byte((U8) (S8) cc->cur_sym.arg.integer);
+        out_byte((U8) (S8) ss_data_get_logical(&cc->cur_sym));
         break;
 
-    case RPN_DAT_WORD16:
-        cc->cur.did_num = SYM_BLANK;
+    case DATA_ID_WORD16:
+        cc->cur.sym_idno = SYM_BLANK;
         out_idno_format(&sym_inf);
-        out_S16((S16) cc->cur_sym.arg.integer);
+        out_S16((S16) ss_data_get_integer(&cc->cur_sym));
         break;
 
-    case RPN_DAT_WORD32:
-        cc->cur.did_num = SYM_BLANK;
+    case DATA_ID_WORD32:
+        cc->cur.sym_idno = SYM_BLANK;
         out_idno_format(&sym_inf);
         out_to_rpn(sizeof32(S32), &cc->cur_sym.arg.integer);
         break;
 
-    case RPN_DAT_SLR:
-        cc->cur.did_num = SYM_BLANK;
+    case DATA_ID_SLR:
+        cc->cur.sym_idno = SYM_BLANK;
         out_idno_format(&sym_inf);
         out_slr(&cc->cur_sym.arg.slr);
         break;
 
-    case RPN_DAT_RANGE:
-        cc->cur.did_num = SYM_BLANK;
+    case DATA_ID_RANGE:
+        cc->cur.sym_idno = SYM_BLANK;
         out_idno_format(&sym_inf);
         out_range(&cc->cur_sym.arg.range);
         break;
 
     case RPN_TMP_STRING:
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
         out_string_free(&sym_inf, &cc->cur_sym.arg.string_wr.uchars);
         break;
 
-    case RPN_DAT_DATE:
-        cc->cur.did_num = SYM_BLANK;
+    case DATA_ID_DATE:
+        cc->cur.sym_idno = SYM_BLANK;
         out_idno_format(&sym_inf);
-        out_to_rpn(sizeof32(EV_DATE), &cc->cur_sym.arg.ev_date);
+        out_to_rpn(sizeof32(SS_DATE), &cc->cur_sym.arg.ss_date);
         break;
 
     case SYM_OARRAY:
@@ -2432,10 +2255,10 @@ rec_lterm(void)
         }
 
         /* array has been scanned */
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
         /* output array details to compiled expression */
-        sym_inf.did_num = RPN_FNA_MAKEARRAY;
+        sym_inf.sym_idno = RPN_FNA_MAKEARRAY;
         out_idno_format(&sym_inf);
 
         /* output array sizes */
@@ -2456,7 +2279,7 @@ rec_lterm(void)
             out_byte(*ci);
         while(*ci++);
 
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
         break;
         }
 
@@ -2469,7 +2292,7 @@ rec_lterm(void)
         strcpy(ident, cc->ident);
 
         /* we scanned the tag */
-        cc->cur.did_num = SYM_BLANK;
+        cc->cur.sym_idno = SYM_BLANK;
 
         /* lookup id as internal function */
         if(!cc->doc_name[0])
@@ -2478,7 +2301,7 @@ rec_lterm(void)
 
             if((int_func = func_lookup(ident)) >= 0)
             {
-                sym_inf.did_num = (EV_IDNO) int_func;
+                sym_inf.sym_idno = (EV_IDNO) int_func;
                 func_call(&sym_inf, 0);
                 break;
             }
@@ -2498,7 +2321,7 @@ rec_lterm(void)
             }
 
             p_ev_custom = custom_ptr_must(custom_num);
-            sym_inf.did_num = RPN_FNM_CUSTOMCALL;
+            sym_inf.sym_idno = RPN_FNM_CUSTOMCALL;
             func_call(&sym_inf, p_ev_custom->key);
         }
         else
@@ -2513,7 +2336,7 @@ rec_lterm(void)
             }
 
             p_ev_name = name_ptr_must(name_num);
-            sym_inf.did_num = RPN_DAT_NAME;
+            sym_inf.sym_idno = DATA_ID_NAME;
             out_idno_format(&sym_inf);
             out_nameid(p_ev_name->key);
 
@@ -2540,7 +2363,7 @@ static EV_IDNO
 scan_check_next(
     P_SYM_INF p_sym_inf)
 {
-    if(cc->cur.did_num == SYM_BLANK)
+    if(cc->cur.sym_idno == SYM_BLANK)
     {
         cc->err_pos = cc->ip_pos;
         scan_next_symbol();
@@ -2550,7 +2373,7 @@ scan_check_next(
     if(p_sym_inf)
         *p_sym_inf = cc->cur;
 
-    return(cc->cur.did_num);
+    return(cc->cur.sym_idno);
 }
 
 /******************************************************************************
@@ -2610,11 +2433,12 @@ scan_next_symbol(void)
     if( (*cc->ip_pos != '-') &&
         (*cc->ip_pos != '+') )
     {
-        /* check for number */
-        if((res = ss_recog_number(&cc->cur_sym, cc->ip_pos)) > 0)
-            cc->ip_pos += res;
         /* check for date and/or time */
-        else if((res = ss_recog_date_time(&cc->cur_sym, cc->ip_pos, cc->p_optblock->american_date)) > 0)
+        /*SKS 20191203 moved from below ss_recog_number call to be consistent with Fireworkz (allows ISO dates etc.) */
+        if((res = ss_recog_date_time(&cc->cur_sym, cc->ip_pos, cc->p_optblock->american_date)) > 0)
+            cc->ip_pos += res;
+        /* check for number */
+        else if((res = ss_recog_number(&cc->cur_sym, cc->ip_pos)) > 0)
             cc->ip_pos += res;
         /* read a string ? */
         else if((res = recog_string(&cc->cur_sym, cc->ip_pos)) > 0)
@@ -2622,7 +2446,7 @@ scan_next_symbol(void)
 
         if(res > 0)
         {
-            cc->cur.did_num = cc->cur_sym.did_num;
+            cc->cur.sym_idno = cc->cur_sym.data_id; /* promote to superset */
             return;
         }
     }
@@ -2635,7 +2459,7 @@ scan_next_symbol(void)
     {
         cc->ip_pos += res;
         cc->parms.var = 1;
-        cc->cur.did_num = cc->cur_sym.did_num;
+        cc->cur.sym_idno = cc->cur_sym.data_id;
         return;
     }
 
@@ -2643,31 +2467,31 @@ scan_next_symbol(void)
     switch(*cc->ip_pos)
     {
     case CH_NULL:
-        cc->cur.did_num = RPN_FRM_END;
+        cc->cur.sym_idno = RPN_FRM_END;
         return;
     case '(':
         ++cc->ip_pos;
-        cc->cur.did_num = SYM_OBRACKET;
+        cc->cur.sym_idno = SYM_OBRACKET;
         return;
     case ')':
         ++cc->ip_pos;
-        cc->cur.did_num = SYM_CBRACKET;
+        cc->cur.sym_idno = SYM_CBRACKET;
         return;
     case ',':
         ++cc->ip_pos;
-        cc->cur.did_num = SYM_COMMA;
+        cc->cur.sym_idno = SYM_COMMA;
         return;
     case ';':
         ++cc->ip_pos;
-        cc->cur.did_num = SYM_SEMICOLON;
+        cc->cur.sym_idno = SYM_SEMICOLON;
         return;
     case '{':
         ++cc->ip_pos;
-        cc->cur.did_num = SYM_OARRAY;
+        cc->cur.sym_idno = SYM_OARRAY;
         return;
     case '}':
         ++cc->ip_pos;
-        cc->cur.did_num = SYM_CARRAY;
+        cc->cur.sym_idno = SYM_CARRAY;
         return;
 
     /* local name */
@@ -2679,7 +2503,7 @@ scan_next_symbol(void)
         }
 
         cc->ip_pos += res;
-        cc->cur.did_num = RPN_LCL_ARGUMENT;
+        cc->cur.sym_idno = RPN_LCL_ARGUMENT;
         return;
 
     default:
@@ -2695,7 +2519,7 @@ scan_next_symbol(void)
         {
             cc->ip_pos += res;
             cc->parms.var = 1;
-            cc->cur.did_num = cc->cur_sym.did_num;
+            cc->cur.sym_idno = cc->cur_sym.data_id;
             return;
         }
     }
@@ -2715,7 +2539,7 @@ scan_next_symbol(void)
         }
 
         cc->ip_pos += res;
-        cc->cur.did_num = SYM_TAG;
+        cc->cur.sym_idno = SYM_TAG;
         return;
     }
     /* must be an operator or a dud */
@@ -2750,7 +2574,7 @@ scan_next_symbol(void)
         *co++ = CH_NULL;
 
         if(count)
-            if((cc->cur.did_num = func_lookup(cc->ident)) >= 0)
+            if((cc->cur.sym_idno = func_lookup(cc->ident)) >= 0)
                 return;
     }
 
@@ -2767,7 +2591,7 @@ static S32
 set_error(
     S32 err)
 {
-    cc->cur.did_num = SYM_BAD;
+    cc->cur.sym_idno = SYM_BAD;
     if(!cc->error)
         cc->error = err;
 

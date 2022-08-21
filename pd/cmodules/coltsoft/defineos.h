@@ -84,8 +84,12 @@ check that setup from selectos.h is ok
 #include "cmodules/coltsoft/target_riscos_host_windows.h"
 #endif /* CROSS_COMPILE */
 
-#if CROSS_COMPILE && (defined(HOST_GCCSDK) || defined(HOST_CLANG))
+#if CROSS_COMPILE && defined(HOST_GCCSDK)
 #include "cmodules/coltsoft/target_riscos_host_gccsdk.h"
+#endif /* CROSS_COMPILE */
+
+#if CROSS_COMPILE && defined(HOST_CLANG)
+#include "cmodules/coltsoft/target_riscos_host_clang.h"
 #endif /* CROSS_COMPILE */
 
 #endif /* RISCOS */

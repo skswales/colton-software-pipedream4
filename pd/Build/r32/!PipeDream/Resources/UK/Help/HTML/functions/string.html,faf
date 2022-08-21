@@ -55,6 +55,8 @@
         Returns as a string the formula in the cell referenced, so that it can be displayed in the worksheet.
         This is useful for annotating worksheets, and printing out the formula which created the results shown in the worksheet.
     </p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
 
     <h2 class="csg-function" id="FIND">FIND</h2>
     <h5>Syntax:</h5>
@@ -218,6 +220,8 @@
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>TEXT(1234.567, "#,.###.,00&nbsp;\&euro;")</code> returns <code>1.234,57&nbsp;\&euro;</code></p>
     <p class="csg-sample-indent"><code>TEXT(1234.567, "g0.###&nbsp;\m")</code> returns <code>1.235&nbsp;km</code></p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/39.</p>
 
     <h2 class="csg-function" id="TRIM">TRIM</h2>
     <h5>Syntax:</h5>

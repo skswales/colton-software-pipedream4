@@ -14,6 +14,8 @@
 exported variables from version.c
 */
 
+extern const int hexversion;
+
 extern const char applicationversion[];
 
 #endif /* __version_x_h */

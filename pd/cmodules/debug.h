@@ -201,7 +201,7 @@ extern void
 vtracef(
     _InVal_     U32 mask,
     _In_z_ _Printf_format_string_ PCTSTR format,
-    /**/        va_list arg);
+    /**/        va_list args);
 
 extern int trace__count; /* exported only for tracing() */
 

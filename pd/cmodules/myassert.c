@@ -64,8 +64,8 @@ hard_assertion = 1000; /* an OLE server really needs this */
 _Check_return_
 extern BOOL __cdecl
 __myasserted(
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _InVal_     U32 line_no,
     _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        ...)
@@ -74,7 +74,7 @@ __myasserted(
     BOOL crash_and_burn;
 
     va_start(va, format);
-    crash_and_burn = __vmyasserted(p_function, p_file, line_no, NULL, format, va);
+    crash_and_burn = __vmyasserted(tstr_function, tstr_file, line_no, NULL, format, va);
     va_end(va);
 
     return(crash_and_burn);
@@ -83,8 +83,8 @@ __myasserted(
 _Check_return_
 extern BOOL __cdecl
 __myasserted_msg(
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _InVal_     U32 line_no,
     _In_z_      PCTSTR message,
     _In_z_ _Printf_format_string_ PCTSTR format,
@@ -94,7 +94,7 @@ __myasserted_msg(
     BOOL crash_and_burn;
 
     va_start(va, format);
-    crash_and_burn = __vmyasserted(p_function, p_file, line_no, message, format, va);
+    crash_and_burn = __vmyasserted(tstr_function, tstr_file, line_no, message, format, va);
     va_end(va);
 
     return(crash_and_burn);
@@ -103,8 +103,8 @@ __myasserted_msg(
 _Check_return_
 extern BOOL
 __myasserted_EQ(
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _InVal_     U32 line_no,
     _InVal_     U32 val1,
     _InVal_     U32 val2)
@@ -112,18 +112,18 @@ __myasserted_EQ(
     if(val1 == val2)
         return(FALSE);
 
-    return(__myasserted(p_function, p_file, line_no, U32_TFMT TEXT("==") U32_TFMT, val1, val2));
+    return(__myasserted(tstr_function, tstr_file, line_no, U32_TFMT TEXT("==") U32_TFMT, val1, val2));
 }
 
 _Check_return_
 extern BOOL
 __vmyasserted(
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _InVal_     U32 line_no,
     _In_opt_z_  PCTSTR message,
     _In_z_ _Printf_format_string_ PCTSTR format,
-    /**/        va_list va_in)
+    /**/        va_list args)
 {
 
 #if RISCOS
@@ -134,11 +134,7 @@ __vmyasserted(
     int button_clicked;
 
     /* we need to know how to copy this! */
-#if !RISCOS
-    va = va_in;
-#else
-    va[0] = va_in[0];
-#endif
+    va_copy(va, args);
 
     err.errnum = 0;
 
@@ -149,11 +145,7 @@ __vmyasserted(
             *p = CH_NULL;
 
         /* unbeknown to SKS, vsprintf modifies va, so reload necessary ... */
-#if !RISCOS
-        va = va_in;
-#else
-        va[0] = va_in[0];
-#endif
+        va_copy(va, args);
 
         if(strlen(p) > 32)
         {
@@ -169,7 +161,7 @@ __vmyasserted(
         }
     }
 
-    p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), ASSERTION_FAILURE_PREFIX TEXT(" - "), p_function, p_file, line_no);
+    p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), ASSERTION_FAILURE_PREFIX TEXT(" - "), tstr_function, tstr_file, line_no);
 
     p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), TEXT("%s"), message ? message : ASSERTION_FAILURE_YN);
 
@@ -203,7 +195,7 @@ __vmyasserted(
 
     len = _sntprintf_s(szBuffer, elemof32(szBuffer), _TRUNCATE,
                        ASSERTION_FAILURE_PREFIX TEXT("\n\n%s"),
-                       p_function, p_file, line_no, message ? message : ASSERTION_FAILURE_YN);
+                       tstr_function, tstr_file, line_no, message ? message : ASSERTION_FAILURE_YN);
     assert(len != (size_t) -1);
 
 #if TRACE_ALLOWED
@@ -227,10 +219,10 @@ __vmyasserted(
 #if defined(_DEBUG)
         /* avoid putting up a simple message box in this state */
 #if T5_UNICODE
-        if(1 == _CrtDbgReportW(_CRT_ASSERT, p_file, line_no, product_id(), TEXT("%s"), szBuffer))
+        if(1 == _CrtDbgReportW(_CRT_ASSERT, tstr_file, line_no, product_id(), TEXT("%s"), szBuffer))
             return(FALSE);
 #else
-        if(1 == _CrtDbgReport(_CRT_ASSERT, p_file, line_no, product_id(), TEXT("%s"), szBuffer))
+        if(1 == _CrtDbgReport(_CRT_ASSERT, tstr_file, line_no, product_id(), TEXT("%s"), szBuffer))
             return(FALSE);
 #endif
         return(TRUE);
@@ -270,7 +262,7 @@ __vmyasserted(
 
 #else
 
-    fprintf(stderr, ASSERTION_FAILURE_PREFIX, p_file, line_no);
+    fprintf(stderr, ASSERTION_FAILURE_PREFIX, tstr_file, line_no);
 
     if(!IS_P_DATA_NONE(format))
     {
@@ -300,8 +292,8 @@ __hard_assert(
 extern STATUS
 __status_assert(
     _InVal_     STATUS status,
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _InVal_     U32 line_no,
     _In_z_      PCTSTR tstr)
 {
@@ -310,7 +302,7 @@ __status_assert(
 
     {
     PCTSTR tstr_s = string_lookup(status);
-    if(__myasserted(p_function, p_file, line_no, tstr_s ? TEXT("%s: status = ") S32_TFMT TEXT(", %s") : TEXT("%s: status = ") S32_TFMT, tstr, status, tstr_s))
+    if(__myasserted(tstr_function, tstr_file, line_no, tstr_s ? TEXT("%s: status = ") S32_TFMT TEXT(", %s") : TEXT("%s: status = ") S32_TFMT, tstr, status, tstr_s))
         __crash_and_burn_here();
     } /*block*/
 
@@ -323,8 +315,8 @@ __status_assert(
 extern _kernel_oserror *
 __WrapOsErrorChecking(
     _In_opt_    _kernel_oserror * const p_kernel_oserror,
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _In_        int line_no,
     _In_z_      PCTSTR tstr)
 {
@@ -333,7 +325,7 @@ __WrapOsErrorChecking(
     if(NULL == p_kernel_oserror)
         return(NULL);
 
-    if(__myasserted(p_function, p_file, line_no,
+    if(__myasserted(tstr_function, tstr_file, line_no,
                     TEXT("%s")
                     TEXT("\n")
                     TEXT("FAILED: err=%d:") U32_XTFMT TEXT(" %s"),
@@ -351,8 +343,8 @@ _Check_return_
 extern BOOL
 __WrapOsBoolChecking(
     _InVal_     BOOL res,
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _In_        int line_no,
     _In_z_      PCTSTR tstr)
 {
@@ -384,11 +376,11 @@ __WrapOsBoolChecking(
                 tstr,
                 dwLastError, dwLastError,
                 buffer ? buffer : TEXT("Error message unavailable"),
-                p_function, p_file, line_no);
+                tstr_function, tstr_file, line_no);
 
         if(!hard_assertion) /* best not to do assert message box in this state */
         {
-            if(__myasserted(p_function, p_file, line_no,
+            if(__myasserted(tstr_function, tstr_file, line_no,
                             TEXT("%s")
                             TEXT("\n")
                             TEXT("FAILED: err=%d:") U32_XTFMT TEXT(" %s"),

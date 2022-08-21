@@ -17,7 +17,7 @@
 #endif
 
 #if !defined(__STDC_VERSION__)
-#if _MSC_VER >= 1800 /* VS2013 */
+#if _MSC_VER >= 1800 /* VS2013 or later */
 #define      __STDC_VERSION__ 199001L /* MSVC is still not quite C99 but pretend that it is */
 #else
 #define      __STDC_VERSION__ 0L /* MSVC is still not C99 */
@@ -47,7 +47,7 @@ typedef unsigned short wchar_t;
 #  define __wchar_t 1
 #endif
 
-#if _MSC_VER > 1500 /* Needs VS2010 or later */
+#if _MSC_VER >= 1600 /* VS2010 or later */
 /* __func__ is defined */
 #else /* _MSC_VER */
 #define __func__ __FUNCTION__
@@ -108,6 +108,19 @@ __pragma(warning(disable:6246)) /* Local declaration of 'x' hides declaration of
 #endif
 
 #define ___assert(e, s) 0 /* Norcroft specific */
+
+#if !defined(__cplusplus)
+#if _MSC_VER < 1800 /* < VS2013 */
+typedef unsigned int _Bool;
+#define bool    _Bool
+#define false   0
+#define true    1
+
+#define inline __inline /* for MSVC < C99 */
+#endif /* _MSC_VER */
+#endif /* __cplusplus */
+
+#define inline_when_fast_fp inline
 
 #endif /* __target_riscos_host_windows_h */
 

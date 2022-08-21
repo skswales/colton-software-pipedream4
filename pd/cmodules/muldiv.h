@@ -17,17 +17,6 @@ extern "C" {
 #endif
 
 /*
-exported structure
-*/
-
-typedef struct UMUL64_RESULT
-{
-    U32 LowPart;
-    U32 HighPart;
-}
-UMUL64_RESULT, * P_UMUL64_RESULT;
-
-/*
 exported functions
 */
 
@@ -67,12 +56,6 @@ muldiv64_limiting(
     _InVal_     S32 denominator);
 
 /* no need for muldiv64_round_floor, muldiv64_remainder, muldiv64_overflow in PipeDream */
-
-extern void
-umul64(
-    _InVal_     U32 a,
-    _InVal_     U32 b,
-    _OutRef_    P_UMUL64_RESULT result);
 
 #if defined(__cplusplus)
 }

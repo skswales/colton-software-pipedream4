@@ -32,6 +32,8 @@ typedef enum FILETYPE_RISC_OS
     FILETYPE_TGA         = 0x69D,
     FILETYPE_CUR         = 0x6A5,
     FILETYPE_TSTEP_800S  = 0x7A0,
+    FILETYPE_PD_CHART    = 0xA77,
+    FILETYPE_T5_DRAW     = 0xA78,
     FILETYPE_FWP         = 0xAF8,
     FILETYPE_DRAW        = 0xAFF,
     FILETYPE_PNG         = 0xB60,
@@ -50,7 +52,7 @@ typedef enum FILETYPE_RISC_OS
     FILETYPE_POSTER      = 0xCC3,
     FILETYPE_SID         = 0xC7D,
     FILETYPE_JPEG        = 0xC85,
-    FILETYPE_PDMACRO     = 0xD21,
+    FILETYPE_PD_MACRO    = 0xD21,
     FILETYPE_LOTUS123    = 0xDB0, /* .WK1 */
     FILETYPE_PIPEDREAM   = 0xDDE,
     FILETYPE_PROARTISAN  = 0xDE2,

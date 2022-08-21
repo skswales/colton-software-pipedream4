@@ -53,10 +53,12 @@
 #define EXTENDED_COLOUR 1 /* BBGGRR1n or 0000000n */
 
 /*
-gr_rdiag.c and numbers.c require this to be defined
+gr_rdiag.c and numbers.c require these to be defined
 */
 
-#define GR_RISCDIAG_WACKYTAG 0x23311881
+#define GR_RISCDIAG_TAG_PD_CHART_CODE_LEGACY 0x23311881U
+
+#define GR_RISCDIAG_TAG_PD_CHART_CODE 0x00001500U
 
 /* -------------- new features, not in release version yet --------------- */
 
@@ -111,10 +113,10 @@ extern void message_output(_In_z_ PCTSTR buffer);
 extern _kernel_oserror *
 __WrapOsErrorChecking(
     _In_opt_    _kernel_oserror * const p_kernel_oserror,
-    _In_z_      PCTSTR p_function,
-    _In_z_      PCTSTR p_file,
+    _In_z_      PCTSTR tstr_function,
+    _In_z_      PCTSTR tstr_file,
     _In_        int line_no,
-    _In_z_      PCTSTR str);
+    _In_z_      PCTSTR tstr);
 
 /*ncr*/
 extern BOOL

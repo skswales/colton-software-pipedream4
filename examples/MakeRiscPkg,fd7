@@ -7,7 +7,7 @@
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
-Set pd$Release 20180225
+Set pd$Release 20191220
 | Remember to update RiscPkg.Control too
 
 Set pd$Disc $.Temp.PD4.PDExamples_<pd$Release>

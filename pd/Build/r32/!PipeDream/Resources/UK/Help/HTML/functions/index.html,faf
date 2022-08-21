@@ -94,7 +94,9 @@
     <h2 id="Mathematical"><a href="math.html">Mathematical Functions</a></h2>
     <ul style="list-style-type: none;">
         <li><a href="math.html#ABS">ABS</a></li>
+        <li><a href="math.html#BASE">BASE</a></li>
         <li><a href="math.html#CEILING">CEILING</a></li>
+        <li><a href="math.html#DECIMAL">DECIMAL</a></li>
         <li><a href="math.html#EXP">EXP</a></li>
         <li><a href="math.html#FACT">FACT</a></li>
         <li><a href="math.html#FLOOR">FLOOR</a></li>
@@ -135,8 +137,10 @@
     <ul style="list-style-type: none;">
         <li><a href="stats.html#AVG">AVG</a></li>
         <li><a href="stats.html#BETA">BETA</a></li>
+        <li><a href="stats.html#BIN">BIN</a></li>
         <li><a href="stats.html#COMBIN">COMBIN</a></li>
         <li><a href="stats.html#COUNT">COUNT</a></li>
+        <li><a href="stats.html#COUNTA">COUNTA</a></li>
         <li><a href="stats.html#GAMMALN">GAMMALN</a></li>
         <li><a href="stats.html#GRAND">GRAND</a></li>
         <li><a href="stats.html#GROWTH">GROWTH</a></li>

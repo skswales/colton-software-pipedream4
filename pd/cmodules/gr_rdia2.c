@@ -33,10 +33,6 @@
 #include "drawmod.h"
 #endif
 
-#ifndef GR_RISCDIAG_WACKYTAG
-#define GR_RISCDIAG_WACKYTAG 0x23311881
-#endif
-
 /******************************************************************************
 *
 * start a path object
@@ -302,8 +298,8 @@ gr_riscdiag_piesector_new(
     _OutRef_    P_DRAW_DIAG_OFFSET pObjectStart,
     PC_DRAW_POINT pPos,
     DRAW_COORD radius,
-    PC_F64 alpha,
-    PC_F64 beta,
+    _InVal_     F64 alpha,
+    _InVal_     F64 beta,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle)
 {
@@ -679,8 +675,8 @@ gr_riscdiag_jpeg_recompute_bbox(
     {
         S32 x1, y1;
 
-        x1 = pJpegObject->width;  //muldiv64(pJpegObject->width,  GR_RISCDRAW_PER_INCH, pJpegObject->dpi_x);
-        y1 = pJpegObject->height; //muldiv64(pJpegObject->height, GR_RISCDRAW_PER_INCH, pJpegObject->dpi_y);
+        x1 = pJpegObject->width;
+        y1 = pJpegObject->height;
 
         /* assumes bbox.x0, bbox.y0 correct */
         pJpegObject->bbox.x1 = pJpegObject->bbox.x0 + x1;
@@ -805,27 +801,27 @@ gr_riscdiag_diagram_tagged_object_strip(
                     if(!PRM_conformant)
                         tag = * (P_U32) (pEnclObject.p_byte + enclObjectSize);
 
-                    tagGoopSize       = objectSize - enclObjectSize - tagHdrSize;
+                    tagGoopSize       = (objectSize - enclObjectSize) - tagHdrSize;
 
                     if(proc)
                     {
-                        GR_RISCDIAG_TAGSTRIP_INFO info;
+                        GR_RISCDIAG_TAGSTRIP_INFO image_cache_tagstrip_info;
 
-                        info.ppDiag         = &p_gr_riscdiag->draw_diag.data;
-                        info.tag            = tag;
-                        info.PRM_conformant = PRM_conformant;
-                        info.thisObject     = thisObject;
-                        info.goopOffset     = thisObject + tagHdrSize + enclObjectSize;
-                        info.goopSize       = tagGoopSize;
+                        image_cache_tagstrip_info.ppDiag         = &p_gr_riscdiag->draw_diag.data;
+                        image_cache_tagstrip_info.tag            = tag;
+                        image_cache_tagstrip_info.PRM_conformant = PRM_conformant;
+                        image_cache_tagstrip_info.thisObject     = thisObject;
+                        image_cache_tagstrip_info.goopOffset     = thisObject + tagHdrSize + enclObjectSize;
+                        image_cache_tagstrip_info.goopSize       = tagGoopSize;
 
                         if(!PRM_conformant)
                         {
                             /* skip first word for Draw conformant tagged objects */
-                            info.goopOffset += 4;
-                            info.goopSize   -= 4;
+                            image_cache_tagstrip_info.goopOffset += 4;
+                            image_cache_tagstrip_info.goopSize   -= 4;
                         }
 
-                        (* proc) (handle, &info);
+                        (* proc) (&image_cache_tagstrip_info, handle);
                     }
 
                     /* remove the tag goop by copying the rest of the diagram down over it */
@@ -1499,7 +1495,7 @@ Address  : 28 29 2A 2B 2C 2D 2E 2F 30 31 32 33 34 35 36 37 38 39 3A 3B 3C 3D 3E 
 */
 
 static const char
-gr_riscdiag_wackytag_encapsulated_object[] =
+gr_riscdiag_tag_pd_chart_code_encapsulated_object[] =
 {
     '\x0B', '\x00', '\x00', '\x00', /* type */ /* 28-2F */
     '\x58', '\x00', '\x00', '\x00', /* size */
@@ -1529,48 +1525,62 @@ gr_riscdiag_wackytag_encapsulated_object[] =
 #endif
 
 static const DRAW_OBJECT_TAG
-gr_riscdiag_wackytag_tag_object =
+gr_riscdiag_tag_pd_chart_code_object =
+{
+    /* type  */ DRAW_OBJECT_TYPE_TAG,
+    /* size  */ sizeof(DRAW_OBJECT_TAG), /* always patched in file */
+    /* bbox  */ { 0, 0, 0, 0 },
+
+    /* tagID */ GR_RISCDIAG_TAG_PD_CHART_CODE
+};
+
+static const DRAW_OBJECT_TAG
+gr_riscdiag_tag_pd_chart_code_legacy_object =
 {
     /* type  */ DRAW_OBJECT_TYPE_TAG,
     /* size  */ sizeof(DRAW_OBJECT_TAG) +
-                sizeof(gr_riscdiag_wackytag_encapsulated_object) +
+                sizeof(gr_riscdiag_tag_pd_chart_code_encapsulated_object) +
                        GR_RISCDIAG_WACKYTAG_EXTRABYTES, /* at least */
     /* bbox  */ { 0, 0, 0, 0 },
-    /* tagID */ GR_RISCDIAG_WACKYTAG
+
+    /* tagID */ GR_RISCDIAG_TAG_PD_CHART_CODE_LEGACY
 };
 
 /******************************************************************************
 *
-* start saving out a wacky tagged object into an opened Draw file
+* start saving out a pd_chart_code tagged object into an opened Draw file
 *
 ******************************************************************************/
 
 _Check_return_
 extern STATUS
-gr_riscdiag_wackytag_save_start(
+gr_riscdiag_tag_pd_chart_code_save_start(
     FILE_HANDLE file_handle,
-    _OutRef_    P_DRAW_DIAG_OFFSET p_offset)
+    _OutRef_    P_DRAW_DIAG_OFFSET p_tag_object_offset)
 {
     filepos_t pos;
 
-    *p_offset = 0;
+    *p_tag_object_offset = 0;
 
     status_return(file_getpos(file_handle, &pos));
 
-    status_return(file_write_bytes(&gr_riscdiag_wackytag_tag_object, sizeof32(gr_riscdiag_wackytag_tag_object), file_handle));
+    status_return(file_write_bytes((FILETYPE_PD_CHART == gr_chart_save_as_filetype())
+                                   ? &gr_riscdiag_tag_pd_chart_code_object
+                                   : &gr_riscdiag_tag_pd_chart_code_legacy_object,
+                                   sizeof32(gr_riscdiag_tag_pd_chart_code_object), file_handle));
 
-    status_return(file_write_bytes(gr_riscdiag_wackytag_encapsulated_object, sizeof32(gr_riscdiag_wackytag_encapsulated_object), file_handle));
+    status_return(file_write_bytes(gr_riscdiag_tag_pd_chart_code_encapsulated_object, sizeof32(gr_riscdiag_tag_pd_chart_code_encapsulated_object), file_handle));
 
-    *p_offset = pos.lo;
+    *p_tag_object_offset = pos.lo;
 
     return(1);
 }
 
 _Check_return_
 extern STATUS
-gr_riscdiag_wackytag_save_end(
+gr_riscdiag_tag_pd_chart_code_save_end(
     FILE_HANDLE file_handle,
-    _InRef_     PC_DRAW_DIAG_OFFSET p_offset)
+    _InRef_     PC_DRAW_DIAG_OFFSET p_tag_object_offset)
 {
     filepos_t curpos;
     filepos_t pos;
@@ -1581,11 +1591,11 @@ gr_riscdiag_wackytag_save_end(
 
     status_return(file_getpos(file_handle, &curpos));
 
-    pos.lo = *p_offset + offsetof(DRAW_OBJECT_TAG, size);
+    pos.lo = *p_tag_object_offset + offsetof(DRAW_OBJECT_TAG, size);
   /*pos.hi = 0;*/
 
     /* total number of bytes written as tag object, encapsulated object and goop */
-    size = curpos.lo - *p_offset;
+    size = curpos.lo - *p_tag_object_offset;
 
     status_return(file_setpos(file_handle, &pos));
 

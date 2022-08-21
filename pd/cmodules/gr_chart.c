@@ -291,10 +291,8 @@ gr_chart_diagram(
 
 /******************************************************************************
 *
-* propogate damage from datasources and
-* user modifications into chart, both in
-* editing window (if present) and to disc
-* (if present) for client reload
+* propagate damage from datasources and user modifications into chart, both
+* in editing window (if present) and to disc (if present) for client reload
 *
 ******************************************************************************/
 
@@ -1873,7 +1871,7 @@ gr_travel_dsh_label(
             decimals = ((S32) pValue->data.number == pValue->data.number) ? 0 : 2;
 
         gr_numtostr(pValue->data.text, elemof32(pValue->data.text),
-                    &pValue->data.number,
+                    pValue->data.number,
                     eformat,
                     decimals,
                     CH_NULL /* dp_ch */,

@@ -4,14 +4,14 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2018 Stuart Swales
+| Copyright (C) 2013-2019 Stuart Swales
 |
 echo <Obey$Dir>
 |
 dir <Obey$Dir>
 |
-Set flexlib_tmp$Dir <Obey$Dir>.^.apache.RiscOS.Sources.Toolbox.Libs.flexlib
-Set rlib_tmp$Dir <Obey$Dir>.^.apache.RiscOS.Sources.Lib.RISC_OSLib.rlib
+Set flexlib_tmp$Dir <Obey$Dir>.^.gitlab.RiscOS.Sources.Toolbox.ToolboxLib.flexlib
+Set rlib_tmp$Dir <Obey$Dir>.^.gitlab.RiscOS.Sources.Lib.RISC_OSLib.rlib
 Set WimpLib_tmp$Dir ^.^.^
 |
 time
@@ -73,49 +73,49 @@ copy "<rlib_tmp$Dir>.VerIntern.h.messages" "<WimpLib_tmp$Dir>.VerIntern.h.*" ~CF
 |
 echo Populate WimpLib with files to be patched from the checked-out copy of RISC_OSLib
 |
-copy "<flexlib_tmp$Dir>.c.flex"    "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<flexlib_tmp$Dir>.c.flex"    "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.c.bbc"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.dbox"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.event"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-| copy "<rlib_tmp$Dir>.c.flex"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.fontlist"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.fontselect" "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.menu"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.res"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.resspr"     "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.win"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.wimp"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.wimpt"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.xferrecv"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.c.xfersend"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.bbc"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.dbox"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.event"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P | copy "<rlib_tmp$Dir>.c.flex"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.fontlist"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.fontselect" "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.menu"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.res"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.resspr"     "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.win"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.wimp"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.wimpt"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.xferrecv"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.c.xfersend"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.h.wimp"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.h.wimp"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.s.swi"        "<WimpLib_tmp$Dir>.s.*" ~CF~NSV
+|P copy "<rlib_tmp$Dir>.s.swi"        "<WimpLib_tmp$Dir>.s.*" ~CF~NSV
 |
 echo Patch these files in WimpLib so that it is in the PipeDream state
 |
-patch --unified < "@.c.flex"       "<WimpLib_tmp$Dir>.c.flex"
+patch --unified -i "@.c.flex"       -o "<WimpLib_tmp$Dir>.c.flex"       "<flexlib_tmp$Dir>.c.flex"
 |
-patch --unified < "@.c.bbc"        "<WimpLib_tmp$Dir>.c.bbc"
-patch --unified < "@.c.dbox"       "<WimpLib_tmp$Dir>.c.dbox"
-patch --unified < "@.c.event"      "<WimpLib_tmp$Dir>.c.event"
-| patch --unified < "@.c.flex"       "<WimpLib_tmp$Dir>.c.flex"
-patch --unified < "@.c.fontlist"   "<WimpLib_tmp$Dir>.c.fontlist"
-patch --unified < "@.c.fontselect" "<WimpLib_tmp$Dir>.c.fontselect"
-patch --unified < "@.c.menu"       "<WimpLib_tmp$Dir>.c.menu"
-patch --unified < "@.c.res"        "<WimpLib_tmp$Dir>.c.res"
-patch --unified < "@.c.resspr"     "<WimpLib_tmp$Dir>.c.resspr"
-patch --unified < "@.c.win"        "<WimpLib_tmp$Dir>.c.win"
-patch --unified < "@.c.wimp"       "<WimpLib_tmp$Dir>.c.wimp"
-patch --unified < "@.c.wimpt"      "<WimpLib_tmp$Dir>.c.wimpt"
-patch --unified < "@.c.xferrecv"   "<WimpLib_tmp$Dir>.c.xferrecv"
-patch --unified < "@.c.xfersend"   "<WimpLib_tmp$Dir>.c.xfersend"
+patch --unified -i "@.c.bbc"        -o "<WimpLib_tmp$Dir>.c.bbc"        "<rlib_tmp$Dir>.c.bbc"
+patch --unified -i "@.c.dbox"       -o "<WimpLib_tmp$Dir>.c.dbox"       "<rlib_tmp$Dir>.c.dbox"
+patch --unified -i "@.c.event"      -o "<WimpLib_tmp$Dir>.c.event"      "<rlib_tmp$Dir>.c.event"
+| patch --unified -i "@.c.flex"       -o "<WimpLib_tmp$Dir>.c.flex"       "<rlib_tmp$Dir>.c.flex"
+patch --unified -i "@.c.fontlist"   -o "<WimpLib_tmp$Dir>.c.fontlist"   "<rlib_tmp$Dir>.c.fontlist"
+patch --unified -i "@.c.fontselect" -o "<WimpLib_tmp$Dir>.c.fontselect" "<rlib_tmp$Dir>.c.fontselect"
+patch --unified -i "@.c.menu"       -o "<WimpLib_tmp$Dir>.c.menu"       "<rlib_tmp$Dir>.c.menu"
+patch --unified -i "@.c.res"        -o "<WimpLib_tmp$Dir>.c.res"        "<rlib_tmp$Dir>.c.res"
+patch --unified -i "@.c.resspr"     -o "<WimpLib_tmp$Dir>.c.resspr"     "<rlib_tmp$Dir>.c.resspr"
+patch --unified -i "@.c.win"        -o "<WimpLib_tmp$Dir>.c.win"        "<rlib_tmp$Dir>.c.win"
+patch --unified -i "@.c.wimp"       -o "<WimpLib_tmp$Dir>.c.wimp"       "<rlib_tmp$Dir>.c.wimp"
+patch --unified -i "@.c.wimpt"      -o "<WimpLib_tmp$Dir>.c.wimpt"      "<rlib_tmp$Dir>.c.wimpt"
+patch --unified -i "@.c.xferrecv"   -o "<WimpLib_tmp$Dir>.c.xferrecv"   "<rlib_tmp$Dir>.c.xferrecv"
+patch --unified -i "@.c.xfersend"   -o "<WimpLib_tmp$Dir>.c.xfersend"   "<rlib_tmp$Dir>.c.xfersend"
 |
-patch --unified < "@.h.wimp"       "<WimpLib_tmp$Dir>.h.wimp"
+patch --unified -i "@.h.wimp"       -o "<WimpLib_tmp$Dir>.h.wimp"       "<rlib_tmp$Dir>.h.wimp"
 |
-patch --unified < "@.s.swi"        "<WimpLib_tmp$Dir>.s.swi"
+patch --unified -i "@.s.swi"        -o "<WimpLib_tmp$Dir>.s.swi"        "<rlib_tmp$Dir>.s.swi"
 |
 back
 |

@@ -1,6 +1,6 @@
---- _src	2009-05-31 18:58:59.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.790000000 +0100
-@@ -35,6 +35,14 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.080000000 +0100
+@@ -32,6 +32,14 @@
   *
   */
  
@@ -15,7 +15,7 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
-@@ -56,6 +64,7 @@
+@@ -53,6 +61,7 @@
  
  /* -------- Keeping Track of All Windows. -------- */
  
@@ -23,7 +23,7 @@
  /* At the moment, a simple linear array of all windows. */
  
  typedef struct {
-@@ -70,9 +79,13 @@
+@@ -67,9 +76,13 @@
  
  static win__str *win__allwindows; /*[MAXWINDOWS]*/
  static int win__lim = 0; /* first unused index of win__allwindows */
@@ -37,7 +37,7 @@
    int i;
    for (i=0;; i++) {
      if (i == win__lim)
-@@ -99,10 +112,14 @@
+@@ -96,10 +109,14 @@
    win__allwindows[i].proc = proc;
    win__allwindows[i].handle = handle;
    win__allwindows[i].menuh = 0;
@@ -52,7 +52,7 @@
    int i;
    for (i=0; i<win__lim; i++) {
      if (win__allwindows[i].w == w) {
-@@ -114,16 +131,41 @@
+@@ -111,16 +128,41 @@
      /* decrease the limit if you can. */
      win__lim--;
    };
@@ -94,7 +94,7 @@
    return(0);
  }
  
-@@ -146,8 +188,8 @@
+@@ -143,8 +185,8 @@
   void *handle ;
  } unknown_previewer ;
  
@@ -105,7 +105,7 @@
  
  static wimp_w win__unknown = DUD;
  static unknown_previewer *win__unknown_previewer_list = 0 ;
-@@ -196,7 +238,7 @@
+@@ -193,7 +235,7 @@
  }
  
  void win_remove_unknown_event_processor(win_unknown_event_processor p,
@@ -114,7 +114,7 @@
  {
     unknown_previewer *b, **pb;
  
-@@ -235,7 +277,30 @@
+@@ -232,7 +274,30 @@
    wimp_w w;
    win__str *p;
  
@@ -146,7 +146,7 @@
  
      case wimp_ENULL:
        w = win__idle;
-@@ -243,11 +308,18 @@
+@@ -240,11 +305,18 @@
  
      case wimp_EUSERDRAG:
        w = win__unknown_flag ;
@@ -165,7 +165,7 @@
        w = e->data.o.w;
        break;
  
-@@ -260,14 +332,10 @@
+@@ -257,14 +329,10 @@
      case wimp_ESENDWANTACK:
      /* Some standard messages we understand, and give to the right guy. */
        switch (e->data.msg.hdr.action) {
@@ -181,7 +181,7 @@
  
            /* Note that we're assuming the window handle's the same position in
               both messages */
-@@ -286,18 +354,24 @@
+@@ -283,18 +351,24 @@
            if (w < 0) w = win_ICONBARLOAD;
            break;
  
@@ -208,7 +208,7 @@
    {
     unknown_previewer *pr ;
     for (pr = win__unknown_previewer_list; pr != 0; pr = pr->link)
-@@ -308,15 +382,21 @@
+@@ -305,15 +379,21 @@
     w = win__unknown ;
    }
  
@@ -233,7 +233,7 @@
  /* -------- Termination. -------- */
  
  static int win__active = 0;
-@@ -381,41 +461,64 @@
+@@ -378,41 +458,64 @@
    return(FALSE);
  }
  

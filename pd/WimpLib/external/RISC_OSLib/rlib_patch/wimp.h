@@ -1,6 +1,6 @@
---- _src	2011-11-13 20:13:59.000000000 +0100
-+++ _dst	2016-10-27 12:58:48.240000000 +0100
-@@ -221,7 +221,11 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.410000000 +0100
+@@ -218,7 +218,11 @@
  typedef struct {
    wimp_w w;               /* window handle */
    wimp_box box;           /* position on screen of visible work area */
@@ -12,7 +12,7 @@
    wimp_w behind;          /* handle of window to go behind (-1 = top,
                             * -2 = bottom) */
  } wimp_openstr;
-@@ -314,6 +318,9 @@
+@@ -311,6 +315,9 @@
    wimp_MDEVICECLAIM  = 11, /* Broadcast before an application can claim parallel port, RS232 port etc. */
    wimp_MDEVICEINUSE  = 12, /* Reply if another application is already using the device */
    wimp_MDATASAVED    = 13, /* A file previously saved has become 'safe' */
@@ -22,12 +22,7 @@
  
    wimp_FilerOpenDir  = 0x0400,
    wimp_FilerCloseDir = 0x0401,
-@@ -349,10 +356,14 @@
-   wimp_MICONIZEAT    = 0x400d0,
-   wimp_MTOGGLEBACKDROP         = 0x400d1,
-   wimp_MSCREENEDGENOTIFICATION = 0x400d2,
--  
-+
+@@ -350,6 +357,10 @@
    wimp_MHELPREQUEST  = 0x502,         /* interactive help request */
    wimp_MHELPREPLY    = 0x503,         /* interactive help message */
  
@@ -38,7 +33,7 @@
    /* Messages for dialogue with printer applications */
  
    wimp_MPrintFile       = 0x80140,    /* Printer app's first response to */
-@@ -376,7 +387,6 @@
+@@ -373,7 +384,6 @@
  } wimp_msghdr;
  /* size is the size of the whole msgstr, see below. */
  
@@ -46,7 +41,7 @@
  typedef struct {
    wimp_w w;               /* window in which save occurs. */
    wimp_i i;               /* icon there */
-@@ -425,8 +435,18 @@
+@@ -422,8 +432,18 @@
    int nbyteswritten;         /* number of bytes written */
  } wimp_msgramtransmit;
  
@@ -65,7 +60,7 @@
  } wimp_msgsavedesk;
  
  typedef struct {
-@@ -440,7 +460,11 @@
+@@ -437,7 +457,11 @@
  } wimp_msghelprequest;
  
  typedef struct {
@@ -77,7 +72,7 @@
  } wimp_msghelpreply;
  
  typedef struct {         /* structure used in all print messages */
-@@ -449,6 +473,74 @@
+@@ -446,6 +470,74 @@
    char name[256-44] ;    /* filename */
  } wimp_msgprint ;
  
@@ -152,7 +147,7 @@
  typedef struct {          /* message block */
    wimp_msghdr hdr;
    union {
-@@ -465,12 +557,38 @@
+@@ -462,12 +554,38 @@
      wimp_msgprint       print;
      wimp_msgsavedesk    savedesk;
      wimp_msgdevice      device;
@@ -193,7 +188,7 @@
        wimp_mousestr m;
        wimp_bbits b;} but;   /* for button change event */
      wimp_box dragbox;       /* for user drag box event */
-@@ -508,8 +626,10 @@
+@@ -505,8 +623,10 @@
  /* use wimp_INOSELECT to shade the item as unselectable,
  and the button type to mark it as writable. */
  
@@ -204,7 +199,7 @@
  
  typedef struct {
    wimp_menuflags flags;         /* menu entry flags */
-@@ -831,6 +951,32 @@
+@@ -828,6 +948,32 @@
     It is the application's responsibility to set the tag correctly.
   */
  

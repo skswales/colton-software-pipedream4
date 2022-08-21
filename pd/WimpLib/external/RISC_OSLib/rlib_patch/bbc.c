@@ -1,6 +1,6 @@
---- _src	2010-11-30 10:29:08.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.330000000 +0100
-@@ -35,6 +35,8 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:38.690000000 +0100
+@@ -32,6 +32,8 @@
   * History: IDJ: 05-Feb-92: prepared for source release
   */
  
@@ -9,7 +9,7 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
-@@ -81,6 +83,12 @@
+@@ -78,6 +80,12 @@
  
  #pragma -s1
  
@@ -22,7 +22,7 @@
  #ifndef UROM
  /* Set screen mode. */
  os_error *bbc_mode(int n)
-@@ -133,6 +141,8 @@
+@@ -130,6 +138,8 @@
  }
  #endif
  
@@ -31,7 +31,7 @@
  int bbc_modevar (int mode, int varno)
  
  { int flags, result;
-@@ -223,23 +233,45 @@
+@@ -220,23 +230,45 @@
  
  /* ---------- Graphics ----------- */
  
@@ -77,7 +77,7 @@
  #ifndef UROM
  /* Move the graphics origin to the given absolute coordinates. */
  os_error *bbc_origin(int x, int y)
-@@ -251,15 +283,32 @@
+@@ -248,15 +280,32 @@
  }
  #endif
  
@@ -110,7 +110,7 @@
  
  /* Perform an operating system plot operation. Plot number, x, y. */
  os_error *bbc_plot(int n, int x, int y)
-@@ -552,6 +601,8 @@
+@@ -549,6 +598,8 @@
  }
  #endif
  

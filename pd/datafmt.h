@@ -1176,7 +1176,8 @@ enum D_PROGVARS_OFFSETS
 {
     OR_AM,      /* auto/manual recalc (SHOULD REALLY BE OR_AN) */
     OR_IO,      /* insert/overtype */
-    OR_AC       /* auto/manual chart recalc */
+    OR_AC,      /* auto/manual chart recalc */
+    OR_CF       /* new/old chart format */
 };
 
 extern void
@@ -1569,6 +1570,9 @@ exported functions
 */
 
 extern void
+chart_format_state_may_have_changed(void);
+
+extern void
 chart_recalc_state_may_have_changed(void);
 
 extern void
@@ -1887,6 +1891,8 @@ enum FUNCTION_NUMBERS
 ,   N_InsertPageNumber
 ,   N_ShowLicence
 ,   N_InteractiveHelp
+
+,   N_ChartFormat /* added in PD 4.57 */
 };
 
 extern void
@@ -3649,6 +3655,7 @@ pdchart_submenu_show(
     BOOL submenurequest);
 
 image_cache_tagstrip_proto(extern, pdchart_tagstrip);
+image_cache_tagstrip_proto(extern, pdchart_tagstrip_legacy);
 
 extern BOOL
 Return_fn_core(void);

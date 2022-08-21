@@ -396,7 +396,7 @@ gr_diag_create_riscdiag_between(
             draw_point_from_gr_point(&draw_point, &pos);
             draw_radius = gr_riscDraw_from_pixit(radius);
 
-            status = gr_riscdiag_piesector_new(p_gr_riscdiag, &sys_off, &draw_point, draw_radius, &alpha, &beta, &linestyle, &fillstyle);
+            status = gr_riscdiag_piesector_new(p_gr_riscdiag, &sys_off, &draw_point, draw_radius, alpha, beta, &linestyle, &fillstyle);
 
             break;
             }
@@ -1443,8 +1443,8 @@ gr_diag_piesector_new(
     _InVal_     GR_DIAG_OBJID_T objid,
     _InRef_     PC_GR_POINT pPos,
     _InVal_     GR_COORD radius,
-    _InRef_     PC_F64 alpha,
-    _InRef_     PC_F64 beta,
+    _InVal_     F64 alpha,
+    _InVal_     F64 beta,
     _InRef_     PC_GR_LINESTYLE linestyle,
     _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
@@ -1455,8 +1455,8 @@ gr_diag_piesector_new(
     pObject.pie->pos       = *pPos;
 
     pObject.pie->radius    = radius;
-    pObject.pie->alpha     = *alpha;
-    pObject.pie->beta      = *beta;
+    pObject.pie->alpha     = alpha;
+    pObject.pie->beta      = beta;
 
     pObject.pie->linestyle = *linestyle;
     pObject.pie->fillstyle = *fillstyle;
@@ -1469,8 +1469,8 @@ static BOOL
 piesector_hit(
     _InRef_     PC_GR_POINT pPos,
     _InVal_     GR_COORD radius,
-    _InRef_     PC_F64 alpha,
-    _InRef_     PC_F64 beta,
+    _InVal_     F64 alpha,
+    _InVal_     F64 beta,
     _InRef_     PC_GR_POINT point)
 {
     const GR_COORD dx = point->x - pPos->x;
@@ -1485,10 +1485,10 @@ piesector_hit(
 
     {
     F64 theta = atan2(dy, dx);
-    assert(*alpha <= *beta);
+    assert(alpha <= beta);
 
-    /*reportf(TEXT("piesector_hit 1: test %g < %g < %g"), *alpha, theta, *beta);*/
-    if((theta >= *alpha) && (theta <= *beta))
+    /*reportf(TEXT("piesector_hit 1: test %g < %g < %g"), alpha, theta, beta);*/
+    if((theta >= alpha) && (theta <= beta))
         return(TRUE);
 
     if(theta < 0.0)
@@ -1500,8 +1500,8 @@ piesector_hit(
         theta -= _two_pi;
     }
 
-    /*reportf(TEXT("piesector_hit 2: test %g < %g < %g"), *alpha, theta, *beta);*/
-    if((theta >= *alpha) && (theta <= *beta))
+    /*reportf(TEXT("piesector_hit 2: test %g < %g < %g"), alpha, theta, beta);*/
+    if((theta >= alpha) && (theta <= beta))
         return(TRUE);
     } /*block*/
 
@@ -1517,7 +1517,7 @@ gr_diag_piesector_hit_refine(
 {
     UNREFERENCED_PARAMETER_InRef_(size);
 
-    return(piesector_hit(&pie->pos, pie->radius, &pie->alpha, &pie->beta, point));
+    return(piesector_hit(&pie->pos, pie->radius, pie->alpha, pie->beta, point));
 }
 
 _Check_return_

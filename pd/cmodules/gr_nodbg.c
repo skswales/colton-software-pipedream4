@@ -49,7 +49,7 @@ gr_nodbg_chart_save(
     FILE_HANDLE f,
     P_U8 save_filename /*const*/)
 {
-    DRAW_DIAG_OFFSET wackytag_offset;
+    DRAW_DIAG_OFFSET tag_object_offset;
 
     if(cp->core.p_gr_diag && cp->core.p_gr_diag->gr_riscdiag.draw_diag.length)
     {
@@ -67,7 +67,7 @@ gr_nodbg_chart_save(
     }
 
     /* save tag header and object */
-    status_return(gr_riscdiag_wackytag_save_start(f, &wackytag_offset));
+    status_return(gr_riscdiag_tag_pd_chart_code_save_start(f, &tag_object_offset));
 
     /* save user tag components for chart reload - client must note preferred save using NULL handle */
     status_return(gr_chart_save_external(cp->core.ch, f, save_filename,
@@ -78,10 +78,8 @@ gr_nodbg_chart_save(
     /* save tag components for chart reload */
     status_return(gr_chart_save_internal(cp, f, save_filename));
 
-#if 1
-    /* pad file and update tag header size field */
-    status_return(gr_riscdiag_wackytag_save_end(f, &wackytag_offset));
-#endif
+    /* pad file and update tag object header size field */
+    status_return(gr_riscdiag_tag_pd_chart_code_save_end(f, &tag_object_offset));
 
     return(1);
 }

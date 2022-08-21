@@ -375,7 +375,7 @@ gr_barline_label_point(
     GR_SERIES_IDX   series_idx,
     GR_POINT_NO    point,
     GR_CHART_OBJID id,
-    PC_F64 value,
+    _InVal_     F64 value,
     PC_GR_BOX txt_boxp)
 {
     GR_BOX box = *txt_boxp;
@@ -389,10 +389,10 @@ gr_barline_label_point(
 
     gr_point_textstyle_query(cp, series_idx, point, &textstyle);
 
-    if(fabs(*value) >= U32_MAX)
+    if(fabs(value) >= S32_MAX)
         eformat = TRUE;
-    else if(fabs(*value) >= 1.0)
-        decimals = ((S32) *value == *value) ? 0 : 2;
+    else if(fabs(value) >= 1.0)
+        decimals = ((S32) value == value) ? 0 : 2;
 
     f = gr_riscdiag_font_from_textstyle(&textstyle);
 
@@ -1011,7 +1011,7 @@ gr_barchart_point_addin(
     {
         GR_BOX txt_box = err_box;
 
-        status_return(gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box));
+        status_return(gr_barline_label_point(cp, series_idx, point, lcp->point_id, value.y, &txt_box));
     }
 
     gr_chart_group_end(cp, &point_group_start);
@@ -1553,7 +1553,7 @@ gr_linechart_point_addin(
     {
         GR_BOX txt_box = err_box;
 
-        status_return(gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box));
+        status_return(gr_barline_label_point(cp, series_idx, point, lcp->point_id, value.y, &txt_box));
     }
 
     gr_chart_group_end(cp, &point_group_start);

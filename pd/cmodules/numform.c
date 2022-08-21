@@ -7,14 +7,14 @@
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* Formats data in an ev_data structure */
+/* Formats data in an ss_data structure */
 
 /* James A. Dixon 07-Jan-1992; SKS April 1993 major hack */
 
 #include "common/gflags.h"
 
 #if 1 /* PipeDream */
-/* The master copy is in Fireworkz - but note the small differences in this one! (headers, RPN_TMP_ARRAY, RPN_DAT_NEXT_NUMBER, RPN_DAT_ERROR) */
+/* The master copy is in Fireworkz - but note the small differences in this one! (headers, RPN_TMP_ARRAY, RPN_DAT_NEXT_NUMBER, DATA_ID_ERROR) */
 
 #include "cmodules/numform.h"
 
@@ -46,7 +46,7 @@ typedef struct NUMFORM_INFO
 
     P_QUICK_UBLOCK p_quick_ublock; /*appended*/
 
-    EV_DATA ev_data;
+    SS_DATA ss_data;
 
     struct NUMFORM_INFO_NUMBER
     {
@@ -318,7 +318,7 @@ static void
 convert_number_engineering(
     P_NUMFORM_INFO p_numform_info)
 {
-    F64 work_value = (RPN_DAT_REAL == p_numform_info->ev_data.did_num) ? p_numform_info->ev_data.arg.fp : p_numform_info->ev_data.arg.integer;
+    F64 work_value = ss_data_get_number(&p_numform_info->ss_data);
     S32 remainder = 0;
     S32 decimal_places;
     P_USTR ustr;
@@ -443,8 +443,8 @@ static void
 convert_number_exponential(
     P_NUMFORM_INFO p_numform_info)
 {
+    F64 work_value = ss_data_get_number(&p_numform_info->ss_data);
     P_USTR ustr;
-    F64 work_value = (RPN_DAT_REAL == p_numform_info->ev_data.did_num) ? p_numform_info->ev_data.arg.fp : p_numform_info->ev_data.arg.integer;
 
     consume_int(ustr_xsnprintf(p_numform_info->ustr_integer_section, p_numform_info->elemof_integer_section,
                                USTR_TEXT("%#.*e"), /* NB # flag forces e conversion to always have decimal point */
@@ -503,7 +503,8 @@ convert_number_exponential(
 *
 ******************************************************************************/
 
-static void
+_Check_return_
+static BOOL
 convert_number_roman(
     P_NUMFORM_INFO p_numform_info)
 {
@@ -516,12 +517,28 @@ convert_number_roman(
     S32 digit = 0;
     P_USTR ustr;
 
-    if(RPN_DAT_REAL == p_numform_info->ev_data.did_num)
+    /* bounds check argument (always positive) for given output format */
+    assert(ss_data_is_number(&p_numform_info->ss_data));
+    if(ss_data_is_real(&p_numform_info->ss_data))
+    {
+        if(ss_data_get_real(&p_numform_info->ss_data) > (F64) ROMAN_MAX)
+            p_numform_info->roman = 0;
+    }
+    else
+    {
+        if(ss_data_get_integer(&p_numform_info->ss_data) > ROMAN_MAX)
+            p_numform_info->roman = 0;
+    }
+
+    if(!p_numform_info->roman)
+        return(FALSE);
+
+    if(ss_data_is_real(&p_numform_info->ss_data))
         digit = xsnprintf(num_string, sizeof32(num_string),
-                          "%.0f",  p_numform_info->ev_data.arg.fp); /* precision of 0 -> no decimal point */
+                          "%.0f",  ss_data_get_real(&p_numform_info->ss_data)); /* precision of 0 -> no decimal point */
     else
         digit = xsnprintf(num_string, sizeof32(num_string),
-                          S32_FMT, p_numform_info->ev_data.arg.integer);
+                          S32_FMT, ss_data_get_integer(&p_numform_info->ss_data));
 
     p_num_string = num_string;
     ustr = p_numform_info->ustr_integer_section;
@@ -536,6 +553,8 @@ convert_number_roman(
     trace_4(TRACE_MODULE_NUMFORM, TEXT("numform rmnfmt > %s ") S32_TFMT TEXT("; %s ") S32_TFMT,
             report_ustr(p_numform_info->ustr_integer_section), p_numform_info->integer_places_actual,
             report_ustr(p_numform_info->ustr_decimal_section), p_numform_info->decimal_places_actual);
+
+    return(TRUE);
 }
 
 /******************************************************************************
@@ -545,25 +564,35 @@ convert_number_roman(
 *
 ******************************************************************************/
 
-static void
+_Check_return_
+static BOOL
 convert_number_spreadsheet(
     P_NUMFORM_INFO p_numform_info)
 {
     S32 work_value;
 
-    if(RPN_DAT_REAL == p_numform_info->ev_data.did_num)
+    /* bounds check argument (always positive) for given output format */
+    assert(ss_data_is_number(&p_numform_info->ss_data));
+    if(ss_data_is_real(&p_numform_info->ss_data))
     {
-        EV_DATA ev_data = p_numform_info->ev_data;
-        ev_data.arg.fp += 0.5; /* round */
-        real_to_integer_force(&ev_data);
-        work_value = ev_data.arg.integer;
+        if(ss_data_get_real(&p_numform_info->ss_data) > (F64) S32_MAX)
+            p_numform_info->spreadsheet = 0;
+        else
+            ss_data_set_integer(&p_numform_info->ss_data, (S32) real_floor(ss_data_get_real(&p_numform_info->ss_data) + 0.5)); /* round prior to force */ /* already range checked so should convert OK */
     }
-    else
-        work_value = p_numform_info->ev_data.arg.integer;
+
+    /* all integer args are representable in spreadsheet format */
+
+    if(!p_numform_info->spreadsheet)
+        return(FALSE);
+
+    work_value = ss_data_get_integer(&p_numform_info->ss_data);
 
     p_numform_info->integer_places_actual = xtos_ustr_buf(p_numform_info->ustr_integer_section, p_numform_info->elemof_integer_section, work_value - 1, (p_numform_info->spreadsheet == 'X'));
 
     p_numform_info->ustr_decimal_section = ustr_AddBytes(p_numform_info->ustr_integer_section, p_numform_info->integer_places_actual); /* point to CH_NULL */
+
+    return(TRUE);
 }
 
 /******************************************************************************
@@ -585,10 +614,7 @@ convert_number_lookup(
 
     PTR_ASSERT(ustr_string);
 
-    if(RPN_DAT_REAL == p_numform_info->ev_data.did_num)
-        work_value = (S32) (p_numform_info->ev_data.arg.fp + 0.5);
-    else
-        work_value = p_numform_info->ev_data.arg.integer;
+    work_value = ss_data_is_real(&p_numform_info->ss_data) ? (S32) (ss_data_get_real(&p_numform_info->ss_data) + 0.5) : ss_data_get_integer(&p_numform_info->ss_data);
 
     while((index < work_value) && ((ch = ustr_GetByteInc_wr(ustr_string)) != CH_RIGHT_CURLY_BRACKET) && (ch != CH_NULL))
     {
@@ -646,13 +672,13 @@ static void
 convert_number_standard(
     P_NUMFORM_INFO p_numform_info)
 {
-    if(RPN_DAT_REAL == p_numform_info->ev_data.did_num)
+    if(ss_data_is_real(&p_numform_info->ss_data))
     {
         P_USTR ustr;
 
         consume_int(ustr_xsnprintf(p_numform_info->ustr_integer_section, p_numform_info->elemof_integer_section,
                                    USTR_TEXT("%#.*f"), /* NB # flag forces f conversion to always have decimal point */
-                                   (int) p_numform_info->decimal_places_format, p_numform_info->ev_data.arg.fp));
+                                   (int) p_numform_info->decimal_places_format, ss_data_get_real(&p_numform_info->ss_data)));
         trace_1(TRACE_MODULE_NUMFORM, TEXT("numform stdfmt(f) : %s"), report_ustr(p_numform_info->ustr_integer_section));
 
         if(PtrGetByte(p_numform_info->ustr_integer_section) == CH_DIGIT_ZERO)
@@ -682,7 +708,7 @@ convert_number_standard(
     {
         consume_int(ustr_xsnprintf(p_numform_info->ustr_integer_section, p_numform_info->elemof_integer_section,
                                    USTR_TEXT(S32_FMT),
-                                   p_numform_info->ev_data.arg.integer));
+                                   ss_data_get_integer(&p_numform_info->ss_data)));
         trace_1(TRACE_MODULE_NUMFORM, TEXT("numform stdfmt(i) : %s"), report_ustr(p_numform_info->ustr_integer_section));
 
         if(PtrGetByte(p_numform_info->ustr_integer_section) == CH_DIGIT_ZERO)
@@ -694,6 +720,27 @@ convert_number_standard(
     }
 
     trace_4(TRACE_MODULE_NUMFORM, TEXT("numform stdfmt > %s ") S32_TFMT TEXT("; %s ") S32_TFMT,
+            report_ustr(p_numform_info->ustr_integer_section), p_numform_info->integer_places_actual,
+            report_ustr(p_numform_info->ustr_decimal_section), p_numform_info->decimal_places_actual);
+}
+
+static void
+convert_to_floating_point_hexadecimal(
+    _InoutRef_  P_NUMFORM_INFO p_numform_info)
+{
+    F64 f64 = ss_data_get_number(&p_numform_info->ss_data);
+
+    /* NB with DBL_MANT_DIG 53 there are 52 bits actually stored, divided by 4 -> 13 hex digits after the point */
+    assert(DBL_MANT_DIG == 53);
+    consume_int(ustr_xsnprintf(p_numform_info->ustr_integer_section, p_numform_info->elemof_integer_section,
+                               /*"C"*/isupper(p_numform_info->base_basechar) ? USTR_TEXT("%.13A") : USTR_TEXT("%.13a"),
+                               f64));
+
+    p_numform_info->integer_places_actual = ustrlen32(p_numform_info->ustr_integer_section);
+
+    p_numform_info->ustr_decimal_section = ustr_AddBytes(p_numform_info->ustr_integer_section, p_numform_info->integer_places_actual); /* point to CH_NULL */
+
+    trace_4(TRACE_MODULE_NUMFORM, TEXT("numform hexfmt > %s ") S32_TFMT TEXT("; %s ") S32_TFMT,
             report_ustr(p_numform_info->ustr_integer_section), p_numform_info->integer_places_actual,
             report_ustr(p_numform_info->ustr_decimal_section), p_numform_info->decimal_places_actual);
 }
@@ -716,33 +763,44 @@ static void
 convert_number_base(
     _InoutRef_  P_NUMFORM_INFO p_numform_info)
 {
-    S32 work_value;
-    U8Z buffer[1000]; /* should cover all numbers! */
-    P_U8Z p_buffer = buffer;
-    P_USTR ustr_next = p_numform_info->ustr_integer_section;
+    U8Z buffer[1024+4]; /* should cover all numbers! (consider DBL_MAX in base 2) */
+    P_U8Z p_buffer = buffer + elemof32(buffer);
 
-    if(RPN_DAT_REAL == p_numform_info->ev_data.did_num)
-        work_value = (S32) (p_numform_info->ev_data.arg.fp + 0.5);
+    if(S32_MIN == p_numform_info->base)
+    {
+        convert_to_floating_point_hexadecimal(p_numform_info);
+        return;
+    }
+
+    *--p_buffer = CH_NULL; /* digits are output in reverse order, appearing in buffer in the correct order */
+
+    if(ss_data_is_real(&p_numform_info->ss_data))
+    {
+        F64 work_value = real_floor(ss_data_get_real(&p_numform_info->ss_data));
+
+        do  { /* consider zero */
+            const S32 digit_in_base = (S32) fmod(work_value, p_numform_info->base);
+            work_value = work_value / p_numform_info->base;
+            *--p_buffer = base_character(digit_in_base, p_numform_info->base_basechar);
+            assert(buffer != p_buffer);
+        }
+        while(work_value >= 1.0);
+    }
     else
-        work_value = p_numform_info->ev_data.arg.integer;
+    {
+        S32 work_value = ss_data_get_integer(&p_numform_info->ss_data);
 
-    *p_buffer++ = CH_NULL;
-    if(work_value == 0)
-        *p_buffer++ = CH_DIGIT_ZERO;
-    while(work_value > 0)
-    {
-        const S32 digit_in_base = work_value % p_numform_info->base;
-        work_value = work_value / p_numform_info->base;
-        *p_buffer++ = base_character(digit_in_base, p_numform_info->base_basechar);
+        do  { /* consider zero */
+            const S32 digit_in_base = work_value % p_numform_info->base;
+            work_value = work_value / p_numform_info->base;
+            *--p_buffer = base_character(digit_in_base, p_numform_info->base_basechar);
+            assert(buffer != p_buffer);
+        }
+        while(work_value >= 1);
     }
-    p_buffer--;
-    while(CH_NULL != *p_buffer)
-    {
-        PtrPutByte(ustr_next, *p_buffer);
-        ustr_IncByte_wr(ustr_next);
-        p_buffer--;
-    }
-    PtrPutByte(ustr_next, CH_NULL);
+
+    /* copy the accumulated digits to the output */
+    ustr_xstrkpy(p_numform_info->ustr_integer_section, p_numform_info->elemof_integer_section, p_buffer);
 
     if(PtrGetByte(p_numform_info->ustr_integer_section) == CH_DIGIT_ZERO)
         ustr_IncByte_wr(p_numform_info->ustr_integer_section);
@@ -751,7 +809,7 @@ convert_number_base(
 
     p_numform_info->ustr_decimal_section = ustr_AddBytes(p_numform_info->ustr_integer_section, p_numform_info->integer_places_actual); /* point to CH_NULL */
 
-    trace_4(TRACE_MODULE_NUMFORM, TEXT("numform stdfmt > %s ") S32_TFMT TEXT("; %s ") S32_TFMT,
+    trace_4(TRACE_MODULE_NUMFORM, TEXT("numform basfmt > %s ") S32_TFMT TEXT("; %s ") S32_TFMT,
             report_ustr(p_numform_info->ustr_integer_section), p_numform_info->integer_places_actual,
             report_ustr(p_numform_info->ustr_decimal_section), p_numform_info->decimal_places_actual);
 }
@@ -761,29 +819,62 @@ static BOOL
 check_real_nan_inf(
     _InoutRef_  P_NUMFORM_INFO p_numform_info)
 {
-    assert(RPN_DAT_REAL == p_numform_info->ev_data.did_num);
+    F64 f64;
 
-    if(p_numform_info->ev_data.arg.fp != p_numform_info->ev_data.arg.fp) /* test for NaN */
-    {
-        const F64 test = copysign(1.0, p_numform_info->ev_data.arg.fp);
-        if(test < 0.0) /* try to handle -nan */
-            p_numform_info->number.negative = 1;
-        p_numform_info->ev_data.arg.fp = 0.0;
-        p_numform_info->number.nan = 1;
-        return(TRUE);
-    }
+    assert(ss_data_is_real(&p_numform_info->ss_data));
+    f64 = ss_data_get_real(&p_numform_info->ss_data);
 
-    if(!isfinite(p_numform_info->ev_data.arg.fp))
+    if(!isfinite(f64)) /* test for NaN and infinity */
     {
-        const F64 test = copysign(1.0, p_numform_info->ev_data.arg.fp);
-        if(test < 0.0) /* try to handle -inf */
+        const F64 test = copysign(1.0, f64); /* try to handle -nan and -inf */
+
+        if(test < 0.0)
             p_numform_info->number.negative = 1;
-        p_numform_info->ev_data.arg.fp = 0.0;
-        p_numform_info->number.infinity = 1;
+
+        if(isnan(f64))
+            p_numform_info->number.nan = 1;
+        else
+            p_numform_info->number.infinity = 1;
+
+        ss_data_set_real(&p_numform_info->ss_data, 0.0);
+
         return(TRUE);
     }
 
     return(FALSE);
+}
+
+static void
+quickly_check_numform_numeric_for_date(
+    _InoutRef_  P_NUMFORM_INFO p_numform_info,
+    _In_z_      PC_USTR ustr_numform_numeric)
+{
+    F64 f64;
+    SS_DATE ss_date;
+
+    if(NULL == ustr_numform_numeric)
+        return; /* e.g. during autoformat() */
+
+    /* just test the first character */
+    switch(/*"C"*/tolower(PtrGetByte(ustr_numform_numeric)))
+    {
+    default:
+        return;
+
+    case 'd':
+    case 'h':
+    case 'm':
+    case 'n':
+    case 's':
+    case 'y':
+        /* try to mutate to a date then! */
+        break;
+    }
+
+    f64 = ss_data_get_number(&p_numform_info->ss_data);
+
+    if(status_ok(ss_serial_number_to_date(&ss_date, f64)))
+        ss_data_set_date(&p_numform_info->ss_data, ss_date.date, ss_date.time);
 }
 
 /******************************************************************************
@@ -805,7 +896,7 @@ eE   - exponent (followed by +, - or nothing)
 %    - % char and *100
 gG   - Engineering notation (afpnum.kMGTPE)
 rR   - Roman numerals (if < 4999)
-xX   - Spreadsheet (i.e. 1 -> A  etc.)
+xX   - Spreadsheet (1 -> A  etc.)
 hH   - hours
 nN   - minutes
 sS   - seconds
@@ -860,70 +951,56 @@ extern STATUS
 numform(
     _InoutRef_  P_QUICK_UBLOCK p_quick_ublock /*appended,terminated*/,
     _InoutRef_opt_ P_QUICK_TBLOCK p_quick_tblock_style /*appended,terminated*/,
-    _InRef_     PC_EV_DATA p_ev_data,
+    _InRef_     PC_SS_DATA p_ss_data,
     _InRef_     PC_NUMFORM_PARMS p_numform_parms)
 {
     PC_NUMFORM_CONTEXT p_numform_context = p_numform_parms->p_numform_context;
-    NUMFORM_INFO numform_info;
+    NUMFORM_INFO numform_info = { 0 };
     UCHARZ own_numform[BUF_SECTION_MAX]; /* buffer into which numform section is extracted */
+#if 1 /* consider DBL_MAX in base 2 */
+    UCHARZ num_ustr_buf[1 /*sign*/ + (1+DBL_MAX_EXP) /*digits*/ + 1 /*paranoia*/ + 1 /*CH_NULL*/]; /* Contains the number to be output */
+#else
     UCHARZ num_ustr_buf[1 /*sign*/ + (1+DBL_MAX_10_EXP) /*digits*/ + 1 /*paranoia*/ + 1 /*CH_NULL*/]; /* Contains the number to be output */
+#endif
 
     if(IS_P_DATA_NONE(p_numform_context))
         p_numform_context = &default_numform_context;
 
-    zero_struct(numform_info);
     numform_info.p_quick_ublock = p_quick_ublock;
     numform_info.ustr_style_name = NULL;
 
-    /* Get a hard copy of the ev_data */
-    numform_info.ev_data = *p_ev_data;
+    /* Get a hard copy of the ss_data */
+    numform_info.ss_data = *p_ss_data;
 
     /* just show array tl */
-    if(RPN_DAT_ARRAY == numform_info.ev_data.did_num)
-        ss_array_element_read(&numform_info.ev_data, &numform_info.ev_data, 0, 0);
+    if(ss_data_is_array(&numform_info.ss_data))
+        ss_array_element_read(&numform_info.ss_data, &numform_info.ss_data, 0, 0);
+
+    if(ss_data_is_number(&numform_info.ss_data))
+        quickly_check_numform_numeric_for_date(&numform_info, p_numform_parms->ustr_numform_numeric);
 
     /* note conversion type */
-    numform_info.type = numform_info.ev_data.did_num;
+    numform_info.type = ss_data_get_data_id(&numform_info.ss_data);
 
     /*numform_info.negative = 0; already clear */
     /*numform_info.zero = 0;*/
 
     own_numform[0] = CH_NULL;
 
-    switch(numform_info.ev_data.did_num)
+    switch(ss_data_get_data_id(&numform_info.ss_data))
     {
-  /*case RPN_DAT_BOOL8:*/
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
-        numform_info.type = RPN_DAT_REAL;
-
-        if(numform_info.ev_data.arg.integer == 0)
-        {
-            numform_info.number.zero = 1;
-        }
-        else if(numform_info.ev_data.arg.integer < 0)
-        {
-            ev_data_set_integer(&numform_info.ev_data, 0 - numform_info.ev_data.arg.integer);
-            numform_info.number.negative = 1;
-        }
-
-        if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_numeric))
-            numform_section_extract_numeric(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_numeric, ustr_bptr(num_ustr_buf), sizeof32(num_ustr_buf));
-        break;
-
-    case RPN_DAT_REAL:
+    case DATA_ID_REAL:
         if(check_real_nan_inf(&numform_info))
         {   /*EMPTY*/ /*nan/infinity*/
         }
-        else if(numform_info.ev_data.arg.fp == 0.0)
+        else if(ss_data_get_real(&numform_info.ss_data) == 0.0)
         {
-            numform_info.ev_data.arg.fp = 0.0; /* NB We DO get -0.0 !!! which screws up rest of printing code ... */
+            ss_data_set_real(&numform_info.ss_data, 0.0); /* NB We DO get -0.0 !!! which screws up rest of printing code ... */
             numform_info.number.zero = 1;
         }
-        else if(numform_info.ev_data.arg.fp < 0.0)
+        else if(ss_data_get_real(&numform_info.ss_data) < 0.0)
         {
-            numform_info.ev_data.arg.fp = 0.0 - numform_info.ev_data.arg.fp;
+            ss_data_set_real(&numform_info.ss_data, 0.0 - ss_data_get_real(&numform_info.ss_data));
             numform_info.number.negative = 1;
         }
 
@@ -931,11 +1008,33 @@ numform(
             numform_section_extract_numeric(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_numeric, ustr_bptr(num_ustr_buf), sizeof32(num_ustr_buf));
         break;
 
-    case RPN_DAT_DATE:
+    case DATA_ID_LOGICAL:
+        /*break;*/
+
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        numform_info.type = DATA_ID_REAL;
+
+        if(ss_data_get_integer(&numform_info.ss_data) == 0)
+        {
+            numform_info.number.zero = 1;
+        }
+        else if(ss_data_get_integer(&numform_info.ss_data) < 0)
+        {
+            ss_data_set_integer(&numform_info.ss_data, 0 - ss_data_get_integer(&numform_info.ss_data));
+            assert(ss_data_get_integer(&numform_info.ss_data) > 0); /* watch out for S32_MIN - that should never have got into an integer value */
+            numform_info.number.negative = 1;
+        }
+
+        if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_numeric))
+            numform_section_extract_numeric(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_numeric, ustr_bptr(num_ustr_buf), sizeof32(num_ustr_buf));
+        break;
+
+    case DATA_ID_DATE:
         numform_output_datetime_last_field = CH_NULL;
 
-        numform_info.date.valid = status_ok(ss_dateval_to_ymd(&numform_info.ev_data.arg.ev_date.date, &numform_info.date.year, &numform_info.date.month,  &numform_info.date.day));
-        numform_info.time.valid = status_ok(ss_timeval_to_hms(&numform_info.ev_data.arg.ev_date.time, &numform_info.time.hours, &numform_info.time.minutes, &numform_info.time.seconds));
+        numform_info.date.valid = status_ok(ss_dateval_to_ymd(numform_info.ss_data.arg.ss_date.date, &numform_info.date.year, &numform_info.date.month,  &numform_info.date.day));
+        numform_info.time.valid = status_ok(ss_timeval_to_hms(numform_info.ss_data.arg.ss_date.time, &numform_info.time.hours, &numform_info.time.minutes, &numform_info.time.seconds));
 
         if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_datetime))
             numform_section_extract_datetime(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_datetime);
@@ -943,16 +1042,18 @@ numform(
 
     default:
 #if CHECKING
+        default_unhandled();
+        /*FALLTHRU*/
     case RPN_DAT_NEXT_NUMBER:
         assert0();
 
         /*FALLTHRU*/
 
-    case RPN_DAT_STRING:
-    case RPN_DAT_ERROR:
-    case RPN_DAT_BLANK:
+    case DATA_ID_STRING:
+    case DATA_ID_BLANK:
+    case DATA_ID_ERROR:
 #endif
-        numform_info.type = RPN_DAT_STRING;
+        numform_info.type = DATA_ID_STRING;
 
         if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_texterror))
             numform_section_extract_texterror(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_texterror);
@@ -964,9 +1065,14 @@ numform(
 
     status_return(numform_output(p_numform_context, &numform_info, ustr_bptr(own_numform)));
 
-    /* get style name if one exists */
-    if((P_QUICK_TBLOCK_NONE != p_quick_tblock_style) && (NULL != numform_info.ustr_style_name))
-        status_return(numform_output_style_name(p_quick_tblock_style, numform_info.ustr_style_name));
+    /* get style name if requested and if one exists */
+    if(P_QUICK_TBLOCK_NONE != p_quick_tblock_style)
+    {
+        if(NULL != numform_info.ustr_style_name)
+            status_return(numform_output_style_name(p_quick_tblock_style, numform_info.ustr_style_name));
+        else
+            status_return(quick_tblock_nullch_add(p_quick_tblock_style));
+    }
 
     return(STATUS_OK);
 }
@@ -1098,6 +1204,7 @@ numform_numeric_section_copy_and_parse(
                 {
                 case CH_NULL:
                 case CH_UNDERSCORE:
+                case CH_QUESTION_MARK: /* as Excel */
                 case CH_DIGIT_ZERO:
                 case CH_NUMBER_SIGN:
                 case CH_QUOTATION_MARK:
@@ -1116,6 +1223,7 @@ numform_numeric_section_copy_and_parse(
             }
 
         case CH_UNDERSCORE:
+        case CH_QUESTION_MARK: /* as Excel */
             if(dst_idx >= elemof_buffer) break;
             buffer[dst_idx++] = ch;
 
@@ -1171,10 +1279,17 @@ numform_numeric_section_copy_and_parse(
                 ustr_DecByte(ustr_numform_section);
             break;
 
+        case 'a':
+        case 'A':
+            {
+            p_numform_info->base = S32_MIN;
+            break;
+            }
+
         case 'b':
         case 'B':
             {
-            p_numform_info->base_basechar = (U8) (ch - 1);
+            p_numform_info->base_basechar = (U8) (ch - 1); /* a or A */
 
             if(!/*"C"*/isdigit(PtrGetByte(ustr_numform_section)))
                 p_numform_info->base = 0;  /* turn conversion off again */
@@ -1319,12 +1434,13 @@ numform_output(
         {
         default: default_unhandled();
 #if CHECKING
-        case RPN_DAT_REAL:
+        case DATA_ID_REAL:
 #endif
             switch(ch)
             {
             case CH_FULL_STOP:
             case CH_UNDERSCORE:
+            case CH_QUESTION_MARK: /* as Excel */
             case CH_DIGIT_ZERO:
             case CH_NUMBER_SIGN:
                 if(p_numform_info->number.negative)
@@ -1354,29 +1470,29 @@ numform_output(
 
             break;
 
-        case RPN_DAT_DATE:
+        case DATA_ID_DATE:
             ustr_DecByte(ustr_numform_section);
             status_return(numform_output_date_fields(p_numform_info, p_numform_context, &ustr_numform_section));
             continue;
 
-        case RPN_DAT_STRING:
+        case DATA_ID_STRING:
             if(CH_COMMERCIAL_AT == ch)
             {
-                if(RPN_DAT_STRING == p_numform_info->ev_data.did_num)
+                if(ss_data_is_string(&p_numform_info->ss_data))
                 {
-                    status_return(quick_ublock_uchars_add(p_quick_ublock, p_numform_info->ev_data.arg.string.uchars, p_numform_info->ev_data.arg.string.size));
+                    status_return(quick_ublock_uchars_add(p_quick_ublock, ss_data_get_string(&p_numform_info->ss_data), ss_data_get_string_size(&p_numform_info->ss_data)));
                     continue;
                 }
 
-                if(RPN_DAT_BLANK == p_numform_info->ev_data.did_num)
+                if(ss_data_is_blank(&p_numform_info->ss_data))
                     continue;
 
-                if(RPN_DAT_ERROR == p_numform_info->ev_data.did_num)
+                if(ss_data_is_error(&p_numform_info->ss_data))
                 {
 #if 1 /* PipeDream */
-                    status_return(quick_ublock_ustr_add(p_quick_ublock, reperr_getstr(p_numform_info->ev_data.arg.ev_error.status)));
+                    status_return(quick_ublock_ustr_add(p_quick_ublock, reperr_getstr(p_numform_info->ss_data.arg.ss_error.status)));
 #else
-                    status_return(resource_lookup_quick_ublock(p_numform_info->ev_data.arg.ev_error.status, p_quick_ublock));
+                    status_return(resource_lookup_quick_ublock(p_quick_ublock, p_numform_info->ss_data.arg.ss_error.status));
 #endif
                     continue;
                 }
@@ -1703,6 +1819,7 @@ numform_output_number_fields(
             switch(ch)
             {
             case CH_UNDERSCORE:
+            case CH_QUESTION_MARK: /* as Excel */
                 ch_out = CH_SPACE;
                 if(!p_numform_info->integer_section_result_output)
                     p_numform_info->integer_section_result_output = 1; /* put spaces at thousand positions between padding spaces */
@@ -1747,13 +1864,15 @@ numform_output_number_fields(
     }
 
     /* got any trailing spaces in the decimal section? */
-    if(CH_UNDERSCORE == ch)
+    if((CH_UNDERSCORE == ch) || (CH_QUESTION_MARK == ch))
+    {
         if(p_numform_info->decimal_section_spaces)
         {
             status = quick_ublock_a7char_add(p_numform_info->p_quick_ublock, CH_SPACE);
             p_numform_info->decimal_section_spaces--;
             return(status);
         }
+    }
 
     if(p_numform_info->decimal_places_format > 0)
     {
@@ -1801,13 +1920,15 @@ numform_output_number_fields(
     }
 
     /* got any trailing spaces in the exponent section? */
-    if(CH_UNDERSCORE == ch)
+    if((CH_UNDERSCORE == ch) || (CH_QUESTION_MARK == ch))
+    {
         if(p_numform_info->exponent_section_spaces)
         {
             status = quick_ublock_a7char_add(p_numform_info->p_quick_ublock, CH_SPACE);
             p_numform_info->exponent_section_spaces--;
             return(status);
         }
+    }
 
     if(p_numform_info->exponent_places_format > 0)
     {
@@ -1939,17 +2060,25 @@ numform_section_extract_datetime(
     BOOL has_date = p_numform_info->date.valid;
     BOOL has_time = p_numform_info->time.valid;
     BOOL date_only = has_date && !has_time;
+#if SS_DATE_NULL != 0
+    BOOL time_only = has_time && !has_date;
+#else
     BOOL time_only = /*has_time &&*/ !has_date; /*SKS 10feb97 for 00:00:00 time with no date*/
+#endif
     PC_USTR ustr_section = ustr_numform_datetime;
+    PC_USTR ustr_second_section = numform_section_scan_next(ustr_section);
+    PC_USTR ustr_third_section =
+        (P_USTR_NONE != ustr_second_section)
+            ? numform_section_scan_next(ustr_second_section)
+            : P_USTR_NONE;
 
-    if(time_only)
+    if(date_only)
     {
-        PC_USTR ustr_second_section = numform_section_scan_next(ustr_section);
-        PC_USTR ustr_third_section = P_USTR_NONE;
-
-        if(P_USTR_NONE != ustr_second_section)
-            ustr_third_section = numform_section_scan_next(ustr_second_section);
-
+        if(P_USTR_NONE != ustr_third_section)
+            ustr_section = ustr_second_section;
+    }
+    else if(time_only)
+    {
         if(P_USTR_NONE != ustr_third_section)
         {
             BOOL is_pm = (p_numform_info->time.hours >= 12);
@@ -1989,16 +2118,22 @@ numform_section_extract_datetime(
             }
         }
     }
-    else if(date_only)
+    else
     {
-        PC_USTR ustr_second_section = numform_section_scan_next(ustr_section);
-
-        if(P_USTR_NONE != ustr_second_section)
+        if((P_USTR_NONE != ustr_second_section) && (P_USTR_NONE == ustr_third_section)) /* 2 section am/pm format, possibly with date bits? */
         {
-            PC_USTR ustr_third_section = numform_section_scan_next(ustr_second_section);
+            BOOL is_pm = (p_numform_info->time.hours >= 12);
 
-            if(P_USTR_NONE != ustr_third_section)
+            if(is_pm)
+            {
+                if(p_numform_info->time.hours >= 12)
+                    p_numform_info->time.hours -= 12;
+
+                if(p_numform_info->time.hours == 0) /* err, 0:30pm is silly SKS 07feb96 */
+                    p_numform_info->time.hours = 12;
+
                 ustr_section = ustr_second_section;
+            }
         }
     }
 
@@ -2044,8 +2179,8 @@ numform_section_extract_numeric(
     if(shift_value)
     {
         F64 multiplier = pow(10.0, shift_value);
-        F64 work_value = (RPN_DAT_REAL == p_numform_info->ev_data.did_num) ? p_numform_info->ev_data.arg.fp : p_numform_info->ev_data.arg.integer;
-        ev_data_set_real(&p_numform_info->ev_data, work_value * multiplier);
+        F64 work_value = ss_data_get_number(&p_numform_info->ss_data);
+        ss_data_set_real(&p_numform_info->ss_data, work_value * multiplier);
         (void) check_real_nan_inf(p_numform_info); /* recheck for nan/infinity in this case */
     }
 
@@ -2055,6 +2190,8 @@ numform_section_extract_numeric(
     /* now handle exceptional stuff */
     if(p_numform_info->number.nan || p_numform_info->number.infinity)
     {
+        p_numform_info->number.insert_minus_sign = 0; /* as we are forcing the format */
+
         (void) numform_numeric_section_copy_and_parse(p_numform_info, ustr_buf, elemof_buffer,
                                                       p_numform_info->number.negative ? USTR_TEXT("-#") : USTR_TEXT("#"));
 
@@ -2067,34 +2204,15 @@ numform_section_extract_numeric(
     }
 
     if(p_numform_info->roman)
-    {   /* bounds check argument for given output format */
-        if(RPN_DAT_REAL == p_numform_info->ev_data.did_num)
-        {
-            if(p_numform_info->ev_data.arg.fp > (F64) ROMAN_MAX)
-                p_numform_info->roman = 0;
-        }
-        else if(p_numform_info->ev_data.arg.integer > ROMAN_MAX)
-            p_numform_info->roman = 0;
-
-        if(p_numform_info->roman)
-        {
-            convert_number_roman(p_numform_info);
+    {
+        if(convert_number_roman(p_numform_info))
             return;
-        }
     }
 
     if(p_numform_info->spreadsheet)
-    {   /* bounds check argument for given output format */
-        if(RPN_DAT_REAL == p_numform_info->ev_data.did_num)
-            if(p_numform_info->ev_data.arg.fp > (F64) S32_MAX)
-                p_numform_info->spreadsheet = 0;
-
-        /* all integer args are representable in spreadsheet format */
-        if(p_numform_info->spreadsheet)
-        {
-            convert_number_spreadsheet(p_numform_info);
+    {
+        if(convert_number_spreadsheet(p_numform_info))
             return;
-        }
     }
 
     if(p_numform_info->ustr_lookup_section)
@@ -2135,14 +2253,14 @@ numform_section_extract_texterror(
     PC_USTR ustr_next_section;
 
     /* maybe search for optional second section */
-    switch(p_numform_info->ev_data.did_num)
+    switch(ss_data_get_data_id(&p_numform_info->ss_data))
     {
-    case RPN_DAT_BLANK:
-    case RPN_DAT_ERROR:
+    case DATA_ID_BLANK:
+    case DATA_ID_ERROR:
         if(P_USTR_NONE != (ustr_next_section = numform_section_scan_next(ustr_section)))
         {
             /* maybe search for optional third section */
-            if(RPN_DAT_BLANK == p_numform_info->ev_data.did_num)
+            if(ss_data_is_blank(&p_numform_info->ss_data))
             {
                 if(P_USTR_NONE != (ustr_next_section = numform_section_scan_next(ustr_next_section)))
                     ustr_section = ustr_next_section;

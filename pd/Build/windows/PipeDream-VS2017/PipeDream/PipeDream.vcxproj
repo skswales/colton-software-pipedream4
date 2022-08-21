@@ -121,6 +121,7 @@
     <ClCompile Include="..\..\..\..\cmodules\bezier.c" />
     <ClCompile Include="..\..\..\..\cmodules\collect.c" />
     <ClCompile Include="..\..\..\..\cmodules\debug.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_arith.c" />
     <ClCompile Include="..\..\..\..\cmodules\ev_comp.c" />
     <ClCompile Include="..\..\..\..\cmodules\ev_dcom.c" />
     <ClCompile Include="..\..\..\..\cmodules\ev_docs.c" />
@@ -628,17 +629,21 @@
     <None Include="..\..\..\..\..\extrautils\Relnotes,faf" />
     <None Include="..\..\..\..\cmodules\GB\msg\gr_chart" />
     <None Include="..\..\..\..\cmodules\GB\msg\mlec" />
+    <None Include="..\..\..\..\RelHistPrev.html" />
     <None Include="..\..\..\..\WimpLib\cs-pollfpm.s" />
     <None Include="..\..\..\..\WimpLib\cs-riscasm.s" />
     <None Include="..\..\..\..\WimpLib\GB\msg_risc" />
     <None Include="..\..\..\..\WimpLib\r32\Makefile" />
     <None Include="..\..\..\..\WimpLib\swi.s" />
     <None Include="..\..\..\r32\!PipeDream\!Help,feb" />
-    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\cmds.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\complex.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\custom.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\database.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\datetime.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\index.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\lookup.html,faf" />
     <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\math.html,faf" />

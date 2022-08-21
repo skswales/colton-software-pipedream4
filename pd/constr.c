@@ -756,7 +756,7 @@ PROC_QSORT_PROTO(static, rowcomp, SORT_ENTRY)
     slr1.docno = slr2.docno = (EV_DOCNO) current_docno();
 
     do  {
-        EV_DATA data1, data2;
+        SS_DATA data1, data2;
 
         /* make long sorts escapeable - at this point no data has been exchanged */
         if(ctrlflag)

@@ -7,8 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.56
-#TEXTUAL_VERSION_NUMBER=4.56.01
+TEXTUAL_VERSION_NUMBER=4.57
+#TEXTUAL_VERSION_NUMBER=4.56.02
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
@@ -185,6 +185,7 @@ o.modules.muldivas
 AOFMEV=\
 o.modules.ss_const \
 o.modules.ss_date \
+o.modules.ev_arith \
 o.modules.ev_comp \
 o.modules.ev_dcom \
 o.modules.ev_docs \
@@ -383,6 +384,8 @@ o.Modules.collect:    $(CMODULES).c.collect
         $(CC) -o $@ $(CCflags) $(CMODULES).c.collect
 o.Modules.debug:      $(CMODULES).c.debug
         $(CC) -o $@ $(CCflags) $(CMODULES).c.debug
+o.Modules.ev_arith:    $(CMODULES).c.ev_arith
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_arith
 o.Modules.ev_comp:    $(CMODULES).c.ev_comp
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_comp
 o.Modules.ev_dcom:    $(CMODULES).c.ev_dcom
@@ -804,6 +807,7 @@ utils.UK.!Sprites22:   \
         SLoad   $(PD).utils.Neutral.spr_app22
         SMerge  $(PD).utils.Neutral.spr_file22
         SMerge  $(PD).utils.Neutral.spr_fxtr22R4
+        X SDelete now_empty
        -SInfo
        -SList
         SSave   $@
@@ -819,6 +823,7 @@ utils.UK.!Sprites24:   \
         SLoad   $(PD).utils.Neutral.spr_app24
         SMerge  $(PD).utils.Neutral.spr_file24
         SMerge  $(PD).utils.Neutral.spr_fxtr24R4
+        X SDelete now_empty
        -SInfo
        -SList
         SSave   $@
@@ -838,6 +843,7 @@ utils.UK.!SpritesR511:   \
         SLoad   $(PD).utils.Neutral.spr_app11
         SMerge  $(PD).utils.Neutral.spr_file11
         SMerge  $(PD).utils.Neutral.spr_file11R5
+        X SDelete now_empty
        -SInfo
        -SList
         SSave   $@
@@ -853,6 +859,7 @@ utils.UK.!SpritesR522:   \
         SLoad   $(PD).utils.Neutral.spr_app22
         SMerge  $(PD).utils.Neutral.spr_file22
         SMerge  $(PD).utils.Neutral.spr_file22R5
+        X SDelete now_empty
        -SInfo
        -SList
         SSave   $@
@@ -865,7 +872,9 @@ utils.UK.Sprites11:   \
         $(PD).utils.Neutral.spr_app11 \
         $(PD).utils.en_GB.spr_pd \
         $(PD).utils.en_GB.spr_pd22  \
+        $(PD).utils.en_GB.tangod.spr_tg22  \
         $(PD).utils.en_GB.spr_pd11  \
+        $(PD).utils.en_GB.tangod.spr_tg11  \
         $(PD).utils.Neutral.spr_chart \
         $(PD).utils.Neutral.spr_chart22 \
         $(WimpLib).utils.en_GB.spr_risc
@@ -875,10 +884,15 @@ utils.UK.Sprites11:   \
        -SDelete sm!pipedream
         SMerge  $(PD).utils.en_GB.spr_pd
         SMerge  $(PD).utils.en_GB.spr_pd22
+        SMerge  $(PD).utils.en_GB.tangod.spr_tg22
+       -SDelete ptr_menu
+       -SDelete ptr_write
         SMerge  $(PD).utils.en_GB.spr_pd11
+        SMerge  $(PD).utils.en_GB.tangod.spr_tg11
         SMerge  $(PD).utils.Neutral.spr_chart
         SMerge  $(PD).utils.Neutral.spr_chart22
         SMerge  $(WimpLib).utils.en_GB.spr_risc
+        X SDelete now_empty
        -SInfo
        -SList
        @CDir    @.utils
@@ -892,6 +906,7 @@ utils.UK.Sprites22:   \
         $(PD).utils.Neutral.spr_file22 \
         $(PD).utils.en_GB.spr_pd \
         $(PD).utils.en_GB.spr_pd22  \
+        $(PD).utils.en_GB.tangod.spr_tg22  \
         $(PD).utils.Neutral.spr_chart \
         $(PD).utils.Neutral.spr_chart22 \
         $(WimpLib).utils.en_GB.spr_risc
@@ -902,9 +917,11 @@ utils.UK.Sprites22:   \
         SMerge  $(PD).utils.Neutral.spr_file22
         SMerge  $(PD).utils.en_GB.spr_pd
         SMerge  $(PD).utils.en_GB.spr_pd22
+        SMerge  $(PD).utils.en_GB.tangod.spr_tg22
         SMerge  $(PD).utils.Neutral.spr_chart
         SMerge  $(PD).utils.Neutral.spr_chart22
         SMerge  $(WimpLib).utils.en_GB.spr_risc
+        X SDelete now_empty
        -SInfo
        -SList
        @CDir    @.utils
@@ -931,6 +948,7 @@ utils.UK.Sprites24:   \
         SMerge  $(PD).utils.Neutral.spr_chart
         SMerge  $(PD).utils.Neutral.spr_chart24
         SMerge  $(WimpLib).utils.en_GB.spr_risc
+        X SDelete now_empty
        -SInfo
        -SList
        @CDir    @.utils

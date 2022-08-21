@@ -158,7 +158,9 @@ image_cache_can_import_without_conversion(
 {
     switch(filetype)
     {
-    case FILETYPE_PIPEDREAM:
+    case FILETYPE_PIPEDREAM: /* may be legacy chart format */
+    case FILETYPE_PD_CHART:
+    case FILETYPE_T5_DRAW:
     case FILETYPE_DRAW:
     case FILETYPE_SPRITE:
     case FILETYPE_POSTER:
@@ -1061,9 +1063,11 @@ image_cache_load(
             {
             default: default_unhandled();
 #if CHECKING
+            case FILETYPE_PD_CHART:
+            case FILETYPE_T5_DRAW:
+            case FILETYPE_DRAW:
             case FILETYPE_POSTER:
             case FILETYPE_VECTOR:
-            case FILETYPE_DRAW:
 #endif
                 /* round up size to be paranoid */
                 drawlength = round_up(filelength, 4);
@@ -1127,10 +1131,13 @@ image_cache_load(
             switch(filetype)
             {
             default: default_unhandled();
+#if CHECKING
+            case FILETYPE_T5_DRAW:
             case FILETYPE_DRAW:
             case FILETYPE_POSTER:
             case FILETYPE_VECTOR:
             case FILETYPE_JPEG:
+#endif
                 break;
 
             case FILETYPE_SPRITE:
@@ -1153,12 +1160,18 @@ image_cache_load(
             switch(filetype)
             {
             default: default_unhandled();
+#if CHECKING
+            case FILETYPE_T5_DRAW:
             case FILETYPE_DRAW:
             case FILETYPE_POSTER:
             case FILETYPE_VECTOR:
+#endif
+                break;
+
+            case FILETYPE_PD_CHART:
             case FILETYPE_PIPEDREAM:
                 {
-                /* strip tagged objects out of real Draw files as well as PipeDream */
+                /* strip tagged objects out of PipeDream charts */
                 GR_RISCDIAG gr_riscdiag;
 
                 /* give loaded diagram away to temp diagram for reset/rebind process */
@@ -1429,7 +1442,7 @@ gr_riscdiag_tagstrip_proto(static, image_cache_tagstrippers_call)
     P_ANY         prochandle;
     S32           proctag;
     U32           wantTag;
-    IMAGE_CACHE_TAGSTRIP_INFO info;
+    IMAGE_CACHE_TAGSTRIP_INFO image_cache_tagstrip_info;
 
     for(proctag = funclist_first(&image_cache_tagstrippers,
                                  &proc, &prochandle, &item, FALSE);
@@ -1445,14 +1458,14 @@ gr_riscdiag_tagstrip_proto(static, image_cache_tagstrippers_call)
                              offsetof(IMAGE_CACHE_TAGSTRIP_EXTRADATA, tag),
                              sizeof(wantTag));
 
-        if(wantTag && (wantTag != p_info->tag))
+        if(wantTag && (wantTag != p_image_cache_tagstrip_info->tag))
             continue;
 
-        info.r = *p_info; /* each client gets a fresh copy */
-        info.image_cache_handle = handle;
+        image_cache_tagstrip_info.r = *p_image_cache_tagstrip_info; /* each client gets a fresh copy */
+        image_cache_tagstrip_info.image_cache_handle = handle;
 
         /* call this client's handler */
-        (* tsp) (prochandle, &info);
+        (* tsp) (&image_cache_tagstrip_info, prochandle);
     }
 
     return(1);

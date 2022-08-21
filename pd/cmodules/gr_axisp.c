@@ -147,10 +147,10 @@ static void
 gr_numtopowstr(
     _Out_writes_z_(elemof_buffer) P_U8Z buffer /*out*/,
     _InVal_     U32 elemof_buffer,
-    _In_        PC_F64 evalue,
-    _In_        PC_F64 base)
+    _InVal_     F64 value_in,
+    _InVal_     F64 base)
 {
-    F64 value = *evalue;
+    F64 value = value_in;
     F64 lnz, mantissa, exponent;
 
     if(value == 0.0)
@@ -165,20 +165,20 @@ gr_numtopowstr(
         *buffer++ = '-';
     }
 
-    lnz = log(value) / log(*base);
+    lnz = log(value) / log(base);
 
-    mantissa = _splitlognum(&lnz, &exponent);
+    mantissa = _splitlognum(lnz, &exponent);
 
     if(mantissa != 0.0) /* log(1.0) == 0.0 */
     {
-        mantissa = pow(*base, mantissa);
+        mantissa = pow(base, mantissa);
 
         /* use ANSI 'times' character */
-        (void) xsnprintf(buffer, elemof_buffer, "%g" "\xD7" "%g" "^" "%g", mantissa, *base, exponent);
+        (void) xsnprintf(buffer, elemof_buffer, "%g" "\xD7" "%g" "^" "%g", mantissa, base, exponent);
     }
     else
     {
-        (void) xsnprintf(buffer, elemof_buffer,             "%g" "^" "%g",           *base, exponent);
+        (void) xsnprintf(buffer, elemof_buffer,             "%g" "^" "%g",           base, exponent);
     }
 }
 
@@ -209,7 +209,7 @@ gr_axis_iterator_renormalise_log(
     lnz = log(iterp->iter);
     lnz = lnz / lna;
 
-    lnz = _splitlognum(&lnz, &iterp->exponent);
+    lnz = _splitlognum(lnz, &iterp->exponent);
 
     iterp->mantissa = pow(iterp->base, lnz);
 
@@ -1132,15 +1132,15 @@ gr_axis_addin_value_labels_x(
 
         if(p_axis->bits.pow_label)
             gr_numtopowstr(cv.data.text, elemof32(cv.data.text),
-                           &iterator.iter,
-                           &iterator.base);
+                           iterator.iter,
+                           iterator.base);
         else
         {
             S32 decimals = p_axis_ticks->bits.decimals;
             S32 eformat  = (fabs(iterator.iter) >= U32_MAX);
 
             gr_numtostr(cv.data.text, elemof32(cv.data.text),
-                        &iterator.iter,
+                        iterator.iter,
                         eformat,
                         decimals,
                         CH_NULL /* dp_ch */,
@@ -1258,15 +1258,15 @@ gr_axis_addin_value_labels_y(
 
         if(p_axis->bits.pow_label)
             gr_numtopowstr(cv.data.text, elemof32(cv.data.text),
-                           &iterator.iter,
-                           &iterator.base);
+                           iterator.iter,
+                           iterator.base);
         else
         {
             S32 decimals = p_axis_ticks->bits.decimals;
             S32 eformat  = (fabs(iterator.iter) >= U32_MAX);
 
             gr_numtostr(cv.data.text, elemof32(cv.data.text),
-                        &iterator.iter,
+                        iterator.iter,
                         eformat,
                         decimals,
                         CH_NULL /* dp_ch */,

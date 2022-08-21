@@ -247,7 +247,7 @@ bash_cells_about_a_bit(
 
                 /* Snapshot: convert text strings to text cells */
                 /* Make Constant: leave text strings as is */
-                if(RPN_RES_STRING != p_ev_result->did_num)
+                if(RPN_RES_STRING != p_ev_result->data_id)
                 {
                     xf_inexpression = TRUE;
                 }
@@ -261,12 +261,12 @@ bash_cells_about_a_bit(
                  * their formula (same difference for constant arrays, but
                  * not for calculated arrays)
                  */
-                if(RPN_RES_ARRAY == p_ev_result->did_num)
+                if(RPN_RES_ARRAY == p_ev_result->data_id)
                     do_ev_decode = TRUE;
 
                 if(do_ev_decode)
                 {
-                    EV_DATA data;
+                    SS_DATA data;
                     const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
                     EV_OPTBLOCK optblock;
 
@@ -584,7 +584,7 @@ compile_expression(
     EV_OPTBLOCK optblock;
     EV_DOCNO docno;
     S32 rpn_len;
-    EV_DATA data;
+    SS_DATA data;
 
     trace_1(TRACE_MODULE_EVAL, "compile_expression(%s): in -", text_in);
 
@@ -597,11 +597,11 @@ compile_expression(
     /* get sensible defaults for result and parms */
     if(d_progvars[OR_AM].option != 'A')
     {
-        p_ev_result->did_num = RPN_DAT_WORD8;
+        p_ev_result->data_id = DATA_ID_WORD16;
         p_ev_result->arg.integer = 0;
     }
     else
-        p_ev_result->did_num = RPN_DAT_BLANK;
+        p_ev_result->data_id = DATA_ID_BLANK;
 
     parmsp->control   = 0;
     parmsp->circ      = 0;
@@ -610,7 +610,7 @@ compile_expression(
         rpn_len = create_error(EVAL_ERR_BADEXPR);
     else if((rpn_len = ss_recog_constant(&data, docno, text_in, &optblock, 0)) > 0)
     {
-        ev_data_to_result_convert(p_ev_result, &data);
+        ss_data_to_result_convert(p_ev_result, &data);
         rpn_len = 0;
         parmsp->type = EVS_CON_DATA;
     }
@@ -896,8 +896,9 @@ draw_cache_file(
 {
     const BOOL loading_into_document = is_current_document();
     IMAGE_CACHE_HANDLE draw_file_key;
-    U32 wacky_tag = GR_RISCDIAG_WACKYTAG;
-    struct PDCHART_TAGSTRIP_INFO info;
+    const U32 tag_pd_chart_code = GR_RISCDIAG_TAG_PD_CHART_CODE;
+    const U32 tag_pd_chart_code_legacy = GR_RISCDIAG_TAG_PD_CHART_CODE_LEGACY;
+    struct PDCHART_TAGSTRIP_INFO pdchart_tagstrip_info;
     U8  namebuf[BUF_MAX_PATHSTRING];
     STATUS res;
     GR_CHART_HANDLE ch;
@@ -916,7 +917,7 @@ draw_cache_file(
     if(STATUS_OK == res)
         return(create_error(FILE_ERR_NOTFOUND));
 
-    info.pdchartdatakey = NULL;
+    pdchart_tagstrip_info.pdchartdatakey = NULL;
 
     chart_exists = gr_chart_query_exists(&ch, &ext_handle, namebuf);
 
@@ -939,7 +940,8 @@ draw_cache_file(
         /* add tag stripper iff chart not already loaded */
         if(!chart_exists)
         {
-            status_assert(image_cache_tagstripper_add(pdchart_tagstrip, &info, wacky_tag));
+            status_assert(image_cache_tagstripper_add(pdchart_tagstrip, &pdchart_tagstrip_info, tag_pd_chart_code));
+            status_assert(image_cache_tagstripper_add(pdchart_tagstrip_legacy, &pdchart_tagstrip_info, tag_pd_chart_code_legacy));
 
             added_stripper = TRUE;
         }
@@ -948,28 +950,31 @@ draw_cache_file(
     (void) image_cache_loaded_ensure(&draw_file_key);
 
     if(added_stripper)
-        image_cache_tagstripper_remove(pdchart_tagstrip, &info);
+    {
+        image_cache_tagstripper_remove(pdchart_tagstrip, &pdchart_tagstrip_info);
+        image_cache_tagstripper_remove(pdchart_tagstrip_legacy, &pdchart_tagstrip_info);
+    }
 
     /* if we loaded a live Chart file we'll now want to ensure its dependent docs are loaded too */
 
-    if(info.pdchartdatakey)
+    if(pdchart_tagstrip_info.pdchartdatakey)
     {
         /* when all refs to this chart go to zero then kill the cache entry */
         image_cache_entry_set_autokill(&draw_file_key);
 
-        if((res = pdchart_load_dependents(info.pdchartdatakey, namebuf)) < 0)
+        if((res = pdchart_load_dependents(pdchart_tagstrip_info.pdchartdatakey, namebuf)) < 0)
         {
             reperr_null(res);
             been_error = FALSE;
         }
 
-        pdchart_load_ended(info.pdchartdatakey, load_as_preferred);
+        pdchart_load_ended(pdchart_tagstrip_info.pdchartdatakey, load_as_preferred);
 
         if(explicit_load && !load_as_preferred)
         {
-            pdchart_select_using_handle(info.pdchartdatakey);
+            pdchart_select_using_handle(pdchart_tagstrip_info.pdchartdatakey);
 
-            if((res = pdchart_show_editor_using_handle(info.pdchartdatakey)) < 0)
+            if((res = pdchart_show_editor_using_handle(pdchart_tagstrip_info.pdchartdatakey)) < 0)
             {
                 reperr_null(res);
                 been_error = FALSE;
@@ -2459,7 +2464,7 @@ row_select(
     ROW row)
 {
     char cond_rpn[EV_MAX_OUT_LEN];
-    EV_DATA result;
+    SS_DATA ss_data_result;
     S32 res;
     EV_SLR slr;
 
@@ -2467,23 +2472,26 @@ row_select(
 
     ev_proc_conditional_rpn(cond_rpn, rpn_in, &slr, FALSE, TRUE);
 
-    if((res = ev_eval_rpn(&result, &slr, cond_rpn)) >= 0)
+    if((res = ev_eval_rpn(&ss_data_result, &slr, cond_rpn)) >= 0)
     {
         res = 0;
-        switch(result.did_num)
+
+        switch(ss_data_get_data_id(&ss_data_result))
         {
-        case RPN_DAT_REAL:
-            if(result.arg.fp != 0)
+        case DATA_ID_REAL:
+            if(ss_data_result.arg.fp != 0.0)
                res = 1;
             break;
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-            if(result.arg.integer != 0)
+
+        case DATA_ID_LOGICAL:
+        case DATA_ID_WORD16:
+        case DATA_ID_WORD32:
+            if(ss_data_result.arg.integer != 0)
                 res = 1;
             break;
-        case RPN_DAT_ERROR:
-            res = result.arg.ev_error.status;
+
+        case DATA_ID_ERROR:
+            res = ss_data_result.arg.ss_error.status;
             break;
         }
     }
@@ -2747,7 +2755,7 @@ text_slot_add_dependency(
 
         grubb.byoffset = csr - sl->content.text;
 
-        grubb.data.did_num = RPN_DAT_SLR;
+        grubb.data.data_id = DATA_ID_SLR;
 
         csr = (uchar *) talps_csr(csr, &grubb.data.arg.slr.docno, &tcol, &trow);
 

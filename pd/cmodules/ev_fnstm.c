@@ -31,8 +31,8 @@
 
 PROC_EXEC_PROTO(c_growth)
 {
-    const PC_EV_DATA array_logest_data = args[0];
-    const PC_EV_DATA array_known_x = args[1];
+    const PC_SS_DATA array_logest_data = args[0];
+    const PC_SS_DATA array_known_x = args[1];
     S32 x_vars;
     S32 x, y;
     S32 err = 0;
@@ -48,8 +48,7 @@ PROC_EXEC_PROTO(c_growth)
         ((y != 1 /*no stats*/)  &&
          (y != 3 /*stats*/   )  )  )
     {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
     }
 
     array_range_sizes(array_known_x, &x, &y);
@@ -61,33 +60,32 @@ PROC_EXEC_PROTO(c_growth)
 
     if(across_rows)
     {
-        if(status_ok(ss_array_make(p_ev_data_res, 1, y)))
+        if(status_ok(ss_array_make(p_ss_data_res, 1, y)))
         {
             S32 row;
 
             for(row = 0; row < y; ++row)
             {
-                EV_DATA a_data;
+                SS_DATA a_data;
                 F64 product; /* NB. product computed carefully using logs */
                 S32 ci;
                 BOOL negative;
-                P_EV_DATA elep;
+                P_SS_DATA elep;
 
                 errno = 0;
 
                 /* start with the constant */
-                array_range_index(&a_data, array_logest_data,
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
-
-                if(RPN_DAT_REAL != a_data.did_num)
+                if(DATA_ID_REAL !=
+                    array_range_index(&a_data, array_logest_data,
+                                      0, /* NB!*/
+                                      0,
+                                      EM_REA))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 /* if initial y data was all -ve then this is a possibility ... */
-                negative = (a_data.arg.fp < 0);
+                negative = (ss_data_get_real(&a_data) < 0.0);
 
-                product = fabs(a_data.arg.fp);
+                product = fabs(ss_data_get_real(&a_data));
 
                 if(product != 0.0)
                 {
@@ -97,25 +95,24 @@ PROC_EXEC_PROTO(c_growth)
                     /* loop across a row multiplying product by coefficients ^ x variables*/
                     for(ci = 0; ci < x_vars; ++ci)
                     {
-                        EV_DATA x_data;
+                        SS_DATA x_data;
 
-                        array_range_index(&a_data, array_logest_data,
-                                          ci + 1, /* NB. skip constant! */
-                                          0,
-                                          EM_REA);
-
-                        if(RPN_DAT_REAL != a_data.did_num)
+                        if(DATA_ID_REAL != 
+                            array_range_index(&a_data, array_logest_data,
+                                              ci + 1, /* NB. skip constant! */
+                                              0,
+                                              EM_REA))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                        array_range_index(&x_data, array_known_x,
-                                          ci, /* NB. extract from nth col ! */
-                                          row,
-                                          EM_REA);
 
-                        if(RPN_DAT_REAL != x_data.did_num)
+                        if(DATA_ID_REAL != 
+                            array_range_index(&x_data, array_known_x,
+                                              ci, /* NB. extract from nth col ! */
+                                              row,
+                                              EM_REA))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                        product += log(a_data.arg.fp) * x_data.arg.fp;
+                        product += log(ss_data_get_real(&a_data)) * ss_data_get_real(&x_data);
                     }
 
                     if(errno /* == EDOM, ERANGE */)
@@ -132,43 +129,43 @@ PROC_EXEC_PROTO(c_growth)
                 if(negative)
                     product = -product;
 
-                elep = ss_array_element_index_wr(p_ev_data_res, 0, row);
-                ev_data_set_real(elep, product);
+                elep = ss_array_element_index_wr(p_ss_data_res, 0, row);
+                ss_data_set_real(elep, product);
             }
 
         } /*fi*/
     }
     else if(y == x_vars)
     {
-        if(status_ok(ss_array_make(p_ev_data_res, x, 1)))
+        if(status_ok(ss_array_make(p_ss_data_res, x, 1)))
         {
             S32 col;
 
             for(col = 0; col < x; ++col)
             {
-                EV_DATA a_data;
+                SS_DATA a_data;
                 F64 product; /* NB. product computed carefully using logs */
                 S32 ci;
                 BOOL negative;
-                P_EV_DATA elep;
+                P_SS_DATA elep;
 
                 errno = 0;
 
                 /* start with the constant */
-                array_range_index(&a_data, array_logest_data,
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
 
-                if(RPN_DAT_REAL != a_data.did_num)
+                if(DATA_ID_REAL !=
+                    array_range_index(&a_data, array_logest_data,
+                                      0, /* NB!*/
+                                      0,
+                                      EM_REA))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 errno = 0;
 
                 /* if initial y data was all -ve then this is a possibility ... */
-                negative = (a_data.arg.fp < 0);
+                negative = (ss_data_get_real(&a_data) < 0.0);
 
-                product = fabs(a_data.arg.fp);
+                product = fabs(ss_data_get_real(&a_data));
 
                 if(product != 0.0)
                 {
@@ -178,22 +175,21 @@ PROC_EXEC_PROTO(c_growth)
                     /* loop multiplying product by coefficients ^ x variables*/
                     for(ci = 0; ci < x_vars; ++ci)
                     {
-                        EV_DATA x_data;
+                        SS_DATA x_data;
 
-                        array_range_index(&a_data, array_logest_data,
-                                          ci + 1, /* NB. skip constant! */
-                                          0,
-                                          EM_REA);
-
-                        if(RPN_DAT_REAL != a_data.did_num)
+                        if(DATA_ID_REAL !=
+                            array_range_index(&a_data, array_logest_data,
+                                              ci + 1, /* NB. skip constant! */
+                                              0,
+                                              EM_REA))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                        array_range_index(&x_data, array_known_x,
-                                          col,
-                                          ci, /* NB. extract from nth row ! */
-                                          EM_REA);
 
-                        if(RPN_DAT_REAL != x_data.did_num)
+                        if(DATA_ID_REAL !=
+                            array_range_index(&x_data, array_known_x,
+                                              col,
+                                              ci, /* NB. extract from nth row ! */
+                                              EM_REA))
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                         product += log(a_data.arg.fp) * x_data.arg.fp;
@@ -213,22 +209,21 @@ PROC_EXEC_PROTO(c_growth)
                 if(negative)
                     product = -product;
 
-                elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
-                ev_data_set_real(elep, product);
+                elep = ss_array_element_index_wr(p_ss_data_res, col, 0);
+                ss_data_set_real(elep, product);
             }
 
         } /*fi*/
     }
     else
     {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
     }
 
     if(status_fail(err))
     {
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, err);
+        ss_data_free_resources(p_ss_data_res);
+        ss_data_set_error(p_ss_data_res, err);
     }
 }
 
@@ -279,10 +274,11 @@ PROC_LINEST_DATA_PUT_PROTO(static, lipp, client_handle, colID, row, value)
     switch(colID)
     {
     case LINEST_A_COLOFF:
-        lidatap->a[row] = *value;
+        lidatap->a[row] = value;
         break;
 
-    default: default_unhandled(); break;
+    default: default_unhandled();
+        break;
     }
 
     return(STATUS_DONE);
@@ -338,7 +334,7 @@ PROC_EXEC_PROTO(c_linest)
         /*FALLTHRU*/
 
     case 3:
-         stats = (args[2]->arg.fp != 0.0);
+         stats = (ss_data_get_real(args[2]) != 0.0);
 
         /*FALLTHRU*/
 
@@ -402,26 +398,25 @@ PROC_EXEC_PROTO(c_linest)
             goto endlabel;
     }
 
-    if(status_ok(ss_array_make(p_ev_data_res, result_a.cols, result_a.rows)))
+    if(status_ok(ss_array_make(p_ss_data_res, result_a.cols, result_a.rows)))
     {
         S32 i, j;
-        EV_DATA data;
+        SS_DATA ss_data;
 
         /* copy y data into working array */
         for(i = 0; i < y_items; ++i)
         {
-            array_range_index(&data, args[0],
-                              (data_in_cols) ? 0 : i,
-                              (data_in_cols) ? i : 0,
-                              EM_REA);
-
-            if(RPN_DAT_REAL != data.did_num)
+            if(DATA_ID_REAL !=
+                array_range_index(&ss_data, args[0],
+                                  (data_in_cols) ? 0 : i,
+                                  (data_in_cols) ? i : 0,
+                                  EM_REA))
             {
                 status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
             }
 
-            known_y.val[i] = data.arg.fp;
+            known_y.val[i] = ss_data_get_real(&ss_data);
         }
 
         /* copy x data into working array */
@@ -431,18 +426,17 @@ PROC_EXEC_PROTO(c_linest)
             {
                 for(j = 0; j < x_vars; ++j)
                 {
-                    array_range_index(&data, args[1],
-                                      (data_in_cols) ? j : i,
-                                      (data_in_cols) ? i : j,
-                                      EM_REA);
-
-                    if(RPN_DAT_REAL != data.did_num)
+                    if(DATA_ID_REAL !=
+                        array_range_index(&ss_data, args[1],
+                                          (data_in_cols) ? j : i,
+                                          (data_in_cols) ? i : j,
+                                          EM_REA))
                     {
                         status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
                     }
 
-                    (known_x.val + i * x_vars)[j] = data.arg.fp;
+                    (known_x.val + i * x_vars)[j] = ss_data_get_real(&ss_data);
                 }
             }
             else
@@ -460,18 +454,17 @@ PROC_EXEC_PROTO(c_linest)
             {
                 if(i < ((data_in_cols) ? known_e.rows : known_e.cols))
                 {
-                    array_range_index(&data, args[4],
-                                      (data_in_cols) ? 0 : i,
-                                      (data_in_cols) ? i : 0,
-                                      EM_REA);
-
-                    if(RPN_DAT_REAL != data.did_num)
+                    if(DATA_ID_REAL !=
+                        array_range_index(&ss_data, args[4],
+                                          (data_in_cols) ? 0 : i,
+                                          (data_in_cols) ? i : 0,
+                                          EM_REA))
                     {
                         status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
                     }
 
-                    known_e.val[i] = data.arg.fp;
+                    known_e.val[i] = ss_data_get_real(&ss_data);
                 }
                 else
                     known_e.val[i] = 1.0;
@@ -499,12 +492,12 @@ PROC_EXEC_PROTO(c_linest)
         for(j = 0; j < result_a.cols; ++j)
         {
             F64 res;
-            P_EV_DATA elep;
+            P_SS_DATA elep;
 
             res = (result_a.val + 0 * result_a.cols)[j];
 
-            elep = ss_array_element_index_wr(p_ev_data_res, j, 0); /* NB j,i */
-            ev_data_set_real(elep, res);
+            elep = ss_array_element_index_wr(p_ss_data_res, j, 0); /* NB j,i */
+            ss_data_set_real(elep, res);
 
             if(stats)
             {
@@ -515,8 +508,8 @@ PROC_EXEC_PROTO(c_linest)
                 res = (result_a.val + 1 * result_a.cols)[j];
 #endif
 
-                elep = ss_array_element_index_wr(p_ev_data_res, j, 1); /* NB j,i */
-                ev_data_set_real(elep, res);
+                elep = ss_array_element_index_wr(p_ss_data_res, j, 1); /* NB j,i */
+                ss_data_set_real(elep, res);
             }
         }
 
@@ -524,12 +517,12 @@ PROC_EXEC_PROTO(c_linest)
         {
             /* chi-squared */
             F64 chi_sq;
-            P_EV_DATA elep;
+            P_SS_DATA elep;
 
             chi_sq = 0.0;
 
-            elep = ss_array_element_index_wr(p_ev_data_res, 0, 2); /* NB j,i */
-            ev_data_set_real(elep, chi_sq);
+            elep = ss_array_element_index_wr(p_ss_data_res, 0, 2); /* NB j,i */
+            ss_data_set_real(elep, chi_sq);
         }
 
     } /*fi*/
@@ -538,8 +531,8 @@ endlabel:;
 
     if(status_fail(status))
     {
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, status);
+        ss_data_free_resources(p_ss_data_res);
+        ss_data_set_error(p_ss_data_res, status);
     }
 
     al_ptr_dispose(P_P_ANY_PEDANTIC(&known_e.val));
@@ -561,11 +554,11 @@ endlabel:;
 
 PROC_EXEC_PROTO(c_logest)
 {
-    EV_DATA y_data;
-    EV_DATA a_data = { RPN_DAT_BLANK };
-    EV_DATA ev_data;
-    P_EV_DATA elep;
-    P_EV_DATA targs0, targs3;
+    SS_DATA y_data;
+    SS_DATA a_data = { DATA_ID_BLANK };
+    SS_DATA ss_data;
+    P_SS_DATA elep;
+    P_SS_DATA targs0, targs3;
     F64 val;
     S32 x, y;
     S32 col, row;
@@ -580,7 +573,7 @@ PROC_EXEC_PROTO(c_logest)
     {
         array_range_sizes(args[0], &x, &y);
 
-        if(RPN_DAT_RANGE == args[3]->did_num)
+        if(DATA_ID_RANGE == ss_data_get_data_id(args[3]))
         {
             if(status_fail(ss_array_make(&a_data, x, y)))
                 return;
@@ -590,19 +583,19 @@ PROC_EXEC_PROTO(c_logest)
 
         for(col = 0; col < x; ++col)
         {
-            if(RPN_DAT_REAL != array_range_index(&ev_data, args[3], col, 0, EM_REA))
+            if(DATA_ID_REAL != array_range_index(&ss_data, args[3], col, 0, EM_REA))
             {
                 err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel2;
             }
 
-            val = ev_data.arg.fp;
+            val = ss_data_get_real(&ss_data);
             /* do sign forcing before y transform */
             if(col == 0)
                 sign = (val < 0) ? -1 : +1;
-            ev_data.arg.fp = log(val);
+            ss_data_set_real(&ss_data, log(val));
 
-            *ss_array_element_index_wr(&a_data, col, 0) = ev_data;
+            *ss_array_element_index_wr(&a_data, col, 0) = ss_data;
         }
     }
 
@@ -610,7 +603,7 @@ PROC_EXEC_PROTO(c_logest)
 
     array_range_sizes(args[0], &x, &y);
 
-    if(RPN_DAT_RANGE == args[0]->did_num)
+    if(DATA_ID_RANGE == ss_data_get_data_id(args[0]))
     {
         if(status_fail(ss_array_make(&y_data, x, y)))
             return;
@@ -623,13 +616,13 @@ PROC_EXEC_PROTO(c_logest)
     {
         for(row = 0; row < y; ++row)
         {
-            if(RPN_DAT_REAL != array_range_index(&ev_data, args[0], col, row, EM_REA))
+            if(DATA_ID_REAL != array_range_index(&ss_data, args[0], col, row, EM_REA))
             {
                 err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
             }
 
-            if(ev_data.arg.fp < 0.0)
+            if(ss_data_get_real(&ss_data) < 0.0)
             {
                 if(!sign)
                     sign = -1;
@@ -639,9 +632,9 @@ PROC_EXEC_PROTO(c_logest)
                     goto endlabel;
                 }
 
-                ev_data.arg.fp = log(-ev_data.arg.fp);
+                ss_data_set_real(&ss_data, log(-ss_data_get_real(&ss_data)));
             }
-            else if(ev_data.arg.fp > 0.0)
+            else if(ss_data_get_real(&ss_data) > 0.0)
             {
                 if(!sign)
                     sign = +1;
@@ -651,13 +644,13 @@ PROC_EXEC_PROTO(c_logest)
                     goto endlabel;
                 }
 
-                ev_data.arg.fp = log(ev_data.arg.fp);
+                ss_data_set_real(&ss_data, log(ss_data_get_real(&ss_data)));
             }
             /* else 0.0 ... interesting case ... not necessarily wrong but very hard */
 
             /* poke back transformed data */
             elep = ss_array_element_index_wr(&y_data, col, row);
-            ev_data_set_real(elep, ev_data.arg.fp);
+            ss_data_set_real(elep, ss_data_get_real(&ss_data));
         }
     }
 
@@ -674,27 +667,27 @@ PROC_EXEC_PROTO(c_logest)
         targs3  = NULL;
 
     /* call my friend to do the hard work */
-    c_linest(args, n_args, p_ev_data_res, p_cur_slr);
+    c_linest(args, n_args, p_ss_data_res, p_cur_slr);
 
     args[0] = targs0;
 
     if(targs3)
         args[3] = targs3;
 
-    /* and transform first row of coefficients in situ using exp, and sign the constant if needed */
+    /* and transform first row of coefficients in situ using exp(), and sign the constant if needed */
 
-    if(RPN_TMP_ARRAY == p_ev_data_res->did_num)
+    if(RPN_TMP_ARRAY == ss_data_get_data_id(p_ss_data_res))
     {
-        array_range_sizes(p_ev_data_res, &x, &y);
+        array_range_sizes(p_ss_data_res, &x, &y);
 
         for(col = 0; col < x; ++col)
         {
-            elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
-            assert(RPN_DAT_REAL == elep->did_num);
-            val = exp(elep->arg.fp);
+            elep = ss_array_element_index_wr(p_ss_data_res, col, 0);
+            assert(ss_data_is_real(elep));
+            val = exp(ss_data_get_real(elep));
             if((col == 0) && (sign == -1))
                 val = -val;
-            elep->arg.fp = val;
+            ss_data_set_real(elep, val);
         }
     }
 
@@ -706,8 +699,7 @@ endlabel2:;
 
     ss_data_free_resources(&a_data);
 
-    if(err)
-        ev_data_set_error(p_ev_data_res, err);
+    exec_func_status_return(p_ss_data_res, err);
 }
 
 /******************************************************************************
@@ -718,8 +710,8 @@ endlabel2:;
 
 PROC_EXEC_PROTO(c_trend)
 {
-    const PC_EV_DATA array_linest_data = args[0];
-    const PC_EV_DATA array_known_x = args[1];
+    const PC_SS_DATA array_linest_data = args[0];
+    const PC_SS_DATA array_known_x = args[1];
     S32 x_vars;
     S32 x, y;
     S32 err = 0;
@@ -735,8 +727,7 @@ PROC_EXEC_PROTO(c_trend)
         ((y != 1 /*no stats*/)  &&
          (y != 3 /*stats*/  )   )  )
     {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
     }
 
     array_range_sizes(array_known_x, &x, &y);
@@ -748,125 +739,118 @@ PROC_EXEC_PROTO(c_trend)
 
     if(across_rows)
     {
-        if(status_ok(ss_array_make(p_ev_data_res, 1, y)))
+        if(status_ok(ss_array_make(p_ss_data_res, 1, y)))
         {
             S32 row;
 
             for(row = 0; row < y; ++row)
             {
-                EV_DATA a_data;
+                SS_DATA a_data;
                 F64 sum;
                 S32 ci;
-                P_EV_DATA elep;
+                P_SS_DATA elep;
 
                 /* start with the constant */
-                array_range_index(&a_data, array_linest_data,
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
-
-                if(RPN_DAT_REAL != a_data.did_num)
+                if(DATA_ID_REAL !=
+                    array_range_index(&a_data, array_linest_data,
+                                      0, /* NB!*/
+                                      0,
+                                      EM_REA))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                sum = a_data.arg.fp;
+                sum = ss_data_get_real(&a_data);
 
                 /* loop across a row summing coefficients * x variables */
                 for(ci = 0; ci < x_vars; ++ci)
                 {
-                    EV_DATA x_data;
+                    SS_DATA x_data;
 
-                    array_range_index(&a_data, array_linest_data,
-                                      ci + 1, /* NB. skip constant! */
-                                      0,
-                                      EM_REA);
-
-                    if(RPN_DAT_REAL != a_data.did_num)
+                    if(DATA_ID_REAL !=
+                        array_range_index(&a_data, array_linest_data,
+                                          ci + 1, /* NB. skip constant! */
+                                          0,
+                                          EM_REA))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    array_range_index(&x_data, array_known_x,
-                                      ci, /* NB. extract from ci'th col (if across_rows) */
-                                      row,
-                                      EM_REA);
-
-                    if(RPN_DAT_REAL != x_data.did_num)
+                    if(DATA_ID_REAL !=
+                        array_range_index(&x_data, array_known_x,
+                                          ci, /* NB. extract from ci'th col (if across_rows) */
+                                          row,
+                                          EM_REA))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    sum += a_data.arg.fp * x_data.arg.fp;
+                    sum += ss_data_get_real(&a_data) * ss_data_get_real(&x_data);
                 }
 
                 status_break(err);
 
-                elep = ss_array_element_index_wr(p_ev_data_res, 0, row);
-                ev_data_set_real(elep, sum);
+                elep = ss_array_element_index_wr(p_ss_data_res, 0, row);
+                ss_data_set_real(elep, sum);
             }
         } /*fi*/
     }
     else if(y == x_vars)
     {
-        if(status_ok(ss_array_make(p_ev_data_res, x, 1)))
+        if(status_ok(ss_array_make(p_ss_data_res, x, 1)))
         {
             S32 col;
 
             for(col = 0; col < x; ++col)
             {
-                EV_DATA a_data;
+                SS_DATA a_data;
                 F64 sum;
                 S32 ci;
-                P_EV_DATA elep;
+                P_SS_DATA elep;
 
                 /* start with the constant */
-                array_range_index(&a_data, array_linest_data,
-                                  0, /* NB!*/
-                                  0,
-                                  EM_REA);
-
-                if(RPN_DAT_REAL != a_data.did_num)
+                if(DATA_ID_REAL !=
+                    array_range_index(&a_data, array_linest_data,
+                                      0, /* NB!*/
+                                      0,
+                                      EM_REA))
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                sum = a_data.arg.fp;
+                sum = ss_data_get_real(&a_data);
 
                 /* loop down a column summing coefficients * x variables */
                 for(ci = 0; ci < x_vars; ++ci)
                 {
-                    EV_DATA x_data;
+                    SS_DATA x_data;
 
-                    array_range_index(&a_data, array_linest_data,
-                                      ci + 1, /* NB. skip constant! */
-                                      0,
-                                      EM_REA);
-
-                    if(RPN_DAT_REAL != a_data.did_num)
+                    if(DATA_ID_REAL !=
+                        array_range_index(&a_data, array_linest_data,
+                                          ci + 1, /* NB. skip constant! */
+                                          0,
+                                          EM_REA))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    array_range_index(&x_data, array_known_x,
-                                      col,
-                                      ci, /* NB. extract from ci-th row (if down_columns) */
-                                      EM_REA);
-
-                    if(RPN_DAT_REAL != x_data.did_num)
+                    if(DATA_ID_REAL !=
+                        array_range_index(&x_data, array_known_x,
+                                          col,
+                                          ci, /* NB. extract from ci-th row (if down_columns) */
+                                          EM_REA))
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    sum += a_data.arg.fp * x_data.arg.fp;
+                    sum += ss_data_get_real(&a_data) * ss_data_get_real(&x_data);
                 }
 
                 status_break(err);
 
-                elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
-                ev_data_set_real(elep, sum);
+                elep = ss_array_element_index_wr(p_ss_data_res, col, 0);
+                ss_data_set_real(elep, sum);
             }
 
         } /*fi*/
     }
     else
     {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
-        return;
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
     }
 
     if(status_fail(err))
     {
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, err);
+        ss_data_free_resources(p_ss_data_res);
+        ss_data_set_error(p_ss_data_res, err);
     }
 }
 

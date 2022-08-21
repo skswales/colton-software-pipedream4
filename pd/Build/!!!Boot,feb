@@ -29,7 +29,7 @@ If "<disc_root>"="" Then Error 0 Please locate root disc
 | and not the svn:riscosfiletype property
 Set svn$filetypeext ""
 |
-Set pd_root <disc_root>.pipedream.trunk
+Set pd_root <disc_root>.pipedream.pipedream__4_57__branch
 |
 Unset disc_root
 |

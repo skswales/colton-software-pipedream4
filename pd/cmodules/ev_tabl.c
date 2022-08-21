@@ -38,9 +38,9 @@ static const EV_TYPE arg_DAT[]  = { 1, EM_DAT };
 
 static const EV_TYPE arg_INT[]  = { 1, EM_INT };
 
-#define arg_BOO arg_INT
-
 static const EV_TYPE arg_REA[]  = { 1, EM_REA };
+
+static const EV_TYPE arg_BOO[]  = { 1, EM_LOGICAL };
 
 static const EV_TYPE arg_SLR[]  = { 1, EM_SLR };
 
@@ -58,10 +58,16 @@ static const EV_TYPE arg_S_I[]  = { 2, EM_STR,
 
 /* function-specific argument lists */
 
+static const EV_TYPE arg_bse[]  = { 2, EM_REA | EM_INT,
+                                       EM_INT };
+
 static const EV_TYPE arg_cho[]  = { 2, EM_INT,
                                        EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY };
 
 static const EV_TYPE arg_cpx[]  = { 1, EM_REA | EM_ARY };
+
+static const EV_TYPE arg_cvr[]  = { 2, EM_REA | EM_STR,
+                                       EM_INT };
 
 static const EV_TYPE arg_dbs[]  = { 2, EM_ARY,
                                        EM_CDX };
@@ -179,16 +185,12 @@ const RPNDEF rpn_table[] =
     { RPN_DAT, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* blank */
     { RPN_DAT, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* error */
 
-    /* handle based resources owned by RPN */
-    { RPN_DAT, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* rpn string */
+    { RPN_DAT, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* rpn string       */ /* handle based resource owned by RPN */
+    { RPN_TMP, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* temporary string */ /* temporary handle based resource */
+    { RPN_RES, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* result string    */ /* handle based resource owned by a result */
 
-    /* temporary handle based resources */
-    { RPN_TMP, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* temporary string */
-    { RPN_TMP, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* temporary array */
-
-    /* handle based resources owned by a result */
-    { RPN_RES, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* result string */
-    { RPN_RES, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* result array */
+    { RPN_TMP, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* temporary array  */ /* temporary handle based resource */
+    { RPN_RES, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* result array     */ /* handle based resource owned by a result */
 
     /* local argument */
     { RPN_LCL, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* argument name */
@@ -203,26 +205,26 @@ const RPNDEF rpn_table[] =
     { RPN_FRM, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* skip rpn if true */
     { RPN_FRM, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* no dependency */
 
-    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_not,            arg_BOO },
-    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uminus,         arg_IoR }, /* unary - */
-    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uplus,          arg_IoR }, /* unary + */
+    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uop_not,        arg_BOO },
+    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uop_minus,      arg_IoR }, /* unary - */
+    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uop_plus,       arg_IoR }, /* unary + */
 
     /* binary operators */
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_and,            arg_BOO },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_div,            arg_IoR },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_sub,            arg_IoRoD },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_or,             arg_BOO },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_add,            arg_IoRoD },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_power,          arg_REA },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_mul,            arg_IoR },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_bop_and,        arg_BOO },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_bop_div,        arg_IoR },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_bop_sub,        arg_IoRoD },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_bop_or,         arg_BOO },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_bop_add,        arg_IoRoD },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_bop_power,      arg_REA },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_bop_mul,        arg_IoR },
 
     /* binary relational operators */
-    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_eq,             arg_rel },
-    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_gt,             arg_rel },
-    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_gteq,           arg_rel },
-    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_lt,             arg_rel },
-    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_lteq,           arg_rel },
-    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_neq,            arg_rel },
+    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_rel_eq,         arg_rel },
+    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_rel_gt,         arg_rel },
+    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_rel_gteq,       arg_rel },
+    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_rel_lt,         arg_rel },
+    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_rel_lteq,       arg_rel },
+    { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_rel_neq,        arg_rel },
 
     /* functions */
     { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_abs,            arg_IoR },
@@ -244,6 +246,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_atan,           arg_REA },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_avg,            arg_mix },
 
+    { RPN_FNV,  -3, EV_RESO_MATHS   ,         NAP, c_base,           arg_bse },
     { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_beta,           arg_REA },
     { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_bin,            arg_ARY },
     { RPN_FNV,  -1, EV_RESO_CONTROL , EXCTRL(CONTROL_BREAK, 0),
@@ -315,6 +318,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNTA, 0, 1/*dbase*/, 0, 0),
                                                    /*dcounta*/ NAS,  arg_dbs },
     { RPN_FNV,  -5, EV_RESO_FINANCE ,         NAP, c_ddb,            arg_REA },
+    { RPN_FNF,   2, EV_RESO_MATHS   ,         NAP, c_decimal,        arg_cvr },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_deg,            arg_REA },
     { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_deref,          arg_drf },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DMAX,    0, 1/*dbase*/, 0, 0),
@@ -541,6 +545,7 @@ look_table[] =
     { "atn",        RPN_FNF_ATN         },
     { "avg",        RPN_FNV_AVG         },
 
+    { "base",       RPN_FNV_BASE        },
     { "beta",       RPN_FNF_BETA        },
     { "bin",        RPN_FNF_BIN         },
     { "break",      RPN_FNV_BREAK       },
@@ -605,6 +610,7 @@ look_table[] =
     { "dcount",     RPN_FNF_DCOUNT      },
     { "dcounta",    RPN_FNF_DCOUNTA     },
     { "ddb",        RPN_FNV_DDB         },
+    { "decimal",    RPN_FNF_DECIMAL     },
     { "deg",        RPN_FNF_DEG         },
     { "deref",      RPN_FNF_DEREF       },
     { "dmax",       RPN_FNF_DMAX        },
@@ -761,7 +767,7 @@ definition of types available
 typedef struct TYPES
 {
     U8Z id[10];
-    EV_TYPE types;
+    EV_TYPE type_flags;
 }
 TYPES; typedef const TYPES * PC_TYPES;
 
@@ -971,7 +977,7 @@ ev_enum_resource_get(
 *
 ******************************************************************************/
 
-PROC_BSEARCH_PROTO(static, func_lookcomp, U8Z, LOOKDEF)
+PROC_BSEARCH_PROTO(static, func_name_compare, U8Z, LOOKDEF)
 {
     BSEARCH_KEY_VAR_DECL(PC_USTR, key_id);
     BSEARCH_DATUM_VAR_DECL(PC_LOOKDEF, datum);
@@ -994,7 +1000,7 @@ PROC_BSEARCH_PROTO(static, func_lookcomp, U8Z, LOOKDEF)
 
 extern S32
 func_lookup(
-    PC_USTR id)
+    _In_z_      PC_USTR id)
 {
     PC_LOOKDEF opr;
 
@@ -1002,7 +1008,7 @@ func_lookup(
 
     {
         opr = (PC_LOOKDEF)
-            bsearch(id, look_table, elemof(look_table) - LOOK_TABLE_EXTRA, sizeof(look_table[0]), func_lookcomp);
+            bsearch(id, look_table, elemof(look_table) - LOOK_TABLE_EXTRA, sizeof(look_table[0]), func_name_compare);
     }
 
     if(NULL == opr)
@@ -1038,14 +1044,14 @@ func_name(
 ******************************************************************************/
 
 extern PC_A7STR
-type_from_flags(
-    EV_TYPE type)
+type_name_from_type_flags(
+    EV_TYPE type_flags)
 {
     U32 i;
     PC_TYPES typ;
 
     for(i = 0, typ = type_table; i < elemof32(type_table); ++i, ++typ)
-        if(typ->types == type)
+        if(typ->type_flags == type_flags)
             return(typ->id);
 
     return(NULL);
@@ -1057,7 +1063,7 @@ type_from_flags(
 *
 ******************************************************************************/
 
-PROC_BSEARCH_PROTO(static, type_lookcomp, U8Z, TYPES)
+PROC_BSEARCH_PROTO(static, type_name_compare, U8Z, TYPES)
 {
     BSEARCH_KEY_VAR_DECL(PC_USTR, key_id);
     BSEARCH_DATUM_VAR_DECL(PC_TYPES, datum);
@@ -1076,15 +1082,15 @@ PROC_BSEARCH_PROTO(static, type_lookcomp, U8Z, TYPES)
 
 extern EV_TYPE
 type_lookup(
-    PC_USTR id)
+    _In_z_      PC_USTR id)
 {
     PC_TYPES p_types = (PC_TYPES)
-        bsearch(id, type_table, elemof(type_table) - TYPE_TABLE_EXTRA, sizeof(type_table[0]), type_lookcomp);
+        bsearch(id, type_table, elemof(type_table) - TYPE_TABLE_EXTRA, sizeof(type_table[0]), type_name_compare);
 
     if(NULL == p_types)
         return(0);
 
-    return(p_types->types);
+    return(p_types->type_flags);
 }
 
 /* end of ev_tabl.c */

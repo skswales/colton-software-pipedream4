@@ -21,255 +21,349 @@
 
 /******************************************************************************
 *
-* NUMBER unary plus
+* LOGICAL unary not operator
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_uplus)
+PROC_EXEC_PROTO(c_uop_not)
+{
+    const bool not_result = !(ss_data_get_logical(args[0]));
+
+    exec_func_ignore_parms();
+
+    ss_data_set_logical(p_ss_data_res, not_result);
+}
+
+/******************************************************************************
+*
+* NUMBER unary plus operator
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_uop_plus)
 {
     exec_func_ignore_parms();
 
-    if(args[0]->did_num == RPN_DAT_REAL)
-        ev_data_set_real(p_ev_data_res, args[0]->arg.fp);
+    assert(ss_data_is_number(args[0]));
+    *p_ss_data_res = *(args[0]);
+}
+
+/******************************************************************************
+*
+* NUMBER unary minus operator
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_uop_minus)
+{
+    exec_func_ignore_parms();
+
+    if(ss_data_is_real(args[0]))
+        ss_data_set_real(p_ss_data_res, -ss_data_get_real(args[0]));
     else
-        ev_data_set_integer(p_ev_data_res, args[0]->arg.integer);
-}
-
-/******************************************************************************
-*
-* NUMBER unary minus
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_uminus)
-{
-    exec_func_ignore_parms();
-
-    if(args[0]->did_num == RPN_DAT_REAL)
-        ev_data_set_real(p_ev_data_res, -args[0]->arg.fp);
-    else
-        ev_data_set_integer(p_ev_data_res, -args[0]->arg.integer);
-}
-
-/******************************************************************************
-*
-* BOOLEAN unary not
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_not)
-{
-    exec_func_ignore_parms();
-
-    ev_data_set_boolean(p_ev_data_res, (args[0]->arg.integer == 0 ? TRUE : FALSE));
-}
-
-/******************************************************************************
-*
-* BOOLEAN binary and
-* res = a && b
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_and)
-{
-    exec_func_ignore_parms();
-
-    ev_data_set_boolean(p_ev_data_res, ((args[0]->arg.integer != 0) && (args[1]->arg.integer != 0)));
-}
-
-/******************************************************************************
-*
-* VALUE binary multiplication
-* res = a*b
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_mul)
-{
-    exec_func_ignore_parms();
-
-    consume_bool(two_nums_multiply_try(p_ev_data_res, args[0], args[1]));
+        ss_data_set_integer(p_ss_data_res, -ss_data_get_integer(args[0]));
 }
 
 /******************************************************************************
 *
 * VALUE binary addition
+*
 * res = a+b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_add)
+static bool
+date_date_add_number_calc(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InVal_     SS_DATE_DATE ss_date_date,
+    _InVal_     S32 s32)
 {
-    exec_func_ignore_parms();
+    INT64_WITH_INT32_OVERFLOW int64_with_int32_overflow;
 
-    if(two_nums_add_try(p_ev_data_res, args[0], args[1]))
-        return;
+    p_ss_data_res->arg.ss_date.date = int32_add_check_overflow(ss_date_date, s32, &int64_with_int32_overflow);
 
-    switch(args[0]->did_num)
+    if(!int64_with_int32_overflow.f_overflow)
+        return(true);
+
+    ss_data_set_error(p_ss_data_res, EVAL_ERR_ARGRANGE);
+    return(false);
+}
+
+static bool
+date_time_add_number_calc(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InVal_     SS_DATE_TIME ss_date_time,
+    _InVal_     S32 s32)
+{
+    INT64_WITH_INT32_OVERFLOW int64_with_int32_overflow;
+
+    p_ss_data_res->arg.ss_date.time = int32_add_check_overflow(ss_date_time, s32, &int64_with_int32_overflow);
+
+    if(!int64_with_int32_overflow.f_overflow)
+        return(true);
+
+    ss_data_set_error(p_ss_data_res, EVAL_ERR_ARGRANGE);
+    return(false);
+}
+
+static void
+date_add_number_calc(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     PC_SS_DATE p_ss_date,
+    _InVal_     S32 s32)
+{
+    ss_data_set_data_id(p_ss_data_res, DATA_ID_DATE);
+
+    if(SS_DATE_NULL != p_ss_date->date)
     {
-    case RPN_DAT_REAL:
-        real_to_integer_force(args[0]);
+        if(!date_date_add_number_calc(p_ss_data_res, p_ss_date->date, s32))
+            return;
+
+        p_ss_data_res->arg.ss_date.time = p_ss_date->time;
+    }
+    else
+    {
+        p_ss_data_res->arg.ss_date.date = SS_DATE_NULL;
+
+        if(!date_time_add_number_calc(p_ss_data_res, p_ss_date->time, s32))
+            return;
+
+        ss_date_normalise(&p_ss_data_res->arg.ss_date);
+    }
+}
+
+static void
+date_add_date_calc(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     PC_SS_DATE p_ss_date_addend_a,
+    _InRef_     PC_SS_DATE p_ss_date_addend_b)
+{
+    ss_data_set_data_id(p_ss_data_res, DATA_ID_DATE);
+
+    if( !date_date_add_number_calc(p_ss_data_res, p_ss_date_addend_a->date, p_ss_date_addend_b->date) ||
+        !date_time_add_number_calc(p_ss_data_res, p_ss_date_addend_a->time, p_ss_date_addend_b->time) )
+    {
+        return;
+    }
+
+    ss_date_normalise(&p_ss_data_res->arg.ss_date);
+}
+
+static void
+add_harder_addend_a_is_number(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     PC_SS_DATA p_ss_data_addend_a,
+    _InRef_     PC_SS_DATA p_ss_data_addend_b)
+{
+    switch(ss_data_get_data_id(p_ss_data_addend_b))
+    {
+    /* number + date */
+    case DATA_ID_DATE:
+        date_add_number_calc(p_ss_data_res, ss_data_get_date(p_ss_data_addend_b), ss_data_get_integer(p_ss_data_addend_a));
+        break;
+    }
+}
+
+static void
+add_harder_addend_a_is_date(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     P_SS_DATA p_ss_data_addend_a,
+    _InRef_     P_SS_DATA p_ss_data_addend_b)
+{
+    switch(ss_data_get_data_id(p_ss_data_addend_b))
+    {
+    case DATA_ID_REAL:
+        ss_data_real_to_integer_force(p_ss_data_addend_b);
+
+        /*FALLTHRU*/
+
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        /* date + number */
+        date_add_number_calc(p_ss_data_res, ss_data_get_date(p_ss_data_addend_a), ss_data_get_integer(p_ss_data_addend_b));
+        break;
+
+    case DATA_ID_DATE:
+        /* date + date */
+        date_add_date_calc(p_ss_data_res, ss_data_get_date(p_ss_data_addend_a), ss_data_get_date(p_ss_data_addend_b));
+        break;
+    }
+}
+
+static void
+add_harder(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     P_SS_DATA p_ss_data_addend_a,
+    _InRef_     P_SS_DATA p_ss_data_addend_b)
+{
+    switch(ss_data_get_data_id(p_ss_data_addend_a))
+    {
+    case DATA_ID_REAL:
+        ss_data_real_to_integer_force(p_ss_data_addend_a);
 
     /*FALLTHRU*/
 
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
-        switch(args[1]->did_num)
-        {
-        /* number + date */
-        case RPN_DAT_DATE:
-            p_ev_data_res->did_num = RPN_DAT_DATE;
-
-            if(EV_DATE_NULL != args[1]->arg.ev_date.date)
-            {
-                p_ev_data_res->arg.ev_date.date = args[1]->arg.ev_date.date + args[0]->arg.integer;
-                p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time;
-            }
-            else
-            {
-                p_ev_data_res->arg.ev_date.date = EV_DATE_NULL;
-                p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time + args[0]->arg.integer;
-                ss_date_normalise(&p_ev_data_res->arg.ev_date);
-            }
-            break;
-        }
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        add_harder_addend_a_is_number(p_ss_data_res, p_ss_data_addend_a, p_ss_data_addend_b);
         break;
 
-    case RPN_DAT_DATE:
-        switch(args[1]->did_num)
-        {
-        /* date + number */
-        case RPN_DAT_REAL:
-            real_to_integer_force(args[1]);
-
-            /*FALLTHRU*/
-
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-            p_ev_data_res->did_num = RPN_DAT_DATE;
-
-            if(EV_DATE_NULL != args[0]->arg.ev_date.date)
-            {
-                p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.integer;
-                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
-            }
-            else
-            {
-                p_ev_data_res->arg.ev_date.date = EV_DATE_NULL;
-                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.integer;
-                ss_date_normalise(&p_ev_data_res->arg.ev_date);
-            }
-            break;
-
-        /* date + date */
-        case RPN_DAT_DATE:
-            p_ev_data_res->did_num = RPN_DAT_DATE;
-            p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.ev_date.date;
-            p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.ev_date.time;
-            ss_date_normalise(&p_ev_data_res->arg.ev_date);
-            break;
-        }
-
+    case DATA_ID_DATE:
+        add_harder_addend_a_is_date(p_ss_data_res, p_ss_data_addend_a, p_ss_data_addend_b);
         break;
     }
+}
+
+PROC_EXEC_PROTO(c_bop_add)
+{
+    exec_func_ignore_parms();
+
+    if(two_nums_add_try(p_ss_data_res, args[0], args[1]))
+        return;
+
+    add_harder(p_ss_data_res, args[0], args[1]);
 }
 
 /******************************************************************************
 *
 * VALUE binary subtraction
+*
 * res = a-b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_sub)
+static void
+date_subtract_date_calc(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     PC_SS_DATE p_ss_date_minuend,
+    _InRef_     PC_SS_DATE p_ss_date_subtrahend)
+{
+    ss_data_set_data_id(p_ss_data_res, DATA_ID_DATE);
+
+    if( !date_date_add_number_calc(p_ss_data_res, p_ss_date_minuend->date, -p_ss_date_subtrahend->date) ||
+        !date_time_add_number_calc(p_ss_data_res, p_ss_date_minuend->time, -p_ss_date_subtrahend->time) )
+    {
+        return;
+    }
+
+    if( ss_data_get_date(p_ss_data_res)->date && ss_data_get_date(p_ss_data_res)->time )
+    {
+        ss_date_normalise(&p_ss_data_res->arg.ss_date);
+    }
+    else
+    {
+        ss_data_set_integer(p_ss_data_res,
+                            (ss_data_get_date(p_ss_data_res)->date
+                                    ? ss_data_get_date(p_ss_data_res)->date
+                                    : ss_data_get_date(p_ss_data_res)->time));
+    }
+}
+
+static void
+subtract_harder_minuend_is_number(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     PC_SS_DATA p_ss_data_minuend,
+    _InRef_     PC_SS_DATA p_ss_data_subtrahend)
+{
+    UNREFERENCED_PARAMETER_InRef_(p_ss_data_minuend);
+
+    switch(ss_data_get_data_id(p_ss_data_subtrahend))
+    {
+    /* number - date */
+    case DATA_ID_DATE:
+        ss_data_set_error(p_ss_data_res, EVAL_ERR_UNEXDATE);
+        break;
+    }
+}
+
+static void
+subtract_harder_minuend_is_date(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     P_SS_DATA p_ss_data_minuend,
+    _InRef_     P_SS_DATA p_ss_data_subtrahend)
+{
+    switch(ss_data_get_data_id(p_ss_data_subtrahend))
+    {
+    case DATA_ID_REAL:
+        ss_data_real_to_integer_force(p_ss_data_subtrahend);
+
+        /*FALLTHRU*/
+
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        /* date - number */
+        date_add_number_calc(p_ss_data_res, ss_data_get_date(p_ss_data_minuend), -ss_data_get_integer(p_ss_data_subtrahend));
+        break;
+
+    case DATA_ID_DATE:
+        /* date - date */
+        date_subtract_date_calc(p_ss_data_res, ss_data_get_date(p_ss_data_minuend), ss_data_get_date(p_ss_data_subtrahend));
+        break;
+    }
+}
+
+static inline void
+subtract_harder(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     P_SS_DATA p_ss_data_minuend,
+    _InRef_     P_SS_DATA p_ss_data_subtrahend)
+{
+    switch(ss_data_get_data_id(p_ss_data_minuend))
+    {
+    case DATA_ID_REAL:
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        subtract_harder_minuend_is_number(p_ss_data_res, p_ss_data_minuend, p_ss_data_subtrahend);
+        break;
+
+    case DATA_ID_DATE:
+        subtract_harder_minuend_is_date(p_ss_data_res, p_ss_data_minuend, p_ss_data_subtrahend);
+        break;
+    }
+}
+
+PROC_EXEC_PROTO(c_bop_sub)
 {
     exec_func_ignore_parms();
 
-    if(two_nums_subtract_try(p_ev_data_res, args[0], args[1]))
+    if(two_nums_subtract_try(p_ss_data_res, args[0], args[1]))
         return;
 
-    switch(args[0]->did_num)
-    {
-    case RPN_DAT_REAL:
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
-        switch(args[1]->did_num)
-        {
-        /* number - date */
-        case RPN_DAT_DATE:
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXDATE);
-            break;
-        }
-        break;
+    subtract_harder(p_ss_data_res, args[0], args[1]);
+}
 
-    case RPN_DAT_DATE:
-        switch(args[1]->did_num)
-        {
-        /* date - number */
-        case RPN_DAT_REAL:
-            real_to_integer_force(args[1]);
+/******************************************************************************
+*
+* VALUE binary multiplication
+*
+* res = a*b
+*
+******************************************************************************/
 
-            /*FALLTHRU*/
+PROC_EXEC_PROTO(c_bop_mul)
+{
+    exec_func_ignore_parms();
 
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-            p_ev_data_res->did_num = RPN_DAT_DATE;
-
-            if(EV_DATE_NULL != args[0]->arg.ev_date.date)
-            {
-                p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.integer;
-                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
-            }
-            else
-            {
-                p_ev_data_res->arg.ev_date.date = EV_DATE_NULL;
-                p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.integer;
-                ss_date_normalise(&p_ev_data_res->arg.ev_date);
-            }
-            break;
-
-        /* date - date */
-        case RPN_DAT_DATE:
-            p_ev_data_res->did_num = RPN_DAT_DATE;
-            p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.ev_date.date;
-            p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.ev_date.time;
-
-            if(p_ev_data_res->arg.ev_date.date && p_ev_data_res->arg.ev_date.time)
-            {
-                ss_date_normalise(&p_ev_data_res->arg.ev_date);
-            }
-            else
-            {
-                ev_data_set_integer(p_ev_data_res,
-                                    (p_ev_data_res->arg.ev_date.date
-                                         ? p_ev_data_res->arg.ev_date.date
-                                         : p_ev_data_res->arg.ev_date.time));
-            }
-
-            break;
-        }
-
-        break;
-    }
+    consume_bool(two_nums_multiply_try(p_ss_data_res, args[0], args[1]));
 }
 
 /******************************************************************************
 *
 * VALUE binary division
+*
 * res = a/b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_div)
+PROC_EXEC_PROTO(c_bop_div)
 {
     exec_func_ignore_parms();
 
-    consume_bool(two_nums_divide_try(p_ev_data_res, args[0], args[1]));
+    consume_bool(two_nums_divide_try(p_ss_data_res, args[0], args[1]));
 }
 
 /******************************************************************************
@@ -280,123 +374,143 @@ PROC_EXEC_PROTO(c_div)
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_power)
+PROC_EXEC_PROTO(c_bop_power)
 {
-    const F64 a = args[0]->arg.fp;
-    const F64 b = args[1]->arg.fp;
+    const F64 a = ss_data_get_real(args[0]);
+    const F64 b = ss_data_get_real(args[1]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real_ti(p_ev_data_res, pow(a, b));
+    if(0.5 == b)
+        ss_data_set_real_try_integer(p_ss_data_res, sqrt(a));
+    else
+        ss_data_set_real_try_integer(p_ss_data_res, pow(a, b));
 
     if(errno /* == EDOM */)
     {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
+        ss_data_set_error(p_ss_data_res, EVAL_ERR_ARGRANGE);
 
         /* test for negative numbers to power of 1/odd number (odd roots are OK) */
-        if((a < 0.0) && (b <= 1.0))
+        if( (a < 0.0) && (b <= 1.0) )
         {
-            EV_DATA test;
+            SS_DATA test;
 
-            ev_data_set_real(&test, 1.0 / b);
+            ss_data_set_real(&test, 1.0 / b);
 
-            if(real_to_integer_try(&test))
-                ev_data_set_real_ti(p_ev_data_res, -(pow(-(a), b)));
+            if(ss_data_real_to_integer_try(&test))
+                ss_data_set_real_try_integer(p_ss_data_res, -(pow(-(a), b)));
         }
     }
 }
 
 /******************************************************************************
 *
-* BOOLEAN res = a|b
+* LOGICAL res = a && b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_or)
+PROC_EXEC_PROTO(c_bop_and)
 {
+    const bool and_result = ss_data_get_logical(args[0]) && ss_data_get_logical(args[1]);
+
     exec_func_ignore_parms();
 
-    ev_data_set_boolean(p_ev_data_res, ((args[0]->arg.integer != 0) || (args[1]->arg.integer != 0)));
+    ss_data_set_logical(p_ss_data_res, and_result);
 }
 
 /******************************************************************************
 *
-* BOOLEAN res = a==b
+* LOGICAL res = a|b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_eq)
+PROC_EXEC_PROTO(c_bop_or)
 {
+    const bool or_result = ss_data_get_logical(args[0]) || ss_data_get_logical(args[1]);
+
     exec_func_ignore_parms();
 
-    ev_data_set_boolean(p_ev_data_res, (ss_data_compare(args[0], args[1]) == 0));
+    ss_data_set_logical(p_ss_data_res, or_result);
 }
 
 /******************************************************************************
 *
-* BOOLEAN res = a>b
+* LOGICAL res = a==b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_gt)
+PROC_EXEC_PROTO(c_rel_eq)
 {
     exec_func_ignore_parms();
 
-    ev_data_set_boolean(p_ev_data_res, (ss_data_compare(args[0], args[1]) > 0));
+    ss_data_set_logical(p_ss_data_res, (ss_data_compare(args[0], args[1]) == 0));
 }
 
 /******************************************************************************
 *
-* BOOLEAN res = a>=b
+* LOGICAL res = a>b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_gteq)
+PROC_EXEC_PROTO(c_rel_gt)
 {
     exec_func_ignore_parms();
 
-    ev_data_set_boolean(p_ev_data_res, (ss_data_compare(args[0], args[1]) >= 0));
+    ss_data_set_logical(p_ss_data_res, (ss_data_compare(args[0], args[1]) > 0));
 }
 
 /******************************************************************************
 *
-* BOOLEAN res = a<b
+* LOGICAL res = a>=b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_lt)
+PROC_EXEC_PROTO(c_rel_gteq)
 {
     exec_func_ignore_parms();
 
-    ev_data_set_boolean(p_ev_data_res, (ss_data_compare(args[0], args[1]) < 0));
+    ss_data_set_logical(p_ss_data_res, (ss_data_compare(args[0], args[1]) >= 0));
 }
 
 /******************************************************************************
 *
-* BOOLEAN res = a<=b
+* LOGICAL res = a<b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_lteq)
+PROC_EXEC_PROTO(c_rel_lt)
 {
     exec_func_ignore_parms();
 
-    ev_data_set_boolean(p_ev_data_res, (ss_data_compare(args[0], args[1]) <= 0));
+    ss_data_set_logical(p_ss_data_res, (ss_data_compare(args[0], args[1]) < 0));
 }
 
 /******************************************************************************
 *
-* BOOLEAN res = a!=b
+* LOGICAL res = a<=b
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_neq)
+PROC_EXEC_PROTO(c_rel_lteq)
 {
     exec_func_ignore_parms();
 
-    ev_data_set_boolean(p_ev_data_res, (ss_data_compare(args[0], args[1]) != 0));
+    ss_data_set_logical(p_ss_data_res, (ss_data_compare(args[0], args[1]) <= 0));
+}
+
+/******************************************************************************
+*
+* LOGICAL res = a!=b
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_rel_neq)
+{
+    exec_func_ignore_parms();
+
+    ss_data_set_logical(p_ss_data_res, (ss_data_compare(args[0], args[1]) != 0));
 }
 
 /******************************************************************************
@@ -409,12 +523,12 @@ PROC_EXEC_PROTO(c_if)
 {
     exec_func_ignore_parms();
 
-    if(args[0]->arg.boolean)
-        ss_data_resource_copy(p_ev_data_res, args[1]);
+    if(ss_data_get_logical(args[0]))
+        ss_data_resource_copy(p_ss_data_res, args[1]);
     else if(n_args > 2)
-        ss_data_resource_copy(p_ev_data_res, args[2]);
+        ss_data_resource_copy(p_ss_data_res, args[2]);
     else
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_NA);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_NA);
 }
 
 /******************************************************************************
@@ -426,7 +540,7 @@ PROC_EXEC_PROTO(c_if)
 static S32
 poke_slot(
     _InRef_     PC_EV_SLR slrp,
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     _InRef_     PC_EV_SLR cur_slrp)
 {
     P_EV_CELL p_ev_cell;
@@ -443,15 +557,15 @@ poke_slot(
     #endif
     else
     {
-        EV_DATA temp;
+        SS_DATA temp;
         EV_RESULT ev_result;
 
         ev_result_free_resources(&p_ev_cell->ev_result);
 
         /* make sure we have a copy of data */
-        ss_data_resource_copy(&temp, p_ev_data);
+        ss_data_resource_copy(&temp, p_ss_data);
 
-        ev_data_to_result_convert(&ev_result, &temp);
+        ss_data_to_result_convert(&ev_result, &temp);
 
         if((res = ev_make_slot(slrp, &ev_result)) < 0)
             ev_result_free_resources(&ev_result);
@@ -479,35 +593,34 @@ poke_slot(
 
 PROC_EXEC_PROTO(c_setvalue)
 {
-    S32 err;
+    S32 err = 0;
 
     exec_func_ignore_parms();
 
     /* initialise output so we can free OK */
-    p_ev_data_res->did_num = RPN_DAT_BLANK;
-    err = 0;
+    ss_data_set_data_id(p_ss_data_res, DATA_ID_BLANK);
 
-    switch(args[0]->did_num)
+    switch(ss_data_get_data_id(args[0]))
     {
-    case RPN_DAT_SLR:
+    case DATA_ID_SLR:
         {
         if(!slr_equal(p_cur_slr, &args[0]->arg.slr))
             err = poke_slot(&args[0]->arg.slr, args[1], p_cur_slr);
 
         if(!err)
-            ss_data_resource_copy(p_ev_data_res, args[1]);
+            ss_data_resource_copy(p_ss_data_res, args[1]);
 
         break;
         }
 
-    case RPN_DAT_RANGE:
+    case DATA_ID_RANGE:
         {
         RANGE_SCAN_BLOCK rsb;
         EV_SLR top_left;
 
         if((err = range_scan_init(&args[0]->arg.range, &rsb)) >= 0)
         {
-            EV_DATA element;
+            SS_DATA element;
             S32 first;
 
             first = 1;
@@ -518,11 +631,11 @@ PROC_EXEC_PROTO(c_setvalue)
                                      EM_ANY) != RPN_FRM_END)
             {
                 S32 res;
-                EV_DATA poke_data;
+                SS_DATA poke_data;
 
-                switch(args[1]->did_num)
+                switch(ss_data_get_data_id(args[1]))
                 {
-                case RPN_DAT_RANGE:
+                case DATA_ID_RANGE:
                 case RPN_TMP_ARRAY:
                 case RPN_RES_ARRAY:
                     array_range_index(&poke_data,
@@ -546,7 +659,7 @@ PROC_EXEC_PROTO(c_setvalue)
                 }
 
                 if(first)
-                    ss_data_resource_copy(p_ev_data_res, &poke_data);
+                    ss_data_resource_copy(p_ss_data_res, &poke_data);
 
                 first = 0;
             }
@@ -564,8 +677,8 @@ PROC_EXEC_PROTO(c_setvalue)
     if(err < 0)
     {
         /* free anything we might have saved */
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, err);
+        ss_data_free_resources(p_ss_data_res);
+        ss_data_set_error(p_ss_data_res, err);
     }
 }
 
@@ -575,50 +688,50 @@ range-ey functions
 
 static void
 args_array_range_proc(
-    P_EV_DATA args[EV_MAX_ARGS],
+    P_SS_DATA args[EV_MAX_ARGS],
     S32 n_args,
-    P_EV_DATA p_ev_data_res,
+    P_SS_DATA p_ss_data_res,
     _InVal_     EV_IDNO function_id);
 
 static void
 array_range_proc(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data);
+    P_SS_DATA p_ss_data);
 
 static void
 array_range_proc_array(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data);
+    P_SS_DATA p_ss_data);
 
 static void
 array_range_proc_finish(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block);
 
 static void
 array_range_proc_item(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data);
+    P_SS_DATA p_ss_data);
 
 static S32
 lookup_array_range_proc_array(
     P_LOOKUP_BLOCK lkbp,
-    P_EV_DATA p_ev_data);
+    P_SS_DATA p_ss_data);
 
 static S32
 lookup_array_range_proc_item(
     P_LOOKUP_BLOCK lkbp,
-    P_EV_DATA p_ev_data);
+    P_SS_DATA p_ss_data);
 
 static EV_IDNO
 npv_calc(
-    P_EV_DATA p_ev_data_res,
+    P_SS_DATA p_ss_data_res,
     P_F64 intp,
-    P_EV_DATA array);
+    P_SS_DATA array);
 
 static void
 npv_item(
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     P_S32 p_count,
     P_F64 p_parm,
     P_F64 p_temp,
@@ -634,7 +747,7 @@ PROC_EXEC_PROTO(c_avg)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_AVG);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_AVG);
 }
 
 /******************************************************************************
@@ -647,7 +760,7 @@ PROC_EXEC_PROTO(c_count)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_COUNT);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_COUNT);
 }
 
 /******************************************************************************
@@ -660,7 +773,7 @@ PROC_EXEC_PROTO(c_counta)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_COUNTA);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_COUNTA);
 }
 
 /******************************************************************************
@@ -671,7 +784,7 @@ PROC_EXEC_PROTO(c_counta)
 
 PROC_EXEC_PROTO(c_irr)
 {
-    F64 r = args[0]->arg.fp;
+    F64 r = ss_data_get_real(args[0]);
     F64 last_npv = 1.0;
     F64 last_r = 0.0;
     S32 iteration_count;
@@ -681,17 +794,17 @@ PROC_EXEC_PROTO(c_irr)
     for(iteration_count = 0; iteration_count < 40; ++iteration_count)
     {
         F64 this_npv, this_r;
-        EV_DATA npv;
+        SS_DATA npv;
 
-        if(npv_calc(&npv, &r, args[1]) != RPN_DAT_REAL)
+        if(npv_calc(&npv, &r, args[1]) != DATA_ID_REAL)
             return;
 
-        this_npv = npv.arg.fp;
+        this_npv = ss_data_get_real(&npv);
         this_r = r;
 
         if(fabs(this_npv) < 0.0000001)
         {
-            ev_data_set_real(p_ev_data_res, r);
+            ss_data_set_real(p_ss_data_res, r);
             return;
         }
 
@@ -709,7 +822,7 @@ PROC_EXEC_PROTO(c_irr)
         last_r = this_r;
     }
 
-    ev_data_set_error(p_ev_data_res, EVAL_ERR_IRR);
+    exec_func_status_return(p_ss_data_res, EVAL_ERR_IRR);
 }
 
 /******************************************************************************
@@ -722,7 +835,7 @@ PROC_EXEC_PROTO(c_max)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_MAX);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_MAX);
 }
 
 /******************************************************************************
@@ -735,7 +848,7 @@ PROC_EXEC_PROTO(c_min)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_MIN);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_MIN);
 }
 
 /******************************************************************************
@@ -750,11 +863,11 @@ PROC_EXEC_PROTO(c_mirr)
 
     exec_func_ignore_parms();
 
-    stat_block_init(&stb, RPN_FNF_MIRR, args[1]->arg.fp + 1, args[2]->arg.fp + 1);
+    stat_block_init(&stb, RPN_FNF_MIRR, ss_data_get_real(args[1]) + 1.0, ss_data_get_real(args[2]) + 1.0);
 
     array_range_proc(&stb, args[0]);
 
-    array_range_proc_finish(p_ev_data_res, &stb);
+    array_range_proc_finish(p_ss_data_res, &stb);
 }
 
 /******************************************************************************
@@ -767,7 +880,7 @@ PROC_EXEC_PROTO(c_npv)
 {
     exec_func_ignore_parms();
 
-    npv_calc(p_ev_data_res, &args[0]->arg.fp, args[1]);
+    npv_calc(p_ss_data_res, &args[0]->arg.fp, args[1]);
 }
 
 /******************************************************************************
@@ -780,7 +893,7 @@ PROC_EXEC_PROTO(c_std)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_STD);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_STD);
 }
 
 /******************************************************************************
@@ -793,7 +906,7 @@ PROC_EXEC_PROTO(c_stdp)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_STDP);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_STDP);
 }
 
 /******************************************************************************
@@ -806,7 +919,7 @@ PROC_EXEC_PROTO(c_sum)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_SUM);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_SUM);
 }
 
 /******************************************************************************
@@ -819,7 +932,7 @@ PROC_EXEC_PROTO(c_var)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_VAR);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_VAR);
 }
 
 /******************************************************************************
@@ -832,7 +945,7 @@ PROC_EXEC_PROTO(c_varp)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_VARP);
+    args_array_range_proc(args, n_args, p_ss_data_res, RPN_FNV_VARP);
 }
 
 /******************************************************************************
@@ -843,9 +956,9 @@ PROC_EXEC_PROTO(c_varp)
 
 static void
 args_array_range_proc(
-    P_EV_DATA args[EV_MAX_ARGS],
+    P_SS_DATA args[EV_MAX_ARGS],
     S32 n_args,
-    P_EV_DATA p_ev_data_res,
+    P_SS_DATA p_ss_data_res,
     _InVal_     EV_IDNO function_id)
 {
     S32 i;
@@ -856,7 +969,7 @@ args_array_range_proc(
     for(i = 0; i < n_args; ++i)
         array_range_proc(&stb, args[i]);
 
-    array_range_proc_finish(p_ev_data_res, &stb);
+    array_range_proc_finish(p_ss_data_res, &stb);
 }
 
 /******************************************************************************
@@ -868,26 +981,26 @@ args_array_range_proc(
 static void
 array_range_proc(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
-    switch(p_ev_data->did_num)
+    switch(ss_data_get_data_id(p_ss_data))
     {
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
-        array_range_proc_array(p_stat_block, p_ev_data);
+        array_range_proc_array(p_stat_block, p_ss_data);
         break;
 
-    case RPN_DAT_RANGE:
+    case DATA_ID_RANGE:
         {
         RANGE_SCAN_BLOCK rsb;
 
-        if(range_scan_init(&p_ev_data->arg.range, &rsb) >= 0)
+        if(range_scan_init(&p_ss_data->arg.range, &rsb) >= 0)
         {
-            EV_DATA element;
+            SS_DATA element;
 
             while(range_scan_element(&rsb, &element, EM_REA | EM_ARY | EM_BLK | EM_DAT | EM_INT) != RPN_FRM_END)
             {
-                switch(element.did_num)
+                switch(element.data_id)
                 {
                 case RPN_TMP_ARRAY:
                 case RPN_RES_ARRAY:
@@ -904,7 +1017,7 @@ array_range_proc(
         }
 
     default:
-        array_range_proc_item(p_stat_block, p_ev_data);
+        array_range_proc_item(p_stat_block, p_ss_data);
         break;
     }
 }
@@ -918,13 +1031,13 @@ array_range_proc(
 static void
 array_range_proc_array(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     ARRAY_SCAN_BLOCK asb;
 
-    if(array_scan_init(&asb, p_ev_data))
+    if(array_scan_init(&asb, p_ss_data))
     {
-        EV_DATA element;
+        SS_DATA element;
 
         while(array_scan_element(&asb, &element, EM_REA | EM_AR0 | EM_BLK | EM_DAT | EM_INT) != RPN_FRM_END)
             array_range_proc_item(p_stat_block, &element);
@@ -939,87 +1052,87 @@ array_range_proc_array(
 
 static void
 array_range_proc_finish_running_data(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    if(0 != p_stat_block->count)
+    if(0 == p_stat_block->count)
+        ss_data_set_real(p_ss_data, 0.0);
+    else
     {
-        switch(p_stat_block->running_data.did_num)
+        switch(p_stat_block->running_data.data_id)
         {
-        default: default_unhandled();
+        default:
 #if CHECKING
-        case RPN_DAT_DATE:
-        case RPN_DAT_REAL:
+            default_unhandled();
+        case DATA_ID_REAL:
+        case DATA_ID_DATE:
 #endif
-            *p_ev_data = p_stat_block->running_data;
+            *p_ss_data = p_stat_block->running_data;
             break;
 
-        /*case RPN_DAT_BOOL8:*/ /* really shouldn't occur */
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
-            ev_data_set_integer(p_ev_data, p_stat_block->running_data.arg.integer);
+        case DATA_ID_LOGICAL: /* really shouldn't occur */
+        case DATA_ID_WORD16:
+        case DATA_ID_WORD32:
+            ss_data_set_integer(p_ss_data, ss_data_get_integer(&p_stat_block->running_data));
             break;
         }
     }
-    else
-        ev_data_set_real(p_ev_data, 0.0);
 }
 
 static void
 array_range_proc_finish_average(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    if(0 != p_stat_block->count)
+    if(0 == p_stat_block->count)
+        ss_data_set_real(p_ss_data, 0.0);
+    else
     {
-        switch(p_stat_block->running_data.did_num)
+        switch(p_stat_block->running_data.data_id)
         {
         default:
-            p_stat_block->running_data.arg.fp = (F64) p_stat_block->running_data.arg.integer;
+            ss_data_set_real(&p_stat_block->running_data, (F64) ss_data_get_integer(&p_stat_block->running_data));
 
             /*FALLTHRU*/
 
-        case RPN_DAT_REAL:
+        case DATA_ID_REAL:
             {
-            F64 avg_result = p_stat_block->running_data.arg.fp / (F64) p_stat_block->count;
-            ev_data_set_real_ti(p_ev_data, avg_result);
+            F64 avg_result = ss_data_get_real(&p_stat_block->running_data) / (F64) p_stat_block->count;
+            ss_data_set_real_try_integer(p_ss_data, avg_result);
             break;
             }
 
-        case RPN_DAT_DATE:
-            *p_ev_data = p_stat_block->running_data;
-#if (EV_DATE_NULL == 0)
-            p_ev_data->arg.ev_date.date /= p_stat_block->count;
-            p_ev_data->arg.ev_date.time /= p_stat_block->count;
+        case DATA_ID_DATE:
+            *p_ss_data = p_stat_block->running_data;
+#if (SS_DATE_NULL == 0)
+            p_ss_data->arg.ss_date.date /= p_stat_block->count;
+            p_ss_data->arg.ss_date.time /= p_stat_block->count;
 #else
-            if(EV_DATE_NULL != p_ev_data->arg.ev_date.date)
-                p_ev_data->arg.ev_date.date /= p_stat_block->count;
-            if(EV_TIME_NULL != p_ev_data->arg.ev_date.time)
-                p_ev_data->arg.ev_date.time /= p_stat_block->count;
+            if(SS_DATE_NULL != p_ss_data->arg.ss_date.date)
+                p_ss_data->arg.ss_date.date /= p_stat_block->count;
+            if(SS_TIME_NULL != p_ss_data->arg.ss_date.time)
+                p_ss_data->arg.ss_date.time /= p_stat_block->count;
 #endif
-            ss_date_normalise(&p_ev_data->arg.ev_date);
+            ss_date_normalise(&p_ss_data->arg.ss_date);
             break;
         }
     }
-    else
-        ev_data_set_real(p_ev_data, 0.0);
 }
 
 static void
 array_range_proc_finish_COUNT(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    ev_data_set_integer(p_ev_data, p_stat_block->count);
+    ss_data_set_integer(p_ss_data, p_stat_block->count);
 }
 
 static void
 array_range_proc_finish_COUNTA(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    ev_data_set_integer(p_ev_data, p_stat_block->count_a);
+    ss_data_set_integer(p_ss_data, p_stat_block->count_a);
 }
 
 _Check_return_
@@ -1030,7 +1143,7 @@ calc_variance(
 {
     F64 n = (F64) p_stat_block->count;
     F64 n_sum_x2 = p_stat_block->sum_x2 * (F64) p_stat_block->count;
-    F64 sum_2 = p_stat_block->running_data.arg.fp * p_stat_block->running_data.arg.fp;
+    F64 sum_2 = ss_data_get_real(&p_stat_block->running_data) * ss_data_get_real(&p_stat_block->running_data);
     F64 delta = n_sum_x2 - sum_2;
     F64 variance;
 
@@ -1045,7 +1158,7 @@ calc_variance(
 
 static void
 array_range_proc_finish_standard_deviation(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
     BOOL population_statistics = FALSE;
@@ -1065,16 +1178,16 @@ array_range_proc_finish_standard_deviation(
         F64 variance = calc_variance(p_stat_block, population_statistics);
         F64 standard_deviation = sqrt(variance);
 
-        ev_data_set_real(p_ev_data, standard_deviation);
+        ss_data_set_real(p_ss_data, standard_deviation);
         return;
     }
 
-    ev_data_set_error(p_ev_data, EVAL_ERR_DIVIDEBY0);
+    ss_data_set_error(p_ss_data, EVAL_ERR_DIVIDEBY0);
 }
 
 static void
 array_range_proc_finish_variance(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
     BOOL population_statistics = FALSE;
@@ -1093,22 +1206,22 @@ array_range_proc_finish_variance(
     {
         F64 variance = calc_variance(p_stat_block, population_statistics);
 
-        ev_data_set_real(p_ev_data, variance);
+        ss_data_set_real(p_ss_data, variance);
         return;
     }
 
-    ev_data_set_error(p_ev_data, EVAL_ERR_DIVIDEBY0);
+    ss_data_set_error(p_ss_data, EVAL_ERR_DIVIDEBY0);
 }
 
 static void
 array_range_proc_finish_NPV(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    if(0 != p_stat_block->count)
-        ev_data_set_real(p_ev_data, p_stat_block->running_data.arg.fp);
+    if(0 == p_stat_block->count)
+        ss_data_set_real(p_ss_data, 0.0);
     else
-        ev_data_set_real(p_ev_data, 0.0);
+        ss_data_set_real(p_ss_data, ss_data_get_real(&p_stat_block->running_data));
 }
 
 static inline F64
@@ -1124,59 +1237,61 @@ array_range_proc_MIRR_help(
 
 static void
 array_range_proc_finish_MIRR(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
     if(p_stat_block->count_a > 1)
-        ev_data_set_real(p_ev_data, array_range_proc_MIRR_help(p_stat_block));
+        ss_data_set_real(p_ss_data, array_range_proc_MIRR_help(p_stat_block));
     else
-        ev_data_set_real(p_ev_data, 0.0);
+        ss_data_set_real(p_ss_data, 0.0);
 }
 
 static void
 array_range_proc_finish(
-    _OutRef_    P_EV_DATA p_ev_data,
+    _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     P_STAT_BLOCK p_stat_block)
 {
     switch(p_stat_block->exec_array_range_id)
     {
+    default:
+#if CHECKING
+        default_unhandled();
+        /*FALLTHRU*/
     case ARRAY_RANGE_MAX:
     case ARRAY_RANGE_MIN:
     case ARRAY_RANGE_SUM:
-        array_range_proc_finish_running_data(p_ev_data, p_stat_block);
+#endif
+        array_range_proc_finish_running_data(p_ss_data, p_stat_block);
         break;
 
     case ARRAY_RANGE_AVERAGE:
-        array_range_proc_finish_average(p_ev_data, p_stat_block);
+        array_range_proc_finish_average(p_ss_data, p_stat_block);
         break;
 
     case ARRAY_RANGE_COUNT:
-        array_range_proc_finish_COUNT(p_ev_data, p_stat_block);
+        array_range_proc_finish_COUNT(p_ss_data, p_stat_block);
         break;
 
     case ARRAY_RANGE_COUNTA:
-        array_range_proc_finish_COUNTA(p_ev_data, p_stat_block);
+        array_range_proc_finish_COUNTA(p_ss_data, p_stat_block);
         break;
 
     case ARRAY_RANGE_STD:
     case ARRAY_RANGE_STDP:
-        array_range_proc_finish_standard_deviation(p_ev_data, p_stat_block);
+        array_range_proc_finish_standard_deviation(p_ss_data, p_stat_block);
         break;
 
     case ARRAY_RANGE_VAR:
     case ARRAY_RANGE_VARP:
-        array_range_proc_finish_variance(p_ev_data, p_stat_block);
+        array_range_proc_finish_variance(p_ss_data, p_stat_block);
         break;
 
     case ARRAY_RANGE_NPV:
-        array_range_proc_finish_NPV(p_ev_data, p_stat_block);
+        array_range_proc_finish_NPV(p_ss_data, p_stat_block);
         break;
 
     case ARRAY_RANGE_MIRR:
-        array_range_proc_finish_MIRR(p_ev_data, p_stat_block);
-        break;
-
-    default:
+        array_range_proc_finish_MIRR(p_ss_data, p_stat_block);
         break;
     }
 }
@@ -1190,22 +1305,22 @@ array_range_proc_finish(
 static void
 array_range_proc_item_add(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     if(0 == p_stat_block->count)
     {
-        p_stat_block->running_data = *p_ev_data;
+        p_stat_block->running_data = *p_ss_data;
     }
     else
     {
-        P_EV_DATA args[2];
-        EV_DATA result_data;
+        P_SS_DATA args[2];
+        SS_DATA result_data;
         EV_SLR dummy_slr;
 
-        args[0] = p_ev_data;
+        args[0] = p_ss_data;
         args[1] = &p_stat_block->running_data;
 
-        c_add(args, 2, &result_data, &dummy_slr);
+        c_bop_add(args, 2, &result_data, &dummy_slr);
 
         p_stat_block->running_data = result_data;
     }
@@ -1220,34 +1335,34 @@ array_range_proc_item_add(
 static void
 array_range_proc_blank(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     UNREFERENCED_PARAMETER(p_stat_block);
-    UNREFERENCED_PARAMETER(p_ev_data);
+    UNREFERENCED_PARAMETER(p_ss_data);
 }
 
 static void
 array_range_proc_date(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     switch(p_stat_block->exec_array_range_id)
     {
-    case ARRAY_RANGE_SUM:
-        /* cope with dates and times within a SUM by calling the add routine */
-        array_range_proc_item_add(p_stat_block, p_ev_data);
-        p_stat_block->count += 1;
-        break;
-
     case ARRAY_RANGE_MAX:
-        if((0 == p_stat_block->count) || (ss_data_compare(&p_stat_block->running_data, p_ev_data) < 0))
-            p_stat_block->running_data = *p_ev_data;
+        if((0 == p_stat_block->count) || (ss_data_compare(&p_stat_block->running_data, p_ss_data) < 0))
+            p_stat_block->running_data = *p_ss_data;
         p_stat_block->count += 1;
         break;
 
     case ARRAY_RANGE_MIN:
-        if((0 == p_stat_block->count) || (ss_data_compare(&p_stat_block->running_data, p_ev_data) > 0))
-            p_stat_block->running_data = *p_ev_data;
+        if((0 == p_stat_block->count) || (ss_data_compare(&p_stat_block->running_data, p_ss_data) > 0))
+            p_stat_block->running_data = *p_ss_data;
+        p_stat_block->count += 1;
+        break;
+
+    case ARRAY_RANGE_SUM:
+        /* cope with dates and times within a SUM by calling the add routine */
+        array_range_proc_item_add(p_stat_block, p_ss_data);
         p_stat_block->count += 1;
         break;
 
@@ -1259,38 +1374,68 @@ array_range_proc_date(
 }
 
 _Check_return_
+static bool
+array_range_proc_number_integer_MAX(
+    P_STAT_BLOCK p_stat_block,
+    PC_SS_DATA p_ss_data)
+{
+    if( (0 == p_stat_block->count) || (ss_data_get_integer(p_ss_data) > ss_data_get_integer(&p_stat_block->running_data)) )
+        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
+
+    return(true);
+}
+
+_Check_return_
+static bool
+array_range_proc_number_integer_MIN(
+    P_STAT_BLOCK p_stat_block,
+    PC_SS_DATA p_ss_data)
+{
+    if( (0 == p_stat_block->count) || (ss_data_get_integer(p_ss_data) < ss_data_get_integer(&p_stat_block->running_data)) )
+        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
+
+    return(true);
+}
+
+_Check_return_
+static bool
+array_range_proc_number_integer_sum(
+    P_STAT_BLOCK p_stat_block,
+    PC_SS_DATA p_ss_data)
+{
+    /* only dealing with individual narrower integer types here but SKS shows this may eventually overflow WORD16 */
+    if(0 == p_stat_block->count)
+        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data));
+    else
+        ss_data_set_integer(&p_stat_block->running_data, ss_data_get_integer(p_ss_data) + ss_data_get_integer(&p_stat_block->running_data));
+
+    return(true);
+}
+
+_Check_return_
 static BOOL
 array_range_proc_number_try_integer(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
-    BOOL int_done = 0;
+    bool int_done = false;
 
     switch(p_stat_block->exec_array_range_id)
     {
-    default: default_unhandled();
-        break;
-
     case ARRAY_RANGE_MAX:
-        if((0 == p_stat_block->count) || (p_ev_data->arg.integer > p_stat_block->running_data.arg.integer))
-            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer);
-        int_done = 1;
+        int_done = array_range_proc_number_integer_MAX(p_stat_block, p_ss_data);
         break;
 
     case ARRAY_RANGE_MIN:
-        if((0 == p_stat_block->count) || (p_ev_data->arg.integer < p_stat_block->running_data.arg.integer))
-            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer);
-        int_done = 1;
+        int_done = array_range_proc_number_integer_MIN(p_stat_block, p_ss_data);
         break;
 
     case ARRAY_RANGE_SUM:
     case ARRAY_RANGE_AVERAGE:
-        /* only dealing with individual narrower integer types here but SKS shows this may eventually overflow WORD16 */
-        if(0 == p_stat_block->count)
-            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer);
-        else
-            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer + p_stat_block->running_data.arg.integer);
-        int_done = 1;
+        int_done = array_range_proc_number_integer_sum(p_stat_block, p_ss_data);
+        break;
+
+    default: default_unhandled();
         break;
     }
 
@@ -1303,9 +1448,85 @@ array_range_proc_number_try_integer(
 }
 
 static void
+array_range_proc_number_MAX(
+    P_STAT_BLOCK p_stat_block,
+    P_SS_DATA p_ss_data)
+{
+    if( (0 == p_stat_block->count) || (ss_data_get_real(p_ss_data) > ss_data_get_real(&p_stat_block->running_data)) )
+        ss_data_set_real(&p_stat_block->running_data, ss_data_get_real(p_ss_data));
+}
+
+static void
+array_range_proc_number_MIN(
+    P_STAT_BLOCK p_stat_block,
+    P_SS_DATA p_ss_data)
+{
+    if( (0 == p_stat_block->count) || (ss_data_get_real(p_ss_data) < ss_data_get_real(&p_stat_block->running_data)) )
+        ss_data_set_real(&p_stat_block->running_data, ss_data_get_real(p_ss_data));
+}
+
+static void
+array_range_proc_number_sum(
+    P_STAT_BLOCK p_stat_block,
+    P_SS_DATA p_ss_data)
+{
+    if(p_stat_block->running_data.data_id == DATA_ID_REAL)
+    {
+        if(0 == p_stat_block->count)
+            ss_data_set_real(&p_stat_block->running_data, ss_data_get_real(p_ss_data));
+        else
+            p_stat_block->running_data.arg.fp += ss_data_get_real(p_ss_data);
+    }
+    else
+        array_range_proc_item_add(p_stat_block, p_ss_data);
+}
+
+static void
+array_range_proc_number_standard_deviation(
+    P_STAT_BLOCK p_stat_block,
+    P_SS_DATA p_ss_data)
+{
+    const F64 x2 = ss_data_get_real(p_ss_data) * ss_data_get_real(p_ss_data);
+
+    if(0 == p_stat_block->count)
+    {
+        p_stat_block->sum_x2 = x2;
+        p_stat_block->running_data.arg.fp  = ss_data_get_real(p_ss_data);
+    }
+    else
+    {
+        p_stat_block->sum_x2 += x2;
+        p_stat_block->running_data.arg.fp += ss_data_get_real(p_ss_data);
+    }
+}
+
+static void
+array_range_proc_number_NPV(
+    P_STAT_BLOCK p_stat_block,
+    P_SS_DATA p_ss_data)
+{
+    npv_item(p_ss_data, &p_stat_block->count, &p_stat_block->parm, &p_stat_block->temp, &p_stat_block->running_data.arg.fp);
+
+    p_stat_block->count -= 1;
+}
+
+static void
+array_range_proc_number_MIRR(
+    P_STAT_BLOCK p_stat_block,
+    P_SS_DATA p_ss_data)
+{
+    if(ss_data_get_real(p_ss_data) >= 0.0)
+        npv_item(p_ss_data, &p_stat_block->count1, &p_stat_block->parm1, &p_stat_block->temp1, &p_stat_block->result1);
+    else
+        npv_item(p_ss_data, &p_stat_block->count,  &p_stat_block->parm,  &p_stat_block->temp,  &p_stat_block->running_data.arg.fp);
+
+    p_stat_block->count -= 1;
+}
+
+static void
 array_range_proc_number(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     BOOL size_worry = FALSE;
 
@@ -1320,71 +1541,42 @@ array_range_proc_number(
         break;
     }
 
-    if(TWO_INTS == two_nums_type_match(p_ev_data, &p_stat_block->running_data, size_worry))
-        if(array_range_proc_number_try_integer(p_stat_block, p_ev_data))
+    if(TWO_INTS == two_nums_type_match(p_ss_data, &p_stat_block->running_data, size_worry))
+        if(array_range_proc_number_try_integer(p_stat_block, p_ss_data))
             return;
 
     /* two_nums_type_match will have promoted */
-    assert(RPN_DAT_REAL == p_ev_data->did_num);
-    assert(RPN_DAT_REAL == p_stat_block->running_data.did_num);
+    assert(ss_data_is_number(p_ss_data));
+    assert(ss_data_is_number(&p_stat_block->running_data));
 
     switch(p_stat_block->exec_array_range_id)
     {
     case ARRAY_RANGE_MAX:
-        if((0 == p_stat_block->count) || (p_ev_data->arg.fp > p_stat_block->running_data.arg.fp))
-            p_stat_block->running_data.arg.fp = p_ev_data->arg.fp;
+        array_range_proc_number_MAX(p_stat_block, p_ss_data);
         break;
 
     case ARRAY_RANGE_MIN:
-        if((0 == p_stat_block->count) || (p_ev_data->arg.fp < p_stat_block->running_data.arg.fp))
-            p_stat_block->running_data.arg.fp = p_ev_data->arg.fp;
+        array_range_proc_number_MIN(p_stat_block, p_ss_data);
         break;
 
     case ARRAY_RANGE_SUM:
     case ARRAY_RANGE_AVERAGE:
-        if(p_stat_block->running_data.did_num == RPN_DAT_REAL)
-        {
-            if(0 == p_stat_block->count)
-                p_stat_block->running_data.arg.fp  = p_ev_data->arg.fp;
-            else
-                p_stat_block->running_data.arg.fp += p_ev_data->arg.fp;
-        }
-        else
-            array_range_proc_item_add(p_stat_block, p_ev_data);
+        array_range_proc_number_sum(p_stat_block, p_ss_data);
         break;
 
     case ARRAY_RANGE_STD:
     case ARRAY_RANGE_STDP:
     case ARRAY_RANGE_VAR:
     case ARRAY_RANGE_VARP:
-        {
-        const F64 x2 = p_ev_data->arg.fp * p_ev_data->arg.fp;
-
-        if(0 == p_stat_block->count)
-        {
-            p_stat_block->sum_x2 = x2;
-            p_stat_block->running_data.arg.fp = p_ev_data->arg.fp;
-        }
-        else
-        {
-            p_stat_block->sum_x2 += x2;
-            p_stat_block->running_data.arg.fp += p_ev_data->arg.fp;
-        }
-
+        array_range_proc_number_standard_deviation(p_stat_block, p_ss_data);
         break;
-        }
 
     case ARRAY_RANGE_NPV:
-        npv_item(p_ev_data, &p_stat_block->count, &p_stat_block->parm, &p_stat_block->temp, &p_stat_block->running_data.arg.fp);
-        p_stat_block->count -= 1;
+        array_range_proc_number_NPV(p_stat_block, p_ss_data);
         break;
 
     case ARRAY_RANGE_MIRR:
-        if(p_ev_data->arg.fp >= 0)
-            npv_item(p_ev_data, &p_stat_block->count1, &p_stat_block->parm1, &p_stat_block->temp1, &p_stat_block->result1);
-        else
-            npv_item(p_ev_data, &p_stat_block->count,  &p_stat_block->parm,  &p_stat_block->temp,  &p_stat_block->running_data.arg.fp);
-        p_stat_block->count -= 1;
+        array_range_proc_number_MIRR(p_stat_block, p_ss_data);
         break;
 
     default: default_unhandled();
@@ -1402,9 +1594,9 @@ array_range_proc_number(
 static void
 array_range_proc_others(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
-    UNREFERENCED_PARAMETER(p_ev_data);
+    UNREFERENCED_PARAMETER(p_ss_data);
 
     p_stat_block->count_a += 1;
 }
@@ -1412,11 +1604,11 @@ array_range_proc_others(
 static void
 array_range_proc_string(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
-    if(!ss_string_is_blank(p_ev_data))
+    if(!ss_string_is_blank(p_ss_data))
     {
-        array_range_proc_others(p_stat_block, p_ev_data);
+        array_range_proc_others(p_stat_block, p_ss_data);
         return;
     }
 }
@@ -1424,31 +1616,31 @@ array_range_proc_string(
 static void
 array_range_proc_item(
     P_STAT_BLOCK p_stat_block,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
-    switch(p_ev_data->did_num)
+    switch(ss_data_get_data_id(p_ss_data))
     {
-    case RPN_DAT_REAL:
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
-        array_range_proc_number(p_stat_block, p_ev_data);
+    case DATA_ID_REAL:
+    case DATA_ID_LOGICAL:
+    case DATA_ID_WORD16:
+    case DATA_ID_WORD32:
+        array_range_proc_number(p_stat_block, p_ss_data);
         break;
 
-    case RPN_DAT_DATE:
-        array_range_proc_date(p_stat_block, p_ev_data);
+    case DATA_ID_DATE:
+        array_range_proc_date(p_stat_block, p_ss_data);
         break;
 
-    case RPN_DAT_BLANK:
-        array_range_proc_blank(p_stat_block, p_ev_data);
+    case DATA_ID_BLANK:
+        array_range_proc_blank(p_stat_block, p_ss_data);
         break;
 
     case RPN_DAT_STRING:
-        array_range_proc_string(p_stat_block, p_ev_data);
+        array_range_proc_string(p_stat_block, p_ss_data);
         break;
 
     default:
-        array_range_proc_others(p_stat_block, p_ev_data);
+        array_range_proc_others(p_stat_block, p_ss_data);
         break;
     }
 }
@@ -1462,7 +1654,7 @@ array_range_proc_item(
 extern void
 dbase_sub_function(
     P_STACK_DBASE p_stack_dbase,
-    P_EV_DATA cond_flagp)
+    P_SS_DATA cond_flagp)
 {
     EV_SLR cur_slot;
 
@@ -1471,10 +1663,10 @@ dbase_sub_function(
     cur_slot.row += p_stack_dbase->offset.row;
 
     /* work out state of condition */
-    if((arg_normalise(cond_flagp, EM_REA, NULL, NULL) == RPN_DAT_REAL) &&
-       (cond_flagp->arg.fp != 0.0))
+    if( (arg_normalise(cond_flagp, EM_REA, NULL, NULL) == DATA_ID_REAL) &&
+        (ss_data_get_real(cond_flagp) != 0.0) )
     {
-        EV_DATA data;
+        SS_DATA data;
 
 #if TRACE_ALLOWED
         if_constant(tracing(TRACE_MODULE_EVAL))
@@ -1506,10 +1698,10 @@ dbase_sub_function(
 
 extern void
 dbase_sub_function_finish(
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     P_STACK_DBASE p_stack_dbase)
 {
-    array_range_proc_finish(p_ev_data, p_stack_dbase->p_stat_block);
+    array_range_proc_finish(p_ss_data, p_stack_dbase->p_stat_block);
 }
 
 /******************************************************************************
@@ -1526,28 +1718,28 @@ dbase_sub_function_finish(
 extern S32
 lookup_array_range_proc(
     P_LOOKUP_BLOCK lkbp,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     S32 res = 0;
 
-    switch(p_ev_data->did_num)
+    switch(ss_data_get_data_id(p_ss_data))
     {
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
         lkbp->in_array = 1;
-        res = lookup_array_range_proc_array(lkbp, p_ev_data);
+        res = lookup_array_range_proc_array(lkbp, p_ss_data);
         break;
 
-    case RPN_DAT_RANGE:
+    case DATA_ID_RANGE:
         {
-        if(lkbp->in_range || range_scan_init(&p_ev_data->arg.range, &lkbp->rsb) >= 0)
+        if(lkbp->in_range || range_scan_init(&p_ss_data->arg.range, &lkbp->rsb) >= 0)
         {
-            EV_DATA element;
+            SS_DATA element;
 
             lkbp->in_range = 0;
             while(range_scan_element(&lkbp->rsb, &element, EM_REA | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_INT) != RPN_FRM_END)
             {
-                switch(element.did_num)
+                switch(element.data_id)
                 {
                 case RPN_TMP_ARRAY:
                 case RPN_RES_ARRAY:
@@ -1559,7 +1751,7 @@ lookup_array_range_proc(
                     {
                         /* save position */
                         lkbp->result_data.arg.slr = lkbp->rsb.slr_of_result;
-                        lkbp->result_data.did_num = RPN_DAT_SLR;
+                        lkbp->result_data.data_id = DATA_ID_SLR;
                         lkbp->had_one = 1;
                     }
                     else
@@ -1584,9 +1776,9 @@ lookup_array_range_proc(
         }
 
     default:
-        if((res = lookup_array_range_proc_item(lkbp, p_ev_data)) >= 0)
+        if((res = lookup_array_range_proc_item(lkbp, p_ss_data)) >= 0)
         {
-            lkbp->result_data = *p_ev_data;
+            lkbp->result_data = *p_ss_data;
             lkbp->had_one = 1;
         }
         else
@@ -1613,18 +1805,18 @@ lookup_array_range_proc(
 static S32
 lookup_array_range_proc_array(
     P_LOOKUP_BLOCK lkbp,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     S32 res = 0;
     ARRAY_SCAN_BLOCK asb;
 
-    if(array_scan_init(&asb, p_ev_data))
+    if(array_scan_init(&asb, p_ss_data))
     {
-        EV_DATA element;
+        SS_DATA element;
 
         while(array_scan_element(&asb, &element, EM_REA | EM_STR | EM_DAT | EM_AR0 | EM_BLK | EM_INT) != RPN_FRM_END)
         {
-            if(element.did_num == RPN_DAT_BLANK)
+            if(element.data_id == DATA_ID_BLANK)
                 continue;
 
             if((res = lookup_array_range_proc_item(lkbp, &element)) >= 0)
@@ -1657,7 +1849,7 @@ lookup_array_range_proc_array(
 static S32
 lookup_array_range_proc_item(
     P_LOOKUP_BLOCK lkbp,
-    P_EV_DATA p_ev_data)
+    P_SS_DATA p_ss_data)
 {
     S32 res;
 
@@ -1677,7 +1869,7 @@ lookup_array_range_proc_item(
         S32 match;
 
         /* SKS 22oct96 for PD 4.50 reversed to make wildcard lookups work */
-        if(0 == (match = ss_data_compare(p_ev_data, &lkbp->target_data)))
+        if(0 == (match = ss_data_compare(p_ss_data, &lkbp->target_data)))
             res = 1;
         else
         {
@@ -1705,15 +1897,15 @@ lookup_array_range_proc_item(
 extern void
 lookup_block_init(
     P_LOOKUP_BLOCK lkbp,
-    _InRef_opt_ P_EV_DATA p_ev_data_target,
+    _InRef_opt_ P_SS_DATA p_ss_data_target,
     S32 lookup_id,
     S32 choose_count,
     S32 match)
 {
-    if(p_ev_data_target)
-        ss_data_resource_copy(&lkbp->target_data, p_ev_data_target);
+    if(p_ss_data_target)
+        ss_data_resource_copy(&lkbp->target_data, p_ss_data_target);
     else
-        lkbp->target_data.did_num = RPN_DAT_BLANK;
+        lkbp->target_data.data_id = DATA_ID_BLANK;
 
     lkbp->lookup_id = lookup_id;
     lkbp->choose_count = choose_count;
@@ -1748,53 +1940,53 @@ lookup_block_init(
 
 extern void
 lookup_finish(
-    P_EV_DATA p_ev_data_res,
+    P_SS_DATA p_ss_data_res,
     P_STACK_LOOKUP p_stack_lookup)
 {
     switch(p_stack_lookup->p_lookup_block->lookup_id)
     {
     case LOOKUP_LOOKUP:
         {
-        EV_DATA data;
+        SS_DATA data;
 
         array_range_mono_index(&data,
                                &p_stack_lookup->arg2,
                                p_stack_lookup->p_lookup_block->count - 1,
                                EM_REA | EM_SLR | EM_STR | EM_DAT | EM_BLK | EM_INT);
         /* MRJC 27.3.92 */
-        ss_data_resource_copy(p_ev_data_res, &data);
+        ss_data_resource_copy(p_ss_data_res, &data);
         break;
         }
 
     case LOOKUP_HLOOKUP:
         {
-        if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
+        if(p_stack_lookup->p_lookup_block->result_data.data_id != DATA_ID_SLR)
+            ss_data_set_error(p_ss_data_res, EVAL_ERR_UNEXARRAY);
         else
         {
-            ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
-            p_ev_data_res->arg.slr.row += (EV_ROW) p_stack_lookup->arg2.arg.integer;
+            ss_data_resource_copy(p_ss_data_res, &p_stack_lookup->p_lookup_block->result_data);
+            p_ss_data_res->arg.slr.row += (EV_ROW) ss_data_get_integer(&p_stack_lookup->arg2);
         }
         break;
         }
 
     case LOOKUP_VLOOKUP:
         {
-        if(p_stack_lookup->p_lookup_block->result_data.did_num != RPN_DAT_SLR)
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_UNEXARRAY);
+        if(p_stack_lookup->p_lookup_block->result_data.data_id != DATA_ID_SLR)
+            ss_data_set_error(p_ss_data_res, EVAL_ERR_UNEXARRAY);
         else
         {
-            ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
-            p_ev_data_res->arg.slr.col += (EV_COL) p_stack_lookup->arg2.arg.integer;
+            ss_data_resource_copy(p_ss_data_res, &p_stack_lookup->p_lookup_block->result_data);
+            p_ss_data_res->arg.slr.col += (EV_COL) ss_data_get_integer(&p_stack_lookup->arg2);
         }
         break;
         }
 
     case LOOKUP_MATCH:
         if(p_stack_lookup->p_lookup_block->in_array)
-            ev_data_set_integer(p_ev_data_res, p_stack_lookup->p_lookup_block->count);
+            ss_data_set_integer(p_ss_data_res, p_stack_lookup->p_lookup_block->count);
         else
-            ss_data_resource_copy(p_ev_data_res, &p_stack_lookup->p_lookup_block->result_data);
+            ss_data_resource_copy(p_ss_data_res, &p_stack_lookup->p_lookup_block->result_data);
         break;
     }
 }
@@ -1807,9 +1999,9 @@ lookup_finish(
 
 static EV_IDNO
 npv_calc(
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     P_F64 intp,
-    P_EV_DATA array)
+    P_SS_DATA array)
 {
     STAT_BLOCK stb;
 
@@ -1817,9 +2009,9 @@ npv_calc(
 
     array_range_proc(&stb, array);
 
-    array_range_proc_finish(p_ev_data, &stb);
+    array_range_proc_finish(p_ss_data, &stb);
 
-    return(p_ev_data->did_num);
+    return(ss_data_get_data_id(p_ss_data));
 }
 
 /******************************************************************************
@@ -1830,21 +2022,21 @@ npv_calc(
 
 static void
 npv_item(
-    P_EV_DATA p_ev_data,
+    P_SS_DATA p_ss_data,
     P_S32 p_count,
     P_F64 p_parm,
     P_F64 p_temp,
     P_F64 p_result)
 {
-    if(!*p_count)
+    if(0 == *p_count)
     {
-        *p_temp    = *p_parm;                       /* interest */
-        *p_result  = p_ev_data->arg.fp / *p_parm;   /* interest */
+        *p_temp    = *p_parm;                               /* interest */
+        *p_result  = ss_data_get_real(p_ss_data) / *p_parm; /* interest */
     }
     else
     {
-        *p_temp   *= *p_parm;                       /* interest */
-        *p_result += p_ev_data->arg.fp / *p_temp;
+        *p_temp   *= *p_parm;                               /* interest */
+        *p_result += ss_data_get_real(p_ss_data) / *p_temp;
     }
 
     *p_count += 1;
@@ -1855,6 +2047,15 @@ npv_item(
 * initialise stats data block
 *
 ******************************************************************************/
+
+static void
+stat_block_init_real(
+    _InoutRef_  P_STAT_BLOCK p_stat_block,
+    _InVal_     enum EXEC_ARRAY_RANGE exec_array_range_id)
+{
+    p_stat_block->exec_array_range_id = exec_array_range_id;
+    ss_data_set_real(&p_stat_block->running_data, 0.0);
+}
 
 extern void
 stat_block_init(
@@ -1873,64 +2074,16 @@ stat_block_init(
     p_stat_block->parm1       = parm1;
     p_stat_block->result1     = 0;
 
+    ss_data_set_integer(&p_stat_block->running_data, 0);
+
     switch(function_id)
     {
-    case RPN_FNV_MAX:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_MAX;
-        ev_data_set_integer(&p_stat_block->running_data, 0);
-        break;
-
-    case RPN_FNV_MIN:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_MIN;
-        ev_data_set_integer(&p_stat_block->running_data, 0);
-        break;
-
-    case RPN_FNV_SUM:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_SUM;
-        ev_data_set_integer(&p_stat_block->running_data, 0);
-        break;
-
-    case RPN_FNV_AVG:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_AVERAGE;
-        ev_data_set_integer(&p_stat_block->running_data, 0);
-        break;
-
-    case RPN_FNF_NPV:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_NPV;
-        ev_data_set_real(&p_stat_block->running_data, 0.0);
-        break;
-
-    case RPN_FNF_IRR:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_IRR;
-        ev_data_set_real(&p_stat_block->running_data, 0.0);
-        break;
-
-    case RPN_FNF_MIRR:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_MIRR;
-        ev_data_set_real(&p_stat_block->running_data, 0.0);
-        break;
-
-    case RPN_FNV_STD:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_STD;
-        ev_data_set_real(&p_stat_block->running_data, 0.0);
-        break;
-
-    case RPN_FNV_STDP:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_STDP;
-        ev_data_set_real(&p_stat_block->running_data, 0.0);
-        break;
-
-    case RPN_FNV_VAR:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_VAR;
-        ev_data_set_real(&p_stat_block->running_data, 0.0);
-        break;
-
-    case RPN_FNV_VARP:
-        p_stat_block->exec_array_range_id = ARRAY_RANGE_VARP;
-        ev_data_set_real(&p_stat_block->running_data, 0.0);
-        break;
-
+    default:
+#if CHECKING
+        default_unhandled();
+        /*FALLTHRU*/
     case RPN_FNV_COUNT:
+#endif
         p_stat_block->exec_array_range_id = ARRAY_RANGE_COUNT;
         break;
 
@@ -1938,7 +2091,44 @@ stat_block_init(
         p_stat_block->exec_array_range_id = ARRAY_RANGE_COUNTA;
         break;
 
-    default: default_unhandled();
+    case RPN_FNV_MAX:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_MAX;
+        break;
+
+    case RPN_FNV_MIN:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_MIN;
+        break;
+
+    case RPN_FNV_SUM:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_SUM;
+        break;
+
+    case RPN_FNV_AVG:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_AVERAGE;
+        break;
+
+    case RPN_FNV_STD:
+        stat_block_init_real(p_stat_block, ARRAY_RANGE_STD);
+        break;
+
+    case RPN_FNV_STDP:
+        stat_block_init_real(p_stat_block, ARRAY_RANGE_STDP);
+        break;
+
+    case RPN_FNV_VAR:
+        stat_block_init_real(p_stat_block, ARRAY_RANGE_VAR);
+        break;
+
+    case RPN_FNV_VARP:
+        stat_block_init_real(p_stat_block, ARRAY_RANGE_VARP);
+        break;
+
+    case RPN_FNF_NPV:
+        stat_block_init_real(p_stat_block, ARRAY_RANGE_NPV);
+        break;
+
+    case RPN_FNF_MIRR:
+        stat_block_init_real(p_stat_block, ARRAY_RANGE_MIRR);
         break;
     }
 

@@ -1,6 +1,6 @@
---- _src	2009-05-31 18:58:59.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.620000000 +0100
-@@ -35,6 +35,7 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:38.960000000 +0100
+@@ -32,6 +32,7 @@
   * History: IDJ: 06-Feb-92: prepared for source release
   */
  
@@ -8,7 +8,7 @@
  
  #ifndef UROM
  
-@@ -66,6 +67,7 @@
+@@ -63,6 +64,7 @@
  #define typeface_icon    4
  #define weight_icon      7
  #define style_icon       10
@@ -16,7 +16,7 @@
  #define height_up_icon   15
  #define width_up_icon    16
  #define height_icon      17
-@@ -74,6 +76,17 @@
+@@ -71,6 +73,17 @@
  #define width_down_icon  20
  #define font_text_icon   21
  #define try_icon         22
@@ -34,7 +34,7 @@
  
  #define typeface_level          0
  #define weight_level            1
-@@ -93,6 +106,9 @@
+@@ -90,6 +103,9 @@
  typedef struct pane_block
  {
      int         level;
@@ -44,7 +44,7 @@
      wimp_w      handle;
      wimp_i      selection;
      int         no_icons;
-@@ -103,6 +119,10 @@
+@@ -100,6 +116,10 @@
  typedef struct global_data
  {
      font       font_handle;
@@ -55,7 +55,7 @@
      wimp_w     font_window_handle;
      pane_block *(panes_store[3]);
      double     start_width;
-@@ -185,11 +205,27 @@
+@@ -182,11 +202,27 @@
     wimp_icreate    icon_create;
     os_error        *error;
  
@@ -84,7 +84,7 @@
  
     icon_create.w = pane->handle;
     wimpt_noerr( wimp_get_icon_info( pane->handle, 0 , &icon_create.i) );
-@@ -213,9 +249,18 @@
+@@ -210,9 +246,18 @@
        y0 += dy; y1 += dy;
        icon_create.i.data.indirecttext.buffer = pane->icons[i];
        if ( (error=wimp_create_icon( &icon_create, &j )) !=NULL )
@@ -105,7 +105,7 @@
  }
  
  /* ------------------------------------------------------------- */
-@@ -251,14 +296,34 @@
+@@ -248,14 +293,34 @@
     wimp_wind       *window_block_ptr;
     wimp_wstate     window_state;
  
@@ -141,7 +141,7 @@
     {
  
        /* Show the main window */
-@@ -294,7 +359,12 @@
+@@ -291,7 +356,12 @@
  
  
        /* Attach handlers */
@@ -154,7 +154,7 @@
        win_register_event_handler( (globals->panes_store)[typeface_level]->handle, subwindow_process, (void *) (globals->panes_store)[typeface_level] );
        win_register_event_handler( (globals->panes_store)[weight_level]->handle,   subwindow_process, (void *) (globals->panes_store)[weight_level] );
        win_register_event_handler( (globals->panes_store)[style_level]->handle,    subwindow_process, (void *) (globals->panes_store)[style_level] );
-@@ -557,30 +627,42 @@
+@@ -554,30 +624,42 @@
     {
        if ((globals->panes_store)[typeface_level]->handle != -1)
        {
@@ -197,7 +197,7 @@
           globals->font_window_handle = -1;
        }
        if (globals->font_handle!=-1)
-@@ -588,6 +670,9 @@
+@@ -585,6 +667,9 @@
           font_lose(globals->font_handle);
           globals->font_handle = -1;
        }
@@ -207,7 +207,7 @@
     }
  }
  
-@@ -662,7 +747,11 @@
+@@ -659,7 +744,11 @@
     e->data.msg.hdr.your_ref = e->data.msg.hdr.my_ref;
     e->data.msg.hdr.action = wimp_MHELPREPLY;
     e->data.msg.hdr.size = 256;
@@ -219,7 +219,7 @@
     wimp_sendmessage( wimp_ESEND, &(e->data.msg), e->data.msg.hdr.task );
  }
  
-@@ -684,7 +773,11 @@
+@@ -681,7 +770,11 @@
     char            font_name[40];
     wimp_icon       icon_block;
     wimp_wstate     pane_posn;
@@ -231,7 +231,7 @@
  
     handle = handle;
  
-@@ -757,7 +850,9 @@
+@@ -754,7 +847,9 @@
                     }
                     break;
                 default:
@@ -242,7 +242,7 @@
                         fontselect_closewindows();
                     break;
             }
-@@ -773,6 +868,10 @@
+@@ -770,6 +865,10 @@
                 i = read_int( e->data.but.m.i );
                 set_int( width_icon,  i );
                 set_int( height_icon, i );
@@ -253,7 +253,7 @@
             }
             else
             {
-@@ -799,28 +898,33 @@
+@@ -796,28 +895,33 @@
                                 add_to_width( -1.0 );
                             else
                                 add_to_width( 1.0 );
@@ -292,7 +292,7 @@
                                 fontselect_closewindows();
                             break;
                     }
-@@ -832,6 +936,7 @@
+@@ -829,6 +933,7 @@
             switch (e->data.msg.hdr.action)
             {
                 case wimp_MHELPREQUEST:
@@ -300,7 +300,7 @@
                     if (e->data.msg.data.helprequest.m.i <= try_icon)
                     {
                         sprintf(buf,"FNTSELI%02d:\x01",e->data.msg.data.helprequest.m.i);
-@@ -856,12 +961,34 @@
+@@ -853,12 +958,34 @@
                                 fontselect_closewindows();
                         }
                     }
@@ -336,7 +336,7 @@
                 fontselect_closewindows();
             break;
     }
-@@ -898,6 +1025,10 @@
+@@ -895,6 +1022,10 @@
            switch (e->data.msg.hdr.action)
            {
                case wimp_MHELPREQUEST:
@@ -347,7 +347,7 @@
                    wimp_get_icon_info( e->data.msg.data.helprequest.m.w, e->data.msg.data.helprequest.m.i, &icon_block );
                    sprintf(buf, "FNTSELW%d", pane_handle->level );
                    sprintf(buf2, msgs_lookup(buf), icon_block.data.indirecttext.buffer );
-@@ -1060,12 +1191,17 @@
+@@ -1057,12 +1188,17 @@
  
     /* List the fonts. If we get an error then return */
     if (fontlist_list_all_fonts(TRUE) == NULL)
@@ -367,7 +367,7 @@
         return FALSE;
     }
  
-@@ -1075,9 +1211,9 @@
+@@ -1072,9 +1208,9 @@
  
     for  (i=typeface_level; i<=style_level; i++)
     {
@@ -379,7 +379,7 @@
             return FALSE;
         }
         (globals->panes_store)[i]->handle = -1;
-@@ -1103,7 +1239,7 @@
+@@ -1100,7 +1236,7 @@
     /* Check they have already called font_selector_init */
     if (globals == NULL)
     {

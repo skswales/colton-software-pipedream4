@@ -26,6 +26,7 @@ static MENU * command_edit(S32 ch);
 
 static void AutoRecalculation_fn(void);
 static void AutoChartRecalculation_fn(void);
+static void ChartFormat_fn(void);
 
 static void stop_macro_recorder(void);
 
@@ -904,11 +905,14 @@ choices_menu[] =
 /* need address of tickable entry */
 #define chart_recalc_option choices_menu[8]
     MIT("Chc",  SHT                                     | NEU | TCK, Auto_chart_recalculation_STR,   AutoChartRecalculation_fn, N_AutoChartRecalculation),
+/* need address of tickable entry */
+#define chart_format_option choices_menu[9]
+    MIT("Chf",  SHT                                     | NEU | TCK, New_chart_files_STR,            ChartFormat_fn,            N_ChartFormat),
 #if !defined(EXTENDED_COLOUR_WINDVARS)
     MIT("Fr",   SHT             | DLG                   | NEU,       Colours_STR,                    Colours_fn,                N_Colours),
 #endif
 /* need address of tickable entry */
-#define insert_overtype_option   choices_menu[10]
+#define insert_overtype_option   choices_menu[11]
     MIT("V",    SHT                                     | NEU | TCK, Overtype_STR,                   InsertOvertype_fn,         N_InsertOvertype),
     MIT("Bpd",  SHT             | DLG                   | NEU,       Size_of_paste_list_STR,         PasteListDepth_fn,         N_PasteListDepth),
     MSP,
@@ -1852,6 +1856,19 @@ chart_recalc_state_may_have_changed(void)
 }
 
 extern void
+chart_format_state_may_have_changed(void)
+{
+    optiontype opt;
+
+    opt = chart_format_option.flags;
+    myassert0x(opt & MF_TICKABLE, "chart format state change failed");
+    chart_format_option.flags =
+        (d_progvars[OR_CF].option)
+            ? opt |  MF_TICK_STATUS
+            : opt & ~MF_TICK_STATUS;
+}
+
+extern void
 MenuSize_fn(void)
 {
     d_menu[0].option = (optiontype) !d_menu[0].option;
@@ -1885,6 +1902,14 @@ AutoChartRecalculation_fn(void)
     d_progvars[OR_AC].option = d_progvars[OR_AC].option ^ 'A' ^ 'M'; /* swap between Auto and Manual */
 
     chart_recalc_state_may_have_changed();
+}
+
+static void
+ChartFormat_fn(void)
+{
+    d_progvars[OR_CF].option = (optiontype) !d_progvars[OR_CF].option; /* swap between New and Old (1/0) */
+
+    chart_format_state_may_have_changed();
 }
 
 static char *       macro_file_name = NULL;
@@ -2170,7 +2195,7 @@ start_macro_recorder_core(void)
         return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
     }
 
-    file_set_type(macro_recorder_file, FILETYPE_PDMACRO);
+    file_set_type(macro_recorder_file, FILETYPE_PD_MACRO);
 
     macro_recorder_on = TRUE;
 

@@ -1,6 +1,6 @@
---- _src	2009-05-31 18:58:59.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.960000000 +0100
-@@ -35,6 +35,10 @@
+--- _src	2019-07-29 19:42:18.000000000 +0100
++++ _dst	2019-07-30 11:45:39.260000000 +0100
+@@ -32,6 +32,10 @@
   *
   */
  
@@ -11,7 +11,7 @@
  #include <string.h>
  #include <stdio.h>
  
-@@ -81,7 +85,7 @@
+@@ -78,7 +82,7 @@
  static int xferrecv_msgid ;
  
  static int scrap_ref = 0 ;
@@ -20,7 +20,7 @@
  
  int xferrecv_checkinsert(char **filename)
  {
-@@ -174,7 +178,7 @@
+@@ -171,7 +175,7 @@
    tracef2("xferrecv_checkimport returning filetype %x from %d\n",
             e->data.msg.data.datasave.type,xferrecv_sendertask) ;
  
@@ -29,7 +29,7 @@
   }
   else return -1 ;
  }
-@@ -186,7 +190,7 @@
+@@ -183,7 +187,7 @@
   int size = xferrecv_ack.data.ramfetch.nbytes ;
   int action = xferrecv_ack.hdr.action ;
  
@@ -38,7 +38,7 @@
            (int) xferrecv_buffer,xferrecv_buffersize) ;
  
   xferrecv_ack.hdr.action = wimp_MRAMFETCH ;
-@@ -209,7 +213,7 @@
+@@ -206,7 +210,7 @@
   handle = handle ;
  
  #if TRACE
@@ -47,7 +47,7 @@
           e->data.msg.hdr.action,e->data.msg.hdr.my_ref,
           e->data.msg.hdr.your_ref,xferrecv_msgid) ;
  #endif
-@@ -266,7 +270,7 @@
+@@ -263,7 +267,7 @@
     os_swix(OS_ReadVarVal+os_X, &r) ;
  
     if (r.r[2]==0)
@@ -56,7 +56,7 @@
     else
     {
      strcpy(xferrecv_ack.data.datasaveok.name, "<Wimp$Scrap>") ;
-@@ -278,7 +282,7 @@
+@@ -275,7 +279,7 @@
    else
    {
     tracef0("tell the user the protocol fell down\n") ;
@@ -65,7 +65,7 @@
    }
    xferrecv_state = xferrecv_state_Broken ;
   }
-@@ -289,6 +293,7 @@
+@@ -286,6 +290,7 @@
  
  int xferrecv_doimport(char *buf, int size, xferrecv_buffer_processor p)
  {
@@ -73,7 +73,7 @@
  
  /* Receives data into the buffer; calls the buffer processor if the buffer
     given becomes full. Returns TRUE if the transaction completed sucessfully.
-@@ -300,9 +305,11 @@
+@@ -297,9 +302,11 @@
   xferrecv_processbuff = p ;
   xferrecv_buffer = buf ;
   xferrecv_buffersize = size ;
@@ -87,7 +87,7 @@
  
   do
   {
-@@ -319,4 +326,58 @@
+@@ -316,4 +323,58 @@
   return xferrecv__fileissafe ;
  }
  

@@ -535,7 +535,7 @@ create_sup_dep_submenu(
         EV_OPTBLOCK optblock;
         EV_DEPSUP   depsup;
         S32         itemno;
-        EV_DATA     evdata;
+        SS_DATA     ss_data;
         P_CELL      p_cell;
         char        namebuf[EV_MAX_IN_LEN + 1];         /* Large buffer cos cell may be external */
         char        valubuf[LIN_BUFSIZ + 1];
@@ -547,21 +547,21 @@ create_sup_dep_submenu(
         ev_enum_dep_sup_init(&depsup, slrp, submenucontents_category, get_deps);
 
         for(itemno = -1;
-            (ev_enum_dep_sup_get(&depsup, &itemno, &evdata) >= 0);
+            (ev_enum_dep_sup_get(&depsup, &itemno, &ss_data) >= 0);
             itemno = -1
            )
         {
-            ev_decode_data(namebuf, cur_docno, &evdata, &optblock);
+            ev_decode_data(namebuf, cur_docno, &ss_data, &optblock);
 
-            if(evdata.did_num == RPN_DAT_SLR)
+            if(ss_data.data_id == DATA_ID_SLR)
             {
-                p_cell = travel_externally(evdata.arg.slr.docno,
-                                          (COL) evdata.arg.slr.col,
-                                          (ROW) evdata.arg.slr.row);
+                p_cell = travel_externally(ss_data.arg.slr.docno,
+                                          (COL) ss_data.arg.slr.col,
+                                          (ROW) ss_data.arg.slr.row);
                 if(p_cell)
                 {
                     (void) expand_cell(
-                                evdata.arg.slr.docno, p_cell, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ,
+                                ss_data.arg.slr.docno, p_cell, (ROW) ss_data.arg.slr.row, valubuf, LIN_BUFSIZ,
                                 DEFAULT_EXPAND_REFS /*expand_refs*/,
                                 EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
                                 EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
@@ -985,7 +985,7 @@ goto_dep_or_sup_cell(
     EV_DOCNO    cur_docno;
     EV_OPTBLOCK optblock;
     EV_DEPSUP   depsup;
-    EV_DATA     evdata;
+    SS_DATA     evdata;
 
     trace_0(TRACE_APP_EXPEDIT, "goto_dep_or_sup_cell");
 
@@ -999,7 +999,7 @@ goto_dep_or_sup_cell(
     {
     /*    ev_decode_data(namebuf, curdoc, &evdata, &optblock);*/
 
-        if(evdata.did_num == RPN_DAT_SLR)
+        if(evdata.data_id == DATA_ID_SLR)
         {
             trace_3(TRACE_APP_EXPEDIT, "goto - docno,col,row (%u,%d,%d)",
                                       evdata.arg.slr.docno,
@@ -1376,15 +1376,15 @@ new_font_leading_based_on_field(
 static void
 pdfontselect_try_me(
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     _HwndRef_   HOST_WND window_handle)
 {
     if(pdfontselect.docno != DOCNO_NONE)
     {
         DOCNO old_docno = change_document_using_docno(pdfontselect.docno);
-        S32 font_x = (S32) (*width  * 16.0);
-        S32 font_y = (S32) (*height * 16.0);
+        S32 font_x = (S32) (width  * 16.0);
+        S32 font_y = (S32) (height * 16.0);
 
         /* printer font selection; may unset riscos_fonts on error in repaint */
         if(font_name && (0 != _stricmp(font_name, "System")))
@@ -1526,9 +1526,9 @@ bump_line_height(
 static void
 show_new_auto_line_height(
     _HwndRef_   HOST_WND window_handle,
-    _InRef_    PC_F64 height)
+    _InVal_     F64 height)
 {
-    F64 dleading = *height * 1.2;
+    const double dleading = height * 1.2;
 
     winf_setdouble(window_handle, FONT_LEADING, &dleading, 2);
 }
@@ -1561,8 +1561,8 @@ pdfontselect_init_fn(
 static void
 pdfontselect_unknown_event_Mouse_Click(
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     const WimpMouseClickEvent * const mouse_click,
     BOOL try_anyway)
 {
@@ -1601,8 +1601,8 @@ pdfontselect_unknown_event_Mouse_Click(
 static void
 pdfontselect_unknown_event_Key_Pressed(
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     const WimpKeyPressedEvent * const key_pressed,
     BOOL try_anyway)
 {
@@ -1620,8 +1620,8 @@ pdfontselect_unknown_event_Key_Pressed(
 static BOOL
 pdfontselect_unknown_fn(
     const char * font_name,
-    PC_F64 width,
-    PC_F64 height,
+    _InVal_     F64 width,
+    _InVal_     F64 height,
     const wimp_eventstr * e,
     P_ANY try_handle,
     BOOL try_anyway)
@@ -1688,8 +1688,8 @@ PrinterFont_fn(void)
     fontselect_process(Printer_font_STR,                         /* win title */
                        fontselect_SETFONT | fontselect_SETTITLE, /* flags */
                        global_font,                              /* font_name */
-                       &width,                                   /* font width */
-                       &height,                                  /* font height */
+                       width,                                    /* font width */
+                       height,                                   /* font height */
                        pdfontselect_init_fn, NULL,
                        pdfontselect_unknown_fn, NULL);
 
@@ -1732,8 +1732,8 @@ InsertFont_fn(void)
     fontselect_process(Insert_font_STR,                          /* win title */
                        fontselect_SETFONT | fontselect_SETTITLE, /* flags */
                        global_font,                              /* font_name */
-                       &width,                                   /* font width */
-                       &height,                                  /* font height */
+                       width,                                    /* font width */
+                       height,                                   /* font height */
                        NULL, NULL,
                        pdfontselect_unknown_fn, NULL);
 

@@ -1,6 +1,6 @@
---- _src	2009-05-31 18:58:59.000000000 +0100
-+++ _dst	2016-09-16 14:50:26.710000000 +0100
-@@ -41,6 +41,8 @@
+--- _src	2019-07-29 19:20:28.000000000 +0100
++++ _dst	2019-07-30 11:45:39.030000000 +0100
+@@ -38,6 +38,8 @@
  #define TRUE 1
  #define FALSE 0
  
@@ -9,7 +9,7 @@
  #include <stdio.h>
  #include <string.h>
  
-@@ -59,6 +61,11 @@
+@@ -56,6 +58,11 @@
    programname = a;
  }
  
@@ -21,7 +21,7 @@
  
  BOOL res_findname(const char *leafname, char *buf /*out*/)
  {
-@@ -91,6 +98,37 @@
+@@ -88,6 +95,37 @@
    return TRUE;
  }
  
@@ -59,7 +59,7 @@
  BOOL res_prefixnamewithpath(const char *leafname, char *buf /*out*/)
  {
  #ifndef UROM
-@@ -103,6 +141,9 @@
+@@ -100,6 +138,9 @@
    {
      strcpy(buf, programname);
      strcat(buf, ":");
@@ -69,7 +69,7 @@
      strcat(buf, leafname);
    }
    return TRUE;
-@@ -118,11 +159,17 @@
+@@ -115,11 +156,17 @@
    else
  #endif
    {
@@ -87,7 +87,7 @@
  #ifndef UROM
  FILE *res_openfile(const char *leafname, const char *mode)
  
-@@ -145,5 +192,6 @@
+@@ -142,5 +189,6 @@
  }
  #endif
  

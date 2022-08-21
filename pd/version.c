@@ -18,10 +18,13 @@
  * Build.r32.RiscPkg.Control
  */
 
-#define Version      "4.56.02"
-#define CurrentDate  "19-Mar-2019"
+#define HexVersion   0x45700
+#define Version      "4.57"
+#define CurrentDate  "20-Dec-2019"
 
 /*
+* 20 Dec 2019 - 4.57
+* 16 Aug 2019 - 4.57 Don't think anyone got this preview
 * 19 Mar 2019 - 4.56.02
 * 21 Dec 2018 - 4.56.01
 * 17 Dec 2018 - 4.56
@@ -91,6 +94,8 @@
 */
 
 #include "version_x.h"
+
+const int hexversion = HexVersion;
 
 const char applicationversion[] = Version " (" CurrentDate ")";
 

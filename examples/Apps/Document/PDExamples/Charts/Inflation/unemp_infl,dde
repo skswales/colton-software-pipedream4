@@ -9,7 +9,7 @@
 %OP%FS13000
 %OP%PT1
 %OP%PDDefault
-%OP%WC30,1240,88,1320,2,3,0,0
+%OP%WC30,1240,12,1320,2,3,0,0
 %OP%LC0,3
 %CO:A,5,67%%C%@F:Homerton.Bold,14@Economic well-being 1991
 

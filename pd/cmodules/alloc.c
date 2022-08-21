@@ -1885,7 +1885,7 @@ riscos_ptr_alloc(
     /* scan free list for first fit */
     p_free_block.v = p_free_offset = &heap->free;
 
-    while(NULL != (next_free_offset = *p_free_offset))
+    while(0 != (next_free_offset = *p_free_offset))
     {
         assert(next_free_offset < heap->size);
         p_free_block.c += next_free_offset;
@@ -1950,7 +1950,7 @@ riscos_ptr_free(
     /* scan free list for insertion/coalescing */
     p_free_block.v = p_free_offset = &heap->free;
 
-    while(NULL != (next_free_offset = *p_free_offset))
+    while(0 != (next_free_offset = *p_free_offset))
     {
         assert(next_free_offset < heap->size);
         p_free_block.c += next_free_offset;

@@ -137,11 +137,11 @@ linest_solve_system(
     P_F64 X /*[m]*/ /*out*/,
     _InVal_     U32 m)
 {
+    STATUS status = STATUS_OK;
     F64 det_A;
     U32 j;
-    STATUS status;
 
-    status_return(status = data_in_columns_determinant(A, m, &det_A));
+    status_return(data_in_columns_determinant(A, m, &det_A));
 
     if(det_A == 0.0)
         return(EVAL_ERR_MATRIX_SINGULAR); /* insoluble */
@@ -244,7 +244,7 @@ linest(
 
         /* output the result vector */
         for(i = 0; i < m; ++i)
-            if(status_fail(put_status = (* p_proc_put) (client_handle, LINEST_A_COLOFF, i, &X[i])))
+            if(status_fail(put_status = (* p_proc_put) (client_handle, LINEST_A_COLOFF, i, X[i])))
                 if(status_ok(status))
                     status = put_status;
                 /* but keep looping anyway? */

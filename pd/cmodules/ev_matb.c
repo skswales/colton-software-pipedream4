@@ -18,30 +18,231 @@
 /* local header file */
 #include "ev_evali.h"
 
-#if __STDC_VERSION__ < 199901L
-
-#if WINDOWS
-
-#ifndef                   __mathnums_h
-#include "cmodules/coltsoft/mathnums.h" /* for _log2_e */
-#endif
-
-_Check_return_
-static double
-log2(_InVal_ double d)
-{
-    return(log(d) * _log2_e);
-}
-
-#endif /* OS */
-
-#endif /* __STDC_VERSION__ */
-
 /******************************************************************************
 *
 * More mathematical functions for OpenDocument / Microsoft Excel support
 *
 ******************************************************************************/
+
+/******************************************************************************
+*
+* STRING base(n, radix {, minimum_length})
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_base)
+{
+    STATUS status = STATUS_OK;
+    S32 radix;
+    S32 minimum_length = 1;
+    S32 i;
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 64);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 64);
+    quick_ublock_with_buffer_setup(quick_ublock_format);
+    quick_ublock_with_buffer_setup(quick_ublock_result);
+
+    exec_func_ignore_parms();
+
+    radix = ss_data_get_integer(args[1]);
+
+    if( (radix < 2) || (radix > 36) )
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
+
+    if(n_args > 2)
+    {
+        minimum_length = ss_data_get_integer(args[2]);
+
+        if( (minimum_length < 1) || (minimum_length > 256) )
+            exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
+    }
+
+    for(i = 0; (i < minimum_length) && status_ok(status); ++i)
+        status = quick_ublock_a7char_add(&quick_ublock_format, CH_DIGIT_ZERO);
+
+    if(status_ok(status))
+        status = quick_ublock_printf(&quick_ublock_format, ustr_bptr("B%d"), radix);
+
+    if(status_ok(status))
+        status = quick_ublock_nullch_add(&quick_ublock_format);
+
+    if(status_ok(status))
+        status = ev_numform(&quick_ublock_result, quick_ublock_ustr(&quick_ublock_format), args[0]);
+
+    if(status_ok(status))
+        status_assert(ss_string_make_ustr(p_ss_data_res, quick_ublock_ustr(&quick_ublock_result)));
+
+    quick_ublock_dispose(&quick_ublock_format);
+    quick_ublock_dispose(&quick_ublock_result);
+
+    exec_func_status_return(p_ss_data_res, status);
+}
+
+/******************************************************************************
+*
+* decimal() helper functions
+*
+******************************************************************************/
+
+_Check_return_
+static STATUS
+from_base_decode_string(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _InVal_     U32 uchars_n,
+    _InVal_     U32 radix,
+    _OutRef_    P_F64 p_f64);
+
+_Check_return_
+static STATUS
+from_base_decode_real(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _In_        F64 f64,
+    _InVal_     U32 radix,
+    _OutRef_    P_F64 p_f64)
+{
+    char buffer[64];
+
+    f64 = real_floor(f64);
+
+    *p_f64 = 0.0;
+
+    if((f64 < 0.0) /*|| (f64 > 9999999999.0)*/) /* range check input, decimal digits (can't have A-Z) */
+        return(ss_data_set_error(p_ss_data_res, EVAL_ERR_ARGRANGE));
+
+    consume_int(xsnprintf(buffer, sizeof(buffer), "%.0f", f64));
+
+    return(from_base_decode_string(p_ss_data_res, uchars_bptr(buffer), strlen32(buffer), radix, p_f64));
+}
+
+_Check_return_
+static STATUS
+from_base_decode_string(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _InVal_     U32 uchars_n,
+    _InVal_     U32 radix,
+    _OutRef_    P_F64 p_f64)
+{
+    U32 wss;
+    U32 initial_buf_idx;
+    U32 buf_idx;
+    F64 f64 = 0.0;
+
+    *p_f64 = 0.0;
+
+    wss = ss_string_skip_leading_whitespace_uchars(uchars, uchars_n);
+    buf_idx = wss;
+
+    if(16 == radix)
+    {   /* test for hex prefixes */
+        if( ((uchars_n - buf_idx) >= 2) &&
+            (('x' == PtrGetByteOff(uchars, buf_idx + 0)) || ('X' == PtrGetByteOff(uchars, buf_idx + 0))) &&
+            isxdigit(PtrGetByteOff(uchars, buf_idx + 1)) )
+        {
+            buf_idx += 1; /* skip that prefix */
+        }
+        else
+        if( ((uchars_n - buf_idx) >= 3) &&
+            ('0' == PtrGetByteOff(uchars, buf_idx + 0)) &&
+            (('x' == PtrGetByteOff(uchars, buf_idx + 1)) || ('X' == PtrGetByteOff(uchars, buf_idx + 1))) &&
+            isxdigit(PtrGetByteOff(uchars, buf_idx + 2)) )
+        {
+            buf_idx += 2; /* skip that prefix */
+        }
+    }
+
+    initial_buf_idx = buf_idx;
+
+    while(buf_idx < uchars_n)
+    {
+        U32 bytes_of_char = 1; /*uchars_bytes_of_char_off(uchars, buf_idx);*/
+        U8 u8;
+        U32 digit;
+
+        assert((buf_idx + bytes_of_char) <= uchars_n);
+        if((buf_idx + bytes_of_char) > uchars_n)
+            break;
+
+        u8 = PtrGetByteOff(uchars, buf_idx);
+
+        if(isdigit(u8))
+        {
+            digit = (U32) toupper(u8) - UCH_DIGIT_ZERO;
+        }
+        else if(isalpha(u8))
+        {   /* a..z, A..Z */
+            digit = (((U32) toupper(u8) - UCH_LATIN_CAPITAL_LETTER_A) + 10);
+        }
+        else
+        {
+            break;
+        }
+
+        if(digit >= radix)
+        {
+            if((16 == radix) && (18 == digit)) /* read 'H' or 'h' as suffix? */
+                buf_idx += bytes_of_char; /* skip that optional suffix */
+            else if((2 == radix) && (11 == digit)) /* read 'B' or 'b' as suffix? */
+                buf_idx += bytes_of_char; /* skip that optional suffix */
+            break;
+        }
+
+        f64 = (f64 * radix) + digit;
+
+        buf_idx += bytes_of_char;
+    }
+
+    if(buf_idx == initial_buf_idx) /* nothing read? */
+        return(ss_data_set_error(p_ss_data_res, EVAL_ERR_NO_VALID_DATA));
+
+    wss = ss_string_skip_internal_whitespace_uchars(uchars, uchars_n, buf_idx);
+    buf_idx += wss;
+
+    if(buf_idx < uchars_n) /* trailing garbage? */
+        return(ss_data_set_error(p_ss_data_res, EVAL_ERR_NO_VALID_DATA));
+
+    *p_f64 = f64;
+
+    return(STATUS_OK);
+}
+
+_Check_return_
+static STATUS
+from_base(
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     PC_SS_DATA p_ss_data,
+    _InVal_     U32 radix,
+    _OutRef_    P_F64 p_f64)
+{
+    if(ss_data_is_real(p_ss_data))
+        status_return(from_base_decode_real(p_ss_data_res, ss_data_get_real(p_ss_data), radix, p_f64));
+    else
+        status_return(from_base_decode_string(p_ss_data_res, ss_data_get_string(p_ss_data), ss_data_get_string_size(p_ss_data), radix, p_f64));
+
+    return(STATUS_OK);
+}
+
+/******************************************************************************
+*
+* NUMBER decimal(number_string)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_decimal)
+{
+    const S32 radix = ss_data_get_integer(args[1]);
+    F64 f64;
+
+    exec_func_ignore_parms();
+
+    if( (radix < 2) || (radix > 36) )
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
+
+    if(status_fail(from_base(p_ss_data_res, args[0], radix, &f64)))
+        return;
+
+    ss_data_set_real_try_integer(p_ss_data_res, f64);
+}
 
 #if 0 /* just for diff minimization */
 
@@ -53,18 +254,18 @@ log2(_InVal_ double d)
 
 static void
 factdouble_calc(
-    _OutRef_    P_EV_DATA p_ev_data_out, /* may return fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return fp or error */
     _InVal_     S32 n)
 {
     if(n <= 3)
     {
         if(n < -1)
         {
-            ev_data_set_error(p_ev_data_out, EVAL_ERR_ARGRANGE);
+            ss_data_set_error(p_ss_data_out, EVAL_ERR_ARGRANGE);
             return;
         }
 
-        ev_data_set_real(p_ev_data_out, (n > 0) ? n : 1); /* 3!!=3, 2!!=2, 1!!=1, 0!!=1, -1!!=1 */
+        ss_data_set_real(p_ss_data_out, (n > 0) ? n : 1); /* 3!!=3, 2!!=2, 1!!=1, 0!!=1, -1!!=1 */
         return;
     }
 
@@ -72,47 +273,47 @@ factdouble_calc(
     {   /* where n = 2k, n!! = 2^k * k! */
         const S32 k = n >> 1;
 
-        factorial_calc(p_ev_data_out, k); /* may return integer or fp or error */
+        factorial_calc(p_ss_data_out, k); /* may return integer or fp or error */
 
-        switch(p_ev_data_out->did_num)
+        switch(ss_data_get_data_id(p_ss_data_out))
         {
-        case RPN_DAT_WORD32:
-            ev_data_set_real(p_ev_data_out, (F64) p_ev_data_out->arg.integer); /* now go to fp for the single multiply */
+        case DATA_ID_WORD32:
+            ss_data_set_real(p_ss_data_out, (F64) p_ss_data_out->arg.integer); /* now go to fp for the single multiply */
 
             /*FALLTHRU*/
 
-        case RPN_DAT_REAL:
-            p_ev_data_out->arg.fp *= pow(2.0, k);
+        case DATA_ID_REAL:
+            ss_data_set_real(p_ss_data_out, ss_data_get_real(p_ss_data_out) * pow(2.0, k));
             break;
 
         default:
-        case RPN_DAT_ERROR:
+        case DATA_ID_ERROR:
             break;
         }
     }
     else /* is_odd */
     {   /* n!! = n! / (n - 1)!! */
-        EV_DATA ev_data_numer;
-        EV_DATA ev_data_denom;
+        SS_DATA ss_data_numer;
+        SS_DATA ss_data_denom;
 
-        factorial_calc(&ev_data_numer, n); /* may return integer or fp or error */
+        factorial_calc(&ss_data_numer, n); /* may return integer or fp or error */
 
-        factdouble_calc(&ev_data_denom, n - 1); /* may return fp or error */
+        factdouble_calc(&ss_data_denom, n - 1); /* may return fp or error */
 
-        if(!two_nums_divide_try(p_ev_data_out, &ev_data_numer, &ev_data_denom, TRUE /*propogate_errors*/))
-            ev_data_set_error(p_ev_data_out, EVAL_ERR_CALC_FAILURE);
+        if(!two_nums_divide_try(p_ss_data_out, &ss_data_numer, &ss_data_denom, TRUE /*propagate_errors*/))
+            ss_data_set_error(p_ss_data_out, EVAL_ERR_CALC_FAILURE);
     }
 }
 
 PROC_EXEC_PROTO(c_factdouble)
 {
-    const S32 n = args[0]->arg.integer;
+    const S32 n = ss_data_get_integer(args[0]);
 
     exec_func_ignore_parms();
 
-    factdouble_calc(p_ev_data_res, n); /* may return fp or error */
+    factdouble_calc(p_ss_data_res, n); /* may return fp or error */
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 /******************************************************************************
@@ -127,14 +328,14 @@ PROC_EXEC_PROTO(c_odf_int)
 {
     exec_func_ignore_parms();
 
-    if(RPN_DAT_REAL == args[0]->did_num)
+    if(ss_data_is_real(args[0]))
     {
-        ev_data_set_real_ti(p_ev_data_res, real_floor(args[0]->arg.fp));
+        ss_data_set_real_try_integer(p_ss_data_res, real_floor(ss_data_get_real(args[0])));
         return;
     }
 
     /* all other types can be handled by our friend */
-    c_int(args, n_args, p_ev_data_res, p_cur_slr);
+    c_int(args, n_args, p_ss_data_res, p_cur_slr);
 }
 
 #endif
@@ -147,8 +348,8 @@ PROC_EXEC_PROTO(c_odf_int)
 
 PROC_EXEC_PROTO(c_log)
 {
-    const F64 x = args[0]->arg.fp;
-    const F64 b = (n_args > 1) ? args[1]->arg.fp : 10.0;
+    const F64 x = ss_data_get_real(args[0]);
+    const F64 b = (n_args > 1) ? ss_data_get_real(args[1]) : 10.0;
     F64 log_result;
 
     exec_func_ignore_parms();
@@ -156,11 +357,9 @@ PROC_EXEC_PROTO(c_log)
     errno = 0;
 
     if(b == 1.0)
-    {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
-        return;
-    }
-    else if(b == 2.0)
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_DIVIDEBY0);
+
+    if(b == 2.0)
     {
         log_result = log2(x);
     }
@@ -176,10 +375,10 @@ PROC_EXEC_PROTO(c_log)
         log_result = log2_x / log2_b;
     }
 
-    ev_data_set_real(p_ev_data_res, log_result);
+    ss_data_set_real(p_ss_data_res, log_result);
 
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_LOG);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_BAD_LOG);
 }
 
 #if 0 /* just for diff minimization */
@@ -192,16 +391,16 @@ PROC_EXEC_PROTO(c_log)
 
 PROC_EXEC_PROTO(c_odf_log10)
 {
-    const F64 number = args[0]->arg.fp;
+    const F64 number = ss_data_get_real(args[0]);
 
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, log10(number));
+    ss_data_set_real(p_ss_data_res, log10(number));
 
     if(errno /* == EDOM, ERANGE */)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_LOG);
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_BAD_LOG);
 }
 
 /******************************************************************************
@@ -220,17 +419,14 @@ PROC_EXEC_PROTO(c_odf_mod)
     {
     case TWO_INTS:
         {
-        const S32 s32_a = args[0]->arg.integer;
-        const S32 s32_b = args[1]->arg.integer;
+        const S32 s32_a = ss_data_get_integer(args[0]);
+        const S32 s32_b = ss_data_get_integer(args[1]);
         div_t d;
         S32 s32_odf_mod_result;
 
         /* SKS after PD 4.11 03feb92 - gave FP error not zero if trap taken */
         if(s32_b == 0)
-        {
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
-            return;
-        }
+            exec_func_status_return(p_ss_data_res, EVAL_ERR_DIVIDEBY0);
 
         d = div((int) s32_a, (int) s32_b);
 
@@ -244,14 +440,14 @@ PROC_EXEC_PROTO(c_odf_mod)
             }
         }
 
-        ev_data_set_integer(p_ev_data_res, s32_odf_mod_result);
+        ss_data_set_integer(p_ss_data_res, s32_odf_mod_result);
         break;
         }
 
     case TWO_REALS:
         {
-        const F64 f64_a = args[0]->arg.fp;
-        const F64 f64_b = args[1]->arg.fp;
+        const F64 f64_a = ss_data_get_real(args[0]);
+        const F64 f64_b = ss_data_get_real(args[1]);
         F64 f64_odf_mod_result;
 
         errno = 0;
@@ -266,11 +462,11 @@ PROC_EXEC_PROTO(c_odf_mod)
             }
         }
 
-        ev_data_set_real_ti(p_ev_data_res, f64_odf_mod_result);
+        ss_data_set_real_try_integer(p_ss_data_res, f64_odf_mod_result);
 
         /* would have divided by zero? */
         if(errno /* == EDOM */)
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
+            exec_func_status_return(p_ss_data_res, EVAL_ERR_DIVIDEBY0);
 
         break;
         }
@@ -299,9 +495,9 @@ PROC_EXEC_PROTO(c_odf_mod)
 
 extern void
 round_common(
-    P_EV_DATA args[EV_MAX_ARGS],
+    P_SS_DATA args[EV_MAX_ARGS],
     _InVal_     S32 n_args,
-    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InoutRef_  P_SS_DATA p_ss_data_res,
     _InVal_     U32 rpn_did_num)
 {
     BOOL negate_result = FALSE;
@@ -312,7 +508,7 @@ round_common(
     case RPN_FNV_CEILING:
     case RPN_FNV_FLOOR:
         {
-        f64 = args[0]->arg.fp;
+        f64 = ss_data_get_real(args[0]);
 
         if(n_args <= 1)
         {
@@ -320,7 +516,7 @@ round_common(
         }
         else
         {
-            F64 multiple =  args[1]->arg.fp;
+            F64 multiple = ss_data_get_real(args[1]);
 
             if(multiple < 0.0) /* Handle the Excel way of doing these */
             {
@@ -328,7 +524,7 @@ round_common(
 
                 if(f64 > 0.0)
                 {
-                    ev_data_set_error(p_ev_data_res, EVAL_ERR_MIXED_SIGNS);
+                    ss_data_set_error(p_ss_data_res, EVAL_ERR_MIXED_SIGNS);
                     return;
                 }
 
@@ -343,7 +539,7 @@ round_common(
             /* check for divide by zero about to trap */
             if(multiple < F64_MIN)
             {
-                ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
+                ss_data_set_error(p_ss_data_res, EVAL_ERR_DIVIDEBY0);
                 return;
             }
 
@@ -357,9 +553,9 @@ round_common(
 
     case RPN_FNF_MROUND:
         {
-        F64 multiple = fabs(args[1]->arg.fp); /* Unlike Excel, we allow mixed signs for MROUND */
+        F64 multiple = fabs(ss_data_get_real(args[1])); /* Unlike Excel, we allow mixed signs for MROUND */
 
-        f64 = args[0]->arg.fp;
+        f64 = ss_data_get_real(args[0]);
 
         /* rounds towards (or away from) zero, so operate on positive number */
         if(f64 < 0.0)
@@ -371,7 +567,7 @@ round_common(
         /* check for divide by zero about to trap */
         if(multiple < F64_MIN)
         {
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
+            ss_data_set_error(p_ss_data_res, EVAL_ERR_DIVIDEBY0);
             return;
         }
 
@@ -392,31 +588,30 @@ round_common(
         S32 decimal_places = 2;
 
         if(n_args > 1)
-            decimal_places = MIN(15, args[1]->arg.integer);
+            decimal_places = MIN(15, ss_data_get_integer(args[1]));
 
 #if 0 /* diff minimization */
         else if(RPN_FNV_TRUNC == rpn_did_num)
             decimal_places = 0;
 #endif
 
-        switch(args[0]->did_num)
+        switch(ss_data_get_data_id(args[0]))
         {
-      /*case RPN_DAT_BOOL8: diff minimization*/
-        case RPN_DAT_WORD8:
-        case RPN_DAT_WORD16:
-        case RPN_DAT_WORD32:
+        case DATA_ID_LOGICAL:
+        case DATA_ID_WORD16:
+        case DATA_ID_WORD32:
             if(decimal_places >= 0)
             {   /* if we have an integer number to be rounded at, or to the right of, the decimal, it's already there */
                 /* NOP */
-                *p_ev_data_res = *(args[0]);
+                *p_ss_data_res = *(args[0]);
                 return;
             }
 
-            f64 = (F64) args[0]->arg.integer; /* have to do it like this */
+            f64 = (F64) ss_data_get_integer(args[0]); /* have to do it like this */
             break;
 
         default:
-            f64 = args[0]->arg.fp;
+            f64 = ss_data_get_real(args[0]);
             break;
         }
 
@@ -458,25 +653,25 @@ round_common(
 
     f64 = f64 / multiplier;
 
-    ev_data_set_real(p_ev_data_res, negate_result ? -f64 : f64);
+    ss_data_set_real(p_ss_data_res, negate_result ? -f64 : f64);
 }
 
 PROC_EXEC_PROTO(c_ceiling)
 {
     exec_func_ignore_parms();
 
-    round_common(args, n_args, p_ev_data_res, RPN_FNV_CEILING);
+    round_common(args, n_args, p_ss_data_res, RPN_FNV_CEILING);
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 PROC_EXEC_PROTO(c_floor)
 {
     exec_func_ignore_parms();
 
-    round_common(args, n_args, p_ev_data_res, RPN_FNV_FLOOR);
+    round_common(args, n_args, p_ss_data_res, RPN_FNV_FLOOR);
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 #if 0 /* just for diff minimization */
@@ -485,9 +680,9 @@ PROC_EXEC_PROTO(c_mround)
 {
     exec_func_ignore_parms();
 
-    round_common(args, n_args, p_ev_data_res, RPN_FNF_MROUND);
+    round_common(args, n_args, p_ss_data_res, RPN_FNF_MROUND);
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 #endif
@@ -496,9 +691,9 @@ PROC_EXEC_PROTO(c_round)
 {
     exec_func_ignore_parms();
 
-    round_common(args, n_args, p_ev_data_res, RPN_FNV_ROUND);
+    round_common(args, n_args, p_ss_data_res, RPN_FNV_ROUND);
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 #if 0 /* just for diff minimization */
@@ -507,27 +702,27 @@ PROC_EXEC_PROTO(c_rounddown)
 {
     exec_func_ignore_parms();
 
-    round_common(args, n_args, p_ev_data_res, RPN_FNF_ROUNDDOWN);
+    round_common(args, n_args, p_ss_data_res, RPN_FNF_ROUNDDOWN);
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 PROC_EXEC_PROTO(c_roundup)
 {
     exec_func_ignore_parms();
 
-    round_common(args, n_args, p_ev_data_res, RPN_FNF_ROUNDUP);
+    round_common(args, n_args, p_ss_data_res, RPN_FNF_ROUNDUP);
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 PROC_EXEC_PROTO(c_trunc)
 {
     exec_func_ignore_parms();
 
-    round_common(args, n_args, p_ev_data_res, RPN_FNV_TRUNC);
+    round_common(args, n_args, p_ss_data_res, RPN_FNV_TRUNC);
 
-    consume_bool(real_to_integer_try(p_ev_data_res));
+    consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }
 
 /******************************************************************************
@@ -540,20 +735,17 @@ PROC_EXEC_PROTO(c_quotient)
 {
     exec_func_ignore_parms();
 
-    if(!two_nums_divide_try(p_ev_data_res, args[0], args[1], FALSE))
-    {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_CALC_FAILURE);
-        return;
-    }
+    if(!two_nums_divide_try(p_ss_data_res, args[0], args[1], FALSE))
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_CALC_FAILURE);
 
-    if(RPN_DAT_REAL == p_ev_data_res->did_num)
+    if(DATA_ID_REAL == ss_data_get_data_id(p_ss_data_res))
     {
         F64 quotient_result;
 
         /* lose the fractional part */
-        (void) modf(p_ev_data_res->arg.fp, &quotient_result);
+        (void) modf(ss_data_get_real(p_ss_data_res), &quotient_result);
 
-        ev_data_set_real_ti(p_ev_data_res, quotient_result);
+        ss_data_set_real_try_integer(p_ss_data_res, quotient_result);
     }
 }
 
@@ -567,10 +759,10 @@ PROC_EXEC_PROTO(c_quotient)
 
 PROC_EXEC_PROTO(c_seriessum)
 {
-    const F64 x = args[0]->arg.fp;
-    const F64 n = args[1]->arg.fp;
-    const F64 m = args[2]->arg.fp;
-    const PC_EV_DATA array_coefficients = args[3];
+    const F64 x = ss_data_get_real(args[0]);
+    const F64 n = ss_data_get_real(args[1]);
+    const F64 m = ss_data_get_real(args[2]);
+    const PC_SS_DATA array_coefficients = args[3];
     S32 x_size, y_size;
     S32 ix, iy;
     F64 seriessum_result = 0.0;
@@ -587,11 +779,11 @@ PROC_EXEC_PROTO(c_seriessum)
         for(iy = 0; iy < y_size; ++iy)
         {
             F64 term;
-            EV_DATA ev_data_coefficient;
+            SS_DATA ss_data_coefficient;
 
-            (void) array_range_index(&ev_data_coefficient, array_coefficients, ix, iy, EM_REA);
+            (void) array_range_index(&ss_data_coefficient, array_coefficients, ix, iy, EM_REA);
 
-            term = ev_data_coefficient.arg.fp * x_to_power;
+            term = ss_data_coefficient.arg.fp * x_to_power;
 
             seriessum_result += term;
 
@@ -606,7 +798,7 @@ PROC_EXEC_PROTO(c_seriessum)
         }
     }
 
-    ev_data_set_real(p_ev_data_res, seriessum_result);
+    ss_data_set_real(p_ss_data_res, seriessum_result);
 }
 
 #if 0 /* just for diff minimization */
@@ -630,13 +822,12 @@ PROC_EXEC_PROTO(c_sumproduct)
 
     for(i = 1; i < n_args; ++i)
     {
-        const PC_EV_DATA array_i = args[i];
+        const PC_SS_DATA array_i = args[i];
         S32 x_size_i, y_size_i;
         array_range_sizes(array_i, &x_size_i, &y_size_i);
-        if((x_size != x_size_i) || (y_size != y_size_i))
+        if( (x_size != x_size_i) || (y_size != y_size_i) )
         {
-            ev_data_set_error(p_ev_data_res, EVAL_ERR_ODF_VALUE);
-            return;
+            exec_func_status_return(p_ss_data_res, EVAL_ERR_ODF_VALUE);
         }
     }
 
@@ -651,12 +842,12 @@ PROC_EXEC_PROTO(c_sumproduct)
 
             for(i = 0; i < n_args; ++i)
             {
-                const PC_EV_DATA array_i = args[i];
-                EV_DATA ev_data;
+                const PC_SS_DATA array_i = args[i];
+                SS_DATA ss_data;
 
-                (void) array_range_index(&ev_data, array_i, ix, iy, EM_REA);
+                (void) array_range_index(&ss_data, array_i, ix, iy, EM_REA);
 
-                product *= ev_data.arg.fp;
+                product *= ss_data_get_real(&ss_data);
             }
 
             /* all products of {arrays}[i][j] are added to the total */
@@ -665,7 +856,7 @@ PROC_EXEC_PROTO(c_sumproduct)
     }
     } /*block*/
 
-    ev_data_set_real_ti(p_ev_data_res, sum);
+    ss_data_set_real_try_integer(p_ss_data_res, sum);
 }
 
 /******************************************************************************
@@ -678,9 +869,9 @@ PROC_EXEC_PROTO(c_sumproduct)
 
 static void
 sumx2opy2_common(
-    _InoutRef_  P_EV_DATA p_ev_data_res,
-    _InRef_     PC_EV_DATA array_x,
-    _InRef_     PC_EV_DATA array_y,
+    _InoutRef_  P_SS_DATA p_ss_data_res,
+    _InRef_     PC_SS_DATA array_x,
+    _InRef_     PC_SS_DATA array_y,
     _InVal_     BOOL subtract_y2)
 {
     STATUS status = STATUS_OK;
@@ -703,14 +894,14 @@ sumx2opy2_common(
         {
             for(ix = 0; ix < x_size[0]; ++ix)
             {
-                EV_DATA ev_data_x, ev_data_y;
+                SS_DATA ss_data_x, ss_data_y;
                 F64 x2, y2;
 
-                (void) array_range_index(&ev_data_x, array_x, ix, iy, EM_REA);
-                (void) array_range_index(&ev_data_y, array_y, ix, iy, EM_REA);
+                (void) array_range_index(&ss_data_x, array_x, ix, iy, EM_REA);
+                (void) array_range_index(&ss_data_y, array_y, ix, iy, EM_REA);
 
-                x2 = ev_data_x.arg.fp*ev_data_x.arg.fp;
-                y2 = ev_data_y.arg.fp*ev_data_y.arg.fp;
+                x2 = ss_data_get_real(&ss_data_x) * ss_data_get_real(&ss_data_x);
+                y2 = ss_data_get_real(&ss_data_y) * ss_data_get_real(&ss_data_y);
 
                 if(subtract_y2)
                     y2 = -y2;
@@ -719,31 +910,30 @@ sumx2opy2_common(
             }
         }
 
-        ev_data_set_real_ti(p_ev_data_res, sum);
+        ss_data_set_real_try_integer(p_ss_data_res, sum);
     }
 
-    if(status_fail(status))
-        ev_data_set_error(p_ev_data_res, status);
+    exec_func_status_return(p_ss_data_res, status);
 }
 
 PROC_EXEC_PROTO(c_sum_x2my2)
 {
-    const PC_EV_DATA array_x = args[0];
-    const PC_EV_DATA array_y = args[1];
+    const PC_SS_DATA array_x = args[0];
+    const PC_SS_DATA array_y = args[1];
 
     exec_func_ignore_parms();
 
-    sumx2opy2_common(p_ev_data_res, array_x, array_y, TRUE); /* sum(x^2 - y^2) */
+    sumx2opy2_common(p_ss_data_res, array_x, array_y, TRUE); /* sum(x^2 - y^2) */
 }
 
 PROC_EXEC_PROTO(c_sum_x2py2)
 {
-    const PC_EV_DATA array_x = args[0];
-    const PC_EV_DATA array_y = args[1];
+    const PC_SS_DATA array_x = args[0];
+    const PC_SS_DATA array_y = args[1];
 
     exec_func_ignore_parms();
 
-    sumx2opy2_common(p_ev_data_res, array_x, array_y, TRUE); /* sum(x^2 + y^2) */
+    sumx2opy2_common(p_ss_data_res, array_x, array_y, FALSE); /* sum(x^2 + y^2) */
 }
 
 /******************************************************************************
@@ -755,8 +945,8 @@ PROC_EXEC_PROTO(c_sum_x2py2)
 PROC_EXEC_PROTO(c_sum_xmy2)
 {
     STATUS status = STATUS_OK;
-    const PC_EV_DATA array_x = args[0];
-    const PC_EV_DATA array_y = args[1];
+    const PC_SS_DATA array_x = args[0];
+    const PC_SS_DATA array_y = args[1];
     S32 x_size[2];
     S32 y_size[2];
 
@@ -778,23 +968,22 @@ PROC_EXEC_PROTO(c_sum_xmy2)
         {
             for(ix = 0; ix < x_size[0]; ++ix)
             {
-                EV_DATA ev_data_x, ev_data_y;
+                SS_DATA ss_data_x, ss_data_y;
                 F64 difference;
 
-                (void) array_range_index(&ev_data_x, array_x, ix, iy, EM_REA);
-                (void) array_range_index(&ev_data_y, array_y, ix, iy, EM_REA);
+                (void) array_range_index(&ss_data_x, array_x, ix, iy, EM_REA);
+                (void) array_range_index(&ss_data_y, array_y, ix, iy, EM_REA);
 
-                difference = ev_data_x.arg.fp - ev_data_y.arg.fp;
+                difference = ss_data_get_real(&ss_data_x) - ss_data_get_real(&ss_data_y);
 
                 sum += (difference*difference);
             }
         }
 
-        ev_data_set_real_ti(p_ev_data_res, sum);
+        ss_data_set_real_try_integer(p_ss_data_res, sum);
     }
 
-    if(status_fail(status))
-        ev_data_set_error(p_ev_data_res, status);
+    exec_func_status_return(p_ss_data_res, status);
 }
 
 #endif

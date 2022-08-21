@@ -485,19 +485,19 @@ ev_recalc_status(
 
 extern void
 ev_report_ERROR_CUSTOM(
-    _InRef_     PC_EV_DATA p_ev_data)
+    _InRef_     PC_SS_DATA p_ss_data)
 {
     U8Z buffer[BUF_MAX_REFERENCE];
 
     if(!reporting_is_enabled())
         return;
 
-    (void) ev_write_docname(buffer, p_ev_data->arg.ev_error.docno, current_docno());
+    (void) ev_write_docname(buffer, p_ss_data->arg.ss_error.docno, current_docno());
 
     reportf("ERROR_CUSTOM: %s Row: %d Error: %s",
             buffer,
-            p_ev_data->arg.ev_error.row + 1,
-            reperr_getstr(p_ev_data->arg.ev_error.status));
+            p_ss_data->arg.ss_error.row + 1,
+            reperr_getstr(p_ss_data->arg.ss_error.status));
 }
 
 /******************************************************************************

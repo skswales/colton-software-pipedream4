@@ -25,10 +25,8 @@ local header
 
 static F64 /*radians*/
 reduce_into_range(
-    _InRef_     PC_F64 p_alpha)
+    _In_        F64 alpha)
 {
-    F64 alpha = *p_alpha;
-
     while(alpha > _pi)
         alpha -= _two_pi;
 
@@ -40,13 +38,11 @@ reduce_into_range(
 
 static F64 /*radians*/
 conv_heading_to_angle(
-    _InRef_     PC_F64 p_heading_degrees)
+    _InVal_     F64 heading_degrees_in)
 {
-    F64 heading_degrees = *p_heading_degrees;
-    F64 heading_radians;
+    F64 heading_degrees = heading_degrees_in;
+    F64 heading_radians = heading_degrees * _radians_per_degree;
     F64 alpha;
-
-    heading_radians = heading_degrees * _radians_per_degree;
 
     while(heading_radians < 0.0)
         heading_radians += _two_pi;
@@ -55,9 +51,9 @@ conv_heading_to_angle(
     /* if heading > 90 and < 270 it's -ve between 0 and pi */
     alpha = _pi_div_two - heading_radians;
 
-    alpha = reduce_into_range(&alpha);
+    alpha = reduce_into_range(alpha);
 
-    trace_2(TRACE_MODULE_GR_CHART, "conv_heading_to_angle(%g degrees) yields %g radians", *p_heading_degrees, alpha);
+    trace_2(TRACE_MODULE_GR_CHART, "conv_heading_to_angle(%g degrees) yields %g radians", heading_degrees_in, alpha);
 
     return(alpha);
 }
@@ -165,7 +161,7 @@ gr_pie_addin(
     id.name      = GR_CHART_OBJNAME_POINT;
     id.has_subno = 1;
 
-    alpha = conv_heading_to_angle(&serp->style.pie_start_heading_degrees);
+    alpha = conv_heading_to_angle(serp->style.pie_start_heading_degrees);
 
     /* reduce radius correspondingly */
     radius = (GR_COORD) (radius / (1.0 + pct_radial_disp_max / 100.0));
@@ -210,7 +206,7 @@ gr_pie_addin(
             if(labelling)
                 status_break(res = gr_chart_group_new(cp, &pointStart, id));
 
-            status_break(res = gr_diag_piesector_new(cp->core.p_gr_diag, NULL, id, &thisOrigin, radius, (alpha < beta) ? &alpha : &beta, (alpha < beta) ? &beta  : &alpha, &linestyle, &fillstyle));
+            status_break(res = gr_diag_piesector_new(cp->core.p_gr_diag, NULL, id, &thisOrigin, radius, (alpha < beta) ? alpha : beta, (alpha < beta) ? beta : alpha, &linestyle, &fillstyle));
 
             res = STATUS_DONE;
 
@@ -247,7 +243,7 @@ gr_pie_addin(
                     }
 
                     gr_numtostr(cv.data.text, elemof32(cv.data.text),
-                                &value,
+                                value,
                                 eformat,
                                 decimals,
                                 CH_NULL /* dp_ch */,
@@ -279,7 +275,7 @@ gr_pie_addin(
                     text_box.y0 -= height / 4;
 
                     /* place differently according to whether on right or left of centre vertical */
-                    if(fabs(reduce_into_range(&bisector)) <= _pi_div_two)
+                    if(fabs(reduce_into_range(bisector)) <= _pi_div_two)
                     {
                         text_box.x1 = text_box.x0 + width;
                     }
@@ -300,7 +296,7 @@ gr_pie_addin(
                 gr_chart_group_end(cp, &pointStart);
 
             /* use this angle as the next segment's start angle */
-            alpha = reduce_into_range(&beta);
+            alpha = reduce_into_range(beta);
         }
     }
 
