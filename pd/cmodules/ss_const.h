@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1992-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Data definitions */
 
@@ -282,11 +282,22 @@ ev_data_set_error(
     _OutRef_    P_EV_DATA p_ev_data,
     _InVal_     STATUS error);
 
+_Check_return_
+extern F64
+real_floor(
+    _InVal_     F64 f64);
+
+_Check_return_
+extern F64
+real_trunc(
+    _InVal_     F64 f64);
+
 extern void
 real_to_integer_force(
     _InoutRef_  P_EV_DATA p_ev_data);
 
-extern void
+/*ncr*/
+extern BOOL
 real_to_integer_try(
     _InoutRef_  P_EV_DATA p_ev_data);
 
@@ -304,29 +315,29 @@ _Ret_
 extern PC_EV_DATA
 ss_array_element_index_borrow(
     _InRef_     PC_EV_DATA p_ev_data,
-    _InVal_     S32 x,
-    _InVal_     S32 y);
+    _InVal_     S32 ix,
+    _InVal_     S32 iy);
 
 _Check_return_
 _Ret_
 extern P_EV_DATA
 ss_array_element_index_wr(
     _InoutRef_  P_EV_DATA p_ev_data,
-    _InVal_     S32 x,
-    _InVal_     S32 y);
+    _InVal_     S32 ix,
+    _InVal_     S32 iy);
 
 extern STATUS
 ss_array_element_make(
     _InoutRef_  P_EV_DATA p_ev_data,
-    _InVal_     S32 x,
-    _InVal_     S32 y);
+    _InVal_     S32 ix,
+    _InVal_     S32 iy);
 
 extern void
 ss_array_element_read(
     _OutRef_    P_EV_DATA p_ev_data,
     _InRef_     PC_EV_DATA p_ev_data_src,
-    _InVal_     S32 x,
-    _InVal_     S32 y);
+    _InVal_     S32 ix,
+    _InVal_     S32 iy);
 
 extern STATUS
 ss_array_make(

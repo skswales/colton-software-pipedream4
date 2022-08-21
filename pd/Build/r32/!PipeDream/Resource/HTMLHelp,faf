@@ -7,16 +7,7 @@
 <BODY>
 <H1>Colton Software PipeDream for RISC OS</H1>
 
-<H2>Release notes</H2>
-
-<P>The release notes for this version of PipeDream may be found <A HREF="Relnotes">here</A>.</P>
-
-
 <H2>Licence and Copyright</H2>
-
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
 (MPL).</P>
@@ -24,8 +15,14 @@
 <P>A copy of the MPL may be downloaded from <A
 HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
 
-<P>Copyright (C) 1989-1998 Colton Software Limited, Copyright (C) 1998-2014
-R W Colton</P>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1989-1998 Colton Software Limited,
+   - Copyright (C) 1998-2015 R W Colton -->
+
+<P>Copyright (C) 1989-1998 Colton Software Limited,
+Copyright (C) 1998-2015 R W Colton</P>
 
 <P><A HREF="Relnotes#CopyrightExtra">Additional copyrights</A></P>
 
@@ -34,11 +31,18 @@ R W Colton</P>
 
 <P>The following resources for PipeDream are available online:</P>
 
-<P><A HREF="http://croftnuisk.co.uk/coltsoft/pipedream">PipeDream Downloads and Examples</A></P>
+<P>The PipeDream Tutorial may be accessed online at
+<A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/tutorial/index.html">PipeDream Tutorial</A></P>
 
-<P><A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/refguide/index.html">PipeDream Reference Guide</A></P>
+<P>The PipeDream Reference Guide may be accessed online at
+<A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/refguide/index.html">PipeDream Reference Guide</A></P>
 
-<P><A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/tutorial/index.html">PipeDream Tutorial</A></P>
+<P>Addenda and Errata to the printed documentation may be accessed online at
+<A HREF="http://croftnuisk.co.uk/coltsoft/fireworkz/pipedream-reference-guide/pipedream-addenda-and-errata">PipeDream Addenda and Errata</A></P>
+
+<P>Updated PipeDream packages and example files, including those used in the PipeDream Tutorial, may be
+obtained directly from
+<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream">PipeDream Downloads and Examples</A></P>
 
 
 <H2>Support</H2>
@@ -52,5 +56,13 @@ any problems.</P>
 <P>Google Group website: <A HREF="http://groups.google.com/group/colton-software-pipedream">http://groups.google.com/group/colton-software-pipedream</A></P>
 
 <P>Email: colton-software-pipedream@googlegroups.com</P>
+
+
+<H2>Release notes</H2>
+
+<P>The release notes for this version of PipeDream may be found <A HREF="Relnotes">here</A>.</P>
+
+<P>A fuller release history may be found
+<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A>.</P>
 </BODY>
 </HTML>

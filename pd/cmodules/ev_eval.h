@@ -437,6 +437,7 @@ enum DID_NUMBERS
     RPN_FNF_C_TANH      ,
     RPN_FNF_C_THETA     ,
 
+    RPN_FNV_CEILING     ,
     RPN_FNF_CHAR        ,
     RPN_FNV_CHOOSE      ,
     RPN_FNF_CODE        ,
@@ -481,6 +482,7 @@ enum DID_NUMBERS
     RPN_FNF_FACT        ,
     RPN_FNV_FIND        ,
     RPN_FNF_FLIP        ,
+    RPN_FNV_FLOOR       ,
     RPN_FNV_FOR         ,
     RPN_FNF_FORMULA_TEXT,
     RPN_FNM_FUNCTION    ,
@@ -508,7 +510,7 @@ enum DID_NUMBERS
     RPN_FNV_LINEST      ,
     RPN_FNF_LISTCOUNT   ,
     RPN_FNF_LN          ,
-    RPN_FNF_LOG         ,
+    RPN_FNV_LOG         ,
     RPN_FNV_LOGEST      ,
     RPN_FNF_LOOKUP      ,
     RPN_FNF_LOWER       ,
@@ -730,6 +732,17 @@ ev_data_set_real(
 {
     p_ev_data->did_num = RPN_DAT_REAL;
     p_ev_data->arg.fp = f64;
+}
+
+static inline void
+ev_data_set_real_ti(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InVal_     F64 f64)
+{
+    p_ev_data->did_num = RPN_DAT_REAL;
+    p_ev_data->arg.fp = f64;
+
+    (void) real_to_integer_try(p_ev_data);
 }
 
 /*

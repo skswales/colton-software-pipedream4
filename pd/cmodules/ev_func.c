@@ -135,7 +135,7 @@ PROC_EXEC_PROTO(c_cols)
 
 PROC_EXEC_PROTO(c_index)
 {
-    S32 x, y, x_size_in, y_size_in, x_size_out, y_size_out;
+    S32 ix, iy, x_size_in, y_size_in, x_size_out, y_size_out;
 
     exec_func_ignore_parms();
 
@@ -143,8 +143,9 @@ PROC_EXEC_PROTO(c_index)
 
     array_range_sizes(args[0], &x_size_in, &y_size_in);
 
-    x = args[1]->arg.integer - 1;
-    y = args[2]->arg.integer - 1;
+    /* NB Fireworkz and PipeDream INDEX() has x, y args */
+    ix = args[1]->arg.integer - 1;
+    iy = args[2]->arg.integer - 1;
 
     /* get size out parameters */
     if(n_args > 4)
@@ -156,34 +157,34 @@ PROC_EXEC_PROTO(c_index)
     }
 
     /* check it's all in range */
-    if(x < 0                           ||
-       y < 0                           ||
-       x + x_size_out - 1 >= x_size_in ||
-       y + y_size_out - 1 >= y_size_in)
+    if( ix < 0                           ||
+        iy < 0                           ||
+        ix + x_size_out - 1 >= x_size_in ||
+        iy + y_size_out - 1 >= y_size_in )
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_INDEX);
         return;
     }
 
-    if(x_size_out == 1 && y_size_out == 1)
+    if((x_size_out == 1) && (y_size_out == 1))
     {
         EV_DATA temp_data;
-        array_range_index(&temp_data, args[0], x, y, EM_ANY);
+        array_range_index(&temp_data, args[0], ix, iy, EM_ANY);
         status_assert(ss_data_resource_copy(p_ev_data_res, &temp_data));
         return;
     }
 
     if(status_ok(ss_array_make(p_ev_data_res, x_size_out, y_size_out)))
     {
-        S32 x_in, y_in, x_out, y_out;
+        S32 ix_in, iy_in, ix_out, iy_out;
 
-        for(y_in = y, y_out = 0; y_out < y_size_out; ++y_in, ++y_out)
+        for(iy_in = iy, iy_out = 0; iy_out < y_size_out; ++iy_in, ++iy_out)
         {
-            for(x_in = x, x_out = 0; x_out < x_size_out; ++x_in, ++x_out)
+            for(ix_in = ix, ix_out = 0; ix_out < x_size_out; ++ix_in, ++ix_out)
             {
                 EV_DATA temp_data;
-                array_range_index(&temp_data, args[0], x_in, y_in, EM_ANY);
-                status_assert(ss_data_resource_copy(ss_array_element_index_wr(p_ev_data_res, x_out, y_out), &temp_data));
+                array_range_index(&temp_data, args[0], ix_in, iy_in, EM_ANY);
+                status_assert(ss_data_resource_copy(ss_array_element_index_wr(p_ev_data_res, ix_out, iy_out), &temp_data));
             }
         }
     }
@@ -344,8 +345,7 @@ PROC_EXEC_PROTO(c_even)
     if(negative)
         even_result = -even_result;
 
-    ev_data_set_real(p_ev_data_res, even_result);
-    real_to_integer_try(p_ev_data_res);
+    ev_data_set_real_ti(p_ev_data_res, even_result);
 }
 
 /******************************************************************************
@@ -371,7 +371,7 @@ PROC_EXEC_PROTO(c_false)
 
 PROC_EXEC_PROTO(c_flip)
 {
-    S32 xs, ys, ys_half, y, y_swap;
+    S32 xs, ys, ys_half, iy, y_swap;
 
     exec_func_ignore_parms();
 
@@ -383,16 +383,16 @@ PROC_EXEC_PROTO(c_flip)
         array_range_sizes(p_ev_data_res, &xs, &ys);
         ys_half = ys / 2;
         y_swap = ys - 1;
-        for(y = 0; y < ys_half; ++y, y_swap -= 2)
+        for(iy = 0; iy < ys_half; ++iy, y_swap -= 2)
         {
-            S32 x;
-            for(x = 0; x < xs; ++x)
+            S32 ix;
+            for(ix = 0; ix < xs; ++ix)
             {
                 EV_DATA temp_data;
-                temp_data = *ss_array_element_index_borrow(p_ev_data_res, x, y + y_swap);
-                *ss_array_element_index_wr(p_ev_data_res, x, y + y_swap) =
-                *ss_array_element_index_borrow(p_ev_data_res, x, y);
-                *ss_array_element_index_wr(p_ev_data_res, x, y) = temp_data;
+                temp_data = *ss_array_element_index_borrow(p_ev_data_res, ix, iy + y_swap);
+                *ss_array_element_index_wr(p_ev_data_res, ix, iy + y_swap) =
+                *ss_array_element_index_borrow(p_ev_data_res, ix, iy);
+                *ss_array_element_index_wr(p_ev_data_res, ix, iy) = temp_data;
             }
         }
     }
@@ -671,8 +671,7 @@ PROC_EXEC_PROTO(c_odd)
     if(negative)
         f64 = -f64;
 
-    ev_data_set_real(p_ev_data_res, f64);
-    real_to_integer_try(p_ev_data_res);
+    ev_data_set_real_ti(p_ev_data_res, f64);
 }
 
 /******************************************************************************

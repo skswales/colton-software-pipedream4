@@ -434,6 +434,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\ev_fnstm.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\ev_fnstr.c"
 					>
 				</File>
@@ -446,7 +450,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\ev_matb.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\ev_math.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\ev_matr.c"
 					>
 				</File>
 				<File
@@ -615,6 +627,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\cmodules\mathxtr3.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\mathxtr4.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\mathxtr4.h"
 					>
 				</File>
 				<File

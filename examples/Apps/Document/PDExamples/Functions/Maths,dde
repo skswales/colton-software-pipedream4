@@ -1,4 +1,4 @@
-%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%VS4.53 (xx-Jan-2015), Colton Software, R9200 7500 3900 8299
 %OP%DP4
 %OP%LP*
 %OP%TM4
@@ -8,13 +8,16 @@
 %OP%FX160
 %OP%FY160
 %OP%FS0
-%OP%WC2,1584,522,1108,0,1,0,0
+%OP%WC2,2518,162,1878,0,1,0,0
 %CO:A,10,100%%C%%H2%Mathematical Functions Examples
 
 %C%Function
 
 ABS
+CEILING
 EXP
+FACT
+FLOOR
 INT
 LN
 LOG
@@ -27,7 +30,10 @@ SUM
 %R%Input 1
 
 %V%%R%-25
+%V%%R%B10
 %V%%R%1
+%V%%R%6
+%V%%R%B10
 %V%%R%12.9437
 %V%%R%exp(-1)
 %V%%R%1000
@@ -40,7 +46,10 @@ SUM
 %R%Input 2
 
 %C%-
+%V%%R%1
+%C%%H4%-
 %C%-
+%V%%R%1
 %C%-
 %C%-
 %C%-
@@ -52,6 +61,9 @@ SUM
 
 %R%Input 3
 
+%C%-
+%C%-
+%C%%H4%-
 %C%-
 %C%-
 %C%-
@@ -66,21 +78,27 @@ SUM
 %R%Output
 
 %V%%R%abs(B5)
-%V%%R%exp(B6)
-%V%%R%int(B7)
-%V%%R%ln(B8)
-%V%%R%log(B9)
-%V%%R%mod(B10,C10)
-%V%%R%sgn(B11)
-%V%%R%sqr(B12)
-%V%%R%sum(B5B12)
+%V%%R%int(B6)
+%V%%R%exp(B7)
+%V%%R%fact(B8)
+%V%%R%int(B9)
+%V%%R%int(B10)
+%V%%R%ln(B11)
+%V%%R%log(B12)
+%V%%R%mod(B13,C13)
+%V%%R%sgn(B14)
+%V%%R%sqr(B15)
+%V%%R%sum(B5B15)
 %CO:F,1,0%%CO:G,53,0%
 
 Summary
 
 Returns the absolute value of %H4%Input1%H4%.
+Returns the integer value of %H4%Input1%H4%, rounded towards +infinity.
 Raises e (natural exponent) to the power of %H4%Input1%H4%.
-Returns the integer value of %H4%Input1%H4%.
+Returns the factorial of %H4%Input1%H4%
+Returns the integer value of %H4%Input1%H4%, rounded towards -infinity.
+Returns the integer value of %H4%Input1%H4%, rounded towards zero.
 Returns the natural logarithm of %H4%Input1%H4%.
 Returns the logarithm to base 10 of %H4%Input1%H4%.
 Returns %H4%Input1%H4% MOD %H4%Input2%H4%.

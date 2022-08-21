@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2014 Stuart Swales */
+/* Copyright (C) 2012-2015 Stuart Swales */
 
 /* Additional math routines */
 
@@ -18,6 +18,9 @@
 'random' numbers
 */
 
+static BOOL
+uniform_distribution_seeded = FALSE;
+
 /*
 Polar method of generating (paired) normal random variables.
 Bit faster than Box-Muller transform that uses trig functions.
@@ -29,6 +32,7 @@ ACM Computing Surveys, Vol. 39(4), Article 11, 2007,
 doi:10.1145/1287620.1287622
 */
 
+_Check_return_
 extern F64
 normal_distribution(void)
 {
@@ -76,14 +80,24 @@ the source code in the external/OtherBSD/dSFMT-src-* directory
 
 */
 
-#if 1 /* use dSFMT */
-
 #ifdef assert
 #undef assert /* as it's contrarily included by dSFMT source */
 #endif
 
-#include "external/OtherBSD/dSFMT-src-2.2/dSFMT.c"
+#pragma warning(push)
 
+#if _MSC_VER < 1500
+#pragma warning(disable:4242) /* '=' : conversion from 'uint64_t' to 'uint32_t', possible loss of data */
+#pragma warning(disable:4244) /* '=' : conversion from 'uint64_t' to 'uint32_t', possible loss of data */
+#endif
+
+#pragma warning(disable:6031) /* Return value ignored: 'fprintf' */
+
+#include "external/OtherBSD/dSFMT-src-2.2.2/dSFMT.c"
+
+#pragma warning(pop)
+
+_Check_return_
 extern F64
 uniform_distribution(void)
 {
@@ -91,33 +105,12 @@ uniform_distribution(void)
     return(dsfmt_gv_genrand_close_open());
 }
 
-#else /* use SFMT */
-
-#define MEXP 19937
-
-#ifdef _M_IX86
-#if _M_IX86_FP >= 2
-#define HAVE_SSE2 1
-#endif
-#endif /* _M_IX86 */
-
-#pragma warning(disable:4244) /* 'return' : conversion from 'long double' to 'double', possible loss of data */
-
-#include "external/OtherBSD/SFMT-src-1.3.3/sfmt.c"
-
-extern F64
-uniform_distribution(void)
-{
-    /* Generates a random number on [0,1) with 53-bit resolution */ 
-    return(genrand_res53());
-}
-
-#endif
-
 extern void
 uniform_distribution_seed(
-    _In_ unsigned int seed)
+    _InVal_     unsigned int seed)
 {
+    uniform_distribution_seeded = TRUE;
+
     init_gen_rand(seed);
 }
 
@@ -125,6 +118,7 @@ uniform_distribution_seed(
 
 /* implementation using ANSI C functions */
 
+_Check_return_
 extern F64
 uniform_distribution(void)
 {
@@ -134,11 +128,27 @@ uniform_distribution(void)
 
 extern void
 uniform_distribution_seed(
-    _In_ unsigned int seed)
+    _InVal_     unsigned int seed)
 {
+    uniform_distribution_seeded = TRUE;
+
     srand(seed);
 }
 
 #endif /* OS */
+
+/*ncr*/
+extern BOOL
+uniform_distribution_test_seeded(
+    _InVal_     BOOL fEnsure)
+{
+    if(!fEnsure)
+        return(uniform_distribution_seeded);
+
+    if(!uniform_distribution_seeded)
+        uniform_distribution_seed((unsigned int) time(NULL));
+
+    return(TRUE);
+}
 
 /* end of mathxtr3.c */

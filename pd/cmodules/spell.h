@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1988-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* External header file for spellcheck */
 
@@ -15,7 +15,7 @@
 #define __spell_h
 
 /*
-function declarations
+exported functions
 */
 
 extern S32

@@ -105,7 +105,7 @@ pdchart_extdependency_new(
 
 static void
 pdchart_init_shape_suss_holes_end(
-    PDCHART_SHAPEDESC * p /*inout*/);
+    PDCHART_SHAPEDESC * const p_chart_shapedesc /*inout*/);
 
 static void
 pdchart_listed_dep_dispose(
@@ -177,22 +177,22 @@ pdchart_current = NULL;
 static S32
 pdchart_add(
     P_PDCHART_HEADER pdchart,
-    const PDCHART_SHAPEDESC * p,
+    const PDCHART_SHAPEDESC * const p_chart_shapedesc,
     S32 initial)
 {
     S32               this_initial      = initial;
     S32               maybe_add_labels  = FALSE;
     S32               has_unused_labels = FALSE;
-    PDCHART_SHAPEDESC pdcsd;
+    PDCHART_SHAPEDESC chart_shapedesc;
     P_P_LIST_BLOCK    p_p_list_block;
     LIST_ITEMNO       stt_key, end_key;
     U32               n_ranges;
     S32               res, res1;
 
-    n_ranges = p->n_ranges;
+    n_ranges = p_chart_shapedesc->n_ranges;
 
     /* only consider adding labels if we haven't already done so to this chart */
-    if(p->bits.label_first_range)
+    if(p_chart_shapedesc->bits.label_first_range)
         {
         if(!gr_chart_query_labels(&pdchart->ch))
             maybe_add_labels = TRUE;
@@ -213,23 +213,23 @@ pdchart_add(
         return(res);
 
     /* derive new blocks from the passed block & nz lists */
-    pdcsd = *p;
+    chart_shapedesc = *p_chart_shapedesc;
 
     p_p_list_block = de_const_cast(P_P_LIST_BLOCK,
-        (p->bits.range_over_columns) ? &p->cols.nz.lbr : &p->rows.nz.lbr);
+        (p_chart_shapedesc->bits.range_over_columns) ? &p_chart_shapedesc->nz_cols.lbr : &p_chart_shapedesc->nz_rows.lbr);
 
-    end_key  = (p->bits.range_over_columns) ? p->stt.col : p->stt.row;
+    end_key = (p_chart_shapedesc->bits.range_over_columns) ? p_chart_shapedesc->stt.col : p_chart_shapedesc->stt.row;
 
     if(has_unused_labels)
         {
         /* turn them off and skip them */
-        pdcsd.bits.label_first_range = 0;
+        chart_shapedesc.bits.label_first_range = 0;
         ++end_key;
         }
 
 #if 1
     /* SKS after 4.12 25mar92 - now sussing seems good, allow additions to use deduced series labelling */
-    pdcsd.bits.label_first_item = p->bits.label_first_item;
+    chart_shapedesc.bits.label_first_item = p_chart_shapedesc->bits.label_first_item;
 #else
     {
     /* look at what's already allocated in this chart for a
@@ -247,7 +247,7 @@ pdchart_add(
     assert(  offsetof(struct PDCHART_ELEMENT, rng.col.stt_row) ==   offsetof(struct PDCHART_ELEMENT, rng.row.stt_col));
     assert(sizeofmemb(struct PDCHART_ELEMENT, rng.col.stt_row) == sizeofmemb(struct PDCHART_ELEMENT, rng.row.stt_col));
     if(ep->rng.col.stt_row ==  (p->bits.range_over_columns ? p->stt.row : p->stt.col))
-        pdcsd.bits.label_first_item = ep->bits.label_first_item;
+        chart_shapedesc.bits.label_first_item = ep->bits.label_first_item;
 
     keep:;
     }
@@ -288,7 +288,7 @@ pdchart_add(
 
         /* create a new dependency block (at end of list) for all sub-ranges to refer to */
         if((res = pdchart_listed_dep_new(&itdep,
-                                         (p->bits.range_over_columns
+                                         (p_chart_shapedesc->bits.range_over_columns
                                                     ? PDCHART_RANGE_COL
                                                     : PDCHART_RANGE_ROW))) < 0)
             return(res);
@@ -296,16 +296,16 @@ pdchart_add(
         /* need to be able to key back to chart */
         itdep->pdchartdatakey = pdchart->pdchartdatakey;
 
-        itdep->bits.label_first_range = pdcsd.bits.label_first_range;
-        itdep->bits.label_first_item  = pdcsd.bits.label_first_item;
+        itdep->bits.label_first_range = chart_shapedesc.bits.label_first_range;
+        itdep->bits.label_first_item  = chart_shapedesc.bits.label_first_item;
 
-        if(DOCNO_NONE != (itdep->rng.s.docno = pdcsd.docno))
+        if(DOCNO_NONE != (itdep->rng.s.docno = chart_shapedesc.docno))
             {
             /* store whole range in there */
-            itdep->rng.s.col = p->bits.range_over_columns ? (EV_COL) stt_key : (EV_COL) pdcsd.stt.col;
-            itdep->rng.s.row = p->bits.range_over_columns ? (EV_ROW) pdcsd.stt.row : (EV_ROW) stt_key;
-            itdep->rng.e.col = p->bits.range_over_columns ? (EV_COL) end_key : (EV_COL) pdcsd.end.col;
-            itdep->rng.e.row = p->bits.range_over_columns ? (EV_ROW) pdcsd.end.row : (EV_ROW) end_key;
+            itdep->rng.s.col = p_chart_shapedesc->bits.range_over_columns ? (EV_COL) stt_key : (EV_COL) chart_shapedesc.stt.col;
+            itdep->rng.s.row = p_chart_shapedesc->bits.range_over_columns ? (EV_ROW) chart_shapedesc.stt.row : (EV_ROW) stt_key;
+            itdep->rng.e.col = p_chart_shapedesc->bits.range_over_columns ? (EV_COL) end_key : (EV_COL) chart_shapedesc.end.col;
+            itdep->rng.e.row = p_chart_shapedesc->bits.range_over_columns ? (EV_ROW) chart_shapedesc.end.row : (EV_ROW) end_key;
 
             /* add an external reference to this whole pdchart range */
             res = pdchart_extdependency_new(itdep);
@@ -326,7 +326,7 @@ pdchart_add(
         this_initial = 0;     /* only the first block of the first add is initial */
         maybe_add_labels = 0; /* only the first block of any add is searched for labels */
 
-        pdcsd.bits.label_first_range = 0;
+        chart_shapedesc.bits.label_first_range = 0;
 
         if(res <= 0)
             {
@@ -878,55 +878,52 @@ pdchart_element_subtract(
 
 static STATUS
 pdchart_init_shape_suss_holes(
-    PDCHART_SHAPEDESC * p)
+    PDCHART_SHAPEDESC * const p_chart_shapedesc)
 {
     SLR end;
     TRAVERSE_BLOCK traverse_blk;
     P_SLOT sl;
     STATUS status = STATUS_OK;
 
-    end.col = p->end.col - 1; /* make these incl again for PipeDream block routines */
-    end.row = p->end.row - 1;
+    p_chart_shapedesc->min.col = LARGEST_COL_POSSIBLE;
+    p_chart_shapedesc->min.row = LARGEST_ROW_POSSIBLE;
+    p_chart_shapedesc->max.col = 0;
+    p_chart_shapedesc->max.row = 0;
 
-    p->cols.nz.lbr = NULL;
-    p->cols.nz.maxitemsize = 1;
-    p->cols.nz.maxpoolsize = 16;
+    p_chart_shapedesc->nz_cols.lbr = NULL;
+    p_chart_shapedesc->nz_cols.maxitemsize = 1;
+    p_chart_shapedesc->nz_cols.maxpoolsize = 16;
 
-    p->rows.nz.lbr = NULL;
-    p->rows.nz.maxitemsize = 1;
-    p->rows.nz.maxpoolsize = 16;
+    p_chart_shapedesc->nz_rows.lbr = NULL;
+    p_chart_shapedesc->nz_rows.maxitemsize = 1;
+    p_chart_shapedesc->nz_rows.maxpoolsize = 16;
 
-    traverse_block_init(&traverse_blk, p->docno, &p->stt, &end, TRAVERSE_DOWN_COLUMNS);
+    end.col = p_chart_shapedesc->end.col - 1; /* make these incl again for PipeDream block routines */
+    end.row = p_chart_shapedesc->end.row - 1;
 
-    p->cols.min = LARGEST_COL_POSSIBLE;
-    p->cols.max = 0;
-    p->rows.min = LARGEST_ROW_POSSIBLE;
-    p->rows.max = 0;
+    traverse_block_init(&traverse_blk, p_chart_shapedesc->docno, &p_chart_shapedesc->stt, &end, TRAVERSE_DOWN_COLUMNS);
 
     while((sl = traverse_block_next_slot(&traverse_blk)) != NULL)
         {
         /* if there's a slot, mark the col & row it's in */
-        COL          col;
-        ROW          row;
-        S32          number_slot;
+        const COL col = traverse_block_cur_col(&traverse_blk);
+        const ROW row = traverse_block_cur_row(&traverse_blk);
+        const S32 number_slot = (sl->type == SL_NUMBER);
         P_NLISTS_BLK nlbrp;
-        LIST_ITEMNO  key;
-        P_U8         entryp;
+        LIST_ITEMNO key;
+        P_U8 entryp;
 
         if(sl->type == SL_PAGE)
             continue;
 
-        number_slot = (sl->type == SL_NUMBER);
-
-        col = traverse_block_cur_col(&traverse_blk);
-        row = traverse_block_cur_row(&traverse_blk);
+        p_chart_shapedesc->min.col = MIN(p_chart_shapedesc->min.col, col);
+        p_chart_shapedesc->min.row = MIN(p_chart_shapedesc->min.row, row);
+        p_chart_shapedesc->max.col = MAX(p_chart_shapedesc->max.col, col);
+        p_chart_shapedesc->max.row = MAX(p_chart_shapedesc->max.row, row);
 
         /* this column is not blank */
-        p->cols.min = MIN(p->cols.min, col);
-        p->cols.max = MAX(p->cols.max, col);
-
-        nlbrp = &p->cols.nz;
-        key = col;
+        nlbrp = &p_chart_shapedesc->nz_cols;
+        key = (LIST_ITEMNO) col;
 
         if((entryp = collect_goto_item(U8, &nlbrp->lbr, key)) == NULL)
             {
@@ -938,11 +935,8 @@ pdchart_init_shape_suss_holes(
             *entryp = number_slot; /* numbers in slots force their way in */
 
         /* this row is not blank */
-        p->rows.min = MIN(p->rows.min, row);
-        p->rows.max = MAX(p->rows.max, row);
-
-        nlbrp = &p->rows.nz;
-        key = row;
+        nlbrp = &p_chart_shapedesc->nz_rows;
+        key = (LIST_ITEMNO) row;
 
         if((entryp = collect_goto_item(U8, &nlbrp->lbr, key)) == NULL)
             {
@@ -954,32 +948,32 @@ pdchart_init_shape_suss_holes(
             *entryp = number_slot;
         }
 
-    p->bits.something = 1;
+    p_chart_shapedesc->bits.something = 1;
 
     if(status < 0)
         {
-        p->bits.something = 0;
+        p_chart_shapedesc->bits.something = 0;
 
-        pdchart_init_shape_suss_holes_end(p);
+        pdchart_init_shape_suss_holes_end(p_chart_shapedesc);
         }
     else
         {
         /* adjust the end points */
-        if(p->cols.min < p->cols.max + 1)
+        if(p_chart_shapedesc->min.col < p_chart_shapedesc->max.col + 1)
             {
-            p->stt.col = p->cols.min;
-            p->end.col = p->cols.max + 1; /*excl*/
+            p_chart_shapedesc->stt.col = p_chart_shapedesc->min.col;
+            p_chart_shapedesc->end.col = p_chart_shapedesc->max.col + 1; /*excl*/
             }
         else
-            p->bits.something = 0;
+            p_chart_shapedesc->bits.something = 0;
 
-        if(p->rows.min < p->rows.max + 1)
+        if(p_chart_shapedesc->min.row < p_chart_shapedesc->max.row + 1)
             {
-            p->stt.row = p->rows.min;
-            p->end.row = p->rows.max + 1; /*excl*/
+            p_chart_shapedesc->stt.row = p_chart_shapedesc->min.row;
+            p_chart_shapedesc->end.row = p_chart_shapedesc->max.row + 1; /*excl*/
             }
         else
-            p->bits.something = 0;
+            p_chart_shapedesc->bits.something = 0;
         }
 
     return(status);
@@ -987,15 +981,15 @@ pdchart_init_shape_suss_holes(
 
 static void
 pdchart_init_shape_suss_holes_end(
-    PDCHART_SHAPEDESC * p /*inout*/)
+    PDCHART_SHAPEDESC * const p_chart_shapedesc /*inout*/)
 {
-    collect_delete(&p->cols.nz.lbr);
-    collect_delete(&p->rows.nz.lbr);
+    collect_delete(&p_chart_shapedesc->nz_cols.lbr);
+    collect_delete(&p_chart_shapedesc->nz_rows.lbr);
 }
 
 static S32
 pdchart_init_shape_from_marked_block(
-    PDCHART_SHAPEDESC * p /*out*/,
+    PDCHART_SHAPEDESC * const p_chart_shapedesc /*out*/,
     P_PDCHART_HEADER pdchart /*const, maybe NULL*/)
 {
     P_SLOT       sl;
@@ -1009,7 +1003,7 @@ pdchart_init_shape_from_marked_block(
 
     init_marked_block();
 
-    p->docno = blk_docno;
+    p_chart_shapedesc->docno = blk_docno;
 
     ++end_bl.col; /* convert end from incl to excl */
     ++end_bl.row;
@@ -1018,62 +1012,65 @@ pdchart_init_shape_from_marked_block(
     ev_recalc_all();
 
     #if TRACE_ALLOWED
-    * (int *) &p->bits = 0;
+    * (int *) &p_chart_shapedesc->bits = 0;
     #endif
 
     /* read the options */
-    p->bits.range_over_manual  = (d_chart_options[0].option != 'A');
-    p->bits.range_over_columns = (d_chart_options[0].option == 'C');
+    p_chart_shapedesc->bits.range_over_manual  = (d_chart_options[0].option != 'A');
+    p_chart_shapedesc->bits.range_over_columns = (d_chart_options[0].option == 'C');
 
     /* SKS after 4.12 24mar92 - merged from_marked_block and from_range as one was only ever called as the tail of t'other */
 
-    p->stt.col = start_bl.col;
-    p->stt.row = start_bl.row;
-    p->end.col = end_bl.col; /*excl*/
-    p->end.row = end_bl.row; /*excl*/
+    p_chart_shapedesc->stt.col = start_bl.col;
+    p_chart_shapedesc->stt.row = start_bl.row;
+    p_chart_shapedesc->end.col = end_bl.col; /*excl*/
+    p_chart_shapedesc->end.row = end_bl.row; /*excl*/
 
-    status_return(res = pdchart_init_shape_suss_holes(p));
+    status_return(res = pdchart_init_shape_suss_holes(p_chart_shapedesc));
 
-    p->cols.n = p->end.col - p->stt.col;
-    p->rows.n = p->end.row - p->stt.row;
+    p_chart_shapedesc->n.col = p_chart_shapedesc->end.col - p_chart_shapedesc->stt.col;
+    p_chart_shapedesc->n.row = p_chart_shapedesc->end.row - p_chart_shapedesc->stt.row;
+
+    p_chart_shapedesc->nz_n.col = 0;
+    p_chart_shapedesc->nz_n.row = 0;
 
     /* count the number of cols actually used */
-    p->cols.nz_n = 0;
-    cols_tx_n    = 0;
+    p_p_list_block = &p_chart_shapedesc->nz_cols.lbr;
+    cols_tx_n = 0;
 
-    for(entryp = collect_first(U8, &p->cols.nz.lbr, &key);
+    for(entryp = collect_first(U8, p_p_list_block, &key);
         entryp;
-        entryp = collect_next( U8, &p->cols.nz.lbr, &key))
+        entryp = collect_next( U8, p_p_list_block, &key))
         {
-        ++p->cols.nz_n;
+        ++p_chart_shapedesc->nz_n.col;
 
         if(!*entryp)
             ++cols_tx_n;
         }
 
     /* count the number of rows actually used */
-    p->rows.nz_n = 0;
-    rows_tx_n    = 0;
+    p_p_list_block = &p_chart_shapedesc->nz_rows.lbr;
+    rows_tx_n = 0;
 
-    for(entryp = collect_first(U8, &p->rows.nz.lbr, &key);
+    for(entryp = collect_first(U8, p_p_list_block, &key);
         entryp;
-        entryp = collect_next( U8, &p->rows.nz.lbr, &key))
+        entryp = collect_next( U8, p_p_list_block, &key))
         {
-        ++p->rows.nz_n;
+        ++p_chart_shapedesc->nz_n.row;
 
         if(!*entryp)
             ++rows_tx_n;
         }
 
-    p->bits.number_top_left = 0;
-    p->bits.label_top_left  = 0;
-    p->bits.number_left_col = 0;
-    p->bits.label_left_col  = 0;
-    p->bits.number_top_row  = 0;
-    p->bits.label_top_row   = 0;
+    p_chart_shapedesc->bits.number_top_left = 0;
+    p_chart_shapedesc->bits.label_top_left  = 0;
+    p_chart_shapedesc->bits.number_left_col = 0;
+    p_chart_shapedesc->bits.label_left_col  = 0;
+    p_chart_shapedesc->bits.number_top_row  = 0;
+    p_chart_shapedesc->bits.label_top_row   = 0;
 
     /* what is at the top left? */
-    sl = travel_externally(p->docno, p->stt.col, p->stt.row);
+    sl = travel_externally(p_chart_shapedesc->docno, p_chart_shapedesc->stt.col, p_chart_shapedesc->stt.row);
 
     if(sl)
         switch(result_extract(sl, &p_ev_result))
@@ -1084,23 +1081,23 @@ pdchart_init_shape_from_marked_block(
             case SL_NUMBER:
                 if(pdchart_extract_numeric_result(p_ev_result, NULL))
                     {
-                    p->bits.number_top_left = 1;
+                    p_chart_shapedesc->bits.number_top_left = 1;
                     break;
                     }
 
             /* else deliberate drop thru ... */
 
             default:
-                p->bits.label_top_left = 1;
+                p_chart_shapedesc->bits.label_top_left = 1;
+                break;
             }
 
-    /* see whether left column is a label set. can skip top left as that's been covered */
-    {
-    ROW row = p->stt.row + 1;
+    { /* see whether left column is a label set. can skip top left as that's been covered */
+    ROW row = p_chart_shapedesc->stt.row + 1;
 
-    if(row < p->end.row)
+    if(row < p_chart_shapedesc->end.row)
         do {
-            sl = travel_externally(p->docno, p->stt.col, row);
+            sl = travel_externally(p_chart_shapedesc->docno, p_chart_shapedesc->stt.col, row);
 
             if(sl)
                 switch(result_extract(sl, &p_ev_result))
@@ -1111,27 +1108,26 @@ pdchart_init_shape_from_marked_block(
                     case SL_NUMBER:
                         if(pdchart_extract_numeric_result(p_ev_result, NULL))
                             {
-                            p->bits.number_left_col = 1;
+                            p_chart_shapedesc->bits.number_left_col = 1;
                             break;
                             }
 
                     /* else deliberate drop thru ... */
 
                     default:
-                        p->bits.label_left_col = 1;
+                        p_chart_shapedesc->bits.label_left_col = 1;
                         break;
                     }
             }
-        while(++row < p->end.row); /* in ideal case one would be able to zip down a sparse list... */
-    }
+        while(++row < p_chart_shapedesc->end.row); /* in ideal case one would be able to zip down a sparse list... */
+    } /*block*/
 
-    /* see whether top row is a label set. can skip top left as that's been covered */
-    {
-    COL col = p->stt.col + 1;
+    { /* see whether top row is a label set. can skip top left as that's been covered */
+    COL col = p_chart_shapedesc->stt.col + 1;
 
-    if(col < p->end.col)
+    if(col < p_chart_shapedesc->end.col)
         do  {
-            sl = travel_externally(p->docno, col, p->stt.row);
+            sl = travel_externally(p_chart_shapedesc->docno, col, p_chart_shapedesc->stt.row);
 
             if(sl)
                 switch(result_extract(sl, &p_ev_result))
@@ -1142,32 +1138,32 @@ pdchart_init_shape_from_marked_block(
                     case SL_NUMBER:
                         if(pdchart_extract_numeric_result(p_ev_result, NULL))
                             {
-                            p->bits.number_top_row = 1;
+                            p_chart_shapedesc->bits.number_top_row = 1;
                             break;
                             }
 
                     /* else deliberate drop thru ... */
 
                     default:
-                        p->bits.label_top_row = 1;
+                        p_chart_shapedesc->bits.label_top_row = 1;
                         break;
                     }
             }
-        while(++col < p->end.col); /* in ideal case one would be able to zip down a sparse list... (but not in PipeDream) */
-    }
+        while(++col < p_chart_shapedesc->end.col); /* in ideal case one would be able to zip down a sparse list... (but not in PipeDream) */
+    } /*block*/
 
     /* SKS after 4.12 24mar92 -  more care needed with top left corner for predictability */
-    if(p->bits.label_top_left)
+    if(p_chart_shapedesc->bits.label_top_left)
         {
-        if(p->bits.range_over_manual && !p->bits.range_over_columns)
+        if(p_chart_shapedesc->bits.range_over_manual && !p_chart_shapedesc->bits.range_over_columns)
             {
             /* if we are definitely arranging across rows then do opposite to the below case */
-            if(!p->bits.label_left_col)
+            if(!p_chart_shapedesc->bits.label_left_col)
                 {
-                if((p->rows.nz_n > 1) && p->bits.number_left_col)
-                    p->bits.label_top_row  = 1;
+                if((p_chart_shapedesc->nz_n.row > 1) && p_chart_shapedesc->bits.number_left_col)
+                    p_chart_shapedesc->bits.label_top_row  = 1;
                 else
-                    p->bits.label_left_col = 1;
+                    p_chart_shapedesc->bits.label_left_col = 1;
                 }
             }
         else
@@ -1177,69 +1173,69 @@ pdchart_init_shape_from_marked_block(
              * (else adding a column with a series label is impossible)
              * this makes adding to chart with series headings work as before (sort of)
             */
-            if(!p->bits.label_top_row)
+            if(!p_chart_shapedesc->bits.label_top_row)
                 {
-                if((p->cols.nz_n > 1) && p->bits.number_top_row)
-                    p->bits.label_left_col = 1;
+                if((p_chart_shapedesc->nz_n.col > 1) && p_chart_shapedesc->bits.number_top_row)
+                    p_chart_shapedesc->bits.label_left_col = 1;
                 else
-                    p->bits.label_top_row  = 1;
+                    p_chart_shapedesc->bits.label_top_row  = 1;
                 }
             }
         }
 
     /* can sort bits out now (and soon probably remove as irrelevant) */
-    if(p->bits.label_top_left)
-        p->bits.number_top_left = 0;
+    if(p_chart_shapedesc->bits.label_top_left)
+        p_chart_shapedesc->bits.number_top_left = 0;
 
-    if(p->bits.label_left_col)
-        p->bits.number_left_col = 0;
+    if(p_chart_shapedesc->bits.label_left_col)
+        p_chart_shapedesc->bits.number_left_col = 0;
 
-    if(p->bits.label_top_row)
-        p->bits.number_top_row = 0;
+    if(p_chart_shapedesc->bits.label_top_row)
+        p_chart_shapedesc->bits.number_top_row = 0;
 
-    if(!p->bits.range_over_manual)
+    if(!p_chart_shapedesc->bits.range_over_manual)
         {
         /* SKS after 4.12 24mar92 - change test to be more careful and predictable */
-        S32 datacols = p->cols.nz_n;
-        S32 datarows = p->rows.nz_n;
-        if(p->bits.label_left_col)
+        S32 datacols = p_chart_shapedesc->nz_n.col;
+        S32 datarows = p_chart_shapedesc->nz_n.row;
+        if(p_chart_shapedesc->bits.label_left_col)
             --datacols;
-        if(p->bits.label_top_row)
+        if(p_chart_shapedesc->bits.label_top_row)
             --datarows;
         if(datacols != datarows)
-            p->bits.range_over_columns = (datacols < datarows);
-        else if(p->bits.label_top_row)
-            p->bits.range_over_columns = TRUE;
-        else if(p->bits.label_left_col)
-            p->bits.range_over_columns = FALSE;
+            p_chart_shapedesc->bits.range_over_columns = (datacols < datarows);
+        else if(p_chart_shapedesc->bits.label_top_row)
+            p_chart_shapedesc->bits.range_over_columns = TRUE;
+        else if(p_chart_shapedesc->bits.label_left_col)
+            p_chart_shapedesc->bits.range_over_columns = FALSE;
         else
-            p->bits.range_over_columns = TRUE;
+            p_chart_shapedesc->bits.range_over_columns = TRUE;
         }
 
-    p->bits.label_first_range = (p->bits.range_over_columns)
-                                            ? p->bits.label_left_col
-                                            : p->bits.label_top_row;
+    p_chart_shapedesc->bits.label_first_range = (p_chart_shapedesc->bits.range_over_columns)
+                                                    ? p_chart_shapedesc->bits.label_left_col
+                                                    : p_chart_shapedesc->bits.label_top_row;
 
-    p->bits.label_first_item  = (p->bits.range_over_columns)
-                                            ? p->bits.label_top_row
-                                            : p->bits.label_left_col;
+    p_chart_shapedesc->bits.label_first_item  = (p_chart_shapedesc->bits.range_over_columns)
+                                                    ? p_chart_shapedesc->bits.label_top_row
+                                                    : p_chart_shapedesc->bits.label_left_col;
 
-    p_p_list_block = (p->bits.range_over_columns)
-                        ? &p->cols.nz.lbr
-                        : &p->rows.nz.lbr;
+    p_p_list_block = (p_chart_shapedesc->bits.range_over_columns)
+                        ? &p_chart_shapedesc->nz_cols.lbr
+                        : &p_chart_shapedesc->nz_rows.lbr;
 
-    if(p->bits.label_first_range)
+    if(p_chart_shapedesc->bits.label_first_range)
         {
         /* protect range from deletion */
-        if(p->bits.range_over_columns)
+        if(p_chart_shapedesc->bits.range_over_columns)
             {
             --cols_tx_n;
-            key = p->stt.col;
+            key = p_chart_shapedesc->stt.col;
             }
         else
             {
             --rows_tx_n;
-            key = p->stt.row;
+            key = p_chart_shapedesc->stt.row;
             }
 
         entryp = collect_goto_item(U8, p_p_list_block, key);
@@ -1248,16 +1244,16 @@ pdchart_init_shape_from_marked_block(
         }
 
     /* remove superfluous non-numeric ranges now */
-    p->cols.nz_n -= cols_tx_n;
-    p->rows.nz_n -= rows_tx_n;
+    p_chart_shapedesc->nz_n.col -= cols_tx_n;
+    p_chart_shapedesc->nz_n.row -= rows_tx_n;
 
-    p->n_ranges = (p->bits.range_over_columns)
-                            ? p->cols.nz_n
-                            : p->rows.nz_n;
+    p_chart_shapedesc->n_ranges = (p_chart_shapedesc->bits.range_over_columns)
+                                    ? p_chart_shapedesc->nz_n.col
+                                    : p_chart_shapedesc->nz_n.row;
 
-    key = (p->bits.range_over_columns)
-                    ? p->stt.col
-                    : p->stt.row;
+    key = (p_chart_shapedesc->bits.range_over_columns)
+                    ? p_chart_shapedesc->stt.col
+                    : p_chart_shapedesc->stt.row;
 
     for(entryp = collect_first_from(U8, p_p_list_block, &key);
         entryp;
@@ -1268,9 +1264,10 @@ pdchart_init_shape_from_marked_block(
         }
 
     /* SKS after 4.12 24mar92 - see whether there is any data left after that! */
-    if(p->n_ranges == 0)
+    if(p_chart_shapedesc->n_ranges == 0)
         return(create_error(ERR_CHARTNONUMERICDATA));
-    else if((p->n_ranges == 1) && p->bits.label_first_range)
+
+    if((p_chart_shapedesc->n_ranges == 1) && p_chart_shapedesc->bits.label_first_range)
         {
         /* go interactive */
         switch(riscdialog_query_YN("There is no numeric data in the marked block. Do you want to continue?"))
@@ -1284,7 +1281,7 @@ pdchart_init_shape_from_marked_block(
             case riscdialog_query_NO:
             case riscdialog_query_CANCEL:
                 /* abandon operation */
-                pdchart_init_shape_suss_holes_end(p);
+                pdchart_init_shape_suss_holes_end(p_chart_shapedesc);
                 return(0);
             }
         }
@@ -1294,7 +1291,7 @@ pdchart_init_shape_from_marked_block(
 
      * SKS after 4.12 24mar92 - rather different to what has gone before...
     */
-    if(0 && !p->bits.label_first_range)
+    if(0 && !p_chart_shapedesc->bits.label_first_range)
         {
         /* if adding to a chart see if already added else ask preferred chart whether it wants them */
         S32 wants_labels = 0;
@@ -1314,18 +1311,18 @@ pdchart_init_shape_from_marked_block(
 
             (void) xsnprintf(buffer, elemof32(buffer),
                     "Use %snumeric %s as category labels?",
-                    (p->n_ranges > 1)            ? "first " : "",
-                    (p->bits.range_over_columns) ? "column" : "row");
+                    (p_chart_shapedesc->n_ranges > 1)            ? "first " : "",
+                    (p_chart_shapedesc->bits.range_over_columns) ? "column" : "row");
 
             switch(riscdialog_query_YN(buffer))
                 {
                 case riscdialog_query_YES:
-                    p->bits.label_first_range = 1;
+                    p_chart_shapedesc->bits.label_first_range = 1;
                     break;
 
                 case riscdialog_query_CANCEL:
                     /* abandon operation */
-                    pdchart_init_shape_suss_holes_end(p);
+                    pdchart_init_shape_suss_holes_end(p_chart_shapedesc);
                     return(0);
 
                 default:
@@ -2899,7 +2896,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
 extern void
 ChartNew_fn(void)
 {
-    PDCHART_SHAPEDESC pdcsd;
+    PDCHART_SHAPEDESC chart_shapedesc;
     P_PDCHART_HEADER  pdchart;
     S32               res;
 
@@ -2911,7 +2908,7 @@ ChartNew_fn(void)
         return;
         }
 
-    if((res = pdchart_init_shape_from_marked_block(&pdcsd, NULL)) < 0)
+    if((res = pdchart_init_shape_from_marked_block(&chart_shapedesc, NULL)) < 0)
         {
         reperr_null(res);
         return;
@@ -2921,16 +2918,16 @@ ChartNew_fn(void)
     if(!res)
         return;
 
-    if((res = pdchart_new(&pdchart, pdcsd.n_ranges, 1, 1)) < 0)
+    if((res = pdchart_new(&pdchart, chart_shapedesc.n_ranges, 1, 1)) < 0)
         {
-        pdchart_init_shape_suss_holes_end(&pdcsd);
+        pdchart_init_shape_suss_holes_end(&chart_shapedesc);
         reperr_null(res);
         return;
         }
 
-    res = pdchart_add(pdchart, &pdcsd, 1);
+    res = pdchart_add(pdchart, &chart_shapedesc, 1);
 
-    pdchart_init_shape_suss_holes_end(&pdcsd);
+    pdchart_init_shape_suss_holes_end(&chart_shapedesc);
 
     if(res < 0)
         {
@@ -2963,7 +2960,7 @@ ChartNew_fn(void)
 extern void
 ChartAdd_fn(void)
 {
-    PDCHART_SHAPEDESC pdcsd;
+    PDCHART_SHAPEDESC chart_shapedesc;
     S32               res;
 
     /* SKS after 4.12 26mar92 */
@@ -3006,7 +3003,7 @@ ChartAdd_fn(void)
         }
     else
         {
-        if((res = pdchart_init_shape_from_marked_block(&pdcsd, pdchart_current)) < 0)
+        if((res = pdchart_init_shape_from_marked_block(&chart_shapedesc, pdchart_current)) < 0)
             {
             reperr_null(res);
             return;
@@ -3016,9 +3013,9 @@ ChartAdd_fn(void)
         if(!res)
             return;
 
-        res = pdchart_add(pdchart_current, &pdcsd, 0);
+        res = pdchart_add(pdchart_current, &chart_shapedesc, 0);
 
-        pdchart_init_shape_suss_holes_end(&pdcsd);
+        pdchart_init_shape_suss_holes_end(&chart_shapedesc);
         }
 
     if(res < 0)

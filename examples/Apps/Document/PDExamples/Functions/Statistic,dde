@@ -1,4 +1,4 @@
-%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%VS4.53 (xx-Jan-2015), Colton Software, R9200 7500 3900 8299
 %OP%DP4
 %OP%LP*
 %OP%TM4
@@ -8,7 +8,7 @@
 %OP%FX160
 %OP%FY160
 %OP%FS0
-%OP%WC2,1796,512,1364,0,8,0,0
+%OP%WC418,2290,770,1772,3,13,0,0
 %CO:A,10,100%%C%%H2%Statistical Functions Examples
 
 
@@ -22,6 +22,7 @@
 %C%Function
 
 AVG
+COMBIN
 COUNT
 GRAND
 MAX
@@ -44,8 +45,9 @@ VARP
 %R%Input 1
 
 %R%B4E8
+%V%%R%%D0%6
 %R%B4E8
-%V%%R%2
+%V%%R%0
 %R%B4E8
 %R%B4E8
 %V%%R%1
@@ -66,6 +68,7 @@ VARP
 %R%Input 2
 
 %R%-
+%V%%R%%D0%3
 %R%-
 %V%%R%1
 %R%-
@@ -97,6 +100,7 @@ VARP
 %R%-
 %R%-
 %R%-
+%R%-
 %CO:E,9,0%
 
 
@@ -110,11 +114,12 @@ VARP
 %C%Result
 
 %V%%C%avg(B4E8)
+%V%%C%%D0%combin(B14,C14)
 %V%%C%count(B4E8)
-%V%%C%grand(B15,C15)
+%V%%C%grand(B16,C16)
 %V%%C%max(B4E8)
 %V%%C%min(B4E8)
-%V%%C%rand(B18)
+%V%%C%rand(B19)
 %V%%C%std(B4E8)
 %V%%C%stdp(B4E8)
 %V%%C%var(B4E8)
@@ -132,12 +137,13 @@ VARP
 %L%Summary
 
 Returns the average of a list of numbers.
+Number of combinations of %H4%Input1%H4% items taken %H4%Input2%H4% at a time.
 Counts the number of entries in a list. (Numeric Slots only).
-Generates a Gaussian random number, average %H4%Input1%H4%, s.d. %H4%Input2%H4%, both optional.
+Generates a random number from the normal distribution with average %H4%Input1%H4%, s.d. %H4%Input2%H4%, both optional.
 Returns the maximum value in a list.
 Returns the minimum value in a list.
 Generates a random number using %H4%Input1%H4% as the seed. %H4%Input1%H4% is optional.
+Returns the sample standard deviation of a list.
 Returns the population standard deviation of a list.
-Returns the modified population standard deviation of a list.
+Returns the sample variance of a list.
 Returns the population variance of a list.
-Returns the modified population variance of a list.

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* SKS July 1991 */
 
@@ -13,88 +13,107 @@
 #define __mathxtra_h
 
 /*
-function declarations
+exported functions
 */
 
 #define PRAGMA_SIDE_EFFECTS_OFF
 #include "coltsoft/pragma.h"
 /* note that ANSI errno is volatile to enable this sort of CSE optimization */
 
+_Check_return_
 extern F64
 mx_acosh(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_acosec(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_acosech(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_acot(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_acoth(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_asec(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_asech(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_asinh(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_atanh(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_cosec(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_cosech(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_cot(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_coth(
-    F64 x);
+    _InVal_     F64 x);
 
+/* return the square of a number (or more likely, hard expression) */
+
+_Check_return_
 static inline F64
 mx_fsquare(
-    F64 x)
+    _InVal_     F64 x)
 {
     return(x * x);
 }
 
+_Check_return_
 extern F64
 mx_fhypot(
-    F64 x,
-    F64 y);
+    _InVal_     F64 x,
+    _InVal_     F64 y);
 
+_Check_return_
 extern F64
 mx_sec(
-    F64 x);
+    _InVal_     F64 x);
 
+_Check_return_
 extern F64
 mx_sech(
-    F64 x);
+    _InVal_     F64 x);
 
 #define PRAGMA_SIDE_EFFECTS
 #include "coltsoft/pragma.h"
 
 #endif /* __mathxtra_h */
 
-/* end of mathxtra.h */
+/* end of mathxtra.h  */

@@ -31,8 +31,8 @@ _Check_return_
 static STATUS
 array_element_copy(
     _InoutRef_  P_EV_DATA p_ev_data_array,
-    _InVal_     S32 x,
-    _InVal_     S32 y,
+    _InVal_     S32 ix,
+    _InVal_     S32 iy,
     _InRef_     PC_EV_DATA p_ev_data_from);
 
 static void
@@ -237,11 +237,11 @@ _Check_return_
 static STATUS
 array_element_copy(
     _InoutRef_  P_EV_DATA p_ev_data_array,
-    _InVal_     S32 x,
-    _InVal_     S32 y,
+    _InVal_     S32 ix,
+    _InVal_     S32 iy,
     _InRef_     PC_EV_DATA p_ev_data_from)
 {
-    const P_EV_DATA p_ev_data = ss_array_element_index_wr(p_ev_data_array, x, y);
+    const P_EV_DATA p_ev_data = ss_array_element_index_wr(p_ev_data_array, ix, iy);
 
     switch(p_ev_data_from->did_num)
     {
@@ -392,19 +392,21 @@ end_expand:
 *
 ******************************************************************************/
 
+/*ncr*/
 extern EV_IDNO
 array_range_index(
-    P_EV_DATA p_ev_data_out,
+    _OutRef_    P_EV_DATA p_ev_data_out,
     _InRef_     PC_EV_DATA p_ev_data_in,
-    S32 x,
-    S32 y,
-    EV_TYPE types)
+    _InVal_     S32 ix,
+    _InVal_     S32 iy,
+    _InVal_     EV_TYPE types)
 {
     S32 xs, ys;
 
     array_range_sizes(p_ev_data_in, &xs, &ys);
 
-    if(x >= xs || y >= ys)
+    if( ((U32) ix >= (U32) xs) ||
+        ((U32) iy >= (U32) ys) ) /* caters for negative indexing */
     {
         ev_data_set_error(p_ev_data_out, EVAL_ERR_SUBSCRIPT);
         return(p_ev_data_out->did_num);
@@ -414,13 +416,13 @@ array_range_index(
     {
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
-        ss_array_element_read(p_ev_data_out, p_ev_data_in, x, y);
+        ss_array_element_read(p_ev_data_out, p_ev_data_in, ix, iy);
         break;
 
     case RPN_DAT_RANGE:
         p_ev_data_out->arg.slr = p_ev_data_in->arg.range.s;
-        p_ev_data_out->arg.slr.col += (EV_COL) x;
-        p_ev_data_out->arg.slr.row += (EV_ROW) y;
+        p_ev_data_out->arg.slr.col += (EV_COL) ix;
+        p_ev_data_out->arg.slr.row += (EV_ROW) iy;
         p_ev_data_out->did_num = RPN_DAT_SLR;
         break;
 
@@ -442,26 +444,26 @@ array_range_index(
 
 extern void
 array_range_mono_index(
-    P_EV_DATA p_ev_data_out,
+    _OutRef_    P_EV_DATA p_ev_data_out,
     _InRef_     PC_EV_DATA p_ev_data_in,
-    S32 mono_x,
-    EV_TYPE types)
+    _InVal_     S32 mono_ix,
+    _InVal_     EV_TYPE types)
 {
     S32 xs, ys;
 
     array_range_sizes(p_ev_data_in, &xs, &ys);
 
-    if(!xs || !ys)
+    if((0 == xs) || (0 == ys))
     {
         ev_data_set_error(p_ev_data_out, create_error(EVAL_ERR_SUBSCRIPT));
         return;
     }
 
     {
-    S32 y  =      mono_x / xs;
-    S32 x  = mono_x - (y * xs);
+    const S32 iy  =       mono_ix / xs;
+    const S32 ix  = mono_ix - (iy * xs);
 
-    array_range_index(p_ev_data_out, p_ev_data_in, x, y, types);
+    array_range_index(p_ev_data_out, p_ev_data_in, ix, iy, types);
     } /*block*/
 }
 
@@ -768,11 +770,11 @@ data_ensure_constant_sub(
             ev_data_set_error(p_ev_data, EVAL_ERR_NESTEDARRAY);
         else
         {
-            S32 x, y;
+            S32 ix, iy;
 
-            for(y = 0; y < p_ev_data->arg.ev_array.y_size; ++y)
-                for(x = 0; x < p_ev_data->arg.ev_array.x_size; ++x)
-                    data_ensure_constant_sub(ss_array_element_index_wr(p_ev_data, x, y), TRUE);
+            for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
+                for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
+                    data_ensure_constant_sub(ss_array_element_index_wr(p_ev_data, ix, iy), TRUE);
         }
         break;
 
@@ -859,11 +861,11 @@ data_limit_types(
                 ev_data_set_error(p_ev_data, create_error(EVAL_ERR_NESTEDARRAY));
             else
                 {
-                S32 x, y;
+                S32 ix, iy;
 
-                for(y = 0; y < p_ev_data->arg.ev_array.y_size; ++y)
-                    for(x = 0; x < p_ev_data->arg.ev_array.x_size; ++x)
-                        data_limit_types(ss_array_element_index_wr(p_ev_data, x, y), TRUE);
+                for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
+                    for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
+                        data_limit_types(ss_array_element_index_wr(p_ev_data, ix, iy), TRUE);
                 }
             break;
 
@@ -968,14 +970,14 @@ ev_data_to_result_convert(
 
         case RPN_TMP_ARRAY:
             {
-            S32 x, y;
+            S32 ix, iy;
 
-            for(y = 0; y < temp.arg.ev_array.y_size; ++y)
-                for(x = 0; x < temp.arg.ev_array.x_size; ++x)
+            for(iy = 0; iy < temp.arg.ev_array.y_size; ++iy)
+                for(ix = 0; ix < temp.arg.ev_array.x_size; ++ix)
                     {
                     P_EV_DATA p_ev_data_a;
 
-                    p_ev_data_a = ss_array_element_index_wr(&temp, x, y);
+                    p_ev_data_a = ss_array_element_index_wr(&temp, ix, iy);
                     if(p_ev_data_a->did_num == RPN_TMP_STRING)
                         p_ev_data_a->did_num = RPN_RES_STRING;
                     }

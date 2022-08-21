@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Version information for PipeDream */
 
@@ -17,8 +17,8 @@
  * r32.!PipeDream.Resource.Relnotes
  */
 
-#define Version      "4.52/08"
-#define CurrentDate  "(18-Dec-2014)"
+#define Version      "4.53"
+#define CurrentDate  "(xx-Jan-2015)"
 
 /*
 * 18 Dec 2014 - 4.52/08

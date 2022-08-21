@@ -5,20 +5,23 @@
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
 | Copyright (C) 1991-1998 Colton Software Limited
-| Copyright (C) 1998-2014 R W Colton
+| Copyright (C) 1998-2015 R W Colton
 
 IfThere $.Temp Then Else %CDir $.Temp
 
-Set pd$Disc $.Temp.PDManuals_20141218
-| Remember to update RiscPkg.Control too
+Set pd$Disc $.Temp.PDManuals_20150218
+| Remember to update RiscPkg.Control too and check it in first!
 
 X %Wipe <pd$Disc> ~cfr~v
 
+time
+echo Starting svn export - please be patient
 svn export <Obey$Dir> <pd$Disc>
+time
 
-settype <pd$Disc>.Apps.Manuals.PipeDream.RefGuide.index/html FAF
+settype <pd$Disc>.Manuals.PipeDream.RefGuide.index/html FAF
 
-settype <pd$Disc>.Apps.Manuals.PipeDream.Tutorial.index/html FAF
+settype <pd$Disc>.Manuals.PipeDream.Tutorial.index/html FAF
 
 | The one in RiscPkg is the useful one for the packaged docs
 delete <pd$Disc>.LICENSE

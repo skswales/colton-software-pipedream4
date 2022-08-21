@@ -23,6 +23,10 @@
 
 #define RPN_DAT_ARRAY RPN_TMP_ARRAY /* PipeDream evaluator different RPN types */
 #define RPN_DAT_NEXT_NUMBER -1
+
+extern PC_U8
+reperr_getstr(
+    STATUS errornumber);
 #endif /* PipeDream */
 
 /*
@@ -633,17 +637,6 @@ convert_number_lookup(
     }
 }
 
-static U8
-base_character(
-    _InVal_     S32 value,
-    _InVal_     U8 base_char)
-{
-    if(value < 9)
-        return((U8) (value + CH_DIGIT_ZERO));
-
-    return((U8) (base_char + value - 10));
-}
-
 /******************************************************************************
 *
 * Output standard number to num_buf
@@ -707,6 +700,20 @@ convert_number_standard(
             report_ustr(p_numform_info->ustr_decimal_section), p_numform_info->decimal_places_actual);
 }
 
+_Check_return_
+static inline U8
+base_character(
+    _InVal_     S32 digit_in_base,
+    _InVal_     U8 base_char)
+{
+    assert(digit_in_base >= 0);
+
+    if(digit_in_base < 10)
+        return((U8) (CH_DIGIT_ZERO + digit_in_base));
+
+    return((U8) (base_char + digit_in_base - 10));
+}
+
 static void
 convert_number_base(
     _InoutRef_  P_NUMFORM_INFO p_numform_info)
@@ -726,8 +733,9 @@ convert_number_base(
         *p_buffer++ = CH_DIGIT_ZERO;
     while(work_value > 0)
     {
-        *p_buffer++ = base_character(work_value % p_numform_info->base, p_numform_info->base_basechar);
-        work_value /= p_numform_info->base;
+        const S32 digit_in_base = work_value % p_numform_info->base;
+        work_value = work_value / p_numform_info->base;
+        *p_buffer++ = base_character(digit_in_base, p_numform_info->base_basechar);
     }
     p_buffer--;
     while(CH_NULL != *p_buffer)
@@ -1350,10 +1358,13 @@ numform_output(
                     continue;
                 }
 
+                if(RPN_DAT_BLANK == p_numform_info->ev_data.did_num)
+                    continue;
+
                 if(RPN_DAT_ERROR == p_numform_info->ev_data.did_num)
                 {
 #if 1 /* PipeDream */
-                    assert0();
+                    status_return(quick_ublock_ustr_add(p_quick_ublock, reperr_getstr(p_numform_info->ev_data.arg.ev_error.status)));
 #else
                     status_return(resource_lookup_quick_ublock(p_numform_info->ev_data.arg.ev_error.status, p_quick_ublock));
 #endif

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1992-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* MRJC April 1992 / August 1993; SKS derived from Fireworkz for PipeDream use */
 
@@ -42,6 +42,88 @@ ev_data_set_error(
 
 /******************************************************************************
 *
+* floor() of real with possible ickle rounding
+*
+* rounding performed like real_trunc()
+* so ((0.06-0.04)/0.01) coerced to integer is 2 not 1 etc.
+*
+******************************************************************************/
+
+/* rounds at the given significant place before floor-ing */
+
+_Check_return_
+extern F64
+real_floor(
+    _InVal_     F64 f64)
+{
+    F64 floor_value;
+
+    /*if(global_preferences.ss_calc_additional_rounding)*/
+    {
+        int exponent;
+        F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
+        const int mantissa_digits_minus_n = (DBL_MANT_DIG - 3);
+
+        if(exponent >= 0) /* no need to do more for negative exponents here */
+        {
+            const F64 rounding_value = copysign(pow(2.0, exponent - mantissa_digits_minus_n), mantissa);
+            const F64 adjusted_value = f64 + rounding_value;
+
+            /* adjusted result */
+            floor_value = floor(adjusted_value);
+            return(floor_value);
+        }
+    }
+
+    /* standard result */
+    floor_value = floor(f64);
+    return(floor_value);
+}
+
+/******************************************************************************
+*
+* trunc() of real with possible ickle rounding
+*
+* SKS 06oct97 for INT() function try rounding an ickle bit
+* so INT((0.06-0.04)/0.01) is 2 not 1
+* and INT((0.06-0.02)/1E-6) is 20000 not 19999
+* which is different to naive real_trunc()
+*
+******************************************************************************/
+
+/* rounds at the given significant place before truncating */
+
+_Check_return_
+extern F64
+real_trunc(
+    _InVal_     F64 f64)
+{
+    F64 trunc_value;
+
+    /*if(global_preferences.ss_calc_additional_rounding)*/
+    {
+        int exponent;
+        F64 mantissa = frexp(f64, &exponent); /* yields mantissa in ±[0.5,1.0) */
+        const int mantissa_digits_minus_n = (DBL_MANT_DIG - 3);
+
+        if(exponent >= 0) /* no need to do more for negative exponents here */
+        {
+            const F64 rounding_value = copysign(pow(2.0, exponent - mantissa_digits_minus_n), mantissa);
+            const F64 adjusted_value = f64 + rounding_value;
+
+            /* adjusted result */
+            (void) modf(adjusted_value, &trunc_value);
+            return(trunc_value);
+        }
+    }
+
+    /* standard result */
+    (void) modf(f64, &trunc_value);
+    return(trunc_value);
+}
+
+/******************************************************************************
+*
 * force conversion of fp to integer
 *
 ******************************************************************************/
@@ -73,26 +155,30 @@ real_to_integer_force(
 *
 ******************************************************************************/
 
-extern void
+/*ncr*/
+extern BOOL
 real_to_integer_try(
     _InoutRef_  P_EV_DATA p_ev_data)
 {
     F64 floor_value;
 
     if(p_ev_data->did_num != RPN_DAT_REAL)
-        return;
+        return(FALSE);
 
     floor_value = floor(p_ev_data->arg.fp);
 
     if( (floor_value >  S32_MAX) ||
         (floor_value < -S32_MAX) ) /* NB NOT S32_MIN */
-        return;
+        return(FALSE);
 
     if(floor_value == p_ev_data->arg.fp)
     {
         S32 s32 = (S32) floor_value;
         ev_data_set_integer(p_ev_data, s32);
+        return(TRUE); /* converted OK */
     }
+
+    return(FALSE); /* unmodified */
 }
 
 /******************************************************************************
@@ -105,11 +191,11 @@ extern void
 ss_array_free(
     _InoutRef_  P_EV_DATA p_ev_data)
 {
-    S32 x, y;
+    S32 ix, iy;
 
-    for(y = 0; y < p_ev_data->arg.ev_array.y_size; ++y)
-        for(x = 0; x < p_ev_data->arg.ev_array.x_size; ++x)
-            ss_data_free_resources(ss_array_element_index_wr(p_ev_data, x, y));
+    for(iy = 0; iy < p_ev_data->arg.ev_array.y_size; ++iy)
+        for(ix = 0; ix < p_ev_data->arg.ev_array.x_size; ++ix)
+            ss_data_free_resources(ss_array_element_index_wr(p_ev_data, ix, iy));
 
     p_ev_data->did_num = RPN_DAT_BLANK;
 
@@ -154,17 +240,17 @@ _Ret_/*maybenull*/
 extern P_EV_DATA
 ss_array_element_index_wr(
     _InoutRef_  P_EV_DATA p_ev_data,
-    _InVal_     S32 x,
-    _InVal_     S32 y)
+    _InVal_     S32 ix,
+    _InVal_     S32 iy)
 {
-    assert(x < p_ev_data->arg.ev_array.x_size && y < p_ev_data->arg.ev_array.y_size);
+    assert((ix < p_ev_data->arg.ev_array.x_size) && (iy < p_ev_data->arg.ev_array.y_size));
 
-    if(x >= p_ev_data->arg.ev_array.x_size || y >= p_ev_data->arg.ev_array.y_size)
+    if((ix >= p_ev_data->arg.ev_array.x_size) || (iy >= p_ev_data->arg.ev_array.y_size))
         return(NULL);
 
     assert(NULL != p_ev_data->arg.ev_array.elements);
 
-    return(p_ev_data->arg.ev_array.elements + (y * p_ev_data->arg.ev_array.x_size) + x);
+    return(p_ev_data->arg.ev_array.elements + (iy * p_ev_data->arg.ev_array.x_size) + ix);
 }
 
 /******************************************************************************
@@ -178,17 +264,17 @@ _Ret_/*maybenull*/
 extern PC_EV_DATA
 ss_array_element_index_borrow(
     _InRef_     PC_EV_DATA p_ev_data,
-    _InVal_     S32 x,
-    _InVal_     S32 y)
+    _InVal_     S32 ix,
+    _InVal_     S32 iy)
 {
-    assert(x < p_ev_data->arg.ev_array.x_size && y < p_ev_data->arg.ev_array.y_size);
+    assert((ix < p_ev_data->arg.ev_array.x_size) && (iy < p_ev_data->arg.ev_array.y_size));
 
-    if(x >= p_ev_data->arg.ev_array.x_size || y >= p_ev_data->arg.ev_array.y_size)
+    if((ix >= p_ev_data->arg.ev_array.x_size) || (iy >= p_ev_data->arg.ev_array.y_size))
         return(NULL);
 
     assert(NULL != p_ev_data->arg.ev_array.elements);
 
-    return(p_ev_data->arg.ev_array.elements + (y * p_ev_data->arg.ev_array.x_size) + x);
+    return(p_ev_data->arg.ev_array.elements + (iy * p_ev_data->arg.ev_array.x_size) + ix);
 }
 
 /******************************************************************************
@@ -200,8 +286,8 @@ ss_array_element_index_borrow(
 extern STATUS
 ss_array_element_make(
     _InoutRef_  P_EV_DATA p_ev_data,
-    _InVal_     S32 x,
-    _InVal_     S32 y)
+    _InVal_     S32 ix,
+    _InVal_     S32 iy)
 {
     const S32 old_xs = p_ev_data->arg.ev_array.x_size;
     const S32 old_ys = p_ev_data->arg.ev_array.y_size;
@@ -209,19 +295,19 @@ ss_array_element_make(
     S32 new_ys;
     S32 new_size;
 
-    if((x < old_xs) && (y < old_ys))
+    if((ix < old_xs) && (iy < old_ys))
         return(STATUS_OK);
 
 #if CHECKING
     /* SKS 22nov94 trap uncatered for resizing, whereby we'd have to delaminate the current array due to x growth with > 1 row */
     if(old_xs && old_ys)
-        if(x > old_xs)
+        if(ix > old_xs)
             assert(old_ys <= 1);
 #endif
 
     /* calculate number of extra elements needed */
-    new_xs = MAX(x + 1, old_xs);
-    new_ys = MAX(y + 1, old_ys);
+    new_xs = MAX(ix + 1, old_xs);
+    new_ys = MAX(iy + 1, old_ys);
     new_size = new_xs * new_ys;
 
     /* check not too many elements */
@@ -272,12 +358,12 @@ extern void
 ss_array_element_read(
     _OutRef_    P_EV_DATA p_ev_data,
     _InRef_     PC_EV_DATA p_ev_data_src,
-    _InVal_     S32 x,
-    _InVal_     S32 y)
+    _InVal_     S32 ix,
+    _InVal_     S32 iy)
 {
     assert((p_ev_data_src->did_num == RPN_TMP_ARRAY) || (p_ev_data_src->did_num == RPN_RES_ARRAY));
 
-    *p_ev_data = *ss_array_element_index_borrow(p_ev_data_src, x, y);
+    *p_ev_data = *ss_array_element_index_borrow(p_ev_data_src, ix, iy);
     /*p_ev_data->local_data = 0;*/
     if(RPN_TMP_STRING == p_ev_data->did_num)
         p_ev_data->did_num = RPN_DAT_STRING;
@@ -426,14 +512,14 @@ ss_data_compare(
 
                 if(!res)
                     {
-                    S32 x, y;
+                    S32 ix, iy;
 
-                    for(y = 0; y < data1.arg.ev_array.y_size; ++y)
+                    for(iy = 0; iy < data1.arg.ev_array.y_size; ++iy)
                         {
-                        for(x = 0; x < data1.arg.ev_array.x_size; ++x)
+                        for(ix = 0; ix < data1.arg.ev_array.x_size; ++ix)
                             {
-                            if((res = ss_data_compare(ss_array_element_index_borrow(&data1, x, y),
-                                                      ss_array_element_index_borrow(&data2, x, y))) != 0)
+                            if((res = ss_data_compare(ss_array_element_index_borrow(&data1, ix, iy),
+                                                      ss_array_element_index_borrow(&data2, ix, iy))) != 0)
                                 goto end_array_comp;
                             }
                         }

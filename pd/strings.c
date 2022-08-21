@@ -628,7 +628,7 @@ string(501, function_menu_entries,              "123456789012|"
                                                 "Complex number,"   "Mathematical,"
                                                 "Matrix,"           "Statistical,"          "Trigonometrical|"
                                                 "Miscellaneous|"
-                                                "Control,"          "Custom,"               "Names|"
+                                                "Custom control,"   "Custom,"               "Names|"
                                                 ">Define name,"     "Edit name"             );
 
 string(502, menu_function_database_title,       "Database");

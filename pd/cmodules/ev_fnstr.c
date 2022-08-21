@@ -923,12 +923,10 @@ PROC_EXEC_PROTO(c_value)
     memcpy32(buffer, args[0]->arg.string.uchars, len);
     buffer[len] = NULLCH;
 
-    ev_data_set_real(p_ev_data_res, strtod(buffer, &ptr));
+    ev_data_set_real_ti(p_ev_data_res, strtod(buffer, &ptr));
 
     if(ptr == buffer)
         ev_data_set_integer(p_ev_data_res, 0); /* SKS 08sep97 now behaves as documented */
-    else
-        real_to_integer_try(p_ev_data_res);
 }
 
 /* end of ev_fnstr.c */

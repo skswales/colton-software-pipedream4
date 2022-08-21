@@ -276,37 +276,36 @@ PROC_EXEC_PROTO(c_div)
 *
 * NUMBER res = a ^ b
 *
+* NUMBER power(a, b) is equivalent OpenDocument / Microsoft Excel function
+*
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_power)
 {
+    const F64 a = args[0]->arg.fp;
+    const F64 b = args[1]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    ev_data_set_real(p_ev_data_res, pow(args[0]->arg.fp, args[1]->arg.fp));
+    ev_data_set_real_ti(p_ev_data_res, pow(a, b));
 
-    if(errno /* == EDOM */) /* SKS 15may97 test for 1/odd number */
+    if(errno /* == EDOM */)
     {
-        if(args[1]->arg.fp <= 1.0)
-            {
-            F64 test_f64 = 1.0 / args[1]->arg.fp;
-            const S32 power_of_two = 4194304; /*4*1024*1024*/
-            const S32 mask = power_of_two - 1;
-            S32 test_s32 = (S32) (test_f64 * power_of_two);
-            S32 after_decimal_point = test_s32 & mask;
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
 
-            if((test_s32 & power_of_two) == 0)
-                after_decimal_point = mask - after_decimal_point;
+        /* test for negative numbers to power of 1/odd number (odd roots are OK) */
+        if((a < 0.0) && (b <= 1.0))
+        {
+            EV_DATA test;
 
-            if(after_decimal_point < 2 /*arbitrary sloppy*/)
-                p_ev_data_res->arg.fp = -(pow(-(args[0]->arg.fp), args[1]->arg.fp));
-            else
-                ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
-            }
+            ev_data_set_real(&test, 1.0 / b);
+
+            if(real_to_integer_try(&test))
+                ev_data_set_real_ti(p_ev_data_res, -(pow(-(a), b)));
+        }
     }
-    else
-        real_to_integer_try(p_ev_data_res);
 }
 
 /******************************************************************************
@@ -664,38 +663,45 @@ PROC_EXEC_PROTO(c_count)
 
 PROC_EXEC_PROTO(c_irr)
 {
-    F64 lastnpv, lastguess, guess;
-    S32 i;
+    F64 r = args[0]->arg.fp;
+    F64 last_npv = 1.0;
+    F64 last_r = 0.0;
+    S32 iteration_count;
 
     exec_func_ignore_parms();
 
-    guess     = args[0]->arg.fp;
-    lastguess = guess / 2;
-    lastnpv   = 1.0;
-
-    for(i = 0; i < 20; ++i)
+    for(iteration_count = 0; iteration_count < 40; ++iteration_count)
         {
-        F64 temp;
+        F64 this_npv, this_r;
         EV_DATA npv;
 
-        if(npv_calc(&npv, &guess, args[1]) != RPN_DAT_REAL)
+        if(npv_calc(&npv, &r, args[1]) != RPN_DAT_REAL)
             return;
 
-        if(fabs(npv.arg.fp) < .0000001)
-            break;
+        this_npv = npv.arg.fp;
+        this_r = r;
 
-        temp = guess;
-        guess -=  npv.arg.fp * (guess - lastguess) /
-                 (npv.arg.fp - lastnpv);
-
-        lastnpv   = npv.arg.fp;
-        lastguess = temp;
+        if(fabs(this_npv) < 0.0000001)
+        {
+            ev_data_set_real(p_ev_data_res, r);
+            return;
         }
 
-    if(i >= 20)
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_IRR);
-    else
-        ev_data_set_real(p_ev_data_res, guess);
+        if(0 == iteration_count)
+        {   /* generate another point */
+            r /= 2.0;
+        }
+        else
+        {   /* new trial rate calculated using secant method */
+            F64 step_r = this_npv * (r - last_r) / (this_npv - last_npv);
+            r -= step_r;
+        }
+
+        last_npv = this_npv;
+        last_r = this_r;
+        }
+
+    ev_data_set_error(p_ev_data_res, EVAL_ERR_IRR);
 }
 
 /******************************************************************************

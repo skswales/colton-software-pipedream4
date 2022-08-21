@@ -3248,7 +3248,16 @@ loadfile_core(
         curcol = insert_col;
         currow = insert_row;
 
-        block_updref(blk_docno, blk_docno, first.col, first.row, insert_col, insert_row);
+        switch(p_load_file_options->filetype_option)
+        {
+        default:
+            block_updref(blk_docno, blk_docno, first.col, first.row, insert_col, insert_row);
+            break;
+
+        case PARAGRAPH_CHAR: /* always ignore in this case as paragraphing will have messed up any @cell@ refs */
+        case TAB_CHAR: /* optionally in this case as we are very unlikely to want to updref inserted @cell@ refs (see Richard Torrens' request) */
+            break;
+        }
 
         /* if ran out of memory, throw away what's been loaded */
         if(breakout)

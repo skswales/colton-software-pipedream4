@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Local header for evaluator */
 
@@ -862,15 +862,20 @@ PROC_EXEC_PROTO(c_bin);
 PROC_EXEC_PROTO(c_combin);
 PROC_EXEC_PROTO(c_gammaln);
 PROC_EXEC_PROTO(c_grand);
-PROC_EXEC_PROTO(c_growth);
-PROC_EXEC_PROTO(c_linest);
 PROC_EXEC_PROTO(c_listcount);
-PROC_EXEC_PROTO(c_logest);
 PROC_EXEC_PROTO(c_median);
 PROC_EXEC_PROTO(c_permut);
 PROC_EXEC_PROTO(c_rand);
 PROC_EXEC_PROTO(c_rank);
 PROC_EXEC_PROTO(c_spearman);
+
+/*
+ev_fnstm.c external functions (statistical - multivariate fit)
+*/
+
+PROC_EXEC_PROTO(c_growth);
+PROC_EXEC_PROTO(c_linest);
+PROC_EXEC_PROTO(c_logest);
 PROC_EXEC_PROTO(c_trend);
 
 /*
@@ -920,20 +925,21 @@ array_expand(
     S32 max_x,
     S32 max_y);
 
+/*ncr*/
 extern EV_IDNO
 array_range_index(
-    P_EV_DATA p_ev_data_out,
+    _OutRef_    P_EV_DATA p_ev_data_out,
     _InRef_     PC_EV_DATA p_ev_data_in,
-    S32 x,
-    S32 y,
-    EV_TYPE types);
+    _InVal_     S32 ix,
+    _InVal_     S32 iy,
+    _InVal_     EV_TYPE types);
 
 extern void
 array_range_mono_index(
-    P_EV_DATA p_ev_data_out,
+    _OutRef_    P_EV_DATA p_ev_data_out,
     _InRef_     PC_EV_DATA p_ev_data_in,
-    S32 mono_x,
-    EV_TYPE types);
+    _InVal_     S32 mono_ix,
+    _InVal_     EV_TYPE types);
 
 extern void
 array_range_sizes(
@@ -1020,14 +1026,7 @@ ev_math.c external functions
 */
 
 extern void
-round_common(
-    P_EV_DATA args[EV_MAX_ARGS],
-    _InVal_     S32 n_args,
-    _InoutRef_  P_EV_DATA p_ev_data_res,
-    _InVal_     U32 rpn_did_num);
-
-extern void
-product_between(
+product_between_calc(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InVal_     S32 start,
     _InVal_     S32 end);
@@ -1045,14 +1044,28 @@ PROC_EXEC_PROTO(c_exp);
 PROC_EXEC_PROTO(c_fact);
 PROC_EXEC_PROTO(c_int);
 PROC_EXEC_PROTO(c_ln);
-PROC_EXEC_PROTO(c_log);
 PROC_EXEC_PROTO(c_mod);
-PROC_EXEC_PROTO(c_round);
 PROC_EXEC_PROTO(c_sgn);
 PROC_EXEC_PROTO(c_sqr);
 
 /*
-matrix functions
+ev_matb.c external functions (mathematical)
+*/
+
+PROC_EXEC_PROTO(c_ceiling);
+PROC_EXEC_PROTO(c_floor);
+PROC_EXEC_PROTO(c_log);
+PROC_EXEC_PROTO(c_round);
+
+extern void
+round_common(
+    P_EV_DATA args[EV_MAX_ARGS],
+    _InVal_     S32 n_args,
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InVal_     U32 rpn_did_num);
+
+/*
+ev_matr.c external functions (matrix)
 */
 
 PROC_EXEC_PROTO(c_m_determ);

@@ -9,11 +9,9 @@ you the right to distribute your modified versions.
 
 Copyright (C) 1987-1998 Colton Software Limited
 
-Copyright (C) 1998-2014 R W Colton
+Copyright (C) 1998-2015 R W Colton
 
-Portions Copyright (C) 2012-2014 Stuart Swales
-
-Portions Copyright (C) 1993 by Sun Microsystems, Inc.
+Portions Copyright (C) 2012-2015 Stuart Swales
 
 ======================
 
@@ -216,15 +214,7 @@ Exhibit B - “Incompatible With Secondary Licenses” Notice
 
 ==================================
 Portions (Reporter interface code)
-
 Copyright (C) 2012-2014 Stuart Swales.
 
-
-==================================
-Portions (log-gamma function code)
-
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
-
-"Developed at SunSoft, a Sun Microsystems, Inc. business. Permission to use,
-copy, modify, and distribute this software is freely granted, provided that
-this notice is preserved."
+Portions (Normally distributed random variables code)
+Copyright (C) 2012-2015 Stuart Swales.

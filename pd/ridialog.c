@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Dialog box handling for RISC OS PipeDream */
 
@@ -1617,7 +1617,7 @@ dproc_aboutprog(
 {
     IGNOREPARM(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "© 1988-2014, Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "© 1987-2015, Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 

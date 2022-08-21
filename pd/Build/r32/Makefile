@@ -5,9 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Copyright (C) 1989-1998 Colton Software Limited
-# Copyright (C) 1998-2014 R W Colton
+# Copyright (C) 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.52/08
+TEXTUAL_VERSION_NUMBER=4.53
+#TEXTUAL_VERSION_NUMBER=4.53/01
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -154,10 +155,13 @@ o.modules.ev_exec \
 o.modules.ev_fndat \
 o.modules.ev_fnfin \
 o.modules.ev_fnsta \
+o.modules.ev_fnstm \
 o.modules.ev_fnstr \
 o.modules.ev_func \
 o.modules.ev_help \
 o.modules.ev_math \
+o.modules.ev_matb \
+o.modules.ev_matr \
 o.modules.ev_mcpx \
 o.modules.ev_mtri \
 o.modules.ev_name \
@@ -167,7 +171,8 @@ o.modules.ev_tree \
 o.modules.ev_uref \
 o.modules.mathxtra \
 o.modules.mathxtr2 \
-o.modules.mathxtr3
+o.modules.mathxtr3 \
+o.modules.mathxtr4
 #
 AOFMGR=\
 o.modules.gr_axis2 \
@@ -339,6 +344,8 @@ o.Modules.ev_fnfin:    $(CMODULES).c.ev_fnfin
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnfin
 o.Modules.ev_fnsta:    $(CMODULES).c.ev_fnsta
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnsta
+o.Modules.ev_fnstm:    $(CMODULES).c.ev_fnstm
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnstm
 o.Modules.ev_fnstr:    $(CMODULES).c.ev_fnstr
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnstr
 o.Modules.ev_func:    $(CMODULES).c.ev_func
@@ -347,6 +354,10 @@ o.Modules.ev_help:    $(CMODULES).c.ev_help
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_help
 o.Modules.ev_math:    $(CMODULES).c.ev_math
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_math
+o.Modules.ev_matb:    $(CMODULES).c.ev_matb
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_matb
+o.Modules.ev_matr:    $(CMODULES).c.ev_matr
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_matr
 o.Modules.ev_mcpx:    $(CMODULES).c.ev_mcpx
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_mcpx
 o.Modules.ev_mtri:    $(CMODULES).c.ev_mtri
@@ -415,6 +426,8 @@ o.Modules.mathxtr2:   $(CMODULES).c.mathxtr2
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr2
 o.Modules.mathxtr3:   $(CMODULES).c.mathxtr3
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr3
+o.Modules.mathxtr4:   $(CMODULES).c.mathxtr4
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr4
 o.Modules.mlec:       $(CMODULES).c.mlec
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mlec
 o.Modules.muldiv:     $(CMODULES).c.muldiv
@@ -487,10 +500,13 @@ o.Modules.ev_exec :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).
 o.Modules.ev_fndat :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnfin :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnsta :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_fnstm :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnstr :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_func :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_help :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_math :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_matb :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_matr :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_mcpx :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_mtri :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_name :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
@@ -524,6 +540,7 @@ o.Modules.list :       $(CMODULES).h.list
 o.Modules.mathxtra :   $(CMODULES).h.mathxtra
 o.Modules.mathxtr2 :   $(CMODULES).h.mathxtr2
 o.Modules.mathxtr3 :   $(CMODULES).h.mathxtr3
+o.Modules.mathxtr4 :   $(CMODULES).h.mathxtr4
 o.Modules.mlec :       $(CMODULES).h.mlec
 o.Modules.monotime :   $(CMODULES).h.monotime
 o.Modules.muldiv :     $(CMODULES).h.muldiv
@@ -685,14 +702,14 @@ utils.GB.o.reperr:   $(PD).c.reperr
         @CDir @.utils
         @CDir @.utils.GB
         @CDir @.utils.GB.o
-        $(CC) -o $@ $(ccflags_base) -DMAKE_MESSAGE_FILE $(PD).c.reperr
+        $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.reperr
 
 utils.GB.o.strings:   $(PD).h.personal
 utils.GB.o.strings:   $(PD).c.strings
         @CDir @.utils
         @CDir @.utils.GB
         @CDir @.utils.GB.o
-        $(CC) -o $@ $(ccflags_base) -DMAKE_MESSAGE_FILE $(PD).c.strings
+        $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.strings
 
 ###############################################################################
 #

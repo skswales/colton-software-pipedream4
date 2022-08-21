@@ -14,7 +14,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!-- Copyright (C) 1991-1998 Colton Software Limited
-   - Copyright (C) 1998-2014 R W Colton -->
+   - Copyright (C) 1998-2015 R W Colton -->
 <div class="navheader">
 <table width="100%" summary="Navigation header">
 <tr>
@@ -38,6 +38,13 @@
 class="csguide-arg">number</span>.</p>
 
 
+<h2>CEILING(<span class="csguide-arg">number</span> {, <span class="csguide-arg">multiple:number</span>})</h2>
+
+<p>Rounds <span class="csguide-arg">number</span> to the given <span
+class="csguide-arg">multiple</span> towards +infinity (or away from zero, if both are negative).
+If <span class="csguide-arg">multiple</span> is omitted, 1 is used.</p>
+
+
 <h2>EXP</h2>
 
 <p><code>EXP(<span class="csguide-arg">number</span>)</code></p>
@@ -49,22 +56,35 @@ class="csguide-arg">number</span>.</p>
 
 <p><code>FACT(<span class="csguide-arg">n</span>)</code></p>
 
-<p>This function yields the factorial of <span class="csguide-arg">n</span> (most commonly shortened to <span class="csguide-arg">n</span>!).  <span class="csguide-arg">n</span> must be an integer greater than or equal to zero.</p>
+<p>This function yields the factorial of <span class="csguide-arg">n</span>
+(most commonly shortened to <span class="csguide-arg">n</span>!).
+<span class="csguide-arg">n</span> must be an integer greater than or equal to zero.</p>
 
 <p>The formula used is:</p>
 
-<p><i>n</i>! = <i>n</i> &times; <i>(n - 1)</i> ... &times; 2 &times; 1, ie <i>n</i>! = <span class="csguide-greek-symbol">&Pi;</span><sup><i>i=n</i></sup> <i>i</i></p>
+<p><i>n</i>! = <i>n</i> &times; <i>(n - 1)</i> ... &times; 2 &times; 1, i.e. <i>n</i>! =
+<span class="csguide-greek-symbol">&Pi;</span><sup><i>i=n</i></sup> <i>i</i></p>
 
 <p>If the result is too big to fit in an integer it becomes floating point.</p>
 
 <p>For very large <span class="csguide-arg">n</span> this is an approximation achieved using logarithms.</p>
 
 
+<h2>FLOOR(<span class="csguide-arg">number</span> {, <span class="csguide-arg">multiple:number</span>})</h2>
+
+<p>Rounds <span class="csguide-arg">number</span> to the given <span
+class="csguide-arg">multiple</span> towards -infinity (or towards zero, if both are negative).
+If <span class="csguide-arg">multiple</span> is omitted, 1 is used.</p>
+
+
 <h2>INT</h2>
 
 <p><code>INT(<span class="csguide-arg">number</span>)</code></p>
 
-<p>Returns the integer part of <span class="csguide-arg">number</span>.</p>
+<p>Returns the integer part of <span class="csguide-arg">number</span>, rounding is towards zero.
+This behaviour is consistent with earlier versions of PipeDream, Resultz and Fireworkz and Lotus 1-2-3.
+If <span class="csguide-arg">number</span> is negative, it does not give the result as Microsoft Excel,
+which rounds towards -infinity, like the FLOOR() spreadsheet function.</p>
 
 
 <h2>LN</h2>
@@ -80,6 +100,11 @@ The number must be positive.</p>
 <p><code>LOG(<span class="csguide-arg">number</span>)</code></p>
 
 <p>Returns the logarithm to base 10 of <span
+class="csguide-arg">number</span>. The number must be positive.</p>
+
+<p><code>LOG(<span class="csguide-arg">number</span>, <span class="csguide-arg">b</span>:number)</code></p>
+
+<p>Returns the logarithm to base <span class="csguide-arg">b</span> of <span
 class="csguide-arg">number</span>. The number must be positive.</p>
 
 

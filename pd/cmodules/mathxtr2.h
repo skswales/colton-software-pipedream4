@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* SKS September 1991 */
 
@@ -13,7 +13,7 @@
 #define __mathxtr2_h
 
 /*
-colID states (NB not the same as Fireworkz)
+colID states (NB PipeDream ones are NOT the same as Fireworkz ones)
 */
 
 #define LINEST_A_COLOFF (-1)
@@ -54,7 +54,7 @@ _proc_name( \
     _InRef_     PC_F64 value)
 
 /*
-function declarations
+exported functions
 */
 
 _Check_return_

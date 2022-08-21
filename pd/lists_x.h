@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* External definitions for lists in PipeDream */
 
@@ -23,7 +23,7 @@ typedef struct LIST
 LIST, * P_LIST; typedef const LIST * PC_LIST;
 
 /*
-function declarations
+exported functions
 */
 
 _Check_return_

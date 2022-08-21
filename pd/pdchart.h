@@ -180,51 +180,46 @@ typedef struct PDCHART_LISTED_DATA
 PDCHART_LISTED_DATA, * P_PDCHART_LISTED_DATA;
 
 /*
-a PipeDream shape descriptor for setting up a range to chart
+a PipeDream shape descriptor for setting up a range to chart (only one at once so don't bitfield the bits)
 */
 
-typedef struct PDCHART_SHAPEDESC
+struct PDCHART_SHAPEDESC_BITS
+{
+/*  4.12-3  24-Mar-92   SKS changed block sussing fields from poss_label_ to number_
+ *                          and defn_label_ to label_ for block sussing improvement
+ *                          NB. this also inverts the sense of what was a poss_label_
+*/
+    U8 number_top_left;
+    U8 label_top_left;
+
+    U8 number_left_col;
+    U8 label_left_col;
+
+    U8 number_top_row;
+    U8 label_top_row;
+
+    U8 label_first_range;
+    U8 label_first_item;
+
+    U8 range_over_columns;
+    U8 range_over_manual;
+
+    U8 something;
+};
+
+ typedef struct PDCHART_SHAPEDESC
 {
     DOCNO docno;
     SLR stt;
     SLR end; /*excl*/
     rowcolt n_ranges;
 
-/*  4.12-3  24-Mar-92   SKS changed block sussing fields from poss_label_ to number_
- *                          and defn_label_ to label_ for block sussing improvement
- *                          NB. this also inverts the sense of what was a poss_label_
-*/
-    struct PDCHART_SHAPEDESC_BITS
-    {
-        int number_top_left     : 1;
-        int label_top_left      : 1;
-        int number_left_col     : 1;
-        int label_left_col      : 1;
-        int number_top_row      : 1;
-        int label_top_row       : 1;
-        int label_first_range   : 1;
-        int label_first_item    : 1;
-        int range_over_columns  : 1;
-        int range_over_manual   : 1;
-        int something           : 1;
+    struct PDCHART_SHAPEDESC_BITS bits;
 
-        int reserved : sizeof(int)*8 - 11*1;
-    }
-    bits;
+    SLR min, max, n, nz_n;
 
-    struct PDCHART_SHAPEDESC_COLS
-    {
-        COL n, nz_n, min, max;
-        NLISTS_BLK nz; /* list of non-empty columns in range */
-    }
-    cols;
-
-    struct PDCHART_SHAPEDESC_ROWS
-    {
-        ROW n, nz_n, min, max;
-        NLISTS_BLK nz; /* list of non-empty rows in range */
-    }
-    rows;
+    NLISTS_BLK nz_cols; /* list of non-empty columns in range */
+    NLISTS_BLK nz_rows; /* list of non-empty rows in range */
 }
 PDCHART_SHAPEDESC;
 

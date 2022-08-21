@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
- * Copyright (C) 1998-2014 R W Colton */
+ * Copyright (C) 1998-2015 R W Colton */
 
 /* Defines the external interface to the handle based list manager */
 
@@ -154,7 +154,7 @@ functions as macros
     (lp) ? (lp)->numitem : 0 )
 
 /*
-function declarations
+exported functions
 */
 
 extern P_LIST_ITEM

@@ -30,18 +30,34 @@ internal functions
 *
 ******************************************************************************/
 
-static const EV_TYPE arg_ads[]  = { 1, EM_REA | EM_DAT | EM_INT };
+/* generic argument lists */
 
-static const EV_TYPE arg_any[]  = { 1, EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_ERR | EM_INT};
+static const EV_TYPE arg_ARY[]  = { 1, EM_ARY };
 
-static const EV_TYPE arg_ary[]  = { 1, EM_ARY };
+static const EV_TYPE arg_DAT[]  = { 1, EM_DAT };
+
+static const EV_TYPE arg_INT[]  = { 1, EM_INT };
+
+#define arg_BOO arg_INT
+
+static const EV_TYPE arg_REA[]  = { 1, EM_REA };
+
+static const EV_TYPE arg_SLR[]  = { 1, EM_SLR };
+
+static const EV_TYPE arg_STR[]  = { 1, EM_STR };
+
+/* IoR: integer or real */
+static const EV_TYPE arg_IoR[]  = { 1, EM_INT | EM_REA };
+
+/* IoRoD: integer, real or date */
+static const EV_TYPE arg_IoRoD[] = { 1, EM_REA | EM_DAT | EM_INT };
+
+/* function-specific argument lists */
 
 static const EV_TYPE arg_cho[]  = { 2, EM_INT,
                                        EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY };
 
 static const EV_TYPE arg_cpx[]  = { 1, EM_REA | EM_ARY };
-
-static const EV_TYPE arg_dat[]  = { 1, EM_DAT };
 
 static const EV_TYPE arg_dbs[]  = { 2, EM_ARY,
                                        EM_CDX };
@@ -69,10 +85,6 @@ static const EV_TYPE arg_idx[]  = { 2, EM_ARY,
 static const EV_TYPE arg_if[]   = { 2, EM_INT,
                                        EM_ANY };
 
-static const EV_TYPE arg_int[]  = { 1, EM_INT };
-
-static const EV_TYPE arg_ion[]  = { 1, EM_INT | EM_REA };
-
 static const EV_TYPE arg_llg[]  = { 4, EM_ARY,
                                        EM_ARY,
                                        EM_REA,
@@ -94,8 +106,6 @@ static const EV_TYPE arg_ndp[]  = { 2, EM_REA | EM_INT, /* SKS 23may14 added EM_
 static const EV_TYPE arg_npv[]  = { 2, EM_REA,
                                        EM_ARY };
 
-static const EV_TYPE arg_num[]  = { 1, EM_REA };
-
 static const EV_TYPE arg_rco[]  = { 1, EM_SLR | EM_ARY };
 
 static const EV_TYPE arg_rel[]  = { 1, EM_REA | EM_STR | EM_DAT | EM_BLK | EM_INT };
@@ -116,18 +126,16 @@ static const EV_TYPE arg_setn[] = { 2, EM_STR,
 static const EV_TYPE arg_setv[] = { 2, EM_SLR | EM_ARY,
                                        EM_REA | EM_STR | EM_DAT | EM_ARY | EM_INT };
 
-static const EV_TYPE arg_slr[]  = { 1, EM_SLR };
-
 static const EV_TYPE arg_stn[]  = { 2, EM_STR,
                                        EM_INT };
-
-static const EV_TYPE arg_str[]  = { 1, EM_STR };
 
 static const EV_TYPE arg_trd[]  = { 2, EM_ARY,
                                        EM_ARY | EM_REA };
 
 static const EV_TYPE arg_txt[]  = { 2, EM_REA | EM_STR | EM_DAT,
                                        EM_STR };
+
+static const EV_TYPE arg_typ[]  = { 1, EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_ERR | EM_INT};
 
 /******************************************************************************
 *
@@ -189,18 +197,18 @@ const RPNDEF rpn_table[] =
     { RPN_FRM, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* skip rpn if true */
     { RPN_FRM, NAI, EV_RESO_NOTME   ,         NAP, NAS,              NAA }, /* no dependency */
 
-    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_not,            arg_int },
-    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uminus,         arg_ion }, /* unary - */
-    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uplus,          arg_ion }, /* unary + */
+    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_not,            arg_BOO },
+    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uminus,         arg_IoR }, /* unary - */
+    { RPN_UOP,   1, EV_RESO_NOTME   ,         NAP, c_uplus,          arg_IoR }, /* unary + */
 
     /* binary operators */
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_and,            arg_int },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_div,            arg_ion },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_sub,            arg_ads },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_or,             arg_int },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_add,            arg_ads },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_power,          arg_num },
-    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_mul,            arg_ion },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_and,            arg_BOO },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_div,            arg_IoR },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_sub,            arg_IoRoD },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_or,             arg_BOO },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_add,            arg_IoRoD },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_power,          arg_REA },
+    { RPN_BOP,   2, EV_RESO_NOTME   ,         NAP, c_mul,            arg_IoR },
 
     /* binary relational operators */
     { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_eq,             arg_rel },
@@ -211,29 +219,29 @@ const RPNDEF rpn_table[] =
     { RPN_REL,   2, EV_RESO_NOTME   ,         NAP, c_neq,            arg_rel },
 
     /* functions */
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_abs,            arg_ion },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acosec,         arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acosech,        arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acosh,          arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acot,           arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acoth,          arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acos,           arg_num },
-    { RPN_FNF,   2, EV_RESO_DATE    ,         NAP, c_age,            arg_dat },
+    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_abs,            arg_IoR },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acosec,         arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acosech,        arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acosh,          arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acot,           arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acoth,          arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_acos,           arg_REA },
+    { RPN_FNF,   2, EV_RESO_DATE    ,         NAP, c_age,            arg_DAT },
     { RPN_FNV,  -3, EV_RESO_MISC    , FP_AGG(EXEC_ALERT, 0, 0, 0, 0, 0),
-                                                   /*alert*/ NAS,    arg_str },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asec,           arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asech,          arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asinh,          arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asin,           arg_num },
-    { RPN_FNF,   2, EV_RESO_TRIG    ,         NAP, c_atan_2,         arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_atanh,          arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_atan,           arg_num },
+                                                   /*alert*/ NAS,    arg_STR },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asec,           arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asech,          arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asinh,          arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_asin,           arg_REA },
+    { RPN_FNF,   2, EV_RESO_TRIG    ,         NAP, c_atan_2,         arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_atanh,          arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_atan,           arg_REA },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_avg,            arg_mix },
 
-    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_beta,           arg_num },
-    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_bin,            arg_ary },
+    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_beta,           arg_REA },
+    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_bin,            arg_ARY },
     { RPN_FNV,  -1, EV_RESO_CONTROL , EXCTRL(CONTROL_BREAK, 0),
-                                                   /*break*/ NAS,    arg_int },
+                                                   /*break*/ NAS,    arg_INT },
 
     { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acos,         arg_cpx },
     { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acosec,       arg_cpx },
@@ -269,37 +277,38 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_tanh,         arg_cpx },
     { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_theta,        arg_cpx },
 
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_char,           arg_int },
+    { RPN_FNV,  -2, EV_RESO_MATHS   ,         NAP, c_ceiling,        arg_REA },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_char,           arg_INT },
     { RPN_FNV,  -2, EV_RESO_LOOKUP  ,         NAP, c_choose,         arg_cho },
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_code,           arg_str },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_code,           arg_STR },
     { RPN_FNV,  -1, EV_RESO_LOOKUP  , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
                                                    c_col,            arg_rco },
     { RPN_FNV,  -1, EV_RESO_LOOKUP  , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
-                                                   c_cols,           arg_ary },
-    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_combin,         arg_int },
+                                                   c_cols,           arg_ARY },
+    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_combin,         arg_INT },
     { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_CONTINUE, 0),
                                                    /*continue*/ NAS, NAA },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cos,            arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cosec,          arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cosech,         arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cosh,           arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cot,            arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_coth,           arg_num },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cos,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cosec,          arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cosech,         arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cosh,           arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cot,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_coth,           arg_REA },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_count,          arg_mix },
-    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_cterm,          arg_num },
+    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_cterm,          arg_REA },
 
-    { RPN_FNF,   3, EV_RESO_DATE    ,         NAP, c_date,           arg_int },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_datevalue,      arg_str },
+    { RPN_FNF,   3, EV_RESO_DATE    ,         NAP, c_date,           arg_INT },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_datevalue,      arg_STR },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DAVG,    0, 1/*dbase*/, 0, 0),
                                                    /*dvag*/ NAS,     arg_dbs },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_day,            arg_dat },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_day,            arg_DAT },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_dayname,        arg_dmn },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNT,  0, 1/*dbase*/, 0, 0),
                                                    /*dcount*/ NAS,   arg_dbs },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNTA, 0, 1/*dbase*/, 0, 0),
                                                    /*dcounta*/ NAS,  arg_dbs },
-    { RPN_FNF,   4, EV_RESO_FINANCE ,         NAP, c_ddb,            arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_deg,            arg_num },
+    { RPN_FNF,   4, EV_RESO_FINANCE ,         NAP, c_ddb,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_deg,            arg_REA },
     { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_deref,          arg_drf },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DMAX,    0, 1/*dbase*/, 0, 0),
                                                    /*dmax*/ NAS,     arg_dbs },
@@ -319,71 +328,72 @@ const RPNDEF rpn_table[] =
     { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_ELSE, EVS_CNT_ELSE),
                                                    /*else*/ NAS,     NAA },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_ELSEIF, EVS_CNT_ELSEIF),
-                                                   /*elseif*/ NAS,   arg_int },
+                                                   /*elseif*/ NAS,   arg_BOO },
     { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_ENDIF, EVS_CNT_ENDIF),
                                                    /*endif*/ NAS,    NAA },
     { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_ENDWHILE, EVS_CNT_ENDWHILE),
                                                    /*endwhile*/ NAS, NAA },
-    { RPN_FNF,   2, EV_RESO_STRING  ,         NAP, c_exact,          arg_str },
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_exp,            arg_num },
+    { RPN_FNF,   2, EV_RESO_STRING  ,         NAP, c_exact,          arg_STR },
+    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_exp,            arg_REA },
 
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_fact,           arg_int },
+    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_fact,           arg_INT },
     { RPN_FNV,  -3, EV_RESO_STRING  ,         NAP, c_find,           arg_fnd },
-    { RPN_FNF,   1, EV_RESO_MISC,             NAP, c_flip,           arg_ary },
+    { RPN_FNF,   1, EV_RESO_MISC,             NAP, c_flip,           arg_ARY },
+    { RPN_FNV,  -2, EV_RESO_MATHS   ,         NAP, c_floor,          arg_REA },
     { RPN_FNV,  -4, EV_RESO_CONTROL , EXCTRL(CONTROL_FOR, EVS_CNT_FOR),
                                                    /*for*/ NAS,      arg_for },
-    { RPN_FNF,   1, EV_RESO_STRING,           NAP, c_formula_text,   arg_slr },
+    { RPN_FNF,   1, EV_RESO_STRING,           NAP, c_formula_text,   arg_SLR },
     { RPN_FNM,  -1, EV_RESO_CONTROL ,         NAP, /*function*/ NAS, NAA },
-    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_fv,             arg_num },
+    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_fv,             arg_REA },
 
-    { RPN_FNF,   1, EV_RESO_STATS   ,         NAP, c_gammaln,        arg_num },
+    { RPN_FNF,   1, EV_RESO_STATS   ,         NAP, c_gammaln,        arg_REA },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_GOTO, 0),
-                                                   /*goto*/ NAS,     arg_slr },
+                                                   /*goto*/ NAS,     arg_SLR },
     { RPN_FNV,  -1, EV_RESO_STATS   , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 0),
-                                                   c_grand,          arg_num },
+                                                   c_grand,          arg_REA },
     { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_growth,         arg_trd },
 
     { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_HLOOKUP, 0, 0, 0, 0),
                                                    /*hlookup*/ NAS,  arg_hvl },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_hour,           arg_dat },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_hour,           arg_DAT },
 
     { RPN_FNV,  -3, EV_RESO_MISC    ,         NAP, c_if,             arg_if },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_IF, EVS_CNT_IFC),
-                                                   /*if*/ NAS,       arg_int },
+                                                   /*if*/ NAS,       arg_BOO },
     { RPN_FNV,  -4, EV_RESO_LOOKUP  ,         NAP, c_index,          arg_idx },
     { RPN_FNV,  -4, EV_RESO_MISC    , FP_AGG(EXEC_ALERT, 0, 0, 0, 0, 0),
-                                                   /*input*/ NAS,    arg_str },
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_int,            arg_ion },
+                                                   /*input*/ NAS,    arg_STR },
+    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_int,            arg_IoR },
     { RPN_FNF,   2, EV_RESO_FINANCE ,         NAP, c_irr,            arg_npv },
 
-    { RPN_FNV,  -1, EV_RESO_STRING  ,         NAP, c_join,           arg_str },
+    { RPN_FNV,  -1, EV_RESO_STRING  ,         NAP, c_join,           arg_STR },
 
     { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_left,           arg_stn },
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_length,         arg_str },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_length,         arg_STR },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_linest,         arg_llg },
-    { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_listcount,      arg_ary },
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_ln,             arg_num },
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_log,            arg_num },
+    { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_listcount,      arg_ARY },
+    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_ln,             arg_REA },
+    { RPN_FNV,  -2, EV_RESO_MATHS   ,         NAP, c_log,            arg_REA },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_logest,         arg_llg },
     { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_LOOKUP, 0, 0, 0, 0),
                                                    /*lookup*/ NAS,   arg_lkp },
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_lower,          arg_str },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_lower,          arg_STR },
 
-    { RPN_FNF,   1, EV_RESO_MATRIX  ,         NAP, c_m_determ,       arg_ary },
-    { RPN_FNF,   1, EV_RESO_MATRIX  ,         NAP, c_m_inverse,      arg_ary },
-    { RPN_FNF,   2, EV_RESO_MATRIX  ,         NAP, c_m_mult,         arg_ary },
+    { RPN_FNF,   1, EV_RESO_MATRIX  ,         NAP, c_m_determ,       arg_ARY },
+    { RPN_FNF,   1, EV_RESO_MATRIX  ,         NAP, c_m_inverse,      arg_ARY },
+    { RPN_FNF,   2, EV_RESO_MATRIX  ,         NAP, c_m_mult,         arg_ARY },
 
     { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_MATCH, 0, 0, 0, 0),
                                                    /*match*/ NAS,    arg_hvl },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_max,            arg_mix },
-    { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_median,         arg_ary },
+    { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_median,         arg_ARY },
     { RPN_FNF,   3, EV_RESO_STRING  ,         NAP, c_mid,            arg_stn },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_min,            arg_mix },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_minute,         arg_dat },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_minute,         arg_DAT },
     { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_mirr,           arg_mir },
-    { RPN_FNF,   2, EV_RESO_MATHS   ,         NAP, c_mod,            arg_ion },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_month,          arg_dat },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_monthdays,      arg_dat },
+    { RPN_FNF,   2, EV_RESO_MATHS   ,         NAP, c_mod,            arg_IoR },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_month,          arg_DAT },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_monthdays,      arg_DAT },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_monthname,      arg_dmn },
 
     { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_NEXT, EVS_CNT_NEXT),
@@ -391,79 +401,79 @@ const RPNDEF rpn_table[] =
     { RPN_FN0,   0, EV_RESO_DATE    ,         NAP, c_now,            NAA },
     { RPN_FNF,   2, EV_RESO_FINANCE ,         NAP, c_npv,            arg_npv },
 
-    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_permut,         arg_int },
+    { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_permut,         arg_INT },
     { RPN_FN0,   0, EV_RESO_TRIG    ,         NAP, c_pi,             NAA },
-    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_pmt,            arg_num },
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_proper,         arg_str },
-    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_pv,             arg_num },
+    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_pmt,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_proper,         arg_STR },
+    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_pv,             arg_REA },
 
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_rad,            arg_num },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_rad,            arg_REA },
     { RPN_FNV,  -1, EV_RESO_STATS   , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 0),
-                                                   c_rand,           arg_num },
+                                                   c_rand,           arg_REA },
     { RPN_FNV,  -2, EV_RESO_STATS,            NAP, c_rank,           arg_rnk },
-    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_rate,           arg_num },
+    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_rate,           arg_REA },
     { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_REPEAT, EVS_CNT_REPEAT),
                                                    /*repeat*/ NAS,   NAA },
     { RPN_FNF,   4, EV_RESO_STRING  ,         NAP, c_replace,        arg_rpl },
     { RPN_FNF,   2, EV_RESO_STRING  ,         NAP, c_rept,           arg_stn },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_RESULT, 0),
                                                    /*result*/ NAS,   arg_res },
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_reverse,        arg_str },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_reverse,        arg_STR },
     { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_right,          arg_stn },
     { RPN_FNV,  -2, EV_RESO_MATHS   ,         NAP, c_round,          arg_ndp },
     { RPN_FNV,  -1, EV_RESO_LOOKUP  , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
                                                    c_row,            arg_rco },
     { RPN_FNV,  -1, EV_RESO_LOOKUP  , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
-                                                   c_rows,           arg_ary },
+                                                   c_rows,           arg_ARY },
 
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sec,            arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sech,           arg_num },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_second,         arg_dat },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sec,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sech,           arg_REA },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_second,         arg_DAT },
     { RPN_FNF,   2, EV_RESO_MISC    ,         NAP, c_set_name,       arg_setn },
     { RPN_FNF,   2, EV_RESO_MISC    , FP_AGG(EXEC_EXEC, 0, 0, 0, 0, 1/*nodep*/),
                                                    c_setvalue,       arg_setv },
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_sgn,            arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sin,            arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sinh,           arg_num },
-    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_sln,            arg_num },
+    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_sgn,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sin,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sinh,           arg_REA },
+    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_sln,            arg_REA },
     { RPN_FNV,  -2, EV_RESO_MISC,             NAP, c_sort,           arg_idx },
-    { RPN_FNF,   2, EV_RESO_STATS,            NAP, c_spearman,       arg_ary },
-    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_sqr,            arg_num },
+    { RPN_FNF,   2, EV_RESO_STATS,            NAP, c_spearman,       arg_ARY },
+    { RPN_FNF,   1, EV_RESO_MATHS   ,         NAP, c_sqr,            arg_REA },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_std,            arg_nls },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_stdp,           arg_nls },
     { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_string,         arg_ndp },
     { RPN_FNV,  -2, EV_RESO_MATHS   ,         NAP, c_sum,            arg_mix },
-    { RPN_FNF,   4, EV_RESO_FINANCE ,         NAP, c_syd,            arg_num },
+    { RPN_FNF,   4, EV_RESO_FINANCE ,         NAP, c_syd,            arg_REA },
 
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_tan,            arg_num },
-    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_tanh,           arg_num },
-    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_term,           arg_num },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_tan,            arg_REA },
+    { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_tanh,           arg_REA },
+    { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_term,           arg_REA },
     { RPN_FNF,   2, EV_RESO_STRING,           NAP, c_text,           arg_txt },
-    { RPN_FNF,   3, EV_RESO_DATE    ,         NAP, c_time,           arg_int },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_timevalue,      arg_str },
+    { RPN_FNF,   3, EV_RESO_DATE    ,         NAP, c_time,           arg_INT },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_timevalue,      arg_STR },
     { RPN_FN0,   0, EV_RESO_DATE    ,         NAP, c_today,          NAA },
-    { RPN_FNF,   1, EV_RESO_MATRIX  ,         NAP, c_transpose,      arg_ary },
+    { RPN_FNF,   1, EV_RESO_MATRIX  ,         NAP, c_transpose,      arg_ARY },
     { RPN_FNF,   2, EV_RESO_STATS   ,         NAP, c_trend,          arg_trd },
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_trim,           arg_str },
-    { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_type,           arg_any },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_trim,           arg_STR },
+    { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_type,           arg_typ },
 
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_UNTIL, EVS_CNT_UNTIL),
-                                                   /*until*/ NAS,    arg_int },
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_upper,          arg_str },
+                                                   /*until*/ NAS,    arg_BOO },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_upper,          arg_STR },
 
-    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_value,          arg_str },
+    { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_value,          arg_STR },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_var,            arg_nls },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_varp,           arg_nls },
     { RPN_FN0,   0, EV_RESO_MISC    ,         NAP, c_version,        NAA },
     { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_VLOOKUP, 0, 0, 0, 0),
                                                    /*vlookup*/ NAS,  arg_hvl },
 
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weekday,        arg_dat },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weeknumber,     arg_dat },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weekday,        arg_DAT },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weeknumber,     arg_DAT },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_WHILE, EVS_CNT_WHILE),
-                                                   /*while*/ NAS,    arg_int },
+                                                   /*while*/ NAS,    arg_BOO },
 
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_year,           arg_dat },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_year,           arg_DAT },
 
     { RPN_FNM,  -1, EV_RESO_NOTME   ,         NAP, NAS,              NAA },
 
@@ -559,6 +569,7 @@ look_table[] =
     { "c_tanh",     RPN_FNF_C_TANH      },
     { "c_theta",    RPN_FNF_C_THETA     },
 
+    { "ceiling",    RPN_FNV_CEILING     },
     { "char",       RPN_FNF_CHAR        },
     { "choose",     RPN_FNV_CHOOSE      },
     { "code",       RPN_FNF_CODE        },
@@ -603,6 +614,7 @@ look_table[] =
     { "fact",       RPN_FNF_FACT        },
     { "find",       RPN_FNV_FIND        },
     { "flip",       RPN_FNF_FLIP        },
+    { "floor",      RPN_FNV_FLOOR       },
     { "for",        RPN_FNV_FOR         },
     { "formula_text",   RPN_FNF_FORMULA_TEXT },
     { "function",   RPN_FNM_FUNCTION    },
@@ -629,7 +641,7 @@ look_table[] =
     { "linest",     RPN_FNV_LINEST      },
     { "listcount",  RPN_FNF_LISTCOUNT   },
     { "ln",         RPN_FNF_LN          },
-    { "log",        RPN_FNF_LOG         },
+    { "log",        RPN_FNV_LOG         },
     { "logest",     RPN_FNV_LOGEST      },
     { "lookup",     RPN_FNF_LOOKUP      },
     { "lower",      RPN_FNF_LOWER       },
