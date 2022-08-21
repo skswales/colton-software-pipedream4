@@ -1,0 +1,16 @@
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC310,1576,364,820,0,0,0,0
+%OP%VS3.85 (11-Oct-91), Colton S, R9200 7500 3900 8299 
+%CO:A,30,72%
+%R%Number 1 :
+%R%Number 2 :
+
+%R%Greatest Common Denominator :
+%CO:B,12,60%
+%V%%R%25
+%V%%R%55
+
+%V%%R%[CF_sheets.c_GCD]gcd(b2,b3)
+%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

@@ -1,0 +1,13 @@
+%OP%LP(
+%OP%TP)
+%OP%PL53
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC2,1388,500,1080,0,1,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,7,72%%V%%R%[c_W/R]write(1,10,12,24+15)
+%V%%R%[c_W/R]write(1,10,13,"hi")
+%CO:B,17,60%%V%%R%[c_W/R]read(1,10,13)
+%V%%R%[c_W/R]read(1,10,12)
+%CO:C,41,48%

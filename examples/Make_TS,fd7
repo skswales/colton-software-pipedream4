@@ -1,0 +1,16 @@
+| Make_TS.oby - PipeDream-Examples
+
+IfThere $.Temp Then Else %CDir $.Temp
+
+Set pd$Disc $.Temp.PDExamples_20140215
+| Remember to update RiscPkg.Control too
+
+X %Wipe <pd$Disc> ~cfr~v
+
+svn export <Obey$Dir> <pd$Disc>
+
+| The one in RiscPkg is the useful one for the packaged examples
+delete <pd$Disc>.LICENSE
+delete <pd$Disc>.Make_TS
+
+Filer_OpenDir <pd$Disc>

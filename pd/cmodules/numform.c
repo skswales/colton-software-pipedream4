@@ -7,15 +7,11 @@
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/******************************************************************************
-*
-* formats data in an ev_data structure
-*
-* James A. Dixon 07-Jan-1992; SKS April 1993 major hack
-*
-* The master copy is in Fireworkz - but note the small differences in this one!
-*
-******************************************************************************/
+/* Formats data in an ev_data structure */
+
+/* James A. Dixon 07-Jan-1992; SKS April 1993 major hack */
+
+/* The master copy is in Fireworkz - but note the small differences in this one! */
 
 #include "common/gflags.h"
 

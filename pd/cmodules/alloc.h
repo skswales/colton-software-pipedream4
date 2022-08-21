@@ -73,7 +73,7 @@ alloc_track_stop(void);
 
 _Check_return_
 extern int
-flex_dynamic_area_query(void);
+alloc_dynamic_area_query(void);
 
 #if TRACE_ALLOWED
 

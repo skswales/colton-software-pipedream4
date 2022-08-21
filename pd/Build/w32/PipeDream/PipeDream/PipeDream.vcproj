@@ -594,6 +594,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\mathxtri.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\monotime.h"
 					>
 				</File>
@@ -975,22 +979,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\cmodules\riscos\fontlxtr.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\cmodules\riscos\ho_dll.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\cmodules\riscos\ho_dll.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\cmodules\riscos\ho_sqush.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\cmodules\riscos\ho_sqush.h"
 					>
 				</File>
 				<File

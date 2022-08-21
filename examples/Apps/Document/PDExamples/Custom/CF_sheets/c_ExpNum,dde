@@ -1,0 +1,134 @@
+%OP%PL56
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%NDnstr,"511"
+%OP%NDft,12
+%OP%NDzero_to_nine,b1b20
+%OP%NDcurr_fig,6
+%OP%NDzero_to_ninety,c1c10
+%OP%NDnumber_str,"five hundred and eleven"
+%OP%NDspacer," "
+%OP%NDhdrds,"five hundred"
+%OP%NDneg,0
+%OP%NDfst,"90"
+%OP%NDztn,b1b20
+%OP%NDztnty,c1c10
+%OP%NDdate_str,c10
+%OP%NDsep," "
+%OP%NDsnd,"99"
+%OP%NDdate_str2,"ninety nine"
+%OP%NDadbc,"a.d."
+%OP%NDsuff,""
+%OP%WC2,1354,788,1364,0,0,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,102,0%%V%%L%function("expand_number","arg:number","arg_2:text")
+%V%%L%set_name("nstr",string(@arg,0))
+%V%%L%set_name("neg",0)
+%V%%L%if(left(nstr,1)="-")
+%V%%L%set_name("neg",1)
+%V%%L%set_name("nstr",mid(nstr,2,length(nstr)-1))
+%V%%L%endif
+%V%%L%if(length(nstr)=4,result(expand_date(@arg,@arg_2)),)
+%V%%L%if(length(nstr)>3,result("Number too big"),)
+%V%%L%if(@arg=0,result("Zero"),)
+%V%%L%set_name("spacer",@arg_2)
+%V%%L%set_name("zero_to_nine",b1b20)
+%V%%L%set_name("zero_to_ninety",c1c10)
+%V%%L%set_name("number_str","")
+%V%%L%set_name("ft",value(right(nstr,2))+1)
+%V%%L%if(ft<=20 & ft>1,set_name("number_str",(index(zero_to_nine,1,ft))),)
+%V%%L%if(ft>20)
+%V%%L%set_name("curr_fig",value(mid(nstr,length(nstr)-1,1))+1)
+%V%%L%if(curr_fig>1,set_name("number_str",index(zero_to_ninety,1,curr_fig)),)
+%V%%L%set_name("curr_fig",value(mid(nstr,length(nstr),1))+1)
+%V%%L%if(curr_fig>1,set_name("number_str",join(number_str,spacer,index(zero_to_nine,1,curr_fig))),)
+%V%%L%endif
+%V%%L%set_name("curr_fig",value(mid(nstr,1,1))+1)
+%V%%L%if(length(nstr)=3,set_name("hdrds",join(index(zero_to_nine,1,curr_fig),spacer,"hundred")),set_name("hdrds",""))
+%V%%L%if(hdrds<>"")
+%V%%L%if(number_str<>"",set_name("number_str",join(hdrds,spacer,"and",spacer,number_str)),set_name("number_str",hdrds))
+%V%%L%endif
+%V%%L%if(neg=1,set_name("number_str",join("minus",spacer,number_str)),)
+
+%V%%L%result(number_str)
+
+
+%V%%L%function("expand_date","arg:number","arg_2:text")
+%V%%L%set_name("nstr",string(@arg,0))
+%V%%L%set_name("adbc","a.d.")
+%V%%L%if(left(nstr,1)="-")
+%V%%L%set_name("adbc","b.c.")
+%V%%L%set_name("nstr",mid(nstr,2,length(nstr)-1))
+%V%%L%endif
+%V%%L%if(length(nstr)=1,set_name("nstr",join("000",nstr)),)
+%V%%L%if(length(nstr)=2,set_name("nstr",join("00",nstr)),)
+%V%%L%if(length(nstr)=3,set_name("nstr",join("0",nstr)),)
+%V%%L%if(length(nstr)<>4,result("Bad Year"),)
+%V%%L%set_name("fst",left(nstr,2))
+%V%%L%set_name("snd",right(nstr,2))
+%V%%L%set_name("sep",@arg_2)
+%V%%L%set_name("ztn",b1b20)
+%V%%L%set_name("ztnty",c1c10)
+%V%%L%set_name("date_str","")
+%V%%L%set_name("date_str2","")
+%V%%L%set_name("suff","")
+%V%%L%set_name("ft",value(fst)+1)
+%V%%L%if(ft<=20 & ft>1,set_name("date_str",(index(ztn,1,ft))),)
+%V%%L%if(ft>20)
+%V%%L%set_name("curr_fig",value(left(fst,1))+1)
+%V%%L%if(curr_fig>1,set_name("date_str",index(ztnty,1,curr_fig)),)
+%V%%L%set_name("curr_fig",value(right(fst,1))+1)
+%V%%L%if(curr_fig>1,set_name("date_str",join(date_str,sep,index(ztn,1,curr_fig))),)
+%V%%L%endif
+
+%V%%L%set_name("ft",value(snd)+1)
+%V%%L%if(ft<=20 & ft>1,set_name("date_str2",(index(ztn,1,ft))),)
+%V%%L%if(ft<11 & ft>1,set_name("date_str2",join("oh",sep,date_str2)),)
+%V%%L%if(ft>20)
+%V%%L%set_name("curr_fig",value(left(snd,1))+1)
+%V%%L%if(curr_fig>1,set_name("date_str2",index(ztnty,1,curr_fig)),)
+%V%%L%set_name("curr_fig",value(right(snd,1))+1)
+%V%%L%if(curr_fig>1,set_name("date_str2",join(date_str2,sep,index(ztn,1,curr_fig))),)
+%V%%L%endif
+
+%V%%L%if(left(snd,1)="0")
+%V%%L%if(right(snd,1)="0")
+%V%%L%if(value(right(fst,1))=0,set_name("date_str2","thousand"),set_name("date_str2","hundred"))
+%V%%L%if(value(right(fst,1))=0,set_name("date_str",index(ztn,1,value(left(fst,1))+1)),)
+%V%%L%else
+%V%%L%if(value(right(fst,1))=0,set_name("date_str2",join("thousand",sep,"and",sep,index(ztn,1,value(right(snd,1))+1))),)
+%V%%L%if(value(right(fst,1))=0,set_name("date_str",index(ztn,1,value(left(fst,1))+1)),)
+%V%%L%endif
+%V%%L%endif
+%V%%L%result(join(date_str,sep,date_str2,sep,adbc))
+%CO:B,6,60%zero
+one
+two
+three
+four
+five
+six
+seven
+eight
+nine
+%L%ten
+%L%eleven
+%L%twelve
+%L%thirteen
+%L%fourteen
+%L%fifteen
+%L%sixteen
+%L%seventeen
+%L%eighteen
+%L%nineteen
+%CO:C,7,48%zero
+ten
+twenty
+%L%thirty
+%L%fourty
+%L%fifty
+%L%sixty
+seventy
+%L%eighty
+%L%ninety

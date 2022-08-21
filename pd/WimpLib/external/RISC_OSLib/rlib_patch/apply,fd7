@@ -10,14 +10,19 @@ echo <Obey$Dir>
 |
 dir <Obey$Dir>
 |
+Set flexlib_tmp$Dir <Obey$Dir>.^.castle.RiscOS.Sources.Toolbox.Libs.flexlib
 Set rlib_tmp$Dir <Obey$Dir>.^.castle.RiscOS.Sources.Lib.RISC_OSLib.rlib
 Set WimpLib_tmp$Dir ^.^.^
+|
+time
 |
 cdir <WimpLib_tmp$Dir>.c
 cdir <WimpLib_tmp$Dir>.h
 cdir <WimpLib_tmp$Dir>.s
 |
 echo Populate WimpLib with unmodifed files from the checked-out copy of RISC_OSLib
+|
+copy "<flexlib_tmp$Dir>.h.swiextra" "<WimpLib_tmp$Dir>.h.*" ~CF~NV
 |
 copy "<rlib_tmp$Dir>.c.colourtran" "<WimpLib_tmp$Dir>.c.*" ~CF~NV
 copy "<rlib_tmp$Dir>.c.dboxtcol"   "<WimpLib_tmp$Dir>.c.*" ~CF~NV
@@ -70,10 +75,12 @@ copy "<rlib_tmp$Dir>.VerIntern.h.messages" "<WimpLib_tmp$Dir>.VerIntern.h.*" ~CF
 |
 echo Populate WimpLib with files to be patched from the checked-out copy of RISC_OSLib
 |
+copy "<flexlib_tmp$Dir>.c.flex"    "<WimpLib_tmp$Dir>.c.*" ~CF~NV
+|
 copy "<rlib_tmp$Dir>.c.bbc"        "<WimpLib_tmp$Dir>.c.*" ~CF~NV
 copy "<rlib_tmp$Dir>.c.dbox"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
 copy "<rlib_tmp$Dir>.c.event"      "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.flex"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
+| copy "<rlib_tmp$Dir>.c.flex"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
 copy "<rlib_tmp$Dir>.c.fontlist"   "<WimpLib_tmp$Dir>.c.*" ~CF~NV
 copy "<rlib_tmp$Dir>.c.fontselect" "<WimpLib_tmp$Dir>.c.*" ~CF~NV
 copy "<rlib_tmp$Dir>.c.menu"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
@@ -91,10 +98,12 @@ copy "<rlib_tmp$Dir>.s.swi"        "<WimpLib_tmp$Dir>.s.*" ~CF~NV
 |
 echo Patch these files in WimpLib so that it is in the PipeDream state
 |
+patch --unified < "@.c.flex"       "<WimpLib_tmp$Dir>.c.flex"
+|
 patch --unified < "@.c.bbc"        "<WimpLib_tmp$Dir>.c.bbc"
 patch --unified < "@.c.dbox"       "<WimpLib_tmp$Dir>.c.dbox"
 patch --unified < "@.c.event"      "<WimpLib_tmp$Dir>.c.event"
-patch --unified < "@.c.flex"       "<WimpLib_tmp$Dir>.c.flex"
+| patch --unified < "@.c.flex"       "<WimpLib_tmp$Dir>.c.flex"
 patch --unified < "@.c.fontlist"   "<WimpLib_tmp$Dir>.c.fontlist"
 patch --unified < "@.c.fontselect" "<WimpLib_tmp$Dir>.c.fontselect"
 patch --unified < "@.c.menu"       "<WimpLib_tmp$Dir>.c.menu"
@@ -112,5 +121,8 @@ patch --unified < "@.s.swi"        "<WimpLib_tmp$Dir>.s.swi"
 |
 back
 |
+time
+|
+Unset flexlib_tmp$Dir
 Unset rlib_tmp$Dir
 Unset WimpLib_tmp$Dir

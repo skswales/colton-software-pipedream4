@@ -24,6 +24,8 @@ time
 /<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/h
 /<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/s
 /<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/VerIntern/h
+/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Toolbox/Libs/flexlib/c
+/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Toolbox/Libs/flexlib/h
 time
 |
 back

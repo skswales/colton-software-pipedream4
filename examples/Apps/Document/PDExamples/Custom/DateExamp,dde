@@ -1,0 +1,47 @@
+%OP%DP0
+%OP%LPth
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC118,1512,484,1108,0,6,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,19,19%%C%Input(Text)
+-------------------
+%L%30 Jun 1973
+0009 March 61
+4 May 1268
+29 Febr 2004
+3 Septem 2007
+5 Se 1607
+34 Decem 1736
+15 Fe 71
+1 May 1268
+19 September 1991
+-------------------
+%CO:B,19,0%%C%Output(Date)
+----------------------
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a3)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a4)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a5)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a6)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a7)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a8)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a9)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a10)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a11)
+%V%%R%[CF_sheets.c_DateFns]text_to_date(a12)
+---------------------
+%CO:C,38,38%%C%Output(Expanded)
+%L%--------------------------------------
+%V%%R%[CF_sheets.c_DateFns]expand_date(b3)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b4)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b5)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b6)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b7)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b8)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b9)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b10)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b11)
+%V%%R%[CF_sheets.c_DateFns]expand_date(b12)
+%L%--------------------------------------
+%CO:D,6,24%%CO:E,12,12%

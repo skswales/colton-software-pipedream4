@@ -1,0 +1,191 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%FM3
+%OP%BM0
+%OP%LM6
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%PT1
+%OP%PDDefault
+%OP%WC2,910,280,1364,0,17,0,16
+%OP%LC0,4
+%OP%FR0,16
+%CO:A,10,41%Rainfall
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Sep
+Oct
+Nov
+Dec
+
+Average rainfall was @B17@
+
+Average:
+
+
+This file gives an exercise in creating 
+charts in PipeDream version 4.12 or 
+later.  It is best done in a wide screen 
+mode.
+
+1. Making a chart
+
+To create a chart for this data mark a 
+block from A1 to D13 and select New 
+Chart from the Charts menu.
+
+2. Try changing the figures in the 
+spreadsheet to see the chart update 
+dynamically.
+
+3. Different chart types
+
+Investigate different chart types by 
+clicking on icons in the galleries in 
+the Chart window menu.  For the time 
+being, don't click on the penguins; 
+there are too many numbers in this file 
+to give sensible penguin graphics.
+
+4. Making selections.
+
+Making selections and applying styles to 
+them is the way you can specify exactly 
+how the chart should look.  This is a 
+very important part of PipeDream's 
+charts and it is worth spending a little 
+time to understand it thoroughly.
+
+First, to make a selection of something 
+in the chart, point at it and press the 
+left button on the mouse.  You should 
+see a dotted line around your selection 
+and the name of your selection will 
+appear in the top left of the Chart 
+window.  Try clicking at different 
+places in the chart to see what you can 
+select.  Also, try clicking in the 
+information box at the top left of the 
+window.  This will select the next 
+element in the chart.
+
+In a bar or line chart, try changing the 
+colour of Series 1 in the chart by 
+selecting it and using Fill Colour on 
+the Selection menu.
+
+5. Try adding your own labels to the 
+chart by using the New Text option.  
+You can move a label around by selecting 
+it and dragging it across the chart.  
+Keep it selected and change its style by 
+selecting the Font Selector from 
+Text Style...
+
+Try adding a live label.  Mark slot A15 
+(make sure you mark just the slot and 
+not the whole row) containing the text 
+"Average rainfall was..." and select Add 
+to chart from the PipeDream Chart menu.  
+This will add the label to the chart.  
+Change one of the values and see the 
+label change on the chart.
+
+6. Try adding a backdrop to the chart.  
+Select the plot area and drag in the 
+file BackDrop from the Worldcup 
+directory on this disc.  BackDrop is an 
+ordinary draw file; you can create your 
+backdrops with any drawing or painting 
+package which saves draw or sprite 
+files.
+
+7. Try dragging the legend box around.  
+The legend box will probably appear at 
+the right-hand side of the chart to 
+start with.  
+
+8. Try changing the font size of the 
+axis labels.  Click on the axis labels 
+to select the axis and change the font 
+in the Text style selector of the 
+Selection menu.
+
+9. Try switching grid lines on and off.  
+Grid lines are attributes of the 
+vertical and horizontal axes.  To switch 
+horizontal grid lines on, these are 
+lines running from left to right, you 
+will need to select Axis 2, the vertical 
+axis.  Do this by clicking on one of the 
+numbers up the side of the chart. Then 
+bring up the axis dialogue box by 
+clicking on Axis in the Selection 
+sub-menu.
+
+On the right of the axis dialogue box 
+you will see a box called Major tick 
+interval.  In this box is a switch 
+called Grid lines.  Click on this to 
+switch it on or off and then click on OK 
+to redraw the chart.
+
+10. Try changing the sizes of different 
+parts of the chart in the Options box 
+from the main chart menu.  To make way 
+for a larger title you might increase 
+the top margin.  To give a little more 
+room for labels across the bottom axis 
+you might increase the width of the 
+chart.
+%CO:B,6,31%1988
+%V%%R%40
+%V%%R%14
+%V%%R%15
+%V%%R%7
+%V%%R%3
+%V%%R%12
+%V%%R%2
+%V%%R%4
+%V%%R%8
+%V%%R%18
+%V%%R%25
+%V%%R%23
+
+
+
+%V%%R%avg(B2D13)
+%CO:C,6,25%1989
+%V%%R%23
+%V%%R%17
+%V%%R%14
+%V%%R%11
+%V%%R%12
+%V%%R%12
+%V%%R%24
+%V%%R%9
+%V%%R%12
+%V%%R%18
+%V%%R%27
+%V%%R%22
+%CO:D,6,19%1990
+%V%%R%18
+%V%%R%19
+%V%%R%15
+%V%%R%11
+%V%%R%9
+%V%%R%5
+%V%%R%7
+%V%%R%4
+%V%%R%8
+%V%%R%18
+%V%%R%21
+%V%%R%23
+%CO:E,13,0%

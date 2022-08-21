@@ -1,0 +1,20 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC510,1750,672,1364,0,0,0,0
+%CO:A,12,72%
+%C%%H2%Inflation chart
+
+This chart is an %H4%overlay%H4% chart.  Overlays are mixed charts and they are usually a mixture of bar and 
+line charts.  In this case the bars represent unemployment figures and the line the inflation rate.  
+Notice that the two series each have their own axes.
+
+Put the chart into an editing window by selecting Edit Chart from the Charts menu.  Then type the real 
+numbers in the relevant slots.
+
+Try changing one of the inflation figures to 12%PC%.  To do this just enter 12 into one of the slots; don't 
+type the %PC%.  Watch the chart change and notice the inflation label change.  See if you can work out 
+from the spreadsheet how this has been created from the chart.
+%CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

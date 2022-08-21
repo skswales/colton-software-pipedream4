@@ -39,7 +39,7 @@ o.cs-event:    $(WimpLib).c.event $(WimpLib).h.event
 o.cs-event:    $(WimpLib).c.cs-event
         $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-event
 
-#o.cs-flex:     $(WimpLib).c.flex $(WimpLib).h.flex
+o.cs-flex:     $(WimpLib).c.flex
 o.cs-flex:     $(WimpLib).h.cs-flex
 o.cs-flex:     $(WimpLib).c.cs-flex
         $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-flex

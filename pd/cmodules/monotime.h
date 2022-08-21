@@ -9,7 +9,7 @@
 
 /* Monotonic timer */
 
-/* SKS October 1992 */
+/* SKS October 1990 */
 
 #ifndef __monotime_h
 #define __monotime_h

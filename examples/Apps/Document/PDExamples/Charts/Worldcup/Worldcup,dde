@@ -1,0 +1,64 @@
+%OP%VS4.127 (27-Mar-92), Colton Software, R4000 2029 4983 8986
+
+%OP%IWC
+%OP%DP0
+%OP%PL36
+%OP%FM3
+%OP%BM3
+%OP%LM6
+%OP%FX288
+%OP%FY288
+%OP%FS0
+%OP%PDDefault
+%OP%WC2,1238,44,980,1,1,0,0
+%CO:A,25,72%%L%World cup winners 
+%L%Germany
+%L%Italy
+%L%Brazil
+%L%England
+%L%Argentina
+
+@G:Worldc_C02,80@
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+ 
+%CO:B,5,60%%L%Wins
+%V%%L%3
+%V%%L%3
+%V%%L%2
+%V%%L%1
+%V%%L%2
+%CO:C,12,48%%CO:D,12,29%
+1. Select Edit chart from 
+the Chart menu to put the 
+chart in a window so that 
+you can edit it and see it 
+update. Try changing the 
+number of wins in column B. 
+
+2. In the Chart editing 
+window click with the right 
+button on one of the shirts 
+to select the individual 
+data point and drag in a 
+draw file to redraw the 
+point with the new picture.
+
+3. Click on the background 
+to select the Plot area and 
+drag in the file Backdrop to 
+use as a background to the 
+chart.

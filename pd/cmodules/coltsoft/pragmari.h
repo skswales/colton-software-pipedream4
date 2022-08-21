@@ -7,7 +7,7 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Controls pragmas for RISC OS Norcroft */
+/* Controls pragmas for RISC OS Norcroft compiler */
 
 /* Stuart K. Swales 15-Jan-1991 */
 

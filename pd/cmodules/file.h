@@ -7,7 +7,7 @@
 /* Copyright (C) 1990-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Defines the external interface to the file handling module (both stream & utils) */
+/* External interface to the file handling module (both stream & utils) */
 
 /* SKS February 1990 */
 

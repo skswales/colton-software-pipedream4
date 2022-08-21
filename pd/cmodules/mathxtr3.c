@@ -63,25 +63,7 @@ normal_distribution(void)
     return(x * sqrt(-2.0 * log(s) / s));
 }
 
-#if RISCOS
-
-/* implementation using ANSI C functions */
-
-extern F64
-uniform_distribution(void)
-{
-    int temp = rand() & RAND_MAX;
-    return((F64) temp / (F64) RAND_MAX);
-}
-
-extern void
-uniform_distribution_seed(
-    _In_ unsigned int seed)
-{
-    srand(seed);
-}
-
-#else
+#if WINDOWS
 
 /*
 
@@ -139,6 +121,24 @@ uniform_distribution_seed(
     _In_ unsigned int seed)
 {
     init_gen_rand(seed);
+}
+
+#else
+
+/* implementation using ANSI C functions */
+
+extern F64
+uniform_distribution(void)
+{
+    int temp = rand() & RAND_MAX;
+    return((F64) temp / (F64) RAND_MAX);
+}
+
+extern void
+uniform_distribution_seed(
+    _In_ unsigned int seed)
+{
+    srand(seed);
 }
 
 #endif /* OS */

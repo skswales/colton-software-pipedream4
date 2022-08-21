@@ -7,7 +7,7 @@
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* SKS derived from Fireworkz: MRJC April 1992 / August 1993 */
+/* MRJC April 1992 / August 1993; SKS derived from Fireworkz for PipeDream use */
 
 #include "common/gflags.h"
 

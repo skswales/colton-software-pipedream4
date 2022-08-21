@@ -1,0 +1,24 @@
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC2,1238,452,804,0,0,0,0
+%OP%VS3.80 (11-Oct-91), Mrjc, R9200 7500 3900 8299 
+%CO:A,10,0%Mr Jones
+Mr Byte
+Mrs Brown
+%CO:B,16,0%Managing Director
+Chief Programmer 
+Secretary
+%CO:C,10,0%Jones & Co
+BCPL Ltd
+Girton WI
+%CO:D,13,0%Garden St
+Lisp Road
+Huntingdon Rd
+%CO:E,12,24%%L%York
+%L%Cambridge
+%L%Oxford
+%CO:F,12,12%

@@ -1,0 +1,26 @@
+%OP%PL53
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%NDpcl,38
+%OP%NDposn,37
+%OP%NDequal," "
+%OP%WC2,1496,636,1364,0,0,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,84,0%%V%%L%function("position","list:array","entry:reference")
+\  Returns the position of @entry in @list.
+%V%%L%set_name("equal"," ")
+%V%%L%set_name("posn",1)
+%V%%L%row(index(@list,1,1))
+%V%%L%for("pcl",1,rows(@list))
+%V%%L%    if(index(@list,1,pcl)>@entry,set_name("posn",posn+1),)
+%V%%L%    if(index(@list,1,pcl)=@entry & (pcl+a5-1)<>row(@entry),set_name("equal","="),)
+%V%%L%next
+%V%%L%result(join(string(posn,0),equal))
+
+%V%%L%function("std_mean","list:array","entry:reference")
+\  Returns the number of standard deviations @entry is from the mean of @list.
+%V%%L%std(@list)
+%V%%L%avg(@list)
+%V%%L%result(abs(@entry-a15)/a14)
+%CO:B,12,75%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

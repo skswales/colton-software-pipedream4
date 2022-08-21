@@ -1,0 +1,119 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%DP0
+%OP%LP*
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC2,1750,284,1028,0,1,0,0
+%CO:A,11,96%%C%%H2%Date Functions Examples
+
+%C%Function
+
+Date
+Datevalue
+Day
+Hour
+Minute
+Month
+Monthdays
+Now
+Second
+Time
+Timevalue
+Today
+Weekday
+Year
+%CO:B,17,0%
+
+%C%Input 1
+
+%V%%C%61
+%C%30.6.1991
+%V%%C%now
+%V%%C%now
+%V%%C%now
+%V%%C%now
+%V%%C%now
+%C%-
+%V%%C%now
+%V%%C%17
+%C%18:33:01
+%C%-
+%V%%C%now
+%V%%C%now
+%CO:C,9,13%
+
+%C%Input 2
+
+%V%%C%3
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%V%%C%12
+%C%-
+%C%-
+%C%-
+%C%-
+%CO:D,9,62%
+
+%C%Input 3
+
+%V%%C%17
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%V%%C%35
+%C%-
+%C%-
+%C%-
+%C%-
+%CO:E,17,0%
+
+%C%Output
+
+%V%%C%date(B5,C5,D5)
+%V%%C%datevalue(B6)
+%V%%C%day(B7)
+%V%%C%hour(B8)
+%V%%C%minute(B9)
+%V%%C%month(B10)
+%V%%C%monthdays(B11)
+%V%%C%now
+%V%%C%second(B13)
+%V%%C%time(B14,C14,D14)
+%V%%C%timevalue(B15)
+%V%%C%today
+%V%%C%weekday(B17)
+%V%%C%year(B18)
+%CO:F,51,56%
+
+Summary
+
+Returns the date value from year, month, day information.
+Converts a text value into a date. This may also include a time.
+Returns the day from the date (and time) specified.
+Returns the hour from the time (and date) specified.
+Returns the number of minutes from the time (and date) specified.
+Returns the month from the date (and time) specified.
+Returns the number of days in the month of the date specified.
+Returns the current date and time.
+Returns the number of seconds from the time (and date) specified.
+Returns the time value from hour,minute,second informaion.
+Converts a text value into a time.
+Returns the current date.
+Returns the weekday of the date specified, 1 = Sunday etc.
+Returns the year from the date (and time) speecified.

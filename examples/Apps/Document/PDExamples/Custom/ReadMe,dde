@@ -1,0 +1,79 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%LP(
+%OP%TP)
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC2,1504,366,1364,0,1,0,0
+%CO:A,12,72%%H1%DateExamp :
+
+
+
+
+
+%H1%FormatEng :
+
+
+
+
+
+
+
+
+%H1%GCD :%H1%
+
+
+
+
+%H1%Num_Expnd :
+
+
+
+
+
+%H1%Pos_Sort :
+
+
+
+
+
+
+%H1%RefDemo :
+%CO:B,12,60%
+
+"text_to_date"   converts a text date of the form ;  
+    dd Month yyyy   into a date understood by PipeDream.
+"expand_date" expands a date into textual format.
+
+
+
+Expands a PipeDream format date to English text following 
+several guidelines as follows ;
+
+"format_date", date, length of day text, "the" on/off, date 
+on/off, suffix (e.g. st for first) on/off, "of" on/off, 
+length of month text, length of year, separator (e.g. " ") 
+
+
+
+Iteratively finds the Greatest Common Denominator of two 
+numbers.
+
+
+
+Expands a number slot to text from -999 to 999. If four
+figures are specified, it assumes a date with +ve as a.d. 
+and -ve as b.c.
+
+
+
+"position" returns the position of a certain slot in a list 
+of number slots, e.g. 26, 10, 23, 15= etc.
+"std_mean" returns the number of standard deviations a 
+certain slot is from the mean of the list.
+
+
+
+See Reference Manual for further details.
+%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

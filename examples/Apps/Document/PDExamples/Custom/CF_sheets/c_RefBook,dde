@@ -1,0 +1,28 @@
+%OP%LP*
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC2,1238,1012,1364,0,0,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,67,0%%V%%L%function("fact","arg_1")
+%V%%L%result(if(@arg_1=1,1,@arg_1*fact(@arg_1-1)))
+
+ 
+%V%%L%function("find_space","str:text")
+%V%%L%for("i",1,length(@str),1)
+%V%%L%    if(mid(@str,i,1)=char(32),break,0)
+%V%%L%next
+%V%%L%result(i)
+
+
+%V%%L%function("strip_spaces","str:text")
+%V%%L%set_name("stringout",@str)
+%V%%L%while(code(stringout)=32)
+%V%%L%    set_name("stringout",right(stringout,length(stringout)-1))
+%V%%L%    if(length(stringout)<1,break,)
+%V%%L%endwhile
+%V%%L%result(stringout)
+%CO:B,21,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

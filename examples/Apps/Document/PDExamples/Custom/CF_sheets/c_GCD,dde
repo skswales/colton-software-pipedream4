@@ -1,0 +1,17 @@
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%NDa,1
+%OP%NDb,0
+%OP%WC310,1576,364,820,0,0,0,0
+%OP%VS3.80 (11-Oct-91), Mrjc, R9200 7500 3900 8299 
+%CO:A,50,72%%V%%L%function("GCD","num_1:number","num_2:number")
+%V%%L%set_name("a",@num_1)
+%V%%L%set_name("b",@num_2)
+%V%%L%repeat
+%V%%L%set_name("a",mod(a,b))
+%V%%L%if(a=0,result(b),)
+%V%%L%set_name("b",mod(b,a))
+%V%%L%until(b=0)
+%V%%L%result(a)
+%CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

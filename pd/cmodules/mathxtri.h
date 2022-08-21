@@ -1,5 +1,14 @@
 /* mathxtri.h */
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Copyright (C) 1991-1998 Colton Software Limited
+ * Copyright (C) 1998-2014 R W Colton */
+
+/* SKS July 1991 */
+
 #include "mathnums.h"
 
 #define F64_MANT_DIG DBL_MANT_DIG

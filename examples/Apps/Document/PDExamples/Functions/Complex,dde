@@ -1,0 +1,233 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%DP4
+%OP%LP*
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC216,1492,460,1200,0,1,0,0
+%CO:A,12,100%%C%%H2%Complex Functions Examples
+
+%C%Function
+
+ z
+w
+z+w
+z-w
+z*w
+z/w
+z^w
+exp(z)
+ln(z)
+cos(z)
+sin(z)
+tan(z)
+acos(z)
+asin(z)
+atan(z)
+cosh(z)
+sinh(z)
+tanh(z)
+acosh(z)
+asinh(z)
+atanh(z)
+cosec(z)
+cot(z)
+sec(z)
+acosec(z)
+acot(z)
+asec(z)
+cosech(z)
+coth(z)
+sech(z)
+acosech(z)
+acoth(z)
+asech(z)
+%CO:B,10,0%
+
+%R%Real
+
+%V%%R%1
+%V%%R%2
+%V%%R%index(c_add({$B$5,$C$5},{$B$6,$C$6}),1,1)
+%V%%R%index(c_sub({$B$5,$C$5},{$B$6,$C$6}),1,1)
+%V%%R%index(c_mul({$B$5,$C$5},{$B$6,$C$6}),1,1)
+%V%%R%index(c_div({$B$5,$C$5},{$B$6,$C$6}),1,1)
+%V%%R%index(c_power({$B$5,$C$5},{$B$6,$C$6}),1,1)
+%V%%R%index(c_exp({$B$5,$C$5}),1,1)
+%V%%R%index(c_ln({$B$5,$C$5}),1,1)
+%V%%R%index(c_cos({$B$5,$C$5}),1,1)
+%V%%R%index(c_sin({$B$5,$C$5}),1,1)
+%V%%R%index(c_tan({$B$5,$C$5}),1,1)
+%V%%R%index(c_acos({$B$5,$C$5}),1,1)
+%V%%R%index(c_asin({$B$5,$C$5}),1,1)
+%V%%R%index(c_atan({$B$5,$C$5}),1,1)
+%V%%R%index(c_cosh({$B$5,$C$5}),1,1)
+%V%%R%index(c_sinh({$B$5,$C$5}),1,1)
+%V%%R%index(c_tanh({$B$5,$C$5}),1,1)
+%V%%R%index(c_acosh({$B$5,$C$5}),1,1)
+%V%%R%index(c_asinh({$B$5,$C$5}),1,1)
+%V%%R%index(c_atanh({$B$5,$C$5}),1,1)
+%V%%R%index(c_cosec({$B$5,$C$5}),1,1)
+%V%%R%index(c_cot({$B$5,$C$5}),1,1)
+%V%%R%index(c_sec({$B$5,$C$5}),1,1)
+%V%%R%index(c_acosec({$B$5,$C$5}),1,1)
+%V%%R%index(c_acot({$B$5,$C$5}),1,1)
+%V%%R%index(c_asec({$B$5,$C$5}),1,1)
+%V%%R%index(c_cosech({$B$5,$C$5}),1,1)
+%V%%R%index(c_coth({$B$5,$C$5}),1,1)
+%V%%R%index(c_sech({$B$5,$C$5}),1,1)
+%V%%R%index(c_acosech({$B$5,$C$5}),1,1)
+%V%%R%index(c_acoth({$B$5,$C$5}),1,1)
+%V%%R%index(c_asech({$B$5,$C$5}),1,1)
+%CO:C,10,0%
+
+%R%Imaginary
+
+%V%%R%1
+%V%%R%-1
+%V%%R%index(c_add({$B$5,$C$5},{$B$6,$C$6}),2,1)
+%V%%R%index(c_sub({$B$5,$C$5},{$B$6,$C$6}),2,1)
+%V%%R%index(c_mul({$B$5,$C$5},{$B$6,$C$6}),2,1)
+%V%%R%index(c_div({$B$5,$C$5},{$B$6,$C$6}),2,1)
+%V%%R%index(c_power({$B$5,$C$5},{$B$6,$C$6}),2,1)
+%V%%R%index(c_exp({$B$5,$C$5}),2,1)
+%V%%R%index(c_ln({$B$5,$C$5}),2,1)
+%V%%R%index(c_cos({$B$5,$C$5}),2,1)
+%V%%R%index(c_sin({$B$5,$C$5}),2,1)
+%V%%R%index(c_tan({$B$5,$C$5}),2,1)
+%V%%R%index(c_acos({$B$5,$C$5}),2,1)
+%V%%R%index(c_atan({$B$5,$C$5}),2,1)
+%V%%R%index(c_atan({$B$5,$C$5}),2,1)
+%V%%R%index(c_cosh({$B$5,$C$5}),2,1)
+%V%%R%index(c_sinh({$B$5,$C$5}),2,1)
+%V%%R%index(c_tanh({$B$5,$C$5}),2,1)
+%V%%R%index(c_acosh({$B$5,$C$5}),2,1)
+%V%%R%index(c_asinh({$B$5,$C$5}),2,1)
+%V%%R%index(c_atanh({$B$5,$C$5}),2,1)
+%V%%R%index(c_cosec({$B$5,$C$5}),2,1)
+%V%%R%index(c_cot({$B$5,$C$5}),2,1)
+%V%%R%index(c_sec({$B$5,$C$5}),2,1)
+%V%%R%index(c_acosec({$B$5,$C$5}),2,1)
+%V%%R%index(c_acot({$B$5,$C$5}),2,1)
+%V%%R%index(c_asec({$B$5,$C$5}),2,1)
+%V%%R%index(c_cosech({$B$5,$C$5}),2,1)
+%V%%R%index(c_coth({$B$5,$C$5}),2,1)
+%V%%R%index(c_sech({$B$5,$C$5}),2,1)
+%V%%R%index(c_acosech({$B$5,$C$5}),2,1)
+%V%%R%index(c_acoth({$B$5,$C$5}),2,1)
+%V%%R%index(c_asech({$B$5,$C$5}),2,1)
+%CO:D,10,0%
+
+%R%Modulus
+
+%V%%R%c_radius({B5,C5})
+%V%%R%c_radius({B6,C6})
+%V%%R%c_radius({B7,C7})
+%V%%R%c_radius({B8,C8})
+%V%%R%c_radius({B9,C9})
+%V%%R%c_radius({B10,C10})
+%V%%R%c_radius({B11,C11})
+%V%%R%c_radius({B12,C12})
+%V%%R%c_radius({B13,C13})
+%V%%R%c_radius({B14,C14})
+%V%%R%c_radius({B15,C15})
+%V%%R%c_radius({B16,C16})
+%V%%R%c_radius({B17,C17})
+%V%%R%c_radius({B18,C18})
+%V%%R%c_radius({B19,C19})
+%V%%R%c_radius({B20,C20})
+%V%%R%c_radius({B21,C21})
+%V%%R%c_radius({B22,C22})
+%V%%R%c_radius({B23,C23})
+%V%%R%c_radius({B24,C24})
+%V%%R%c_radius({B25,C25})
+%V%%R%c_radius({B26,C26})
+%V%%R%c_radius({B27,C27})
+%V%%R%c_radius({B28,C28})
+%V%%R%c_radius({B29,C29})
+%V%%R%c_radius({B30,C30})
+%V%%R%c_radius({B31,C31})
+%V%%R%c_radius({B32,C32})
+%V%%R%c_radius({B33,C33})
+%V%%R%c_radius({B34,C34})
+%V%%R%c_radius({B35,C35})
+%V%%R%c_radius({B36,C36})
+%V%%R%c_radius({B37,C37})
+%CO:E,10,0%
+
+%R%Argument
+
+%V%%R%c_theta({B5,C5})
+%V%%R%c_theta({B6,C6})
+%V%%R%c_theta({B7,C7})
+%V%%R%c_theta({B8,C8})
+%V%%R%c_theta({B9,C9})
+%V%%R%c_theta({B10,C10})
+%V%%R%c_theta({B11,C11})
+%V%%R%c_theta({B12,C12})
+%V%%R%c_theta({B13,C13})
+%V%%R%c_theta({B14,C14})
+%V%%R%c_theta({B15,C15})
+%V%%R%c_theta({B16,C16})
+%V%%R%c_theta({B17,C17})
+%V%%R%c_theta({B18,C18})
+%V%%R%c_theta({B19,C19})
+%V%%R%c_theta({B20,C20})
+%V%%R%c_theta({B21,C21})
+%V%%R%c_theta({B22,C22})
+%V%%R%c_theta({B23,C23})
+%V%%R%c_theta({B24,C24})
+%V%%R%c_theta({B25,C25})
+%V%%R%c_theta({B26,C26})
+%V%%R%c_theta({B27,C27})
+%V%%R%c_theta({B28,C28})
+%V%%R%c_theta({B29,C29})
+%V%%R%c_theta({B30,C30})
+%V%%R%c_theta({B31,C31})
+%V%%R%c_theta({B32,C32})
+%V%%R%c_theta({B33,C33})
+%V%%R%c_theta({B34,C34})
+%V%%R%c_theta({B35,C35})
+%V%%R%c_theta({B36,C36})
+%V%%R%c_theta({B37,C37})
+%CO:F,1,0%%CO:G,49,56%
+
+Summary
+
+Defining complex number z.
+Defining complex number w.
+Adds two complex numbers.
+Subtracts two complex numbers.
+Multiplies two complex numbers.
+Divides one complex number by another.
+Raises one complex number to the power of another.
+Raises e (natural exponent) to the power of a complex number.
+Returns the natural logarithm of a complex number.
+Returns the Cosine of a complex number.
+Returns the Sine of a complex number.
+Returns the Tangent of a complex number.
+Returns the inverse Cosine of a complex number.
+Returns the inverse Sine of a complex number.
+Returns the inverse Tangent of a complex number.
+Returns the hyperbolic Cosine of a complex number.
+Returns the hyperbolic Sine of a complex number.
+Returns the hyperbolic Tangent of a complex number.
+Returns the inverse hyperbolic Cosine of a complex number.
+Returns the inverse hyperbolic Sine of a complex number.
+Returns the inverse hyperbolic Tangent of a complex number.
+Returns the Cosecant of a complex number.
+Returns the Cotangent of a complex number.
+Returns the Secant of a complex number.
+Returns the inverse Cosecant of a complex number.
+Returns the inverse Cotangent of a complex number.
+Returns the inverse Secant of a complex number.
+Returns the hyperbolic Cosecant of a complex number.
+Returns the hyperbolic Cotangent of a complex number.
+Returns the hyperbolic Secant of a complex number.
+Returns the inverse hyperbolic Cosecant of a complex number.
+Returns the inverse hyperbolic Cotangent of a complex number.
+Returns the inverse hyperbolic Secant of a complex number.

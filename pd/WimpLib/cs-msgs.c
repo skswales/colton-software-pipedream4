@@ -20,11 +20,18 @@
 
 #include "msgs.h"
 
-#include "cmodules/riscos/ho_sqush.h"
+#include "cmodules/file.h"
 
 static char * msgs__block;
 
-static void __msgs_readfile(const char *filename);
+static void
+__msgs_readfile(
+    _In_z_      const char *filename);
+
+static STATUS
+__msgs_load_messages_file(
+    P_P_ANY p_p_any /*out*/,
+    FILE_HANDLE file_handle);
 
 /*
 compare two strings backwards
@@ -130,17 +137,18 @@ msgs_lookup(/*const*/ char *tag_and_default)
 }
 
 static void
-__msgs_readfile(const char *filename)
+__msgs_readfile(
+    _In_z_      const char *filename)
 {
     size_t real_length, alloc_length;
 
-    { /* 13.12.98 add squashed messages file loading */
+    {
     FILE_HANDLE file_handle;
 
     if(status_fail(file_open(filename, file_open_read, &file_handle)))
         return;
 
-    real_length = host_squash_load_messages_file((P_P_ANY) &msgs__block, file_handle);
+    real_length = __msgs_load_messages_file((P_P_ANY) &msgs__block, file_handle);
 
     file_close(&file_handle);
 
@@ -221,6 +229,41 @@ __msgs_readfile(const char *filename)
         tracef1("[msgs_readfile: placing last NULLCH at &%p]\n", out);
         *out++ = NULLCH; /* need this last byte as end marker */
         }
+}
+
+static STATUS
+__msgs_load_messages_file(
+    P_P_ANY p_p_any /*out*/,
+    FILE_HANDLE file_handle)
+{
+    STATUS status;
+    S32 length = file_length(file_handle);
+    const U32 messages_bodge = 2; /* one for trailing linesep, one for final NUL */
+
+    for (;;) /* loop for structure */
+        {
+        if(NULL == (*p_p_any = _al_ptr_alloc(length + messages_bodge, &status)))
+            break;
+
+        if((status = file_read(*p_p_any, 1, length, file_handle)) != length)
+            {
+            if(status_ok(status))
+                status = STATUS_FAIL;
+            break;
+            }
+
+        status = STATUS_OK;
+        break;
+        }
+
+    if(status_fail(status))
+        {
+        al_ptr_dispose(p_p_any);
+
+        return(status);
+        }
+
+    return(length);
 }
 
 /* end of cs-msgs.c */

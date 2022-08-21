@@ -1,0 +1,16 @@
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC2,1238,236,588,0,0,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,14,72%%V%%R%6
+%R%four letters
+%L%   3 spaces
+
+%CO:B,10,18%%V%%R%[CF_sheets.c_RefBook]fact(a1)
+%V%%R%[CF_sheets.c_RefBook]find_space(a2)
+%V%%L%[CF_sheets.c_RefBook]strip_spaces(a3)
+%CO:C,12,13%%CO:D,12,36%fact(A1)
+find_space(A2)
+strip_spaces(A3)
+%CO:E,12,24%%CO:F,12,12%

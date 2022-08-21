@@ -7,6 +7,8 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
+/* Header for RISC OS filing system calls */
+
 /* Stuart K. Swales 24-May-1991 */
 
 #ifndef __osfile_h

@@ -1,0 +1,46 @@
+%OP%DP0
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC198,1418,164,648,0,0,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,7,72%%V%%R%0
+%V%%R%1
+%V%%R%10
+%V%%R%19
+%V%%R%67
+%V%%R%99
+%V%%R%-54
+%V%%R%201
+%V%%R%511
+%V%%R%999
+%V%%R%-1247
+%V%%R%1809
+%V%%R%1901
+%V%%R%1918
+%V%%R%1959
+%V%%R%1991
+%V%%R%2000
+%V%%R%2001
+%V%%R%2010
+%V%%R%9099
+%CO:B,31,0%%V%%R%[CF_sheets.c_ExpNum]expand_number(a1," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a2," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a3," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a4," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a5," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a6," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a7," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a8," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a9," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a10," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a11," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a12," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a13," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a14," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a15," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a16," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a17," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a18," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a19," ")
+%V%%R%[CF_sheets.c_ExpNum]expand_number(a20," ")

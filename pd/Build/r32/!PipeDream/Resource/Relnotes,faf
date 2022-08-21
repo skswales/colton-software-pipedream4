@@ -70,6 +70,18 @@ obtained from
 
 <H2>Release history</H2>
 
+<H4>4.52/03 (18 Feb 2014)</H4>
+
+<P>tboxlibs' flex module compiled into PipeDream (with patches). Added
+shrink_forbid option (needed for running out of memory when printing problem
+as for 4.50/09). Added flex allocation granularity mechanism to tboxlibs'
+flex module to avoid unnecessary overheads and slot/area thrashing.</P>
+
+<P>Spurious carriage return characters removed from Messages file.</P>
+
+<P>No longer supports squashed Messages file (for source clarity).</P>
+
+
 <H4>4.52/02 (12 Feb 2014)</H4>
 
 <P>PipeDream released under the Mozilla Public License 2.0 (MPL).</P>
@@ -92,7 +104,7 @@ wish to use a package manager, you may extract !PipeDream as before from the
 ZIP archive - it is in Apps.Document.</P>
 
 <P>Choices directory moved back from top level into !PipeDream as uChoices to
-assist packaging.  PipeDream will now test for the existence of choices in
+assist packaging. PipeDream will now test for the existence of choices in
 &lt;Choices$Write&gt;.PipeDream on startup and, if needed, copy the default
 choices directories and files from uChoices over to Choices:PipeDream.</P>
 
@@ -118,7 +130,7 @@ Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CF~NRV
 <H4>4.51 (06 Jan 2014)</H4>
 
 <P>Fonts used in Draw files that are used as pictures / markers in charts now
-match up with existing fonts in the charts much better.  It is now also
+match up with existing fonts in the charts much better. It is now also
 possible to include Draw files that use text in a font that is otherwise
 unused in the chart: since 4.50/41 (when an optimised font table was added)
 this would have mapped text in the included font to display using System
@@ -141,7 +153,7 @@ the VDU funnel and multiple SWI overheads.</P>
 
 <P>Many more return paths from Window Manager (and other) SWIs now check for
 unlikely, but still possible, errors which could otherwise have been hidden
-and not reported.  Use of inline function wrapper means this is just a CMP
+and not reported. Use of inline function wrapper means this is just a CMP
 #0; BLNE report per call.</P>
 
 <P>PipeDream can now be built on 32-bit systems, including RPCEmu (RO 5.20).</P>
@@ -161,8 +173,8 @@ PipeDream$ReportEnable 1 before running PipeDream.</P>
 <H4>4.50/50 (08 Aug 2013)</H4>
 
 <P>Adjust-clicking the Yes (or No) button in Yes/No choice dialogue boxes acts
-as if the No (or Yes) button had been clicked.  This restores the sense
-prior to the 4.50/49 fix.  This also applies to the Save/Discard choice box.</P>
+as if the No (or Yes) button had been clicked. This restores the sense
+prior to the 4.50/49 fix. This also applies to the Save/Discard choice box.</P>
 
 <P>Sequences of consequent dialogue boxes (when closing PipeDream with a
 number of modified documents) now remember the Yes/No dialogue box position
@@ -184,7 +196,7 @@ documents themselves having been dropped many many moons ago).</P>
 <P>Removed spurious '&gt;' from Edit Name menu entries.</P>
 
 <P>Text @-field sequences are all now fully expanded when displaying the
-contents of a string cell in the same way as a text cell would be.  Prior to
+contents of a string cell in the same way as a text cell would be. Prior to
 this version, the display of string cells containing text @-field sequences
 was inconsistent (PipeDream did try to use font and colour changes, but not
 date, title etc expansion) and was in fact broken.</P>
@@ -209,7 +221,7 @@ font.</P>
 
 <P>The user name & organisation name are no longer displayed in the 'About
 this program' dialogue box as PipeDream is now free-to-use and no longer has
-a registration process.  If you have upgraded PipeDream from a paid version
+a registration process. If you have upgraded PipeDream from a paid version
 and have valid registration information in &lt;PipeDream$Dir&gt;.Info, it will
 still be displayed on the splash screen and stored in your saved files.</P>
 
@@ -245,7 +257,7 @@ to adapt!</P>
 <P>Save processing now always ignores RISC_OSLib's initially poorly defined
 xfersend_file_is_safe() state unless the save has been performed using
 xfersend() - ie by dragging the file icon or clicking OK in the Save
-dialogue box.  This fixes the long-standing \Fgs failure to reset the file
+dialogue box. This fixes the long-standing \Fgs failure to reset the file
 modified flag problem.</P>
 
 <P>Standalone Save dialogue box re-enabled now \Fgs problem fixed.</P>
@@ -312,7 +324,7 @@ when it is opened as a standalone dialogue box.</P>
 <P>32-bit Lotus 1-2-3 converter utilities u_ltp (Lotus to PipeDream) and u_ptl
 (PipeDream to Lotus) are now supplied in PipeDream's Resource.RISC_OS
 directory (this being a bit more out of the way of other files loaded on the
-PipeDream path).  Please note that there is no cute front end tool - you
+PipeDream path). Please note that there is no cute front end tool - you
 will need to invoke them in a (Ctrl-F12) Task window:</P>
 
 <PRE>
@@ -341,9 +353,9 @@ Please refer to the ReadMe in the Choices directory for further details.</P>
 
 <P>The spreadsheet evaluator and general document internal identifiers have
 been unified (like in Fireworkz) to rid PipeDream of this artifical and
-unnecessary distinction.  This had hampered getting to the bottom of many
+unnecessary distinction. This had hampered getting to the bottom of many
 external reference and supporting document loading problems through the
-years.  It also simplifies the document handling to spreadsheet module
+years. It also simplifies the document handling to spreadsheet module
 interface code somewhat (with incidental speed up).</P>
 
 <P>Loading supporting documents and external references code rationalised.
@@ -367,7 +379,7 @@ cell position.</P>
 
 <P>Double-clicking on a document icon in a directory viewer that is already
 loaded in PipeDream (whether modified or not) will simply bring that
-document to the front, acquiring the input focus.  This also applies to a
+document to the front, acquiring the input focus. This also applies to a
 document icon being dragged to the PipeDream icon on the icon bar.</P>
 
 <P>Double-clicking on a chart file icon that is used in a PipeDream document
@@ -376,19 +388,19 @@ error.</P>
 
 <P>The Save file dialogue box is now only created as a RISC OS submenu if it
 is invoked by traversing the RISC OS menu structure using the arrow at the
-right of the Save menu option.  If the Save file dialogue box is invoked by
+right of the Save menu option. If the Save file dialogue box is invoked by
 clicking on the Save menu option, from a command sequence (^FS), mapped
 keystroke (F3) or from the toolbar button, it is opened as a standalone
-dialogue box.  This allows the user to then find a suitable directory viewer
-to drag the file icon to without the dialogue box collapsing.  To cancel the
-dialogue box, press ESCAPE or click the Cancel button.  Note that no other
+dialogue box. This allows the user to then find a suitable directory viewer
+to drag the file icon to without the dialogue box collapsing. To cancel the
+dialogue box, press ESCAPE or click the Cancel button. Note that no other
 PipeDream dialogue boxes can be invoked whilst the Save dialogue box is
 being shown as a standalone dialogue box.</P>
 
 <P>In addition to checking whether a file is being saved to a 'safe' place, or
 is only having a partial range saved, saving a document to a file now also
 only renames the document in memory if it is being saved in its original
-format or in PipeDream format.  This permits exporting documents to other
+format or in PipeDream format. This permits exporting documents to other
 formats using the Save file function without perturbing any external
 references.</P>
 
@@ -402,8 +414,8 @@ files on a RISC PC).</P>
 
 <P>Spreadsheet file loading speeded up by use of improved number reading code
 that performs earlier rejection of character sequences that won't be
-recognised as numbers (e.g dates, slot / range references).  It now also
-reads numbers as integers where that is possible.  Both these cases used to
+recognised as numbers (e.g dates, slot / range references). It now also
+reads numbers as integers where that is possible. Both these cases used to
 spend too much time in FP number decode.</P>
 
 <P>File loading attempts to determine the line separator character(s) for use
@@ -415,7 +427,7 @@ directory, in which you can find sub-directories containing the user-created
 Templates and CmdFiles (amongst others) that are used by PipeDream.</P>
 
 <P>'Log labels' option in chart value axes dialogue boxes has been changed to
-'Power (10^n) labels'.  When used with log scaling, this gives the same
+'Power (10^n) labels'. When used with log scaling, this gives the same
 results as before, but now can be applied without selecting log scaling.</P>
 
 <P>Filenames containing commas no longer cause the Documents and Charts
@@ -534,7 +546,7 @@ although no new themed sprites are actually supplied.</P>
 <H4>4.50/37 (19 Sep 2012)</H4>
 
 <P>Add Choices:PipeDream. to the PipeDream$Path variable, replacing
-&lt;PipeDream$Dir&gt;.User.  Please note that if you already have user
+&lt;PipeDream$Dir&gt;.User. Please note that if you already have user
 dictionaries etc., you may wish to copy the contents of your existing
 &lt;PipeDream$Dir&gt;.User into &lt;Choices$Write&gt;.PipeDream:</P>
 
@@ -572,7 +584,7 @@ the new !PipeDream.Resource.RISC_OS directory to avoid any potential name
 clashes with user's custom function sheets etc.</P>
 
 <P>When closing a document window, no longer bring another document to the
-front and set the caret into it.  This avoids unwanted unpinning of
+front and set the caret into it. This avoids unwanted unpinning of
 documents from the Pinboard.</P>
 
 <P>Sequences of consequent dialogue boxes (when closing PipeDream with a
@@ -624,7 +636,7 @@ with the appropriate code being executed conditionally.</P>
 OS_Heap SWI changes. It's also faster due to no SWI overheads.</P>
 
 <P>The character used in text @-fields may now be set to other than '@' in a
-document's Options dialogue box.  Important notes: this does not change any
+document's Options dialogue box. Important notes: this does not change any
 existing text. When changing this character, all cells containing slot
 reference text @-fields will need to be 'recompiled' to reflect this - the
 easiest (and safest) way of doing this is to save the document and reload it
@@ -633,7 +645,7 @@ update immediately.</P>
 
 <P>Dialogue boxes that have a Cancel button or are definitely always raised as
 menus or submenus (e.g. About this program) no longer have a close icon (and
-thereby possibly unwanted iconise icon) on the title bar.  This was a
+thereby possibly unwanted iconise icon) on the title bar. This was a
 hangover from having always had to use a very, very old template editor
 prior to using !WinEd.</P>
 
@@ -697,7 +709,7 @@ loading on RISC OS 3.6 and below).</P>
 release 20.</P>
 
 <P>Registration number code and template info removed as the PipeDream
-installer no longer generates one.  Previous Info files may be used to show
+installer no longer generates one. Previous Info files may be used to show
 user and organisation name in the splash screen and Info box.</P>
 
 
@@ -899,13 +911,13 @@ the contents of a file with Dynamic area handling in use fixed.</P>
 <H2>User Interface changes since 4.13</H2>
 
 <P>PipeDream now has a revised toolbar, bringing quick access to many useful
-(both existing and new) functions.  Each tool button responds to help
+(both existing and new) functions. Each tool button responds to help
 requests, so it may be useful to run !Help for a while to get used to what
-each button can do for you.  !BubbleHelp (available from David Pilling) is a
+each button can do for you. !BubbleHelp (available from David Pilling) is a
 most excellent replacement for !Help and works well with PipeDream.</P>
 
 <P>When PipeDream is loaded in a high resolution screen mode, it loads its set
-of high resolution sprites for better on-screen appearance.  Low resolution
+of high resolution sprites for better on-screen appearance. Low resolution
 sprites are still available for use by (and selected automatically for)
 users who are not running in such screen modes.</P>
 
@@ -930,7 +942,7 @@ same directory as the selected document.</P>
 
 <H2>Other changes since 4.13</H2>
 
-<P>Dynamic area storage for PipeDream file data implemented.  This speeds up
+<P>Dynamic area storage for PipeDream file data implemented. This speeds up
 task swapping on RISC PCs considerably, and permits the use of Clares'
 Virtualise to have documents loaded which are bigger than physical memory.</P>
 
@@ -950,7 +962,7 @@ and hence can render JPEGs on RISC OS 3.7 systems.</P>
 
 <P>PipeDream now iconises to the Pinboard correctly.</P>
 
-<P>Kerning in outline fonts implemented.  See the Options dialogue box.</P>
+<P>Kerning in outline fonts implemented. See the Options dialogue box.</P>
 
 <P>Messages and sprites are no longer bound to the PipeDream !RunImage.</P>
 
@@ -1081,7 +1093,7 @@ taken <I>k</I> at a time.</P>
 <H4>FACT(n)</H4>
 
 <P>This function yields the factorial of </>n</I> (most commonly shortened
-to <I>n</I>!).  <I>n</I> must be an integer greater than or equal to zero. 
+to <I>n</I>!). <I>n</I> must be an integer greater than or equal to zero. 
 If <I>n</I> &lt; 12, the result is an integer, else it is floating point.</P>
 
 <H4>MONTHNAME(<I>number</I>|<I>date</I>)</H4>
@@ -1175,7 +1187,7 @@ Execute command - ^FZ
 <H2>Warnings</H2>
 
 <P>When using Virtualise or a similar virtual memory manager on RISC PCs,
-install Virtualise *before* you load in PipeDream.  This is because
+install Virtualise *before* you load in PipeDream. This is because
 PipeDream optimises its memory handling differently when VM is active on its
 area - the only way it knows this is by comparing the maximum size of the
 area with what it should be were VM not active i.e. Virtualise must have
@@ -1183,13 +1195,6 @@ been allowed to alter the maximum size of an area before PipeDream loads in.</P>
 
 
 <H2>Resources</H2>
-
-<P>Resources are no longer bound into the PipeDream code.</P>
-
-<P>The Messages file has been preprocessed (comments have been stripped and
-newlines replaced) for faster loading and reduced run-time space
-requirements.  Each line is NUL (ASCII 0) terminated, the end of file being
-two adjacent NUL characters.</P>
 
 <P>Templates are grouped by menu:</P>
 

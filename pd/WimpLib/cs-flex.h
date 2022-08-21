@@ -10,51 +10,39 @@
 #ifndef __cs_flex_h
 #define __cs_flex_h
 
-#if defined(WIMPLIB_FLEX)
-
-#ifndef __flex_h
-#include "./flex.h" /* WimpLib */
-#endif
-
-#define flex_init flex_init_new
-
-_Check_return_
-extern int
-flex_init(
-    char *program_name,
-    int *error_fd,
-    int dynamic_size);
-
-extern int
-flex_set_budge(int newstate);
-
-#else /* NOT WIMPLIB_FLEX */
-
 #ifndef __flex_h
 #if defined(__CC_NORCROFT)
 #include "C:flex.h" /* tboxlibs */
-#else
+#elif defined(_GNUC_)
+#include "./flex.h" /* copy from tboxlibs to WimpLib to simplify include path */
+#else /* MSVC */
 #include "\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs\flex.h" /* tboxlibs */
 #endif
 #endif
 
-#define REPORT_TBOX_FLEX 1
+/*#define REPORT_FLEX 1*/
 
-#if defined(REPORT_TBOX_FLEX) /* reporting shims */
+#if defined(REPORT_FLEX) /* reporting shims */
+
 #define flex_alloc(anchor, size) report_flex_alloc(anchor, size)
+_Check_return_
 extern BOOL report_flex_alloc(flex_ptr anchor, int size);
 
 #define flex_extend(anchor, newsize) report_flex_extend(anchor, newsize)
+_Check_return_
 extern BOOL report_flex_extend(flex_ptr anchor, int newsize);
 
 #define flex_free(anchor) report_flex_free(anchor)
 extern void report_flex_free(flex_ptr anchor);
 #endif
 
-#endif /* WIMPLIB_FLEX */
+#define flex_size(anchor) report_flex_size(anchor)
+_Check_return_
+extern int report_flex_size(flex_ptr anchor);
 
-/* granularity of allocation available from OS */
-extern int flex_pagesize;
+/* granularity of allocation of slot/area */
+
+extern int flex_granularity;
 
 /* like flex_free(), but caters for already freed / not yet allocated */
 
@@ -63,7 +51,8 @@ flex_dispose(
     flex_ptr anchor);
 
 extern BOOL
-flex_forbid_shrink(BOOL forbid);
+flex_forbid_shrink(
+    BOOL forbid);
 
 /* give flex memory to another owner */
 

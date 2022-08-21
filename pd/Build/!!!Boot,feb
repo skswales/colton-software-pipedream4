@@ -26,6 +26,9 @@ URD <pd_root>
 |Lib &.arm.library
 Dir &.pd
 |
+Set PipeDream$ReportEnable 1
+Set PipeDream$TraceEnable 1
+|
 Filer_OpenDir <Obey$Dir>.r32
 |
 | end of !!!Boot

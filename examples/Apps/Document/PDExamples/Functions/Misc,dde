@@ -1,0 +1,139 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%DP4
+%OP%LP*
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC20,1910,220,1008,0,1,0,0
+%OP%NDvariable,C18
+%OP%NDname,"Eric The Half A Bee"
+%CO:A,10,100%%C%%H2%Miscellaneous Functions Examples
+
+
+User :
+%V%%R%name
+
+Function
+
+Alert
+Col
+Cols
+Deref
+If
+Input
+Round
+Row
+Rows
+Set_Name
+Set_Value
+Type
+Version
+%CO:B,10,0%
+
+
+
+
+
+%R%Input 1
+
+%R%Text
+%R%C6
+%R%B7G10
+%R%slot ref
+%R%C15=2
+%R%Text
+%V%%R%456.3566
+%R%C6
+%R%A11D16
+%R%variable
+%V%%R%4
+%R%text
+%R%-
+%CO:C,9,0%
+
+
+
+
+
+%R%Input 2
+
+%R%Button 1
+%R%-
+%R%-
+%R%-
+%R%True
+%R%variable
+%V%%R%2
+%R%-
+%R%-
+%V%%R%-1
+%V%%R%2+2
+%V%%R%2
+%R%-
+%CO:D,9,0%
+
+
+
+
+
+%R%Input 3
+
+%R%Button 2
+%R%-
+%R%-
+%R%-
+%R%False
+%R%Button
+%R%-
+%R%-
+%R%-
+%R%-
+%R%-
+%V%%R%{1,2;3,4}
+%R%-
+%CO:E,10,0%
+
+
+
+
+
+%R%Output
+
+%V%%R%alert("This is an ALERT example.","OK","Cancel")
+%V%%R%col(C6)
+%V%%R%cols(B7G10)
+%V%%R%deref(B12)
+%V%%R%if(C15=2,"True","False")
+%V%%R%input("What is your name ?","name","OK")
+%V%%R%round(B15,C15)
+%V%%R%row(C6)
+%V%%R%rows(A11D16)
+%V%%R%set_name(B18,C18)
+%V%%R%set_value(B19,C19)
+%V%%R%type(deref(D20))
+%V%%R%version
+%CO:F,2,0%%CO:G,74,0%
+
+
+
+
+
+Summary
+
+Opens a window containing some text and up to two buttons.
+Returns the column number (A=1) of %H4%Input1%H4% or current column if absent.
+Returns the number of columns in the range specified.
+Dereferences a slot reference - see Type.
+If %H4%Input1%H4% condition is true, %H4%Input2%H4% returned otherwise %H4%Input3%H4%.
+Opens a window with a writeable icon and up to two buttons.
+Rounds %H4%Input1%H4% to %H4%Input2%H4% decimal places. %H4%Input2%H4% may be negative.
+Returns the row number of %H4%Input1%H4% or the current column if absent.
+Returns the number of rows in the range specified.
+Defines a variable and assigns a value to it.
+Sets the contents of a specific slot to a given value.
+Returns the type of a specific slot.
+Returns the version of PipeDream being used.

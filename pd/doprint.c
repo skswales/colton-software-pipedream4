@@ -666,13 +666,14 @@ print_document_core(
 
     { /* SKS 27jan97 add some headroom for printing */
     void * blkp;
+    STATUS status;
 
-    if(!flex_alloc(&blkp, 32*1024))
-        return(status_nomem());
+    if(NULL == (blkp = _al_ptr_alloc(32*1024, &status)))
+        return(status);
 
     flex_forbid_shrink(TRUE);
 
-    flex_dispose(&blkp);
+    al_ptr_dispose(&blkp);
     }
 
     two_sided_margin = (!two_sided  ||  str_isblank(d_print_QM))

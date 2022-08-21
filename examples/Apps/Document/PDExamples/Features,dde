@@ -1,0 +1,69 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%TM2
+%OP%BM2
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC216,1456,490,1400,0,0,0,0
+%CO:A,12,72%
+%C%%H2%PipeDream 4 features
+
+This is a list of features in PipeDream 4 which are not documented in the Tutorial or Reference Guide:
+
+%H2%1. Absolute slot references
+
+When editing a formula in the formula line or formula window you can insert absolute slot references in 
+the formula by pressing the SHIFT and CTRL keys whilst clicking the Select button on the mouse.  
+Pressing the SHIFT key puts a dollar sign before the row number, pressing the CTRL key puts a dollar 
+sign before the column letter.
+
+%H2%2. Auto entry
+
+Auto entry is possible in PipeDream 4.01 and onwards.  When editing in the formula line pressing the 
+up or down keys will enter the formula and the . then move the caret up or down.  Pressing TAB or 
+SHIFT-TAB will enter the formula and then move the caret forward or backward a column.
+
+%H2%3. Slot value on function menu
+
+If you click on the function menu button (curly f at the top of the screen), a new entry has appeared on 
+the menu: 'Slot value'.
+
+Clicking on the function menu button gives you information on the current slot. It does different things if 
+you are on number slots and text slots: on a text slot, if you have a formula which PipeDream persists 
+in thinking is text, you will get the entry 'Compile/Show error' off to the right. Click on this and 
+PipeDream will tell you the reason that it thinks it's a text slot rather than a number slot.
+
+If you click on the function menu button whilst on a number slot, PipeDream will give you another 
+menu, listing slots, ranges and names. This mechanism is so you can follow the structure of a 
+spreadsheet: you can look at supporting slots (those slots that this slot refers to) and dependent slots 
+(those slots that refer to this slot). The values of these slots are given too, so if, for example, you get 
+the message 'Propagated' in a slot examining the values of the slot's supporters (and possibly the 
+supporters of the supporters) you will get to the original source of the error.
+
+If you click on the entry for a supporting or dependent slot, PipeDream will position the caret in that slot 
+so you can follow the structure.
+
+%H2%4. Formulae in arrays
+
+Contrary to page 13 of the Reference Guide, you can now include formulae in arrays. You can only do 
+this when the array is itself inside a formula (as opposed to an array defined by a name). Note that 
+arrays defined by a name cannot contain formulae or names or slot references or ranges. For 
+example: {1+2,3+4,a1+6}.
+
+%H2%5. Redefining keys
+
+The command Define Function key (Ctrl CDF) has been extended to enable the redefinition of many of 
+the darker grey keys around the keyboard. A popular redefinition may be to redefine the Copy/End key 
+to perform a "delete right" command.  To do this press Ctrl-CDF and click on the arrows until Copy 
+appears as the key to define.  Enter
+
+\G|M
+
+as the definition and press Return.  Pressing the Copy key will now delete the character to the right.
+
+We have provided a command file !PipeDream.CmdFiles.CopyDelete which does the redefinition for 
+you.  If you rename this command file as !PipeDream.key, or merge the file into !PipeDream.key if you 
+have one, PipeDream will do the redefinition automatically when it starts up.
+%CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

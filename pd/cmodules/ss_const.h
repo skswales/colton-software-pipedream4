@@ -9,7 +9,7 @@
 
 /* Data definitions */
 
-/* SKS derived from Fireworkz: MRJC April 1992 */
+/* MRJC April 1992; SKS derived from Fireworkz for PipeDream use */
 
 #ifndef __ss_const_h
 #define __ss_const_h

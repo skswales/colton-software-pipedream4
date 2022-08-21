@@ -1,0 +1,19 @@
+%OP%VS4.1283 (06-Apr-92), Colton Software, R4000 2029 4983 8986
+
+%OP%WC514,1750,708,1364,0,0,0,0
+%CO:A,12,72%
+%C%Elections chart
+
+This chart displays the proportions of votes and the proportions of 
+seats won in the general elections of 1987 and 1992.  At the time of 
+writing (Wednesday evening, 12 hours before the polls open) the 1992 
+results aren't known.  Put the chart into an editing window by 
+selecting Edit Chart from the Charts menu.  Then type the real numbers 
+in the relevant slots.
+
+Try changing chart types by selecting charts from the galleries.  The 
+chart originally displayed is the last chart type in the bar gallery. 
+
+Try expanding the table to include the other political parties.
+
+%CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

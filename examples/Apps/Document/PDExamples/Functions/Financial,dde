@@ -1,0 +1,256 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%TP
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC2,1672,44,1364,0,1,0,0
+%CO:A,20,100%%C%%H2%Financial Functions Examples
+
+%L%CTERM ( interest , fv , pv )
+%C%Initial Amount
+%V%%C%%LC%1000
+
+%L%DDB ( cost , salvage , life , period )  
+%C%Initial Cost
+%V%%C%%LC%5000
+
+FV ( payment , interest , term )
+%C%Annual Input
+%V%%C%%LC%400
+
+IRR ( guess , range )
+%C% Inital investment
+%V%%C%%LC%-5000
+
+MIRR ( guess , range )
+%C%Cash -
+%V%%C%%LC%-5000
+
+NPV ( interest , range )
+%C%Discount Rate
+%V%%C%%TC%0.1
+
+PMT ( principal , interest , term )
+%C%Initial Amount
+%V%%C%%LC%150000
+
+PV ( payment , interest , term )
+%C%Annual Input
+%V%%C%%LC%2000
+
+RATE ( fv , pv , term )
+%C%Future Value
+%V%%C%%LC%1000000
+
+SLN  ( cost , salvage , life )
+%C%Inital Cost
+%V%%C%%LC%500
+
+SYD ( cost , salvage , life , period )
+%C%Initial Cost
+%V%%C%%LC%500
+
+TERM ( payment , interest , fv )
+%C%Annual Investment
+%V%%C%%LC%5000
+%CO:B,18,0%
+
+
+%C%Desired Amount
+%V%%C%%LC%2000
+
+
+%C%Salvage Value
+%V%%C%%LC%1000
+
+
+%C%Interest Rate
+%V%%C%%TC%0.05
+
+
+%C%Returned -
+%V%%C%%LC%3100
+
+
+%C%Flows
+%V%%C%%LC%1200
+
+
+%C%Cash flow
+%V%%C%%LC%120
+
+
+%C%Annual Interest
+%V%%C%%TC%0.1
+
+
+%C%Alternative Int.
+%V%%C%%TC%0.12
+
+
+%C%Present Value 
+%V%%C%%LC%50000
+
+
+%C%Salvage Value
+%V%%C%%LC%100
+
+
+%C%Salvage Value
+%V%%C%%LC%100
+
+
+%C%Annual Interest
+%V%%C%%TC%0.1
+%CO:C,15,0%
+
+
+%C%Interest Rate
+%V%%C%%TC%0.1
+
+
+%C%LifeTime
+%V%%C%5
+
+
+%C%Year
+%V%%C%25
+
+
+%C%Payments
+%V%%C%%LC%2990
+
+
+%C%Borrowed rate
+%V%%C%%TC%0.12
+
+
+%C%Cash flow
+%V%%C%%LC%120
+
+
+%C%Term
+%V%%C%20
+
+
+%C%Term
+%V%%C%30
+
+
+%C%Term
+%V%%C%25
+
+
+%C%LifeTime
+%V%%C%5
+
+
+%C%Lifetime
+%V%%C%5
+
+
+%C%Future Value
+%V%%C%%LC%1000000
+%CO:D,19,0%
+
+
+%C%-
+%C%-
+
+
+%C%Year
+%V%%C%1
+
+
+%C%-
+%C%-
+
+
+%C%Initial Guess
+%V%%C%%TC%0.1
+
+
+%C%Reinvestment rate
+%V%%C%%TC%0.1
+
+
+%C%Cash flow
+%V%%C%%LC%120
+
+
+%C%-
+%C%-
+
+
+%C%-
+%C%-
+
+
+%C%-
+%C%-
+
+
+%C%-
+%C%-
+
+
+%C%Year
+%V%%C%1
+
+
+%C%-
+%C%-
+%CO:E,11,17%
+
+
+%C%Compounding Periods
+%V%%C%%LC%cterm(C5,B5,A5)
+
+
+%C%Deprec. Allowance
+%V%%C%%LC%ddb(A9,B9,C9,D9)
+
+
+%C%Future Value
+%V%%C%%LC%fv(A13,B13,C13)
+
+
+%C%Int. percentage rate
+%V%%C%%TC%irr(D17,A17C17)
+
+
+%C%Int. percentage rate
+%V%%C%%TC%mirr(A21B21,C21,D21)
+
+
+%C%Future cash flow value
+%V%%C%%LC%npv(A25,B25D25)
+
+
+%C%Present value
+%V%%C%%LC%pmt(A29,B29/12,C29*12)
+
+
+%C%Present value
+%V%%C%%LC%pv(A33,B33,C33)
+
+
+%C%Interest Rate
+%V%%C%%TC%12*rate(A37,B37,C37*12)
+
+
+%C%Deprec. Allowance
+%V%%C%%LC%sln(A41,B41,C41)
+
+
+%C%Deprec. Allowance
+%V%%C%%LC%syd(A45,B45,C45,D45)
+
+
+%C%Time Period
+%V%%C%term(A49,B49,C49)
+%CO:F,12,12%

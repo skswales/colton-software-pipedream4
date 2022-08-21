@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 198-1998 Colton Software Limited
+/* Copyright (C) 1988-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
 /* External header file for spellcheck */

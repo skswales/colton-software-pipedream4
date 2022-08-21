@@ -1,0 +1,79 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%TM2
+%OP%BM2
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC2,832,256,1364,0,5,0,5
+%OP%LC0,3
+%OP%FR0,5
+%CO:A,15,44%Penguin family
+Daddy
+Mummy
+Baby
+
+
+%C%%H2%Penguin Graphics
+
+This file gives an exercise in creating Penguin Graphics.  It is 
+best done in a wide screen mode.
+
+1. Mark the slots from A1 to B4 by dragging with the mouse.
+
+2. Bring up the PipeDream menu and, from the Chart 
+sub-menu, select new chart.  This will give you a 3-D bar 
+chart.
+
+You may find that the chart window overlaps with this window.  
+If so, move it as far to the right of the screen as you can.  You 
+can also try making the chart window a little narrower.
+
+3. With the pointer in the Chart window, bring up the Chart 
+window menu, and select the Bar Gallery from the Gallery 
+sub-menu.
+
+%H2%Stretched penguins
+
+4. In the Bar Gallery switch off 3-D by clicking on the check 
+box. Then click on the icon showing the three penguins of 
+different sizes.  This will select the "stretched" penguin chart.  
+Then click on the OK button to clear the Bar Gallery.
+
+5. Try changing the numbers in the slots above to see the 
+penguins change size automatically.  For example try 
+changing the Daddy size to 5.
+
+%H2%Stacked penguins
+
+6. Bring the Bar Gallery back onto the screen and click on the 
+icon showing "stacked penguins" and then click on OK.  
+
+
+
+%H2%Other pictures in penguin charts
+
+7. Find the directory Pictures.Flags and bring up a directory 
+viewer of it.
+
+8. Click on one of the penguins in the chart with the left 
+button.  This will select Series 1 which is all three penguin 
+bars.  Drag the file UnionJack from the directory viewer into 
+the chart window.  The penguin bars will change to stacked 
+union jacks.
+
+9. Click on one of the union jacks with the right button of the 
+mouse.  this will select just that data point.  Drag another flag 
+file into the chart.  The data point will be redrawn with the new 
+flag.
+
+10. Try changing the numbers at the top of this window.  Try 
+also changing the labels.  For example, you might change 
+"Daddy" to "Britain", "Mummy" to "USA" and "Baby" to 
+"Japan".  Fill the bars with the appropriate flags.
+%CO:B,10,29%
+%V%%R%3
+%V%%R%4
+%V%%R%1
+%CO:C,7,19%%CO:D,12,0%

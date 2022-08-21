@@ -10,12 +10,17 @@ echo <Obey$Dir>
 |
 dir <Obey$Dir>
 |
+Set flexlib_tmp$Dir <Obey$Dir>.^.castle.RiscOS.Sources.Toolbox.Libs.flexlib
 Set rlib_tmp$Dir <Obey$Dir>.^.castle.RiscOS.Sources.Lib.RISC_OSLib.rlib
 Set WimpLib_tmp$Dir $._coltsoft.pd-nonfree.WimpLib
 |
 IfThere <WimpLib_tmp$Dir> Then Else Error WimpLib_tmp$Dir not present
 |
 cdir c
+|
+copy <flexlib_tmp$Dir>.c.flex _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.flex _dst ~CF~N~V
+diff --unified --minimal > "@.c.flex"   _src _dst
 |
 copy <rlib_tmp$Dir>.c.bbc    _src ~CF~N~V
 copy <WimpLib_tmp$Dir>.c.bbc _dst ~CF~N~V
@@ -29,9 +34,9 @@ copy <rlib_tmp$Dir>.c.event    _src ~CF~N~V
 copy <WimpLib_tmp$Dir>.c.event _dst ~CF~N~V
 diff --unified > "@.c.event"   _src _dst
 |
-copy <rlib_tmp$Dir>.c.flex    _src ~CF~N~V
-copy <WimpLib_tmp$Dir>.c.flex _dst ~CF~N~V
-diff --unified > "@.c.flex"   _src _dst
+| copy <rlib_tmp$Dir>.c.flex    _src ~CF~N~V
+| copy <WimpLib_tmp$Dir>.c.flex _dst ~CF~N~V
+| diff --unified > "@.c.flex"   _src _dst
 |
 copy <rlib_tmp$Dir>.c.fontlist    _src ~CF~N~V
 copy <WimpLib_tmp$Dir>.c.fontlist _dst ~CF~N~V
@@ -99,5 +104,6 @@ info s.*
 |
 back
 |
+Unset flexlib_tmp$Dir
 Unset rlib_tmp$Dir
 Unset WimpLib_tmp$Dir

@@ -48,10 +48,6 @@
 
 #define SKS_ACW 1 /* Use custom RISC_OSLib (WimpLib) */
 
-#if defined(__GNUC__)
-#define WIMPLIB_FLEX 1
-#endif
-
 #if RELEASED && !defined(DEBUG)
 /* Turn off assert checking */
 #define NDEBUG

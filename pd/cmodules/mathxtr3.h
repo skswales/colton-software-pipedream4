@@ -6,6 +6,8 @@
 
 /* Copyright (C) 2012-2014 Stuart Swales */
 
+/* Additional math routines */
+
 /* SKS May 2012 */
 
 #ifndef __mathxtra_h

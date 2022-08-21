@@ -16,7 +16,7 @@
 * you supply a 'static' buffer; if the item to be added to the buffer
 * would overflow the supplied buffer, a handle-based buffer is allocated
 *
-* SKS November 2006
+* SKS November 2006 split out of aligator
 *
 ******************************************************************************/
 

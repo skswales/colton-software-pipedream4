@@ -7,7 +7,7 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2014 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.52/02
+TEXTUAL_VERSION_NUMBER=4.52/03
 
 URD=$.pipedream.trunk
 
@@ -76,7 +76,7 @@ AOFM1=o.modules.aligator o.modules.alloc o.modules.bezier o.modules.collect o.mo
 #
 AOFM2=o.modules.numform o.modules.quickblk o.modules.report o.modules.spell o.modules.stringlk o.modules.typepack o.modules.vsload o.modules.wm_event o.modules.wm_null o.modules.xstring
 #
-AOFM3=o.modules.fontlxtr o.modules.ho_dll o.modules.ho_sqush o.modules.tristate o.modules.wlalloc
+AOFM3=o.modules.fontlxtr o.modules.tristate o.modules.wlalloc
 #
 AOFMA=o.modules.muldivas
 #
@@ -102,12 +102,10 @@ AOFDB=$(AOFD) $(AOFMD)
 @.!PipeDream.!RunImage: @.Makefile \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.flexlib \
         C:o.Stubs
         $(LD) -v $(Linkflags) -base &8000 \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.flexlib \
         C:o.Stubs \
         -map -xref > @.GB_MapIm 2>&1 -symbols @.GB_SymIm
         @Info $@
@@ -119,12 +117,10 @@ o.aof_GB:   \
         @.Makefile \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.flexlib \
         C:o.Stubs
         $(LD) -v $(AOFLinkflags) \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
-        C:o.flexlib \
         C:o.Stubs \
         -map -xref > @.GB_Map00 2>&1 -symbols @.GB_Sym00
 #
@@ -531,11 +527,12 @@ utils.GB.Messages:   \
         $(WimpLib).GB.msg_risc \
         $(CMODULES).GB.msg.gr_chart \
         $(CMODULES).GB.msg.mlec 
-        type  { > $@ } utils.GB.t_reperr 
-        type { >> $@ } utils.GB.t_strings 
-        type { >> $@ } $(WimpLib).GB.msg_risc 
-        type { >> $@ } $(CMODULES).GB.msg.gr_chart 
-        type { >> $@ } $(CMODULES).GB.msg.mlec
+        print  { > $@ } utils.GB.t_reperr 
+        print { >> $@ } utils.GB.t_strings 
+        print { >> $@ } $(WimpLib).GB.msg_risc 
+        print { >> $@ } $(CMODULES).GB.msg.gr_chart 
+        print { >> $@ } $(CMODULES).GB.msg.mlec
+        SetType $@ Text
 
 utils.GB.t_reperr:       utils.GB.u_reperr 
         Run <Prefix$Dir>.utils.GB.u_reperr > $@ 

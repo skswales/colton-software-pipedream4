@@ -48,7 +48,9 @@ Run !!!Boot to set up the PipeDream build environment.
 
 
 Creating a package for distribution
------------------------------------
+----------------------------------- 
+
+Make sure you've got the version number consistent! See version.c for notes.
 
 Execute the Obey file r32.Make_TS.
 
@@ -59,5 +61,5 @@ Rename that directory as PipeDream_4_<xx>_<yy> where <xx> is the actual
 major version number and <yy> the minor version number (usually 00).
 
 Use !InfoZip to create the distributable ZIP package file
-PipeDream_4_<xx>_<yy>/zip containing the RiscPkg then the Apps directories
-from the PipeDream_4_<xx>_<yy> directory.
+PipeDream_4_<xx>_<yy>/zip. First drag the RiscPkg directory then the Apps
+directory from the PipeDream_4_<xx>_<yy> directory into this ZIP.

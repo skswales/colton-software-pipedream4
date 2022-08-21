@@ -2420,9 +2420,6 @@ validatepools(void)
 
             if((P_U8) ptr >= (P_U8) fl_end)
                 valfatal(9, ptr, fl_end);
-
-            /* get flex to check for spillage */
-            (void) flex_size((flex_ptr) &hep->pointer);
             }
         }
 

@@ -21,4 +21,6 @@
 
 #define TRACE_DOC 1
 
+#define STUART 1
+
 /* end of personal.h */

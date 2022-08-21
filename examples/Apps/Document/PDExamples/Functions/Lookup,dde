@@ -1,0 +1,119 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%DP0
+%OP%LP*
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC2,1724,648,1364,0,1,0,0
+%CO:A,10,100%%C%%H2%Lookup Functions Examples
+
+
+
+
+
+
+
+
+
+%C%Function
+
+CHOOSE
+LOOKUP
+HLOOKUP
+VLOOKUP
+MATCH
+INDEX
+%CO:B,9,0%
+
+
+%V%%C%8
+%V%%C%7
+%V%%C%2
+%V%%C%11
+%V%%C%6
+
+
+%R%Input 1
+
+%V%%R%4
+%V%%R%11
+%V%%R%7
+%V%%R%17
+%V%%R%13
+%V%%R%{11,12,13;21,22,23;31,32,33}
+%CO:C,9,0%
+
+
+%V%%C%5
+%V%%C%12
+%V%%C%7
+%V%%C%9
+%V%%C%17
+
+
+%R%Input 2
+
+%R%B4B8
+%R%B4B8
+%R%B5E5
+%R%C4C8
+%R%B4E4
+%V%%R%3
+%CO:D,9,0%
+
+
+%V%%C%10
+%V%%C%13
+%V%%C%7
+%V%%C%5
+%V%%C%12
+
+
+%R%Input 3
+
+%R%-
+%R%C4C8
+%V%%R%2
+%V%%R%1
+%V%%R%1
+%V%%R%1
+%CO:E,8,90%
+
+
+%V%%C%12
+%V%%C%19
+%V%%C%1
+%V%%C%7
+%V%%C%1
+
+
+%R%Result
+
+%V%%R%choose(B13,B4B8)
+%V%%R%lookup(B14,B4B8,C4C8)
+%V%%R%hlookup(B15,B5E5,D15)
+%V%%R%vlookup(B16,C4C8,D16)
+%V%%R%match(B17,B4E4,D17)
+%V%%R%index(B18,C18,D18)
+%CO:F,2,0%%CO:G,82,0%
+
+
+
+
+
+
+
+
+
+%L%Summary
+
+Returns the %H4%Input1%H4%%H6%st%H6% entry from a list of numbers.
+Returns the value in range 2 corresponding to the position of %H4%Input1%H4% in range 1.
+As for Lookup, but range 2 given as a horizontal offset (%H4%Input3%H4%) from range 1.
+As for Lookup, but range 2 given as a vertical offset (%H4%Input3%H4%) from range 1.
+Returns the value in the range which %H4%Input1%H4% matches.
+Returns the desired single element or subarray of an array.

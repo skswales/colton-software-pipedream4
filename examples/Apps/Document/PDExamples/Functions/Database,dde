@@ -1,0 +1,138 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%LP*
+%OP%TM4
+%OP%BM4
+%OP%LM5
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC2,1750,360,1252,0,1,0,0
+%CO:A,10,88%%C%%H2%Database Functions Examples
+
+
+
+
+
+
+
+
+
+%C%Function
+Davg
+Dcount
+Dcounta
+Dmax
+Dmin
+Dstd
+Dstdp
+Dsum
+Dvar
+Dvarp
+%CO:B,9,16%
+
+
+%V%%C%8
+%V%%C%7
+%V%%C%2
+%V%%C%11
+%V%%C%6
+
+
+%C%Input 1
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%C%b4e8
+%CO:C,9,0%
+
+
+%V%%C%5
+%V%%C%12
+%V%%C%7
+%V%%C%9
+%V%%C%17
+
+
+%C%Input 2
+%C%b4e8<11
+%C%b4e8<11
+%C%b4e8<11
+%C%b4e8<16
+%C%b4e8>5
+%C%b4e8<5
+%C%b4e8<5
+%C%b4e8<7
+%C%b4e8>13
+%C%b4e8>13
+%CO:D,9,0%
+
+
+%V%%C%10
+%V%%C%14
+%V%%C%7
+%V%%C%5
+%V%%C%17
+
+
+%C%Input 3
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C%-
+%C% -
+%CO:E,8,90%
+
+
+%V%%C%13
+%V%%C%19
+%V%%C%1
+%V%%C%7
+%V%%C%1
+
+
+%C%Result
+%V%%R%davg(B4E8,B4E8<11)
+%V%%R%dcount(B4E8,B4E8<11)
+%V%%R%dcounta(B4E8,B4E8<11)
+%V%%R%dmax(B4E8,B4E8<16)
+%V%%R%dmin(B4E8,B4E8>5)
+%V%%R%dstd(B4E8,B4E8<5)
+%V%%R%dstdp(B4E8,B4E8<5)
+%V%%R%dsum(B4E8,B4E8<7)
+%V%%R%dvar(B4E8,B4E8>13)
+%V%%R%dvarp(B4E8,B4E8>13)
+%CO:F,4,0%
+%CO:G,65,68%
+
+
+
+
+
+
+
+
+
+%L%Summary
+Returns the average of a list of numbers.
+Counts the number of entries in a list satisfying the condition. (Numeric Slots only).
+Counts the number of entries in a list satisfying the condition. (All Slots).
+Returns the maximum value in a list satisfying a condition.
+Returns the minimum value in a list satisfying the condition.
+Returns the population standard deviation of a list satisfying the condition.
+Returns the modified population standard deviation of a list satisfying the condition.
+Sums the values in a list satisfying the condition.
+Returns the population variance of a list satisfying the condition.
+Returns the modified population variance of a list satisfying the condition.
+%CO:H,12,0%

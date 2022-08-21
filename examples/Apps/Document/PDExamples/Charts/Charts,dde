@@ -1,0 +1,226 @@
+%OP%VS4.1283 (06-Apr-92), Colton Software, R4000 2029 4983 8986
+
+%OP%PL55
+%OP%TM2
+%OP%BM2
+%OP%LM5
+%OP%FS0
+%OP%WC50,1296,424,1364,0,0,0,0
+%CO:A,12,72%
+%C%%H2%PipeDream 4 Charts
+
+This file gives details of PipeDream's charts and applies to PipeDream 
+version 4.12 and later versions.  It contains a description of the 
+charts you can create with PipeDream with hints on how to create them.  
+More explicit descriptions of building chart types are given in the 
+sub-directories within this directory.
+
+%H2%General 
+
+PipeDream 4 provides powerful and flexible charting capability of 
+numerical information.  The charts are dynamic; that is, when the 
+numbers they are based on change within PipeDream, the charts 
+automatically update to take account of the changes.  This provides 
+extremely useful what-if type usage enabling you to investigate how
+different data affects a trend.
+
+Like other aspects of PipeDream the volume of data you can chart is 
+limited not by PipeDream but by aspects of your system resources.  For 
+example the number of charts you can make, the number of series within 
+each chart and the number of points within each series are all limited 
+not by PipeDream but by (i) the amount of memory in your computer, (ii) 
+if you are using RISC OS 2 the number of windows on the screen and 
+(iii) the amount of time spent redrawing the chart.  This last point 
+isn't to imply PipeDream's charts are slow - at exhibitions people 
+frequently think that our demonstration computers are using an ARM 3 
+processor when they aren't - but if you expecting PipeDream to draw 
+hundreds or thousands of 3D bars you will have to wait a little while 
+for it to finish.
+
+%H2%Flexibility
+
+PipeDream's charts are very flexible in other ways.  You can add new 
+data series to, or remove existing data series from, your charts at 
+any time.  This enables you to chart data coming from different parts 
+of your spreadsheet or even from different spreadsheets.
+
+You also have control over the appearance of each element of the chart.  
+For any element of the chart containing text, you can specify the font 
+style, size and colour of the text individually.  You can also change 
+the colour and line styles of any graphic of the chart.  In the 
+rectangular areas of the bars in bar charts, and the chart background 
+you can specify any draw file or sprite to give extra customisation.  
+This feature provides the famous penguin graphics and, before you ask, 
+you can use any draw file instead of the penguins.  Many people have 
+asked "Why Penguins?".  Well, why not?  The real answer is to be found 
+in an excellent book called "DTP Seeds" published by 4mation at Linden 
+Lea, Rock Park, Barnstaple, Devon EX39 2AQ which is well worth every 
+penny of its £8.45 cost.
+
+%C%%H2%Overlays
+
+PipeDream's charts bring overlays to the Archimedes.  These enable you 
+to plot two different types of chart at the same time.  For example as 
+part of your geography studies you may wish to plot a bar chart of 
+rainfall over a particular period together with a line chart of mean 
+temperatures.  You would do this using overlays.
+
+You could also use overlays to plot one data series on a linear axis 
+together with another data series on a parallel logarithmic axis.
+
+
+%C%%H2%Principles of operation
+
+There are three simple principles of operation in PipeDream charts.  
+When you have grasped each of these you will find using the charts easy 
+and natural.
+
+1.  Specify the chart data.  To do this simply mark a block within your 
+PipeDream document and select New chart from the Chart menu.  This will 
+give you your default chart in the %H4%Chart editing window.
+
+2.  Specify the chart type.  To do this bring up the chart menu within 
+the chart editing window.  Slide across to the Gallery sub-menu where 
+you will see entries for Pie, Bar, Line and Scatter galleries.  Click 
+on one of these and PipeDream will display the gallery for the chart 
+type.  The gallery is a dialogue box which presents a set of icons 
+showing different chart types.  Click on any of these icons and 
+PipeDream will redisplay the chart in that type.
+
+Also within the galleries are a number of switches.  For example, the 
+bar and line galleries contain a 3D switch.  You can change the switch 
+settings and these will be taken into account when PipeDream next 
+redraws the chart.  You can force PipeDream to redraw the chart without 
+losing the gallery by clicking OK with the Adjust button.
+
+The bar, line and scatter galleries have an extended set of switches 
+which you can reveal by clicking on the full-size icon in the top-right 
+of the gallery.  These extended switches enable you to switch on or off 
+other attributes such as line of best fit.  Whilst these provide 
+powerful fine-tuning they can be safely ignored by beginners to the 
+charts.
+
+3.  Customize parts of the chart.  To do this make a selection within 
+the chart and then apply something to it.  To make a selection, point 
+at it and click the Select button.  Users of !Draw will find this very 
+easy.  The current selection is named in the top-left of the chart 
+editing window.  Many operations can then be chosen from the Selection 
+sub-menu.  For example, colour, line and text styles can be chosen from 
+here.  You can also change many attributes of an axis in the Axis 
+dialogue box.
+
+To select a whole series of data, click with the Select button on one 
+of the data elements.  To select just a single point within the series, 
+click with the Adjust button on it.  If you have a data series selected 
+you can change its attributes using either the Series dialogue box on 
+the Selection sub-menu, or by making selections in one of the 
+galleries.
+
+If you cannot select any particular element of the chart because it is 
+hidden by another element, click in the top-left of the chart editing 
+window where the selected element is named.  Clicking Select here will 
+select the next type of element.  Clicking Adjust here will clear the 
+selection.
+
+To bring pictures in to the chart, select the chart elements you want 
+the picture to fill and drag in a draw file from a directory viewer.
+For example, if you select the plot area and drag a draw file, 
+PipeDream will display the draw as a backdrop to your chart.  Very 
+impressive displays can be made using this technique.  At Colton 
+Software we often use the file called BackDrop which is provided in the 
+Worldcup directory.
+
+Similarly with Penguin Graphics.  Make your first Penguin Graph by 
+selecting one of the two penguin icons in the bar gallery and switching 
+off 3D.  Then select either a whole series or a single data point and 
+drag in a draw file to fill the data points with the new picture. Some 
+suitable pictures are provided in the Pictures directory on this disc.
+Flags are very good for using in stacked penguin charts.
+
+Points within line and scatter charts are also specified by draw files 
+which you can supply.  Select a point or a series and drag a draw file 
+into the window.
+
+The pictures that PipeDream uses as defaults are in the directories 
+!PipeDream.Pictures and !PipeDream.Markers .  The Pictures directory 
+contains the pictures for the Penguin graphics.  Series 1 is file S1, 
+Series 2 is S2 and so on.  The Markers directory contains the pictures 
+for line and scatter charts using the same convention.  If you wish to 
+change the default pictures for these charts, simply replace the files 
+S1, S2, and so on with your own draw files.
+
+If you wish to specify draw files on a point by point basis, rather 
+than a line by line basis, specify S1P1 for Series 1 Point 1, S1P2 for 
+Series 1 Point 2, and so on.
+
+
+%C%%H2%Learning to use charts
+
+Two directories are provided to help you learn how to create and modify 
+PipeDream's charts.  These are 1_3Dbars and 2_Penguins.  Start by 
+loading the Rainfall file from 1_3Dbars and follow the instructions.  
+You will learn how to create a chart, select its chart-type and how to 
+modify it.
+
+After Rainfall move on the the file Penguins file in 2_Penguins.  This 
+will show you how to create your own Penguin graphics.  
+
+When you have been through both of these little tutorials you will have 
+learnt the main principles of PipeDream's charts.  From here the best 
+thing is to experiment with different charts.  Load the Rainfall file 
+again, or create a table of your own data, and investigate different 
+chart types from the galleries.  Make selections and investigate all of 
+the options on the selection menu.  Investigate the Axis dialogue box 
+for both the x-axis (Axis 1) and the y-axis (Axis 2).  This contains 
+many of the options such as grid lines, logarithmic scales, tick points 
+and axis positioning which you can use to provide the finishing touches 
+to your charts.
+
+Try also the world cup chart.  This might be a good starting point for 
+you to make a chart for the BBC Acorn User competition...
+
+
+%C%%H2%Making your own data table
+
+When making your own table of numbers to use for making charts remember 
+these rules:
+
+1. Use the first row for your series headings and the first column for 
+your data labels.
+
+2. Make sure that the numbers that you want to plot are all in number 
+slots.  If a number is in a number slot it will normally appear right 
+aligned in the slot and with two decimal places like this:
+
+%V%%R%23
+%V%%R%1234
+
+However, if the numbers are in text slots they will appear left 
+justified and without any decimal places unless you have typed them 
+yourself, like this:
+
+23
+1234
+
+If PipeDream cannot find any number slots in the block that you specify 
+it will give you the message "There is no numeric data in the marked 
+block.  Do you want to continue?"  This is usually a sign that you need 
+to put your data in number slots and try again.
+
+To put a single number in a number slot, move the caret to the slot, 
+press F2 and then press RETURN.  Alternatively, click with the mouse in 
+the formula line at the top of the window and then click on the green 
+tick, or press RETURN.
+
+If you want to enter a lot of numbers in number slots, bring up the 
+Options dialogue box from the Files menu, and select New slot format: 
+numbers.  When you now type numbers in they will automatically be 
+entered in numeric slots.  
+
+If you want to start a new document as a spreadsheet, select Numbers 
+from the New document menu from the PipeDream icon bar menu.
+
+Finally if you want to convert a block of text slots into numeric 
+slots, or vice versa, mark the block and select Number <> Text 
+(Ctrl BNT) from the blocks menu.
+%CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

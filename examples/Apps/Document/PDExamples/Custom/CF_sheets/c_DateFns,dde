@@ -1,0 +1,63 @@
+%OP%DP0
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%NDmonth_table,b1b13
+%OP%NDmon_loop,9
+%OP%NDdigit,9
+%OP%NDweekdays,c1c8
+%OP%NDdaytext,c1
+%OP%NDsuffix,"th "
+%OP%NDmonthtext,b2
+%OP%NDyeartext,2004
+%OP%NDdate_text,"Sunday the 29th of February, 2004"
+%OP%WC110,1416,716,1096,0,4,0,0
+%OP%VS3.81 Test (Oct  8 1991), Colton Software - Development, R0123 4567 8901 2345
+%CO:A,90,0%%V%%L%function("text_to_date","etext:reference")
+%V%%L%trim(@etext)
+%V%%L%find(" ",a2,1)
+%V%%L%find(" ",a2,a3+1)
+%V%%L%value(left(a2,a3-1))
+%V%%L%mid(a2,a3+1,a4-a3-1)
+%V%%L%if(a4+2<length(a2),value(right(a2,4)),value(right(a2,2))+1900)
+%V%%L%set_name("month_table",b1b12)
+%V%%L%for("mon_loop",1,12)
+%V%%L%    if(length(a6)>9,result("Bad Month"),0)
+%V%%L%    if(length(a6)>length(index(month_table,1,mon_loop)),goto(a13),0)
+%V%%L%    if(a6=left(index(month_table,1,mon_loop),length(a6)), result(date(a7,mon_loop,a5)), 0)
+%V%%L%next
+%V%%L%result("Bad Month")
+
+
+%V%%L%function("expand_date","when")
+%V%%L%if(type(@when)<>"date",result("Bad Date"),)
+%V%%L%year(@when)
+%V%%L%set_name("month_table",b1b13)
+%V%%L%set_name("weekdays",c1c8)
+%V%%L%mod(day(@when),10)
+%V%%L%if(a22=1,set_name("suffix","st "),set_name("suffix","th "))
+%V%%L%if(a22=2,set_name("suffix","nd "),)
+%V%%L%if(a22=3,set_name("suffix","rd "),)
+%V%%L%index(month_table,1,month(@when))
+%V%%L%index(weekdays,1,weekday(@when))
+%V%%L%join(a27," the ",string(day(@when),0),suffix,"of ",a26,", ",string(a19,0))
+%V%%L%result(a28)
+%CO:B,12,24%January
+February
+March
+April
+May
+June
+July
+August
+September
+October
+November
+December
+%CO:C,12,12%Sunday
+Monday
+ Tuesday
+Wednesday
+Thursday
+Friday
+Saturday

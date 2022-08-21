@@ -6,9 +6,12 @@
 @rem
 @rem Copyright (C) 2013-2014 Stuart Swales
 @rem
+Set flexlib_tmp_dir=..\castle\RiscOS\Sources\Toolbox\Libs\flexlib
 Set rlib_tmp_dir=..\castle\RiscOS\Sources\Lib\RISC_OSLib\rlib
 @rem
 @echo Populate WimpLib with unmodifed files from the checked-out copy of RISC_OSLib
+@rem
+cp -p %flexlib_tmp_dir%\h\swiextra ..\..\..\swiextra.h
 @rem
 cp -p %rlib_tmp_dir%\c\colourtran ..\..\..\colourtran.c
 cp -p %rlib_tmp_dir%\c\dboxtcol   ..\..\..\dboxtcol.c
@@ -60,10 +63,12 @@ cp -p %rlib_tmp_dir%\VerIntern\h\messages ..\..\..\VerIntern\messages.h
 @rem
 @echo Populate WimpLib with files to be patched from the checked-out copy of RISC_OSLib
 @rem
+cp -p %flexlib_tmp_dir%\c\flex    ..\..\..\flex.c
+@rem
 cp -p %rlib_tmp_dir%\c\bbc        ..\..\..\bbc.c
 cp -p %rlib_tmp_dir%\c\dbox       ..\..\..\dbox.c
 cp -p %rlib_tmp_dir%\c\event      ..\..\..\event.c
-cp -p %rlib_tmp_dir%\c\flex       ..\..\..\flex.c
+@rem cp -p %rlib_tmp_dir%\c\flex       ..\..\..\flex.c
 cp -p %rlib_tmp_dir%\c\fontlist   ..\..\..\fontlist.c
 cp -p %rlib_tmp_dir%\c\fontselect ..\..\..\fontselect.c
 cp -p %rlib_tmp_dir%\c\menu       ..\..\..\menu.c
@@ -81,10 +86,12 @@ cp -p %rlib_tmp_dir%\s\swi        ..\..\..\swi.s
 @rem
 @echo Patch these files in WimpLib so that it is in the WimpLib state for PipeDream
 @rem
+patch --unified < flex.c       ..\..\..\flex.c
+@rem
 patch --unified < bbc.c        ..\..\..\bbc.c
 patch --unified < dbox.c       ..\..\..\dbox.c
 patch --unified < event.c      ..\..\..\event.c
-patch --unified < flex.c       ..\..\..\flex.c
+@rem patch --unified < flex.c       ..\..\..\flex.c
 patch --unified < fontlist.c   ..\..\..\fontlist.c
 patch --unified < fontselect.c ..\..\..\fontselect.c
 patch --unified < menu.c       ..\..\..\menu.c

@@ -24,3 +24,6 @@ WimpLib and apply the required set of patches.
 
 NB VerIntern is just placed at the top level, one up from normal, to
 simplify PipeDream's include path,
+
+Once you've done that you may wish to move the castle directory to some
+reference location to save space & speed find results

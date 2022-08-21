@@ -48,10 +48,6 @@
 
 #define SKS_ACW 1 /* Use custom RISC_OSLib (WimpLib) */
 
-#if defined(__GNUC__)
-#define WIMPLIB_FLEX 1
-#endif
-
 #define ALIGATOR_USE_ALLOC 1
 
 /*

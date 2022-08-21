@@ -7,7 +7,7 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Module that handles new lists (was nlists.c) */
+/* Module that handles new lists (was nlists.c) with collect-style interface */
 
 /* SKS February 1991 derived from lists.c / 2012 convergence with Fireworkz terms */
 

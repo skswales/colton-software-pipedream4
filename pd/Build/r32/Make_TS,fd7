@@ -21,6 +21,8 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 
 %CDir                                           <pd$Disc>.Z
 
+%Copy <Obey$Dir>.!PipeDream.LICENSE             <pd$Disc>.Z.* ~rf~cln~v
+
 %Copy <Obey$Dir>.!PipeDream.!Boot               <pd$Disc>.Z.* ~rf~cln~v
 %Copy <Obey$Dir>.!PipeDream.!Help               <pd$Disc>.Z.* ~rf~cln~v
 %Copy <Obey$Dir>.!PipeDream.!Run                <pd$Disc>.Z.* ~rf~cln~v

@@ -12,3 +12,5 @@ cvs -d %ROOL_CVSROOT% -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rli
 cvs -d %ROOL_CVSROOT% -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/h
 cvs -d %ROOL_CVSROOT% -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/s
 cvs -d %ROOL_CVSROOT% -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/VerIntern/h
+cvs -d %ROOL_CVSROOT% -z9 co -D20130226 castle/RiscOS/Sources/Toolbox/Libs/flexlib/c
+cvs -d %ROOL_CVSROOT% -z9 co -D20130226 castle/RiscOS/Sources/Toolbox/Libs/flexlib/h

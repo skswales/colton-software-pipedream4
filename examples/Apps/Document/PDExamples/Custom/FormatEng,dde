@@ -1,0 +1,15 @@
+%OP%PL66
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%WC148,1384,524,876,0,0,0,0
+%OP%VS3.40R (11-Oct-90), Colton Software, R9200 7500 3900 8299 
+%CO:A,51,72%%V%%R%[CF_sheets.c_DatFormE]format_date(c1,10,1,1,1,1,10,4," ")
+%V%%R%[CF_sheets.c_DatFormE]format_date(c1,10,1,1,1,1,4,4," ")
+%V%%R%[CF_sheets.c_DatFormE]format_date(c1,5,0,1,0,0,4,4," ")
+%V%%R%[CF_sheets.c_DatFormE]format_date(c1,3,0,1,0,0,3,2," ")
+%V%%R%[CF_sheets.c_DatFormE]format_date(c1,0,0,1,0,0,3,2,".")
+%V%%R%[CF_sheets.c_DatFormE]format_date(c1,0,0,1,0,0,-1,2,"/")
+%V%%R%[CF_sheets.c_DatFormE]format_date(c1,0,0,1,0,0,-1,2,".")
+%CO:B,12,60%%CO:C,12,48%%V%%R%today
+%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

@@ -1,0 +1,32 @@
+%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%FGHomerton.Medium
+%OP%FX160
+%OP%FY160
+%OP%FS0
+%OP%WC28,1288,508,1360,0,0,0,0
+%CO:A,12,72%
+%H2%Charts in demonstration PipeDream 4
+
+This directory contains some sample charts and some simple tutorials showing you how to create your 
+own charts.  The file %H4%charts%H4% contains some general information; read this first.  The directories Election, 
+Inflation and Worldcup contain simple spreadsheets with live charts. The directories 1_3Dbars and 
+2_Penguins give instructions on making your own charts.  Pictures contains some draw files which you 
+can use in making your own charts.  If you like, you can also use your own draw files.
+
+Remember that the demonstration version cannot save charts and so the charts that appear in the 
+documents will not be updated dynamically as they would be if loaded into the real PipeDream.  You 
+can, however, see the charts live by bringing up the PipeDream menu and selecting Edit Chart from 
+the Charts menu.  This will put the chart into an edit window.  When you change the values in the 
+spreadsheet the chart will redraw in the editing window.  You can also change the format of the chart 
+in the editing window.
+
+You may find that when investigating charts it is best to use a wide screen mode.  If you have an 
+A5000 computer and a multi-sync monitor try mode 39.  If you have an earlier computer try mode 16.  
+To change the screen mode, bring up the menu on the coloured palette icon at the bottom-left of the 
+window, slide across the mode arrow and type the number in at the bottom of the menu.
+
+Finally, fonts.  The charts in this directory use Trinity and Homerton outline fonts.  If you have these 
+fonts available, all well and good.  If you do not have outline fonts the charts will be displayed with 
+system font.  System font is rather ugly when used in graphics.  If you have this, please remember that 
+charts are much prettier when using outline fonts.
+%CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

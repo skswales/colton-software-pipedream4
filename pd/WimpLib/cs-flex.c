@@ -21,375 +21,21 @@
  *  SKS  17 Nov 1996    More code from Fireworkz brought back (flex__ensure,flex__wimpslot,flex__give,flex_init,dynamicarea_*)
  *  SKS  27 Jan 1997    Added flex_forbid_shrink() function to help printing
  *  SKS  04 Sep 2013    Allow use of tboxlibs' flex module
+ *  SKS  16 Feb 2014    Compile tboxlibs' flex module into WimpLib
+ *  SKS  17 Feb 2014    Added flex_forbid_shrink() function to tboxlibs' flex module to help printing
+ *                      Added flex_granularity to tboxlibs' flex module
 */
 
 #include "include.h"
 
-#if defined(WIMPLIB_FLEX)
+/* the well-known implementation of flex has allocated block preceded by: */
 
-/* can get better code for loading structure members on ARM Norcroft */
-
-static struct flex_
+typedef struct _FLEX_BLOCK
 {
-    char *          start;          /* start of flex memory */
-    char *          freep;          /* free flex memory */
-    char *          limit;          /* limit of flex memory */
-
-    BOOL            using_dynhnd;   /* using dynamic area */
-    int             dynhnd;         /* dynamic area handle */
-
-    BOOL            shrink_forbidden;
-} flex_;
-
-int flex_pagesize;                          /* page size (exported) */
-
-#define flex_innards(p)      ((char *) (p + 1))
-
-#define flex_next_block(p)   ((flex__rec *) (flex_innards(p) + roundup(p->size)))
-
-#define flex__check() /*EMPTY*/
-
-/*
-nd: 08-07-1996
-*/
-
-/* Creates a dynamic area and returns the handle of it */
-
-static _kernel_oserror *
-dynamicarea_create(
-    _Out_       int * hand,
-    _InVal_     int dynamic_size,
-    _In_z_      const char * name)
-{
-    _kernel_swi_regs rs;
-    _kernel_oserror * e;
-
-    rs.r[0] = 0;
-    rs.r[1] = -1;
-    rs.r[2] = 0;
-    rs.r[3] = -1;
-    rs.r[4] = (1 << 7);
-    rs.r[5] = dynamic_size;
-    rs.r[6] = 0;
-    rs.r[7] = 0;
-    rs.r[8] = (int) name;
-
-    if(NULL == (e = _kernel_swi(OS_DynamicArea, &rs, &rs)))
-        *hand = rs.r[1];
-    else
-        *hand = 0;
-
-    return(e);
+    flex_ptr    anchor;
+    int         size;           /* exact size of allocation in bytes */
 }
-
-/* Kills off an existing dynamic area */
-
-static _kernel_oserror *
-dynamicarea_kill(
-    _In_        int hand)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[0] = 1;
-    rs.r[1] = hand;
-
-    return(_kernel_swi(OS_DynamicArea, &rs, &rs));
-}
-
-/* Reads info about a dynamic area */
-
-static _kernel_oserror *
-dynamicarea_read(
-    _In_        int hand,
-    _Out_       int * p_size,
-    _Out_       int * p_base)
-{
-    _kernel_swi_regs rs;
-    _kernel_oserror * e;
-
-    rs.r[0] = 2;
-    rs.r[1] = hand;
-
-    if(NULL != (e = _kernel_swi(OS_DynamicArea, &rs, &rs)))
-    {
-        rs.r[2] = 0;
-        rs.r[3] = 0;
-    }
-
-    *p_size = rs.r[2];
-    *p_base = rs.r[3];
-
-    return(e);
-}
-
-/* Changes the size of a dynamic area */
-
-static _kernel_oserror *
-dynamicarea_change(
-    _In_        int hand,
-    _In_        int size)
-{
-    _kernel_swi_regs rs;
-    _kernel_oserror * e;
-
-    rs.r[0] = hand;
-
-    if(NULL != (e = _kernel_swi(OS_ReadDynamicArea, &rs, &rs)))
-        return(e);
-
-    rs.r[1] = size - rs.r[1];
-    rs.r[0] = hand;
-
-    return(_kernel_swi(OS_ChangeDynamicArea, &rs, &rs));
-}
-
-/* Reads the size of the current task's slot */
-
-static _kernel_oserror *
-wimp_currentslot_read(
-    _Out_       int * p_size)
-{
-    _kernel_swi_regs rs;
-    _kernel_oserror * e;
-
-    rs.r[0] = -1;
-    rs.r[1] = -1;
-
-    if(NULL != (e = _kernel_swi(Wimp_SlotSize, &rs, &rs)))
-        rs.r[0] = 0;
-
-    *p_size = rs.r[0];
-
-    return(e);
-}
-
-/* Changes the size of the current task's slot */
-
-static _kernel_oserror *
-wimp_currentslot_change(
-    _Inout_     int * p_size)
-{
-    _kernel_swi_regs rs;
-    _kernel_oserror * e;
-
-    rs.r[0] = *p_size;
-    rs.r[1] = -1;
-
-    if(NULL != (e = _kernel_swi(Wimp_SlotSize, &rs, &rs)))
-        return(e);
-
-    *p_size = rs.r[0];
-
-    return(NULL);
-}
-
-/* Write the top of available memory */
-
-static _kernel_oserror *
-flex__area_change(
-    _Inout_     int * p_top)
-{
-    _kernel_oserror * e;
-    int top = *p_top;
-    int base = 0x8000;
-    int size;
-
-    if(flex_.dynhnd)
-    {
-        base = (int) flex_.start;
-        size = top - base;
-        e = dynamicarea_change(flex_.dynhnd, size);
-    }
-    else
-    {
-        size = top - base;
-        e = wimp_currentslot_change(&size);
-    }
-
-    if(NULL == e)
-        *p_top = base + size;
-
-    return(e);
-}
-
-/* Read the top of available memory */
-
-static void inline
-flex__area_read(
-    _Out_       int * p_top)
-{
-    _kernel_oserror * e;
-    int base = 0x8000;
-    int size = 0;
-    
-    if(flex_.dynhnd)
-        e = dynamicarea_read(flex_.dynhnd, &size, &base);
-    else
-        e = wimp_currentslot_read(&size);
-
-    if(NULL != e)
-    {
-        base = 0;
-        size = 0;
-    }
-
-    *p_top = base + size;
-}
-
-#define flex__base  flex_.start
-#define flex__start flex_.start
-#define flex__freep flex_.freep
-#define flex__lim   flex_.limit
-
-#include "flex.c"
-
-static void
-flex_kill(void)
-{
-    if(flex_.dynhnd)
-    {
-        flex_.using_dynhnd = FALSE;
-        dynamicarea_kill(flex_.dynhnd);
-        flex_.dynhnd = 0;
-    }
-}
-
-static void
-flex_atexit(void)
-{
-    flex_kill();
-}
-
-/* replacement function with tboxlibs-like interface */
-
-extern int
-flex_init(
-    char *program_name,
-    int *error_fd,
-    int dynamic_size)
-{
-    IGNOREPARM(error_fd);
-
-    {
-    _kernel_swi_regs rs;
-    (void) _kernel_swi(OS_ReadMemMapInfo, &rs, &rs);
-    flex_pagesize = rs.r[0];
-    } /*block*/
-
-    if(flex_pagesize < 0x4000)
-        /* SKS says don't page violently on RISC PC (allow 2Mb A3000 etc to get away with 16kb pages though) */
-        flex_pagesize = 0x8000;
-
-#if defined(SHAKE_HEAP_VIOLENTLY)
-    flex_pagesize = 0x0080;
-#endif
-    tracef1("flex_init(): flex_pagesize = %d\n", flex_pagesize);
-
-    if((dynamic_size != 0) && (NULL == dynamicarea_create(&flex_.dynhnd, dynamic_size, program_name))) /* call should fail if OS_DynamicArea not supported */
-    {
-        flex_.using_dynhnd = TRUE;
-        atexit(flex_atexit);
-    }
-
-    { /* Read current top of memory (either Window Manager current slot or Dynamic area just created) */
-    int top;
-    flex__area_read(&top);
-    flex_.start = flex_.freep = flex_.limit = (char *) top;
-    tracef1("flex_limit = &%p\n", flex_.limit);
-    } /*block*/
-
-    {
-    void * a;
-    if(flex_alloc(&a, 1))
-    {
-        flex_free(&a);
-        return(flex_.dynhnd);
-    }
-    } /*block*/
-
-    flex_kill();
-
-    return(-1);
-}
-
-extern int flex_set_budge(int newstate)
-{
-    IGNOREPARM(newstate);
-    return(0);
-}
-
-extern BOOL
-flex_forbid_shrink(BOOL forbid)
-{
-    BOOL res = flex_.shrink_forbidden;
-
-    flex_.shrink_forbidden = forbid;
-
-    return(res);
-}
-
-/* how much store do we have unused at the end of the flex area? */
-
-_Check_return_
-extern int
-flex_storefree(void)
-{
-    return(flex_.limit - flex_.freep);
-}
-
-#else
-
-int flex_pagesize = 0x8000; /* page size (exported) */
-
-typedef struct {
-  flex_ptr anchor;      /* *anchor should point back to here. */
-  int size;             /* in bytes. Exact size of logical area. */
-                        /* then the actual store follows. */
-} flex__rec;
-
-/*ncr*/
-extern BOOL
-flex_forbid_shrink(BOOL forbid)
-{
-    flex_set_deferred_compaction(TRUE);
-
-    return(!forbid);
-}
-
-_Check_return_
-extern int
-flex_storefree(void)
-{
-    return(0);
-}
-
-#ifdef flex_alloc
-extern BOOL report_flex_alloc(flex_ptr anchor, int size)
-{
-reportf("report_flex_alloc(%p)", report_ptr_cast(anchor));
-reportf("flex_alloc(%p->%p, %d)", report_ptr_cast(anchor), *anchor, size);
-    return((flex_alloc)(anchor, size));
-}
-#endif
-
-#ifdef flex_extend
-extern BOOL report_flex_extend(flex_ptr anchor, int newsize)
-{
-reportf("report_flex_extend(%p)", report_ptr_cast(anchor));
-reportf("flex_extend(%p->%p, %d)", report_ptr_cast(anchor), *anchor, newsize);
-    return((flex_extend)(anchor, newsize));
-}
-#endif
-
-#ifdef flex_free
-extern void report_flex_free(flex_ptr anchor)
-{
-reportf("report_flex_free(%p)", report_ptr_cast(anchor));
-reportf("flex_free(%p->%p)", report_ptr_cast(anchor), *anchor);
-    (flex_free)(anchor);
-}
-#endif
-
+FLEX_BLOCK, * P_FLEX_BLOCK;
 
 /* like flex_free(), but caters for already freed / not yet allocated */
 
@@ -397,8 +43,10 @@ extern void
 flex_dispose(
     flex_ptr anchor)
 {
+#if defined(REPORT_FLEX)
     reportf("flex_dispose(%p)", report_ptr_cast(anchor));
     reportf("flex_dispose(%p->%p)", report_ptr_cast(anchor), *anchor);
+#endif
 
     if(NULL == *anchor)
         return;
@@ -413,25 +61,20 @@ flex_give_away(
     flex_ptr new_anchor,
     flex_ptr old_anchor)
 {
-    flex__rec * p;
+    P_FLEX_BLOCK p;
 
+    /*trace_4(TRACE_MODULE_ALLOC, TEXT("flex_give_away(") PTR_XTFMT TEXT(":=") PTR_XTFMT TEXT("->") PTR_XTFMT TEXT(" (size %d))"), new_anchor, old_anchor, *old_anchor, flex_size(old_anchor));*/
+#if defined(REPORT_FLEX)
     reportf(TEXT("flex_give_away(&%p := &%p->&%p)") TEXT(" (size %d))"), report_ptr_cast(new_anchor), report_ptr_cast(old_anchor), *old_anchor, flex_size_maybe_null(old_anchor));
+#endif
 
-    p = (flex__rec *) *old_anchor;
+    p = (P_FLEX_BLOCK) *old_anchor;
 
     *old_anchor = NULL;
     *new_anchor = p;
 
     if(NULL == p--)
         return;
-
-#if defined(WIMPLIB_FLEX)
-    if(((char *) p < flex_.start) || ((char *) (p + 1) > flex_.freep))
-        werr(FALSE, "flex_give_away: block (%p->%p) is not in flex store (%p:%p)", old_anchor, *new_anchor, flex_.start, flex_.freep);
-
-    if(p->anchor != old_anchor)
-        werr(FALSE, "flex_give_away: old_anchor (%p->%p) does not match that stored in block (%p->%p)", old_anchor, *new_anchor, p, p->anchor);
-#endif /* WIMPLIB_FLEX */
 
     p->anchor = new_anchor;
 }
@@ -442,8 +85,11 @@ flex_realloc(
     flex_ptr anchor,
     int newsize)
 {
+    /*trace_3(TRACE_MODULE_ALLOC, TEXT("flex_realloc(") PTR_XTFMT TEXT(" -> ") PTR_XTFMT TEXT(", %d)"), anchor, *anchor, newsize);*/
+#if defined(REPORT_FLEX)
     reportf("flex_realloc(%p)", report_ptr_cast(anchor));
     reportf("flex_realloc(%p->%p, size %d)", report_ptr_cast(anchor), *anchor, newsize);
+#endif
 
     if(0 == newsize)
     {
@@ -464,11 +110,13 @@ extern int
 flex_size_maybe_null(
     flex_ptr anchor)
 {
-    flex__rec * p;
+    P_FLEX_BLOCK p;
 
+#if defined(REPORT_FLEX)
     reportf("flex_size_maybe_null(%p)", report_ptr_cast(anchor));
+#endif
 
-    p = (flex__rec *) *anchor;
+    p = (P_FLEX_BLOCK) *anchor;
 
     if(NULL == p--)
     {
@@ -480,6 +128,188 @@ flex_size_maybe_null(
     return(p->size);
 }
 
-#endif /* WIMPLIB_FLEX */
+#if defined(REPORT_FLEX)
+
+#undef flex_alloc
+
+_Check_return_
+extern BOOL
+report_flex_alloc(
+    flex_ptr anchor,
+    int size)
+{
+    reportf("report_flex_alloc(%p)", report_ptr_cast(anchor));
+
+    if(0 == size)
+        reportf("report_flex_alloc(%p->%p, size %d): size 0 will stuff up", report_ptr_cast(anchor), *anchor, size);
+
+    if(*anchor)
+        reportf("report_flex_alloc(%p->%p, size %d): anchor not NULL - will discard data without freeing", report_ptr_cast(anchor), *anchor, size);
+    else
+        reportf("report_flex_alloc(%p->NULL, size %d)", report_ptr_cast(anchor), size);
+
+    return(flex_alloc(anchor, size));
+}
+
+#undef flex_extend
+
+_Check_return_
+extern BOOL
+report_flex_extend(
+    flex_ptr anchor,
+    int newsize)
+{
+    reportf("report_flex_extend(%p)", report_ptr_cast(anchor));
+
+    if(0 == newsize)
+        reportf("report_flex_extend(%p->%p, newsize %d): size 0 will stuff up", report_ptr_cast(anchor), *anchor, newsize);
+
+    if(*anchor)
+        reportf("report_flex_extend(%p->%p, newsize %d) (cursize %d)", report_ptr_cast(anchor), *anchor, newsize, (flex_size)(anchor));
+    else
+        reportf("report_flex_extend(%p->NULL, newsize %d): anchor NULL - will fail", report_ptr_cast(anchor), newsize);
+
+    return(flex_extend(anchor, newsize));
+}
+
+#undef flex_free
+
+extern void
+report_flex_free(
+    flex_ptr anchor)
+{
+    reportf("report_flex_free(%p)", report_ptr_cast(anchor));
+
+    if(*anchor)
+        reportf("report_flex_free(%p->%p) (size %d)", report_ptr_cast(anchor), *anchor, (flex_size)(anchor));
+    else
+        reportf("report_flex_free(%p->NULL): anchor NULL - will fail", report_ptr_cast(anchor));
+
+    (flex_free)(anchor);
+}
+
+#undef flex_size
+
+_Check_return_
+extern int
+report_flex_size(
+    flex_ptr anchor)
+{
+    int size = 0;
+
+    reportf("report_flex_size(%p)", report_ptr_cast(anchor));
+
+    if(*anchor)
+    {
+        size = (flex_size)(anchor);
+        reportf("report_flex_size(%p->%p): size %d", report_ptr_cast(anchor), *anchor, size);
+    }
+    else
+    {
+        reportf("report_flex_size(%p->NULL): anchor NULL - will fail", report_ptr_cast(anchor));
+        size = (flex_size)(anchor);
+    }
+
+    return(size);
+}
+
+#endif /* REPORT_FLEX */
+
+int flex_granularity = 0x8000;     /* must be a power-of-two size or zero (exported) */
+
+static inline int
+flex_granularity_ceil(int n)
+{
+  if(flex_granularity)
+  {
+    int mask = flex_granularity - 1; /* flex_granularity must be a power-of-two */
+    n = (n + mask) & ~mask;
+  }
+  return n;
+}
+
+static inline int
+flex_granularity_floor(int n)
+{
+  if(flex_granularity)
+  {
+    int mask = flex_granularity - 1; /* flex_granularity must ve a power-of-two */
+    n = n & ~mask;
+  }
+  return n;
+}
+
+/* wrapper for TBOXLIBS_FLEX */
+
+/* can get better code for loading structure members on ARM Norcroft */
+
+static struct flex_
+{
+    char *          start;          /* start of flex memory */
+    char *          freep;          /* free flex memory */
+    char *          limit;          /* limit of flex memory */
+
+    int             area_num;       /* dynamic area handle */
+
+    BOOL            shrink_forbidden;
+} flex_;
+
+/*ncr*/
+extern BOOL
+flex_forbid_shrink(
+    BOOL forbid)
+{
+    BOOL res = flex_.shrink_forbidden;
+
+#if defined(REPORT_FLEX)
+    reportf("flex_forbid_shrink(%s)", report_boolstring(forbid));
+#endif
+
+    flex_.shrink_forbidden = forbid;
+
+    return(res);
+}
+
+/******************************************************************************
+*
+* how much store do we have unused at the end of the flex area?
+*
+******************************************************************************/
+
+_Check_return_
+extern int
+flex_storefree(void)
+{
+#if defined(REPORT_FLEX) && 0
+    reportf("flex_storefree(): flex_.limit = %p, flex_.freep = %p, => free = %d",
+            report_ptr_cast(flex_.limit), report_ptr_cast(flex_.freep), flex_.limit - flex_.freep);
+#endif
+    return(flex_.limit - flex_.freep);
+}
+
+#define flex__base     flex_.start
+#define flex__start    flex_.start
+#define flex__freep    flex_.freep
+#define flex__lim      flex_.limit
+
+#define flex__area_num flex_.area_num
+
+#define flex__check() /*EMPTY*/
+
+#undef TRACE /* don't mess with devices:parallel ! */
+
+#define DefaultSize 0 /* for the Dynamic Area */
+
+static void
+flex__fail(int i);
+
+#include "flex.c"
+
+static void
+flex__fail(int i)
+{
+    IGNOREPARM(i);
+    werr(FALSE, msgs_lookup(MSGS_flex1)); /* don't abort */
+}
 
 /* end of cs-flex.c */

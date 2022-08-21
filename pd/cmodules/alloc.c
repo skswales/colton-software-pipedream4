@@ -391,7 +391,7 @@ alloc_dynamic_area_handle = 0;
 
 _Check_return_
 extern int
-flex_dynamic_area_query(void)
+alloc_dynamic_area_query(void)
 {
     return(alloc_dynamic_area_handle);
 }
@@ -506,6 +506,7 @@ alloc_initialise_heap(
         return(FALSE);
 
     /* once alloc is running in a fixed block at start of flex, we must stop the C runtime from moving us */
+    /* NB if flex is running in a dynamic area, the C runtime is free to grow in any case */
     flex_set_budge(0);
 
     heap = ahp->heap;
@@ -680,14 +681,14 @@ alloc_needtoallocate(
     trace_on();
     trace_4(TRACE_MODULE_ALLOC| TRACE_APP_MEMORY_USE, TEXT("extending heap (&%p->&%p) by %u,&%4.4x"), report_ptr_cast(ahp), report_ptr_cast(heap), delta, delta);
     /*alloc_validate_heap(ahp, "pre heap extension", 0);*/
-    if(!flex_realloc((flex_ptr) ahp, current_size + delta))
+    if(!flex_realloc((flex_ptr) &ahp->heap, current_size + delta))
     {
         trace_0(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("*** heap extension failed - return FALSE"));
         trace_off();
         return(FALSE);
     }
 
-    heap->size = flex_size((flex_ptr) ahp);
+    heap->size = flex_size((flex_ptr) &ahp->heap);
 
     trace_4(TRACE_MODULE_ALLOC | TRACE_APP_MEMORY_USE, TEXT("heap (&%p->&%p) now size %u,&%4.4x"), report_ptr_cast(ahp), report_ptr_cast(heap), heap->size, heap->size);
     trace_off();
@@ -738,17 +739,17 @@ alloc_freeextrastore(
 
     spare = current_size - current_hwm;
 
-    if((int) spare + flex_storefree() >= flex_pagesize)
+    if((int) spare + flex_storefree() >= flex_granularity)
         {
         trace_0(TRACE_MODULE_ALLOC, "alloc_freeextrastore: contracting heap to free some space");
 
-        if(!flex_realloc((flex_ptr) ahp, current_hwm))
+        if(!flex_realloc((flex_ptr) &ahp->heap, current_hwm))
             {
             trace_0(TRACE_MODULE_ALLOC, "*** heap contraction failed");
             return;
             }
 
-        ahp->heap->size = flex_size((flex_ptr) ahp);
+        ahp->heap->size = flex_size((flex_ptr) &ahp->heap);
 
         trace_4(TRACE_MODULE_ALLOC,
                 "heap (&%p->&%p) now contracted to size %u,&%4.4x\n",
@@ -794,6 +795,8 @@ alloc_init(void)
         reportf("g_dynamic_area_limit: %d", g_dynamic_area_limit);
         if((alloc_dynamic_area_handle = flex_init(de_const_cast(char *, g_dynamic_area_name), 0, g_dynamic_area_limit)) < 0)
             break;
+
+        flex_set_deferred_compaction(TRUE);
 
         if(alloc_main_heap_minsize)
             {

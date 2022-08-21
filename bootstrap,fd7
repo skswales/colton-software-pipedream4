@@ -1,0 +1,22 @@
+| RISC OS filetypes are stored using ,xyz suffixes for this project
+Set svn$filetypeext ""
+|
+echo Do not change directory until this is complete!
+|
+time
+|
+dir <Obey$Dir>
+|
+| NB You must uncomment the section that you want (and comment out the one you don't)
+|
+echo svn checkout/update just the pd code dir, ignoring the docs and examples dirs
+IfThere pd       Then svn up pd       Else svn co svn://repos.croftnuisk.local/svn/pipedream/trunk/pd
+|
+|echo svn checkout/update the whole project
+|IfThere pd       Then svn up pd       Else svn co svn://repos.croftnuisk.local/svn/pipedream/trunk/pd
+|IfThere examples Then svn up examples Else svn co svn://repos.croftnuisk.local/svn/pipedream/trunk/examples
+|IfThere docs     Then svn up docs     Else svn co svn://repos.croftnuisk.local/svn/pipedream/trunk/docs
+|
+back
+|
+time
