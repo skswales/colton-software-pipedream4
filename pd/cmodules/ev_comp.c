@@ -1804,7 +1804,7 @@ recog_slr(
 {
     PC_U8 pos = in_str;
     S32 res;
-    S32 row_temp;
+    U32 row_temp;
     P_U8 epos;
 
     /* clear slr flags */
@@ -1832,15 +1832,17 @@ recog_slr(
     if(!isdigit(*pos))
         return(0);
 
-    row_temp = (S32) strtol(pos, &epos, 10);
+    row_temp = (U32) strtol(pos, &epos, 10);
 
     if(epos == pos)
         return(0);
 
-    if(row_temp > EV_MAX_ROW)
+    row_temp -= 1;
+
+    if(row_temp > (U32) EV_MAX_ROW)
         return(0);
 
-    slrp->row = (EV_ROW) (row_temp - 1);
+    slrp->row = (EV_ROW) row_temp;
 
     return(epos - in_str);
 }

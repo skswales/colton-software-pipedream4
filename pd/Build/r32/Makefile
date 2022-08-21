@@ -8,7 +8,7 @@
 # Copyright (C) 1998-2015 R W Colton
 
 #TEXTUAL_VERSION_NUMBER=4.54
-TEXTUAL_VERSION_NUMBER=4.53/03
+TEXTUAL_VERSION_NUMBER=4.53/04
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -49,6 +49,7 @@ PipeDream:   \
     @.!PipeDream.!RunImage \
     @.!PipeDream.!Sprites \
     @.!PipeDream.!Sprites22 \
+    @.!PipeDream.!SpritesR5 \
     @.!PipeDream.Resource.RISC_OS.Messages \
     @.!PipeDream.Resource.RISC_OS.tem_risc \
     @.!PipeDream.Resource.RISC_OS.tem_main \
@@ -243,6 +244,10 @@ o.aof_GB:   \
 @.!PipeDream.!Sprites22:   \
              $(PD).utils.GB.spr_fi22
         Copy $(PD).utils.GB.spr_fi22 $@ ~C FV
+
+@.!PipeDream.!SpritesR5:   \
+             $(PD).utils.GB.spr_fiR5
+        Copy $(PD).utils.GB.spr_fiR5 $@ ~C FV
 
 @.!PipeDream.Resource.RISC_OS.Sprites:   \
              utils.GB.s24_mrg

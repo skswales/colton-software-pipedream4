@@ -7,6 +7,15 @@
 <BODY>
 <H1>Colton Software PipeDream for RISC&nbsp;OS</H1>
 
+<p><A HREF="#Copyright">Licence and Copyright</A></p>
+<p><A HREF="#OnlineResources">Online Resources</A></p>
+<p><A HREF="#Support">Support</A></p>
+<p><A HREF="#ReleaseHistory">Release History</A></p>
+<p><A HREF="#Resources">Application Resources</A></p>
+<p><A HREF="#Toolbar">Toolbar Commands</A></p>
+<p><A HREF="#KnownProblems">Known Problems</A></p>
+
+<A ID="Copyright">
 <H2>Licence and Copyright</H2>
 
 <P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
@@ -27,6 +36,7 @@ Copyright (C) 1998-2015 R W Colton</P>
 <P><A HREF="#CopyrightExtra">Additional copyrights</A></P>
 
 
+<A ID="OnlineResources">
 <H2>Online resources</H2>
 
 <P>The following resources for PipeDream are available online:</P>
@@ -45,6 +55,7 @@ obtained directly from
 <A HREF="http://croftnuisk.co.uk/coltsoft/pipedream">PipeDream Downloads and Examples</A></P>
 
 
+<A ID="Support">
 <H2>Support</H2>
 
 <P>PipeDream is now open source and completely free, so support is a self-help affair.</P>
@@ -58,12 +69,25 @@ any problems.</P>
 <P>Email: colton-software-pipedream@googlegroups.com</P>
 
 
+<A ID="ReleaseHistory">
 <H2>Release history</H2>
 
 <p>Just the last few revisions of PipeDream are documented here.</p>
 
 <p>A fuller release history may be found
 <A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A></p>
+
+<H4>4.53/04 (04 Sep 2015)</H4>
+
+<P>Fixed cell reference detection to no longer allow row zero.</P>
+
+<P>Pressing a key will terminate the splash screen early, as does clicking the window.</P>
+
+<P>IconSprites !SpritesR5 on RISC OS 5.</P>
+
+<P>Modernised pinboard icon in !SpritesR5 to RISC OS 5 style.</P>
+
+<P>Modernised pinboard icon in !Sprites22 to RISC OS 4 style.</P>
 
 
 <H4>4.53/03 (06 Aug 2015)</H4>
@@ -266,6 +290,7 @@ flex module to avoid unnecessary overheads and slot/area thrashing.</P>
 they do not modify flags, so do not attempt to restore them.</P>
 
 
+<A ID="Toolbar">
 <H2>Toolbar to PipeDream command mapping</H2>
 
 <PRE>
@@ -307,17 +332,8 @@ Execute command - ^FZ
 </PRE>
 
 
-<H2>Warnings</H2>
-
-<P>When using Virtualise or a similar virtual memory manager on RISC PCs,
-install Virtualise *before* you load in PipeDream. This is because
-PipeDream optimises its memory handling differently when VM is active on its
-area - the only way it knows this is by comparing the maximum size of the
-area with what it should be were VM not active i.e. Virtualise must have
-been allowed to alter the maximum size of an area before PipeDream loads in.</P>
-
-
-<H2>Resources</H2>
+<A ID="Resources">
+<H2>Application Resources</H2>
 
 <P>Templates are grouped by menu:</P>
 
@@ -337,6 +353,7 @@ been allowed to alter the maximum size of an area before PipeDream loads in.</P>
 files have the border flag applied, which is then stripped off at run-time.</P>
 
 
+<A ID="KnownProblems">
 <H2>Known problems in this release</H2>
 
 <P>It is still possible (and has been since PipeDream 3) to create circular dependencies
@@ -359,6 +376,16 @@ protocol is stopped by PipeDream after the first Message_RAMFetch is
 responded to.</P>
 
 
+<H2>Warnings</H2>
+
+<P>When using Virtualise or a similar virtual memory manager on RISC PCs,
+install Virtualise *before* you load in PipeDream. This is because
+PipeDream optimises its memory handling differently when VM is active on its
+area - the only way it knows this is by comparing the maximum size of the
+area with what it should be were VM not active i.e. Virtualise must have
+been allowed to alter the maximum size of an area before PipeDream loads in.</P>
+
+
 <H2>32-bit !System</H2>
 
 <P>Please note that the latest distribution of !System for use with pre-RISC
@@ -379,13 +406,14 @@ dialogue cannot reach. Instead, a simple obey file is included called
 !SysMerge. Just double click on !SysMerge.</P>
 
 
-<HR/>
-<H2>Additional copyrights<A ID="CopyrightExtra"></H2>
+<A ID="CopyrightExtra">
+<H2>Additional copyright information</H2>
 
-<H4>Portions (Reporter interface code)</H4>
-<P>Copyright (C) 2012-2015 Stuart Swales.</P>
+<H4>Portions Copyright (C) 2012-2015 Stuart Swales</H4>
+<P>Reporter interface code.</P>
 
 <HR/>
+
 <P>End of PipeDream Release Notes</P>
 </BODY>
 </HTML>
