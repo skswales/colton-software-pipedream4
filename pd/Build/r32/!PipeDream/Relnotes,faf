@@ -25,7 +25,7 @@
 <H2 ID="Copyright">Copyright</H2>
 
     <P>
-        Copyright (C) 1987-2018 Colton Software<BR />
+        Copyright (C) 1987-2019 Colton Software<BR />
         <A HREF="file:/PipeDreamRes:Help/HTML/licence.html#CopyrightExtra">Additional copyright information</A>
     </P>
 
@@ -48,6 +48,14 @@
 
 
 <H2 ID="ReleaseHistory">Release History</H2>
+
+<H4>4.56.02 (19 Mar 2019)</H4>
+
+<p>Fix CHOOSE() when used with range or array parameters.
+This had been broken since 4.52/04.</p>
+
+<p>ROOL DDE 28 build environment used.</p>
+
 
 <H4>4.56.01 (21 Dec 2018)</H4>
 

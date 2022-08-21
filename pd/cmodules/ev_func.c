@@ -155,7 +155,7 @@ PROC_EXEC_PROTO(c_choose)
 
     exec_func_ignore_parms();
 
-    if((args[0]->arg.integer < 1) || (args[0]->arg.integer >= n_args))
+    if(args[0]->arg.integer < 1) /* NB Fireworkz' CHOOSE is different */
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
         return;

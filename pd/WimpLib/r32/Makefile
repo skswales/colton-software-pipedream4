@@ -18,7 +18,7 @@ CMODULES=$(PD).cmodules
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 AS = ObjAsm
-ASflags_BASE=-I$(PD).cmodules.Hdr -throwBack -stamp -quit -CloseExec
+ASflags_BASE=-I$(PD).cmodules.Hdr --throwback
 ASflags=$(ASflags_BASE)
 
 # NB PipeDream uses a global register for its sb variable, so avoid using that in this library code!

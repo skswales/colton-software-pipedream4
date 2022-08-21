@@ -1713,7 +1713,7 @@ dproc_aboutprog(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2018 Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2019 Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 

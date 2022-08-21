@@ -35,7 +35,7 @@ WimpLib=$(PD).WimpLib
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 AS=ObjAsm
-ASflags_BASE=-I$(CMODULES).Hdr -throwback -stamp -quit -CloseExec
+ASflags_BASE=-I$(CMODULES).Hdr --throwback
 ASflags=$(ASflags_BASE)
 
 CC=cc
