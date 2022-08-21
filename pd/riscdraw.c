@@ -2555,7 +2555,7 @@ ensurefontcolours(void)
         else
             fg_colour = wimptx_RGB_for_wimpcolour(current_fg_wimp_colour_value & 0x0F);
 
-        trace_2(TRACE_APP_PD4_RENDER, "Colourtrans_SetFontColours(" U32_XTFMT ", " U32_XTFMT ")", fg_colour, bg_colour);
+        trace_2(TRACE_APP_PD4_RENDER, "ColourTrans_SetFontColours(" U32_XTFMT ", " U32_XTFMT ")", fg_colour, bg_colour);
         (void) font_complain(colourtrans_SetFontColours(fh, bg_colour, fg_colour, max_offset));
 
         font_colours_invalid = FALSE;
@@ -2580,7 +2580,7 @@ riscos_printer;
 
 #define stat_bg     0xFFFFFF00U /* full white */
 #define stat_fg     0x00000000U /* full black */
-#define stat_neg    0xFF000000U /* full red */
+#define stat_neg    0x0000FF00U /* full red */
 
 extern void
 print_setcolours(
@@ -2610,7 +2610,7 @@ print_setfontcolours(void)
         if(riscos_printer.has_colour)
             if(current_fg_wimp_colour_value == wimp_colour_value_from_option(COI_NEGATIVE))
                 fg_colour = stat_neg;
-        trace_2(TRACE_APP_PD4_RENDER, "Colourtrans_SetFontColours(" U32_XTFMT ", " U32_XTFMT ")", fg_colour, bg_colour);
+        trace_2(TRACE_APP_PD4_RENDER, "ColourTrans_SetFontColours(" U32_XTFMT ", " U32_XTFMT ")", fg_colour, bg_colour);
         (void) print_complain(colourtrans_SetFontColours(fh, bg_colour, fg_colour, max_offset));
         font_colours_invalid = FALSE;
     }

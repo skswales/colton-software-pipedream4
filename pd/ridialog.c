@@ -1677,7 +1677,7 @@ dproc_aboutprog(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2020 Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2021 Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 

@@ -8,7 +8,7 @@
 | Copyright (C) 1998-2015 R W Colton
 
 Set pd$Release 4_58_00
-Set pd$Release 4_58_02
+Set pd$Release 4_58_03
 | the master list is in version.c
 
 Set pd$Disc                                $.Temp.PD4.RiscPkg.PipeDream_<pd$Release>

@@ -27,7 +27,7 @@
 <h2 id="Copyright">Copyright</h2>
 
     <p>
-        Copyright (C) 1987-2020 Colton Software<br />
+        Copyright (C) 1987-2021 Colton Software<br />
         <a href="file:///PipeDream:Help/HTML/licenc.htm#CopyrightExtra">Additional copyright information</a>
     </p>
 
@@ -84,6 +84,11 @@ Please include files which demonstrate any problems (using a Spark or ZIP archiv
 <p>Please refer to the <a
 href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda
 and Errata</a> for details of changes to functionality.</p>
+
+
+<h4>4.58.03 (31 Jan 2021)</h4>
+
+<p>Fixed printing of negative numbers in red to a colour printer.</p>
 
 
 <h4>4.58.02 (27 Sep 2020)</h4>
