@@ -138,12 +138,12 @@ str_swap(
 #if RISCOS
 
 extern int
-_stricmp(
+C_stricmp(
     _In_z_      PC_USTR a,
     _In_z_      PC_USTR b);
 
 extern int
-_strnicmp(
+C_strnicmp(
     _In_z_      PC_USTR a,
     _In_z_      PC_USTR b,
     size_t n);
@@ -358,8 +358,8 @@ tstr_xvsnprintf(
 #define tstricmp(s1, s2)            sb_stricmp(s1, U32_MAX, s2, U32_MAX)
 #define tstrnicmp(s1, s2, n)        sb_strnicmp(s1, s2, n)
 #else
-#define tstricmp(s1, s2)            _stricmp(s1, s2)
-#define tstrnicmp(s1, s2, n)        _strnicmp(s1, s2, n)
+#define tstricmp(s1, s2)            C_stricmp(s1, s2)
+#define tstrnicmp(s1, s2, n)        C_strnicmp(s1, s2, n)
 #endif
 
 #define tstrchr(s, c)               strchr(s, c)

@@ -18,11 +18,12 @@
  * Build.r32.RiscPkg.Control
  */
 
-#define HexVersion   0x45700
-#define Version      "4.57"
-#define CurrentDate  "20-Dec-2019"
+#define HexVersion   0x45701
+#define Version      "4.57.01"
+#define CurrentDate  "21-Mar-2020"
 
 /*
+* 21 Mar 2020 - 4.57.01
 * 20 Dec 2019 - 4.57
 * 16 Aug 2019 - 4.57 Don't think anyone got this preview
 * 19 Mar 2019 - 4.56.02

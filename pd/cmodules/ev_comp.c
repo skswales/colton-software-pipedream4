@@ -1732,7 +1732,7 @@ recog_slr_range(
 
             if(0 != (len_ext_2 = recog_extref(doc_temp, elemof32(doc_temp), pos, 1)))
             {
-                if(0 == _stricmp(doc_name, doc_temp))
+                if(0 == C_stricmp(doc_name, doc_temp))
                 {
                     ustr_IncBytes(pos, len_ext_2);
                 }

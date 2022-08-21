@@ -27,7 +27,7 @@
 <h2 ID="Copyright">Copyright</h2>
 
     <p>
-        Copyright (C) 1987-2019 Colton Software<br />
+        Copyright (C) 1987-2020 Colton Software<br />
         <a href="file:/PipeDreamRes:Help/HTML/licence.html#CopyrightExtra">Additional copyright information</a>
     </p>
 
@@ -54,6 +54,13 @@
 <p>Please refer to the <a
 href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda
 and Errata</a> for details of changes to functionality.</p>
+
+
+<h4>4.57.01 (21 Mar 2020)</h4>
+
+<p>!RunImage is squeezed for faster loading from slow devices.</p>
+
+<p>Improved packaging giving homepage and indicating compatibility.</p>
 
 
 <h4>4.57 (20 Dec 2019)</h4>

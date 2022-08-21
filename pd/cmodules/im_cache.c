@@ -295,7 +295,7 @@ image_cache_entry_query(
             entryname = file_leafname(entryname);
         }
 
-        if(0 == _stricmp(testname, entryname))
+        if(0 == C_stricmp(testname, entryname))
         {
             *p_image_cache_handle = (IMAGE_CACHE_HANDLE) key;
 
@@ -609,7 +609,7 @@ image_cache_recache(
 
         trace_2(TRACE_MODULE_GR_CHART, "image_cache_recache: comparing entry %s with %s", entryname, testname);
 
-        if(0 == _stricmp(testname, entryname))
+        if(0 == C_stricmp(testname, entryname))
         {
             /* throwing away the Draw file seems easiest way to recache */
             p_image_cache->p_draw_diag->length = 0;

@@ -240,7 +240,7 @@ PROC_BSEARCH_PROTO(static, html_color_name_lookcomp, struct HTML_COLOR_NAME_BSEA
     /* NB no current_p_docu global register furtling required */
 
     /* compare leading substrings */
-    if(0 != (res = /*"C"*/_strnicmp(key->name, datum->name, MIN(key->name_length, datum->name_length))))
+    if(0 != (res = C_strnicmp(key->name, datum->name, MIN(key->name_length, datum->name_length))))
         return(res);
 
     return((int) key->name_length - (int) datum->name_length);

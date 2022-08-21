@@ -3706,7 +3706,7 @@ pdchart_submenu_maker(void)
             gr_chart_name_query(&pdchartdata->pdchart->ch, buffer, sizeof32(buffer)-1);
             ptr = buffer;
 
-            if(cwd_len && (0 == _strnicmp(cwd_buffer, ptr, cwd_len)))
+            if(cwd_len && (0 == C_strnicmp(cwd_buffer, ptr, cwd_len)))
                 ptr += cwd_len;
 
             len = strlen32(ptr);

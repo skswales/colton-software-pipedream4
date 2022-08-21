@@ -332,7 +332,7 @@ str_swap(
 ******************************************************************************/
 
 extern int
-_stricmp(
+C_stricmp(
     _In_z_      PC_USTR a,
     _In_z_      PC_USTR b)
 {
@@ -360,7 +360,7 @@ _stricmp(
 ******************************************************************************/
 
 extern int
-_strnicmp(
+C_strnicmp(
     _In_z_      PC_USTR a,
     _In_z_      PC_USTR b,
     size_t n)

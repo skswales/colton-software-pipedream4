@@ -985,7 +985,7 @@ PROC_BSEARCH_PROTO(static, func_name_compare, U8Z, LOOKDEF)
 
     /* NB no current_p_docu global register furtling required */
 
-    return(/*"C"*/_stricmp(key_id, datum_id));
+    return(C_stricmp(key_id, datum_id));
 }
 
 /******************************************************************************

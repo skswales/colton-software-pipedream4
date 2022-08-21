@@ -151,7 +151,7 @@ not_in_user_dicts_or_list(
         lptr;
         lptr = next_in_list(&first_spell))
     {
-        if(0 == _stricmp((char *) lptr->value, word))
+        if(0 == C_stricmp((char *) lptr->value, word))
             return(FALSE);
     }
 

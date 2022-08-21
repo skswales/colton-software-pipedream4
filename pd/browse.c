@@ -408,7 +408,7 @@ browse_null_core(
 
     dbox_getfield(d, browsing_Template, array, sizeof(array));
 
-    if(0 != _stricmp(array, str))
+    if(0 != C_stricmp(array, str))
     {
         if(browse_statics.iswild)
         {

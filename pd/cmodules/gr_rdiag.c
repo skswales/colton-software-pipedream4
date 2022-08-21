@@ -531,7 +531,7 @@ gr_riscdiag_fontlist_lookup(
     /* actual end of font list object data may not be word aligned */
     while(nextObject - thisOffset >= 4)
     {
-        if(0 == _stricmp(pFontListElem.elem->name, szFontName))
+        if(0 == C_stricmp(pFontListElem.elem->name, szFontName))
         {
             fontRefNum = pFontListElem.elem->fontref8;
             break;
@@ -549,7 +549,7 @@ gr_riscdiag_fontlist_lookup(
     {
         static BOOL recursed_internally = 0;
 
-        if(!recursed_internally && (0 != _stricmp(szFontName, "System")))
+        if(!recursed_internally && (0 != C_stricmp(szFontName, "System")))
         {
             recursed_internally = 1;
             fontRefNum = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, fontListR, string_lookup(GR_CHART_MSG_ALTERNATE_FONTNAME));

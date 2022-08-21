@@ -13,7 +13,7 @@
  #ifndef UROM
  
 +extern int
-+_stricmp(const char * a, const char * b);
++C_stricmp(const char * a, const char * b);
 +
 +
  /* -------------------------------------------------- */
@@ -70,7 +70,7 @@
     fontlist_node *font_ptr;
  
 +#ifdef SKS_ACW /* SKS 25oct96 remove stupid font from all lists */
-+   if(0 == _stricmp(font_name, "WIMPSymbol"))
++   if(0 == C_stricmp(font_name, "WIMPSymbol"))
 +       return((void *) 1);
 +#endif /* SKS_ACW */
 +

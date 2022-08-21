@@ -1898,7 +1898,7 @@ extract_parameters(
             for(c = 0; *(list + c); c++)
             {
                 trace_1(TRACE_APP_DIALOG, "F_ARRAY comparing with: %s", trace_string(**(list + c)));
-                if(0 == _stricmp(array, **(list + c)))
+                if(0 == C_stricmp(array, **(list + c)))
                 {
                     dptr->option = c;
                     found = TRUE;

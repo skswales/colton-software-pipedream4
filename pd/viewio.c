@@ -602,7 +602,7 @@ view_get_stored_command(
                     while((ch = *from++) == SPACE)
                         ;
 
-                    if(!ch  ||  (0 == _stricmp(from - 1, "OFF")))
+                    if(!ch  ||  (0 == C_stricmp(from - 1, "OFF")))
                         d_poptions[O_PL].option = 0;
 
                     break;

@@ -1228,7 +1228,7 @@ find_document_using_leafname(
     {
         PC_DOCU_NAME test_docu_name = &p_docu->ss_instance_data.ss_doc.docu_name;
 
-        if(0 == _stricmp(test_docu_name->leaf_name, leafname))
+        if(0 == C_stricmp(test_docu_name->leaf_name, leafname))
         {
             p_docu_found = p_docu;
             count++;
@@ -1261,7 +1261,7 @@ find_document_using_wholename(
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
     {
-        if(0 == _stricmp(p_docu->Xcurrentfilename, wholename))
+        if(0 == C_stricmp(p_docu->Xcurrentfilename, wholename))
             return(p_docu->docno);
     }
 

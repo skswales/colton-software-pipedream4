@@ -593,7 +593,7 @@ namefile_fn_core(void)
         return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
     }
 
-    if(0 == _stricmp(filename, currentfilename))
+    if(0 == C_stricmp(filename, currentfilename))
         return(TRUE);
 
     if(same_name_warning(filename, name_supporting_Zs_YN_S_STR, name_supporting_YN_Q_STR))
@@ -938,7 +938,7 @@ savefile(
     /* rename file BEFORE saving to get external refs output correctly */
     if(saving_whole_file)
     {
-        if(0 != _stricmp(filename, currentfilename))
+        if(0 != C_stricmp(filename, currentfilename))
         {
             if(same_name_warning(filename, name_supporting_Zs_YN_S_STR, name_supporting_YN_Q_STR))
             {
@@ -3877,7 +3877,7 @@ name_preprocess_docu_name_flags_for_rename(
 
         /* strip off trailing Library from dir_name if present */
         leaf_ptr = file_leafname(dir_name);
-        if(leaf_ptr && (0 == _stricmp(leaf_ptr, EXTREFS_SUBDIR_STR)))
+        if(leaf_ptr && (0 == C_stricmp(leaf_ptr, EXTREFS_SUBDIR_STR)))
             *leaf_ptr = CH_NULL;
         else if(*trail_ptr == CH_NULL) /* otherwise restore trailing '.' iff it was removed */
             *trail_ptr = FILE_DIR_SEP_CH;
@@ -3890,7 +3890,7 @@ name_preprocess_docu_name_flags_for_rename(
         {
             reportf("compare with pathelem: %s", pathelem);
 
-            if((0 == _stricmp(dir_name, pathelem))  /*&&  file_is_dir(pathelem)*/)
+            if((0 == C_stricmp(dir_name, pathelem))  /*&&  file_is_dir(pathelem)*/)
             {
                 is_loaded_from_path = 1;
                 p_docu_name->flags.path_name_supplied = 0;

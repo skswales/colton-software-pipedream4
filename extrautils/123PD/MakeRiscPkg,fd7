@@ -8,7 +8,7 @@
 
 | !!! ENSURE EVERYTHING IS BUILT AND CHECKED IN FIRST !!!
 
-Set pd$Release 1_12
+Set pd$Release 1_12_1
 | Remember to update RiscPkg.Control and !123PD.Desc too
 
 Set pd$Disc $.Temp.PD4.123PD_<pd$Release>

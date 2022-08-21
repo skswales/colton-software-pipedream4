@@ -269,7 +269,7 @@ vsdecodecell(
             U32 i;
 
             for(i = 0; i < elemof32(vsfuncs); ++i)
-                if(0 == _strnicmp(vsfuncs[i].name, ip, strlen(vsfuncs[i].name)))
+                if(0 == C_strnicmp(vsfuncs[i].name, ip, strlen(vsfuncs[i].name)))
                     break;
 
             trace_1(TRACE_APP_PD4, "vsfuncs[i].name: %s]", vsfuncs[i].name);
@@ -279,7 +279,7 @@ vsdecodecell(
             if(i < elemof(vsfuncs))
             {
                 static char average_str[] = "average(";
-                if(0 == _strnicmp(average_str, ip, sizeof(average_str) - 1))
+                if(0 == C_strnicmp(average_str, ip, sizeof(average_str) - 1))
                 {
                     strcpy(op, "avg(");
                     op += 4;

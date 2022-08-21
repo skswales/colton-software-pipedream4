@@ -385,7 +385,7 @@ find_custom_in_list(
         if(owner_docno != p_ev_custom->owner.docno)
             continue;
 
-        if(0 == _stricmp(p_ev_custom->id, custom_name))
+        if(0 == C_stricmp(p_ev_custom->id, custom_name))
             return(i);
     }
 
@@ -422,7 +422,7 @@ find_name_in_list(
         if(owner_docno != p_ev_name->owner.docno)
             continue;
 
-        if(0 == _stricmp(p_ev_name->id, name))
+        if(0 == C_stricmp(p_ev_name->id, name))
             return(i);
     }
 

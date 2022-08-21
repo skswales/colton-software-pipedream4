@@ -1789,7 +1789,7 @@ font_cache(
 
         if( (fp->x_size == x_size)  &&
             (fp->y_size == y_size)  &&
-            (0 == _stricmp(namebuf, fp_name)) )
+            (0 == C_stricmp(namebuf, fp_name)) )
         {
             if(fp->handle > 0)
             {

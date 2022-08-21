@@ -30,7 +30,7 @@
 #endif
 
 /*extern int
-_stricmp(const char * a, const char * b);*/
+C_stricmp(const char * a, const char * b);*/
 
 extern void
 wm_events_get(
@@ -336,7 +336,7 @@ fontlist_enumerate(
                 typeface->flag /* weighted and weightless in one */ )
             {
                 /* weightless font - may be asked to ignore weightless System font */
-                if(system || (0 != _stricmp(szFontName, "System")))
+                if(system || (0 != C_stricmp(szFontName, "System")))
                     (* enumproc) (enumhandle, szFontName, ++seqno);
             }
 

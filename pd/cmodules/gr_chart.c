@@ -813,7 +813,7 @@ gr_chart_query_exists(
     {
         if(cp->core.currentfilename)
         {
-            if(0 == _stricmp(cp->core.currentfilename, szName))
+            if(0 == C_stricmp(cp->core.currentfilename, szName))
             {
                 if(chp)
                     *chp = cp->core.ch;

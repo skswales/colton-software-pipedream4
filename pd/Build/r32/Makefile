@@ -8,7 +8,7 @@
 # Copyright (C) 1998-2015 R W Colton
 
 TEXTUAL_VERSION_NUMBER=4.57
-#TEXTUAL_VERSION_NUMBER=4.57.01
+TEXTUAL_VERSION_NUMBER=4.57.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
@@ -258,6 +258,8 @@ AOFDB=$(AOFD) $(AOFMD)
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs \
         -map -xref > @.o._MapIm 2>&1 -symbols @.o._SymIm
+        @Info $@
+        @Squeeze -v $@
         @Info $@
 #
 #       C:o.AnsiLib

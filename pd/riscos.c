@@ -1499,7 +1499,7 @@ iconbar_event_Message_PD_DDE(
             if(tcell->type != SL_TEXT)
                 continue;
 
-            if(0 != _stricmp(tcell->content.text, tag))
+            if(0 != C_stricmp(tcell->content.text, tag))
                 continue;
 
             col = in_block.col;
@@ -2401,7 +2401,7 @@ draw_insert_filename(
     {
         size_t cwd_len = strlen(cwd_buffer);
 
-        if(0 == _strnicmp(filename, cwd_buffer, cwd_len))
+        if(0 == C_strnicmp(filename, cwd_buffer, cwd_len))
             filename += cwd_len;
     }
 

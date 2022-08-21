@@ -1387,7 +1387,7 @@ pdfontselect_try_me(
         S32 font_y = (S32) (height * 16.0);
 
         /* printer font selection; may unset riscos_fonts on error in repaint */
-        if(font_name && (0 != _stricmp(font_name, "System")))
+        if(font_name && (0 != C_stricmp(font_name, "System")))
         {
             if(pdfontselect.setting)
             {

@@ -56,7 +56,7 @@ dict_number(
         lptr;
         lptr = next_in_list(&first_user_dict))
     {
-        if(0 == _stricmp(leaf, file_leafname((const char *) lptr->value)))
+        if(0 == C_stricmp(leaf, file_leafname((const char *) lptr->value)))
             return(most_recent = (S32) lptr->key);
     }
 

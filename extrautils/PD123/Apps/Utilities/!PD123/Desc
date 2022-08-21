@@ -2,7 +2,7 @@
 
 tool_details_start
    name          "PD123";
-  version    "1.12 (20-Aug-16)";
+   version       "1.12.1 (21-Mar-20)";
    wimpslot      128k;
    has_extended_cmdline;
 tool_details_end

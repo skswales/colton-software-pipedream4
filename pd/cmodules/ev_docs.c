@@ -101,7 +101,7 @@ doc_bind_docno(
         if( (!p_ss_doc->docu_name.flags.path_name_supplied) &&
             (!p_ss_doc_in->docu_name.flags.path_name_supplied) )
         {
-            if(0 == _stricmp(p_ss_doc->docu_name.leaf_name, p_ss_doc_in->docu_name.leaf_name))
+            if(0 == C_stricmp(p_ss_doc->docu_name.leaf_name, p_ss_doc_in->docu_name.leaf_name))
             {
                 if(NAME_NONE == res)
                 {
@@ -330,14 +330,14 @@ docno_find_name(
         name_make_wholename(&p_ss_doc->docu_name, wholename2, elemof32(wholename2));
 
         /*if(0 == name_compare(&p_ss_doc->docu_name, p_docu_name))*/
-        if(0 == _stricmp(wholename1, wholename2))
+        if(0 == C_stricmp(wholename1, wholename2))
             return(docno);
 
         /* leafnames can match iff both are 'sloppy' */
         if( (!p_ss_doc->docu_name.flags.path_name_supplied) &&
             (!p_docu_name->flags.path_name_supplied) )
         {
-            if(0 == _stricmp(p_ss_doc->docu_name.leaf_name, p_docu_name->leaf_name))
+            if(0 == C_stricmp(p_ss_doc->docu_name.leaf_name, p_docu_name->leaf_name))
             {
                 if(DOCNO_NONE == res)
                     res = docno;
@@ -1146,7 +1146,7 @@ ev_write_docname(
         if(docep_from->docu_name.path_name)
         {
             path_len = strlen(docep_from->docu_name.path_name);
-            if(0 == _strnicmp(buffer, docep_from->docu_name.path_name, path_len))
+            if(0 == C_strnicmp(buffer, docep_from->docu_name.path_name, path_len))
                 nam_str = buffer + path_len;
         }
     }
@@ -1181,7 +1181,7 @@ name_compare(
     name_make_wholename(p_docu_name_1, wholename1, elemof32(wholename1));
     name_make_wholename(p_docu_name_2, wholename2, elemof32(wholename2));
 
-    return(_stricmp(wholename1, wholename2));
+    return(C_stricmp(wholename1, wholename2));
 }
 
 /******************************************************************************

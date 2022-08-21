@@ -1655,7 +1655,7 @@ gr_fillstyle_table_save(
                 {
                     U32 pathlen = strlen(pathelem);
 
-                    if(0 == _strnicmp(picture_name, pathelem, pathlen))
+                    if(0 == C_strnicmp(picture_name, pathelem, pathlen))
                     {
                         picture_name += pathlen;
                         break;

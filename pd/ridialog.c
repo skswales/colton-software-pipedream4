@@ -976,7 +976,7 @@ dialog__initkeyfromstring(
         lptr;
         lptr = next_in_list( listpp))
     {
-        if(0 == _stricmp(lptr->value, str))
+        if(0 == C_stricmp(lptr->value, str))
             return(list_atitem(*listpp));
     }
 
@@ -1159,7 +1159,7 @@ dialog__getarray(
 
     do  {
         trace_1(TRACE_APP_DIALOG, "comparing with \"%s\"", **ptr);
-        if(0 == _stricmp(**ptr, tempstring))
+        if(0 == C_stricmp(**ptr, tempstring))
         {
             res = ptr - array;
             break;

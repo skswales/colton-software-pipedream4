@@ -828,7 +828,7 @@ eval_rpn(
 
                     for(i = 0; i < p_ev_custom->args.n; ++i)
                     {
-                        if(0 == _stricmp(p_ev_custom->args.id[i], arg_name))
+                        if(0 == C_stricmp(p_ev_custom->args.id[i], arg_name))
                         {
                             arg_ix = i;
                             break;
