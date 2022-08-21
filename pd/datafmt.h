@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -577,11 +577,24 @@ clearkeyboardbuffer(void);
 extern void
 curon(void);
 
-extern BOOL
-host_ctrl_pressed(void);
+extern BOOL /*ctrl_pressed*/
+host_keyboard_status(
+    _OutRef_    P_BOOL p_shift_pressed);
 
-extern BOOL
-host_shift_pressed(void);
+enum CS_Mouse_State { /* for Click and Drag */
+    CS_Mouse_SELECT = 0,
+    CS_Mouse_SELECT_with_Ctrl, /* +1 */
+    CS_Mouse_SELECT_with_Shift, /* +2 */
+    CS_Mouse_SELECT_with_CtrlShift,
+
+    CS_Mouse_ADJUST,
+    CS_Mouse_ADJUST_with_Ctrl,
+    CS_Mouse_ADJUST_with_Shift,
+    CS_Mouse_ADJUST_with_CtrlShift,
+};
+
+extern enum CS_Mouse_State
+cs_mutate_mouse_click(BOOL f_select_clicked);
 
 extern void
 down_scroll(

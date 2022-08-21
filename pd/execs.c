@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -289,9 +289,9 @@ alnst1(
 
             if((format & F_DCP) == 0)
             {
-                format |= (F_DCP | F_BRAC);
-                if(d_options_MB == 'M')
-                    format &= (uchar) ~F_BRAC;
+                format |= F_DCP;
+                if(d_options_MB == 'B')
+                    format |= F_BRAC;
                 format &= ~F_DCPSID;
                 format |= get_dec_field_from_opt();
             }

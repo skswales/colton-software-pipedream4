@@ -1,0 +1,305 @@
+REM PipeDream Loader
+REM
+REM This Source Code Form is subject to the terms of the Mozilla Public
+REM License, v. 2.0. If a copy of the MPL was not distributed with this
+REM file, You can obtain one at https://mozilla.org/MPL/2.0/.
+REM
+REM Copyright (C) 1989-1998 Colton Software Limited
+REM Copyright (C) 1998-2015 R W Colton
+:
+ON ERROR ON ERROR OFF: ERROR 1,REPORT$+" at "+STR$ERL+" in Loader"
+:
+PROCread_args
+dir$="<"+product$+"$Dir>"
+info$=dir$+"."+"Info"
+splash$=product$+":"+"RISC_OS."+"Splash"
+:
+PROCset_product_vars
+:
+country$=FNpath_generate
+:
+DIM info% &80
+IF NOT FNget_info(info%) THEN
+  IF infogen% THEN
+    PROCinfo_generate
+    END
+  ENDIF
+ENDIF
+:
+PROCstart_splash_task
+END
+:
+:
+DEF PROCread_args
+LOCAL env%, ptr%, buflen%
+SYS"OS_GetEnv" TO env%
+:
+buflen%=1280
+DIM buffer% buflen%
+SYS"XOS_ReadArgs","BASIC,quit/K,load/K,id/A/G,ver/A/G,isodate/A/G",env%,buffer%,buflen% TO ;PSR%
+IF PSR% AND 1 THEN ERROR 0,"Bad parameters to Loader"
+:
+ptr%=buffer%: ptr% += 3*4: REM Skip BASIC, optional -quit, -load filename
+product$=FNstringizeGS(!ptr%): ptr% += 4
+version$=FNstringizeGS(!ptr%): ptr% += 4
+iso_date$=FNstringizeGS(!ptr%): ptr% += 4
+infogen%=FALSE: REM ptr% += 4
+ENDPROC
+:
+:
+DEF PROCset_product_vars
+PROCset_product_var("RunOptions",""): REM This may be appended to later in !Run
+ENDPROC
+:
+:
+DEF FNget_info(info%)
+r%=info%+&50
+SYS"OS_ReadMonotonicTime" TO T%
+$r%="80"+"32"+"08"+RIGHT$("000000000"+STR$(&7FFFFFFF-(T%AND&7FFFFFFF)),10)
+R$=$r%:r%?16=0
+:
+SYS"OS_File",17,info$ TO R%: REM OSFile_ReadNoPath
+IF R% <> 1 THEN
+  u1$="": PROCset_product_var("User1", "")
+  u2$="": PROCset_product_var("User2", "")
+  PROCset_product_var("RegNo", "")
+  =FALSE
+ENDIF
+:
+SYS"OS_File",16,info$,info%: REM OSFile_LoadNoPath
+u1$=FNextract(info%+&00): PROCset_product_var("User1", u1$)
+u2$=FNextract(info%+&20): PROCset_product_var("User2", u2$)
+PROCset_product_var("RegNo", FNextract(r%))
+=TRUE
+:
+:
+DEF PROCstart_splash_task
+LOCAL image$,R%
+image$=product$+":"+"RISC_OS."+"!Sprite"
+SYS"OS_File",17,image$ TO R%: REM OSFile_ReadNoPath
+IF R% <> 1 THEN ENDPROC: REM Nothing to see here...
+:
+REM Create a separate task just to show the splash screen
+REM Pass this task our translated date for display
+vn$=version$+" ("+FNiso_date_to_ymd(country$,iso_date$)+")"
+:
+REM We first need to become a task in order to start another task...
+quote$=""""
+SYS"Wimp_Initialise",200,&4b534154,product$+" Loader"
+REM Splash will set its own slot size
+SYS"Wimp_StartTask","Run "+splash$+" -id "+product$+" -verdate "+quote$+vn$+quote$
+SYS"Wimp_CloseDown"
+ENDPROC
+:
+:
+DEF FNstringizeGS(ptr%)
+LOCAL A%, L%
+L%=?ptr%
+A%=0
+WHILE A% < L%
+  ptr%?(A%)=ptr%?(A%+2)
+  A% += 1
+ENDWHILE
+ptr%?A%=13
+=$ptr%
+:
+:
+DEF FNextract(ptr%)
+LOCAL A%
+A%=0
+WHILE(ptr%?A%)>=32
+  A% += 1
+ENDWHILE
+ptr%?A%=13
+=$ptr%
+:
+:
+DEF FNget_product_var(subvar$)
+=FNget_var(product$+"$"+subvar$)
+:
+:
+DEF PROCset_product_var(subvar$, val$)
+IF LEFT$(subvar$,1)="_" THEN val$="": REM Hide except when debugging
+PROCset_var(product$+"$"+subvar$, val$)
+ENDPROC
+:
+:
+DEF FNget_var(var$)
+LOCAL r2%,PSR%,buflen%: buflen%=255
+DIM buffer% buflen%
+SYS "XOS_ReadVarVal", var$, buffer%, buflen%, 0, 3 TO ,,r2%;PSR%
+IF PSR% AND 1 THEN ="": REM V set?
+buffer%?r2%=13
+=$buffer%
+:
+:
+DEF PROCset_var(var$, val$)
+LOCAL L%: L%=LEN(val$)
+IF L%=0 THEN L%=-1: REM Unset empty variable
+SYS "XOS_SetVarVal", var$, val$, L%, 0, 0
+ENDPROC
+:
+:
+DEF PROCmemset(ptr%,L%,B%)
+LOCAL I%
+FOR I%=0 TO L%-1
+  ptr%?I%=B%
+NEXT
+ENDPROC
+:
+:
+DEF FNcheck_utf8
+LOCAL r1%
+SYS"OS_Byte",71,127 TO ,r1%: REM Read alphabet number
+IF r1% <> 111 THEN =FALSE: REM Not UTF8 alphabet?
+=TRUE
+:
+:
+REM Obtain a BASIC string from control-character terminated memory
+DEF FNget_string_cct(ptr%,L%)
+LOCAL I%
+FOR I%=0 TO L%-1
+  IF ptr%?I%<32 THEN ptr%?I%=13: =$ptr%
+NEXT
+IF TRUE THEN ERROR 1,"String not terminated"
+ptr%?(L%-1)=13: =$ptr%
+:
+:
+DEF FNget_country_number
+LOCAL cnum%
+REM SYS"Territory_Number" TO cnum%: REM Read current territory number
+SYS"OS_Byte",70,127 TO ,cnum%: REM Read current country number
+IF cnum%=0 THEN SYS"OS_Byte",71,255 TO ,cnum%: REM Read keyboard layout number if cnum% is Default
+IF cnum%=0 THEN cnum%=1: REM Use UK if cnum% is stubbornly still Default
+=cnum%
+:
+:
+DEF FNget_territory_name(cnum%)
+LOCAL buflen%: buflen% = 31
+DIM buffer% buflen%: PROCmemset(buffer%, buflen%, 13)
+SYS "Territory_NumberToName",cnum%,buffer%,buflen%
+=FNget_string_cct(buffer%, buflen%)
+:
+:
+REM Consider the fallback language, if one was specified
+DEF FNget_language_fallback
+LOCAL country$
+country$=FNget_product_var("Fallback")
+IF country$="" THEN country$=FNget_var("ResFinder$Fallback")
+IF country$="" OR NOT FNdir_exists(FNresources_dir(country$)) THEN ="UK"
+=country$
+:
+:
+DEF FNdir_append(dir$,subdir$)
+=dir$+"."+subdir$
+:
+:
+DEF FNdir_exists(name$)
+LOCAL PSR%,r0%: r0%=17: REM OSFile_ReadNoPath
+SYS"XOS_File",r0%,name$ TO r0%;PSR%
+IF PSR% AND 1 THEN =FALSE: REM V set?
+IF r0% <> 2 THEN =FALSE: REM Not a dir?
+=TRUE
+:
+:
+DEF FNpath_concat(path$,dir$)
+=path$+","+FNpath_dot(dir$)
+:
+:
+DEF FNpath_dot(dir$)
+=dir$+".": REM ensure a dot at the end
+:
+:
+DEF FNresources_dir(country$)
+=FNdir_append("<"+product$+"$Dir>.Resources",country$)
+:
+:
+REM Inspired by ResFinder but we need a different path structure for
+REM our apps without the usual !App.Resources.,!App. stuck on the end
+:
+DEF FNpath_generate
+REM ERROR 1,"Error"
+LOCAL cnum%,country$,country_resources_dir$,uk_resources_dir$,path$
+cnum%=FNget_country_number: PROCset_product_var("_CountryNumber",STR$cnum%)
+:
+IF cnum%=1 THEN
+  country$="UK": PROCset_product_var("_CountryNameFound",country$)
+ELSE
+  REM Not UK - can we use this Country for language-dependent resources?
+  country$=FNget_territory_name(cnum%): PROCset_product_var("_CountryNameFound",country$)
+  IF NOT FNdir_exists(FNresources_dir(country$)) THEN
+    country$=FNget_language_fallback: PROCset_product_var("_CountryNameFoundFallback",country$)
+  ENDIF
+ENDIF
+PROCset_product_var("_CountryNameUsed",country$)
+IF country$<>"UK" THEN country_resources_dir$=FNresources_dir(country$) ELSE country_resources_dir$=""
+uk_resources_dir$=FNresources_dir("UK")
+:
+REM Build up the path - User's choices and other data always at the start
+path$=FNpath_dot(FNdir_append("<Choices$Write>",product$))
+REM If a usable country (other than UK) has been found, that comes next
+IF country$<>"UK" THEN
+  IF FNcheck_utf8 AND FNdir_exists(FNdir_append(country_resources_dir$,"UTF8")) THEN path$=FNpath_concat(path$, FNdir_append(country_resources_dir$,"UTF8"))
+  path$=FNpath_concat(path$, country_resources_dir$)
+ENDIF
+REM UK is always the fallback for language-dependent resources in case not translated
+IF FNcheck_utf8 AND FNdir_exists(FNdir_append(uk_resources_dir$,"UTF8")) THEN path$=FNpath_concat(path$, FNdir_append(uk_resources_dir$,"UTF8"))
+path$=FNpath_concat(path$, uk_resources_dir$)
+REM Neutral is the location from language-independent resources and always comes last
+path$=FNpath_concat(path$, FNresources_dir("Neutral"))
+PROCset_product_var("Path",path$)
+:
+REM Build up the path used for document templates - User's ones always at the start
+path$=FNpath_dot(FNdir_append(FNdir_append("<Choices$Write>",product$),"Templates"))
+REM Only use the non-UK Country here if it has a Templates sub-directory
+REM If it has, do not add UK to this path otherwise a confusing set of Templates would be presented
+IF country$<>"UK" AND FNdir_exists(FNdir_append(country_resources_dir$,"Templates")) THEN
+  path$=FNpath_concat(path$, FNdir_append(country_resources_dir$,"Templates"))
+ELSE
+  path$=FNpath_concat(path$, FNdir_append(uk_resources_dir$,"Templates"))
+ENDIF
+REM And there are no Neutral Templates
+PROCset_product_var("TemplatesPath",path$)
+=country$
+:
+:
+DEF FNiso_date_to_ymd(country$,iso_date$): REM ISO8601 order YYYYMMDD
+LOCAL day$, month$, year$, month_num%
+LOCAL tr_months$, tr_month_pos%, tr_month_num%
+ymd$ = iso_date$: REM default
+year$ = LEFT$(iso_date$, 4)
+month$ = MID$(iso_date$, 5, 2)
+day$ = RIGHT$(iso_date$, 2)
+month_num% = VAL(month$): REM 1..12
+:
+REM space separated (and space terminated) lists of month name abbreviations
+CASE country$ OF
+  WHEN "France":  tr_months$ = "janv. févr. mars avril mai juin juil. août sept. oct. nov. déc. "
+  WHEN "Germany": tr_months$ = "Jan. Feb. März Apr. Mai Juni Juli Aug. Sep. Okt. Nov. Dez. "
+  OTHERWISE:      tr_months$ = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec "
+ENDCASE
+:
+IF month_num% >= 1 AND month_num% <= 12 THEN
+  tr_month_pos% = 1: REM character position in translated month string
+  FOR tr_month_num% = 1 TO 12: REM translated month number 1..12
+    IF tr_month_num% = month_num% THEN
+      tr_month$ = MID$(tr_months$, tr_month_pos%)
+      tr_month$ = LEFT$(tr_month$, INSTR(tr_month$, " ")-1)
+      ymd$ = day$+" "+tr_month$+" "+year$
+      tr_month_num% = 999: REM stop, done
+    ELSE
+      REM advance to next month name
+      tr_month_pos% = INSTR(tr_months$, " ", tr_month_pos%)+1
+      IF tr_month_pos% < 2 THEN tr_month_num% = 999: REM stop, broken
+    ENDIF
+  NEXT
+ENDIF
+=ymd$
+:
+:
+DEF PROCinfo_generate
+REM PipeDream no longer supports Info file generation
+ENDPROC
+:
+:
+REM End of Loader

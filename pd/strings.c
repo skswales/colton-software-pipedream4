@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -93,7 +93,7 @@ string(1, BAD_MESSAGE_FILE_STR,                 "Missing or incomplete messages 
 
 /* what set of countries shall we work with? */
 
-string(2, DefaultLocale_STR,                    "ISO8859-1");
+string(2, DefaultLocale_STR,                    ""); /* SKS 20211209 was ISO8859-1 but empty string -> system default locale */
 string(3, Unrecognised_arg_Zs_STR,              "Unrecognised arg -%s");
 
 /* names of files used by PipeDream */
@@ -156,8 +156,8 @@ string(65, Page_Zd_wait_between_pages_STR,      "Page %d.. Press M=Miss page, A=
 string(66, Miss_Page_Chars_STR,                 "M"); /* e.g. German has "UU" for Uberspringen (properly umlauted) */
 string(67, All_Pages_Chars_STR,                 "A");
 
-string(53, Zd_file_edited_in_Zs_are_you_sure_STR,   "There is %d document edited but not saved in %s.");
-string(54, Zd_files_edited_in_Zs_are_you_sure_STR,  "There are %d documents edited but not saved in %s.");
+string(53, Zd_file_edited_in_application_are_you_sure_STR,      "There is %d document edited but not saved in PipeDream.");
+string(54, Zd_files_edited_in_application_are_you_sure_STR,     "There are %d documents edited but not saved in PipeDream.");
 string(447,query_quit_SDC_Q_STR,                "Do you want to save the changes before exiting" " "\
                                                 "or exit now, discarding all unsaved changes?"); /* yes, longer multi-line is OK here */
 
@@ -588,7 +588,7 @@ string(475, TIME_FMT3_STR,                      "h:mm am;h:mm pm");
 string(358, YES_STR,                            "Yes");
 string(359, NO_STR,                             "No");
 
-string(360, DEFAULTLEADING_STR,                 "\xA3"); /* pound char */
+string(360, DEFAULTLEADING_STR,                 "\xA4"); /* international currency symbol: one => use local currency symbol */
 string(361, DEFAULTTRAILING_STR,                "%");
 string(427, DEFAULTTEXTAT_STR,                  "@");
 
@@ -733,7 +733,9 @@ string(93, help_dialog_window,                  "\\Wa PipeDream dialogue box.|M"
 
 /* Help from a PipeDream window */
 
+#if 0 /* both users commented out */
 string(94, help_main_window,                    "This is a PipeDream document \\w.|M");
+#endif
 
 string(95, help_drag_file_to_insert,            "Drag a file into the \\w to insert the file at the current cell.");
 
@@ -757,12 +759,17 @@ string(102, help_colh_inexpression_box,         "You are editing a formula in th
 string(103, help_top_left_corner,               "\\Smark the whole document.|M"
                                                 "\\Aclear a marked block.|M");
 
-string(104, help_col_border,                    "Drag \\s along the column border to mark all rows in those columns.|M"
-                                                "Double-click \\s to mark this column.|M");
+string(104, help_col_border,                    "Double-click \\s to mark this column.|M"
+                                                "Drag \\s horizontally in the column border to mark a number of columns.|M"
+                                                "Click \\a or Shift-click \\s to change which columns are marked.");
 
-string(105, help_drag_row_border,               "Drag \\s along the row border to mark all columns in those rows.|M");
+string(105, help_row_border,                    "Double-click \\s to mark this row.|M"
+                                                "Drag \\s vertically in the row border to mark a number of rows.|M"
+                                                "Click \\a or Shift-click \\s to change which rows are marked.");
 
+#if 0 /* no longer used */
 string(106, help_double_row_border,             "Double-click \\s to mark this row.|M");
+#endif
 
 string(107, help_row_is_page_break,             "This is a page break.|M");
 

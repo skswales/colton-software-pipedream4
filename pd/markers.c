@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -1272,15 +1272,17 @@ application_startdrag(
 {
     DOCNO docno = current_docno();
     BOOL blkindoc = (blkstart.col != NO_COL)  &&  (docno == blk_docno);
-    BOOL shift_pressed = host_shift_pressed();
-    BOOL ctrl_pressed  = host_ctrl_pressed();
+
     coord coff = calcoff(tx); /* not _click */
     coord roff = calroff_click(ty);
     COL tcol;
     ROW trow;
 
-    BOOL huntleft = select_clicked && !shift_pressed && !ctrl_pressed;
-    BOOL extend = shift_pressed || !select_clicked;
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+    const BOOL extend = !select_clicked || f_shift_pressed;         /* unshifted-Adjust or Shift-anything */
+    BOOL huntleft = select_clicked && !f_shift_pressed && !f_ctrl_pressed;
 
     trace_3(TRACE_APP_PD4, "it's a drag start: at roff %d, coff %d, select = %s: ",
                 roff, coff, report_boolstring(select_clicked));
@@ -1368,15 +1370,17 @@ application_singleclick_in_main(
 {
     DOCNO docno = current_docno();
     BOOL blkindoc = (blkstart.col != NO_COL)  &&  (docno == blk_docno);
-    BOOL shift_pressed = host_shift_pressed();
-    BOOL ctrl_pressed  = host_ctrl_pressed();
+
     coord coff = calcoff(tx); /* not _click */
     coord roff = calroff_click(ty);
     COL tcol;
     ROW trow;
 
-    BOOL huntleft = select_clicked && !shift_pressed && !ctrl_pressed;
-    BOOL extend = shift_pressed || !select_clicked;       /* i.e. shift-anything or unshifted-adjust */
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed  = host_keyboard_status(&f_shift_pressed);
+
+    const BOOL extend = !select_clicked || f_shift_pressed;       /* i.e. unshifted-Adjust or Shift-anything */
+    BOOL huntleft = select_clicked && !f_shift_pressed && !f_ctrl_pressed;
 
     BOOL acquire    = FALSE; /* don't want caret on block marking operations */
     BOOL motion     = FALSE;
@@ -1414,9 +1418,9 @@ application_singleclick_in_main(
 
                     /* a 'normal' cell reference would be 'A1' where both col (A) and row (1) are relocated if replicated    */
                     /* sometimes it is useful to prevent either col or row or both from changing when replicated - so called */
-                    /* absolute references. We use ctrl_pressed to give an absolute col, shift_pressed for absolute row.       */
+                    /* absolute references. We use Ctrl to give an absolute col, Shift for absolute row.                     */
 
-                    insert_reference_to(p_docu->docno, docno, tcol, trow, ctrl_pressed, shift_pressed, TRUE);
+                    insert_reference_to(p_docu->docno, docno, tcol, trow, f_ctrl_pressed, f_shift_pressed, TRUE);
 
                     /* ensure no drawing done in clicked-on-document
                      * or it might get the caret. must be done after insert_reference_to
@@ -1573,13 +1577,17 @@ application_doubleclick_in_main(
     ROW trow;
     P_SCRROW rptr;
 
-    BOOL shift_pressed = host_shift_pressed();
- /* BOOL ctrl_pressed  = host_ctrl_pressed();*/
- /* BOOL huntleft = select_clicked && !shift_pressed && !ctrl_pressed; */
-    BOOL extend = shift_pressed || !select_clicked;
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+    const BOOL extend   = !select_clicked || f_shift_pressed;       /* unshifted-Adjust or Shift-anything */
+ /* BOOL huntleft = select_clicked && !f_shift_pressed && !f_ctrl_pressed; */
 
     trace_3(TRACE_APP_PD4, "it's a double-click: at roff %d, coff %d, select = %s: ",
                 roff, coff, report_boolstring(select_clicked));
+
+    if(f_ctrl_pressed)
+        return; /* reserved */
 
     if(extend)
         return;
@@ -1944,47 +1952,59 @@ application_drag(
 ******************************************************************************/
 
 static void
+process_autoscroll_before_drag_use_autoscroll(void)
+{
+    /* use Wimp_AutoScroll */
+    WimpAutoScrollBlock wasb;
+    _kernel_swi_regs rs;
+    rs.r[0] = (1 << 7) /* read current state */ ;
+    rs.r[1] = (int) &wasb; /* filled on return from SWI */
+    void_WrapOsErrorReporting(_kernel_swi(Wimp_AutoScroll, &rs, &rs));
+
+    if(!reporting_is_enabled())
+        return;
+    reportf("WASSW now %X", rs.r[0]);
+    reportf(
+        "Autoscroll %s commenced; "
+        "Pointer is %s%s%s%s%s%s%s;"
+        "Some work area %s%s%s%s",
+        (rs.r[0] & (1<<8)) ? "has" : "not",
+        (rs.r[0] & (1<<9)) ? "outside the window's visible area," : "",
+        (rs.r[0] & (1<<10)) ? "within one or two pause zones," : "",
+        (rs.r[0] & (1<<11)) ? "within the centre zone," : "",
+        (rs.r[0] & (1<<12)) ? "left of the centre zone," : "",
+        (rs.r[0] & (1<<13)) ? "below the centre zone," : "",
+        (rs.r[0] & (1<<14)) ? "right of the centre zone," : "",
+        (rs.r[0] & (1<<15)) ? "above the centre zone" : "",
+        (rs.r[0] & (1<<16)) ? "left of the visible area," : "",
+        (rs.r[0] & (1<<17)) ? "below the visible area," : "",
+        (rs.r[0] & (1<<18)) ? "right of the visible area," : "",
+        (rs.r[0] & (1<<19)) ? "above the visible area" : ""
+    );
+}
+
+static void
 process_autoscroll_before_drag(
     _InVal_      int mouse_x,
     _InVal_      int mouse_y)
 {
     if(drag_autoscroll)
-    {   /* use Wimp_AutoScroll */
-#if 1
-        WimpAutoScrollBlock wasb;
-        _kernel_swi_regs rs;
-        rs.r[0] = (1 << 7) /* read current state */ ;
-        rs.r[1] = (int) &wasb; /* filled on return from SWI */
-        void_WrapOsErrorReporting(_kernel_swi(Wimp_AutoScroll, &rs, &rs));
-        reportf("WASSW now %X", rs.r[0]);
-        reportf(
-            "Autoscroll %s commenced; "
-            "Pointer is %s%s%s%s%s%s%s;"
-            "Some work area %s%s%s%s",
-            (rs.r[0] & (1<<8)) ? "has" : "not",
-            (rs.r[0] & (1<<9)) ? "outside the window's visible area," : "",
-            (rs.r[0] & (1<<10)) ? "within one or two pause zones," : "",
-            (rs.r[0] & (1<<11)) ? "within the centre zone," : "",
-            (rs.r[0] & (1<<12)) ? "left of the centre zone," : "",
-            (rs.r[0] & (1<<13)) ? "below the centre zone," : "",
-            (rs.r[0] & (1<<14)) ? "right of the centre zone," : "",
-            (rs.r[0] & (1<<15)) ? "above the centre zone" : "",
-            (rs.r[0] & (1<<16)) ? "left of the visible area," : "",
-            (rs.r[0] & (1<<17)) ? "below the visible area," : "",
-            (rs.r[0] & (1<<18)) ? "right of the visible area," : "",
-            (rs.r[0] & (1<<19)) ? "above the visible area" : ""
-        );
-#endif
+    {
+        process_autoscroll_before_drag_use_autoscroll();
         return;
     }
 
     { /* scroll text ourselves if outside this guy's main window */
-    const BOOL shift_pressed = host_shift_pressed();
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
     WimpGetWindowStateBlock window_state;
 
     window_state.window_handle = main_window_handle;
     if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
         return;
+
+    UNREFERENCED_LOCAL_VARIABLE(f_ctrl_pressed); /* NB Ctrl state ignored here */
 
     if(drag_type != MARK_ALL_COLUMNS)
     {   /* not dragging down row border */
@@ -1994,17 +2014,17 @@ process_autoscroll_before_drag(
             - (charwidth / 2); /* SKS */
 
         if(mouse_x < test_xmin)
-            application_process_command(shift_pressed ? N_PageLeft  : N_ScrollLeft);
+            application_process_command(f_shift_pressed ? N_PageLeft  : N_ScrollLeft);
         else if(mouse_x >= window_state.visible_area.xmax)
-            application_process_command(shift_pressed ? N_PageRight : N_ScrollRight);
+            application_process_command(f_shift_pressed ? N_PageRight : N_ScrollRight);
     }
 
     if(drag_type != MARK_ALL_ROWS)
     {   /* not dragging across col border */
         if(mouse_y < window_state.visible_area.ymin)
-            application_process_command(shift_pressed ? N_PageDown : N_ScrollDown);
+            application_process_command(f_shift_pressed ? N_PageDown : N_ScrollDown);
         else if(mouse_y >= window_state.visible_area.ymax)
-            application_process_command(shift_pressed ? N_PageUp   : N_ScrollUp);
+            application_process_command(f_shift_pressed ? N_PageUp   : N_ScrollUp);
     }
     } /*block*/
 }

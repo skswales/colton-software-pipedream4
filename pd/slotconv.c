@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -25,6 +25,7 @@
 
 #include "riscos_x.h"
 #include "riscdraw.h"
+#include "swis.h"
 
 /*
 need to know about ev_dec_slr()
@@ -2626,7 +2627,7 @@ result_sign(
 ******************************************************************************/
 
 static void
-result_to_string(
+result_to_string_NUMBER(
     _InRef_     PC_EV_RESULT p_ev_result,
     _InVal_     DOCNO docno,
     char *array_start,
@@ -2639,171 +2640,224 @@ result_to_string(
 {
     F64 number;
 
+    UNREFERENCED_PARAMETER_InVal_(docno);
+    UNREFERENCED_PARAMETER_InVal_(expand_flags);
+
+    if(DATA_ID_REAL == p_ev_result->data_id)
+        number = p_ev_result->arg.fp;
+    else
+        number = (F64) p_ev_result->arg.integer;
+
+    /* try to print number fully expanded - if not possible
+     * try to print number in exponential notation - if not possible
+     * print %
+    */
+    if(riscos_fonts)
+        fwidth = cw_to_millipoints(fwidth);
+
+    if(sprintnumber(array_start, array, format, number, FALSE, fwidth) >= fwidth)
+        if(sprintnumber(array_start, array, format, number, TRUE, fwidth) >= fwidth)
+            strcpy(array, "% ");
+
+    if(!expand_refs)
+    {
+        char *last = array + strlen(array);
+
+        if(*last == SPACE) /* should be OK even with riscos_fonts */
+            *last = CH_NULL;
+    }
+
+    /* free alignment should display numbers right */
+    if(*justify == J_FREE)
+        *justify = J_RIGHT;
+    else if(*justify == J_LCR)
+        *justify = J_LEFT;
+}
+
+static void
+result_to_string_ARRAY(
+    _InRef_     PC_EV_RESULT p_ev_result,
+    _InVal_     DOCNO docno,
+    char *array_start,
+    char *array,
+    char format,
+    coord fwidth,
+    char *justify,
+    S32 expand_refs,
+    _InVal_     S32 expand_flags)
+{
+    EV_RESULT temp_ev_result;
+    SS_DATA temp_data;
+
+    /* go via SS_DATA */
+    ev_result_to_data_convert(&temp_data, p_ev_result);
+
+    ss_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
+
+    result_to_string(&temp_ev_result, docno, array_start, array, format, fwidth, justify, expand_refs, expand_flags);
+
+    ev_result_free_resources(&temp_ev_result);
+}
+
+static void
+result_to_string_DATE(
+    _InRef_     PC_EV_RESULT p_ev_result,
+    _InVal_     DOCNO docno,
+    char *array_start,
+    char *array,
+    char format,
+    coord fwidth,
+    char *justify,
+    _InVal_     S32 expand_refs,
+    _InVal_     S32 expand_flags)
+{
+    S32 len = 0;
+    SS_DATE temp = p_ev_result->arg.ss_date;
+
+    UNREFERENCED_PARAMETER_InVal_(docno);
+    UNREFERENCED_PARAMETER(array_start);
+    UNREFERENCED_PARAMETER(format);
+    UNREFERENCED_PARAMETER(fwidth);
+    UNREFERENCED_PARAMETER_InVal_(expand_refs);
+    UNREFERENCED_PARAMETER_InVal_(expand_flags);
+
+    if(temp.date)
+    {
+        S32 year, month, day;
+        BOOL valid;
+
+        valid = (ss_dateval_to_ymd(temp.date, &year, &month, &day) >= 0);
+
+        if(d_options_DF == 'T')
+        {
+            if(valid)
+            {   /* generate 21 Mar 1988 */
+                const S32 month_idx = month - 1;
+                const PC_USTR ustr_monthname = get_p_numform_context()->month_names[month_idx];
+                len = sprintf(array, "%d %.3s %.4d", day, ustr_monthname, year);
+            }
+            else
+            {
+                len = strlen(strcpy(array, "**" " " "***" " " "****"));
+            }
+        }
+        else
+        {
+            if(valid)
+            {   /* generate 21.3.1988 or 3.21.1988 */
+                len = sprintf(array, "%d.%d.%.4d",
+                              ((d_options_DF == 'A')) ? month : day,
+                              ((d_options_DF == 'A')) ? day : month,
+                              year);
+            }
+            else
+            {
+                len = strlen(strcpy(array, "**" " " "**" " " "****"));
+            }
+        }
+    }
+
+    if(!temp.date || temp.time)
+    {
+        S32 hours, minutes, seconds;
+
+        /* separate time from date */
+        if(temp.date)
+            array[len++] = ' ';
+
+        status_consume(ss_timeval_to_hms(temp.time, &hours, &minutes, &seconds));
+
+        consume_int(sprintf(array + len, "%.2d:%.2d:%.2d", hours, minutes, seconds));
+    }
+
+    if(*justify == J_LCR)
+        *justify = J_LEFT;
+}
+
+static void
+result_to_string_ERROR(
+    _InRef_     PC_EV_RESULT p_ev_result,
+    _InVal_     DOCNO docno,
+    char *array_start,
+    char *array,
+    char format,
+    coord fwidth,
+    char *justify,
+    _InVal_     S32 expand_refs,
+    _InVal_     S32 expand_flags)
+{
+    S32 len = 0;
+
+    UNREFERENCED_PARAMETER(array_start);
+    UNREFERENCED_PARAMETER(format);
+    UNREFERENCED_PARAMETER(fwidth);
+    UNREFERENCED_PARAMETER_InVal_(expand_refs);
+    UNREFERENCED_PARAMETER_InVal_(expand_flags);
+
+    if(p_ev_result->arg.ss_error.type == ERROR_PROPAGATED)
+    {
+        U8 buffer_slr[BUF_EV_MAX_SLR_LEN];
+        EV_SLR ev_slr; /* unpack */
+        ev_slr.col = p_ev_result->arg.ss_error.col;
+        ev_slr.row = p_ev_result->arg.ss_error.row;
+        ev_slr.docno = p_ev_result->arg.ss_error.docno;
+        ev_slr.flags = 0;
+        (void) ev_dec_slr(buffer_slr, docno, &ev_slr, true);
+        len = sprintf(array, PropagatedErrStr, buffer_slr);
+    }
+    else if(p_ev_result->arg.ss_error.type == ERROR_CUSTOM)
+    {
+        len = sprintf(array, CustFuncErrStr, p_ev_result->arg.ss_error.row + 1);
+    }
+
+    strcpy(array + len, reperr_getstr(p_ev_result->arg.ss_error.status));
+
+    *justify = J_LEFT;
+}
+
+static void
+result_to_string(
+    _InRef_     PC_EV_RESULT p_ev_result,
+    _InVal_     DOCNO docno,
+    char *array_start,
+    char *array,
+    char format,
+    coord fwidth,
+    char *justify,
+    S32 expand_refs,
+    _InVal_     S32 expand_flags)
+{
     switch(p_ev_result->data_id)
     {
     case DATA_ID_LOGICAL:
     case DATA_ID_WORD16:
     case DATA_ID_WORD32:
-        number = (F64) p_ev_result->arg.integer;
-        goto num_print;
-
     case DATA_ID_REAL:
-        number = p_ev_result->arg.fp;
-
-    num_print:
-        /* try to print number fully expanded - if not possible
-         * try to print number in exponential notation - if not possible
-         * print %
-        */
-        if(riscos_fonts)
-            fwidth = cw_to_millipoints(fwidth);
-
-        if(sprintnumber(array_start, array,
-                        format, number, FALSE, fwidth) >= fwidth)
-            if(sprintnumber(array_start, array,
-                            format, number, TRUE, fwidth) >= fwidth)
-                strcpy(array, "% ");
-
-        if(!expand_refs)
-        {
-            char *last = array + strlen(array);
-
-            if(*last == SPACE) /* should be OK even with riscos_fonts */
-                *last = CH_NULL;
-        }
-
-        /* free alignment should display numbers right */
-        if(*justify == J_FREE)
-            *justify = J_RIGHT;
-        else if(*justify == J_LCR)
-            *justify = J_LEFT;
-        break;
+        result_to_string_NUMBER(p_ev_result, docno, array_start, array, format, fwidth, justify, expand_refs, expand_flags);
+        return;
 
     case RPN_RES_STRING:
-        bitstr(
-            p_ev_result->arg.string.uchars, 0, array, fwidth,
-            expand_refs,
-            expand_flags);
+        bitstr(p_ev_result->arg.string.uchars, 0, array, fwidth, expand_refs, expand_flags);
         /* NB bitstr() will return a fonty result if riscos_fonts */
         break;
 
+    default:
+        assert(0);
     case DATA_ID_BLANK:
         array[0] = CH_NULL;
         break;
 
     case RPN_RES_ARRAY:
-        {
-        EV_RESULT temp_ev_result;
-        SS_DATA temp_data;
-
-        /* go via SS_DATA */
-        ev_result_to_data_convert(&temp_data, p_ev_result);
-
-        ss_data_to_result_convert(&temp_ev_result, ss_array_element_index_borrow(&temp_data, 0, 0));
-
-        result_to_string(
-            &temp_ev_result, docno, array_start, array, format, fwidth, justify,
-            expand_refs,
-            expand_flags);
-
-        ev_result_free_resources(&temp_ev_result);
-        break;
-        }
+        result_to_string_ARRAY(p_ev_result, docno, array_start, array, format, fwidth, justify, expand_refs, expand_flags);
+        return;
 
     case DATA_ID_DATE:
-        {
-        S32 len;
-        SS_DATE temp;
+        result_to_string_DATE(p_ev_result, docno, array_start, array, format, fwidth, justify, expand_refs, expand_flags);
+        return;
 
-        len = 0;
-        temp = p_ev_result->arg.ss_date;
-
-        if(temp.date)
-        {
-            S32 year, month, day;
-            BOOL valid;
-
-            valid = (ss_dateval_to_ymd(temp.date, &year, &month, &day) >= 0);
-
-            if(d_options_DF == 'T')
-            {
-                if(valid)
-                {
-                    /* generate 21 Mar 1988 */
-                    const S32 month_idx = month - 1;
-                    PC_USTR ustr_monthname = get_p_numform_context()->month_names[month_idx];
-                    len += sprintf(array + len, "%d %.3s %.4d",
-                                   day,
-                                   ustr_monthname,
-                                   year);
-                }
-                else
-                    len += sprintf(array + len, "%s %s %s",
-                                   "**", "***", "****");
-            }
-            else
-            {
-                if(valid)
-                    /* generate 21.3.1988 or 3.21.1988 */
-                    len += sprintf(array + len, "%d.%d.%.4d",
-                                   ((d_options_DF == 'A')) ? month : day,
-                                   ((d_options_DF == 'A')) ? day : month,
-                                   year);
-                else
-                    len += sprintf(array + len, "%s.%s.%s",
-                                   "**", "**", "****");
-            }
-        }
-
-        if(!temp.date || temp.time)
-        {
-            S32 hours, minutes, seconds;
-
-            /* separate time from date */
-            if(temp.date)
-                array[len++] = ' ';
-
-            status_consume(ss_timeval_to_hms(temp.time, &hours, &minutes, &seconds));
-
-            /*len +=*/ consume_int(sprintf(array + len, "%.2d:%.2d:%.2d", hours, minutes, seconds));
-        }
-
-        if(*justify == J_LCR)
-            *justify = J_LEFT;
-        break;
-        }
-
-    default:
-        assert(0);
     case DATA_ID_ERROR:
-        {
-        S32 len = 0;
-
-        if(p_ev_result->arg.ss_error.type == ERROR_PROPAGATED)
-        {
-            U8 buffer_slr[BUF_EV_MAX_SLR_LEN];
-            EV_SLR ev_slr; /* unpack */
-            ev_slr.col = p_ev_result->arg.ss_error.col;
-            ev_slr.row = p_ev_result->arg.ss_error.row;
-            ev_slr.docno = p_ev_result->arg.ss_error.docno;
-            ev_slr.flags = 0;
-            (void) ev_dec_slr(buffer_slr, docno, &ev_slr, true);
-            len += sprintf(array + len,
-                           PropagatedErrStr,
-                           buffer_slr);
-        }
-        else
-        if(p_ev_result->arg.ss_error.type == ERROR_CUSTOM)
-        {
-            len += sprintf(array + len,
-                           CustFuncErrStr,
-                           p_ev_result->arg.ss_error.row + 1);
-        }
-
-        strcpy(array + len, reperr_getstr(p_ev_result->arg.ss_error.status));
-        *justify = J_LEFT;
-        break;
-        }
+        result_to_string_ERROR(p_ev_result, docno, array_start, array, format, fwidth, justify, expand_refs, expand_flags);
+        return;
     }
 }
 
@@ -2817,6 +2871,53 @@ result_to_string(
 * the format is picked up from the cell or from the option page
 *
 ******************************************************************************/
+
+#define currency_symbol_char '\xA4'
+
+static const char *
+get_subtitute_currency_string(void)
+{
+    _kernel_oserror * e;
+    _kernel_swi_regs rs;
+    rs.r[0] = -1; /* current territory */
+    rs.r[1] =  4; /* read currency symbol in local alphabet */
+    if(NULL != (e = _kernel_swi(Territory_ReadSymbols, &rs, &rs)))
+        return(NULL);
+    return((const char *) (intptr_t) rs.r[0]);
+}
+
+static void
+lead_trail_substitute_currency(
+    char * leading_buf,
+    char * trailing_buf,
+    _InVal_     U32 buffer_bytes)
+{
+    const char * substitute_str = NULL;
+    char * b;
+    char * p;
+
+    /* only substitute in either leading or trailing buffer but not both */
+    if(NULL == (p = strchr(b = leading_buf, currency_symbol_char)))
+        if(NULL == (p = strchr(b = trailing_buf, currency_symbol_char)))
+            return;
+
+    /* p marks the spot in buffer b where a replacement should be plonked */
+    if(NULL == (substitute_str = get_subtitute_currency_string()))
+        return;
+
+    U32 substitute_len = strlen32(substitute_str); /* without CH_NULL */
+    U32 tail_len = strlen32p1(p + 1); /* probably one (CH_NULL), but there might be a space etc.*/
+    U32 remaining_bytes = buffer_bytes - (p - b);
+    /* if we can't fit the substitute string in after moving the tail up, give up */
+    if(substitute_len + tail_len > remaining_bytes)
+        return;
+    /* move the tail up, including the CH_NULL terminator,
+     * to make room for the substitute string
+     * NB the currency_symbol_char is overwritten
+     */
+    memmove32(p + substitute_len, p + 1, tail_len);
+    memmove32(p, substitute_str, substitute_len);
+}
 
 static char float_e_format[]        = "%g";
 static char decimalsformat[]        = "%.0f";
@@ -2835,17 +2936,30 @@ sprintnumber(
     char floatformat[8];    /* written to to create "%0.nng" format below */
     char *formatstr, *nextprint;
     char decimals, ch;
-    BOOL negative, brackets;
+    BOOL negative = FALSE;
+    BOOL brackets = FALSE;
     char *tptr;
-    S32 len,
-    width = 0, inc;
-    char t_lead[10], t_trail[10];
+    S32 len, width = 0, inc;
+    char t_lead[16], t_trail[16];
     S32 padding, logval;
     GR_MILLIPOINT digitwid_mp = 1; /* keep clang happy */
     GR_MILLIPOINT dotwid_mp = 0, thswid_mp = 0, bracwid_mp = 0;
 
-    negative = brackets = FALSE;
     nextprint = array;
+
+    if(isless(value, 0.0))
+    {
+        value = -value;
+        negative = TRUE;
+    }
+
+    decimals = (format & F_DCP)
+                    ? (format & F_DCPSID)
+                    : get_dec_field_from_opt();
+
+    brackets = (format & F_DCP)
+                    ? (format & F_BRAC)
+                    : (d_options_MB == 'B');
 
     if(riscos_fonts)
     {
@@ -2869,29 +2983,15 @@ sprintnumber(
                 break;
             }
         }
+
+        if(brackets)
+            bracwid_mp = font_charwid(current_font, ')');
     }
-
-    if(value < 0.)
-    {
-        value = 0. - value;
-        negative = TRUE;
-    }
-
-    brackets = (format & F_DCP)
-                    ? (format & F_BRAC)
-                    : (d_options_MB == 'B');
-
-    if(brackets  &&  riscos_fonts)
-        bracwid_mp = font_charwid(current_font, ')');
-
-    decimals = (format & F_DCP)
-                    ? (format & F_DCPSID)
-                    : get_dec_field_from_opt();
 
     /* process leading and trailing characters */
+    t_lead[0] = CH_NULL;
     if(format & F_LDS)
     {
-        *t_lead = CH_NULL;
         if(d_options_LP)
         {
             if(riscos_fonts)
@@ -2901,9 +3001,9 @@ sprintnumber(
         }
     }
 
+    t_trail[0] = CH_NULL;
     if(format & F_TRS)
     {
-        *t_trail = CH_NULL;
         if(d_options_TP)
         {
             if(riscos_fonts)
@@ -2912,6 +3012,9 @@ sprintnumber(
                 strcpy(t_trail, d_options_TP);
         }
     }
+
+    if( t_lead[0] | t_trail[0] ) /* that's a deliberate binary OR, there's no need to test independently */
+        lead_trail_substitute_currency(t_lead, t_trail, elemof32(t_trail));
 
     if(decimals == 0xF)
     {
@@ -2951,14 +3054,14 @@ sprintnumber(
 
             formatstr = floatformat;
 
-            logval = (S32) ((value == 0.) ? 0. : log10(value));
+            logval = ((value == 0.0) ? 0 : (S32) log10(value));
 
             if(d_options_TH != TH_BLANK)
             {
                 if(riscos_fonts)
                     padding += (logval / 3) * thswid_mp;
                 else
-                    padding += logval / 3;
+                    padding += (logval / 3);
             }
 
             width = fwidth - padding;
@@ -2967,7 +3070,7 @@ sprintnumber(
 
             if(value != floor(value))
             {
-                /* if displaying fractional part, allow  for . */
+                /* if displaying fractional part, allow for . */
                 if(riscos_fonts)
                 {
                     if((width / digitwid_mp) > logval)
@@ -2989,7 +3092,7 @@ sprintnumber(
             }
 
             /* account for leading zero */
-            if(value < 1.)
+            if(value < 1.0)
             {
                 if(riscos_fonts)
                     width -= digitwid_mp;
@@ -3082,8 +3185,8 @@ sprintnumber(
 
     /* get rid of superfluous E padding */
     /*if(eformat)*/
-    {
         while((ch = *tptr++) != CH_NULL)
+        {
             if(ch == 'e')
             {
                 if(*tptr == '+')

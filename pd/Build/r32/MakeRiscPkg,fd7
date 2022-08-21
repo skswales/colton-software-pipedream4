@@ -2,13 +2,13 @@
 |
 | This Source Code Form is subject to the terms of the Mozilla Public
 | License, v. 2.0. If a copy of the MPL was not distributed with this
-| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+| file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
 | Copyright (C) 1991-1998 Colton Software Limited
 | Copyright (C) 1998-2015 R W Colton
 
-Set pd$Release 4_59_00
-Set pd$Release 4_59_01
+Set pd$Release 4_60_00
+|et pd$Release 4_60_01
 | the master list is in version.c
 
 Set pd$Disc                                $.Temp.PD4.RiscPkg.PipeDream_<pd$Release>

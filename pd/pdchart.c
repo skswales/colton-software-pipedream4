@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -3130,100 +3130,111 @@ ChartSelect_fn(void)
 
 _Check_return_
 static STATUS
+ChartEdit_notify_RESIZEREQ(
+    P_ANY handle)
+{
+    UNREFERENCED_PARAMETER(handle);
+
+    /* always allow resize ops */
+    return(1);
+}
+
+_Check_return_
+static STATUS
+ChartEdit_notify_CLOSEREQ(
+    P_ANY handle)
+{
+    P_PDCHART_HEADER pdchart = handle;
+    STATUS res = 1; /* default is to allow window closure */
+    BOOL want_to_close = TRUE;
+    char name_buffer[BUF_MAX_PATHSTRING];
+    BOOL f_shift_pressed;
+    BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+    BOOL adjust_clicked = riscos_adjust_clicked();
+    BOOL just_opening = (f_shift_pressed  &&  adjust_clicked);
+
+    UNREFERENCED_LOCAL_VARIABLE(f_ctrl_pressed); /* NB Ctrl state ignored here */
+
+    gr_chart_name_query(&pdchart->ch, name_buffer, sizeof32(name_buffer) - 1);
+
+    /* if on disc OK, close editing window NOW, otherwise ask ... */
+    if( !just_opening && !file_is_rooted(name_buffer) )
+    {
+        char statement_buffer[LIN_BUFSIZ];
+
+        consume_int(xsnprintf(statement_buffer, elemof32(statement_buffer), save_edited_chart_Zs_YN_S_STR, name_buffer));
+
+        switch(riscdialog_query_YN(statement_buffer, save_edited_chart_YN_Q_STR))
+        {
+        case riscdialog_query_YES:
+            { /* use a dialog box */
+            res = gr_chart_save_chart_with_dialog(&pdchart->ch);
+
+            /* test for unsafe receiver; don't close if sent off to Edit for instance */
+            if(status_done(res))
+            {
+                gr_chart_name_query(&pdchart->ch, name_buffer, sizeof32(name_buffer) - 1);
+
+                if(!file_is_rooted(name_buffer))
+                    res = 0;
+            }
+
+            break;
+            }
+
+        case riscdialog_query_NO:
+            res = 1;
+            break;
+
+        default: default_unhandled();
+        case riscdialog_query_CANCEL:
+            res = 0;
+            break;
+        }
+    }
+
+    if(adjust_clicked)
+        filer_opendir(name_buffer);
+
+    if( !just_opening && want_to_close && status_done(res) )
+    {
+        /* destroy the editing window */
+        gr_chartedit_dispose(&pdchart->ceh);
+
+        /* may have been saved into a PipeDream window */
+        S32 nRefs = image_cache_refs(name_buffer);
+
+        /* if there is no use of this chart elsewhere in PipeDream then kill completely */
+        if(!nRefs)
+            pdchart_dispose(&pdchart);
+    }
+
+    return(res);
+}
+
+_Check_return_
+static STATUS
 ChartEdit_notify_proc(
     P_ANY handle,
     GR_CHARTEDIT_HANDLE ceh,
     GR_CHARTEDIT_NOTIFY_TYPE ntype,
     P_ANY nextra)
 {
-    P_PDCHART_HEADER pdchart = handle;
-    STATUS res;
-
     UNREFERENCED_PARAMETER(ceh);
     UNREFERENCED_PARAMETER(nextra);
 
     switch(ntype)
     {
     case GR_CHARTEDIT_NOTIFY_RESIZEREQ:
-        /* always allow resize ops */
-        res = 1;
-        break;
+        return(ChartEdit_notify_RESIZEREQ(handle));
 
     case GR_CHARTEDIT_NOTIFY_CLOSEREQ:
-        {
-        char name_buffer[BUF_MAX_PATHSTRING];
-        S32  nRefs;
-        BOOL adjust_clicked = riscos_adjust_clicked();
-        BOOL shift_pressed  = akbd_pollsh();
-        BOOL just_opening   = (shift_pressed  &&  adjust_clicked);
-        BOOL want_to_close  = TRUE;
-
-        /* default is to allow window closure */
-        res = 1;
-
-        gr_chart_name_query(&pdchart->ch, name_buffer, sizeof32(name_buffer) - 1);
-
-        /* if on disc ok, close editing window NOW, otherwise ask ... */
-        if(!just_opening && !file_is_rooted(name_buffer))
-        {
-            char statement_buffer[LIN_BUFSIZ];
-
-            consume_int(xsnprintf(statement_buffer, elemof32(statement_buffer), save_edited_chart_Zs_YN_S_STR, name_buffer));
-
-            switch(riscdialog_query_YN(statement_buffer, save_edited_chart_YN_Q_STR))
-            {
-            case riscdialog_query_YES:
-                { /* use a dialog box */
-                res = gr_chart_save_chart_with_dialog(&pdchart->ch);
-
-                /* test for unsafe receiver; don't close if sent off to Edit for instance */
-                if(status_done(res))
-                {
-                    gr_chart_name_query(&pdchart->ch, name_buffer, sizeof32(name_buffer) - 1);
-
-                    if(!file_is_rooted(name_buffer))
-                        res = 0;
-                }
-
-                break;
-                }
-
-            case riscdialog_query_NO:
-                res = 1;
-                break;
-
-            default: default_unhandled();
-            case riscdialog_query_CANCEL:
-                res = 0;
-                break;
-            }
-        }
-
-        if(adjust_clicked)
-            filer_opendir(name_buffer);
-
-        if(!just_opening && want_to_close && status_done(res))
-        {
-            /* destroy the editing window */
-            gr_chartedit_dispose(&pdchart->ceh);
-
-            /* may have been saved into a PipeDream window */
-            nRefs = image_cache_refs(name_buffer);
-
-            /* if there is no use of this chart elsewhere in PipeDream then kill completely */
-            if(!nRefs)
-                pdchart_dispose(&pdchart);
-        }
-        break;
-        }
+        return(ChartEdit_notify_CLOSEREQ(handle));
 
     default:
         /* pass back */
-        res = gr_chartedit_notify_default(handle, ceh, ntype, nextra);
-        break;
+        return(gr_chartedit_notify_default(handle, ceh, ntype, nextra));
     }
-
-    return(res);
 }
 
 _Check_return_

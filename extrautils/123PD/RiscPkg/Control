@@ -4,9 +4,9 @@ Priority: Optional
 Licence: Free
 Maintainer: Colton Software <colton-software-pipedream@googlegroups.com>
 Standards-Version: 0.4.0
-Version: 1.15
+Version: 1.16
 Recommends: PipeDream
 Description: Lotus 1-2-3 to PipeDream converter
 Components: Apps.Utilities.!123PD (Movable LookAt)
-Homepage: http://www.croftnuisk.co.uk/coltsoft/pipedream/
+Homepage: https://www.croftnuisk.co.uk/coltsoft/pipedream/
 Environment: arm

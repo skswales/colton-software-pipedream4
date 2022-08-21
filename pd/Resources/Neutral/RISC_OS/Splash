@@ -1,0 +1,322 @@
+REM PipeDream Splash
+REM
+REM This Source Code Form is subject to the terms of the Mozilla Public
+REM License, v. 2.0. If a copy of the MPL was not distributed with this
+REM file, You can obtain one at https://mozilla.org/MPL/2.0/.
+REM
+REM Copyright (C) 1989-1998 Colton Software Limited
+REM Copyright (C) 1998-2015 R W Colton
+:
+ON ERROR ON ERROR OFF: ERROR 1,REPORT$+" at "+STR$ERL+" in Splash"
+:
+REM Set a small slot - it will be expanded as needed
+END=&8000+(32*1024)
+:
+PROCread_args
+dir$="<"+product$+"$Dir>"
+:
+PROCshow_splash_screen
+END
+:
+:
+DEF PROCread_args
+LOCAL env%, ptr%, buflen%
+SYS"OS_GetEnv" TO env%
+:
+buflen%=1280
+DIM buffer% buflen%
+SYS"XOS_ReadArgs","BASIC,quit/K,load/K,id/A/G,verdate/A/G",env%,buffer%,buflen% TO ;PSR%
+IF PSR% AND 1 THEN ERROR 0,"Bad parameters to Splash"
+:
+ptr%=buffer%: ptr% += 3*4: REM Skip BASIC, optional -quit, -load filename
+product$=FNstringizeGS(!ptr%): ptr% += 4
+vn$=FNstringizeGS(!ptr%): ptr% += 4
+ENDPROC
+:
+:
+DEF PROCshow_splash_screen
+LOCAL image$,R%,Z%
+image$=product$+":"+"RISC_OS."+"!Sprite"
+SYS"OS_File",17,image$ TO R%,,,,Z%: REM OSFile_ReadNoPath
+IF R% <> 1 THEN ENDPROC: REM Nothing to see here...
+:
+REM Create a task just to show the splash screen
+:
+minyr$="2015": yr$=MID$(TIME$,12,4): IF VAL(yr$)<VAL(minyr$) THEN yr$=minyr$
+cs$ = "© 1987-" + yr$+" Colton Software"
+:
+REM Read state set by Loader
+u1$=FNget_product_var("User1")
+u2$=FNget_product_var("User2")
+:
+mail$="": REM "colton-software-pipedream@googlegroups.com"
+www$=FNget_product_var("Web")
+:
+has_textop%=FALSE
+os%=INKEY(-256)
+IF os%>=&A5 THEN has_textop%=TRUE
+:
+SYS"Wimp_Initialise",200,&4b534154,product$+" Splash"
+:
+SYS"XSquash_Decompress",8 TO sqws%;PSR%: sqws%=(sqws%+3)ANDNOT3: IF PSR% AND 1 THEN ENDPROC
+sqwa%=FNwimpslot_get: REM Use memory beyond HIMEM
+sa%=(sqwa%+sqws%)
+IF NOT FNwimpslot_set(sa%+Z%) THEN ENDPROC
+SYS"OS_File",16,image$,sa%: REM OSFile_LoadNoPath
+IF !sa%=&48535153 THEN
+  xpb%=(sa%+Z%+3)ANDNOT3
+  IF NOT FNwimpslot_set(xpb%+sa%!4) THEN ENDPROC
+  SYS"Squash_Decompress",0,sqwa%,sa%+20,Z%-20,xpb%,sa%!4
+  sa%=xpb%
+ENDIF
+spr%=sa%+12: REM Skip Sprite Area Header
+:
+SYS"OS_SpriteOp",512+40,&100,spr%TO,,,spr_wid%,spr_hei%,,m%
+SYS"OS_ReadModeVariable",m%,4TO,,spr_xeig%: spr_dx%=1 << spr_xeig%
+SYS"OS_ReadModeVariable",m%,5TO,,spr_yeig%: spr_dy%=1 << spr_yeig%
+spr_wid%=spr_wid% << spr_xeig%
+spr_hei%=spr_hei% << spr_yeig%
+:
+m%=-1
+SYS"OS_ReadModeVariable",m%,4TO,,out_xeig%: out_dx%=1 << out_xeig%
+SYS"OS_ReadModeVariable",m%,5TO,,out_yeig%: out_dy%=1 << out_yeig%
+SYS"OS_ReadModeVariable",m%,11TO,,out_wid%: out_wid%=(1+out_wid%) << out_xeig%
+SYS"OS_ReadModeVariable",m%,12TO,,out_hei%: out_hei%=(1+out_hei%) << out_yeig%
+:
+mg_sx%=4
+mg_sy%=4
+mg_bm_ty%=120
+:
+wnd_wid%=spr_wid%+2*mg_sx%
+wnd_hei%=spr_hei%+2*mg_sy%+mg_bm_ty%
+:
+xpos%=((out_wid% - wnd_wid%) / 2) AND (-4): REM top left of window
+ypos%=((out_hei% + wnd_hei%) / 2) AND (-4)
+:
+whandle%=0: PROCcreate_window
+PROCopen_window_here(whandle%,xpos%,ypos%,wnd_wid%,wnd_hei%)
+:
+SYS "Wimp_SetCaretPosition",whandle%,-1,0,0,1<<25,0
+:
+DIM wb% 256
+SYS"OS_ReadMonotonicTime" TO starttime%
+polltime%=starttime%+150
+looping%=TRUE
+WHILE looping%
+  polltime% += 0
+  wm%=0
+  SYS"Wimp_PollIdle",wm%,wb%,polltime% TO r0%
+  CASE r0% OF
+    WHEN 0: looping%=FALSE
+    WHEN 1: PROCredraw_window(wb%)
+    WHEN 2: PROCopen_window(wb%)
+    WHEN 3: looping%=FALSE
+    WHEN 6: looping%=FALSE
+    WHEN 8: looping%=FALSE
+    OTHERWISE: REM ignore
+  ENDCASE
+ENDWHILE
+SYS"OS_ReadMonotonicTime" TO endtime%
+:
+SYS"Wimp_CloseDown"
+ENDPROC
+:
+:
+DEF PROCcreate_window
+DIM cw% 256
+wflags% = &00
+xmin%=0: ymin%=-wnd_hei%: xmax%=wnd_wid%: ymax%=0
+cw%!0 = xpos%
+cw%!4 = ypos%-wnd_hei%
+cw%!8 = xpos%+wnd_wid%
+cw%!12 = ypos%
+cw%!16 = 0: REM scx
+cw%!20 = 0: REM scy
+cw%!24 = -1: REM behind
+cw%!28 = wflags%: REM window flags
+cw%?32 = &FF: REM no frame
+cw%?33 = 12
+cw%?34 = 7
+cw%?35 = &FF: REM transparent background
+cw%!36 = 0
+cw%!40 = xmin%
+cw%!44 = ymin%
+cw%!48 = xmax%
+cw%!52 = ymax%
+cw%!56 = 0
+cw%!60 = &3000: REM work area button type
+cw%!64 = 0
+cw%!68 = 0
+$(cw%+72) = "Splash": REM title
+cw%!84 = 0: REM icons
+REM cw%!88: REM icons
+SYS"Wimp_CreateWindow",,cw% TO whandle%
+ENDPROC
+:
+:
+DEF PROCopen_window_here(whandle%,xpos%,ypos%,wnd_wid%,wnd_hei%)
+DIM ow% 256
+ow%!0=whandle%
+ow%!4=xpos%
+ow%!8=ypos%-wnd_hei%
+ow%!12=xpos%+wnd_wid%
+ow%!16=ypos%
+ow%!20=0
+ow%!24=0
+ow%!28=-1
+PROCopen_window(ow%)
+ENDPROC
+:
+:
+DEF PROCopen_window(wb%)
+SYS"Wimp_OpenWindow",,wb%
+ENDPROC
+:
+:
+DEF PROCredraw_window(wb%)
+LOCAL more%
+SYS"Wimp_RedrawWindow",,wb% TO more%
+WHILE more%
+  PROCredraw_window_core(wb%)
+  SYS"Wimp_GetRectangle",,wb% TO more%
+ENDWHILE
+ENDPROC
+:
+:
+DEF PROCredraw_window_core(wb%)
+x0%=xpos%
+y0%=ypos%-wnd_hei%
+x1%=xpos%+wnd_wid%
+y1%=ypos%
+:
+xp%=x0%+mg_sx%: REM bottom left of sprite
+yp%=y1%-(spr_hei%+mg_sy%)
+:
+mg_tx%=32
+bly%=yp%
+:
+bgcol%   =&44000000
+txtfgcol%=&C0C0C000
+tlborcol%=&FFFFFF00
+brborcol%=&AAAAAA00
+:
+SYS"ColourTrans_SetGCOL",bgcol%
+PROCrect_fill(x0%, y0%, x1%, y1%)
+:
+SYS"ColourTrans_SetGCOL",tlborcol%
+PROCrect_fill(x0%, y0%, x0%+4, y1%)
+PROCrect_fill(x0%, y1%-4, x1%, y1%)
+:
+SYS"ColourTrans_SetGCOL",brborcol%
+PROCrect_fill(x1%-4, y0%, x1%, y1%-4)
+PROCrect_fill(x0%+4, y0%, x1%, y0%+4)
+:
+sf%=0
+IF out_dx%<>spr_dx% OR out_dy%<>spr_dy% THEN
+  DIM sf% 15
+  sf%!0=spr_dx%
+  sf%!4=spr_dy%
+  sf%!8=out_dx%
+  sf%!12=out_dy%
+ENDIF
+:
+tr%=0
+SYS"ColourTrans_SelectTable",256,spr%,-1,-1,tr%,1 TO ,,,trsize%
+DIM tr% trsize%
+SYS"ColourTrans_SelectTable",256,spr%,-1,-1,tr%,1
+:
+SYS"OS_SpriteOp",512+52,&100,spr%,xp%,yp%,&08,sf%,tr%
+:
+ty%=bly%-24
+VDU 5
+SYS"ColourTrans_SetGCOL",txtfgcol%
+IF LEN(u1$) THEN PROCprint(u1$,x0%+mg_tx%,ty%,FALSE)
+IF LEN(u2$) THEN PROCprint(u2$,x0%+mg_tx%,ty%-36,FALSE)
+IF LEN(vn$) THEN PROCprint(vn$,x1%-mg_tx%,ty%,TRUE)
+IF LEN(cs$) THEN PROCprint(cs$,x1%-mg_tx%,ty%-36,TRUE)
+IF LEN(mail$) THEN PROCprint(mail$,x0%+mg_tx%,ty%-2*36,FALSE)
+IF LEN(www$) THEN PROCprint(www$,x1%-mg_tx%,ty%-2*36,TRUE)
+ENDPROC
+:
+:
+DEF PROCrect_fill(x0%,y0%,x1%,y1%)
+RECTANGLE FILL x0%,y0%,x1%-x0%-out_dx%,y1%-y0%-out_dy%
+ENDPROC
+:
+:
+DEF FNstringizeGS(ptr%)
+LOCAL A%, L%
+L%=?ptr%
+A%=0
+WHILE A% < L%
+  ptr%?(A%)=ptr%?(A%+2)
+  A% += 1
+ENDWHILE
+ptr%?A%=13
+=$ptr%
+:
+:
+DEF FNwimpslot_get
+LOCAL E%
+SYS"Wimp_SlotSize",-1,-1 TO E%
+E%+=&8000
+=E%
+:
+:
+DEF FNwimpslot_set(E%)
+LOCAL R%
+E%-=&8000
+SYS"Wimp_SlotSize",E%,-1 TO R%
+IF R% < E% THEN =FALSE
+=TRUE
+:
+:
+DEF FNextract(ptr%)
+LOCAL A%
+A%=0
+WHILE(ptr%?A%)>=32
+  A% += 1
+ENDWHILE
+ptr%?A%=13
+=$ptr%
+:
+:
+DEF FNwidth(A$)
+LOCAL R%
+IF has_textop% THEN
+  SYS"Wimp_TextOp",1,A$,0 TO R%
+ELSE
+  R% = LEN(A$)*16
+ENDIF
+=R%
+:
+:
+DEF PROCprint(A$,X%,Y%,RJ%)
+LOCAL F%
+IF has_textop% THEN
+  F%=&40000000 OR 2
+  IF RJ% THEN F% = F% OR &80000000
+  SYS"Wimp_TextOp",0,txtfgcol%,bgcol%
+  SYS"Wimp_TextOp",F%,A$,-1,-1,X%,Y%
+ELSE
+  IF RJ% THEN X%-=FNwidth(A$)
+  MOVE X%,Y%+24
+  PRINT A$
+ENDIF
+ENDPROC
+:
+:
+DEF FNget_product_var(subvar$)
+=FNget_var(product$+"$"+subvar$)
+:
+:
+DEF FNget_var(var$)
+LOCAL r2%,PSR%,buflen%: buflen%=255
+DIM buffer% buflen%
+SYS "XOS_ReadVarVal", var$, buffer%, buflen%, 0, 3 TO ,,r2%;PSR%
+IF PSR% AND 1 THEN ="": REM V set?
+buffer%?r2%=13
+=$buffer%
+:
+:
+REM End of Splash

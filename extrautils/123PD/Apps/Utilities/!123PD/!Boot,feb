@@ -1,7 +1,7 @@
 | Boot file for 123PD
 
-Set 123PD$Dir <Obey$Dir>
-IconSprites <123PD$Dir>.!Sprites
+If "<123PD$Dir>"="" Then Set 123PD$Dir <Obey$Dir>
 
-| Syntax: 123PD <infile> <outfile>
-Set Alias$123PD WimpSlot -min 128k|MRun <123PD$Dir>.u_ltp %%*0
+If "<File$Type_DB0>"="" Then Set File$Type_DB0 LotusWK1
+
+IconSprites <123PD$Dir>.!Sprites

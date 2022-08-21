@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -52,9 +52,13 @@ check that setup from selectos.h is ok
 #define BIG_ENDIAN 4321
 #define LITTLE_ENDIAN 1234
 
+#define __ORDER_BIG_ENDIAN__    BIG_ENDIAN
+#define __ORDER_LITTLE_ENDIAN__ LITTLE_ENDIAN
+
 #if RISCOS
 
-#define BYTE_ORDER LITTLE_ENDIAN
+#define   BYTE_ORDER           LITTLE_ENDIAN
+#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
 
 #if !CROSS_COMPILE && defined(__CC_NORCROFT)
 
@@ -96,7 +100,8 @@ check that setup from selectos.h is ok
 
 #if WINDOWS
 
-#define BYTE_ORDER LITTLE_ENDIAN
+#define   BYTE_ORDER           LITTLE_ENDIAN
+#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
 
 #error PipeDream can not be compiled for WINDOWS
 

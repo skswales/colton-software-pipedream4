@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -1373,26 +1373,19 @@ savefile_core(
 
                         if(tcol == 0)
                         {
+                            const char * command;
+
                             switch((tcell->justify) & J_BITS)
                             {
-                            case J_LEFT:
-                                if(!view_save_stored_command("LJ", output))
-                                    all_ok = FALSE;
-                                break;
-
-                            case J_CENTRE:
-                                if(!view_save_stored_command("CE", output))
-                                    all_ok = FALSE;
-                                break;
-
-                            case J_RIGHT:
-                                if(!view_save_stored_command("RJ", output))
-                                    all_ok = FALSE;
-                                break;
-
-                            default:
-                                break;
+                            case J_LEFT:   command = "LJ"; break;
+                            case J_CENTRE: command = "CE"; break;
+                            case J_RIGHT:  command = "RJ"; break;
+                            default:       command = NULL; break;
                             }
+
+                            if(NULL != command)
+                                if(!view_save_stored_command(command, output))
+                                    all_ok = FALSE;
                         }
 
                         if( all_ok  &&

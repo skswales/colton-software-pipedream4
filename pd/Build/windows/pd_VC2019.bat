@@ -1,8 +1,8 @@
 @rem This Source Code Form is subject to the terms of the Mozilla Public
 @rem License, v. 2.0. If a copy of the MPL was not distributed with this
-@rem file, You can obtain one at http://mozilla.org/MPL/2.0/.
+@rem file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-@rem Copyright (C) 2015-2021 Stuart Swales
+@rem Copyright (C) 2015-2022 Stuart Swales
 
 chcp 1252
 
@@ -13,7 +13,7 @@ if exist      "%ProgramFiles%\Microsoft Visual Studio\2019\Community\VC\Auxiliar
 
 call pd_tbt
 
-set PIPEDREAM_ROOT=N:\pipedream\%PIPEDREAM_TBT%
+set PIPEDREAM_ROOT=N:\pipedream4\%PIPEDREAM_TBT%
 
 @rem display environment set for CROSS_COMPILE development
 set

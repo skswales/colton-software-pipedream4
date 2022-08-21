@@ -1,25 +1,45 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
-<HEAD>
-<META HTTP-EQUIV="Content-Type" Content="text/html; charset=iso-8859-1">
-<TITLE>PipeDream / 1-2-3 Converters - Release Notes</TITLE>
-</HEAD>
-<BODY>
-    <H1>PipeDream to/from Lotus 1-2-3 .WK1 Converters - Release Notes</H1>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>PipeDream to/from Lotus 1-2-3 .WK1 Converters - Release Notes</title>
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 2015-2022 Stuart Swales -->
 
-    <H4>1.14</H4>
+    <h1>PipeDream to/from Lotus 1-2-3 .WK1 Converters - Release Notes</h1>
+
+    <h2></h2>
+
+    <h4>1.16</h4>
+
+    <p>Increased accuracy of numbers loaded from Lotus 1-2-3 files.</p>
+
+    <p>More consistent use of https:// vs. http:// in URLs.</p>
+
+    <p>ROOL DDE 30d build environment used.</p>
+
+    <h4>1.15</h4>
+
+    <p>ROOL DDE 30b build environment used.</p>
+
+    <h4>1.14</h4>
 
     <p>Updated copyright in template files.</p>
 
     <p>ROOL DDE 29c build environment used.</p>
 
-    <H4>1.13</H4>
+    <h4>1.13</h4>
 
     <p>Improve packaging.</p>
 
     <p>ROOL DDE 29a build environment used.</p>
 
-    <H4>1.12</H4>
+    <h4>1.12</h4>
 
     <p>
         Maps the Lotus 1-2-3 statistical spreadsheet functions STD() and VAR()
@@ -36,5 +56,18 @@
         to the correct corresponding function in PipeDream (ATAN_2()).
     </p>
 
-</BODY>
-</HTML>
+    <h2 id="Copyright">Copyright and Licence</h2>
+
+    <p>Copyright &copy; 1987-1998 Colton Software<br>
+       Portions Copyright &copy; 2015-2022 Stuart Swales</p>
+
+    <p>
+        PipeDream PD-123 converter is made available to you under the terms of the
+        <a title="MPL 2.0" href="https://mozilla.org/MPL/2.0/">Mozilla Public License, v. 2.0</a>.
+        This means you may use, copy and distribute PipeDream PD-123 converter to others.
+        You are also welcome to modify the source code of PipeDream PD-123 converter as you want to meet your needs.
+        The Mozilla Public License also gives you the right to distribute your modified versions.
+    </p>
+
+</body>
+</html>

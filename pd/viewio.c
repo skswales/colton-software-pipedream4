@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -768,7 +768,9 @@ view_save_ruler_options(
     /* Output VIEW ruler.  Just output tab stops at each column position
      * and right margin at column A right margin position
     */
-    if(!away_byte(VIEW_RULER, output)  ||  !away_string("..", output))
+    if(!away_byte(VIEW_RULER, output))
+        return(FALSE);
+    if(!away_string("..", output))
         return(FALSE);
 
     /* find first column on_screen and get its right margin */
@@ -951,19 +953,24 @@ view_save_ruler_options(
         }
 
         if(out_stored)
-            if(!view_save_stored_command(array, output)  ||  !away_eol(output))
-                res = FALSE;
+        {
+            res = view_save_stored_command(array, output);
+            if(res)
+                res = away_eol(output);
+        }
     }
 
     update_windvars_from_dialog(D_POPTIONS);
 
     /* enable extended highlights */
-    if(res  &&  (!view_save_stored_command("HT2 130", output)  ||  !away_eol(output)))
-        res = FALSE;
+    if(res)
+        res = view_save_stored_command("HT2 130", output);
+    if(res)
+        res = away_eol(output);
 
     /* reset print effects */
-    if(res  &&  !away_string("\x1d\x1c\x1c\x1c", output))
-        res = FALSE;
+    if(res)
+        res = away_string("\x1d\x1c\x1c\x1c", output);
 
     return(res);
 }
@@ -1032,7 +1039,9 @@ view_save_slot(
                 {
                 case 'P':
                 case 'D':
-                    if(!away_byte('|', output)  ||  !away_byte(ch, output))
+                    if(!away_byte('|', output))
+                        return(FALSE);
+                    if(!away_byte(ch, output))
                         return(FALSE);
 
                     while(*++lptr == text_at_char)
@@ -1080,7 +1089,10 @@ view_save_stored_command(
     const char *command,
     FILE_HANDLE output)
 {
-    return(away_byte((uchar) VIEW_STORED_COMMAND, output)  &&  away_string(command, output));
+    const BOOL res = away_byte((uchar) VIEW_STORED_COMMAND, output);
+    if(!res)
+        return(res);
+    return(away_string(command, output));
 }
 
 /* end of viewio.c */

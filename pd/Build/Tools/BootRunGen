@@ -2,7 +2,7 @@ REM BootRunGen - !Boot/!Run file generator for PipeDream
 REM
 REM This Source Code Form is subject to the terms of the Mozilla Public
 REM License, v. 2.0. If a copy of the MPL was not distributed with this
-REM file, You can obtain one at http://mozilla.org/MPL/2.0/.
+REM file, You can obtain one at https://mozilla.org/MPL/2.0/.
 REM
 REM Copyright (C) 1992-1998 Colton Software Limited
 REM Copyright (C) 1998-2015 R W Colton
@@ -161,7 +161,7 @@ ENDIF
 PROCo(f%,"|")
 PROCs(f%,FNvar_product("Help"),var_product_dir$+".!Help",boot%)
 PROCs(f%,FNvar_product("Version"),version$,boot%)
-PROCs(f%,FNvar_product("Web"),"http://croftnuisk.co.uk/coltsoft/pipedream/",boot%)
+PROCs(f%,FNvar_product("Web"),"https://croftnuisk.co.uk/coltsoft/pipedream/",boot%)
 PROCs(f%,FNvar_product("Title"),true_product$,boot%)
 PROCs(f%,FNvar_product("Description"),"Integrated spreadsheet and word processor",boot%)
 PROCs(f%,FNvar_product("Publisher"),"Colton Software",boot%)
@@ -201,7 +201,7 @@ ENDPROC
 DEF PROCgenerate_run_end(f%)
 REM Go for the minimal version we can cope with using the Stubs we built with
 REM and the required functionality (we need working C99 functions)
-REM SharedCLibrary 6.06 is the latest ROOL seen to date (May 2020)
+REM SharedCLibrary 6.09 (06 Feb 2021) is the latest ROOL seen to date (September 2021)
 CLibVersion$="SharedCLibrary 5.45"
 :
 PROCo(f%,"|")
@@ -222,9 +222,6 @@ PROCo(f%,"|")
 PROCo(f%,"RMEnsure "+CLibVersion$+" RMLoad System:Modules.CLib")
 PROCo(f%,"RMEnsure "+CLibVersion$+" Error 0 "+true_product$+" needs "+CLibVersion$+" or later. An updated 32-bit !System may be obtained from the RISC OS Open website")
 :
-PROCo(f%,"|")
-PROCo(f%,"RMEnsure BASIC 0.00 Error 0 "+true_product$+"'s Loader needs BASIC. Is it unplugged?")
-:
 IF colour_picker% THEN
   PROCo(f%,"|")
   PROCo(f%,"RMEnsure ColourPicker 0.00 RMLoad System:Modules.Picker")
@@ -237,14 +234,15 @@ PROCo(f%,"RMEnsure ColourTrans 0.52 Error 0 "+true_product$+" needs ColourTrans 
 :
 PROCo(f%,"|")
 REM Drawfile module is supplied in end-user redistributable, supporting RISC OS 3.1 and newer systems
-REM RISC OS 3.6 on have Drawfile in ROM
+REM RISC OS 3.6 on have Drawfile module in ROM
+PROCo(f%,"| If you have no need to render PipeDream Charts or other Drawfiles you can comment these out for pre-RISC OS 3.6 systems")
 PROCo(f%,"RMEnsure Drawfile 1.30 RMLoad System:Modules.Drawfile")
 PROCo(f%,"RMEnsure Drawfile 1.30 Error 0 "+true_product$+" needs Drawfile 1.30 or later. An updated 32-bit !System may be obtained from the RISC OS Open website")
 :
 REM Go for the minimal version we can cope with
-REM NB FPEmulator 4.09 in RISC OS 4.02 ROM (also in 4.39 ROM) has poor precision
+REM FPEmulator 4.09 in RISC OS 4.02 ROM (also in some 4.39 ROMs?) has poor precision and should not be used
 REM FPEmulator 4.10 in RISC OS 4.39 ROM is better
-REM FPEmulator 4.37 is the latest ROOL seen to date (Nov 2019)
+REM FPEmulator 4.38 (03 Jul 2021) (1.13CELM) is the latest ROOL seen to date (September 2021)
 FPEVersion$="FPEmulator 4.10"
 :
 PROCo(f%,"|")
@@ -255,6 +253,9 @@ REM IF loadable_release32% THEN
 REM   PROCo(f%,"|")
 REM   PROCo(f%,"RMEnsure Squash 0.00 RMLoad System:Modules.Squash")
 REM ENDIF
+:
+PROCo(f%,"|")
+PROCo(f%,"RMEnsure BASIC 0.00 Error 0 "+true_product$+"'s Loader needs BASIC. Is it unplugged?")
 :
 PROCo(f%,"|")
 PROCo(f%,FNif_z_then("Choices$Write")+"Error 0 "+true_product$+" needs Choices$Write to be set")
@@ -502,6 +503,10 @@ REM Never override any other definition...
 PROCs(f%,"File$Type_DFE","CSV",TRUE)
 :
 PROCo(f%,"|")
+REM Never override any other definition...
+PROCs(f%,"File$Type_F0D","TSV",TRUE)
+:
+PROCo(f%,"|")
 PROCo(f%,"| PipeDream (4.59 on) can be set up to be the default handler for any file type")
 PROCo(f%,"| that it can import, so long as it is not overridden by another application.")
 PROCo(f%,"| You could put one or both of the following lines in a file in your")
@@ -528,6 +533,7 @@ PROCo(f%,"| RISC OS 3.10 DOSFS can't take numbers in extension")
 REM PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap WK1 &DB0")
 PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap PD4 &DDE")
 PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap A77 &A77")
+PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap TSV &F0D")
 PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap FF9 &FF9")
 ENDPROC
 :

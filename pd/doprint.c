@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -247,6 +247,11 @@ init_serial_print(
 *
 ******************************************************************************/
 
+#ifndef XPortable_Idle
+#define XPortable_Idle (0x42FC6 | (1U << 17))
+#endif
+extern int __swi(XPortable_Idle) __swi_XPortable_Idle(void);
+
 static S32
 pause(void)
 {
@@ -269,8 +274,18 @@ pause(void)
 
     clearkeyboardbuffer();
 
-    while(!host_shift_pressed()  &&  !ctrlflag)
-        ;
+    while(!ctrlflag)
+    {
+        BOOL f_shift_pressed;
+        const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+        if(f_shift_pressed)
+            break;
+
+        UNREFERENCED_LOCAL_VARIABLE(f_ctrl_pressed);
+
+        __swi_XPortable_Idle(); /* Shift not pressed - this might help? */
+    }
 
     if(escape_disable_nowinge())
         escape_pressed = TRUE;

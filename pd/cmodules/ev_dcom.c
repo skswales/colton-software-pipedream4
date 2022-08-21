@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -875,6 +875,21 @@ fptostr(
         strncpy(exps, exp, len - (exp - op_buf));
         len = len - (exp - exps);
         op_buf[len] = CH_NULL;
+    }
+
+    /* see what's happening with decimal points */
+    if(NULL == exp)
+    {
+        P_U8 ustr_dp = strchr(op_buf, CH_FULL_STOP);
+
+        if(NULL == ustr_dp)
+        {
+            /* not found a decimal point and not had an exponent */
+            /* therefore make it clear that it is fp by tacking on a .0 */
+            op_buf[len++] = CH_FULL_STOP;
+            op_buf[len++] = CH_DIGIT_ZERO;
+            op_buf[len  ] = CH_NULL;
+        }
     }
 
     return(len);

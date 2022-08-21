@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -1200,7 +1200,7 @@ int32_from_int64_possible_overflow(
      * the result still fits in 32-bit integer
      */
 
-#if WINDOWS && (BYTE_ORDER == LITTLE_ENDIAN)
+#if WINDOWS && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
     /* try to stop Microsoft compiler generating a redundant generic shift by 32 call */
     if(false == (p_int64_with_int32_overflow->f_overflow = (
                 (((const int32_t *) &int64)[1])  -  (((int32_t) int64) >> 31)

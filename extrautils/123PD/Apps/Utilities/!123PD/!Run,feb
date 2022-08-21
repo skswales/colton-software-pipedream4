@@ -1,15 +1,38 @@
 | Run file for 123PD
 
+Set 123PD$Dir <Obey$Dir>
+
 /<Obey$Dir>.!Boot
 
-*If "<System$Path>" = "" Then Error 0 System resources cannot be found
-*RMEnsure UtilityModule 3.10 Error This application only runs on RISC OS 3 (version 3.10) or later
-*RMEnsure SharedCLibrary 5.28 Error This application requires CLib 5.28 or later
-*RMEnsure FPEmulator 2.87 Error This application requires the FP Emulator module (is it unplugged?)
-*RMEnsure DDEUtils 0 System:Modules.DDEUtils
-*RMEnsure DDEUtils 1.52 Error You need version 1.52 of the DDEUtils module to run this application
-*RMEnsure FrontEnd 0 System:Modules.FrontEnd
-*RMEnsure FrontEnd 1.21 Error You need version 1.21 of the FrontEnd module to run this application GUI
-*RMEnsure TaskWindow 0.47 Error This application requires the Task Window module (is it unplugged?)
-*WimpSlot -Min 32k -Max 32k
-*FrontEnd_Start -app 123PD -desc <123PD$Dir>.Desc
+RMEnsure UtilityModule 3.10 Error 0 123PD needs RISC OS 3.10 or later
+|
+If "<System$Path>" = "" Then Error 0 System resources cannot be found
+RMEnsure UtilityModule 3.70 RMEnsure CallASWI 0.02 RMLoad System:Modules.CallASWI
+RMEnsure UtilityModule 3.70 RMEnsure CallASWI 0.02 Error 0 SharedCLibrary needs CallASWI 0.02 or later. An updated 32-bit !System may be obtained from the RISC OS Open website
+|
+| Ensure we have the shared C library and determine its vintage
+| NB Don't load a newer version over an older one that may be in RAM
+|
+| Yes, this is 123PD, but that confuses RISC OS, so use our buddy's id!
+Set PD123$CLibLoaded 1
+RMEnsure SharedCLibrary 0.00 Set PD123$CLibLoaded 0
+If PD123$CLibLoaded=1 Then RMEnsure SharedCLibrary 5.28 Error 0 123PD needs SharedCLibrary 5.28 or later but an earlier version is already running. An updated 32-bit !System may be obtained from the RISC OS Open website
+Unset PD123$CLibLoaded
+|
+RMEnsure FPEmulator 4.10 RMLoad System:Modules.FPEmulator
+RMEnsure FPEmulator 4.10 Error 0 123PD needs FPEmulator 4.10 or later. An updated 32-bit !System may be obtained from the RISC OS Open website
+|
+RMEnsure DDEUtils 0.00 RMLoad System:Modules.DDEUtils
+RMEnsure DDEUtils 1.52 Error 0 123PD needs DDEUtils 1.52 or later
+|
+RMEnsure FrontEnd 0.00 RMLoad System:Modules.FrontEnd
+RMEnsure FrontEnd 1.21 Error 0 The 123PD GUI needs FrontEnd 1.21 or later
+|
+RMEnsure TaskWindow 0.00 Error 0 123PD needs the TaskWindow module - is it unplugged?
+RMEnsure TaskWindow 0.47 Error 0 123PD needs Task Window 0.47 or later
+
+| Syntax: 123PD <infile> <outfile>
+Set Alias$123PD WimpSlot -min 128k|MRun <123PD$Dir>.u_ltp %%*0
+
+WimpSlot -min 32k -max 32k
+FrontEnd_Start -app 123PD -desc <123PD$Dir>.Desc

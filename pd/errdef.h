@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -117,7 +117,7 @@ reperr_kernel_oserror(
 #define ERR_ALREADYMERGING      MAIN_ERR_BASE - 62
 #define ERR_ALREADYANAGRAMS     MAIN_ERR_BASE - 63
 #define ERR_ALREADYSUBGRAMS     MAIN_ERR_BASE - 64
-#define ERR_CANTINSTALL         MAIN_ERR_BASE - 65
+#define ERR_was_CANTINSTALL     MAIN_ERR_BASE - 65
 #define ERR_was_DEMO            MAIN_ERR_BASE - 66
 #define ERR_NOROOMFORDBOX       MAIN_ERR_BASE - 67
 #define ERR_NOTINDESKTOP        MAIN_ERR_BASE - 68
@@ -209,7 +209,6 @@ reperr_kernel_oserror(
     errorstring(-62, "Already merging") \
     errorstring(-63, "Already doing anagrams") \
     errorstring(-64, "Already doing subgrams") \
-    errorstring(-65, "Unable to install PipeDream") \
     errorstring(-67, "Memory full: unable to create dialogue box") \
     errorstring(-68, "Not enough memory, or not in *Desktop world") \
     errorstring(-69, "Bad print scale") \

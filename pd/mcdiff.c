@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -474,6 +474,8 @@ clearkeyboardbuffer(void)
     clearmousebuffer();
 }
 
+#if 0
+
 /* returns TRUE if key is depressed */
 
 static inline BOOL
@@ -493,6 +495,17 @@ extern BOOL
 host_shift_pressed(void)
 {
     return(depressed(SHIFT));
+}
+
+#endif
+
+extern BOOL /*ctrl_pressed*/
+host_keyboard_status(
+    _OutRef_    P_BOOL p_shift_pressed)
+{
+    const int r = fx_x(202, 0, 0xFF);
+    *p_shift_pressed = (0 != (r & (1 << 3)));
+    return(0 != (r & (1 << 6))); /*ctrl_pressed*/
 }
 
 /******************************************************************************
@@ -621,8 +634,11 @@ init_mc(void)
 {
 /* screen variables are determined by the opened window */
 
-    setlocale(LC_CTYPE, DefaultLocale_STR);
-    /* use LC_ALL when we know what it does */
+    /* set locale appropriately */
+    if(NULL != setlocale(LC_ALL, DefaultLocale_STR))
+       reportf("setlocale(%s) => %s", DefaultLocale_STR, setlocale(LC_ALL, NULL));
+    else
+        consume_ptr(setlocale(LC_ALL, "C"));
 
     status_consume(add_to_list(&first_key,  KMAP_FUNC_HOME,       "\031" "ctc" "\x0D"));  /* Top Of Column */
     status_consume(add_to_list(&first_key, KMAP_FUNC_CHOME,       "\031" "ctc" "\x0D"));  /* Top Of Column */
@@ -630,13 +646,13 @@ init_mc(void)
     status_consume(add_to_list(&first_key,  KMAP_FUNC_END,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
     status_consume(add_to_list(&first_key, KMAP_FUNC_CEND,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
 
-    /*status_consume(add_to_list(&first_key,  KMAP_FUNC_CDELETE,    "\031" "crb" "\x0D"));*/  /* Delete Character Left */
-    /*status_consume(add_to_list(&first_key, KMAP_FUNC_CSDELETE,    "\031" "g"   "\x0D"));*/  /* Delete Character Right */
+  /*status_consume(add_to_list(&first_key,  KMAP_FUNC_CDELETE,    "\031" "crb" "\x0D"));*//* Delete Character Left */
+  /*status_consume(add_to_list(&first_key, KMAP_FUNC_CSDELETE,    "\031" "g"   "\x0D"));*//* Delete Character Right */
 
     status_consume(add_to_list(&first_key,   KMAP_FUNC_BACKSPACE, "\031" "crb" "\x0D"));  /* Delete Character Left */
     status_consume(add_to_list(&first_key,  KMAP_FUNC_SBACKSPACE, "\031" "g"   "\x0D"));  /* Delete Character Right */
-    /*status_consume(add_to_list(&first_key,  KMAP_FUNC_CBACKSPACE, "\031" "crb" "\x0D"));*/  /* Delete Character Left */
-    /*status_consume(add_to_list(&first_key, KMAP_FUNC_CSBACKSPACE, "\031" "g"   "\x0D"));*/  /* Delete Character Right */
+  /*status_consume(add_to_list(&first_key,  KMAP_FUNC_CBACKSPACE, "\031" "crb" "\x0D"));*//* Delete Character Left */
+  /*status_consume(add_to_list(&first_key, KMAP_FUNC_CSBACKSPACE, "\031" "g"   "\x0D"));*//* Delete Character Right */
 
     mc__initialised = TRUE;
 }

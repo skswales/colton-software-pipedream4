@@ -2,17 +2,17 @@
 |
 | This Source Code Form is subject to the terms of the Mozilla Public
 | License, v. 2.0. If a copy of the MPL was not distributed with this
-| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+| file, You can obtain one at https://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2020-2021 Stuart Swales
+| Copyright (C) 2020-2022 Stuart Swales
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
 | It helps to MakeRiscPkg all the individual packages first
 
 | NB As this whole bundle will be named in !Store
-Set pd$Release pd-45900
-Set pd$Release pd-45901
+Set pd$Release pd-46000
+|et pd$Release pd-46001
 
 Set MakeStore$Dir <Obey$Dir>
 

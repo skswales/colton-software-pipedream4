@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1988-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -550,7 +550,7 @@ main(
     const char * outfile;
 
     /* banner */
-    puts("Lotus 1-2-3 to PipeDream converter: (C) 1988-2021 Colton Software");
+    puts("Lotus 1-2-3 to PipeDream converter: (C) 1988-2022 Colton Software");
 
     /* argument checking */
     if(argc < 3)
@@ -2366,15 +2366,18 @@ writepcol(
         {
         case L_INTEGER:
             {
-            S32 intval, specflg = 0;
+            S32 specflg = 0;
+            S32 intval;
 
             if((err = writeformat(fmtp, &specflg)) != 0)
                 return(err);
 
             intval = (S32) lts_readword16(rec);
             rec += 2;
+
             if((err = checkdate(&specflg, (long) intval)) != 0)
                 return(err);
+
             if(specflg)
                 if(fprintf(pd123__fout, "%d", intval) < 0)
                     return(PD123_ERR_FILE);
@@ -2385,28 +2388,19 @@ writepcol(
             {
             S32 specflg = 0;
             F64 fpval;
-            char resstr[25];
 
             if((err = writeformat(fmtp, &specflg)) != 0)
                 return(err);
 
             fpval = lts_readdouble(rec);
 
-            #if RISCOS
             if(fpval < LONG_MAX)
                 if((err = checkdate(&specflg, (long) (fpval + .5))) != 0)
                     return(err);
-            #else
-            if((err = checkdate(&specflg, (long) (fpval + .5))) != 0)
-                return(err);
-            #endif
 
             if(specflg)
-            {
-                fptostr(resstr, fpval);
-                if((err = outstr(resstr)) != 0)
-                    return(err);
-            }
+                if(fprintf(pd123__fout, "%17g", fpval) < 0)
+                    return(PD123_ERR_FILE);
             break;
             }
 

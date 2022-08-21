@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -112,8 +112,8 @@ stringdef(Page_Zd_wait_between_pages_STR)
 stringdef(Miss_Page_Chars_STR)
 stringdef(All_Pages_Chars_STR)
 
-stringdef(Zd_file_edited_in_Zs_are_you_sure_STR)
-stringdef(Zd_files_edited_in_Zs_are_you_sure_STR)
+stringdef(Zd_file_edited_in_application_are_you_sure_STR)
+stringdef(Zd_files_edited_in_application_are_you_sure_STR)
 stringdef(query_quit_SDC_Q_STR)
 
 stringdef(save_edited_file_Zs_SDC_S_STR)
@@ -172,8 +172,7 @@ stringdef(help_colh_inexpression_line)
 stringdef(help_colh_inexpression_box)
 stringdef(help_top_left_corner)
 stringdef(help_col_border)
-stringdef(help_drag_row_border)
-stringdef(help_double_row_border)
+stringdef(help_row_border)
 stringdef(help_row_is_page_break)
 stringdef(help_row_is_hard_page_break)
 stringdef(help_colh_contents_line)

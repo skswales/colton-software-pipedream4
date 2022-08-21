@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -89,6 +89,24 @@ draw_insert_filename(
 #define TRACE_NULL      (TRACE_APP_PD4)
 
 static BOOL g_kill_duplicates = FALSE;
+
+/* try to get a sensible entity that we can select on
+ * in mouse event handlers so that unexpected combinations
+ * of mouse buttons and shifting keys are not processed
+ */
+
+extern enum CS_Mouse_State
+cs_mutate_mouse_click(BOOL f_select_clicked)
+{
+    int mouse_click = (f_select_clicked ? CS_Mouse_SELECT : CS_Mouse_ADJUST);
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+    if(f_ctrl_pressed)  mouse_click |= 1;
+    if(f_shift_pressed) mouse_click |= 2;
+
+    return((enum CS_Mouse_State) mouse_click);
+}
 
 /* ------------------------ file import/export --------------------------- */
 
@@ -318,10 +336,9 @@ riscos_quit_okayed(
 
     consume_int(xsnprintf(query_quit_statement, elemof32(query_quit_statement),
                           (nmodified == 1)
-                              ? Zd_file_edited_in_Zs_are_you_sure_STR
-                              : Zd_files_edited_in_Zs_are_you_sure_STR,
-                          nmodified,
-                          product_ui_id()));
+                              ? Zd_file_edited_in_application_are_you_sure_STR
+                              : Zd_files_edited_in_application_are_you_sure_STR,
+                          nmodified));
 
     SDC_res = riscdialog_query_quit_SDC(query_quit_statement, query_quit_SDC_Q_STR);
 
@@ -413,12 +430,16 @@ static S32         main_window_default_height;
 ******************************************************************************/
 
 static BOOL
-iconbar_event_Mouse_Click_Button_Select(void)
+iconbar_event_Mouse_Click_process(enum CS_Mouse_State pd_mouse_state)
 {
-    if(host_ctrl_pressed())
-    { /*EMPTY*/ } /* reserved */
-    else if(host_shift_pressed())
+    switch(pd_mouse_state)
     {
+    case CS_Mouse_SELECT:
+        application_process_command(N_LoadTemplate);
+        break;
+
+    case CS_Mouse_SELECT_with_Shift:
+        {
         TCHARZ filename[BUF_MAX_PATHSTRING];
 
         /* open the user's Choices directory display, from where they can find CmdFiles, Templates etc. */
@@ -426,22 +447,21 @@ iconbar_event_Mouse_Click_Button_Select(void)
         tstr_xstrkat(filename, elemof32(filename), TEXT("X"));
 
         filer_opendir(filename);
-    }
-    else
-        application_process_command(N_LoadTemplate);
+        break;
+        }
 
-    return(TRUE);
-}
-
-static BOOL
-iconbar_event_Mouse_Click_Button_Adjust(void)
-{
-    if(host_ctrl_pressed())
-    { /*EMPTY*/ } /* reserved */
-    else if(host_shift_pressed())
-    { /*EMPTY*/ } /* reserved */
-    else
+    case CS_Mouse_ADJUST:
         application_process_command(N_NewWindow);
+        break;
+
+    default:
+    case CS_Mouse_SELECT_with_Ctrl:      /* reserved */
+    case CS_Mouse_SELECT_with_CtrlShift: /* reserved */
+    case CS_Mouse_ADJUST_with_Ctrl:      /* reserved */
+    case CS_Mouse_ADJUST_with_Shift:     /* reserved */
+    case CS_Mouse_ADJUST_with_CtrlShift: /* reserved */
+        break;
+    }
 
     return(TRUE);
 }
@@ -451,10 +471,10 @@ iconbar_event_Mouse_Click(
     const WimpMouseClickEvent * const mouse_click)
 {
     if(mouse_click->buttons == Wimp_MouseButtonSelect)
-        return(iconbar_event_Mouse_Click_Button_Select());
+        return(iconbar_event_Mouse_Click_process(cs_mutate_mouse_click(TRUE)));
 
     if(mouse_click->buttons == Wimp_MouseButtonAdjust)
-        return(iconbar_event_Mouse_Click_Button_Adjust());
+        return(iconbar_event_Mouse_Click_process(cs_mutate_mouse_click(FALSE)));
 
     trace_0(TRACE_APP_PD4, "wierd mouse button click - ignored");
     return(FALSE);
@@ -1877,20 +1897,30 @@ rear_event_Open_Window_Request(
 *
 ******************************************************************************/
 
-/* if       select-close then close window */
-/* if       adjust-close then open parent directory and close window */
-/* if shift-adjust-close then open parent directory */
+/* if       Select-close then close window */
+/* if       Adjust-close then open parent directory and close window */
+/* if Shift-Adjust-close then open parent directory */
+/* if  Ctrl-Either-close then do nothing (reserved) */
 
 static BOOL
 rear_event_Close_Window_Request(
     _In_        const WimpCloseWindowRequestEvent * const close_window_request)
 {
-    BOOL adjust_clicked = riscos_adjust_clicked();
-    BOOL shift_pressed  = host_shift_pressed();
-    BOOL just_opening   = (shift_pressed  &&  adjust_clicked);
+    const BOOL adjust_clicked = riscos_adjust_clicked();
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+    BOOL just_opening   = (f_shift_pressed  &&  adjust_clicked);
     BOOL want_to_close  = !just_opening;
 
     UNREFERENCED_PARAMETER_InRef_(close_window_request);
+
+#if 0
+    if(f_ctrl_pressed)
+        return(TRUE);
+#else
+    UNREFERENCED_LOCAL_VARIABLE(f_ctrl_pressed); /* NB Ctrl state ignored here */
+#endif
 
     trace_0(TRACE_APP_PD4, "rear_event_Close_Window_Request()");
 
@@ -2108,8 +2138,11 @@ static KMAP_CODE
 cs_mutate_key(
     KMAP_CODE kmap_code)
 {
-    const KMAP_CODE shift_added = host_shift_pressed() ? KMAP_CODE_ADDED_SHIFT : 0;
-    const KMAP_CODE ctrl_added  = host_ctrl_pressed()  ? KMAP_CODE_ADDED_CTRL  : 0;
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+    const KMAP_CODE shift_added = f_shift_pressed ? KMAP_CODE_ADDED_SHIFT : 0;
+    const KMAP_CODE ctrl_added  = f_ctrl_pressed  ? KMAP_CODE_ADDED_CTRL  : 0;
 
 #if CHECKING
     switch(kmap_code)
@@ -2134,6 +2167,9 @@ static KMAP_CODE
 convert_ctrl_key(
     _InVal_     S32 code)
 {
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
     KMAP_CODE kmap_code = code;
 
     if(code <= CTRL_Z)
@@ -2143,13 +2179,13 @@ convert_ctrl_key(
         /* SKS after PD 4.11 10jan92 - see notes in convert_standard_key() about ^H, ^M */
         if( ((code == CTRL_H)  ||  (code == CTRL_M))  &&
             cmd_seq_is_empty()  &&
-            !host_ctrl_pressed() )
+            !f_ctrl_pressed )
         {
             if(code == CTRL_H)
                 kmap_code = RISCOS_EKEY_BACKSPACE;
             else /* code == CTRL_M */
             {
-                if(host_shift_pressed())
+                if(f_shift_pressed)
                     kmap_code |= KMAP_CODE_ADDED_SHIFT;
             }
         }
@@ -2161,7 +2197,7 @@ convert_ctrl_key(
         {
             kmap_code = (code - 1 + 'A') | KMAP_CODE_ADDED_CTRL; /* Uppercase Ctrl-letter */
 
-            if(host_shift_pressed())
+            if(f_shift_pressed)
                 kmap_code |= KMAP_CODE_ADDED_SHIFT;
         }
     }
@@ -2561,7 +2597,7 @@ main_event_Message_HelpRequest(
     coord ty = tcoord_y(gdi_y);
     coord coff  = calcoff(tx); /* not _click */
     coord roff  = calroff(ty); /* not _click */
-    coord o_roff = roff;
+    //coord o_roff = roff;
     ROW trow;
     BOOL append_drag_msg = xf_inexpression; /* for THIS window */
 
@@ -2571,10 +2607,15 @@ main_event_Message_HelpRequest(
     trace_0(TRACE_APP_PD4, "Help request on main window");
     trace_4(TRACE_APP_PD4, "get_slr_for_point: g(%d, %d) t(%d, %d)", gdi_x, gdi_y, tx, ty);
 
+    #if 1
+    /* Terse messages for better BubbleHelp response */
+    abuffer[0] = CH_NULL;
+    prefix_len = 0;
+    #else
     /* default message */
     xstrkpy(abuffer, elemof32(abuffer), help_main_window);
-
     prefix_len = strlen(abuffer); /* remember a possible cut place */
+    #endif
 
     alt_msg = buffer = abuffer + prefix_len;
 
@@ -2645,12 +2686,7 @@ main_event_Message_HelpRequest(
                 if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
                     trace_0(TRACE_APP_PD4, "no action cos editing in THIS sheet");
                 else
-                    (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
-                            "%s%s",
-                            help_drag_row_border,
-                            (o_roff == roff)
-                                  ? help_double_row_border
-                                  : (const char *) NULLSTR);
+                    xstrkat(abuffer, elemof32(abuffer), help_row_border);
             }
             else
                 trace_0(TRACE_APP_PD4, "off left/right");

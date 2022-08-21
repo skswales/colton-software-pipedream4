@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -394,7 +394,7 @@ UCHARS/USTR is the same
 UTF-8 is a sequence of bytes encoding a UCS-4 32-bit character
 (ISO 10646-1:2000 Annex D, also described in RFC 3629,
 also section 3.9 of the Unicode 4.0 standard).
-See http://www.cl.cam.ac.uk/~mgk25/unicode.html
+See https://www.cl.cam.ac.uk/~mgk25/unicode.html
 */
 
 #define TSTR_IS_SBSTR 1

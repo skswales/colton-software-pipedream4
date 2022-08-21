@@ -2,17 +2,17 @@
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.59
-TEXTUAL_VERSION_NUMBER=4.59.01
+TEXTUAL_VERSION_NUMBER=4.60
+#TEXTUAL_VERSION_NUMBER=4.60.01-dev
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
-URD=$.pipedream.trunk
+URD=$.pipedream4.pipedream__4_60__branch
 
 #PD=$(URD).pd
 PD=^.^
@@ -1030,10 +1030,10 @@ utils.Neutral.SprCht24:   \
  Copy $? $@ ~C FV
 
 @.!PipeDream.Resources.Neutral.RISC_OS.Loader: $(PD).Resources.Neutral.RISC_OS.Loader
- Copy $? $@ ~C FV
+        Run $(URD).pd.Build.Tools.tokenize $? -out $@
 
 @.!PipeDream.Resources.Neutral.RISC_OS.Splash: $(PD).Resources.Neutral.RISC_OS.Splash
- Copy $? $@ ~C FV
+        Run $(URD).pd.Build.Tools.tokenize $? -out $@
 
 @.!PipeDream.Resources.Neutral.Markers.S1: $(PD).Resources.Neutral.Markers.S1
  Copy $? $@ ~C FV

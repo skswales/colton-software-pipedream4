@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -333,7 +333,7 @@ riscdialog_execute(
     const char * action = NULL;
 
     dialog__fillin_ok = FALSE; /* will be set TRUE by a good fillin */
-    dialog__may_persist = FALSE; /* will be set TRUE by a good fillin AND adjust-click */
+    dialog__may_persist = FALSE; /* will be set TRUE by a good fillin AND Adjust-click */
 
     clearmousebuffer(); /* Keep RJM happy.  RJM says you know it makes sense */
 
@@ -875,10 +875,10 @@ dialog__bumpnumericlimited(
     S32 minval,
     S32 maxval)
 {
-    S32 delta = host_shift_pressed() ? 5 : 1;
-#ifdef OLD_BUMP_NUMERIC
-    S32 range = maxval - minval + 1;            /* i.e. 0..255 is 256 */
-#endif
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+    const S32 delta = f_shift_pressed ? 5 : 1;
     S32 num;
 
     /* one is allowed to bump a composite textfield as a number */
@@ -889,28 +889,18 @@ dialog__bumpnumericlimited(
 
     /* always inc,dec,value */
     if(hit+2 == valuefield)
-    {
-        num = dptr->option + delta;
+    {   /* up */
+        num = f_ctrl_pressed ? maxval : dptr->option + delta;
 
-#ifndef OLD_BUMP_NUMERIC
         if(num > maxval)
-            num = maxval;
-#else
-        if(num > maxval)
-            num -= range;
-#endif
+            num = maxval; /* clamp */
     }
     else
-    {
-        num = dptr->option - delta;
+    {   /* down */
+        num = f_ctrl_pressed ? minval : dptr->option - delta;
 
-#ifndef OLD_BUMP_NUMERIC
         if(num < minval)
-            num = minval;
-#else
-        if(num < minval)
-            num += range;
-#endif
+            num = minval; /* clamp */
     }
 
     dptr->option = num;
@@ -954,6 +944,10 @@ dialog__bumpstring(
     P_P_LIST_BLOCK listpp,
     P_LIST_ITEMNO key)
 {
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
+    LIST_ITEMNO last_key = list_numitem(*listpp) - 1;
     P_LIST entry;
 
     trace_0(TRACE_APP_DIALOG, "bump that string - ");
@@ -963,7 +957,10 @@ dialog__bumpstring(
     {
         trace_0(TRACE_APP_DIALOG, "up");
 
-        *key = *key + 1;
+        if(f_ctrl_pressed)
+            *key = last_key;
+        else
+            *key = *key + 1;
 
         entry = search_list(listpp, *key);
 
@@ -971,22 +968,19 @@ dialog__bumpstring(
 
         if(!entry)
         {
-            *key = 0;
+            *key = 0; /* wrap */
 
             entry = search_list(listpp, *key);
         }
     }
     else
     {
-        LIST_ITEMNO lastkey = list_numitem(*listpp) - 1;
-
         trace_0(TRACE_APP_DIALOG, "down");
 
-        if(*key == 0)
-        {
-            trace_1(TRACE_APP_DIALOG, "numitem=%i", list_numitem(*listpp));
-            *key = lastkey;
-        }
+        if(f_ctrl_pressed)
+            *key = 0;
+        else if(*key == 0)
+            *key = last_key; /* wrap */
         else
         {
             *key = *key - 1;
@@ -994,7 +988,7 @@ dialog__bumpstring(
             entry = search_list(listpp, *key);
 
             if(!entry)
-                *key = lastkey; /* we'd got lost - restart at end of list */
+                *key = last_key; /* we'd got lost - restart at end of list */
         }
 
         entry = search_list(listpp, *key);
@@ -1074,22 +1068,32 @@ dialog__bumpspecial(
     DIALOG * dptr,
     dbox_field hit)
 {
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
     /* Read current value */
     PC_U8 optptr = dialog__getspecial(valuefield, dptr);
     PC_U8 optlistptr;
+    PC_U8 last_option;
 
     optlistptr = *dptr->optionlist;
 
+    last_option = optlistptr + strlen(optlistptr) - 1;
+
     /* always inc,dec,value */
     if(hit+2 == valuefield)
-    {
-        if(*++optptr == CH_NULL)
-            optptr = optlistptr;
+    {   /* up */
+        if(f_ctrl_pressed)
+            optptr = last_option;
+        else if(*++optptr == CH_NULL)
+            optptr = optlistptr; /* wrap */
     }
     else
-    {
-        if(optptr-- == optlistptr)
-            optptr = optlistptr + strlen(optlistptr) - 1;
+    {   /* down */
+        if(f_ctrl_pressed)
+            optptr = optlistptr;
+        else if(optptr-- == optlistptr)
+            optptr = last_option; /* wrap */
     }
 
     dptr->option = *optptr;
@@ -1168,20 +1172,28 @@ dialog__bumparray(
     DIALOG * dptr,
     dbox_field hit)
 {
+    BOOL f_shift_pressed;
+    const BOOL f_ctrl_pressed = host_keyboard_status(&f_shift_pressed);
+
     PC_U8 ** array = (PC_U8 **) dptr->optionlist;
+    S32 last_array_option = dialog__lastarrayopt(array);
 
     assert(dptr->type == F_ARRAY);
 
     /* always inc,dec,value */
     if(hit+2 == valuefield)
-    {
-        if(dptr->option++ == dialog__lastarrayopt(array))
-            dptr->option = 0;
+    {   /* up */
+        if(f_ctrl_pressed)
+            dptr->option = last_array_option;
+        else if(dptr->option++ == last_array_option)
+            dptr->option = 0; /* wrap */
     }
     else
-    {
-        if(dptr->option-- == 0)
-            dptr->option = dialog__lastarrayopt(array);
+    {   /* down */
+        if(f_ctrl_pressed)
+            dptr->option = 0;
+        else if(dptr->option-- == 0)
+            dptr->option = last_array_option; /* wrap */
     }
 
     dialog__setfield_str(valuefield, *array[dptr->option]);
@@ -1677,7 +1689,7 @@ dproc_aboutprog(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2021 Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2022 Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 

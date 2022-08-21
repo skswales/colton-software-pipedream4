@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1989-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -19,11 +19,12 @@
  * &.extrautils.PlingStore.MakeStore
  */
 
-#define HexVersion   0x45901
-#define Version      "4.59.01"
-#define CurrentDate  "01-Oct-2021"
+#define HexVersion   0x46000
+#define Version      "4.60"
+#define CurrentDate  "22-Jul-2022"
 
 /*
+* 22 Jul 2022 - 4.60
 * 01 Oct 2021 - 4.59.01
 * 06 Sep 2021 - 4.59
 * 31 Jan 2021 - 4.58.03

@@ -2,7 +2,7 @@
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
@@ -258,10 +258,6 @@ main(
     wimptx_os_version_determine(); /* very early indeed */
 
     pd_report_and_trace_enable();
-
-    /* set locale for isalpha etc. (ctype.h functions) */
-    trace_1(TRACE_OUT | TRACE_ANY, TEXT("main: initial CTYPE locale is %s"), setlocale(LC_CTYPE, NULL));
-    consume_ptr(setlocale(LC_CTYPE, "C" /* standard ASCII NB NOT "ISO8859-1" (ISO Latin 1) */));
 
     get_user_info();
 
@@ -657,8 +653,11 @@ decode_command_line_options(
             case 'l': /* Locale */
                 arg = argv[++i];
                 if(pass == 2)
-                {
-                    setlocale(LC_CTYPE, arg);
+                {   /* set the specified locale - if that fails, fall back to 'C' locale */
+                    if(NULL != setlocale(LC_ALL, arg))
+                        reportf("setlocale(%s) => %s", arg, setlocale(LC_ALL, NULL));
+                    else
+                        consume_ptr(setlocale(LC_ALL, "C"));
                 }
                 break;
 

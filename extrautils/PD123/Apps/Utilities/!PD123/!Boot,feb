@@ -1,6 +1,9 @@
 | Boot file for PD123
 
-Set PD123$Dir <Obey$Dir>
+If "<PD123$Dir>"="" Then Set PD123$Dir <Obey$Dir>
+
+If "<File$Type_DB0>"="" Then Set File$Type_DB0 LotusWK1
+
 IconSprites <PD123$Dir>.!Sprites
 
 | Syntax: PD123 <infile> <outfile>
