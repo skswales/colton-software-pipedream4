@@ -60,7 +60,7 @@ slot/range flags
 #define SLR_ALL_REF         16
 
 /*
-evaluator result type - stored in slot
+evaluator result type - stored in cell
 */
 
 typedef struct EV_RESULT
@@ -110,33 +110,33 @@ enum CONTROL_TYPES
 };
 
 /*
-evaluator's view of a slot
+evaluator's view of a cell
 */
 
-typedef struct EV_SLOT
+typedef struct EV_CELL
 {
     EV_RESULT ev_result;        /* result of expression */
-    EV_PARMS parms;             /* parameters about slot */
+    EV_PARMS parms;             /* parameters about cell */
 
     /* members below this point may  or may not be present,
-     * depending on the type of slot; flags tells the slot type
+     * depending on the type of cell; flags tells the cell type
      */
-    union EV_SLOT_RPN
+    union EV_CELL_RPN
     {
-        struct EV_SLOT_RPN_VAR
+        struct EV_CELL_RPN_VAR
         {
-            EV_SERIAL visited;          /* slot was last visited on.. */
+            EV_SERIAL visited;          /* cell was last visited on.. */
             char rpn_str[1];            /* rpn string of expression */
         } var;
 
-        struct EV_SLOT_RPN_CON
+        struct EV_CELL_RPN_CON
         {
             char rpn_str[1];
         } con;
 
     } rpn;
 }
-EV_SLOT, * P_EV_SLOT, ** P_P_EV_SLOT;
+EV_CELL, * P_EV_CELL, ** P_P_EV_CELL;
 
 /*
 evaluator option block
@@ -189,7 +189,7 @@ enum UREF_ACTIONS
     UREF_CHANGE    ,
     UREF_REPLACE   ,
     UREF_COPY      ,
-    UREF_SWAPSLOT  ,
+    UREF_SWAPCELL  ,
     UREF_CLOSE     ,
     UREF_REDRAW    ,
     UREF_ADJUST    ,
@@ -214,11 +214,11 @@ grubber state block
 
 typedef struct EV_GRUB_STATE
 {
-    S32 offset;            /* offset into rpn of slot being grubbed */
+    S32 offset;             /* offset into rpn of cell being grubbed */
     EV_SLR slr;             /* slr being grubbed in */
     EV_DATA data;           /* data element grubbed */
     S16 byoffset;           /* rpn offset for use external to grubber */
-    S32 in_cond;           /* in condition flag */
+    S32 in_cond;            /* in condition flag */
 }
 * P_EV_GRUB;
 
@@ -629,11 +629,11 @@ types of rpn atoms
 enum RPN_TYPES
 {
     RPN_DAT     =0,         /* data */
-    RPN_CON     ,           /* constant slots */
+    RPN_CON     ,           /* constant cells */
     RPN_TMP     ,           /* temporary data */
     RPN_RES     ,           /* result data */
     RPN_LCL     ,           /* local variables */
-    RPN_EXT     ,           /* external slots */
+    RPN_EXT     ,           /* external cells */
     RPN_FRM     ,           /* formatting information */
     RPN_UOP     ,           /* unary operator */
     RPN_BOP     ,           /* binary operator */
@@ -791,7 +791,7 @@ extern S32
 ev_decode_slot(
     _InVal_     EV_DOCNO docno,
     P_U8 txt_out,
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     _InRef_     PC_EV_OPTBLOCK p_optblock);
 
 extern S32
@@ -912,16 +912,16 @@ ev_data_to_result_convert(
 
 extern S32
 ev_is_formula(
-    P_EV_SLOT p_ev_slot);
+    P_EV_CELL p_ev_cell);
 
 extern S32
 ev_exp_copy(
-    P_EV_SLOT out_slotp,
-    P_EV_SLOT in_slotp);
+    P_EV_CELL out_slotp,
+    P_EV_CELL in_slotp);
 
 extern void
 ev_exp_free_resources(
-    _InoutRef_  P_EV_SLOT p_ev_slot);
+    _InoutRef_  P_EV_CELL p_ev_cell);
 
 extern S32
 ev_proc_conditional_rpn(
@@ -1059,7 +1059,7 @@ ev_todo_check(void);
 
 extern S32
 ev_travel(
-    _OutRef_    P_P_EV_SLOT slotpp,
+    _OutRef_    P_P_EV_CELL slotpp,
     _InRef_     PC_EV_SLR p_ev_slr);
 
 extern DOCNO
@@ -1075,6 +1075,12 @@ enum NAME_SUCCESS
 /*
 ev_name.c external functions
 */
+
+extern void
+ev_custom_del_hold(void);
+
+extern void
+ev_custom_del_release(void);
 
 extern void
 ev_name_del_hold(void);
@@ -1096,11 +1102,11 @@ ev_rpn.c external functions
 
 extern S32
 ev_len(
-    P_EV_SLOT p_ev_slot);
+    P_EV_CELL p_ev_cell);
 
 extern void
 ev_rpn_adjust_refs(
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     _InRef_     PC_UREF_PARM upp);
 
 /*
@@ -1131,7 +1137,7 @@ ev_tree.c external functions
 
 extern S32
 ev_add_exp_slot_to_tree(
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     _InRef_     PC_EV_SLR p_ev_slr);
 
 extern S32

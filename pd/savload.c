@@ -66,7 +66,7 @@ savefile_core(
 
 static BOOL
 pd_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output,
@@ -732,7 +732,7 @@ SaveFileAsIs_fn(void)
 
 /******************************************************************************
 *
-* output a slot in plain text mode,
+* output a cell in plain text mode,
 * saving results of numbers rather than contents
 * note that fonts are OFF so no juicy formatting
 *
@@ -740,7 +740,7 @@ SaveFileAsIs_fn(void)
 
 extern BOOL
 plain_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     char filetype_option,
@@ -752,11 +752,11 @@ plain_slot(
     S32 colwid;
     S32 fwidth = LIN_BUFSIZ;
 
-    switch(tslot->type)
+    switch(tcell->type)
     {
     case SL_TEXT:
     case SL_PAGE:
-        (void) expand_slot(current_docno(), tslot, trow, buffer, fwidth,
+        (void) expand_slot(current_docno(), tcell, trow, buffer, fwidth,
                            DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
                            FALSE /*allow_fonty_result*/, TRUE /*cff*/);
         return(FALSE);
@@ -766,7 +766,7 @@ plain_slot(
         break;
     }
 
-    oldformat = tslot->format;
+    oldformat = tcell->format;
     thousands = d_options_TH;
 
     switch(filetype_option)
@@ -776,10 +776,10 @@ plain_slot(
 
     case CSV_CHAR:
         #if !defined(OLD_CSV_SAVE_STYLE)
-        /* poke slot to minus format, no leading or trailing chars */
-        tslot->format &= ~(F_BRAC | F_LDS | F_TRS);
+        /* poke cell to minus format, no leading or trailing chars */
+        tcell->format &= ~(F_BRAC | F_LDS | F_TRS);
         #else
-        tslot->format = F_DCPSID | F_DCP;
+        tcell->format = F_DCPSID | F_DCP;
         #endif
         /* ensure no silly commas etc. output! */
         d_options_TH = TH_BLANK;
@@ -787,22 +787,22 @@ plain_slot(
 
     case PARAGRAPH_CHAR:
     case FWP_CHAR:
-        /* format slots on output to the same as we'd print them */
+        /* format cells on output to the same as we'd print them */
         colwid = colwidth(tcol);
-        fwidth = chkolp(tslot, tcol, trow);
+        fwidth = chkolp(tcell, tcol, trow);
         fwidth = MIN(fwidth, colwid);
         fwidth = MIN(fwidth, LIN_BUFSIZ);
         break;
     }
 
-    trace_6(TRACE_APP_PD4, "plain_slot(&%p, %d, %d, '%c', &%p): fwidth %d", report_ptr_cast(tslot), tcol, trow, filetype_option, buffer, fwidth);
+    trace_6(TRACE_APP_PD4, "plain_slot(&%p, %d, %d, '%c', &%p): fwidth %d", report_ptr_cast(tcell), tcol, trow, filetype_option, buffer, fwidth);
 
-    (void) expand_slot(current_docno(), tslot, trow, buffer, fwidth,
+    (void) expand_slot(current_docno(), tcell, trow, buffer, fwidth,
                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
                        FALSE /*allow_fonty_result*/, TRUE /*cff*/);
-    /* does not move slot */
+    /* does not move cell */
 
-    tslot->format = oldformat;
+    tcell->format = oldformat;
     d_options_TH = thousands;
 
     /* remove padding space from plain non-fonty string */
@@ -882,7 +882,7 @@ savefile_core(
     ROW timer = 0;
     COL tcol, prevcol;
     ROW trow, prevrow;
-    P_SLOT tslot;
+    P_CELL tcell;
     SLR first, last;
     char rowselection[EV_MAX_OUT_LEN + 1];
     char array[32];
@@ -1046,7 +1046,7 @@ savefile_core(
             break;
         }
 
-    /* print all slots in block, for plain text going
+    /* print all cells in block, for plain text going
      * row by row, otherwise column by column.
      * NB. don't set any earlier or in danger of block damage
     */
@@ -1067,7 +1067,7 @@ savefile_core(
         /* ensure consistently bad page numbers are saved */
         curpnm = 0;
 
-        /* save all slots */
+        /* save all cells */
         while(!ctrlflag  &&  all_ok  &&  next_in_block(goingdown))
             {
             tcol = in_block.col;
@@ -1139,7 +1139,7 @@ savefile_core(
                     fwp_save_line_preamble(output, FWP_CHAR == p_save_file_options->filetype_option);
                 }
 
-            tslot = travel(tcol, trow);
+            tcell = travel(tcol, trow);
 
             /* for a new column, either a column heading construct needs to be
              * be written or (when in plain text mode) tabs up to
@@ -1150,16 +1150,16 @@ savefile_core(
                 if(!goingdown)
                     {
                     /* in plain text (or commarated) mode don't bother writing
-                     * field separator if there are no more slots in this row
+                     * field separator if there are no more cells in this row
                     */
                     if( prevcol > tcol)
                         prevcol = tcol;  /* might be new row */
 
-                    /* if it's a blank slot don't bother outputting field separators
-                     * watch out for numeric slots masquerading as blanks
+                    /* if it's a blank cell don't bother outputting field separators
+                     * watch out for numeric cells masquerading as blanks
                     */
-                    if( !isslotblank(tslot)  ||
-                        (tslot  &&  (tslot->type != SL_TEXT)))
+                    if( !isslotblank(tcell)  ||
+                        (tcell  &&  (tcell->type != SL_TEXT)))
                         {
                         while(prevcol < tcol)
                             {
@@ -1183,7 +1183,7 @@ savefile_core(
                     }
                 }
 
-            if(!tslot)
+            if(!tcell)
                 {
                 if(atend(tcol, trow))
                     {
@@ -1198,23 +1198,23 @@ savefile_core(
                 /* paragraph saving does its own linefeeds */
                 else if(PARAGRAPH_CHAR == p_save_file_options->filetype_option)
                     {
-                    if(!dtp_save_slot(tslot, tcol, trow, output))
+                    if(!dtp_save_slot(tcell, tcol, trow, output))
                         all_ok = FALSE;
                     }
                 }
             else
                 {
-                /* slot needs writing out */
+                /* cell needs writing out */
                 if(timer++ > TIMER_DELAY)
                     {
                     timer = 0;
                     actind_in_block(goingdown);
                     }
 
-                /* RJM would redirect saving_part_file on 31.8.91, but we still need the slot bits!! */
+                /* RJM would redirect saving_part_file on 31.8.91, but we still need the cell bits!! */
                 if(goingdown)
                     {
-                    if(!pd_save_slot(tslot, tcol, trow, output, saving_part_file)  ||
+                    if(!pd_save_slot(tcell, tcol, trow, output, saving_part_file)  ||
                        !away_eol(output)  )
                         all_ok = FALSE;
                     }
@@ -1245,7 +1245,7 @@ savefile_core(
 
                             if(tcol == 0)
                                 {
-                                switch((tslot->justify) & J_BITS)
+                                switch((tcell->justify) & J_BITS)
                                     {
                                     case J_LEFT:
                                         if(!view_save_stored_command("LJ", output))
@@ -1268,7 +1268,7 @@ savefile_core(
                                 }
 
                             if( all_ok  &&
-                                tslot   &&  !view_save_slot(tslot, tcol, trow, output,
+                                tcell   &&  !view_save_slot(tcell, tcol, trow, output,
                                                             &v_chars_sofar,
                                                             &splitlines, rightmargin))
                                 all_ok = FALSE;
@@ -1296,12 +1296,12 @@ savefile_core(
 
                             if(FWP_CHAR == p_save_file_options->filetype_option)
                                 {
-                                if(!fwp_save_slot(tslot, tcol, trow, output, TRUE))
+                                if(!fwp_save_slot(tcell, tcol, trow, output, TRUE))
                                     all_ok = FALSE;
                                 }
                             else
                                 {
-                                if(!dtp_save_slot(tslot, tcol, trow, output))
+                                if(!dtp_save_slot(tcell, tcol, trow, output))
                                     all_ok = FALSE;
                                 }
                             break;
@@ -1313,8 +1313,8 @@ savefile_core(
                                 continue;
 
                             {
-                            /* write just text or formula part of slot out */
-                            BOOL csv_quotes = !plain_slot(tslot, tcol, trow, p_save_file_options->filetype_option, linbuf)
+                            /* write just text or formula part of cell out */
+                            BOOL csv_quotes = !plain_slot(tcell, tcol, trow, p_save_file_options->filetype_option, linbuf)
                                               &&  (CSV_CHAR == p_save_file_options->filetype_option);
                             uchar * lptr = linbuf;
                             uchar ch;
@@ -1435,13 +1435,13 @@ collup(
 
 /******************************************************************************
 *
-* save slot
+* save cell
 *
 ******************************************************************************/
 
 static BOOL
 pd_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output,
@@ -1451,9 +1451,9 @@ pd_save_slot(
     BOOL numerictype = FALSE;
     uchar justify;
 
-    /* save slot type, followed by justification, followed by formats */
+    /* save cell type, followed by justification, followed by formats */
 
-    switch((int) tslot->type)
+    switch((int) tcell->type)
     {
     default:
     /* case SL_TEXT: */
@@ -1469,14 +1469,14 @@ pd_save_slot(
         {
         char page_array[32];
         (void) xsnprintf(page_array, elemof32(page_array),
-                        "%%" "P" "%d" "%%", tslot->content.page.condval);
+                        "%%" "P" "%d" "%%", tcell->content.page.condval);
         if(!away_string_simple(page_array, output))
             return(FALSE);
         break;
         }
     }
 
-    justify = tslot->justify & J_BITS;
+    justify = tcell->justify & J_BITS;
 
     if((justify > 0)  &&  (justify <= 6))
         if(!away_construct(justify, output))
@@ -1484,7 +1484,7 @@ pd_save_slot(
 
     if(numerictype)
         {
-        const uchar format = tslot->format;
+        const uchar format = tcell->format;
 
         if(format & (F_LDS | F_TRS | F_DCP))
             {
@@ -1517,13 +1517,13 @@ pd_save_slot(
             }
         }
 
-    /* RJM 9.10.91, this plain_slot ensures blocks and row selections aren't saved with silly slot refs
+    /* RJM 9.10.91, this plain_slot ensures blocks and row selections aren't saved with silly cell references
         it helps the PD4 example database to work, amongst other things
     */
     if(saving_part_file)
-        plain_slot(tslot, tcol, trow, PD4_CHAR, linbuf);
+        plain_slot(tcell, tcol, trow, PD4_CHAR, linbuf);
     else
-        prccon(linbuf, tslot);
+        prccon(linbuf, tcell);
 
     /* output contents, dealing with highlight chars and % */
 
@@ -1711,7 +1711,7 @@ lukcon(
 
             break;
 
-        /* for option, just remember position: gets dealt with at end of slot */
+        /* for option, just remember position: gets dealt with at end of cell */
 
         case C_OPT:
             in_option = start_of_construct;
@@ -1771,7 +1771,7 @@ lukcon(
 
 /******************************************************************************
 *
-* store from linbuf in slot
+* store from linbuf in cell
 *
 ******************************************************************************/
 
@@ -1830,9 +1830,9 @@ stoslt(
         case SL_TEXT:
         #endif
             {
-            P_SLOT tslot;
+            P_CELL tcell;
 
-            /* compile directly into slot */
+            /* compile directly into cell */
             buffer_altered = TRUE;
             if(!merstr(tcol, trow, FALSE, !inserting))
                 {
@@ -1840,27 +1840,27 @@ stoslt(
                 return(FALSE);
                 }
 
-            if((tslot = travel(tcol, trow)) != NULL)
-                tslot->justify = justify;
+            if((tcell = travel(tcol, trow)) != NULL)
+                tcell->justify = justify;
 
             break;
             }
 
         case SL_PAGE:
             {
-            P_SLOT tslot;
+            P_CELL tcell;
 
             /* type is not text */
-            if((tslot = createslot(tcol, trow, sizeof(struct SLOT_CONTENT_PAGE), type)) == NULL)
+            if((tcell = createslot(tcol, trow, sizeof(struct CELL_CONTENT_PAGE), type)) == NULL)
                 {
                 slot_in_buffer = buffer_altered = FALSE;
                 return(reperr_null(status_nomem()));
                 }
 
-            tslot->type    = type;
-            tslot->justify = justify;
+            tcell->type    = type;
+            tcell->justify = justify;
 
-            tslot->content.page.condval = pageoffset;
+            tcell->content.page.condval = pageoffset;
             break;
             }
         }
@@ -2738,7 +2738,7 @@ loadfile_core(
     BOOL outofmem = FALSE;
     BOOL been_ruler = FALSE;
     S32 vsrows = -1; /* dataflower */
-    /* 1WP highlights have to be reinstated at the start of each slot */
+    /* 1WP highlights have to be reinstated at the start of each cell */
     uchar h_byte = FWP_NOHIGHLIGHTS;
     COL insert_col = -1; /* dataflower */
     ROW insert_row = -1; /* ditto */
@@ -2808,7 +2808,7 @@ loadfile_core(
             }
 
         if(bad_reference(insert_col, insert_row))
-            return(reperr_null(create_error(ERR_BAD_SLOT)));
+            return(reperr_null(create_error(ERR_BAD_CELL)));
         }
     else  /* overwriting existing(?) file */
         {
@@ -2904,13 +2904,13 @@ loadfile_core(
 
     escape_enable();
 
-    /* read each slot from the file */
+    /* read each cell from the file */
 
     if(VIEWSHEET_CHAR == p_load_file_options->filetype_option)
         viewsheet_load_core(vsrows, p_load_file_options->inserting, &insert_numrow, &breakout);
     else
 
-    /* each slot */
+    /* each cell */
     while(c >= 0)
         {
         BOOL in_construct = FALSE;
@@ -2949,7 +2949,7 @@ loadfile_core(
 
         if(PD4_CHAR == p_load_file_options->filetype_option) /* optimise for PipeDream load */
             {
-            /* begin PipeDream format read processing for this slot */
+            /* begin PipeDream format read processing for this cell */
             lecpos = 0;
 
             do  {
@@ -2975,7 +2975,7 @@ loadfile_core(
 
                         lastch = (uchar) c;
 
-                        break; /* either CR or LF marks end of slot */
+                        break; /* either CR or LF marks end of cell */
                         }
                     else
                         {
@@ -3016,11 +3016,11 @@ loadfile_core(
                 }
             while(lecpos < MAXFLD);
 
-            /* end of PipeDream format read processing for this slot */
+            /* end of PipeDream format read processing for this cell */
             }
         else
             {
-            /* begin other format read processing for this slot */
+            /* begin other format read processing for this cell */
 
             if(/*loading_paragraph &&*/ paragraph_saved_word && paragraph_in_column == tcol)
                 {
@@ -3105,7 +3105,7 @@ loadfile_core(
 
                 lastch = ch = (uchar) c;
 
-                /* end of slot? */
+                /* end of cell? */
                 if((ch == CR)  ||  (ch == LF))
                     break;
 
@@ -3132,14 +3132,14 @@ loadfile_core(
                     (void) mystr_set(&paragraph_saved_word, mptr);
                     paragraph_in_column = tcol;
 
-                    /* write only up to start of word into slot */
+                    /* write only up to start of word into cell */
                     lecpos = mptr-linbuf;
                     break;
                     }
                 }
             while(lecpos < MAXFLD);
 
-            /* end of other format read processing for this slot */
+            /* end of other format read processing for this cell */
             }
 
         if(outofmem)
@@ -3161,7 +3161,7 @@ loadfile_core(
                 {
                 something_on_this_line = TRUE;
 
-                /* if inserting, insert slot here */
+                /* if inserting, insert cell here */
                 if(p_load_file_options->inserting  &&  ((c >= 0)  ||  (lecpos > 0)))
                     {
                     if(!(insertslotat(tcol, trow)))
@@ -3172,7 +3172,7 @@ loadfile_core(
                         insert_numrow = trow+1;
                     }
 
-                /* if something to put in slot, put it in */
+                /* if something to put in cell, put it in */
                 if( ((lecpos > 0)  ||  (type == SL_PAGE))  &&
                     !stoslt(tcol, trow, type, justify, format, pageoffset, p_load_file_options->inserting))
                     {
@@ -3339,7 +3339,7 @@ loadfile_core(
             }
         }
 
-    /* updating slots - must do after possible insertion discard */
+    /* updating cells - must do after possible insertion discard */
     clear_protect_list();
     clear_linked_columns(); /* set the linked columns */
 
@@ -3423,7 +3423,7 @@ viewsheet_load_core(
                         *p_insert_numrow = (ROW) row + 1;
                     }
 
-                /* if something to put in slot, put it in */
+                /* if something to put in cell, put it in */
                 strcpy(linbuf, vslot);
                 if(!stoslt((COL) col, (ROW) row,
                            type, justify, format, 0, inserting))

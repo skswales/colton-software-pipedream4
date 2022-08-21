@@ -66,6 +66,13 @@ any problems.</P>
 <A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A></p>
 
 
+<H4>4.53/03 (06 Aug 2015)</H4>
+
+<P>Converting a number cell containing an undefined custom function reference to text fixed.</P>
+
+<P>Date format extended to accept five 'm' or 'M' characters to yield first character of month name.</P>
+
+
 <H4>4.53/02 (09 Jul 2015)</H4>
 
 <P>Timing-dependent zero-page access during chart loading fixed.</P>

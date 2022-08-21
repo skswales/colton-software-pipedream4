@@ -447,7 +447,7 @@ cachemodevariables(void)
 
         new_grid_state();
 
-        colh_position_icons();  /* mainly because the slot coordinates box is made */
+        colh_position_icons();  /* mainly because the cell coordinates box is made */
                                 /* up of two icons, one dx,dy inside the other     */
 
         (void) new_window_height(windowheight());
@@ -883,7 +883,7 @@ please_invert_numeric_slot(
     please_invert_textarea(tx0, ty0, tx1, ty1, fg, bg);
 }
 
-/* invert a set of slots, taking care with the grid */
+/* invert a set of cells, taking care with the grid */
 
 extern void
 please_invert_numeric_slots(

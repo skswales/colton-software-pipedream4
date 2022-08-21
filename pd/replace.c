@@ -16,7 +16,7 @@
 #include "datafmt.h"
 
 /*
-insert the char, perhaps updating sch_end_offset if last slot
+insert the char, perhaps updating sch_end_offset if last cell
 */
 
 static void
@@ -130,14 +130,14 @@ replace_one_word(
 }
 
 /*
-in the middle of replacing, hit a slot break
-next slot must exist, must be text and must not be blank
+in the middle of replacing, hit a cell break
+next cell must exist, must be text and must not be blank
 */
 
 static BOOL
 next_slot_in_replace(void)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(!mergebuf())
         return(FALSE);
@@ -145,15 +145,15 @@ next_slot_in_replace(void)
     mark_row_border(currowoffset);
     mark_slot(travel_here());
 
-    tslot = travel(curcol, ++currow);
+    tcell = travel(curcol, ++currow);
 
-    if(!tslot)
+    if(!tcell)
         return(FALSE);
 
-    /* SKS after 4.12 30mar92 - was ++currow which destroyed alternate slots until end-of-world */
+    /* SKS after 4.12 30mar92 - was ++currow which destroyed alternate cells until end-of-world */
     chknlr(curcol, currow);
 
-    prccon(linbuf, tslot);
+    prccon(linbuf, tcell);
 
     lecpos = 0;
 
@@ -162,7 +162,7 @@ next_slot_in_replace(void)
 }
 
 /*
-delete the char, perhaps updating sch_end_offset if we're in the last slot
+delete the char, perhaps updating sch_end_offset if we're in the last cell
 */
 
 static void
@@ -208,7 +208,7 @@ do_replace(
         {
         tcase = NOCASEINFO;
 
-        /* move over spaces and line slot breaks */
+        /* move over spaces and line cell breaks */
         assert(lecpos < elemof32(linbuf));
         if(linbuf[lecpos] == SPACE)
             {
@@ -242,7 +242,7 @@ do_replace(
                 tcase |= SECONDUPPER;
             }
 
-        /* delete the word, only works in one slot */
+        /* delete the word, only works in one cell */
         while(linbuf[lecpos]  &&  linbuf[lecpos] != SPACE  &&
               ((currow != sch_pos_end.row)  ||  (curcol != sch_pos_stt.col)  ||  (lecpos < sch_end_offset)))
             delete_this_ch();

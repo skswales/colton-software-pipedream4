@@ -234,7 +234,7 @@ typedef union EV_DATA_ARG
 
     EV_CONSTANT     ev_constant;    /* all the above, as copied by ev_data_to_result_convert() */
 
-    EV_SLR          slr;            /* slot reference */
+    EV_SLR          slr;            /* cell reference */
     EV_RANGE        range;          /* range */
     EV_NAMEID       nameid;         /* id of named resource */
     S16             cond_pos;       /* position of conditional expression */
@@ -383,18 +383,18 @@ ss_ymd_to_dateval(
 extern S32
 ss_hms_to_timeval(
     _OutRef_    P_EV_DATE_TIME p_ev_date_time,
-    _InVal_     S32 hour,
-    _InVal_     S32 minute,
-    _InVal_     S32 second);
+    _InVal_     S32 hours,
+    _InVal_     S32 minutes,
+    _InVal_     S32 seconds);
 
 extern void
 ss_local_time(
     _OutRef_    P_S32 p_year,
     _OutRef_    P_S32 p_month,
     _OutRef_    P_S32 p_day,
-    _OutRef_    P_S32 p_hour,
-    _OutRef_    P_S32 p_minute,
-    _OutRef_    P_S32 p_second);
+    _OutRef_    P_S32 p_hours,
+    _OutRef_    P_S32 p_minutes,
+    _OutRef_    P_S32 p_seconds);
 
 extern void
 ss_local_time_as_ev_date(
@@ -409,9 +409,9 @@ _Check_return_
 extern STATUS
 ss_timeval_to_hms(
     _InRef_     PC_EV_DATE_TIME p_ev_date_time,
-    _OutRef_    P_S32 p_hour,
-    _OutRef_    P_S32 p_minute,
-    _OutRef_    P_S32 p_second);
+    _OutRef_    P_S32 p_hours,
+    _OutRef_    P_S32 p_minutes,
+    _OutRef_    P_S32 p_seconds);
 
 _Check_return_
 extern BOOL

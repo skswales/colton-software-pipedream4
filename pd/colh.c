@@ -334,8 +334,8 @@ colh_position_icons(void)
     wimp_get_icon_info(colh_window, (wimp_i)COLH_STATUS_BORDER, &border.i);
 
     border.w        = colh_window;
-    border.i.box.x0 = texttooffset_x(SLOTCOORDS_t_X0);
-    border.i.box.x1 = texttooffset_x(SLOTCOORDS_t_X1 + borderwidth);
+    border.i.box.x0 = texttooffset_x(CELLCOORDS_t_X0);
+    border.i.box.x1 = texttooffset_x(CELLCOORDS_t_X1 + borderwidth);
     border.i.box.y0 = heading.i.box.y0;
     border.i.box.y1 = heading.i.box.y1;
 
@@ -571,7 +571,7 @@ colh_really_draw_column_headings(void)
 
 /******************************************************************************
 *
-*           display contents of current numeric slot on the contents line
+* display contents of current numeric cell on the contents line
 *
 ******************************************************************************/
 
@@ -579,17 +579,17 @@ extern void
 colh_draw_contents_of_numslot(void)
 {
     char      text[LIN_BUFSIZ];
-    P_SLOT     tslot;
+    P_CELL     tcell;
 
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
         return;
 
-    tslot = travel_here();
+    tcell = travel_here();
 
-    if(!tslot  ||  (tslot->type == SL_TEXT)  ||  (tslot->type == SL_PAGE))
+    if(!tcell  ||  (tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE))
         *text = '\0';
     else
-        prccon(text, tslot);   /* decompile tslot into text */
+        prccon(text, tcell);   /* decompile tcell into text */
 
     set_icon_text(colh_window, (wimp_i)COLH_CONTENTS_LINE, text);
 }
@@ -842,7 +842,7 @@ colh_event_handler(
             break;
 
         case wimp_EGAINCARET:
-            /* This document is gaining the caret, and will show the slot count (recalculation status) from now on */
+            /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
             if(slotcount_docno != current_docno())
                 {
                 colh_draw_slot_count_in_document(NULL); /* kill the current indicatior (if any) */
@@ -930,7 +930,7 @@ application_button_click_in_colh(
             "application_button_click_in_colh: (%d, %d) bstate %X, icon %d",
             pointer->x, pointer->y, buttonstate, (int)icon);
 
-    /* ensure we can find slot for positioning, overlap tests etc. must allow spellcheck as we may move */
+    /* ensure we can find cell for positioning, overlap tests etc. must allow spellcheck as we may move */
     if(!mergebuf())
         return;
     filbuf();
@@ -1155,12 +1155,12 @@ application_singleclick_in_colh(
 
             if(selectclicked && !blkindoc)
                 {
-                trace_0(TRACE_APP_PD4, "click on slot coordinates - mark entire sheet");
+                trace_0(TRACE_APP_PD4, "click on cell coordinates - mark entire sheet");
                 funcnum = N_MarkSheet;
                 }
             else
                 {
-                trace_0(TRACE_APP_PD4, "click on slot coordinates - clear markers");
+                trace_0(TRACE_APP_PD4, "click on cell coordinates - clear markers");
                 funcnum = N_ClearMarkedBlock;
                 }
             break;
@@ -1188,7 +1188,7 @@ application_singleclick_in_colh(
                     if(extend)
                         {
                         /* either alter current block or set new block:
-                         * mergebuf has been done by caller to ensure slot marking correct
+                         * mergebuf has been done by caller to ensure cell marking correct
                          */
                         if(blkindoc)
                             {
@@ -1418,7 +1418,7 @@ application_startdrag_in_colh(
 
 /******************************************************************************
 *
-* Called when user clicks on the editable slot-contents line.
+* Called when user clicks on the editable cell-contents line.
 *
 * The contents line is a writable icon, so when clicked on,
 * receives the caret, whether it wants it, or not!.

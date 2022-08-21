@@ -3059,7 +3059,7 @@ dproc_edit_name(
 *
 * report a badly formed expression on exit from an editor
 * give user the choice of remaining in the editor to fix the
-* problem or returning the expression as a text slot
+* problem or returning the expression as a text cell
 *
 ******************************************************************************/
 

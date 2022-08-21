@@ -275,8 +275,8 @@ ev_match_rng(
                 res = DEP_INFORM;
             break;
 
-        /* (range may be a slot after all) */
-        case UREF_SWAPSLOT:
+        /* (range may be a cell after all) */
+        case UREF_SWAPCELL:
             if(!(p_ev_range->s.flags & SLR_ALL_REF))
                 {
                 /* check if the whole range can be moved */
@@ -400,7 +400,7 @@ ev_match_slr(
                 res = DEP_INFORM;
             break;
 
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
             if(slr_equal(ref, &upp->slr1))
                 res = uref_swapslot(ref, &upp->slr2);
             else if(slr_equal(ref, &upp->slr2))
@@ -443,10 +443,10 @@ ev_match_slr(
 *   slr2 contains source document number
 *
 * UREF_CHANGE
-*   slr1 contains slot changed
+*   slr1 contains cell changed
 *
 * UREF_REPLACE
-*   as UREF_DELETE; references to replaced slots
+*   as UREF_DELETE; references to replaced cells
 *   are not marked bad
 *
 * UREF_COPY
@@ -456,7 +456,7 @@ ev_match_slr(
 *   should NEVER come in main EV_UREF entry, only
 *   local calls to ev_match_slr/ev_match_rng
 *   used in replicate/copy so that absolute bits
-*   are be checked when updating a slot reference
+*   are be checked when updating a cell reference
 *
 * UREF_ADJUST
 *   as UREF_COPY but no checking of absolute bits;
@@ -464,14 +464,14 @@ ev_match_slr(
 *   local calls to ev_match_slr/ev_match_rng
 *   result document number is checked for validity
 *
-* UREF_SWAPSLOT
-*   slr1, slr2 contain slots to be swapped
+* UREF_SWAPCELL
+*   slr1, slr2 contain cells to be swapped
 *
 * UREF_CLOSE
 *   document slr1.docno is going away
 *
 * UREF_REDRAW
-*   request for redraw; slr1 contains slot
+*   request for redraw; slr1 contains cell
 *
 * MRJC added 26.3.92
 * UREF_RENAME
@@ -507,8 +507,8 @@ ev_uref(
         case UREF_REPLACE:
             trace_0(TRACE_MODULE_UREF, "UREF_REPLACE ");
             break;
-        case UREF_SWAPSLOT:
-            trace_0(TRACE_MODULE_UREF, "UREF_SWAPSLOT ");
+        case UREF_SWAPCELL:
+            trace_0(TRACE_MODULE_UREF, "UREF_SWAPCELL ");
             break;
         case UREF_CLOSE:
             trace_0(TRACE_MODULE_UREF, "UREF_CLOSE ");
@@ -537,7 +537,7 @@ ev_uref(
         case UREF_DELETE:
         case UREF_SWAP:
         case UREF_CHANGEDOC:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
         case UREF_RENAME:
             stack_zap(upp);
@@ -559,7 +559,7 @@ ev_uref(
         case UREF_DELETE:
         case UREF_SWAP:
         case UREF_CHANGEDOC:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
             if((todop = todo_ptr(0)) != NULL)
                 {
@@ -611,7 +611,7 @@ ev_uref(
                 case UREF_CHANGE:
                 case UREF_REDRAW:
                 case UREF_REPLACE:
-                case UREF_SWAPSLOT:
+                case UREF_SWAPCELL:
                 case UREF_CLOSE:
                 case UREF_RENAME:
                     if((eep = tree_extptr(p_ss_doc, 0)) != NULL)
@@ -662,7 +662,7 @@ ev_uref(
                 case UREF_SWAP:
                 case UREF_CHANGEDOC:
                 case UREF_REPLACE:
-                case UREF_SWAPSLOT:
+                case UREF_SWAPCELL:
                 case UREF_CLOSE:
                     if((rep = tree_rngptr(p_ss_doc, 0)) != NULL)
                         {
@@ -688,7 +688,7 @@ ev_uref(
                             in the compiled string and update that */
                             if((res = ev_match_rng(&rep->refto, upp)) != DEP_NONE)
                                 {
-                                P_EV_SLOT p_ev_slot;
+                                P_EV_CELL p_ev_cell;
                                 S32 travel_res;
 
                                 /* mark for recalc */
@@ -697,22 +697,22 @@ ev_uref(
                                 if(res != DEP_INFORM)
                                     {
                                     if(rep->byoffset >= 0 &&
-                                       (travel_res = ev_travel(&p_ev_slot, &rep->byslr)) != 0)
+                                       (travel_res = ev_travel(&p_ev_cell, &rep->byslr)) != 0)
                                         {
-                                        /* internal format slots */
+                                        /* internal format cells */
                                         if(travel_res > 0)
                                             {
                                             EV_RANGE temp_rng;
 
                                             read_range(  &temp_rng,
-                                                         p_ev_slot->rpn.var.rpn_str +
+                                                         p_ev_cell->rpn.var.rpn_str +
                                                          rep->byoffset);
                                             ev_match_rng(&temp_rng, upp);
                                             write_rng   (&temp_rng,
-                                                         p_ev_slot->rpn.var.rpn_str +
+                                                         p_ev_cell->rpn.var.rpn_str +
                                                          rep->byoffset);
                                             }
-                                        /* external format slots */
+                                        /* external format cells */
                                         else
                                             ev_ext_uref(&rep->byslr,
                                                         rep->byoffset,
@@ -742,7 +742,7 @@ ev_uref(
                 case UREF_SWAP:
                 case UREF_CHANGEDOC:
                 case UREF_REPLACE:
-                case UREF_SWAPSLOT:
+                case UREF_SWAPCELL:
                 case UREF_CLOSE:
                     if((sep = tree_slrptr(p_ss_doc, 0)) != NULL)
                         {
@@ -770,7 +770,7 @@ ev_uref(
                             in the compiled string and update that */
                             if((res = ev_match_slr(&sep->refto, upp)) != DEP_NONE)
                                 {
-                                P_EV_SLOT p_ev_slot;
+                                P_EV_CELL p_ev_cell;
                                 S32 travel_res;
 
                                 /* mark for recalc */
@@ -779,22 +779,22 @@ ev_uref(
                                 if(res != DEP_INFORM)
                                     {
                                     if(sep->byoffset >= 0 &&
-                                       (travel_res = ev_travel(&p_ev_slot, &sep->byslr)) != 0)
+                                       (travel_res = ev_travel(&p_ev_cell, &sep->byslr)) != 0)
                                         {
-                                        /* internal format slots */
+                                        /* internal format cells */
                                         if(travel_res > 0)
                                             {
                                             EV_SLR temp_slr;
 
                                             read_slr    (&temp_slr,
-                                                         p_ev_slot->rpn.var.rpn_str +
+                                                         p_ev_cell->rpn.var.rpn_str +
                                                          sep->byoffset);
                                             ev_match_slr(&temp_slr, upp);
                                             write_slr   (&temp_slr,
-                                                         p_ev_slot->rpn.var.rpn_str +
+                                                         p_ev_cell->rpn.var.rpn_str +
                                                          sep->byoffset);
                                             }
-                                        /* external format slots */
+                                        /* external format cells */
                                         else
                                             ev_ext_uref(&sep->byslr,
                                                         sep->byoffset,
@@ -831,7 +831,7 @@ ev_uref(
         case UREF_SWAP:
         case UREF_CHANGEDOC:
         case UREF_REPLACE:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
             if((nep = tree_namptr(0)) != NULL)
                 {
@@ -885,7 +885,7 @@ ev_uref(
         case UREF_SWAP:
         case UREF_CHANGEDOC:
         case UREF_REPLACE:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
             if((p_ev_name = names_def.ptr) != NULL)
                 {
@@ -956,7 +956,7 @@ ev_uref(
         case UREF_SWAP:
         case UREF_CHANGEDOC:
         case UREF_REPLACE:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
             if((mep = tree_macptr(0)) != NULL)
                 {
@@ -1010,7 +1010,7 @@ ev_uref(
         case UREF_SWAP:
         case UREF_CHANGEDOC:
         case UREF_REPLACE:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
             if((p_ev_custom = custom_def.ptr) != NULL)
                 {
@@ -1139,7 +1139,7 @@ uref_swap(
 
 /******************************************************************************
 *
-* update reference when slots are swapped
+* update reference when cells are swapped
 *
 ******************************************************************************/
 

@@ -275,7 +275,7 @@ pdchart_add(
 
         end_key = stt_key;
 
-        /* slots in this range, find the end */
+        /* cells in this range, find the end */
 
         do  {
             ++end_key;
@@ -882,7 +882,7 @@ pdchart_init_shape_suss_holes(
 {
     SLR end;
     TRAVERSE_BLOCK traverse_blk;
-    P_SLOT sl;
+    P_CELL sl;
     STATUS status = STATUS_OK;
 
     p_chart_shapedesc->min.col = LARGEST_COL_POSSIBLE;
@@ -905,7 +905,7 @@ pdchart_init_shape_suss_holes(
 
     while((sl = traverse_block_next_slot(&traverse_blk)) != NULL)
         {
-        /* if there's a slot, mark the col & row it's in */
+        /* if there's a cell, mark the col & row it's in */
         const COL col = traverse_block_cur_col(&traverse_blk);
         const ROW row = traverse_block_cur_row(&traverse_blk);
         const S32 number_slot = (sl->type == SL_NUMBER);
@@ -932,7 +932,7 @@ pdchart_init_shape_suss_holes(
             *entryp = number_slot;
             }
         else if(!*entryp)
-            *entryp = number_slot; /* numbers in slots force their way in */
+            *entryp = number_slot; /* numbers in cells force their way in */
 
         /* this row is not blank */
         nlbrp = &p_chart_shapedesc->nz_rows;
@@ -992,7 +992,7 @@ pdchart_init_shape_from_marked_block(
     PDCHART_SHAPEDESC * const p_chart_shapedesc /*out*/,
     P_PDCHART_HEADER pdchart /*const, maybe NULL*/)
 {
-    P_SLOT       sl;
+    P_CELL       sl;
     P_EV_RESULT  p_ev_result;
     S32          res;
     COL          cols_tx_n;
@@ -1566,7 +1566,7 @@ pdchart_text_add(
     P_PDCHART_ELEMENT pdchartelem;
     S32               res;
 
-    /* create a new dependency block (at end of list) for this slot to refer to */
+    /* create a new dependency block (at end of list) for this cell to refer to */
     if((res = pdchart_listed_dep_new(&itdep, PDCHART_RANGE_TXT)) < 0)
         return(res);
 
@@ -1631,7 +1631,7 @@ pdchart_text_subtract(
 
     pdchart_listed_dep_dispose(&itdep);
 
-    /* source slots going away: must kill use in chart */
+    /* source cells going away: must kill use in chart */
     pdchart_element_subtract(pdchart, pdchartelem, 1);
 
     return(pdchart_modify(pdchart));
@@ -1648,7 +1648,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
     P_PDCHART_ELEMENT pdchartelem = handle;
     DOCNO docno;
     P_LIST_ITEM it;
-    P_SLOT sl;
+    P_CELL sl;
     COL col;
     ROW row;
     P_EV_RESULT p_ev_result;
@@ -1659,7 +1659,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
     if(val)
         val->type = GR_CHART_VALUE_NONE;
 
-    /* determine actual slot to go to */
+    /* determine actual cell to go to */
     switch(pdchartelem->type)
         {
         case PDCHART_RANGE_COL:
@@ -1862,7 +1862,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
 {
     P_PDCHART_ELEMENT pdchartelem = handle;
     DOCNO docno;
-    P_SLOT sl;
+    P_CELL sl;
     ROW row;
     P_EV_RESULT p_ev_result;
 
@@ -1895,7 +1895,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
     /* initial guess is nothing */
     val->type = GR_CHART_VALUE_NONE;
 
-    /* determine actual slot to go to */
+    /* determine actual cell to go to */
     row = pdchartelem->rng.txt.row;
 
     /* use official means for texts */
@@ -2019,7 +2019,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
         case UREF_CHANGE:
         /*case UREF_REPLACE:*/
         case UREF_COPY:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
         case UREF_REDRAW:
         /*case UREF_ADJUST:*/
@@ -2090,7 +2090,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
 
             pdchart_listed_dep_dispose(&itdep);
 
-            /* source slots going away: must kill use in chart */
+            /* source cells going away: must kill use in chart */
             if(pdchartelem != i_pdchartelem)
                 while(--pdchartelem >= i_pdchartelem)
                     if(pdchartelem->itdepkey == itdepkey)
@@ -2110,22 +2110,22 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
             break; /* end of UREF_CLOSE/kill_ref */
 
         case UREF_CHANGE:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
             {
 #if TRACE_ALLOWED
             switch(upp->action)
                 {
                 case UREF_CHANGE:
-                    /* a single slot (upp->slr1) in the range has had a value change: recalc */
+                    /* a single cell (upp->slr1) in the range has had a value change: recalc */
                     trace_3(TRACE_MODULE_GR_CHART,
                             "pdchart_uref_handler: UREF_CHANGE for (%d,%d,%d)",
                             upp->slr1.docno, upp->slr1.col, upp->slr1.row);
                     break;
 
-                case UREF_SWAPSLOT:
-                    /* a pair of slots (upp->slr1, upp->slr2) in the range have been swapped: recalc */
+                case UREF_SWAPCELL:
+                    /* a pair of cells (upp->slr1, upp->slr2) in the range have been swapped: recalc */
                     trace_6(TRACE_MODULE_GR_CHART,
-                            "pdchart_uref_handler: UREF_SWAPSLOT for (%d,%d,%d), (%d,%d,%d)",
+                            "pdchart_uref_handler: UREF_SWAPCELL for (%d,%d,%d), (%d,%d,%d)",
                             upp->slr1.docno, upp->slr1.col, upp->slr1.row,
                             upp->slr2.docno, upp->slr2.col, upp->slr2.row);
                     break;
@@ -2175,7 +2175,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
                 }
             endwhile_change:;
             }
-            break; /* end of UREF_CHANGE/UREF_SWAPSLOT */
+            break; /* end of UREF_CHANGE/UREF_SWAPCELL */
 
         case UREF_SWAP:
             {
@@ -2437,12 +2437,12 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
 
         case UREF_DELETE:
             {
-            /* some (or all) of the slots in the range have been deleted - NOT NECESSARILY UPDATING RANGE
+            /* some (or all) of the cells in the range have been deleted - NOT NECESSARILY UPDATING RANGE
 
              * if columns(rows) have been deleted from a
              * col(row)-based dep then remove elements from chart
 
-             * if slots in rows(columns) have been deleted from a
+             * if cells in rows(columns) have been deleted from a
              * col(row)-based element then recalc chart
             */
 
@@ -2683,7 +2683,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
         case UREF_CHANGE:
         /*case UREF_REPLACE:*/
         case UREF_COPY:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
         case UREF_REDRAW:
         /*case UREF_ADJUST:*/
@@ -2732,7 +2732,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
 
             /* REMOVE NEITHER THIS EXTDEPENDENCY OR OUR LISTED_DEP (needed for save) */
 
-            /* source sheet going away: must bash chart to get it to request this still-live empty slot */
+            /* source sheet going away: must bash chart to get it to request this still-live empty cell */
             pdchart_damage_chart_for_dep(pdchart, itdep);
             break;
 
@@ -2756,7 +2756,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
 
             pdchart_listed_dep_dispose(&itdep);
 
-            /* source slots going away: must kill use in chart and dep */
+            /* source cells going away: must kill use in chart and dep */
             if(pdchartelem != i_pdchartelem)
                 {
                 while(--pdchartelem >= i_pdchartelem)
@@ -2774,23 +2774,23 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
             break; /* end of UREF_CLOSE/kill_ref */
 
         case UREF_CHANGE:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_SWAP:
             {
 #if TRACE_ALLOWED
             switch(upp->action)
                 {
                 case UREF_CHANGE:
-                    /* a single slot (upp->slr1) in the range has had a value change: recalc */
+                    /* a single cell (upp->slr1) in the range has had a value change: recalc */
                     trace_3(TRACE_MODULE_GR_CHART,
                             "pdchart_text_uref_handler: UREF_CHANGE for (%d,%d,%d)",
                             upp->slr1.docno, upp->slr1.col, upp->slr1.row);
                     break;
 
-                case UREF_SWAPSLOT:
-                    /* a pair of slots (upp->slr1, upp->slr2) in the range have been swapped: recalc */
+                case UREF_SWAPCELL:
+                    /* a pair of cells (upp->slr1, upp->slr2) in the range have been swapped: recalc */
                     trace_6(TRACE_MODULE_GR_CHART,
-                            "pdchart_text_uref_handler: UREF_SWAPSLOT for (%d,%d,%d), (%d,%d,%d)",
+                            "pdchart_text_uref_handler: UREF_SWAPCELL for (%d,%d,%d), (%d,%d,%d)",
                             upp->slr1.docno, upp->slr1.col, upp->slr1.row,
                             upp->slr2.docno, upp->slr2.col, upp->slr2.row);
                     break;
@@ -2856,7 +2856,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
 
         case UREF_DELETE:
             {
-            /* some (or all) of the slots in the range have been deleted - NOT NECESSARILY UPDATING RANGE
+            /* some (or all) of the cells in the range have been deleted - NOT NECESSARILY UPDATING RANGE
             */
 
             trace_6(TRACE_MODULE_GR_CHART,
@@ -3402,15 +3402,15 @@ pdchart_dependent_documents(
 
 /******************************************************************************
 *
-* clean up text and date slots for export
-* a la send slot via hot link - common up!
+* clean up text and date cells for export
+* a la send cell via hot link - common up!
 *
 ******************************************************************************/
 
 extern void
 expand_slot_for_chart_export(
     _InVal_     DOCNO docno,
-    P_SLOT sl,
+    P_CELL sl,
     char * buffer /*out*/,
     U32 elemof_buffer,
     ROW row)
@@ -3428,7 +3428,7 @@ expand_slot_for_chart_export(
     assert(!docu_is_thunk(p_docu));
 
     t_curpnm = p_docu->Xcurpnm;
-    p_docu->Xcurpnm = 0; /* we have really no idea what page a slot is on */
+    p_docu->Xcurpnm = 0; /* we have really no idea what page a cell is on */
 
     (void) expand_slot(docno, sl, row, buffer, elemof_buffer /*fwidth*/,
                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,

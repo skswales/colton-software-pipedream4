@@ -2125,7 +2125,7 @@ get_next_misspell(
     char *array /*out*/)
 {
     S32 res, dict;
-    P_SLOT tslot;
+    P_CELL tcell;
     BOOL tried_again;
 
     trace_1(TRACE_APP_PD4, "get_next_misspell(): sch_stt_offset = %d\n]", sch_stt_offset);
@@ -2140,7 +2140,7 @@ get_next_misspell(
                 {
                 /* (NB. set sch_pos_stt.col = sch_stt.col - 1 to start) */
 
-                trace_0(TRACE_APP_PD4, "get_next_misspell: offset == -1 -> find another slot to scan for misspells");
+                trace_0(TRACE_APP_PD4, "get_next_misspell: offset == -1 -> find another cell to scan for misspells");
 
                 do  {
                     if(sch_pos_stt.col < sch_end.col)
@@ -2159,23 +2159,23 @@ get_next_misspell(
                         }
                     else
                         {
-                        trace_0(TRACE_APP_PD4, "get_next_misspell ran out of slots");
+                        trace_0(TRACE_APP_PD4, "get_next_misspell ran out of cells");
                         return(FALSE);
                         }
 
-                    tslot = travel(sch_pos_stt.col, sch_pos_stt.row);
+                    tcell = travel(sch_pos_stt.col, sch_pos_stt.row);
                     }
-                while(!tslot  ||  (tslot->type != SL_TEXT)  ||  str_isblank(tslot->content.text));
+                while(!tcell  ||  (tcell->type != SL_TEXT)  ||  str_isblank(tcell->content.text));
 
                 sch_stt_offset = 0;
                 }
             else
                 {
-                trace_0(TRACE_APP_PD4, "get_next_misspell found no slot in buffer so reload");
-                tslot = travel(sch_pos_stt.col, sch_pos_stt.row);
+                trace_0(TRACE_APP_PD4, "get_next_misspell found no cell in buffer so reload");
+                tcell = travel(sch_pos_stt.col, sch_pos_stt.row);
                 }
 
-            prccon(linbuf, tslot);
+            prccon(linbuf, tcell);
             }
 
         /* if current word not ok set variables */
@@ -2217,7 +2217,7 @@ get_next_misspell(
                 }
             }
 
-        /* go to next word if available, else reload from another slot */
+        /* go to next word if available, else reload from another cell */
         if(!next_word_on_line())
             sch_stt_offset = -1;
         }

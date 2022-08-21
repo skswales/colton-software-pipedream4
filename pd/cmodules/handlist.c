@@ -906,7 +906,7 @@ list_nextseq(
 
     validatepools();
 
-    /* get current slot pointer */
+    /* get current item pointer */
     if( (lp->item != *itemnop)      ||
         ((pdp = lp->poold) == NULL) ||
         ((pp = pdp->pool) == NULL)  )
@@ -1581,7 +1581,7 @@ deallocitem(
         {
         nextsl = (P_LIST_ITEM) (((P_U8) it) + it->offsetn);
 
-        /* check for special case of trailing filler slot */
+        /* check for special case of trailing filler item */
         if(!it->offsetp &&
            !nextsl->offsetn &&
            (nextsl->flags & LIST_FILL) &&

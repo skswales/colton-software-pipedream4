@@ -61,7 +61,7 @@ recover_deleted_block(
 /*ncr*/
 static S32
 refs_adjust_add(
-    P_SLOT slot,
+    P_CELL slot,
     _InRef_     PC_EV_SLR slrp,
     _InRef_     PC_UREF_PARM upp,
     S32 update_refs,
@@ -82,7 +82,7 @@ static S32 start_pos_on_stack   = 0;   /* one before the first one on stack */
 block_updref is like upfred except that it takes only a column number,
 and operates on the block of that column and all columns to the right
 
-Adds on coffset to the column part of slot references
+Adds on coffset to the column part of cell references
 
 Used by:    insert on load
             save_block_on_stack
@@ -91,13 +91,13 @@ Used by:    insert on load
 
 /******************************************************************************
 *
-* adjust the references in a block of slots
-* (all slots to the right of, and below startcol, startrow)
+* adjust the references in a block of cells
+* (all cells to the right of, and below startcol, startrow)
 *
 * the references must not be on the tree at the time of call!
 *
 * when leaving blocks on the paste list, call with to_doc==DOCNO_NONE;
-* this sets the document numbers of internal slot references to zero;
+* this sets the document numbers of internal cell references to zero;
 * when restoring the block, set the from_doc==DOCNO_NONE &
 * to_doc to the target document; this restores internal references.
 *
@@ -116,7 +116,7 @@ block_updref(
     COL coffset,
     ROW roffset)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     SLR topleft;
     SLR botright;
     UREF_PARM urefb;
@@ -139,10 +139,10 @@ block_updref(
 
     urefb.action = UREF_ADJUST;
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
         set_ev_slr(&slr, in_block.col, in_block.row);
-        refs_adjust_add(tslot, &slr, &urefb, TRUE, FALSE);
+        refs_adjust_add(tcell, &slr, &urefb, TRUE, FALSE);
         }
 }
 
@@ -266,7 +266,7 @@ CopyBlock_fn(void)
 }
 
 /*
-copy a block of slots to a new column of to the right
+copy a block of cells to a new column of to the right
 if it fails it must tidy up the world as if nothing happened
 */
 
@@ -292,7 +292,7 @@ copy_slots_to_eoworld(
         trace_2(TRACE_APP_PD4, "copy_slots_to_eoworld, tcol: %d, numcol: %d", tcol, numcol);
 
         /* copy from fromcol + tcol to o_numcol + tcol */
-        /* create a gap in the column to copy the slots to  */
+        /* create a gap in the column to copy the cells to  */
         for(trow = 0; !ctrlflag  &&  (trow < rsize); trow++)
             {
             /* RJM 21.11.91 - if at end of both columns, don't bother */
@@ -329,7 +329,7 @@ copy_slots_to_eoworld(
 /******************************************************************************
 *
 * createslot at tcol, trow and copy srcslot to it
-* update slot references, adding on coldiff and rowdiff
+* update cell references, adding on coldiff and rowdiff
 * works between windows, starts and finishes in towindow
 *
 ******************************************************************************/
@@ -348,19 +348,19 @@ copyslot(
     S32 update_refs,
     S32 add_refs)
 {
-    P_SLOT newslot;
+    P_CELL newslot;
     EV_SLR slr;
     UREF_PARM urefb;
 
     select_document_using_docno(docno_to);
     set_ev_slr(&slr, tcol, trow);
 
-    /* if we are not copying slot to itself */
+    /* if we are not copying cell to itself */
     if((docno_from != docno_to) ||
        (cs_oldcol  != tcol) ||
        (cs_oldrow  != trow) )
         {
-        P_SLOT oldslot;
+        P_CELL oldslot;
         S32 slotlen;
         char type;
 
@@ -368,7 +368,7 @@ copyslot(
 
         slot_free_resources(travel(tcol, trow));
 
-        /* create blank new slot */
+        /* create blank new cell */
         if(!oldslot)
             {
             S32 res;
@@ -398,7 +398,7 @@ copyslot(
     set_ev_slr(&urefb.slr3, coldiff, rowdiff);
     urefb.action = UREF_COPY;
 
-    /* adjust refs in copied slot and add to tree */
+    /* adjust refs in copied cell and add to tree */
     return(refs_adjust_add(newslot, &slr, &urefb, update_refs, add_refs));
 }
 
@@ -648,7 +648,7 @@ do_the_replicate(
                         break;
                         }
 
-                /* copy the slot */
+                /* copy the cell */
                 if(errorval < 0)
                     {
                     slot_free_resources(travel(tcol, trow));
@@ -815,7 +815,7 @@ MoveBlock_fn_do(S32 add_refs)
     __assume(IS_ARRAY_INDEX_VALID(docno_from, elemof32(docu_array)));
     select_document_using_docno(docno_from);
 
-    /* updref - redirect slot refs from old block to new block */
+    /* updref - redirect cell references from old block to new block */
     updref(blkstart.col, blkstart.row, blkend.col, blkend.row, col_to-blkstart.col, row_to-blkstart.row, UREF_UREF, docno_to);
 
     /* reset markers to old block */
@@ -997,7 +997,7 @@ recover_deleted_block(
 
     reset_numrow();
 
-    /* poke its slot refs so that columns are sensible */
+    /* poke its cell references so that columns are sensible */
     block_updref(current_docno(), DOCNO_NONE,
                  new_numcol, new_numrow,
                  curcol-BLOCK_UPDREF_COL, currow-BLOCK_UPDREF_ROW);
@@ -1038,15 +1038,14 @@ recover_deleted_block(
 
 /******************************************************************************
 *
-* maybe adjust the references in the slot and
-* maybe then add them to the tree
+* maybe adjust the references in the cell and maybe then add them to the tree
 *
 ******************************************************************************/
 
 /*ncr*/
 static S32
 refs_adjust_add(
-    P_SLOT slot,
+    P_CELL slot,
     _InRef_     PC_EV_SLR slrp,
     _InRef_     PC_UREF_PARM upp,
     S32 update_refs,
@@ -1059,17 +1058,17 @@ refs_adjust_add(
         {
         if(slot->type == SL_NUMBER)
             {
-            P_EV_SLOT p_ev_slot;
+            P_EV_CELL p_ev_cell;
 
-            /* update references in the copied slot for any move */
-            if(ev_travel(&p_ev_slot, slrp) > 0)
+            /* update references in the copied cell for any move */
+            if(ev_travel(&p_ev_cell, slrp) > 0)
                 {
                 if(update_refs)
-                    ev_rpn_adjust_refs(p_ev_slot, upp);
+                    ev_rpn_adjust_refs(p_ev_cell, upp);
 
                 if(add_refs)
                     {
-                    if(ev_add_exp_slot_to_tree(p_ev_slot, slrp) < 0)
+                    if(ev_add_exp_slot_to_tree(p_ev_cell, slrp) < 0)
                         {
                         tree_insert_fail(slrp);
                         err = status_nomem();
@@ -1238,7 +1237,7 @@ Replicate_fn(void)
         if( bad_reference(res_start.col, res_start.row) ||
             bad_reference(src_start.col, src_start.row))
             {
-            reperr_null(create_error(ERR_BAD_SLOT));
+            reperr_null(create_error(ERR_BAD_CELL));
             if(!dialog_box_can_retry())
                 break;
             continue;
@@ -1297,7 +1296,7 @@ ReplicateRight_fn(void)
     do_fill(FALSE);
 }
 
-/* save block of slots on to the deleted block stack
+/* save block of cells on to the deleted block stack
  * returns TRUE if successfully saved or user wants to proceed anyway
  * if cannot save block it leaves world as it found it and puts out dialog
  * box asking if user wants to proceed.  If so it returns TRUE, otherwise FALSE
@@ -1361,7 +1360,7 @@ save_block_and_delete(
             sbdp->del_row_size  = delete_size_row;
             }
 
-        /* if those worked, copy slots to a parallel structure in this sheet */
+        /* if those worked, copy cells to a parallel structure in this sheet */
         if(delete_colstart  &&  lptr)
             copyres = copy_slots_to_eoworld(bs.col, bs.row,
                                             delete_size_col, delete_size_row);
@@ -1373,7 +1372,7 @@ save_block_and_delete(
 
         if(copyres < 0)
             {
-            /* copy slots failed - might be escape or memory problem */
+            /* copy cells failed - might be escape or memory problem */
 
             if(lptr)
                 {
@@ -1431,14 +1430,14 @@ save_block_and_delete(
         for(tcol = bs.col; tcol <= be.col; tcol++)
             for(i = 0; !ctrlflag  &&  i < delete_size_row; i++)
                 {
-                trace_2(TRACE_APP_PD4, "killing slot col %d row %d", tcol, bs.row);
+                trace_2(TRACE_APP_PD4, "killing cell col %d row %d", tcol, bs.row);
                 killslot(tcol, bs.row);
                 }
 
         trace_0(TRACE_APP_PD4, "recalcing number of rows");
         reset_numrow();
 
-        trace_0(TRACE_APP_PD4, "updref slots below which have moved up");
+        trace_0(TRACE_APP_PD4, "updref cells below which have moved up");
         updref(bs.col, be.row + 1, be.col, LARGEST_ROW_POSSIBLE, 0, -delete_size_row, UREF_UREF, DOCNO_NONE);
         }
 
@@ -1519,11 +1518,11 @@ set_up_block(
 
 /******************************************************************************
 *
-* uref a compiled slot reference embedded in a PipeDream format
-* text slot - given pointer to compiled slot reference
+* uref a compiled cell reference embedded in a PipeDream format
+* text cell - given pointer to compiled cell reference
 *
 * --out--
-* pointer to byte after compiled slot reference
+* pointer to byte after compiled cell reference
 *
 ******************************************************************************/
 
@@ -1538,7 +1537,7 @@ text_csr_uref(
     COL col;
     ROW row;
 
-    /* read slr from text compiled slot reference */
+    /* read slr from text compiled cell reference */
     (void) talps_csr(csr, &docno, &col, &row);
     /*eportf("text_csr_uref: talps docno %d col 0x%x row 0x%x", docno, col, row);*/
 

@@ -306,11 +306,11 @@ PROC_EXEC_PROTO(c_fixed)
 
 PROC_EXEC_PROTO(c_formula_text)
 {
-    P_EV_SLOT p_ev_slot;
+    P_EV_CELL p_ev_cell;
 
     exec_func_ignore_parms();
 
-    if(ev_travel(&p_ev_slot, &args[0]->arg.slr) > 0)
+    if(ev_travel(&p_ev_cell, &args[0]->arg.slr) > 0)
     {
         U8Z buffer[4096];
         EV_DOCNO docno = args[0]->arg.slr.docno;
@@ -319,7 +319,7 @@ PROC_EXEC_PROTO(c_formula_text)
         ev_set_options(&optblock, docno);
         optblock.lf = optblock.cr = 0;
 
-        ev_decode_slot(docno, buffer, p_ev_slot, &optblock);
+        ev_decode_slot(docno, buffer, p_ev_cell, &optblock);
 
         status_assert(ss_string_make_ustr(p_ev_data_res, buffer));
     }

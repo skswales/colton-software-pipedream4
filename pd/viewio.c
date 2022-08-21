@@ -923,14 +923,14 @@ view_save_ruler_options(
 
 /******************************************************************************
 *
-* save slot in VIEW format
+* save cell in VIEW format
 * may only output ~132 chars on line, so at 130 print CR and set warning
 *
 ******************************************************************************/
 
 extern BOOL
 view_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output,
@@ -940,7 +940,7 @@ view_save_slot(
 {
     const uchar text_at_char = get_text_at_char();
     uchar *lptr, ch;
-    uchar justify = tslot->justify & J_BITS;
+    uchar justify = tcell->justify & J_BITS;
 
     if((justify == J_LEFTRIGHT)  ||  (justify == J_RIGHTLEFT))
         {
@@ -948,11 +948,11 @@ view_save_slot(
         memset32(linbuf, 0, LIN_BUFSIZ);
 
         /* expand justified line into linbuf, not forgetting terminator */
-        justifyline(tslot->content.text, rightmargin - *v_chars_sofar, justify, linbuf);
+        justifyline(tcell->content.text, rightmargin - *v_chars_sofar, justify, linbuf);
         }
     else
-        /* write just text or formula part of slot out */
-        plain_slot(tslot, tcol, trow, VIEW_CHAR, linbuf);
+        /* write just text or formula part of cell out */
+        plain_slot(tcell, tcol, trow, VIEW_CHAR, linbuf);
 
     /* output contents, dealing with highlight chars */
     for(lptr = linbuf; *lptr; lptr++)

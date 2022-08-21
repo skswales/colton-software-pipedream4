@@ -45,7 +45,7 @@ static struct SORT_FIELD sort_fields[SORT_FIELD_DEPTH];
 
 /******************************************************************************
 *
-* insert partial row of slots at currow
+* insert partial row of cells at currow
 *
 ******************************************************************************/
 
@@ -116,7 +116,7 @@ InsertRow_fn(void)
 extern void
 InsertPageBreak_fn(void)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(!dialog_box_start())
         return;
@@ -125,17 +125,17 @@ InsertPageBreak_fn(void)
 
     while(dialog_box(D_INSPAGE))
         {
-        tslot = insertrow(0, numcol)
+        tcell = insertrow(0, numcol)
                     ? createslot(0, currow, 1, SL_PAGE)
                     : NULL;
 
-        if(!tslot)
+        if(!tcell)
             {
             reperr_null(status_nomem());
             break;
             }
 
-        tslot->content.page.condval = (S32) d_inspage[0].option;
+        tcell->content.page.condval = (S32) d_inspage[0].option;
 
         out_screen = out_rebuildvert = TRUE;
         filealtered(TRUE);
@@ -340,7 +340,7 @@ NewWindow_fn(void)
 
 static S32
 isnewrec(
-    P_SLOT sl)
+    P_CELL sl)
 {
     /* test multi-row sort option */
     if(d_sort[SORT_MULTI_ROW].option != 'Y')
@@ -360,7 +360,7 @@ isnewrec(
 
 /******************************************************************************
 *
-* get next compiled slot ref in either text or numeric slot
+* get next compiled cell reference in either text or numeric cell
 *
 ******************************************************************************/
 
@@ -445,8 +445,8 @@ PROC_QSORT_PROTO(static, rowcomp, SORT_ENTRY)
 * the key, and include all following blank rows upto the
 * next non-blank entry
 *
-* sort a block of slots by a specified or the current column
-* update slot references to slots in block by default
+* sort a block of cells by a specified or the current column
+* update cell references to cells in block by default
 *
 ******************************************************************************/
 

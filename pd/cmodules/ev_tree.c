@@ -294,13 +294,13 @@ ev_add_extdependency(
 
 /******************************************************************************
 *
-* add all the dependencies for an expression slot into the tree
+* add all the dependencies for an expression cell into the tree
 *
 ******************************************************************************/
 
 extern S32
 ev_add_exp_slot_to_tree(
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     _InRef_     PC_EV_SLR slrp)
 {
     struct EV_GRUB_STATE grubb;
@@ -320,7 +320,7 @@ ev_add_exp_slot_to_tree(
     grub_init(&grubb, slrp);
 
     res = 0;
-    while(res >= 0 && grub_next(p_ev_slot, &grubb) != RPN_FRM_END)
+    while(res >= 0 && grub_next(p_ev_cell, &grubb) != RPN_FRM_END)
         {
         switch(grubb.data.did_num)
             {
@@ -507,7 +507,7 @@ ev_del_extdependency(
 
 /******************************************************************************
 *
-* initialise slot dependent/supporter getter
+* initialise cell dependent/supporter getter
 *
 ******************************************************************************/
 
@@ -527,8 +527,7 @@ ev_enum_dep_sup_init(
 
 /******************************************************************************
 *
-* return supporting or dependent
-* slots/ranges/names for a slot
+* return supporting or dependent cells / ranges / names for a cell
 *
 * --in--
 * item_no <  0 - get next dep/sup
@@ -560,7 +559,7 @@ ev_enum_dep_sup_get(
 
     if(dsp->get_deps)
         {
-        /* look for things dependent upon this slot */
+        /* look for things dependent upon this cell */
         switch(dsp->category)
             {
             case EV_DEPSUP_SLR:
@@ -661,16 +660,16 @@ ev_enum_dep_sup_get(
         }
     else
         {
-        P_EV_SLOT p_ev_slot;
+        P_EV_CELL p_ev_cell;
 
-        /* grub about for supporters of this slot */
-        if(ev_travel(&p_ev_slot, &dsp->slr) > 0)
+        /* grub about for supporters of this cell */
+        if(ev_travel(&p_ev_cell, &dsp->slr) > 0)
             {
             struct EV_GRUB_STATE grubb;
 
             grub_init(&grubb, &dsp->slr);
 
-            while(res < 0 && grub_next(p_ev_slot, &grubb) != RPN_FRM_END)
+            while(res < 0 && grub_next(p_ev_cell, &grubb) != RPN_FRM_END)
                 {
                 switch(grubb.data.did_num)
                     {
@@ -778,7 +777,7 @@ ev_todo_add_doc_dependents(
 
 /******************************************************************************
 *
-* add a slot's dependents to the todo list bumping the serial number first
+* add a cell's dependents to the todo list bumping the serial number first
 *
 ******************************************************************************/
 
@@ -1071,7 +1070,7 @@ search_for_rng_ref(
 
 /******************************************************************************
 *
-* search the table of slot references for a reference to the given slot
+* search the table of cell references for a reference to the given cell
 *
 ******************************************************************************/
 
@@ -1118,7 +1117,7 @@ search_for_slrdependent(
 
 /******************************************************************************
 *
-* routine for bsearch to compare two slots
+* routine for bsearch to compare two cells
 *
 ******************************************************************************/
 
@@ -1149,7 +1148,7 @@ PROC_QSORT_PROTO(static, slrcomp, SLR_USE)
 
 /******************************************************************************
 *
-* add the dependents of a slot to the todo list
+* add the dependents of a cell to the todo list
 *
 ******************************************************************************/
 
@@ -1280,10 +1279,10 @@ todo_add_name_dependents(
 
 /******************************************************************************
 *
-* look for names which refer to a given slot
+* look for names which refer to a given cell
 * or document and add their dependents to be done
 *
-* set all_doc to match all slots in a document
+* set all_doc to match all cells in a document
 *
 ******************************************************************************/
 
@@ -1338,7 +1337,7 @@ todo_add_name_deps_of_slr(
 
 /******************************************************************************
 *
-* ensure that a slot is in the to do list
+* ensure that a cell is in the to do list
 *
 * --in--
 * sort = 0 no sort, no duplicate check
@@ -1445,7 +1444,7 @@ PROC_QSORT_PROTO(static, todocomp, TODO_ENTRY)
 
 /******************************************************************************
 *
-* get a slot to calc from the to do list
+* get a cell to calc from the to do list
 *
 ******************************************************************************/
 
@@ -1488,7 +1487,7 @@ todo_get_slr(
 
 /******************************************************************************
 *
-* is the slot already in the to do list ?
+* is the cell already in the to do list ?
 *
 ******************************************************************************/
 
@@ -1522,7 +1521,7 @@ todo_has_slr(
 
 /******************************************************************************
 *
-* remove all occurrences of a slot from the todo list
+* remove all occurrences of a cell from the todo list
 *
 ******************************************************************************/
 

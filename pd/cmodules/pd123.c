@@ -722,7 +722,7 @@ addplusn(
 *
 * handle special formats for dates and things
 *
-* if no more output for a slot is required,
+* if no more output for a cell is required,
 * specflg is set to zero
 *
 ******************************************************************************/
@@ -2319,7 +2319,7 @@ writepcol(
 			if((err = foutcr(pd123__fout)) != 0)
 				return(err);
 
-		/* deal with different slot types */
+		/* deal with different cell types */
 		switch(opcode)
 			{
 			case L_INTEGER:

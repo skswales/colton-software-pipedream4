@@ -70,7 +70,7 @@ typedef struct NUMFORM_INFO
     {
         BOOL valid;
 
-        S32 hour, minute, second;
+        S32 hours, minutes, seconds;
     }
     time;
 
@@ -925,7 +925,7 @@ numform(
         numform_output_datetime_last_field = CH_NULL;
 
         numform_info.date.valid = status_ok(ss_dateval_to_ymd(&numform_info.ev_data.arg.ev_date.date, &numform_info.date.year, &numform_info.date.month,  &numform_info.date.day));
-        numform_info.time.valid = status_ok(ss_timeval_to_hms(&numform_info.ev_data.arg.ev_date.time, &numform_info.time.hour, &numform_info.time.minute, &numform_info.time.second));
+        numform_info.time.valid = status_ok(ss_timeval_to_hms(&numform_info.ev_data.arg.ev_date.time, &numform_info.time.hours, &numform_info.time.minutes, &numform_info.time.seconds));
 
         if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_datetime))
             numform_section_extract_datetime(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_datetime);
@@ -1429,7 +1429,7 @@ numform_output_date_fields(
         do { ++count; } while(((next_section_ch = ustr_GetByteInc(ustr_numform_section)) == 'h') || (next_section_ch == 'H'));
         ustr_DecByte(ustr_numform_section);
 
-        arg = p_numform_info->time.hour;
+        arg = p_numform_info->time.hours;
 
         status = quick_ublock_printf(p_quick_ublock, USTR_TEXT("%.*" S32_FMT_POSTFIX), count, arg);
         break;
@@ -1439,7 +1439,7 @@ numform_output_date_fields(
         do { ++count; } while(((next_section_ch = ustr_GetByteInc(ustr_numform_section)) == 'n') || (next_section_ch == 'N'));
         ustr_DecByte(ustr_numform_section);
 
-        arg = p_numform_info->time.minute;
+        arg = p_numform_info->time.minutes;
 
         status = quick_ublock_printf(p_quick_ublock, USTR_TEXT("%.*" S32_FMT_POSTFIX), count, arg);
         break;
@@ -1449,7 +1449,7 @@ numform_output_date_fields(
         do { ++count; } while(((next_section_ch = ustr_GetByteInc(ustr_numform_section)) == 's') || (next_section_ch == 'S'));
         ustr_DecByte(ustr_numform_section);
 
-        arg = p_numform_info->time.second;
+        arg = p_numform_info->time.seconds;
 
         status = quick_ublock_printf(p_quick_ublock, USTR_TEXT("%.*" S32_FMT_POSTFIX), count, arg);
         break;
@@ -1489,7 +1489,7 @@ numform_output_date_fields(
         if((numform_output_datetime_last_field == 'h') || (numform_output_datetime_last_field == 'H'))
         {
             /* minutes, not months iff immediately after hours */
-            arg = p_numform_info->time.minute;
+            arg = p_numform_info->time.minutes;
 
             status = quick_ublock_printf(p_quick_ublock, USTR_TEXT("%.*" S32_FMT_POSTFIX), count, arg);
             break;
@@ -1516,9 +1516,10 @@ numform_output_date_fields(
             U32 i;
             BOOL upper_case_flag = FALSE;
 
-            /* restrict output to just first 3 chars of the monthname */
             if(count == 3)
-                limit = 3;
+                limit = 3; /* restrict output to just first 3 chars of the monthname */
+            else if(count == 5)
+                limit = 1; /* restrict output to just first char of the monthname */
 
             for(offset = 0, i = 0; (offset < len) && (i < limit); ++i)
             {
@@ -1934,7 +1935,6 @@ numform_section_extract_datetime(
 
     if(time_only)
     {
-        BOOL is_pm = (p_numform_info->time.hour >= 12);
         PC_USTR ustr_second_section = numform_section_scan_next(ustr_section);
         PC_USTR ustr_third_section = P_USTR_NONE;
 
@@ -1943,6 +1943,8 @@ numform_section_extract_datetime(
 
         if(P_USTR_NONE != ustr_third_section)
         {
+            BOOL is_pm = (p_numform_info->time.hours >= 12);
+
             ustr_section = ustr_third_section;
 
             /* if we have time >= 1200, look for an optional fourth section */
@@ -1952,11 +1954,11 @@ numform_section_extract_datetime(
 
                 if(P_USTR_NONE != ustr_fourth_section)
                 {
-                    if(p_numform_info->time.hour >= 12)
-                        p_numform_info->time.hour -= 12;
+                    if(p_numform_info->time.hours >= 12)
+                        p_numform_info->time.hours -= 12;
 
-                    if(p_numform_info->time.hour == 0) /* err, 0:30pm is silly SKS 07feb96 */
-                        p_numform_info->time.hour = 12;
+                    if(p_numform_info->time.hours == 0) /* err, 0:30pm is silly SKS 07feb96 */
+                        p_numform_info->time.hours = 12;
 
                     ustr_section = ustr_fourth_section;
                 }
@@ -1964,13 +1966,15 @@ numform_section_extract_datetime(
         }
         else if(P_USTR_NONE != ustr_second_section) /* 2 section am/pm format? */
         {
+            BOOL is_pm = (p_numform_info->time.hours >= 12);
+
             if(is_pm)
             {
-                if(p_numform_info->time.hour >= 12)
-                    p_numform_info->time.hour -= 12;
+                if(p_numform_info->time.hours >= 12)
+                    p_numform_info->time.hours -= 12;
 
-                if(p_numform_info->time.hour == 0) /* err, 0:30pm is silly SKS 07feb96 */
-                    p_numform_info->time.hour = 12;
+                if(p_numform_info->time.hours == 0) /* err, 0:30pm is silly SKS 07feb96 */
+                    p_numform_info->time.hours = 12;
 
                 ustr_section = ustr_second_section;
             }

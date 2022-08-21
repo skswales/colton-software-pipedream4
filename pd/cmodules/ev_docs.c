@@ -589,7 +589,7 @@ doc_move_rngref(
 
 /******************************************************************************
 *
-* move a slot reference to another document's tree
+* move a cell reference to another document's tree
 *
 ******************************************************************************/
 

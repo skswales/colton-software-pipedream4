@@ -8,7 +8,7 @@
 # Copyright (C) 1998-2015 R W Colton
 
 #TEXTUAL_VERSION_NUMBER=4.54
-TEXTUAL_VERSION_NUMBER=4.53/02
+TEXTUAL_VERSION_NUMBER=4.53/03
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -22,7 +22,7 @@ LIB_MSUN=$(PD).external.FreeBSD.srcp.lib.msun
 
 WimpLib=$(PD).WimpLib
 
-# Can speed up build (especially when using HostFS on RPCemu) by using RAM disc
+# Can speed up build (especially when using HostFS on RPCemu on Windows) by using RAM disc
 # Uncomment these vvv if you want
 
 # INC_RAM_WimpLib=-IRAM:$.WimpLib
@@ -669,33 +669,33 @@ utils.GB.Messages:   \
         utils.GB.t_strings \
         $(WimpLib).GB.msg_risc \
         $(CMODULES).GB.msg.gr_chart \
-        $(CMODULES).GB.msg.mlec 
-        print  { > $@ } utils.GB.t_reperr 
-        print { >> $@ } utils.GB.t_strings 
-        print { >> $@ } $(WimpLib).GB.msg_risc 
-        print { >> $@ } $(CMODULES).GB.msg.gr_chart 
+        $(CMODULES).GB.msg.mlec
+        print  { > $@ } utils.GB.t_reperr
+        print { >> $@ } utils.GB.t_strings
+        print { >> $@ } $(WimpLib).GB.msg_risc
+        print { >> $@ } $(CMODULES).GB.msg.gr_chart
         print { >> $@ } $(CMODULES).GB.msg.mlec
         SetType $@ Text
 
-utils.GB.t_reperr:       utils.GB.u_reperr 
-        Run <Prefix$Dir>.utils.GB.u_reperr > $@ 
+utils.GB.t_reperr:       utils.GB.u_reperr
+        Run <Prefix$Dir>.utils.GB.u_reperr > $@
 
-utils.GB.t_strings:      utils.GB.u_strings 
-        Run <Prefix$Dir>.utils.GB.u_strings > $@ 
+utils.GB.t_strings:      utils.GB.u_strings
+        Run <Prefix$Dir>.utils.GB.u_strings > $@
 
 utils.GB.u_reperr:   \
         utils.GB.o.reperr \
-        C:o.Stubs 
+        C:o.Stubs
         Link -o $@ -aif \
         utils.GB.o.reperr \
-        C:o.Stubs 
+        C:o.Stubs
 
 utils.GB.u_strings:   \
         utils.GB.o.strings \
-        C:o.Stubs 
+        C:o.Stubs
         Link -o $@ -aif \
         utils.GB.o.strings \
-        C:o.Stubs 
+        C:o.Stubs
 
 utils.GB.o.reperr:   $(PD).h.personal $(PD).h.errdef
 utils.GB.o.reperr:   $(PD).c.reperr
@@ -723,7 +723,7 @@ utils.GB.s22_mrg:   \
         $(PD).utils.GB.spr_pd \
         $(PD).utils.GB.spr_ch22 \
         $(PD).utils.GB.spr_chart \
-        $(WimpLib).GB.spr_risc 
+        $(WimpLib).GB.spr_risc
         ChangeDynamicArea -SpriteSize 256k
         SNew
         SLoad   $(PD).utils.GB.spr_fi22
@@ -752,7 +752,7 @@ utils.GB.s24_mrg:   \
         $(PD).utils.GB.spr_pd \
         $(PD).utils.GB.spr_ch24  \
         $(PD).utils.GB.spr_chart \
-        $(WimpLib).GB.spr_risc 
+        $(WimpLib).GB.spr_risc
         ChangeDynamicArea -SpriteSize 256k
         SNew
         SLoad   $(PD).utils.GB.spr_fi24

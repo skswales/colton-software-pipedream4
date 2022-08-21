@@ -226,7 +226,7 @@ expedit_editcurrentslot(
     S32 caretpos,
     BOOL force_inbox)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(xf_inexpression_box)
         {
@@ -246,24 +246,24 @@ expedit_editcurrentslot(
 
     *linbuf = '\0';
 
-    tslot = travel_here();
+    tcell = travel_here();
 
-    if(tslot)
+    if(tcell)
         {
-        if(tslot->type == SL_PAGE)
+        if(tcell->type == SL_PAGE)
             {
             xf_acquirecaret = TRUE;
             return;
             }
 
-        if(tslot->justify & PROTECTED)
+        if(tcell->justify & PROTECTED)
             {
             reperr_null(create_error(ERR_PROTECTED));
             xf_acquirecaret = TRUE;
             return;
             }
 
-        prccon(linbuf, tslot);
+        prccon(linbuf, tcell);
         }
 
     start_editor(caretpos, force_inbox);
@@ -286,14 +286,14 @@ expedit_editcurrentslot_freshcontents(
 
 /******************************************************************************
 *
-* If current slot is a text slot, try compiling it, reporting any errors.
+* If current cell is a text cell, try compiling it, reporting any errors.
 *
 ******************************************************************************/
 
 extern void
 expedit_recompilecurrentslot_reporterrors(void)
 {
-    P_SLOT  tslot;
+    P_CELL  tcell;
     S32    err, at_pos;
 
     if(!mergebuf() || xf_inexpression || xf_inexpression_box || xf_inexpression_line)
@@ -301,21 +301,21 @@ expedit_recompilecurrentslot_reporterrors(void)
 
     *linbuf = '\0';
 
-    tslot = travel_here();
+    tcell = travel_here();
 
-    if(tslot)
+    if(tcell)
         {
-        if(tslot->type != SL_TEXT)
+        if(tcell->type != SL_TEXT)
             return;
 
-        if(tslot->justify & PROTECTED)
+        if(tcell->justify & PROTECTED)
             {
             reperr_null(create_error(ERR_PROTECTED));
             xf_acquirecaret = TRUE;
             return;
             }
 
-        prccon(linbuf, tslot);
+        prccon(linbuf, tcell);
         slot_in_buffer = buffer_altered = TRUE;
         edtslr_col = curcol;
         edtslr_row = currow;
@@ -332,7 +332,7 @@ expedit_recompilecurrentslot_reporterrors(void)
                 return;
                 }
 
-            merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text slot */
+            merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text cell */
             }
 
         slot_in_buffer = buffer_altered = FALSE;
@@ -667,7 +667,7 @@ start_editor(
         wimp_set_caret_pos(&carrot);
 #endif
         }
-        {                   /* Show slot as being editted */
+        {                   /* Show cell as being editted */
         /*seteex();*/
         output_buffer = slot_in_buffer = buffer_altered = xf_blockcursor = TRUE;
 
@@ -688,7 +688,7 @@ start_editor(
 * Formula line routines.
 *
 * The formula line is a single-line expression editor based on a window manager indirected writable text icon.
-* This icon, 'COLH_CONTENTS_LINE', is dual purpose, being used as the 'current slot contents' line until
+* This icon, 'COLH_CONTENTS_LINE', is dual purpose, being used as the 'current cell contents' line until
 * clicked-on, at which point it becomes an editor.
 *
 ******************************************************************************/
@@ -807,7 +807,7 @@ formline_mergebacktext(
                     return(FALSE);                      /* retain editing state   */
                     }
 
-                merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text slot */
+                merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text cell */
                 }
             }
         else
@@ -1385,7 +1385,7 @@ formwind_mergebacktext(
                 return(FALSE);                                                                  /* retain editing state   */
                 }
 
-            merexp_reterr(NULL, NULL, TRUE);            /* force expression into sheet as a text slot */
+            merexp_reterr(NULL, NULL, TRUE);            /* force expression into sheet as a text cell */
             }
         }
     else
@@ -1846,7 +1846,7 @@ PasteName_fn(
                 xstrkat(namebuf, elemof32(namebuf), ")");
                 }
 
-            if(insert_string_check_numeric(namebuf, FALSE))     /* insert function, starts an editor if current slot */
+            if(insert_string_check_numeric(namebuf, FALSE))     /* insert function, starts an editor if current cell */
                 {                                               /* is empty and sheet is in numeric entry mode       */
                 /* insert worked, so place caret after '(' */
                 if(argcount)

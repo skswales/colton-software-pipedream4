@@ -39,7 +39,7 @@ view_save_ruler_options(
 
 extern BOOL
 view_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output,

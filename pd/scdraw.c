@@ -112,7 +112,7 @@ really_draw_slot(
     S32 roff,
     BOOL in_draw_row);
 
-static BOOL         /* set inverse, depends on slot,mark */
+static BOOL         /* set inverse, depends on cell,mark */
 setivs(
     COL,
     ROW);
@@ -892,7 +892,7 @@ draw_slot_in_buffer(void)
 
 /******************************************************************************
 *
-* slot is being edited in place
+* cell is being edited in place
 *
 ******************************************************************************/
 
@@ -969,7 +969,7 @@ draw_screen_below(
     if(xf_interrupted)
         return;
 
-    /* if we completed the whole redraw from the top, we can't have any SL_ALTERED slots to draw */
+    /* if we completed the whole redraw from the top, we can't have any SL_ALTERED cells to draw */
     if(i_roff == 0)
         xf_drawsome = FALSE;
 
@@ -1341,7 +1341,7 @@ really_draw_row_contents(
         }
     else
         {
-        trace_0(TRACE_REALLY, "normal row: drawing slots");
+        trace_0(TRACE_REALLY, "normal row: drawing cells");
 
         at(borderwidth, rpos);
 
@@ -1372,7 +1372,7 @@ draw_slot(
     S32 rpos = calrad(roff);
     COL tcol = col_number(coff);
     ROW trow = row_number(roff);
-    P_SLOT tslot = travel(tcol, trow);
+    P_CELL tcell = travel(tcol, trow);
     S32 fwidth = colwidth(tcol);
     S32 overlap;
 
@@ -1380,9 +1380,9 @@ draw_slot(
 
     trace_2(TRACE_DRAW, "\n*** draw_slot(%d, %d)", coff, roff);
 
-    if(tslot  &&  slot_displays_contents(tslot))
+    if(tcell  &&  slot_displays_contents(tcell))
         {
-        overlap = chkolp(tslot, tcol, trow);
+        overlap = chkolp(tcell, tcol, trow);
         fwidth = MAX(fwidth, overlap);
         }
 
@@ -1406,7 +1406,7 @@ really_draw_slot(
     COL tcol = col_number(coff);
     P_SCRROW rptr = vertvec_entry(roff);
     ROW trow = rptr->rowno;
-    P_SLOT thisslot = travel(tcol, trow);
+    P_CELL thisslot = travel(tcol, trow);
     BOOL slotblank = isslotblank(thisslot);
     S32 os_cpos = os_if_fonts(cpos);
     S32 c_width = colwidth(tcol);
@@ -1429,7 +1429,7 @@ really_draw_slot(
         trace_1(TRACE_REALLY, "last_offset := %d", last_offset);
         }
 
-    /* special case for blank, partially overlapped slots.
+    /* special case for blank, partially overlapped cells.
      * just need to space to the end of the column
     */
     if(slotblank  &&  (last_offset > os_cpos))
@@ -1440,9 +1440,9 @@ really_draw_slot(
 
         spaces_to_draw = os_cpos + os_if_fonts(c_width) - last_offset;
 
-        trace_1(TRACE_REALLY, "blank, partially overlapped slot: spaces_to_draw := %d", spaces_to_draw);
+        trace_1(TRACE_REALLY, "blank, partially overlapped cell: spaces_to_draw := %d", spaces_to_draw);
 
-        if(spaces_to_draw > 0)          /* last slot partially overlaps */
+        if(spaces_to_draw > 0)          /* last cell partially overlaps */
             {
             at_fonts(last_offset, rpos);
             (void) setivs(tcol, trow);
@@ -1481,12 +1481,12 @@ really_draw_slot(
     /* stored page number invalid if silly cases */
     curpnm = (!encpln || n_rowfixes) ? 0 : rptr->page;
 
-    /* switch inverse on if in block (or on number slot?) */
+    /* switch inverse on if in block (or on number cell?) */
 
     slot_in_block = setivs(tcol, trow);
     setprotectedstatus(thisslot);
 
-    /* set window covering slot to prevent bits of fonts sticking out:
+    /* set window covering cell to prevent bits of fonts sticking out:
      * if no window set then nothing to plot - hoorah!
      * this may even help system font plotting
     */
@@ -1501,8 +1501,8 @@ really_draw_slot(
         }
     else
         {
-        /* this is current slot to be drawn by dspfld
-         * don't bother drawing current slot if not numeric
+        /* this is current cell to be drawn by dspfld
+         * don't bother drawing current cell if not numeric
         */
         if( (tcol == curcol)  &&  (trow == currow)  &&  !xf_blockcursor  &&
             (!thisslot  ||
@@ -1748,7 +1748,7 @@ check_output_current_slot(
 /******************************************************************************
 *
 * set inverse state
-* Varies if current numeric slot and in marked block
+* Varies if current numeric cell and in marked block
 *
 ******************************************************************************/
 
@@ -1771,7 +1771,7 @@ setivs(
 
 /******************************************************************************
 *
-* if xf_drawsome, some slots need redrawing.
+* if xf_drawsome, some cells need redrawing.
 * Scan through horzvec and vertvec
 * drawing the ones that have changed
 *
@@ -1786,7 +1786,7 @@ draw_altered_slots(void)
     P_SCRROW rptr;
     S32 coff;
     S32 roff;
-    P_SLOT tslot;
+    P_CELL tcell;
 
     trace_0(TRACE_DRAW, "\n*** draw_altered_slots()");
 
@@ -1800,14 +1800,14 @@ draw_altered_slots(void)
 
             while(!(cptr->flags & LAST))
                 {
-                tslot = travel(cptr->colno, rptr->rowno);
+                tcell = travel(cptr->colno, rptr->rowno);
 
-                if(tslot)
+                if(tcell)
                     {
-                    if(tslot->type == SL_PAGE)
+                    if(tcell->type == SL_PAGE)
                         break;
 
-                    if(tslot->flags & SL_ALTERED)
+                    if(tcell->flags & SL_ALTERED)
                         {
                         coff = (S32) (cptr - i_cptr);
                         roff = (S32) (rptr - i_rptr);
@@ -1842,7 +1842,7 @@ draw_altered_slots(void)
 
 /******************************************************************************
 *
-* draw one slot, given the slot reference
+* draw one cell, given the cell reference
 * called just from evaluator for
 * interruptability
 *
@@ -1857,11 +1857,11 @@ draw_one_altered_slot(
     P_SCRROW i_rptr = vertvec();
     P_SCRCOL cptr = i_cptr;
     P_SCRROW rptr = i_rptr;
-    P_SLOT tslot;
+    P_CELL tcell;
 
     trace_0(TRACE_DRAW, "\n*** draw_one_altered_slot()");
 
-    /* cheap tests to save loops if slot not in window - fixing complicates */
+    /* cheap tests to save loops if cell not in window - fixing complicates */
     if( !(rptr->flags & FIX)  &&
         ((rptr->rowno > row)  ||  (rptr[rowsonscreen-1].rowno < row))
         )
@@ -1872,7 +1872,7 @@ draw_one_altered_slot(
         )
         return;
 
-    /* no need to reload pointers as only one slot is being drawn */
+    /* no need to reload pointers as only one cell is being drawn */
     while(!(rptr->flags & LAST))
         {
         if((rptr->rowno == row)  &&  !(rptr->flags & PAGE))
@@ -1880,9 +1880,9 @@ draw_one_altered_slot(
                 {
                 if(cptr->colno == col)
                     {
-                    tslot = travel(cptr->colno, rptr->rowno);
+                    tcell = travel(cptr->colno, rptr->rowno);
 
-                    if(tslot)
+                    if(tcell)
                         {
                         draw_slot((S32)(cptr - i_cptr),
                                   (S32)(rptr - i_rptr), FALSE);
@@ -2028,7 +2028,7 @@ maybe_draw_empty_right_of_screen(void)
 
 /******************************************************************************
 *
-* expand the slot and call the appropriate justification routine to print it
+* expand the cell and call the appropriate justification routine to print it
 *
 * fwidth maximum width of screen available
 * returns number of characters drawn or number of millipoints
@@ -2037,7 +2037,7 @@ maybe_draw_empty_right_of_screen(void)
 
 extern S32
 outslt(
-    P_SLOT tslot,
+    P_CELL tcell,
     ROW trow,
     S32 fwidth)
 {
@@ -2046,9 +2046,9 @@ outslt(
     uchar justify;
     S32 res;
 
-    trace_3(TRACE_APP_PD4, "outslt: slot &%p, row %d, fwidth %d", report_ptr_cast(tslot), trow, fwidth);
+    trace_3(TRACE_APP_PD4, "outslt: cell &%p, row %d, fwidth %d", report_ptr_cast(tcell), trow, fwidth);
 
-    justify = expand_slot(current_docno(), tslot, trow, array, fwidth,
+    justify = expand_slot(current_docno(), tcell, trow, array, fwidth,
                           DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                           riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
 
@@ -3377,17 +3377,17 @@ twzchr(
 
 /******************************************************************************
 *
-*  how big a field the given slot must plot in
+*  how big a field the given cell must plot in
 *
 ******************************************************************************/
 
 extern S32
 limited_fwidth_of_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow)
 {
-    S32 fwidth = chkolp(tslot, tcol, trow);    /* text slot contents never drawn beyond overlap */
+    S32 fwidth = chkolp(tcell, tcol, trow);    /* text cell contents never drawn beyond overlap */
     S32 limit  = pagwid_plus1 - calcad(curcoloffset);
 
     assert(tcol == curcol);
@@ -3403,7 +3403,7 @@ limited_fwidth_of_slot_in_buffer(void)
 
 /******************************************************************************
 *
-* get overlap width for slot taking account of column width
+* get overlap width for cell taking account of column width
 *
 * RJM, realises on 18.5.89 that when printing,
 * not all the columns are in horzvec. Hence the sqobits.
@@ -3412,7 +3412,7 @@ limited_fwidth_of_slot_in_buffer(void)
 
 extern S32
 chkolp(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow)
 {
@@ -3423,7 +3423,7 @@ chkolp(
     P_SCRCOL cptr = BAD_POINTER_X(P_SCRCOL, 0); /* keep dataflower happy */
 
     trace_5(TRACE_OVERLAP, "chkolp(&%p, %d, %d): totalwidth = %d, wrapwidth = %d",
-            report_ptr_cast(tslot), tcol, trow, totalwidth, wrapwidth);
+            report_ptr_cast(tcell), tcol, trow, totalwidth, wrapwidth);
 
     if(totalwidth >= wrapwidth)
         return(wrapwidth);
@@ -3432,7 +3432,7 @@ chkolp(
         return(totalwidth);
 
     /* check to see if its a weirdo masquerading as a blank */
-    if(tslot  &&  (tslot->type != SL_TEXT)  &&  isslotblank(tslot))
+    if(tcell  &&  (tcell->type != SL_TEXT)  &&  isslotblank(tcell))
         return(totalwidth);
 
     if(printing)
@@ -3469,12 +3469,12 @@ chkolp(
 
         /* can we overlap it? */
         trace_2(TRACE_OVERLAP, "travelling to %d, %d", trycol, trow);
-        tslot = travel(trycol, trow);
-        if(tslot  &&  !isslotblank(tslot))
+        tcell = travel(trycol, trow);
+        if(tcell  &&  !isslotblank(tcell))
             break;
 
         if(!printing)
-            /* don't overlap to current slot */
+            /* don't overlap to current cell */
             if( ((trycol == curcol)  &&  (trow == currow))          ||
                 /* don't allow overlap from non-marked to marked */
                 (inblock(trycol, trow)  &&  !inblock(tcol, trow))
@@ -3489,10 +3489,10 @@ chkolp(
 
 /******************************************************************************
 *
-* is a slot possibly overlapped on the screen
+* is a cell possibly overlapped on the screen
 *
-* tests whether there is a text slot on the screen to the left
-* with a big enough wrap width to overlap this slot
+* tests whether there is a text cell on the screen to the left
+* with a big enough wrap width to overlap this cell
 *
 ******************************************************************************/
 
@@ -3507,13 +3507,13 @@ is_overlapped(
     while(--coff >= 0)
         {
         COL  tcol  = col_number(coff);
-        P_SLOT tslot = travel(tcol, trow);
+        P_CELL tcell = travel(tcol, trow);
 
         gap += colwidth(tcol);
 
-        if(tslot)
+        if(tcell)
             {
-            if(!slot_displays_contents(tslot))
+            if(!slot_displays_contents(tcell))
                 return(FALSE);
 
 #if 1

@@ -34,7 +34,7 @@ find_and_replace(
 local variables
 */
 
-static BOOL only_at_start = FALSE;  /* check only at start of slot? */
+static BOOL only_at_start = FALSE;  /* check only at start of cell? */
 static S32 found_sofar;      /* how many strings found in this search */
 static S32 hidden_sofar; /* strings in columns width 0 */
 static uchar *target_string = NULL;
@@ -234,7 +234,7 @@ do_search(
     if(!dialog_box_start())
         return;
 
-    /* switch off replace, confirmation and expression slot searching */
+    /* switch off replace, confirmation and expression cell searching */
 
     d_search[SCH_REPLACE].option = replace ? 'Y' : 'N';
 
@@ -329,7 +329,7 @@ next_or_previous_match(
         /* NextMatch_fn or PrevMatch_fn called whilst in an editor, so */
         /* mergeback current edit buffer contents before doing search  */
 
-        S32 caretpos;  /* buffer offset to cursor column and row (might be multiline) within slot */
+        S32 caretpos;  /* buffer offset to cursor column and row (might be multiline) within cell */
 
         if(!expedit_mergebacktext(FALSE, &caretpos))    /* don't report compile errors, naff formula saved as text */
             return;             /* mergeback failed, probably text too big for linbuf */
@@ -339,7 +339,7 @@ next_or_previous_match(
     else if(!mergebuf())
         return;
 
-    /* redraw current slot */
+    /* redraw current cell */
     mark_row_border(currowoffset);
     mark_slot(travel_here());
 
@@ -403,39 +403,39 @@ save_wild_string(
 }
 
 /*
-find the next slot in the search and decompile it to linbuf
-if no more slots in file return NULL
+find the next cell in the search and decompile it to linbuf
+if no more cells in file return NULL
 */
 
 static uchar *
 get_next_slot_in_search(void)
 {
-    P_SLOT tslot = travel(sch_pos_end.col, sch_pos_end.row);
+    P_CELL tcell = travel(sch_pos_end.col, sch_pos_end.row);
 
-    /* only look across boundaries of text slots */
-    if(!tslot  ||  (tslot->type != SL_TEXT))
+    /* only look across boundaries of text cells */
+    if(!tcell  ||  (tcell->type != SL_TEXT))
         return(NULL);
 
-    /* look for second slot */
+    /* look for second cell */
 
-    tslot = travel(sch_pos_end.col, sch_pos_end.row+1);
-    if(!tslot)
+    tcell = travel(sch_pos_end.col, sch_pos_end.row+1);
+    if(!tcell)
         return(NULL);
 
-    /* can only match non-blank text slots */
-    if((tslot->type != SL_TEXT)  ||  str_isblank(tslot->content.text))
+    /* can only match non-blank text cells */
+    if((tcell->type != SL_TEXT)  ||  str_isblank(tcell->content.text))
         return(NULL);
 
-    /* tslot is new slot, decompile it */
-    prccon(linbuf, tslot);
+    /* tcell is new cell, decompile it */
+    prccon(linbuf, tcell);
     sch_pos_end.row++;
     return(linbuf);
 }
 
 /*
-recover first slot to search from
+recover first cell to search from
 the thing in linbuf has not changed, so can
-decompile the slot in sch_pos_stt into linbuf
+decompile the cell in sch_pos_stt into linbuf
 */
 
 static void
@@ -446,9 +446,9 @@ recover_first_slot(void)
 }
 
 /*
-search for string in decompiled slot
+search for string in decompiled cell
 assumes strings are decompiled
-x is search string, y is string in slot
+x is search string, y is string in cell
 copes with ^? and ^# for single and multiple wild characters in target_string
 returns TRUE if match, FALSE no match
 */
@@ -459,11 +459,11 @@ sch_stringcmp(
     BOOL next,
     BOOL folding)
 {
-    BOOL moved_slots = FALSE;   /* are we starting in correct slot */
+    BOOL moved_slots = FALSE;   /* are we starting in correct cell */
     uchar *current_slot;
     S32 increment = (next) ? 1 : -1;
 
-    /* this needs to be changed for slot boundaries. <-- whatsis mean?? */
+    /* this needs to be changed for cell boundaries. <-- whatsis mean?? */
     sch_pos_end = sch_pos_stt;
 
     /* look all through this string for target_string */
@@ -540,13 +540,13 @@ STAR:
                 /* see if we have space matching */
                 if(*x == FUNNYSPACE)
                     {
-                    /* read to last space or end of slot */
+                    /* read to last space or end of cell */
                     while((*y == SPACE)  &&  ((y[1] == SPACE)  ||  !y[1]))
                         y++;
 
                     if(!*y)
                         {
-                        /* get next non-blank slot */
+                        /* get next non-blank cell */
                         moved_slots = TRUE;
 
                         y = current_slot = get_next_slot_in_search();
@@ -637,18 +637,18 @@ STAR:
 }
 
 /*
-try this slot for the search string, start at sch_stt_offset
+try this cell for the search string, start at sch_stt_offset
 if find a match, leave the position in sch_stt_offset and return TRUE
 */
 
 static BOOL
 look_in_this_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     BOOL next)
 {
     S32 len;
 
-    prccon(linbuf, tslot);
+    prccon(linbuf, tcell);
 
     /* check that sch_stt_offset not past end of string */
 
@@ -674,7 +674,7 @@ look_in_this_slot(
 /*
 find the string
 
-look through slots and files
+look through cells and files
 */
 
 static BOOL
@@ -683,7 +683,7 @@ find_sch_string(
     BOOL replace_option,
     BOOL confirm_option)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     ROW number_of_rows = sch_end.row - sch_stt.row + 1;
   /*S32 res;*/
 
@@ -700,7 +700,7 @@ find_sch_string(
     else if(!mergebuf())
         return(FALSE);
 
-    /* mark the slot cos we might have replaced something in it */
+    /* mark the cell cos we might have replaced something in it */
     mark_row_border(currowoffset);
     mark_slot(travel_here());
 
@@ -712,16 +712,16 @@ find_sch_string(
             return(reperr_null(ERR_ESCAPE));
             }
 
-        tslot = travel(sch_pos_stt.col, sch_pos_stt.row);
+        tcell = travel(sch_pos_stt.col, sch_pos_stt.row);
 
-        if(tslot)
-            switch(tslot->type)
+        if(tcell)
+            switch(tcell->type)
                 {
                 case SL_NUMBER:
                     if(d_search[SCH_EXPRESSIONS].option != 'Y')
                         break;
                 case SL_TEXT:
-                    if(look_in_this_slot(tslot, next))
+                    if(look_in_this_slot(tcell, next))
                         goto FOUNDONE;
 
                 default:
@@ -771,13 +771,13 @@ FOUNDONE:
 
     chknlr(curcol = sch_pos_stt.col, currow = sch_pos_stt.row);
 
-    /* if all of string in one slot, increment end offset */
+    /* if all of string in one cell, increment end offset */
     if(sch_pos_end.row == sch_pos_stt.row)
         sch_end_offset += sch_stt_offset;
 
-    tslot = travel_here();
+    tcell = travel_here();
 
-    if(tslot  &&  (tslot->type != SL_TEXT))
+    if(tcell  &&  (tcell->type != SL_TEXT))
         seteex();
     else
         filbuf();
@@ -843,17 +843,17 @@ prompt_user(void)
 
     if(xf_inexpression_box || xf_inexpression_line)
         {
-        S32   caretpos; /* buffer offset to cursor column, row (might be multiline) within slot */
-        P_SLOT tslot;
+        S32   caretpos; /* buffer offset to cursor column, row (might be multiline) within cell */
+        P_CELL tcell;
 
         if(!expedit_mergebacktext(FALSE, &caretpos))       /* don't report compile errors, naff formula saved as text */
             return(ESCAPE);             /* mergeback failed, probably text too big for linbuf */
 
         *linbuf = '\0';
-        tslot = travel_here();
+        tcell = travel_here();
 
-        if(tslot)
-            prccon(linbuf, tslot);
+        if(tcell)
+            prccon(linbuf, tcell);
 
         seteex();
         lecpos = caretpos;
@@ -1001,7 +1001,7 @@ find_and_replace(
                     /* don't worry about the backward replace case - it can't happen! */
                     }
 
-                /* mark the slot anyway */
+                /* mark the cell anyway */
                 mark_row_border(currowoffset);
                 mark_slot(travel_here());
 

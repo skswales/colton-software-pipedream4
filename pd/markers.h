@@ -32,17 +32,17 @@ extern void
 force_next_row(void);
 
 extern BOOL
-inblock(                            /* is this slot in marked block? */
+inblock(                            /* is this cell in marked block? */
     COL tcol,
     ROW trow);
 
 extern void
-init_block(                         /* initializes block to be given block or current slot */
+init_block(                         /* initializes block to be given block or current cell */
     PC_SLR bs,
     PC_SLR be);
 
 extern void
-init_marked_block(void);            /* initializes block to be marked block or current slot */
+init_marked_block(void);            /* initializes block to be marked block or current cell */
 
 extern void
 init_doc_as_block(void);            /* initializes block to be whole document */

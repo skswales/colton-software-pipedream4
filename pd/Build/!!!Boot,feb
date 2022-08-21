@@ -11,14 +11,19 @@ If "<Hdr$Path>"="" Then Error AcornC/C++ Tools not yet opened
 |
 If "<pd_root>"<>""  Then Error 0 Please reboot and reselect
 |
-| SKS' RISC PC
-Set disc_root ADFS::id0.$
+| SKS RISC PC
+If "<disc_root>"="" Then IfThere ADFS::id0.$.!Boot Then Set disc_root ADFS::id0.$
+|
+| SKS iMX6
+If "<disc_root>"="" Then IfThere SCSI::hd4.$.!Boot Then Set disc_root SCSI::hd4.$
 |
 | Raspberry Pi
-IfThere SDFS::RISCOSpi.$.!Boot Then Set disc_root SDFS::RISCOSpi.$
+If "<disc_root>"="" Then IfThere SDFS::RISCOSpi.$.!Boot Then Set disc_root SDFS::RISCOSpi.$
 |
 | RPCEmu
-IfThere HostFS:$.!Boot Then Set disc_root HostFS:$
+If "<disc_root>"="" Then IfThere HostFS:$.!Boot Then Set disc_root HostFS:$
+|
+If "<disc_root>"="" Then Error 0 Please locate root disc
 |
 Set pd_root <disc_root>.pipedream.trunk
 |

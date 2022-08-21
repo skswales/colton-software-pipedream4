@@ -84,7 +84,7 @@ SLR sch_stt;                    /* start of search block */
 SLR sch_end;                    /* end of search block */
 SLR sch_pos_stt;                /* position of start of match */
 SLR sch_pos_end;                /* position of end of match */
-S32 sch_stt_offset;             /* offset of search string in slot */
+S32 sch_stt_offset;             /* offset of search string in cell */
 S32 sch_end_offset;             /* offset of end of matched string */
 BOOL dont_update_lescrl = FALSE;
 

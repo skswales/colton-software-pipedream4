@@ -282,8 +282,8 @@ typedef struct EXTENTRY
 typedef struct RANGE_USE
 {
     EV_RANGE  refto;        /* range points to */
-    EV_SLR    byslr;        /* slot containing range */
-    S16       byoffset;     /* offset of range in containing slot */
+    EV_SLR    byslr;        /* cell containing range */
+    S16       byoffset;     /* offset of range in containing cell */
     EV_FLAGS  flags;        /* flags about this reference */
     EV_SERIAL visited;      /* group visited flag */
 }
@@ -292,8 +292,8 @@ RANGE_USE, * P_RANGE_USE;
 typedef struct SLR_USE
 {
     EV_SLR    refto;        /* reference points to */
-    EV_SLR    byslr;        /* slot containing reference */
-    S16       byoffset;     /* offset of reference/array in containing slot */
+    EV_SLR    byslr;        /* cell containing reference */
+    S16       byoffset;     /* offset of reference/array in containing cell */
     EV_FLAGS  flags;        /* flags about this reference */
 }
 SLR_USE, * P_SLR_USE;
@@ -305,8 +305,8 @@ structure of name use table
 typedef struct NAME_USE
 {
     EV_NAMEID nameto;       /* reference to name.. */
-    EV_SLR    byslr;        /* slot containing use of name */
-    S16       byoffset;     /* offset of id in containing slot */
+    EV_SLR    byslr;        /* cell containing use of name */
+    S16       byoffset;     /* offset of id in containing cell */
     EV_FLAGS  flags;        /* flags about this entry */
 }
 NAME_USE, * P_NAME_USE;
@@ -318,9 +318,9 @@ structure of custom function use table
 typedef struct CUSTOM_USE
 {
     EV_NAMEID custom_to;    /* reference to custom.. */
-    EV_SLR    byslr;        /* slot containing reference to custom */
+    EV_SLR    byslr;        /* cell containing reference to custom */
     EV_FLAGS  flags;        /* flags about this entry */
-    S16       byoffset;     /* offset of id in containing slot */
+    S16       byoffset;     /* offset of id in containing cell */
 }
 CUSTOM_USE, * P_CUSTOM_USE;
 
@@ -424,7 +424,7 @@ typedef struct EVAL_BLOCK
 {
     S32 offset;
     EV_SLR slr;
-    P_EV_SLOT p_ev_slot;
+    P_EV_CELL p_ev_cell;
 }
 EVAL_BLOCK;
 
@@ -522,7 +522,7 @@ STACK_ALERT_INPUT;
 
 typedef struct STACK_ENTRY
 {
-    EV_SLR slr;                 /* slot to which entry relates */
+    EV_SLR slr;                 /* cell to which entry relates */
     EV_FLAGS stack_flags;       /* flags about entry */
     char type;                  /* type of impure part of entry */
 
@@ -550,10 +550,10 @@ STACK_ENTRY, * P_STACK_ENTRY;
 definition of stack entry flags
 */
 
-#define STF_CALCEDERROR     1   /* error has been stored in slot */
+#define STF_CALCEDERROR     1   /* error has been stored in cell */
 #define STF_CALCEDSUPPORTER 2   /* supporter was recalced */
 #define STF_INCUSTOM        4   /* we are inside a custom */
-#define STF_CIRCSOURCE      8   /* slot is source of circular reference */
+#define STF_CIRCSOURCE      8   /* cell is source of circular reference */
 
 enum STACK_TYPES
 {
@@ -1237,7 +1237,7 @@ grub_init(
 
 extern S32
 grub_next(
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     P_EV_GRUB grubp);
 
 _Check_return_
@@ -1349,7 +1349,7 @@ ev_add_rngdependency(
 
 extern S32
 ev_add_exp_slot_to_tree(
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     _InRef_     PC_EV_SLR slrp);
 
 extern S32

@@ -40,7 +40,7 @@ static S32
 cal_offset_in_slot(
     COL col,
     ROW row,
-    P_SLOT sl,
+    P_CELL sl,
     S32 offset_ch,
     S32 cell_offset_os);
 
@@ -274,8 +274,8 @@ ScrollRight_fn(void)
 /******************************************************************************
 *
 * mark the row for redrawing.  When moving up and down within the screen
-* most numeric slots do not need to be redrawn.  The old and new slots
-* must be redrawn for the block cursor movement.  Text and blank slots must
+* most numeric cells do not need to be redrawn.  The old and new cells
+* must be redrawn for the block cursor movement.  Text and blank cells must
 * be redrawn for overlap. drawnumbers specifies whether the numbers can be
 * missed.
 *
@@ -326,7 +326,7 @@ mark_row(
 * MRJC created this more optimal version 13/7/89
 * I note from the speech above mark_row that the original
 * sentiments from VP have been noted - but not
-* implemented! So this one checks for numeric slots
+* implemented! So this one checks for numeric cells
 * and overlap. This was done by MRKCON in VP
 * This routine assumes that the column has not changed
 *
@@ -339,7 +339,7 @@ mark_row_praps(
 {
     COL col, i;
     ROW row;
-    P_SLOT sl, tsl;
+    P_CELL sl, tsl;
     char *c;
     coord fwidth;
 
@@ -360,16 +360,16 @@ mark_row_praps(
 
         sl = travel(col, row);
 
-        /* only text slots can be different */
+        /* only text cells can be different */
         if(sl  &&  (sl->type != SL_TEXT))
             return;
 
-        trace_0(TRACE_APP_PD4, "mark_row_praps found empty slot/text slot");
+        trace_0(TRACE_APP_PD4, "mark_row_praps found empty cell/text cell");
 
         /* check for justification */
         if(sl  &&  ((sl->justify & J_BITS) != J_FREE))
             {
-            trace_0(TRACE_APP_PD4, "slot is justified");
+            trace_0(TRACE_APP_PD4, "cell is justified");
             break;
             }
 
@@ -380,7 +380,7 @@ mark_row_praps(
                 {
                 if(old_lescroll)
                     {
-                    trace_0(TRACE_APP_PD4, "old slot had been scrolled");
+                    trace_0(TRACE_APP_PD4, "old cell had been scrolled");
                     break;
                     }
 
@@ -418,13 +418,13 @@ mark_row_praps(
 
                 if(lecpos > fwidth)
                     {
-                    trace_0(TRACE_APP_PD4, "new slot will be scrolled");
+                    trace_0(TRACE_APP_PD4, "new cell will be scrolled");
                     break;
                     }
                 }
             }
 
-        /* check for slots to the left overlapping */
+        /* check for cells to the left overlapping */
         if(col  &&  !sl)
             {
             for(i = 0; i < col; i++)
@@ -440,7 +440,7 @@ mark_row_praps(
 
             if(i != col)
                 {
-                trace_0(TRACE_APP_PD4, "blank slot is overlapped by something to the left");
+                trace_0(TRACE_APP_PD4, "blank cell is overlapped by something to the left");
                 break;
                 }
             }
@@ -453,7 +453,7 @@ mark_row_praps(
         for(c = sl->content.text; *c; c++)
             if((text_at_char == *c)  ||  (*c == CH_DELETE)  ||  (*c < CH_SPACE))
                 {
-                trace_0(TRACE_APP_PD4, "slot has highlights");
+                trace_0(TRACE_APP_PD4, "cell has highlights");
                 goto mark_and_return;
                 }
         } /*block*/
@@ -464,7 +464,7 @@ mark_row_praps(
 
 mark_and_return:
 
-    trace_0(TRACE_APP_PD4, "mark_row_praps marking slot");
+    trace_0(TRACE_APP_PD4, "mark_row_praps marking cell");
     mark_row(rowonscr);
 }
 
@@ -1195,7 +1195,7 @@ nextcol(void)
 
 /******************************************************************************
 *
-* push current slot onto (FA) stack
+* push current cell onto (FA) stack
 *
 ******************************************************************************/
 
@@ -1218,7 +1218,7 @@ SavePosition_fn(void)
 
 /******************************************************************************
 *
-*  pop current slot from (FA) stack
+*  pop current cell from (FA) stack
 *
 ******************************************************************************/
 
@@ -1285,7 +1285,7 @@ SwapPosition_fn(void)
 
 /******************************************************************************
 *
-* goto slot
+* goto cell
 *
 ******************************************************************************/
 
@@ -1338,7 +1338,7 @@ reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
 
             if(baddoc)
                 {
-                reperr_null(create_error(ERR_BAD_SLOT));  /* and let him try again... */
+                reperr_null(create_error(ERR_BAD_CELL));  /* and let him try again... */
                 if(!dialog_box_can_retry())
                     break;
                 continue;
@@ -1350,7 +1350,7 @@ reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
 
         if(bad_reference(tcol, trow))
             {
-            reperr_null(create_error(ERR_BAD_SLOT));  /* and let him try again... */
+            reperr_null(create_error(ERR_BAD_CELL));  /* and let him try again... */
             if(!dialog_box_can_retry())
                 break;
             continue;
@@ -1837,7 +1837,7 @@ filvert(
     S32 temp_pagoff;
     uchar saveflags;
     ROW first_row_number = row_number(0);
-    P_SLOT tslot;
+    P_CELL tcell;
     BOOL on_break;
     S32 pictrows;
 
@@ -1906,8 +1906,8 @@ filvert(
                 /* on break */
 
                 /* if hard break - do chkrpb(nextrow) explicitly to save time */
-                tslot = travel(0, nextrow);
-                if(tslot  &&  (tslot->type == SL_PAGE))
+                tcell = travel(0, nextrow);
+                if(tcell  &&  (tcell->type == SL_PAGE))
                     {
                     if(chkpbs(nextrow, temp_pagoff))
                         temp_pagoff = 0;
@@ -2033,9 +2033,9 @@ extern BOOL
 chkrpb(
     ROW rowno)
 {
-    P_SLOT tslot = travel(0, rowno);
+    P_CELL tcell = travel(0, rowno);
 
-    return(tslot  &&  (tslot->type == SL_PAGE));
+    return(tcell  &&  (tcell->type == SL_PAGE));
 }
 
 /*
@@ -2062,9 +2062,9 @@ extern BOOL
 chkpac(
     ROW rowno)
 {
-    P_SLOT tslot = travel(0, rowno);
-    S32 condval = tslot->content.page.condval;
-    S32 rowonpage = tslot->content.page.cpoff;
+    P_CELL tcell = travel(0, rowno);
+    S32 condval = tcell->content.page.condval;
+    S32 rowonpage = tcell->content.page.cpoff;
 
     return((condval == 0)  ||  (condval >= (encpln-rowonpage) / enclns));
 }
@@ -2416,31 +2416,31 @@ curosc(void)
 
 /******************************************************************************
 *
-*  check slot is blank
+* check cell is blank
 *
 ******************************************************************************/
 
 extern BOOL
 isslotblank(
-    P_SLOT tslot)
+    P_CELL tcell)
 {
     uchar *str;
     uchar ch;
 
-    if(!tslot)
+    if(!tcell)
         return(TRUE);
 
-    switch(tslot->type)
+    switch(tcell->type)
         {
         case SL_TEXT:
-            str = tslot->content.text;
+            str = tcell->content.text;
             break;
 
         default:
             return(FALSE);
         }
 
-    /* check if only characters in slot are spaces
+    /* check if only characters in cell are spaces
      * Is done explicitly for speed
     */
     do { ch = *str++; } while(ch == SPACE);
@@ -2467,10 +2467,10 @@ get_column(
     coord coff = calcoff_click(tx); /* actual grid address with l/r map */
     coord trycoff;
     COL  tcol;
-    P_SLOT tslot;
+    P_CELL tcell;
     S32 tryoffset;
 
-    /* ensure we can find caret in current slot! */
+    /* ensure we can find caret in current cell! */
     (void) mergebuf_nocheck();
     filbuf();
 
@@ -2482,29 +2482,29 @@ get_column(
 
         trace_0(TRACE_APP_PD4, "SELECT: find the leftmost column");
 
-        /* find any preceding non-blank slot,
+        /* find any preceding non-blank cell,
          * or stop at first column on screen.
         */
         do  {
             tryoffset = tx - calcad(trycoff);
             tcol  = col_number(trycoff);
-            tslot = travel(tcol, trow);
+            tcell = travel(tcol, trow);
             }
-        while(!tslot  &&  (--trycoff >= 0));
+        while(!tcell  &&  (--trycoff >= 0));
 
         /* Manic jump-left always clicking */
-        /* if there is a non-blank text slot which overlaps, have it, otherwise
+        /* if there is a non-blank text cell which overlaps, have it, otherwise
             have the column we appear to be in
         */
-        if(tslot && (tslot->type == SL_TEXT))
+        if(tcell && (tcell->type == SL_TEXT))
             {
-            g_newoffset = cal_offset_in_slot(tcol, trow, tslot, tryoffset, xcelloffset);
-            trace_2(TRACE_APP_PD4, "preceding text slot at coff %d, g_newoffset %d", trycoff, g_newoffset);
+            g_newoffset = cal_offset_in_slot(tcol, trow, tcell, tryoffset, xcelloffset);
+            trace_2(TRACE_APP_PD4, "preceding text cell at coff %d, g_newoffset %d", trycoff, g_newoffset);
             return(trycoff);
             }
         else
             {
-            trace_0(TRACE_APP_PD4, "preceding non-text slot: first non-blank one");
+            trace_0(TRACE_APP_PD4, "preceding non-text cell: first non-blank one");
             return(coff);
             }
         }
@@ -2512,18 +2512,18 @@ get_column(
     trace_0(TRACE_APP_PD4, "ADJUST: found the underlying column");
 
     tcol  = col_number(coff);
-    tslot = travel(tcol, trow);
+    tcell = travel(tcol, trow);
 
-    if(tslot  &&  (tslot->type == SL_TEXT))
-        g_newoffset = cal_offset_in_slot(tcol, trow, tslot, tx - calcad(coff), xcelloffset);
+    if(tcell  &&  (tcell->type == SL_TEXT))
+        g_newoffset = cal_offset_in_slot(tcol, trow, tcell, tx - calcad(coff), xcelloffset);
 
     return(coff);
 }
 
 /******************************************************************************
 *
-* given a slot and a character + cell offset, work
-* out the new cursor offset position in the slot
+* given a cell and a character + cell offset, work
+* out the new cursor offset position in the cell
 *
 * MRJC 19/7/89
 *
@@ -2533,7 +2533,7 @@ static S32
 cal_offset_in_slot(
     COL col,
     ROW row,
-    P_SLOT sl,
+    P_CELL sl,
     S32 offset_ch,
     S32 cell_offset_os)
 {
@@ -2855,7 +2855,7 @@ cal_offset_in_slot(
 
 /******************************************************************************
 *
-*  insert a reference to a (possibly) external slot in the given document
+*  insert a reference to a (possibly) external cell in the given document
 *
 ******************************************************************************/
 

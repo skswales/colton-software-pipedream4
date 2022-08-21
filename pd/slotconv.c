@@ -233,7 +233,7 @@ bitstr(
     const uchar text_at_char = get_text_at_char();
     coord length = 0;
     S32 consume;
-    P_SLOT tslot;
+    P_CELL tcell;
     COL tcol;
     ROW trow;
     EV_DOCNO docno;
@@ -242,7 +242,7 @@ bitstr(
     S32 i = 0;
     BOOL revert_colour_change = FALSE;
 
-    /* start slot with global font */
+    /* start cell with global font */
     if(riscos_fonts)
         {
         start_font = 0;
@@ -463,7 +463,7 @@ bitstr(
         switch(toupper(*from))
             {
             case SLRLD1:
-                { /* expand a compiled slot reference */
+                { /* expand a compiled cell reference */
                 const uchar * csr = from + 2; /* CSR is past the SLRLD1/2 */
 
                 from = talps_csr(csr, &docno, &tcol, &trow);
@@ -472,13 +472,13 @@ bitstr(
                 if(!expand_ats)
                     break;
 
-                /* and expand it into current slot */
+                /* and expand it into current cell */
                 if((expand_refs > 0) && !bad_reference(tcol, trow))
                     {
-                    tslot = travel_externally(docno, tcol & COLNOBITS, trow & ROWNOBITS);
+                    tcell = travel_externally(docno, tcol & COLNOBITS, trow & ROWNOBITS);
 
-                    if(tslot)
-                        (void) expand_slot(docno, tslot, row, to, fwidth,
+                    if(tcell)
+                        (void) expand_slot(docno, tcell, row, to, fwidth,
                                            expand_refs-1, expand_ats, expand_ctrl,
                                            FALSE /*allow_fonty_result*/, TRUE /*cff*/);
 
@@ -502,7 +502,7 @@ bitstr(
                 else
                     {
                     /* if we are not allowed to expand it because we are
-                     * already expanding, or error, just print slot reference
+                     * already expanding, or error, just print cell reference
                     */
                     *to++ = text_at_char;
                     reflength = write_ref(to, BUF_MAX_REFERENCE, docno, tcol, trow);
@@ -1025,7 +1025,7 @@ expand_lcr(
 
         *tptr = NULLCH;
 
-        /* revert to slot font before each section */
+        /* revert to cell font before each section */
         if(riscos_fonts  &&  i)
             font_insert_change(slot_font, &to);
 
@@ -1063,12 +1063,12 @@ expand_lcr(
 
 /******************************************************************************
 *
-* expand the contents of the slot into array
+* expand the contents of the cell into array
 *
 * returns the justification state
 *
-* expand_refs level says whether we are allowed to expand slot references inside
-* the slot so text slots referring to themselves are not recursive
+* expand_refs level says whether we are allowed to expand cell references inside
+* the cell so text cells referring to themselves are not recursive
 *
 * note that strings returned by expand_slot() can now contain RISC OS font
 * changes and thus embedded NULLCHs if riscos_fonts && allow_fonty_result.
@@ -1079,7 +1079,7 @@ expand_lcr(
 extern char
 expand_slot(
     _InVal_     DOCNO docno,
-    P_SLOT tslot,
+    P_CELL tcell,
     ROW row,
     /*out*/ char *array,
     coord fwidth,
@@ -1089,7 +1089,7 @@ expand_slot(
     BOOL allow_fonty_result,
     BOOL cust_func_formula)
 {
-    char justify = tslot->justify & J_BITS;
+    char justify = tcell->justify & J_BITS;
     char *array_start;
     S32 old_riscos_fonts;
     P_EV_RESULT p_ev_result;
@@ -1113,31 +1113,31 @@ expand_slot(
             font_insert_change(slot_font, &array);
         }
 
-    switch(result_extract(tslot, &p_ev_result))
+    switch(result_extract(tcell, &p_ev_result))
         {
         case SL_TEXT:
             if(justify == J_LCR)
                 {
-                expand_lcr(tslot->content.text, row, array, fwidth,
+                expand_lcr(tcell->content.text, row, array, fwidth,
                            expand_refs, expand_ats, expand_ctrl,
                            allow_fonty_result, FALSE /*compile_lcr*/);
                 }
             else
                 {
-                bitstr(tslot->content.text, row, array, fwidth,
+                bitstr(tcell->content.text, row, array, fwidth,
                        expand_refs, expand_ats, expand_ctrl);
                 /* bitstr() will return a fonty result if riscos_fonts and allow_fonty_result on entry */
                 }
             break;
 
         case SL_PAGE:
-            sprintf(array, "~ %d", tslot->content.page.condval);
+            sprintf(array, "~ %d", tcell->content.page.condval);
             justify = J_LEFT;
             break;
 
         case SL_NUMBER:
             if(cust_func_formula && ev_doc_is_custom_sheet(docno) &&
-               ev_is_formula(&tslot->content.number.guts))
+               ev_is_formula(&tcell->content.number.guts))
                 {
                 EV_OPTBLOCK optblock;
 
@@ -1145,7 +1145,7 @@ expand_slot(
 
                 strcpy(array, "...");
 
-                ev_decode_slot(docno, array + 3, &tslot->content.number.guts, &optblock);
+                ev_decode_slot(docno, array + 3, &tcell->content.number.guts, &optblock);
 
                 /* SKS after 4.11 29jan92 - LCR custom function display gave drug-crazed redraw */
                 if(justify == J_LCR)
@@ -1154,7 +1154,7 @@ expand_slot(
             else
                 {
                 result_to_string(p_ev_result, docno, array_start, array,
-                                 tslot->format,
+                                 tcell->format,
                                  fwidth, &justify,
                                  expand_refs, expand_ats, expand_ctrl);
                 }
@@ -1980,15 +1980,15 @@ is_font_change(
 
 /******************************************************************************
 *
-* extract pointer to result structure from slot
-* provides a level of indirection from slot
+* extract pointer to result structure from cell
+* provides a level of indirection from cell
 * structure details
 *
 ******************************************************************************/
 
 extern S32
 result_extract(
-    P_SLOT sl,
+    P_CELL sl,
     P_EV_RESULT * p_p_ev_result)
 {
     if(sl->type == SL_NUMBER)
@@ -2008,7 +2008,7 @@ result_extract(
 
 extern S32
 result_sign(
-    P_SLOT sl)
+    P_CELL sl)
 {
     S32 res = 0;
     P_EV_RESULT p_ev_result;
@@ -2170,15 +2170,15 @@ result_to_string(
 
             if(!temp.date || temp.time)
             {
-                S32 hour, minute, second;
+                S32 hours, minutes, seconds;
 
                 /* separate time from date */
                 if(temp.date)
                     array[len++] = ' ';
 
-                ss_timeval_to_hms(&temp.time, &hour, &minute, &second);
+                ss_timeval_to_hms(&temp.time, &hours, &minutes, &seconds);
 
-                len += sprintf(array + len, "%.2d:%.2d:%.2d", hour, minute, second);
+                len += sprintf(array + len, "%.2d:%.2d:%.2d", hours, minutes, seconds);
             }
 
             if(*justify == J_LCR)
@@ -2222,12 +2222,12 @@ result_to_string(
 
 /******************************************************************************
 *
-* sprintnumber does a print of the number in tslot into array
+* sprintnumber does a print of the number in tcell into array
 * it prints lead chars, '-' | '(', number, ')', trail chars
 * if eformat is FALSE it prints number in long form
 * if eformat is TRUE  it prints number in e format
 * it returns the number of non-space characters printed
-* the format is picked up from the slot or from the option page
+* the format is picked up from the cell or from the option page
 *
 ******************************************************************************/
 

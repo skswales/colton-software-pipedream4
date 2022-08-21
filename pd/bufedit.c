@@ -43,7 +43,7 @@ del_chkwrp(void);       /* check for reformat situation on deleting characters *
 
 static BOOL
 chkcfm(
-    P_SLOT tslot,
+    P_CELL tcell,
     ROW trow);
 
 static coord
@@ -92,7 +92,7 @@ static BOOL firstword;
 *
 * insert character into buffer
 * If nothing in buffer, decide whether
-* it's a text or numeric slot
+* it's a text or numeric cell
 *
 ******************************************************************************/
 
@@ -100,7 +100,7 @@ extern void
 inschr(
     uchar ch)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     S32   out_to_macro = TRUE;
 
     if((xf_inexpression || xf_inexpression_box || xf_inexpression_line) && (ch < SPACE))
@@ -112,26 +112,26 @@ inschr(
 #endif
 
     do  {                               /* only once. dummy loop for clean exit */
-        tslot = travel_here();
+        tcell = travel_here();
 
-        /* no slot and not in numeric mode */
-        if(!tslot)
+        /* no cell and not in numeric mode */
+        if(!tcell)
             {
             if(txnbit)
                 break;
             }
-        else if(is_protected_slot(tslot))
+        else if(is_protected_slot(tcell))
             {
             reperr_null(create_error(ERR_PROTECTED));
             return;
             }
 
-        /* text slot or blank text slot and text mode */
-        if(tslot  &&  ((tslot->type == SL_TEXT)  ||  (tslot->type == SL_PAGE)))
-            if(txnbit  ||  !isslotblank(tslot))
+        /* text cell or blank text cell and text mode */
+        if(tcell  &&  ((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE)))
+            if(txnbit  ||  !isslotblank(tcell))
                 break;
 
-        /* new numeric slot */
+        /* new numeric cell */
         if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
             {
             expedit_editcurrentslot_freshcontents(FALSE);
@@ -143,7 +143,7 @@ inschr(
         }
     while(FALSE);
 
-    /* SKS after 4.11 08jan92 - only record chars going into text slots not numeric slots */
+    /* SKS after 4.11 08jan92 - only record chars going into text cells not numeric cells */
     if(out_to_macro)
         if(macro_recorder_on)
             output_char_to_macro_file(ch);
@@ -259,26 +259,26 @@ insert_string_check_numeric(
     const char *str,
     BOOL allow_check)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     do  {                               /* only once. dummy loop for clean exit */
-        tslot = travel_here();
+        tcell = travel_here();
 
-        /* no slot and not in numeric mode */
-        if(!tslot)
+        /* no cell and not in numeric mode */
+        if(!tcell)
             {
             if(txnbit)
                 break;
             }
-        else if(is_protected_slot(tslot))
+        else if(is_protected_slot(tcell))
             return(reperr_null(create_error(ERR_PROTECTED)));
 
-        /* text slot or blank text slot and text mode */
-        if(tslot  &&  ((tslot->type == SL_TEXT)  ||  (tslot->type == SL_PAGE)))
-            if(txnbit  ||  !isslotblank(tslot))
+        /* text cell or blank text cell and text mode */
+        if(tcell  &&  ((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE)))
+            if(txnbit  ||  !isslotblank(tcell))
                 break;
 
-        /* new numeric slot */
+        /* new numeric cell */
         if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
             {
             expedit_editcurrentslot_freshcontents(FALSE);
@@ -291,7 +291,7 @@ insert_string_check_numeric(
 
 /******************************************************************************
 *
-* beginning of slot
+* beginning of cell
 *
 ******************************************************************************/
 
@@ -304,7 +304,7 @@ StartOfSlot_fn(void)
 
 /******************************************************************************
 *
-* end of slot
+* end of cell
 *
 ******************************************************************************/
 
@@ -497,8 +497,8 @@ CursorRight_fn(void)
     if(!slot_in_buffer)
         {
 #if 0
-    /* SKS after 4.11 09jan92 - why were we letting punters move around in protected slots? */
-        /* might not have slot in buffer due to protection */
+    /* SKS after 4.11 09jan92 - why were we letting punters move around in protected cells? */
+        /* might not have cell in buffer due to protection */
         if(!is_protected_slot(travel_here()))
 #endif
             {
@@ -549,7 +549,7 @@ CursorRight_fn(void)
                     }
                 #endif
                 }
-            /* are we at end of slot display? */
+            /* are we at end of cell display? */
             else if(lecpos >= chkolp(travel_here(), curcol, currow))
                 internal_process_command(N_NextColumn);
             }
@@ -560,8 +560,8 @@ CursorRight_fn(void)
 /******************************************************************************
 *
 * count words in current file or marked block
-* only counts words in text slots
-* slot references don't count, not even to text slots
+* only counts words in text cells
+* cell references don't count, not even to text cells
 *
 ******************************************************************************/
 
@@ -570,7 +570,7 @@ WordCount_fn(void)
 {
     S32 count = 0;
     char array[LIN_BUFSIZ + 1];
-    P_SLOT tslot;
+    P_CELL tcell;
     char ch;
     uchar *ptr;
     BOOL inword;
@@ -585,16 +585,16 @@ WordCount_fn(void)
     else
         init_doc_as_block();
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
         actind_in_block(DOWN_COLUMNS);
 
-        if(tslot->type != SL_TEXT)
+        if(tcell->type != SL_TEXT)
             continue;
 
-        /* count words in this slot */
+        /* count words in this cell */
 
-        ptr = tslot->content.text;
+        ptr = tcell->content.text;
         inword = FALSE;
 
         while((ch = *ptr++) != NULLCH)
@@ -854,20 +854,20 @@ block_highlight_core(
 {
     BOOL txf_iovbit = xf_iovbit;
     S32 tlecpos = lecpos;
-    P_SLOT tslot;
+    P_CELL tcell;
 
     xf_iovbit = TRUE;       /* force insert mode */
 
     init_marked_block();
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
         actind_in_block(DOWN_COLUMNS);
 
-        if((tslot->type != SL_TEXT)  ||  isslotblank(tslot))
+        if((tcell->type != SL_TEXT)  ||  isslotblank(tcell))
             continue;
 
-        prccon(linbuf, tslot);      /* decompile to linbuf */
+        prccon(linbuf, tcell);      /* decompile to linbuf */
         slot_in_buffer = TRUE;
 
         highlight_words_on_line(H_DELETE, h_ch);
@@ -1070,7 +1070,7 @@ NextWord_fn(void)
 extern void
 PrevWord_fn(void)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(slot_in_buffer  &&  (lecpos > 0))
         {
@@ -1090,10 +1090,10 @@ PrevWord_fn(void)
 
     /* move to end of previous row */
 
-    tslot = travel(curcol, currow - 1);
+    tcell = travel(curcol, currow - 1);
 
-    if(tslot  &&  (tslot->type == SL_TEXT))
-        lecpos = strlen((char *) tslot->content.text);
+    if(tcell  &&  (tcell->type == SL_TEXT))
+        lecpos = strlen((char *) tcell->content.text);
     else
         lecpos = lescrl = 0;
 
@@ -1141,8 +1141,8 @@ AutoWidth_fn(void)
     /* set widths for each column
         look down column:
             if blank, don't touch it
-            set width to maximum "kosher slot" display size
-            kosher slot is numeric slot or text slot that has something to its right
+            set width to maximum "kosher cell" display size
+            kosher cell is numeric cell or text cell that has something to its right
     */
     COL tcol;
     BOOL changed = FALSE;
@@ -1172,7 +1172,7 @@ AutoWidth_fn(void)
         {
         coord biggest_width = 0;
         coord biggest_margin = 0;
-        P_SLOT tslot;
+        P_CELL tcell;
         SLR cs, ce;
         coord right_margin;
         P_S32 widp, wwidp;
@@ -1187,17 +1187,17 @@ AutoWidth_fn(void)
 
         init_block(&cs, &ce);
 
-        while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+        while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
             {
             S32 iwidth;
             coord this_width = 0;
             char tjust;
             BOOL nothing_on_right = FALSE;
 
-            tjust = tslot->justify;
-            tslot->justify = J_LEFT;
+            tjust = tcell->justify;
+            tcell->justify = J_LEFT;
 
-            switch(tslot->type)
+            switch(tcell->type)
                 {
                 char array[LIN_BUFSIZ];
                 char *ptr;
@@ -1209,7 +1209,7 @@ AutoWidth_fn(void)
 
                     /* deliberate fall-thru */
                 case SL_NUMBER:
-                    (void) expand_slot(current_docno(), tslot, in_block.row, array, elemof32(array),
+                    (void) expand_slot(current_docno(), tcell, in_block.row, array, elemof32(array),
                                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                                        riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
 
@@ -1284,7 +1284,7 @@ AutoWidth_fn(void)
                 if(this_width > biggest_width)
                     biggest_width = this_width;
                 }
-            tslot->justify = tjust;
+            tcell->justify = tjust;
             }
 
         /* got a width for this column */
@@ -1402,7 +1402,7 @@ ColumnWidth_fn(void)
         /* width of zero special */
         if(!badparm  &&  (d_width[0].option == 0))
             {
-            /* if setting current column to zero width force slot out of buffer */
+            /* if setting current column to zero width force cell out of buffer */
             if((curcol >= tcol1)  &&  (curcol <= tcol2))
                 if(!mergebuf())
                     break;
@@ -1802,7 +1802,7 @@ fill_linbuf(
     const uchar * from;
     uchar * to;
     S32 wordlen, ch;
-    P_SLOT tslot;
+    P_CELL tcell;
     coord splitpoint;
     COL tcol;
     ROW trow;
@@ -1815,13 +1815,13 @@ fill_linbuf(
         {
         firstword = FALSE;
 
-        /* copy word and spaces to temp buffer: any slot references need decompiling */
+        /* copy word and spaces to temp buffer: any cell references need decompiling */
         from = lastword;
         to = buffer;
         while(((ch = *from++) != NULLCH)  &&  (ch != SPACE))
             {
             if(SLRLD1 == ch)
-                { /* decompile compiled slot reference */
+                { /* decompile compiled cell reference */
                 const uchar * csr = from + 1; /* CSR is past the SLRLD1/2 */
 
                 from = talps_csr(csr, &docno, &tcol, &trow);
@@ -1885,13 +1885,13 @@ fill_linbuf(
             if(!mergeinline(splitpoint))
                 return(TRUE);
 
-            tslot = travel(curcol, curr_outrow - 1);
+            tcell = travel(curcol, curr_outrow - 1);
 
             /* set to justify perhaps */
-            if(jusbit  &&  ((tslot->justify & J_BITS) == J_FREE))
+            if(jusbit  &&  ((tcell->justify & J_BITS) == J_FREE))
                 {
                 /* set new justify status, keeping protected bit */
-                tslot->justify = (tslot->justify & CLR_J_BITS) | new_just;
+                tcell->justify = (tcell->justify & CLR_J_BITS) | new_just;
                 cur_leftright = !cur_leftright;
                 }
             }
@@ -1978,7 +1978,7 @@ fill_linbuf(
                         if(tcol != curcol)
                             killslot(tcol, curr_outrow);
 
-                    /* anything pointing to deleted slots in this row become bad */
+                    /* anything pointing to deleted cells in this row become bad */
                     updref(0, currow,     LARGEST_COL_POSSIBLE, currow,               BADCOLBIT, (ROW) 0, UREF_DELETE, DOCNO_NONE);
 
                     /* rows in all those columns move up */
@@ -2078,7 +2078,7 @@ mergeinline(
 
 /******************************************************************************
 *
-* collect word from slot or next slot
+* collect word from cell or next cell
 * return address of word or NULL if break in formatting
 * enters with lastword set to NULL the first time,
 * points to space after last word read subsequently
@@ -2088,7 +2088,7 @@ mergeinline(
 static uchar *
 colword(void)
 {
-    P_SLOT sl;
+    P_CELL sl;
     uchar *next_word;
 
     if(!lastword)
@@ -2103,7 +2103,7 @@ colword(void)
             next_word = lastword;
         else
             {
-            /* no more words on this line so delete the slot */
+            /* no more words on this line so delete the cell */
             if((sl = travel(curcol, curr_inrow)) != NULL)
                 {
                 old_just = (sl->justify & J_BITS);
@@ -2112,7 +2112,7 @@ colword(void)
 
             killslot(curcol, curr_inrow);
 
-            /* was_curr_inrow maintains the row where the next slot first came from */
+            /* was_curr_inrow maintains the row where the next cell first came from */
             was_curr_inrow++;
 
             lindif--;
@@ -2129,15 +2129,15 @@ colword(void)
 static uchar *
 word_on_new_line(void)
 {
-    P_SLOT tslot = travel(curcol, curr_inrow);
+    P_CELL tcell = travel(curcol, curr_inrow);
 
     last_word_in = word_in;
     word_in = 0;
 
-    if(!tslot  ||  !chkcfm(tslot, was_curr_inrow))
+    if(!tcell  ||  !chkcfm(tcell, was_curr_inrow))
         return(NULL);
 
-    memcpy32(lastwordbuff, tslot->content.text, slotcontentssize(tslot)); /* includes terminator */
+    memcpy32(lastwordbuff, tcell->content.text, slotcontentssize(tcell)); /* includes terminator */
     lastword = lastwordbuff;
 
     return(((*lastword == SPACE  &&  !firstword)  ||  *lastword == '\0')
@@ -2301,7 +2301,7 @@ static void
 del_chkwrp(void)
 {
     ROW nextrow;
-    P_SLOT sl;
+    P_CELL sl;
     S32 splitpoint;
     S32 wrapwidth;
     char *c;
@@ -2399,26 +2399,26 @@ chkwrp(void)
 
 /******************************************************************************
 *
-* check can format slot
+* check can format cell
 *
 ******************************************************************************/
 
 static BOOL
 chkcfm(
-    P_SLOT tslot,
+    P_CELL tcell,
     ROW trow)
 {
     if(xf_inexpression  ||  chkrpb(trow))
         return(FALSE);
 
-    if(!tslot)
+    if(!tcell)
         return(!str_isblank(linbuf));
 
-    if(tslot->type != SL_TEXT)
+    if(tcell->type != SL_TEXT)
         return(FALSE);
 
     /* note: if protected bit set will return false */
-    switch(tslot->justify)
+    switch(tcell->justify)
         {
         case J_FREE:
         case J_LEFTRIGHT:
@@ -2674,7 +2674,7 @@ static void
 init_colword(
     ROW trow)
 {
-    P_SLOT sl;
+    P_CELL sl;
 
     was_curr_inrow =
     curr_inrow = curr_outrow = trow;

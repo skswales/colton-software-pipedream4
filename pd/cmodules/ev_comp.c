@@ -297,10 +297,10 @@ ev_compile(
     /* save options */
     cc->p_optblock = p_optblock;
 
-    /* default to being a constant slot */
+    /* default to being a constant cell */
     parmsp->type = EVS_CON_RPN;
 
-    /* return zero for blank slot */
+    /* return zero for blank cell */
     if(!*txt_in)
         return(0);
 
@@ -712,7 +712,7 @@ out_range(
 
 /******************************************************************************
 *
-* output a slot reference to the compiled string
+* output a cell reference to the compiled string
 *
 ******************************************************************************/
 
@@ -1198,7 +1198,7 @@ proc_custom_argument(
 * recognise a constant array
 *
 * --in--
-* refs_ok says whether slot references
+* refs_ok says whether cell references
 * and ranges are allowed in the array
 *
 * --out--
@@ -1362,7 +1362,8 @@ ss_recog_date_time(
     S32 american)
 {
     S32 day, month, year, date_scanned;
-    S32 hour, minute, second, time_scanned;
+    S32 hours, minutes, seconds;
+    U32 time_scanned;
     PC_U8 pos = in_str;
 
     p_ev_data->arg.ev_date.date = EV_DATE_INVALID;
@@ -1393,10 +1394,10 @@ ss_recog_date_time(
         }
 
     /* check for a time */
-    second = 0;
-    if((time_scanned = recog_time(pos, &hour, &minute, &second)) != 0)
+    seconds = 0;
+    if((time_scanned = recog_time(pos, &hours, &minutes, &seconds)) != 0)
         {
-        if(ss_hms_to_timeval(&p_ev_data->arg.ev_date.time, hour, minute, second) >= 0)
+        if(ss_hms_to_timeval(&p_ev_data->arg.ev_date.time, hours, minutes, seconds) >= 0)
             {
             pos += time_scanned;
             p_ev_data->did_num = RPN_DAT_DATE;
@@ -1788,7 +1789,7 @@ ss_recog_number(
 
 /******************************************************************************
 *
-* read a slot reference
+* read a cell reference
 *
 * --out--
 * =0 no slr found

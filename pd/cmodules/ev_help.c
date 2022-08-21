@@ -997,15 +997,15 @@ ev_data_to_result_convert(
 
 /******************************************************************************
 *
-* is this a formula slot ??
+* is this a formula cell ??
 *
 ******************************************************************************/
 
 extern S32
 ev_is_formula(
-    P_EV_SLOT p_ev_slot)
+    P_EV_CELL p_ev_cell)
 {
-    switch(p_ev_slot->parms.type)
+    switch(p_ev_cell->parms.type)
         {
         case EVS_CON_RPN:
         case EVS_VAR_RPN:
@@ -1019,15 +1019,15 @@ ev_is_formula(
 
 /******************************************************************************
 *
-* make a copy of an evaluator slot, duplicating
+* make a copy of an evaluator cell, duplicating
 * indirect resources where necessary
 *
 ******************************************************************************/
 
 extern S32
 ev_exp_copy(
-    P_EV_SLOT out_slotp,
-    P_EV_SLOT in_slotp)
+    P_EV_CELL out_slotp,
+    P_EV_CELL in_slotp)
 {
     P_U8 rpn_in, rpn_out;
     EV_DATA data_in, data_out;
@@ -1055,7 +1055,7 @@ ev_exp_copy(
     if(rpn_in)
         memcpy32(rpn_out, rpn_in, len_rpn(rpn_in));
 
-    /* copy slot results */
+    /* copy cell results */
     ev_result_to_data_convert(&data_in, &in_slotp->ev_result);
     ss_data_resource_copy(&data_out, &data_in);
     ev_data_to_result_convert(&out_slotp->ev_result, &data_out);
@@ -1065,16 +1065,16 @@ ev_exp_copy(
 
 /******************************************************************************
 *
-* free any resources that are owned by an expression slot
+* free any resources that are owned by an expression cell
 *
 ******************************************************************************/
 
 extern void
 ev_exp_free_resources(
-    _InoutRef_  P_EV_SLOT p_ev_slot)
+    _InoutRef_  P_EV_CELL p_ev_cell)
 {
     /* free any results that are there */
-    ev_result_free_resources(&p_ev_slot->ev_result);
+    ev_result_free_resources(&p_ev_cell->ev_result);
 }
 
 /******************************************************************************
@@ -1266,12 +1266,12 @@ ev_slr_deref(
     _InRef_     PC_EV_SLR slrp,
     S32 copy_ext)
 {
-    P_EV_SLOT p_ev_slot;
+    P_EV_CELL p_ev_cell;
     S32 res;
 
     if((slrp->flags & SLR_EXT_REF) && ev_doc_error(slrp->docno))
         ev_data_set_error(p_ev_data, ev_doc_error(slrp->docno));
-    else if((res = ev_travel(&p_ev_slot, slrp)) != 0)
+    else if((res = ev_travel(&p_ev_cell, slrp)) != 0)
         {
         /* it's an external string */
         if(res < 0)
@@ -1306,10 +1306,10 @@ ev_slr_deref(
                     p_ev_data->did_num = RPN_DAT_BLANK;
                 }
             }
-        /* it's an evaluator slot */
+        /* it's an evaluator cell */
         else
             {
-            ev_result_to_data_convert(p_ev_data, &p_ev_slot->ev_result);
+            ev_result_to_data_convert(p_ev_data, &p_ev_cell->ev_result);
 
             switch(p_ev_data->did_num)
                 {

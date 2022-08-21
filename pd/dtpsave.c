@@ -39,22 +39,22 @@ chkcfm_for_fwp(
     ROW trow,
     BOOL first)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(chkrpb(trow))
         return(FALSE);
 
-    tslot = travel(tcol, trow);
+    tcell = travel(tcol, trow);
 
-    if(tslot  &&  (tslot->type == SL_TEXT))
+    if(tcell  &&  (tcell->type == SL_TEXT))
         {
         /* note: if protected bit set will return false */
-        switch(tslot->justify)
+        switch(tcell->justify)
             {
             case J_FREE:
             case J_LEFTRIGHT:
             case J_RIGHTLEFT:
-                if(first  ||  (*tslot->content.text != SPACE))
+                if(first  ||  (*tcell->content.text != SPACE))
                     return(TRUE);
 
             default:
@@ -71,7 +71,7 @@ static ROW fwp_save_end_row;
 
 extern BOOL
 dtp_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output)
@@ -81,14 +81,14 @@ dtp_save_slot(
     S32 trailing_spaces = 0;
     BOOL possible_para_dtp;
 
-    trace_3(TRACE_APP_PD4, "dtp_save_slot(" PTR_XTFMT ", %d, %d)", report_ptr_cast(tslot), tcol, trow);
+    trace_3(TRACE_APP_PD4, "dtp_save_slot(" PTR_XTFMT ", %d, %d)", report_ptr_cast(tcell), tcol, trow);
 
-    if(tslot)
-        plain_slot(tslot, tcol, trow, PARAGRAPH_CHAR, linbuf);
+    if(tcell)
+        plain_slot(tcell, tcol, trow, PARAGRAPH_CHAR, linbuf);
 
-    trace_1(TRACE_APP_PD4, "slot converted to '%s'", linbuf);
+    trace_1(TRACE_APP_PD4, "cell converted to '%s'", linbuf);
 
-    /* if this and the slot above can be formatted together call it a paragraph */
+    /* if this and the cell above can be formatted together call it a paragraph */
     possible_para_dtp =
                         chkcfm_for_fwp(tcol, trow, FALSE)  &&
                         ((trow > fwp_save_stt_row)  &&  chkcfm_for_fwp(tcol, trow-1,  FALSE))  &&
@@ -103,7 +103,7 @@ dtp_save_slot(
         if(possible_para_dtp  &&  trow > 0)
             {
             /* do we need to send out space first? */
-            P_SLOT tslot1;
+            P_CELL tslot1;
 
             tslot1 = travel(tcol, trow-1);
             if(tslot1)
@@ -123,7 +123,7 @@ dtp_save_slot(
             return(FALSE);
         }
 
-    if(!tslot)
+    if(!tcell)
         return(TRUE);
 
     /* output contents, chucking highlight chars */
@@ -156,7 +156,7 @@ dtp_save_slot(
 }
 
 /*
-save slot in fwp format
+save cell in fwp format
 
 spaces should be soft spaces ($1E), could send out stretch spaces too but no
     point for fwp?
@@ -169,7 +169,7 @@ whole highlight status gets output on all highlight changes
 
 extern BOOL
 fwp_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output,
@@ -181,18 +181,18 @@ fwp_save_slot(
     S32 trailing_spaces = 0;
     BOOL possible_para_fwp, possible_para_dtp;
 
-    trace_3(TRACE_APP_PD4, "fwp_save_slot(" PTR_XTFMT ", %d, %d)", report_ptr_cast(tslot), tcol, trow);
+    trace_3(TRACE_APP_PD4, "fwp_save_slot(" PTR_XTFMT ", %d, %d)", report_ptr_cast(tcell), tcol, trow);
 
-    plain_slot(tslot, tcol, trow, saving_fwp ? FWP_CHAR : PARAGRAPH_CHAR, linbuf);
+    plain_slot(tcell, tcol, trow, saving_fwp ? FWP_CHAR : PARAGRAPH_CHAR, linbuf);
 
-    trace_1(TRACE_APP_PD4, "slot converted to '%s'", linbuf);
+    trace_1(TRACE_APP_PD4, "cell converted to '%s'", linbuf);
 
-    /* if this and the slot below can be formatted together call it a paragraph in FWP */
+    /* if this and the cell below can be formatted together call it a paragraph in FWP */
     possible_para_fwp =  saving_fwp  &&
                         chkcfm_for_fwp(tcol, trow,  TRUE)  &&
                         ((trow != fwp_save_end_row)  &&  chkcfm_for_fwp(tcol, trow+1, FALSE));
 
-    /* if this and the slot above can be formatted together call it a paragraph in DTP */
+    /* if this and the cell above can be formatted together call it a paragraph in DTP */
     possible_para_dtp = !saving_fwp  &&
                         chkcfm_for_fwp(tcol, trow, FALSE)  &&
                         ((trow == fwp_save_stt_row)  ||  chkcfm_for_fwp(tcol, trow-1,  TRUE))  &&
@@ -238,7 +238,7 @@ fwp_save_slot(
             }
         }
 
-    /* switch all highlights off at end of slot */
+    /* switch all highlights off at end of cell */
     if(h_byte != FWP_NOHIGHLIGHTS)
         if(!away_byte(FWP_HIGH_PREFIX, output)  ||  !away_byte(FWP_NOHIGHLIGHTS, output))
             return(FALSE);

@@ -143,7 +143,7 @@ bash_slots_about_a_bit(
     char oldformat;
     char dateformat = d_options_DF;
     char thousands  = d_options_TH;
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(blkstart.col != NO_COL && !set_up_block(TRUE))
         return;
@@ -157,24 +157,25 @@ bash_slots_about_a_bit(
 
     init_marked_block();
 
-    /* keep name definitions for decompilations */
+    /* keep custom & name definitions for decompilations */
+    ev_custom_del_hold();
     ev_name_del_hold();
 
     uref_block(UREF_REPLACE);
 
     escape_enable();
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL && !ctrlflag)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL && !ctrlflag)
         {
         actind_in_block(DOWN_COLUMNS);
 
-        if(is_protected_slot(tslot))
+        if(is_protected_slot(tcell))
             continue;
 
         d_options_DF = 'E';
         d_options_TH = TH_BLANK;
 
-        switch(tslot->type)
+        switch(tcell->type)
             {
             case SL_TEXT:
                 if(bash_snapshot == action)
@@ -193,7 +194,7 @@ bash_slots_about_a_bit(
             }
 
         /* keep dataflower happy - moved from a bit below */
-        oldformat = tslot->format;
+        oldformat = tcell->format;
 
         curcol = in_block.col;
         currow = in_block.row;
@@ -203,19 +204,19 @@ bash_slots_about_a_bit(
             {
             case bash_tonumber:
                 xf_inexpression = TRUE;
-                prccon(linbuf, tslot);
+                prccon(linbuf, tcell);
                 break;
 
             case bash_totext:
-                prccon(linbuf, tslot);
+                prccon(linbuf, tcell);
                 break;
 
             case bash_exchange:
                 {
-                if(tslot->type == SL_TEXT)
+                if(tcell->type == SL_TEXT)
                     xf_inexpression = TRUE;
 
-                prccon(linbuf, tslot);
+                prccon(linbuf, tcell);
                 break;
                 }
 
@@ -224,15 +225,15 @@ bash_slots_about_a_bit(
                 {
                 P_EV_RESULT p_ev_result;
 
-                switch(result_extract(tslot, &p_ev_result))
+                switch(result_extract(tcell, &p_ev_result))
                     {
                     case SL_NUMBER:
-                        /* leave strings as text slots */
+                        /* leave strings as text cells */
                         if(p_ev_result->did_num != RPN_RES_STRING)
                             xf_inexpression = TRUE;
 
                         /* poke the minus/brackets flag to minus */
-                        tslot->format = F_DCPSID | F_DCP;
+                        tcell->format = F_DCPSID | F_DCP;
 
                         /* array results are left as arrays - not decompiled into
                          * their formula (same difference for constant arrays, but
@@ -254,7 +255,7 @@ bash_slots_about_a_bit(
 
                     /* note fall thru */
                     default:
-                        (void) expand_slot(current_docno(), tslot, in_block.row, linbuf, LIN_BUFSIZ /*fwidth*/,
+                        (void) expand_slot(current_docno(), tcell, in_block.row, linbuf, LIN_BUFSIZ /*fwidth*/,
                                            DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
                                            FALSE /*allow_fonty_result*/, TRUE /*cff*/);
                         break;
@@ -265,7 +266,7 @@ bash_slots_about_a_bit(
 
         slot_in_buffer = buffer_altered = TRUE;
 
-        /* compile into slot */
+        /* compile into cell */
 
         if(xf_inexpression)
             {
@@ -275,9 +276,9 @@ bash_slots_about_a_bit(
 
             if(bash_snapshot == action)
                 {
-                /* reset format in new slot */
-                if((NULL != (tslot = travel(in_block.col, in_block.row)))  &&  (tslot->type != SL_TEXT))
-                    tslot->format = oldformat;
+                /* reset format in new cell */
+                if((NULL != (tcell = travel(in_block.col, in_block.row)))  &&  (tcell->type != SL_TEXT))
+                    tcell->format = oldformat;
                 }
 
             /* SKS after 4.11 03feb92 - added escape clause */
@@ -304,6 +305,7 @@ EXIT_POINT:;
 
     out_screen = TRUE;
 
+    ev_custom_del_release();
     ev_name_del_release();
 
     uref_block(UREF_CHANGE);
@@ -311,7 +313,7 @@ EXIT_POINT:;
 
 /******************************************************************************
 *
-* compile from linbuf into array converting text-at fields to slot references
+* compile from linbuf into array converting text-at fields to cell references
 * return length (including terminating NULL)
 *
 ******************************************************************************/
@@ -351,7 +353,7 @@ compile_text_slot(
                 continue;
                 }
 
-            /* if it's a slot ref deal with it */
+            /* if it's a cell reference deal with it */
             if(slot_ref_here(from))
                 {
                 COL tcol;
@@ -390,7 +392,7 @@ compile_text_slot(
 
                 from = buff_sofar;
 
-                /* emit a compiled slot reference */
+                /* emit a compiled cell reference */
                 *to++ = SLRLD1;
 
 #if defined(SLRLD2) /* additional byte helps speed compiled_text_len()! */
@@ -488,7 +490,7 @@ report_compiled_text_string(
 
 /******************************************************************************
 *
-* return the length of a compiled text (normally slot contents)
+* return the length of a compiled text (normally cell contents)
 * NB. length is inclusive of NULLCH byte
 *
 ******************************************************************************/
@@ -532,7 +534,7 @@ compiled_text_len(
 
 /******************************************************************************
 *
-* compile a slot; recognise a constant
+* compile a cell; recognise a constant
 *
 ******************************************************************************/
 
@@ -1060,7 +1062,7 @@ draw_search_refs(
 
 /******************************************************************************
 *
-* search list of draw refs for entry for given slot
+* search list of draw refs for entry for given cell
 *
 ******************************************************************************/
 
@@ -1086,7 +1088,7 @@ draw_search_refs_slot(
 
 /******************************************************************************
 *
-* search a slot for a draw file reference
+* search a cell for a draw file reference
 * and if found, add it to the list
 *
 ******************************************************************************/
@@ -1097,7 +1099,7 @@ draw_str_insertslot(
     ROW row)
 {
     S32 found_file = 0;
-    P_SLOT sl;
+    P_CELL sl;
     F64 x, y;
     S32 len, res;
     PC_U8Z name;
@@ -1164,7 +1166,7 @@ draw_str_insertslot(
 
 /******************************************************************************
 *
-* insert a slot from both draw and tree structures
+* insert a cell from both draw and tree structures
 *
 ******************************************************************************/
 
@@ -1212,7 +1214,7 @@ PROC_UREF_PROTO(static, draw_uref)
         case UREF_UREF:
         case UREF_DELETE:
         case UREF_SWAP:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
             {
             P_DRAW_FILE_REF p_draw_file_ref = draw_search_refs(inthandle);
@@ -1222,7 +1224,7 @@ PROC_UREF_PROTO(static, draw_uref)
                 switch(upp->action)
                     {
                     case UREF_SWAP:
-                    case UREF_SWAPSLOT:
+                    case UREF_SWAPCELL:
                     case UREF_UREF:
                         p_draw_file_ref->col = at_rng->s.col;
                         p_draw_file_ref->row = at_rng->s.row;
@@ -1251,7 +1253,7 @@ PROC_UREF_PROTO(static, draw_uref)
 }
 
 /*
-enter string as formula in numeric slot
+enter string as formula in numeric cell
 
 useful for macro files in PD4
 */
@@ -1313,7 +1315,7 @@ endeex(void)
 
 /******************************************************************************
 *
-* call-back from evaluator uref to redraw altered slots
+* call-back from evaluator uref to redraw altered cells
 *
 ******************************************************************************/
 
@@ -1328,14 +1330,14 @@ PROC_UREF_PROTO(extern, eval_wants_slot_drawn)
         case UREF_REDRAW:
             {
             DOCNO old_docno = change_document_using_docno((DOCNO) exthandle);
-            P_SLOT tslot;
+            P_CELL tcell;
 
-            /* don't redraw blanks and text slots unless they contain slrs */
-            tslot = travel((COL) upp->slr1.col, (ROW) upp->slr1.row);
+            /* don't redraw blanks and text cells unless they contain slrs */
+            tcell = travel((COL) upp->slr1.col, (ROW) upp->slr1.row);
 
-            if(tslot != NULL)
-                if((tslot->type == SL_NUMBER) ||
-                   (tslot->type == SL_TEXT && (tslot->flags & SL_TREFS)) )
+            if(tcell != NULL)
+                if((tcell->type == SL_NUMBER) ||
+                   (tcell->type == SL_TEXT && (tcell->flags & SL_TREFS)) )
                     draw_one_altered_slot((COL) upp->slr1.col, (ROW) upp->slr1.row);
 
             select_document_using_docno(old_docno);
@@ -1382,7 +1384,7 @@ ToText_fn(void)
 
 /******************************************************************************
 *
-* fill buffer from slot
+* fill buffer from cell
 *
 ******************************************************************************/
 
@@ -1390,7 +1392,7 @@ extern void
 filbuf(void)
 {
     BOOL zap = FALSE;
-    P_SLOT nslot;
+    P_CELL nslot;
 
     if(slot_in_buffer || buffer_altered || xf_inexpression || xf_inexpression_box || xf_inexpression_line)
         return;
@@ -1606,7 +1608,7 @@ graph_search_list(
 
 /******************************************************************************
 *
-* send a block of slots off to graphics link
+* send a block of cells off to graphics link
 *
 ******************************************************************************/
 
@@ -1659,7 +1661,7 @@ PROC_UREF_PROTO(static, graph_uref)
         case UREF_UREF:
         case UREF_DELETE:
         case UREF_SWAP:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
         case UREF_CLOSE:
             {
             P_GRAPHICS_LINK_ENTRY glp = graph_search_list((ghandle) exthandle);
@@ -1712,7 +1714,7 @@ PROC_UREF_PROTO(static, graph_uref)
                         graph_send_block(glp, upp->slr1.col, upp->slr2.row, upp->slr2.col, upp->slr2.row + 1);
                         break;
 
-                    case UREF_SWAPSLOT:
+                    case UREF_SWAPCELL:
                         glp->col = at_rng->s.col;
                         glp->row = at_rng->s.row;
                         graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr1.col + 1, upp->slr1.row + 1);
@@ -1738,13 +1740,13 @@ PROC_UREF_PROTO(static, graph_uref)
 
 extern void
 mark_slot(
-    P_SLOT tslot)
+    P_CELL tcell)
 {
-    if(tslot)
+    if(tcell)
         {
-        tslot->flags |= SL_ALTERED;
+        tcell->flags |= SL_ALTERED;
         xf_drawsome = TRUE;
-        trace_0(TRACE_APP_PD4, "slot marked altered");
+        trace_0(TRACE_APP_PD4, "cell marked altered");
         }
 }
 
@@ -1752,9 +1754,9 @@ mark_slot(
 *
 * compile and merge expression
 *
-* merexp()                     - compile expression, if it contains an error return as a text slot
+* merexp()                     - compile expression, if it contains an error return as a text cell
 *
-* merexp_reterr(NULL, NULL)    - compile expression, if it contains an error return as a text slot
+* merexp_reterr(NULL, NULL)    - compile expression, if it contains an error return as a text cell
 * merexp_reterr(&err, &at_pos) - compile expression, return error and abort compilation
 *
 ******************************************************************************/
@@ -1771,7 +1773,7 @@ merexp_reterr(
     P_S32 at_posp,
     S32 send_replace)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     S32 rpn_len, res, at_pos;
     char justify, format;
     char compiled_out[EV_MAX_OUT_LEN];
@@ -1800,11 +1802,11 @@ merexp_reterr(
     /* do replace before compile otherwise we delete
      * references that compile establishes (names, funcs etc)
      */
-    tslot = travel(newcol, newrow);
+    tcell = travel(newcol, newrow);
     if(send_replace)
-        slot_to_be_replaced(newcol, newrow, tslot);
-    else if(tslot)
-        slot_free_resources(tslot);
+        slot_to_be_replaced(newcol, newrow, tcell);
+    else if(tcell)
+        slot_free_resources(tcell);
 
     if((rpn_len = compile_expression(compiled_out,
                                      linbuf,
@@ -1826,7 +1828,7 @@ merexp_reterr(
             return;
             }
 
-        /* else make it a text slot */
+        /* else make it a text cell */
         merstr(curcol, currow, send_replace, TRUE);
         return;
         }
@@ -1834,17 +1836,17 @@ merexp_reterr(
     justify = J_RIGHT;
     format = 0;
 
-    /* tell uref we're about to replace slot */
+    /* tell uref we're about to replace cell */
     set_ev_slr(&slr, newcol, newrow);
 
-    /* save justify flags for numeric slot */
-    if(tslot)
+    /* save justify flags for numeric cell */
+    if(tcell)
         {
-        switch(tslot->type)
+        switch(tcell->type)
             {
             case SL_NUMBER:
-                justify = tslot->justify;
-                format  = tslot->format;
+                justify = tcell->justify;
+                format  = tcell->format;
                 break;
 
             default:
@@ -1866,7 +1868,7 @@ merexp_reterr(
 
 /******************************************************************************
 *
-* merge a compiled expression into a slot
+* merge a compiled expression into a cell
 *
 ******************************************************************************/
 
@@ -1883,7 +1885,7 @@ merge_compiled_exp(
     S32 add_refs)
 {
     S32 add_to_tree, tot_len, res;
-    P_SLOT tslot;
+    P_CELL tcell;
 
     /* calculate new total length */
     switch(parmsp->type)
@@ -1903,16 +1905,16 @@ merge_compiled_exp(
 
     res = 0;
 
-    /* get a slot the correct size */
-    if((tslot = createslot((COL) slrp->col, (ROW) slrp->row, tot_len, SL_NUMBER)) == NULL)
+    /* get a cell the correct size */
+    if((tcell = createslot((COL) slrp->col, (ROW) slrp->row, tot_len, SL_NUMBER)) == NULL)
         res = -1;
     else
         {
         /* copy across data */
-        tslot->justify                       = justify;
-        tslot->format                        = format;
-        tslot->content.number.guts.ev_result = *p_ev_result;
-        tslot->content.number.guts.parms     = *parmsp;
+        tcell->justify                       = justify;
+        tcell->format                        = format;
+        tcell->content.number.guts.ev_result = *p_ev_result;
+        tcell->content.number.guts.parms     = *parmsp;
 
         add_to_tree = 0;
         switch(parmsp->type)
@@ -1923,20 +1925,20 @@ merge_compiled_exp(
                 break;
 
             case EVS_CON_RPN:
-                memcpy32(tslot->content.number.guts.rpn.con.rpn_str, compiled_out, rpn_len);
+                memcpy32(tcell->content.number.guts.rpn.con.rpn_str, compiled_out, rpn_len);
                 add_to_tree = 1;
                 break;
 
             case EVS_VAR_RPN:
-                tslot->content.number.guts.rpn.var.visited = 0;
-                memcpy32(tslot->content.number.guts.rpn.var.rpn_str, compiled_out, rpn_len);
+                tcell->content.number.guts.rpn.var.visited = 0;
+                memcpy32(tcell->content.number.guts.rpn.var.rpn_str, compiled_out, rpn_len);
                 add_to_tree = 1;
                 break;
             }
 
         if(add_refs && add_to_tree)
             {
-            if(ev_add_exp_slot_to_tree(&tslot->content.number.guts, slrp) < 0)
+            if(ev_add_exp_slot_to_tree(&tcell->content.number.guts, slrp) < 0)
                 {
                 tree_insert_fail(slrp);
                 res = -1;
@@ -1945,9 +1947,9 @@ merge_compiled_exp(
                 {
                 ev_todo_add_slr(slrp, load_flag ? 0 : 1);
 
-                /* force left justification for macro slots */
+                /* force left justification for macro cells */
                 if(ev_doc_is_custom_sheet(current_docno()))
-                    tslot->justify = J_LEFT;
+                    tcell->justify = J_LEFT;
                 }
             }
         }
@@ -2110,7 +2112,7 @@ merstr(
 
     if(buffer_altered)
         {
-        P_SLOT newslot, oldslot;
+        P_CELL newslot, oldslot;
         char justifyflag;
         U8 slot_refs = 0;
         /* note that SLRs can expand hugely on compilation */
@@ -2130,7 +2132,7 @@ merstr(
         else
             justifyflag = J_FREE;
 
-        { /* SKS 20130402 - most slots have no text-at chars, saves copying data yet again */
+        { /* SKS 20130402 - most cells have no text-at chars, saves copying data yet again */
         BOOL contains_text_at_char;
         source_text = linbuf;
         source_len = buffer_length_detecting_text_at_char(source_text, &contains_text_at_char);
@@ -2218,17 +2220,17 @@ pdeval_initialise(void)
 }
 
 /*
-decompile slot, dealing with compiled slot references, text-at fields etc
-decompile from ptr (text field in slot) to linbuf
+decompile cell, dealing with compiled cell references, text-at fields etc
+decompile from ptr (text field in cell) to linbuf
 
-compiled slot references are stored as SLR leadin bytes, DOCNO docno, COL colno, ROW rowno.
-Note this may contain NULLCH as part of compiled slot reference, but not at end of string.
+compiled cell references are stored as SLR leadin bytes, DOCNO docno, COL colno, ROW rowno.
+Note this may contain NULLCH as part of compiled cell reference, but not at end of string.
 */
 
 extern void
 prccon(
     P_U8 target,
-    P_SLOT ptr)
+    P_CELL ptr)
 {
     P_U8 to = target;
     PC_U8 from;
@@ -2260,8 +2262,8 @@ prccon(
         return;
         }
 
-    /* this copes with compiled slot references in text slots.
-     * On compilation, text-at chars are left in the slot so they can
+    /* this copes with compiled cell references in text cells.
+     * On compilation, text-at chars are left in the cell so they can
      * be ignored on decompilation
     */
     do  {
@@ -2478,23 +2480,23 @@ seteex(void)
 
 /******************************************************************************
 *
-* say whether a given slot displays
+* say whether a given cell displays
 * its contents which may overlap
 *
 ******************************************************************************/
 
 extern S32
 slot_displays_contents(
-    P_SLOT tslot)
+    P_CELL tcell)
 {
-    switch(tslot->type)
+    switch(tcell->type)
         {
         case SL_TEXT:
             return(TRUE);
 
         case SL_NUMBER:
             return(ev_doc_is_custom_sheet(current_docno()) &&
-                   ev_is_formula(&tslot->content.number.guts));
+                   ev_is_formula(&tcell->content.number.guts));
 
         default:
             return(FALSE);
@@ -2502,7 +2504,7 @@ slot_displays_contents(
 }
 
 /*
-is there a slot ref here?
+is there a cell reference here?
 must be sequence of letters followed by digits followed by at least one text-at char
 and (rule number 6) NO spaces
 */
@@ -2553,7 +2555,7 @@ slot_ref_here(
 
 /*
 splat takes a U32 and writes it as size (>0) bytes at to, LSB first.
-used for converting compiled slot references to stream of bytes in slot
+used for converting compiled cell references to stream of bytes in cell
 */
 
 static inline void
@@ -2613,7 +2615,7 @@ Snapshot_fn(void)
 /*
 talps reads size (>0) bytes from from, LSB first,
 generates a U32 which it returns.
-used for converting stream of bytes to slot reference
+used for converting stream of bytes to cell reference
 */
 
 static inline U32
@@ -2651,7 +2653,7 @@ talps_csr(
 
 /******************************************************************************
 *
-* add references to the tree for a text slot
+* add references to the tree for a text cell
 *
 ******************************************************************************/
 
@@ -2661,7 +2663,7 @@ text_slot_add_dependency(
     _InVal_     ROW row)
 {
     uchar * csr;
-    P_SLOT sl;
+    P_CELL sl;
     struct EV_GRUB_STATE grubb;
 
     if((sl = travel(col, row)) == NULL)
@@ -2672,7 +2674,7 @@ text_slot_add_dependency(
 
     set_ev_slr(&grubb.slr, col, row);
 
-    /* add dependency for each compiled slot reference found */
+    /* add dependency for each compiled cell reference found */
     csr = sl->content.text;
 
     while(NULL != (csr = find_next_csr(csr)))
@@ -2729,7 +2731,7 @@ write_col(
 
 /******************************************************************************
 *
-* write a slot reference to ptr, returning number of characters written
+* write a cell reference to ptr, returning number of characters written
 *
 ******************************************************************************/
 

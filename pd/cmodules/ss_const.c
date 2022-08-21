@@ -641,6 +641,11 @@ ss_date_normalise(
         return;
     }
 
+    if(EV_TIME_INVALID == p_ev_date->time)
+    {
+        return;
+    }
+
     if((p_ev_date->time >= SECS_IN_24) || (p_ev_date->time < 0))
     {
         S32 days = p_ev_date->time / SECS_IN_24;
@@ -914,7 +919,7 @@ ss_ymd_to_dateval(
 
 /******************************************************************************
 *
-* convert an hours, minutes and seconds to a timeval
+* convert a number of hours, minutes and seconds to a timeval
 *
 ******************************************************************************/
 
@@ -922,18 +927,25 @@ ss_ymd_to_dateval(
 extern S32
 ss_hms_to_timeval(
     _OutRef_    P_EV_DATE_TIME p_ev_date_time,
-    _InVal_     S32 hour,
-    _InVal_     S32 minute,
-    _InVal_     S32 second)
+    _InVal_     S32 hours,
+    _InVal_     S32 minutes,
+    _InVal_     S32 seconds)
 {
-    /* at least check hour is in range */
-    if((S32) labs((long) hour) >= S32_MAX / 3600)
+    /* check hours is in range */
+    if((S32) labs((long) hours) >= S32_MAX / 3600)
     {
         *p_ev_date_time = EV_TIME_INVALID;
         return(-1);
     }
 
-    *p_ev_date_time = ((S32) hour * 3600) + (minute * 60) + second;
+    /* check minutes is in range */
+    if((S32) labs((long) minutes) >= S32_MAX / 60)
+    {
+        *p_ev_date_time = EV_TIME_INVALID;
+        return(-1);
+    }
+
+    *p_ev_date_time = ((S32) hours * 3600) + (minutes * 60) + seconds;
 
     return(0);
 }
@@ -949,9 +961,9 @@ ss_local_time(
     _OutRef_    P_S32 p_year,
     _OutRef_    P_S32 p_month,
     _OutRef_    P_S32 p_day,
-    _OutRef_    P_S32 p_hour,
-    _OutRef_    P_S32 p_minute,
-    _OutRef_    P_S32 p_second)
+    _OutRef_    P_S32 p_hours,
+    _OutRef_    P_S32 p_minutes,
+    _OutRef_    P_S32 p_seconds)
 {
 #if RISCOS
 
@@ -974,9 +986,10 @@ ss_local_time(
         *p_year = time_ordinals.year;
         *p_month = time_ordinals.month;
         *p_day = time_ordinals.day;
-        *p_hour = time_ordinals.hours;
-        *p_minute = time_ordinals.minutes;
-        *p_second = time_ordinals.seconds;
+
+        *p_hours = time_ordinals.hours;
+        *p_minutes = time_ordinals.minutes;
+        *p_seconds = time_ordinals.seconds;
     }
     else
     {
@@ -986,9 +999,10 @@ ss_local_time(
         *p_year = split_timep->tm_year + (S32) 1900;
         *p_month = split_timep->tm_mon + (S32) 1;
         *p_day = split_timep->tm_mday;
-        *p_hour = split_timep->tm_hour;
-        *p_minute = split_timep->tm_min;
-        *p_second = split_timep->tm_sec;
+
+        *p_hours = split_timep->tm_hour;
+        *p_minutes = split_timep->tm_min;
+        *p_seconds = split_timep->tm_sec;
     }
 
 #elif WINDOWS
@@ -1000,9 +1014,10 @@ ss_local_time(
     *p_year = systemtime.wYear;
     *p_month = systemtime.wMonth;
     *p_day = systemtime.wDay;
-    *p_hour = systemtime.wHour;
-    *p_minute = systemtime.wMinute;
-    *p_second = systemtime.wSecond;
+
+    *p_hours = systemtime.wHour;
+    *p_minutes = systemtime.wMinute;
+    *p_seconds = systemtime.wSecond;
 
 #else
 
@@ -1012,9 +1027,10 @@ ss_local_time(
     *p_year = split_timep->tm_year + 1900;
     *p_month = split_timep->tm_mon + 1;
     *p_day = split_timep->tm_mday;
-    *p_hour = split_timep->tm_hour;
-    *p_minute = split_timep->tm_min;
-    *p_second = split_timep->tm_sec;
+
+    *p_hours = split_timep->tm_hour;
+    *p_minutes = split_timep->tm_min;
+    *p_seconds = split_timep->tm_sec;
 
 #endif /* OS */
 }
@@ -1023,10 +1039,11 @@ extern void
 ss_local_time_as_ev_date(
     _OutRef_    P_EV_DATE p_ev_date)
 {
-    S32 year, month, day, hour, minute, second;
-    ss_local_time(&year, &month, &day, &hour, &minute, &second);
+    S32 year, month, day;
+    S32 hours, minutes, seconds;
+    ss_local_time(&year, &month, &day, &hours, &minutes, &seconds);
     (void) ss_ymd_to_dateval(&p_ev_date->date, year, month, day);
-    (void) ss_hms_to_timeval(&p_ev_date->time, hour, minute, second);
+    (void) ss_hms_to_timeval(&p_ev_date->time, hours, minutes, seconds);
 }
 
 _Check_return_
@@ -1036,9 +1053,10 @@ sliding_window_year(
 {
     S32 modified_year = year;
     S32 local_year, local_century;
-    S32 month, day, hour, minute, second;
+    S32 month, day;
+    S32 hours, minutes, seconds;
 
-    ss_local_time(&local_year, &month, &day, &hour, &minute, &second);
+    ss_local_time(&local_year, &month, &day, &hours, &minutes, &seconds);
 
     local_century = (local_year / 100) * 100;
 
@@ -1067,27 +1085,29 @@ _Check_return_
 extern STATUS
 ss_timeval_to_hms(
     _InRef_     PC_EV_DATE_TIME p_ev_date_time,
-    _OutRef_    P_S32 p_hour,
-    _OutRef_    P_S32 p_minute,
-    _OutRef_    P_S32 p_second)
+    _OutRef_    P_S32 p_hours,
+    _OutRef_    P_S32 p_minutes,
+    _OutRef_    P_S32 p_seconds)
 {
     S32 time = *p_ev_date_time;
 
-#if EV_TIME_INVALID != 0
     if(EV_TIME_INVALID == time)
     {
-        *p_hour = *p_minute = *p_second = 0;
+        *p_hours = *p_minutes = *p_seconds = 0;
+#if EV_TIME_INVALID != 0
         return(EVAL_ERR_NOTIME);
-    }
+#else
+        return(STATUS_OK);
 #endif
+    }
 
-    *p_hour   = (S32) (time / 3600);
-    time     -= (S32) *p_hour * 3600;
+    *p_hours   = (S32) (time / 3600);
+    time      -= (S32) *p_hours * 3600;
 
-    *p_minute = (S32) (time / 60);
-    time     -= *p_minute * 60;
+    *p_minutes = (S32) (time / 60);
+    time      -= *p_minutes * 60;
 
-    *p_second = (S32) time;
+    *p_seconds = (S32) time;
 
     return(STATUS_OK);
 }

@@ -20,13 +20,11 @@
 internal functions
 */
 
-#define RJM_NEW_SWAP_SLOT_CORE
-
 typedef struct
 {
     COL col;
     ROW  row;
-    P_SLOT sl;
+    P_CELL sl;
     S32   size;
     uchar type;
 }
@@ -73,7 +71,7 @@ atrow(
 *
 * blow away so many row from a column
 *
-* this does not free slot resources
+* this does not free cell resources
 * use only if you know what you are doing!
 * else use killslot etc.
 *
@@ -157,14 +155,14 @@ linked_column_linkright(
 
 /******************************************************************************
 *
-*  copy the contents of one slot into another
+*  copy the contents of one cell into another
 *
 ******************************************************************************/
 
 extern void
 copycont(
-    P_SLOT nsl,
-    P_SLOT osl,
+    P_CELL nsl,
+    P_CELL osl,
     S32 size)
 {
     nsl->type    = osl->type;
@@ -273,7 +271,7 @@ createcol(
 
 /******************************************************************************
 *
-* create a filler slot in the structure
+* create a filler cell in the structure
 *
 ******************************************************************************/
 
@@ -304,19 +302,19 @@ createhole(
 
 /******************************************************************************
 *
-* Create a slot for a particular column and row of a given size and type.
+* Create a cell for a particular column and row of a given size and type.
 *
-* the size must include any extra space required apart from the slot
-* overhead itself: a size of 0 means a blank slot; a size of 1 leaves space
+* the size must include any extra space required apart from the cell
+* overhead itself: a size of 0 means a blank cell; a size of 1 leaves space
 * for a delimiter.
 *
-* in the case of a number slot for the new evaluator, NUMBEROVH includes
+* in the case of a number cell for the new evaluator, NUMBEROVH includes
 * all of PD's overhead, so size must be the space required by the
 * evaluator: ie the number returned by ev_len()
 *
 ******************************************************************************/
 
-extern P_SLOT
+extern P_CELL
 createslot(
     COL col,
     ROW row,
@@ -324,7 +322,7 @@ createslot(
     uchar type)
 {
     P_LIST_ITEM it;
-    P_SLOT sl;
+    P_CELL sl;
     P_LIST_BLOCK lp;
 
     trace_4(TRACE_APP_PD4, "createslot(%d, %d; contents size %d, type %d)", col, row, size, type);
@@ -355,7 +353,7 @@ createslot(
         {
         sl = slot_contents(it);
 
-        /* set type of final slot */
+        /* set type of final cell */
         sl->type = type;
 
         sl->flags = 0;
@@ -398,7 +396,7 @@ default_col_entries(
 
 /******************************************************************************
 *
-* delete all the slots in a set of columns
+* delete all the cells in a set of columns
 *
 ******************************************************************************/
 
@@ -452,7 +450,7 @@ delcol(
 
 /******************************************************************************
 *
-* delete all the slots and entries in a set of column entries, closing up the table
+* delete all the cells and entries in a set of column entries, closing up the table
 *
 ******************************************************************************/
 
@@ -635,8 +633,8 @@ inscolentry(
 
 /******************************************************************************
 *
-* insert a new blank slot at this position
-* return TRUE if slot inserted or no need to because after end of column
+* insert a new blank cell at this position
+* return TRUE if cell inserted or no need to because after end of column
 * return FALSE if no room
 *
 ******************************************************************************/
@@ -701,7 +699,7 @@ killcoltab(void)
 
 /******************************************************************************
 *
-* delete a slot
+* delete a cell
 *
 ******************************************************************************/
 
@@ -723,17 +721,17 @@ killslot(
 /******************************************************************************
 *
 * speedy next_in_block for sparse matrix
-* returns next slot address
+* returns next cell address
 *
 ******************************************************************************/
 
-extern P_SLOT
+extern P_CELL
 next_slot_in_block(
     BOOL direction)
 {
     static P_LIST_ITEM it;
     LIST_ITEMNO in_block_item;
-    P_SLOT sl;
+    P_CELL sl;
     P_LIST_BLOCK lp;
     BOOL was_start;
 
@@ -749,7 +747,7 @@ next_slot_in_block(
 
     if(end_bl.col == NO_COL)
         {
-        /* if zero or one markers, only return one slot */
+        /* if zero or one markers, only return one cell */
         sl = was_start ? travel(in_block.col, in_block.row) : NULL;
         trace_1(TRACE_APP_PD4, "next_slot_in_block(ONE_SLOT_ONLY) returns &%p", report_ptr_cast(sl));
         return(sl);
@@ -760,7 +758,7 @@ next_slot_in_block(
 
     if(direction == DOWN_COLUMNS)
         {
-        /* loop to find a slot, going onto next column whenever necessary */
+        /* loop to find a cell, going onto next column whenever necessary */
         do  {
             lp = indexcollb(in_block.col);
 
@@ -774,7 +772,7 @@ next_slot_in_block(
 
                 while(it  &&  (in_block_item < start_bl.row))
                     {
-                    trace_0(TRACE_APP_PD4, "slot found before start of block");
+                    trace_0(TRACE_APP_PD4, "cell found before start of block");
                     it = list_nextseq(lp, &in_block_item);
                     }
                 }
@@ -794,7 +792,7 @@ next_slot_in_block(
                 trace_0(TRACE_APP_PD4, "beyond end row --- try a new column");
                 }
             else
-                trace_0(TRACE_APP_PD4, "no slot found --- try a new column");
+                trace_0(TRACE_APP_PD4, "no cell found --- try a new column");
 
             if(++in_block.col > end_bl.col)
                 {
@@ -858,12 +856,12 @@ next_slot_in_block(
 *
 ******************************************************************************/
 
-extern P_SLOT
+extern P_CELL
 traverse_block_next_slot(
     TRAVERSE_BLOCKP blk /*inout*/)
 {
     LIST_ITEMNO item;
-    P_SLOT       sl;
+    P_CELL       sl;
     P_LIST_BLOCK      lp;
     BOOL        was_start;
 
@@ -883,7 +881,7 @@ traverse_block_next_slot(
 
     if(blk->end.col == NO_COL)
         {
-        /* if zero or one markers, only return one slot */
+        /* if zero or one markers, only return one cell */
         sl = was_start ? traverse_block_travel(blk) : NULL;
         trace_1(TRACE_APP_PD4, "traverse_block_next_slot: ONE_SLOT_ONLY returns &%p", report_ptr_cast(sl));
         return(sl);
@@ -894,7 +892,7 @@ traverse_block_next_slot(
 
     if(blk->direction == TRAVERSE_DOWN_COLUMNS)
         {
-        /* loop to find a slot, going onto next column whenever necessary */
+        /* loop to find a cell, going onto next column whenever necessary */
         do  {
             P_DOCU p_docu = blk->p_docu;
 
@@ -911,7 +909,7 @@ traverse_block_next_slot(
 
                 while(blk->it  &&  (item < blk->stt.row))
                     {
-                    trace_0(TRACE_APP_PD4, "slot found before start of block");
+                    trace_0(TRACE_APP_PD4, "cell found before start of block");
                     blk->it = list_nextseq(lp, &item);
                     }
                 }
@@ -931,7 +929,7 @@ traverse_block_next_slot(
                 trace_0(TRACE_APP_PD4, "beyond end row --- try a new column");
                 }
             else
-                trace_0(TRACE_APP_PD4, "no slot found --- try a new column");
+                trace_0(TRACE_APP_PD4, "no cell found --- try a new column");
 
             if(++blk->cur.col > blk->end.col)
                 {
@@ -1139,7 +1137,7 @@ savecoltab(void)
 
 /******************************************************************************
 *
-* tell people that ought to know that slot has changed
+* tell people that ought to know that cell has changed
 *
 ******************************************************************************/
 
@@ -1152,7 +1150,7 @@ slot_changed(
         {
         UREF_PARM urefb;
 
-        /* first, free all tree entries owned by this slot */
+        /* first, free all tree entries owned by this cell */
         set_ev_slr(&urefb.slr1,     col,     row);
         set_ev_slr(&urefb.slr2, col + 1, row + 1);
         urefb.action = UREF_CHANGE;
@@ -1165,25 +1163,25 @@ slot_changed(
 
 /******************************************************************************
 *
-* free resources owned by slot
-* (currently only evaluator slots
+* free resources owned by cell
+* (currently only evaluator cells
 * can own resources
 *
 ******************************************************************************/
 
 extern void
 slot_free_resources(
-    P_SLOT tslot)
+    P_CELL tcell)
 {
-    if(tslot && tslot->type == SL_NUMBER)
-        ev_exp_free_resources(&tslot->content.number.guts);
+    if(tcell && tcell->type == SL_NUMBER)
+        ev_exp_free_resources(&tcell->content.number.guts);
 }
 
 /******************************************************************************
 *
-* a slot is about to be replaced
+* a cell is about to be replaced
 * (probably with a createslot or createhole)
-* tslot can be NULL
+* tcell can be NULL
 *
 ******************************************************************************/
 
@@ -1191,41 +1189,41 @@ extern void
 slot_to_be_replaced(
     COL col,
     ROW row,
-    P_SLOT tslot)
+    P_CELL tcell)
 {
     UREF_PARM urefb;
 
-    if(tslot && !in_load)
+    if(tcell && !in_load)
         {
-        /* first, free all tree entries owned by this slot */
+        /* first, free all tree entries owned by this cell */
         set_ev_slr(&urefb.slr1,     col,     row);
         set_ev_slr(&urefb.slr2, col + 1, row + 1);
         urefb.action = UREF_REPLACE;
 
         ev_uref(&urefb);
 
-        /* second, free any resources owned by slot */
-        slot_free_resources(tslot);
+        /* second, free any resources owned by cell */
+        slot_free_resources(tcell);
         }
 }
 
 /******************************************************************************
 *
-* return size of contents of slot in bytes, including necessary termination
+* return size of contents of cell in bytes, including necessary termination
 *
 ******************************************************************************/
 
 extern S32
 slotcontentssize(
-    P_SLOT tslot)
+    P_CELL tcell)
 {
-    switch(tslot->type)
+    switch(tcell->type)
         {
         case SL_TEXT:
-            return(compiled_text_len(tslot->content.text)); /* includes NULLCH */
+            return(compiled_text_len(tcell->content.text)); /* includes NULLCH */
 
         case SL_NUMBER:
-            return(ev_len(&tslot->content.number.guts));
+            return(ev_len(&tcell->content.number.guts));
 
         case SL_PAGE:
             return(0);
@@ -1237,29 +1235,29 @@ slotcontentssize(
 
 /******************************************************************************
 *
-* return size of slot in bytes, including any overhead
+* return size of cell in bytes, including any overhead
 *
 ******************************************************************************/
 
 extern S32
 slotsize(
-    P_SLOT tslot)
+    P_CELL tcell)
 {
-    switch(tslot->type)
+    switch(tcell->type)
         {
         case SL_TEXT:
             return(SL_TEXTOVH +
-                   compiled_text_len(tslot->content.text)); /* includes NULLCH */
+                   compiled_text_len(tcell->content.text)); /* includes NULLCH */
 
         case SL_NUMBER:
             return(SL_NUMBEROVH +
-                   ev_len(&tslot->content.number.guts));
+                   ev_len(&tcell->content.number.guts));
 
         case SL_PAGE:
             return(SL_PAGEOVH);
 
         default:
-            return(SL_SLOTOVH);
+            return(SL_CELLOVH);
         }
 }
 
@@ -1290,7 +1288,7 @@ sortrefs(
 
 /******************************************************************************
 *
-* swap the rows, can assume slots exist in all columns
+* swap the rows, can assume cells exist in all columns
 * trow1 is guaranteed to be higher up than trow2
 *
 ******************************************************************************/
@@ -1341,7 +1339,7 @@ swap_rows(
         else
             s2.size = 0;
 
-        /* swapo the slots */
+        /* swapo the cells */
         if(s1.size > s2.size)
             {
             trace_2(TRACE_APP_PD4, "swap_rows: size1 %d > size2 %d", s1.size, s2.size);
@@ -1374,7 +1372,7 @@ swap_rows(
 
 /******************************************************************************
 *
-* swap just a pair of slots
+* swap just a pair of cells
 * trow1 is guaranteed to be higher up than trow2
 *
 ******************************************************************************/
@@ -1390,7 +1388,7 @@ swap_slots(
     swap_slot_struct s1, s2;
     UREF_PARM urefb;
 
-    trace_4(TRACE_APP_PD4, "swap slots: %d, %d, %d, %d", (S32) tcol1, (S32) trow1, (S32) tcol2, (S32) trow2);
+    trace_4(TRACE_APP_PD4, "swap cells: %d, %d, %d, %d", (S32) tcol1, (S32) trow1, (S32) tcol2, (S32) trow2);
 
     s1.row = trow1;
     s1.col = tcol1;
@@ -1416,7 +1414,7 @@ swap_slots(
         else
             s2.size = 0;
 
-        /* swapo the slots */
+        /* swapo the cells */
         if(s1.size > s2.size)
             {
             if(!swap_slot_core(&s1, &s2, tempslot))
@@ -1438,7 +1436,7 @@ swap_slots(
     /* set up uref block */
     set_ev_slr(&urefb.slr1, s1.col, s1.row);
     set_ev_slr(&urefb.slr2, s2.col, s2.row);
-    urefb.action = UREF_SWAPSLOT;
+    urefb.action = UREF_SWAPCELL;
 
     ev_uref(&urefb);
 
@@ -1449,7 +1447,7 @@ swap_slots(
 
 /******************************************************************************
 *
-* helper routine for swap rows - to swap two slots
+* helper routine for swap rows - to swap two cells
 *
 ******************************************************************************/
 
@@ -1459,11 +1457,11 @@ swap_slot_core(
     swap_slot_struct *p2,
     P_ANY tempslot)
 {
-    /* copy p2 to temp slot */
+    /* copy p2 to temp cell */
     if(p2->size)
         memcpy32(tempslot, p2->sl, p2->size);
 
-    /* create slot at p2 for p1 */
+    /* create cell at p2 for p1 */
     if((p2->sl = createslot(p2->col, p2->row, p1->size + 4, p1->type)) == NULL)
         return(FALSE);
 
@@ -1489,7 +1487,7 @@ swap_slot_core(
 *
 * travel to a particular row, column
 *
-* returns pointer to slot if it exists.
+* returns pointer to cell if it exists.
 * Returns NULL if column doesn't exist
 * Returns NULL if column does exist, but row doesn't.  In this case, new
 * position stored in column vector.
@@ -1499,29 +1497,29 @@ swap_slot_core(
 *
 ******************************************************************************/
 
-extern P_SLOT
+extern P_CELL
 travel(
     COL col,
     ROW row)
 {
     P_LIST_ITEM it;
-    P_SLOT sl = NULL;
+    P_CELL sl = NULL;
 
     if(NULL != (it = list_gotoitem(indexcollb(col), row)))
         sl = slot_contents(it);
 
-    trace_3(TRACE_APP_PD4, "travel(%d, %d) to slot &%p", col, row, report_ptr_cast(sl));
+    trace_3(TRACE_APP_PD4, "travel(%d, %d) to cell &%p", col, row, report_ptr_cast(sl));
 
     return(sl);
 }
 
-extern P_SLOT
+extern P_CELL
 travel_here(void)
 {
     return(travel(curcol, currow));
 }
 
-extern P_SLOT
+extern P_CELL
 travel_externally(
     _InVal_     DOCNO docno,
     COL col,
@@ -1529,7 +1527,7 @@ travel_externally(
 {
     P_DOCU p_docu;
     P_LIST_ITEM it;
-    P_SLOT sl = NULL;
+    P_CELL sl = NULL;
 
     if((NO_DOCUMENT == (p_docu = p_docu_from_docno(docno)))  ||  docu_is_thunk(p_docu))
     {
@@ -1546,13 +1544,13 @@ travel_externally(
     return(sl);
 }
 
-extern P_SLOT
+extern P_CELL
 traverse_block_travel(
     TRAVERSE_BLOCKP blk /*const*/)
 {
     P_DOCU p_docu = blk->p_docu;
     P_LIST_ITEM it;
-    P_SLOT sl = NULL;
+    P_CELL sl = NULL;
 
     assert(NO_DOCUMENT != p_docu);
     assert((NO_DOCUMENT != p_docu) && docu_is_thunk(p_docu));
@@ -1565,9 +1563,9 @@ traverse_block_travel(
 
 /******************************************************************************
 *
-* called when an insert of a slot into
+* called when an insert of a cell into
 * the tree fails. this removes all entries
-* for this slot in the tree, and blats the slot too
+* for this cell in the tree, and blats the cell too
 *
 ******************************************************************************/
 
@@ -1589,7 +1587,7 @@ tree_insert_fail(
 
 /******************************************************************************
 *
-* see if a slot reference (SLR) needs updating
+* see if a cell reference (SLR) needs updating
 *
 ******************************************************************************/
 

@@ -281,8 +281,8 @@ linked_column_linkright(
 
 extern void
 copycont(
-    P_SLOT,
-    P_SLOT,
+    P_CELL,
+    P_CELL,
     S32);
 
 extern BOOL
@@ -294,7 +294,7 @@ createhole(
     COL col,
     ROW row);
 
-extern P_SLOT
+extern P_CELL
 createslot(
     COL tcol,
     ROW trow,
@@ -355,7 +355,7 @@ killslot(
     COL tcol,
     ROW trow);
 
-extern P_SLOT
+extern P_CELL
 next_slot_in_block(
     BOOL direction);
 
@@ -400,21 +400,21 @@ slot_changed(
 
 extern void
 slot_free_resources(
-    P_SLOT tslot);
+    P_CELL tcell);
 
 extern void
 slot_to_be_replaced(
     COL col,
     ROW row,
-    P_SLOT tslot);
+    P_CELL tcell);
 
 extern S32
 slotcontentssize(
-    P_SLOT tslot);
+    P_CELL tcell);
 
 extern S32
 slotsize(
-    P_SLOT tslot);
+    P_CELL tcell);
 
 extern BOOL
 swap_rows(
@@ -431,25 +431,25 @@ swap_slots(
     COL tcol2,
     ROW trow2);
 
-extern P_SLOT
+extern P_CELL
 travel(
     COL tcol,
     ROW row);
 
-extern P_SLOT
+extern P_CELL
 travel_externally(
     _InVal_     DOCNO docno,
     COL col,
     ROW row);
 
-extern P_SLOT
+extern P_CELL
 travel_here(void);
 
-extern P_SLOT
+extern P_CELL
 traverse_block_next_slot(
     TRAVERSE_BLOCKP blk /*inout*/);
 
-extern P_SLOT
+extern P_CELL
 traverse_block_travel(
     TRAVERSE_BLOCKP blk /*const*/);
 
@@ -490,7 +490,7 @@ macros
     x_indexcollb(current_p_docu, col)
 
 #define slot_contents(it) \
-    list_itemcontents(struct SLOT, it)
+    list_itemcontents(struct CELL, it)
 
 /*
 allocator parameters
@@ -730,7 +730,7 @@ loadfile_recurse_load_supporting_documents(
 
 extern BOOL
 plain_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     char filetype,
@@ -1431,14 +1431,14 @@ mystr_set_n(
 #define RHS_X           (pagwid_plus1 + 1)  /* allow semi-printed chars off right */
 #endif
 
-/* coordinates of current slot */
+/* coordinates of current cell */
 
 /* Careful, _t_ are text coordinates    */
 /*          _g_ are graphic coordinates */
-#define SLOTCOORDS_t_X0 (-1)
-#define SLOTCOORDS_t_X1 (COLUMNHEAD_t_X0)
-#define SLOTCOORDS_g_Y0 (-128)
-#define SLOTCOORDS_g_Y1 (-64)
+#define CELLCOORDS_t_X0 (-1)
+#define CELLCOORDS_t_X1 (COLUMNHEAD_t_X0)
+#define CELLCOORDS_g_Y0 (-128)
+#define CELLCOORDS_g_Y1 (-64)
 
 /* column headings (if present) */
 
@@ -2334,7 +2334,7 @@ protected_slot_in_range(
 
 extern void
 setprotectedstatus(
-    P_SLOT tslot);
+    P_CELL tcell);
 
 extern void
 save_linked_columns(
@@ -2359,7 +2359,7 @@ test_protected_slot(
 
 extern S32 latest_word_on_stack;
 
-#define is_protected_slot(tslot) ((tslot)->justify & PROTECTED)
+#define is_protected_slot(tcell) ((tcell)->justify & PROTECTED)
 
 #define words_allowed ((S32) (d_deleted[0].option))
 
@@ -2528,7 +2528,7 @@ justifyline(
 
 extern S32
 limited_fwidth_of_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow);
 
@@ -2547,7 +2547,7 @@ onejst(
 
 extern coord
 outslt(
-    P_SLOT tslot,
+    P_CELL tcell,
     ROW row,
     coord fwidth);
 
@@ -2671,7 +2671,7 @@ calroff_click(          /* ditto, but round into t/b rows */
 
 extern coord
 chkolp(                 /* find overlap width */
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow);
 
@@ -2817,7 +2817,7 @@ inrowfixes1(
 
 extern BOOL
 isslotblank(
-    P_SLOT tslot);
+    P_CELL tcell);
 
 extern void
 mark_row(
@@ -2836,7 +2836,7 @@ mark_row_praps(
 #define NEW_ROW FALSE
 
 extern void
-mark_slot(P_SLOT);
+mark_slot(P_CELL);
 
 extern void
 nextcol(void);
@@ -2857,12 +2857,12 @@ schrsc(                 /* search for row on screen */
 ******************************************************************************/
 
 /*
-overheads required by different types of evaluator slot
+overheads required by different types of evaluator cell
 */
 
-#define NUM_DAT_OVH (offsetof(EV_SLOT, parms) + sizeof(EV_PARMS))
-#define NUM_CON_OVH  offsetof(EV_SLOT, rpn.con.rpn_str)
-#define NUM_VAR_OVH  offsetof(EV_SLOT, rpn.var.rpn_str)
+#define NUM_DAT_OVH (offsetof(EV_CELL, parms) + sizeof(EV_PARMS))
+#define NUM_CON_OVH  offsetof(EV_CELL, rpn.con.rpn_str)
+#define NUM_VAR_OVH  offsetof(EV_CELL, rpn.var.rpn_str)
 
 extern S32
 compile_expression(
@@ -2965,7 +2965,7 @@ is_draw_file_slot(
 
 extern void
 mark_slot(
-    P_SLOT tslot);
+    P_CELL tcell);
 
 extern void
 merexp(void);
@@ -3015,7 +3015,7 @@ pdeval_initialise(void);
 extern void
 prccon(
     uchar *target,
-    P_SLOT ptr);
+    P_CELL ptr);
 
 extern S32
 readfxy(
@@ -3049,7 +3049,7 @@ seteex_nodraw(void);
 
 extern S32
 slot_displays_contents(
-    P_SLOT tslot);
+    P_CELL tcell);
 
 /*extern void
 splat(
@@ -3127,26 +3127,26 @@ do_replace(
     BOOL folding);
 
 /******************************************************************************
-definition of slot structure
+definition of cell structure
 ******************************************************************************/
 
-struct SLOT
+struct CELL
 {
-    uchar type;                 /* type of slot */
-    uchar flags;                /* error, altered & contains slot refs */
+    uchar type;                 /* type of cell */
+    uchar flags;                /* error, altered & contains cell references */
     uchar justify;              /* justify bits and protected bit */
-    uchar format;               /* format if it's a number slot */
+    uchar format;               /* format if it's a number cell */
 
-    union SLOT_CONTENT
+    union CELL_CONTENT
     {
-        uchar text[1];          /* text slot contents */
+        uchar text[1];          /* text cell contents */
 
-        struct SLOT_CONTENT_NUMBER
+        struct CELL_CONTENT_NUMBER
         {
-            EV_SLOT guts;
+            EV_CELL guts;
         } number;
 
-        struct SLOT_CONTENT_PAGE
+        struct CELL_CONTENT_PAGE
         {
             S32 cpoff;         /* current page offset */
             S32 condval;       /* value for conditional page eject, 0=unconditional */
@@ -3155,14 +3155,14 @@ struct SLOT
     } content;
 };
 
-#define SL_NUMBEROVH    ((S32) (offsetof(struct SLOT, content.number.guts)))
-#define SL_PAGEOVH      ((S32) (offsetof(struct SLOT, content.page) + \
-                                 sizeof(struct SLOT_CONTENT_PAGE)))
-#define SL_SLOTOVH      ((S32)  offsetof(struct SLOT, content))
-#define SL_TEXTOVH      SL_SLOTOVH
+#define SL_NUMBEROVH    ((S32) (offsetof(struct CELL, content.number.guts)))
+#define SL_PAGEOVH      ((S32) (offsetof(struct CELL, content.page) + \
+                                 sizeof(struct CELL_CONTENT_PAGE)))
+#define SL_CELLOVH      ((S32)  offsetof(struct CELL, content))
+#define SL_TEXTOVH      SL_CELLOVH
 
 /******************************************************************************
-slot types
+cell types
 ******************************************************************************/
 
 #define SL_TEXT     ((uchar) 0)
@@ -3170,11 +3170,11 @@ slot types
 #define SL_PAGE     ((uchar) 2)
 
 /******************************************************************************
-slot flags
+cell flags
 ******************************************************************************/
 
 #define SL_ALTERED  ((uchar) 1)         /* re-display flag */
-#define SL_TREFS    ((uchar) 2)         /* slot has references in text */
+#define SL_TREFS    ((uchar) 2)         /* cell has references in text */
 
 /******************************************************************************
 format flags
@@ -3290,7 +3290,7 @@ expand_lcr(
 extern char
 expand_slot(
     _InVal_     DOCNO docno,
-    P_SLOT tslot,
+    P_CELL tcell,
     ROW row,
     char *array /*out*/,
     coord fwidth,
@@ -3339,12 +3339,12 @@ font_unstack(
 
 extern S32
 result_extract(
-    P_SLOT sl,
+    P_CELL sl,
     P_EV_RESULT * p_p_ev_result);
 
 extern S32
 result_sign(
-    P_SLOT sl);
+    P_CELL sl);
 
 #include "ridialog.h"
 
@@ -3387,7 +3387,7 @@ dependent_charts_warning(void);
 extern void
 expand_slot_for_chart_export(
     _InVal_     DOCNO docno,
-    P_SLOT sl,
+    P_CELL sl,
     char * buffer /*out*/,
     U32 elemof_buffer,
     ROW row);

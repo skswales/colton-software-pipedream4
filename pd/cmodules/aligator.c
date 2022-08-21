@@ -507,7 +507,7 @@ _al_array_alloc(
     }
 #endif
 
-    { /* clear out slot we found */
+    { /* clear out cell we found */
     P_ARRAY_BLOCK p_array_block = array_block_wr_no_checks(p_array_handle);
     ARRAY_INDEX array_index;
     P_BYTE p_byte;

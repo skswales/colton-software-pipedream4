@@ -82,7 +82,7 @@ fwp_save_line_preamble(
 
 extern BOOL
 fwp_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output,
@@ -90,7 +90,7 @@ fwp_save_slot(
 
 extern BOOL
 dtp_save_slot(
-    P_SLOT tslot,
+    P_CELL tcell,
     COL tcol,
     ROW trow,
     FILE_HANDLE output);

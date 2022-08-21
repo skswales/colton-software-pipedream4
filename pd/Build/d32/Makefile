@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Copyright (C) 1989-1998 Colton Software Limited
-# Copyright (C) 1998-2014 R W Colton
+# Copyright (C) 1998-2015 R W Colton
 
 #TEXTUAL_VERSION_NUMBER=4.54
-TEXTUAL_VERSION_NUMBER=4.53/01
+TEXTUAL_VERSION_NUMBER=4.53/03
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -48,8 +48,11 @@ CCflags=$(CCflags_BASE) -Otime
 # o.pdmain as that sets up TRACE_ALLOWED stuff
 # o.modules.aligator as that exports some CHECKING functions
 #
-# CCflags=$(CCflags_BASE) -g -DUNRELEASED
+CCflags=$(CCflags_BASE) -g
 # Uncomment the above line ^^^ to get some modules compiled with debug info
+#
+# CCflags=$(CCflags_BASE) -g -DUNRELEASED
+# Uncomment the above line ^^^ to get some modules compiled with debug info and tracing
 #
 # CCflags=$(CCflags_BASE) -Otime -DPROFILING
 # Uncomment the above line ^^^ for Profiling
@@ -172,7 +175,6 @@ o.modules.ev_eval \
 o.modules.ev_exec \
 o.modules.ev_fndat \
 o.modules.ev_fnfin \
-o.modules.ev_fnsta \
 o.modules.ev_fnsta \
 o.modules.ev_fnstm \
 o.modules.ev_fnstr \
@@ -445,6 +447,8 @@ o.Modules.mathxtr2:   $(CMODULES).c.mathxtr2
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr2
 o.Modules.mathxtr3:   $(CMODULES).c.mathxtr3
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr3
+o.Modules.mathxtr4:   $(CMODULES).c.mathxtr4
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr4
 o.Modules.mlec:       $(CMODULES).c.mlec
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mlec
 o.Modules.muldiv:     $(CMODULES).c.muldiv
@@ -517,10 +521,13 @@ o.Modules.ev_exec :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).
 o.Modules.ev_fndat :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnfin :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnsta :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_fnstm :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnstr :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_func :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_help :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_math :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_matb :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_matr :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_mcpx :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_mtri :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_name :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
@@ -554,6 +561,7 @@ o.Modules.list :       $(CMODULES).h.list
 o.Modules.mathxtra :   $(CMODULES).h.mathxtra
 o.Modules.mathxtr2 :   $(CMODULES).h.mathxtr2
 o.Modules.mathxtr3 :   $(CMODULES).h.mathxtr3
+o.Modules.mathxtr4 :   $(CMODULES).h.mathxtr4
 o.Modules.mlec :       $(CMODULES).h.mlec
 o.Modules.monotime :   $(CMODULES).h.monotime
 o.Modules.muldiv :     $(CMODULES).h.muldiv
@@ -715,14 +723,14 @@ utils.GB.o.reperr:   $(PD).c.reperr
         @CDir @.utils
         @CDir @.utils.GB
         @CDir @.utils.GB.o
-        $(CC) -o $@ $(ccflags_base) -DMAKE_MESSAGE_FILE $(PD).c.reperr
+        $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.reperr
 
 utils.GB.o.strings:   $(PD).h.personal
 utils.GB.o.strings:   $(PD).c.strings
         @CDir @.utils
         @CDir @.utils.GB
         @CDir @.utils.GB.o
-        $(CC) -o $@ $(ccflags_base) -DMAKE_MESSAGE_FILE $(PD).c.strings
+        $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.strings
 
 ###############################################################################
 #

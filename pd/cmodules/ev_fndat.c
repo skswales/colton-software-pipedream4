@@ -205,13 +205,13 @@ PROC_EXEC_PROTO(c_dayname)
 PROC_EXEC_PROTO(c_hour)
 {
     S32 hour_result;
-    S32 hour, minute, second;
+    S32 hours, minutes, seconds;
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hour, &minute, &second);
+    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds);
 
-    hour_result = hour;
+    hour_result = hours;
 
     ev_data_set_integer(p_ev_data_res, hour_result);
 }
@@ -225,13 +225,13 @@ PROC_EXEC_PROTO(c_hour)
 PROC_EXEC_PROTO(c_minute)
 {
     S32 minute_result;
-    S32 hour, minute, second;
+    S32 hours, minutes, seconds;
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hour, &minute, &second);
+    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds);
 
-    minute_result = minute;
+    minute_result = minutes;
 
     ev_data_set_integer(p_ev_data_res, minute_result);
 }
@@ -379,20 +379,20 @@ PROC_EXEC_PROTO(c_now)
 PROC_EXEC_PROTO(c_second)
 {
     S32 second_result;
-    S32 hour, minute, second;
+    S32 hours, minutes, seconds;
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hour, &minute, &second);
+    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds);
 
-    second_result = second;
+    second_result = seconds;
 
     ev_data_set_integer(p_ev_data_res, second_result);
 }
 
 /******************************************************************************
 *
-* DATE time(hour, minute, second)
+* DATE time(hours, minutes, seconds)
 *
 ******************************************************************************/
 

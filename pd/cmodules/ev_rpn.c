@@ -59,7 +59,7 @@ macros to select efficient reading routines
 
 /******************************************************************************
 *
-* initialise grubber block for a slot
+* initialise grubber block for a cell
 *
 ******************************************************************************/
 
@@ -75,8 +75,9 @@ grub_init(
 
 /******************************************************************************
 *
-* grub about in a slot and return the slots,
-* ranges and names on which a slot depends
+* grub about in a cell and
+* return the cells, ranges and names
+* on which a cell depends
 *
 * --out--
 * rpn number of element returned
@@ -86,25 +87,25 @@ grub_init(
 
 extern S32
 grub_next(
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     P_EV_GRUB grubp)
 {
     S32 res, data_offset, nodep;
     PC_U8 rpn_start, at_pos;
     RPNSTATE cur_rpn;
 
-    switch(p_ev_slot->parms.type)
+    switch(p_ev_cell->parms.type)
         {
         case EVS_CON_DATA:
             rpn_start = at_pos = NULL;
             res = RPN_FRM_END;
             break;
         case EVS_CON_RPN:
-            rpn_start = p_ev_slot->rpn.con.rpn_str;
+            rpn_start = p_ev_cell->rpn.con.rpn_str;
             res = -1;
             break;
         case EVS_VAR_RPN:
-            rpn_start = p_ev_slot->rpn.var.rpn_str;
+            rpn_start = p_ev_cell->rpn.var.rpn_str;
             res = -1;
             break;
         }
@@ -210,24 +211,24 @@ grub_next(
 
 extern S32
 ev_len(
-    P_EV_SLOT p_ev_slot)
+    P_EV_CELL p_ev_cell)
 {
     S32 len;
 
     len = 0;
 
-    switch(p_ev_slot->parms.type)
+    switch(p_ev_cell->parms.type)
         {
         case EVS_CON_DATA:
-            len = offsetof(EV_SLOT, parms) + sizeof(EV_PARMS);
+            len = offsetof(EV_CELL, parms) + sizeof(EV_PARMS);
             break;
         case EVS_CON_RPN:
-            len = offsetof(EV_SLOT, rpn.con.rpn_str) +
-                  len_rpn(p_ev_slot->rpn.con.rpn_str);
+            len = offsetof(EV_CELL, rpn.con.rpn_str) +
+                  len_rpn(p_ev_cell->rpn.con.rpn_str);
             break;
         case EVS_VAR_RPN:
-            len = offsetof(EV_SLOT, rpn.var.rpn_str) +
-                  len_rpn(p_ev_slot->rpn.var.rpn_str);
+            len = offsetof(EV_CELL, rpn.var.rpn_str) +
+                  len_rpn(p_ev_cell->rpn.var.rpn_str);
             break;
         }
 
@@ -246,10 +247,10 @@ ev_len(
 
 extern void
 ev_rpn_adjust_refs(
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     _InRef_     PC_UREF_PARM upp)
 {
-    switch(p_ev_slot->parms.type)
+    switch(p_ev_cell->parms.type)
         {
         case EVS_CON_DATA:
         case EVS_CON_RPN:
@@ -260,7 +261,7 @@ ev_rpn_adjust_refs(
             RPNSTATE cur_rpn;
             S32 in_cond = 0;
 
-            cur_rpn.pos = p_ev_slot->rpn.var.rpn_str;
+            cur_rpn.pos = p_ev_cell->rpn.var.rpn_str;
 
             rpn_check(&cur_rpn);
 

@@ -65,7 +65,7 @@ LeftAlign_fn(void)
 extern void
 CentreAlign_fn(void)
 {
-    /* if block marked, do each slot in block */
+    /* if block marked, do each cell in block */
     alnsto(J_CENTRE, (uchar) 0xFF, (uchar) 0, TRUE);
 }
 
@@ -170,9 +170,9 @@ mark_block_output(
 
 /******************************************************************************
 *
-* set a marked block or the current slot with a format
+* set a marked block or the current cell with a format
 * the justify byte is put into the justify field
-* in the slot (unless NO_JUSTIFY)
+* in the cell (unless NO_JUSTIFY)
 * mask & bits give the information to change the format
 * some operations set bits, some clear, and some toggle bits
 * this is done by masking out some bits and then exclusive-oring
@@ -191,7 +191,7 @@ alnsto_block(
     PC_SLR bs,
     PC_SLR be)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(fault_protection  &&  protected_slot_in_range(bs, be))
         return;
@@ -203,7 +203,7 @@ alnsto_block(
 
     mark_block_output(&start_bl);
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
         filealtered(TRUE);
 
@@ -214,24 +214,24 @@ alnsto_block(
 
             case PROTECTED:
                 /* set protected bit */
-                tslot->justify |= PROTECTED;
+                tcell->justify |= PROTECTED;
                 break;
 
             case J_BITS:
                 /* clear protected bit */
-                tslot->justify &= J_BITS;
+                tcell->justify &= J_BITS;
                 break;
 
             default:
                 /* set justify bits, retaining protected status */
-                tslot->justify = (tslot->justify & CLR_J_BITS) | justify;
+                tcell->justify = (tcell->justify & CLR_J_BITS) | justify;
                 break;
             }
 
-        switch(tslot->type)
+        switch(tcell->type)
             {
             case SL_NUMBER:
-                tslot->format = (tslot->format & mask) ^ bits;
+                tcell->format = (tcell->format & mask) ^ bits;
                 break;
 
             default:
@@ -254,8 +254,8 @@ alnsto(
 *
 * alnst1 is like alnsto
 * for sign minus, sign bracket and set decimal places
-* if the slot is currently using option page defaults then those
-* defaults are copied into the slot
+* if the cell is currently using option page defaults then those
+* defaults are copied into the cell
 *
 ******************************************************************************/
 
@@ -264,7 +264,7 @@ alnst1(
     uchar mask,
     uchar bits)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     uchar format;
 
     if(protected_slot_in_range(&blkstart, &blkend))
@@ -278,14 +278,14 @@ alnst1(
 
     mark_block_output(&start_bl);
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
-        switch(tslot->type)
+        switch(tcell->type)
             {
             case SL_NUMBER:
                 filealtered(TRUE);
 
-                format = tslot->format;
+                format = tcell->format;
 
                 if((format & F_DCP) == 0)
                     {
@@ -296,7 +296,7 @@ alnst1(
                     format |= get_dec_field_from_opt();
                     }
 
-                tslot->format = (format & mask) ^ bits;
+                tcell->format = (format & mask) ^ bits;
                 break;
 
             default:
@@ -345,7 +345,7 @@ DecimalPlaces_fn(void)
 extern void
 Return_fn(void)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     uchar justify;
 
     /* check word perhaps */
@@ -356,17 +356,17 @@ Return_fn(void)
         {
         internal_process_command(N_SplitLine);
 
-        /* remove justify bit from current slot */
+        /* remove justify bit from current cell */
         if( !xf_inexpression  &&
-            ((tslot = travel_here()) != NULL))
+            ((tcell = travel_here()) != NULL))
                 {
                 /* shirley we don't have to worry about PROTECTED bit,
-                    cos if protected what are we doing poking slot?
+                    cos if protected what are we doing poking cell?
                 */
-                justify = tslot->justify & J_BITS;
+                justify = tcell->justify & J_BITS;
                 if((justify == J_LEFTRIGHT)  ||  (justify == J_RIGHTLEFT))
                     /* set justify bits, retaining protected status */
-                    tslot->justify = (tslot->justify & CLR_J_BITS) | J_FREE;
+                    tcell->justify = (tcell->justify & CLR_J_BITS) | J_FREE;
                 }
         }
 
@@ -387,7 +387,7 @@ Return_fn_core(void)
 
     if(currow + 1 >= numrow)
         {
-        /* force blank slot in */
+        /* force blank cell in */
         if(!createhole(curcol, currow + 1))
             return(reperr_null(status_nomem()));
 
@@ -733,7 +733,7 @@ extern void
 SplitLine_fn(void)
 {
     uchar tempchar;
-    P_SLOT tslot;
+    P_CELL tcell;
     BOOL actually_splitting = FALSE;
     COL tcol;
     ROW trow;
@@ -744,9 +744,9 @@ SplitLine_fn(void)
     if(lecpos  &&  protected_slot(curcol, currow))
         return;
 
-    tslot = travel_here();
+    tcell = travel_here();
 
-    if(!tslot  ||  ((tslot->type == SL_TEXT))  &&  !is_protected_slot(tslot))
+    if(!tcell  ||  ((tcell->type == SL_TEXT))  &&  !is_protected_slot(tcell))
         {
         U32 bufflength = xustrlen32(linbuf, elemof32(linbuf));
         U32 splitpoint = MIN(bufflength, (U32) lecpos);
@@ -768,7 +768,7 @@ SplitLine_fn(void)
         memmove32(linbuf, linbuf + splitpoint, (bufflength - splitpoint + 1));
         }
 
-    /* if insert on wrap is row insert slots in this row for each column to the right,
+    /* if insert on wrap is row insert cells in this row for each column to the right,
      * and on the next row for each each column to the left, and for this one if we'll need
      * to move the rest of the line down
     */
@@ -856,7 +856,7 @@ SplitLine_fn(void)
 extern void
 JoinLines_fn(void)
 {
-    P_SLOT thisslot, nextslot, tslot;
+    P_CELL thisslot, nextslot, tcell;
     S32 thislen, nextlen;
     BOOL actually_joining = TRUE;
     uchar temparray[LIN_BUFSIZ];
@@ -867,13 +867,13 @@ JoinLines_fn(void)
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
         return;
 
-    /* can't join this slot to next one if this slot exists and not null or text */
+    /* can't join this cell to next one if this cell exists and not null or text */
     thisslot = travel_here();
 
     if(thisslot  &&  (thisslot->type != SL_TEXT))
         return;
 
-    /* can only join non-textual next slot if this slot null */
+    /* can only join non-textual next cell if this cell null */
     nextslot = travel(curcol, currow + 1);
     if(nextslot  &&  (nextslot->type != SL_TEXT))
         {
@@ -924,8 +924,8 @@ JoinLines_fn(void)
         {
         /* look to see if all this row bar the current column is blank.
          * If so joinlines can delete a whole row, perhaps
-         * be careful of numeric slots masquerading as blanks
-         * for slots to left needs to split on following line
+         * be careful of numeric cells masquerading as blanks
+         * for cells to left needs to split on following line
         */
         allblank = TRUE;
 
@@ -937,8 +937,8 @@ JoinLines_fn(void)
             else if((tcol == curcol)  &&  actually_joining)
                 continue;
 
-            tslot = travel(tcol, trow);
-            if(!isslotblank(tslot)  ||  (tslot  &&  (tslot->type != SL_TEXT)))
+            tcell = travel(tcol, trow);
+            if(!isslotblank(tcell)  ||  (tcell  &&  (tcell->type != SL_TEXT)))
                 {
                 allblank = FALSE;
                 break;
@@ -983,7 +983,7 @@ JoinLines_fn(void)
         else if(actually_joining)
             {
             currow++;
-            internal_process_command(N_DeleteRowInColumn);     /* get rid of slot */
+            internal_process_command(N_DeleteRowInColumn);     /* get rid of cell */
             internal_process_command(N_InsertRowInColumn);     /* and leave a hole */
             currow--;
             }
@@ -1035,7 +1035,7 @@ DeleteRowInColumn_fn(void)
 
     reset_numrow();
 
-    /* anything pointing to deleted slots in this row become bad */
+    /* anything pointing to deleted cells in this row become bad */
     updref(curcol, currow,     curcol, currow,               BADCOLBIT, (ROW) 0, UREF_DELETE, DOCNO_NONE);
 
     /* rows in all those columns move up */
@@ -1450,14 +1450,14 @@ save_words(
 
 /******************************************************************************
 *
-* delete to end of slot
+* delete to end of cell
 *
 ******************************************************************************/
 
 extern void
 DeleteToEndOfSlot_fn(void)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
 
     if(protected_slot(curcol, currow))
         return;
@@ -1466,14 +1466,14 @@ DeleteToEndOfSlot_fn(void)
 
     if(!slot_in_buffer)
         {
-        /* this is to delete non-text slots */
-        tslot = travel_here();
+        /* this is to delete non-text cells */
+        tcell = travel_here();
 
-        if(tslot  &&  (tslot->type != SL_PAGE))
+        if(tcell  &&  (tcell->type != SL_PAGE))
             {
             char buffer[EV_MAX_IN_LEN + 1];
 
-            prccon(buffer, tslot);
+            prccon(buffer, tcell);
             save_words(buffer);
             }
 
@@ -1505,7 +1505,7 @@ DeleteToEndOfSlot_fn(void)
 
 /******************************************************************************
 *
-*  see if a slot is protected
+*  see if a cell is protected
 *
 ******************************************************************************/
 
@@ -1514,9 +1514,9 @@ test_protected_slot(
     COL tcol,
     ROW trow)
 {
-    P_SLOT tslot = travel(tcol, trow);
+    P_CELL tcell = travel(tcol, trow);
 
-    return(tslot  &&  is_protected_slot(tslot));
+    return(tcell  &&  is_protected_slot(tcell));
 }
 
 extern BOOL
@@ -1532,7 +1532,7 @@ protected_slot(
 
 /******************************************************************************
 *
-*  verify no protect slots in block: if there are - whinge
+*  verify no protect cells in block: if there are - whinge
 *
 *  note that this corrupts in_block.col & in_block.row
 *
@@ -1543,18 +1543,18 @@ protected_slot_in_range(
     PC_SLR bs,
     PC_SLR be)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     BOOL res = FALSE;
 
     trace_4(TRACE_APP_PD4, "\n\n[protected_slot_in_range: bs (%d, %d) be (%d, %d)", bs->col, bs->row, be->col, be->row);
 
     init_block(bs, be);
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
-        trace_3(TRACE_APP_PD4, "got slot " PTR_XTFMT ", (%d, %d)", report_ptr_cast(tslot), in_block.col, in_block.row);
+        trace_3(TRACE_APP_PD4, "got cell " PTR_XTFMT ", (%d, %d)", report_ptr_cast(tcell), in_block.col, in_block.row);
 
-        if(is_protected_slot(tslot))
+        if(is_protected_slot(tcell))
             {
             res = !reperr_null(create_error(ERR_PROTECTED));
             break;
@@ -1604,11 +1604,11 @@ SetProtectedBlock_fn(void)
 
 extern void
 setprotectedstatus(
-    P_SLOT tslot)
+    P_CELL tcell)
 {
     S32 fg;
 
-    if(tslot  &&  is_protected_slot(tslot))
+    if(tcell  &&  is_protected_slot(tcell))
         {
         currently_protected = TRUE;
 
@@ -1621,8 +1621,8 @@ setprotectedstatus(
 }
 
 /*
-check that the slots between firstcol and lastcol in the row are protected
- - but not the previous slot or the subsequent one
+check that the cells between firstcol and lastcol in the row are protected
+ - but not the previous cell or the subsequent one
 */
 
 static BOOL
@@ -1638,7 +1638,7 @@ check_prot_range(
         if(!test_protected_slot(firstcol++, trow))
             return(FALSE);
 
-    /* check slot following lastcol */
+    /* check cell following lastcol */
     return(!test_protected_slot(firstcol, trow));
 }
 
@@ -1713,27 +1713,27 @@ add_to_names_list(
 }
 
 /*
-save all blocks of protected slots to the file
+save all blocks of protected cells to the file
 
 algorithm for getting block is to find top-left
-    then horizontal extent is all slots marked to the right
+    then horizontal extent is all cells marked to the right
     vertical extent is rows beneath with all cols as first row marked
-        but not the slot to the left or the one to the right.
+        but not the cell to the left or the one to the right.
 
-this ensures that a marked slot has already been saved if the slot
+this ensures that a marked cell has already been saved if the cell
 to the left is marked.
 OK Ya.
 
 sexiest little algorithm rob ever invented
 
-don't be rude, I bet you couldn't describe an arbitrary set of slots in fewer rectangles
+don't be rude, I bet you couldn't describe an arbitrary set of cells in fewer rectangles
 */
 
 extern void
 save_protected_bits(
     FILE_HANDLE output)
 {
-    P_SLOT tslot;
+    P_CELL tcell;
     SLR last;
     U8 array[BUF_MAX_REFERENCE];
     uchar *ptr;
@@ -1743,15 +1743,15 @@ save_protected_bits(
 
     init_doc_as_block();
 
-    while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
         /* if have already saved further down the block */
         if((in_block.col == last.col)  &&  (last.row > in_block.row))
             continue;
 
-        if(is_protected_slot(tslot))
+        if(is_protected_slot(tcell))
             {
-            /* if slot to left is protected, this slot already saved */
+            /* if cell to left is protected, this cell already saved */
             /* honest */
             if((in_block.col > 0)  &&  test_protected_slot(in_block.col-1, in_block.row))
                 continue;
@@ -1804,7 +1804,7 @@ add_to_protect_list(
 }
 
 /*
-clear the protect list, setting the slot protection
+clear the protect list, setting the cell protection
 */
 
 extern void
@@ -1828,7 +1828,7 @@ clear_protect_list(void)
         lptr;
         lptr = next_in_list(&protected_blocks))
         {
-        /* read two slot references out of lptr->value */
+        /* read two cell references out of lptr->value */
 
         buff_sofar = lptr->value;
 
@@ -1850,7 +1850,7 @@ clear_protect_list(void)
 }
 
 /*
-save all blocks of protected slots to the file
+save all blocks of protected cells to the file
 
 */
 
@@ -1908,7 +1908,7 @@ clear_linked_columns(void)
         {
         COL first,last;
 
-        /* read two slot references out of lptr->value */
+        /* read two cell references out of lptr->value */
 
         buff_sofar = lptr->value;
 

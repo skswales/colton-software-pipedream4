@@ -36,8 +36,8 @@ RISC_OSLib with PipeDream-specific build options. See ^.WimpLib.ReadMe and
 Run !Amu.
 
 Drag 'r32.Makefile' to !Amu... and wait...  A PipeDream build takes
-about 16 minutes on a SA RISC PC.  Building on a Raspberry Pi takes about
-1/4 of that time.
+about 16 minutes on a SA RISC PC.  Building on a i.MX6 takes about
+one minute.
 
 
 Subsequent builds
@@ -62,11 +62,10 @@ Make sure you've got the version number consistent! See version.c for notes.
 Execute the Obey file r32.MakeRiscPkg.
 
 This will copy only those files needed for distribution to PipeDream_4_xx_yy
-in $.Temp.
+in $.Temp and create the corresponding distributable ZIP package file.
 
 Rename that directory as PipeDream_4_<xx>_<yy> where <xx> is the actual
-major version number and <yy> the minor version number (usually 00).
+major version number and <yy> the minor version number (usually 00) and
+the corresponding distributable ZIP package file contained in that
+directory as PipeDream_4_<xx>_<yy>/zip.
 
-Use !InfoZip to create the distributable ZIP package file
-PipeDream_4_<xx>_<yy>/zip. First drag the RiscPkg directory then the Apps
-directory from the PipeDream_4_<xx>_<yy> directory into this ZIP.

@@ -69,15 +69,15 @@ sort_rowt(
 
 /******************************************************************************
 *
-*   rectangle of marked slots has changed
+*   rectangle of marked cells has changed
 *
 * --in--
 *   assumes mergebuf has been done much
-*   further up for slot correctness
+*   further up for cell correctness
 *
 *
 * --out--
-*   flag indicates that some slots need
+*   flag indicates that some cells need
 *   redrawing rather than merely inverting
 *
 ******************************************************************************/
@@ -91,7 +91,7 @@ new_marked_rectangle(void)
     coord roff;
     COL  tcol;
     ROW  trow;
-    P_SLOT tslot;
+    P_CELL tcell;
     BOOL in_new_rowr, in_old_rowr;
     BOOL in_new_rect, in_old_rect;
     P_SCRCOL cptr;
@@ -104,7 +104,7 @@ new_marked_rectangle(void)
             old_blkstart.col, old_blkstart.row,
             old_blkend.col,   old_blkend.row);
 
-    /* loop over all visible slots and 'update' slots in
+    /* loop over all visible cells and 'update' cells in
      * visible range of changing rows and columns
     */
     for(roff = 0; !((rptr = vertvec_entry(roff))->flags & LAST); roff++)
@@ -117,8 +117,8 @@ new_marked_rectangle(void)
 
             trow = rptr->rowno;
 
-            tslot = travel(col_number(0), trow);
-            if(tslot  &&  (tslot->type == SL_PAGE))
+            tcell = travel(col_number(0), trow);
+            if(tcell  &&  (tcell->type == SL_PAGE))
                 continue;
 
             in_new_rowr =   (blkstart.row <= trow)      &&
@@ -145,13 +145,13 @@ new_marked_rectangle(void)
                     {
                     if( mustdraw  ||                                                /* forced to draw? */
                         (rptr->flags & (PICT | UNDERPICT))  ||                      /* picture on row? */
-                        (   ((tslot = travel(tcol, trow)) == NULL)
-                                ?   is_overlapped(coff, roff)                           /* empty slot overlapped from left? */
-                                :   (   /*riscos_fonts  ||*/                            /* slot with fonts needs drawing */
-                                        (   !slot_displays_contents(tslot)              /* text slots might need drawing: */
+                        (   ((tcell = travel(tcol, trow)) == NULL)
+                                ?   is_overlapped(coff, roff)                           /* empty cell overlapped from left? */
+                                :   (   /*riscos_fonts  ||*/                            /* cell with fonts needs drawing */
+                                        (   !slot_displays_contents(tcell)              /* text cells might need drawing: */
                                             ? FALSE
-                                            :   (   ((c_width = colwidth(tcol)) < (overlap = chkolp(tslot, tcol, trow)))  ||
-                                                    /* if slot overlaps to right */
+                                            :   (   ((c_width = colwidth(tcol)) < (overlap = chkolp(tcell, tcol, trow)))  ||
+                                                    /* if cell overlaps to right */
                                                     (FALSE  &&  grid_on  &&  (c_width > overlap))
                                                     /* or if grid & shorter than colwidth */
                                                 )
@@ -160,12 +160,12 @@ new_marked_rectangle(void)
                         )
                       )
                         {
-                        trace_5(TRACE_APP_PD4, "disasterville: draw this whole row and breakout because mustdraw %s, PICT %s, tslot " PTR_XTFMT " -> empty overlapped %s, text | fonts %s",
+                        trace_5(TRACE_APP_PD4, "disasterville: draw this whole row and breakout because mustdraw %s, PICT %s, tcell " PTR_XTFMT " -> empty overlapped %s, text | fonts %s",
                                 trace_boolstring(mustdraw),
                                 trace_boolstring(rptr->flags & (PICT | UNDERPICT)),
-                                report_ptr_cast(tslot),
-                                trace_boolstring(tslot ? FALSE : is_overlapped(coff, roff)),
-                                trace_boolstring(tslot ? ((tslot->type == SL_TEXT) || riscos_fonts) : FALSE));
+                                report_ptr_cast(tcell),
+                                trace_boolstring(tcell ? FALSE : is_overlapped(coff, roff)),
+                                trace_boolstring(tcell ? ((tcell->type == SL_TEXT) || riscos_fonts) : FALSE));
                         mark_row(roff);
                         draw_screen();
 
@@ -179,17 +179,17 @@ new_marked_rectangle(void)
                         S32 fg = FORE;
                         S32 bg = BACK;
 
-                        if(tslot)
+                        if(tcell)
                             {
-                            if(tslot->justify & PROTECTED)
+                            if(tcell->justify & PROTECTED)
                                 {
-                                trace_0(TRACE_APP_PD4, "slot is protected");
+                                trace_0(TRACE_APP_PD4, "cell is protected");
                                 bg = PROTECTC;
                                 }
 
-                            if(result_sign(tslot) < 0)
+                            if(result_sign(tcell) < 0)
                                 {
-                                trace_0(TRACE_APP_PD4, "slot is negative");
+                                trace_0(TRACE_APP_PD4, "cell is negative");
                                 fg = NEGATIVEC;
                                 }
                             }
@@ -387,7 +387,7 @@ alter_marked_block(
     if(update)
         if(new_marked_rectangle())
             {
-            /* update the screen if some slots need redrawing */
+            /* update the screen if some cells need redrawing */
             xf_drawsome = TRUE;
             draw_screen();
             }
@@ -453,7 +453,7 @@ make_single_mark_into_block(void)
 
 /******************************************************************************
 *
-* set a single slot as marked
+* set a single cell as marked
 * adjusts screen to show change
 *
 ******************************************************************************/
@@ -471,7 +471,7 @@ set_single_mark(
     blkanchor.col = tcol;
     blkanchor.row = trow;
 
-    /* set new block of one slot, end mark fudged */
+    /* set new block of one cell, end mark fudged */
     blkstart.col = tcol;
     blkstart.row = trow;
     blkend.col   = tcol;
@@ -483,7 +483,7 @@ set_single_mark(
 
     if(new_marked_rectangle())
         {
-        /* update the screen if some slots need redrawing */
+        /* update the screen if some cells need redrawing */
         xf_drawsome = TRUE;
         draw_screen();
         }
@@ -552,7 +552,7 @@ set_marked_block(
 
     if(new_marked_rectangle())
         {
-        /* update the screen if some slots need redrawing */
+        /* update the screen if some cells need redrawing */
         xf_drawsome = TRUE;
         draw_screen();
         }
@@ -601,7 +601,7 @@ set_marker(
 
 /******************************************************************************
 *
-* is the slot marked?
+* is the cell marked?
 * marked blocks lie between blkstart.col, blkend.col,
 *                           blkstart.row, blkend.row
 *
@@ -615,11 +615,11 @@ inblock(
     if(blk_docno != current_docno())
         return(FALSE);              /* marked block not in this document */
 
-    if(blkend.col != NO_COL)        /* block of slots */
+    if(blkend.col != NO_COL)        /* block of cells */
         return( (blkstart.col <= tcol)  &&  (blkstart.row <= trow)  &&
                 (tcol <= blkend.col)    &&  (trow <= blkend.row)    );
 
-    if(blkstart.col != NO_COL)      /* one slot */
+    if(blkstart.col != NO_COL)      /* one cell */
         return((tcol == blkstart.col)  &&  (trow == blkstart.row));
 
     return(FALSE);                  /* no block */
@@ -627,8 +627,8 @@ inblock(
 
 /******************************************************************************
 *
-* set up block ie. make in_block top left slot
-* if no block set to current slot
+* set up block ie. make in_block top left cell
+* if no block set to current cell
 *
 ******************************************************************************/
 
@@ -665,7 +665,7 @@ init_block(
     if( start_bl.col & BADCOLBIT)
         start_bl.col = NO_COL;
 
-    /* if no mark(s) set in this document, use current slot */
+    /* if no mark(s) set in this document, use current cell */
 
     if(start_bl.col != NO_COL)
         {
@@ -675,11 +675,11 @@ init_block(
             end_bl.col = NO_COL;
 
         if( end_bl.col == NO_COL)
-            end_bl.row = start_bl.row;  /* single slot (marked) */
+            end_bl.row = start_bl.row;  /* single cell (marked) */
         }
     else
         {
-        /* single slot (current) */
+        /* single cell (current) */
         start_bl.row = currow;
         in_block.col = curcol;
         in_block.row = currow;
@@ -723,7 +723,7 @@ traverse_block_init(
     if( blk->stt.col & BADCOLBIT)
         blk->stt.col = NO_COL;
 
-    /* if no mark(s) set in this document, use current slot */
+    /* if no mark(s) set in this document, use current cell */
 
     if(blk->stt.col != NO_COL)
         {
@@ -733,11 +733,11 @@ traverse_block_init(
             blk->end.col = NO_COL;
 
         if( blk->end.col == NO_COL)
-            blk->end.row = blk->stt.row;  /* single slot (marked) */
+            blk->end.row = blk->stt.row;  /* single cell (marked) */
         }
     else
         {
-        /* single slot (current) */
+        /* single cell (current) */
         blk->stt.row = blk->p_docu->Xcurrow;
         blk->cur.col = blk->p_docu->Xcurcol;
         blk->cur.row = blk->p_docu->Xcurrow;
@@ -796,12 +796,12 @@ more_in_block(
     COL col;
     ROW row;
 
-    /* always can return first slot - perhaps current slot */
+    /* always can return first cell - perhaps current cell */
     if(start_block)
         return(TRUE);
 
-    /* for zero or one markers, only slot returned above */
-    /* for zero or one markers, only slot returned above */
+    /* for zero or one markers, only cell returned above */
+    /* for zero or one markers, only cell returned above */
     if(end_bl.col == NO_COL)
         return(FALSE);
 
@@ -837,7 +837,7 @@ more_in_block(
 
 /******************************************************************************
 *
-* this must be called after init_block and before reading first slot
+* this must be called after init_block and before reading first cell
 *
 ******************************************************************************/
 
@@ -845,14 +845,14 @@ extern BOOL
 next_in_block(
     BOOL direction)
 {
-    /* always return first slot - perhaps current slot */
+    /* always return first cell - perhaps current cell */
     if(start_block)
         {
         start_block = FALSE;
         return(TRUE);
         }
 
-    /* for zero or one markers, only slot returned above */
+    /* for zero or one markers, only cell returned above */
     if(end_bl.col == NO_COL)
         return(FALSE);
 
@@ -889,14 +889,14 @@ traverse_block_next(
 {
     assert(blk);
 
-    /* always return first slot - perhaps current slot */
+    /* always return first cell - perhaps current cell */
     if(blk->start)
         {
         blk->start = FALSE;
         return(TRUE);
         }
 
-    /* for zero or one markers, only slot returned above */
+    /* for zero or one markers, only cell returned above */
     if(blk->end.col == NO_COL)
         return(FALSE);
 
@@ -964,10 +964,10 @@ percent_in_block(
 /******************************************************************************
 *
 * mark block
-* if 0 or 2 markers already set, set first marker to current slot
+* if 0 or 2 markers already set, set first marker to current cell
 * if 1 marker set, set second. Afterwards first marker is top left
 * and second marker is bottom right even if markers not specified at
-* these slots or in this order.
+* these cells or in this order.
 *
 ******************************************************************************/
 
@@ -1331,7 +1331,7 @@ application_singleclick_in_main(
 
                     trace_0(TRACE_APP_PD4, "editing expression, use ADJUST paradigm: ");
 
-                    /* a 'normal' slot reference would be 'A1' where both col (A) and row (1) are relocated if replicated    */
+                    /* a 'normal' cell reference would be 'A1' where both col (A) and row (1) are relocated if replicated    */
                     /* sometimes it is useful to prevent either col or row or both from changing when replicated - so called */
                     /* absolute references. We use ctrlpressed to give an absolute col, shiftpressed for absolute row.       */
 
@@ -1349,7 +1349,7 @@ application_singleclick_in_main(
                     /* is being edited, so give its editor the focus & caret                  */
 
                     acquire = TRUE;
-                    trace_0(TRACE_APP_PD4, "clicked in document being edited, couldn't find anyone to give a slot ref too");
+                    trace_0(TRACE_APP_PD4, "clicked in document being edited, couldn't find anyone to give a cell ref too");
                     }
                 else
                     {
@@ -1370,7 +1370,7 @@ application_singleclick_in_main(
                     if(extend)
                         {
                         /* either alter current block or set new block:
-                         * mergebuf has been done by caller to ensure slot marking correct
+                         * mergebuf has been done by caller to ensure cell marking correct
                         */
                         if(blkindoc)
                             {
@@ -1388,7 +1388,7 @@ application_singleclick_in_main(
                         {
                         if((tcol != curcol)  ||  (trow != currow))
                             {
-                            /* position caret in new slot; mergebuf has been done by caller */
+                            /* position caret in new cell; mergebuf has been done by caller */
                             slot_in_buffer = FALSE;
 #if FALSE
                             /* RCM says: I saw something like this in PDSearch ! */
@@ -1403,14 +1403,14 @@ application_singleclick_in_main(
 
                         acquire = motion = TRUE;
 #if FALSE
-                        /* If the click is in a macro sheet numeric slot, fire up an editor. */
+                        /* If the click is in a macro sheet numeric cell, fire up an editor. */
                         if(ev_doc_is_custom_sheet(doc))
                             {
-                            P_SLOT tslot = travel(tcol, trow);
+                            P_CELL tcell = travel(tcol, trow);
 
-                            if((tslot)                    &&
-                               (tslot->type == SL_NUMBER) &&
-                               (ev_is_formula(&tslot->content.number.guts))
+                            if((tcell)                    &&
+                               (tcell->type == SL_NUMBER) &&
+                               (ev_is_formula(&tcell->content.number.guts))
                               )
                                 {
                                 expedit_editcurrentslot(lecpos -3, FALSE); /* -3 cos mark prints '...' infront of line! */
@@ -1432,7 +1432,7 @@ application_singleclick_in_main(
                 if(extend)
                     {
                     /* either alter current block or set new block:
-                     * mergebuf has been done by caller to ensure slot marking correct
+                     * mergebuf has been done by caller to ensure cell marking correct
                     */
                     if(blkindoc)
                         {
@@ -1564,7 +1564,7 @@ application_button_click_in_main(
     trace_6(TRACE_APP_PD4, "application_button_click_in_main: g(%d, %d) t(%d, %d) xco %d bstate %X",
                 x, y, tx, ty, xcelloffset, buttonstate);
 
-    /* ensure we can find slot for positioning, overlap tests etc. must allow spellcheck as we may move */
+    /* ensure we can find cell for positioning, overlap tests etc. must allow spellcheck as we may move */
     if(!mergebuf())
         return;
     filbuf();

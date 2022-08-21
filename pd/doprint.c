@@ -104,7 +104,7 @@ static S32 riscos_copies;
 static S32 riscos_scale;
 static S32 riscos_seqnum;
 
-/* range of slots to print */
+/* range of cells to print */
 static SLR printing_first;
 static SLR printing_last;
 
@@ -1439,7 +1439,7 @@ print_page(void)
         coord this_colstart = 0;  /* keep dataflower happy */
         coord drawn_sofar   = 0;  /* only used for PD printing */
         ROW previous_row   = -1; /* an invalid row number */
-        P_SLOT tslot;
+        P_CELL tcell;
         coord fwidth, colwid, page_width;
 
         trace_0(TRACE_APP_PD4, "print_page loop");
@@ -1447,7 +1447,7 @@ print_page(void)
         /* SKS after 4.11 06jan92 - see below */
         page_width = page_width_query();
 
-        /* for each slot in file or block */
+        /* for each cell in file or block */
         while(next_in_block(ACROSS_ROWS))
             {
             trace_2(TRACE_APP_PD4, "print_page loop... col %d, row %d", in_block.col, in_block.row);
@@ -1529,11 +1529,11 @@ print_page(void)
                         drawn_sofar++;
                         }
 
-                /* draw slot */
-                tslot = travel(in_block.col, in_block.row);
+                /* draw cell */
+                tcell = travel(in_block.col, in_block.row);
 
-                /* get width of slot */
-                fwidth = chkolp(tslot, in_block.col, in_block.row);
+                /* get width of cell */
+                fwidth = chkolp(tcell, in_block.col, in_block.row);
 
                 if(page_width)
                     {
@@ -1542,7 +1542,7 @@ print_page(void)
                     fwidth = MIN(fwidth, page_width - this_colstart);
                     }
 
-                if(tslot)
+                if(tcell)
                     {
                     P_DRAW_DIAG p_draw_diag;
                     P_DRAW_FILE_REF p_draw_file_ref;
@@ -1569,16 +1569,16 @@ print_page(void)
                         }
                     else
                         {
-                        trace_2(TRACE_APP_PD4, "printing slot %d, %d", in_block.col, in_block.row);
+                        trace_2(TRACE_APP_PD4, "printing cell %d, %d", in_block.col, in_block.row);
 
-                        if((fwidth > colwid)  &&  !slot_displays_contents(tslot))
+                        if((fwidth > colwid)  &&  !slot_displays_contents(tcell))
                             fwidth = colwid;
 
                         if(riscos_printing)
                             {
                             BOOL neg;
 
-                            if(result_sign(tslot) < 0)
+                            if(result_sign(tcell) < 0)
                                 neg = TRUE;
                             else
                                 neg = FALSE;
@@ -1591,7 +1591,7 @@ print_page(void)
                                 at_print();
                             }
 
-                        drawn_sofar += outslt(tslot, in_block.row, fwidth);
+                        drawn_sofar += outslt(tcell, in_block.row, fwidth);
 
                         prnout(EOS);
                         }
@@ -2248,7 +2248,7 @@ drvout(
         return(FALSE);
         }
 
-    /* if at end of slot, switch highlights off, maybe */
+    /* if at end of cell, switch highlights off, maybe */
     if(ch == EOS)
         {
         h_waiting &= ~off_at_cr;
@@ -2421,7 +2421,7 @@ prnout(
     out = prnvec->out;
     nspaces = prnspc;
 
-    /* if not end of slot, output spaces cos of printable character */
+    /* if not end of cell, output spaces cos of printable character */
     if((ch != EOS)  &&  nspaces)
         {
         prnspc = 0;

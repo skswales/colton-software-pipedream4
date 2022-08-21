@@ -87,16 +87,16 @@ typedef S32 ROW; typedef ROW * P_ROW;
 #define PAINT_STRSIZ    (LIN_BUFSIZ * 4)
 #endif
 
-/* Output buffer for text slot compilation: worst case is LINBUF full of
+/* Output buffer for text cell compilation: worst case is LINBUF full of
  * small SLR, op such as '@A1@'
 */
 #define COMPILED_TEXT_BUFSIZ ((LIN_BUFSIZ / 4) * (COMPILED_TEXT_SLR_SIZE + 2))
 
-/* maximum length of a textual slot reference [fullname]%$ABCDEFGH$1234567890 */
+/* maximum length of a textual cell reference [fullname]%$ABCDEFGH$1234567890 */
 #define BUF_MAX_REFERENCE (BUF_MAX_PATHSTRING + 2 + 8 + 1 + 10)
 
-/* maximum size of a low level slot */
-#define MAX_SLOTSIZE (EV_MAX_OUT_LEN + sizeof(struct SLOT))
+/* maximum size of a low level cell */
+#define MAX_SLOTSIZE (EV_MAX_OUT_LEN + sizeof(struct CELL))
 
 /* ----------------------------------------------------------------------- */
 
@@ -159,7 +159,7 @@ TRAVERSE_BLOCK, * TRAVERSE_BLOCKP;
 * slot.c
 ******************************************************************************/
 
-typedef struct SLOT * P_SLOT; /* slot pointer type */
+typedef struct CELL * P_CELL; /* cell pointer type */
 
 /*
 column entry for use in sparse matrix

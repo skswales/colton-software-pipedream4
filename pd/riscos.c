@@ -695,7 +695,7 @@ riscos_sendsheetclosed(
 
 /******************************************************************************
 *
-* send client the contents of a slot
+* send client the contents of a cell
 *
 ******************************************************************************/
 
@@ -714,7 +714,7 @@ riscos_sendslotcontents(
         S32 nbytes;
         WIMP_MSGPD_DDETYPEC_TYPE type;
         wimp_msgstr msg;
-        P_SLOT tslot;
+        P_CELL tcell;
 
         glp->datasent = TRUE;
 
@@ -723,13 +723,13 @@ riscos_sendslotcontents(
         row = glp->row + yoff;
         ptr = NULL;
 
-        tslot = travel(glp->col + xoff, row);
+        tcell = travel(glp->col + xoff, row);
 
-        if(tslot)
+        if(tcell)
             {
             P_EV_RESULT p_ev_result;
 
-            if(result_extract(tslot, &p_ev_result) == SL_NUMBER)
+            if(result_extract(tcell, &p_ev_result) == SL_NUMBER)
                 {
                 switch(p_ev_result->did_num)
                     {
@@ -755,12 +755,12 @@ riscos_sendslotcontents(
                 {
                 S32 t_justify, t_format, t_opt_DF, t_opt_TH;
 
-                t_justify = tslot->justify;
-                tslot->justify = J_LEFT;
-                if(tslot->type == SL_NUMBER)
+                t_justify = tcell->justify;
+                tcell->justify = J_LEFT;
+                if(tcell->type == SL_NUMBER)
                     {
-                    t_format  = tslot->format;
-                    tslot->format = t_format & ~(F_LDS | F_TRS | F_BRAC);
+                    t_format  = tcell->format;
+                    tcell->format = t_format & ~(F_LDS | F_TRS | F_BRAC);
                     }
                 else
                     t_format = 0; /* keep compiler dataflow analyser happy */
@@ -771,13 +771,13 @@ riscos_sendslotcontents(
                 d_options_TH = TH_BLANK;
                 curpnm = 0;        /* we have really no idea */
 
-                (void) expand_slot(current_docno(), tslot, row, buffer, LIN_BUFSIZ,
+                (void) expand_slot(current_docno(), tcell, row, buffer, LIN_BUFSIZ,
                                    DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                                    FALSE /*allow_fonty_result*/, TRUE /*cff*/);
 
-                tslot->justify               = t_justify;
-                if(tslot->type == SL_NUMBER)
-                    tslot->format = t_format;
+                tcell->justify               = t_justify;
+                if(tcell->type == SL_NUMBER)
+                    tcell->format = t_format;
                 d_options_DF      = t_opt_DF;
                 d_options_TH      = t_opt_TH;
 
@@ -1220,7 +1220,7 @@ iconbar_PD_DDE(
                 const char *leaf;
                 const char *tag;
                 S32 taglen;
-                P_SLOT tslot;
+                P_CELL tcell;
 
                 select_document_using_docno(blk_docno);
 
@@ -1230,10 +1230,10 @@ iconbar_PD_DDE(
                 leaf = file_leafname(currentfilename);
                 ptr = strnpcpyind(ptr, leaf, &nbytes);
 
-                tslot = travel(blkstart.col, blkstart.row);
+                tcell = travel(blkstart.col, blkstart.row);
 
-                if(tslot  &&  (tslot->type == SL_TEXT))
-                    tag = tslot->content.text;
+                if(tcell  &&  (tcell->type == SL_TEXT))
+                    tag = tcell->content.text;
                 else
                     tag = ambiguous_tag_STR;
 
@@ -1291,7 +1291,7 @@ iconbar_PD_DDE(
             DOCNO docno;
             COL col;
             ROW row;
-            P_SLOT tslot;
+            P_CELL tcell;
 
             trace_4(TRACE_APP_PD4, "EstablishHandle: xsize %d, ysize %d, name %s, tag %s", xsize, ysize, tstr, tag);
 
@@ -1318,12 +1318,12 @@ iconbar_PD_DDE(
             /* find tag in document */
             init_doc_as_block();
 
-            while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+            while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
                 {
-                if(tslot->type != SL_TEXT)
+                if(tcell->type != SL_TEXT)
                     continue;
 
-                if(0 != _stricmp(tslot->content.text, tag))
+                if(0 != _stricmp(tcell->content.text, tag))
                     continue;
 
                 col = in_block.col;
@@ -1396,7 +1396,7 @@ iconbar_PD_DDE(
                 (void) mergebuf_nocheck();
                 filbuf();
 
-                /* fire off all the slots */
+                /* fire off all the cells */
                 riscos_sendallslots(glp);
 
                 riscos_sendendmarker(glp);
@@ -2278,7 +2278,7 @@ main_event_handler(
                     e->data.c.height, e->data.c.index);
             caret_window = e->data.c.w;
 
-            /* This document is gaining the caret, and will show the slot count (recalculation status) from now on */
+            /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
             if(slotcount_docno != current_docno())
                 {
                 colh_draw_slot_count_in_document(NULL); /* kill the current indicator (if any) */
@@ -2309,7 +2309,7 @@ main_event_handler(
             colh_draw_slot_count(NULL);
 
             /*RCM says: I suppose we could find out which doc (if any) is getting the focus */
-            /*          and only blank the slot count if its not this doc - this would mean */
+            /*          and only blank the cell count if its not this doc - this would mean */
             /*          the count wouldn't blank out momentarily if the focus went to an    */
             /*          edit expression box owned by this document                          */
             /*          NB The expression editor would need similar ELOSECARET code to this */

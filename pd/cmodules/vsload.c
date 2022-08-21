@@ -238,7 +238,7 @@ vsload_loadvsfile(
 
 /******************************************************************************
 *
-* decode a ViewSheet slot into plain text
+* decode a ViewSheet cell into plain text
 *
 ******************************************************************************/
 
@@ -361,8 +361,7 @@ vsload_fileend(void)
 
 /******************************************************************************
 *
-* return a pointer to textual slot
-* contents of a ViewSheet slot
+* return a pointer to textual cell contents of a ViewSheet cell
 *
 ******************************************************************************/
 
@@ -408,7 +407,7 @@ vsload_travel(
 
     coloff &= 0x7FFF;
 
-    /* calculate final slot pointer */
+    /* calculate final cell pointer */
     slotcont = vsdp + readval_S16(&vsp->ctbpn1) + coloff;
 
     if(*type == VS_NUMBER)

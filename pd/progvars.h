@@ -83,7 +83,7 @@ extern SLR sch_stt;             /* start of search block */
 extern SLR sch_end;             /* end of search block */
 extern SLR sch_pos_stt;         /* position of start of match */
 extern SLR sch_pos_end;         /* position of end of match */
-extern S32 sch_stt_offset;      /* offset of search string in slot */
+extern S32 sch_stt_offset;      /* offset of search string in cell */
 extern S32 sch_end_offset;      /* offset of end of matched string */
 extern BOOL dont_update_lescrl;
 

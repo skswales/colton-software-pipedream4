@@ -328,7 +328,7 @@ static void (* argmod[])(P_S32 , S32) =
 };
 
 /*
-table of valid constructs for slots
+table of valid constructs for cells
 */
 
 #define BIT_BRK 0x0001
@@ -1265,7 +1265,7 @@ findcolumns(void)
 
 /******************************************************************************
 *
-* make a lotus form absolute/relative slot reference
+* make a lotus form absolute/relative cell reference
 *
 ******************************************************************************/
 
@@ -1347,7 +1347,7 @@ nxtsym(void)
 			}
 		}
 
-	/* check for slot reference/range */
+	/* check for cell reference/range */
 	if(isalpha(cc) || (cc == '$'))
 		{
 		if((cr = pd123__scnslr(exppos, &pd123__csym.stcol, &pd123__csym.strow)) != 0)
@@ -1634,7 +1634,7 @@ showrow(
 
 /******************************************************************************
 *
-* scan a slot reference
+* scan a cell reference
 *
 ******************************************************************************/
 
@@ -1869,7 +1869,7 @@ wrcols(void)
 				/* save position in column */
 				colcur[col] = c;
 
-				/* now write out slot contents */
+				/* now write out cell contents */
 				if(strlen((char *) slot))
 					if((err = writeslot(slot, col, row, slotbits, dcp)) != 0)
 						return(err);
@@ -2139,7 +2139,7 @@ writeins(
 
 /******************************************************************************
 *
-* write out a slot as a label
+* write out a cell as a label
 *
 ******************************************************************************/
 
@@ -2283,7 +2283,7 @@ writelformat(
 
 /******************************************************************************
 *
-* write out slot to lotus file
+* write out cell to lotus file
 *
 ******************************************************************************/
 
@@ -2305,11 +2305,11 @@ writeslot(
 		{
 		F64 fpval;
 
-		/* try to interpret the slot as an integer/float/date */
+		/* try to interpret the cell as an integer/float/date */
 		res = reccon(slot, &fpval, &day, &mon, &yr, &cs);
 
 		/* check characters were scanned and
-		that we got to the end of the slot */
+		that we got to the end of the cell */
 		if(!cs || (*(slot + cs)))
 			res = 0;
 
@@ -2366,7 +2366,7 @@ writeslot(
 
 /******************************************************************************
 *
-* write out start of slot
+* write out start of cell
 *
 ******************************************************************************/
 

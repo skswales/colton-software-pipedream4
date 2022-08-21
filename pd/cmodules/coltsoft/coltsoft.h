@@ -112,7 +112,7 @@ the destination should appear first in the parameter list,
 as it does for example xstrkpy(dst, elemof_dst, src)
 
 When you have start and end pointers / indexes they must be
-inclusive, exclusive whether they point to memory, slots, arrays or anything
+inclusive, exclusive whether they point to memory, cells, arrays or anything
 */
 
 /*

@@ -333,7 +333,7 @@ check_supporting_name(
             switch(p_ev_name->def_data.did_num)
                 {
                 case RPN_DAT_SLR:
-                    /* go check out the slot */
+                    /* go check out the cell */
                     stack_inc(VISIT_SLOT, p_ev_name->def_data.arg.slr, 0);
                     grub_init(&stack_ptr->data.stack_visit_slot.grubb, &stack_ptr->slr);
                     break;
@@ -401,13 +401,13 @@ check_supporting_rng(
 
 static S32
 circ_check(
-    P_EV_SLOT p_ev_slot)
+    P_EV_CELL p_ev_cell)
 {
     S32 res;
 
     res = SAME_STATE;
 
-    if(p_ev_slot->parms.circ)
+    if(p_ev_cell->parms.circ)
         {
         P_STACK_ENTRY stkentp;
         S32 found_it;
@@ -415,8 +415,8 @@ circ_check(
         eval_trace("<circ_check> found EVS_CIRC");
 
         /* now we must search back up the stack to find the
-         * first visit to the slot and stop this recalcing the
-         * slot and thus removing our stored error
+         * first visit to the cell and stop this recalcing the
+         * cell and thus removing our stored error
         */
         stkentp = stack_ptr - 1;
         found_it = 0;
@@ -452,7 +452,7 @@ circ_check(
         res = slot_error_complete(/*create_error*/(EVAL_ERR_CIRC));
         }
     else
-        p_ev_slot->parms.circ = 1;
+        p_ev_cell->parms.circ = 1;
 
     return(res);
 }
@@ -481,7 +481,7 @@ ev_eval_rpn(
 
         stack_ptr->data.stack_in_calc.eval_block.offset = 0;
         stack_ptr->data.stack_in_calc.eval_block.slr = *slrp;
-        stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = NULL;
+        stack_ptr->data.stack_in_calc.eval_block.p_ev_cell = NULL;
         stack_ptr->data.stack_in_calc.type = INCALC_PTR;
         stack_ptr->data.stack_in_calc.ptr = rpn_in;
 
@@ -501,8 +501,8 @@ ev_eval_rpn(
 /******************************************************************************
 *
 * backtrack up the stack to find the
-* most recent slot we were calculating,
-* set the error into the slot and go
+* most recent cell we were calculating,
+* set the error into the cell and go
 * to calculate its dependents
 *
 ******************************************************************************/
@@ -586,7 +586,7 @@ eval_optimise(
     return(did_opt);
 }
 
-/* recache slot pointer as needed */
+/* recache cell pointer as needed */
 
 static inline void
 stack_in_calc_ensure_slot(
@@ -595,15 +595,15 @@ stack_in_calc_ensure_slot(
     _In_z_      PCTSTR caller)
 {
 #if 1
-    if(NULL != p_stack_in_calc->eval_block.p_ev_slot)
+    if(NULL != p_stack_in_calc->eval_block.p_ev_cell)
     {
-        P_EV_SLOT p_ev_slot;
-        S32 travel_res = ev_travel(&p_ev_slot, p_ev_slr);
-        if(p_stack_in_calc->eval_block.p_ev_slot != p_ev_slot)
+        P_EV_CELL p_ev_cell;
+        S32 travel_res = ev_travel(&p_ev_cell, p_ev_slr);
+        if(p_stack_in_calc->eval_block.p_ev_cell != p_ev_cell)
         {
-            reportf(TEXT("%s: slot ") U32_TFMT TEXT(":") S32_TFMT TEXT(",") S32_TFMT TEXT(" moved from ") PTR_TFMT TEXT(" to ") PTR_TFMT,
-                caller, (U32) p_ev_slr->docno, p_ev_slr->col, p_ev_slr->row, report_ptr_cast(stack_ptr->data.stack_in_calc.eval_block.p_ev_slot), report_ptr_cast(p_ev_slot));
-            p_stack_in_calc->eval_block.p_ev_slot = p_ev_slot;
+            reportf(TEXT("%s: cell ") U32_TFMT TEXT(":") S32_TFMT TEXT(",") S32_TFMT TEXT(" moved from ") PTR_TFMT TEXT(" to ") PTR_TFMT,
+                caller, (U32) p_ev_slr->docno, p_ev_slr->col, p_ev_slr->row, report_ptr_cast(stack_ptr->data.stack_in_calc.eval_block.p_ev_cell), report_ptr_cast(p_ev_cell));
+            p_stack_in_calc->eval_block.p_ev_cell = p_ev_cell;
             p_stack_in_calc->travel_res = travel_res;
         }
     }
@@ -611,10 +611,10 @@ stack_in_calc_ensure_slot(
     IGNOREPARM(caller);
 #endif
 
-    if(NULL != p_stack_in_calc->eval_block.p_ev_slot)
+    if(NULL != p_stack_in_calc->eval_block.p_ev_cell)
         return;
 
-    p_stack_in_calc->travel_res = ev_travel(&p_stack_in_calc->eval_block.p_ev_slot, p_ev_slr);
+    p_stack_in_calc->travel_res = ev_travel(&p_stack_in_calc->eval_block.p_ev_cell, p_ev_slr);
 }
 
 /******************************************************************************
@@ -654,10 +654,10 @@ eval_rpn(
             {
             stack_in_calc_ensure_slot(p_stack_in_calc, &p_stack_in_calc->eval_block.slr, "eval_rpn");
 
-            if(p_stack_in_calc->eval_block.p_ev_slot->parms.type == EVS_CON_RPN)
-                rpn_start = p_stack_in_calc->eval_block.p_ev_slot->rpn.con.rpn_str;
+            if(p_stack_in_calc->eval_block.p_ev_cell->parms.type == EVS_CON_RPN)
+                rpn_start = p_stack_in_calc->eval_block.p_ev_cell->rpn.con.rpn_str;
             else
-                rpn_start = p_stack_in_calc->eval_block.p_ev_slot->rpn.var.rpn_str;
+                rpn_start = p_stack_in_calc->eval_block.p_ev_cell->rpn.var.rpn_str;
             break;
             }
         }
@@ -690,7 +690,7 @@ eval_rpn(
                     {
                     #ifdef SLOTS_MOVE
                     /* we can't push DAT_STRINGs because they point into the rpn
-                     * which may move with a slot during an interruption; if slots
+                     * which may move with a cell during an interruption; if cells
                      * stop moving about, then we needn't do this duplication
                      */
                     case RPN_DAT_STRING:
@@ -982,7 +982,7 @@ eval_rpn(
                                          &func_result,
                                          &max_x, &max_y)) > 0)
                         {
-                        /* save calculating slot state */
+                        /* save calculating cell state */
                         const P_PROC_EXEC p_proc_exec = func_data->p_proc_exec;
 
                         /* save resume position */
@@ -1391,14 +1391,14 @@ custom_sequence(
     /* have we gone off end of file ? */
     if(next_slot.row >= last_slot.row)
         res = create_error(EVAL_ERR_NORETURN);
-    /* switch to calculate next slot in custom */
+    /* switch to calculate next cell in custom */
     else if(stack_check_n(1) < 0)
         res = status_nomem();
     else
         {
         stack_inc(CALC_SLOT, next_slot, 0);
         stack_ptr->stack_flags |= STF_INCUSTOM;
-        stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = NULL;
+        stack_ptr->data.stack_in_calc.eval_block.p_ev_cell = NULL;
         stack_ptr->data.stack_in_calc.start_calc = ev_serial_num;
         }
 
@@ -1430,7 +1430,7 @@ process_control(
 {
     EV_SLR current_slot;
 
-    /* save slot on which control statement encountered */
+    /* save cell on which control statement encountered */
     current_slot = stack_ptr->slr;
 
     switch(action)
@@ -1804,28 +1804,28 @@ process_control_search(
 
     while(!found && ++slr.row < last_row)
         {
-        P_EV_SLOT p_ev_slot;
+        P_EV_CELL p_ev_cell;
 
-        if(ev_travel(&p_ev_slot, &slr) > 0)
+        if(ev_travel(&p_ev_cell, &slr) > 0)
             {
-            if(p_ev_slot->parms.control == (unsigned) block_start)
+            if(p_ev_cell->parms.control == (unsigned) block_start)
                 ++nest;
-            else if(p_ev_slot->parms.control == (unsigned) block_end)
+            else if(p_ev_cell->parms.control == (unsigned) block_end)
                 {
                 if(nest)
                     --nest;
                 else
                     {
-                    found_type = p_ev_slot->parms.control;
+                    found_type = p_ev_cell->parms.control;
                     found = 1;
                     }
                 }
             else if(!nest)
                 {
-                if(p_ev_slot->parms.control == (unsigned) block_end_maybe1 ||
-                   p_ev_slot->parms.control == (unsigned) block_end_maybe2)
+                if(p_ev_cell->parms.control == (unsigned) block_end_maybe1 ||
+                   p_ev_cell->parms.control == (unsigned) block_end_maybe2)
                     {
-                    found_type = p_ev_slot->parms.control;
+                    found_type = p_ev_cell->parms.control;
                     found = 1;
                     }
                 }
@@ -1951,7 +1951,7 @@ ev_recalc(void)
     tree_flags |= TRF_LOCK;
 
     do  {
-        /* get next slot from todo list */
+        /* get next cell from todo list */
         if(complete)
             {
             if(todo_get_slr(&stack_ptr->slr))
@@ -1976,25 +1976,25 @@ ev_recalc(void)
             {
             case VISIT_SLOT:
                 {
-                P_EV_SLOT p_ev_slot;
+                P_EV_CELL p_ev_cell;
                 S32 travel_res, res;
 
-                if((travel_res = ev_travel(&p_ev_slot, &stack_ptr->slr)) > 0)
+                if((travel_res = ev_travel(&p_ev_cell, &stack_ptr->slr)) > 0)
                     {
                     S32 did_num;
 
                     if(!stack_ptr->data.stack_visit_slot.grubb.offset)
                         {
-                        if(p_ev_slot->parms.type == EVS_VAR_RPN &&
-                           p_ev_slot->rpn.var.visited >= ev_serial_num)
+                        if(p_ev_cell->parms.type == EVS_VAR_RPN &&
+                           p_ev_cell->rpn.var.visited >= ev_serial_num)
                             {
                             eval_trace("<visit_slot> ");
                             trace_2(TRACE_MODULE_EVAL,
-                                    "avoided slot visit: visited: %d, serial_num: %d",
-                                    p_ev_slot->rpn.var.visited,
+                                    "avoided cell visit: visited: %d, serial_num: %d",
+                                    p_ev_cell->rpn.var.visited,
                                     ev_serial_num);
 
-                            /* remove this slot's entry from the todo list */
+                            /* remove this cell's entry from the todo list */
                             todo_remove_slr(&stack_ptr->slr);
 
                             /* continue with what we were doing previously */
@@ -2009,7 +2009,7 @@ ev_recalc(void)
 
                         eval_trace("<visit_slot>");
 
-                        if(circ_check(p_ev_slot) == NEW_STATE)
+                        if(circ_check(p_ev_cell) == NEW_STATE)
                             break;
                         }
 
@@ -2023,12 +2023,12 @@ ev_recalc(void)
                         }
 
                     res = 0;
-                    while(!res && (did_num = grub_next(p_ev_slot, &stack_ptr->data.stack_visit_slot.grubb)) != RPN_FRM_END)
+                    while(!res && (did_num = grub_next(p_ev_cell, &stack_ptr->data.stack_visit_slot.grubb)) != RPN_FRM_END)
                         {
                         switch(did_num)
                             {
                             case RPN_DAT_SLR:
-                                /* we must go and visit the slot;
+                                /* we must go and visit the cell;
                                  * stack the current state
                                  */
                                 stack_inc(VISIT_SLOT, stack_ptr[-1].data.stack_visit_slot.grubb.data.arg.slr, 0);
@@ -2054,10 +2054,10 @@ ev_recalc(void)
                         break;
                     }
 
-                /* all slot's supporters are calced - check
-                if this slot now needs to be recalced */
+                /* all cell's supporters are calced - check
+                if this cell now needs to be recalced */
                 stack_ptr->type = CALC_SLOT;
-                stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = p_ev_slot;
+                stack_ptr->data.stack_in_calc.eval_block.p_ev_cell = p_ev_cell;
                 stack_ptr->data.stack_in_calc.travel_res = travel_res;
                 stack_ptr->data.stack_in_calc.start_calc = ev_serial_num;
 
@@ -2073,7 +2073,7 @@ ev_recalc(void)
                 visit_supporting_range();
                 break;
 
-            /* called to start recalc of a slot
+            /* called to start recalc of a cell
              */
             case CALC_SLOT:
                 {
@@ -2096,12 +2096,12 @@ ev_recalc(void)
                    !(stack_ptr->stack_flags & STF_CALCEDERROR)                               &&
                    (doc_check_custom(stack_ptr->slr.docno)                                 ||
                     (stack_ptr->stack_flags & STF_CALCEDSUPPORTER)                         ||
-                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.type == EVS_VAR_RPN &&
+                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->parms.type == EVS_VAR_RPN &&
                      changed)                                                                        ||
-                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.type == EVS_CON_RPN &&
+                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->parms.type == EVS_CON_RPN &&
                      changed)                                                                        ||
-                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.did_num == RPN_DAT_ERROR &&
-                     stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.arg.ev_error.status == STATUS_NOMEM)
+                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result.did_num == RPN_DAT_ERROR &&
+                     stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result.arg.ev_error.status == STATUS_NOMEM)
                    )
                   )
                     {
@@ -2118,7 +2118,7 @@ ev_recalc(void)
                 break;
                 }
 
-            /* called during recalc of a slot after eval_rpn
+            /* called during recalc of a cell after eval_rpn
              * has released control for some reason
              */
             case IN_EVAL:
@@ -2126,8 +2126,8 @@ ev_recalc(void)
                 eval_trace("<IN_EVAL>");
 
                 #ifdef SLOTS_MOVE
-                /* clear out any cached slot pointer for later reload */
-                stack_base[stack_ptr->data.stack_in_eval.stack_offset].data.stack_in_calc.eval_block.p_ev_slot = NULL;
+                /* clear out any cached cell pointer for later reload */
+                stack_base[stack_ptr->data.stack_in_eval.stack_offset].data.stack_in_calc.eval_block.p_ev_cell = NULL;
                 #endif
 
                 /* remove IN_EVAL state and continue with recalc */
@@ -2135,7 +2135,7 @@ ev_recalc(void)
                 break;
                 }
 
-            /* called when recalculation of a slot is over
+            /* called when recalculation of a cell is over
              */
             case END_CALC:
                 {
@@ -2149,23 +2149,23 @@ ev_recalc(void)
                 if(stack_ptr->data.stack_in_calc.travel_res > 0 &&
                    stack_ptr->data.stack_in_calc.did_calc)
                     {
-                    /* store result in slot */
-                    ev_result_free_resources(&stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result);
-                    ev_data_to_result_convert(&stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result,
+                    /* store result in cell */
+                    ev_result_free_resources(&stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result);
+                    ev_data_to_result_convert(&stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result,
                                               &stack_ptr->data.stack_in_calc.result_data);
 
                     /* on error in custom function sheet, return custom function result error */
-                    if(stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.did_num == RPN_DAT_ERROR &&
+                    if(stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result.did_num == RPN_DAT_ERROR &&
                        doc_check_custom(stack_ptr->slr.docno))
                         {
                         EV_DATA data;
 
                         data.did_num = RPN_DAT_ERROR;
-                        data.arg.ev_error = stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.arg.ev_error;
+                        data.arg.ev_error = stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result.arg.ev_error;
 
                         if(data.arg.ev_error.type != ERROR_CUSTOM)
                         {
-                            data.arg.ev_error.type = stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.arg.ev_error.type = ERROR_CUSTOM;
+                            data.arg.ev_error.type = stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result.arg.ev_error.type = ERROR_CUSTOM;
                         
                             data.arg.ev_error.docno = stack_ptr->slr.docno;
                             data.arg.ev_error.col = stack_ptr->slr.col;
@@ -2204,19 +2204,19 @@ ev_recalc(void)
                 if(stack_ptr->data.stack_in_calc.travel_res > 0)
                     {
                     /* clear circular flag and set visited */
-                    if(stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.type == EVS_VAR_RPN)
+                    if(stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->parms.type == EVS_VAR_RPN)
                         {
-                        stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->rpn.var.visited = stack_ptr->data.stack_in_calc.start_calc;
+                        stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->rpn.var.visited = stack_ptr->data.stack_in_calc.start_calc;
                         trace_2(TRACE_MODULE_EVAL,
-                                "END_CALC, slot->visited set to: %d, serial_num: %d",
-                                stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->rpn.var.visited,
+                                "END_CALC, p_ev_cell->visited set to: %d, serial_num: %d",
+                                stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->rpn.var.visited,
                                 ev_serial_num);
                         }
 
-                    stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.circ = 0;
+                    stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->parms.circ = 0;
                     }
 
-                /* remove this slot's entry from the todo list */
+                /* remove this cell's entry from the todo list */
                 todo_remove_slr(&stack_ptr->slr);
 
                 if((stack_ptr->stack_flags & STF_CALCEDSUPPORTER) ||
@@ -2266,7 +2266,7 @@ ev_recalc(void)
 
             /* called to start a loop; the loop data
              * is pushed onto the stack; execution continues
-             * at the slot after the origin slot
+             * at the cell after the origin cell
              */
             case CONTROL_LOOP:
                 {
@@ -2279,24 +2279,24 @@ ev_recalc(void)
                 break;
                 }
 
-            /* called for each slot in a database condition
+            /* called for each cell in a database condition
              * eval_rpn checks that stack is available
              * needs 1 stack entry
              */
             case DBASE_FUNCTION:
                 {
-                P_EV_SLOT p_ev_slot;
+                P_EV_CELL p_ev_cell;
                 S32 error = 0;
 
                 /* set up conditional string ready for munging */
-                if(ev_travel(&p_ev_slot, &stack_ptr->data.stack_dbase.dbase_slot) > 0)
+                if(ev_travel(&p_ev_cell, &stack_ptr->data.stack_dbase.dbase_slot) > 0)
                     {
                     char dbase_rpn[EV_MAX_OUT_LEN + 1];
                     S32 rpn_len;
                     P_U8 rpn_ptr;
                     EV_SLR slr;
 
-                    /* calculate slr for slot being processed conditionally */
+                    /* calculate slr for cell being processed conditionally */
                     slr = stack_ptr->data.stack_dbase.dbase_rng.s;
 
                     /* check for errors with external refs */
@@ -2307,7 +2307,7 @@ ev_recalc(void)
                         EV_SLR target_slr;
                         S32 abs_col, abs_row;
 
-                        /* calculate slr of slot in database range */
+                        /* calculate slr of cell in database range */
                         slr.col += stack_ptr->data.stack_dbase.offset.col;
                         slr.row += stack_ptr->data.stack_dbase.offset.row;
 
@@ -2328,7 +2328,7 @@ ev_recalc(void)
                             }
 
                         rpn_len = ev_proc_conditional_rpn(dbase_rpn,
-                                                          p_ev_slot->rpn.var.rpn_str + stack_ptr->data.stack_dbase.cond_pos,
+                                                          p_ev_cell->rpn.var.rpn_str + stack_ptr->data.stack_dbase.cond_pos,
                                                           &target_slr, abs_col, abs_row);
 
                         if(NULL != (rpn_ptr = al_ptr_alloc_bytes(P_U8, rpn_len, &error)))
@@ -2495,7 +2495,7 @@ ev_recalc(void)
                 }
 
             /* whilst executing custom, select
-             * next sequential slot for evaluation
+             * next sequential cell for evaluation
             */
             case EXECUTING_CUSTOM:
                 custom_sequence(stack_ptr);
@@ -2710,12 +2710,12 @@ ev_recalc(void)
     #endif
 
     #ifdef SLOTS_MOVE
-    /* clear cached slot pointer when leaving evaluator */
+    /* clear cached cell pointer when leaving evaluator */
     switch(stack_ptr->type)
         {
         case CALC_SLOT:
         case END_CALC:
-            stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = NULL;
+            stack_ptr->data.stack_in_calc.eval_block.p_ev_cell = NULL;
             break;
         }
     #endif
@@ -2727,9 +2727,8 @@ ev_recalc(void)
 
 /******************************************************************************
 *
-* when an error is encountered processing
-* a slot, store the error and terminate
-* the evaluation
+* when an error is encountered processing a cell,
+* store the error and terminate the evaluation
 *
 ******************************************************************************/
 
@@ -2741,7 +2740,7 @@ slot_error_complete(
 
     stack_ptr->type = CALC_SLOT;
     stack_ptr->data.stack_in_calc.start_calc = ev_serial_num;
-    stack_ptr->data.stack_in_calc.eval_block.p_ev_slot  = NULL;
+    stack_ptr->data.stack_in_calc.eval_block.p_ev_cell  = NULL;
 
     stack_ptr->stack_flags |= STF_CALCEDERROR | STF_CALCEDSUPPORTER;
 
@@ -2750,8 +2749,8 @@ slot_error_complete(
 
 /******************************************************************************
 *
-* store an error in a slot and switch state
-* to calculating the slot's dependents
+* store an error in a cell and switch state
+* to calculating the cell's dependents
 *
 ******************************************************************************/
 
@@ -2761,15 +2760,15 @@ slot_set_error(
     _InRef_     PC_EV_SLR slrp,
     _InVal_     STATUS error)
 {
-    P_EV_SLOT p_ev_slot;
+    P_EV_CELL p_ev_cell;
 
-    if(ev_travel(&p_ev_slot, slrp) > 0)
+    if(ev_travel(&p_ev_cell, slrp) > 0)
         {
-        ev_result_free_resources(&p_ev_slot->ev_result);
+        ev_result_free_resources(&p_ev_cell->ev_result);
 
-        p_ev_slot->ev_result.did_num = RPN_DAT_ERROR;
-        p_ev_slot->ev_result.arg.ev_error.status  = error;
-        p_ev_slot->ev_result.arg.ev_error.type = ERROR_NORMAL;
+        p_ev_cell->ev_result.did_num = RPN_DAT_ERROR;
+        p_ev_cell->ev_result.arg.ev_error.status  = error;
+        p_ev_cell->ev_result.arg.ev_error.type = ERROR_NORMAL;
         }
 
     return(error);
@@ -2857,7 +2856,7 @@ stack_free_resources(
             }
 
         /* blow away the circ bit for incompletely
-         * calculated and visited slots
+         * calculated and visited cells
          */
         case CALC_SLOT:
         case END_CALC:
@@ -2870,14 +2869,14 @@ stack_free_resources(
                 res = DEP_UPDATE;
 
             /* we must do travel since document may have been deleted */
-            if(res != DEP_DELETE && ev_travel(&stkentp->data.stack_in_calc.eval_block.p_ev_slot, &stkentp->slr) > 0)
-                stkentp->data.stack_in_calc.eval_block.p_ev_slot->parms.circ = 0;
+            if(res != DEP_DELETE && ev_travel(&stkentp->data.stack_in_calc.eval_block.p_ev_cell, &stkentp->slr) > 0)
+                stkentp->data.stack_in_calc.eval_block.p_ev_cell->parms.circ = 0;
             break;
             }
 
         case VISIT_SLOT:
             {
-            P_EV_SLOT p_ev_slot;
+            P_EV_CELL p_ev_cell;
             S32 res;
 
             if(upp)
@@ -2885,8 +2884,8 @@ stack_free_resources(
             else
                 res = DEP_UPDATE;
 
-            if(res != DEP_DELETE && ev_travel(&p_ev_slot, &stkentp->slr) > 0)
-                p_ev_slot->parms.circ = 0;
+            if(res != DEP_DELETE && ev_travel(&p_ev_cell, &stkentp->slr) > 0)
+                p_ev_cell->parms.circ = 0;
             break;
             }
 

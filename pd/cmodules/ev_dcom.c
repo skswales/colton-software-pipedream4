@@ -68,7 +68,7 @@ static S32
 date_time_val_to_str(
     P_U8 op_buf,
     _InRef_     PC_EV_DATE datep,
-    S32 american)
+    _InVal_     BOOL american)
 {
     S32 len;
     EV_DATE temp;
@@ -91,7 +91,7 @@ date_time_val_to_str(
 
     if(!temp.date || temp.time)
     {
-        S32 hour, minute, second;
+        S32 hours, minutes, seconds;
 
         /* separate time from date */
         if(temp.date)
@@ -103,12 +103,12 @@ date_time_val_to_str(
             temp.time = -temp.time;
         }
 
-        ss_timeval_to_hms(&temp.time, &hour, &minute, &second);
+        ss_timeval_to_hms(&temp.time, &hours, &minutes, &seconds);
 
-        if(second)
-            len += sprintf(op_buf + len, "%.2d:%.2d:%.2d", hour, minute, second);
+        if(0 != seconds)
+            len += sprintf(op_buf + len, "%.2d:%.2d:%.2d", hours, minutes, seconds);
         else
-            len += sprintf(op_buf + len, "%.2d:%.2d", hour, minute);
+            len += sprintf(op_buf + len, "%.2d:%.2d", hours, minutes);
     }
 
     return(len);
@@ -770,7 +770,7 @@ ev_decode_data(
 
 /******************************************************************************
 *
-* given a pointer to an expression slot, return a textual form for it
+* given a pointer to an expression cell, return a textual form for it
 *
 ******************************************************************************/
 
@@ -778,29 +778,29 @@ extern S32
 ev_decode_slot(
     _InVal_     EV_DOCNO docno,
     P_U8 txt_out,
-    P_EV_SLOT p_ev_slot,
+    P_EV_CELL p_ev_cell,
     _InRef_     PC_EV_OPTBLOCK p_optblock)
 {
     S32 res;
 
-    switch(p_ev_slot->parms.type)
+    switch(p_ev_cell->parms.type)
         {
         case EVS_CON_DATA:
             {
             EV_DATA data;
 
-            ev_result_to_data_convert(&data, &p_ev_slot->ev_result);
+            ev_result_to_data_convert(&data, &p_ev_cell->ev_result);
             ev_decode_data(txt_out, docno, &data, p_optblock);
             res = 0;
             break;
             }
 
         case EVS_CON_RPN:
-            res = ev_decompile(docno, txt_out, p_ev_slot->rpn.con.rpn_str, p_optblock);
+            res = ev_decompile(docno, txt_out, p_ev_cell->rpn.con.rpn_str, p_optblock);
             break;
 
         case EVS_VAR_RPN:
-            res = ev_decompile(docno, txt_out, p_ev_slot->rpn.var.rpn_str, p_optblock);
+            res = ev_decompile(docno, txt_out, p_ev_cell->rpn.var.rpn_str, p_optblock);
             break;
 
         default:

@@ -419,7 +419,7 @@ PROC_EXEC_PROTO(c_if)
 
 /******************************************************************************
 *
-* set the value of a slot
+* set the value of a cell
 *
 ******************************************************************************/
 
@@ -429,11 +429,11 @@ poke_slot(
     P_EV_DATA p_ev_data,
     _InRef_     PC_EV_SLR cur_slrp)
 {
-    P_EV_SLOT p_ev_slot;
+    P_EV_CELL p_ev_cell;
     S32 res;
 
-    /* can't overwrite formula slots */
-    if(ev_travel(&p_ev_slot, slrp) > 0 && p_ev_slot->parms.type != EVS_CON_DATA)
+    /* can't overwrite formula cells */
+    if(ev_travel(&p_ev_cell, slrp) > 0 && p_ev_cell->parms.type != EVS_CON_DATA)
         res = create_error(EVAL_ERR_UNEXFORMULA);
     #ifdef SLOTS_MOVE
     else if((slrp->docno == cur_slrp->docno) &&
@@ -446,7 +446,7 @@ poke_slot(
         EV_DATA temp;
         EV_RESULT ev_result;
 
-        ev_result_free_resources(&p_ev_slot->ev_result);
+        ev_result_free_resources(&p_ev_cell->ev_result);
 
         /* make sure we have a copy of data */
         ss_data_resource_copy(&temp, p_ev_data);
@@ -473,7 +473,7 @@ poke_slot(
 
 /******************************************************************************
 *
-* VALUE set_value(slr/range, value) - set the value of a slot
+* VALUE set_value(slr/range, value) - set the value of a cell
 *
 ******************************************************************************/
 
@@ -535,7 +535,7 @@ PROC_EXEC_PROTO(c_setvalue)
                             break;
                         }
 
-                    /* poke slot duplicates resources,
+                    /* poke cell duplicates resources,
                      * but don't poke to ourselves
                      */
                     if(!slr_equal(p_cur_slr, &rsb.slr_of_result))
@@ -1263,7 +1263,7 @@ dbase_sub_function(
         if(tracing(TRACE_MODULE_EVAL))
             {
             char buffer[BUF_EV_LONGNAMLEN];
-            ev_trace_slr(buffer, elemof32(buffer), "DBASE processing slot: $$", &cur_slot);
+            ev_trace_slr(buffer, elemof32(buffer), "DBASE processing cell: $$", &cur_slot);
             trace_0(TRACE_MODULE_EVAL, buffer);
             }
 #endif
@@ -1275,7 +1275,7 @@ dbase_sub_function(
     else if(tracing(TRACE_MODULE_EVAL))
         {
         char buffer[BUF_EV_LONGNAMLEN];
-        ev_trace_slr(buffer, elemof32(buffer), "DBASE failed slot: $$", &cur_slot);
+        ev_trace_slr(buffer, elemof32(buffer), "DBASE failed cell: $$", &cur_slot);
         trace_0(TRACE_MODULE_EVAL, buffer);
         }
 #endif

@@ -162,22 +162,22 @@ ev_external_string(
     _Out_writes_z_(elemof_buffer) P_USTR buffer/*out*/,
     _InVal_     U32 elemof_buffer)
 {
-    P_SLOT p_slot;
+    P_CELL p_cell;
     char tbuf[LIN_BUFSIZ];
 
-    if((p_slot = travel_externally(slrp->docno, slrp->col, slrp->row)) == NULL)
+    if((p_cell = travel_externally(slrp->docno, slrp->col, slrp->row)) == NULL)
         return(0);
 
-    if(p_slot->type != SL_TEXT)
+    if(p_cell->type != SL_TEXT)
         return(0);
 
-    if(!(p_slot->flags & SL_TREFS))
+    if(!(p_cell->flags & SL_TREFS))
         {
-        *outpp = p_slot->content.text;
+        *outpp = p_cell->content.text;
         return(-1);
         }
 
-    (void) expand_slot(slrp->docno, p_slot, (ROW) slrp->row, tbuf, elemof32(tbuf) /*fwidth*/,
+    (void) expand_slot(slrp->docno, p_cell, (ROW) slrp->row, tbuf, elemof32(tbuf) /*fwidth*/,
                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                        FALSE /*allow_fonty_result*/, TRUE /*cff*/);
 
@@ -191,8 +191,8 @@ ev_external_string(
 /******************************************************************************
 *
 * this routine is called by uref to update external
-* format slots with dependencies. there is a subtle difference
-* between these slots and external dependencies
+* format cells with dependencies. there is a subtle difference
+* between these cells and external dependencies
 *
 ******************************************************************************/
 
@@ -214,18 +214,18 @@ ev_ext_uref(
         case UREF_SWAP:
         case UREF_CHANGEDOC:
         case UREF_REPLACE:
-        case UREF_SWAPSLOT:
+        case UREF_SWAPCELL:
             {
-            P_SLOT tslot;
+            P_CELL tcell;
 
-            tslot = travel_externally(byslrp->docno,
+            tcell = travel_externally(byslrp->docno,
                                       (COL) byslrp->col,
                                       (ROW) byslrp->row);
 
-            assert(NULL != tslot);
+            assert(NULL != tcell);
 
             /*eportf("ex_ext_uref: text_csr_uref byoffset %d", byoffset);*/
-            (void) text_csr_uref(tslot->content.text + byoffset, upp);
+            (void) text_csr_uref(tcell->content.text + byoffset, upp);
 
             break;
             }
@@ -294,7 +294,7 @@ ev_input_poll(
 
 /******************************************************************************
 *
-* make a slot for the evaluator of the required size
+* make a cell for the evaluator of the required size
 *
 ******************************************************************************/
 
@@ -303,7 +303,7 @@ ev_make_slot(
     _InRef_     PC_EV_SLR slrp,
     P_EV_RESULT p_ev_result)
 {
-    P_SLOT sl;
+    P_CELL sl;
     P_DOCU p_docu;
     DOCNO docno;
     char justify, format;
@@ -515,21 +515,20 @@ ev_todo_check(void)
 
 /******************************************************************************
 *
-* travel to a slot and return an
-* evaluator type pointer to the slot
+* travel to a cell and return an evaluator type pointer to the cell
 * --out--
-* <0 non-eval slot
-* =0 no slot found
-* >0 eval slot
+* <0 non-evaluator cell
+* =0 no cell found
+* >0 evaluator cell
 *
 ******************************************************************************/
 
 extern S32
 ev_travel(
-    _OutRef_    P_P_EV_SLOT p_p_ev_slot,
+    _OutRef_    P_P_EV_CELL p_p_ev_cell,
     _InRef_     PC_EV_SLR p_ev_slr)
 {
-    P_SLOT p_slot;
+    P_CELL p_cell;
 
 #if 1 /* NB this is a hackers' efficient version of ev_travel(); for the official version, see below */
 
@@ -545,7 +544,7 @@ ev_travel(
         }
 #endif
 
-    *p_p_ev_slot = NULL;
+    *p_p_ev_cell = NULL;
 
     if((NO_DOCUMENT == (p_docu = p_docu_from_docno(p_ev_slr->docno)))  ||  docu_is_thunk(p_docu))
     {
@@ -559,7 +558,7 @@ ev_travel(
     if(NULL == (it = list_gotoitem(x_indexcollb(p_docu, p_ev_slr->col), p_ev_slr->row)))
         return(0);
 
-    p_slot = slot_contents(it);
+    p_cell = slot_contents(it);
 
 #else
 
@@ -572,17 +571,17 @@ ev_travel(
         }
 #endif
 
-    *p_p_ev_slot = NULL;
+    *p_p_ev_cell = NULL;
 
-    if(NULL == (p_slot = travel_externally(p_ev_slr->docno, p_ev_slr->col, p_ev_slr->row)))
+    if(NULL == (p_cell = travel_externally(p_ev_slr->docno, p_ev_slr->col, p_ev_slr->row)))
         return(0);
 
 #endif
 
-    if(p_slot->type != SL_NUMBER)
+    if(p_cell->type != SL_NUMBER)
         return(-1);
 
-    *p_p_ev_slot = &p_slot->content.number.guts;
+    *p_p_ev_cell = &p_cell->content.number.guts;
 
     return(1);
 }

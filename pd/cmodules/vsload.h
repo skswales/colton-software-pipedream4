@@ -47,7 +47,7 @@ vsload_travel(
     P_S32 minus);
 
 /*
-types of slot
+types of cell
 */
 
 #define VS_TEXT   0

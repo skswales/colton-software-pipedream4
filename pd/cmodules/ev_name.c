@@ -242,6 +242,30 @@ ensure_name_in_list(
 
 /******************************************************************************
 *
+* switch custom deletions off
+*
+******************************************************************************/
+
+extern void
+ev_custom_del_hold(void)
+{
+    custom_def.flags |= TRF_DELHOLD;
+}
+
+/******************************************************************************
+*
+* allow custom function deletions again
+*
+******************************************************************************/
+
+extern void
+ev_custom_del_release(void)
+{
+    custom_def.flags &= ~TRF_DELHOLD;
+}
+
+/******************************************************************************
+*
 * switch name deletions off
 *
 ******************************************************************************/
@@ -428,10 +452,10 @@ custom_change_id(
 
         if(mep->custom_to == id_from)
             {
-            P_EV_SLOT p_ev_slot;
+            P_EV_CELL p_ev_cell;
 
-            if(ev_travel(&p_ev_slot, &mep->byslr) > 0)
-                write_nameid(id_to, p_ev_slot->rpn.var.rpn_str + mep->byoffset);
+            if(ev_travel(&p_ev_cell, &mep->byslr) > 0)
+                write_nameid(id_to, p_ev_cell->rpn.var.rpn_str + mep->byoffset);
 
             mep->custom_to = id_to;
             custom_use_deptable.sorted = 0;
@@ -602,10 +626,10 @@ name_change_id(
 
         if(nep->nameto == id_from)
             {
-            P_EV_SLOT p_ev_slot;
+            P_EV_CELL p_ev_cell;
 
-            if(ev_travel(&p_ev_slot, &nep->byslr) > 0)
-                write_nameid(id_to, p_ev_slot->rpn.var.rpn_str + nep->byoffset);
+            if(ev_travel(&p_ev_cell, &nep->byslr) > 0)
+                write_nameid(id_to, p_ev_cell->rpn.var.rpn_str + nep->byoffset);
 
             nep->nameto = id_to;
             namtab.sorted = 0;

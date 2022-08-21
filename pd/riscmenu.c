@@ -70,7 +70,7 @@ encodesubmenu(
     BOOL short_m);
 
 static void
-goto_dep_or_sup_slot(
+goto_dep_or_sup_cell(
     _InRef_     PC_EV_SLR slrp,
     S32 get_deps,
     _InVal_     enum EV_DEPSUP_TYPES category,
@@ -357,7 +357,7 @@ iconbar_menu_handler(
 *
 ******************************************************************************/
 
-#define MENU_FUNCTION_SLOTINFO          1
+#define MENU_FUNCTION_CELLINFO          1
 #define MENU_FUNCTION_DBASE             2
 #define MENU_FUNCTION_DATE              3
 #define MENU_FUNCTION_FINANCIAL         4
@@ -375,7 +375,7 @@ iconbar_menu_handler(
 #define MENU_FUNCTION_DEFINENAME        16
 #define MENU_FUNCTION_EDITNAME          17
 
-#define MENU_FUNCTION_NUMINFO_SLOTVALUE 1
+#define MENU_FUNCTION_NUMINFO_CELLVALUE 1
 #define MENU_FUNCTION_NUMINFO_SUPSLR    2
 #define MENU_FUNCTION_NUMINFO_SUPRANGE  3
 #define MENU_FUNCTION_NUMINFO_SUPNAME   4
@@ -410,7 +410,7 @@ static menu menu_function_editname  = NULL;
 static menu menu_function_numinfo   = NULL;
 static menu menu_function_textinfo  = NULL;
 
-static menu menu_function_numinfo_slotvalue = NULL;
+static menu menu_function_numinfo_cellvalue = NULL;
 static menu menu_function_numinfo_supslr    = NULL;
 static menu menu_function_numinfo_suprange  = NULL;
 static menu menu_function_numinfo_supname   = NULL;
@@ -533,8 +533,8 @@ create_sup_dep_submenu(
         EV_DEPSUP   depsup;
         S32         itemno;
         EV_DATA     evdata;
-        P_SLOT      p_slot;
-        char        namebuf[EV_MAX_IN_LEN + 1];         /* Large buffer cos slot may be external */
+        P_CELL      p_cell;
+        char        namebuf[EV_MAX_IN_LEN + 1];         /* Large buffer cos cell may be external */
         char        valubuf[LIN_BUFSIZ + 1];
 
         cur_docno = (EV_DOCNO) current_docno();
@@ -552,12 +552,12 @@ create_sup_dep_submenu(
 
             if(evdata.did_num == RPN_DAT_SLR)
                 {
-                p_slot = travel_externally(evdata.arg.slr.docno,
+                p_cell = travel_externally(evdata.arg.slr.docno,
                                           (COL) evdata.arg.slr.col,
                                           (ROW) evdata.arg.slr.row);
-                if(p_slot)
+                if(p_cell)
                     {
-                    (void) expand_slot(evdata.arg.slr.docno, p_slot, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ,
+                    (void) expand_slot(evdata.arg.slr.docno, p_cell, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ,
                                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                                        FALSE /*allow_fonty_result*/, FALSE /*cff*/);
 
@@ -609,7 +609,7 @@ function__event_menu_filler(
         if(strlen32(entry) > 12)
             (void) xsnprintf(entry, elemof32(entry), "Slot info");
 
-        menu_entry_changetext(menu_function, MENU_FUNCTION_SLOTINFO, entry);
+        menu_entry_changetext(menu_function, MENU_FUNCTION_CELLINFO, entry);
 #endif
 
         /* createfunctionsubmenu only creates and attachs a submenu if it doesn't already exist, so all   */
@@ -656,17 +656,17 @@ function__event_menu_filler(
             }
         createfunctionsubmenu(MENU_FUNCTION_EDITNAME , &menu_function_editname , Edit_name_STR                , EV_RESO_NAMES);
 
-        /* The slot info entry may already have a numinfo or textinfo menu structure attached, if so destroy it, */
-        /* then create and attach a structure appropriate to slot (curcol,currow).                               */
+        /* The cell info entry may already have a numinfo or textinfo menu structure attached, if so destroy it, */
+        /* then create and attach a structure appropriate to cell (curcol,currow).                               */
 
         if(menu_function_numinfo)
             {
-            menu_submenu(menu_function, MENU_FUNCTION_SLOTINFO, NULL);
+            menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, NULL);
             menu_dispose(&menu_function_numinfo, 0);
             menu_function_numinfo = NULL;
 
-            menu_dispose(&menu_function_numinfo_slotvalue, 0);
-            menu_function_numinfo_slotvalue = NULL;
+            menu_dispose(&menu_function_numinfo_cellvalue, 0);
+            menu_function_numinfo_cellvalue = NULL;
 
             menu_dispose(&menu_function_numinfo_depslr, 0);
             menu_function_numinfo_depslr = NULL;
@@ -689,7 +689,7 @@ function__event_menu_filler(
 
         if(menu_function_textinfo)
             {
-            menu_submenu(menu_function, MENU_FUNCTION_SLOTINFO, NULL);
+            menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, NULL);
             menu_dispose(&menu_function_textinfo, 0);
             menu_function_textinfo = NULL;
 
@@ -708,8 +708,8 @@ function__event_menu_filler(
             }
         else
             {
-            P_SLOT tslot = travel_here();
-            U8 type = (NULL != tslot) ? tslot->type : SL_TEXT;
+            P_CELL tcell = travel_here();
+            U8 type = (NULL != tcell) ? tcell->type : SL_TEXT;
             char coord[LIN_BUFSIZ];
 
             (void) write_ref(coord, elemof32(coord), current_docno(), curcol, currow); /* always current doc */
@@ -717,7 +717,7 @@ function__event_menu_filler(
             switch(type)
                 {
                 case SL_NUMBER:
-                    /* got number slot */
+                    /* got number cell */
                     set_ev_slr(&menu_function_slr, curcol, currow);
 
                     menu_function_numinfo = menu_new_c(menu_function_numinfo_title, menu_function_numinfo_entries);
@@ -726,7 +726,7 @@ function__event_menu_filler(
                     char  entry[LIN_BUFSIZ + 1];
                     char  valubuf[LIN_BUFSIZ + 1];
 
-                    (void) expand_slot(current_docno(), tslot, currow, valubuf, LIN_BUFSIZ,
+                    (void) expand_slot(current_docno(), tcell, currow, valubuf, LIN_BUFSIZ,
                                        DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
                                        FALSE /*allow_fonty_result*/, FALSE /*cff*/);
 
@@ -737,11 +737,11 @@ function__event_menu_filler(
                     substitute_spaces(entry, 0xA0);
 
                     /* create menu 'unparsed' cos entry may contain ',' */
-                    menu_function_numinfo_slotvalue = menu_new_unparsed(menu_function_numinfo_value_title, entry);
+                    menu_function_numinfo_cellvalue = menu_new_unparsed(menu_function_numinfo_value_title, entry);
                     }
-                    menu_submenu (menu_function_numinfo, MENU_FUNCTION_NUMINFO_SLOTVALUE, menu_function_numinfo_slotvalue);
-                    menu_setflags(menu_function_numinfo, MENU_FUNCTION_NUMINFO_SLOTVALUE, FALSE /*not ticked*/,
-                                                                                 (NULL == menu_function_numinfo_slotvalue) /*greyed out*/);
+                    menu_submenu (menu_function_numinfo, MENU_FUNCTION_NUMINFO_CELLVALUE, menu_function_numinfo_cellvalue);
+                    menu_setflags(menu_function_numinfo, MENU_FUNCTION_NUMINFO_CELLVALUE, FALSE /*not ticked*/,
+                                                                                 (NULL == menu_function_numinfo_cellvalue) /*greyed out*/);
 
                     create_sup_dep_submenu(MENU_FUNCTION_NUMINFO_SUPSLR     , &menu_function_numinfo_supslr,
                                            menu_function_numinfo_slr_title  , EV_DEPSUP_SLR  , FALSE, menu_function_numinfo);
@@ -765,13 +765,13 @@ function__event_menu_filler(
 
                 case SL_TEXT:
                     {
-                    BOOL can_compile_text = (NULL != tslot) ? (!is_protected_slot(tslot) && !isslotblank(tslot)) : FALSE;
+                    BOOL can_compile_text = (NULL != tcell) ? (!is_protected_slot(tcell) && !isslotblank(tcell)) : FALSE;
 
                     set_ev_slr(&menu_function_slr, curcol, currow);
 
                     menu_function_textinfo =
                         menu_new_c(
-                            (NULL != tslot)
+                            (NULL != tcell)
                                 ? menu_function_textinfo_title
                                 : menu_function_textinfo_title_blank,
                             menu_function_textinfo_entries);
@@ -796,19 +796,19 @@ function__event_menu_filler(
         if(menu_function_numinfo)
             {
             /* set menu entry to 'num. A1' */
-            menu_submenu(menu_function, MENU_FUNCTION_SLOTINFO, menu_function_numinfo);
-            menu_setflags(menu_function, MENU_FUNCTION_SLOTINFO, FALSE /*not ticked*/, FALSE /*not greyed*/);
+            menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, menu_function_numinfo);
+            menu_setflags(menu_function, MENU_FUNCTION_CELLINFO, FALSE /*not ticked*/, FALSE /*not greyed*/);
             }
         else if(menu_function_textinfo)
             {
             /* set menu entry to 'text A1' */
-            menu_submenu(menu_function, MENU_FUNCTION_SLOTINFO, menu_function_textinfo);
-            menu_setflags(menu_function, MENU_FUNCTION_SLOTINFO, FALSE /*not ticked*/, FALSE /*not greyed*/);
+            menu_submenu(menu_function, MENU_FUNCTION_CELLINFO, menu_function_textinfo);
+            menu_setflags(menu_function, MENU_FUNCTION_CELLINFO, FALSE /*not ticked*/, FALSE /*not greyed*/);
             }
         else
             {
             /* just grey it out */
-            menu_setflags(menu_function, MENU_FUNCTION_SLOTINFO, FALSE /*not ticked*/, TRUE /*greyed out*/);
+            menu_setflags(menu_function, MENU_FUNCTION_CELLINFO, FALSE /*not ticked*/, TRUE /*greyed out*/);
             }
         }
 
@@ -896,33 +896,33 @@ function__event_menu_proc(
             EditName_fn(EV_RESO_NAMES, (*hit++)-1);     /* -1 because resource item numbers count from 0, */
             break;                                      /* whilst menu entries count from 1               */
 
-        case MENU_FUNCTION_SLOTINFO:
+        case MENU_FUNCTION_CELLINFO:
             if(menu_function_numinfo)
                 {
                 switch(*hit++)
                     {
                     case MENU_FUNCTION_NUMINFO_SUPSLR:
-                        goto_dep_or_sup_slot(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_SLR, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_SLR, (*hit++)-1);
                         break;
 
                     case MENU_FUNCTION_NUMINFO_SUPRANGE:
-                        goto_dep_or_sup_slot(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_RANGE, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_RANGE, (*hit++)-1);
                         break;
 
                     case MENU_FUNCTION_NUMINFO_SUPNAME:
-                        goto_dep_or_sup_slot(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_NAME, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, FALSE /* SUP */, EV_DEPSUP_NAME, (*hit++)-1);
                         break;
 
                     case MENU_FUNCTION_NUMINFO_DEPSLR:
-                        goto_dep_or_sup_slot(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
                         break;
 
                     case MENU_FUNCTION_NUMINFO_DEPRANGE:
-                        goto_dep_or_sup_slot(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
                         break;
 
                     case MENU_FUNCTION_NUMINFO_DEPNAME:
-                        goto_dep_or_sup_slot(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
                         break;
                     }
                 }
@@ -935,15 +935,15 @@ function__event_menu_proc(
                         break;
 
                     case MENU_FUNCTION_TEXTINFO_DEPSLR:
-                        goto_dep_or_sup_slot(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_SLR, (*hit++)-1);
                         break;
 
                     case MENU_FUNCTION_TEXTINFO_DEPRANGE:
-                        goto_dep_or_sup_slot(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_RANGE, (*hit++)-1);
                         break;
 
                     case MENU_FUNCTION_TEXTINFO_DEPNAME:
-                        goto_dep_or_sup_slot(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
+                        goto_dep_or_sup_cell(&menu_function_slr, TRUE /* DEP */, EV_DEPSUP_NAME, (*hit++)-1);
                         break;
                     }
                 }
@@ -965,7 +965,7 @@ function__event_menu_proc(
 }
 
 static void
-goto_dep_or_sup_slot(
+goto_dep_or_sup_cell(
     _InRef_     PC_EV_SLR slrp,
     S32 get_deps,
     _InVal_     enum EV_DEPSUP_TYPES category,
@@ -976,7 +976,7 @@ goto_dep_or_sup_slot(
     EV_DEPSUP   depsup;
     EV_DATA     evdata;
 
-    trace_0(TRACE_APP_EXPEDIT, "goto_dep_or_sup_slot");
+    trace_0(TRACE_APP_EXPEDIT, "goto_dep_or_sup_cell");
 
     cur_docno = (EV_DOCNO) current_docno();
 
