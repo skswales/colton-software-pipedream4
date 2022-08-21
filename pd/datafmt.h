@@ -35,6 +35,7 @@
 #define FORMFEED                ((uchar) 0x0C)
 #define FUNNYSPACE              ((uchar) 0x0E)
 #define SLRLD1                  ((uchar) 0x10)
+/* DO NOT CHANGE the FIRST_HIGHLIGHT..LAST_HIGHLIGHT range - these are 'well-known' and inserted by various spreadsheet users */
 #define FIRST_HIGHLIGHT         ((uchar) 0x18)
 #define FIRST_HIGHLIGHT_TEXT    ((uchar) '1')
 #define CMDLDI                  (FIRST_HIGHLIGHT + 1)
@@ -45,15 +46,10 @@
 #define SPACE                   ((uchar) 0x20)
 #define DUMMYHAT                FORMFEED
 #define COMMA                   ((uchar) ',')
-#define BACKSLASH               ((uchar) '\\')
-#define FORESLASH               ((uchar) '/')
-#define COLON                   ((uchar) ':')
-#define SINGLE_QUOTE            ((uchar) '\'')
 #define QUOTES                  ((uchar) '\"')
 #define CTRLDI                  ((uchar) '|')
 #define QUERY                   ((uchar) '?')
 #define DOT                     ((uchar) '.')
-#define DELETE                  ((uchar) 0x7F)
 
 typedef enum
 {

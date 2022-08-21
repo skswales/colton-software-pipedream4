@@ -2917,7 +2917,7 @@ sndchr(
     if(sqobit  &&  !riscos_printing)
         return(prnout(ch));
 
-    if((ch >= SPACE)  &&  (ch != DELETE))
+    if((ch >= CH_SPACE)  &&  (ch != CH_DELETE))
         {
         if(highlights_on)
             wrch_h(ch);
@@ -3363,7 +3363,7 @@ extern void
 twzchr(
     char ch)
 {
-    ch = (ch == DELETE)
+    ch = (ch == CH_DELETE)
                 ?   '?'
                 :
          ishighlight(ch)

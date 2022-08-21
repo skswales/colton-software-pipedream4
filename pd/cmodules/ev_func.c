@@ -2182,8 +2182,8 @@ round_common(
     default: default_unhandled();
 #if CHECKING
     case RPN_FNV_ROUND:
-        f64 = floor(f64 + 0.5); /* got a positive number here */
 #endif
+        f64 = floor(f64 + 0.5); /* got a positive number here */
         break;
     }
 

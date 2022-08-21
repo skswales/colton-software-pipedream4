@@ -61,7 +61,6 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 %CDir                                           <pd$Disc>.Z.Resource.CmdFiles
 %Copy <ap$Resource$Dir>.CmdFiles.CopyDelete     <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
 %Copy <ap$Resource$Dir>.CmdFiles.Indent5        <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.CmdFiles.PD4Keys        <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
 
 %CDir                                           <pd$Disc>.Z.Resource.DictDefn
 %Copy <ap$Resource$Dir>.DictDefn.English        <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v

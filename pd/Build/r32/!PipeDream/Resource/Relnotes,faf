@@ -71,6 +71,15 @@ obtained from
 
 <H2>Release history</H2>
 
+<H4>4.52/05 (16 Jul 2014)</H4>
+
+<P>Problem with ROUND() spreadsheet function fixed.</P>
+
+<P>Improved text and layout of Save/Discard/Cancel dialogue box on exit with modified document(s).</P>
+
+<P>PD4Keys command file is no longer shipped - it was only there to revert from PD3Keys.</P>
+
+
 <H4>4.52/04 (04 Jul 2014)</H4>
 
 <P>Issue with PipeDream's font cache mechanism could sometimes lead to
@@ -149,7 +158,7 @@ they do not modify flags, so do not attempt to restore them.</P>
 <H4>4.52/01 (09 Feb 2014)</H4>
 
 <P>Initialisation order with flex and dynamic areas fixed. Caused exception
-on shutdown if fonts had been used in any documents when a dyanamic area had
+on shutdown if fonts had been used in any documents when a dynamic area had
 been created (bug was introduced in 4.51).</P>
 
 
@@ -255,7 +264,7 @@ documents themselves having been dropped many many moons ago).</P>
 contents of a string cell in the same way as a text cell would be. Prior to
 this version, the display of string cells containing text @-field sequences
 was inconsistent (PipeDream did try to use font and colour changes, but not
-date, title etc expansion) and was in fact broken.</P>
+date, title etc. expansion) and was in fact broken.</P>
 
 <P>Adjust-clicking the OK button in dialogue boxes to allow sub-menu
 persistence works again (it was broken for most dialogue boxes in 4.50/36
@@ -302,7 +311,7 @@ editing as they do specifically cater for this case:
 a transparent background so as to conform with textured window backgrounds.</P>
 
 <P>Background colour of the text section in the splash screen adjusted to be
-closer to that of the image backrgound on high-colour displays.</P>
+closer to that of the image background on high-colour displays.</P>
 
 <P>PD3Keys command file is no longer shipped - you've all had plenty of time
 to adapt!</P>
@@ -312,7 +321,7 @@ to adapt!</P>
 
 <P>Save processing now always ignores RISC_OSLib's initially poorly defined
 xfersend_file_is_safe() state unless the save has been performed using
-xfersend() - ie by dragging the file icon or clicking OK in the Save
+xfersend() - i.e. by dragging the file icon or clicking OK in the Save
 dialogue box. This fixes the long-standing \Fgs failure to reset the file
 modified flag problem.</P>
 
@@ -353,10 +362,10 @@ processes more words per null event).</P>
 
 <P>HTML Help now refers to the online PipeDream Reference Guide.</P>
 
-<P>When dragging, eg column width adjusting, inappropriate BubbleHelp for
+<P>When dragging, e.g. column width adjusting, inappropriate BubbleHelp for
 PipeDream document windows is suppressed.</P>
 
-<P>Files loaded from sources that are not deemed as 'safe', eg as a selection
+<P>Files loaded from sources that are not deemed as 'safe', e.g. as a selection
 dragged to the PipeDream icon from another editor, are once again marked as
 modified and untitled, rather than as unmodified and with the name of the
 Scrap file used for the transfer (was broken in 4.50/41).</P>
@@ -369,7 +378,7 @@ document window to be re-opened at a 'new document' position.</P>
 
 <P>PipeDream's dialogue box processing no longer greedily steals the caret
 back to the current field in open dialogue boxes, so allowing the user to
-perform other useful tasks (eg file rename, directory creation) whilst in a
+perform other useful tasks (e.g. file rename, directory creation) whilst in a
 standalone dialogue box such as Save file.</P>
 
 <P>The Save file dialogue box now attempts to restore the caret on closing
@@ -408,7 +417,7 @@ Please refer to the ReadMe in the Choices directory for further details.</P>
 <H4>4.50/43 (09 May 2013)</H4>
 
 <P>The spreadsheet evaluator and general document internal identifiers have
-been unified (like in Fireworkz) to rid PipeDream of this artifical and
+been unified (like in Fireworkz) to rid PipeDream of this artificial and
 unnecessary distinction. This had hampered getting to the bottom of many
 external reference and supporting document loading problems through the
 years. It also simplifies the document handling to spreadsheet module
@@ -555,7 +564,7 @@ screen - the colour change is automatically cancelled at the end of a cell
 rather than at the end of the printout or end of the line.</P>
 
 <P>PipeDream no longer incorrectly warns about saving to itself when Return is
-pressed in Save dialog box with mouse pointer over the PipeDream window.</P>
+pressed in Save dialogue box with mouse pointer over the PipeDream window.</P>
 
 <P>Fixed potential for evaluator crash (esp. custom functions) with
 zero-length strings that has existed since 4.50/08.</P>
@@ -569,16 +578,16 @@ filename possibility.</P>
 
 <P>Allow matrix inverse to be calculated for n &gt; 3.</P>
 
-<P>BIN(), FLIP(), FORMULA_TEXT(), MEDIAN(), RANK(), SORT(), SPEARMAN(), TEXT()
-functions backported from Fireworkz (see functions added since 4.50/00
-below).</P>
+<P>BIN(), FLIP(), FORMULA_TEXT(), MEDIAN(), RANK(), SORT(), SPEARMAN(),
+TEXT() spreadsheet functions backported from Fireworkz (see functions added
+since 4.50/00 below).</P>
 
-<P>CTERM() function can now take negative fv and pv arguments to calculate
-debt accrual (as in Fireworkz).</P>
+<P>CTERM() spreadsheet function can now take negative fv and pv arguments to
+calculate debt accrual (as in Fireworkz).</P>
 
-<P>INT() function now performs rounding (at the 14th significant place) such
-that formulas which are affected by the imprecise floating point
-representation of fractional numbers eg INT((0.06-0.02)/2E-6) yield the
+<P>INT() spreadsheet function now performs rounding (at the 14th significant
+place) such that formulas which are affected by the imprecise floating point
+representation of fractional numbers e.g. INT((0.06-0.02)/2E-6) yield the
 correct integer value.</P>
 
 <P>Ships with Master dictionary again (oops).</P>
@@ -652,7 +661,7 @@ dialogue boxes towards the bottom right of the screen.</P>
 the caret (in fact a short distance right and down), as originally intended.</P>
 This had in fact been broken since the early days of PipeDream 3!
 
-<P>Larger dialogue box margins to better accomodate 3-D internal window
+<P>Larger dialogue box margins to better accommodate 3-D internal window
 borders and more modern, less cramped, style.</P>
 
 <P>Writable icons use RISC&nbsp;OS Style Guide compliant appearance and size.</P>
@@ -774,7 +783,7 @@ user and organisation name in the splash screen and Info box.</P>
 <H4>4.50/23 (10 Aug 2000)</H4>
 
 <P>PipeDream documents can now be saved with leafnames longer than 12
-characters where this is allowed, eg RISC&nbsp;OS 4 new format hard discs,
+characters where this is allowed, e.g. RISC&nbsp;OS 4 new format hard discs,
 ADFS E+/F+ format floppies and RAM discs. This may also work on earlier
 systems with the Longnames module loaded or into archive files, but this has
 not been tested.</P>
@@ -784,8 +793,8 @@ not been tested.</P>
 
 <H4>4.50/22 (11 Apr 1999)</H4>
 
-<P>Range over which combin() and permut() functions work increased, avoiding
-integer overflow.</P>
+<P>Range over which COMBIN() and PERMUT() spreadsheet functions work
+increased, avoiding integer overflow.</P>
 
 
 <H4>4.50/21 (17 Jan 1999)</H4>
@@ -796,7 +805,7 @@ been broken since 4.50/08.</P>
 <P>E format numbers in chart axes no longer contain superfluous commas.</P>
 
 <P>@C:r,g,b@ can be used to set the colour of the following text on a line
-(only when using fonts and RISC&nbsp;OS 3.5 or later) eg aaa@C:240,0,0@bbb would
+(only when using fonts and RISC&nbsp;OS 3.5 or later) e.g. aaa@C:240,0,0@bbb would
 display aaa followed by bbb in red. Use @C@ to restore normal (black).</P>
 Versions prior to this one will display the full @ sequence instead of the
 colour change.</P>
@@ -806,7 +815,7 @@ colour change.</P>
 <P>Superfluous !Help file removed from Resources directory; PipeDream always
 uses the one from the main !PipeDream directory, as does the RISC&nbsp;OS Filer.</P>
 
-<P>First full (ie non-upgrade) version of PipeDream 4.5 released.</P>
+<P>First full (i.e. non-upgrade) version of PipeDream 4.5 released.</P>
 
 
 <H4>4.50/20 (14 Nov 1998)</H4>
@@ -823,7 +832,7 @@ uses the one from the main !PipeDream directory, as does the RISC&nbsp;OS Filer.
 <P>Dialogue boxes dynamically modified on RISC&nbsp;OS 3.1 to use menu-type icons
 no longer force an explicit ESG (used to set ESG 15) to avoid unsetting
 radio buttons in the dialogue box. The templates have been modified to
-accomodate this.</P>
+accommodate this.</P>
 
 
 <H4>4.50/13 (13 Nov 1997)</H4>
@@ -859,11 +868,11 @@ would try to redraw an icon in a dialogue box that no longer exists.</P>
 
 <P>Delete Row In Column now sets file modified.</P>
 
-<P>PROPER("o'connor") now correctly returns "O'Connor".</P>
+<P>PROPER("o'connor") spreadsheet function now correctly returns "O'Connor".</P>
 
-<P>PROPER("barnes-wallis") now correctly returns "Barnes-Wallis".</P>
+<P>PROPER("barnes-wallis") spreadsheet function now correctly returns "Barnes-Wallis".</P>
 
-<P>VALUE() function fixed to return 0 when presented with input that doesn't
+<P>VALUE() spreadsheet function fixed to return 0 when presented with input that doesn't
 yield a numeric result.</P>
 
 
@@ -873,7 +882,7 @@ yield a numeric result.</P>
 order to prevent itself running out of memory whilst starting to print when
 this is invoked from the button bar.</P>
 
-<P>You can now raise negative numbers to odd fractional powers eg (-8)^(1/3)
+<P>You can now raise negative numbers to odd fractional powers e.g. (-8)^(1/3)
 will find the cube root of two - in fact the cube root with zero imaginary
 part.</P>
 
@@ -906,7 +915,7 @@ already checked.</P>
 
 <P>Chart-&gt;Selection-&gt;Fill style dialogue box now displays file name correctly.</P>
 
-<P>monthname function corrected (was one month out).</P>
+<P>MONTHNAME() spreadsheet function corrected (was one month out).</P>
 
 <P>row number alignment now behaves the same on all systems.</P>
 
@@ -930,7 +939,7 @@ focus colour.</P>
 
 <H4>4.50/06 (01 Dec 1996)</H4>
 
-<P>weeknumber function added.</P>
+<P>WEEKNUMBER() spreadsheet function added.</P>
 
 <P>@D@ now outputs century prefix in English/American format as well as Text.</P>
 
@@ -1287,7 +1296,7 @@ properly. If an chart is created and a copy of the chart is saved out as a
 drawfile (with a different name) then the chart will not reload after being
 closed down. It will reload successfully if PipeDream is restarted.</P>
 
-<P>Exporting charts directly to other applications (eg EasyWriter) as Draw
+<P>Exporting charts directly to other applications (e.g. EasyWriter) as Draw
 files via the Message_RAMFetch / Message_RAMTransfer mechanism only works if
 the application being exported to asks for the whole file in one go as the
 protocol is stopped by PipeDream after the first Message_RAMFetch is

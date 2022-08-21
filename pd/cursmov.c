@@ -451,7 +451,7 @@ mark_row_praps(
         { /* search for text-at chars and highlights and anything nasty */
         const uchar text_at_char = get_text_at_char();
         for(c = sl->content.text; *c; c++)
-            if((text_at_char == *c)  ||  (*c == DELETE)  ||  (*c < SPACE))
+            if((text_at_char == *c)  ||  (*c == CH_DELETE)  ||  (*c < CH_SPACE))
                 {
                 trace_0(TRACE_APP_PD4, "slot has highlights");
                 goto mark_and_return;

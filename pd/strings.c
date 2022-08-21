@@ -160,8 +160,8 @@ string(68, save_edited_file_Zs_STR,             "Do you want to save edited file
 string(423,close_dependent_charts_winge_STR,    "This file has dependent unsaved charts. Do you want to discard them?");
 string(424,save_edited_chart_Zs_STR,            "'%s' has not been saved. Do you want to save it?");
 
-string(53, Zd_file_edited_in_Zs_are_you_sure_STR,   "%d file edited but not saved in %s: do you want to save or discard it?");
-string(54, Zd_files_edited_in_Zs_are_you_sure_STR,  "%d files edited but not saved in %s: do you want to save or discard them?");
+string(53, Zd_file_edited_in_Zs_are_you_sure_STR,   "%d file edited but not saved in %s."); /*: do you want to save or discard it?");*/
+string(54, Zd_files_edited_in_Zs_are_you_sure_STR,  "%d files edited but not saved in %s."); /*: do you want to save or discard them?");*/
 
 string(69, close_dependent_files_winge_STR,     "This file has dependent documents. Do you want to close it?");
 string(70, close_dependent_links_winge_STR,     "This file has dependent HotLinks. Do you want to close it?");

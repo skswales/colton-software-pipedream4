@@ -279,7 +279,7 @@ bitstr(
                 {
                 /* check for C0 control characters & Acorn C1 redefs */
                 if(expand_ctrl                                                                                         &&
-                    ((*from < SPACE) || (*from == DELETE) ||
+                    ((*from < CH_SPACE) || (CH_DELETE == *from) ||
                      (riscos_fonts  &&  (*from >= 128)  &&  (*from < 160)  &&  !font_charwid(current_font, *from)))
                                                                                                                        )
                     {
