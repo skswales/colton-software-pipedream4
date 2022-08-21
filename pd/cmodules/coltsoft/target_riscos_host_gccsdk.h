@@ -4,9 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2016 Stuart Swales */
-
-/* SKS 2012 */
+/* Copyright (C) 2012-2018 Stuart Swales */
 
 #ifndef __target_riscos_host_gccsdk_h
 #define __target_riscos_host_gccsdk_h
@@ -15,9 +13,7 @@
 #error       __CHAR_UNSIGNED__ must be set (use -funsigned-char switch)
 #endif
 
-#ifndef _In_reads_
-#include "cmodules/coltsoft/no-sal.h"
-#endif
+#include "cmodules/coltsoft/ns-sal.h"
 
 #undef  F64_IS_64_BIT_ALIGNED
 #define F64_IS_64_BIT_ALIGNED 1

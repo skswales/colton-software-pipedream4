@@ -1,5 +1,5 @@
---- _src	2009-05-31 18:58:58 +0100
-+++ _dst	2013-09-03 13:25:57 +0100
+--- _src	2009-05-31 18:58:58.000000000 +0100
++++ _dst	2016-09-16 14:50:26.450000000 +0100
 @@ -35,6 +35,8 @@
   *
   */
@@ -98,7 +98,7 @@
 +  if (to == 0) return 0;
 +
 +  /* Make a copy of the given dbox template and its workspace */
-+  if(NULL == (w = template_copy_new(from)))
++  if(NULL == (w = (wimp_wind *) template_copy_new(from)))
 +  {
 +    free(to);
 +    return 0;
@@ -151,8 +151,8 @@
    wimpt_noerr(wimp_delete_wind(d->w));
 +#else /* SKS_ACW */
 +  {
-+  wimp_w w = d->w;
-+  wimpt_complain(win_delete_wind(&w));
++  HOST_WND window_handle = d->w;
++  (void) wimpt_complain(winx_delete_window(&window_handle));
 +  } /* block */
 +#endif /* SKS_ACW */
    dbox__dispose(d);
@@ -257,7 +257,7 @@
    wimpt_noerr(wimp_set_icon_state (d->w, dbox__fieldtoicon(f),
                                     wimp_INOSELECT, wimp_INOSELECT));
 +#else /* SKS_ACW */
-+  win_fadefield(dbox_syshandle(d), dbox_field_to_icon(ed, f));
++  winf_fadefield(dbox_window_handle(d), dbox_field_to_icon_handle(ed, f));
 +#endif /* SKS_ACW */
  }
  
@@ -269,7 +269,7 @@
    wimpt_noerr(wimp_set_icon_state(d->w, dbox__fieldtoicon(f),
                                    0, wimp_INOSELECT));
 +#else /* SKS_ACW */
-+  win_unfadefield(dbox_syshandle(d), dbox_field_to_icon(ed, f));
++  winf_unfadefield(dbox_window_handle(d), dbox_field_to_icon_handle(ed, f));
 +#endif /* SKS_ACW */
  }
  
@@ -285,7 +285,7 @@
      wimpt_noerr(wimp_set_icon_state(d->w, dbox__fieldtoicon(f), 0, 0));
    }
 +#else /* SKS_ACW */
-+  win_setfield(d->w, dbox_field_to_icon(d, f), value);
++  winf_setfield(d->w, dbox_field_to_icon_handle(d, f), value);
 +#endif /* SKS_ACW */
  }
  
@@ -300,7 +300,7 @@
    }
    buffer[j] = 0;
 +#else /* SKS_ACW */
-+  win_getfield(d->w, dbox_field_to_icon(d, f), buffer, size);
++  winf_getfield(d->w, dbox_field_to_icon_handle(d, f), buffer, size);
 +#endif /* SKS_ACW */
    tracef1("GetField returns %s.\n", (int) buffer);
  }
@@ -324,10 +324,10 @@
 +  switch(ftype) {
 +  case dbox_FONOFF:
 +  case dbox_FACTION:
-+      win_setonoff(d->w, dbox_field_to_icon(d, f), (n != 0));
++      winf_setonoff(d->w, dbox_field_to_icon_handle(d, f), (n != 0));
 +      break;
 +  default:
-+      win_setint(d->w, dbox_field_to_icon(d, f), n);
++      winf_setint(d->w, dbox_field_to_icon_handle(d, f), n);
 +      break;
 +  }
 +#endif /* SKS_ACW */
@@ -350,10 +350,10 @@
 +  switch(dbox__iconfieldtype(iptr)) {
 +  case dbox_FONOFF:
 +  case dbox_FACTION:
-+    n = win_getonoff(d->w, dbox_field_to_icon(d, f));
++    n = winf_getonoff(d->w, dbox_field_to_icon_handle(d, f));
 +    break;
 +  default:
-+    n = win_getint(d->w, dbox_field_to_icon(d, f), 0);
++    n = winf_getint(d->w, dbox_field_to_icon_handle(d, f), 0);
 +    break;
 +  }
 +#endif /* SKS_ACW */
@@ -399,7 +399,7 @@
 +        /* give it a woggle now, restore state after */
 +        icon_to_select = (wimp_i) hit_j;
 +        for(woggle_count = 0; woggle_count < 5; ++woggle_count)
-+            win_invertfield(w, icon_to_select);
++            winf_invertfield(w, icon_to_select);
 +        }
 +    else if(esg)
 +        {
@@ -415,16 +415,16 @@
 +                if(esg_first == (wimp_i) -1)
 +                    esg_first = k; /* found the first member of this ESG */
 +
-+                wimpt_safe(wimp_get_icon_info(w, k, &icon));
++                (void) wimpt_complain(wimp_get_icon_info(w, k, &icon));
 +                if(icon.flags & wimp_ISELECTED)
 +                    {
 +                    esg_selected = k;
 +                    if(adjustclicked  ||  (k != (wimp_i) hit_j))
 +                        {
 +                        /* if found a selected one turn it off if adjustclicked or not the right one */
-+                        wimpt_complain(wimp_set_icon_state(w, esg_selected,
-+                                                           /* EOR */ wimp_ISELECTED,
-+                                                           /* BIC */ (wimp_iconflags) 0));
++                        (void) wimpt_complain(wimp_set_icon_state(w, esg_selected,
++                                                                  /* EOR */ wimp_ISELECTED,
++                                                                  /* BIC */ (wimp_iconflags) 0));
 +                        }
 +                    else
 +                        {
@@ -480,7 +480,7 @@
 +        }
 +
 +    if(allow_invert)
-+        win_invertfield(w, icon_to_select);
++        winf_invertfield(w, icon_to_select);
 +
 +    /* ensure hit looked like it came from a left button click */
 +    e = wimpt_last_event();
@@ -875,7 +875,7 @@
 +      {
 +        c.height = -1; /* calc x,y,h from icon/index */
 +        tracef2("Setting caret in icon %i, index = %i\n", c.i, c.index);
-+        wimpt_complain(wimp_set_caret_pos(&c));
++        (void) wimpt_complain(wimp_set_caret_pos(&c));
 +      }
 +
        break;
@@ -935,7 +935,7 @@
 +  }
 +  else
 +  { os_error *er;
-+    er = win_create_wind(d->p_window, &d->w, dbox__wimp_event_handler, d);
++    er = winx_create_window((WimpWindowWithBitset *) d->p_window, (HOST_WND *) &d->w, dbox__wimp_event_handler, d);
 +    if (er != 0) {
 +      *errorp = er->errmess;
 +      dbox__dispose(d);
@@ -999,9 +999,9 @@
 +  else
 +  {
 +    tracef0("Move dbox to near pointer\n");
-+    wimpt_safe(wimp_get_point_info(&m));
++    (void) wimpt_complain(wimp_get_point_info(&m));
 +    m.x -= 64 /*32*/; /* try to be a bit into it */
-+    m.y += 64 /*32*/; /* SKS 23oct96 make distance consistent with Fireworkz dialogs */
++    m.y += 64 /*32*/; /* SKS 23oct96 make distance consistent with Fireworkz dialogue boxes */
 +
      if (d->posatcaret) {
        /* move to near the caret. */
@@ -1014,10 +1014,10 @@
 -          c.y = c.y + (s.o.box.y1 - s.o.y);
 +      if ((e->e == wimp_EKEY)) {
 +        /* move to near the caret if it's in a window */
-+        wimpt_safe(wimp_get_caret_pos(&c));
++        (void) wimpt_complain(wimp_get_caret_pos(&c));
 +        if(c.w != (wimp_w) -1) {
 +          tracef0("Move dbox to near caret.\n");
-+          wimpt_safe(wimp_get_wind_state(c.w, &ws));
++          (void) wimpt_complain(wimp_get_wind_state(c.w, &ws));
 +          c.x = c.x + (ws.o.box.x0 - ws.o.x);
 +          c.y = c.y + (ws.o.box.y1 - ws.o.y);
 +
@@ -1051,7 +1051,7 @@
 +  {
 +    /* this is a dbox that is actually part of the menu tree */
 +    tracef0("opening dbox as top-level menu (submenu)");
-+    wimpt_complain(win_create_submenu(d->w, m.x, m.y));
++    (void) wimpt_complain(winx_create_submenu(d->w, m.x, m.y));
 +  }
 +  else
 +  {
@@ -1079,13 +1079,13 @@
 +    }
 +
 +    if(isstatic) {
-+      wimpt_complain(win_open_wind(&o));
++      (void) wimpt_complain(winx_open_window((WimpOpenWindowBlock *) &o));
      } else {
 -      dbox__submenu = d->w; /* there's only ever one. */
 -      wimp_create_menu((wimp_menustr*) d->w, o.box.x0, o.box.y1);
 +      /*dbox__submenu = d->w;*/ /* there's only ever one. */
 +      tracef0("opening dbox as top-level menu (not submenu)");
-+      wimpt_complain(win_create_menu(d->w, o.box.x0, o.box.y1));
++      (void) wimpt_complain(winx_create_menu(d->w, o.box.x0, o.box.y1));
      }
  
 -    tracef0("Dialog box shown.\n");
@@ -1119,13 +1119,13 @@
 +#else /* SKS_ACW */
 +      if(note_position) { /* stash the window position */
 +        wimp_wstate ws;
-+        wimpt_safe(wimp_get_wind_state(d->w, &ws));
++        (void) wimpt_complain(wimp_get_wind_state(d->w, &ws));
 +        noted_position.x = (ws.o.box.x0 - ws.o.x);
 +        noted_position.y = (ws.o.box.y1 - ws.o.y);
 +        noted_position.noted = TRUE;
 +      }
 +      tracef0("hiding non-submenu dbox.\n");
-+      wimpt_complain(win_close_wind(d->w));
++      (void) wimpt_complain(winx_close_window(d->w));
 +#endif /* SKS_ACW */
    }
 +
@@ -1227,7 +1227,7 @@
 +            break;
 +            }
 +
-+        wimpt_safe(wimp_get_caret_pos(&caret));
++        if(wimpt_complain(wimp_get_caret_pos(&caret))) { result = dbox_CLOSE; break; }
 +
 +        if(d->caret_set)
 +            { /*EMPTY*/ /* SKS 20130523 don't repeat */
@@ -1248,7 +1248,7 @@
 +                caret.height = -1;      /* calc x,y,h from icon/index */
 +                caret.index  = dbox__fieldlength(d, j);
 +
-+                wimpt_complain(wimp_set_caret_pos(&caret));
++                (void) wimpt_complain(wimp_set_caret_pos(&caret));
 +
 +                d->caret_set = TRUE;
 +                }
@@ -1290,13 +1290,13 @@
 +        tracef1("[dbox_fillin got event %s]\n",
 +                report_wimp_event(e.e, &e.data));
 +
-+        if(win_submenu_query_is_submenu(w))
++        if(winx_submenu_query_is_submenu(w))
 +            {
 +            /* Check to see if the window has been closed.
 +             * If it has then we are in a menu tree, and the wimp
 +             * is doing things behind our backs.
 +            */
-+            if(win_submenu_query_closed())
++            if(winx_submenu_query_closed())
 +                {
 +                tracef0("--- menu dbox has been closed for us!\n");
 +
@@ -1311,7 +1311,7 @@
 +                if(e.e == wimp_EREDRAW)
 +                    event_process();
 +
-+                wimpt_complain(win_close_wind(w));
++                (void) wimpt_complain(winx_close_window(w));
 +
 +                result = dbox_CLOSE;
 +                break;
@@ -1320,12 +1320,12 @@
 +                {
 +                tracef0("menu dbox is still open\n");
 +
-+                wimpt_safe(wimp_get_wind_state(w, &ws));
++                (void) wimpt_complain(wimp_get_wind_state(w, &ws));
 +
-+                if(!(ws.flags & wimp_WTOP))
++                if(0 == (ws.flags & wimp_WTOP))
 +                    {
 +                    trace_0(TRACE_OUT | TRACE_ANY, "menu dbox not at front!!!\n");
-+                    /*SKS 08jan97 win_send_front(w, FALSE);*/
++                    /*SKS 08jan97 winx_send_front_window_request(w, FALSE);*/
 +                    }
 +                }
 +            }
@@ -1345,7 +1345,7 @@
 +            {
 +            case wimp_EKEY:
 +                /* Pass key events to submenu dbox */
-+                if(win_submenu_query_is_submenu(w) &&  (e.data.key.c.w != w))
++                if(winx_submenu_query_is_submenu(w) &&  (e.data.key.c.w != w))
 +                    {
 +                    e.data.key.c.w = w;
 +                    e.data.key.c.i = (wimp_i) -1;

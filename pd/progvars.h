@@ -51,16 +51,16 @@ extern uchar highlights_on;
 #define M_IS_SUBSET ((void *) 1)
 #define M_IS_ERROR  ((void *) 2)
 
-extern uchar        alt_array[];
 extern uchar       *buff_sofar;
 extern uchar        cbuff[];                /* command line buffer */
 extern S32          cbuff_offset;           /* length of string in cbuff */
+extern uchar        cmd_seq_array[];
 extern BOOL         command_expansion;
 extern uchar       *exec_ptr;
 extern uchar        expanded_key_buff[];    /* for key expansions, always start with \ */
 extern P_LIST_BLOCK first_command_redef;
 extern MENU_HEAD    headline[];
-extern S32          head_size;
+extern U32          head_size;
 extern BOOL         in_execfile;
 extern BOOL         macro_recorder_on;
 extern coord        this_heading_length;
@@ -175,18 +175,19 @@ extern P_LIST_BLOCK first_macro;      /* list of macro parameters */
 
 /* --------------------------- lists.c ----------------------------------- */
 
-extern P_LIST_BLOCK def_first_option;   /* default options read from pd.ini */
+extern P_LIST_BLOCK def_first_option;   /* default options read from Choices file */
 extern P_LIST_BLOCK deleted_words;      /* list of deleted strings */
 extern P_LIST_BLOCK first_key;          /* first key expansion in chain */
 
 /* --------------------------- slot.c ------------------------------------ */
 
-extern P_COLENTRY def_colstart;         /* default column structure from pd.ini */
+extern P_COLENTRY def_colstart;         /* default column structure read from Choices file */
 extern COL def_numcol;
 
 /* ----------------------------- riscos.c -------------------------------- */
 
-extern HOST_WND caret_window;
+extern HOST_WND caret_window_handle;
+extern HOST_WND caret_stolen_from_window_handle;
 
 extern DOCNO slotcount_docno;
 
@@ -201,22 +202,21 @@ extern DOCNO browsing_docno;
 extern DOCNO pausing_docno;
 
 /* on screen only! - printer conversion fixed */
-#define ch_to_os(c) ((c) * charwidth)
-#define os_to_mp(o) ((o) * x_scale)
-#define ch_to_mp(c) os_to_mp(ch_to_os(c))
-extern S32 x_scale;
-extern S32 y_scale;
+#define cw_to_os(c) ((c) * charwidth)
+#define os_to_millipoints(o) ((o) * millipoints_per_os_x)
+#define cw_to_millipoints(c) os_to_millipoints(cw_to_os(c))
+extern S32 millipoints_per_os_x; /* default is 400 (72000/(90*2)) */
+extern S32 millipoints_per_os_y;
 
-extern S32 screen_x_os;
-extern S32 screen_y_os;
+extern GDI_SIZE g_os_display_size;
 
 extern GDI_BOX graphics_window;
 extern GDI_BOX cliparea;
 extern GDI_BOX thisarea;
 extern BOOL paint_is_update;
 
-extern S32 riscos_font_xad; /* mp coordinates of left hand baseline point */
-extern S32 riscos_font_yad;
+extern GR_MILLIPOINT riscos_font_ad_millipoints_x; /* millipoints coordinates of left hand baseline point */
+extern GR_MILLIPOINT riscos_font_ad_millipoints_y;
 extern BOOL riscos_printing;
 extern BOOL draw_to_screen;
 
@@ -234,14 +234,36 @@ extern BOOL insert_reference_abs_row;
 extern DOCNO insert_reference_docno;
 extern SLR insert_reference_slr;
 
+extern S32 paper_width_millipoints;
+extern S32 paper_length_millipoints;
+
 /* enumeration of dict defn files */
-extern P_LIST_BLOCK language_list;
+extern P_LIST_BLOCK languages_list;
 
-/* temporary enumeration of templates or printer drivers */
-extern P_LIST_BLOCK ltemplate_or_driver_list;
+/* temporary enumeration of macros */
+extern P_LIST_BLOCK macros_list;
 
-extern S32 paper_width_mp;
-extern S32 paper_length_mp;
+/* temporary enumeration of printer drivers */
+extern P_LIST_BLOCK pdrivers_list;
+
+/* temporary enumeration of templates */
+extern P_LIST_BLOCK templates_list;
+
+/* enumeration of page number formats */
+extern P_LIST_BLOCK page_number_formats_list;
+
+/* enumeration of date formats */
+extern P_LIST_BLOCK date_formats_list;
+
+/* enumeration of time formats */
+extern P_LIST_BLOCK time_formats_list;
+
+extern P_PD_CONFIG p_pd_config;
+
+_Check_return_
+_Ret_valid_
+extern P_NUMFORM_CONTEXT
+get_p_numform_context(void);
 
 #endif /* __progvars_h */
 

@@ -22,7 +22,7 @@ buflen% = 255
 DIM buffer% buflen%
 :
 REM read & decode command line args
-SYS "OS_ReadArgs","BASIC,quit/K,load/K,output/A,version/A,r32/S,d32/S,p32/S,boot/S,alternate/S",args$,buffer%,buflen%
+SYS "OS_ReadArgs","BASIC,quit/K,load/K,output/A,product/A,version/A,r32/S,d32/S,p32/S,boot/S,alternate/S",args$,buffer%,buflen%
 :
 ptr% = buffer%
 :
@@ -32,6 +32,9 @@ ptr% += 4
 ptr% += 4
 :
 outfile$ = FNstringize(!ptr%)
+ptr% += 4
+:
+raw_product$ = FNstringize(!ptr%)
 ptr% += 4
 :
 version$ = FNstringize(!ptr%)
@@ -66,7 +69,7 @@ REM Any kind of release?
 release% = release32%
 IF release% THEN info$ += "Release "
 :
-info$ += "32-bit "
+REM Only 32-bit now; info$ += "32-bit "
 :
 imageslotparm$ = "48K 32K"
 :
@@ -79,13 +82,17 @@ ELSE
   ENDIF
 ENDIF
 :
-colour_picker% = TRUE: REM WimpLib dboxtcol now uses ColourPicker module
+colour_picker% = TRUE: REM PipeDream now needs to use ColourPicker module
 :
 reg_extra$ = ""
 :
-product$ = "PipeDream"
+IF raw_product$ = "pipedream" THEN
+  product$ = "PipeDream"
+  true_product$ = product$
+  appl_product$ = product$
+ENDIF
 :
-info$ = product$ + " " + info$
+info$ = true_product$ + " " + info$
 PRINT info$
 :
 quote$ = """"
@@ -100,69 +107,81 @@ postfix$ += " 32-bit"
 IF debug% THEN postfix$ += " DEBUG"
 IF profile% THEN postfix$ += " PROFILE"
 version_and_date$ = version$+" ("+MID$(TIME$,5,11)+")"
-PROCo(f%,"| "+file$+" file for "+product$+postfix$+" "+version_and_date$)
+PROCo(f%,"| "+file$+" file for "+true_product$+postfix$+" "+version_and_date$)
 PROCo(f%,"|")
 IF alternate% THEN
-  PROCs(f%,product$+"$Dir","<Obey$Dir>.!"+product$,boot%)
+  PROCs(f%,product$+"$Dir","<Obey$Dir>.!"+appl_product$,boot%)
 ELSE
   PROCs(f%,product$+"$Dir","<Obey$Dir>",boot%)
 ENDIF
 :
+PROCo(f%,"|")
+PROCs(f%,product$+"Res$Path","<"+product$+"$Dir>.Resources.UK."+",<"+product$+"$Dir>.Resources.Neutral.",boot%)
+:
 REM IF boot% THEN
   PROCo(f%,"|")
-  PROCo(f%,"RMEnsure UtilityModule 3.10 Error 0 32-bit applications require RISC OS 3.10 or later")
+  REM Needs 3.10+ anyway now; PROCo(f%,"RMEnsure UtilityModule 3.10 Error 0 32-bit applications require RISC OS 3.10 or later")
+  PROCo(f%,"RMEnsure UtilityModule 3.10 Error 0 "+true_product$+" needs RISC OS 3.10 or later")
   :
   PROCo(f%,"|")
-  PROCo(f%,"If ""<Boot$OSVersion>""="""" Then Error 0 "+product$+" needs Boot$OSVersion to be set")
+  PROCo(f%,FNif_z_then("Boot$OSVersion")+"Error 0 "+true_product$+" needs Boot$OSVersion to be set")
   :
   PROCo(f%,"|")
-  PROCo(f%,"If (Boot$OSVersion<500) OR (Boot$OSVersion>=600) Then IconSprites <PipeDream$Dir>.!Sprites Else IconSprites <PipeDream$Dir>.!SpritesR5")
+  IF TRUE THEN
+    PROCo(f%,"If (Boot$OSVersion>=600) Then IconSprites <"+product$+"$Dir>.!Sprites")
+    PROCo(f%,"If (Boot$OSVersion>=500 AND Boot$OSVersion<600) Then IconSprites <"+product$+"$Dir>.!SpritesR5")
+    PROCo(f%,"If (Boot$OSVersion< 500) Then IconSprites <"+product$+"$Dir>.!Sprites")
+  ENDIF
   :
   PROCo(f%,"|")
   PROCs(f%,"File$Type_DDE","PDream",boot%)
-  PROCm(f%,"Alias$@RunType_DDE",  "Run <"+product$+"$Dir>.!Run %%*0",boot%)
-  PROCm(f%,"Alias$@PrintType_DDE","Run <"+product$+"$Dir>.!Run -Print %%*0",boot%)
+  PROCs(f%,"Alias$@RunType_DDE",  "Run <"+product$+"$Dir>.!Run %%*0",boot%)
+  PROCs(f%,"Alias$@PrintType_DDE","Run <"+product$+"$Dir>.!Run -Print %%*0",boot%)
   :
   PROCo(f%,"|")
   PROCs(f%,"File$Type_D21","PDCmdFil",boot%)
-  PROCm(f%,"Alias$@RunType_D21",   "Run <"+product$+"$Dir>.!Run %%*0",boot%)
+  PROCs(f%,"Alias$@RunType_D21",   "Run <"+product$+"$Dir>.!Run -Command %%*0",boot%)
   :
   PROCo(f%,"|")
-  PROCs(f%,"File$Type_DFE","CSV",TRUE): REM Never override any other definition
-  PROCo(f%,"|")
-  PROCs(f%,"File$Type_DB0","LotusWK1",TRUE): REM Never override any other definition
+  REM Never override any other definition of file types we do not actually own
+  PROCs(f%,"File$Type_DB0","LotusWK1",TRUE)
   :
   PROCo(f%,"|")
-  PROCo(f%,"DOSMap TXT &FFF")
-  PROCo(f%,"DOSMap CSV &DFE")
-  PROCo(f%,"DOSMap JPG &C85")
-  REM PROCo(f%,"DOSMap RTF &C32")
-  REM PROCo(f%,"DOSMap FWT &C1D")
-  REM PROCo(f%,"DOSMap FWK &BDF")
-  REM PROCo(f%,"DOSMap XLS &BA6")
-  PROCo(f%,"DOSMap AFF &AFF")
+  REM Never override any other definition...
+  PROCs(f%,"File$Type_DFE","CSV",TRUE)
+  :
+  PROCo(f%,"|")
   PROCo(f%,"DOSMap BMP &69C")
   PROCo(f%,"DOSMap DIB &69C")
+  PROCo(f%,"DOSMap AFF &AFF")
+  PROCo(f%,"DOSMap XLS &BA6")
+  REM PROCo(f%,"DOSMap FWK &BDF")
+  REM PROCo(f%,"DOSMap FWT &C1D")
+  REM PROCo(f%,"DOSMap RTF &C32")
+  PROCo(f%,"DOSMap JPG &C85")
+  PROCo(f%,"DOSMap WKS &DB0")
+  PROCo(f%,"DOSMap CSV &DFE")
+  PROCo(f%,"DOSMap TXT &FFF")
   PROCo(f%,"| RISC OS 3.10 DOSFS can't take numbers in extension")
-  PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap FF9 &FF9")
-  PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap PD4 &DDE")
   PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap WK1 &DB0")
+  PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap PD4 &DDE")
+  PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap FF9 &FF9")
 :
 REM Go for the minimal version we can cope with
 REM NB FPEmulator 4.09 in RISC OS 4.02 ROM (also in 4.39 ROM) has poor precision
 REM FPEmulator 4.10 in RISC OS 4.39 ROM is better
-REM FPEmulator 4.32 is the latest ROOL seen to date (May 2013)
+REM FPEmulator 4.35 is the latest ROOL seen to date (Apr 2016)
 FPEVersion$="FPEmulator 4.10"
 :
 REM Go for the minimal version we can cope with using the Stubs we built with
 REM and the required functionality (we need working C99 functions)
-REM SharedCLibrary 5.83 is the latest ROOL seen to date (Aug 2014)
+REM SharedCLibrary 5.92 is the latest ROOL seen to date (May 2016)
 CLibVersion$="SharedCLibrary 5.45"
 :
 IF NOT boot% THEN
   PROCo(f%,"|")
   PROCo(f%,"RMEnsure "+FPEVersion$+" RMLoad System:Modules.FPEmulator")
-  PROCo(f%,"RMEnsure "+FPEVersion$+" Error 0 "+product$+" needs "+FPEVersion$+" or later. An updated 32-bit !System may be obtained from the RISC OS Open website")
+  PROCo(f%,"RMEnsure "+FPEVersion$+" Error 0 "+true_product$+" needs "+FPEVersion$+" or later. An updated 32-bit !System may be obtained from the RISC OS Open website")
   :
   PROCo(f%,"|")
   PROCo(f%,"| Ensure we have the shared C library and determine its vintage")
@@ -170,50 +189,57 @@ IF NOT boot% THEN
   PROCo(f%,"|")
   PROCo(f%,"Set "+product$+"$CLibLoaded 1")
   PROCo(f%,"RMEnsure SharedCLibrary 0.00 Set "+product$+"$CLibLoaded 0")
-  PROCo(f%,"If "+product$+"$CLibLoaded=1 Then RMEnsure "+CLibVersion$+" Error 0 "+product$+" needs "+CLibVersion$+" or later but an earlier version is already running. An updated 32-bit !System may be obtained from the RISC OS Open website")
+  PROCo(f%,"If "+product$+"$CLibLoaded=1 Then RMEnsure "+CLibVersion$+" Error 0 "+true_product$+" needs "+CLibVersion$+" or later but an earlier version is already running. An updated 32-bit !System may be obtained from the RISC OS Open website")
   :
   REM 32-bit needs a SysMerge with the supplied !System
   :
   PROCo(f%,"|")
   PROCo(f%,"RMEnsure "+CLibVersion$+" RMLoad System:Modules.CLib")
-  PROCo(f%,"RMEnsure "+CLibVersion$+" Error 0 "+product$+" needs "+CLibVersion$+" or later. An updated 32-bit !System may be obtained from the RISC OS Open website")
+  PROCo(f%,"RMEnsure "+CLibVersion$+" Error 0 "+true_product$+" needs "+CLibVersion$+" or later. An updated 32-bit !System may be obtained from the RISC OS Open website")
   :
   IF colour_picker% THEN
     PROCo(f%,"|")
     PROCo(f%,"RMEnsure ColourPicker 0.00 RMLoad System:Modules.Picker")
-    PROCo(f%,"RMEnsure ColourPicker 0.00 Error 0 The version of ColourPicker installed in your !System is too old. "+product$+" needs ColourPicker 0.00 or later")
+    PROCo(f%,"RMEnsure ColourPicker 0.00 Error 0 The version of ColourPicker installed in your !System is too old. "+true_product$+" needs ColourPicker 0.00 or later")
   ENDIF
   :
   PROCo(f%,"|")
   PROCo(f%,"RMEnsure ColourTrans 0.52 RMLoad System:Modules.Colours")
-  PROCo(f%,"RMEnsure ColourTrans 0.52 Error 0 The version of ColourTrans installed in your !System is too old. "+product$+" needs ColourTrans 0.52 or later")
+  PROCo(f%,"RMEnsure ColourTrans 0.52 Error 0 The version of ColourTrans installed in your !System is too old. "+true_product$+" needs ColourTrans 0.52 or later")
   :
   PROCo(f%,"|")
   REM Drawfile module is supplied in end-user redistributable, supporting RISC OS 3.1 and newer systems
   REM RISC OS 3.6 on have Drawfile in ROM
   PROCo(f%,"RMEnsure Drawfile 1.30 RMLoad System:Modules.Drawfile")
-  PROCo(f%,"RMEnsure Drawfile 1.30 Error 0 The version of Drawfile installed in your !System is too old. "+product$+" needs Drawfile 1.30 or later")
+  PROCo(f%,"RMEnsure Drawfile 1.30 Error 0 The version of Drawfile installed in your !System is too old. "+true_product$+" needs Drawfile 1.30 or later")
+  :
+  REM PROCo(f%,"|")
+  REM PROCo(f%,"RMEnsure Squash 0.00 RMLoad System:Modules.Squash")
+  :
+  REM PROCo(f%,"|")
+  REM PROCo(f%,"Set "+appl_product$+"$AcornURI TRUE")
+  REM PROCo(f%,"RMEnsure AcornURI 0.00 Set "+appl_product$+"$AcornURI FALSE")
   :
   PROCo(f%,"|")
-  PROCo(f%,"Set PipeDream$AcornURI TRUE")
-  PROCo(f%,"RMEnsure AcornURI 0.00 Set PipeDream$AcornURI FALSE")
+  PROCo(f%,FNif_z_then("Choices$Write")+"Error 0 "+true_product$+" needs Choices$Write to be set")
   :
   PROCo(f%,"|")
-  PROCo(f%,"If ""<Choices$Write>""="""" Then Error 0 "+product$+" needs Choices$Write to be set")
+  PROCo(f%,"IfThere <Choices$Write>.PipeDream.Choices Then Else Obey <"+product$+"$Dir>.uChoices.DoCopy")
   :
   PROCo(f%,"|")
-  PROCo(f%,"IfThere <Choices$Write>.PipeDream Then Else Obey <"+product$+"$Dir>.uChoices.DoCopy")
-  :
-  PROCo(f%,"|")
-  insert$ = "": REM IF debug% OR profile% THEN insert$ = "$.pipedream.trunk.pd.resource.riscos.uk.,$.pipedream.trunk.pd.resource.,"
-  PROCo(f%,"Set "+product$+"$Path <Choices$Write>."+product$+".,"+insert$+"<"+product$+"$Dir>.Resource.")
+  insert$ = ""
+  REM IF debug% OR profile% THEN insert$ = ",$.pipedream.trunk.pd.resource.riscos.uk.,$.pipedream.trunk.pd.resource."
+  PROCo(f%,"Set "+product$+"$Path <Choices$Write>."+appl_product$+"."+insert$+",<"+product$+"$Dir>.AppData.UK."+",<"+product$+"$Dir>.AppData.Neutral.")
   PROCo(f%,"|")
   PROCo(f%,"| Iff UserPath is set, prepend the path with that")
-  PROCo(f%,"If ""<"+product$+"$UserPath>""<>"""" Then Set "+product$+"$Path <"+product$+"$UserPath>,<Choices$Write>."+product$+".,"+insert$+"<"+product$+"$Dir>.Resource.")
+  PROCo(f%,FNif_z_then(product$+"$UserPath")+"Else Set "+product$+"$Path <"+product$+"$UserPath>,<"+product$+"$Path>")
+  :
+  PROCo(f%,"|")
+  PROCo(f%,"Set "+product$+"$Web "+"http://croftnuisk.co.uk/coltsoft/pipedream/")
   :
   PROCo(f%,"|")
   PROCo(f%,"WimpSlot -min 32K -max 32K")
-  PROCo(f%,"Run "+product$+":RISC_OS.Loader -dir <"+product$+"$Dir> -id "+product$+reg_extra$+" -ver "+quote$+version_and_date$+quote$)
+  PROCo(f%,"Run "+product$+"Res:Loader -dir <"+product$+"$Dir> -id "+product$+reg_extra$+" -ver "+quote$+version_and_date$+quote$)
   :
   PROCo(f%,"|")
   PROCo(f%,"Set "+product$+"$RunOptions """"")
@@ -246,7 +272,7 @@ IF NOT boot% THEN
       PROCo(f%,"InitStore EEDCBE0A { > NULL: }")
     ENDIF
     PROCo(f%,"|")
-    PROCo(f%,"Run "+product$+":RISC_OS.ImageSlot <"+product$+"$Dir>.!RunImage "+imageslotparm$)
+    PROCo(f%,"Run "+product$+"Res:ImageSlot <"+product$+"$Dir>.!RunImage "+imageslotparm$)
     PROCo(f%,"|")
     IF alternate% THEN
       PROCo(f%,"Load <"+product$+"$Dir>.!RunImage 8000"): REM !RunND
@@ -267,7 +293,7 @@ IF NOT boot% THEN
       PROCo(f%,"InitStore EEDCBE0A { > NULL: }")
     ENDIF
     PROCo(f%,"|")
-    PROCo(f%,"Run "+product$+":RISC_OS.ImageSlot <"+product$+"$Dir>.!RunImage "+imageslotparm$)
+    PROCo(f%,"Run "+product$+"Res:ImageSlot <"+product$+"$Dir>.!RunImage "+imageslotparm$)
     PROCo(f%,"|")
     IF alternate% THEN
       PROCo(f%,"RMEnsure DDT 0.0 RMLoad System:Modules.DDT")
@@ -292,7 +318,13 @@ IF NOT boot% THEN
       PROCo(f%,"InitStore EEDCBE0A { > NULL: }")
     ENDIF
     PROCo(f%,"|")
-    PROCo(f%,"Run "+product$+":RISC_OS.ImageSlot <"+product$+"$Dir>.!RunImage "+imageslotparm$)
+    PROCo(f%,"| The first parameter controls the amount of additional memory")
+    PROCo(f%,"| that "+true_product$+" requires to be in the WimpSlot on startup")
+    PROCo(f%,"|")
+    PROCo(f%,"| The second parameter is how much extra memory "+true_product$+" will")
+    PROCo(f%,"| need to claim on startup on top of the initial WimpSlot")
+    PROCo(f%,"|")
+    PROCo(f%,"Run "+product$+"Res:ImageSlot <"+product$+"$Dir>.!RunImage "+imageslotparm$)
     PROCo(f%,"|")
     IF alternate% THEN
       PROCo(f%,"RMEnsure DDT 0.0 RMLoad System:Modules.DDT")
@@ -329,7 +361,7 @@ DEF PROCm(file%,V$,A$,C%)
 LOCAL prefix$
 prefix$ = ""
 IF C% THEN
-  prefix$="If ""<"+V$+">""="""" Then "
+  prefix$=FNif_z_then(V$)
 ENDIF
 PROCo(file%,prefix$+"SetMacro "+V$+" "+A$)
 ENDPROC
@@ -339,10 +371,14 @@ DEF PROCs(file%,V$,A$,C%)
 LOCAL prefix$
 prefix$ = ""
 IF C% THEN
-  prefix$="If ""<"+V$+">""="""" Then "
+  prefix$=FNif_z_then(V$)
 ENDIF
 PROCo(file%,prefix$+"Set "+V$+" "+A$)
 ENDPROC
+:
+:
+DEF FNif_z_then(V$)
+="If ""<"+V$+">""="""" Then "
 :
 :
 DEF PROCno(file%,A$)

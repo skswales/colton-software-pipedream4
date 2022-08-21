@@ -27,6 +27,8 @@
 #include "res.h"        /* includes <stdio.h> */
 #endif
 
+#include <signal.h>     /* for SIGSTAK */
+
 #include "riscos_x.h"
 #include "ridialog.h"
 #include "pd_x.h"
@@ -80,8 +82,10 @@ host_initialise_file_path(void);
 static U8 product_name[16] = "PipeDream";
 static U8 product_ui_name[16] = "PipeDream";
 static U8 product_spritename[16] = "!pipedream";
-static U8 user_name[32];
-static U8 organ_name[32];
+
+static U8 __user_name[64] = "Colton Software";
+static U8 __organisation_name[64];
+static U8 __registration_number[4*4 + 1]; /* NB no spaces */
 
 const PC_U8Z
 g_dynamic_area_name = "PipeDream workspace";
@@ -119,19 +123,40 @@ profile_setup(void)
 
 #endif /* PROFILING */
 
+/*
+Read details from Info file - variables are now set up by Loader
+*/
+
 static void
 get_user_info(void)
 {
-    char var_name[BUF_MAX_PATHSTRING];
+    TCHARZ var_name[BUF_MAX_PATHSTRING];
     TCHARZ env_value[256];
 
     if(NULL == _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$User1"), env_value, elemof32(env_value)))
-        if(0 != strcmp(env_value, "NoInfo"))
-            xstrkpy(user_name, elemof32(user_name), env_value);
+        if(CH_NULL != env_value[0])
+            xstrkpy(__user_name, elemof32(__user_name), env_value);
 
     if(NULL == _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$User2"), env_value, elemof32(env_value)))
-        xstrkpy(organ_name, elemof32(organ_name), env_value); /* SKS 13.12.98 */
+        xstrkpy(__organisation_name, elemof32(__organisation_name), env_value);
+
+    if(NULL == _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$RegNo"), env_value, elemof32(env_value)))
+        xstrkpy(__registration_number, elemof32(__registration_number), env_value);
 }
+
+#if defined(UNUSED)
+
+static int
+pd_stack_overflow_test(int i)
+{
+    unsigned char buf[256];
+    unsigned int j;
+    for(j = 0; j < 256; ++j)
+        buf[j] = i & 0xFF;
+    return(buf[i & 0xFF] + pd_stack_overflow_test(i + 1));
+}
+
+#endif
 
 /******************************************************************************
 *
@@ -141,36 +166,69 @@ get_user_info(void)
 
 /* The list of messages that this application is interested in */
 
-static /*const*/ wimp_msgaction
+static /*const*/ int
 pd_wimp_messages[] =
 {
-    wimp_MDATASAVE,
-    wimp_MDATASAVEOK,
-    wimp_MDATALOAD,
-    wimp_MDATALOADOK,
-    wimp_MDATAOPEN,
-    wimp_MPREQUIT,
-    wimp_PALETTECHANGE,
-    wimp_SAVEDESK,
-    wimp_MShutDown,
+    Wimp_MDataSave,
+    Wimp_MDataSaveAck,
+    Wimp_MDataLoad,
+    Wimp_MDataLoadAck,
+    Wimp_MDataOpen,
+    Wimp_MPreQuit,
+    Wimp_MPaletteChange,
+    Wimp_MSaveDesktop,
+    Wimp_MShutDown,
 
-    wimp_MHELPREQUEST,
+    Wimp_MHelpRequest,
 
-    wimp_MPD_DDE,
+    Wimp_MPD_DDE,
 
-    wimp_MMENUWARN,
-    wimp_MMODECHANGE,
-    wimp_MINITTASK,
-    wimp_MMENUSDELETED,
-    wimp_MWINDOWINFO,
+    Wimp_MMenuWarning,
+    Wimp_MModeChange,
+    Wimp_MTaskInitialise,
+    Wimp_MMenusDeleted,
+    Wimp_MWindowInfo,
 
-    wimp_MPrintFile,
-    wimp_MPrintSave,
-    wimp_MPrintError,
-    wimp_MPrintTypeOdd,
+    Wimp_MPrintFile,
+    Wimp_MPrintSave,
+    Wimp_MPrintError,
+    Wimp_MPrintTypeOdd,
 
-    wimp_MCLOSEDOWN /* terminate list with zero */
+    Wimp_MQuit /* terminate list with zero */
 };
+
+static jmp_buf event_loop_jmp_buf;
+
+static void
+pd_report_and_trace_enable(void)
+{
+    /* allow application to run without any report info */
+    char env_value[BUF_MAX_PATHSTRING];
+
+    report_enable(NULL == _kernel_getenv("PipeDream$ReportEnable", env_value, elemof32(env_value)));
+
+#if TRACE_ALLOWED
+    /* allow trace version to run without any trace info */
+    if(NULL != _kernel_getenv("PipeDream$TraceEnable", env_value, elemof32(env_value)))
+    {
+        trace_disable();
+    }
+    else
+    {
+        _kernel_stack_chunk *scptr;
+        unsigned long scsize;
+        int val = atoi(env_value);
+        if(0 != val)
+        {
+            trace_on();
+            trace_1(TRACE_APP_PD4, "main: sp ~= " PTR_XTFMT, report_ptr_cast(&env_value[0]));
+            scptr = _kernel_current_stack_chunk();
+            scsize = scptr->sc_size;
+            trace_3(TRACE_APP_PD4, "main: stack chunk " PTR_XTFMT ", size %lu, top " PTR_XTFMT, report_ptr_cast(scptr), scsize, report_ptr_cast((char *) scptr + scsize));
+        }
+    }
+#endif /* TRACE_ALLOWED */
+}
 
 extern int
 main(
@@ -194,34 +252,9 @@ main(
 
     muldiv64_init(); /* very early indeed */
 
-    wimpt_os_version_determine(); /* very early indeed */
+    wimptx_os_version_determine(); /* very early indeed */
 
-    { /* allow application to run without any report info */
-    char env_value[BUF_MAX_PATHSTRING];
-    report_enable(NULL == _kernel_getenv("PipeDream$ReportEnable", env_value, elemof32(env_value)));
-    } /* block */
-
-#if TRACE_ALLOWED
-    { /* allow trace version to run without any trace info */
-    char env_value[BUF_MAX_PATHSTRING];
-    if(NULL != _kernel_getenv("PipeDream$TraceEnable", env_value, elemof32(env_value)))
-        trace_disable();
-    else
-    {
-        _kernel_stack_chunk *scptr;
-        unsigned long scsize;
-        int val = atoi(env_value);
-        if(0 != val)
-        {
-            trace_on();
-            trace_1(TRACE_APP_PD4, "main: sp ~= " PTR_XTFMT, report_ptr_cast(&argc));
-            scptr = _kernel_current_stack_chunk();
-            scsize = scptr->sc_size;
-            trace_3(TRACE_APP_PD4, "main: stack chunk " PTR_XTFMT ", size %lu, top " PTR_XTFMT, report_ptr_cast(scptr), scsize, report_ptr_cast((char *) scptr + scsize));
-        }
-    }
-    } /* block */
-#endif /* TRACE_ALLOWED */
+    pd_report_and_trace_enable();
 
     /* set locale for isalpha etc. (ctype.h functions) */
     trace_1(TRACE_OUT | TRACE_ANY, TEXT("main: initial CTYPE locale is %s"), setlocale(LC_CTYPE, NULL));
@@ -234,8 +267,8 @@ main(
     decode_run_options();
 
     /* startup Window Manager interface */
-    wimpt_set_spritename(product_spritename); /* For RISC OS 3.5 and later error reporting */
-    wimpt_set_taskname(product_ui_id()); /* Optional; uses wimpt_init() parm when omitted */
+    wimptx_set_spritename(product_spritename); /* For RISC OS 3.5 and later error reporting */
+    wimptx_set_taskname(product_ui_id()); /* Optional: uses wimpt_init() parm when omitted */
 
     riscos_hourglass_on();
 
@@ -243,11 +276,11 @@ main(
     docu_array_init_once();
 
     /* need to have set up the resource place and the program name for all to work ok */
-    res_init(product_id());  /* Resources are in <applicationname$Dir> */
+    res_init("PipeDream" "Res"); /* RISC_OSLib-type resources may be found along appnameRes$Path: */
 
     /* Startup Window Manager interface */
     wimpt_wimpversion(310);
-    wimpt_messages(pd_wimp_messages);
+    wimpt_messages((wimp_msgaction *) pd_wimp_messages);
     wimpt_init(de_const_cast(char *, product_ui_id()));
 
 #ifdef PROFILING
@@ -261,7 +294,8 @@ main(
         strings_init();
         reperr_init();
 
-        reperr_fatal(reperr_getstr(create_error(ERR_NOTINDESKTOP)));
+        consume_bool(reperr_null(ERR_NOTINDESKTOP));
+        return(EXIT_FAILURE);
     }
 
     if(atexit(application__atexit)) /* ensure closedown proc called on exit */
@@ -303,32 +337,44 @@ main(
         select_document(first_document());
         /* get caret when it is actually fronted */
         xf_acquirecaret = TRUE;
-        xf_frontmainwindow = TRUE;
+        xf_front_document_window = TRUE;
         draw_screen();
     }
 
     /* turn off null events unless we really want them - tested at the exit of each event processed */
-    event_setmask((wimp_emask) (event_getmask() | wimp_EMNULL));
+    event_setmask((wimp_emask) (event_getmask() | Wimp_Poll_NullMask));
 
     /* set up a point we can longjmp back to on serious error */
+    switch(setjmp(event_loop_jmp_buf))
     {
-    static jmp_buf program_safepoint;
+    case SIGSTAK:
+        wimptx_stack_overflow_handler(SIGSTAK);
 
-    if(setjmp(program_safepoint))
-    {
-        /* returned here from exception */
+        /*FALLTHRU*/
 
-        /* SKS after 4.11 31jan92 - tidy up a little */
+    default: /* returned here from exception - tidy up as necessary */
+
+        /* SKS after PD 4.11 31jan92 */
         riscos_printing = FALSE;
-        alt_array[0] = NULLCH;
-    }
-    else
-        wimpt_set_safepoint(&program_safepoint);
+        cmd_seq_cancel(); /* cancel Cmd-sequence */
+
+        trace_0(TRACE_APP_PD4, TEXT("main: Starting to poll for messages again after serious error"));
+        break;
+
+    case 0:
+        wimptx_set_safepoint(&event_loop_jmp_buf);
+
+        trace_0(TRACE_APP_PD4, TEXT("main: Starting to poll for messages"));
+
+        /*pd_stack_overflow_test(0);*/
+        break;
     }
 
     /* Go and find something to do now -  just loop getting events until we are told to curl up and die */
     for(;;)
+    {
         wm_events_get(FALSE); /* fg null events not wanted */
+    }
 
     return(EXIT_SUCCESS);
 }
@@ -359,7 +405,7 @@ application__atexit(void)
 */
 
 /* On RISC OS wimpt__exit() is now called iff wimpt_init has been executed
- * as the CWimp library will have done an atexit() call too.
+ * as the RISC_OSLib library will have done an atexit() call too.
  *
  * The flex library may also have registered an atexit() handler
  * to free any allocated dynamic area.
@@ -384,7 +430,7 @@ exec_pd_key_once(void)
 {
     char array[BUF_MAX_PATHSTRING];
 
-    if(add_path_using_dir(array, elemof32(array), INITEXEC_STR, MACROS_SUBDIR_STR))
+    if(status_done(add_path_using_dir(array, elemof32(array), INITEXEC_STR, MACROS_SUBDIR_STR)))
         exec_file(array);
 }
 
@@ -394,9 +440,15 @@ extern void
 exec_file(
     const char *filename)
 {
-    P_DOCU p_docu;
+    P_DOCU p_docu = find_document_with_input_focus();
 
-    if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
+    if(NO_DOCUMENT == p_docu)
+    {   /* The Filer may have just stolen the caret from us when the user double-clicked! */
+        if(HOST_WND_NONE != caret_stolen_from_window_handle)
+            p_docu = find_document_using_window_handle(caret_stolen_from_window_handle);
+    }
+
+    if(NO_DOCUMENT != p_docu)
     {
         /*>>>RCM asks, what should we do if xf_inexpression or xf_inexpression_box is true???*/
         DOCNO old_docno = current_docno();
@@ -424,7 +476,7 @@ exec_file(
         /* bring window to front NOW so that we can see
          * what's happening in the exec file
         */
-        riscos_frontmainwindow(TRUE);
+        riscos_front_document_window(TRUE);
 
         draw_screen();
         draw_caret();
@@ -497,18 +549,39 @@ product_ui_id(void)
 
 _Check_return_
 _Ret_z_
-extern PC_USTR
-user_id(void)
+extern PCTSTR
+registration_number(void)
 {
-    return(user_name);
+    static TCHARZ visRegistrationNumber[] = TEXT("0000 0000 0000 0000"); /* NB spaces */
+
+    UINT grpidx;
+
+    if(CH_NULL != __registration_number[0])
+    {
+        for(grpidx = 0; grpidx < 4; grpidx++)
+        {
+            /* copy groups of four over */
+            memcpy32(&visRegistrationNumber[grpidx * 5], &__registration_number[grpidx * 4], 4 * sizeof(TCHAR));
+        }
+    }
+
+    return(visRegistrationNumber);
 }
 
 _Check_return_
 _Ret_z_
-extern PC_USTR
+extern PCTSTR
+user_id(void)
+{
+    return(__user_name);
+}
+
+_Check_return_
+_Ret_z_
+extern PCTSTR
 user_organ_id(void)
 {
-    return(organ_name);
+    return(__organisation_name);
 }
 
 /*ncr*/
@@ -552,7 +625,7 @@ decode_command_line_options(
             ch = (char) tolower(ch);
             switch(ch)
             {
-            case 'h':
+            case 'h': /* Help */
                 if(pass == 2)
                     application_process_command(N_Help);
                 break;
@@ -563,7 +636,7 @@ decode_command_line_options(
                     thicken_grid_lines(atoi(arg));
                 break;
 
-            case 'l':
+            case 'l': /* Locale */
                 arg = argv[++i];
                 if(pass == 2)
                 {
@@ -571,31 +644,32 @@ decode_command_line_options(
                 }
                 break;
 
-            case 'm':
+            case 'c': /* Command */
+            case 'm': /* Macro (for compatibility) */
                 arg = argv[++i];
                 if(pass == 2)
-                    if(add_path_using_dir(array, elemof32(array), arg, MACROS_SUBDIR_STR))
+                    if(status_done(add_path_using_dir(array, elemof32(array), arg, MACROS_SUBDIR_STR)))
                         exec_file(arg);
                 break;
 
-            case 'n':
+            case 'n': /* New */
                 if(pass == 2)
                     if(create_new_untitled_document())
                     {
                         /* don't acquire caret here, done later */
                         /* bring to front sometime */
-                        xf_frontmainwindow = TRUE;
+                        xf_front_document_window = TRUE;
                         draw_screen();
                     }
                 break;
 
-            case 'p':
+            case 'p': /* Print */
                 arg = argv[++i];
                 if(pass == 2)
                     print_file(arg);
                 break;
 
-            case 'q':
+            case 'q': /* Quit */
                 if(pass == 2)
                     application_process_command(N_Quit);
                 break;
@@ -638,7 +712,7 @@ decode_run_options(void)
         while(SPACE == *arg)
             ++arg;
 
-        if(NULLCH == *arg)
+        if(CH_NULL == *arg)
             break;
 
         reportf("main: *** got run option arg '%s'", arg);
@@ -693,7 +767,7 @@ host_initialise_file_path(void)
     r.r[4] = 0; /* don't expand here in case user really does want SetMacro */
     if(NULL == _kernel_swi(OS_ReadVarVal, &r, &r))
     {
-        resource_path[r.r[2]] = NULLCH;
+        resource_path[r.r[2]] = CH_NULL;
         file_set_path(resource_path);
     }
 #else

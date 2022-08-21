@@ -308,7 +308,7 @@ flex__fail(int i);
 static void
 flex__fail(int i)
 {
-    IGNOREPARM(i);
+    UNREFERENCED_PARAMETER(i);
     werr(FALSE, msgs_lookup(MSGS_flex1)); /* don't abort */
 }
 

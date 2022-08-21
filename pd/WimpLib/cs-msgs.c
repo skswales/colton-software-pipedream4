@@ -28,11 +28,6 @@ static void
 __msgs_readfile(
     _In_z_      const char *filename);
 
-static STATUS
-__msgs_load_messages_file(
-    P_P_ANY p_p_any /*out*/,
-    FILE_HANDLE file_handle);
-
 /*
 compare two strings backwards
 */
@@ -68,50 +63,54 @@ msgs_init(void)
         __msgs_readfile(filename);
 }
 
+static const char * lookup_ptr = NULL;
+
 extern /*const*/ char *
 msgs_lookup(/*const*/ char *tag_and_default)
 {
+    const char * tag = tag_and_default;
     char tag_buffer[msgs_TAG_MAX + 1];
     const char * default_ptr;
-    size_t tag_length, lookup_length;
+    U32 tag_length;
     const char * init_lookup_ptr;
 
-    static const char * lookup_ptr = NULL;
-
-    default_ptr = strchr(tag_and_default, TAG_DELIMITER);
-    if(!default_ptr)
-        tag_length = strlen(tag_and_default);
+    if(NULL == (default_ptr = strchr(tag_and_default, TAG_DELIMITER)))
+        tag_length = strlen(tag);
     else
+    {   /* copy tag to buffer, stopping at delimiter */
         tag_length = default_ptr - tag_and_default;
 
-    if(tag_length > msgs_TAG_MAX)
-    {
-        messagef("Tag too long: %s", tag_buffer);
-        return(NULL);
+        if(tag_length > msgs_TAG_MAX)
+        {
+            messagef("Tag too long: %s", tag_buffer);
+            return(NULL);
+        }
+
+        *tag_buffer = CH_NULL;
+        strncat(tag_buffer, tag_and_default, tag_length);
+
+        default_ptr++;
+        tag = tag_buffer;
     }
 
-    /* copy tag to buffer */
-    *tag_buffer = CH_NULL;
-    strncat(tag_buffer, tag_and_default, tag_length);
-
     /* if there ain't a message block or it's bad then we can't do lookup */
-    if(msgs__block  &&  (msgs__block != INVALID_MSGS_BLOCK))
+    if((NULL != msgs__block)  &&  (msgs__block != INVALID_MSGS_BLOCK))
     {
         init_lookup_ptr = lookup_ptr;
 
         for(;;)
         {
             /* try resuming search at last position or at start */
-            if(!lookup_ptr)
+            if(NULL == lookup_ptr)
                 lookup_ptr = msgs__block;
 
-            while(*lookup_ptr)
+            while(CH_NULL != *lookup_ptr)
             {
-                lookup_length = strlen(lookup_ptr);
+                const U32 lookup_length = strlen(lookup_ptr);
 
                 if(lookup_length > tag_length)
                     if(*(lookup_ptr + tag_length) == TAG_DELIMITER)
-                        if(!__strrncmp(tag_buffer, lookup_ptr, tag_length))
+                        if(0 == __strrncmp(tag, lookup_ptr, tag_length))
                             return((char *) (lookup_ptr + tag_length + 1));
 
                 /* step to next message */
@@ -126,20 +125,120 @@ msgs_lookup(/*const*/ char *tag_and_default)
 
             lookup_ptr = NULL; /* ensure restart */
 
-            if(!init_lookup_ptr)
+            if(NULL == init_lookup_ptr)
                 break;
         }
     }
 
     /* return the default, or if that fails, the tag */
-    return((char *) (default_ptr ? default_ptr + 1 : tag_and_default));
+    return((char *) ((NULL != default_ptr) ? default_ptr : tag_and_default));
+}
+
+static STATUS
+__msgs_load_messages_file(
+    _OutRef_    P_P_U8 p_msgs,
+    FILE_HANDLE file_handle)
+{
+    STATUS status;
+    P_ANY msgs;
+    S32 length = file_length(file_handle);
+    const U32 messages_bodge = 1; /* one for final CH_NULL */
+
+    *p_msgs = NULL;
+
+    if(length < 0)
+        return(length);
+
+    if(NULL == (msgs = _al_ptr_alloc(length + messages_bodge, &status)))
+        return(status);
+
+    if((status = file_read(msgs, 1, length, file_handle)) != length)
+    {
+        if(status_ok(status))
+            status = STATUS_FAIL;
+    }
+    else
+        status = STATUS_OK;
+
+    if(status_fail(status))
+    {
+        al_ptr_dispose(&msgs);
+
+        return(status);
+    }
+
+    *p_msgs = msgs;
+    return(length);
+}
+
+/* squish all the comments out of the loaded messages */
+
+static void
+__msgs_process_loaded_data(
+                P_U8 msgs,
+    _InVal_     U32 real_length)
+{
+    U32 in = 0;
+    U32 out = 0;
+#if TRACE
+    U32 start = 0;
+#endif
+    const U32 end = real_length;
+    int ch;
+
+    do  {
+        ch = (in != end) ? msgs[in++] : LF;
+
+        if(ch == COMMENT_CH)
+        {   /* SKS 2016sep28 only look for comments at start of lines */
+            if((out == 0) || (CH_NULL == msgs[out - 1]))
+            {
+                tracef1("[msgs_readfile: found comment at &%p]", msgs + (in - 1));
+                do
+                    ch = (in != end) ? msgs[in++] : LF;
+                while(ch != LF);
+
+                if(in == end)
+                    break;
+            }
+        }
+
+        if(ch == LF)
+        {
+            tracef1("[msgs_readfile: got a line terminator at &%p - place a CH_NULL]", msgs + (in - 1));
+            ch = CH_NULL;
+        }
+
+        /* don't place two CH_NULLs together or one at the start (this also means you can have blank lines) */
+        if(CH_NULL == ch)
+        {
+            if(out == 0)
+                continue;
+
+            if(CH_NULL == msgs[out - 1])
+                continue;
+
+#if TRACE
+            tracef1("[msgs_readfile: placing CH_NULL at &%p]", msgs + out);
+            msgs[out] = CH_NULL;
+            tracef1("[msgs_readfile: ended line '%s']", msgs + start);
+            start = out + 1;
+#endif
+        }
+
+        msgs[out++] = (char) ch;
+    }
+    while(in != end);
+
+    tracef1("[msgs_readfile: placing last CH_NULL at &%p]", msgs + out);
+    msgs[out++] = CH_NULL; /* need this last byte as end marker */
 }
 
 static void
 __msgs_readfile(
     _In_z_      const char *filename)
 {
-    size_t real_length, alloc_length;
+    size_t real_length;
 
     {
     FILE_HANDLE file_handle;
@@ -147,11 +246,12 @@ __msgs_readfile(
     if(status_fail(file_open(filename, file_open_read, &file_handle)))
         return;
 
-    real_length = __msgs_load_messages_file((P_P_ANY) &msgs__block, file_handle);
+    real_length = __msgs_load_messages_file(&msgs__block, file_handle);
 
     file_close(&file_handle);
+    } /*block*/
 
-    if(!msgs__block)
+    if(NULL == msgs__block)
     {
         /* stop msgs trying to translate during application death */
         msgs__block = INVALID_MSGS_BLOCK;
@@ -159,110 +259,7 @@ __msgs_readfile(
         return;
     }
 
-    alloc_length = real_length;
-    } /*block*/
-
-    if(NULL == memchr(msgs__block, CH_NULL, real_length)) /* 20aug96 allow loading of preprocessed messages */
-    {
-        /* loop over loaded messages: end -> real end of messages */
-        const char * in = msgs__block;
-        char * out = msgs__block;
-#if TRACE
-        const char * start = msgs__block;
-#endif
-        const char * end = in + real_length;
-        int ch;
-        int lastch = CH_NULL;
-
-        do  {
-            ch = (in != end) ? *in++ : LF;
-
-            if(ch == COMMENT_CH)
-            {
-                tracef1("[msgs_readfile: found comment at &%p]", in - 1);
-                do
-                    ch = (in != end) ? *in++ : LF;
-                while((ch != LF)  &&  (ch != CR));
-
-                if(in == end)
-                    break;
-
-                lastch = CH_NULL;
-            }
-
-            if((ch == LF)  ||  (ch == CR))
-            {
-                if((ch ^ lastch) == (LF ^ CR))
-                {
-                    tracef0("[msgs_readfile: just got the second of a pair of LF,CR or CR,LF - CH_NULL already placed so loop]");
-                    lastch = CH_NULL;
-                    continue;
-                }
-                else
-                {
-                    tracef1("[msgs_readfile: got a line terminator at &%p - place a CH_NULL]", in - 1);
-                    lastch = ch;
-                    ch = CH_NULL;
-                }
-            }
-            else
-                lastch = ch;
-
-            /* don't place two CH_NULLs together or one at the start (this also means you can have blank lines) */
-            if(!ch)
-            {
-                tracef1("[msgs_readfile: placing CH_NULL at &%p]", out);
-                if((out == msgs__block)  ||  !*(out - 1))
-                    continue;
-#if TRACE
-                *out = (char) ch;
-                tracef1("[msgs_readfile: ended line '%s']", start);
-                start = out + 1;
-#endif
-            }
-
-            *out++ = (char) ch;
-        }
-        while(in != end);
-
-        tracef1("[msgs_readfile: placing last CH_NULL at &%p]", out);
-        *out++ = CH_NULL; /* need this last byte as end marker */
-    }
-}
-
-static STATUS
-__msgs_load_messages_file(
-    P_P_ANY p_p_any /*out*/,
-    FILE_HANDLE file_handle)
-{
-    STATUS status;
-    S32 length = file_length(file_handle);
-    const U32 messages_bodge = 2; /* one for trailing linesep, one for final NUL */
-
-    for (;;) /* loop for structure */
-    {
-        if(NULL == (*p_p_any = _al_ptr_alloc(length + messages_bodge, &status)))
-            break;
-
-        if((status = file_read(*p_p_any, 1, length, file_handle)) != length)
-        {
-            if(status_ok(status))
-                status = STATUS_FAIL;
-            break;
-        }
-
-        status = STATUS_OK;
-        break;
-    }
-
-    if(status_fail(status))
-    {
-        al_ptr_dispose(p_p_any);
-
-        return(status);
-    }
-
-    return(length);
+    __msgs_process_loaded_data(msgs__block, real_length);
 }
 
 /* end of cs-msgs.c */

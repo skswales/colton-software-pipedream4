@@ -34,7 +34,7 @@ gr_diag_normalise_stt(
     GR_DIAG_OFFSET sttObject = sttObject_in;
 
     myassert0x(p_gr_diag && array_elements32(&p_gr_diag->handle), "gr_diag_normalise_stt has no diagram");
-    IGNOREPARM_InRef_(p_gr_diag);
+    UNREFERENCED_PARAMETER_InRef_(p_gr_diag);
 
     if(sttObject == GR_DIAG_OBJECT_FIRST)
         sttObject = sizeof32(GR_DIAG_DIAGHEADER);
@@ -1515,7 +1515,7 @@ gr_diag_piesector_hit_refine(
     _InRef_     PC_GR_POINT point,
     _InRef_     PC_GR_SIZE size)
 {
-    IGNOREPARM_InRef_(size);
+    UNREFERENCED_PARAMETER_InRef_(size);
 
     return(piesector_hit(&pie->pos, pie->radius, &pie->alpha, &pie->beta, point));
 }
@@ -1582,7 +1582,7 @@ gr_diag_quadrilateral_hit_refine(
 {
     GR_POINT points[4 + 1];
 
-    IGNOREPARM_InRef_(size);
+    UNREFERENCED_PARAMETER_InRef_(size);
 
     points[0] = quad->pos;
 

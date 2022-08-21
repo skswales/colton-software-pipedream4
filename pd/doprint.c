@@ -176,7 +176,7 @@ static coord two_sided_margin;
 
 #define landscape_option (d_print_QL == 'L')
 
-#define baseline_offset ((global_font_leading_mp * 1) / 8)
+#define baseline_offset ((global_font_leading_millipoints * 1) / 8)
 
 /* ----------------------------------------------------------------------- */
 
@@ -215,7 +215,7 @@ init_serial_print(
 {
     S32 rs423config;
 
-    IGNOREPARM(port);
+    UNREFERENCED_PARAMETER(port);
 
     /* set default RS423 state */
     _kernel_osbyte(181, 1, 0);
@@ -310,7 +310,7 @@ Print_fn(void)
 
     /* orientation change: redo lines */
     if((d_print_QL != d_old_QL) || (d_print_QS != d_old_QS))
-        new_font_leading(global_font_leading_mp);
+        new_font_leading(global_font_leading_millipoints);
 
     if(res)
         print_document();
@@ -409,14 +409,14 @@ print_document_core_core(
 
         if(parmfile)
         {
-            res = file_find_on_path_or_relative(parmfile_array, elemof32(parmfile_array), parmfile, currentfilename)
+            res = status_done(file_find_on_path_or_relative(parmfile_array, elemof32(parmfile_array), file_get_search_path(), parmfile, currentfilename))
                         /* doing macros - check it's a tab file */
                         ? find_filetype_option(parmfile_array, FILETYPE_UNDETERMINED)
-                        : '\0';
+                        : CH_NULL;
 
             if(res != 'T')
             {
-                res = (res == '\0') ? create_error(ERR_NOTFOUND) : create_error(ERR_NOTTABFILE);
+                res = (res == CH_NULL) ? create_error(ERR_NOTFOUND) : create_error(ERR_NOTTABFILE);
                 /* must pass back a pointer to a non-auto object */
                 *errp = parmfile;
                 return(res);
@@ -510,7 +510,7 @@ print_document_core_core(
 static S32
 page_width_query(void)
 {
-    /* SKS after 4.11 06jan92 - add paranoid checks on page_width; made function as it's now used much more */
+    /* SKS after PD 4.11 06jan92 - add paranoid checks on page_width; made function as it's now used much more */
     S32 page_width;
 
     page_width = d_poptions_PX;
@@ -617,7 +617,7 @@ print_document_core(
         case driver_network:
             if(!str_isblank(d_driver_PN))
             {
-                /* SKS after 4.11 06jan92 - $.Stream is bodge for netprint 5.23 on RISC OS 3 */
+                /* SKS after PD 4.11 06jan92 - $.Stream is bodge for netprint 5.23 on RISC OS 3 */
                 (void) xsnprintf(outfile_array, elemof32(outfile_array), "netprint#%s:$.Stream", d_driver_PN);
                 outname = outfile_array;
             }
@@ -647,7 +647,7 @@ print_document_core(
         if(!printer_output)
         {
             *errp = outnamerep ? outnamerep : outname;
-            riscos_printing = FALSE; /* hole closed by SKS after 4.11 17jan92 */
+            riscos_printing = FALSE; /* hole closed by SKS after PD 4.11 17jan92 */
             return(create_error(ERR_CANNOTOPEN));
         }
 
@@ -754,7 +754,7 @@ print_document_core(
 
             /* determine end column from page width and use_be limit */
             blkend.col   = last_col_in_width(new_column, page_width);
-            /* SKS after 4.11 06jan92 - don't exceed specified last column! */
+            /* SKS after PD 4.11 06jan92 - don't exceed specified last column! */
             blkend.col   = MIN(blkend.col, use_be.col);
             blkend.row   = use_be.row;
 
@@ -891,9 +891,9 @@ set_pitch(
     if(hmi_as_text)
     {
         /* send length of gap as text form */
-        (void) sprintf(buffer, "%d", n);
+        consume_int(sprintf(buffer, "%d", n));
         ptr = buffer;
-        while((ch = *ptr++) != '\0')
+        while((ch = *ptr++) != CH_NULL)
             rawprint(ch);
     }
     else
@@ -909,8 +909,8 @@ at_print(void)
 {
     /* system font printing pos at top of char */
     /* + extra correction for system font baseline */
-    print_complain(bbc_move(riscos_font_xad/MILLIPOINTS_PER_OS,
-                            riscos_font_yad/MILLIPOINTS_PER_OS
+    print_complain(bbc_move(riscos_font_ad_millipoints_x / MILLIPOINTS_PER_OS,
+                            riscos_font_ad_millipoints_y / MILLIPOINTS_PER_OS
                             + (charheight*(7-1))/8));
 }
 
@@ -972,27 +972,24 @@ drop_n_lines(
 {
     trace_1(TRACE_APP_PD4, "drop_n_lines(%d)", nlines);
 
-    if(nlines > 0)
-    {
-        if(riscos_printing)
-        {
-            /* drop baseline n lines */
-            riscos_font_yad -= nlines * global_font_leading_mp;
-            trace_3(TRACE_APP_PD4, "riscos_font_yad = %d (mp) after dropping %d line%s",
-                    riscos_font_yad, nlines, (nlines == 1) ? "" : "s");
-            return;
-        }
+    if(nlines <= 0)
+        return;
 
-        wrchrep(CR, nlines);
+    if(riscos_printing)
+    {   /* drop baseline n lines */
+        riscos_font_ad_millipoints_y -= nlines * global_font_leading_millipoints;
+        trace_3(TRACE_APP_PD4, "riscos_font_ad_millipoints_y = %d after dropping %d %s",
+                riscos_font_ad_millipoints_y, nlines, (nlines == 1) ? "line" : "lines");
+        return;
     }
+
+     wrchrep(CR, nlines);
 }
 
 extern S32
 left_margin_width(void)
 {
-    S32 nspaces;
-
-    nspaces = d_poptions_LM + ((left_page) ? 0 : two_sided_margin);
+    S32 nspaces = d_poptions_LM + ((left_page) ? 0 : two_sided_margin);
 
     trace_1(TRACE_APP_PD4, "left_margin_width() gives %d spaces", nspaces);
 
@@ -1002,14 +999,11 @@ left_margin_width(void)
 static S32
 print_left_margin(void)
 {
-    S32 nspaces;
-
-    nspaces = left_margin_width();
+    S32 nspaces = left_margin_width();
 
     if(riscos_printing)
-    {
-        /* left margin and two-sided margins now accounted for in RISC OS printing rectangle */
-        riscos_font_xad = 0;
+    {   /* left margin and two-sided margins now accounted for in RISC OS printing rectangle */
+        riscos_font_ad_millipoints_x = 0;
     }
     else
         ospca(nspaces);
@@ -1031,7 +1025,7 @@ prchef(
 
     trace_2(TRACE_APP_PD4, "prchef(%s), page number = %d", trace_string(field), curpnm);
 
-    /* SKS after 4.12 21apr92 - must test header/footer even on page 0 */
+    /* SKS after PD 4.12 21apr92 - must test header/footer even on page 0 */
     if(str_isblank(field))
         return;
 
@@ -1045,7 +1039,7 @@ prchef(
 
         if(riscos_printing)
         {
-            print_setcolours(FORE, BACK);
+            print_setcolours(COI_FORE, COI_BACK);
 
             if(riscos_fonts)
                 print_setfontcolours();
@@ -1054,11 +1048,15 @@ prchef(
         }
 
         /* expand the lcr field and send it off */
-        expand_lcr(field, -1, array, header_footer_width,
-                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                   riscos_fonts /*allow_fonty_result*/, TRUE /*compile_lcr*/);
+        expand_lcr(
+            field, -1 /*row*/, array, header_footer_width,
+            DEFAULT_EXPAND_REFS /*expand_refs*/,
+            EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+            EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+            EXPAND_FLAGS_FONTY_RESULT(riscos_fonts) /*allow_fonty_result*/ /*expand_flags*/,
+            TRUE /*compile_lcr*/);
 
-        lcrjust(array, header_footer_width, left_page);
+        (void) (riscos_fonts ? lcrjust_riscos_fonts : lcrjust_plain)(array, header_footer_width, left_page);
     }
 
     prnout(EOS);        /* switch off highlights */
@@ -1111,17 +1109,17 @@ print_grid_line(
 
     admit_defeat.wordp = path;
 
-    /* starting x Draw - assumes print_left_margin sets riscos_font_xad to some small epsilon > 0 */
+    /* starting x Draw - assumes print_left_margin sets riscos_font_ad_millipoints_x to some small epsilon > 0 */
     x0 = x_ch * charwidth * 256 + (MILLIPOINTS_PER_OS / 4); /* SKS 31.10.91 / 16 works for landscape but not portrait */
 
     /* ending x Draw - across n chars from start */
     x1 = x0 + x_across_ch * charwidth * 256;
 
     /* starting y Draw - relative to current output position */
-    y0 = (riscos_font_yad - y_row * global_font_leading_mp + global_font_leading_mp*3/4) * 256 / MILLIPOINTS_PER_OS;
+    y0 = (riscos_font_ad_millipoints_y - y_row * global_font_leading_millipoints + global_font_leading_millipoints*3/4) * 256 / MILLIPOINTS_PER_OS;
 
     /* ending y Draw - drop n lines from start */
-    y1 = y0 - (y_drop_rows * global_font_leading_mp) * 256 / MILLIPOINTS_PER_OS;
+    y1 = y0 - (y_drop_rows * global_font_leading_millipoints) * 256 / MILLIPOINTS_PER_OS;
 
     *ptr++ = path_move_2;       /* MoveTo */
     *ptr++ = x0;
@@ -1135,7 +1133,7 @@ print_grid_line(
 
     *ptr++ = path_term;         /* EndOfObject */
 
-    print_setcolours(FORE, BACK);
+    print_setcolours(COI_FORE, COI_BACK);
 
     print_complain(drawmod_stroke(admit_defeat, fill_Default, NULL, &printing_draw_line_style));
 }
@@ -1223,7 +1221,7 @@ static BOOL
 outff(
     BOOL do_something)
 {
-    trace_1(TRACE_APP_PD4, "outff(%s)", trace_boolstring(do_something));
+    trace_1(TRACE_APP_PD4, "outff(%s)", report_boolstring(do_something));
 
     if(riscos_printing)
         return(TRUE);
@@ -1448,7 +1446,7 @@ print_page(void)
 
         trace_0(TRACE_APP_PD4, "print_page loop");
 
-        /* SKS after 4.11 06jan92 - see below */
+        /* SKS after PD 4.11 06jan92 - see below */
         page_width = page_width_query();
 
         /* for each cell in file or block */
@@ -1541,7 +1539,7 @@ print_page(void)
 
                 if(page_width)
                 {
-                    /* SKS after 4.11 06jan92 - limit field widths to page */
+                    /* SKS after PD 4.11 06jan92 - limit field widths to page */
                     colwid = MIN(colwid, page_width - this_colstart);
                     fwidth = MIN(fwidth, page_width - this_colstart);
                 }
@@ -1559,9 +1557,9 @@ print_page(void)
                         trace_2(TRACE_APP_PD4, "found picture at %d, %d", in_block.col, in_block.row);
 
                         /* origin of draw file at x0, y1 */
-                        x = riscos_font_xad / MILLIPOINTS_PER_OS;
-                        y =(riscos_font_yad
-                             + (global_font_leading_mp - baseline_offset)
+                        x = riscos_font_ad_millipoints_x / MILLIPOINTS_PER_OS;
+                        y =(riscos_font_ad_millipoints_y
+                             + (global_font_leading_millipoints - baseline_offset)
                              - (p_draw_file_ref->y_size_os * MILLIPOINTS_PER_OS)
                             ) / MILLIPOINTS_PER_OS;
 
@@ -1587,7 +1585,7 @@ print_page(void)
                             else
                                 neg = FALSE;
 
-                            print_setcolours(neg ? NEGATIVEC : FORE, BACK);
+                            print_setcolours(neg ? COI_NEGATIVE : COI_FORE, COI_BACK);
 
                             if(riscos_fonts)
                                 print_setfontcolours();
@@ -1605,7 +1603,7 @@ print_page(void)
                     return(P_HAD_ERROR);
 
                 if(riscos_printing)
-                    riscos_font_xad += colwid * (charwidth*MILLIPOINTS_PER_OS);
+                    riscos_font_ad_millipoints_x += colwid * (charwidth * MILLIPOINTS_PER_OS);
 
                 this_colstart += colwid;
             }
@@ -1702,7 +1700,7 @@ save_print_state(void)
         first_macro = NULL;
     }
     riscos_print_save.saved_had_top     = had_top;
-    trace_1(TRACE_APP_PD4, "saved had_top %s", trace_boolstring(had_top));
+    trace_1(TRACE_APP_PD4, "saved had_top %s", report_boolstring(had_top));
 }
 
 static S32
@@ -1723,7 +1721,7 @@ restore_saved_print_state(void)
         res = duplicate_list(&first_macro, &riscos_print_save.saved_macrolist);
     }
     had_top             = riscos_print_save.saved_had_top;
-    trace_1(TRACE_APP_PD4, "restored had_top := %s", trace_boolstring(had_top));
+    trace_1(TRACE_APP_PD4, "restored had_top := %s", report_boolstring(had_top));
 
     return(res);
 }
@@ -1795,7 +1793,9 @@ printx(void)
 
             /* does the user want wait between sheets etc. ? */
             if(encpln  &&  sheets_bit)
-                do  {
+            {
+                for(;;) /* loop for structure */
+                {
                     int c;
                     char array[LIN_BUFSIZ];
 
@@ -1835,15 +1835,17 @@ printx(void)
 
                     if(riscos_printing)
                     {
-                        print_setcolours(FORE, BACK);
+                        print_setcolours(COI_FORE, COI_BACK);
 
                         if(riscos_fonts)
                             print_setfontcolours();
                         else
                             at_print();
                     }
+
+                    break; /* out of loop for structure */
                 }
-                while(FALSE);
+            }
 
             escape_enable();
 
@@ -1994,7 +1996,7 @@ out_h_string(
     if(!prnbit)
         return;
 
-    while((ch = *str++) != '\0')
+    while((ch = *str++) != CH_NULL)
     {
         if(ch == ESCAPE)
         {
@@ -2106,9 +2108,9 @@ riscos_drvout(
     switch(ch)
     {
     case CR:
-        /* drop baseline one line; doesn't reposition xad */
-        riscos_font_yad -= global_font_leading_mp;
-        trace_1(TRACE_APP_PD4, "riscos_font_yad = %d (mp) due to CR", riscos_font_yad);
+        /* drop baseline one line; doesn't reposition riscos_font_ad_millipoints_x */
+        riscos_font_ad_millipoints_y -= global_font_leading_millipoints;
+        trace_1(TRACE_APP_PD4, "riscos_font_ad_millipoints_y = %d (mp) due to CR", riscos_font_ad_millipoints_y);
         break;
 
     case EOS:
@@ -2170,7 +2172,7 @@ drvoff(
 {
     riscos_printing_abort("drvoff");
 
-    IGNOREPARM(ok);
+    UNREFERENCED_PARAMETER(ok);
 
     escape_enable();
 
@@ -2539,7 +2541,7 @@ static void
 prncan(
     BOOL ok)
 {
-    trace_1(TRACE_APP_PD4, "prncan(%s)", trace_boolstring(ok));
+    trace_1(TRACE_APP_PD4, "prncan(%s)", report_boolstring(ok));
 
     actind_end();
 
@@ -2571,19 +2573,19 @@ extern BOOL
 print_complain(
     os_error * err)
 {
-    if(err)
+    if(NULL == err)
+        return(FALSE);
+
+    if(riscos_printing)
     {
-        if(riscos_printing)
-        {
-            riscprint_suspend();
+        riscprint_suspend();
 
-            reperr(create_error(ERR_PRINTER), err->errmess);
-        }
-        else
-            rep_fserr(err->errmess);
+        reperr(ERR_PRINTER, err->errmess);
     }
+    else
+        reperr_kernel_oserror(err);
 
-    return((BOOL) err);
+    return(TRUE);
 }
 
 static coord
@@ -2635,7 +2637,7 @@ getfield(
         switch(ch)
         {
         case EOF:
-            *ptr = '\0';
+            *ptr = CH_NULL;
             return(EOF);
 
         case LF:
@@ -2650,8 +2652,8 @@ getfield(
             {
                 if(file_ungetc(newch, input) == EOF)
                 {
-                    reperr_null(create_error(ERR_CANNOTREAD));
-                    *ptr = '\0';
+                    reperr_null(ERR_CANNOTREAD);
+                    *ptr = CH_NULL;
                     return(EOF);
                 }
             }
@@ -2661,16 +2663,16 @@ getfield(
             /* deliberate fall through */
 
         case TAB:
-            *ptr = '\0';
+            *ptr = CH_NULL;
             return(ch);
 
         default:
             *ptr++ = (uchar) ch;
 
-            /* SKS after 4.11 03feb92 - where had this check gone? */
-            if(ptr - array >= LIN_BUFSIZ)
+            /* SKS after PD 4.11 03feb92 - where had this check gone? */
+            if((ptr - array) >= LIN_BUFSIZ)
             {
-                *--ptr = NULLCH;
+                *--ptr = CH_NULL;
                 return(EOF);
             }
             break;
@@ -2684,6 +2686,14 @@ getfield(
 *
 ******************************************************************************/
 
+static void
+pagelayout_fn_core(void)
+{
+    update_variables();
+
+    filealtered(TRUE);
+}
+
 extern void
 PageLayout_fn(void)
 {
@@ -2692,9 +2702,7 @@ PageLayout_fn(void)
 
     while(dialog_box(D_POPTIONS))
     {
-        update_variables();
-
-        filealtered(TRUE);
+        pagelayout_fn_core();
 
         if(!dialog_box_can_persist())
             break;
@@ -2709,13 +2717,26 @@ PageLayout_fn(void)
 *
 ******************************************************************************/
 
+static BOOL
+printerconfig_fn_prepare(void)
+{
+    LIST_ITEMNO pdrivers_list_key;
+
+    false_return(dialog_box_can_start());
+
+    delete_list(&pdrivers_list);
+
+    pdrivers_list_key = 0;
+    status_assert(enumerate_dir_to_list(&pdrivers_list, &pdrivers_list_key, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
+
+    return(dialog_box_start());
+}
+
 extern void
 PrinterConfig_fn(void)
 {
-    if(!dialog_box_start())
+    if(!printerconfig_fn_prepare())
         return;
-
-    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
 
     while(dialog_box(D_DRIVER))
     {
@@ -2727,7 +2748,7 @@ PrinterConfig_fn(void)
 
     dialog_box_end();
 
-    delete_list(&ltemplate_or_driver_list);
+    delete_list(&pdrivers_list);
 }
 
 /******************************************************************************
@@ -2736,52 +2757,78 @@ PrinterConfig_fn(void)
 *
 ******************************************************************************/
 
-extern void
-EditPrinterDriver_fn(void)
+static int
+editprinterdriver_fn_core(void)
 {
-    if(!dialog_box_start())
-        return;
+    PCTSTR driver_name = d_edit_driver[0].textfield;
+    TCHARZ buffer[BUF_MAX_PATHSTRING];
+    S32 res;
+
+    if(str_isblank(driver_name))
+    {
+        reperr_null(ERR_BAD_NAME);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    /* Add prefix '<PipeDream$Path>.PDrivers.' to driver name */
+    if((res = add_path_using_dir(buffer, elemof32(buffer), driver_name, PDRIVERS_SUBDIR_STR)) <= 0)
+    {
+        consume_bool(reperr_null(res));
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    {
+    LOAD_FILE_OPTIONS load_file_options;
+    zero_struct(load_file_options);
+    load_file_options.document_name = buffer;
+    load_file_options.filetype_option = AUTO_CHAR; /* therefore must go via loadfile() */
+    if(!loadfile(buffer, &load_file_options))
+        return(FALSE);
+    } /*block*/
+
+    xf_file_is_driver = TRUE;
+
+    return(TRUE);
+}
+
+static BOOL
+editprinterdriver_fn_prepare(void)
+{
+    LIST_ITEMNO pdrivers_list_key;
+
+    false_return(dialog_box_can_start());
+
+    false_return(init_dialog_box(D_EDIT_DRIVER));
 
     /* use Load template dialog process 'cos its the same, but initialise for edit driver */
 
     /* try giving current printer driver as default */
     if(!mystr_set(&d_edit_driver[0].textfield, d_driver_PD))
-        return;
+        return(FALSE);
 
-    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
+    delete_list(&pdrivers_list);
+
+    pdrivers_list_key = 0;
+    status_assert(enumerate_dir_to_list(&pdrivers_list, &pdrivers_list_key, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
+
+    return(dialog_box_start());
+}
+
+extern void
+EditPrinterDriver_fn(void)
+{
+    if(!editprinterdriver_fn_prepare())
+        return;
 
     while(dialog_box(D_EDIT_DRIVER))
     {
-        /* Add prefix '<PipeDream$Dir>.PDrivers.' to driver name */
-        TCHARZ buffer[BUF_MAX_PATHSTRING];
-        LOAD_FILE_OPTIONS load_file_options;
-        PCTSTR tname = d_edit_driver[0].textfield;
-        S32 res;
+        int core_res = editprinterdriver_fn_core();
 
-        if(str_isblank(tname))
-        {
-            reperr_null(create_error(ERR_BAD_NAME));
-            if(!dialog_box_can_retry())
-                break;
+        if(2 == core_res)
             continue;
-        }
 
-        if((res = add_path_using_dir(buffer, elemof32(buffer), tname, PDRIVERS_SUBDIR_STR)) <= 0)
-        {
-            reperr_null(res);
-            if(!dialog_box_can_retry())
-                break;
-            continue;
-        }
-
-        zero_struct(load_file_options);
-        load_file_options.document_name = buffer;
-        load_file_options.filetype_option = AUTO_CHAR; /* therefore must go via loadfile() */
-
-        if(!loadfile(buffer, &load_file_options))
+        if(0 == core_res)
             break;
-
-        xf_file_is_driver = TRUE;
 
         if(!dialog_box_can_persist())
             break;
@@ -2789,7 +2836,7 @@ EditPrinterDriver_fn(void)
 
     dialog_box_end();
 
-    delete_list(&ltemplate_or_driver_list);
+    delete_list(&pdrivers_list);
 }
 
 /******************************************************************************
@@ -2798,40 +2845,48 @@ EditPrinterDriver_fn(void)
 *
 ******************************************************************************/
 
-extern void
-MicrospacePitch_fn(void)
+static BOOL
+microspacepitch_fn_core(void)
 {
     micbit = FALSE;
 
-    if(!driver_loaded)
+    if(d_mspace[0].option == 'Y')
     {
-        reperr_null(create_error(ERR_NO_DRIVER));
-        return;
+        if(0 == d_mspace[1].option)
+            return(reperr_null(ERR_BAD_OPTION));
+
+        micbit = TRUE;
     }
+
+    return(TRUE);
+}
+
+static BOOL
+microspacepitch_fn_prepare(void)
+{
+    false_return(dialog_box_can_start());
+
+    micbit = FALSE;
+
+    if(!driver_loaded)
+        return(reperr_null(ERR_NO_DRIVER));
 
     if(!search_list(&highlight_list, HMI_P))
-    {
-        reperr_null(create_error(ERR_NO_MICRO));
-        return;
-    }
+        return(reperr_null(ERR_NO_MICRO));
 
-    if(!dialog_box_start())
+    return(dialog_box_start());
+}
+
+extern void
+MicrospacePitch_fn(void)
+{
+    if(!microspacepitch_fn_prepare())
         return;
 
     while(dialog_box(D_MSPACE))
     {
-        micbit = FALSE;
-
-        if(d_mspace[0].option == 'Y')
-        {
-            if(!d_mspace[1].option)
-            {
-                reperr_null(create_error(ERR_BAD_OPTION));
-                break;
-            }
-
-            micbit = TRUE;
-        }
+        if(!microspacepitch_fn_core())
+            break;
 
         if(!dialog_box_can_persist())
             break;

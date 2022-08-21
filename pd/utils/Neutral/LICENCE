@@ -1,0 +1,26 @@
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+| Copyright (C) 1987-1998 Colton Software Limited
+| Copyright (C) 1998-2015 R W Colton
+
+This licence also applies to the following files in this directory that do
+not contain the above licence:
+
+ p4/aff
+ p4/svg
+
+ spr_app11
+ spr_app22
+ spr_app24
+ spr_chart
+ spr_chart22
+ spr_chart24
+ spr_file11
+ spr_file11R5
+ spr_file22
+ spr_file22R5
+ spr_file24
+ spr_fxtr22R4
+ spr_fxtr24R4

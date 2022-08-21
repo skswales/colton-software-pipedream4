@@ -84,7 +84,7 @@ gr_map_box_front_and_back(
     _InoutRef_  P_GR_BOX xbox /*inout*/,
     _InRef_     PC_GR_CHART cp)
 {
-    /* SKS after 4.12 30mar92 - for consistency and code size do this here not in callers */
+    /* SKS after PD 4.12 30mar92 - for consistency and code size do this here not in callers */
     xbox->x1 = xbox->x0;
     xbox->y1 = xbox->y0;
 
@@ -260,7 +260,7 @@ gr_actualise_series_error1(
             {
                 error = fabs(error);
 
-                /* SKS after 4.12 30mar92 - correct scaling with errors */
+                /* SKS after PD 4.12 30mar92 - correct scaling with errors */
                 if(cumulative)
                     error += errsum;
 
@@ -630,7 +630,7 @@ gr_barlinech_point_start(
     if(p_axes->axis[Y_AXIS_IDX].bits.log_scale)
         if(value->y <= 0.0)
         {
-            /* SKS after 4.12 30mar92 - skip this point and start afresh with the line */
+            /* SKS after PD 4.12 30mar92 - skip this point and start afresh with the line */
             lcp->had_first = FALSE;
             return(0);
         }
@@ -640,7 +640,7 @@ gr_barlinech_point_start(
         /* don't plot -ve values on stacked plot */
         if(value->y < 0.0)
         {
-            /* SKS after 4.12 30mar92 - skip this point and start afresh with the line */
+            /* SKS after PD 4.12 30mar92 - skip this point and start afresh with the line */
             lcp->had_first = FALSE;
             return(0);
         }
@@ -1019,7 +1019,7 @@ gr_barchart_point_addin(
     return(1);
 }
 
-/* SKS after 4.12 30mar92 - added structure for better control */
+/* SKS after PD 4.12 30mar92 - added structure for better control */
 
 typedef struct VANE_CONTROL
 {
@@ -1069,7 +1069,7 @@ gr_linechart_vane_new(
             if(alpha < beta)
                 return(1);
 
-            /* SKS after 4.12 30mar92 - to avoid 'Escher' line charts we sometimes need to ignore the bottom drop vane */
+            /* SKS after PD 4.12 30mar92 - to avoid 'Escher' line charts we sometimes need to ignore the bottom drop vane */
             if(p_vane->ignore_bottom)
                 return(1);
         }
@@ -1138,7 +1138,7 @@ gr_linechart_point_addin(
     }
 
     /* BODGE: in 2-D mode derive line chart line colour from fill colour if point has defaulted */
-    /* SKS after 4.12 30mar92 - added else in front of if: only bodge in 2-D non-fill-axis mode */
+    /* SKS after PD 4.12 30mar92 - added else in front of if: only bodge in 2-D non-fill-axis mode */
     else if(!cp->d3.bits.use && point_linestyle_using_default)
         point_linestyle.fg = point_fillstyle.fg;
 
@@ -1817,7 +1817,7 @@ gr_barlinechart_addin(
         if(p_axes->bits.stacked)
         {
             P_GR_BARLINESCATCH_SERIES_CACHE lc_array;
-            /* SKS after 4.12 30mar92 - was total_n_points (which is garbage) -> crash if total_n_points < n_series */
+            /* SKS after PD 4.12 30mar92 - was total_n_points (which is garbage) -> crash if total_n_points < n_series */
             U32 n_elem = (end_idx - stt_idx);
             S32 bars_plotted  = 0;
             S32 lines_plotted = 0;

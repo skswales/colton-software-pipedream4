@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>External References</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="errormessages.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="fileops.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Externalref">External References</h1>
+    <p>
+        As well as having references in cells to other cells inside the document, you can also have references to cells in other documents.
+        Such references to cells in other documents are called external references.
+    </p>
+    <p>
+        This can be useful if you have spreadsheets which use figures from other spreadsheets.
+        For example, you may need to have a turnover spreadsheet whose totals you use in your balance sheet spreadsheet.
+        By using external references, you can link the two spreadsheets so that a change in the the
+        total figure in the turnover spreadsheet is automatically applied to the balance sheet.
+        So, by updating one spreadsheet, you are automatically updating another spreadsheet.
+    </p>
+    <p>
+        The document which contains the external references is called the dependent document.
+        The documents referred to by the dependent document are called supporting documents.
+        Normally, both dependent and supporting documents are stored in the same directory on your disc.
+    </p>
+    <p>
+        To include a cell reference from another document, you should have loaded both the dependent document you are editing and the supporting documents.
+        To insert an external reference in the dependent document, click in the relevant cell in the supporting document whilst you are editing a number
+        i.e. after having given the <span class="csg-command">Edit Formula</span> command.
+        The external reference will appear on the formula line of the dependent document at the caret position as follows:
+    </p>
+    <pre class="csg-sample-indent">[filename]cell reference</pre>
+    <p>where <code>filename</code> is the name of the supporting document and <code>cell reference</code> is the cell referred to in that document.</p>
+    <p>For example, <code>[turnover]A3</code> would be a reference to cell A3 in the document called &lsquo;turnover&rsquo;.</p>
+    <p>
+        Instead of clicking in the relevant cell in the supporting document, you can type in the external reference on the formula line using the above syntax.
+        Any document referred to should be loaded.
+        If you try to type in a reference to a document which is not loaded, you will get an error message <code>File not loaded</code>.
+        If you then load the supporting document, PipeDream will resolve the reference.
+    </p>
+    <p>
+        Once documents are linked in this way, loading a dependent document causes its supporting documents to be loaded at the same time.
+        All the linked documents must be in memory at the same time for the linking to work correctly.
+        If you do not have enough memory for all the linked documents to be in memory at the same time, a message will tell you.
+    </p>
+    <p>
+        Note that only supporting documents are loaded automatically.
+        Dependent documents are not loaded automatically.
+        If you want to ensure that all documents in a linked set are loaded together, make sure that they are all mutually supporting documents.
+    </p>
+    <h5>Example 1:</h5>
+    <p class="csg-sample-indent">
+        Sheet Alpha has references to cells in Beta, Gamma and Delta.
+        It is a dependent document.
+    </p>
+    <p class="csg-sample-indent">Sheets Beta, Gamma and Delta are supporting documents.</p>
+    <p class="csg-sample-indent">In the case shown above, loading the dependent document Alpha causes the supporting documents Beta, Gamma and Delta to be loaded automatically.</p>
+    <p class="csg-sample-indent">However, loading Beta, Gamma or Delta individually does not load any other document automatically.</p>
+    <h5>Example 2:</h5>
+    <p class="csg-sample-indent">Sheet Alpha has references to cells in Beta, Gamma and Delta.</p>
+    <p class="csg-sample-indent">Sheets Beta, Gamma and Delta have references to cells in Alpha.</p>
+    <p class="csg-sample-indent">All sheets are both supporting and dependent documents.</p>
+    <p class="csg-sample-indent">
+        In the case shown above, loading document Alpha causes documents Beta, Gamma and Delta to be loaded automatically.
+        Also, loading either Beta, Gamma or Delta causes all the other documents in the linked set to be loaded automatically, since references have turned them all into supporting documents.
+    </p>
+    <p>References in all linked documents will be recalculated automatically, provided you have not switched to manual recalculation.</p>
+    <p>If you change the name of one of the supporting documents, all references to it in dependent documents which are loaded will change accordingly.</p>
+    <p>If you carry out moves, copies or deletions in one of the linked documents such that cell references need to be updated, this will be done automatically for all the dependent documents which are loaded.</p>
+    <p>Note that, if you have dependent documents which are not in memory when you do some editing, references in the dependent documents may become out of date.</p>
+    <p>
+        If you try to close one of the supporting documents, you will be asked to confirm that you want to close it.
+        Remember that all the linked documents must be open at the same time for the features described to work correctly.
+    </p>
+    <p>If you load two supporting documents with the same name, you will get the message <code>More than 1 file loaded</code> in a spreadsheet.</p>
+
+    <h2 id="External">External References and Directories</h2>
+    <p>
+        You can have references between files in different directories.
+        PipeDream avoids, wherever possible, using a whole filename to describe the location of a supporting document;
+        if the supporting document is in the same directory as a dependent document, only the leafname of the supporting document is required.
+        If the supporting document is in a sub-directory of the directory containing the dependent document, then the sub-directory is used, with no pathname.
+        If the supporting document is in a higher directory or in a different branch of the directory tree, PipeDream has to use the whole pathname.
+        This works well until you give the file to someone else who does not have these directories or you take out the removable media on which a supporting document was stored.
+        To avoid such problems, make sure that your supporting documents are in the same directory as, or in sub-directories of, the dependent document.
+    </p>
+
+    <h2 id="Loading">Loading of Files From a Library</h2>
+    <p>
+        If PipeDream is unable to load a supporting document from the directory of the dependent document, it searches the directories listed on the Path for a file with the given name in the sub-directory Library.
+        If the file still has not been loaded, it searches the directories listed on the Path for a file with the given name but without any sub-directory prefix.
+    </p>
+    <p>
+        For example, if there is no file called <code>custom</code> in the current directory,
+        the reference <code>[custom]</code> causes PipeDream to look for the name <code>custom</code> on the Path.
+    </p>
+    <p>
+        By saving library files in a library directory accessible on the Path, such as <code>!PipeDream.Resources.Library</code>,
+        you can have one central copy of common data and custom functions.
+    </p>
+    <p>In order for PipeDream to carry out library searching in this way, the external reference must not include any pathname.</p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>External references in custom functions</td>
+                <td><a href="customfns.html">Custom Functions</a></td>
+            </tr>
+            <tr>
+                <td>External references in names</td>
+                <td><a href="names.html">Names</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Error Messages </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> File Operations</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="errormessages.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="fileops.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

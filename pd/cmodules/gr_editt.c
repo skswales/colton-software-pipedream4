@@ -13,17 +13,9 @@
 
 #include "common/gflags.h"
 
-/*
-exported header
-*/
-
-#include "gr_chart.h"
-
-/*
-local header
-*/
-
-#include "gr_chari.h"
+#ifndef __swis_h
+#include "swis.h" /*C:*/
+#endif
 
 #ifndef          __wm_event_h
 #include "cmodules/wm_event.h"
@@ -57,6 +49,10 @@ local header
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif
 
+#ifndef __drawmod_h
+#include "drawmod.h"
+#endif
+
 #ifndef __fontlxtr_h
 #include "cmodules/riscos/fontlxtr.h" /* includes fontlist.h */
 #endif
@@ -68,10 +64,22 @@ local header
 #include "cmodules/mlec.h"
 
 /*
+exported header
+*/
+
+#include "gr_chart.h"
+
+/*
+local header
+*/
+
+#include "gr_chari.h"
+
+/*
 callback functions
 */
 
-mlec_event_proto(static, mlsubmenu_mlec_event_handler);
+MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_handler);
 
 null_event_proto(static, gr_chartedit_selected_object_drag_null_handler);
 
@@ -151,7 +159,7 @@ gr_text_addin(
     return(res);
 }
 
-/* SKS after 4.12 27mar92 - needed for live text reload mechanism */
+/* SKS after PD 4.12 27mar92 - needed for live text reload mechanism */
 
 static LIST_ITEMNO gr_text_key_to_use = 0;
 
@@ -160,7 +168,7 @@ gr_chart_text_order_set(
     P_GR_CHART_HANDLE chp /*const*/,
     S32 key)
 {
-    IGNOREPARM(chp);
+    UNREFERENCED_PARAMETER(chp);
 
     gr_text_key_to_use = key;
 }
@@ -172,7 +180,7 @@ gr_text_key_for_new(
     P_GR_TEXT    t;
     LIST_ITEMNO key;
 
-    /* SKS after 4.12 27mar92 - needed for live text reload mechanism */
+    /* SKS after PD 4.12 27mar92 - needed for live text reload mechanism */
     if(gr_text_key_to_use != 0)
     {
         key = gr_text_key_to_use;
@@ -292,7 +300,7 @@ gr_text_box_set(
         gr_box_sort(&t->box, &t->box); /* always ensure sorted */
     }
 
-    return(1);
+    return(STATUS_DONE);
 }
 
 /******************************************************************************
@@ -312,16 +320,17 @@ MLSUBMENU_STATES;
 typedef struct MLSUBMENU_STRUCT
 {
     MLEC_HANDLE mlec;
-    wimp_w      panewindow;
-    wimp_wind * panetemplate;
+
+    HOST_WND mls_pane_window_handle;
+    WimpWindowWithBitset * mls_pane_template;
 
     MLSUBMENU_STATES state;
 }
 MLSUBMENU_STRUCT;
 
-#define MLSUBMENU_BUTTON_OK      ((wimp_i) 1)
-#define MLSUBMENU_BUTTON_CANCEL  ((wimp_i) 2)
-#define MLSUBMENU_BUTTON_NEWLINE ((wimp_i) 3)
+#define MLSUBMENU_BUTTON_OK      (1)
+#define MLSUBMENU_BUTTON_CANCEL  (2)
+#define MLSUBMENU_BUTTON_NEWLINE (3)
 
 /******************************************************************************
 *
@@ -333,24 +342,24 @@ _Check_return_
 static STATUS
 mlsubmenu_create(
     P_MLSUBMENU_HANDLE mlsubmenup,
-    P_U8 templatename,
-    P_U8 title)
+    P_U8Z template_name,
+    P_U8Z title)
 {
     STATUS           res;
     int              err = 0;
     MLSUBMENU_HANDLE mlsubmenu;
     MLEC_HANDLE      mlec;
-    template *       templatehanpane;
-    wimp_wind *      templatepane;
-    wimp_w           pane_win_handle;
-    wimp_box         paneExtent;      /* work area extent */
+    template *       template_handle_pane;
+    WimpWindowWithBitset * template_pane;
+    HOST_WND         mls_pane_win_handle;
+    BBox             initial_extent; /* work area extent */
 
     trace_0(TRACE_MODULE_GR_CHART, "mlsubmenu_create - in");
 
     if(NULL == (*mlsubmenup = mlsubmenu = al_ptr_calloc_elem(struct MLSUBMENU_STRUCT, 1, &res)))
         return(res);
 
-    mlsubmenu->state        = MLSUBMENU_ENDED_CANCEL;
+    mlsubmenu->state = MLSUBMENU_ENDED_CANCEL;
 
     trace_0(TRACE_MODULE_GR_CHART, "mlsubmenu_create - allocated block OK");
 
@@ -360,23 +369,23 @@ mlsubmenu_create(
 
         mlsubmenu->mlec = mlec;
 
-        templatehanpane = template_find_new(templatename);
+        template_handle_pane = template_find_new(template_name);
 
-        if(templatehanpane)
+        if(template_handle_pane)
         {
             trace_0(TRACE_MODULE_GR_CHART, "mlsubmenu_create - template_find OK");
 
-            mlsubmenu->panetemplate = templatepane = template_copy_new(templatehanpane);
+            mlsubmenu->mls_pane_template = template_pane = template_copy_new(template_handle_pane);
 
-            if(templatepane)
+            if(template_pane)
             {
                 os_error * e;
 
-                paneExtent = templatepane->ex;
+                initial_extent = template_pane->extent;
 
                 trace_0(TRACE_MODULE_GR_CHART, "mlsubmenu_create - template_copy OK");
 
-                e = wimp_create_wind(templatepane, &pane_win_handle);
+                e = tbl_wimp_create_window((WimpWindow *) template_pane, &mls_pane_win_handle);
 
                 if(!e)
                 {
@@ -384,11 +393,11 @@ mlsubmenu_create(
 
                     trace_0(TRACE_MODULE_GR_CHART, "mlsubmenu_create - wimp_create_wind OK");
 
-                    mlsubmenu->panewindow   = pane_win_handle;
+                    mlsubmenu->mls_pane_window_handle = mls_pane_win_handle;
 
-                    win_settitle(pane_win_handle, title);
+                    win_settitle(mlsubmenu->mls_pane_window_handle, title);
 
-                    mlec_attach(mlec, (wimp_w) 0, pane_win_handle, paneExtent, NULL);       /* NB no menu on the window */
+                    mlec_attach(mlec, HOST_WND_NONE, mlsubmenu->mls_pane_window_handle, &initial_extent, NULL); /* NB no menu on the window */
 
                     mlsubmenu->state = MLSUBMENU_WAIT;
 
@@ -443,20 +452,25 @@ mlsubmenu_process(
 
         trace_2(TRACE_MODULE_GR_CHART, "mlsubmenu_process, opening submenu at (%d,%d)", x, y);
 
-        win_create_submenu(mlsubmenu->panewindow, x, y);
+        winx_create_submenu(mlsubmenu->mls_pane_window_handle, x, y);
     }
     else
     {
         wimp_mousestr m;
 
-        wimpt_safe(wimp_get_point_info(&m));
-
-        m.x -= 32; /* try to be a bit into the window */
-        m.y += 32;
+        if(NULL != WrapOsErrorReporting(wimp_get_point_info(&m)))
+        {
+            m.x = m.y = 0;
+        }
+        else
+        {
+            m.x -= 32; /* try to be a bit into the window */
+            m.y += 32;
+        }
 
         trace_2(TRACE_MODULE_GR_CHART, "mlsubmenu_process, opening menu at (%d,%d)", m.x, m.y);
 
-        win_create_menu(mlsubmenu->panewindow, m.x, m.y);
+        winx_create_menu(mlsubmenu->mls_pane_window_handle, m.x, m.y);
     }
 
     mlec_claim_focus(mlsubmenu->mlec);
@@ -515,10 +529,14 @@ mlsubmenu_destroy(
             mlec_destroy(&((*mlsubmenup)->mlec));
         }
 
-        if((*mlsubmenup)->panewindow)
-            wimpt_noerr(wimp_delete_wind((*mlsubmenup)->panewindow));
+        if(HOST_WND_NONE != (*mlsubmenup)->mls_pane_window_handle)
+        {
+            WimpDeleteWindowBlock delete_window_block;
+            delete_window_block.window_handle = (*mlsubmenup)->mls_pane_window_handle;
+            void_WrapOsErrorReporting(tbl_wimp_delete_window(&delete_window_block));
+        }
 
-        template_copy_dispose(&(*mlsubmenup)->panetemplate);
+        template_copy_dispose(&(*mlsubmenup)->mls_pane_template);
 
         al_ptr_dispose(P_P_ANY_PEDANTIC(mlsubmenup));
     }
@@ -530,82 +548,123 @@ mlsubmenu_destroy(
 *
 ******************************************************************************/
 
-mlec_event_proto(static, mlsubmenu_mlec_event_handler)
+MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsClose)
 {
     MLSUBMENU_HANDLE mlsubmenu = handle;
 
+    UNREFERENCED_PARAMETER(rc);
+    UNREFERENCED_PARAMETER(p_eventdata);
+
+    winx_close_window(mlsubmenu->mls_pane_window_handle);
+
+    mlsubmenu->state = MLSUBMENU_ENDED_CANCEL;
+
+    return(mlec_event_closed);
+}
+
+MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsEscape)
+{
+    MLSUBMENU_HANDLE mlsubmenu = handle;
+
+    UNREFERENCED_PARAMETER(rc);
+    UNREFERENCED_PARAMETER(p_eventdata);
+
+    /* being a submenu, we probably never receive this, the code in win (or the wimp) sends us a close instead */
+    winx_close_window(mlsubmenu->mls_pane_window_handle); /* close window and rest of menu-tree */
+
+    mlsubmenu->state = MLSUBMENU_ENDED_CANCEL;
+
+    return(mlec_event_escape);
+}
+
+MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsReturn)
+{
+    MLSUBMENU_HANDLE mlsubmenu = handle;
+
+    UNREFERENCED_PARAMETER(rc);
+    UNREFERENCED_PARAMETER(p_eventdata);
+
+    winx_close_window(mlsubmenu->mls_pane_window_handle); /* close window and rest of menu-tree */
+
+    mlsubmenu->state = MLSUBMENU_ENDED_OK;
+
+    return(mlec_event_return);
+}
+
+MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsClick)
+{
+    MLSUBMENU_HANDLE mlsubmenu = handle;
+
+    const WimpMouseClickEvent * const mouse_click = (const WimpMouseClickEvent *) p_eventdata;
+
+    UNREFERENCED_PARAMETER(rc);
+
+    if(mouse_click->buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust)) /* 'Select' or 'Adjust' */
+    {
+        switch(mouse_click->icon_handle)
+        {
+        case MLSUBMENU_BUTTON_OK:
+            winx_close_window(mlsubmenu->mls_pane_window_handle); /* close window and rest of menu-tree */
+            mlsubmenu->state = MLSUBMENU_ENDED_OK;
+            return(mlec_event_click);
+
+        case MLSUBMENU_BUTTON_CANCEL:
+            winx_close_window(mlsubmenu->mls_pane_window_handle);
+            mlsubmenu->state = MLSUBMENU_ENDED_CANCEL;
+            return(mlec_event_click);
+
+        case MLSUBMENU_BUTTON_NEWLINE:
+            mlec__insert_newline(mlsubmenu->mlec);
+            return(mlec_event_click);
+        }
+    }
+
+    return(mlec_event_unknown);
+}
+
+#if FALSE
+MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsOpen)
+{
+    wimp__openstr * panep = (wimp_openstr *) p_eventdata;
+    wimp__openstr   main;
+
+    wimp_open_wind(data);       /* open pane, so scrolling works */
+
+    main.w = mlsubmenu->mls_main_window_handle;
+    main.visible_area.x0 = panep->visible_area.x0 - mlsubmenu->margin.x0;
+    main.visible_area.x1 = panep->visible_area.x1 - mlsubmenu->margin.x1;
+    main.visible_area.y0 = panep->visible_area.y0 - mlsubmenu->margin.y0;
+    main.visible_area.y1 = panep->visible_area.y1 - mlsubmenu->margin.y1;
+    main.xscroll = 0;
+    main.yscroll = 0;
+    main.behind = panep->behind;
+
+    mlsubmenu_open_window(mlsubmenu, &main);
+
+    return(mlec_event_opened);
+}
+#endif
+
+MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_handler)
+{
     trace_1(TRACE_MODULE_GR_CHART, "mlsubmenu_mlec_event_handler, rc=%d", rc);
 
     switch(rc)
     {
-#if FALSE
-    case Mlec_IsOpen:
-        {
-        wimp_openstr * panep = (wimp_openstr *) p_eventdata;
-        wimp_openstr   main;
-
-        wimp_open_wind(data);       /* open pane, so scrolling works */
-
-        main.w      = mlsubmenu->mainwindow;
-        main.box.x0 = panep->box.x0 - mlsubmenu->margin.x0;
-        main.box.x1 = panep->box.x1 - mlsubmenu->margin.x1;
-        main.box.y0 = panep->box.y0 - mlsubmenu->margin.y0;
-        main.box.y1 = panep->box.y1 - mlsubmenu->margin.y1;
-        main.scx    = main.scy = 0;
-        main.behind = panep->behind;
-
-        mlsubmenu_open_window(mlsubmenu, &main);
-
-        return(mlec_event_openned);
-        }
-#endif
-#if TRUE
     case Mlec_IsClose:
-        win_close_wind(mlsubmenu->panewindow);
-        mlsubmenu->state = MLSUBMENU_ENDED_CANCEL;
-        return(mlec_event_closed);
+        return(mlsubmenu_mlec_event_IsClose(rc, handle, p_eventdata));
 
     case Mlec_IsEscape:
-        /* being a submenu, we probably never receive this, the code in win (or the wimp) sends us a close instead */
-
-        win_close_wind(mlsubmenu->panewindow);           /* close window and rest of menu-tree */
-        mlsubmenu->state = MLSUBMENU_ENDED_CANCEL;
-        return(mlec_event_escape);
+        return(mlsubmenu_mlec_event_IsEscape(rc, handle, p_eventdata));
 
     case Mlec_IsReturn:
-        win_close_wind(mlsubmenu->panewindow);           /* close window and rest of menu-tree */
-        mlsubmenu->state = MLSUBMENU_ENDED_OK;
-        return(mlec_event_return);
-#endif
-#if TRUE
+        return(mlsubmenu_mlec_event_IsReturn(rc, handle, p_eventdata));
+
     case Mlec_IsClick:
-        {
-        wimp_mousestr * mousep = (wimp_mousestr *) p_eventdata;
+        return(mlsubmenu_mlec_event_IsClick(rc, handle, p_eventdata));
 
-        if(mousep->bbits & 0x5)   /* 'select' or 'adjust' */
-        {
-            switch ((int) mousep->i)
-            {
-            case MLSUBMENU_BUTTON_OK:
-                win_close_wind(mlsubmenu->panewindow);           /* close window and rest of menu-tree */
-                mlsubmenu->state = MLSUBMENU_ENDED_OK;
-                return(mlec_event_click);
-
-            case MLSUBMENU_BUTTON_CANCEL:
-                win_close_wind(mlsubmenu->panewindow);
-                mlsubmenu->state = MLSUBMENU_ENDED_CANCEL;
-                return(mlec_event_click);
-
-            case MLSUBMENU_BUTTON_NEWLINE:
-                mlec__insert_newline(mlsubmenu->mlec);
-                return(mlec_event_click);
-            }
-        }
-        } /*block*/
-        /* drop into... */
-#endif
-
-    default: return(mlec_event_unknown);
+    default:
+        return(mlec_event_unknown);
     }
 }
 
@@ -647,17 +706,17 @@ gr_chartedit_riscos_fillstyle_pattern_query(
 static void
 gr_chartedit_encode_selected_fillstyle(
     P_GR_CHARTEDITOR cep,
-    wimp_w w,
+    _HwndRef_   HOST_WND window_handle,
     PC_GR_FILLSTYLE fillstyle,
     _InVal_     LIST_ITEMNO fillstyle_key)
 {
     /* encode icons from current state (ok, ought to
      * use tristates but RISC OS doesn't have the concept)
     */
-    P_GR_CHART         cp;
+    P_GR_CHART cp;
     PC_FILLSTYLE_ENTRY entryp;
-    const char *      leafname = "";
-    void           (* fadeproc) (wimp_w w, wimp_i i);
+    const char * leafname = "";
+    void (* fadeproc) (_HwndRef_ HOST_WND window_handle, _InVal_ int icon_handle);
 
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
@@ -665,24 +724,24 @@ gr_chartedit_encode_selected_fillstyle(
     if((entryp = fillstyle_list_search_key(fillstyle_key)) != NULL)
         leafname = entryp->leafname;
 
-    win_setfield(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME, leafname);
+    winf_setfield(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME, leafname);
 
-    win_setonoff(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID,
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID,
                     (fillstyle->pattern == GR_FILL_PATTERN_NONE) || !fillstyle->bits.notsolid);
-    win_setonoff(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN,
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN,
                     (fillstyle->pattern != GR_FILL_PATTERN_NONE) && fillstyle->bits.pattern);
 
-    win_setonoff(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC, fillstyle->bits.isotropic);
-    win_setonoff(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR,  !fillstyle->bits.norecolour);
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC, fillstyle->bits.isotropic);
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR,  !fillstyle->bits.norecolour);
 
     /* fade out picture icons once picture fill deselected */
-    fadeproc = !win_getonoff(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN) ? win_fadefield : win_unfadefield;
+    fadeproc = !winf_getonoff(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN) ? winf_fadefield : winf_unfadefield;
 
-    (* fadeproc) (w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME);
-    (* fadeproc) (w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC);
-    (* fadeproc) (w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_DEC);
-    (* fadeproc) (w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC);
-    (* fadeproc) (w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR);
+    (* fadeproc) (window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME);
+    (* fadeproc) (window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC);
+    (* fadeproc) (window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_DEC);
+    (* fadeproc) (window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC);
+    (* fadeproc) (window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR);
 }
 
 static void
@@ -695,7 +754,7 @@ gr_chartedit_build_fillstyle_list(
     PC_U8            pict_dir;
     IMAGE_CACHE_HANDLE current_cah;
     LIST_ITEMNO      current_key;
-    U8               path[BUF_MAX_PATHSTRING];
+    U8               combined_path[BUF_MAX_PATHSTRING];
     U8               fullname[BUF_MAX_PATHSTRING];
     P_FILE_OBJENUM   enumstrp;
     P_FILE_OBJINFO   infostrp;
@@ -747,14 +806,15 @@ gr_chartedit_build_fillstyle_list(
      * directories relative to the chart or listed in the applications path variable
     */
 
-    file_combined_path(path, elemof32(path),
-                       file_is_rooted(cp->core.currentfilename)
-                                    ? cp->core.currentfilename
-                                    : NULL);
+    file_combine_path(combined_path, elemof32(combined_path),
+                      file_is_rooted(cp->core.currentfilename)
+                                   ? cp->core.currentfilename
+                                   : NULL,
+                      file_get_search_path());
 
-    trace_1(TRACE_MODULE_GR_CHART, "path='%s'", path);
+    trace_1(TRACE_MODULE_GR_CHART, "path='%s'", combined_path);
 
-    for(infostrp = file_find_first_subdir(&enumstrp, path, FILE_WILD_MULTIPLE_STR, pict_dir);
+    for(infostrp = file_find_first_subdir(&enumstrp, combined_path, FILE_WILD_MULTIPLE_STR, pict_dir);
         infostrp;
         infostrp = file_find_next(&enumstrp))
     {
@@ -811,58 +871,80 @@ gr_chartedit_build_fillstyle_list(
     }
 }
 
+_Check_return_
+static inline _kernel_oserror *
+gr_editm_colourtrans_SetGCOL(
+    _In_        unsigned int word,
+    _In_        int flags,
+    _In_        int gcol_action)
+{
+    _kernel_swi_regs rs;
+    rs.r[0] = word;
+    rs.r[3] = flags;
+    rs.r[4] = gcol_action;
+    assert((rs.r[3] & 0xfffffe7f) == 0); /* just bits 7 and 8 are valid */
+    return(_kernel_swi(ColourTrans_SetGCOL, &rs, &rs)); /* ignore gcol_out */
+}
+
 static void
 fillstyle_redraw_core(
     IMAGE_CACHE_HANDLE cah,
-    const wimp_redrawstr * r,
-    wimp_icon * picture)
+    const WimpRedrawWindowBlock * const redraw_window_block,
+    const BBox * const p_picture_bbox)
 {
-    wimp_redrawstr passed_r;
+    WimpRedrawWindowBlock picture_redraw_window_block = *redraw_window_block;
     P_DRAW_DIAG p_draw_diag;
 
-    int orgx = r->box.x0 - r->scx;
-    int orgy = r->box.y1 - r->scy;
+    GDI_POINT gdi_org;
 
-    passed_r        = *r;
+    const int dx = wimpt_dx();
+    const int dy = wimpt_dy();
 
-    passed_r.box.x0 = orgx + picture->box.x0;
-    passed_r.box.y0 = orgy + picture->box.y0;
-    passed_r.box.x1 = orgx + picture->box.x1;
-    passed_r.box.y1 = orgy + picture->box.y1;
-    passed_r.scx    = 0;
-    passed_r.scy    = 0;
+    /* origin (NOT top left) of Draw file taken by renderer to be at x0,y1 (abs screen coords) */
+    int xmin;
+    int ymax;
+
+    gdi_org.x = redraw_window_block->visible_area.xmin - redraw_window_block->xscroll;
+    gdi_org.y = redraw_window_block->visible_area.ymax - redraw_window_block->yscroll;
+
+    xmin = p_picture_bbox->xmin + gdi_org.x;
+    ymax = p_picture_bbox->ymax + gdi_org.y;
 
     /* ensure clipped to 'picture box' */
     {
-    wimp_box picture_box; /* (abs screen coords) */
+    BBox picture_bbox; /* (abs screen coords) */
 
-    picture_box.x0 = picture->box.x0 + orgx;
-    picture_box.y0 = picture->box.y0 + orgy;
-    picture_box.x1 = picture->box.x1 + orgx;
-    picture_box.y1 = picture->box.y1 + orgy;
+    picture_bbox.xmin = p_picture_bbox->xmin + gdi_org.x;
+    picture_bbox.ymin = p_picture_bbox->ymin + gdi_org.y;
+    picture_bbox.xmax = p_picture_bbox->xmax + gdi_org.x;
+    picture_bbox.ymax = p_picture_bbox->ymax + gdi_org.y;
 
-    if(!gr_box_intersection((P_GR_BOX) &passed_r.g, NULL, (P_GR_BOX) &picture_box))
+    if(!gr_box_intersection((P_GR_BOX) &picture_redraw_window_block.redraw_area, NULL, (P_GR_BOX) &picture_bbox))
         return;
     }
 
     /* set our own graphics window */
-    wimpt_safe(bbc_gwindow(passed_r.g.x0,              passed_r.g.y0,
-                           passed_r.g.x1 - wimpt_dx(), passed_r.g.y1 - wimpt_dy()));
+    wimpt_safe(riscos_vdu_define_graphics_window(picture_redraw_window_block.redraw_area.xmin,
+                                                 picture_redraw_window_block.redraw_area.ymin,
+                                                 picture_redraw_window_block.redraw_area.xmax - dx,
+                                                 picture_redraw_window_block.redraw_area.ymax - dy));
 
-    passed_r.box.y1 = passed_r.box.y0;  /* D.Elworthy, your're a twat! */
-
-    bbc_gcol(0, 128);   /* clear background to white */
+    /* clear background to white */
+    gr_editm_colourtrans_SetGCOL(0xFFFFFF00, 0x80, 0);
     wimpt_safe(bbc_vdu(bbc_ClearGraph));
 
     p_draw_diag = image_cache_loaded_ensure(&cah);
 
     if(p_draw_diag)
     {
-        S32 icon_wid = picture->box.x1 - picture->box.x0;
-        S32 icon_hei = picture->box.y1 - picture->box.y0;
+        const int icon_wid = BBox_width( p_picture_bbox);
+        const int icon_hei = BBox_height(p_picture_bbox);
         DRAW_BOX draw_bound = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
         S32 diag_wid = (draw_bound.x1 - draw_bound.x0) >> 8; /* Draw -> OS units */
         S32 diag_hei = (draw_bound.y1 - draw_bound.y0) >> 8;
+        S32 scaled_diag_wid, scaled_diag_hei;
+        S32 xshift = 0;
+        S32 yshift = 0;
         F64 scaleX, scaleY, scale;
 
         diag_wid = MAX(diag_wid, 16);
@@ -873,83 +955,107 @@ fillstyle_redraw_core(
 
         scale = MIN(scaleX, scaleY);
 
-        status_assert(draw_do_render(p_draw_diag->data, p_draw_diag->length, passed_r.box.x0, passed_r.box.y1, scale, scale, (P_GDI_BOX) &passed_r.g));
+        scaled_diag_wid = (S32) (diag_wid * scale);
+        scaled_diag_hei = (S32) (diag_hei * scale);
+
+        if(scaled_diag_wid < icon_wid)
+            xshift = (((icon_wid - scaled_diag_wid) / 2) + (dx-1)) & ~(dx-1); /* round to pixels */
+        if(scaled_diag_hei < icon_hei)
+            yshift = (((icon_hei - scaled_diag_hei) / 2) + (dy-1)) & ~(dy-1);
+
+        status_assert(draw_do_render(p_draw_diag->data, p_draw_diag->length,
+                                     xmin + xshift, ymax + yshift - icon_hei, /* D.Elworthy, your're a twat! */
+                                     scale, scale,
+                                     (P_GDI_BOX) &picture_redraw_window_block.redraw_area));
     }
 
     /* restore caller's graphics window */
-    wimpt_safe(bbc_gwindow(r->g.x0,              r->g.y0,
-                           r->g.x1 - wimpt_dx(), r->g.y1 - wimpt_dy()
-                          )
-              );
+    wimpt_safe(riscos_vdu_define_graphics_window(redraw_window_block->redraw_area.xmin,
+                                                 redraw_window_block->redraw_area.ymin,
+                                                 redraw_window_block->redraw_area.xmax - dx,
+                                                 redraw_window_block->redraw_area.ymax - dy));
 }
 
 static BOOL
-fillstyle_event_handler(
-    dbox d,
-    P_ANY event,
+fillstyle_event_Redraw_Window_Request(
+    const WimpRedrawWindowRequestEvent * const redraw_window_request,
     P_ANY handle)
 {
-    wimp_eventstr * e    = event;
-    LIST_ITEMNO   * keyp = handle;
+    LIST_ITEMNO * keyp = handle;
+    PC_FILLSTYLE_ENTRY entryp;
+    IMAGE_CACHE_HANDLE cah;
+    WimpRedrawWindowBlock redraw_window_block;
+    BOOL more;
 
-    IGNOREPARM(d);
+    redraw_window_block.window_handle = redraw_window_request->window_handle;
 
-    switch(e->e)
+    cah = 0;
+
+    if((entryp = fillstyle_list_search_key(*keyp)) != NULL)
+        cah = entryp->cah;
+
+    /* only redrawing required is of the 'picture' (a draw file identified by cah), */
+    /* which must be scaled to fit within the limits of its icon                    */
+    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
+        more = FALSE;
+
+    while(more)
     {
-    case wimp_EREDRAW:
-        {
-        PC_FILLSTYLE_ENTRY entryp;
-        IMAGE_CACHE_HANDLE cah;
-        wimp_redrawstr    r;
-        wimp_icon         picture;
-        BOOL              more;
-
         /* get the window relative bbox of the picture icon */
-        r.w = e->data.redraw.w;
-        wimp_get_icon_info(r.w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT, &picture);
-
-        cah = 0;
-
-        if((entryp = fillstyle_list_search_key(*keyp)) != NULL)
-            cah = entryp->cah;
-
-        /* only redrawing required is of the 'picture' (a draw file identified by cah), */
-        /* which must be scaled to fit within the limits of its icon                    */
-        if(wimpt_complain(wimp_redraw_wind(&r, &more)))
-            more = FALSE;
-
-        while(more)
+        WimpGetIconStateBlock icon_state;
+        icon_state.window_handle = redraw_window_block.window_handle;
+        icon_state.icon_handle = GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT;
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
         {
-            fillstyle_redraw_core(cah, &r, &picture);
+            more = FALSE;
+            break;
+        }
 
-            if(wimpt_complain(wimp_get_rectangle(&r, &more)))
-                more = FALSE;
-        }
-        break;
-        }
+        fillstyle_redraw_core(cah, &redraw_window_block, &icon_state.icon.bbox);
+
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
+            more = FALSE;
+    }
+
+    return(TRUE);
+}
+
+static BOOL
+fillstyle_raw_event_handler(
+    dbox d,
+    void * event,
+    void * handle)
+{
+    const int event_code = ((WimpEvent *) event)->event_code;
+    WimpPollBlock * const event_data = &((WimpEvent *) event)->event_data;
+
+    UNREFERENCED_PARAMETER(d);
+
+    switch(event_code)
+    {
+    case Wimp_ERedrawWindow:
+        return(fillstyle_event_Redraw_Window_Request(&event_data->redraw_window_request, handle));
 
     default:
         return(FALSE);
     }
-
-    return(TRUE);
 }
 
 extern S32
 gr_chartedit_selection_fillstyle_edit(
     P_GR_CHARTEDITOR cep)
 {
-    dbox         d;
+    dbox d;
     char * errorp;
-    wimp_w       w;
-    dbox_field   f;
-    S32          ok, persist, reflect_modify;
-    P_GR_CHART    cp;
+    HOST_WND window_handle;
+    dbox_field f;
+    BOOL ok, persist, reflect_modify;
+    P_GR_CHART cp;
     GR_FILLSTYLE fillstyle;
-    LIST_ITEMNO  fillstyle_key;
+    LIST_ITEMNO fillstyle_key;
     PC_FILLSTYLE_ENTRY entryp;
-    S32          disallow_piccie = 0;
-    S32          res = 1;
+    S32 disallow_piccie = 0;
+    S32 res = 1;
 
     assert(cep);
 
@@ -962,7 +1068,7 @@ gr_chartedit_selection_fillstyle_edit(
 
     dbox_show(d);
 
-    w = dbox_syshandle(d);
+    window_handle = dbox_window_handle(d);
 
     {
     U8   title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
@@ -994,16 +1100,16 @@ gr_chartedit_selection_fillstyle_edit(
 
     xstrkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
 
-    win_settitle(w, title);
+    win_settitle(window_handle, title);
     }
 
-    (disallow_piccie ? win_fadefield : win_unfadefield) (w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN);
+    (disallow_piccie ? winf_fadefield : winf_unfadefield) (window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN);
 
     if(!disallow_piccie)
     {
         gr_chartedit_build_fillstyle_list(cep, cep->selection.id);
 
-        dbox_raw_eventhandler(d, fillstyle_event_handler, &fillstyle_key);
+        dbox_raw_eventhandler(d, fillstyle_raw_event_handler, &fillstyle_key);
     }
 
     reflect_modify = 0;
@@ -1031,7 +1137,7 @@ gr_chartedit_selection_fillstyle_edit(
 
         for(;;)
         {
-            gr_chartedit_encode_selected_fillstyle(cep, w, &fillstyle, fillstyle_key);
+            gr_chartedit_encode_selected_fillstyle(cep, window_handle, &fillstyle, fillstyle_key);
 
             res = 1;
 
@@ -1046,14 +1152,16 @@ gr_chartedit_selection_fillstyle_edit(
 
             if(f != dbox_OK)
             {
-                switch(f)
+                const int hit_icon_handle = dbox_field_to_icon_handle(d, f);
+
+                switch(hit_icon_handle)
                 {
                 case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID:
-                    fillstyle.bits.notsolid = !win_getonoff(w, f);
+                    fillstyle.bits.notsolid = !winf_getonoff(window_handle, hit_icon_handle);
                     break;
 
                 case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN:
-                    fillstyle.bits.pattern = win_getonoff(w, f);
+                    fillstyle.bits.pattern = winf_getonoff(window_handle, hit_icon_handle);
 
                     fillstyle.pattern = fillstyle.bits.pattern
                                                 ? gr_chartedit_riscos_fillstyle_pattern_query(fillstyle_key)
@@ -1061,16 +1169,16 @@ gr_chartedit_selection_fillstyle_edit(
                     break;
 
                 case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC:
-                    fillstyle.bits.isotropic = win_getonoff(w, f);
+                    fillstyle.bits.isotropic = winf_getonoff(window_handle, hit_icon_handle);
                     break;
 
                 case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR:
-                    fillstyle.bits.norecolour  = !win_getonoff(w, f);
+                    fillstyle.bits.norecolour = !winf_getonoff(window_handle, hit_icon_handle);
                     break;
 
                 default:
-                    if(win_adjustbumphit(&f, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME)) /* inverts dirn. for click */
-                    {                                                                    /* with adjust button      */
+                    if(winf_adjustbumphit(&f, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME)) /* inverts dirn. for click */
+                    {                                                                     /* with adjust button      */
                         LIST_ITEMNO last_key;
                         const char * leafname;
 
@@ -1100,15 +1208,15 @@ gr_chartedit_selection_fillstyle_edit(
                         /* show the picture's leafname, trigger a (later) redraw of picture icon */
                         leafname = entryp->leafname;
 
-                        win_setfield(       w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME, leafname);
-                        wimp_set_icon_state(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT, (wimp_iconflags) 0, (wimp_iconflags) 0);
+                        winf_setfield(    window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME, leafname);
+                        winf_changedfield(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT);
                     }
                     break;
                 }
             }
 
             /* check what the current pattern is set to */
-            fillstyle.bits.pattern = win_getonoff(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN);
+            fillstyle.bits.pattern = winf_getonoff(window_handle, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN);
 
             fillstyle.pattern = fillstyle.bits.pattern
                                         ? gr_chartedit_riscos_fillstyle_pattern_query(fillstyle_key)
@@ -1398,22 +1506,22 @@ static enum GR_OBJECT_DRAG_TYPE drag_type;
 
 static void
 displ_box(
-    int x0,int y0,
-    int x1,int y1)
+    int x0,
+    int y0,
+    int x1,
+    int y1)
 {
-  bbc_move(x0,y0);
+    wimpt_safe(bbc_move(x0, y0));
 
-  if (x0 == x1)
-    bbc_draw(x0,y1);
-  else
-    if (y0 == y1)
-      bbc_draw(x1,y0);
+    if((x0 == x1) || (y0 == y1))
+        wimpt_safe(bbc_draw(x1, y1));
     else
-      { os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x1, y0);
-        os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x1, y1);
-        os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x0, y1);
-        os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x0, y0);
-       }
+    {
+        wimpt_safe(os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x1, y0));
+        wimpt_safe(os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x1, y1));
+        wimpt_safe(os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x0, y1));
+        wimpt_safe(os_plot(bbc_SolidExInit | bbc_DrawAbsFore, x0, y0));
+    }
 }
 
 static void
@@ -1425,10 +1533,8 @@ object_dragging_eor_bbox(
 {
     GR_POINT moveby;
     GR_POINT tl, br;
-    int             os_orgx, os_orgy;
-    wimp_box        os_outline;
-    wimp_redrawstr  r;
-    S32             more;
+    GDI_POINT gdi_org;
+    BBox gdi_outline;
 
     moveby.x = curr_point->x - start_point->x;
     moveby.y = curr_point->y - start_point->y;
@@ -1468,35 +1574,42 @@ object_dragging_eor_bbox(
     gr_point_scale(&br, &br, NULL, &cep->riscos.scale_from_diag16);
 
     /* plot origin */
-    os_orgx = cp->core.editsave.open_box.x0 - cp->core.editsave.open_scx;
-    os_orgy = cp->core.editsave.open_box.y0;
+    gdi_org.x = cp->core.editsave.open.visible_area.xmin - cp->core.editsave.open.scroll_x;
+    gdi_org.y = cp->core.editsave.open.visible_area.ymin;
 
     /* add in display offset */
-    os_orgx += cep->riscos.diagram_off_x;
-    os_orgy += cep->riscos.diagram_off_y;
+    gdi_org.x += cep->riscos.diagram_off_x;
+    gdi_org.y += cep->riscos.diagram_off_y;
 
     /* bbox in absolute screen coords */
-    os_outline.x0 = (int) (os_orgx + gr_riscos_from_pixit(tl.x));
-    os_outline.y0 = (int) (os_orgy + gr_riscos_from_pixit(br.y));
-    os_outline.x1 = (int) (os_orgx + gr_riscos_from_pixit(br.x));
-    os_outline.y1 = (int) (os_orgy + gr_riscos_from_pixit(tl.y));
+    gdi_outline.xmin = (int) (gdi_org.x + gr_riscos_from_pixit(tl.x));
+    gdi_outline.ymin = (int) (gdi_org.y + gr_riscos_from_pixit(br.y));
+    gdi_outline.xmax = (int) (gdi_org.x + gr_riscos_from_pixit(br.x));
+    gdi_outline.ymax = (int) (gdi_org.y + gr_riscos_from_pixit(tl.y));
 
-    r.w      = cep->riscos.w;
-    r.box.x0 = -0x1FFFFFFF; r.box.y0 = -0x1FFFFFFF;
-    r.box.x1 =  0x1FFFFFFF; r.box.y1 = 0; /* 0x1FFFFFFF; */     /* RCM says that SKS claimed zero was a good upper limit */
+    {
+    WimpUpdateAndRedrawWindowBlock update_and_redraw_window_block;
+    BOOL more;
 
-    if(wimpt_complain(wimp_update_wind(&r, &more)))
+    update_and_redraw_window_block.update.window_handle = cep->riscos.window_handle;
+    update_and_redraw_window_block.update.update_area.xmin = -0x1FFFFFFF;
+    update_and_redraw_window_block.update.update_area.ymin = -0x1FFFFFFF;
+    update_and_redraw_window_block.update.update_area.xmax =  0x1FFFFFFF;
+    update_and_redraw_window_block.update.update_area.ymax = 0; /* 0x1FFFFFFF; */     /* RCM says that SKS claimed zero was a good upper limit */
+
+    if(NULL != WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)))
         more = FALSE;
 
     while(more)
     {
         bbc_gcol(3,15); /*>>>eor in light-blue */
 
-        displ_box(os_outline.x0, os_outline.y0, os_outline.x1, os_outline.y1);
+        displ_box(gdi_outline.xmin, gdi_outline.ymin, gdi_outline.xmax, gdi_outline.ymax);
 
-        if(wimpt_complain(wimp_get_rectangle(&r, &more)))
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)))
             more = FALSE;
     }
+    } /*block*/
 }
 
 extern void
@@ -1510,7 +1623,7 @@ gr_chartedit_selected_object_drag_start(
     wimp_dragstr dragstr;
     P_GR_CHART cp;
 
-    IGNOREPARM(workareaoff);
+    UNREFERENCED_PARAMETER(workareaoff);
 
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
@@ -1548,7 +1661,7 @@ gr_chartedit_selected_object_drag_start(
 
     /* confine the drag to the chart edit window */
 
-    dragstr.window    = cep->riscos.w;          /* Needed by win_drag_box, so it can send EUSERDRAG to us */
+    dragstr.window    = cep->riscos.window_handle; /* Needed by winx_drag_box, so it can direct Wimp_EUserDrag to us */
     dragstr.type      = wimp_USER_HIDDEN;
 #if FALSE
     /* Window Manager ignores inner box on hidden drags */
@@ -1557,14 +1670,14 @@ gr_chartedit_selected_object_drag_start(
     dragstr.box.x1    = mx+30;
     dragstr.box.y1    = my+30;
 #endif
-    dragstr.parent.x0 = cp->core.editsave.open_box.x0;
-    dragstr.parent.y0 = cp->core.editsave.open_box.y0;
-    dragstr.parent.x1 = cp->core.editsave.open_box.x1;
-    dragstr.parent.y1 = cp->core.editsave.open_box.y1;
+    dragstr.parent.x0 = cp->core.editsave.open.visible_area.xmin;
+    dragstr.parent.y0 = cp->core.editsave.open.visible_area.ymin;
+    dragstr.parent.x1 = cp->core.editsave.open.visible_area.xmax;
+    dragstr.parent.y1 = cp->core.editsave.open.visible_area.ymax;
 
     if(status_ok(Null_EventHandlerAdd(gr_chartedit_selected_object_drag_null_handler, (P_ANY) cp->core.ch, 0)))
     {
-        wimpt_complain(win_drag_box(&dragstr));     /* NB win_drag_box NOT wimp_drag_box */
+        void_WrapOsErrorReporting(winx_drag_box(&dragstr)); /* NB winx_drag_box NOT wimp_drag_box */
 
         drag_start_point = drag_curr_point = *point;
 
@@ -1575,12 +1688,12 @@ gr_chartedit_selected_object_drag_start(
 extern void
 gr_chartedit_selected_object_drag_complete(
     P_GR_CHARTEDITOR cep,
-    const wimp_box * dragboxp)
+    const BBox * const dragboxp)
 {
     GR_POINT moveby;
     P_GR_CHART cp;
 
-    IGNOREPARM(dragboxp);
+    UNREFERENCED_PARAMETER_InRef_(dragboxp);
 
     trace_0(TRACE_MODULE_GR_CHART, "gr_chartedit_selected_object_drag_complete");
 
@@ -1628,7 +1741,7 @@ gr_chartedit_selected_object_drag_complete(
 
         gr_box_sort(&box, &box);
 
-        gr_text_box_set(cp, cep->selection.id.no, &box);
+        status_consume(gr_text_box_set(cp, cep->selection.id.no, &box));
         break;
         }
 
@@ -1830,6 +1943,7 @@ gr_chartedit_text_editor_make(
         NLISTS_BLK edit_lbr = gr_text_nlists_blk_proto;
         GR_TEXT temp;
         U32 nBytes;
+        STATUS add_res;
 
         nBytes = mlsubmenu_gettextlen(&mlsubmenu) + 1; /* + 1 for CH_NULL */
 
@@ -1839,7 +1953,7 @@ gr_chartedit_text_editor_make(
         edit_lbr.lbr = cp->text.lbr; /* for API */
 
         /* overwrite existing entry */
-        if(NULL != (t = collect_add_entry_bytes(GR_TEXT, &edit_lbr, nBytes + sizeof32(GR_TEXT), &key, &res)))
+        if(NULL != (t = collect_add_entry_bytes(GR_TEXT, &edit_lbr, nBytes + sizeof32(GR_TEXT), &key, &add_res)))
         {
             P_GR_TEXT_GUTS gutsp;
 
@@ -1863,7 +1977,11 @@ gr_chartedit_text_editor_make(
             }
 
             /* copy over edited text */
-            mlsubmenu_gettext(&mlsubmenu, gutsp.textp, nBytes);
+            status_consume(mlsubmenu_gettext(&mlsubmenu, gutsp.textp, nBytes));
+        }
+        else
+        {
+            res = add_res; /* failure to add */
         }
     }
 

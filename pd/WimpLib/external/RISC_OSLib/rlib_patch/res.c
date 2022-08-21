@@ -1,5 +1,5 @@
---- _src	2009-05-31 18:58:59 +0100
-+++ _dst	2013-08-31 16:54:20 +0100
+--- _src	2009-05-31 18:58:59.000000000 +0100
++++ _dst	2016-09-16 14:50:26.710000000 +0100
 @@ -41,6 +41,8 @@
  #define TRUE 1
  #define FALSE 0
@@ -14,7 +14,7 @@
  }
  
 +#ifdef SKS_ACW /* SKS - PipeDream's RISC_OSLib-type resources now live one level down */
-+#define RISC_OS_RESOURCE_SUBDIR "RISC_OS"
++/*#define RISC_OS_RESOURCE_SUBDIR "RISC_OS"*/ /* Not needed now RISC_OSLib-type resources live in PipeDreamRes: */
 +#endif
 +
 +#ifndef SKS_ACW

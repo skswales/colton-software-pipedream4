@@ -1,0 +1,741 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Replication</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="reformattingtext.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="savingchoices.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1>Replication</h1>
+    <p>
+        Replication is a means of copying cells, usually number cells.
+        It is particularly useful for copying formulae as it can update a formula for each cell into which it is copied.
+    </p>
+    <p>In the following spreadsheet:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column">A</th>
+                <th class="csg-sample-sheet-border-column">B</th>
+                <th class="csg-sample-sheet-border-column">C</th>
+                <th class="csg-sample-sheet-border-column">D</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td class="csg-sample-sheet-cell-number"><strong>Price ex VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Price inc VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Total inc postage</strong></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td class="csg-sample-sheet-cell-number">&pound;100.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;17.50</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td class="csg-sample-sheet-cell-number">&pound;200.00</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td class="csg-sample-sheet-cell-number">&pound;300.00</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td class="csg-sample-sheet-cell-number">&pound;400.00</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">7</th>
+                <td class="csg-sample-sheet-cell-number">&pound;500.00</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">8</th>
+                <td class="csg-sample-sheet-cell-number">&pound;600.00</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">9</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">10</th>
+                <td>Postage charge</td>
+                <td class="csg-sample-sheet-cell-number">&pound;10.00</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        Cell B3 contains the formula A3 * 0.175.
+        (Note: this example was written in 1991 when the VAT rate was 17.5%)
+        If you want to work out 17.5% of the remaining values in cells A4 to A8, you don&rsquo;t have to laboriously type formulae into cells B4 to B8.
+        Instead, you can do the following:
+    </p>
+    <ol>
+        <li>Mark the block from B3 to B8.</li>
+        <li>Use the <span class="csg-command">Replicate Down</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Replicate Down</td>
+                <td><img src="images/tbar_fill_down.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BRD</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Your spreadsheet will now appear as follows:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column">A</th>
+                <th class="csg-sample-sheet-border-column">B</th>
+                <th class="csg-sample-sheet-border-column">C</th>
+                <th class="csg-sample-sheet-border-column">D</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td class="csg-sample-sheet-cell-number"><strong>Price ex VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Price inc VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Total inc postage</strong></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td class="csg-sample-sheet-cell-number">&pound;100.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;17.50</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td class="csg-sample-sheet-cell-number">&pound;200.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;35.00</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td class="csg-sample-sheet-cell-number">&pound;300.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;52.50</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td class="csg-sample-sheet-cell-number">&pound;400.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;70.00</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">7</th>
+                <td class="csg-sample-sheet-cell-number">&pound;500.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;87.50</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">8</th>
+                <td class="csg-sample-sheet-cell-number">&pound;600.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;105.00</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">9</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">10</th>
+                <td>Postage charge</td>
+                <td class="csg-sample-sheet-cell-number">&pound;10.00</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        The formula in cell B3 has been copied into cells B4 to B8, but the cell reference in the formula has been updated for each of the cells in column B.
+        Cell B4, for example, contains the formula A4 * 0.175.
+        Cell B5 contains the formula A5 * 0.175.
+    </p>
+    <p>To get the totals, all you have to do is the following:</p>
+    <ol>
+        <li>Type the formula A3+B3 into cell C3. This gives the result 117.50</li>
+        <li>Mark the block from C3 to C8.</li>
+        <li>Give the <span class="csg-command">Replicate Down</span> command.</li>
+    </ol>
+    <p>The spreadsheet will appear as follows:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column">A</th>
+                <th class="csg-sample-sheet-border-column">B</th>
+                <th class="csg-sample-sheet-border-column">C</th>
+                <th class="csg-sample-sheet-border-column">D</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td class="csg-sample-sheet-cell-number"><strong>Price ex VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Price inc VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Total inc postage</strong></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td class="csg-sample-sheet-cell-number">&pound;100.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;17.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;117.50</td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td class="csg-sample-sheet-cell-number">&pound;200.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;35.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;235.00</td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td class="csg-sample-sheet-cell-number">&pound;300.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;52.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;352.50</td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td class="csg-sample-sheet-cell-number">&pound;400.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;70.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;470.00</td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">7</th>
+                <td class="csg-sample-sheet-cell-number">&pound;500.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;87.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;587.50</td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">8</th>
+                <td class="csg-sample-sheet-cell-number">&pound;600.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;105.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;705.00</td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">9</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">10</th>
+                <td>Postage charge</td>
+                <td class="csg-sample-sheet-cell-number">&pound;10.00</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        The formula in cell C3 has been copied into cells C4 to C8,
+        but the cell reference in the formula has been updated for each of the cells in column C.
+        Cell C4, for example, contains the formula A4+B4.
+        Cell C5 contains the formula A5+B5.
+    </p>
+    <p>
+        There may be situations in which you don&rsquo;t want the cell reference(s) in the formula to be updated in the way described above.
+        In the example above, you may want to add 10.00 to each total as the extra price for postage, for example.
+        You would do this as follows:
+    </p>
+    <ol>
+        <li>
+            In cell D3, type the formula C3+$B$10.
+            This adds cell B10 (10.00) to cell C3 giving the result 127.50.
+        </li>
+        <li>Mark the block from D3 to D8.</li>
+        <li>Give the <span class="csg-command">Replicate Down</span> command.</li>
+    </ol>
+    <p>Your spreadsheet will look like this:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column">A</th>
+                <th class="csg-sample-sheet-border-column">B</th>
+                <th class="csg-sample-sheet-border-column">C</th>
+                <th class="csg-sample-sheet-border-column">D</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td class="csg-sample-sheet-cell-number"><strong>Price ex VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Price inc VAT</strong></td>
+                <td class="csg-sample-sheet-cell-number"><strong>Total inc postage</strong></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="csg-sample-sheet-border-row">
+                    3</th>
+                </td>
+                <td class="csg-sample-sheet-cell-number">&pound;100.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;17.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;117.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;127.50</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td class="csg-sample-sheet-cell-number">&pound;200.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;35.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;235.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;245.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td class="csg-sample-sheet-cell-number">&pound;300.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;52.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;352.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;362.50</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td class="csg-sample-sheet-cell-number">&pound;400.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;70.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;470.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;480.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">7</th>
+                <td class="csg-sample-sheet-cell-number">&pound;500.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;87.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;587.50</td>
+                <td class="csg-sample-sheet-cell-number">&pound;597.50</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">8</th>
+                <td class="csg-sample-sheet-cell-number">&pound;600.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;105.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;705.00</td>
+                <td class="csg-sample-sheet-cell-number">&pound;715.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">9</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">10</th>
+                <td>Postage charge</td>
+                <td class="csg-sample-sheet-cell-number">&pound;10.00</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        This time, the formula in cell D3 has been copied into cells D4 to D8.
+        However, the cell reference B10 has not been updated because it has been &lsquo;fixed&rsquo; by the $ characters.
+        The other cell reference in the formula in cell D3, C3, has been updated since it is not fixed by $ characters.
+        Therefore, cell D4 contains the formula C4+$B$10, cell D5 contains the formula C5+$B$10, and so on.
+    </p>
+    <p>Note that all references, including those fixed by $ characters, are updated correctly when you insert or delete rows or columns.</p>
+    <p>
+        You need to put a $ character before each element of the cell reference you want to fix.
+        Sometimes, you may only want to fix one element.
+        For example, you may want the row references to be updated when copied but not the column references.
+    </p>
+    <p>Consider the following document:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column">A</th>
+                <th class="csg-sample-sheet-border-column">B</th>
+                <th class="csg-sample-sheet-border-column">C</th>
+                <th class="csg-sample-sheet-border-column">D</th>
+                <th class="csg-sample-sheet-border-column">E</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td></td>
+                <td>France</td>
+                <td>Germany</td>
+                <td>Spain</td>
+                <td>England</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td>Cars</td>
+                <td>&nbsp;&nbsp;-</td>
+                <td>road</td>
+                <td>sea</td>
+                <td>road</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td>TVs</td>
+                <td>road</td>
+                <td>air</td>
+                <td>road</td>
+                <td>road</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td>Fridges</td>
+                <td>sea</td>
+                <td>road</td>
+                <td>&nbsp;&nbsp;-</td>
+                <td>road</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td>Post</td>
+                <td>air</td>
+                <td>air</td>
+                <td>air</td>
+                <td>air</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">7</th>
+                <td>Spares</td>
+                <td>sea</td>
+                <td>road</td>
+                <td>sea</td>
+                <td>road</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">8</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">9</th>
+                <td>Totals</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">10</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">11</th>
+                <td>air</td>
+                <td class="csg-sample-sheet-cell-number">1</td>
+                <td class="csg-sample-sheet-cell-number">2</td>
+                <td class="csg-sample-sheet-cell-number">1</td>
+                <td class="csg-sample-sheet-cell-number">1</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">12</th>
+                <td>sea</td>
+                <td class="csg-sample-sheet-cell-number">2</td>
+                <td class="csg-sample-sheet-cell-number">0</td>
+                <td class="csg-sample-sheet-cell-number">2</td>
+                <td class="csg-sample-sheet-cell-number">0</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">13</th>
+                <td>road</td>
+                <td class="csg-sample-sheet-cell-number">1</td>
+                <td class="csg-sample-sheet-cell-number">3</td>
+                <td class="csg-sample-sheet-cell-number">1</td>
+                <td class="csg-sample-sheet-cell-number">4</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Cell B11 contains the formula</p>
+    <p class="csg-sample-indent"><code>DCOUNTA(B$3B$7,B$3B$7=$A11)</code></p>
+    <p>
+        DCOUNTA counts the number of cells in the range for which the condition is true.
+        B$3B$7 is the range of cells which the DCOUNTA function is to act upon.
+        B$3B$7=$A11 is the condition it has to satisfy.
+        A11 contains the word &lsquo;air&rsquo; so PipeDream counts all the cells in the range B3B7 which contain &lsquo;air&rsquo;.
+        This gives the required result 1.
+    </p>
+    <p>If you now mark cells B11 to E11 and give the <span class="csg-command">Replicate Right</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Replicate Right</td>
+                <td><img src="images/tbar_fill_right.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BRR</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        PipeDream will count the occurrences of &lsquo;air&rsquo; in the ranges C3C7, D3D7 and E3E7.
+        When replicating, $ fixes any column or row it precedes.
+        In this case, therefore, cell C11 contains the formula DCOUNTA(C$3C$7,C$3C$7=$A11), cell D11 contains the formula DCOUNTA (D$3D$7,D$3D$7=$A11), and so on.
+        The references to column B have been updated, but the row references (3 and 7) have not been updated as they are fixed with $ characters.
+    </p>
+    <p>
+        Now mark cells B11 to E13 and give the <span class="csg-command">Replicate Down</span> command.
+        Since there is no $ character, the row reference (11) is updated for each new row.
+        Therefore, on row 12, the total occurrences of cells matching cell A12 (sea) are returned
+        and on row 13, the total occurrences of cells matching cell A13 (road) are returned.
+    </p>
+    <p>You can see that replication, together with us of the $ character, can dramatically increase the speed and accuracy with which you construct a spreadsheet.</p>
+    <p>
+        In PipeDream, as in other spreadsheets, the term replication is generally used to refer to copying number cells.
+        The differences between <span class="csg-command">Copy Block</span> and replication are as follows:
+    </p>
+    <ul>
+        <li>Copying may insert a copy at the specified position if the target area contains some text or number cells already.</li>
+        <li>Replication overwrites the specified position with the marked information, i.e. text or blank cells which were already at the specified position are overwritten.</li>
+    </ul>
+    <p>
+        With the <span class="csg-command">Replicate</span> command, you can replicate a single cell to another position in the document.
+        You can replicate a single cell to a range of cells.
+        Or you can replicate a range of cells to another range of cells.
+    </p>
+
+    <h2 id="Replicate">To Replicate a Single Cell</h2>
+    <ol>
+        <li>Give the <span class="csg-command">Replicate</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Replicate</td>
+                <td>Adj-<img src="images/tbar_fill_down.png" style="vertical-align: bottom;"/></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BRE</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <!-- ol start="2" -->
+    <ul class="csg-netsurf-2434">
+        <li>2. When the dialogue box appears, on the <span class="csg-dbox-option">Range to copy from</span> input field, type the cell reference of the single cell you wish to copy.</li>
+        <li>
+            3. In the <span class="csg-dbox-option">Range to copy to</span> input field, specify the reference of the cell you are copying to.
+            The reference of the cell the caret is in will already appear.
+        </li>
+        <li>4. Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+    </ul>
+    <p>The contents of the first cell will appear replicated in the specified cell.</p>
+
+    <h2 id="Range">To Replicate a Range of Cells</h2>
+    <ol>
+        <li>Mark the range of cells.</li>
+        <li>Move the caret to where you want to copy the first cell in the range.</li>
+        <li>Give the <span class="csg-dbox-option">Replicate</span> command.</li>
+    </ol>
+    <p>
+        The first and last cells of the range you have marked will already appear on the <span class="csg-dbox-option">Range to copy from</span> input field.
+        If you had not marked the range, you could type in the required cell references at this stage.
+        The cell references of the cell at which you want the copy of the range to start will appear in the
+        <span class="csg-dbox-option">Range to copy to</span> input field since the caret is in the cell,
+        so all you need to do is to
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        If you had not positioned the caret in the right cell, you could type it in at this stage.
+    </p>
+    <p>The range will be replicated at the specified position.</p>
+
+    <h2 id="Table">To Replicate a Range Into a Table</h2>
+    <ol>
+        <li>Mark the range of cells to be copied.</li>
+        <li>
+            Give the <span class="csg-command">Replicate</span> command.<br />
+            <br />
+            The source range will already be correct in the dialogue box since you have marked it.
+        </li>
+        <li>
+            Type the first and last cells of the target range on the <span class="csg-dbox-option">Range to copy to</span> input field.
+            If the first range is a row, this must be a column, and vice versa.
+        </li>
+        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span> and the table will be created.</li>
+    </ol>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>Copying, moving or deleting blocks</td>
+                <td><a href="blockops.html">Block operations</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Reformatting Text </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Saving Choices</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="reformattingtext.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="savingchoices.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

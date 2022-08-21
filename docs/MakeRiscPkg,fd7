@@ -7,24 +7,57 @@
 | Copyright (C) 1991-1998 Colton Software Limited
 | Copyright (C) 1998-2015 R W Colton
 
-IfThere $.Temp Then Else %CDir $.Temp
+| !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
-Set pd$Disc $.Temp.PDManuals_20151122
-| Remember to update RiscPkg.Control too and check it in first!
+Set pd$Release 20180225
+| Remember to update RiscPkg.Control too
+
+Set pd$Disc $.Temp.PD4.PDManuals_<pd$Release>
+Set pd$Zip  $.Temp.PD4.PDManuals_<pd$Release>/zip
+
+IfThere $.Temp     Then Else %CDir $.Temp
+IfThere $.Temp.PD4 Then Else %CDir $.Temp.PD4
 
 X %Wipe <pd$Disc> ~cfr~v
 
 time
-echo Starting svn export - please be patient
+echo Starting svn export (local) - please be patient
 svn export <Obey$Dir> <pd$Disc>
 time
 
-settype <pd$Disc>.Manuals.PipeDream.RefGuide.index/html FAF
+| HTML files
+SetMacro Alias$pd_settype SetType %%0 &FAF
+Repeat pd_settype <pd$Disc>.Manuals.PipeDream.RefGuide -files -verbose
+Repeat pd_settype <pd$Disc>.Manuals.PipeDream.RefGuide.content -files -verbose
+Repeat pd_settype <pd$Disc>.Manuals.PipeDream.Tutorial -files -verbose
+Repeat pd_settype <pd$Disc>.Manuals.PipeDream.Tutorial.content -files -verbose
 
-settype <pd$Disc>.Manuals.PipeDream.Tutorial.index/html FAF
+| CSS files
+SetMacro Alias$pd_settype SetType %%0 &F79
+pd_settype <pd$Disc>.Manuals.PipeDream.RefGuide.content.csguide/css
+pd_settype <pd$Disc>.Manuals.PipeDream.Tutorial.content.csguide/css
 
-| The one in RiscPkg is the useful one for the packaged docs
-delete <pd$Disc>.LICENSE
+| PNG files
+SetMacro Alias$pd_settype SetType %%0 &B60
+Repeat pd_settype <pd$Disc>.Manuals.PipeDream.RefGuide.content.images -files -verbose
+Repeat pd_settype <pd$Disc>.Manuals.PipeDream.Tutorial.content.images -files -verbose
+
+SetMacro Alias$pd_settype SetType %%0 &FFF
+pd_settype <pd$Disc>.Manuals.PipeDream.RefGuide.content.images.LICENCE
+pd_settype <pd$Disc>.Manuals.PipeDream.Tutorial.content.images.LICENCE
+
+Unset Alias$pd_settype
+
+| The one in RiscPkg.Copyright is the useful one for the packaged docs
+delete <pd$Disc>.RiscPkg.LICENCE
+delete <pd$Disc>.LICENCE
 delete <pd$Disc>.MakeRiscPkg
+
+%Dir <pd$Disc>
+%Remove <pd$Zip>
+zip -r <pd$Zip> RiscPkg Manuals
+SetType <pd$Zip> &A91
+Info <pd$Zip>
+%Back
 
 Filer_OpenDir <pd$Disc>

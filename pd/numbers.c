@@ -130,13 +130,14 @@ actind_in_block(
 *
 ******************************************************************************/
 
-#define bash_snapshot 0
-#define bash_exchange 1
-#define bash_tonumber 2
-#define bash_totext   3
+#define bash_Snapshot   0
+#define bash_Exchange   1
+#define bash_ToNumber   2
+#define bash_ToText     3
+#define bash_ToConstant 4
 
 static void
-bash_slots_about_a_bit(
+bash_cells_about_a_bit(
     int action)
 {
     SLR oldpos;
@@ -148,8 +149,8 @@ bash_slots_about_a_bit(
     if(blkstart.col != NO_COL && !set_up_block(TRUE))
         return;
 
-    /* must ensure recalced for snapshot */
-    if(bash_snapshot == action)
+    /* must ensure recalced for some actions */
+    if((bash_Snapshot == action) || (bash_ToConstant == action))
         ev_recalc_all();
 
     oldpos.col = curcol;
@@ -165,8 +166,11 @@ bash_slots_about_a_bit(
 
     escape_enable();
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL && !ctrlflag)
+    while(NULL != (tcell = next_cell_in_block(DOWN_COLUMNS)))
     {
+        if(ctrlflag)
+            break;
+
         actind_in_block(DOWN_COLUMNS);
 
         if(is_protected_cell(tcell))
@@ -178,7 +182,7 @@ bash_slots_about_a_bit(
         switch(tcell->type)
         {
         case SL_TEXT:
-            if(bash_snapshot == action)
+            if((bash_Snapshot == action) || (bash_ToConstant == action))
             {
                 d_options_DF = dateformat;
                 d_options_TH = thousands;
@@ -202,18 +206,18 @@ bash_slots_about_a_bit(
         /* decompile into buffer */
         switch(action)
         {
-        case bash_tonumber:
+        case bash_ToNumber:
             xf_inexpression = TRUE;
             prccon(linbuf, tcell);
             break;
 
-        case bash_totext:
+        case bash_ToText:
             prccon(linbuf, tcell);
             break;
 
-        case bash_exchange:
+        case bash_Exchange:
             {
-            if(tcell->type == SL_TEXT)
+            if(SL_TEXT == tcell->type)
                 xf_inexpression = TRUE;
 
             prccon(linbuf, tcell);
@@ -221,25 +225,46 @@ bash_slots_about_a_bit(
             }
 
         default:
-        case bash_snapshot:
+        case bash_Snapshot:
+        case bash_ToConstant:
             {
             P_EV_RESULT p_ev_result;
+            BOOL do_ev_decode = FALSE;
+            S32 expand_flags =
+                    EXPAND_FLAGS_DONT_EXPAND_CTRL /*!expand_ctrl*/ |
+                    EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ ;
+
+            if(bash_ToConstant == action)
+                expand_flags |= EXPAND_FLAGS_EXPAND_ATS_1;
+            else /* (bash_Snapshot == action) */
+                expand_flags |= EXPAND_FLAGS_EXPAND_ATS_ALL;
 
             switch(result_extract(tcell, &p_ev_result))
             {
             case SL_NUMBER:
-                /* leave strings as text cells */
-                if(p_ev_result->did_num != RPN_RES_STRING)
-                    xf_inexpression = TRUE;
-
                 /* poke the minus/brackets flag to minus */
                 tcell->format = F_DCPSID | F_DCP;
+
+                /* Snapshot: convert text strings to text cells */
+                /* Make Constant: leave text strings as is */
+                if(RPN_RES_STRING != p_ev_result->did_num)
+                {
+                    xf_inexpression = TRUE;
+                }
+                else if(bash_ToConstant == action)
+                {
+                    xf_inexpression = TRUE;
+                    do_ev_decode = TRUE;
+                }
 
                 /* array results are left as arrays - not decompiled into
                  * their formula (same difference for constant arrays, but
                  * not for calculated arrays)
                  */
-                if(p_ev_result->did_num == RPN_RES_ARRAY)
+                if(RPN_RES_ARRAY == p_ev_result->did_num)
+                    do_ev_decode = TRUE;
+
+                if(do_ev_decode)
                 {
                     EV_DATA data;
                     const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
@@ -250,14 +275,19 @@ bash_slots_about_a_bit(
                     ev_result_to_data_convert(&data, p_ev_result);
 
                     ev_decode_data(linbuf, cur_docno, &data, &optblock);
+                    reportf("decoded to '%s'", linbuf);
                     break;
                 }
 
             /* note fall thru */
+
             default:
-                (void) expand_slot(current_docno(), tcell, in_block.row, linbuf, LIN_BUFSIZ /*fwidth*/,
-                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
-                                   FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+                (void) expand_cell(
+                            current_docno(), tcell, in_block.row, linbuf, LIN_BUFSIZ /*fwidth*/,
+                            DEFAULT_EXPAND_REFS /*expand_refs*/,
+                            expand_flags,
+                            TRUE /*cff*/);
+                reportf("expanded to '%s'", linbuf);
                 break;
             }
             break;
@@ -274,19 +304,23 @@ bash_slots_about_a_bit(
             merexp_reterr(NULL, NULL, FALSE);
             endeex_nodraw();
 
-            if(bash_snapshot == action)
+            if((NULL != (tcell = travel(in_block.col, in_block.row)))  &&  (SL_NUMBER == tcell->type))
             {
-                /* reset format in new cell */
-                if((NULL != (tcell = travel(in_block.col, in_block.row)))  &&  (tcell->type != SL_TEXT))
+                if((bash_Snapshot == action) || (bash_ToConstant == action))
+                {   /* restore format in number cell */
                     tcell->format = oldformat;
+                }
             }
 
-            /* SKS after 4.11 03feb92 - added escape clause */
+            /* SKS after PD 4.11 03feb92 - added escape clause */
             if(been_error)
                 goto EXIT_POINT;
         }
-        else if(!mergebuf_core(FALSE, FALSE))
-            goto EXIT_POINT;
+        else /*if(slot_in_buffer)*/
+        {
+            if(!mergebuf_core(FALSE, FALSE))
+                goto EXIT_POINT;
+        }
     }
 
     curcol = oldpos.col;
@@ -295,7 +329,7 @@ bash_slots_about_a_bit(
 
 EXIT_POINT:;
 
-    /* SKS after 4.11 03feb92 - moved from above label */
+    /* SKS after PD 4.11 03feb92 - moved from above label */
     d_options_DF = dateformat;
     d_options_TH = thousands;
 
@@ -332,14 +366,14 @@ compile_text_slot(
     if(slot_refsp)
         *slot_refsp = 0;
 
-    if(NULLCH == text_at_char)
+    if(CH_NULL == text_at_char)
     {
-        while(NULLCH != *from)
+        while(CH_NULL != *from)
             *to++ = *from++;
     }
     else
     {
-        while(NULLCH != *from)
+        while(CH_NULL != *from)
         {
             if((*to++ = *from++) != text_at_char)
                 continue;
@@ -411,7 +445,7 @@ compile_text_slot(
             }
 
             /* check for any other text-at field */
-            if(strchr("DTPNLFGdtpnlfg", *from))
+            if(strchr("CDFGLNPT", toupper(*from)))
             {
                 /* MRJC 30.3.92 */
                 if(slot_refsp)
@@ -433,7 +467,7 @@ compile_text_slot(
         }
     }
 
-    *to = NULLCH;
+    *to = CH_NULL;
 
     return((to - array) + 1);
 }
@@ -452,7 +486,7 @@ report_compiled_text_string(
     {
         uchar c = *cts++;
 
-        if(NULLCH == c)
+        if(CH_NULL == c)
             return(cts_in); /* nothing out-of-the-ordinary - just pass the source */
 
         if((c < 0x20) || (c == 0x7F))
@@ -471,12 +505,12 @@ report_compiled_text_string(
 
         if(PtrDiffBytesU32(to, buffer) >= elemof32(buffer))
         {
-            to[-1] = NULLCH; /* ran out of space. NULLCH-terminate and exit */
+            to[-1] = CH_NULL; /* ran out of space. CH_NULL-terminate and exit */
             return(buffer);
         }
 
-        if(NULLCH == c)
-            return(buffer); /* buffer is NULLCH-terminated, exit */
+        if(CH_NULL == c)
+            return(buffer); /* buffer is CH_NULL-terminated, exit */
 
         if((c < 0x20) || (c == 0x7F))
         {
@@ -491,7 +525,7 @@ report_compiled_text_string(
 /******************************************************************************
 *
 * return the length of a compiled text (normally cell contents)
-* NB. length is inclusive of NULLCH byte
+* NB. length is inclusive of CH_NULL byte
 *
 ******************************************************************************/
 
@@ -501,30 +535,30 @@ compiled_text_len(
 {
     PC_U8 str = str_in;
 
-#if defined(SLRLD2) /* can optimise using fast Norcroft strlen() when SLRLD2==NULLCH is used after SLRLD1 */
-    if(NULLCH == *str) /* verifying string is not empty saves a test per loop */
-        return(1); /*NULLCH*/
+#if defined(SLRLD2) /* can optimise using fast Norcroft strlen() when SLRLD2==CH_NULL is used after SLRLD1 */
+    if(CH_NULL == *str) /* verifying string is not empty saves a test per loop */
+        return(1); /*CH_NULL*/
 
     for(;;)
     {
         PC_U8 ptr = str + strlen(str);
 
         if(SLRLD1 == ptr[-1]) /* ptr is never == str */
-        {   /* the NULLCH we found is SLRLD2 - keep going */
+        {   /* the CH_NULL we found is SLRLD2 - keep going */
             str = ptr + COMPILED_TEXT_SLR_SIZE-1; /* restart past the compiled SLR */
             /*eportf("ctl: SLRLD2 @ %d in %s", PtrDiffBytesS32(ptr, str_in), report_compiled_text_string(str_in));*/
             continue;
         }
 
-        /* (NULLCH == *ptr) */
-        /*eportf("ctl: NULLCH @ %d in %s", PtrDiffBytesS32(ptr, str_in), report_compiled_text_string(str_in));*/
-        str = ptr + 1; /* want to leave str pointing past the real NULLCH */
+        /* (CH_NULL == *ptr) */
+        /*eportf("ctl: CH_NULL @ %d in %s", PtrDiffBytesS32(ptr, str_in), report_compiled_text_string(str_in));*/
+        str = ptr + 1; /* want to leave str pointing past the real CH_NULL */
         return(PtrDiffBytesS32(str, str_in));
     }
 #else
     int c;
 
-    while((c = *str++) != NULLCH) /* leave p pointing past NULLCH */
+    while((c = *str++) != CH_NULL) /* leave p pointing past CH_NULL */
         if(SLRLD1 == c)
             str += COMPILED_TEXT_SLR_SIZE-1;
 
@@ -691,27 +725,27 @@ draw_adjust_file_ref(
 
     trace_2(TRACE_APP_PD4, "draw_adjust_file_ref(" PTR_XTFMT ", " PTR_XTFMT ")", report_ptr_cast(p_draw_diag), report_ptr_cast(p_draw_file_ref));
 
-    if(p_draw_diag->data)
+    if(NULL != p_draw_diag->data)
     {
-        DRAW_BOX box;
+        DRAW_BOX draw_box;
         S32 x_size, y_size;
         S32 scaled_x_size, scaled_y_size;
 
         /* get box in Draw units */
-        box = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
+        draw_box = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
 
-        x_size = box.x1 - box.x0;
-        y_size = box.y1 - box.y0;
+        x_size = draw_box.x1 - draw_box.x0;
+        y_size = draw_box.y1 - draw_box.y0;
 
         scaled_x_size = (S32) ceil(x_size * p_draw_file_ref->x_factor);
         scaled_y_size = (S32) ceil(y_size * p_draw_file_ref->y_factor);
 
         /* save size in OS units rounded out to worst-case pixels */
-        p_draw_file_ref->x_size_os = div_round_ceil(scaled_x_size, GR_RISCDRAW_PER_RISCOS * 4) * 4;
-        p_draw_file_ref->y_size_os = div_round_ceil(scaled_y_size, GR_RISCDRAW_PER_RISCOS * 4) * 4;
+        p_draw_file_ref->x_size_os = idiv_ceil(scaled_x_size, GR_RISCDRAW_PER_RISCOS * 4) << 2;
+        p_draw_file_ref->y_size_os = idiv_ceil(scaled_y_size, GR_RISCDRAW_PER_RISCOS * 4) << 2;
 
         trace_4(TRACE_APP_PD4, "draw_adjust_file_ref: bbox of file is %d %d %d %d (os)",
-                box.x0, box.y0, box.x1, box.y1);
+                draw_box.x0, draw_box.y0, draw_box.x1, draw_box.y1);
 
         /* scale sizes */
         trace_2(TRACE_APP_PD4, "draw_adjust_file_ref: scaled sizes x: %d, y: %d (os)",
@@ -759,7 +793,7 @@ draw_adjust_file_ref(
                         {
                             xf_interrupted = TRUE;
 #if 1
-                            /* SKS after 4.11 22jan92 - slight (and careful) optimisation here; Draw files always hang down */
+                            /* SKS after PD 4.11 22jan92 - slight (and careful) optimisation here; Draw files always hang down */
                             if(out_below)
                                 rowtoend  = MIN(rowtoend, roff);
                             else
@@ -821,8 +855,8 @@ image_cache_recache_proto(static, draw_file_recached)
     LIST_ITEMNO key;
     P_DRAW_FILE_REF p_draw_file_ref;
 
-    IGNOREPARM(handle);
-    IGNOREPARM(cres);
+    UNREFERENCED_PARAMETER(handle);
+    UNREFERENCED_PARAMETER(cres);
 
     for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
         p_draw_file_ref;
@@ -860,11 +894,12 @@ draw_cache_file(
     S32 load_as_preferred,
     S32 explicit_load)
 {
+    const BOOL loading_into_document = is_current_document();
     IMAGE_CACHE_HANDLE draw_file_key;
     U32 wacky_tag = GR_RISCDIAG_WACKYTAG;
     struct PDCHART_TAGSTRIP_INFO info;
     U8  namebuf[BUF_MAX_PATHSTRING];
-    S32 res;
+    STATUS res;
     GR_CHART_HANDLE ch;
     P_ANY ext_handle;
     S32 chart_exists;
@@ -872,12 +907,14 @@ draw_cache_file(
 
     trace_1(TRACE_APP_PD4, "draw_cache_file(%s)", name);
 
-    res = is_current_document()
-        ? file_find_on_path_or_relative(namebuf, elemof32(namebuf), name, currentfilename)
-        : file_find_on_path(namebuf, elemof32(namebuf), name);
+    res = loading_into_document
+        ? file_find_on_path_or_relative(namebuf, elemof32(namebuf), file_get_search_path(), name, currentfilename)
+        : file_find_on_path(namebuf, elemof32(namebuf), file_get_search_path(), name);
 
-    if(res <= 0)
-        return(res ? res : create_error(FILE_ERR_NOTFOUND));
+    status_return(res);
+
+    if(STATUS_OK == res)
+        return(create_error(FILE_ERR_NOTFOUND));
 
     info.pdchartdatakey = NULL;
 
@@ -942,7 +979,7 @@ draw_cache_file(
 
     if(image_cache_error_query(&draw_file_key) >= 0)
     {
-        if(is_current_document())
+        if(loading_into_document)
         {
             res = draw_add_file_ref(draw_file_key, xp, yp, col, row);
 
@@ -1118,7 +1155,7 @@ draw_str_insertslot(
 
     trace_2(TRACE_APP_PD4, "draw_str_insertslot col: %d, row: %d", col, row);
 
-    if(NULLCH == text_at_char)
+    if(CH_NULL == text_at_char)
         return(0);
 
     if(NULL == (sl = travel(col, row)))
@@ -1129,7 +1166,7 @@ draw_str_insertslot(
 
     c = sl->content.text;
 
-    while(NULLCH != *c)
+    while(CH_NULL != *c)
     {
         if(SLRLD1 == *c) /* because of possibility of text-at char change, this need not be preceded by the current text-at char (orphaned) */
         {
@@ -1186,7 +1223,7 @@ draw_tree_str_insertslot(
 {
     S32 res;
 
-    IGNOREPARM(sort);
+    UNREFERENCED_PARAMETER(sort);
 
     res = text_slot_add_dependency(col, row);
 
@@ -1206,8 +1243,8 @@ draw_tree_str_insertslot(
 
 PROC_UREF_PROTO(static, draw_uref)
 {
-    IGNOREPARM(exthandle);
-    IGNOREPARM(status);
+    UNREFERENCED_PARAMETER(exthandle);
+    UNREFERENCED_PARAMETER(status);
 
     trace_0(TRACE_MODULE_UREF, "draw_uref");
 
@@ -1261,10 +1298,27 @@ PROC_UREF_PROTO(static, draw_uref)
 }
 
 /*
-enter string as formula in numeric cell
+enter string as formula in number cell
 
 useful for macro files in PD4
 */
+
+static BOOL
+newslotcontents_fn_core(void)
+{
+    strcpy(linbuf, d_name[0].textfield);
+
+    buffer_altered  = TRUE;
+    slot_in_buffer  = TRUE;
+    xf_inexpression = TRUE;
+    out_currslot    = TRUE;
+
+    seteex_nodraw();
+    merexp();
+    endeex_nodraw();
+
+    return(TRUE);
+}
 
 extern void
 Newslotcontents_fn(void)
@@ -1277,16 +1331,8 @@ Newslotcontents_fn(void)
 
     while(dialog_box(D_NAME))
     {
-        strcpy(linbuf, d_name[0].textfield);
-
-        buffer_altered  = TRUE;
-        slot_in_buffer  = TRUE;
-        xf_inexpression = TRUE;
-        out_currslot    = TRUE;
-
-        seteex_nodraw();
-        merexp();
-        endeex_nodraw();
+        if(!newslotcontents_fn_core())
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -1329,9 +1375,9 @@ endeex(void)
 
 PROC_UREF_PROTO(extern, eval_wants_slot_drawn)
 {
-    IGNOREPARM(inthandle);
-    IGNOREPARM_InRef_(at_rng);
-    IGNOREPARM(status);
+    UNREFERENCED_PARAMETER(inthandle);
+    UNREFERENCED_PARAMETER_InRef_(at_rng);
+    UNREFERENCED_PARAMETER(status);
 
     switch(upp->action)
     {
@@ -1375,19 +1421,19 @@ PROC_UREF_PROTO(extern, eval_wants_slot_drawn)
 extern void
 ExchangeNumbersText_fn(void)
 {
-    bash_slots_about_a_bit(bash_exchange);
+    bash_cells_about_a_bit(bash_Exchange);
 }
 
 extern void
 ToNumber_fn(void)
 {
-    bash_slots_about_a_bit(bash_tonumber);
+    bash_cells_about_a_bit(bash_ToNumber);
 }
 
 extern void
 ToText_fn(void)
 {
-    bash_slots_about_a_bit(bash_totext);
+    bash_cells_about_a_bit(bash_ToText);
 }
 
 /******************************************************************************
@@ -1421,8 +1467,8 @@ filbuf(void)
 
     if(!nslot  ||  zap)
     {
-        *linbuf = '\0';
         lescrl = 0;
+        linbuf[0] = CH_NULL;
         slot_in_buffer = !zap;
     }
 }
@@ -1466,22 +1512,26 @@ dependent_links_warning(void)
 {
     PC_LIST lptr;
     const DOCNO docno = current_docno();
-    S32 nLinks = 0;
+    S32 nDepLinks = 0;
 
     for(lptr = first_in_list(&graphics_link_list);
         lptr;
         lptr = next_in_list(&graphics_link_list))
     {
-        PC_GRAPHICS_LINK_ENTRY glp = (P_GRAPHICS_LINK_ENTRY) lptr->value;
+        PC_GRAPHICS_LINK_ENTRY glp = (PC_GRAPHICS_LINK_ENTRY) lptr->value;
 
-        if(glp->docno == docno)
-            ++nLinks;
+        if(glp->docno != docno)
+            continue;
+
+        ++nDepLinks;
     }
 
-    if(nLinks)
-        return(riscdialog_query_YN(close_dependent_links_winge_STR) == riscdialog_query_YES);
+    if(0 == nDepLinks)
+        return(TRUE);
 
-    return(TRUE);
+    return(riscdialog_query_YES ==
+           riscdialog_query_YN(close_dependent_links_YN_Q_STR,
+                               close_dependent_links_YN_S_STR));
 }
 
 /******************************************************************************
@@ -1641,7 +1691,7 @@ graph_send_block(
 
         for(tcol = scol; tcol < ecol; ++tcol)
             for(trow = srow; trow < erow; ++trow)
-                riscos_sendslotcontents(glp, (S32) (tcol - glp->col), (S32) (trow - glp->row));
+                riscos_sendcellcontents(glp, (S32) (tcol - glp->col), (S32) (trow - glp->row));
     }
 }
 
@@ -1653,7 +1703,7 @@ graph_send_block(
 
 PROC_UREF_PROTO(static, graph_uref)
 {
-    IGNOREPARM(inthandle);
+    UNREFERENCED_PARAMETER(inthandle);
 
     trace_0(TRACE_MODULE_UREF, "graph_uref");
 
@@ -1701,7 +1751,7 @@ PROC_UREF_PROTO(static, graph_uref)
                     if( at_rng->e.col - at_rng->s.col != glp->x_size + 1 ||
                         at_rng->e.row - at_rng->s.row != glp->y_size + 1)
                     {
-                        riscos_sendallslots(glp);
+                        riscos_sendallcells(glp);
 
                         /* reset extent of dependency */
                         at_rng->e.col = at_rng->s.col + glp->x_size + 1;
@@ -1846,7 +1896,7 @@ merexp_reterr(
     /* tell uref we're about to replace cell */
     set_ev_slr(&slr, newcol, newrow);
 
-    /* save justify flags for numeric cell */
+    /* save justify flags for number cell */
     if(tcell)
     {
         switch(tcell->type)
@@ -1863,7 +1913,7 @@ merexp_reterr(
 
     if((res = merge_compiled_exp(&slr, justify, format, compiled_out, rpn_len, &result, &parms, FALSE, TRUE)) < 0)
     {
-        *linbuf = '\0';
+        linbuf[0] = CH_NULL;
         reperr_null(status_nomem());
     }
 
@@ -2007,7 +2057,7 @@ mergebuf_nocheck(void)
     return(mergebuf_core(FALSE, TRUE));
 }
 
-/* find first instance of ch or NULLCH in s */
+/* find first instance of ch or CH_NULL in s */
 
 _Check_return_
 static inline const uchar *
@@ -2019,7 +2069,7 @@ xstrzchr(
     {
         uchar c = *s++;
 
-        if((ch == c) || (NULLCH == c))
+        if((ch == c) || (CH_NULL == c))
             return(s - 1);
     }
 }
@@ -2039,18 +2089,18 @@ buffer_length_detecting_text_at_char(
     *p_contains_tac = FALSE;
 
     /* Norcroft strlen() is FAST */
-    if(NULLCH == text_at_char)
-        return(strlen(str) + 1 /*NULLCH*/);
+    if(CH_NULL == text_at_char)
+        return(strlen(str) + 1 /*CH_NULL*/);
 
-#if defined(SLRLD2) /* can optimise when SLRLD2==NULLCH is used after SLRLD1 */
-    if(NULLCH == *str) /* verifying string is not empty saves a test per loop */
-        return(1); /*NULLCH*/
+#if defined(SLRLD2) /* can optimise when SLRLD2==CH_NULL is used after SLRLD1 */
+    if(CH_NULL == *str) /* verifying string is not empty saves a test per loop */
+        return(1); /*CH_NULL*/
 
     for(;;)
     {
         PC_U8 ptr;
 
-        /* search for text-at char and NULLCH together using our xstrzchr() */
+        /* search for text-at char and CH_NULL together using our xstrzchr() */
         /* this will also find orphaned (text-at char changed) SLRLD1/2 */
         /* if fact we only need to find first instance of text-at char, then speed up with fast Norcroft strlen() */
         if(!*p_contains_tac)
@@ -2066,7 +2116,7 @@ buffer_length_detecting_text_at_char(
                 continue;
             }
 
-            /* failed to find text_at_char but ptr is pointing at a NULLCH (either real or SLRLD2) */
+            /* failed to find text_at_char but ptr is pointing at a CH_NULL (either real or SLRLD2) */
         }
         else
         {
@@ -2074,21 +2124,21 @@ buffer_length_detecting_text_at_char(
         }
 
         if(SLRLD1 == ptr[-1]) /* ptr is never == str */
-        {   /* the NULLCH we found is SLRLD2 - keep going */
+        {   /* the CH_NULL we found is SLRLD2 - keep going */
             str = ptr + COMPILED_TEXT_SLR_SIZE-1; /* restart past the compiled SLR */
             continue;
         }
 
-        /* (NULLCH == *ptr) */
-        str = ptr + 1; /* want to leave str pointing past the real NULLCH */
+        /* (CH_NULL == *ptr) */
+        str = ptr + 1; /* want to leave str pointing past the real CH_NULL */
         return(PtrDiffBytesS32(str, str_in));
     }
 #else
     for(;;)
     {
-        uchar ch = *str++; /* want to leave str pointing past NULLCH */
+        uchar ch = *str++; /* want to leave str pointing past CH_NULL */
 
-        if(NULLCH == ch)
+        if(CH_NULL == ch)
             break;
 
         if(SLRLD1 == ch)
@@ -2097,7 +2147,7 @@ buffer_length_detecting_text_at_char(
             continue;
         }
 
-        if(text_at_char == ch) /* catered for NULLCH t-a-c above */
+        if(text_at_char == ch) /* catered for CH_NULL t-a-c above */
             *p_contains_tac = TRUE;
     }
 
@@ -2156,7 +2206,7 @@ merstr(
 
             if((res = createhole(tcol, trow)) == FALSE)
             {
-                *linbuf = '\0';
+                linbuf[0] = CH_NULL;
                 reperr_null(status_nomem());
             }
         }
@@ -2169,7 +2219,7 @@ merstr(
                  * may free some memory and merstr will get called again
                 */
                 if(!in_load)
-                    *linbuf = '\0';
+                    linbuf[0] = CH_NULL;
 
                 res = reperr_null(status_nomem());
             }
@@ -2231,45 +2281,44 @@ decompile cell, dealing with compiled cell references, text-at fields etc.
 decompile from ptr (text field in cell) to linbuf
 
 compiled cell references are stored as SLR leadin bytes, DOCNO docno, COL colno, ROW rowno.
-Note this may contain NULLCH as part of compiled cell reference, but not at end of string.
+Note this may contain CH_NULL as part of compiled cell reference, but not at end of string.
 */
 
 extern void
 prccon(
     P_U8 target,
-    P_CELL ptr)
+    P_CELL tcell)
 {
     P_U8 to = target;
     PC_U8 from;
     int c;
 
-    if((NULL == ptr)  ||  (ptr->type == SL_PAGE))
-    {
-        *to = '\0';
-        return;
-    }
+    *to = CH_NULL;
 
-    if(ptr->type == SL_NUMBER)
+    if((NULL == tcell)  ||  (tcell->type == SL_PAGE))
+        return;
+
+    if(SL_NUMBER == tcell->type)
     {
         const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
         EV_OPTBLOCK optblock;
 
         ev_set_options(&optblock, cur_docno);
 
-        ev_decode_slot(cur_docno, to, &ptr->content.number.guts, &optblock);
+        ev_decode_slot(cur_docno, to, &tcell->content.number.guts, &optblock);
 
         return;
     }
 
-    from = ptr->content.text;
+    from = tcell->content.text;
 
-    if(!(ptr->flags & SL_TREFS))
+    if(!(tcell->flags & SL_TREFS))
     {
         strcpy(to, from);
         return;
     }
 
-    /* this copes with compiled cell references in text cells.
+    /* This copes with compiled cell references in text cells.
      * On compilation, text-at chars are left in the cell so they can
      * be ignored on decompilation
     */
@@ -2289,7 +2338,7 @@ prccon(
             to += write_ref(to, BUF_MAX_REFERENCE, docno, tcol, trow);
         }
     }
-    while(NULLCH != c);
+    while(CH_NULL != c);
 }
 
 /******************************************************************************
@@ -2299,7 +2348,7 @@ prccon(
 *   f is a filename,
 *   x and y are optional x and y parameters
 *
-* NB NULLCH != get_text_at_char()
+* NB CH_NULL != get_text_at_char()
 *
 ******************************************************************************/
 
@@ -2356,13 +2405,13 @@ readfxy(
         /* scan following x and y parameters */
         if(*--from == ',')
         {
-            consume(int, sscanf(from, ", %lg %n", xp, &scanned));
+            consume_int(sscanf(from, ", %lg %n", xp, &scanned));
             trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s", scanned, from);
             while(scanned--)
                 *to++ = *from++;
 
             scanned = 0;
-            consume(int, sscanf(from, ", %lg %n", yp, &scanned));
+            consume_int(sscanf(from, ", %lg %n", yp, &scanned));
             trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s", scanned, from);
             while(scanned--)
                 *to++ = *from++;
@@ -2607,16 +2656,22 @@ Snapshot_fn(void)
 /*  char trailch = d_options_TP;*/
 
 /*  d_options_MB = 'M';*/
-/*  d_options_LP = '\0';*/
-/*  d_options_TP = '\0';*/
+/*  d_options_LP = CH_NULL;*/
+/*  d_options_TP = CH_NULL;*/
 
-    bash_slots_about_a_bit(bash_snapshot);
+    bash_cells_about_a_bit(bash_Snapshot);
 
     /* restore brackets bit, leading trailing chars */
 
 /*  d_options_MB = minus;*/
 /*  d_options_LP = leadch;*/
 /*  d_options_TP = trailch;*/
+}
+
+extern void
+ToConstant_fn(void)
+{
+    bash_cells_about_a_bit(bash_ToConstant);
 }
 
 /*

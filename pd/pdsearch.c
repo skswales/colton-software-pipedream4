@@ -206,11 +206,13 @@ set_search_block(
     BOOL res;
 
     if(d_search[SCH_BLOCK].option == 'Y')
-        /* marked block option selected */
+    {   /* marked block option selected */
         res = set_search_marked_block();
+    }
     else
-        /* all rows, current document */
+    {   /* all rows, current document */
         res = set_search_all_rows();
+    }
 
     /* set initial position according to next/previous match wanted */
     if(res)
@@ -229,15 +231,11 @@ static void
 do_search(
     BOOL replace)
 {
-    BOOL confirm_option, replace_option;
-
     if(!dialog_box_start())
         return;
 
     /* switch off replace, confirmation and expression cell searching */
-
     d_search[SCH_REPLACE].option = replace ? 'Y' : 'N';
-
     d_search[SCH_CONFIRM].option = 'Y';
 
     while(dialog_box(D_SEARCH))
@@ -245,9 +243,9 @@ do_search(
         if(str_isblank(d_search[SCH_TARGET].textfield))
         {
             reperr_null(ERR_BAD_STRING);
-            if(!dialog_box_can_retry())
-                break;
-            continue;
+            if(dialog_box_can_retry())
+                continue;
+            break;
         }
 
         break; /* never persists in this case */
@@ -268,13 +266,13 @@ do_search(
 
     sch_stt_offset = -1;
 
-    hidden_sofar = found_sofar = (S32) 0;
-
-    confirm_option = (d_search[SCH_CONFIRM].option == 'Y');
-    replace_option = (d_search[SCH_REPLACE].option == 'Y');
+    hidden_sofar = 0;
+    found_sofar = 0;
 
     /* get next match */
-    find_and_replace(TRUE, replace_option, confirm_option);
+    find_and_replace(TRUE,
+                     (d_search[SCH_REPLACE].option == 'Y'),
+                     (d_search[SCH_CONFIRM].option == 'Y'));
 }
 
 extern void
@@ -308,7 +306,7 @@ next_or_previous_match(
     trace_2(TRACE_APP_PD4, "next_or_prev_match: schhan %d curhan %d", sch_docno, current_docno());
 
     /* cannot check with str_isblank cos might be looking for spaces */
-    if(!target_string  ||  (*target_string == '\0'))
+    if(!target_string  ||  (*target_string == CH_NULL))
     {
         reperr_null(ERR_BAD_STRING);
         return;
@@ -322,7 +320,7 @@ next_or_previous_match(
     }
 
     /* do now, so we don't get flashing dbox */
-    riscos_frontmainwindow(TRUE);
+    riscos_front_document_window(TRUE);
 
     if(xf_inexpression_box || xf_inexpression_line)
     {
@@ -394,7 +392,7 @@ save_wild_string(
     while(oldypos < y)
         *ptr++ = *oldypos++;
 
-    *ptr = NULLCH;
+    *ptr = CH_NULL;
 
     if(status_fail(res = add_to_list(&wild_string_list, (S32) wild_strings, array)))
         reperr_null(res);
@@ -459,7 +457,7 @@ sch_stringcmp(
     BOOL next,
     BOOL folding)
 {
-    BOOL moved_slots = FALSE;   /* are we starting in correct cell */
+    BOOL moved_cells = FALSE;   /* are we starting in correct cell */
     uchar *current_slot;
     S32 increment = (next) ? 1 : -1;
 
@@ -482,10 +480,10 @@ sch_stringcmp(
         wild_current = 0;
         oldypos = NULL;
 
-        if(moved_slots)
+        if(moved_cells)
         {
             recover_first_slot();
-            moved_slots = FALSE;
+            moved_cells = FALSE;
         }
         y = current_slot = ptr2;
         x = target_string-1;
@@ -547,7 +545,7 @@ STAR:
                     if(!*y)
                     {
                         /* get next non-blank cell */
-                        moved_slots = TRUE;
+                        moved_cells = TRUE;
 
                         y = current_slot = get_next_slot_in_search();
 
@@ -590,10 +588,10 @@ STAR:
                     /* single character wildcard at x? */
                     if(!wild_x  ||  (*x != '?')  ||  (*y == SPACE))
                     {
-                        if(moved_slots)
+                        if(moved_cells)
                         {
                             recover_first_slot();
-                            moved_slots = FALSE;
+                            moved_cells = FALSE;
                             }
 
                         x = ox;
@@ -836,7 +834,7 @@ prompt_user(void)
         S32 caretpos = lecpos; /* cos endeex zeros it */
         merexp();
         endeex();
-        expedit_editcurrentslot(caretpos, FALSE);
+        expedit_edit_current_cell(caretpos, FALSE);
     }
 
     res = riscdialog_replace_dbox(NULL, NULL);
@@ -849,7 +847,7 @@ prompt_user(void)
         if(!expedit_mergebacktext(FALSE, &caretpos))       /* don't report compile errors, naff formula saved as text */
             return(ESCAPE);             /* mergeback failed, probably text too big for linbuf */
 
-        *linbuf = '\0';
+        linbuf[0] = CH_NULL;
         tcell = travel_here();
 
         if(tcell)
@@ -927,7 +925,7 @@ find_and_replace(
                                 : Zld_many_strings_hidden_STR,
                         hidden_sofar);
             else
-                array2[0] = '\0';
+                array2[0] = CH_NULL;
 
             bleep();
 
@@ -1037,7 +1035,7 @@ ENDPOINT:
         S32 caretpos = lecpos; /* cos endeex zeros it */
         merexp();
         endeex();
-        expedit_editcurrentslot(caretpos, FALSE);
+        expedit_edit_current_cell(caretpos, FALSE);
     }
 }
 

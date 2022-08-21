@@ -108,12 +108,12 @@ add_to_list(
     P_LIST lpt;
     STATUS status;
 
-    trace_3(TRACE_APP_PD4, "add_to_list(" PTR_XTFMT ", %d, %s, " PTR_XTFMT ")", report_ptr_cast(list), key, trace_string(str));
+    trace_3(TRACE_APP_PD4, "add_to_list(" PTR_XTFMT ", %d, %s)", report_ptr_cast(list), key, trace_string(str));
 
     if(!str)
         str = NULLSTR;
 
-    n_bytes = strlen32(str) + 1/*NULLCH*/;
+    n_bytes = strlen32p1(str);
 
     if(NULL != (lpt = add_list_entry(list, n_bytes, &status)))
     {

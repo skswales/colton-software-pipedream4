@@ -103,7 +103,7 @@ date_time_val_to_str(
             temp.time = -temp.time;
         }
 
-        ss_timeval_to_hms(&temp.time, &hours, &minutes, &seconds);
+        status_consume(ss_timeval_to_hms(&temp.time, &hours, &minutes, &seconds));
 
         if(0 != seconds)
             len += sprintf(op_buf + len, "%.2d:%.2d:%.2d", hours, minutes, seconds);
@@ -718,8 +718,8 @@ ev_dec_slr(
 
     op_pos = op_buf;
 
-    if(slrp->docno != this_docno || (slrp->flags & SLR_EXT_REF))
-        op_pos += ev_write_docname(op_buf, slrp->docno, this_docno);
+    if((ev_slr_docno(slrp) != this_docno) || (slrp->flags & SLR_EXT_REF))
+        op_pos += ev_write_docname(op_buf, ev_slr_docno(slrp), this_docno);
 
     if(slrp->flags & SLR_BAD_REF)
         *op_pos++ = '%';
@@ -727,12 +727,12 @@ ev_dec_slr(
     if(slrp->flags & SLR_ABS_COL)
         *op_pos++ = '$';
 
-    op_pos += xtos_ustr_buf(op_pos, BUF_EV_INTNAMLEN, slrp->col, upper_case);
+    op_pos += xtos_ustr_buf(op_pos, BUF_EV_INTNAMLEN, ev_slr_col(slrp), upper_case);
 
     if(slrp->flags & SLR_ABS_ROW)
         *op_pos++ = '$';
 
-    op_pos += sprintf(op_pos, "%d", slrp->row + 1);
+    op_pos += sprintf(op_pos, "%d", ev_slr_row(slrp) + 1);
 
     return(op_pos - op_buf);
 }
@@ -762,7 +762,7 @@ ev_decode_data(
     dc->p_optblock = p_optblock;
 
     len = dec_const(txt_out, p_ev_data);
-    txt_out[len] = '\0';
+    txt_out[len] = CH_NULL;
 
     dc = old_dc;
     return(len);
@@ -876,7 +876,7 @@ ev_decompile(
             else
                 *co = *ci;
 
-        *co = '\0';
+        *co = CH_NULL;
         res = len;
     }
 
@@ -904,7 +904,7 @@ fptostr(
     S32 len;
 
     len = sprintf(op_buf, "%.15g", *fpval);
-    op_buf[len] = '\0';
+    op_buf[len] = CH_NULL;
 
     /* search for exponent and remove leading zeros because
     they are confusing; remove the + for good measure */
@@ -929,7 +929,7 @@ fptostr(
 
         strncpy(exps, exp, len - (exp - op_buf));
         len = len - (exp - exps);
-        op_buf[len] = '\0';
+        op_buf[len] = CH_NULL;
     }
 
     return(len);

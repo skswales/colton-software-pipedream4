@@ -7,11 +7,8 @@
 /* Copyright (C) 1990-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* SKS 03-Aug-90 */
-
-/* This code written to replace the supplied RISC_OSLib code, slightly different API */
-
-/* SKS 05 Nov 1997 Hack template__resolve_icon to get round R6,3 icon problems on RISC OS 3.1
+/* SKS 03 Aug 1990 This code written to replace the supplied RISC_OSLib code, slightly different API
+ * SKS 05 Nov 1997 Hack template__resolve_icon to get round R6,3 icon problems on RISC OS 3.1
  * SKS 27 Nov 1997 Change ESG used to 1 from 15 to stop other radio buttons being nobbled
  * SKS 14 Jan 1998 Refrain from hacking ESG used! All templates should now have action buttons with ESG=1
  * SKS 21 Apr 1998 Support for tristate icons
@@ -27,7 +24,7 @@ static void   template__resolve(unsigned int b);
 
 #ifdef TEMPLATE_FONT_RESOLVE
 static void   template__atexit(void);
-static void   template__convert_font_ref(unsigned int b, wimp_iconflags * p);
+static void   template__convert_font_ref(unsigned int b, WimpIconFlagsWithBitset * p_flags_ua);
 #endif
 
 /*
@@ -79,22 +76,23 @@ typedef struct TEMPLATE_INDEX_ENTRY
 }
 TEMPLATE_INDEX_ENTRY;
 
-#define template__header(b) ((TEMPLATE_HEADER *) template__block[b])
+#define template__header(b) ( \
+    (TEMPLATE_HEADER *) template__block[b] )
 
-#define template__indexentry(b, i) \
-(((TEMPLATE_INDEX_ENTRY *) (template__header(b) + 1)) + (i))
+#define template__indexentry(b, i) ( \
+    ((TEMPLATE_INDEX_ENTRY *) (template__header(b) + 1)) + (i) )
 
-#define template__indextowindow(b, i) \
-((wimp_wind *) (template__block[b] + template__indexentry(b, i)->dataOffset))
+#define template__indextowindow(b, i) ( \
+    (WimpWindowWithBitset *) (template__block[b] + template__indexentry(b, i)->dataOffset) )
 
 /*
 internal <-> external handle conversion
 */
 
-#define template__itop(b, i) \
-    ((template *) ((((b) << 8) | (i)) ^ 0x4A000000))
-#define template__ptoi(p)    \
-    (             (((int) (p))        ^ 0x4A000000))
+#define template__itop(b, i) ( \
+    (template *) ((((b) << 8) | (i)) ^ 0x4A000000) )
+#define template__ptoi(p)    ( \
+                 (((int) (p))        ^ 0x4A000000) )
 
 #define template__block_index(i)  ((i) >> 8)
 #define template__block_offset(i) ((i) & 0xFF)
@@ -116,10 +114,11 @@ typedef struct TEMPLATE_FONT_ENTRY
 }
 TEMPLATE_FONT_ENTRY;
 
-#define template__font_data_offset(b) (template__header(b)->fontDataOffset)
+#define template__font_data_offset(b) ( \
+    template__header(b)->fontDataOffset )
 
-#define template__font_entry(b, i) \
-(((TEMPLATE_FONT_ENTRY *) (template__block[b] + template__font_data_offset(b))) + (i))
+#define template__font_entry(b, i) ( \
+    ((TEMPLATE_FONT_ENTRY *) (template__block[b] + template__font_data_offset(b))) + (i) )
 
 
 typedef struct TEMPLATE_FONT_PAIR
@@ -131,8 +130,8 @@ TEMPLATE_FONT_PAIR;
 
 #define sizeof_template_font_pair 2
 
-#define template__font_ref(i) \
-((TEMPLATE_FONT_PAIR *) (template__font_refs + sizeof_template_font_pair * (i)))
+#define template__font_ref(i) ( \
+    (TEMPLATE_FONT_PAIR *) (template__font_refs + sizeof_template_font_pair * (i)) )
 
 
 static void
@@ -157,16 +156,19 @@ template__atexit(void)
 
 
 #define wimp_IFONTHSHIFT 24
-#define wimp_IFONTHMASK  (0xFFUL << wimp_IFONTHSHIFT)
+#define wimp_IFONTHMASK  (0xFFU << wimp_IFONTHSHIFT)
 
 static void
-template__convert_font_ref(unsigned int b, wimp_iconflags * p)
+template__convert_font_ref(unsigned int b, WimpIconFlagsWithBitset * p_flags_ua)
 {
+    WimpIconFlagsWithBitset iconflags;
     font                  logfont, physfont;
     TEMPLATE_FONT_ENTRY * fep;
     TEMPLATE_FONT_PAIR *  fpp;
 
-    logfont = (font) ((unsigned long) (*p & wimp_IFONTHMASK)) >> (wimp_IFONTHSHIFT);
+    iconflags.u32 = readval_U32(p_flags_ua);
+
+    logfont = (font) ((U32) (iconflags.u32 & wimp_IFONTHMASK)) >> (wimp_IFONTHSHIFT);
 
     fpp = template__font_refs ? template__font_ref(logfont) : NULL;
 
@@ -187,9 +189,11 @@ template__convert_font_ref(unsigned int b, wimp_iconflags * p)
             physfont = 0;
 
         if(!physfont)
-        {
-            /* use system font */
-            *p = (*p & ~wimp_IFONTHMASK & ~wimp_IFONT) | (wimp_IFORECOL * 7) | (wimp_IBACKCOL * 0);
+        {   /* use system font */
+            iconflags.bits.indirected = 0;
+            iconflags.bits.fg_colour = 7;
+            iconflags.bits.bg_colour = 0;
+            writeval_U32(p_flags_ua, iconflags.u32);
             return;
         }
 
@@ -198,7 +202,8 @@ template__convert_font_ref(unsigned int b, wimp_iconflags * p)
     }
 
     /* make physical font ref in template definition */
-    *p = (*p & ~wimp_IFONTHMASK) | ((unsigned long) fpp->physfont << wimp_IFONTHSHIFT);
+    iconflags.u32 = (iconflags.u32 & ~wimp_IFONTHMASK) | ((U32) fpp->physfont << wimp_IFONTHSHIFT);
+    writeval_U32(p_flags_ua, iconflags.u32);
 }
 
 #endif /* TEMPLATE_FONT_RESOLVE */
@@ -233,18 +238,16 @@ template_init(void)
  *
  */
 
-extern wimp_wind *
+extern WimpWindowWithBitset *
 template_copy_new(
     template * templateHandle)
 {
     TEMPLATE_INDEX_ENTRY * ip;
     size_t                 w_size, ind_size;
-    const wimp_wind *      src_w;
-    wimp_wind *            w;
+    const WimpWindowWithBitset * src_w_ua;
+    WimpWindowWithBitset * w;
     ptrdiff_t              w_ind_change, ind_ind_change;
     int                    nIcons, icon;
-    wimp_icon *            iconp;
-    wimp_iconflags         iconflags;
     char *                 indData;
     const char *           src_ind;
     unsigned int           b, iTemplateHandle;
@@ -271,22 +274,22 @@ template_copy_new(
     }
 
     ip       = template__indexentry(b, iTemplateHandle);
-    src_w    = (wimp_wind *) (template__block[b] + ip->dataOffset);
+    src_w_ua = (WimpWindowWithBitset *) (template__block[b] + ip->dataOffset);
     w_size   = ip->dataSize;
     ind_size = ip->indDataSize;
     src_ind  = template__ind_block[b] + ip->bits.indDataOffset;
 
     tracef7("\n\n\n[template__copy: base &%p index %u, entry &%p, src_w &%p, size %u, extra ind ws &%p, size %u]",
-            template__block[b], iTemplateHandle, ip, src_w, w_size, src_ind, ind_size);
+            template__block[b], iTemplateHandle, ip, src_w_ua, w_size, src_ind, ind_size);
 
-    w = (wimp_wind *) wlalloc_malloc(w_size + ind_size);
+    w = (WimpWindowWithBitset *) wlalloc_malloc(w_size + ind_size);
     if(!w)
         return(w);
 
-    tracef3("[template__copy WIN DEFN from &%p to &%p, size %u]", src_w, w, w_size);
-    memcpy(w, src_w, w_size);
+    tracef3("[template__copy WIN DEFN from &%p to &%p, size %u]", src_w_ua, w, w_size);
+    memcpy(w, src_w_ua, w_size);
 #if TRACE
-    if(memcmp(w, src_w, w_size))
+    if(memcmp(w, src_w_ua, w_size))
         tracef0("[template__copy WIN DEFN failed]");
 #endif
 
@@ -294,11 +297,11 @@ template_copy_new(
     w_ind_change = (char *) w - (char *) 0;
 
     { /* strap extra indirect data on end of workspace */
-    char * newIndData = (char *) w + w_size;
+    char * newIndData = PtrAddBytes(char *, w, w_size);
 
     if(ind_size)
     {
-        tracef3("[template__copy IND DATA from &%p to &%p, size %u]", src_ind, newIndData, ind_size);
+        tracef3("[template__copy IND DATA from " PTR_XTFMT " to " PTR_XTFMT ", size %u]", src_ind, newIndData, ind_size);
         memcpy(newIndData, src_ind, ind_size);
 #if TRACE
         if(memcmp(newIndData, src_ind, ind_size))
@@ -310,45 +313,48 @@ template_copy_new(
     } /*block*/
 
     /* relocate title indirection pointer */
-    if(w->titleflags & wimp_INDIRECT)
+    if(w->title_flags.bits.indirected)
     {
-        indData = w->title.indirecttext.buffer;
-        w->title.indirecttext.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
-        tracef1("[template__copy: relocated title to &%p]", w->title.indirecttext.buffer);
+        indData = w->title_data.it.buffer;
+        w->title_data.it.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
+        tracef1("[template_copy_new: relocated title to " PTR_XTFMT "]", w->title_data.it.buffer);
     }
 
     nIcons = w->nicons;
 
     /* relocate icon indirection pointers */
-    icon  = -1;
-    iconp = (wimp_icon *) (w + 1) + icon; /* yes, this is necessary */
-    while(++icon < nIcons)
-        if((iconflags = (++iconp)->flags) & wimp_INDIRECT)
+    for(icon = 0; icon < nIcons; ++icon)
+    {
+        WimpIconBlockWithBitset * p_icon = (WimpIconBlockWithBitset *) (w + 1) + icon; /* yes, this is necessary */
+        WimpIconFlagsWithBitset iconflags = p_icon->flags;
+
+        if(iconflags.bits.indirected)
         {
-            tracef2("[template__copy: got indirected icon %u, flags &%p]", icon, iconflags);
-            indData = iconp->data.indirecttext.buffer;
-            iconp->data.indirecttext.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
-            tracef2("[template__copy: relocated icon %u data to &%p]", icon, iconp->data.indirecttext.buffer);
+            tracef2("[template__copy: got indirected icon %u, flags " U32_XTFMT "]", icon, iconflags.u32);
+            indData = p_icon->data.it.buffer;
+            p_icon->data.it.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
+            tracef2("[template_copy_new: relocated icon %u data to " PTR_XTFMT "]", icon, p_icon->data.it.buffer);
 
             /* only needed for icon with text components
-             * Note that the Wimp sometimes uses -1 as a
-             * null string, thus the > 0.
+             * Note that the Window Manager sometimes uses
+             * -1 as a null string.
             */
-            if( (iconflags & wimp_ITEXT)  &&
-                (((int) iconp->data.indirecttext.validstring) > 0))
+            if( iconflags.bits.text  &&
+                ((p_icon->data.it.validation != NULL) && ((int) p_icon->data.it.validation != -1)) )
             {
-                iconp->data.indirecttext.validstring = iconp->data.indirecttext.validstring + w_ind_change;
-                tracef2("[template__copy: relocated icon %u validstring to &%p]",
-                        icon, iconp->data.indirecttext.validstring);
+                p_icon->data.it.validation = p_icon->data.it.validation + w_ind_change;
+                tracef2("[template_copy_new: relocated icon %u validation string to " PTR_XTFMT "]",
+                        icon, p_icon->data.it.validation);
             }
         }
+    }
 
     return(w);
 }
 
 extern void
 template_copy_dispose(
-    wimp_wind ** ppww)
+    WimpWindowWithBitset ** ppww)
 {
     wlalloc_dispose((void **) ppww);
 }
@@ -538,31 +544,36 @@ static void
 template__resolve_icon(
     unsigned int b,
     int pass,
-    wimp_icon * p_icon,
-    wimp_wind * w,
+    WimpIconBlockWithBitset * p_icon_ua,
+    WimpWindowWithBitset * w_ua,
     size_t * p_indSize /*inout*/,
     size_t * p_newIndDataOffset /*inout*/)
 {
     BOOL mutate_flags = FALSE;  /* 06oct96 make for easy design life and RISC OS 2 mutation */
     BOOL nobble_border = FALSE; /* 06oct96 make for easy design life */
-    wimp_iconflags iconflags = (wimp_iconflags) readval_U32(&p_icon->flags);
-    wimp_ibtype button_type = (wimp_ibtype) ((iconflags & wimp_IBUTMASK) / wimp_IBTYPE);
-    BOOL has_border = (0 != (wimp_IBORDER & iconflags));
+    WimpIconFlagsWithBitset iconflags;
+    UBF button_type;
+    BOOL has_border;
 
-    /*tracef3("[template__readfile: looking at icon %u, ptr &%p, flags &%8.8x]", icon, p_icon, iconflags);*/
+    iconflags.u32 = readval_U32(&p_icon_ua->flags.u32);
+
+    /*tracef3("[template__readfile: looking at icon %u, ptr &%p, flags " U32_XTFMT "]", icon, p_icon_ua, iconflags.u32);*/
+
+    button_type = iconflags.bits.button_type;
+    has_border = (0 != iconflags.bits.border);
 
 #ifdef TEMPLATE_FONT_RESOLVE
-    if(iconflags & wimp_IFONT)
-        template__convert_font_ref(b, &p_icon->flags);
+    if(iconflags.bits.anti_aliased)
+        template__convert_font_ref(b, &p_icon_ua->flags);
 #else
-    assert(!(iconflags & wimp_IFONT));
+    assert(!(iconflags.bits.anti_aliased));
 #endif
 
-    if(iconflags & wimp_INDIRECT)
+    if(iconflags.bits.indirected)
     {
-        char * indData = (char *) w + readval_U32(&p_icon->data.indirecttext.buffer); /* NB there will be indirected data (either text or sprite name pointer) */
+        char * indData = PtrAddBytes(char *, w_ua, readval_U32(&p_icon_ua->data.it.buffer)); /* NB there will be indirected data (either text or sprite name pointer) */
         int iconLen = template__datalen(indData);
-        int reqdLen = readval_U16(&p_icon->data.indirecttext.bufflen);
+        int reqdLen = readval_U16(&p_icon_ua->data.it.buffer_size);
 
         if(iconLen != reqdLen)
         {
@@ -573,7 +584,7 @@ template__resolve_icon(
                 /* store address of new copy */
                 char * newIndData = template__ind_block[b] + *p_newIndDataOffset;
                 memcpy(newIndData, indData, iconLen);
-                writeval_U32(&p_icon->data.indirecttext.buffer, (U32) newIndData); /* compiler used to barf */
+                writeval_U32(&p_icon_ua->data.it.buffer, (U32) newIndData); /* compiler used to barf */
                 tracef1("[template__readfile: relocated icon ? data to &%p]", newIndData);
                 *p_newIndDataOffset = *p_newIndDataOffset + reqdLen;
             }
@@ -583,20 +594,20 @@ template__resolve_icon(
 
         /* 06oct96 - look for some border stuff in the indirected validation string */
         /* NB only on the last pass (else we transform twice) */
-        if((0 != (wimp_ITEXT & iconflags)) /*&& (0 == (wimp_ISPRITE & iconflags))*/)
+        if(iconflags.bits.text)
         {
             if((pass == 2) && has_border)
             {
-                S32 indValidOffset = readval_S32(&p_icon->data.indirecttext.validstring);
+                S32 indValidOffset = readval_S32(&p_icon_ua->data.it.validation);
 
                 if(indValidOffset > 0)
                 {
-                    char * indValid = (char *) w + indValidOffset;
+                    char * indValid = PtrAddBytes(char *, w_ua, indValidOffset);
                     int validLen = template__datalen(indValid); /* forces terminator to CH_NULL so string fns work */
                     char * p;
                     int skip = 0;
 
-                    IGNOREPARM(validLen);
+                    UNREFERENCED_PARAMETER(validLen);
 
                     p = indValid;
 
@@ -610,7 +621,7 @@ template__resolve_icon(
 
                     if(NULL != p)
                     {
-                        if(wimpt_os_version_query() < RISC_OS_3_5) /* or for testing */
+                        if(wimptx_os_version_query() < RISC_OS_3_5) /* or for testing */
                         {
                             int type;
 
@@ -643,21 +654,19 @@ template__resolve_icon(
                                         if('6' == type)
                                         {
                                             /* reduce the height of this button */
-                                            S32 iy0, iy1;
-                                            iy0 = readval_S32(&p_icon->box.y0);
-                                            iy1 = readval_S32(&p_icon->box.y1);
-                                            iy1 -= 8;
-                                            iy0 += 8;
-                                            writeval_S32(&p_icon->box.y0, iy0);
-                                            writeval_S32(&p_icon->box.y1, iy1);
+                                            S32 iymin = readval_S32(&p_icon_ua->bbox.ymin);
+                                            S32 iymax = readval_S32(&p_icon_ua->bbox.ymax);
+                                            iymin += 8;
+                                            iymax -= 8;
+                                            writeval_S32(&p_icon_ua->bbox.ymin, iymin);
+                                            writeval_S32(&p_icon_ua->bbox.ymax, iymax);
                                         }
                                         p[-3] = '1'; /* mutate into R1 */
                                         p[-2] = CH_NULL; /* remove the depressing effect */
                                         /*iconflags &= ~wimp_IESGMASK;*/
                                         /*iconflags |= (0x01U * wimp_IESG);*/
                                         /* ^^^ OK,Cancel should be this ESG anyway */
-                                        iconflags = (wimp_iconflags) (iconflags & ~wimp_IBUTMASK);
-                                        iconflags = (wimp_iconflags) (iconflags | (0x09U * wimp_IBTYPE));
+                                        iconflags.bits.button_type = 0x09U;
                                         mutate_flags = TRUE;
                                         break;
 
@@ -671,7 +680,7 @@ template__resolve_icon(
                         }
                     }
                     else
-                    { /* no bo(R)der settings */
+                    {   /* no bo(R)der settings */
                         /* remove design-time border */
                         /* NB to retain a border on an icon you must set validstring=" ;R1" */
                         if(wimp_BWRITABLE != button_type)
@@ -680,8 +689,7 @@ template__resolve_icon(
 
                     /* search for (S)prite settings (only needed at start) */
                     if('S' == indValid[0])
-                    {
-                        /* we have sprite validation section. Nobble standard buttons */
+                    {   /* we have sprite validation section. Nobble standard buttons */
                         if(     0 == strncmp(indValid, "Soptoff,", sizeof("Soptoff,")-1/*CH_NULL*/))
                             nobble_border = TRUE;
                         else if(0 == strncmp(indValid, "Sradiooff,", sizeof("Sradiooff,")-1/*CH_NULL*/))
@@ -696,29 +704,30 @@ template__resolve_icon(
                     }
                 }
                 else
-                { /* no validation string at all */
+                {   /* no validation string at all */
                     /* remove design-time border */
                     nobble_border = TRUE;
                 }
             }
         }
     }
-    else if(wimp_ITEXT & iconflags)
+    else if(iconflags.bits.text)
     {
         /* simple non-indirected text icon */
         if((pass == 2) && has_border)
-            /* remove design-time border */
+        {   /* remove design-time border */
             nobble_border = TRUE;
+        }
     }
 
     if(nobble_border)
     {
-        iconflags = (wimp_iconflags) (iconflags & ~wimp_IBORDER);
+        iconflags.bits.border = 0;
         mutate_flags = TRUE;
     }
 
     if(mutate_flags)
-        writeval_U32(&p_icon->flags, iconflags);
+        writeval_U32(&p_icon_ua->flags.u32, iconflags.u32);
 }
 
 static void
@@ -728,12 +737,10 @@ template__resolve(
     unsigned int           pass;
     void *                 spriteArea;
     TEMPLATE_INDEX_ENTRY * ip;
-    wimp_wind *            w;
+    WimpWindowWithBitset * w_ua;
     size_t                 totalIndSize, indSize;
     size_t                 newIndDataOffset;
     int                    nIcons, icon;
-    wimp_icon *            p_icon;
-    wimp_iconflags         iconflags;
 
     if(!template__block[b])
         return;
@@ -758,6 +765,7 @@ template__resolve(
         ip = template__indexentry(b, 0) - 1;
 
         while((++ip)->dataOffset)
+        {
             if(ip->bits.dataType == 1) /* only know about window definitions */
             {
 #if TRACE
@@ -780,26 +788,28 @@ template__resolve(
 
                 /* note that loaded window definitions need NOT be aligned */
 
-                w = (wimp_wind *) (template__block[b] + ip->dataOffset);
-                tracef2("\n\n[template__readfile: looking at window def &%p, id %12.12s]", w, ip->name);
+                w_ua = (WimpWindowWithBitset *) (template__block[b] + ip->dataOffset);
+                tracef2("\n\n[template__readfile: looking at window def &%p, id %12.12s]", w_ua, ip->name);
 
                 indSize = 0;
 
-                /* relocate title indirection pointer */
-                iconflags = (wimp_iconflags) readval_U32(&w->titleflags);
+                { /* relocate title indirection pointer */
+                WimpIconFlagsWithBitset iconflags;
+
+                iconflags.u32 = readval_U32(&w_ua->title_flags.u32);
 
 #ifdef TEMPLATE_FONT_RESOLVE
-                if(iconflags & wimp_IFONT)
-                    template__convert_font_ref(b, &w->titleflags);
+                if(iconflags.bits.anti_aliased)
+                    template__convert_font_ref(b, &w_ua->title_flags);
 #else
-                assert(!(iconflags & wimp_IFONT));
+                assert(!(iconflags.bits.anti_aliased));
 #endif
 
-                if(iconflags & wimp_INDIRECT)
+                if(iconflags.bits.indirected)
                 {
-                    char * indData = (char *) w + readval_U16(&w->title.indirecttext.buffer); /* NB there will be indirected data! */
+                    char * indData = PtrAddBytes(char *, w_ua, readval_U16(&w_ua->title_data.it.buffer)); /* NB there will be indirected data! */
                     int iconLen = template__datalen(indData);
-                    int reqdLen = readval_U16(&w->title.indirecttext.bufflen);
+                    int reqdLen = readval_U16(&w_ua->title_data.it.buffer_size);
 
                     if(iconLen != reqdLen)
                     {
@@ -810,7 +820,7 @@ template__resolve(
                             /* store address of new copy */
                             char * newIndData = template__ind_block[b] + newIndDataOffset;
                             memcpy(newIndData, indData, iconLen);
-                            writeval_U32((P_BYTE) &w->title.indirecttext.buffer, (U32) newIndData); /* compiler used to barf */
+                            writeval_U32((P_BYTE) &w_ua->title_data.it.buffer, (U32) newIndData); /* compiler used to barf */
                             tracef1("[template__readfile: relocated title to &%p]", newIndData);
                             newIndDataOffset += reqdLen;
                         }
@@ -818,17 +828,17 @@ template__resolve(
                     else
                         tracef0("[template__readfile: indirected title fits exactly - no extra allocation]");
                 }
+                } /*block*/
 
-                nIcons = readval_U16(&w->nicons);
+                nIcons = readval_U16(&w_ua->nicons);
                 tracef1("[template__readfile: window defn has %u icons]", nIcons);
 
                 /* relocate icon indirection pointers and bind sprites */
-                icon  = -1;
-                p_icon = (wimp_icon *) (w + 1) + icon; /* yes, this is necessary */
-                while(++icon < nIcons)
+                for(icon = 0; icon < nIcons; ++icon)
                 {
-                    ++p_icon;
-                    template__resolve_icon(b, pass, p_icon, w, &indSize, &newIndDataOffset);
+                    WimpIconBlockWithBitset * p_icon_ua = (WimpIconBlockWithBitset *) (w_ua + 1) + icon; /* yes, this is necessary */
+
+                    template__resolve_icon(b, pass, p_icon_ua, w_ua, &indSize, &newIndDataOffset);
                 }
 
                 if(pass == 1)
@@ -839,12 +849,13 @@ template__resolve(
                     ip->indDataSize = indSize;
                     tracef3("[template__readfile: poked size field for window %12.12s to %u with %u]", ip->name, ip->indDataSize, indSize);
 
-                    writeval_U32(&w->spritearea, (U32) spriteArea);
+                    writeval_U32(&w_ua->sprite_area, (U32) spriteArea);
                     tracef1("[template__readfile: Binding sprites to area &%p]", spriteArea);
                 }
             }
             else
                 *ip->name = CH_NULL; /* kill identifiers of unknown object types */
+        }
 
         if(pass == 1)
         {
@@ -864,20 +875,20 @@ template__resolve(
     while(++pass <= 2);
 }
 
-/* --------------------------- template_syshandle --------------------------
+/* ---------------------- template_syshandle_unaligned ---------------------
  * Description:   Get a pointer to the underlying window used to create a
  *                template. Note that this may be unaligned!
  *
  * Parameters:    const char *name.
  * Returns:       Pointer to template's underlying window definition (NULL if
  *                template not found).
- * Other Info:    Any changes made to the wimp_wind structure will affect
+ * Other Info:    Any changes made to the WimpWindow structure will affect
  *                future windows generated using this template.
  *
  */
 
-extern wimp_wind *
-template_syshandle_ua(
+extern WimpWindowWithBitset *
+template_syshandle_unaligned(
     const char * name)
 {
     template *   templateHandle;
@@ -908,7 +919,7 @@ template_settitle(
     const char * title)
 {
     TEMPLATE_INDEX_ENTRY * ip;
-    wimp_wind *            w;
+    WimpWindowWithBitset * w_ua;
     size_t                 w_size;
     char *                 ptr;
     unsigned int           b, iTemplateHandle;
@@ -932,20 +943,20 @@ template_settitle(
     }
 
     ip     = template__indexentry(b, iTemplateHandle);
-    w      = (wimp_wind *) (template__block[b] + ip->dataOffset);
+    w_ua   = (WimpWindowWithBitset *) (template__block[b] + ip->dataOffset);
     w_size = ip->dataSize;
 
     /* title data stored relative to start of window defn or as address in indirect block */
     /* NB. not necessarily aligned */
-    ptr = (char *) readval_U32(&w->title.indirecttext.buffer);
+    ptr = (char *) readval_U32(&w_ua->title_data.it.buffer);
     if((int) ptr < w_size)
-        ptr += (int) w;
+        ptr += (int) w_ua;
 
     *ptr = CH_NULL;
-    strncat(ptr, title, readval_U16(&w->title.indirecttext.bufflen));
+    strncat(ptr, title, readval_U16(&w_ua->title_data.it.buffer_size));
 
-    tracef6("[template_settitle(%u) w &%p, size %u -> buffer &%p %s, length]",
-            iTemplateHandle, w, w_size, ptr, ptr, readval_U16(&w->title.indirecttext.bufflen));
+    tracef6("[template_settitle(%u) w &%p, size %u -> buffer &%p %s, length %u]",
+            iTemplateHandle, w_ua, w_size, ptr, ptr, readval_U16(&w_ua->title_data.it.buffer_size));
 }
 
 /* end of cs-templat.c */

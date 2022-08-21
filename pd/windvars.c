@@ -173,7 +173,7 @@ static DOCU initial_docu_data =
     /* BOOLEAN xf_draweverything */
 
     FALSE,
-    /* BOOLEAN xf_frontmainwindow */
+    /* BOOLEAN xf_front_document_window */
 
     FALSE,
     /* BOOLEAN xf_drawcolumnheadings */
@@ -182,7 +182,7 @@ static DOCU initial_docu_data =
     /* BOOLEAN xf_drawsome */
 
     FALSE,
-    /* BOOLEAN xf_drawslotcoordinates */
+    /* BOOLEAN xf_drawcellcoordinates */
 
     FALSE,
     /* BOOLEAN xf_acquirecaret */
@@ -192,6 +192,9 @@ static DOCU initial_docu_data =
 
     FALSE,
     /* BOOLEAN xf_interrupted */
+
+    FALSE,
+    /* BOOLEAN xf_draw_empty_right */
 
     FALSE,
     /* BOOLEAN unused_bit_at_bottom */
@@ -272,10 +275,10 @@ static DOCU initial_docu_data =
     /* S32 curpnm */
 
     0,
-    /* gcoord curr_scx */
+    /* gcoord curr_scroll_x */
 
     0,
-    /* gcoord curr_scy */
+    /* gcoord curr_scroll_y */
 
 /* ----------------------------- cursmov.c ------------------------------- */
 
@@ -305,22 +308,7 @@ static DOCU initial_docu_data =
 /* ---------------------------- doprint.c -------------------------------- */
 
     TRUE,
-    /* BOOLEAN wrpbit */
-
-    TRUE,
-    /* BOOLEAN jusbit */
-
-    TRUE,
-    /* BOOLEAN txnbit */
-
-    TRUE,
-    /* BOOLEAN minbit */
-
-    TRUE,
-    /* BOOLEAN borbit */
-
-    FALSE,
-    /* BOOLEAN iowbit */
+    /* BOOLEAN displaying_borders */
 
     DONT_CARE,
     /* S32 real_pagelength */
@@ -348,29 +336,26 @@ static DOCU initial_docu_data =
 
 /* --------------------------- riscos.c ---------------------------------- */
 
-    window_NULL,
-    /* HOST_WND rear_window */
-    /* wimp_w rear__window */
+    HOST_WND_NONE,
+    /* HOST_WND rear_window_handle */
 
     NULL,
-    /* void * rear_template (should be wimp_wind *) */
+    /* void * rear_window_template (should be WimpWindowWithBitset *) */
 
-    window_NULL,
-    /* HOST_WND main_window */
-    /* wimp_w main__window */
+    HOST_WND_NONE,
+    /* HOST_WND main_window_handle */
 
     NULL,
-    /* void * main_template (should be wimp_wind *) */
+    /* void * main_window_template (should be WimpWindowWithBitset *) */
 
     { 0, 0, 0, 0 },
     /* GDI_BOX open_box */
 
-    window_NULL,
-    /* HOST_WND colh_window */
-    /* wimp_w colh__window */
+    HOST_WND_NONE,
+    /* HOST_WND colh_window_handle */
 
     NULL,
-    /* void * colh_template (should be wimp_wind *) */
+    /* void * colh_window_template (should be WimpWindowWithBitset *) */
 
     NULL,
     /* FORMULA_WINDOW_HANDLE editexpression_formwind */
@@ -425,7 +410,7 @@ static DOCU initial_docu_data =
     /* S32 global_font_y (1/16th of a point) */
 
     14400,
-    /* S32 global_font_leading_mp (millipoints) */
+    /* GR_MILLIPOINT global_font_leading_millipoints */
 
     0,
     /* S32 hbar_length */
@@ -443,16 +428,16 @@ static DOCU initial_docu_data =
     /* BOOL quitseen */
 
     0,
-    /* S32 curr_xext */
+    /* S32 curr_extent_x */
 
     0,
-    /* S32 curr_yext */
+    /* S32 curr_extent_y */
 
     0,
-    /* S32 delta_scx */
+    /* S32 delta_scroll_x */
 
     0,
-    /* S32 delta_scy */
+    /* S32 delta_scroll_y */
 
     DONT_CARE,
     /* S32 charvrubout_neg */
@@ -464,7 +449,7 @@ static DOCU initial_docu_data =
     /* S32 fontbaselineoffset */
 
     12000,
-    /* S32 fontscreenheightlimit_mp */
+    /* GR_MILLIPOINT fontscreenheightlimit_mp */
 
     32,
     /* S32 charallocheight */
@@ -477,6 +462,51 @@ static DOCU initial_docu_data =
 
     0,
     /* formline_stashedcaret */
+
+#if defined(EXTENDED_COLOUR_WINDVARS)
+
+/* ----------------------------------------------------------------------- */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CF */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CB */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CP */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CL */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CG */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CC */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CE */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CH */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CS */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CU */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CT */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CV */
+
+    DONT_CARE,
+    /* U32 Xd_colours_CX */
+
+#endif /* EXTENDED_COLOUR_WINDVARS */
 
 /* ----------------------------------------------------------------------- */
 
@@ -670,9 +700,6 @@ static DOCU initial_docu_data =
 
     TRAVERSE_BLOCK_INIT,
     /* TRAVERSE_BLOCK tr_block */
-
-    0,
-    /* BOOLEAN xf_draw_empty_right */
 
     { 0 },
     /* TCHARZ window_title[] */
@@ -1241,11 +1268,6 @@ find_document_using_wholename(
     return(DOCNO_NONE);
 }
 
-#if FALSE
-/*RCM sez: This was only ever called with caret_window as its parameter, so I replaced all */
-/*         uses with find_document_with_input_focus(), designed to cope with mlec based    */
-/*         expression editors                                                              */
-
 /******************************************************************************
 *
 * search document list for document with given key = window handle
@@ -1255,23 +1277,22 @@ find_document_using_wholename(
 _Check_return_
 _Ret_notnull_
 extern P_DOCU /* may be NO_DOCUMENT */
-find_document_using_window(
-    wimp_w w)
+find_document_using_window_handle(
+    _HwndRef_   HOST_WND window_handle)
 {
     P_DOCU p_docu;
 
-    trace_1(TRACE_APP_PD4, "find_document_using_window(%u) ", w);
+    trace_1(TRACE_APP_PD4, "find_document_using_window_handle(%u) ", window_handle);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
     {
-        if(p_docu->Xmain_window == w)
+        if(p_docu->Xmain_window_handle == window_handle)
             break;
     }
 
     trace_1(TRACE_APP_PD4, "yields &%p", p_docu);
     return(p_docu);
 }
-#endif
 
 /******************************************************************************
 *
@@ -1279,7 +1300,7 @@ find_document_using_window(
 *
 * --out--
 * NO_DOCUMENT     no document found
-* P_DOCU          document whose main_window or edit control has the input focus
+* P_DOCU          document whose document window or edit control has the input focus
 *
 ******************************************************************************/
 
@@ -1288,22 +1309,23 @@ _Ret_notnull_
 extern P_DOCU /* may be NO_DOCUMENT */
 find_document_with_input_focus(void)
 {
-    wimp_caretstr current;
+    WimpGetCaretPositionBlock caret;
     P_DOCU p_docu;
 
     trace_0(TRACE_APP_PD4, "find_document_with_input_focus ");
 
-    wimp_get_caret_pos(&current);
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        return(NO_DOCUMENT);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
     {
-        if((p_docu->Xxf_inexpression_box) && expedit_owns_window(p_docu, current.w))
+        if((p_docu->Xxf_inexpression_box) && expedit_owns_window(p_docu, caret.window_handle))
             break;
 
-        if(p_docu->Xcolh_window == current.w)
+        if(p_docu->Xcolh_window_handle == caret.window_handle)
             break;
 
-        if(p_docu->Xmain_window == current.w)
+        if(p_docu->Xmain_window_handle == caret.window_handle)
             break;
     }
 
@@ -1329,7 +1351,7 @@ front_document_using_docno(
 
         /* must do NOW as we're unlikely to draw_screen() this document */
         /* and as we're doing an immediate, we MUST preserve current doc */
-        riscos_frontmainwindow(TRUE);
+        riscos_front_document_window(TRUE);
 
         (void) select_document_using_docno(old_docno);
     }
@@ -1490,7 +1512,7 @@ is_current_document(void)
 {
     BOOL res = (current_p_docu != NO_DOCUMENT);
 
-    trace_1(TRACE_APP_PD4, TEXT("is_current_document() yields %s"), trace_boolstring(res));
+    trace_1(TRACE_APP_PD4, TEXT("is_current_document() yields %s"), report_boolstring(res));
     return(res);
 }
 

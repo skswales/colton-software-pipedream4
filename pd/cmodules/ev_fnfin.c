@@ -42,6 +42,7 @@ PROC_EXEC_PROTO(c_cterm)
     F64 cterm_result;
     BOOL fv_negative = FALSE; /* SKS - allow it to work out debts like Fireworkz */
     BOOL pv_negative = FALSE;
+
     exec_func_ignore_parms();
 
     if(fv < 0.0)
@@ -73,9 +74,80 @@ PROC_EXEC_PROTO(c_cterm)
     ev_data_set_real(p_ev_data_res, cterm_result);
 }
 
+#if 0 /* just for diff minimization */
+
 /******************************************************************************
 *
-* REAL ddb(cost, salvage, life, period)
+* REAL db(cost, salvage, life, period {, month})
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_db)
+{
+    const F64 cost = args[0]->arg.fp;
+    const F64 salvage = args[1]->arg.fp;
+    const S32 life = (S32) args[2]->arg.fp;
+    const S32 period = (S32) args[3]->arg.fp;
+    const F64 month = (n_args > 4) ? args[4]->arg.fp : 12.0;
+    F64 rate;
+    F64 db_result;
+
+    exec_func_ignore_parms();
+
+    if(cost < 0.0     ||
+       salvage > cost ||
+       life < 1       ||
+       month < 1.0    ||
+       month > 12.0   ||
+       period < 1     ||
+       (period > life + (12.0 != month)) )
+    {
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
+        return;
+    }
+
+    /* rate = 1 - ((salvage / cost) ^ (1 / life)), rounded to three decimal places */
+    rate = 1.0 - pow((salvage / cost), (1.0 / life));
+    rate *= 1000;
+    rate = (S32) (rate + 0.5);
+    rate /= 1000;
+
+    /* depreciation during a period = (cost - total depreciation from prior periods) * rate */
+    if(1 == period)
+    {   /* depreciation during first period */
+        db_result = cost * rate;
+
+        if(12.0 != month)
+            db_result *= month / 12.0; /* adjust for month */
+    }
+    else
+    {
+        F64 total_depreciation = (cost * rate) * month / 12.0; /* depreciation during first period, adjust for month */
+        S32 prev_period;
+
+        /* depreciation during subsequent periods */
+        for(prev_period = 2; prev_period < period; ++prev_period)
+        {
+            F64 this_db = (cost - total_depreciation) * rate;
+
+            total_depreciation += this_db;
+        }
+
+        /* depreciation during this period */
+        db_result = (cost - total_depreciation) * rate;
+
+        if((12.0 != month) && (period > life))
+            db_result *= (12.0 - month) / 12.0; /* adjust for month */
+    }
+
+    ev_data_set_real(p_ev_data_res, db_result);
+}
+
+#endif
+
+/******************************************************************************
+*
+* REAL ddb(cost, salvage, life, period {, factor})
 *
 ******************************************************************************/
 
@@ -86,6 +158,7 @@ PROC_EXEC_PROTO(c_ddb)
     F64 salvage = args[1]->arg.fp;
     S32 life = (S32) args[2]->arg.fp;
     S32 period = (S32) args[3]->arg.fp;
+    F64 factor = (n_args > 4) ? args[4]->arg.fp : 2.0;
     F64 cur_period = 0.0; /* ddb_result */
     S32 i;
 
@@ -103,7 +176,7 @@ PROC_EXEC_PROTO(c_ddb)
 
     for(i = 0; i < period; ++i)
     {
-        cur_period = (value * 2) / life;
+        cur_period = (value * factor) / life;
         if(value - cur_period < salvage)
             cur_period = value - salvage;
         value -= cur_period;
@@ -116,13 +189,13 @@ PROC_EXEC_PROTO(c_ddb)
 *
 * REAL fv(payment, interest, term)
 *
-* REAL fv_xls(interest, term, payment)
+* REAL odf.fv(interest, term, payment)
 *
 ******************************************************************************/
 
 _Check_return_
 static F64
-fv_common(
+calc_fv(
     _InVal_     F64 payment,
     _InVal_     F64 interest,
     _InVal_     F64 term)
@@ -133,28 +206,166 @@ fv_common(
 
 PROC_EXEC_PROTO(c_fv)
 {
-    F64 payment = args[0]->arg.fp;
-    F64 interest = args[1]->arg.fp;
-    F64 term = args[2]->arg.fp;
+    const F64 payment = args[0]->arg.fp;
+    const F64 interest = args[1]->arg.fp;
+    const F64 term = args[2]->arg.fp;
 
     exec_func_ignore_parms();
 
     /* fv(payment, interest, term) = payment * ((1 + interest) ^ term - 1) / interest */
-    ev_data_set_real(p_ev_data_res, fv_common(payment, interest, term));
+    ev_data_set_real(p_ev_data_res, calc_fv(payment, interest, term));
 }
 
 #if 0 /* just for diff minimization */
 
-PROC_EXEC_PROTO(c_fv_xls)
+PROC_EXEC_PROTO(c_odf_fv)
 {
-    F64 interest = args[0]->arg.fp;
-    F64 term = args[1]->arg.fp;
-    F64 payment = args[2]->arg.fp;
+    const F64 interest = args[0]->arg.fp;
+    const F64 term = args[1]->arg.fp;
+    const F64 payment = args[2]->arg.fp;
+    F64 odf_fv_result;
 
     exec_func_ignore_parms();
 
-    /* fv_xls(interest, term, payment) = - payment * ((1 + interest) ^ term - 1) / interest */
-    ev_data_set_real(p_ev_data_res, - fv_common(payment,  interest,  term));
+    /* odf.fv(interest, term, payment) = - payment * ((1 + interest) ^ term - 1) / interest */
+    odf_fv_result = - calc_fv(payment,  interest,  term);
+
+    if(n_args > 3)
+    {
+        const F64 pv = args[3]->arg.fp;
+        const F64 fv = pv * pow(1.0 + interest, term);
+
+        odf_fv_result -= fv;
+    }
+
+    ev_data_set_real(p_ev_data_res, odf_fv_result);
+}
+
+/******************************************************************************
+*
+* REAL fvschedule(principal, schedule)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_fvschedule)
+{
+    const F64 principal = args[0]->arg.fp;
+    const PC_EV_DATA array_schedule = args[1];
+    F64 fvschedule_result = principal;
+    S32 x_size, y_size;
+    S32 ix, iy;
+
+    array_range_sizes(array_schedule, &x_size, &y_size);
+
+    exec_func_ignore_parms();
+
+    for(ix = 0; ix < x_size; ++ix)
+    {
+        for(iy = 0; iy < y_size; ++iy)
+        {
+            EV_DATA ev_data;
+            F64 interest;
+
+            if(RPN_DAT_ERROR == array_range_index(&ev_data, array_schedule, ix, iy, EM_REA)) /* blanks == 0 */
+            {
+                *p_ev_data_res = ev_data;
+                return;
+            }
+
+            interest = 1.0 + ev_data.arg.fp;
+
+            fvschedule_result *= interest; /* product */
+        }
+    }
+
+    ev_data_set_real(p_ev_data_res, fvschedule_result);
+}
+
+/******************************************************************************
+*
+* REAL odf.irr(principal, values, {guess:number=0.1})
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_odf_irr)
+{
+    const PC_EV_DATA array_values = args[0];
+    F64 r = (n_args > 1) ? args[1]->arg.fp : 0.1; /* usually in 0..1 */
+    F64 last_npv = 0.0; /* keep dataflower happy now that we handle r0->r1 */
+    F64 last_r = 0.0;
+    U32 iteration_count;
+    S32 x_size, y_size;
+
+    array_range_sizes(array_values, &x_size, &y_size);
+
+    exec_func_ignore_parms();
+
+    /* we must converge in 40 guesses */
+    for(iteration_count = 0; iteration_count < 40; ++iteration_count)
+    {
+        F64 this_npv;
+        F64 this_r;
+
+        if( (-1.0 == r) /* will divide by zero */||
+            (fabs(r) >= 1.0E6) /* heading off to infinity */ )
+        {
+            ev_data_set_error(p_ev_data_res, EVAL_ERR_IRR);
+            return;
+        }
+
+        { /* recalculate NPV for the array of values with trial rate r */
+        S32 ix, iy;
+        F64 sum = 0.0;
+        F64 multiplier = 1.0;
+        F64 one_over_one_plus_r = 1.0 / (1.0 + r);
+
+        for(ix = 0; ix < x_size; ++ix)
+        {
+            for(iy = 0; iy < y_size; ++iy)
+            {
+                EV_DATA ev_data;
+
+                if(RPN_DAT_ERROR == array_range_index(&ev_data, array_values, ix, iy, EM_REA)) /* blanks == 0 */
+                {
+                    *p_ev_data_res = ev_data;
+                    return;
+                }
+
+                multiplier *= one_over_one_plus_r; /* progressively smaller */
+
+                sum += ev_data.arg.fp * multiplier;
+            }
+        }
+
+        this_npv = sum;
+        this_r = r;
+        } /*block*/
+
+        /*reportf(TEXT("ODF.IRR loop %d: this_npv=%g, this_r=%g"), iteration_count, this_npv, this_r);*/
+        /* finish condition is target of npv ~= 0 */
+        if(fabs(this_npv) < 0.0000001)
+        {
+            ev_data_set_real(p_ev_data_res, this_r);
+            return;
+        }
+
+        if(0 == iteration_count)
+        {   /* generate another point */
+            r /= 2.0;
+        }
+        else
+        {   /* new trial rate calculated using secant method */
+            F64 step_r = this_npv * (this_r - last_r) / (this_npv - last_npv);
+            /*reportf(TEXT("ODF.IRR loop %d: this_npv=%g, last_npv=%g, this_r=%g, last_r=%g -> step_r=%g"), iteration_count, this_npv, last_npv, this_r, last_r, step_r);*/
+            r -= step_r;
+        }
+
+        /* go for another iteration if allowed */
+        last_npv = this_npv;
+        last_r = this_r;
+    }
+
+    ev_data_set_error(p_ev_data_res, EVAL_ERR_IRR);
 }
 
 #endif
@@ -163,12 +374,13 @@ PROC_EXEC_PROTO(c_fv_xls)
 *
 * REAL pmt(principal, interest, term)
 *
-* REAL pmt_xls(rate, nper, pv)
+* REAL odf.pmt(rate, nper, pv)
 *
 ******************************************************************************/
 
+_Check_return_
 static F64
-pmt_common(
+calc_pmt(
     _InVal_     F64 principal,
     _InVal_     F64 interest,
     _InVal_     F64 term)
@@ -186,12 +398,12 @@ PROC_EXEC_PROTO(c_pmt)
     exec_func_ignore_parms();
 
     /* pmt(principal, interest, term) = principal * interest / (1-(interest+1)^(-term)) */
-    ev_data_set_real(p_ev_data_res, pmt_common(principal, interest, term));
+    ev_data_set_real(p_ev_data_res, calc_pmt(principal, interest, term));
 }
 
-#if 0 /* just for diff minimisation */
+#if 0 /* just for diff minimization */
 
-PROC_EXEC_PROTO(c_pmt_xls)
+PROC_EXEC_PROTO(c_odf_pmt)
 {
     F64 rate = args[0]->arg.fp;
     F64 nper = args[1]->arg.fp;
@@ -199,8 +411,8 @@ PROC_EXEC_PROTO(c_pmt_xls)
 
     exec_func_ignore_parms();
 
-    /* pmt_xls(rate, nper, pv) = - pv * rate / (1-(rate+1)^(-nper)) */
-    ev_data_set_real(p_ev_data_res, - pmt_common(pv, rate, nper));
+    /* odf.pmt(rate, nper, pv) = - pv * rate / (1-(rate+1)^(-nper)) */
+    ev_data_set_real(p_ev_data_res, - calc_pmt(pv, rate, nper));
 }
 
 #endif
@@ -280,7 +492,7 @@ PROC_EXEC_PROTO(c_syd)
     exec_func_ignore_parms();
 
     /* syd(cost, salvage, life, period) = (cost-salvage) * (life-period+1) / (life*(life+1)/2) */
-    syd_result = ((cost - salvage) * (life - period + 1.0)) / ((life * (life + 1.0) / 2.0));
+    syd_result = ((cost - salvage) * (life - period + 1.0)) / ((life * (life + 1.0) * 0.5));
 
     ev_data_set_real(p_ev_data_res, syd_result);
 }
@@ -293,6 +505,7 @@ PROC_EXEC_PROTO(c_syd)
 *
 ******************************************************************************/
 
+_Check_return_
 static F64
 term_nper_common(
     _InVal_     F64 payment,
@@ -306,7 +519,7 @@ term_nper_common(
     return(result);
 }
 
-#if 0 /* just for diff minimisation */
+#if 0 /* just for diff minimization */
 
 PROC_EXEC_PROTO(c_nper)
 {
@@ -318,7 +531,7 @@ PROC_EXEC_PROTO(c_nper)
 
     /* Excel: really up to 5 args but I don't yet support that */
 
-    /* Excel: like TERM() but different parameter order and result sign */
+    /* Excel: like TERM() but different parameter order and sign of result */
     /* nper(rate, payment, pv) = - ln(1+(pv * rate/payment)) / ln(1+rate) */
     ev_data_set_real(p_ev_data_res, - term_nper_common(payment, rate, pv));
 }

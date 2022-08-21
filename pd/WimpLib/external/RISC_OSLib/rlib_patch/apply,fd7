@@ -4,14 +4,14 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2016 Stuart Swales
+| Copyright (C) 2013-2018 Stuart Swales
 |
 echo <Obey$Dir>
 |
 dir <Obey$Dir>
 |
-Set flexlib_tmp$Dir <Obey$Dir>.^.castle.RiscOS.Sources.Toolbox.Libs.flexlib
-Set rlib_tmp$Dir <Obey$Dir>.^.castle.RiscOS.Sources.Lib.RISC_OSLib.rlib
+Set flexlib_tmp$Dir <Obey$Dir>.^.apache.RiscOS.Sources.Toolbox.Libs.flexlib
+Set rlib_tmp$Dir <Obey$Dir>.^.apache.RiscOS.Sources.Lib.RISC_OSLib.rlib
 Set WimpLib_tmp$Dir ^.^.^
 |
 time
@@ -22,79 +22,77 @@ cdir <WimpLib_tmp$Dir>.s
 |
 echo Populate WimpLib with unmodifed files from the checked-out copy of RISC_OSLib
 |
-copy "<flexlib_tmp$Dir>.h.swiextra" "<WimpLib_tmp$Dir>.h.*" ~CF~NV
+copy "<flexlib_tmp$Dir>.h.swiextra" "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.c.colourtran" "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.dboxtcol"   "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.drawmod"    "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.fileicon"   "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.font"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.os"         "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.pointer"    "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.print"      "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.werr"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
+copy "<rlib_tmp$Dir>.c.dboxtcol"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.drawmod"    "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.fileicon"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.font"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.os"         "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.pointer"    "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.print"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.werr"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.h.akbd"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.alarm"      "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.baricon"    "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.bbc"        "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.colourpick" "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.colourtran" "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.coords"     "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.dbox"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.dboxtcol"   "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.dragasprit" "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.drawmod"    "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.event"      "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.fileicon"   "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-| copy "<rlib_tmp$Dir>.h.flex"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.font"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.fontlist"   "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.fontselect" "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.help"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.menu"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.msgs"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.os"         "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.pointer"    "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.print"      "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.res"        "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.resspr"     "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.saveas"     "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.sprite"     "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.template"   "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.typdat"     "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.werr"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.wimpt"      "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.win"        "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.xferrecv"   "<WimpLib_tmp$Dir>.h.*" ~CF~NV
-copy "<rlib_tmp$Dir>.h.xfersend"   "<WimpLib_tmp$Dir>.h.*" ~CF~NV
+copy "<rlib_tmp$Dir>.h.akbd"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.alarm"      "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.baricon"    "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.bbc"        "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.colourpick" "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.coords"     "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.dbox"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.dboxtcol"   "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.dragasprit" "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.drawmod"    "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.event"      "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.fileicon"   "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+| copy "<rlib_tmp$Dir>.h.flex"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.font"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.fontlist"   "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.fontselect" "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.help"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.menu"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.msgs"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.os"         "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.pointer"    "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.print"      "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.res"        "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.resspr"     "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.saveas"     "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.sprite"     "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.template"   "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.typdat"     "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.werr"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.wimpt"      "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.win"        "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.xferrecv"   "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.h.xfersend"   "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 |
 cdir <WimpLib_tmp$Dir>.VerIntern
 cdir <WimpLib_tmp$Dir>.VerIntern.h
-copy "<rlib_tmp$Dir>.VerIntern.h.messages" "<WimpLib_tmp$Dir>.VerIntern.h.*" ~CF~NV
+copy "<rlib_tmp$Dir>.VerIntern.h.messages" "<WimpLib_tmp$Dir>.VerIntern.h.*" ~CF~NSV
 |
 echo Populate WimpLib with files to be patched from the checked-out copy of RISC_OSLib
 |
-copy "<flexlib_tmp$Dir>.c.flex"    "<WimpLib_tmp$Dir>.c.*" ~CF~NV
+copy "<flexlib_tmp$Dir>.c.flex"    "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.c.bbc"        "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.dbox"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.event"      "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-| copy "<rlib_tmp$Dir>.c.flex"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.fontlist"   "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.fontselect" "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.menu"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.res"        "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.resspr"     "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.win"        "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.wimp"       "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.wimpt"      "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.xferrecv"   "<WimpLib_tmp$Dir>.c.*" ~CF~NV
-copy "<rlib_tmp$Dir>.c.xfersend"   "<WimpLib_tmp$Dir>.c.*" ~CF~NV
+copy "<rlib_tmp$Dir>.c.bbc"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.dbox"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.event"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+| copy "<rlib_tmp$Dir>.c.flex"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.fontlist"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.fontselect" "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.menu"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.res"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.resspr"     "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.win"        "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.wimp"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.wimpt"      "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.xferrecv"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
+copy "<rlib_tmp$Dir>.c.xfersend"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.h.wimp"       "<WimpLib_tmp$Dir>.h.*" ~CF~NV
+copy "<rlib_tmp$Dir>.h.wimp"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.s.swi"        "<WimpLib_tmp$Dir>.s.*" ~CF~NV
+copy "<rlib_tmp$Dir>.s.swi"        "<WimpLib_tmp$Dir>.s.*" ~CF~NSV
 |
 echo Patch these files in WimpLib so that it is in the PipeDream state
 |

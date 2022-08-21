@@ -482,7 +482,7 @@ ss_data_compare(
     /* eliminate equivalent types */
     type_equate(&data1, p_ev_data1);
     type_equate(&data2, p_ev_data2);
-    two_nums_type_match(&data1, &data2, 0);
+    two_nums_type_match(&data1, &data2, FALSE);
 
     if(data1.did_num != data2.did_num)
     {
@@ -735,6 +735,66 @@ ss_string_make_ustr(
     _In_z_      PC_USTR ustr)
 {
     return(ss_string_make_uchars(p_ev_data, ustr, ustrlen32(ustr)));
+}
+
+_Check_return_
+extern U32
+ss_string_skip_leading_whitespace(
+    _InRef_     PC_EV_DATA p_ev_data)
+{
+    assert(RPN_DAT_STRING == p_ev_data->did_num);
+
+    return(ss_string_skip_leading_whitespace_uchars(p_ev_data->arg.string.uchars, p_ev_data->arg.string.size));
+}
+
+_Check_return_
+extern U32
+ss_string_skip_leading_whitespace_uchars(
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _InRef_     U32 uchars_n)
+{
+    U32 wss = 0;
+
+    assert((0 == uchars_n) || (!IS_PTR_NULL_OR_NONE(uchars)));
+
+    while(wss < uchars_n)
+    {
+        switch(PtrGetByteOff(uchars, wss))
+        {
+        case CH_TAB:
+        case LF:
+        case CR:
+        case CH_SPACE:
+            wss++;
+            continue;
+
+        default:
+            break;
+        }
+
+        break;
+    }
+
+    return(wss);
+}
+
+_Check_return_
+extern F64
+ui_strtod(
+    _In_z_      PC_USTR ustr,
+    _Out_opt_   P_PC_USTR p_ustr)
+{
+    return(strtod((const char *) ustr, (char **) p_ustr));
+}
+
+_Check_return_
+extern S32
+ui_strtol(
+    _In_z_      PC_USTR ustr,
+    _Out_opt_   P_P_USTR p_ustr,
+    _In_        int radix)
+{
+    return((S32) strtol((const char *) ustr, (char **) p_ustr, radix));
 }
 
 /******************************************************************************

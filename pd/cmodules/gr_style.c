@@ -909,7 +909,7 @@ gr_fillstyle_default(
         for(i = 0; i < GR_FILLSTYLE_N_DEFAULTS; ++i, ++pt)
         {
             /* NB. you get stuck with the palette entries for the startup mode */
-            * (int *) &pt->fg = wimpt_RGB_for_wimpcolour(fill_with_wimp[i]);
+            * (int *) &pt->fg = wimptx_RGB_for_wimpcolour(fill_with_wimp[i]);
             pt->fg.reserved = 0;
             pt->fg.manual   = 0;
             pt->fg.visible  = 1;

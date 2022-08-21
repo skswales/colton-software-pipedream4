@@ -44,6 +44,7 @@ typedef U8 DOCNO; typedef DOCNO * P_DOCNO; /* NB now exactly the same as EV_DOCN
 #include "cmodules/gr_chart.h"
 #include "cmodules/monotime.h"
 #include "cmodules/muldiv.h"
+#include "cmodules/numform.h"
 #include "cmodules/report.h"
 #include "cmodules/xstring.h"
 

@@ -14,12 +14,6 @@
 #ifndef __flags_h
 #define __flags_h
 
-#if defined(_PREFAST_)
-#ifndef CODE_ANALYSIS
-#define CODE_ANALYSIS 1
-#endif
-#endif /* _PREFAST_ */
-
 #ifdef RELEASED
 #undef UNRELEASED
 #endif
@@ -55,6 +49,8 @@
 #define SKS_ACW 1 /* Use custom RISC_OSLib (WimpLib) */
 
 #define ALIGATOR_USE_ALLOC 1
+
+#define EXTENDED_COLOUR 1 /* BBGGRR1n or 0000000n */
 
 /*
 gr_rdiag.c and numbers.c require this to be defined
@@ -105,6 +101,44 @@ extern void messagef(_In_z_ _Printf_format_string_ PCTSTR format, ...); /* to me
 #endif
 
 extern void message_output(_In_z_ PCTSTR buffer);
+
+/* These are useful for wrapping up calls to system functions
+ * and distinguishing our own errors from those emanating from
+ * the RISC_OSLib wimpt_xxx API.
+ */
+
+/*ncr*/
+extern _kernel_oserror *
+__WrapOsErrorChecking(
+    _In_opt_    _kernel_oserror * const p_kernel_oserror,
+    _In_z_      PCTSTR p_function,
+    _In_z_      PCTSTR p_file,
+    _In_        int line_no,
+    _In_z_      PCTSTR str);
+
+/*ncr*/
+extern BOOL
+reperr_kernel_oserror(
+    _In_        _kernel_oserror * const p_kernel_oserror);
+
+/*ncr*/
+static inline _kernel_oserror *
+WrapOsErrorReporting(
+    _In_opt_    _kernel_oserror * p_kernel_oserror)
+{
+    if(NULL != p_kernel_oserror)
+        (void) reperr_kernel_oserror(p_kernel_oserror);
+
+    return(p_kernel_oserror);
+}
+
+static inline void
+void_WrapOsErrorReporting(
+    _In_opt_    _kernel_oserror * p_kernel_oserror)
+{
+    if(NULL != p_kernel_oserror)
+        (void) reperr_kernel_oserror(p_kernel_oserror);
+}
 
 #endif /* __flags_h */
 

@@ -1,5 +1,5 @@
---- _src	2001-08-23 14:47:04 +0100
-+++ _dst	2013-08-31 16:54:19 +0100
+--- _src	2001-08-23 14:47:04.000000000 +0100
++++ _dst	2016-09-16 14:50:26.550000000 +0100
 @@ -36,6 +36,7 @@
   *
   */
@@ -59,7 +59,7 @@
     font__deallocate_font( font_tree );
 +
 +#ifdef SKS_ACW
-+   /* SKS after 4.11 07jan92 - must clear out the global tree assuming it's this one! */
++   /* SKS after PD 4.11 07jan92 - must clear out the global tree assuming it's this one! */
 +   font__tree = NULL;
 +#endif /* SKS_ACW */
  }
@@ -82,7 +82,7 @@
     }
  
 -   for (i=0; ((*font_name_ptr)[i] != '\0' && (rest_of_name || (*font_name_ptr)[i] != '.')) ;i++);
-+   for (i=0; ((*font_name_ptr)[i] != '\0' && (rest_of_name || (*font_name_ptr)[i] != '.')) ;i++) /*EMPTY*/;
++   for (i=0; (((*font_name_ptr)[i] != CH_NULL) && (rest_of_name || (*font_name_ptr)[i] != '.')) ;i++) /*EMPTY*/;
     if ( ( strncmp( *font_name_ptr, (*font_list_ptr)->name, i) != 0 ) ||
          ( (*font_list_ptr)->name[i]!='\0' ) )
             return font__seek_font( &((*font_list_ptr)->brother), font_name_ptr, rest_of_name );

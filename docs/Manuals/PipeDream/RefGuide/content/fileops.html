@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>File Operations</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="financialfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="File">File Operations</h1>
+
+    <h2 id="Saving">Saving Files</h2>
+    <p>
+        You can save an entire document to a named file.
+        Alternatively, you can save just a range of columns or a marked block.
+        You can also save all rows satisfying a condition, enabling you to create a subset of a database or a document.
+        The <span class="csg-dbox">Save</span> dialogue box enables you to specify the format of the file to be saved.
+    </p>
+    <p>If you have finished editing a file and you want to save it, the simplest way is to close the window.</p>
+    <p>If the file has been modified, a prompt will appear asking you whether you want to save the updated file.</p>
+    <p>
+        Click the <span class="csg-dbox-button">Yes</span> button.
+        The <span class="csg-dbox">Save</span> dialogue box then appears.
+    </p>
+    <p>
+        Type in the name with which you want the file to be saved.
+        If you originally loaded the file from disc or have previously named the file with the
+        <span class="csg-command">Rename file</span> command, the filename already appears at this point.
+    </p>
+    <p>
+        To save the file,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+    </p>
+    <p>
+        Another way to save the file is to drag its icon from the <span class="csg-dbox">Save</span> dialogue box into the directory you want to save it in.
+        Obviously, you need to have the required directory display on the screen.
+        Then drag the file&rsquo;s icon from the <span class="csg-dbox">Save</span> dialogue box into the directory display.
+        It will be saved there with the leafname you gave it in the <span class="csg-dbox">Save</span> dialogue box.
+    </p>
+
+    <h3 id="Part">To save a marked block</h3>
+    <ol>
+        <li>The block you want to save must be marked before you give the <span class="csg-command">Save</span> command.</li>
+        <li>When the <span class="csg-dbox">Save</span> dialogue box appears, type in the name of the file if necessary.</li>
+        <li>Click Select on the <span class="csg-dbox-option">Save only marked block</span> option.</li>
+    </ol>
+
+    <h3>To save a selection of rows</h3>
+    <ol>
+        <li>Give the <span class="csg-command">Save</span> command.</li>
+        <li>When the <span class="csg-dbox">Save</span> dialogue box appears, type in the name of the file if necessary.</li>
+        <li>Click Select on the <span class="csg-dbox-option">Save selection of rows</span> option.</li>
+        <li>Type in the condition you want to apply.</li>
+    </ol>
+    <p>
+        The condition you type in will be evaluated before each row is saved.
+        Only if the result is true will the row be saved.
+        The condition will normally contain ranges.
+        These references are updated one row for each new line.
+    </p>
+    <h5>Example:</h5>
+    <p>
+        If you type <span class="csg-user-text">B1B100&gt;600</span> as the condition,
+        all rows up to row 100 where the second column evaluates to a number greater than 600 will be saved.
+    </p>
+    <p>You can include text strings in the condition, but they must be placed within double quotation marks.</p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">A1A100&gt;"Fred"</pre>
+    <p>will save all rows up to row 100 lying alphabetically after Fred.</p>
+    <p>
+        A string can contain the wildcards
+        <code>^?</code> (any single character) and
+        <code>^#</code> (any multiple character).
+        All string comparisons treat lower-case and upper-case letters as matching.
+    </p>
+    <p>
+        You can save rows which satisfy more than one condition by using the <code>&amp;</code> (AND) operator and
+        rows which match one of several conditions by using the <code>|</code> (OR) operator.
+    </p>
+
+    <h3 id="Formats">To save a document in different formats</h3>
+    <p>
+        The format of the file you loaded will appear as the default setting.
+        Click on the format you want.
+    </p>
+    <ul>
+        <li><span class="csg-dbox-option">PipeDream</span> saves a file in PipeDream format. This will be the default value for a new file.</li>
+        <li><span class="csg-dbox-option">CSV</span> saves the file in CSV (comma separated values) format.</li>
+        <li><span class="csg-dbox-option">ASCII</span> saves the file in ASCII (plain text) format.</li>
+        <li><span class="csg-dbox-option">VIEW</span> saves the file in VIEW format.</li>
+        <li><span class="csg-dbox-option">1WP</span> saves the file in First Word Plus format so that it can be loaded into First Word Plus.</li>
+        <li><span class="csg-dbox-option">Paragraph</span> saves the file in Paragraph (plain text) format for transfer to desktop publishing programs.</li>
+    </ul>
+
+    <h2 id="Loadingfile">Loading Files</h2>
+    <p>
+        You can load an entire document into the computer.
+        You can also add to a document already in memory.
+        You can load part of a document by specifying a range of row numbers that you want to load;
+        this enables you to load a file in sections that would be too large to load in one piece.
+        Plain text from another program can be loaded into PipeDream; fields separated by <code>TAB</code> characters will automatically be put into separate columns on the document.
+        PipeDream automatically recognises the format of files and loads them in the correct format.
+    </p>
+
+    <h3 id="Load">To load a PipeDream document</h3>
+    <p>The simplest way to load a PipeDream document is to get the directory display containing the file on the screen and double-click Select on the file&rsquo;s icon.</p>
+
+    <h3 id="Loadother">To load another file format</h3>
+    <p>If the file is not a PipeDream file, drag the file&rsquo;s icon from the directory display onto the PipeDream icon on the icon bar.</p>
+
+    <h3 id="Loading">Loading a file on start-up</h3>
+    <p>If you are not already running PipeDream, double-clicking on a PipeDream file&rsquo;s icon will start up PipeDream and load the file.</p>
+
+    <h3 id="Insert">To insert one file into another</h3>
+    <p>
+        Position the caret at the point in one document (file-a) where you want the other file (file-b) to be inserted.
+        Drag file-b&rsquo;s icon into file-a&rsquo;s window.
+        The merged file will take file-a&rsquo;s column structure and settings.
+    </p>
+
+    <h3 id="Partdoc">To load part of a document</h3>
+    <ol>
+        <li>Give the <span class="csg-command">Load</span> command. You will see the <span class="csg-dbox">Load</span> dialogue box.</li>
+        <li>Type in the name of the file of which you want to load part.</li>
+        <li>Click Select on the <span class="csg-dbox-option">Load only range of rows </span> option.</li>
+        <li>Type in the first and last rows of the range.</li>
+    </ol>
+
+    <h3 id="Different">To load a file in different formats</h3>
+    <p>Select the required format option in the <span class="csg-dbox">Load</span> dialogue box.</p>
+    <p>
+        <span class="csg-dbox-option">Auto</span> is the default format.
+        If you do not change this, PipeDream looks at the start of the file to decide what type of file it is and loads it assuming that format.
+        It is possible, albeit rare, for PipeDream to make the wrong choice for unusual files.
+        If this happens, reload the file but this time specify the type explicitly.
+        To do this, bring up the <span class="csg-dbox">Load</span> dialogue box from the <span class="csg-menu">Files</span> menu.
+        This will have remembered the name of the file last loaded.
+        Select the desired file format and then
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        When PipeDream has loaded a file in a particular format,
+        it sets the default format in the <span class="csg-dbox">Save</span> dialogue box to match,
+        so that when you save the file again, it will be replaced in its original format.
+    </p>
+    <p>
+        If the file was a ViewSheet file, PipeDream will set the file type in the
+        <span class="csg-dbox">Save</span> dialogue box to
+        <span class="csg-dbox-option">PipeDream</span> because it cannot save ViewSheet files.
+    </p>
+
+    <h2 id="Naming">Renaming Files</h2>
+    <p>To name or rename the file in memory, give the <span class="csg-command">Rename File</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+                <th class="csg-ct-th-key">Key</th>
+            </tr>
+            <tr>
+                <td>Files</td>
+                <td>Rename file</td>
+                <td><span class="csg-cmdseq">FC</span></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>The name you specify appears on the window&rsquo;s title bar and in the <span class="csg-dbox">Save</span> dialogue box when you save the file.</p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>Using file templates</td>
+                <td><a href="templates.html">Template Files</a></td>
+            </tr>
+            <tr>
+                <td>Different formats</td>
+                <td>
+                    <a href="ascii.html">ASCII and Paragraph File Formats</a><br />
+                    <a href="csv.html">CSV File Format</a><br />
+                    <a href="firstwordplus.html">First Word Plus File Format</a><br />
+                    <a href="pipedreamfileformat.html">PipeDream File Format</a><br />
+                    <a href="view.html">VIEW Transfer</a><br />
+                    <a href="viewsheet.html">ViewSheet Transfer</a><br />
+                    <a href="z88.html">Z88 Transfer</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">External References </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Financial Functions</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="financialfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

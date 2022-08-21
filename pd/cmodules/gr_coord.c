@@ -31,24 +31,11 @@ gr_scale_from_s32_pair(
     _InVal_     S32 numerator,
     _InVal_     S32 denominator)
 {
-    GR_SCALE num;
-    S32 overflow;
 
     if(numerator == 0)
         return(GR_SCALE_ZERO);
 
-    num = muldiv64(numerator, GR_SCALE_ONE, denominator);
-
-    /* check not OTT */
-    overflow = muldiv64_overflow();
-
-    if(overflow > 0)
-        return(+GR_SCALE_MAX);
-
-    if(overflow < 0)
-        return(-GR_SCALE_MAX);
-
-    return(num);
+    return(muldiv64_limiting(numerator, GR_SCALE_ONE, denominator));
 }
 
 /******************************************************************************
@@ -362,10 +349,10 @@ gr_box_xform(
     else
         p = xbox;
 
-    p->x0 = muldiv64(xform->a, abox->x0, GR_SCALE_ONE) + muldiv64(xform->c, abox->y0, GR_SCALE_ONE) + xform->e;
-    p->y0 = muldiv64(xform->c, abox->x0, GR_SCALE_ONE) + muldiv64(xform->d, abox->y0, GR_SCALE_ONE) + xform->f;
-    p->x1 = muldiv64(xform->a, abox->x1, GR_SCALE_ONE) + muldiv64(xform->c, abox->y1, GR_SCALE_ONE) + xform->e;
-    p->y1 = muldiv64(xform->c, abox->x1, GR_SCALE_ONE) + muldiv64(xform->d, abox->y1, GR_SCALE_ONE) + xform->f;
+    p->x0 = muldiv64_a_b_GR_SCALE_ONE(xform->a, abox->x0) + muldiv64_a_b_GR_SCALE_ONE(xform->c, abox->y0) + xform->e;
+    p->y0 = muldiv64_a_b_GR_SCALE_ONE(xform->c, abox->x0) + muldiv64_a_b_GR_SCALE_ONE(xform->d, abox->y0) + xform->f;
+    p->x1 = muldiv64_a_b_GR_SCALE_ONE(xform->a, abox->x1) + muldiv64_a_b_GR_SCALE_ONE(xform->c, abox->y1) + xform->e;
+    p->y1 = muldiv64_a_b_GR_SCALE_ONE(xform->c, abox->x1) + muldiv64_a_b_GR_SCALE_ONE(xform->d, abox->y1) + xform->f;
 
     if(p == &tmp)
         *xbox = tmp;
@@ -385,7 +372,7 @@ gr_coord_scale(
     _InVal_     GR_COORD coord,
     _InVal_     GR_SCALE scale)
 {
-    return(muldiv64(coord, scale, GR_SCALE_ONE));
+    return(muldiv64_a_b_GR_SCALE_ONE(coord, scale));
 }
 
 /******************************************************************************
@@ -493,8 +480,8 @@ gr_point_xform(
     else
         p = xpoint;
 
-    p->x = muldiv64(xform->a, apoint->x, GR_SCALE_ONE) + muldiv64(xform->c, apoint->y, GR_SCALE_ONE) + xform->e;
-    p->y = muldiv64(xform->c, apoint->x, GR_SCALE_ONE) + muldiv64(xform->d, apoint->y, GR_SCALE_ONE) + xform->f;
+    p->x = muldiv64_a_b_GR_SCALE_ONE(xform->a, apoint->x) + muldiv64_a_b_GR_SCALE_ONE(xform->c, apoint->y) + xform->e;
+    p->y = muldiv64_a_b_GR_SCALE_ONE(xform->c, apoint->x) + muldiv64_a_b_GR_SCALE_ONE(xform->d, apoint->y) + xform->f;
 
     if(p == &tmp)
         *xpoint = tmp;
@@ -528,24 +515,24 @@ gr_xform_make_combination(
 
     /* 16.16p 16.16 = 32.32 i.e. take middle word for new 16.16 */
 
-    p->a  = muldiv64(bxform->a, axform->a, GR_SCALE_ONE);
-    p->a += muldiv64(bxform->c, axform->b, GR_SCALE_ONE);
+    p->a  = muldiv64_a_b_GR_SCALE_ONE(bxform->a, axform->a);
+    p->a += muldiv64_a_b_GR_SCALE_ONE(bxform->c, axform->b);
 
-    p->c  = muldiv64(bxform->a, axform->c, GR_SCALE_ONE);
-    p->c += muldiv64(bxform->c, axform->d, GR_SCALE_ONE);
+    p->c  = muldiv64_a_b_GR_SCALE_ONE(bxform->a, axform->c);
+    p->c += muldiv64_a_b_GR_SCALE_ONE(bxform->c, axform->d);
 
-    p->e  = muldiv64(bxform->a, axform->e, GR_SCALE_ONE);
-    p->e += muldiv64(bxform->c, axform->f, GR_SCALE_ONE);
+    p->e  = muldiv64_a_b_GR_SCALE_ONE(bxform->a, axform->e);
+    p->e += muldiv64_a_b_GR_SCALE_ONE(bxform->c, axform->f);
     p->e += bxform->e;
 
-    p->b  = muldiv64(bxform->b, axform->a, GR_SCALE_ONE);
-    p->b += muldiv64(bxform->d, axform->b, GR_SCALE_ONE);
+    p->b  = muldiv64_a_b_GR_SCALE_ONE(bxform->b, axform->a);
+    p->b += muldiv64_a_b_GR_SCALE_ONE(bxform->d, axform->b);
 
-    p->d  = muldiv64(bxform->b, axform->c, GR_SCALE_ONE);
-    p->d += muldiv64(bxform->d, axform->d, GR_SCALE_ONE);
+    p->d  = muldiv64_a_b_GR_SCALE_ONE(bxform->b, axform->c);
+    p->d += muldiv64_a_b_GR_SCALE_ONE(bxform->d, axform->d);
 
-    p->f  = muldiv64(bxform->b, axform->e, GR_SCALE_ONE);
-    p->f += muldiv64(bxform->d, axform->f, GR_SCALE_ONE);
+    p->f  = muldiv64_a_b_GR_SCALE_ONE(bxform->b, axform->e);
+    p->f += muldiv64_a_b_GR_SCALE_ONE(bxform->d, axform->f);
     p->f += bxform->f;
 
     if(p == &tmp)

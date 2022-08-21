@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>VIEW Transfer</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="troubleshooting.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="viewsheet.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="VIEW">VIEW Transfer</h1>
+    <p>
+        PipeDream can load and save files in VIEW format.
+        Since the file structures and philosophies of VIEW and PipeDream are different, it is not possible to perform a perfect conversion on all files.
+        However, the conversion considerably eases the task of importing files from VIEW to PipeDream and, if used with care,
+        can be used to transfer files backwards and forwards between the two programs, retaining a lot of information about highlights and page layout.
+    </p>
+
+    <h2 id="Loading">Loading VIEW format files into PipeDream</h2>
+    <p>
+        When loading with the <span class="csg-dbox-option">Format</span> option set to <span class="csg-dbox-option-value">Auto</span>
+        in the <span class="csg-dbox">Load</span> dialogue box, PipeDream will recognise a file as being in VIEW format if there is a stored command or ruler near the beginning.
+        If there is no stored command or ruler near the beginning, PipeDream will probably load the file in ASCII format
+        so you will need to reload with the <span class="csg-dbox-option">Format</span> option set to <span class="csg-dbox-option">VIEW</span>.
+        Only the first ruler, header, footer and margin settings will be used.
+        Any subsequent stored commands resetting these items will be ignored by PipeDream since PipeDream cannot cope with the page layout changing within a file.
+    </p>
+
+    <h2 id="Saving">Saving PipeDream documents as VIEW format files</h2>
+    <p>
+        When saving, you can specify that a file should be in VIEW format by setting the
+        <span class="csg-dbox-option">Format</span> option to <span class="csg-dbox-option">VIEW</span> in the <span class="csg-dbox">Save</span> dialogue box.
+        If the file was originally loaded in VIEW format this will be already be set.
+        Remember that if you want to save a file in a different format to the one used on loading you need to change the
+        <span class="csg-dbox-option">Format</span> option in the <span class="csg-dbox">Save</span> dialogue box.
+    </p>
+    <p>
+        Since VIEW can only format one column of text and is restricted to lines no longer than 132 characters, some information may be lost.
+        If your line in PipeDream is longer than 132 characters, PipeDream will split the line and give a message at the end saying that it has had to split some lines.
+    </p>
+    <p>Text from column B onwards is sent out to the VIEW file preceded by TAB characters.</p>
+
+    <h4 id="Pages">Page layout</h4>
+    <p>The following table shows how PipeDream creates and interprets VIEW stored commands:</p>
+    <table border="1">
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th><strong>Option in<br />Page Layout</strong></th>
+                <th><strong>PipeDream<br />default</strong></th>
+                <th><strong>VIEW<br />default</strong></th>
+                <th><strong>Stored<br />command</strong></th>
+            </tr>
+            <tr>
+                <td>Page length</td>
+                <td>66</td>
+                <td>66</td>
+                <td>PL</td>
+            </tr>
+            <tr>
+                <td>Line spacing</td>
+                <td>1</td>
+                <td>0</td>
+                <td>LS</td>
+            </tr>
+            <tr>
+                <td>Start page</td>
+                <td>1</td>
+                <td>1</td>
+                <td>SR</td>
+            </tr>
+            <tr>
+                <td>Top margin</td>
+                <td>0</td>
+                <td></td>
+                <td>TM</td>
+            </tr>
+            <tr>
+                <td>Header margin</td>
+                <td>2</td>
+                <td>4</td>
+                <td>HM</td>
+            </tr>
+            <tr>
+                <td>Footer margin</td>
+                <td>2</td>
+                <td>4</td>
+                <td>FM</td>
+            </tr>
+            <tr>
+                <td>Bottom margin</td>
+                <td>8</td>
+                <td>4</td>
+                <td>BM</td>
+            </tr>
+            <tr>
+                <td>Left margin</td>
+                <td>0</td>
+                <td>0</td>
+                <td>LM</td>
+            </tr>
+            <tr>
+                <td>Header</td>
+                <td></td>
+                <td></td>
+                <td>DH</td>
+            </tr>
+            <tr>
+                <td>Footer</td>
+                <td></td>
+                <td></td>
+                <td>DF</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        When saving, PipeDream checks to see if the current setting in the <span class="csg-dbox">Page Layout</span> dialogue box is different to the default value in VIEW.
+        If it is different, PipeDream outputs a VIEW stored command so that the file, when loaded into VIEW, will have the same setting as when it was in PipeDream.
+    </p>
+    <p>
+        When loading, PipeDream initially sets the <span class="csg-dbox">Page Layout</span> dialogue box to have the VIEW defaults.
+        Upon encountering a page layout stored command, PipeDream interprets it and puts the setting in the relevant entry of the dialogue box.
+        Subsequent stored commands of the same type are ignored.
+        For example, if there are two Page Length stored commands in the file,
+        the first setting to 50 lines and the second setting to 72 lines,
+        PipeDream will set the Page Length option to 50.
+    </p>
+
+    <h4 id="Line">Line spacing</h4>
+    <p>
+        Both VIEW and PipeDream default to single line spacing but VIEW calls this 0 line spacing whereas PipeDream calls it 1 line spacing.
+        PipeDream knows about this difference and handles the stored command accordingly.
+    </p>
+
+    <h4 id="Start">Start page</h4>
+    <p>
+        PipeDream has a dialogue box entry to determine what page number it should start printing at.
+        VIEW does not have the same option but instead has number registers.
+        PipeDream cannot sensibly interpret stored commands which set number registers and so it ignores them.
+    </p>
+    <p>
+        However, when saving, if the start page is not the default PipeDream outputs the
+        stored command <code>SR P <span class="csg-function-parameter">n</span></code>
+        where <span class="csg-function-parameter">n</span> is the start page number.
+        The effect of this is to set number register P (the page number register) and so
+        page numbering will start at the value of <span class="csg-function-parameter">n</span>.
+    </p>
+
+    <h4 id=Headers">Headers and footers</h4>
+    <p>
+        The format of headers and footers is similar in PipeDream and VIEW but their effect on the page length is not.
+        VIEW always prints a line for both the header and footer so if they have not been set VIEW will print a blank line for each.
+        PipeDream differs in that if the header or footer has not been set it does not print a blank line
+        but allows one or two extra lines of text on that page to compensate.
+    </p>
+    <p>PipeDream is aware of this difference and adjusts the margins on loading and saving so that the same amount of text is printed on the page in both VIEW and PipeDream.</p>
+
+    <h4 id="Rulers">Rulers</h4>
+    <p>
+        On loading a VIEW file, PipeDream uses the first ruler it finds in the file to determine the column widths and right margins of the PipeDream document.
+        Each tab stop in the ruler indicates a new column.
+        The right margin for each column is set to the right margin point in the ruler.
+        Any columns which start after the right margin have a column width of zero (giving an effective right margin of the column width).
+    </p>
+    <p>On saving a VIEW format file, PipeDream uses the column widths to create tab stops in the ruler and the right margin of column A for the right margin position in the ruler.</p>
+
+    <h4 id="Dates">Dates</h4>
+    <p>
+        On loading a VIEW file, PipeDream converts |D to @D@.
+        On saving in VIEW format it converts @D@ to |D.
+    </p>
+
+    <h4 id="Page">Page numbering</h4>
+    <p>
+        On loading a VIEW file, PipeDream converts |P to @P@.
+        On saving in VIEW format it converts @P@ to |P.
+    </p>
+
+    <h4 id="Cell">Cell justification</h4>
+    <p>On loading (and saving) PipeDream converts LJ, CE and RJ stored commands to (and from) their PipeDream equivalents.</p>
+
+    <h4 id="Highlights">Highlights</h4>
+    <p>
+        PipeDream converts highlights 1 and 2 directly both on loading and saving.
+        It also knows about the extended highlight sequences defined for use with printer drivers created by Acornsoft&rsquo;s Printer Driver Generator.
+    </p>
+    <p>Where possible conversions are made between these sequences and PipeDream highlights 3-8 as follows:</p>
+    <table>
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td><strong>VIEW</strong></td>
+                <td>&nbsp;&nbsp;</td>
+                <td><strong>PipeDream</strong></td>
+            </tr>
+            <tr>
+                <td>H1</td>
+                <td></td>
+                <td>H1</td>
+            </tr>
+            <tr>
+                <td>H2 H2 H2&nbsp;</td>
+                <td></td>
+                <td>H2</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>H3</td>
+            </tr>
+            <tr>
+                <td>H2 H1 H2</td>
+                <td></td>
+                <td>H4</td>
+            </tr>
+            <tr>
+                <td>H2 H1</td>
+                <td></td>
+                <td>H5</td>
+            </tr>
+            <tr>
+                <td>H2 H2</td>
+                <td></td>
+                <td>H6</td>
+            </tr>
+            <tr>
+                <td>H2 H1 H1</td>
+                <td></td>
+                <td>H7</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>H8</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Troubleshooting </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> ViewSheet</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="troubleshooting.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="viewsheet.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

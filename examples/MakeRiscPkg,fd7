@@ -7,17 +7,31 @@
 
 | !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
 
-IfThere $.Temp Then Else %CDir $.Temp
-
-Set pd$Disc $.Temp.PDExamples_20150102
+Set pd$Release 20180225
 | Remember to update RiscPkg.Control too
+
+Set pd$Disc $.Temp.PD4.PDExamples_<pd$Release>
+Set pd$Zip  $.Temp.PD4.PDExamples_<pd$Release>/zip
+
+IfThere $.Temp     Then Else %CDir $.Temp
+IfThere $.Temp.PD4 Then Else %CDir $.Temp.PD4
 
 X %Wipe <pd$Disc> ~cfr~v
 
+time
+echo Starting svn export (local) - please be patient
 svn export <Obey$Dir> <pd$Disc>
+time
 
-| The one in RiscPkg is the useful one for the packaged examples
-delete <pd$Disc>.LICENSE
+| The one in RiscPkg.Copyright is the useful one for the packaged examples
+delete <pd$Disc>.LICENCE
 delete <pd$Disc>.MakeRiscPkg
+
+%Dir <pd$Disc>
+%Remove <pd$Zip>
+zip -r <pd$Zip> RiscPkg Apps
+SetType <pd$Zip> &A91
+Info <pd$Zip>
+%Back
 
 Filer_OpenDir <pd$Disc>

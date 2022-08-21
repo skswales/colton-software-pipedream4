@@ -63,7 +63,7 @@ _do_aqb_fill(
 static inline void
 _quick_block_setup(
     _OutRef_    P_QUICK_BLOCK p_quick_block /*set up*/,
-#if CHECKING_QUICK_BLOCK
+#if CHECKING_QUICK_BLOCK || defined(CODE_ANALYSIS)
     _Out_writes_all_(bytesof_buffer) P_BYTE buf,
 #else
     _In_        P_BYTE buf,
@@ -229,7 +229,7 @@ quick_block_ptr(
 {
     if(0 != quick_block_array_handle_ref(p_quick_block))
     {
-        assert(array_handle_valid(&quick_block_array_handle_ref(p_quick_block)));
+        assert(array_handle_is_valid(&quick_block_array_handle_ref(p_quick_block)));
         return(array_basec_no_checks(&quick_block_array_handle_ref(p_quick_block), BYTE));
     }
 
@@ -244,7 +244,7 @@ quick_block_ptr_wr(
 {
     if(0 != quick_block_array_handle_ref(p_quick_block))
     {
-        assert(array_handle_valid(&quick_block_array_handle_ref(p_quick_block)));
+        assert(array_handle_is_valid(&quick_block_array_handle_ref(p_quick_block)));
         return(array_base_no_checks(&quick_block_array_handle_ref(p_quick_block), BYTE));
     }
 
@@ -285,8 +285,8 @@ UCHARS-based quick block (for Fireworkz-derived numform and evaluator functions)
 
 #define quick_ublock_array_handle_ref               quick_block_array_handle_ref
 #define quick_ublock_bytes                          quick_block_bytes
-#define quick_ublock_uptr                           quick_block_ptr
-#define quick_ublock_uptr_wr                        quick_block_ptr_wr
+#define quick_ublock_uchars                         quick_block_ptr
+#define quick_ublock_uchars_wr                      quick_block_ptr_wr
 #define quick_ublock_ustr                           quick_block_str
 
 #define quick_ublock_extend_by                      quick_block_extend_by

@@ -31,8 +31,7 @@ eval_rpn(
 
 /*ncr*/
 static S32
-custom_result(
-    _Inout_opt_ P_EV_DATA p_ev_data,
+custom_result_ERROR(
     STATUS error);
 
 static S32
@@ -608,13 +607,13 @@ stack_in_calc_ensure_slot(
         if(p_stack_in_calc->eval_block.p_ev_cell != p_ev_cell)
         {
             reportf(TEXT("%s: cell ") U32_TFMT TEXT(":") S32_TFMT TEXT(",") S32_TFMT TEXT(" moved from ") PTR_TFMT TEXT(" to ") PTR_TFMT,
-                caller, (U32) p_ev_slr->docno, p_ev_slr->col, p_ev_slr->row, report_ptr_cast(stack_ptr->data.stack_in_calc.eval_block.p_ev_cell), report_ptr_cast(p_ev_cell));
+                caller, (U32) ev_slr_docno(p_ev_slr), ev_slr_col(p_ev_slr), ev_slr_row(p_ev_slr), report_ptr_cast(stack_ptr->data.stack_in_calc.eval_block.p_ev_cell), report_ptr_cast(p_ev_cell));
             p_stack_in_calc->eval_block.p_ev_cell = p_ev_cell;
             p_stack_in_calc->travel_res = travel_res;
         }
     }
 #else
-    IGNOREPARM(caller);
+    UNREFERENCED_PARAMETER(caller);
 #endif
 
     if(NULL != p_stack_in_calc->eval_block.p_ev_cell)
@@ -1270,7 +1269,7 @@ custom_jmp(
             EV_ROW first_row, last_row;
             EV_SLR slr;
 
-            last_row  = ev_numrow(slrp);
+            last_row  = ev_numrow(ev_slr_docno(slrp));
             first_row = p_ev_custom->owner.row;
             slr       = *slrp;
             slr.row  += offset;
@@ -1287,7 +1286,7 @@ custom_jmp(
             res = create_error(EVAL_ERR_BADGOTO);
 
         if(res < 0)
-            custom_result(NULL, res);
+            custom_result_ERROR(res);
         else
             stack_set(stack_after);
     }
@@ -1304,23 +1303,16 @@ custom_jmp(
 /*ncr*/
 static S32
 custom_result(
-    _Inout_opt_ P_EV_DATA p_ev_data,
-    STATUS error)
+    _InRef_     PC_EV_DATA p_ev_data)
 {
     P_EV_DATA resultp, finalp;
     P_STACK_ENTRY custom_stackp;
 
-    /* if we were simply passed an error... */
-    if(NULL == p_ev_data)
-    {
-        static EV_DATA err_res = { RPN_DAT_BLANK };
-        ev_data_set_error(&err_res, error);
-        p_ev_data = &err_res;
-    }
-
     /* find the most recent custom */
     if((custom_stackp = stack_back_search(stack_ptr, EXECUTING_CUSTOM)) == NULL)
+    {
         stack_ptr->type =_ERROR;
+    }
     else
     {
         /* point to custom result area on stack */
@@ -1339,7 +1331,7 @@ custom_result(
                                           custom_stackp->data.stack_executing_custom.y_pos);
 
             if(data_is_array_range(p_ev_data))
-                ev_data_set_error(array_elementp, create_error(EVAL_ERR_NESTEDARRAY));
+                ev_data_set_error(array_elementp, EVAL_ERR_NESTEDARRAY);
             else
                 ss_data_resource_copy(array_elementp, p_ev_data);
 
@@ -1354,12 +1346,13 @@ custom_result(
         if(finalp->did_num == RPN_DAT_ERROR)
         {
             if(finalp->arg.ev_error.type != ERROR_CUSTOM)
-            { /* if possible, mark error's origin as given row in a custom function */
+            {   /* if possible, mark error's origin as given row in a custom function */
                 finalp->arg.ev_error.type = ERROR_CUSTOM;
                 finalp->arg.ev_error.docno = stack_ptr->slr.docno;
                 finalp->arg.ev_error.col = stack_ptr->slr.col;
                 finalp->arg.ev_error.row = stack_ptr->slr.row;
             }
+            ev_report_ERROR_CUSTOM(finalp);
         }
 
         /* reset stack to executing custom */
@@ -1370,6 +1363,16 @@ custom_result(
     }
 
     return(NEW_STATE);
+}
+
+/*ncr*/
+static S32
+custom_result_ERROR(
+    STATUS error)
+{
+    EV_DATA err_res = { RPN_DAT_BLANK };
+    ev_data_set_error(&err_res, error);
+    return(custom_result(&err_res));
 }
 
 /******************************************************************************
@@ -1391,14 +1394,18 @@ custom_sequence(
     res = 0;
 
     ++semp->data.stack_executing_custom.next_slot.row;
-    last_slot.row = ev_numrow(&last_slot);
+    last_slot.row = ev_numrow(ev_slr_docno(&last_slot));
 
     /* have we gone off end of file ? */
     if(next_slot.row >= last_slot.row)
+    {
         res = create_error(EVAL_ERR_NORETURN);
+    }
     /* switch to calculate next cell in custom */
     else if(stack_check_n(1) < 0)
+    {
         res = status_nomem();
+    }
     else
     {
         stack_inc(CALC_SLOT, next_slot, 0);
@@ -1445,7 +1452,7 @@ process_control(
         break;
 
     case CONTROL_RESULT:
-        custom_result(args[0], 0);
+        custom_result(args[0]);
         break;
 
     case CONTROL_WHILE:
@@ -1473,7 +1480,7 @@ process_control(
                                    &current_slot,
                                    1,
                                    eval_stack_base - 1,
-                                   create_error(EVAL_ERR_BADLOOPNEST));
+                                   EVAL_ERR_BADLOOPNEST);
         }
         break;
 
@@ -1482,12 +1489,16 @@ process_control(
      */
     case CONTROL_ENDWHILE:
         {
-        P_STACK_ENTRY stkentp;
+        P_STACK_ENTRY stkentp = stack_back_search_loop(CONTROL_WHILE);
 
-        if((stkentp = stack_back_search_loop(CONTROL_WHILE)) == NULL)
-            custom_result(NULL, create_error(EVAL_ERR_BADLOOPNEST));
+        if(NULL == stkentp)
+        {
+            custom_result_ERROR(EVAL_ERR_BADLOOPNEST);
+        }
         else
+        {
             custom_jmp(&stkentp->data.stack_control_loop.origin_slot, 0, stack_offset(stkentp - 1));
+        }
 
         break;
         }
@@ -1507,7 +1518,7 @@ process_control(
                                    &current_slot,
                                    1,
                                    eval_stack_base - 1,
-                                   create_error(EVAL_ERR_BADIFNEST));
+                                   EVAL_ERR_BADIFNEST);
             break;
         }
         }
@@ -1538,9 +1549,10 @@ process_control(
                                       &current_slot,
                                       1,
                                       eval_stack_base - 1,
-                                      create_error(EVAL_ERR_BADIFNEST)) == EVS_CNT_ELSEIF)
+                                      EVAL_ERR_BADIFNEST) == EVS_CNT_ELSEIF)
                 stkentp->data.stack_executing_custom.elseif = 1;
         }
+
         break;
         }
 
@@ -1580,14 +1592,21 @@ process_control(
 
     case CONTROL_UNTIL:
         {
-        P_STACK_ENTRY stkentp;
+        P_STACK_ENTRY stkentp = stack_back_search_loop(CONTROL_REPEAT);
 
-        if((stkentp = stack_back_search_loop(CONTROL_REPEAT)) == NULL)
-            custom_result(NULL, create_error(EVAL_ERR_BADLOOPNEST));
-        else if(!args[0]->arg.integer)
+        if(NULL == stkentp)
+        {
+            custom_result_ERROR(EVAL_ERR_BADLOOPNEST);
+        }
+        else if(0 == args[0]->arg.integer)
+        {
             custom_jmp(&stkentp->data.stack_control_loop.origin_slot, 1, eval_stack_base - 1);
+        }
         else
+        {
             custom_jmp(&current_slot, 1, stack_offset(stkentp - 1));
+        }
+
         break;
         }
 
@@ -1609,8 +1628,11 @@ process_control(
                             stack_ptr->slr.docno,
                             args[0]->arg.string.uchars,
                             args[1])) < 0)
-            custom_result(NULL, res);
+        {
+            custom_result_ERROR(res);
+        }
         else if(!process_control_for_cond(&stack_control_loop, 0))
+        {
             process_control_search(EVS_CNT_FOR,
                                    EVS_CNT_NEXT,
                                    EVS_CNT_NONE,
@@ -1618,7 +1640,8 @@ process_control(
                                    &current_slot,
                                    1,
                                    eval_stack_base - 1,
-                                   create_error(EVAL_ERR_BADLOOPNEST));
+                                   EVAL_ERR_BADLOOPNEST);
+        }
         else
         {
             /* clear stack and switch to for loop */
@@ -1634,14 +1657,20 @@ process_control(
 
     case CONTROL_NEXT:
         {
-        P_STACK_ENTRY stkentp;
+        P_STACK_ENTRY stkentp = stack_back_search_loop(CONTROL_FOR);
 
-        if((stkentp = stack_back_search_loop(CONTROL_FOR)) == NULL)
-            custom_result(NULL, create_error(EVAL_ERR_BADLOOPNEST));
+        if(NULL == stkentp)
+        {
+            custom_result_ERROR(EVAL_ERR_BADLOOPNEST);
+        }
         else if(process_control_for_cond(&stkentp->data.stack_control_loop, 1))
+        {
             custom_jmp(&stkentp->data.stack_control_loop.origin_slot, 1, eval_stack_base - 1);
+        }
         else
+        {
             custom_jmp(&current_slot, 1, stack_offset(stkentp - 1));
+        }
 
         break;
         }
@@ -1660,11 +1689,13 @@ process_control(
 
         stkentp = stack_ptr;
         while(loop_count--)
-            if((stkentp = stack_back_search(stkentp, CONTROL_LOOP)) == NULL)
+            if(NULL == (stkentp = stack_back_search(stkentp, CONTROL_LOOP)))
                 break;
 
-        if(!stkentp)
-            custom_result(NULL, create_error(EVAL_ERR_BADLOOPNEST));
+        if(NULL == stkentp)
+        {
+            custom_result_ERROR(EVAL_ERR_BADLOOPNEST);
+        }
         else
         {
             S32 block_start, block_end;
@@ -1676,10 +1707,12 @@ process_control(
                 block_start = EVS_CNT_REPEAT;
                 block_end   = EVS_CNT_UNTIL;
                 break;
+
             case CONTROL_FOR:
                 block_start = EVS_CNT_FOR;
                 block_end   = EVS_CNT_NEXT;
                 break;
+
             case CONTROL_WHILE:
             default:
                 block_start = EVS_CNT_WHILE;
@@ -1696,7 +1729,7 @@ process_control(
                                    &slr,
                                    1,
                                    stack_offset(stkentp - 1),
-                                   create_error(EVAL_ERR_BADLOOPNEST));
+                                   EVAL_ERR_BADLOOPNEST);
         }
 
         break;
@@ -1704,10 +1737,12 @@ process_control(
 
     case CONTROL_CONTINUE:
         {
-        P_STACK_ENTRY stkentp;
+        P_STACK_ENTRY stkentp = stack_back_search(stack_ptr, CONTROL_LOOP);
 
-        if((stkentp = stack_back_search(stack_ptr, CONTROL_LOOP)) == NULL)
-            custom_result(NULL, create_error(EVAL_ERR_BADLOOPNEST));
+        if(NULL == stkentp)
+        {
+            custom_result_ERROR(EVAL_ERR_BADLOOPNEST);
+        }
         else
         {
             S32 block_start, block_end;
@@ -1718,10 +1753,12 @@ process_control(
                 block_start = EVS_CNT_REPEAT;
                 block_end   = EVS_CNT_UNTIL;
                 break;
+
             case CONTROL_FOR:
                 block_start = EVS_CNT_FOR;
                 block_end   = EVS_CNT_NEXT;
                 break;
+
             case CONTROL_WHILE:
             default:
                 block_start = EVS_CNT_WHILE;
@@ -1736,8 +1773,9 @@ process_control(
                                    &current_slot,
                                    0,
                                    eval_stack_base - 1,
-                                   create_error(EVAL_ERR_BADLOOPNEST));
+                                   EVAL_ERR_BADLOOPNEST);
         }
+
         break;
         }
     }
@@ -1805,7 +1843,7 @@ process_control_search(
 
     slr      = *slrp;
     nest     = found = 0;
-    last_row = ev_numrow(&slr);
+    last_row = ev_numrow(ev_slr_docno(&slr));
 
     while(!found && ++slr.row < last_row)
     {
@@ -1839,7 +1877,7 @@ process_control_search(
 
     if(!found)
     {
-        custom_result(NULL, error);
+        custom_result_ERROR(error);
         res = error;
     }
     else
@@ -2177,7 +2215,7 @@ ev_recalc(void)
                         data.arg.ev_error.row = stack_ptr->slr.row;
                     }
 
-                    custom_result(&data, 0);
+                    custom_result(&data);
                     break;
                 }
             }
@@ -3063,7 +3101,7 @@ extern void
 stack_zap(
     _InRef_     PC_UREF_PARM upp)
 {
-    /* MC after 4.12 23mar92 - was testing stack_base against stack_ptr but this left
+    /* MC after PD 4.12 23mar92 - was testing stack_base against stack_ptr but this left
      * current state/resources leading to circular ref errors. but don't free NULL stacks!
     */
     if(/*stack_ptr !=*/ stack_base)
@@ -3087,23 +3125,23 @@ stack_zap(
 static S32
 visit_supporting_range(void)
 {
-    if( stack_ptr->slr.row >= stack_ptr->data.stack_visit_range.range.e.row ||
-        stack_ptr->slr.row >= ev_numrow(&stack_ptr->slr) )
-        {
-        stack_ptr->slr.row  = stack_ptr->data.stack_visit_range.range.s.row;
+    if( (ev_slr_row(&stack_ptr->slr) >= ev_slr_row(&stack_ptr->data.stack_visit_range.range.e)) ||
+        (ev_slr_row(&stack_ptr->slr) >= ev_numrow(ev_slr_docno(&stack_ptr->slr))) )
+    {
+        stack_ptr->slr.row  = ev_slr_row(&stack_ptr->data.stack_visit_range.range.s);
         stack_ptr->slr.col += 1;
 
         /* hit the end of the range ? */
-        if( stack_ptr->slr.col >= stack_ptr->data.stack_visit_range.range.e.col ||
-            stack_ptr->slr.col >= ev_numcol(&stack_ptr->slr) )
-            {
+        if( (ev_slr_col(&stack_ptr->slr) >= ev_slr_col(&stack_ptr->data.stack_visit_range.range.e)) ||
+            (ev_slr_col(&stack_ptr->slr) >= ev_numcol(ev_slr_docno(&stack_ptr->slr))) )
+        {
             EV_TRENT rix;
             EV_FLAGS changed;
 
             /* update range serial number */
             if((rix = search_for_rng_ref(&stack_ptr->data.stack_visit_range.range)) >= 0)
             {
-                const P_SS_DOC p_ss_doc = ev_p_ss_doc_from_docno_must(stack_ptr->data.stack_visit_range.range.s.docno);
+                const P_SS_DOC p_ss_doc = ev_p_ss_doc_from_docno_must(ev_slr_docno(&stack_ptr->data.stack_visit_range.range.s));
                 const P_RANGE_USE p_range_use = tree_rngptr(p_ss_doc, rix);
                 PTR_ASSERT(p_range_use);
                 p_range_use->visited = ev_serial_num;
@@ -3118,8 +3156,8 @@ visit_supporting_range(void)
             stack_ptr->stack_flags |= changed;
 
             return(NEW_STATE);
-            }
         }
+    }
 
     stack_ptr->slr.row += 1;
 

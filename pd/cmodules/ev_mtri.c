@@ -11,19 +11,16 @@
 
 #include "common/gflags.h"
 
-#include "handlist.h"
 #include "cmodules/ev_eval.h"
 
 #include "cmodules/mathxtra.h"
 
+#ifndef                   __mathnums_h
 #include "cmodules/coltsoft/mathnums.h" /* for _pi */
+#endif
 
 /* local header file */
 #include "ev_evali.h"
-
-#include <math.h>
-#include <float.h>
-#include <errno.h>
 
 /******************************************************************************
 *

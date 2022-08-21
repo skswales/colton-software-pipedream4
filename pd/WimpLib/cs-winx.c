@@ -11,560 +11,128 @@
 
 #include "cmodules/aligator.h"
 
-/*****************************************************
-*                                                    *
-* send (via WM queue) a close request to this window *
-*                             ~~~~~~~                *
-*****************************************************/
-
-extern void
-win_send_close(wimp_w w)
-{
-    wimp_eventdata msg;
-
-    msg.o.w = w;
-    wimpt_safe(wimp_sendwmessage(wimp_ECLOSE, (wimp_msgstr *) &msg, w, (wimp_i) -1));
-}
-
-/************************************************
-*                                               *
-* send (either via WM queue, or immediate fake) *
-* an open request to this window                *
-*         ~~~~~~~                               *
-************************************************/
-
-extern void
-win_send_open(wimp_w w, BOOL immediate, const wimp_openstr * openstr)
-{
-    wimp_eventstr e;
-
-    tracef2("[win_send_open(&%p, immediate = %s)]",
-            w, trace_boolstring(immediate));
-
-    e.data.o   = *openstr;
-    e.data.o.w = w;
-    if(immediate)
-    {
-        e.e = wimp_EOPEN;
-        wimpt_fake_event(&e);
-        event_process();
-    }
-    else
-        wimpt_safe(wimp_sendwmessage(wimp_EOPEN, (wimp_msgstr *) &e.data.o, w, (wimp_i) -1));
-}
-
-/************************************************
-*                                               *
-* send (either via WM queue, or immediate fake) *
-* an open at front request to this window       *
-*                  ~~~~~~~                      *
-************************************************/
-
-extern void
-win_send_front(wimp_w w, BOOL immediate)
-{
-    wimp_wstate wstate;
-
-    tracef2("[win_send_front(&%p, immediate = %s)]", w, trace_boolstring(immediate));
-
-    wimpt_safe(wimp_get_wind_state(w, &wstate));
-    wstate.o.behind = (wimp_w) -1;          /* force to the front */
-    win_send_open(w, immediate, &wstate.o);
-}
-
-extern void
-win_send_front_at(wimp_w w, BOOL immediate, const wimp_box * box)
-{
-    wimp_wstate wstate;
-
-    tracef2("[win_send_front_at(&%p, immediate = %s)]", w, trace_boolstring(immediate));
-
-    /* get current scroll offsets */
-    wimpt_safe(wimp_get_wind_state(w, &wstate));
-    wstate.o.behind = (wimp_w) -1;          /* force to the front */
-    wstate.o.box    = *box;
-    win_send_open(w, immediate, &wstate.o);
-}
-
 extern BOOL
-win_adjustbumphit(wimp_i * hitp /*inout*/, wimp_i val)
-{
-    wimp_i hit = *hitp;
-    wimp_i dec = val - 1;
-    wimp_i inc = dec - 1;
-    BOOL   res = ((hit == inc)  ||  (hit == dec));
-
-    if(res  &&  win_adjustclicked())
-        *hitp = (hit ^ inc ^ dec);
-
-    return(res);
-}
-
-extern BOOL
-win_adjustclicked(void)
+winx_adjustclicked(void)
 {
     wimp_mousestr m;
 
-    wimpt_safe(wimp_get_point_info(&m));
+    if(wimpt_complain(wimp_get_point_info(&m)))
+        return(FALSE);
 
-    return((m.bbits & wimp_BRIGHT) != 0);
+    return(0 != (m.bbits & wimp_BRIGHT));
 }
 
 extern void
-win_changedtitle(wimp_w w)
+winx_changedtitle(
+    _HwndRef_   HOST_WND window_handle)
 {
     wimp_wstate wstate;
 
-    if(!wimpt_complain(wimp_get_wind_state(w, &wstate)))
-        if(wstate.flags & wimp_WOPEN)
-        {
-            wimp_redrawstr redraw;
-            int dy = wimpt_dy();
-            redraw.w      = (wimp_w) -1; /* entire screen */
-            redraw.box.x0 = wstate.o.box.x0;
-            redraw.box.y0 = wstate.o.box.y1 + dy; /* title bar contents starts one raster up */
-            redraw.box.x1 = wstate.o.box.x1;
-            redraw.box.y1 = redraw.box.y0 + wimp_win_title_height(dy) - 2*dy;
-            trace_0(TRACE_RISCOS_HOST, TEXT("queuing global redraw of inside of title bar area"));
-            wimpt_safe(wimp_force_redraw(&redraw));
-        }
+    if(wimpt_complain(wimp_get_wind_state(window_handle, &wstate)))
+        return;
+
+    if(wstate.flags & wimp_WOPEN)
+    {
+        wimp_redrawstr redraw;
+        int dy = wimpt_dy();
+        redraw.w      = (wimp_w) -1; /* entire screen */
+        redraw.box.x0 = wstate.o.box.x0;
+        redraw.box.y0 = wstate.o.box.y1 + dy; /* title bar contents starts one raster up */
+        redraw.box.x1 = wstate.o.box.x1;
+        redraw.box.y1 = redraw.box.y0 + wimp_win_title_height(dy) - 2*dy;
+        trace_0(TRACE_RISCOS_HOST, TEXT("queuing global redraw of inside of title bar area"));
+        (void) wimpt_complain(wimp_force_redraw(&redraw));
+    }
 }
 
+/*****************************************************
+*
+* send (via WM queue) a close request to this window
+*                             ~~~~~~~
+*****************************************************/
+
 extern void
-win_getfield(wimp_w w, wimp_i i, char *buffer /*out*/, size_t size)
+winx_send_close_window_request(
+    _HwndRef_   HOST_WND window_handle)
 {
-    wimp_icon    info;
-    size_t       j;
-    const char * from;
-    const char * ptr;
+    wimp_eventdata msg;
 
-    tracef4("[win_getfield(&%p, &%p, &%p, %d): ", w, i, buffer, size);
+    msg.o.w = window_handle;
+    (void) wimpt_complain(wimp_send_message_to_window(Wimp_ECloseWindow, (wimp_msgstr *) &msg, window_handle, -1));
+}
 
-    wimpt_safe(wimp_get_icon_info(w, i, &info));
+/************************************************
+*
+* send (either via WM queue, or immediate fake)
+* an open request to this window
+*         ~~~~~~~
+************************************************/
 
-    if(!(info.flags & wimp_ITEXT))
+extern void
+winx_send_open_window_request(
+    _HwndRef_   HOST_WND window_handle,
+    BOOL immediate,
+    const WimpOpenWindowBlock * open_window)
+{
+    WimpEvent ev;
+
+    tracef2("[winx_send_open_window_request(&%p, immediate = %s)]",
+            (void *) window_handle, report_boolstring(immediate));
+
+    ev.event_data.open_window_request   = *open_window;
+    ev.event_data.open_window_request.window_handle = window_handle;
+    if(immediate)
     {
-        tracef0("- non-text icon: ");
-        j = 0;  /* returns "" */
+        ev.event_code = Wimp_EOpenWindow;
+        wimpt_fake_event((wimp_eventstr *) &ev);
+        event_process();
     }
     else
     {
-        myassert2x(info.flags & wimp_INDIRECT, "win_getfield: window &%p icon &%u has inline buffer", w, i);
-
-        from = info.data.indirecttext.buffer;
-        ptr  = from;
-        while(*ptr++ >= 32)
-            ;
-        j = ptr - from - 1;
-        j = min(j, size - 1);
-        memcpy(buffer, from, j);
+        (void) wimpt_complain(wimp_send_message_to_window(Wimp_EOpenWindow, (wimp_msgstr *) &ev.event_data, window_handle, -1));
     }
-
-    buffer[j] = CH_NULL;
-    tracef1(" returns \"%s\"]", buffer);
 }
 
+/************************************************
+*
+* send (either via WM queue, or immediate fake)
+* an open at front request to this window
+*                  ~~~~~~~
+************************************************/
+
 extern void
-win_setfield(wimp_w w, wimp_i i, const char * value)
+winx_send_front_window_request(
+    _HwndRef_   HOST_WND window_handle,
+    BOOL immediate)
 {
-    wimp_icon     info;
-    wimp_caretstr caret;
-    int           newlen, oldlen, maxlen;
+    wimp_wstate wstate;
 
-    tracef3("[win_setfield(&%p, &%p, \"%s\"): ", w, i, value);
+    tracef2("[winx_send_front_window_request(&%p, immediate = %s)]", (void *) window_handle, report_boolstring(immediate));
 
-    wimpt_safe(wimp_get_icon_info(w, i, &info));
-
-    if(!(info.flags & wimp_ITEXT))
-    {
-        tracef0(" non-text icon - ignored");
-        return;
-    }
-
-    myassert2x(info.flags & wimp_INDIRECT, "win_setfield: window &%p icon &%u has inline buffer", w, i);
-
-    if(!strcmp(info.data.indirecttext.buffer, value))
+    if(wimpt_complain(wimp_get_wind_state(window_handle, &wstate)))
         return;
 
-    maxlen = info.data.indirecttext.bufflen - 1;  /* MUST be term */
-    oldlen = strlen(info.data.indirecttext.buffer);
-    info.data.indirecttext.buffer[0] = CH_NULL;
-    strncat(info.data.indirecttext.buffer, value, maxlen);
-    tracef1(" indirect buffer now \"%s\"]", info.data.indirecttext.buffer);
-    newlen = strlen(info.data.indirecttext.buffer);
-
-    /* ensure that the caret moves correctly if it's in this icon */
-    wimpt_safe(wimp_get_caret_pos(&caret));
-    tracef2("[caret in window &%p, icon &%p]", caret.w, caret.i);
-
-    if((caret.w == w)  &&  (caret.i == i))
-    {
-        if(caret.index == oldlen)
-            caret.index = newlen;       /* if grown and caret was at end,
-                                         * move caret right */
-        if(caret.index > newlen)
-            caret.index = newlen;       /* if shorter, bring caret left */
-
-        caret.height = -1;   /* calc x,y,h from icon/index */
-
-        wimpt_complain(wimp_set_caret_pos(&caret));
-    }
-
-    /* prod it, to cause redraw */
-    wimpt_safe(
-        wimp_set_icon_state(w, i,
-                            /* EOR */ (wimp_iconflags) 0,
-                            /* BIC */ wimp_ISELECTED));
+    wstate.o.behind = (wimp_w) -1;          /* force to the front */
+    winx_send_open_window_request(window_handle, immediate, (WimpOpenWindowBlock *) &wstate.o);
 }
 
 extern void
-win_fadefield(wimp_w w, wimp_i i)
+winx_send_front_window_request_at(
+    _HwndRef_   HOST_WND window_handle,
+    BOOL immediate,
+    const BBox * const bbox)
 {
-    wimp_icon info;
+    wimp_wstate wstate;
 
-    wimpt_safe(wimp_get_icon_info(w, i, &info));
+    tracef2("[winx_send_front_window_request_at(&%p, immediate = %s)]", (void *) window_handle, report_boolstring(immediate));
 
-    if((info.flags & wimp_INOSELECT) == 0)
-        /* prod it, to cause redraw */
-        wimpt_safe(
-            wimp_set_icon_state(w, i,
-                                /* EOR */ wimp_INOSELECT,
-                                /* BIC */ (wimp_iconflags) 0));
-}
+    /* get current scroll offsets */
+    if(wimpt_complain(wimp_get_wind_state(window_handle, &wstate)))
+        return;
 
-extern void
-win_unfadefield(wimp_w w, wimp_i i)
-{
-    wimp_icon info;
-
-    wimpt_safe(wimp_get_icon_info(w, i, &info));
-
-    if((info.flags & wimp_INOSELECT) != 0)
-        /* prod it, to cause redraw */
-        wimpt_safe(
-            wimp_set_icon_state(w, i,
-                                /* EOR */ wimp_INOSELECT,
-                                /* BIC */ (wimp_iconflags) 0));
-}
-
-/* note that unhide is rather harder - would need a saved state to restore */
-
-extern void
-win_hidefield(wimp_w w, wimp_i i)
-{
-    wimpt_safe(
-        wimp_set_icon_state(w, i,
-                            /*EOR*/ (wimp_iconflags) 0,
-                            /*BIC*/ (wimp_iconflags) (wimp_ITEXT | wimp_ISPRITE | wimp_IBORDER | wimp_IFILLED | wimp_IBUTMASK)));
-}
-
-extern void
-win_invertfield(wimp_w w, wimp_i i)
-{
-    wimp_icon icon;
-
-    wimpt_safe(wimp_get_icon_info(w, i, &icon));
-
-    wimpt_safe(
-        wimp_set_icon_state(w, i,
-                            /* EOR */    wimp_ISELECTED,
-                            /* BIC */    icon.flags & wimp_ISELECTED ? (wimp_iconflags) 0 : wimp_ISELECTED));
-}
-
-/*
-double field handling
-*/
-
-static double
-round_to_decplaces(
-    const double * dvar,
-    int decplaces)
-{
-    double val = *dvar;
-    int    negative = (val < 0.0);
-    double base;
-
-    if(negative)
-        val = fabs(val);
-
-    base = pow(10.0, decplaces);
-    val  = floor(val * base + 0.5) / base;
-
-    return(negative ? -val : +val);
-}
-
-extern BOOL
-win_bumpdouble(
-    wimp_w w, wimp_i hit, wimp_i val,
-    double * dvar /*inout*/,
-    const double * ddelta,
-    const double * dmin,
-    const double * dmax,
-    int            decplaces)
-{
-    wimp_i dec = val - 1;
-    double try_ddelta, dval;
-    BOOL   res = win_adjustbumphit(&hit, val);
-
-    if(res)
-    {
-        try_ddelta = *ddelta;
-
-        if(hit == dec)
-            try_ddelta = 0.0 - try_ddelta;
-
-        dval = win_getdouble(w, val, dvar, decplaces);
-
-        dval += try_ddelta;
-
-        if( dval > *dmax)
-            dval = *dmax;
-        else if(dval < *dmin)
-            dval = *dmin;
-
-        *dvar = dval;
-
-        win_setdouble(w, val, dvar, decplaces);
-    }
-
-    return(res);
-}
-
-extern void
-win_checkdouble(
-    wimp_w w, wimp_i val,
-    double * dvar /*inout*/,
-    int * modify /*out-if-mod*/,
-    const double * dmin,
-     const double * dmax,
-    int            decplaces)
-{
-    double dval = win_getdouble(w, val, dvar, decplaces);
-
-    if( dval > *dmax)
-        dval = *dmax;
-    else if(dval < *dmin)
-        dval = *dmin;
-
-    if(*dvar != dval)
-    {
-        *dvar = dval;
-
-        if(modify)
-            *modify = 1;
-    }
-
-    /* NEVER set modify 0; that's for the caller to accumulate */
-}
-
-extern double
-win_getdouble(
-    wimp_w w, wimp_i i,
-    const double * default_val,
-    int            decplaces)
-{
-    char   buffer[64];
-    char * ptr;
-    double val;
-
-    win_getfield(w, i, buffer, sizeof(buffer));
-
-    val = strtod(buffer, &ptr);
-
-    if(ptr == buffer)
-        val = +HUGE_VAL;
-
-    if((val == +HUGE_VAL)  ||  (val == -HUGE_VAL))
-        if(default_val)
-            return(*default_val);
-
-    if(decplaces != INT_MAX)
-        val = round_to_decplaces(&val, decplaces);
-
-    return(val);
-}
-
-extern void
-win_setdouble(
-    wimp_w w, wimp_i i,
-    const double * val,
-    int decplaces)
-{
-    char buffer[32];
-    double dval;
-
-    if(decplaces != INT_MAX)
-        dval = round_to_decplaces(val, decplaces);
-    else
-        dval = *val;
-
-    (void) sprintf(buffer, "%g", dval);
-
-    win_setfield(w, i, buffer);
-}
-
-/*
-int field handling
-*/
-
-extern BOOL
-win_bumpint(
-    wimp_w w, wimp_i hit, wimp_i val,
-    int * ivar /*inout*/,
-    int idelta, int imin, int imax)
-{
-    wimp_i dec = val - 1;
-    int    try_idelta, ival;
-    BOOL   res = win_adjustbumphit(&hit, val);
-
-    if(res)
-    {
-        try_idelta = idelta;
-
-        if(hit == dec)
-            try_idelta = 0 - try_idelta;
-
-        ival = win_getint(w, val, *ivar);
-
-        ival += try_idelta;
-
-        if( ival > imax)
-            ival = imax;
-        else if(ival < imin)
-            ival = imin;
-
-        *ivar = ival;
-
-        win_setint(w, val, *ivar);
-    }
-
-    return(res);
-}
-
-extern void
-win_checkint(
-    wimp_w w, wimp_i val,
-    int * ivar /*inout*/,
-    int * modify /*out-if-mod*/,
-    int imin, int imax)
-{
-    int ival = win_getint(w, val, *ivar);
-
-    if( ival > imax)
-        ival = imax;
-    else if(ival < imin)
-        ival = imin;
-
-    if(*ivar != ival)
-    {
-        *ivar = ival;
-
-        if(modify)
-            *modify = 1;
-    }
-
-    /* NEVER set modify 0; that's for the caller to accumulate */
-}
-
-extern int
-win_getint(
-    wimp_w w, wimp_i i,
-    int default_val)
-{
-    char   buffer[32];
-    char * ptr;
-    int    val;
-
-    win_getfield(w, i, buffer, sizeof(buffer));
-
-    val = (int) strtol(buffer, &ptr, 0);
-
-    if(ptr == buffer)
-        return(default_val);
-
-    return(val);
-}
-
-extern void
-win_setint(
-    wimp_w w, wimp_i i,
-    int val)
-{
-    char buffer[16];
-
-    (void) sprintf(buffer, "%d", val);
-
-    win_setfield(w, i, buffer);
-}
-
-/*
-on/off handling
-*/
-
-/*
-* returns TRUE if icon selected
-*/
-
-extern BOOL
-win_getonoff(wimp_w w, wimp_i i)
-{
-    wimp_icon info;
-
-    wimpt_safe(wimp_get_icon_info(w, i, &info));
-
-    return((info.flags & wimp_ISELECTED) == wimp_ISELECTED);
-}
-
-extern void
-win_setonoff(wimp_w w, wimp_i i, BOOL on)
-{
-    wimp_icon info;
-    int       cur_state, req_state;
-
-    wimpt_safe(wimp_get_icon_info(w, i, &info));
-
-    cur_state = (info.flags & wimp_ISELECTED);
-    req_state = (on ? wimp_ISELECTED : 0);
-
-    if(cur_state != req_state)
-        wimpt_complain(wimp_set_icon_state(w, i,
-                                    /* EOR */   (wimp_iconflags) req_state,
-                                    /* BIC */   wimp_ISELECTED));
-}
-
-extern void
-win_setonoffpair(wimp_w w, wimp_i i, BOOL on)
-{
-    win_setonoff(w, i,      on);
-    win_setonoff(w, i + 1, !on);
-}
-
-extern wimp_i
-win_whichonoff(wimp_w w, wimp_i first, wimp_i last, wimp_i dft)
-{
-    wimp_i i;
-    int    ival;
-
-    for(i = last; i >= first; --i)
-    {
-        ival = win_getonoff(w, i);
-
-        if(ival)
-            break;
-
-        if(i == first)
-            return(dft);
-    }
-
-    return(i);
-}
-
-/* suss a pair of radio buttons, first being default too */
-
-extern wimp_i
-win_whichonoffpair(wimp_w w, wimp_i first)
-{
-    return(win_whichonoff(w, first, first + 1, first));
+    wstate.o.behind = (wimp_w) -1;          /* force to the front */
+    wstate.o.box    = * (const wimp_box *) bbox;
+    winx_send_open_window_request(window_handle, immediate, (WimpOpenWindowBlock *) &wstate.o);
 }
 
 /*
@@ -580,24 +148,24 @@ data structure for win-controlled windows - exists as long as window, even if hi
 typedef struct WIN__STR {
   struct WIN__STR *link;
 
-  wimp_w w;
-  win_new_event_handler proc;
+  HOST_WND window_handle;
+  winx_new_event_handler proc;
   void *handle;
   int new_proc;
   void *menuh;
 
-  wimp_w parentw;  /* parent window handle if a child */
+  HOST_WND parent_window_handle;  /* parent window handle if a child */
   struct WIN__CHILD_STR *children; /* windows can have children hanging off them */
 
-  wimp_i menuhi_i; /* icon to which menu is registered */
+  int menuhi_icon_handle; /* icon to which menu is registered */
   void * menuhi;   /* registered icon menu (if any) */
 
   /* extra data follows here */
 } WIN__STR;
 
-#define WIN_OFFSET_MENUH    ((int) offsetof(WIN__STR, menuh)    - (int) sizeof(WIN__STR))
-#define WIN_OFFSET_PARENTW  ((int) offsetof(WIN__STR, parentw)  - (int) sizeof(WIN__STR))
-#define WIN_OFFSET_CHILDREN ((int) offsetof(WIN__STR, children) - (int) sizeof(WIN__STR))
+#define WIN_OFFSET_MENUH    ((int) offsetof(WIN__STR, menuh)                 - (int) sizeof(WIN__STR))
+#define WIN_OFFSET_PARENTW  ((int) offsetof(WIN__STR, parent_window_handle)  - (int) sizeof(WIN__STR))
+#define WIN_OFFSET_CHILDREN ((int) offsetof(WIN__STR, children)              - (int) sizeof(WIN__STR))
 
 static WIN__STR * win__window_list = NULL;
 
@@ -608,16 +176,24 @@ data structure for child windows hanging off a parent window
 typedef struct WIN__CHILD_STR
 {
     struct WIN__CHILD_STR *link;
-    wimp_w w; /* window handle of child */
-    int x, y; /* offsets of child x0,y1 from parent x0,y1 */
+    HOST_WND window_handle; /* window handle of child */
+    int offset_x, offset_y; /* offsets of child x0,y1 from parent x0,y1 */
 }
 WIN__CHILD_STR;
 
-static wimp_w win__drag_w = 0;
+static struct WINX_STATICS
+{
+    HOST_WND drag_window_handle;
 
-static wimp_w win_submenu_w = 0;
+    HOST_WND submenu_window_handle;
+}
+winx_statics;
 
-static BOOL win__register_new(wimp_w w, win_new_event_handler eventproc, void *handle, int new_proc)
+static BOOL winx__register_new(
+    _HwndRef_   HOST_WND window_handle,
+    winx_new_event_handler eventproc,
+    void *handle,
+    int new_proc)
 {
     /* search list to see if it's already there */
     WIN__STR *p = (WIN__STR *) &win__window_list;
@@ -625,7 +201,7 @@ static BOOL win__register_new(wimp_w w, win_new_event_handler eventproc, void *h
 
     while((p = p->link) != NULL)
     {
-        if(p->w == w)
+        if(p->window_handle == window_handle)
         {
             new_thing = FALSE; /* found previous definition */
             break;
@@ -642,7 +218,7 @@ static BOOL win__register_new(wimp_w w, win_new_event_handler eventproc, void *h
             p->link = win__window_list; /* add to head of list */
             win__window_list = p;
 
-            p->w = w;
+            p->window_handle = window_handle;
         }
 
         p->proc     = eventproc;
@@ -653,16 +229,22 @@ static BOOL win__register_new(wimp_w w, win_new_event_handler eventproc, void *h
     return(p != NULL);
 }
 
-static void win__discard(wimp_w w);
+static void win__discard(
+    wimp_w window_handle);
 
-BOOL win_register_new_event_handler(wimp_w w, win_new_event_handler newproc, void *handle)
+extern BOOL
+winx_register_new_event_handler(
+    _HwndRef_   HOST_WND window_handle,
+    winx_new_event_handler newproc,
+    void *handle)
 {
-  if (newproc == 0) {
-    win__discard(w);
-    return(TRUE);
-  } else {
-    return(win__register_new(w, newproc, handle, 1 /* for new binaries */));
-  }
+    if(NULL == newproc)
+    {
+        win__discard(window_handle);
+        return(TRUE);
+    }
+
+    return(winx__register_new(window_handle, newproc, handle, 1 /* for new binaries */));
 }
 
 #define win__str WIN__STR
@@ -670,53 +252,59 @@ BOOL win_register_new_event_handler(wimp_w w, win_new_event_handler newproc, voi
 #include "win.c"
 
 extern os_error *
-win_drag_box(wimp_dragstr * dr)
+winx_drag_box(wimp_dragstr * dr)
 {
     WIN__STR *p = win__find(dr->window);
 
     /* MUST be valid, unlike what PRM doc says, due to changed event handling here */
-    myassert1x(p != NULL, "win_drag_box for unregistered window &%p", dr->window);
+    myassert1x(p != NULL, "winx_drag_box for unregistered window &%p", (void *) dr->window);
     if(p)
-        win__drag_w = dr->window;
+        winx_statics.drag_window_handle = dr->window;
 
     return(wimp_drag_box(dr));
 }
 
-extern void
-win_setmenuhi(wimp_w w, wimp_i i, void *handle)
+_Check_return_
+extern void *
+winx_menu_get_handle(
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle)
 {
-    WIN__STR *p;
+    WIN__STR *p_winx_window;
 
-    if(i == (wimp_i) -1)
+    if(icon_handle == -1 /*WORKAREA*/)
+        return(win_getmenuh(window_handle));
+
+    p_winx_window = win__find(window_handle);
+
+    if(NULL != p_winx_window)
+        if(p_winx_window->menuhi_icon_handle == icon_handle)
+            return(p_winx_window->menuhi);
+
+    return(NULL);
+}
+
+extern void
+winx_menu_set_handle(
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    void * handle)
+{
+    WIN__STR *p_winx_window;
+
+    if(icon_handle == -1 /*WORKAREA*/)
     {
-        win_setmenuh(w, handle);
+        win_setmenuh(window_handle, handle);
         return;
     }
 
-    p = win__find(w);
+    p_winx_window = win__find(window_handle);
 
-    if(p)
+    if(NULL != p_winx_window)
     {
-        p->menuhi_i = i;
-        p->menuhi   = handle;
+        p_winx_window->menuhi_icon_handle = icon_handle;
+        p_winx_window->menuhi = handle;
     }
-}
-
-extern void *
-win_getmenuhi(wimp_w w, wimp_i i) /* 0 if not set */
-{
-    WIN__STR *p;
-
-    if(i == (wimp_i) -1)
-        return(win_getmenuh(w));
-
-    p = win__find(w);
-
-    if(p)
-        if(p->menuhi_i == i)
-            return(p->menuhi);
-
-    return(NULL);
 }
 
 /**********************************************************
@@ -726,29 +314,29 @@ win_getmenuhi(wimp_w w, wimp_i i) /* 0 if not set */
 **********************************************************/
 
 extern BOOL
-win_register_child(wimp_w parentw, wimp_w w)
+winx_register_child(
+    _HwndRef_   HOST_WND parent_window_handle,
+    _HwndRef_   HOST_WND window_handle)
 {
-    WIN__STR *parp = win__find(parentw);
-    WIN__STR *chip = win__find(w);
+    WIN__STR *parp = win__find(parent_window_handle);
+    WIN__STR *chip = win__find(window_handle);
     WIN__CHILD_STR *c;
-    wimp_wstate     wstate;
-    int             parx, pary;
 
-    tracef2("[win_register_child(child %p to parent %p): ", parentw, w);
+    tracef2("[winx_register_child(child &%p to parent &%p): ", (void *) parent_window_handle, (void *) window_handle);
 
     /* one or other window not created via this module? */
     if(!parp || !chip)
         return(FALSE);
 
     /* already a child of someone else? */
-    if((chip->parentw != NULL_WIMP_W)  &&  (chip->parentw != parentw))
+    if((chip->parent_window_handle != HOST_WND_NONE)  &&  (chip->parent_window_handle != parent_window_handle))
         return(FALSE);
 
     /* search parent's child list to see if it's already there */
     c = (WIN__CHILD_STR *) &parp->children;
 
     while((c = c->link) != NULL)
-        if(c->w == w)
+        if(c->window_handle == window_handle)
             /* already registered with this window as parent */
             break;
 
@@ -763,22 +351,28 @@ win_register_child(wimp_w parentw, wimp_w w)
             c->link = parp->children; /* add to head of list */
             parp->children = c;
 
-            c->w = w;
+            c->window_handle = window_handle;
 
-            chip->parentw = parentw;
+            chip->parent_window_handle = parent_window_handle;
         }
     }
 
     if(c)
-    {
-        /* note current parent<->child offset */
-        wimpt_safe(wimp_get_wind_state(parentw, &wstate));
-        parx = wstate.o.box.x0;
-        pary = wstate.o.box.y1;
-        wimpt_safe(wimp_get_wind_state(w,       &wstate));
-        c->x = wstate.o.box.x0 - parx; /* add on to parent pos to recover child pos */
-        c->y = wstate.o.box.y1 - pary;
-        tracef2("at offset %d,%d from parent]", c->x, c->y);
+    {   /* note current parent<->child offset */
+        wimp_wstate wstate;
+
+        if(!wimpt_complain(wimp_get_wind_state(parent_window_handle, &wstate)))
+        {
+            int parx = wstate.o.box.x0;
+            int pary = wstate.o.box.y1;
+
+            if(!wimpt_complain(wimp_get_wind_state(window_handle, &wstate)))
+            {
+                c->offset_x = wstate.o.box.x0 - parx; /* add on to parent pos to recover child pos */
+                c->offset_y = wstate.o.box.y1 - pary;
+                tracef2("at offset %d,%d from parent]", c->offset_x, c->offset_y);
+            }
+        }
     }
     else
         tracef0("failed to register child]");
@@ -793,35 +387,36 @@ win_register_child(wimp_w parentw, wimp_w w)
 ***************************************************/
 
 extern BOOL
-win_deregister_child(wimp_w w)
+winx_deregister_child(
+    _HwndRef_   HOST_WND window_handle)
 {
     WIN__STR *parp;
-    WIN__STR *chip = win__find(w);
+    WIN__STR *chip = win__find(window_handle);
     WIN__CHILD_STR *pp;
     WIN__CHILD_STR *cp;
 
-    tracef1("win_deregister_child(child %p): ", w);
+    tracef1("winx_deregister_child(child &%p): ", (void *) window_handle);
 
     if(!chip)
         return(FALSE);
 
     /* not a child? */
-    if(chip->parentw == NULL_WIMP_W)
+    if(chip->parent_window_handle == HOST_WND_NONE)
         return(FALSE);
 
-    parp = win__find(chip->parentw);
+    parp = win__find(chip->parent_window_handle);
     if(!parp)
         return(FALSE);
 
     /* remove parent window ref from child window structure */
-    chip->parentw = NULL_WIMP_W;
+    chip->parent_window_handle = HOST_WND_NONE;
 
     /* remove child window from parent's list */
     pp = (WIN__CHILD_STR *) &parp->children;
 
     while((cp = pp->link) != NULL)
     {
-        if(cp->w == w)
+        if(cp->window_handle == window_handle)
         {
             tracef1("removing win__child_str &%p", cp);
             pp->link = cp->link;
@@ -838,18 +433,22 @@ win_deregister_child(wimp_w w)
 }
 
 /*
-use win_create_wind rather than wimp_create_wind to get enhanced window handling
+use winx_create_wind rather than wimp_create_wind to get enhanced window handling
 */
 
 extern os_error *
-win_create_wind(wimp_wind * wwp, wimp_w * wp, win_new_event_handler proc, void * handle)
+winx_create_window(
+    WimpWindowWithBitset * const p_window_template,
+    _Out_       HOST_WND * const p_window_handle,
+    winx_new_event_handler proc,
+    void * handle)
 {
     os_error * e;
 
-    e = wimp_create_wind(wwp, wp);
+    e = wimp_create_wind((wimp_wind *) p_window_template, (wimp_w *) p_window_handle);
 
     if(!e)
-        if(!win__register_new(*wp, proc, handle, 1))
+        if(!winx__register_new(*p_window_handle, proc, handle, 1))
             e = os_set_error(0, msgs_lookup("winT1" /* "Not enough memory to create window" */));
 
     return(e);
@@ -862,21 +461,22 @@ win_create_wind(wimp_wind * wwp, wimp_w * wp, win_new_event_handler proc, void *
 ************************************************************/
 
 extern os_error *
-win_close_wind(wimp_w w)
+winx_close_window(
+    _HwndRef_   HOST_WND window_handle)
 {
     os_error * e = NULL;
     os_error * e1;
-    WIN__STR *p = win__find(w);
+    WIN__STR *p = win__find(window_handle);
     WIN__CHILD_STR *c;
 
     if(!p)
         return(NULL);
 
-    if(win_submenu_query_is_submenu(w))
+    if(winx_submenu_query_is_submenu(window_handle))
     {
         tracef0("closing submenu window ");
 
-        if(!win_submenu_query_closed())
+        if(!winx_submenu_query_closed())
         {
             tracef0("- explicit closure of open window");
             /* window being closed without the menu tree knowing about it */
@@ -886,24 +486,24 @@ win_close_wind(wimp_w w)
         else
             tracef0("- already been closed by Wimp");
 
-        win_submenu_w = 0;
+        winx_statics.submenu_window_handle = 0;
     }
 
     /* is this window a child? */
-    if(p->parentw)
+    if(p->parent_window_handle)
         /* remove from parent's list */
-        win_deregister_child(w);
+        winx_deregister_child(window_handle);
 
     /* loop closing child windows */
     c = (WIN__CHILD_STR *) &p->children;
     while((c = c->link) != NULL)
     {
-        e1 = win_close_wind(c->w);
+        e1 = winx_close_window(c->window_handle);
         e  = e ? e : e1;
     }
 
-    /* close window to window manager */
-    e1 = wimp_close_wind(w);
+    /* close window to Window Manager */
+    e1 = wimp_close_wind(window_handle);
 
     return(e ? e : e1);
 }
@@ -915,44 +515,45 @@ win_close_wind(wimp_w w)
 ************************************************************/
 
 extern os_error *
-win_delete_wind(wimp_w * wp)
+winx_delete_window(
+    _Inout_     HOST_WND * const p_window_handle)
 {
     os_error * e;
     os_error * e1;
     WIN__STR *p;
-    wimp_w w = *wp;
+    HOST_WND window_handle = *p_window_handle;
 
-    if(!w)
+    if(0 == window_handle)
         return(NULL);
 
-    *wp = 0;
+    *p_window_handle = 0;
 
     /* close internally (closes all children too) */
-    e = win_close_wind(w);
+    e = winx_close_window(window_handle);
 
     /* delete children */
-    p = win__find(w);
+    p = win__find(window_handle);
 
     if(p)
     {
         /* is this window a child? */
-        if(p->parentw)
+        if(p->parent_window_handle)
             /* remove from parent's list */
-            win_deregister_child(w);
+            winx_deregister_child(window_handle);
 
         /* loop deleting child windows, restarting each time */
         while(p->children)
         {
-            e1 = win_delete_wind(&p->children->w);
+            e1 = winx_delete_window(&p->children->window_handle);
             e  = e ? e : e1;
-            p = win__find(w);
+            p = win__find(window_handle);
         }
     }
 
-    win__discard(w);
+    win__discard(window_handle);
 
-    /* delete window to window manager */
-    e1 = wimp_delete_wind(w);
+    /* delete window to Window Manager */
+    e1 = wimp_delete_wind(window_handle);
 
     return(e ? e : e1);
 }
@@ -998,57 +599,66 @@ win_delete_wind(wimp_w * wp)
 * note that the entire child 2 stack is between the parent and child 1
 * and that this applies recursively e.g. to child1.1 and child1.2 stacks
 *
-* recursive generation of win_open_wind() via wimp_EOPEN of each child
-* window is the key to this happening, either by the child window doing
-* the win_open_wind itself or by allowing the default event handler to
-* do it for it. note that the child windows get events to allow them to
+* recursive generation of winx_open_window() via Wimp_EOpenWindow of each
+* child window is the key to this happening, either by the child window
+* doing the winx_open_window() itself or by allowing the default event handler
+* to do it for it. note that the child windows get events to allow them to
 * set extents etc. at a suitable place rather than this routine simply
 * calling itself directly.
 *
 */
 
 extern os_error *
-win_open_wind(wimp_openstr * o)
+winx_open_window(WimpOpenWindowBlock * const p_open_window_block)
 {
-    wimp_w           w = o->w;
+    wimp_openstr * const o = (wimp_openstr *) p_open_window_block;
+    const HOST_WND   window_handle = p_open_window_block->window_handle;
     os_error * e;
     os_error * e1 = NULL;
-    WIN__STR *       p = win__find(w);
+    WIN__STR *       p = win__find(window_handle);
     WIN__CHILD_STR * c;
     wimp_openstr     childo;
     wimp_wstate      wstate;
-    wimp_w           behind = o->behind;
+    HOST_WND         behind = p_open_window_block->behind;
 
-    tracef6("[win_open_wind(&%p at %d,%d;%d,%d behind &%p]",
-            w, o->box.x0, o->box.y0, o->box.x1, o->box.y1, o->behind);
+    tracef6("[winx_open_window(&%p at %d,%d;%d,%d behind &%p]",
+        (void *) window_handle, o->box.x0, o->box.y0, o->box.x1, o->box.y1, o->behind);
 
     if(p)
     {
-        if(behind != (wimp_w) -2)
+        if(behind != (HOST_WND) -2)
         {
             /* not sending to back: bring stack forwards first to minimize redraws */
 
             /* on mode change, Neil tells us to open windows behind themselves! */
-            if((behind == w)  &&  p->children)
+            if((behind == window_handle)  &&  p->children)
             {
                 /* see which window the pane stack is really behind */
-                wimpt_safe(wimp_get_wind_state(p->children->w, &wstate));
-                tracef2("[window &%p pane stack is behind window &%p]", w, wstate.o.behind);
-                behind = wstate.o.behind;
+                e1 = wimp_get_wind_state(p->children->window_handle, &wstate);
+
+                if(NULL == e1)
+                {
+                    tracef2("[window &%p pane stack is behind window &%p]", (void *) window_handle, (void *) wstate.o.behind);
+                    behind = wstate.o.behind;
+                }
             }
 
             /* loop trying to open child windows at new positions */
             c = (WIN__CHILD_STR *) &p->children;
             while((c = c->link) != NULL)
             {
-                childo.w      = c->w;
-                childo.box.x0 = o->box.x0 + c->x;
-                childo.box.y0 = o->box.y0 + c->y;
-                childo.box.x1 = o->box.x1 + c->x;
-                childo.box.y1 = o->box.y1 + c->y;
+                os_error * e2;
+
+                childo.w      = c->window_handle;
+                childo.box.x0 = o->box.x0 + c->offset_x;
+                childo.box.y0 = o->box.y0 + c->offset_y;
+                childo.box.x1 = o->box.x1 + c->offset_x;
+                childo.box.y1 = o->box.y1 + c->offset_y;
                 childo.behind = behind;
-                e1 = win_open_wind(&childo);
-                behind = c->w; /* open next pane behind this one */
+                e2 = winx_open_window((WimpOpenWindowBlock *) &childo);
+                behind = c->window_handle; /* open next pane behind this one */
+
+                e1 = e1 ? e1 : e2;
             }
 
             /* always open parent window behind last pane window */
@@ -1067,17 +677,20 @@ win_open_wind(wimp_openstr * o)
         c = (WIN__CHILD_STR *) &p->children;
         while((c = c->link) != NULL)
         {
-            wimpt_safe(wimp_get_wind_state(c->w, &wstate));
+            os_error * e2 = wimp_get_wind_state(c->window_handle, &wstate);
 
-            /* just translate to correct place, don't shuffle stack */
-            wstate.o.box.x0 = o->box.x0 + c->x;
-            wstate.o.box.y0 = o->box.y0 + c->y;
-            wstate.o.box.x1 = o->box.x1 + c->x;
-            wstate.o.box.y1 = o->box.y1 + c->y;
+            if(NULL == e2)
+            {
+                /* just translate to correct place, don't shuffle stack */
+                wstate.o.box.x0 = o->box.x0 + c->offset_x;
+                wstate.o.box.y0 = o->box.y0 + c->offset_y;
+                wstate.o.box.x1 = o->box.x1 + c->offset_x;
+                wstate.o.box.y1 = o->box.y1 + c->offset_y;
 
-            e1 = win_open_wind(&wstate.o);
+                e2 = winx_open_window((WimpOpenWindowBlock *) &wstate.o);
+            }
 
-            e = e ? e : e1;
+            e = e ? e : e2;
         }
     }
 
@@ -1091,67 +704,74 @@ win_open_wind(wimp_openstr * o)
 ***********************************************************/
 
 extern os_error *
-win_create_submenu(wimp_w w, int x, int y)
+winx_create_submenu(
+    _HwndRef_   HOST_WND window_handle,
+    int x,
+    int y)
 {
     os_error * err;
 
     /* do we have a different menu tree window up already? if so, close it */
-    if((win_submenu_w != 0)  &&  (win_submenu_w != w))
-        win_send_close(win_submenu_w);
+    if((winx_statics.submenu_window_handle != 0)  &&  (winx_statics.submenu_window_handle != window_handle))
+        winx_send_close_window_request(winx_statics.submenu_window_handle);
 
-    err = event_create_submenu((wimp_menustr *) w, x, y);
+    err = event_create_submenu((wimp_menustr *) window_handle, x, y);
 
     if(!err)
-        win_submenu_w = w; /* there can be only one */
+        winx_statics.submenu_window_handle = window_handle; /* there can be only one */
     else
-        win_submenu_w = 0;
+        winx_statics.submenu_window_handle = 0;
 
     return(err);
 }
 
-/* only needed 'cos Wimp is too stupid to realise that submenu creation
+/* only needed 'cos Window Manager is too stupid to realise that submenu creation
  * without a parent menu should be valid
 */
 
 extern os_error *
-win_create_menu(wimp_w w, int x, int y)
+winx_create_menu(
+    _HwndRef_   HOST_WND window_handle,
+    int x,
+    int y)
 {
     os_error * err;
 
     /* do we have a different menu tree window up already? if so, close it */
-    if((win_submenu_w != 0)  &&  (win_submenu_w != w))
-        win_send_close(win_submenu_w);
+    if((winx_statics.submenu_window_handle != 0)  &&  (winx_statics.submenu_window_handle != window_handle))
+        winx_send_close_window_request(winx_statics.submenu_window_handle);
 
-    err = event_create_menu((wimp_menustr *) w, x, y);
+    err = event_create_menu((wimp_menustr *) window_handle, x, y);
 
     if(!err)
-        win_submenu_w = w; /* there can be only one */
+        winx_statics.submenu_window_handle = window_handle; /* there can be only one */
     else
-        win_submenu_w = 0;
+        winx_statics.submenu_window_handle = 0;
 
     return(err);
 }
 
 extern BOOL
-win_submenu_query_is_submenu(wimp_w w)
+winx_submenu_query_is_submenu(
+    _HwndRef_   HOST_WND window_handle)
 {
-    if(w != 0)
-        return(w == win_submenu_w);
+    if(winx_statics.submenu_window_handle != 0)
+        return(window_handle == winx_statics.submenu_window_handle);
 
-    return(0);
+    return(FALSE);
 }
 
 extern BOOL
-win_submenu_query_closed(void)
+winx_submenu_query_closed(void)
 {
     wimp_wstate ws;
 
-    if(win_submenu_w != 0)
-        if(!wimpt_complain(wimp_get_wind_state(win_submenu_w, &ws)))
-            return((ws.flags & wimp_WOPEN) == 0);
+    if(winx_statics.submenu_window_handle != 0)
+        if(!wimpt_complain(wimp_get_wind_state(winx_statics.submenu_window_handle, &ws)))
+            return(0 == (ws.flags & wimp_WOPEN));
 
     /* there is none, you fool */
-    return(1);
+    return(TRUE);
 }
 
 /* end of cs-winx.c */

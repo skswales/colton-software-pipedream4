@@ -22,7 +22,7 @@ extern void
 colh_draw_column_headings(void);
 
 extern void
-colh_draw_contents_of_numslot(void);
+colh_draw_contents_of_number_cell(void);
 
 extern void
 colh_draw_drag_state(
@@ -36,11 +36,11 @@ colh_draw_mark_state_indicator(
     BOOL sheet_marked);
 
 extern void
-colh_draw_slot_count(
+colh_draw_cell_count(
     _In_opt_z_      char *text);
 
 extern void
-colh_draw_slot_count_in_document(
+colh_draw_cell_count_in_document(
     _In_opt_z_      char *text);
 
 extern BOOL
@@ -60,26 +60,26 @@ colh_colour_icons(void);    /*>>>rename as colh_recolour_icons*/
 
 extern void
 redefine_icon(
-    wimp_w window,
-    wimp_i icon,
-    wimp_icreate *create);
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    WimpCreateIconBlock * const create);
 
 extern void
 set_icon_text(
-    wimp_w window,
-    wimp_i icon,
-    char *text); /*>>>should really live elsewhere!*/
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    _In_z_      const char * text); /*>>>should really live elsewhere!*/
 
-/* Icons in the colh_window */
+/* Icons in the colh window */
 
 #define COLH_BUTTON_OK          (0)
 #define COLH_BUTTON_CANCEL      (1)
 #define COLH_CONTENTS_LINE      (2)
 #define COLH_FUNCTION_SELECTOR  (3)
-#define COLH_PIPEDREAM_LOGO     (4) /* faked for colh_dbox_o */
+/*#define COLH_PIPEDREAM_LOGO     (4) no longer needed */
 
 #define COLH_STATUS_BORDER      (5)
-#define COLH_STATUS_BAR         (6)
+/*#define COLH_STATUS_BAR         (6) no longer needed */
 #define COLH_STATUS_TEXT        (7)
 #define COLH_COLUMN_HEADINGS    (8)
 
@@ -104,20 +104,21 @@ set_icon_text(
 #define COLH_BUTTON_SUBSCRIPT   (24)
 #define COLH_BUTTON_SUPERSCRIPT (25)
 
-#define COLH_BUTTON_COPY        (26)
-#define COLH_BUTTON_DELETE      (27)
-#define COLH_BUTTON_PASTE       (28)
-#define COLH_BUTTON_FORMATBLOCK (29)
+#define COLH_BUTTON_LEADTRAIL   (26)
+#define COLH_BUTTON_DECPLACES   (27)
 
-#define COLH_BUTTON_SEARCH      (30)
-#define COLH_BUTTON_SORT        (31)
-#define COLH_BUTTON_SPELLCHECK  (32)
+#define COLH_BUTTON_MARK        (28)
+#define COLH_BUTTON_COPY        (29)
+#define COLH_BUTTON_DELETE      (30)
+#define COLH_BUTTON_PASTE       (31)
+#define COLH_BUTTON_FORMATBLOCK (32)
 
-#define COLH_BUTTON_CMD_RECORD  (33)
-#define COLH_BUTTON_CMD_EXEC    (34)
+#define COLH_BUTTON_SEARCH      (33)
+#define COLH_BUTTON_SORT        (34)
+#define COLH_BUTTON_SPELLCHECK  (35)
 
-#define COLH_BUTTON_LEADTRAIL   (35)
-#define COLH_BUTTON_DECPLACES   (36)
+#define COLH_BUTTON_CMD_RECORD  (36)
+#define COLH_BUTTON_CMD_EXEC    (37)
 
 /* Pointer shape change stuff */
 
@@ -132,15 +133,15 @@ pointer_shape;
 
 extern void
 colh_where_in_column_headings(
-    wimp_mousestr *pointer,
+    const WimpMouseClickEvent * const mouse_click,
     pointer_shape **shapep,
     int *subpositionp,
     P_COL p_col,
     coord *txp);
 
 extern void
-setpointershape(
-    pointer_shape *shape);
+riscos_setpointershape(
+    pointer_shape * shape);
 
 #define OVER_COLUMN_DEAD_SPACE          23
 #define OVER_COLUMN_CENTRE              24
@@ -167,13 +168,19 @@ formline_claim_focus(void);
 
 typedef struct FORMULA_WINDOW
 {
-    struct MLEC_STRUCT * mlec;      /* was editexpression_mlec     */
-    HOST_WND     mainwindow;        /* editexpression_mainwindow   */
-    HOST_WND     panewindow;        /* editexpression_panewindow   */
-    void        *maintemplate;      /* editexpression_maintemplate */
-    void        *panetemplate;      /* editexpression_panetemplate */
+    struct MLEC_STRUCT * mlec;
 
-    GDI_BOX      margin;            /* panewindow open dimemsions relative to those of mainwindow */
+    HOST_WND     fw_main_window_handle;
+    HOST_WND     fw_pane_window_handle;
+
+    void        *fw_main_template;
+    void        *fw_pane_template;
+
+    /* pane window opened relative to main window by these offsets */
+    GDI_COORD    offset_left;
+    GDI_COORD    offset_bottom;
+    GDI_COORD    offset_right;
+    GDI_COORD    offset_top;
 
     DOCNO        docno;
     BOOL         tracking;
@@ -187,16 +194,16 @@ extern void
 EditFormulaInWindow_fn(void);
 
 extern void
-expedit_editcurrentslot(
+expedit_edit_current_cell(
     S32 caretpos,
     BOOL force_inbox);
 
 extern void
-expedit_editcurrentslot_freshcontents(
+expedit_edit_current_cell_freshcontents(
     BOOL force_inbox);
 
 extern void
-expedit_recompilecurrentslot_reporterrors(void);
+expedit_recompile_current_cell_reporterrors(void);
 
 extern void
 expedit_transfer_line_to_box(
@@ -236,7 +243,7 @@ expedit_close_file(
     _InVal_     DOCNO docno);
 
 extern void
-formline_canceledit(void);
+formline_cancel_edit(void);
 
 extern BOOL
 formline_mergebacktext(

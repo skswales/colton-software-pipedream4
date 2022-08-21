@@ -236,7 +236,7 @@ pdchart_add(
     }
 
 #if 1
-    /* SKS after 4.12 25mar92 - now sussing seems good, allow additions to use deduced series labelling */
+    /* SKS after PD 4.12 25mar92 - now sussing seems good, allow additions to use deduced series labelling */
     chart_shapedesc.bits.label_first_item = p_chart_shapedesc->bits.label_first_item;
 #else
     {
@@ -922,7 +922,7 @@ pdchart_init_shape_suss_holes(
         /* if there's a cell, mark the col & row it's in */
         const COL col = traverse_block_cur_col(&traverse_blk);
         const ROW row = traverse_block_cur_row(&traverse_blk);
-        const S32 number_slot = (sl->type == SL_NUMBER);
+        const S32 is_number_cell = (sl->type == SL_NUMBER);
         P_NLISTS_BLK nlbrp;
         LIST_ITEMNO key;
         P_U8 entryp;
@@ -943,10 +943,10 @@ pdchart_init_shape_suss_holes(
         {
             if(NULL == (entryp = collect_add_entry_elem(U8, nlbrp, &key, &status)))
                 break;
-            *entryp = number_slot;
+            *entryp = is_number_cell;
         }
         else if(!*entryp)
-            *entryp = number_slot; /* numbers in cells force their way in */
+            *entryp = is_number_cell; /* numbers in cells force their way in */
 
         /* this row is not blank */
         nlbrp = &p_chart_shapedesc->nz_rows;
@@ -956,10 +956,10 @@ pdchart_init_shape_suss_holes(
         {
             if(NULL == (entryp = collect_add_entry_elem(U8, nlbrp, &key, &status)))
                 break;
-            *entryp = number_slot;
+            *entryp = is_number_cell;
         }
         else if(!*entryp)
-            *entryp = number_slot;
+            *entryp = is_number_cell;
     }
 
     p_chart_shapedesc->bits.something = 1;
@@ -1023,7 +1023,7 @@ pdchart_init_shape_from_marked_block(
     ++end_bl.col; /* convert end from incl to excl */
     ++end_bl.row;
 
-    /* SKS after 4.12 24mar92 - made forced recalc so that yet-to-be-recalced numbers appear as numbers not text */
+    /* SKS after PD 4.12 24mar92 - made forced recalc so that yet-to-be-recalced numbers appear as numbers not text */
     ev_recalc_all();
 
     #if TRACE_ALLOWED
@@ -1034,7 +1034,7 @@ pdchart_init_shape_from_marked_block(
     p_chart_shapedesc->bits.range_over_manual  = (d_chart_options[0].option != 'A');
     p_chart_shapedesc->bits.range_over_columns = (d_chart_options[0].option == 'C');
 
-    /* SKS after 4.12 24mar92 - merged from_marked_block and from_range as one was only ever called as the tail of t'other */
+    /* SKS after PD 4.12 24mar92 - merged from_marked_block and from_range as one was only ever called as the tail of t'other */
 
     p_chart_shapedesc->stt.col = start_bl.col;
     p_chart_shapedesc->stt.row = start_bl.row;
@@ -1173,7 +1173,7 @@ pdchart_init_shape_from_marked_block(
     }
     } /*block*/
 
-    /* SKS after 4.12 24mar92 -  more care needed with top left corner for predictability */
+    /* SKS after PD 4.12 24mar92 -  more care needed with top left corner for predictability */
     if(p_chart_shapedesc->bits.label_top_left)
     {
         if(p_chart_shapedesc->bits.range_over_manual && !p_chart_shapedesc->bits.range_over_columns)
@@ -1216,7 +1216,7 @@ pdchart_init_shape_from_marked_block(
 
     if(!p_chart_shapedesc->bits.range_over_manual)
     {
-        /* SKS after 4.12 24mar92 - change test to be more careful and predictable */
+        /* SKS after PD 4.12 24mar92 - change test to be more careful and predictable */
         S32 datacols = p_chart_shapedesc->nz_n.col;
         S32 datarows = p_chart_shapedesc->nz_n.row;
         if(p_chart_shapedesc->bits.label_left_col)
@@ -1284,14 +1284,14 @@ pdchart_init_shape_from_marked_block(
             collect_subtract_entry(p_p_list_block, key);
     }
 
-    /* SKS after 4.12 24mar92 - see whether there is any data left after that! */
+    /* SKS after PD 4.12 24mar92 - see whether there is any data left after that! */
     if(p_chart_shapedesc->n_ranges == 0)
         return(create_error(ERR_CHARTNONUMERICDATA));
 
     if((p_chart_shapedesc->n_ranges == 1) && p_chart_shapedesc->bits.label_first_range)
     {
         /* go interactive */
-        switch(riscdialog_query_YN("There is no numeric data in the marked block. Do you want to continue?"))
+        switch(riscdialog_query_YN("There is no numeric data in the marked block.", "Do you want to continue?"))
         {
         case riscdialog_query_YES:
             /* punter has given us the go-ahead */
@@ -1311,15 +1311,17 @@ pdchart_init_shape_from_marked_block(
     /* if no category labels found and the chart would prefer to
      * have them then ask the punter whether he knows better
 
-     * SKS after 4.12 24mar92 - rather different to what has gone before...
+     * SKS after PD 4.12 24mar92 - rather different to what has gone before...
     */
     if(0 && !p_chart_shapedesc->bits.label_first_range)
     {
         /* if adding to a chart see if already added else ask preferred chart whether it wants them */
         S32 wants_labels = 0;
 
-        if(!pdchart)
+        if(NULL == pdchart)
+        {
             wants_labels = gr_chart_query_labelling(NULL);
+        }
         else
         {
             if(gr_chart_query_labelling(&pdchart->ch))
@@ -1329,14 +1331,14 @@ pdchart_init_shape_from_marked_block(
         if(wants_labels)
         {
             /* go interactive */
-            char buffer[128];
+            char statement_buffer[128];
 
-            (void) xsnprintf(buffer, elemof32(buffer),
-                    "Use %snumeric %s as category labels?",
-                    (p_chart_shapedesc->n_ranges > 1)            ? "first " : "",
-                    (p_chart_shapedesc->bits.range_over_columns) ? "column" : "row");
+            consume_int(xsnprintf(statement_buffer, elemof32(statement_buffer),
+                                  "Use %snumeric %s as category labels?",
+                                  (p_chart_shapedesc->n_ranges > 1)            ? "first " : "",
+                                  (p_chart_shapedesc->bits.range_over_columns) ? "column" : "row"));
 
-            switch(riscdialog_query_YN(buffer))
+            switch(riscdialog_query_YN(statement_buffer, " ")) /* NB the question cannot be NULL */
             {
             case riscdialog_query_YES:
                 p_chart_shapedesc->bits.label_first_range = 1;
@@ -1522,7 +1524,7 @@ null_event_proto(static, pdchart_null_handler)
     switch(p_null_event_block->rc)
     {
     case NULL_QUERY:
-        /* SKS after 4.11 13jan92 - added auto/manual update */
+        /* SKS after PD 4.11 13jan92 - added auto/manual update */
         if(d_progvars[OR_AC].option != 'A')
             return(NULL_EVENTS_OFF);
 
@@ -1531,7 +1533,7 @@ null_event_proto(static, pdchart_null_handler)
                        : NULL_EVENTS_REQUIRED);
 
     case NULL_EVENT:
-        /* SKS after 4.11 13jan92 - added auto/manual update */
+        /* SKS after PD 4.11 13jan92 - added auto/manual update */
         if(d_progvars[OR_AC].option != 'A')
             return(NULL_EVENT_COMPLETED);
 
@@ -1678,7 +1680,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
     ROW row;
     P_EV_RESULT p_ev_result;
 
-    IGNOREPARM(ch);
+    UNREFERENCED_PARAMETER(ch);
 
     /* initial guess is nothing */
     if(val)
@@ -1875,7 +1877,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
         {
         char buffer[LIN_BUFSIZ];
 
-        expand_slot_for_chart_export(docno, sl, buffer, LIN_BUFSIZ, row);
+        expand_cell_for_chart_export(docno, sl, buffer, LIN_BUFSIZ, row);
 
         val->type = GR_CHART_VALUE_TEXT;
         xstrkpy(val->data.text, elemof32(val->data.text), buffer);
@@ -1894,8 +1896,8 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
     ROW row;
     P_EV_RESULT p_ev_result;
 
-    IGNOREPARM(ch);
-    IGNOREPARM(item);
+    UNREFERENCED_PARAMETER(ch);
+    UNREFERENCED_PARAMETER(item);
 
     if(!val)
     {
@@ -1942,7 +1944,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
         /* force to text form ALWAYS */
         char buffer[LIN_BUFSIZ];
 
-        expand_slot_for_chart_export(docno, sl, buffer, LIN_BUFSIZ, row);
+        expand_cell_for_chart_export(docno, sl, buffer, LIN_BUFSIZ, row);
 
         val->type = GR_CHART_VALUE_TEXT;
         xstrkpy(val->data.text, elemof32(val->data.text), buffer);
@@ -2035,8 +2037,8 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
     S32                   end_col, end_row;
     S32                   modify = 0;
 
-    IGNOREPARM(inthandle);
-    IGNOREPARM_InRef_(at_rng);
+    UNREFERENCED_PARAMETER(inthandle);
+    UNREFERENCED_PARAMETER_InRef_(at_rng);
 
     switch(upp->action)
     {
@@ -2075,7 +2077,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
 
     switch(upp->action)
     {
-    /* SKS after 4.12 26mar92 - added new rename document case */
+    /* SKS after PD 4.12 26mar92 - added new rename document case */
     case UREF_RENAME:
         pdchart_damage_chart_for_dep(pdchart, itdep);
         break;
@@ -2087,7 +2089,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
 
         pdchart_uref_changedoc(pdchart, itdep);
 
-        /* SKS after 4.12 26mar92 - this is needed for document unresolved/multiple -> resolved */
+        /* SKS after PD 4.12 26mar92 - this is needed for document unresolved/multiple -> resolved */
         modify = 1;
         break;
 
@@ -2130,7 +2132,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
 #if 0
         /* possibility of killing chart too */
 
-        /* SKS after 4.11 13jan92 - leave an empty chart. user must kill it */
+        /* SKS after PD 4.11 13jan92 - leave an empty chart. user must kill it */
         if(!pdchart->elem.n)
             pdchart_dispose(&pdchart);
 #endif
@@ -2283,7 +2285,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
                 upp->slr2.docno, upp->slr2.col, upp->slr2.row,
                                  upp->slr3.col, upp->slr3.row);
 
-        /* SKS after 4.12 26mar92 - consider moving a block from one doc to another */
+        /* SKS after PD 4.12 26mar92 - consider moving a block from one doc to another */
         if(itdep->rng.s.docno != upp->slr3.docno)
         {
             itdep->rng.s.docno = upp->slr3.docno;
@@ -2699,8 +2701,8 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
     P_PDCHART_ELEMENT     i_pdchartelem, pdchartelem;
     S32                   modify = 0;
 
-    IGNOREPARM(inthandle);
-    IGNOREPARM_InRef_(at_rng);
+    UNREFERENCED_PARAMETER(inthandle);
+    UNREFERENCED_PARAMETER_InRef_(at_rng);
 
     switch(upp->action)
     {
@@ -2739,7 +2741,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
 
     switch(upp->action)
     {
-    /* SKS after 4.12 26mar92 - added new rename document case */
+    /* SKS after PD 4.12 26mar92 - added new rename document case */
     case UREF_RENAME:
         pdchart_damage_chart_for_dep(pdchart, itdep);
         break;
@@ -2751,7 +2753,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
 
         pdchart_uref_changedoc(pdchart, itdep);
 
-        /* SKS after 4.12 26mar92 - this is needed for document unresolved/multiple -> resolved */
+        /* SKS after PD 4.12 26mar92 - this is needed for document unresolved/multiple -> resolved */
         modify = 1;
         break;
 
@@ -2847,7 +2849,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
                 upp->slr2.docno, upp->slr2.col, upp->slr2.row,
                                  upp->slr3.col, upp->slr3.row);
 
-        /* SKS after 4.12 26mar92 - consider moving a block from one doc to another */
+        /* SKS after PD 4.12 26mar92 - consider moving a block from one doc to another */
         if(itdep->rng.s.docno != upp->slr3.docno)
         {
             itdep->rng.s.docno = upp->slr3.docno;
@@ -2911,7 +2913,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
         break;
     }
 
-    /* SKS after 4.12 26mar92 - best done here I feel */
+    /* SKS after PD 4.12 26mar92 - best done here I feel */
     if(modify)
         status_assert(pdchart_modify(pdchart));
 }
@@ -2990,13 +2992,13 @@ ChartAdd_fn(void)
     PDCHART_SHAPEDESC chart_shapedesc;
     STATUS res;
 
-    /* SKS after 4.12 26mar92 */
+    /* SKS after PD 4.12 26mar92 */
     if(!pdchart_current)
         pdchart_select_something(1 /*iff only one*/);
 
     if(!pdchart_current)
     {
-        reperr_null(create_error(ERR_NOSELCHART));
+        reperr_null(ERR_NOSELCHART);
         return;
     }
 
@@ -3008,7 +3010,7 @@ ChartAdd_fn(void)
         return;
     }
 
-    /* SKS after 4.11 07feb92 - made condition correct to allow single marks to add text (blkend.col may == NO_COL) */
+    /* SKS after PD 4.11 07feb92 - made condition correct to allow single marks to add text (blkend.col may == NO_COL) */
     if(  (blkend.col == NO_COL) ||
         ((blkstart.col == blkend.col) && (blkstart.row == blkend.row)))
     {
@@ -3061,13 +3063,13 @@ ChartDelete_fn(void)
     U8  filename[BUF_MAX_PATHSTRING];
     S32 res;
 
-    /* SKS after 4.12 26mar92 */
+    /* SKS after PD 4.12 26mar92 */
     if(!pdchart_current)
         pdchart_select_something(1 /*iff only one*/);
 
     if(!pdchart_current)
     {
-        reperr_null(create_error(ERR_NOSELCHART));
+        reperr_null(ERR_NOSELCHART);
         return;
     }
 
@@ -3083,6 +3085,14 @@ ChartDelete_fn(void)
     pdchart_dispose(&pdchart_current);
 }
 
+static void
+chartoptions_fn_core(void)
+{
+    /* all chart options are read from windvars when required */
+
+    filealtered(TRUE);
+}
+
 extern void
 ChartOptions_fn(void)
 {
@@ -3091,9 +3101,7 @@ ChartOptions_fn(void)
 
     while(dialog_box(D_CHART_OPTIONS))
     {
-        /* options read from windvars when required */
-
-        filealtered(TRUE);
+        chartoptions_fn_core();
 
         if(!dialog_box_can_persist())
             break;
@@ -3103,8 +3111,8 @@ ChartOptions_fn(void)
 }
 
 /* some user function will be needed (esp. for macro files)
-* to set a chart as 'current'
-*/
+ * to set a chart as 'current'
+ */
 
 extern void
 ChartSelect_fn(void)
@@ -3129,8 +3137,8 @@ ChartEdit_notify_proc(
     P_PDCHART_HEADER pdchart = handle;
     STATUS res;
 
-    IGNOREPARM(ceh);
-    IGNOREPARM(nextra);
+    UNREFERENCED_PARAMETER(ceh);
+    UNREFERENCED_PARAMETER(nextra);
 
     switch(ntype)
     {
@@ -3143,10 +3151,10 @@ ChartEdit_notify_proc(
         {
         char name_buffer[BUF_MAX_PATHSTRING];
         S32  nRefs;
-        BOOL adjustclicked = riscos_adjustclicked();
-        BOOL shiftpressed  = akbd_pollsh();
-        BOOL justopening   = (shiftpressed  &&  adjustclicked);
-        BOOL wanttoclose   = TRUE;
+        BOOL adjust_clicked = riscos_adjust_clicked();
+        BOOL shift_pressed  = akbd_pollsh();
+        BOOL just_opening   = (shift_pressed  &&  adjust_clicked);
+        BOOL want_to_close  = TRUE;
 
         /* default is to allow window closure */
         res = 1;
@@ -3154,16 +3162,16 @@ ChartEdit_notify_proc(
         gr_chart_name_query(&pdchart->ch, name_buffer, sizeof32(name_buffer) - 1);
 
         /* if on disc ok, close editing window NOW, otherwise ask ... */
-        if(!justopening && !file_is_rooted(name_buffer))
+        if(!just_opening && !file_is_rooted(name_buffer))
         {
-            char buffer[LIN_BUFSIZ];
+            char statement_buffer[LIN_BUFSIZ];
 
-            (void) xsnprintf(buffer, elemof32(buffer), save_edited_chart_Zs_STR, name_buffer);
+            consume_int(xsnprintf(statement_buffer, elemof32(statement_buffer), save_edited_chart_Zs_YN_S_STR, name_buffer));
 
-            switch(riscdialog_query_YN(buffer))
+            switch(riscdialog_query_YN(statement_buffer, save_edited_chart_YN_Q_STR))
             {
             case riscdialog_query_YES:
-                /* use a dialog box */
+                { /* use a dialog box */
                 res = gr_chart_save_chart_with_dialog(&pdchart->ch);
 
                 /* test for unsafe receiver; don't close if sent off to Edit for instance */
@@ -3176,6 +3184,7 @@ ChartEdit_notify_proc(
                 }
 
                 break;
+                }
 
             case riscdialog_query_NO:
                 res = 1;
@@ -3188,10 +3197,10 @@ ChartEdit_notify_proc(
             }
         }
 
-        if(adjustclicked)
+        if(adjust_clicked)
             filer_opendir(name_buffer);
 
-        if(!justopening  &&  wanttoclose && status_done(res))
+        if(!just_opening && want_to_close && status_done(res))
         {
             /* destroy the editing window */
             gr_chartedit_dispose(&pdchart->ceh);
@@ -3264,13 +3273,13 @@ ChartEdit_fn(void)
 {
     STATUS res;
 
-    /* SKS after 4.12 26mar92 */
+    /* SKS after PD 4.12 26mar92 */
     if(!pdchart_current)
         pdchart_select_something(0 /*any will do*/);
 
     if(!pdchart_current)
     {
-        reperr_null(create_error(ERR_NOSELCHART));
+        reperr_null(ERR_NOSELCHART);
         return;
     }
 
@@ -3334,7 +3343,8 @@ dependent_charts_warning(void)
         {
             /* only ask once for all such */
             if(DC_res == riscdialog_query_DC_CANCEL)
-                DC_res = riscdialog_query_DC(close_dependent_charts_winge_STR);
+                DC_res = riscdialog_query_DC(close_dependent_charts_DC_S_STR,
+                                             close_dependent_charts_DC_Q_STR);
 
             /* have mercy, the user went 'Cancel' */
             if(DC_res == riscdialog_query_DC_CANCEL)
@@ -3433,7 +3443,7 @@ pdchart_dependent_documents(
 ******************************************************************************/
 
 extern void
-expand_slot_for_chart_export(
+expand_cell_for_chart_export(
     _InVal_     DOCNO docno,
     P_CELL sl,
     char * buffer /*out*/,
@@ -3455,19 +3465,23 @@ expand_slot_for_chart_export(
     t_curpnm = p_docu->Xcurpnm;
     p_docu->Xcurpnm = 0; /* we have really no idea what page a cell is on */
 
-    (void) expand_slot(docno, sl, row, buffer, elemof_buffer /*fwidth*/,
-                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                       FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+    (void) expand_cell(
+                docno, sl, row, buffer, elemof_buffer /*fwidth*/,
+                DEFAULT_EXPAND_REFS /*expand_refs*/,
+                EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+                EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+                TRUE /*cff*/);
 
     /* remove highlights & funny spaces etc. from plain non-fonty string */
     ptr = to = buffer;
     do  {
         ch = *ptr++;
-        if(ch >= SPACE)
+        if(ch >= CH_SPACE)
             *to++ = ch;
     }
-    while(NULLCH != ch);
-    *to = NULLCH;
+    while(CH_NULL != ch);
+    *to = CH_NULL;
 
     p_docu->Xcurpnm = t_curpnm;
 
@@ -3487,7 +3501,7 @@ pdchart_load_dependents(
     PC_U8 chartfilename)
 {
 #if 0 /* can't do this are we haven't got an established set of urefs */
-    IGNOREPARM(epdchartdatakey);
+    UNREFERENCED_PARAMETER(epdchartdatakey);
 
     (void) loadfile_recurse_load_supporting_documents(chartfilename);
 #else
@@ -3502,7 +3516,7 @@ pdchart_load_dependents(
 #endif
     P_SS_DOC              p_ss_doc;
 
-    IGNOREPARM(chartfilename);
+    UNREFERENCED_PARAMETER(chartfilename);
 
     pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
 
@@ -3513,7 +3527,7 @@ pdchart_load_dependents(
         return(1);
 
 #if 1
-    /* SKS after 4.12 26mar92 - more helpful on errors perchance - loop over deps of this chart not chart elements */
+    /* SKS after PD 4.12 26mar92 - more helpful on errors perchance - loop over deps of this chart not chart elements */
     for(itdep = collect_first(PDCHART_DEP, &pdchart_listed_deps.lbr, &itdepkey);
         itdep;
         itdep = collect_next( PDCHART_DEP, &pdchart_listed_deps.lbr, &itdepkey))
@@ -3580,7 +3594,7 @@ pdchart_preferred_save(
     return(STATUS_OK);
 }
 
-/* SKS after 4.12 26mar92 - something like this was needed... */
+/* SKS after PD 4.12 26mar92 - something like this was needed... */
 
 static void
 pdchart_select_something(
@@ -3783,7 +3797,7 @@ gr_chart_preferred_get_name(
     U32 bufsiz)
 {
     /* Preferred should be saved in <Choices$Write>.PipeDream directory */
-    add_choices_write_prefix_to_name_using_dir(buffer, bufsiz, PREFERRED_FILE_STR, NULL);
+    (void) add_choices_write_prefix_to_name_using_dir(buffer, bufsiz, PREFERRED_FILE_STR, NULL);
 
     return(1);
 }
@@ -3835,7 +3849,7 @@ enum PDCHART_CONSTRUCT_TABLE_OFFSETS
     PDCHART_CON_RANGE_TXT,
     PDCHART_CON_VERSION,
 
-    /* SKS after 4.12 27mar92 - needed for live text object ordering on reload */
+    /* SKS after PD 4.12 27mar92 - needed for live text object ordering on reload */
     PDCHART_CON_RANGE_TXT_ORDER,
 
     PDCHART_CON_N_TABLE_OFFSETS
@@ -3880,7 +3894,7 @@ pdchart_make_range_for_save(
     _InVal_     U32 elemof_buffer,
     _InRef_     PC_EV_RANGE rng)
 {
-    IGNOREPARM_InVal_(elemof_buffer);
+    UNREFERENCED_PARAMETER_InVal_(elemof_buffer);
     return(ev_dec_range(buffer, pdchart_load_save_docno, rng, 1));
 }
 
@@ -3911,7 +3925,7 @@ pdchart_save_external_core(
     P_U16  p_bits;
     STATUS res;
 
-    IGNOREPARM(ch);
+    UNREFERENCED_PARAMETER(ch);
 
     pdchartdatakey = (LIST_ITEMNO) ext_handle;
 
@@ -4072,8 +4086,8 @@ pdchart_save_external_core(
             p_bits = (P_U16) &itdep->bits;
 
 #if 1
-            /* SKS after 4.12 27mar92 - needed for (compatible) live text object ordering on reload */
-            (void) sprintf(buffer, "%d", gr_chart_order_query(&pdchart->ch, &ep->gr_int_handle));
+            /* SKS after PD 4.12 27mar92 - needed for (compatible) live text object ordering on reload */
+            consume_int(sprintf(buffer, "%d", gr_chart_order_query(&pdchart->ch, &ep->gr_int_handle)));
 
             status_break(res = gr_chart_construct_save_frag_stt(f, PDCHART_CON_RANGE_TXT_ORDER));
 
@@ -4126,7 +4140,7 @@ gr_chart_save_external(
     if(DOCNO_NONE == (pdchart_load_save_docno = ev_docno_ensure_for_pdchart_bodge()))
         return(create_error(status_nomem()));
 
-    { /* SKS after 4.12 26mar92 - keep consistent with save_version_string */
+    { /* SKS after PD 4.12 26mar92 - keep consistent with save_version_string */
     U8 array[LIN_BUFSIZ];
 
     xstrkpy(array, elemof32(array), applicationversion);
@@ -4138,9 +4152,9 @@ gr_chart_save_external(
         xstrkat(array, elemof32(array), " - ");
         xstrkat(array, elemof32(array), user_organ_id());
     }
-    xstrkat(array, elemof32(array), ", ");
+    xstrkat(array, elemof32(array), ", R");
 
-    xstrkat(array, elemof32(array), "R9200 7500 3900 8299");
+    xstrkat(array, elemof32(array), registration_number());
 
     res = gr_chart_construct_save_txt(f, PDCHART_CON_VERSION, array);
     }
@@ -4154,7 +4168,7 @@ gr_chart_save_external(
     }
 
     /* kill name prior to close */
-    pdchart_load_save_docname[0] = NULLCH;
+    pdchart_load_save_docname[0] = CH_NULL;
 
     ev_p_ss_doc_from_docno_must(pdchart_load_save_docno)->is_docu_thunk = TRUE; /* bodge back - we aren't a real document */
 
@@ -4257,7 +4271,7 @@ gr_ext_construct_load_this(
     EV_RANGE rng;
     STATUS res;
 
-    IGNOREPARM(ch);
+    UNREFERENCED_PARAMETER(ch);
 
     zero_struct(rng);
 
@@ -4320,7 +4334,7 @@ gr_ext_construct_load_this(
         break;
 
 #if 1
-    /* SKS after 4.12 27mar92 - live text objects not as easy as originally claimed */
+    /* SKS after PD 4.12 27mar92 - live text objects not as easy as originally claimed */
     case PDCHART_CON_RANGE_TXT_ORDER:
         {
         S32 order;
@@ -4388,7 +4402,7 @@ pdchart_load_ended(
     assert(pdchart_load_save_docno != DOCNO_NONE);
 
     /* kill name prior to close */
-    pdchart_load_save_docname[0] = NULLCH;
+    pdchart_load_save_docname[0] = CH_NULL;
 
     ev_p_ss_doc_from_docno_must(pdchart_load_save_docno)->is_docu_thunk = TRUE; /* bodge back - we aren't a real document */
 

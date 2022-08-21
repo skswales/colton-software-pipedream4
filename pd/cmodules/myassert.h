@@ -9,6 +9,12 @@
 
 /* NB Designed for multiple inclusion */
 
+#if RISCOS && defined(CHECKING_PEDANTIC)
+/* RISC OS can check parameters for matching format #ifdef CHECKING_PEDANTIC */
+#pragma check_printf_formats
+#endif
+
+_Check_return_
 extern BOOL __cdecl
 __myasserted(
     _In_z_      PCTSTR p_function,
@@ -17,6 +23,7 @@ __myasserted(
     _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        ...);
 
+_Check_return_
 extern BOOL __cdecl
 __myasserted_msg(
     _In_z_      PCTSTR p_function,
@@ -26,6 +33,11 @@ __myasserted_msg(
     _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        ...);
 
+#if RISCOS && defined(CHECKING_PEDANTIC)
+#pragma no_check_printf_formats
+#endif
+
+_Check_return_
 extern BOOL
 __myasserted_EQ(
     _In_z_      PCTSTR p_function,
@@ -34,19 +46,30 @@ __myasserted_EQ(
     _InVal_     U32 val1,
     _InVal_     U32 val2);
 
+_Check_return_
 extern BOOL
 __vmyasserted(
     _In_z_      PCTSTR p_function,
     _In_z_      PCTSTR p_file,
     _InVal_     U32 line_no,
     _In_opt_z_  PCTSTR message,
-    _In_z_      PCTSTR format,
+    _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        va_list args);
+
+_Check_return_
+extern BOOL
+__bool_assert(
+    _InVal_     BOOL bool_val,
+    _In_z_      PCTSTR p_function,
+    _In_z_      PCTSTR p_file,
+    _InVal_     U32 line_no,
+    _In_z_      PCTSTR str);
 
 extern void
 __hard_assert(
     _InVal_     BOOL hard_mode);
 
+_Check_return_
 extern STATUS
 __status_assert(
     _InVal_     STATUS status,
@@ -55,15 +78,25 @@ __status_assert(
     _InVal_     U32 line_no,
     _In_z_      PCTSTR str);
 
-#if WINDOWS
+#if RISCOS
 
+/* __WrapOsErrorChecking() & WrapOsErrorReporting() are defined in gflags.h in PipeDream */
+
+#elif WINDOWS
+
+_Check_return_
 extern BOOL
-__WrapOsBool(
+__WrapOsBoolChecking(
     _InVal_     BOOL res,
     _In_z_      PCTSTR p_function,
     _In_z_      PCTSTR p_file,
     _InVal_     int line_no,
     _In_z_      PCTSTR str);
+
+/*ncr*/
+extern BOOL
+WrapOsBoolReporting(
+    _InVal_     BOOL res);
 
 #endif /* OS */
 
@@ -183,8 +216,16 @@ __WrapOsBool(
 #undef assert_EQ
 #endif
 
+#ifdef bool_assert
+#undef bool_assert
+#endif
+
 #ifdef hard_assert
 #undef hard_assert
+#endif
+
+#ifdef status_wrap
+#undef status_wrap
 #endif
 
 #ifdef status_assert
@@ -195,12 +236,20 @@ __WrapOsBool(
 #undef status_assertc
 #endif
 
-#ifdef WrapOsBool
-#undef WrapOsBool
+#ifdef WrapOsBoolChecking
+#undef WrapOsBoolChecking
 #endif
 
-#ifdef void_WrapOsBool
-#undef void_WrapOsBool
+#ifdef void_WrapOsBoolChecking
+#undef void_WrapOsBoolChecking
+#endif
+
+#ifdef WrapOsErrorChecking
+#undef WrapOsErrorChecking
+#endif
+
+#ifdef void_WrapOsErrorChecking
+#undef void_WrapOsErrorChecking
 #endif
 
 #if !defined(_MSC_VER)
@@ -211,96 +260,117 @@ __WrapOsBool(
 
 #if CHECKING
 
-#define myassert0(str) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, TEXT("%s"), (str))) \
-        __crash_and_burn_here(); }
-#define myassert1(format, arg1) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1)) \
-        __crash_and_burn_here(); }
-#define myassert2(format, arg1, arg2) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2)) \
-        __crash_and_burn_here(); }
-#define myassert3(format, arg1, arg2, arg3) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3)) \
-        __crash_and_burn_here(); }
-#define myassert4(format, arg1, arg2, arg3, arg4) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4)) \
-        __crash_and_burn_here(); }
-#define myassert5(format, arg1, arg2, arg3, arg4, arg5) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5)) \
-        __crash_and_burn_here(); }
-#define myassert6(format, arg1, arg2, arg3, arg4, arg5, arg6) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6)) \
-        __crash_and_burn_here(); }
-#define myassert7(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7)) \
-        __crash_and_burn_here();}
-#define myassert8(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)) \
-        __crash_and_burn_here(); }
-#define myassert9(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)) \
-        __crash_and_burn_here(); }
-#define myassert10(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)) \
-        __crash_and_burn_here(); }
-#define myassert11(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)) \
-        __crash_and_burn_here(); }
-#define myassert12(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)) \
-        __crash_and_burn_here(); }
-#define myassert13(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) { \
-    if(__myasserted(TEXT(__func__), TEXT(__FILE__), __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)) \
-        __crash_and_burn_here(); }
+#define myassert0(str) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, TEXT("%s"), (str))) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert1(format, arg1) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert2(format, arg1, arg2) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert3(format, arg1, arg2, arg3) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert4(format, arg1, arg2, arg3, arg4) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert5(format, arg1, arg2, arg3, arg4, arg5) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert6(format, arg1, arg2, arg3, arg4, arg5, arg6) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert7(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert8(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert9(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert10(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert11(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert12(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)) \
+        __crash_and_burn_here(); } while_constant(0)
+#define myassert13(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) do { \
+    if(__myasserted(__Tfunc__, __TFILE__, __LINE__, (format), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)) \
+        __crash_and_burn_here(); } while_constant(0)
 
-#define myassert0x(exp, str) { \
+#define myassert0x(exp, str) do { \
     if_constant(!(exp)) \
-        myassert0(      str) \
-    __analysis_assume(exp); }
-#define myassert1x(exp, format, arg1) { \
+        myassert0(      str); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert1x(exp, format, arg1) do { \
     if_constant(!(exp)) \
-        myassert1(      format, arg1) \
-    __analysis_assume(exp); }
-#define myassert2x(exp, format, arg1, arg2) { \
+        myassert1(      format, arg1); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert2x(exp, format, arg1, arg2) do { \
     if_constant(!(exp)) \
-        myassert2(      format, arg1, arg2) \
-    __analysis_assume(exp); }
-#define myassert3x(exp, format, arg1, arg2, arg3) { \
+        myassert2(      format, arg1, arg2); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert3x(exp, format, arg1, arg2, arg3) do { \
     if_constant(!(exp)) \
-        myassert3(      format, arg1, arg2, arg3) \
-    __analysis_assume(exp); }
-#define myassert4x(exp, format, arg1, arg2, arg3, arg4) { \
+        myassert3(      format, arg1, arg2, arg3); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert4x(exp, format, arg1, arg2, arg3, arg4) do { \
     if_constant(!(exp)) \
-        myassert4(      format, arg1, arg2, arg3, arg4) \
-    __analysis_assume(exp); }
-#define myassert5x(exp, format, arg1, arg2, arg3, arg4, arg5) \
-    __analysis_assume(exp); { \
+        myassert4(      format, arg1, arg2, arg3, arg4); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert5x(exp, format, arg1, arg2, arg3, arg4, arg5) do { \
     if_constant(!(exp)) \
-        myassert5(      format, arg1, arg2, arg3, arg4, arg5) }
-#define myassert6x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6) { \
+        myassert5(      format, arg1, arg2, arg3, arg4, arg5); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert6x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6) do { \
     if_constant(!(exp)) \
-        myassert6(      format, arg1, arg2, arg3, arg4, arg5, arg6) \
-    __analysis_assume(exp); }
-#define myassert7x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) { \
+        myassert6(      format, arg1, arg2, arg3, arg4, arg5, arg6); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert7x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) do { \
     if_constant(!(exp)) \
-        myassert7(      format, arg1, arg2, arg3, arg4, arg5, arg6, arg7) \
-    __analysis_assume(exp); }
-#define myassert9x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) { \
+        myassert7(      format, arg1, arg2, arg3, arg4, arg5, arg6, arg7); \
+    __analysis_assume(exp); } while_constant(0)
+#define myassert9x(exp, format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) do { \
     if_constant(!(exp)) \
-        myassert9(      format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) \
-    __analysis_assume(exp); }
+        myassert9(      format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9); \
+    __analysis_assume(exp); } while_constant(0)
 
-#define assert_EQ(exp1, exp2) { \
-    if(__myasserted_EQ(TEXT(__func__), TEXT(__FILE__), __LINE__, (U32) (exp1), (U32) (exp2))) \
-        __crash_and_burn_here(); }
+#define assert_EQ(exp1, exp2) do { \
+    if(__myasserted_EQ(__Tfunc__, __TFILE__, __LINE__, (U32) (exp1), (U32) (exp2))) \
+        __crash_and_burn_here(); } while_constant(0)
+
+#ifndef _bool_assert_function_declared
+#define _bool_assert_function_declared 1
+_Check_return_
+static inline BOOL
+_bool_assert(
+    _InVal_     BOOL bool_val,
+    _In_z_      PCTSTR p_function,
+    _In_z_      PCTSTR p_file,
+    _In_        int line_no,
+    _In_z_      PCTSTR tstr)
+{
+    if(bool_val)
+        return(bool_val);
+
+    return(__bool_assert(bool_val, p_function, p_file, line_no, tstr));
+}
+#endif /* _bool_assert_function_declared */
+
+#define bool_assert(bool_expr) \
+    consume_bool(_bool_assert(bool_expr, __Tfunc__, __TFILE__, __LINE__, TEXT(#bool_expr)))
 
 #define hard_assert(hard_mode) \
     __hard_assert(hard_mode)
 
 #ifndef _status_assert_function_declared
 #define _status_assert_function_declared 1
-/*ncr*/
+_Check_return_
 static inline STATUS
 _status_assert(
     _InVal_     STATUS status,
@@ -316,19 +386,30 @@ _status_assert(
 }
 #endif /* _status_assert_function_declared */
 
-#define status_assert(status) \
-    status_consume(_status_assert(status, TEXT(__func__), TEXT(__FILE__), __LINE__, TEXT(#status)))
+#define status_wrap(status_expr) \
+    _status_assert(status_expr, __Tfunc__, __TFILE__, __LINE__, TEXT(#status_expr))
 
-#define status_assertc(status) \
-    status_assert(status)
+#define status_assert(status_expr) \
+    status_consume(_status_assert(status_expr, __Tfunc__, __TFILE__, __LINE__, TEXT(#status_expr)))
 
-#if WINDOWS
+#define status_assertc(status_expr) \
+    status_assert(status_expr)
 
-#define WrapOsBool(f) \
-    __WrapOsBool(f, TEXT(__func__), TEXT(__FILE__), __LINE__, TEXT(#f))
+#if RISCOS
 
-#define void_WrapOsBool(f) \
-    (void) __WrapOsBool(f, TEXT(__func__), TEXT(__FILE__), __LINE__, TEXT(#f))
+#define WrapOsErrorChecking(f) \
+    __WrapOsErrorChecking(f, __Tfunc__, __TFILE__, __LINE__, TEXT(#f))
+
+#define void_WrapOsErrorChecking(f) \
+    consume(_kernel_oserror *, __WrapOsErrorChecking(f, __Tfunc__, __TFILE__, __LINE__, TEXT(#f)))
+
+#elif WINDOWS && !defined(CODE_ANALYSIS)
+
+#define WrapOsBoolChecking(f) \
+    __WrapOsBoolChecking(f, __Tfunc__, __TFILE__, __LINE__, TEXT(#f))
+
+#define void_WrapOsBoolChecking(f) \
+    consume_bool(__WrapOsBoolChecking(f, __Tfunc__, __TFILE__, __LINE__, TEXT(#f)))
 
 #endif /* OS */
 
@@ -342,7 +423,7 @@ _status_assert(
 #define myassert5(format, arg1, arg2, arg3, arg4, arg5)
 #define myassert6(format, arg1, arg2, arg3, arg4, arg5, arg6)
 #define myassert7(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-#define myassert8(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+#define myassert8(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
 #define myassert9(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 #define myassert10(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 #define myassert11(format, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
@@ -361,20 +442,31 @@ _status_assert(
 
 #define assert_EQ(exp1, exp2)
 
+#define bool_assert(bool_expr)      consume_bool(bool_expr)
+
 #define hard_assert(hard_mode)
 
-#define status_assert(status)   status_consume(status)
-#define status_assertc(status)  /* rien - don't evaluate arg */
-
-#if WINDOWS
-
-#define WrapOsBool(f) (f)
-
-#define void_WrapOsBool(f) (void) (f)
-
-#endif /* OS */
+#define status_wrap(status_expr)    (status_expr)
+#define status_assert(status_expr)  status_consume(status_expr)
+#define status_assertc(status_expr) /* rien - don't evaluate arg */
 
 #endif /* CHECKING */
+
+#if RISCOS
+
+#ifndef WrapOsErrorChecking
+#define WrapOsErrorChecking(f) (f)
+#define void_WrapOsErrorChecking(f) (void) (f)
+#endif
+
+#elif WINDOWS
+
+#ifndef WrapOsBoolChecking
+#define WrapOsBoolChecking(f) (f)
+#define void_WrapOsBoolChecking(f) (void) (f)
+#endif
+
+#endif /* OS */
 
 /*
 override normal C assert() usage
@@ -387,18 +479,14 @@ override normal C assert() usage
 #define assert(expr) \
     myassert0x(expr, TEXT(#expr))
 
-#ifdef assert0
-#undef assert0
-#endif
-
+#ifndef assert0
 #define assert0() \
     myassert0(TEXT("assert(FALSE)"))
-
-#ifdef default_unhandled
-#undef default_unhandled
 #endif
 
+#ifndef default_unhandled
 #define default_unhandled() \
     myassert0(TEXT("Unhandled value in switch")) /*then often...*/ /*FALLTHRU*/
+#endif
 
 /* end of myassert.h */

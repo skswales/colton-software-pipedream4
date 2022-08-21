@@ -21,18 +21,18 @@ exported functions
 
 extern RISCOS_TRISTATE_STATE
 riscos_tristate_hit(
-    wimp_w w,
-    wimp_i i);
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle);
 
 extern RISCOS_TRISTATE_STATE
 riscos_tristate_query(
-    wimp_w w,
-    wimp_i i);
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle);
 
 extern void
 riscos_tristate_set(
-    wimp_w w,
-    wimp_i i,
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
     RISCOS_TRISTATE_STATE state);
 
 #endif /* __tristate_h */

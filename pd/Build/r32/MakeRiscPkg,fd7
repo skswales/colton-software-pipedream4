@@ -7,117 +7,180 @@
 | Copyright (C) 1991-1998 Colton Software Limited
 | Copyright (C) 1998-2015 R W Colton
 
-IfThere $.Temp Then Else %CDir $.Temp
+Set pd$Release 4_56
+| Set pd$Release 4_56_01
+| the master list is in version.c
 
-Set pd$Release 4_55
-|Set pd$Release 4_55_yy
+Set pd$Disc $.Temp.PD4.PipeDream_<pd$Release>
+Set pd$Zip  $.Temp.PD4.PipeDream_<pd$Release>/zip
 
-Set pd$Disc $.Temp.PipeDream_<pd$Release>
-Set pd$Zip  $.Temp.PipeDream_<pd$Release>/zip
+IfThere $.Temp     Then Else %CDir $.Temp
+IfThere $.Temp.PD4 Then Else %CDir $.Temp.PD4
 
 %CDir <pd$Disc>
 
 X %Wipe <pd$Disc>.* ~cfr~v
 
-Set ap$Country GB
+Set pd$AppData$Dir   <Obey$Dir>.!PipeDream.AppData
 
-Set pd$Resource$Dir <Obey$Dir>.!PipeDream.Resource
+Set pd$Resources$Dir <Obey$Dir>.!PipeDream.Resources
 
-Set ap$Resource$Dir <Obey$Dir>.^.^.Utils.<ap$Country>
+Set ap$Resource$Dir  <Obey$Dir>.^.^.Utils
 
-%CDir                                           <pd$Disc>.Z
+%CDir                                               <pd$Disc>.Z
 
-%Copy <Obey$Dir>.!PipeDream.LICENSE             <pd$Disc>.Z.* ~rf~cln~v
+| Use the same licence in the distributed package
+%Copy <Obey$Dir>.RiscPkg.Copyright                  <pd$Disc>.Z.LICENCE ~rf~cln~v
 
-%Copy <Obey$Dir>.!PipeDream.!Boot               <pd$Disc>.Z.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.!Help               <pd$Disc>.Z.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.!Run                <pd$Disc>.Z.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.!RunImage           <pd$Disc>.Z.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.!Sprites            <pd$Disc>.Z.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.!Sprites22          <pd$Disc>.Z.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.!SpritesR5          <pd$Disc>.Z.* ~rf~cln~v
-
-%Access                                         <pd$Disc>.Z.* r/r
-
-| Resource
-
-%CDir                                           <pd$Disc>.Z.Resource
-|
-%CDir                                           <pd$Disc>.Z.Resource.RISC_OS
-%Copy <pd$Resource$Dir>.RISC_OS.!Sprite         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-|%Copy <pd$Resource$Dir>.RISC_OS.BorderUtil      <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.RISC_OS.ImageSlot       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.RISC_OS.Loader          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.RISC_OS.Messages        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.RISC_OS.Sprites         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.RISC_OS.Sprites22       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-| Templates in the same order that we load them in (used to save seeking)
-%Copy <ap$Resource$Dir>.tem_risc                <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.tem_main                <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.tem_cht                 <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.tem_bc                  <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.tem_el                  <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.tem_f                   <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.tem_p                   <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.tem_s                   <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
-
-%CDir                                           <pd$Disc>.Z.Resource.CmdFiles
-%Copy <pd$Resource$Dir>.CmdFiles.CopyDelete     <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.CmdFiles.Indent5        <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
-
-%CDir                                           <pd$Disc>.Z.Resource.DictDefn
-%Copy <pd$Resource$Dir>.DictDefn.English        <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.DictDefn.Latin1         <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
-%Access                                         <pd$Disc>.Z.Resource.DictDefn.* r/r
-
-%CDir                                           <pd$Disc>.Z.Resource.Dicts
-%Copy <ap$Resource$Dir>.Dicts.Master-s          <pd$Disc>.Z.Resource.Dicts.Master ~rf~cln~v
-
-%CDir                                           <pd$Disc>.Z.Resource.Markers
-%Copy <pd$Resource$Dir>.Markers.S1              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Markers.S2              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Markers.S3              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Markers.S4              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Markers.S5              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Markers.S6              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
-%Access                                         <pd$Disc>.Z.Resource.Markers.* r/r
-
-%CDir                                           <pd$Disc>.Z.Resource.PDrivers
-%Copy <pd$Resource$Dir>.PDrivers.BJ10           <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.PDrivers.DaisyWheel     <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.PDrivers.Default        <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.PDrivers.DotMatrix      <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.PDrivers.HPJet          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.PDrivers.JP150          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
-%Access                                         <pd$Disc>.Z.Resource.PDrivers.* r/r
-
-%CDir                                           <pd$Disc>.Z.Resource.Pictures
-%Copy <pd$Resource$Dir>.Pictures.S1             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Pictures.S2             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
-%Access                                         <pd$Disc>.Z.Resource.Pictures.* r/r
-
-%CDir                                           <pd$Disc>.Z.Resource.Templates
-%Copy <pd$Resource$Dir>.Templates.Numbers       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Templates.Records       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Templates.Text          <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Templates.Text_Plain    <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
-%Access                                         <pd$Disc>.Z.Resource.Templates.* r/r
+%Copy <Obey$Dir>.!PipeDream.!Boot                   <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Help                   <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Run                    <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!RunImage               <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Sprites                <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Sprites22              <pd$Disc>.Z.* ~rf~cln~v
+| RISC OS 5 has different orientation pin in ic_xxx
+%Copy <Obey$Dir>.!PipeDream.!SpritesR5              <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!SpritesR511            <pd$Disc>.Z.* ~rf~cln~v
 
 | These used to be at top level - R-Comp can extract from here for PlingStore
-%Copy <pd$Resource$Dir>.HTMLHelp                <pd$Disc>.Z.Resource.* ~rf~cln~v
-%Copy <pd$Resource$Dir>.Relnotes                <pd$Disc>.Z.Resource.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.Relnotes                <pd$Disc>.Z.* ~rf~cln~v
 
-%Access                                         <pd$Disc>.Z.Resource.* r/r
-%Access                                         <pd$Disc>.Z.Resource r/r
+%Access                                             <pd$Disc>.Z.* r/r
 
+|
+| Resources (RISC OS specific)
+|
+%CDir                                               <pd$Disc>.Z.Resources
+|
+| Language-independent
+%CDir                                               <pd$Disc>.Z.Resources.Neutral
+%Copy <pd$Resources$Dir>.Neutral.!Sprite            <pd$Disc>.Z.Resources.Neutral.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.Neutral.ImageSlot          <pd$Disc>.Z.Resources.Neutral.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.Neutral.Loader             <pd$Disc>.Z.Resources.Neutral.* ~rf~cln~v
+|
+| Language-dependent (UK)
+%CDir                                               <pd$Disc>.Z.Resources.UK
+| Built resources
+%Copy <pd$Resources$Dir>.UK.Messages                <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.Sprites                 <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.Sprites11               <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.Sprites22               <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+| Static resources
+| Templates
+%Copy <ap$Resource$Dir>.en_GB.tem_risc              <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.en_GB.tem_main              <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.en_GB.tem_cht               <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.en_GB.tem_bc                <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.en_GB.tem_el                <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.en_GB.tem_f                 <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.en_GB.tem_p                 <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.en_GB.tem_s                 <pd$Disc>.Z.Resources.UK.* ~rf~cln~v
+
+|
+| Help
+|
+| Language-dependent (UK)
+%CDir                                               <pd$Disc>.Z.Resources.UK.Help
+%Copy <pd$Resources$Dir>.UK.Help.Text               <pd$Disc>.Z.Resources.UK.Help.* ~rf~cln~v
+
+%Copy <pd$Resources$Dir>.UK.Help.HTML               <pd$Disc>.Z.Resources.UK.Help.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.Help.HTML.functions     <pd$Disc>.Z.Resources.UK.Help.HTML.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.Help.HTML.images        <pd$Disc>.Z.Resources.UK.Help.HTML.* ~rf~cln~v
+
+| CSS files
+SetMacro Alias$pd_settype SetType %%0 &F79
+pd_settype                                          <pd$Disc>.Z.Resources.UK.Help.HTML.help/css
+
+| PNG files
+SetMacro Alias$pd_settype SetType %%0 &B60
+Repeat pd_settype                                   <pd$Disc>.Z.Resources.UK.Help.HTML.images -files -verbose
+
+%Access                                             <pd$Disc>.Z.Resources.UK.Help.HTML.functions.* r/r
+%Access                                             <pd$Disc>.Z.Resources.UK.Help.HTML.images.* r/r
+%Access                                             <pd$Disc>.Z.Resources.UK.Help.HTML.* r/r
+%Access                                             <pd$Disc>.Z.Resources.UK.Help.* r/r
+
+%Access                                             <pd$Disc>.Z.Resources.Neutral.* r/r
+%Access                                             <pd$Disc>.Z.Resources.UK.* r/r
+%Access                                             <pd$Disc>.Z.Resources.* r/r
+%Access                                             <pd$Disc>.Z.Resources r/r
+
+|
+| Resources (AppData)
+|
+%CDir                                               <pd$Disc>.Z.AppData
+%CDir                                               <pd$Disc>.Z.AppData.Neutral
+%CDir                                               <pd$Disc>.Z.AppData.UK
+%CDir                                               <pd$Disc>.Z.AppData.Germany
+|
+%CDir                                               <pd$Disc>.Z.AppData.Neutral.Markers
+| Language-independent
+%Copy <pd$AppData$Dir>.Neutral.Markers.S1           <pd$Disc>.Z.AppData.Neutral.Markers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.Neutral.Markers.S2           <pd$Disc>.Z.AppData.Neutral.Markers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.Neutral.Markers.S3           <pd$Disc>.Z.AppData.Neutral.Markers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.Neutral.Markers.S4           <pd$Disc>.Z.AppData.Neutral.Markers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.Neutral.Markers.S5           <pd$Disc>.Z.AppData.Neutral.Markers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.Neutral.Markers.S6           <pd$Disc>.Z.AppData.Neutral.Markers.* ~rf~cln~v
+%Access                                             <pd$Disc>.Z.AppData.Neutral.Markers.* r/r
+
+%CDir                                               <pd$Disc>.Z.AppData.Neutral.Pictures
+| Language-independent
+%Copy <pd$AppData$Dir>.Neutral.Pictures.S1          <pd$Disc>.Z.AppData.Neutral.Pictures.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.Neutral.Pictures.S2          <pd$Disc>.Z.AppData.Neutral.Pictures.* ~rf~cln~v
+%Access                                             <pd$Disc>.Z.AppData.Neutral.Pictures.* r/r
+
+| Language-dependent (UK)
+%CDir                                               <pd$Disc>.Z.AppData.UK.CmdFiles
+%Copy <pd$AppData$Dir>.UK.CmdFiles.CopyDelete       <pd$Disc>.Z.AppData.UK.CmdFiles.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.CmdFiles.Indent5          <pd$Disc>.Z.AppData.UK.CmdFiles.* ~rf~cln~v
+
+| Language-dependent (UK)
+%CDir                                               <pd$Disc>.Z.AppData.UK.DictDefn
+%Copy <pd$AppData$Dir>.UK.DictDefn.English          <pd$Disc>.Z.AppData.UK.DictDefn.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.DictDefn.Latin1           <pd$Disc>.Z.AppData.UK.DictDefn.* ~rf~cln~v
+%Access                                             <pd$Disc>.Z.AppData.UK.DictDefn.* r/r
+| Language-dependent (Germany)
+%CDir                                               <pd$Disc>.Z.AppData.Germany.DictDefn
+%Copy <pd$AppData$Dir>.Germany.DictDefn.Deutsch     <pd$Disc>.Z.AppData.Germany.DictDefn.* ~rf~cln~v
+%Access                                             <pd$Disc>.Z.AppData.Germany.DictDefn.* r/r
+
+| Language-dependent (UK)
+%CDir                                               <pd$Disc>.Z.AppData.UK.Dicts
+%Copy <ap$Resource$Dir>.en_GB.Dicts.Master-s        <pd$Disc>.Z.AppData.UK.Dicts.Master ~rf~cln~v
+
+| Language-dependent (although I can't seem them being translated!)
+%CDir                                               <pd$Disc>.Z.AppData.UK.PDrivers
+%Copy <pd$AppData$Dir>.UK.PDrivers.BJ10             <pd$Disc>.Z.AppData.UK.PDrivers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.PDrivers.DaisyWheel       <pd$Disc>.Z.AppData.UK.PDrivers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.PDrivers.Default          <pd$Disc>.Z.AppData.UK.PDrivers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.PDrivers.DotMatrix        <pd$Disc>.Z.AppData.UK.PDrivers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.PDrivers.HPJet            <pd$Disc>.Z.AppData.UK.PDrivers.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.PDrivers.JP150            <pd$Disc>.Z.AppData.UK.PDrivers.* ~rf~cln~v
+%Access                                             <pd$Disc>.Z.AppData.UK.PDrivers.* r/r
+
+| Language-dependent
+%CDir                                               <pd$Disc>.Z.AppData.UK.Templates
+%Copy <pd$AppData$Dir>.UK.Templates.Numbers         <pd$Disc>.Z.AppData.UK.Templates.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.Templates.Records         <pd$Disc>.Z.AppData.UK.Templates.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.Templates.Text            <pd$Disc>.Z.AppData.UK.Templates.* ~rf~cln~v
+%Copy <pd$AppData$Dir>.UK.Templates.Text_Plain      <pd$Disc>.Z.AppData.UK.Templates.* ~rf~cln~v
+%Access                                             <pd$Disc>.Z.AppData.UK.Templates.* r/r
+
+%Access                                             <pd$Disc>.Z.AppData.Neutral.* r/r
+%Access                                             <pd$Disc>.Z.AppData.UK.* r/r
+%Access                                             <pd$Disc>.Z.AppData.Germany.* r/r
+%Access                                             <pd$Disc>.Z.AppData.* r/r
+%Access                                             <pd$Disc>.Z.AppData r/r
+
+|
 | User Choices (destined for Choices$Write on target system)
+|
+%CDir                                                       <pd$Disc>.Z.uChoices
 
-%CDir                                           <pd$Disc>.Z.uChoices
+%Copy <Obey$Dir>.!PipeDream.uChoices.DoCopy                 <pd$Disc>.Z.uChoices.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.uChoices.ReadMe                 <pd$Disc>.Z.uChoices.* ~rf~cln~v
 
-%Copy <Obey$Dir>.!PipeDream.uChoices.DoCopy     <pd$Disc>.Z.uChoices.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.uChoices.ReadMe     <pd$Disc>.Z.uChoices.* ~rf~cln~v
-
-%CDir                                           <pd$Disc>.Z.uChoices.PipeDream
+%CDir                                                       <pd$Disc>.Z.uChoices.PipeDream
 
 %CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.CmdFiles
 %CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Dicts
@@ -130,12 +193,15 @@ Set ap$Resource$Dir <Obey$Dir>.^.^.Utils.<ap$Country>
 %CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Pictures
 %CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Templates
 
-%Access                                         <pd$Disc>.Z.uChoices.PipeDream.* wr/r
-%Access                                         <pd$Disc>.Z.uChoices.PipeDream wr/r
-%Access                                         <pd$Disc>.Z.uChoices wr/r
+%Access                                                     <pd$Disc>.Z.uChoices.PipeDream.* wr/r
+%Access                                                     <pd$Disc>.Z.uChoices.PipeDream wr/r
+%Access                                                     <pd$Disc>.Z.uChoices wr/r
 
+Unset Alias$pd_settype
+
+|
 | Top level, contains just Apps and RiscPkg
-
+|
 %CDir                              <pd$Disc>.Apps
 %CDir                              <pd$Disc>.Apps.Document
 %Rename <pd$Disc>.Z                <pd$Disc>.Apps.Document.!PipeDream
@@ -143,9 +209,13 @@ Set ap$Resource$Dir <Obey$Dir>.^.^.Utils.<ap$Country>
 %CDir                              <pd$Disc>.RiscPkg
 %Copy <Obey$Dir>.RiscPkg.Control   <pd$Disc>.RiscPkg.* ~rf~cln~v
 %Copy <Obey$Dir>.RiscPkg.Copyright <pd$Disc>.RiscPkg.* ~rf~cln~v
+| Omit           RiscPkg.LICENCE
 
 %Dir <pd$Disc>
+%Remove <pd$Zip>
 zip -r <pd$Zip> RiscPkg Apps
+SetType <pd$Zip> &A91
+Info <pd$Zip>
 %Back
 
 Filer_OpenDir <pd$Disc>

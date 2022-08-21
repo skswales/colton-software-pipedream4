@@ -9,16 +9,16 @@
 
 /* MRJC 8.8.91 */
 
+#include "common/gflags.h"
+
+#include "datafmt.h"
+
 #define DO_SAVE 1
 #define DONT_SAVE 0
 #define DO_DELETE 1
 #define DONT_DELETE 0
 #define ALLOW_WIDENING 1
 #define DONT_ALLOW_WIDENING 0
-
-#include "common/gflags.h"
-
-#include "datafmt.h"
 
 /*
 internal functions
@@ -139,7 +139,7 @@ block_updref(
 
     urefb.action = UREF_ADJUST;
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
     {
         set_ev_slr(&slr, in_block.col, in_block.row);
         refs_adjust_add(tcell, &slr, &urefb, TRUE, FALSE);
@@ -272,7 +272,7 @@ if it fails it must tidy up the world as if nothing happened
 
 _Check_return_
 static S32
-copy_slots_to_eoworld(
+copy_cells_to_eoworld(
     COL fromcol,
     ROW fromrow,
     COL csize,
@@ -283,13 +283,13 @@ copy_slots_to_eoworld(
     COL coldiff  = numcol - fromcol;
     COL tcol;
     ROW trow;
-    S32 errorval = 1;
+    STATUS errorval = 1;
 
-    trace_0(TRACE_APP_PD4, "copy_slots_to_eoworld");
+    trace_0(TRACE_APP_PD4, "copy_cells_to_eoworld");
 
     for(tcol = 0; !ctrlflag  &&  (tcol < csize); tcol++)
     {
-        trace_2(TRACE_APP_PD4, "copy_slots_to_eoworld, tcol: %d, numcol: %d", tcol, numcol);
+        trace_2(TRACE_APP_PD4, "copy_cells_to_eoworld, tcol: %d, numcol: %d", tcol, numcol);
 
         /* copy from fromcol + tcol to o_numcol + tcol */
         /* create a gap in the column to copy the cells to  */
@@ -322,7 +322,7 @@ copy_slots_to_eoworld(
         /* tidy up mess */
         delcolandentry(o_numcol, numcol - o_numcol);
 
-    trace_0(TRACE_APP_PD4, "exit copy_slots_to_eoworld");
+    trace_0(TRACE_APP_PD4, "exit copy_cells_to_eoworld");
     return(errorval);
 }
 
@@ -408,7 +408,7 @@ ClearBlock_fn(void)
     /* fault marked blocks not in this document */
     if((blk_docno != current_docno())  &&  (blkstart.col != NO_COL))
     {
-        reperr_null(create_error(ERR_NOBLOCKINDOC));
+        reperr_null(ERR_NOBLOCKINDOC);
         return;
     }
 
@@ -416,7 +416,7 @@ ClearBlock_fn(void)
         return;
 
     /* clear the block out */
-    *linbuf = NULLCH;
+    linbuf[0] = CH_NULL;
     buffer_altered = TRUE;
     if(!merstr(blkstart.col, blkstart.row, TRUE, TRUE))
         return;
@@ -443,7 +443,7 @@ DeleteBlock_fn(void)
     /* fault marked blocks not in this document */
     if((blk_docno != current_docno())  &&  (col != NO_COL))
     {
-        reperr_null(create_error(ERR_NOBLOCKINDOC));
+        reperr_null(ERR_NOBLOCKINDOC);
         return;
     }
 
@@ -527,7 +527,7 @@ do_delete_block(
 
 static void
 do_fill(
-    BOOL down)
+    int command)
 {
     SLR src_start, src_end;
     SLR res_start, res_end;
@@ -540,36 +540,94 @@ do_fill(
                             ? create_error(ERR_NOBLOCKINDOC)
                             : create_error(ERR_NOBLOCK));
 */
-    if( (blkend.col == NO_COL)  ||
-        (down ? (blkend.row == blkstart.row) : (blkend.col == blkstart.col)) )
+    if(blkend.col == NO_COL)
     {
-        reperr_null(create_error(ERR_BAD_MARKER));
+        reperr_null(ERR_BAD_MARKER);
         return;
     }
 
-    src_start = blkstart;
-
-    if(down)
+    switch(command)
     {
+	default: default_unhandled();
+    case N_ReplicateDown:
+        if(blkend.row == blkstart.row)
+        {
+            reperr_null(ERR_BAD_MARKER);
+            return;
+        }
+
+        src_start.col = blkstart.col;
+        src_start.row = blkstart.row;
+
         src_end.col = blkend.col;
-        src_end.row = blkstart.row;
+        src_end.row = src_start.row;
 
         res_start.col = blkstart.col;
         res_start.row = blkstart.row + 1;
 
-        res_end.col = blkstart.col;
+        res_end.col = res_start.col;
         res_end.row = blkend.row;
-    }
-    else
-    {
-        src_end.col = blkstart.col;
+        break;
+
+    case N_ReplicateUp:
+        if(blkend.row == blkstart.row)
+        {
+            reperr_null(ERR_BAD_MARKER);
+            return;
+        }
+
+        src_start.col = blkstart.col;
+        src_start.row = blkend.row;
+
+        src_end.col = blkend.col;
+        src_end.row = src_start.row;
+
+        res_start.col = blkstart.col;
+        res_start.row = blkstart.row;
+
+        res_end.col = res_start.col;
+        res_end.row = blkend.row - 1;
+        break;
+
+    case N_ReplicateRight:
+        if(blkend.col == blkstart.col)
+        {
+            reperr_null(ERR_BAD_MARKER);
+            return;
+        }
+
+        src_start.col = blkstart.col;
+        src_start.row = blkstart.row;
+
+        src_end.col = src_start.col;
         src_end.row = blkend.row;
 
         res_start.col = blkstart.col + 1;
         res_start.row = blkstart.row;
 
         res_end.col = blkend.col;
-        res_end.row = blkstart.row;
+        res_end.row = res_start.row;
+        break;
+
+    case N_ReplicateLeft:
+        if(blkend.col == blkstart.col)
+        {
+            reperr_null(ERR_BAD_MARKER);
+            return;
+        }
+
+        src_start.col = blkend.col;
+        src_start.row = blkstart.row;
+
+        src_end.col = src_start.col;
+        src_end.row = blkend.row;
+
+        res_start.col = blkstart.col;
+        res_start.row = blkstart.row;
+
+        res_end.col = blkend.col - 1;
+        res_end.row = res_start.row;
+        break;
     }
 
     do_the_replicate(&src_start, &src_end,
@@ -796,7 +854,7 @@ MoveBlock_fn_do(S32 add_refs)
             */
             if(!is_blank_block(curcol, currow, curcol+colsize, currow+rowsize))
             {
-                reperr_null(create_error(ERR_OVERLAP));
+                reperr_null(ERR_OVERLAP);
                 return;
             }
         }
@@ -907,7 +965,7 @@ Paste_fn(void)
         else
         {
             /* won't recover block when editing expression */
-            reperr_null(create_error(ERR_EDITINGEXP));
+            reperr_null(ERR_EDITINGEXP);
             return;
         }
     }
@@ -991,7 +1049,7 @@ recover_deleted_block(
     if(!createcol(new_numcol + delete_size_col - 1))
     {
         trace_0(TRACE_APP_PD4, "failed to create enough columns for block: leave on list");
-        return(reperr_null(create_error(ERR_CANTLOADPASTEBLOCK)));
+        return(reperr_null(ERR_CANTLOADPASTEBLOCK));
     }
 
     /* copy column lists into end of colstart */
@@ -1169,10 +1227,9 @@ remove_deletion(
 *
 ******************************************************************************/
 
-extern void
-Replicate_fn(void)
+static int
+replicate_fn_core(void)
 {
-    char array[LIN_BUFSIZ];
     SLR src_start, src_end;
     SLR res_start, res_end;
 
@@ -1180,11 +1237,72 @@ Replicate_fn(void)
      *      first block in src_start, src_end
      *      second block in blkstart, blkend
     */
-    if(!init_dialog_box(D_REPLICATE))
-        return;
 
-    if(!dialog_box_start())
-        return;
+    /* get source range */
+    buff_sofar = (uchar *) d_replicate[0].textfield;
+    if(buff_sofar == NULL)
+        buff_sofar = UNULLSTR;
+    src_start.col =       getcol();
+    src_start.row = (ROW) getsbd()-1;
+    src_end.col   =       getcol();
+    src_end.row   = (ROW) getsbd()-1;
+
+    /* get target range */
+    buff_sofar = (uchar *) d_replicate[1].textfield;
+    if(buff_sofar == NULL)
+        buff_sofar = UNULLSTR;
+    res_start.col =       getcol();
+    res_start.row = (ROW) getsbd()-1;
+    res_end.col   =       getcol();
+    res_end.row   = (ROW) getsbd()-1;
+
+    /* check first markers */
+    if( bad_reference(res_start.col, res_start.row) ||
+        bad_reference(src_start.col, src_start.row) )
+    {
+        reperr_null(ERR_BAD_CELL);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    /* make sure second marker is sensible */
+    if( res_end.col == NO_COL)
+        res_end = res_start;
+
+    if( src_end.col == NO_COL)
+        src_end = src_start;
+
+    /* check not column of columns or row of rows */
+    if( ((res_end.col - res_start.col > 0)  &&  (src_end.col - src_start.col > 0))  ||
+        ((res_end.row - res_start.row > 0)  &&  (src_end.row - src_start.row > 0))  )
+    {
+        reperr_null(ERR_BAD_RANGE);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    /* check ranges point in right direction */
+    if( !check_range(&res_start, &res_end)  ||
+        !check_range(&src_start, &src_end)  )
+    {
+        reperr_null(ERR_BAD_RANGE);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    do_the_replicate(&src_start, &src_end,
+                     &res_start, &res_end);
+
+    out_rebuildvert = out_rebuildhorz = TRUE;
+
+    return(TRUE);
+}
+
+static BOOL
+replicate_fn_prepare(void)
+{
+    char array[LIN_BUFSIZ];
+
+    false_return(dialog_box_can_start());
+
+    false_return(init_dialog_box(D_REPLICATE));
 
     /* write current block into the source range */
 
@@ -1203,83 +1321,33 @@ Replicate_fn(void)
             /*out_idx +=*/ (void) write_ref(&array[out_idx], elemof32(array) - out_idx, current_docno(), blkend.col, blkend.row);
         }
 
-        if(!mystr_set(&d_replicate[0].textfield, array))
-            return;
+        false_return(mystr_set(&d_replicate[0].textfield, array));
     }
 
     /* write current position into the target range */
 
     (void) write_ref(array, elemof32(array), current_docno(), curcol, currow);
 
-    if(!mystr_set(&d_replicate[1].textfield, array))
+    false_return(mystr_set(&d_replicate[1].textfield, array));
+
+    return(dialog_box_start());
+}
+
+extern void
+Replicate_fn(void)
+{
+    if(!replicate_fn_prepare())
         return;
 
     while(dialog_box(D_REPLICATE))
     {
-        /* get source range */
+        int core_res = replicate_fn_core();
 
-        buff_sofar = (uchar *) d_replicate[0].textfield;
-        if(buff_sofar == NULL)
-            buff_sofar = UNULLSTR;
-        src_start.col =       getcol();
-        src_start.row = (ROW) getsbd()-1;
-        src_end.col   =       getcol();
-        src_end.row   = (ROW) getsbd()-1;
-
-        /* get target range */
-
-        buff_sofar = (uchar *) d_replicate[1].textfield;
-        if(buff_sofar == NULL)
-            buff_sofar = UNULLSTR;
-        res_start.col =       getcol();
-        res_start.row = (ROW) getsbd()-1;
-        res_end.col   =       getcol();
-        res_end.row   = (ROW) getsbd()-1;
-
-        /* check first markers */
-
-        if( bad_reference(res_start.col, res_start.row) ||
-            bad_reference(src_start.col, src_start.row))
-            {
-            reperr_null(create_error(ERR_BAD_CELL));
-            if(!dialog_box_can_retry())
-                break;
+        if(2 == core_res)
             continue;
-            }
 
-        /* make sure second marker is sensible */
-
-        if( res_end.col == NO_COL)
-            res_end = res_start;
-
-        if( src_end.col == NO_COL)
-            src_end = src_start;
-
-        /* check not column of columns or row of rows */
-
-        if( ((res_end.col-res_start.col > 0)  &&  (src_end.col-src_start.col > 0))  ||
-            ((res_end.row-res_start.row > 0)  &&  (src_end.row-src_start.row > 0))  )
-        {
-            reperr_null(create_error(ERR_BAD_RANGE));
-            if(!dialog_box_can_retry())
-                break;
-            continue;
-        }
-
-        /* check ranges point in right direction */
-        if( !check_range(&res_start, &res_end)  ||
-            !check_range(&src_start, &src_end)  )
-        {
-            reperr_null(create_error(ERR_BAD_RANGE));
-            if(!dialog_box_can_retry())
-                break;
-            continue;
-        }
-
-        do_the_replicate(&src_start, &src_end,
-                         &res_start, &res_end);
-
-        out_rebuildvert = out_rebuildhorz = TRUE;
+        if(0 == core_res)
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -1291,13 +1359,25 @@ Replicate_fn(void)
 extern void
 ReplicateDown_fn(void)
 {
-    do_fill(TRUE);
+    do_fill(N_ReplicateDown);
 }
 
 extern void
 ReplicateRight_fn(void)
 {
-    do_fill(FALSE);
+    do_fill(N_ReplicateRight);
+}
+
+extern void
+ReplicateUp_fn(void)
+{
+    do_fill(N_ReplicateUp);
+}
+
+extern void
+ReplicateLeft_fn(void)
+{
+    do_fill(N_ReplicateLeft);
 }
 
 /* save block of cells on to the deleted block stack
@@ -1351,7 +1431,7 @@ save_block_and_delete(
         /* put block on deleted_words list */
         if( (NULL != (delete_colstart = al_ptr_alloc_elem(COLENTRY, delete_size_col, &mres))) &&
             (NULL != (lptr = add_list_entry(&deleted_words, sizeof32(SAVED_BLOCK_DESCRIPTOR), &mres))) )
-            {
+        {
             lptr->key = ++latest_word_on_stack + BLOCK_OFFSET;
 
             sbdp = (SAVED_BLOCK_DESCRIPTOR *) lptr->value;
@@ -1362,11 +1442,11 @@ save_block_and_delete(
             sbdp->del_colstart  = delete_colstart;
             sbdp->del_col_size  = delete_size_col;
             sbdp->del_row_size  = delete_size_row;
-            }
+        }
 
         /* if those worked, copy cells to a parallel structure in this sheet */
         if(delete_colstart  &&  lptr)
-            copyres = copy_slots_to_eoworld(bs.col, bs.row,
+            copyres = copy_cells_to_eoworld(bs.col, bs.row,
                                             delete_size_col, delete_size_row);
         else
             copyres = (mres < 0) ? mres : status_nomem();
@@ -1374,11 +1454,14 @@ save_block_and_delete(
         if(((eres = escape_disable_nowinge()) < 0)  &&  (copyres >= 0))
             copyres = eres;
 
+        /*if(is_deletion)
+            copyres = status_nomem();*/ /* for testing */
+
         if(copyres < 0)
         {
             /* copy cells failed - might be escape or memory problem */
 
-            if(lptr)
+            if(NULL != lptr)
             {
                 --latest_word_on_stack;
                 delete_from_list(&deleted_words, lptr->key);
@@ -1386,7 +1469,7 @@ save_block_and_delete(
 
             al_ptr_dispose(P_P_ANY_PEDANTIC(&delete_colstart));
 
-            if((copyres != create_error(ERR_ESCAPE))  &&  is_deletion)
+            if((copyres != ERR_ESCAPE)  &&  is_deletion)
             {
                 if(init_dialog_box(D_SAVE_DELETED)  &&  dialog_box_start())
                 {
@@ -1404,9 +1487,11 @@ save_block_and_delete(
                 }
             }
             else
-                res = reperr_null((copyres == STATUS_NOMEM) ? create_error(ERR_CANTSAVEPASTEBLOCK) : copyres);
+            {
+                res = reperr_null((copyres == STATUS_NOMEM) ? ERR_CANTSAVEPASTEBLOCK : copyres);
+            }
 
-            if(!res)
+            if(0 == res)
                 goto FINISH_OFF;
         }
 
@@ -1506,7 +1591,7 @@ set_up_block(
         return(FALSE);
 
     if(blkstart.col == NO_COL)
-        return(reperr_null(create_error(ERR_NOBLOCK)));
+        return(reperr_null(ERR_NOBLOCK));
 
     if(blkend.col == NO_COL)
     {
@@ -1515,7 +1600,7 @@ set_up_block(
     }
 
     if(check_block_in_doc && (blk_docno != current_docno()))
-        return(reperr_null(create_error(ERR_NOBLOCKINDOC)));
+        return(reperr_null(ERR_NOBLOCKINDOC));
 
     trace_4(TRACE_APP_PD4, "set_up_block ok: start %d %d; end %d %d", blkstart.col, blkstart.row, blkend.col, blkend.row);
 
@@ -1620,7 +1705,7 @@ TransposeBlock_fn(void)
         {
             /* need to insert columns here, can't use insert_blank_block */
 
-            reperr_null(create_error(ERR_OVERLAP));
+            reperr_null(ERR_OVERLAP);
             return;
         }
 
@@ -1637,7 +1722,7 @@ TransposeBlock_fn(void)
     {
         /* too many cols */
         if(!is_blank_block(blkstart.col, blkend.row+1, new_last_col, new_last_row))
-            /* RJM on 6.2.91, after 4.11
+            /* RJM on 6.2.91, after PD 4.11
                 changes numcol-1 to numcol in the following
             */
             insert_blank_block(0,blkend.row+1,numcol,-more_rows);

@@ -26,11 +26,19 @@
 /* get declarations of marked block functions */
 #include "markers.h"
 
+/* returns from current function with FALSE */
+#define false_return(expr) \
+    do { \
+    const BOOL bool_e = (expr); \
+    if(!bool_e) \
+        return(bool_e); \
+    } while_constant(0)
+
 /******************************************************************************
 * character definitions
 ******************************************************************************/
 
-#define SLRLD2                  NULLCH /* this makes detecting SLRLD1 trivial and really helps debug! */
+#define SLRLD2                  CH_NULL /* this makes detecting SLRLD1 trivial and really helps debug! */
 #define TAB                     ((uchar) 0x09)
 #define FORMFEED                ((uchar) 0x0C)
 #define FUNNYSPACE              ((uchar) 0x0E)
@@ -81,11 +89,11 @@ enum HIGHLIGHT_BITS
 #else
 #define get_text_at_char() ( \
     (NULL == d_options_TA)   \
-        ? NULLCH             \
-        : *d_options_TA      ) /* may be NULLCH */
+        ? CH_NULL            \
+        : *d_options_TA      ) /* may be CH_NULL */
 
 #define is_text_at_char(c) ( \
-    ((NULL == d_options_TA)  ||  (NULLCH == *d_options_TA)) \
+    ((NULL == d_options_TA)  ||  (CH_NULL == *d_options_TA)) \
         ? FALSE              \
         : (*d_options_TA == (c)) )
 #endif
@@ -101,102 +109,148 @@ enum HIGHLIGHT_BITS
 #define              ALT    -3
 #define DEPRESSED_ESCAPE    0
 
-enum EXTRA_CHAR_BITS
-{
-    FN_ADDED    = 0x0100, /* function keys */
-    SHIFT_ADDED = 0x0200,
-    CTRL_ADDED  = 0x0400,
-    ALT_ADDED   = 0x0800  /* 'alt' letters */
-};
+/*
+extra bits added in to basic key codes
+*/
+
+#define KMAP_CODE_ADDED_FN    0x0100 /* function keys */
+#define KMAP_CODE_ADDED_SHIFT 0x0200
+#define KMAP_CODE_ADDED_CTRL  0x0400
+#define KMAP_CODE_ADDED_ALT   0x0800 /* 'alt' letters */
+
+#define RISCOS_EKEY_ESCAPE 27
+
+#define KMAP_ESCAPE 27
 
 /* function keys starting at F0 .. F15 */
 
-#define          FUNC   (FN_ADDED + 0x00)
-#define         SFUNC   (FUNC | SHIFT_ADDED)
-#define         CFUNC   (FUNC               | CTRL_ADDED)
-#define        CSFUNC   (FUNC | SHIFT_ADDED | CTRL_ADDED)
+#define KMAP_BASE_FUNC          (KMAP_CODE_ADDED_FN + 0x00)
+#define KMAP_BASE_SFUNC         (KMAP_BASE_FUNC | KMAP_CODE_ADDED_SHIFT)
+#define KMAP_BASE_CFUNC         (KMAP_BASE_FUNC                         | KMAP_CODE_ADDED_CTRL)
+#define KMAP_BASE_CSFUNC        (KMAP_BASE_FUNC | KMAP_CODE_ADDED_SHIFT | KMAP_CODE_ADDED_CTRL)
 
-/* function-like keys */
+/* function-like keys (1) */
 
-#define          FUNC2  (FN_ADDED + 0x10)
-#define         SFUNC2  (FUNC2 | SHIFT_ADDED)
-#define         CFUNC2  (FUNC2               | CTRL_ADDED)
-#define        CSFUNC2  (FUNC2 | SHIFT_ADDED | CTRL_ADDED)
+#define KMAP_FUNC_PRINT         (KMAP_BASE_FUNC    + 0x00)
+#define KMAP_FUNC_SPRINT        (KMAP_BASE_SFUNC   + 0x00)
+#define KMAP_FUNC_CPRINT        (KMAP_BASE_CFUNC   + 0x00)
+#define KMAP_FUNC_CSPRINT       (KMAP_BASE_CSFUNC  + 0x00)
+
+#define KMAP_FUNC_INSERT        (KMAP_BASE_FUNC    + 0x0D)
+#define KMAP_FUNC_SINSERT       (KMAP_BASE_SFUNC   + 0x0D)
+#define KMAP_FUNC_CINSERT       (KMAP_BASE_CFUNC   + 0x0D)
+#define KMAP_FUNC_CSINSERT      (KMAP_BASE_CSFUNC  + 0x0D)
+
+/* function-like keys (2) */
+
+#define KMAP_BASE_FUNC2         (KMAP_CODE_ADDED_FN + 0x10)
+#define KMAP_BASE_SFUNC2        (KMAP_BASE_FUNC2 | KMAP_CODE_ADDED_SHIFT)
+#define KMAP_BASE_CFUNC2        (KMAP_BASE_FUNC2                         | KMAP_CODE_ADDED_CTRL)
+#define KMAP_BASE_CSFUNC2       (KMAP_BASE_FUNC2 | KMAP_CODE_ADDED_SHIFT | KMAP_CODE_ADDED_CTRL)
 
 /* Common function key assignments */
 
-enum FUNCTION_KEY_VALUES
+enum CLASSIC_KEY_VALUES
 {
-    PRINT_KEY       = FUNC +  0,    /* 'F0' */
+    CLASSIC_KEY_HELP            = KMAP_BASE_FUNC   +  1, /* same as SG */
+    CLASSIC_KEY_EDIT_EXPRESSION = KMAP_BASE_FUNC   +  2,
+    CLASSIC_KEY_SAVE            = KMAP_BASE_FUNC   +  3, /* same as SG */
+    CLASSIC_KEY_SEARCH          = KMAP_BASE_FUNC   +  4, /* same as SG */
 
-    HELP            = FUNC +  1,
-    EXPRESSION      = FUNC +  2,
-    SAVE            = FUNC +  3,
-    SEARCH          = FUNC +  4,
+    CLASSIC_KEY_REPEAT_COMMAND  = KMAP_BASE_FUNC   +  5,
+    CLASSIC_KEY_NEXT_MATCH      = KMAP_BASE_FUNC   +  6,
+    CLASSIC_KEY_INSERT_ROW      = KMAP_BASE_FUNC   +  7, /* moves to CSF7 in SG mode */
+    CLASSIC_KEY_DELETE_ROW      = KMAP_BASE_FUNC   +  8, /* moves to CSF7 in SG mode */
 
-    REPEAT          = FUNC +  5,
-    NEXTMATCH       = FUNC +  6,
-    INSERTROW       = FUNC +  7,
-    DELETEROW       = FUNC +  8,
-
-    PASTE           = FUNC +  9,
-    DELETEWORD      = FUNC + 10,
-    DELEOL          = FUNC + 11,
+    CLASSIC_KEY_PASTE           = KMAP_BASE_FUNC   +  9,
+    CLASSIC_KEY_DELETE_WORD     = KMAP_BASE_FUNC   + 10,
+    CLASSIC_KEY_DELETE_EOL      = KMAP_BASE_FUNC   + 11,
     /* leave F12 well alone */
 
-    INSERT_KEY      = FUNC + 13    /* 'F13' */
+    CLASSIC_KEY_GOTO            = KMAP_BASE_SFUNC  +  5, /* added in 4.56 */
+    CLASSIC_KEY_SORT            = KMAP_BASE_SFUNC  +  6, /* added in 4.56 */
+    CLASSIC_KEY_INSERT_COLUMN   = KMAP_BASE_SFUNC  +  7, /* added in 4.56 */
+    CLASSIC_KEY_DELETE_COLUMN   = KMAP_BASE_SFUNC  +  8, /* added in 4.56 */
+
 };
 
-#define RISCOS_DELETE_KEY 0x7F /* transforms to ... */
+enum STYLE_GUIDE_KEY_VALUES
+{
+    SG_KEY_HELP             = KMAP_BASE_FUNC   +  1, /* RO SG */
+    SG_KEY_LOAD_DOCUMENT    = KMAP_BASE_FUNC   +  2, /* RO SG */
+    SG_KEY_SAVE_DOCUMENT    = KMAP_BASE_FUNC   +  3, /* RO SG */
+    SG_KEY_FIND             = KMAP_BASE_FUNC   +  4, /* RO SG */
+    SG_KEY_GOTO             = KMAP_BASE_FUNC   +  5, /* RO SG */
+    SG_KEY_NEXTMATCH        = KMAP_BASE_FUNC   +  6, /* PipeDream (same as Classic) */
+    SG_KEY_F7               = KMAP_BASE_FUNC   +  7,
+    SG_KEY_UNDO             = KMAP_BASE_FUNC   +  8, /* RO SG */ /* not in PipeDream */
+    SG_KEY_REDO             = KMAP_BASE_FUNC   +  9, /* RO SG */ /* not in PipeDream */
+    SG_KEY_F10              = KMAP_BASE_FUNC   + 10,
+    SG_KEY_F11              = KMAP_BASE_FUNC   + 11,
 
-#define   DELETE_KEY    (  FUNC2 +  0)
-#define  SDELETE_KEY    ( SFUNC2 +  0)
-#define  CDELETE_KEY    ( CFUNC2 +  0)
-#define CSDELETE_KEY    (CSFUNC2 +  0)
+    SG_KEY_INSERT_DOCUMENT  = KMAP_BASE_SFUNC  +  2, /* RO SG */ /* not in PipeDream */
+    SG_KEY_SORT             = KMAP_BASE_SFUNC  +  6, /* PipeDream (same as Classic) */
+    SG_KEY_INSERT_COLUMN    = KMAP_BASE_SFUNC  +  7, /* PipeDream (same as Fireworkz) */
+    SG_KEY_DELETE_COLUMN    = KMAP_BASE_SFUNC  +  8, /* PipeDream (same as Fireworkz) */
 
-#define RISCOS_HOME_KEY   30 /* transforms to ... */
+    SG_KEY_CLOSE_WINDOW     = KMAP_BASE_CFUNC  +  2, /* RO SG */
+    SG_KEY_REPLACE          = KMAP_BASE_CFUNC  +  4, /* RO SG */
+    SG_KEY_INSERT_ROW       = KMAP_BASE_CFUNC  +  7, /* PipeDream (same as Fireworkz) */
+    SG_KEY_DELETE_ROW       = KMAP_BASE_CFUNC  +  8, /* PipeDream (same as Fireworkz) */
+};
 
-#define   HOME_KEY      (  FUNC2 +  1)
-#define  SHOME_KEY      ( SFUNC2 +  1)
-#define  CHOME_KEY      ( CFUNC2 +  1)
-#define CSHOME_KEY      (CSFUNC2 +  1)
+#define RISCOS_EKEY_DELETE 0x7F /* transforms to ... */
 
-#define RISCOS_BACKSPACE_KEY 0x08 /* transforms to ... */
+#define KMAP_FUNC_DELETE        (KMAP_BASE_FUNC2   + 0x00)
+#define KMAP_FUNC_SDELETE       (KMAP_BASE_SFUNC2  + 0x00)
+#define KMAP_FUNC_CDELETE       (KMAP_BASE_CFUNC2  + 0x00)
+#define KMAP_FUNC_CSDELETE      (KMAP_BASE_CSFUNC2 + 0x00)
 
-#define   BACKSPACE_KEY (  FUNC2 +  2)
-#define  SBACKSPACE_KEY ( SFUNC2 +  2)
-#define  CBACKSPACE_KEY ( CFUNC2 +  2)
-#define CSBACKSPACE_KEY (CSFUNC2 +  2)
+#define RISCOS_EKEY_HOME   30 /* transforms to ... */
 
-#define   TAB_KEY       (  FUNC2 + 10)
-#define  STAB_KEY       ( SFUNC2 + 10)
-#define  CTAB_KEY       ( CFUNC2 + 10)
-#define CSTAB_KEY       (CSFUNC2 + 10)
+#define KMAP_FUNC_HOME          (KMAP_BASE_FUNC2   + 0x01)
+#define KMAP_FUNC_SHOME         (KMAP_BASE_SFUNC2  + 0x01)
+#define KMAP_FUNC_CHOME         (KMAP_BASE_CFUNC2  + 0x01)
+#define KMAP_FUNC_CSHOME        (KMAP_BASE_CSFUNC2 + 0x01)
 
-#define   END_KEY       (  FUNC2 + 11)
-#define  SEND_KEY       ( SFUNC2 + 11)
-#define  CEND_KEY       ( CFUNC2 + 11)
-#define CSEND_KEY       (CSFUNC2 + 11)
+#define RISCOS_EKEY_BACKSPACE 0x08 /* transforms to ... */
 
-#define   LEFTCURSOR    (  FUNC2 + 12)
-#define  SLEFTCURSOR    ( SFUNC2 + 12)
-#define  CLEFTCURSOR    ( CFUNC2 + 12)
-#define CSLEFTCURSOR    (CSFUNC2 + 12)
+#define KMAP_FUNC_BACKSPACE     (KMAP_BASE_FUNC2   + 0x02)
+#define KMAP_FUNC_SBACKSPACE    (KMAP_BASE_SFUNC2  + 0x02)
+#define KMAP_FUNC_CBACKSPACE    (KMAP_BASE_CFUNC2  + 0x02)
+#define KMAP_FUNC_CSBACKSPACE   (KMAP_BASE_CSFUNC2 + 0x02)
 
-#define   RIGHTCURSOR   (  FUNC2 + 13)
-#define  SRIGHTCURSOR   ( SFUNC2 + 13)
-#define  CRIGHTCURSOR   ( CFUNC2 + 13)
-#define CSRIGHTCURSOR   (CSFUNC2 + 13)
+#define KMAP_FUNC_TAB           (KMAP_BASE_FUNC2   + 0x0A)
+#define KMAP_FUNC_STAB          (KMAP_BASE_SFUNC2  + 0x0A)
+#define KMAP_FUNC_CTAB          (KMAP_BASE_CFUNC2  + 0x0A)
+#define KMAP_FUNC_CSTAB         (KMAP_BASE_CSFUNC2 + 0x0A)
 
-#define   DOWNCURSOR    (  FUNC2 + 14)
-#define  SDOWNCURSOR    ( SFUNC2 + 14)
-#define  CDOWNCURSOR    ( CFUNC2 + 14)
-#define CSDOWNCURSOR    (CSFUNC2 + 14)
+#define KMAP_FUNC_END           (KMAP_BASE_FUNC2   + 0x0B)
+#define KMAP_FUNC_SEND          (KMAP_BASE_SFUNC2  + 0x0B)
+#define KMAP_FUNC_CEND          (KMAP_BASE_CFUNC2  + 0x0B)
+#define KMAP_FUNC_CSEND         (KMAP_BASE_CSFUNC2 + 0x0B)
 
-#define   UPCURSOR      (  FUNC2 + 15)
-#define  SUPCURSOR      ( SFUNC2 + 15)
-#define  CUPCURSOR      ( CFUNC2 + 15)
-#define CSUPCURSOR      (CSFUNC2 + 15)
+#define KMAP_FUNC_ARROW_LEFT    (KMAP_BASE_FUNC2   + 0x0C)
+#define KMAP_FUNC_SARROW_LEFT   (KMAP_BASE_SFUNC2  + 0x0C)
+#define KMAP_FUNC_CARROW_LEFT   (KMAP_BASE_CFUNC2  + 0x0C)
+#define KMAP_FUNC_CSARROW_LEFT  (KMAP_BASE_CSFUNC2 + 0x0C)
+
+#define KMAP_FUNC_ARROW_RIGHT   (KMAP_BASE_FUNC2   + 0x0D)
+#define KMAP_FUNC_SARROW_RIGHT  (KMAP_BASE_SFUNC2  + 0x0D)
+#define KMAP_FUNC_CARROW_RIGHT  (KMAP_BASE_CFUNC2  + 0x0D)
+#define KMAP_FUNC_CSARROW_RIGHT (KMAP_BASE_CSFUNC2 + 0x0D)
+
+#define KMAP_FUNC_ARROW_DOWN    (KMAP_BASE_FUNC2   + 0x0E)
+#define KMAP_FUNC_SARROW_DOWN   (KMAP_BASE_SFUNC2  + 0x0E)
+#define KMAP_FUNC_CARROW_DOWN   (KMAP_BASE_CFUNC2  + 0x0E)
+#define KMAP_FUNC_CSARROW_DOWN  (KMAP_BASE_CSFUNC2 + 0x0E)
+
+#define KMAP_FUNC_ARROW_UP      (KMAP_BASE_FUNC2   + 0x0F)
+#define KMAP_FUNC_SARROW_UP     (KMAP_BASE_SFUNC2  + 0x0F)
+#define KMAP_FUNC_CARROW_UP     (KMAP_BASE_CFUNC2  + 0x0F)
+#define KMAP_FUNC_CSARROW_UP    (KMAP_BASE_CSFUNC2 + 0x0F)
+
+typedef S32 KMAP_CODE; typedef KMAP_CODE * P_KMAP_CODE; typedef const KMAP_CODE * PC_KMAP_CODE;
 
 /******************************************************************************
 * movement manifests
@@ -358,7 +412,7 @@ killslot(
     ROW trow);
 
 extern P_CELL
-next_slot_in_block(
+next_cell_in_block(
     BOOL direction);
 
 extern void
@@ -568,9 +622,9 @@ extern coord
 scrnwidth(void);
 
 extern void
-setcolour(
-    S32 fore,
-    S32 back);
+setcolours(
+    _In_        COLOURS_OPTION_INDEX fg_colours_option_index,
+    _In_        COLOURS_OPTION_INDEX bg_colours_option_index);
 
 extern coord
 stringout(
@@ -596,19 +650,15 @@ extern void
 escape_enable(void);
 
 extern S32
-getcolour(
-    S32 colour);
-
-extern S32
 rdch_riscos(void);
 
 extern void
-setbgcolour(
-    S32 colour);
+set_bg_colour_from_option(
+    _InVal_     COLOURS_OPTION_INDEX bg_colours_option_index);
 
 extern void
-setfgcolour(
-    S32 colour);
+set_fg_colour_from_option(
+    _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index);
 
 extern void
 wrch_definefunny(
@@ -709,6 +759,7 @@ exported functions
 extern STATUS
 enumerate_dir_to_list(
     _InoutRef_  P_P_LIST_BLOCK list,
+    _InoutRef_  P_LIST_ITEMNO p_key,
     _In_opt_z_  PC_U8Z subdir /*maybe NULL*/,
     _InVal_     FILETYPE_RISC_OS filetype);
 
@@ -759,6 +810,10 @@ set_width_and_wrap(
     COL tcol,
     coord width,
     coord wrapwidth);
+
+extern FILETYPE_RISC_OS
+currentfiletype(
+    _InVal_     char filetype_option);
 
 extern FILETYPE_RISC_OS
 rft_from_filetype_option(
@@ -835,14 +890,14 @@ kill_driver(void);
 exported functions
 */
 
-extern BOOL
+extern STATUS
 add_path_using_dir(
     _Out_writes_z_(elemof_buffer) P_USTR filename /*inout*/,
     _InVal_     U32 elemof_buffer,
     const char *src,
     _In_z_      PC_USTR dir);
 
-extern BOOL
+extern STATUS
 add_path_or_relative_using_dir(
     _Out_writes_z_(elemof_buffer) P_USTR filename /*inout*/,
     _InVal_     U32 elemof_buffer,
@@ -917,24 +972,19 @@ away_string_simple(
 * browse.c
 ******************************************************************************/
 
-extern void
-check_word(void);   /* check current word on line */
+extern S32
+browse(
+    _InVal_     DICT_NUMBER dict,
+    char *wild_str);
 
-extern BOOL
-check_word_wanted(void);
+_Check_return_
+extern STATUS
+close_dict(
+    _InVal_     DICT_NUMBER dict);
 
 extern void
 close_user_dictionaries(
     BOOL force);
-
-extern void
-del_spellings(void);
-
-_Check_return_
-extern STATUS
-dict_number(
-    const char *name,
-    BOOL create);
 
 typedef struct A_LETTER
 {
@@ -957,6 +1007,53 @@ dumpdict_null(void);
 
 extern void
 mergedict_null(void);
+
+/******************************************************************************
+* spellchk.c
+******************************************************************************/
+
+extern void
+check_word(void);   /* check current word on line */
+
+extern BOOL
+check_word_wanted(void);
+
+extern void
+del_spellings(void);
+
+extern P_U8
+get_word_from_line(
+    _InVal_     DICT_NUMBER dict,
+    /*out*/ P_U8 array,
+    S32 stt_offset,
+    P_S32 found_offsetp);
+
+/******************************************************************************
+* userdict.c
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+dict_number(
+    const char *name,
+    BOOL create);
+
+/*ncr*/
+extern BOOL
+err_open_master_dict(void);
+
+extern BOOL
+insert_most_recent_userdict(
+    char **field);
+
+_Check_return_
+extern STATUS
+open_appropriate_dict(
+    const DIALOG * const dptr);
+
+_Check_return_
+extern STATUS
+open_master_dict(void);
 
 /******************************************************************************
 * bufedit.c
@@ -999,7 +1096,7 @@ insert_string(
     BOOL allow_check);
 
 extern BOOL
-insert_string_check_numeric(
+insert_string_check_number(
     const char *str,
     BOOL allow_check);
 
@@ -1137,10 +1234,10 @@ enum DIALOG_HEADER_OFFSETS
     D_INSHIGH,
     D_DEFKEY,
     D_DEF_FKEY,
-    D_INSPAGE,
+    D_INSERT_PAGE_BREAK,
     D_SAVE_POPUP,
     D_COLOURS,
-    D_was_INSCHAR,
+    D_EXTENDED_COLOURS,
     D_ABOUT,
     D_was_STATUS,
     D_COUNT,
@@ -1183,6 +1280,9 @@ enum DIALOG_HEADER_OFFSETS
     D_EDIT_DRIVER,
     D_FORMULA_ERROR,
     D_CHART_OPTIONS,
+    D_INSERT_PAGE_NUMBER,
+    D_INSERT_DATE,
+    D_INSERT_TIME,
     D_THE_LAST_ONE
 };
 
@@ -1227,7 +1327,7 @@ extern DIALOG d_decimal[];
 extern DIALOG d_inshigh[];
 extern DIALOG d_defkey[];
 extern DIALOG d_def_fkey[];
-extern DIALOG d_inspage[];
+extern DIALOG d_insert_page_break[];
 extern DIALOG d_create[];
 extern DIALOG d_colours[];
 extern DIALOG d_inschar[];
@@ -1276,15 +1376,15 @@ extern DIALOG d_load_template[];
 extern DIALOG d_formula_error[];
 extern DIALOG d_chart_options[];
 extern DIALOG d_edit_driver[];
-
-/*>>>the following define was ripped off from c.mcdiff and probably shouldn't be here*/
-#define logcol(colour) (d_colours[colour].option)
+extern DIALOG d_insert_page_number[];
+extern DIALOG d_insert_date[];
+extern DIALOG d_insert_time[];
 
 /*
 exported table of internal key values corresponding to the define function key dialog box list
 */
 
-extern const S32 func_key_list[];
+extern const KMAP_CODE func_key_list[];
 
 extern BOOL
 allowed_in_dialog(
@@ -1299,6 +1399,9 @@ dialog_box_can_persist(void);
 
 extern BOOL
 dialog_box_can_retry(void);
+
+extern BOOL
+dialog_box_can_start(void);
 
 extern void
 dialog_box_end(void);
@@ -1353,14 +1456,14 @@ extern void
 colh_draw_column_headings(void);
 
 extern void
-colh_draw_contents_of_numslot(void);
+colh_draw_contents_of_number_cell(void);
 
 extern void
-colh_draw_slot_count(
+colh_draw_cell_count(
     _In_opt_z_      char *text);
 
 extern void
-colh_draw_slot_count_in_document(
+colh_draw_cell_count_in_document(
     _In_opt_z_      char *text);
 
 extern void
@@ -1411,11 +1514,13 @@ delfil(void);       /* delete contents of file (cols and rows) */
 
 /* we require mystr_set to error if failed */
 
+_Check_return_
 extern BOOL
 mystr_set(
-    _OutRef_    P_P_USTR aa,
+    _InoutRef_  P_P_USTR aa,
     _In_opt_z_  PC_USTR b);
 
+_Check_return_
 extern BOOL
 mystr_set_n(
     _OutRef_    P_P_USTR aa,
@@ -1470,6 +1575,12 @@ extern void
 check_state_changed(void);
 
 extern void
+cmd_seq_cancel(void);
+
+extern BOOL
+cmd_seq_is_empty(void);
+
+extern void
 display_heading(
     S32 idx);
 
@@ -1499,7 +1610,7 @@ find_loadcommand(void);
 
 extern void
 get_menu_change(
-    char *from);
+    const char *from);
 
 extern S32
 getsbd(void);
@@ -1512,7 +1623,7 @@ inpchr(
     BOOL curs);
 
 extern void
-insert_state_may_have_changed(void);
+insert_overtype_state_may_have_changed(void);
 
 extern void
 internal_process_command(
@@ -1707,7 +1818,7 @@ enum FUNCTION_NUMBERS
     N_DefineCommand,
     N_Help,
     N_Pause,
-    N_OSCommand,
+    N_was_OSCommand,
 
     N_AutoSpellCheck,
     N_BrowseDictionary,
@@ -1761,10 +1872,21 @@ enum FUNCTION_NUMBERS
 ,   N_ChartOptions
 ,   N_AutoChartRecalculation
 
-    /* vvv --- new in 4.50 --- vvv */
-,   N_ToNumber
+,   N_ToNumber /* added in PD 4.50 */
 ,   N_ToText
 ,   N_ClearBlock
+
+,   N_ToConstant /* added in PD 4.56 */
+,   N_ReplicateUp
+,   N_ReplicateLeft
+,   N_MenuStyle
+,   N_InsertFile
+,   N_InsertColourChange
+,   N_InsertDate
+,   N_InsertTime
+,   N_InsertPageNumber
+,   N_ShowLicence
+,   N_InteractiveHelp
 };
 
 extern void
@@ -1947,6 +2069,18 @@ extern void
 InsertPageBreak_fn(void);
 
 extern void
+InsertPageNumber_fn(void);
+
+extern void
+InsertDate_fn(void);
+
+extern void
+InsertTime_fn(void);
+
+extern void
+InsertColourChange_fn(void);
+
+extern void
 EditFormula_fn(void);
 
 extern void
@@ -2060,12 +2194,6 @@ extern void
 ExchangeNumbersText_fn(void);
 
 extern void
-ToNumber_fn(void);
-
-extern void
-ToText_fn(void);
-
-extern void
 HighlightBlock_fn(void);
 
 extern void
@@ -2084,12 +2212,6 @@ extern void
 Replicate_fn(void);
 
 extern void
-ReplicateDown_fn(void);
-
-extern void
-ReplicateRight_fn(void);
-
-extern void
 SetProtectedBlock_fn(void);
 
 extern void
@@ -2099,7 +2221,19 @@ extern void
 SortBlock_fn(void);
 
 extern void
+ToConstant_fn(void);
+
+extern void
+ToNumber_fn(void);
+
+extern void
+ToText_fn(void);
+
+extern void
 LoadFile_fn(void);
+
+extern void
+InsertFile_fn(void);
 
 extern void
 NameFile_fn(void);
@@ -2186,6 +2320,9 @@ extern void
 MenuSize_fn(void);
 
 extern void
+MenuStyle_fn(void);
+
+extern void
 DefineKey_fn(void);
 
 extern void
@@ -2195,13 +2332,9 @@ extern void
 DefineCommand_fn(void);
 
 extern void
-Help_fn(void);
-
-extern void
 Pause_fn(void);
 
-extern void
-OSCommand_fn(void);
+/* Spell */
 
 extern void
 AutoSpellCheck_fn(void);
@@ -2257,6 +2390,8 @@ DisplayOpenDicts_fn(void);
 extern void
 PackUserDict_fn(void);
 
+/* Chart */
+
 extern void
 ChartNew_fn(void);
 
@@ -2274,6 +2409,17 @@ ChartOptions_fn(void);
 
 extern void
 ChartSelect_fn(void);
+
+/* Help */
+
+extern void
+Help_fn(void);
+
+extern void
+ShowLicence_fn(void);
+
+extern void
+InteractiveHelp_fn(void);
 
 extern void
 AutoRecalculate_fn(void);
@@ -2425,7 +2571,13 @@ extern void
 ReplicateDown_fn(void);
 
 extern void
+ReplicateLeft_fn(void);
+
+extern void
 ReplicateRight_fn(void);
+
+extern void
+ReplicateUp_fn(void);
 
 _Check_return_
 extern BOOL
@@ -2471,7 +2623,7 @@ expedit_close_file(
 extern BOOL
 expedit_owns_window(
     P_DOCU p_docu,
-    HOST_WND window);
+    _HwndRef_   HOST_WND window_handle);
 
 /******************************************************************************
 * scdraw.c
@@ -2543,12 +2695,6 @@ my_rectangle(
     coord y_size);
 
 extern coord
-onejst(
-    uchar *str,
-    coord fwidth,
-    uchar type);
-
-extern coord
 outslt(
     P_CELL tcell,
     ROW row,
@@ -2568,7 +2714,13 @@ twzchr(
     char ch);
 
 extern coord
-lcrjust(
+lcrjust_plain(
+    uchar *str,
+    coord fwidth,
+    BOOL reversed);
+
+extern coord
+lcrjust_riscos_fonts(
     uchar *str,
     coord fwidth,
     BOOL reversed);
@@ -2583,7 +2735,7 @@ lcrjust(
 * doprint.c
 ******************************************************************************/
 
-#define EOS     '\0'    /* prnout called with this to turn off highlights */
+#define EOS     CH_NULL      /* prnout called with this to turn off highlights */
 #define P_ON    ((S32) 257)  /* printer on */
 #define P_OFF   ((S32) 258)  /* printer off */
 #define E_P     ((S32) 259)  /* end page */
@@ -2640,6 +2792,43 @@ sndchr(
 extern void
 thicken_grid_lines(
     S32 thickness);
+
+/******************************************************************************
+* colour.c
+******************************************************************************/
+
+#if defined(EXTENDED_COLOUR_WINDVARS)
+#define wimp_colour_value_from_option(colours_option_index) ( \
+    (&current_p_docu->Xd_colours_CF)[(colours_option_index)] )
+#else
+#define wimp_colour_value_from_option(colours_option_index) ( \
+    d_colours[colours_option_index].option )
+#endif
+
+#define wimp_colour_index_from_option(colours_option_index) ( \
+    0x0F & wimp_colour_value_from_option(colours_option_index) )
+
+#if defined(EXTENDED_COLOUR)
+
+extern U32
+decode_wimp_colour_value(
+    const char * from);
+
+extern int /* sprintf-like */
+encode_wimp_colour_value(
+    /*out*/ char * buffer,
+    U32 buffer_bytes,
+    U32 wimp_colour_value);
+
+#endif
+
+extern U32
+get_colour_value(
+    PC_USTR pos,
+    _OutRef_    P_U32 p_r,
+    _OutRef_    P_U32 p_g,
+    _OutRef_    P_U32 p_b,
+    _InVal_     uchar text_at_char);
 
 /******************************************************************************
 * cursmov.c
@@ -2721,7 +2910,7 @@ horzvec SCRCOL[maximum_cols]
     array_base(&horzvec_mh, SCRCOL)
 
 #define horzvec_entry_valid(coff) \
-    array_index_valid(&horzvec_mh, coff)
+    array_index_is_valid(&horzvec_mh, coff)
 
 #define horzvec_entry(coff) \
     array_ptr(&horzvec_mh, SCRCOL, coff)
@@ -2737,7 +2926,7 @@ vertvec SCRROW[maximum_rows]
     array_base(&vertvec_mh, SCRROW)
 
 #define vertvec_entry_valid(roff) \
-    array_index_valid(&vertvec_mh, roff)
+    array_index_is_valid(&vertvec_mh, roff)
 
 #define vertvec_entry(roff) \
     array_ptr(&vertvec_mh, SCRROW, roff)
@@ -2752,13 +2941,13 @@ get_column(
     coord tx,
     ROW trow,
     S32 xcelloffset,
-    BOOL selectclicked);
+    BOOL select_clicked);
 
 extern void
 get_slr_for_point(
     gcoord x,
     gcoord y,
-    BOOL selectclicked,
+    BOOL select_clicked,
     char *buffer /*out*/);
 
 extern void
@@ -3223,12 +3412,12 @@ justification flags
 /* things that need to find a home */
 
 extern BOOL
-new_window_height(
-    coord height);
+new_main_window_height(
+    tcoord height);
 
 extern BOOL
-new_window_width(
-    coord width);
+new_main_window_width(
+    tcoord width);
 
 extern BOOL
 screen_initialise(void);
@@ -3290,30 +3479,38 @@ expand_current_slot_in_fonts(
 
 #define DEFAULT_EXPAND_REFS 9 /*was 1*/
 
+#define EXPAND_FLAGS_DONT_EXPAND_CTRL           (0)
+#define EXPAND_FLAGS_EXPAND_CTRL                (1 << 0)
+
+#define EXPAND_FLAGS_DONT_EXPAND_ATS            (0)
+#define EXPAND_FLAGS_EXPAND_ATS_1               (1 << 1) /* SLRLDI,@D,@N */ /* for 'Make constant' */
+#define EXPAND_FLAGS_EXPAND_ATS_2               (1 << 2) /* @F,@G,@P,@T */
+#define EXPAND_FLAGS_EXPAND_ATS_ALL             (EXPAND_FLAGS_EXPAND_ATS_1 | EXPAND_FLAGS_EXPAND_ATS_2)
+
+#define EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT    (0)
+#define EXPAND_FLAGS_ALLOW_FONTY_RESULT         (1 << 8)
+#define EXPAND_FLAGS_FONTY_RESULT(bVal)         ((bVal) ? EXPAND_FLAGS_ALLOW_FONTY_RESULT : EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT)
+
+extern char
+expand_cell(
+    _InVal_     DOCNO docno,
+    P_CELL p_cell,
+    _InVal_     ROW row,
+    char *array /*out*/,
+    coord fwidth,
+    S32 expand_refs,
+    _InVal_     S32 expand_flags,
+    _InVal_     BOOL cust_func_formula);
+
 extern void
 expand_lcr(
     char *from,
-    ROW row,
+    _InVal_     ROW row,
     char *array /*out*/,
     coord fwidth,
     S32 expand_refs,
-    BOOL expand_ats,
-    BOOL expand_ctrl,
-    BOOL allow_fonty_result,
-    BOOL compile_lcr);
-
-extern char
-expand_slot(
-    _InVal_     DOCNO docno,
-    P_CELL tcell,
-    ROW row,
-    char *array /*out*/,
-    coord fwidth,
-    S32 expand_refs,
-    BOOL expand_ats,
-    BOOL expand_ctrl,
-    BOOL allow_fonty_result,
-    BOOL cust_func_formula);
+    _InVal_     S32 expand_flags,
+    _InVal_     BOOL compile_lcr);
 
 extern void
 font_close_all(
@@ -3326,7 +3523,7 @@ font_expand_for_break(
 
 extern S32
 font_skip(
-    char *at);
+    const char * at);
 
 extern char
 get_dec_field_from_opt(void);
@@ -3400,9 +3597,9 @@ extern BOOL
 dependent_charts_warning(void);
 
 extern void
-expand_slot_for_chart_export(
+expand_cell_for_chart_export(
     _InVal_     DOCNO docno,
-    P_CELL sl,
+    P_CELL p_cell,
     char * buffer /*out*/,
     U32 elemof_buffer,
     ROW row);
@@ -3455,6 +3652,11 @@ image_cache_tagstrip_proto(extern, pdchart_tagstrip);
 
 extern BOOL
 Return_fn_core(void);
+
+_Check_return_
+extern STATUS
+ho_help_url(
+    _In_z_      PCTSTR url);
 
 #include "pd_x.h"
 

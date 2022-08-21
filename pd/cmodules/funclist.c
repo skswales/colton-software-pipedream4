@@ -108,7 +108,7 @@ funclist_add(
         *itemnop = 0;
     }
 
-    myassert1x(extradata <= 256, "extradata %s too big for current pool initialiser", extradata);
+    myassert1x(extradata <= 256, "extradata %u too big for current pool initialiser", extradata);
 
     new_nlb.lbr = *p_p_list_block;
     new_nlb.maxitemsize = (sizeof32(*hp) + 256);
@@ -150,7 +150,7 @@ funclist_first(
     S32                tag;
 
     trace_2(TRACE_MODULE_FUNCLIST,
-            "funclist_first(&%p, %s)", report_ptr_cast(p_p_list_block), trace_boolstring(ascending));
+            "funclist_first(&%p, %s)", report_ptr_cast(p_p_list_block), report_boolstring(ascending));
 
     *itemnop = list_numitem(*p_p_list_block);
 
@@ -203,7 +203,7 @@ funclist_next(
     S32                tag;
 
     trace_2(TRACE_MODULE_FUNCLIST,
-            "funclist_next(&%p, %s)", report_ptr_cast(p_p_list_block), trace_boolstring(ascending));
+            "funclist_next(&%p, %s)", report_ptr_cast(p_p_list_block), report_boolstring(ascending));
 
     if(ascending)
         hp = collect_next(FUNCLIST_HANDLER, p_p_list_block, itemnop);

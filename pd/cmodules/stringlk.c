@@ -55,12 +55,12 @@ string_lookup(
         /* module range */
         moduleno = stringid / increment;
         stringid = stringid % increment;
-        (void) sprintf(tagbuffer, "%c%d" MSGS_LOOKUP_DELIMITER_STR "%d", m_or_e, moduleno, stringid);
+        consume_int(sprintf(tagbuffer, "%c%d" MSGS_LOOKUP_DELIMITER_STR "%d", m_or_e, moduleno, stringid));
     }
     else
     {
         /* application range */
-        (void) sprintf(tagbuffer, "%c%d", m_or_e, stringid);
+        consume_int(sprintf(tagbuffer, "%c%d", m_or_e, stringid));
     }
 
     str = msgs_lookup(tagbuffer);

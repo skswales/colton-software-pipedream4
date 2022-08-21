@@ -25,7 +25,7 @@
 *
 ******************************************************************************/
 
-extern BOOL
+extern STATUS
 add_path_using_dir( /* never relative to current document */
     _Out_writes_z_(elemof_buffer) P_USTR filename /*out*/,
     _InVal_     U32 elemof_buffer,
@@ -33,30 +33,30 @@ add_path_using_dir( /* never relative to current document */
     _In_z_      PC_USTR dir)
 {
     char buffer[BUF_MAX_PATHSTRING];
-    S32 res;
+    STATUS res;
 
     reportf("add_path_using_dir(%u:%s, dir=%s)", strlen32(src), src, dir);
 
     if(file_is_rooted(src))
-        return(file_readable(src) > 0);
+        return(file_readable(src));
 
     /* first try looking up dir.src along path */
     xstrkpy(buffer, elemof32(buffer), dir);
     xstrkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
     xstrkat(buffer, elemof32(buffer), src);
 
-    res = file_find_on_path(filename, elemof_buffer, buffer);
+    res = file_find_on_path(filename, elemof_buffer, file_get_search_path(), buffer);
 
     if(res != 0)
         return(res);
 
     /* finally try looking up just src along path */
-    res = file_find_on_path(filename, elemof_buffer, src);
+    res = file_find_on_path(filename, elemof_buffer, file_get_search_path(), src);
 
     return(res);
 }
 
-extern BOOL
+extern STATUS
 add_path_or_relative_using_dir( /* may be relative to current document */
     _Out_writes_z_(elemof_buffer) P_USTR filename /*out*/,
     _InVal_     U32 elemof_buffer,
@@ -65,7 +65,7 @@ add_path_or_relative_using_dir( /* may be relative to current document */
     _In_z_      PC_USTR dir)
 {
     char buffer[BUF_MAX_PATHSTRING];
-    S32 res;
+    STATUS res;
 
     if(!allow_cwd)
         return(add_path_using_dir(filename, elemof_buffer, src, dir));
@@ -75,7 +75,7 @@ add_path_or_relative_using_dir( /* may be relative to current document */
     if(file_is_rooted(src))
     {
         xstrkpy(filename, elemof_buffer, src);
-        return(file_readable(filename) > 0);
+        return(file_readable(filename));
     }
 
     /* first try looking up dir.src along path */
@@ -83,13 +83,13 @@ add_path_or_relative_using_dir( /* may be relative to current document */
     xstrkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
     xstrkat(buffer, elemof32(buffer), src);
 
-    res = file_find_on_path_or_relative(filename, elemof_buffer, buffer, currentfilename);
+    res = file_find_on_path_or_relative(filename, elemof_buffer, file_get_search_path(), buffer, currentfilename);
 
     if(res != 0)
         return(res);
 
     /* finally try looking up just src along path */
-    res = file_find_on_path_or_relative(filename, elemof_buffer, src, currentfilename);
+    res = file_find_on_path_or_relative(filename, elemof_buffer, file_get_search_path(), src, currentfilename);
 
     return(res);
 }
@@ -164,10 +164,13 @@ checkoverwrite(
 {
     if(file_readable(name) > 0)
     {
-        (void) init_dialog_box(D_OVERWRITE);
+        dialog_box_end(); /* take priority */
 
-        if(!dialog_box_start()  ||  !dialog_box(D_OVERWRITE))
-            return(FALSE);
+        false_return(init_dialog_box(D_OVERWRITE));
+
+        false_return(dialog_box_start());
+
+        consume_bool(dialog_box(D_OVERWRITE));
 
         dialog_box_end();
 
@@ -415,7 +418,7 @@ away_string(
     U8 ch;
 
     /* even inline of such a simple function can be improved on to help Save speed */
-    while((ch = *str++) != '\0')
+    while((ch = *str++) != CH_NULL)
     {
         if(ch == CR)
         {
@@ -445,7 +448,7 @@ away_string_simple(
     U8 ch;
 
     /* even inline of such a simple function can be improved on to help Save speed */
-    while((ch = *str++) != '\0')
+    while((ch = *str++) != CH_NULL)
     {
         if(file_putc_fast_ready(output))
         {

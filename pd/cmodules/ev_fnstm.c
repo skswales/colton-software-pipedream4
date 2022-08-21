@@ -19,7 +19,7 @@
 
 /******************************************************************************
 *
-* Statistical functions (Multivariate linear/logarihmic fit using least squares)
+* Statistical functions - Multivariate linear/logarithmic fit using least squares
 *
 ******************************************************************************/
 
@@ -31,13 +31,16 @@
 
 PROC_EXEC_PROTO(c_growth)
 {
+    const PC_EV_DATA array_logest_data = args[0];
+    const PC_EV_DATA array_known_x = args[1];
     S32 x_vars;
     S32 x, y;
     S32 err = 0;
+    BOOL across_rows;
 
     exec_func_ignore_parms();
 
-    array_range_sizes(args[0], &x, &y);
+    array_range_sizes(array_logest_data, &x, &y);
 
     x_vars = x - 1;
 
@@ -49,10 +52,14 @@ PROC_EXEC_PROTO(c_growth)
         return;
     }
 
-    array_range_sizes(args[1], &x, &y);
+    array_range_sizes(array_known_x, &x, &y);
 
-    /* SKS after 4.12 28apr92 - same reason as TREND() update */
-    if(x == x_vars)
+    /* SKS after PD 4.12 28apr92 - allow TREND() and GROWTH() to receive data
+     * in untransposed form i.e. more naturally matched to linest data
+    */
+    across_rows = (x == x_vars);
+
+    if(across_rows)
     {
         if(status_ok(ss_array_make(p_ev_data_res, 1, y)))
         {
@@ -60,23 +67,22 @@ PROC_EXEC_PROTO(c_growth)
 
             for(row = 0; row < y; ++row)
             {
-                EV_DATA x_data;
                 EV_DATA a_data;
                 F64 product; /* NB. product computed carefully using logs */
                 S32 ci;
                 BOOL negative;
                 P_EV_DATA elep;
 
+                errno = 0;
+
                 /* start with the constant */
-                array_range_index(&a_data, args[0],
+                array_range_index(&a_data, array_logest_data,
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(a_data.did_num != RPN_DAT_REAL)
+                if(RPN_DAT_REAL != a_data.did_num)
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
-
-                errno = 0;
 
                 /* if initial y data was all -ve then this is a possibility ... */
                 negative = (a_data.arg.fp < 0);
@@ -91,20 +97,22 @@ PROC_EXEC_PROTO(c_growth)
                     /* loop across a row multiplying product by coefficients ^ x variables*/
                     for(ci = 0; ci < x_vars; ++ci)
                     {
-                        array_range_index(&a_data, args[0],
+                        EV_DATA x_data;
+
+                        array_range_index(&a_data, array_logest_data,
                                           ci + 1, /* NB. skip constant! */
                                           0,
                                           EM_REA);
 
-                        if(a_data.did_num != RPN_DAT_REAL)
+                        if(RPN_DAT_REAL != a_data.did_num)
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                        array_range_index(&x_data, args[1],
+                        array_range_index(&x_data, array_known_x,
                                           ci, /* NB. extract from nth col ! */
                                           row,
                                           EM_REA);
 
-                        if(x_data.did_num != RPN_DAT_REAL)
+                        if(RPN_DAT_REAL != x_data.did_num)
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                         product += log(a_data.arg.fp) * x_data.arg.fp;
@@ -138,20 +146,21 @@ PROC_EXEC_PROTO(c_growth)
 
             for(col = 0; col < x; ++col)
             {
-                EV_DATA x_data;
                 EV_DATA a_data;
                 F64 product; /* NB. product computed carefully using logs */
                 S32 ci;
                 BOOL negative;
                 P_EV_DATA elep;
 
+                errno = 0;
+
                 /* start with the constant */
-                array_range_index(&a_data, args[0],
+                array_range_index(&a_data, array_logest_data,
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(a_data.did_num != RPN_DAT_REAL)
+                if(RPN_DAT_REAL != a_data.did_num)
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 errno = 0;
@@ -169,20 +178,22 @@ PROC_EXEC_PROTO(c_growth)
                     /* loop multiplying product by coefficients ^ x variables*/
                     for(ci = 0; ci < x_vars; ++ci)
                     {
-                        array_range_index(&a_data, args[0],
+                        EV_DATA x_data;
+
+                        array_range_index(&a_data, array_logest_data,
                                           ci + 1, /* NB. skip constant! */
                                           0,
                                           EM_REA);
 
-                        if(a_data.did_num != RPN_DAT_REAL)
+                        if(RPN_DAT_REAL != a_data.did_num)
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                        array_range_index(&x_data, args[1],
+                        array_range_index(&x_data, array_known_x,
                                           col,
                                           ci, /* NB. extract from nth row ! */
                                           EM_REA);
 
-                        if(x_data.did_num != RPN_DAT_REAL)
+                        if(RPN_DAT_REAL != x_data.did_num)
                             status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                         product += log(a_data.arg.fp) * x_data.arg.fp;
@@ -303,7 +314,7 @@ PROC_EXEC_PROTO(c_linest)
 
     exec_func_ignore_parms();
 
-    stats    = 0;
+    stats = 0;
 
     known_y  = empty;
     known_x  = empty;
@@ -393,7 +404,7 @@ PROC_EXEC_PROTO(c_linest)
 
     if(status_ok(ss_array_make(p_ev_data_res, result_a.cols, result_a.rows)))
     {
-        S32     i, j;
+        S32 i, j;
         EV_DATA data;
 
         /* copy y data into working array */
@@ -404,7 +415,7 @@ PROC_EXEC_PROTO(c_linest)
                               (data_in_cols) ? i : 0,
                               EM_REA);
 
-            if(data.did_num != RPN_DAT_REAL)
+            if(RPN_DAT_REAL != data.did_num)
             {
                 status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
@@ -417,6 +428,7 @@ PROC_EXEC_PROTO(c_linest)
         for(i = 0; i < y_items; ++i)
         {
             if(n_args > 1)
+            {
                 for(j = 0; j < x_vars; ++j)
                 {
                     array_range_index(&data, args[1],
@@ -424,7 +436,7 @@ PROC_EXEC_PROTO(c_linest)
                                       (data_in_cols) ? i : j,
                                       EM_REA);
 
-                    if(data.did_num != RPN_DAT_REAL)
+                    if(RPN_DAT_REAL != data.did_num)
                     {
                         status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
@@ -432,6 +444,7 @@ PROC_EXEC_PROTO(c_linest)
 
                     (known_x.val + i * x_vars)[j] = data.arg.fp;
                 }
+            }
             else
                 known_x.val[i] = (F64) i + 1.0; /* make simple { 1.0, 2.0, 3.0 ... } */
         }
@@ -442,6 +455,7 @@ PROC_EXEC_PROTO(c_linest)
 
         /* copy (possibly partial) ye data into working array */
         if(known_e.val)
+        {
             for(i = 0; i < y_items; ++i)
             {
                 if(i < ((data_in_cols) ? known_e.rows : known_e.cols))
@@ -451,7 +465,7 @@ PROC_EXEC_PROTO(c_linest)
                                       (data_in_cols) ? i : 0,
                                       EM_REA);
 
-                    if(data.did_num != RPN_DAT_REAL)
+                    if(RPN_DAT_REAL != data.did_num)
                     {
                         status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
@@ -462,6 +476,7 @@ PROC_EXEC_PROTO(c_linest)
                 else
                     known_e.val[i] = 1.0;
             }
+        }
 
         /* and then ignore it! */
 
@@ -565,7 +580,7 @@ PROC_EXEC_PROTO(c_logest)
     {
         array_range_sizes(args[0], &x, &y);
 
-        if(args[3]->did_num == RPN_DAT_RANGE)
+        if(RPN_DAT_RANGE == args[3]->did_num)
         {
             if(status_fail(ss_array_make(&a_data, x, y)))
                 return;
@@ -575,7 +590,7 @@ PROC_EXEC_PROTO(c_logest)
 
         for(col = 0; col < x; ++col)
         {
-            if(array_range_index(&ev_data, args[3], col, 0, EM_REA) != RPN_DAT_REAL)
+            if(RPN_DAT_REAL != array_range_index(&ev_data, args[3], col, 0, EM_REA))
             {
                 err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel2;
@@ -595,7 +610,7 @@ PROC_EXEC_PROTO(c_logest)
 
     array_range_sizes(args[0], &x, &y);
 
-    if(args[0]->did_num == RPN_DAT_RANGE)
+    if(RPN_DAT_RANGE == args[0]->did_num)
     {
         if(status_fail(ss_array_make(&y_data, x, y)))
             return;
@@ -605,9 +620,10 @@ PROC_EXEC_PROTO(c_logest)
 
     /* simple layout-independent transform of y data */
     for(col = 0; col < x; ++col)
+    {
         for(row = 0; row < y; ++row)
         {
-            if(array_range_index(&ev_data, args[0], col, row, EM_REA) != RPN_DAT_REAL)
+            if(RPN_DAT_REAL != array_range_index(&ev_data, args[0], col, row, EM_REA))
             {
                 err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
@@ -643,6 +659,7 @@ PROC_EXEC_PROTO(c_logest)
             elep = ss_array_element_index_wr(&y_data, col, row);
             ev_data_set_real(elep, ev_data.arg.fp);
         }
+    }
 
     /* ask MRJC whether this is legal */
     targs0  = args[0];
@@ -664,17 +681,17 @@ PROC_EXEC_PROTO(c_logest)
     if(targs3)
         args[3] = targs3;
 
-    /* and transform first row of coefficients insitu using exp, and sign the constant if needed */
+    /* and transform first row of coefficients in situ using exp, and sign the constant if needed */
 
-    if(p_ev_data_res->did_num == RPN_TMP_ARRAY)
+    if(RPN_TMP_ARRAY == p_ev_data_res->did_num)
     {
         array_range_sizes(p_ev_data_res, &x, &y);
 
         for(col = 0; col < x; ++col)
         {
-            elep  = ss_array_element_index_wr(p_ev_data_res, col, 0);
-            assert(elep->did_num == RPN_DAT_REAL);
-            val   = exp(elep->arg.fp);
+            elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
+            assert(RPN_DAT_REAL == elep->did_num);
+            val = exp(elep->arg.fp);
             if((col == 0) && (sign == -1))
                 val = -val;
             elep->arg.fp = val;
@@ -701,30 +718,35 @@ endlabel2:;
 
 PROC_EXEC_PROTO(c_trend)
 {
+    const PC_EV_DATA array_linest_data = args[0];
+    const PC_EV_DATA array_known_x = args[1];
     S32 x_vars;
     S32 x, y;
     S32 err = 0;
+    BOOL across_rows;
 
     exec_func_ignore_parms();
 
-    array_range_sizes(args[0], &x, &y);
+    array_range_sizes(array_linest_data, &x, &y);
 
     x_vars = x - 1;
 
     if( (x < 2  /*at least c,m*/)  ||
         ((y != 1 /*no stats*/)  &&
          (y != 3 /*stats*/  )   )  )
-        {
+    {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
         return;
-        }
+    }
 
-    array_range_sizes(args[1], &x, &y);
+    array_range_sizes(array_known_x, &x, &y);
 
-    /* SKS after 4.12 28apr92 - allow TREND() to receive data
+    /* SKS after PD 4.12 28apr92 - allow TREND() and GROWTH() to receive data
      * in untransposed form i.e. more naturally matched to linest data
     */
-    if(x == x_vars)
+    across_rows = (x == x_vars);
+
+    if(across_rows)
     {
         if(status_ok(ss_array_make(p_ev_data_res, 1, y)))
         {
@@ -732,19 +754,18 @@ PROC_EXEC_PROTO(c_trend)
 
             for(row = 0; row < y; ++row)
             {
-                EV_DATA x_data;
                 EV_DATA a_data;
                 F64 sum;
                 S32 ci;
                 P_EV_DATA elep;
 
                 /* start with the constant */
-                array_range_index(&a_data, args[0],
+                array_range_index(&a_data, array_linest_data,
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(a_data.did_num != RPN_DAT_REAL)
+                if(RPN_DAT_REAL != a_data.did_num)
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 sum = a_data.arg.fp;
@@ -752,20 +773,22 @@ PROC_EXEC_PROTO(c_trend)
                 /* loop across a row summing coefficients * x variables */
                 for(ci = 0; ci < x_vars; ++ci)
                 {
-                    array_range_index(&a_data, args[0],
+                    EV_DATA x_data;
+
+                    array_range_index(&a_data, array_linest_data,
                                       ci + 1, /* NB. skip constant! */
                                       0,
                                       EM_REA);
 
-                    if(a_data.did_num != RPN_DAT_REAL)
+                    if(RPN_DAT_REAL != a_data.did_num)
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    array_range_index(&x_data, args[1],
-                                      ci, /* NB. extract from nth col! */
+                    array_range_index(&x_data, array_known_x,
+                                      ci, /* NB. extract from ci'th col (if across_rows) */
                                       row,
                                       EM_REA);
 
-                    if(x_data.did_num != RPN_DAT_REAL)
+                    if(RPN_DAT_REAL != x_data.did_num)
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                     sum += a_data.arg.fp * x_data.arg.fp;
@@ -786,19 +809,18 @@ PROC_EXEC_PROTO(c_trend)
 
             for(col = 0; col < x; ++col)
             {
-                EV_DATA x_data;
                 EV_DATA a_data;
                 F64 sum;
                 S32 ci;
                 P_EV_DATA elep;
 
                 /* start with the constant */
-                array_range_index(&a_data, args[0],
+                array_range_index(&a_data, array_linest_data,
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(a_data.did_num != RPN_DAT_REAL)
+                if(RPN_DAT_REAL != a_data.did_num)
                     status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 sum = a_data.arg.fp;
@@ -806,20 +828,22 @@ PROC_EXEC_PROTO(c_trend)
                 /* loop down a column summing coefficients * x variables */
                 for(ci = 0; ci < x_vars; ++ci)
                 {
-                    array_range_index(&a_data, args[0],
+                    EV_DATA x_data;
+
+                    array_range_index(&a_data, array_linest_data,
                                       ci + 1, /* NB. skip constant! */
                                       0,
                                       EM_REA);
 
-                    if(a_data.did_num != RPN_DAT_REAL)
+                    if(RPN_DAT_REAL != a_data.did_num)
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    array_range_index(&x_data, args[1],
+                    array_range_index(&x_data, array_known_x,
                                       col,
-                                      ci, /* NB. extract from nth row! */
+                                      ci, /* NB. extract from ci-th row (if down_columns) */
                                       EM_REA);
 
-                    if(x_data.did_num != RPN_DAT_REAL)
+                    if(RPN_DAT_REAL != x_data.did_num)
                         status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                     sum += a_data.arg.fp * x_data.arg.fp;

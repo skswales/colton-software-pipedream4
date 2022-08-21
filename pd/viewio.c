@@ -307,7 +307,7 @@ view_convert(
                 {
                 case 'D':
                 case 'P':
-                    if(NULLCH != get_text_at_char())
+                    if(CH_NULL != get_text_at_char())
                     {
                         linbuf[lecpos++] = get_text_at_char();
                         *lastch = linbuf[lecpos++] = (char) c;
@@ -505,17 +505,19 @@ view_get_stored_command(
 
         case CR:
         case LF:
-            c = '\0';
+            c = CH_NULL;
+            break;
 
         default:
-            if(PtrDiffBytesU32(to, array) >= sizeof(array))
-                return(-1);
-
-            *to++ = (char) c;
             break;
         }
+
+        if(PtrDiffBytesU32(to, array) >= sizeof(array))
+            return(-1);
+
+        *to++ = (char) c;
     }
-    while(c);
+    while(CH_NULL != c);
 
     trace_1(TRACE_APP_PD4, "view_get_stored_command: got parameters '%s'", array);
 
@@ -554,7 +556,7 @@ view_get_stored_command(
                             {
                             case 'D':
                             case 'P':
-                                if(NULLCH != get_text_at_char())
+                                if(CH_NULL != get_text_at_char())
                                 {
                                     *to++ = get_text_at_char();
                                     *to++ = *from++;
@@ -571,7 +573,7 @@ view_get_stored_command(
                     }
                     while(ch);
 
-                    (void) mystr_set(&d_poptions[option].textfield, cvtarray);
+                    consume_bool(mystr_set(&d_poptions[option].textfield, cvtarray));
                     break;
 
                 case O_LS:
@@ -615,7 +617,7 @@ view_get_stored_command(
                     if(ch == '2')
                     {
                         extended_highlights = (atoi(from) == 130);
-                        trace_2(TRACE_APP_PD4, "view_get_stored_command: HT 2 %s -> extended highlights %s", from, trace_boolstring(extended_highlights));
+                        trace_2(TRACE_APP_PD4, "view_get_stored_command: HT 2 %s -> extended highlights %s", from, report_boolstring(extended_highlights));
                     }
 
                     optptr->v_done = FALSE;     /* can do many times */
@@ -655,10 +657,10 @@ view_get_stored_command(
     while(++a_index < NO_OF_ALL_OPTS);
 
     /* unrecognised stored command - just put into linbuf */
-
-    *linbuf   = (uchar) ch1;
+    linbuf[0] = (uchar) ch1;
     linbuf[1] = (uchar) ch2;
-    lecpos = strlen(strcpy(linbuf + 2, array)) + 2;
+    strcpy(linbuf + 2, array);
+    lecpos = strlen(linbuf);
 
     return(CR);
 }
@@ -720,7 +722,7 @@ view_load_preinit(
         view_opts[opt_idx].v_done = FALSE;
 
         if(def == 255)
-            (void) mystr_set(&d_poptions[offset].textfield, NULL);
+            consume_bool(mystr_set(&d_poptions[offset].textfield, NULL));
         else
             d_poptions[offset].option = (uchar) def;
     }
@@ -944,7 +946,7 @@ view_save_ruler_options(
         /* if parameter has been set, build stored command */
         if(margin >= 0)
         {
-            (void) sprintf(array + 2, "%d", margin);
+            consume_int(sprintf(array + 2, "%d", margin));
             out_stored = TRUE;
         }
 
@@ -1022,7 +1024,7 @@ view_save_slot(
             break;
 
         default:
-            if((ch == text_at_char) && (NULLCH != text_at_char)) /* case text_at_char: */
+            if((ch == text_at_char) && (CH_NULL != text_at_char)) /* case text_at_char: */
             {
                 ch = *++lptr;
 

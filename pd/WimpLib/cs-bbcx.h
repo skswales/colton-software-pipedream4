@@ -47,6 +47,15 @@ os_plot(
 
 #endif /* COMPILING_WIMPLIB */
 
+_Check_return_
+_Ret_maybenull_
+extern _kernel_oserror *
+riscos_vdu_define_graphics_window(
+    _In_        GDI_COORD x1,
+    _In_        GDI_COORD y1,
+    _In_        GDI_COORD x2,
+    _In_        GDI_COORD y2);
+
 #endif /* __cs_bbcx_h */
 
 /* end of cs_bbcx.h */

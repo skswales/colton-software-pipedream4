@@ -19,14 +19,6 @@
 /* local header file */
 #include "ev_evali.h"
 
-#include <math.h>
-#include <float.h>
-#include <errno.h>
-
-/*
-internally exported functions
-*/
-
 /******************************************************************************
 *
 * computes the product of all integers in the range [start..end] inclusive
@@ -37,7 +29,7 @@ internally exported functions
 
 extern void
 product_between_calc(
-    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InoutRef_  P_EV_DATA p_ev_data_res, /* denotes integer or fp; may return integer or fp */
     _InVal_     S32 start,
     _InVal_     S32 end)
 {
@@ -90,7 +82,7 @@ product_between_calc(
 
             umul64(p_ev_data_res->arg.integer, i, &result);
 
-            if((0 == result.HighPart) && (0 == (result.LowPart >> 31)))
+            if((0 == result.HighPart) && (0 == (result.LowPart & 0x80000000U)))
             {   /* result still fits in integer */
                 p_ev_data_res->arg.integer = (S32) result.LowPart;
                 continue;
@@ -172,9 +164,9 @@ PROC_EXEC_PROTO(c_exp)
 *
 ******************************************************************************/
 
-static void
+extern void
 factorial_calc(
-    _OutRef_    P_EV_DATA p_ev_data_out,
+    _OutRef_    P_EV_DATA p_ev_data_out, /* may return integer or fp or error */
     _InVal_     S32 n)
 {
     if((n < 0) || (n > 170)) /* SKS maximum factorial that will fit in F64 */
@@ -187,7 +179,7 @@ factorial_calc(
     p_ev_data_out->did_num = RPN_DAT_WORD32;
 
     /* function will go to fp as necessary */
-    product_between_calc(p_ev_data_out, 1, n); /* n==0 is handled by that */
+    product_between_calc(p_ev_data_out, 1, n); /* n==0 is handled by that */ /* may return integer or fp */
 }
 
 PROC_EXEC_PROTO(c_fact)
@@ -196,7 +188,7 @@ PROC_EXEC_PROTO(c_fact)
 
     exec_func_ignore_parms();
 
-    factorial_calc(p_ev_data_res, n);
+    factorial_calc(p_ev_data_res, n); /* may return integer or fp or error */
 
     if(RPN_DAT_WORD32 == p_ev_data_res->did_num)
         p_ev_data_res->did_num = ev_integer_size(p_ev_data_res->arg.integer);
@@ -206,9 +198,16 @@ PROC_EXEC_PROTO(c_fact)
 *
 * NUMBER int(number)
 *
-* NB truncates towards zero - this is unlike OpenDocument and Microsoft Excel (but is what Lotus 1-2-3 did)
+* NB truncates towards zero - this is unlike OpenDocument and Microsoft Excel
+* but is what Lotus 1-2-3 did
 *
 ******************************************************************************/
+
+/* SKS 06oct97 for Fireworkz INT() function try rounding an ickle bit
+ * so INT((0.06-0.04)/0.01) is 2 not 1
+ * and now dec14 INT((0.06-0.02)/2E-6) is 20000 not 19999
+ * which is different to naive real_trunc()
+ */
 
 PROC_EXEC_PROTO(c_int)
 {
@@ -220,8 +219,20 @@ PROC_EXEC_PROTO(c_int)
         ev_data_set_real_ti(p_ev_data_res, real_trunc(args[0]->arg.fp));
         return;
 
+#if 0 /* just for diff minimization */
+
+    case RPN_DAT_DATE:
+        /* Convert just the date component to a largely Excel-compatible serial number */
+        if(EV_DATE_NULL != args[0]->arg.ev_date.date)
+            ev_data_set_integer(p_ev_data_res, ss_dateval_to_serial_number(&args[0]->arg.ev_date.date)); /* ignore any time component */
+        else
+            ev_data_set_integer(p_ev_data_res, 0); /* ignore any time component, and this is a pure time value */
+        return;
+
+#endif
+
     default:
-        *p_ev_data_res = *(args[0]);  /*NOP*/
+        *p_ev_data_res = *(args[0]); /*NOP*/
         return;
     }
 }
@@ -265,13 +276,13 @@ PROC_EXEC_PROTO(c_mod)
         S32 s32_mod_result;
 
         /* SKS after PD 4.11 03feb92 - gave FP error not zero if trap taken */
-        if(s32_b == 0)
+        if(0 == s32_b)
         {
             ev_data_set_error(p_ev_data_res, EVAL_ERR_DIVIDEBY0);
             return;
         }
 
-        s32_mod_result = (s32_a % s32_b);
+        s32_mod_result = (s32_a % s32_b); /* remainder has the same sign as the dividend for ARM Norcroft at least */
 
         ev_data_set_integer(p_ev_data_res, s32_mod_result);
         break;
@@ -285,9 +296,9 @@ PROC_EXEC_PROTO(c_mod)
 
         errno = 0;
 
-        f64_mod_result = fmod(f64_a, f64_b);
+        f64_mod_result = fmod(f64_a, f64_b); /* remainder has the same sign as the dividend */
 
-        ev_data_set_real(p_ev_data_res, f64_mod_result);
+        ev_data_set_real_ti(p_ev_data_res, f64_mod_result);
 
         /* would have divided by zero? */
         if(errno /* == EDOM */)

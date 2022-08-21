@@ -28,10 +28,11 @@ exported functions from riscmenu.c
 
 extern void
 riscmenu_attachmenutree(
-    wimp_w w);
+    _HwndRef_   HOST_WND window_handle);
 
 extern void
 riscmenu_buildmenutree(
+    BOOL classic_m,
     BOOL short_m);
 
 extern void
@@ -39,7 +40,7 @@ riscmenu_clearmenutree(void);
 
 extern void
 riscmenu_detachmenutree(
-    wimp_w w);
+    _HwndRef_   HOST_WND window_handle);
 
 extern void
 riscmenu_initialise_once(void);
@@ -77,10 +78,10 @@ InsertFont_fn(void);
 extern void
 LineSpacing_fn(void);
 
-#define FONT_LEADING_UP   (wimp_i) 31
-#define FONT_LEADING_DOWN (wimp_i) 32
-#define FONT_LEADING      (wimp_i) 33
-#define FONT_LEADING_AUTO (wimp_i) 34
+#define FONT_LEADING_UP   (31)
+#define FONT_LEADING_DOWN (32)
+#define FONT_LEADING      (33)
+#define FONT_LEADING_AUTO (34)
 
 #endif  /* RISCOS */
 

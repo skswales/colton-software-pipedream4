@@ -66,7 +66,7 @@ static void
 draw_empty_right_of_screen(void);
 
 static void
-draw_altered_slots(void);
+draw_altered_cells(void);
 
 static void
 draw_row_border(
@@ -77,10 +77,10 @@ draw_screen_below(
     S32 roff);
 
 static void
-draw_slot_in_buffer(void);
+draw_cell_in_buffer(void);
 
 static void
-draw_slot_in_buffer_in_place(void);
+draw_cell_in_buffer_in_place(void);
 
 static S32
 dspfld(
@@ -96,6 +96,18 @@ end_of_block(
 static S32
 limited_fwidth_of_slot_in_buffer(void);
 
+static S32
+onejst_plain(
+    uchar *str,
+    S32 fwidth_ch,
+    uchar type);
+
+static GR_MILLIPOINT
+onejst_riscos_fonts(
+    uchar *str,
+    S32 fwidth_ch,
+    uchar type);
+
 static void
 really_draw_row_border(
     S32 roff,
@@ -107,7 +119,7 @@ really_draw_row_contents(
     S32 rpos);
 
 static S32
-really_draw_slot(
+really_draw_cell(
     S32 coff,
     S32 roff,
     BOOL in_draw_row);
@@ -221,7 +233,7 @@ stringout_field(
     if(len > fwidth)
     {
         ch = str[fwidth];
-        str[fwidth] = '\0';
+        str[fwidth] = CH_NULL;
         drawn = stringout(str);
         str[fwidth] = ch;
     }
@@ -239,7 +251,7 @@ stringout_field(
 *
 * set up row information done
 * whenever screen height set:
-* new_window_height, DSfunc, window size change
+* new_main_window_height, DSfunc, window size change
 *
 ******************************************************************************/
 
@@ -251,9 +263,8 @@ reinit_rows(void)
     trace_1(TRACE_APP_PD4, "maxnrow        := %d", maxnrow);
 
     /* number of rows we can actually use at the moment */
-    rows_available = maxnrow;    /* depends on borbit */
+    rows_available = maxnrow;    /* depends on displaying_borders */
     trace_1(TRACE_APP_PD4, "rows_available := %d", rows_available);
-    reportf("rows_available := %d", rows_available);
 }
 
 /******************************************************************************
@@ -267,14 +278,14 @@ reinit_rows(void)
 ******************************************************************************/
 
 extern BOOL
-new_window_height(
-    S32 height)
+new_main_window_height(
+    tcoord height)
 {
     SC_ARRAY_INIT_BLOCK vertvec_init_block = aib_init(8, sizeof32(SCRROW), TRUE);
     S32 nrows;
     STATUS status;
 
-    trace_1(TRACE_APP_PD4, "new_window_height(%d)", height);
+    trace_1(TRACE_APP_PD4, "new_main_window_height(%d)", height);
 
     /* calculate no. of rows needed: h=25 -> 22 rows if borders off,
      * (and headline present) +1 for terminating row -> nrows=23
@@ -328,15 +339,15 @@ new_window_height(
 ******************************************************************************/
 
 extern BOOL
-new_window_width(
-    S32 width)
+new_main_window_width(
+    tcoord width)
 {
     SC_ARRAY_INIT_BLOCK horzvec_init_block = aib_init(4, sizeof32(SCRCOL), TRUE);
     /* number of columns needed: +1 for terminating column */
     S32 ncols = (width + 1 /*one for LAST*/);
     STATUS status;
 
-    trace_1(TRACE_APP_PD4, "new_window_width(%d)", width);
+    trace_1(TRACE_APP_PD4, "new_main_window_width(%d)", width);
 
     if(ncols > maximum_cols) /* never consider shrinking! */
         if(NULL == al_array_extend_by(&horzvec_mh, SCRROW, ncols - maximum_cols, &horzvec_init_block, &status))
@@ -396,8 +407,8 @@ screen_initialise(void)
     new_grid_state();       /* set charvspace/vrubout - doesn't redraw */
 
     /* even on RISC OS, may have changed from burned-in grid state */
-    ok =    new_window_height(windowheight())  &&
-            new_window_width(windowwidth());
+    ok =    new_main_window_height(main_window_height())  &&
+            new_main_window_width(main_window_width());
 
     if(!ok)
     {
@@ -440,8 +451,8 @@ static MONOTIME draw_screen_initialTime;
     TRUE )
 #else
 #define draw_screen_timeout_criterion() /* BOOL(): whether time out enabled */ ( \
-    (dragtype == DRAG_COLUMN_WIDTH)     || \
-    (dragtype == DRAG_COLUMN_WRAPWIDTH) )
+    (drag_type == DRAG_COLUMN_WIDTH)     || \
+    (drag_type == DRAG_COLUMN_WRAPWIDTH) )
 #endif
 
 #define draw_screen_timeout_init() /* void() */ \
@@ -475,7 +486,7 @@ draw_screen(void)
     {
         xf_draweverything = FALSE; /* unset this redraw flag */
 
-        xf_drawslotcoordinates = xf_drawcolumnheadings =
+        xf_drawcellcoordinates = xf_drawcolumnheadings =
         out_rebuildhorz = out_rebuildvert = out_screen = out_currslot = TRUE;
 
         /* clear out entire window */
@@ -503,7 +514,7 @@ draw_screen(void)
 
     if((int) movement)
     {
-        xf_drawslotcoordinates = TRUE;
+        xf_drawcellcoordinates = TRUE;
 
         if(!dont_update_lescrl)
             lescrl = 0;
@@ -575,17 +586,17 @@ draw_screen(void)
     (void) draw_altered_state();        /* sets extent, scroll offsets */
 
     /* send window to the front after adjusting scroll offsets! */
-    if(xf_frontmainwindow)
+    if(xf_front_document_window)
     {
         /* this sort of fronting demands caret claim at the grand opening */
         xf_acquirecaret = TRUE;
-        riscos_frontmainwindow(in_execfile);
+        riscos_front_document_window(in_execfile);
     }
 
     if(xf_drawcolumnheadings)
         colh_draw_column_headings();
 #if 1
-    /* SKS after 4.11 08jan92 - consider interrupt in draw_screen_below() for full screen case ... */
+    /* SKS after PD 4.11 08jan92 - consider interrupt in draw_screen_below() for full screen case ... */
     if(out_screen)
     {
         out_screen = FALSE;
@@ -599,13 +610,13 @@ draw_screen(void)
     if(xf_draw_empty_right)
         draw_empty_right_of_screen(); /* ditto 13jan92 - this is now needed */
 
-    /* SKS after 4.11 08jan92 - move here after fixed draw_screen overheads */
+    /* SKS after PD 4.11 08jan92 - move here after fixed draw_screen overheads */
     draw_screen_timeout_init();
 
     if(out_below)
         draw_screen_below(rowtoend);
 #else
-    /* SKS after 4.11 08jan92 - move here after fixed draw_screen overheads */
+    /* SKS after PD 4.11 08jan92 - move here after fixed draw_screen overheads */
     draw_screen_timeout_init();
 
     if(out_screen)
@@ -627,14 +638,15 @@ draw_screen(void)
         draw_row_border(adjust_rowborout(rowborout1));
 
     if(xf_drawsome)
-        draw_altered_slots();
+        draw_altered_cells();
 
-    draw_slot_in_buffer();      /* if there is one */
+    draw_cell_in_buffer();      /* if there is one */
 
     position_cursor();
 
-    if(xf_caretreposition  &&  (main_window == caret_window))
-        draw_caret();
+    if(xf_caretreposition)
+        if(main_window_handle == caret_window_handle)
+            draw_caret();
 
     out_currslot = FALSE;
 }
@@ -665,7 +677,7 @@ really_draw_picture(
     /* drawing may shuffle core by use of flex - which now upcalls */
     /* list_unlockpools(); */
 
-    setbgcolour(BACK);
+    set_bg_colour_from_option(COI_BACK);
 
     #if defined(CLEAR_DRAWFILES_BACKGROUND)
     clear_thistextarea();
@@ -682,7 +694,7 @@ really_draw_picture(
 
     /* Draw rendering destroys current graphics & font colour settings */
     killcolourcache();
-    setcolour(FORE, BACK);
+    setcolours(COI_FORE, COI_BACK);
 }
 
 #if 0 /* nobody using this anymore (SKS 25oct96) */
@@ -758,7 +770,7 @@ maybe_draw_pictures(void)
                         trace_2(TRACE_APP_PD4, "found picture at col %d, row %d", tcol, trow);
 
                         x0 = calcad(coff /*find_coff(p_draw_file_ref->col)*/);
-                        x1 = x0 + tsize_x(p_draw_file_ref->x_size_os + 4); /* SKS after 4.11 09feb92 - make pictures oversize for redraw consideration */
+                        x1 = x0 + tsize_x(p_draw_file_ref->x_size_os + 4); /* SKS after PD 4.11 09feb92 - make pictures oversize for redraw consideration */
                         y1 = calrad(roff) - 1;      /* NB. picture hangs from top */
                         y0 = y1 + tsize_y(p_draw_file_ref->y_size_os + 4);
                         y0 = MIN(y0, paghyt);
@@ -792,17 +804,17 @@ maybe_draw_pictures(void)
 ******************************************************************************/
 
 static void
-draw_slot_in_buffer(void)
+draw_cell_in_buffer(void)
 {
     S32 fwidth_ch;
-    S32 fwidth_mp, swidth_mp;
+    GR_MILLIPOINT fwidth_mp, swidth_mp;
     char paint_str[PAINT_STRSIZ];
 
     if(slot_in_buffer)
     {
         if(!output_buffer)
         {
-            trace_2(TRACE_APP_PD4, "draw_slot_in_buffer: lescrl %d, old_lescrl %d", lescrl, old_lescroll);
+            trace_2(TRACE_APP_PD4, "draw_cell_in_buffer: lescrl %d, old_lescrl %d", lescrl, old_lescroll);
 
             /* if scroll position is different, we must output */
             if(lescrl != old_lescroll)
@@ -817,7 +829,7 @@ draw_slot_in_buffer(void)
                 if(--fwidth_ch < 0)     /* rh scroll margin */
                     fwidth_ch = 0;
 
-                trace_2(TRACE_APP_PD4, "draw_slot_in_buffer: fwidth_ch %d, lecpos %d", fwidth_ch, lecpos);
+                trace_2(TRACE_APP_PD4, "draw_cell_in_buffer: fwidth_ch %d, lecpos %d", fwidth_ch, lecpos);
 
                 if(riscos_fonts  &&
                    !(xf_inexpression || xf_inexpression_box || xf_inexpression_line)  &&
@@ -826,7 +838,7 @@ draw_slot_in_buffer(void)
                 {
                     /* fonty cal_lescrl a little more complex */
 
-                    trace_0(TRACE_APP_PD4, "draw_slot_in_buffer: fonty_cal_lescrl(fwidth)");
+                    trace_0(TRACE_APP_PD4, "draw_cell_in_buffer: fonty_cal_lescrl(fwidth)");
 
                     /* is the caret off the left of the field? (scroll margin one char) */
                     if(lecpos <= lescrl)
@@ -838,12 +850,12 @@ draw_slot_in_buffer(void)
                     else
                     {
                         /* is the caret off the right of the field? (scroll margin one char) */
-                        fwidth_mp = ch_to_mp(fwidth_ch);
+                        fwidth_mp = cw_to_millipoints(fwidth_ch);
 
                         expand_current_slot_in_fonts(paint_str, TRUE, NULL);
                         swidth_mp = font_width(paint_str);
 
-                        trace_2(TRACE_APP_PD4, "draw_slot_in_buffer: fwidth_mp %d, swidth_mp %d", fwidth_mp, swidth_mp);
+                        trace_2(TRACE_APP_PD4, "draw_cell_in_buffer: fwidth_mp %d, swidth_mp %d", fwidth_mp, swidth_mp);
 
                         if(swidth_mp > fwidth_mp)
                             /* off right - will need to right justify */
@@ -852,7 +864,7 @@ draw_slot_in_buffer(void)
                 }
                 else
                 {
-                    trace_1(TRACE_APP_PD4, "draw_slot_in_buffer: cal_lescrl(fwidth) %d", cal_lescrl(fwidth_ch));
+                    trace_1(TRACE_APP_PD4, "draw_cell_in_buffer: cal_lescrl(fwidth) %d", cal_lescrl(fwidth_ch));
 
                     if(cal_lescrl(fwidth_ch) != lescrl)
                         output_buffer = TRUE;
@@ -860,12 +872,12 @@ draw_slot_in_buffer(void)
             }
         }
 
-        trace_1(TRACE_APP_PD4, "draw_slot_in_buffer: output_buffer = %s", trace_boolstring(output_buffer));
+        trace_1(TRACE_APP_PD4, "draw_cell_in_buffer: output_buffer = %s", report_boolstring(output_buffer));
 
         if(output_buffer)
         {
             if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
-                draw_slot_in_buffer_in_place();
+                draw_cell_in_buffer_in_place();
 
             old_lescroll = lescrl;
             old_lecpos = lecpos;    /* for movement checks */
@@ -881,7 +893,7 @@ draw_slot_in_buffer(void)
 ******************************************************************************/
 
 static void
-draw_slot_in_buffer_in_place(void)
+draw_cell_in_buffer_in_place(void)
 {
     S32 x0 = calcad(curcoloffset);
     S32 x1;
@@ -891,7 +903,7 @@ draw_slot_in_buffer_in_place(void)
     S32 overlap = chkolp(travel_here(), curcol, currow);
     S32 dead_text;
 
-    trace_0(TRACE_DRAW, "\n*** draw_slot_in_buffer_in_place()");
+    trace_0(TRACE_DRAW, "\n*** draw_cell_in_buffer_in_place()");
 
     adjust_lescrl(x0, overlap);
 
@@ -903,11 +915,9 @@ draw_slot_in_buffer_in_place(void)
 
     x0 += dead_text;
 
-    riscos_removecaret();
-
+    riscos_caret_hide();
     please_redraw_textarea(x0, y0, x1, y1);
-
-    riscos_restorecaret();
+    riscos_caret_restore();
 }
 
 /******************************************************************************
@@ -916,7 +926,7 @@ draw_slot_in_buffer_in_place(void)
 *
 ******************************************************************************/
 
-#define os_if_fonts(nchars) (riscos_fonts ? ch_to_os(nchars) : (nchars))
+#define os_if_fonts(nchars) (riscos_fonts ? cw_to_os(nchars) : (nchars))
 
 /******************************************************************************
 *
@@ -1029,7 +1039,7 @@ maybe_draw_row_border(
 {
     /* required to redraw left slop too */
 
-    if(!borbit)
+    if(!displaying_borders)
     {
         if(textxintersects(-1, 0))
         {
@@ -1147,7 +1157,7 @@ draw_row_border(
     if( out_rowborout1  &&  (rowborout1 == roff))
         out_rowborout1 = FALSE;
 
-    if(!borbit)
+    if(!displaying_borders)
         return;
 
     rpos = calrad(roff);
@@ -1157,7 +1167,7 @@ draw_row_border(
     please_redraw_textarea(-1, rpos, borderwidth, rpos-1);
 }
 
-/* only called if borbit on RISC OS */
+/* only called if displaying_borders on RISC OS */
 
 static void
 really_draw_row_border(
@@ -1184,85 +1194,95 @@ really_draw_row_border(
         /* soft page breaks are shown as a bar, right across the page - here we draw the bit */
         /* crossing the border row, the rest is drawn by really_draw_row_contents            */
 
-        setbgcolour(SOFTPAGEBREAKC);    /*PAGEBREAKC*/
+        set_bg_colour_from_option(COI_SOFTPAGEBREAK);
         clear_thistextarea();
     }
     else
     {
-        /* draw row number in border */
         ROW trow = rptr->rowno;
-        wimp_icon border;       /* We plot the row number in two parts, so that the icon borders overlap */
-        wimp_icon number;       /* instead of touching, and so the border can be a unique colour.        */
+        /* We plot the row number in two parts, so that the icon borders overlap */
+        /* instead of touching, and so the border can be a unique colour.        */
+        WimpIconBlock number;
+        WimpIconBlock border;
 
-        int fgcol, bgcol;
+        COLOURS_OPTION_INDEX fg_colours_option_index, bg_colours_option_index;
 
         if(trow == currow)
         {
-            fgcol = CURBORDERFOREC;
-            bgcol = CURBORDERBACKC;
+            fg_colours_option_index = COI_CURRENT_BORDERFORE;
+            bg_colours_option_index = COI_CURRENT_BORDERBACK;
         }
         else
         {
-            fgcol = BORDERFOREC;
-            bgcol = BORDERBACKC;
+            fg_colours_option_index = COI_BORDERFORE;
+            bg_colours_option_index = COI_BORDERBACK;
 
             if(rptr->flags & FIX)
-                bgcol = FIXBORDERBACKC;
+                bg_colours_option_index = COI_FIXED_BORDERBACK;
         }
 
-        border.box.x0 = texttooffset_x(-1);             /* -1 character, so icon is clipped at the window edge, */
-        border.box.x1 = texttooffset_x(borderwidth);    /*  with no left hand border */
-        border.box.y0 = texttooffset_y(rpos);
-        number.box.y1 = border.box.y0 + charvspace;
+        border.bbox.xmin = texttooffset_x(-1);             /* -1 character, so icon is clipped at the window edge, */
+        number.bbox.xmin = border.bbox.xmin;
 
-        border.flags = (wimp_iconflags) (wimp_IBORDER | (wimp_IFORECOL * logcol(GRIDC))); /*BORDERFOREC*/
+        border.bbox.ymin = texttooffset_y(rpos);
+        number.bbox.ymin = border.bbox.ymin + dy;
 
-        number.box.y0 = border.box.y0 + dy;
-        border.box.y1 = number.box.y1 + dy;
-        number.box.x0 = border.box.x0;
-        number.box.x1 = border.box.x1 - dx;
+        border.bbox.xmax = texttooffset_x(borderwidth);    /*  with no left hand border */
+        number.bbox.xmax = border.bbox.xmax - dx;
 
-        number.flags = (wimp_iconflags) (wimp_ITEXT | wimp_IRJUST | wimp_IVCENTRE | wimp_IFILLED
-                     | (wimp_IFORECOL * logcol(fgcol))
-                     | (wimp_IBACKCOL * logcol(bgcol)) );
+        number.bbox.ymax = border.bbox.ymin + charvspace;
+        border.bbox.ymax = number.bbox.ymax + dy;
 
-        (void) sprintf(number.data.text, "%d", (int) trow + 1);
+        border.flags = (int) (
+            wimp_IBORDER | (WimpIcon_FGColour * wimp_colour_index_from_option(COI_GRID)) ); /*COI_BORDERFORE*/
 
-        wimp_ploticon(&number);
-        wimp_ploticon(&border);
+        number.flags = (int) (
+            wimp_ITEXT | wimp_IRJUST |
+            wimp_IVCENTRE |
+            /* */          (WimpIcon_FGColour * wimp_colour_index_from_option(fg_colours_option_index)) |
+            wimp_IFILLED | (WimpIcon_BGColour * wimp_colour_index_from_option(bg_colours_option_index)) );
 
-        /* draw first vbar - needs to include hbar */
-        if(grid_on)
-            draw_grid_vbar(TRUE);
+        consume_int(sprintf(number.data.t, "%d", (int) trow + 1));
+
+        if(NULL == WrapOsErrorReporting(tbl_wimp_plot_icon(&number)))
+        {
+            if(NULL == WrapOsErrorReporting(tbl_wimp_plot_icon(&border)))
+            {   /* draw first vbar - needs to include hbar */
+                if(grid_on)
+                    draw_grid_vbar(TRUE);
+            }
+        }
     }
 
-    killcolourcache();          /* cos wimp_ploticon changes foreground and background */
-    setcolour(FORE, BACK);      /* colours under our feet!                             */
+    killcolourcache(); /* cos Wimp_PlotIcon changes foreground and background colours */
+    setcolours(COI_FORE, COI_BACK);
 }
 
-/* only called if borbit on RISC OS */
+/* only called if displaying_borders on RISC OS */
 
 static void
 really_draw_extended_row_border(void)
 {
-    S32        start = calrad(rowsonscreen);
-    wimp_icon  border;
+    S32 start = calrad(rowsonscreen);
+    WimpIconBlock border;
 
     trace_3(TRACE_REALLY, "really_draw_extended_row_border - rowsonscreen=%d, start=%d, paghyt=%d", rowsonscreen, start, paghyt);
 
-    border.box.x0 = texttooffset_x(-1);             /* -1 character, so icon is clipped at the window edge, */
-    border.box.x1 = texttooffset_x(borderwidth);    /*  with no left hand border */
-    border.box.y0 = texttooffset_y(paghyt+1) - dy;
-    border.box.y1 = texttooffset_y(start-1)  + dy;
+    border.bbox.xmin = texttooffset_x(-1);             /* -1 character, so icon is clipped at the window edge, */
+    border.bbox.ymin = texttooffset_y(paghyt+1) - dy;
+    border.bbox.xmax = texttooffset_x(borderwidth);    /*  with no left hand border */
+    border.bbox.ymax = texttooffset_y(start-1)  + dy;
 
-    border.flags = (wimp_iconflags) ( wimp_IBORDER | wimp_IFILLED
-                 | (wimp_IFORECOL * logcol(GRIDC))
-                 | (wimp_IBACKCOL * logcol(BORDERBACKC)) );
+    border.flags = (int) (
+        wimp_IBORDER | (WimpIcon_FGColour * wimp_colour_index_from_option(COI_GRID)) |
+        wimp_IFILLED | (WimpIcon_BGColour * wimp_colour_index_from_option(COI_BORDERBACK)) );
 
-    wimp_ploticon(&border);
+    /* border.data unused */
 
-    killcolourcache();          /* cos wimp_ploticon changes foreground and background */
-    setcolour(FORE, BACK);      /* colours under our feet!                             */
+    void_WrapOsErrorReporting(tbl_wimp_plot_icon(&border));
+
+    killcolourcache(); /* cos Wimp_PlotIcon changes foreground and background colours */
+    setcolours(COI_FORE, COI_BACK);
 }
 
 static S32
@@ -1290,25 +1310,25 @@ really_draw_row_contents(
         len = MIN(hbar_length, RHS_X - borderwidth);
         trace_0(TRACE_REALLY, "row has soft page break");
 
-        setbgcolour(SOFTPAGEBREAKC);    /*PAGEBREAKC*/
+        set_bg_colour_from_option(COI_SOFTPAGEBREAK);
         clear_thistextarea();
-        setbgcolour(BACK);
+        set_bg_colour_from_option(COI_BACK);
 
         newlen = os_if_fonts(len);
     }
     else if(chkrpb(rptr->rowno))
     {
         if(chkfsb()  &&  chkpac(rptr->rowno))
-                {
+        {
             /* conditional page break occurred */
             /* shown as a bar crossing the columns, the row border has the usual row number */
 
             len = MIN(hbar_length, RHS_X - borderwidth);
             trace_0(TRACE_REALLY, "row has good hard page break");
 
-            setbgcolour(HARDPAGEBREAKC);        /*PAGEBREAKC*/
+            set_bg_colour_from_option(COI_HARDPAGEBREAK);
             clear_thistextarea();
-          /*setbgcolour(BACK); done later on */
+          /*set_bg_colour_from_option(COI_BACK); done later on */
 
             newlen = os_if_fonts(len);
         }
@@ -1320,14 +1340,14 @@ really_draw_row_contents(
             len = sprintf(tbuf, "~ %d", travel(0, rptr->rowno)->content.page.condval);
             trace_1(TRACE_REALLY, "row has failed hard page break %s", tbuf);
             at(borderwidth, rpos);
-            setfgcolour(FORE);  /*PAGEBREAKC*/  /* When first asked, Rob wanted PAGEBREAKC, then he changed */
-            clear_underlay(len);
-            stringout(tbuf);                    /* his mind, if he changes it again, thump him */
+            set_fg_colour_from_option(COI_FORE); /* When first asked, Rob wanted COI_PAGEBREAK, then he */
+            clear_underlay(len);                 /* changed his mind, if he changes it again, thump him */
+            stringout(tbuf);
             newlen = os_if_fonts(len);
             trace_1(TRACE_REALLY, "length of line so far: %d", newlen);
         }
 
-        setcolour(FORE, BACK);  /* cos we've altered fg or bg colour */
+        setcolours(COI_FORE, COI_BACK); /* cos we've altered fg or bg colour */
     }
     else
     {
@@ -1340,7 +1360,7 @@ really_draw_row_contents(
         assert(horzvec_entry_valid(0));
         for(coff = 0; !(horzvec_entry(coff)->flags & LAST); coff++)
         {
-            newlen = really_draw_slot(coff, roff, TRUE);
+            newlen = really_draw_cell(coff, roff, TRUE);
             invoff();
         }
 
@@ -1354,7 +1374,7 @@ really_draw_row_contents(
 }
 
 static void
-draw_slot(
+draw_cell(
     S32 coff,
     S32 roff,
     BOOL in_draw_row)
@@ -1376,9 +1396,9 @@ draw_slot(
 
     tcell = travel(tcol, trow);
 
-    IGNOREPARM(in_draw_row);    /* NEVER in_draw_row in RISC OS */
+    UNREFERENCED_PARAMETER(in_draw_row);    /* NEVER in_draw_row in RISC OS */
 
-    trace_2(TRACE_DRAW, "\n*** draw_slot(%d, %d)", coff, roff);
+    trace_2(TRACE_DRAW, "\n*** draw_cell(%d, %d)", coff, roff);
 
     if(tcell  &&  slot_displays_contents(tcell))
     {
@@ -1396,7 +1416,7 @@ draw_slot(
 ******************************************************************************/
 
 static S32
-really_draw_slot(
+really_draw_cell(
     S32 coff,
     S32 roff,
     BOOL in_draw_row)
@@ -1415,7 +1435,7 @@ really_draw_slot(
     S32 end_of_inverse, to_do_inverse;
     BOOL slot_in_block, slot_visible;
 
-    static S32 last_offset;        /* last draw_slot finished here */
+    static S32 last_offset;        /* last draw_cell finished here */
 
     assert(horzvec_entry_valid(coff));
     tcol = col_number(coff);
@@ -1430,9 +1450,9 @@ really_draw_slot(
     os_cpos = os_if_fonts(cpos);
     c_width = colwidth(tcol);
 
-    trace_4(TRACE_REALLY, "really_draw_slot(%d, %d, %s): slotblank = %s",
-                coff, roff, trace_boolstring(in_draw_row),
-                trace_boolstring(slotblank));
+    trace_4(TRACE_REALLY, "really_draw_cell(%d, %d, %s): slotblank = %s",
+                coff, roff, report_boolstring(in_draw_row),
+                report_boolstring(slotblank));
 
     /* if at beginning of line reset last offset to bos */
 
@@ -1515,7 +1535,7 @@ really_draw_slot(
     else
     {
         /* this is current cell to be drawn by dspfld
-         * don't bother drawing current cell if not numeric
+         * don't bother drawing current cell if not number
         */
         if( (tcol == curcol)  &&  (trow == currow)  &&  !xf_blockcursor  &&
             (!thisslot  ||
@@ -1525,8 +1545,8 @@ really_draw_slot(
             widthofslot = dspfld(cpos, rpos, fwidth);
 
             if(riscos_fonts)
-                /* come down from mp to OS units, via pixel rounding */
-                widthofslot = div_round_ceil_fn(widthofslot, x_scale * dx) * dx;
+                /* convert from millipoints to OS units, rounding out to pixels */
+                widthofslot = idiv_ceil_fn(widthofslot, millipoints_per_os_x * dx) * dx;
         }
         else if(slotblank)
         {
@@ -1540,10 +1560,7 @@ really_draw_slot(
 
             if(result_sign(thisslot) < 0)
             {
-                if(currently_inverted)
-                    setbgcolour(NEGATIVEC);
-                else
-                    setfgcolour(NEGATIVEC);
+                (currently_inverted ? set_bg_colour_from_option : set_fg_colour_from_option) (COI_NEGATIVE);
             }
 
             if(riscos_fonts)
@@ -1552,22 +1569,27 @@ really_draw_slot(
                 screen_xad_os = gcoord_x(cpos);
                 screen_yad_os = gcoord_y(rpos);
 
-                riscos_font_xad = x_scale * screen_xad_os;
-                riscos_font_yad = y_scale * (screen_yad_os + fontbaselineoffset);
+                riscos_font_ad_millipoints_x = millipoints_per_os_x * (screen_xad_os);
+                riscos_font_ad_millipoints_y = millipoints_per_os_y * (screen_yad_os + fontbaselineoffset);
 
                 ensurefontcolours();
 
-                widthofslot = div_round_ceil_fn(outslt(thisslot, trow, fwidth), x_scale * dx) * dx;
+                widthofslot = outslt(thisslot, trow, fwidth);
+
+                /* convert from millipoints to OS units, rounding out to pixels */
+                widthofslot = idiv_ceil_fn(widthofslot, millipoints_per_os_x * dx) * dx;
+
+                trace_1(TRACE_APP_PD4, "widthofslot = %d (OS)", widthofslot);
             }
             else
             {
                 at(cpos, rpos);
 
-                widthofslot = os_if_fonts(outslt(thisslot, trow, fwidth));
-            }
+                widthofslot = outslt(thisslot, trow, fwidth);
 
-            trace_1(TRACE_APP_PD4, "widthofslot = %d (OS)", widthofslot);
+                trace_1(TRACE_APP_PD4, "widthofslot = %d (CH)", widthofslot);
             }
+        }
     }
 
     /* now get fwidth & cpos into os units */
@@ -1611,7 +1633,7 @@ really_draw_slot(
     draw_spaces_with_grid(fwidth, os_cpos);
 
     switch_off_highlights();
-    setcolour(FORE, BACK);
+    setcolours(COI_FORE, COI_BACK);
 
     return(last_offset);            /* new screen x address */
 }
@@ -1752,7 +1774,7 @@ check_output_current_slot(
     }
 
     if(!slot_in_buffer  ||  move)
-        colh_draw_contents_of_numslot();
+        colh_draw_contents_of_number_cell();
 
     if( out_screen  ||
         out_below   ||
@@ -1769,7 +1791,7 @@ check_output_current_slot(
 /******************************************************************************
 *
 * set inverse state
-* Varies if current numeric cell and in marked block
+* Varies if current number cell and in marked block
 *
 ******************************************************************************/
 
@@ -1799,7 +1821,7 @@ setivs(
 ******************************************************************************/
 
 static void
-draw_altered_slots(void)
+draw_altered_cells(void)
 {
     P_SCRCOL i_cptr;
     P_SCRROW i_rptr;
@@ -1809,7 +1831,7 @@ draw_altered_slots(void)
     S32 roff;
     P_CELL tcell;
 
-    trace_0(TRACE_DRAW, "\n*** draw_altered_slots()");
+    trace_0(TRACE_DRAW, "\n*** draw_altered_cells()");
 
     assert(0 != array_elements(&horzvec_mh));
     i_cptr = horzvec();
@@ -1841,7 +1863,7 @@ draw_altered_slots(void)
                         coff = (S32) (cptr - i_cptr);
                         roff = (S32) (rptr - i_rptr);
 
-                        draw_slot(coff, roff, FALSE);
+                        draw_cell(coff, roff, FALSE);
 
                         assert(0 != array_elements(&horzvec_mh));
                         i_cptr  = horzvec();
@@ -1862,7 +1884,7 @@ draw_altered_slots(void)
 
                     if(draw_screen_timeout() || keyinbuffer())
                     {
-                        trace_0(TRACE_OUT | TRACE_ANY, "*** draw_altered_slots interrupted - leaving xf_drawsome set");
+                        trace_0(TRACE_OUT | TRACE_ANY, "*** draw_altered_cells interrupted - leaving xf_drawsome set");
                         xf_interrupted = TRUE;
                         return;
                     }
@@ -1933,7 +1955,7 @@ draw_one_altered_slot(
 
                     if(tcell)
                     {
-                        draw_slot((S32)(cptr - i_cptr),
+                        draw_cell((S32)(cptr - i_cptr),
                                   (S32)(rptr - i_rptr), FALSE);
 
                         invoff();
@@ -1995,7 +2017,7 @@ maybe_draw_empty_bottom_of_screen(void)
 
             clear_thistextarea();
 
-            if(borbit)
+            if(displaying_borders)
                 really_draw_extended_row_border();
         }
     }
@@ -2017,7 +2039,7 @@ maybe_draw_unused_bit_at_bottom(void)
             /* may have been overlapped by a Draw file */
             clear_thistextarea();
 
-            if(borbit)
+            if(displaying_borders)
                 really_draw_extended_row_border();
         }
     }
@@ -2045,7 +2067,7 @@ draw_empty_right_of_screen(void)
     /* NB. right of screen may not be visible */
     if(x1 > x0)
     {
-        BOOL grid_below = !borbit  &&  grid_on;
+        BOOL grid_below = !displaying_borders  &&  grid_on;
         S32 grid_adjust = grid_below ? 1 : 0;
         S32 y0 = calrad(rowsonscreen) - 1;
         S32 y1 = calrad(0) - 1 - grid_adjust;
@@ -2057,7 +2079,7 @@ draw_empty_right_of_screen(void)
 static void
 maybe_draw_empty_right_of_screen(void)
 {
-    BOOL grid_below = !borbit  &&  grid_on;
+    BOOL grid_below = !displaying_borders  &&  grid_on;
     S32 grid_adjust = grid_below ? 1 : 0;
     S32 x0 = borderwidth + hbar_length;
     S32 y0 = calrad(rowsonscreen) - 1;
@@ -2084,7 +2106,7 @@ maybe_draw_empty_right_of_screen(void)
 *
 ******************************************************************************/
 
-extern S32
+extern S32 /* GR_MILLIPOINT iff riscos_fonts */
 outslt(
     P_CELL tcell,
     ROW trow,
@@ -2097,14 +2119,21 @@ outslt(
 
     trace_3(TRACE_APP_PD4, "outslt: cell &%p, row %d, fwidth %d", report_ptr_cast(tcell), trow, fwidth);
 
-    justify = expand_slot(current_docno(), tcell, trow, array, fwidth,
-                          DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                          riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
+    justify = expand_cell(
+                    current_docno(), tcell, trow, array, fwidth,
+                    DEFAULT_EXPAND_REFS /*expand_refs*/,
+                    EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                    EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+                    EXPAND_FLAGS_FONTY_RESULT(riscos_fonts) /*allow_fonty_result*/ /*expand_flags*/,
+                    TRUE /*cff*/);
 
     switch(justify)
     {
     case J_LCR:
-        return(lcrjust(array, fwidth, FALSE));
+        if(riscos_fonts)
+            return(lcrjust_riscos_fonts(array, fwidth, FALSE));
+
+        return(lcrjust_plain(array, fwidth, FALSE));
 
     case J_LEFTRIGHT:
     case J_RIGHTLEFT:
@@ -2116,7 +2145,10 @@ outslt(
         return(res);
 
     default:
-        return(onejst(array, fwidth, justify));
+        if(riscos_fonts)
+            return(onejst_riscos_fonts(array, fwidth, justify));
+
+        return(onejst_plain(array, fwidth, justify));
     }
 }
 
@@ -2130,9 +2162,9 @@ outslt(
 
 static void
 font_setruboutbox(
-    S32 swidth_mp)
+    GR_MILLIPOINT swidth_mp)
 {
-    S32 swidth_os = div_round_ceil_fn(swidth_mp, x_scale * dx) * dx;
+    S32 swidth_os = idiv_ceil_fn(swidth_mp, millipoints_per_os_x * dx) * dx; /* round out to pixels */
 
     trace_1(TRACE_APP_PD4, "font_ruboutbox: swidth_os = %d", swidth_os);
 
@@ -2146,12 +2178,8 @@ font_setruboutbox(
 *
 ******************************************************************************/
 
-#ifndef font_KERNING /* why doesn't RISC_OSLib define this? */
-#define font_KERNING 0x200  /* perform kerning on the plot */
-#endif
-
-extern S32
-onejst(
+static S32
+onejst_plain(
     uchar *str,
     S32 fwidth_ch,
     uchar type)
@@ -2160,76 +2188,10 @@ onejst(
     const S32 fwidth_adjust_ch = ((type == J_CENTRE)  ||  (type == J_RIGHT)) ? 1 : 0;
     S32 spaces, swidth_ch;
     uchar *ptr, ch;
-    S32 fwidth_mp, swidth_mp, x_mp, xx_mp;
-    char paint_buf[PAINT_STRSIZ], *paint_str;
-    S32 paint_op = font_ABS;
+
+    assert(!riscos_fonts);
 
     fwidth_ch -= fwidth_adjust_ch;
-
-    if(riscos_fonts)
-    {
-        if(type != J_FREE)
-        {
-            font_strip_spaces(paint_buf, str, NULL);
-            paint_str = paint_buf;
-        }
-        else
-            paint_str = str;
-
-        swidth_mp = font_width(paint_str);
-
-        fwidth_mp = ch_to_mp(fwidth_ch);
-
-        if(swidth_mp > fwidth_mp)
-        {
-            /* fill as much field as possible if too big */
-            x_mp  = 0;
-            xx_mp = font_truncate(paint_str, fwidth_mp + ch_to_mp(fwidth_adjust_ch));
-        }
-        else
-        {
-            switch(type)
-            {
-            default:
-                trace_0(TRACE_APP_PD4, "*** error in OneJst ***");
-
-            case J_FREE:
-            case J_LEFT:
-                x_mp  = 0;
-                xx_mp = swidth_mp;
-                break;
-
-            case J_RIGHT:
-                x_mp  = fwidth_mp - swidth_mp;
-                xx_mp = fwidth_mp;
-                break;
-
-            case J_CENTRE:
-                x_mp  = (fwidth_mp - swidth_mp) / 2;
-                xx_mp = fwidth_mp;  /* make centred fields fill field (for grid) */
-                break;
-            }
-        }
-
-        if(draw_to_screen)
-        {
-            font_setruboutbox(xx_mp);
-
-            paint_op |= font_RUBOUT;
-        }
-        if('Y' == d_options_KE)
-        {
-            paint_op |= font_KERNING;
-        }
-
-        trace_2(TRACE_APP_PD4, "onejst font_paint x: %d, y: %d",
-                riscos_font_xad + x_mp, riscos_font_yad);
-
-        font_complain(font_paint(paint_str, paint_op,
-                                 riscos_font_xad + x_mp, riscos_font_yad));
-
-        return(xx_mp);
-    }
 
     /* non-fonty code */
 
@@ -2251,7 +2213,7 @@ onejst(
     if(ch == FUNNYSPACE)
         *ptr = SPACE;
 
-    *++ptr = NULLCH;
+    *++ptr = CH_NULL;
 
     swidth_ch = calsiz(str);
 
@@ -2285,10 +2247,93 @@ onejst(
     return(spaces + strout(str, fwidth_ch));
 }
 
+#ifndef font_KERNING /* why doesn't RISC_OSLib define this? */
+#define font_KERNING 0x200  /* perform kerning on the plot */
+#endif
+
+static GR_MILLIPOINT
+onejst_riscos_fonts(
+    uchar *str,
+    S32 fwidth_ch,
+    uchar type)
+{
+    /* leave one char space to the right in some cases */
+    const S32 fwidth_adjust_ch = ((type == J_CENTRE)  ||  (type == J_RIGHT)) ? 1 : 0;
+    GR_MILLIPOINT fwidth_mp, swidth_mp, x_mp, xx_mp;
+    char paint_buf[PAINT_STRSIZ], *paint_str;
+    S32 paint_op = font_ABS;
+
+    assert(riscos_fonts);
+
+    fwidth_ch -= fwidth_adjust_ch;
+
+    if(type != J_FREE)
+    {
+        font_strip_spaces(paint_buf, str, NULL);
+        paint_str = paint_buf;
+    }
+    else
+        paint_str = str;
+
+    swidth_mp = font_width(paint_str);
+
+    fwidth_mp = cw_to_millipoints(fwidth_ch);
+
+    if(swidth_mp > fwidth_mp)
+    {
+        /* fill as much field as possible if too big */
+        x_mp  = 0;
+        xx_mp = font_truncate(paint_str, fwidth_mp + cw_to_millipoints(fwidth_adjust_ch));
+    }
+    else
+    {
+        switch(type)
+        {
+        default:
+            trace_0(TRACE_APP_PD4, "*** error in OneJst ***");
+
+        case J_FREE:
+        case J_LEFT:
+            x_mp  = 0;
+            xx_mp = swidth_mp;
+            break;
+
+        case J_RIGHT:
+            x_mp  = fwidth_mp - swidth_mp;
+            xx_mp = fwidth_mp;
+            break;
+
+        case J_CENTRE:
+            x_mp  = (fwidth_mp - swidth_mp) / 2;
+            xx_mp = fwidth_mp;  /* make centred fields fill field (for grid) */
+            break;
+        }
+    }
+
+    if(draw_to_screen)
+    {
+        font_setruboutbox(xx_mp);
+
+        paint_op |= font_RUBOUT;
+    }
+    if('Y' == d_options_KE)
+    {
+        paint_op |= font_KERNING;
+    }
+
+    trace_2(TRACE_APP_PD4, "onejst_riscos_fonts font_paint x: %d, y: %d",
+            riscos_font_ad_millipoints_x + x_mp, riscos_font_ad_millipoints_y);
+
+    font_complain(font_paint(paint_str, paint_op,
+                             riscos_font_ad_millipoints_x + x_mp, riscos_font_ad_millipoints_y));
+
+    return(xx_mp);
+}
+
 /******************************************************************************
 *
 * get rid of leading and trailing spaces in a plain non-fonty string
-* puts NULLCH at end and returns first non-space char
+* puts CH_NULL at end and returns first non-space char
 *
 ******************************************************************************/
 
@@ -2311,7 +2356,7 @@ trim_spaces_nf(
         ;
 
     /* lose trailing spaces */
-    *ptr = NULLCH;
+    *ptr = CH_NULL;
 
     return(str);
 }
@@ -2322,112 +2367,40 @@ trim_spaces_nf(
 *
 ******************************************************************************/
 
-extern S32
-lcrjust(
+extern coord
+lcrjust_plain(
     uchar *str,
     S32 fwidth_ch,
     BOOL reversed)
 {
-    uchar *str2, *str3, *tstr;
+    uchar *str2, *str3;
     S32 str1len, str2len, str3len;
     S32 spaces1, spaces2;
     S32 sofar;
-    char paint1_buf[PAINT_STRSIZ], paint2_buf[PAINT_STRSIZ], paint3_buf[PAINT_STRSIZ];
-    S32 swidth1_mp, swidth2_mp, swidth3_mp;
-    S32 fwidth_mp, x_mp, xx_mp;
-    S32 paint_op=font_ABS;
 
-    trace_3(TRACE_REALLY, "lcrjust(\"%s\", fwidth_ch = %d, reversed = \"%s\")",
-                str, fwidth_ch, trace_boolstring(reversed));
+    trace_3(TRACE_REALLY, "lcrjust_plain(\"%s\", fwidth_ch = %d, reversed = \"%s\")",
+                str, fwidth_ch, report_boolstring(reversed));
+
+    assert(!riscos_fonts);
 
     /* wee three strings from outslt are: baring nulls wee travel() sofar */
     str2 = str;
-    if(riscos_fonts)
-    {
-        while(NULLCH != *str2)
-            str2 += font_skip(str2);
-    }
-    else
-    {
-        str2 += strlen(str2); /* str is a plain non-fonty string */
-    }
+    str2 += strlen(str2); /* str is a plain non-fonty string */
     ++str2;
 
     str3 = str2;
-    if(riscos_fonts)
-    {
-        while(NULLCH != *str3)
-            str3 += font_skip(str3);
-    }
-    else
-    {
-        str3 += strlen(str3); /* str2 is a plain non-fonty string */
-    }
+    str3 += strlen(str3); /* str2 is a plain non-fonty string */
     ++str3;
 
     if(reversed)
     {
-        tstr = str3;
+        uchar * tstr = str3;
         str3 = str;
         str  = tstr;
     }
 
     /* leave one char space to the right */
     --fwidth_ch;
-
-    if(riscos_fonts)
-    {
-        x_mp  = 0;
-        xx_mp = 0;
-
-        if('Y' == d_options_KE)
-        {
-            paint_op |= font_KERNING;
-        }
-
-        font_strip_spaces(paint1_buf, str,  NULL);
-        font_strip_spaces(paint2_buf, str2, NULL);
-        font_strip_spaces(paint3_buf, str3, NULL);
-
-        swidth1_mp = font_width(paint1_buf);
-        swidth2_mp = font_width(paint2_buf);
-        swidth3_mp = font_width(paint3_buf);
-
-        fwidth_mp = ch_to_mp(fwidth_ch);
-
-        if(draw_to_screen)
-            clear_underlay(fwidth_ch);
-
-        if( swidth1_mp > fwidth_mp)
-            swidth1_mp = font_truncate(paint1_buf, fwidth_mp);
-
-        if(swidth1_mp)
-        {
-            font_complain(font_paint(paint1_buf, paint_op,
-                                     riscos_font_xad, riscos_font_yad));
-            xx_mp = swidth1_mp;
-        }
-
-        x_mp = (fwidth_mp - swidth2_mp) / 2;
-
-        if(swidth2_mp  &&  (x_mp >= xx_mp))
-        {
-            font_complain(font_paint(paint2_buf, paint_op,
-                                     riscos_font_xad + x_mp, riscos_font_yad));
-            xx_mp = x_mp + swidth2_mp;
-        }
-
-        x_mp = fwidth_mp - swidth3_mp;
-
-        if(swidth3_mp  &&  (x_mp >= xx_mp))
-        {
-            font_complain(font_paint(paint3_buf, paint_op,
-                                     riscos_font_xad + x_mp, riscos_font_yad));
-            xx_mp = x_mp + swidth3_mp;
-        }
-
-        return(xx_mp);
-    }
 
     /* non-fonty code */
 
@@ -2474,20 +2447,112 @@ lcrjust(
     return(sofar);
 }
 
+extern GR_MILLIPOINT
+lcrjust_riscos_fonts(
+    uchar *str,
+    S32 fwidth_ch,
+    BOOL reversed)
+{
+    uchar *str2, *str3;
+    char paint1_buf[PAINT_STRSIZ], paint2_buf[PAINT_STRSIZ], paint3_buf[PAINT_STRSIZ];
+    GR_MILLIPOINT swidth1_mp, swidth2_mp, swidth3_mp;
+    GR_MILLIPOINT fwidth_mp, x_mp, xx_mp;
+    S32 paint_op = font_ABS;
+
+    trace_3(TRACE_REALLY, "lcrjust_riscos_fonts(\"%s\", fwidth_ch = %d, reversed = \"%s\")",
+                str, fwidth_ch, report_boolstring(reversed));
+
+    assert(riscos_fonts);
+
+    /* wee three strings from outslt are: baring nulls wee travel() sofar */
+    str2 = str;
+    while(CH_NULL != *str2)
+        str2 += font_skip(str2);
+    ++str2;
+
+    str3 = str2;
+    while(CH_NULL != *str3)
+        str3 += font_skip(str3);
+    ++str3;
+
+    if(reversed)
+    {
+        uchar * tstr = str3;
+        str3 = str;
+        str  = tstr;
+    }
+
+    /* leave one char space to the right */
+    --fwidth_ch;
+
+    /* fonty code */
+
+    x_mp  = 0;
+    xx_mp = 0;
+
+    if('Y' == d_options_KE)
+    {
+        paint_op |= font_KERNING;
+    }
+
+    font_strip_spaces(paint1_buf, str,  NULL);
+    font_strip_spaces(paint2_buf, str2, NULL);
+    font_strip_spaces(paint3_buf, str3, NULL);
+
+    swidth1_mp = font_width(paint1_buf);
+    swidth2_mp = font_width(paint2_buf);
+    swidth3_mp = font_width(paint3_buf);
+
+    fwidth_mp = cw_to_millipoints(fwidth_ch);
+
+    if(draw_to_screen)
+        clear_underlay(fwidth_ch);
+
+    if( swidth1_mp > fwidth_mp)
+        swidth1_mp = font_truncate(paint1_buf, fwidth_mp);
+
+    if(swidth1_mp)
+    {
+        font_complain(font_paint(paint1_buf, paint_op,
+                                 riscos_font_ad_millipoints_x, riscos_font_ad_millipoints_y));
+        xx_mp = swidth1_mp;
+    }
+
+    x_mp = (fwidth_mp - swidth2_mp) / 2;
+
+    if(swidth2_mp  &&  (x_mp >= xx_mp))
+    {
+        font_complain(font_paint(paint2_buf, paint_op,
+                                 riscos_font_ad_millipoints_x + x_mp, riscos_font_ad_millipoints_y));
+        xx_mp = x_mp + swidth2_mp;
+    }
+
+    x_mp = fwidth_mp - swidth3_mp;
+
+    if(swidth3_mp  &&  (x_mp >= xx_mp))
+    {
+        font_complain(font_paint(paint3_buf, paint_op,
+                                 riscos_font_ad_millipoints_x + x_mp, riscos_font_ad_millipoints_y));
+        xx_mp = x_mp + swidth3_mp;
+    }
+
+    return(xx_mp);
+}
+
 /******************************************************************************
 *
 * paint justified fonty string
 *
 ******************************************************************************/
 
-static S32
+static GR_MILLIPOINT
 font_paint_justify(
     char *str_in,
     S32 fwidth_ch)
 {
     /* leave one char space to the right */
     const S32 fwidth_adjust_ch = 1;
-    S32 fwidth_mp, swidth_mp, lead_space_mp;
+    GR_MILLIPOINT fwidth_mp, swidth_mp, lead_space_mp;
     char paint_buf[PAINT_STRSIZ];
     S32 paint_op = font_ABS;
 
@@ -2496,7 +2561,7 @@ font_paint_justify(
     /* account for spaces */
     lead_space_mp = font_strip_spaces(paint_buf, str_in, NULL);
 
-    fwidth_mp = ch_to_mp(fwidth_ch);
+    fwidth_mp = cw_to_millipoints(fwidth_ch);
 
     swidth_mp = font_width(paint_buf);
 
@@ -2504,7 +2569,7 @@ font_paint_justify(
             swidth_mp, fwidth_mp, fwidth_ch, lead_space_mp);
 
     if(swidth_mp + lead_space_mp > fwidth_mp)
-        swidth_mp = font_truncate(paint_buf, fwidth_mp + ch_to_mp(fwidth_adjust_ch) - lead_space_mp);
+        swidth_mp = font_truncate(paint_buf, fwidth_mp + cw_to_millipoints(fwidth_adjust_ch) - lead_space_mp);
     else
     {
         swidth_mp = fwidth_mp;
@@ -2527,12 +2592,12 @@ font_paint_justify(
 
     if(paint_op & font_JUSTIFY)
         /* provide right-hand justification point */
-        wimpt_safe(bbc_move(div_round_floor_fn(riscos_font_xad + fwidth_mp, x_scale * dx) * dx,
-                            riscos_font_yad / y_scale));
+        wimpt_safe(bbc_move(idiv_floor_fn(riscos_font_ad_millipoints_x + fwidth_mp, millipoints_per_os_x * dx) * dx,
+                            riscos_font_ad_millipoints_y / millipoints_per_os_y));
 
     font_complain(font_paint(paint_buf, paint_op,
-                             riscos_font_xad + lead_space_mp,
-                             riscos_font_yad));
+                             riscos_font_ad_millipoints_x + lead_space_mp,
+                             riscos_font_ad_millipoints_y));
 
     return(swidth_mp);
 }
@@ -2602,7 +2667,7 @@ justifyline(
     }
 
     /* get rid of trailing spaces */
-    *(from - trailingspaces) = '\0';
+    *(from - trailingspaces) = CH_NULL;
 
     gaps = words-1;
     if(gaps < 1)
@@ -2674,14 +2739,14 @@ justifyline(
 
         /* find end of word */
         for(lastword = from; *from != SPACE; from++)
-            if(*from == '\0')
+            if(*from == CH_NULL)
             {
                 nullfound = TRUE;
                 break;
             }
 
         /* *from must be space here */
-        *from = '\0';
+        *from = CH_NULL;
 
         /* send out word */
         if(out_array)
@@ -2705,7 +2770,7 @@ justifyline(
             count++, spacesout += c_width, from++)
             ;
 
-        if(*from == '\0')
+        if(*from == CH_NULL)
         {
             count = oldcount;
             break;
@@ -2829,7 +2894,7 @@ font_truncate(
     font_complain(font_strwidth(&fs));
     trace_3(TRACE_APP_PD4, "font_truncate before width: %d, term: %d, str: \"%s\"",
             width, fs.term, str);
-    str[fs.term] = '\0';
+    str[fs.term] = CH_NULL;
     trace_2(TRACE_APP_PD4, "font_truncate after width: %d, str: \"%s\"", fs.x, str);
     return(fs.x);
 }
@@ -2842,13 +2907,14 @@ font_truncate(
 *
 ******************************************************************************/
 
-extern S32
+extern GR_MILLIPOINT
 font_strip_spaces(
     char *out_buf,
     char *str_in,
     P_S32 spaces)
 {
-    S32 lead_spaces, lead_space_mp, font_change;
+    S32 lead_spaces, font_change;
+    GR_MILLIPOINT lead_space_mp;
     char *i, *o, *str, ch;
 
     /* find end of string and find leading space */
@@ -2856,7 +2922,7 @@ font_strip_spaces(
     str = NULL;
     i = str_in;
     o = out_buf;
-    while(NULLCH != *i)
+    while(CH_NULL != *i)
     {
         S32 nchar;
 
@@ -2885,15 +2951,15 @@ font_strip_spaces(
     if(o != out_buf)
     {
         while(*--o == SPACE && !font_change);
-        *(o + 1) = '\0';
+        *(o + 1) = CH_NULL;
     }
     else
-        *o = '\0';
+        *o = CH_NULL;
 
     if(str)
     {
         ch = *str;
-        *str = '\0';
+        *str = CH_NULL;
         lead_space_mp = font_width(str_in);
         *str = ch;
     }
@@ -3062,7 +3128,7 @@ adjust_lescrl(
     S32 fwidth_ch)
 {
     char paint_str[PAINT_STRSIZ];
-    S32 fwidth_mp, swidth_mp;
+    GR_MILLIPOINT fwidth_mp, swidth_mp;
 
     fwidth_ch = MIN(fwidth_ch, pagwid_plus1 - x);
 
@@ -3073,10 +3139,9 @@ adjust_lescrl(
        !(xf_inexpression || xf_inexpression_box || xf_inexpression_line) &&
        fwidth_ch
       )
-    {
-        /* adjust for fancy font printing */
+    {   /* adjust for fancy font printing */
 
-        fwidth_mp = ch_to_mp(fwidth_ch);
+        fwidth_mp = cw_to_millipoints(fwidth_ch);
 
         for(;;)
         {
@@ -3108,8 +3173,7 @@ adjust_lescrl(
         }
     }
     else
-    {
-        /* adjust for standard font printing */
+    {   /* adjust for standard text printing */
 
         lescrl = cal_lescrl(fwidth_ch);
     }
@@ -3176,25 +3240,24 @@ dspfld(
     S32 linelen, offset;
     char *ptr, *start;
     char paint_str[PAINT_STRSIZ];
-    S32 fwidth_mp, swidth_mp;
+    GR_MILLIPOINT fwidth_mp, swidth_mp;
     S32 this_font;
-    S32 paint_op=font_ABS+font_RUBOUT;
+    S32 paint_op = font_ABS+font_RUBOUT;
 
     trace_3(TRACE_APP_PD4, "dspfld: x %d, y %d, fwidth_ch %d", x, y, fwidth_ch);
 
     if(riscos_fonts  &&  !(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
-    {
-        /* fancy font printing */
+    {   /* fancy font printing */
 
         screen_xad_os = gcoord_x(x);
         screen_yad_os = gcoord_y(y);
 
-        riscos_font_xad = x_scale * screen_xad_os;
-        riscos_font_yad = y_scale * (screen_yad_os + fontbaselineoffset);
+        riscos_font_ad_millipoints_x = millipoints_per_os_x * screen_xad_os;
+        riscos_font_ad_millipoints_y = millipoints_per_os_y * (screen_yad_os + fontbaselineoffset);
 
         ensurefontcolours();
 
-        fwidth_mp = ch_to_mp(fwidth_ch);
+        fwidth_mp = cw_to_millipoints(fwidth_ch);
 
         expand_current_slot_in_fonts(paint_str, FALSE, &this_font);
         swidth_mp = font_width(paint_str);
@@ -3211,7 +3274,7 @@ dspfld(
         font_setruboutbox(swidth_mp);
 
         font_complain(font_paint(paint_str, paint_op,
-                                 riscos_font_xad, riscos_font_yad));
+                                 riscos_font_ad_millipoints_x, riscos_font_ad_millipoints_y));
 
         if(word_to_invert)
             killfontcolourcache();
@@ -3219,8 +3282,7 @@ dspfld(
         dspfld_written = swidth_mp;
     }
     else
-    {
-        /* standard font printing */
+    {   /* standard text printing */
 
         linelen = strlen(linbuf);
         offset = MIN(lescrl, linelen);
@@ -3239,7 +3301,7 @@ dspfld(
                 x, fwidth_ch, width_left, lescrl);
 
 #if 1
-        /* SKS after 4.12 24mar92 - having added code in middle of loop to handle
+        /* SKS after PD 4.12 24mar92 - having added code in middle of loop to handle
          * end of field and break this shouldn't loop conditionally here
         */
         for(;;)
@@ -3343,7 +3405,7 @@ position_cursor(void)
 {
     S32 x, y;
     char paint_str[PAINT_STRSIZ];
-    S32 swidth_mp;
+    GR_MILLIPOINT swidth_mp;
 
     trace_0(TRACE_APP_PD4, "position_cursor()");
 
@@ -3354,8 +3416,7 @@ position_cursor(void)
     y = calrad(currowoffset);
 
     if(riscos_fonts)
-    {
-        /* fancy font positioning */
+    {   /* fancy font positioning */
 
         if(lecpos > lescrl)
         {
@@ -3365,11 +3426,10 @@ position_cursor(void)
         else
             swidth_mp = 0;
 
-        x = ch_to_os(x) + div_round_floor_fn(swidth_mp, x_scale * dx) * dx;     /* mp into OS via pixels */
+        x = cw_to_os(x) + idiv_floor_fn(swidth_mp, millipoints_per_os_x * dx) * dx; /* millipoints into OS via pixels */
     }
     else
-    {
-        /* standard font positioning */
+    {   /* standard text positioning */
 
         x += (lecpos - lescrl < 0)
                     ? (S32) 0
@@ -3583,7 +3643,7 @@ is_overlapped(
                 return(FALSE);
 
 #if 1
-            /* SKS after 4.11 23jan92 */
+            /* SKS after PD 4.11 23jan92 */
             return(colwrapwidth(tcol) > gap);
 #else
             return(colwrapwidth(tcol) >= gap);

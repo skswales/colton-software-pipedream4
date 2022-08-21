@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Toolbar</title>
+    <link href="help.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 2016-2018 Stuart Swales -->
+
+    <h1>Toolbar</h1>
+
+    <h2>PipeDream Toolbar to Command Mapping</h2>
+    <table border="1" style="width: 100%;">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th colspan="6" style="padding: 8px;">Top row</th>
+            </tr>
+            <tr style="background-color: #eeeeee;">
+                <th>Tool</th>
+                <th>Select</th>
+                <th>Cmd<br />seq</th>
+                <th>Adjust</th>
+                <th>Cmd<br />seq</th>
+                <th>Notes</th>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_fill_down.png" /></td>
+                <td>Replicate down</td>
+                <td class="csg-cmdseq">BRD</td>
+                <td>Replicate Up</td>
+                <td class="csg-cmdseq">BRU</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_fill_right.png" /></td>
+                <td>Replicate right</td>
+                <td class="csg-cmdseq">BRR</td>
+                <td>Replicate Left</td>
+                <td class="csg-cmdseq">BRL</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_make_text.png" /></td>
+                <td>Make text</td>
+                <td class="csg-cmdseq">BLT</td>
+                <td>Number &lt;&gt; Text</td>
+                <td class="csg-cmdseq">BNT</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_make_number.png" /></td>
+                <td>Make number</td>
+                <td class="csg-cmdseq">BLN</td>
+                <td>Make constant</td>
+                <td class="csg-cmdseq">BSC</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_chart.png" /></td>
+                <td>Chart</td>
+                <td class="csg-cmdseq">CHN</td>
+                <td>Chart options</td>
+                <td class="csg-cmdseq">CHO</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_function_selector.png" /></td>
+                <td><em>Functions menu</em></td>
+                <td><em>none</em></td>
+                <td>Formula editing window</td>
+                <td class="csg-cmdseq">EFW</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_cross.png" /></td>
+                <td>Cancel editing</td>
+                <td><em>none</em></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_tick.png" /></td>
+                <td>Enter formula</td>
+                <td><em>none</em></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th colspan="6" style="padding: 8px;">Bottom row</th>
+            </tr>
+            <tr style="background-color: #eeeeee;">
+                <th>Tool</th>
+                <th>Select</th>
+                <th>Cmd<br />seq</th>
+                <th>Adjust</th>
+                <th>Cmd<br />seq</th>
+                <th>Notes</th>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_save.png" /></td>
+                <td>Save</td>
+                <td class="csg-cmdseq">FS</td>
+                <td>Save (no dialogue box)</td>
+                <td class="csg-cmdseq">FGS</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_print.png" /></td>
+                <td>Print</td>
+                <td class="csg-cmdseq">PO</td>
+                <td>Page layout</td>
+                <td class="csg-cmdseq">PY</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_align_left.png" /></td>
+                <td>Left align</td>
+                <td class="csg-cmdseq">LAL</td>
+                <td>Free align</td>
+                <td class="csg-cmdseq">LAF</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_align_centre.png" /></td>
+                <td>Centre align</td>
+                <td class="csg-cmdseq">LAC</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_align_right.png" /></td>
+                <td>Right align</td>
+                <td class="csg-cmdseq">LAR</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_align_full.png" /></td>
+                <td>Toggle justification</td>
+                <td><em>none</em></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_font_selector.png" /></td>
+                <td>Font</td>
+                <td class="csg-cmdseq">PFG</td>
+                <td>Local font</td>
+                <td class="csg-cmdseq">PFL</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_bold.png" /></td>
+                <td>Bold</td>
+                <td class="csg-cmdseq">PB</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">PHB/PHR</span> of H2 when marked block</td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_italic.png" /></td>
+                <td>Italic</td>
+                <td class="csg-cmdseq">PI</td>
+                <td></td>
+                <td></td>
+                <td>ditto, H4</td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_underline.png" /></td>
+                <td>Underline</td>
+                <td class="csg-cmdseq">PU</td>
+                <td></td>
+                <td></td>
+                <td>ditto, H1</td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_subscript.png" /></td>
+                <td>Subscript</td>
+                <td class="csg-cmdseq">PL</td>
+                <td></td>
+                <td></td>
+                <td>ditto, H5</td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_superscript.png" /></td>
+                <td>Superscript</td>
+                <td class="csg-cmdseq">PR</td>
+                <td></td>
+                <td></td>
+                <td>ditto, H6</td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_leading_trailing.png" /></td>
+                <td>Leading characters</td>
+                <td class="csg-cmdseq">LCL</td>
+                <td>Trailing characters</td>
+                <td class="csg-cmdseq">LCT</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_decimal_places.png" /></td>
+                <td>Decimal places</td>
+                <td class="csg-cmdseq">LDP</td>
+                <td>Default format</td>
+                <td class="csg-cmdseq">LDF</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_selection_off.png" /></td>
+                <td>Mark sheet</td>
+                <td class="csg-cmdseq">FGZ</td>
+                <td>Clear markers</td>
+                <td class="csg-cmdseq">Z</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_copy.png" /></td>
+                <td>Copy block to paste list</td>
+                <td class="csg-cmdseq">BF</td>
+                <td>Move block</td>
+                <td class="csg-cmdseq">BM</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_cut.png" /></td>
+                <td>Delete block</td>
+                <td class="csg-cmdseq">BD</td>
+                <td>Clear block</td>
+                <td class="csg-cmdseq">BLC</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_paste.png" /></td>
+                <td>Paste</td>
+                <td class="csg-cmdseq">I</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_reformat.png" /></td>
+                <td>Format block</td>
+                <td class="csg-cmdseq">R</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">EFB</span> when marked block</td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_search.png" /></td>
+                <td>Search</td>
+                <td class="csg-cmdseq">BSE</td>
+                <td>Next match</td>
+                <td class="csg-cmdseq">BNM</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_sort.png" /></td>
+                <td>Sort</td>
+                <td class="csg-cmdseq">BSO</td>
+                <td>Transpose block</td>
+                <td class="csg-cmdseq">BT</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_spell_check.png" /></td>
+                <td>Check document</td>
+                <td class="csg-cmdseq">SC</td>
+                <td>Browse</td>
+                <td class="csg-cmdseq">SB</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_record_command_file.png" /></td>
+                <td>Record command file</td>
+                <td class="csg-cmdseq">FY</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><img src="images/tbar_execute_command_file.png" /></td>
+                <td>Do command file</td>
+                <td class="csg-cmdseq">FZ</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    </div>
+</body>
+</html>

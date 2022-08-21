@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Tables</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="stringfns.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="templates.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1>Tables</h1>
+
+    <h2 id="Creating">Creating Independent Columns of Text</h2>
+    <p>
+        By default, the <span class="csg-dbox-option">Insert on wrap</span> option
+        in the <span class="csg-dbox">Options</span> dialogue box is set to
+        <span class="csg-dbox-option">Rows</span>, to
+        ensure that information in adjacent columns remains correctly aligned when text is inserted within any column.
+        You can also create independent columns of text in one PipeDream document, like a newspaper.
+        Setting the <span class="csg-dbox-option">Insert on wrap</span> option to <span class="csg-dbox-option">Columns</span> makes all columns independent,
+        so that inserting text within one column will not affect columns to either side of it.
+        The <span class="csg-dbox-option">Insert on wrap </span> setting is preserved when you save a document.
+    </p>
+    <p>
+        To create a multi-column layout, first design the document.
+        For example, to create a layout with three equal columns, set the width to 24 and the right margin to zero for all three columns.
+        To do this, use the <span class="csg-command">Set Column Width</span> and <span class="csg-command">Set Right Margin</span> commands.
+        The <span class="csg-command">Set Column Width</span> command enables you to set the width for all the columns.
+        The <span class="csg-command">Set Right Margin</span> command enables you to specify the position of the right margins for the columns.
+        This determines the point at which the column will wrap.
+        You do not need to carry out these commands three times.
+        Instead, you can specify a column range <code>A C</code>, which will cause the command to be applied to columns A, B and C.
+    </p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">String Functions </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Template Files</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="stringfns.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"><a accesskey="n" href="templates.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

@@ -357,7 +357,7 @@ gr_axis_form_value_lin(
         }
     }
 #if 1
-    /* SKS after 4.12 26mar92 - in auto mode only: RJM reckons this is what punters would like and I agree */
+    /* SKS after PD 4.12 26mar92 - in auto mode only: RJM reckons this is what punters would like and I agree */
     else
     {
         if(p_axis_ticks->current == 0.5)

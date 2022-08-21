@@ -1,5 +1,5 @@
---- _src	2011-11-13 19:13:59.000000000 +0000
-+++ _dst	2015-11-18 16:29:49.260000000 +0000
+--- _src	2011-11-13 20:13:59.000000000 +0100
++++ _dst	2016-10-27 12:58:48.240000000 +0100
 @@ -221,7 +221,11 @@
  typedef struct {
    wimp_w w;               /* window handle */
@@ -32,7 +32,7 @@
    wimp_MHELPREPLY    = 0x503,         /* interactive help message */
  
 +#if defined(SKS_ACW)
-+  wimp_MPD_DDE       = 0x600,
++  Wimp_MPD_DDE       = 0x600,
 +#endif
 +
    /* Messages for dialogue with printer applications */
@@ -55,8 +55,8 @@
 +  int flags;                 /* where the help is required */
 +} wimp_msgprequitrequest;
 +
-+#define wimp_MPREQUIT_flags_killthistask 0x01
-+#define wimp_MPREQUIT_flags int
++#define Wimp_MPREQUIT_flags_killthistask 0x01
++#define Wimp_MPREQUIT_flags int
 +#endif /* SKS_ACW */
 +
  typedef struct {           /* Save state for restart */
@@ -157,7 +157,7 @@
      wimp_msgsavedesk    savedesk;
      wimp_msgdevice      device;
 +#ifdef SKS_ACW
-+    wimp_msgpd_dde          pd_dde;
++    WIMP_MSGPD_DDE          pd_dde;
 +    wimp_msgwindowinfo      windowinfo;
 +    wimp_msgwindowclosed    windowclosed;
 +    wimp_msgprequitrequest  prequitrequest;
@@ -228,9 +228,9 @@
 +
 +#define wimp_win_title_height(dy) (40 + (dy))
 +
-+#define NULL_WIMP_W  ((wimp_w) 0)
++/*#define NULL_WIMP_W  ((wimp_w) 0)*/
 +
-+os_error *wimp_reporterror_rf(const os_error *, wimp_errflags, const char *name, wimp_errflags *flags_out, const char *message);
++/*const _kernel_oserror *wimp_reporterror_rf(_In_ const _kernel_oserror *, _InVal_ int errflags, _Out_ int * p_button_clicked, _In_opt_z_ const char *message, _InVal_ int error_level);*/
 +
 +#endif /* SKS_ACW */
 +

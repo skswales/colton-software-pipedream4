@@ -15,29 +15,48 @@
 #include "cs-bbcx.h"
 #endif
 
-#include "colourtran.h"
-
 #ifndef __cs_wimptx_h
 #include "cs-wimptx.h"
 #endif
 
-extern os_error *
-wimp_Poll_SFM(wimp_emask mask, wimp_eventstr *result);
+/*
+exported for macros
+*/
 
-extern wimp_errflags
+unsigned int wimptx__XEigFactor = 1U;
+unsigned int wimptx__YEigFactor = 2U;
+
+unsigned int wimptx__display_size_cx = 1280U;
+unsigned int wimptx__display_size_cy = 1024U;
+
+int wimptx__title_height   = 40;
+int wimptx__hscroll_height = 40;
+int wimptx__vscroll_width  = 40;
+
+wimp_palettestr wimptx__palette;
+
+extern _kernel_oserror *
+wimp_poll_coltsoft(
+    _In_        wimp_emask mask,
+    _Out_       /*WimpPollBlock*/ void * block,
+    _Inout_opt_ int * pollword,
+    _Out_       int * event_code);
+
+extern int /*button_clicked*/
 wimp_ReportError_wrapped(
     const _kernel_oserror * e,
-    wimp_errflags flags,
+    int errflags,
     const char * name,
     const char * spritename,
     const char * spritearea,
     const char * buttons)
 {
-    wimp_errflags errflags = wimp_ECANCEL;
-    _kernel_swi_regs rs;
+    int button_clicked = 1;
+
+    static _kernel_swi_regs rs; /* flatter for stack overflow handler */
 
     rs.r[0] = (int) e;
-    rs.r[1] = flags;
+    rs.r[1] = errflags;
     rs.r[2] = (int) name;
     rs.r[3] = (int) spritename;
     rs.r[4] = (int) spritearea;
@@ -45,29 +64,13 @@ wimp_ReportError_wrapped(
 
     riscos_hourglass_off();
 
-    (void) _kernel_swi(Wimp_ReportError, &rs, &rs);
-    errflags = (wimp_errflags) rs.r[1];
+    if(NULL == _kernel_swi(Wimp_ReportError, &rs, &rs))
+        button_clicked = rs.r[1];
 
     riscos_hourglass_on();
 
-    return(errflags);
+    return(button_clicked);
 }
-
-/*
-exported for macros
-*/
-
-int wimpt__xeig  = 1;
-int wimpt__xsize = 1280;
-
-int wimpt__yeig  = 2;
-int wimpt__ysize = 1024;
-
-int wimpt__title_height   = 40;
-int wimpt__hscroll_height = 40;
-int wimpt__vscroll_width  = 40;
-
-wimp_palettestr wimpt__palette;
 
 extern os_error *
 os_set_error(
@@ -83,33 +86,29 @@ os_set_error(
     return(&e);
 }
 
-/* replacement for one in wimp.c to use new mechanism */
-
-extern os_error *
-wimp_reporterror(
-    os_error * e,
-    wimp_errflags flags,
-    char * name)
-{
-    wimp_errflags flags_dummy;
-    return(wimp_reporterror_rf(e, flags, name, &flags_dummy, NULL));
-}
- 
-extern os_error *
+extern const _kernel_oserror *
 wimp_reporterror_rf(
-    const _kernel_oserror * e,
-    wimp_errflags flags,
-    const char *name,
-    wimp_errflags * flags_out,
-    const char *message)
+    _In_        const _kernel_oserror * e,
+    _InVal_     int errflags_in,
+    _Out_       int * p_button_clicked,
+    _In_opt_z_  const char * message,
+    _InVal_     int error_level)
 {
-    static _kernel_oserror ie;
+    static _kernel_oserror g_e;
 
-    ie.errnum = 1 /* lie to over-knowledgeable RISC PC error handler - was e->errnum */;
+    int errflags = errflags_in;
+
+    *p_button_clicked = 1;
+
+#if 0
+    g_e.errnum = 1 /* lie to over-knowledgeable RISC PC error handler - was e->errnum */;
+#else
+    g_e.errnum = e->errnum;
+#endif
 
     {
     const char * p_u8 = e->errmess;
-    char * p_u8_out = ie.errmess;
+    char * p_u8_out = g_e.errmess;
     int len = 0;
     int non_blanks = 0;
 
@@ -117,68 +116,67 @@ wimp_reporterror_rf(
     {
         U8 c = *p_u8++;
         *p_u8_out++ = c;
-        if(!c)
+        if(CH_NULL == c)
             break;
         ++len;
 
         if((c != 0x20) && (c != 0xA0))
             ++non_blanks;
 
-        if((c < 0x20) || (c == 0x7F))
+        if((c <= 0x1F) || (c == 0x7F))
             /* Found control characters in error string */
-            p_u8_out[-1] = '.';
+            p_u8_out[-1] = CH_FULL_STOP;
     }
 
-    if(!len || !non_blanks)
-        e = os_set_error(1, "No printing characters in error string");
-    else
-        e = &ie;
+    if(0 == len)
+        strcpy(g_e.errmess, "No characters in error string");
+    else if(0 == non_blanks)
+        strcpy(g_e.errmess, "All characters in error string are blank");
     }
 
-    if(message)
+    e = &g_e;
+
+    if(wimptx_os_version_query() >= RISC_OS_3_5)
     {
-        flags = (wimp_errflags) (flags | wimp_ENOERRORFROM);
-        name = message;
+        if(NULL != message)
+            errflags |= Wimp_ReportError_NoAppName;
+
+        errflags |= Wimp_ReportError_UseCategory; /* new-style */
+        errflags |= Wimp_ReportError_Category(error_level); /* 11..9 */
     }
 
-    if(wimpt_os_version_query() >= RISC_OS_3_5)
-    {
-        flags = (wimp_errflags) (flags | wimp_EUSECATEGORY); /* new-style */
-        flags = (wimp_errflags) (flags | wimp_ECAT_WARNING); /* error */
-    }
+    *p_button_clicked = wimp_ReportError_wrapped(e, errflags, message ? message : wimpt_programname(), wimptx_get_spritename(), (const char *) 1 /*Wimp Sprite Area*/, NULL);
 
-    *flags_out = wimp_ReportError_wrapped(e, flags, name, wimpt_get_spritename(), (const char *) 1 /*Wimp Sprite Area*/, NULL);
-
-    return(de_const_cast(os_error *, e));
+    return(e);
 }
 
-static int wimpt__os_version;
+static int wimptx__os_version;
 
-static int wimpt__platform_features; /* 19aug96 */
+static int wimptx__platform_features; /* 19aug96 */
 
 extern void
-wimpt_os_version_determine(void)
+wimptx_os_version_determine(void)
 {
-    wimpt__os_version = (_kernel_osbyte(0x81, 0, 0xFF) & 0xFF);
+    wimptx__os_version = (_kernel_osbyte(0x81, 0, 0xFF) & 0xFF);
 
     { /* 19aug96 */
     _kernel_swi_regs rs;
     rs.r[0] = 0; /*Read code features*/
     if(NULL == _kernel_swi(/*OS_PlatformFeatures*/ 0x6D, &rs, &rs))
-        wimpt__platform_features = rs.r[0];
+        wimptx__platform_features = rs.r[0];
     } /*block*/
 }
 
 extern int
-wimpt_os_version_query(void)
+wimptx_os_version_query(void)
 {
-    return(wimpt__os_version);
+    return(wimptx__os_version);
 }
 
 extern int
-wimpt_platform_features_query(void)
+wimptx_platform_features_query(void)
 {
-    return(wimpt__platform_features);
+    return(wimptx__platform_features);
 }
 
 /*****************************************
@@ -188,77 +186,228 @@ wimpt_platform_features_query(void)
 *****************************************/
 
 extern void
-wimpt_checkpalette(void)
-{
-    colourtran_invalidate_cache();
+wimptx_checkpalette(void)
+{  
+    {
+    _kernel_swi_regs rs;
+    (void) wimpt_complain(_kernel_swi(ColourTrans_InvalidateCache, &rs, &rs));
+    } /*block*/
 
-    wimpt_safe(wimp_readpalette(&wimpt__palette));
+    (void) wimpt_complain(wimp_readpalette(&wimptx__palette));
 
     /* copy over only info needed */
 #if TRACE
     {
     int i;
-    for(i = 0; i < sizeof(wimpt__palette.c)/sizeof(wimpt__palette.c[0]); ++i)
-        tracef2("palette entry %2d = &%8.8X", i, wimpt__palette.c[i]);
+    for(i = 0; i < sizeof(wimptx__palette.c)/sizeof(wimptx__palette.c[0]); ++i)
+        tracef2("palette entry %2d = &%8.8X", i, wimptx__palette.c[i].word);
     }
 #endif
 }
 
-static const char * wimpt__spritename;
+static const char * wimptx__spritename;
 
 extern const char *
-wimpt_get_spritename(void)
+wimptx_get_spritename(void)
 {
-    return(wimpt__spritename);
+    return(wimptx__spritename);
 }
 
 extern void
-wimpt_set_spritename(const char * spritename)
+wimptx_set_spritename(const char * spritename)
 {
-    wimpt__spritename = spritename;
+    wimptx__spritename = spritename;
 }
 
-static const char * wimpt__taskname;
+static const char * wimptx__taskname;
 
 extern const char *
-wimpt_get_taskname(void)
+wimptx_get_taskname(void)
 {
-    return(wimpt__taskname ? wimpt__taskname : wimpt_programname());
+    return(wimptx__taskname ? wimptx__taskname : wimpt_programname());
 }
 
 extern void
-wimpt_set_taskname(const char * taskname)
+wimptx_set_taskname(const char * taskname)
 {
-    wimpt__taskname = taskname;
+    wimptx__taskname = taskname;
 }
-
-extern int wimpt__must_die;
-int wimpt__must_die = 0;
 
 /*
 SKS added wimp_poll wrapping atentry/atexit procs
 */
 
-static wimpt_atentry_t wimpt__atentryproc;
-static wimpt_atexit_t  wimpt__atexitproc;
+/*static wimptx_atentry_t wimptx__atentryproc;*/
+static wimptx_atexit_t  wimptx__atexitproc;
 
-extern wimpt_atentry_t
-wimpt_atentry(wimpt_atentry_t pfnNewProc)
+#if defined(UNUSED)
+extern wimptx_atentry_t
+wimptx_atentry(wimptx_atentry_t pfnNewProc)
 {
-    wimpt_atentry_t pfnOldProc = wimpt__atentryproc;
-    wimpt__atentryproc = pfnNewProc;
+    wimptx_atentry_t pfnOldProc = wimptx__atentryproc;
+    wimptx__atentryproc = pfnNewProc;
+    return(pfnOldProc);
+}
+#endif
+
+extern wimptx_atexit_t
+wimptx_atexit(wimptx_atexit_t pfnNewProc)
+{
+    wimptx_atexit_t pfnOldProc = wimptx__atexitproc;
+    wimptx__atexitproc = pfnNewProc;
     return(pfnOldProc);
 }
 
-extern wimpt_atexit_t
-wimpt_atexit(wimpt_atexit_t pfnNewProc)
+static BOOL g_host_must_die = FALSE;
+
+_Check_return_
+extern BOOL
+host_must_die_query(void)
 {
-    wimpt_atexit_t pfnOldProc = wimpt__atexitproc;
-    wimpt__atexitproc = pfnNewProc;
-    return(pfnOldProc);
+    return(g_host_must_die);
 }
+
+extern void
+host_must_die_set(
+    _InVal_     BOOL must_die)
+{
+    g_host_must_die = must_die;
+}
+
+/* if message system ok then all well and good, but there is a chance of fulkup */
+
+static jmp_buf * program_safepoint = NULL;
+
+extern void
+wimptx_set_safepoint(jmp_buf * safe)
+{
+    program_safepoint = safe;
+}
+
+#pragma no_check_stack
+
+static void
+wimptx_jmp_safepoint(int signum)
+{
+    if(program_safepoint)
+        longjmp(*program_safepoint, signum);
+}
+
+static void
+wimptx_internal_stack_overflow_handler(int sig)
+{
+    /* Pass it up to someone who may have some stack to handle it! */
+
+    /* give it your best shot else we come back and die soon */
+    wimptx_jmp_safepoint(sig);
+
+    exit(EXIT_FAILURE);
+}
+
+#pragma check_stack
+
+static void wimptx_signal_handler(int sig);
+#define handler wimptx_signal_handler
+#define errhandler wimptx_signal_handler
 
 #include "wimpt.c"
+
+/* keep defaults for these in case of msgs death */
+
+static const U8Z
+error_fatal_str[] =
+    "wimpt2:%s has gone wrong (%s). "
+    "Click Continue to quit, losing data";
+
+static const U8Z
+error_serious_str[] =
+    "wimptx2:%s has gone wrong (%s). "
+    "Click Continue to try to resume or Cancel to quit, losing data.";
+
+static void
+wimptx_signal_handler(int sig)
+{
+    _kernel_oserror err;
+    char causebuffer[64];
+    const char * cause;
+    BOOL must_die;
+    BOOL jump_back = FALSE;
+    int errflags;
+    int button_clicked;
+
+    switch(sig)
+    {
+    case SIGOSERROR:
+        cause = _kernel_last_oserror()->errmess;
+        break;
+
+    default:
+        consume_int(snprintf(causebuffer, elemof32(causebuffer), "signal%d", sig));
+        if((cause = msgs_lookup(causebuffer)) == causebuffer)
+        {
+            consume_int(snprintf(causebuffer, elemof32(causebuffer), msgs_lookup("(%d)"), sig));
+            cause = causebuffer;
+        }
+        break;
+    }
+
+    if(NULL == program_safepoint)
+        host_must_die_set(TRUE);
+
+    must_die = host_must_die_query();
+    host_must_die_set(TRUE); /* trap errors in lookup/sprintf etc */
+
+    err.errnum = sig;
+    err.errnum |= (1U << 31); /* helpful Quit button for the users on RISC OS 3.5+ */
+    consume_int(snprintf(err.errmess, elemof32(err.errmess),
+                         msgs_lookup(de_const_cast(char *, must_die ? error_fatal_str : error_serious_str)),
+                         wimpt_programname(),
+                         cause));
+
+    errflags = (must_die ? Wimp_ReportError_OK : Wimp_ReportError_OK | Wimp_ReportError_Cancel);
+
+    errflags |= Wimp_ReportError_UseCategory; /* new-style */
+    errflags |= Wimp_ReportError_Category(3); /*STOP*/ /* error */
+
+    if(must_die)
+    {
+        button_clicked = wimp_ReportError_wrapped(&err, errflags, wimpt_programname(), wimptx_get_spritename(), (const char *) 1 /*Wimp Sprite Area*/, NULL);
+        /* ignore button_clicked - we must die */
+    }
+    else
+    {
+        button_clicked = wimp_ReportError_wrapped(&err, errflags, wimpt_programname(), wimptx_get_spritename(), (const char *) 1 /*Wimp Sprite Area*/, NULL);
+        jump_back = (1 == button_clicked);
+    }
+
+    /* reinstall ourselves, as SIG_DFL will have been restored (as defined by the ANSI spec) */
+    /* helps to trap any further errors during closedown rather than giving postmortem dump */
+    switch(sig)
+    {
+    case SIGSTAK:
+        (void) signal(sig, &wimptx_internal_stack_overflow_handler);
+        return;
+
+    default:
+        break;
+    }
+
+    (void) signal(sig, &wimptx_signal_handler);
+
+    if(jump_back)
+        /* give it your best shot else we come back and die soon */
+        wimptx_jmp_safepoint(sig);
+
+    exit(EXIT_FAILURE);
+}
+
+/* call from routine that longjmp() returns to! */
+
+extern void
+wimptx_stack_overflow_handler(int sig)
+{
+    wimptx_signal_handler(sig);
+}
 
 #undef profile_ensure_frame
 extern void

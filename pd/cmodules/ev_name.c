@@ -302,6 +302,7 @@ ev_name_del_release(void)
 *
 ******************************************************************************/
 
+_Check_return_
 extern S32
 ev_name_make(
     P_U8 name_text,

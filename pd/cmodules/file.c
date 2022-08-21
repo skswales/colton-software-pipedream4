@@ -38,6 +38,7 @@ file__closefile(
 
 #if TRACE_ALLOWED
 
+_Check_return_
 static S32
 file__flushbuffer(
     FILE_HANDLE file_handle,
@@ -238,7 +239,7 @@ file_clearerror(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -279,7 +280,7 @@ file_close(
 #if CHECKING
     if(file_handle->magic != _FILE_MAGIC_WORD)
     {
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -379,7 +380,7 @@ file_error(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -424,7 +425,7 @@ file_flush(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -469,7 +470,7 @@ file_getbyte(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -596,7 +597,7 @@ file_get_type(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(FILETYPE_UNDETERMINED);
     }
 #endif
@@ -637,7 +638,7 @@ file_length(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -898,7 +899,7 @@ file_putbyte(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -940,7 +941,7 @@ file_read(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -1002,7 +1003,7 @@ file_seek(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -1054,7 +1055,7 @@ file_set_type(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -1078,7 +1079,7 @@ file_tell(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -1108,7 +1109,7 @@ file_ungetc(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -1155,7 +1156,7 @@ file_write(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -1195,7 +1196,7 @@ file_write_bytes(
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
     {
         assert(file_handle);
-        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD))
+        assert(file_handle && (file_handle->magic == _FILE_MAGIC_WORD));
         return(create_error(FILE_ERR_BADHANDLE));
     }
 #endif
@@ -1370,6 +1371,7 @@ file__fillbuffer(
 *
 ******************************************************************************/
 
+_Check_return_
 static S32
 #if TRACE_ALLOWED
 file__flushbuffer(

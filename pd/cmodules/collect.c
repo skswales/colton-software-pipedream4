@@ -159,7 +159,7 @@ collect_copy(
 
             /* listed memory may move */
             old_entp = _list_gotoitemcontents(*old_p_p_list_block, list_atitem(*old_p_p_list_block));
-
+            assert(NULL != old_entp);
             memcpy32(new_entp, old_entp, entry_size);
         }
         while(collect_next(BYTE, old_p_p_list_block, &key));
@@ -282,6 +282,8 @@ _collect_first_from(
 *
 ******************************************************************************/
 
+_Check_return_
+_Ret_writes_to_maybenull_(size, 0)
 extern P_BYTE
 _collect_insert_entry(
     _InoutRef_  P_NLISTS_BLK nlbrp,

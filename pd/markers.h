@@ -129,7 +129,7 @@ traverse_block_next(
 #if RISCOS
 
 extern void
-application_button_click_in_main(
+application_main_Mouse_Click(
     gcoord x,
     gcoord y,
     S32 buttonstate);

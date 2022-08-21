@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Arrays</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="alignment.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="ascii.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1>Arrays</h1>
+    <p>
+        An array is a group of items within a number cell.
+        Arrays consist of columns and rows of data.
+        The smallest array would have one column and one row; the largest would have many columns and many rows.
+        In practice, the size of an array is limited by the memory in your computer.
+    </p>
+    <p>
+        Arrays can only be entered in number cells.
+        Enter an array by enclosing the array contents in curly brackets (<code>{ }</code>).
+        Data in the same row in an array is separated by commas; rows in the array are separated by semi-colons.
+    </p>
+    <h5>Examples:</h5>
+    <p class="csg-sample-indent"><code>{1,2,3}</code> three columns, one row</p>
+    <p class="csg-sample-indent"><code>{"a";"b";"c"}</code> one column, three rows</p>
+    <p class="csg-sample-indent"><code>{A1,B1;A2,B2}</code> two columns, two rows</p>
+    <p>Arrays can contain constant numbers, dates, strings, names or cell references.</p>
+    <p>Arrays cannot contain ranges or other arrays or formulae.</p>
+    <p>You can mix different types of data in the same array.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>{"fred",10,A1}</code> three columns, one row&mdash;containing a text string, a number and a cell reference</p>
+    <p>
+        If you enter an array into a number cell, PipeDream displays the first element in the array, i.e. the element in column one, row one.
+        To see what else is in the array, you must use the INDEX function to select a different element or pass the array to another function to calculate a result.
+    </p>
+
+    <h2 id="Passing">Passing Arrays To Functions</h2>
+    <p>
+        You can pass arrays to functions and to custom functions.
+        As far as arrays are concerned, there are two types of function: those which have array parameters and so expect arrays and those which do not.
+        If a function has an array parameter, the array is processed explicitly within the function.
+    </p>
+    <p>
+        One function which does expect an array is INDEX.
+        Its first parameter must be an array; the INDEX function picks out one or more elements from the array that you pass to it.
+    </p>
+    <p>
+        When you pass an array to a function or operation which does not expect one,
+        PipeDream automatically calls the function for each element in the array.
+        The result of the function is an array of values of the same size.
+    </p>
+    <p>
+        An example of such an operation is &lsquo;<code>+</code>&rsquo;.
+        If you enter the following formula:
+    </p>
+    <p class="csg-sample-indent">
+        <code>{1,2,3}+{4,5,6}</code> the result is
+        <code>{5,7,9}</code>
+    </p>
+    <p>similarly,</p>
+    <p class="csg-sample-indent">
+        <code>SGN({-100,0,100})</code> returns
+        <code>{-1,0,1}</code>.
+    </p>
+    <p>
+        If the function or operation has more than one parameter, and you pass arrays of different sizes to it,
+        PipeDream automatically expands the smaller array or arrays to the size of the largest.
+    </p>
+    <p>
+        If the array to be expanded has the same number of rows but fewer columns than the largest array,
+        PipeDream copies the last column in the array until the array is large enough.
+        If the array to be expanded has the same number of columns but fewer rows than the largest array,
+        PipeDream copies the last row until the array is large enough.
+        If both the number of rows and the number of columns is different PipeDream fills the spaces in the array with blanks.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent">
+        <code>{1,2,3}*4</code> expands to
+        <code>{1,2,3}*{4,4,4}</code> resulting in <code>{4,8,12}</code>.
+    </p>
+    <p class="csg-sample-indent">
+        <code>{1,2;3,4}*-1</code> expands to
+        <code>{1,2;3,4}*{-1,-1;-1,-1}</code> resulting in<code>{-1,-2;-3,-4}</code>.
+    </p>
+    <p class="csg-sample-indent">
+        <code>{55,66}+{1,1;1,1}</code> expands to
+        <code>{55,66;55,66}+{1,1;1,1}</code> resulting in
+        <code>{56,67;56,67}</code>.
+    </p>
+
+    <h2 id="Custom">Arrays and Custom Functions</h2>
+    <p>
+        You can also pass arrays to custom functions.
+        This will have one of two effects depending on whether or not the custom function expects an array as one of its parameters.
+        If it does not expect an array as a parameter, it will behave as an ordinary function does, i.e. it will return an array of results.
+        If the custom function does expect arrays as one or more of its parameters, you must supply arrays only for those parameters.
+        The custom function must contain the instructions to process the array itself.
+        If you supply an array for another parameter, you will get an error message.
+    </p>
+
+    <h2 id="Ranges">Arrays and Ranges</h2>
+    <p>
+        In most cases, arrays and ranges of cells are interchangeable as parameters to functions and operators.
+        If you pass a range of cells instead of an array,
+        PipeDream treats it as an array of the same dimensions as the range of cells,
+        containing the contents of the range of cells.
+    </p>
+
+    <h2 id="Lists">Arrays and Ranges in Lists</h2>
+    <p>
+        If you give arrays and ranges of cells as the parameters to functions which expect lists, like SUM,
+        PipeDream includes every element in each array and every cell in each range of cells in the list.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent">
+        <code>SUM(A1A2,{1,2})</code> adds the contents of cell A1, the contents of cell A2, 1 and 2.<br />
+        If cells A1 and A2 contain arrays themselves, each element of these arrays will be added too,
+        so if cell A1 contains <code>{3,4}</code> and cell A2 contains <code>{5,6}</code>, the result will be <code>1+2+3+4+5+6</code>.
+    </p>
+    <p>A powerful usage of arrays, ranges and functions is to have one function call calculating many results.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent">
+        <code>SUM(A1A100*B1B100)</code> causes
+        all the products A1*B1, A2*B2, &hellip; A100*B100 to be calculated
+        and then adds them all together to produce a result.
+    </p>
+
+    <h2 id="Special">Special Functions</h2>
+    <p>Some functions, such as the complex number functions and the matrix functions, only operate on arrays and ranges.</p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>Using arrays in custom functions</td>
+                <td><a href="customfns.html">Custom Functions</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Alignment </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> ASCII</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="alignment.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="ascii.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

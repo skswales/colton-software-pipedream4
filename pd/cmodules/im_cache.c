@@ -790,7 +790,7 @@ image_cache_refs(
 *
 ******************************************************************************/
 
-/* SKS after 4.12 30mar92 - 0x1000 coords were too small to see on screen */
+/* SKS after PD 4.12 30mar92 - 0x1000 coords were too small to see on screen */
 
 struct DUFFO_DIAGRAM
 {

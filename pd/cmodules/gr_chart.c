@@ -272,7 +272,7 @@ gr_chart_damage(
             default:
                 assert(0);
             case GR_CHART_OBJNAME_ANON:
-                /* SKS after 4.12 30mar92 - note that damages can come through to a datasource even when not yet assigned to a series */
+                /* SKS after PD 4.12 30mar92 - note that damages can come through to a datasource even when not yet assigned to a series */
                 break;
             }
         }
@@ -469,6 +469,7 @@ gr_chart_initialise(void)
 *
 ******************************************************************************/
 
+_Check_return_
 extern BOOL
 gr_chart_insert(
     P_GR_CHART_HANDLE    chp /*inout*/,
@@ -614,7 +615,7 @@ gr_chart_new(
     cp->core.layout.size.x = cp->core.layout.width  - (cp->core.layout.margins.left   + cp->core.layout.margins.right);
     cp->core.layout.size.y = cp->core.layout.height - (cp->core.layout.margins.bottom + cp->core.layout.margins.top  );
 
-    /* SKS after 4.12 25mar92 - must reallocate series to chart on first gr_chart_build() even if no datasources have been added */
+    /* SKS after PD 4.12 25mar92 - must reallocate series to chart on first gr_chart_build() even if no datasources have been added */
     cp->bits.realloc_series = 1;
 
     cp->legend.bits.on = 1;
@@ -756,7 +757,7 @@ gr_chart_order_query(
         {
         case GR_CHART_OBJNAME_TEXT:
             {
-            /* SKS after 4.12 27mar92 - needed for live text reload mechanism */
+            /* SKS after PD 4.12 27mar92 - needed for live text reload mechanism */
             LIST_ITEMNO key;
             P_GR_TEXT t;
 
@@ -1051,7 +1052,7 @@ gr_datasource_insert(
 
         cp->bits.realloc_series = 1;
 
-        /* SKS after 4.12 30mar92 - not yet allocated to series */
+        /* SKS after PD 4.12 30mar92 - not yet allocated to series */
         id = gr_chart_objid_anon;
     }
 
@@ -1347,7 +1348,7 @@ gr_chart_realloc_series(
     last_dsp = dsp + cp->core.datasources.n;
 
 #if 1
-    /* SKS after 4.12 25mar92 - must allocate at least one series even if this would be completely unfilled */
+    /* SKS after PD 4.12 25mar92 - must allocate at least one series even if this would be completely unfilled */
     do
 #else
     while(dsp < last_dsp)
@@ -1510,7 +1511,7 @@ gr_chart_realloc_series(
         }
     }
 
-    /* SKS after 4.12 26mar92 - added overlay reloading helper stuff */
+    /* SKS after PD 4.12 26mar92 - added overlay reloading helper stuff */
     cp->axes[0].series.start_series = 0;
     if(cp->axes_idx_max > 0)
     {
@@ -1525,7 +1526,7 @@ gr_chart_realloc_series(
     else
         cp->axes[1].series.start_series = 0;
 
-#if 0 /* SKS after 4.12 26mar92 - removed, this should only be set on loading and cloning */
+#if 0 /* SKS after PD 4.12 26mar92 - removed, this should only be set on loading and cloning */
     /* all descriptors on main axes set are now ok
     */
     for(series_idx = cp->axes[0].series.stt_idx;
@@ -1547,7 +1548,7 @@ gr_chart_realloc_series(
     {
         serp = getserp(cp, series_idx);
 
-#if 0 /* SKS after 4.12 26mar92 - removed, this should only be set on loading and cloning */
+#if 0 /* SKS after PD 4.12 26mar92 - removed, this should only be set on loading and cloning */
         serp->internal_bits.descriptor_ok = 1;
 #endif
 
@@ -1718,9 +1719,9 @@ gr_chart_cache_n_contrib(
 
 gr_chart_travel_proto(static, gr_chart_empty_traveller)
 {
-    IGNOREPARM(handle);
-    IGNOREPARM(ch);
-    IGNOREPARM(item);
+    UNREFERENCED_PARAMETER(handle);
+    UNREFERENCED_PARAMETER(ch);
+    UNREFERENCED_PARAMETER(item);
     val->type = GR_CHART_VALUE_NONE;
     return(0);
 }
@@ -1989,7 +1990,7 @@ gr_travel_categ_label(
     {
         /* invent a category label, based on item number */
         pValue->type = GR_CHART_VALUE_TEXT;
-        (void) sprintf(pValue->data.text, "%u", item + 1);
+        consume_int(sprintf(pValue->data.text, "%u", item + 1));
     }
 }
 
@@ -2036,7 +2037,7 @@ gr_travel_series_label(
     serp = getserp(cp, series_idx);
 
 #if 1
-    /* SKS after 4.12 01apr92 - why had nobody spotted this before? Get series label from Y value where possible */
+    /* SKS after PD 4.12 01apr92 - why had nobody spotted this before? Get series label from Y value where possible */
     ds = 1;
     if(serp->datasources.dsh[ds] == GR_DATASOURCE_HANDLE_NONE)
         --ds;
@@ -2050,7 +2051,7 @@ gr_travel_series_label(
     {
         /* invent a label, based on series number */
         pValue->type = GR_CHART_VALUE_TEXT;
-        (void) sprintf(pValue->data.text, "S%u", gr_series_external_from_idx(cp, series_idx));
+        consume_int(sprintf(pValue->data.text, "S%u", gr_series_external_from_idx(cp, series_idx)));
     }
 }
 
@@ -2163,7 +2164,7 @@ gr_chart_plotarea_addin(
     GR_LINESTYLE linestyle;
     S32 res = 1;
 
-    /* SKS after 4.12 30mar92 - now individual plotareas don't inherit from each other, divorce selection grouping */
+    /* SKS after PD 4.12 30mar92 - now individual plotareas don't inherit from each other, divorce selection grouping */
     status_return(res = gr_chart_group_new(cp, &plotGroupStart, gr_chart_objid_anon));
 
     gr_chart_objid_clear(&id);

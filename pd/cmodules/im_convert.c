@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2015-2016 Stuart Swales */
+/* Copyright (C) 2015-2018 Stuart Swales */
 
 /* Module that handles conversion for image file cache */
 
@@ -123,13 +123,13 @@ image_convert_do_convert(
     tstr_xstrkpy(command_line_buffer, elemof32(command_line_buffer), "<Wimp$ScrapDir>.");
     tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), product_id());
     if(!file_is_dir(command_line_buffer))
-        file_create_directory(command_line_buffer);
+        status_return(file_create_directory(command_line_buffer));
     len = tstrlen32(command_line_buffer);
-    xsnprintf(command_line_buffer + len, elemof32(command_line_buffer) - len, ".cv%08x", monotime());
+    consume_int(xsnprintf(command_line_buffer + len, elemof32(command_line_buffer) - len, ".cv%08x", monotime()));
 
     status_return(str_set(p_converted_name, command_line_buffer));
 
-    if(wimpt_os_version_query() <= RISC_OS_3_5)
+    if(wimptx_os_version_query() <= RISC_OS_3_5)
         mode = "28r";
 
     tstr_xstrkpy(command_line_buffer, elemof32(command_line_buffer), "WimpTask Run ");
@@ -147,12 +147,12 @@ image_convert_do_convert(
     _kernel_swi_regs rs;
     rs.r[0] = -1; /* read */
     rs.r[1] = -1; /* read next slot */
-    _kernel_swi(Wimp_SlotSize, &rs, &rs);
+    (void) _kernel_swi(Wimp_SlotSize, &rs, &rs);
     if(rs.r[1] < MIN_NEXT_SLOT)
     {
         rs.r[0] = -1; /* read */
         rs.r[1] = MIN_NEXT_SLOT; /* write next slot */
-        _kernel_swi(Wimp_SlotSize, &rs, &rs); /* sorry for the override, but it does need some space to run! */
+        (void) _kernel_swi(Wimp_SlotSize, &rs, &rs); /* sorry for the override, but it does need some space to run! */
     }
     } /*block*/
 

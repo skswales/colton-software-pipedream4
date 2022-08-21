@@ -150,7 +150,7 @@ next_slot_in_replace(void)
     if(!tcell)
         return(FALSE);
 
-    /* SKS after 4.12 30mar92 - was ++currow which destroyed alternate cells until end-of-world */
+    /* SKS after PD 4.12 30mar92 - was ++currow which destroyed alternate cells until end-of-world */
     chknlr(curcol, currow);
 
     prccon(linbuf, tcell);
@@ -196,7 +196,7 @@ do_replace(
     next_replace_word = replace_str ? replace_str : UNULLSTR;
 
     trace_8(TRACE_APP_PD4, "do_replace(%s, folding = %s): stt_off %d, end_off %d, (%d, %d) - (%d, %d)",
-            next_replace_word, trace_boolstring(folding), sch_stt_offset, sch_end_offset,
+            next_replace_word, report_boolstring(folding), sch_stt_offset, sch_end_offset,
             sch_pos_stt.col, sch_pos_stt.row, sch_pos_end.col, sch_pos_end.row);
     trace_3(TRACE_APP_PD4, "linbuf %s, curcol %d, currow %d", linbuf, curcol, currow);
 

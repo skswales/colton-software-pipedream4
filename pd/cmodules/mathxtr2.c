@@ -141,7 +141,7 @@ linest_solve_system(
     U32 j;
     STATUS status;
 
-    status_return(data_in_columns_determinant(A, m, &det_A));
+    status_return(status = data_in_columns_determinant(A, m, &det_A));
 
     if(det_A == 0.0)
         return(EVAL_ERR_MATRIX_SINGULAR); /* insoluble */

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2013-2016 Stuart Swales */
+/* Copyright (C) 2013-2018 Stuart Swales */
 
 /* SKS February 2013 */
 
@@ -17,7 +17,7 @@
 #endif
 
 #if RISCOS
-#define LOW_MEMORY_LIMIT  0x00008000U /* Don't look in zero page */
+#define LOW_MEMORY_LIMIT  0x00008000U /* Don't look at data in zero page on RISC OS */
 #if 1
 #define HIGH_MEMORY_LIMIT 0xFFFFFFFCU /* 32-bit RISC OS 5 */
 #else
@@ -27,6 +27,11 @@
 
 static BOOL
 g_report_enabled = TRUE;
+
+#if RISCOS
+static int try_reporter = TRUE;
+static int try_rpcemu_report = TRUE;
+#endif
 
 extern void
 report_enable(
@@ -40,6 +45,25 @@ extern BOOL
 report_enabled(void)
 {
     return(g_report_enabled);
+}
+
+_Check_return_
+extern BOOL
+reporting_is_enabled(void)
+{
+    if(!g_report_enabled)
+        return(FALSE);
+
+#if RISCOS
+    if( !try_reporter &&
+        !try_rpcemu_report &&
+        (0 == stderr->__file) /* not redirected? */ )
+    {
+        return(FALSE);
+    }
+#endif
+
+    return(TRUE);
 }
 
 /******************************************************************************
@@ -82,7 +106,7 @@ vreportf(
 
     if(!g_report_enabled) return;
 
-    if(format[0] == '|')
+    if(format[0] == CH_VERTICAL_LINE)
     {   /* this one is a continuation - doesn't matter if it's already been flushed */
         format++;
     }
@@ -93,13 +117,13 @@ vreportf(
     }
 
     tail = format + tstrlen32(format);
-    wants_continuation = (tail != format) && (tail[-1] == '|');
+    wants_continuation = (tail != format) && (tail[-1] == CH_VERTICAL_LINE);
 
 #if WINDOWS
     len = _vsntprintf_s(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, _TRUNCATE, format, args);
     if(-1 == len)
         len = strlen32(report_buffer); /* limit to what actually was achieved */
-#else/* C99 CRT */
+#else /* C99 CRT */
     len = vsnprintf(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, format, args);
     if(len < 0)
         len = 0;
@@ -115,7 +139,7 @@ vreportf(
 
         if(0 != original_report_buffer_offset)
         {
-            if(report_buffer[report_buffer_offset - 1] == '|') /* may have been truncated - if so, just output */
+            if(report_buffer[report_buffer_offset - 1] == CH_VERTICAL_LINE) /* may have been truncated - if so, just output */
             {
                 report_buffer[--report_buffer_offset] = CH_NULL; /* otherwise retract back over the terminal continuation char */
                 return;
@@ -167,12 +191,9 @@ report_output(
     PCTSTR ptr;
     U8 ch;
 
-    static int try_reporter = TRUE;
-    static int try_rpcemu_report = TRUE;
-
     if(!g_report_enabled) return;
 
-    tail = buffer + tstrlen32(buffer);
+    tail = buffer + tstrlen32(buffer); /* Differs from Fireworkz - scratches head... */
     may_need_newline = (tail == buffer) || (tail[-1] != '\n');
 
     if(try_reporter)
@@ -210,25 +231,20 @@ report_output(
     while((ch = *ptr++) != CH_NULL)
         switch(ch)
         {
-        case 0x07: /* BEL */
-        case 0x0C: /* FF  */
-            fputc(ch, stderr);
-            break;
-
         case 0x0A: /* LF  */
         case 0x0D: /* CR  */
             fputc(0x0A, stderr);
             break;
 
         case 0x7F: /* DEL */
-            fputc('|', stderr);
+            fputc(CH_VERTICAL_LINE, stderr);
             fputc('?', stderr);
             break;
 
         default:
-            if(ch < 0x20)
+            if(ch <= 0x1F)
             {
-                fputc('|', stderr);
+                fputc(CH_VERTICAL_LINE, stderr);
                 ch = ch + '@';
             }
 
@@ -292,10 +308,10 @@ report_procedure_name(
 #endif
     {
     static TCHARZ buffer[16];
-#if RISCOS
-    consume(int, snprintf(buffer, elemof32(buffer), PTR_XTFMT, deviant.ptr));
-#else
-    consume(int, _sntprintf_s(buffer, elemof32(buffer), _TRUNCATE, PTR_XTFMT, deviant.ptr));
+#if WINDOWS
+    consume_int(_sntprintf_s(buffer, elemof32(buffer), _TRUNCATE, PTR_XTFMT, deviant.ptr));
+#else /* C99 CRT */
+    consume_int(snprintf(buffer, elemof32(buffer), PTR_XTFMT, deviant.ptr));
 #endif
     name = buffer;
     } /*block*/
@@ -309,21 +325,26 @@ extern PCTSTR
 report_tstr(
     _In_opt_z_  PCTSTR tstr)
 {
-    if(IS_PTR_NONE_OR_NULL(PCTSTR, tstr))
+    if(NULL == tstr)
         return(TEXT("<<NULL>>"));
 
-#if RISCOS
-    if( ((uintptr_t) tstr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
-        ((uintptr_t) tstr > (uintptr_t) HIGH_MEMORY_LIMIT) )
-#else
-    if(IS_BAD_POINTER(tstr))
+#if 0 && CHECKING
+    if(IS_PTR_NONE(tstr))
+        return(TEXT("<<NONE>>"));
 #endif
+
+    if(
+#if defined(HIGH_MEMORY_LIMIT)
+        ((uintptr_t) tstr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
+        ((uintptr_t) tstr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
+#endif
+        IS_BAD_POINTER(tstr) )
     {
         static TCHARZ stringbuffer[16];
-#if RISCOS
-        consume(int, snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), tstr));
-#else
-        consume(int, _sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), tstr));
+#if WINDOWS
+        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), tstr));
+#else /* C99 CRT */
+        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), tstr));
 #endif
         return(stringbuffer);
     }
@@ -337,27 +358,71 @@ extern PCTSTR
 report_ustr(
     _In_opt_z_  PC_USTR ustr)
 {
-    if(IS_PTR_NONE_OR_NULL(PC_USTR, ustr))
+    if(NULL == ustr)
         return(TEXT("<<NULL>>"));
 
-#if RISCOS
-    if( ((uintptr_t) ustr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
-        ((uintptr_t) ustr > (uintptr_t) HIGH_MEMORY_LIMIT) )
-#else
-    if(IS_BAD_POINTER(ustr))
+#if 0 && CHECKING
+    if(IS_PTR_NONE(ustr))
+        return(TEXT("<<NONE>>"));
 #endif
+
+    if(
+#if defined(HIGH_MEMORY_LIMIT)
+        ((uintptr_t) ustr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
+        ((uintptr_t) ustr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
+#endif
+        IS_BAD_POINTER(ustr) )
     {
         static TCHARZ stringbuffer[16];
-#if RISCOS
-        consume(int, snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), ustr));
-#else
-        consume(int, _sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), ustr));
+#if WINDOWS
+        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), ustr));
+#else /* C99 CRT */
+        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), ustr));
 #endif
         return(stringbuffer);
     }
 
+    /* No need in PipeDream to watch out for inlines in USTRs! */
+
     return(/*_tstr_from_ustr*/(ustr));
 }
+
+#if 0 /* just for diff minimization */ /* no report_wstr() in PipeDream */
+
+_Check_return_
+_Ret_z_
+extern PCTSTR
+report_wstr(
+    _In_opt_z_  PCWSTR wstr)
+{
+    if(NULL == wstr)
+        return(TEXT("<<NULL>>"));
+
+#if CHECKING
+    if(IS_PTR_NONE(wstr))
+        return(TEXT("<<NONE>>"));
+#endif
+
+    if(
+#if defined(HIGH_MEMORY_LIMIT)
+        ((uintptr_t) wstr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
+        ((uintptr_t) wstr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
+#endif
+        IS_BAD_POINTER(wstr) )
+    {
+        static TCHARZ stringbuffer[16];
+#if WINDOWS
+        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), wstr));
+#else /* C99 CRT */
+        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), report_ptr_cast(wstr)));
+#endif
+        return(stringbuffer);
+    }
+
+    return(_tstr_from_wstr(wstr));
+}
+
+#endif
 
 _Check_return_
 _Ret_z_
@@ -365,24 +430,31 @@ extern PCTSTR
 report_sbstr(
     _In_opt_z_  PC_SBSTR sbstr)
 {
-    if(IS_PTR_NONE_OR_NULL(PC_SBSTR, sbstr))
+    if(NULL == sbstr)
         return(TEXT("<<NULL>>"));
 
-#if RISCOS
-    if( ((uintptr_t) sbstr < (uintptr_t) 0x00008000U)  ||
-        ((uintptr_t) sbstr > (uintptr_t) HIGH_MEMORY_LIMIT))
-#else
-    if(IS_BAD_POINTER(sbstr))
+#if 0 && CHECKING
+    if(IS_PTR_NONE(sbstr))
+        return(TEXT("<<NONE>>"));
 #endif
+
+    if(
+#if defined(HIGH_MEMORY_LIMIT)
+        ((uintptr_t) sbstr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
+        ((uintptr_t) sbstr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
+#endif
+        IS_BAD_POINTER(sbstr) )
     {
         static TCHARZ stringbuffer[16];
-#if RISCOS
-        consume(int, snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
-#else
-        consume(int, _sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
+#if WINDOWS
+        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
+#else /* C99 CRT */
+        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
 #endif
         return(stringbuffer);
     }
+
+    /* No need in PipeDream to watch out for inlines in SBSTR! */
 
     return(/*_tstr_from_sbstr*/(sbstr));
 }
@@ -405,26 +477,27 @@ report_wimp_event_code(
 
     switch(event_code)
     {
-    case wimp_ENULL:        return(TEXT("wimp_ENULL"));
-    case wimp_EREDRAW:      return(TEXT("wimp_EREDRAW"));
-    case wimp_EOPEN:        return(TEXT("wimp_EOPEN"));
-    case wimp_ECLOSE:       return(TEXT("wimp_ECLOSE"));
-    case wimp_EPTRLEAVE:    return(TEXT("wimp_EPTRLEAVE"));
-    case wimp_EPTRENTER:    return(TEXT("wimp_EPTRENTER"));
-    case wimp_EBUT:         return(TEXT("wimp_EBUT"));
-    case wimp_EUSERDRAG:    return(TEXT("wimp_EUSERDRAG"));
-    case wimp_EKEY:         return(TEXT("wimp_EKEY"));
-    case wimp_EMENU:        return(TEXT("wimp_EMENU"));
-    case wimp_ESCROLL:      return(TEXT("wimp_ESCROLL"));
-    case wimp_ELOSECARET:   return(TEXT("wimp_ELOSECARET"));
-    case wimp_EGAINCARET:   return(TEXT("wimp_EGAINCARET"));
-
-    case wimp_ESEND:        return(TEXT("wimp_ESEND")); /* send message, don't worry if it doesn't arrive */
-    case wimp_ESENDWANTACK: return(TEXT("wimp_ESENDWANTACK")); /* send message, return ack if not acknowledged */
-    case wimp_EACK:         return(TEXT("wimp_EACK")); /* acknowledge receipt of message */
+    case Wimp_ENull:                    return(TEXT("Null_Reason_Code"));
+    case Wimp_ERedrawWindow:            return(TEXT("Redraw_Window_Request"));
+    case Wimp_EOpenWindow:              return(TEXT("Open_Window_Request"));
+    case Wimp_ECloseWindow:             return(TEXT("Close_Window_Request"));
+    case Wimp_EPointerLeavingWindow:    return(TEXT("Pointer_Leaving_Window"));
+    case Wimp_EPointerEnteringWindow:   return(TEXT("Pointer_Entering_Window"));
+    case Wimp_EMouseClick:              return(TEXT("Mouse_Click"));
+    case Wimp_EUserDrag:                return(TEXT("User_Drag_Box"));
+    case Wimp_EKeyPressed:              return(TEXT("Key_Pressed"));
+    case Wimp_EMenuSelection:           return(TEXT("Menu_Selection"));
+    case Wimp_EScrollRequest:           return(TEXT("Scroll_Request"));
+    case Wimp_ELoseCaret:               return(TEXT("Lose_Caret"));
+    case Wimp_EGainCaret:               return(TEXT("Gain_Caret"));
+    case Wimp_EPollWordNonZero:         return(TEXT("Poll_Word_Non_Zero"));
+    /* 14..16 not defined */
+    case Wimp_EUserMessage:             return(TEXT("User_Message"));
+    case Wimp_EUserMessageRecorded:     return(TEXT("User_Message_Recorded"));
+    case Wimp_EUserMessageAcknowledge:  return(TEXT("User_Message_Acknowledge"));
 
     default:
-        consume(int, snprintf(default_eventstring, elemof32(default_eventstring), U32_XTFMT, (U32) event_code));
+        consume_int(snprintf(default_eventstring, elemof32(default_eventstring), U32_XTFMT, (U32) event_code));
         return(default_eventstring);
     }
 }
@@ -436,7 +509,7 @@ report_wimp_event(
     _InVal_     int event_code,
     _In_        const void * const p_event_data)
 {
-    const wimp_eventdata * const ed = (const wimp_eventdata * const) p_event_data;
+    const WimpPollBlock * const event_data = (const WimpPollBlock * const) p_event_data;
     char tempbuffer[256];
 
     static TCHARZ messagebuffer[512];
@@ -445,62 +518,81 @@ report_wimp_event(
 
     switch(event_code)
     {
-    case wimp_EOPEN:
-        consume(int,
+    case Wimp_EOpenWindow:
+        consume_int(
             snprintf(tempbuffer, elemof32(tempbuffer),
-                        TEXT(": window ") PTR_XTFMT TEXT("; coords (") S32_TFMT TEXT(", ") S32_TFMT TEXT(", ") S32_TFMT TEXT(", ") S32_TFMT TEXT("); scroll (") S32_TFMT TEXT(", ") S32_TFMT TEXT("); behind &") PTR_XTFMT,
-                        (P_ANY) ed->o.w,
-                        (S32) ed->o.box.x0, (S32) ed->o.box.y0,
-                        (S32) ed->o.box.x1, (S32) ed->o.box.y1,
-                        (S32) ed->o.scx,    (S32) ed->o.scy,
-                        (P_ANY) ed->o.behind));
+                     TEXT(": window ") UINTPTR_XTFMT TEXT("; coords (") INT_TFMT TEXT(", ") INT_TFMT TEXT(", ") INT_TFMT TEXT(", ") INT_TFMT TEXT("); scroll (") INT_TFMT TEXT(", ") INT_TFMT TEXT("); behind ") UINTPTR_XTFMT,
+                     (uintptr_t) event_data->open_window_request.window_handle,
+                     event_data->open_window_request.visible_area.xmin, event_data->open_window_request.visible_area.ymin,
+                     event_data->open_window_request.visible_area.xmax, event_data->open_window_request.visible_area.ymax,
+                     event_data->open_window_request.xscroll,           event_data->open_window_request.yscroll,
+                     (uintptr_t) event_data->open_window_request.behind));
         break;
 
-    case wimp_EREDRAW:
-    case wimp_ECLOSE:
-    case wimp_EPTRLEAVE:
-    case wimp_EPTRENTER:
-        consume(int,
+    case Wimp_ERedrawWindow:
+    case Wimp_ECloseWindow:
+    case Wimp_EPointerLeavingWindow:
+    case Wimp_EPointerEnteringWindow:
+        consume_int(
             snprintf(tempbuffer, elemof32(tempbuffer),
-                        TEXT(": window ") PTR_XTFMT,
-                        (P_ANY) ed->o.w));
+                     TEXT(": window ") UINTPTR_XTFMT,
+                     (uintptr_t) event_data->close_window_request.window_handle));
         break;
 
-    case wimp_ESCROLL:
-        consume(int,
+    case Wimp_EMouseClick:
+        consume_int(
             snprintf(tempbuffer, elemof32(tempbuffer),
-                        TEXT(": window ") PTR_XTFMT TEXT("; coords (") S32_TFMT TEXT(", ") S32_TFMT TEXT(", ") S32_TFMT TEXT(", ") S32_TFMT TEXT("); scroll (") S32_TFMT TEXT(", ") S32_TFMT TEXT("); dir'n (") S32_TFMT TEXT(", ") S32_TFMT TEXT(")"),
-                        (P_ANY) ed->scroll.o.w,
-                        (S32) ed->scroll.o.box.x0, (S32) ed->scroll.o.box.y0,
-                        (S32) ed->scroll.o.box.x1, (S32) ed->scroll.o.box.y1,
-                        (S32) ed->scroll.o.scx,    (S32) ed->scroll.o.scy,
-                        (S32) ed->scroll.x,        (S32) ed->scroll.y));
+                     TEXT(": window ") UINTPTR_XTFMT TEXT("; icon ") INT_TFMT TEXT("; mouse x ") INT_TFMT TEXT(" y ") INT_TFMT TEXT("; buttons ") U32_XTFMT,
+                     (uintptr_t) event_data->mouse_click.window_handle,
+                     event_data->mouse_click.icon_handle,
+                     event_data->mouse_click.mouse_x, event_data->mouse_click.mouse_y,
+                     event_data->mouse_click.buttons));
         break;
 
-    case wimp_ELOSECARET:
-    case wimp_EGAINCARET:
-        consume(int,
+    case Wimp_EKeyPressed:
+        consume_int(
             snprintf(tempbuffer, elemof32(tempbuffer),
-                        TEXT(": window ") PTR_XTFMT TEXT("; icon &%p x ") S32_TFMT TEXT(" y ") S32_TFMT TEXT(" height %8.8X index ") S32_TFMT,
-                        (P_ANY) ed->c.w,
-                        (P_ANY) ed->c.i,
-                        (S32) ed->c.x,      (S32) ed->c.y,
-                        (S32) ed->c.height, (S32) ed->c.index));
-
+                     TEXT(": window ") UINTPTR_XTFMT TEXT("; icon ") INT_TFMT TEXT("; x ") INT_TFMT TEXT(" y ") INT_TFMT TEXT("; height ") U32_XTFMT TEXT(" index ") INT_TFMT TEXT("; key_code ") U32_XTFMT,
+                     (uintptr_t) event_data->key_pressed.caret.window_handle,
+                     event_data->key_pressed.caret.icon_handle,
+                     event_data->key_pressed.caret.xoffset, event_data->key_pressed.caret.yoffset,
+                     event_data->key_pressed.caret.height,  event_data->key_pressed.caret.index,
+                     (U32) event_data->key_pressed.key_code));
         break;
 
-    case wimp_ESEND:
-    case wimp_ESENDWANTACK:
-    case wimp_EACK:
-        consume(int,
+    case Wimp_EScrollRequest:
+        consume_int(
             snprintf(tempbuffer, elemof32(tempbuffer),
-                        TEXT(": %s"), report_wimp_message(&ed->msg, FALSE)));
+                     TEXT(": window ") UINTPTR_XTFMT TEXT("; coords (") INT_TFMT TEXT(", ") INT_TFMT TEXT(", ") INT_TFMT TEXT(", ") INT_TFMT TEXT("); scroll (") INT_TFMT TEXT(", ") INT_TFMT TEXT("); dir'n (") INT_TFMT TEXT(", ") INT_TFMT TEXT(")"),
+                     (uintptr_t) event_data->scroll_request.open.window_handle,
+                     event_data->scroll_request.open.visible_area.xmin, event_data->scroll_request.open.visible_area.ymin,
+                     event_data->scroll_request.open.visible_area.xmax, event_data->scroll_request.open.visible_area.ymax,
+                     event_data->scroll_request.open.xscroll,           event_data->scroll_request.open.yscroll,
+                     event_data->scroll_request.xscroll,                event_data->scroll_request.yscroll));
         break;
 
-    case wimp_ENULL:
-    case wimp_EBUT:
-    case wimp_EKEY:
-    case wimp_EMENU:
+    case Wimp_ELoseCaret:
+    case Wimp_EGainCaret:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": window ") UINTPTR_XTFMT TEXT("; icon ") INT_TFMT TEXT(" x ") INT_TFMT TEXT(" y ") INT_TFMT TEXT("; height ") U32_XTFMT TEXT(" index ") INT_TFMT,
+                     (uintptr_t) event_data->lose_caret.window_handle,
+                     event_data->lose_caret.icon_handle,
+                     event_data->lose_caret.xoffset, event_data->lose_caret.yoffset,
+                     event_data->lose_caret.height,  event_data->lose_caret.index));
+        break;
+
+    case Wimp_EUserMessage:
+    case Wimp_EUserMessageRecorded:
+    case Wimp_EUserMessageAcknowledge:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": %s"), report_wimp_message(&event_data->user_message, FALSE)));
+        break;
+
+    case Wimp_ENull:
+    case Wimp_EUserDrag:
+    case Wimp_EMenuSelection:
 
     default:
         *tempbuffer = CH_NULL;
@@ -523,45 +615,61 @@ report_wimp_message_action(
 
     switch(message_action)
     {
-    case wimp_MCLOSEDOWN:       return(TEXT("wimp_MCLOSEDOWN"));
+    case Wimp_MQuit:            return(TEXT("Message_Quit"));
+    case Wimp_MDataSave:        return(TEXT("Message_DataSave"));
+    case Wimp_MDataSaveAck:     return(TEXT("Message_DataSaveAck"));
+    case Wimp_MDataLoad:        return(TEXT("Message_DataLoad"));
+    case Wimp_MDataLoadAck:     return(TEXT("Message_DataLoadAck"));
+    case Wimp_MDataOpen:        return(TEXT("Message_DataOpen"));
+    case Wimp_MRAMFetch:        return(TEXT("Message_RAMFetch"));
+    case Wimp_MRAMTransmit:     return(TEXT("Message_RAMTransmit"));
+    case Wimp_MPreQuit:         return(TEXT("Message_PreQuit"));
+    case Wimp_MPaletteChange:   return(TEXT("Message_PaletteChange"));
+    case Wimp_MSaveDesktop:     return(TEXT("Message_SaveDesktop"));
+    /*Wimp_MDeviceClaim*/
+    /*Wimp_MDeviceInUse*/
+    case Wimp_MDataSaved:       return(TEXT("Message_DataSaved"));
+    case Wimp_MShutDown:        return(TEXT("Message_ShutDown"));
+    case Wimp_MClaimEntity:     return(TEXT("Message_ClaimEntity"));
+    /*Wimp_MDataRequest*/
+    /*Wimp_MDragging*/
+    /*Wimp_MDragClaim*/
+    case Wimp_MAppControl:      return(TEXT("Message_AppControl"));
 
-    case wimp_MDATASAVE:        return(TEXT("wimp_MDATASAVE")); /* request to identify directory */
-    case wimp_MDATASAVEOK:      return(TEXT("wimp_MDATASAVEOK")); /* reply to wimp_MDATASAVE */
-    case wimp_MDATALOAD:        return(TEXT("wimp_MDATALOAD")); /* request to load/insert dragged icon */
-    case wimp_MDATALOADOK:      return(TEXT("wimp_MDATALOADOK")); /* reply that file has been loaded */
-    case wimp_MDATAOPEN:        return(TEXT("wimp_MDATAOPEN")); /* warning that an object is to be opened */
-    case wimp_MRAMFETCH:        return(TEXT("wimp_MRAMFETCH")); /* transfer data to buffer in my workspace */
-    case wimp_MRAMTRANSMIT:     return(TEXT("wimp_MRAMTRANSMIT")); /* I have transferred some data to a buffer in your workspace */
+    case Wimp_MFilerOpenDir:    return(TEXT("Message_FilerOpenDir"));
+    case Wimp_MFilerCloseDir:   return(TEXT("Message_FilerCloseDir"));
 
-    case wimp_MPREQUIT:         return(TEXT("wimp_MPREQUIT"));
-    case wimp_PALETTECHANGE:    return(TEXT("wimp_MPALETTECHANGE"));
+    case Wimp_MHelpRequest:     return(TEXT("Message_HelpRequest"));
+    case Wimp_MHelpReply:       return(TEXT("Message_HelpReply"));
 
-    case wimp_FilerOpenDir:     return(TEXT("wimp_MFilerOpenDir"));
-    case wimp_FilerCloseDir:    return(TEXT("wimp_MFilerCloseDir"));
+    case Wimp_MMenuWarning:     return(TEXT("Message_MenuWarning"));
+    case Wimp_MModeChange:      return(TEXT("Message_ModeChange"));
+    case Wimp_MTaskInitialise:  return(TEXT("Message_TaskInitialise"));
+    case Wimp_MTaskCloseDown:   return(TEXT("Message_TaskCloseDown"));
+    case Wimp_MSlotSize:        return(TEXT("Message_SlotSize"));
+    case Wimp_MSetSlot:         return(TEXT("Message_SetSlot"));
+    case Wimp_MTaskNameRq:      return(TEXT("Message_TaskNameRq"));
+    case Wimp_MTaskNameIs:      return(TEXT("Message_TaskNameIs"));
+    case Wimp_MTaskStarted:     return(TEXT("Message_TaskStarted"));
+    case Wimp_MMenusDeleted:    return(TEXT("Message_MenusDeleted"));
+    case Wimp_MIconize:         return(TEXT("Message_Iconize"));
+    case Wimp_MWindowClosed:    return(TEXT("Message_WindowClosed"));
+    case Wimp_MWindowInfo:      return(TEXT("Message_WindowInfo"));
+    case Wimp_MSwap:            return(TEXT("Message_Swap"));
+    case Wimp_MToolsChanged:    return(TEXT("Message_ToolsChanged"));
+    case Wimp_MFontChanged:     return(TEXT("Message_FontChanged"));
 
-    case wimp_MHELPREQUEST:     return(TEXT("wimp_MHELPREQUEST")); /* interactive help request */
-    case wimp_MHELPREPLY:       return(TEXT("wimp_MHELPREPLY")); /* interactive help message */
-
-    case wimp_Notify:           return(TEXT("wimp_MNOTIFY"));
-
-    case wimp_MMENUWARN:        return(TEXT("wimp_MMENUWARN")); /* menu warning */
-    case wimp_MMODECHANGE:      return(TEXT("wimp_MMODECHANGE"));
-    case wimp_MINITTASK:        return(TEXT("wimp_MTASKINIT"));
-    case wimp_MCLOSETASK:       return(TEXT("wimp_MCLOSETASK"));
-    case wimp_MSLOTCHANGE:      return(TEXT("wimp_MSLOTCHANGE")); /* Slot size has altered */
-    case wimp_MSETSLOT:         return(TEXT("wimp_MSETSLOT"));
-    case wimp_MTASKNAMERQ:      return(TEXT("wimp_MTASKNAMERQ"));
-    case wimp_MTASKNAMEIS:      return(TEXT("wimp_MTASKNAMEIS"));
-
-    /* Messages for dialogue with printer applications */
-    case wimp_MPrintFile:       return(TEXT("wimp_MPrintFile"));
-    case wimp_MWillPrint:       return(TEXT("wimp_MWillPrint"));
-    case wimp_MPrintTypeOdd:    return(TEXT("wimp_MPrintTypeOdd"));
-    case wimp_MPrintTypeKnown:  return(TEXT("wimp_MPrintTypeKnown"));
-    case wimp_MPrinterChange:   return(TEXT("wimp_MPrinterChange"));
+    case Wimp_MPrintFile:       return(TEXT("Message_PrintFile"));
+    case Wimp_MWillPrint:       return(TEXT("Message_WillPrint"));
+    case Wimp_MPrintSave:       return(TEXT("Message_PrintSave"));
+    case Wimp_MPrintInit:       return(TEXT("Message_PrintInit"));
+    case Wimp_MPrintError:      return(TEXT("Message_PrintError"));
+    case Wimp_MPrintTypeOdd:    return(TEXT("Message_PrintTypeOdd"));
+    case Wimp_MPrintTypeKnown:  return(TEXT("Message_PrintTypeKnown"));
+    case Wimp_MSetPrinter:      return(TEXT("Message_SetPrinter"));
 
     default:
-        consume(int, snprintf(default_actionstring, elemof32(default_actionstring), U32_XTFMT, (U32) message_action));
+        consume_int(snprintf(default_actionstring, elemof32(default_actionstring), U32_XTFMT, (U32) message_action));
         return(default_actionstring);
     }
 }
@@ -573,67 +681,96 @@ report_wimp_message(
     _In_        const void * const p_wimp_message,
     _InVal_     BOOL sending)
 {
-    const wimp_msgstr * const m = (const wimp_msgstr * const) p_wimp_message;
+    const WimpMessage * const user_message = (const WimpMessage * const) p_wimp_message;
     PCTSTR format =
         sending
-            ? TEXT("type %s, size ") S32_TFMT TEXT(", your_ref ") S32_TFMT TEXT(" ")
-            : TEXT("type %s, size ") S32_TFMT TEXT(", your_ref ") S32_TFMT TEXT(" from task &%8.8X, my(his)_ref ") S32_TFMT TEXT(" ");
+            ? TEXT("%s, size ") INT_TFMT TEXT(", your_ref ") U32_XTFMT TEXT(" ")
+            : TEXT("%s, size ") INT_TFMT TEXT(", your_ref ") U32_XTFMT TEXT(" from task " U32_XTFMT ", my(his)_ref ") U32_XTFMT TEXT(" ");
     TCHARZ tempbuffer[256];
 
     static TCHARZ messagebuffer[512];
 
-    consume(int,
+    consume_int(
         snprintf(messagebuffer, elemof32(messagebuffer), format,
-                 report_wimp_message_action(m->hdr.action),
-                 m->hdr.size, m->hdr.your_ref,
-                 m->hdr.task, m->hdr.my_ref));
+                 report_wimp_message_action(user_message->hdr.action_code),
+                 user_message->hdr.size, user_message->hdr.your_ref,
+                 user_message->hdr.sender, user_message->hdr.my_ref));
 
-    switch(m->hdr.action)
+    switch(user_message->hdr.action_code)
     {
-    case wimp_MINITTASK:
-        consume(int,
-            snprintf(tempbuffer, elemof32(tempbuffer), "CAO &%p AplSize &%8.8X TaskName \"%s\"",
-                     m->data.taskinit.CAO,
-                     m->data.taskinit.size,
-                     m->data.taskinit.taskname));
+    case Wimp_MDataLoadAck:
+        if(user_message->hdr.size <= 44)
+        {
+            xstrkpy(tempbuffer, elemof32(tempbuffer), TEXT(": runt")); /* e.g. SrcEdit, Draw */
+            break;
+        }
+
+        /*FALLTHRU*/
+
+    case Wimp_MDataSave:
+    case Wimp_MDataSaveAck:
+    case Wimp_MDataLoad:
+  /*case Wimp_MDataLoadAck:*/
+    case Wimp_MDataOpen:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": dest window ") UINTPTR_XTFMT TEXT("; icon ") INT_TFMT TEXT("; x ") INT_TFMT TEXT(" y ") INT_TFMT TEXT("; estimated_size ") U32_XTFMT TEXT("; type: 0x%.3X; file: %s"),
+                     user_message->data.data_load.destination_window,
+                     user_message->data.data_load.destination_icon,
+                     user_message->data.data_load.destination_x, user_message->data.data_load.destination_y,
+                     user_message->data.data_load.estimated_size,
+                     user_message->data.data_load.file_type,
+                     user_message->data.data_load.leaf_name));
         break;
 
-    case wimp_MCLOSEDOWN:
+    case Wimp_MRAMFetch:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": buffer ") PTR_XTFMT TEXT("; size ") U32_XTFMT,
+                     user_message->data.ram_fetch.buffer,
+                     user_message->data.ram_fetch.buffer_size));
+        break;
 
-    case wimp_MDATASAVE: /* request to identify directory */
-    case wimp_MDATASAVEOK: /* reply to wimp_MDATASAVE */
-    case wimp_MDATALOAD: /* request to load/insert dragged icon */
-    case wimp_MDATALOADOK: /* reply that file has been loaded */
-    case wimp_MDATAOPEN: /* warning that an object is to be opened */
-    case wimp_MRAMFETCH: /* transfer data to buffer in my workspace */
-    case wimp_MRAMTRANSMIT: /* I have transferred some data to a buffer in your workspace */
+    case Wimp_MRAMTransmit:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": buffer ") PTR_XTFMT TEXT("; nbytes ") U32_XTFMT,
+                     user_message->data.ram_transmit.buffer,
+                     user_message->data.ram_transmit.nbytes));
+        break;
 
-    case wimp_MPREQUIT:
-    case wimp_PALETTECHANGE:
+    case Wimp_MClaimEntity:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": ") U32_XTFMT,
+                     user_message->data.words[0]));
+        break;
 
-    case wimp_FilerOpenDir:
-    case wimp_FilerCloseDir:
+    case Wimp_MDataRequest:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": dest window ") UINTPTR_XTFMT TEXT("; icon ") INT_TFMT TEXT("; x ") INT_TFMT TEXT(" y ") INT_TFMT TEXT("; flags ") U32_XTFMT TEXT("; type[0]: 0x%.3X"),
+                     user_message->data.data_load.destination_window,
+                     user_message->data.data_load.destination_icon,
+                     user_message->data.data_load.destination_x, user_message->data.data_load.destination_y,
+                     ((const WimpDataRequestMessage *) (&user_message->data))->flags,
+                     ((const WimpDataRequestMessage *) (&user_message->data))->type[0]));
+        break;
 
-    case wimp_MHELPREQUEST:
-    case wimp_MHELPREPLY:
+    case Wimp_MHelpRequest:
+        consume_int(
+            snprintf(tempbuffer, elemof32(tempbuffer),
+                     TEXT(": window ") UINTPTR_XTFMT TEXT("; icon ") INT_TFMT TEXT("; mouse x ") INT_TFMT TEXT(" y ") INT_TFMT TEXT("; buttons ") INT_TFMT,
+                     user_message->data.help_request.window_handle,
+                     user_message->data.help_request.icon_handle,
+                     user_message->data.help_request.mouse_x, user_message->data.help_request.mouse_y,
+                     user_message->data.help_request.buttons));
+        break;
 
-    case wimp_Notify:
-
-    case wimp_MMENUWARN:
-    case wimp_MMODECHANGE:
-    case wimp_MCLOSETASK:
-    case wimp_MSLOTCHANGE:
-    case wimp_MSETSLOT:
-    case wimp_MTASKNAMERQ:
-    case wimp_MTASKNAMEIS:
-
-    /* Messages for dialogue with printer applications */
-
-    case wimp_MPrintFile:
-    case wimp_MWillPrint:
-    case wimp_MPrintTypeOdd:
-    case wimp_MPrintTypeKnown:
-    case wimp_MPrinterChange:
+    case Wimp_MHelpReply:
+        xstrkpy(tempbuffer, elemof32(tempbuffer), ": ");
+        xstrkat(tempbuffer, elemof32(tempbuffer), user_message->data.help_reply.text);
+        break;
 
     default:
         *tempbuffer = CH_NULL;

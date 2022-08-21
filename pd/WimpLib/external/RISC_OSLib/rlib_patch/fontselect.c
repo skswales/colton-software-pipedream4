@@ -1,5 +1,5 @@
---- _src	2009-05-31 18:58:59 +0100
-+++ _dst	2013-09-15 16:40:52 +0100
+--- _src	2009-05-31 18:58:59.000000000 +0100
++++ _dst	2016-09-16 14:50:26.620000000 +0100
 @@ -35,6 +35,7 @@
   * History: IDJ: 06-Feb-92: prepared for source release
   */
@@ -39,7 +39,7 @@
  {
      int         level;
 +#ifdef SKS_ACW
-+    wimp_wind  *core; /* from template_copy() */
++    WimpWindowWithBitset *core; /* from template_copy_new() */
 +#endif /* SKS_ACW */
      wimp_w      handle;
      wimp_i      selection;
@@ -49,7 +49,7 @@
  {
      font       font_handle;
 +#ifdef SKS_ACW
-+    wimp_wind *font_window_core; /* from template_copy() */
++    WimpWindowWithBitset *font_window_core; /* from template_copy_new() */
 +    fontselect_fn unknown_icon_routine;
 +#endif /* SKS_ACW */
      wimp_w     font_window_handle;
@@ -74,7 +74,7 @@
 +           return(NULL);
 +   }
 +
-+   window = pane->core;
++   window = (wimp_wind *) pane->core;
 +#endif /* SKS_ACW */
 +
     window -> nicons = 2;
@@ -136,7 +136,7 @@
 +           }
 +       }
 +
-+   window_block_ptr = globals->font_window_core;
++   window_block_ptr = (wimp_wind *) globals->font_window_core;
 +#endif /* SKS_ACW */
     {
  

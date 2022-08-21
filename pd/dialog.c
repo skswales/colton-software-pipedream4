@@ -26,8 +26,8 @@ internal functions
 static BOOL
 init___dialog_box(
     _InVal_     U32 boxnumber,
-    BOOL windvars,
-    BOOL allocatestrings);
+    _InVal_     BOOL f_windvars,
+    _InVal_     BOOL f_allocatestrings);
 
 /* Stuart claims these should not be translated */
 static const char *YESNOSTR       =     "YN";
@@ -266,100 +266,100 @@ func_list[] =
     &CF_Copy_STR,
     &CSF_Copy_STR,
 
-    NULL,
+    NULL
 };
 
 /* exported list of internal key values corresponding to the above list of key names */
 
-/*extern*/ const S32
+/*extern*/ const KMAP_CODE
 func_key_list[] =
 {
-      FUNC +  1,
-      FUNC +  2,
-      FUNC +  3,
-      FUNC +  4,
-      FUNC +  5,
-      FUNC +  6,
-      FUNC +  7,
-      FUNC +  8,
-      FUNC +  9,
-      FUNC + 10,
-      FUNC + 11,
-      FUNC + 12,
+      KMAP_BASE_FUNC +  1,
+      KMAP_BASE_FUNC +  2,
+      KMAP_BASE_FUNC +  3,
+      KMAP_BASE_FUNC +  4,
+      KMAP_BASE_FUNC +  5,
+      KMAP_BASE_FUNC +  6,
+      KMAP_BASE_FUNC +  7,
+      KMAP_BASE_FUNC +  8,
+      KMAP_BASE_FUNC +  9,
+      KMAP_BASE_FUNC + 10,
+      KMAP_BASE_FUNC + 11,
+      KMAP_BASE_FUNC + 12,
 
-     SFUNC +  1,
-     SFUNC +  2,
-     SFUNC +  3,
-     SFUNC +  4,
-     SFUNC +  5,
-     SFUNC +  6,
-     SFUNC +  7,
-     SFUNC +  8,
-     SFUNC +  9,
-     SFUNC + 10,
-     SFUNC + 11,
-     SFUNC + 12,
+     KMAP_BASE_SFUNC +  1,
+     KMAP_BASE_SFUNC +  2,
+     KMAP_BASE_SFUNC +  3,
+     KMAP_BASE_SFUNC +  4,
+     KMAP_BASE_SFUNC +  5,
+     KMAP_BASE_SFUNC +  6,
+     KMAP_BASE_SFUNC +  7,
+     KMAP_BASE_SFUNC +  8,
+     KMAP_BASE_SFUNC +  9,
+     KMAP_BASE_SFUNC + 10,
+     KMAP_BASE_SFUNC + 11,
+     KMAP_BASE_SFUNC + 12,
 
-     CFUNC +  1,
-     CFUNC +  2,
-     CFUNC +  3,
-     CFUNC +  4,
-     CFUNC +  5,
-     CFUNC +  6,
-     CFUNC +  7,
-     CFUNC +  8,
-     CFUNC +  9,
-     CFUNC + 10,
-     CFUNC + 11,
-     CFUNC + 12,
+     KMAP_BASE_CFUNC +  1,
+     KMAP_BASE_CFUNC +  2,
+     KMAP_BASE_CFUNC +  3,
+     KMAP_BASE_CFUNC +  4,
+     KMAP_BASE_CFUNC +  5,
+     KMAP_BASE_CFUNC +  6,
+     KMAP_BASE_CFUNC +  7,
+     KMAP_BASE_CFUNC +  8,
+     KMAP_BASE_CFUNC +  9,
+     KMAP_BASE_CFUNC + 10,
+     KMAP_BASE_CFUNC + 11,
+     KMAP_BASE_CFUNC + 12,
 
-    CSFUNC +  1,
-    CSFUNC +  2,
-    CSFUNC +  3,
-    CSFUNC +  4,
-    CSFUNC +  5,
-    CSFUNC +  6,
-    CSFUNC +  7,
-    CSFUNC +  8,
-    CSFUNC +  9,
-    CSFUNC + 10,
-    CSFUNC + 11,
-    CSFUNC + 12,
+    KMAP_BASE_CSFUNC +  1,
+    KMAP_BASE_CSFUNC +  2,
+    KMAP_BASE_CSFUNC +  3,
+    KMAP_BASE_CSFUNC +  4,
+    KMAP_BASE_CSFUNC +  5,
+    KMAP_BASE_CSFUNC +  6,
+    KMAP_BASE_CSFUNC +  7,
+    KMAP_BASE_CSFUNC +  8,
+    KMAP_BASE_CSFUNC +  9,
+    KMAP_BASE_CSFUNC + 10,
+    KMAP_BASE_CSFUNC + 11,
+    KMAP_BASE_CSFUNC + 12,
 
-    PRINT_KEY,
-    PRINT_KEY              | SHIFT_ADDED,
-    PRINT_KEY | CTRL_ADDED,
-    PRINT_KEY | CTRL_ADDED | SHIFT_ADDED,
+    KMAP_FUNC_PRINT,
+    KMAP_FUNC_PRINT                        | KMAP_CODE_ADDED_SHIFT,
+    KMAP_FUNC_PRINT | KMAP_CODE_ADDED_CTRL,
+    KMAP_FUNC_PRINT | KMAP_CODE_ADDED_CTRL | KMAP_CODE_ADDED_SHIFT,
 
-    TAB_KEY,
-    STAB_KEY,
-    CTAB_KEY,
-    CSTAB_KEY,
+    KMAP_FUNC_TAB,
+    KMAP_FUNC_STAB,
+    KMAP_FUNC_CTAB,
+    KMAP_FUNC_CSTAB,
 
-    BACKSPACE_KEY,
-    SBACKSPACE_KEY,
-    /*CBACKSPACE_KEY,*/
-    /*CSBACKSPACE_KEY,*/
+    KMAP_FUNC_BACKSPACE,
+    KMAP_FUNC_SBACKSPACE,
+    /*KMAP_FUNC_CBACKSPACE,*/
+    /*KMAP_FUNC_CSBACKSPACE,*/
 
-    INSERT_KEY,
-    INSERT_KEY              | SHIFT_ADDED,
-    INSERT_KEY | CTRL_ADDED,
-    INSERT_KEY | CTRL_ADDED | SHIFT_ADDED,
+    KMAP_FUNC_INSERT,
+    KMAP_FUNC_INSERT                        | KMAP_CODE_ADDED_SHIFT,
+    KMAP_FUNC_INSERT | KMAP_CODE_ADDED_CTRL,
+    KMAP_FUNC_INSERT | KMAP_CODE_ADDED_CTRL | KMAP_CODE_ADDED_SHIFT,
 
-    DELETE_KEY,
-    SDELETE_KEY,
-    CDELETE_KEY,
-    CSDELETE_KEY,
+    KMAP_FUNC_DELETE,
+    KMAP_FUNC_SDELETE,
+    KMAP_FUNC_CDELETE,
+    KMAP_FUNC_CSDELETE,
 
-    HOME_KEY,
-    SHOME_KEY,
-    CHOME_KEY,
-    CSHOME_KEY,
+    KMAP_FUNC_HOME,
+    KMAP_FUNC_SHOME,
+    KMAP_FUNC_CHOME,
+    KMAP_FUNC_CSHOME,
 
-    END_KEY,
-    SEND_KEY,
-    CEND_KEY,
-    CSEND_KEY,
+    KMAP_FUNC_END,
+    KMAP_FUNC_SEND,
+    KMAP_FUNC_CEND,
+    KMAP_FUNC_CSEND,
 };
 
 /* load/save dialog text/options */
@@ -553,12 +553,12 @@ DIALOG d_decimal[] =
 };
 
 DIALOG d_inshigh[] =
-    {
+{
     DN(  F_SPECIAL,   '\0','\0', NO_OPT, ONE2345678STR,       0 )
 };
 
 DIALOG d_defkey[] =
-    {
+{
     DNNL(F_LIST,      '\0','\0', 128,                         0 ),
     DNNL(F_TEXT,      '\0','\0', NO_OPT,                      0 )
 };
@@ -569,7 +569,7 @@ DIALOG d_def_fkey[] =
     DNNL(F_TEXT,      '\0','\0', NO_OPT,                      0 )
 };
 
-DIALOG d_inspage[] =
+DIALOG d_insert_page_break[] =
 {
     DN(  F_NUMBER,    '\0','\0', NO_OPT, ZEROSTR,             0 )
 };
@@ -583,19 +583,35 @@ DIALOG d_create[] =
 
 DIALOG d_colours[] =
 {
+#if defined(EXTENDED_COLOUR_WINDVARS)
+    DN(  F_COLOUR,    'C','F',   NO_OPT, textforestr,         DV(Xd_colours_CF) ),
+    DN(  F_COLOUR,    'C','B',   NO_OPT, textbackstr,         DV(Xd_colours_CB) ),
+    DN(  F_COLOUR,    'C','P',   NO_OPT, protectstr,          DV(Xd_colours_CP) ),
+    DN(  F_COLOUR,    'C','L',   NO_OPT, negativestr,         DV(Xd_colours_CL) ),
+    DN(  F_COLOUR,    'C','G',   NO_OPT, gridstr,             DV(Xd_colours_CG) ),
+    DN(  F_COLOUR,    'C','C',   NO_OPT, caretstr,            DV(Xd_colours_CC) ),
+    DN(  F_COLOUR,    'C','E',   NO_OPT, softpagebreakstr,    DV(Xd_colours_CE) ),
+    DN(  F_COLOUR,    'C','H',   NO_OPT, hardpagebreakstr,    DV(Xd_colours_CH) ),
+    DN(  F_COLOUR,    'C','S',   NO_OPT, borderforestr,       DV(Xd_colours_CS) ),
+    DN(  F_COLOUR,    'C','U',   NO_OPT, borderbackstr,       DV(Xd_colours_CU) ),
+    DN(  F_COLOUR,    'C','T',   NO_OPT, curborderforestr,    DV(Xd_colours_CT) ),
+    DN(  F_COLOUR,    'C','V',   NO_OPT, curborderbackstr,    DV(Xd_colours_CV) ),
+    DN(  F_COLOUR,    'C','X',   NO_OPT, fixborderbackstr,    DV(Xd_colours_CX) )
+#else
     DN(  F_COLOUR,    'C','F',   NO_OPT, textforestr,         0 ),
     DN(  F_COLOUR,    'C','B',   NO_OPT, textbackstr,         0 ),
     DN(  F_COLOUR,    'C','P',   NO_OPT, protectstr,          0 ),
     DN(  F_COLOUR,    'C','L',   NO_OPT, negativestr,         0 ),
-    DN(  F_COLOUR,    'C','G',   NO_OPT, gridstr,             0 ),  /*new*/
+    DN(  F_COLOUR,    'C','G',   NO_OPT, gridstr,             0 ),
     DN(  F_COLOUR,    'C','C',   NO_OPT, caretstr,            0 ),
-    DN(  F_COLOUR,    'C','E',   NO_OPT, softpagebreakstr,    0 ),  /*new*/
-    DN(  F_COLOUR,    'C','H',   NO_OPT, hardpagebreakstr,    0 ),  /*new*/
+    DN(  F_COLOUR,    'C','E',   NO_OPT, softpagebreakstr,    0 ),
+    DN(  F_COLOUR,    'C','H',   NO_OPT, hardpagebreakstr,    0 ),
     DN(  F_COLOUR,    'C','S',   NO_OPT, borderforestr,       0 ),
-    DN(  F_COLOUR,    'C','U',   NO_OPT, borderbackstr,       0 ),  /*new*/
+    DN(  F_COLOUR,    'C','U',   NO_OPT, borderbackstr,       0 ),
     DN(  F_COLOUR,    'C','T',   NO_OPT, curborderforestr,    0 ),
-    DN(  F_COLOUR,    'C','V',   NO_OPT, curborderbackstr,    0 ),  /*new*/
-    DN(  F_COLOUR,    'C','X',   NO_OPT, fixborderbackstr,    0 )   /*new*/
+    DN(  F_COLOUR,    'C','V',   NO_OPT, curborderbackstr,    0 ),
+    DN(  F_COLOUR,    'C','X',   NO_OPT, fixborderbackstr,    0 )
+#endif /* EXTENDED_COLOUR_WINDVARS */
 };
 
 #define DEF_INS_CHAR 0xC0
@@ -791,9 +807,12 @@ DIALOG d_fonts[] =
     DN(  F_TEXT,      'F','S',   NO_OPT, LINESPACE_MP_STR,    0 )
 };
 
+/*                    'M','C',   Menu Change is specially handled */
+
 DIALOG d_menu[] =
 {
-    DN(  F_NUMBER,    'M','S',   NO_OPT, ONESTR,              0 )
+    DN(  F_NUMBER,    'M','S',   NO_OPT, ONESTR,              0 ),
+    DN(  F_NUMBER,    'M','A',   NO_OPT, ZEROSTR,             0 )
 };
 
 DIALOG d_def_cmd[] =
@@ -813,6 +832,21 @@ DIALOG d_edit_name[] =
     DNNL(F_TEXT,      '\0','\0',  NO_OPT,                     0 ),
     DNNL(F_TEXT,      '\0','\0',  NO_OPT,                     0 ),
     DN(  F_SPECIAL,   '\0','\0',  NO_OPT, NOYESSTR,           0 )
+};
+
+DIALOG d_insert_page_number[] =
+{
+    DNNL(F_TEXT,      '\0','\0',  NO_OPT,                     0 )
+};
+
+DIALOG d_insert_date[] =
+{
+    DNNL(F_TEXT,      '\0','\0',  NO_OPT,                     0 )
+};
+
+DIALOG d_insert_time[] =
+{
+    DNNL(F_TEXT,      '\0','\0',  NO_OPT,                     0 )
 };
 
 /* This is a nuther dummy dialog box, used only for saving and loading the window coords
@@ -869,79 +903,82 @@ dialog headers
 DHEADER dialog_head[] =
 {
     dhead_none,
-    dhead(d_load,           dproc_loadfile,      "loadfile",     EXEC_CAN_FILL ),
-    dhead(d_overwrite,      dproc_overwrite,     NULL,           0             ),    /* may pop up; uses dboxquery on RISCOS */
-    dhead(d_save,           dproc_savefile,      "savefile",     EXEC_CAN_FILL ),
-    dhead(d_save_template,  dproc_onetext,       "savetempl",    EXEC_CAN_FILL ),
-    dhead(d_print,          dproc_print,         "print",        EXEC_CAN_FILL ),
-    dhead(d_mspace,         dproc_microspace,    "microspace",   EXEC_CAN_FILL ),
-    dhead(d_driver,         dproc_printconfig,   "printconfig",  EXEC_CAN_FILL ),
-    dhead(d_poptions,       dproc_pagelayout,    "pagelayout",   EXEC_CAN_FILL ),
-    dhead(d_sort,           dproc_sort,          "sort",         EXEC_CAN_FILL ),
-    dhead(d_replicate,      dproc_twotext,       "replicate",    EXEC_CAN_FILL ),
-    dhead(d_search,         dproc_search,        "search",       EXEC_CAN_FILL ),
-    dhead(d_options,        dproc_options,       "options",      EXEC_CAN_FILL ),
-    dhead(d_parameter,      dproc_numtext,       "setparm",      EXEC_CAN_FILL ),
-    dhead(d_width,          dproc_numtext,       "columnwidth",  EXEC_CAN_FILL ),
-    dhead(d_width,          dproc_numtext,       "rightmargin",  EXEC_CAN_FILL ),
-    dhead(d_name,           dproc_onetext,       "namefile",     EXEC_CAN_FILL ),
-    dhead(d_execfile,       dproc_loadtemplate,  "execfile",     EXEC_CAN_FILL ),
-    dhead(d_goto,           dproc_onetext,       "gotoslot",     EXEC_CAN_FILL ),
-    dhead(d_decimal,        dproc_decimal,       "decimal",      EXEC_CAN_FILL ),
-    dhead(d_inshigh,        dproc_onespecial,    "insremhigh",   EXEC_CAN_FILL ),
-    dhead(d_inshigh,        dproc_onespecial,    "insremhigh",   EXEC_CAN_FILL ),
-    dhead(d_defkey,         dproc_defkey,        "defkey",       EXEC_CAN_FILL ),
-    dhead(d_def_fkey,       dproc_deffnkey,      "deffnkey",     EXEC_CAN_FILL ),
-    dhead(d_inspage,        dproc_onenumeric,    "pagebreak",    EXEC_CAN_FILL ),
-    dhead(d_save,           dproc_savefile,      "savefile",     0             ),    /* always pop up */
-    dhead(d_colours,        dproc_colours,       "colours",      EXEC_CAN_FILL ),
+    dhead(d_load,               dproc_loadfile,          "loadfile",     EXEC_CAN_FILL ),
+    dhead(d_overwrite,          dproc_overwrite,         NULL,           0             ),    /* may pop up; uses dboxquery on RISCOS */
+    dhead(d_save,               dproc_savefile,          "savefile",     EXEC_CAN_FILL ),
+    dhead(d_save_template,      dproc_onetext,           "savetempl",    EXEC_CAN_FILL ),
+    dhead(d_print,              dproc_print,             "print",        EXEC_CAN_FILL ),
+    dhead(d_mspace,             dproc_microspace,        "microspace",   EXEC_CAN_FILL ),
+    dhead(d_driver,             dproc_printconfig,       "printconfig",  EXEC_CAN_FILL ),
+    dhead(d_poptions,           dproc_pagelayout,        "pagelayout",   EXEC_CAN_FILL ),
+    dhead(d_sort,               dproc_sort,              "sort",         EXEC_CAN_FILL ),
+    dhead(d_replicate,          dproc_twotext,           "replicate",    EXEC_CAN_FILL ),
+    dhead(d_search,             dproc_search,            "search",       EXEC_CAN_FILL ),
+    dhead(d_options,            dproc_options,           "options",      EXEC_CAN_FILL ),
+    dhead(d_parameter,          dproc_numtext,           "setparm",      EXEC_CAN_FILL ),
+    dhead(d_width,              dproc_numtext,           "columnwidth",  EXEC_CAN_FILL ),
+    dhead(d_width,              dproc_numtext,           "rightmargin",  EXEC_CAN_FILL ),
+    dhead(d_name,               dproc_onetext,           "namefile",     EXEC_CAN_FILL ),
+    dhead(d_execfile,           dproc_execfile,          "execfile",     EXEC_CAN_FILL ),
+    dhead(d_goto,               dproc_onetext,           "gotoslot",     EXEC_CAN_FILL ),
+    dhead(d_decimal,            dproc_decimal,           "decimal",      EXEC_CAN_FILL ),
+    dhead(d_inshigh,            dproc_onespecial,        "insremhigh",   EXEC_CAN_FILL ),
+    dhead(d_inshigh,            dproc_onespecial,        "insremhigh",   EXEC_CAN_FILL ),
+    dhead(d_defkey,             dproc_defkey,            "defkey",       EXEC_CAN_FILL ),
+    dhead(d_def_fkey,           dproc_deffnkey,          "deffnkey",     EXEC_CAN_FILL ),
+    dhead(d_insert_page_break,  dproc_onenumeric,        "pagebreak",    EXEC_CAN_FILL ),
+    dhead(d_save,               dproc_savefile,          "savefile",     0             ),    /* always pop up */
+    dhead(d_colours,            dproc_colours,           "colours",      EXEC_CAN_FILL ),
+    dhead(d_colours,            dproc_extended_colours,  "extcolours",   EXEC_CAN_FILL ),    /* NB this refers to the same data as D_COLOURS */
+    dhead(d_about,              dproc_aboutfile,         "aboutfile",    EXEC_CAN_FILL ),
     dhead_none,
-    dhead(d_about,          dproc_aboutfile,     "aboutfile",    EXEC_CAN_FILL ),
-    dhead_none,
-    dhead(d_count,          dproc_onetext,       "count",        EXEC_CAN_FILL ),
-    dhead(d_pause,          dproc_onenumeric,    "pause",        EXEC_CAN_FILL ),
-    dhead(d_save_deleted,   dproc_save_deleted,  NULL,           0             ),    /* may pop up; uses dboxquery on RISCOS */
+    dhead(d_count,              dproc_onetext,           "count",        EXEC_CAN_FILL ),
+    dhead(d_pause,              dproc_onenumeric,        "pause",        EXEC_CAN_FILL ),
+    dhead(d_save_deleted,       dproc_save_deleted,      NULL,           0             ),    /* may pop up; uses dboxquery on RISCOS */
 
     dhead_dummy(d_auto),
-    dhead(d_checkon,        dproc_checkdoc,      "checkdoc",     EXEC_CAN_FILL ),
-    dhead(d_check,          dproc_checking,      "checking",     0             ),    /* may pop up */
-    dhead(d_check_mess,     dproc_checked,       "checked",      0             ),    /* may pop up */
-    dhead(d_user_create,    dproc_createdict,    "createdict",   EXEC_CAN_FILL ),
-    dhead(d_user_open,      dproc_onetext,       "opnclsdict",   EXEC_CAN_FILL ),
-    dhead(d_user_close,     dproc_onetext,       "opnclsdict",   EXEC_CAN_FILL ),
-    dhead(d_user_delete,    dproc_twotext,       "insdelword",   EXEC_CAN_FILL ),
-    dhead(d_user_insert,    dproc_twotext,       "insdelword",   EXEC_CAN_FILL ),
-    dhead(d_user_browse,    dproc_browse,        "browse",       EXEC_CAN_FILL ),
-    dhead(d_user_dump,      dproc_dumpdict,      "dumpdict",     EXEC_CAN_FILL ),
-    dhead(d_user_merge,     dproc_twotext,       "mergedict",    EXEC_CAN_FILL ),
-    dhead(d_user_anag,      dproc_anasubgram,    "anasubgram",   EXEC_CAN_FILL ),
-    dhead(d_user_anag,      dproc_anasubgram,    "anasubgram",   EXEC_CAN_FILL ),
-    dhead(d_user_lock,      dproc_onecomponoff,  "unlockdict",   EXEC_CAN_FILL ),
-    dhead(d_user_unlock,    dproc_onecomponoff,  "unlockdict",   EXEC_CAN_FILL ),
-    dhead(d_user_pack,      dproc_twotext,       "packuser",     EXEC_CAN_FILL ),
+    dhead(d_checkon,            dproc_checkdoc,          "checkdoc",     EXEC_CAN_FILL ),
+    dhead(d_check,              dproc_checking,          "checking",     0             ),    /* may pop up */
+    dhead(d_check_mess,         dproc_checked,           "checked",      0             ),    /* may pop up */
+    dhead(d_user_create,        dproc_createdict,        "createdict",   EXEC_CAN_FILL ),
+    dhead(d_user_open,          dproc_onetext,           "opnclsdict",   EXEC_CAN_FILL ),
+    dhead(d_user_close,         dproc_onetext,           "opnclsdict",   EXEC_CAN_FILL ),
+    dhead(d_user_delete,        dproc_twotext,           "insdelword",   EXEC_CAN_FILL ),
+    dhead(d_user_insert,        dproc_twotext,           "insdelword",   EXEC_CAN_FILL ),
+    dhead(d_user_browse,        dproc_browse,            "browse",       EXEC_CAN_FILL ),
+    dhead(d_user_dump,          dproc_dumpdict,          "dumpdict",     EXEC_CAN_FILL ),
+    dhead(d_user_merge,         dproc_twotext,           "mergedict",    EXEC_CAN_FILL ),
+    dhead(d_user_anag,          dproc_anasubgram,        "anasubgram",   EXEC_CAN_FILL ),
+    dhead(d_user_anag,          dproc_anasubgram,        "anasubgram",   EXEC_CAN_FILL ),
+    dhead(d_user_lock,          dproc_onecomponoff,      "unlockdict",   EXEC_CAN_FILL ),
+    dhead(d_user_unlock,        dproc_onecomponoff,      "unlockdict",   EXEC_CAN_FILL ),
+    dhead(d_user_pack,          dproc_twotext,           "packuser",     EXEC_CAN_FILL ),
 
-    dhead_dummy(d_fixes),                        /* dummy dialog box for saving fixed rows + cols */
-    dhead(d_deleted,        dproc_onenumeric,    "pastedepth",   EXEC_CAN_FILL ),
-    dhead_dummy(d_progvars),                     /* dummy dialog box for progvars options */
-    dhead_dummy(d_protect),                      /* dummy dialog box for saving protection */
-    dhead_dummy(d_version),                      /* dummy dialog box for saving version */
-    dhead_dummy(d_names_dbox),                   /* dummy dialog box for saving names */
-    dhead(d_macro_file,     dproc_onetext,       "onefile",      EXEC_CAN_FILL ),
+    dhead_dummy(d_fixes),           /* dummy dialog box for saving fixed rows + cols */
+    dhead(d_deleted,            dproc_onenumeric,        "pastedepth",   EXEC_CAN_FILL ),
+    dhead_dummy(d_progvars),        /* dummy dialog box for progvars options */
+    dhead_dummy(d_protect),         /* dummy dialog box for saving protection */
+    dhead_dummy(d_version),         /* dummy dialog box for saving version */
+    dhead_dummy(d_names_dbox),      /* dummy dialog box for saving names */
+    dhead(d_macro_file,         dproc_onetext,           "onefile",      EXEC_CAN_FILL ),
     dhead_dummy(d_fonts),
     dhead_dummy(d_menu),
-    dhead(d_def_cmd,        dproc_twotext,       "defcmd",       EXEC_CAN_FILL ),
+    dhead(d_def_cmd,            dproc_twotext,           "defcmd",       EXEC_CAN_FILL ),
 
-    dhead(d_user_options,   dproc_onecomponoff,  "dictoptions",  EXEC_CAN_FILL ),
-    dhead(d_user_flush,     dproc_onetext,       "opnclsdict",   EXEC_CAN_FILL ),
+    dhead(d_user_options,       dproc_onecomponoff,      "dictoptions",  EXEC_CAN_FILL ),
+    dhead(d_user_flush,         dproc_onetext,           "opnclsdict",   EXEC_CAN_FILL ),
 
-    dhead(d_define_name,    dproc_twotext,       "definename",   EXEC_CAN_FILL ),
-    dhead(d_edit_name,      dproc_edit_name,     "editname",     EXEC_CAN_FILL ),
-    dhead_dummy(d_open_box),                     /* dummy dialog box for saving window position */
-    dhead_dummy(d_linked_columns),               /* dummy dialog box for saving linked cols */
-    dhead(d_load_template,  dproc_loadtemplate,  "ltemplate",    EXEC_CAN_FILL ),
-    dhead(d_edit_driver,    dproc_loadtemplate,  "ltemplate",    EXEC_CAN_FILL ),
-    dhead(d_formula_error,  dproc_formula_error, "formula_err",  0             ),    /* may pop up */
-    dhead(d_chart_options,  dproc_chartopts,     "chartopts",    EXEC_CAN_FILL ),
+    dhead(d_define_name,        dproc_twotext,           "definename",   EXEC_CAN_FILL ),
+    dhead(d_edit_name,          dproc_edit_name,         "editname",     EXEC_CAN_FILL ),
+    dhead_dummy(d_open_box),        /* dummy dialog box for saving window position */
+    dhead_dummy(d_linked_columns),  /* dummy dialog box for saving linked cols */
+    dhead(d_load_template,      dproc_loadtemplate,      "ltemplate",    EXEC_CAN_FILL ),
+    dhead(d_edit_driver,        dproc_edit_driver,       "ltemplate",    EXEC_CAN_FILL ),
+    dhead(d_formula_error,      dproc_formula_error,     "formula_err",  0             ),    /* may pop up */
+    dhead(d_chart_options,      dproc_chartopts,         "chartopts",    EXEC_CAN_FILL ),
+    dhead(d_insert_page_number, dproc_insert_page_number,"inspagenum",   EXEC_CAN_FILL ),
+    dhead(d_insert_date,        dproc_insert_date,       "insdatetime",  EXEC_CAN_FILL ),
+    dhead(d_insert_time,        dproc_insert_time,       "insdatetime",  EXEC_CAN_FILL )
 };
 #define NDIALOG_BOXES elemof32(dialog_head)
 
@@ -960,12 +997,12 @@ find_option(
     DHEADER * dhptr, * last_dhptr;
     DIALOG * dptr, * last_dptr;
 
-    dhptr      = dialog_head;
+    dhptr = dialog_head;
     last_dhptr = dhptr + NDIALOG_BOXES;
 
     /* for each dialog box */
     do  {
-        dptr      = dhptr->dialog_box;
+        dptr = dhptr->dialog_box;
         last_dptr = dptr + dhptr->items;
 
         /* for each entry in each dialog box */
@@ -996,8 +1033,6 @@ getoption(
     uchar *optr)
 {
     DIALOG *dptr;
-    uchar array[LIN_BUFSIZ];
-    uchar *to = array;
     uchar *from;
     S32 dbox_num;
 
@@ -1031,14 +1066,27 @@ getoption(
         dptr->option = *from;
         break;
 
-    case F_ARRAY:
+#if defined(EXTENDED_COLOUR)
     case F_COLOUR:
+        set_option_from_u32(&dptr->option, decode_wimp_colour_value(from));
+        reportf("getoption(%s) got " U32_XTFMT, optr, get_option_as_u32(&dptr->option));
+        break;
+#endif
+
+    case F_ARRAY:
+#if !defined(EXTENDED_COLOUR)
+    case F_COLOUR:
+#endif
     case F_NUMBER:
     case F_LIST:
-        dptr->option = (uchar) atoi((char *) from);
+        dptr->option = (uchar) atoi((const char *) from); /* will be U8 in WV so truncate here for consistency */
         break;
 
     case F_TEXT:
+        {
+        uchar buffer[LIN_BUFSIZ];
+        U32 to_idx = 0;
+
         /* user dictionaries have to be treated specially,
          * 'cos there may be more than one
         */
@@ -1053,21 +1101,25 @@ getoption(
             add_to_names_list(from);
 
         /* copy string and encode highlights  */
-
-        while(*from)
-            if(    (*from == '%')
-                &&  (from[1] == 'H')  &&  (from[3] == '%')
-                &&  ishighlighttext(from[2]))
-                {
-                *to++ = from[2] - FIRST_HIGHLIGHT_TEXT + FIRST_HIGHLIGHT;
+        while(CH_NULL != *from)
+        {
+            if( (from[0] == '%') &&
+                (from[1] == 'H') &&
+                (from[3] == '%') &&
+                ishighlighttext(from[2]) )
+            {
+                buffer[to_idx++] = (from[2] - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT;
                 from += 4;
-                }
+            }
             else
-                *to++ = *from++;
+                buffer[to_idx++] = *from++;
+        }
 
-        *to = '\0';
-        (void) mystr_set(&dptr->textfield, array);
+        buffer[to_idx] = CH_NULL;
+
+        consume_bool(mystr_set(&dptr->textfield, buffer));
         break;
+        }
 
     default:
         break;
@@ -1132,16 +1184,33 @@ save_opt_to_list(
             if(!dptr->option)
                 continue;
 
-            (void) sprintf(array, "%d", (int) dptr->option);
+            consume_int(sprintf(array, "%d", (int) dptr->option));
             break;
+
+#if defined(EXTENDED_COLOUR)
+        case F_COLOUR:
+            {
+            const U32 wimp_colour_value = get_option_as_u32(&dptr->option);
+
+            if(wimp_colour_value == decode_wimp_colour_value(*dptr->optionlist))
+                continue;
+
+            consume_int(encode_wimp_colour_value(array, sizeof32(array), wimp_colour_value));
+            reportf("save_opt_to_list(%c%c%s) from " U32_XTFMT ")", (int) dptr->ch1, (int) dptr->ch2, array, wimp_colour_value);
+
+            break;
+            }
+#endif /* EXTENDED_COLOUR */
 
         case F_LIST:
         case F_NUMBER:
+#if !defined(EXTENDED_COLOUR)
         case F_COLOUR:
-            if((int) dptr->option == atoi(*dptr->optionlist))
+#endif
+            if(dptr->option == (optiontype) atoi(*dptr->optionlist))
                 continue;
 
-            (void) sprintf(array, "%d", (int) dptr->option);
+            consume_int(sprintf(array, "%d", (int) dptr->option));
             break;
 
         case F_SPECIAL:
@@ -1149,7 +1218,7 @@ save_opt_to_list(
                 continue;
 
             array[0] = dptr->option;
-            array[1] = '\0';
+            array[1] = CH_NULL;
             break;
 
         default:
@@ -1172,14 +1241,14 @@ write_int_to_string(
     S32 number)
 {
     char array[32];
-    (void) sprintf(array, "%d", number);
+    consume_int(sprintf(array, "%d", number));
     return(mystr_set(var, array));
 }
 
 /******************************************************************************
 *
 * save the current options on to the default list
-* done after loading pd.ini
+* done after loading the Choices file
 * these will be recovered on an implicit or explicit new
 *
 ******************************************************************************/
@@ -1201,6 +1270,11 @@ save_options_to_list(void)
     /* added by RJM on 16.10.91 */
     save_opt_to_list(d_mspace, dialog_head[D_MSPACE].items);
 
+#if defined(EXTENDED_COLOUR_WINDVARS)
+    /* added by SKS on 14.09.16 */
+    save_opt_to_list(d_colours, dialog_head[D_COLOURS].items);
+#endif
+
     save_opt_to_list(d_save + SAV_LINESEP, 1);
 
     save_opt_to_list(d_fonts,    dialog_head[D_FONTS].items);
@@ -1209,7 +1283,7 @@ save_options_to_list(void)
 
 #if 0
     save_opt_to_list(d_open_box, 1);
-    /* SKS after 4.11 08jan92 - restore size position etc. from saved choices. removed again 'cos it's silly */
+    /* SKS after PD 4.11 08jan92 - restore size position etc. from saved choices. removed again 'cos it's silly */
 #endif
 
 /* no update_fontinfo_from_dialog(); needed */
@@ -1219,7 +1293,7 @@ save_options_to_list(void)
 
 /******************************************************************************
 *
-* on a new recover the options from the pd.ini file which were
+* on a new recover the options from the Choices file which were
 * put on the default option list
 * assumes that all variables are currently in dialog boxes
 *
@@ -1254,16 +1328,25 @@ recover_options_from_list(void)
             dptr->option = *(lptr->value);
             break;
 
-        case F_ARRAY:
+#if defined(EXTENDED_COLOUR)
         case F_COLOUR:
+            set_option_from_u32(&dptr->option, decode_wimp_colour_value((const char *) lptr->value));
+            reportf("recover_options_from_list(%c%c%s) got " U32_XTFMT, ch1, ch2, (const char *) lptr->value, get_option_as_u32(&dptr->option));
+            break;
+#endif
+
+        case F_ARRAY:
+#if !defined(EXTENDED_COLOUR)
+        case F_COLOUR:
+#endif
         case F_NUMBER:
         case F_LIST:
 /*???*/
-            dptr->option = (uchar) atoi((char *) lptr->value);
+            dptr->option = (uchar) atoi((const char *) lptr->value);
             break;
 
         case F_TEXT:
-            (void) mystr_set(&dptr->textfield, lptr->value);    /* keep trying */
+            consume_bool(mystr_set(&dptr->textfield, lptr->value));    /* keep trying */
             break;
 
         default:
@@ -1280,80 +1363,80 @@ recover_options_from_list(void)
 extern void
 update_dialog_from_fontinfo(void)
 {
-    if(is_current_document())
+    if(!is_current_document())
+        return;
+    
+    init_dialog_box(D_FONTS);
+
+    if(riscos_fonts)
     {
-        init_dialog_box(D_FONTS);
-
-        if(riscos_fonts)
-        {
-            /* even saves defaults onto list */
-            mystr_set(          &d_fonts[D_FONTS_G].textfield, global_font);
-#if 0 /* SKS after 4.11 19jan92 moved these from here ... */
-            write_int_to_string(&d_fonts[D_FONTS_X].textfield, global_font_x);
-            write_int_to_string(&d_fonts[D_FONTS_Y].textfield, global_font_y);
-            write_int_to_string(&d_fonts[D_FONTS_S].textfield, auto_line_height ? 0 : global_font_leading_mp);
-#endif
-        }
-        else
-        {
-            str_clr(&d_fonts[D_FONTS_G].textfield);
-#if 0 /* SKS after 4.11 19jan92 removed these */
-            str_clr(&d_fonts[D_FONTS_X].textfield);
-            str_clr(&d_fonts[D_FONTS_Y].textfield);
-            str_clr(&d_fonts[D_FONTS_S].textfield);
-#endif
-        }
-
-#if 1 /* SKS after 4.11 19jan92 moved these ... to here */
+        /* even saves defaults onto list */
+        consume_bool(mystr_set(&d_fonts[D_FONTS_G].textfield, global_font));
+#if 0 /* SKS after PD 4.11 19jan92 moved these from here ... */
         write_int_to_string(&d_fonts[D_FONTS_X].textfield, global_font_x);
         write_int_to_string(&d_fonts[D_FONTS_Y].textfield, global_font_y);
-        write_int_to_string(&d_fonts[D_FONTS_S].textfield, auto_line_height ? 0 : global_font_leading_mp);
+        write_int_to_string(&d_fonts[D_FONTS_S].textfield, auto_line_height ? 0 : global_font_leading_millipoints);
 #endif
     }
+    else
+    {
+        str_clr(&d_fonts[D_FONTS_G].textfield);
+#if 0 /* SKS after PD 4.11 19jan92 removed these */
+        str_clr(&d_fonts[D_FONTS_X].textfield);
+        str_clr(&d_fonts[D_FONTS_Y].textfield);
+        str_clr(&d_fonts[D_FONTS_S].textfield);
+#endif
+        }
+
+#if 1 /* SKS after PD 4.11 19jan92 moved these ... to here */
+    write_int_to_string(&d_fonts[D_FONTS_X].textfield, global_font_x);
+    write_int_to_string(&d_fonts[D_FONTS_Y].textfield, global_font_y);
+    write_int_to_string(&d_fonts[D_FONTS_S].textfield, auto_line_height ? 0 : global_font_leading_millipoints);
+#endif
 }
 
 extern void
 update_fontinfo_from_dialog(void)
 {
-    if(is_current_document())
+    if(!is_current_document())
+        return;
+
+    str_clr(&global_font);
+
+    if(d_fonts[D_FONTS_G].textfield)
     {
-        str_clr(&global_font);
-
-        if(d_fonts[D_FONTS_G].textfield)
-        {
-            str_swap(&global_font, &d_fonts[D_FONTS_G].textfield);
-            /* try the new font out */
-            riscos_fonts = TRUE;
-            riscos_font_error = FALSE;
-            ensure_global_font_valid();
-        }
-        else
-            riscos_fonts = FALSE;
-
-        if(d_fonts[D_FONTS_X].textfield)
-        {
-            consume(int, sscanf(d_fonts[D_FONTS_X].textfield, "%d", &global_font_x));
-            str_clr(&d_fonts[D_FONTS_X].textfield);
-        }
-
-        if(d_fonts[D_FONTS_Y].textfield)
-        {
-            consume(int, sscanf(d_fonts[D_FONTS_Y].textfield, "%d", &global_font_y));
-            str_clr(&d_fonts[D_FONTS_Y].textfield);
-        }
-
-        if(d_fonts[D_FONTS_S].textfield)
-        {
-            consume(int, sscanf(d_fonts[D_FONTS_S].textfield, "%d", &global_font_leading_mp));
-            str_clr(&d_fonts[D_FONTS_S].textfield);
-        }
-
-        auto_line_height = (global_font_leading_mp == 0);
-        if(auto_line_height)
-            new_font_leading_based_on_y(); /* <<<<RJM,RCM */
-        else
-            new_font_leading(global_font_leading_mp); /*<<<SKS*/
+        str_swap(&global_font, &d_fonts[D_FONTS_G].textfield);
+        /* try the new font out */
+        riscos_fonts = TRUE;
+        riscos_font_error = FALSE;
+        ensure_global_font_valid();
     }
+    else
+        riscos_fonts = FALSE;
+
+    if(d_fonts[D_FONTS_X].textfield)
+    {
+        consume_int(sscanf(d_fonts[D_FONTS_X].textfield, "%d", &global_font_x));
+        str_clr(&d_fonts[D_FONTS_X].textfield);
+    }
+
+    if(d_fonts[D_FONTS_Y].textfield)
+    {
+        consume_int(sscanf(d_fonts[D_FONTS_Y].textfield, "%d", &global_font_y));
+        str_clr(&d_fonts[D_FONTS_Y].textfield);
+    }
+
+    if(d_fonts[D_FONTS_S].textfield)
+    {
+        consume_int(sscanf(d_fonts[D_FONTS_S].textfield, "%d", &global_font_leading_millipoints));
+        str_clr(&d_fonts[D_FONTS_S].textfield);
+    }
+
+    auto_line_height = (global_font_leading_millipoints == 0);
+    if(auto_line_height)
+        new_font_leading_based_on_y(); /* <<<<RJM,RCM */
+    else
+        new_font_leading(global_font_leading_millipoints); /*<<<SKS*/
 }
 
 extern void
@@ -1362,57 +1445,66 @@ update_dialog_from_windvars(
 {
     DHEADER * dhptr;
     DIALOG * init_dptr, *dptr, *last_dptr;
-    S32 wvoffset;
-    void * ptr;
 
-    if(is_current_document())
+    if(!is_current_document())
     {
-        assert(boxnumber < NDIALOG_BOXES);
-        dhptr     = dialog_head + boxnumber;
-        init_dptr = dhptr->dialog_box;
+        trace_0(TRACE_APP_DIALOG, "unable to update_dialog_from_windvars as no current document");
+        return;
+    }
 
-        dptr      = init_dptr;
-        last_dptr = init_dptr + dhptr->items;
+    assert(boxnumber < NDIALOG_BOXES);
+    dhptr = dialog_head + boxnumber;
 
-        trace_2(TRACE_APP_DIALOG, "update_dialog_from_windvars(%d) dialog box " PTR_XTFMT, boxnumber, report_ptr_cast(dhptr));
+    dptr = dhptr->dialog_box;
+    init_dptr = dptr;
+    last_dptr = dptr + dhptr->items;
 
-        do  {
-            wvoffset = dptr->offset;
+    trace_2(TRACE_APP_DIALOG, "update_dialog_from_windvars(%d) dialog box " PTR_XTFMT, boxnumber, report_ptr_cast(dhptr));
 
-            if(wvoffset)
+    do  {
+        const U32 wv_offset = dptr->wv_offset;
+
+        if(0 != wv_offset)
+        {
+            void * wv_ptr = PtrAddBytes(void *, current_document(), wv_offset);
+
+            trace_2(TRACE_APP_DIALOG, "offset/ptr to windvars variable = &%x, " PTR_XTFMT", ", wv_offset, report_ptr_cast(wv_ptr));
+
+            switch(dptr->type)
             {
-                ptr = PtrAddBytes(void *, current_document(), wvoffset);
+            case F_ERRORTYPE:
+            case F_TEXT:
+                /* copy the windvars variable (STR) to dialog[n].textfield */
+                /* still need primary copy for screen updates */
+                consume_bool(mystr_set(&dptr->textfield, * (char **) wv_ptr));
+                trace_2(TRACE_APP_DIALOG, "dialog[%d].textfield is now \"%s\"",
+                        dptr - init_dptr,
+                        trace_string(dptr->textfield));
+                break;
 
-                trace_2(TRACE_APP_DIALOG, "offset/ptr to windvars variable = &%x, " PTR_XTFMT", ", wvoffset, report_ptr_cast(ptr));
+#if defined(EXTENDED_COLOUR_WINDVARS)
+            case F_COLOUR:
+                /* copy the windvars variable (U32) to dialog[n].option */
+                set_option_from_u32(&dptr->option, * (PC_U32) wv_ptr);
+                trace_2(TRACE_APP_DIALOG, "dialog[%d].option is now " U32_XTFMT,
+                        dptr - init_dptr,
+                        get_option_as_u32(&dptr->option));
+                break;
+#endif /* EXTENDED_COLOUR_WINDVARS */
 
-                switch(dptr->type)
-                {
-                case F_ERRORTYPE:
-                case F_TEXT:
-                    /* copy the windvars variable to dialog[n].textfield */
-                    /* still need primary copy for screen updates */
-                    (void) mystr_set(&dptr->textfield, * (char **) ptr);
-                    trace_2(TRACE_APP_DIALOG, "dialog[%d].textfield is now \"%s\"",
-                            dptr - init_dptr,
-                            trace_string(dptr->textfield));
-                    break;
-
-                case F_NUMBER:
-                case F_ARRAY:
-                default:
-                    /* copy the windvars variable to dialog[n].option */
-                    dptr->option = * (uchar *) ptr;
-                    trace_3(TRACE_APP_DIALOG, "dialog[%d].option is now %d, '%c'",
-                            dptr - init_dptr,
-                            dptr->option, dptr->option);
-                    break;
-                }
+            case F_NUMBER:
+            case F_ARRAY:
+            default:
+                /* copy the windvars variable (U8) to dialog[n].option */
+                dptr->option = * (const uchar *) wv_ptr;
+                trace_3(TRACE_APP_DIALOG, "dialog[%d].option is now %d, '%c'",
+                        dptr - init_dptr,
+                        dptr->option, dptr->option);
+                break;
             }
         }
-        while(++dptr < last_dptr);
     }
-    else
-        trace_0(TRACE_APP_DIALOG, "unable to update_dialog_from_windvars as no current document");
+    while(++dptr < last_dptr);
 }
 
 extern void
@@ -1421,58 +1513,66 @@ update_windvars_from_dialog(
 {
     DHEADER * dhptr;
     DIALOG * init_dptr, * dptr, * last_dptr;
-    S32 wvoffset;
-    void *ptr;
 
-    if(is_current_document())
+    if(!is_current_document())
     {
-        assert(boxnumber < NDIALOG_BOXES);
-        dhptr     = dialog_head + boxnumber;
-        init_dptr = dhptr->dialog_box;
+        reportf(/*trace_0(TRACE_APP_DIALOG,*/ "unable to update_windvars_from_dialog as no current document");
+        return;
+    }
 
-        dptr      = init_dptr;
-        last_dptr = init_dptr + dhptr->items;
+    assert(boxnumber < NDIALOG_BOXES);
+    dhptr = dialog_head + boxnumber;
 
-        trace_2(TRACE_APP_DIALOG, "update_windvars_from_dialog(%d) dialog box " PTR_XTFMT, boxnumber, report_ptr_cast(dhptr));
+    dptr = dhptr->dialog_box;
+    init_dptr = dptr;
+    last_dptr = dptr + dhptr->items;
 
-        do  {
-            wvoffset = dptr->offset;
+    trace_2(TRACE_APP_DIALOG, "update_windvars_from_dialog(%d) dialog box " PTR_XTFMT, boxnumber, report_ptr_cast(dhptr));
 
-            if(wvoffset)
+    do  {
+        const U32 wv_offset = dptr->wv_offset;
+
+        if(0 != wv_offset)
+        {
+            void * wv_ptr = PtrAddBytes(void *, current_document(), wv_offset);
+
+            trace_4(TRACE_APP_DIALOG, "offset/ptr to windvars %c%c variable = &%x, " PTR_XTFMT ", ", dptr->ch1, dptr->ch2, wv_offset, wv_ptr);
+
+            switch(dptr->type)
             {
-                ptr = PtrAddBytes(void *, current_document(), wvoffset);
+            case F_ERRORTYPE:
+            case F_TEXT:
+                /* move the dialog[n].textfield to windvars variable (STR) */
+                str_clr((char **) wv_ptr);
+                * (char **) wv_ptr = dptr->textfield;
+                dptr->textfield = NULL;
+                trace_2(TRACE_APP_DIALOG, "windvar for dialog[%d].textfield is now \"%s\"",
+                            dptr - init_dptr,
+                            trace_string(* (char **) wv_ptr));
+                break;
 
-                trace_4(TRACE_APP_DIALOG, "offset/ptr to windvars %c%c variable = &%x, " PTR_XTFMT ", ", dptr->ch1, dptr->ch2, wvoffset, ptr);
+#if defined(EXTENDED_COLOUR_WINDVARS)
+            case F_COLOUR:
+                * (P_U32) wv_ptr = get_option_as_u32(&dptr->option);
+                trace_2(TRACE_APP_DIALOG, "windvar for dialog[%d].option is now " U32_XTFMT,
+                            dptr - init_dptr,
+                            * (PC_U32)  wv_ptr);
+                break;
+#endif /* EXTENDED_COLOUR_WINDVARS */
 
-                switch(dptr->type)
-                {
-                case F_ERRORTYPE:
-                case F_TEXT:
-                    /* move the dialog[n].textfield to windvars variable */
-                    str_clr((char **) ptr);
-                    * (char **) ptr = dptr->textfield;
-                    dptr->textfield = NULL;
-                    trace_2(TRACE_APP_DIALOG, "windvar for [%d].textfield is now \"%s\"",
-                                dptr - init_dptr,
-                                trace_string(* (char **) ptr));
-                    break;
-
-                case F_NUMBER:
-                case F_ARRAY:
-                default:
-                    /* copy the dialog[n].option to windvars variable */
-                    * (uchar *) ptr = dptr->option;
-                    trace_3(TRACE_APP_DIALOG, "windvar for [%d].option is now %d, '%c'",
-                                dptr - init_dptr,
-                                * (uchar *)  ptr, * (uchar *) ptr);
-                    break;
-                }
+            case F_NUMBER:
+            case F_ARRAY:
+            default:
+                /* copy the dialog[n].option to windvars variable (U8) */
+                * (uchar *) wv_ptr = (uchar) dptr->option;
+                trace_3(TRACE_APP_DIALOG, "windvar for dialog[%d].option is now %d, '%c'",
+                            dptr - init_dptr,
+                            * (const uchar *)  wv_ptr, * (const uchar *) wv_ptr);
+                break;
             }
         }
-        while(++dptr < last_dptr);
     }
-    else
-        trace_0(TRACE_APP_DIALOG, "unable to update_windvars_from_dialog as no current document");
+    while(++dptr < last_dptr);
 }
 
 extern void
@@ -1599,25 +1699,25 @@ init_dialog_box(
 static BOOL
 init___dialog_box(
     _InVal_     U32 boxnumber,
-    BOOL windvars,
-    BOOL allocatestrings)
+    _InVal_     BOOL f_windvars,
+    _InVal_     BOOL f_allocatestrings)
 {
     DHEADER * dhptr;
     DIALOG * dptr;
     DIALOG * last_dptr;
     BOOL res = TRUE;
-    S32 wvoffset;
 
     assert(boxnumber < NDIALOG_BOXES);
     dhptr = dialog_head + boxnumber;
+
     dptr = dhptr->dialog_box;
     last_dptr = dptr + dhptr->items;
 
     do  {
-        wvoffset = dptr->offset;
+        const U32 wv_offset = dptr->wv_offset;
 
-        if((wvoffset != 0) == windvars)    /* init one set or the other */
-        if(!windvars || is_current_document())
+        if((0 != wv_offset) == f_windvars)    /* init one set or the other */
+        if(!f_windvars || is_current_document())
         {
             /* for F_TEXT, F_COMPOSITE */
             str_clr(&dptr->textfield);
@@ -1627,7 +1727,7 @@ init___dialog_box(
                 switch(dptr->type)
                 {
                 case F_TEXT:
-                    if(allocatestrings)
+                    if(f_allocatestrings)
                         res = res && mystr_set(&dptr->textfield, *dptr->optionlist);
                     break;
 
@@ -1635,8 +1735,16 @@ init___dialog_box(
                     dptr->option = 0;
                     break;
 
-                case F_NUMBER:
+#if defined(EXTENDED_COLOUR)
                 case F_COLOUR:
+                    set_option_from_u32(&dptr->option, decode_wimp_colour_value(*dptr->optionlist));
+                    break;
+#endif
+
+                case F_NUMBER:
+#if !defined(EXTENDED_COLOUR)
+                case F_COLOUR:
+#endif
                     dptr->option = (uchar) atoi(*dptr->optionlist);
                     break;
 
@@ -1673,12 +1781,12 @@ read_parm(
     {
         switch(*exec_ptr)
         {
-        case '\0':
+        case CH_NULL:
             return(FALSE);
 
         case CR:
         case TAB:
-            *array = '\0';
+            *array = CH_NULL;
             return(TRUE);
 
         default:
@@ -1727,10 +1835,19 @@ extract_parameters(
 
         switch(dptr->type)
         {
+#if defined(EXTENDED_COLOUR)
         case F_COLOUR:
+            set_option_from_u32(&dptr->option, decode_wimp_colour_value(array));
+            reportf("extract_parameters(%s) got " U32_XTFMT, array, get_option_as_u32(&dptr->option));
+            break;
+#endif
+
+#if !defined(EXTENDED_COLOUR)
+        case F_COLOUR:
+#endif
         case F_CHAR:
         case F_NUMBER:
-            dptr->option = (uchar) atoi((char *) array);
+            dptr->option = (uchar) atoi((const char *) array);
             break;
 
         case F_COMPOSITE:
@@ -1806,7 +1923,7 @@ extract_parameters(
     return;
 
 ERRORPOINT:
-    reperr(create_error(ERR_BAD_PARM), array);
+    reperr(ERR_BAD_PARM, array);
 }
 
 /******************************************************************************
@@ -1845,7 +1962,8 @@ dialog_box(
 
     assert(boxnumber < NDIALOG_BOXES);
     dhptr = dialog_head + boxnumber;
-    dptr  = dhptr->dialog_box;
+
+    dptr = dhptr->dialog_box;
 
     /* if execing a file don't display a dialog box,
      * just read the parameters until a CR is found
@@ -1869,7 +1987,7 @@ dialog_box(
     {
         res = (dhptr->dproc)
                     ? riscdialog_execute(dhptr->dproc, dhptr->dname, dptr, boxnumber)
-                    : reperr_not_installed(create_error(ERR_GENFAIL));
+                    : reperr_not_installed(ERR_GENFAIL);
 
         if((dhptr->flags & EXEC_CAN_FILL)  &&  macro_recorder_on)
             out_comm_parms_to_macro_file(dhptr->dialog_box, dhptr->items, res);
@@ -1895,9 +2013,9 @@ extern BOOL
 dialog_box_can_persist(void)
 {
     BOOL ended = exec_filled_dialog  ||  riscdialog_ended();
-    trace_1(TRACE_APP_DIALOG, "dialog_box_ended() returns %s", trace_boolstring(ended));
+    trace_1(TRACE_APP_DIALOG, "dialog_box_ended() returns %s", report_boolstring(ended));
 
-    /* SKS after 4.12 01apr92 - ensure people don't get persistent dialogs 'cos that screws up command file recording (which is too hard to fix) */
+    /* SKS after PD 4.12 01apr92 - ensure people don't get persistent dialogs 'cos that screws up command file recording (which is too hard to fix) */
     if(!ended && macro_recorder_on)
     {
         dialog_box_end();
@@ -1952,17 +2070,24 @@ dialog_box_end(void)
 ******************************************************************************/
 
 extern BOOL
+dialog_box_can_start(void)
+{
+    if(riscdialog_in_dialog())
+    {
+        riscdialog_front_dialog();
+        return(reperr_null(ERR_ALREADY_IN_DIALOG));
+    }
+
+    return(TRUE);
+}
+
+extern BOOL
 dialog_box_start(void)
 {
     /* ensure font selector goes bye-bye */
     pdfontselect_finalise(TRUE);
 
-    if(riscdialog_in_dialog())
-    {
-        riscdialog_front_dialog();
-        reperr_null(ERR_ALREADY_IN_DIALOG);
-        return(FALSE);
-    }
+    false_return(dialog_box_can_start());
 
     exec_filled_dialog = FALSE;
 
@@ -1972,23 +2097,51 @@ dialog_box_start(void)
 /*
 Example of how to call dialog box functions:
 
+static BOOL
+examplecommand_fn_prepare(void)
+{
+    false_return(dialog_box_can_start());
+
+    false_return(init_dialog_box(D_EXAMPLECOMMAND); .*may not be needed*.
+
+    if(error_in_setup)
+        return(FALSE);
+
+    return(dialog_box_start());
+}
+
+static int (or BOOL)
+examplecommand_fn_core(void)
+{
+    if(some_error_condition_wanting_retry)
+    {
+        reperr();
+        return(dialog_box_can_retry() ? 2 .*continue*. : FALSE);
+    }
+
+    some_processing_of_args;
+
+    if(error_in_processing)
+        return(FALSE);
+
+    return(TRUE);
+}
+
 extern void
 ExampleCommand_fn(void)
 {
-    if(!dialog_box_start())
+    if(!examplecommand_fn_prepare())
         return;
 
-    while(dialog_box(D_whatever))
+    while(dialog_box(D_EXAMPLECOMMAND))
     {
-        if(some_error_condition_wanting_retry)
-        {
-            reperr();
-            if(!dialog_box_can_retry())
-                break;
-            continue;
-        }
+        int core_res = examplecommand_fn_prepare();
 
-        some processing of args;
+        if(2 == core_res)
+            continue;
+
+        if(0 == core_res)
+            break;
 
         if(!dialog_box_can_persist())
             break;

@@ -25,6 +25,10 @@ If "<disc_root>"="" Then IfThere HostFS:$.!Boot Then Set disc_root HostFS:$
 |
 If "<disc_root>"="" Then Error 0 Please locate root disc
 |
+| RISC OS filetypes are stored using ,xyz suffixes for this project
+| and not the svn:riscosfiletype property
+Set svn$filetypeext ""
+|
 Set pd_root <disc_root>.pipedream.trunk
 |
 Unset disc_root

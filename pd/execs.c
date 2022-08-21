@@ -11,7 +11,7 @@
 
 /* RJM August 1987 */
 
-#define RJM
+/*#define RJM*/
 
 #include "common/gflags.h"
 
@@ -203,7 +203,7 @@ alnsto_block(
 
     mark_block_output(&start_bl);
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
     {
         filealtered(TRUE);
 
@@ -278,7 +278,7 @@ alnst1(
 
     mark_block_output(&start_bl);
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
     {
         switch(tcell->type)
         {
@@ -325,9 +325,10 @@ DecimalPlaces_fn(void)
 
     while(dialog_box(D_DECIMAL))
     {
-        alnst1((uchar) ~F_DCPSID, (d_decimal[0].option == 'F')
-                                            ? (uchar) 0xF
-                                            : d_decimal[0].option - '0');
+        alnst1((uchar) ~F_DCPSID,
+               (d_decimal[0].option == 'F')
+                   ? (uchar) 0xF
+                   : d_decimal[0].option - '0');
 
         if(!dialog_box_can_persist())
             break;
@@ -415,10 +416,10 @@ Return_fn_core(void)
 
 extern void
 prccml(
-    uchar *array)
+    uchar *buffer)
 {
-    uchar *from = array;
-    uchar *to   = array;
+    uchar *from = buffer;
+    uchar *to   = buffer;
     BOOL instring = FALSE;
 
     while(*from)
@@ -447,7 +448,7 @@ prccml(
         case '\"':
             /* remove leading spaces before strings */
             if(!instring)
-                while(to > array && *(to-1) == SPACE)
+                while(to > buffer && *(to-1) == SPACE)
                     to--;
 
             instring = !instring;
@@ -478,7 +479,7 @@ prccml(
         }
     }
 
-    *to = '\0';
+    *to = CH_NULL;
 }
 
 /******************************************************************************
@@ -487,39 +488,45 @@ prccml(
 *
 ******************************************************************************/
 
+static BOOL
+definekey_fn_core(void)
+{
+    uchar buffer[LIN_BUFSIZ];
+    S32 key;
+
+    buffer[0] = CH_NULL;
+
+    if(NULL != d_defkey[1].textfield)
+        strcpy((char *) buffer, d_defkey[1].textfield);
+
+    prccml(buffer); /* convert funny characters in buffer */
+
+    key = (S32) d_defkey[0].option;
+
+    /* remove old definition */
+    delete_from_list(&first_key, key);
+
+    /* add new one */
+    if(CH_NULL != buffer[0])
+    {
+        S32 res;
+        if(status_fail(res = add_to_list(&first_key, key, buffer)))
+            return(reperr_null(res));
+    }
+
+    return(TRUE);
+}
+
 extern void
 DefineKey_fn(void)
 {
-    uchar array[LIN_BUFSIZ];
-    S32 key;
-    S32 res;
-
     if(!dialog_box_start())
         return;
 
     while(dialog_box(D_DEFKEY)) /* so we can see prev defn'n */
     {
-        if(!d_defkey[1].textfield)
-            *array = '\0';
-        else
-            strcpy((char *) array, d_defkey[1].textfield);
-
-        prccml(array);      /* convert funny characters in array */
-
-        key = (S32) d_defkey[0].option;
-
-        /* remove old definition */
-        delete_from_list(&first_key, key);
-
-        /* add new one */
-        if(*array)
-        {
-            if(status_fail(res = add_to_list(&first_key, key, array)))
-            {
-                reperr_null(res);
-                break;
-            }
-        }
+        if(!definekey_fn_core())
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -534,39 +541,43 @@ DefineKey_fn(void)
 *
 ******************************************************************************/
 
+static BOOL
+definefunctionkey_fn_core(void)
+{
+    const KMAP_CODE kmap_code = func_key_list[d_def_fkey[0].option];
+    uchar buffer[LIN_BUFSIZ];
+
+    buffer[0] = CH_NULL;
+
+    if(NULL != d_def_fkey[1].textfield)
+        strcpy((char *) buffer, d_def_fkey[1].textfield);
+
+    prccml(buffer); /* convert funny characters in buffer */
+
+    /* remove old definition */
+    delete_from_list(&first_key, (S32) kmap_code);
+
+    /* add new definition */
+    if(CH_NULL != buffer[0])
+    {
+        S32 res;
+        if(status_fail(res = add_to_list(&first_key, (S32) kmap_code, buffer)))
+            return(reperr_null(res));
+    }
+
+    return(TRUE);
+}
+
 extern void
 DefineFunctionKey_fn(void)
 {
-    uchar array[LIN_BUFSIZ];
-    S32 key;
-    S32 res;
-
     if(!dialog_box_start())
         return;
 
     while(dialog_box(D_DEF_FKEY))
     {
-        if(!d_def_fkey[1].textfield)
-            *array = '\0';
-        else
-            strcpy((char *) array, d_def_fkey[1].textfield);
-
-        prccml(array);      /* convert funny characters in array */
-
-        key = (S32) func_key_list[d_def_fkey[0].option];
-
-        /* remove old definition */
-        delete_from_list(&first_key, key);
-
-        /* add new definition */
-        if(*array)
-        {
-            if(status_fail(res = add_to_list(&first_key, key, array)))
-            {
-                reperr_null(res);
-                break;
-            }
-        }
+        if(!definefunctionkey_fn_core())
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -581,68 +592,77 @@ DefineFunctionKey_fn(void)
 *
 ******************************************************************************/
 
-extern void
-DefineCommand_fn(void)
+static int
+definecommand_fn_core(void)
 {
-    char array[LIN_BUFSIZ];
+    char buffer[LIN_BUFSIZ];
     S32 key;
     char *src;
     char *dst;
-    S32 ch, res;
+    S32 ch;
 
+    src = d_def_cmd[0].textfield;
+
+    if((NULL == src)  ||  (strlen(src) > (sizeof(S32) * 8 / 5)))
+    {
+        bleep();
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    dst = buffer;
+    key = 0;
+
+    do  {
+        ch = *src++;
+        ch = toupper(ch);
+        if((ch >= 'A')  &&  (ch <= 'Z'))
+            key = (key << 5) + ((S32) ch - 'A');
+        else
+            ch = '_';
+
+        *dst++ = ch;
+    }
+    while(ch != '_');
+
+    /* remove old definition */
+    delete_from_list(&first_command_redef, key);
+
+    src = d_def_cmd[1].textfield;
+
+    if(NULL != src)
+    {
+        do  {
+            ch = *src++;
+            *dst++ = toupper(ch);   /* including terminating CH_NULL */
+        }
+        while(CH_NULL != ch);
+
+        if(!str_isblank(buffer))
+        {   /* add new definition */
+            S32 res;
+            if(status_fail(res = add_to_list(&first_command_redef, key, buffer)))
+                return(reperr_null(res));
+        }
+    }
+
+    return(TRUE);
+}
+
+extern void
+DefineCommand_fn(void)
+{
     if(!dialog_box_start())
         return;
 
     while(dialog_box(D_DEF_CMD))
     {
-        src = d_def_cmd[0].textfield;
+        int core_res = definecommand_fn_core();
 
-        if(!src  ||  (strlen(src) > (sizeof(S32) * 8 / 5)))
-        {
-            bleep();
-            if(!dialog_box_can_retry())
-                break;
+        if(2 == core_res)
             continue;
-        }
 
-        dst = array;
-        key = 0;
-
-        do  {
-            ch = *src++;
-            ch = toupper(ch);
-            if((ch >= 'A')  &&  (ch <= 'Z'))
-                key = (key << 5) + ((S32) ch - 'A');
-            else
-                ch = '_';
-
-            *dst++ = ch;
-        }
-        while(ch != '_');
-
-        /* remove old definition */
-        delete_from_list(&first_command_redef, key);
-
-        src = d_def_cmd[1].textfield;
-
-        if(src)
-        {
-            do  {
-                ch = *src++;
-                *dst++ = toupper(ch);   /* including terminating NULLCH */
-            }
-            while(ch);
-
-            if(!str_isblank(array))
-            {
-                /* add new definition */
-                if(status_fail(res = add_to_list(&first_command_redef, key, array)))
-                {
-                    reperr_null(res);
-                    break;
-                }
-            }
-        }
+        if(0 == core_res)
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -696,7 +716,7 @@ Pause_fn(void)
 extern void
 InsertReference_fn(void)
 {
-    U8 array[BUF_MAX_REFERENCE];
+    U8 buffer[BUF_MAX_REFERENCE];
 
     if(!xf_inexpression && !xf_inexpression_box && !xf_inexpression_line)
     {
@@ -704,10 +724,10 @@ InsertReference_fn(void)
         return;
     }
 
-    /* expand column then row into array */
-    (void) write_ref(array, elemof32(array), current_docno(), curcol, currow);
+    /* expand column then row into buffer */
+    (void) write_ref(buffer, elemof32(buffer), current_docno(), curcol, currow);
 
-    insert_string(array, FALSE);
+    insert_string(buffer, FALSE);
 }
 
 extern void
@@ -735,7 +755,7 @@ xustrlen32(
     _In_reads_(elemof_buffer) PC_USTR buffer,
     _InVal_     U32 elemof_buffer)
 {
-    PC_USTR p = memchr(buffer, NULLCH, elemof_buffer);
+    PC_USTR p = memchr(buffer, CH_NULL, elemof_buffer);
     assert(elemof_buffer);
     if(NULL == p)
         return(elemof_buffer - 1);
@@ -766,7 +786,7 @@ SplitLine_fn(void)
 
         assert(splitpoint < elemof32(linbuf));
         tempchar = linbuf[splitpoint];
-        linbuf[splitpoint] = NULLCH;
+        linbuf[splitpoint] = CH_NULL;
 
         if( dspfld_from == -1)
             dspfld_from = splitpoint;
@@ -785,7 +805,7 @@ SplitLine_fn(void)
      * and on the next row for each each column to the left, and for this one if we'll need
      * to move the rest of the line down
     */
-    if(iowbit)
+    if(d_options_IW == 'R')
     {
         for(tcol = 0; tcol < numcol; ++tcol)
         {
@@ -872,7 +892,7 @@ JoinLines_fn(void)
     P_CELL thisslot, nextslot, tcell;
     S32 thislen, nextlen;
     BOOL actually_joining = TRUE;
-    uchar temparray[LIN_BUFSIZ];
+    uchar tempbuffer[LIN_BUFSIZ];
     BOOL allblank = TRUE;
     COL tcol;
     ROW trow;
@@ -902,7 +922,7 @@ JoinLines_fn(void)
     if(actually_joining)
     {
         thislen = strlen(linbuf);
-        memcpy32(temparray, linbuf, thislen);
+        memcpy32(tempbuffer, linbuf, thislen);
 
         currow++;
 
@@ -910,18 +930,18 @@ JoinLines_fn(void)
 
         nextlen = strlen(linbuf);
 
-        /* SKS after 4.11 25jan92 - was >=, but MAXFLD is LIN_BUFSIZ-1 */
+        /* SKS after PD 4.11 25jan92 - was >=, but MAXFLD is LIN_BUFSIZ-1 */
         if(thislen + nextlen > MAXFLD)
         {
             currow--;
             slot_in_buffer = FALSE;
             filbuf();
-            reperr_null(create_error(ERR_LINETOOLONG));
+            reperr_null(ERR_LINETOOLONG);
             return;
         }
 
-        memmove32(linbuf + thislen, linbuf,    nextlen+1);
-        memcpy32( linbuf,           temparray, thislen);
+        memmove32(linbuf + thislen, linbuf,     nextlen+1);
+        memcpy32( linbuf,           tempbuffer, thislen);
 
         buffer_altered = slot_in_buffer = TRUE;
         currow--;
@@ -933,11 +953,11 @@ JoinLines_fn(void)
     dont_save = TRUE;
 
     /* wrap set to rows? */
-    if(iowbit)
+    if(d_options_IW == 'R')
     {
         /* look to see if all this row bar the current column is blank.
          * If so joinlines can delete a whole row, perhaps
-         * be careful of numeric cells masquerading as blanks
+         * be careful of number cells masquerading as blanks
          * for cells to left needs to split on following line
         */
         allblank = TRUE;
@@ -1116,7 +1136,7 @@ DeleteColumn_fn(void)
     blkend.col   = tcol;
     blkend.row   = numrow - 1;
 
-    res = save_block_and_delete(TRUE, TRUE);
+    res = save_block_and_delete(TRUE/*is_deletion*/, TRUE/*do_save*/);
 
     blk_docno = bd;
     blkstart  = bs;
@@ -1148,6 +1168,16 @@ DeleteColumn_fn(void)
 *
 ******************************************************************************/
 
+static BOOL
+options_fn_core(void)
+{
+    update_variables();
+
+    filealtered(TRUE);
+
+    return(TRUE);
+}
+
 extern void
 Options_fn(void)
 {
@@ -1156,9 +1186,8 @@ Options_fn(void)
 
     while(dialog_box(D_OPTIONS))
     {
-        update_variables();
-
-        filealtered(TRUE);
+        if(!options_fn_core())
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -1185,35 +1214,50 @@ Recalculate_fn(void)
 *
 ******************************************************************************/
 
+static BOOL
+colours_fn_core(void)
+{
+    P_DOCU p_docu;
+    DOCNO old_docno = current_docno();
+
+    for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
+    {
+        select_document(p_docu);
+        riscos_invalidate_document_window();
+    }
+
+    select_document_using_docno(old_docno);
+
+    if(!dialog_box_can_persist())
+    {
+        /* must force ourselves to set caret position
+         * in order to set new caret colour after killing
+         * the menu tree (in case of writeable icons)
+        */
+        if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
+            p_docu->Xxf_acquirecaret = p_docu->Xxf_interrupted = TRUE;
+        return(FALSE);
+    }
+
+    return(TRUE);
+}
+
 extern void
 Colours_fn(void)
 {
+#if defined(EXTENDED_COLOUR)
+    const int i_dialogue_box = D_EXTENDED_COLOURS;
+#else
+    const int i_dialogue_box = D_COLOURS;
+#endif
+
     if(!dialog_box_start())
         return;
 
-    while(dialog_box(D_COLOURS))
+    while(dialog_box(i_dialogue_box))
     {
-        P_DOCU p_docu;
-        DOCNO old_docno = current_docno();
-
-        for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
-        {
-            select_document(p_docu);
-            riscos_invalidatemainwindow();
-        }
-
-        select_document_using_docno(old_docno);
-
-        if(!dialog_box_can_persist())
-        {
-            /* must force ourselves to set caret position
-             * in order to set new caret colour after killing
-             * the menu tree (in case of writeable icons)
-            */
-            if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
-                p_docu->Xxf_acquirecaret = p_docu->Xxf_interrupted = TRUE;
+        if(!colours_fn_core()) /* handles dialog_box_can_persist() */
             break;
-        }
     }
 
     dialog_box_end();
@@ -1225,52 +1269,69 @@ Colours_fn(void)
 *
 ******************************************************************************/
 
+static int
+domacrofile_fn_core(void)
+{
+    PCTSTR filename = d_execfile[0].textfield;
+    char buffer[BUF_MAX_PATHSTRING];
+    STATUS res;
+
+    if(str_isblank(filename))
+    {
+        reperr_null(ERR_BAD_NAME);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    if((res = add_path_or_relative_using_dir(buffer, elemof32(buffer), filename, TRUE, MACROS_SUBDIR_STR)) <= 0)
+    {
+        consume_bool(reperr(res ? res : ERR_NOTFOUND, filename));
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    reportf("Executing command file %s", buffer);
+
+    do_execfile(buffer);
+
+    /* bodge required as dialog_box_ended considers this too */
+    exec_filled_dialog = FALSE;
+
+    return(TRUE);
+}
+
+static BOOL
+domacrofile_fn_prepare(void)
+{
+    LIST_ITEMNO macros_list_key;
+
+    false_return(dialog_box_can_start());
+
+    if(in_execfile)
+        return(reperr_null(ERR_BAD_PARM));
+
+    delete_list(&macros_list);
+
+    macros_list_key = 0;
+    status_assert(enumerate_dir_to_list(&macros_list, &macros_list_key, NULL, FILETYPE_PDMACRO)); /* ones adjacent to current document as there won't be any on path here */
+    status_assert(enumerate_dir_to_list(&macros_list, &macros_list_key, MACROS_SUBDIR_STR, FILETYPE_PDMACRO)); /* ones in the given sub-directoryboth here and on path */
+
+    return(dialog_box_start());
+}
+
 extern void
 DoMacroFile_fn(void)
 {
-    char array[BUF_MAX_PATHSTRING];
-    PC_U8 filename;
-
-    if(in_execfile)
-    {
-        reperr_null(create_error(ERR_BAD_PARM));
-        return;
-    }
-
-    if(!dialog_box_start())
+    if(!domacrofile_fn_prepare())
         return;
 
-    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, NULL, FILETYPE_PDMACRO));
-
-    while(dialog_box(D_EXECFILE))
-    {
-        filename = d_execfile[0].textfield;
-
-        if(str_isblank(filename))
-        {
-            reperr_null(create_error(ERR_BAD_NAME));
-            if(!dialog_box_can_retry())
-                break;
-            continue;
-        }
-        else
-        {
-            if(file_find_on_path_or_relative(array, elemof32(array), filename, currentfilename))
-                do_execfile(array);
-            else
-                reperr(create_error(ERR_NOTFOUND), filename);
-        }
-
-        /* bodge required as dialog_box_ended considers this too */
-        exec_filled_dialog = FALSE;
-
-        if(!dialog_box_can_persist())
-            break;
-    }
+    /* don't allow this dialogue box to persist as command fillin will bork */
+    if(!dialog_box(D_EXECFILE))
+        return;
 
     dialog_box_end();
 
-    delete_list(&ltemplate_or_driver_list);
+    (void) domacrofile_fn_core();
+
+    delete_list(&macros_list);
 }
 
 /******************************************************************************
@@ -1359,7 +1420,7 @@ DeleteRow_fn(void)
         blkend.col   = numcol - 1;
         blkend.row   = currow;
 
-        res = save_block_and_delete(TRUE, TRUE);
+        res = save_block_and_delete(TRUE/*is_deletion*/, TRUE/*do_save*/);
 
         if(res)
         {
@@ -1416,13 +1477,13 @@ CopyBlockToPasteList_fn(void)
 
     if(blkstart.col == NO_COL)
     {
-        reperr_null(create_error(ERR_NOBLOCK));
+        reperr_null(ERR_NOBLOCK);
         return;
     }
 
     old_docno = change_document_using_docno(blk_docno);
 
-    (void) save_block_and_delete(FALSE, TRUE);
+    consume_bool(save_block_and_delete(FALSE/*is_deletion*/, TRUE/*do_save*/));
 
     select_document_using_docno(old_docno);
 }
@@ -1492,7 +1553,7 @@ DeleteToEndOfSlot_fn(void)
 
         slot_in_buffer = buffer_altered = output_buffer = TRUE;
         lecpos = lescrl = 0;
-        *linbuf = '\0';
+        linbuf[0] = CH_NULL;
         (void) mergebuf_nocheck();
         return;
     }
@@ -1500,7 +1561,7 @@ DeleteToEndOfSlot_fn(void)
     if(strlen((const char *) linbuf) > (size_t) lecpos)
         save_words(linbuf + lecpos);
 
-    linbuf[lecpos] = '\0';
+    linbuf[lecpos] = CH_NULL;
 
     if(dspfld_from == -1)
         dspfld_from = lecpos;
@@ -1538,7 +1599,7 @@ protected_cell(
     ROW trow)
 {
     if(test_protected_cell(tcol, trow))
-        return(!reperr_null(create_error(ERR_PROTECTED)));
+        return(!reperr_null(ERR_PROTECTED));
 
     return(FALSE);
 }
@@ -1563,13 +1624,13 @@ protected_cell_in_range(
 
     init_block(bs, be);
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
     {
         trace_3(TRACE_APP_PD4, "got cell " PTR_XTFMT ", (%d, %d)", report_ptr_cast(tcell), in_block.col, in_block.row);
 
         if(is_protected_cell(tcell))
         {
-            res = !reperr_null(create_error(ERR_PROTECTED));
+            res = !reperr_null(ERR_PROTECTED);
             break;
         }
     }
@@ -1619,15 +1680,15 @@ extern void
 setprotectedstatus(
     P_CELL tcell)
 {
-    S32 fg;
+    COLOURS_OPTION_INDEX fg_colours_option_index;
 
     if(tcell  &&  is_protected_cell(tcell))
     {
         currently_protected = TRUE;
 
-        fg = currently_inverted ? PROTECTC : FORE;
+        fg_colours_option_index = currently_inverted ? COI_PROTECT : COI_FORE;
 
-        setcolour(fg, fg ^ PROTECTC ^ FORE);
+        setcolours(fg_colours_option_index, (COLOURS_OPTION_INDEX) (fg_colours_option_index ^ COI_PROTECT ^ COI_FORE));
     }
     else
         currently_protected = FALSE;
@@ -1672,7 +1733,7 @@ save_names_to_file(
     char        argbuf[256];
     S32         argcount;
     EV_DOCNO    cur_docno;
-    char array[NAMEBUF_LEN + LIN_BUFSIZ +2];
+    char buffer[NAMEBUF_LEN + LIN_BUFSIZ +2];
 
     cur_docno = (EV_DOCNO) current_docno();
 
@@ -1685,10 +1746,10 @@ save_names_to_file(
         itemno = -1
        )
     {
-        xstrkpy(array, elemof32(array), namebuf);
-        xstrkat(array, elemof32(array), ",");
-        xstrkat(array, elemof32(array), argbuf);
-        (void) mystr_set(&d_names_dbox[0].textfield, array);
+        xstrkpy(buffer, elemof32(buffer), namebuf);
+        xstrkat(buffer, elemof32(buffer), ",");
+        xstrkat(buffer, elemof32(buffer), argbuf);
+        consume_bool(mystr_set(&d_names_dbox[0].textfield, buffer));
         save_opt_to_file(output, d_names_dbox, 1);
     }
 }
@@ -1709,11 +1770,11 @@ add_to_names_list(
 
     name = from;
     for(contents = from; *contents != ','; contents++)
-        if(*contents == '\0')
+        if(*contents == CH_NULL)
             return;
 
     /* looking at comma here - poke to null and point contents one on */
-    *contents++ = '\0';
+    *contents++ = CH_NULL;
 
     cur_docno = (EV_DOCNO) current_docno();
 
@@ -1748,7 +1809,7 @@ save_protected_bits(
 {
     P_CELL tcell;
     SLR last;
-    U8 array[BUF_MAX_REFERENCE];
+    U8 buffer[BUF_MAX_REFERENCE];
     uchar *ptr;
 
     last.col = (COL) 0;
@@ -1756,7 +1817,7 @@ save_protected_bits(
 
     init_doc_as_block();
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
     {
         /* if have already saved further down the block */
         if((in_block.col == last.col)  &&  (last.row > in_block.row))
@@ -1781,12 +1842,12 @@ save_protected_bits(
             --last.row;
 
             /* now lastcol is one past the last column */
-            ptr = array;
-            ptr += write_ref(ptr, elemof32(array),                 current_docno(), in_block.col, in_block.row);
-            ptr += write_ref(ptr, elemof32(array) - (ptr - array), current_docno(), last.col, last.row);
-            *ptr = '\0';
+            ptr = buffer;
+            ptr += write_ref(ptr, elemof32(buffer),                  current_docno(), in_block.col, in_block.row);
+            ptr += write_ref(ptr, elemof32(buffer) - (ptr - buffer), current_docno(), last.col, last.row);
+            *ptr = CH_NULL;
 
-            (void) mystr_set(&d_protect[0].textfield, array);
+            consume_bool(mystr_set(&d_protect[0].textfield, buffer));
             save_opt_to_file(output, d_protect, 1);
 
             /* last doubles as remembering the last top-left */
@@ -1863,26 +1924,26 @@ clear_protect_list(void)
 }
 
 /*
-save all blocks of protected cells to the file
-
+save linked column info to the file
 */
 
 extern void
 save_linked_columns(
     FILE_HANDLE output)
 {
-    COL count, first, last;
-
-    count = 0;
+    COL count = 0;
+    COL first, last;
 
     while(enumerate_linked_columns(&count, &first, &last))
     {
-        char array[40];
+        char buffer[40];
 
-        (void) sprintf(array, "%d,%d", first, last);
+        consume_int(sprintf(buffer, "%d,%d", first, last));
 
-        (void) mystr_set(&d_linked_columns[0].textfield, array);
-        save_opt_to_file(output, d_linked_columns, 1);
+        if(mystr_set(&d_linked_columns[0].textfield, buffer))
+        {
+            save_opt_to_file(output, d_linked_columns, 1);
+        }
     }
 }
 

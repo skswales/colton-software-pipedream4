@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
+<TITLE>PipeDream / 1-2-3 Converters - Release Notes</TITLE>
+</HEAD>
+<BODY>
+    <H1>PipeDream to/from Lotus 1-2-3 .WK1 Converters - Release Notes</H1>
+
+    <H4>1.12</H4>
+
+    <P>
+        Maps the Lotus 1-2-3 statistical spreadsheet functions STD() and VAR()
+        to the correct corresponding population statistical functions in PipeDream (STDP() and VARP()).
+    </P>
+
+    <P>
+        Maps the Lotus 1-2-3 text spreadsheet function REPEAT()
+        to the correct corresponding function in PipeDream (REPT()).
+    </P>
+
+    <P>
+        Maps the Lotus 1-2-3 trigonometrical spreadsheet function ATAN2()
+        to the correct corresponding function in PipeDream (ATAN_2()).
+    </P>
+
+</BODY>
+</HTML>

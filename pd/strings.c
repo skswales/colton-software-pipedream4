@@ -34,17 +34,20 @@ strings_lookup(
     S32 stringid)
 {
     char buffer[256];
-    PC_U8 text = string_lookup(stringid);
+    PC_U8Z text = string_lookup(stringid);
 
-    if(!text)
+    if(NULL == text)
     {
-        (void) xsnprintf(buffer, elemof32(buffer),
+        consume_int(
+            xsnprintf(buffer, elemof32(buffer),
                 BAD_MESSAGE_FILE_STR
                          ? BAD_MESSAGE_FILE_STR
                          : "Missing or incomplete messages file at id %d",
-                stringid);
+                stringid));
 
-        reperr_fatal(buffer);
+        reperr(ERR_OUTPUTSTRING, buffer);
+
+        text = "!!!";
     }
 
     return(text);
@@ -129,8 +132,6 @@ string(22, DUMP_FILE_STR,                       "DumpedFile");
 string(25, UNTITLED_ZD_STR,                     "Untitled%d");
 string(26, ambiguous_tag_STR,                   "$$$AmbiguousTag");
 
-string(39, Ctrl__STR,                           "Ctrl ");
-string(40, Shift__STR,                          "Shift ");
 string(41, PRESSANYKEY_STR,                     "Press any key");
 string(42, Initialising_STR,                    "Initialising...");
 string(113, Debug_STR,                          "Debug");
@@ -155,28 +156,31 @@ string(65, Page_Zd_wait_between_pages_STR,      "Page %d.. Press M=Miss page, A=
 string(66, Miss_Page_Chars_STR,                 "M"); /* e.g. German has "UU" for Uberspringen (properly umlauted) */
 string(67, All_Pages_Chars_STR,                 "A");
 
-string(68, save_edited_file_Zs_STR,             "Do you want to save edited document '%s'?");
+string(53, Zd_file_edited_in_Zs_are_you_sure_STR,   "There is %d document edited but not saved in %s.");
+string(54, Zd_files_edited_in_Zs_are_you_sure_STR,  "There are %d documents edited but not saved in %s.");
+string(447,query_quit_SDC_Q_STR,                "Do you want to save the changes before exiting" " "\
+                                                "or exit now, discarding all unsaved changes?"); /* yes, longer multi-line is OK here */
 
-string(423,close_dependent_charts_winge_STR,    "This document has dependent unsaved charts." " " \
-                                                "Do you want to discard them?");
+string(68, save_edited_file_Zs_SDC_S_STR,       "'%s' has been modified.");
+string(446,save_edited_file_SDC_Q_STR,          "Do you want to save it?");
 
-string(424,save_edited_chart_Zs_STR,            "'%s' has not been saved." " " \
-                                                "Do you want to save it?");
+string(424,save_edited_chart_Zs_YN_S_STR,       "'%s' has not been saved.");
+string(445,save_edited_chart_YN_Q_STR,          "Do you want to save it?");
 
-string(53, Zd_file_edited_in_Zs_are_you_sure_STR,   "There is %d document edited but not saved in %s."); /*: do you want to save or discard it?");*/
-string(54, Zd_files_edited_in_Zs_are_you_sure_STR,  "There are %d documents edited but not saved in %s."); /*: do you want to save or discard them?");*/
+string(423,close_dependent_charts_DC_S_STR,     "This document has dependent unsaved charts.");
+string(442,close_dependent_charts_DC_Q_STR,     "Do you want to discard them?");
 
-string(69, close_dependent_files_winge_STR,     "This file has dependent documents." " " \
-                                                "Do you want to close it?");
+string(69, close_dependent_files_YN_S_STR,      "This document has dependent documents.");
+string(444,close_dependent_files_YN_Q_STR,      "Do you want to close it?");
 
-string(70, close_dependent_links_winge_STR,     "This file has dependent HotLinks." " " \
-                                                "Do you want to close it?");
+string(70, close_dependent_links_YN_S_STR,      "This document has dependent HotLinks.");
+string(443,close_dependent_links_YN_Q_STR,      "Do you want to close it?");
 
-string(71, load_supporting_winge_STR,           "File '%s' has a name that would conflict with another document." " "\
-                                                "Do you want to load it?");
+string(71, load_supporting_Zs_YN_S_STR,         "File '%s' has a name that would conflict with another document.");
+string(448,load_supporting_YN_Q_STR,            "Do you want to load it?");
 
-string(72, name_supporting_winge_STR,           "This document would be given a name that would conflict with another document." " "\
-                                                "Do you want to rename it?");
+string(72, name_supporting_Zs_YN_S_STR,         "This document would be given a name that would conflict with another document.");
+string(449,name_supporting_YN_Q_STR,            "Do you want to rename it?");
 
 /* -------------------------- dialog boxes ------------------------------- */
 
@@ -194,7 +198,7 @@ string(83, Merging_STR,                         "Merging");
 string(84, Anagrams_STR,                        "Anagrams");
 string(85, Subgrams_STR,                        "Subgrams");
 #if 1
-/* SKS after 4.12 26mar92 */
+/* SKS after PD 4.12 26mar92 */
 string(86, Opened_user_dictionaries_STR,        "Opened dictionaries");
 #else
 string(86, Opened_user_dictionaries_STR,        "Opened user dictionaries");
@@ -203,78 +207,12 @@ string(87, Insert_word_in_user_dictionary_dialog_STR,   "Insert word in user dic
 string(88, Delete_word_from_user_dictionary_dialog_STR, "Delete word from user dictionary");
 string(89, Insert_highlights_dialog_STR,                "Insert highlights");
 
-/* Messages to be used for dboxqueries */
+/* Messages to be used for dproc__query */
 
-string(90, Overwrite_existing_file_STR,         "Overwrite existing file?");
-string(91, Cannot_store_block_STR,              "Unable to store block to paste list - continue deletion?");
+string(90, Overwrite_existing_file_YN_Q_STR,    "Overwrite existing file?");
 
-/* Help system */
-
-/* Help from the icon bar icon */
-
-string(92, help_iconbar,
-                                                "This is the PipeDream icon.|M"
-                                                "Drag a file onto this icon to load the file.|M"
-                                                "Click SELECT to create a new document.|M"
-                                                "Shift-click SELECT to view the Choices directory.|M"
-                                                "Click MENU to select a document or set Choices.|M");
-
-/* Help from a dialog window */
-
-string(93, help_dialog_window,                  "This is a PipeDream dialogue box.|M"
-                                                "Click OK or press RETURN to complete.|M"
-                                                "Click Cancel or press ESCAPE to cancel.|M"
-                                                "Use TAB (or SHIFT TAB) to move forwards |M"
-                                                "(or backwards) between writeable fields.");
-
-/* Help from a PipeDream window */
-
-string(94, help_main_window,                    "This is a PipeDream document window.|M");
-
-string(95, help_drag_file_to_insert,            "Drag a file into the window to insert the file at the current cell.");
-
-string(96, help_click_select_to,                "Click SELECT to ");
-
-string(97, help_click_adjust_to,                "Click Ctrl SELECT to ");
-
-string(98, help_position_the_caret_in,          "position the caret in ");
-
-string(99, help_insert_a_reference_to,          "insert a reference to ");
-
-string(100, help_slot,                          "cell ");
-
-string(101, help_colh_inexpression_line,        "You are editing a formula in the formula editing line so this button cannot perform its associated command.");
-
-string(102, help_colh_inexpression_box,         "You are editing a formula in the formula window so this button cannot perform its associated command.");
-
-string(103, help_top_left_corner,               "Click SELECT in this icon to mark the sheet.|M"
-                                                "Click ADJUST to clear a marked block.|M");
-
-string(104, help_col_border,                    "Drag SELECT along the column border to mark all rows in those columns.|M"
-                                                "Double-click SELECT to mark this column.|M");
-
-string(105, help_drag_row_border,               "Drag SELECT along the row border to mark all columns in those rows.|M");
-
-string(106, help_double_row_border,             "Double-click SELECT to mark this row.|M");
-
-string(107, help_row_is_page_break,             "This is a page break.|M");
-
-string(108, help_row_is_hard_page_break,        "This row is an expanded hard page break.|M");
-
-string(109, help_colh_contents_line,            "Click SELECT to start editing the current cell contents in the formula editing line.");
-
-string(110, help_colh_contents_line_inexpression,
-                                                "Click SELECT to position the caret within the formula editing line.");
-
-string(414, help_colh_transfer_to_window,       "Click SELECT to popup a menu of formula related topics.|M" \
-                                                "Click ADJUST to transfer the formula editing line contents to a formula window.");
-
-string(415, help_colh_edit_in_window,           "Click SELECT to popup a menu of formula related topics.|M" \
-                                                "Click ADJUST to edit the current cell contents in a formula window.|M");
-
-string(416, help_drag_column_width,             "Drag SELECT to alter the width of column ");
-string(417, help_drag_right_margin,             "Drag SELECT to alter the right margin of column ");
-string(418, help_double_right_margin,           "Double-click SELECT to link the right margin to the columns width.|M");
+string(91, Cannot_store_block_YN_S_STR,         "Unable to store block to paste list.");
+string(450,Cannot_store_block_YN_Q_STR,         "Continue deletion?");
 
 /* Menu strings - keep in step with riscos.c menu offsets */
 
@@ -304,12 +242,15 @@ string(130, _unable_to_create_new_document_STR, "- unable to create new document
 
 /* Top-level menu headings */
 
-string(131, Blocks_STR,                         "Blocks");
-string(132, Cursor_STR,                         "Caret");
-string(133, Edit_STR,                           "Edit");
-string(134, Files_STR,                          "Files");
-string(135, Layout_STR,                         "Layout");
-string(136, Spell_STR,                          "Spell");
+string(131, Blocks_top_level_menu_STR,          "Blocks");
+string(439, Chart_top_level_menu_STR,           "Chart");
+string(132, Cursor_top_level_menu_STR,          "Caret");
+string(133, Edit_top_level_menu_STR,            "Edit");
+string(134, Files_top_level_menu_STR,           "Files");
+string(435, Help_top_level_menu_STR,            "Help");
+string(135, Layout_top_level_menu_STR,          "Layout");
+string(438, Print_top_level_menu_STR,           "Print");
+string(136, Spell_top_level_menu_STR,           "Spell");
 
 /* 'Blocks' submenu */
 
@@ -322,6 +263,8 @@ string(143, Delete_block_STR,                   "Delete block");
 string(426, Clear_block_STR,                    "Clear block");
 string(144, Replicate_down_STR,                 "Replicate down");
 string(145, Replicate_right_STR,                "Replicate right");
+string(429, Replicate_up_STR,                   "Replicate up");
+string(430, Replicate_left_STR,                 "Replicate left");
 string(146, Replicate_STR,                      "Replicate");
 string(147, Sort_STR,                           "Sort");
 string(148, Search_STR,                         "Search");
@@ -332,6 +275,7 @@ string(152, Clear_protection_STR,               "Clear protection");
 string(153, Number_X_Text_STR,                  "Number <> Text");
 string(175, ToText_STR,                         "Make text");
 string(425, ToNumber_STR,                       "Make number");
+string(428, ToConstant_STR,                     "Make constant");
 string(154, Snapshot_STR,                       "Snapshot");
 string(155, Word_count_STR,                     "Word count");
 
@@ -358,6 +302,7 @@ string(172, Record_macro_file_STR,              "Record command file");
 
 /* 'Choices' submenu */
 
+string(431, Classic_menus_STR,                  "Classic menus");
 string(199, Short_menus_STR,                    "Short menus");
 string(372, ChangeMenus_STR,                    "Change menus");
 string(250, Auto_check_STR,                     "Auto check");
@@ -365,7 +310,7 @@ string(254, Display_user_dictionaries_STR,      "Dictionaries");
 string(208, Auto_recalculation_STR,             "Auto recalc");
 string(420, Auto_chart_recalculation_STR,       "Auto chart update");
 string(201, Colours_STR,                        "Colours");
-string(181, Insert_STR,                         "Insert");
+string(181, Overtype_STR,                       "Overtype");
 string(141, Size_of_paste_list_STR,             "Paste depth");
 
 /* 'Edit' submenu */
@@ -387,12 +332,17 @@ string(189, Delete_row_in_column_STR,           "Delete row in column");
 string(190, Insert_column_STR,                  "Insert column");
 string(191, Delete_column_STR,                  "Delete column");
 string(192, Add_column_STR,                     "Add column");
-string(193, Insert_page_STR,                    "Insert page");
+string(193, Insert_page_break_STR,              "Insert page break");
+string(433, Insert_page_number_STR,             "Insert page number");
+string(451, Insert_date_STR,                    "Insert date");
+string(452, Insert_time_STR,                    "Insert time");
+string(453, Insert_colour_change_STR,           "Insert colour");
 
 /* 'Files' submenu */
 
-string(194, Load_STR,                           "Load");
-string(195, Save_STR,                           "Save");
+string(194, Load_file_STR,                      "Load");
+string(432, Insert_file_STR,                    "Insert file");
+string(195, Save_file_STR,                      "Save");
 string(196, Save_template_STR,                  "Save template");
 string(197, Name_STR,                           "Rename file");
 string(198, New_window_STR,                     "New window");
@@ -405,7 +355,6 @@ string(205, Bottom_file_STR,                    "Bottom file");
 
 string(207, Recalculate_STR,                    "Recalculate");
 
-string(209, Help_STR,                           "Help");
 string(210, About_STR,                          "About");
 string(211, Exit_STR,                           "Quit");
 
@@ -496,6 +445,13 @@ string(284, Replace_STR,                        "Replace");
 string(285, Next_window_STR,                    "Next window");
 string(286, Close_window_STR,                   "Close window");
 
+/* 'Help' submenu */
+
+string(209, Help_STR,                           "Help");
+string(441, Licence_STR,                        "Licence");
+string(440, Interactive_help_STR,               "Interactive help");
+
+
 string(287, Tidy_up_STR,                        "Reclaim memory");
 string(405, Load_Template_STR,                  "Load template");
 
@@ -533,59 +489,105 @@ string(307, F10_STR,                            "F10");
 string(308, F11_STR,                            "F11");
 string(309, F12_STR,                            "F12");
 
-string(310, Shift_F1_STR,                       "Shift F1");
-string(311, Shift_F2_STR,                       "Shift F2");
-string(312, Shift_F3_STR,                       "Shift F3");
-string(313, Shift_F4_STR,                       "Shift F4");
-string(314, Shift_F5_STR,                       "Shift F5");
-string(315, Shift_F6_STR,                       "Shift F6");
-string(316, Shift_F7_STR,                       "Shift F7");
-string(317, Shift_F8_STR,                       "Shift F8");
-string(318, Shift_F9_STR,                       "Shift F9");
-string(319, Shift_F10_STR,                      "Shift F10");
-string(320, Shift_F11_STR,                      "Shift F11");
-string(321, Shift_F12_STR,                      "Shift F12");
+string(310, Shift_F1_STR,                       "Shift-F1");
+string(311, Shift_F2_STR,                       "Shift-F2");
+string(312, Shift_F3_STR,                       "Shift-F3");
+string(313, Shift_F4_STR,                       "Shift-F4");
+string(314, Shift_F5_STR,                       "Shift-F5");
+string(315, Shift_F6_STR,                       "Shift-F6");
+string(316, Shift_F7_STR,                       "Shift-F7");
+string(317, Shift_F8_STR,                       "Shift-F8");
+string(318, Shift_F9_STR,                       "Shift-F9");
+string(319, Shift_F10_STR,                      "Shift-F10");
+string(320, Shift_F11_STR,                      "Shift-F11");
+string(321, Shift_F12_STR,                      "Shift-F12");
 
-string(322, Ctrl_F1_STR,                        "Ctrl F1");
-string(323, Ctrl_F2_STR,                        "Ctrl F2");
-string(324, Ctrl_F3_STR,                        "Ctrl F3");
-string(325, Ctrl_F4_STR,                        "Ctrl F4");
-string(326, Ctrl_F5_STR,                        "Ctrl F5");
-string(327, Ctrl_F6_STR,                        "Ctrl F6");
-string(328, Ctrl_F7_STR,                        "Ctrl F7");
-string(329, Ctrl_F8_STR,                        "Ctrl F8");
-string(330, Ctrl_F9_STR,                        "Ctrl F9");
-string(331, Ctrl_F10_STR,                       "Ctrl F10");
-string(332, Ctrl_F11_STR,                       "Ctrl F11");
-string(333, Ctrl_F12_STR,                       "Ctrl F12");
+string(322, Ctrl_F1_STR,                        "Ctrl-F1");
+string(323, Ctrl_F2_STR,                        "Ctrl-F2");
+string(324, Ctrl_F3_STR,                        "Ctrl-F3");
+string(325, Ctrl_F4_STR,                        "Ctrl-F4");
+string(326, Ctrl_F5_STR,                        "Ctrl-F5");
+string(327, Ctrl_F6_STR,                        "Ctrl-F6");
+string(328, Ctrl_F7_STR,                        "Ctrl-F7");
+string(329, Ctrl_F8_STR,                        "Ctrl-F8");
+string(330, Ctrl_F9_STR,                        "Ctrl-F9");
+string(331, Ctrl_F10_STR,                       "Ctrl-F10");
+string(332, Ctrl_F11_STR,                       "Ctrl-F11");
+string(333, Ctrl_F12_STR,                       "Ctrl-F12");
 
-string(334, Ctrl_Shift_F1_STR,                  "Ctrl-Shift F1");
-string(335, Ctrl_Shift_F2_STR,                  "Ctrl-Shift F2");
-string(336, Ctrl_Shift_F3_STR,                  "Ctrl-Shift F3");
-string(337, Ctrl_Shift_F4_STR,                  "Ctrl-Shift F4");
-string(338, Ctrl_Shift_F5_STR,                  "Ctrl-Shift F5");
-string(339, Ctrl_Shift_F6_STR,                  "Ctrl-Shift F6");
-string(340, Ctrl_Shift_F7_STR,                  "Ctrl-Shift F7");
-string(341, Ctrl_Shift_F8_STR,                  "Ctrl-Shift F8");
-string(342, Ctrl_Shift_F9_STR,                  "Ctrl-Shift F9");
-string(343, Ctrl_Shift_F10_STR,                 "Ctrl-Shift F10");
-string(344, Ctrl_Shift_F11_STR,                 "Ctrl-Shift F11");
-string(345, Ctrl_Shift_F12_STR,                 "Ctrl-Shift F12");
+string(334, Ctrl_Shift_F1_STR,                  "Ctrl-Shift-F1");
+string(335, Ctrl_Shift_F2_STR,                  "Ctrl-Shift-F2");
+string(336, Ctrl_Shift_F3_STR,                  "Ctrl-Shift-F3");
+string(337, Ctrl_Shift_F4_STR,                  "Ctrl-Shift-F4");
+string(338, Ctrl_Shift_F5_STR,                  "Ctrl-Shift-F5");
+string(339, Ctrl_Shift_F6_STR,                  "Ctrl-Shift-F6");
+string(340, Ctrl_Shift_F7_STR,                  "Ctrl-Shift-F7");
+string(341, Ctrl_Shift_F8_STR,                  "Ctrl-Shift-F8");
+string(342, Ctrl_Shift_F9_STR,                  "Ctrl-Shift-F9");
+string(343, Ctrl_Shift_F10_STR,                 "Ctrl-Shift-F10");
+string(344, Ctrl_Shift_F11_STR,                 "Ctrl-Shift-F11");
+string(345, Ctrl_Shift_F12_STR,                 "Ctrl-Shift-F12");
 
 /* Month names */
 
-string(346, month_January_STR,                  "January");
-string(347, month_February_STR,                 "February");
-string(348, month_March_STR,                    "March");
-string(349, month_April_STR,                    "April");
-string(350, month_May_STR,                      "May");
-string(351, month_June_STR,                     "June");
-string(352, month_July_STR,                     "July");
-string(353, month_August_STR,                   "August");
-string(354, month_September_STR,                "September");
-string(355, month_October_STR,                  "October");
-string(356, month_November_STR,                 "November");
-string(357, month_December_STR,                 "December");
+string(346, month_name_01_STR,                  "January");
+string(347, month_name_02_STR,                  "February");
+string(348, month_name_03_STR,                  "March");
+string(349, month_name_04_STR,                  "April");
+string(350, month_name_05_STR,                  "May");
+string(351, month_name_06_STR,                  "June");
+string(352, month_name_07_STR,                  "July");
+string(353, month_name_08_STR,                  "August");
+string(354, month_name_09_STR,                  "September");
+string(355, month_name_10_STR,                  "October");
+string(356, month_name_11_STR,                  "November");
+string(357, month_name_12_STR,                  "December");
+
+/* Day names */
+
+string(476, day_name_01_STR,                    "Sunday");
+string(477, day_name_02_STR,                    "Monday");
+string(478, day_name_03_STR,                    "Tuesday");
+string(479, day_name_04_STR,                    "Wednesday");
+string(480, day_name_05_STR,                    "Thursday");
+string(481, day_name_06_STR,                    "Friday");
+string(482, day_name_07_STR,                    "Saturday");
+
+string(483, day_endings_STR,                    "st nd rd th th th th th th th th th th th th th th th th th st nd rd th th th th th th th st");
+
+/* page number formats */
+
+string(435, PN_FMT1_STR,                        "#");
+string(436, PN_FMT2_STR,                        "r#");
+string(437, PN_FMT3_STR,                        "R#");
+
+/* date formats */
+
+string(454, DATE_FMT01_STR,                     "yyyy-mm-dd");
+string(455, DATE_FMT02_STR,                     "dd.mm.yy");
+string(456, DATE_FMT03_STR,                     "dd/mm/yy");
+string(457, DATE_FMT04_STR,                     "dd Mmm yy");
+string(458, DATE_FMT05_STR,                     "Mmm dd, yy");
+string(459, DATE_FMT06_STR,                     "d Mmm yy");
+string(460, DATE_FMT07_STR,                     "d Mmmm yy");
+string(461, DATE_FMT08_STR,                     "Mmmm d, yy");
+string(462, DATE_FMT09_STR,                     "d Mmmm yyyy");
+string(463, DATE_FMT10_STR,                     "ddd Mmmm");
+string(464, DATE_FMT11_STR,                     "Mmmm ddd");
+string(465, DATE_FMT12_STR,                     "ddd Mmmm yy");
+string(466, DATE_FMT13_STR,                     "Mmmm ddd, yy");
+string(467, DATE_FMT14_STR,                     "ddd Mmmm yyyy");
+string(468, DATE_FMT15_STR,                     "Mmmm ddd, yyyy");
+string(469, DATE_FMT16_STR,                     "Mmm yy");
+string(470, DATE_FMT17_STR,                     "Mmmm yy");
+string(471, DATE_FMT18_STR,                     "Mmmm yyyy");
+string(472, DATE_FMT19_STR,                     "dd.mm.yy hh:mm:ss");
+
+/* time formats */
+
+string(473, TIME_FMT1_STR,                      "hh:mm");
+string(474, TIME_FMT2_STR,                      "hh:mm:ss");
+string(475, TIME_FMT3_STR,                      "h:mm am;h:mm pm");
 
 string(358, YES_STR,                            "Yes");
 string(359, NO_STR,                             "No");
@@ -674,99 +676,188 @@ string(529, formwind_menu_title,                "Formula");
 /* more function key-like strings */
 
 string(530,   F_Print_STR,                      "Print");
-string(531,  SF_Print_STR,                      "Shift Print");
-string(532,  CF_Print_STR,                      "Ctrl Print");
-string(533, CSF_Print_STR,                      "Ctrl-Shift Print");
+string(531,  SF_Print_STR,                      "Shift-Print");
+string(532,  CF_Print_STR,                      "Ctrl-Print");
+string(533, CSF_Print_STR,                      "Ctrl-Shift-Print");
 
 string(534,   F_Insert_STR,                     "Insert");
-string(535,  SF_Insert_STR,                     "Shift Insert");
-string(536,  CF_Insert_STR,                     "Ctrl Insert");
-string(537, CSF_Insert_STR,                     "Ctrl-Shift Insert");
+string(535,  SF_Insert_STR,                     "Shift-Insert");
+string(536,  CF_Insert_STR,                     "Ctrl-Insert");
+string(537, CSF_Insert_STR,                     "Ctrl-Shift-Insert");
 
 string(538,   F_Home_STR,                       "Home");
-string(539,  SF_Home_STR,                       "Shift Home");
-string(540,  CF_Home_STR,                       "Ctrl Home");
-string(541, CSF_Home_STR,                       "Ctrl-Shift Home");
+string(539,  SF_Home_STR,                       "Shift-Home");
+string(540,  CF_Home_STR,                       "Ctrl-Home");
+string(541, CSF_Home_STR,                       "Ctrl-Shift-Home");
 
 string(542,   F_Copy_STR,                       "Copy");
-string(543,  SF_Copy_STR,                       "Shift Copy");
-string(544,  CF_Copy_STR,                       "Ctrl Copy");
-string(545, CSF_Copy_STR,                       "Ctrl-Shift Copy");
+string(543,  SF_Copy_STR,                       "Shift-Copy");
+string(544,  CF_Copy_STR,                       "Ctrl-Copy");
+string(545, CSF_Copy_STR,                       "Ctrl-Shift-Copy");
 
 string(546,   F_Delete_STR,                     "Delete");
-string(547,  SF_Delete_STR,                     "Shift Delete");
-string(548,  CF_Delete_STR,                     "Ctrl Delete");
-string(549, CSF_Delete_STR,                     "Ctrl-Shift Delete");
+string(547,  SF_Delete_STR,                     "Shift-Delete");
+string(548,  CF_Delete_STR,                     "Ctrl-Delete");
+string(549, CSF_Delete_STR,                     "Ctrl-Shift-Delete");
 
 string(550,   F_Backspace_STR,                  "Backspace");
-string(551,  SF_Backspace_STR,                  "Shift Backspace");
-/*string(552,  CF_Backspace_STR,                  "Ctrl Backspace"); sadly undistinguishable from ^H */
-/*string(553, CSF_Backspace_STR,                  "Ctrl-Shift Backspace"); ditto */
+string(551,  SF_Backspace_STR,                  "Shift-Backspace");
+/*string(552,  CF_Backspace_STR,                  "Ctrl-Backspace"); sadly undistinguishable from ^H */
+/*string(553, CSF_Backspace_STR,                  "Ctrl-Shift-Backspace"); ditto */
 
 string(554,   F_Tab_STR,                        "Tab");
-string(555,  SF_Tab_STR,                        "Shift Tab");
-string(556,  CF_Tab_STR,                        "Ctrl Tab");
-string(557, CSF_Tab_STR,                        "Ctrl-Shift Tab");
+string(555,  SF_Tab_STR,                        "Shift-Tab");
+string(556,  CF_Tab_STR,                        "Ctrl-Tab");
+string(557, CSF_Tab_STR,                        "Ctrl-Shift-Tab");
 
 string(558, ToNumber_STR,                       "Make number");
 string(559, ToText_STR,                         "Make text");
 
-string(900, colh_button_replicd,                "Click SELECT to replicate the top row of a marked block down throughout the rest of the block.|M"
-                                                "Click ADJUST for a general block replicate.");
-string(901, colh_button_replicr,                "Click SELECT to replicate the left column of a marked block right throughout the rest of the block.|M"
-                                                "Click ADJUST for a general block replicate.");
-string(902, colh_button_graph,                  "Click SELECT to create a new chart.|M"
-                                                "Click ADJUST to set the chart options.");
-string(903, colh_button_save,                   "Click SELECT to bring up the save file dialogue box.|M"
-                                                "Click ADJUST to save the file immediately.");
-string(904, colh_button_print,                  "Click SELECT to bring up the print file dialogue box.|M"
-                                                "Click ADJUST to bring up the page layout dialogue box.");
-string(905, colh_button_ljustify,               "Click SELECT to apply left justification.");
-string(906, colh_button_cjustify,               "Click SELECT to apply centred justification.");
-string(907, colh_button_rjustify,               "Click SELECT to apply right justification.");
-string(908, colh_button_fjustify,               "Click SELECT to apply full justification (as from the Options box).");
-string(909, colh_button_bold,                   "Click SELECT to insert bold at the caret or apply bold to the marked block.|M"
-                                                "Click ADJUST to remove bold from the marked block.");
-string(910, colh_button_italic,                 "Click SELECT to insert italic at the caret or apply italic to the marked block.|M"
-                                                "Click ADJUST to remove italic from the marked block.");
-string(911, colh_button_underlined,             "Click SELECT to insert underline at the caret or apply underline to the marked block.|M"
-                                                "Click ADJUST to remove underline from the marked block.");
-string(912, colh_button_subscript,              "Click SELECT to insert subscript at the caret or apply subscript to the marked block.|M"
-                                                "Click ADJUST to remove subscript from the marked block.");
-string(913, colh_button_superscript,            "Click SELECT to insert superscript at the caret or apply superscript to the marked block.|M"
-                                                "Click ADJUST to remove superscript from the marked block.");
-string(914, colh_button_search,                 "Click SELECT to bring up the search and replace dialogue box.|M"
-                                                "Click ADJUST to find the next occurence of the word being searched for.");
-string(915, colh_button_sort,                   "Click SELECT to sort the marked block.|M"
-                                                "Click ADJUST to transpose the marked block.");
-string(916, colh_button_spellcheck,             "Click SELECT to bring up the spell check file dialogue box.|M"
-                                                "Click ADJUST to browse through the spelling dictionary.");
-string(917, colh_button_totext,                 "Click SELECT to force cells to text.|M"
-                                                "Click ADJUST to change between number and text");
-string(918, colh_button_tonumber,               "Click SELECT to force cells to number.|M"
-                                                "Click ADJUST to change between number and text");
-string(919, colh_button_copy,                   "Click SELECT to copy the marked block to the paste list.|M"
-                                                "Click ADJUST to move the marked block to the caret position.");
-string(920, colh_button_delete,                 "Click SELECT to delete the marked block to the paste list.|M"
-                                                "Click ADJUST to clear the cells in the marked block.");
-string(921, colh_button_paste,                  "Click SELECT to copy the top item on the paste list to the caret position.");
+/*
+ * Interactive Help system.
+ * Tokens as described in Style Guide
+ */
 
-string(922, colh_button_edit_ok,                "Click SELECT to enter the formula you have typed on the formula editing line into the document.");
-string(923, colh_button_edit_cancel,            "Click SELECT to abandon editing the formula and leave the document unchanged.");
+/* Help from the icon bar icon */
 
-string(924, colh_button_font,                   "Click SELECT to set the base font to be used in this document.|M"
-                                                "Click ADJUST to insert a local font change.");
-string(925, colh_button_formatblock,            "Click SELECT to reformat the current paragraph or marked block.");
-string(926, colh_button_cmd_record,             "Click SELECT to start (or stop) recording a command file.");
-string(927, colh_button_cmd_exec,               "Click SELECT to choose and execute a command file.");
-string(928, colh_button_leadtrail,              "Click SELECT to apply leading characters to the current cell or marked block.|M"
-                                                "Click ADJUST to apply trailing characters to the current cell or marked block.");
-string(929, colh_button_decplaces,              "Click SELECT to vary the number of decimal places displayed in the current cell or marked block.");
-/* use 930 as next help */
+string(92, help_iconbar,
+                                                "\\TPipeDream icon.|M"
+                                                "Drag a file onto this icon to load it.|M"
+                                                "\\Screate a new document.|M"
+                                                "Shift-click \\s to view the Choices directory.|M"
+                                                "Click MENU to select a document or set Choices.|M");
+
+/* Help from a dialog window */
+
+string(93, help_dialog_window,                  "\\Wa PipeDream dialogue box.|M"
+                                                "Click OK or press ENTER to complete.|M"
+                                                "Click Cancel or press ESCAPE to cancel.|M"
+                                                "Use TAB (or Shift-TAB) to move forwards "
+                                                "(or backwards) between writeable fields.");
+
+/* Help from a PipeDream window */
+
+string(94, help_main_window,                    "This is a PipeDream document \\w.|M");
+
+string(95, help_drag_file_to_insert,            "Drag a file into the \\w to insert the file at the current cell.");
+
+string(96, help_click_select_to,                "\\S");
+
+string(97, help_click_adjust_to,                "Click Ctrl-\\s to ");
+
+string(98, help_position_the_caret_in,          "position the caret in ");
+
+string(99, help_insert_a_reference_to,          "insert a reference to ");
+
+string(100, help_cell,                          "cell ");
+
+string(930, help_drag_select_to_mark_block,     "\\Dmark a block of cells.|M"
+                                                "\\Ato change which cells are marked.");
+
+string(101, help_colh_inexpression_line,        "You are editing a formula in the formula editing line so this button cannot perform its associated command.");
+
+string(102, help_colh_inexpression_box,         "You are editing a formula in the formula \\w so this button cannot perform its associated command.");
+
+string(103, help_top_left_corner,               "\\Smark the whole document.|M"
+                                                "\\Aclear a marked block.|M");
+
+string(104, help_col_border,                    "Drag \\s along the column border to mark all rows in those columns.|M"
+                                                "Double-click \\s to mark this column.|M");
+
+string(105, help_drag_row_border,               "Drag \\s along the row border to mark all columns in those rows.|M");
+
+string(106, help_double_row_border,             "Double-click \\s to mark this row.|M");
+
+string(107, help_row_is_page_break,             "This is a page break.|M");
+
+string(108, help_row_is_hard_page_break,        "This row is an expanded hard page break.|M");
+
+string(109, help_colh_contents_line,            "\\Sstart editing the current cell contents in the formula editing line.");
+
+string(110, help_colh_contents_line_inexpression,
+                                                "\\Sposition the caret within the formula editing line.");
+
+string(414, help_colh_transfer_to_window,       "\\Spopup a menu of formula related topics.|M" \
+                                                "\\Atransfer the formula editing line contents to a formula \\w.");
+
+string(415, help_colh_edit_in_window,           "\\Spopup a menu of formula related topics.|M" \
+                                                "\\Aedit the current cell contents in a formula \\w.|M");
+
+string(416, help_drag_column_width,             "\\Dalter the width of column ");
+string(417, help_drag_right_margin,             "\\Dalter the right margin of column ");
+string(418, help_double_right_margin,           "Double-click \\s to link the right margin to the columns width.|M");
+
+/* Help from a PipeDream toolbar */
+
+string(900, colh_button_replicd,                "\\Sreplicate the top row of a marked block down throughout the rest of the block.|M"
+                                                "\\Areplicate the bottom row of a marked block up throughout the rest of the block.");
+string(901, colh_button_replicr,                "\\Sreplicate the left column of a marked block right throughout the rest of the block.|M"
+                                                "\\Areplicate the right column of a marked block left throughout the rest of the block.");
+string(902, colh_button_graph,                  "\\Screate a new chart.|M"
+                                                "\\Aset the chart options.");
+string(903, colh_button_save,                   "\\Sbring up the Save dialogue box.|M"
+                                                "\\Asave the file immediately.");
+string(904, colh_button_print,                  "\\Sbring up the Print dialogue box.|M"
+                                                "\\Abring up the Page layout dialogue box.");
+string(905, colh_button_ljustify,               "\\Sapply left justification to a marked block (or current cell)."
+                                                "\\Aapply default justification to a marked block (or current cell).");
+string(906, colh_button_cjustify,               "\\Sapply centred justification to a marked block (or current cell).");
+string(907, colh_button_rjustify,               "\\Sapply right justification to a marked block (or current cell).");
+string(908, colh_button_fjustify,               "\\Sapply full justification (as from the Options dialogue box).");
+string(909, colh_button_bold,                   "\\Sinsert bold at the caret or apply bold to a marked block.|M"
+                                                "\\Aremove bold from a marked block.");
+string(910, colh_button_italic,                 "\\Sinsert italic at the caret or apply italic to a marked block.|M"
+                                                "\\Aremove italic from a marked block.");
+string(911, colh_button_underlined,             "\\Sinsert underline at the caret or apply underline to a marked block.|M"
+                                                "\\Aremove underline from a marked block.");
+string(912, colh_button_subscript,              "\\Sinsert subscript at the caret or apply subscript to a marked block.|M"
+                                                "\\Aremove subscript from a marked block.");
+string(913, colh_button_superscript,            "\\Sinsert superscript at the caret or apply superscript to a marked block.|M"
+                                                "\\Aremove superscript from a marked block.");
+string(914, colh_button_search,                 "\\Ssearch and replace.|M"
+                                                "\\Afind the next occurence of the word being searched for.");
+string(915, colh_button_sort,                   "\\Ssort a marked block.|M"
+                                                "\\Atranspose a marked block.");
+string(916, colh_button_spellcheck,             "\\Sspell check this document.|M"
+                                                "\\Abrowse through the spelling dictionary.");
+string(917, colh_button_totext,                 "\\Sforce cells to text.|M"
+                                                "\\Achange between number and text.");
+string(918, colh_button_tonumber,               "\\Sforce cells to number.|M"
+                                                "\\Aforce cells to constant.");
+string(431, colh_button_mark,                   "\\Smark the whole document.|M"
+                                                "\\Aclear a marked block.|M");
+string(938, colh_button_copy,                   "\\Scopy a marked block to the paste list.|M"
+                                                "\\Amove a marked block to the caret position.");
+string(920, colh_button_delete,                 "\\Sdelete a marked block to the paste list.|M"
+                                                "\\Aclear the cells in a marked block.");
+string(921, colh_button_paste,                  "\\Scopy the top item on the paste list to the caret position.");
+
+string(922, colh_button_edit_ok,                "\\Senter the formula you have typed on the formula editing line into the document.|M"
+                                                "\\Atransfer the formula into an editing window.");
+string(923, colh_button_edit_cancel,            "\\Sabandon editing the formula and leave the document unchanged.");
+
+string(924, colh_button_font,                   "\\Sset the font to be used in this document.|M"
+                                                "\\Ainsert a local font change in a cell.");
+string(925, colh_button_formatblock,            "\\Sreformat a marked block (or current paragraph).");
+string(926, colh_button_cmd_record,             "\\Sstart (or stop) recording a command file.");
+string(927, colh_button_cmd_exec,               "\\Schoose and execute a command file.");
+string(928, colh_button_leadtrail,              "\\Sapply leading characters to a marked block (or current cell).|M"
+                                                "\\Aapply trailing characters to a marked block (or current cell).");
+string(929, colh_button_decplaces,              "\\Svary the number of decimal places displayed in a marked block (or current cell)."
+                                                "\\Aapply the default format to a marked block (or current cell).");
+
+string(931, help_formwind_button_edit_ok,       "\\Senter the formula you have typed in the formula editing window into the document.");
+string(932, help_formwind_button_edit_cancel,   "\\Sabandon editing the formula and leave the document unchanged.");
+string(933, help_formwind_button_function,      "\\Spopup a menu of formula related topics.");
+string(934, help_formwind_button_newline,       "\\Sinsert a line break in the formula.");
+string(935, help_formwind_button_copy,          "\\Scopy the selection to the clipboard.");
+string(936, help_formwind_button_cut,           "\\Scut the selection to the clipboard.");
+string(937, help_formwind_button_paste,         "\\Scopy the contents of the clipboard to the caret.");
+/* use 939 as next help */
 
 /* use 561 as next if adding at end */
 
-/* use 428 as next in middle */
+/* use 484 as next in middle */
 
 } /* end of strings_init() */
 
@@ -778,64 +869,56 @@ fontselect_strings(void)
         /* 0         1         2         3         4         5         6         7         8 */
         /* 012345678901234567890123456789012345678901234567890123456789012345678901234567890 */
     fputs("FNTSELI13:"
-          "Click SELECT here to increase the height of the font.|M"
-          "Click ADJUST to decrease the height of the font.|M"
+          "You can adjust the height of the font using the arrows.|M"
           "Shift-click to change the width at the same time."
           "\n", stdout);
     fputs("FNTSELI14:"
-          "Click SELECT here to decrease the height of the font.|M"
-          "Click ADJUST to increase the height of the font.|M"
+          "You can adjust the height of the font using the arrows.|M"
           "Shift-click to change the width at the same time."
           "\n", stdout);
     fputs("FNTSELI15:"
-          "Type into this icon the height in points that you want the font in."
+          "You can enter the height in points that you want the font in."
           "\n", stdout);
     fputs("FNTSELI16:"
-          "Click SELECT here to increase the width of the font.|M"
-          "Click ADJUST to decrease the width of the font.|M"
+          "You can adjust the width of the font using the arrows.|M"
           "Shift-click to change the height at the same time."
           "\n", stdout);
     fputs("FNTSELI17:"
-          "Click SELECT here to decrease the width of the font.|M"
-          "Click ADJUST to increase the width of the font.|M"
+          "You can adjust the width of the font using the arrows.|M"
           "Shift-click to change the height at the same time."
           "\n", stdout);
     fputs("FNTSELI18:"
-          "Type into this icon the width in points that you want the font in.|M"
+          "You can enter the width in points that you want the font in.|M"
           "\n", stdout);
     fputs("FNTSELI31:"
-          "Click SELECT here to increase the line spacing.|M"
-          "Click ADJUST to decrease the line spacing."
+          "You can adjust the line spacing using the arrows.|M"
           "\n", stdout);
     fputs("FNTSELI32:"
-          "Click SELECT here to decrease the line spacing.|M"
-          "Click ADJUST to increase the line spacing."
+          "You can adjust the line spacing using the arrows.|M"
           "\n", stdout);
     fputs("FNTSELI33:"
-          "Type into this icon the value in points that you want the line spacing to be."
+          "You can enter the value in points that you want the line spacing to be."
           "\n", stdout);
     fputs("FNTSELI34:"
-          "Click here to set the line spacing to 120% of the font height."
+          "This indicates if automatic line spacing (120% of the font height) is turned on.|M"
+          "\\Sselect or deselect this option."
           "\n", stdout);
     fputs("FNTSELI35:"
-          "Click here to reflect the font, width and height choices in the sample text icon."
+          "\\Sreflect the font, width and height choices in the sample text field."
           "\n", stdout);
     fputs("FNTSELI36:"
-          "Type into this icon a sample string to see your font choice.|M"
-          "Click on 'Try' to reflect the font, width and height choices in this icon."
+          "You can enter text here to see the effects of your font choice.|M"
           "\n", stdout);
 }
 
 extern int
 main(void)
 {
-    fputs("# start of PipeDream specific strings" "\n", stdout);
+    fputs("# PipeDream en_GB messages (" __DATE__ ")" "\n", stdout);
     strings_init();
-    fputs("# end of PipeDream specific strings" "\n", stdout);
 
-    fputs("# start of PipeDream's tuned help strings for FontSelect" "\n", stdout);
+    fputs("# PipeDream en_GB tuned help strings for FontSelect" "\n", stdout);
     fontselect_strings();
-    fputs("# end of PipeDream's tuned help strings for FontSelect" "\n", stdout);
 
     return(ferror(stdout)
                ? EXIT_FAILURE

@@ -24,6 +24,8 @@
 #include "cmodules/stringlk.h"
 
 #ifndef MAKE_MESSAGE_FILE
+_Check_return_
+_Ret_maybenull_
 extern const char *
 strings_lookup(
     S32 stringid);
@@ -102,7 +104,7 @@ make_errorstring(
 static void
 make_reperr_init(void)
 {
-    puts("# GB errors section (" __DATE__ ")");
+    fputs("# PipeDream en_GB error messages (" __DATE__ ")" "\n", stdout);
 
 /*
 errors local to this application
@@ -127,7 +129,6 @@ evaluator errors
 
     {GR_CHART_ERRLIST_DEF};
 
-    puts("# end of GB errors section");
 } /* end of make_reperr_init() */
 
 #endif /* MAKE_MESSAGE_FILE */
@@ -148,10 +149,6 @@ reperr_init(void)
 *   error reported, been_error set TRUE
 *
 ******************************************************************************/
-
-#ifndef ERR_OUTPUTSTRING
-#define ERR_OUTPUTSTRING 1
-#endif
 
 extern void
 messagef(
@@ -179,7 +176,7 @@ messagef(
     if(vsnprintf(err.errmess, elemof32(err.errmess), format, args) < 0)
         err.errmess[0] = CH_NULL;
 
-    wimpt_complain(&err);
+    void_WrapOsErrorReporting(&err);
 #endif
 
     va_end(args);
@@ -198,13 +195,14 @@ message_output(
 
     (void) xstrkpy(err.errmess, elemof32(err.errmess), buffer);
 
-    wimpt_complain(&err);
+    void_WrapOsErrorReporting(&err);
 }
 
+/*ncr*/
 extern BOOL
 reperr(
     STATUS errornumber,
-    _In_z_      PC_U8Z text,
+    _In_opt_z_  PC_U8Z text,
     ...)
 {
     os_error err;
@@ -213,9 +211,6 @@ reperr(
     va_list args;
 
     trace_2(TRACE_APP_PD4, "reperr(%d, %s)", errornumber, trace_string(text));
-
-    keyidx = NULL;
-    cbuff_offset = 0;
 
     /* unusual start due to text being passed too */
     va_start(args, errornumber);
@@ -231,7 +226,7 @@ reperr(
         if(NULL == strstr(errorp, "%s"))
         {
             /* if we have an arg then append it if not a %s error */
-            if(text)
+            if(NULL != text)
             {
                 xstrkpy(array, elemof32(array), errorp);
                 xstrkat(array, elemof32(array), " %s");
@@ -244,31 +239,22 @@ reperr(
     vfprintf(stderr, errorp, args);
     fputc('\n', stderr);
 
+    va_end(args);
+
     been_error = TRUE;
+
+    return(FALSE);
 #else
-    reportf("*** Error follows: ***");
-    vreportf(errorp, args);
+    err.errnum = 0;
 
-    if(been_error < 3) /* allow just a few errors to be reported before we start suppressing them */
-    {
-        been_error++; /* = TRUE; */
-
-        va_end(args);
-
-        va_start(args, errornumber);
-
-        err.errnum = 0;
-
-        if(vsnprintf(err.errmess, elemof32(err.errmess), errorp, args) < 0)
-            err.errmess[0] = CH_NULL;
-
-        wimpt_complain(&err);
-    }
-#endif
+    if(vsnprintf(err.errmess, elemof32(err.errmess), errorp, args) < 0)
+        err.errmess[0] = CH_NULL;
 
     va_end(args);
 
-    return(FALSE);
+    return(reperr_kernel_oserror(&err));
+#endif
+
 }
 
 /******************************************************************************
@@ -299,7 +285,7 @@ reperr_getstr(
 *
 ******************************************************************************/
 
-extern STATUS
+extern BOOL
 reperr_not_installed(
     STATUS errornumber)
 {
@@ -314,48 +300,72 @@ reperr_not_installed(
 *
 ******************************************************************************/
 
-extern STATUS
+/*ncr*/
+extern BOOL
 reperr_null(
     STATUS errornumber)
 {
     return(reperr(errornumber, NULL));
 }
 
-extern STATUS
+/*ncr*/
+extern BOOL
 rep_fserr(
-    PC_U8 str)
+    _In_z_      PC_U8 str)
 {
     return(reperr(ERR_OUTPUTSTRING, str));
 }
 
-/* note: no extra %s is grafted on here so user must supply */
-
-extern void
-reperr_fatal(
-    _In_z_      PC_U8 format,
-    ...)
+/*ncr*/
+extern BOOL
+reperr_kernel_oserror(
+    _In_        _kernel_oserror * const err)
 {
-    os_error err;
-    va_list args;
+    const int errflags = Wimp_ReportError_OK;
+    int button_clicked;
 
-    va_start(args, format);
+    assert(NULL != err);
 
-#if RISCOS && !defined(RISCOS_CMD_UTIL)
-    trace_2(TRACE_RISCOS_HOST, TEXT("reperr_fatal(%s, ") PTR_XTFMT, format, report_ptr_cast(args));
+    keyidx = NULL;
+    cbuff_offset = 0;
 
-    err.errnum = 0;
+    report_output("*** Error follows ***");
 
-    if(vsnprintf(err.errmess, elemof32(err.errmess), format, args) < 0)
-        err.errmess[0] = CH_NULL;
+    if(been_error++ < 3) /* allow just a few errors to be reported before we start suppressing them */
+    {
+        consume(const _kernel_oserror *, wimp_reporterror_rf(err, errflags, &button_clicked, NULL, 2/*Warning*/));
+    }
+    else
+    {   /* but do log suppressed errors */
+        report_output(err->errmess);
+    }
 
-    wimpt_noerr(&err);
-#else
-    vreperr(format, args);
-#endif
+    return(FALSE);
+}
 
-    va_end(args);
+/* replacements for RISC_OSLib */
 
-    exit(EXIT_FAILURE);
+extern os_error *
+wimpt_complain(
+    os_error * e)
+{
+    if(NULL != e)
+        consume_bool(reperr_kernel_oserror(e));
+
+    return(e);
+}
+
+extern os_error *
+wimp_reporterror(
+    os_error * e,
+    wimp_errflags flags,
+    char * name)
+{
+    int button_clicked;
+
+    UNREFERENCED_PARAMETER(name); /* always the program name from RISC_OSLib anyway */
+
+    return(de_const_cast(os_error *, wimp_reporterror_rf(e, (int) flags, &button_clicked, NULL, 2 /*Warning*/)));
 }
 
 #endif /* MAKE_MESSAGE_FILE */
@@ -367,8 +377,8 @@ main(
     int argc,
     char * argv[])
 {
-    IGNOREPARM(argc);
-    IGNOREPARM(argv);
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
 
     make_reperr_init();
 

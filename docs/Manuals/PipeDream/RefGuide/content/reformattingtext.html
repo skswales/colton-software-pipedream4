@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Reformatting Text</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="recalculation.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="replication.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Reformatting">Reformatting Text</h1>
+    <p>
+        You can reformat text paragraph by paragraph to tidy it up after editing or to fit it into a new column width or right margin.
+        You can also reformat a marked block of text.
+        Note that, if you have turned on <span class="csg-dbox-option">Insert on Return</span> in the <span class="csg-dbox">Options</span> dialogue box,
+        text will be automatically reformatted after deletions using the <span class="csg-command">Delete Word</span> and <span class="csg-command">Delete Character</span> commands
+        and the <span class="csg-key">Backspace</span> key.
+    </p>
+
+    <h2 id="Reformat">To Reformat a Paragraph</h2>
+    <ol>
+        <li>Position the caret anywhere on the first line of the paragraph.</li>
+        <li>Give the <span class="csg-command">Format Paragraph</span> Command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Caret</td>
+                <td>Format paragraph</td>
+                <td><img src="images/tbar_reformat.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">R</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        Text will be reformatted from the line containing the caret to the end of the paragraph.
+        The end of a paragraph is taken as one of the following:
+    </p>
+    <ul>
+        <li>a blank line;</li>
+        <li>a line with leading spaces, i.e. with spaces at the beginning of the line;</li>
+        <li>a line with a specific alignment: left, centre, right or LCR;</li>
+        <li>a number cell.</li>
+    </ul>
+    <p>
+        Note that a cell does not reformat if there is anything on the next line in a column to the left or right of the cell.
+        This is to prevent you from accidentally reformatting columns of textual labels in a database.
+    </p>
+
+    <h2 id="Justified">To Have Justified Text</h2>
+    <p>PipeDream can justify text by adding extra spaces into the line to make an even right-hand margin.</p>
+    <p>To select this option, turn on the <span class="csg-dbox-option">Justify</span> option in the <span class="csg-dbox">Options</span> dialogue box.</p>
+    <p>
+        New text you type in will be justified.
+        Existing text will be justified when you reformat it.
+    </p>
+
+    <h2 id="Prevent">To Prevent Lines From Wrapping</h2>
+    <p>If you want to type text onto a line without it wrapping onto the next line, position the caret on the line and give the <span class="csg-command">Left Align</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+                <th class="csg-ct-th-key">Key</th>
+            </tr>
+            <tr>
+                <td>Layout</td>
+                <td>Left align</td>
+                <td><span class="csg-cmdseq">LAL</span></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>You can prevent a block of text, such as a list, from wrapping by applying this command to a marked block of text.</p>
+
+    <h2 id="Turn">To Turn Off Wrapping Over the Whole Document</h2>
+    <p>Turn off the <span class="csg-dbox-option">Wrap</span> option in the <span class="csg-dbox">Options</span> dialogue box.</p>
+
+    <h2 id="Block">To Reformat a Block of Text</h2>
+    <p>
+        First mark the block of text to be reformatted.
+        Then give the <span class="csg-command">Format Block</span> command:
+    </p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Caret</td>
+                <td>Format block</td>
+                <td><img src="images/tbar_reformat.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">EFB</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        This command is particularly useful if you want to reformat your whole document, after a change of font, for example.
+        Having marked the whole document, you can give the Format Block command to reformat the document quickly and easily.
+        Be careful not to mark an address at the top of a letter, unless it has been explicitly left-aligned&mdash;you don&rsquo;t want to reformat the address!
+    </p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Recalculation </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Replication</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="recalculation.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="replication.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

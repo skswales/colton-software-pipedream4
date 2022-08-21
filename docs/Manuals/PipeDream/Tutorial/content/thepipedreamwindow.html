@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>The PipeDream Window</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="installation.html">Prev</a> </td>
+                <th id="navheader_PCN_C">PipeDream Tutorial</th>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="commands.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1>The PipeDream Window</h1>
+    <p>
+        When PipeDream is running in the computer, you will see the blue PipeDream icon
+        (a large white 4 on a dark blue background, with a column of coloured dots) installed on the icon bar.
+    </p>
+    <p>If you do not have the PipeDream icon on the icon bar, find the !PipeDream icon on your disc or network server and double-click on it.</p>
+    <p>To create a new empty PipeDream document window:</p>
+    <ol>
+        <li>Click the PipeDream icon on the icon bar;</li>
+        <li>Click the <span class="csg-dbox-option-value">Text</span> option in the <span class="csg-dbox">New document</span> dialogue box.</li>
+        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+    </ol>
+    <p>Your screen will look something like this:</p>
+    <div class="csg-sample-indent"><img src="images/pd_new_window.png" alt="PipeDream document window" /></div>
+    <p>The PipeDream document window is divided into two parts.</p>
+    <p>
+        At the top of the window is the toolbar area.
+        This contains a set of buttons that can be clicked on to execute useful functions and a formula editing line.
+    </p>
+    <p>
+        Below the toolbar area is the cell area in which a document's data is displayed.
+        This in turn is divided into columns (referred to by A, B, C etc. going from left to right) and rows (numbered from 1 at the top, increasing going down the document).
+        When you first create an empty PipeDream document window based on the Text template, only row 1 is displayed.
+        Many more rows are displayed if you create a document based on the Numbers template.
+    </p>
+    <p>The part of a document lying at the intersection of one row and one column is called a cell and can be referred to by its joint column and row coordinates, for example B1.</p>
+
+    <h2>Columns</h2>
+    <p>
+        A PipeDream document is made up of cells of two types: text cells and number cells.
+        Text in a text cell is allowed to overlap any blank cells to its right up to the right margin position.
+        However, number cells are not allowed to overlap other columns.
+        It is this very simple distinction between text and numbers which is at the heart of PipeDream.
+    </p>
+    <p>It can be helpful to think of each column as being a transparent sheet of paper overlaying the columns to its left.</p>
+    <p>
+        Moving the pointer into a cell and clicking Select positions the caret in the cell,
+        unless there is anything in a text cell to the left which could overlap the cell containing the pointer.
+        Remember that number cells cannot overlap cells to the right of them.
+    </p>
+    <p>Consider the following case:</p>
+    <table border="0" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column">A</th>
+                <th class="csg-sample-sheet-border-column">B</th>
+                <th class="csg-sample-sheet-border-column">&nbsp;&nbsp;&nbsp;C&nbsp;&nbsp;&nbsp;</th>
+                <th class="csg-sample-sheet-border-column">&nbsp;&nbsp;&nbsp;D&nbsp;&nbsp;&darr;</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td><img alt="caret" src="images/caret_smaller.png" /></td>
+                <td></td>
+                <td>          </td>
+                <td>             </td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td colspan="2">This text in column A overlaps cell B2.</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td>Text just in column A.</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td></td>
+                <td>Text in column B.</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td></td>
+                <td class="csg-sample-sheet-cell-number">123.45</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td class="csg-sample-sheet-cell-number">97.30</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        If you move the pointer into cell C1 and click, the caret will be positioned in cell C1
+        because there is nothing to the left of cell C1 which could overlap it.
+    </p>
+    <p>
+        If you move the pointer into cell C2 and click, the caret will be positioned in cell A2
+        because cell A2 contains text and could overlap cell C2.
+    </p>
+    <p>
+        If you move the pointer into cell C3 and click, the caret will be positioned in cell A3
+        because cell A3 contains text and could overlap cell C3.
+    </p>
+    <p>
+        If you move the pointer into cell C4 and click, the caret will be positioned in cell B4
+        because cell B4 contains text and could overlap cell C4
+    </p>
+    <p>
+        If you position the pointer in cell C5 and click, the caret will be positioned in cell C5.
+        Because cell B5 is a number cell, it cannot overlap cell C5.
+    </p>
+    <p>
+        If you position the pointer in cell C6 and click, the caret will be positioned in cell C6.
+        Although cell A6 has contents, it is a number cell and so cannot overlap cell C6.
+    </p>
+    <p>
+        Clicking <span class="csg-key">Ctrl</span>-Select always positions the caret in the cell containing the pointer.
+        So, in all the above cases, clicking <span class="csg-key">Ctrl</span>-Select would position the caret in the relevant cell in column C.
+    </p>
+
+    <h2>Interactive Help</h2>
+    <p>
+        You can request interactive help at any point during your use of PipeDream by running the
+        Help application from your RISC&nbsp;OS <span class="csg-filename">Apps</span> directory.
+        A window appears which provides information about the part of the RISC&nbsp;OS desktop or PipeDream document window at which you are pointing.
+        For further details about the RISC&nbsp;OS interactive help system, see your RISC&nbsp;OS <em>User Guide</em>.
+    </p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Installation </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Commands</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="installation.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="commands.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

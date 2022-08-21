@@ -1,0 +1,42 @@
+| Dictionary definition file for Spellcheck II for Latin1 countries
+| 	SKS June 1990
+|
+| '|' is the comment character; use || black sheep if you really want a |
+| leading spaces are not significant
+|
+| Copyright string follows:
+|
+PipeDream Latin1 Dictionary Definition Copyright Colton Software 1988,89,90
+|
+63 | Max word length  (min 32, max 63; set to 32 for old dictionaries)
+00 | Ending offset    (normally 0 for auto-calculation; otherwise min 64)
+|
+| valid first letters MUST BE A SUBSET of valid other letters
+| valid first letters and valid other letters MUST BE IN UPPER CASE
+| maximum number of valid other letters is 96
+| (Character offset) + (number of valid other letters) + (number of endings)
+|   MUST BE LESS THAN 256
+|
+  ABCDEÉFGHIJKLMNOPQRSTUVWXYÜZÅÄÖ     | valid first letters (in ascending order)
+'-ABCDEÉFGHIJKLMNOPQRSTUVWXYÜZÅÄÖ     | valid other letters (in ascending order)
+'-abcdeéfghijklmnopqrstuvwxyüzåäö     | lower case equivalents (must line up)
+|
+| Ending list
+| ordering is not vital, but if you order with most common endings 
+| of a given length first, this will improve speed
+|
+ED
+IC
+AL
+EN
+ER
+OR
+ES
+LY
+AN
+EE
+RY
+CY
+E
+S
+Y

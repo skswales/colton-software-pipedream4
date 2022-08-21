@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Width of Text</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="viewsheet.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="wordcount.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Width">Width of Text</h1>
+    <p>
+        The width of text in PipeDream is controlled by columns.
+        Each column has its own width and a right margin associated with it which determines the width of text formatted in that column.
+        In the initial PipeDream document, the right margins are set so that text typed into any column
+        will wrap onto the next line when it reaches the right-hand side of the document layout.
+        You can change the width of any column.
+        You can move the right margin for a group of columns in the document.
+        You can also set the right margin independently for any column in the document.
+    </p>
+
+    <h2 id="RMargin">To See Where the Right Margin is for a Column</h2>
+    <p>
+        Position the caret in the column.
+        The column&rsquo;s top border is shown in a different colour to let you know which column you are in.
+    </p>
+    <p>
+        The right margin for that column is shown by the down-arrow right margin marker in the top border.
+        Initially, all columns wrap at the right-hand side of the document layout.
+        You can see this by pressing the <span class="csg-key">Tab</span> key to move the caret from column to column.
+        In each case, the right margin marker is at the right-hand side of the document layout.
+    </p>
+
+    <h2 id="Move">To Move the Right Margin of a Group of Columns</h2>
+    <ol>
+        <li>Position the caret in the first column of the group to be altered.</li>
+        <li>
+            Give the <span class="csg-command">Move Margin Right</span> command to move the right margin to the right
+            or the <span class="csg-command">Move Margin Left</span> command to move the right margin to the left.
+        </li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td rowspan="2">Layout</td>
+                <td>Move margin right</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">LMR</span></td>
+            </tr>
+            <tr>
+                <td>Move margin left</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">LML</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>All columns between the column containing the caret and the new right margin will now wrap at the new right margin marker position.</p>
+
+    <h2 id="Change">To Change the Right Margin of a Column</h2>
+    <p>There are two ways to do this:</p>
+
+    <h4 id="Dragging">Dragging the right margin marker</h4>
+    <ol>
+        <li>
+            Position the pointer on the right margin marker.
+            The pointer will change shape when the it is over the marker.
+        </li>
+        <li>Drag Select to move the right margin marker to the required position.</li>
+    </ol>
+    <p>As the right margin marker moves, the column width is displayed in the mark block box.</p>
+
+    <h4 id="H">Using the Set Right Margin command</h4>
+    <ol>
+        <li>Position the caret in the column to be altered.</li>
+        <li>Give the <span class="csg-command">Set Right Margin</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Layout</td>
+                <td>Set right margin</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">H</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <!-- ol start="3" -->
+    <ul class="csg-netsurf-2434">
+        <li>3. When the dialogue box appears, type in the required number.</li>
+    </ul>
+    <p>
+        Alternatively, you can alter the right margin of a different column by typing the column letter
+        in the <span class="csg-dbox-option">Specify column range</span> input field of the dialogue box.
+    </p>
+
+    <h2 id="Alter">To Alter the Width of a Column</h2>
+    <p>There are two ways to do this:</p>
+
+    <h4 id="Dragging">Dragging the column borders</h4>
+    <ol>
+        <li>
+            Move the pointer onto the border of the column.
+            The shape of the pointer will change.
+        </li>
+        <li>Drag until the column has the width you require.</li>
+    </ol>
+    <p>The column width is displayed in the mark block box as you drag the border.</p>
+
+    <h4 id="W">Using the Set Column Width command</h4>
+    <ol>
+        <li>Position the caret in the required column.</li>
+        <li>Give the <span class="csg-command">Set Column Width</span> command.</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Layout</td>
+                <td>Set column width</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">W</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <!-- ol start="3" -->
+    <ul class="csg-netsurf-2434">
+        <li>When the dialogue box appears, enter the width you require.</li>
+    </ul>
+    <p>
+        When you
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>,
+        the column will be redisplayed with the new width.
+    </p>
+    <p>
+        Alternatively, you can alter the width of a specified column (i.e. not the one you are in) by typing in the column letter.
+        You can specify a range of columns whose width you want to alter.
+        If you type <span class="csg-key">C E</span>, for example, columns C, D and E will have the new width you specify.
+        To specify a range of columns, you only need to type in the first and last columns.
+        All columns between will be included in the range.
+    </p>
+    <p>
+        Note that if you change the width of a column to zero, the column is not displayed at all, although the data in it is not affected.
+        This is useful if you want a column of intermediate calculations which you do not want to be displayed or printed.
+    </p>
+
+    <h2 id="Linked">Linked Columns</h2>
+    <p>You can link several columns together so that they share the same right margin.</p>
+    <ol>
+        <li>Drag Select across the column borders of the columns you want to link.</li>
+        <li>Give the <span class="csg-command">Link Columns</span> command.</li>
+    </ol>
+    <p>
+        This sets the right margin to be the end of the last linked column, so that the linked columns share the right margin of the rightmost column.
+        The right margin marker changes colour to show that it cannot be changed in the normal manner.
+        If you change the width of any of the linked columns, the right margin marker moves accordingly.
+    </p>
+
+    <h2 id="Auto">Auto Width</h2>
+    <p>
+        You can instruct PipeDream to set the width of each column in a block to that necessary for the widest entry in that column.
+        Proceed as follows:
+    </p>
+    <ol>
+        <li>Mark the block of columns.</li>
+        <li>Give the <span class="csg-command">Auto Width</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Layout</td>
+                <td>Auto width</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">LAW</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        Each column will be displayed with the width set to that necessary for the widest entry in that column.
+        This command is particularly useful for spreadsheet work in which it is often the case that many columns are too wide.
+        It is also helpful when you get % signs in cells to show that your columns are not wide enough for the contents to be displayed.
+        All you have to do is mark the block then give the <span class="csg-command">Auto Width</span> command to ensure that each column is the correct width.
+        Note that in carrying out the <span class="csg-command">Auto Width</span> command, PipeDream ignores
+        text cells which have nothing to the right of them to ensure that headings can overlap other columns.
+    </p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>PipeDream&rsquo;s column structure</td>
+                <td><em>Tutorial</em></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">ViewSheet </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Word Count</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="viewsheet.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="wordcount.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

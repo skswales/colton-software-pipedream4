@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (C) 2013-2016 Stuart Swales
+# Copyright (C) 2013-2018 Stuart Swales
 
 URD=$.pipedream.trunk
 
@@ -35,13 +35,17 @@ lotus-converters:   \
 # C modules static dependencies
 #
 @.o.123pd_ltp:      $(CMODULES).c.123pd
+       @%CDir @.o
         $(CC) -o $@ $(CCflags) -DUTIL_LTP $(CMODULES).c.123pd
 @.o.pd123_ltp:      $(CMODULES).c.pd123
+       @%CDir @.o
         $(CC) -o $@ $(CCflags) -DUTIL_LTP $(CMODULES).c.pd123
 #
 @.o.123pd_ptl:      $(CMODULES).c.123pd
+       @%CDir @.o
         $(CC) -o $@ $(CCflags) -DUTIL_PTL $(CMODULES).c.123pd
 @.o.pd123_ptl:      $(CMODULES).c.pd123
+       @%CDir @.o
         $(CC) -o $@ $(CCflags) -DUTIL_PTL $(CMODULES).c.pd123
 #
 # C modules extra dependencies

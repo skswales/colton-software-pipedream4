@@ -54,7 +54,7 @@ fontselect_ensure_all_fonts(void);
 
 extern BOOL
 fontselect_check_open(
-    wimp_w * w /*inout*/);
+    /*inout*/ HOST_WND * p_window_handle);
 
 /* ------------------------------ fontlist_enumerate ---------------------------------
  * Description:   Call a user-supplied enumeration routine with fonts from a font tree
@@ -100,7 +100,7 @@ fontlist_enumerate(
  */
 
 typedef void (* FONTSELECT_INIT_FN) (
-    wimp_w fontselect_wind,
+    HOST_WND fontselect_wind,
     void * init_handle);
 
 typedef BOOL /* processed */ (* FONTSELECT_TRY_FN) (

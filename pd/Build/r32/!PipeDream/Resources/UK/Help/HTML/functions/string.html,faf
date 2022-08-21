@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>String Functions</title>
+    <link href="../help.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+
+    <h1 id="String">String Functions</h1>
+    <p>
+        The following text string functions are provided by PipeDream.
+        There are examples of the string functions in the PipeDream Examples.
+    </p>
+
+    <h2 class="csg-function" id="CHAR">CHAR</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">CHAR(<span class="csg-function-parameter">n</span>)</p>
+    <p>Returns the text character whose ASCII number is <span class="csg-function-parameter">n</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>CHAR(65)</code></p>
+    <p>returns <code>"A"</code>.</p>
+
+    <h2 class="csg-function" id="CODE">CODE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">CODE(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Returns the ASCII number of the first character of <span class="csg-function-parameter">text</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>CODE("A")</code></p>
+    <p>returns <code>65</code>.</p>
+
+    <h2 class="csg-function" id="EXACT">EXACT</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        EXACT(<span class="csg-function-parameter">"text1"</span>,
+        <span class="csg-function-parameter">"text2"</span>)
+    </p>
+    <p>If <span class="csg-function-parameter">text1</span> exactly matches <span class="csg-function-parameter">text2</span>, returns 1.</p>
+    <p>If <span class="csg-function-parameter">text1</span> does not exactly match <span class="csg-function-parameter">text2</span>, returns 0.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>EXACT("word","word")</code> returns 1.</p>
+    <p class="csg-sample-indent"><code>EXACT("Word","word")</code> returns 0.</p>
+
+    <h2 class="csg-function" id="FORMULA_TEXT">FORMULA_TEXT</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">FORMULA_TEXT(<span class="csg-function-parameter">cell_reference</span>)</p>
+    <p>
+        Returns as a string the formula in the cell referenced, so that it can be displayed in the worksheet.
+        This is useful for annotating worksheets, and printing out the formula which created the results shown in the worksheet.
+    </p>
+
+    <h2 class="csg-function" id="FIND">FIND</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        FIND(<span class="csg-function-parameter">"find_text"</span>,
+        <span class="csg-function-parameter">"in_text"</span>
+        {,&nbsp;<span class="csg-function-parameter">start_n</span>})
+    </p>
+    <p>
+        Looks for <span class="csg-function-parameter">find_text</span> in <span class="csg-function-parameter">in_text</span> optionally starting at <span class="csg-function-parameter">start_n</span> and
+        returns the offset (starting at one) of the character in <span class="csg-function-parameter">in_text</span> at which <span class="csg-function-parameter">find_text</span> starts.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>FIND("needle","haystack needle in")</code></p>
+    <p>returns <code>10</code>.</p>
+    <p><span class="csg-function-parameter">find_text</span> cannot contain wildcards.</p>
+    <p>FIND is case-sensitive and does not ignore leading and trailing spaces.</p>
+
+    <h2 class="csg-function" id="JOIN">JOIN</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        JOIN(<span class="csg-function-parameter">"text1"</span>,
+        <span class="csg-function-parameter">"text2"</span>,
+        <span class="csg-function-parameter">"text3"</span> &hellip;)
+    </p>
+    <p>Joins strings together.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>JOIN("back","gammon")</code></p>
+    <p>returns <code>"backgammon"</code>.</p>
+
+    <h2 class="csg-function" id="LEFT">LEFT</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        LEFT(<span class="csg-function-parameter">"text"</span>,
+        <span class="csg-function-parameter">n</span>)
+    </p>
+    <p>Returns the leftmost <span class="csg-function-parameter">n</span> characters of <span class="csg-function-parameter">text</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>LEFT("rightwing",5)</code></p>
+    <p>returns <code>"right"</code>.</p>
+
+    <h2 class="csg-function" id="LENGTH">LENGTH</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">LENGTH(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Returns the number of characters in <span class="csg-function-parameter">text</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>LENGTH("cat")</code></p>
+    <p>returns <code>3</code>.</p>
+
+    <h2 class="csg-function" id="LOWER">LOWER</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">LOWER(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Makes all characters in <span class="csg-function-parameter">text</span> lower-case.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>LOWER( "Big Ben")</code></p>
+    <p>returns <code>"big ben"</code>.</p>
+
+    <h2 class="csg-function" id="MID">MID</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        MID(<span class="csg-function-parameter">"text"</span>,
+        <span class="csg-function-parameter">start_n</span>,
+        <span class="csg-function-parameter">chars_n</span>)
+    </p>
+    <p>
+        Returns the middle <span class="csg-function-parameter">chars_n</span> characters
+        of <span class="csg-function-parameter">text</span>
+        starting at <span class="csg-function-parameter">start_n</span>.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>MID("middle of the road",8,6)</code></p>
+    <p>returns <code>"of the"</code>.</p>
+
+    <h2 class="csg-function" id="PROPER">PROPER</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">PROPER(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Makes the first character of each word in <span class="csg-function-parameter">text</span> upper-case.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>PROPER("big ben")</code></p>
+    <p>returns <code>"Big Ben</code>".</p>
+
+    <h2 class="csg-function" id="REPLACE">REPLACE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        REPLACE("text",
+        <span class="csg-function-parameter">start_n</span>,
+        <span class="csg-function-parameter">chars_n</span>,
+        <span class="csg-function-parameter">"with_text"</span>)
+    </p>
+    <p>
+        Replaces the part of <span class="csg-function-parameter">text</span> starting at
+        <span class="csg-function-parameter">start_n</span> for
+        <span class="csg-function-parameter">chars_n</span> with
+        <span class="csg-function-parameter">with_text</span>.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>REPLACE("PipeDream 3 is brilliant",11,1,"4")</code></p>
+    <p>returns <code>"PipeDream 4 is brilliant</code>".</p>
+
+    <h2 class="csg-function" id="REPT">REPT</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        REPT(<span class="csg-function-parameter">"text"</span>,
+        <span class="csg-function-parameter">n</span>)
+    </p>
+    <p>Repeats <span class="csg-function-parameter">text</span> <span class="csg-function-parameter">n</span> times.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>REPT("yo",2)</code></p>
+    <p>returns <code>"yoyo"</code>.</p>
+
+    <h2 class="csg-function" id="REVERSE">REVERSE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">REVERSE(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Reverses <span class="csg-function-parameter">text</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>REVERSE("1 2 3 4")</code></p>
+    <p>returns <code>"4 3 2 1</code>".</p>
+
+    <h2 class="csg-function" id="RIGHT">RIGHT</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        RIGHT(<span class="csg-function-parameter">"text"</span>,
+        <span class="csg-function-parameter">n</span>)
+    </p>
+    <p>
+        Returns the rightmost <span class="csg-function-parameter">n</span> characters of
+        <span class="csg-function-parameter">text</span>.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>RIGHT("rightwing",4)</code></p>
+    <p>returns "<code>wing"</code>.</p>
+
+    <h2 class="csg-function" id="STRING">STRING</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        STRING(<span class="csg-function-parameter">n</span>,
+        <span class="csg-function-parameter">decimals</span>)
+    </p>
+    <p>
+        Converts <span class="csg-function-parameter">n</span> from a number to a text string with
+        <span class="csg-function-parameter">decimals</span> decimal places
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>STRING(1234.567,1)</code></p>
+    <p>returns <code>"1234.6"</code>.</p>
+    <p>See the description of the ROUND function in <a href="miscfns.html">Miscellaneous Functions</a>.</p>
+
+    <h2 class="csg-function" id="TEXT">TEXT</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        TEXT(<span class="csg-function-parameter">number</span>,
+        <span class="csg-function-parameter">string</span>)
+    </p>
+    <p>
+        Returns a string of the <span class="csg-function-parameter">number</span> in the style specified.
+        This allows formatted results other than those provided by PipeDream&rsquo;s basic style system.
+    </p>
+    <p><span class="csg-function-parameter">number</span> may be a number or a date.</p>
+    <p><span class="csg-function-parameter">string</span> is a format string in Fireworkz number format style.</p>
+    <p>Please refer to the Fireworkz <em>User Guide</em> for details.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>TEXT(1234.567, "#,.###.,00&nbsp;\&euro;")</code> returns <code>1.234,57&nbsp;\&euro;</code></p>
+    <p class="csg-sample-indent"><code>TEXT(1234.567, "g0.###&nbsp;\m")</code> returns <code>1.235&nbsp;km</code></p>
+
+    <h2 class="csg-function" id="TRIM">TRIM</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">TRIM(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Removes all leading and trailing spaces from <span class="csg-function-parameter">text</span> and converts multiple spaces inside <span class="csg-function-parameter">text</span> into single spaces.</p>
+
+    <h2 class="csg-function" id="UPPER">UPPER</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">UPPER(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Makes all characters in <span class="csg-function-parameter">text</span> upper-case.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>UPPER("Big Ben")</code></p>
+    <p>returns <code>"BIG BEN"</code>.</p>
+
+    <h2 class="csg-function" id="VALUE">VALUE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">VALUE(<span class="csg-function-parameter">"text"</span>)</p>
+    <p>Converts <span class="csg-function-parameter">text</span> to a number.</p>
+    <h5>Examples:</h5>
+    <p class="csg-sample-indent">
+        <code>VALUE("56")</code> returns
+        <code>56</code>.
+    </p>
+    <p class="csg-sample-indent">
+        <code>VALUE("fred")</code> returns
+        <code>0</code>.
+    </p>
+    <p class="csg-sample-indent">
+        <code>VALUE("1.3.86")</code> returns
+        <code>0</code>.
+    </p>
+</body>
+</html>

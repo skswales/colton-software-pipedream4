@@ -1,22 +1,23 @@
-%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%VS4.56.p1 (18-Aug-2016), Colton Software, R9200 7500 3900 8299
+%OP%PL55
 %OP%FGHomerton.Medium
-%OP%FX160
-%OP%FY160
 %OP%FS0
-%OP%WC28,1288,508,1360,0,0,0,0
+%OP%WC2,1260,1318,2118,0,0,0,0
 %CO:A,12,72%
-%H2%Charts in PipeDream 4
+%C%%H2%Charts in PipeDream 4
 
-This directory contains some sample charts and some simple tutorials showing you how to create your 
-own charts.  The file %H4%charts%H4% contains some general information; read this first.  The directories Election, 
-Inflation and Worldcup contain simple spreadsheets with live charts. The directories 1_3Dbars and 
-2_Penguins give instructions on making your own charts.  Pictures contains some draw files which you 
+This directory contains some sample charts and some simple tutorials showing you 
+how to create your own charts.  The file %H4%charts%H4% contains some general information; 
+read this first.  The directories Election, Inflation and Worldcup contain simple 
+spreadsheets with live charts. The directories 1_3Dbars and 2_Penguins give 
+instructions on making your own charts.  Pictures contains some draw files which you 
 can use in making your own charts.  If you like, you can also use your own draw files.
 
 You may find that when investigating charts it is best to use a wide screen mode
 
-Finally, fonts.  The charts in this directory use Trinity and Homerton outline fonts.  If you have these 
-fonts available, all well and good.  If you do not have outline fonts the charts will be displayed with 
-system font.  System font is rather ugly when used in graphics.  If you have this, please remember that 
-charts are much prettier when using outline fonts.
+Finally, fonts.  The charts in this directory use Trinity and Homerton outline fonts.  If 
+you have these fonts available, all well and good.  If you do not have outline fonts the 
+charts will be displayed with system font.  System font is rather ugly when used in 
+graphics.  If you have this, please remember that charts are much prettier when using 
+outline fonts.
 %CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

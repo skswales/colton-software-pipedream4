@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Text @-fields</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="templates.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="toolbar.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Text">Text @-fields</h1>
+    <p>
+        Text @-fields enable you to put the page number, the date, the document
+        title as defined in the <span class="csg-dbox">Options</span> dialogue
+        box, a picture, a colour or font change or a reference to another cell into
+        your document. Text @-fields are also used to put the required entries into
+        mail shots. Text @-fields can be included in headers and footers, for page
+        numbering and document titling.
+    </p>
+    <p>Text @-fields take the form:</p>
+    <p><code>@<span class="csg-function-parameter">identifier</span>@@@...@</code></p>
+    <p><strong>Identifier&nbsp;&nbsp;&nbsp;&nbsp;Effect</strong></p>
+    <p><code>D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>date</p>
+    <p><code>F&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>font</p>
+    <p><code>G&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>picture or graph</p>
+    <p><code>L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>leafname</p>
+    <p><code>N&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>current time</p>
+    <p><code>P&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>current page number</p>
+    <p>
+        <code>T&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>file title as defined in <span class="csg-dbox">Options</span> dialogue box
+    </p>
+    <p>
+        <code><span class="csg-function-parameter">number</span>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="csg-function-parameter">number</span> is number of field for a mailshot
+    </p>
+    <p><code class="csg-function-parameter">cell ref&nbsp;&nbsp;</code>value of cell referred to</p>
+    <p>
+        When the caret is not in the cell containing the Text @-field, the cell
+        shows the value of the Text @-field. When the caret is moved onto the cell, the
+        actual @ identifier is shown, for editing.
+    </p>
+    <p>
+        The number of @ characters after the identifier determines the size of the
+        Text @-field for formatting. Provided the number of characters in the value to
+        be displayed is less than or equal to the size of the Text @-field, the line
+        will be formatted correctly. The field is displayed in the minimum space and
+        any extra spaces are distributed throughout the line if it is justified.
+    </p>
+
+    <h3 id="D">@D</h3>
+    <p>Inserts the current date.</p>
+    <p>
+        If you want to fix the date into the cell, mark it as a block and give the
+        <span class="csg-command">Snapshot</span> command.
+    </p>
+
+    <h3 id="F">F</h3>
+    <p>Specifies a change of font within a cell.</p>
+    <h5>Syntax:</h5>
+    <pre>@F:<span class="csg-function-parameter">fontname</span>,<span class="csg-function-parameter">x</span>,<span class="csg-function-parameter">y</span>@</pre>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>@F:Corpus.Medium,24,24@</code></p>
+    <p>switches the font to 24 point Corpus.Medium.</p>
+    <p>
+        The easiest way to specify this is by using the <span class="csg-command">Local Font</span> command and selecting the settings in
+        the dialogue box.
+    </p>
+
+    <h3 id="G">@G</h3>
+    <p>Displays a picture from a file, scaled as specified.</p>
+    <h5>Syntax:</h5>
+    <pre>@G:<span class="csg-function-parameter">filename</span>,<span class="csg-function-parameter">scale_factor</span>@</pre>
+    <p>
+        If the filename is just a leafname, PipeDream looks in the directory of the
+        current document.
+    </p>
+    <p>
+        The easiest way to specify this is to place the caret at the top left of
+        where you want the picture and drag the picture into the PipeDream document.
+    </p>
+
+    <h3 id="L">@L</h3>
+    <p>Inserts the leafname of the current file.</p>
+
+    <h3 id="N">@N</h3>
+    <p>Inserts the current time.</p>
+    <p>
+        If you want to fix the time into the cell, mark it as a block and give the
+        <span class="csg-command">Snapshot</span> command.
+    </p>
+
+    <h3 id="P">@P</h3>
+    <p>Inserts the current page number.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>@P@@@@</code></p>
+    <p>displays the page number allowing for a width of up to four characters.</p>
+    <p>
+        This Text @-field is particularly useful if inserted into a footer for page
+        numbering.
+    </p>
+
+    <h3 id="T">@T</h3>
+    <p>
+        Inserts the document title as defined in the <span class="csg-dbox">Options</span> dialogue box.
+    </p>
+    <p>
+        To display it within the text, type @T@. There should be sufficient @ signs
+        after the T to reserve space for the title.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>@T@@@@@</code></p>
+    <p>allows for a title five characters long.</p>
+
+    <h3 id="number">@number</h3>
+    <p>
+        Inserts the field represented by <span class="csg-function-parameter">number</span>
+        into a text cell in a mailshot.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>@2@@@@@@@</code></p>
+    <p>
+        inserts field 2 into a mailshot, allowing for a width of up to 7
+        characters.
+    </p>
+
+    <h3 id="cellreference">@cell_reference</h3>
+    <p>Inserts the value of the cell referred to.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>@A5@@@@@</code></p>
+    <p>reserves five characters for the contents of cell A5 to be displayed.</p>
+    <p>
+        There must be as many @-signs following the Text @-field identifier as the
+        maximum number of characters needed to display the item, including any minus
+        signs, brackets, and leading and trailing characters. This is necessary to
+        maintain formatting when the item is included.
+    </p>
+    <p>
+        If the reference is to a number cell, the value will be displayed in the
+        same format as in the cell itself, with alignment ignored.
+    </p>
+    <p>
+        <span class="csg-function-parameter">cell_reference</span> can be an external reference,
+        i.e. a reference to a cell in a different document.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>[fred]A1</code></p>
+    <p>is a reference to cell A1 in the document called &lsquo;fred&rsquo;.</p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Template Files </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Toolbar</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="templates.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="toolbar.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

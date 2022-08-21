@@ -29,8 +29,8 @@
 #include "cs-wimptx.h"
 #endif
 
-extern int
-_stricmp(const char * a, const char * b);
+/*extern int
+_stricmp(const char * a, const char * b);*/
 
 extern void
 wm_events_get(
@@ -59,7 +59,7 @@ fontlxtr__ensure_test(
 
     if(!new_font_var)
     {
-        fontlxtr__path[0] = '\0';
+        fontlxtr__path[0] = CH_NULL;
         *ensure = 1;
     }
     else if(0 != strcmp(fontlxtr__path, new_font_var))
@@ -72,7 +72,7 @@ fontlxtr__ensure_test(
 
     if(!new_font_var)
     {
-        fontlxtr__prefix[0] = '\0';
+        fontlxtr__prefix[0] = CH_NULL;
         *ensure = 1;
     }
     else if(0 != strcmp(fontlxtr__prefix, new_font_var))
@@ -113,18 +113,18 @@ fontselect_ensure_all_fonts(void)
 
 extern BOOL
 fontselect_check_open(
-    wimp_w * w /*inout*/)
+    /*inout*/ HOST_WND * p_window_handle)
 {
-    wimp_wstate ws;
-
-    if(*w)
+    if(*p_window_handle)
     {
-        if(!wimp_get_wind_state(*w, &ws))
-            if((ws.flags & wimp_WOPEN) != 0)
+        WimpGetWindowStateBlock window_state;
+        window_state.window_handle = *p_window_handle;
+        if(NULL == tbl_wimp_get_window_state(&window_state))
+            if((window_state.flags & WimpWindow_Open) != 0)
                 return(TRUE);
 
         fontselect_closewindows();
-        *w = 0;
+        *p_window_handle = HOST_WND_NONE;
     }
 
     return(FALSE);
@@ -139,7 +139,8 @@ FONTSELECT_STATES;
 
 static struct FONTSELECT
 {
-    wimp_w            w;
+    HOST_WND window_handle;
+
     FONTSELECT_STATES state;
 
     FONTSELECT_TRY_FN try_fn;
@@ -161,17 +162,18 @@ fontselect_xtra_unknown_fn(
 
     switch(e->e)
     {
-    case wimp_EBUT:
-        switch(e->data.but.m.i)
+    case Wimp_EMouseClick:
         {
-        case 0:
-            /* OK */
-            close_windows = (e->data.but.m.bbits != wimp_BRIGHT);
+        const WimpMouseClickEvent * const mouse_click = (const WimpMouseClickEvent *) &e->data;
+
+        switch(mouse_click->icon_handle)
+        {
+        case 0: /* OK */
+            close_windows = (mouse_click->buttons != Wimp_MouseButtonAdjust);
             try_anyway = TRUE;
             break;
 
-        case 1:
-            /* CANCEL */
+        case 1: /* CANCEL */
             close_windows = TRUE;
             processed = TRUE;
             break;
@@ -179,10 +181,15 @@ fontselect_xtra_unknown_fn(
         default:
             break;
         }
-        break;
 
-    case wimp_EKEY:
-        switch(e->data.key.chcode)
+        break;
+        }
+
+    case Wimp_EKeyPressed:
+        {
+        const WimpKeyPressedEvent * const key_pressed = (const WimpKeyPressedEvent *) &e->data;
+
+        switch(key_pressed->key_code)
         {
         case 13:
             /* Return */
@@ -199,7 +206,9 @@ fontselect_xtra_unknown_fn(
         default:
             break;
         }
+
         break;
+        }
 
     default:
         break;
@@ -209,9 +218,9 @@ fontselect_xtra_unknown_fn(
         /* send the uk event anyway if not already done so */
         processed = (* fontselect.try_fn) (font_name, &width, &height, e, fontselect.try_handle, try_anyway);
 
-    if(!processed && (e->e == wimp_EKEY))
+    if(!processed && (e->e == Wimp_EKeyPressed))
         /* send it on */
-        wimpt_complain(wimp_processkey(e->data.key.chcode));
+        void_WrapOsErrorReporting(wimp_processkey(e->data.key.chcode));
 
     if(close_windows  &&  (fontselect.state == FONTSELECT_WAIT))
         fontselect.state = FONTSELECT_ENDED;
@@ -222,7 +231,7 @@ fontselect_xtra_unknown_fn(
 extern BOOL
 fontselect_can_process(void)
 {
-    return(fontselect.w == (wimp_w) 0);
+    return(fontselect.window_handle == HOST_WND_NONE);
 }
 
 extern BOOL
@@ -235,7 +244,7 @@ fontselect_prepare_process(void)
      * it will merely close the old font selector and not open a new one, so
      * he'll have to go and move over the right arrow again!
     */
-    if(fontselect.w != (wimp_w) 0)
+    if(fontselect.window_handle != HOST_WND_NONE)
     {
         /* can't requeue it as it'd come through again instantly without the below process loop terminating */
         fontselect_closewindows();
@@ -267,7 +276,7 @@ fontselect_process(
     fontselect.try_fn     = try_fn;
     fontselect.try_handle = try_handle;
 
-    fontselect.w = (wimp_w)
+    fontselect.window_handle = (HOST_WND)
         fontselect_selector((char *) title,                   /* win title   */
                             flags,                            /* flags       */
                             (char *) font_name,               /* font_name   */
@@ -275,24 +284,24 @@ fontselect_process(
                             *height,                          /* font height */
                             fontselect_xtra_unknown_fn);
 
-    fontselect.state = (fontselect.w != 0)
+    fontselect.state = (fontselect.window_handle != HOST_WND_NONE)
                                ? FONTSELECT_WAIT
                                : FONTSELECT_ENDED;
 
     if(init_fn)
-        (*init_fn)(fontselect.w, init_handle);
+        (*init_fn)(fontselect.window_handle, init_handle);
 
     /* wait for process to complete. user process will suffer upcalls from wm_events_get() */
     while(fontselect.state == FONTSELECT_WAIT)
     {
-        if(!fontselect_check_open(&fontselect.w))
+        if(!fontselect_check_open(&fontselect.window_handle))
             fontselect.state = FONTSELECT_ENDED;
         else
             wm_events_get(TRUE);
     }
 
     /* clear the interlock */
-    fontselect.w = (wimp_w) 0;
+    fontselect.window_handle = HOST_WND_NONE;
 
     return(1);
 }
@@ -302,7 +311,7 @@ fontlist_enumerate(
     BOOL              system,
     fontlist_node *   fontlist,
     fontlist_enumproc enumproc,
-    P_ANY              enumhandle)
+    P_ANY             enumhandle)
 {
     char            szFontName[256];
     S32             seqno = 0;

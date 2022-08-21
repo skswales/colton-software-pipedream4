@@ -475,7 +475,7 @@ convert_number_exponential(
 
     /* strip sign and leading zero(es) from exponent */
     p_numform_info->exponent_sign_actual = ustr_GetByteInc(p_numform_info->ustr_exponent_section);
-    assert((p_numform_info->exponent_sign_actual == CH_PLUS_SIGN) || (p_numform_info->exponent_sign_actual == CH_MINUS_SIGN));
+    assert((p_numform_info->exponent_sign_actual == CH_PLUS_SIGN) || (p_numform_info->exponent_sign_actual == CH_MINUS_SIGN__BASIC));
 
     ustr = p_numform_info->ustr_exponent_section;
     while(PtrGetByte(ustr) == CH_DIGIT_ZERO)
@@ -892,7 +892,8 @@ numform(
 
     switch(numform_info.ev_data.did_num)
     {
-    case RPN_DAT_BOOL8:
+  /*case RPN_DAT_BOOL8:*/
+    case RPN_DAT_WORD8:
     case RPN_DAT_WORD16:
     case RPN_DAT_WORD32:
         numform_info.type = RPN_DAT_REAL;
@@ -1164,7 +1165,7 @@ numform_numeric_section_copy_and_parse(
             p_numform_info->exponential = ch;
 
             ch = ustr_GetByteInc(ustr_numform_section);
-            if((ch == CH_PLUS_SIGN) || (ch == CH_MINUS_SIGN))
+            if((ch == CH_PLUS_SIGN) || (ch == CH_MINUS_SIGN__BASIC))
                 p_numform_info->exponent_sign = ch;
             else
                 ustr_DecByte(ustr_numform_section);
@@ -1302,7 +1303,7 @@ numform_output(
         case CH_COLON:
         case CH_LEFT_PARENTHESIS:
         case CH_RIGHT_PARENTHESIS:
-        case CH_MINUS_SIGN:
+        case CH_MINUS_SIGN__BASIC:
             status_return(quick_ublock_ucs4_add(p_quick_ublock, ch));
             continue;
 
@@ -1332,7 +1333,7 @@ numform_output(
 
                     if(p_numform_info->number.insert_minus_sign)
                     {   /* for negative numbers, insert a minus sign in as needed just prior to the first bit of numeric output */
-                        status_return(quick_ublock_a7char_add(p_quick_ublock, CH_MINUS_SIGN));
+                        status_return(quick_ublock_a7char_add(p_quick_ublock, CH_MINUS_SIGN__BASIC));
                     }
                 }
 
@@ -1784,7 +1785,7 @@ numform_output_number_fields(
     {
         status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, p_numform_info->exponential));
 
-        if( (p_numform_info->exponent_sign_actual == CH_MINUS_SIGN) ||
+        if( (p_numform_info->exponent_sign_actual == CH_MINUS_SIGN__BASIC) ||
             (p_numform_info->exponent_sign_actual == CH_PLUS_SIGN && p_numform_info->exponent_sign == CH_PLUS_SIGN))
             status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, p_numform_info->exponent_sign_actual));
 

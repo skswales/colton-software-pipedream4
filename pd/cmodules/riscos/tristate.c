@@ -13,8 +13,12 @@
 
 #include "common/gflags.h"
 
-#ifndef __cs_wimp_h
-#include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
+#ifndef __cs_wimptx_h
+#include "cs-wimptx.h"
+#endif
+
+#ifndef __cs_winx_h
+#include "cs-winx.h"
 #endif
 
 /* external header */
@@ -35,34 +39,35 @@ riscos_tristate_sprite_names[] =
 
 extern RISCOS_TRISTATE_STATE
 riscos_tristate_hit(
-    wimp_w w,
-    wimp_i i)
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle)
 {
-    RISCOS_TRISTATE_STATE state;
-
-    state = riscos_tristate_query(w, i);
+    RISCOS_TRISTATE_STATE state = riscos_tristate_query(window_handle, icon_handle);
 
     if(++state >= elemof32(riscos_tristate_sprite_names))
         state = 0;
 
-    riscos_tristate_set(w, i, state);
+    riscos_tristate_set(window_handle, icon_handle, state);
 
     return(state);
 }
 
 extern RISCOS_TRISTATE_STATE
 riscos_tristate_query(
-    wimp_w w,
-    wimp_i i)
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle)
 {
     RISCOS_TRISTATE_STATE state;
-    wimp_icon    icon;
-    char *       tristate_name;
+    WimpGetIconStateBlock icon_state;
+    char * tristate_name;
     const char * test_name;
 
-    wimp_get_icon_info(w, i, &icon);
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = icon_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return(RISCOS_TRISTATE_DONT_CARE);
 
-    tristate_name = icon.data.indirecttext.validstring;
+    tristate_name = icon_state.icon.data.it.validation;
     assert(tristate_name);
 
     state = elemof32(riscos_tristate_sprite_names) - 1;
@@ -80,25 +85,28 @@ riscos_tristate_query(
 
 extern void
 riscos_tristate_set(
-    wimp_w w,
-    wimp_i i,
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
     RISCOS_TRISTATE_STATE state)
 {
-    wimp_icon icon;
-    char *    tristate_name;
+    WimpGetIconStateBlock icon_state;
+    char * tristate_name;
 
-    if(state == riscos_tristate_query(w, i))
+    if(state == riscos_tristate_query(window_handle, icon_handle))
         return;
 
-    wimp_get_icon_info(w, i, &icon);
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = icon_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
 
-    tristate_name = icon.data.indirecttext.validstring;
+    tristate_name = icon_state.icon.data.it.validation;
     assert(tristate_name);
 
     assert(state < elemof32(riscos_tristate_sprite_names));
     strcpy(tristate_name, riscos_tristate_sprite_names[state]);
 
-    wimp_set_icon_state(w, i, (wimp_iconflags) 0, (wimp_iconflags) 0); /* poke it for redraw */
+    winf_changedfield(window_handle, icon_handle); /* poke it for redraw */
 }
 
 /* end of tristate.c */

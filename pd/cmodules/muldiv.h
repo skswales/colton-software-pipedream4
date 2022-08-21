@@ -25,75 +25,54 @@ typedef struct UMUL64_RESULT
     U32 LowPart;
     U32 HighPart;
 }
-UMUL64_RESULT;
+UMUL64_RESULT, * P_UMUL64_RESULT;
 
 /*
 exported functions
 */
 
-#define PRAGMA_NO_SIDE_EFFECTS
-#include "coltsoft/pragma.h"
-/* no CSE disturbance here */
-
 extern void
 muldiv64_init(void);
 
 /* careful 32-bit * 32-bit / 32-bit a la BCPL */
+
+_Check_return_
 extern S32
 muldiv64(
-    S32 a,
-    S32 b,
-    S32 c);
+    _InVal_     S32 dividend,
+    _InVal_     S32 numerator,
+    _InVal_     S32 denominator);
 
-extern S32
-muldiv64_a_b_GR_SCALE_ONE(
-    S32 a,
-    S32 b);
-
+_Check_return_
 extern S32
 muldiv64_ceil(
-    S32 a,
-    S32 b,
-    S32 c);
+    _InVal_     S32 dividend,
+    _InVal_     S32 numerator,
+    _InVal_     S32 denominator);
 
+_Check_return_
 extern S32
 muldiv64_floor(
-    S32 a,
-    S32 b,
-    S32 c);
+    _InVal_     S32 dividend,
+    _InVal_     S32 numerator,
+    _InVal_     S32 denominator);
 
-extern S32
-muldiv64_round_floor(
-    S32 a,
-    S32 b,
-    S32 c);
+/* muldiv64, but limit against +/-S32_MAX on overflows */
 
-/* ditto, but limit against +/-S32_MAX on overflows
-*/
+_Check_return_
 extern S32
 muldiv64_limiting(
-    S32 a,
-    S32 b,
-    S32 c);
+    _InVal_     S32 dividend,
+    _InVal_     S32 numerator,
+    _InVal_     S32 denominator);
 
-/* the overflow from a prior muldiv()
-*/
-extern S32
-muldiv64_overflow(void);
-
-/* the remainder from a prior muldiv()
-*/
-extern S32
-muldiv64_rem(void);
+/* no need for muldiv64_round_floor, muldiv64_remainder, muldiv64_overflow in PipeDream */
 
 extern void
 umul64(
-    U32 a,
-    U32 b,
-    UMUL64_RESULT * result /*out*/);
-
-#define PRAGMA_SIDE_EFFECTS
-#include "coltsoft/pragma.h"
+    _InVal_     U32 a,
+    _InVal_     U32 b,
+    _OutRef_    P_UMUL64_RESULT result);
 
 #if defined(__cplusplus)
 }

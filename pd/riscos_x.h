@@ -10,8 +10,8 @@
 #ifndef __riscos_x_h
 #define __riscos_x_h
 
-#ifndef __cs_wimp_h
-#include "cs-wimp.h"    /* includes wimp.h -> os.h, sprite.h */
+#ifndef __cs_wimptx_h
+#include "cs-wimptx.h" /* includes cs-wimp.h -> os.h, sprite.h; wimpt.h */
 #endif
 
 #ifndef BOOL
@@ -31,17 +31,29 @@ exported functions from riscos.c
 */
 
 extern BOOL
-riscos_adjustclicked(void);
+riscos_adjust_clicked(void);
+
+extern void
+riscos_caret_hide(void);
+
+extern void
+riscos_caret_restore(void);
+
+extern void
+riscos_caret_set_position(
+    _HwndRef_   HOST_WND window_handle,
+    int x,
+    int y);
 
 extern char *
 riscos_cleanupstring(
     char *str);
 
 extern BOOL
-riscos_createmainwindow(void);
+riscos_create_document_window(void);
 
 extern void
-riscos_destroymainwindow(void);
+riscos_destroy_document_window(void);
 
 extern void
 riscos_finalise(void);
@@ -50,15 +62,12 @@ extern void
 riscos_finalise_once(void);
 
 extern void
-riscos_frontmainwindow(
+riscos_front_document_window(
     BOOL immediate);
 
 extern void
-riscos_frontmainwindow_atbox(
+riscos_front_document_window_atbox(
     BOOL immediate);
-
-extern S32
-riscos_getbuttonstate(void);
 
 extern void
 riscos_initialise_once(void);
@@ -67,7 +76,7 @@ extern BOOL
 riscos_initialise(void);
 
 extern void
-riscos_invalidatemainwindow(void);
+riscos_invalidate_document_window(void);
 
 extern void
 riscos_invert(void);
@@ -99,34 +108,21 @@ riscos_readtime(
     RISCOS_FILEINFO * const rip /*inout*/);
 
 extern void
-riscos_removecaret(void);
-
-extern void
 riscos_resetwindowpos(void);
 
 extern void
-riscos_restorecaret(void);
-
-extern void
-riscos_restorecurrentwindowpos(
-    BOOL immediate);
-
-extern void
-riscos_savecurrentwindowpos(void);
-
-extern void
-riscos_sendhelpreply(
-    wimp_msgstr * m,
+riscos_send_Message_HelpReply(
+    /*acked*/ WimpMessage * const user_message,
     const char * msg);
 
 extern void
-riscos_sendslotcontents(
+riscos_sendcellcontents(
     _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp,
     int x_off,
     int y_off);
 
 extern void
-riscos_sendallslots(
+riscos_sendallcells(
     _InoutRef_  P_GRAPHICS_LINK_ENTRY glp);
 
 extern void
@@ -134,15 +130,16 @@ riscos_sendsheetclosed(
     _InRef_opt_ PC_GRAPHICS_LINK_ENTRY glp);
 
 extern void
-riscos_setcaretpos(
-    wimp_w w,
-    int x,
-    int y);
+riscos_set_wimp_colour_value_index_byte(
+    _InoutRef_  P_U32 p_wimp_colour_value);
 
 extern void
-riscos_setcolour(
-    int colour,
-    int isbackcolour);
+riscos_set_bg_colour_from_wimp_colour_value(
+    _InVal_     U32 wimp_colour_value);
+
+extern void
+riscos_set_fg_colour_from_wimp_colour_value(
+    _InVal_     U32 wimp_colour_value);
 
 extern void
 riscos_setdefwindowpos(
@@ -168,19 +165,20 @@ riscos_settype(
 extern void
 riscos_updatearea(
     RISCOS_REDRAWPROC redrawproc,
-    wimp_w w,
+    _HwndRef_   HOST_WND window_handle,
     int x0,
     int y0,
     int x1,
     int y1);
 
 extern void
+riscos_window_dispose(
+    _Inout_     HOST_WND * const p_window_handle);
+
+extern void
 riscos_writefileinfo(
     const RISCOS_FILEINFO * const rip,
     const char *name);
-
-extern void
-riscos_zerocurrentwindowscrolls(void);
 
 extern void
 print_file(
@@ -194,11 +192,18 @@ extern void
 filer_launch(
     _In_z_      PCTSTR filename);
 
+extern void
+riscos_event_handler_report(
+    _InVal_     int event_code,
+    _In_        const WimpPollBlock * const event_data,
+    void * handle,
+    _In_z_      const char * name);
+
 /*
 exported variables
 */
 
-extern int dragtype;
+extern int drag_type;
 extern DOCNO drag_docno;
 
 /*
@@ -213,8 +218,6 @@ macro definitions
 #define INSERTING_REFERENCE     4
 #define DRAG_COLUMN_WIDTH       5
 #define DRAG_COLUMN_WRAPWIDTH   6
-
-#define window_NULL 0
 
 /* Sizes of window things in OS units */
 

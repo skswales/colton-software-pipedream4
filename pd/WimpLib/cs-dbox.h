@@ -14,6 +14,9 @@
 #include "dbox.h"
 #endif
 
+#define dbox_window_handle(d) ( (HOST_WND) \
+    dbox_syshandle(d) )
+
 #define DBOX_NEW_NEW_PRESENT 1
 extern dbox
 dbox_new_new(const char *name, char **errorp /*out*/);
@@ -30,7 +33,7 @@ dbox_motion_updates(dbox d);
 extern BOOL
 dbox_adjusthit(dbox_field *fp, dbox_field a, dbox_field b, BOOL adjustclicked);
 
-#define dbox_field_to_icon(d, f) ((wimp_i) f)
+#define dbox_field_to_icon_handle(d, f) ((int) (f))
 
 /* 'OK' buttons are conventionally icon number 0 (RETURN 'hits' this field) */
 #define dbox_OK     ((dbox_field) 0)

@@ -70,10 +70,11 @@ file_add_prefix_to_name(
 ******************************************************************************/
 
 extern char *
-file_combined_path(
+file_combine_path(
     char * destpath,
     _InVal_     U32 elemof_buffer,
-    PC_U8 currentfilename)
+    PC_U8 currentfilename,
+    _In_opt_z_  PCTSTR search_path)
 {
     *destpath = CH_NULL;
 
@@ -179,7 +180,7 @@ file_find_first_subdir(
     if(!p)
         return(NULL);
 
-    if(!file_path_element_first(&p->pathenum, path))
+    if(NULL == file_path_element_first(&p->pathenum, path))
     {
         al_ptr_dispose(P_P_ANY_PEDANTIC(pp));
         return(NULL);
@@ -187,7 +188,7 @@ file_find_first_subdir(
 
     /* initialise object enumeration structure */
 
-    if(subdir)
+    if(NULL != subdir)
         xstrkpy(p->subdir, elemof32(p->subdir), subdir);
     else
         *p->subdir = CH_NULL;
@@ -534,15 +535,16 @@ file_objinfo_filetype(
 *
 ******************************************************************************/
 
-extern S32
+extern STATUS
 file_find_on_path(
     _Out_writes_z_(elemof_buffer) char * filename /*out*/,
     _InVal_     U32 elemof_buffer,
+    _In_z_      PCTSTR path,
     _In_z_      PC_USTR srcfilename)
 {
-    P_FILE_PATHENUM path;
+    P_FILE_PATHENUM pathenum;
     char * pathelem;
-    S32 res;
+    STATUS res = STATUS_OK;
 
     reportf("file_find_on_path(%u:%s)", strlen32(srcfilename), srcfilename);
 
@@ -553,11 +555,7 @@ file_find_on_path(
         return(file_readable(filename));
     }
 
-    res = 0;
-
-    for(pathelem = file_path_element_first(&path, file_get_path());
-        pathelem != NULL;
-        pathelem = file_path_element_next(&path))
+    for(pathelem = file_path_element_first(&pathenum, path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
     {
         xstrkpy(filename, elemof_buffer, pathelem);
         xstrkat(filename, elemof_buffer, srcfilename);
@@ -565,35 +563,38 @@ file_find_on_path(
         if(0 == (res = file_readable(filename)))
             continue;
 
-        if(res > 0)
+        if(status_done(res))
             break;
 
         if(file_is_dir(pathelem))
             break;
 
-        res = 0; /* otherwise suppress the error (may be caused by malformed path element) and loop */
+        res = STATUS_OK; /* otherwise suppress the error (may be caused by malformed path element) and loop */
     }
+
+    file_path_element_close(&pathenum);
 
     trace_2(TRACE_MODULE_FILE,
             "file_find_on_path() yields filename \"%s\" & %s",
-            filename, trace_boolstring(res > 0));
+            filename, report_boolstring(status_done(res)));
     return(res);
 }
 
-extern S32
+extern STATUS
 file_find_on_path_or_relative(
     _Out_writes_z_(elemof_buffer) char * filename /*out*/,
     _InVal_     U32 elemof_buffer,
+    _In_z_      PCTSTR path,
     _In_z_      PC_USTR srcfilename,
     _In_opt_z_  PC_USTR currentfilename)
 {
-    char rawpath[BUF_MAX_PATHSTRING];
-    P_FILE_PATHENUM path;
+    char combined_path[BUF_MAX_PATHSTRING];
+    P_FILE_PATHENUM pathenum;
     char * pathelem;
-    S32 res;
+    STATUS res = STATUS_OK;
 
     if(NULL == currentfilename)
-        return(file_find_on_path(filename, elemof_buffer, srcfilename));
+        return(file_find_on_path(filename, elemof_buffer, path, srcfilename));
 
     reportf("file_find_on_path_or_relative(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, strlen32(currentfilename), currentfilename);
 
@@ -604,13 +605,9 @@ file_find_on_path_or_relative(
         return(file_readable(filename));
     }
 
-    file_combined_path(rawpath, elemof32(rawpath), currentfilename);
+    file_combine_path(combined_path, elemof32(combined_path), currentfilename, path);
 
-    res = 0;
-
-    for(pathelem = file_path_element_first(&path, rawpath);
-        pathelem != NULL;
-        pathelem = file_path_element_next(&path))
+    for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
     {
         xstrkpy(filename, elemof_buffer, pathelem);
         xstrkat(filename, elemof_buffer, srcfilename);
@@ -618,20 +615,24 @@ file_find_on_path_or_relative(
         if(0 == (res = file_readable(filename)))
             continue;
 
-        if(res > 0)
+        if(status_done(res))
             break;
 
         if(file_is_dir(pathelem))
             break;
 
-        res = 0; /* otherwise suppress the error (may be caused by malformed path element) and loop */
+        res = STATUS_OK; /* otherwise suppress the error (may be caused by malformed path element) and loop */
     }
+
+    file_path_element_close(&pathenum);
 
     trace_2(TRACE_MODULE_FILE,
             "file_find_on_path() yields filename \"%s\" & %s",
-            filename, trace_boolstring(res > 0));
+            filename, report_boolstring(status_done(res)));
     return(res);
 }
+
+#if defined(UNUSED_KEEP_ALIVE) /* currently unused */
 
 /******************************************************************************
 *
@@ -647,16 +648,16 @@ file_find_on_path_or_relative(
 
 _Check_return_
 extern BOOL
-file_find_dir_on_path(
+file_find_dir_on_path_or_relative(
     _Out_writes_z_(elemof_buffer) char * filename /*out*/,
     _InVal_     U32 elemof_buffer,
     _In_z_      PC_USTR srcfilename,
     _In_opt_z_  PC_USTR currentfilename)
 {
-    char rawpath[BUF_MAX_PATHSTRING];
-    P_FILE_PATHENUM path;
+    char combined_path[BUF_MAX_PATHSTRING];
+    P_FILE_PATHENUM pathenum;
     char * pathelem;
-    BOOL res;
+    BOOL res = FALSE;
 
     reportf("file_find_dir_on_path(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, currentfilename ? strlen32(currentfilename) : 0, currentfilename ? currentfilename : "<NULL>");
 
@@ -667,31 +668,32 @@ file_find_dir_on_path(
         return(file_is_dir(filename));
     }
 
-    file_combined_path(rawpath, elemof32(rawpath), currentfilename);
+    file_combine_path(combined_path, elemof32(combined_path), currentfilename, path);
 
-    pathelem = file_path_element_first(&path, rawpath);
-
-    res = FALSE;
-
-    while(pathelem)
+    for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
     {
-        if(file_is_dir(pathelem))
-        {
-            xstrkpy(filename, elemof_buffer, pathelem);
-            xstrkat(filename, elemof_buffer, srcfilename);
-            res = file_is_dir(filename);
-            if(res)
-                break;
-        }
+        if(!file_is_dir(pathelem))
+            continue;
 
-        pathelem = file_path_element_next(&path);
+        xstrkpy(filename, elemof_buffer, pathelem);
+        xstrkat(filename, elemof_buffer, srcfilename);
+
+        if(file_is_dir(filename))
+        {
+            res = TRUE;
+            break;
+        }
     }
+
+    file_path_element_close(&pathenum);
 
     trace_2(TRACE_MODULE_FILE,
             "file_find_dir_on_path() yields dirname \"%s\" & %s",
-            filename, trace_boolstring(res));
+            filename, report_boolstring(res));
     return(res);
 }
+
+#endif /* UNUSED_KEEP_ALIVE */
 
 /******************************************************************************
 *
@@ -722,7 +724,7 @@ file_get_cwd(
 
     trace_2(TRACE_MODULE_FILE,
             "file_get_cwd() yields cwd = \"%s\", has cwd = %s",
-            trace_string(res), trace_boolstring(*destpath));
+            trace_string(res), report_boolstring(*destpath));
     return(res);
 }
 
@@ -738,7 +740,7 @@ file_get_cwd(
 ******************************************************************************/
 
 extern char *
-file_get_path(void)
+file_get_search_path(void)
 {
     return((search_path && *search_path) ? search_path : NULL);
 }
@@ -755,26 +757,24 @@ file_get_prefix(
     _InVal_     U32 elemof_buffer,
     PC_U8 currentfilename)
 {
-    char rawpath[BUF_MAX_PATHSTRING];
-    P_FILE_PATHENUM path;
+    char combined_path[BUF_MAX_PATHSTRING];
+    P_FILE_PATHENUM pathenum;
     char * pathelem;
 
-    file_combined_path(rawpath, elemof32(rawpath), currentfilename);
-
-    pathelem = file_path_element_first(&path, rawpath);
+    file_combine_path(combined_path, elemof32(combined_path), currentfilename, file_get_search_path());
 
     *destpath = CH_NULL;
 
-    while(pathelem)
+    for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
     {
         if(file_is_dir(pathelem))
         {
             xstrkpy(destpath, elemof_buffer, pathelem);
             break;
         }
-
-        pathelem = file_path_element_next(&path);
     }
+
+    file_path_element_close(&pathenum);
 
     trace_1(TRACE_MODULE_FILE, "file_get_prefix yields %s", destpath);
     return(*destpath ? destpath : NULL);

@@ -17,8 +17,6 @@
 #include "typepack.h"
 #include "ev_eval.h"
 
-#include "math.h"
-
 /* local header file */
 #include "ev_evali.h"
 
@@ -90,6 +88,7 @@ recog_array_row(
     P_S32 x,
     P_S32 y);
 
+_Check_return_
 static U32
 recog_dt(
     _In_z_      PC_USTR spos,
@@ -1145,7 +1144,7 @@ proc_custom_argument(
         ++i, ++ci, ++co)
         *co = (char) tolower(*ci);
 
-    *co++ = '\0';
+    *co++ = CH_NULL;
 
     if(ident_validate(name_out) < 0)
         return(create_error(EVAL_ERR_BADIDENT));
@@ -1177,7 +1176,7 @@ proc_custom_argument(
                 ++i, ++ci, ++co)
                 *co = (char) tolower(*ci);
 
-            *co++ = '\0';
+            *co++ = CH_NULL;
 
             if((type_res = type_lookup(type_id)) == 0)
                 return(create_error(EVAL_ERR_ARGCUSTTYPE));
@@ -1337,6 +1336,7 @@ recog_array_row(
 *
 ******************************************************************************/
 
+_Check_return_
 static inline U32
 recog_date(
     _In_z_      PC_USTR spos,
@@ -1347,6 +1347,7 @@ recog_date(
     return(recog_dt(spos, one, two, three, '.', 3));
 }
 
+_Check_return_
 static inline U32
 recog_time(
     _In_z_      PC_USTR spos,
@@ -1415,13 +1416,12 @@ ss_recog_date_time(
 *
 * read a three part date or two or three part time value
 *
-* this exists because of the unreliability of sscanf
-*
 ******************************************************************************/
 
+_Check_return_
 static U32
 recog_dt(
-    PC_USTR spos,
+    _In_z_      PC_USTR spos,
     _OutRef_    P_S32 one,
     _OutRef_    P_S32 two,
     _OutRef_    P_S32 three,
@@ -1586,7 +1586,7 @@ recog_ident(
 
     if(count)
     {
-        *co++ = '\0';
+        *co++ = CH_NULL;
         count = ident_validate(id_out);
     }
 
@@ -1619,7 +1619,7 @@ recog_n_dt_str_slr_rng(
             char doc_name[BUF_EV_LONGNAMLEN];
 
             /* check for external document reference */
-            doc_name[0] = '\0';
+            doc_name[0] = CH_NULL;
 
             if((len = recog_extref(doc_name, elemof32(doc_name), in_str, 1)) >= 0)
             {
@@ -1811,6 +1811,12 @@ recog_slr(
 
     zero_struct_ptr(p_slr);
 
+    if(*pos == '%')
+    {
+        ++pos;
+        p_slr->flags |= SLR_BAD_REF;
+    }
+
     if(*pos == '$')
     {
         ++pos;
@@ -1828,8 +1834,7 @@ recog_slr(
         p_slr->flags |= SLR_ABS_ROW;
     }
 
-    /* stop things like + and - being munged
-     */
+    /* stop things like + and - being munged */
     if(!isdigit(*pos))
         return(0);
 
@@ -1865,31 +1870,24 @@ recog_slr_range(
     _In_z_      PC_U8Z in_str,
     P_U8 doc_name)
 {
-    EV_SLR s_slr, e_slr;
-    S32 len;
+    PC_U8 pos = in_str;
+    S32 len = 0;
 
-    if((len = recog_slr(&s_slr, in_str)) > 0)
+ /* S32 len_ext_1 = 0; PipeDream establishes in caller */
+    EV_SLR s_slr;
+    S32 len_slr_1;
+
+    S32 len_colon = 0;
+
+    S32 len_ext_2 = 0;
+    EV_SLR e_slr;
+    S32 len_slr_2;
+
+    len_slr_1 = recog_slr(&s_slr, pos);
+
+    if(len_slr_1 > 0)
     {
-        char doc_temp[BUF_EV_LONGNAMLEN];
-        S32 len1;
-        PC_U8 pos = in_str + len;
-        S32 len_colon = 0;
-
-        /* allow foreign range input */
-        if(CH_COLON == PtrGetByte(pos))
-        {
-            len_colon = 1;
-            ustr_IncByte(pos);
-        }
-        else
-            len_colon = 0;
-
-        /* check for a second external reference, and
-         * allow it if it's the same as the one passed in
-         */
-        if(doc_name[0] && (len1 = recog_extref(doc_temp, elemof32(doc_temp), pos, 1)) != 0)
-            if(0 == _stricmp(doc_name, doc_temp))
-                len += len1;
+        ustr_IncBytes(pos, len_slr_1);
 
         ev_doc_establish_doc_from_name(doc_name, docno_from, &s_slr.docno);
 
@@ -1897,32 +1895,58 @@ recog_slr_range(
         if(doc_name[0])
             s_slr.flags |= SLR_EXT_REF;
 
-        /* check for another SLR to make range */
-        e_slr = s_slr;
-        pos = in_str + len;
-        if((len1 = recog_slr(&e_slr, pos)) > 0)
+        /* allow foreign range input */
+        if(CH_COLON == PtrGetByte(pos))
         {
-            /* set up range */
+            ustr_IncByte(pos);
+            len_colon = 1;
+        }
+
+        /* if there is an external id, check for a second one, and allow it if it's the same */
+        if(doc_name[0])
+        {
+            char doc_temp[BUF_EV_LONGNAMLEN];
+
+            if(0 != (len_ext_2 = recog_extref(doc_temp, elemof32(doc_temp), pos, 1)))
+            {
+                if(0 == _stricmp(doc_name, doc_temp))
+                {
+                    ustr_IncBytes(pos, len_ext_2);
+                }
+                /* else don't increment pos - next SLR test will fail and just return first SLR */
+            }
+        }
+
+        /* check for another SLR to make range */
+        len_slr_2 = recog_slr(&e_slr, pos);
+
+        if(len_slr_2 > 0)
+        {
+            /* set up range (i,i,i,i->i,i,e,e) */
             e_slr.col += 1;
             e_slr.row += 1;
+            e_slr.docno = s_slr.docno; /* SKS 20160814 repair docno now recog_slr contract good */
 
-            if(s_slr.col < e_slr.col &&
-               s_slr.row < e_slr.row)
+            if((s_slr.col < e_slr.col) && (s_slr.row < e_slr.row))
             {
                 p_ev_data->arg.range.s = s_slr;
                 p_ev_data->arg.range.e = e_slr;
                 p_ev_data->did_num = RPN_DAT_RANGE;
-                len += len1 + len_colon;
+
+                len = (/*len_ext_1 +*/ len_slr_1) + len_colon + (len_ext_2 + len_slr_2); /* all components for range */
             }
-            else
-                len = 0;
+            /* else bad range - ignore everything here */
         }
         else
         {
             p_ev_data->arg.slr = s_slr;
             p_ev_data->did_num = RPN_DAT_SLR;
-        }
+
+            len = /*len_ext_1 +*/ len_slr_1; /* all components for SLR */
+        } /*fi*/
     }
+    /* else bad SLR - ignore everything here */
+    /*fi*/
 
     return(len);
 }
@@ -2543,54 +2567,48 @@ scan_next_symbol(void)
 {
     S32 count, res;
 
-    /* accumulate line separators and spaces */
+    /* accumulate line separators and spaces before next symbol */
     cc->cur.sym_cr = 0;
+    cc->cur.sym_space = 0;
 
     for(;;)
     {
-        /* look for EXCEL type equals sign and ignore it (only if we haven't scanned anything yet) */
-        if((cc->n_scanned == 0) && (*cc->ip_pos == '='))
-        {
-            ++cc->ip_pos;
-            continue;
-        }
+        const U8 u8 = *cc->ip_pos;
 
-        if(*cc->ip_pos == CR)
+        if((LF == u8) || (CR == u8))
         {
             ++cc->ip_pos;
-            if(*cc->ip_pos == LF)
+            if(*cc->ip_pos == (u8 ^ (CR ^ LF)))
                 ++cc->ip_pos;
             ++cc->cur.sym_cr;
+            cc->cur.sym_space = 0; /* don't accumulate any trailing spaces onto next line */
             continue;
         }
 
-        if(*cc->ip_pos == LF)
+        if(' ' == u8)
         {
             ++cc->ip_pos;
-            if(*cc->ip_pos == CR)
-                ++cc->ip_pos;
-            ++cc->cur.sym_cr;
+            ++cc->cur.sym_space;
             continue;
         }
 
-        cc->cur.sym_space = 0;
-        if(*cc->ip_pos == ' ')
-        {
-            do  {
+        /* look for EXCEL type equals sign */
+        if('=' == u8)
+        {   /* NB only if we haven't scanned anything yet */
+            if(0 == cc->n_scanned)
+            {
                 ++cc->ip_pos;
-                ++cc->cur.sym_space;
+                /* and ignore it */
+                continue;
             }
-            while(*cc->ip_pos == ' ');
-
-            continue;
         }
 
         break; /* none of the above matched on this pass */
     }
 
     /* try to scan a data item */
-    if(*cc->ip_pos != '-' &&
-       *cc->ip_pos != '+')
+    if( (*cc->ip_pos != '-') &&
+        (*cc->ip_pos != '+') )
     {
         /* check for number */
         if((res = ss_recog_number(&cc->cur_sym, cc->ip_pos)) > 0)
@@ -2610,7 +2628,7 @@ scan_next_symbol(void)
     }
 
     /* clear external ref buffer */
-    cc->doc_name[0] = '\0';
+    cc->doc_name[0] = CH_NULL;
 
     /* check for internal slr or range */
     if((res = recog_slr_range(&cc->cur_sym, cc->docno, cc->ip_pos, cc->doc_name)) > 0)
@@ -2624,7 +2642,7 @@ scan_next_symbol(void)
     /* check for special symbols */
     switch(*cc->ip_pos)
     {
-    case '\0':
+    case CH_NULL:
         cc->cur.did_num = RPN_FRM_END;
         return;
     case '(':
@@ -2729,7 +2747,7 @@ scan_next_symbol(void)
             break;
         }
 
-        *co++ = '\0';
+        *co++ = CH_NULL;
 
         if(count)
             if((cc->cur.did_num = func_lookup(cc->ident)) >= 0)

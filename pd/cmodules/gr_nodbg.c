@@ -31,7 +31,7 @@ gr_nodbg_bring_me_the_head_of_yuri_gagarin(
     GR_CHART_OBJID * id,
     GR_DIAG_OFFSET * hitObject,
     GR_COORD x, GR_COORD y,
-    S32 adjustclicked)
+    BOOL adjust_clicked)
 {
     GR_POINT point;
 
@@ -39,7 +39,7 @@ gr_nodbg_bring_me_the_head_of_yuri_gagarin(
     point.x = x;
     point.y = y;
 
-    return(gr_chartedit_riscos_correlate(cep, &point, id, hitObject, 64, adjustclicked));
+    return(gr_chartedit_riscos_correlate(cep, &point, id, hitObject, 64, adjust_clicked));
 }
 
 _Check_return_

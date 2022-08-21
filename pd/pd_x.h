@@ -35,6 +35,11 @@ product_ui_id(void);
 
 _Check_return_
 _Ret_z_
+extern PCTSTR
+registration_number(void);
+
+_Check_return_
+_Ret_z_
 extern PC_USTR
 user_id(void);
 
@@ -70,13 +75,14 @@ application_process_command(
 _Check_return_
 extern BOOL
 application_process_key(
-    S32 c);
+    KMAP_CODE kmap_code);
 
 _Check_return_
 extern BOOL
 get_menu_item(
-    MENU_HEAD *header,
+    const MENU_HEAD * const header,
     MENU *mptr,
+    BOOL classic_m,
     char *array /*filled*/);
 
 /*
@@ -96,7 +102,7 @@ extern void
 get_slr_for_point(
     gcoord x,
     gcoord y,
-    BOOL selectclicked,
+    BOOL select_clicked,
     char *buffer /*out*/);
 
 /* end of pd_x.h */

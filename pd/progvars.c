@@ -59,13 +59,13 @@ uchar highlights_on = FALSE;
 
 /* ----------------------------- commlin.c ------------------------------- */
 
-uchar alt_array[MAX_COMM_SIZE+4];   /* only ever one Alt sequence going */
 uchar *buff_sofar = NULL;
 uchar cbuff[CMD_BUFSIZ];            /* command line buffer */
 S32 cbuff_offset = 0;              /* length of string in cbuff */
+uchar cmd_seq_array[MAX_COMM_SIZE+4]; /* only ever one Cmd-sequence going */
 BOOL command_expansion = FALSE;
 uchar *exec_ptr = NULL;
-uchar expanded_key_buff[8]  = { CMDLDI, '\0' }; /* for key expansions, always start with \ */
+uchar expanded_key_buff[8]  = { CMDLDI, CH_NULL }; /* for key expansions, always start with \ */
 P_LIST_BLOCK first_command_redef = NULL;
 BOOL in_execfile = FALSE;
 BOOL macro_recorder_on = FALSE;
@@ -158,18 +158,19 @@ S32 been_error = 0; /* reperr sets this for others to notice */
 
 /* ---------------------------- lists.c ------------------------------------- */
 
-P_LIST_BLOCK def_first_option  = NULL;  /* default options read from pd.ini */
+P_LIST_BLOCK def_first_option  = NULL;  /* default options read from Choices file */
 P_LIST_BLOCK deleted_words     = NULL;  /* list of deleted words */
 P_LIST_BLOCK first_key         = NULL;  /* list of key definitions */
 
 /* ---------------------------- slot.c ------------------------------------- */
 
-P_COLENTRY def_colstart = NULL;         /* default column structure from pd.ini */
+P_COLENTRY def_colstart = NULL;         /* default column structure from Choices file */
 COL def_numcol = 0;
 
 /* ---------------------------- riscos.c ----------------------------------- */
 
-wimp_w caret_window = window_NULL;
+HOST_WND caret_window_handle = HOST_WND_NONE;
+HOST_WND caret_stolen_from_window_handle = HOST_WND_NONE;
 
 DOCNO slotcount_docno = DOCNO_NONE;
 
@@ -183,20 +184,20 @@ SLR blkend              = { NO_COL, 0 };    /* block end */
 DOCNO browsing_docno = DOCNO_NONE;
 DOCNO pausing_docno  = DOCNO_NONE;
 
-S32 x_scale;                           /* OS units per millipoint */
-S32 y_scale;                           /* OS units per millipoint */
-S32 screen_x_os;                       /* width of screen in OS units */
-S32 screen_y_os;                       /* height of screen in OS units */
+S32 millipoints_per_os_x;              /* millipoints per OS unit */
+S32 millipoints_per_os_y;              /* millipoints per OS unit */
+
+GDI_SIZE g_os_display_size;            /* width/height of screen in OS units */
 
 /* boxes are inclusive, inclusive, exclusive, exclusive */
 
-/* current absolute graphics window coordinates set by Window manager
+/* current absolute graphics window coordinates set by Window Manager
  *
  * NB. this is in OS units
 */
 GDI_BOX graphics_window;
 
-/* current relative graphics window coordinates set by Window manager
+/* current relative graphics window coordinates set by Window Manager
  *
  * NB. this is in text cells (y0 >= y1)
 */
@@ -206,7 +207,7 @@ GDI_BOX cliparea;     /* left, bottom, off right, off top */
  * between the maybe_ and really_ phases of drawing an object.
  *
  * Important: can't be used between the draw_ and maybe_ phases as only
- * the Window manager knows what is going on in the world nowadays.
+ * the Window Manager knows what is going on in the world nowadays.
 */
 GDI_BOX thisarea;
 
@@ -216,8 +217,8 @@ GDI_BOX thisarea;
 */
 BOOL paint_is_update;
 
-S32 riscos_font_xad;
-S32 riscos_font_yad;
+GR_MILLIPOINT riscos_font_ad_millipoints_x;
+GR_MILLIPOINT riscos_font_ad_millipoints_y;
 BOOL riscos_printing = FALSE;
 BOOL draw_to_screen = TRUE;
 
@@ -236,13 +237,45 @@ BOOL insert_reference_abs_row;
 DOCNO insert_reference_docno;
 SLR insert_reference_slr;
 
+GR_MILLIPOINT paper_width_millipoints  =  8 * (72 * 1000);
+GR_MILLIPOINT paper_length_millipoints = 11 * (72 * 1000);
+
 /* list of dict defns */
-P_LIST_BLOCK language_list = NULL;
+P_LIST_BLOCK languages_list = NULL;
 
-/* temporary enumeration of templates or printer drivers */
-P_LIST_BLOCK ltemplate_or_driver_list = NULL;
+/* temp list of macros */
+P_LIST_BLOCK macros_list = NULL;
 
-S32 paper_width_mp  =  8 * 72 * 1000;
-S32 paper_length_mp = 11 * 72 * 1000;
+/* temp list of printer drivers */
+P_LIST_BLOCK pdrivers_list = NULL;
+
+/* temp list of templates */
+P_LIST_BLOCK templates_list = NULL;
+
+/* enumeration of page number formats */
+P_LIST_BLOCK page_number_formats_list = NULL;
+
+/* enumeration of date formats */
+P_LIST_BLOCK date_formats_list = NULL;
+
+/* enumeration of time formats */
+P_LIST_BLOCK time_formats_list = NULL;
+
+static NUMFORM_CONTEXT config_numform_context;
+
+static PD_CONFIG pd_config =
+{
+    &config_numform_context
+};
+
+P_PD_CONFIG p_pd_config = &pd_config;
+
+_Check_return_
+_Ret_valid_
+extern P_NUMFORM_CONTEXT
+get_p_numform_context(void)
+{
+    return(p_pd_config->p_numform_context);
+}
 
 /* end of progvars.c */

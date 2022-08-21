@@ -1,48 +1,49 @@
-%OP%VS4.50/41 (19-Mar-2013), PipeDream, R0123 4567 8901 2345
+%OP%VS4.56.p1 (18-Aug-2016), Colton Software, R9200 7500 3900 8299
 %OP%LP(
 %OP%TP)
+%OP%PL55
 %OP%FGHomerton.Medium
-%OP%FX160
-%OP%FY160
 %OP%FS0
-%OP%WC2,1504,366,1364,0,1,0,0
-%CO:A,12,72%%H1%DateExamp :
+%OP%WC2,1504,366,1364,0,0,0,0
+%CO:A,12,72%
+%H2%DateExamp%H2% :
 
 
 
 
 
-%H1%FormatEng :
-
-
-
-
-
-
-
-
-%H1%GCD :%H1%
-
-
-
-
-%H1%Num_Expnd :
-
-
-
-
-
-%H1%Pos_Sort :
+%H2%FormatEng%H2% :
 
 
 
 
 
 
-%H1%RefDemo :
+
+
+%H2%GCD%H2% :
+
+
+
+
+%H2%Num_Expnd%H2% :
+
+
+
+
+
+%H2%Pos_Sort%H2% :
+
+
+
+
+
+
+%H2%RefDemo%H2% :
 %CO:B,12,60%
 
-"text_to_date"   converts a text date of the form ;  
+
+"text_to_date"   converts a text date of the form 
     dd Month yyyy   into a date understood by PipeDream.
 "expand_date" expands a date into textual format.
 

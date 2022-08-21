@@ -2,7 +2,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-| Copyright (C) 2013-2016 Stuart Swales
+| Copyright (C) 2013-2018 Stuart Swales
 
 | ROOL repository
 *set CVSROOT :pserver:anonymous@riscosopen.org:/home/rool/cvsroot
@@ -20,12 +20,12 @@ dir <Obey$Dir>
 |
 echo Checking out RISC_OSLib from ROOL
 time
-/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/c
-/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/h
-/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/s
-/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Lib/RISC_OSLib/rlib/VerIntern/h
-/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Toolbox/Libs/flexlib/c
-/<CVS$BinDir>.cvs -z9 co -D20130226 castle/RiscOS/Sources/Toolbox/Libs/flexlib/h
+/<CVS$BinDir>.cvs -z9 co -D20130226 apache/RiscOS/Sources/Lib/RISC_OSLib/rlib/c
+/<CVS$BinDir>.cvs -z9 co -D20130226 apache/RiscOS/Sources/Lib/RISC_OSLib/rlib/h
+/<CVS$BinDir>.cvs -z9 co -D20130226 apache/RiscOS/Sources/Lib/RISC_OSLib/rlib/s
+/<CVS$BinDir>.cvs -z9 co -D20130226 apache/RiscOS/Sources/Lib/RISC_OSLib/rlib/VerIntern/h
+/<CVS$BinDir>.cvs -z9 co -D20130226 apache/RiscOS/Sources/Toolbox/Libs/flexlib/c
+/<CVS$BinDir>.cvs -z9 co -D20130226 apache/RiscOS/Sources/Toolbox/Libs/flexlib/h
 time
 |
 back

@@ -156,7 +156,7 @@ ScrollUp_fn(void)
 
     if(currowoffset == NOTFOUND)
     {
-        xf_drawslotcoordinates = output_buffer = TRUE;
+        xf_drawcellcoordinates = output_buffer = TRUE;
 
         currowoffset = rowsonscreen-1;
 
@@ -190,7 +190,7 @@ ScrollDown_fn(void)
 
     if(currowoffset == NOTFOUND)
     {
-        xf_drawslotcoordinates = output_buffer = TRUE;
+        xf_drawcellcoordinates = output_buffer = TRUE;
         currow = fstnrx();
         currowoffset = schrsc(currow);
         mark_row_praps(currowoffset, NEW_ROW);
@@ -280,7 +280,7 @@ ScrollRight_fn(void)
 /******************************************************************************
 *
 * mark the row for redrawing.  When moving up and down within the screen
-* most numeric cells do not need to be redrawn.  The old and new cells
+* most number cells do not need to be redrawn.  The old and new cells
 * must be redrawn for the block cursor movement.  Text and blank cells must
 * be redrawn for overlap. drawnumbers specifies whether the numbers can be
 * missed.
@@ -336,7 +336,7 @@ mark_row(
 * MRJC created this more optimal version 13/7/89
 * I note from the speech above mark_row that the original
 * sentiments from VP have been noted - but not
-* implemented! So this one checks for numeric cells
+* implemented! So this one checks for number cells
 * and overlap. This was done by MRKCON in VP
 * This routine assumes that the column has not changed
 *
@@ -355,8 +355,8 @@ mark_row_praps(
 
     mark_row_border(rowonscr);
 
-    /* do-while is for structure - break out to mark row */
-    do  {
+    for(;;) /* loop for structure */ /* break out to mark row */
+    {
         if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
             break;
 
@@ -364,7 +364,7 @@ mark_row_praps(
         col = oldcol;
         row = row_number(rowonscr);
 
-        trace_4(TRACE_APP_PD4, "mark_row_praps col: %d, row: %d, lescrl %d, OLD_ROW %s", col, row, lescrl, trace_boolstring(old_row == OLD_ROW));
+        trace_4(TRACE_APP_PD4, "mark_row_praps col: %d, row: %d, lescrl %d, OLD_ROW %s", col, row, lescrl, report_boolstring(old_row == OLD_ROW));
 
         if(chkrpb(row))
             break;
@@ -471,7 +471,6 @@ mark_row_praps(
 
         return;
     }
-    while(FALSE);
 
 mark_and_return:
 
@@ -513,7 +512,7 @@ adjpud(
 
     curpnm = pagnum;
 
-    trace_2(TRACE_APP_PD4, "adjpud(%s, %d)", trace_boolstring(down), rowno);
+    trace_2(TRACE_APP_PD4, "adjpud(%s, %d)", report_boolstring(down), rowno);
 
     if(down)
     {
@@ -1317,7 +1316,7 @@ RestorePosition_fn(void)
     lecpos = lescrl = 0;
 
     if(docno != old_docno)
-        xf_frontmainwindow = TRUE;
+        xf_front_document_window = TRUE;
 }
 
 extern void
@@ -1344,84 +1343,92 @@ SwapPosition_fn(void)
 *
 ******************************************************************************/
 
-extern void
-GotoSlot_fn(void)
+static int
+gotoslot_fn_core(void)
 {
-    char *extstr;
+    char *extstr = (char *) d_goto[0].textfield;
     COL tcol;
     ROW trow;
     DOCNO docno = DOCNO_NONE;
 
+    while(CH_SPACE == *extstr++)
+        ;
+    buff_sofar = --extstr;
+
+    if(*extstr++ == '[')
+    {   /* read in name to temporary buffer */
+        char tstr_buf[BUF_EV_LONGNAMLEN];
+        U32 count = 0;
+        BOOL baddoc = TRUE;
+
+        while(*extstr  &&  (*extstr != ']')  &&  (count < elemof32(tstr_buf)))
+            tstr_buf[count++] = *extstr++;
+
+        if(count  &&  (*extstr == ']'))
+        {
+            tstr_buf[count++] = CH_NULL;
+            if(file_is_rooted(tstr_buf))
+            {
+                docno = find_document_using_wholename(tstr_buf);
+                reportf("GotoSlot: rooted %s is docno %d", report_tstr(tstr_buf), docno);
+                baddoc = (DOCNO_NONE == docno);
+            }
+            else
+            {
+                docno = find_document_using_leafname(tstr_buf);
+                reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
+                baddoc = ((DOCNO_SEVERAL == docno) || (DOCNO_NONE == docno));
+            }
+            if(!baddoc)
+                buff_sofar = extstr;
+        }
+
+        if(baddoc)
+        {
+            consume_bool(reperr_null(ERR_BAD_CELL)); /* and let him try again... */
+            return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+        }
+    }
+
+    tcol = getcol();            /* assumes buff_sofar set */
+    trow = (ROW) getsbd();
+
+    if(bad_reference(tcol, trow))
+    {
+        consume_bool(reperr_null(ERR_BAD_CELL)); /* and let him try again... */
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    if(!mergebuf())
+        return(FALSE);
+
+    if(docno != DOCNO_NONE)
+    {
+        select_document_using_docno(docno);
+        xf_front_document_window = TRUE;
+    }
+
+    chknlr(tcol, trow-1);
+    lecpos = lescrl = 0;
+
+    return(TRUE);
+}
+
+extern void
+GotoSlot_fn(void)
+{
     if(!dialog_box_start())
         return;
 
     while(dialog_box(D_GOTO))
     {
-        extstr = (uchar *) d_goto[0].textfield;
+        int core_res = gotoslot_fn_core();
 
-        while(*extstr++ == SPACE)
-            ;
-        buff_sofar = --extstr;
-
-        if(*extstr++ == '[')
-        { /* read in name to temporary buffer */
-            char tstr_buf[BUF_EV_LONGNAMLEN];
-            U32 count = 0;
-            BOOL baddoc = TRUE;
-
-            while(*extstr  &&  (*extstr != ']')  &&  (count < elemof32(tstr_buf)))
-                tstr_buf[count++] = *extstr++;
-
-            if(count  &&  (*extstr == ']'))
-            {
-                tstr_buf[count++] = '\0';
-                if(file_is_rooted(tstr_buf))
-                {
-                    docno = find_document_using_wholename(tstr_buf);
-reportf("GotoSlot: rooted %s is docno %d", report_tstr(tstr_buf), docno);
-                    baddoc = (DOCNO_NONE == docno);
-                }
-                else
-                {
-                    docno = find_document_using_leafname(tstr_buf);
-reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
-                    baddoc = ((DOCNO_SEVERAL == docno) || (DOCNO_NONE == docno));
-                }
-                if(!baddoc)
-                    buff_sofar = extstr;
-            }
-
-            if(baddoc)
-            {
-                reperr_null(create_error(ERR_BAD_CELL));  /* and let him try again... */
-                if(!dialog_box_can_retry())
-                    break;
-                continue;
-            }
-        }
-
-        tcol = getcol();            /* assumes buff_sofar set */
-        trow = (ROW) getsbd();
-
-        if(bad_reference(tcol, trow))
-        {
-            reperr_null(create_error(ERR_BAD_CELL));  /* and let him try again... */
-            if(!dialog_box_can_retry())
-                break;
+        if(2 == core_res)
             continue;
-        }
 
-        if(!mergebuf())
+        if(0 == core_res)
             break;
-
-        if(docno != DOCNO_NONE)
-        {
-            select_document_using_docno(docno);
-            xf_frontmainwindow = TRUE;
-        }
-
-        chknlr(tcol, trow-1);
-        lecpos = lescrl = 0;
 
         if(!dialog_box_can_persist())
             break;
@@ -1753,7 +1760,7 @@ filhorz(
         assert(horzvec_entry_valid(vecoffset));
         scol = horzvec_entry(vecoffset);
 
-        trace_2(TRACE_APP_PD4, "filhorz: vecoffset %d, fixed %s", vecoffset, trace_boolstring(fixed));
+        trace_2(TRACE_APP_PD4, "filhorz: vecoffset %d, fixed %s", vecoffset, report_boolstring(fixed));
 
         if(!fixed)
             do  {
@@ -1820,11 +1827,11 @@ H_FILLED:
 
     trace_2(TRACE_APP_PD4, "filhorz: scrbrc := %d, numcol %d", scrbrc, numcol);
     trace_3(TRACE_APP_PD4, "filhorz: colsonscreen %d != o_colsonscreen %d    %s",
-            colsonscreen, o_colsonscreen, trace_boolstring(colsonscreen != o_colsonscreen));
+            colsonscreen, o_colsonscreen, report_boolstring(colsonscreen != o_colsonscreen));
     trace_3(TRACE_APP_PD4, "filhorz: col_number(0) %d != first_col_number %d %s",
-            col_number(0), first_col_number, trace_boolstring(col_number(0) != first_col_number));
+            col_number(0), first_col_number, report_boolstring(col_number(0) != first_col_number));
     trace_3(TRACE_APP_PD4, "filhorz: o_ncx %d != fstncx() %d                 %s",
-            o_ncx, fstncx(), trace_boolstring(o_ncx != fstncx()));
+            o_ncx, fstncx(), report_boolstring(o_ncx != fstncx()));
 
     /* if different number of columns, need to redraw */
     if( (colsonscreen  != o_colsonscreen)       ||
@@ -1974,7 +1981,7 @@ filvert(
     out_forcevertcentre = out_rebuildvert = FALSE;
 
     trace_3(TRACE_APP_PD4, "************** filvert(%d, %d, %s)",
-            nextrow, currentrowno, trace_boolstring(call_fixpage));
+            nextrow, currentrowno, report_boolstring(call_fixpage));
 
     if(nextrow < 0)
         nextrow = 0;
@@ -2267,29 +2274,23 @@ fstnrx(void)
 extern void
 update_variables(void)
 {
-    S32   idx;
-    S32   linespace;
-    ROW  oldtop;
-    BOOL  old_borbit = borbit;
+    S32 idx;
+    S32 linespace;
+    ROW oldtop;
+    BOOL old_displaying_borders = displaying_borders;
 
-    iowbit = (uchar) (d_options_IW == 'R'); /* insert on wrap */
-    txnbit = (uchar) (d_options_TN == 'T'); /* text/numbers */
-    borbit = (uchar) (d_options_BO == 'Y'); /* borders on/off */
+    displaying_borders = (BOOLEAN) (d_options_BO == 'Y'); /* borders on/off */
 
     /*
-     * note that all the following variables depend on borbit
+     * note that all the following variables depend on displaying_borders
      * this should only happen in the global options menu
     */
-    borderwidth  = (borbit) ? BORDERWIDTH  : 0;
+    borderwidth = (displaying_borders) ? BORDERWIDTH  : 0;
 
     if((rows_available = paghyt + 1) < 0)
         rows_available = 0;
     if((cols_available = pagwid_plus1 - borderwidth) < 0)
         cols_available = 0;
-
-    jusbit = (uchar) (d_options_JU == 'Y'); /* justified text */
-    wrpbit = (uchar) (d_options_WR == 'Y'); /* wrapped text */
-    minbit = (uchar) (d_options_MB == 'M'); /* minus/brackets */
 
     linespace = (S32) d_poptions_LS;
     if(linespace < 1)
@@ -2342,56 +2343,52 @@ update_variables(void)
     grid_on = (d_options_GR == 'Y');
     new_grid_state();
 
-    (void) new_window_width(windowwidth());
-    (void) new_window_height(windowheight());
+    (void) new_main_window_width(main_window_width());
+    (void) new_main_window_height(main_window_height());
 
     /* may need to move caret if grid state different but do after creating horzvec & vertvec */
     position_cursor();
     xf_caretreposition = TRUE;
 
-    if((old_borbit != borbit)       &&
-       (rear_window != window_NULL) &&
-       (main_window != window_NULL) &&  /* cos we may be called before windows exist!!! */
-       (colh_window != window_NULL)
-      )
+    if( (old_displaying_borders != displaying_borders) &&
+        (rear_window_handle != HOST_WND_NONE) &&
+        (main_window_handle != HOST_WND_NONE) && /* cos we may be called before windows exist!!! */
+        (colh_window_handle != HOST_WND_NONE) )
     {
-        /* the border state has changed, so reopen the rear_window at its current position */
-        /* allowing openpane to show/hide the colh_window as appropriate                   */
-
-        wimp_wstate rear_wstate;
+        /* the border state has changed, so reopen the rear window at its current position */
+        /* allowing openpane to show/hide the colh window as appropriate                   */
 
         /* if we are losing the border (and hence the formula line) and the */
         /* formula line is in use, transfer its text to a formula window    */
 
-        if(old_borbit && xf_inexpression_line)
+        if(old_displaying_borders && xf_inexpression_line)
         {
-            expedit_transfer_line_to_box(FALSE);        /* don't force a newline */
+            expedit_transfer_line_to_box(FALSE); /* don't force a newline */
 
             if(xf_inexpression_line)
-                formline_canceledit();          /* didn't work! so must abort the edit, cos the formula line will disappear */
+                formline_cancel_edit(); /* didn't work! so must abort the edit, cos the formula line will disappear */
         }
 
-        if(borbit)                      /* if a mode change occured whilst borders were off, various icons will */
+        if(displaying_borders)          /* if a mode change occured whilst borders were off, various icons will */
             colh_position_icons();      /* have moved left by the width of the row border!!, so put them back   */
 
-        wimp_get_wind_state(rear_window, &rear_wstate);
-        win_send_open(rear_window, TRUE, &rear_wstate.o);
+        {
+        WimpGetWindowStateBlock window_state;
+        window_state.window_handle = rear_window_handle;
+        if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+            winx_send_open_window_request(rear_window_handle, TRUE, (WimpOpenWindowBlock *) &window_state);
+        } /*block*/
     }
     else
     {
-#if TRUE
-        riscos_invalidatemainwindow(); /* (and colh_window) */
-#else
-        my_force_redraw(main_window);  /*RCM says, routines were similar, so I */
-                                       /*    removed my_force_redraw           */
-#endif
+        riscos_invalidate_document_window();
     }
 }
 
 /******************************************************************************
 *
 * get size of string accounting for highlights etc.
-* i.e. length of string when drawn on screen by draw_slot()
+* i.e. length of string when drawn on screen by draw_cell()
 *
 ******************************************************************************/
 
@@ -2401,7 +2398,7 @@ calsiz(
 {
     S32 size;
 
-    for(size = 0; *str /*!= '\0'*/; str++)
+    for(size = 0; *str /*!= CH_NULL*/; str++)
         if(!ishighlight(*str))
             size++;
 
@@ -2505,7 +2502,7 @@ chkmov(void)
 extern void
 curosc(void)
 {
-    BOOL had_caret = (main_window == caret_window);
+    const BOOL main_window_had_caret = (main_window_handle == caret_window_handle);
     BOOL maybe_caretreposition = FALSE;
     P_SCRCOL cptr;
     P_SCRROW rptr;
@@ -2550,7 +2547,7 @@ curosc(void)
     if(currowoffset > rowsonscreen-1)
     {
         currowoffset = rowsonscreen-1;
-        /* SKS after 4.11 09jan92 - attempt to bring cursor back on screen in kosher fashion */
+        /* SKS after PD 4.11 09jan92 - attempt to bring cursor back on screen in kosher fashion */
         mark_row_border(currowoffset);
         maybe_caretreposition = TRUE;
     }
@@ -2564,7 +2561,7 @@ curosc(void)
     currow = rptr[currowoffset].rowno; /* must be outside previous block */
 
     if(maybe_caretreposition)
-        if(had_caret)
+        if(main_window_had_caret)
             xf_caretreposition = TRUE;
 }
 
@@ -2599,7 +2596,7 @@ is_blank_cell(
     */
     do { ch = *str++; } while(ch == SPACE);
 
-    return(ch == '\0');
+    return(ch == CH_NULL);
 }
 
 /******************************************************************************
@@ -2616,7 +2613,7 @@ get_column(
     coord tx,
     ROW trow,
     S32 xcelloffset,
-    BOOL selectclicked)
+    BOOL select_clicked)
 {
     coord coff = calcoff_click(tx); /* actual grid address with l/r map */
     coord trycoff;
@@ -2630,7 +2627,7 @@ get_column(
 
     g_newoffset = 0;
 
-    if(selectclicked)   /* selectclicked means place caret where pd wants to, else force into col user clicked in*/
+    if(select_clicked) /* select_clicked means place caret where pd wants to, else force into col user clicked in*/
     {
         trycoff = coff;
 
@@ -2703,10 +2700,11 @@ cal_offset_in_slot(
     char tbuf[PAINT_STRSIZ];
     S32 success;
     font_string fs;
-    S32 fwidth_mp, swidth_mp;
+    GR_MILLIPOINT fwidth_mp, swidth_mp;
     S32 this_font;
     char wid_buf[PAINT_STRSIZ];
-    S32 lead_spaces, lead_space_mp;
+    S32 lead_spaces;
+    GR_MILLIPOINT lead_space_mp;
     S32 spaces;
     S32 text_length;
 
@@ -2729,7 +2727,7 @@ cal_offset_in_slot(
         success = FALSE;
 
         fs.s = tbuf;
-        fs.x = os_to_mp(ch_to_os(offset_ch) + cell_offset_os);
+        fs.x = os_to_millipoints(cw_to_os(offset_ch) + cell_offset_os);
         fs.y = 0;
 
         trace_4(TRACE_APP_PD4, "offset_ch: %d, offset_os: %d, fs.x: %d, fs.y: %d",
@@ -2763,14 +2761,14 @@ cal_offset_in_slot(
         }
 
         fwidth_ch -= fwidth_adjust_ch;
-        fwidth_mp = ch_to_mp(fwidth_ch);
+        fwidth_mp = cw_to_millipoints(fwidth_ch);
 
         trace_1(TRACE_APP_PD4, "cal_offset_in_slot: fwidth_ch = %d", fwidth_ch);
         trace_2(TRACE_APP_PD4, "cal_offset_in_slot: fwidth_mp = %d, swidth_mp = %d", fwidth_mp, swidth_mp);
 
         if( swidth_mp > fwidth_mp)
         {
-            swidth_mp = font_truncate(tbuf, fwidth_mp + ch_to_mp(fwidth_adjust_ch));
+            swidth_mp = font_truncate(tbuf, fwidth_mp + cw_to_millipoints(fwidth_adjust_ch));
             IGNOREVAR(swidth_mp);
 
             justify = 0;
@@ -3007,7 +3005,7 @@ cal_offset_in_slot(
     if(in_linbuf)
         text_length = (S32) strlen(linbuf);
     else
-        text_length = compiled_text_len(sl->content.text) - 1; /*included NULLCH*/
+        text_length = compiled_text_len(sl->content.text) - 1; /*included CH_NULL*/
 
     return(MIN(offset_ch, text_length));
 }

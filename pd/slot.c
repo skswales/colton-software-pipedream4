@@ -360,7 +360,7 @@ createslot(
         sl->format = 0;
         sl->justify = J_FREE;
 
-        sl->content.text[0] = '\0';
+        sl->content.text[0] = CH_NULL;
 
         if(type == SL_NUMBER)
         {
@@ -726,7 +726,7 @@ killslot(
 ******************************************************************************/
 
 extern P_CELL
-next_slot_in_block(
+next_cell_in_block(
     BOOL direction)
 {
     static P_LIST_ITEM it;
@@ -735,12 +735,12 @@ next_slot_in_block(
     P_LIST_BLOCK lp;
     BOOL was_start;
 
-    trace_3(TRACE_APP_PD4, "next_slot_in_block(DOWN_COLUMNS = %s): in_block (%d, %d)", trace_boolstring(direction == DOWN_COLUMNS), in_block.col, in_block.row);
+    trace_3(TRACE_APP_PD4, "next_cell_in_block(DOWN_COLUMNS = %s): in_block (%d, %d)", report_boolstring(direction == DOWN_COLUMNS), in_block.col, in_block.row);
 
     was_start = start_block;
     if(was_start)
     {
-        trace_0(TRACE_APP_PD4, "next_slot_in_block: starting block so set it := NULL");
+        trace_0(TRACE_APP_PD4, "next_cell_in_block: starting block so set it := NULL");
         start_block = FALSE;
         it = NULL;
     }
@@ -749,7 +749,7 @@ next_slot_in_block(
     {
         /* if zero or one markers, only return one cell */
         sl = was_start ? travel(in_block.col, in_block.row) : NULL;
-        trace_1(TRACE_APP_PD4, "next_slot_in_block(ONE_SLOT_ONLY) returns &%p", report_ptr_cast(sl));
+        trace_1(TRACE_APP_PD4, "next_cell_in_block(ONE_SLOT_ONLY) returns &%p", report_ptr_cast(sl));
         return(sl);
     }
 
@@ -797,7 +797,7 @@ next_slot_in_block(
 
             if(++in_block.col > end_bl.col)
             {
-                trace_0(TRACE_APP_PD4, "next_slot_in_block ran out of columns: returning NULL");
+                trace_0(TRACE_APP_PD4, "next_cell_in_block ran out of columns: returning NULL");
                 sl = NULL;
                 break;
             }
@@ -820,21 +820,21 @@ next_slot_in_block(
 
             if(sl)
             {
-                trace_1(TRACE_APP_PD4, "next_slot_in_block(ACROSS_ROWS) returns &%p", report_ptr_cast(sl));
+                trace_1(TRACE_APP_PD4, "next_cell_in_block(ACROSS_ROWS) returns &%p", report_ptr_cast(sl));
                 break;
             }
 
             if(in_block.col >= end_bl.col)
             {
                 /* at rhs so reset */
-                trace_0(TRACE_APP_PD4, "next_slot_in_block at end column --- try a new row");
+                trace_0(TRACE_APP_PD4, "next_cell_in_block at end column --- try a new row");
 
                 /* a new row */
                 it = NULL;
 
                 if(++in_block_item > end_bl.row)
                 {
-                    trace_0(TRACE_APP_PD4, "next_slot_in_block(ACROSS_ROWS) ran out of rows: returning NULL");
+                    trace_0(TRACE_APP_PD4, "next_cell_in_block(ACROSS_ROWS) ran out of rows: returning NULL");
                     sl = NULL;
                     break;
                 }
@@ -842,7 +842,7 @@ next_slot_in_block(
         }
     }
 
-    trace_1(TRACE_APP_PD4, "next_slot_in_block returns &%p", report_ptr_cast(sl));
+    trace_1(TRACE_APP_PD4, "next_cell_in_block returns &%p", report_ptr_cast(sl));
 
     in_block.row = (ROW) in_block_item;
     return(sl);
@@ -850,7 +850,7 @@ next_slot_in_block(
 
 /******************************************************************************
 *
-* SKS after 4.11 13jan92 derives from next_slot_in_block
+* SKS after PD 4.11 13jan92 derives from next_cell_in_block
 *
 * ONLY USE ONE OF traverse_block_next and traverse_block_next_slot
 *
@@ -1220,7 +1220,7 @@ slotcontentssize(
     switch(tcell->type)
     {
     case SL_TEXT:
-        return(compiled_text_len(tcell->content.text)); /* includes NULLCH */
+        return(compiled_text_len(tcell->content.text)); /* includes CH_NULL */
 
     case SL_NUMBER:
         return(ev_len(&tcell->content.number.guts));
@@ -1247,7 +1247,7 @@ slotsize(
     {
     case SL_TEXT:
         return(SL_TEXTOVH +
-               compiled_text_len(tcell->content.text)); /* includes NULLCH */
+               compiled_text_len(tcell->content.text)); /* includes CH_NULL */
 
     case SL_NUMBER:
         return(SL_NUMBEROVH +
@@ -1305,7 +1305,7 @@ swap_rows(
     char temp[MAX_SLOTSIZE];
     swap_cell_struct s1, s2;
 
-    IGNOREPARM(updaterefs);
+    UNREFERENCED_PARAMETER(updaterefs);
 
     trace_2(TRACE_APP_PD4, "swap rows: %d, %d", (S32) trow1, (S32) trow2);
 

@@ -1010,7 +1010,7 @@ typedef struct GR_AXES
 
     struct GR_AXES_SERIES
     {
-        /* SKS after 4.12 26mar92 - what series no this axes set should start at (-ve -> user forced, +ve auto) */
+        /* SKS after PD 4.12 26mar92 - what series no this axes set should start at (-ve -> user forced, +ve auto) */
         S32 start_series;
 
         S32 stt_idx; /* what series_idx this axes set starts at */
@@ -1107,8 +1107,12 @@ typedef struct GR_CHART
         struct GR_CHART_EDITSAVE
         {
 #if RISCOS
-            wimp_box  open_box;
-            GR_OSUNIT open_scx, open_scy;
+            struct GR_CHART_EDITSAVE_OPEN
+            {
+                BBox visible_area;
+                GDI_COORD scroll_x, scroll_y;
+            }
+            open;
 #else
             char foo;
 #endif
@@ -1663,8 +1667,8 @@ typedef struct GR_CHARTEDITOR
 
     struct GR_CHARTEDITOR_RISCOS
     {
-        wimp_wind * ww;        /* a template_copy'ed window definition (keep for indirected data) */
-        wimp_w      w;         /* wimp handle of chart editing window */
+        WimpWindowWithBitset * window_template; /* a template_copy_new'ed window definition (keep for indirected data) */
+        HOST_WND      window_handle;       /* Window Manager handle of chart editing window */
 
 /* margins around chart in display */
 #define GR_CHARTEDIT_DISPLAY_LM_OS 8
@@ -1672,13 +1676,13 @@ typedef struct GR_CHARTEDITOR
 #define GR_CHARTEDIT_DISPLAY_BM_OS 8
 #define GR_CHARTEDIT_DISPLAY_TM_OS 8
 
-        GR_OSUNIT     heading_size; /* total y size at the top of the window that is taken up by the icons */
+        GR_OSUNIT     heading_size;        /* total y size at the top of the window that is taken up by the icons */
 
         F64           scale_from_diag;     /* last scale factor used */
         GR_SCALE_PAIR scale_from_diag16;   /* and as a pair of 16.16 fixed nos. */
         GR_SCALE_PAIR scale_from_screen16; /* and the inverse. */
 
-        S32           init_scx, init_scy;
+        GDI_COORD     init_scroll_x, init_scroll_y;
 
         S32           diagram_off_x, diagram_off_y; /* work area offsets of diagram origin */
 
@@ -1747,7 +1751,7 @@ gr_chartedit_riscos_correlate(
     _OutRef_    P_GR_CHART_OBJID id,
     /*out*/ P_GR_DIAG_OFFSET hitObject /*[]*/,
     size_t hitObjectDepth,
-    BOOL adjustclicked);
+    BOOL adjust_clicked);
 
 extern void
 gr_chartedit_riscos_point_from_abs(
@@ -1843,7 +1847,7 @@ gr_chartedit_selected_object_drag_start(
 extern void
 gr_chartedit_selected_object_drag_complete(
     P_GR_CHARTEDITOR cep,
-    const wimp_box * dragboxp);
+    const BBox * const dragboxp);
 
 extern S32
 gr_chartedit_selection_fillstyle_edit(
@@ -2380,7 +2384,7 @@ extern const GR_XFORMMATRIX
 gr_riscdiag_riscDraw_from_pixit_xformer;
 
 extern const GR_XFORMMATRIX
-gr_riscdiag_riscDraw_from_mp_xformer;
+gr_riscdiag_riscDraw_from_millipoint_xformer;
 
 /*
 internally exported functions as macros from gr_rdiag.c
@@ -2608,7 +2612,7 @@ typedef enum GR_LIST_ID
     GR_LIST_PDROP_FILLSTYLE,
     GR_LIST_PDROP_LINESTYLE,
 
-    /* SKS after 4.12 25mar92 - these were horribly wrong */
+    /* SKS after PD 4.12 25mar92 - these were horribly wrong */
     GR_LIST_POINT_FILLSTYLE,
     GR_LIST_POINT_LINESTYLE,
     GR_LIST_POINT_TEXTSTYLE,
@@ -3116,7 +3120,7 @@ gr_font_stringwidth(
     HOST_FONT f,
     PC_U8 str);
 
-extern os_error *
+extern _kernel_oserror *
 gr_font_truncate(
     HOST_FONT f,
     char * str /*poked*/,
@@ -3148,18 +3152,18 @@ options window
 
 #define GR_CHARTEDIT_TEM_OPTIONS "gr_ec_opt"
 
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_WIDTH          ((wimp_i)  8)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_HEIGHT         ((wimp_i) 13)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_TOP    ((wimp_i) 18)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_TOP     ((wimp_i) 20)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_LEFT   ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_LEFT    ((wimp_i) 27)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_RIGHT  ((wimp_i) 32)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_RIGHT   ((wimp_i) 34)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_BOTTOM ((wimp_i) 39)
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_BOTTOM  ((wimp_i) 41)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_WIDTH          ( 8)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_HEIGHT         (13)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_TOP    (18)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_TOP     (20)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_LEFT   (25)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_LEFT    (27)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_RIGHT  (32)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_RIGHT   (34)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_BOTTOM (39)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_BOTTOM  (41)
 
-#define GR_CHARTEDIT_TEM_OPTIONS_ICON_CANCEL            ((wimp_i) 43)
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_CANCEL            (43)
 
 /*
 fill style
@@ -3167,18 +3171,18 @@ fill style
 
 #define GR_CHARTEDIT_TEM_FILLSTYLE "gr_ec_fstyl"
 
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT   ((wimp_i) 9)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC    ((wimp_i) 2)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_DEC    ((wimp_i) 3)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME   ((wimp_i) 4)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT   (9)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC    (2)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_DEC    (3)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME   (4)
 
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID       ((wimp_i) 5)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN     ((wimp_i) 6)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID       (5)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN     (6)
 
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC   ((wimp_i) 7)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR    ((wimp_i) 8)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC   (7)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR    (8)
 
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_CANCEL      ((wimp_i) 10)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_CANCEL      (10)
 
 /*
 line pattern
@@ -3186,12 +3190,12 @@ line pattern
 
 #define GR_CHARTEDIT_TEM_LINEPATTERN "gr_ec_lpat"
 
-#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_CANCEL    ((wimp_i)  1)
+#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_CANCEL    ( 1)
 
 /* made harder by having display icons overlapped by radio buttons */
 
-#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST     ((wimp_i)  9)
-#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_LAST      ((wimp_i) 13)
+#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST     ( 9)
+#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_LAST      (13)
 
 /*
 line width
@@ -3199,14 +3203,14 @@ line width
 
 #define GR_CHARTEDIT_TEM_LINEWIDTH "gr_ec_lwid"
 
-#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_CANCEL  ((wimp_i)  1)
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_CANCEL  ( 1)
 
 /* made harder by having display icons overlapped by radio buttons */
 
-#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST   ((wimp_i) 18)
-#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_LAST    ((wimp_i) 24)
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST   (18)
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_LAST    (24)
 
-#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_USER    ((wimp_i) 25)
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_USER    (25)
 
 /*
 category axis dialog
@@ -3214,35 +3218,35 @@ category axis dialog
 
 #define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS "gr_ec_cax"
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_BOTTOM        ((wimp_i)  7)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_ZERO          ((wimp_i)  8)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_TOP           ((wimp_i)  9)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_BOTTOM        ( 7)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_ZERO          ( 8)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_TOP           ( 9)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_FRONT         ((wimp_i) 10)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_AUTO          ((wimp_i) 11)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_REAR          ((wimp_i) 12)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_FRONT         (10)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_AUTO          (11)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_REAR          (12)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_AUTO             ((wimp_i) 13)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL           ((wimp_i) 14)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL              ((wimp_i) 18)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_GRID             ((wimp_i) 19)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_AUTO             (13)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL           (14)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL              (18)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_GRID             (19)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE        ((wimp_i) 21)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_FULL        ((wimp_i) 22)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_TOP    ((wimp_i) 23)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_BOTTOM ((wimp_i) 24)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE        (21)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_FULL        (22)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_TOP    (23)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_HALF_BOTTOM (24)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_AUTO             ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL           ((wimp_i) 26)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL              ((wimp_i) 30)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_GRID             ((wimp_i) 31)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_AUTO             (25)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL           (26)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL              (30)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_GRID             (31)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE        ((wimp_i) 33)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_FULL        ((wimp_i) 34)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_TOP    ((wimp_i) 35)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_BOTTOM ((wimp_i) 36)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE        (33)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_FULL        (34)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_TOP    (35)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_BOTTOM (36)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_CANCEL                 ((wimp_i) 37)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_CANCEL                 (37)
 
 /*
 selection => axis => dialog
@@ -3250,50 +3254,50 @@ selection => axis => dialog
 
 #define GR_CHARTEDIT_TEM_SELECTION_AXIS "gr_ec_vax"
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_LEFT          ((wimp_i)  7)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_ZERO          ((wimp_i)  8)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_RIGHT         ((wimp_i)  9)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_LEFT          ( 7)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_ZERO          ( 8)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_RIGHT         ( 9)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_FRONT         ((wimp_i) 10)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_AUTO          ((wimp_i) 11)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_REAR          ((wimp_i) 12)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_FRONT         (10)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_AUTO          (11)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_REAR          (12)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO             ((wimp_i) 13)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL           ((wimp_i) 14)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL              ((wimp_i) 18)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_GRID             ((wimp_i) 19)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO             (13)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL           (14)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL              (18)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_GRID             (19)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE        ((wimp_i) 21)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_FULL        ((wimp_i) 22)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_RIGHT  ((wimp_i) 23)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_LEFT   ((wimp_i) 24)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE        (21)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_FULL        (22)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_RIGHT  (23)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_HALF_LEFT   (24)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_AUTO             ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL           ((wimp_i) 26)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL              ((wimp_i) 30)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_GRID             ((wimp_i) 31)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_AUTO             (25)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL           (26)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL              (30)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_GRID             (31)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE        ((wimp_i) 33)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_FULL        ((wimp_i) 34)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_RIGHT  ((wimp_i) 35)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_LEFT   ((wimp_i) 36)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE        (33)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_FULL        (34)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_RIGHT  (35)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_HALF_LEFT   (36)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_AUTO             ((wimp_i) 41)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL           ((wimp_i) 42)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX              ((wimp_i) 46)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN              ((wimp_i) 50)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_ZERO             ((wimp_i) 51)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_LOG_SCALE        ((wimp_i) 52)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_POW_LABEL        ((wimp_i) 53)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_AUTO             (41)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL           (42)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX              (46)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN              (50)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_ZERO             (51)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_LOG_SCALE        (52)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_POW_LABEL        (53)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_CUMULATIVE      ((wimp_i) 54)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_POINT_VARY      ((wimp_i) 55)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_BEST_FIT        ((wimp_i) 56)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_FILL_AXIS       ((wimp_i) 57)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_CUMULATIVE      (54)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_POINT_VARY      (55)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_BEST_FIT        (56)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_FILL_AXIS       (57)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_STACKED         ((wimp_i) 58)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_STACKED         (58)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_CANCEL                 ((wimp_i) 59)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_CANCEL                 (59)
 
 /*
 selection => series => dialog
@@ -3301,14 +3305,14 @@ selection => series => dialog
 
 #define GR_CHARTEDIT_TEM_SELECTION_SERIES "gr_ec_ser"
 
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CANCEL           ((wimp_i) 1)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CANCEL           (1)
 
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_REMOVE_SERIES    ((wimp_i) 2)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_REMOVE_SERIES    (2)
 
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CUMULATIVE       ((wimp_i) 3)
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_POINT_VARY       ((wimp_i) 4)
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_BEST_FIT         ((wimp_i) 5)
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_FILL_AXIS        ((wimp_i) 6)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CUMULATIVE       (3)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_POINT_VARY       (4)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_BEST_FIT         (5)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_FILL_AXIS        (6)
 
 /*
 text editor
@@ -3322,22 +3326,22 @@ pie gallery
 
 #define GR_CHARTEDIT_TEM_GALLERY_PIE "gr_ec_pie"
 
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_FIRST  ((wimp_i) 1) /* first picture in this gallery */
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_LAST   ((wimp_i) 8) /* last picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_FIRST  (1) /* first picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_LAST   (8) /* last picture in this gallery */
 
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL   ((wimp_i) 14)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_ANTICLOCKWISE ((wimp_i) 16)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000   ((wimp_i) 18)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_045   ((wimp_i) 19)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_090   ((wimp_i) 20)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_135   ((wimp_i) 21)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_180   ((wimp_i) 22)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_225   ((wimp_i) 23)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_270   ((wimp_i) 24)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_315   ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL   ((wimp_i) 29)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL   (14)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_ANTICLOCKWISE (16)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000   (18)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_045   (19)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_090   (20)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_135   (21)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_180   (22)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_225   (23)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_270   (24)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_315   (25)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL   (29)
 
-#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_CANCEL        ((wimp_i) 31)
+#define GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_CANCEL        (31)
 
 /*
 bar gallery
@@ -3345,24 +3349,24 @@ bar gallery
 
 #define GR_CHARTEDIT_TEM_GALLERY_BAR "gr_ec_bar"
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_FIRST          ((wimp_i) 1) /* first picture in this gallery */
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_LAST           ((wimp_i) 8) /* last picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_FIRST          (1) /* first picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_LAST           (8) /* last picture in this gallery */
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_BAR_WIDTH      ((wimp_i) 13)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_2D_OVERLAP     ((wimp_i) 17)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_DEPTH       ((wimp_i) 21)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_ON          ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_TURN        ((wimp_i) 28)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_DROOP       ((wimp_i) 32)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_REMOVE_OVERLAY ((wimp_i) 34)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_CUMULATIVE     ((wimp_i) 35)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_POINT_VARY     ((wimp_i) 36)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_BEST_FIT       ((wimp_i) 37)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_STACK_PICT     ((wimp_i) 38)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_PICTURES       ((wimp_i) 39)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_STACKED        ((wimp_i) 40)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_BAR_WIDTH      (13)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_2D_OVERLAP     (17)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_DEPTH       (21)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_ON          (25)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_TURN        (28)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_DROOP       (32)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_REMOVE_OVERLAY (34)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_CUMULATIVE     (35)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_POINT_VARY     (36)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_BEST_FIT       (37)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_STACK_PICT     (38)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_PICTURES       (39)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_STACKED        (40)
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_CANCEL         ((wimp_i) 41)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_CANCEL         (41)
 
 /*
 line gallery
@@ -3370,24 +3374,24 @@ line gallery
 
 #define GR_CHARTEDIT_TEM_GALLERY_LINE "gr_ec_line"
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_FIRST          ((wimp_i) 1) /* first picture in this gallery */
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_LAST           ((wimp_i) 8) /* last picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_FIRST          (1) /* first picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_LAST           (8) /* last picture in this gallery */
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_POINT_WIDTH    ((wimp_i) 13)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_2D_SHIFT       ((wimp_i) 17)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_DEPTH       ((wimp_i) 21)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_ON          ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_TURN        ((wimp_i) 28)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_DROOP       ((wimp_i) 32)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_REMOVE_OVERLAY ((wimp_i) 34)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_CUMULATIVE     ((wimp_i) 35)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_POINT_VARY     ((wimp_i) 36)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_BEST_FIT       ((wimp_i) 37)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_FILL_AXIS      ((wimp_i) 38)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_PICTURES       ((wimp_i) 39)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_STACKED        ((wimp_i) 40)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_POINT_WIDTH    (13)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_2D_SHIFT       (17)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_DEPTH       (21)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_ON          (25)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_TURN        (28)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_DROOP       (32)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_REMOVE_OVERLAY (34)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_CUMULATIVE     (35)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_POINT_VARY     (36)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_BEST_FIT       (37)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_FILL_AXIS      (38)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_PICTURES       (39)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_STACKED        (40)
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_CANCEL         ((wimp_i) 41)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_CANCEL         (41)
 
 /*
 scatter gallery
@@ -3395,18 +3399,18 @@ scatter gallery
 
 #define GR_CHARTEDIT_TEM_GALLERY_SCAT "gr_ec_scat"
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_FIRST ((wimp_i) 1) /* first picture in this gallery */
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_LAST  ((wimp_i) 9) /* last picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_FIRST (1) /* first picture in this gallery */
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_LAST  (9) /* last picture in this gallery */
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_POINT_WIDTH    ((wimp_i) 14)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_REMOVE_OVERLAY ((wimp_i) 16)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_POINT_VARY     ((wimp_i) 17)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_BEST_FIT       ((wimp_i) 18)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_JOIN_LINES     ((wimp_i) 19)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_PICTURES       ((wimp_i) 20)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_CATEG_X_VAL    ((wimp_i) 21)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_POINT_WIDTH    (14)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_REMOVE_OVERLAY (16)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_POINT_VARY     (17)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_BEST_FIT       (18)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_JOIN_LINES     (19)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_PICTURES       (20)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_CATEG_X_VAL    (21)
 
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_CANCEL         ((wimp_i) 22)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_SCAT_CANCEL         (22)
 
 /*
 some useful macros
@@ -3438,7 +3442,7 @@ gr_nodbg_bring_me_the_head_of_yuri_gagarin(
     P_GR_DIAG_OFFSET hitObject,
     GR_COORD x,
     GR_COORD y,
-    BOOL adjustclicked);
+    BOOL adjust_clicked);
 
 _Check_return_
 extern STATUS

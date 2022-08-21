@@ -46,7 +46,7 @@ gr_riscdiag_normalise_stt(
     DRAW_DIAG_OFFSET sttObject = sttObject_in;
 
     myassert0x(p_gr_riscdiag && p_gr_riscdiag->draw_diag.length, "gr_riscdiag_normalise_stt has no diagram");
-    IGNOREPARM_InRef_(p_gr_riscdiag);
+    UNREFERENCED_PARAMETER_InRef_(p_gr_riscdiag);
 
     if(sttObject == GR_RISCDIAG_OBJECT_FIRST)
         sttObject = sizeof32(DRAW_FILE_HEADER);
@@ -145,7 +145,7 @@ scaling matrix for millipoints to riscDraw units
 */
 
 const GR_XFORMMATRIX
-gr_riscdiag_riscDraw_from_mp_xformer =
+gr_riscdiag_riscDraw_from_millipoint_xformer =
 {
     /* &0000.AD37 ~= 640/1000 (inexact) */
     (GR_SCALE_ONE * GR_RISCDRAW_PER_POINT) / GR_MILLIPOINTS_PER_POINT,
@@ -544,7 +544,7 @@ gr_riscdiag_fontlist_lookup(
         pFontListElem.p_byte += thislen;
     }
 
-    /* SKS after 4.11 21jan92 - try looking up our alternate font if not looking for "System" */
+    /* SKS after PD 4.11 21jan92 - try looking up our alternate font if not looking for "System" */
     if(!fontRefNum)
     {
         static BOOL recursed_internally = 0;
@@ -887,6 +887,7 @@ gr_riscdiag_object_first(
     /* force scans to be linear, not recursive */
     /* see comments in gr_riscdiag_object_next too ... */
     objectType = pObject.hdr->type;
+    UNREFERENCED_PARAMETER(recurse);
 
 #if CHECKING
     {
@@ -1207,7 +1208,7 @@ draw_do_render(
     trfm[5] = y << 8;
 
     /* no DrawFiles recommendation. Draw module recommends 2 OS units */
-    flatness = (int) muldiv64(2 * GR_RISCDRAW_PER_RISCOS, (int) GR_SCALE_ONE, (int) (yfactor * GR_SCALE_ONE));
+    flatness = (int) muldiv64(2 * GR_RISCDRAW_PER_RISCOS * 1024, (int) GR_SCALE_ONE, (int) (yfactor * 1024));
 
     rs.r[0] = flags;
     rs.r[1] = (int) data;

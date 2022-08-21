@@ -174,7 +174,7 @@ DRAW_TEXT_STYLE;
 
 /* Draw font sizes are 1/640 point */
 
-#define draw_fontsize_from_mp(mp) ( \
+#define draw_fontsize_from_millipoint(mp) ( \
     ((mp) * 64) / 100 )
 
 typedef struct DRAW_OBJECT_TEXT

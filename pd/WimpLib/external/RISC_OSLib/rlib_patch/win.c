@@ -1,5 +1,5 @@
---- _src	2009-05-31 18:58:59 +0100
-+++ _dst	2013-09-03 13:31:08 +0100
+--- _src	2009-05-31 18:58:59.000000000 +0100
++++ _dst	2016-09-16 14:50:26.790000000 +0100
 @@ -35,6 +35,14 @@
   *
   */
@@ -7,7 +7,7 @@
 +/*
 + *   03-Apr-89 SKS made window allocation stuff dynamic
 + *   07-Jun-91 SKS added pane handling facilities
-+ *   27-Mar-92 SKS after 4.12 changed BAD_WIMP_Ws to 0
++ *   27-Mar-92 SKS after PD 4.12 changed BAD_WIMP_Ws to 0
 +*/
 +
 +#include "include.h" /* for SKS_ACW */
@@ -42,7 +42,7 @@
    win__allwindows[i].handle = handle;
    win__allwindows[i].menuh = 0;
 +#else
-+  win__register_new(w, (win_new_event_handler) proc, handle, 0 /* for old binaries */);
++  winx__register_new(w, (winx_new_event_handler) proc, handle, 0 /* for old binaries */);
 +#endif /* WIN_WINDOW_LIST */
  }
  
@@ -61,7 +61,7 @@
 +  win__str *cp;
 +
 +  while ((cp = pp->link) != NULL) {
-+    if (cp->w != w) {
++    if (cp->window_handle != w) {
 +      pp = cp;
 +      continue;
 +    }
@@ -86,7 +86,7 @@
 +#else
 +  win__str *p = (win__str *) &win__window_list;
 +  while ((p = p->link) != NULL) {
-+    if (p->w == w) {
++    if (p->window_handle == w) {
 +       return(p);
 +    }
 +  }
@@ -119,23 +119,23 @@
    win__str *p;
  
 -  switch (e->e) {
-+  if(e->e != wimp_EREDRAW)
++  if(e->e != Wimp_ERedrawWindow)
 +  {
-+    /* note that the Wimp cannot cope with any window opening etc
-+     * issued between the receipt of the EREDRAW and the Wimp_RedrawWindow
++    /* note that the Window Manager cannot cope with any window opening etc issued
++     * between the receipt of the Wimp_ERedrawWindow and the SWI Wimp_RedrawWindow
 +    */
-+    if(win_submenu_w != 0)
++    if(winx_statics.submenu_window_handle != 0)
 +    {
-+      if(win_submenu_query_closed())
++      if(winx_submenu_query_closed())
 +      {
-+        /* Wimp must have gone and closed the window the sly rat */
++        /* Window Manager must have gone and closed the window the sly rat */
 +        /* so send our client a close request NOW */
 +        wimp_eventstr ev;
 +
 +        ev.e = wimp_ECLOSE;
-+        ev.data.close.w = win_submenu_w;
++        ev.data.close.w = winx_statics.submenu_window_handle;
 +
-+        win_submenu_w = 0;
++        winx_statics.submenu_window_handle = 0;
 +
 +        (void) win_processevent(&ev);
 +      }
@@ -150,10 +150,10 @@
  
      case wimp_EUSERDRAG:
        w = win__unknown_flag ;
-+      if(win__drag_w != 0)
-+      { /* user drag comes but once per win_drag_box */
-+        w = win__drag_w;
-+        win__drag_w = 0;
++      if(winx_statics.drag_window_handle != 0)
++      { /* user drag comes but once per winx_drag_box */
++        w = winx_statics.drag_window_handle;
++        winx_statics.drag_window_handle = 0;
 +      }
        break;
  
@@ -272,7 +272,7 @@
 +    }
 +    str   = winfo->info.title.indirecttext.buffer;
 +    count = winfo->info.title.indirecttext.bufflen;
-+    *str  = NULLCH;
++    *str  = CH_NULL;
 +    strncat(str, newtitle, count - 1);
  
    /* --- invalidate the title bar in absolute coords --- */
@@ -283,10 +283,10 @@
 -    wimpt_noerr(wimp_force_redraw(&r));
 +    if(winfo->info.flags & wimp_WOPEN) /* only if open! */
 +    {
-+        int dy = wimpt_dy();
++        const int dy = wimpt_dy();
 +        r.box.y0 = r.box.y0 + dy; /* title bar starts one raster up */
-+        r.box.y1 = r.box.y0 + wimpt_title_height() - 2*dy;
-+        wimpt_safe(wimp_force_redraw(&r));
++        r.box.y1 = r.box.y0 + wimptx_title_height() - 2*dy;
++        (void) wimpt_complain(wimp_force_redraw(&r));
 +    }
  
    /* --- free space used to window info --- */

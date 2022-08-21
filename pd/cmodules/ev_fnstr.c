@@ -17,7 +17,7 @@
 
 #include "cmodules/mathxtr3.h"
 
-#include "cmodules/numform.h"
+#include "datafmt.h"
 
 /******************************************************************************
 *
@@ -33,18 +33,26 @@
 
 PROC_EXEC_PROTO(c_char)
 {
-    S32 n = args[0]->arg.integer;
-    U8 ch = (U8) n;
+    UCS4 ucs4 = (UCS4) args[0]->arg.integer;
 
     exec_func_ignore_parms();
 
-    if((U32) n >= 256U) /* Some users are known to put highlight characters in so don't get too picky */
+    if(ucs4 >= 256U) /* Some users are known to put PipeDream highlight characters in so don't get too picky */
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
         return;
     }
 
-    status_assert(ss_string_make_uchars(p_ev_data_res, &ch, 1));
+    {
+    UCHARB uchar_buffer[8];
+#if USTR_IS_SBSTR
+    U32 bytes_of_char = 1;
+    uchar_buffer[0] = (U8) ucs4;
+#else
+    U32 bytes_of_char = uchars_char_encode(uchars_bptr(uchar_buffer), sizeof32(uchar_buffer), ucs4);
+#endif
+    status_assert(ss_string_make_uchars(p_ev_data_res, uchars_bptr(uchar_buffer), bytes_of_char));
+    } /*block*/
 }
 
 #if 0 /* just for diff minimization */
@@ -112,17 +120,12 @@ PROC_EXEC_PROTO(c_clean)
 
 PROC_EXEC_PROTO(c_code)
 {
-    S32 code_result;
-    
+    S32 code_result = 0; /* SKS 20160801 allow empty string */
+
     exec_func_ignore_parms();
 
-    if(0 == args[0]->arg.string.size)
-    {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_ARGRANGE);
-        return;
-    }
-
-    code_result = (S32) *(args[0]->arg.string.uchars);
+    if(0 != args[0]->arg.string.size)
+        code_result = (S32) PtrGetByte(args[0]->arg.string.uchars);
 
     ev_data_set_integer(p_ev_data_res, code_result);
 }
@@ -157,16 +160,16 @@ PROC_EXEC_PROTO(c_dollar)
 
     round_common(args, n_args, p_ev_data_res, RPN_FNV_ROUND); /* ROUND: uses n_args, args[0] and {args[1]}, yields RPN_DAT_REAL (or an integer type) */
 
-    status = quick_ublock_ucs4_add(&quick_ublock_format, CH_POUND_SIGN); /* FIXME */
+    status = quick_ublock_ucs4_add(&quick_ublock_format, UCH_POUND_SIGN); /* FIXME */
 
     if(status_ok(status))
         status = quick_ublock_ustr_add(&quick_ublock_format, USTR_TEXT("#,,###0"));
 
     if((decimal_places > 0) && status_ok(status))
-        status = quick_ublock_ucs4_add(&quick_ublock_format, CH_FULL_STOP);
+        status = quick_ublock_a7char_add(&quick_ublock_format, CH_FULL_STOP);
 
     for(i = 0; (i < decimal_places) && status_ok(status); ++i)
-        status = quick_ublock_ucs4_add(&quick_ublock_format, CH_NUMBER_SIGN);
+        status = quick_ublock_a7char_add(&quick_ublock_format, CH_NUMBER_SIGN);
 
     if(status_ok(status))
         status = quick_ublock_nullch_add(&quick_ublock_format);
@@ -198,7 +201,7 @@ PROC_EXEC_PROTO(c_exact)
     exec_func_ignore_parms();
 
     if(args[0]->arg.string.size == args[1]->arg.string.size)
-        if(0 == memcmp32(args[0]->arg.string.uchars, args[1]->arg.string.uchars, (U32) args[0]->arg.string.size))
+        if(0 == memcmp32(args[0]->arg.string.uchars, args[1]->arg.string.uchars, args[0]->arg.string.size))
             exact_result = TRUE;
 
     ev_data_set_boolean(p_ev_data_res, exact_result);
@@ -215,7 +218,7 @@ PROC_EXEC_PROTO(c_find)
     S32 find_result = 0;
     S32 find_len = args[1]->arg.string.size;
     S32 start_n = 1;
-    P_U8 ptr;
+    PC_UCHARS uchars;
 
     exec_func_ignore_parms();
 
@@ -233,8 +236,8 @@ PROC_EXEC_PROTO(c_find)
     if( start_n > find_len)
         start_n = find_len;
 
-    if(NULL != (ptr = (P_U8) memstr32(args[1]->arg.string.uchars + start_n, find_len - start_n, args[0]->arg.string.uchars, args[0]->arg.string.size))) /*strstr replacement*/
-        find_result = 1 + (S32) (ptr - args[1]->arg.string.uchars);
+    if(NULL != (uchars = (PC_UCHARS) memstr32(uchars_AddBytes(args[1]->arg.string.uchars, start_n), find_len - start_n, args[0]->arg.string.uchars, args[0]->arg.string.size))) /*strstr replacement*/
+        find_result = 1 + PtrDiffBytesS32(uchars, args[1]->arg.string.uchars);
 
     ev_data_set_integer(p_ev_data_res, find_result);
 }
@@ -276,10 +279,10 @@ PROC_EXEC_PROTO(c_fixed)
     status = quick_ublock_ustr_add(&quick_ublock_format, no_commas ? USTR_TEXT("0") : USTR_TEXT("#,,###0"));
 
     if((decimal_places > 0) && status_ok(status))
-        status = quick_ublock_a7char_add(&quick_ublock_format, '.');
+        status = quick_ublock_a7char_add(&quick_ublock_format, CH_FULL_STOP);
 
     for(i = 0; (i < decimal_places) && status_ok(status); ++i)
-        status = quick_ublock_a7char_add(&quick_ublock_format, '#');
+        status = quick_ublock_a7char_add(&quick_ublock_format, CH_NUMBER_SIGN);
 
     if(status_ok(status))
         status = quick_ublock_nullch_add(&quick_ublock_format);
@@ -333,37 +336,32 @@ PROC_EXEC_PROTO(c_formula_text)
 
 PROC_EXEC_PROTO(c_join)
 {
-    STATUS status;
-    S32 i;
-    S32 len = 0;
-    P_U8 p_u8;
+    S32 arg_idx;
+    U32 len = 0;
+    P_UCHARS uchars;
 
     exec_func_ignore_parms();
 
-    for(i = 0; i < n_args; ++i)
-        len += args[i]->arg.string.size;
+    for(arg_idx = 0; arg_idx < n_args; ++arg_idx)
+    {
+        const U32 arg_len = args[arg_idx]->arg.string.size;
+        len += arg_len;
+    }
 
     if(0 == len)
         return;
 
-    if(NULL == (p_u8 = al_ptr_alloc_bytes(P_U8, len + 1/*CH_NULL*/, &status)))
-    {
-        ev_data_set_error(p_ev_data_res, status);
+    if(status_fail(ss_string_make_uchars(p_ev_data_res, NULL, len)))
         return;
-    }
 
-    p_ev_data_res->arg.string.uchars = p_u8;
-    p_ev_data_res->arg.string.size = len;
-    p_ev_data_res->did_num = RPN_TMP_STRING;
+    uchars = p_ev_data_res->arg.string_wr.uchars;
 
-    for(i = 0; i < n_args; ++i)
+    for(arg_idx = 0; arg_idx < n_args; ++arg_idx)
     {
-        U32 arglen = args[i]->arg.string.size;
-        memcpy32(p_u8, args[i]->arg.string.uchars, arglen);
-        p_u8 += arglen;
+        const U32 arg_len = args[arg_idx]->arg.string.size;
+        memcpy32(uchars, args[arg_idx]->arg.string.uchars, arg_len);
+        uchars_IncBytes_wr(uchars, arg_len);
     }
-
-    *p_u8 = CH_NULL;
 }
 
 /******************************************************************************
@@ -403,7 +401,7 @@ PROC_EXEC_PROTO(c_length)
     S32 length_result = args[0]->arg.string.size;
 
     exec_func_ignore_parms();
-    
+
     ev_data_set_integer(p_ev_data_res, length_result);
 }
 
@@ -419,12 +417,19 @@ PROC_EXEC_PROTO(c_lower)
 
     if(status_ok(ss_string_dup(p_ev_data_res, args[0])))
     {
-        U32 x;
+        P_UCHARS uchars = p_ev_data_res->arg.string_wr.uchars;
         const U32 len = p_ev_data_res->arg.string_wr.size;
-        P_U8 ptr = p_ev_data_res->arg.string_wr.uchars;
+        U32 offset = 0;
 
-        for(x = 0; x < len; ++x, ++ptr)
-            *ptr = (U8) tolower(*ptr);
+        while(offset < len)
+        {
+            const U8 ch = *uchars;
+            const U8 ch_x = (U8) tolower(ch);
+            *uchars++ = ch_x;
+
+            offset += 1;
+            assert(offset <= len);
+        }
     }
 }
 
@@ -450,7 +455,7 @@ PROC_EXEC_PROTO(c_mid)
 
     start = MIN(start, len);
     n = MIN(n, len - start);
-    status_assert(ss_string_make_uchars(p_ev_data_res, args[0]->arg.string.uchars + start, n));
+    status_assert(ss_string_make_uchars(p_ev_data_res, uchars_AddBytes(args[0]->arg.string.uchars, start), n));
 }
 
 #if 0 /* just for diff minimization */
@@ -467,16 +472,20 @@ PROC_EXEC_PROTO(c_n)
 
     switch(args[0]->did_num)
     {
-    case RPN_DAT_DATE:
-        ev_data_set_integer(p_ev_data_res, ss_dateval_to_serial_number(&args[0]->arg.ev_date.date));
-        break;
-
     case RPN_DAT_BOOL8:
         ev_data_set_integer(p_ev_data_res, args[0]->arg.boolean);
         break;
 
     case RPN_DAT_STRING:
         /* can't discriminate here between strings and text cells */
+        ev_data_set_integer(p_ev_data_res, 0);
+        break;
+
+    case RPN_DAT_DATE:
+        /* might have just a date component, which is representable as an integer */
+        ev_data_set_real_ti(p_ev_data_res, ss_date_to_serial_number(&args[0]->arg.ev_date));
+        break;
+
     default:
         status_assert(ss_data_resource_copy(p_ev_data_res, args[0]));
         break;
@@ -497,26 +506,31 @@ PROC_EXEC_PROTO(c_proper)
 
     if(status_ok(ss_string_dup(p_ev_data_res, args[0])))
     {
-        U32 x;
         const U32 len = p_ev_data_res->arg.string_wr.size;
-        P_U8 ptr = p_ev_data_res->arg.string_wr.uchars;
+        P_UCHARS uchars = p_ev_data_res->arg.string_wr.uchars;
+        U32 offset = 0;
         U32 offset_in_word = 0;
 
-        for(x = 0; x < len; ++x, ++ptr)
+        while(offset < len)
         {
-            if((*ptr == ' ') || (*ptr == '-') /* SKS 27aug97 Barnes-Wallis */)
+            if((*uchars == ' ') || (*uchars == '-') /* SKS 27aug97 Barnes-Wallis */)
                 offset_in_word = 0;
             else
             {
                 if((0 == offset_in_word)
-                || ((2 == offset_in_word) && ('\'' == ptr[-1]) && ('O' == ptr[-2])))
+                || ((2 == offset_in_word) && ('\'' == uchars[-1]) && ('O' == uchars[-2])))
                     /* SKS 17jul97 proper case O'Connor (but not A'chir?) */
-                    *ptr = (U8) toupper(*ptr);
+                    *uchars = (U8) toupper(*uchars);
                 else
-                    *ptr = (U8) tolower(*ptr);
+                    *uchars = (U8) tolower(*uchars);
 
                 ++offset_in_word;
             }
+
+            ++uchars;
+
+            offset += 1;
+            assert(offset <= len);
         }
     }
 }
@@ -556,11 +570,11 @@ PROC_EXEC_PROTO(c_replace)
         {
             S32 end_n_chars = len - (start_n_chars + excise_n_chars);
 
-            status = quick_ublock_uchars_add(&quick_ublock_result, args[0]->arg.string.uchars + (start_n_chars + excise_n_chars), end_n_chars);
+            status = quick_ublock_uchars_add(&quick_ublock_result, uchars_AddBytes(args[0]->arg.string.uchars, (start_n_chars + excise_n_chars)), end_n_chars);
         }
 
         if(status_ok(status))
-            status_assert(ss_string_make_uchars(p_ev_data_res, quick_ublock_uptr(&quick_ublock_result), quick_ublock_bytes(&quick_ublock_result)));
+            status_assert(ss_string_make_uchars(p_ev_data_res, quick_ublock_uchars(&quick_ublock_result), quick_ublock_bytes(&quick_ublock_result)));
     }
 
     if(status_fail(status))
@@ -579,7 +593,7 @@ PROC_EXEC_PROTO(c_rept)
 {
     const U32 len = args[0]->arg.string.size;
     S32 n = args[1]->arg.integer;
-    P_U8 p_u8;
+    P_UCHARS uchars;
     S32 x;
 
     exec_func_ignore_parms();
@@ -590,14 +604,15 @@ PROC_EXEC_PROTO(c_rept)
         return;
     }
 
-    status_assert(ss_string_make_uchars(p_ev_data_res, NULL, (U32) n * len));
+    if(status_fail(ss_string_make_uchars(p_ev_data_res, NULL, (U32) n * len)))
+        return;
 
-    p_u8 = p_ev_data_res->arg.string_wr.uchars;
+    uchars = p_ev_data_res->arg.string_wr.uchars;
 
     for(x = 0; x < n; ++x)
     {
-        memcpy32(p_u8, args[0]->arg.string.uchars, len);
-        p_u8 += len;
+        memcpy32(uchars, args[0]->arg.string.uchars, len);
+        uchars_IncBytes_wr(uchars, len);
     }
 }
 
@@ -615,8 +630,8 @@ PROC_EXEC_PROTO(c_reverse)
     {
         U32 x;
         const U32 half_len = p_ev_data_res->arg.string_wr.size / 2;
-        P_U8 ptr_lo = p_ev_data_res->arg.string_wr.uchars;
-        P_U8 ptr_hi = p_ev_data_res->arg.string_wr.uchars + p_ev_data_res->arg.string_wr.size;
+        P_U8 ptr_lo = (P_U8) p_ev_data_res->arg.string_wr.uchars;
+        P_U8 ptr_hi = ptr_lo + p_ev_data_res->arg.string_wr.size;
 
         for(x = 0; x < half_len; ++x)
         {
@@ -650,7 +665,7 @@ PROC_EXEC_PROTO(c_right)
     }
 
     n = MIN(n, len);
-    status_assert(ss_string_make_uchars(p_ev_data_res, args[0]->arg.string.uchars + len - n, n));
+    status_assert(ss_string_make_uchars(p_ev_data_res, uchars_AddBytes(args[0]->arg.string.uchars, (len - n)), n));
 }
 
 /******************************************************************************
@@ -680,9 +695,9 @@ PROC_EXEC_PROTO(c_string)
     else
         rounded_value = (F64) p_ev_data_res->arg.integer; /* take care now we can get integer types back */
 
-    (void) xsnprintf(buffer, elemof32(buffer), "%.*f", (int) decimal_places, rounded_value);
+    consume_int(xsnprintf(buffer, elemof32(buffer), "%.*f", (int) decimal_places, rounded_value));
 
-    status_assert(ss_string_make_ustr(p_ev_data_res, buffer));
+    status_assert(ss_string_make_ustr(p_ev_data_res, ustr_bptr(buffer)));
 }
 
 #if 0 /* just for diff minimization */
@@ -732,7 +747,7 @@ PROC_EXEC_PROTO(c_substitute)
             text_to_test = uchars_AddBytes(text_uchars, text_i);
 
             if( ((instance == instance_to_replace) || (0 == instance_to_replace)) &&
-                (0 == short_memcmp32(text_to_test, old_text_uchars, old_text_size)) )
+                (0 == memcmp32(text_to_test, old_text_uchars, old_text_size)) )
             {   /* found an instance of old_text in text to replace */
 
                 /* copy the replacement string (which may be empty) to the output */
@@ -800,7 +815,7 @@ ev_numform(
     numform_parms.ustr_numform_datetime =
     numform_parms.ustr_numform_texterror = ustr;
 
-    numform_parms.p_numform_context = P_DATA_NONE; /* use default */
+    numform_parms.p_numform_context = get_p_numform_context();
 
     return(numform(p_quick_ublock, P_QUICK_UBLOCK_NONE, p_ev_data, &numform_parms));
 }
@@ -843,30 +858,27 @@ PROC_EXEC_PROTO(c_text)
 PROC_EXEC_PROTO(c_trim)
 {
     U8Z buffer[BUF_EV_MAX_STRING_LEN];
-    BOOL gap;
-    P_U8 s_ptr, e_ptr, i_ptr, o_ptr;
+    U32 o_idx = 0;
+    PC_UCHARS s_ptr;
+    PC_UCHARS e_ptr;
+    PC_UCHARS i_ptr;
+    BOOL gap = FALSE;
 
     exec_func_ignore_parms();
 
-    memcpy32(buffer, args[0]->arg.string.uchars, args[0]->arg.string.size);
+    s_ptr = args[0]->arg.string.uchars;
+    e_ptr = uchars_AddBytes(s_ptr, args[0]->arg.string.size);
 
-    s_ptr = buffer;
-    e_ptr = buffer + args[0]->arg.string.size;
+    while((s_ptr < e_ptr) && (PtrGetByte(s_ptr) == CH_SPACE)) /* skip leading spaces */
+        uchars_IncByte(s_ptr);
 
-    /* skip leading spaces */
-    while(*s_ptr == ' ')
-        ++s_ptr;
+    while((e_ptr > s_ptr) && (PtrGetByteOff(e_ptr, -1) == CH_SPACE)) /* skip trailing spaces */
+        uchars_DecByte(e_ptr);
 
-    /* skip trailing spaces */
-    while((e_ptr > s_ptr) && (e_ptr[-1] == ' '))
-        --e_ptr;
-
-    *e_ptr = CH_NULL;
-
-    /* crunge multiple spaces */
-    for(i_ptr = o_ptr = s_ptr, gap = 0; i_ptr <= e_ptr; ++i_ptr)
+    /* crunge runs of multiple spaces to a single space during transfer */
+    for(i_ptr = s_ptr; i_ptr < e_ptr; uchars_IncByte(i_ptr))
     {
-        if(*i_ptr == ' ')
+        if(CH_SPACE == PtrGetByte(i_ptr))
         {
             if(gap)
                 continue;
@@ -874,12 +886,17 @@ PROC_EXEC_PROTO(c_trim)
                 gap = TRUE;
         }
         else
+        {
             gap = FALSE;
+        }
 
-        *o_ptr++ = *i_ptr;
+        buffer[o_idx++] = PtrGetByte(i_ptr);
+
+        if(o_idx >= elemof32(buffer))
+            break;
     }
 
-    status_assert(ss_string_make_ustr(p_ev_data_res, s_ptr));
+    status_assert(ss_string_make_uchars(p_ev_data_res, uchars_bptr(buffer), o_idx));
 }
 
 /******************************************************************************
@@ -894,12 +911,19 @@ PROC_EXEC_PROTO(c_upper)
 
     if(status_ok(ss_string_dup(p_ev_data_res, args[0])))
     {
-        U32 x;
+        P_UCHARS uchars = p_ev_data_res->arg.string_wr.uchars;
         const U32 len = p_ev_data_res->arg.string_wr.size;
-        P_U8 ptr = p_ev_data_res->arg.string_wr.uchars;
+        U32 offset = 0;
 
-        for(x = 0; x < len; ++x, ++ptr)
-            *ptr = (U8) toupper(*ptr);
+        while(offset < len)
+        {
+            const U8 ch = *uchars;
+            const U8 ch_x = (U8) toupper(ch);
+            *uchars++ = ch_x;
+
+            offset += 1;
+            assert(offset <= len);
+        }
     }
 }
 
@@ -911,20 +935,41 @@ PROC_EXEC_PROTO(c_upper)
 
 PROC_EXEC_PROTO(c_value)
 {
-    U8Z buffer[256];
-    U32 len;
-    P_U8 ptr;
+    PC_UCHARS s_ptr = args[0]->arg.string.uchars;
+    U32 len = args[0]->arg.string.size;
 
     exec_func_ignore_parms();
 
-    len = MIN(args[0]->arg.string.size, sizeof32(buffer)-1);
-    memcpy32(buffer, args[0]->arg.string.uchars, len);
-    buffer[len] = CH_NULL;
+    while((0 != len) && (PtrGetByte(s_ptr) == CH_SPACE)) /* skip leading spaces prior to copy */
+    {
+        uchars_IncByte(s_ptr);
+        --len;
+    }
 
-    ev_data_set_real_ti(p_ev_data_res, strtod(buffer, &ptr));
-
-    if(ptr == buffer)
+    if(0 == len)
+    {
         ev_data_set_integer(p_ev_data_res, 0); /* SKS 08sep97 now behaves as documented */
+    }
+    else
+    {
+        PC_UCHARS e_ptr = uchars_AddBytes(s_ptr, len);
+        UCHARZ buffer[256];
+        PC_USTR ptr;
+
+        /* we are guaranteed here to have at least one byte to transfer */
+        while(/*(e_ptr > s_ptr) &&*/ (PtrGetByteOff(e_ptr, -1) == CH_SPACE)) /* skip trailing spaces prior to copy */
+        {
+            uchars_DecByte(e_ptr);
+            --len;
+        }
+
+        ustr_xstrnkpy(ustr_bptr(buffer), sizeof32(buffer), s_ptr, len);
+
+        ev_data_set_real_ti(p_ev_data_res, ui_strtod(ustr_bptr(buffer), &ptr));
+
+        if(0 == PtrDiffBytesU32(ptr, buffer))
+            ev_data_set_integer(p_ev_data_res, 0); /* SKS 08sep97 now behaves as documented */
+    }
 }
 
 /* end of ev_fnstr.c */

@@ -12,16 +12,20 @@
 /*#include "common/gflags.h"*/
 
 /* NB See also
+ * Build.r32.!PipeDream.Relnotes
  * Build.r32.Makefile (for !Boot/!Run building)
  * Build.r32.MakeRiscPkg
  * Build.r32.RiscPkg.Control
- * Build.r32.!PipeDream.Resource.Relnotes
  */
 
-#define Version      "4.55"
-#define CurrentDate  "(21-May-2016)"
+#define Version      "4.56"
+#define CurrentDate  "17-Dec-2018"
 
 /*
+* 01 Aug 2016 - 4.55.04
+* 27 Jul 2016 - 4.55.03
+* 12 Jul 2016 - 4.55.02
+* 03 Jul 2016 - 4.55.01 Move to x.yy.zz scheme for !Store version ease
 * 21 May 2016 - 4.55
 * 22 Nov 2015 - 4.54
 * 21 Sep 2015 - 4.53/06
@@ -85,6 +89,6 @@
 
 #include "version_x.h"
 
-const char applicationversion[] = Version " " CurrentDate;
+const char applicationversion[] = Version " (" CurrentDate ")";
 
 /* end of version.c */

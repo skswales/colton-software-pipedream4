@@ -1,5 +1,5 @@
---- _src	2009-05-31 18:58:59 +0100
-+++ _dst	2013-08-31 18:30:02 +0100
+--- _src	2009-05-31 18:58:59.000000000 +0100
++++ _dst	2016-09-16 14:50:27.020000000 +0100
 @@ -35,6 +35,8 @@
   *
   */
@@ -134,7 +134,7 @@
                if (xfersend__sendproc (xfersend__savehandle, &rcvbufsize))
                {
 +                /* get dbox closed */
-+                win_send_close(dbox_syshandle(d));
++                winx_send_close_window_request(dbox_window_handle(d));
 +
                  /* See sendbuf for all the real work for this case... */
  
@@ -161,7 +161,7 @@
 +              xfersend__msg.hdr.your_ref = e->data.msg.hdr.my_ref;
 +
 +              /* get dbox closed */
-+              win_send_close(dbox_syshandle(d));
++              winx_send_close_window_request(dbox_window_handle(d));
 +
 +              res = (*xfersend__printproc) (e->data.msg.data.print.name,
                    xfersend__savehandle);
@@ -225,7 +225,7 @@
 -              xfersend__msg.hdr.your_ref = e->data.msg.hdr.my_ref;
 -              xfersend__msg.hdr.action = wimp_MDATALOAD;
 +              /* get dbox closed */
-+              win_send_close(dbox_syshandle(d));
++              winx_send_close_window_request(dbox_window_handle(d));
 +
                xfersend__msg.data.dataload.type = xfersend__filetype;
                wimpt_noerr (wimp_sendmessage (wimp_ESENDWANTACK, &xfersend__msg,
@@ -285,7 +285,7 @@
 +{
 +  wimp_w w = dbox_syshandle(d);
 +  fileicon(w, xfersend_FIcon, xfersend__filetype);
-+  wimpt_safe(wimp_set_icon_state(w, xfersend_FIcon, 0, 0));
++  (void) wimpt_complain(wimp_set_icon_state(w, xfersend_FIcon, (wimp_iconflags) 0, (wimp_iconflags) 0));
 +}
 +
 +BOOL xfersend_x(
@@ -460,8 +460,8 @@
 +
 +    xfersend_.ukproc = TRUE;
 +
-+    wimpt_safe(wimp_get_wind_state(w, &wstate));
-+    wimpt_safe(wimp_get_icon_info(w, xfersend_FIcon, &icon));
++    if(wimpt_complain(wimp_get_wind_state(w, &wstate))) return(FALSE);
++    if(wimpt_complain(wimp_get_icon_info(w, xfersend_FIcon, &icon))) return(FALSE);
 +    dr.window = w; /* not relevant */
 +    dr.type   = wimp_USER_FIXED;
 +    dr.box.x0 = wstate.o.box.x0 - wstate.o.x + icon.box.x0;
@@ -475,7 +475,7 @@
 +
 +    /* nd 19-07-1996 Added in support for DragASprite */
 +    if(!xfersend__using_dragasprite() || (NULL != nd_dragstart(dr, xfersend__filetype)))
-+        wimpt_safe(wimp_drag_box(&dr));
++        (void) wimpt_complain(wimp_drag_box(&dr));
 +
 +    return TRUE;
 +  }

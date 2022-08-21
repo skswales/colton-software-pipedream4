@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Command Files</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="colours.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="complexfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Command">Command Files</h1>
+    <p>
+        If you often need to give the same sequence of commands or type in the same text,
+        there are two ways to do this without having to laboriously type in the same items over and over again;
+    </p>
+    <ul>
+        <li>using command files</li>
+        <li>redefining keys or function keys.</li>
+    </ul>
+    <p>
+        A command file is simply a list of commands.
+        It is stored on disc and you call it up when you want to carry out the commands.
+        A simple example is as follows:
+    </p>
+    <p>Give the <span class="csg-command">Record Command File</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Files</td>
+                <td>Record Command File</td>
+                <td><img src="images/tbar_record_command_file.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">FY</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        When the dialogue box appears, type in the name you want the command file to have.
+        Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+    <p>
+        A tick will appear on the left of the <span class="csg-menu-option">Record command file</span> option on the
+        <span class="csg-menu">Caret</span> menu to show that you are recording a command file.
+        A command file will be opened with the name you have typed in.
+    </p>
+    <p>
+        PipeDream will create the command file in the directory from which the current document was loaded.
+        If the current file does not yet have a directory, PipeDream will create the command file in
+        <span class="csg-filename">&lt;Choices$Write&gt;.PipeDream.CmdFiles</span>.
+    </p>
+    <p>
+        Now use the keyboard keys to move down a line.
+        Many mouse movements cannot be recorded in a command file so you should use the keyboard to move around.
+        Type your name into the cell and then press <span class="csg-key">Return&crarr;</span>.
+    </p>
+    <p>
+        Give the <span class="csg-command">Record Command File</span> command again.
+        The tick to the left of the <span class="csg-menu-option">Record command file</span> option
+        will disappear to show that you are no longer recording a command file.
+        The commands that you gave and the text will be saved into the file.
+    </p>
+    <p>To run the command file, drag its icon into the PipeDream document window upon which you want it to operate.</p>
+    <p>Alternatively, give the <span class="csg-command">Do Command File</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Files</td>
+                <td>Do Command File</td>
+                <td><img src="images/tbar_execute_command_file.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">FZ</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        You should see PipeDream the caret move down a line, enter your name and then move down another line.
+        It is exactly as if you had entered the commands and the formulae at the keyboard.
+    </p>
+    <p>If you wish, you can make the command file run by assigning it to a function key.</p>
+    <p>Give the <span class="csg-command">Define Function Key</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Caret</td>
+                <td>Define function key</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CDF</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Set the <span class="csg-dbox-option">Function key to define</span> option to <span class="csg-dbox-option-value">Ctrl-Shift-F2</span>.</p>
+    <p>In the <span class="csg-dbox-option">Definition</span> input field, type</p>
+    <p class="csg-sample-indent csg-user-text">\FZ|i"name of command file"|m</p>
+    <p>
+        and then
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+    <p>When you press <span class="csg-key">Ctrl-Shift-F2</span>, the command file will be called up and the sequence of commands you typed into it will be carried out in the current window.</p>
+    <p>To run the command file in another file&rsquo;s window, drag the command file&rsquo;s icon into that window.</p>
+    <p>To load the command file into a window to examine it or edit it, drag the command file&rsquo;s icon to the PipeDream icon on the icon bar.</p>
+    <p>
+        Both for defining function keys and making command files, PipeDream uses the Ctrl-key sequences to specify commands.
+        Drag the command file&rsquo;s icon to the PipeDream icon on the icon bar to load it into a new window and examine it.
+        You will see a number of commands, each on a separate line and you will see your name.
+    </p>
+    <p>
+        <code>\</code> is used to introduce a command.
+        The command itself is specified by using its sequence
+        (<code>FZ</code> in the case of <span class="csg-command">Do Command File</span>).
+    </p>
+    <p>
+        <code>|i</code> is used to introduce a dialogue box parameter.
+        If the parameter is a text string, it must be enclosed in double quotation marks.
+    </p>
+    <p>
+        <code>|m</code> is used to terminate the command.
+        Anything on a line after the <code>|m</code> is treated as a comment.
+        PipeDream automatically puts in the name of the command when it builds command files with the recorder.
+    </p>
+    <p>Each command must be on a new line.</p>
+    <p>
+        Most of the Cmd-key sequences are specified on the Classic menus and you have probably learnt some of them already.
+        Some only appear on long menus.
+        The Cmd-key sequences which do not appear on the sub-menus are all listed in the
+        <a href="commands.html">Commands</a> section of this <em>Reference&nbsp;Guide</em>.
+        Many of these are caret movements.
+        There are some extra commands which are particularly useful in command files.
+        One is <span class="csg-cmdseq">Cmd-CCP</span> which carries out the <span class="csg-command">Pause</span> command.
+        This can be useful if you are using a command file to set up a demonstration.
+    </p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">\CCP|i5|m</pre>
+    <p>makes PipeDream pause in the command file for 5 seconds or until the user tells PipeDream to continue.</p>
+    <p>
+        Another extra command is <span class="csg-cmdseq">Cmd-ESC</span>
+        which instructs PipeDream to replace the cell contents of a number cell with a new formula.
+    </p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">\ESC|i"A1+7"|m</pre>
+    <p>means "replace the cell contents with the formula A1+7".</p>
+    <p>
+        Other useful extra commands are
+        <span class="csg-cmdseq">Cmd-FGF</span> (<span class="csg-command">Full Screen</span>) and
+        <span class="csg-cmdseq">Cmd-FGS</span> (<span class="csg-command">Save With No Box</span>).
+    </p>
+
+    <h2 id="Startup">Command Files and Startup</h2>
+    <p>
+        A special command file called <span class="csg-filename">PipeDream:key</span> can be created.
+        When PipeDream starts up it automatically looks for <span class="csg-filename">PipeDream:key</span>
+        (NB see <a href="paths.html">Paths</a> for where this could be stored) and, if it is found, it is invoked as a command file.
+        This happens after the choices file <span class="csg-filename">PipeDream:Choices</span> is loaded.
+        <span class="csg-filename">PipeDream:key</span> is most useful when it contains a set of key definitions.
+        You have seen that both function keys and other keys can be redefined to other commands.
+        You can use these facilities to create a different command key layout.
+        One example of this is the file
+        <span class="csg-filename">!PipeDream.Resources.CmdFiles.PD3keys</span>
+        which contains definitions for redefining the function keys to the PipeDream 3 settings.
+        If you copied this file to <span class="csg-filename">&lt;Choices$Write&gt;.PipeDream.key</span>, for example,
+        and then restarted PipeDream, it would use the PipeDream 3 function key settings
+        (NB we do not recommend that you actually use this example file).
+    </p>
+    <p>Alternatively, consider the following command file:</p>
+    <pre class="csg-sample-indent">
+\CDK|i35|i"&cent;"|m
+\CDF|i"F1"|i"\R|m"|m
+\CDF|i"ShiftF2"|i"\CGS |i|"C3|"|m"|m
+\CDF|i"Ctrl-F3"|i"\Q|m\Z|m"|m
+\CDF|i"Ctrl-Shift-F11"|i"\FH|m"|m
+</pre>
+    <p>
+        Note the different way in which the function keys are specified.
+        It is always easiest to generate command files using the
+        <span class="csg-command">Record Command File</span> (<span class="csg-cmdseq">Cmd-FY</span>) command.
+        This is on the long <span class="csg-menu">Caret</span> menu.
+        If you need to know the syntax of command files precisely, use the command file recorder and then load the resulting command file by dragging it to the PipeDream icon on the icon bar.
+    </p>
+    <p>
+        This command file uses the two commands Define Key and Define Function Key to redefine the
+        <span class="csg-key">#</span> key,
+        <span class="csg-key">F1</span>,
+        <span class="csg-key">Shift-F2</span>,
+        <span class="csg-key">Ctrl-F3</span> and
+        <span class="csg-key">Shift-Ctrl-F11</span> respectively.
+        The <span class="csg-key">#</span> key is redefined to produce the <code>&cent;</code> character.
+        The other four commands each redefine a function key to give commands.
+    </p>
+    <p>
+        Note that we have on each of the last four lines a command describing a command.
+        The command being invoked in each case is <span class="csg-command">Define Function Key</span>.
+        Each parameter to the command is introduced by <code>|i</code>.
+        If the parameter is a string it is enclosed within double quotation marks.
+        Notice that inside the second parameter of the definition for <span class="csg-key">Shift-F2</span> is a string which itself contains double quotation marks.
+        To tell PipeDream that each of these characters is inside the parameter string they are preceded by a solidus <code>|</code>.
+    </p>
+    <p>
+        <span class="csg-key">F1</span> is given the definition string
+        <code>\R|m</code>
+        which redefines it to <span class="csg-command">Format Paragraph</span>.
+    </p>
+    <p>
+        <span class="csg-key">Shift-F2</span> is given the definition string
+        <code>\CGS|i"C3"|m</code>
+        which redefines it to the command <span class="csg-command">Go to Cell</span> with parameter C3.
+    </p>
+    <p>
+        <span class="csg-key">Ctrl-F3</span> is given the definition string
+        <code>\Q|m\Z|m</code>
+        which redefines it to clear a marked block and then mark the current cell.
+    </p>
+    <p>
+        Finally <span class="csg-key">Shift-Ctrl-F11</span> is given the definition string
+        <code>\FH|m</code>
+        which redefines it to give Help, now that <span class="csg-key">F1</span> no longer does.
+    </p>
+
+    <h3 id="Characters"><code>|</code> Characters and Strings</h3>
+    <p>
+        Characters introduced with the <code>|</code> (solidus) indicate a special action.
+        The actions are as follows:
+    </p>
+    <p class="csg-sample-indent"><code>|m&nbsp;&nbsp;</code>terminate the command</p>
+    <p class="csg-sample-indent"><code>|i&nbsp;&nbsp;</code>introduce a parameter to the field</p>
+    <p class="csg-sample-indent"><code>|"&nbsp;&nbsp;</code>include the <code>"</code> character.</p>
+    <p class="csg-sample-indent"><code>||&nbsp;&nbsp;</code>include the <code>|</code> character</p>
+    <p>Note that spaces are allowed between parameters in a command but not before commands as they will be inserted into your document as spaces.</p>
+    <p>
+        If you wish you can create a command file which redefines all of the 48 function keys (used by themselves and with Shift and Ctrl) and also the printable characters.
+        In this way, you can create your own keyboard definitions.
+        If you save your definitions in the command file <span class="csg-filename">&lt;Choices$Write&gt;.PipeDream.key</span>,
+        PipeDream will automatically load them when it starts up, thereby redefining your keyboard.
+    </p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>Redefining single keys or function keys</td>
+                <td><a href="keyboard.html">Keyboard Definition</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Colours </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Complex Number Functions</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="colours.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="complexfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

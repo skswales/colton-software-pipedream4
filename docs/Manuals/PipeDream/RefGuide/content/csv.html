@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>CSV (Comma Separated Value) File Format</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="complexfns.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="customfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="CSV">Comma Separated Value (CSV) File Format</h1>
+    <p>This is a common file format for simple spreadsheet and database transfer between applications.</p>
+    <p>A CSV file consists of numbers and textual labels, with fields separated by commas and records by a line separator.</p>
+    <p>The following demonstrate most of the characteristics of the CSV file format:</p>
+    <table border="0">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td><code>123.456,</code></td>
+                <td><code>7.8E9,</code></td>
+                <td><code>"textstring1",</code></td>
+                <td><code>"text""string2",</code></td>
+                <td><code>"text,string3" </code></td>
+                <td><code>" text string 4 " </code></td>
+            </tr>
+            <tr style="text-align:center;">
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+                <td>6</td>
+            </tr>
+        </tbody>
+    </table>
+    <ol>
+        <li>Numbers do not appear in quotes.</li>
+        <li>Scientific notation is understood with both upper-case <code>E</code> and lower-case <code>e</code> being acceptable.</li>
+        <li>Text strings appear in double quotes.</li>
+        <li>
+            Double quotes characters can be included in text strings and are represented as two double quotes characters.
+            The example above should be interpreted as <code>text"string2</code>.
+        </li>
+        <li>Commas may appear anywhere within text strings.</li>
+        <li>Spaces may appear anywhere within text strings.</li>
+    </ol>
+    <p>White space (spaces or TAB characters) on either side of comma separators is ignored.</p>
+    <p>White space within numbers is erroneous.</p>
+    <p>PipeDream treats any of these single characters or character pairs:</p>
+    <ul>
+        <li><code>LF</code></li>
+        <li><code>CR</code></li>
+        <li><code>CR,LF</code></li>
+        <li><code>LF,CR</code></li>
+    </ul>
+    <p>as line separators.</p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Complex Number Functions </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Custom Functions</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="complexfns.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="customfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

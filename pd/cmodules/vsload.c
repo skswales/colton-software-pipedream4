@@ -316,7 +316,7 @@ vsdecodecell(
             row = (S32) *(++ip);
             rangeix += vsxtos(rangebuf + rangeix, col);
             rangeix += sprintf(rangebuf + rangeix, "%d", row + 1);
-            rangebuf[rangeix] = '\0';
+            rangebuf[rangeix] = CH_NULL;
             if(++slrcount == 2)
             {
                 if(bracix && bracstac[bracix - 1] != NO_SUM)

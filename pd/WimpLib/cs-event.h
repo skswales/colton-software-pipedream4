@@ -23,17 +23,28 @@ typedef BOOL (* event_menu_ws_proc)(void *handle, char* hit, BOOL submenurequest
 
 _Check_return_
 extern BOOL
-event_attachmenumaker_to_w_i(wimp_w, wimp_i, event_menu_maker, event_menu_ws_proc, void *handle);
+event_attachmenumaker_to_w_i(
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    event_menu_maker,
+    event_menu_ws_proc,
+    void *handle);
 
 _Check_return_
 _Ret_maybenull_
 extern os_error *
-event_create_menu(wimp_menustr * m, int x, int y);
+event_create_menu(
+    wimp_menustr * m,
+    int x,
+    int y);
 
 _Check_return_
 _Ret_maybenull_
 extern os_error *
-event_create_submenu(wimp_menustr * m, int x, int y);
+event_create_submenu(
+    wimp_menustr * m,
+    int x,
+    int y);
 /* for dbox/win to zap recreatepending */
 
 _Check_return_
@@ -44,16 +55,16 @@ event_is_menu_recreate_pending(void);
 
 extern void
 event_read_submenupos(
-    _Out_ int * const xp,
-    _Out_ int * const yp);
+    _Out_       int * const p_x,
+    _Out_       int * const p_y);
 /* Read the x, y position to open a submenu at */
 
 extern void
 event_read_menuclickdata(
-    _Out_ int * const xp,
-    _Out_ int * const yp,
-    _Out_ wimp_w * const wp,
-    _Out_ wimp_i * const ip);
+    _Out_       int * const p_x,
+    _Out_       int * const p_y,
+    _Out_       HOST_WND * const p_window_handle,
+    _Out_       int * const p_icon_handle);
 /* Read the data associated with the mouse click that created the menu you're making or handling */
 
 #endif /* __cs_event_h */

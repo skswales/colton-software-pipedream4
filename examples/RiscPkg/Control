@@ -1,14 +1,13 @@
 Package: PipeDream-Examples
-Version: 20150102
+Version: 20180225
 Section: Document
 Priority: Optional
 Maintainer: Colton Software <colton-software-pipedream@googlegroups.com>
 Standards-Version: 0.4.0
 Licence: Free
-Description: Example files and tutorials for PipeDream
- PipeDream offers all the facilities you would expect from the following separate programs:
- word processor, spreadsheet, database and charts package.
- Thanks to Richard Colton, PipeDream is now open source and completely free.
- This package contains example files and tutorials to help with using PipeDream facilities.
+Description: Example & Tutorial files for PipeDream
+ Example files to demonstrate, and help with using, various PipeDream facilities.
+ .
+ Also, files that should be used when working through the PipeDream Tutorial.
 Components: Apps.Document.PDExamples (Movable)
-Depends: PipeDream
+Recommends: PipeDream,PipeDream-Manuals

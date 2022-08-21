@@ -291,21 +291,25 @@ nextword(
     _InRef_     P_DICT p_dict,
     char *word);
 
+_Check_return_
 static S32
 ordinal_char_1(
     _InRef_     P_DICT p_dict,
     _InVal_     S32 ord);
 
+_Check_return_
 static S32
 ordinal_char_2(
     _InRef_     P_DICT p_dict,
     _InVal_     S32 ord);
 
+_Check_return_
 static S32
 ordinal_char_3(
     _InRef_     P_DICT p_dict,
     _InVal_     S32 ord);
 
+_Check_return_
 static S32
 prevword(
     _InRef_     P_DICT p_dict,
@@ -388,7 +392,7 @@ macro to get index pointer given
 either dictionary number or pointer
 */
 
-#define ixpdv(p_dict, ix) array_index_valid(&(p_dict)->dicth, ix)
+#define ixpdv(p_dict, ix) array_index_is_valid(&(p_dict)->dicth, ix)
 #define ixpdp(p_dict, ix) array_ptr(&(p_dict)->dicth, struct IXSTRUCT, ix)
 
 #define ixv(dict, ix) ixpdv(&dictlist[(dict)], ix)
@@ -590,7 +594,7 @@ spell_addword(
         switch(newword.fail)
         {
         case INS_STARTLET:
-            *newpos++ = '\0';
+            *newpos++ = CH_NULL;
             ci = newword.body;
             while(*ci)
                 *newpos++ = *ci++;
@@ -1137,7 +1141,7 @@ spell_nextword(
 
     /* return blank word at end */
     if(!res)
-        *wordout = '\0';
+        *wordout = CH_NULL;
 
     trace_2(TRACE_MODULE_SPELL, "spell_nextword yields %s, res = %d", wordout, res);
     return(res);
@@ -1382,7 +1386,7 @@ spell_prevword(
 
     /* return blank word at start */
     if(!res)
-        *wordout = '\0';
+        *wordout = CH_NULL;
 
     trace_2(TRACE_MODULE_SPELL, "spell_prevword yields %s, res = %d", wordout, res);
     return(res);
@@ -1506,6 +1510,7 @@ strnicmp_us(
     return((ch1 > ch2) ? 1 : -1);
 }
 
+_Check_return_
 extern S32
 spell_strnicmp(
     _InVal_     DICT_NUMBER dict_number,
@@ -1624,7 +1629,7 @@ badcharsin(
 {
     char ch;
 
-    while((ch = *str++) != '\0')
+    while((ch = *str++) != CH_NULL)
     {
         if(! (iswordc_us(p_dict, (S32) ch) ||
               (ch == SPELL_WILD_SINGLE) ||
@@ -1809,7 +1814,7 @@ decodeword(
 
     if(len == 1)
     {
-        *(word + 1) = '\0';
+        *(word + 1) = CH_NULL;
         return(1);
     }
 
@@ -1821,7 +1826,7 @@ decodeword(
 
     if(len == 2)
     {
-        *(word + 2) = '\0';
+        *(word + 2) = CH_NULL;
         return(2);
     }
 
@@ -1837,7 +1842,7 @@ decodeword(
 
     while(*ci)
         *co++ = (char) tolower_us(p_dict, ordinal_char_3(p_dict, *ci++));
-    *co = '\0';
+    *co = CH_NULL;
 
     return(strlen(word));
 }
@@ -2028,7 +2033,7 @@ endmatch(
     S32 len, res;
     const char *ci = mask;
 
-    if((NULL == mask) || ('\0' == mask))
+    if((NULL == mask) || (CH_NULL == mask))
         return(0);
 
     len = 0;
@@ -2344,19 +2349,19 @@ initmatch(
         co = wordout;
         do  {
             if( (NULL == ci)                 ||
-                ('\0' == *ci)                ||
+                (CH_NULL == *ci)             ||
                 (SPELL_WILD_MULTIPLE == *ci) ||
                 (SPELL_WILD_SINGLE == *ci)   )
             {
                 if((NULL == ci) || (ci == mask))
                 {
                     *co++ = p_dict->letter_1[0];
-                    *co = '\0';
+                    *co = CH_NULL;
 
                     assert(ixpdv(p_dict, 0));
                     return((ixpdp(p_dict, 0)->letflags & LET_ONE) ? 1 : 0);
                 }
-                *co = '\0';
+                *co = CH_NULL;
                 return(1);
             }
             *co++ = *ci;
@@ -2452,7 +2457,7 @@ load_dict_def(
 
     /* read key string to determine dictionary type */
     nbytes = strlen(KEYSTR);
-    *keystr = '\0';
+    *keystr = CH_NULL;
     status_return(file_read(keystr, sizeof(char), nbytes, p_dict->file_handle_dict));
 
     keylen = strlen(KEYSTR);
@@ -2576,7 +2581,7 @@ load_dict_def_now(
     token[0].len       = 0;
     token[0].alpha     = 0;
     token[0].pos       = 255;
-    token[0].ending[0] = '\0';
+    token[0].ending[0] = CH_NULL;
 
     /* read endings list */
     for(end = 1;
@@ -2602,7 +2607,7 @@ load_dict_def_now(
         if(!i || i == MAX_ENDLEN)
             return(create_error(SPELL_ERR_BADDEFFILE));
 
-        *out++ = '\0';
+        *out++ = CH_NULL;
         ep->len = (char) strlen(ep->ending);
         ep->pos = (char) end;
     }
@@ -2801,7 +2806,7 @@ lookupword(
     /* search forward for word */
     endlim = cp->data + lett->blklen;
 
-    *wp->bodyd = '\0';
+    *wp->bodyd = CH_NULL;
     while((datap + 1) < endlim)
     {
         /* save previous body */
@@ -2817,7 +2822,7 @@ lookupword(
 
         /* mark end of body */
         bodylen = co - wp->bodyd;
-        *co = '\0';
+        *co = CH_NULL;
 
         /* compare bodies and stop search if
         we are past the place */
@@ -2975,7 +2980,7 @@ makeindex(
             return(NULL);
         *co++ = (char) ch;
     }
-    *co++ = '\0';
+    *co++ = CH_NULL;
 
     /* clear tail index */
     wp->tail = 0;
@@ -3006,7 +3011,7 @@ matchword(
     char *wordp = word;
     char *nextpos = word;
 
-    if((NULL == mask) || ('\0' == *mask))
+    if((NULL == mask) || (CH_NULL == *mask))
         return(0);
 
     /* loop1 */
@@ -3026,7 +3031,7 @@ matchword(
 
             if(toupper_us(p_dict, *maskp) != toupper_us(p_dict, *wordp))
             {
-                if(*wordp == '\0')
+                if(*wordp == CH_NULL)
                     return(1);
 
                 if(*maskp != SPELL_WILD_SINGLE)
@@ -3046,7 +3051,7 @@ matchword(
                 }
             }
 
-            if(*maskp++ == '\0')
+            if(*maskp++ == CH_NULL)
                 return(0);
             ++wordp;
         }
@@ -3129,7 +3134,7 @@ nextword(
                 co = curword.bodyd;
                 while(*datap < token_start)
                     *co++ = *datap++;
-                *co++ = '\0';
+                *co++ = CH_NULL;
             }
 
             if(datap < ep)
@@ -3187,13 +3192,13 @@ nextword(
                 while((*datap < token_start) && (datap < ep))
                     *co++ = *datap++;
 
-                *co = '\0';
+                *co = CH_NULL;
                 curabval = -1;
             }
         }
 
         /* move onto the next letter */
-        *curword.bodyd = *curword.bodydp = '\0';
+        *curword.bodyd = *curword.bodydp = CH_NULL;
         curword.tail   = curword.matchc = curword.matchcp =
         curword.match  = curword.matchp = curword.findpos = 0;
 
@@ -3213,7 +3218,7 @@ nextword(
     }
     while(curword.lettix < n_index);
 
-    *word = '\0';
+    *word = CH_NULL;
     return(0);
 }
 
@@ -3225,6 +3230,7 @@ nextword(
 *
 ******************************************************************************/
 
+_Check_return_
 static S32
 ordinal_char_1(
     _InRef_     P_DICT p_dict,
@@ -3241,6 +3247,7 @@ ordinal_char_1(
 *
 ******************************************************************************/
 
+_Check_return_
 static S32
 ordinal_char_2(
     _InRef_     P_DICT p_dict,
@@ -3257,6 +3264,7 @@ ordinal_char_2(
 *
 ******************************************************************************/
 
+_Check_return_
 static S32
 ordinal_char_3(
     _InRef_     P_DICT p_dict,
@@ -3354,14 +3362,14 @@ prevword(
                     --datap;
 
                 /* build a body at the start of a block */
-                if(*datap == '\0')
+                if(*datap == CH_NULL)
                 {
                     /* skip null starter */
                     ++datap;
                     co = curword.bodyd;
                     while(*datap < token_start)
                         *co++ = *datap++;
-                    *co++ = '\0';
+                    *co++ = CH_NULL;
                     curword.matchcp = 0;
                 }
 
@@ -3457,7 +3465,7 @@ prevword(
             max_word = p_dict->char_offset + 1;
             for(i = 2, co = word + 2; i < max_word; ++i)
                 *co++ = last_ch;
-            *co = '\0';
+            *co = CH_NULL;
 
             /* set position to end of block */
             makeindex(p_dict, &curword, word);
@@ -3480,7 +3488,7 @@ prevword(
 
             for(i = 3; i < max_word; ++i)
                 *co++ = last_ch;
-            *co = '\0';
+            *co = CH_NULL;
 
             makeindex(p_dict, &curword, word);
         }
@@ -3490,7 +3498,7 @@ prevword(
     }
     while(curword.lettix >= 0);
 
-    *word = '\0';
+    *word = CH_NULL;
     return(0);
 }
 
@@ -3593,7 +3601,7 @@ read_def_line(
     }
 
     if(trail != buffer)
-        *trail++ = '\0';
+        *trail++ = CH_NULL;
 
     return(trail - buffer);
 }
@@ -3745,7 +3753,7 @@ tokenise(
         if(0 == strcmp(curend->ending, endbody - curend->len))
         {
             wp->tail = i + token_start;
-            *(endbody - curend->len) = '\0';
+            *(endbody - curend->len) = CH_NULL;
             break;
         }
     }

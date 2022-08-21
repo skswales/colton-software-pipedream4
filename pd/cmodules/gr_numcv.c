@@ -72,14 +72,14 @@ gr_font_stringwidth(
 *
 ******************************************************************************/
 
-extern os_error *
+extern _kernel_oserror *
 gr_font_truncate(
     HOST_FONT f,
     char * str /*poked*/,
     int * width_mpp /*inout*/)
 {
     font_string fs;
-    os_error * e;
+    _kernel_oserror * e;
 
     if(!f)
     {
@@ -103,7 +103,7 @@ gr_font_truncate(
 
     if(NULL == e)
     {
-        str[fs.term] = '\0';
+        str[fs.term] = CH_NULL;
         trace_2(TRACE_RISCOS_HOST, "gr_font_truncate new width: %d, str: \"%s\"", fs.x, str);
         *width_mpp = fs.x;
     }

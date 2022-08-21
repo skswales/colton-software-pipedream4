@@ -134,10 +134,6 @@ extern void message_output(_In_z_ PCTSTR buffer);
 #include "cs-bbcx.h"    /* includes bbc.h */
 #endif
 
-#ifndef __colourtran_h
-#include "colourtran.h" /* includes os.h, wimp.h, font.h */
-#endif
-
 #ifndef __cs_dbox_h
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif

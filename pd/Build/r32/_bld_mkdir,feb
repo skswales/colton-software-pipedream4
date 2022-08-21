@@ -4,7 +4,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2016 Stuart Swales
+| Copyright (C) 2013-2018 Stuart Swales
 |
 dir <Obey$Dir>
 |
@@ -17,10 +17,10 @@ copy ^.!!!waste o.modules.!!!waste ~CF~V
 settype         o.modules.!!!waste Obey
 |
 cdir            utils
-cdir            utils.GB
-cdir            utils.GB.o
-copy ^.!!!waste utils.GB.o.!!!waste ~CF~V
-settype         utils.GB.o.!!!waste obey
+cdir            utils.UK
+cdir            utils.UK.o
+copy ^.!!!waste utils.UK.o.!!!waste ~CF~V
+settype         utils.UK.o.!!!waste obey
 |
 back
 |

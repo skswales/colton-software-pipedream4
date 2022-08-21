@@ -1,5 +1,5 @@
---- _src	2011-08-06 21:05:17 +0100
-+++ _dst	2013-08-31 16:54:20 +0100
+--- _src	2011-08-06 21:05:17.000000000 +0100
++++ _dst	2016-09-16 14:50:26.680000000 +0100
 @@ -34,6 +34,10 @@
   * History: IDJ: 06-Feb-92: prepared for source release
   */
@@ -260,7 +260,7 @@
 +    do  {
 +        /* could use strncpy but for width calculation */
 +        m->m->title[i] = title[i];
-+        if (title[i] == '\0') break;
++        if (title[i] == CH_NULL) break;
 +    }
 +    while(++i < 12);
 +
@@ -297,7 +297,7 @@
 +        for(i = 0; i < length; i++)
 +            p->data.text[i] = text[i];
 +        if(length < 12)
-+            p->data.text[length] = '\0';
++            p->data.text[length] = CH_NULL;
 +    }
 +}
 +

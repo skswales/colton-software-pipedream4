@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Recalculation</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="protection.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="reformattingtext.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1>Recalculation</h1>
+    <p>
+        Recalculation ensures that the contents of number cells remain up-to-date at all times.
+        Every time you make a change to a cell, PipeDream recalculates all other cells which depend upon it.
+    </p>
+    <p>
+        PipeDream recalculates automatically unless you specify otherwise.
+        With PipeDream&rsquo;s advanced recalculation facilities, you should never need to switch to manual recalculation.
+        However, the option to do so exists.
+        You can switch off automatic recalculation by clicking the
+        <span class="csg-dbox-option">Auto recalc</span> option on the <span class="csg-menu">Choices</span> sub-menu to turn it off.
+        If you switch to manual recalculation, when you give the <span class="csg-command">Recalculate</span> command,
+        PipeDream will recalculate all those cells which have changed since the last recalculation.
+        Switching recalculation to manual applies to all documents in your computer.
+    </p>
+    <p>
+        PipeDream uses natural recalculation.
+        This means that when you change a value in the spreadsheet, or enter a new value,
+        instead of recalculating the whole spreadsheet, PipeDream recalculates only those cells which need to be altered as a result of the change you have made.
+        Therefore, only a small section usually needs to be recalculated, and recalculation is completed quickly.
+        Natural recalculation also means that forward references are automatically resolved;
+        if you have forward references, you do not have to give the <span class="csg-command">Recalculate</span> command several times to get the values to stabilise.
+        With natural recalculation, you cannot have circular or self-references.
+        If you put the formula A1+1 in cell A1, PipeDream will display the error <strong>Circular reference</strong>.
+    </p>
+
+    <h3 id="Background">Background Recalculation</h3>
+    <p>
+        PipeDream recalculates in the background, i.e. when nothing else is going on in the computer.
+        This means that you can get on with something else either in PipeDream or in another program whilst recalculation is going on.
+        PipeDream will carry on recalculating the spreadsheet whenever there is some free time to do so.
+        Whilst PipeDream is recalculating, a number is shown in the mark block box at the top left-hand side of the screen.
+        This number represents the number of cells PipeDream knows it has to recalculate.
+        Due to the complexities of natural recalculation,
+        the number may go up during a recalculation if PipeDream finds more cells needing recalculation,
+        but generally it goes down until it reaches zero.
+    </p>
+
+    <h3 id="Recalculate">To Recalculate</h3>
+    <p>If you have chosen to use manual recalculation, you will need to gave the <span class="csg-command">Recalculate</span> command to recalculate your spreadsheet:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+                <th class="csg-ct-th-key">Key</th>
+            </tr>
+            <tr>
+                <td>Files</td>
+                <td>Recalculate</td>
+                <td><span class="csg-cmdseq">A</span></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        All cells in the document which need recalculating will be recalculated.
+        The hourglass may be displayed while PipeDream completes this operation if there are many cells to recalculate.
+    </p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Protection </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Reformatting Text</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="protection.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="reformattingtext.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

@@ -37,6 +37,7 @@
 
 #include "cmodules/mlec.h"
 
+#include "riscos_x.h"
 #include "colh_x.h"
 
 static void
@@ -51,10 +52,10 @@ start_editor(
 ******************************************************************************/
 
 static S32
-formline_cursor_getpos(void);
+formline_cursor_get_position(void);
 
 static void
-formline_cursor_setpos(
+formline_cursor_set_position(
     S32 pos);
 
 /******************************************************************************
@@ -102,10 +103,10 @@ formwind_event_handler(
 static void
 formwind_open_window(
     FORMULA_WINDOW_HANDLE formwind,
-    wimp_openstr *main);
+    _In_        const WimpOpenWindowBlock * const open_window);
 
 static void
-formwind_canceledit(void);
+formwind_cancel_edit(void);
 
 static BOOL
 formwind_mergebacktext(
@@ -120,18 +121,18 @@ formwind_buildtitlestring(
     ROW row);
 
 static void
-formwind_setextent(
+formwind_set_extent(
     FORMULA_WINDOW_HANDLE formwind,
-    wimp_box paneWorkArea);
+    const BBox * const pane_extent);
 
-mlec_event_proto(static, formwind_mlec_event_handler); /* callback function */
+MLEC_EVENT_PROTO(static, formwind_mlec_event_handler); /* callback function */
 
 static void
-formwind_pointershape_starttracking(
+formwind_pointershape_start_tracking(
     FORMULA_WINDOW_HANDLE formwind);
 
 static void
-formwind_pointershape_endtracking(
+formwind_pointershape_end_tracking(
     FORMULA_WINDOW_HANDLE formwind);
 
 null_event_proto(static, formwind_pointershape_null_handler); /* callback function */
@@ -140,6 +141,18 @@ null_event_proto(static, formwind_pointershape_null_handler); /* callback functi
 #define FORMWIND_BUTTON_CANCEL     (1)
 #define FORMWIND_FUNCTION_SELECTOR (2)
 #define FORMWIND_BUTTON_NEWLINE    (3)
+#define FORMWIND_BUTTON_COPY       (4)
+#define FORMWIND_BUTTON_CUT        (5)
+#define FORMWIND_BUTTON_PASTE      (6)
+
+static void
+formwind_button_copy(void);
+
+static void
+formwind_button_cut(void);
+
+static void
+formwind_button_paste(void);
 
 static BOOL
 check_text_or_fixit(
@@ -159,8 +172,8 @@ cvt_offset_to_colrow(
     P_S32 p_row,
     BOOL *multilinep);
 
-static BOOL     formwind_position_valid = FALSE;
-static wimp_box formwind_position_box   = {0, 0, 0, 0};
+static BOOL formwind_visible_area_valid = FALSE;
+static BBox formwind_visible_area = { 0, 0, 0, 0 };
 
 /******************************************************************************
 *
@@ -190,7 +203,7 @@ function__event_menu_proc(
 extern void
 EditFormula_fn(void)
 {
-    expedit_editcurrentslot(lecpos, FALSE);     /* either in contents line or formula box as appropriate */
+    expedit_edit_current_cell(lecpos, FALSE); /* either in contents line or formula box as appropriate */
 }
 
 /******************************************************************************
@@ -203,7 +216,7 @@ extern void
 EditFormulaInWindow_fn(void)
 {
 #if TRUE
-    /* Tests performed by expedit_editcurrentslot */
+    /* Tests performed by expedit_edit_current_cell */
 #else
     if(xf_inexpression)
         return;
@@ -218,11 +231,11 @@ EditFormulaInWindow_fn(void)
         return;
     }
 
-    expedit_editcurrentslot(lecpos, TRUE);      /* force use of formula box */
+    expedit_edit_current_cell(lecpos, TRUE); /* force use of formula box */
 }
 
 extern void
-expedit_editcurrentslot(
+expedit_edit_current_cell(
     S32 caretpos,
     BOOL force_inbox)
 {
@@ -230,13 +243,13 @@ expedit_editcurrentslot(
 
     if(xf_inexpression_box)
     {
-        trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot - fronting the formula window");
+        trace_0(TRACE_APP_EXPEDIT, "expedit_edit_current_cell - fronting the formula window");
 
-        win_send_front(editexpression_formwind->mainwindow, TRUE);
+        winx_send_front_window_request(editexpression_formwind->fw_main_window_handle, TRUE);
         return;
     }
 
-    trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot");
+    trace_0(TRACE_APP_EXPEDIT, "expedit_edit_current_cell");
 
     if(xf_inexpression_line)
         return;
@@ -244,11 +257,11 @@ expedit_editcurrentslot(
     if(!mergebuf() || xf_inexpression)
         return;
 
-    *linbuf = '\0';
+    linbuf[0] = CH_NULL;
 
     tcell = travel_here();
 
-    if(tcell)
+    if(NULL != tcell)
     {
         if(tcell->type == SL_PAGE)
         {
@@ -258,7 +271,7 @@ expedit_editcurrentslot(
 
         if(tcell->justify & PROTECTED)
         {
-            reperr_null(create_error(ERR_PROTECTED));
+            reperr_null(ERR_PROTECTED);
             xf_acquirecaret = TRUE;
             return;
         }
@@ -271,15 +284,15 @@ expedit_editcurrentslot(
 
 /******************************************************************************
 *
-* Called by inschr (in bufedit) to put user in formula line when in 'numeric mode'.
+* Called by inschr (in bufedit) to put user in formula line when in 'number mode'.
 *
 ******************************************************************************/
 
 extern void
-expedit_editcurrentslot_freshcontents(
+expedit_edit_current_cell_freshcontents(
     BOOL force_inbox)
 {
-    *linbuf = '\0';
+    linbuf[0] = CH_NULL;
 
     start_editor(0, force_inbox);
 }
@@ -291,7 +304,7 @@ expedit_editcurrentslot_freshcontents(
 ******************************************************************************/
 
 extern void
-expedit_recompilecurrentslot_reporterrors(void)
+expedit_recompile_current_cell_reporterrors(void)
 {
     P_CELL  tcell;
     S32    err, at_pos;
@@ -299,45 +312,45 @@ expedit_recompilecurrentslot_reporterrors(void)
     if(!mergebuf() || xf_inexpression || xf_inexpression_box || xf_inexpression_line)
         return;
 
-    *linbuf = '\0';
+    linbuf[0] = CH_NULL;
 
     tcell = travel_here();
 
-    if(tcell)
+    if(NULL == tcell)
+        return;
+
+    if(tcell->type != SL_TEXT)
+        return;
+
+    if(tcell->justify & PROTECTED)
     {
-        if(tcell->type != SL_TEXT)
-            return;
-
-        if(tcell->justify & PROTECTED)
-        {
-            reperr_null(create_error(ERR_PROTECTED));
-            xf_acquirecaret = TRUE;
-            return;
-        }
-
-        prccon(linbuf, tcell);
-        slot_in_buffer = buffer_altered = TRUE;
-        edtslr_col = curcol;
-        edtslr_row = currow;
-
-      /*seteex_nodraw();*/
-        merexp_reterr(&err, &at_pos, TRUE);
-      /*endeex_nodraw();*/
-
-        if(err < 0)
-        {
-            if((at_pos >= 0) && !check_text_or_fixit(err))
-            {
-                start_editor(at_pos, FALSE);    /* use line or box as appropriate */
-                return;
-            }
-
-            merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text cell */
-        }
-
-        slot_in_buffer = buffer_altered = FALSE;
-        lecpos = lescrl = 0;
+        reperr_null(ERR_PROTECTED);
+        xf_acquirecaret = TRUE;
+        return;
     }
+
+    prccon(linbuf, tcell);
+    slot_in_buffer = buffer_altered = TRUE;
+    edtslr_col = curcol;
+    edtslr_row = currow;
+
+  /*seteex_nodraw();*/
+    merexp_reterr(&err, &at_pos, TRUE);
+  /*endeex_nodraw();*/
+
+    if(err < 0)
+    {
+        if((at_pos >= 0) && !check_text_or_fixit(err))
+        {
+            start_editor(at_pos, FALSE);    /* use line or box as appropriate */
+            return;
+        }
+
+        merexp_reterr(NULL, NULL, TRUE);        /* force expression into sheet as a text cell */
+    }
+
+    slot_in_buffer = buffer_altered = FALSE;
+    lecpos = lescrl = 0;
 }
 
 extern void
@@ -346,20 +359,22 @@ expedit_transfer_line_to_box(
 {
     if(xf_inexpression_line)
     {
-        wimp_icon  icon;
-        S32        caretpos;
-        char       title[LIN_BUFSIZ];
-        S32        err;
+        WimpGetIconStateBlock icon_state;
+        S32 caretpos;
+        char title[LIN_BUFSIZ];
+        S32 err;
 
-        wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
+        icon_state.window_handle = colh_window_handle;
+        icon_state.icon_handle = COLH_CONTENTS_LINE;
+        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
 
-        caretpos = formline_cursor_getpos();    /* either actual or last known caret position */
+        caretpos = formline_cursor_get_position();    /* either actual or last known caret position */
 
         formwind_buildtitlestring(title, elemof32(title), edtslr_col, edtslr_row);  /* Build string, e.g. "Formula window: A1" */
 
         if((err = formwind_create_fill_open(&editexpression_formwind,
                                             current_docno(),
-                                            icon.data.indirecttext.buffer,
+                                            icon_state.icon.data.it.buffer,
                                             caretpos,   /* cursor col */
                                             0,          /* cursor row */
                                             newline,    /* performed AFTER cursor positioning */
@@ -368,11 +383,22 @@ expedit_transfer_line_to_box(
           )
         {
             xf_inexpression_line = FALSE;
-            colh_draw_contents_of_numslot();
+            colh_draw_contents_of_number_cell();
             xf_inexpression_box  = TRUE;        /* All other flags remain the same */
             colh_draw_edit_state_indicator();
         }
     }
+}
+
+static void
+expedit_force_redraw(void)
+{
+    WimpSetIconStateBlock set_icon_state_block;
+    set_icon_state_block.window_handle = colh_window_handle;
+    set_icon_state_block.icon_handle = COLH_CONTENTS_LINE;
+    set_icon_state_block.EOR_word = 0;
+    set_icon_state_block.clear_word = 0;
+    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
 }
 
 extern BOOL
@@ -383,29 +409,31 @@ expedit_insert_char(
 
     if(xf_inexpression_line)
     {
-        wimp_icon  icon;
-        S32        caretpos;
-        S32        length;
-        char      *currpos;
+        WimpGetIconStateBlock icon_state;
+        S32 caretpos;
+        S32 length;
+        char *currpos;
 
-        wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
+        icon_state.window_handle = colh_window_handle;
+        icon_state.icon_handle = COLH_CONTENTS_LINE;
+        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
 
-        caretpos = formline_cursor_getpos();
-        length   = strlen(icon.data.indirecttext.buffer);
+        caretpos = formline_cursor_get_position();
+        length   = strlen(icon_state.icon.data.it.buffer);
 
         caretpos = MAX(caretpos, 0);
         caretpos = MIN(caretpos, length);
 
-        if((length + 1) < icon.data.indirecttext.bufflen)
+        if((length + 1) < icon_state.icon.data.it.buffer_size)
         {
-            currpos = icon.data.indirecttext.buffer + caretpos;
+            currpos = icon_state.icon.data.it.buffer + caretpos;
             memmove32(currpos+1, currpos, (length - caretpos + 1));
             *currpos = ch;
 
             /* Nudge caret position, and force a redraw */
             ++caretpos;
-            formline_cursor_setpos(caretpos);
-            wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
+            formline_cursor_set_position(caretpos);
+            expedit_force_redraw();
         }
         else
             had_error = TRUE;
@@ -430,29 +458,31 @@ expedit_insert_string(
 
     if(xf_inexpression_line)
     {
-        wimp_icon  icon;
-        S32        caretpos;
-        S32        length;
-        char      *currpos;
+        WimpGetIconStateBlock icon_state;
+        S32 caretpos;
+        S32 length;
+        char *currpos;
 
-        wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
+        icon_state.window_handle = colh_window_handle;
+        icon_state.icon_handle = COLH_CONTENTS_LINE;
+        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
 
-        caretpos = formline_cursor_getpos();
-        length   = strlen(icon.data.indirecttext.buffer);
+        caretpos = formline_cursor_get_position();
+        length   = strlen(icon_state.icon.data.it.buffer);
 
         caretpos = MAX(caretpos, 0);
         caretpos = MIN(caretpos, length);
 
-        if((length + insertlen) < icon.data.indirecttext.bufflen)
+        if((length + insertlen) < icon_state.icon.data.it.buffer_size)
         {
-            currpos = icon.data.indirecttext.buffer + caretpos;
+            currpos = icon_state.icon.data.it.buffer + caretpos;
             memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
             memmove32(currpos, insertstr, insertlen);                       /* splice text in */
 
             /* Nudge caret position, and force a redraw */
             caretpos += insertlen;
-            formline_cursor_setpos(caretpos);
-            wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
+            formline_cursor_set_position(caretpos);
+            expedit_force_redraw();
         }
         else
             had_error = TRUE;
@@ -472,12 +502,12 @@ expedit_get_cursorpos(
 {
     if(xf_inexpression_line)
     {
-        *p_col = formline_cursor_getpos();
+        *p_col = formline_cursor_get_position();
         *p_row = 0;
     }
     else if(xf_inexpression_box)
     {
-        mlec__cursor_getpos(editexpression_formwind->mlec, p_col, p_row);
+        mlec__cursor_get_position(editexpression_formwind->mlec, p_col, p_row);
     }
 }
 
@@ -488,11 +518,11 @@ expedit_set_cursorpos(
 {
     if(xf_inexpression_line)
     {
-        formline_cursor_setpos(col);
+        formline_cursor_set_position(col);
     }
     else if(xf_inexpression_box)
     {
-        mlec__cursor_setpos(editexpression_formwind->mlec, col, row);
+        mlec__cursor_set_position(editexpression_formwind->mlec, col, row);
     }
 }
 
@@ -504,12 +534,14 @@ expedit_delete_bit_of_line(
 {
     if(xf_inexpression_line)
     {
-        wimp_icon icon;
-        S32       start, end, length;
+        WimpGetIconStateBlock icon_state;
+        S32 start, end, length;
 
-        wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
+        icon_state.window_handle = colh_window_handle;
+        icon_state.icon_handle = COLH_CONTENTS_LINE;
+        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
 
-        length = strlen(icon.data.indirecttext.buffer);
+        length = strlen(icon_state.icon.data.it.buffer);
 
         start = MIN(col_start, col_end);
         end   = MAX(col_start, col_end);
@@ -518,17 +550,16 @@ expedit_delete_bit_of_line(
         end   = MIN(end  , length);
 
         if(start < end)
-        {
-            /* chop characters from the buffer, position the caret at start of cut, and force a redraw */
-            memmove32(&icon.data.indirecttext.buffer[start], &icon.data.indirecttext.buffer[end], (length - end + 1));
-            formline_cursor_setpos(start);
-            wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
+        {   /* chop characters from the buffer, position the caret at start of cut, and force a redraw */
+            memmove32(&icon_state.icon.data.it.buffer[start], &icon_state.icon.data.it.buffer[end], (length - end + 1));
+            formline_cursor_set_position(start);
+            expedit_force_redraw();
         }
     }
     else if(xf_inexpression_box)
     {
-        mlec__cursor_setpos   (editexpression_formwind->mlec, col_start, row);
-        mlec__selection_adjust(editexpression_formwind->mlec, col_end  , row);
+        mlec__cursor_set_position(editexpression_formwind->mlec, col_start, row);
+        mlec__selection_adjust(editexpression_formwind->mlec, col_end, row);
         mlec__selection_delete(editexpression_formwind->mlec);
     }
 }
@@ -550,13 +581,13 @@ expedit_mergebacktext(
 #ifdef UNUSED
 
 extern void
-expedit_canceledit(void)
+expedit_cancel_edit(void)
 {
     if(xf_inexpression_box)
-        formwind_canceledit();
+        formwind_cancel_edit();
 
     if(xf_inexpression_line)
-        formline_canceledit();
+        formline_cancel_edit();
 }
 
 #endif /* UNUSED */
@@ -579,7 +610,7 @@ expedit_close_file(
     old_docno = change_document_using_docno(docno);
 
     if(xf_inexpression_box)
-        formwind_canceledit();
+        formwind_cancel_edit();
 
     select_document_using_docno(old_docno);
 }
@@ -587,11 +618,11 @@ expedit_close_file(
 extern BOOL
 expedit_owns_window(
     P_DOCU p_docu,
-    wimp_w window)
+    _HwndRef_   HOST_WND window_handle)
 {
     if(p_docu->Xxf_inexpression_box)
     {
-        if(window == p_docu->Xeditexpression_formwind->panewindow)
+        if(window_handle == p_docu->Xeditexpression_formwind->fw_pane_window_handle)
             return(TRUE);
     }
 
@@ -608,7 +639,7 @@ start_editor(
 
     cvt_offset_to_colrow(linbuf, caretpos, &cursorcol, &cursorrow, &multiline);
 
-    if(multiline || force_inbox || !borbit)
+    if(multiline || force_inbox || !displaying_borders)
     {
         /* Fire up the formula box */
 
@@ -645,41 +676,34 @@ start_editor(
 #else
         assert((cursorrow == 0));       /* caret IS allowed beyond end of line but editors dont pad with spaces to that point */
 #endif
+        { /* Formula fits in one line, so edit it on the contents line */
+        WimpGetIconStateBlock icon_state;
+        icon_state.window_handle = colh_window_handle;
+        icon_state.icon_handle = COLH_CONTENTS_LINE;
+        if(NULL == WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
         {
-        /* Formula fits in one line, so edit it on the contents line */
-
-        wimp_icon     icon;
-      /*wimp_caretstr carrot;*/
-
-        wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
-        assert(icon.data.indirecttext.bufflen == LIN_BUFSIZ);
-        strcpy(icon.data.indirecttext.buffer, linbuf);
-        wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
-#if TRUE
-        formline_cursor_setpos(caretpos);
-        formline_claim_focus();
-#else
-        carrot.w = colh_window;
-        carrot.i = (wimp_i)COLH_CONTENTS_LINE;
-        carrot.x = carrot.y = carrot.height = -1;
-        carrot.index = caretpos;
-
-        wimp_set_caret_pos(&carrot);
-#endif
+            assert(icon_state.icon.data.it.buffer_size == LIN_BUFSIZ);
+            strcpy(icon_state.icon.data.it.buffer, linbuf);
         }
-    {                   /* Show cell as being editted */
+        expedit_force_redraw();
+        } /*block*/
+
+        formline_cursor_set_position(caretpos);
+        formline_claim_focus();
+
+        { /* Show cell as being editted */
         /*seteex();*/
         output_buffer = slot_in_buffer = buffer_altered = xf_blockcursor = TRUE;
 
         edtslr_col = curcol;
-        edtslr_row = currow;        /* save current position */
+        edtslr_row = currow; /* save current position */
 
         xf_inexpression_line = TRUE;
 
         mark_row(currowoffset);
         colh_draw_edit_state_indicator();
         draw_screen();
-    }
+        }
     }
 }
 
@@ -687,7 +711,7 @@ start_editor(
 *
 * Formula line routines.
 *
-* The formula line is a single-line expression editor based on a window manager indirected writable text icon.
+* The formula line is a single-line expression editor based on a Window Manager indirected writable text icon.
 * This icon, 'COLH_CONTENTS_LINE', is dual purpose, being used as the 'current cell contents' line until
 * clicked-on, at which point it becomes an editor.
 *
@@ -696,66 +720,84 @@ start_editor(
 extern void
 formline_claim_focus(void)
 {
-    wimp_caretstr carrot;    /* nyeeeer, whats up doc? */
+    WimpCaret caret;
 
-    wimp_get_caret_pos(&carrot);
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        return;
 
-    if((carrot.w != colh_window) || (carrot.i != (wimp_i)COLH_CONTENTS_LINE))
+    if( (caret.window_handle != colh_window_handle) ||
+        (caret.icon_handle != COLH_CONTENTS_LINE) )
     {
-        carrot.w      = colh_window;
-        carrot.i      = (wimp_i)COLH_CONTENTS_LINE;
-        carrot.x      = -1;
-        carrot.y      = -1;
-        carrot.height = -1;
-        carrot.index  = formline_stashedcaret;   /* index into string, set by formline_cursor_setpos */
-                                                 /* or when caret was stolen from us                 */
-        wimp_set_caret_pos(&carrot);
+        /* formline_stashedcaret is index into string,
+         * set by formline_cursor_set_position or when caret was stolen from us
+         */
+        void_WrapOsErrorReporting(
+            tbl_wimp_set_caret_position(colh_window_handle, COLH_CONTENTS_LINE,
+                                        -1, -1,
+                                        -1, formline_stashedcaret));
     }
-  /*else                                      */
-  /*    formline_stashedcaret = carrot.index; */
+  /*else                                     */
+  /*    formline_stashedcaret = caret.index; */
 }
 
-static S32
-formline_cursor_getpos(void)
+static int
+formline_cursor_get_position(void)
 {
-    wimp_caretstr  carrot;
-    wimp_icon      icon;
-    S32            caretpos;
-    S32            length;
+    WimpCaret caret;
+    int pos;
+    int length;
 
-    wimp_get_caret_pos(&carrot);
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
-
-    length = strlen(icon.data.indirecttext.buffer);
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        return(0);
 
     /* If the caret is within the icon, return its string index position,      */
     /* else someone has stolen the caret from us, so return the stashed value. */
 
-    if((carrot.w == colh_window) && (carrot.i == (wimp_i)COLH_CONTENTS_LINE))
-        caretpos = carrot.index;
+    if( (caret.window_handle == colh_window_handle) &&
+        (caret.icon_handle == COLH_CONTENTS_LINE) )
+    {
+        pos = caret.index;
+    }
     else
-        caretpos = formline_stashedcaret;
+        pos = formline_stashedcaret;
 
-    caretpos = MAX(caretpos, 0);
-    caretpos = MIN(caretpos, length);
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_CONTENTS_LINE;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        length = 0;
+    else
+        length = strlen(icon_state.icon.data.it.buffer);
+    } /*block*/
 
-    formline_stashedcaret = caretpos;
+    pos = MAX(pos, 0);
+    pos = MIN(pos, length);
 
-    return(caretpos);
+    formline_stashedcaret = pos;
+
+    return(pos);
 }
 
 static void
-formline_cursor_setpos(
-    S32 pos)
+formline_cursor_set_position(
+    int pos)
 {
-    wimp_caretstr  carrot;
-    wimp_icon      icon;
-    S32            length;
+    WimpCaret caret;
+    int length;
 
-    wimp_get_caret_pos(&carrot);
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        return;
 
-    length = strlen(icon.data.indirecttext.buffer);
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_CONTENTS_LINE;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        length = 0;
+    else
+        length = strlen(icon_state.icon.data.it.buffer);
+    } /*block*/
 
     pos = MAX(pos, 0);
     pos = MIN(pos, length);
@@ -764,13 +806,14 @@ formline_cursor_setpos(
 
     /* If caret is within the icon, and is not at required place, reposition it. */
 
-    if((carrot.w == colh_window)                &&
-       (carrot.i == (wimp_i)COLH_CONTENTS_LINE) &&
-       (carrot.index != pos)
-      )
+    if( (caret.window_handle == colh_window_handle) &&
+        (caret.icon_handle == COLH_CONTENTS_LINE) &&
+        (caret.index != pos) )
     {
-        carrot.index = pos;
-        wimp_set_caret_pos(&carrot);
+        void_WrapOsErrorReporting(
+            tbl_wimp_set_caret_position(caret.window_handle, caret.icon_handle,
+                                        caret.xoffset, caret.yoffset,
+                                        caret.height, pos));
     }
 }
 
@@ -781,16 +824,24 @@ formline_mergebacktext(
 {
     if(xf_inexpression_line)
     {
-        wimp_icon icon;
-        S32       err, at_pos;
+        S32 err, at_pos;
 
         /* next/prev match and its friends want to know where the caret is */
         if(caretposp)
-            *caretposp = formline_cursor_getpos();
+            *caretposp = formline_cursor_get_position();
 
-        wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &icon);
-        assert(icon.data.indirecttext.bufflen == LIN_BUFSIZ);
-        strcpy(linbuf, icon.data.indirecttext.buffer);
+        {
+        WimpGetIconStateBlock icon_state;
+        icon_state.window_handle = colh_window_handle;
+        icon_state.icon_handle = COLH_CONTENTS_LINE;
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+            linbuf[0] = CH_NULL;
+        else
+        {
+            assert(icon_state.icon.data.it.buffer_size == LIN_BUFSIZ);
+            strcpy(linbuf, icon_state.icon.data.it.buffer);
+        }
+        } /*block*/
 
         buffer_altered = TRUE;
         slot_in_buffer = TRUE;
@@ -803,7 +854,7 @@ formline_mergebacktext(
             {
                 if((at_pos >= 0) && !check_text_or_fixit(err))
                 {
-                    formline_cursor_setpos(at_pos);     /* show position of error */
+                    formline_cursor_set_position(at_pos);     /* show position of error */
                     return(FALSE);                      /* retain editing state   */
                 }
 
@@ -816,14 +867,14 @@ formline_mergebacktext(
         if(macro_recorder_on)
             output_formula_to_macro_file(linbuf);
 
-        formline_canceledit();
+        formline_cancel_edit();
     }
 
     return(TRUE);
 }
 
 extern void
-formline_canceledit(void)
+formline_cancel_edit(void)
 {
     /* c.f. endeex in c.numbers */
 
@@ -871,7 +922,7 @@ formwind_create_fill_open(
 
     if((err = formwind_create(formwindp, docno)) >= 0)
     {
-        win_settitle((*formwindp)->mainwindow, title);
+        win_settitle((*formwindp)->fw_main_window_handle, title);
 
         formwind_open_infront_withfocus(*formwindp);
 
@@ -894,62 +945,72 @@ formwind_create(
     S32              err = 0;
     FORMULA_WINDOW_HANDLE  formwind;
     MLEC_HANDLE      mlec;
-    template        *templatehanmain;
-    template        *templatehanpane;
-    wimp_wind       *templatemain;
-    wimp_wind       *templatepane;
-    wimp_w           main_win_handle;
-    wimp_w           pane_win_handle;
-    wimp_box         mainBB, paneBB;  /* visible area     */
-    wimp_box         paneExtent;      /* work area extent */
+    template        *template_handle_main;
+    template        *template_handle_pane;
+    HOST_WND         fw_main_window_handle;
+    HOST_WND         fw_pane_window_handle;
+    BBox             fw_main_visible_area;
+    BBox             fw_pane_visible_area;
+    BBox             fw_pane_extent;
 
     *formwindp = formwind = al_ptr_alloc_elem(FORMULA_WINDOW, 1, &err);
 
     if(formwind)
     {
-        formwind->mlec         = NULL;
-        formwind->mainwindow   = formwind->panewindow   = 0;
-        formwind->maintemplate = formwind->panetemplate = NULL;
-        formwind->tracking     = FALSE;
+        formwind->mlec = NULL;
+        formwind->fw_main_window_handle = HOST_WND_NONE;
+        formwind->fw_pane_window_handle = HOST_WND_NONE;
+        formwind->fw_main_template = NULL;
+        formwind->fw_pane_template = NULL;
+        formwind->tracking = FALSE;
 
         if((err = mlec_create(&mlec)) >= 0)
         {
             formwind->mlec = mlec;
 
-            templatehanmain = template_find_new("ExpEdMain");  /*>>>use a manifest??*/
-            templatehanpane = template_find_new("ExpEdPane");  /*>>>use a manifest??*/
+            template_handle_main = template_find_new("ExpEdMain"); /*>>>use a manifest??*/
+            template_handle_pane = template_find_new("ExpEdPane"); /*>>>use a manifest??*/
 
-            if(templatehanmain && templatehanpane)
+            if(template_handle_main && template_handle_pane)
             {
-                formwind->maintemplate = templatemain = template_copy_new(templatehanmain);
-                formwind->panetemplate = templatepane = template_copy_new(templatehanpane);
+                WimpWindowWithBitset * fw_main_template;
+                WimpWindowWithBitset * fw_pane_template;
 
-                if(templatemain && templatepane)
+                formwind->fw_main_template = fw_main_template = template_copy_new(template_handle_main);
+                formwind->fw_pane_template = fw_pane_template = template_copy_new(template_handle_pane);
+
+                if(formwind->fw_main_template && formwind->fw_pane_template)
                 {
                     os_error * e;
-                    mainBB = templatemain->box;
 
-                    e = win_create_wind(templatemain, &main_win_handle,
-                                         formwind_event_handler, (void*)(uintptr_t)docno);
+                    fw_main_visible_area = fw_main_template->visible_area;
 
-                    if(!e)
+                    e = winx_create_window(formwind->fw_main_template, &fw_main_window_handle,
+                                           formwind_event_handler, (void*)(uintptr_t)docno);
+
+                    if(NULL == e)
                     {
                         /* Created main window */
 
-                        formwind->mainwindow   = main_win_handle;
+                        formwind->fw_main_window_handle = fw_main_window_handle;
 
-                        paneBB     = templatepane->box;
-                        paneExtent = templatepane->ex;
+                        fw_pane_visible_area = fw_pane_template->visible_area;
 
-                        e = wimp_create_wind(templatepane, &pane_win_handle);
+                        fw_pane_extent = fw_pane_template->extent;
 
-                        if(!e)
+                        e = tbl_wimp_create_window(formwind->fw_pane_template, &fw_pane_window_handle);
+
+                        if(NULL == e)
                         {
                             /* Created pane window */
 
-                            formwind->panewindow   = pane_win_handle;
+                            formwind->fw_pane_window_handle = fw_pane_window_handle;
 
-                            mlec_attach(mlec, main_win_handle, pane_win_handle, paneExtent, formwind_menu_title);
+                            mlec_attach(mlec,
+                                        formwind->fw_main_window_handle,
+                                        formwind->fw_pane_window_handle,
+                                        &fw_pane_extent,
+                                        formwind_menu_title);
 
                             /* To recap:                                                 */
                             /* We've created the edit box main window (where the buttons */
@@ -957,24 +1018,25 @@ formwind_create(
                             /* various event handlers have been set up and the mlec data */
                             /* structures tied to the windows                            */
 
-                            formwind->margin.x0    = paneBB.x0 - mainBB.x0;
-                            formwind->margin.y0    = paneBB.y0 - mainBB.y0;
-                            formwind->margin.x1    = paneBB.x1 - mainBB.x1;
-                            formwind->margin.y1    = paneBB.y1 - mainBB.y1;
+                            formwind->offset_left   = fw_pane_visible_area.xmin - fw_main_visible_area.xmin;
+                            formwind->offset_bottom = fw_pane_visible_area.ymin - fw_main_visible_area.ymin;
+                            formwind->offset_right  = fw_pane_visible_area.xmax - fw_main_visible_area.xmax;
+                            formwind->offset_top    = fw_pane_visible_area.ymax - fw_main_visible_area.ymax;
 
-                            formwind->docno    = docno;
+                            formwind->docno = docno;
 
                             mlec_attach_eventhandler(mlec, formwind_mlec_event_handler, formwind, TRUE);
 
                             /* Create function paster menu */
                             function__event_menu_maker();
-                            event_attachmenumaker_to_w_i(main_win_handle,
-                                                        (wimp_i)FORMWIND_FUNCTION_SELECTOR,
+
+                            event_attachmenumaker_to_w_i(formwind->fw_main_window_handle,
+                                                        FORMWIND_FUNCTION_SELECTOR,
                                                         function__event_menu_filler,
                                                         function__event_menu_proc,
                                                         (void *)(uintptr_t)docno);
 
-                            formwind_setextent(formwind, paneExtent);
+                            formwind_set_extent(formwind, &fw_pane_extent);
 
                             return(0);
                         }
@@ -1012,7 +1074,7 @@ formwind_destroy(
 {
     if(*formwindp)
     {
-        formwind_pointershape_endtracking(*formwindp);
+        formwind_pointershape_end_tracking(*formwindp);
 
         if((*formwindp)->mlec)
         {
@@ -1020,21 +1082,19 @@ formwind_destroy(
             mlec_destroy(&((*formwindp)->mlec));
         }
 
-        /* SKS after 4.12 use win_ not wimp_ so that event handlers are released and
+        /* SKS after PD 4.12 use win_ not wimp_ so that event handlers are released and
          * don't give exception-causing events after window structures freed
          * also changed _noerr to _complain and template free to template_copy_dispose
         */
-        if((*formwindp)->mainwindow)
-            wimpt_complain(win_delete_wind(&(*formwindp)->mainwindow));
+        if((*formwindp)->fw_main_window_handle)
+            void_WrapOsErrorReporting(winx_delete_window(&(*formwindp)->fw_main_window_handle));
 
-        if((*formwindp)->panewindow)
-            wimpt_complain(win_delete_wind(&(*formwindp)->panewindow));
+        if((*formwindp)->fw_pane_window_handle)
+            void_WrapOsErrorReporting(winx_delete_window(&(*formwindp)->fw_pane_window_handle));
 
-        if((*formwindp)->maintemplate)
-            template_copy_dispose((wimp_wind **) &(*formwindp)->maintemplate);
+        template_copy_dispose((WimpWindowWithBitset **) &(*formwindp)->fw_main_template);
 
-        if((*formwindp)->panetemplate)
-            template_copy_dispose((wimp_wind **) &(*formwindp)->panetemplate);
+        template_copy_dispose((WimpWindowWithBitset **) &(*formwindp)->fw_pane_template);
 
         al_ptr_dispose(P_P_ANY_PEDANTIC(formwindp));
     }
@@ -1044,21 +1104,43 @@ static void
 formwind_open_infront_withfocus(
     FORMULA_WINDOW_HANDLE formwind)
 {
-    wimp_wstate  state;
+    WimpGetWindowStateBlock window_state;
 
-    /* Get the state of the window */
-    if(wimpt_complain(wimp_get_wind_state(formwind->mainwindow, &state)) == 0)
+    /* Get the state of the main window */
+    window_state.window_handle = formwind->fw_main_window_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        return;
+
+    assert(0 == window_state.xscroll);
+    assert(0 == window_state.yscroll);
+
     {
-        state.o.behind = (wimp_w)-1;    /* Make sure window is opened in front */
+    WimpOpenWindowBlock open_window_block;
 
-        /* Robert wants all formula windows to open/reopen where user last placed one */
-        if(formwind_position_valid)
-            state.o.box = formwind_position_box;
+    open_window_block.window_handle = formwind->fw_main_window_handle;
 
-        formwind_open_window(formwind, &state.o);
+    /* Robert wants all subsequent formula windows to open where user last placed one */
+    if(formwind_visible_area_valid)
+    {
+        open_window_block.visible_area = formwind_visible_area;
 
-        mlec_claim_focus(formwind->mlec);
+        open_window_block.xscroll = 0;
+        open_window_block.yscroll = 0;
     }
+    else
+    {
+        open_window_block.visible_area = window_state.visible_area;
+
+        open_window_block.xscroll = window_state.xscroll;
+        open_window_block.yscroll = window_state.yscroll;
+    }
+
+    open_window_block.behind = (wimp_w) -1; /* Make sure window is opened in front */
+
+    formwind_open_window(formwind, &open_window_block);
+    } /*block*/
+
+    mlec_claim_focus(formwind->mlec);
 }
 
 static S32
@@ -1072,7 +1154,7 @@ formwind_settext(
 
     if((err = mlec_SetText(formwind->mlec, text)) >= 0)
     {
-        mlec__cursor_setpos(formwind->mlec, cursorcol, cursorrow);
+        mlec__cursor_set_position(formwind->mlec, cursorcol, cursorrow);
 
         /* if newline required, do one only if text is present */
         if(newline && *text)
@@ -1097,218 +1179,299 @@ formwind_buildtitlestring(
 }
 
 static BOOL
-formwind_event_handler(
-    wimp_eventstr *e,
-    void *handle)
+formwind_event_Mouse_Click(
+    const WimpMouseClickEvent * const mouse_click)
 {
-    MLEC_HANDLE mlec;
-
-    if(!select_document_using_callback_handle(handle))
-        return(FALSE);
-
-    mlec = editexpression_formwind->mlec;
-
-    /* Deal with event */
-    switch (e->e)
+    if(mouse_click->buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust)) /* 'Select' or 'Adjust' */
     {
-    case wimp_EOPEN:                                                /* 2 */
-        formwind_open_window(editexpression_formwind, &e->data.o);  /* main & pane */
-        break;
-
-    case wimp_EREDRAW:                                              /* 1 */
-        return(FALSE);              /* default action */
-        break;
-
-    case wimp_ECLOSE:       /* treat a close request as a cancel */ /* 3 */
-        formwind_canceledit();
-        break;
-
-    case wimp_EPTRENTER:
-        formwind_pointershape_starttracking(editexpression_formwind);
-        break;
-
-    case wimp_EPTRLEAVE:
-        formwind_pointershape_endtracking(editexpression_formwind);
-        break;
-
-    case wimp_EBUT:                                                 /* 6 */
-        if(e->data.but.m.bbits & 0x5)   /* 'select' or 'adjust' */
+        switch(mouse_click->icon_handle)
         {
-            switch ((int)e->data.but.m.i)
-            {
-            case FORMWIND_BUTTON_OK:
-                formwind_mergebacktext(TRUE, NULL);     /* report formula compilation errors */
-                break;
+        case FORMWIND_BUTTON_OK:
+            formwind_mergebacktext(TRUE, NULL); /* report formula compilation errors */
+            break;
 
-            case FORMWIND_BUTTON_CANCEL:
-                formwind_canceledit();
-                break;
+        case FORMWIND_BUTTON_CANCEL:
+            formwind_cancel_edit();
+            break;
 
-            case FORMWIND_BUTTON_NEWLINE:
-                mlec__insert_newline(mlec);
-                break;
-            }
+        case FORMWIND_BUTTON_NEWLINE:
+            mlec__insert_newline(editexpression_formwind->mlec);
+            break;
+
+        case FORMWIND_BUTTON_COPY:
+            formwind_button_copy();
+            break;
+
+        case FORMWIND_BUTTON_CUT:
+            formwind_button_cut();
+            break;
+
+        case FORMWIND_BUTTON_PASTE:
+            formwind_button_paste();
+            break;
         }
-        break;
-
-    default:   /* Ignore any other events */
-        return(FALSE);
-        break;
     }
 
     /* done something, so... */
     return(TRUE);
 }
 
+static BOOL
+formwind_event_Open_Window_Request(
+    const WimpOpenWindowRequestEvent * const open_window_request)
+{
+    formwind_open_window(editexpression_formwind, open_window_request); /* main & pane */
+
+    return(TRUE);
+}
+
+static BOOL
+formwind_event_Close_Window_Request(
+    const WimpCloseWindowRequestEvent * const close_window_request)
+{
+    UNREFERENCED_PARAMETER_InRef_(close_window_request);
+
+    formwind_cancel_edit(); /* treat a close request as a cancel */
+
+    return(TRUE);
+}
+
+static BOOL
+formwind_event_Pointer_Leaving_Window(
+    const WimpPointerLeavingWindowEvent * const pointer_leaving_window)
+{
+    UNREFERENCED_PARAMETER_InRef_(pointer_leaving_window);
+
+    formwind_pointershape_end_tracking(editexpression_formwind);
+
+    return(TRUE);
+}
+
+static BOOL
+formwind_event_Pointer_Entering_Window(
+    const WimpPointerEnteringWindowEvent * const pointer_entering_window)
+{
+    UNREFERENCED_PARAMETER_InRef_(pointer_entering_window);
+
+    formwind_pointershape_start_tracking(editexpression_formwind);
+
+    return(TRUE);
+}
+
+static BOOL
+formwind_event_Message_HelpRequest(
+    /*acked*/ WimpMessage * const user_message)
+{
+    const int icon_handle = user_message->data.help_request.icon_handle;
+    char abuffer[256+128/*bit of slop*/];
+    const U32 prefix_len = 0;
+    const char * msg = NULL;
+
+    trace_0(TRACE_APP_PD4, "Help request on formula window");
+
+    if(drag_type != NO_DRAG_ACTIVE) /* stop pointer and message changing whilst dragging */
+        return(TRUE);
+
+    /* Terse messages for better BubbleHelp response */
+    abuffer[0] = CH_NULL;
+
+    switch(icon_handle)
+    {
+    case -1:
+        break;
+
+    case FORMWIND_BUTTON_OK:
+        msg = help_formwind_button_edit_ok;
+        break;
+
+    case FORMWIND_BUTTON_CANCEL:
+        msg = help_formwind_button_edit_cancel;
+        break;
+
+    case FORMWIND_FUNCTION_SELECTOR:
+        msg = help_formwind_button_function;
+        break;
+
+    case FORMWIND_BUTTON_NEWLINE:
+        msg = help_formwind_button_newline;
+        break;
+
+    case FORMWIND_BUTTON_COPY:
+        msg = help_formwind_button_copy;
+        break;
+
+    case FORMWIND_BUTTON_CUT:
+        msg = help_formwind_button_cut;
+        break;
+
+    case FORMWIND_BUTTON_PASTE:
+        msg = help_formwind_button_paste;
+        break;
+    }
+
+    if(msg)
+        xstrkpy(abuffer + prefix_len, elemof32(abuffer) - prefix_len, msg);
+
+    riscos_send_Message_HelpReply(user_message, abuffer);
+
+    return(TRUE);
+}
+
+static BOOL
+formwind_event_User_Message(
+    /*poked*/ WimpMessage * const user_message)
+{
+    switch(user_message->hdr.action_code)
+    {
+    case Wimp_MHelpRequest:
+        return(formwind_event_Message_HelpRequest(user_message));
+
+    default:
+        return(FALSE);
+    }
+}
+
+#define fwin_event_handler_report(event_code, event_data, handle) \
+    riscos_event_handler_report(event_code, event_data, handle, "fwin")
+
+static BOOL
+formwind_event_handler(
+    wimp_eventstr *e,
+    void *handle)
+{
+    const int event_code = (int) e->e;
+    WimpPollBlock * const event_data = (WimpPollBlock *) &e->data;
+
+    if(!select_document_using_callback_handle(handle))
+        return(FALSE);
+
+    switch(event_code)
+    {
+    case Wimp_ERedrawWindow:
+        return(FALSE); /* default action */
+
+    case Wimp_EOpenWindow:
+        return(formwind_event_Open_Window_Request(&event_data->open_window_request));
+
+    case Wimp_ECloseWindow:
+        return(formwind_event_Close_Window_Request(&event_data->close_window_request));
+
+    case Wimp_EPointerLeavingWindow:
+        return(formwind_event_Pointer_Leaving_Window(&event_data->pointer_leaving_window));
+
+    case Wimp_EPointerEnteringWindow:
+        return(formwind_event_Pointer_Entering_Window(&event_data->pointer_entering_window));
+
+    case Wimp_EMouseClick:
+        return(formwind_event_Mouse_Click(&event_data->mouse_click));
+
+    case Wimp_EUserMessage:
+    case Wimp_EUserMessageRecorded:
+        /*fwin_event_handler_report(event_code, event_data, handle);*/
+        return(formwind_event_User_Message(&event_data->user_message));
+
+    default: /* Ignore other events */
+        /*fwin_event_handler_report(event_code, event_data, handle);*/
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event to formula window: %s",
+                report_wimp_event(event_code, event_data));
+        return(FALSE);
+    }
+}
+
 /******************************************************************************
 *
 * Process open window requests sent to formwind_event_handler for "ExpEdMain",
-* this involves carefull openning and positioning of both "ExpEdMain" and "ExpEdPane".
+* this involves careful opening and positioning of both "ExpEdMain" and "ExpEdPane".
 *
 ******************************************************************************/
 
-#if TRUE
 static void
 formwind_open_window(
     FORMULA_WINDOW_HANDLE formwind,
-    wimp_openstr *open)
+    _In_        const WimpOpenWindowBlock * const open_window)
 {
-    wimp_wstate   main, pane;
+    WimpGetWindowStateBlock window_state;
+    int pane_xscroll;
+    int pane_yscroll;
 
-    wimp_get_wind_state(formwind->panewindow, &pane);           /* All(?) we want are the scroll offsets */
+    window_state.window_handle = formwind->fw_pane_window_handle;
+    void_WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)); /* All we want here are the scroll offsets */
 
-    pane.o.w      = formwind->panewindow;
-    pane.o.box.x0 = open->box.x0 + formwind->margin.x0;         /* position pane relative to requested main position */
-    pane.o.box.y0 = open->box.y0 + formwind->margin.y0;
-    pane.o.box.x1 = open->box.x1 + formwind->margin.x1;
-    pane.o.box.y1 = open->box.y1 + formwind->margin.y1;
-                                                                /* retaining scroll offsets */
-    pane.o.behind = open->behind;
+    pane_xscroll = window_state.xscroll;
+    pane_yscroll = window_state.yscroll;
 
-    if(pane.o.behind == formwind->mainwindow)
-        pane.o.behind = formwind->panewindow;
+    { /* position pane window relative to the requested main window position */
+    WimpOpenWindowBlock pane_open_window_block;
 
-    trace_2(TRACE_APP_PD4, "opening pane before, x=%d, behind=%d",pane.o.box.x0,pane.o.behind);
+    pane_open_window_block.window_handle = formwind->fw_pane_window_handle;
 
-    wimp_open_wind(&pane.o);
+    pane_open_window_block.visible_area.xmin = open_window->visible_area.xmin + formwind->offset_left;
+    pane_open_window_block.visible_area.ymin = open_window->visible_area.ymin + formwind->offset_bottom;
+    pane_open_window_block.visible_area.xmax = open_window->visible_area.xmax + formwind->offset_right;
+    pane_open_window_block.visible_area.ymax = open_window->visible_area.ymax + formwind->offset_top;
 
-    /* Pane work area extent may prevent it openning at requested size, so read actual pane dimensions */
-    /* and calculate appropriate main parameters                                                       */
-    wimp_get_wind_state(formwind->panewindow, &pane);
+    pane_open_window_block.xscroll = pane_xscroll;
+    pane_open_window_block.yscroll = pane_yscroll;
 
-    main.o.w      = formwind->mainwindow;
-    main.o.box.x0 = pane.o.box.x0 - formwind->margin.x0;
-    main.o.box.x1 = pane.o.box.x1 - formwind->margin.x1;
-    main.o.box.y0 = pane.o.box.y0 - formwind->margin.y0;
-    main.o.box.y1 = pane.o.box.y1 - formwind->margin.y1;
-    main.o.scx    = main.o.scy = 0;
-    main.o.behind = formwind->panewindow;
+    pane_open_window_block.behind = open_window->behind;
 
-    wimp_open_wind(&main.o);
+    if(pane_open_window_block.behind == formwind->fw_main_window_handle)
+        pane_open_window_block.behind = formwind->fw_pane_window_handle;
+
+    void_WrapOsErrorReporting(tbl_wimp_open_window(&pane_open_window_block));
+    } /*block*/
+
+    /* Pane work area extent may prevent it opening at requested size, so read actual pane dimensions */
+    /* and calculate appropriate main window parameters                                               */
+    window_state.window_handle = formwind->fw_pane_window_handle;
+    void_WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state));
+
+    {
+    WimpOpenWindowBlock main_open_window_block;
+
+    main_open_window_block.window_handle = formwind->fw_main_window_handle;
+
+    main_open_window_block.visible_area.xmin = window_state.visible_area.xmin - formwind->offset_left;
+    main_open_window_block.visible_area.ymin = window_state.visible_area.ymin - formwind->offset_bottom;
+    main_open_window_block.visible_area.xmax = window_state.visible_area.xmax - formwind->offset_right;
+    main_open_window_block.visible_area.ymax = window_state.visible_area.ymax - formwind->offset_top;
+
+    main_open_window_block.xscroll = 0;
+    main_open_window_block.yscroll = 0;
+
+    main_open_window_block.behind = formwind->fw_pane_window_handle;
+
+    void_WrapOsErrorReporting(tbl_wimp_open_window(&main_open_window_block));
+    } /*block*/
 
     /* if we were called because the pane is being resized, its possible the dimensions we tried to open main */
     /* with are naff (typically too small), so resize the pane!!!!                                            */
 
-    wimp_get_wind_state(formwind->mainwindow, &main);
+    window_state.window_handle = formwind->fw_main_window_handle;
+    void_WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state));
 
-    /* note position of window, so all other formula windows are openned at the same place (Rob requested this) */
-    formwind_position_box   = main.o.box;
-    formwind_position_valid = TRUE;
+    /* note position of window, so all other formula windows are opened at the same place (Rob requested this) */
+    formwind_visible_area = window_state.visible_area;
+    formwind_visible_area_valid = TRUE;
 
-    pane.o.w      = formwind->panewindow;
-    pane.o.box.x0 = main.o.box.x0 + formwind->margin.x0;        /* position pane relative to requested main position */
-    pane.o.box.y0 = main.o.box.y0 + formwind->margin.y0;
-    pane.o.box.x1 = main.o.box.x1 + formwind->margin.x1;
-    pane.o.box.y1 = main.o.box.y1 + formwind->margin.y1;
-                                                                /* retaining scroll offsets & window stack position */
-    pane.o.behind = formwind->panewindow;
-    wimp_open_wind(&pane.o);
+    { /* position pane window relative to the determined main window position */
+    WimpOpenWindowBlock pane_open_window_block;
+
+    pane_open_window_block.window_handle = formwind->fw_pane_window_handle;
+
+    pane_open_window_block.visible_area.xmin = window_state.visible_area.xmin + formwind->offset_left;
+    pane_open_window_block.visible_area.ymin = window_state.visible_area.ymin + formwind->offset_bottom;
+    pane_open_window_block.visible_area.xmax = window_state.visible_area.xmax + formwind->offset_right;
+    pane_open_window_block.visible_area.ymax = window_state.visible_area.ymax + formwind->offset_top;
+
+    pane_open_window_block.xscroll = pane_xscroll;
+    pane_open_window_block.yscroll = pane_yscroll;
+
+    pane_open_window_block.behind = formwind->fw_pane_window_handle;
+
+    void_WrapOsErrorReporting(tbl_wimp_open_window(&pane_open_window_block));
+    } /*block*/
 }
-#else
-static void
-formwind_open_window(
-    FORMULA_WINDOW_HANDLE formwind,
-    wimp_openstr *main)
-{
-    MLEC_HANDLE mlec = formwind->mlec;
-    wimp_wstate pane;
-    wimp_wstate oldmain;
-
-    wimp_get_wind_state(formwind->panewindow, &pane);         /* All(?) we want are the scroll offsets */
-    wimp_get_wind_state(formwind->mainwindow, &oldmain);
-
-    trace_0(TRACE_APP_PD4, "In formwind_open_window ");
-
-    /* To mimimise repaints, when main window is moving left, open pane window  */
-    /* (shifted left) first, then do open main and open pane. The second open   */
-    /* pane is needed incase the main window positioning was modified to keep   */
-    /* it on screen.                                                            */
-
-#if (1)
-    if (main->box.x0 <= oldmain.o.box.x0)
-    {
-        pane.o.w      = formwind->panewindow;
-
-        pane.o.box.x0 = main->box.x0 + formwind->margin.x0;     /* position pane relative to main */
-        pane.o.box.y0 = main->box.y0 + formwind->margin.y0;
-        pane.o.box.x1 = main->box.x1 + formwind->margin.x1;
-        pane.o.box.y1 = main->box.y1 + formwind->margin.y1;
-
-        if (pane.o.box.x1 > main->box.x1) pane.o.box.x1 = main->box.x1; /* trim pane to stay within main */
-        if (pane.o.box.y0 < main->box.y0) pane.o.box.y0 = main->box.y0;
-
-        /*pane.o.x = pane.o.y = 0;*/             /* zero the scrolls!!!! - wrong for this application */
-        pane.o.behind = main->behind;
-
-        trace_2(TRACE_APP_PD4, "opening pane before, x=%d, behind=%d",pane.o.box.x0,pane.o.behind);
-
-        wimp_open_wind(&pane.o);
-    }
-#endif
-
-    /* Open main window, then open pane (based on the actual position values */
-    /* returned by wimp_open_window, incase window positioning was modified  */
-    /* to keep it on screen.                                                 */
-
-    wimp_get_wind_state(formwind->panewindow, &pane);
-
-    /* if pane window already on screen, and trying to open main window */
-    /* at same layer as pane window, open main behind pane, to reduce   */
-    /* flicker                                                          */
-
-    if((pane.flags & wimp_WOPEN) && (main->behind == pane.o.behind))
-        main->behind = formwind->panewindow;
-
-    trace_2(TRACE_APP_PD4, "opening main, x=%d, behind=%d",main->box.x0,main->behind);
-
-    wimp_open_wind(main);       /* open main (paper) window */
-
-    pane.o.box.x0 = main->box.x0 + formwind->margin.x0;     /* position pane relative to main */
-    pane.o.box.y0 = main->box.y0 + formwind->margin.y0;
-    pane.o.box.x1 = main->box.x1 + formwind->margin.x1;
-    pane.o.box.y1 = main->box.y1 + formwind->margin.y1;
-
-    if (pane.o.box.x1 > main->box.x1) pane.o.box.x1 = main->box.x1;     /* trim pane to stay within main */
-    if (pane.o.box.y0 < main->box.y0) pane.o.box.y0 = main->box.y0;
-
-#if (1)
-    /* hitting 'back' on main window will cause 'pane' to go behind 'main' */
-    /* so read behind position of 'main' after openning                    */
-
-    {   wimp_wstate main;
-        wimp_get_wind_state(formwind->mainwindow, &main);
-        pane.o.behind = main.o.behind;
-    }
-#else
-    pane.o.behind = main->behind;
-#endif
-
-    trace_2(TRACE_APP_PD4, "opening pane after, x=%d, behind=%d",pane.o.box.x0,pane.o.behind);
-    wimp_open_wind(&pane.o);
-
-    trace_0(TRACE_APP_PD4, "leaving formwind_open_window");
-}
-#endif
 
 /******************************************************************************
 *
@@ -1317,7 +1480,7 @@ formwind_open_window(
 ******************************************************************************/
 
 static void
-formwind_canceledit(void)
+formwind_cancel_edit(void)
 {
     /* c.f. endeex in c.numbers */
 
@@ -1350,7 +1513,7 @@ formwind_mergebacktext(
 
     if(len >= LIN_BUFSIZ)
     {
-        reperr_null(create_error(ERR_LINETOOLONG));
+        reperr_null(ERR_LINETOOLONG);
         return(FALSE);
     }
 
@@ -1362,7 +1525,7 @@ formwind_mergebacktext(
     {
         S32 col, row;
 
-        mlec__cursor_getpos(editexpression_formwind->mlec, &col, &row);
+        mlec__cursor_get_position(editexpression_formwind->mlec, &col, &row);
         *caretposp = cvt_colrow_to_offset(linbuf, col, row);
     }
 
@@ -1381,8 +1544,8 @@ formwind_mergebacktext(
 
             if((at_pos >= 0) && !check_text_or_fixit(err))
             {
-                mlec__cursor_setpos(editexpression_formwind->mlec, cursorcol, cursorrow);       /* show position of error */
-                return(FALSE);                                                                  /* retain editing state   */
+                mlec__cursor_set_position(editexpression_formwind->mlec, cursorcol, cursorrow);       /* show position of error */
+                return(FALSE);                                                                        /* retain editing state   */
             }
 
             merexp_reterr(NULL, NULL, TRUE);            /* force expression into sheet as a text cell */
@@ -1394,68 +1557,120 @@ formwind_mergebacktext(
     if(macro_recorder_on)
         output_formula_to_macro_file(linbuf);
 
-    formwind_canceledit();
+    formwind_cancel_edit();
 
     return(TRUE);
 }
 
 static void
-formwind_setextent(
-    FORMULA_WINDOW_HANDLE formwind,
-    wimp_box paneWorkArea)
+report_error(
+    int err)
 {
-    wimp_redrawstr  blk;
-
-    blk.w = formwind->mainwindow;
-
-    blk.box.x0 = 0;
-    blk.box.y0 = paneWorkArea.y0 - formwind->margin.y0 + formwind->margin.y1;
-    blk.box.y1 = 0;
-    blk.box.x1 = paneWorkArea.x1 + formwind->margin.x0 - formwind->margin.x1;
-
-    wimp_set_extent(&blk);
+    message_output(string_lookup(err));
 }
 
-mlec_event_proto(static, formwind_mlec_event_handler)
+static void
+formwind_button_copy(void)
+{
+    S32 err = mlec__selection_copy(editexpression_formwind->mlec);
+
+    if(err < 0)
+        report_error(err);
+}
+
+static void
+formwind_button_cut(void)
+{
+    S32 err = mlec__selection_cut(editexpression_formwind->mlec);
+
+    if(err < 0)
+        report_error(err);
+}
+
+static void
+formwind_button_paste(void)
+{
+    S32 err = mlec__atcursor_paste(editexpression_formwind->mlec);
+
+    if(err < 0)
+        report_error(err);
+}
+
+static void
+formwind_set_extent(
+    FORMULA_WINDOW_HANDLE formwind,
+    const BBox * const pane_extent)
+{
+    BBox bbox;
+
+    bbox.xmin = 0;
+    bbox.ymin = pane_extent->ymin - formwind->offset_bottom + formwind->offset_top;
+    bbox.xmax = pane_extent->xmax + formwind->offset_left - formwind->offset_right;
+    bbox.ymax = 0;
+
+    void_WrapOsErrorReporting(tbl_wimp_set_extent(formwind->fw_main_window_handle, &bbox));
+}
+
+MLEC_EVENT_PROTO(static, formwind_event_Mlec_IsOpen)
 {
     FORMULA_WINDOW_HANDLE formwind = handle;
-    DOCNO old_docno;
+    /*updated*/ WimpOpenWindowBlock * panep = (WimpOpenWindowBlock *) p_eventdata;
+    WimpOpenWindowBlock main_open_window_block;
+
+    UNREFERENCED_PARAMETER(rc);
+
+    void_WrapOsErrorReporting(tbl_wimp_open_window(panep)); /* open pane, so scrolling works */
+
+    main_open_window_block.window_handle = formwind->fw_main_window_handle;
+
+    main_open_window_block.visible_area.xmin = panep->visible_area.xmin - formwind->offset_left;
+    main_open_window_block.visible_area.ymin = panep->visible_area.ymin - formwind->offset_bottom;
+    main_open_window_block.visible_area.xmax = panep->visible_area.xmax - formwind->offset_right;
+    main_open_window_block.visible_area.ymax = panep->visible_area.ymax - formwind->offset_top;
+
+    main_open_window_block.xscroll = 0;
+    main_open_window_block.yscroll = 0;
+
+    main_open_window_block.behind = panep->behind;
+
+    formwind_open_window(formwind, &main_open_window_block);
+
+    return(mlec_event_return);
+}
+
+MLEC_EVENT_PROTO(static, formwind_event_Mlec_IsWorkAreaChanged)
+{
+    FORMULA_WINDOW_HANDLE formwind = handle;
+    const BBox * const pane_extent = (const BBox *) p_eventdata;
+
+    UNREFERENCED_PARAMETER(rc);
+
+    formwind_set_extent(formwind, pane_extent);
+
+    return(mlec_event_workareachanged);
+}
+
+MLEC_EVENT_PROTO(static, formwind_mlec_event_handler)
+{
+    FORMULA_WINDOW_HANDLE formwind = handle;
+    DOCNO old_docno = change_document_using_docno(formwind->docno);
     MLEC_EVENT_RETURN_CODE res = mlec_event_unknown;
 
     trace_1(TRACE_APP_EXPEDIT, "formwind_mlec_event_handler, rc=%d", rc);
 
-    old_docno = change_document_using_docno(formwind->docno);
-
     switch(rc)
     {
     case Mlec_IsOpen:
-        {
-        wimp_openstr *panep = (wimp_openstr*)p_eventdata;
-        wimp_openstr  main;
-
-        wimp_open_wind(panep);      /* open pane, so scrolling works */
-
-        main.w      = formwind->mainwindow;
-        main.box.x0 = panep->box.x0 - formwind->margin.x0;
-        main.box.x1 = panep->box.x1 - formwind->margin.x1;
-        main.box.y0 = panep->box.y0 - formwind->margin.y0;
-        main.box.y1 = panep->box.y1 - formwind->margin.y1;
-        main.scx    = main.scy = 0;
-        main.behind = panep->behind;
-
-        formwind_open_window(formwind, &main);
-
-        res = mlec_event_openned;
-        }
+        res = formwind_event_Mlec_IsOpen(rc, handle, p_eventdata);
         break;
 
     case Mlec_IsClose:
-        formwind_canceledit();
+        formwind_cancel_edit();
         res = mlec_event_closed;
         break;
 
     case Mlec_IsEscape:
-        formwind_canceledit();
+        formwind_cancel_edit();
         res = mlec_event_escape;
         break;
 
@@ -1464,19 +1679,11 @@ mlec_event_proto(static, formwind_mlec_event_handler)
         res = mlec_event_return;
         break;
 
-#if TRUE
     case Mlec_IsWorkAreaChanged:
-        {
-        wimp_redrawstr *paneExtent = (wimp_redrawstr*)p_eventdata;
-
-        formwind_setextent(formwind, paneExtent->box);
-        res = mlec_event_workareachanged;
-        }
+        res = formwind_event_Mlec_IsWorkAreaChanged(rc, handle, p_eventdata);
         break;
-#endif
 
     default:
-        /*res = 0;*/
         break;  
     }
 
@@ -1485,31 +1692,31 @@ mlec_event_proto(static, formwind_mlec_event_handler)
 }
 
 static void
-formwind_pointershape_starttracking(
-    FORMULA_WINDOW_HANDLE formwind)
-{
-    if(!formwind->tracking)
-    {
-        trace_0(TRACE_APP_EXPEDIT, "formwind_pointershape_starttracking()");
-
-        formwind->tracking = TRUE;
-
-        status_assert(Null_EventHandlerAdd(formwind_pointershape_null_handler, formwind, 0));
-    }
-}
-
-static void
-formwind_pointershape_endtracking(
+formwind_pointershape_start_tracking(
     FORMULA_WINDOW_HANDLE formwind)
 {
     if(formwind->tracking)
-    {
-        Null_EventHandlerRemove(formwind_pointershape_null_handler, formwind);
+        return;
 
-        setpointershape(POINTER_DEFAULT);
+    trace_0(TRACE_APP_EXPEDIT, "formwind_pointershape_start_tracking()");
 
-        formwind->tracking = FALSE;
-    }
+    formwind->tracking = TRUE;
+
+    status_assert(Null_EventHandlerAdd(formwind_pointershape_null_handler, formwind, 0));
+}
+
+static void
+formwind_pointershape_end_tracking(
+    FORMULA_WINDOW_HANDLE formwind)
+{
+    if(!formwind->tracking)
+        return;
+
+    formwind->tracking = FALSE;
+
+    Null_EventHandlerRemove(formwind_pointershape_null_handler, formwind);
+
+    riscos_setpointershape(POINTER_DEFAULT);
 }
 
 /******************************************************************************
@@ -1518,44 +1725,46 @@ formwind_pointershape_endtracking(
 *
 ******************************************************************************/
 
-null_event_proto(static, formwind_pointershape_null_handler)
+null_event_proto(static, formwind_pointershape_null_event)
 {
     FORMULA_WINDOW_HANDLE formwind = (FORMULA_WINDOW_HANDLE) p_null_event_block->client_handle;
+    wimp_mousestr pointer;
 
+    trace_0(TRACE_APP_EXPEDIT, "formwind null call");
+
+    if(NULL != wimp_get_point_info(&pointer))
+        return(NULL_EVENT_COMPLETED);
+
+    if(pointer.w == formwind->fw_main_window_handle) /* should be true, as we release null events when pointer leaves window */
+    {
+        switch((int)pointer.i)
+        {
+        case FORMWIND_FUNCTION_SELECTOR:
+            trace_0(TRACE_APP_EXPEDIT, "change pointer to drop-down-menu");
+            riscos_setpointershape(POINTER_DROPMENU);
+            break;
+
+        default:
+            trace_0(TRACE_APP_EXPEDIT, "restore default pointer");
+            riscos_setpointershape(POINTER_DEFAULT);
+            break;
+        }
+    }
+
+    return(NULL_EVENT_COMPLETED);
+}
+
+null_event_proto(static, formwind_pointershape_null_handler)
+{
     trace_1(TRACE_APP_EXPEDIT, "formwind_pointershape_null_handler, rc=%d", p_null_event_block->rc);
 
     switch(p_null_event_block->rc)
     {
-    case NULL_QUERY:
-        trace_0(TRACE_APP_EXPEDIT, "call to ask if we want nulls");
+    case NULL_QUERY: /* call to ask if we want nulls */
         return(NULL_EVENTS_REQUIRED);
 
     case NULL_EVENT:
-        {
-        wimp_mousestr pointer;
-
-        trace_0(TRACE_APP_EXPEDIT, "null call");
-
-        if(NULL == wimp_get_point_info(&pointer))
-        {
-            if(pointer.w == formwind->mainwindow)   /* should be true, as we release null events when pointer leaves window */
-            {
-                switch((int)pointer.i)
-                {
-                case FORMWIND_FUNCTION_SELECTOR:
-                    trace_0(TRACE_APP_EXPEDIT, "change pointer to drop-down-menu");
-                    setpointershape(POINTER_DROPMENU);
-                    break;
-
-                default:
-                    trace_0(TRACE_APP_EXPEDIT, "restore default pointer");
-                    setpointershape(POINTER_DEFAULT);
-                    break;
-                }
-            }
-        }
-        return(NULL_EVENT_COMPLETED);
-        }
+        return(formwind_pointershape_null_event(p_null_event_block));
 
     default:
         return(NULL_EVENT_UNKNOWN);
@@ -1579,6 +1788,8 @@ static BOOL
 check_text_or_fixit(
     S32 err)
 {
+    dialog_box_end(); /* take priority */
+
     if(!dialog_box_start())
         return(FALSE);
 
@@ -1630,13 +1841,14 @@ cvt_offset_to_colrow(
     P_S32 p_row,
     BOOL *multilinep)
 {
-    S32 pos, cursorcol, cursorrow;
-    BOOL multiline;
+    S32 pos;
+    S32 cursorcol = 0;
+    S32 cursorrow = 0;
+    BOOL multiline = FALSE;
 
-    for(multiline = FALSE, pos = cursorcol = cursorrow = 0; *text != '\0'; text++, pos++)
+    for(pos = 0; *text != CH_NULL; text++, pos++)
     {
-#if 1
-        /* SKS after 4.12 27mar92 - wimp icon treats ctrlchar as terminators so don't edit on line if they're present */
+        /* SKS after PD 4.12 27mar92 - wimp icon treats ctrlchar as terminators so don't edit on line if they're present */
         if(*text < 0x20)
         {
             multiline = TRUE;
@@ -1645,20 +1857,11 @@ cvt_offset_to_colrow(
                 cursorcol++;
                 if(*text == LF)
                 {
-                    cursorcol = 0; cursorrow++;
+                    cursorcol = 0;
+                    cursorrow++;
                 }
             }
         }
-#else
-        if(*text == LF)
-        {
-            multiline = TRUE;
-            if(pos < offset)
-            {
-                cursorcol = 0; cursorrow++;
-            }
-        }
-#endif
         else
         {
             if(pos < offset)
@@ -1681,41 +1884,43 @@ cvt_offset_to_colrow(
 *
 ******************************************************************************/
 
+static BOOL
+definename_fn_core(void)
+{
+    char        *name = d_define_name[0].textfield;
+    char        *contents = d_define_name[1].textfield;
+    EV_DOCNO     cur_docno = (EV_DOCNO) current_docno();
+    EV_OPTBLOCK  optblock;
+    STATUS       err;
+
+    trace_1(TRACE_APP_EXPEDIT,"Name     : %s", trace_string(name));
+    trace_1(TRACE_APP_EXPEDIT,"Refers to: %s", trace_string(contents));
+
+    /* define the name */
+    ev_set_options(&optblock, cur_docno);
+
+    err = ev_name_make(name, cur_docno, contents, &optblock, FALSE);
+
+    trace_1(TRACE_APP_EXPEDIT,"err=%d", err);
+
+    if(err < 0)
+        reperr_null(err);
+
+    filealtered(TRUE);
+
+    return(TRUE);
+}
+
 extern void
 DefineName_fn(void)
 {
-    char        *name;
-    char        *contents;
-    EV_OPTBLOCK  optblock;
-    EV_DOCNO     cur_docno;
-    STATUS       err;
-
-    trace_0(TRACE_APP_EXPEDIT, "DefineName_fn()");
-
     if(!dialog_box_start())
         return;
 
-    cur_docno = (EV_DOCNO) current_docno();
-
     while(dialog_box(D_DEFINE_NAME))
     {
-        name     = d_define_name[0].textfield;
-        contents = d_define_name[1].textfield;
-
-        trace_1(TRACE_APP_EXPEDIT,"Name     : %s", trace_string(name));
-        trace_1(TRACE_APP_EXPEDIT,"Refers to: %s", trace_string(contents));
-
-        /* define the name */
-        ev_set_options(&optblock, cur_docno);
-
-        err = ev_name_make(name, cur_docno, contents, &optblock, FALSE);
-
-        trace_1(TRACE_APP_EXPEDIT,"err=%d", err);
-
-        if(err < 0)
-            reperr_null(err);
-
-        filealtered(TRUE);
+        if(!definename_fn_core())
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -1737,7 +1942,7 @@ EditName_fn(
     _InVal_     enum EV_RESOURCE_TYPES category,
     S32 itemno)
 {
-    char        *contents = NULL; /* SKS 04nov95 for 450 keep dataflower (and below comment) happy */
+    char        *contents = NULL; /* SKS 04nov95 for PD 4.50 keep dataflower (and below comment) happy */
     EV_RESOURCE  resource;
     EV_OPTBLOCK  optblock;
     char         namebuf[BUF_MAX_PATHSTRING + EV_INTNAMLEN]; /* name may be prefixed by sheet name */
@@ -1760,34 +1965,37 @@ EditName_fn(
         {
             /*>>>should we change trim name placed in [0].textfield to fit???, NB must keep whole namebuf for ev_name_make*/
 
-            if( dialog_box_start() &&
+            if( init_dialog_box(D_EDIT_NAME) &&
                 mystr_set(&d_edit_name[0].textfield, namebuf) &&
                 mystr_set(&d_edit_name[1].textfield, argbuf)  )
             {
-                while(dialog_box(D_EDIT_NAME))
+                if(dialog_box_start())
                 {
-                    contents =  d_edit_name[1].textfield;
+                    while(dialog_box(D_EDIT_NAME))
+                    {
+                        contents =  d_edit_name[1].textfield;
 
-                    trace_1(TRACE_APP_EXPEDIT,"Name     : %s", trace_string(namebuf));
-                    trace_1(TRACE_APP_EXPEDIT,"Change to: %s", trace_string(contents));
+                        trace_1(TRACE_APP_EXPEDIT,"Name     : %s", trace_string(namebuf));
+                        trace_1(TRACE_APP_EXPEDIT,"Change to: %s", trace_string(contents));
 
-                    /* redefine the name */
-                    ev_set_options(&optblock, cur_docno);
+                        /* redefine the name */
+                        ev_set_options(&optblock, cur_docno);
 
-                    err = ev_name_make(namebuf, cur_docno, contents, &optblock, FALSE);
+                        err = ev_name_make(namebuf, cur_docno, contents, &optblock, FALSE);
 
-                    trace_1(TRACE_APP_EXPEDIT,"err=%d", err);
+                        trace_1(TRACE_APP_EXPEDIT,"err=%d", err);
 
-                    if(err < 0)
-                        reperr_null(err);
+                        if(err < 0)
+                            reperr_null(err);
 
-                    filealtered(TRUE);
+                        filealtered(TRUE);
 
-                    if(!dialog_box_can_persist())
-                        break;
+                        if(!dialog_box_can_persist())
+                            break;
+                    }
+
+                    dialog_box_end();
                 }
-
-                dialog_box_end();
 
                 if(d_edit_name[2].option == 'U')
                 {
@@ -1818,7 +2026,7 @@ PasteName_fn(
     EV_RESOURCE resource;
     EV_OPTBLOCK optblock;
     char        namebuf[BUF_MAX_PATHSTRING + EV_INTNAMLEN + LIN_BUFSIZ]; /* room for name (plus sheet prefix), */
-                                                                       /* plus plenty of '(,,,,,,)'          */
+                                                                         /* plus plenty of '(,,,,,,)'          */
     char        argbuf[256];
     S32         argcount;
     EV_DOCNO    cur_docno;
@@ -1848,8 +2056,8 @@ PasteName_fn(
                 xstrkat(namebuf, elemof32(namebuf), ")");
             }
 
-            if(insert_string_check_numeric(namebuf, FALSE))     /* insert function, starts an editor if current cell */
-            {                                                   /* is empty and sheet is in numeric entry mode       */
+            if(insert_string_check_number(namebuf, FALSE))      /* insert function, starts an editor if */
+            {                                                   /* current cell is empty / number cell  */
                 /* insert worked, so place caret after '(' */
                 if(argcount)
                 {

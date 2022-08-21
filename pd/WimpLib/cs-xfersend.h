@@ -35,9 +35,9 @@ xfersend_x(
 /* A dbox may be passed, and should have the following icons:
 */
 
-#define xfersend_FOK    ((wimp_i) 0)        /* (action) 'ok' button */
-#define xfersend_FName  ((wimp_i) 1)        /* (writeable) filename */
-#define xfersend_FIcon  ((wimp_i) 2)        /* (click/drag) icon to drag */
+#define xfersend_FOK    (0) /* (action) 'ok' button */
+#define xfersend_FName  (1) /* (writeable) filename */
+#define xfersend_FIcon  (2) /* (click/drag) icon to drag */
 
 void xfersend_set_cancel_button(dbox_field f);
 

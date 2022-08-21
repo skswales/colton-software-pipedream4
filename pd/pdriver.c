@@ -56,7 +56,7 @@ encode_highlight_field(
     uchar *from = buffer;
     uchar *to = array;
 
-    while(*from != '\0')
+    while(*from != CH_NULL)
     {
         int ch;
 
@@ -77,8 +77,8 @@ encode_highlight_field(
         case QUERY:
             *to++ = ESCAPE;
             ch = QUERY;
-            if(from[1] == '\0')
-                from[2] = '\0';
+            if(from[1] == CH_NULL)
+                from[2] = CH_NULL;
 
             from += 2;
             h_query |= mask;
@@ -98,7 +98,7 @@ encode_highlight_field(
             if(!isxdigit(*from))
                 return(FALSE);
 
-            consume(int, sscanf((char *) from, "%x", &ch));
+            consume_int(sscanf((char *) from, "%x", &ch));
             for( ; isxdigit(*from); from++)
                 ;
             break;
@@ -138,7 +138,7 @@ encode_highlight_field(
             *to++ = (uchar) ch;
     }
 
-    *to = '\0';
+    *to = CH_NULL;
     strcpy((char *) buffer, (char *) array);
     return(TRUE);
 }
@@ -155,7 +155,7 @@ static char *current_driver_name = NULL;
 extern void
 kill_driver(void)
 {
-    (void) mystr_set(&current_driver_name, NULL);
+    consume_bool(mystr_set(&current_driver_name, NULL));
     delete_list(&highlight_list);
     micbit = driver_loaded = FALSE;
 }
@@ -181,7 +181,7 @@ load_driver(
 
     if(!force_load)
     {
-        /* SKS after 4.11 21jan92 - stop comparing against the string at 0! */
+        /* SKS after PD 4.11 21jan92 - stop comparing against the string at 0! */
         if(!blank_name)
             if(0 == strcmp(name, current_driver_name))
                 return;
@@ -221,7 +221,7 @@ load_driver(
 
     if(!input)
     {
-        reperr(create_error(ERR_CANNOTOPEN), name);
+        reperr(ERR_CANNOTOPEN, name);
         return;
     }
 
@@ -267,8 +267,8 @@ load_driver(
 
                     if(!encode_highlight_field(linarray, mask))
                     {
-                        linarray[15] = '\0';
-                        reperr(create_error(ERR_BAD_PARM), (char *) linarray);
+                        linarray[15] = CH_NULL;
+                        reperr(ERR_BAD_PARM, (char *) linarray);
                         goto ENDPOINT;
                     }
 
@@ -296,8 +296,8 @@ load_driver(
 
                     if(!encode_highlight_field(linarray, 0))
                     {
-                        linarray[15] = '\0';
-                        reperr(create_error(ERR_BAD_PARM), (char *) linarray);
+                        linarray[15] = CH_NULL;
+                        reperr(ERR_BAD_PARM, (char *) linarray);
                         goto ENDPOINT;
                     }
 
@@ -393,8 +393,8 @@ load_driver(
         {
             if(!encode_highlight_field(linarray, 0))
             {
-                linarray[15] = '\0';
-                reperr(create_error(ERR_BAD_PARM), (char *) linarray);
+                linarray[15] = CH_NULL;
+                reperr(ERR_BAD_PARM, (char *) linarray);
                 goto ENDPOINT;
             }
 
@@ -410,7 +410,7 @@ ENDPOINT:
     pd_file_close(&input);
 
     /* remember driver name */
-    (void) mystr_set(&current_driver_name, name);
+    consume_bool(mystr_set(&current_driver_name, name));
 }
 
 /* end of pdriver.c */

@@ -15,7 +15,7 @@
 
 #include "cmodules/ev_evali.h"
 
-#include "version_x.h"
+#include "datafmt.h"
 
 #include "kernel.h" /*C:*/
 
@@ -42,15 +42,20 @@ PROC_EXEC_PROTO(c_age)
 
     exec_func_ignore_parms();
 
+    ev_date_init(&ev_date);
+
     if((EV_DATE_NULL != args[0]->arg.ev_date.date) && (EV_DATE_NULL != args[1]->arg.ev_date.date))
     {
         ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.ev_date.date;
-        ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.ev_date.time;
+
+        if((EV_TIME_NULL != args[0]->arg.ev_date.time) || (EV_TIME_NULL != args[1]->arg.ev_date.time))
+        {   /* here 31/12/2015 00:00:00 == 31/12/2015 */
+            EV_DATE_TIME time_1 = (EV_TIME_NULL != args[0]->arg.ev_date.time) ? args[0]->arg.ev_date.time : 0;
+            EV_DATE_TIME time_2 = (EV_TIME_NULL != args[1]->arg.ev_date.time) ? args[1]->arg.ev_date.time : 0;
+            ev_date.time = time_1 - time_2;
+        }
+
         ss_date_normalise(&ev_date);
-    }
-    else
-    {
-        ev_date_init(&ev_date);
     }
 
     if(status_fail(status = ss_dateval_to_ymd(&ev_date.date, &year, &month, &day)))
@@ -85,7 +90,7 @@ PROC_EXEC_PROTO(c_date)
 #endif
 
     p_ev_data_res->did_num = RPN_DAT_DATE;
-    p_ev_data_res->arg.ev_date.time = EV_TIME_NULL;
+    ev_date_init(&p_ev_data_res->arg.ev_date);
 
     if(ss_ymd_to_dateval(&p_ev_data_res->arg.ev_date.date, our_year, month, day) < 0)
     {
@@ -102,16 +107,21 @@ PROC_EXEC_PROTO(c_date)
 
 PROC_EXEC_PROTO(c_datevalue)
 {
-    U8Z buffer[256];
-    U32 len;
+    UCHARZ buffer[BUF_EV_MAX_STRING_LEN];
+    PC_UCHARS uchars;
+    U32 wss, len;
 
     exec_func_ignore_parms();
 
-    len = MIN(args[0]->arg.string.size, elemof32(buffer)-1); /* SKS for 1.30 */
-    memcpy32(buffer, args[0]->arg.string.uchars, len);
+    wss = ss_string_skip_leading_whitespace(args[0]);
+    uchars = uchars_AddBytes_wr(args[0]->arg.string.uchars, wss);
+    len = args[0]->arg.string.size - wss;
+
+    len = MIN(len, sizeof32(buffer)-1);
+    memcpy32(buffer, uchars, len);
     buffer[len] = CH_NULL;
 
-    if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_NULL == p_ev_data_res->arg.ev_date.date))
+    if((ss_recog_date_time(p_ev_data_res, ustr_bptr(buffer), 0) < 0) || (EV_DATE_NULL == p_ev_data_res->arg.ev_date.date))
         ev_data_set_error(p_ev_data_res, EVAL_ERR_BAD_DATE);
 }
 
@@ -129,12 +139,6 @@ PROC_EXEC_PROTO(c_day)
 
     exec_func_ignore_parms();
 
-    if(EV_DATE_NULL == args[0]->arg.ev_date.date)
-    {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
-        return;
-    }
-
     if(status_fail(status = ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day)))
     {
         ev_data_set_error(p_ev_data_res, status);
@@ -146,18 +150,6 @@ PROC_EXEC_PROTO(c_day)
     ev_data_set_integer(p_ev_data_res, day_result);
 }
 
-static const PC_USTR
-ss_day_names[7] =
-{
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday"
-};
-
 /******************************************************************************
 *
 * STRING dayname(n | date)
@@ -166,6 +158,7 @@ ss_day_names[7] =
 
 PROC_EXEC_PROTO(c_dayname)
 {
+    PC_USTR ustr_dayname;
     S32 day = 1;
 
     exec_func_ignore_parms();
@@ -192,9 +185,221 @@ PROC_EXEC_PROTO(c_dayname)
 
     day = (day - 1) % 7;
 
-    if(status_ok(ss_string_make_ustr(p_ev_data_res, ss_day_names[day])))
-        *(p_ev_data_res->arg.string_wr.uchars) = (U8) toupper(*(p_ev_data_res->arg.string.uchars));
+    ustr_dayname = get_p_numform_context()->day_names[day];
+
+    if(status_ok(ss_string_make_ustr(p_ev_data_res, ustr_dayname)))
+    {
+        const U8 u8 = *(p_ev_data_res->arg.string.uchars);
+        const U8 u8_uc = (U8) toupper(u8);
+        *(p_ev_data_res->arg.string_wr.uchars) = u8_uc;
+    }
 }
+
+#if 0 /* just for diff minimization */
+
+/******************************************************************************
+*
+* INTEGER days_360(start_date, end_date {, method})
+*
+******************************************************************************/
+
+/*
+Credit: http://en.wikipedia.org/wiki/360-day_calendar
+
+A duration is calculated as an integral number of days between two dates A and B (where by convention A is earlier than B).
+There are two methods commonly available which differ in the way that they handle the cases where the months are not 30 days long:
+
+The European Method (30E/360)[1]
+If either date A or B falls on the 31st of the month, that date will be changed to the 30th;
+Where date B falls on the last day of February, the actual date B will be used.
+
+The US/NASD Method (30US/360)[2]
+If both date A and B fall on the last day of February, then date B will be changed to the 30th.
+If date A falls on the 31st of a month or last day of February, then date A will be changed to the 30th.
+If date A falls on the 30th of a month after applying (2) above and date B falls on the 31st of a month, then date B will be changed to the 30th.
+
+In both cases the difference between the possibly-adjusted dates is then computed by treating all intervening months as being 30 days long.
+*/
+
+PROC_EXEC_PROTO(c_days_360)
+{
+    BOOL negate_result = FALSE;
+    STATUS status;
+    EV_DATE_DATE start_date = args[0]->arg.ev_date.date;
+    EV_DATE_DATE end_date   = args[1]->arg.ev_date.date;
+    BOOL european_method = FALSE; 
+    S32 start_year, start_month, start_day;
+    S32 end_year, end_month, end_day;
+    S32 days_360_result;
+
+    exec_func_ignore_parms();
+
+    if(start_date > end_date)
+    {
+        memswap32(&start_date, &end_date, sizeof32(start_date));
+        negate_result = TRUE;
+    }
+
+    if(status_fail(status = ss_dateval_to_ymd(&start_date, &start_year, &start_month, &start_day)))
+    {
+        ev_data_set_error(p_ev_data_res, status);
+        return;
+    }
+
+    if(status_fail(status = ss_dateval_to_ymd(&end_date, &end_year, &end_month, &end_day)))
+    {
+        ev_data_set_error(p_ev_data_res, status);
+        return;
+    }
+
+    if(n_args > 2)
+        european_method = (0 != args[0]->arg.integer);
+
+    if(european_method)
+    {
+        /* If either date A or B falls on the 31st of the month, that date will be changed to the 30th */
+        if(start_day == 31)
+            start_day = 30;
+
+        if(end_day == 31)
+            end_day = 30;
+
+        /* Where date B falls on the last day of February, the actual date B will be used */
+    }
+    else
+    {
+        BOOL start_is_leap_year = LEAP_YEAR_ACTUAL(start_year);
+        BOOL start_is_last_day_of_feb = (start_month == 2) && (start_day == (start_is_leap_year ? 29 : 28));
+
+        /* If both date A and B fall on the last day of February, then date B will be changed to the 30th */
+        if(start_is_last_day_of_feb && (start_month == end_month))
+        {
+            BOOL end_is_leap_year = LEAP_YEAR_ACTUAL(end_year);
+            BOOL end_is_last_day_of_feb = /*(end_month == 2) &&*/ (end_day == (end_is_leap_year ? 29 : 28));
+
+            if(/*start_is_last_day_of_feb &&*/ end_is_last_day_of_feb)
+            {
+                end_day = 30;
+            }
+        }
+
+        /* If date A falls on the 31st of a month or last day of February, then date A will be changed to the 30th */
+        if((start_day == 31) || start_is_last_day_of_feb)
+        {
+            start_day = 30;
+
+            /* If date A falls on the 30th of a month after applying (2) above and date B falls on the 31st of a month, then date B will be changed to the 30th */
+            if(end_day == 31)
+                end_day = 30;
+        }
+    }
+
+    days_360_result = (end_day - start_day);
+
+    days_360_result += 30 * (end_month - start_month);
+
+    days_360_result += 360 * (end_year - start_year);
+
+    ev_data_set_integer(p_ev_data_res, negate_result ? -days_360_result : days_360_result);
+}
+
+/******************************************************************************
+*
+* DATE edate(date, delta_months)
+*
+******************************************************************************/
+
+static void
+edate_eomonth_calc(
+    _OutRef_    P_EV_DATA p_ev_data_out,
+    _InVal_     S32 start_year,
+    _InVal_     S32 start_month,
+    _InVal_     S32 start_day,
+    _InVal_     S32 delta_months,
+    _InVal_     BOOL f_is_eomonth)
+{
+    S32 result_year = start_year;
+    S32 result_month = start_month + delta_months;
+    S32 result_day = start_day;
+    S32 monthdays;
+
+    /* does adjusted month underflow or overflow the current year? */
+    /* NB can be adjusting by more than one year */
+    while(result_month < 1)
+    {
+        result_month += 12;
+        result_year -= 1;
+    }
+    while(result_month > 12)
+    {
+        result_month -= 12;
+        result_year += 1;
+    }
+
+    monthdays = (LEAP_YEAR_ACTUAL(result_year) ? ev_days_in_month_leap[result_month - 1] : ev_days_in_month[result_month - 1]);
+
+    if(f_is_eomonth)
+    {   /* always return the last day of the month */
+        result_day = monthdays;
+    }
+    else
+    {   /* try to return the same day of the month unless that's off the end */
+        if(result_day > monthdays)
+            result_day = monthdays;
+    }
+
+    p_ev_data_out->did_num = RPN_DAT_DATE;
+    ev_date_init(&p_ev_data_out->arg.ev_date);
+    /* I did think about taking the time component across but Excel doesn't */
+
+    if(ss_ymd_to_dateval(&p_ev_data_out->arg.ev_date.date, result_year, result_month, result_day) < 0)
+    {
+        ev_data_set_error(p_ev_data_out, EVAL_ERR_ARGRANGE);
+        return;
+    }
+}
+
+PROC_EXEC_PROTO(c_edate)
+{
+    STATUS status;
+    S32 delta_months = args[1]->arg.integer;
+    S32 start_year, start_month, start_day;
+
+    exec_func_ignore_parms();
+
+    if(status_fail(status = ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &start_year, &start_month, &start_day)))
+    {
+        ev_data_set_error(p_ev_data_res, status);
+        return;
+    }
+
+    edate_eomonth_calc(p_ev_data_res, start_year, start_month, start_day, delta_months, FALSE);
+}
+
+/******************************************************************************
+*
+* DATE eomonth(date, delta_months)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_eomonth)
+{
+    STATUS status;
+    S32 delta_months = args[1]->arg.integer;
+    S32 start_year, start_month, start_day;
+
+    exec_func_ignore_parms();
+
+    if(status_fail(status = ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &start_year, &start_month, &start_day)))
+    {
+        ev_data_set_error(p_ev_data_res, status);
+        return;
+    }
+
+    edate_eomonth_calc(p_ev_data_res, start_year, start_month, start_day, delta_months, TRUE);
+}
+
+#endif
 
 /******************************************************************************
 *
@@ -205,11 +410,16 @@ PROC_EXEC_PROTO(c_dayname)
 PROC_EXEC_PROTO(c_hour)
 {
     S32 hour_result;
+    STATUS status;
     S32 hours, minutes, seconds;
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds);
+    if(status_fail(status = ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds)))
+    {
+        ev_data_set_error(p_ev_data_res, status);
+        return;
+    }
 
     hour_result = hours;
 
@@ -225,11 +435,16 @@ PROC_EXEC_PROTO(c_hour)
 PROC_EXEC_PROTO(c_minute)
 {
     S32 minute_result;
+    STATUS status;
     S32 hours, minutes, seconds;
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds);
+    if(status_fail(status = ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds)))
+    {
+        ev_data_set_error(p_ev_data_res, status);
+        return;
+    }
 
     minute_result = minutes;
 
@@ -249,12 +464,6 @@ PROC_EXEC_PROTO(c_month)
     S32 year, month, day;
 
     exec_func_ignore_parms();
-
-    if(EV_DATE_NULL == args[0]->arg.ev_date.date)
-    {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
-        return;
-    }
 
     if(status_fail(status = ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day)))
     {
@@ -281,12 +490,6 @@ PROC_EXEC_PROTO(c_monthdays)
 
     exec_func_ignore_parms();
 
-    if(EV_DATE_NULL == args[0]->arg.ev_date.date)
-    {
-        ev_data_set_error(p_ev_data_res, EVAL_ERR_NODATE);
-        return;
-    }
-
     if(status_fail(status = ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day)))
     {
         ev_data_set_error(p_ev_data_res, status);
@@ -298,23 +501,6 @@ PROC_EXEC_PROTO(c_monthdays)
     ev_data_set_integer(p_ev_data_res, monthdays_result);
 }
 
-static const PC_USTR
-ss_month_names[12] =
-{
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
-};
-
 /******************************************************************************
 *
 * STRING monthname(n | date)
@@ -323,6 +509,7 @@ ss_month_names[12] =
 
 PROC_EXEC_PROTO(c_monthname)
 {
+    PC_USTR ustr_monthname;
     S32 month_idx = 0;
 
     exec_func_ignore_parms();
@@ -342,7 +529,8 @@ PROC_EXEC_PROTO(c_monthname)
         break;
         }
 
-    case RPN_DAT_BOOL8:
+  /*case RPN_DAT_BOOL8:*/
+    case RPN_DAT_WORD8:
     case RPN_DAT_WORD16:
     case RPN_DAT_WORD32:
         month_idx = MAX(0, args[0]->arg.integer - 1);
@@ -352,8 +540,14 @@ PROC_EXEC_PROTO(c_monthname)
     default: default_unhandled(); break;
     }
 
-    if(status_ok(ss_string_make_ustr(p_ev_data_res, ss_month_names[month_idx])))
-        *(p_ev_data_res->arg.string_wr.uchars) = (U8) toupper(*(p_ev_data_res->arg.string.uchars));
+    ustr_monthname = get_p_numform_context()->month_names[month_idx];
+
+    if(status_ok(ss_string_make_ustr(p_ev_data_res, ustr_monthname)))
+    {
+        const U8 u8 = *(p_ev_data_res->arg.string.uchars);
+        const U8 u8_uc = (U8) toupper(u8);
+        *(p_ev_data_res->arg.string_wr.uchars) = u8_uc;
+    }
 }
 
 /******************************************************************************
@@ -379,11 +573,16 @@ PROC_EXEC_PROTO(c_now)
 PROC_EXEC_PROTO(c_second)
 {
     S32 second_result;
+    STATUS status;
     S32 hours, minutes, seconds;
 
     exec_func_ignore_parms();
 
-    ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds);
+    if(status_fail(status = ss_timeval_to_hms(&args[0]->arg.ev_date.time, &hours, &minutes, &seconds)))
+    {
+        ev_data_set_error(p_ev_data_res, status);
+        return;
+    }
 
     second_result = seconds;
 
@@ -401,7 +600,7 @@ PROC_EXEC_PROTO(c_time)
     exec_func_ignore_parms();
 
     p_ev_data_res->did_num = RPN_DAT_DATE;
-    p_ev_data_res->arg.ev_date.date = EV_DATE_NULL;
+    ev_date_init(&p_ev_data_res->arg.ev_date);
 
     if(ss_hms_to_timeval(&p_ev_data_res->arg.ev_date.time,
                          args[0]->arg.integer,
@@ -423,16 +622,22 @@ PROC_EXEC_PROTO(c_time)
 
 PROC_EXEC_PROTO(c_timevalue)
 {
-    U8Z buffer[256];
-    U32 len;
+    UCHARZ buffer[BUF_EV_MAX_STRING_LEN];
+    PC_UCHARS uchars;
+    U32 wss, len;
 
     exec_func_ignore_parms();
 
-    len = MIN(args[0]->arg.string.size, sizeof32(buffer)-1);
-    memcpy32(buffer, args[0]->arg.string.uchars, len);
+    wss = ss_string_skip_leading_whitespace(args[0]);
+    uchars = uchars_AddBytes_wr(args[0]->arg.string.uchars, wss);
+    len = args[0]->arg.string.size - wss;
+
+    len = MIN(len, sizeof32(buffer)-1);
+    memcpy32(buffer, uchars, len);
     buffer[len] = CH_NULL;
 
-    if((ss_recog_date_time(p_ev_data_res, buffer, 0) < 0) || (EV_DATE_NULL != p_ev_data_res->arg.ev_date.date))
+    /* Hmm. */
+    if((ss_recog_date_time(p_ev_data_res, ustr_bptr(buffer), 0) < 0) || (EV_DATE_NULL != p_ev_data_res->arg.ev_date.date))
         ev_data_set_error(p_ev_data_res, EVAL_ERR_BADTIME);
 }
 
@@ -507,14 +712,14 @@ fivebytetime_from_date(
     }
 
     zero_struct(time_ordinals);
-    time_ordinals.year = year;
+    time_ordinals.year  = year;
     time_ordinals.month = month;
-    time_ordinals.day = day;
+    time_ordinals.day   = day;
 
     rs.r[0] = -1; /* use current territory */
     rs.r[1] = (int) &p_fivebyte->utc[0];
     rs.r[2] = (int) &time_ordinals;
-    if(NULL != _kernel_swi(Territory_ConvertOrdinalsToTime, &rs, &rs))
+    if(NULL != WrapOsErrorChecking(_kernel_swi(Territory_ConvertOrdinalsToTime, &rs, &rs)))
         zero_struct_ptr(p_fivebyte);
 
     return(STATUS_OK);
@@ -543,11 +748,12 @@ PROC_EXEC_PROTO(c_weeknumber)
         rs.r[2] = (int) buffer;
         rs.r[3] = sizeof32(buffer);
         rs.r[4] = (int) "%WK";
-        if(NULL != _kernel_swi(Territory_ConvertDateAndTime, &rs, &rs))
+        if(NULL != WrapOsErrorChecking(_kernel_swi(Territory_ConvertDateAndTime, &rs, &rs)))
             weeknumber_result = 0; /* a result of zero -> info not available */
         else
             weeknumber_result = (S32) fast_strtoul(buffer, NULL);
 
+        assert(weeknumber_result >= 0);
         ev_data_set_integer(p_ev_data_res, weeknumber_result);
     }
     else
@@ -555,15 +761,15 @@ PROC_EXEC_PROTO(c_weeknumber)
 #else
     S32 year, month, day;
 
-    if(status_ok(status = ss_dateval_to_ymd(&args[0]->arg.date.date, &year, &month, &day)))
+    if(status_ok(status = ss_dateval_to_ymd(&args[0]->arg.ev_date.date, &year, &month, &day)))
     {
         U8Z buffer[32];
         struct tm tm;
 
         zero_struct(tm);
         tm.tm_year = (int) (year - 1900);
-        tm.tm_mon = (int) (month - 1);
-        tm.tm_mday = (int) day;
+        tm.tm_mon  = (int) (month - 1);
+        tm.tm_mday = (int) (day);
 
         /* actually needs wday and yday setting up! */
         (void) mktime(&tm); /* normalise */

@@ -127,7 +127,7 @@ dtp_save_slot(
         return(TRUE);
 
     /* output contents, chucking highlight chars */
-    while((ch = *lptr++) != '\0')
+    while((ch = *lptr++) != CH_NULL)
     {
         if(ch == SPACE)
             ++trailing_spaces;
@@ -208,7 +208,7 @@ fwp_save_slot(
     }
 
     /* output contents, dealing with highlight chars */
-    while((ch = *lptr++) != '\0')
+    while((ch = *lptr++) != CH_NULL)
     {
         if(ch == SPACE)
             ++trailing_spaces;
@@ -275,15 +275,18 @@ fwp_head_foot(
 
     if(!str_isblank(lcr_field))
     {
-        expand_lcr(lcr_field, -1, expanded, LIN_BUFSIZ /* field width not buffer size */,
-                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                   FALSE /*allow_fonty_result*/, FALSE /*compile_lcr*/);
+        expand_lcr(
+            lcr_field, -1 /*row*/, expanded, LIN_BUFSIZ /* NB field width not buffer size */,
+            DEFAULT_EXPAND_REFS /*expand_refs*/,
+            EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+            EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+            EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+            FALSE /*!compile_lcr*/);
+
         second = expanded + strlen(expanded) + 1; /* all three are plain non-fonty strings */
         third  = second   + strlen(second)   + 1;
 
-        (void) sprintf(array,
-                       "\x1F" "%d",
-                       type);
+        consume_int(sprintf(array, "\x1F" "%d", type));
 
         if( !away_string(array,         output) ||
             !away_string(expanded,      output) ||
@@ -292,7 +295,9 @@ fwp_head_foot(
             !away_byte  ('\x1F',        output) ||
             !away_string(third,         output) ||
             !away_byte  (FWP_LINESEP,   output) )
-                return(FALSE);
+        {
+            return(FALSE);
+        }
     }
 
     return(TRUE);
@@ -385,13 +390,13 @@ fwp_save_file_preamble(
         /* send out start of fwp file */
 
         /* mandatory page layout */
-        (void) sprintf(array,
-                        "\x1F" "0%02d%02d%02d%02d%02d000" "\x0A",
-                        d_poptions_PL % 100,
-                        d_poptions_TM % 100,
-                        d_poptions_HM % 100,
-                        d_poptions_FM % 100,
-                        d_poptions_BM % 100);
+        consume_int(sprintf(array,
+                            "\x1F" "0%02d%02d%02d%02d%02d000" "\x0A",
+                            d_poptions_PL % 100,
+                            d_poptions_TM % 100,
+                            d_poptions_HM % 100,
+                            d_poptions_FM % 100,
+                            d_poptions_BM % 100));
 
         if(!away_string(array, output))
             return(FALSE);
@@ -416,8 +421,8 @@ fwp_save_line_preamble(
     FILE_HANDLE output,
     BOOL saving_fwp)
 {
-    IGNOREPARM(output);
-    IGNOREPARM(saving_fwp);
+    UNREFERENCED_PARAMETER(output);
+    UNREFERENCED_PARAMETER(saving_fwp);
 
     trace_0(TRACE_APP_PD4, "fwp_save_line_preamble()");
 
@@ -633,7 +638,7 @@ fwp_load_preinit(
         case FWP_HEADER:
             footer = FALSE;
 
-            /* deliberate fall-thru */
+            /* deliberate fall thru */
 
         case FWP_FOOTER:
             /* get three parameters. Force in '/', quick & nasty */
@@ -655,7 +660,7 @@ fwp_load_preinit(
 
                 case CR:
                 case LF:
-                    *ptr = '\0';
+                    *ptr = CH_NULL;
                     break;
 
                 default:
@@ -666,7 +671,7 @@ fwp_load_preinit(
                 break;
             }
 
-            mystr_set(footer ? &d_poptions_FO : &d_poptions_HE, array);
+            consume_bool(mystr_set(footer ? &d_poptions_FO : &d_poptions_HE, array));
             break;
             }
 
@@ -681,7 +686,7 @@ fwp_load_preinit(
                 IGNOREVAR(c);
                 break;
             }
-            /* deliberate fall-through if we don't want rulers */
+            /* deliberate fall through */ /* if we don't want rulers */
 
         default:
             /* dunno wot this format line is so read past it */
@@ -791,7 +796,7 @@ fwp_convert(
             else
                 *pageoffset = c - 16;
 
-            /* deliberate fall-thru */
+            /* deliberate fall thru */
 
         case FWP_HARD_PAGE:
             *type = SL_PAGE;

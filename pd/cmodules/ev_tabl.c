@@ -52,6 +52,10 @@ static const EV_TYPE arg_IoR[]  = { 1, EM_INT | EM_REA };
 /* IoRoD: integer, real or date */
 static const EV_TYPE arg_IoRoD[] = { 1, EM_REA | EM_DAT | EM_INT };
 
+/* S_I: string and integer */
+static const EV_TYPE arg_S_I[]  = { 2, EM_STR,
+                                       EM_INT };
+
 /* function-specific argument lists */
 
 static const EV_TYPE arg_cho[]  = { 2, EM_INT,
@@ -126,8 +130,10 @@ static const EV_TYPE arg_setn[] = { 2, EM_STR,
 static const EV_TYPE arg_setv[] = { 2, EM_SLR | EM_ARY,
                                        EM_REA | EM_STR | EM_DAT | EM_ARY | EM_INT };
 
-static const EV_TYPE arg_stn[]  = { 2, EM_STR,
-                                       EM_INT };
+static const EV_TYPE arg_ssm[]  = { 4, EM_REA,
+                                       EM_REA,
+                                       EM_REA,
+                                       EM_ARY };
 
 static const EV_TYPE arg_trd[]  = { 2, EM_ARY,
                                        EM_ARY | EM_REA };
@@ -308,7 +314,7 @@ const RPNDEF rpn_table[] =
                                                    /*dcount*/ NAS,   arg_dbs },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNTA, 0, 1/*dbase*/, 0, 0),
                                                    /*dcounta*/ NAS,  arg_dbs },
-    { RPN_FNF,   4, EV_RESO_FINANCE ,         NAP, c_ddb,            arg_REA },
+    { RPN_FNV,  -5, EV_RESO_FINANCE ,         NAP, c_ddb,            arg_REA },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_deg,            arg_REA },
     { RPN_FNF,   1, EV_RESO_MISC    ,         NAP, c_deref,          arg_drf },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DMAX,    0, 1/*dbase*/, 0, 0),
@@ -369,7 +375,7 @@ const RPNDEF rpn_table[] =
 
     { RPN_FNV,  -1, EV_RESO_STRING  ,         NAP, c_join,           arg_STR },
 
-    { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_left,           arg_stn },
+    { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_left,           arg_S_I },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_length,         arg_STR },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_linest,         arg_llg },
     { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_listcount,      arg_ARY },
@@ -388,7 +394,7 @@ const RPNDEF rpn_table[] =
                                                    /*match*/ NAS,    arg_hvl },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_max,            arg_mix },
     { RPN_FNF,   1, EV_RESO_STATS,            NAP, c_median,         arg_ARY },
-    { RPN_FNF,   3, EV_RESO_STRING  ,         NAP, c_mid,            arg_stn },
+    { RPN_FNF,   3, EV_RESO_STRING  ,         NAP, c_mid,            arg_S_I },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_min,            arg_mix },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_minute,         arg_DAT },
     { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_mirr,           arg_mir },
@@ -408,6 +414,8 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_proper,         arg_STR },
     { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_pv,             arg_REA },
 
+  /*{ RPN_FNF,   2, EV_RESO_MATHS   ,         NAP, c_quotient,       arg_REA },*/
+
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_rad,            arg_REA },
     { RPN_FNV,  -1, EV_RESO_STATS   , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 0),
                                                    c_rand,           arg_REA },
@@ -416,11 +424,11 @@ const RPNDEF rpn_table[] =
     { RPN_FN0,   0, EV_RESO_CONTROL , EXCTRL(CONTROL_REPEAT, EVS_CNT_REPEAT),
                                                    /*repeat*/ NAS,   NAA },
     { RPN_FNF,   4, EV_RESO_STRING  ,         NAP, c_replace,        arg_rpl },
-    { RPN_FNF,   2, EV_RESO_STRING  ,         NAP, c_rept,           arg_stn },
+    { RPN_FNF,   2, EV_RESO_STRING  ,         NAP, c_rept,           arg_S_I },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_RESULT, 0),
                                                    /*result*/ NAS,   arg_res },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_reverse,        arg_STR },
-    { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_right,          arg_stn },
+    { RPN_FNV,  -2, EV_RESO_STRING  ,         NAP, c_right,          arg_S_I },
     { RPN_FNV,  -2, EV_RESO_MATHS   ,         NAP, c_round,          arg_ndp },
     { RPN_FNV,  -1, EV_RESO_LOOKUP  , FP_AGG(EXEC_EXEC, 0, 0, 0, 1/*var*/, 1/*nodep*/),
                                                    c_row,            arg_rco },
@@ -430,6 +438,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sec,            arg_REA },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_sech,           arg_REA },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_second,         arg_DAT },
+    { RPN_FNF,   4, EV_RESO_MATHS   ,         NAP, c_seriessum,      arg_ssm },
     { RPN_FNF,   2, EV_RESO_MISC    ,         NAP, c_set_name,       arg_setn },
     { RPN_FNF,   2, EV_RESO_MISC    , FP_AGG(EXEC_EXEC, 0, 0, 0, 0, 1/*nodep*/),
                                                    c_setvalue,       arg_setv },
@@ -595,7 +604,7 @@ look_table[] =
     { "dayname",    RPN_FNF_DAYNAME     },
     { "dcount",     RPN_FNF_DCOUNT      },
     { "dcounta",    RPN_FNF_DCOUNTA     },
-    { "ddb",        RPN_FNF_DDB         },
+    { "ddb",        RPN_FNV_DDB         },
     { "deg",        RPN_FNF_DEG         },
     { "deref",      RPN_FNF_DEREF       },
     { "dmax",       RPN_FNF_DMAX        },
@@ -674,6 +683,8 @@ look_table[] =
     { "proper",     RPN_FNF_PROPER      },
     { "pv",         RPN_FNF_PV          },
 
+  /*{ "quotient",   RPN_FNF_QUOTIENT    },*/
+
     { "rad",        RPN_FNF_RAD         },
     { "rand",       RPN_FNV_RAND        },
     { "rank",       RPN_FNV_RANK        },
@@ -691,6 +702,7 @@ look_table[] =
     { "sec",        RPN_FNF_SEC         },
     { "sech",       RPN_FNF_SECH        },
     { "second",     RPN_FNF_SECOND      },
+    { "seriessum",  RPN_FNF_SERIESSUM   },
     { "set_name",   RPN_FNF_SET_NAME    },
     { "set_value",  RPN_FNF_SET_VALUE   },
     { "sgn",        RPN_FNF_SGN         },
@@ -817,7 +829,7 @@ ev_enum_resource_get(
 {
     S32 res, item_get;
 
-    IGNOREPARM(arg_buf_siz);
+    UNREFERENCED_PARAMETER(arg_buf_siz);
 
     if(*item_no < 0)
     {
@@ -849,8 +861,8 @@ ev_enum_resource_get(
             {
                 if(item_at == item_get)
                 {
-                    arg_out[0] = '\0';
-                    name_out[0] = '\0';
+                    arg_out[0] = CH_NULL;
+                    name_out[0] = CH_NULL;
                     if(p_ev_custom->owner.docno != resop->docno_from)
                     {
                         ev_write_docname(doc_name_buf, p_ev_custom->owner.docno, resop->docno_from);
@@ -888,7 +900,7 @@ ev_enum_resource_get(
             {
                 if(item_at == item_get)
                 {
-                    name_out[0] = '\0';
+                    name_out[0] = CH_NULL;
                     if(p_ev_name->owner.docno != resop->docno_from)
                     {
                         ev_write_docname(doc_name_buf, p_ev_name->owner.docno, resop->docno_from);
@@ -926,9 +938,9 @@ ev_enum_resource_get(
             {
                 if(item_at == item_get)
                 {
-                    arg_out[0] = '\0';
+                    arg_out[0] = CH_NULL;
                     *n_args = 0;
-                    name_out[0] = '\0';
+                    name_out[0] = CH_NULL;
                     strncat(name_out, func_name(rpn_num), name_buf_siz);
 
                     if(rpn_p->n_args >= 0)
@@ -1025,7 +1037,7 @@ func_name(
 *
 ******************************************************************************/
 
-extern PC_USTR
+extern PC_A7STR
 type_from_flags(
     EV_TYPE type)
 {

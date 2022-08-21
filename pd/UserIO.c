@@ -65,9 +65,9 @@ io_event_handler(
 
 typedef struct USERIO_STRUCT
 {
-    wimp_w  window;
-    void   *template;
-    S32     button;
+    HOST_WND window_handle;
+    WimpWindowWithBitset * window_template;
+    S32 button;
 }
 USERIO_STRUCT;
 
@@ -177,51 +177,50 @@ io_create(
     const char *button2)
 {
     userIO_handle  user;
-    template      *templatehan;
-    wimp_wind     *template;
-    wimp_w         window;
+    template      *template_handle;
+    HOST_WND       window_handle;
     S32            err = STATUS_NOMEM;     /* a useful default value */
 
     *userp = user = al_ptr_alloc_elem(USERIO_STRUCT, 1, &err);
 
     if(user)
     {
-        user->window   = 0;
-        user->template = NULL;
-        user->button   = 0;     /* closed */
+        user->window_handle = HOST_WND_NONE;
+        user->window_template = NULL;
+        user->button = 0; /* closed */
 
-        templatehan = template_find_new(ident);
+        template_handle = template_find_new(ident);
 
-        if(templatehan)
+        if(NULL != template_handle)
         {
-            user->template = template = template_copy_new(templatehan);
+            user->window_template = template_copy_new(template_handle);
 
-            if(template)
+            if(NULL != user->window_template)
             {
-                if(!win_create_wind(template, &window, io_event_handler, (void*)user))
+                if(NULL == WrapOsErrorReporting(winx_create_window(user->window_template, &window_handle, io_event_handler, (void *) user)))
                 {
-                    user->window = window;
+                    user->window_handle = window_handle;
 
-                    win_settitle(window, de_const_cast(char *, title));
+                    win_settitle(window_handle, de_const_cast(char *, title));
 
-                    win_setfield(window, (wimp_i)userIO_Message, message);
-                    win_setfield(window, (wimp_i)userIO_UserText, "");
+                    winf_setfield(window_handle, userIO_Message, message);
+                    winf_setfield(window_handle, userIO_UserText, "");
 
                     if(button2)
                     {
                         /* put text in left and right buttons, make middle button invisible */
 
-                        win_setfield(window, (wimp_i)userIO_ButtonL, button1);
-                        win_setfield(window, (wimp_i)userIO_ButtonR, button2);
-                        win_hidefield(window, (wimp_i)userIO_ButtonM);
+                        winf_setfield(window_handle, userIO_ButtonL, button1);
+                        winf_setfield(window_handle, userIO_ButtonR, button2);
+                        winf_hidefield(window_handle, userIO_ButtonM);
                     }
                     else
                     {
                         /* put text in middle button, make left and right buttons invisible */
 
-                        win_setfield(window, (wimp_i)userIO_ButtonM, button1);
-                        win_hidefield(window, (wimp_i)userIO_ButtonL);
-                        win_hidefield(window, (wimp_i)userIO_ButtonR);
+                        winf_setfield(window_handle, userIO_ButtonM, button1);
+                        winf_hidefield(window_handle, userIO_ButtonL);
+                        winf_hidefield(window_handle, userIO_ButtonR);
                     }
 
                     return(0);
@@ -248,13 +247,14 @@ static void
 io_destroy(
     userIO_handle *userp)
 {
-    if(*userp)
-    {
-        if((*userp)->window)
-            win_delete_wind(&(*userp)->window);
+    userIO_handle user = *userp;
 
-        if((*userp)->template)
-            al_ptr_free((*userp)->template);
+    if(NULL != user)
+    {
+        if(HOST_WND_NONE != user->window_handle)
+            winx_delete_window(&user->window_handle);
+
+        template_copy_dispose(&user->window_template);
 
         al_ptr_free(*userp);
     }
@@ -266,20 +266,24 @@ static S32
 io_open(
     userIO_handle *userp)
 {
-    wimp_wstate    state;
-    userIO_handle  user = *userp;
+    userIO_handle user = *userp;
 
-    if(user)
+    if(NULL != user)
     {
-        if(wimpt_complain(wimp_get_wind_state(user->window, &state)) == 0)
+        WimpGetWindowStateBlock window_state;
+
+        window_state.window_handle = user->window_handle;
+        if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
         {
-            state.o.w      = user->window;      /* Probably set, but make sure! */
-            state.o.behind = (wimp_w)-1;        /* Make sure window is opened in front */
+            WimpOpenWindowBlock open_window_block = * (WimpOpenWindowBlock *) &window_state;
 
-            if(!win_open_wind(&state.o))
+            open_window_block.window_handle = user->window_handle; /* Probably set, but make sure! */
+
+            open_window_block.behind = -1; /* Make sure this window is opened in front */
+
+            if(NULL == WrapOsErrorReporting(winx_open_window(&open_window_block)))
             {
-                user->button = -1;      /* nothing has happened yet */
-
+                user->button = -1; /* nothing has happened yet */
                 return(0);
             }
         }
@@ -294,12 +298,14 @@ io_poll(
     char *text_out,
     int max_len)
 {
-    if(*userp)
+    userIO_handle user = *userp;
+
+    if(user)
     {
         if(text_out)
-            win_getfield((*userp)->window, (wimp_i)userIO_UserText, text_out, max_len);
+            winf_getfield(user->window_handle, userIO_UserText, text_out, max_len);
 
-        return((*userp)->button);
+        return(user->button);
     }
 
     return(0);  /* closed */
@@ -309,77 +315,112 @@ static void
 io_close(
     userIO_handle *userp)
 {
-    if(*userp)
+    userIO_handle user = *userp;
+
+    if(user)
     {
-        win_close_wind((*userp)->window);  /* no need to validate window handle, win_close_wind does it */
+        winx_close_window(user->window_handle); /* no need to validate window handle, winx_close_wind does it */
     }
 }
+
+static BOOL
+io_event_Close_Window(
+    userIO_handle user)
+{
+    /* merely register as user input */
+    if(user->button < 0)
+        user->button = 0;   /* closed */
+
+    /* done something, so... */
+    return(TRUE);
+}
+
+static BOOL
+io_event_Mouse_Click(
+    const WimpMouseClickEvent * mouse_click,
+    userIO_handle user)
+{
+    if(mouse_click->buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust)) /* 'Select' or 'Adjust' */
+    {
+        switch(mouse_click->icon_handle)
+        {
+        case userIO_ButtonL:
+        case userIO_ButtonM:
+            if(user->button < 0)
+                user->button = 1;
+            break;
+
+        case userIO_ButtonR:
+            if(user->button < 0)
+                user->button = 2;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    /* done something, so... */
+    return(TRUE);
+}
+
+static BOOL
+io_event_Key_Pressed(
+    const WimpKeyPressedEvent * const key_pressed,
+    userIO_handle user)
+{
+    switch(key_pressed->key_code)
+    {
+    case 13:
+        if(user->button < 0)
+            user->button = 1;
+        break;
+
+    case 27:
+        if(user->button < 0)
+            user->button = 0;
+        break;
+
+    default:
+        break;
+    }
+
+    /* done something, so... */
+    return(TRUE);
+}
+
+#define io_event_handler_report(event_code, event_data, handle) \
+    riscos_event_handler_report(event_code, event_data, handle, "u_io")
 
 static BOOL
 io_event_handler(
     wimp_eventstr *e,
     void *handle)
 {
-    userIO_handle user = (userIO_handle)handle;
+    const int event_code = (int) e->e;
+    WimpPollBlock * const event_data = (WimpPollBlock *) &e->data;
+    userIO_handle user = (userIO_handle) handle;
 
-    /* Deal with event */
-    switch (e->e)
+    switch(event_code)
     {
-    case wimp_EOPEN:                                                /* 2 */
-        return(FALSE);              /* default action */
-        break;
+    case Wimp_ERedrawWindow:
+        return(FALSE); /* default action */
 
-    case wimp_EREDRAW:                                              /* 1 */
-        return(FALSE);              /* default action */
-        break;
+    case Wimp_EOpenWindow:
+        return(FALSE); /* default action */
 
-    case wimp_ECLOSE:                                               /* 3 */
-        /* merely register as user input */
-        if(user->button < 0)
-            user->button = 0;   /* closed */
-        break;
+    case Wimp_ECloseWindow:
+        return(io_event_Close_Window(user));
 
-    case wimp_EBUT:                                                 /* 6 */
-        if(e->data.but.m.bbits & 0x5)   /* 'select' or 'adjust' */
-        {
-            switch ((int)e->data.but.m.i)
-            {
-            case userIO_ButtonL:
-            case userIO_ButtonM:
-                if(user->button < 0)
-                    user->button = 1;
-                break;
+    case Wimp_EMouseClick:
+        return(io_event_Mouse_Click(&event_data->mouse_click, user));
 
-            case userIO_ButtonR:
-                if(user->button < 0)
-                    user->button = 2;
-                break;
-            }
-        }
-        break;
+    case Wimp_EKeyPressed:
+        return(io_event_Key_Pressed(&event_data->key_pressed, user));
 
-    case wimp_EKEY:
-        switch(e->data.key.chcode)
-        {
-        case 13:
-            if(user->button < 0)
-                user->button = 1;
-            break;
-
-        case 27:
-            if(user->button < 0)
-                user->button = 0;
-            break;
-        }
-        break;
-
-    default:   /* Ignore any other events */
+    default: /* Ignore other events */
         return(FALSE);
-        break;
     }
-
-    /* done something, so... */
-    return(TRUE);
 }
 
 /* end of userIO.c */

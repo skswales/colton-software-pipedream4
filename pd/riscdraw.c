@@ -34,10 +34,6 @@
 #include "cs-wimptx.h"
 #endif
 
-#ifndef __colourtran_h
-#include "colourtran.h"
-#endif
-
 #ifndef __print_h
 #include "print.h"
 #endif
@@ -52,11 +48,26 @@
 #include "pd_x.h"
 
 /*
-internal functions
+internal types
 */
 
-#define round_with_mask(value, mask) \
-    { (value) = ((value) + (mask)) & ~(mask); }
+typedef union RISCOS_PALETTE_U
+{
+    unsigned int word;
+
+    struct RISCOS_PALETTE_U_BYTES
+    {
+        char gcol;
+        char red;
+        char green;
+        char blue;
+    } bytes;
+}
+RISCOS_PALETTE_U;
+
+/*
+internal functions
+*/
 
 #define pd_muldiv64(a, b, c) \
     ((S32) muldiv64_limiting(a, b, c))
@@ -68,39 +79,42 @@ internal functions
 #define TRACE_SETCOLOUR (TRACE_APP_PD4_RENDER)
 
 /*
-* +-----------------------------------------------------------------------+
-* |                                                                       |
-* |     work area extent origin                                           |
-* |       + --  --  --  --  --  --  --  --  --  -- --  --  --  --  --  -- |
-* |             .                                                   ^     |
-* |       | TLS          TMS                                        |     |
-* |         .   +   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  |  .  |
-* |       |     TCO                                                scy    |
-* |                 +---+---+------------------------------+---+    |     |
-* |       |     .   | B | C |     T i t l e    b a r       | T |    v     |
-* |                 +---+---+------------------------------+---+ <---wy1  |
-* |       |     .   |                                      | U |          |
-* |                 |                                      +---+          |
-* |       |     .   |                                      |   |          |
-* |                 |                                      | = |          |
-* |       |   L .   |                                      | # |          |
-* |           M     |                                      | = |          |
-* |       |   S .   |                                      |   |          |
-* |                 |                                      |   |          |
-* |       |     .   |                                      |   |          |
-* |                 |                                      +---+          |
-* |       |     .   |                                      | D |          |
-* |                 +---+------------------------------+---+---+ <---wy0  |
-* |       |     .   | L |      [-#-]                   | R | S |          |
-* |                 +---+------------------------------+---+---+          |
-* |       |<--scx-->^                                      ^              |
-* |                 |                                      |              |
-* |       |         |                                      |              |
-* |                 wx0                                    wx1            |
-* +-----------------------------------------------------------------------+
+* +---------------------------------------------------------------------------+
+* |                                                                           |
+* |     work area extent origin                                               |
+* |       + --  --  --  --  --  --  --  --  --  -- --  --  --  --  --  -- --  |
+* |             .                                                   ^         |
+* |       | TLS          TMS                                        |         |
+* |         .   +   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  |  .  .   |
+* |       |     TCO                                              yscroll      |
+* |                 +---+---+------------------------------+---+    |         |
+* |       |     .   | B | C |     T i t l e    b a r       | T |    v         |
+* |                 +---+---+------------------------------+---+ <---v_a.ymax |
+* |       |     .   |                                      | U |              |
+* |                 |                                      +---+              |
+* |       |     .   |                                      |   |              |
+* |                 |                                      | = |              |
+* |       |   L .   |                                      | # |              |
+* |           M     |                                      | = |              |
+* |       |   S .   |                                      |   |              |
+* |                 |                                      |   |              |
+* |       |     .   |                                      |   |              |
+* |                 |                                      +---+              |
+* |       |     .   |                                      | D |              |
+* |                 +---+------------------------------+---+---+ <---v_a.ymin |
+* |       |     .   | L |      [-#-]                   | R | S |              |
+* |                 +---+------------------------------+---+---+              |
+* |       |<--xsc-->^                                      ^                  |
+* |                 |                                      |                  |
+* |       |         |                                      |                  |
+* |                 v_a.xmin                               v_a.xmax           |
+* +---------------------------------------------------------------------------+
 * ^
 * graphics origin
 */
+
+/* gdi_org.x = v_a.xmin - xscroll */
+/* gdi_org.x = v_a.ymax - yscroll */
 
 /*  a text cell
 *   ===========
@@ -170,15 +184,15 @@ static S32 default_gcharxspace;
 static S32 default_gcharyspace;
 
 /* maximum size the contents of a window could be given in this screen mode */
-static S32 max_poss_height;
-static S32 max_poss_width;
+static GDI_COORD max_poss_os_height;
+static GDI_COORD max_poss_os_width;
 
 /* current fg/bg colours for this call of update/redraw (temp globals) */
-S32 current_fg = -1;
-S32 current_bg = -1;
+U32 current_fg_wimp_colour_value = (U32) -1;
+U32 current_bg_wimp_colour_value = (U32) -1;
 
-static S32 invert_fg;
-static S32 invert_bg;
+static U32 invert_fg_colours_option_index;
+static U32 invert_bg_colours_option_index;
 
 static BOOL font_colours_invalid = TRUE;
 
@@ -218,7 +232,8 @@ killcolourcache(void)
 {
     trace_0(TRACE_APP_PD4_RENDER, "killcolourcache()");
 
-    current_fg = current_bg = -1;
+    current_fg_wimp_colour_value = (U32) -1;
+    current_bg_wimp_colour_value = (U32) -1;
 
     font_colours_invalid = TRUE;
 }
@@ -232,16 +247,10 @@ killcolourcache(void)
 ******************************************************************************/
 
 extern void
-application_redraw(
-    RISCOS_REDRAWSTR *r)
+application_redraw_core(
+    _In_        const RISCOS_RedrawWindowBlock * const redraw_window_block)
 {
-    #if TRACE_ALLOWED
-    wimp_redrawstr * redrawstr = (wimp_redrawstr *) r;
-    S32 x0 = redrawstr->box.x0;
-    S32 y1 = redrawstr->box.y1;
-    #endif
-
-    IGNOREPARM(r);
+    UNREFERENCED_PARAMETER_InRef_(redraw_window_block);
 
     /* calculate 'text window' in document that needs painting */
     /* note the flip & xlate of y coordinates from graphics to text */
@@ -250,15 +259,13 @@ application_redraw(
     cliparea.y0 = tcoord_y( graphics_window.y0);
     cliparea.y1 = tcoord_y1(graphics_window.y1);
 
-    trace_2(TRACE_APP_PD4_RENDER, "app_redraw: x0 %d y1 %d", x0, y1);
-    trace_2(TRACE_APP_PD4_RENDER, " textcell org %d, %d; ", textcell_xorg, textcell_yorg);
+    trace_2(TRACE_APP_PD4_RENDER, "app_redraw: textcell org %d, %d; ", textcell_xorg, textcell_yorg);
     trace_4(TRACE_APP_PD4_RENDER, " graphics window %d, %d, %d, %d",
-            graphics_window.x0, graphics_window.y0,
-            graphics_window.x1, graphics_window.y1);
+            graphics_window.x0, graphics_window.y0, graphics_window.x1, graphics_window.y1);
     trace_4(TRACE_APP_PD4_RENDER, " invalid text area %d, %d, %d, %d",
             thisarea.x0, thisarea.y0, thisarea.x1, thisarea.y1);
 
-    setcolour(FORE, BACK);
+    setcolours(COI_FORE, COI_BACK);
 
     /* ensure all of buffer displayed on redraw */
     dspfld_from = -1;
@@ -272,26 +279,67 @@ application_redraw(
 
 /******************************************************************************
 *
-* swap fg/bg colours
+* New colour value handling
 *
 ******************************************************************************/
 
-extern void
-riscos_invert(void)
+_Check_return_
+static int /*colnum*/
+colourtrans_ReturnColourNumberForMode(
+    _In_        unsigned int word,
+    _In_        unsigned int mode,
+    _In_        unsigned int palette)
 {
-    int newbg = current_fg;
-    int newfg = current_bg;
+    _kernel_swi_regs rs;
+    rs.r[0] = word;
+    rs.r[1] = mode;
+    rs.r[2] = palette;
+    return(_kernel_swi(ColourTrans_ReturnColourNumberForMode, &rs, &rs) ? 0 : rs.r[0]);
+}
 
-    current_fg = newfg;
-    current_bg = newbg;
+_Check_return_
+static inline _kernel_oserror *
+colourtrans_SetGCOL(
+    _In_        unsigned int word,
+    _In_        int flags,
+    _In_        int gcol_action)
+{
+    _kernel_swi_regs rs;
+    rs.r[0] = word;
+    rs.r[3] = flags;
+    rs.r[4] = gcol_action;
+    assert((rs.r[3] & 0xfffffe7f) == 0); /* just bits 7 and 8 are valid */
+    return(_kernel_swi(ColourTrans_SetGCOL, &rs, &rs)); /* ignore gcol_out */
+}
 
-    trace_1(TRACE_SETCOLOUR, "invert: wimp_setcolour(fg %d); ", newfg);
-    trace_1(TRACE_SETCOLOUR, "wimp_setcolour(bg %d)", newbg);
+static inline void
+os_rgb_from_wimp_colour_value(
+    _Out_       RISCOS_PALETTE_U * p_os_rgb,
+    _InVal_     U32 wimp_colour_value /* BBGGRR10 */ )
+{
+    p_os_rgb->bytes.gcol  = 0;
+    p_os_rgb->bytes.red   = (wimp_colour_value >>  8) & 0xFF;
+    p_os_rgb->bytes.green = (wimp_colour_value >> 16) & 0xFF;
+    p_os_rgb->bytes.blue  = (wimp_colour_value >> 24) & 0xFF;
+}
 
-    wimpt_safe(wimp_setcolour(newfg       ));
-    wimpt_safe(wimp_setcolour(newbg | 0x80));
+extern void
+riscos_set_wimp_colour_value_index_byte(
+    _InoutRef_  P_U32 p_wimp_colour_value)
+{
+    U32 wimp_colour_value = *p_wimp_colour_value & ~0x1F;
 
-    font_colours_invalid = TRUE;
+    /* map this BBGGRRS0 to a 16-colour mode index */
+    int colnum = colourtrans_ReturnColourNumberForMode(wimp_colour_value, 12, (int) &wimptx__palette.c[0]);
+
+    /*reportf("cvib: 0x%.8X -> 0x%.2X", wimp_colour_value, colnum);*/
+    if(colnum <= 0x0F)
+        wimp_colour_value |= (U32) colnum;
+
+    wimp_colour_value |= 0x10;
+
+    reportf("cvib: 0x%.8X", wimp_colour_value);
+    *p_wimp_colour_value = wimp_colour_value;
 }
 
 /******************************************************************************
@@ -301,63 +349,106 @@ riscos_invert(void)
 ******************************************************************************/
 
 extern void
-riscos_setcolour(
-    int colour,
-    BOOL isbackcolour)
+riscos_set_bg_colour_from_wimp_colour_value(
+    _InVal_     U32 wimp_colour_value)
 {
-    if(isbackcolour)
+    if(wimp_colour_value == current_bg_wimp_colour_value)
+        return;
+
+    current_bg_wimp_colour_value = wimp_colour_value;
+    font_colours_invalid = TRUE;
+
+    trace_1(TRACE_SETCOLOUR, "wimp_setcolour(bg " U32_XTFMT ")", wimp_colour_value);
+    if(0 != (0x10 & wimp_colour_value))
     {
-        if(colour != current_bg)
-        {
-            current_bg = colour;
-            trace_1(TRACE_SETCOLOUR, "wimp_setcolour(bg %d)", colour);
-            wimpt_safe(wimp_setcolour(colour | 0x80));
-            font_colours_invalid = TRUE;
-        }
+        RISCOS_PALETTE_U os_rgb;
+        os_rgb_from_wimp_colour_value(&os_rgb, wimp_colour_value);
+        void_WrapOsErrorReporting(
+            colourtrans_SetGCOL(os_rgb.word,
+                                0x100 /* allow ECF */ | 0x80 /*background*/,
+                                0 /*GCol action is store*/));
     }
     else
     {
-        if(colour != current_fg)
-        {
-            current_fg = colour;
-            trace_1(TRACE_SETCOLOUR, "wimp_setcolour(fg %d)", colour);
-            wimpt_safe(wimp_setcolour(colour));
-            font_colours_invalid = TRUE;
-        }
+        void_WrapOsErrorReporting(
+            wimp_setcolour(wimp_colour_value | 0x80 /*background*/));
     }
 }
 
 extern void
-new_font_leading(
-    S32 new_font_leading_mp)
+riscos_set_fg_colour_from_wimp_colour_value(
+    _InVal_     U32 wimp_colour_value)
 {
-    global_font_leading_mp = new_font_leading_mp;
+    if(wimp_colour_value == current_fg_wimp_colour_value)
+        return;
+
+    current_fg_wimp_colour_value = wimp_colour_value;
+    font_colours_invalid = TRUE;
+
+    trace_1(TRACE_SETCOLOUR, "wimp_setcolour(fg " U32_XTFMT ")", wimp_colour_value);
+    if(0 != (0x10 & wimp_colour_value))
+    {
+        RISCOS_PALETTE_U os_rgb;
+        os_rgb_from_wimp_colour_value(&os_rgb, wimp_colour_value);
+        void_WrapOsErrorReporting(
+            colourtrans_SetGCOL(os_rgb.word,
+                                0x100 /* allow ECF */ /* | 0x00 foreground*/,
+                                0 /*GCol action is store*/));
+    }
+    else
+    {
+        void_WrapOsErrorReporting(
+            wimp_setcolour(wimp_colour_value));
+    }
+}
+
+/******************************************************************************
+*
+* swap fg/bg colours
+*
+******************************************************************************/
+
+extern void
+riscos_invert(void)
+{
+    const U32 new_bg_wimp_colour_value = current_fg_wimp_colour_value;
+    const U32 new_fg_wimp_colour_value = current_bg_wimp_colour_value;
+
+    riscos_set_bg_colour_from_wimp_colour_value(new_bg_wimp_colour_value);
+    riscos_set_fg_colour_from_wimp_colour_value(new_fg_wimp_colour_value);
+}
+
+extern void
+new_font_leading(
+    GR_MILLIPOINT new_font_leading_mp)
+{
+    global_font_leading_millipoints = new_font_leading_mp;
 
     if(riscos_fonts)
     {
         /* line spacing - round up to nearest OS unit */
-        charallocheight = div_round_ceil(global_font_leading_mp, MILLIPOINTS_PER_OS);
+        charallocheight = idiv_ceil(global_font_leading_millipoints, millipoints_per_os_y);
 
         /* and then to nearest pixel corresponding */
-        charallocheight = div_round_ceil(charallocheight, dy) * dy;
+        charallocheight = idiv_ceil(charallocheight, dy) * dy;
 
         /* lines are at least two pixels high */
         charallocheight = MAX(charallocheight, 2*dy);
 
-        /* SKS after 4.11 06jan92 - only set page length if in auto mode */
+        /* SKS after PD 4.11 06jan92 - only set page length if in auto mode */
         if(auto_line_height)
         {
-            S32 paper_size_mp;
+            S32 paper_size_millipoints;
             /* actual paper size */
-            paper_size_mp = (d_print_QL == 'L')
-                                    ? paper_width_mp
-                                    : paper_length_mp;
+            paper_size_millipoints = (d_print_QL == 'L')
+                                        ? paper_width_millipoints
+                                        : paper_length_millipoints;
 
             /* effective paper size including scaling (bigger scale -> less lines + v.v.) */
-            paper_size_mp = (S32) muldiv64(paper_size_mp, 100, d_print_QS);
+            paper_size_millipoints = (S32) muldiv64(paper_size_millipoints, 100, d_print_QS);
 
             /* page length (round down) */
-            d_poptions_PL = paper_size_mp / global_font_leading_mp;
+            d_poptions_PL = paper_size_millipoints / global_font_leading_millipoints;
         }
     }
     else
@@ -391,29 +482,26 @@ new_font_leading_based_on_y(void)
 static BOOL first_open = TRUE;
 
 extern void
-cachemodevariables(void)
+cache_mode_variables(void)
 {
-    DOCNO old_docno;
-    P_DOCU p_docu;
-    S32 x, y;
+    GDI_SIZE os_display_size;
 
     /* cache some variables so Draw rendering works */
     wimpt_checkmode();
 
-    x = wimpt_xsize();
-    y = wimpt_ysize();
+    os_display_size.cx = wimptx_display_size_cx();
+    os_display_size.cy = wimptx_display_size_cy();
 
-    if(y != screen_y_os)
+    if(os_display_size.cy != g_os_display_size.cy)
         /* ensure window default pos reset to sensible for mode again */
-        riscos_setinitwindowpos(y - wimpt_title_height());
+        riscos_setinitwindowpos(os_display_size.cy - wimptx_title_height());
 
-    screen_x_os = x;
-    screen_y_os = y;
+    g_os_display_size = os_display_size;
 
-    default_gcharxsize  = bbc_vduvar(bbc_GCharSizeX)  << wimpt_xeig();
-    default_gcharysize  = bbc_vduvar(bbc_GCharSizeY)  << wimpt_yeig();
-    default_gcharxspace = bbc_vduvar(bbc_GCharSpaceX) << wimpt_xeig();
-    default_gcharyspace = bbc_vduvar(bbc_GCharSpaceY) << wimpt_yeig();
+    default_gcharxsize  = bbc_vduvar(bbc_GCharSizeX)  << wimptx_XEigFactor();
+    default_gcharysize  = bbc_vduvar(bbc_GCharSizeY)  << wimptx_YEigFactor();
+    default_gcharxspace = bbc_vduvar(bbc_GCharSpaceX) << wimptx_XEigFactor();
+    default_gcharyspace = bbc_vduvar(bbc_GCharSpaceY) << wimptx_YEigFactor();
     trace_4(TRACE_APP_PD4_RENDER, "default system font %d %d %d %d",
             default_gcharxsize, default_gcharysize, default_gcharxspace, default_gcharyspace);
 
@@ -427,20 +515,24 @@ cachemodevariables(void)
     dym1    = dy - 1;
     chmdy   = charheight - dy;
 
-    trace_4(TRACE_APP_PD4_RENDER, "dx = %d, dy = %d, x_size = %d, y_size = %d", dx, dy, x, y);
+    trace_4(TRACE_APP_PD4_RENDER, "dx = %d, dy = %d, x_size = %d, y_size = %d", dx, dy, os_display_size.cx, os_display_size.cy);
 
-    max_poss_width  = x - leftline_width - wimpt_vscroll_width();
-    max_poss_height = y - wimpt_title_height() - wimpt_hscroll_height() /* has hscroll not bottomline */;
-    trace_2(TRACE_APP_PD4_RENDER, "max poss height = %d, max poss width = %d",
-                    max_poss_height, max_poss_width);
+    max_poss_os_width  = os_display_size.cx - leftline_width - wimptx_vscroll_width();
+    max_poss_os_height = os_display_size.cy - wimptx_title_height() - wimptx_hscroll_height() /* has hscroll not bottomline */;
+    trace_2(TRACE_APP_PD4_RENDER, "max poss height = %d (os), max poss width = %d",
+                    max_poss_os_height, max_poss_os_width);
 
-    font_readscalefactor(&x_scale, &y_scale);
-    trace_2(TRACE_APP_PD4_RENDER, "font x_scale = %d, font y_scale = %d", x_scale, y_scale);
+    font_readscalefactor(&millipoints_per_os_x, &millipoints_per_os_y);
+    trace_2(TRACE_APP_PD4_RENDER, "font scale factor x = %d, y = %d", millipoints_per_os_x, millipoints_per_os_y);
 
-    /* loop over documents setting new height */
+    /* just in case this needs bpp set etc. and for colour changes between modes */
+    cache_palette_variables();
 
-    old_docno = current_docno();
+    { /* loop over all documents */
+    DOCNO old_docno = current_docno();
+    P_DOCU p_docu;
 
+    /* new height etc. first phase */
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
     {
         select_document(p_docu);
@@ -450,16 +542,23 @@ cachemodevariables(void)
         colh_position_icons();  /* mainly because the cell coordinates box is made */
                                 /* up of two icons, one dx,dy inside the other     */
 
-        (void) new_window_height(windowheight());
+        (void) new_main_window_height(main_window_height());
+    }
+
+    /* do caret stuff in a second phase */
+    for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
+    {
+        select_document(p_docu);
 
         /* may need to set caret up again on mode change (256 colour modes) */
         xf_caretreposition = TRUE;
 
-        if(main_window == caret_window)
+        if(main_window_handle == caret_window_handle)
             draw_caret();
     }
 
     select_document_using_docno(old_docno);
+    } /*block*/
 }
 
 /******************************************************************************
@@ -469,9 +568,17 @@ cachemodevariables(void)
 ******************************************************************************/
 
 extern void
-cachepalettevariables(void)
+cache_palette_variables(void)
 {
-    wimpt_checkpalette();
+    wimptx_checkpalette();
+
+#if CHECKING || 0
+    {
+    int i;
+    for(i = 0; i < sizeof(wimptx__palette.c)/sizeof(wimptx__palette.c[0]); ++i)
+        reportf("palette entry %2d = &%8.8X", i, wimptx__palette.c[i].word);
+    } /*block*/
+#endif
 }
 
 /* merely set the vspace/vrubout variables */
@@ -503,10 +610,10 @@ new_grid_state(void)
 
 #if 1
     /* SKS says why didn't we use this to start with? */
-    fontscreenheightlimit_mp = global_font_leading_mp;
+    fontscreenheightlimit_millipoints = global_font_leading_millipoints;
 #else
     /* 15/12 is pragmatic fix to get 12pt still without use of grid */
-    fontscreenheightlimit_mp = (charvspace - fontbaselineoffset) * (15*MILLIPOINTS_PER_OS/12);
+    fontscreenheightlimit_millipoints = (charvspace - fontbaselineoffset) * (15*MILLIPOINTS_PER_OS/12);
 #endif
 
     charvrubout_pos = charvspace - (vdu5textoffset + dy);
@@ -528,55 +635,74 @@ new_grid_state(void)
 ******************************************************************************/
 
 _Check_return_
-extern coord
-windowheight(void)
+extern tcoord
+main_window_height(void)
 {
-    wimp_wstate s;
-    S32 os_height;
-    S32 height;
-    S32 min_height = calrad(3);        /* else rebols & friends explode */
+    WimpGetWindowStateBlock window_state;
+    const S32 min_height = calrad(3); /* else rebols & friends explode */
+    tcoord height;
     BOOL ok;
 
-    ok = (main_window != window_NULL);
+    ok = (main_window_handle != HOST_WND_NONE);
 
     if(ok)
-        ok = (NULL == wimp_get_wind_state(main__window, &s));
+    {
+        window_state.window_handle = main_window_handle;
+        ok = (NULL == tbl_wimp_get_window_state(&window_state));
+    }
 
     if(ok)
-        os_height = (s.o.box.y1 - topslop) - s.o.box.y0;
+    {
+        S32 os_height = BBox_height(&window_state.visible_area) - topslop;
+        height = os_height / charvspace;
+        unused_bit_at_bottom = ((height * charvspace) != os_height);
+        height = MAX(height, min_height);
+
+        trace_3(TRACE_APP_PD4_RENDER, "main_window_height is %d os %d text, ubb = %s",
+            os_height, height, report_boolstring(unused_bit_at_bottom));
+    }
     else
-        os_height = min_height * charvspace;
+    {
+        height = min_height;
+        unused_bit_at_bottom = FALSE;
 
-    height = os_height / charvspace;
+        trace_2(TRACE_APP_PD4_RENDER, "main_window_height(!OK) is xxx os %d text, ubb = %s",
+            height, report_boolstring(unused_bit_at_bottom));
+    }
 
-    unused_bit_at_bottom = (height * charvspace != os_height);
-
-    height = MAX(height, min_height);
-
-    trace_3(TRACE_APP_PD4_RENDER, "windowheight is %d os %d text, ubb = %s",
-            os_height, height, trace_boolstring(unused_bit_at_bottom));
     return(height);
 }
 
 _Check_return_
-extern coord
-windowwidth(void)
+extern tcoord
+main_window_width(void)
 {
-    wimp_wstate s;
-    S32 width;
+    WimpGetWindowStateBlock window_state;
+    tcoord width;
     BOOL ok;
 
-    ok = (main_window != window_NULL);
+    ok = (main_window_handle != HOST_WND_NONE);
 
     if(ok)
-        ok = (NULL == wimp_get_wind_state(main__window, &s));
+    {
+        window_state.window_handle = main_window_handle;
+        ok = (NULL == tbl_wimp_get_window_state(&window_state));
+    }
 
     if(ok)
-        width = (s.o.box.x1 - (s.o.box.x0 + leftslop)) / charwidth;
+    {
+        GDI_COORD os_width = BBox_width(&window_state.visible_area) - leftslop;
+        width = os_width / charwidth;
+
+        trace_1(TRACE_APP_PD4_RENDER, "main_window_width is %d", width);
+    }
     else
+    {
         width = BORDERWIDTH + 4;
 
-    trace_1(TRACE_APP_PD4_RENDER, "windowwidth is %d", width);
+        trace_1(TRACE_APP_PD4_RENDER, "main_window_width(!OK) is %d", width);
+    }
+
     return(width);
 }
 
@@ -588,8 +714,8 @@ windowwidth(void)
 
 extern void
 at(
-    S32 tx,
-    S32 ty)
+    tcoord tx,
+    tcoord ty)
 {
     trace_2(TRACE_DRAW, "at(%d, %d)", tx, ty);
 
@@ -598,8 +724,8 @@ at(
 
 extern void
 at_fonts(
-    S32 x,
-    S32 ty)
+    coord x,
+    tcoord ty)
 {
     if(riscos_fonts)
     {
@@ -620,13 +746,13 @@ at_fonts(
 
 extern void
 clear_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1,
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1,
     BOOL zap_grid)
 {
-    S32 x0, y0, x1, y1;
+    GDI_COORD x0, y0, x1, y1;
 
     trace_4(TRACE_APP_PD4_RENDER, "clear_textarea(%d, %d, %d, %d)", tx0, ty0, tx1, ty1);
 
@@ -670,24 +796,24 @@ clear_thistextarea(void)
 
 extern void
 clear_underlay(
-    S32 len)
+    tcoord len)
 {
-    S32 x, y_pos, y_neg;
+    GDI_COORD x, y_pos, y_neg;
 
     trace_1(TRACE_DRAW, "clear_underlay(%d)", len);
 
-    if(len > 0)
-    {
-        x = len * charwidth - dx;
-        y_pos = charvrubout_pos;
-        y_neg = charvrubout_neg;
+    if(len <= 0)
+        return;
 
-        if(y_pos)
-            wimpt_safe(os_plot(bbc_MoveCursorRel,               0, +y_pos));
+    x = cw_to_os(len) - dx;
+    y_pos = charvrubout_pos;
+    y_neg = charvrubout_neg;
 
-        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack, x, -y_pos -y_neg));
-        wimpt_safe(os_plot(bbc_MoveCursorRel,                  -x,        +y_neg));
-    }
+    if(y_pos)
+        wimpt_safe(os_plot(bbc_MoveCursorRel,               0, +y_pos));
+
+    wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack, x, -y_pos -y_neg));
+    wimpt_safe(os_plot(bbc_MoveCursorRel,                  -x,        +y_neg));
 }
 
 /******************************************************************************
@@ -703,19 +829,19 @@ clear_underlay(
 ******************************************************************************/
 
 _Check_return_
-extern S32
+extern gcoord
 gcoord_x(
-    S32 x)
+    tcoord x)
 {
-    return(textcell_xorg + x * charwidth);
+    return(textcell_xorg + cw_to_os(x));
 }
 
 #define gc_y(y) (textcell_yorg - (y+1) * charvspace)
 
 _Check_return_
-extern S32
+extern gcoord
 gcoord_y(
-    S32 y)
+    tcoord y)
 {
     return(gc_y(y));
 }
@@ -723,9 +849,9 @@ gcoord_y(
 #ifdef UNUSED
 
 _Check_return_
-extern S32
+extern gcoord
 gcoord_y_fontout(
-    S32 y)
+    tcoord y)
 {
     return(gc_y(y) + fontbaselineoffset);
 }
@@ -733,9 +859,9 @@ gcoord_y_fontout(
 #endif /* UNUSED */
 
 _Check_return_
-extern S32
+extern gcoord
 gcoord_y_textout(
-    S32 y)
+    tcoord y)
 {
     return(gc_y(y) + vdu5textoffset);
 }
@@ -782,24 +908,24 @@ ospca_fonts(
 
 static void
 redraw_clear_area(
-    RISCOS_REDRAWSTR * r)
+    _In_        const RISCOS_RedrawWindowBlock * const redraw_window_block)
 {
+    UNREFERENCED_PARAMETER_InRef_(redraw_window_block);
+
     trace_4(TRACE_APP_PD4_RENDER, "redraw_cleararea: graphics window %d, %d, %d, %d",
             graphics_window.x0, graphics_window.y0,
             graphics_window.x1, graphics_window.y1);
 
-    IGNOREPARM(r);
-
-    setbgcolour(BACK);
+    set_bg_colour_from_option(COI_BACK);
     wimpt_safe(bbc_vdu(bbc_ClearGraph));
 }
 
 extern void
 please_clear_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1)
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1)
 {
     trace_4(TRACE_APP_PD4_RENDER, "please_clear_textarea(%d, %d, %d, %d)", tx0, ty0, tx1, ty1);
 
@@ -807,7 +933,7 @@ please_clear_textarea(
 
     /* no text printing so don't need scaling wrapper */
     riscos_updatearea(  redraw_clear_area,
-                        main_window,
+                        main_window_handle,
                         texttooffset_x(tx0),
                         /* include grid hspace & hbar */
                         texttooffset_y(ty0),
@@ -817,24 +943,29 @@ please_clear_textarea(
 
 /******************************************************************************
 *
-*  request that an area of text cells be inverted
+* request that an area of text cells be inverted
+*
+* NB can't invert in 256 or more colour modes
 *
 ******************************************************************************/
 
 static void
 redraw_invert_area(
-    RISCOS_REDRAWSTR *r)
+    _In_        const RISCOS_RedrawWindowBlock * const redraw_window_block)
 {
-    S32 invertEORcolour;
+    const U32 invert_fg_wimp_colour_index = wimp_colour_index_from_option(invert_fg_colours_option_index); /* index will be valid for bpp < 8 */
+    const U32 invert_bg_wimp_colour_index = wimp_colour_index_from_option(invert_bg_colours_option_index);
+    const int invertEORcolour =
+        wimptx_GCOL_for_wimpcolour(invert_fg_wimp_colour_index) ^
+        wimptx_GCOL_for_wimpcolour(invert_bg_wimp_colour_index);
 
-    invertEORcolour = wimpt_GCOL_for_wimpcolour(getcolour(invert_fg)) ^
-                      wimpt_GCOL_for_wimpcolour(getcolour(invert_bg));
+    UNREFERENCED_PARAMETER_InRef_(redraw_window_block);
+
+    assert(wimpt_bpp() < 8);
 
     trace_5(TRACE_APP_PD4_RENDER, "redraw_invert_area: graphics window (%d, %d, %d, %d), EOR %d",
             graphics_window.x0, graphics_window.y0,
             graphics_window.x1, graphics_window.y1, invertEORcolour);
-
-    IGNOREPARM(r);
 
     wimpt_safe(bbc_gcol(3, 0x80 | invertEORcolour));
     wimpt_safe(bbc_vdu(bbc_ClearGraph));
@@ -842,24 +973,24 @@ redraw_invert_area(
 
 static void
 please_invert_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1,
-    S32 fg,
-    S32 bg)
+    _InVal_     tcoord tx0,
+    _InVal_     tcoord ty0,
+    _InVal_     tcoord tx1,
+    _InVal_     tcoord ty1,
+    _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index,
+    _InVal_     COLOURS_OPTION_INDEX bg_colours_option_index)
 {
     trace_6(TRACE_APP_PD4_RENDER, "please_invert_textarea(%d, %d, %d, %d) fg = %d, bg = %d",
-                tx0, ty0, tx1, ty1, fg, bg);
+                tx0, ty0, tx1, ty1, (int) fg_colours_option_index, (int) bg_colours_option_index);
 
     myassert4x((tx0 <= tx1)  &&  (ty0 >= ty1), "please_invert_textarea(%d, %d, %d, %d) is stupid", tx0, ty0, tx1, ty1);
 
-    invert_fg = fg;
-    invert_bg = bg;
+    invert_fg_colours_option_index = fg_colours_option_index;
+    invert_bg_colours_option_index = bg_colours_option_index;
 
     /* no text printing so don't need scaling wrapper */
     riscos_updatearea(  redraw_invert_area,
-                        main_window,
+                        main_window_handle,
                         texttooffset_x(tx0),
                         /* invert grid hspace, not hbar */
                         texttooffset_y(ty0) + ((grid_on) ? dy : 0),
@@ -869,48 +1000,48 @@ please_invert_textarea(
 }
 
 extern void
-please_invert_numeric_slot(
-    S32 coff,
-    S32 roff,
-    S32 fg,
-    S32 bg)
+please_invert_number_cell(
+    _InVal_     S32 coff,
+    _InVal_     S32 roff,
+    _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index,
+    _InVal_     COLOURS_OPTION_INDEX bg_colours_option_index)
 {
-    S32 tx0 = calcad(coff);
-    S32 tx1 = tx0 + colwidth(col_number(coff));
-    S32 ty0 = calrad(roff);
-    S32 ty1 = ty0 - 1;
+    tcoord tx0 = calcad(coff);
+    tcoord tx1 = tx0 + colwidth(col_number(coff));
+    tcoord ty0 = calrad(roff);
+    tcoord ty1 = ty0 - 1;
 
-    please_invert_textarea(tx0, ty0, tx1, ty1, fg, bg);
+    please_invert_textarea(tx0, ty0, tx1, ty1, fg_colours_option_index, bg_colours_option_index);
 }
 
 /* invert a set of cells, taking care with the grid */
 
 extern void
-please_invert_numeric_slots(
-    S32 start_coff,
-    S32 end_coff,
-    S32 roff,
-    S32 fg,
-    S32 bg)
+please_invert_number_cells(
+    _InVal_     S32 start_coff,
+    _InVal_     S32 end_coff,
+    _InVal_     S32 roff,
+    _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index,
+    _InVal_     COLOURS_OPTION_INDEX bg_colours_option_index)
 {
-    S32 tx0, tx1, ty0, ty1;
+    S32 coff;
 
     if(grid_on)
     {
-        while(start_coff <= end_coff)
-            please_invert_numeric_slot(start_coff++, roff, fg, bg);
+        for(coff = start_coff; coff <= end_coff; ++coff)
+            please_invert_number_cell(coff, roff, fg_colours_option_index, bg_colours_option_index);
     }
     else
-    {
-        tx0 = calcad(start_coff);
-        tx1 = tx0;
-        ty0 = calrad(roff);
-        ty1 = ty0 - 1;
+    {   /* accumulate all columns into one textarea */
+        const tcoord tx0 = calcad(start_coff);
+              tcoord tx1 = tx0;
+        const tcoord ty0 = calrad(roff);
+        const tcoord ty1 = ty0 - 1;
 
-        while(start_coff <= end_coff)
-            tx1 += colwidth(col_number(start_coff++));
+        for(coff = start_coff; coff <= end_coff; ++coff)
+            tx1 += colwidth(col_number(coff));
 
-        please_invert_textarea(tx0, ty0, tx1, ty1, fg, bg);
+        please_invert_textarea(tx0, ty0, tx1, ty1, fg_colours_option_index, bg_colours_option_index);
     }
 }
 
@@ -924,18 +1055,18 @@ static RISCOS_REDRAWPROC updatearea_proc;
 
 static void
 updatearea_wrapper(
-    RISCOS_REDRAWSTR *r)
+    _In_        const RISCOS_RedrawWindowBlock * const redraw_window_block)
 {
-    updatearea_proc(r);
+    updatearea_proc(redraw_window_block);
 }
 
 extern void
 please_update_textarea(
     RISCOS_REDRAWPROC proc,
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1)
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1)
 {
     trace_4(TRACE_APP_PD4_RENDER, "please_update_textarea(%d, %d, %d, %d)", tx0, ty0, tx1, ty1);
 
@@ -944,7 +1075,7 @@ please_update_textarea(
     updatearea_proc = proc;
 
     riscos_updatearea(  updatearea_wrapper,
-                        main_window,
+                        main_window_handle,
                         texttooffset_x(tx0),
                         /* include grid hspace & hbar */
                         texttooffset_y(ty0),
@@ -955,7 +1086,7 @@ please_update_textarea(
 extern void
 please_update_window(
     RISCOS_REDRAWPROC proc,
-    wimp_w window,
+    _HwndRef_   HOST_WND window_handle,
     S32 gx0,
     S32 gy0,
     S32 gx1,
@@ -965,7 +1096,7 @@ please_update_window(
 
     updatearea_proc = proc;
 
-    riscos_updatearea(updatearea_wrapper, window, gx0, gy0, gx1, gy1);
+    riscos_updatearea(updatearea_wrapper, window_handle, gx0, gy0, gx1, gy1);
 }
 
 /******************************************************************************
@@ -976,19 +1107,19 @@ please_update_window(
 
 extern void
 please_redraw_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1)
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1)
 {
     trace_4(TRACE_APP_PD4_RENDER, "please_redraw_textarea(%d, %d, %d, %d)", tx0, ty0, tx1, ty1);
 
     myassert4x((tx0 <= tx1)  &&  (ty0 >= ty1), "please_redraw_textarea(%d, %d, %d, %d) is stupid", tx0, ty0, tx1, ty1);
 
-    updatearea_proc = application_redraw;
+    updatearea_proc = application_redraw_core;
 
     riscos_updatearea(  updatearea_wrapper,
-                        main_window,
+                        main_window_handle,
                         texttooffset_x(tx0),
                         /* include grid hspace & hbar */
                         texttooffset_y(ty0),
@@ -998,9 +1129,9 @@ please_redraw_textarea(
 
 extern void
 please_redraw_textline(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1)
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1)
 {
     please_redraw_textarea(tx0, ty0, tx1, ty0 - 1);
 }
@@ -1023,10 +1154,10 @@ please_redraw_entire_window(void)
 
 extern BOOL
 set_graphics_window_from_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1,
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1,
     BOOL set_gw)
 {
     GDI_BOX clipper;
@@ -1073,8 +1204,13 @@ set_graphics_window_from_textarea(
         trace_4(TRACE_APP_PD4_RENDER, "setting gw (%d, %d, %d, %d) (OS)", clipper.x0, clipper.y0, clipper.x1, clipper.y1);
 
         /* when setting graphics window, all points are inclusive */
+#if 1
+        wimpt_safe(riscos_vdu_define_graphics_window(clipper.x0,      clipper.y0,
+                                                     clipper.x1 - dx, clipper.y1 - dy));
+#else
         wimpt_safe(bbc_gwindow(clipper.x0,      clipper.y0,
                                clipper.x1 - dx, clipper.y1 - dy));
+#endif
     }
 
     return(TRUE);
@@ -1086,8 +1222,13 @@ restore_graphics_window(void)
     /* restore from saved copy  */
     graphics_window = saved_graphics_window;
 
+#if 1
+    wimpt_safe(riscos_vdu_define_graphics_window(graphics_window.x0,      graphics_window.y0,
+                                                 graphics_window.x1 - dx, graphics_window.y1 - dy));
+#else
     wimpt_safe(bbc_gwindow(graphics_window.x0,      graphics_window.y0,
                            graphics_window.x1 - dx, graphics_window.y1 - dy));
+#endif
 }
 
 /******************************************************************************
@@ -1098,14 +1239,17 @@ restore_graphics_window(void)
 
 extern void
 scroll_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1,
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1,
     S32 nlines)
 {
-    wimp_box box;
-    S32 y, uy0, uy1, ht;
+    gcoord sxmin;
+    gcoord symin;
+    gcoord sxmax;
+    gcoord symax;
+    S32 dy, uy0, uy1, ht;
 
     trace_5(0, "scroll_textarea((%d, %d, %d, %d), %d)", tx0, ty0, tx1, ty1, nlines);
 
@@ -1113,49 +1257,52 @@ scroll_textarea(
 
     if(nlines != 0)
     {
-        box.x0 = texttooffset_x(tx0);
-        box.x1 = texttooffset_x(tx1+1);
+        sxmin = texttooffset_x(tx0);
+        sxmax = texttooffset_x(tx1+1);
         ht     = nlines * charvspace;
 
         if(ht > 0)
         {
             /* scrolling area down, clear top line(s) */
-            box.y0 = texttooffset_y(ty0) + ht;
-            box.y1 = texttooffset_y(ty1-1);
-            y      = box.y0 - ht;
-            uy0    = box.y1 - ht;
-            uy1    = box.y1;
+            symin = texttooffset_y(ty0) + ht;
+            symax = texttooffset_y(ty1-1);
+
+            dy  = symin - ht;
+            uy0 = symax - ht;
+            uy1 = symax;
         }
         else
         {
             /* scrolling area up, clear bottom line(s) */
-            box.y0 = texttooffset_y(ty0);
-            box.y1 = texttooffset_y(ty1-1) + ht;
-            y      = box.y0 - ht;
-            uy0    = box.y0;
-            uy1    = y;
+            symin = texttooffset_y(ty0);
+            symax = texttooffset_y(ty1-1) + ht;
+
+            dy  = symin - ht;
+            uy0 = symin;
+            uy1 = dy;
         }
 
-        riscos_removecaret();
+        riscos_caret_hide();
 
         trace_6(TRACE_APP_PD4_RENDER, "wimp_blockcopy((%d, %d, %d, %d), %d, %d)",
-                            box.x0, box.y0, box.x1, box.y1, box.x0, y);
+                            sxmin, symin, sxmax, symax, sxmin, dy);
 
-        wimpt_safe(wimp_blockcopy(main__window, &box, box.x0, y));
+        void_WrapOsErrorReporting(
+            tbl_wimp_block_copy(main_window_handle, sxmin, symin, sxmax, symax, sxmin /*dx*/, dy));
 
         /* get our clear lines routine called - again no text drawn */
         riscos_updatearea(  redraw_clear_area,
-                            main_window,
-                            box.x0, uy0,
-                            box.x1, uy1);
+                            main_window_handle,
+                            sxmin, uy0,
+                            sxmax, uy1);
 
-        riscos_restorecaret();
+        riscos_caret_restore();
     }
 }
 
 /******************************************************************************
 *
-* conversions from absolute graphics coordinates
+* conversions from graphics coordinates in main window
 * to text cell coordinates for input
 * (and their friends for calculating cliparea)
 *
@@ -1163,55 +1310,62 @@ scroll_textarea(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern tcoord
 tsize_x(
-    S32 x)
+    gcoord os_x)
 {
-    return(div_round_ceil(x, charwidth));
+    return(idiv_ceil(os_x, charwidth));
 }
 
-extern S32
+_Check_return_
+extern tcoord
 tsize_y(
-    S32 y)
+    gcoord os_y)
 {
-    return(div_round_ceil(y, charvspace));
+    return(idiv_ceil(os_y, charvspace));
 }
 
-extern S32
+_Check_return_
+extern tcoord
 tcoord_x(
-    S32 x)
+    gcoord os_x)
 {
-    return(div_round_floor_fn(x - textcell_xorg, charwidth));
+    return(idiv_floor_fn(os_x - textcell_xorg, charwidth));
 }
 
-extern S32
+_Check_return_
+extern tcoord
 tcoord_y(
-    S32 y)
+    gcoord os_y)
 {
-    return(div_round_ceil_fn(textcell_yorg - y, charvspace) - 1);
+    return(idiv_ceil_fn(textcell_yorg - os_y, charvspace) - 1);
 }
 
-extern S32
+_Check_return_
+extern tcoord
 tcoord_x_remainder(
-    S32 x)
+    gcoord os_x)
 {
-    S32 tx = tcoord_x(x);
+    tcoord tx = tcoord_x(os_x);
 
-    return((x - textcell_xorg) - tx * charwidth);
+    return((os_x - textcell_xorg) - cw_to_os(tx));
 }
 
-extern S32
+_Check_return_
+extern tcoord
 tcoord_x1(
-    S32 x)
+    gcoord os_x)
 {
-    return(div_round_ceil_fn(x - textcell_xorg, charwidth));
+    return(idiv_ceil_fn(os_x - textcell_xorg, charwidth));
 }
 
-extern S32
+_Check_return_
+extern tcoord
 tcoord_y1(
-    S32 y)
+    gcoord os_y)
 {
-    return(div_round_floor_fn(textcell_yorg - y, charvspace) - 1);
+    return(idiv_floor_fn(textcell_yorg - os_y, charvspace) - 1);
 }
 
 /******************************************************************************
@@ -1223,29 +1377,29 @@ tcoord_y1(
 
 extern BOOL
 textobjectintersects(
-    S32 x0,
-    S32 y0,
-    S32 x1,
-    S32 y1)
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1)
 {
-    BOOL intersects = !((cliparea.x0 >=          x1)    ||
-                        (         y1 >= cliparea.y0)    ||
-                        (         x0 >= cliparea.x1)    ||
-                        (cliparea.y1 >=          y0)    );
+    BOOL intersects = !((cliparea.x0 >=         tx1)  ||
+                        (        ty1 >= cliparea.y0)  ||
+                        (        tx0 >= cliparea.x1)  ||
+                        (cliparea.y1 >=         ty0)  );
 
     trace_4(TRACE_CLIP, "textobjectintersects: %d %d %d %d (if any true, fails)",
-             x0, y0, x1, y1);
-    trace_1(TRACE_CLIP, "x0 >= cliparea.x1 %s, ", trace_boolstring(x0 >= cliparea.x1));
-    trace_1(TRACE_CLIP, "x1 <= cliparea.x0 %s, ", trace_boolstring(x1 <= cliparea.x0));
-    trace_1(TRACE_CLIP, "y0 <= cliparea.y1 %s, ", trace_boolstring(y0 <= cliparea.y1));
-    trace_1(TRACE_CLIP, "y1 >= cliparea.y0 %s", trace_boolstring(y1 >= cliparea.y0));
+             tx0, ty0, tx1, ty1);
+    trace_1(TRACE_CLIP, "tx0 >= cliparea.x1 %s, ", report_boolstring(tx0 >= cliparea.x1));
+    trace_1(TRACE_CLIP, "tx1 <= cliparea.x0 %s, ", report_boolstring(tx1 <= cliparea.x0));
+    trace_1(TRACE_CLIP, "ty0 <= cliparea.y1 %s, ", report_boolstring(ty0 <= cliparea.y1));
+    trace_1(TRACE_CLIP, "ty1 >= cliparea.y0 %s",   report_boolstring(ty1 >= cliparea.y0));
 
     if(intersects)
     {
-        thisarea.x0 = x0;
-        thisarea.y0 = y0;
-        thisarea.x1 = x1;
-        thisarea.y1 = y1;
+        thisarea.x0 = tx0;
+        thisarea.y0 = ty0;
+        thisarea.x1 = tx1;
+        thisarea.y1 = ty1;
     }
 
     return(intersects);
@@ -1259,21 +1413,21 @@ textobjectintersects(
 
 extern BOOL
 textxintersects(
-    S32 x0,
-    S32 x1)
+    tcoord tx0,
+    tcoord tx1)
 {
-    BOOL intersects = !((cliparea.x0 >=          x1)    ||
-                        (         x0 >= cliparea.x1)    );
+    BOOL intersects = !((cliparea.x0 >=         tx1)    ||
+                        (        tx0 >= cliparea.x1)    );
 
     trace_2(TRACE_CLIP, "textxintersects: %d %d (if any true, fails)",
-             x0, x1);
-    trace_1(TRACE_CLIP, "x0 >= cliparea.x1 %s, ", trace_boolstring(x0 >= cliparea.x1));
-    trace_1(TRACE_CLIP, "x1 <= cliparea.x0 %s, ", trace_boolstring(x1 <= cliparea.x0));
+             tx0, tx1);
+    trace_1(TRACE_CLIP, "tx0 >= cliparea.x1 %s, ", report_boolstring(tx0 >= cliparea.x1));
+    trace_1(TRACE_CLIP, "tx1 <= cliparea.x0 %s, ", report_boolstring(tx1 <= cliparea.x0));
 
     if(intersects)
     {
-        thisarea.x0 = x0;
-        thisarea.x1 = x1;
+        thisarea.x0 = tx0;
+        thisarea.x1 = tx1;
     }
 
     return(intersects);
@@ -1287,18 +1441,20 @@ textxintersects(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern gcoord
 texttooffset_x(
-    S32 x)
+    tcoord tx)
 {
-    return((/*curr_scx*/ + leftslop) + x * charwidth);
+    return((/*curr_scroll_x*/ + leftslop) + cw_to_os(tx));
 }
 
-extern S32
+_Check_return_
+extern gcoord
 texttooffset_y(
-    S32 y)
+    tcoord ty)
 {
-    return((/*curr_scy*/ - topslop) - (y+1) * charvspace);
+    return((/*curr_scroll_y*/ - topslop) - (ty+1) * charvspace);
 }
 
 /******************************************************************************
@@ -1314,8 +1470,10 @@ riscos_movespaces(
 {
     trace_1(TRACE_DRAW, "riscos_movespaces(%d)", nspaces);
 
-    if(nspaces != 0)        /* -ve allowed */
-        wimpt_safe(os_plot(bbc_MoveCursorRel, nspaces * charwidth, 0));
+    if(nspaces == 0) /* -ve allowed */
+        return;
+
+    wimpt_safe(os_plot(bbc_MoveCursorRel, cw_to_os(nspaces), 0));
 }
 
 extern void
@@ -1324,9 +1482,11 @@ riscos_movespaces_fonts(
 {
     trace_1(TRACE_DRAW, "riscos_movespaces_fonts(%d)", nspaces);
 
-    if(nspaces != 0)        /* -ve allowed */
-        wimpt_safe(os_plot(bbc_MoveCursorRel,
-                            riscos_fonts ? nspaces : nspaces * charwidth, 0));
+    if(nspaces == 0) /* -ve allowed */
+        return;
+
+    wimpt_safe(os_plot(bbc_MoveCursorRel,
+                       riscos_fonts ? nspaces : cw_to_os(nspaces), 0));
 }
 
 /******************************************************************************
@@ -1347,42 +1507,42 @@ riscos_printspaces(
 
     trace_1(TRACE_DRAW, "riscos_printspaces(%d)", nspaces);
 
-    if(nspaces != 0)        /* -ve allowed */
-    {
-        ldx = dx;
-        x = nspaces * charwidth - ldx;
-        y_pos = charvrubout_pos;
-        y_neg = charvrubout_neg;
+    if(nspaces == 0) /* -ve allowed */
+        return;
 
-        if(y_pos)
-            wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +y_pos));
+    ldx = dx;
+    x = cw_to_os(nspaces) - ldx;
+    y_pos = charvrubout_pos;
+    y_neg = charvrubout_neg;
 
-        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -y_pos  -y_neg));
-        wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,         +y_neg));
-    }
+    if(y_pos)
+        wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +y_pos));
+
+    wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -y_pos  -y_neg));
+    wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,         +y_neg));
 }
 
 extern void
 riscos_printspaces_fonts(
     S32 nspaces)
 {
-    S32 ldx, x, y_pos, y_neg;
+    GDI_COORD ldx, x, y_pos, y_neg;
 
     trace_1(TRACE_DRAW, "riscos_printspaces_fonts(%d)", nspaces);
 
-    if(nspaces != 0)        /* -ve allowed */
-    {
-        ldx = dx;
-        x = (riscos_fonts ? nspaces : nspaces * charwidth) - ldx;
-        y_pos = charvrubout_pos;
-        y_neg = charvrubout_neg;
+    if(nspaces == 0) /* -ve allowed */
+        return;
 
-        if(y_pos)
-            wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +y_pos));
+    ldx = dx;
+    x = (riscos_fonts ? nspaces : cw_to_os(nspaces)) - ldx;
+    y_pos = charvrubout_pos;
+    y_neg = charvrubout_neg;
 
-        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -y_pos  -y_neg));
-        wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,         +y_neg));
-    }
+    if(y_pos)
+        wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +y_pos));
+
+    wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -y_pos  -y_neg));
+    wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,         +y_neg));
 }
 
 /******************************************************************************
@@ -1399,9 +1559,9 @@ extern void
 riscos_printchar(
     S32 ch)
 {
-    S32 x = charwidth - dx; /* avoids reload over procs */
-    S32 y_pos = charvrubout_pos;
-    S32 y_neg = charvrubout_neg;
+    const GDI_COORD x = charwidth - dx; /* avoids reload over procs */
+    const GDI_COORD y_pos = charvrubout_pos;
+    const GDI_COORD y_neg = charvrubout_neg;
 
     trace_1(TRACE_DRAW, "riscos_printchar(%d)", ch);
 
@@ -1426,63 +1586,145 @@ riscos_printchar(
 
 static BOOL caretposallowed = TRUE;
 
-extern void
-application_scroll_request(
-    wimp_eventstr *e)
+static void
+application_repeat_command(
+    S32 c,
+    int count)
 {
-    S32 xdir = e->data.scroll.x;   /* -1 for left, +1 for right */
-    S32 ydir = e->data.scroll.y;   /* -1 for down, +1 for up    */
-                                    /*     ±2 for page scroll    */
+    while(count != 0)
+    {
+        --count;
+        application_process_command(c);
+    }
+}
 
-    trace_2(TRACE_APP_PD4, "app_scroll_request: xdir %d ydir %d", xdir, ydir);
+static void
+process_Scroll_Request_xscroll(
+    int xscroll)
+{
+    for(;;)
+    {
+        reportf(/*trace_1(TRACE_APP_PD4,*/ "app_Scroll_Request: xscroll %d", xscroll);
+
+        switch(xscroll)
+        {
+        case +2:
+            application_process_command(N_PageRight);
+            return;
+
+        case +3: /* AutoScroll */
+        case +1:
+            application_process_command(N_ScrollRight);
+            return;
+
+        case 0:
+            return;
+
+        case -1:
+        case -3: /* AutoScroll */
+            application_process_command(N_ScrollLeft);
+            return;
+
+        case -2:
+            application_process_command(N_PageLeft);
+            return;
+
+        default:
+            break;
+        }
+
+        /* expect multiples of ±4 for scroll wheel */
+        if(xscroll >= 4)
+        {
+            xscroll -= 4;
+            application_process_command(N_ScrollRight);
+            return; /* left/right is very fast */
+        }
+        else if(xscroll <= -4)
+        {
+            xscroll += 4;
+            application_process_command(N_ScrollLeft);
+            return; /* left/right is very fast */
+        }
+    }
+}
+
+static void
+process_Scroll_Request_yscroll(
+    int yscroll)
+{
+    for(;;)
+    {
+        reportf(/*trace_1(TRACE_APP_PD4,*/ "app_Scroll_Request: yscroll %d", yscroll);
+
+        switch(yscroll)
+        {
+        case +3: /* AutoScroll */
+            application_repeat_command(N_ScrollUp, 3);
+            return;
+
+        case +2:
+            application_process_command(N_PageUp);
+            return;
+
+        case +1:
+            application_process_command(N_ScrollUp);
+            return;
+
+        case 0:
+            return;
+
+        case -1:
+            application_process_command(N_ScrollDown);
+            return;
+
+        case -2:
+            application_process_command(N_PageDown);
+            return;
+
+        case -3: /* AutoScroll */
+            application_repeat_command(N_ScrollDown, 3);
+            return;
+
+        default:
+            break;
+        }
+
+        /* expect multiples of ±4 for scroll wheel */
+        if(yscroll >= 4)
+        {
+            yscroll -= 4;
+            application_repeat_command(N_ScrollUp, 5);
+
+        }
+        else if(yscroll <= -4)
+        {
+            yscroll += 4;
+            application_repeat_command(N_ScrollDown, 5);
+        }
+    }
+}
+
+extern void
+application_Scroll_Request(
+    _In_        const WimpScrollRequestEvent * const scroll_request)
+{
+    int xscroll = scroll_request->xscroll; /* -1 for left, +1 for right */
+    int yscroll = scroll_request->yscroll; /* -1 for down, +1 for up    */
+                                           /*     ±2 for page scroll    */
+                                           /*     ±3 for AutoScroll     */
+                                           /*     ±4 for scroll wheel   */
+
+    trace_2(TRACE_APP_PD4, "app_Scroll_Request: xscroll %d yscroll %d", xscroll, yscroll);
 
     /* ensure draw_caret gets ignored if not current window */
-    caretposallowed = (main_window == caret_window);
+    caretposallowed = (main_window_handle == caret_window_handle);
 
-    switch(ydir)
-    {
-    case +2:
-        application_process_command(N_PageUp);
-        break;
+    process_Scroll_Request_yscroll(yscroll);
 
-    case +1:
-        application_process_command(N_ScrollUp);
-        break;
+    process_Scroll_Request_xscroll(xscroll);
 
-    default:
-        break;
-
-    case -1:
-        application_process_command(N_ScrollDown);
-        break;
-
-    case -2:
-        application_process_command(N_PageDown);
-        break;
-        }
-
-    switch(xdir)
-    {
-    case +2:
-        application_process_command(N_PageRight);
-        break;
-
-    case +1:
-        application_process_command(N_ScrollRight);
-        break;
-
-    default:
-        break;
-
-    case -1:
-        application_process_command(N_ScrollLeft);
-        break;
-
-    case -2:
-        application_process_command(N_PageLeft);
-        break;
-        }
-
+    /* and finally restore normality */
     caretposallowed = TRUE;
 }
 
@@ -1505,12 +1747,12 @@ cols_for_extent(void)
     return(res ? res : 1);
 }
 
-static S32
-compute_scx(void)
+static GDI_COORD
+compute_scroll_x(void)
 {
     COL ffc    = fstncx();
     COL nfixes = n_colfixes;
-    S32 scx;
+    GDI_COORD scroll_x;
 
     if(nfixes)
     {
@@ -1519,13 +1761,13 @@ compute_scx(void)
             ffc -= nfixes;
     }
 
-    scx = pd_muldiv64(curr_xext, (S32) ffc, cols_for_extent());
+    scroll_x = pd_muldiv64(curr_extent_x, (S32) ffc, cols_for_extent()); /* +ve := +ve, +ve, +ve */
 
     /* scroll offsets must be rounded to pixels so as not to confuse Neil */
-    round_with_mask(scx, dxm1);
+    scroll_x = floor_using_mask(scroll_x, dxm1);
 
-    trace_1(TRACE_APP_PD4, "computed scx %d (OS)", scx);
-    return(scx);
+    trace_1(TRACE_APP_PD4, "computed scroll_x %d (OS)", scroll_x);
+    return(scroll_x);
 }
 
 /******************************************************************************
@@ -1540,12 +1782,12 @@ rows_for_extent(void)
     return((S32) numrow + 1);
 }
 
-static S32
-compute_scy(void)
+static GDI_COORD
+compute_scroll_y(void)
 {
     ROW ffr    = fstnrx();
     ROW nfixes = n_rowfixes;
-    S32 scy;
+    GDI_COORD scroll_y;
 
     if(nfixes)
     {
@@ -1554,13 +1796,16 @@ compute_scy(void)
             ffr -= nfixes;
     }
 
-    scy = pd_muldiv64(curr_yext, (S32) ffr, rows_for_extent()); /* -ve, +ve, +ve */
+    scroll_y = pd_muldiv64(-curr_extent_y, (S32) ffr, rows_for_extent()); /* +ve := -(-ve), +ve, +ve */
 
     /* scroll offsets must be rounded to pixels so as not to confuse Neil */
-    round_with_mask(scy, dym1);
+    /* NB we choose to round scroll offsets to the lower multiple */
+    scroll_y = floor_using_mask(scroll_y, dym1);
 
-    trace_1(TRACE_APP_PD4, "computed scy %d (OS)", scy);
-    return(scy);
+    scroll_y = -scroll_y; /* and now flip to -ve for Neil */
+
+    trace_1(TRACE_APP_PD4, "computed scroll_y %d (OS)", scroll_y);
+    return(scroll_y);
 }
 
 /******************************************************************************
@@ -1571,60 +1816,68 @@ compute_scy(void)
 
 static void
 openpane(
-    wimp_box *boxp,
-    wimp_w behind)
+    const BBox * const boxp,
+    _HwndRef_   HOST_WND behind)
 {
-    wimp_icon     heading;
-    S32           borderline = 0;       /* a negative number, relative to top edge of rear_window */
-    wimp_openstr  o;
+    GDI_COORD borderline = 0; /* a negative number, relative to top edge of rear window */
+    WimpOpenWindowBlock open_window_block;
 
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_COLUMN_HEADINGS, &heading);
-
-    borderline = heading.box.y0;        /* approx -132 */
-
-    /* open main_window */
-
-    o.w      = main__window;
-    o.box    = *boxp;                   /* if borders are off, main_window completely covers rear_window and colh_window */
-    if(borbit)
-        o.box.y1 = o.box.y1 + borderline; /* - 132;*/   /* else main_window abutts colh_window and both cover rear_window */
-    o.scx    = 0;
-    o.scy    = 0;
-    o.behind = behind;
-
-    wimpt_complain(wimp_open_wind(&o));
-
-    o.w      = colh_window;
-    o.box    = *boxp;          /* pane completely covers rear_window */
-    o.box.y0 = o.box.y1 + borderline; /* - 132;*/
-    o.scx    = 0;
-    o.scy    = 0;
-    o.behind = main_window;
-
-    wimpt_complain(wimp_open_wind(&o));
-
-    if(borbit)
     {
-        wimp_icreate create;
-        S32          x1;
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
+    if(NULL == WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        borderline = icon_state.icon.bbox.ymin; /* approx -132 */
+    } /*block*/
 
-        wimp_get_icon_info(colh_window, (wimp_i)COLH_CONTENTS_LINE, &create.i);
+    /* open main window */
+
+    open_window_block.window_handle = main_window_handle;
+    open_window_block.visible_area = *boxp; /* if borders are off, main window completely covers rear window and colh window */
+    if(displaying_borders)
+        open_window_block.visible_area.ymax = open_window_block.visible_area.ymax + borderline; /* else main window abuts colh window and both cover rear window */
+    open_window_block.xscroll = 0;
+    open_window_block.yscroll = 0;
+    open_window_block.behind = behind;
+
+    void_WrapOsErrorReporting(tbl_wimp_open_window(&open_window_block));
+
+    open_window_block.window_handle = colh_window_handle;
+    open_window_block.visible_area = *boxp; /* pane completely covers rear window */
+    open_window_block.visible_area.ymin = open_window_block.visible_area.ymax + borderline;
+    open_window_block.xscroll = 0;
+    open_window_block.yscroll = 0;
+    open_window_block.behind = main_window_handle;
+
+    void_WrapOsErrorReporting(tbl_wimp_open_window(&open_window_block));
+
+    if(displaying_borders)
+    {
+        WimpGetIconStateBlock icon_state;
+        WimpCreateIconBlock create;
+        GDI_COORD os_x1;
+
+        icon_state.window_handle = colh_window_handle;
+        icon_state.icon_handle = COLH_CONTENTS_LINE;
+        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+
+        create.icon = icon_state.icon;
 
         trace_4(TRACE_APP_EXPEDIT, "Contents line icon currently (%d,%d, %d,%d)",
-                                   create.i.box.x0, create.i.box.y0, create.i.box.x1, create.i.box.y1);
+                                   create.icon.bbox.xmin, create.icon.bbox.ymin, create.icon.bbox.xmax, create.icon.bbox.ymax);
 
-        x1 = (o.box.x1 - o.box.x0) - MAX(dx, dy);       /*16;*/
+        os_x1 = BBox_width(&open_window_block.visible_area) - MAX(dx, dy); /*16;*/
 
-        if(x1 < (create.i.box.x0 + 16))
-            x1 = create.i.box.x0 + 16;          /* perhaps unnecessary but I don't trust Neil */
+        if(os_x1 < (create.icon.bbox.xmin + 16))
+            os_x1 = create.icon.bbox.xmin + 16; /* perhaps unnecessary but I don't trust Neil */
 
-        if(create.i.box.x1 != x1)
+        if(create.icon.bbox.xmax != os_x1)
         {
             /* icon size is wrong, so... */
 
-            create.i.box.x1 = x1;
+            create.icon.bbox.xmax = os_x1;
 
-            redefine_icon(colh_window, (wimp_i)COLH_CONTENTS_LINE, &create);
+            redefine_icon(colh_window_handle, COLH_CONTENTS_LINE, &create);
         }
     }
 }
@@ -1637,100 +1890,100 @@ openpane(
 ******************************************************************************/
 
 extern void
-application_open_request(
-    wimp_eventstr *e)
+application_Open_Window_Request(
+    WimpOpenWindowRequestEvent * const open_window_request)
 {
-    wimp_openstr * op           = &e->data.o;
-    S32     scx                 = op->scx;
-    S32     scy                 = op->scy;
-    wimp_w  behind              = op->behind;
-    BOOL    old_unused_bit      = unused_bit_at_bottom;
+    S32 scroll_x = open_window_request->xscroll;
+    S32 scroll_y = open_window_request->yscroll;
+    HOST_WND behind = open_window_request->behind;
+    BOOL old_unused_bit = unused_bit_at_bottom;
     /* note knowledge of height <-> pagvars conversion */
-    S32     old_window_height   = paghyt + 1;
-    S32     old_window_width    = pagwid_plus1;
-    S32     window_height;
-    S32     window_width;
-    wimp_redrawstr r;
+    tcoord  old_window_height   = paghyt + 1;
+    tcoord  old_window_width    = pagwid_plus1;
+    tcoord  window_height;
+    tcoord  window_width;
     BOOL    smash = FALSE;
     S32     smash_y0;
     S32     size_change;
 
-    trace_2(TRACE_APP_PD4, "\n\n*** app_open_request: w %d, behind %d", op->w, behind);
-    trace_6(TRACE_APP_PD4, "                : x0 %d, x1 %d;  y0 %d, y1 %d; scx %d, scy %d",
-            op->box.x0, op->box.x1, op->box.y0, op->box.y1, scx, scy);
+    trace_2(TRACE_APP_PD4, "\n\n*** app_open_request: w %d, behind %d", open_window_request->window_handle, behind);
+    trace_6(TRACE_APP_PD4, "                : x0 %d, x1 %d;  y0 %d, y1 %d; scroll_x %d, scroll_y %d",
+            open_window_request->visible_area.xmin, open_window_request->visible_area.xmax,
+            open_window_request->visible_area.ymin, open_window_request->visible_area.ymax, scroll_x, scroll_y);
 
     /* have to tweak requested coordinates as we have a wierd extent */
-    if( op->box.x1 > op->box.x0 + max_poss_width)
-        op->box.x1 = op->box.x0 + max_poss_width;
+    if( open_window_request->visible_area.xmax > open_window_request->visible_area.xmin + max_poss_os_width)
+        open_window_request->visible_area.xmax = open_window_request->visible_area.xmin + max_poss_os_width;
 
-    if( op->box.y0 < op->box.y1 - max_poss_height)
-        op->box.y0 = op->box.y1 - max_poss_height;
+    if( open_window_request->visible_area.ymin < open_window_request->visible_area.ymax - max_poss_os_height)
+        open_window_request->visible_area.ymin = open_window_request->visible_area.ymax - max_poss_os_height;
 
-    if(behind != (wimp_w) -2)
+    if(behind != (HOST_WND) -2)
     {
         /* on mode change, Neil tells us to open windows behind themselves! */
-        if((behind == rear__window) || (behind == colh_window))
-            behind = main__window;
+        if((behind == rear_window_handle) || (behind == colh_window_handle))
+            behind = main_window_handle;
 
         /* always open pane first */
-        openpane(&op->box, behind);
+        openpane(&open_window_request->visible_area, behind);
 
-        /* always open rear_window behind pane colh_window */
-        op->behind = colh_window;
+        /* always open rear window behind pane colh window */
+        open_window_request->behind = colh_window_handle;
     }
 
-    wimpt_complain(wimp_open_wind(op));
+    void_WrapOsErrorReporting(tbl_wimp_open_window(open_window_request));
 
     if(first_open)
     {
         /* remember first successful open position, bump from there (nicer on < 1024 y OS unit screens) */
         first_open = FALSE;
-        riscos_setnextwindowpos(op->box.y1); /* gets bumped */
+        riscos_setnextwindowpos(open_window_request->visible_area.ymax); /* gets bumped */
     }
 
-    /* reopen pane with corrected coords */
-    wimpt_safe(wimp_get_wind_state(rear__window, (wimp_wstate *) op));
+    /* reopen pane with corrected coords (NB widdles off end - flags word) */
+    void_WrapOsErrorReporting(tbl_wimp_get_window_state((WimpGetWindowStateBlock *) open_window_request));
 
     /* keep track of where we opened it */
-    open_box = * (PC_GDI_BOX) &op->box;
+    open_box = * (PC_GDI_BOX) &open_window_request->visible_area;
 
-    /* if rear_window was sent to the back, open panes behind the window that
-     * the rear_window ended up behind
+    /* if the rear window was sent to the back,
+     * open panes behind the window that
+     * the rear window ended up behind
     */
     if(behind == (wimp_w) -2)
-        behind = op->behind;
+        behind = open_window_request->behind;
 
-    openpane(&op->box, behind);
+    openpane(&open_window_request->visible_area, behind);
 
-    trace_6(TRACE_APP_PD4, "opened rear_window at: x0 %d, x1 %d;  y0 %d, y1 %d; width %d (OS) height %d (OS)",
-            op->box.x0, op->box.x1, op->box.y0, op->box.y1,
-               (op->box.x1 - op->box.x0), (op->box.y1 - op->box.y0));
+    trace_6(TRACE_APP_PD4, "opened rear window at: x0 %d, x1 %d;  y0 %d, y1 %d; width %d (OS) height %d (OS)",
+            open_window_request->visible_area.xmin, open_window_request->visible_area.xmax,
+            open_window_request->visible_area.ymin, open_window_request->visible_area.ymax,
+            BBox_width(&open_window_request->visible_area), BBox_height(&open_window_request->visible_area));
 
     {
-    wimp_wstate s;
-
-    wimpt_safe(wimp_get_wind_state(main__window, &s));
-
-    /* note absolute coordinates of window (NOT work area extent) origin */
-
-    setorigins(s.o.box.x0, s.o.box.y1);
+    WimpGetWindowStateBlock window_state;
+    window_state.window_handle = main_window_handle;
+    if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+    {   /* note absolute coordinates of window (NOT work area extent) origin */
+        setorigins(window_state.visible_area.xmin, window_state.visible_area.ymax);
     }
+    } /*block*/
 
-    window_height = windowheight();
-    window_width  = windowwidth();
+    window_height = main_window_height();
+    window_width  = main_window_width();
 
     /* suss resize after opening as then we know how big we really are */
     size_change = 0;
 
     if(old_window_height != window_height)
     {
-        (void) new_window_height(window_height);
+        (void) new_main_window_height(window_height);
         size_change = 1;
     }
 
     if(old_window_width != window_width)
     {
-        (void) new_window_width(window_width);
+        (void) new_main_window_width(window_width);
         size_change = 1;
     }
 
@@ -1738,7 +1991,7 @@ application_open_request(
      * by dragging the scroll bars?
      * SKS - forbid scrolling to have any effect here if open window changed size
     */
-    if((scx != curr_scx) && !size_change)
+    if((scroll_x != curr_scroll_x) && !size_change)
     {
         /* work out which column to put at left */
         COL leftcol, o_leftcol, newcurcol;
@@ -1747,10 +2000,10 @@ application_open_request(
         o_leftcol = fstncx();
         nfixes    = n_colfixes;
 
-        trace_3(TRACE_APP_PD4, "horizontal scroll bar dragged: scx %d, curr_scx %d, curr_xext %d",
-                scx, curr_scx, curr_xext);
+        trace_3(TRACE_APP_PD4, "horizontal scroll bar dragged: scroll_x %d, curr_scroll_x %d, curr_extent_x %d",
+                scroll_x, curr_scroll_x, curr_extent_x);
 
-        leftcol = (COL) pd_muldiv64(scx, cols_for_extent(), curr_xext);
+        leftcol = (COL) pd_muldiv64(scroll_x, cols_for_extent(), curr_extent_x);
 
         if(nfixes)
         {
@@ -1791,7 +2044,7 @@ application_open_request(
             out_screen = TRUE;
 
             /* may need caret motion */
-            if(main_window == caret_window)
+            if(main_window_handle == caret_window_handle)
                 xf_acquirecaret = TRUE;
         }
 
@@ -1799,12 +2052,12 @@ application_open_request(
          * between what we did open at and the scroll offset that
          * we would set given a free hand in the matter.
         */
-        curr_scx    = scx;
-        delta_scx   = scx - compute_scx();
-        trace_1(TRACE_APP_PD4, "delta_scx := %d", delta_scx);
+        curr_scroll_x    = scroll_x;
+        delta_scroll_x   = scroll_x - compute_scroll_x();
+        trace_1(TRACE_APP_PD4, "delta_scroll_x := %d", delta_scroll_x);
     }
 
-    if((scy != curr_scy) && !size_change)
+    if((scroll_y != curr_scroll_y) && !size_change)
     {
         /* work out which row to put at top */
         ROW toprow, o_toprow, newcurrow;
@@ -1813,10 +2066,10 @@ application_open_request(
         o_toprow = fstnrx();
         nfixes   = n_rowfixes;
 
-        trace_3(TRACE_APP_PD4, "vertical scroll bar dragged: scy %d, curr_scy %d, curr_yext %d",
-                scy, curr_scy, curr_yext);
+        trace_3(TRACE_APP_PD4, "vertical scroll bar dragged: scroll_y %d, curr_scroll_y %d, curr_extent_y %d",
+                scroll_y, curr_scroll_y, curr_extent_y);
 
-        toprow = (ROW) pd_muldiv64(rows_for_extent(), scy, curr_yext);  /* +ve, -ve, -ve */
+        toprow = (ROW) pd_muldiv64(rows_for_extent(), scroll_y, curr_extent_y); /* +ve, -ve, -ve */
 
         if(nfixes)
         {
@@ -1869,7 +2122,7 @@ application_open_request(
             rowtoend = schrsc(fstnrx());
 
             /* may need caret motion */
-            if(main_window == caret_window)
+            if(main_window_handle == caret_window_handle)
                 xf_acquirecaret = TRUE;
         }
 
@@ -1877,9 +2130,9 @@ application_open_request(
          * between what we did open at and the scroll offset that
          * we would set given a free hand in the matter.
         */
-        curr_scy    = scy;
-        delta_scy   = scy - compute_scy();
-        trace_1(TRACE_APP_PD4, "delta_scy := %d", delta_scy);
+        curr_scroll_y    = scroll_y;
+        delta_scroll_y   = scroll_y - compute_scroll_y();
+        trace_1(TRACE_APP_PD4, "delta_scroll_y := %d", delta_scroll_y);
     }
 
     if(window_height != old_window_height)
@@ -1913,14 +2166,14 @@ application_open_request(
 
         if(smash)
         {
-            r.w      = main__window;
-            r.box.x0 = texttooffset_x(-1);              /* lhs slop too */
-            r.box.x1 = texttooffset_x(window_width+1);  /* new!, possible bit at right */
-            r.box.y0 = texttooffset_y(smash_y0);
-            r.box.y1 = r.box.y0 + charvspace;
+            BBox redraw_area;
+            redraw_area.xmin = texttooffset_x(-1);              /* lhs slop too */
+            redraw_area.xmax = texttooffset_x(window_width+1);  /* new!, possible bit at right */
+            redraw_area.ymin = texttooffset_y(smash_y0);
+            redraw_area.ymax = redraw_area.ymin + charvspace;
             trace_5(TRACE_APP_PD4, "calling wimp_force_redraw(%d; %d, %d, %d, %d)",
-                        r.w, r.box.x0, r.box.y0, r.box.x1, r.box.y1);
-            wimpt_safe(wimp_force_redraw(&r));
+                        main_window_handle, redraw_area.xmin, redraw_area.ymin, redraw_area.xmax, redraw_area.ymax);
+            wimpt_safe(tbl_wimp_force_redraw(main_window_handle, redraw_area.xmin, redraw_area.ymin, redraw_area.xmax, redraw_area.ymax));
         }
     }
 
@@ -1931,14 +2184,14 @@ application_open_request(
 
         if(window_width > old_window_width)
         {
-            r.w      = main__window;
-            r.box.x0 = texttooffset_x(old_window_width);
-            r.box.x1 = texttooffset_x(window_width+1);  /* new!, possible bit at right */
-            r.box.y0 = texttooffset_y(-1);              /* top slop too */
-            r.box.y1 = texttooffset_y(window_height);
+            BBox redraw_area;
+            redraw_area.xmin = texttooffset_x(old_window_width);
+            redraw_area.xmax = texttooffset_x(window_width+1);  /* new!, possible bit at right */
+            redraw_area.ymin = texttooffset_y(-1);              /* top slop too */
+            redraw_area.ymax = texttooffset_y(window_height);
             trace_5(TRACE_APP_PD4, "calling wimp_force_redraw(%d; %d, %d, %d, %d)",
-                        r.w, r.box.x0, r.box.y0, r.box.x1, r.box.y1);
-            wimpt_safe(wimp_force_redraw(&r));
+                        main_window_handle, redraw_area.xmin, redraw_area.ymin, redraw_area.xmax, redraw_area.ymax);
+            wimpt_safe(tbl_wimp_force_redraw(main_window_handle, redraw_area.xmin, redraw_area.ymin, redraw_area.xmax, redraw_area.ymax));
         }
     }
 
@@ -1960,88 +2213,98 @@ application_open_request(
 extern BOOL
 draw_altered_state(void)
 {
-    wimp_redrawstr r;
-    wimp_wstate wstate;
-    S32 oswidth, osheight;
-    S32 xext, yext, scx, scy;
+    WimpGetWindowStateBlock window_state;
+    S32 os_width, os_height;
+    S32 extent_x, extent_y;
+    S32 scroll_x, scroll_y;
 
-    /* read current rear_window size etc. */
-    wimpt_safe(wimp_get_wind_state(rear__window, &wstate));
-    trace_5(TRACE_APP_PD4, "\n\n\n*** draw_altered_state(): get_wind_state(%d) returns %d, %d, %d, %d;",
-                wstate.o.w, wstate.o.box.x0, wstate.o.box.y0,
-                wstate.o.box.x1, wstate.o.box.y1);
-    trace_2(TRACE_APP_PD4, " scx %d, scy %d", wstate.o.scx, wstate.o.scy);
+    /* read current rear window size etc. */
+    window_state.window_handle = rear_window_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        return(FALSE);
+    trace_5(TRACE_APP_PD4, "\n\n\n*** draw_altered_state(): get_wind_state(" UINTPTR_XTFMT ") returns %d, %d, %d, %d;",
+                (uintptr_t) window_state.window_handle,
+                window_state.visible_area.xmin, window_state.visible_area.ymin,
+                window_state.visible_area.xmax, window_state.visible_area.ymax);
+    trace_2(TRACE_APP_PD4, " scroll_x %d, scroll_y %d", window_state.xscroll, window_state.yscroll);
 
-    oswidth  = wstate.o.box.x1 - wstate.o.box.x0;
-    osheight = wstate.o.box.y1 - wstate.o.box.y0;
-    trace_2(TRACE_APP_PD4, " width %d (OS), height %d (OS)", oswidth, osheight);
+    os_width  = BBox_width( &window_state.visible_area);
+    os_height = BBox_height(&window_state.visible_area);
+    trace_2(TRACE_APP_PD4, " width %d (OS), height %d (OS)", os_width, os_height);
 
-    /* recompute extents */
-    xext = pd_muldiv64(oswidth,  (S32) numcol, colsonscreen ? colsonscreen : 1);
+    /* recompute extents (both +ve for now) */
+    extent_x = pd_muldiv64(os_width,  (S32) numcol, colsonscreen ? colsonscreen : 1);
+    extent_y = pd_muldiv64(os_height, (S32) numrow, rowsonscreen);
 
-    if( xext < max_poss_width)
-        xext = max_poss_width;
+    if( extent_x < max_poss_os_width)
+        extent_x = max_poss_os_width;
 
-    yext = pd_muldiv64(osheight, (S32) numrow, rowsonscreen);
+    if( extent_y < max_poss_os_height)
+        extent_y = max_poss_os_height;
 
-    if( yext < max_poss_height)
-        yext = max_poss_height;
+    /* extents must be rounded to pixels so as not to confuse Neil */
+    /* NB we choose to round extents to the higher multiple */
+    extent_x = ceil_using_mask(extent_x, dxm1);
+    extent_y = ceil_using_mask(extent_y, dym1);
+    trace_2(TRACE_APP_PD4, "computed extent_x %d (OS), extent_y %d (OS)", extent_x, extent_y);
 
-    yext = -yext;
+    extent_y = -extent_y; /* and now flip to -ve for Neil */
 
-    /* extent must be rounded to pixels so as not to confuse Neil */
-    round_with_mask(xext, dxm1);
-    round_with_mask(yext, dym1);
-    trace_2(TRACE_APP_PD4, "computed xext %d (OS), yext %d (OS)", xext, yext);
-
-    if((xext != curr_xext)  ||  (yext != curr_yext))
+    if((extent_x != curr_extent_x)  ||  (extent_y != curr_extent_y))
     {
-        trace_2(TRACE_APP_PD4, "different extents: old xext %d, yext %d", curr_xext, curr_yext);
+        BBox bbox;
+        trace_2(TRACE_APP_PD4, "different extents: old extent_x %d, extent_y %d", curr_extent_x, curr_extent_y);
 
         /* note new extent */
-        curr_xext = xext;
-        curr_yext = yext;
+        curr_extent_x = extent_x;
+        curr_extent_y = extent_y;
 
-        /* set new extent of rear_window */
-        r.w      = rear__window;
-        r.box.x0 = 0;
-        r.box.x1 = xext;
-        r.box.y0 = yext;
-        r.box.y1 = 0;
+        /* set new extent of rear window */
+        bbox.xmin = 0;
+        bbox.ymin = extent_y;
+        bbox.xmax = extent_x;
+        bbox.ymax = 0;
 
-        trace_5(TRACE_APP_PD4, "calling wimp_set_extent(%d; %d, %d, %d, %d)",
-                    r.w, r.box.x0, r.box.y0, r.box.x1, r.box.y1);
-        wimpt_safe(wimp_set_extent(&r));
+        trace_5(TRACE_APP_PD4, "calling wimp_set_extent(" UINTPTR_XTFMT "; %d, %d, %d, %d)",
+                    (uintptr_t) rear_window_handle, bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax);
+        void_WrapOsErrorReporting(tbl_wimp_set_extent(rear_window_handle, &bbox));
     }
 
     /* now think what to do with the scroll offsets */
-    scx = compute_scx();
-    scy = compute_scy();
+    scroll_x = compute_scroll_x();
+    scroll_y = compute_scroll_y();
 
-    if(((scx + delta_scx) != curr_scx)  ||  ((scy + delta_scy) != curr_scy))
+    if(((scroll_x + delta_scroll_x) != curr_scroll_x)  ||  ((scroll_y + delta_scroll_y) != curr_scroll_y))
     {
-        /* note new scroll offsets and zero the deltas */
-        curr_scx    = scx;
-        curr_scy    = scy;
-        delta_scx   = 0;
-        delta_scy   = 0;
+        WimpOpenWindowBlock open_window_block;
 
-        /* reopen rear_window at new scroll offsets */
-        wstate.o.scx = scx;
-        wstate.o.scy = scy;
-        trace_5(TRACE_APP_PD4, "calling wimp_open_wind(%d; %d, %d, %d, %d;",
-                wstate.o.w, wstate.o.box.x0, wstate.o.box.y0,
-                wstate.o.box.x1, wstate.o.box.y1);
-        trace_2(TRACE_APP_PD4, " %d, %d)", wstate.o.scx, wstate.o.scy);
-        wimpt_safe(wimp_open_wind(&wstate.o));
+        /* note new scroll offsets and zero the deltas */
+        curr_scroll_x  = scroll_x;
+        curr_scroll_y  = scroll_y;
+        delta_scroll_x = 0;
+        delta_scroll_y = 0;
+
+        /* reopen rear window at new scroll offsets */
+        memcpy32(&open_window_block, &window_state, sizeof32(open_window_block));
+        open_window_block.xscroll = scroll_x;
+        open_window_block.yscroll = scroll_y;
+        trace_5(TRACE_APP_PD4, "calling wimp_open_window(" UINTPTR_XTFMT "; %d, %d, %d, %d;",
+                (uintptr_t) window_state.window_handle,
+                window_state.visible_area.xmin, window_state.visible_area.ymin,
+                window_state.visible_area.xmax, window_state.visible_area.ymax);
+        trace_2(TRACE_APP_PD4, " %d, %d)", open_window_block.xscroll, open_window_block.yscroll);
+        void_WrapOsErrorReporting(tbl_wimp_open_window(&open_window_block));
     }
 
     return(FALSE);
 }
 
-/* actually put the caret in the window at the place
- * we computed it should go if reposition needed
-*/
+/******************************************************************************
+*
+* actually put the caret in the window at the place
+* we computed it should go if reposition needed
+*
+******************************************************************************/
 
 extern void
 draw_caret(void)
@@ -2049,9 +2312,12 @@ draw_caret(void)
     if(xf_inexpression_box)
     {
         mlec_claim_focus(editexpression_formwind->mlec);
+
         xf_caretreposition = FALSE;
+        return;
     }
-    else if(xf_inexpression_line)
+
+    if(xf_inexpression_line)
     {
      /* we must some how give the caret back to the writeable icon, at the place it was lost
         from, probally, reading the caret position on a lose caret notification then using
@@ -2060,32 +2326,22 @@ draw_caret(void)
         formline_claim_focus();
 
         xf_caretreposition = FALSE;
+        return;
     }
-    else
+
+    trace_1(TRACE_APP_PD4_RENDER, "draw_caret(): reposition = %s", report_boolstring(xf_caretreposition));
+
+    if(xf_caretreposition  &&  caretposallowed)
     {
-        trace_1(TRACE_APP_PD4_RENDER, "draw_caret(): reposition = %s", trace_boolstring(xf_caretreposition));
+        xf_caretreposition = FALSE;
 
-        if(xf_caretreposition  &&  caretposallowed)
-        {
-            xf_caretreposition = FALSE;
-            setcaretpos(lastcursorpos_x, lastcursorpos_y);
-        }
+        riscos_caret_set_position(
+            main_window_handle,
+            (riscos_fonts  &&  !xf_inexpression)
+                ? lastcursorpos_x + leftslop
+                : texttooffset_x(lastcursorpos_x),
+            texttooffset_y(lastcursorpos_y));
     }
-}
-
-/* RCM: seems only to be called by draw_caret */
-extern void
-setcaretpos(
-    S32 x,
-    S32 y)
-{
-    trace_2(TRACE_APP_PD4_RENDER, "setcaretpos(%d, %d)", x, y);
-
-    riscos_setcaretpos( main_window,
-                        (riscos_fonts  &&  !xf_inexpression)
-                                ? x + leftslop
-                                : texttooffset_x(x),
-                        texttooffset_y(y));
 }
 
 /******************************************************************************
@@ -2093,43 +2349,45 @@ setcaretpos(
 * set caret position in a window
 * NB. this takes offsets from xorg/yorg
 *
-* RCM: seems only to be called by setcaretpos
-*      which is only called by draw_caret
+* RCM: seems only to be called by draw_caret
 *
 ******************************************************************************/
 
 extern void
-riscos_setcaretpos(
-    wimp_w w,
+riscos_caret_set_position(
+    _HwndRef_   HOST_WND window_handle,
     int x,
     int y)
 {
-    S32 caretbits;
-    wimp_caretstr caret;
+    int caret_bits;
 
     y -= CARET_BODGE_Y;
 
-    caretbits = charvspace + 2 * CARET_BODGE_Y;
+    caret_bits = charvspace + 2 * CARET_BODGE_Y;
 
     if(!riscos_fonts  ||  xf_inexpression)
-        caretbits |= CARET_SYSTEMFONT;
+        caret_bits |= CARET_SYSTEMFONT;
 
     if(wimpt_bpp() < 8) /* can only do non-coloured carets in very simple modes */
     {
-        caretbits |= CARET_COLOURED | CARET_REALCOLOUR;
-        caretbits |= (wimpt_GCOL_for_wimpcolour(getcolour(CARETC)) ^ wimpt_GCOL_for_wimpcolour(getcolour(BACK))) << CARET_COLOURSHIFT;
+        const U32 caret_wimp_colour_value = wimp_colour_value_from_option(COI_CARET);
+        const U32 bg_wimp_colour_value = wimp_colour_value_from_option(COI_BACK);
+
+        if((0 == (0x10 & caret_wimp_colour_value)) && (0 == (0x10 & bg_wimp_colour_value)))
+        {
+            const int colour_bits =
+                wimptx_GCOL_for_wimpcolour(caret_wimp_colour_value & 0x0F) ^
+                wimptx_GCOL_for_wimpcolour(bg_wimp_colour_value & 0x0F);
+            caret_bits |= colour_bits << CARET_COLOURSHIFT;
+            caret_bits |= CARET_COLOURED | CARET_REALCOLOUR;
+         }
     }
 
-    caret.w      = w;
-    caret.i      = (wimp_i) -1;         /* never in any icon */
-    caret.x      = x;
-    caret.y      = y;
-    caret.height = caretbits;
-    caret.index  = 0;
+    trace_4(TRACE_APP_PD4_RENDER, "riscos_caret_set_position(%d, %d, %d): %8.8X", window_handle, x, y, caret_bits);
 
-    trace_4(TRACE_APP_PD4_RENDER, "riscos_setcaretpos(%d, %d, %d): %8.8X", w, x, y, caret.height);
-
-    wimpt_safe(wimp_set_caret_pos(&caret));
+    /* presumably this gets called before main window is shown and gives the 'Input focus window not found' error */
+    (void) /*void_WrapOsErrorReporting*/ (
+        tbl_wimp_set_caret_position(window_handle, -1, x, y, caret_bits, 0));
 }
 
 /******************************************************************************
@@ -2140,59 +2398,69 @@ riscos_setcaretpos(
 ******************************************************************************/
 
 /* stored caret position: relative to work area origin */
-static S32 caret_rel_x;
-static S32 caret_rel_y;
+static GDI_POINT caret_rel;
 
 extern void
-riscos_removecaret(void)
+riscos_caret_hide(void)
 {
-    wimp_caretstr caret;
+    WimpCaret caret;
 
-    trace_0(TRACE_APP_PD4_RENDER, "riscos_removecaret()");
+    trace_0(TRACE_APP_PD4_RENDER, "riscos_caret_hide()");
 
-    if(main_window == caret_window)
-    {
-        wimpt_safe(wimp_get_caret_pos(&caret));
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        return;
 
-        caret_rel_x = caret.x /*- curr_scx*/;   /* +ve */
-        caret_rel_y = caret.y /*- curr_scy*/;   /* -ve */
+    if(main_window_handle != caret_window_handle)
+        return;
 
-        trace_4(TRACE_APP_PD4_RENDER, "hiding caret from offset %d %d at relative pos %d, %d",
-                caret.x, caret.y, caret_rel_x, caret_rel_y);
+    assert(caret.window_handle == caret_window_handle);
 
-        /* way off top */
-        caret.y = 100;
+    caret_rel.x = caret.xoffset /*- curr_scroll_x*/;   /* +ve */
+    caret_rel.y = caret.yoffset /*- curr_scroll_y*/;   /* -ve */
 
-        wimpt_safe(wimp_set_caret_pos(&caret));
-    }
+    trace_4(TRACE_APP_PD4_RENDER, "hiding caret from offset %d %d at relative pos %d, %d",
+            caret.xoffset, caret.yoffset, caret_rel.x, caret_rel.y);
+
+    /* way off top */
+    caret.yoffset = 100;
+
+    void_WrapOsErrorReporting(
+        tbl_wimp_set_caret_position(caret.window_handle, caret.icon_handle,
+                                    caret.xoffset, caret.yoffset,
+                                    caret.height, caret.index));
 }
 
 /******************************************************************************
 *
-* restore caret after removal
+* restore caret after hiding
 *
 ******************************************************************************/
 
 extern void
-riscos_restorecaret(void)
+riscos_caret_restore(void)
 {
-    wimp_caretstr caret;
+    WimpCaret caret;
 
-    trace_0(TRACE_APP_PD4_RENDER, "riscos_restorecaret()");
+    trace_0(TRACE_APP_PD4_RENDER, "riscos_caret_restore()");
 
-    if(main_window == caret_window)
-    {
-        wimpt_safe(wimp_get_caret_pos(&caret));
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        return;
 
-        caret.x = /*curr_scx*/ + caret_rel_x;
-        caret.y = /*curr_scy*/ + caret_rel_y;
+    if(main_window_handle != caret_window_handle)
+        return;
 
-        trace_4(TRACE_APP_PD4_RENDER, "restoring caret from relative pos %d %d to offset %d, %d",
-                caret_rel_x, caret_rel_y, caret.x, caret.y);
+    assert(caret.window_handle == caret_window_handle);
 
-        wimpt_safe(wimp_set_caret_pos(&caret));
-    }
-}
+    caret.xoffset = /*curr_scroll_x*/ + caret_rel.x;
+    caret.yoffset = /*curr_scroll_y*/ + caret_rel.y;
+
+    trace_4(TRACE_APP_PD4_RENDER, "restoring caret from relative pos %d %d to offset %d, %d",
+            caret_rel.x, caret_rel.y, caret.xoffset, caret.yoffset);
+
+    void_WrapOsErrorReporting(
+        tbl_wimp_set_caret_position(caret.window_handle, caret.icon_handle,
+                                    caret.xoffset, caret.yoffset,
+                                    caret.height, caret.index));}
 
 /******************************************************************************
 *
@@ -2206,14 +2474,14 @@ extern void
 draw_grid_hbar(
     S32 len)
 {
-    S32 fg = current_fg;
+    const U32 restore_fg_wimp_colour_value = current_fg_wimp_colour_value;
 
-    setfgcolour(GRIDC);
+    set_fg_colour_from_option(COI_GRID);
 
     wimpt_safe(os_plot(bbc_MoveCursorRel,              -dx,             -vdu5textoffset));
     wimpt_safe(os_plot(bbc_SolidBoth + bbc_DrawRelFore, len * charwidth, 0));
 
-    riscos_setcolour(fg, FALSE);
+    riscos_set_fg_colour_from_wimp_colour_value(restore_fg_wimp_colour_value);
 }
 
 /******************************************************************************
@@ -2228,18 +2496,18 @@ extern void
 draw_grid_vbar(
     BOOL include_hbar)
 {
-    S32 fg = current_fg;
-    S32 ldx = dx;
-    S32 y_pos = charvrubout_pos;
-    S32 y_neg = charvrubout_neg + (include_hbar ? dy : 0);
+    const U32 restore_fg_wimp_colour_value = current_fg_wimp_colour_value;
+    GDI_COORD ldx = dx;
+    GDI_COORD y_pos = charvrubout_pos;
+    GDI_COORD y_neg = charvrubout_neg + (include_hbar ? dy : 0);
 
-    setfgcolour(GRIDC);
+    set_fg_colour_from_option(COI_GRID);
 
     wimpt_safe(os_plot(bbc_MoveCursorRel,              -ldx, +y_pos));
     wimpt_safe(os_plot(bbc_SolidBoth + bbc_DrawRelFore,   0, -y_pos -y_neg));
     wimpt_safe(os_plot(bbc_MoveCursorRel,              +ldx,        +y_neg));
 
-    riscos_setcolour(fg, FALSE);
+    riscos_set_fg_colour_from_wimp_colour_value(restore_fg_wimp_colour_value);
 }
 
 extern void
@@ -2258,34 +2526,48 @@ filealtered(
 
 /******************************************************************************
 *
-*  ensure font colours are set to reflect those set via setcolour
+*  ensure font colours are set to reflect those set via set_fg_colour (and bg)
 *
 ******************************************************************************/
+
+_Check_return_
+static inline _kernel_oserror *
+colourtrans_SetFontColours(
+    _In_        unsigned int font_handle,
+    _In_        unsigned int bg_colour,
+    _In_        unsigned int fg_colour,
+    _In_        unsigned int max_offset)
+{
+    _kernel_swi_regs rs;
+    rs.r[0] = font_handle;
+    rs.r[1] = bg_colour;
+    rs.r[2] = fg_colour;
+    rs.r[3] = max_offset;
+    return(_kernel_swi(ColourTrans_SetFontColours, &rs, &rs)); /* don't care about updated values here */
+}
 
 extern void
 ensurefontcolours(void)
 {
     if(riscos_fonts  &&  font_colours_invalid)
     {
-        #ifdef SKS_FONTCOLOURS
-        /* should use ColourTrans even on screen: consider
-         * user that turns wimp colour 3 red -> fonts get
-         * measles if wimp_setfontcolours used!
-        */
-        font fh;
-        wimp_paletteword bg, fg;
-        int offset;
+        font fh = 0; /* current font */
+        U32 bg_colour, fg_colour;
+        const int max_offset = 14;
 
-        fh = 0;
-        bg.word = wimpt_RGB_for_wimpcolour(current_bg);
-        fg.word = wimpt_RGB_for_wimpcolour(current_fg);
-        offset = 14;
-        trace_2(TRACE_APP_PD4_RENDER, "colourtran_setfontcolours(%8.8X, %8.8X)", fg.word, bg.word);
-        (void) font_complain(colourtran_setfontcolours(&fh, &bg, &fg, &offset));
-        #else
-        trace_2(TRACE_APP_PD4_RENDER, "wimp_setfontcolours(%d, %d)", current_fg, current_bg);
-        (void) font_complain(wimp_setfontcolours(current_fg, current_bg));
-        #endif
+        if(0 != (0x10 & current_bg_wimp_colour_value))
+            bg_colour = current_bg_wimp_colour_value & ~0x1F;
+        else
+            bg_colour = wimptx_RGB_for_wimpcolour(current_bg_wimp_colour_value & 0x0F);
+
+        if(0 != (0x10 & current_fg_wimp_colour_value))
+            fg_colour = current_fg_wimp_colour_value & ~0x1F;
+        else
+            fg_colour = wimptx_RGB_for_wimpcolour(current_fg_wimp_colour_value & 0x0F);
+
+        trace_2(TRACE_APP_PD4_RENDER, "Colourtrans_SetFontColours(" U32_XTFMT ", " U32_XTFMT ")", fg_colour, bg_colour);
+        (void) font_complain(colourtrans_SetFontColours(fh, bg_colour, fg_colour, max_offset));
+
         font_colours_invalid = FALSE;
     }
 }
@@ -2306,39 +2588,40 @@ static struct RISCOS_PRINTING_STATICS
 }
 riscos_printer;
 
-#define stat_bg     0xFFFFFF00  /* full white */
-#define stat_fg     0x00000000  /* full black */
-#define stat_neg    0xFF000000  /* full red */
+#define stat_bg     0xFFFFFF00U /* full white */
+#define stat_fg     0x00000000U /* full black */
+#define stat_neg    0xFF000000U /* full red */
 
 extern void
 print_setcolours(
-    S32 fore,
-    S32 back)
+    _InVal_     COLOURS_OPTION_INDEX fore_colours_option_index,
+    _InVal_     COLOURS_OPTION_INDEX back_colours_option_index)
 {
     if(riscos_printer.has_colour)
-        setcolour(fore, back);
+    {
+        setcolours(fore_colours_option_index, back_colours_option_index);
+    }
     else
     {
-        riscos_setcolour(0 /*bg*/, TRUE);
-        riscos_setcolour(7 /*fg*/, FALSE);
+        riscos_set_bg_colour_from_wimp_colour_value(0U);
+        riscos_set_fg_colour_from_wimp_colour_value(7U);
     }
 }
 
 extern void
 print_setfontcolours(void)
 {
-    font fh;
-    wimp_paletteword bg, fg;
-    int offset;
-
     if(riscos_fonts  &&  font_colours_invalid)
     {
-        fh = 0;
-        bg.word = (int) stat_bg;
-        fg.word = (riscos_printer.has_colour  &&  (current_fg == NEGATIVEC)) ? stat_neg : stat_fg;
-        offset = 14;
-        trace_2(TRACE_APP_PD4_RENDER, "colourtran_setfontcolours(%8.8X, %8.8X)", fg.word, bg.word);
-        (void) print_complain(colourtran_setfontcolours(&fh, &bg, &fg, &offset));
+        const font fh = 0; /* current font */
+        const int max_offset = 14;
+        const U32 bg_colour = stat_bg;
+        U32 fg_colour = stat_fg;
+        if(riscos_printer.has_colour)
+            if(current_fg_wimp_colour_value == wimp_colour_value_from_option(COI_NEGATIVE))
+                fg_colour = stat_neg;
+        trace_2(TRACE_APP_PD4_RENDER, "Colourtrans_SetFontColours(" U32_XTFMT ", " U32_XTFMT ")", fg_colour, bg_colour);
+        (void) print_complain(colourtrans_SetFontColours(fh, bg_colour, fg_colour, max_offset));
         font_colours_invalid = FALSE;
     }
 }
@@ -2363,8 +2646,8 @@ riscprint_set_printer_data(void)
         riscos_printer.psize.ysize = riscos_printer.psize.bbox.y0 + riscos_printer.psize.bbox.y1 + riscos_printer.psize.bbox.y0;
     }
 
-    paper_width_mp  = riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0;
-    paper_length_mp = riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0;
+    paper_width_millipoints  = riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0;
+    paper_length_millipoints = riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0;
 
     riscos_printer.where.dx = riscos_printer.psize.bbox.x0;
     riscos_printer.where.dy = riscos_printer.psize.bbox.y0;
@@ -2382,10 +2665,10 @@ riscprint_set_printer_data(void)
             riscos_printer.psize.bbox.x1, riscos_printer.psize.bbox.y1);
     trace_2(TRACE_APP_PD4_RENDER, "usable x = %d (mp), %d (os 100%%)",
             riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0,
-            div_round_floor_fn(riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0, MILLIPOINTS_PER_OS));
+            idiv_floor_fn(riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0, MILLIPOINTS_PER_OS));
     trace_2(TRACE_APP_PD4_RENDER, "usable y = %d (mp), %d (os 100%%)",
             riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0,
-            div_round_floor_fn(riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0, MILLIPOINTS_PER_OS));
+            idiv_floor_fn(riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0, MILLIPOINTS_PER_OS));
 }
 
 extern BOOL
@@ -2400,7 +2683,7 @@ riscprint_start(void)
     riscos_printer.oldjob = 0;
 
     if(print_info(&pinfo))
-        return(reperr_null(create_error(ERR_NORISCOSPRINTER)));
+        return(reperr_null(ERR_NORISCOSPRINTER));
 
     riscos_printer.has_colour = (pinfo.features & print_colour);
 
@@ -2451,10 +2734,10 @@ riscprint_page(
     S32    usable_x_os, usable_y_os;
 
     trace_2(TRACE_APP_PD4_RENDER, "riscprint_page(%d copies, landscape = %s)",
-            copies, trace_boolstring(landscape));
+            copies, report_boolstring(landscape));
 
     if(!scale_pct)
-        return(reperr_null(create_error(ERR_BADPRINTSCALE)));
+        return(reperr_null(ERR_BADPRINTSCALE));
 
     xform = (S32) muldiv64(0x00010000, scale_pct, 100);   /* fixed binary point number 16.16 */
 
@@ -2472,8 +2755,8 @@ riscprint_page(
         /* move x0,y0 origin and therefore text origin near top right of
          * physical portrait page, descending towards left, across going down
         */
-        where_mp.dx += paper_width_mp;
-        where_mp.dy += paper_length_mp;
+        where_mp.dx += paper_width_millipoints;
+        where_mp.dy += paper_length_millipoints;
     }
     else
     {
@@ -2487,14 +2770,14 @@ riscprint_page(
          * physical portrait page, descending towards bottom, across going right
         */
         where_mp.dx += 0;
-        where_mp.dy += paper_length_mp;
+        where_mp.dy += paper_length_millipoints;
     }
 
     left_margin_shift_os = charwidth * left_margin_width();
 
     /* how big the usable area is in scaling OS units (i.e. corresponding to printing OS) */
-    usable_x_os = (S32) muldiv64(((landscape) ? paper_length_mp : paper_width_mp ), 100, scale_pct * MILLIPOINTS_PER_OS);
-    usable_y_os = (S32) muldiv64(((landscape) ? paper_width_mp  : paper_length_mp), 100, scale_pct * MILLIPOINTS_PER_OS);
+    usable_x_os = (S32) muldiv64(((landscape) ? paper_length_millipoints : paper_width_millipoints ), 100, scale_pct * MILLIPOINTS_PER_OS);
+    usable_y_os = (S32) muldiv64(((landscape) ? paper_width_millipoints  : paper_length_millipoints), 100, scale_pct * MILLIPOINTS_PER_OS);
 
     trace_4(TRACE_APP_PD4_RENDER, "usable area %d,%d (os %d%%): header_footer_width %d (os)",
             usable_x_os, usable_y_os, scale_pct, charwidth * header_footer_width);
@@ -2539,7 +2822,7 @@ riscprint_page(
 
         if(curpnm)
         {
-            (void) sprintf(buffer, "p%d", curpnm);
+            consume_int(sprintf(buffer, "p%d", curpnm));
             pageptr = buffer;
         }
         else
@@ -2630,8 +2913,8 @@ riscprint_page(
             /* print page */
 
             /* set up initial baseline */
-            riscos_font_yad = 0 - global_font_leading_mp;
-            trace_1(TRACE_APP_PD4_RENDER, "\n\n*** initial riscos_font_yad := %d (mp)", riscos_font_yad);
+            riscos_font_ad_millipoints_y = 0 - global_font_leading_millipoints;
+            trace_1(TRACE_APP_PD4_RENDER, "\n\n*** initial riscos_font_ad_millipoints_y := %d", riscos_font_ad_millipoints_y);
 
             killcolourcache();
 
@@ -2657,8 +2940,8 @@ riscprint_end(
     BOOL ok)
 {
     _kernel_swi_regs rs;
-    os_error * bum;
-    os_error * bum2;
+    os_error * e;
+    os_error * e2;
 
     trace_1(TRACE_APP_PD4_RENDER, "riscprint_end(): %s print", !ok ? "aborting" : "ending");
 
@@ -2670,29 +2953,31 @@ riscprint_end(
     if(ok)
     {
         /* close neatly */
-        bum = print_endjob(riscos_printer.job);
-        ok = (bum == NULL);
+        e = print_endjob(riscos_printer.job);
+        ok = (e == NULL);
     }
     else
-        bum = NULL;
+        e = NULL;
 
     if(!ok)
     {
         /* whinge terribly */
-        bum2 = print_abortjob(riscos_printer.job);
-        bum = bum ? bum : bum2;
-        rep_fserr(bum->errmess);
+        e2 = print_abortjob(riscos_printer.job);
+        e = e ? e : e2;
+        assert(NULL != e);
+        if(NULL != e)
+            reperr_kernel_oserror(e);
         been_error = FALSE;
     }
 
     trace_0(TRACE_APP_PD4_RENDER, "riscprint_end(): closing printer stream");
     rs.r[0] = 0;
     rs.r[1] = riscos_printer.job;
-    bum2 = wimpt_complain(_kernel_swi(OS_Find, &rs, &rs));
+    e2 = WrapOsErrorReporting(_kernel_swi(OS_Find, &rs, &rs));
 
-    bum = bum ? bum : bum2;
+    e = e ? e : e2;
 
-    return(ok ? (bum == NULL) : ok);
+    return(ok ? (e == NULL) : ok);
 }
 
 extern BOOL
@@ -2711,22 +2996,22 @@ extern BOOL
 riscprint_suspend(void)
 {
     int dummy_job;
-    os_error * bum;
+    os_error * e;
 
     trace_0(TRACE_APP_PD4_RENDER, "riscprint_suspend()");
 
     if(!riscos_printer.job)
         return(FALSE);
 
-    bum = print_selectjob(riscos_printer.oldjob, NULL, &dummy_job);
+    e = print_selectjob(riscos_printer.oldjob, NULL, &dummy_job);
 
     riscos_printer.oldjob = 0;
 
-    if(bum)
+    if(NULL != e)
     {
         /* job suspension failure must be severe otherwise no errors may come out */
         (void) print_reset();
-        return(rep_fserr(bum->errmess));
+        return(reperr_kernel_oserror(e));
     }
     else
         myassert2x((dummy_job == 0) || (dummy_job == riscos_printer.job), "riscprint_suspend suspended the wrong job %d not %d!", dummy_job, riscos_printer.job);

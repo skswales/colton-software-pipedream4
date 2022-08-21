@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>PipeDream File Format</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="pictures.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="printerdriverediting.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="File">PipeDream File Format</h1>
+    <p>
+        The PipeDream file format is designed to facilitate manipulation by other programs.
+        No control characters are used in the file, unless they have been explicitly typed in,
+        apart from carriage return and/or linefeed characters which are used as cell separators.
+        The files are sequential, and can be edited by any text editor.
+    </p>
+    <p>
+        PipeDream uses a special form of construct to add information about the structure of the file.
+        All constructs begin and end with an percent sign (&lsquo;%&rsquo;).
+        Immediately after the first percent sign come one or more alphabetic characters which identify the construct.
+        Between these characters and the final percent sign can come any information which is relevant to the construct.
+    </p>
+    <p>
+        At the start of the file is a group of constructs that identify what the values of the parameters which appear in the
+        <span class="csg-dbox">Options</span> and <span class="csg-dbox">Page Layout</span> dialogue boxes are for the file.
+        (In the case of Choices files, the parameters of several other dialogue boxes are stored:
+        for a full list of the parameters stored in Choices files, see Save Choices.)
+        This is followed by the main body of the file.
+    </p>
+    <p>
+        The file is arranged column by column and each column in the file is preceded by a
+        column construct which gives details about the column followed by all the cells in the column.
+        Every cell that is defined in that column has an entry.
+    </p>
+    <p>
+        Each entry is separated from the next one with a carriage return and/or linefeed.
+        On each line can be a collection of constructs giving details about the cell.
+    </p>
+    <p>For each column in the file there is a column construct, followed by all the entries for that column, until the end of file.</p>
+
+    <h2 id="Options">Options Constructs</h2>
+    <p><code>%OP%<span class="csg-function-parameter">parameter</span> <span class="csg-function-parameter">value</span> <span class="csg-function-parameter">ls</span></code></p>
+    <table border="0">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td><span class="csg-function-parameter">parameter</span>&nbsp;&nbsp;</td>
+                <td>two characters identifying the parameter;</td>
+            </tr>
+            <tr>
+                <td><span class="csg-function-parameter">value</span></td>
+                <td>the value of the parameter;</td>
+            </tr>
+            <tr>
+                <td><span class="csg-function-parameter">ls</span></td>
+                <td>
+                    line separator which can be <code>LF</code> or <code>CR,LF</code> or <code>LF,CR</code> or <code>CR</code>.<br />
+                    Note: <code>LF</code> = ASCII 10; <code>CR</code> = ASCII 13.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Unknown options are always ignored by PipeDream and any program which processes PipeDream format files must do so too.</p>
+    <p>The various <span class="csg-function-parameter">parameter</span> ids are:</p>
+    <p><code>AM&nbsp;*&nbsp;</code>Auto / manual</p>
+    <p><code>BM&nbsp;&nbsp;&nbsp;</code>Bottom margin</p>
+    <p><code>BO&nbsp;&nbsp;&nbsp;</code>Borders</p>
+    <p><code>CR&nbsp;*&nbsp;</code>Line separator status</p>
+    <p><code>DE&nbsp;&nbsp;&nbsp;</code>Title</p>
+    <p><code>DF&nbsp;&nbsp;&nbsp;</code>Date format</p>
+    <p><code>DN&nbsp;*&nbsp;</code>Number of deletions to store in paste list&nbsp;</p>
+    <p><code>DP&nbsp;&nbsp;&nbsp;</code>Decimal places</p>
+    <p><code>FC&nbsp;&nbsp;&nbsp;</code>Fixed columns</p>
+    <p><code>FG&nbsp;&nbsp;&nbsp;</code>Font name</p>
+    <p><code>FM&nbsp;&nbsp;&nbsp;</code>Footer margin</p>
+    <p><code>FO&nbsp;&nbsp;&nbsp;</code>First footer line</p>
+    <p><code>F1&nbsp;&nbsp;&nbsp;</code>Second footer line</p>
+    <p><code>F2&nbsp;&nbsp;&nbsp;</code>Third footer line</p>
+    <p><code>FR&nbsp;&nbsp;&nbsp;</code>Fixed rows</p>
+    <p><code>FS&nbsp;&nbsp;&nbsp;</code>Line height</p>
+    <p><code>FX&nbsp;&nbsp;&nbsp;</code>Font width</p>
+    <p><code>FY&nbsp;&nbsp;&nbsp;</code>Font height</p>
+    <p><code>GR&nbsp;&nbsp;&nbsp;</code>Grid</p>
+    <p><code>HE&nbsp;&nbsp;&nbsp;</code>First header line</p>
+    <p><code>H1&nbsp;&nbsp;&nbsp;</code>Second header line</p>
+    <p><code>H2&nbsp;&nbsp;&nbsp;</code>Third header line</p>
+    <p><code>HM&nbsp;&nbsp;&nbsp;</code>Header margin</p>
+    <p><code>IO&nbsp;*&nbsp;</code>Insert / overtype</p>
+    <p><code>IR&nbsp;&nbsp;&nbsp;</code>Insert on return</p>
+    <p><code>IW&nbsp;&nbsp;&nbsp;</code>Insert on wrap</p>
+    <p><code>JU&nbsp;&nbsp;&nbsp;</code>Justify</p>
+    <p><code>LM&nbsp;&nbsp;&nbsp;</code>Left margin</p>
+    <p><code>LP&nbsp;&nbsp;&nbsp;</code>Leading characters</p>
+    <p><code>LS&nbsp;&nbsp;&nbsp;</code>Line spacing</p>
+    <p><code>MB&nbsp;&nbsp;&nbsp;</code>Minus / brackets</p>
+    <p><code>MC&nbsp;*&nbsp;</code>Menu change</p>
+    <p><code>MS&nbsp;*&nbsp;</code>Short / long menus</p>
+    <p><code>ND&nbsp;&nbsp;&nbsp;</code>Name definition</p>
+    <p><code>PA&nbsp;&nbsp;&nbsp;</code>Pages</p>
+    <p><code>PL&nbsp;&nbsp;&nbsp;</code>Page length</p>
+    <p><code>PS&nbsp;&nbsp;&nbsp;</code>Page no. start</p>
+    <p><code>PX&nbsp;&nbsp;&nbsp;</code>Page width</p>
+    <p><code>PZ&nbsp;&nbsp;&nbsp;</code>Protected areas</p>
+    <p><code>SA&nbsp;*&nbsp;</code>Auto spell checking</p>
+    <p><code>SL&nbsp;&nbsp;&nbsp;</code>User dictionary language</p>
+    <p><code>SO&nbsp;*&nbsp;</code>User dictionary</p>
+    <p><code>TA&nbsp;&nbsp;&nbsp;</code>Text @-field character</p>
+    <p><code>TH&nbsp;&nbsp;&nbsp;</code>Thousands separator</p>
+    <p><code>TM&nbsp;&nbsp;&nbsp;</code>Top margin</p>
+    <p><code>TN&nbsp;&nbsp;&nbsp;</code>Text / numbers</p>
+    <p><code>TP&nbsp;&nbsp;&nbsp;</code>Trailing characters</p>
+    <p><code>WR&nbsp;&nbsp;&nbsp;</code>Wrap</p>
+    <p>* Choices files only</p>
+
+    <h3 id="Printer">Printer Driver Options Constructs</h3>
+    <p>These apply only to choices files.</p>
+    <p><code>PD&nbsp;&nbsp;&nbsp;</code>Printer driver</p>
+    <p><code>PT&nbsp;&nbsp;&nbsp;</code>Type</p>
+    <p><code>P<span class="csg-function-parameter">n</span>&nbsp;&nbsp;&nbsp;</code>Printer server number</p>
+    <p><code>PB&nbsp;&nbsp;&nbsp;</code>Serial baud rate</p>
+    <p><code>PW&nbsp;&nbsp;&nbsp;</code>Databits</p>
+    <p><code>PP&nbsp;&nbsp;&nbsp;</code>Parity</p>
+    <p><code>PO&nbsp;&nbsp;&nbsp;</code>Stop bits</p>
+
+    <h3 id="Colours">Colours Options Constructs</h3>
+    <p>These apply only to choices files</p>
+    <p><code>CF&nbsp;&nbsp;&nbsp;</code>Text foreground colour</p>
+    <p><code>CB&nbsp;&nbsp;&nbsp;</code>Text background colour</p>
+    <p><code>CP&nbsp;&nbsp;&nbsp;</code>Protected cells colour</p>
+    <p><code>CL&nbsp;&nbsp;&nbsp;</code>Negative numbers colour</p>
+    <p><code>CG&nbsp;&nbsp;&nbsp;</code>Grid colour</p>
+    <p><code>CC&nbsp;&nbsp;&nbsp;</code>Caret colour</p>
+    <p><code>CE&nbsp;&nbsp;&nbsp;</code>Soft page break colour</p>
+    <p><code>CH&nbsp;&nbsp;&nbsp;</code>Hard page break colour</p>
+    <p><code>CS&nbsp;&nbsp;&nbsp;</code>Border foreground colour</p>
+    <p><code>CU&nbsp;&nbsp;&nbsp;</code>Border background colour</p>
+    <p><code>CT&nbsp;&nbsp;&nbsp;</code>Current border foreground colour</p>
+    <p><code>CV&nbsp;&nbsp;&nbsp;</code>Current border background colour</p>
+    <p><code>CX&nbsp;&nbsp;&nbsp;</code>Fixed border background colour</p>
+
+    <h2 id="Column">Column Construct</h2>
+    <p><code>%CO:<span class="csg-function-parameter">column</span>,<span class="csg-function-parameter">width</span>,<span class="csg-function-parameter">wrap_width</span>%</code></p>
+    <table border="0">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td><span class="csg-function-parameter">column</span></td>
+                <td>letter identifying the column;</td>
+            </tr>
+            <tr>
+                <td><span class="csg-function-parameter">width</span></td>
+                <td>decimal number giving the column width;</td>
+            </tr>
+            <tr>
+                <td><span class="csg-function-parameter">wrap_width</span>&nbsp;</td>
+                <td>decimal number giving the right margin position.</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>These constructs can appear anywhere in the entry for each cell</p>
+    <p><code>%B%&nbsp;&nbsp;&nbsp;</code>brackets format</p>
+    <p><code>%C%&nbsp;&nbsp;&nbsp;</code>centre align</p>
+    <p><code>%D<span class="csg-function-parameter">n</span>%&nbsp;&nbsp;</code>decimal places; <span class="csg-function-parameter">n</span> gives the number</p>
+    <p><code>%DF%&nbsp;&nbsp;</code>floating format</p>
+    <p><code>%F%&nbsp;&nbsp;&nbsp;</code>free align</p>
+    <p><code>%H<span class="csg-function-parameter">n</span>%&nbsp;&nbsp;</code>highlight character; <span class="csg-function-parameter">n</span> gives the number</p>
+    <p><code>%JL%&nbsp;&nbsp;</code>justify left</p>
+    <p><code>%JR%&nbsp;&nbsp;</code>justify right</p>
+    <p><code>%L%&nbsp;&nbsp;&nbsp;</code>left align</p>
+    <p><code>%LC%&nbsp;&nbsp;</code>leading character format</p>
+    <p><code>%LCR%&nbsp;</code>LCR align</p>
+    <p><code>%P<span class="csg-function-parameter">n</span>%&nbsp;&nbsp;</code>page break: <span class="csg-function-parameter">n</span> gives the parameter, 0 for unconditional</p>
+    <p><code>%PC%&nbsp;&nbsp;</code>per cent character</p>
+    <p><code>%R%&nbsp;&nbsp;&nbsp;</code>right align</p>
+    <p><code>%TC%&nbsp;&nbsp;</code>trailing character format</p>
+    <p><code>%V%&nbsp;&nbsp;&nbsp;</code>cell is a number (value) cell</p>
+
+    <h2 id="Cell">PipeDream Cell Format</h2>
+    <p>
+        <code>
+            <span class="csg-function-parameter">construct</span> <span class="csg-function-parameter">text</span> <span class="csg-function-parameter">construct</span>
+            <span class="csg-function-parameter">text</span> &hellip; <span class="csg-function-parameter">ls</span>
+        </code>
+    </p>
+    <table border="0">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td><span class="csg-function-parameter">construct</span>&nbsp;&nbsp;</td>
+                <td>one of the constructs above;</td>
+            </tr>
+            <tr>
+                <td><span class="csg-function-parameter">text</span></td>
+                <td>ASCII characters being the cell content;</td>
+            </tr>
+            <tr>
+                <td><span class="csg-function-parameter">ls</span></td>
+                <td>line separator which can be <code>LF</code> or <code>CR,LF</code> or <code>LF,CR</code> or <code>CR</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Pictures</td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> PipeDream Printer Driver Editing</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="pictures.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="printerdriverediting.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

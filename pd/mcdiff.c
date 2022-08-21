@@ -129,7 +129,7 @@ wrch_h(
         ptr = toprow + 1;
         do { *ptr++ = *from; from += 2; } while(ptr <= midway);
 
-        do { *ptr++ = '\0'; } while(ptr <= baseline + 1);
+        do { *ptr++ = CH_NULL; } while(ptr <= baseline + 1);
     }
     else if(highlights_on & N_SUBSCRIPT)
     {
@@ -137,7 +137,7 @@ wrch_h(
         ptr = baseline + 1;
         do { *ptr-- = *from; from -=2; } while(ptr > midway);
 
-        do { *ptr-- = '\0'; } while(ptr >= toprow);
+        do { *ptr-- = CH_NULL; } while(ptr >= toprow);
     }
 
     print_complain(bbc_vdu(bbc_MultiPurpose));              /* start to redefine char */
@@ -172,19 +172,6 @@ clearmousebuffer(void)
 
 /******************************************************************************
 *
-* get Wimp colour for given PD colour
-*
-******************************************************************************/
-
-extern S32
-getcolour(
-    S32 colour)
-{
-    return(logcol(colour));
-}
-
-/******************************************************************************
-*
 * set background colour to specified colour
 * for things that are never inverted and
 * always printing using current foreground
@@ -192,10 +179,10 @@ getcolour(
 ******************************************************************************/
 
 extern void
-setbgcolour(
-    S32 colour)
+set_bg_colour_from_option(
+    _InVal_     COLOURS_OPTION_INDEX bg_colours_option_index)
 {
-    riscos_setcolour(logcol(colour), TRUE); /* bg */
+    riscos_set_bg_colour_from_wimp_colour_value(wimp_colour_value_from_option(bg_colours_option_index));
 }
 
 /******************************************************************************
@@ -207,10 +194,40 @@ setbgcolour(
 ******************************************************************************/
 
 extern void
-setfgcolour(
-    S32 colour)
+set_fg_colour_from_option(
+    _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index)
 {
-    riscos_setcolour(logcol(colour), FALSE); /* fg */
+    riscos_set_fg_colour_from_wimp_colour_value(wimp_colour_value_from_option(fg_colours_option_index));
+}
+
+/******************************************************************************
+*
+* set fg and bg colour to those specified
+* or the other way round if currently_inverted
+*
+******************************************************************************/
+
+extern void
+setcolours(
+    _In_          COLOURS_OPTION_INDEX fg_colours_option_index,
+    _In_          COLOURS_OPTION_INDEX bg_colours_option_index)
+{
+    if(currently_inverted)
+    {
+        if((fg_colours_option_index == COI_FORE)  &&  (bg_colours_option_index == COI_BACK))
+        {
+            fg_colours_option_index = COI_BACK;
+            bg_colours_option_index = COI_FORE;
+        }
+        else if((fg_colours_option_index == COI_BACK)  &&  (bg_colours_option_index == COI_FORE))
+        {
+            fg_colours_option_index = COI_FORE;
+            bg_colours_option_index = COI_BACK;
+        }
+    }
+
+    set_bg_colour_from_option(bg_colours_option_index);
+    set_fg_colour_from_option(fg_colours_option_index);
 }
 
 #ifdef HAS_FUNNY_CHARACTERS_FOR_WRCH
@@ -443,7 +460,7 @@ wrch_undefinefunnies(void)
         if(chardefined & bitmask)
         {
             trace_1(TRACE_APP_PD4, "undefining char %d", oldchardef[bitshift][1]);
-            wimpt_safe(os_writeN, &oldchardef[bitshift][0], 10));
+            void_WrapOsErrorReporting(os_writeN, &oldchardef[bitshift][0], 10));
             chardefined ^= bitmask;
         }
 
@@ -635,19 +652,19 @@ init_mc(void)
     setlocale(LC_CTYPE, DefaultLocale_STR);
     /* use LC_ALL when we know what it does */
 
-    status_consume(add_to_list(&first_key,  HOME_KEY,       "\031" "ctc" "\x0D"));  /* Top Of Column */
-    status_consume(add_to_list(&first_key, CHOME_KEY,       "\031" "ctc" "\x0D"));  /* Top Of Column */
+    status_consume(add_to_list(&first_key,  KMAP_FUNC_HOME,       "\031" "ctc" "\x0D"));  /* Top Of Column */
+    status_consume(add_to_list(&first_key, KMAP_FUNC_CHOME,       "\031" "ctc" "\x0D"));  /* Top Of Column */
 
-    status_consume(add_to_list(&first_key,  END_KEY,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
-    status_consume(add_to_list(&first_key, CEND_KEY,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
+    status_consume(add_to_list(&first_key,  KMAP_FUNC_END,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
+    status_consume(add_to_list(&first_key, KMAP_FUNC_CEND,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
 
-    /*status_consume(add_to_list(&first_key,  CDELETE_KEY,    "\031" "crb" "\x0D"));*/  /* Delete Character Left */
-    /*status_consume(add_to_list(&first_key, CSDELETE_KEY,    "\031" "g"   "\x0D"));*/  /* Delete Character Right */
+    /*status_consume(add_to_list(&first_key,  KMAP_FUNC_CDELETE,    "\031" "crb" "\x0D"));*/  /* Delete Character Left */
+    /*status_consume(add_to_list(&first_key, KMAP_FUNC_CSDELETE,    "\031" "g"   "\x0D"));*/  /* Delete Character Right */
 
-    status_consume(add_to_list(&first_key,   BACKSPACE_KEY, "\031" "crb" "\x0D"));  /* Delete Character Left */
-    status_consume(add_to_list(&first_key,  SBACKSPACE_KEY, "\031" "g"   "\x0D"));  /* Delete Character Right */
-    /*status_consume(add_to_list(&first_key,  CBACKSPACE_KEY, "\031" "crb" "\x0D"));*/  /* Delete Character Left */
-    /*status_consume(add_to_list(&first_key, CSBACKSPACE_KEY, "\031" "g"   "\x0D"));*/  /* Delete Character Right */
+    status_consume(add_to_list(&first_key,   KMAP_FUNC_BACKSPACE, "\031" "crb" "\x0D"));  /* Delete Character Left */
+    status_consume(add_to_list(&first_key,  KMAP_FUNC_SBACKSPACE, "\031" "g"   "\x0D"));  /* Delete Character Right */
+    /*status_consume(add_to_list(&first_key,  KMAP_FUNC_CBACKSPACE, "\031" "crb" "\x0D"));*/  /* Delete Character Left */
+    /*status_consume(add_to_list(&first_key, KMAP_FUNC_CSBACKSPACE, "\031" "g"   "\x0D"));*/  /* Delete Character Right */
 
     mc__initialised = TRUE;
 }
@@ -703,36 +720,6 @@ scrnheight(void)
 
 /******************************************************************************
 *
-* set fg and bg colour to those specified
-* or the other way round if currently_inverted
-*
-******************************************************************************/
-
-extern void
-setcolour(
-    S32 fore,
-    S32 back)
-{
-    if(currently_inverted)
-    {
-        if(fore == FORE  &&  back == BACK)
-        {
-            fore = BACK;
-            back = FORE;
-        }
-        else if(fore == BACK  &&  back == FORE)
-        {
-            fore = FORE;
-            back = BACK;
-        }
-    }
-
-    riscos_setcolour(logcol(back), TRUE);
-    riscos_setcolour(logcol(fore), FALSE);
-}
-
-/******************************************************************************
-*
 * output string in current highlight state
 *
 * returns number of characters printed
@@ -748,11 +735,11 @@ stringout(
     char ch;
     len = strlen(str);
     #if TRUE
-    while((ch = *str++) != '\0')
+    while((ch = *str++) != CH_NULL)
         sndchr(ch);
     #else
     if(highlights_on)
-        while((ch = *str++) != '\0')
+        while((ch = *str++) != CH_NULL)
             wrch_h(ch);
     else
         print_complain(os_write0, str));

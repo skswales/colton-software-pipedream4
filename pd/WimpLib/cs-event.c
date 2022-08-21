@@ -9,100 +9,176 @@
 
 #include "include.h"
 
-static BOOL
-event__default_process(wimp_eventstr * e)
+static struct _event_statics
 {
-    switch(e->e)
+    BOOL       recreatepending;
+
+    struct _event_menu_click_cache_data
     {
-    case wimp_ENULL:
-        /* machine idle: say so */
-        tracef0("unclaimed idle event");
-        return(TRUE);
-
-
-    case wimp_EOPEN:
-        trace_0(TRACE_RISCOS_HOST, "unclaimed open request - doing open");
-        wimpt_complain(wimp_open_wind(&e->data.o));
-        break;
-
-
-    case wimp_ECLOSE:
-        trace_0(TRACE_RISCOS_HOST, "unclaimed close request - doing close");
-        wimpt_complain(wimp_close_wind(e->data.close.w));
-        break;
-
-
-    case wimp_EREDRAW:
-        {
-        wimp_redrawstr r;
-        BOOL more;
-        trace_0(TRACE_RISCOS_HOST, "unclaimed redraw request - doing redraw");
-        r.w = e->data.redraw.w;
-        if(!wimpt_complain(wimp_redraw_wind(&r, &more)))
-            while(more)
-                if(wimpt_complain(wimp_get_rectangle(&r, &more)))
-                    more = FALSE;
-        }
-        break;
-
-
-    case wimp_EKEY:
-        wimpt_complain(wimp_processkey(e->data.key.chcode));
-        break;
-
-
-    case wimp_ESEND:
-    case wimp_ESENDWANTACK:
-        trace_1(TRACE_RISCOS_HOST, "unclaimed message %s", report_wimp_event(e->e, &e->data));
-        switch(e->data.msg.hdr.action)
-        {
-        case wimp_MCLOSEDOWN:
-            exit(EXIT_SUCCESS);
-
-        default:
-            break;
-        }
-        break;
-
-    default:
-        trace_1(TRACE_RISCOS_HOST, "unclaimed event %s", report_wimp_event(e->e, &e->data));
-        break;
+        BOOL            valid;
+        int             x;
+        int             y;
+        HOST_WND        window_handle;
+        int             icon_handle;
     }
+    menuclick;
 
-    return(FALSE);
+    struct _event_submenu_opening_cache_data
+    {
+        BOOL            valid;
+        wimp_menuptr    m;
+        int             x;
+        int             y;
+    }
+    submenu;
 }
+event_statics;
+
+static BOOL
+event__default_process(
+    const int event_code,
+    WimpPollBlock * const event_data);
 
 static wimp_menuptr
 event_read_submenudata(void);
 
 #include "event.c"
 
+static BOOL
+event__default_process_Redraw_Window_Request(
+    const WimpRedrawWindowRequestEvent * const redraw_window_request)
+{
+    WimpRedrawWindowBlock redraw_window_block;
+    BOOL more;
+
+    trace_0(TRACE_RISCOS_HOST, "unclaimed redraw request - doing redraw");
+
+    redraw_window_block.window_handle = redraw_window_request->window_handle;
+    if(wimpt_complain(tbl_wimp_redraw_window(&redraw_window_block, &more)))
+        more = FALSE;
+
+    while(more)
+    {
+        /* nothing to redraw */
+
+        if(wimpt_complain(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
+            more = FALSE;
+    }
+
+    return(FALSE);
+}
+
+static BOOL
+event__default_process_Open_Window_Request(
+    /*poked*/ WimpOpenWindowRequestEvent * const open_window_request)
+{
+    trace_0(TRACE_RISCOS_HOST, "unclaimed open request - doing open");
+
+    (void) wimpt_complain(winx_open_window(open_window_request));
+
+    return(FALSE);
+}
+
+static BOOL
+event__default_process_Close_Window_Request(
+    const WimpCloseWindowRequestEvent * const close_window_request)
+{
+    trace_0(TRACE_RISCOS_HOST, "unclaimed close request - doing close");
+
+    (void) wimpt_complain(winx_close_window(close_window_request->window_handle));
+
+    return(FALSE);
+}
+
+static BOOL
+event__default_process_Key_Pressed(
+    const WimpKeyPressedEvent * const key_pressed)
+{
+    (void) wimpt_complain(wimp_processkey(key_pressed->key_code));
+
+    return(FALSE);
+}
+
+static BOOL
+event__default_process_User_Message(
+    const WimpUserMessageEvent * const user_message)
+{
+    switch(user_message->hdr.action_code)
+    {
+    case wimp_MCLOSEDOWN:
+        exit(EXIT_SUCCESS);
+
+    default:
+        return(FALSE);
+    }
+}
+
+static BOOL
+event__default_process(
+    const int event_code,
+    WimpPollBlock * const event_data)
+{
+    switch(event_code)
+    {
+    case Wimp_ENull:
+        /* machine idle: say so */
+        tracef0("unclaimed idle event");
+        return(TRUE);
+
+    case Wimp_ERedrawWindow:
+        return(event__default_process_Redraw_Window_Request(&event_data->redraw_window_request));
+
+    case Wimp_EOpenWindow:
+        return(event__default_process_Open_Window_Request(&event_data->open_window_request));
+
+    case Wimp_ECloseWindow:
+        return(event__default_process_Close_Window_Request(&event_data->close_window_request));
+
+    case Wimp_EKeyPressed:
+        return(event__default_process_Key_Pressed(&event_data->key_pressed));
+
+    case Wimp_EUserMessage:
+    case Wimp_EUserMessageRecorded:
+        trace_1(TRACE_RISCOS_HOST, "unclaimed message %s", report_wimp_event(event_code, event_data));
+        return(event__default_process_User_Message(&event_data->user_message));
+
+    default:
+        trace_1(TRACE_RISCOS_HOST, "unclaimed event %s", report_wimp_event(event_code, event_data));
+        return(FALSE);
+    }
+}
+
 /*
 SKS: read the menu recreation pending state
 */
 
+_Check_return_
 extern BOOL
 event_is_menu_recreate_pending(void)
 {
-    return(event_.recreatepending);
+    return(event_statics.recreatepending);
 }
 
 /*
 SKS: for dbox/win to zap pendingrecreate
 */
 
+_Check_return_
+_Ret_maybenull_
 extern os_error *
 event_create_menu(wimp_menustr * m, int x, int y)
 {
-    event_.recreatepending = FALSE;
+    event_statics.recreatepending = FALSE;
 
     return(wimp_create_menu(m, x, y));
 }
 
+_Check_return_
+_Ret_maybenull_
 extern os_error *
 event_create_submenu(wimp_menustr * m, int x, int y)
 {
-    event_.recreatepending = FALSE;
+    event_statics.recreatepending = FALSE;
 
     return(wimp_create_submenu(m, x, y));
 }
@@ -115,25 +191,25 @@ static wimp_menuptr
 event_read_submenudata(void)
 {
 #if TRACE
-    if(!event_.submenu.valid)
+    if(!event_statics.submenu.valid)
         werr(FALSE, "reading invalid submenu data");
 #endif
 
-    return(event_.submenu.m);
+    return(event_statics.submenu.m);
 }
 
 extern void
 event_read_submenupos(
-    _Out_ int * const xp,
-    _Out_ int * const yp)
+    _Out_ int * const p_x,
+    _Out_ int * const p_y)
 {
 #if TRACE
-    if(!event_.submenu.valid)
+    if(!event_statics.submenu.valid)
         werr(FALSE, "reading invalid submenu data");
 #endif
 
-    *xp = event_.submenu.x;
-    *yp = event_.submenu.y;
+    *p_x = event_statics.submenu.x;
+    *p_y = event_statics.submenu.y;
 }
 
 /*
@@ -142,21 +218,21 @@ SKS: read the cache of menu click data - only valid during menu makers!
 
 extern void
 event_read_menuclickdata(
-    _Out_ int * const xp,
-    _Out_ int * const yp,
-    _Out_ wimp_w * const wp,
-    _Out_ wimp_i * const ip)
+    _Out_ int * const p_x,
+    _Out_ int * const p_y,
+    _Out_ HOST_WND * const p_window_handle,
+    _Out_ int * const p_icon_handle)
 {
 #if TRACE
-    if(!event_.menuclick.valid)
+    if(!event_statics.menuclick.valid)
         werr(FALSE, "reading invalid menuclick data");
 #endif
 
-    *xp = event_.menuclick.x;
-    *yp = event_.menuclick.y;
+    *p_x = event_statics.menuclick.x;
+    *p_y = event_statics.menuclick.y;
 
-    *wp = event_.menuclick.w;
-    *ip = event_.menuclick.i;
+    *p_window_handle = event_statics.menuclick.window_handle;
+    *p_icon_handle   = event_statics.menuclick.icon_handle;
 }
 
 /* end of cs-event.c */

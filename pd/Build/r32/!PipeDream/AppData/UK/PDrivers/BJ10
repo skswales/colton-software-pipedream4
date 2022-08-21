@@ -1,0 +1,149 @@
+	PipeDream printer drivers
+
+	This driver is for the BJ10
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Copyright (C) 1991 Colton Software
+
+				Description
+
+PON	ESC "6"			Printer on string
+POFF				Printer off string 
+EP				End of page string
+LF	Y			Linefeeds (on)
+
+
+	Highlights
+
+	On	Off	Off at CR?	Description
+
+H1	ESC "-" 1	ESC "-" 0	Y	Underlined text
+H2	ESC "G"	ESC "H"	Y	Bold text
+H3			N
+H4			Y	Italics
+H5	ESC "S" 1	ESC "T"	Y	Subscript downup
+H6	ESC "S" 0	ESC "T"	Y	Superscript updown
+H7	15	18	N	Alternative font
+H8			N	User defined (NLQ)
+
+
+	ISO Latin 1 translations
+
+"["	"["			bracket left
+"\"	"\"			backslash
+"]"	"]"			bracket right
+"^"	"^"			circumflex
+"`"	"`"			grave
+"{"	"{"			brace left
+"|"	"|"			solidus
+"}"	"}"			brace right
+"~"	"~"			tilde
+" "	255			non-break space
+"¡"	173			inverted exclamation
+"¢"	155			cent
+"£"	156			pound
+"¤"	" "			currency symbol
+"¥"	157			yen
+"¦"	" "			broken vertical bar
+"§"	" "   			section mark
+"¨"	" "			dieresis
+				no copyright symbol
+"ª"	166			feminine ordinal
+"«"	174			guillemot left
+"¬"	170			logical not
+"­"	45			hyphen
+				no registration mark
+				no macron
+"°"	248			ring
+"±"	241			plus/minus
+"²"	253			superscript two
+				no superscript three
+"´"	39			acute
+"µ"	230			mu
+				no paragraph mark
+"·"	250			centred period
+				no cedilla
+				no superscript one
+"º"	167			masculine ordinal
+"»"	175			guillemot right
+"¼"	172			one quarter
+"½"	171			one half
+"¾"	" "			no three quarters
+"¿"	168			inverted query
+"À"	"A"			faked Capital A grave
+"Á"	"A"			faked Capital A acute
+"Â"	"A"			faked Capital A circumflex
+"Ã"	"A"			faked Capital A tilde
+"Ä"	142			Capital A dieresis
+"Å"	143			Capital A ring
+"Æ"	146			Capital AE
+"Ç"	128			Capital C cedilla
+"È"	"E"			faked Capital E grave
+"É"	144			Capital E acute
+"Ê"	"E"			faked Capital E circumflex
+"Ë"	"E"			faked Capital E dieresis
+"Ì"	"I"			faked Capital I grave
+"Í"	"I"			faked Capital I acute
+"Î"	"I"			faked Capital I circumflex
+"Ï"	"I"			faked Capital I dieresis
+"Ð"	" "			no Capital Eth
+"Ñ"	165			Capital N tilde
+"Ò"	"O"			faked Capital O grave
+"Ó"	"O"			faked Capital O acute
+"Ô"	"O"			faked Capital O circumflex
+"Õ"	"O"			faked Capital O tilde
+"Ö"	153			Capital O dieresis
+"×"	"*"			faked multiply
+"Ø"	"O" 8 "/"			Capital O slash
+"Ù"	"U"			faked Capital U grave
+"Ú"	"U"			faked Capital U acute
+"Û"	"U"			faked Capital U circumflex
+"Ü"	154			Capital U dieresis
+"Ý"	"Y"			faked Capital Y acute
+"Þ"	" "			no Capital Thorn
+"ß"	225			german double s
+"à"	133			a grave
+"á"	160			a acute
+"â"	131			a circumflex
+"ã"	"a" 8 "~"			a tilde
+"ä"	132			a dieresis
+"å"	134			a ring
+"æ"	145			ae
+"ç"	135			c cedilla
+"é"	130			e acute
+"è"	138			e grave
+"ê"	136			e circumflex
+"ë"	137			e dieresis
+"ì"	141			i grave
+"í"	161			i acute
+"î"	140			i circumflex
+"ï"	139			i dieresis
+"ð"	" "			no eth
+"ñ"	164			n tilde
+"ò"	149			o grave
+"ó"	162			o acute
+"ô"	147			o circumflex
+"õ"	"o" 8 "~"			o tilde
+"ö"	148			o dieresis
+"÷"	246			divide
+"ø"	"o" 8 "/"			o slash
+"ù"	151			u grave
+"ú"	163			u acute
+"û"	150			u circumflex
+"ü"	129			u dieresis
+"ý"	"y"			faked y acute
+"þ"	" "			no thorn
+"ÿ"	152			y dieresis
+
+
+	Microspacing
+
+HMIP				HMI prefix
+HMIS				HMI suffix
+HMIO				HMI offset
+
+
+	End of PipeDream printer driver

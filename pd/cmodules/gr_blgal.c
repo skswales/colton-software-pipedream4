@@ -47,9 +47,9 @@ internal functions
 
 typedef struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE
 {
-    P_GR_CHART       cp;
-    wimp_w          w;
-    const wimp_i *  icons;
+    P_GR_CHART      cp;
+    HOST_WND        window_handle;
+    const int *     icon_handles;
     GR_CHARTTYPE    charttype;
     P_GR_CHARTEDITOR cep;
     S32             reflect_modify;
@@ -260,16 +260,16 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
     } /*block*/
 
     res = (NULL != currname)
-        ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
-        : file_find_on_path(filename, elemof32(filename), leafname);
+        ? file_find_on_path_or_relative(filename, elemof32(filename), file_get_search_path(), leafname, currname)
+        : file_find_on_path(filename, elemof32(filename), file_get_search_path(), leafname);
 
     if(res <= 0)
     {
         (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id + 1), eseries_no, epoint_no); /* "markers.S1P2" */
 
         res = (NULL != currname)
-            ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
-            : file_find_on_path(filename, elemof32(filename), leafname);
+            ? file_find_on_path_or_relative(filename, elemof32(filename), file_get_search_path(), leafname, currname)
+            : file_find_on_path(filename, elemof32(filename), file_get_search_path(), leafname);
     }
 
     if(res <= 0)
@@ -345,8 +345,8 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
             (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), eseries_no); /* "markers.S1 */
 
             res = (NULL != currname)
-                ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
-                : file_find_on_path(filename, elemof32(filename), leafname);
+                ? file_find_on_path_or_relative(filename, elemof32(filename), file_get_search_path(), leafname, currname)
+                : file_find_on_path(filename, elemof32(filename), file_get_search_path(), leafname);
 
             if(res <= 0)
             {
@@ -356,8 +356,8 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
                 (void) xsnprintf(leafname, elemof32(leafname), string_lookup(file_id), 1);
 
                 res = (NULL != currname)
-                    ? file_find_on_path_or_relative(filename, elemof32(filename), leafname, currname)
-                    : file_find_on_path(filename, elemof32(filename), leafname);
+                    ? file_find_on_path_or_relative(filename, elemof32(filename), file_get_search_path(), leafname, currname)
+                    : file_find_on_path(filename, elemof32(filename), file_get_search_path(), leafname);
 
                 if(res <= 0)
                     return(0);
@@ -638,93 +638,89 @@ static void
 gr_chartedit_gallery_barlinescatch_decode(
     P_GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state /*inout*/)
 {
-    P_GR_CHART cp;
-    wimp_w         w;
-    const wimp_i * icons;
-    wimp_i         i;
+    P_GR_CHART cp = state->cp;
+    const HOST_WND window_handle = state->window_handle;
+    const int * const icon_handles = state->icon_handles;
+    int icon_handle;
     STATUS res;
 
-    cp    = state->cp;
-    w     = state->w;
-    icons = state->icons;
-
-    if(icons)
+    if(NULL != icon_handles)
     {
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
-        if(i)
-            win_checkdouble(w, i,
-                            &state->barch.slot_width_percentage,
-                            &state->barch_modified,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
+        if(icon_handle)
+            winf_checkdouble(window_handle, icon_handle,
+                             &state->barch.slot_width_percentage,
+                             &state->barch_modified,
+                             &pct_min_limit, &pct_max_limit, pct_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
-        if(i && !cp->d3.bits.on)
-            win_checkdouble(w, i,
-                            &cp->barch.slot_overlap_percentage,
-                            NULL,
-                            &double_m100, &double_100, pct_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
+        if(icon_handle && !cp->d3.bits.on)
+            winf_checkdouble(window_handle, icon_handle,
+                             &cp->barch.slot_overlap_percentage,
+                             NULL,
+                             &double_m100, &double_100, pct_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_WIDTH];
-        if(i)
-            win_checkdouble(w, i,
-                            &state->linech.slot_width_percentage,
-                            &state->linech_modified,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_WIDTH];
+        if(icon_handle)
+            winf_checkdouble(window_handle, icon_handle,
+                             &state->linech.slot_width_percentage,
+                             &state->linech_modified,
+                             &pct_min_limit, &pct_max_limit, pct_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
-        if(i && !cp->d3.bits.on)
-            win_checkdouble(w, i,
-                            &cp->linech.slot_shift_percentage,
-                            NULL,
-                            &double_m100, &double_100, pct_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
+        if(icon_handle && !cp->d3.bits.on)
+            winf_checkdouble(window_handle, icon_handle,
+                             &cp->linech.slot_shift_percentage,
+                             NULL,
+                             &double_m100, &double_100, pct_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BARLINE_3D_DEPTH];
-        if(i && cp->d3.bits.on)
-            win_checkdouble(w , i,
-                            &state->barlinech.slot_depth_percentage,
-                            &state->barlinech_modified,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BARLINE_3D_DEPTH];
+        if(icon_handle && cp->d3.bits.on)
+            winf_checkdouble(window_handle, icon_handle,
+                             &state->barlinech.slot_depth_percentage,
+                             &state->barlinech_modified,
+                             &pct_min_limit, &pct_max_limit, pct_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
-        if(i)
-            win_checkdouble(w, i,
-                            &state->scatch.width_percentage,
-                            &state->scatch_modified,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
+        if(icon_handle)
+            winf_checkdouble(window_handle, icon_handle,
+                             &state->scatch.width_percentage,
+                             &state->scatch_modified,
+                             &pct_min_limit, &pct_max_limit, pct_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
-        if(i && cp->d3.bits.on)
-            win_checkdouble(w, i,
-                            &cp->d3.turn,
-                            NULL,
-                            &turn_min_limit, &turn_max_limit, turn_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
+        if(icon_handle && cp->d3.bits.on)
+            winf_checkdouble(window_handle, icon_handle,
+                             &cp->d3.turn,
+                             NULL,
+                             &turn_min_limit, &turn_max_limit, turn_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
-        if(i && cp->d3.bits.on)
-            win_checkdouble(w, i,
-                            &cp->d3.droop,
-                            NULL,
-                            &droop_min_limit, &droop_max_limit, droop_decplaces);
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
+        if(icon_handle && cp->d3.bits.on)
+            winf_checkdouble(window_handle, icon_handle,
+                             &cp->d3.droop,
+                             NULL,
+                             &droop_min_limit, &droop_max_limit, droop_decplaces);
     }
     else if(state->charttype == GR_CHARTTYPE_PIE)
     {
-        i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL;
-        if(i)
-            win_checkdouble(w, i,
-                            &state->piechdispl.radial_displacement,
-                            &state->piechdispl_modified,
-                            &pct_radial_dsp_min_limit,
-                            &pct_radial_dsp_max_limit,
-                             pct_radial_dsp_decplaces);
+        icon_handle = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL;
+        if(icon_handle)
+            winf_checkdouble(window_handle, icon_handle,
+                             &state->piechdispl.radial_displacement,
+                             &state->piechdispl_modified,
+                             &pct_radial_dsp_min_limit,
+                             &pct_radial_dsp_max_limit,
+                              pct_radial_dsp_decplaces);
 
-        i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL;
-        if(i)
-            win_checkdouble(w, i,
-                            &state->pie_xtra.start_heading_degrees,
-                            &state->pie_xtra_modified,
-                            &pie_heading_min_limit,
-                            &pie_heading_max_limit,
-                             pie_heading_decplaces);
+        icon_handle = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL;
+        if(icon_handle)
+            winf_checkdouble(window_handle, icon_handle,
+                             &state->pie_xtra.start_heading_degrees,
+                             &state->pie_xtra_modified,
+                             &pie_heading_min_limit,
+                             &pie_heading_max_limit,
+                              pie_heading_decplaces);
     }
 
     if(state->reflect_modify)
@@ -990,154 +986,150 @@ static void
 gr_chartedit_gallery_barlinescatch_encode(
     P_GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state /*const*/)
 {
-    P_GR_CHART      cp;
-    wimp_w         w;
-    const wimp_i * icons;
-    wimp_i         i;
-    void (* unfadeproc2d) (wimp_w w, wimp_i i);
-    void (* unfadeproc3d) (wimp_w w, wimp_i i);
-    void (* unfadeprocRO) (wimp_w w, wimp_i i);
-
-    cp    = state->cp;
-    w     = state->w;
-    icons = state->icons;
+    P_GR_CHART cp = state->cp;
+    const HOST_WND window_handle = state->window_handle;
+    const int * const icon_handles = state->icon_handles;
+    int icon_handle;
+    void (* unfadeproc2d) (_HwndRef_ HOST_WND window_handle, _InVal_ int icon_handle);
+    void (* unfadeproc3d) (_HwndRef_ HOST_WND window_handle, _InVal_ int icon_handle);
+    void (* unfadeprocRO) (_HwndRef_ HOST_WND window_handle, _InVal_ int icon_handle);
 
     /* on if 2-D */
-    unfadeproc2d = cp->d3.bits.on ? win_fadefield : win_unfadefield;
+    unfadeproc2d = cp->d3.bits.on ? winf_fadefield : winf_unfadefield;
 
     /* on if 3-D */
-    unfadeproc3d = cp->d3.bits.on ? win_unfadefield : win_fadefield;
+    unfadeproc3d = cp->d3.bits.on ? winf_unfadefield : winf_fadefield;
 
     /* on iff overlay present */
-    unfadeprocRO = (cp->axes_idx_max > 0) ? win_unfadefield : win_fadefield;
+    unfadeprocRO = (cp->axes_idx_max > 0) ? winf_unfadefield : winf_fadefield;
 
     if(state->charttype == GR_CHARTTYPE_PIE)
     {
         U32 pie_idx;
 
-        win_setdouble(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL,
-                      &state->piechdispl.radial_displacement, pct_radial_dsp_decplaces);
+        winf_setdouble(window_handle, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL,
+                       &state->piechdispl.radial_displacement, pct_radial_dsp_decplaces);
 
-        win_setonoff(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_ANTICLOCKWISE,
-                     state->pie_xtra.anticlockwise);
+        winf_setonoff(window_handle, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_ANTICLOCKWISE,
+                      state->pie_xtra.anticlockwise);
 
-        win_setdouble(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL,
-                      &state->pie_xtra.start_heading_degrees, pie_heading_decplaces);
+        winf_setdouble(window_handle, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL,
+                       &state->pie_xtra.start_heading_degrees, pie_heading_decplaces);
 
         for(pie_idx = 0; pie_idx < elemof32(pie_start_headings); ++pie_idx)
-            win_setonoff(w, (wimp_i) pie_idx + GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000,
-                         (state->pie_xtra.start_heading_degrees == pie_start_headings[pie_idx]));
+            winf_setonoff(window_handle, pie_idx + GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000,
+                          (state->pie_xtra.start_heading_degrees == pie_start_headings[pie_idx]));
 
         return;
     }
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
-    if(i)
-        win_setdouble(w, i, &state->barch.slot_width_percentage, pct_decplaces);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
+    if(icon_handle)
+        winf_setdouble(window_handle, icon_handle, &state->barch.slot_width_percentage, pct_decplaces);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
-    if(i)
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
+    if(icon_handle)
     {
-        (* unfadeproc2d) (w, i - 2); /* triplet field */
-        (* unfadeproc2d) (w, i - 1);
-        (* unfadeproc2d) (w, i);
+        (* unfadeproc2d) (window_handle, icon_handle - 2); /* triplet field */
+        (* unfadeproc2d) (window_handle, icon_handle - 1);
+        (* unfadeproc2d) (window_handle, icon_handle);
 
-        win_setdouble(w, i, &cp->barch.slot_overlap_percentage, pct_decplaces);
+        winf_setdouble(window_handle, icon_handle, &cp->barch.slot_overlap_percentage, pct_decplaces);
     }
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_STACK_PICT];
-    if(i)
-        win_setonoff(w, i, state->barch.bits.pictures_stacked);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_STACK_PICT];
+    if(icon_handle)
+        winf_setonoff(window_handle, icon_handle, state->barch.bits.pictures_stacked);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_WIDTH];
-    if(i)
-        win_setdouble(w, i, &state->linech.slot_width_percentage, pct_decplaces);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_WIDTH];
+    if(icon_handle)
+        winf_setdouble(window_handle, icon_handle, &state->linech.slot_width_percentage, pct_decplaces);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
-    if(i)
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
+    if(icon_handle)
     {
-        (* unfadeproc2d) (w, i - 2); /* triplet field */
-        (* unfadeproc2d) (w, i - 1);
-        (* unfadeproc2d) (w, i);
+        (* unfadeproc2d) (window_handle, icon_handle - 2); /* triplet field */
+        (* unfadeproc2d) (window_handle, icon_handle - 1);
+        (* unfadeproc2d) (window_handle, icon_handle);
 
-        win_setdouble(w, i, &cp->linech.slot_shift_percentage, pct_decplaces);
+        winf_setdouble(window_handle, icon_handle, &cp->linech.slot_shift_percentage, pct_decplaces);
     }
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BARLINE_3D_DEPTH];
-    if(i)
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BARLINE_3D_DEPTH];
+    if(icon_handle)
     {
-        (* unfadeproc3d) (w, i - 2); /* triplet field */
-        (* unfadeproc3d) (w, i - 1);
-        (* unfadeproc3d) (w, i);
+        (* unfadeproc3d) (window_handle, icon_handle - 2); /* triplet field */
+        (* unfadeproc3d) (window_handle, icon_handle - 1);
+        (* unfadeproc3d) (window_handle, icon_handle);
 
-        win_setdouble(w, i, &state->barlinech.slot_depth_percentage, pct_decplaces);
+        winf_setdouble(window_handle, icon_handle, &state->barlinech.slot_depth_percentage, pct_decplaces);
     }
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
-    if(i)
-        win_setdouble(w, i, &state->scatch.width_percentage, pct_decplaces);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
+    if(icon_handle)
+        winf_setdouble(window_handle, icon_handle, &state->scatch.width_percentage, pct_decplaces);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ON];
-    if(i)
-        win_setonoff(w, i, cp->d3.bits.on);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ON];
+    if(icon_handle)
+        winf_setonoff(window_handle, icon_handle, cp->d3.bits.on);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
-    if(i)
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
+    if(icon_handle)
     {
-        (* unfadeproc3d) (w, i - 2); /* triplet field */
-        (* unfadeproc3d) (w, i - 1);
-        (* unfadeproc3d) (w, i);
+        (* unfadeproc3d) (window_handle, icon_handle - 2); /* triplet field */
+        (* unfadeproc3d) (window_handle, icon_handle - 1);
+        (* unfadeproc3d) (window_handle, icon_handle);
 
-        win_setdouble(w, i, &cp->d3.turn, turn_decplaces);
+        winf_setdouble(window_handle, icon_handle, &cp->d3.turn, turn_decplaces);
     }
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
-    if(i)
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
+    if(icon_handle)
     {
-        (* unfadeproc3d) (w, i - 2); /* triplet field */
-        (* unfadeproc3d) (w, i - 1);
-        (* unfadeproc3d) (w, i);
+        (* unfadeproc3d) (window_handle, icon_handle - 2); /* triplet field */
+        (* unfadeproc3d) (window_handle, icon_handle - 1);
+        (* unfadeproc3d) (window_handle, icon_handle);
 
-        win_setdouble(w, i, &cp->d3.droop, droop_decplaces);
+        winf_setdouble(window_handle, icon_handle, &cp->d3.droop, droop_decplaces);
     }
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
-    if(i)
-        (* unfadeprocRO) (w, i);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
+    if(icon_handle)
+        (* unfadeprocRO) (window_handle, icon_handle);
 
     /* tristate section */
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CUMULATIVE];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_cumulative);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CUMULATIVE];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_cumulative);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_POINT_VARY];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_point_vary);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_POINT_VARY];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_point_vary);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_FILL_AXIS];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_fill_axis);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_FILL_AXIS];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_fill_axis);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BEST_FIT];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_best_fit);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BEST_FIT];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_best_fit);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_JOIN_LINES];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_join_lines);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_JOIN_LINES];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_join_lines);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_STACKED];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_stacked);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_STACKED];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_stacked);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_PICTURES];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_pictures);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_PICTURES];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_pictures);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CATEG_X_VAL];
-    if(i)
-        riscos_tristate_set(w, i, state->bits.tristate_categ_x_val);
+    icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CATEG_X_VAL];
+    if(icon_handle)
+        riscos_tristate_set(window_handle, icon_handle, state->bits.tristate_categ_x_val);
 }
 
 /******************************************************************************
@@ -1266,17 +1258,17 @@ gr_chartedit_gallery_barlinescatch_init(
 
     if(*p_dbox)
     {
-        wimp_w w = dbox_syshandle(*p_dbox);
-        wimp_wstate wstate;
-        wimp_eventstr e;
+        const HOST_WND window_handle = dbox_window_handle(*p_dbox);
+        WimpGetWindowStateBlock window_state;
 
-        wimpt_safe(wimp_get_wind_state(w, &wstate));
-        wstate.o.behind = (wimp_w) -1; /* force to the front */
-
-        /* send it an open message */
-        e.data.o = wstate.o;
-        e.data.o.w = w;
-        wimpt_safe(wimp_sendwmessage(wimp_EOPEN, (wimp_msgstr *) &e.data.o, w, (wimp_i) -1));
+        window_state.window_handle = window_handle;
+        if(NULL == WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        {   /* send it an Open_Window_Request message */
+            wimp_eventstr e;
+            memcpy32(&e.data.o, &window_state, sizeof32(WimpOpenWindowRequestEvent));
+            e.data.o.behind = (wimp_w) -1; /* force this window to the front */
+            void_WrapOsErrorReporting(wimp_send_message_to_window(Wimp_EOpenWindow, &e.data, window_handle, -1));
+        } /*block*/
 
         return(0);
     }
@@ -1291,7 +1283,7 @@ gr_chartedit_gallery_barlinescatch_init(
 
     dbox_show(d);
 
-    state->w  = dbox_syshandle(d);
+    state->window_handle = dbox_window_handle(d);
     state->cep = cep;
     state->cp  = gr_chart_cp_from_ch(cep->ch);
 
@@ -1305,14 +1297,11 @@ gr_chartedit_gallery_barlinescatch_process(
     P_GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state /*inout*/,
     dbox_field f)
 {
-    P_GR_CHART      cp;
-    wimp_w         w;
-    const wimp_i * icons;
-    wimp_i         i;
-
-    cp    = state->cp;
-    w     = state->w;
-    icons = state->icons;
+    const int hit_icon_handle = dbox_field_to_icon_handle(d, f);
+    P_GR_CHART cp = state->cp;
+    const HOST_WND window_handle = state->window_handle;
+    const int * const icon_handles = state->icon_handles;
+    int icon_handle;
 
     /* adjusters all modify but rebuild at end */
 
@@ -1322,29 +1311,33 @@ gr_chartedit_gallery_barlinescatch_process(
         return;
     }
 
-    if(icons)
+    if(NULL != icon_handles)
     {
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
-        if(i && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_WIDTH];
+        if(icon_handle &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &state->barch.slot_width_percentage,
                             &double_1,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces))
+                            &pct_min_limit, &pct_max_limit,
+                             pct_decplaces))
         {
             state->barch_modified = 1;
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
-        if(i && !cp->d3.bits.on && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_2D_OVERLAP];
+        if(icon_handle && !cp->d3.bits.on &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &cp->barch.slot_overlap_percentage,
                             &double_1,
-                            &double_m100, &double_100, pct_decplaces))
+                            &double_m100, &double_100,
+                             pct_decplaces))
             return;
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_STACK_PICT];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BAR_STACK_PICT];
+        if(icon_handle && (icon_handle == f))
         {
-            state->barch.bits.pictures_stacked = win_getonoff(w, f);
+            state->barch.bits.pictures_stacked = winf_getonoff(window_handle, f);
             state->barch_modified = 1;
 
             /* if changed then assume we want pictures too */
@@ -1354,66 +1347,78 @@ gr_chartedit_gallery_barlinescatch_process(
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_WIDTH];
-        if(i && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_WIDTH];
+        if(icon_handle &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &state->linech.slot_width_percentage,
                             &double_1,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces))
+                            &pct_min_limit, &pct_max_limit,
+                             pct_decplaces))
         {
             state->linech_modified = 1;
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
-        if(i && !cp->d3.bits.on && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_LINE_2D_SHIFT];
+        if(icon_handle && !cp->d3.bits.on &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &cp->linech.slot_shift_percentage,
                             &double_1,
-                            &double_m100, &double_100, pct_decplaces))
+                            &double_m100, &double_100,
+                             pct_decplaces))
             return;
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BARLINE_3D_DEPTH];
-        if(i && cp->d3.bits.on && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BARLINE_3D_DEPTH];
+        if(icon_handle && cp->d3.bits.on &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &state->barlinech.slot_depth_percentage,
                             &double_1,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces))
+                            &pct_min_limit, &pct_max_limit,
+                             pct_decplaces))
         {
             state->barlinech_modified = 1;
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
-        if(i && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH];
+        if(icon_handle &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &state->scatch.width_percentage,
                             &pct_bumpvalue,
-                            &pct_min_limit, &pct_max_limit, pct_decplaces))
+                            &pct_min_limit, &pct_max_limit,
+                             pct_decplaces))
         {
             state->scatch_modified = 1;
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ON];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ON];
+        if(icon_handle && (icon_handle == f))
         {
-            cp->d3.bits.on = win_getonoff(w, f);
+            cp->d3.bits.on = winf_getonoff(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
-        if(i && cp->d3.bits.on && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
+        if(icon_handle && cp->d3.bits.on &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &cp->d3.turn,
                             &double_1,
-                            &turn_min_limit, &turn_max_limit, turn_decplaces))
+                            &turn_min_limit, &turn_max_limit,
+                             turn_decplaces))
             return;
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
-        if(i && cp->d3.bits.on && win_bumpdouble(w, f, i,
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
+        if(icon_handle && cp->d3.bits.on &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &cp->d3.droop,
                             &double_1,
-                            &droop_min_limit, &droop_max_limit, droop_decplaces))
+                            &droop_min_limit, &droop_max_limit,
+                             droop_decplaces))
             return;
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
+        if(icon_handle && (icon_handle == f))
         {
             if(cp->axes_idx_max > 0)
             {
@@ -1425,68 +1430,68 @@ gr_chartedit_gallery_barlinescatch_process(
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CUMULATIVE];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CUMULATIVE];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_cumulative = riscos_tristate_hit(w, f);
+            state->bits.tristate_cumulative = riscos_tristate_hit(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_POINT_VARY];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_POINT_VARY];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_point_vary = riscos_tristate_hit(w, f);
+            state->bits.tristate_point_vary = riscos_tristate_hit(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_FILL_AXIS];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_FILL_AXIS];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_fill_axis = riscos_tristate_hit(w, f);
+            state->bits.tristate_fill_axis = riscos_tristate_hit(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BEST_FIT];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_BEST_FIT];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_best_fit = riscos_tristate_hit(w, f);
+            state->bits.tristate_best_fit = riscos_tristate_hit(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_JOIN_LINES];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_JOIN_LINES];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_join_lines = riscos_tristate_hit(w, f);
+            state->bits.tristate_join_lines = riscos_tristate_hit(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_STACKED];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_STACKED];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_stacked = riscos_tristate_hit(w, f);
+            state->bits.tristate_stacked = riscos_tristate_hit(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_PICTURES];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_PICTURES];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_pictures = riscos_tristate_hit(w, f);
+            state->bits.tristate_pictures = riscos_tristate_hit(window_handle, f);
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CATEG_X_VAL];
-        if(i && (i == f))
+        icon_handle = icon_handles[GR_CHARTEDIT_GALLERY_BARLINESCATCH_CATEG_X_VAL];
+        if(icon_handle && (icon_handle == f))
         {
-            state->bits.tristate_categ_x_val = riscos_tristate_hit(w, f);
+            state->bits.tristate_categ_x_val = riscos_tristate_hit(window_handle, f);
             return;
         }
     }
     else if(state->charttype == GR_CHARTTYPE_PIE)
     {
-        i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_ANTICLOCKWISE;
-        if(i && (i == f))
+        icon_handle = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_ANTICLOCKWISE;
+        if(icon_handle && (icon_handle == f))
         {
-            state->pie_xtra.anticlockwise = win_getonoff(w, f);
+            state->pie_xtra.anticlockwise = winf_getonoff(window_handle, f);
             state->pie_xtra_modified = 1;
             return;
         }
@@ -1498,14 +1503,15 @@ gr_chartedit_gallery_barlinescatch_process(
             state->pie_xtra_modified = 1;
 
             /* reflect into icon as this is checked for value */
-            win_setdouble(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL,
-                          &state->pie_xtra.start_heading_degrees, pie_heading_decplaces);
+            winf_setdouble(window_handle, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL,
+                           &state->pie_xtra.start_heading_degrees, pie_heading_decplaces);
 
             return;
         }
 
-        i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL;
-        if(i && win_bumpdouble(w, f, i,
+        icon_handle = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL;
+        if(icon_handle &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &state->pie_xtra.start_heading_degrees,
                             &pie_heading_increment,
                             &pie_heading_min_limit,
@@ -1516,8 +1522,9 @@ gr_chartedit_gallery_barlinescatch_process(
             return;
         }
 
-        i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL;
-        if(i && win_bumpdouble(w, f, i,
+        icon_handle = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL;
+        if(icon_handle &&
+            winf_bumpdouble(window_handle, hit_icon_handle, icon_handle,
                             &state->piechdispl.radial_displacement,
                             &pct_radial_dsp_increment,
                             &pct_radial_dsp_min_limit,
@@ -1538,7 +1545,7 @@ gr_chartedit_gallery_barlinescatch_process(
 *
 ******************************************************************************/
 
-static const wimp_i
+static const int
 gr_chartedit_gallery_icons_barch[GR_CHARTEDIT_GALLERY_BARLINESCATCH_N_ICONS] =
 {
     GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_BAR_WIDTH,
@@ -1580,12 +1587,12 @@ gr_chartedit_gallery_bar_process(
 {
     static dbox d = NULL;
 
-    P_GR_CHART  cp;
+    P_GR_CHART cp;
     dbox_field f;
-    S32        ok_hit, pict_hit, persist;
+    BOOL ok_hit, pict_hit, persist;
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state;
 
-    state.icons     = gr_chartedit_gallery_icons_barch;
+    state.icon_handles = gr_chartedit_gallery_icons_barch;
     state.charttype = GR_CHARTTYPE_BAR;
 
     if(!gr_chartedit_gallery_barlinescatch_init(&state, cep, &d, GR_CHARTEDIT_TEM_GALLERY_BAR))
@@ -1617,7 +1624,9 @@ gr_chartedit_gallery_bar_process(
             /* maybe set base axes types to bar, first hit on anything converts */
 
             if(ok_hit || pict_hit)
+            {
                 if(state.modifying_id.name == GR_CHART_OBJNAME_AXIS)
+                {
                     if( cp->axes[state.modifying_axes_idx].charttype != state.charttype)
                     {
                         cp->axes[state.modifying_axes_idx].charttype  = state.charttype;
@@ -1640,6 +1649,8 @@ gr_chartedit_gallery_bar_process(
                             pict_hit = 1;
                         }
                     }
+                }
+            }
 
             if(pict_hit)
             {
@@ -1722,7 +1733,7 @@ gr_chartedit_gallery_bar_process(
 *
 ******************************************************************************/
 
-static const wimp_i
+static const int
 gr_chartedit_gallery_icons_linech[GR_CHARTEDIT_GALLERY_BARLINESCATCH_N_ICONS] =
 {
     0,
@@ -1764,12 +1775,12 @@ gr_chartedit_gallery_line_process(
 {
     static dbox d = NULL;
 
-    P_GR_CHART  cp;
+    P_GR_CHART cp;
     dbox_field f;
-    S32        ok_hit, pict_hit, persist;
+    BOOL ok_hit, pict_hit, persist;
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state;
 
-    state.icons     = gr_chartedit_gallery_icons_linech;
+    state.icon_handles = gr_chartedit_gallery_icons_linech;
     state.charttype = GR_CHARTTYPE_LINE;
 
     if(!gr_chartedit_gallery_barlinescatch_init(&state, cep, &d, GR_CHARTEDIT_TEM_GALLERY_LINE))
@@ -1801,7 +1812,9 @@ gr_chartedit_gallery_line_process(
             /* maybe set base axes types to line, first hit on anything converts */
 
             if(ok_hit || pict_hit)
+            {
                 if(state.modifying_id.name == GR_CHART_OBJNAME_AXIS)
+                {
                     if( cp->axes[state.modifying_axes_idx].charttype != state.charttype)
                     {
                         cp->axes[state.modifying_axes_idx].charttype  = state.charttype;
@@ -1824,6 +1837,8 @@ gr_chartedit_gallery_line_process(
                             pict_hit = 1;
                         }
                     }
+                }
+            }
 
             if(pict_hit)
             {
@@ -1904,7 +1919,7 @@ gr_chartedit_gallery_line_process(
 *
 ******************************************************************************/
 
-static const wimp_i
+static const int
 gr_chartedit_gallery_icons_scatch[GR_CHARTEDIT_GALLERY_BARLINESCATCH_N_ICONS] =
 {
     0,
@@ -1946,12 +1961,12 @@ gr_chartedit_gallery_scat_process(
 {
     static dbox d = NULL;
 
-    P_GR_CHART  cp;
+    P_GR_CHART cp;
     dbox_field f;
-    S32        ok_hit, pict_hit, persist;
+    BOOL ok_hit, pict_hit, persist;
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state;
 
-    state.icons     = gr_chartedit_gallery_icons_scatch;
+    state.icon_handles = gr_chartedit_gallery_icons_scatch;
     state.charttype = GR_CHARTTYPE_SCAT;
 
     if(!gr_chartedit_gallery_barlinescatch_init(&state, cep, &d, GR_CHARTEDIT_TEM_GALLERY_SCAT))
@@ -1983,6 +1998,7 @@ gr_chartedit_gallery_scat_process(
             /* maybe set base CHART type to scat, first hit on anything converts */
 
             if(ok_hit || pict_hit)
+            {
                 if( cp->axes[0].charttype != state.charttype)
                 {
                     cp->axes[0].charttype  = state.charttype;
@@ -2016,6 +2032,7 @@ gr_chartedit_gallery_scat_process(
                         pict_hit = 1;
                     }
                 }
+            }
 
             if(pict_hit)
             {
@@ -2111,12 +2128,12 @@ gr_chartedit_gallery_pie_process(
 {
     static dbox d = NULL;
 
-    dbox_field  f;
-    P_GR_CHART   cp;
-    S32         ok_hit, pict_hit, persist;
+    dbox_field f;
+    P_GR_CHART cp;
+    BOOL ok_hit, pict_hit, persist;
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state;
 
-    state.icons     = NULL;
+    state.icon_handles = NULL;
     state.charttype = GR_CHARTTYPE_PIE;
 
     if(!gr_chartedit_gallery_barlinescatch_init(&state, cep, &d, GR_CHARTEDIT_TEM_GALLERY_PIE))
@@ -2188,7 +2205,7 @@ gr_chartedit_gallery_pie_process(
                 {
                 case 0:
                     state.piechdispl.radial_displacement = 0.0;
-                    win_setdouble(state.w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL, &state.piechdispl.radial_displacement, 0);
+                    winf_setdouble(state.window_handle, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL, &state.piechdispl.radial_displacement, 0);
                     state.piechdispl_modified = 1;
 
                     state.piechlabel.bits.label_leg = 0;

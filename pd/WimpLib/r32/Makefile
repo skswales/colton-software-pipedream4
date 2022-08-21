@@ -28,6 +28,8 @@ CCflags_BASE=-c -I$(WimpLib) -I$(PD) -throwback -DSB_GLOBAL_REGISTER -Wp
 CCflags=$(CCflags_BASE) -Otime
 #CCflags=$(CCflags_BASE) -g
 
+CCflags_CSX=$(CCflags) -DCOMPILING_WIMPLIB_EXTENSIONS
+
 LibFile = libfile
 LibFileflags = -o -c $@
 
@@ -35,67 +37,74 @@ WimpLib: o.WimpLib
 
 # Colton Software extras, replacement and wrappers of patched files
 
+o.cs-bbcx:     $(WimpLib).c.bbc $(WimpLib).h.bbc
+o.cs-bbcx:     $(WimpLib).h.cs-bbcx
+o.cs-bbcx:     $(WimpLib).c.cs-bbcx
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-bbcx
+
 o.cs-event:    $(WimpLib).c.event $(WimpLib).h.event
 o.cs-event:    $(WimpLib).c.cs-event
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-event
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-event
 
 o.cs-flex:     $(WimpLib).c.flex
 o.cs-flex:     $(WimpLib).h.cs-flex
 o.cs-flex:     $(WimpLib).c.cs-flex
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-flex
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-flex
 
 o.cs-wimptx:   $(WimpLib).c.wimpt $(WimpLib).h.wimpt
 o.cs-wimptx:   $(WimpLib).h.cs-wimptx
 o.cs-wimptx:   $(WimpLib).c.cs-wimptx
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-wimptx
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-wimptx
+
+o.cs-winf:     $(WimpLib).h.cs-winf
+o.cs-winf:     $(WimpLib).c.cs-winf
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-winf
 
 o.cs-winx:     $(WimpLib).c.win $(WimpLib).h.win
 o.cs-winx:     $(WimpLib).h.cs-winx
 o.cs-winx:     $(WimpLib).c.cs-winx
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-winx
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-winx
 
 o.cs-riscasm:  $(WimpLib).s.cs-riscasm
         $(AS) -to $@ $(ASflags) -from $(WimpLib).s.cs-riscasm
 
-o.cs-pollfpm:  $(WimpLib).s.cs-pollfpm
-        $(AS) -to $@ $(ASflags) -from $(WimpLib).s.cs-pollfpm
+o.cs-poll:     $(WimpLib).s.cs-poll
+        $(AS) -to $@ $(ASflags) -from $(WimpLib).s.cs-poll
 
 # Colton Software replacements
 
 o.cs-msgs:     $(WimpLib).h.msgs
 o.cs-msgs:     $(WimpLib).c.cs-msgs
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-msgs
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-msgs
 
 o.cs-templat:  $(WimpLib).h.template
 o.cs-templat:  $(WimpLib).h.cs-template
 o.cs-templat:  $(WimpLib).c.cs-templat
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-templat
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-templat
 
 COLTON_XTRAS=\
+o.cs-bbcx \
 o.cs-event \
 o.cs-flex \
 o.cs-msgs \
 o.cs-templat \
 o.cs-wimptx \
+o.cs-winf \
 o.cs-winx \
-o.cs-pollfpm \
+o.cs-poll \
 o.cs-riscasm
 
 # source files with deltas (patched from RISC_OSLib source, without extra wrapping)
 
-o.bbc:         $(WimpLib).h.cs-bbcx
-o.bbc:         $(WimpLib).c.bbc
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.bbc
-
 o.dbox:        $(WimpLib).h.cs-dbox
 o.dbox:        $(WimpLib).c.dbox
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.dbox
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.dbox
 
 o.fontlist:    $(WimpLib).c.fontlist
         $(CC) -o $@ $(CCflags) $(WimpLib).c.fontlist
 
 o.fontselect:  $(WimpLib).c.fontselect
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.fontselect
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.fontselect
 
 o.menu:        $(WimpLib).h.menu
 o.menu:        $(WimpLib).c.menu
@@ -125,7 +134,6 @@ o.swi:         $(WimpLib).s.swi
         $(AS) -to $@ $(ASflags) -from $(WimpLib).s.swi
 
 PATCHED=\
-o.bbc \
 o.dbox \
 o.fontlist \
 o.fontselect \
@@ -138,9 +146,6 @@ o.xfersend \
 o.swi
 
 # source files with no deltas (but wrapped with nd-xxx.c for context)
-
-o.colourtran:  $(WimpLib).c.colourtran $(WimpLib).c.nd-colourtran
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-colourtran
 
 o.dboxtcol:    $(WimpLib).c.dboxtcol $(WimpLib).c.nd-dboxtcol
         $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-dboxtcol
@@ -179,7 +184,6 @@ o.werr :       $(WimpLib).c.werr $(WimpLib).c.nd-werr
         $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-werr
 
 WRAPPED=\
-o.colourtran \
 o.dboxtcol \
 o.drawmod \
 o.font \

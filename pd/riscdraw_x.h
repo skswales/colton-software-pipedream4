@@ -80,11 +80,9 @@ tcoord_y1(
 exported variables from riscdraw.c
 */
 
-extern wimp_box cliparea;
 extern BOOLEAN  paint_is_update;
 /*extern int      textcell_xorg;*/
 /*extern int      textcell_yorg;*/
-extern wimp_box thisarea;
 extern int      xorg;
 extern int      yorg;
 

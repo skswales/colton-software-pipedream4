@@ -1,5 +1,5 @@
---- _src	2003-01-16 13:43:31 +0100
-+++ _dst	2013-09-06 13:18:24 +0100
+--- _src	2003-01-16 13:43:31.000000000 +0100
++++ _dst	2016-09-16 15:15:40.130000000 +0100
 @@ -76,21 +76,26 @@
    menu m;
    event_menu_maker maker;
@@ -8,10 +8,11 @@
    void *handle;
  } mstr;
  
- static BOOL event__attach(event_w w,
+-static BOOL event__attach(event_w w,
 -                          menu m, event_menu_maker menumaker,
 -                          event_menu_proc eventproc, void *handle)
-+                          wimp_i i,
++static BOOL event__attach(_HwndRef_ HOST_WND w /*window_handle*/,
++                          int i /*icon_handle*/,
 +                          menu m,
 +                          event_menu_maker menumaker,
 +                          event_menu_proc eventproc,
@@ -19,7 +20,7 @@
 +                          void *handle)
  {
 -  mstr *p = win_getmenuh(w);
-+  mstr *p = win_getmenuhi(w, i);
++  mstr *p = winx_menu_get_handle(w, i);
    if (m == 0 && menumaker == 0)
    {
      /* cancelling */
@@ -27,7 +28,7 @@
      { /* something to cancel */
        free(p);
 -      win_setmenuh(w, 0);
-+      win_setmenuhi(w, i, NULL);
++      winx_menu_set_handle(w, i, NULL);
      }
    }
    else
@@ -38,7 +39,7 @@
 +    p->event_ws_proc = event_ws_proc;
      p->handle = handle;
 -    win_setmenuh(w, p);
-+    win_setmenuhi(w, i, p);
++    winx_menu_set_handle(w, i, p);
    }
    return TRUE;
  }
@@ -48,7 +49,7 @@
  BOOL event_attachmenu(event_w w, menu m, event_menu_proc eventproc, void* handle)
  {
    return event__attach(w, m, 0, eventproc, handle);
-@@ -116,8 +124,64 @@
+@@ -116,8 +124,39 @@
    return event__attach(w, 0, menumaker, eventproc, handle);
  }
  
@@ -56,23 +57,23 @@
 +
 +BOOL event_attachmenu(event_w w, menu m, event_menu_proc eventproc, void *handle)
 +{
-+  return event__attach(w, (wimp_i) -1, m, NULL, eventproc, NULL, handle);
++  return event__attach(w, -1, m, NULL, eventproc, NULL, handle);
 +}
 +
 +BOOL event_attachmenumaker(event_w w, event_menu_maker menumaker, event_menu_proc eventproc, void *handle)
 +{
-+  return event__attach(w, (wimp_i) -1, NULL, menumaker, eventproc, NULL, handle);
++  return event__attach(w, -1, NULL, menumaker, eventproc, NULL, handle);
 +}
 +
 +BOOL
 +event_attachmenumaker_to_w_i(
-+    wimp_w w,
-+    wimp_i i,
++    _HwndRef_   HOST_WND window_handle,
++    _InVal_     int icon_handle,
 +    event_menu_maker menumaker,
 +    event_menu_ws_proc event_ws_proc,
 +    void * handle)
 +{
-+    return event__attach(w, i, NULL, menumaker, NULL, event_ws_proc, handle);
++    return event__attach((event_w) window_handle, icon_handle, NULL, menumaker, NULL, event_ws_proc, handle);
 +}
 +
 +#endif /* SKS_ACW */
@@ -83,37 +84,12 @@
 +
 +static menu event__current_menu;
 +
-+static struct _event_statics
-+{
-+    BOOL       recreatepending;
-+
-+    struct _event_menu_click_cache_data
-+        {
-+        BOOL   valid;
-+        int    x;
-+        int    y;
-+        wimp_w w;
-+        wimp_i i;
-+        }
-+    menuclick;
-+
-+    struct _event_submenu_opening_cache_data
-+        {
-+        BOOL          valid;
-+        wimp_menuptr  m;
-+        int           x;
-+        int           y;
-+        }
-+    submenu;
-+}
-+event_;
-+
 +#else /* NOT SKS_ACW */
 +
  static wimp_w event__current_menu_window = 0;
    /* 0 if no menu currently visible */
  static menu event__current_menu;
-@@ -127,89 +191,243 @@
+@@ -127,89 +166,243 @@
  static BOOL event__last_was_menu_hit = FALSE;
  static BOOL event__recreation;
  
@@ -125,16 +101,16 @@
 +#ifdef SKS_ACW
 +
 +static void event__createmenu(BOOL recreate)
- {
++{
 +    mstr *          p = NULL;
 +    wimp_menuhdr *  m;
 +    wimp_menuitem * mi;
 +
-+    if(event_.menuclick.w != win_ICONBAR)
-+        p = win_getmenuhi(event_.menuclick.w, event_.menuclick.i);
++    if(event_statics.menuclick.window_handle != win_ICONBAR)
++        p = winx_menu_get_handle(event_statics.menuclick.window_handle, event_statics.menuclick.icon_handle);
 +
 +    if(!p)
-+        p = win_getmenuh(event_.menuclick.w);
++        p = win_getmenuh(event_statics.menuclick.window_handle);
 +
 +    if(p)
 +        {
@@ -154,21 +130,21 @@
 +            }
 +
 +        /* allow icon bar recreates not to restore menu position */
-+        if((event_.menuclick.w == win_ICONBAR)  &&  !recreate)
++        if((event_statics.menuclick.window_handle == win_ICONBAR)  &&  !recreate)
 +            {
 +            /* move icon bar menus up to standard position. */
 +            mi = (wimp_menuitem *) (m + 1);
 +
-+            event_.menuclick.y = 96;
++            event_statics.menuclick.y = 96;
 +
 +            tracef0("positioning icon bar menu.\n");
 +            do  {
-+                event_.menuclick.y += m->height + m->gap;
++                event_statics.menuclick.y += m->height + m->gap;
 +                }
 +            while(!((mi++)->flags & wimp_MLAST));
 +            }
 +
-+        wimpt_complain(event_create_menu((wimp_menustr *) m, event_.menuclick.x - 64, event_.menuclick.y));
++        (void) wimpt_complain(event_create_menu((wimp_menustr *) m, event_statics.menuclick.x - 64, event_statics.menuclick.y));
 +        }
 +    else
 +        tracef0("no registered menu\n");
@@ -184,7 +160,7 @@
 +
 +extern BOOL
 +event__process(wimp_eventstr * e)
-+{
+ {
 +  wimp_msgstr *m = &e->data.msg;
 +  wimp_mousestr ms;
 +  char hit[20];
@@ -207,9 +183,9 @@
 +    tracef0("hit on submenu => pointer, fake menu hit\n");
 +
 +    /* cache submenu opening info for use later on this event */
-+    event_.submenu.m = m->data.menuwarning.submenu.m;
-+    event_.submenu.x = m->data.menuwarning.x;
-+    event_.submenu.y = m->data.menuwarning.y;
++    event_statics.submenu.m = m->data.menuwarning.submenu.m;
++    event_statics.submenu.x = m->data.menuwarning.x;
++    event_statics.submenu.y = m->data.menuwarning.y;
 +
      e->e = wimp_EMENU;
      i = 0;
@@ -225,19 +201,19 @@
  
    /* Look for menu events */
 -  if (e->e == wimp_EBUT && (wimp_BMID & e->data.but.m.bbits) != 0)
-+  if (e->e == wimp_EBUT)
++  if (e->e == Wimp_EMouseClick)
    {
 -    /* set up a menu! */
 -    mstr *p;
 -    if (e->data.but.m.w <= -1) e->data.but.m.w = win_ICONBAR;
 -    p = win_getmenuh(e->data.but.m.w);
 -    if (p != 0)
-+    wimp_w w = e->data.but.m.w;
-+    wimp_i i = e->data.but.m.i;
++    HOST_WND window_handle = e->data.but.m.w;
++    int icon_handle = e->data.but.m.i;
 +    mstr * p = NULL;
 +
-+    if((int) w < 0)
-+        w = win_ICONBAR;
++    if(window_handle < 0)
++        window_handle = win_ICONBAR;
 +
 +    /* menu on an icon can give a drag as the pointer leaves the window!
 +     * so Mr. Paranoid masks out all unreasonable button hits
@@ -256,25 +232,25 @@
 +        if(e->data.but.m.bbits & wimp_BMID)
 +        {
 +            /* don't use MENU to get menus for registered to icons; fake work area */
-+            i = (wimp_i) -1;
++            icon_handle = -1;
 +
 +            if(!p)
-+                p = win_getmenuh(w);
++                p = win_getmenuh(window_handle);
 +        }
-+        else if(i != (wimp_i) -1)
++        else if(icon_handle != -1)
 +            /* look for menu registered to that icon */
-+            p = win_getmenuhi(w, i);
++            p = winx_menu_get_handle(window_handle, icon_handle);
 +    }
 +
 +    if(p)
 +    {
-+      event_.menuclick.w = w;
-+      event_.menuclick.i = i;
-+      event_.menuclick.x = e->data.but.m.x;
-+      event_.menuclick.y = e->data.but.m.y;
-+      event_.menuclick.valid = TRUE;
++      event_statics.menuclick.window_handle = window_handle;
++      event_statics.menuclick.icon_handle = icon_handle;
++      event_statics.menuclick.x = e->data.but.m.x;
++      event_statics.menuclick.y = e->data.but.m.y;
++      event_statics.menuclick.valid = TRUE;
 +      event__createmenu(FALSE);
-+      event_.menuclick.valid = FALSE;
++      event_statics.menuclick.valid = FALSE;
 +      tracef0("menu created\n");
 +      return(FALSE);
 +    }
@@ -286,11 +262,11 @@
 +    /* Menu hit */
 +    mstr * p = NULL;
 +
-+    if(event_.menuclick.w != win_ICONBAR)
-+       p = win_getmenuhi(event_.menuclick.w, event_.menuclick.i);
++    if(event_statics.menuclick.window_handle != win_ICONBAR)
++       p = winx_menu_get_handle(event_statics.menuclick.window_handle, event_statics.menuclick.icon_handle);
 +
 +    if(!p)
-+       p = win_getmenuh(event_.menuclick.w);
++       p = win_getmenuh(event_statics.menuclick.window_handle);
 +
 +    tracef0("menu hit ");
 +
@@ -302,15 +278,15 @@
 -        event__recreation = 0 ;
 -        event__current_menu = p->maker(p->handle);
 -        m = (wimp_menuhdr*) menu_syshandle(event__current_menu);
-+        wimpt_safe(wimp_get_point_info(&ms));
-+        event_.recreatepending = ((ms.bbits & wimp_BRIGHT) == wimp_BRIGHT);
++        if(wimpt_complain(wimp_get_point_info(&ms))) { ms.bbits = (wimp_bbits) 0; }
++        event_statics.recreatepending = ((ms.bbits & wimp_BRIGHT) == wimp_BRIGHT);
        }
        else
        {
 -        m = (wimp_menuhdr *) -1;
 +        /* say the submenu opening cache is valid */
-+        event_.submenu.valid = TRUE;
-+        event_.recreatepending = FALSE;
++        event_statics.submenu.valid = TRUE;
++        event_statics.recreatepending = FALSE;
        }
 -      if (event__current_menu_window == win_ICONBAR)
 +
@@ -321,29 +297,28 @@
 +          tracef1("[%d]", hit[i]);
 +      } while(e->data.menu[i++] != -1);
 +
-+      tracef1(", ADJUST = %s\n", trace_boolstring(event_.recreatepending));
++      tracef1(", ADJUST = %s\n", report_boolstring(event_statics.recreatepending));
 +
 +      /* allow access to initial click cache during handler */
-+      event_.menuclick.valid = TRUE;
++      event_statics.menuclick.valid = TRUE;
 +
 +      if(p->event_ws_proc)
        {
 -        /* move icon bar menus up a bit. */
 -        e->data.but.m.x -= 16 /* m->width/2 */;
 -        e->data.but.m.y = 96;
--        {
++        if(! (* p->event_ws_proc) (p->handle, hit, submenu_fake_hit))
+         {
 -          wimp_menuitem *mi = (wimp_menuitem*) (m + 1);
 -          while (1) {
 -            e->data.but.m.y += m->height + m->gap;
 -            if ((mi->flags & wimp_MLAST) != 0) break;
 -            mi++;
-+        if(! (* p->event_ws_proc) (p->handle, hit, submenu_fake_hit))
-+        {
 +          if(submenu_fake_hit)
 +          { /* handle unprocessed submenu open events */
 +            int x, y;
 +            event_read_submenupos(&x, &y);
-+            wimpt_complain(event_create_submenu(event_read_submenudata(), x, y));
++            (void) wimpt_complain(event_create_submenu(event_read_submenudata(), x, y));
            }
          }
        }
@@ -369,20 +344,20 @@
 +        { /* handle unprocessed submenu open events */
 +          int x, y;
 +          event_read_submenupos(&x, &y);
-+          wimpt_complain(event_create_submenu(event_read_submenudata(), x, y));
++          (void) wimpt_complain(event_create_submenu(event_read_submenudata(), x, y));
 +        }
 +      }
 +
 +      /* submenu opening cache no longer valid */
-+      event_.submenu.valid = FALSE;
++      event_statics.submenu.valid = FALSE;
 +
-+      if(event_.recreatepending)
++      if(event_statics.recreatepending)
 +      {
 +        /* Twas an ADJ-hit on a menu item.
 +         * The menu should be recreated.
 +        */
 +        tracef0("menu hit caused by ADJUST - recreating menu\n");
-+        event_.menuclick.valid = TRUE;
++        event_statics.menuclick.valid = TRUE;
 +        event__createmenu(TRUE);
 +      }
 +#if TRACE
@@ -393,7 +368,7 @@
 +#endif
 +
 +      /* initial click cache no longer valid */
-+      event_.menuclick.valid = FALSE;
++      event_statics.menuclick.valid = FALSE;
 +
 +      return(FALSE);
      }
@@ -415,7 +390,7 @@
    if (e->e == wimp_ENULL)
    {
      int dummy_time;
-@@ -224,12 +442,14 @@
+@@ -224,12 +417,14 @@
      if ((event_getmask() & wimp_EMNULL) != 0)
         return TRUE;
    }
@@ -430,14 +405,14 @@
    else if (e->e == wimp_ENULL)
    {
      /* machine idle: say so */
-@@ -240,12 +460,20 @@
+@@ -240,12 +435,20 @@
      /* Assume it's a menu being moved */
      wimpt_complain(wimp_open_wind(&e->data.o));
    }
 +#else /* SKS_ACW */
 +  else
 +  {
-+    return(event__default_process(e));
++    return(event__default_process(e->e, (WimpPollBlock *) &e->data));
 +  }
 +#endif /* SKS_ACW */
  
@@ -451,7 +426,7 @@
    if (event__last_was_menu_hit && wimpt_last_event()->e == wimp_EMENU)
    {
      wimp_mousestr m;
-@@ -276,6 +504,8 @@
+@@ -276,6 +479,8 @@
        }
      }
    }
@@ -460,7 +435,7 @@
    tracef0("doing poll.\n");
    wimpt_complain(wimpt_poll(mask, result));
    tracef0("poll done.\n");
-@@ -284,7 +514,9 @@
+@@ -284,7 +489,9 @@
  void event_process(void)
  {
    tracef0("event_process.\n");
@@ -470,7 +445,7 @@
    {
      wimp_eventstr e;
      event__poll(event_getmask(), &e);
-@@ -292,6 +524,8 @@
+@@ -292,6 +499,8 @@
    }
  }
  
@@ -479,7 +454,7 @@
  #ifndef UROM
  BOOL event_anywindows()
  {
-@@ -299,8 +533,15 @@
+@@ -299,8 +508,15 @@
  }
  #endif
  
@@ -488,7 +463,7 @@
  void event_clear_current_menu(void) {
 +#ifdef SKS_ACW
 +  /* NB not wimpt_noerr(), and use our new function */
-+  wimpt_complain(event_create_menu((wimp_menustr *) -1, 0, 0));
++  (void) wimpt_complain(event_create_menu((wimp_menustr *) -1, 0, 0));
 +#else /* NOT SKS_ACW */
    wimpt_noerr(wimp_create_menu((wimp_menustr*) -1, 0, 0));
 +#endif /* SKS_ACW */

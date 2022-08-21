@@ -7,7 +7,7 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* Column heading and contents line code for PD4 */
+/* Column heading and contents line code for PipeDream 4 */
 
 /* RCM Aug 1991 */
 
@@ -47,7 +47,7 @@ extern void
 colh_draw_column_headings(void);
 
 extern void
-colh_draw_contents_of_numslot(void);
+colh_draw_contents_of_number_cell(void);
 
 extern void
 colh_draw_drag_state(
@@ -61,11 +61,11 @@ colh_draw_mark_state_indicator(
     BOOL sheet_marked);
 
 extern void
-colh_draw_slot_count(
+colh_draw_cell_count(
     _In_opt_z_      char *text);
 
 extern void
-colh_draw_slot_count_in_document(
+colh_draw_cell_count_in_document(
     _In_opt_z_      char *text);
 
 extern BOOL
@@ -81,55 +81,46 @@ extern void
 colh_position_icons(void);
 
 extern void
-set_icon_text(
-    wimp_w window,
-    wimp_i icon,
-    char *text);
-
-extern void
-setpointershape(
+riscos_setpointershape(
     pointer_shape *shape);
 
 static void
 colh_forced_draw_column_headings(
-    RISCOS_REDRAWSTR *r);
+    _In_        const RISCOS_RedrawWindowBlock * const redraw_window_block);
 
 static void
 colh_really_draw_column_headings(void);
 
 static void
 draw_status_box(
-    _In_opt_z_      char *text);
+    _In_opt_z_  char *text);
 
 static void
 draw_status_box_no_interlock(
-    _In_opt_z_      char *text);
+    _In_opt_z_  char *text);
 
-static void
-application_button_click_in_colh(
-    wimp_mousestr *pointer);
+static BOOL
+colh_event_Mouse_Click(
+    const WimpMouseClickEvent * const mouse_click);
 
-static void
-application_singleclick_in_colh(
-    wimp_i icon,
-    wimp_mousestr *pointer,
-    BOOL selectclicked);
+static BOOL
+colh_event_Mouse_Click_single(
+    const WimpMouseClickEvent * const mouse_click,
+    BOOL select_clicked);
 
-static void
-application_doubleclick_in_colh(
-    wimp_i icon,
-    wimp_mousestr *pointer,
-    BOOL selectclicked);
+static BOOL
+colh_event_Mouse_Click_double(
+    const WimpMouseClickEvent * const mouse_click,
+    BOOL select_clicked);
 
-static void
-application_startdrag_in_colh(
-    wimp_i icon,
-    wimp_mousestr *pointer,
-    BOOL selectclicked);
+static BOOL
+colh_event_Mouse_Click_start_drag(
+    const WimpMouseClickEvent * const mouse_click,
+    BOOL select_clicked);
 
-static void
-colh_message(
-    wimp_msgstr * m);
+static BOOL
+colh_event_User_Message(
+    /*poked*/ WimpMessage * const user_message);
 
 static void
 EditContentsLine(void);
@@ -149,151 +140,223 @@ static DOCNO track_docno;
 
 extern void
 redefine_icon(
-    wimp_w window,
-    wimp_i icon,
-    wimp_icreate *create)
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    WimpCreateIconBlock * const create)
 {
-    wimp_icon current;
-    wimp_get_icon_info(window, icon, &current);
+    WimpGetIconStateBlock icon_state;
 
-    if((create->i.box.x0 != current.box.x0) ||
-       (create->i.box.x1 != current.box.x1) ||
-       (create->i.box.y0 != current.box.y0) ||
-       (create->i.box.y1 != current.box.y1) ||
-       (create->i.flags  != current.flags)
-      )
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = icon_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
+
+    if( (create->icon.bbox.xmin != icon_state.icon.bbox.xmin) ||
+        (create->icon.bbox.ymin != icon_state.icon.bbox.ymin) ||
+        (create->icon.bbox.xmax != icon_state.icon.bbox.xmax) ||
+        (create->icon.bbox.ymax != icon_state.icon.bbox.ymax) ||
+        (create->icon.flags  != icon_state.icon.flags)  )
     {
         /* icon size or flags are wrong, so... */
 
-        wimp_redrawstr redraw;
-        wimp_caretstr  carrot;
-        wimp_i         newhandle;
+        WimpCaret caret;
+        int new_icon_handle;
 
-        /* must force-redraw max of current box and required box as resize may scroll the text */
+        { /* must force-redraw max of current box and required box as resize may scroll the text */
+        BBox redraw_area;
+        redraw_area.xmin = MIN(create->icon.bbox.xmin, icon_state.icon.bbox.xmin); /* update_area */
+        redraw_area.ymin = MIN(create->icon.bbox.ymin, icon_state.icon.bbox.ymin);
+        redraw_area.xmax = MAX(create->icon.bbox.xmax, icon_state.icon.bbox.xmax);
+        redraw_area.ymax = MAX(create->icon.bbox.ymax, icon_state.icon.bbox.ymax);
+        void_WrapOsErrorReporting(tbl_wimp_force_redraw(window_handle, redraw_area.xmin, redraw_area.ymin, redraw_area.xmax, redraw_area.ymax));
+        } /*block*/
 
-        redraw.w = window;
-        redraw.box.x0 = MIN(create->i.box.x0, current.box.x0);
-        redraw.box.x1 = MAX(create->i.box.x1, current.box.x1);
-        redraw.box.y0 = MIN(create->i.box.y0, current.box.y0);
-        redraw.box.y1 = MAX(create->i.box.y1, current.box.y1);
-
-        wimpt_noerr(wimp_force_redraw(&redraw));
-
-        wimp_get_caret_pos(&carrot);
-        if((carrot.w == window) && (carrot.i == icon))
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+        {   /* ensure we don't restore to undefined window handle */
+            caret.window_handle = -1;
+            caret.icon_handle = -1;
+        }
+        else
         {
-            wimp_caretstr killit;
-
-            killit.w = (wimp_w)-1;
-            killit.i = (wimp_i)-1;
-            killit.x = killit.y = killit.index = 0;
-            killit.height = 0x02000000;
-
-            wimp_set_caret_pos(&killit);
+            if( (caret.window_handle == window_handle) &&
+                (caret.icon_handle == icon_handle) )
+            {   /* hide caret */
+                void_WrapOsErrorReporting(tbl_wimp_set_caret_position(-1, -1, 0, 0, 0x02000000, 0));
+            }
         }
 
         /* delete current definition */
-        wimpt_complain(wimp_delete_icon(window, icon));
+        void_WrapOsErrorReporting(wimp_delete_icon(window_handle, icon_handle));
 
         /* and re-create icon with required size */
-        create->w = window;
-        wimpt_complain(wimp_create_icon(create, &newhandle));
-        assert(icon == newhandle);              /* MUST retain same icon number */
+        create->window_handle = window_handle;
+        void_WrapOsErrorReporting(tbl_wimp_create_icon(0, create, &new_icon_handle));
+        assert(icon_handle == new_icon_handle); /* MUST retain same icon number */
 
-        if((carrot.w == window) && (carrot.i == icon))
-            wimp_set_caret_pos(&carrot);
-
+        if( (caret.window_handle == window_handle) &&
+            (caret.icon_handle == icon_handle) )
+        {   /* restore caret */
+            void_WrapOsErrorReporting(
+                tbl_wimp_set_caret_position(caret.window_handle, caret.icon_handle,
+                                            caret.xoffset, caret.yoffset,
+                                            caret.height, caret.index));
+        }
     }
 }
 
 static void
 set_icon_colours(
-    wimp_w window,
-    wimp_i icon,
-    int fgcol,
-    int bgcol)
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    _InVal_     U32 fg_colour_option_index,
+    _InVal_     U32 bg_colour_option_index)
 {
-    wimp_icon  info;
-    unsigned int colbits = (wimp_IFORECOL * logcol(fgcol) + wimp_IBACKCOL * logcol(bgcol));
-    unsigned int colmask = (wimp_IFORECOL * 0xFU + wimp_IBACKCOL * 0xFU);
+    const unsigned int colour_bits =
+        (WimpIcon_FGColour * wimp_colour_index_from_option(fg_colour_option_index)) |
+        (WimpIcon_BGColour * wimp_colour_index_from_option(bg_colour_option_index));
+    const unsigned int colour_mask =
+        (WimpIcon_FGColour * 0xFU) |
+        (WimpIcon_BGColour * 0xFU);
+    BOOL change_value;
 
-    wimp_get_icon_info(window, icon, &info);
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = icon_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
 
-    if((info.flags & colmask) != colbits)
-        wimp_set_icon_state(window, icon, (wimp_iconflags) colbits, (wimp_iconflags) colmask);
-    else
+    change_value = ((icon_state.icon.flags & colour_mask) != colour_bits);
+
+    if(!change_value)
+    {
         trace_0(TRACE_APP_PD4, "colours not changed");
+        return;
+    }
+    } /*block*/
+
+    {
+    WimpSetIconStateBlock set_icon_state_block;
+    set_icon_state_block.window_handle = window_handle;
+    set_icon_state_block.icon_handle = icon_handle;
+    set_icon_state_block.EOR_word = (int) colour_bits;
+    set_icon_state_block.clear_word = (int) colour_mask;
+    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
+    } /*block*/
 }
 
 static void
 set_icon_flags(
-    wimp_w window,
-    wimp_i icon,
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
     int value,
     int mask)
 {
-    wimp_icon  info;
+    BOOL change_value;
 
-    wimp_get_icon_info(window, icon, &info);
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = icon_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
 
-    if((info.flags & mask) != value)
-        wimp_set_icon_state(window, icon, (wimp_iconflags) value, (wimp_iconflags) mask);
-#if FALSE
-    else
-        trace_0(TRACE_APP_PD4, "icon flags not changed");
-#endif
+    change_value = ((icon_state.icon.flags & mask) != value);
+
+    if(!change_value)
+    {
+        trace_0(0/*TRACE_APP_PD4*/, "icon flags not changed");
+        return;
+    }
+    } /*block*/
+
+    {
+    WimpSetIconStateBlock set_icon_state_block;
+    set_icon_state_block.window_handle = window_handle;
+    set_icon_state_block.icon_handle = icon_handle;
+    set_icon_state_block.EOR_word = value;
+    set_icon_state_block.clear_word = mask;
+    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
+    } /*block*/
 }
 
 extern void
 set_icon_text(
-    wimp_w window,
-    wimp_i icon,
-    char *text)
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    _In_z_      const char * text)
 {
-    wimp_icon info;
+    BOOL change_text;
 
-    wimp_get_icon_info(window, icon, &info);
-                /* really GetIconState, but some twat gave it the wrong name */
-
-    if(0 != strcmp(info.data.indirecttext.buffer, text))
     {
-        /* redraw iff changed */
-        strcpy(info.data.indirecttext.buffer, text);
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = icon_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
 
-        wimp_set_icon_state(window, icon, (wimp_iconflags) 0, (wimp_iconflags) 0);
-    }
+    change_text = (0 != strcmp(icon_state.icon.data.it.buffer, text));
+
+    if(change_text)
+        strcpy(icon_state.icon.data.it.buffer, text);
+
+    if(!change_text)
+        return;
+    } /*block*/
+
+    { /* redraw iff changed */
+    WimpSetIconStateBlock set_icon_state_block;
+    set_icon_state_block.window_handle = window_handle;
+    set_icon_state_block.icon_handle = icon_handle;
+    set_icon_state_block.EOR_word = 0;
+    set_icon_state_block.clear_word = 0;
+    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
+    } /*block*/
 }
 
 static void
 set_icon_text_and_flags(
-    wimp_w window,
-    wimp_i icon,
-    char *text,
+    _HwndRef_   HOST_WND window_handle,
+    _InVal_     int icon_handle,
+    _In_z_      const char * text,
     int value,
     int mask)
 {
-    wimp_icon info;
-    BOOL      newtext;
+    BOOL change_text;
+    BOOL change_value;
 
-    wimp_get_icon_info(window, icon, &info);
-                /* really GetIconState, but some twat gave it the wrong name */
-
-    newtext = strcmp(info.data.indirecttext.buffer, text);
-
-    if(newtext || ((info.flags & mask) != value))
     {
-        /* redraw iff changed */
-        if(newtext)
-            strcpy(info.data.indirecttext.buffer, text);
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = icon_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
 
-        wimp_set_icon_state(window, icon, (wimp_iconflags) value, (wimp_iconflags) mask);
-    }
+    change_text = (0 != strcmp(icon_state.icon.data.it.buffer, text));
+
+    if(change_text)
+        strcpy(icon_state.icon.data.it.buffer, text);
+
+    change_value = ((icon_state.icon.flags & mask) != value);
+
+    if(!change_text && !change_value)
+        return;
+    } /*block*/
+
+    { /* redraw iff changed */
+    WimpSetIconStateBlock set_icon_state_block;
+    set_icon_state_block.window_handle = window_handle;
+    set_icon_state_block.icon_handle = icon_handle;
+    set_icon_state_block.EOR_word = value;
+    set_icon_state_block.clear_word = mask;
+    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
+    } /*block*/
 }
 
 /******************************************************************************
 *
-* Called by riscos_createmainwindow (c.riscos) and cachemodevariables(c.riscdraw)
-* to tweak the * positions/colours/flags etc. of some of the icons in the colh_window.
+* Called by riscos_create_document_window (riscos.c) and cache_mode_variables(riscdraw.c)
+* to tweak the positions/colours/flags etc. of some of the icons in the colh window.
 * Some of the state is taken from the template file, some is calculated and set by this routine.
 *
 ******************************************************************************/
@@ -301,90 +364,75 @@ set_icon_text_and_flags(
 extern void
 colh_position_icons(void)
 {
-    wimp_icreate heading;
-    wimp_icreate coordinate;
-    wimp_icreate border;
-    wimp_icreate bar;
+    WimpCreateIconBlock heading;
+    WimpCreateIconBlock coordinate;
+    WimpCreateIconBlock border;
 
     /* Position the column heading 'click detection' icon.        */
     /* This invisible icon exists to make click detection easier, */
     /* and acts as a guide for plotting the headings & margins.   */
 
-    /* box.y0 & box.y1 taken from template file, other fields set here */
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = heading.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
+    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    heading.icon = icon_state.icon;
+    } /*block*/
 
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_COLUMN_HEADINGS, &heading.i);
+    /* heading bbox.ymin & bbox.ymax taken from template file, other fields set here */
+    heading.icon.bbox.xmin = texttooffset_x(COLUMNHEAD_t_X0 + borderwidth);
+    heading.icon.bbox.xmax = 0x3FFF;
+    /* use       bbox.ymin   from template */
+    /* use       bbox.ymin   from template */
+    heading.icon.flags = (int) (wimp_IBTYPE * wimp_BCLICKDRAGDOUBLE);
 
-    heading.w        = colh_window;
-    heading.i.box.x0 = texttooffset_x(COLUMNHEAD_t_X0 + borderwidth);
-    heading.i.box.x1 = 0x3FFF;
-    /* use    box.y0   from template */
-    /* use    box.y1   from template */
-    heading.i.flags  = (wimp_iconflags) (wimp_IBTYPE * wimp_BCLICKDRAGDOUBLE);
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = border.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_STATUS_BORDER;
+    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    border.icon = icon_state.icon;
+    } /*block*/
 
-#if FALSE
-    /* so we can see it for debugging purposes */
-    heading.i.flags |= wimp_IBORDER | (wimp_IFORECOL * logcol(BORDERFOREC));
-#endif
+    border.icon.bbox.xmin = texttooffset_x(CELLCOORDS_t_X0);
+    border.icon.bbox.ymin = heading.icon.bbox.ymin;
+    border.icon.bbox.xmax = texttooffset_x(CELLCOORDS_t_X1 + borderwidth);
+    border.icon.bbox.ymax = heading.icon.bbox.ymax;
 
-    redefine_icon(colh_window, (wimp_i)COLH_COLUMN_HEADINGS, &heading);
+    border.icon.flags = (int) (
+        wimp_IBORDER | (WimpIcon_FGColour * wimp_colour_index_from_option(COI_GRID))       |
+        wimp_IFILLED | (WimpIcon_BGColour * wimp_colour_index_from_option(COI_BORDERBACK)) |
+        wimp_IRJUST );
 
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_STATUS_BORDER, &border.i);
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = coordinate.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_STATUS_TEXT;
+    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+    coordinate.icon = icon_state.icon;
+    } /*block*/
 
-    border.w        = colh_window;
-    border.i.box.x0 = texttooffset_x(CELLCOORDS_t_X0);
-    border.i.box.x1 = texttooffset_x(CELLCOORDS_t_X1 + borderwidth);
-    border.i.box.y0 = heading.i.box.y0;
-    border.i.box.y1 = heading.i.box.y1;
+    coordinate.icon.bbox.xmin = border.icon.bbox.xmin;
+    coordinate.icon.bbox.ymin = border.icon.bbox.ymin + dy;
+    coordinate.icon.bbox.xmax = border.icon.bbox.xmax - dx;
+    coordinate.icon.bbox.ymax = border.icon.bbox.ymax - dy;
 
-    border.i.flags = (wimp_iconflags) (wimp_IBORDER | wimp_IFILLED |
-                                      (wimp_IFORECOL * logcol(GRIDC))       |
-                                      (wimp_IBACKCOL * logcol(BORDERBACKC)) |
-                                       wimp_IRJUST);
-
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_STATUS_TEXT, &coordinate.i);
-
-    coordinate.w        = colh_window;
-    coordinate.i.box.x0 = border.i.box.x0;
-    coordinate.i.box.x1 = border.i.box.x1 - dx;
-    coordinate.i.box.y0 = border.i.box.y0 + dy;
-    coordinate.i.box.y1 = border.i.box.y1 - dy;
-
-    coordinate.i.flags = (wimp_iconflags) (coordinate.i.flags &
-                            ~(wimp_ITEXT | wimp_IFILLED));
-    coordinate.i.flags = (wimp_iconflags) (coordinate.i.flags &
-                            ~((wimp_IFORECOL * 0xFU) +
-                              (wimp_IBACKCOL * 0xFU) +
-                               wimp_IHCENTRE));
-    coordinate.i.flags = (wimp_iconflags) (coordinate.i.flags |
-                           ((wimp_IFORECOL * logcol(CURBORDERFOREC)) +
-                            (wimp_IBACKCOL * logcol(CURBORDERBACKC)) +
-                             wimp_IRJUST));
+    coordinate.icon.flags = (int) (
+        coordinate.icon.flags & ~(wimp_ITEXT | wimp_IFILLED));
+    coordinate.icon.flags = (int) (
+        coordinate.icon.flags & ~((WimpIcon_FGColour * 0xFU) |
+                                  (WimpIcon_BGColour * 0xFU) |
+                                   wimp_IHCENTRE) );
+    coordinate.icon.flags = (int) (
+        coordinate.icon.flags | ((WimpIcon_FGColour * wimp_colour_index_from_option(COI_CURRENT_BORDERFORE)) |
+                                 (WimpIcon_BGColour * wimp_colour_index_from_option(COI_CURRENT_BORDERBACK)) |
+                                  wimp_IRJUST) );
     /* rest of flags should be wimp_IHCENTRE | wimp_IVCENTRE | wimp_INDIRECT */
 
-    redefine_icon(colh_window, (wimp_i)COLH_STATUS_BORDER, &border);
-    redefine_icon(colh_window, (wimp_i)COLH_STATUS_TEXT, &coordinate);
-
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_STATUS_BAR, &bar.i);
-
-    bar.w        = colh_window;
-#if TRUE
-    /* RCM & MRJC think these (original) dimensions look better */
-    bar.i.box.x0 = dx * 6;
-    bar.i.box.x1 = border.i.box.x1 - dx * 7;
-#else
-    bar.i.box.x0 = border.i.box.x0 + charwidth;           /*dx * 6;*/
-    bar.i.box.x1 = border.i.box.x1 - 3*2 - dx/*mode indep. + mode dep.*/; /*dx * 7;*/
-#endif
-    bar.i.box.y0 = border.i.box.y0 + dy * 2;
-    bar.i.box.y1 = border.i.box.y1 - dy * 2;
-
-    bar.i.flags = (wimp_iconflags) (
-                  wimp_IBORDER | (wimp_IFORECOL * logcol(FORE))    |
-                  wimp_IFILLED | (wimp_IBACKCOL * logcol(BACK))    |
-                  (colh_mark_state_indicator ? wimp_ISELECTED : 0) |
-                  (wimp_IBTYPE * wimp_BCLICKDEBOUNCE) );
-
-    redefine_icon(colh_window, (wimp_i)COLH_STATUS_BAR, &bar);
+    redefine_icon(colh_window_handle, COLH_COLUMN_HEADINGS, &heading);
+    redefine_icon(colh_window_handle, COLH_STATUS_BORDER, &border);
+    redefine_icon(colh_window_handle, COLH_STATUS_TEXT, &coordinate);
 
     colh_draw_edit_state_indicator();
 
@@ -394,12 +442,8 @@ colh_position_icons(void)
 extern void
 colh_colour_icons(void)
 {
-    int invert = (colh_mark_state_indicator ? wimp_ISELECTED : 0);
-
-    set_icon_colours(colh_window, (wimp_i)COLH_STATUS_BORDER, GRIDC         , BORDERBACKC   );
-    set_icon_colours(colh_window, (wimp_i)COLH_STATUS_TEXT  , CURBORDERFOREC, CURBORDERBACKC);
-    set_icon_colours(colh_window, (wimp_i)COLH_STATUS_BAR   , FORE          , BACK          );
-    set_icon_flags  (colh_window, (wimp_i)COLH_STATUS_BAR   , invert        , wimp_ISELECTED);
+    set_icon_colours(colh_window_handle, COLH_STATUS_BORDER, COI_GRID              , COI_BORDERBACK        );
+    set_icon_colours(colh_window_handle, COLH_STATUS_TEXT  , COI_CURRENT_BORDERFORE, COI_CURRENT_BORDERBACK);
 }
 
 /******************************************************************************
@@ -411,26 +455,30 @@ colh_colour_icons(void)
 extern void
 colh_draw_column_headings(void)
 {
-    wimp_icon icon;
+    WimpGetIconStateBlock icon_state;
 
     xf_drawcolumnheadings = FALSE;      /* unset my redraw flag */
 
-    if(!borbit)
+    if(!displaying_borders)
         return;
 
     trace_0(TRACE_APP_PD4, "\n*** colh_draw_column_headings()");
 
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_COLUMN_HEADINGS, &icon);
+    icon_state.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
 
-    please_update_window(colh_forced_draw_column_headings, colh_window,
-                         icon.box.x0, icon.box.y0, icon.box.x1, icon.box.y1);
+    please_update_window(colh_forced_draw_column_headings, colh_window_handle,
+                         icon_state.icon.bbox.xmin, icon_state.icon.bbox.ymin,
+                         icon_state.icon.bbox.xmax, icon_state.icon.bbox.ymax);
 }
 
 extern void
 colh_forced_draw_column_headings(
-    RISCOS_REDRAWSTR *r)
+    _In_        const RISCOS_RedrawWindowBlock * const redraw_window_block)
 {
-    IGNOREPARM(r);
+    UNREFERENCED_PARAMETER_InRef_(redraw_window_block);
 
     trace_0(TRACE_APP_PD4, "colh_forced_draw_column_headings()");
 
@@ -442,7 +490,7 @@ colh_maybe_draw_column_headings(void)
 {
     trace_0(TRACE_APP_PD4, "colh_maybe_draw_column_headings()");
 
-    if(!borbit)
+    if(!displaying_borders)
         return;
 
     /*>>>Do source level clipping here*/
@@ -457,123 +505,136 @@ colh_really_draw_column_headings(void)
     COL colno;
     S32 cwid;
 
-    wimp_wstate wind;
-    wimp_icon   border;
-    wimp_icon   number;
-    int fgcol, bgcol;
-    S32 wind_width;
+    WimpIconBlock border;
+    WimpIconBlock number;
+    GDI_COORD window_width;
 
     trace_0(TRACE_APP_PD4, "colh_really_draw_column_headings()");
 
-    wimp_get_wind_state(colh_window, &wind);
+    { /* get the window width */
+    WimpGetWindowStateBlock window_state;
+    window_state.window_handle = colh_window_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        return;
+    window_width = BBox_width(&window_state.visible_area);
+    } /*block*/
 
-    wimp_get_icon_info(colh_window, (wimp_i)COLH_COLUMN_HEADINGS, &border);
+    window_width += charwidth; /* i.e. comfortably wider than window */
 
-    number.box.x0 = border.box.x0;
-    number.box.y0 = border.box.y0 + dy;
-    number.box.y1 = border.box.y1 - dy;
+    {
+    WimpGetIconStateBlock icon_state;
+    icon_state.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_COLUMN_HEADINGS;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return;
+    border = icon_state.icon;
+    } /*block*/
 
-    wind_width = (wind.o.box.x1 - wind.o.box.x0) + charwidth;   /* i.e. comfortably wider than window */
+    number.bbox.xmin = border.bbox.xmin;
+    number.bbox.ymin = border.bbox.ymin + dy;
+    number.bbox.ymax = border.bbox.ymax - dy;
 
     coff = 0;
 
-    for(; !((cptr = horzvec_entry(coff))->flags & LAST)  &&  (wind_width > number.box.x0); ++coff)
+    for(; !((cptr = horzvec_entry(coff))->flags & LAST); ++coff)
     {
+        COLOURS_OPTION_INDEX fg_colours_option_index, bg_colours_option_index;
+
+        if(window_width <= number.bbox.xmin)
+            break; /* off the right */
+
         colno = cptr->colno;
         cwid = colwidth(colno);
 
-        border.box.x0 = number.box.x0 - dx;
-        border.box.x1 = number.box.x0 + cwid*charwidth;
-        number.box.x1 = border.box.x1 - dx;
+        border.bbox.xmin = number.bbox.xmin - dx;
+        border.bbox.xmax = number.bbox.xmin + cwid*charwidth;
+        number.bbox.xmax = border.bbox.xmax - dx;
 
         if(colno == curcol)
         {
-            fgcol = CURBORDERFOREC;
-            bgcol = CURBORDERBACKC;
+            fg_colours_option_index = COI_CURRENT_BORDERFORE;
+            bg_colours_option_index = COI_CURRENT_BORDERBACK;
         }
         else
         {
-            fgcol = BORDERFOREC;
-            bgcol = BORDERBACKC;
+            fg_colours_option_index = COI_BORDERFORE;
+            bg_colours_option_index = COI_BORDERBACK;
 
             if(incolfixes(colno))
-                bgcol = FIXBORDERBACKC;
+                bg_colours_option_index = COI_FIXED_BORDERBACK;
         }
 
-        border.flags = (wimp_iconflags) (wimp_IBORDER | (wimp_IFORECOL * logcol(GRIDC))); /*BORDERFOREC*/
+        border.flags = (int) (
+            wimp_IBORDER | (WimpIcon_FGColour * wimp_colour_index_from_option(COI_GRID)) ); /*COI_BORDERFORE*/
 
-        number.flags = (wimp_iconflags) ( wimp_ITEXT /*| wimp_IBORDER*/ | wimp_IHCENTRE | wimp_IVCENTRE | wimp_IFILLED
-                     | (wimp_IFORECOL * logcol(fgcol))
-                     | (wimp_IBACKCOL * logcol(bgcol)) );
+        number.flags = (int) (
+            wimp_ITEXT |
+            wimp_IHCENTRE | wimp_IVCENTRE |
+          /*wimp_IBORDER |*/ (WimpIcon_FGColour * wimp_colour_index_from_option(fg_colours_option_index)) |
+            wimp_IFILLED |   (WimpIcon_BGColour * wimp_colour_index_from_option(bg_colours_option_index)) );
 
-        (void) write_col(number.data.text, elemof32(number.data.text), colno);
+        (void) write_col(number.data.t, elemof32(number.data.t), colno);
 
-        wimp_ploticon(&number);
-        wimp_ploticon(&border);
+        if(NULL != WrapOsErrorReporting(tbl_wimp_plot_icon(&number)))
+            break;
 
-        number.box.x0 = border.box.x1;
+        if(NULL != WrapOsErrorReporting(tbl_wimp_plot_icon(&border)))
+            break;
+
+        number.bbox.xmin = border.bbox.xmax;
     }
 
     /* Clear rest of column heading line upto right edge of window */
 
-    if(wind_width > number.box.x0)
+    if(window_width > number.bbox.xmin)
     {
-        border.box.x0 = number.box.x0 - dx;
-        border.box.x1 = wind_width;
+        border.bbox.xmin = number.bbox.xmin - dx;
+        border.bbox.xmax = window_width;
 
-        border.flags = (wimp_iconflags) ( /*wimp_ITEXT |*/ wimp_IBORDER | /*wimp_IHCENTRE | wimp_IVCENTRE |*/ wimp_IFILLED
-                     | (wimp_IFORECOL * logcol(GRIDC))         /*BORDERFOREC*/
-                     | (wimp_IBACKCOL * logcol(BORDERBACKC)) );
+        border.flags = (int) (
+            /*wimp_ITEXT |*/
+            /*wimp_IHCENTRE | wimp_IVCENTRE |*/
+            wimp_IBORDER | (WimpIcon_FGColour * wimp_colour_index_from_option(COI_GRID)) | /*COI_BORDERFORE*/
+            wimp_IFILLED | (WimpIcon_BGColour * wimp_colour_index_from_option(COI_BORDERBACK)) );
 
-        wimp_ploticon(&border);
+        void_WrapOsErrorReporting(tbl_wimp_plot_icon(&border));
     }
 
     /* Draw the right margin indicator (a down arrow) for the current column */
 
-    number.box.x1 = texttooffset_x(calcad(curcoloffset) + colwrapwidth(curcol));
-    number.box.x0 = number.box.x1 - 2 * charwidth;
+    number.bbox.xmax = texttooffset_x(calcad(curcoloffset) + colwrapwidth(curcol));
+    number.bbox.xmin = number.bbox.xmax - 2 * charwidth;
 
-    if(wind_width > number.box.x0)
+    if(window_width > number.bbox.xmin)
     {
-      /*number.flags = wimp_ITEXT | wimp_IBORDER | wimp_IHCENTRE | wimp_IVCENTRE | wimp_IFILLED;*/
-        number.flags = (wimp_iconflags) (wimp_ITEXT | wimp_IHCENTRE | wimp_IVCENTRE);
-
-#ifndef POUNDS_BLEEDING_RJM
-        number.flags = (wimp_iconflags) (wimp_ISPRITE  | wimp_IHCENTRE | wimp_IVCENTRE);
-#else
-        number.flags = (wimp_iconflags) (wimp_ITEXT | wimp_IHCENTRE | wimp_IVCENTRE);
-#endif
+        number.flags = (int) (wimp_ISPRITE | wimp_IHCENTRE | wimp_IVCENTRE);
 
 #if FALSE
         number.flags |= wimp_IBORDER;     /* Useful for debugging */
 #endif
 
-        number.flags = (wimp_iconflags) (number.flags |
-            (colislinked(curcol)
-                ? (wimp_IFORECOL * logcol(CURBORDERFOREC))
-                : (wimp_IFORECOL * logcol(BORDERFOREC)) ));  /*FORE*/
+        number.flags = (int) (number.flags |
+                              (WimpIcon_FGColour * wimp_colour_index_from_option(colislinked(curcol)
+                                                                             ? COI_CURRENT_BORDERFORE
+                                                                             : COI_BORDERFORE)) );
 
-#ifndef POUNDS_BLEEDING_RJM
-        xstrkpy(number.data.sprite_name, elemof32(number.data.sprite_name), "pd4downarro");
-#else
-        number.data.text[0] = 138;      /* a down arrow */
-        number.data.text[1] = 0;
-#endif
-        wimp_ploticon(&number);
+        xstrkpy(number.data.s, elemof32(number.data.s), "pd4downarro");
+
+        void_WrapOsErrorReporting(tbl_wimp_plot_icon(&number));
     }
 
-    killcolourcache();          /* cos wimp_ploticon changes foreground and background */
-    setcolour(FORE, BACK);      /* colours under our feet!                             */
+    killcolourcache(); /* cos Wimp_PlotIcon changes foreground and background colours */
+    setcolours(COI_FORE, COI_BACK);
 }
 
 /******************************************************************************
 *
-* display contents of current numeric cell on the contents line
+* display contents of current number cell on the contents line
 *
 ******************************************************************************/
 
 extern void
-colh_draw_contents_of_numslot(void)
+colh_draw_contents_of_number_cell(void)
 {
     char      text[LIN_BUFSIZ];
     P_CELL     tcell;
@@ -581,14 +642,14 @@ colh_draw_contents_of_numslot(void)
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
         return;
 
+    text[0] = CH_NULL;
+
     tcell = travel_here();
 
-    if(!tcell  ||  (tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE))
-        *text = '\0';
-    else
-        prccon(text, tcell);   /* decompile tcell into text */
+    if((NULL != tcell)  &&  (tcell->type == SL_NUMBER))
+        prccon(text, tcell); /* decompile tcell into text */
 
-    set_icon_text(colh_window, (wimp_i)COLH_CONTENTS_LINE, text);
+    set_icon_text(colh_window_handle, COLH_CONTENTS_LINE, text);
 }
 
 extern void
@@ -598,13 +659,11 @@ colh_draw_drag_state(
     if(size >= 0)
     {
         char array[32];
-
-        (void) sprintf(array, "%d", size);
-
+        consume_int(sprintf(array, "%d", size));
         draw_status_box_no_interlock(array);
     }
     else
-        draw_status_box_no_interlock(NULL);     /* Finished, so put the silly bar back */
+        draw_status_box_no_interlock(NULL); /* Finished, so put the silly bar back */
 
 }
 
@@ -613,8 +672,8 @@ colh_draw_edit_state_indicator(void)
 {
     int shade = (xf_inexpression_line ? 0 : wimp_INOSELECT);
 
-    set_icon_flags(colh_window, (wimp_i)COLH_BUTTON_OK    , shade, wimp_INOSELECT);
-    set_icon_flags(colh_window, (wimp_i)COLH_BUTTON_CANCEL, shade, wimp_INOSELECT);
+    set_icon_flags(colh_window_handle, COLH_BUTTON_OK    , shade, wimp_INOSELECT);
+    set_icon_flags(colh_window_handle, COLH_BUTTON_CANCEL, shade, wimp_INOSELECT);
 }
 
 extern void
@@ -625,18 +684,18 @@ colh_draw_mark_state_indicator(
 
     colh_mark_state_indicator = sheet_marked;
 
-    set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BAR, invert, wimp_ISELECTED);
+    set_icon_flags(colh_window_handle, COLH_BUTTON_MARK, invert, wimp_ISELECTED);
 }
 
 extern void
-colh_draw_slot_count(
+colh_draw_cell_count(
     _In_opt_z_      char *text)
 {
     draw_status_box(text);
 }
 
 extern void
-colh_draw_slot_count_in_document(
+colh_draw_cell_count_in_document(
     _In_opt_z_      char *text)
 {
     P_DOCU p_docu;
@@ -652,7 +711,7 @@ colh_draw_slot_count_in_document(
 
         select_document(p_docu);
 
-        colh_draw_slot_count(text);
+        colh_draw_cell_count(text);
 
         select_document_using_docno(old_docno);
     }
@@ -665,7 +724,7 @@ draw_status_box(
     /* Don't widdle on status box if dragging, cos the drag code uses it */
     /* to show the column width/right margin whilst dragging them.       */
 
-    if((dragtype == DRAG_COLUMN_WIDTH) || (dragtype == DRAG_COLUMN_WRAPWIDTH))
+    if((drag_type == DRAG_COLUMN_WIDTH) || (drag_type == DRAG_COLUMN_WRAPWIDTH))
         return;
 
     draw_status_box_no_interlock(text);
@@ -678,79 +737,194 @@ draw_status_box_no_interlock(
     if(text)
     {
 #if TRUE
-        set_icon_text_and_flags(colh_window, (wimp_i)COLH_STATUS_TEXT, text,
+        set_icon_text_and_flags(colh_window_handle, COLH_STATUS_TEXT, text,
                                                                 (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));
 
 #else
-      /*  set_icon_flags(colh_window, (wimp_i)COLH_STATUS_TEXT  , (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));*/
-        set_icon_text(colh_window , (wimp_i)COLH_STATUS_TEXT  , text);
+      /*set_icon_flags(colh_window_handle, COLH_STATUS_TEXT  , (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));*/
+        set_icon_text(colh_window_handle , COLH_STATUS_TEXT  , text);
 
-      /*set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BAR   , (                          0), (wimp_IBORDER | wimp_IFILLED));*/
-        set_icon_flags(colh_window, (wimp_i)COLH_STATUS_TEXT  , (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));
-#endif
-#if FALSE
-        set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BAR   , (                          0), (wimp_IBORDER | wimp_IFILLED));
-        set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BORDER, (                          0), (               wimp_IFILLED));
+        set_icon_flags(colh_window_handle, COLH_STATUS_TEXT  , (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));
 #endif
     }
     else
     {
-        set_icon_flags(colh_window, (wimp_i)COLH_STATUS_TEXT  , (                          0), (wimp_ITEXT   | wimp_IFILLED));
-        set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BORDER, (               wimp_IFILLED), (               wimp_IFILLED));
-        set_icon_flags(colh_window, (wimp_i)COLH_STATUS_BAR   , (wimp_IBORDER | wimp_IFILLED), (wimp_IBORDER | wimp_IFILLED));
+        set_icon_flags(colh_window_handle, COLH_STATUS_TEXT  , (                          0), (wimp_ITEXT   | wimp_IFILLED));
+        set_icon_flags(colh_window_handle, COLH_STATUS_BORDER, (               wimp_IFILLED), (               wimp_IFILLED));
     }
 }
 
 /******************************************************************************
 *
-* process redraw window request for colh_window
+* process redraw window request for colh window
 *
 ******************************************************************************/
 
-static void
-colh_redraw_request(
-    wimp_eventstr *e)
+static BOOL
+colh_event_Redraw_Window_Request(
+    const WimpRedrawWindowRequestEvent * const redraw_window_request)
 {
-    os_error * bum;
-    wimp_redrawstr redraw;
-    S32 redrawindex;
+    WimpRedrawWindowBlock redraw_window_block;
+    BOOL more;
 
-    trace_0(TRACE_APP_PD4, "colh_redraw_request()");
+    trace_0(TRACE_APP_PD4, "colh_Redraw_Window_Request()");
 
-    redraw.w = e->data.o.w;     /* should be colh_window */
+    redraw_window_block.window_handle = redraw_window_request->window_handle;
+    assert(redraw_window_block.window_handle == colh_window_handle);
 
     /* wimp errors in redraw are fatal */
-    bum = wimpt_complain(wimp_redraw_wind(&redraw, &redrawindex));
+    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
+        more = FALSE;
 
-#if TRACE_ALLOWED
-    if(!redrawindex)
-        trace_0(TRACE_APP_PD4, "no rectangles to redraw");
-#endif
-
-    while(!bum  &&  redrawindex)
+    while(more)
     {
-      /*graphics_window = *((coord_box *) &redraw.g);*/
+        graphics_window = * ((PC_GDI_BOX) &redraw_window_block.redraw_area);
 
         colh_maybe_draw_column_headings();
 
-        bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
+            more = FALSE;
     }
+
+    return(TRUE);
 }
 
 /******************************************************************************
 *
-* process events sent to colh_window
+* process key pressed event for colh window
+*
+******************************************************************************/
+
+static BOOL
+colh_event_Key_Pressed(
+    /*mutated*/ wimp_eventstr * const e,
+    const WimpKeyPressedEvent * const key_pressed)
+{
+    BOOL processed = TRUE;
+
+    switch(key_pressed->key_code)
+    {
+    case 13:
+        if(host_ctrl_pressed())
+        {
+            expedit_transfer_line_to_box(TRUE);     /* force newline */
+            break;
+        }
+
+        formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
+        break;                                      /* don't want to know where the caret was  */
+
+    case 27:
+        formline_cancel_edit();
+        break;
+
+    case akbd_UpK:                  /* up arrow   */
+    case akbd_DownK:                /* down arrow */
+    case akbd_TabK:                 /* tab        */
+    case akbd_TabK + akbd_Sh:       /* shift tab  */
+    case akbd_TabK + akbd_Ctl:      /* ctrl tab   */
+    case akbd_TabK + akbd_Sh + akbd_Ctl: /* ctrl shift tab */
+        formline_mergebacktext(FALSE, NULL);        /* MUST NOT report formula compilation errors, */
+                                                    /* cos we want event block intact to send the  */
+                                                    /* key to PipeDream's main window              */
+#if FALSE
+    case 388:       /* f4 - search     */
+    case 390:       /* f6 - next match */
+#endif
+        e->data.key.c.w = main_window_handle;
+        e->data.key.c.i = 0;
+        wimpt_fake_event(e);                        /* send key to PipeDream's main window */
+        break;
+
+    default:
+#if TRUE
+        /* can't test for F4/F6 for search/next-match cos user may have changed the keys, so try... */
+        if(e->data.key.chcode >= 256)
+        {
+            e->data.key.c.w = main_window_handle;
+            e->data.key.c.i = 0;
+            wimpt_fake_event(e);            /* ...sending all likely looking keys to PipeDream's main window */
+            break;
+        }
+#endif
+        processed = FALSE;
+        break;
+    }
+
+    return(processed);
+}
+
+/******************************************************************************
+*
+* process caret lose event for colh window
+*
+******************************************************************************/
+
+static BOOL
+colh_event_Lose_Caret(
+    const WimpLoseCaretEvent * const lose_caret)
+{
+    trace_6(TRACE_APP_PD4, "colh_event_handler - Lose_Caret: old window %d icon %d x %d y %d height %8.8X index %d",
+            lose_caret->window_handle, lose_caret->icon_handle,
+            lose_caret->xoffset, lose_caret->yoffset,
+            lose_caret->height, lose_caret->index);
+
+    if( xf_inexpression_line  &&
+        (lose_caret->window_handle == colh_window_handle) &&
+        (lose_caret->icon_handle == COLH_CONTENTS_LINE) &&
+        (lose_caret->index >= 0)
+      )
+    {
+        trace_0(TRACE_APP_PD4, "colh_event_handler - stashing caret position");
+
+        /* Someone is stealing the caret from the contents/formula-line,
+         * stash position away so it can be restored when PipeDream reclaims the caret.
+         * Also means we can paste formula etc. into formula line at correct place.
+         */
+        formline_stashedcaret = lose_caret->index;
+    }
+
+    return(FALSE /*processed*/);
+}
+
+/******************************************************************************
+*
+* process caret gain event for colh window
+*
+******************************************************************************/
+
+static BOOL
+colh_event_Gain_Caret(void)
+{
+    /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
+    if(slotcount_docno != current_docno())
+    {
+        colh_draw_cell_count_in_document(NULL); /* kill the current indicatior (if any) */
+
+        slotcount_docno = current_docno();
+    }
+
+    return(TRUE);
+}
+
+/******************************************************************************
+*
+* process events sent to colh window
 *
 * c.f. main_event_handler & rear_event_handler in c.riscos
 *
 ******************************************************************************/
+
+#define colh_event_handler_report(event_code, event_data, handle) \
+    riscos_event_handler_report(event_code, event_data, handle, "colh")
 
 extern BOOL
 colh_event_handler(
     wimp_eventstr *e,
     void *handle)
 {
-    BOOL processed = TRUE;
+    const int event_code = (int) e->e;
+    WimpPollBlock * const event_data = (WimpPollBlock *) &e->data;
 
     if(!select_document_using_callback_handle(handle))
     {
@@ -759,128 +933,65 @@ colh_event_handler(
     }
 
     trace_4(TRACE_APP_PD4, TEXT("colh_event_handler: event %s, handle ") PTR_XTFMT TEXT(" window %d, document ") PTR_XTFMT,
-             report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) colh_window, report_ptr_cast(current_document()));
+             report_wimp_event(event_code, event_data), report_ptr_cast(handle), (int) colh_window_handle, report_ptr_cast(current_document()));
 
-    switch(e->e)
+    switch(event_code)
     {
-    case wimp_EOPEN:    /* colh_window always opened as a pane on top of rear_window */
-    case wimp_ECLOSE:   /* colh_window has no close box */
-    case wimp_ESCROLL:  /* or scroll bars  */
-        break;
+    case Wimp_ERedrawWindow:
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(colh_event_Redraw_Window_Request(&event_data->redraw_window_request));
 
-    case wimp_EPTRENTER:
+    case Wimp_EOpenWindow:    /* colh window always opened as a pane on top of rear window */
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(TRUE);
+
+    case Wimp_ECloseWindow:   /* colh window has no close box */
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(TRUE);
+
+    case Wimp_EPointerEnteringWindow:
+        /*colh_event_handler_report(event_code, event_data, handle);*/
         if(!drag_in_column_header)
             colh_pointershape_starttracking();
-        break;
+        return(TRUE);
 
-    case wimp_EPTRLEAVE:                            /* When we start dragging, the wimp sends a pointer-leaving-window-event, */
+    case Wimp_EPointerLeavingWindow:                /* When we start dragging, the wimp sends a pointer-leaving-window-event, */
+        /*colh_event_handler_report(event_code, event_data, handle);*/
         if(!drag_in_column_header)                  /* we ignore this, so the pointer retains its dragcolumn or dragmargin    */
             colh_pointershape_endtracking();        /* shape. When the drag has finshed we remove the tracker, the wimp may   */
-        break;                                      /* then send a pointer-entering-window-event.                             */
+        return(TRUE);                               /* then send a pointer-entering-window-event.                             */
 
-    case wimp_EREDRAW:
-        colh_redraw_request(e);
-        break;
+    case Wimp_EScrollRequest: /* colh window has no scroll bars  */
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(TRUE);
 
-    case wimp_EBUT:
-        application_button_click_in_colh(&(e->data.but.m));
-        break;
+    case Wimp_EMouseClick:
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(colh_event_Mouse_Click(&event_data->mouse_click));
 
-    case wimp_EKEY:
-        switch(e->data.key.chcode)
-        {
-        case 13:
-            if(host_ctrl_pressed())
-            {
-                expedit_transfer_line_to_box(TRUE);     /* force newline */
-                break;
-            }
+    case Wimp_EKeyPressed:
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(colh_event_Key_Pressed(e, &event_data->key_pressed));
 
-            formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
-            break;                                      /* don't want to know where the caret was  */
+    case Wimp_ELoseCaret:
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(colh_event_Lose_Caret(&event_data->lose_caret));
 
-        case 27:
-            formline_canceledit();
-            break;
+    case Wimp_EGainCaret:
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(colh_event_Gain_Caret());
 
-        case akbd_UpK:                  /* up arrow   */
-        case akbd_DownK:                /* down arrow */
-        case akbd_TabK:                 /* tab        */
-        case akbd_TabK + akbd_Sh:       /* shift tab  */
-        case akbd_TabK + akbd_Ctl:      /* ctrl tab   */
-        case akbd_TabK + akbd_Sh + akbd_Ctl: /* ctrl shift tab */
-            formline_mergebacktext(FALSE, NULL);        /* MUST NOT report formula compilation errors, */
-                                                        /* cos we want event block intact to send the  */
-                                                        /* key to PipeDream's main_window              */
-#if FALSE
-        case 388:       /* f4 - search     */
-        case 390:       /* f6 - next match */
-#endif
-            e->data.key.c.w = main_window;
-            e->data.key.c.i = (wimp_i)0;
-            wimpt_fake_event(e);                        /* send key to PipeDream's main_window */
-            break;
-
-        default:
-#if TRUE
-            /* can't test for f4/f6 for search/next-match cos user may have changed the keys, so try... */
-            if(e->data.key.chcode >= 256)
-            {
-                e->data.key.c.w = main_window;
-                e->data.key.c.i = (wimp_i)0;
-                wimpt_fake_event(e);            /* ...sending all likely looking keys to PipeDream's main_window */
-                break;
-            }
-#endif
-            processed = FALSE;
-            break;
-        }
-        break;
-
-    case wimp_EGAINCARET:
-        /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
-        if(slotcount_docno != current_docno())
-        {
-            colh_draw_slot_count_in_document(NULL); /* kill the current indicatior (if any) */
-
-            slotcount_docno = current_docno();
-        }
-        break;
-
-    case wimp_ELOSECARET:
-        trace_6(TRACE_APP_PD4, "colh_event_handler - LoseCaret: old window %d icon %d x %d y %d height %8.8X index %d",
-                e->data.c.w, e->data.c.i,
-                e->data.c.x, e->data.c.y,
-                e->data.c.height, e->data.c.index);
-
-        if(xf_inexpression_line         &&
-           (e->data.c.w == colh_window) &&
-           (e->data.c.i == (wimp_i)COLH_CONTENTS_LINE) &&
-           (e->data.c.index >= 0)
-          )
-        {
-            trace_0(TRACE_APP_PD4, "colh_event_handler - stashing caret position");
-
-            /* Someone is stealing the caret from the contents/formula-line, stash position away so it can be restored    */
-            /* when PipeDream reclaims the caret. Also means we can paste formula etc. into formula line at correct place. */
-            formline_stashedcaret = e->data.c.index;
-        }
-        processed = FALSE;
-        break;
-
-    case wimp_ESEND:
-    case wimp_ESENDWANTACK:
-        colh_message(&e->data.msg);
-        break;
+    case Wimp_EUserMessage:
+    case Wimp_EUserMessageRecorded:
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        return(colh_event_User_Message(&event_data->user_message));
 
     default:
-        trace_1(TRACE_APP_PD4, "unprocessed wimp event to colh_window: %s",
-                report_wimp_event(e->e, &e->data));
-        processed = FALSE;
-        break;
+        /*colh_event_handler_report(event_code, event_data, handle);*/
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event to colh window: %s",
+                report_wimp_event(event_code, event_data));
+        return(FALSE);
     }
-
-    return(processed);
 }
 
 /******************************************************************************
@@ -900,7 +1011,7 @@ colh_event_handler(
 * +----------------------------+--------+----------+---------------+
 *
 *
-* Chapter 2: Button types used for the colh_window
+* Chapter 2: Button types used for the colh window
 *   The window background is        Double-click/Click/Drag,
 *   the editable contents line is   Write/Click/Drag,
 *   the OK and Cancel buttons are   Click
@@ -912,166 +1023,181 @@ colh_event_handler(
 *
 ******************************************************************************/
 
-static void             /* new stuff */
-application_button_click_in_colh(
-    wimp_mousestr *pointer)
+static BOOL             /* new stuff */
+colh_event_Mouse_Click(
+    const WimpMouseClickEvent * const mouse_click)
 {
-    static BOOL initially_selectclicked = FALSE;
+    static BOOL initially_select_clicked = FALSE;
 
-    wimp_i icon = pointer->i;
-    int buttonstate = pointer->bbits;
-    BOOL selectclicked;
+    const int icon_handle = mouse_click->icon_handle;
+    int buttons = mouse_click->buttons;
+    BOOL select_clicked;
 
     trace_4(TRACE_APP_PD4,
-            "application_button_click_in_colh: (%d, %d) bstate %X, icon %d",
-            pointer->x, pointer->y, buttonstate, (int)icon);
+            "colh_event_Mouse_Click: (%d, %d) buttons %X, icon %d",
+            mouse_click->mouse_x, mouse_click->mouse_y, buttons, icon_handle);
 
     /* ensure we can find cell for positioning, overlap tests etc. must allow spellcheck as we may move */
     if(!mergebuf())
-        return;
+        return(TRUE);
     filbuf();
     /* but guaranteed that we can simply slot_in_buffer = FALSE for movement */
 
-    if(icon == (wimp_i)COLH_COLUMN_HEADINGS)
+    if(icon_handle == COLH_COLUMN_HEADINGS)
     {
-        /* have to cope with Pink 'Plonker' Duck Man's ideas on double clicks (fixed in new RISC OS+):
-        * He says that left then right (or vice versa) is a double click!
-        */
-        if(buttonstate & (wimp_BLEFT | wimp_BRIGHT))
+        /* Have to cope with Pink 'Plonker' Duck Man's ideas on double clicks (fixed in new RISC OS+):
+         * He says that left then right (or vice versa) is a double click!
+         */
+        if(buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust))
         {
-            selectclicked = ((buttonstate & wimp_BLEFT) != 0);
+            select_clicked = ((buttons & Wimp_MouseButtonSelect) != 0);
 
             /* must be same button that started us off */
-            if(initially_selectclicked != selectclicked)
-                buttonstate = buttonstate << 8; /* force a single click */
+            if(initially_select_clicked != select_clicked)
+                buttons = select_clicked ? Wimp_MouseButtonSingleSelect : Wimp_MouseButtonSingleAdjust; /* force a single click */
         }
 
-        if(     buttonstate & (wimp_BLEFT      | wimp_BRIGHT))
+        if(     buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust))
         {
-            selectclicked = ((buttonstate & wimp_BLEFT) != 0);
+            select_clicked = ((buttons & Wimp_MouseButtonSelect) != 0);
 
-            application_doubleclick_in_colh(icon, pointer, selectclicked);
+            return(colh_event_Mouse_Click_double(mouse_click, select_clicked));
         }
-        else if(buttonstate & (wimp_BDRAGLEFT  | wimp_BDRAGRIGHT))
+        else if(buttons & (Wimp_MouseButtonDragSelect | Wimp_MouseButtonDragAdjust))
         {
-            selectclicked = ((buttonstate & wimp_BDRAGLEFT) != 0);
+            select_clicked = ((buttons & Wimp_MouseButtonDragSelect) != 0);
 
-            application_startdrag_in_colh(icon, pointer, selectclicked);
+            return(colh_event_Mouse_Click_start_drag(mouse_click, select_clicked));
         }
-        else if(buttonstate & (wimp_BCLICKLEFT | wimp_BCLICKRIGHT))
+        else if(buttons & (Wimp_MouseButtonSingleSelect | Wimp_MouseButtonSingleAdjust))
         {
-            selectclicked = ((buttonstate & wimp_BCLICKLEFT) != 0);
+            select_clicked = ((buttons & Wimp_MouseButtonSingleSelect) != 0);
 
-            initially_selectclicked = selectclicked;
-            application_singleclick_in_colh(icon, pointer, selectclicked);
+            initially_select_clicked = select_clicked;
+
+            return(colh_event_Mouse_Click_single(mouse_click, select_clicked));
         }
     }
     else
     {
-        if(     buttonstate & (wimp_BLEFT      | wimp_BRIGHT))
+        if(buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust))
         {
-            selectclicked = ((buttonstate & wimp_BLEFT) != 0);
+            select_clicked = ((buttons & Wimp_MouseButtonSelect) != 0);
 
-            initially_selectclicked = selectclicked;
-            application_singleclick_in_colh(icon, pointer, selectclicked);
+            initially_select_clicked = select_clicked;
+
+            return(colh_event_Mouse_Click_single(mouse_click, select_clicked));
         }
     }
+
+    return(FALSE);
 }
 
-static void             /* new stuff */
-application_singleclick_in_colh(
-    wimp_i icon,
-    wimp_mousestr *pointer,
-    BOOL selectclicked)
+static BOOL             /* new stuff */
+colh_event_Mouse_Click_single(
+    const WimpMouseClickEvent * const mouse_click,
+    BOOL select_clicked)
 {
     DOCNO docno   = current_docno();
     BOOL blkindoc = (blkstart.col != NO_COL) && (docno == blk_docno);
     BOOL acquire  = FALSE;                                        /* don't want caret on block marking operations */
     BOOL motion   = FALSE;
-    BOOL extend   = !selectclicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
+    BOOL extend   = !select_clicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
     S32  funcnum = 0;
     S32  highlight_number = -1;
 
-    trace_0(TRACE_APP_PD4, "application_singleclick_in_colh");
+    trace_0(TRACE_APP_PD4, "colh_event_Mouse_Click_single");
 
-    switch((int)icon)
+    switch(mouse_click->icon_handle)
     {
     case COLH_BUTTON_OK:
-        formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
-        break;                                      /* don't want to know where the caret was  */
+        if(select_clicked)
+        {
+            formline_mergebacktext(FALSE, NULL);        /* don't report formula compilation errors */
+            break;                                      /* don't want to know where the caret was  */
+        }
+        funcnum = N_EditFormulaInWindow;
+        break;
 
     case COLH_BUTTON_CANCEL:
-        formline_canceledit();
+        if(select_clicked)
+            formline_cancel_edit();
         break;
 
     case COLH_CONTENTS_LINE:
-        EditContentsLine();
+        if(select_clicked)
+            EditContentsLine();
         break;
 
     case COLH_FUNCTION_SELECTOR:
-
-        /* deliberate drop thru ... */
-
-    case COLH_PIPEDREAM_LOGO:
+        if(select_clicked)
+        {   /* should be handled by function menu code */
+            assert0();
+            break;
+        }
         funcnum = N_EditFormulaInWindow;
         break;
 
     case COLH_BUTTON_REPLICD:
-        funcnum = (selectclicked) ? N_ReplicateDown: N_Replicate;
+        funcnum = (select_clicked) ? N_ReplicateDown: N_ReplicateUp;
         break;
 
     case COLH_BUTTON_REPLICR:
-        funcnum = (selectclicked) ? N_ReplicateRight : N_Replicate;
+        funcnum = (select_clicked) ? N_ReplicateRight : N_ReplicateLeft;
         break;
 
     case COLH_BUTTON_TOTEXT:
-        funcnum = (selectclicked) ? N_ToText : N_ExchangeNumbersText;
+        funcnum = (select_clicked) ? N_ToText : N_ExchangeNumbersText;
         break;
 
     case COLH_BUTTON_TONUMBER:
-        funcnum = (selectclicked) ? N_ToNumber : N_ExchangeNumbersText;
+        funcnum = (select_clicked) ? N_ToNumber : N_ToConstant;
         break;
 
     case COLH_BUTTON_GRAPH:
-        funcnum = (selectclicked) ? N_ChartNew : N_ChartOptions;
+        funcnum = (select_clicked) ? N_ChartNew : N_ChartOptions;
         break;
 
     case COLH_BUTTON_SAVE:
-        funcnum = (selectclicked) ? N_SaveFile : N_SaveFileAsIs;
+        funcnum = (select_clicked) ? N_SaveFile : N_SaveFileAsIs;
         break;
 
     case COLH_BUTTON_PRINT:
-        funcnum = (selectclicked) ? N_Print : N_PageLayout;
+        funcnum = (select_clicked) ? N_Print : N_PageLayout;
         break;
 
     case COLH_BUTTON_LJUSTIFY:
-        funcnum = N_LeftAlign;
+        funcnum = (select_clicked) ? N_LeftAlign : N_FreeAlign;
         break;
 
     case COLH_BUTTON_CJUSTIFY:
-        funcnum = N_CentreAlign;
+        funcnum = (select_clicked) ? N_CentreAlign : 0;
         break;
 
     case COLH_BUTTON_RJUSTIFY:
-        funcnum = N_RightAlign;
+        funcnum = (select_clicked) ? N_RightAlign : 0;
         break;
 
     case COLH_BUTTON_FJUSTIFY:
         {
-        if(d_options_JU == 'Y')
-            d_options_JU = 'N';
-        else
+        if(select_clicked)
         {
-            d_options_JU = 'Y';
-            d_options_WR = 'Y';
+            if(d_options_JU == 'Y')
+                d_options_JU = 'N';
+            else
+            {
+                d_options_JU = 'Y';
+                d_options_WR = 'Y';
+            }
+
+            update_variables();
         }
 
-        update_variables();
         break;
         }
 
     case COLH_BUTTON_FONT:
-        funcnum = (selectclicked) ? N_PRINTERFONT : N_INSERTFONT;
+        funcnum = (select_clicked) ? N_PRINTERFONT : N_INSERTFONT;
         break;
 
     case COLH_BUTTON_BOLD:
@@ -1100,62 +1226,64 @@ application_singleclick_in_colh(
         break;
 
     case COLH_BUTTON_LEADTRAIL:
-        funcnum = (selectclicked) ? N_LeadingCharacters : N_TrailingCharacters;
+        funcnum = (select_clicked) ? N_LeadingCharacters : N_TrailingCharacters;
         break;
 
     case COLH_BUTTON_DECPLACES:
-        funcnum = N_DecimalPlaces;
+        funcnum = (select_clicked) ? N_DecimalPlaces : N_DefaultFormat;
         break;
 
     case COLH_BUTTON_COPY:
-        funcnum = (selectclicked) ? N_CopyBlockToPasteList : N_MoveBlock;
+        funcnum = (select_clicked) ? N_CopyBlockToPasteList : N_MoveBlock;
         break;
 
     case COLH_BUTTON_DELETE:
-        funcnum = (selectclicked) ? N_DeleteBlock : N_ClearBlock;
+        funcnum = (select_clicked) ? N_DeleteBlock : N_ClearBlock;
         break;
 
     case COLH_BUTTON_PASTE:
-        funcnum = N_Paste;
+        funcnum = (select_clicked) ? N_Paste : 0;
         break;
 
     case COLH_BUTTON_FORMATBLOCK:
-        funcnum = N_FormatBlock;
+        funcnum = (select_clicked) ? N_FormatBlock : 0;
         break;
 
     case COLH_BUTTON_SEARCH:
-        funcnum = (selectclicked) ? N_Search : N_NextMatch;
+        funcnum = (select_clicked) ? N_Search : N_NextMatch;
         break;
 
     case COLH_BUTTON_SORT:
-        funcnum = (selectclicked) ? N_SortBlock : N_TransposeBlock;
+        funcnum = (select_clicked) ? N_SortBlock : N_TransposeBlock;
         break;
 
     case COLH_BUTTON_SPELLCHECK:
-        funcnum = (selectclicked) ? N_CheckDocument : N_BrowseDictionary;
+        funcnum = (select_clicked) ? N_CheckDocument : N_BrowseDictionary;
         break;
 
     case COLH_BUTTON_CMD_RECORD:
-        funcnum = N_RecordMacroFile;
+        funcnum = (select_clicked) ? N_RecordMacroFile : 0;
         break;
 
     case COLH_BUTTON_CMD_EXEC:
-        funcnum = N_DoMacroFile;
+        funcnum = (select_clicked) ? N_DoMacroFile : 0;
         break;
 
-    case COLH_STATUS_BAR:
+    case COLH_BUTTON_MARK:
     case COLH_STATUS_TEXT:
         /* if editing, suppress setting/clearing of marks */
         if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
             break;
 
-        if(selectclicked && !blkindoc)
+        if(select_clicked && !blkindoc)
         {
             trace_0(TRACE_APP_PD4, "click on cell coordinates - mark entire sheet");
             funcnum = N_MarkSheet;
         }
         else
         {
+            if(!select_clicked)
+                colh_draw_mark_state_indicator(blkindoc); /* may need to re-invert as Window Manager has already set the icon state */
             trace_0(TRACE_APP_PD4, "click on cell coordinates - clear markers");
             funcnum = N_ClearMarkedBlock;
         }
@@ -1163,7 +1291,7 @@ application_singleclick_in_colh(
 
     case COLH_COLUMN_HEADINGS:
         {
-        pointer_shape *shape;
+        pointer_shape * shape;
         int   subposition;
         COL  tcol;
         coord tx;
@@ -1175,8 +1303,8 @@ application_singleclick_in_colh(
             break;
         }
 
-        colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
-        setpointershape(shape);
+        colh_where_in_column_headings(mouse_click, &shape, &subposition, &tcol, &tx);
+        riscos_setpointershape(shape);
 
         switch(subposition)
         {
@@ -1235,9 +1363,18 @@ application_singleclick_in_colh(
         /* is there a marked block in this document? */
         if((NO_COL != blkstart.col) && (blk_docno == current_docno()))
         {
-            /* can't think of a kosher way to do this */
-            block_highlight_core(!selectclicked, highlight_number);
+            /* can't think of a kosher way to do this */ /* and why doesn't it get redrawn? */
+            block_highlight_core(!select_clicked, highlight_number);
+
+            /* populate the dialogue box option in case we then wish to remove! */
+            d_inshigh[0].option = (highlight_number - FIRST_HIGHLIGHT) + FIRST_HIGHLIGHT_TEXT;
+
             funcnum = 0;
+        }
+        else
+        {
+            if(!select_clicked)
+                funcnum = 0;
         }
     }
 
@@ -1250,40 +1387,41 @@ application_singleclick_in_colh(
     if(acquire)
         xf_caretreposition = TRUE;
 
-    if(xf_caretreposition  ||  motion)
+    if(xf_caretreposition  ||  motion  ||  (highlight_number >= 0))
     {
         draw_screen();
         draw_caret();
     }
+
+    return(TRUE);
 }
 
-static void             /* new stuff */
-application_doubleclick_in_colh(
-    wimp_i icon,
-    wimp_mousestr *pointer,
-    BOOL selectclicked)
+static BOOL             /* new stuff */
+colh_event_Mouse_Click_double(
+    const WimpMouseClickEvent * const mouse_click,
+    BOOL select_clicked)
 {
-    BOOL extend = !selectclicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
+    BOOL extend = !select_clicked || host_shift_pressed();          /* unshifted-Adjust or shift-anything */
 
-    trace_0(TRACE_APP_PD4, "application_doubleclick_in_colh");
+    trace_0(TRACE_APP_PD4, "colh_event_Mouse_Click_double");
 
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)  /* everything suppressed whilst editing */
-        return;
+        return(TRUE);
 
-    switch((int)icon)
+    switch(mouse_click->icon_handle)
     {
     case COLH_COLUMN_HEADINGS:
         {
-        pointer_shape *shape;
-        int            subposition;
-        COL           tcol;
-        coord          tx;
+        pointer_shape * shape;
+        int subposition;
+        COL tcol;
+        coord tx;
 
-        colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
-        setpointershape(shape);
+        colh_where_in_column_headings(mouse_click, &shape, &subposition, &tcol, &tx);
+        riscos_setpointershape(shape);
 
         if(extend)
-            return;
+            return(TRUE);
 
         switch(subposition)
         {
@@ -1332,35 +1470,36 @@ application_doubleclick_in_colh(
         }
 
     } /* switch(icon) */
+
+    return(TRUE);
 }
 
-static void             /* new stuff */
-application_startdrag_in_colh(
-    wimp_i icon,
-    wimp_mousestr *pointer,
-    BOOL selectclicked)
+static BOOL             /* new stuff */
+colh_event_Mouse_Click_start_drag(
+    const WimpMouseClickEvent * const mouse_click,
+    BOOL select_clicked)
 {
     DOCNO docno   = current_docno();
     BOOL blkindoc = (blkstart.col != NO_COL) && (docno == blk_docno);
-    BOOL extend   = !selectclicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
+    BOOL extend   = !select_clicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
 
-    trace_0(TRACE_APP_PD4, "application_startdrag_in_colh");
+    trace_0(TRACE_APP_PD4, "colh_event_Mouse_Click_start_drag");
 
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)  /* everything suppressed whilst editing */
-        return;
+        return(TRUE);
 
-    switch((int)icon)
+    switch(mouse_click->icon_handle)
     {
     case COLH_COLUMN_HEADINGS:
         {
-        pointer_shape *shape;
-        int            subposition;
-        COL           tcol;
-        coord          tx;
-        coord          ty   = -1; /*>>>don't really know this - suck it and see!*/
+        pointer_shape * shape;
+        int subposition;
+        COL tcol;
+        coord tx;
+        coord ty = -1; /*>>>don't really know this - suck it and see!*/
 
-        colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, &tx);
-        setpointershape(shape);     /* Must do this, incase colh_pointershape_null_handler hasn't been called yet. */
+        colh_where_in_column_headings(mouse_click, &shape, &subposition, &tcol, &tx);
+        riscos_setpointershape(shape); /* Must do this, incase colh_pointershape_null_handler hasn't been called yet. */
 
         switch(subposition)
         {
@@ -1410,6 +1549,8 @@ application_startdrag_in_colh(
         }
 
     } /* switch(icon) */
+
+    return(TRUE);
 }
 
 /******************************************************************************
@@ -1424,8 +1565,8 @@ application_startdrag_in_colh(
 static void
 EditContentsLine(void)
 {
-    wimp_caretstr carrot;
-    S32           index;
+    WimpCaret caret;
+    int index = 0;
 
     /* If already editing the contents line, a click repositions the caret, */
     /* this is done totally by the wimp, so requires no action by us.       */
@@ -1443,42 +1584,44 @@ EditContentsLine(void)
 
     /* Start editing the formula, place caret where user clicked */
 
-    wimp_get_caret_pos(&carrot);
-    index = (((carrot.w == colh_window)                &&
-              (carrot.i == (wimp_i)COLH_CONTENTS_LINE) &&
-              (carrot.index >= 0)
-             )
-             ? carrot.index
-             : 0
-            );
+    if(NULL == WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
+    {
+        if( (caret.window_handle == colh_window_handle) &&
+            (caret.icon_handle == COLH_CONTENTS_LINE) &&
+            (caret.index >= 0) )
+        {
+            index = caret.index;
+        }
+    }
 
-    expedit_editcurrentslot(index, FALSE);      /* either in contents line or formula box as appropriate */
+    expedit_edit_current_cell(index, FALSE); /* either in contents line or formula box as appropriate */
 }
 
 /******************************************************************************
 *
-* Process message events for colh_window
+* Process message events for colh window
 *
 ******************************************************************************/
 
-static void
-colh_HELPREQUEST(
-    wimp_msgstr * m)
+static BOOL
+colh_event_Message_HelpRequest(
+    /*acked*/ WimpMessage * const user_message)
 {
-    wimp_mousestr * pointer = &m->data.helprequest.m;
-    wimp_i icon = pointer->i;
+    const int icon_handle = user_message->data.help_request.icon_handle;
     char abuffer[256+128/*bit of slop*/];
     U32 prefix_len;
     char * buffer;
     char * alt_msg;
     const char * msg = NULL;
 
-    if(dragtype != NO_DRAG_ACTIVE) /* stop pointer and message changing whilst dragging */
-        return;
+    trace_0(TRACE_APP_PD4, "Help request on colh window");
+
+    if(drag_type != NO_DRAG_ACTIVE) /* stop pointer and message changing whilst dragging */
+        return(TRUE);
 
     #if 1
     /* Terse messages for better BubbleHelp response */
-    abuffer[0] = NULLCH;
+    abuffer[0] = CH_NULL;
     prefix_len = 0;
     #else
     /* default message */
@@ -1492,7 +1635,7 @@ colh_HELPREQUEST(
         msg = help_colh_inexpression_box;
     else if(xf_inexpression_line)
     {
-        switch((int)icon)
+        switch(icon_handle)
         {
         case -1:
             break;
@@ -1513,16 +1656,13 @@ colh_HELPREQUEST(
             msg = help_colh_transfer_to_window;
             break;
 
-        case COLH_PIPEDREAM_LOGO:
-            /* they can sodding well use the new UI if they want help! */
-            break;
-
-        case COLH_STATUS_BAR:
+        case COLH_BUTTON_MARK:
         case COLH_STATUS_TEXT:
             /* if editing, suppress setting/clearing of marks */
             break;
 
-        case COLH_COLUMN_HEADINGS:                                                       /* if editing, all movement and drags are suppressed */
+        case COLH_COLUMN_HEADINGS:
+            /* if editing, all movement and drags are suppressed */
             break;
 
         default:
@@ -1531,7 +1671,8 @@ colh_HELPREQUEST(
         }
     }
     else
-        switch((int)icon)
+    {
+        switch(icon_handle)
         {
         case -1:
             break;
@@ -1552,11 +1693,6 @@ colh_HELPREQUEST(
             msg = help_colh_edit_in_window;
             break;
 
-        case COLH_PIPEDREAM_LOGO:
-            /* they can sodding well use the new UI if they want help! */
-            break;
-
-        case COLH_STATUS_BAR:
         case COLH_STATUS_TEXT:
             /* if editing, suppress setting/clearing of marks */
             if(xf_inexpression)
@@ -1567,7 +1703,7 @@ colh_HELPREQUEST(
 
         case COLH_COLUMN_HEADINGS:
             {
-            pointer_shape *shape;
+            pointer_shape * shape;
             int subposition;
             COL tcol;
             char cbuf[32];
@@ -1576,8 +1712,8 @@ colh_HELPREQUEST(
             if(xf_inexpression)
                 break;
 
-            colh_where_in_column_headings(pointer, &shape, &subposition, &tcol, NULL);
-            setpointershape(shape);
+            colh_where_in_column_headings((const WimpMouseClickEvent *) &user_message->data.help_request, &shape, &subposition, &tcol, NULL);
+            riscos_setpointershape(shape);
 
             switch(subposition)
             {
@@ -1686,6 +1822,10 @@ colh_HELPREQUEST(
             msg = colh_button_decplaces;
             break;
 
+        case COLH_BUTTON_MARK:
+            msg = colh_button_mark;
+            break;
+
         case COLH_BUTTON_COPY:
             msg = colh_button_copy;
             break;
@@ -1722,6 +1862,7 @@ colh_HELPREQUEST(
             msg = colh_button_cmd_exec;
             break;
         }
+    }
 
     if(msg)
         xstrkpy(buffer, elemof32(abuffer) - prefix_len, msg);
@@ -1731,54 +1872,55 @@ colh_HELPREQUEST(
         xstrkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
     #endif
 
-    riscos_sendhelpreply(m, (strlen32p1(abuffer) < 240) ? abuffer : alt_msg);
+    riscos_send_Message_HelpReply(user_message, (strlen32p1(abuffer) <= 236) ? abuffer : alt_msg);
+
+    return(TRUE);
 }
 
-static void
-colh_message(
-    wimp_msgstr * m)
+static BOOL
+colh_event_User_Message(
+    /*poked*/ WimpMessage * const user_message)
 {
-    int action = m->hdr.action;
-
-    switch(action)
+    switch(user_message->hdr.action_code)
     {
-    default:
-        break;
+    case Wimp_MHelpRequest:
+        return(colh_event_Message_HelpRequest(user_message));
 
-    case wimp_MHELPREQUEST:
-        trace_0(TRACE_APP_PD4, "Help request on colh_window");
-        colh_HELPREQUEST(m);
-        break;
+    default:
+        return(FALSE);
     }
 }
 
 extern void
 colh_where_in_column_headings(
-    wimp_mousestr *pointer,
+    const WimpMouseClickEvent * const mouse_click,
     pointer_shape **shapep,
     int *subpositionp,
     P_COL p_col,
     coord *txp)
 {
-    wimp_wstate    r;
-    int            orgx/*, orgy*/;
-    int            rel_x/*, rel_y*/;
-    int            arrowcentre;
-    pointer_shape *shape;
-    int            drag_type;
-    coord          drag_tx;
-    COL           drag_tcol;
-    coord          tx;
+    GDI_POINT gdi_org;
+    int rel_x, rel_y;
+    int arrowcentre;
+    pointer_shape *shape = POINTER_DEFAULT;
+    int drag_type = OVER_COLUMN_DEAD_SPACE;
+    coord drag_tx = 0;
+    COL drag_tcol = 0;
+    coord tx;
 
-    wimp_get_wind_state(pointer->w, &r);
-    orgx = r.o.box.x0 - r.o.scx;
-  /*orgy = r.o.box.y1 - r.o.scy; never used */
-    rel_x = pointer->x - orgx;
-  /*rel_y = pointer->y - orgy; never used */
+    { /* calculate window origin */
+    WimpGetWindowStateBlock window_state;
+    window_state.window_handle = mouse_click->window_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        goto had_error;
+    gdi_org.x = window_state.visible_area.xmin - window_state.xscroll;
+    gdi_org.y = window_state.visible_area.ymax - window_state.yscroll;
+    } /*block*/
 
-    tx        = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0), charwidth);
-    shape     = POINTER_DEFAULT;
-    drag_type = OVER_COLUMN_DEAD_SPACE;
+    rel_x = mouse_click->mouse_x - gdi_org.x;
+    rel_y = mouse_click->mouse_y - gdi_org.y;
+
+    tx = idiv_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0), charwidth);
 
     /* The arrow shown belongs to curcol (even if it is a linked column) */
     arrowcentre = texttooffset_x(calcad(curcoloffset) + colwrapwidth(curcol) - 1);
@@ -1818,7 +1960,7 @@ colh_where_in_column_headings(
 
         gcoord hitband   = charwidth/2;
         coord  coff      = calcoff(tx);
-        coord  prev_tx   = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0) - hitband, charwidth);
+        coord  prev_tx   = idiv_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0) - hitband, charwidth);
         coord  prev_coff = calcoff(prev_tx);
 
         drag_tcol = 0; /* SKS 29sep96 paranoia */
@@ -1840,7 +1982,7 @@ colh_where_in_column_headings(
             }
             else
             {
-                coord next_tx = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0) + hitband, charwidth);
+                coord next_tx = idiv_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0) + hitband, charwidth);
 
                 if(coff != calcoff(next_tx))
                 {
@@ -1897,6 +2039,7 @@ colh_where_in_column_headings(
         }
     }
 
+had_error:;
     if(shapep)
         *shapep = shape;
 
@@ -1938,7 +2081,7 @@ colh_pointershape_starttracking(void)
 
 /******************************************************************************
 *
-* Called the when pointer leaves the colh_window.
+* Called the when pointer leaves the colh window.
 *
 * Remove the null_handler and restore the default pointer shape.
 *
@@ -1951,7 +2094,7 @@ colh_pointershape_endtracking(void)
 
     Null_EventHandlerRemove(colh_pointershape_null_handler, &track_docno);
 
-    setpointershape(POINTER_DEFAULT);
+    riscos_setpointershape(POINTER_DEFAULT);
 }
 
 /******************************************************************************
@@ -1960,67 +2103,76 @@ colh_pointershape_endtracking(void)
 *
 ******************************************************************************/
 
-null_event_proto(static, colh_pointershape_null_handler)
+null_event_proto(static, colh_pointershape_null_query)
+{
+    UNREFERENCED_PARAMETER_CONST(p_null_event_block);
+
+    trace_0(TRACE_APP_PD4, "colh call to ask if we want nulls");
+
+    return( (drag_type == NO_DRAG_ACTIVE)
+                        ? NULL_EVENTS_REQUIRED
+                        : NULL_EVENTS_OFF );
+}
+
+null_event_proto(static, colh_pointershape_null_event)
 {
     P_DOCNO dochanp = (P_DOCNO) p_null_event_block->client_handle;
+    wimp_mousestr pointer;
 
+    trace_0(TRACE_APP_PD4, "colh null call");
+
+    if(!select_document_using_docno(*dochanp))
+        return(NULL_EVENT_COMPLETED);
+
+    if(NULL != wimp_get_point_info(&pointer))
+        return(NULL_EVENT_COMPLETED);
+
+    /*(if(pointer.w == colh_window_handle)*/ /* should be true, as we release null events when pointer leaves window */
+    {
+        switch((int)pointer.i)
+        {
+        case COLH_COLUMN_HEADINGS:
+            /* if editing, all movement and drags are suppressed, so show default pointer */
+            if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
+            {
+                riscos_setpointershape(POINTER_DEFAULT);
+            }
+            else
+            {
+                pointer_shape * shape;
+                colh_where_in_column_headings((const WimpMouseClickEvent *) &pointer, &shape, NULL, NULL, NULL);
+                riscos_setpointershape(shape);
+            }
+            break;
+
+        #if 0
+        case COLH_FUNCTION_SELECTOR:
+            trace_0(TRACE_APP_PD4, "change pointer to drop-down-menu");
+            riscos_setpointershape(POINTER_DROPMENU);
+            break;
+        #endif
+
+        default:
+            trace_0(TRACE_APP_PD4, "restore default pointer");
+            riscos_setpointershape(POINTER_DEFAULT);
+            break;
+        }
+    }
+
+    return(NULL_EVENT_COMPLETED);
+}
+
+null_event_proto(static, colh_pointershape_null_handler)
+{
     trace_1(TRACE_APP_PD4, "colh_pointershape_null_handler, rc=%d", p_null_event_block->rc);
 
     switch(p_null_event_block->rc)
     {
     case NULL_QUERY:
-        trace_0(TRACE_APP_PD4, "colh call to ask if we want nulls");
-        return(dragtype == NO_DRAG_ACTIVE
-               ? NULL_EVENTS_REQUIRED
-               : NULL_EVENTS_OFF
-              );
+        return(colh_pointershape_null_query(p_null_event_block));
 
     case NULL_EVENT:
-        {
-        wimp_mousestr pointer;
-
-        trace_0(TRACE_APP_PD4, "colh null call");
-
-        if(select_document_using_docno(*dochanp))
-        if(NULL == wimp_get_point_info(&pointer))
-        {
-            /*(if(pointer.w == colh_window)*/    /* should be true, as we release null events when pointer leaves window */
-            {
-                switch((int)pointer.i)
-                {
-                case COLH_COLUMN_HEADINGS:
-                    /* if editing, all movement and drags are suppressed, so show default pointer */
-                    if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
-                    {
-                        setpointershape(POINTER_DEFAULT);
-                    }
-                    else
-                    {
-                        pointer_shape *shape;
-
-                        colh_where_in_column_headings(&pointer, &shape, NULL, NULL, NULL);
-                        setpointershape(shape);
-                    }
-                    break;
-
-                #if 0
-                case COLH_FUNCTION_SELECTOR:
-                    trace_0(TRACE_APP_PD4, "change pointer to drop-down-menu");
-
-                    setpointershape(POINTER_DROPMENU);
-                    break;
-                #endif
-
-                default:
-                    trace_0(TRACE_APP_PD4, "restore default pointer");
-
-                    setpointershape(POINTER_DEFAULT);
-                    break;
-                }
-            }
-        }
-        }
-        return(NULL_EVENT_COMPLETED);
+        return(colh_pointershape_null_event(p_null_event_block));
 
     default:
         return(NULL_EVENT_UNKNOWN);
@@ -2043,33 +2195,33 @@ pointer_shape pointer_dragmargin       = { "ptr_margin" , 12, 5 };
 static pointer_shape *current_pointer_shape = POINTER_DEFAULT;
 
 extern void
-setpointershape(
-    pointer_shape *shape)
+riscos_setpointershape(
+    pointer_shape * shape)
 {
-    if(current_pointer_shape != shape)
+    if(current_pointer_shape == shape)
+        return;
+
+    riscos_hourglass_off();
+
+    if(shape)
     {
-        riscos_hourglass_off();
+        sprite_id sprite;
 
-        if(shape)
-        {
-            sprite_id sprite;
+        sprite.tag = sprite_id_name;
+        sprite.s.name = shape->name;
 
-            sprite.tag = sprite_id_name;
-            sprite.s.name = shape->name;
-
-            wimpt_safe(pointer_set_shape((sprite_area *)resspr_area() /* -1 */, &sprite, shape->x, shape->y));
-        }
-        else
-        {
-            /* POINTER_DEFAULT */
-
-            pointer_reset_shape();
-        }
-
-        current_pointer_shape = shape;
-
-        riscos_hourglass_on();
+        void_WrapOsErrorReporting(pointer_set_shape((sprite_area *)resspr_area() /* -1 */, &sprite, shape->x, shape->y));
     }
+    else
+    {
+        /* POINTER_DEFAULT */
+
+        pointer_reset_shape();
+    }
+
+    current_pointer_shape = shape;
+
+    riscos_hourglass_on();
 }
 
 /* end of colh.c */

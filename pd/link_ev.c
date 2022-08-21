@@ -165,7 +165,7 @@ ev_external_string(
     P_CELL p_cell;
     char tbuf[LIN_BUFSIZ];
 
-    if((p_cell = travel_externally(slrp->docno, slrp->col, slrp->row)) == NULL)
+    if(NULL == (p_cell = travel_externally(ev_slr_docno(slrp), ev_slr_col(slrp), ev_slr_row(slrp))))
         return(0);
 
     if(p_cell->type != SL_TEXT)
@@ -177,9 +177,13 @@ ev_external_string(
         return(-1);
     }
 
-    (void) expand_slot(slrp->docno, p_cell, (ROW) slrp->row, tbuf, elemof32(tbuf) /*fwidth*/,
-                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                       FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+    (void) expand_cell(
+                ev_slr_docno(slrp), p_cell, (ROW) ev_slr_row(slrp), tbuf, elemof32(tbuf) /*fwidth*/,
+                DEFAULT_EXPAND_REFS /*expand_refs*/,
+                EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+                EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+                TRUE /*cff*/);
 
     xstrkpy(buffer, elemof_buffer, tbuf); /* plain non-fonty string */
 
@@ -218,9 +222,9 @@ ev_ext_uref(
         {
         P_CELL tcell;
 
-        tcell = travel_externally(byslrp->docno,
-                                  (COL) byslrp->col,
-                                  (ROW) byslrp->row);
+        tcell = travel_externally(ev_slr_docno(byslrp),
+                                  (COL) ev_slr_col(byslrp),
+                                  (ROW) ev_slr_row(byslrp));
 
         assert(NULL != tcell);
 
@@ -320,12 +324,12 @@ ev_make_slot(
     }
 #endif
 
-    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(slrp->docno)))  ||  docu_is_thunk(p_docu))
+    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(ev_slr_docno(slrp))))  ||  docu_is_thunk(p_docu))
         return(EVAL_ERR_CANTEXTREF);
 
     docno = p_docu->docno;
 
-    if((NULL != (sl = travel_externally(docno, slrp->col, slrp->row)))  &&  (sl->type == SL_NUMBER))
+    if((NULL != (sl = travel_externally(docno, ev_slr_col(slrp), ev_slr_row(slrp))))  &&  (sl->type == SL_NUMBER))
     {
         justify = sl->justify;
         format  = sl->format;
@@ -340,14 +344,14 @@ ev_make_slot(
 
     filealtered(TRUE);
 
-    if(slrp->row >= numrow)
+    if(ev_slr_row(slrp) >= numrow)
     {
         out_rebuildvert = TRUE;
         out_screen      = TRUE;
         xf_interrupted  = TRUE;
     }
 
-    if(slrp->col >= numcol)
+    if(ev_slr_col(slrp) >= numcol)
     {
         out_rebuildhorz = TRUE;
         out_screen      = TRUE;
@@ -383,11 +387,11 @@ ev_make_slot(
 _Check_return_
 extern EV_COL
 ev_numcol(
-    _InRef_     PC_EV_SLR slrp)
+    _InVal_     DOCNO docno)
 {
     P_DOCU p_docu;
 
-    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(slrp->docno)))  ||  docu_is_thunk(p_docu))
+    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(docno)))  ||  docu_is_thunk(p_docu))
         return(0);
 
     return((EV_COL) p_docu->Xnumcol);
@@ -395,18 +399,18 @@ ev_numcol(
 
 /******************************************************************************
 *
-* return number of rows for given doc, col
+* return number of rows in a doc
 *
 ******************************************************************************/
 
 _Check_return_
 extern EV_ROW
 ev_numrow(
-    _InRef_     PC_EV_SLR slrp)
+    _InVal_     DOCNO docno)
 {
     P_DOCU p_docu;
 
-    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(slrp->docno)))  ||  docu_is_thunk(p_docu))
+    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(docno)))  ||  docu_is_thunk(p_docu))
         return(0);
 
     return((EV_ROW) p_docu->Xnumrow);
@@ -448,7 +452,7 @@ ev_recalc_all(void)
 
     escape_disable();
 
-    /*colh_draw_slot_count_in_document(NULL);*/
+    /*colh_draw_cell_count_in_document(NULL);*/
 }
 
 /******************************************************************************
@@ -465,12 +469,35 @@ ev_recalc_status(
     {
         char buffer[BUF_EV_INTNAMLEN];
 
-        (void) sprintf(buffer, S32_FMT, to_calc);
+        consume_int(sprintf(buffer, S32_FMT, to_calc));
 
-        colh_draw_slot_count_in_document(buffer);
+        colh_draw_cell_count_in_document(buffer);
     }
     else
-        colh_draw_slot_count_in_document(NULL);
+        colh_draw_cell_count_in_document(NULL);
+}
+
+/******************************************************************************
+*
+* iff reporting, output info about this ERROR_CUSTOM
+*
+******************************************************************************/
+
+extern void
+ev_report_ERROR_CUSTOM(
+    _InRef_     PC_EV_DATA p_ev_data)
+{
+    U8Z buffer[BUF_MAX_REFERENCE];
+
+    if(!reporting_is_enabled())
+        return;
+
+    (void) ev_write_docname(buffer, p_ev_data->arg.ev_error.docno, current_docno());
+
+    reportf("ERROR_CUSTOM: %s Row: %d Error: %s",
+            buffer,
+            p_ev_data->arg.ev_error.row + 1,
+            reperr_getstr(p_ev_data->arg.ev_error.status));
 }
 
 /******************************************************************************
@@ -546,16 +573,16 @@ ev_travel(
 
     *p_p_ev_cell = NULL;
 
-    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(p_ev_slr->docno)))  ||  docu_is_thunk(p_docu))
+    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(ev_slr_docno(p_ev_slr))))  ||  docu_is_thunk(p_docu))
     {
-        assert(DOCNO_NONE != p_ev_slr->docno);
-        assert(p_ev_slr->docno < DOCNO_MAX);
+        assert(DOCNO_NONE != ev_slr_docno(p_ev_slr));
+        assert(ev_slr_docno(p_ev_slr) < DOCNO_MAX);
         assert(NO_DOCUMENT != p_docu);
         assert((NO_DOCUMENT != p_docu) && docu_is_thunk(p_docu));
         return(0);
     }
 
-    if(NULL == (it = list_gotoitem(x_indexcollb(p_docu, p_ev_slr->col), p_ev_slr->row)))
+    if(NULL == (it = list_gotoitem(x_indexcollb(p_docu, ev_slr_col(p_ev_slr)), ev_slr_row(p_ev_slr))))
         return(0);
 
     p_cell = slot_contents(it);
@@ -573,7 +600,7 @@ ev_travel(
 
     *p_p_ev_cell = NULL;
 
-    if(NULL == (p_cell = travel_externally(p_ev_slr->docno, p_ev_slr->col, p_ev_slr->row)))
+    if(NULL == (p_cell = travel_externally(ev_slr_docno(p_ev_slr), ev_slr_col(p_ev_slr), ev_slr_row(p_ev_slr))))
         return(0);
 
 #endif

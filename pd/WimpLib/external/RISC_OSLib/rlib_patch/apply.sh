@@ -4,16 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (C) 2013-2016 Stuart Swales
+# Copyright (C) 2013-2018 Stuart Swales
 
-flexlib_tmp_dir=../castle/RiscOS/Sources/Toolbox/Libs/flexlib
-rlib_tmp_dir=../castle/RiscOS/Sources/Lib/RISC_OSLib/rlib
+flexlib_tmp_dir=../apache/RiscOS/Sources/Toolbox/Libs/flexlib
+rlib_tmp_dir=../apache/RiscOS/Sources/Lib/RISC_OSLib/rlib
 #
 echo Populate WimpLib with unmodifed files from the checked-out copy of RISC_OSLib
 #
 cp -p $flexlib_tmp_dir/h/swiextra ../../../swiextra.h
 #
-cp -p $rlib_tmp_dir/c/colourtran ../../../colourtran.c
 cp -p $rlib_tmp_dir/c/dboxtcol   ../../../dboxtcol.c
 cp -p $rlib_tmp_dir/c/drawmod    ../../../drawmod.c
 cp -p $rlib_tmp_dir/c/fileicon   ../../../fileicon.c
@@ -28,7 +27,6 @@ cp -p $rlib_tmp_dir/h/alarm      ../../../alarm.h
 cp -p $rlib_tmp_dir/h/baricon    ../../../baricon.h
 cp -p $rlib_tmp_dir/h/bbc        ../../../bbc.h
 cp -p $rlib_tmp_dir/h/colourpick ../../../colourpick.h
-cp -p $rlib_tmp_dir/h/colourtran ../../../colourtran.h
 cp -p $rlib_tmp_dir/h/coords     ../../../coords.h
 cp -p $rlib_tmp_dir/h/dbox       ../../../dbox.h
 cp -p $rlib_tmp_dir/h/dboxtcol   ../../../dboxtcol.h

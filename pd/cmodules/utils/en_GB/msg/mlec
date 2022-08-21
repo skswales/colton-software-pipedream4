@@ -1,0 +1,12 @@
+#
+# mlec en_GB messages: keep consistent with CModules mlec.h
+#
+# menus
+#
+m7_1:Save,Selection,Paste
+#
+m7_10:Save
+m7_11:>File,>Selection
+#
+m7_20:Selection
+m7_21:Clear,Copy,Cut,Delete

@@ -156,9 +156,9 @@ save_version_string(
         xstrkat(array, elemof32(array), " - ");
         xstrkat(array, elemof32(array), user_organ_id());
     }
-    xstrkat(array, elemof32(array), ", ");
+    xstrkat(array, elemof32(array), ", R");
 
-    xstrkat(array, elemof32(array), "R9200 7500 3900 8299");
+    xstrkat(array, elemof32(array), registration_number());
 
     /* SKS 15nov91 - temporarily borrow the data */
     tmp = d_version[0].textfield;
@@ -184,7 +184,7 @@ write_box_sizes(void)
             open_box.y0, open_box.y1,
             curcol, currow, fstncx(), fstnrx());
 
-    (void) mystr_set(&d_open_box[0].textfield, array);
+    consume_bool(mystr_set(&d_open_box[0].textfield, array));
 }
 
 /******************************************************************************
@@ -230,9 +230,9 @@ save_options_to_file(
 
     if(saving_choices_file)
     {
-        /* save print options and colours - and menu changes -  only to Choices file */
+        /* save print options and colours - and menu changes - only to Choices file */
 
-        save_opt_to_file(output, d_colours, dialog_head[D_COLOURS].items);
+        save_opt_to_file(output, d_colours, dialog_head[D_COLOURS].items); /* all colours */
         save_opt_to_file(output, d_menu,    dialog_head[D_MENU].items);
         save_opt_to_file(output, d_progvars,dialog_head[D_PROGVARS].items);
         save_opt_to_file(output, d_save + SAV_LINESEP, 1);
@@ -259,13 +259,17 @@ save_options_to_file(
     }
     else
     {
-        /* save spreadsheet names - SKS after 4.11 08jan92 moved into non-Choices file section */
+        /* save spreadsheet names - SKS after PD 4.11 08jan92 moved into non-Choices file section */
         save_names_to_file(output);
 
         /* save any row & column fixes */
         save_opt_to_file(output, d_fixes, dialog_head[D_FIXES].items);
 
         save_protected_bits(output);
+
+#if defined(EXTENDED_COLOUR_WINDVARS)
+        save_opt_to_file(output, d_colours, 8); /* just sheet colours, not borders */
+#endif
     }
 
     update_all_windvars_from_dialog();
@@ -289,7 +293,6 @@ save_opt_to_file(
     S32 n)
 {
     const DIALOG *dptr;
-    char array[LIN_BUFSIZ];
     char *ptr;
     const char *ptr1, *ptr2;
     char ch1, ch2;
@@ -303,7 +306,7 @@ save_opt_to_file(
         ch2 = dptr->ch2;
 
         /* RJM adds on 22.9.91 cos print box may not have complete set of options */
-        if(ch1 == '\0' || ch2 == '\0')
+        if((ch1 == CH_NULL) || (ch2 == CH_NULL))
             continue;
 
         ptr = linbuf + sprintf(linbuf, "%%" "OP" "%%" "%c%c", ch1, ch2);
@@ -319,26 +322,44 @@ save_opt_to_file(
                 continue;
 
             ptr[0] = (char) dptr->option;
-            ptr[1] = '\0';
+            ptr[1] = CH_NULL;
             break;
 
         case F_ARRAY:
             if(not_on_list  &&  (dptr->option == 0))
                 continue;
 
-            (void) sprintf(ptr, "%d", (int) dptr->option);
+            consume_int(sprintf(ptr, "%d", (int) dptr->option));
             break;
+
+#if defined(EXTENDED_COLOUR)
+        case F_COLOUR:
+            {
+            U32 wimp_colour_value = get_option_as_u32(&dptr->option);
+
+            /* is it the default ? */
+            if(not_on_list  &&  (wimp_colour_value == decode_wimp_colour_value(*dptr->optionlist)))
+                continue;
+
+            consume_int(encode_wimp_colour_value(ptr, LIN_BUFSIZ - 32, wimp_colour_value));
+
+            break;
+            }
+#endif /* EXTENDED_COLOUR */
 
         case F_LIST:
         case F_NUMBER:
+#if !defined(EXTENDED_COLOUR)
         case F_COLOUR:
-            /* is it the default ? */
-
-            if(not_on_list  &&  ((int) dptr->option == atoi(*dptr->optionlist)))
+#endif
+            { /* is it the default ? */
+            if(not_on_list  &&  (dptr->option == (optiontype) atoi(*dptr->optionlist)))
                 continue;
 
-            (void) sprintf(ptr, "%d", (int) dptr->option);
+            consume_int(sprintf(ptr, "%d", (int) dptr->option));
+
             break;
+            }
 
         case F_TEXT:
 #if 1
@@ -346,7 +367,7 @@ save_opt_to_file(
             if(str_isblank(ptr1))
                 ptr1 = NULLSTR;
 
-            if(dptr->optionlist)
+            if(NULL != dptr->optionlist)
             {
                 ptr2 = *dptr->optionlist;
                 if(str_isblank(ptr2))
@@ -386,14 +407,17 @@ save_opt_to_file(
         /* output the string, expanding inline hilites */
         ptr = linbuf;
 
-        while((ch1 = *ptr++) != '\0')
+        while((ch1 = *ptr++) != CH_NULL)
+        {
             if(ishighlight(ch1))
             {
-                (void) sprintf(array, "%%" "H" "%c" "%%", (ch1 - FIRST_HIGHLIGHT) + FIRST_HIGHLIGHT_TEXT);
-                away_string_simple(array, output);
+                char buffer[32];
+                consume_int(snprintf(buffer, sizeof32(buffer), "%%" "H" "%c" "%%", (ch1 - FIRST_HIGHLIGHT) + FIRST_HIGHLIGHT_TEXT));
+                away_string_simple(buffer, output);
             }
             else
                 away_byte(ch1, output);
+        }
     }
 }
 
@@ -447,7 +471,7 @@ save_or_discard_existing(void)
 {
     enum RISCDIALOG_QUERY_SDC_REPLY SDC_res = riscdialog_query_save_or_discard_existing();
 
-    return(SDC_res != riscdialog_query_SDC_CANCEL);
+    return(riscdialog_query_SDC_CANCEL != SDC_res);
 }
 
 /*
@@ -469,7 +493,7 @@ FullScreen_fn(void)
     tcol = fstncx();
     trow = fstnrx();
 
-    riscos_frontmainwindow_atbox(TRUE);
+    riscos_front_document_window_atbox(TRUE);
 
     /* ensure window back as it was */
     filvert(trow, trow, CALL_FIXPAGE);
@@ -528,7 +552,8 @@ name_read_tstr(
 static BOOL
 same_name_warning(
     _In_z_      PCTSTR filename,
-    _In_z_      PCTSTR message)
+    _In_z_      PCTSTR statement,
+    _In_z_      PCTSTR question)
 {
     DOCU_NAME docu_name;
     EV_DOCNO docno;
@@ -542,9 +567,10 @@ same_name_warning(
 
     if(DOCNO_NONE != docno)
     {
-        char buffer[256];
-        (void) xsnprintf(buffer, elemof32(buffer), message, filename);
-        return(riscdialog_query_YN(buffer) == riscdialog_query_YES);
+        char statement_buffer[256];
+        consume_int(xsnprintf(statement_buffer, elemof32(statement_buffer), statement, filename));
+        return(riscdialog_query_YES ==
+               riscdialog_query_YN(statement_buffer, question));
     }
 
     return(TRUE);
@@ -556,36 +582,58 @@ same_name_warning(
 *
 ******************************************************************************/
 
+static BOOL
+namefile_fn_core(void)
+{
+    const char * filename = d_name[0].textfield ? d_name[0].textfield : get_untitled_document();
+
+    if(str_isblank(filename))
+    {
+        reperr_null(ERR_BAD_NAME);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    if(0 == _stricmp(filename, currentfilename))
+        return(TRUE);
+
+    if(same_name_warning(filename, name_supporting_Zs_YN_S_STR, name_supporting_YN_Q_STR))
+    {
+        DOCU_NAME docu_name;
+        BOOL ok = name_read_tstr(&docu_name, filename);
+
+        if(ok)
+        {
+            xf_loaded_from_path = (BOOLEAN) name_preprocess_docu_name_flags_for_rename(&docu_name);
+
+            rename_document(&docu_name);
+
+            name_free(&docu_name);
+        }
+    }
+
+    return(TRUE);
+}
+
+static BOOL
+namefile_fn_prepare(void)
+{
+    false_return(dialog_box_can_start());
+
+    false_return(mystr_set(&d_name[0].textfield, currentfilename));
+
+    return(dialog_box_start());
+}
+
 extern void
 NameFile_fn(void)
 {
-    if(!dialog_box_start())
-        return;
-
-    if(!mystr_set(&d_name[0].textfield, currentfilename))
+    if(!namefile_fn_prepare())
         return;
 
     while(dialog_box(D_NAME))
     {
-        const char * filename = d_name[0].textfield ? d_name[0].textfield : get_untitled_document();
-
-        if(0 != _stricmp(filename, currentfilename))
-        {
-            if(same_name_warning(filename, name_supporting_winge_STR))
-            {
-                DOCU_NAME docu_name;
-                BOOL ok = name_read_tstr(&docu_name, filename);
-
-                if(ok)
-                {
-                    xf_loaded_from_path = (BOOLEAN) name_preprocess_docu_name_flags_for_rename(&docu_name);
-
-                    rename_document(&docu_name);
-
-                    name_free(&docu_name);
-                }
-            }
-        }
+        if(!namefile_fn_core())
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -598,32 +646,53 @@ NameFile_fn(void)
 *
 * save template file
 *
-* put out a dialog box, get a leafname,
-* append it to <Choices$Write>.PipeDream.Templates.
-* and save away in PipeDream format
-*
 ******************************************************************************/
+
+static BOOL
+savetemplatefile_fn_core(void)
+{
+    PCTSTR leafname = d_save_template[0].textfield;
+    TCHARZ buffer[BUF_MAX_PATHSTRING];
+
+    if(str_isblank(leafname))
+    {
+        reperr_null(ERR_BAD_NAME);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    /* append the leafname to <Choices$Write>.PipeDream.Templates. */
+    (void) add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), leafname, LTEMPLATE_SUBDIR_STR);
+
+    { /* and save away in PipeDream format */
+    SAVE_FILE_OPTIONS save_file_options;
+    zero_struct(save_file_options);
+    save_file_options.filetype_option = PD4_CHAR;
+    return(savefile_core(buffer, &save_file_options));
+    } /*block*/
+}
+
+static BOOL
+savetemplatefile_fn_prepare(void)
+{
+    /* push out the leafname of the current file as a suggestion */
+    PCTSTR leafname = file_leafname(currentfilename);
+
+    false_return(dialog_box_can_start());
+
+    false_return(mystr_set(&d_save_template[0].textfield, leafname));
+
+    return(dialog_box_start());
+}
 
 extern void
 SaveTemplateFile_fn(void)
 {
-    if(!dialog_box_start())
-        return;
-
-    /* push out the leafname of the current file as a suggestion */
-    if(!mystr_set(&d_save_template[0].textfield, file_leafname(currentfilename)))
+    if(!savetemplatefile_fn_prepare())
         return;
 
     while(dialog_box(D_SAVE_TEMPLATE))
     {
-        /* try to save the file out in <Choices$Write>.PipeDream.Templates. */
-        TCHARZ buffer[BUF_MAX_PATHSTRING];
-        SAVE_FILE_OPTIONS save_file_options;
-
-        (void) add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), d_save_template[0].textfield, LTEMPLATE_SUBDIR_STR);
-        zero_struct(save_file_options);
-        save_file_options.filetype_option = PD4_CHAR;
-        if(!savefile_core(buffer, &save_file_options))
+        if(!savetemplatefile_fn_core())
             break;
 
         if(!dialog_box_can_persist())
@@ -643,17 +712,19 @@ extern void
 SaveChoices_fn(void)
 {
     TCHARZ buffer[BUF_MAX_PATHSTRING];
-    SAVE_FILE_OPTIONS save_file_options;
 
     /* save Choices in <Choices$Write>.PipeDream directory */
-    add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), CHOICES_FILE_STR, NULL);
+    (void) add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), CHOICES_FILE_STR, NULL);
+    {
+    SAVE_FILE_OPTIONS save_file_options;
     zero_struct(save_file_options);
     save_file_options.filetype_option = PD4_CHAR;
     save_file_options.saving_choices_file = TRUE;
     (void) savefile_core(buffer, &save_file_options);
+    } /*block*/
 
     /* save Preferred in <Choices$Write>.PipeDream directory (iff needed) */
-    add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), PREFERRED_FILE_STR, NULL);
+    (void) add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), PREFERRED_FILE_STR, NULL);
     pdchart_preferred_save(buffer);
 }
 
@@ -663,42 +734,56 @@ SaveChoices_fn(void)
 *
 ******************************************************************************/
 
-static void
-do_SaveFile(
+static BOOL
+do_SaveFile_prepare(
     _InVal_     U32 boxnumber)
 {
-    SAVE_FILE_OPTIONS save_file_options;
-
-    if(!init_dialog_box(boxnumber))
-        return;
-
-    if(!dialog_box_start())
-        return;
-
-    if(!mystr_set(&d_save[SAV_NAME].textfield, currentfilename))
-        return;
+    false_return(init_dialog_box(boxnumber));
 
     d_save[SAV_FORMAT].option = current_filetype_option;
     d_save[SAV_LINESEP].option = current_line_sep_option;
 
+    false_return(mystr_set(&d_save[SAV_NAME].textfield, currentfilename));
+
+    return(dialog_box_start());
+}
+
+static int
+do_SaveFile_core(void)
+{
+    SAVE_FILE_OPTIONS save_file_options;
+    zero_struct(save_file_options);
+
+    if(str_isblank(d_save[SAV_NAME].textfield))
+    {
+        reperr_null(ERR_BAD_NAME);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    save_file_options.filetype_option = (char) d_save[SAV_FORMAT].option;
+    save_file_options.line_sep_option = (char) d_save[SAV_LINESEP].option;
+    if(('Y' == d_save[SAV_ROWCOND].option)  &&  !str_isblank(d_save[SAV_ROWCOND].textfield))
+        save_file_options.row_condition = d_save[SAV_ROWCOND].textfield;
+    if('Y' == d_save[SAV_BLOCK].option)
+        save_file_options.saving_block = TRUE;
+    return(savefile(d_save[SAV_NAME].textfield, &save_file_options));
+}
+
+static void
+do_SaveFile(
+    _InVal_     U32 boxnumber)
+{
+    if(!do_SaveFile_prepare(boxnumber))
+        return;
+
     while(dialog_box(boxnumber))
     {
-        if(str_isblank(d_save[SAV_NAME].textfield))
-        {
-            reperr_null(create_error(ERR_BAD_NAME));
-            if(!dialog_box_can_retry())
-                break;
-            continue;
-        }
+        int core_res = do_SaveFile_core();
 
-        zero_struct(save_file_options);
-        save_file_options.filetype_option = (char) d_save[SAV_FORMAT].option;
-        save_file_options.line_sep_option = (char) d_save[SAV_LINESEP].option;
-        if(('Y' == d_save[SAV_ROWCOND].option)  &&  !str_isblank(d_save[SAV_ROWCOND].textfield))
-            save_file_options.row_condition = d_save[SAV_ROWCOND].textfield;
-        if('Y' == d_save[SAV_BLOCK].option)
-            save_file_options.saving_block = TRUE;
-        if(!savefile(d_save[SAV_NAME].textfield, &save_file_options))
+        if(2 == core_res)
+            continue;
+
+        if(0 == core_res)
             break;
 
         if(!dialog_box_can_persist())
@@ -717,18 +802,17 @@ SaveFile_fn(void)
 extern void
 SaveFileAsIs_fn(void)
 {
-    SAVE_FILE_OPTIONS save_file_options;
-
-    if(!file_is_rooted(currentfilename))
+    if(file_is_rooted(currentfilename))
     {
-        do_SaveFile(D_SAVE_POPUP); /* different as we may be in_execfile || command_expansion */
+        SAVE_FILE_OPTIONS save_file_options;
+        zero_struct(save_file_options);
+        save_file_options.filetype_option = current_filetype_option;
+        save_file_options.line_sep_option = current_line_sep_option;
+        (void) savefile_core(currentfilename, &save_file_options);
         return;
     }
 
-    zero_struct(save_file_options);
-    save_file_options.filetype_option = current_filetype_option;
-    save_file_options.line_sep_option = current_line_sep_option;
-    (void) savefile_core(currentfilename, &save_file_options);
+    do_SaveFile(D_SAVE_POPUP); /* different as we may be in_execfile || command_expansion */
 }
 
 /******************************************************************************
@@ -757,9 +841,13 @@ plain_slot(
     {
     case SL_TEXT:
     case SL_PAGE:
-        (void) expand_slot(current_docno(), tcell, trow, buffer, fwidth,
-                           DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
-                           FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+        (void) expand_cell(
+                    current_docno(), tcell, trow, buffer, fwidth,
+                    DEFAULT_EXPAND_REFS /*expand_refs*/,
+                    EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                    EXPAND_FLAGS_DONT_EXPAND_CTRL /*!expand_ctrl*/ |
+                    EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+                    TRUE /*cff*/);
         return(FALSE);
 
     default:
@@ -798,9 +886,13 @@ plain_slot(
 
     trace_6(TRACE_APP_PD4, "plain_slot(&%p, %d, %d, '%c', &%p): fwidth %d", report_ptr_cast(tcell), tcol, trow, filetype_option, buffer, fwidth);
 
-    (void) expand_slot(current_docno(), tcell, trow, buffer, fwidth,
-                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
-                       FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+    (void) expand_cell(
+                current_docno(), tcell, trow, buffer, fwidth,
+                DEFAULT_EXPAND_REFS /*expand_refs*/,
+                EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                EXPAND_FLAGS_DONT_EXPAND_CTRL /*!expand_ctrl*/ |
+                EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+                TRUE /*cff*/);
     /* does not move cell */
 
     tcell->format = oldformat;
@@ -810,11 +902,13 @@ plain_slot(
     len = strlen(buffer);
 
     while(len--)
+    {
         if(buffer[len] == FUNNYSPACE)
         {
-            buffer[len] = '\0';
+            buffer[len] = CH_NULL;
             break;
         }
+    }
 
     trace_1(TRACE_APP_PD4, "plain_slot returns '%s'", buffer);
     return(TRUE);
@@ -836,7 +930,7 @@ savefile(
     BOOL saving_part_file = p_save_file_options->saving_block  ||  (NULL != p_save_file_options->row_condition);
 
     if(str_isblank(filename))
-        return(reperr_null(create_error(ERR_BAD_NAME)));
+        return(reperr_null(ERR_BAD_NAME));
 
     if(saving_part_file  ||  p_save_file_options->saving_choices_file  ||  p_save_file_options->temp_file)
         saving_whole_file = FALSE;
@@ -846,7 +940,7 @@ savefile(
     {
         if(0 != _stricmp(filename, currentfilename))
         {
-            if(same_name_warning(filename, name_supporting_winge_STR))
+            if(same_name_warning(filename, name_supporting_Zs_YN_S_STR, name_supporting_YN_Q_STR))
             {
                 DOCU_NAME docu_name;
                 BOOL ok = name_read_tstr(&docu_name, filename);
@@ -887,7 +981,7 @@ savefile_core(
     SLR first, last;
     char rowselection[EV_MAX_OUT_LEN + 1];
     char array[32];
-    char field_separator = NULLCH;
+    char field_separator = CH_NULL;
     uchar condval;
     BOOL triscos_fonts;
     coord v_chars_sofar = 0;
@@ -935,7 +1029,7 @@ savefile_core(
     if(p_save_file_options->saving_block)
     {
         if(!MARKER_DEFINED())
-            return(reperr_null(MARKER_SOMEWHERE() ? create_error(ERR_NOBLOCKINDOC) : create_error(ERR_NOBLOCK)));
+            return(reperr_null(MARKER_SOMEWHERE() ? ERR_NOBLOCKINDOC : ERR_NOBLOCK));
 
         first = blkstart;
         last  = (blkend.col == NO_COL) ? blkstart : blkend;
@@ -953,7 +1047,7 @@ savefile_core(
 
     /* open file and buffer it */
     if(NULL == (output = pd_file_open(filename, file_open_write)))
-        return(reperr_null(create_error(ERR_CANNOTOPEN)));
+        return(reperr_null(ERR_CANNOTOPEN));
 
     (void) file_buffer(output, NULL, 64*1024); /* no messing about for save */
 
@@ -972,20 +1066,20 @@ savefile_core(
 
     /* row and column fixes have dummy dialog box - set it up */
 
-    (void) init_dialog_box(D_FIXES);
+    consume_bool(init_dialog_box(D_FIXES));
 
-    if(n_rowfixes)
+    if(0 != n_rowfixes)
     {
         assert(vertvec_entry_valid(0));
-        (void) sprintf(array, "%d,%d", row_number(0), n_rowfixes);
-        (void) mystr_set(&d_fixes[0].textfield, array);
+        consume_int(sprintf(array, "%d,%d", row_number(0), n_rowfixes));
+        consume_bool(mystr_set(&d_fixes[0].textfield, array));
     }
 
-    if(n_colfixes)
+    if(0 != n_colfixes)
     {
         assert(horzvec_entry_valid(0));
-        (void) sprintf(array, "%d,%d", col_number(0), n_colfixes);
-        (void) mystr_set(&d_fixes[1].textfield, array);
+        consume_int(sprintf(array, "%d,%d", col_number(0), n_colfixes));
+        consume_bool(mystr_set(&d_fixes[1].textfield, array));
     }
 
     /* NB some file types have specified line_sep_option */
@@ -1097,11 +1191,11 @@ savefile_core(
                     {
                         escape_disable();
                         pd_file_close(&output);
-                        return(reperr_null(create_error(ERR_BAD_SELECTION)));
+                        return(reperr_null(ERR_BAD_SELECTION));
                     }
                 }
                 else
-                    *rowselection = '\0';
+                    *rowselection = CH_NULL;
             }
 
             /* now check row selection for this row */
@@ -1159,7 +1253,7 @@ savefile_core(
                         prevcol = tcol;  /* might be new row */
 
                     /* if it's a blank cell don't bother outputting field separators
-                     * watch out for numeric cells masquerading as blanks
+                     * watch out for number cells masquerading as blanks
                     */
                     if( !is_blank_cell(tcell)  ||
                         (tcell  &&  (tcell->type != SL_TEXT)))
@@ -1236,7 +1330,7 @@ savefile_core(
                                 strcpy(array, "PE");
                                 condval = travel(0, trow)->content.page.condval;
                                 if(condval > 0)
-                                    (void) sprintf(array + 2, "%d", (int) condval);
+                                    consume_int(sprintf(array + 2, "%d", (int) condval));
 
                                 if(!view_save_stored_command(array, output))
                                     all_ok = FALSE;
@@ -1326,7 +1420,7 @@ savefile_core(
                         if(csv_quotes  &&  !away_byte(QUOTES, output))
                             all_ok = FALSE;
 
-                        while(all_ok  &&  ((ch = *lptr++) != NULLCH))
+                        while(all_ok  &&  ((ch = *lptr++) != CH_NULL))
                         {
                             if((CSV_CHAR == p_save_file_options->filetype_option)  &&  (ch == QUOTES))
                                 if(!away_byte(QUOTES, output))
@@ -1356,13 +1450,13 @@ savefile_core(
 
     if((file_flush(output) < 0)  ||  !all_ok) /* ensures we always get an error report if needed */
     {
-        reperr_null(create_error(ERR_CANNOTWRITE));
+        reperr_null(ERR_CANNOTWRITE);
         all_ok = FALSE;
     }
 
     if(pd_file_close(&output))
     {
-        reperr_null(create_error(ERR_CANNOTCLOSE));
+        reperr_null(ERR_CANNOTCLOSE);
         all_ok = FALSE;
     }
 
@@ -1399,7 +1493,7 @@ savefile_core(
     {
         U8Z buffer[20];
         (void) xsnprintf(buffer, elemof32(buffer), "%d", splitlines);
-        reperr(create_error(ERR_LINES_SPLIT), buffer);
+        reperr(ERR_LINES_SPLIT, buffer);
     }
 
     return(all_ok);
@@ -1451,7 +1545,7 @@ pd_save_slot(
     BOOL saving_part_file)
 {
     uchar * lptr, ch;
-    BOOL numerictype = FALSE;
+    BOOL is_number = FALSE;
     uchar justify;
 
     /* save cell type, followed by justification, followed by formats */
@@ -1463,7 +1557,7 @@ pd_save_slot(
         break;
 
     case SL_NUMBER:
-        numerictype = TRUE;
+        is_number = TRUE;
         if(!away_construct(C_VALUE, output))
             return(FALSE);
         break;
@@ -1485,7 +1579,7 @@ pd_save_slot(
         if(!away_construct(justify, output))
             return(FALSE);
 
-    if(numerictype)
+    if(is_number)
     {
         const uchar format = tcell->format;
 
@@ -1521,8 +1615,8 @@ pd_save_slot(
     }
 
     /* RJM 9.10.91, this plain_slot ensures blocks and row selections aren't saved with silly cell references
-        it helps the PD4 example database to work, amongst other things
-    */
+     * it helps the PipeDream 4 example database to work, amongst other things
+     */
     if(saving_part_file)
         plain_slot(tcell, tcol, trow, PD4_CHAR, linbuf);
     else
@@ -1533,7 +1627,7 @@ pd_save_slot(
     { /* SKS 20130403 quick check to see if we can avoid special case processing (usually we can) */
     P_U8 simple_string = lptr = linbuf;
 
-    while((ch = *lptr++) != '\0')
+    while((ch = *lptr++) != CH_NULL)
     {
         if((ch < 0x20) || (ch == '%'))
         {
@@ -1548,7 +1642,7 @@ pd_save_slot(
 
     lptr = linbuf;
 
-    while((ch = *lptr++) != '\0')
+    while((ch = *lptr++) != CH_NULL)
     {
         if(ch == '%')
         {
@@ -1877,31 +1971,96 @@ stoslt(
 *
 ******************************************************************************/
 
-extern void
-LoadFile_fn(void)
+static BOOL
+loadfile_fn_core(void)
 {
     LOAD_FILE_OPTIONS load_file_options;
+    zero_struct(load_file_options);
 
-    if(!init_dialog_box(D_LOAD))
-        return;
+    if(str_isblank(d_load[0].textfield))
+    {
+        reperr_null(ERR_BAD_NAME);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
 
-    if(!dialog_box_start())
-        return;
+    load_file_options.document_name = d_load[0].textfield;
+    load_file_options.inserting = ('Y' == d_load[1].option) && is_current_document();
+    if(load_file_options.inserting)
+        load_file_options.insert_at_slot = d_load[1].textfield;
+    if('Y' == d_load[2].option)
+        load_file_options.row_range = d_load[2].textfield;
+    load_file_options.filetype_option = (char) d_load[3].option;
+    return(loadfile(d_load[0].textfield, &load_file_options));
+}
+
+static BOOL
+loadfile_fn_prepare(void)
+{
+    false_return(dialog_box_can_start());
+
+    false_return(init_dialog_box(D_LOAD));
 
     d_load[3].option = **(d_load[3].optionlist); /* Init to Auto */
 
+    return(dialog_box_start());
+}
+
+extern void
+LoadFile_fn(void)
+{
+    if(!loadfile_fn_prepare())
+        return;
+
     while(dialog_box(D_LOAD))
     {
-        zero_struct(load_file_options);
-        load_file_options.document_name = d_load[0].textfield;
-        load_file_options.inserting = ('Y' == d_load[1].option) && is_current_document();
-        if(load_file_options.inserting)
-            load_file_options.insert_at_slot = d_load[1].textfield;
-        if('Y' == d_load[2].option)
-            load_file_options.row_range = d_load[2].textfield;
-        load_file_options.filetype_option = (char) d_load[3].option;
+        if(!loadfile_fn_core())
+            break;
 
-        if(!loadfile(d_load[0].textfield, &load_file_options))
+        if(!dialog_box_can_persist())
+            break;
+    }
+
+    dialog_box_end();
+}
+
+/******************************************************************************
+*
+* insert file
+*
+******************************************************************************/
+
+static BOOL
+insertfile_fn_prepare(void)
+{
+    false_return(dialog_box_can_start());
+
+    false_return(init_dialog_box(D_LOAD));
+
+    d_load[1].option = 'Y';
+
+    { /* write current position into the target range */
+    U8 buffer[32];
+
+    (void) write_ref(buffer, elemof32(buffer), current_docno(), curcol, currow);
+
+    if(!mystr_set(&d_load[1].textfield, buffer))
+        return(FALSE);
+    } /*block*/
+
+    d_load[3].option = **(d_load[3].optionlist); /* Init to Auto */
+
+    return(dialog_box_start());
+}
+
+extern void
+InsertFile_fn(void)
+{
+    if(!insertfile_fn_prepare())
+        return;
+
+    while(dialog_box(D_LOAD))
+    {
+        if(!loadfile_fn_core())
             break;
 
         if(!dialog_box_can_persist())
@@ -1917,47 +2076,67 @@ LoadFile_fn(void)
 *
 ******************************************************************************/
 
+static int
+loadtemplate_fn_core(void)
+{
+    PCTSTR template_name = d_load_template[0].textfield;
+    char buffer[BUF_MAX_PATHSTRING];
+    S32 res;
+
+    if(str_isblank(template_name))
+    {
+        reperr_null(ERR_BAD_NAME);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    /* Add prefix '<PipeDream$Path>.Templates.' to template */
+    if((res = add_path_using_dir(buffer, elemof32(buffer), template_name, LTEMPLATE_SUBDIR_STR)) <= 0)
+    {
+        consume_bool(reperr_null(res ? res : ERR_NOTFOUND));
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    {
+    LOAD_FILE_OPTIONS load_file_options;
+    zero_struct(load_file_options);
+    load_file_options.document_name = get_untitled_document();
+    load_file_options.filetype_option = PD4_CHAR;
+    return(loadfile_recurse(buffer, &load_file_options));
+    } /*block*/
+}
+
+static BOOL
+loadtemplate_fn_prepare(void)
+{
+    LIST_ITEMNO templates_list_key;
+
+    false_return(dialog_box_can_start());
+
+    if(str_isblank(d_load_template[0].textfield))
+        false_return(mystr_set(&d_load_template[0].textfield, DEFAULT_LTEMPLATE_FILE_STR));
+
+    delete_list(&templates_list);
+
+    templates_list_key = 0;
+    status_assert(enumerate_dir_to_list(&templates_list, &templates_list_key, LTEMPLATE_SUBDIR_STR, FILETYPE_UNDETERMINED));
+
+    return(dialog_box_start());
+}
+
 extern void
 LoadTemplate_fn(void)
 {
-    if(!dialog_box_start())
+    if(!loadtemplate_fn_prepare())
         return;
-
-    if(str_isblank(d_load_template[0].textfield))
-        if(!mystr_set(&d_load_template[0].textfield, DEFAULT_LTEMPLATE_FILE_STR))
-            return;
-
-    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, LTEMPLATE_SUBDIR_STR, FILETYPE_UNDETERMINED));
 
     while(dialog_box(D_LOAD_TEMPLATE))
     {
-        /* Add prefix '<PipeDream$Dir>.Templates.' to template */
-        char buffer[BUF_MAX_PATHSTRING];
-        PCTSTR tname = d_load_template[0].textfield;
-        LOAD_FILE_OPTIONS load_file_options;
-        S32 res;
+        int core_res = loadtemplate_fn_core();
 
-        if(str_isblank(tname))
-        {
-            reperr_null(create_error(ERR_BAD_NAME));
-            if(!dialog_box_can_retry())
-                break;
+        if(2 == core_res)
             continue;
-        }
 
-        if((res = add_path_using_dir(buffer, elemof32(buffer), tname, LTEMPLATE_SUBDIR_STR)) <= 0)
-        {
-            reperr_null(res);
-            if(!dialog_box_can_retry())
-                break;
-            continue;
-        }
-
-        zero_struct(load_file_options);
-        load_file_options.document_name = get_untitled_document();
-        load_file_options.filetype_option = PD4_CHAR;
-
-        if(!loadfile_recurse(buffer, &load_file_options))
+        if(0 == core_res)
             break;
 
         if(!dialog_box_can_persist())
@@ -1966,7 +2145,7 @@ LoadTemplate_fn(void)
 
     dialog_box_end();
 
-    delete_list(&ltemplate_or_driver_list);
+    delete_list(&templates_list);
 }
 
 /******************************************************************************
@@ -2037,22 +2216,21 @@ get_open_box_sizes(void)
     {
         frow = -1;
 
-        consume(int,
-            sscanf(d_open_box[0].textfield,
-                   "%d,%d,%d,%d,%d,%d,%d,%d",
-                   &open_box.x0, &open_box.x1,
-                   &open_box.y0, &open_box.y1,
-                   &tcol, &trow, &fcol, &frow));
+        consume_int(sscanf(d_open_box[0].textfield,
+                           "%d,%d,%d,%d,%d,%d,%d,%d",
+                           &open_box.x0, &open_box.x1,
+                           &open_box.y0, &open_box.y1,
+                           &tcol, &trow, &fcol, &frow));
 
         /* did we get them all? */
         if(frow != -1)
             use_loaded = TRUE;
     }
 
-    /* SKS after 4.11 08jan92 - attempt to get window position scrolled back ok */
+    /* SKS after PD 4.11 08jan92 - attempt to get window position scrolled back ok */
     if(use_loaded)
     {
-        riscos_frontmainwindow_atbox(TRUE);
+        riscos_front_document_window_atbox(TRUE);
 
         if(!mergebuf_nocheck())
             return(FALSE); /* SKS 10.10.91 */
@@ -2064,7 +2242,7 @@ get_open_box_sizes(void)
         /*draw_screen();*/ /* SKS 08jan92 added; SKS 20130604 removed - see caller */
     }
     else
-        riscos_frontmainwindow(in_execfile);
+        riscos_front_document_window(in_execfile);
 
     return(TRUE);
 }
@@ -2098,8 +2276,9 @@ loadfile_recurse(
     {
         init_open_box_sizes();
 
-        if(!p_load_file_options->temp_file  &&  !same_name_warning(filename, load_supporting_winge_STR))
-            return(FALSE);
+        if(!p_load_file_options->temp_file)
+            if(!same_name_warning(filename, load_supporting_Zs_YN_S_STR, load_supporting_YN_Q_STR))
+                return(FALSE);
 
         { /* now go via DOCU_NAME to start off on the right foot */
         DOCU_NAME docu_name;
@@ -2147,7 +2326,7 @@ loadfile_recurse(
                 ev_todo_add_doc_dependents(current_docno());
 
                 if(0 != loadfile_recurse_load_supporting_documents(filename))
-                    riscos_frontmainwindow(in_execfile);
+                    riscos_front_document_window(in_execfile);
             }
         }
         else
@@ -2254,7 +2433,7 @@ loadfile_recurse_load_supporting_documents(
             /* copy out so that it doesn't get overwritten */
             xstrkpy(leaf_name, elemof32(leaf_name), file_leafname(sup_doc_filename));
 
-            try_path = add_path_using_dir(sup_doc_filename, elemof32(sup_doc_filename), leaf_name, EXTREFS_SUBDIR_STR);
+            try_path = status_done(add_path_using_dir(sup_doc_filename, elemof32(sup_doc_filename), leaf_name, EXTREFS_SUBDIR_STR));
             } /*block*/
 
             if(try_path)
@@ -2287,7 +2466,9 @@ loadfile_recurse_load_supporting_documents(
 
 /******************************************************************************
 *
-* Enumerate all files in subdirectory 'subdir' found in the directories listed by the PipeDream$Path variable.
+* Enumerate all files in subdirectory 'subdir' found
+* in the same directory as the current document (if there is one)
+* and also in the directories listed by the PipeDream$Path variable.
 *
 ******************************************************************************/
 
@@ -2295,19 +2476,19 @@ loadfile_recurse_load_supporting_documents(
 extern STATUS
 enumerate_dir_to_list(
     _InoutRef_  P_P_LIST_BLOCK list,
+    _InoutRef_  P_LIST_ITEMNO p_key,
     _In_opt_z_  PC_U8Z subdir /*maybe NULL*/,
     _InVal_     FILETYPE_RISC_OS filetype)
 {
     P_FILE_OBJENUM     enumstrp;
     P_FILE_OBJINFO     infostrp;
-    U8                 path[BUF_MAX_PATHSTRING];
-    S32                entry = 0;
+    U8                 combined_path[BUF_MAX_PATHSTRING];
     STATUS             res_error = 0;
 
-    /* SKS after 4.11 03feb92 - why was this only file_get_path() before? */
-    file_combined_path(path, elemof32(path), is_current_document() ? currentfilename : NULL);
+    /* SKS after PD 4.11 03feb92 - why was this only file_get_path() before? */
+    file_combine_path(combined_path, elemof32(combined_path), is_current_document() ? currentfilename : NULL, file_get_search_path());
 
-    for(infostrp = file_find_first_subdir(&enumstrp, path, FILE_WILD_MULTIPLE_STR, subdir);
+    for(infostrp = file_find_first_subdir(&enumstrp, combined_path, FILE_WILD_MULTIPLE_STR, subdir);
         infostrp;
         infostrp = file_find_next(&enumstrp))
     {
@@ -2319,8 +2500,9 @@ enumerate_dir_to_list(
             char leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 now cater for long leaf names (was BUF_MAX_LEAFNAME) */
 
             file_objinfo_name(infostrp, leafname, elemof32(leafname));
+            reportf("enumerate_dir_to_list(subdir=%s) matched file %s", report_tstr(subdir), leafname);
 
-            status_break(res_error = add_to_list(list, entry++, leafname));
+            status_break(res_error = add_to_list(list, (*p_key)++, leafname));
         }
     }
 
@@ -2468,7 +2650,7 @@ find_filetype_option(
     input = pd_file_open(filename, file_open_read);
 
     if(!input)
-        return('\0'); /* not an error at this level */
+        return(CH_NULL); /* not an error at this level */
 
     if(FILETYPE_UNDETERMINED == filetype)
     {
@@ -2496,7 +2678,7 @@ find_filetype_option(
     /* ensure terminated at a suitable place */
     if(size == BYTES_TO_SEARCH)
         --size;
-    array[size] = '\0';
+    array[size] = CH_NULL;
 
     /* is it a chart file? search early or may get confused with just normal Draw file */
     res = image_cache_fileheader_is_chart(array, size);
@@ -2646,7 +2828,7 @@ find_filetype_option(
                 {
                 case CR:
                 case LF:
-                case '\0':
+                case CH_NULL:
                     /* faulty quoted string */
                     trace_0(TRACE_APP_PD4, "Tab file as quoted string was faulty");
                     filetype_option = TAB_CHAR;
@@ -2773,6 +2955,23 @@ rft_from_filetype_option(
     return(res);
 }
 
+/******************************************************************************
+*
+******************************************************************************/
+
+extern FILETYPE_RISC_OS
+currentfiletype(
+    _InVal_     char filetype_option)
+{
+    if(TAB_CHAR != filetype_option)
+        return(rft_from_filetype_option(filetype_option));
+
+    if(TAB_CHAR == current_filetype_option)
+        return((FILETYPE_RISC_OS) ((currentfileinfo.load >> 8) & 0xFFF));
+
+    return(FILETYPE_TEXT);
+}
+
 /*
 munges input character for CSV loading
 returns 0 if dealt with character completely, else new char
@@ -2880,7 +3079,7 @@ loadfile_core(
     {
     case PD4_CHAR:
         plaintext = FALSE;
-        field_separator = NULLCH;
+        field_separator = CH_NULL;
         break;
 
     case VIEWSHEET_CHAR:
@@ -2912,7 +3111,7 @@ loadfile_core(
         if( (row_range_start < 0)    ||
             (row_range_end   < 0)    ||
             (row_range_end < row_range_start))
-            return(reperr_null(create_error(ERR_BAD_RANGE)));
+            return(reperr_null(ERR_BAD_RANGE));
     }
 
     /* are we inserting? */
@@ -2936,7 +3135,7 @@ loadfile_core(
         }
 
         if(bad_reference(insert_col, insert_row))
-            return(reperr_null(create_error(ERR_BAD_CELL)));
+            return(reperr_null(ERR_BAD_CELL));
     }
     else  /* overwriting existing(?) file */
     {
@@ -2956,7 +3155,7 @@ loadfile_core(
             {
             case FWP_CHAR:
             case VIEW_CHAR:
-            case PARAGRAPH_CHAR: /* SKS after 4.11 08jan92 - stop paragraph loading turning wrap off */
+            case PARAGRAPH_CHAR: /* SKS after PD 4.11 08jan92 - stop paragraph loading turning wrap off */
                 break;
 
             default:
@@ -2988,7 +3187,7 @@ loadfile_core(
 
     /* open the file and buffer it */
     if(NULL == (loadinput = pd_file_open(filename, file_open_read)))
-        return(reperr(create_error(ERR_CANNOTOPEN), filename));
+        return(reperr(ERR_CANNOTOPEN, filename));
 
     (void) file_buffer(loadinput, NULL, 64*1024); /* no messing about for load */
 
@@ -3018,7 +3217,7 @@ loadfile_core(
         if(vsrows < 0)
         {
             pd_file_close(&loadinput);
-            return(reperr_module(ERR_SHEET, vsrows));
+            return(reperr_null(vsrows));
         }
 
         break;
@@ -3126,7 +3325,7 @@ loadfile_core(
                         continue;
                     }
 
-                    linbuf[lecpos] = NULLCH;
+                    linbuf[lecpos] = CH_NULL;
 
                     if(lukcon(linbuf + start_of_construct, &tcol, &trow, &type,
                                 &justify, &format, first.col, first.row,
@@ -3155,7 +3354,7 @@ loadfile_core(
                 /* put the word at start of this line */
                 strcpy(linbuf, paragraph_saved_word);
                 lecpos = strlen(linbuf);
-                (void) mystr_set(&paragraph_saved_word, NULL);
+                consume_bool(mystr_set(&paragraph_saved_word, NULL));
             }
             else
                 lecpos = 0;
@@ -3255,9 +3454,9 @@ loadfile_core(
                     /* point mylecpos at start of word */
                     mptr++;
 
-                    linbuf[lecpos] = '\0';
+                    linbuf[lecpos] = CH_NULL;
 
-                    (void) mystr_set(&paragraph_saved_word, mptr);
+                    consume_bool(mystr_set(&paragraph_saved_word, mptr));
                     paragraph_in_column = tcol;
 
                     /* write only up to start of word into cell */
@@ -3273,7 +3472,7 @@ loadfile_core(
         if(outofmem)
             break;
 
-        linbuf[lecpos] = NULLCH;
+        linbuf[lecpos] = CH_NULL;
 
         if(VIEW_CHAR == p_load_file_options->filetype_option)
             view_load_line_ended();
@@ -3389,8 +3588,9 @@ loadfile_core(
 
         /* if ran out of memory, throw away what's been loaded */
         if(breakout)
-            /* second parameter added 19.8.91 by RJM for new block move code */
-            do_delete_block(FALSE, FALSE, TRUE);
+        {   /* second parameter added 19.8.91 by RJM for new block move code */
+            do_delete_block(FALSE/*do_save*/, FALSE/*allow_widening*/, TRUE/*ignore_protection*/);
+        }
         else
             MoveBlock_fn_do(TRUE);
 
@@ -3437,7 +3637,7 @@ loadfile_core(
             /* rows */
             ROW firstrow = 0, nrows = 0;
 
-            consume(int, sscanf(d_fixes[0].textfield, "%d,%d", &firstrow, &nrows));
+            consume_int(sscanf(d_fixes[0].textfield, "%d,%d", &firstrow, &nrows));
 
             if(nrows > 0)
             {
@@ -3454,7 +3654,7 @@ loadfile_core(
             /* cols */
             int firstcol = 0, ncols = 0;
 
-            consume(int, sscanf(d_fixes[1].textfield, "%d,%d", &firstcol, &ncols));
+            consume_int(sscanf(d_fixes[1].textfield, "%d,%d", &firstcol, &ncols));
 
             if(ncols > 0)
             {
@@ -3477,13 +3677,13 @@ loadfile_core(
 
     recalc_state_may_have_changed();
     chart_recalc_state_may_have_changed();
-    insert_state_may_have_changed();
+    insert_overtype_state_may_have_changed();
     update_variables();
 
     filealtered(p_load_file_options->temp_file  ||  p_load_file_options->inserting);
 
     if(ctrl_chars)
-        reperr_null(create_error(ERR_CTRL_CHARS));
+        reperr_null(ERR_CTRL_CHARS);
 
     return(!breakout);
 }
@@ -3585,7 +3785,7 @@ rename_document(
     { /* NB the given DOCU_NAME now always takes prority */
     U8 buffer[BUF_MAX_PATHSTRING];
     name_make_wholename(p_docu_name, buffer, elemof32(buffer));
-    (void) mystr_set(&currentfilename, buffer);
+    consume_bool(mystr_set(&currentfilename, buffer));
     } /*block*/
 
     riscos_settitlebar(currentfilename);
@@ -3602,8 +3802,8 @@ name_preprocess_docu_name_flags_for_rename(
     if(p_docu_name->path_name && file_is_rooted(p_docu_name->path_name))
     {
         char dir_name[BUF_MAX_PATHSTRING];
-        char rawpath[BUF_MAX_PATHSTRING];
-        P_FILE_PATHENUM path;
+        char combined_path[BUF_MAX_PATHSTRING];
+        P_FILE_PATHENUM pathenum;
         PCTSTR pathelem;
         P_U8 trail_ptr;
         P_U8 leaf_ptr;
@@ -3613,20 +3813,20 @@ name_preprocess_docu_name_flags_for_rename(
         xstrkpy(dir_name, elemof32(dir_name), p_docu_name->path_name);
         trail_ptr = dir_name + strlen32(dir_name) - 1;
         if(*trail_ptr == FILE_DIR_SEP_CH) /* overwrite trailing '.' but NOT ':' */
-            *trail_ptr = NULLCH;
+            *trail_ptr = CH_NULL;
 
         /* strip off trailing Library from dir_name if present */
         leaf_ptr = file_leafname(dir_name);
         if(leaf_ptr && (0 == _stricmp(leaf_ptr, EXTREFS_SUBDIR_STR)))
-            *leaf_ptr = NULLCH;
-        else if(*trail_ptr == NULLCH) /* otherwise restore trailing '.' iff it was removed */
+            *leaf_ptr = CH_NULL;
+        else if(*trail_ptr == CH_NULL) /* otherwise restore trailing '.' iff it was removed */
             *trail_ptr = FILE_DIR_SEP_CH;
 
         reportf("dir_name: %s", dir_name);
 
-        file_combined_path(rawpath, elemof32(rawpath), NULL);
+        file_combine_path(combined_path, elemof32(combined_path), NULL, file_get_search_path());
 
-        for(pathelem = file_path_element_first(&path, rawpath); pathelem; pathelem = file_path_element_next(&path))
+        for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
         {
             reportf("compare with pathelem: %s", pathelem);
 
@@ -3638,7 +3838,7 @@ name_preprocess_docu_name_flags_for_rename(
             }
         }
 
-        file_path_element_close(&path);
+        file_path_element_close(&pathenum);
     }
     else
     {

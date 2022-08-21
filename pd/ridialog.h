@@ -20,10 +20,6 @@
 exported functions from riscdialog.c
 */
 
-extern FILETYPE_RISC_OS
-currentfiletype(
-    char filetype_option);
-
 extern void
 pausing_null(void);
 
@@ -87,7 +83,8 @@ enum RISCDIALOG_QUERY_DC_REPLY
 
 extern enum RISCDIALOG_QUERY_DC_REPLY
 riscdialog_query_DC(
-    const char *mess);
+    const char * statement,
+    const char * question);
 
 enum RISCDIALOG_QUERY_YN_REPLY
 {
@@ -98,7 +95,8 @@ enum RISCDIALOG_QUERY_YN_REPLY
 
 extern enum RISCDIALOG_QUERY_YN_REPLY
 riscdialog_query_YN(
-    const char *mess);
+    const char * statement,
+    const char * question);
 
 enum RISCDIALOG_QUERY_SDC_REPLY
 {
@@ -109,11 +107,13 @@ enum RISCDIALOG_QUERY_SDC_REPLY
 
 extern enum RISCDIALOG_QUERY_SDC_REPLY
 riscdialog_query_SDC(
-    const char *mess);
+    const char * statement,
+    const char * question);
 
 extern enum RISCDIALOG_QUERY_SDC_REPLY
 riscdialog_query_quit_SDC(
-    const char *mess);
+    const char * statement,
+    const char * question);
 
 extern enum RISCDIALOG_QUERY_SDC_REPLY
 riscdialog_query_save_or_discard_existing(void);
@@ -128,6 +128,11 @@ riscdialog_replace_dbox_end(void);
 
 extern BOOL
 riscdialog_warning(void);
+
+extern BOOL
+riscdialog_choose_colour(
+    _OutRef_    P_U32 p_wimp_colour_value,
+    _In_z_      PC_U8Z title);
 
 /*
 shared dprocs
@@ -196,6 +201,18 @@ dproc_checking(
 extern void
 dproc_colours(
     DIALOG *dptr);
+
+#if defined(EXTENDED_COLOUR)
+
+extern void
+dproc_extended_colours(
+    DIALOG *dptr);
+
+#else
+
+#define dproc_extended_colours dproc_colours
+
+#endif /* EXTENDED_COLOUR */
 
 extern void
 dproc_createlinking(
@@ -270,11 +287,31 @@ dproc_loadtemplate(
     DIALOG *dptr);
 
 extern void
+dproc_edit_driver(
+    DIALOG *dptr);
+
+extern void
+dproc_execfile(
+    DIALOG *dptr);
+
+extern void
 dproc_edit_name(
     DIALOG *dptr);
 
 extern void
 dproc_formula_error(
+    DIALOG *dptr);
+
+extern void
+dproc_insert_page_number(
+    DIALOG *dptr);
+
+extern void
+dproc_insert_date(
+    DIALOG *dptr);
+
+extern void
+dproc_insert_time(
     DIALOG *dptr);
 
 #endif  /* __pd__riscdialog_h */

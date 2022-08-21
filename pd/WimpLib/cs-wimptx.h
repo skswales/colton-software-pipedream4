@@ -10,10 +10,6 @@
 #ifndef __cs_wimptx_h
 #define __cs_wimptx_h
 
-#ifndef __os_h
-#include "os.h"
-#endif
-
 #ifndef __cs_wimp_h
 #include "cs-wimp.h" /* ensure we get ours in first */
 #endif
@@ -23,16 +19,25 @@
 #endif
 
 #ifdef PARANOID
-#define wimpt_safe(a) consume(_kernel_oserror *, wimpt_complain(a))
+#define wimpt_safe(a) wimpt_complain((a))
 #else
-#define wimpt_safe(a) consume(_kernel_oserror *, a)
+#define wimpt_safe(a) (void) (a)
 #endif
 
 /*
-wimpt.c
+cs-wimptx.c (wraps wimpt.c)
 */
 
-/* ----------------------- wimpt_set_spritename ---------------------------
+extern int /*button_clicked*/
+wimp_ReportError_wrapped(
+    const _kernel_oserror * e,
+    int errflags,
+    const char * name,
+    const char * spritename,
+    const char * spritearea,
+    const char * buttons);
+
+/* ----------------------- wimptx_set_spritename --------------------------
  * Description:   Sets a sprite name to use when the application reports
  *                info / warning / errors using the Window Manager
  *                for RISC OS 3.5 and later.
@@ -41,14 +46,14 @@ wimpt.c
 */
 
 extern void
-wimpt_set_spritename(const char * spritename);
+wimptx_set_spritename(const char * spritename);
 
 extern const char *
-wimpt_get_spritename(void);
+wimptx_get_spritename(void);
 
-/* ----------------------- wimpt_set_taskname -----------------------------
+/* ----------------------- wimptx_set_taskname ----------------------------
  * Description:   Sets a name by which the application is registered with
- *                the Window and Task Managers.
+ *                the Window Manager and Task Manager.
  *
  *                Must be done prior to wimpt_init() to have any effect.
  *                If omitted, application is registered using the name
@@ -56,12 +61,12 @@ wimpt_get_spritename(void);
 */
 
 extern void
-wimpt_set_taskname(const char * taskname);
+wimptx_set_taskname(const char * taskname);
 
 extern const char *
-wimpt_get_taskname(void);
+wimptx_get_taskname(void);
 
-/* ----------------------- wimpt_set_safepoint ----------------------------
+/* ----------------------- wimptx_set_safepoint ---------------------------
  * Descripton:    Sets a safe point to longjmp() to on faulting.
  *                NULL to disable, thereby forcing immediate exit.
 */
@@ -71,19 +76,20 @@ wimpt_get_taskname(void);
 #endif
 
 extern void
-wimpt_set_safepoint(jmp_buf * safepoint);
+wimptx_set_safepoint(jmp_buf * safepoint);
 
 /*
 obtain callback just after/before calling wimp_poll
 */
-typedef void (*wimpt_atentry_t)(wimp_eventstr *);
-typedef void (*wimpt_atexit_t) (wimp_eventstr *);
 
-extern wimpt_atentry_t
-wimpt_atentry(wimpt_atentry_t pfnNewProc);
+typedef void (*wimptx_atentry_t)(wimp_eventstr *e);
+typedef void (*wimptx_atexit_t) (wimp_eventstr *e);
 
-extern wimpt_atexit_t
-wimpt_atexit(wimpt_atexit_t pfnNewProc);
+extern wimptx_atentry_t
+wimptx_atentry(wimptx_atentry_t pfnNewProc);
+
+extern wimptx_atexit_t
+wimptx_atexit(wimptx_atexit_t pfnNewProc);
 
 /*
 cs-wimptx.c
@@ -102,16 +108,16 @@ os_set_error(int errnum, const char * errmess);
 #endif
 
 extern void
-wimpt_os_version_determine(void);
+wimptx_os_version_determine(void);
 
 extern int
-wimpt_os_version_query(void);
+wimptx_os_version_query(void);
 
 extern int
-wimpt_platform_features_query(void);
+wimptx_platform_features_query(void);
 
 /*
-Fast access via macros
+Fast access to RISC_OSLib mode variables in wimpt.c via macros
 */
 
 extern int wimpt__mode;
@@ -125,7 +131,7 @@ extern int wimpt__dy;
 extern int wimpt__bpp;
 #define wimpt_bpp() wimpt__bpp
 
-/* ---------------------- wimpt_xeig/wimpt_yeig ------------------------------
+/* ---------------- wimptx_XEigFactor/wimptx_YEigFactor ----------------------
  * Description:   Inform caller of OS x/y units to screen pixel shift factor
  *
  * Parameters:    void
@@ -135,18 +141,18 @@ extern int wimpt__bpp;
  *
  */
 
-extern int
-wimpt_xeig(void);
+extern unsigned int
+wimptx_XEigFactor(void);
 
-extern int
-wimpt_yeig(void);
+extern unsigned int
+wimptx_YEigFactor(void);
 
-extern int wimpt__xeig;
-extern int wimpt__yeig;
-#define wimpt_xeig() wimpt__xeig
-#define wimpt_yeig() wimpt__yeig
+extern unsigned int wimptx__XEigFactor;
+extern unsigned int wimptx__YEigFactor;
+#define wimptx_XEigFactor() wimptx__XEigFactor
+#define wimptx_YEigFactor() wimptx__YEigFactor
 
-/* --------------------- wimpt_xsize/wimpt_ysize -----------------------------
+/* ----------- wimptx_display_size_cx/wimptx_display_size_cy -----------------
  * Description:   Inform caller of OS x/y units dimensions of screen
  *
  * Parameters:    void
@@ -156,16 +162,16 @@ extern int wimpt__yeig;
  *
  */
 
-extern int
-wimpt_xsize(void);
+extern unsigned int
+wimptx_display_size_cx(void);
 
-extern int
-wimpt_ysize(void);
+extern unsigned int
+wimptx_display_size_cy(void);
 
-extern int wimpt__xsize;
-extern int wimpt__ysize;
-#define wimpt_xsize() wimpt__xsize
-#define wimpt_ysize() wimpt__ysize
+extern unsigned int wimptx__display_size_cx;
+extern unsigned int wimptx__display_size_cy;
+#define wimptx_display_size_cx() wimptx__display_size_cx
+#define wimptx_display_size_cy() wimptx__display_size_cy
 
 /* -------------------------- wimpt_* ------------------------------------
  * Description:   More stuff.
@@ -177,53 +183,66 @@ extern int wimpt__ysize;
  *
  */
 
-extern int wimpt__title_height;
-extern int wimpt__hscroll_height;
-extern int wimpt__vscroll_width;
-#define wimpt_title_height()   wimpt__title_height
-#define wimpt_hscroll_height() wimpt__hscroll_height
-#define wimpt_vscroll_width()  wimpt__vscroll_width
+extern int wimptx__title_height;
+extern int wimptx__hscroll_height;
+extern int wimptx__vscroll_width;
+#define wimptx_title_height()   wimptx__title_height
+#define wimptx_hscroll_height() wimptx__hscroll_height
+#define wimptx_vscroll_width()  wimptx__vscroll_width
 
-/* ----------------------- wimpt_checkpalette ----------------------------
+/* ----------------------- wimptx_checkpalette ---------------------------
  * Description:   Invalidates ColourTrans cached colours and caches current
  *                palette for all wimp colours. Must be called on a
  *                palette change message (& on mode change) to work properly
 */
 
 extern void
-wimpt_checkpalette(void);
+wimptx_checkpalette(void);
 
-/* ------------------------- wimpt_palette -------------------------------
- * Description:   Returns the palette entry for a given wimp colour
+/* ------------------------- wimptx_palette ------------------------------
+ * Description:   Returns the palette entry
+ *                for a given wimp colour index
 */
 
 extern wimp_paletteword
-wimpt_palette(int wimpcolour);
+wimptx_palette(int wimpcolour);
 
-extern wimp_palettestr wimpt__palette;
-#define wimpt_palette(wimpcolour) wimpt__palette.c[wimpcolour]
+extern wimp_palettestr wimptx__palette;
+#define wimptx_palette(wimpcolour) ( \
+    wimptx__palette.c[(wimpcolour)] )
 
-/* --------------------- wimpt_RGB_for_wimpcolour ------------------------
- * Description:   Returns the RGB value in the palette entry for a
- *                given wimp colour
+/* --------------------- wimptx_RGB_for_wimpcolour -----------------------
+ * Description:   Returns the RGB value in the palette entry
+ *                for a given wimp colour index
 */
 
 extern int
-wimpt_RGB_for_wimpcolour(int wimpcolour);
+wimptx_RGB_for_wimpcolour(int wimpcolour);
 
-#define wimpt_RGB_for_wimpcolour(wimpcolour) \
-(wimpt_palette(wimpcolour).word & 0xFFFFFF00)
+#define wimptx_RGB_for_wimpcolour(wimpcolour) (\
+    wimptx_palette(wimpcolour).word & 0xFFFFFF00 )
 
-/* --------------------- wimpt_GCOL_for_wimpcolour ------------------------
- * Description:   Returns the GCOL value in the palette entry for a
- *                given wimp colour
+/* --------------------- wimptx_GCOL_for_wimpcolour -----------------------
+ * Description:   Returns the GCOL value in the palette entry
+ *                for a given wimp colour index
 */
 
 extern int
-wimpt_GCOL_for_wimpcolour(int wimpcolour);
+wimptx_GCOL_for_wimpcolour(int wimpcolour);
 
-#define wimpt_GCOL_for_wimpcolour(wimpcolour) \
-(wimpt_palette(wimpcolour).bytes.gcol)
+#define wimptx_GCOL_for_wimpcolour(wimpcolour) ( \
+    wimptx_palette(wimpcolour).bytes.gcol )
+
+_Check_return_
+extern BOOL
+host_must_die_query(void);
+
+extern void
+host_must_die_set(
+    _InVal_     BOOL must_die);
+
+extern void
+wimptx_stack_overflow_handler(int sig);
 
 /*
 cs-riscasm.s

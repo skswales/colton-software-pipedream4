@@ -90,88 +90,100 @@ draw_insert_filename(
 
 static BOOL g_kill_duplicates = FALSE;
 
-static wimp_openstr saved_window_pos;
-
 /* ------------------------ file import/export --------------------------- */
 
 /* ask for scrap file load: all errors have been reported locally */
 
 static void
+scraptransfer_file_PipeDream(
+    _InVal_     BOOL iconbar)
+{
+    char grname[BUF_MAX_PATHSTRING];
+    char myname[BUF_MAX_PATHSTRING];
+
+    /* check with chart editor to see if he's saving to us - if so invent
+     * relative filename using leafname supplied by chart editor
+    */
+    if(gr_chart_saving_chart(grname))
+    {
+        if(file_is_rooted(grname))
+        {
+            /* just insert a ref if it is saved */
+            draw_insert_filename(grname);
+            return;
+        }
+
+        /* fault these as we can't store them anywhere safe relative
+         * to the iconbar or relative to this unsaved file
+        */
+        if(iconbar)
+            reperr_null(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED);
+        else if(!file_is_rooted(currentfilename))
+            reperr_null(ERR_CHARTIMPORTNEEDSSAVEDDOC);
+        else
+        {
+            U32 prefix_len;
+            S32 num = 0;
+
+            file_get_prefix(myname, elemof32(myname), currentfilename);
+
+            prefix_len = strlen32(myname);
+
+            do  {
+                if(++num > 99) /* only two digits in printf string */
+                    break;
+
+                /* invent a new leafname and stick it on the end */
+                (void) xsnprintf(myname + prefix_len, elemof32(myname) - prefix_len,
+                        string_lookup(GR_CHART_MSG_DEFAULT_CHARTINNAMEZD),
+                        file_leafname(currentfilename),
+                        num);
+
+                /* see if there's any file of this name already */
+            }
+            while(file_is_file(myname));
+
+            xferrecv_import_via_file(myname);
+        }
+    }
+    else
+    {
+        xferrecv_import_via_file(NULL); /* can't manage RAM load */
+    }
+}
+
+static void
+scraptransfer_file_others(
+    _InVal_       FILETYPE_RISC_OS filetype)
+{
+    if(image_cache_can_import(filetype))
+        /* fault these as we can't store them anywhere safe */
+        reperr_null(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED);
+    else
+        xferrecv_import_via_file(NULL); /* can't manage ram load */
+}
+
+static void
 scraptransfer_file(
-    const wimp_msgdatasave * ms,
-    BOOL iconbar)
+    const WimpDataSaveMessage * const data_save,
+    _InVal_       BOOL iconbar)
 {
     S32 size;
-    FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkimport(&size);
+    const FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkimport(&size);
 
     switch(filetype)
     {
     case FILETYPE_DIRECTORY:
     case FILETYPE_APPLICATION:
-        reperr(create_error(FILE_ERR_ISADIR), ms->leaf);
+        reperr(FILE_ERR_ISADIR, data_save->leaf_name);
         break;
 
     case FILETYPE_PIPEDREAM:
-        {
-        char grname[BUF_MAX_PATHSTRING];
-        char myname[BUF_MAX_PATHSTRING];
-
-        /* check with chart editor to see if he's saving to us - if so invent
-         * relative filename using leafname supplied by chart editor
-        */
-        if(gr_chart_saving_chart(grname))
-        {
-            if(file_is_rooted(grname))
-            {
-                /* just insert a ref if it is saved */
-                draw_insert_filename(grname);
-                break;
-            }
-
-            /* fault these as we can't store them anywhere safe relative
-             * to the iconbar or relative to this unsaved file
-            */
-            if(iconbar)
-                reperr_null(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED));
-            else if(!file_is_rooted(currentfilename))
-                reperr_null(ERR_CHARTIMPORTNEEDSSAVEDDOC);
-            else
-            {
-                U32 prefix_len;
-                S32 num = 0;
-
-                file_get_prefix(myname, elemof32(myname), currentfilename);
-
-                prefix_len = strlen32(myname);
-
-                do  {
-                    if(++num > 99) /* only two digits in printf string */
-                        break;
-
-                    /* invent a new leafname and stick it on the end */
-                    (void) xsnprintf(myname + prefix_len, elemof32(myname) - prefix_len,
-                            string_lookup(GR_CHART_MSG_DEFAULT_CHARTINNAMEZD),
-                            file_leafname(currentfilename),
-                            num);
-
-                    /* see if there's any file of this name already */
-                }
-                while(file_is_file(myname));
-
-                xferrecv_import_via_file(myname);
-            }
-        }
-        else
-            xferrecv_import_via_file(NULL); /* can't manage ram load */
-        }
+        scraptransfer_file_PipeDream(iconbar);
         break;
 
     default:
-        if(image_cache_can_import(filetype))
-            /* fault these as we can't store them anywhere safe */
-            reperr_null(create_error(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED));
-        else
-            xferrecv_import_via_file(NULL); /* can't manage ram load */
+        scraptransfer_file_others(filetype);
         break;
     }
 }
@@ -292,24 +304,24 @@ riscos_quit_okayed(
     DOCNO old_docno = current_docno();
     P_DOCU p_docu;
     enum RISCDIALOG_QUERY_SDC_REPLY SDC_res;
-    char mess[256];
+    char query_quit_statement[256];
 
     dbox_note_position_on_completion(TRUE);
 
-    (void) xsnprintf(mess, elemof32(mess),
-            (nmodified == 1)
-                ? Zd_file_edited_in_Zs_are_you_sure_STR
-                : Zd_files_edited_in_Zs_are_you_sure_STR,
-            nmodified,
-            product_ui_id());
+    consume_int(xsnprintf(query_quit_statement, elemof32(query_quit_statement),
+                          (nmodified == 1)
+                              ? Zd_file_edited_in_Zs_are_you_sure_STR
+                              : Zd_files_edited_in_Zs_are_you_sure_STR,
+                          nmodified,
+                          product_ui_id()));
 
-    SDC_res = riscdialog_query_quit_SDC(mess);
+    SDC_res = riscdialog_query_quit_SDC(query_quit_statement, query_quit_SDC_Q_STR);
 
-    /* Discard   -> ok, quit application (also known as 'Discard') */
-    /* Cancel    -> abandon closedown */
-    /* Save      -> save files, then quit application (aka 'Save') */
+    /* Discard -> ok, quit application */
+    /* Cancel  -> abandon closedown */
+    /* Save    -> save files, then quit application */
 
-    if(SDC_res == riscdialog_query_SDC_SAVE)
+    if(riscdialog_query_SDC_SAVE == SDC_res)
     {
         /* loop over all documents in sequence trying to save them */
 
@@ -320,7 +332,7 @@ riscos_quit_okayed(
             dbox_note_position_on_completion(TRUE);
 
             /* If punter (or program) cancels any save, he means abort the shutdown */
-            if(riscdialog_query_save_or_discard_existing() == riscdialog_query_SDC_CANCEL)
+            if(riscdialog_query_SDC_CANCEL == riscdialog_query_save_or_discard_existing())
             {
                 SDC_res = riscdialog_query_SDC_CANCEL;
                 break;
@@ -332,8 +344,11 @@ riscos_quit_okayed(
 
     /* if not aborted then all modified documents either saved or ignored - delete all documents (must be at least one) */
 
-    if((SDC_res == riscdialog_query_SDC_SAVE) || (SDC_res == riscdialog_query_SDC_DISCARD))
+    switch(SDC_res)
     {
+    case riscdialog_query_SDC_SAVE:
+    case riscdialog_query_SDC_DISCARD:
+        {
         for(;;)
         {
             if(NO_DOCUMENT == (p_docu = first_document()))
@@ -346,10 +361,12 @@ riscos_quit_okayed(
 
         select_document(NO_DOCUMENT);
         return(1);
-    }
+        }
 
-    select_document_using_docno(old_docno);
-    return(0);
+    default:
+        select_document_using_docno(old_docno);
+        return(0);
+    }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -373,9 +390,7 @@ static const char  colh_window_name[] = "colh_wind";
 static wimp_wind * main_window_definition;        /* ptr to actual window def NB. this might not be word aligned! */
 static S32         main_window_initial_y1;
 static S32         main_window_default_height;
-#define            main_window_y_bump           (wimpt_title_height() + 16)
-
-static const char  fontselector_dboxname[] = "FontSelect";
+#define            main_window_y_bump           (wimptx_title_height() + 16)
 
 /*
 can we print a file of this filetype?
@@ -426,8 +441,8 @@ pd_can_run(
 *
 ******************************************************************************/
 
-static void
-iconbar_event_EBUT_BLEFT(void)
+static BOOL
+iconbar_event_Mouse_Click_Button_Select(void)
 {
     if(host_ctrl_pressed())
     { /*EMPTY*/ } /* reserved */
@@ -443,10 +458,12 @@ iconbar_event_EBUT_BLEFT(void)
     }
     else
         application_process_command(N_LoadTemplate);
+
+    return(TRUE);
 }
 
-static void
-iconbar_event_EBUT_BRIGHT(void)
+static BOOL
+iconbar_event_Mouse_Click_Button_Adjust(void)
 {
     if(host_ctrl_pressed())
     { /*EMPTY*/ } /* reserved */
@@ -454,59 +471,67 @@ iconbar_event_EBUT_BRIGHT(void)
     { /*EMPTY*/ } /* reserved */
     else
         application_process_command(N_NewWindow);
+
+    return(TRUE);
 }
 
-static void
-iconbar_event_EBUT(
-    wimp_eventstr *e)
+static BOOL
+iconbar_event_Mouse_Click(
+    const WimpMouseClickEvent * const mouse_click)
 {
-    if(e->data.but.m.bbits == wimp_BLEFT)
-        iconbar_event_EBUT_BLEFT();
-    else if(e->data.but.m.bbits == wimp_BRIGHT)
-        iconbar_event_EBUT_BRIGHT();
-    else
-        trace_0(TRACE_APP_PD4, "wierd button click - ignored");
+    if(mouse_click->buttons == Wimp_MouseButtonSelect)
+        return(iconbar_event_Mouse_Click_Button_Select());
+
+    if(mouse_click->buttons == Wimp_MouseButtonAdjust)
+        return(iconbar_event_Mouse_Click_Button_Adjust());
+
+    trace_0(TRACE_APP_PD4, "wierd mouse button click - ignored");
+    return(FALSE);
 }
 
 /* create an icon on the icon bar */
 
-static struct
-{
-    wimp_i i;
-    char spritename[1 + 12 + 1];
-}
-bi;
+static int iconbar_icon_handle;
 
-static BOOL
+static char iconbar_spritename[12 + 1];
+
+static void
+iconbar_new_sprite_setup(
+    _Out_ WimpIconBlockWithBitset * p_icon)
+{
+    zero_struct_ptr(p_icon);
+
+    p_icon->bbox.xmin = 0;
+    p_icon->bbox.ymin = 0;
+    p_icon->bbox.xmax = 68 /* sprite width */;
+    p_icon->bbox.ymax = 68 /* sprite height */;
+
+    p_icon->flags.bits.sprite = 1;
+    p_icon->flags.bits.indirected = 1;
+    p_icon->flags.bits.filled = 1;
+    p_icon->flags.bits.horz_centred = 1;
+    p_icon->flags.bits.button_type = wimp_BCLICKDEBOUNCE;
+    p_icon->flags.bits.fg_colour = 7;
+    p_icon->flags.bits.bg_colour = 0;
+
+    p_icon->data.is.sprite = iconbar_spritename;
+    p_icon->data.is.sprite_area = resspr_area();
+    p_icon->data.is.sprite_name_length = strlen(iconbar_spritename);
+
+}
+
+static _kernel_oserror *
 iconbar_new_sprite(
     const char * spritename)
 {
-    wimp_icreate i;
+    WimpCreateIconBlock create;
 
-    bi.spritename[0] = 'S';
-    bi.spritename[1] = '\0';
-    xstrkat(bi.spritename, elemof32(bi.spritename), spritename);
+    xstrkpy(iconbar_spritename, elemof32(iconbar_spritename), spritename);
 
-    i.w = -1; /* icon bar, right hand side */
+    create.window_handle = -1; /* icon bar, right hand side */
+    iconbar_new_sprite_setup((WimpIconBlockWithBitset *) &create.icon);
 
-    i.i.box.x0 = 0;
-    i.i.box.y0 = 0;
-    i.i.box.x1 = 68 /* sprite width */;
-    i.i.box.y1 = 68 /* sprite height */;
-
-    i.i.flags  = (wimp_iconflags) ( (wimp_IFORECOL * 7) | (wimp_IBACKCOL * 1) |
-                                    wimp_INDIRECT | wimp_IFILLED | wimp_IHCENTRE |
-                                    (wimp_BCLICKDEBOUNCE * wimp_IBTYPE) |
-                                    wimp_ISPRITE );
-
-    i.i.data.indirectsprite.name       = &bi.spritename[1];
-    i.i.data.indirectsprite.spritearea = resspr_area();
-    i.i.data.indirectsprite.nameisname = TRUE;
-
-    if(wimpt_complain(wimp_create_icon(&i, &bi.i)))
-        return(FALSE);
-
-    return(TRUE);
+    return(tbl_wimp_create_icon(0, &create, &iconbar_icon_handle));
 }
 
 /******************************************************************************
@@ -526,12 +551,12 @@ iconbar_initialise(
     /* make name of icon bar icon sprite */
     xstrkat(iconbar_spritename, elemof32(iconbar_spritename), appname);
 
-    win_register_new_event_handler(win_ICONBAR,
-                                   default_event_handler,
-                                   NULL);
+    winx_register_new_event_handler(win_ICONBAR,
+                                    default_event_handler,
+                                    NULL);
 
     /* new icon (sprite/no text) */
-    (void) iconbar_new_sprite(iconbar_spritename);
+    void_WrapOsErrorReporting(iconbar_new_sprite(iconbar_spritename));
 }
 
 /******************************************************************************
@@ -585,11 +610,12 @@ continue_draw(void)
 ******************************************************************************/
 
 static void
-check_if_null_events_wanted(wimp_eventstr * e)
+check_if_null_events_wanted(
+    _InVal_     int event_code)
 {
     BOOL required = FALSE;
 
-    if(e->e != wimp_ENULL)
+    if(Wimp_ENull != event_code)
         required = TRUE; /* always schedule a null event to work out whether they are needed! */
 
     if(!required)
@@ -642,21 +668,26 @@ check_if_null_events_wanted(wimp_eventstr * e)
 
 /******************************************************************************
 *
-* Tidy up before returning control back to the Window manager
+* Tidy up before returning control back to the Window Manager
 *
 ******************************************************************************/
+
+static void
+actions_when_idle_reached(void)
+{
+    /* anyone need end of data sending? */
+    send_end_markers();
+}
 
 static void
 actions_before_exiting(wimp_eventstr * e)
 {
     /* anyone need background events? */
-    check_if_null_events_wanted(e);
+    check_if_null_events_wanted(e->e);
 
-    if(wimp_ENULL == e->e)
-    {   /* all the things to do once we have settled down */
-
-        /* anyone need end of data sending? */
-        send_end_markers();
+    if(Wimp_ENull == e->e)
+    {   /* do all the things to do once we have settled down */
+        actions_when_idle_reached();
     }
 
     /* forget about any fonts we have handles on (but don't kill all of the cache mechanism) */
@@ -679,19 +710,19 @@ extern void
 riscos_sendsheetclosed(
     _InRef_opt_ PC_GRAPHICS_LINK_ENTRY glp)
 {
-    wimp_msgstr msg;
+    WimpMessageExtra user_message;
 
     if(glp)
     {
-        msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.b)
-                       + sizeof(WIMP_MSGPD_DDETYPEB);
-        msg.hdr.my_ref = 0;        /* fresh msg */
-        msg.hdr.action = wimp_MPD_DDE;
+        user_message.hdr.size   = offsetof(WimpMessageExtra, data.pd_dde.type.b)
+                                + sizeof(WIMP_MSGPD_DDETYPEB);
+        user_message.hdr.my_ref = 0;        /* fresh msg */
+        user_message.hdr.action_code = Wimp_MPD_DDE;
 
-        msg.data.pd_dde.id            = Wimp_MPD_DDE_SheetClosed;
-        msg.data.pd_dde.type.b.handle = glp->ghan;
+        user_message.data.pd_dde.id            = Wimp_MPD_DDE_SheetClosed;
+        user_message.data.pd_dde.type.b.handle = glp->ghan;
 
-        wimpt_safe(wimp_sendmessage(wimp_ESEND, &msg, (wimp_t) glp->task));
+        void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessage, &user_message, glp->task));
     }
 }
 
@@ -702,7 +733,7 @@ riscos_sendsheetclosed(
 ******************************************************************************/
 
 extern void
-riscos_sendslotcontents(
+riscos_sendcellcontents(
     _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp,
     S32 x_off,
     S32 y_off)
@@ -715,7 +746,7 @@ riscos_sendslotcontents(
         char *to, ch;
         S32 nbytes;
         WIMP_MSGPD_DDETYPEC_TYPE type;
-        wimp_msgstr msg;
+        WimpMessageExtra user_message;
         P_CELL tcell;
 
         glp->datasent = TRUE;
@@ -738,11 +769,11 @@ riscos_sendslotcontents(
                 case RPN_DAT_WORD8:
                 case RPN_DAT_WORD16:
                 case RPN_DAT_WORD32:
-                    msg.data.pd_dde.type.c.content.number = (F64) p_ev_result->arg.integer;
+                    user_message.data.pd_dde.type.c.content.number = (F64) p_ev_result->arg.integer;
                     goto send_number;
 
                 case RPN_DAT_REAL:
-                    msg.data.pd_dde.type.c.content.number = p_ev_result->arg.fp;
+                    user_message.data.pd_dde.type.c.content.number = p_ev_result->arg.fp;
                 send_number:
                     type = Wimp_MPD_DDE_typeC_type_Number;
                     nbytes = sizeof(F64);
@@ -753,7 +784,7 @@ riscos_sendslotcontents(
                 }
             }
 
-            if(!nbytes)
+            if(0 == nbytes)
             {
                 S32 t_justify, t_format, t_opt_DF, t_opt_TH;
 
@@ -773,11 +804,15 @@ riscos_sendslotcontents(
                 d_options_TH = TH_BLANK;
                 curpnm = 0;        /* we have really no idea */
 
-                (void) expand_slot(current_docno(), tcell, row, buffer, LIN_BUFSIZ,
-                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                                   FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+                (void) expand_cell(
+                            current_docno(), tcell, row, buffer, LIN_BUFSIZ,
+                            DEFAULT_EXPAND_REFS /*expand_refs*/,
+                            EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                            EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+                            EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+                            TRUE /*cff*/);
 
-                tcell->justify               = t_justify;
+                tcell->justify    = t_justify;
                 if(tcell->type == SL_NUMBER)
                     tcell->format = t_format;
                 d_options_DF      = t_opt_DF;
@@ -800,29 +835,29 @@ riscos_sendslotcontents(
 
         if(ptr)
         {
-            xstrkpy(msg.data.pd_dde.type.c.content.text, elemof32(msg.data.pd_dde.type.c.content.text), ptr);
-            nbytes = strlen32p1(msg.data.pd_dde.type.c.content.text);
+            xstrkpy(user_message.data.pd_dde.type.c.content.text, elemof32(user_message.data.pd_dde.type.c.content.text), ptr);
+            nbytes = strlen32p1(user_message.data.pd_dde.type.c.content.text);
         }
 
-        msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.c.content)
-                       + nbytes;
-        msg.hdr.my_ref = 0;        /* fresh msg */
-        msg.hdr.action = wimp_MPD_DDE;
+        user_message.hdr.size   = offsetof(WimpMessageExtra, data.pd_dde.type.c.content)
+                                + nbytes;
+        user_message.hdr.my_ref = 0;        /* fresh msg */
+        user_message.hdr.action_code = Wimp_MPD_DDE;
 
-        msg.data.pd_dde.id            = Wimp_MPD_DDE_SendSlotContents;
-        msg.data.pd_dde.type.c.handle = glp->ghan;
-        msg.data.pd_dde.type.c.x_off  = x_off;
-        msg.data.pd_dde.type.c.y_off  = y_off;
-        msg.data.pd_dde.type.c.type   = type;
+        user_message.data.pd_dde.id            = Wimp_MPD_DDE_SendSlotContents;
+        user_message.data.pd_dde.type.c.handle = glp->ghan;
+        user_message.data.pd_dde.type.c.x_off  = x_off;
+        user_message.data.pd_dde.type.c.y_off  = y_off;
+        user_message.data.pd_dde.type.c.type   = type;
 
-        trace_2(TRACE_MODULE_UREF, "sendslotcontents x:%d, y:%d", x_off, y_off);
+        trace_2(TRACE_MODULE_UREF, "sendcellcontents x:%d, y:%d", x_off, y_off);
 
-        wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, (wimp_t) glp->task));
+        void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessageRecorded, &user_message, glp->task));
     }
 }
 
 extern void
-riscos_sendallslots(
+riscos_sendallcells(
     _InoutRef_  P_GRAPHICS_LINK_ENTRY glp)
 {
     S32 xoff, yoff;
@@ -831,7 +866,7 @@ riscos_sendallslots(
     do  {
         yoff = 0;
         do  {
-            riscos_sendslotcontents(glp, xoff, yoff);
+            riscos_sendcellcontents(glp, xoff, yoff);
         }
         while(++yoff <= glp->y_size);
     }
@@ -848,22 +883,22 @@ static void
 riscos_sendendmarker(
     _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp)
 {
-    wimp_msgstr msg;
+    WimpMessageExtra user_message;
 
     if(glp)
     {
         glp->datasent = FALSE;
 
-        msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.c)
-                       + sizeof(WIMP_MSGPD_DDETYPEC);
-        msg.hdr.my_ref = 0;        /* fresh msg */
-        msg.hdr.action = wimp_MPD_DDE;
+        user_message.hdr.size   = offsetof(WimpMessageExtra, data.pd_dde.type.c)
+                                + sizeof(WIMP_MSGPD_DDETYPEC);
+        user_message.hdr.my_ref = 0;        /* fresh msg */
+        user_message.hdr.action_code = Wimp_MPD_DDE;
 
-        msg.data.pd_dde.id            = Wimp_MPD_DDE_SendSlotContents;
-        msg.data.pd_dde.type.c.handle = glp->ghan;
-        msg.data.pd_dde.type.c.type   = Wimp_MPD_DDE_typeC_type_End;
+        user_message.data.pd_dde.id            = Wimp_MPD_DDE_SendSlotContents;
+        user_message.data.pd_dde.type.c.handle = glp->ghan;
+        user_message.data.pd_dde.type.c.type   = Wimp_MPD_DDE_typeC_type_End;
 
-        wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, (wimp_t) glp->task));
+        void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessageRecorded, &user_message, glp->task));
     }
 }
 
@@ -890,7 +925,7 @@ _kernel_fwrite0(
 {
    U8 ch;
 
-   while((ch = *p_u8++) != NULLCH)
+   while((ch = *p_u8++) != CH_NULL)
        if(_kernel_ERROR == _kernel_osbput(ch, os_file_handle))
            return((os_error *) _kernel_last_oserror());
 
@@ -899,28 +934,24 @@ _kernel_fwrite0(
 
 /******************************************************************************
 *
-*  event processing for broadcasts
-*  and other such events that don't go
-*  to a main window handler
+* acknowledge a message to its sender
 *
 ******************************************************************************/
 
 static void
-wimpt_ack_message(
-    wimp_msgstr *msg)
+acknowledge_User_Message(
+    /*acked*/ WimpMessage * const user_message)
 {
-    wimp_t sender_id = msg->hdr.task;
-
     trace_0(TRACE_RISCOS_HOST, "acknowledging message: ");
 
-    msg->hdr.your_ref = msg->hdr.my_ref;
+    user_message->hdr.your_ref = user_message->hdr.my_ref;
 
-    wimpt_safe(wimp_sendmessage(wimp_EACK, msg, sender_id));
+    void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessageAcknowledge, user_message, user_message->hdr.sender));
 }
 
 /******************************************************************************
 *
-* derived from strncatind, but returns pointer to NULLCH byte at end of a
+* derived from strncatind, but returns pointer to CH_NULL byte at end of a
 * takes indirect count, which is updated
 *
 ******************************************************************************/
@@ -944,7 +975,7 @@ strnpcpyind(
             *a++ = c;
         }
 
-        *a  = '\0';
+        *a  = CH_NULL;
         *np = n;
     }
 
@@ -953,76 +984,33 @@ strnpcpyind(
 
 /******************************************************************************
 *
+*  event processing for broadcasts
+*  and other such events that don't go
+*  to a main window handler
+*
+******************************************************************************/
+
+/******************************************************************************
+*
 * process message events
 *
 ******************************************************************************/
 
-static void
-iconbar_message_DATAOPEN_PDMacro(
-    char * filename)
-{
-    if(mystr_set(&d_macro_file[0].textfield, filename))
-    {
-        exec_file(d_macro_file[0].textfield);
-        str_clr( &d_macro_file[0].textfield);
-    }
-}
-
-static void
-iconbar_message_DATAOPEN_others(
-    char * filename,
-    FILETYPE_RISC_OS filetype)
-{
-    STATUS filetype_option = find_filetype_option(filename, filetype); /* check the readability & do the auto-detect here for consistency */
-
-    (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
-}
+/* initial drag of data from somewhere to icon */
 
 static BOOL
-iconbar_message_DATAOPEN(
-    wimp_msgstr *m)
+iconbar_event_Message_DataSave(
+    const WimpMessage * const user_message)
 {
-    char * filename;
-    FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
-    DOCNO docno;
-
-    IGNOREPARM(m); /* xferrecv uses last message mechanism */
-
-    trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can 'run' a file of type &%03X", filetype);
-
-    if(!pd_can_run(filetype))
-        return(TRUE);
-
-    reportf("MDATAOPEN: file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
-
-    /* if it's a macro file we need this here to stop pause in macro file allowing message bounce
-     * thereby allowing Filer to try to invoke another copy of PipeDream to run this macro file ...
-     * and it helps anyway.
-     */
-    xferrecv_insertfileok();
-
-    docno = find_document_using_wholename(filename);
-
-    if(DOCNO_NONE != docno)
-    {
-        front_document_using_docno(docno);
-    }
-    else if(FILETYPE_PDMACRO == filetype)
-    {
-        iconbar_message_DATAOPEN_PDMacro(filename);
-    }
-    else
-    {
-        iconbar_message_DATAOPEN_others(filename, filetype);
-    }
+    scraptransfer_file(&user_message->data.data_save, TRUE /* iconbar */);
 
     return(TRUE);
 }
 
 static void
-iconbar_message_DATALOAD_PipeDream(
-    char * filename,
-    FILETYPE_RISC_OS filetype)
+iconbar_event_Message_DataLoad_PipeDream(
+    _In_z_      char * filename,
+    _InVal_     FILETYPE_RISC_OS filetype)
 {
     DOCNO docno = find_document_using_wholename(filename);
 
@@ -1048,9 +1036,9 @@ iconbar_message_DATALOAD_PipeDream(
 }
 
 static void
-iconbar_message_DATALOAD_others(
-    char * filename,
-    FILETYPE_RISC_OS filetype)
+iconbar_event_Message_DataLoad_others(
+    _In_z_      char * filename,
+    _InVal_     FILETYPE_RISC_OS filetype)
 {
     DOCNO docno = find_document_using_wholename(filename);
 
@@ -1073,103 +1061,184 @@ iconbar_message_DATALOAD_others(
     xferrecv_insertfileok();
 }
 
+/* object dragged to icon bar - load mostly regardless of type */
+
 static BOOL
-iconbar_message_DATALOAD(
-    wimp_msgstr *m)
+iconbar_event_Message_DataLoad(
+    const WimpMessage * const user_message)
 {
     char * filename;
-    FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
+    const FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
 
-    IGNOREPARM(m); /* xferrecv uses last message mechanism */
+    UNREFERENCED_PARAMETER_InRef_(user_message); /* xferrecv uses last message mechanism */
 
-    reportf("MDATALOAD: file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    reportf("Message_DataLoad(icon): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
     {
     case FILETYPE_DIRECTORY:
     case FILETYPE_APPLICATION:
-        reperr(create_error(FILE_ERR_ISADIR), filename);
+        reperr(FILE_ERR_ISADIR, filename);
         break;
 
     case FILETYPE_PDMACRO:
     case FILETYPE_PIPEDREAM:
-        iconbar_message_DATALOAD_PipeDream(filename, filetype);
+        iconbar_event_Message_DataLoad_PipeDream(filename, filetype);
         break;
 
     default:
-        iconbar_message_DATALOAD_others(filename, filetype);
+        iconbar_event_Message_DataLoad_others(filename, filetype);
         break;
     }
 
     return(TRUE);
 }
 
-static BOOL
-iconbar_PREQUIT(
-    wimp_msgstr *m)
+/* double-click on object */
+
+static void
+iconbar_event_Message_DataOpen_PDMacro(
+    char * filename)
 {
-    BOOL processed = TRUE;
-    const int size = m->hdr.size;
-    const wimp_t task = m->hdr.task; /* caller's task id */
-    int flags = 0;
-    int count;
-
-    /* flags word only present if RISC OS 3 or better */
-    if(size >= 24)
-       flags = m->data.prequitrequest.flags & wimp_MPREQUIT_flags_killthistask;
-
-    mergebuf_all();            /* ensure modified buffers to docs */
-
-    count = documents_modified();
-
-    /* if any modified, it gets hard */
-    if(count)
+    if(mystr_set(&d_macro_file[0].textfield, filename))
     {
-        /* First, acknowledge the message to stop it going any further */
-        wimpt_ack_message(m);
-
-        /* And then tell the user. */
-        if(riscos_quit_okayed(count))
-        {
-            wimp_eventdata ee;
-
-            if(flags) /* only RISC OS 3 */
-                exit(EXIT_SUCCESS);
-
-            /* Start up the closedown sequence again if OK and all tasks are to die. (RISC OS 3) */
-            /* We assume that the sender is the Task Manager,
-             * so that Ctrl-Shf-F12 is the closedown key sequence.
-            */
-            wimpt_safe(wimp_get_caret_pos(&ee.key.c));
-            ee.key.chcode = akbd_Sh + akbd_Ctl + akbd_Fn12;
-            wimpt_safe(wimp_sendmessage(wimp_EKEY, (wimp_msgstr *) &ee, task));
-        }
+        exec_file(d_macro_file[0].textfield);
+        str_clr( &d_macro_file[0].textfield);
     }
+}
 
-    return(processed);
+static void
+iconbar_event_Message_DataOpen_others(
+    char * filename,
+    FILETYPE_RISC_OS filetype)
+{
+    STATUS filetype_option = find_filetype_option(filename, filetype); /* check the readability & do the auto-detect here for consistency */
+
+    (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
 }
 
 static BOOL
-iconbar_SAVEDESK(
-    wimp_msgstr *m)
+iconbar_event_Message_DataOpen(
+    const WimpMessage * const user_message)
 {
-    BOOL processed = TRUE;
-    int os_file_handle = m->data.savedesk.filehandle;
+    char * filename;
+    const FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
+    DOCNO docno;
+
+    UNREFERENCED_PARAMETER_InRef_(user_message); /* xferrecv uses last message mechanism */
+
+    trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can 'run' a file of type &%03X", filetype);
+
+    if(!pd_can_run(filetype))
+        return(TRUE);
+
+    reportf("Message_DataOpen: file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+
+    /* if it's a macro file we need this here to stop pause in macro file allowing message bounce
+     * thereby allowing Filer to try to invoke another copy of PipeDream to run this macro file ...
+     * and it helps anyway.
+     */
+    xferrecv_insertfileok();
+
+    docno = find_document_using_wholename(filename);
+
+    if(DOCNO_NONE != docno)
+    {
+        front_document_using_docno(docno);
+    }
+    else if(FILETYPE_PDMACRO == filetype)
+    {
+        iconbar_event_Message_DataOpen_PDMacro(filename);
+    }
+    else
+    {
+        iconbar_event_Message_DataOpen_others(filename, filetype);
+    }
+
+    return(TRUE);
+}
+
+/* We assume that the sender is the Task Manager, so that
+ * Ctrl-Shift-F12 is the Desktop Shutdown key sequence.
+ */
+
+static void
+riscos_send_CSF12(
+    _InVal_     wimp_t sender)
+{
+    WimpPollBlock event_data;
+    void_WrapOsErrorReporting(tbl_wimp_get_caret_position(&event_data.key_pressed.caret));
+    event_data.key_pressed.key_code = akbd_Sh + akbd_Ctl + akbd_Fn12;
+    void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EKeyPressed, &event_data, sender));
+}
+
+static BOOL
+iconbar_event_Message_PreQuit(
+    /*acked*/ WimpMessageExtra * const user_message)
+{
+    const wimp_t sender = user_message->hdr.sender; /* caller's task id */
+    const int flags = user_message->data.prequit.flags & Wimp_MPREQUIT_flags_killthistask;
+    int count;
+
+    mergebuf_all(); /* ensure modified buffers to docs */
+
+    count = documents_modified();
+
+    /* if any are modified, it gets harder... */
+    if(0 == count)
+        return(TRUE);
+
+    /* First, acknowledge the message to stop it going any further */
+    acknowledge_User_Message((WimpMessage *) user_message);
+
+    /* And then ask the user what to do */
+    if(riscos_quit_okayed(count))
+    {
+        if(flags)
+        {   /* We are being killed individually by the Task Manager */
+            /* Do NOT send back a C/S/F12 */
+            exit(EXIT_SUCCESS);
+        }
+
+        /* Start up the Shutdown sequence again if OK and all tasks are to die */
+        riscos_send_CSF12(sender);
+    }
+
+    return(TRUE);
+}
+
+static BOOL
+iconbar_event_Message_PaletteChange(void)
+{
+    cache_palette_variables();
+
+    draw_redraw_all_pictures();
+
+    return(TRUE);
+}
+
+/* SKS 26oct96 added */
+
+static BOOL
+iconbar_event_Message_SaveDesktop(
+    /*acked*/ WimpMessage * const user_message)
+{
+    const int os_file_handle = user_message->data.save_desktop.file_handle;
     os_error * e = NULL;
     char var_name[BUF_MAX_PATHSTRING];
     TCHARZ main_dir[BUF_MAX_PATHSTRING];
     TCHARZ user_path[BUF_MAX_PATHSTRING];
     P_U8 p_main_app = main_dir;
 
-    main_dir[0] = NULLCH;
+    main_dir[0] = CH_NULL;
     (void) _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$Dir"), main_dir, elemof32(main_dir));
 
-    user_path[0] = NULLCH;
+    user_path[0] = CH_NULL;
     (void) _kernel_getenv(make_var_name(var_name, elemof32(var_name), "$UserPath"), user_path, elemof32(user_path));
     /* Ignore PRM guideline about caching at startup; final seen one is most relevant */
 
     /* write out commands to desktop save file that will restart app */
-    if(user_path[0] != NULLCH)
+    if(user_path[0] != CH_NULL)
     {
         P_U8 p_u8;
 
@@ -1181,7 +1250,7 @@ iconbar_SAVEDESK(
         p_u8 = user_path + strlen(user_path);
         assert(p_u8[-1] == ',');
         assert(p_u8[-2] == '.');
-        p_u8[-2] = NULLCH;
+        p_u8[-2] = CH_NULL;
 
         p_main_app = user_path;
     }
@@ -1196,26 +1265,108 @@ iconbar_SAVEDESK(
 
     if(e)
     {
-        wimpt_complain(e);
+        void_WrapOsErrorReporting(e);
 
         /* ack the message to stop desktop save and remove file */
-        wimpt_ack_message(m);
+        acknowledge_User_Message(user_message);
     }
 
-    return(processed);
+    return(TRUE);
 }
 
 static BOOL
-iconbar_PD_DDE(
-    wimp_msgstr *m)
+iconbar_event_Message_HelpRequest(
+    /*acked*/ WimpMessage * const user_message)
+{
+    trace_0(TRACE_APP_PD4, "ukprocessor got Help request for icon bar icon");
+
+    user_message->data.help_request.icon_handle = 0;
+
+    riscos_send_Message_HelpReply(user_message, help_iconbar);
+
+    return(TRUE);
+}
+
+static BOOL
+iconbar_event_Message_ModeChange(void)
+{
+    cache_mode_variables();
+
+    return(TRUE);
+}
+
+static BOOL
+iconbar_event_Message_TaskInitialise(
+    const WimpMessageExtra * const user_message)
+{
+    if(g_kill_duplicates)
+    {
+        static int seen_my_birth = FALSE;
+        const char *taskname = user_message->data.task_initialise.taskname;
+        trace_1(TRACE_APP_PD4, "Message_TaskInitialise for %s", taskname);
+        if(0 == strcmp(wimptx_get_taskname(), taskname))
+        {
+            if(seen_my_birth)
+            {
+                WimpUserMessageEvent user_message_quit;
+                trace_1(TRACE_APP_PD4, "Another %s is trying to start! I'll kill it", taskname);
+                /* no need to clear all fields */
+                user_message_quit.hdr.size = sizeof(user_message_quit);
+                user_message_quit.hdr.your_ref = 0; /* fresh msg */
+                user_message_quit.hdr.action_code = Wimp_MQuit;
+                void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessage, &user_message_quit, user_message->hdr.sender));
+            }
+            else
+            {
+                trace_0(TRACE_APP_PD4, "witnessing our own birth");
+                seen_my_birth = TRUE;
+            }
+        }
+    }
+
+    return(TRUE);
+}
+
+static BOOL
+iconbar_event_Message_PrintTypeOdd(void)
+{
+    /* printer broadcast */
+    char * filename;
+    FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkprint(&filename);
+
+    trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%03X", filetype);
+
+    if(pd_can_print(filetype))
+    {
+        print_file(filename);
+
+        xferrecv_printfileok(-1);    /* print all done */
+    }
+
+    return(TRUE);
+}
+
+static BOOL
+iconbar_event_Message_SetPrinter(void)
+{
+    trace_0(TRACE_APP_PD4, "ukprocessor got informed of printer driver change");
+
+    riscprint_set_printer_data();
+
+    return(TRUE);
+}
+
+static BOOL
+iconbar_event_Message_PD_DDE(
+    /*acked*/ WimpMessageExtra * const user_message)
 {
     BOOL processed = TRUE;
-    wimp_t task = m->hdr.task; /* caller's task id */
-    S32 id = m->data.pd_dde.id;
+    const int sender = (int) user_message->hdr.sender; /* caller's task id */
+    const S32 pd_dde_id = user_message->data.pd_dde.id;
 
-    trace_1(TRACE_APP_PD4, "ukprocessor got PD DDE message %d", id);
+    trace_1(TRACE_APP_PD4, "ukprocessor got PD DDE message %d", pd_dde_id);
 
-    switch(id)
+    switch(pd_dde_id)
     {
     case Wimp_MPD_DDE_IdentifyMarkedBlock:
         {
@@ -1223,8 +1374,8 @@ iconbar_PD_DDE(
 
         if((blkstart.col != NO_COL)  &&  (blkend.col != NO_COL))
         {
-            wimp_msgstr msg;
-            char *ptr = msg.data.pd_dde.type.a.text;
+            WimpMessageExtra user_message_reply;
+            char *ptr = user_message_reply.data.pd_dde.type.a.text;
             size_t nbytes = sizeof(WIMP_MSGPD_DDETYPEA_TEXT)-1;
             ghandle ghan;
             S32 x_size = (S32) (blkend.col - blkstart.col);
@@ -1259,26 +1410,26 @@ iconbar_PD_DDE(
                 ptr += taglen + 1;
 
                 /* create entry on list - even if already there */
-                ghan = graph_add_entry(m->hdr.my_ref,        /* unique number */
+                ghan = graph_add_entry(user_message->hdr.my_ref,        /* unique number */
                                        blk_docno, blkstart.col, blkstart.row,
                                        x_size, y_size, leaf, tag,
-                                       (int) task);
+                                       sender);
 
                 if(ghan > 0)
                 {
                     trace_5(TRACE_APP_PD4, "IMB: ghan %d x_size %d y_size %d leafname %s tag %s]",
                             ghan, x_size, y_size, leaf, tag);
 
-                    msg.data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
-                    msg.data.pd_dde.type.a.handle = ghan;
-                    msg.data.pd_dde.type.a.x_size = x_size;
-                    msg.data.pd_dde.type.a.y_size = y_size;
+                    user_message_reply.data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
+                    user_message_reply.data.pd_dde.type.a.handle = ghan;
+                    user_message_reply.data.pd_dde.type.a.x_size = x_size;
+                    user_message_reply.data.pd_dde.type.a.y_size = y_size;
 
-                    /* send message as ack to his one */
-                    msg.hdr.size     = ptr - (char *) &msg;
-                    msg.hdr.your_ref = m->hdr.my_ref;
-                    msg.hdr.action     = wimp_MPD_DDE;
-                    wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, task));
+                    /* send message reply as ack to his one */
+                    user_message_reply.hdr.size     = ptr - (char *) &user_message_reply;
+                    user_message_reply.hdr.your_ref = user_message->hdr.my_ref;
+                    user_message_reply.hdr.action_code = Wimp_MPD_DDE;
+                    void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessageRecorded, &user_message_reply, sender));
                 }
                 else if(ghan  &&  (ghan != status_nomem()))
                     reperr_null(ghan);
@@ -1296,10 +1447,10 @@ iconbar_PD_DDE(
     case Wimp_MPD_DDE_EstablishHandle:
         {
         ghandle ghan;
-        S32 x_size = m->data.pd_dde.type.a.x_size;
-        S32 y_size = m->data.pd_dde.type.a.y_size;
-        const char *tstr = m->data.pd_dde.type.a.text;
-        const char *tag  = tstr + strlen(tstr) + 1;
+        S32 x_size = user_message->data.pd_dde.type.a.x_size;
+        S32 y_size = user_message->data.pd_dde.type.a.y_size;
+        const char *tstr = user_message->data.pd_dde.type.a.text;
+        const char *tag  = tstr + strlen32p1(tstr);
         DOCNO docno;
         COL col;
         ROW row;
@@ -1330,7 +1481,7 @@ iconbar_PD_DDE(
         /* find tag in document */
         init_doc_as_block();
 
-        while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+        while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
         {
             if(tcell->type != SL_TEXT)
                 continue;
@@ -1342,23 +1493,23 @@ iconbar_PD_DDE(
             row = in_block.row;
 
             /* add entry to list */
-            ghan = graph_add_entry(m->hdr.my_ref,        /* unique number */
+            ghan = graph_add_entry(user_message->hdr.my_ref,        /* unique number */
                                    docno, col, row,
                                    x_size, y_size, tstr, tag,
-                                   (int) task);
+                                   sender);
 
             if(ghan > 0)
             {
                 trace_5(TRACE_APP_PD4, "EST: ghan %d x_size %d y_size %d name %s tag %s]",
                         ghan, x_size, y_size, tstr, tag);
 
-                m->data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
-                m->data.pd_dde.type.a.handle = ghan;
+                user_message->data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
+                user_message->data.pd_dde.type.a.handle = ghan;
 
                 /* send same message as ack to his one */
-                m->hdr.your_ref = m->hdr.my_ref;
-                m->hdr.action   = wimp_MPD_DDE;
-                wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, m, task));
+                user_message->hdr.your_ref = user_message->hdr.my_ref;
+                user_message->hdr.action_code = Wimp_MPD_DDE;
+                void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessageRecorded, user_message, sender));
             }
             else
                 trace_0(TRACE_APP_PD4, "EST: failed to create ghandle - caller will get bounced msg");
@@ -1371,27 +1522,27 @@ iconbar_PD_DDE(
     case Wimp_MPD_DDE_RequestUpdates:
     case Wimp_MPD_DDE_StopRequestUpdates:
         {
-        ghandle han = m->data.pd_dde.type.b.handle;
+        ghandle han = user_message->data.pd_dde.type.b.handle;
         P_GRAPHICS_LINK_ENTRY glp;
 
-        trace_2(TRACE_APP_PD4, "%sRequestUpdates: handle %d", (id == Wimp_MPD_DDE_StopRequestUpdates) ? "Stop" : "", han);
+        trace_2(TRACE_APP_PD4, "%sRequestUpdates: handle %d", (pd_dde_id == Wimp_MPD_DDE_StopRequestUpdates) ? "Stop" : "", han);
 
         glp = graph_search_list(han);
 
         if(glp)
         {
             /* stop caller getting bounced msg */
-            wimpt_ack_message(m);
+            acknowledge_User_Message((WimpMessage *) user_message);
 
             /* flag that updates are/are not required on this handle */
-            glp->update = (id == Wimp_MPD_DDE_RequestUpdates);
+            glp->update = (pd_dde_id == Wimp_MPD_DDE_RequestUpdates);
         }
         break;
         }
 
     case Wimp_MPD_DDE_RequestContents:
         {
-        ghandle han = m->data.pd_dde.type.b.handle;
+        ghandle han = user_message->data.pd_dde.type.b.handle;
         P_GRAPHICS_LINK_ENTRY glp;
 
         trace_1(TRACE_APP_PD4, "RequestContents: handle %d", han);
@@ -1401,7 +1552,7 @@ iconbar_PD_DDE(
         if(glp)
         {
             /* stop caller getting bounced msg */
-            wimpt_ack_message(m);
+            acknowledge_User_Message((WimpMessage *) user_message);
 
             select_document_using_docno(glp->docno);
 
@@ -1409,7 +1560,7 @@ iconbar_PD_DDE(
             filbuf();
 
             /* fire off all the cells */
-            riscos_sendallslots(glp);
+            riscos_sendallcells(glp);
 
             riscos_sendendmarker(glp);
         }
@@ -1418,7 +1569,7 @@ iconbar_PD_DDE(
 
     case Wimp_MPD_DDE_GraphClosed:
         {
-        ghandle han = m->data.pd_dde.type.b.handle;
+        ghandle han = user_message->data.pd_dde.type.b.handle;
         PC_GRAPHICS_LINK_ENTRY glp;
 
         trace_1(TRACE_APP_PD4, "GraphClosed: handle %d", han);
@@ -1428,7 +1579,7 @@ iconbar_PD_DDE(
         if(glp)
         {
             /* stop caller getting bounced msg */
-            wimpt_ack_message(m);
+            acknowledge_User_Message((WimpMessage *) user_message);
 
             /* delete entry from list */
             graph_remove_entry(han);
@@ -1438,7 +1589,7 @@ iconbar_PD_DDE(
 
     case Wimp_MPD_DDE_DrawFileChanged:
         {
-        const char *drawfilename = m->data.pd_dde.type.d.leafname;
+        const char *drawfilename = user_message->data.pd_dde.type.d.leafname;
 
         trace_1(TRACE_APP_PD4, "DrawFileChanged: name %s", drawfilename);
 
@@ -1450,7 +1601,7 @@ iconbar_PD_DDE(
         break;
 
     default:
-        trace_1(TRACE_APP_PD4, "ignoring PD DDE type %d message", id);
+        trace_1(TRACE_APP_PD4, "ignoring PD DDE type %d message", pd_dde_id);
         processed = FALSE;
         break;
     }
@@ -1459,179 +1610,108 @@ iconbar_PD_DDE(
 }
 
 static BOOL
-iconbar_message(
-    wimp_msgstr *m)
+iconbar_event_User_Message(
+    /*acked*/ WimpMessage * const user_message)
 {
-    BOOL processed = TRUE;
-
-    switch(m->hdr.action)
+    switch(user_message->hdr.action_code)
     {
-    case wimp_MPREQUIT:
-        processed = iconbar_PREQUIT(m);
-        break;
+    case Wimp_MDataSave:
+        return(iconbar_event_Message_DataSave(user_message));
 
-    case wimp_SAVEDESK:
-        /* SKS 26oct96 added */
-        processed = iconbar_SAVEDESK(m);
-        break;
+    case Wimp_MDataLoad:
+        return(iconbar_event_Message_DataLoad(user_message));
 
-    case wimp_MDATASAVE:
-        /* initial drag of data from somewhere to icon */
-        scraptransfer_file(&m->data.datasave, 1);
-        break;
+    case Wimp_MDataOpen:
+        return(iconbar_event_Message_DataOpen(user_message));
 
-    case wimp_MDATAOPEN:
-        /* double-click on object */
-        processed = iconbar_message_DATAOPEN(m);
-        break;
+    case Wimp_MPreQuit:
+        return(iconbar_event_Message_PreQuit((WimpMessageExtra *) user_message));
 
-    case wimp_MDATALOAD:
-        /* object dragged to icon bar - load mostly regardless of type */
-        processed = iconbar_message_DATALOAD(m);
-        break;
+    case Wimp_MPaletteChange:
+        return(iconbar_event_Message_PaletteChange());
 
-    case wimp_MPrintTypeOdd:
-        {
-        /* printer broadcast */
-        char * filename;
-        FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkprint(&filename);
+    case Wimp_MSaveDesktop:
+        return(iconbar_event_Message_SaveDesktop(user_message));
 
-        trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%03X", filetype);
+    case Wimp_MHelpRequest:
+        return(iconbar_event_Message_HelpRequest(user_message));
 
-        if(pd_can_print(filetype))
-        {
-            print_file(filename);
+    case Wimp_MModeChange:
+        return(iconbar_event_Message_ModeChange());
 
-            xferrecv_printfileok(-1);    /* print all done */
-        }
-        break;
-        }
+    case Wimp_MTaskInitialise:
+        return(iconbar_event_Message_TaskInitialise((WimpMessageExtra *) user_message));
 
-    case wimp_MPrinterChange:
-        trace_0(TRACE_APP_PD4, "ukprocessor got informed of printer driver change");
-        riscprint_set_printer_data();
-        break;
+    case Wimp_MPrintTypeOdd:
+        return(iconbar_event_Message_PrintTypeOdd());
 
-    case wimp_MMODECHANGE:
-        cachemodevariables();
-        cachepalettevariables();
-        break;
+    case Wimp_MSetPrinter:
+        return(iconbar_event_Message_SetPrinter());
 
-    case wimp_PALETTECHANGE:
-        cachepalettevariables();
-        draw_redraw_all_pictures();
-        break;
-
-    case wimp_MINITTASK:
-      if(g_kill_duplicates)
-      {
-          static int seen_my_birth = FALSE;
-          const char *taskname = m->data.taskinit.taskname;
-          trace_1(TRACE_APP_PD4, "MTASKINIT for %s", taskname);
-          if(0 == strcmp(wimpt_get_taskname(), taskname))
-          {
-              if(seen_my_birth)
-              {
-                  wimp_msgstr msg;
-                  msg.hdr.size = sizeof(wimp_msghdr);
-                  msg.hdr.your_ref = 0; /* fresh msg */
-                  msg.hdr.action = wimp_MCLOSEDOWN;
-                  trace_1(TRACE_APP_PD4, "Another %s is trying to start! I'll kill it", taskname);
-                  wimpt_safe(wimp_sendmessage(wimp_ESEND, &msg, m->hdr.task));
-              }
-              else
-              {
-                  trace_0(TRACE_APP_PD4, "witnessing our own birth");
-                  seen_my_birth = TRUE;
-              }
-          }
-      }
-    break;
-
-    case wimp_MHELPREQUEST:
-        trace_0(TRACE_APP_PD4, "ukprocessor got help request for icon bar icon");
-        m->data.helprequest.m.i = 0;
-        riscos_sendhelpreply(m, help_iconbar);
-        break;
-
-    case wimp_MPD_DDE:
-        processed = iconbar_PD_DDE(m);
-        break;
+    case Wimp_MPD_DDE:
+        return(iconbar_event_Message_PD_DDE((WimpMessageExtra *) user_message));
 
     default:
         trace_1(TRACE_APP_PD4, "unprocessed %s message to iconbar handler",
-                report_wimp_message(m, FALSE));
-        processed = FALSE;
-        break;
+                report_wimp_message(user_message, FALSE));
+        return(FALSE);
     }
-
-    return(processed);
 }
 
 static BOOL
 iconbar_PD_DDE_bounced(
-    wimp_msgstr *m)
+    WimpMessageExtra * const user_message)
 {
-    BOOL processed = TRUE;
-    const S32 id = m->data.pd_dde.id;
+    const S32 pd_dde_id = user_message->data.pd_dde.id;
 
-    trace_1(TRACE_APP_PD4, "ukprocessor got bounced PD DDE message %d", id);
+    trace_1(TRACE_APP_PD4, "ukprocessor got bounced PD DDE message %d", pd_dde_id);
 
-    switch(id)
+    switch(pd_dde_id)
     {
     case Wimp_MPD_DDE_SendSlotContents:
         {
-        ghandle han = m->data.pd_dde.type.c.handle;
+        ghandle han = user_message->data.pd_dde.type.c.handle;
         P_GRAPHICS_LINK_ENTRY glp;
         trace_1(TRACE_APP_PD4, "SendSlotContents on handle %d bounced - receiver dead", han);
         glp = graph_search_list(han);
         if(glp)
             /* delete entry from list */
             graph_remove_entry(han);
+        return(TRUE);
         }
-        break;
 
     case Wimp_MPD_DDE_ReturnHandleAndBlock:
         {
-        ghandle han = m->data.pd_dde.type.a.handle;
+        ghandle han = user_message->data.pd_dde.type.a.handle;
         P_GRAPHICS_LINK_ENTRY glp;
         trace_1(TRACE_APP_PD4, "ReturnHandleAndBlock on handle %d bounced - receiver dead", han);
         glp = graph_search_list(han);
         if(glp)
             /* delete entry from list */
             graph_remove_entry(han);
+        return(TRUE);
         }
-        break;
 
     default:
-        trace_1(TRACE_APP_PD4, "ignoring bounced PD DDE type %d message", id);
-        processed = FALSE;
-        break;
+        trace_1(TRACE_APP_PD4, "ignoring bounced PD DDE type %d message", pd_dde_id);
+        return(FALSE);
     }
-
-    return(processed);
 }
 
 static BOOL
-iconbar_message_bounced(
-    wimp_msgstr *m)
+iconbar_event_User_Message_Acknowledge(
+    WimpMessage * const user_message)
 {
-    BOOL processed = TRUE;
-
-    switch(m->hdr.action)
+    switch(user_message->hdr.action_code)
     {
-    case wimp_MPD_DDE:
-        processed = iconbar_PD_DDE_bounced(m);
-        break;
+    case Wimp_MPD_DDE:
+        return(iconbar_PD_DDE_bounced((WimpMessageExtra *) user_message));
 
     default:
         trace_1(TRACE_APP_PD4, "unprocessed %s bounced message to iconbar handler",
-                report_wimp_message(m, FALSE));
-        processed = FALSE;
-        break;
+                report_wimp_message(user_message, FALSE));
+        return(FALSE);
     }
-
-    return(processed);
 }
 
 /******************************************************************************
@@ -1641,7 +1721,7 @@ iconbar_message_bounced(
 ******************************************************************************/
 
 static BOOL
-default_event_ENULL(void)
+default_event_Null(void)
 {
     trace_0(TRACE_NULL, "got a null event");
 
@@ -1666,89 +1746,87 @@ default_event_ENULL(void)
 }
 
 static BOOL
+default_event_User_Drag_Box(
+    _In_        const WimpUserDragBoxEvent * const user_drag_box)
+{
+    trace_0(TRACE_APP_PD4, "User_Drag_Box: stopping drag as button released");
+
+    if(DOCNO_NONE == drag_docno)
+    {   /* due to wally RISC_OSLib window event processing, we get end-of-drag events for dboxtcol too... */
+        assert(drag_type == NO_DRAG_ACTIVE);
+        return(TRUE);
+    }
+
+    assert(drag_type != NO_DRAG_ACTIVE);
+
+    /* send this to the right guy */
+    select_document_using_docno(drag_docno);
+
+    application_drag(user_drag_box->bbox.xmin, user_drag_box->bbox.ymin, TRUE);
+
+    ended_drag(); /* will release nulls */
+
+    return(TRUE);
+}
+
+static BOOL
 default_event_handler(
     wimp_eventstr *e,
     void *handle)
 {
-    BOOL processed = TRUE;
+    const int event_code = (int) e->e;
+    WimpPollBlock * const event_data = (WimpPollBlock *) &e->data;
 
-    IGNOREPARM(handle);
+    UNREFERENCED_PARAMETER(handle);
 
     select_document(NO_DOCUMENT);
 
-    switch(e->e)
+    switch(event_code)
     {
-    case wimp_ENULL:
-        processed = default_event_ENULL();
-        break;
+    case Wimp_ENull:
+        return(default_event_Null());
 
-    case wimp_EBUT:
+    case Wimp_EMouseClick:
         /* one presumes only the icon bar stuff gets here ... */
-        iconbar_event_EBUT(e);
-        break;
+        return(iconbar_event_Mouse_Click(&event_data->mouse_click));
 
-    case wimp_EUSERDRAG:
-        trace_0(TRACE_APP_PD4, "UserDrag: stopping drag as button released");
+    case Wimp_EUserDrag:
+        return(default_event_User_Drag_Box(&event_data->user_drag_box));
 
-        /* send this to the right guy */
-        select_document_using_docno(drag_docno);
+    case Wimp_EUserMessage:
+    case Wimp_EUserMessageRecorded:
+        return(iconbar_event_User_Message(&event_data->user_message));
 
-        application_drag(e->data.dragbox.x0, e->data.dragbox.y0, TRUE);
-
-        ended_drag();        /* will release nulls */
-        break;
-
-    case wimp_ESEND:
-    case wimp_ESENDWANTACK:
-        processed = iconbar_message(&e->data.msg);
-        break;
-
-    case wimp_EACK:
-        processed = iconbar_message_bounced(&e->data.msg);
-        break;
+    case Wimp_EUserMessageAcknowledge:
+        return(iconbar_event_User_Message_Acknowledge(&event_data->user_message));
 
     default:
-        trace_1(TRACE_APP_PD4, "unprocessed wimp event %s", report_wimp_event(e->e, &e->data));
-        processed = FALSE;
-        break;
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event %s",
+                report_wimp_event(event_code, event_data));
+        return(FALSE);
     }
-
-    return(processed);
 }
 
 /******************************************************************************
 *
-*  process open window request for rear_window
+*  process open window request for rear window
 *
 ******************************************************************************/
 
-static void
-rear_open_request(
-    wimp_eventstr *e)
+static BOOL
+rear_event_Open_Window_Request(
+    /*poked*/ WimpOpenWindowRequestEvent * const open_window_request)
 {
-    trace_0(TRACE_APP_PD4, "rear_open_request()");
+    trace_0(TRACE_APP_PD4, "rear_event_Open_Window_Request()");
 
-    application_open_request(e);
+    application_Open_Window_Request(open_window_request);
+
+    return(TRUE);
 }
 
 /******************************************************************************
 *
-* process scroll window request for rear_window
-*
-******************************************************************************/
-
-static void
-rear_scroll_request(
-    wimp_eventstr *e)
-{
-    trace_0(TRACE_APP_PD4, "rear_scroll_request()");
-
-    application_scroll_request(e);
-}
-
-/******************************************************************************
-*
-* process close window request for rear_window
+* process close window request for rear window
 *
 ******************************************************************************/
 
@@ -1756,79 +1834,184 @@ rear_scroll_request(
 /* if       adjust-close then open parent directory and close window */
 /* if shift-adjust-close then open parent directory */
 
-static void
-rear_close_request(
-    wimp_eventstr *e)
+static BOOL
+rear_event_Close_Window_Request(
+    _In_        const WimpCloseWindowRequestEvent * const close_window_request)
 {
-    BOOL adjustclicked = riscos_adjustclicked();
-    BOOL shiftpressed  = host_shift_pressed();
-    BOOL justopening   = (shiftpressed  &&  adjustclicked);
-    BOOL wanttoclose   = !justopening;
+    BOOL adjust_clicked = riscos_adjust_clicked();
+    BOOL shift_pressed  = host_shift_pressed();
+    BOOL just_opening   = (shift_pressed  &&  adjust_clicked);
+    BOOL want_to_close  = !just_opening;
 
-    IGNOREPARM(e);
+    UNREFERENCED_PARAMETER_InRef_(close_window_request);
 
-    trace_0(TRACE_APP_PD4, "rear_close_request()");
+    trace_0(TRACE_APP_PD4, "rear_event_Close_Window_Request()");
 
-    if(!justopening)
+    if(!just_opening)
     {
         /* deal with modified files etc. before opening any Filer windows */
-        wanttoclose = riscdialog_warning();
+        want_to_close = riscdialog_warning();
 
         (void) mergebuf_nocheck();
         filbuf();
 
-        if(wanttoclose)
-            wanttoclose = save_or_discard_existing();
+        if(want_to_close)
+            want_to_close = save_or_discard_existing();
 
-        if(wanttoclose)
-            wanttoclose = dependent_files_warning();
+        if(want_to_close)
+            want_to_close = dependent_files_warning();
 
-        if(wanttoclose)
-            wanttoclose = dependent_charts_warning();
+        if(want_to_close)
+            want_to_close = dependent_charts_warning();
 
-        if(wanttoclose)
-            wanttoclose = dependent_links_warning();
+        if(want_to_close)
+            want_to_close = dependent_links_warning();
     }
 
-    if(adjustclicked)
+    if(adjust_clicked)
         if(file_is_rooted(currentfilename))
             filer_opendir(currentfilename);
 
-    if(wanttoclose)
+    if(want_to_close)
         close_window();
+
+    return(TRUE);
 }
 
 /******************************************************************************
 *
-* process redraw window request for main_window
+* process scroll window request for rear window
 *
 ******************************************************************************/
 
-static void
-main_redraw_request(
-    wimp_eventstr *e)
+static BOOL
+rear_event_Scroll_Request(
+    _In_        const WimpScrollRequestEvent * const scroll_request)
 {
-    os_error * bum;
-    wimp_redrawstr redraw;
-    S32 redrawindex;
+    trace_0(TRACE_APP_PD4, "rear_event_Scroll_Request()");
 
-    trace_0(TRACE_APP_PD4, "main_redraw_request()");
+    application_Scroll_Request(scroll_request);
 
-    redraw.w = e->data.o.w;
+    return(TRUE);
+}
+
+/******************************************************************************
+*
+* process message events for rear window
+*
+******************************************************************************/
+
+static BOOL
+main_event_User_Message(
+    /*acked*/ WimpMessage * const user_message);
+
+static BOOL
+rear_event_User_Message(
+    /*acked*/ WimpMessage * const user_message)
+{
+    /* SKS 26oct96 delegate handling */
+    return(main_event_User_Message(user_message));
+}
+
+/******************************************************************************
+*
+* process main window events
+*
+******************************************************************************/
+
+extern void
+riscos_event_handler_report(
+    _InVal_     int event_code,
+    _In_        const WimpPollBlock * const event_data,
+    void * handle,
+    _In_z_      const char * name)
+{
+    if(reporting_is_enabled())
+        reportf(TEXT("%s[handle ") PTR_XTFMT TEXT(" document %d] %s"),
+                name, report_ptr_cast(handle), current_docno(), report_wimp_event(event_code, event_data));
+}
+
+#define rear_event_handler_report(event_code, event_data, handle) \
+    riscos_event_handler_report(event_code, event_data, handle, "rear")
+
+static BOOL
+rear_event_handler(
+    wimp_eventstr *e,
+    void *handle)
+{
+    const int event_code = (int) e->e;
+    WimpPollBlock * const event_data = (WimpPollBlock *) &e->data;
+
+    if(!select_document_using_callback_handle(handle))
+    {
+        messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to rear event handler"), report_ptr_cast(handle));
+        return(FALSE);
+    }
+
+    trace_4(TRACE_APP_PD4, TEXT("rear_event_handler: event %s, handle ") PTR_XTFMT TEXT(" window %d, document %d"),
+             report_wimp_event(event_code, event_data), report_ptr_cast(handle), (int) rear_window_handle, current_docno());
+
+    switch(event_code)
+    {
+    case Wimp_ERedrawWindow:
+        return(TRUE);
+
+    case Wimp_EOpenWindow:
+        /*rear_event_handler_report(event_code, event_data, handle);*/
+        return(rear_event_Open_Window_Request(&event_data->open_window_request));
+
+    case Wimp_ECloseWindow:
+        /*rear_event_handler_report(event_code, event_data, handle);*/
+        return(rear_event_Close_Window_Request(&event_data->close_window_request));
+
+    case Wimp_EPointerLeavingWindow:
+    case Wimp_EPointerEnteringWindow:
+        /*rear_event_handler_report(event_code, event_data, handle);*/
+        return(TRUE); /* not default: */
+
+    case Wimp_EScrollRequest:
+        rear_event_handler_report(event_code, event_data, handle);
+        return(rear_event_Scroll_Request(&event_data->scroll_request));
+
+    case Wimp_EUserMessage:
+    case Wimp_EUserMessageRecorded:
+        /*rear_event_handler_report(event_code, event_data, handle);*/
+        return(rear_event_User_Message(&event_data->user_message));
+
+    default:
+        /*rear_event_handler_report(event_code, event_data, handle);*/
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event to rear window: %s",
+                report_wimp_event(event_code, event_data));
+        return(FALSE);
+    }
+}
+
+/******************************************************************************
+*
+* process redraw window request for main window
+*
+******************************************************************************/
+
+static BOOL
+main_event_Redraw_Window_Request(
+    const WimpRedrawWindowRequestEvent * const redraw_window_request)
+{
+    WimpRedrawWindowBlock redraw_window_block;
+    BOOL more;
+
+    trace_0(TRACE_APP_PD4, "main_event_Redraw_Window_Request()");
+
+    redraw_window_block.window_handle = redraw_window_request->window_handle;
 
     /* wimp errors in redraw are fatal */
-    bum = wimpt_complain(wimp_redraw_wind(&redraw, &redrawindex));
+    if(NULL != WrapOsErrorReporting(tbl_wimp_redraw_window(&redraw_window_block, &more)))
+        more = FALSE;
 
-#if TRACE_ALLOWED
-    if(!redrawindex)
-        trace_0(TRACE_APP_PD4, "no rectangles to redraw");
-#endif
-
-    while(!bum  &&  redrawindex)
+    while(more)
     {
         killcolourcache();
 
-        graphics_window = * ((const GDI_BOX *) &redraw.g);
+        graphics_window = * ((PC_GDI_BOX) &redraw_window_block.redraw_area);
 
         #if defined(ALWAYS_PAINT)
         paint_is_update = TRUE;
@@ -1837,15 +2020,35 @@ main_redraw_request(
         #endif
 
         /* redraw area, not update */
-        application_redraw((RISCOS_REDRAWSTR *) &redraw);
+        application_redraw_core((const RISCOS_RedrawWindowBlock *) &redraw_window_block);
 
-        bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&redraw_window_block, &more)))
+            more = FALSE;
     }
+
+    return(TRUE);
 }
 
 /******************************************************************************
 *
-* process key pressed event for main_window
+* process mouse click event for main window
+*
+******************************************************************************/
+
+static BOOL
+main_event_Mouse_Click(
+    const WimpMouseClickEvent * const mouse_click)
+{
+    application_main_Mouse_Click(mouse_click->mouse_x,
+                                 mouse_click->mouse_y,
+                                 mouse_click->buttons);
+
+    return(TRUE);
+}
+
+/******************************************************************************
+*
+* process key pressed event for main window
 *
 ******************************************************************************/
 
@@ -1853,111 +2056,324 @@ main_redraw_request(
 #define CTRL_M    ('M' & 0x1F)    /* Return/Enter keys */
 #define CTRL_Z    ('Z' & 0x1F)    /* Last Ctrl-x key */
 
-static void
-main_key_pressed(
-    wimp_eventstr *e)
+_Check_return_
+static KMAP_CODE
+cs_mutate_key(
+    KMAP_CODE kmap_code)
 {
-    S32 ch = e->data.key.chcode;
-    S32 kh;
+    const KMAP_CODE shift_added = host_shift_pressed() ? KMAP_CODE_ADDED_SHIFT : 0;
+    const KMAP_CODE ctrl_added  = host_ctrl_pressed()  ? KMAP_CODE_ADDED_CTRL  : 0;
 
-    trace_1(TRACE_APP_PD4, "main_key_pressed: key &%3.3X", ch);
-
-    /* Translate key from Window manager into what PipeDream expects */
-
-      if(ch == ESCAPE)
-        kh = ch;
-    else if(ch <= CTRL_Z)                /* RISC OS 'Hot Key' here we come */
+#if CHECKING
+    switch(kmap_code)
     {
-        kh = (ch - 1 + 'A') | ALT_ADDED; /* Uppercase Alt-letter by default */
+    case KMAP_FUNC_DELETE:
+    case KMAP_FUNC_HOME:
+    case KMAP_FUNC_BACKSPACE:
+        break;
 
+    default: default_unhandled();
+        break;
+    }
+#endif
+
+    kmap_code |= (shift_added | ctrl_added);
+
+    return(kmap_code);
+}
+
+_Check_return_
+static KMAP_CODE
+convert_ctrl_key(
+    _InVal_     S32 code)
+{
+    KMAP_CODE kmap_code = code;
+
+    if(code <= CTRL_Z)
+    {
         /* Watch out for useful CtrlChars not produced by Ctrl-letter */
 
-        /* SKS after 4.11 10jan92 - if already in Alt-sequence then these go in as Alt-letters
-         * without considering Ctrl-state (allows ^BM, ^PHB etc. from !Chars but not ^M, ^H still)
-        */
-        if( ((ch == CTRL_H)  ||  (ch == CTRL_M))  &&
-            (alt_array[0] == NULLCH)  &&
-            !host_ctrl_pressed())
+        /* SKS after PD 4.11 10jan92 - see notes in convert_standard_key() about ^H, ^M */
+        if( ((code == CTRL_H)  ||  (code == CTRL_M))  &&
+            cmd_seq_is_empty()  &&
+            !host_ctrl_pressed() )
         {
-            if(ch == CTRL_H)
-                kh = RISCOS_BACKSPACE_KEY;
-            else
-                kh = ch;
+            if(code == CTRL_H)
+                kmap_code = RISCOS_EKEY_BACKSPACE;
+            else /* code == CTRL_M */
+            {
+                if(host_shift_pressed())
+                    kmap_code |= KMAP_CODE_ADDED_SHIFT;
+            }
+        }
+        else if(classic_menus())
+        {
+            kmap_code = (code - 1 + 'A') | KMAP_CODE_ADDED_ALT; /* Uppercase Alt-letter */
+        }
+        else
+        {
+            kmap_code = (code - 1 + 'A') | KMAP_CODE_ADDED_CTRL; /* Uppercase Ctrl-letter */
+
+            if(host_shift_pressed())
+                kmap_code |= KMAP_CODE_ADDED_SHIFT;
         }
     }
     else
     {
-        if((ch & ~0x00FF) == 0x0100)
+        switch(code)
         {
-            /* convert RISC OS Fn keys to our internal representations */
-            S32 shift_added = 0;
-            S32 ctrl_added  = 0;
+        default:
+            break;
 
-            kh = ch ^ 0x180;       /* map F0 (0x180) to 0x00, F10 (0x1CA) to 0x4A etc. */
-
-            /* remap RISC OS shift and control bits to our definitions */
-            if(kh & 0x10)
-            {
-                kh ^= 0x10;
-                shift_added = SHIFT_ADDED;
-            }
-            else
-                shift_added = 0;
-
-            if(kh & 0x20)
-            {
-                kh ^= 0x20;
-                ctrl_added = CTRL_ADDED;
-            }
-            else
-                ctrl_added = 0;
-
-            /* map F10-F15 range onto end of F0-F9 range and map TAB-up arrow out of that range */
-            if(     (kh >= 0x4A) && (kh <= 0x4F))
-                kh ^= (0x00 ^ 0x40);
-            else if((kh >= 0x0A) && (kh <= 0x0F))
-                kh ^= (0x10 ^ 0x00);
-
-            kh |= (FN_ADDED | shift_added | ctrl_added);
+        case 0x1C: /* Ctrl-Backslash */
+            kmap_code = (code - 1 + 'A') | KMAP_CODE_ADDED_ALT; /* Alt-Backslash */
+            break;
         }
-        else if((alt_array[0] != NULLCH)  &&  isalpha(ch))
-                                            /* already in Alt-sequence? */
-            kh = toupper(ch) | ALT_ADDED;   /* Uppercase Alt-letter */
-        else
-            kh = ch;
     }
 
-    /* transform the simple Delete and Home keys into function-like keys */
-    if((kh == RISCOS_DELETE_KEY) || (kh == RISCOS_HOME_KEY) || (kh == RISCOS_BACKSPACE_KEY))
+    /* transform simply produced Delete, Home and Backspace keys into function-like keys */
+    switch(kmap_code)
     {
-        S32 shift_added = host_shift_pressed() ? SHIFT_ADDED : 0;
-        S32 ctrl_added  = host_ctrl_pressed()  ? CTRL_ADDED  : 0;
+    default:
+        break;
 
-        if(     kh == RISCOS_DELETE_KEY)
-            kh = DELETE_KEY;
-        else if(kh == RISCOS_HOME_KEY)
-            kh = HOME_KEY;
-        else if(kh == RISCOS_BACKSPACE_KEY)
-            kh = BACKSPACE_KEY;
-        else
-            assert(0);
+    case RISCOS_EKEY_DELETE:
+        kmap_code = cs_mutate_key(KMAP_FUNC_DELETE);
+        break;
 
-        kh |= (shift_added | ctrl_added);
+    case RISCOS_EKEY_HOME:
+        kmap_code = cs_mutate_key(KMAP_FUNC_HOME);
+        break;
+
+    case RISCOS_EKEY_BACKSPACE:
+        kmap_code = cs_mutate_key(KMAP_FUNC_BACKSPACE);
+        break;
     }
 
-    if(!application_process_key(kh))
+    return(kmap_code);
+}
+
+_Check_return_
+static KMAP_CODE
+convert_standard_key(
+    _InVal_     S32 code /*from Wimp_EKeyPressed*/)
+{
+    KMAP_CODE kmap_code;
+
+    if((code < 0x20) || (code == RISCOS_EKEY_DELETE))
+        return(convert_ctrl_key(code)); /* RISC OS 'Hot Key' here we come */
+
+    kmap_code = code;
+
+    /* SKS after PD 4.11 10jan92 - if already in Cmd-sequence then these go in as Alt-letters
+     * without considering Ctrl-state (allows ^BM, ^PHB etc. from !Chars but not ^M, ^H still)
+     */
+    if(!cmd_seq_is_empty()  &&  isalpha(code))
+    {   /* already in Cmd-sequence? */
+        kmap_code = toupper(code) | KMAP_CODE_ADDED_ALT; /* Uppercase Alt-letter */
+    }
+
+    return(kmap_code);
+}
+
+/* convert RISC OS Fn keys to our internal representations */
+
+_Check_return_
+static KMAP_CODE
+convert_function_key(
+    _InVal_     S32 code /*from Wimp_EKeyPressed*/)
+{
+    KMAP_CODE kmap_code = code ^ 0x180; /* map F0 (0x180) to 0x00, F10 (0x1CA) to 0x4A etc. */
+
+    KMAP_CODE shift_added = 0;
+    KMAP_CODE ctrl_added  = 0;
+
+    /* remap RISC OS shift and control bits to our definitions */
+    if(0 != (kmap_code & 0x10))
     {
-        /* if unprocessed, send it back from whence it came */
-        trace_1(TRACE_APP_PD4, "main_key_pressed: unprocessed app_process_key(&%8X)", ch);
-        wimpt_safe(wimp_processkey(ch));
+        kmap_code ^= 0x10;
+        shift_added = KMAP_CODE_ADDED_SHIFT;
     }
+
+    if(0 != (kmap_code & 0x20))
+    {
+        kmap_code ^= 0x20;
+        ctrl_added = KMAP_CODE_ADDED_CTRL;
+    }
+
+    /* map F10-F15 range onto end of F0-F9 range ... */
+    if((kmap_code >= 0x4A) && (kmap_code <= 0x4F))
+    {
+        kmap_code ^= (0x00 ^ 0x40);
+    }
+    /* ... and map TAB-up arrow out of that range */
+    else if((kmap_code >= 0x0A) && (kmap_code <= 0x0F))
+    {
+        kmap_code ^= (0x10 ^ 0x00);
+    }
+
+    kmap_code |= (KMAP_CODE_ADDED_FN | shift_added | ctrl_added);
+
+    return(kmap_code);
+}
+
+/* Translate key from RISC OS Window manager into what application expects */
+
+_Check_return_
+static KMAP_CODE
+ri_kmap_convert(
+    _InVal_     S32 code /*from Wimp_EKeyPressed*/)
+{
+    KMAP_CODE kmap_code;
+
+    trace_1(0, TEXT("ri_kmap_convert: key in ") U32_XTFMT, (U32) code);
+
+    switch(code & ~0x000000FF)
+    {
+    /* 'normal' chars in 0..255 */
+    case 0x0000:
+        kmap_code = convert_standard_key(code);
+        break;
+
+    /* convert RISC OS Fn keys to our internal representations */
+    case 0x0100:
+        kmap_code = convert_function_key(code);
+        break;
+
+    default: default_unhandled();
+        kmap_code = 0;
+        break;
+    }
+
+    trace_2(0, TEXT("ri_kmap_convert(") U32_XTFMT TEXT("): kmap_code out ") U32_XTFMT, (U32) code, (U32) kmap_code);
+
+    return(kmap_code);
+}
+
+static BOOL
+main_event_Key_Pressed(
+    const WimpKeyPressedEvent * const key_pressed)
+{
+    trace_1(TRACE_APP_PD4, "main_event_Key_Pressed: key &%3.3X", key_pressed->key_code);
+
+    if(application_process_key(ri_kmap_convert(key_pressed->key_code)))
+        return(TRUE);
+
+    /* if unprocessed, send it back from whence it came */
+    trace_1(TRACE_APP_PD4, "main_key_pressed: unprocessed app_process_key(&%8X)", key_pressed->key_code);
+    void_WrapOsErrorReporting(wimp_processkey(key_pressed->key_code));
+    return(TRUE);
 }
 
 /******************************************************************************
 *
-*  process message events for main_window
+* process scroll window request for main window
+*
+* scroll furniture interactions come through rear window
 *
 ******************************************************************************/
+
+static BOOL
+main_event_Scroll_Request(
+    _In_        const WimpScrollRequestEvent * const scroll_request)
+{
+    trace_0(TRACE_APP_PD4, "main_event_Scroll_Request()");
+
+    application_Scroll_Request(scroll_request);
+
+    return(TRUE);
+}
+
+/******************************************************************************
+*
+* process caret lose event for main window
+*
+******************************************************************************/
+
+static BOOL
+main_event_Lose_Caret(
+    wimp_eventstr *e)
+{
+    trace_2(TRACE_APP_PD4, "main_event_Lose_Caret: old window %d icon %d",
+            e->data.c.w, e->data.c.i);
+    trace_4(TRACE_APP_PD4, " x %d y %d height %X index %d",
+            e->data.c.x, e->data.c.y,
+            e->data.c.height, e->data.c.index);
+
+    assert(caret_window_handle == e->data.c.w);
+
+    UNREFERENCED_PARAMETER(e);
+
+    cmd_seq_cancel(); /* cancel Cmd-sequence */
+
+    /* don't cancel key expansion or else user won't be able to
+     * set 'Next window', 'other action' etc. on keys
+    */
+    (void) mergebuf_nocheck();
+    filbuf();
+
+    caret_stolen_from_window_handle = caret_window_handle;
+    caret_window_handle = HOST_WND_NONE;
+
+#if FALSE
+    colh_draw_cell_count(NULL);
+
+    /*RCM says: I suppose we could find out which doc (if any) is getting the focus */
+    /*          and only blank the cell count if its not this doc - this would mean */
+    /*          the count wouldn't blank out momentarily if the focus went to an    */
+    /*          edit expression box owned by this document                          */
+    /*          NB The expression editor would need similar ELOSECARET code to this */
+#endif
+
+    return(TRUE);
+}
+
+/******************************************************************************
+*
+* process caret gain event for main window
+*
+******************************************************************************/
+
+static BOOL
+main_event_Gain_Caret(
+    wimp_eventstr *e)
+{
+    trace_2(TRACE_APP_PD4, "main_event_Gain_Caret: new window %d icon %d",
+            e->data.c.w, e->data.c.i);
+    trace_4(TRACE_APP_PD4, " x %d y %d height %8.8X index %d",
+            e->data.c.x, e->data.c.y,
+            e->data.c.height, e->data.c.index);
+
+    caret_window_handle = e->data.c.w;
+    caret_stolen_from_window_handle = HOST_WND_NONE;
+
+    /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
+    if(slotcount_docno != current_docno())
+    {
+        colh_draw_cell_count_in_document(NULL); /* kill the current indicator (if any) */
+
+        slotcount_docno = current_docno();
+    }
+
+    return(TRUE);
+}
+
+/******************************************************************************
+*
+* process message events for main window
+*
+******************************************************************************/
+
+/* possible object dragged into main window - ask for DataLoad */
+
+static BOOL
+main_event_Message_DataSave(
+    const WimpMessage * const user_message)
+{
+    scraptransfer_file(&user_message->data.data_save, FALSE /* not iconbar */);
+
+    return(TRUE);
+}
 
 static BOOL
 draw_insert_filename(
@@ -1978,7 +2394,7 @@ draw_insert_filename(
 
     filbuf();
 
-    if(NULLCH != get_text_at_char())
+    if(CH_NULL != get_text_at_char())
     {
         if( insert_string(d_options_TA, FALSE)  &&
             insert_string("G:", FALSE)          &&
@@ -1995,8 +2411,10 @@ draw_insert_filename(
     return(0);
 }
 
+/* object (possibly scrap) dragged into main window - insert mostly regardless of type */
+
 static void
-main_DATALOAD_PDMacro(
+main_event_Message_DataLoad_PDMacro(
     char * filename)
 {
     if(mystr_set(&d_macro_file[0].textfield, filename))
@@ -2007,7 +2425,7 @@ main_DATALOAD_PDMacro(
 }
 
 static void
-main_DATALOAD_PipeDream(
+main_event_Message_DataLoad_PipeDream(
     char * filename,
     FILETYPE_RISC_OS filetype)
 {
@@ -2024,7 +2442,7 @@ main_DATALOAD_PipeDream(
 }
 
 static void
-main_DATALOAD_others(
+main_event_Message_DataLoad_others(
     char * filename,
     FILETYPE_RISC_OS filetype)
 {
@@ -2042,33 +2460,33 @@ main_DATALOAD_others(
 }
 
 static BOOL
-main_DATALOAD(
-    wimp_msgstr *m)
+main_event_Message_DataLoad(
+    const WimpMessage * const user_message)
 {
     char * filename;
     FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename); /* sets up reply too */
 
-    IGNOREPARM(m); /* xferrecv uses last message mechanism */
+    UNREFERENCED_PARAMETER_InRef_(user_message); /* xferrecv uses last message mechanism */
 
-    reportf("MDATALOAD(main): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+    reportf("Message_DataLoad(main): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
     {
     case FILETYPE_DIRECTORY:
     case FILETYPE_APPLICATION:
-        reperr(create_error(FILE_ERR_ISADIR), filename);
+        reperr(FILE_ERR_ISADIR, filename);
         break;
 
     case FILETYPE_PDMACRO:
-        main_DATALOAD_PDMacro(filename);
+        main_event_Message_DataLoad_PDMacro(filename);
         break;
 
     case FILETYPE_PIPEDREAM:
-        main_DATALOAD_PipeDream(filename, filetype);
+        main_event_Message_DataLoad_PipeDream(filename, filetype);
         break;
 
     default:
-        main_DATALOAD_others(filename, filetype);
+        main_event_Message_DataLoad_others(filename, filetype);
         break;
     }
 
@@ -2079,12 +2497,11 @@ main_DATALOAD(
 }
 
 static BOOL
-main_HELPREQUEST(
-    wimp_msgstr *m)
+main_event_Message_HelpRequest(
+    /*poked*/ WimpMessage * const user_message)
 {
-    BOOL processed = TRUE;
-    int x = m->data.helprequest.m.x;
-    int y = m->data.helprequest.m.y;
+    const int gdi_x = user_message->data.help_request.mouse_x;
+    const int gdi_y = user_message->data.help_request.mouse_y;
     P_DOCU p_docu = find_document_with_input_focus();
     BOOL insertref = ( (NO_DOCUMENT != p_docu) &&
                        (p_docu->Xxf_inexpression || p_docu->Xxf_inexpression_box || p_docu->Xxf_inexpression_line) );
@@ -2092,18 +2509,19 @@ main_HELPREQUEST(
     U32 prefix_len;
     char * buffer;
     char * alt_msg;
-    coord tx    = tcoord_x(x);    /* text cell coordinates */
-    coord ty    = tcoord_y(y);
-    coord coff  = calcoff(tx);    /* not _click */
-    coord roff  = calroff(ty);    /* not _click */
+    coord tx = tcoord_x(gdi_x); /* text cell coordinates */
+    coord ty = tcoord_y(gdi_y);
+    coord coff  = calcoff(tx); /* not _click */
+    coord roff  = calroff(ty); /* not _click */
     coord o_roff = roff;
     ROW trow;
     BOOL append_drag_msg = xf_inexpression; /* for THIS window */
 
-    if(dragtype != NO_DRAG_ACTIVE) /* stop pointer and message changing whilst dragging */
-        return(processed);
+    if(drag_type != NO_DRAG_ACTIVE) /* stop pointer and message changing whilst dragging */
+        return(TRUE);
 
-    trace_4(TRACE_APP_PD4, "get_slr_for_point: g(%d, %d) t(%d, %d)", x, y, tx, ty);
+    trace_0(TRACE_APP_PD4, "Help request on main window");
+    trace_4(TRACE_APP_PD4, "get_slr_for_point: g(%d, %d) t(%d, %d)", gdi_x, gdi_y, tx, ty);
 
     /* default message */
     xstrkpy(abuffer, elemof32(abuffer), help_main_window);
@@ -2163,14 +2581,15 @@ main_HELPREQUEST(
 
                     (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
                             (scol != tcol)
-                                ? "%s%s%s" "%s%s"     "%s%s%s"       "%s.|M"
-                                : "%s%s%s" "%.0s%.0s" "%.0s%.0s%.0s" "%s.|M",
-                            help_click_select_to, msg, help_slot,
+                                ? "%s%s%s" "%s%s"     "%s%s%s"       "%s.|M%s"
+                                : "%s%s%s" "%.0s%.0s" "%.0s%.0s%.0s" "%s.|M%s",
+                            help_click_select_to, msg, help_cell,
                             /* else miss this set of args */
                             sbuf, ".|M",
                             /* and this set of args */
-                            help_click_adjust_to, msg, help_slot,
-                            abuf);
+                            help_click_adjust_to, msg, help_cell,
+                            abuf,
+                            help_drag_select_to_mark_block);
                 }
             }
             else if(IN_ROW_BORDER(coff))
@@ -2192,73 +2611,74 @@ main_HELPREQUEST(
     else
         trace_0(TRACE_APP_PD4, "above/below sheet data");
 
-    if(append_drag_msg && (strlen32p1(abuffer) + strlen32(help_drag_file_to_insert) < 240))
+    if(append_drag_msg && (strlen32p1(abuffer) + strlen32(help_drag_file_to_insert) <= 236))
          xstrkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
 
-    riscos_sendhelpreply(m, (strlen32p1(abuffer) < 240) ? abuffer : alt_msg);
+    riscos_send_Message_HelpReply(user_message, (strlen32p1(abuffer) <= 236) ? abuffer : alt_msg);
 
-    return(processed);
+    return(TRUE);
+}
+
+/* help out the iconizer - send him a new message as acknowledgement of his request */
+
+static BOOL
+main_event_Message_WindowInfo(
+    /*poked*/ WimpMessageExtra * const user_message)
+{
+    user_message->hdr.size     = sizeof(user_message->hdr) + sizeof(user_message->data.window_info);
+    user_message->hdr.your_ref = user_message->hdr.my_ref;
+    user_message->hdr.action_code = Wimp_MWindowInfo;
+
+    user_message->data.window_info.reserved_0 = 0;
+    (void) strcpy(user_message->data.window_info.sprite, /*"ic_"*/ "dde"); /* dde == PipeDream */
+    (void) strcpy(user_message->data.window_info.title, file_leafname(currentfilename));
+
+    void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessage, (WimpMessage *) user_message, user_message->hdr.sender));
+
+    return(TRUE);
 }
 
 static BOOL
-main_message(
-    wimp_msgstr *m)
+main_event_User_Message(
+    /*acked*/ WimpMessage * const user_message)
 {
-    int action     = m->hdr.action;
-    BOOL processed = TRUE;
-
-    switch(action)
+    switch(user_message->hdr.action_code)
     {
-    case wimp_MDATASAVE:
-        /* possible object dragged into main_window - ask for DATALOAD */
-        scraptransfer_file(&m->data.datasave, 0 /* not iconbar */);
-        break;
+    case Wimp_MDataSave:
+        return(main_event_Message_DataSave(user_message));
 
-    case wimp_MDATALOAD:
-        /* object (possibly scrap) dragged into main_window - insert mostly regardless of type */
-        processed = main_DATALOAD(m);
-        break;
+    case Wimp_MDataLoad:
+        return(main_event_Message_DataLoad(user_message));
 
-    case wimp_MHELPREQUEST:
-        trace_0(TRACE_APP_PD4, "Help request on main_window");
-        processed = main_HELPREQUEST(m);
-        break;
+    case Wimp_MHelpRequest:
+        return(main_event_Message_HelpRequest(user_message));
 
-    case wimp_MWINDOWINFO:
-        /* help out the iconizer - send him a new message as acknowledgement of his request */
-        m->hdr.size     = sizeof(m->hdr) + sizeof(m->data.windowinfo);
-        m->hdr.your_ref = m->hdr.my_ref;
-        m->hdr.action   = wimp_MWINDOWINFO;
-
-        m->data.windowinfo.reserved_0 = 0;
-        (void) strcpy(m->data.windowinfo.sprite, /*"ic_"*/ "dde"); /* dde == PipeDream */
-        (void) strcpy(m->data.windowinfo.title, file_leafname(currentfilename));
-
-        wimpt_safe(wimp_sendmessage(wimp_ESEND, m, m->hdr.task));
-        break;
+    case Wimp_MWindowInfo:
+        return(main_event_Message_WindowInfo((WimpMessageExtra *) user_message));
 
     default:
-        trace_1(TRACE_APP_PD4, "unprocessed %s message to main_window",
-                 report_wimp_message(m, FALSE));
-        processed = FALSE;
-        break;
+        trace_1(TRACE_APP_PD4, "unprocessed %s message to main window",
+                 report_wimp_message(user_message, FALSE));
+        return(FALSE);
     }
-
-    return(processed);
 }
 
 /******************************************************************************
 *
-* process main_window events
+* process main window events
 *
 ******************************************************************************/
+
+#define main_event_handler_report(event_code, event_data, handle) \
+    riscos_event_handler_report(event_code, event_data, handle, "main")
 
 static BOOL
 main_event_handler(
     wimp_eventstr *e,
     void *handle)
 {
-    BOOL processed = TRUE;
+    const int event_code = (int) e->e;
+    WimpPollBlock * const event_data = (WimpPollBlock *) &e->data;
 
     if(!select_document_using_callback_handle(handle))
     {
@@ -2267,143 +2687,55 @@ main_event_handler(
     }
 
     trace_4(TRACE_APP_PD4, TEXT("main_event_handler: event %s, dhan ") PTR_XTFMT TEXT(" window %d, document %d"),
-             report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) main_window, current_docno());
+             report_wimp_event(event_code, event_data), report_ptr_cast(handle), (int) main_window_handle, current_docno());
 
-    switch(e->e)
+    switch(event_code)
     {
-    case wimp_EOPEN:      /* main_window always opened as a pane on top of rear_window */
-    case wimp_ECLOSE:     /* main_window has no close box */
-    case wimp_ESCROLL:    /* or scroll bars - come through fake */
-    case wimp_EPTRLEAVE:
-    case wimp_EPTRENTER:
-        break;
+    case Wimp_ERedrawWindow:
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(main_event_Redraw_Window_Request(&event_data->redraw_window_request));
 
-    case wimp_EREDRAW:
-        main_redraw_request(e);
-        break;
+    case Wimp_EOpenWindow:  /* main window always opened as a pane on top of rear window */
+    case Wimp_ECloseWindow: /* main window has no close box. rear window has the close box */
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(TRUE); /*not default: */
 
-    case wimp_EBUT:
-        /* ignore old button state */
-        application_button_click_in_main(e->data.but.m.x,
-                                         e->data.but.m.y,
-                                         e->data.but.m.bbits
-                                        );
-        break;
+    case Wimp_EPointerLeavingWindow:
+    case Wimp_EPointerEnteringWindow:
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(TRUE); /*not default: */
 
-    case wimp_EKEY:
-        main_key_pressed(e);
-        break;
+    case Wimp_EMouseClick:
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(main_event_Mouse_Click(&event_data->mouse_click));
 
-    case wimp_ESEND:
-    case wimp_ESENDWANTACK:
-        main_message(&e->data.msg);
-        break;
+    case Wimp_EKeyPressed:
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(main_event_Key_Pressed(&event_data->key_pressed));
 
-    case wimp_EGAINCARET:
-        trace_2(TRACE_APP_PD4, "GainCaret: new window %d icon %d",
-                e->data.c.w, e->data.c.i);
-        trace_4(TRACE_APP_PD4, " x %d y %d height %8.8X index %d",
-                e->data.c.x, e->data.c.y,
-                e->data.c.height, e->data.c.index);
-        caret_window = e->data.c.w;
+    case Wimp_EScrollRequest:
+        main_event_handler_report(event_code, event_data, handle);
+        return(main_event_Scroll_Request(&event_data->scroll_request));
 
-        /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
-        if(slotcount_docno != current_docno())
-        {
-            colh_draw_slot_count_in_document(NULL); /* kill the current indicator (if any) */
+    case Wimp_ELoseCaret:
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(main_event_Lose_Caret(e));
 
-            slotcount_docno = current_docno();
-        }
-        break;
+    case Wimp_EGainCaret:
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(main_event_Gain_Caret(e));
 
-    case wimp_ELOSECARET:
-        trace_2(TRACE_APP_PD4, "LoseCaret: old window %d icon %d",
-                e->data.c.w, e->data.c.i);
-        trace_4(TRACE_APP_PD4, " x %d y %d height %X index %d",
-                e->data.c.x, e->data.c.y,
-                e->data.c.height, e->data.c.index);
-
-        /* cancel Alt sequence */
-        alt_array[0] = NULLCH;
-
-        /* don't cancel key expansion or else user won't be able to
-         * set 'Next window', 'other action' etc. on keys
-        */
-        (void) mergebuf_nocheck();
-        filbuf();
-
-        caret_window = window_NULL;
-
-#if FALSE
-        colh_draw_slot_count(NULL);
-
-        /*RCM says: I suppose we could find out which doc (if any) is getting the focus */
-        /*          and only blank the cell count if its not this doc - this would mean */
-        /*          the count wouldn't blank out momentarily if the focus went to an    */
-        /*          edit expression box owned by this document                          */
-        /*          NB The expression editor would need similar ELOSECARET code to this */
-#endif
-        break;
+    case Wimp_EUserMessage:
+    case Wimp_EUserMessageRecorded:
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        return(main_event_User_Message(&event_data->user_message));
 
     default:
-        trace_1(TRACE_APP_PD4, "unprocessed wimp event to main_window: %s",
-                report_wimp_event(e->e, &e->data));
-        processed = FALSE;
-        break;
-    }
-
-    return(processed);
-}
-
-static BOOL
-rear_event_handler(
-    wimp_eventstr *e,
-    void *handle)
-{
-    BOOL processed = TRUE;
-
-    if(!select_document_using_callback_handle(handle))
-    {
-        messagef(TEXT("Bad handle ") PTR_XTFMT TEXT(" passed to rear event handler"), report_ptr_cast(handle));
+        /*main_event_handler_report(event_code, event_data, handle);*/
+        trace_1(TRACE_APP_PD4, "unprocessed wimp event to main window: %s",
+                report_wimp_event(event_code, event_data));
         return(FALSE);
     }
-
-    trace_4(TRACE_APP_PD4, TEXT("rear_event_handler: event %s, handle ") PTR_XTFMT TEXT(" window %d, document %d"),
-             report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) rear_window, current_docno());
-
-    switch(e->e)
-    {
-    case wimp_EPTRLEAVE:
-    case wimp_EPTRENTER:
-        break;
-
-    case wimp_EOPEN:
-        rear_open_request(e);
-        break;
-
-    case wimp_ECLOSE:
-        rear_close_request(e);
-        break;
-
-    case wimp_ESCROLL:
-        rear_scroll_request(e);
-        break;
-
-    /* SKS 26oct96 */
-    case wimp_ESEND:
-    case wimp_ESENDWANTACK:
-        main_message(&e->data.msg);
-        break;
-
-/*    case wimp_EREDRAW:    */
-    default:
-        trace_1(TRACE_APP_PD4, "unprocessed wimp event to rear_window: %s",
-                report_wimp_event(e->e, &e->data));
-        processed = FALSE;
-        break;
-    }
-
-    return(processed);
 }
 
 /*
@@ -2425,7 +2757,7 @@ riscos_cleanupstring(
     while(*a++ >= 0x20)
         ;
 
-    a[-1] = NULLCH;
+    a[-1] = CH_NULL;
 
     return(str);
 }
@@ -2438,28 +2770,28 @@ riscos_cleanupstring(
 ******************************************************************************/
 
 extern BOOL
-riscos_createmainwindow(void)
+riscos_create_document_window(void)
 {
     DOCNO docno = current_docno();
     os_error * e;
 
-    trace_0(TRACE_APP_PD4, "riscos_createmainwindow()");
+    trace_0(TRACE_APP_PD4, "riscos_create_document_window()");
 
-    if(rear_window == window_NULL) /* a window needs creating? */
+    if(rear_window_handle == HOST_WND_NONE) /* a window needs creating? */
     {
-        rear_template = template_copy_new(template_find_new(rear_window_name));
+        rear_window_template = template_copy_new(template_find_new(rear_window_name));
 
-        if(NULL == rear_template)
+        if(NULL == rear_window_template)
             return(reperr_null(status_nomem()));
 
         riscos_settitlebar(currentfilename); /* set the buffer content up */
 
-        ((wimp_wind *) (current_p_docu->Xrear_template))->title.indirecttext.buffer  = current_p_docu->Xwindow_title;
-        ((wimp_wind *) (current_p_docu->Xrear_template))->title.indirecttext.bufflen = BUF_WINDOW_TITLE_LEN; /* includes terminator */
+        ((WimpWindowWithBitset *) (current_p_docu->Xrear_window_template))->title_data.it.buffer = current_p_docu->Xwindow_title;
+        ((WimpWindowWithBitset *) (current_p_docu->Xrear_window_template))->title_data.it.buffer_size = BUF_WINDOW_TITLE_LEN; /* includes terminator */
 
-        if((e = win_create_wind(rear_template, (wimp_w *) &rear_window,
-                                rear_event_handler, (void *)(uintptr_t)docno)) != NULL)
-            return(rep_fserr(e->errmess));
+        if((e = winx_create_window(rear_window_template, &rear_window_handle,
+                                   rear_event_handler, (void *)(uintptr_t)docno)) != NULL)
+            return(reperr_kernel_oserror(e));
 
         /* Bump the y coordinate for the next window to be created */
         /* Try not to overlap the icon bar */
@@ -2469,41 +2801,42 @@ riscos_createmainwindow(void)
         out_alteredstate = TRUE;
     }
 
-    if(colh_window == window_NULL) /* a window needs creating? */
+    if(colh_window_handle == HOST_WND_NONE) /* a window needs creating? */
     {
-        colh_template = template_copy_new(template_find_new(colh_window_name));
+        colh_window_template = template_copy_new(template_find_new(colh_window_name));
 
-        if(NULL == colh_template)
+        if(NULL == colh_window_template)
             return(reperr_null(status_nomem()));
 
-        if((e = win_create_wind(colh_template, (wimp_w *) &colh_window,
-                                colh_event_handler, (void *)(uintptr_t)docno)) != NULL)
-            return(rep_fserr(e->errmess));
+        if((e = winx_create_window(colh_window_template, &colh_window_handle,
+                                   colh_event_handler, (void *)(uintptr_t)docno)) != NULL)
+            return(reperr_kernel_oserror(e));
 
         colh_position_icons();      /*>>>errors???*/
     }
 
-    if(main_window == window_NULL) /* a window needs creating? */
+    if(main_window_handle == HOST_WND_NONE) /* a window needs creating? */
     {
-        main_template = template_copy_new(template_find_new(main_window_name));
+        main_window_template = template_copy_new(template_find_new(main_window_name));
 
-        if(NULL == main_template)
+        if(NULL == main_window_template)
             return(reperr_null(status_nomem()));
 
-        if((e = win_create_wind(main_template, (wimp_w *) &main_window,
-                                main_event_handler, (void *)(uintptr_t)docno)) != NULL)
-            return(rep_fserr(e->errmess));
+        if((e = winx_create_window(main_window_template, &main_window_handle,
+                                   main_event_handler, (void *)(uintptr_t)docno)) != NULL)
+            return(reperr_kernel_oserror(e));
 
-        riscmenu_attachmenutree(main_window);
-        riscmenu_attachmenutree(colh_window);
+        riscmenu_attachmenutree(main_window_handle);
+        riscmenu_attachmenutree(colh_window_handle);
 
         /* Create function paster menu */
         function__event_menu_maker();
-        event_attachmenumaker_to_w_i(colh_window,
-                                    (wimp_i)COLH_FUNCTION_SELECTOR,
-                                    function__event_menu_filler,
-                                    function__event_menu_proc,
-				                    (void *)(uintptr_t)docno);
+
+        event_attachmenumaker_to_w_i(colh_window_handle,
+                                     COLH_FUNCTION_SELECTOR,
+                                     function__event_menu_filler,
+                                     function__event_menu_proc,
+                                     (void *)(uintptr_t)docno);
 
         /* now window created at default size, initialise screen bits */
         if(!screen_initialise())
@@ -2515,49 +2848,70 @@ riscos_createmainwindow(void)
 
 /******************************************************************************
 *
-* destroy this domain's mainwindow
+* destroy this domain's document windows
 *
 ******************************************************************************/
 
-extern void
-riscos_destroymainwindow(void)
+static inline void
+riscos_template_copy_dispose(
+    _Inout_     void ** ppww)
 {
-    trace_0(TRACE_APP_PD4, "riscos_destroymainwindow()");
+    template_copy_dispose((WimpWindowWithBitset **) ppww);
+}
 
-    if(rear_window != window_NULL)
+extern void
+riscos_destroy_document_window(void)
+{
+    trace_0(TRACE_APP_PD4, "riscos_destroy_document_window()");
+
+    if(rear_window_handle != HOST_WND_NONE)
     {
-        /* deregister procedures for the rear_window */
+        /* deregister procedures for the rear window */
 
-        win_delete_wind((wimp_w *) &rear_window);
-        rear_window = window_NULL;
-        wlalloc_dispose(P_P_ANY_PEDANTIC(&rear_template));
+        riscos_window_dispose(&rear_window_handle);
+
+        riscos_template_copy_dispose(&rear_window_template);
     }
 
-    if(colh_window != window_NULL)
+    if(colh_window_handle != HOST_WND_NONE)
     {
-        /* deregister procedures for the colh_window */
-        riscmenu_detachmenutree(colh_window);
+        /* deregister procedures for the colh window */
+        riscmenu_detachmenutree(colh_window_handle);
 
-        win_delete_wind((wimp_w *) &colh_window);
-        colh_window = window_NULL;
-        wlalloc_dispose(P_P_ANY_PEDANTIC(&colh_template));
+        riscos_window_dispose(&colh_window_handle);
+
+        riscos_template_copy_dispose(&colh_window_template);
 
         /*>>>should probably give caret away, if this window has it */
     }
 
-    if(main_window != window_NULL)
+    if(main_window_handle != HOST_WND_NONE)
     {
         /* pretty permanent caret loss */
-        if(main_window == caret_window)
-            caret_window = window_NULL;
+        if(main_window_handle == caret_window_handle)
+            caret_window_handle = HOST_WND_NONE;
+        if(main_window_handle == caret_stolen_from_window_handle)
+            caret_stolen_from_window_handle = HOST_WND_NONE;
 
-        /* deregister procedures for the main_window */
-        riscmenu_detachmenutree(main_window);
+        /* deregister procedures for the main window */
+        riscmenu_detachmenutree(main_window_handle);
 
-        win_delete_wind((wimp_w *) &main_window);
-        main_window = window_NULL;
-        wlalloc_dispose(P_P_ANY_PEDANTIC(&main_template));
+        riscos_window_dispose(&main_window_handle);
+
+        riscos_template_copy_dispose(&main_window_template);
     }
+}
+
+extern void
+riscos_window_dispose(
+    _Inout_     HOST_WND * const p_window_handle)
+{
+    if(HOST_WND_NONE == *p_window_handle)
+        return;
+
+    winx_delete_window(p_window_handle);
+
+    *p_window_handle = HOST_WND_NONE;
 }
 
 /******************************************************************************
@@ -2571,7 +2925,7 @@ riscos_finalise(void)
 {
     trace_0(TRACE_APP_PD4, "riscos_finalise()");
 
-    riscos_destroymainwindow();
+    riscos_destroy_document_window();
 }
 
 /******************************************************************************
@@ -2597,48 +2951,40 @@ riscos_finalise_once(void)
 
 /******************************************************************************
 *
-* bring main_window to the front
+* bring document window to the front
 *
 ******************************************************************************/
 
 extern void
-riscos_frontmainwindow(
+riscos_front_document_window(
     BOOL immediate)
 {
-    trace_1(TRACE_APP_PD4, "riscos_frontmainwindow(immediate = %s)", trace_boolstring(immediate));
+    trace_1(TRACE_APP_PD4, "riscos_front_document_window(immediate = %s)", report_boolstring(immediate));
 
-    if(main_window != window_NULL)
-    {
-        xf_frontmainwindow = FALSE;                    /* as immediate event raising calls draw_screen() */
-        win_send_front(rear__window, immediate);
-    }
+    if(main_window_handle == HOST_WND_NONE)
+        return;
+
+    xf_front_document_window = FALSE;                    /* as immediate event raising calls draw_screen() */
+    winx_send_front_window_request(rear_window_handle, immediate);
 }
 
 extern void
-riscos_frontmainwindow_atbox(
+riscos_front_document_window_atbox(
     BOOL immediate)
 {
-    trace_1(TRACE_APP_PD4, "riscos_frontmainwindow_atbox(immediate = %s)", trace_boolstring(immediate));
+    trace_1(TRACE_APP_PD4, "riscos_front_document_window_atbox(immediate = %s)", report_boolstring(immediate));
 
-    if(main_window != window_NULL)
-    {
-        xf_frontmainwindow = FALSE;                    /* as immediate event raising calls draw_screen() */
-        win_send_front_at(rear__window, immediate, (const wimp_box *) &open_box);
-    }
-}
+    if(main_window_handle == HOST_WND_NONE)
+        return;
 
-extern S32
-riscos_getbuttonstate(void)
-{
-    wimp_mousestr m;
-    wimpt_safe(wimp_get_point_info(&m));
-    return(m.bbits);
+    xf_front_document_window = FALSE;                    /* as immediate event raising calls draw_screen() */
+    winx_send_front_window_request_at(rear_window_handle, immediate, (const BBox *) &open_box);
 }
 
 extern BOOL
-riscos_adjustclicked(void)
+riscos_adjust_clicked(void)
 {
-    return(riscos_getbuttonstate() & wimp_BRIGHT);
+    return(winx_adjustclicked());
 }
 
 /******************************************************************************
@@ -2652,7 +2998,7 @@ riscos_initialise(void)
 {
     BOOL ok;
 
-    ok = riscos_createmainwindow();
+    ok = riscos_create_document_window();
 
     return(ok);
 }
@@ -2675,8 +3021,8 @@ riscos_initialise_once(void)
 
     resspr_init();
 
-    /* register callproc for wimp exit */
-    wimpt_atexit(actions_before_exiting);
+    /* register callproc for actions before exiting to Wimp_Poll */
+    wimptx_atexit(actions_before_exiting);
 
     /* no point having more than one of this app loaded */
     g_kill_duplicates = 1;
@@ -2697,42 +3043,44 @@ riscos_initialise_once(void)
 
     /* now keep main_window_definition pointing to the back window for all time */
 
-    main_window_definition = template_syshandle_ua(rear_window_name);
+    main_window_definition = (wimp_wind *) template_syshandle_unaligned(rear_window_name);
 
     main_window_initial_y1     = (int) readval_S32(&main_window_definition->box.y1);
     main_window_default_height = main_window_initial_y1 -
                                  (int) readval_S32(&main_window_definition->box.y0);
 
+#if 0 /* can't see the point of this ... */
     {
-    wimp_wind * fontselector_definition = template_syshandle_ua(fontselector_dboxname);
-    wimp_icon * fontselector_firsticon  = (wimp_icon *) (fontselector_definition + 1);
+    static const char fontselector_dboxname[] = "FontSelect";
+    wimp_wind * fontselector_definition_ua = (wimp_wind *) template_syshandle_unaligned(fontselector_dboxname);
+    wimp_icon * fontselector_firsticon_ua  = (wimp_icon *) (fontselector_definition_ua + 1);
 
-    writeval_S32(&fontselector_firsticon[FONT_LEADING].flags,
-     readval_S32(&fontselector_firsticon[FONT_LEADING].flags)      | wimp_INOSELECT);
-    writeval_S32(&fontselector_firsticon[FONT_LEADING_DOWN].flags,
-     readval_S32(&fontselector_firsticon[FONT_LEADING_DOWN].flags) | wimp_INOSELECT);
-    writeval_S32(&fontselector_firsticon[FONT_LEADING_UP].flags,
-     readval_S32(&fontselector_firsticon[FONT_LEADING_UP].flags)   | wimp_INOSELECT);
-    writeval_S32(&fontselector_firsticon[FONT_LEADING_AUTO].flags,
-     readval_S32(&fontselector_firsticon[FONT_LEADING_AUTO].flags) | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon_ua[FONT_LEADING].flags,
+     readval_S32(&fontselector_firsticon_ua[FONT_LEADING].flags)      | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon_ua[FONT_LEADING_DOWN].flags,
+     readval_S32(&fontselector_firsticon_ua[FONT_LEADING_DOWN].flags) | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon_ua[FONT_LEADING_UP].flags,
+     readval_S32(&fontselector_firsticon_ua[FONT_LEADING_UP].flags)   | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon_ua[FONT_LEADING_AUTO].flags,
+     readval_S32(&fontselector_firsticon_ua[FONT_LEADING_AUTO].flags) | wimp_INOSELECT);
     }
+#endif
 
     iconbar_initialise(product_id());
 
     /* Direct miscellaneous unknown (and icon bar)
      * events to our default event handler
     */
-    win_register_new_event_handler(win_ICONBARLOAD,
-                                   default_event_handler,
-                                   NULL);
+    winx_register_new_event_handler(win_ICONBARLOAD,
+                                    default_event_handler,
+                                    NULL);
     win_claim_unknown_events(win_ICONBARLOAD);
 
     /* initialise riscmenu */
     riscmenu_initialise_once();
 
     /* initialise riscdraw */
-    cachemodevariables();
-    cachepalettevariables();
+    cache_mode_variables(); /* includes palette data */
 
     riscprint_set_printer_data();
 
@@ -2741,37 +3089,43 @@ riscos_initialise_once(void)
 
 /******************************************************************************
 *
-* invalidate all of main_window & colh_window
+* invalidate all of main window & colh window (rear window is fully covered)
 *
 ******************************************************************************/
 
 extern void
-riscos_invalidatemainwindow(void)
+riscos_invalidate_document_window(void)
 {
-    wimp_redrawstr redraw;
-
-    if(main__window != window_NULL)
+    if(main_window_handle != HOST_WND_NONE)
     {
-        redraw.w      = main__window;
-        redraw.box.x0 = -0x07FFFFFF;
-        redraw.box.y0 = -0x07FFFFFF;
-        redraw.box.x1 = +0x07FFFFFF;
-        redraw.box.y1 = +0x07FFFFFF;
+        BBox redraw_area;
 
-        wimpt_safe(wimp_force_redraw(&redraw));
+        redraw_area.xmin = -0x07FFFFFF;
+        redraw_area.ymin = -0x07FFFFFF;
+        redraw_area.xmax = +0x07FFFFFF;
+        redraw_area.ymax = +0x07FFFFFF;
+
+        void_WrapOsErrorReporting(
+            tbl_wimp_force_redraw(main_window_handle,
+                                  redraw_area.xmin, redraw_area.ymin,
+                                  redraw_area.xmax, redraw_area.ymax));
     }
 
-    if(colh_window != window_NULL)
+    if(colh_window_handle != HOST_WND_NONE)
     {
+        BBox redraw_area;
+
         colh_colour_icons();                    /* ensure colours of wimp maintained icons are correct */
 
-        redraw.w      = colh_window;
-        redraw.box.x0 = -0x07FFFFFF;
-        redraw.box.y0 = -0x07FFFFFF;
-        redraw.box.x1 = +0x07FFFFFF;
-        redraw.box.y1 = +0x07FFFFFF;
+        redraw_area.xmin = -0x07FFFFFF;
+        redraw_area.ymin = -0x07FFFFFF;
+        redraw_area.xmax = +0x07FFFFFF;
+        redraw_area.ymax = +0x07FFFFFF;
 
-        wimpt_safe(wimp_force_redraw(&redraw)); /* will force icons maintained by us to be redrawn */
+        void_WrapOsErrorReporting(
+            tbl_wimp_force_redraw(colh_window_handle, /* will force icons maintained by us to be redrawn */
+                                  redraw_area.xmin, redraw_area.ymin,
+                                  redraw_area.xmax, redraw_area.ymax));
     }
 }
 
@@ -2808,10 +3162,10 @@ riscos_readfileinfo(
     res = _kernel_osfile(OSFile_ReadNoPath, name, &fileblk);
 
     if(res == _kernel_ERROR)
-        wimpt_complain((os_error *) _kernel_last_oserror());
+        void_WrapOsErrorReporting(_kernel_last_oserror());
 
     if(res != OSFile_ObjectType_File)
-    {
+    {   /* includes error case */
         riscos_readtime(rip);
         riscos_settype(rip, FILETYPE_PIPEDREAM);
         rip->length = 0;
@@ -2862,74 +3216,33 @@ riscos_resetwindowpos(void)
 
 /******************************************************************************
 *
-* restore the current window to the saved position
-*
-******************************************************************************/
-
-extern void
-riscos_restorecurrentwindowpos(
-    BOOL immediate)
-{
-    wimp_wstate wstate;
-
-    wstate.o = saved_window_pos;
-
-    /* send myself an open request for this new window */
-    win_send_open(rear__window, immediate, &wstate.o);
-}
-
-extern void
-riscos_zerocurrentwindowscrolls(void)
-{
-    saved_window_pos.scx = 0;
-    saved_window_pos.scy = 0;
-}
-
-/******************************************************************************
-*
-* save the current window's position
-*
-******************************************************************************/
-
-extern void
-riscos_savecurrentwindowpos(void)
-{
-    wimp_eventdata ed;
-
-    /* try to preserve the window coordinates */
-    wimpt_safe(wimp_get_wind_state((wimp_w) rear_window,
-                                   (wimp_wstate *) &ed.o));
-
-    saved_window_pos = ed.o;
-}
-
-/******************************************************************************
-*
 * send a help reply
 *
 ******************************************************************************/
 
 extern void
-riscos_sendhelpreply(
-    wimp_msgstr * m,
+riscos_send_Message_HelpReply(
+    /*acked*/ WimpMessage * const user_message,
     const char * msg)
 {
-    S32 size, length;
+    S32 length = strlen32p1(msg);
 
-    if((int) m->data.helprequest.m.i >= -1)
+    if(length > sizeof32(user_message->data.help_reply.text))
+        length = sizeof32(user_message->data.help_reply.text); /* xstrkpy() will truncate */
+
+    if(user_message->data.help_request.icon_handle >= -1)
     {
-        length = strlen(msg) + 1;
-        size = offsetof(wimp_msgstr, data.helpreply.text) + length;
+        S32 size = offsetof(WimpMessage, data.help_reply.text) + length;
 
-        m->hdr.size     = size;
-        m->hdr.your_ref = m->hdr.my_ref;
-        m->hdr.action   = wimp_MHELPREPLY;
+        trace_2(TRACE_APP_PD4, "help_reply is %d long, %s", size, msg);
 
-        trace_2(TRACE_APP_PD4, "helpreply is %d long, %s", size, msg);
+        user_message->hdr.size        = size;
+        user_message->hdr.your_ref    = user_message->hdr.my_ref;
+        user_message->hdr.action_code = Wimp_MHelpReply;
 
-        xstrkpy(m->data.helpreply.text, 256 - offsetof(wimp_msgstr, data.helpreply.text), msg);
+        xstrkpy(user_message->data.help_reply.text, sizeof32(user_message->data.help_reply.text), msg);
 
-        wimpt_safe(wimp_sendmessage(wimp_ESEND, m, m->hdr.task));
+        void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessage, user_message, user_message->hdr.sender));
     }
     else
         trace_0(TRACE_APP_PD4, "no reply for system icons");
@@ -2965,7 +3278,7 @@ riscos_setnextwindowpos(
 {
     this_y1 -= main_window_y_bump;
 
-    if((this_y1 - main_window_default_height) <= (iconbar_height + wimpt_hscroll_height()))
+    if((this_y1 - main_window_default_height) <= (iconbar_height + wimptx_hscroll_height()))
         this_y1 = main_window_initial_y1;
 
     riscos_setdefwindowpos(this_y1);
@@ -2983,7 +3296,7 @@ riscos_settitlebar(
 {
     PCTSTR documentname = riscos_obtainfilename(filename);
 
-    trace_2(TRACE_APP_PD4, "riscos_settitlebar(%s): rear_window %d", documentname, rear_window);
+    trace_2(TRACE_APP_PD4, "riscos_settitlebar(%s): rear_window_handle %d", documentname, rear_window_handle);
 
 #ifndef TITLE_SPACE
 #define TITLE_SPACE " "
@@ -2997,8 +3310,8 @@ riscos_settitlebar(
         xstrkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, TITLE_SPACE "*");
     trace_1(TRACE_APP_PD4, "poked main document title to be '%s'", current_p_docu->Xwindow_title);
 
-    if(rear_window != window_NULL)
-        win_changedtitle(rear__window);
+    if(rear_window_handle != HOST_WND_NONE)
+        winx_changedtitle(rear_window_handle);
 }
 
 /******************************************************************************
@@ -3017,8 +3330,7 @@ riscos_settype(
 
 /******************************************************************************
 *
-* invalidate part of main_window and
-* call application back to redraw it
+* invalidate part of main window and call application back to redraw it
 * NB. this takes offsets from xorg/yorg
 *
 ******************************************************************************/
@@ -3026,18 +3338,17 @@ riscos_settype(
 extern void
 riscos_updatearea(
     RISCOS_REDRAWPROC redrawproc,
-    wimp_w w,
+    _HwndRef_   HOST_WND window_handle,
     int x0,
     int y0,
     int x1,
     int y1)
 {
-    os_error * bum;
-    wimp_redrawstr redraw;
-    S32 redrawindex;
+    WimpUpdateAndRedrawWindowBlock update_and_redraw_window_block;
+    BOOL more;
 
     trace_6(TRACE_APP_PD4, "riscos_updatearea(%s, %d, %d, %d, %d, %d)",
-             report_procedure_name(report_proc_cast(redrawproc)), w, x0, y0, x1, y1);
+             report_procedure_name(report_proc_cast(redrawproc)), window_handle, x0, y0, x1, y1);
 
     /* RISC OS graphics primitives all need coordinates limited to s16 */
     x0 = MAX(x0, SHRT_MIN);
@@ -3045,34 +3356,31 @@ riscos_updatearea(
     x1 = MIN(x1, SHRT_MAX);
     y1 = MIN(y1, SHRT_MAX);
 
-    redraw.w      = w;
-    redraw.box.x0 = x0;
-    redraw.box.y0 = y0;
-    redraw.box.x1 = x1;
-    redraw.box.y1 = y1;
+    update_and_redraw_window_block.update.window_handle = window_handle;
+    update_and_redraw_window_block.update.update_area.xmin = x0;
+    update_and_redraw_window_block.update.update_area.ymin = y0;
+    update_and_redraw_window_block.update.update_area.xmax = x1;
+    update_and_redraw_window_block.update.update_area.ymax = y1;
 
     /* wimp errors in update are fatal */
-    bum = wimpt_complain(wimp_update_wind(&redraw, &redrawindex));
+    if(NULL != WrapOsErrorReporting(tbl_wimp_update_window(&update_and_redraw_window_block.redraw, &more)))
+        more = FALSE;
 
-#if TRACE_ALLOWED
-    if(!redrawindex)
-        trace_0(TRACE_APP_PD4, "no rectangles to update");
-#endif
-
-    while(!bum  &&  redrawindex)
+    while(more)
     {
         killcolourcache();
 
-        graphics_window = * ((const GDI_BOX *) &redraw.g);
+        graphics_window = * ((PC_GDI_BOX) &update_and_redraw_window_block.redraw.redraw_area);
 
         #if !defined(ALWAYS_PAINT)
         paint_is_update = TRUE;
         #endif
 
         /* we are updating area */
-        redrawproc((RISCOS_REDRAWSTR *) &redraw);
+        redrawproc((const RISCOS_RedrawWindowBlock *) &update_and_redraw_window_block.redraw);
 
-        bum = wimpt_complain(wimp_get_rectangle(&redraw, &redrawindex));
+        if(NULL != WrapOsErrorReporting(tbl_wimp_get_rectangle(&update_and_redraw_window_block.redraw, &more)))
+            more = FALSE;
     }
 }
 
@@ -3103,7 +3411,7 @@ riscos_writefileinfo(
     }
 
     if(res == _kernel_ERROR)
-        wimpt_complain((os_error *) _kernel_last_oserror());
+        void_WrapOsErrorReporting(_kernel_last_oserror());
 }
 
 extern void
@@ -3156,6 +3464,213 @@ extern int
 akbd_pollctl(void)
 {
     return(akbd__poll(-2));
+}
+
+/* tboxlibs compatible shims a la WimpLib */
+
+_kernel_oserror *
+tbl_wimp_create_window(WimpWindow *defn, int *handle)
+{
+    _kernel_oserror * e;
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) defn;
+
+    e = _kernel_swi(Wimp_CreateWindow, &rs, &rs);
+
+    *handle = e ? 0 : rs.r[0];
+
+    return(e);
+}
+
+_kernel_oserror *
+tbl_wimp_create_icon(
+    int priority,
+    WimpCreateIconBlock *defn,
+    int *handle)
+{
+    _kernel_oserror * e;
+    _kernel_swi_regs rs;
+
+    rs.r[0] = (int) priority;
+    rs.r[1] = (int) defn;
+
+    e = _kernel_swi(Wimp_CreateIcon, &rs, &rs);
+
+    *handle = e ? 0 : rs.r[0];
+
+    return(e);
+}
+
+_kernel_oserror *
+tbl_wimp_delete_window(WimpDeleteWindowBlock *block)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) block;
+
+    return(_kernel_swi(Wimp_DeleteWindow, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_open_window(WimpOpenWindowBlock *show)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) show;
+
+    return(_kernel_swi(Wimp_OpenWindow, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_redraw_window(WimpRedrawWindowBlock *block, int *more)
+{
+    _kernel_oserror * e;
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) block;
+
+    e = _kernel_swi(Wimp_RedrawWindow, &rs, &rs);
+
+    *more = e ? 0 : rs.r[0];
+
+    return(e);
+}
+
+_kernel_oserror *
+tbl_wimp_update_window(WimpRedrawWindowBlock *block, int *more)
+{
+    return(wimp_update_wind((wimp_redrawstr *) block, more));
+}
+
+_kernel_oserror *
+tbl_wimp_get_rectangle(WimpRedrawWindowBlock *block, int *more)
+{
+    return(wimp_get_rectangle((wimp_redrawstr *) block, more));
+}
+
+_kernel_oserror *
+tbl_wimp_get_window_state(WimpGetWindowStateBlock *state)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) state;
+
+    return(_kernel_swi(Wimp_GetWindowState, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_set_icon_state(WimpSetIconStateBlock *block)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) block;
+
+    return(_kernel_swi(Wimp_SetIconState, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_get_icon_state(WimpGetIconStateBlock *block)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) block;
+
+    return(_kernel_swi(Wimp_GetIconState, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_force_redraw(
+    int window_handle,
+    int xmin,
+    int ymin,
+    int xmax,
+    int ymax)
+{
+    WimpForceRedrawBlock force_redraw_block;
+
+    force_redraw_block.window_handle = window_handle;
+    force_redraw_block.redraw_area.xmin = xmin;
+    force_redraw_block.redraw_area.ymin = ymin;
+    force_redraw_block.redraw_area.xmax = xmax;
+    force_redraw_block.redraw_area.ymax = ymax;
+
+    return(_kernel_swi(Wimp_ForceRedraw, (_kernel_swi_regs *) &force_redraw_block, (_kernel_swi_regs *) &force_redraw_block));
+}
+
+_kernel_oserror *
+tbl_wimp_set_caret_position(
+    int window_handle,
+    int icon_handle,
+    int xoffset,
+    int yoffset,
+    int height,
+    int index)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[0] = window_handle;
+    rs.r[1] = icon_handle;
+    rs.r[2] = xoffset;
+    rs.r[3] = yoffset;
+    rs.r[4] = height;
+    rs.r[5] = index;
+
+    return(_kernel_swi(Wimp_SetCaretPosition, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_get_caret_position(WimpGetCaretPositionBlock *block)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) block;
+
+    return(_kernel_swi(Wimp_GetCaretPosition, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_set_extent(int window_handle, BBox *area)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[0] = window_handle;
+    rs.r[1] = (int) area;
+
+    return(_kernel_swi(Wimp_SetExtent, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_plot_icon(WimpPlotIconBlock *block)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[1] = (int) block;
+
+    return(_kernel_swi(Wimp_PlotIcon, &rs, &rs));
+}
+
+_kernel_oserror *
+tbl_wimp_block_copy(
+    int handle,
+    int sxmin,
+    int symin,
+    int sxmax,
+    int symax,
+    int dxmin,
+    int dymin)
+{
+    _kernel_swi_regs rs;
+
+    rs.r[0] = handle;
+    rs.r[1] = sxmin;
+    rs.r[2] = symin;
+    rs.r[3] = sxmax;
+    rs.r[4] = symax;
+    rs.r[5] = dxmin;
+    rs.r[6] = dymin;
+
+    return(_kernel_swi(Wimp_BlockCopy, &rs, &rs));
 }
 
 /* end of riscos.c */

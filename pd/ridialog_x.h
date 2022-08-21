@@ -73,7 +73,7 @@ dproc_savefile(
 exported variables
 */
 
-extern wimp_w  dialog_window;
+extern HOST_WND dialog_window_handle;
 extern BOOLEAN dialog_window_has_caret;
 
 #endif

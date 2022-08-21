@@ -70,6 +70,11 @@ check that setup from selectos.h is ok
 #define __FUNCTION__ ""
 #endif /* __STDC_VERSION__ */
 
+#define __TFILE__ __FILE__
+#define __Tfunc__ __FUNCTION__
+
+#include "cmodules/coltsoft/ns-sal.h"
+
 #endif /* CROSS_COMPILE */
 
 #define F64_IS_64_BIT_ALIGNED 0
@@ -82,10 +87,6 @@ check that setup from selectos.h is ok
 #if CROSS_COMPILE && (defined(HOST_GCCSDK) || defined(HOST_CLANG))
 #include "cmodules/coltsoft/target_riscos_host_gccsdk.h"
 #endif /* CROSS_COMPILE */
-
-#ifndef _In_reads_
-#include "cmodules/coltsoft/no-sal.h"
-#endif
 
 #endif /* RISCOS */
 

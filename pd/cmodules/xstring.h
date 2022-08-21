@@ -187,7 +187,7 @@ xtos_ustr_buf(
     _InVal_     BOOL upper_case);
 
 /*
-strcpy / _s() etc. replacements that ensure NULLCH-termination
+strcpy / _s() etc. replacements that ensure CH_NULL-termination
 */
 
 extern void
@@ -233,6 +233,27 @@ xstrnkpy(
 #define tstr_xstrnkpy xstrnkpy
 
 #endif /* TSTR_IS_SBSTR */
+
+#define uchars_IncByte(uchars__ref) \
+    PtrIncByte(PC_UCHARS, uchars__ref)
+
+#define uchars_IncByte_wr(uchars_wr__ref) \
+    PtrIncByte(P_UCHARS, uchars_wr__ref)
+
+#define uchars_IncBytes(uchars__ref, add) \
+    PtrIncBytes(PC_UCHARS, uchars__ref, add)
+
+#define uchars_IncBytes_wr(uchars_wr__ref, add) \
+    PtrIncBytes(P_UCHARS, uchars_wr__ref, add)
+
+#define uchars_DecByte(uchars__ref) \
+    PtrDecByte(PC_UCHARS, uchars__ref)
+
+#define uchars_AddBytes(uchars, add) \
+    PtrAddBytes(PC_UCHARS, uchars, add)
+
+#define uchars_AddBytes_wr(uchars_wr, add) \
+    PtrAddBytes(P_UCHARS, uchars_wr, add)
 
 #define ustr_IncByte(ustr__ref) \
     PtrIncBytes(PC_USTR, ustr__ref, 1)

@@ -57,7 +57,7 @@ gr_save_id_now(
 
 #if RISCOS
 
-static void
+static _kernel_oserror *
 gr_chart_riscos_broadcast_changed(
     P_U8 filename /*const*/);
 
@@ -268,7 +268,7 @@ gr_chart_saving_chart(
     return(gr_chart__saving_chart);
 }
 
-/* SKS after 4.12 30mar92 - enhanced file error handling */
+/* SKS after PD 4.12 30mar92 - enhanced file error handling */
 
 extern void
 gr_chart_save_chart_winge(
@@ -347,7 +347,7 @@ gr_chart_save_chart_without_dialog_checking_xfersend_core(
 
             gr_chartedit_setwintitle(cp);
 
-            gr_chart_riscos_broadcast_changed(save_filename);
+            void_WrapOsErrorReporting(gr_chart_riscos_broadcast_changed(save_filename));
         }
     }
 
@@ -372,7 +372,7 @@ gr_chart_save_chart_without_dialog_checking_xfersend(
 
     /* if save failed try without diagram to get constructs out (else deep doo doo) */
 
-    /* SKS after 4.12 30mar92 - only do this when allowed to */
+    /* SKS after PD 4.12 30mar92 - only do this when allowed to */
     if(status_fail(res) && force_constructs)
     {
         P_GR_CHART cp;
@@ -448,7 +448,7 @@ gr_chart_save_draw_file_without_dialog(
             gr_chartedit_setwintitle(cp);
 #endif
 
-            gr_chart_riscos_broadcast_changed(save_filename);
+            void_WrapOsErrorReporting(gr_chart_riscos_broadcast_changed(save_filename));
         }
     }
 
@@ -457,26 +457,26 @@ gr_chart_save_draw_file_without_dialog(
 
 #if RISCOS
 
-static void
+static _kernel_oserror *
 gr_chart_riscos_broadcast_changed(
     P_U8 filename /*const*/)
 {
-    wimp_msgstr msg;
-    size_t      nBytes;
+    WimpMessageExtra user_message;
+    size_t nBytes;
 
-    nBytes = strlen(filename) + 1; /* for CH_NULL */
+    nBytes = strlen32p1(filename); /* for CH_NULL */
 
     nBytes = round_up(nBytes, 4);
 
-    msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.d) + nBytes;
-    msg.hdr.my_ref = 0;        /* fresh msg */
-    msg.hdr.action = wimp_MPD_DDE;
+    user_message.hdr.size   = offsetof(WimpMessageExtra, data.pd_dde.type.d) + nBytes;
+    user_message.hdr.my_ref = 0;        /* fresh msg */
+    user_message.hdr.action_code = Wimp_MPD_DDE;
 
-    msg.data.pd_dde.id = Wimp_MPD_DDE_DrawFileChanged;
+    user_message.data.pd_dde.id = Wimp_MPD_DDE_DrawFileChanged;
 
-    strcpy(msg.data.pd_dde.type.d.leafname, filename);
+    xstrkpy(user_message.data.pd_dde.type.d.leafname, elemof32(user_message.data.pd_dde.type.d.leafname), filename);
 
-    wimpt_safe(wimp_sendmessage(wimp_ESEND, &msg, (wimp_t) 0));
+    return(wimp_send_message_to_task(Wimp_EUserMessage, (WimpMessage *) &user_message, 0));
 }
 
 #endif /* RISCOS */
@@ -501,21 +501,25 @@ gr_fillstyle_create_pict_for_load(
     IMAGE_CACHE_HANDLE image_cache_handle;
     P_IMAGE_CACHE_HANDLE p_image_cache_handle;
     LIST_ITEMNO       key;
-    S32               res;
+    STATUS            res;
 
     /* create entry to cache using picture_name
      * note that if a name is unrooted it was either relative
      * to the chart or from the application path
     */
-    res = file_find_on_path_or_relative(picture_namebuf, elemof32(picture_namebuf), picture_name, cp->core.currentfilename);
+    res = file_find_on_path_or_relative(picture_namebuf, elemof32(picture_namebuf), file_get_search_path(), picture_name, cp->core.currentfilename);
 
-    if(res <= 0)
-        return(res ? res : create_error(FILE_ERR_NOTFOUND));
+    status_return(res);
+
+    if(res == STATUS_OK)
+        return(create_error(FILE_ERR_NOTFOUND));
 
     res = image_cache_entry_ensure(&image_cache_handle, picture_namebuf);
 
-    if(res <= 0)
-        return(res ? res : status_nomem());
+    status_return(res);
+
+    if(res == STATUS_OK)
+        return(status_nomem());
 
     /* use external handle as key into list */
     key = ekey;
@@ -526,7 +530,7 @@ gr_fillstyle_create_pict_for_load(
     /* stick image cache handle on the list */
     *p_image_cache_handle = image_cache_handle;
 
-    return(1);
+    return(STATUS_DONE);
 }
 
 /*ncr*/
@@ -947,8 +951,8 @@ gr_construct_table[GR_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
     gr_contab_entry("CLM,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, layout) + offsetof(struct GR_CHART_LAYOUT, margins), GR_CON_CORE_MARGINS),
 
 #if RISCOS
-    gr_contab_entry("RSB,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, editsave) + offsetof(struct GR_CHART_EDITSAVE, open_box), GR_CON_EDITSAVE_BOX),
-    gr_contab_entry("RSS,G,", GR_ARG_S32_2,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, editsave) + offsetof(struct GR_CHART_EDITSAVE, open_scx), GR_CON_EDITSAVE_SCROLLS), /* and open_scy too */
+    gr_contab_entry("RSB,G,", GR_ARG_S32_4,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, editsave) + offsetof(struct GR_CHART_EDITSAVE, open.visible_area), GR_CON_EDITSAVE_BOX),
+    gr_contab_entry("RSS,G,", GR_ARG_S32_2,                     GR_STR_CHART,  offsetof(GR_CHART, core) + offsetof(struct GR_CHART_CORE, editsave) + offsetof(struct GR_CHART_EDITSAVE, open.scroll_x), GR_CON_EDITSAVE_SCROLLS), /* and scroll_y too */
 #endif
 
     gr_contab_entry("LGB,G,", GR_ARG_UBF32,                     GR_STR_CHART,  offsetof(GR_CHART, legend) + offsetof(struct GR_CHART_LEGEND, bits),         GR_CON_LEGEND_BITS),
@@ -969,7 +973,7 @@ gr_construct_table[GR_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
     gr_contab_entry("ASB,G,", GR_ARG_UBF32,                     GR_STR_AXES,   offsetof(GR_AXES, bits),      GR_CON_AXES_BITS),
     gr_contab_entry("ASS,G,", GR_ARG_S32,                       GR_STR_AXES,   offsetof(GR_AXES, sertype),   GR_CON_AXES_SERIES_TYPE), /* default series type */
     gr_contab_entry("AST,G,", GR_ARG_S32,                       GR_STR_AXES,   offsetof(GR_AXES, charttype), GR_CON_AXES_CHART_TYPE),  /* default series chart type */
-    /* SKS after 4.12 26mar92 - new construct for overlay loading */
+    /* SKS after PD 4.12 26mar92 - new construct for overlay loading */
     gr_contab_entry("AFS,G,", GR_ARG_S32,                       GR_STR_AXES,   offsetof(GR_AXES, series) + offsetof(struct GR_AXES_SERIES, start_series), GR_CON_AXES_START_SERIES),
 
     /*
@@ -1094,7 +1098,7 @@ gr_load_save_id_change(
         {
             P_GR_SERIES serp;
 
-            /* SKS after 4.12 26mar92 - series are loaded contiguously into axes set 0 and
+            /* SKS after PD 4.12 26mar92 - series are loaded contiguously into axes set 0 and
              * eventually split with explicit split point to preserve overlay series styles
             */
             series_idx = gr_load_save_objid.no - 1;
@@ -1640,29 +1644,25 @@ gr_fillstyle_table_save(
                 picture_name = namebuffer;
 
                 {
-                P_FILE_PATHENUM path;
-                U8 pathbuffer[BUF_MAX_PATHSTRING];
+                U8 combined_path[BUF_MAX_PATHSTRING];
+                P_FILE_PATHENUM pathenum;
                 P_U8 pathelem;
 
                 /* loop over path to find minimalist reference */
-                file_combined_path(pathbuffer, elemof32(pathbuffer), file_is_rooted(filename) ? filename : NULL);
+                file_combine_path(combined_path, elemof32(combined_path), file_is_rooted(filename) ? filename : NULL, file_get_search_path());
 
-                pathelem = file_path_element_first(&path, pathbuffer);
-
-                while(pathelem)
+                for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
                 {
                     U32 pathlen = strlen(pathelem);
 
                     if(0 == _strnicmp(picture_name, pathelem, pathlen))
                     {
                         picture_name += pathlen;
-
-                        file_path_element_close(&path);
                         break;
                     }
-
-                    pathelem = file_path_element_next(&path);
                 }
+
+                file_path_element_close(&pathenum);
                 } /*block*/
 
                 status_return(gr_construct_save(cp, f, GR_CON_PICT_TRANS, /* extra extra */ ekey, picture_name));
@@ -2540,7 +2540,7 @@ gr_construct_load_this(
         U16 no    = U16_MAX;
         U16 subno = U16_MAX;
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &name, &no, &subno));
 
         gr_chart_objid_clear(p_id);
@@ -2581,7 +2581,7 @@ gr_construct_load_this(
     case GR_ARG_S32:
     case GR_ARG_F64_LOAD:
         /* scan up to 4 arguments in at 32-bit intervals, directly poking structure */
-        consume(int, sscanf(args, p_arg_format, p0, p1, p2, p3));
+        consume_int(sscanf(args, p_arg_format, p0, p1, p2, p3));
         break;
 
     case GR_ARG_PICT_TRANS:
@@ -2589,7 +2589,7 @@ gr_construct_load_this(
         U8  filename[BUF_MAX_PATHSTRING];
         U32 ekey;
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &ekey,
                &filename[0]));
 
@@ -2603,7 +2603,7 @@ gr_construct_load_this(
 
         gr_chart_objid_fillstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.fg,
                &style.pattern,
                &style.bits));
@@ -2620,7 +2620,7 @@ gr_construct_load_this(
 
         gr_chart_objid_linestyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.fg,
                &style.pattern,
                &style.width));
@@ -2635,7 +2635,7 @@ gr_construct_load_this(
 
         gr_chart_objid_textstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.fg,
                &style.bg,
                &style.width,
@@ -2652,7 +2652,7 @@ gr_construct_load_this(
 
         gr_chart_objid_barchstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.bits,
                &style.slot_width_percentage));
 
@@ -2666,7 +2666,7 @@ gr_construct_load_this(
 
         gr_chart_objid_barlinechstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.bits,
                &style.slot_depth_percentage));
 
@@ -2680,7 +2680,7 @@ gr_construct_load_this(
 
         gr_chart_objid_linechstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.bits,
                &style.slot_width_percentage));
 
@@ -2694,7 +2694,7 @@ gr_construct_load_this(
 
         gr_chart_objid_piechdisplstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.bits,
                &style.radial_displacement));
 
@@ -2708,7 +2708,7 @@ gr_construct_load_this(
 
         gr_chart_objid_piechlabelstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.bits));
 
         res = gr_chart_objid_piechlabelstyle_set(cp, *p_id, &style);
@@ -2721,7 +2721,7 @@ gr_construct_load_this(
 
         gr_chart_objid_scatchstyle_query(cp, *p_id, &style);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &style.bits,
                &style.width_percentage));
 
@@ -2735,7 +2735,7 @@ gr_construct_load_this(
 
         gr_text_box_query(cp, p_id->no, &box);
 
-        consume(int, sscanf(args, p_arg_format,
+        consume_int(sscanf(args, p_arg_format,
                &box.x0, &box.y0, &box.x1, &box.y1));
 
         res = gr_text_box_set(cp, p_id->no, &box);
@@ -2903,7 +2903,7 @@ gr_chart_construct_tagstrip_process(
         status_return(gr_construct_load(cp, args));
     }
 
-    /* SKS after 4.12 26mar92 - end of that lot, post-process overlay chart to preserve styles */
+    /* SKS after PD 4.12 26mar92 - end of that lot, post-process overlay chart to preserve styles */
     if(cp->axes_idx_max > 0)
     {
         GR_ESERIES_NO first_overlay_series;

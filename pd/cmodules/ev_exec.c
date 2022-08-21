@@ -433,12 +433,12 @@ poke_slot(
     S32 res;
 
     /* can't overwrite formula cells */
-    if(ev_travel(&p_ev_cell, slrp) > 0 && p_ev_cell->parms.type != EVS_CON_DATA)
+    if((ev_travel(&p_ev_cell, slrp) > 0) && (p_ev_cell->parms.type != EVS_CON_DATA))
         res = create_error(EVAL_ERR_UNEXFORMULA);
     #ifdef SLOTS_MOVE
-    else if((slrp->docno == cur_slrp->docno) &&
-            (slrp->col == cur_slrp->col) &&
-            (slrp->row <= cur_slrp->row) )
+    else if( (ev_slr_docno(slrp) == ev_slr_docno(cur_slrp)) &&
+             (ev_slr_col(slrp) == ev_slr_col(cur_slrp)) &&
+             (ev_slr_row(slrp) <= ev_slr_row(cur_slrp)) )
         res = create_error(EVAL_ERR_OWNCOLUMN);
     #endif
     else
@@ -1222,8 +1222,8 @@ array_range_proc_blank(
     P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data)
 {
-    IGNOREPARM(p_stat_block);
-    IGNOREPARM(p_ev_data);
+    UNREFERENCED_PARAMETER(p_stat_block);
+    UNREFERENCED_PARAMETER(p_ev_data);
 }
 
 static void
@@ -1404,7 +1404,7 @@ array_range_proc_others(
     P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data)
 {
-    IGNOREPARM(p_ev_data);
+    UNREFERENCED_PARAMETER(p_ev_data);
 
     p_stat_block->count_a += 1;
 }
@@ -1676,7 +1676,7 @@ lookup_array_range_proc_item(
         {
         S32 match;
 
-        /* SKS 22oct96 for 4.50 reversed to make wildcard lookups work */
+        /* SKS 22oct96 for PD 4.50 reversed to make wildcard lookups work */
         if(0 == (match = ss_data_compare(p_ev_data, &lkbp->target_data)))
             res = 1;
         else

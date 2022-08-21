@@ -28,8 +28,10 @@
 #define TRACE_MARK (TRACE_APP_PD4)
 
 /* what sort of drag is in progress */
-int       dragtype   = NO_DRAG_ACTIVE;
+int drag_type = NO_DRAG_ACTIVE;
 DOCNO drag_docno = DOCNO_NONE;
+
+static BOOL drag_autoscroll = FALSE;
 
 /* previously marked rectangle - intersect for fast updates */
 static SLR old_blkstart;
@@ -164,11 +166,11 @@ new_marked_rectangle(void)
                       )
                     {
                         trace_5(TRACE_APP_PD4, "disasterville: draw this whole row and breakout because mustdraw %s, PICT %s, tcell " PTR_XTFMT " -> empty overlapped %s, text | fonts %s",
-                                trace_boolstring(mustdraw),
-                                trace_boolstring(rptr->flags & (PICT | UNDERPICT)),
+                                report_boolstring(mustdraw),
+                                report_boolstring(rptr->flags & (PICT | UNDERPICT)),
                                 report_ptr_cast(tcell),
-                                trace_boolstring(tcell ? FALSE : is_overlapped(coff, roff)),
-                                trace_boolstring(tcell ? ((tcell->type == SL_TEXT) || riscos_fonts) : FALSE));
+                                report_boolstring(tcell ? FALSE : is_overlapped(coff, roff)),
+                                report_boolstring(tcell ? ((tcell->type == SL_TEXT) || riscos_fonts) : FALSE));
                         mark_row(roff);
                         draw_screen();
 
@@ -179,26 +181,26 @@ new_marked_rectangle(void)
                     }
                     else
                     {
-                        S32 fg = FORE;
-                        S32 bg = BACK;
+                        COLOURS_OPTION_INDEX fg_colours_option_index = COI_FORE;
+                        COLOURS_OPTION_INDEX bg_colours_option_index = COI_BACK;
 
                         if(tcell)
                         {
                             if(tcell->justify & PROTECTED)
                             {
                                 trace_0(TRACE_APP_PD4, "cell is protected");
-                                bg = PROTECTC;
+                                bg_colours_option_index = COI_PROTECT;
                             }
 
                             if(result_sign(tcell) < 0)
                             {
                                 trace_0(TRACE_APP_PD4, "cell is negative");
-                                fg = NEGATIVEC;
+                                fg_colours_option_index = COI_NEGATIVE;
                             }
                         }
 
                         /* can buffer up inversions */
-                        if((fg == FORE)  &&  (bg == BACK))
+                        if((fg_colours_option_index == COI_FORE)  &&  (bg_colours_option_index == COI_BACK))
                         {
                             if(start_coff == -1)
                             {
@@ -214,18 +216,18 @@ new_marked_rectangle(void)
                             if(start_coff != -1)
                             {
                                 trace_2(TRACE_APP_PD4, "flush inverted section because colour change %d - %d", start_coff, end_coff);
-                                please_invert_numeric_slots(start_coff, end_coff, roff, FORE, BACK);
+                                please_invert_number_cells(start_coff, end_coff, roff, COI_FORE, COI_BACK);
                                 start_coff = -1;
                             }
 
-                            please_invert_numeric_slot(coff, roff, fg, bg);
+                            please_invert_number_cell(coff, roff, fg_colours_option_index, bg_colours_option_index);
                         }
                     }
                 }
                 else if(start_coff != -1)
                 {
                     trace_2(TRACE_APP_PD4, "flush inverted section because rectangle edge %d - %d", start_coff, end_coff);
-                    please_invert_numeric_slots(start_coff, end_coff, roff, FORE, BACK);
+                    please_invert_number_cells(start_coff, end_coff, roff, COI_FORE, COI_BACK);
                     start_coff = -1;
                 }
             }   /* loop over cols */
@@ -233,7 +235,7 @@ new_marked_rectangle(void)
             if(start_coff != -1)
             {
                 trace_2(TRACE_APP_PD4, "flush inverted section because row end %d - %d", start_coff, end_coff);
-                please_invert_numeric_slots(start_coff, end_coff, roff, FORE, BACK);
+                please_invert_number_cells(start_coff, end_coff, roff, COI_FORE, COI_BACK);
             }
 
         NO_MORE_THIS_ROW:
@@ -518,7 +520,7 @@ set_marked_block(
     ROW i_srow = srow;
 
     trace_5(TRACE_MARK, "set_marked_block(%d, %d, %d, %d, new=%s)",
-                            scol, srow, ecol, erow, trace_boolstring(is_new_block));
+                            scol, srow, ecol, erow, report_boolstring(is_new_block));
 
     /* always keep markers ordered */
     sort_colt(&scol, &ecol);
@@ -948,7 +950,7 @@ percent_in_block(
     ROW trow = in_block.row - start_bl.row;
 
     trace_5(TRACE_APP_PD4, "percent_in_block: DOWN_COLUMNS %s ncol %d nrow %d tcol %d trow %d",
-            trace_boolstring(direction == DOWN_COLUMNS), ncol, nrow, tcol, trow);
+            report_boolstring(direction == DOWN_COLUMNS), ncol, nrow, tcol, trow);
 
     if(direction == DOWN_COLUMNS)
     {   /* a bit less than S32_MAX / 100 */
@@ -1086,23 +1088,42 @@ prepare_for_drag_column_wrapwidth(
     dragcol_do_dstwrp = do_dstwrp;
 }
 
+null_event_proto(static, drag_null_query)
+{
+    UNREFERENCED_PARAMETER_CONST(p_null_event_block);
+
+    trace_0(TRACE_APP_PD4, "drag call to ask if we want nulls");
+
+    return( (drag_type == NO_DRAG_ACTIVE)
+                        ? NULL_EVENTS_OFF
+                        : NULL_EVENTS_REQUIRED );
+}
+
+null_event_proto(static, drag_null_event)
+{
+    P_DOCNO dochanp = (P_DOCNO) p_null_event_block->client_handle;
+
+    trace_0(TRACE_APP_PD4, "drag null call");
+
+    if(!select_document_using_docno(*dochanp))
+        return(NULL_EVENT_COMPLETED);
+
+    process_drag();
+
+    return(NULL_EVENT_COMPLETED);
+}
+
 null_event_proto(static, drag_null_handler)
 {
+    trace_1(TRACE_APP_PD4, "drag_null_handler, rc=%d", p_null_event_block->rc);
+
     switch(p_null_event_block->rc)
     {
     case NULL_QUERY:
-        return((dragtype == NO_DRAG_ACTIVE)
-                          ? NULL_EVENTS_OFF
-                          : NULL_EVENTS_REQUIRED);
+        return(drag_null_query(p_null_event_block));
 
     case NULL_EVENT:
-        {
-        P_DOCNO dochanp = (P_DOCNO) p_null_event_block->client_handle;
-        assert(NULL != dochanp);
-        if(select_document_using_docno(*dochanp))
-            process_drag();
-        }
-        return(NULL_EVENT_COMPLETED);
+        return(drag_null_event(p_null_event_block));
 
     default:
         return(NULL_EVENT_UNKNOWN);
@@ -1121,10 +1142,10 @@ start_drag(
 {
     wimp_dragstr dragstr;
 
-    dragtype = dragt;
+    drag_type = dragt;
     drag_docno = current_docno();
 
-    dragstr.window      = main__window;
+    dragstr.window      = (wimp_w) main_window_handle;
     dragstr.type        = wimp_USER_HIDDEN;
 #if 0
     /* Window Manager ignores inner box on hidden drags */
@@ -1135,14 +1156,63 @@ start_drag(
 #endif
     dragstr.parent.x0   = 0;
     dragstr.parent.y0   = 0;
-    dragstr.parent.x1   = screen_x_os;
-    dragstr.parent.y1   = screen_y_os;
+    dragstr.parent.x1   = g_os_display_size.cx;
+    dragstr.parent.y1   = g_os_display_size.cy;
 
-    (void) wimp_drag_box(&dragstr);
+    if(NULL != WrapOsErrorReporting(wimp_drag_box(&dragstr)))
+        return;
+
+#if defined(TRY_AUTOSCROLL) /* try using Wimp_AutoScroll if available and appropriate, falling back to the existing mechanism if not */
+    switch(drag_type)
+    {
+    case DRAG_COLUMN_WIDTH:
+    case DRAG_COLUMN_WRAPWIDTH:
+        /* not for colh window - too hard! */
+        break;
+
+    default:
+        { /* Window Manager copies this block on setup */
+        WimpAutoScrollBlock wasb;
+        wasb.window_handle = rear_window_handle;
+        wasb.left_pause_zone_width = texttooffset_x(2);
+        wasb.bottom_pause_zone_width = charvspace;
+        wasb.right_pause_zone_width = wasb.left_pause_zone_width;
+        wasb.top_pause_zone_width = wasb.bottom_pause_zone_width;
+        wasb.pause_duration_cs = -1; /* use configured pause length */
+        wasb.state_change_handler = 1; /* use Wimp‘s pointer shape routine */
+        wasb.state_change_handler_handle = 0;
+
+        if(displaying_borders) /* main window contains row borders - scroll when we hit them too */
+        {
+            wasb.left_pause_zone_width = texttooffset_x(borderwidth);
+        }
+
+        if(displaying_borders) /* main window displaced from rear window for colh window */
+        {
+            int borderline;
+            WimpGetIconStateBlock icon_state;
+            icon_state.window_handle = colh_window_handle;
+            icon_state.icon_handle = COLH_COLUMN_HEADINGS;
+            void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+            borderline = icon_state.icon.bbox.ymin; /* approx -132 */
+            wasb.top_pause_zone_width += (-borderline);
+        }
+
+        {
+        _kernel_swi_regs rs;
+        rs.r[0] = 0x03 /* autoscroll both directions */ | (1 << 2) /* send Scroll_Request */ ;
+        rs.r[1] = (int) &wasb;
+        drag_autoscroll = (NULL == _kernel_swi(Wimp_AutoScroll, &rs, &rs)); /* don't winge */
+        } /*block*/
+
+        break;
+        }
+    }
+#endif
 
     status_assert(Null_EventHandlerAdd(drag_null_handler, &drag_docno, 0));
 
-    switch(dragtype)                                    /* be helpful, tell the user... */
+    switch(drag_type)                                       /* be helpful, tell the user ... */
     {
     case DRAG_COLUMN_WIDTH:
         colh_pointershape_drag_notification(TRUE);
@@ -1156,27 +1226,39 @@ start_drag(
     }
 }
 
-/* Normally called when default_event_handler (c.riscos) receives a wimp_EUSERDRAG event */
+/* Normally called when default_event_handler (riscos.c) receives a Wimp_EUserDrag event */
 
 extern void
 ended_drag(void)
 {
-    if(dragtype != NO_DRAG_ACTIVE)
+    if(drag_type == NO_DRAG_ACTIVE)
+        return;
+
+    switch(drag_type)
     {
-        switch(dragtype)
-        {
-        case DRAG_COLUMN_WIDTH:
-        case DRAG_COLUMN_WRAPWIDTH:
-            colh_pointershape_drag_notification(FALSE);
-            colh_draw_drag_state(-1);                       /* put the silly bar back */
-        /*  adjust_all_linked_columns();*/
-            break;
-        }
-
-        dragtype = NO_DRAG_ACTIVE;
-
-        Null_EventHandlerRemove(drag_null_handler, &drag_docno);
+    case DRAG_COLUMN_WIDTH:
+    case DRAG_COLUMN_WRAPWIDTH:
+        colh_pointershape_drag_notification(FALSE);
+        colh_draw_drag_state(-1);                       /* put the silly bar back */
+    /*  adjust_all_linked_columns();*/
+        break;
     }
+
+    drag_type = NO_DRAG_ACTIVE;
+
+    if(drag_autoscroll)
+    {
+        _kernel_swi_regs rs;
+        rs.r[0] = 0 /* turn autoscroll off */ ;
+        rs.r[1] = NULL;
+        void_WrapOsErrorReporting(_kernel_swi(Wimp_AutoScroll, &rs, &rs));
+
+        drag_autoscroll = FALSE;
+    }
+
+    Null_EventHandlerRemove(drag_null_handler, &drag_docno);
+
+    drag_docno = DOCNO_NONE;
 }
 
 /* column to constrain selection made by dragging to */
@@ -1186,22 +1268,22 @@ static void
 application_startdrag(
     coord tx,
     coord ty,
-    BOOL selectclicked)
+    BOOL select_clicked)
 {
     DOCNO docno = current_docno();
     BOOL blkindoc = (blkstart.col != NO_COL)  &&  (docno == blk_docno);
-    BOOL shiftpressed = host_shift_pressed();
-    BOOL ctrlpressed  = host_ctrl_pressed();
+    BOOL shift_pressed = host_shift_pressed();
+    BOOL ctrl_pressed  = host_ctrl_pressed();
     coord coff = calcoff(tx); /* not _click */
     coord roff = calroff_click(ty);
     COL tcol;
     ROW trow;
 
-    BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed;
-    BOOL extend = shiftpressed || !selectclicked;
+    BOOL huntleft = select_clicked && !shift_pressed && !ctrl_pressed;
+    BOOL extend = shift_pressed || !select_clicked;
 
     trace_3(TRACE_APP_PD4, "it's a drag start: at roff %d, coff %d, select = %s: ",
-                roff, coff, trace_boolstring(selectclicked));
+                roff, coff, report_boolstring(select_clicked));
 
     dragcol = -1;                       /* no constraint on drag yet */
     drag_not_started_to_mark = FALSE;   /* drags mark immediately */
@@ -1282,19 +1364,19 @@ application_singleclick_in_main(
     coord tx,
     coord ty,
     S32 xcelloffset,
-    BOOL selectclicked)
+    BOOL select_clicked)
 {
     DOCNO docno = current_docno();
     BOOL blkindoc = (blkstart.col != NO_COL)  &&  (docno == blk_docno);
-    BOOL shiftpressed = host_shift_pressed();
-    BOOL ctrlpressed  = host_ctrl_pressed();
+    BOOL shift_pressed = host_shift_pressed();
+    BOOL ctrl_pressed  = host_ctrl_pressed();
     coord coff = calcoff(tx); /* not _click */
     coord roff = calroff_click(ty);
     COL tcol;
     ROW trow;
 
-    BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed;
-    BOOL extend = shiftpressed || !selectclicked;       /* i.e. shift-anything or unshifted-adjust */
+    BOOL huntleft = select_clicked && !shift_pressed && !ctrl_pressed;
+    BOOL extend = shift_pressed || !select_clicked;       /* i.e. shift-anything or unshifted-adjust */
 
     BOOL acquire    = FALSE; /* don't want caret on block marking operations */
     BOOL motion     = FALSE;
@@ -1332,9 +1414,9 @@ application_singleclick_in_main(
 
                     /* a 'normal' cell reference would be 'A1' where both col (A) and row (1) are relocated if replicated    */
                     /* sometimes it is useful to prevent either col or row or both from changing when replicated - so called */
-                    /* absolute references. We use ctrlpressed to give an absolute col, shiftpressed for absolute row.       */
+                    /* absolute references. We use ctrl_pressed to give an absolute col, shift_pressed for absolute row.       */
 
-                    insert_reference_to(p_docu->docno, docno, tcol, trow, ctrlpressed, shiftpressed, TRUE);
+                    insert_reference_to(p_docu->docno, docno, tcol, trow, ctrl_pressed, shift_pressed, TRUE);
 
                     /* ensure no drawing done in clicked-on-document
                      * or it might get the caret. must be done after insert_reference_to
@@ -1403,17 +1485,16 @@ application_singleclick_in_main(
 
                         acquire = motion = TRUE;
 #if FALSE
-                        /* If the click is in a macro sheet numeric cell, fire up an editor. */
+                        /* If the click is in a macro sheet number cell, fire up an editor. */
                         if(ev_doc_is_custom_sheet(doc))
                         {
                             P_CELL tcell = travel(tcol, trow);
 
-                            if((tcell)                    &&
-                               (tcell->type == SL_NUMBER) &&
-                               (ev_is_formula(&tcell->content.number.guts))
-                              )
+                            if( (NULL != tcell)            &&
+                                (tcell->type == SL_NUMBER) &&
+                                (ev_is_formula(&tcell->content.number.guts)) )
                             {
-                                expedit_editcurrentslot(lecpos -3, FALSE); /* -3 cos mark prints '...' infront of line! */
+                                expedit_edit_current_cell(lecpos -3, FALSE); /* -3 cos Mark prints '...' infront of line! */
                             }
                         }
 #endif
@@ -1484,7 +1565,7 @@ static void
 application_doubleclick_in_main(
     coord tx,
     coord ty,
-    BOOL selectclicked)
+    BOOL select_clicked)
 {
     coord coff = calcoff(tx);   /* not _click */
     coord roff = calroff_click(ty);
@@ -1492,13 +1573,13 @@ application_doubleclick_in_main(
     ROW trow;
     P_SCRROW rptr;
 
-    BOOL shiftpressed = host_shift_pressed();
- /* BOOL ctrlpressed  = host_ctrl_pressed();*/
- /* BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed; */
-    BOOL extend = shiftpressed || !selectclicked;
+    BOOL shift_pressed = host_shift_pressed();
+ /* BOOL ctrl_pressed  = host_ctrl_pressed();*/
+ /* BOOL huntleft = select_clicked && !shift_pressed && !ctrl_pressed; */
+    BOOL extend = shift_pressed || !select_clicked;
 
     trace_3(TRACE_APP_PD4, "it's a double-click: at roff %d, coff %d, select = %s: ",
-                roff, coff, trace_boolstring(selectclicked));
+                roff, coff, report_boolstring(select_clicked));
 
     if(extend)
         return;
@@ -1535,26 +1616,26 @@ application_doubleclick_in_main(
 
 /******************************************************************************
 *
-*  a button event has occurred in main_window
+*  a button event has occurred in main window
 *
 ******************************************************************************/
 
 extern void
-application_button_click_in_main(
+application_main_Mouse_Click(
     gcoord x,
     gcoord y,
-    S32 buttonstate)
+    int buttons)
 {
-    static BOOL initially_selectclicked = FALSE;
+    static BOOL initially_select_clicked = FALSE;
 
     /* text cell coordinates */
     coord tx = tcoord_x(x);
     coord ty = tcoord_y(y);
     S32 xcelloffset = tcoord_x_remainder(x);   /* x offset in cell (OS units) */
-    BOOL selectclicked;
+    BOOL select_clicked;
 
-    trace_6(TRACE_APP_PD4, "application_button_click_in_main: g(%d, %d) t(%d, %d) xco %d bstate %X",
-                x, y, tx, ty, xcelloffset, buttonstate);
+    trace_6(TRACE_APP_PD4, "application_main_Mouse_Click: g(%d, %d) t(%d, %d) xco %d bstate %X",
+                x, y, tx, ty, xcelloffset, buttons);
 
     /* ensure we can find cell for positioning, overlap tests etc. must allow spellcheck as we may move */
     if(!mergebuf())
@@ -1565,48 +1646,49 @@ application_button_click_in_main(
     mx = x;
     my = y;
 
-    /* have to cope with Pink 'Plonker' Duck Man's ideas on double clicks (fixed in new RISC OS+):
+    /* Have to cope with Pink 'Plonker' Duck Man's ideas on double clicks (fixed in new RISC OS+):
      * He says that left then right (or vice versa) is a double click!
     */
-    if(buttonstate & (wimp_BLEFT | wimp_BRIGHT))
+    if(buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust))
     {
-        selectclicked = ((buttonstate & wimp_BLEFT) != 0);
+        select_clicked = ((buttons & Wimp_MouseButtonSelect) != 0);
 
         /* must be same button that started us off */
-        if(initially_selectclicked != selectclicked)
-            buttonstate = selectclicked ? wimp_BCLICKLEFT : wimp_BCLICKRIGHT; /* force a single click */
+        if(initially_select_clicked != select_clicked)
+            buttons = select_clicked ? Wimp_MouseButtonSingleSelect : Wimp_MouseButtonSingleAdjust; /* force a single click */
     }
-    else if(buttonstate & (wimp_BDRAGLEFT  | wimp_BDRAGRIGHT))
+    else if(buttons & (Wimp_MouseButtonDragSelect | Wimp_MouseButtonDragAdjust))
     {
-        selectclicked = ((buttonstate & wimp_BDRAGLEFT) != 0);
+        select_clicked = ((buttons & Wimp_MouseButtonDragSelect) != 0);
 
         /* must be same button that started us off dragging */
-        if(initially_selectclicked != selectclicked)
-            buttonstate = selectclicked ? wimp_BCLICKLEFT : wimp_BCLICKRIGHT; /* force a single click */
+        if(initially_select_clicked != select_clicked)
+            buttons = select_clicked ? Wimp_MouseButtonSingleSelect : Wimp_MouseButtonSingleAdjust; /* force a single click */
     }
 
-    if(buttonstate & (wimp_BLEFT      | wimp_BRIGHT))
+    if(buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust))
     {
-        selectclicked = ((buttonstate & wimp_BLEFT) != 0);
+        select_clicked = ((buttons & Wimp_MouseButtonSelect) != 0);
 
-        application_doubleclick_in_main(tx, ty, selectclicked);
+        application_doubleclick_in_main(tx, ty, select_clicked);
 
-        initially_selectclicked = 0;
+        initially_select_clicked = FALSE;
     }
-    else if(buttonstate & (wimp_BDRAGLEFT  | wimp_BDRAGRIGHT))
+    else if(buttons & (Wimp_MouseButtonDragSelect | Wimp_MouseButtonDragAdjust))
     {
-        selectclicked = ((buttonstate & wimp_BDRAGLEFT) != 0);
+        select_clicked = ((buttons & Wimp_MouseButtonDragSelect) != 0);
 
-        application_startdrag(tx, ty, selectclicked);
+        application_startdrag(tx, ty, select_clicked);
 
-        initially_selectclicked = 0;
+        initially_select_clicked = FALSE;
     }
-    else if(buttonstate & (wimp_BCLICKLEFT | wimp_BCLICKRIGHT))
+    else if(buttons & (Wimp_MouseButtonSingleSelect | Wimp_MouseButtonSingleAdjust))
     {
-        selectclicked = ((buttonstate & wimp_BCLICKLEFT) != 0);
+        select_clicked = ((buttons & Wimp_MouseButtonSingleSelect) != 0);
 
-        initially_selectclicked = selectclicked;
-        application_singleclick_in_main(tx, ty, xcelloffset, selectclicked);
+        initially_select_clicked = select_clicked;
+
+        application_singleclick_in_main(tx, ty, xcelloffset, select_clicked);
     }
 }
 
@@ -1654,12 +1736,12 @@ application_drag(
     SLR here;
     P_DOCU p_docu;
 
-    trace_1(TRACE_DRAG, "application_drag: type = %d", dragtype);
+    trace_1(TRACE_DRAG, "application_drag: type = %d", drag_type);
 
     assert(vertvec_entry_valid(roff));
     rptr = vertvec_entry(roff);
 
-    switch(dragtype)
+    switch(drag_type)
     {
     case INSERTING_REFERENCE:
         if(ended  &&  !(rptr->flags & PAGE))
@@ -1783,7 +1865,7 @@ application_drag(
 
                 colh_draw_drag_state(*widp);        /* be helpful, show user what the width is */
 
-                setpointershape(*widp == 0 ? POINTER_DRAGCOLUMN_RIGHT : POINTER_DRAGCOLUMN);
+                riscos_setpointershape(*widp == 0 ? POINTER_DRAGCOLUMN_RIGHT : POINTER_DRAGCOLUMN);
 
 #if TRUE
                 if(dragcol_col != curcol)
@@ -1861,55 +1943,99 @@ application_drag(
 *
 ******************************************************************************/
 
+static void
+process_autoscroll_before_drag(
+    _InVal_      int mouse_x,
+    _InVal_      int mouse_y)
+{
+    if(drag_autoscroll)
+    {   /* use Wimp_AutoScroll */
+#if 1
+        WimpAutoScrollBlock wasb;
+        _kernel_swi_regs rs;
+        rs.r[0] = (1 << 7) /* read current state */ ;
+        rs.r[1] = (int) &wasb; /* filled on return from SWI */
+        void_WrapOsErrorReporting(_kernel_swi(Wimp_AutoScroll, &rs, &rs));
+        reportf("WASSW now %X", rs.r[0]);
+        reportf(
+            "Autoscroll %s commenced; "
+            "Pointer is %s%s%s%s%s%s%s;"
+            "Some work area %s%s%s%s",
+            (rs.r[0] & (1<<8)) ? "has" : "not",
+            (rs.r[0] & (1<<9)) ? "outside the window‘s visible area," : "",
+            (rs.r[0] & (1<<10)) ? "within one or two pause zones," : "",
+            (rs.r[0] & (1<<11)) ? "within the centre zone," : "",
+            (rs.r[0] & (1<<12)) ? "left of the centre zone," : "",
+            (rs.r[0] & (1<<13)) ? "below the centre zone," : "",
+            (rs.r[0] & (1<<14)) ? "right of the centre zone," : "",
+            (rs.r[0] & (1<<15)) ? "above the centre zone" : "",
+            (rs.r[0] & (1<<16)) ? "left of the visible area," : "",
+            (rs.r[0] & (1<<17)) ? "below the visible area," : "",
+            (rs.r[0] & (1<<18)) ? "right of the visible area," : "",
+            (rs.r[0] & (1<<19)) ? "above the visible area" : ""
+        );
+#endif
+        return;
+    }
+
+    { /* scroll text ourselves if outside this guy's main window */
+    const BOOL shift_pressed = host_shift_pressed();
+    WimpGetWindowStateBlock window_state;
+
+    window_state.window_handle = main_window_handle;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_window_state(&window_state)))
+        return;
+
+    if(drag_type != MARK_ALL_COLUMNS)
+    {   /* not dragging down row border */
+        const GDI_COORD test_xmin =
+            window_state.visible_area.xmin
+            + (displaying_borders ? texttooffset_x(borderwidth) : 0)
+            - (charwidth / 2); /* SKS */
+
+        if(mouse_x < test_xmin)
+            application_process_command(shift_pressed ? N_PageLeft  : N_ScrollLeft);
+        else if(mouse_x >= window_state.visible_area.xmax)
+            application_process_command(shift_pressed ? N_PageRight : N_ScrollRight);
+    }
+
+    if(drag_type != MARK_ALL_ROWS)
+    {   /* not dragging across col border */
+        if(mouse_y < window_state.visible_area.ymin)
+            application_process_command(shift_pressed ? N_PageDown : N_ScrollDown);
+        else if(mouse_y >= window_state.visible_area.ymax)
+            application_process_command(shift_pressed ? N_PageUp   : N_ScrollUp);
+    }
+    } /*block*/
+}
+
 extern void
 process_drag(void)
 {
-    wimp_wstate wstate;
+    int mouse_x, mouse_y;
+
+    {
     wimp_mousestr m;
-    int x, y;
-    BOOL shiftpressed = host_shift_pressed();
-
     (void) wimp_get_point_info(&m);
-    x = m.x;
-    y = m.y;
-
+    mouse_x = m.x; /* abs GDI coordinates */
+    mouse_y = m.y;
     trace_4(TRACE_APP_PD4, "mouse pointer at w %d i %d x %d y %d", m.w, m.i, m.x, m.y);
+    } /*block*/
 
     trace_0(TRACE_APP_PD4, "continuing drag: button still held");
 
-    switch(dragtype)
+    switch(drag_type)
     {
     case DRAG_COLUMN_WIDTH:
     case DRAG_COLUMN_WRAPWIDTH:
         break;
 
     default:
-        /* scroll text if outside this guy's window */
-        (void) wimp_get_wind_state(main__window, &wstate);
-
-        if(dragtype != MARK_ALL_COLUMNS)
-        {
-            /* not dragging down row border */           /* vvvv change to N_PageLeft/Right when implemented */
-            if(x < (wstate.o.box.x0
-                   + (borbit ? texttooffset_x(borderwidth) : 0)
-                   - (charwidth / 2))) /* SKS */
-                application_process_command(shiftpressed ? N_ScrollLeft  : N_ScrollLeft);
-            else if(x >= wstate.o.box.x1)
-                application_process_command(shiftpressed ? N_ScrollRight : N_ScrollRight);
-        }
-
-        if(dragtype != MARK_ALL_ROWS)
-        {
-            /* not dragging across col border */
-            if(y < wstate.o.box.y0)
-                application_process_command(shiftpressed ? N_PageDown : N_ScrollDown);
-            else if(y >= wstate.o.box.y1)
-                application_process_command(shiftpressed ? N_PageUp   : N_ScrollUp);
-        }
+        process_autoscroll_before_drag(mouse_x, mouse_y);
         break;
     }
 
-    application_drag(x, y, FALSE);
+    application_drag(mouse_x, mouse_y, FALSE);
 }
 
 /* end of markers.c */

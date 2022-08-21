@@ -30,7 +30,7 @@ macro definitions
 #define MAX_PATHSTRING      (1+255)
 
 #ifndef MAX_FILENAME_WIMP
-/* limited by Wimp block */
+/* limited by Window Manager poll block */
 #define MAX_FILENAME_WIMP   (1+211)
 #endif
 #define BUF_MAX_FILENAME_WIMP (MAX_FILENAME_WIMP + 1)
@@ -385,10 +385,11 @@ file_add_prefix_to_name(
     PC_U8 currentfilename);
 
 extern char *
-file_combined_path(
+file_combine_path(
     char * destpath,
     _InVal_     U32 elemof_buffer,
-    PC_U8 currentfilename);
+    PC_U8 currentfilename,
+    _In_opt_z_  PCTSTR search_path);
 
 extern P_U8
 file_extension(
@@ -415,24 +416,18 @@ extern P_FILE_OBJINFO
 file_find_next(
     P_P_FILE_OBJENUM pp /*inout*/);
 
-extern S32
+extern STATUS
 file_find_on_path(
     _Out_writes_z_(elemof_buffer) char * filename /*out*/,
     _InVal_     U32 elemof_buffer,
+    _In_z_      PCTSTR path,
     _In_z_      PC_USTR srcfilename);
 
-extern S32
+extern STATUS
 file_find_on_path_or_relative(
     _Out_writes_z_(elemof_buffer) char * filename /*out*/,
     _InVal_     U32 elemof_buffer,
-    _In_z_      PC_USTR srcfilename,
-    _In_opt_z_  PC_USTR currentfilename);
-
-_Check_return_
-extern BOOL
-file_find_dir_on_path(
-    _Out_writes_z_(elemof_buffer) char * filename /*out*/,
-    _InVal_     U32 elemof_buffer,
+    _In_z_      PCTSTR path,
     _In_z_      PC_USTR srcfilename,
     _In_opt_z_  PC_USTR currentfilename);
 
@@ -449,7 +444,7 @@ file_get_cwd(
     PC_U8 currentfilename);
 
 extern char *
-file_get_path(void);
+file_get_search_path(void);
 
 extern char *
 file_get_prefix(

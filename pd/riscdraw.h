@@ -25,38 +25,38 @@ acquirecaret(void);
 
 extern void
 at(
-    S32 tx,
-    S32 ty);
+    tcoord tx,
+    tcoord ty);
 
 extern void
 at_fonts(
-    S32 x,
-    S32 ty);
+    coord x,
+    tcoord ty);
 
 extern void
-application_open_request(
-    wimp_eventstr *e);
+application_Open_Window_Request(
+    /*poked*/ WimpOpenWindowRequestEvent * const open_window_request);
 
 extern void
-application_redraw(
-    RISCOS_REDRAWSTR *r);
+application_redraw_core(
+    _In_        const RISCOS_RedrawWindowBlock * const redraw_window_block);
 
 extern void
-application_scroll_request(
-    wimp_eventstr *e);
+application_Scroll_Request(
+    _In_        const WimpScrollRequestEvent * const scroll_request);
 
 extern void
-cachemodevariables(void);
+cache_mode_variables(void);
 
 extern void
-cachepalettevariables(void);
+cache_palette_variables(void);
 
 extern void
 clear_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1,
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1,
     BOOL zap_grid);
 
 extern void
@@ -93,7 +93,7 @@ gcoord_y(
 _Check_return_
 extern S32
 gcoord_y_textout(
-    S32 ty);
+    tcoord ty);
 
 extern void
 killfontcolourcache(void);
@@ -114,63 +114,63 @@ new_grid_state(void);
 
 extern void
 please_clear_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1);
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1);
 
 extern void
-please_invert_numeric_slot(
-    S32 coff,
-    S32 roff,
-    S32 fg,
-    S32 bg);
+please_invert_number_cell(
+    _InVal_     S32 coff,
+    _InVal_     S32 roff,
+    _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index,
+    _InVal_     COLOURS_OPTION_INDEX bg_colours_option_index);
 
 extern void
-please_invert_numeric_slots(
-    S32 start_coff,
-    S32 end_coff,
-    S32 roff,
-    S32 fg,
-    S32 bg);
+please_invert_number_cells(
+    _InVal_     S32 start_coff,
+    _InVal_     S32 end_coff,
+    _InVal_     S32 roff,
+    _InVal_     COLOURS_OPTION_INDEX fg_colours_option_index,
+    _InVal_     COLOURS_OPTION_INDEX bg_colours_option_index);
 
 extern void
 please_redraw_entire_window(void);
 
 extern void
 please_redraw_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1);
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1);
 
 extern void
 please_redraw_textline(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1);
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1);
 
 extern void
 please_update_textarea(
     RISCOS_REDRAWPROC proc,
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1);
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1);
 
 extern void
 please_update_window(
     RISCOS_REDRAWPROC proc,
-    wimp_w window,
-    S32 gx0,
-    S32 gy0,
-    S32 gx1,
-    S32 gy1);
+    _HwndRef_   HOST_WND window_handle,
+    gcoord os_x0,
+    gcoord os_y0,
+    gcoord os_x1,
+    gcoord os_y1);
 
 extern void
 print_setcolours(
-    S32 fore,
-    S32 back);
+    _InVal_     COLOURS_OPTION_INDEX fore_colours_option_index,
+    _InVal_     COLOURS_OPTION_INDEX back_colours_option_index);
 
 extern void
 print_setfontcolours(void);
@@ -200,89 +200,84 @@ riscos_printspaces_fonts(
 
 extern void
 scroll_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1,
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1,
     S32 nlines);
-
-extern void
-setcaretpos(
-    S32 x,
-    S32 y);
 
 extern BOOL
 set_graphics_window_from_textarea(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1,
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1,
     BOOL set_gw);
 
 _Check_return_
-extern S32
+extern tcoord
 tcoord_x(
-    S32 x);
+    gcoord os_x);
 
 _Check_return_
-extern S32
+extern tcoord
 tcoord_y(
-    S32 y);
+    gcoord os_y);
 
 _Check_return_
-extern S32
+extern tcoord
 tcoord_x_remainder(
-    S32 x);
+    gcoord os_x);
 
 _Check_return_
-extern S32
+extern tcoord
 tcoord_x1(
-    S32 x);
+    gcoord os_x);
 
 _Check_return_
-extern S32
+extern tcoord
 tcoord_y1(
-    S32 y);
+    gcoord os_y);
 
 _Check_return_
-extern S32
+extern tcoord
 tsize_x(
-    S32 x);
+    gcoord os_x);
 
 _Check_return_
-extern S32
+extern tcoord
 tsize_y(
-    S32 y);
+    gcoord os_y);
 
 extern BOOL
 textobjectintersects(
-    S32 tx0,
-    S32 ty0,
-    S32 tx1,
-    S32 ty1);
+    tcoord tx0,
+    tcoord ty0,
+    tcoord tx1,
+    tcoord ty1);
 
 extern BOOL
 textxintersects(
-    S32 tx0,
-    S32 tx1);
+    tcoord tx0,
+    tcoord tx1);
 
 _Check_return_
-extern S32
+extern gcoord
 texttooffset_x(
-    S32 tx);
+    tcoord tx);
 
 _Check_return_
-extern S32
+extern gcoord
 texttooffset_y(
-    S32 ty);
+    tcoord ty);
 
 _Check_return_
-extern S32
-windowheight(void);
+extern tcoord
+main_window_height(void);
 
 _Check_return_
-extern S32
-windowwidth(void);
+extern tcoord
+main_window_width(void);
 
 extern BOOL
 riscprint_resume(void);
@@ -314,8 +309,8 @@ exported variables
 
 extern S32 dx;
 extern S32 dy;
-extern S32 current_bg;
-extern S32 current_fg;
+extern U32 current_bg_wimp_colour_value;
+extern U32 current_fg_wimp_colour_value;
 extern S32 log2bpp;
 
 /* PipeDream specific character printing stuff */

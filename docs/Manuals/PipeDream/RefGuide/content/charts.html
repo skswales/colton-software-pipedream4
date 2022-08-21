@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Charts</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="caretmovements.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="colours.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1>Charts</h1>
+    <p>
+        PipeDream enables you to produce many types of chart from your spreadsheets;
+        you can produce pie charts, bar charts, line charts, scatter charts and overlay charts.
+    </p>
+    <p>
+        For each type of chart, you can choose from a wide variety of styles by selecting the style you want from a gallery,
+        in which you can see examples of the possible styles for the chart type you have chosen.
+    </p>
+    <p>
+        Once you have produced a chart, you can resize it and edit each part of it individually.
+        You also have a great deal of control over the final appearance of your chart in terms of colour, text style and fill style.
+    </p>
+    <p>Indeed, PipeDream provides all the facilities you need to produce exactly the chart you want.</p>
+    <p>The charts you produce are dynamic, i.e. any changes made to the spreadsheet data on which they are based are reflected in the charts themselves.</p>
+
+    <h2 id="Producing">Producing a Chart From a PipeDream Spreadsheet</h2>
+    <ol>
+        <li>Mark the block of spreadsheet data from which you want to produce a chart.</li>
+        <li>Give the <span class="csg-command">New Chart</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Charts</td>
+                <td>New Chart</td>
+                <td><img src="images/tbar_chart.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CHN</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        The chart editing window is displayed, containing the chart produced from the marked block of spreadsheet data.
+        The chart type used is the preferred chart type.
+        If you have not yet set a preferred chart type, PipeDream displays a bar chart.
+        The chart displayed in the chart editing window becomes the current chart,
+        i.e. any chart commands you give will be applied only to this chart.
+    </p>
+    <p>
+        If there are more rows than columns or an equal number of rows and columns in the marked block,
+        PipeDream assumes that the categories (i.e. the x-data) run across the columns.
+        If any of the cells in the leftmost column of the marked block are text cells,
+        PipeDream assumes that the column contains the category labels.
+        If any of the cells in the top row of the marked block are text cells,
+        PipeDream assumes that the row contains the series labels&mdash;normally these are only seen in legends or 3-D charts.
+    </p>
+    <p>
+        If there are more columns than rows in the marked block,
+        PipeDream assumes that the categories (i.e. the x-data) run down the rows from the top of the marked block.
+        If any of the cells in the top row of the marked block are text cells,
+        PipeDream assumes that the row contains the category labels.
+        If any of the cells in the leftmost column of the marked block are text cells,
+        PipeDream assumes that the column contains the series labels&mdash;normally these are only seen in legends or 3-D charts.
+    </p>
+
+    <h2 id="Alterchart">Altering a Chart by Altering Data in PipeDream</h2>
+    <p>If you make a change to any PipeDream cell in the block from which a chart was produced, the chart is reformatted and redisplayed, taking account of the change you have made.</p>
+    <p>
+        If you insert rows or columns into the block from which a chart was produced, new entries are made in the chart.
+        If you delete rows or columns from the block, the corresponding entries are removed from the chart.
+    </p>
+    <p>Note that the same block can be used to produce more than one chart.</p>
+
+    <h2 id="Selecting">Selecting a Chart</h2>
+    <p>
+        You can select a chart.
+        This makes it the current chart, so that any commands you give will operate upon it.
+    </p>
+    <ol>
+        <li>Give the <span class="csg-command">Select Chart</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Charts</td>
+                <td>Select Chart</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CHS</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>You will see a list of all the charts currently in PipeDream.</p>
+    <p>
+        If one of the charts is within a PipeDream document, the leafname of the document is shown in brackets.
+        For example, <code>[Penguins]BarChart1</code> represents a chart called &lsquo;BarChart1&rsquo; within the document &lsquo;Penguins&rsquo;.
+    </p>
+    <p>If a chart appears in more than one PipeDream document, a number is displayed next to the chart&rsquo;s name to indicate how many documents contain it.</p>
+    <!-- ol start="2" -->
+    <ul class="csg-netsurf-2434">
+        <li>2. Click on the name of the chart you want to select.</li>
+    </ul>
+    <p>The chart you have chosen becomes the current chart.</p>
+
+    <h2 id="Adding">Adding Data to a Chart</h2>
+    <p>You can add more PipeDream spreadsheet data to a chart:</p>
+    <ol>
+        <li>Mark the block of spreadsheet data you want to add to the chart.</li>
+        <li>Give the <span class="csg-command">Add to Chart</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Charts</td>
+                <td>Add to Chart</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CHA</code></span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        You will see a list of all available charts,
+        as you do when you give the <span class="csg-command">Select Chart</span> command.
+    </p>
+    <p>
+        You can choose a chart from this list by clicking on its name.
+        If you do so, the chart you choose becomes the current chart.
+    </p>
+    <p>The current chart is redrawn to take account of the new data which has been added to it.</p>
+
+    <h2 id="Removing">Removing Data From a Chart</h2>
+    <p>You can remove PipeDream spreadsheet data from a chart:</p>
+    <ol>
+        <li>Mark the block of spreadsheet data you want to remove from the chart.</li>
+        <li>Give the <span class="csg-command">Remove from Chart</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Charts</td>
+                <td>Remove from Chart</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CHR</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p id="Selecting">You will see a list of all available charts, as you do when you give the <span class="csg-command">Select Chart</span> command.</p>
+    <p>
+        You can choose a chart from this list by clicking on the chart&rsquo;s name.
+        If you do so, the chart you choose becomes the current chart.
+    </p>
+    <p>The current chart is redrawn to take account of the data which has been removed from it.</p>
+
+    <h2 id="Deleting">Deleting a Chart</h2>
+    <p>To delete the current chart, give the <span class="csg-command">Delete Chart</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Charts</td>
+                <td>Delete Chart</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CHD</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>You will see a list of all available charts, as you do when you give the <span class="csg-command">Select Chart</span> command.</p>
+    <p>
+        You can choose a chart from this list by clicking on the chart&rsquo;s name.
+        If you do so, the chart you choose will be deleted.
+    </p>
+
+    <h2 id="Editing">Editing a Chart</h2>
+    <p>To edit a chart:</p>
+    <ol>
+        <li>Give the <span class="csg-command">Edit Chart</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Charts</td>
+                <td>Edit Chart</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CHE</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>You will see a list of all available charts, as you do when you give the <span class="csg-command">Select Chart</span> command.</p>
+    <!-- ol start="2" -->
+    <ul class="csg-netsurf-2434">
+        <li>If you want to edit a chart other than the current chart, click on the name of the chart you want to edit.</li>
+    </ul>
+    <p>The <span class="csg-dbox">Chart Editing Window</span> is displayed containing the current chart.</p>
+    <p>If you resize the window, PipeDream resizes and reformats the chart appropriately.</p>
+
+    <h2 id="Altering">Altering the type of your chart</h2>
+    <p>To change the type of your chart:</p>
+    <ol>
+        <li>Click Menu in the <span class="csg-dbox">Chart Editing Window</span> to bring up the <span class="csg-menu">Chart Editing</span> Menu.</li>
+        <li>Slide off the <span class="csg-menu-option">Gallery</span> option to bring up the <span class="csg-menu">Gallery</span> sub-menu.</li>
+        <li>
+            If you want to restore the preferred chart type, click the <span class="csg-menu-option">Preferred</span> option.
+            If you want to set a different chart type, slide off the appropriate option.
+        </li>
+    </ol>
+    <p>Unless you clicked on <span class="csg-menu-option">Preferred</span>, the <span class="csg-dbox">Gallery</span> dialogue box for the chart type you chose is displayed.</p>
+
+    <h3 id="Pie">Pie</h3>
+    <p>
+        The <span class="csg-dbox">Pie Gallery</span> dialogue box displays pictures of eight styles of pie chart.
+        Choose the style closest to the final result you want by clicking on the appropriate picture.
+    </p>
+    <p>The remaining options in the dialogue box enable you to fine-tune your pie chart so that you get exactly what you want.</p>
+    <p>
+        You can specify that all sectors, or a selected sector, of the pie chart should be exploded by a given distance or brought back to the centre.
+        Use the <span class="csg-dbox-option">All</span> and <span class="csg-dbox-option">Selection</span> radio buttons
+        and the <span class="csg-dbox-option">Distance</span> input field to make these settings.
+    </p>
+    <p>
+        You can choose whether the pie chart should run clockwise or anti-clockwise and specify the starting angle.
+        Either click the radio buttons to select a 12, 3, 6 or 9 o&rsquo;clock starting angle, type in a number or use the up / down arrow buttons to set the angle you require.
+        Note that the number specifies a clockwise bearing in the same way as a compass, i.e. 0 at the top, 90 at the middle right, etc.
+    </p>
+
+    <h3 id="Bar">Bar</h3>
+    <p>
+        The <span class="csg-dbox">Bar Gallery</span> dialogue box displays pictures of the available styles of bar chart.
+        Choose the style closest to the final result you want by clicking on the appropriate picture.
+    </p>
+    <p>The remaining dialogue box options enable you to set the following:</p>
+    <ul>
+        <li>the percentage overlap between adjacent bar slots in a category</li>
+    </ul>
+    <p>
+        This can be positive to space the bar slots out, zero to have the bar slots abutting each other or negative to have the bar slots overlapping.
+        A setting of 100% would make the bar slots overlap completely.
+        This setting does not apply to 3-D bar charts.
+    </p>
+    <ul>
+        <li>the percentage width of bars in their slots</li>
+    </ul>
+    <p>
+        A setting of zero would make the bars very thin; a setting of 100% would make them fill their slots.
+        This setting also applies to 3-D bar charts.
+    </p>
+    <ul>
+        <li>the percentage depth of bars in their slots</li>
+    </ul>
+    <p>
+        A setting of zero would make the bars very thin; a setting of 100% would make them fill their slots.
+        This setting applies only to 3-D bar charts.
+    </p>
+    <p>
+        If a fill style (see below) using a picture has been chosen,
+        you can specify whether the picture is stretched vertically to fill the bar
+        or whether the number of copies of the picture used to fill the bar is dependent on the bar value.
+    </p>
+    <ul>
+        <li>3-D</li>
+    </ul>
+    <p>Click on the 3-D option icon to turn 3-D on or off.</p>
+    <ul>
+        <li>
+            If you select 3-D, you can change two further parameters that control the view.
+            The chart can be turned about a vertical axis and the front of the chart can be drooped forwards.
+            Either use the up / down arrow buttons to set these values or type in the number of degrees.
+        </li>
+    </ul>
+
+    <h3 id="Line">Line</h3>
+    <p>
+        The <span class="csg-dbox">Line Gallery</span> dialogue box displays pictures of the available styles of line and point chart.
+        Point charts are line charts without the lines between points.
+        Choose the style closest to the final result you want by clicking on the appropriate picture.
+    </p>
+    <p>The remaining dialogue box options enable you to set the following:</p>
+    <ul>
+        <li>In 3-D, the percentage depth of lines in their slots</li>
+    </ul>
+    <p>
+        This gives a ribbon which can be filled in a solid colour.
+        The line style and line colour settings only affect the lines bounding the ribbon.
+    </p>
+    <ul>
+        <li>droplines</li>
+    </ul>
+    <p>
+        If this option is set, lines are dropped from each data point to the category axis.
+    </p>
+
+    <h3 id="Scatter">Scatter</h3>
+    <p>
+        The <span class="csg-dbox">Scatter Gallery</span> dialogue box displays pictures of the available styles of scatter chart.
+        Choose the style closest to the final result you want by clicking on the appropriate picture.
+    </p>
+    <p>
+        In scatter charts, points are plotted at x and y positions corresponding to their numeric input pair, rather than using labelled categories.
+        The points may be joined by lines in the style you select (see below).
+        Note that the x-data is not sorted by PipeDream.
+        Hence if the input x-data is not sorted, the lines joining the points may go backwards from right to left as well as from left to right.
+    </p>
+    <p>
+        In the dialogue box you can select the x-error bar and y-error bar independently.
+        These take additional values and are used to draw error bars of the given length in the x and/or y directions.
+    </p>
+
+    <h3 id="Overlays">Overlays</h3>
+    <p>
+        The <span class="csg-dbox">Overlays Gallery</span> dialogue box displays pictures of the available styles of overlay chart.
+        Choose the style closest to the final result you want by clicking on the appropriate picture.
+    </p>
+    <p>
+        The series in the chart are repartitioned such that not more than half of them are moved to the overlay chart.
+        Overlays have chart type, axes and scaling independent of the main chart.
+        Pie charts cannot be overlaid or used as overlays.
+    </p>
+    <p>
+        To remove the overlay from a chart, use the <span class="csg-dbox-option">Remove overlay</span> button
+        in the <span class="csg-dbox">Line Gallery</span>, <span class="csg-dbox">Bar Gallery</span> or <span class="csg-dbox">Scatter Gallery</span> dialogue boxes.
+        All series will then be put back into the main chart.
+    </p>
+    <p>Selecting any kind of pie will force overlays to be removed.</p>
+
+    <h2 id="Changing">Changing the style of your chart</h2>
+    <p>You can change the style of any part of your chart:</p>
+    <ol>
+        <li>Click Select on the part of the chart you want to change.</li>
+    </ol>
+    <p>You can select the chart background, plot area, individual axes, series, etc.</p>
+    <p>Series are numbered from 1, so series 1 is called S1.</p>
+    <p>
+        Points within a series can be selected individually by clicking Adjust on them.
+        S2P4 refers to point 4 in series 2.
+    </p>
+    <p>
+        Axes are numbered from 1 to 6.
+        The numbering depends on whether 3-D is set and whether there are any overlays:
+    </p>
+    <ul>
+        <li>Axis 1 is always the main category x-axis.</li>
+        <li>Axis 2 is always the main value y-axis.</li>
+        <li>Axis 3 is the main series z-axis if 3-D is set or, if not, an overlay category axis.</li>
+        <li>Axis 4 is an overlay category axis if 3-D is set or, if not, an overlay value axis.</li>
+        <li>Axis 5 is an overlay value axis.</li>
+        <li>Axis 6 is an overlay series axis.</li>
+    </ul>
+    <!-- ol start="2" -->
+    <ul class="csg-netsurf-2434">
+        <li>2. Bring up the <span class="csg-menu">Selection</span> sub-menu by sliding off the <span class="csg-menu-option">Selection</span> option in the <span class="csg-menu">Chart Editing</span> menu.</li>
+    </ul>
+    <p>
+        The <span class="csg-menu">Selection</span> sub-menu options which you cannot apply to your selected part will be greyed out.
+        You can apply all the other options to it.
+    </p>
+
+    <h3 id="Fillcol">Fill colour</h3>
+    <p>
+        If you click Select on this option, you will see the <span class="csg-dbox">Colour Selection</span> dialogue box which you can use
+        to alter the solid colour used to fill an object such as the background of the plot area or the insides of the bars in a bar chart.
+        Use the sliders to drag the
+        <span class="csg-dbox-option">R</span>, <span class="csg-dbox-option">G</span> and <span class="csg-dbox-option">B</span>
+        values from 0 to 255 or use the up / down arrow buttons.
+    </p>
+    <p>
+        When you have made the settings you require,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+
+    <h3 id="Fill">Fill style</h3>
+    <p>
+        If you click Select on this option, you will see the <span class="csg-dbox">Fill Style</span> dialogue box which you can use to
+        specify whether filled objects should be filled with a solid colour or with a
+        picture. Click on the <span class="csg-dbox-option">Solid</span> button to
+        specify the former or on the <span class="csg-dbox-option">Picture</span>
+        button to specify the latter. If you select pictures, you will be able to
+        scroll through the files available for use as fill patterns.
+    </p>
+    <p>
+        When you have made the settings you require,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+    <p>
+        If you want to use your own picture as a fill pattern, drag your Draw file
+        into the Chart Editing window.
+    </p>
+
+    <h3 id="Linecol">Line colour</h3>
+    <p>
+        If you click Select on this option, you will see the <span class="csg-dbox">Colour Selection</span> dialogue box which you can use
+        to alter the colour used for objects such as the borders around the plot area,
+        the legend border, the grid lines and the outsides of bars in bar charts.
+    </p>
+    <p>
+        When you have made the settings you require,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+
+    <h3 id="Linestyle">Line style</h3>
+    <p>
+        If you click Select on this option, you will see the <span class="csg-dbox">Line Style</span> dialogue box. This has options for
+        pattern and thickness. Five patterns are given, one of which is solid; the
+        other four are dashed patterns.
+    </p>
+    <p>
+        Thickness is specified in points. You can type in a number or choose the
+        picture of the line thickness you want.
+    </p>
+    <p>
+        When you have made the settings you require,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+
+    <h3 id="Legend">Legend</h3>
+    <p>
+        The <span class="csg-menu-option">Legend</span> option in the
+        <span class="csg-menu">Chart Editing</span> menu can be turned on or off by clicking on it.
+        If it is turned on, a tick appears next to its name.
+        Sliding off the <span class="csg-menu-option">Legend</span> option brings up the <span class="csg-menu">Legend</span> sub-menu.
+    </p>
+    <p>
+        This sub-menu has only one option: <span class="csg-menu-option">Arrange vertically</span>.
+        You can switch this on or off by clicking on it.
+        If it is switched on, a tick appears next to it.
+    </p>
+    <p>To reposition a legend, select it and drag it into place.</p>
+
+    <h2 id="Addedit">Adding and Editing text in your chart</h2>
+    <p>You can create new text, such as chart titles, anywhere within the chart area in any style:</p>
+    <ol>
+        <li>Give the <span class="csg-command">New Text</span> command from the Chart Editing window.</li>
+        <li>In the Text Window, type in the text you require.</li>
+        <li>Click the <span class="csg-toolbar-button">Tick</span> toolbar button.</li>
+    </ol>
+    <p>
+        The text will be placed in the chart at the point where you brought up the menu.
+        You can alter its position later by selecting it and dragging it.
+    </p>
+    <p>To edit text in your chart:</p>
+    <ol>
+        <li>Select the text.</li>
+        <li>Click the Menu button to bring up the <span class="csg-menu">Chart Editing</span> menu.</li>
+        <li>Slide off the <span class="csg-menu-option">Selection</span> option to bring up the <span class="csg-menu">Selection</span> sub-menu.</li>
+        <li>Slide off the <span class="csg-menu-option">Text</span> option.</li>
+    </ol>
+    <p>
+        You will see the Text Window.
+        If you want to remove the selected text from the chart, click <span class="csg-menu-option">Remove</span>.
+        To replace the selected text, type the new text into the Text Window and click the <span class="csg-toolbar-button">Tick</span> tool button.
+        The selected text will be replaced by the Text Window text.
+        Click the <span class="csg-toolbar-button">Cross</span> tool button to cancel editing.
+    </p>
+
+    <h3 id="Text">Text colour</h3>
+    <p>If you click this button, you will see the <span class="csg-dbox">Colour Selection</span> dialogue box which you can use to alter the colour used for text.</p>
+    <p>
+        When you have made the settings you require,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+
+    <h3 id="Hint">Hint colour</h3>
+    <p>
+        If you click this button, you will see the <span class="csg-dbox">Colour Selection</span> dialogue box which you can use to alter background hint colour.
+        This is used to improve the appearance of anti-aliased font rendering on screen.
+        For example, if white text is displayed on a blue background, it is best to set the hint colour to blue, especially in 256 colour (or greater) modes.
+    </p>
+    <p>
+        When you have made the settings you require,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+
+    <h2 id="axes">To control the axes of your chart</h2>
+    <ol>
+        <li>Select the axis by clicking on it.</li>
+        <li>Click the Menu button to bring up the <span class="csg-menu">Chart Editing</span> menu.</li>
+        <li>Slide off the <span class="csg-menu-option">Selection</span> option to bring up the <span class="csg-menu">Selection</span> sub-menu.</li>
+        <li>Slide off the <span class="csg-menu-option">Axis</span> option.</li>
+    </ol>
+    <p>
+        You will see the <span class="csg-dbox">Axis</span> dialogue box in
+        which you can set the axis control attributes.
+    </p>
+    <p>
+        You can specify the position of the axis, to the left or right of the plot
+        area or as close to zero as possible.
+    </p>
+    <p>
+        You can turn log (base 10) scaling of an axis on or off for a selected axis.
+        Note that log scaling turns off all other axis scaling and interval options.
+    </p>
+    <p>You can turn autoscaling on or off for a selected axis.</p>
+    <p>
+        If autoscaling is turned off, the chart uses the specified minimum and
+        maximum values on that axis. If the actual data values fall outside this range,
+        the range used to plot the graph is increased accordingly to ensure that all
+        your data is plotted sensibly.
+    </p>
+    <p>You can turn grid lines on or off for an axis.</p>
+    <p>You can turn major and minor ticks on or off for an axis.</p>
+    <p>
+        You can specify whether these ticks are to the left (or bottom), right (or
+        top) or centred on the axis.
+    </p>
+    <p>
+        You can specify the major and minor tick intervals which are used if the
+        autointerval option is turned off. Note that if major ticks are turned off
+        minor ticks are also turned off.
+    </p>
+    <p>
+        When you have made the settings you require,
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+    </p>
+
+    <h2 id="Saving">Saving Your Chart</h2>
+    <p>You can save your chart, either as a &lsquo;live&rsquo; dynamic chart or as a &lsquo;dead&rsquo; Draw file, into a PipeDream document.</p>
+    <p>To save a dynamic chart into a PipeDream document:</p>
+    <ol>
+        <li>Open the window of the PipeDream document into which you want to insert the chart.</li>
+        <li>Position the caret at the top left of where you want the chart positioned.</li>
+        <li>Give the <span class="csg-command">Save</span> command from the <span class="csg-menu">Chart Editing</span> menu.</li>
+        <li>Slide off the Chart option.</li>
+        <li>Drag the chart&rsquo;s file icon into the PipeDream document window.</li>
+    </ol>
+    <p>This inserts an <a id="atG"><code>@G</code></a> reference to the chart file.</p>
+    <p>
+        Whenever the chart is updated, those PipeDream document windows which contain it are redrawn.
+        You can adjust the <code>@G</code> reference to rescale the chart, just as you can with Draw files.
+    </p>
+    <p>You can copy the chart into more than one document.</p>
+    <p>
+        To save a &lsquo;dead&rsquo; Draw file into a PipeDream document, proceed as above,
+        sliding off the <span class="csg-menu-option">Draw file</span> option in the
+        <span class="csg-menu">Save</span> sub-menu.
+    </p>
+    <p>You can also save the chart as a &lsquo;dead&rsquo; Draw file into a file or into another application such as Draw.</p>
+    <p>To save a chart as a file to disc, drag its file icon into the required directory display.</p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Caret Movements </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Colours</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="caretmovements.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="colours.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

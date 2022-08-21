@@ -170,7 +170,7 @@ gr_riscdiag_path_query_guts(
     P_BYTE pObject = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, pathStart);
     U32 extraBytes;
 
-    myassert2x(((PC_DRAW_OBJECT_HEADER) pObject)->type == DRAW_OBJECT_TYPE_PATH, "gr_riscdiag_path_query_guts of a non-path object " U32_XTFMT " type %d", pathStart, ((PC_DRAW_OBJECT_HEADER) pObject));
+    myassert2x(((PC_DRAW_OBJECT_HEADER) pObject)->type == DRAW_OBJECT_TYPE_PATH, "gr_riscdiag_path_query_guts of a non-path object " U32_XTFMT " type %d", pathStart, ((PC_DRAW_OBJECT_HEADER) pObject)->type);
 
     /* always skip path header */
     extraBytes = sizeof32(DRAW_OBJECT_PATH);
@@ -569,7 +569,7 @@ gr_riscdiag_string_new(
     P_DRAW_OBJECT pObject;
     DRAW_OBJECT_TEXT * pObjectText;
     DRAW_FONT_REF16 fontRef;
-    S32 fsizey_mp;
+    GR_MILLIPOINT fsizey_mp;
     STATUS status;
     DRAW_DIAG_OFFSET rectStart;
 
@@ -611,9 +611,9 @@ gr_riscdiag_string_new(
     * (P_U32) &pObjectText->textstyle = (U32) fontRef;
 
     /* NB. NOT DRAW UNITS!!! --- 1/640 point */
-    pObjectText->fsize_x = (int) draw_fontsize_from_mp(gr_mp_from_pixit(fsizex));
-    fsizey_mp            = (int) gr_mp_from_pixit(fsizey);
-    pObjectText->fsize_y = (int) draw_fontsize_from_mp(fsizey_mp);
+    pObjectText->fsize_x = (int) draw_fontsize_from_millipoint(gr_millipoint_from_pixit(fsizex));
+    fsizey_mp            = (int) gr_millipoint_from_pixit(fsizey);
+    pObjectText->fsize_y = (int) draw_fontsize_from_millipoint(fsizey_mp);
 
     /* baseline origin coords */
     pObjectText->coord.x = point->x;
@@ -714,7 +714,7 @@ gr_riscdiag_string_recompute_bbox(
     {
         if(NULL == font_SetFont(f))
             (void) font_stringbbox((P_USTR) (pObjectText + 1),
-                                   (font_info *) &pObjectText->bbox); /* NB. in mp */
+                                   (font_info *) &pObjectText->bbox); /* NB. in millipoints */
 
         font_LoseFont(f);
 
@@ -1467,7 +1467,7 @@ gr_riscdiag_font_from_textstyle(
     if(font_find((P_U8) textstyle->szFontName, fsizex16, fsizey16, 0, 0, &f))
         f = 0;
 
-    /* SKS after 4.11 21jan92 - try looking up our alternate font */
+    /* SKS after PD 4.11 21jan92 - try looking up our alternate font */
     if(!f)
         if(font_find((P_U8) string_lookup(GR_CHART_MSG_ALTERNATE_FONTNAME), fsizex16, fsizey16, 0, 0, &f))
             f = 0;

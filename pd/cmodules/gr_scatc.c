@@ -80,7 +80,7 @@ gr_actualise_series_point(
 {
     P_GR_SERIES serp = getserp(cp, series_idx);
 
-    IGNOREPARM(plain);
+    UNREFERENCED_PARAMETER(plain);
 
     if(1 /*!serp->valid.limits*/)
     {
@@ -140,7 +140,7 @@ gr_actualise_series_point_error1(
 
     serp = getserp(cp, series_idx);
 
-    IGNOREPARM(plain);
+    UNREFERENCED_PARAMETER(plain);
 
     if(1 /*!serp->valid.limits*/)
     {
@@ -220,7 +220,7 @@ gr_actualise_series_point_error2(
 
     serp = getserp(cp, series_idx);
 
-    IGNOREPARM(plain);
+    UNREFERENCED_PARAMETER(plain);
 
     if(1 /*!serp->valid.limits*/)
     {

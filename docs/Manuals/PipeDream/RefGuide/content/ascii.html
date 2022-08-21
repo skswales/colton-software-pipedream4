@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>ASCII and Paragraph File Formats</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="arrays.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="blocks.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="ASCII">ASCII and Paragraph File Formats</h1>
+    <p>Passing data between applications is an inexact science - don&rsquo;t believe those who pretend otherwise!</p>
+    <p>
+        Any productivity package which has anything unique to offer will almost certainly have
+        its own unique data format to encapsulate the information it needs in its files.
+        It is difficult for one application to read the data formats of other applications because of these different data structures.
+        As a result, most applications provide facilities to save out a subset of information so that another application can import it.
+    </p>
+    <p>
+        PipeDream provides two file formats to help transfer text to and from other word processors and desktop publishing (DTP) packages.
+        These are ASCII format and paragraph format.
+        They are very simple and differ from each other in only one respect.
+    </p>
+
+    <h2 id="Saving">Saving in ASCII and Paragraph Format</h2>
+    <p>
+        Text is saved as plain text without any font style information.
+        The only page layout information provided is <code>TAB</code> characters which separate columns.
+        No formulae from number cells are saved; instead the current value of each cell is saved.
+        Display formats are also saved so that if you are loading the file into a DTP package,
+        you will get leading and trailing characters, thousands format and your brackets settings.
+        If the data is to be loaded back into PipeDream, you may prefer to change the
+        <span class="csg-dbox">Options</span> dialogue box settings so that only plain numbers are printed.
+        Then, when you have reloaded the file, you will be able to use the
+        <span class="csg-command">Number&lt;&gt;Text</span> command (<span class="csg-cmdseq">Cmd-BNT</span>) to convert the numbers back into numeric cells.
+        The settings you need in the <span class="csg-dbox">Options</span> dialogue box are:
+    </p>
+    <ul>
+        <li><span class="csg-dbox-option">Negative numbers</span>:<span class="csg-dbox-option-value"> Minus</span></li>
+        <li><span class="csg-dbox-option">Thousands separator</span>: <span class="csg-dbox-option-value">none</span></li>
+        <li><span class="csg-dbox-option">Leading characters</span>: <span class="csg-dbox-option-value">blank</span></li>
+        <li><span class="csg-dbox-option">Trailing characters</span>: <span class="csg-dbox-option-value">blank</span></li>
+    </ul>
+    <p>
+        With ASCII format, PipeDream saves a line separator at the end of each line.
+        You can specify the line separator in the <span class="csg-dbox">Save</span> dialogue box.
+    </p>
+    <ul>
+        <li><span class="csg-dbox-option-value">LF</span> (linefeed) - use this to save to other RISC&nbsp;OS applications;</li>
+        <li><span class="csg-dbox-option-value">CR</span> (carriage return) - use this to save to BBC Micro applications;</li>
+        <li><span class="csg-dbox-option-value">CR,LF</span> option - use this to save to Windows applications.</li>
+    </ul>
+    </ul>
+    <p>
+        With Paragraph format, PipeDream puts a separator at the end of each paragraph.
+        This is the format that DTP packages and many more recently written word processors use.
+        In particular, you will probably find paragraph format the best for saving to Impression and Ovation.
+    </p>
+
+    <h2 id="Loading">Loading in ASCII and Paragraph Format</h2>
+    <p>
+        PipeDream can also load files in both of these formats.
+        To load an ASCII or paragraph format file into PipeDream,
+        simply drag its icon to the PipeDream icon on the icon bar.
+        PipeDream will automatically determine what the format is and load the file appropriately.
+    </p>
+    <p>
+        Sometimes, it isn&rsquo;t easy to tell the difference automatically between ASCII
+        and paragraph format files because the formats are so similar.
+        If you find that PipeDream has made the wrong guess, reload the file forcing the correct format.
+        To do this, bring up the <span class="csg-dbox">Load</span> dialogue box with the
+        <span class="csg-command">Load</span> command (<span class="csg-cmdseq">Cmd-FL</span>).
+        You will see that PipeDream has retained the filename of the last file loaded; this is the file you want to reload.
+        Choose the correct file format at the bottom of the dialogue box and then
+        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        PipeDream will load the file in the correct format.
+    </p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>Other formats</td>
+                <td>
+                    <a href="firstwordplus.html">First Word Plus Format</a><br />
+                    <a href="pipedreamfileformat.html">PipeDream File Format</a><br />
+                    <a href="view.html">VIEW Transfer</a><br />
+                    <a href="viewsheet.html">ViewSheet Transfer</a><br />
+                    <a href="z88.html">Z88 Transfer</a>
+                </td>
+            </tr>
+            <tr>
+                <td>Saving numeric information</td>
+                <td>
+                    <a href="lotus123.html">Lotus Transfer</a><br />
+                    <a href="csv.html">CSV Format</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Arrays </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Blocks</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="arrays.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="blocks.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

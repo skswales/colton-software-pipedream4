@@ -1,0 +1,39 @@
+#
+# WimpLib.utils.en_GB.msg_risc
+#
+saveasT0:Memory full: unable to create save dialogue box
+saveas1:To save, drag the icon to a directory display
+#
+template3:Memory full: unable to create dialogue boxes
+template6:Template file not found
+#
+signal1:Data abort
+signal2:Arithmetic exception
+signal3:Illegal instruction
+signal4:Escape
+signal5:Address exception
+signal6:Termination request
+signal7:Stack overflow
+#
+wimpt2:%s has gone wrong (%s). Click Continue to quit, losing data
+wimptx2:%s has gone wrong (%s). Click Continue to try to resume, Cancel to quit, losing data.
+#
+winT1:Not enough memory to create window
+#
+xfersend1:Bad data transfer, receiver dead
+xferrecv1:Can't transfer file (use *Set Wimp$Scrap <filename>)
+xferrecv2:Data transfer failed
+#
+FontSel01:Must call fontselector_init before font_selector
+FNTSELM00:Failed to find FontSelect template
+FNTSELM01:Memory full (FS01)
+FNTSELM02:Memory full (FS02)
+FNTSELM03:Memory full (FS03)
+FNTSELI00:Click here to apply the above data
+FNTSELI01:Click here to go back to the last applied or chosen values
+# NB SKS has renumbered the icons in PipeDream's font selector dialogue box!
+FNTSELIZZ:This is the font selector window
+FNTSELPNT:Click here to set the height and the width to %d point.
+FNTSELW0:Click here to choose '%s' as the font.
+FNTSELW1:Click here to choose '%s' as the weight.
+FNTSELW2:Click here to choose '%s' as the style.

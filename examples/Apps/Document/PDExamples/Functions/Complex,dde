@@ -13,7 +13,7 @@
 
 %C%Function
 
- z
+z
 w
 z+w
 z-w
@@ -207,27 +207,27 @@ Divides one complex number by another.
 Raises one complex number to the power of another.
 Raises e (natural exponent) to the power of a complex number.
 Returns the natural logarithm of a complex number.
-Returns the Cosine of a complex number.
-Returns the Sine of a complex number.
-Returns the Tangent of a complex number.
-Returns the inverse Cosine of a complex number.
-Returns the inverse Sine of a complex number.
-Returns the inverse Tangent of a complex number.
-Returns the hyperbolic Cosine of a complex number.
-Returns the hyperbolic Sine of a complex number.
-Returns the hyperbolic Tangent of a complex number.
-Returns the inverse hyperbolic Cosine of a complex number.
-Returns the inverse hyperbolic Sine of a complex number.
-Returns the inverse hyperbolic Tangent of a complex number.
-Returns the Cosecant of a complex number.
-Returns the Cotangent of a complex number.
-Returns the Secant of a complex number.
-Returns the inverse Cosecant of a complex number.
-Returns the inverse Cotangent of a complex number.
-Returns the inverse Secant of a complex number.
-Returns the hyperbolic Cosecant of a complex number.
-Returns the hyperbolic Cotangent of a complex number.
-Returns the hyperbolic Secant of a complex number.
-Returns the inverse hyperbolic Cosecant of a complex number.
-Returns the inverse hyperbolic Cotangent of a complex number.
-Returns the inverse hyperbolic Secant of a complex number.
+Returns the cosine of a complex number.
+Returns the sine of a complex number.
+Returns the tangent of a complex number.
+Returns the inverse cosine of a complex number.
+Returns the inverse sine of a complex number.
+Returns the inverse tangent of a complex number.
+Returns the hyperbolic cosine of a complex number.
+Returns the hyperbolic sine of a complex number.
+Returns the hyperbolic tangent of a complex number.
+Returns the inverse hyperbolic cosine of a complex number.
+Returns the inverse hyperbolic sine of a complex number.
+Returns the inverse hyperbolic tangent of a complex number.
+Returns the cosecant of a complex number.
+Returns the cotangent of a complex number.
+Returns the secant of a complex number.
+Returns the inverse cosecant of a complex number.
+Returns the inverse cotangent of a complex number.
+Returns the inverse secant of a complex number.
+Returns the hyperbolic cosecant of a complex number.
+Returns the hyperbolic cotangent of a complex number.
+Returns the hyperbolic secant of a complex number.
+Returns the inverse hyperbolic cosecant of a complex number.
+Returns the inverse hyperbolic cotangent of a complex number.
+Returns the inverse hyperbolic secant of a complex number.

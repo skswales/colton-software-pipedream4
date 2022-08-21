@@ -92,7 +92,7 @@ static BOOL firstword;
 *
 * insert character into buffer
 * If nothing in buffer, decide whether
-* it's a text or numeric cell
+* it's a text or number cell
 *
 ******************************************************************************/
 
@@ -101,7 +101,6 @@ inschr(
     uchar ch)
 {
     P_CELL tcell;
-    S32   out_to_macro = TRUE;
 
     if((xf_inexpression || xf_inexpression_box || xf_inexpression_line) && (ch < SPACE))
         return;
@@ -111,42 +110,57 @@ inschr(
         return;
 #endif
 
-    do  {                               /* only once. dummy loop for clean exit */
-        tcell = travel_here();
+    tcell = travel_here();
 
-        /* no cell and not in numeric mode */
-        if(!tcell)
+    for(;;) /* loop for structure */
+    {
+        /* insert character as text if no cell and not in number mode */
+        if(NULL == tcell)
         {
-            if(txnbit)
-                break;
-        }
-        else if(is_protected_cell(tcell))
-        {
-            reperr_null(create_error(ERR_PROTECTED));
-            return;
-        }
-
-        /* text cell or blank text cell and text mode */
-        if(tcell  &&  ((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE)))
-            if(txnbit  ||  !is_blank_cell(tcell))
+            if(d_options_TN == 'T')
                 break;
 
-        /* new numeric cell */
+            /* allow some characters to begin entering text into the buffer in blank 'number' cells */
+            if(ishighlight(ch))
+                break; /* highlight characters are some such */
+
+            if(is_text_at_char(ch))
+                break; /* text-at character is another */
+
+            if(slot_in_buffer && (CH_NULL != linbuf[0]))
+                break; /* this will only break if text has already sneaked into the buffer from cases above */
+        }
+        else
+        {
+            if(is_protected_cell(tcell))
+            {
+                reperr_null(ERR_PROTECTED);
+                return;
+            }
+
+            /* insert character as text iff text cell or blank text cell and text mode */
+            if((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE))
+                if((d_options_TN == 'T')  ||  !is_blank_cell(tcell))
+                    break;
+        }
+
+        /* new number cell */
         if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
         {
-            expedit_editcurrentslot_freshcontents(FALSE);
+            expedit_edit_current_cell_freshcontents(FALSE);
             if(ch < SPACE)
                 return;
         }
 
-        out_to_macro = FALSE;
-    }
-    while(FALSE);
+        /* don't record chars going into number cells */
+        chrina(ch, FALSE);
 
-    /* SKS after 4.11 08jan92 - only record chars going into text cells not numeric cells */
-    if(out_to_macro)
-        if(macro_recorder_on)
-            output_char_to_macro_file(ch);
+        return;
+    }
+
+    /* SKS after PD 4.11 08jan92 - only record chars going into text cells not number cells */
+    if(macro_recorder_on)
+        output_char_to_macro_file(ch);
 
     chrina(ch, TRUE);
 }
@@ -183,7 +197,7 @@ chrina(
         /* pad with spaces */
         memset32(linbuf+length, SPACE, (lecpos-length));
         length = lecpos;
-        linbuf[length] = '\0';
+        linbuf[length] = CH_NULL;
     }
 
     if(xf_iovbit)                  /* insert mode, create a space */
@@ -207,7 +221,7 @@ chrina(
             return;
         }
 
-        linbuf[length+1] = '\0';
+        linbuf[length+1] = CH_NULL;
     }
 
     *currpos = ch;
@@ -241,7 +255,7 @@ insert_string(
     t_xf_iovbit = xf_iovbit;
     xf_iovbit = TRUE;               /* Force insert mode */
 
-    while((ch = *str++) != '\0')
+    while((ch = *str++) != CH_NULL)
     {
         chrina(ch, allow_check);
 
@@ -255,36 +269,38 @@ insert_string(
 }
 
 extern BOOL
-insert_string_check_numeric(
+insert_string_check_number(
     const char *str,
     BOOL allow_check)
 {
-    P_CELL tcell;
+    P_CELL tcell = travel_here();
 
-    do  {                               /* only once. dummy loop for clean exit */
-        tcell = travel_here();
-
-        /* no cell and not in numeric mode */
-        if(!tcell)
+    for(;;) /* loop for structure */
+    {
+        if(NULL == tcell)
         {
-            if(txnbit)
-                break;
+            /*if(d_options_TN == 'T') SKS 2016-07-27 allow empty 'text' cell to be pasted with number data */
+                /*break;*/
         }
-        else if(is_protected_cell(tcell))
-            return(reperr_null(create_error(ERR_PROTECTED)));
+        else
+        {
+            if(is_protected_cell(tcell))
+                return(reperr_null(ERR_PROTECTED));
 
-        /* text cell or blank text cell and text mode */
-        if(tcell  &&  ((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE)))
-            if(txnbit  ||  !is_blank_cell(tcell))
-                break;
+            /* insert the string into text cell iff text cell or blank text cell and text mode */
+            if((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE))
+                if((d_options_TN == 'T')  ||  !is_blank_cell(tcell))
+                    break;
+        }
 
-        /* new numeric cell */
+        /* new number cell */
         if(!(xf_inexpression || xf_inexpression_box || xf_inexpression_line))
         {
-            expedit_editcurrentslot_freshcontents(FALSE);
+            expedit_edit_current_cell_freshcontents(FALSE);
         }
+
+        break; /* out of loop for structure */
     }
-    while(FALSE);
 
     return(insert_string(str, allow_check));
 }
@@ -500,7 +516,7 @@ CursorRight_fn(void)
     if(!slot_in_buffer)
     {
 #if 0
-    /* SKS after 4.11 09jan92 - why were we letting punters move around in protected cells? */
+    /* SKS after PD 4.11 09jan92 - why were we letting punters move around in protected cells? */
         /* might not have cell in buffer due to protection */
         if(!is_protected_cell(travel_here()))
 #endif
@@ -568,8 +584,8 @@ CursorRight_fn(void)
 *
 ******************************************************************************/
 
-extern void
-WordCount_fn(void)
+static BOOL
+wordcount_fn_prepare(void)
 {
     S32 count = 0;
     char array[LIN_BUFSIZ + 1];
@@ -578,17 +594,15 @@ WordCount_fn(void)
     uchar *ptr;
     BOOL inword;
 
-    if(!dialog_box_start())
-        return;
+    false_return(dialog_box_can_start());
 
     /* if no block in this document look through whole file */
-
     if(MARKER_DEFINED())
         init_marked_block();
     else
         init_doc_as_block();
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
     {
         actind_in_block(DOWN_COLUMNS);
 
@@ -600,7 +614,7 @@ WordCount_fn(void)
         ptr = tcell->content.text;
         inword = FALSE;
 
-        while((ch = *ptr++) != NULLCH)
+        while((ch = *ptr++) != CH_NULL)
         {
             if(SLRLD1 == ch)
             {
@@ -626,15 +640,26 @@ WordCount_fn(void)
 
     actind_end();
 
-    (void) xsnprintf(array, elemof32(array),
+    consume_int(
+        xsnprintf(array, elemof32(array),
             (count == 1)
                     ? Zld_one_word_found_STR
                     : Zld_many_words_found_STR,
-            count);
+            count));
 
-    (void) mystr_set(&d_count[0].textfield, array);
+    false_return(mystr_set(&d_count[0].textfield, array));
 
-    (void) dialog_box(D_COUNT);
+    return(dialog_box_start());
+}
+
+extern void
+WordCount_fn(void)
+{
+    if(!wordcount_fn_prepare())
+        return;
+
+    if(!dialog_box(D_COUNT))
+        return;
 
     dialog_box_end();
 }
@@ -821,7 +846,7 @@ highlight_words_on_line(
 
     lecpos = 0;
 
-    while((ch = linbuf[lecpos]) != NULLCH)
+    while((ch = linbuf[lecpos]) != CH_NULL)
     {
         if(SLRLD1 == ch)
         {
@@ -863,7 +888,7 @@ block_highlight_core(
 
     init_marked_block();
 
-    while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+    while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
     {
         actind_in_block(DOWN_COLUMNS);
 
@@ -897,25 +922,6 @@ block_highlight_core(
     xf_iovbit = txf_iovbit;
 }
 
-static void
-highlight_block(
-    BOOL delete,
-    S32 type)
-{
-    if(!dialog_box_start())
-        return;
-
-    while(dialog_box(type))
-    {
-        block_highlight_core(delete, (d_inshigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
-
-        if(!dialog_box_can_persist())
-            break;
-    }
-
-    dialog_box_end();
-}
-
 /******************************************************************************
 *
 * insert highlights into block
@@ -925,7 +931,18 @@ highlight_block(
 extern void
 HighlightBlock_fn(void)
 {
-    highlight_block(H_INSERT, D_INSHIGH);
+    if(!dialog_box_start())
+        return;
+
+    while(dialog_box(D_INSHIGH))
+    {
+        block_highlight_core(H_INSERT, (d_inshigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
+
+        if(!dialog_box_can_persist())
+            break;
+    }
+
+    dialog_box_end();
 }
 
 /******************************************************************************
@@ -937,12 +954,23 @@ HighlightBlock_fn(void)
 extern void
 RemoveHighlights_fn(void)
 {
-    highlight_block(H_DELETE, D_REMHIGH);
+    if(!dialog_box_start())
+        return;
+
+    while(dialog_box(D_REMHIGH))
+    {
+        block_highlight_core(H_DELETE, (d_inshigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
+
+        if(!dialog_box_can_persist())
+            break;
+    }
+
+    dialog_box_end();
 }
 
 /******************************************************************************
 *
-* toggle insert flag
+* toggle insert/overtype flag
 *
 ******************************************************************************/
 
@@ -951,7 +979,7 @@ InsertOvertype_fn(void)
 {
     xf_iovbit = !xf_iovbit;
 
-    insert_state_may_have_changed();
+    insert_overtype_state_may_have_changed();
 }
 
 /******************************************************************************
@@ -1030,14 +1058,14 @@ delete_bit_of_line(
     {
         /* save word to paste list */
         ch = dst[length];
-        dst[length] = '\0';
+        dst[length] = CH_NULL;
         save_words(dst);
         dst[length] = ch;
     }
 
     buffer_altered = TRUE;
 
-    /* compact up (+1 to copy NULLCH) */
+    /* compact up (+1 to copy CH_NULL) */
     memmove32(dst, src, strlen32p1(src));
 }
 
@@ -1145,7 +1173,7 @@ AutoWidth_fn(void)
         look down column:
             if blank, don't touch it
             set width to maximum "kosher cell" display size
-            kosher cell is numeric cell or text cell that has something to its right
+            kosher cell is number cell or text cell that has something to its right
     */
     COL tcol;
     BOOL changed = FALSE;
@@ -1157,7 +1185,7 @@ AutoWidth_fn(void)
     be = blkend;
     bd = blk_docno;
 
-    /* SKS 19feb97 do something sensible when block not in doc for 4.50/09 */
+    /* SKS 19feb97 do something sensible when block not in doc for PD 4.50/09 */
     if((blkstart.col == NO_COL) || (blk_docno != current_docno()))
     {
         /* no block so use current column */
@@ -1167,7 +1195,7 @@ AutoWidth_fn(void)
     else if(!set_up_block(FALSE)) /* SKS 17jan99 amend marked block setup */
         return;
 
-    /* SKS after 4.11 01feb92 - widths depend on calced results! */
+    /* SKS after PD 4.11 01feb92 - widths depend on calced results! */
     ev_recalc_all();
 
     /* each column in block */
@@ -1190,31 +1218,35 @@ AutoWidth_fn(void)
 
         init_block(&cs, &ce);
 
-        while((tcell = next_slot_in_block(DOWN_COLUMNS)) != NULL)
+        while((tcell = next_cell_in_block(DOWN_COLUMNS)) != NULL)
         {
             S32 iwidth;
             coord this_width = 0;
             char tjust;
             BOOL nothing_on_right = FALSE;
+            char array[LIN_BUFSIZ];
+            char *ptr;
 
             tjust = tcell->justify;
             tcell->justify = J_LEFT;
 
             switch(tcell->type)
             {
-            char array[LIN_BUFSIZ];
-            char *ptr;
-
             case SL_TEXT:
                 /* if we are not last column and nothing to right, don't bother */
                 if(tcol < numcol-1 && is_blank_block(tcol+1, in_block.row, numcol-1, in_block.row))
                     nothing_on_right = TRUE;
 
-                /* deliberate fall-thru */
+                /* deliberate fall thru */
+
             case SL_NUMBER:
-                (void) expand_slot(current_docno(), tcell, in_block.row, array, elemof32(array),
-                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                                   riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
+                (void) expand_cell(
+                            current_docno(), tcell, in_block.row, array, elemof32(array),
+                            DEFAULT_EXPAND_REFS /*expand_refs*/,
+                            EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                            EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+                            EXPAND_FLAGS_FONTY_RESULT(riscos_fonts) /*allow_fonty_result*/ /*expand_flags*/,
+                            TRUE /*cff*/);
 
                 if(riscos_fonts)
                 {
@@ -1222,7 +1254,7 @@ AutoWidth_fn(void)
                     BOOL last_was_font_change = FALSE;
 
                     ptr = array;
-                    while(NULLCH != *ptr)
+                    while(CH_NULL != *ptr)
                     {
                         S32 nchar = font_skip(ptr);
 
@@ -1233,14 +1265,14 @@ AutoWidth_fn(void)
 
                     if(!last_was_font_change)
                         while((--ptr >= array) && (*ptr == SPACE))
-                            *ptr = NULLCH;
+                            *ptr = CH_NULL;
 
-                    /* SKS after 4.11 29jan92 - twiddle in this side for finer
+                    /* SKS after PD 4.11 29jan92 - twiddle in this side for finer
                      * tuning in fonts considering 1/2 chars etc.
                     */
                     iwidth  = font_width(array);
                     iwidth += (charwidth * MILLIPOINTS_PER_OS * 3) / 2;
-                    this_width = div_round_ceil_fn(iwidth, charwidth * MILLIPOINTS_PER_OS);
+                    this_width = idiv_ceil_fn(iwidth, charwidth * MILLIPOINTS_PER_OS);
                 }
                 else
                 {
@@ -1253,9 +1285,9 @@ AutoWidth_fn(void)
                     /* remove trailing spaces */
                     ptr = array + strlen(array);
                     while((--ptr >= array) && (*ptr == SPACE))
-                        *ptr = '\0';
+                        *ptr = CH_NULL;
 
-                    for(aptr = array ; *aptr != '\0'; aptr++)
+                    for(aptr = array ; *aptr != CH_NULL; aptr++)
                     {
                         if(ishighlight(*aptr))
                             hcount++;
@@ -1351,8 +1383,8 @@ all_widths_zero(
 }
 
 static BOOL
-do_widths_admin_start(
-    S32 width)
+do_widths_admin_prepare(
+    _InVal_     S32 width)
 {
     uchar array[20];
 
@@ -1360,13 +1392,15 @@ do_widths_admin_start(
 
     (void) write_col(array, elemof32(array), curcol);
 
-    return(mystr_set(&d_width[1].textfield, array));
+    false_return(mystr_set(&d_width[1].textfield, array));
+
+    return(dialog_box_start());
 }
 
 static BOOL
 do_widths_admin_core(
-    P_COL tcol1,
-    P_COL tcol2)
+    _OutRef_    P_COL tcol1,
+    _OutRef_    P_COL tcol2)
 {
     buff_sofar = (uchar *) d_width[1].textfield;
 
@@ -1385,80 +1419,95 @@ do_widths_admin_core(
     return(/*(*tcol2 < numcol)  &&*/  (*tcol1 <= *tcol2));
 }
 
-extern void
-ColumnWidth_fn(void)
+static int
+columnwidth_fn_core(void)
 {
     COL tcol, tcol1, tcol2;
     P_S32 widp, wwidp;
-    BOOL badparm;
+    BOOL badparm = !do_widths_admin_core(&tcol1, &tcol2);
 
-    if(!dialog_box_start())
-        return;
+    /* width of zero special */
+    if(!badparm  &&  (d_width[0].option == 0))
+    {
+        /* if setting current column to zero width force cell out of buffer */
+        if((curcol >= tcol1)  &&  (curcol <= tcol2))
+            if(!mergebuf())
+                return(FALSE);
 
-    if(!do_widths_admin_start(colwidth(curcol)))
+        /* must have some other columns possibly visible */
+        badparm = all_widths_zero(tcol1, tcol2);
+        trace_1(TRACE_APP_PD4, "all_widths_zero %d", badparm);
+
+        /* can't set fixed cols to zero width */
+        if(!badparm)
+        {
+            tcol = tcol1;
+            do  {
+                if(incolfixes(tcol))
+                    badparm = TRUE;
+            }
+            while(++tcol <= tcol2);
+        }
+    }
+
+    if(badparm)
+    {
+        reperr_null(ERR_BAD_PARM);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
+
+    tcol = tcol1;
+    do  {
+        readpcolvars(tcol, &widp, &wwidp);
+        *widp = d_width[0].option;
+    }
+    while(++tcol <= tcol2);
+
+    /* Examine all columns in sheet, tweek right margins of all linked columns */
+    adjust_all_linked_columns();
+
+    /* if the current width now 0 move ahead to first non-zero column */
+
+    for( ; !colwidth(curcol)  &&  (curcol < numcol-1); ++curcol)
+        movement = ABSOLUTE;
+
+    /* if there aren't any ahead, move back to one */
+
+    for( ; !colwidth(curcol); --curcol)
+        movement = ABSOLUTE;
+
+    newcol = curcol;
+    newrow = currow;
+
+    xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
+    filealtered(TRUE);
+
+    return(TRUE);
+}
+
+static BOOL
+columnwidth_fn_prepare(void)
+{
+    false_return(dialog_box_can_start());
+
+    return(do_widths_admin_prepare(colwidth(curcol)));
+}
+
+extern void
+ColumnWidth_fn(void)
+{
+    if(!columnwidth_fn_prepare())
         return;
 
     while(dialog_box(D_WIDTH))
     {
-        badparm = !do_widths_admin_core(&tcol1, &tcol2);
+        int core_res = columnwidth_fn_core();
 
-        /* width of zero special */
-        if(!badparm  &&  (d_width[0].option == 0))
-        {
-            /* if setting current column to zero width force cell out of buffer */
-            if((curcol >= tcol1)  &&  (curcol <= tcol2))
-                if(!mergebuf())
-                    break;
-
-            /* must have some other columns possibly visible */
-            badparm = all_widths_zero(tcol1, tcol2);
-            trace_1(TRACE_APP_PD4, "all_widths_zero %d", badparm);
-
-            /* can't set fixed cols to zero width */
-            if(!badparm)
-            {
-                tcol = tcol1;
-                do  {
-                    if(incolfixes(tcol))
-                        badparm = TRUE;
-                }
-                while(++tcol <= tcol2);
-            }
-        }
-
-        if(badparm)
-        {
-            reperr_null(create_error(ERR_BAD_PARM));
-            if(!dialog_box_can_retry())
-                break;
+        if(2 == core_res)
             continue;
-        }
 
-        tcol = tcol1;
-        do  {
-            readpcolvars(tcol, &widp, &wwidp);
-            *widp = d_width[0].option;
-        }
-        while(++tcol <= tcol2);
-
-        /* Examine all columns in sheet, tweek right margins of all linked columns */
-        adjust_all_linked_columns();
-
-        /* if the current width now 0 move ahead to first non-zero column */
-
-        for( ; !colwidth(curcol)  &&  (curcol < numcol-1); ++curcol)
-            movement = ABSOLUTE;
-
-        /* if there aren't any ahead, move back to one */
-
-        for( ; !colwidth(curcol); --curcol)
-            movement = ABSOLUTE;
-
-        newcol = curcol;
-        newrow = currow;
-
-        xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
-        filealtered(TRUE);
+        if(0 == core_res)
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -1467,44 +1516,62 @@ ColumnWidth_fn(void)
     dialog_box_end();
 }
 
-extern void
-RightMargin_fn(void)
+static int
+rightmargin_fn_core(void)
 {
     COL tcol, tcol1, tcol2;
     P_S32 widp, wwidp;
 
-    if(!dialog_box_start())
-        return;
+    if(!do_widths_admin_core(&tcol1, &tcol2))
+    {
+        reperr_null(ERR_BAD_PARM);
+        return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
+    }
 
-    /* Changed for PD4.12 by RCM at RJM's request */
+    remove_overlapped_linked_columns(tcol1, tcol2);
+
+    tcol = tcol1;
+    do  {
+        readpcolvars(tcol, &widp, &wwidp);
+        *wwidp = d_width[0].option;
+    }
+    while(++tcol <= tcol2);
+
+    xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
+    filealtered(TRUE);
+
+    return(TRUE);
+}
+
+static BOOL
+rightmargin_fn_prepare(void)
+{
+    /* Changed for PD 4.12 by RCM at RJM's request */
+    P_S32 widp, wwidp;
+
+    false_return(dialog_box_can_start());
 
     /* show wrap width, shows zero if right margin is tracking the colwidth */
     readpcolvars(curcol, &widp, &wwidp);
 
-    if(!do_widths_admin_start(*wwidp))
+    return(do_widths_admin_prepare(*wwidp));
+}
+
+extern void
+RightMargin_fn(void)
+{
+    if(!rightmargin_fn_prepare())
         return;
 
     while(dialog_box(D_MARGIN))
     {
-        if(!do_widths_admin_core(&tcol1, &tcol2))
-        {
-            reperr_null(create_error(ERR_BAD_PARM));
-            if(!dialog_box_can_retry())
-                break;
+        int core_res = rightmargin_fn_core();
+
+        if(2 == core_res)
             continue;
-        }
 
-        remove_overlapped_linked_columns(tcol1, tcol2);
-
-        tcol = tcol1;
-        do  {
-            readpcolvars(tcol, &widp, &wwidp);
-            *wwidp = d_width[0].option;
-        }
-        while(++tcol <= tcol2);
-
-        xf_drawcolumnheadings = out_screen = out_rebuildhorz = TRUE;
-        filealtered(TRUE);
+        if(0 == core_res)
+            break;
 
         if(!dialog_box_can_persist())
             break;
@@ -1651,7 +1718,7 @@ extern BOOL
 adjust_this_linked_column(
     COL tcol)
 {
-    IGNOREPARM(tcol);
+    UNREFERENCED_PARAMETER(tcol);
 
     return(adjust_all_linked_columns());
 }
@@ -1821,7 +1888,7 @@ fill_linbuf(
         /* copy word and spaces to temp buffer: any cell references need decompiling */
         from = lastword;
         to = buffer;
-        while(((ch = *from++) != NULLCH)  &&  (ch != SPACE))
+        while(((ch = *from++) != CH_NULL)  &&  (ch != SPACE))
         {
             if(SLRLD1 == ch)
             { /* decompile compiled cell reference */
@@ -1845,8 +1912,8 @@ fill_linbuf(
             ch = *from++;
         }
 
-        --from; /* retract to point to NULLCH or first character after a SPACE */
-        *to = NULLCH;
+        --from; /* retract to point to CH_NULL or first character after a SPACE */
+        *to = CH_NULL;
 
         wordlen = strlen(buffer);
         trace_2(TRACE_APP_PD4, "fill_linbuf received word '%s' of length %d", buffer, wordlen);
@@ -1862,7 +1929,7 @@ fill_linbuf(
         if(wordlen > LIN_BUFSIZ - lecpos)
         {
             trace_0(TRACE_APP_PD4, "fill_linbuf got a word that is too long!");
-            *to = '\0';
+            *to = CH_NULL;
             splitpoint = lecpos;
         }
         else
@@ -1881,8 +1948,10 @@ fill_linbuf(
 
         if(splitpoint > 0)
         {
-            new_just = jusbit ? (cur_leftright ? J_LEFTRIGHT : J_RIGHTLEFT)
-                              : J_FREE;
+            new_just =
+                (d_options_JU == 'Y')
+                    ? (cur_leftright ? J_LEFTRIGHT : J_RIGHTLEFT)
+                    : J_FREE;
 
             /* this line too long so merge it in */
             if(!mergeinline(splitpoint))
@@ -1891,7 +1960,7 @@ fill_linbuf(
             tcell = travel(curcol, curr_outrow - 1);
 
             /* set to justify perhaps */
-            if(jusbit  &&  ((tcell->justify & J_BITS) == J_FREE))
+            if((d_options_JU == 'Y')  &&  ((tcell->justify & J_BITS) == J_FREE))
             {
                 /* set new justify status, keeping protected bit */
                 tcell->justify = (tcell->justify & CLR_J_BITS) | new_just;
@@ -1901,7 +1970,7 @@ fill_linbuf(
     }
 
     assert(lecpos + 1 < elemof32(linbuf));
-    linbuf[lecpos + 1] = NULLCH;
+    linbuf[lecpos + 1] = CH_NULL;
     new_just = J_FREE;
 
     trace_2(TRACE_APP_PD4, "fill_linbuf settled on linbuf '%s', lecpos %d", linbuf, lecpos);
@@ -1927,7 +1996,7 @@ fill_linbuf(
     /* if insert on wrap, need to insert lindif rows in other columns */
     if(lindif > 0)
     {
-        if(iowbit)
+        if(d_options_IW == 'R')
         {
             COL tcol;
 
@@ -1959,7 +2028,7 @@ fill_linbuf(
     else
     {
         /* only pad with blank rows if insert on wrap is rows */
-        if(iowbit)
+        if(d_options_IW == 'R')
         {
             for( ; lindif < 0; lindif++)
             {
@@ -2021,7 +2090,7 @@ mergeinline(
     ROW temp_row;
 
     splitch = linbuf[splitpoint];
-    linbuf[splitpoint] = '\0';
+    linbuf[splitpoint] = CH_NULL;
     insertslotat(curcol, curr_outrow);
     curr_inrow++;
     lindif++;
@@ -2066,7 +2135,7 @@ mergeinline(
     else
         word_out = 0;
 
-    while(NULLCH != *from)
+    while(CH_NULL != *from)
     {
         if(SLRLD1 == (*to++ = *from++))
         { /* copy the rest of the CSR over */
@@ -2076,7 +2145,7 @@ mergeinline(
         }
     }
 
-    *to = NULLCH;
+    *to = CH_NULL;
 
     lecpos = to - linbuf;
     return(TRUE);
@@ -2146,7 +2215,7 @@ word_on_new_line(void)
     memcpy32(lastwordbuff, tcell->content.text, slotcontentssize(tcell)); /* includes terminator */
     lastword = lastwordbuff;
 
-    return(((*lastword == SPACE  &&  !firstword)  ||  *lastword == '\0')
+    return(((*lastword == SPACE  &&  !firstword)  ||  *lastword == CH_NULL)
                 ? NULL
                 : lastword);
 }
@@ -2154,9 +2223,9 @@ word_on_new_line(void)
 static BOOL
 do_FormatParagraph(void)
 {
-    if(!wrpbit)
+    if(d_options_WR != 'Y')
     {
-        reperr_null(create_error(ERR_CANTWRAP));
+        reperr_null(ERR_CANTWRAP);
         return(FALSE);
     }
 
@@ -2184,7 +2253,7 @@ FormatBlock_fn(void)
     COL startcol;
 #endif
 
-    /* SKS for 4.50 do something sensible when no marked block in this doc */
+    /* SKS for PD 4.50 do something sensible when no marked block in this doc */
     if((NO_COL == blkstart.col) || (blk_docno != current_docno()))
     {
         FormatParagraph_fn();
@@ -2200,7 +2269,7 @@ FormatBlock_fn(void)
     startcol = end_bl.col;
 #endif
 
-    for(;next_slot_in_block(DOWN_COLUMNS);)
+    for(;next_cell_in_block(DOWN_COLUMNS);)
     {
         curcol = in_block.col;
         currow = in_block.row;
@@ -2235,7 +2304,7 @@ FormatBlock_fn(void)
         {
             COL debug_col = end_bl.col;
 
-            reperr_null(create_error(ERR_BAD_PARM));
+            reperr_null(ERR_BAD_PARM);
             break;
         }
 #endif
@@ -2315,9 +2384,10 @@ del_chkwrp(void)
     S32 word_wid;
 
     /* do a reformat if insert on return */
-    if( !wrpbit  ||  (d_options_IR != 'Y')  ||
+    if( (d_options_WR != 'Y')  ||
+        (d_options_IR != 'Y')  ||
         xf_inexpression  ||
-        !chkcfm(travel_here(), currow))
+        !chkcfm(travel_here(), currow) )
             return;
 
     /* get length of line */
@@ -2346,10 +2416,10 @@ del_chkwrp(void)
                 while(*c && *c != SPACE)
                     c += font_skip(c);
 
-                *c = '\0';
+                *c = CH_NULL;
                 word_wid = font_width(tbuf);
 
-                wrapwidth *= charwidth * x_scale;
+                wrapwidth *= charwidth * millipoints_per_os_x;
 
                 if((wrapwidth - -splitpoint) < word_wid)
                     return;
@@ -2358,7 +2428,7 @@ del_chkwrp(void)
             {
                 c = sl->content.text;
 
-                while((NULLCH != *c) && (SPACE != *c))
+                while((CH_NULL != *c) && (SPACE != *c))
                 {
                     if(SLRLD1 == *c)
                         c += COMPILED_TEXT_SLR_SIZE;
@@ -2396,7 +2466,7 @@ chkwrp(void)
 
     row = currow;
 
-    if(!wrpbit  ||  !chkcfm(travel_here(), row))
+    if((d_options_WR != 'Y')  ||  !chkcfm(travel_here(), row))
         return;
 
     if((splitpoint = fndlbr(row)) > 0)
@@ -2438,9 +2508,9 @@ chkcfm(
     /* don't allow database reformat, hopefully
         no reformat on lines below the first if something to left or right
     */
-    if(iowbit && trow != currow && (
+    if( (d_options_IW == 'R')  &&  (trow != currow)  &&  (
         !is_blank_block(0,        trow, curcol-1, trow) ||
-        !is_blank_block(curcol+1, trow, numcol-1, trow)))
+        !is_blank_block(curcol+1, trow, numcol-1, trow) ) )
         return(FALSE);
 
     return(TRUE);
@@ -2466,7 +2536,7 @@ str_isblank(
         ch = *str++;
     while(ch == SPACE);
 
-    return(ch == '\0');
+    return(ch == CH_NULL);
 }
 
 /******************************************************************************
@@ -2512,7 +2582,7 @@ fndlbr(
         while(split_count--  &&  *break_point)
         {
             /* skip over word */
-            while(((ch = *break_point++) != '\0')  &&  (ch != SPACE))
+            while(((ch = *break_point++) != CH_NULL)  &&  (ch != SPACE))
                 ;
 
             if(ch != SPACE)
@@ -2545,9 +2615,9 @@ fndlbr(
         startofword = tptr - linbuf;
 
         /* walk past word - updating for text-at fields */
-        while(((ch = *tptr) != '\0')  &&  (ch != SPACE))
+        while(((ch = *tptr) != CH_NULL)  &&  (ch != SPACE))
         {
-            if((text_at_char == ch) && (NULLCH != text_at_char))
+            if((text_at_char == ch) /*no need to test (CH_NULL != text_at_char)*/)
             {
                 /* length of text-at field is number of trailing text-at chars */
                 tptr++;
@@ -2571,13 +2641,13 @@ fndlbr(
                 case 'G':
                     /* skip over internal part */
                     c = tptr;
-                    while(((ch = *c++) != '\0')  &&  (ch != text_at_char))
+                    while(((ch = *c++) != CH_NULL)  &&  (ch != text_at_char))
                         ;
                     if(!ch)
                         break;
                     --c;
                     /* skip over text-at chars - GF have zero width */
-                    while(((ch = *c++) != '\0')  &&  (ch == text_at_char))
+                    while(((ch = *c++) != CH_NULL)  &&  (ch == text_at_char))
                         ;
                     tptr = --c;
                     break;
@@ -2644,10 +2714,10 @@ font_line_break(
     S32 wrap_point)
 {
     font_string fs;
-    S32 wrap_mp;
+    GR_MILLIPOINT wrap_mp;
     S32 res;
 
-    wrap_mp = wrap_point * charwidth * x_scale;
+    wrap_mp = (wrap_point * charwidth) * millipoints_per_os_x;
 
     fs.s = str;
     fs.x = wrap_mp;

@@ -7,9 +7,10 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.55
-#TEXTUAL_VERSION_NUMBER=4.55.01
+TEXTUAL_VERSION_NUMBER=4.56
+#TEXTUAL_VERSION_NUMBER=4.56.01
 # ^^^ Needed for !Boot/!Run building
+# the master list is in version.c
 
 URD=$.pipedream.trunk
 
@@ -40,10 +41,34 @@ ASflags=$(ASflags_BASE)
 CC=cc
 CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -fah -throwback -DSB_GLOBAL_REGISTER
 CCflags=$(CCflags_BASE) -Otime
+#
+# CCflags=$(CCflags_BASE) -Otime -DCHECKING
+# Uncomment the above line ^^^ to get some modules compiled with assertion
+#
+# CCflags=$(CCflags_BASE) -Otime -DUNRELEASED
+# Uncomment the above line ^^^ to get some modules compiled with trace info and assertion
+#
+# Stuart's top tip - just copy over the set of r32.o
+# then delete the ones you want compiled with trace info
+# You'll probably need / want to rebuild some files:
+# o.pdmain as that sets up TRACE_ALLOWED stuff
+# o.modules.aligator as that exports some CHECKING functions
+#
+# CCflags=$(CCflags_BASE) -g
+# Uncomment the above line ^^^ to get some modules compiled with debug info
+#
+# CCflags=$(CCflags_BASE) -g -DUNRELEASED
+# Uncomment the above line ^^^ to get some modules compiled with debug info and tracing
+#
+# CCflags=$(CCflags_BASE) -Otime -DPROFILING
+# Uncomment the above line ^^^ for Profiling
+# recompile pdmain to enable the Profiler module
+# put a profile_on()/off() pair around interesting code
 
 LD=link
 AOFLinkflags=-aof -o $@
 Linkflags=-aif -o $@
+# For Profiling add -d for more symbols; -d is needed for debug info!
 
 PipeDream:   \
     @.!PipeDream.!Boot \
@@ -52,17 +77,19 @@ PipeDream:   \
     @.!PipeDream.!Sprites \
     @.!PipeDream.!Sprites22 \
     @.!PipeDream.!SpritesR5 \
-    @.!PipeDream.Resource.RISC_OS.Messages \
-    @.!PipeDream.Resource.RISC_OS.tem_risc \
-    @.!PipeDream.Resource.RISC_OS.tem_main \
-    @.!PipeDream.Resource.RISC_OS.tem_cht \
-    @.!PipeDream.Resource.RISC_OS.tem_bc \
-    @.!PipeDream.Resource.RISC_OS.tem_el \
-    @.!PipeDream.Resource.RISC_OS.tem_f \
-    @.!PipeDream.Resource.RISC_OS.tem_p \
-    @.!PipeDream.Resource.RISC_OS.tem_s \
-    @.!PipeDream.Resource.RISC_OS.Sprites \
-    @.!PipeDream.Resource.RISC_OS.Sprites22
+    @.!PipeDream.!SpritesR511 \
+    @.!PipeDream.Resources.UK.Messages \
+    @.!PipeDream.Resources.UK.tem_risc \
+    @.!PipeDream.Resources.UK.tem_main \
+    @.!PipeDream.Resources.UK.tem_cht \
+    @.!PipeDream.Resources.UK.tem_bc \
+    @.!PipeDream.Resources.UK.tem_el \
+    @.!PipeDream.Resources.UK.tem_f \
+    @.!PipeDream.Resources.UK.tem_p \
+    @.!PipeDream.Resources.UK.tem_s \
+    @.!PipeDream.Resources.UK.Sprites \
+    @.!PipeDream.Resources.UK.Sprites11 \
+    @.!PipeDream.Resources.UK.Sprites22
 
 AOF1=\
 o.pdmain \
@@ -70,6 +97,7 @@ o.blocks \
 o.browse \
 o.bufedit \
 o.colh \
+o.colour \
 o.commlin \
 o.constr \
 o.cursmov \
@@ -96,16 +124,18 @@ o.ridialog \
 o.riscdraw \
 o.riscos \
 o.riscmenu \
+o.savload \
 o.scdraw \
+o.slector \
 o.slot \
-o.slotconv \
-o.strings
+o.slotconv
 #
 AOF4=\
-o.savload \
-o.slector \
+o.spellchk \
+o.strings \
 o.viewio \
 o.dtpsave \
+o.userdict \
 o.userIO \
 o.version \
 o.windvars
@@ -143,6 +173,7 @@ o.modules.wm_null \
 o.modules.xstring
 #
 AOFM3=\
+o.modules.colourpick \
 o.modules.fontlxtr \
 o.modules.tristate \
 o.modules.wlalloc
@@ -161,6 +192,7 @@ o.modules.ev_exec \
 o.modules.ev_fndat \
 o.modules.ev_fnfin \
 o.modules.ev_fnsta \
+o.modules.ev_fnstb \
 o.modules.ev_fnstm \
 o.modules.ev_fnstr \
 o.modules.ev_func \
@@ -210,7 +242,7 @@ AOFND=$(AOF1) $(AOF2) $(AOF3) $(AOF4) $(AOFGR) $(AOFM1) $(AOFM2) $(AOFM3) $(AOFM
 #
 AOFDB=$(AOFD) $(AOFMD)
 #
-# United Kingdom image
+# language-independent image
 #
 #       Insert -d for debug symbols, -v (multiple times) for interesting output
 #
@@ -218,18 +250,21 @@ AOFDB=$(AOFD) $(AOFMD)
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs
-        @Echo If the link step fails, please look in o.GB_MapIm for the error
+        @Echo If the link step fails, please look in o._MapIm for the error
         $(LD) -v $(Linkflags) -base &8000 \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs \
-        -map -xref > @.o.GB_MapIm 2>&1 -symbols @.o.GB_SymIm
+        -map -xref > @.o._MapIm 2>&1 -symbols @.o._SymIm
         @Info $@
+#
+#       C:o.AnsiLib
+# You may wish to link with AnsiLib for better profiling resolution
 #
 o.aof_inter: Makefile
         $(LD) $(AOFLinkflags) o.pdmain C:o.Stubs
 
-o.aof_GB:   \
+o.aof: \
         @.Makefile \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
@@ -238,89 +273,97 @@ o.aof_GB:   \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs \
-        -map -xref > @.o.GB_Map00 2>&1 -symbols @.o.GB_Sym00
+        -map -xref > @.o._Map00 2>&1 -symbols @.o._Sym00
 #
 # working copy of the United Kingdom release sprites file
 #
 @.!PipeDream.!Sprites:   \
-             $(PD).utils.GB.spr_fi24
-        Copy $(PD).utils.GB.spr_fi24 $@ ~C FV
+             utils.UK.!Sprites24
+        Copy utils.UK.!Sprites24 $@ ~C FV
 
 @.!PipeDream.!Sprites22:   \
-             $(PD).utils.GB.spr_fi22
-        Copy $(PD).utils.GB.spr_fi22 $@ ~C FV
+             utils.UK.!Sprites22
+        Copy utils.UK.!Sprites22 $@ ~C FV
 
 @.!PipeDream.!SpritesR5:   \
-             $(PD).utils.GB.spr_fiR5
-        Copy $(PD).utils.GB.spr_fiR5 $@ ~C FV
+             utils.UK.!SpritesR522
+        Copy utils.UK.!SpritesR522 $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.Sprites:   \
-             utils.GB.s24_mrg
-        Copy @.utils.GB.s24_mrg $@ ~C FV
+@.!PipeDream.!SpritesR511:   \
+             utils.UK.!SpritesR511
+        Copy utils.UK.!SpritesR511 $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.Sprites22:   \
-             utils.GB.s22_mrg
-        Copy @.utils.GB.s22_mrg $@ ~C FV
+@.!PipeDream.Resources.UK.Sprites:   \
+             utils.UK.Sprites24
+      Copy @.utils.UK.Sprites24 $@ ~C FV
+
+@.!PipeDream.Resources.UK.Sprites11:   \
+             utils.UK.Sprites11
+      Copy @.utils.UK.Sprites11 $@ ~C FV
+
+@.!PipeDream.Resources.UK.Sprites22:   \
+             utils.UK.Sprites22
+      Copy @.utils.UK.Sprites22 $@ ~C FV
 #
 # and the template files too
 #
-@.!PipeDream.Resource.RISC_OS.tem_risc:   \
-             $(PD).utils.GB.tem_risc
-        Copy $(PD).utils.GB.tem_risc $@ ~C FV
+@.!PipeDream.Resources.UK.tem_risc:   \
+             $(PD).utils.en_GB.tem_risc
+        Copy $(PD).utils.en_GB.tem_risc $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.tem_main:   \
-             $(PD).utils.GB.tem_main
-        Copy $(PD).utils.GB.tem_main $@ ~C FV
+@.!PipeDream.Resources.UK.tem_main:   \
+             $(PD).utils.en_GB.tem_main
+        Copy $(PD).utils.en_GB.tem_main $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.tem_cht:   \
-             $(PD).utils.GB.tem_cht
-        Copy $(PD).utils.GB.tem_cht $@ ~C FV
+@.!PipeDream.Resources.UK.tem_cht:   \
+             $(PD).utils.en_GB.tem_cht
+        Copy $(PD).utils.en_GB.tem_cht $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.tem_bc:   \
-             $(PD).utils.GB.tem_bc
-        Copy $(PD).utils.GB.tem_bc $@ ~C FV
+@.!PipeDream.Resources.UK.tem_bc:   \
+             $(PD).utils.en_GB.tem_bc
+        Copy $(PD).utils.en_GB.tem_bc $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.tem_el:   \
-             $(PD).utils.GB.tem_el
-        Copy $(PD).utils.GB.tem_el $@ ~C FV
+@.!PipeDream.Resources.UK.tem_el:   \
+             $(PD).utils.en_GB.tem_el
+        Copy $(PD).utils.en_GB.tem_el $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.tem_f:   \
-             $(PD).utils.GB.tem_f
-        Copy $(PD).utils.GB.tem_f $@ ~C FV
+@.!PipeDream.Resources.UK.tem_f:   \
+             $(PD).utils.en_GB.tem_f
+        Copy $(PD).utils.en_GB.tem_f $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.tem_p:   \
-             $(PD).utils.GB.tem_p
-        Copy $(PD).utils.GB.tem_p $@ ~C FV
+@.!PipeDream.Resources.UK.tem_p:   \
+             $(PD).utils.en_GB.tem_p
+        Copy $(PD).utils.en_GB.tem_p $@ ~C FV
 
-@.!PipeDream.Resource.RISC_OS.tem_s:   \
-             $(PD).utils.GB.tem_s
-        Copy $(PD).utils.GB.tem_s $@ ~C FV
+@.!PipeDream.Resources.UK.tem_s:   \
+             $(PD).utils.en_GB.tem_s
+        Copy $(PD).utils.en_GB.tem_s $@ ~C FV
 #
 # and the message file too
 #
-@.!PipeDream.Resource.RISC_OS.Messages:   \
-             utils.GB.Messages
-        Copy @.utils.GB.Messages $@ ~C FV
+@.!PipeDream.Resources.UK.Messages:   \
+             utils.UK.Messages
+        Copy @.utils.UK.Messages $@ ~C FV
 
 @.!PipeDream.!Boot: \
         $(PD).Build.Tools.BootRunGen \
         @.Makefile
-        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -version $(TEXTUAL_VERSION_NUMBER) -r32 -boot
+        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -product pipedream -version $(TEXTUAL_VERSION_NUMBER) -r32 -boot
 
 @.!PipeDream.!Run: \
         $(PD).Build.Tools.BootRunGen \
         @.Makefile
-        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -version $(TEXTUAL_VERSION_NUMBER) -r32
+        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -product pipedream -version $(TEXTUAL_VERSION_NUMBER) -r32
 
 @.!RunDB: \
         $(PD).Build.Tools.BootRunGen \
         @.Makefile
-        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -version $(TEXTUAL_VERSION_NUMBER) -r32 -alternate
+        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -product pipedream -version $(TEXTUAL_VERSION_NUMBER) -r32 -alternate
 
 @.!RunND: \
         $(PD).Build.Tools.BootRunGen \
         @.Makefile
-        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -version $(TEXTUAL_VERSION_NUMBER) -r32 -alternate
+        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -product pipedream -version $(TEXTUAL_VERSION_NUMBER) -r32 -alternate
 
 # ####################################################################
 #
@@ -354,6 +397,8 @@ o.Modules.ev_fnfin:    $(CMODULES).c.ev_fnfin
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnfin
 o.Modules.ev_fnsta:    $(CMODULES).c.ev_fnsta
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnsta
+o.Modules.ev_fnstb:    $(CMODULES).c.ev_fnstb
+        $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnstb
 o.Modules.ev_fnstm:    $(CMODULES).c.ev_fnstm
         $(CC) -o $@ $(CCflags_BASE) $(CMODULES).c.ev_fnstm
 o.Modules.ev_fnstr:    $(CMODULES).c.ev_fnstr
@@ -473,6 +518,8 @@ o.Modules.xstring:    $(CMODULES).c.xstring
 #
 # RISCOS specific
 #
+o.Modules.colourpick:  $(CMODULES).riscos.c.colourpick
+        $(CC) -o $@ $(CCflags) $(CMODULES).riscos.c.colourpick
 o.Modules.fontlxtr:   $(CMODULES).riscos.c.fontlxtr
         $(CC) -o $@ $(CCflags) $(CMODULES).riscos.c.fontlxtr
 o.Modules.ho_dll:     $(CMODULES).riscos.c.ho_dll
@@ -500,8 +547,8 @@ o.Modules.wn_pnpoly:	$(PD_EXTERNAL).OtherFree.c.wn_pnpoly
 #
 # ARM assembler modules static dependencies
 #
-o.Modules.muldivas:   $(CMODULES).riscos.c.muldivas
-        $(AS) -to $@ $(ASflags) -from $(CMODULES).riscos.c.muldivas
+o.Modules.muldivas:   $(CMODULES).riscos.s.muldivas
+        $(AS) -to $@ $(ASflags) -from $(CMODULES).riscos.s.muldivas
 #
 # C modules extra dependencies (comment out appropriately during severe hacks)
 #
@@ -519,6 +566,7 @@ o.Modules.ev_exec :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).
 o.Modules.ev_fndat :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnfin :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnsta :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_fnstb :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnstm :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_fnstr :   $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_func :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
@@ -574,6 +622,7 @@ o.Modules.vsload :     $(CMODULES).h.vsload
 o.Modules.wm_null :    $(CMODULES).h.wm_event
 o.Modules.xstring :    $(CMODULES).h.xstring
 #
+o.Modules.colourpick : $(CMODULES).riscos.h.colourpick
 o.Modules.fontlxtr :   $(CMODULES).riscos.h.fontlxtr
 o.Modules.ho_dll :     $(CMODULES).riscos.h.ho_dll
 o.Modules.ho_sqush :   $(CMODULES).riscos.h.ho_sqush
@@ -594,6 +643,8 @@ o.bufedit:   $(PD).c.bufedit
         $(CC) -o $@ $(CCflags) $(PD).c.bufedit
 o.colh:   $(PD).c.colh
         $(CC) -o $@ $(CCflags) $(PD).c.colh
+o.colour:   $(PD).c.colour
+        $(CC) -o $@ $(CCflags) $(PD).c.colour
 o.commlin:   $(PD).c.commlin
         $(CC) -o $@ $(CCflags) $(PD).c.commlin
 o.constr:   $(PD).c.constr
@@ -656,10 +707,14 @@ o.slot:   $(PD).c.slot
         $(CC) -o $@ $(CCflags) $(PD).c.slot
 o.slotconv:   $(PD).c.slotconv
         $(CC) -o $@ $(CCflags) $(PD).c.slotconv
+o.spellchk:   $(PD).c.spellchk
+        $(CC) -o $@ $(CCflags) $(PD).c.spellchk
 o.strings:   $(PD).c.strings
         $(CC) -o $@ $(CCflags) $(PD).c.strings
+o.userdict:   $(PD).c.userdict
+        $(CC) -o $@ $(CCflags) $(PD).c.userdict
 o.userIO:   $(PD).c.userIO
-        $(CC) -o $@ $(CCflags) $(PD).c.UserIO
+        $(CC) -o $@ $(CCflags) $(PD).c.userIO
 o.version:   $(PD).c.version
         $(CC) -o $@ $(CCflags) $(PD).c.version
 o.viewio:   $(PD).c.viewio
@@ -683,51 +738,51 @@ o.pdchart: $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 #
 ###############################################################################
 
-utils.GB.Messages:   \
-        utils.GB.t_reperr \
-        utils.GB.t_strings \
-        $(WimpLib).GB.msg_risc \
-        $(CMODULES).GB.msg.gr_chart \
-        $(CMODULES).GB.msg.mlec
-        print  { > $@ } utils.GB.t_reperr
-        print { >> $@ } utils.GB.t_strings
-        print { >> $@ } $(WimpLib).GB.msg_risc
-        print { >> $@ } $(CMODULES).GB.msg.gr_chart
-        print { >> $@ } $(CMODULES).GB.msg.mlec
+utils.UK.Messages:   \
+        utils.UK.t_strings \
+        utils.UK.t_reperr \
+        $(CMODULES).utils.en_GB.msg.gr_chart \
+        $(CMODULES).utils.en_GB.msg.mlec \
+        $(WimpLib).utils.en_GB.msg_risc
+        print  { > $@ } utils.UK.t_strings
+        print { >> $@ } utils.UK.t_reperr
+        print { >> $@ } $(CMODULES).utils.en_GB.msg.gr_chart
+        print { >> $@ } $(CMODULES).utils.en_GB.msg.mlec
+        print { >> $@ } $(WimpLib).utils.en_GB.msg_risc
         SetType $@ Text
 
-utils.GB.t_reperr:       utils.GB.u_reperr
-        Run <Prefix$Dir>.utils.GB.u_reperr > $@
+utils.UK.t_reperr:       utils.UK.u_reperr
+        Run <Prefix$Dir>.utils.UK.u_reperr > $@
 
-utils.GB.t_strings:      utils.GB.u_strings
-        Run <Prefix$Dir>.utils.GB.u_strings > $@
+utils.UK.t_strings:      utils.UK.u_strings
+        Run <Prefix$Dir>.utils.UK.u_strings > $@
 
-utils.GB.u_reperr:   \
-        utils.GB.o.reperr \
+utils.UK.u_reperr:   \
+        utils.UK.o.reperr \
         C:o.Stubs
         Link -o $@ -aif \
-        utils.GB.o.reperr \
+        utils.UK.o.reperr \
         C:o.Stubs
 
-utils.GB.u_strings:   \
-        utils.GB.o.strings \
+utils.UK.u_strings:   \
+        utils.UK.o.strings \
         C:o.Stubs
         Link -o $@ -aif \
-        utils.GB.o.strings \
+        utils.UK.o.strings \
         C:o.Stubs
 
-utils.GB.o.reperr:   $(PD).h.personal $(PD).h.errdef
-utils.GB.o.reperr:   $(PD).c.reperr
+utils.UK.o.reperr:   $(PD).h.personal $(PD).h.errdef
+utils.UK.o.reperr:   $(PD).c.reperr
         @CDir @.utils
-        @CDir @.utils.GB
-        @CDir @.utils.GB.o
+        @CDir @.utils.UK
+        @CDir @.utils.UK.o
         $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.reperr
 
-utils.GB.o.strings:   $(PD).h.personal
-utils.GB.o.strings:   $(PD).c.strings
+utils.UK.o.strings:   $(PD).h.personal
+utils.UK.o.strings:   $(PD).c.strings
         @CDir @.utils
-        @CDir @.utils.GB
-        @CDir @.utils.GB.o
+        @CDir @.utils.UK
+        @CDir @.utils.UK.o
         $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.strings
 
 ###############################################################################
@@ -736,58 +791,163 @@ utils.GB.o.strings:   $(PD).c.strings
 #
 ###############################################################################
 
-utils.GB.s22_mrg:   \
-        $(PD).utils.GB.spr_fi22 \
-        $(PD).utils.GB.spr_pd22  \
-        $(PD).utils.GB.spr_pd \
-        $(PD).utils.GB.spr_ch22 \
-        $(PD).utils.GB.spr_chart \
-        $(WimpLib).GB.spr_risc
+# Do ship extra file type icons that are in not RISC OS 4.02 ROM
+
+utils.UK.!Sprites22:   \
+        $(PD).utils.Neutral.spr_app22 \
+        $(PD).utils.Neutral.spr_file22 \
+        $(PD).utils.Neutral.spr_fxtr22R4
         ChangeDynamicArea -SpriteSize 256k
         SNew
-        SLoad   $(PD).utils.GB.spr_fi22
-       -SDelete sm!pipedream
-       -SDelete file_dde
-       -SDelete small_dde
-       -SDelete file_d21
-       -SDelete small_d21
-        SMerge  $(PD).utils.GB.spr_pd22
-        SMerge  $(PD).utils.GB.spr_pd
-        SMerge  $(PD).utils.GB.spr_ch22
-        SMerge  $(PD).utils.GB.spr_chart
-        SMerge  $(WimpLib).GB.spr_risc
+        SLoad   $(PD).utils.Neutral.spr_app22
+        SMerge  $(PD).utils.Neutral.spr_file22
+        SMerge  $(PD).utils.Neutral.spr_fxtr22R4
+        X SDelete now_empty
        -SInfo
        -SList
-       @CDir    @.utils
-       @CDir    @.utils.GB
         SSave   $@
        -SNew
        -ChangeDynamicArea -SpriteSize 32k
 
-utils.GB.s24_mrg:   \
-        $(PD).utils.GB.spr_fi24 \
-        $(PD).utils.GB.spr_pd24  \
-        $(PD).utils.GB.spr_pd \
-        $(PD).utils.GB.spr_ch24  \
-        $(PD).utils.GB.spr_chart \
-        $(WimpLib).GB.spr_risc
+utils.UK.!Sprites24:   \
+        $(PD).utils.Neutral.spr_app24 \
+        $(PD).utils.Neutral.spr_file24 \
+        $(PD).utils.Neutral.spr_fxtr24R4
         ChangeDynamicArea -SpriteSize 256k
         SNew
-        SLoad   $(PD).utils.GB.spr_fi24
+        SLoad   $(PD).utils.Neutral.spr_app24
+        SMerge  $(PD).utils.Neutral.spr_file24
+        SMerge  $(PD).utils.Neutral.spr_fxtr24R4
+        X SDelete now_empty
+       -SInfo
+       -SList
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+# !SpritesR5XX have different ic_dde pin position
+
+# Also don't ship extra file type icons that are in RISC OS 5 ROM
+
+utils.UK.!SpritesR511:   \
+        $(PD).utils.Neutral.spr_app11 \
+        $(PD).utils.Neutral.spr_file11 \
+        $(PD).utils.Neutral.spr_file11R5
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_app11
+        SMerge  $(PD).utils.Neutral.spr_file11
+        SMerge  $(PD).utils.Neutral.spr_file11R5
+        X SDelete now_empty
+       -SInfo
+       -SList
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+utils.UK.!SpritesR522:   \
+        $(PD).utils.Neutral.spr_app22 \
+        $(PD).utils.Neutral.spr_file22 \
+        $(PD).utils.Neutral.spr_file22R5
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_app22
+        SMerge  $(PD).utils.Neutral.spr_file22
+        SMerge  $(PD).utils.Neutral.spr_file22R5
+        X SDelete now_empty
+       -SInfo
+       -SList
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+# SpritesXX need !pipedream but not sm!pipedream
+
+utils.UK.Sprites11:   \
+        $(PD).utils.Neutral.spr_app11 \
+        $(PD).utils.en_GB.spr_pd \
+        $(PD).utils.en_GB.spr_pd22  \
+        $(PD).utils.en_GB.tangod.spr_tg22  \
+        $(PD).utils.en_GB.spr_pd11  \
+        $(PD).utils.en_GB.tangod.spr_tg11  \
+        $(PD).utils.Neutral.spr_chart \
+        $(PD).utils.Neutral.spr_chart22 \
+        $(WimpLib).utils.en_GB.spr_risc
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_app11
        -SDelete sm!pipedream
-       -SDelete file_dde
-       -SDelete small_dde
-       -SDelete file_d21
-       -SDelete small_d21
-        SMerge  $(PD).utils.GB.spr_pd24
-        SMerge  $(PD).utils.GB.spr_pd
-        SMerge  $(PD).utils.GB.spr_ch24
-        SMerge  $(PD).utils.GB.spr_chart
-        SMerge  $(WimpLib).GB.spr_risc
+        SMerge  $(PD).utils.en_GB.spr_pd
+        SMerge  $(PD).utils.en_GB.spr_pd22
+        SMerge  $(PD).utils.en_GB.tangod.spr_tg22
+       -SDelete ptr_menu
+       -SDelete ptr_write
+        SMerge  $(PD).utils.en_GB.spr_pd11
+        SMerge  $(PD).utils.en_GB.tangod.spr_tg11
+        SMerge  $(PD).utils.Neutral.spr_chart
+        SMerge  $(PD).utils.Neutral.spr_chart22
+        SMerge  $(WimpLib).utils.en_GB.spr_risc
+        X SDelete now_empty
        -SInfo
        -SList
        @CDir    @.utils
-       @CDir    @.utils.GB
+       @CDir    @.utils.UK
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+utils.UK.Sprites22:   \
+        $(PD).utils.Neutral.spr_app22 \
+        $(PD).utils.Neutral.spr_file22 \
+        $(PD).utils.en_GB.spr_pd \
+        $(PD).utils.en_GB.spr_pd22  \
+        $(PD).utils.en_GB.tangod.spr_tg22  \
+        $(PD).utils.Neutral.spr_chart \
+        $(PD).utils.Neutral.spr_chart22 \
+        $(WimpLib).utils.en_GB.spr_risc
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_app22
+       -SDelete sm!pipedream
+        SMerge  $(PD).utils.Neutral.spr_file22
+        SMerge  $(PD).utils.en_GB.spr_pd
+        SMerge  $(PD).utils.en_GB.spr_pd22
+        SMerge  $(PD).utils.en_GB.tangod.spr_tg22
+        SMerge  $(PD).utils.Neutral.spr_chart
+        SMerge  $(PD).utils.Neutral.spr_chart22
+        SMerge  $(WimpLib).utils.en_GB.spr_risc
+        X SDelete now_empty
+       -SInfo
+       -SList
+       @CDir    @.utils
+       @CDir    @.utils.UK
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+utils.UK.Sprites24:   \
+        $(PD).utils.Neutral.spr_app24 \
+        $(PD).utils.Neutral.spr_file24 \
+        $(PD).utils.en_GB.spr_pd \
+        $(PD).utils.en_GB.spr_pd24  \
+        $(PD).utils.Neutral.spr_chart \
+        $(PD).utils.Neutral.spr_chart24  \
+        $(WimpLib).utils.en_GB.spr_risc
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_app24
+       -SDelete sm!pipedream
+        SMerge  $(PD).utils.Neutral.spr_file24
+        SMerge  $(PD).utils.en_GB.spr_pd
+        SMerge  $(PD).utils.en_GB.spr_pd24
+        SMerge  $(PD).utils.Neutral.spr_chart
+        SMerge  $(PD).utils.Neutral.spr_chart24
+        SMerge  $(WimpLib).utils.en_GB.spr_risc
+        X SDelete now_empty
+       -SInfo
+       -SList
+       @CDir    @.utils
+       @CDir    @.utils.UK
         SSave   $@
        -SNew
        -ChangeDynamicArea -SpriteSize 32k

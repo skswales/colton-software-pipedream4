@@ -4,9 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2016 Stuart Swales */
-
-/* SKS 2012 */
+/* Copyright (C) 2012-2018 Stuart Swales */
 
 #ifndef __target_riscos_host_windows_h
 #define __target_riscos_host_windows_h
@@ -24,10 +22,6 @@
 #else
 #define      __STDC_VERSION__ 0L /* MSVC is still not C99 */
 #endif
-#endif
-
-#if !defined(_CHAR_UNSIGNED)
-#error       _CHAR_UNSIGNED must be set (use -J switch)
 #endif
 
 #if !defined(_CHAR_UNSIGNED)
@@ -67,6 +61,12 @@ typedef unsigned short wchar_t;
 #define __Tfunc__ TEXT("__FUNCTION__")
 #endif
 
+#if defined(_PREFAST_)
+#ifndef CODE_ANALYSIS
+#define CODE_ANALYSIS 1
+#endif
+#endif /* _PREFAST_ */
+
 #pragma warning(push)
 #pragma warning(disable:4820) /* 'x' bytes padding added after data member */
 
@@ -75,7 +75,6 @@ typedef unsigned short wchar_t;
 #endif
 
 #if 1 /* turn on for a big surprise with MSVC /analyze ! */
-/* VC2008; NB VC2005 sal.h is different */
 #define _USE_DECLSPECS_FOR_SAL  1
 #define _USE_ATTRIBUTES_FOR_SAL 0
 /* Ideally #include "%VCINSTALLDIR%\Include\sal.h" */
@@ -90,9 +89,7 @@ typedef unsigned short wchar_t;
 
 #pragma warning(pop)
 
-#ifndef _In_reads_
-#include "cmodules/coltsoft/no-sal.h"
-#endif
+#include "cmodules/coltsoft/ns-sal.h"
 
 __pragma(warning(disable:4514)) /* 'x' : unreferenced inline function has been removed */
 /*__pragma(warning(disable:4548))*/ /* expression before comma has no effect; expected expression with side-effect */

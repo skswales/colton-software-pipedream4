@@ -1,0 +1,665 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{365DDD4C-1800-4B52-B79C-6E37E1930FA7}</ProjectGuid>
+    <RootNamespace>PipeDream</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.23107.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(ProgramFiles)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CROSS_COMPILE;HOST_WINDOWS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>-J %(AdditionalOptions)</AdditionalOptions>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat />
+      <CompileAs>Default</CompileAs>
+      <DisableSpecificWarnings>4068;4081;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <EnablePREfast>false</EnablePREfast>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>common/gflags.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>$(OutDir)PipeDream.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/J %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Full</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(ProgramFiles)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CROSS_COMPILE;HOST_WINDOWS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat />
+      <CompileAs>Default</CompileAs>
+      <DisableSpecificWarnings>4068;4081;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>$(OutDir)PipeDream.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\blocks.c" />
+    <ClCompile Include="..\..\..\..\browse.c" />
+    <ClCompile Include="..\..\..\..\bufedit.c" />
+    <ClCompile Include="..\..\..\..\cmodules\123pd.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">UTIL_PTL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UTIL_PTL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\aligator.c" />
+    <ClCompile Include="..\..\..\..\cmodules\alloc.c" />
+    <ClCompile Include="..\..\..\..\cmodules\allocblk.c" />
+    <ClCompile Include="..\..\..\..\cmodules\bezier.c" />
+    <ClCompile Include="..\..\..\..\cmodules\collect.c" />
+    <ClCompile Include="..\..\..\..\cmodules\debug.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_comp.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_dcom.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_docs.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_eval.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_exec.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_fndat.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_fnfin.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_fnsta.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_fnstb.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_fnstm.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_fnstr.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_func.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_help.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_matb.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_math.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_matr.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_mcpx.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_mtri.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_name.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_rpn.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_tabl.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_tree.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ev_uref.c" />
+    <ClCompile Include="..\..\..\..\cmodules\file.c" />
+    <ClCompile Include="..\..\..\..\cmodules\fileutil.c" />
+    <ClCompile Include="..\..\..\..\cmodules\funclist.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_axis2.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_axisp.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_barch.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_blgal.c" />
+    <ClCompile Include="..\..\..\..\cmodules\im_cache.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_chart.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_chtIO.c" />
+    <ClCompile Include="..\..\..\..\cmodules\im_convert.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_coord.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_diag.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_editc.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_editm.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_editt.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_nodbg.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_numcv.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_piesg.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_rdia2.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_rdiag.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_scatc.c" />
+    <ClCompile Include="..\..\..\..\cmodules\gr_style.c" />
+    <ClCompile Include="..\..\..\..\cmodules\handlist.c" />
+    <ClCompile Include="..\..\..\..\cmodules\mathxtr2.c" />
+    <ClCompile Include="..\..\..\..\cmodules\mathxtr3.c" />
+    <ClCompile Include="..\..\..\..\cmodules\mathxtr4.c" />
+    <ClCompile Include="..\..\..\..\cmodules\mathxtra.c" />
+    <ClCompile Include="..\..\..\..\cmodules\mlec.c" />
+    <ClCompile Include="..\..\..\..\cmodules\myassert.c" />
+    <ClCompile Include="..\..\..\..\cmodules\numform.c" />
+    <ClCompile Include="..\..\..\..\cmodules\pd123.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">UTIL_PTL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UTIL_PTL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\quickblk.c" />
+    <ClCompile Include="..\..\..\..\cmodules\report.c" />
+    <ClCompile Include="..\..\..\..\cmodules\riscos\colourpick.c" />
+    <ClCompile Include="..\..\..\..\cmodules\riscos\fontlxtr.c" />
+    <ClCompile Include="..\..\..\..\cmodules\riscos\muldivas.s">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\riscos\tristate.c" />
+    <ClCompile Include="..\..\..\..\cmodules\riscos\wlalloc.c" />
+    <ClCompile Include="..\..\..\..\cmodules\spell.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ss_const.c" />
+    <ClCompile Include="..\..\..\..\cmodules\ss_date.c" />
+    <ClCompile Include="..\..\..\..\cmodules\stringlk.c" />
+    <ClCompile Include="..\..\..\..\cmodules\typepack.c" />
+    <ClCompile Include="..\..\..\..\cmodules\vsload.c" />
+    <ClCompile Include="..\..\..\..\cmodules\wm_event.c" />
+    <ClCompile Include="..\..\..\..\cmodules\wm_null.c" />
+    <ClCompile Include="..\..\..\..\cmodules\xstring.c" />
+    <ClCompile Include="..\..\..\..\colh.c" />
+    <ClCompile Include="..\..\..\..\colour.c" />
+    <ClCompile Include="..\..\..\..\commlin.c" />
+    <ClCompile Include="..\..\..\..\constr.c" />
+    <ClCompile Include="..\..\..\..\cursmov.c" />
+    <ClCompile Include="..\..\..\..\dialog.c" />
+    <ClCompile Include="..\..\..\..\doprint.c" />
+    <ClCompile Include="..\..\..\..\dtpsave.c" />
+    <ClCompile Include="..\..\..\..\execs.c" />
+    <ClCompile Include="..\..\..\..\expedit.c" />
+    <ClCompile Include="..\..\..\..\external\OtherFree\wn_pnpoly.c" />
+    <ClCompile Include="..\..\..\..\help.c" />
+    <ClCompile Include="..\..\..\..\link_ev.c" />
+    <ClCompile Include="..\..\..\..\lists.c" />
+    <ClCompile Include="..\..\..\..\markers.c" />
+    <ClCompile Include="..\..\..\..\mcdiff.c" />
+    <ClCompile Include="..\..\..\..\numbers.c" />
+    <ClCompile Include="..\..\..\..\pdchart.c" />
+    <ClCompile Include="..\..\..\..\pdmain.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\pdriver.c" />
+    <ClCompile Include="..\..\..\..\pdsearch.c" />
+    <ClCompile Include="..\..\..\..\progvars.c" />
+    <ClCompile Include="..\..\..\..\reperr.c" />
+    <ClCompile Include="..\..\..\..\replace.c" />
+    <ClCompile Include="..\..\..\..\ridialog.c" />
+    <ClCompile Include="..\..\..\..\riscdraw.c" />
+    <ClCompile Include="..\..\..\..\riscmenu.c" />
+    <ClCompile Include="..\..\..\..\riscos.c" />
+    <ClCompile Include="..\..\..\..\savload.c" />
+    <ClCompile Include="..\..\..\..\scdraw.c" />
+    <ClCompile Include="..\..\..\..\slector.c" />
+    <ClCompile Include="..\..\..\..\slot.c" />
+    <ClCompile Include="..\..\..\..\slotconv.c" />
+    <ClCompile Include="..\..\..\..\spellchk.c" />
+    <ClCompile Include="..\..\..\..\strings.c" />
+    <ClCompile Include="..\..\..\..\UserIO.c" />
+    <ClCompile Include="..\..\..\..\userdict.c" />
+    <ClCompile Include="..\..\..\..\version.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\viewio.c" />
+    <ClCompile Include="..\..\..\..\WimpLib\bbc.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-event.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-flex.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-msgs.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-templat.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-wimptx.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\cs-winx.c">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CROSS_COMPILE;HOST_WINDOWS;COMPILING_WIMPLIB_EXTENSIONS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\dbox.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\dboxtcol.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\drawmod.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\event.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\fileicon.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\flex.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\font.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\fontlist.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\fontselect.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\menu.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-dboxtcol.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-drawmod.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-fileicon.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-font.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-os.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-pointer.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-print.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\nd-werr.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\os.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\pointer.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\print.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\res.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\resspr.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\werr.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\wimp.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\wimpt.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\win.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\xferrecv.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\WimpLib\xfersend.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\windvars.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\t5-nonfree\Acorn\Library\32\CLib\msvchack\kernel.h" />
+    <ClInclude Include="..\..\..\..\..\t5-nonfree\Acorn\Library\32\CLib\msvchack\swis.h" />
+    <ClInclude Include="..\..\..\..\..\t5-nonfree\Acorn\Library\32\tboxlibs\flex.h" />
+    <ClInclude Include="..\..\..\..\cmodules\aligator.h" />
+    <ClInclude Include="..\..\..\..\cmodules\alloc.h" />
+    <ClInclude Include="..\..\..\..\cmodules\allocblk.h" />
+    <ClInclude Include="..\..\..\..\cmodules\bezier.h" />
+    <ClInclude Include="..\..\..\..\cmodules\collect.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\ansi.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\coltsoft.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\defineos.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\drawxtra.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\mathnums.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\no-sal.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\ns-sal.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\pragma.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\pragmari.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_gccsdk.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_windows.h" />
+    <ClInclude Include="..\..\..\..\cmodules\debug.h" />
+    <ClInclude Include="..\..\..\..\cmodules\ev_eval.h" />
+    <ClInclude Include="..\..\..\..\cmodules\ev_evali.h" />
+    <ClInclude Include="..\..\..\..\cmodules\file.h" />
+    <ClInclude Include="..\..\..\..\cmodules\funclist.h" />
+    <ClInclude Include="..\..\..\..\cmodules\im_cache.h" />
+    <ClInclude Include="..\..\..\..\cmodules\gr_chari.h" />
+    <ClInclude Include="..\..\..\..\cmodules\gr_chart.h" />
+    <ClInclude Include="..\..\..\..\cmodules\gr_coord.h" />
+    <ClInclude Include="..\..\..\..\cmodules\handlist.h" />
+    <ClInclude Include="..\..\..\..\cmodules\mathxtr2.h" />
+    <ClInclude Include="..\..\..\..\cmodules\mathxtr3.h" />
+    <ClInclude Include="..\..\..\..\cmodules\mathxtr4.h" />
+    <ClInclude Include="..\..\..\..\cmodules\mathxtra.h" />
+    <ClInclude Include="..\..\..\..\cmodules\mathxtri.h" />
+    <ClInclude Include="..\..\..\..\cmodules\mlec.h" />
+    <ClInclude Include="..\..\..\..\cmodules\monotime.h" />
+    <ClInclude Include="..\..\..\..\cmodules\muldiv.h" />
+    <ClInclude Include="..\..\..\..\cmodules\myassert.h" />
+    <ClInclude Include="..\..\..\..\cmodules\numform.h" />
+    <ClInclude Include="..\..\..\..\cmodules\pd123.h" />
+    <ClInclude Include="..\..\..\..\cmodules\pd123_i.h" />
+    <ClInclude Include="..\..\..\..\cmodules\quickblk.h" />
+    <ClInclude Include="..\..\..\..\cmodules\report.h" />
+    <ClInclude Include="..\..\..\..\cmodules\riscos\colourpick.h" />
+    <ClInclude Include="..\..\..\..\cmodules\riscos\filetype.h" />
+    <ClInclude Include="..\..\..\..\cmodules\riscos\fontlxtr.h" />
+    <ClInclude Include="..\..\..\..\cmodules\riscos\osfile.h" />
+    <ClInclude Include="..\..\..\..\cmodules\riscos\profile.h" />
+    <ClInclude Include="..\..\..\..\cmodules\riscos\tristate.h" />
+    <ClInclude Include="..\..\..\..\cmodules\riscos\wlalloc.h" />
+    <ClInclude Include="..\..\..\..\cmodules\spell.h" />
+    <ClInclude Include="..\..\..\..\cmodules\ss_const.h" />
+    <ClInclude Include="..\..\..\..\cmodules\stringlk.h" />
+    <ClInclude Include="..\..\..\..\cmodules\typepack.h" />
+    <ClInclude Include="..\..\..\..\cmodules\unicode\u0000.h" />
+    <ClInclude Include="..\..\..\..\cmodules\unicode\u0080.h" />
+    <ClInclude Include="..\..\..\..\cmodules\vsload.h" />
+    <ClInclude Include="..\..\..\..\cmodules\wm_event.h" />
+    <ClInclude Include="..\..\..\..\cmodules\xstring.h" />
+    <ClInclude Include="..\..\..\..\colh_x.h" />
+    <ClInclude Include="..\..\..\..\common\gflags.h" />
+    <ClInclude Include="..\..\..\..\datafmt.h" />
+    <ClInclude Include="..\..\..\..\datatype.h" />
+    <ClInclude Include="..\..\..\..\dtpsave.h" />
+    <ClInclude Include="..\..\..\..\errdef.h" />
+    <ClInclude Include="..\..\..\..\include.h" />
+    <ClInclude Include="..\..\..\..\lists_x.h" />
+    <ClInclude Include="..\..\..\..\markers.h" />
+    <ClInclude Include="..\..\..\..\pdchart.h" />
+    <ClInclude Include="..\..\..\..\pd_x.h" />
+    <ClInclude Include="..\..\..\..\personal.h" />
+    <ClInclude Include="..\..\..\..\progvars.h" />
+    <ClInclude Include="..\..\..\..\ridialog.h" />
+    <ClInclude Include="..\..\..\..\ridialog_x.h" />
+    <ClInclude Include="..\..\..\..\riscdraw.h" />
+    <ClInclude Include="..\..\..\..\riscdraw_x.h" />
+    <ClInclude Include="..\..\..\..\riscmenu.h" />
+    <ClInclude Include="..\..\..\..\riscos_x.h" />
+    <ClInclude Include="..\..\..\..\scdraw_x.h" />
+    <ClInclude Include="..\..\..\..\screen.h" />
+    <ClInclude Include="..\..\..\..\strings.h" />
+    <ClInclude Include="..\..\..\..\userIO_x.h" />
+    <ClInclude Include="..\..\..\..\version_x.h" />
+    <ClInclude Include="..\..\..\..\viewio.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\akbd.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\alarm.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\baricon.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\bbc.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\colourpick.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\colourtran.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\coords.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-akbd.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-bbcx.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-dbox.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-event.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-flex.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-font.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-menu.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-template.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-wimp.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-wimptx.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-winx.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-xferrecv.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\cs-xfersend.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\dbox.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\dboxtcol.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\dragasprit.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\drawmod.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\event.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\fileicon.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\font.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\fontlist.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\fontselect.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\help.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\include.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\menu.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\msgs.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\os.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\pointer.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\print.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\res.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\resspr.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\saveas.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\sprite.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\template.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\trace.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\typdat.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\werr.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\wimp.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\wimpt.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\win.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\xferrecv.h" />
+    <ClInclude Include="..\..\..\..\WimpLib\xfersend.h" />
+    <ClInclude Include="..\..\..\..\windvars.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\docs\LICENCE" />
+    <None Include="..\..\..\..\..\docs\MakeRiscPkg,fd7" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\addenda.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\alignment.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\arrays.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\ascii.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\blockops.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\blocks.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\caretmovements.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\charts.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\colours.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\commandfiles.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\commands.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\complexfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\csguide.css" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\csv.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\customfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\databasefns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\databaseuse.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\datetime.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\datetimefns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\editing.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\errormessages.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\externalreferences.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fileops.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\financialfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\firstwordplus.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fixingcolsrows.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fonts.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fullindex.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\highlights.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\hotlinks.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\iconmenu.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\indentingparagraphs.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\intro.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\keyboard.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\labelprinting.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\lookupfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\lotus123.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mailshots.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mathfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\matrixfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\memory.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\menus.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\miscfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mouse.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\names.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\numbercells.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\numberformats.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\options.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\pagebreaks.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\pagelayout.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\paste.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\paths.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\pictures.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\pipedreamfileformat.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printerdriverediting.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printerdrivers.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printing.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\protection.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\recalculation.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\reformattingtext.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\replication.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\savingchoices.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\search.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\sorting.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\spellchecking.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\spelluserdicts.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\statsfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\stringfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\tables.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\templates.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\textatfields.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\toolbar.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\trigfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\troubleshooting.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\view.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\viewsheet.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\widthoftext.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\wordcount.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\z88.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\index.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutpipedream.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutthistutorial.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\combineddocuments.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\commands.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\conventions.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\csguide.css" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\databases.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\glossary.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\installation.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\spreadsheets.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\thepipedreamwindow.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\wordprocessing.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\index.html" />
+    <None Include="..\..\..\..\..\docs\RiscPkg\Control" />
+    <None Include="..\..\..\..\..\docs\RiscPkg\Copyright" />
+    <None Include="..\..\..\..\..\extrautils\123PD\Apps\Utilities\!123PD\!Help" />
+    <None Include="..\..\..\..\..\extrautils\123PD\Apps\Utilities\!123PD\Desc" />
+    <None Include="..\..\..\..\..\extrautils\123PD\Apps\Utilities\!123PD\Messages" />
+    <None Include="..\..\..\..\..\extrautils\123PD\MakeRiscPkg,fd7" />
+    <None Include="..\..\..\..\..\extrautils\123PD\RiscPkg\Control" />
+    <None Include="..\..\..\..\..\extrautils\123PD\RiscPkg\Copyright" />
+    <None Include="..\..\..\..\..\extrautils\LICENCE" />
+    <None Include="..\..\..\..\..\extrautils\Makef123" />
+    <None Include="..\..\..\..\..\extrautils\PD123\Apps\Utilities\!PD123\!Help" />
+    <None Include="..\..\..\..\..\extrautils\PD123\Apps\Utilities\!PD123\Desc" />
+    <None Include="..\..\..\..\..\extrautils\PD123\Apps\Utilities\!PD123\Messages" />
+    <None Include="..\..\..\..\..\extrautils\PD123\MakeRiscPkg,fd7" />
+    <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\Control" />
+    <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\Copyright" />
+    <None Include="..\..\..\..\..\extrautils\Relnotes,faf" />
+    <None Include="..\..\..\..\cmodules\GB\msg\gr_chart" />
+    <None Include="..\..\..\..\cmodules\GB\msg\mlec" />
+    <None Include="..\..\..\..\WimpLib\cs-pollfpm.s" />
+    <None Include="..\..\..\..\WimpLib\cs-riscasm.s" />
+    <None Include="..\..\..\..\WimpLib\GB\msg_risc" />
+    <None Include="..\..\..\..\WimpLib\r32\Makefile" />
+    <None Include="..\..\..\..\WimpLib\swi.s" />
+    <None Include="..\..\..\r32\!PipeDream\!Help,feb" />
+    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\cmds.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\complex.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\custom.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\database.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\index.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\lookup.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\math.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\matrix.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\misc.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\stats.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\string.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\trig.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\help.css" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\index.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\licence.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\mouse.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\toolb.html,faf" />
+    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\Text" />
+    <None Include="..\..\..\r32\as_flags_h" />
+    <None Include="..\..\..\r32\Makefile" />
+    <None Include="..\..\..\r32\MakeRiscPkg,fd7" />
+    <None Include="..\..\..\r32\RiscPkg\Control" />
+    <None Include="..\..\..\r32\RiscPkg\Copyright" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

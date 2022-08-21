@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Search and Replace</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="savingchoices.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="sorting.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Search">Search and Replace</h1>
+    <p>
+        You can search for any text or replace all occurrences of a string of text with other text.
+        Each of these operations can be performed on the whole document, on a marked block or on a column range.
+        A number of special character sequences allow you to search for and replace a variety of different types of strings.
+    </p>
+
+    <h2 id="Text">To Search for Text</h2>
+    <ol>
+        <li>Give the <span class="csg-command">Search</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Search</td>
+                <td><img src="images/tbar_search.png" /></td>
+                <td><span class="csg-key">F4</span></td>
+                <td><span class="csg-cmdseq">BSE</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <!-- ol start="2" -->
+    <ul class="csg-netsurf-2434">
+        <li>2. When the dialogue box appears, type the text you are looking for in the <span class="csg-dbox-option">String to search for</span> input field.</li>
+        <li>3. Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+    </ul>
+
+    <h2 id="Find">To Find the Next or Previous Match After a Search Command</h2>
+    <p>Give the <span class="csg-command">Next Match</span> or <span class="csg-command">Previous Match</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td rowspan="2">Blocks</td>
+                <td>Next match</td>
+                <td>Adj-<img src="images/tbar_search.png" style="vertical-align:bottom;" /></td>
+                <td><span class="csg-key">F6</span></td>
+                <td><span class="csg-cmdseq">BNM</span></td>
+            </tr>
+            <tr>
+                <td>Previous match</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BPN</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>When PipeDream can find no more strings that match, you will be told how many strings were found.</p>
+
+    <h2 id="Replacetext">To Replace Text</h2>
+    <ol>
+        <li>Give the <span class="csg-command">Search</span> command.</li>
+        <li>
+            You will see the <span class="csg-dbox-option">Search</span> dialogue box.
+            Type the text you want to change in the <span class="csg-dbox-option">String to search for</span> input field.
+        </li>
+        <li>Select the <span class="csg-dbox-option">Replace with</span> option and type the text with which you want to replace the first string.</li>
+    </ol>
+    <p>If you do not want to stop at each occurrence of the string, turn off the <span class="csg-dbox-option">Ask for confirmation</span> option.</p>
+    <p>
+        Otherwise, when PipeDream finds a string, it will ask you what you want to do.
+        Click the <span class="csg-dbox-button">Yes</span> button or press <span class="csg-key">Y</span> if you want to change the string.
+        Click the <span class="csg-dbox-button">No</span> button or press <span class="csg-key">N</span> if you do not want to change the string.
+        Click the <span class="csg-dbox-button">All</span> button or press <span class="csg-key">A</span> to change this and all subsequent strings automatically.
+        Click the <span class="csg-dbox-button">Stop</span> button or press <span class="csg-key">Escape</span> to stop the process.
+    </p>
+    <p>The other dialogue box options do the following:</p>
+    <p><span class="csg-dbox-option">Equate upper and lower case</span></p>
+    <p>If you do not select this option, the case of the characters in a search will be ignored and the case of the replacement is matched to the original word by word.</p>
+    <p>
+        For example, if you wanted to change <code>the</code> to <code>this</code>,
+        <code>The</code> would be changed to <code>This</code>,
+        <code>THE</code> to <code>THIS</code> and
+        <code>the</code> to <code>this</code>.
+        If you select this option, you can specify exact matches and replacements.
+        For example, you could change <code>basic</code> to <code>BASIC</code>.
+    </p>
+    <p><span class="csg-dbox-option">Search number cells</span></p>
+    <p>If you select this option, number cells will be searched as well as text cells.</p>
+    <p><span class="csg-dbox-option">Search only marked block</span></p>
+    <p>If you select this option, only the marked block will be searched.</p>
+
+    <h2 id="Search">Search Special Sequences</h2>
+    <p>The following special sequences can be used in the search string:</p>
+    <div class="csg-sample-indent">
+        <p><strong>Sequence Matches</strong></p>
+        <p><code>^^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> ^</p>
+        <p><code>^?&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> A single character (not space)</p>
+        <p><code>^#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> Any sequence of characters not containing spaces</p>
+        <p><code>^B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> Beginning of a cell</p>
+        <p><code>^S&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> A space</p>
+        <p><code>^1 .. ^8</code> Highlight character</p>
+        <p><code>||&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> | (vertical bar)</p>
+        <p>
+            <code>|<span class="csg-function-parameter">n</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>
+            Character <code>Ctrl-<span class="csg-function-parameter">n</span></code>
+        </p>
+        <p><code>space&nbsp;&nbsp;&nbsp;</code> One or more spaces or across cells</p>
+    </div>
+
+    <h2 id="Replace">Replace Special Sequences</h2>
+    <p>The following special sequences can be used in the replace string:</p>
+    <div class="csg-sample-indent">
+        <p><strong>Sequence Matches</strong></p>
+        <p><code>^^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> ^</p>
+        <p>
+            <code>^?<span class="csg-function-parameter">n</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>
+            The <span class="csg-function-parameter">n</span>th character that was matched by <code>^?</code> in the search string
+        </p>
+        <p>
+            <code>^#<span class="csg-function-parameter">n</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>
+            The <span class="csg-function-parameter">n</span>th string that was matched by <code>^#</code> in the search string
+        </p>
+        <p><code>^S&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> A space</p>
+        <p><code>^1 .. ^8</code> Highlight character</p>
+        <p><code>||&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code> | (vertical bar)</p>
+        <p>
+            <code>|<span class="csg-function-parameter">n</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>
+            Character <code>Ctrl-<span class="csg-function-parameter">n</span></code>
+        </p>
+        <p><code>space&nbsp;&nbsp;&nbsp;</code> Matching spaces or cell boundary</p>
+    </div>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Saving Choices </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Sorting</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="savingchoices.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="sorting.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

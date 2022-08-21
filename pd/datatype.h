@@ -39,6 +39,7 @@ typedef time_t DATE;
 
 typedef int coord;      /* coordinate type for screen, MUST BE SIGNED */
 typedef int gcoord;     /* graphics coordinate type */
+typedef int tcoord;     /* text cell coordinate type */
 
 /*
 Column & Row types
@@ -78,10 +79,10 @@ typedef S32 ROW; typedef ROW * P_ROW;
 #define MAXFLD      (LIN_BUFSIZ - 1)
 
 /* On RISC OS the worst case is MAXFLD ctrlchars being expanded to
- * four characters each plus an overhead for an initial font change and NULLCH
+ * four characters each plus an overhead for an initial font change and CH_NULL
 */
 #if 1
-/* SKS after 4.12 23mar92 - reduce to avoid excessive stack consumption (^b and ^c now stripped on load which were the main culprits...) */
+/* SKS after PD 4.12 23mar92 - reduce to avoid excessive stack consumption (^b and ^c now stripped on load which were the main culprits...) */
 #define PAINT_STRSIZ    (LIN_BUFSIZ * 2)
 #else
 #define PAINT_STRSIZ    (LIN_BUFSIZ * 4)
@@ -199,35 +200,37 @@ SAVED_BLOCK_DESCRIPTOR;
 
 /* ------------------------------ commlin.c ------------------------------ */
 
-#define short_menus() (d_menu[0].option)
+#define short_menus()   (d_menu[0].option)
+#define classic_menus() (d_menu[1].option)
 
-#define NOMENU 0
+#define MF_NOMENU 0
 
-#define CHANGED    1
-#define LONG_ONLY  2
+#define MF_LONG_SHORT_CHANGED 1
+#define MF_LONG_ONLY    2
+#define MF_TICKABLE     4
+#define MF_TICK_STATUS  8
+#define MF_GREYABLE     16
+#define MF_GREY_STATUS  32
+#define MF_HAS_DIALOG   64
+#define MF_DOCUMENT_REQUIRED 128  /* document required to do this command */
+#define MF_GREY_EXPEDIT 256
+#define MF_NO_REPEAT    512  /* REPEAT COMMAND ignores this */
+#define MF_NO_MACROFILE 1024 /* don't output this command in the macro recorder */
+#define MF_ALWAYS_SHORT 2048 /* some commands can't be removed from short menus */
+#define MF_DO_MERGEBUF  4096 /* mergebuf() prior to command */
 
-#define on_short_menus(flag)    !(((flag & LONG_ONLY) == 0) ^ ((flag & CHANGED) == 0))
-
-#define TICKABLE     4
-#define TICK_STATUS  8
-#define GREYABLE     16
-#define GREY_STATUS  32
-#define HAS_DIALOG   64
-#define DOC_REQ      128  /* document required to do this command */
-#define GREY_EXPEDIT 256
-#define NO_REPEAT    512  /* REPEAT COMMAND ignores this */
-#define NO_MACROFILE 1024 /* don't output this command in the macro recorder */
-#define ALWAYS_SHORT 2048 /* some commands can't be removed from short menus */
-#define DO_MERGEBUF  4096 /* mergebuf() prior to command */
+#define on_short_menus(flag) ( \
+    !((((flag) & MF_LONG_ONLY) == 0) ^ (((flag) & MF_LONG_SHORT_CHANGED) == 0)) )
 
 typedef struct MENU
 {
-    PC_U8 *title;
     const char *command;
-    S32 key;
-    S16 flags;
-    S16 funcnum;   /* better packing */
+    S32 flags;
+    PC_U8 *title;
     void (*cmdfunc)(void);
+    S32 funcnum;
+    S32 classic_key;
+    S32 sg_key;
 }
 MENU;
 
@@ -235,10 +238,9 @@ typedef struct MENU_HEAD
 {
     PC_U8 *name;
     MENU *tail;
-    char installed;
-    char items;
-    char titlelen;
-    char commandlen;
+    U32 items;
+    S32 titlelen;
+    S32 commandlen;
     void * m; /* abuse: RISC OS submenu^ kept here */
 }
 MENU_HEAD;
@@ -266,15 +268,28 @@ SCRCOL, * P_SCRCOL;
 
 typedef S32 optiontype;
 
+static inline void
+set_option_from_u32(optiontype * const p_optiontype, U32 u32)
+{
+    * (P_U32) p_optiontype = u32;
+}
+
+static inline U32
+get_option_as_u32(const optiontype * const p_optiontype)
+{
+    return(* (PC_U32) p_optiontype);
+}
+
 typedef struct DIALOG
 {
     uchar type;         /* type of field, text, number, special */
     uchar ch1;          /* first character of save option string */
     uchar ch2;          /* second character of save option string */
+    /* uchar _spare; */
     optiontype option;  /* single character option e.g. Y, sometimes int index */
-    PC_U8 *optionlist; /* range of possible values for option, first is default */
+    PC_U8Z *optionlist; /* range of possible values for option, first is default */
     char *textfield;    /* user specified name of something */
-    U32 offset;         /* of corresponding variable in windvars */
+    U32 wv_offset;      /* of corresponding variable in windvars */
 }
 DIALOG;
 
@@ -360,7 +375,7 @@ GRAPHICS_LINK_ENTRY, * P_GRAPHICS_LINK_ENTRY; typedef const GRAPHICS_LINK_ENTRY 
 /* --------------------------- riscos.c ---------------------------------- */
 
 /* Abstract objects for export */
-typedef struct RISCOS__REDRAWSTR * RISCOS_REDRAWSTR;
+typedef struct RISCOS__RedrawWindowBlock * RISCOS_RedrawWindowBlock;
 
 typedef struct RISCOS_FILEINFO
 {
@@ -370,7 +385,7 @@ typedef struct RISCOS_FILEINFO
 }
 RISCOS_FILEINFO;
 
-typedef void (* RISCOS_REDRAWPROC) (RISCOS_REDRAWSTR * redrawstr);
+typedef void (* RISCOS_REDRAWPROC) (_In_ const RISCOS_RedrawWindowBlock * const redraw_window_block);
 
 typedef void (* RISCOS_PRINTPROC) (void);
 
@@ -387,24 +402,26 @@ enum DRIVER_TYPES
 
 /* set of colours used by PipeDream */
 
-enum D_COLOUR_OFFSETS
+typedef enum D_COLOUR_OFFSETS
 {
-    FORE,
-    BACK,
-    PROTECTC,
-    NEGATIVEC,
-    GRIDC,
-    CARETC,
-    SOFTPAGEBREAKC,
-    HARDPAGEBREAKC,
+    COI_FORE,
+    COI_BACK,
+    COI_PROTECT,
+    COI_NEGATIVE,
+    COI_GRID,
+    COI_CARET,
+    COI_SOFTPAGEBREAK,
+    COI_HARDPAGEBREAK,
 
-    BORDERFOREC,     /*BORDERC,*/
-    BORDERBACKC,
-    CURBORDERFOREC,  /*CURBORDERC,*/
-    CURBORDERBACKC,
-    FIXBORDERBACKC,
+    COI_BORDERFORE,
+    COI_BORDERBACK,
+    COI_CURRENT_BORDERFORE,
+    COI_CURRENT_BORDERBACK,
+    COI_FIXED_BORDERBACK,
+
     N_COLOURS
-};
+}
+COLOURS_OPTION_INDEX;
 
 /* the following are entries in the print dialog box */
 
@@ -448,6 +465,12 @@ typedef struct PDCHART_TAGSTRIP_INFO
     P_ANY pdchartdatakey;
 }
 * P_PDCHART_TAGSTRIP_INFO;
+
+typedef struct PD_CONFIG
+{
+    P_NUMFORM_CONTEXT p_numform_context;
+}
+PD_CONFIG, * P_PD_CONFIG; typedef const PD_CONFIG * PC_PD_CONFIG;
 
 #endif /* __datatype_h */
 

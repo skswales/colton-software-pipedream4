@@ -86,7 +86,7 @@ gr_axes_idx_from_external(
         return(eaxes_no % 3);
     }
 
-    myassert1x(eaxes_no < 4, "external axes id > 4", eaxes_no);
+    myassert1x(eaxes_no < 4, "external axes id %d > 4", eaxes_no);
     *p_axes_idx = eaxes_no / 2;
     return(eaxes_no % 2);
 }
@@ -261,7 +261,7 @@ gr_axis_iterator_next(
     {
         iterp->iter += iterp->step;
 
-        /* SKS after 4.12 26mar92 - correct for very small FP rounding errors (wouldn't loop up to 3.0 in 0.1 steps) */
+        /* SKS after PD 4.12 26mar92 - correct for very small FP rounding errors (wouldn't loop up to 3.0 in 0.1 steps) */
         if(fabs(iterp->iter - p_axis->current.max) / iterp->step < 0.000244140625) /* 2^-12 */
         {
             iterp->iter = p_axis->current.max;
@@ -833,7 +833,7 @@ gr_axis_addin_value_grids_x(
     STATUS res;
     BOOL loop;
 
-    IGNOREPARM_InVal_(axis_ypos);
+    UNREFERENCED_PARAMETER_InVal_(axis_ypos);
 
     if(!p_axis_ticks->bits.grid)
         return(1);
@@ -1096,7 +1096,7 @@ gr_axis_addin_value_labels_x(
     STATUS res;
     BOOL loop;
 
-    IGNOREPARM_InVal_(front_phase);
+    UNREFERENCED_PARAMETER_InVal_(front_phase);
 
     iterator.step = p_axis_ticks->current;
     if(!iterator.step)
@@ -1695,7 +1695,7 @@ gr_axis_addin_value_y(
 
 typedef struct GR_CHARTEDIT_CAT_AXIS_STATE
 {
-    wimp_w w;
+    HOST_WND window_handle;
 
     struct GR_CHARTEDIT_CAT_AXIS_STATE_AXIS
     {
@@ -1755,40 +1755,40 @@ gr_chartedit_selection_cat_axis_encode(
     const GR_CHARTEDIT_CAT_AXIS_STATE * const state)
 {
     const struct GR_CHARTEDIT_CAT_AXIS_STATE_TICKS * smp;
-    wimp_w w = state->w;
+    const HOST_WND window_handle = state->window_handle;
     U32 i;
 
     /* bzt */
     for(i = 0; i < elemof32(gr_chartedit_selection_cat_axis_bzts); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_BOTTOM,
-                     (state->axis.bzt == gr_chartedit_selection_cat_axis_bzts[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_BOTTOM,
+                      (state->axis.bzt == gr_chartedit_selection_cat_axis_bzts[i]));
 
     /* arf */
     for(i = 0; i < elemof32(gr_chartedit_selection_cat_axis_arfs); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_FRONT,
-                 (state->axis.arf == gr_chartedit_selection_cat_axis_arfs[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_FRONT,
+                      (state->axis.arf == gr_chartedit_selection_cat_axis_arfs[i]));
 
     /* major */
     smp = &state->major;
 
-    win_setonoffpair(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_AUTO, !smp->manual);
-    win_setint(      w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,   smp->val);
-    win_setonoff(    w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_GRID,  smp->grid);
+    winf_setonoffpair(window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_AUTO, !smp->manual);
+    winf_setint(      window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,   smp->val);
+    winf_setonoff(    window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_GRID,  smp->grid);
 
     for(i = 0; i < elemof32(gr_chartedit_selection_cat_axis_ticks); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE,
-                     (smp->tick == gr_chartedit_selection_cat_axis_ticks[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE,
+                      (smp->tick == gr_chartedit_selection_cat_axis_ticks[i]));
 
     /* minor */
     smp = &state->minor;
 
-    win_setonoffpair(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_AUTO, !smp->manual);
-    win_setint(      w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,   smp->val);
-    win_setonoff(    w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_GRID,  smp->grid);
+    winf_setonoffpair(window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_AUTO, !smp->manual);
+    winf_setint(      window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,   smp->val);
+    winf_setonoff(    window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_GRID,  smp->grid);
 
     for(i = 0; i < elemof32(gr_chartedit_selection_cat_axis_ticks); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE,
-                     (smp->tick == gr_chartedit_selection_cat_axis_ticks[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE,
+                      (smp->tick == gr_chartedit_selection_cat_axis_ticks[i]));
 }
 
 static void
@@ -1796,12 +1796,12 @@ gr_chartedit_selection_cat_axis_process(
     P_GR_CHARTEDITOR cep,
     GR_CHART_OBJID id)
 {
-    dbox           d;
+    dbox d;
     char * errorp;
-    wimp_w         w;
-    dbox_field     f;
-    P_GR_CHART      cp;
-    S32            ok, persist;
+    HOST_WND window_handle;
+    dbox_field f;
+    P_GR_CHART cp;
+    BOOL ok, persist;
     GR_CHARTEDIT_CAT_AXIS_STATE state;
     GR_AXES_IDX     modifying_axes_idx;
     GR_AXIS_IDX     modifying_axis_idx;
@@ -1823,9 +1823,9 @@ gr_chartedit_selection_cat_axis_process(
 
     dbox_show(d);
 
-    state.w = w = dbox_syshandle(d);
+    state.window_handle = window_handle = dbox_window_handle(d);
 
-    win_settitle_c(w, gr_chart_object_name_from_id_quick(id));
+    win_settitle(window_handle, de_const_cast(char *, gr_chart_object_name_from_id_quick(id)));
 
     do  {
         /* load current settings into structure */
@@ -1903,14 +1903,14 @@ gr_chartedit_selection_cat_axis_process(
                 smp = &state.major;
                 mmp = &p_axis->major;
 
-                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL);
+                smp->manual = winf_getonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL);
 
                 if(!smp->manual)
                     smp->val = (S32) mmp->current;
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_GRID:
-                state.major.grid = win_getonoff(w, f);
+                state.major.grid = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_AUTO:
@@ -1918,23 +1918,23 @@ gr_chartedit_selection_cat_axis_process(
                 smp = &state.minor;
                 mmp = &p_axis->minor;
 
-                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL);
+                smp->manual = winf_getonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_MANUAL);
 
                 if(!smp->manual)
                     smp->val = (S32) mmp->current;
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_GRID:
-                state.minor.grid = win_getonoff(w, f);
+                state.minor.grid = winf_getonoff(window_handle, f);
                 break;
 
             default:
                 smp = &state.major;
 
-                if(win_bumpint(w, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,
-                               &smp->val,
-                               smp->delta,
-                               1, INT_MAX))
+                if(winf_bumpint(window_handle, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,
+                                &smp->val,
+                                smp->delta,
+                                1, INT_MAX))
                 {
                     state.major.manual = 1;
                     break;
@@ -1942,10 +1942,10 @@ gr_chartedit_selection_cat_axis_process(
 
                 smp = &state.minor;
 
-                if(win_bumpint(w, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,
-                               &smp->val,
-                               smp->delta,
-                               1, state.major.val))
+                if(winf_bumpint(window_handle, f, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,
+                                &smp->val,
+                                smp->delta,
+                                1, state.major.val))
                 {
                     state.minor.manual = 1;
                     break;
@@ -1957,7 +1957,8 @@ gr_chartedit_selection_cat_axis_process(
 
             /* bzt */
 
-            state.axis.bzt = gr_chartedit_selection_cat_axis_bzts[win_whichonoff(w,
+            state.axis.bzt = gr_chartedit_selection_cat_axis_bzts[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_BOTTOM,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_BOTTOM + 2,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_ZERO)
@@ -1965,7 +1966,8 @@ gr_chartedit_selection_cat_axis_process(
 
             /* arf */
 
-            state.axis.arf = gr_chartedit_selection_cat_axis_arfs[win_whichonoff(w,
+            state.axis.arf = gr_chartedit_selection_cat_axis_arfs[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_FRONT,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_FRONT + 2,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_AUTO)
@@ -1974,12 +1976,13 @@ gr_chartedit_selection_cat_axis_process(
             /* major */
             smp = &state.major;
 
-            win_checkint(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,
-                         &smp->val,
-                         NULL,
-                         1, INT_MAX);
+            winf_checkint(window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_VAL,
+                          &smp->val,
+                          NULL,
+                          1, INT_MAX);
 
-            smp->tick = gr_chartedit_selection_cat_axis_ticks[win_whichonoff(w,
+            smp->tick = gr_chartedit_selection_cat_axis_ticks[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_NONE + 3,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_TICK_FULL)
@@ -1988,12 +1991,13 @@ gr_chartedit_selection_cat_axis_process(
             /* minor */
             smp = &state.minor;
 
-            win_checkint(w, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,
-                         &smp->val,
-                         NULL,
-                         1, INT_MAX);
+            winf_checkint(window_handle, GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_VAL,
+                          &smp->val,
+                          NULL,
+                          1, INT_MAX);
 
-            smp->tick = gr_chartedit_selection_cat_axis_ticks[win_whichonoff(w,
+            smp->tick = gr_chartedit_selection_cat_axis_ticks[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_NONE + 3,
                                       GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_FULL)
@@ -2048,7 +2052,7 @@ gr_chartedit_selection_cat_axis_process(
 
 typedef struct GR_CHARTEDIT_AXIS_STATE
 {
-    wimp_w w;
+    HOST_WND window_handle;
 
     struct GR_CHARTEDIT_AXIS_STATE_AXIS
     {
@@ -2108,67 +2112,67 @@ gr_chartedit_selection_axis_encode(
     const GR_CHARTEDIT_AXIS_STATE * state)
 {
     const struct GR_CHARTEDIT_AXIS_STATE_TICKS * smp;
-    wimp_w w = state->w;
+    const HOST_WND window_handle = state->window_handle;
     U32 i;
 
     /* scale */
-    win_setonoffpair(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_AUTO,     !state->axis.manual);
-    win_setdouble(   w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,      &state->axis.min, INT_MAX);
-    win_setdouble(   w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,      &state->axis.max, INT_MAX);
-    win_setonoff(    w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_ZERO,      state->axis.zero);
-    win_setonoff(    w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_LOG_SCALE, state->axis.log_scale);
-    win_setonoff(    w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_POW_LABEL, state->axis.pow_label);
+    winf_setonoffpair(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_AUTO,     !state->axis.manual);
+    winf_setdouble(   window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,      &state->axis.min, INT_MAX);
+    winf_setdouble(   window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,      &state->axis.max, INT_MAX);
+    winf_setonoff(    window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_ZERO,      state->axis.zero);
+    winf_setonoff(    window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_LOG_SCALE, state->axis.log_scale);
+    winf_setonoff(    window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_POW_LABEL, state->axis.pow_label);
 
     /* lzr */
     for(i = 0; i < elemof32(gr_chartedit_selection_axis_lzrs); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_LEFT,
-                     (state->axis.lzr == gr_chartedit_selection_axis_lzrs[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_LEFT,
+                      (state->axis.lzr == gr_chartedit_selection_axis_lzrs[i]));
 
     /* arf */
     for(i = 0; i < elemof32(gr_chartedit_selection_axis_arfs); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_FRONT,
-                 (state->axis.arf == gr_chartedit_selection_axis_arfs[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_FRONT,
+                      (state->axis.arf == gr_chartedit_selection_axis_arfs[i]));
 
     /* major */
     smp = &state->major;
-    win_setonoffpair(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO, !smp->manual);
-    win_setdouble(   w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,  &smp->val, INT_MAX);
-    win_setonoff(    w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_GRID,  smp->grid);
+    winf_setonoffpair(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO, !smp->manual);
+    winf_setdouble(   window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,  &smp->val, INT_MAX);
+    winf_setonoff(    window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_GRID,  smp->grid);
 
     for(i = 0; i < elemof32(gr_chartedit_selection_axis_ticks); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE,
-                     (smp->tick == gr_chartedit_selection_axis_ticks[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE,
+                      (smp->tick == gr_chartedit_selection_axis_ticks[i]));
 
     /* minor */
     smp = &state->minor;
-    win_setonoffpair(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_AUTO, !smp->manual);
-    win_setdouble(   w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,  &smp->val, INT_MAX);
-    win_setonoff(    w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_GRID,  smp->grid);
+    winf_setonoffpair(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_AUTO, !smp->manual);
+    winf_setdouble(   window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,  &smp->val, INT_MAX);
+    winf_setonoff(    window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_GRID,  smp->grid);
 
     for(i = 0; i < elemof32(gr_chartedit_selection_axis_ticks); i++)
-        win_setonoff(w, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE,
-                     (smp->tick == gr_chartedit_selection_axis_ticks[i]));
+        winf_setonoff(window_handle, i + GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE,
+                      (smp->tick == gr_chartedit_selection_axis_ticks[i]));
 
     /* series defaults */
-    win_setonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_CUMULATIVE, state->series.cumulative);
-    win_setonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_POINT_VARY, state->series.point_vary);
-    win_setonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_BEST_FIT,   state->series.best_fit);
-    win_setonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_FILL_AXIS,  state->series.fill_axis);
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_CUMULATIVE, state->series.cumulative);
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_POINT_VARY, state->series.point_vary);
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_BEST_FIT,   state->series.best_fit);
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_FILL_AXIS,  state->series.fill_axis);
 
     /* series immediate */
-    win_setonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_STACKED,    state->series.stacked);
+    winf_setonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_STACKED,    state->series.stacked);
 }
 
 extern void
 gr_chartedit_selection_axis_process(
     P_GR_CHARTEDITOR cep)
 {
-    dbox           d;
+    dbox d;
     char * errorp;
-    wimp_w         w;
-    dbox_field     f;
-    P_GR_CHART      cp;
-    S32            ok, persist;
+    HOST_WND window_handle;
+    dbox_field f;
+    P_GR_CHART cp;
+    BOOL ok, persist;
     GR_CHART_OBJID id;
     GR_CHARTEDIT_AXIS_STATE state;
     GR_AXES_IDX     modifying_axes_idx;
@@ -2238,9 +2242,9 @@ gr_chartedit_selection_axis_process(
 
     dbox_show(d);
 
-    state.w = w = dbox_syshandle(d);
+    state.window_handle = window_handle = dbox_window_handle(d);
 
-    win_settitle_c(w, gr_chart_object_name_from_id_quick(id));
+    win_settitle(window_handle, de_const_cast(char *, gr_chart_object_name_from_id_quick(id)));
 
     /* id not used after that */
 
@@ -2336,7 +2340,7 @@ gr_chartedit_selection_axis_process(
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_AUTO:
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL:
-                state.axis.manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL);
+                state.axis.manual = winf_getonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MANUAL);
 
                 if(!state.axis.manual)
                 {
@@ -2346,16 +2350,16 @@ gr_chartedit_selection_axis_process(
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_ZERO:
-                state.axis.zero = win_getonoff(w, f);
+                state.axis.zero = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_LOG_SCALE:
-                state.axis.log_scale = win_getonoff(w, f);
+                state.axis.log_scale = winf_getonoff(window_handle, f);
                 state.axis.log_scale_modified = 1;
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_POW_LABEL:
-                state.axis.pow_label = win_getonoff(w, f);
+                state.axis.pow_label = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO:
@@ -2363,14 +2367,14 @@ gr_chartedit_selection_axis_process(
                 smp = &state.major;
                 mmp = &p_axis->major;
 
-                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL);
+                smp->manual = winf_getonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL);
 
                 if(!smp->manual)
                     smp->val = mmp->current;
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_GRID:
-                state.major.grid = win_getonoff(w, f);
+                state.major.grid = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_AUTO:
@@ -2378,43 +2382,44 @@ gr_chartedit_selection_axis_process(
                 smp = &state.minor;
                 mmp = &p_axis->minor;
 
-                smp->manual = win_getonoff(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL);
+                smp->manual = winf_getonoff(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_MANUAL);
 
                 if(!smp->manual)
                     smp->val = mmp->current;
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_GRID:
-                state.minor.grid = win_getonoff(w, f);
+                state.minor.grid = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_CUMULATIVE:
-                state.series.cumulative = win_getonoff(w, f);
+                state.series.cumulative = winf_getonoff(window_handle, f);
                 state.series.cumulative_modified = 1;
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_POINT_VARY:
-                state.series.point_vary = win_getonoff(w, f);
+                state.series.point_vary = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_BEST_FIT:
-                state.series.best_fit = win_getonoff(w, f);
+                state.series.best_fit = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_FILL_AXIS:
-                state.series.fill_axis = win_getonoff(w, f);
+                state.series.fill_axis = winf_getonoff(window_handle, f);
                 break;
 
             case GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SERIES_STACKED:
-                state.series.stacked = win_getonoff(w, f);
+                state.series.stacked = winf_getonoff(window_handle, f);
                 state.series.stacked_modified = 1;
                 break;
 
             default:
-                if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,
-                                  &state.axis.max,
-                                  &state.axis.delta,
-                                  &state.axis.min, &dbl_max_limit, INT_MAX))
+                if(winf_bumpdouble(window_handle, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,
+                                   &state.axis.max,
+                                   &state.axis.delta,
+                                   &state.axis.min, &dbl_max_limit,
+                                   INT_MAX))
                 {
                     state.major.delta = gr_lin_major(state.axis.max - state.axis.min);
 
@@ -2422,11 +2427,12 @@ gr_chartedit_selection_axis_process(
                     break;
                 }
 
-                if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,
-                                  &state.axis.min,
-                                  &state.axis.delta,
-                                  state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
-                                  &state.axis.max, INT_MAX))
+                if(winf_bumpdouble(window_handle, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,
+                                   &state.axis.min,
+                                   &state.axis.delta,
+                                   state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
+                                   &state.axis.max,
+                                   INT_MAX))
                 {
                     state.major.delta = gr_lin_major(state.axis.max - state.axis.min);
 
@@ -2438,15 +2444,15 @@ gr_chartedit_selection_axis_process(
 
                 if(state.axis.log_scale)
                 {
-                    if(win_adjustbumphit(&f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL))
+                    if(winf_adjustbumphit(&f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL))
                     {
-                        wimp_i dec = GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL - 1;
+                        const int dec_icon_handle = GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL - 1;
                         F64 dval;
 
-                        dval = win_getdouble(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL, &smp->val, INT_MAX);
+                        dval = winf_getdouble(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL, &smp->val, INT_MAX);
                         dval = fabs(dval);
 
-                        if(f == dec)
+                        if(f == dec_icon_handle)
                         {
                             /* try not to cause exceptions */
 
@@ -2479,11 +2485,12 @@ gr_chartedit_selection_axis_process(
                 }
                 else
                 {
-                    if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,
-                                      &smp->val,
-                                      &smp->delta,
-                                      &dbl_min_interval_limit,
-                                      &dbl_max_interval_limit, INT_MAX))
+                    if(winf_bumpdouble(window_handle, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,
+                                       &smp->val,
+                                       &smp->delta,
+                                       &dbl_min_interval_limit,
+                                       &dbl_max_interval_limit,
+                                       INT_MAX))
                     {
                         state.minor.delta = gr_lin_major(2.0 * smp->val);
 
@@ -2494,12 +2501,12 @@ gr_chartedit_selection_axis_process(
 
                 smp = &state.minor;
 
-                if(win_bumpdouble(w, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,
-                                  &smp->val,
-                                  state.axis.log_scale ? &dbl_log_minor_delta : &smp->delta,
-                                  &dbl_min_interval_limit,
-                                  state.axis.log_scale ? &dbl_log_minor_max_interval_limit : &dbl_max_interval_limit,
-                                  INT_MAX))
+                if(winf_bumpdouble(window_handle, f, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,
+                                   &smp->val,
+                                   state.axis.log_scale ? &dbl_log_minor_delta : &smp->delta,
+                                   &dbl_min_interval_limit,
+                                   state.axis.log_scale ? &dbl_log_minor_max_interval_limit : &dbl_max_interval_limit,
+                                   INT_MAX))
                 {
                     smp->manual = 1;
                     break;
@@ -2511,21 +2518,24 @@ gr_chartedit_selection_axis_process(
 
             /* scale */
 
-            win_checkdouble(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,
-                            &state.axis.max,
-                            NULL,
-                            state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
-                            &dbl_max_limit, INT_MAX);
+            winf_checkdouble(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MAX,
+                             &state.axis.max,
+                             NULL,
+                             state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
+                             &dbl_max_limit,
+                             INT_MAX);
 
-            win_checkdouble(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,
-                            &state.axis.min,
-                            NULL,
-                            state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
-                            &state.axis.max, INT_MAX);
+            winf_checkdouble(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_SCALE_MIN,
+                             &state.axis.min,
+                             NULL,
+                             state.axis.log_scale ? &dbl_log_min_limit : &dbl_min_limit,
+                             &state.axis.max,
+                             INT_MAX);
 
             /* lzr */
 
-            state.axis.lzr = gr_chartedit_selection_axis_lzrs[win_whichonoff(w,
+            state.axis.lzr = gr_chartedit_selection_axis_lzrs[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_LEFT,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_LEFT + 2,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_ZERO)
@@ -2533,7 +2543,8 @@ gr_chartedit_selection_axis_process(
 
             /* arf */
 
-            state.axis.arf = gr_chartedit_selection_axis_arfs[win_whichonoff(w,
+            state.axis.arf = gr_chartedit_selection_axis_arfs[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_FRONT,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_FRONT + 2,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_AUTO)
@@ -2542,14 +2553,15 @@ gr_chartedit_selection_axis_process(
             /* major */
             smp = &state.major;
 
-            win_checkdouble(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,
-                            &smp->val,
-                            NULL,
-                            &dbl_min_interval_limit,
-                            state.axis.log_scale ? &dbl_log_major_max_interval_limit : &dbl_max_interval_limit,
-                            INT_MAX);
+            winf_checkdouble(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_VAL,
+                             &smp->val,
+                             NULL,
+                             &dbl_min_interval_limit,
+                             state.axis.log_scale ? &dbl_log_major_max_interval_limit : &dbl_max_interval_limit,
+                             INT_MAX);
 
-            smp->tick = gr_chartedit_selection_axis_ticks[win_whichonoff(w,
+            smp->tick = gr_chartedit_selection_axis_ticks[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_NONE + 3,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_TICK_FULL)
@@ -2558,14 +2570,15 @@ gr_chartedit_selection_axis_process(
             /* minor */
             smp = &state.minor;
 
-            win_checkdouble(w, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,
-                            &smp->val,
-                            NULL,
-                            &dbl_min_interval_limit,
-                            state.axis.log_scale ? &dbl_log_minor_max_interval_limit : &dbl_max_interval_limit,
-                            INT_MAX);
+            winf_checkdouble(window_handle, GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_VAL,
+                             &smp->val,
+                             NULL,
+                             &dbl_min_interval_limit,
+                             state.axis.log_scale ? &dbl_log_minor_max_interval_limit : &dbl_max_interval_limit,
+                             INT_MAX);
 
-            smp->tick = gr_chartedit_selection_axis_ticks[win_whichonoff(w,
+            smp->tick = gr_chartedit_selection_axis_ticks[
+                                winf_whichonoff(window_handle,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_NONE + 3,
                                       GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MINOR_TICK_FULL)

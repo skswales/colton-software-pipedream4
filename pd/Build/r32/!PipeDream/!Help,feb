@@ -1,5 +1,14 @@
 | !Help for PipeDream
 |
-Set PipeDream$HelpFile <Obey$Dir>.Resource.HTMLHelp
-If "<File$Type_FAF>"="" Then Set PipeDream$HelpFile <Obey$Dir>.Resource.RISC_OS.TextHelp
-IfThere <PipeDream$HelpFile> Then Filer_Run <PipeDream$HelpFile> Else Error PipeDream help file not found
+| Determine style of help (text or HTML)
+If "<File$Type_FAF>"="" Then Set PipeDream$HelpSuffix Text Else Set PipeDream$HelpSuffix HTML.index/html
+|
+| Try locating help on resources path
+Set PipeDream$HelpFile PipeDreamRes:Help.<PipeDream$HelpSuffix>
+|
+| Fallback is direct (path may not be set)
+IfThere <PipeDream$HelpFile> Then Else Set PipeDream$HelpFile <Obey$Dir>.Res.UK.Help.<PipeDream$HelpSuffix>
+|
+Unset PipeDream$HelpSuffix
+|
+IfThere <PipeDream$HelpFile> Then Filer_Run <PipeDream$HelpFile> Else Error Help not found

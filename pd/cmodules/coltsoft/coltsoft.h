@@ -31,6 +31,12 @@ Stuff defined on Windows
 #endif
 
 /*
+"stdio.h"
+*/
+
+#define sscanf_s sscanf /* This is OK for non-%s, %c - stop winges about deprecated function */
+
+/*
 "windef.h"
 */
 
@@ -41,12 +47,28 @@ typedef unsigned long  DWORD;
 #define BOOL int /* or RISC_OSLib:os.h winges ... */ /*typedef int BOOL;*/
 typedef unsigned int UINT;
 
+#define LOBYTE(w)   ((BYTE) ( ((U32)(w))       & 0xFF))
+#define HIBYTE(w)   ((BYTE) ((((U32)(w)) >> 8) & 0xFF))
+
 /*
 "winnt.h"
 */
 
 typedef void * HANDLE;
 typedef void * HGLOBAL;
+
+typedef unsigned short WCHAR; /* 16-bit UTF-16 character (NOT wchar_t) */
+typedef         WCHAR *    PWCH;
+typedef        PWCH   *  P_PWCH;
+typedef   const WCHAR *   PCWCH;
+typedef       PCWCH   * P_PCWCH;
+
+/* CH_NULL-terminated variants */
+#define         WCHARZ       WCHAR
+typedef         WCHAR  *    PWSTR;
+typedef        PWSTR   *  P_PWSTR;
+typedef   const WCHAR  *   PCWSTR;
+typedef       PCWSTR   * P_PCWSTR;
 
 #define __TEXT(s) s /* No wide character constants */
 #define TEXT(s) __TEXT(s)
@@ -130,20 +152,23 @@ the callee function shouldn't be modifying the pointer,
 just referencing/setting/updating the contents referred to
 */
 
-#define _InRef_         _In_        const
-#define _InRef_opt_     _In_opt_    const
+#define _InRef_                 _In_                const
+#define _InRef_opt_             _In_opt_            const
+#define _InRef_maybenone_       _In_maybenone_      const
 
-#define _InoutRef_      _Inout_     const
-#define _InoutRef_opt_  _Inout_opt_ const
+#define _InoutRef_              _Inout_             const
+#define _InoutRef_opt_          _Inout_opt_         const
+#define _InoutRef_maybenone_    _Inout_maybenone_   const
 
-#define _OutRef_        _Out_       const
-#define _OutRef_opt_    _Out_opt_   const
+#define _OutRef_                _Out_               const
+#define _OutRef_opt_            _Out_opt_           const
+#define _OutRef_maybenone_      _Out_maybenone_     const
 
 /*
 Simple, or derived, type value args that the callee function shouldn't be modifying
 */
 
-#define _InVal_         /*_In_*/    const
+#define _InVal_ /*_In_*/ const
 
 /*
 void
@@ -183,17 +208,23 @@ typedef U8 * P_U8, ** P_P_U8; typedef const U8 * PC_U8; typedef PC_U8 * P_PC_U8;
 
 /* Z suffix signifying these to be known to be CH_NULL-terminated */
 
-#if 1 /* Distinct (but convertible) where possible for usage clarity and IntelliSense hover */
+#if 0 /* Distinct (but convertible) where possible for usage clarity and Code Analysis and IntelliSense hover (diff minimization) */
+typedef       U8         U8Z;
+typedef       U8Z *    P_U8Z; /*_Null_terminated_*/
+typedef       U8Z ** P_P_U8Z; /*_Null_terminated_*/
+typedef const U8Z *   PC_U8Z; /*_Null_terminated_*/
+typedef    PC_U8Z * P_PC_U8Z;
+#elif 1 /* Distinct (but convertible) where possible for usage clarity and IntelliSense hover */
 typedef      U8      U8Z;
-typedef    P_U8    P_U8Z; /*_NullTerminated_*/
+typedef    P_U8    P_U8Z; /*_Null_terminated_*/
 typedef  P_P_U8  P_P_U8Z;
-typedef   PC_U8   PC_U8Z; /*_NullTerminated_*/
+typedef   PC_U8   PC_U8Z; /*_Null_terminated_*/
 typedef P_PC_U8 P_PC_U8Z;
 #else
 #define      U8Z      U8
-#define    P_U8Z    P_U8 /*_NullTerminated_*/
+#define    P_U8Z    P_U8 /*_Null_terminated_*/
 #define  P_P_U8Z  P_P_U8
-#define   PC_U8Z   PC_U8 /*_NullTerminated_*/
+#define   PC_U8Z   PC_U8 /*_Null_terminated_*/
 #define P_PC_U8Z P_PC_U8
 #endif
 
@@ -216,6 +247,8 @@ typedef /*signed*/ int S32; typedef S32 * P_S32, ** P_P_S32; typedef const S32 *
 
 #define P_S32_NONE _P_DATA_NONE(P_S32)
 
+typedef int64_t S64; typedef S64 * P_S64, ** P_P_S64; typedef const S64 * PC_S64;
+
 typedef uint64_t U64; typedef U64 * P_U64, ** P_P_U64; typedef const U64 * PC_U64;
 
 typedef double F64; typedef F64 * P_F64, ** P_P_F64; typedef const F64 * PC_F64;
@@ -224,16 +257,10 @@ typedef BOOL * P_BOOL; typedef const BOOL * PC_BOOL;
 
 typedef uintptr_t CLIENT_HANDLE; typedef CLIENT_HANDLE * P_CLIENT_HANDLE;
 
-#if !WINDOWS
-typedef U16 WCHAR; typedef U16 * PWCH; typedef const U16 * PCWCH;
-
-/* CH_NULL-terminated character strings */
-typedef U16 * PWSTR; typedef const U16 * PCWSTR;
-#endif
-
 /*
 a UCS-4 32-bit character (ISO 10646-1)
 */
+
 typedef          U32      UCS4;
 typedef         UCS4 *  P_UCS4;
 typedef   const UCS4 * PC_UCS4;
@@ -277,24 +304,40 @@ ucs4_is_C1(
 /*
 A7CHAR: an ASCII 7-bit character (subset of SBCHAR where top bit is zero)
 Useful for things that we know are limited e.g. spreadsheet TYPE()
-and key names that go in files for mapping
+and key names that go in files for mapping. Also RTF files.
 */
 
-#if 1
-typedef      U8       A7_U8;
+#if 1 /* Distinct (but convertible) where possible for usage clarity and IntelliSense hover */
+typedef      U8       A7CHAR;
+typedef    P_U8     P_A7CHARS;
+typedef  P_P_U8   P_P_A7CHARS;
+typedef   PC_U8    PC_A7CHARS;
+typedef P_PC_U8  P_PC_A7CHARS;
+#else
+#define      A7CHAR       U8
+#define    P_A7CHARS    P_U8
+#define  P_P_A7CHARS  P_P_U8
+#define   PC_A7CHARS   PC_U8
+#define P_PC_A7CHARS P_PC_U8
+#endif
 
-typedef      U8Z      A7_U8Z;
-typedef    P_U8Z    P_A7STR; /*_NullTerminated_*/
+#if 0 /* Distinct (but convertible) where possible for usage clarity and Code Analysis and IntelliSense hover */
+typedef       U8Z            A7CHARZ;
+typedef       A7CHARZ *    P_A7STR; /*_Null_terminated_*/
+typedef       A7CHARZ ** P_P_A7STR; /*_Null_terminated_*/
+typedef const A7CHARZ *   PC_A7STR; /*_Null_terminated_*/
+typedef    PC_A7STR   * P_PC_A7STR;
+#elif 1 /* Distinct (but convertible) where possible for usage clarity and IntelliSense hover */
+typedef      U8Z      A7CHARZ;
+typedef    P_U8Z    P_A7STR; /*_Null_terminated_*/
 typedef  P_P_U8Z  P_P_A7STR;
-typedef   PC_U8Z   PC_A7STR; /*_NullTerminated_*/
+typedef   PC_U8Z   PC_A7STR; /*_Null_terminated_*/
 typedef P_PC_U8Z P_PC_A7STR;
 #else
-#define      A7_U8        U8
-
-#define      A7_U8Z       U8Z
-#define    P_A7STR      P_U8Z /*_NullTerminated_*/
+#define      A7CHARZ      U8Z
+#define    P_A7STR      P_U8Z /*_Null_terminated_*/
 #define  P_P_A7STR    P_P_U8Z
-#define   PC_A7STR     PC_U8Z /*_NullTerminated_*/
+#define   PC_A7STR     PC_U8Z /*_Null_terminated_*/
 #define P_PC_A7STR   P_PC_U8Z
 #endif
 
@@ -303,7 +346,7 @@ SBCHAR: a Latin-N 8-bit Single Byte character (may have top-bit-set)
 ISO 8859-N / Acorn Extended Latin-N / Windows-<AnsiCodePage>
 */
 
-#if 1
+#if 1 /* Distinct (but convertible) where possible for usage clarity and IntelliSense hover */
 typedef      U8       SBCHAR;
 typedef    P_U8     P_SBCHARS;
 typedef  P_P_U8   P_P_SBCHARS;
@@ -317,26 +360,41 @@ typedef P_PC_U8  P_PC_SBCHARS;
 #define P_PC_SBCHARS P_PC_U8
 #endif
 
-#if 1
+#if 0 /* Distinct (but convertible) where possible for usage clarity and Code Analysis and IntelliSense hover */
+typedef       U8Z            SBCHARZ;
+typedef       SBCHARZ *    P_SBSTR; /*_Null_terminated_*/
+typedef       SBCHARZ ** P_P_SBSTR; /*_Null_terminated_*/
+typedef const SBCHARZ *   PC_SBSTR; /*_Null_terminated_*/
+typedef    PC_SBSTR   * P_PC_SBSTR;
+#elif 1 /* Distinct (but convertible) where possible for usage clarity and IntelliSense hover */
 typedef      U8Z      SBCHARZ;
-typedef    P_U8Z    P_SBSTR; /*_NullTerminated_*/
+typedef    P_U8Z    P_SBSTR; /*_Null_terminated_*/
 typedef  P_P_U8Z  P_P_SBSTR;
-typedef   PC_U8Z   PC_SBSTR; /*_NullTerminated_*/
+typedef   PC_U8Z   PC_SBSTR; /*_Null_terminated_*/
 typedef P_PC_U8Z P_PC_SBSTR;
 #else
 #define      SBCHARZ      U8Z
-#define    P_SBSTR      P_U8Z /*_NullTerminated_*/
+#define    P_SBSTR      P_U8Z /*_Null_terminated_*/
 #define  P_P_SBSTR    P_P_U8Z
-#define   PC_SBSTR     PC_U8Z /*_NullTerminated_*/
+#define   PC_SBSTR     PC_U8Z /*_Null_terminated_*/
 #define P_PC_SBSTR   P_PC_U8Z
 #endif
 
 #define SBSTR_TEXT(text) ((PC_SBSTR) (text)) /* akin to the TEXT() macro */
 
+typedef U32 SBCHAR_CODEPAGE; /* for translation between code pages */
+
 /*
 RISC OS non-UNICODE build
 TCHAR is Latin-N
 UCHARZ is Latin-N
+*/
+
+/*
+UTF-8 is a sequence of bytes encoding a UCS-4 32-bit character
+(ISO 10646-1:2000 Annex D, also described in RFC 3629,
+also section 3.9 of the Unicode 4.0 standard).
+See http://www.cl.cam.ac.uk/~mgk25/unicode.html
 */
 
 #define TSTR_IS_SBSTR 1
@@ -350,22 +408,42 @@ UCHARZ is Latin-N
 #define PC_UCHARS PC_U8
 
 #define    UCHARZ      U8Z
-#define    P_USTR    P_U8Z /*_NullTerminated_*/
+#define    P_USTR    P_U8Z /*_Null_terminated_*/
 #define  P_P_USTR  P_P_U8Z
-#define   PC_USTR   PC_U8Z /*_NullTerminated_*/
+#define   PC_USTR   PC_U8Z /*_Null_terminated_*/
 #define P_PC_USTR P_PC_U8Z
 #endif
 
 /* using inline function can spot any bad buffer-to-pointer casts that would otherwise happen silently */
+_Check_return_
+_Ret_notnull_
+static inline P_UCHARS
+uchars_bptr(UCHARB buf[])
+{
+    return((P_UCHARS) buf);
+}
+
+_Check_return_
+_Ret_notnull_
 static inline P_USTR
 ustr_bptr(UCHARZ buf[])
 {
     return((P_USTR) buf);
 }
 
+_Check_return_
+_Ret_notnull_
+static inline PC_USTR
+ustr_bptrc(const UCHARZ buf[])
+{
+    return((PC_USTR) buf);
+}
+
 #define P_USTR_NONE _P_DATA_NONE(P_USTR)
 
-#define USTR_TEXT(text) ((PC_USTR) (text)) /* akin to the TEXT() macro */
+#define uchars_empty_string ((PC_UCHARS) "")
+
+#define USTR_TEXT(text) ((PC_USTR) (text)) /* akin to the TEXT() macro - sadly can't concatenate them */
 
 #define ustr_empty_string USTR_TEXT("")
 
@@ -378,10 +456,15 @@ printf format strings
 #define S16_FMT        "%hd"
 #define U16_FMT        "%hu"
 #define U16_XFMT       "%hX"
+#define INT_FMT         "%d"
+#define UINT_FMT        "%u"
 #define S32_FMT         "%d"
 #define S32_FMT_POSTFIX  "d"
 #define U32_FMT         "%u"
 #define U32_XFMT        "%X"
+#define S64_FMT         "%" PRId64
+#define U64_FMT         "%" PRIu64
+#define U64_XFMT        "%" PRIx64
 #define F64_FMT         "%g"
 #define PTR_FMT         "%p"
 
@@ -389,22 +472,35 @@ printf format strings
 #define  S8_TFMT         TEXT("%c")
 #define S16_TFMT        TEXT("%hd")
 #define U16_TFMT        TEXT("%hu")
-#define U16_XTFMT       TEXT("%hX")
+#define U16_XTFMT     TEXT("0x%hX")
 #define INT_TFMT         TEXT("%d")
 #define UINT_TFMT        TEXT("%u")
+#define UINT_XTFMT     TEXT("0x%X")
 #define S32_TFMT         TEXT("%d")
 #define S32_TFMT_POSTFIX  TEXT("d")
 #define U32_TFMT         TEXT("%u")
 #define U32_XTFMT      TEXT("0x%X")
+#if defined(_MSC_VER)
+#define S64_TFMT         TEXT("%lld")
+#define U64_TFMT         TEXT("%llu")
+#define U64_XTFMT      TEXT("0x%llx")
+#else
+#define S64_TFMT         TEXT("%") PRId64
+#define U64_TFMT         TEXT("%") PRIu64
+#define U64_XTFMT      TEXT("0x%") PRIx64
+#endif /* _MSC_VER */
 #define F64_TFMT         TEXT("%g")
 #define PTR_TFMT         TEXT("%p")
 #define PTR_XTFMT      TEXT("0x%p")
 
 #define ENUM_XTFMT      U32_XTFMT
 
+#define DWORD_TFMT       TEXT("%lu")
+#define DWORD_XTFMT    TEXT("0x%lX")
+
 #if defined(_WIN64)
-#define UINT3264_TFMT   TEXT("%llu")
-#define UINT3264_XTFMT  TEXT("0x%llx")
+#define UINT3264_TFMT   U64_TFMT
+#define UINT3264_XTFMT  U64_XTFMT
 #else
 #define UINT3264_TFMT   U32_TFMT
 #define UINT3264_XTFMT  U32_XTFMT
@@ -425,6 +521,7 @@ type limits
 #define S16_MAX    SHRT_MAX
 #define U32_MAX    UINT_MAX
 #define S32_MAX     INT_MAX
+#define F64_MAX     DBL_MAX
 
 #define  S8_MIN   SCHAR_MIN
 #define S16_MIN    SHRT_MIN
@@ -459,17 +556,17 @@ buffer sizes for printf conversions
 
 /* increment / decrement pointer by one bytes (or N bytes) */
 
-#define PtrDecByte(__ptr_type, ptr__ref) \
-    PtrDecBytes(__ptr_type, ptr__ref, 1)
-
-#define PtrDecBytes(__ptr_type, ptr__ref, sub) \
-    (ptr__ref) = ((__ptr_type) (((uintptr_t)(ptr__ref)) - (sub)))
-
 #define PtrIncByte(__ptr_type, ptr__ref) \
     PtrIncBytes(__ptr_type, ptr__ref, 1)
 
 #define PtrIncBytes(__ptr_type, ptr__ref, add) \
     (ptr__ref) = ((__ptr_type) (((uintptr_t)(ptr__ref)) + (add)))
+
+#define PtrDecByte(__ptr_type, ptr__ref) \
+    PtrDecBytes(__ptr_type, ptr__ref, 1)
+
+#define PtrDecBytes(__ptr_type, ptr__ref, sub) \
+    (ptr__ref) = ((__ptr_type) (((uintptr_t)(ptr__ref)) - (sub)))
 
 /* add bytes to pointer / subtract bytes from pointer */
 
@@ -553,20 +650,20 @@ typedef /*_Check_return_*/ int (__cdecl * P_PROC_BSEARCH) (
 #define PROC_BSEARCH_PROTO(_e_s, _proc_bsearch, __key_base_type, __datum_base_type) \
 _Check_return_ \
 _e_s int __cdecl _proc_bsearch( \
-    _In_bytecount_c_(sizeof(__key_base_type))   const void * _key, \
-    _In_bytecount_c_(sizeof(__datum_base_type)) const void * _datum)
+    _In_reads_bytes_c_(sizeof(__key_base_type))   const void * _key, \
+    _In_reads_bytes_c_(sizeof(__datum_base_type)) const void * _datum)
 
 #define BSEARCH_KEY(__key_ptr_type) ((__key_ptr_type) \
     _key)
 
 #define BSEARCH_KEY_VAR_DECL(__key_ptr_type, __var_name) \
-    __key_ptr_type __var_name = BSEARCH_KEY(__key_ptr_type)
+    const __key_ptr_type __var_name = BSEARCH_KEY(__key_ptr_type)
 
 #define BSEARCH_DATUM(__datum_ptr_type) ((__datum_ptr_type) \
     _datum)
 
 #define BSEARCH_DATUM_VAR_DECL(__datum_ptr_type, __var_name) \
-    __datum_ptr_type __var_name = BSEARCH_DATUM(__datum_ptr_type)
+    const __datum_ptr_type __var_name = BSEARCH_DATUM(__datum_ptr_type)
 
 /* for CH_NULL-terminated string lookup */
 /* Removing z_ avoids the C6510 'Invalid annotation: 'NullTerminated'' warning */
@@ -574,7 +671,7 @@ _e_s int __cdecl _proc_bsearch( \
 _Check_return_ \
 _e_s int __cdecl _proc_bsearch( \
     _Pre_valid_ /*_In_z_*/ /*__key_base_type unused*/ const void * _key, \
-    _In_bytecount_c_(sizeof(__datum_base_type)) const void * _datum)
+    _In_reads_bytes_c_(sizeof(__datum_base_type)) const void * _datum)
 
 /*
 qsort()
@@ -586,8 +683,14 @@ typedef int (__cdecl * P_PROC_QSORT) (
 
 #define PROC_QSORT_PROTO(_e_s, _proc_qsort, __arg_base_type) \
 _e_s int  __cdecl _proc_qsort( \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void * _arg1, \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void * _arg2)
+    _In_reads_bytes_c_(sizeof(__arg_base_type)) const void * _arg1, \
+    _In_reads_bytes_c_(sizeof(__arg_base_type)) const void * _arg2)
+
+#define QSORT_ARG1_VAR_DECL(__arg_ptr_type, __var_name) \
+    const __arg_ptr_type __var_name = (__arg_ptr_type) _arg1
+
+#define QSORT_ARG2_VAR_DECL(__arg_ptr_type, __var_name) \
+    const __arg_ptr_type __var_name = (__arg_ptr_type) _arg2
 
 /*
 qsort_s()
@@ -598,26 +701,70 @@ typedef int (__cdecl * P_PROC_QSORT_S) (
     _In_        const void * _arg1,
     _In_        const void * _arg2);
 
-/*    _In_bytecount_c_(sizeof(__ctx_base_type)) void *context, \ */
+/*    _In_reads_bytes_c_(sizeof(__ctx_base_type)) void *context, \ */
 
 #define PROC_QSORT_S_PROTO(_e_s_, _proc_qsort_s, __ctx_base_type, __arg_base_type) \
 _e_s_ int __cdecl _proc_qsort_s( \
     _In_        void * context, \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void * _arg1, \
-    _In_bytecount_c_(sizeof(__arg_base_type)) const void  *_arg2)
+    _In_reads_bytes_c_(sizeof(__arg_base_type)) const void * _arg1, \
+    _In_reads_bytes_c_(sizeof(__arg_base_type)) const void * _arg2)
 
 #if RISCOS
 typedef int HOST_WND; /* really wimp_w but don't tell everyone */
 #define HOST_WND_XTFMT U32_XTFMT
 #define HOST_WND_NONE ((HOST_WND) 0)
-
-#define HOST_FONT int   /* font */
-#define HOST_FONT_NONE ((HOST_FONT) 0)
 #elif WINDOWS
 #define HOST_WND HWND
 #define HOST_WND_XTFMT PTR_XTFMT
 #define HOST_WND_NONE ((HOST_WND) NULL)
 #endif
+
+#if RISCOS
+#define _HwndRef_ _InVal_
+#define _HwndRef_opt_ _InVal_ /* may be 0 */
+
+#define UNREFERENCED_PARAMETER_HwndRef_ UNREFERENCED_PARAMETER_InVal_
+#elif WINDOWS
+#define _HwndRef_ _InRef_
+#define _HwndRef_opt_ _InRef_opt_ /* may be NULL */
+
+#define UNREFERENCED_PARAMETER_HwndRef_ UNREFERENCED_PARAMETER_InRef_
+#endif
+
+#if RISCOS
+#define HOST_FONT int   /* font */
+#define HOST_FONT_NONE ((HOST_FONT) 0)
+#endif
+
+/*
+colour definition
+*/
+
+typedef struct RGB
+{
+    U8 r;
+    U8 g;
+    U8 b;
+    U8 transparent;
+}
+RGB, * P_RGB; typedef const RGB * PC_RGB;
+
+#define RGB_INIT_BLACK { 0, 0, 0, 0 }
+
+#define RGB_INIT(r, g, b) { r, g, b, 0 }
+
+static inline void
+rgb_set(
+    _OutRef_    P_RGB p_rgb,
+    _InVal_     U8 r,
+    _InVal_     U8 g,
+    _InVal_     U8 b)
+{
+    p_rgb->r = r;
+    p_rgb->g = g;
+    p_rgb->b = b;
+    p_rgb->transparent = 0;
+}
 
 /*
 GDI coordinates are large signed things (device units: OS units on RISC OS)
@@ -749,7 +896,7 @@ short_memcpy32nz(
 
 static inline void
 memcpy32(
-    _Out_writes_bytes_(n_bytes) P_ANY dst,
+    _Out_writes_bytes_all_(n_bytes) P_ANY dst,
     _In_reads_bytes_(n_bytes) PC_ANY src,
     _InVal_     U32 n_bytes)
 {
@@ -758,7 +905,7 @@ memcpy32(
 
 static inline void
 memmove32(
-    _Out_writes_bytes_(n_bytes) P_ANY dst,
+    _Out_writes_bytes_all_(n_bytes) P_ANY dst,
     _In_reads_bytes_(n_bytes) PC_ANY src,
     _InVal_     U32 n_bytes)
 {
@@ -779,8 +926,8 @@ memmove32(
 
 static inline void
 memset32(
-    _Out_writes_bytes_(n_bytes) P_ANY dst,
-    _In_        int byteval,
+    _Out_writes_bytes_all_(n_bytes) P_ANY dst,
+    _InVal_     int byteval,
     _InVal_     U32 n_bytes)
 {
     (void) memset(dst, byteval, n_bytes);
@@ -940,10 +1087,6 @@ status_check(void);
 Trivial character definitions
 */
 
-#ifndef NULLCH
-#define NULLCH '\0'
-#endif
-
 #ifndef LF
 #define LF 10
 #endif
@@ -983,10 +1126,11 @@ UCS-4 character definitions
 #define CH_PLUS_SIGN                0x2B    /* + */
 #define CH_COMMA                    0x2C    /* , */
 #define CH_HYPHEN_MINUS             0x2D    /* - */
-#define CH_MINUS_SIGN               CH_HYPHEN_MINUS
+#define CH_MINUS_SIGN__BASIC        CH_HYPHEN_MINUS
 #define CH_FULL_STOP                0x2E    /* . */
 #define CH_SOLIDUS                  0x2F    /* / */ /*slash*/
 #define CH_FORWARDS_SLASH           CH_SOLIDUS
+
 #define CH_DIGIT_ZERO               0x30    /* 0 */
 #define CH_DIGIT_NINE               0x39    /* 9 */
 #define CH_COLON                    0x3A    /* : */
@@ -994,8 +1138,10 @@ UCS-4 character definitions
 #define CH_LESS_THAN_SIGN           0x3C    /* < */
 #define CH_EQUALS_SIGN              0x3D    /* = */
 #define CH_GREATER_THAN_SIGN        0x3E    /* > */
-#define CH_COMMERCIAL_AT            0x40    /* @ */
 #define CH_QUESTION_MARK            0x3F    /* ? */
+
+#define CH_COMMERCIAL_AT            0x40    /* @ */
+
 #define CH_LEFT_SQUARE_BRACKET      0x5B    /* [ */
 #define CH_REVERSE_SOLIDUS          0x5C    /* \ */ /*backslash*/
 #define CH_BACKWARDS_SLASH          CH_REVERSE_SOLIDUS
@@ -1003,12 +1149,14 @@ UCS-4 character definitions
 #define CH_CIRCUMFLEX_ACCENT        0x5E    /* ^ */
 #define CH_LOW_LINE                 0x5F    /* _ */ /*underscore*/
 #define CH_UNDERSCORE               CH_LOW_LINE
+
 #define CH_LEFT_CURLY_BRACKET       0x7B    /* { */
 #define CH_VERTICAL_LINE            0x7C    /* | */
 #define CH_RIGHT_CURLY_BRACKET      0x7D    /* } */
 #define CH_TILDE                    0x7E    /* ~ */
 #define CH_DELETE                   0x7F
 
+#include "cmodules/unicode/u0000.h" /* 0000..007F Basic Latin */
 #include "cmodules/unicode/u0080.h" /* 0080..00FF Latin-1 Supplement */
 
 /*
@@ -1066,43 +1214,54 @@ typedef int align_t;
 #define MIN(A,B) ((A) < (B) ? (A) : (B))
 #endif
 
+/* simple but effective and works for -ve values */
+#define ceil_using_mask(value, mask) ( \
+    ((value) + (mask)) & ~(mask) )
+
+/* simple but effective and works for -ve values */
+#define floor_using_mask(value, mask) ( \
+    ((value)) & ~(mask) )
+
 /* useful division a/b macros to round result to +/- infinity rather than towards zero (NB watch out for multiple-evaluation side-effects) */
 
-#define div_round_ceil_u(a, b) ( \
+#define idiv_ceil_u(a, b) ( \
     ((a) + (b) - 1) / (b) ) /* for unsigned a */
 
-#define div_round_ceil(a, b) ( \
+#define idiv_ceil(a, b) ( \
     (((a) >  0) ? ((a) + (b) - 1) : (a)) / (b) )
 
-#define div_round_floor(a, b) ( \
+#define idiv_floor_u(a, b) ( \
+    (a) / (b) ) /* for unsigned a */
+
+#define idiv_floor(a, b) ( \
     (((a) >= 0) ? (a) : ((a) - (b) + 1)) / (b) )
 
 /* functions for where it can't be avoided */
 
 _Check_return_
 static inline S32
-div_round_ceil_fn(
+idiv_ceil_fn(
     _InVal_     S32 a,
     _InVal_     S32 b)
 {
-    return(div_round_ceil(a, b));
+    return(idiv_ceil(a, b));
 }
 
 _Check_return_
 static inline S32
-div_round_floor_fn(
+idiv_floor_fn(
     _InVal_     S32 a,
     _InVal_     S32 b)
 {
-    return(div_round_floor(a, b));
+    return(idiv_floor(a, b));
 }
 
-#define IGNOREPARM(p)                       (p)=(p)
-#define IGNOREPARM_CONST(p)                 (void)(p)
-#define IGNOREPARM_InRef_(p)                (void)(p)
-#define IGNOREPARM_InoutRef_(p)             (void)(p)
-#define IGNOREPARM_OutRef_(p)               (void)(p)
-#define IGNOREPARM_InVal_(p)                (void)(p)
+#define UNREFERENCED_PARAMETER(p)                       (p)=(p)
+#define UNREFERENCED_PARAMETER_CONST(p)                 (void)(p)
+#define UNREFERENCED_PARAMETER_InRef_(p)                (void)(p)
+#define UNREFERENCED_PARAMETER_InoutRef_(p)             (void)(p)
+#define UNREFERENCED_PARAMETER_OutRef_(p)               (void)(p)
+#define UNREFERENCED_PARAMETER_InVal_(p)                (void)(p)
 
 #define IGNOREVAR(v)                        (void)(v)
 
@@ -1129,33 +1288,41 @@ a pointer that will hopefully give a trap when dereferenced even when not CHECKI
     (uintptr_t) (0xC0000000U | (X)))
 
 #define BAD_POINTER_X_RANGE ( \
-    (uintptr_t) (0x3FFFFFFFU))
+    (uintptr_t) (0x0000001FU))
 
 #elif defined(_WIN64)
 
 #define BAD_POINTER_X(__ptr_type, X) ((__ptr_type) \
-    (uintptr_t) (0xFF00000000000000U | (X)))
+    (uintptr_t) (0x0000000000000000U | (X)))
 
 #define BAD_POINTER_X_RANGE ( \
-    (uintptr_t) (0x00FFFFFFFFFFFFFFU))
+    (uintptr_t) (0x000000000000001FU))
 
 #else
 
 #define BAD_POINTER_X(__ptr_type, X) ((__ptr_type) \
-    (uintptr_t) (0xFF000000U | (X)))
+    (uintptr_t) (0x00000000U | (X)))
 
 #define BAD_POINTER_X_RANGE ( \
-    (uintptr_t) (0x00FFFFFFU))
+    (uintptr_t) (0x0000001FU))
 
 #endif /* _WIN64 */
 
 #define IS_BAD_POINTER(p) ( \
-    ((uintptr_t) (p) - BAD_POINTER_X(uintptr_t, 0)) <= BAD_POINTER_X_RANGE )
+    ((uintptr_t) (p) - (uintptr_t) BAD_POINTER_X(uintptr_t, 0)) <= BAD_POINTER_X_RANGE )
 
 /* paranoid compatibility NULL == NONE for all */
 
+/* Some SAL to reflect the fact that PTR_NONE is not NULL in this state */
+
+#define _In_maybenone_      _In_
+#define _Inout_maybenone_   _Inout_
+#define _Out_maybenone_     _Out_
+
 #define _Ret_notnone_       _Ret_notnull_
 #define _Ret_maybenone_     _Ret_maybenull_
+
+#define _Ret_writes_maybenone_  _Ret_writes_
 
 #define PTR_NONE_X(__ptr_type, X) ( \
     (__ptr_type) NULL)
@@ -1165,20 +1332,21 @@ a pointer that will hopefully give a trap when dereferenced even when not CHECKI
 #define IS_PTR_NONE_X(p, X) ( \
     (NULL == (p))
 
-#define IS_PTR_NONE_OR_NULL(__ptr_type, p) ( \
-    (__ptr_type) NULL == (p) )
+#define IS_PTR_NULL_OR_NONE(/*ANY*/ p) ( \
+    NULL == (p) )
 
-#define IS_PTR_NONE_X_OR_NULL(__ptr_type, p, X) ( \
+#define IS_PTR_NULL_OR_NONE_X(__ptr_type, p, X) ( \
     (__ptr_type) NULL == (p) )
 
 #define _IS_P_DATA_NONE(__ptr_type, p) ( \
     (__ptr_type) NULL == (p) )
 
 #define _P_DATA_NONE(__ptr_type) ( \
-    PTR_NONE_X(__ptr_type, 0))
+    PTR_NONE_X(__ptr_type, 1))
 
 #define PTR_ASSERT(p) \
-    assert(NULL != (p))
+    assert(!IS_PTR_NULL_OR_NONE(p))
+
 /*
 round up v if needed to the next r (r must be a power of 2)
 */

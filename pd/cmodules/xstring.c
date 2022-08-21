@@ -17,6 +17,7 @@
 
 /* strtol, strtoul without whitespace stripping and base rubbish */
 
+_Check_return_
 extern U32
 fast_strtoul(
     _In_z_      PC_U8Z p_u8_in,
@@ -115,7 +116,7 @@ extern void
 memswap32(
     _Inout_updates_bytes_(n_bytes) P_ANY p1,
     _Inout_updates_bytes_(n_bytes) P_ANY p2,
-    _In_        U32 nbytes)
+    _In_        U32 n_bytes)
 {
     P_U8 c1;
     P_U8 c2;
@@ -133,9 +134,9 @@ memswap32(
         s1 = p1;
         s2 = p2;
 
-        while(nbytes > sizeof32(s))
+        while(n_bytes > sizeof32(s))
         {
-            nbytes -= sizeof32(s);
+            n_bytes -= sizeof32(s);
              s    = *s1;
             *s1++ = *s2;
             *s2++ =  s;
@@ -151,7 +152,7 @@ memswap32(
     }
 #endif
 
-    for(i = 0; i < nbytes; ++i)
+    for(i = 0; i < n_bytes; ++i)
     {
          c    = *c1;
         *c1++ = *c2;
@@ -479,12 +480,12 @@ STAR:
                     break;
                 }
 
-            /*trace_3(0, "wild_stricmp loop3: x -> '%s', y -> '%s', wild_x %s", x, y, trace_boolstring(wild_x));*/
+            /*trace_3(0, "wild_stricmp loop3: x -> '%s', y -> '%s', wild_x %s", x, y, report_boolstring(wild_x));*/
 
             /* are we at end of y string? */
             if(y == end_y)
             {
-                /*trace_1(0, "wild_stricmp: end of y string: returns %d", (*x == '\0') ? 0 : -1);*/
+                /*trace_1(0, "wild_stricmp: end of y string: returns %d", (*x == CH_NULL) ? 0 : -1);*/
                 if(x == end_x)
                     return(0);       /* equal */
                 else

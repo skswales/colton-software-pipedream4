@@ -27,16 +27,16 @@ atan_2
 atanh
 atn
 cos
-%L%cosec
-%L%cosech
+cosec
+cosech
 cosh
-%L%cot
-%L%coth
+cot
+coth
 deg
 pi
 rad
-%L%sec
-%L%sech
+sec
+sech
 sin
 sinh
 tan
@@ -173,31 +173,31 @@ tanh
 
 Summary
 
-Returns the ArcCosecant of %H4%Input1%H4% in radians.
-Returns the hyperbolic ArcCosecant of %H4%Input1%H4% in radians.
-Returns the hyperbolic ArcCosine of %H4%Input1%H4% in radians.
-Returns the ArcCotangent of %H4%Input1%H4% in radians.
-Returns the hyperbolic ArcCotangent of %H4%input1%H4% in radians.
-Returns the ArcCosine of %H4%Input1%H4% in radians.
-Returns the ArcSecant of %H4%Input1%H4% in radians.
-Returns the hyperbolic ArcSecant of %H4%Input1%H4% in radians.
-Returns the hyperbolic ArcSine of %H4%Input1%H4% in radians.
-Returns the ArcSine of %H4%Input1%H4% in radians.
-Returns the ArcTangent of %H4%Input2%H4% / %H4%Input1%H4% in radians.
-Returns the hyperbolic ArcTangent of %H4%Input1%H4% in radians.
-Returns the ArcTangent of %H4%Input1%H4% in radians.
-Returns the Cosine of %H4%Input1%H4%, given in radians.
-Returns the Cosecant of %H4%Input1%H4%, given in radians.
-Returns the hyperbolic Secant of %H4%Input1%H4%, given in radians.
-Returns the hyperbolic Cosine of %H4%Input1%H4%, given in radians.
-Returns the Cotangent of %H4%Input1%H4%, given in radians.
-Returns the hyperbolic Cotangent of %H4%Input1%H4%, given in radians.
-Converts radians to degrees.
-Returns the value of PI.
-Converts degrees to radians.
-Returns the Secant of %H4%Input1%H4%, given in radians.
-Returns the hyperbolic Secant of %H4%Input1%H4%, given in radians.
-Returns the Sine of %H4%Input1%H4%, given in radians.
-Returns the hyperbolic Sine of %H4%Input1%H4%, given in radians.
-Returns the Tangent of %H4%Input1%H4%, given in radians.
-Returns the hyperbolic Tangent of %H4%Input1%H4%, given in radians.
+Returns the arc cosecant of %H4%Input1%H4% in radians
+Returns the inverse hyperbolic cosecant of %H4%Input1%H4%
+Returns the inverse hyperbolic cosine of %H4%Input1%H4%
+Returns the arc cotangent of %H4%Input1%H4% in radians
+Returns the inverse hyperbolic cotangent of %H4%input1%H4%
+Returns the arc cosine of %H4%Input1%H4% in radians
+Returns the arc secant of %H4%Input1%H4% in radians
+Returns the inverse hyperbolic secant of %H4%Input1%H4%
+Returns the inverse hyperbolic sine of %H4%Input1%H4%
+Returns the arc sine of %H4%Input1%H4% in radians
+Returns the arc tangent of %H4%Input2%H4% / %H4%Input1%H4% in radians
+Returns the inverse hyperbolic tangent of %H4%Input1%H4%
+Returns the arc tangent of %H4%Input1%H4% in radians
+Returns the cosine of %H4%Input1%H4%, given in radians
+Returns the cosecant of %H4%Input1%H4%, given in radians
+Returns the hyperbolic secant of %H4%Input1%H4%
+Returns the hyperbolic cosine of %H4%Input1%H4%
+Returns the cotangent of %H4%Input1%H4%, given in radians
+Returns the hyperbolic cotangent of %H4%Input1%H4%
+Converts an angle from a number of radians to degrees
+Returns the value of pi (3.1415926...)
+Converts an angle in degrees to a number of radians
+Returns the secant of %H4%Input1%H4%, given in radians
+Returns the hyperbolic secant of %H4%Input1%H4%
+Returns the sine of %H4%Input1%H4%, given in radians
+Returns the hyperbolic sine of %H4%Input1%H4%
+Returns the tangent of %H4%Input1%H4%, given in radians
+Returns the hyperbolic tangent of %H4%Input1%H4%

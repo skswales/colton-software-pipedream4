@@ -85,18 +85,18 @@ wm_events_get(
          * as it stands wimpt is using win_idle_event_claimer() to
          * reenable nulls too for win_idle clients
         */
-        wimpt_poll((wimp_emask) (event_getmask() & ~(peek ? wimp_EMNULL : 0)),
+        wimpt_poll((wimp_emask) (event_getmask() & ~(peek ? Wimp_Poll_NullMask : 0)),
                    &msg);
         /* loops itself till good event read */
 
         /* res = 0 only if we got a peek at a null event and we wanted it! */
-        res = (!peek || (msg.e != wimp_ENULL));
+        res = (!peek || (msg.e != Wimp_ENull));
         #endif
 
         /* if we have a real event, process it and look again */
         #if RISCOS
         /* always allow other clients to have a look in at nulls if they want */
-        if((msg.e != wimp_ENULL)  ||  (win_idle_event_claimer() != win_IDLE_OFF))
+        if((msg.e != Wimp_ENull)  ||  (win_idle_event_claimer() != win_IDLE_OFF))
             event_do_process(&msg);
         #endif
 

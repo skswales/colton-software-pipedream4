@@ -74,7 +74,7 @@ convert from pixits to OS units (harder - must consider rounding in general)
 /*
 convert from pixits to millipoints
 */
-#define gr_mp_from_pixit(p)       ((p) * GR_MILLIPOINTS_PER_PIXIT)
+#define gr_millipoint_from_pixit(p) ((p) * GR_MILLIPOINTS_PER_PIXIT)
 
 /*
 convert from pixits to RISC OS Draw units
@@ -164,7 +164,7 @@ typedef struct GR_LINESTYLE
 }
 GR_LINESTYLE, * P_GR_LINESTYLE; typedef const GR_LINESTYLE * PC_GR_LINESTYLE;
 
-#define gr_linestyle_init(linestylep) memset32((linestylep), '\0', sizeof32(*(linestylep)))
+#define gr_linestyle_init(linestylep) memset32((linestylep), CH_NULL, sizeof32(*(linestylep)))
 
 /* NB. on WINDOWS thick or coloured lines must be done by rectangle fill */
 
@@ -202,7 +202,7 @@ typedef struct GR_FILLSTYLE
 }
 GR_FILLSTYLE, * P_GR_FILLSTYLE; typedef const GR_FILLSTYLE * PC_GR_FILLSTYLE;
 
-#define gr_fillstyle_init(fillstylep) memset32((fillstylep), '\0', sizeof32(*(fillstylep)))
+#define gr_fillstyle_init(fillstylep) memset32((fillstylep), CH_NULL, sizeof32(*(fillstylep)))
 
 /*
 style for strings

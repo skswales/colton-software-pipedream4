@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Mouse Techniques</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="miscfns.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="names.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Mouse">Mouse Techniques</h1>
+    <p>The following is a summary of mouse operations which apply to a PipeDream window.</p>
+
+    <h2 id="Positioning">Positioning the Caret</h2>
+    <p>
+        Moving the pointer onto a row and clicking Select usually positions the caret in the cell containing the pointer.
+        However, if that cell is blank, and there is a text cell to the left which can overlap the blank cell, PipeDream puts the caret in the text cell.
+        This is to prevent you from accidentally typing text into two different columns on the same row.
+        If you really want the caret to be in the blank cell into which you moved the pointer, hold down <span class="csg-key">Ctrl</span> and then click Select.
+    </p>
+    <p>Alternatively, click Select on the heading of the column and PipeDream will move the caret along the row into that column.</p>
+
+    <h2 id="Loading">Loading Documents</h2>
+    <p>
+        To load a PipeDream document, either double-click on its file icon in a directory display,
+        or drag the file&rsquo;s icon from a directory display (or other running application) onto the PipeDream icon on the icon bar.
+    </p>
+
+    <h2 id="Inserting">Inserting Documents</h2>
+    <p>Drag a file&rsquo;s icon from a directory display (or other running application) into a window to insert the file at the caret position.</p>
+
+    <h2 id="Opening">Opening a PipeDream Window</h2>
+    <p>To open a new PipeDream document:</p>
+    <ol>
+        <li>Click on the PipeDream icon on the icon bar to bring up the <span class="csg-dbox">Load template</span> dialogue box.</li>
+        <li>Click on the up / down arrows to find the template file you want.</li>
+        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+    </ol>
+
+    <h2 id="Bringing">Bringing up Menus and Choosing Commands</h2>
+    <p>With the pointer in a PipeDream document window, click Menu to bring up the top level menu.</p>
+    <p>To bring up a sub-menu, slide the pointer over the arrow to the right of the menu name.</p>
+    <p>
+        To choose a command, click Select on the command name.
+        This carries out the command and removes the menu from the screen.
+        If you click Adjust, the menu remains on the screen.
+    </p>
+    <p>To repeat the last command, use the <span class="csg-command">Repeat Command</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+                <th class="csg-ct-th-key">Key</th>
+            </tr>
+            <tr>
+                <td>Files</td>
+                <td>Repeat command</td>
+                <td><span class="csg-cmdseq">J</span></td>
+                <td><span class="csg-key">F5</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        This enables you to repeat commands easily without having the menu in the
+        way or having to type long Ctrl-key sequences.
+    </p>
+
+    <h2 id="Putting">Putting Cell References Into the Formula Line</h2>
+    <p>
+        To put a cell reference into the formula line or formula window whilst you
+        are editing a formula, click Select in the cell to which you want to refer. The
+        cell can be in the current window or in another window.
+    </p>
+    <p>
+        By default, relative cell references will be inserted. To fix the row part
+        of the reference, hold down the SHIFT key when you click on the cell. To fix
+        the column part of the reference, hold down the Ctrl key when you click on the
+        cell. PipeDream will add $ signs to fix the reference.
+    </p>
+    <p>
+        To insert a range in the formula line or formula window you can either click
+        Select at the start and the end of the range, or you can drag from the start to
+        the end of the range.
+    </p>
+
+    <h2 id="Using">Using Scroll Bars</h2>
+    <p>
+        To scroll one line in the direction of the arrow, position the pointer on
+        the scroll arrow and click Select. Hold down Select to continue scrolling.
+        Click Adjust to scroll back the other way.
+        The caret always remains within the PipeDream document window, staying as near as possible to its original position.
+    </p>
+    <p>
+        To scroll windowful by windowful, position the pointer on the darker part of
+        the scroll bar (above the slider to scroll up, below the slider to scroll down)
+        and click Select. The next windowful of the document will appear. Click Adjust
+        to scroll back the other way.
+        The caret always remains within the PipeDream window, moving, if necessary to the point nearest to its position before scrolling.
+    </p>
+    <p>
+        To move down through the document, position the pointer on the slider, press
+        Select and hold it down. Drag the slider to display the part of the document
+        you want to see.
+    </p>
+    <p>
+        To move from one side of a document to the other, use the horizontal scroll bars.
+        The caret always remains within the PipeDream document window, staying as near as possible to its original position.
+    </p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Miscellaneous Functions </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Names</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="miscfns.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="names.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

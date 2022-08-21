@@ -14,7 +14,7 @@
 #ifndef __mlec_h
 #define __mlec_h
 
-#define SUPPORT_SELECTION TRUE /* SKS 04nov95 for 450 */
+#define SUPPORT_SELECTION TRUE /* SKS 04nov95 for PD 4.50 */
 #define SUPPORT_LOADSAVE  TRUE
 #define SUPPORT_CUTPASTE  TRUE
 #define SUPPORT_PANEMENU  TRUE
@@ -71,9 +71,9 @@ mlec_destroy(
 extern void
 mlec_attach(
     MLEC_HANDLE mlec,
-    wimp_w main_win_handle,
-    wimp_w pane_win_handle,
-    wimp_box paneWorkArea,
+    HOST_WND main_win_handle,
+    HOST_WND pane_win_handle,
+    const BBox * const p_pane_extent,
     const char *menu_title);
 
 extern void
@@ -129,13 +129,13 @@ mlec__insert_newline(
     MLEC_HANDLE mlec);
 
 extern void
-mlec__cursor_getpos(
+mlec__cursor_get_position(
     MLEC_HANDLE mlec,
     int * p_col,
     int * p_row);
 
 extern void
-mlec__cursor_setpos(
+mlec__cursor_set_position(
     MLEC_HANDLE mlec,
     int col,
     int row);
@@ -158,6 +158,19 @@ mlec__selection_delete(
 
 #endif
 
+#if SUPPORT_CUTPASTE
+
+extern int
+mlec__atcursor_paste(MLEC_HANDLE mlec);
+
+extern int
+mlec__selection_copy(MLEC_HANDLE mlec);
+
+extern int
+mlec__selection_cut(MLEC_HANDLE mlec);
+
+#endif
+
 typedef enum MLEC_EVENT_REASON_CODE
 {
     Mlec_IsOpen            = 1,
@@ -174,7 +187,7 @@ typedef enum MLEC_EVENT_RETURN_CODE
     mlec_event_unknown         = 0x00,
 
     /* from IsOpen */
-    mlec_event_openned         = 0x10,
+    mlec_event_opened          = 0x10,
 
     /* from IsClose */
     mlec_event_closed          = 0x20,
@@ -198,7 +211,7 @@ typedef MLEC_EVENT_RETURN_CODE (* MLEC_EVENT_PROC) (
     P_ANY handle,
     P_ANY p_eventdata);
 
-#define mlec_event_proto(_e_s, _p_proc_mlec_event) \
+#define MLEC_EVENT_PROTO(_e_s, _p_proc_mlec_event) \
 _e_s MLEC_EVENT_RETURN_CODE _p_proc_mlec_event( \
     MLEC_EVENT_REASON_CODE rc, \
     P_ANY handle, \

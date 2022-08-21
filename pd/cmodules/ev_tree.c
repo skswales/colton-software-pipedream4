@@ -360,7 +360,7 @@ ev_add_exp_slot_to_tree(
                 p_ev_custom->flags &= ~TRF_UNDEFINED;
 
                 /* mark document as a custom function sheet */
-                if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) != NULL)
+                if(NULL != (p_ss_doc = ev_p_ss_doc_from_docno(ev_slr_docno(slrp))))
                     p_ss_doc->flags |= DCF_CUSTOM;
 
                 ev_todo_add_custom_dependents(grubb.data.arg.nameid);
@@ -1082,13 +1082,13 @@ search_for_slrdependent(
     P_SLR_USE ssep;
     EV_TRENT res;
 
-    tree_sort_slrs(slrp->docno);
+    tree_sort_slrs(ev_slr_docno(slrp));
 
-    if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) == NULL)
+    if(NULL == (p_ss_doc = ev_p_ss_doc_from_docno(ev_slr_docno(slrp))))
         return(-1);
 
     res = -1;
-    if((ssep = tree_slrptr(p_ss_doc, 0)) != NULL)
+    if(NULL != (ssep = tree_slrptr(p_ss_doc, 0)))
     {
         SLR_USE target;
         P_SLR_USE sep;
@@ -1158,7 +1158,7 @@ todo_add_dependents(
 {
     P_SS_DOC p_ss_doc;
 
-    if((p_ss_doc = ev_p_ss_doc_from_docno(slrp->docno)) != NULL)
+    if(NULL != (p_ss_doc = ev_p_ss_doc_from_docno(ev_slr_docno(slrp))))
     {
         P_RANGE_USE rep;
         P_SLR_USE sep;
@@ -1310,7 +1310,7 @@ todo_add_name_deps_of_slr(
             case RPN_DAT_SLR:
                 if(all_doc)
                 {
-                    if(p_ev_name->def_data.arg.slr.docno == slrp->docno)
+                    if(ev_slr_docno(&p_ev_name->def_data.arg.slr) == ev_slr_docno(slrp))
                         got_ref = 1;
                 }
                 else if(slr_equal(&p_ev_name->def_data.arg.slr, slrp))
@@ -1320,7 +1320,7 @@ todo_add_name_deps_of_slr(
             case RPN_DAT_RANGE:
                 if(all_doc)
                 {
-                    if(p_ev_name->def_data.arg.range.s.docno == slrp->docno)
+                    if(ev_slr_docno(&p_ev_name->def_data.arg.range.s) == ev_slr_docno(slrp))
                         got_ref = 1;
                 }
                 if(ev_slr_in_range(&p_ev_name->def_data.arg.range, slrp))
@@ -1350,7 +1350,7 @@ todo_add_slr(
     _InRef_     PC_EV_SLR slrp,
     S32 sort)
 {
-    if(!doc_check_custom(slrp->docno))
+    if(!doc_check_custom(ev_slr_docno(slrp)))
     {
         P_TODO_ENTRY todop;
 

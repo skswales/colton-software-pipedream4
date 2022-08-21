@@ -1,68 +1,73 @@
-%OP%VS4.52/05a (17-Jul-2014), Colton Software, R9200 7500 3900 8299
+%OP%VS4.56.p1 (18-Aug-2016), Colton Software, R9200 7500 3900 8299
+%OP%PL55
 %OP%TM2
 %OP%BM2
 %OP%LM5
 %OP%FGHomerton.Medium
-%OP%FX160
-%OP%FY160
 %OP%FS0
-%OP%WC216,1456,490,1400,0,1,0,0
-%CO:A,12,72%%C%%H2%PipeDream 4 features
+%OP%WC2,1258,1162,2118,0,1,0,0
+%CO:A,12,72%%C%%H2%PipeDream features
 
-This is a list of features in PipeDream 4 which are not documented in the Tutorial or Reference Guide:
+This is a list of features in PipeDream which are not documented in the %H4%Tutorial%H4% or 
+%H4%Reference Guide%H4%:
 
-%H2%1. Absolute slot references
+%H2%1. Absolute cell references
 
-When editing a formula in the formula line or formula window you can insert absolute slot references in 
-the formula by pressing the SHIFT and CTRL keys whilst clicking the Select button on the mouse.  
-Pressing the SHIFT key puts a dollar sign before the row number, pressing the CTRL key puts a dollar 
-sign before the column letter.
+When editing a formula in the formula line or formula window you can insert absolute 
+cell references in the formula by pressing the Shift and Ctrl keys whilst clicking the 
+Select button on the mouse.  Pressing the Shift key puts a dollar sign before the row 
+number, pressing the Ctrl key puts a dollar sign before the column letter.
 
 %H2%2. Auto entry
 
-Auto entry is possible in PipeDream 4.01 and onwards.  When editing in the formula line pressing the 
-up or down keys will enter the formula and the . then move the caret up or down.  Pressing TAB or 
-SHIFT-TAB will enter the formula and then move the caret forward or backward a column.
+When editing in the formula line pressing the up or down keys will enter the formula 
+and the . then move the caret up or down.  Pressing TAB or Shift-TAB will enter the 
+formula and then move the caret forward or backward a column.
 
-%H2%3. Slot value on function menu
+%H2%3. Cell value on function menu
 
-If you click on the function menu button (curly f at the top of the screen), a new entry has appeared on 
-the menu: 'Slot value'.
+If you click on the function menu button (curly f at the top of the screen), a new entry 
+has appeared on the menu: 'Cell value'.
 
-Clicking on the function menu button gives you information on the current slot. It does different things if 
-you are on number slots and text slots: on a text slot, if you have a formula which PipeDream persists 
-in thinking is text, you will get the entry 'Compile/Show error' off to the right. Click on this and 
-PipeDream will tell you the reason that it thinks it's a text slot rather than a number slot.
+Clicking on the function menu button gives you information on the current cell. It does 
+different things if you are on number cells and text cells: on a text cell, if you have a 
+formula which PipeDream persists in thinking is text, you will get the entry 
+'Compile/Show error' off to the right. Click on this and PipeDream will tell you the 
+reason that it thinks it's a text cell rather than a number cell.
 
-If you click on the function menu button whilst on a number slot, PipeDream will give you another 
-menu, listing slots, ranges and names. This mechanism is so you can follow the structure of a 
-spreadsheet: you can look at supporting slots (those slots that this slot refers to) and dependent slots 
-(those slots that refer to this slot). The values of these slots are given too, so if, for example, you get 
-the message 'Propagated' in a slot examining the values of the slot's supporters (and possibly the 
+If you click on the function menu button whilst on a number cell, PipeDream will give 
+you another menu, listing cells, ranges and names. This mechanism is so you can 
+follow the structure of a spreadsheet: you can look at supporting cells (those cells 
+that this cell refers to) and dependent cells (those cells that refer to this cell). The 
+values of these cells are given too, so if, for example, you get the message 
+'Propagated' in a cell examining the values of the cell's supporters (and possibly the 
 supporters of the supporters) you will get to the original source of the error.
 
-If you click on the entry for a supporting or dependent slot, PipeDream will position the caret in that slot 
-so you can follow the structure.
+If you click on the entry for a supporting or dependent cell, PipeDream will position 
+the caret in that cell so you can follow the structure.
 
 %H2%4. Formulae in arrays
 
-Contrary to page 13 of the Reference Guide, you can now include formulae in arrays. You can only do 
-this when the array is itself inside a formula (as opposed to an array defined by a name). Note that 
-arrays defined by a name cannot contain formulae or names or slot references or ranges. For 
-example: {1+2,3+4,a1+6}.
+Contrary to page 13 of the %H4%Reference Guide%H4%, you can now include formulae in arrays. 
+You can only do this when the array is itself inside a formula (as opposed to an array 
+defined by a name). Note that arrays defined by a name cannot contain formulae or 
+names or cell references or ranges. For example: {1+2,3+4,a1+6}.
 
 %H2%5. Redefining keys
 
-The command Define Function key (Ctrl CDF) has been extended to enable the redefinition of many of 
-the darker grey keys around the keyboard. A popular redefinition may be to redefine the Copy/End key 
-to perform a "delete right" command.  To do this press Ctrl-CDF and click on the arrows until Copy 
-appears as the key to define.  Enter
+The command Define Function key (Ctrl CDF) has been extended to enable the 
+redefinition of many of the darker grey keys around the keyboard. A popular 
+redefinition may be to redefine the Copy/End key to perform a "delete right" 
+command.  To do this press Ctrl-CDF and click on the arrows until Copy appears as 
+the key to define.  Enter
 
 \G|M
 
-as the definition and press Return.  Pressing the Copy key will now delete the character to the right.
+as the definition and press Return.  Pressing the Copy key will now delete the 
+character to the right.
 
-We have provided a command file !PipeDream.CmdFiles.CopyDelete which does the redefinition for 
-you.  If you rename this command file as !PipeDream.key, or merge the file into !PipeDream.key if you 
-have one, PipeDream will do the redefinition automatically when it starts up.
+We have provided a command file !PipeDream.CmdFiles.CopyDelete which does the 
+redefinition for you.  If you rename this command file as !PipeDream.key, or merge 
+the file into !PipeDream.key if you have one, PipeDream will do the redefinition 
+automatically when it starts up.
 %CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

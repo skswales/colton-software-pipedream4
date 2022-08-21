@@ -487,7 +487,7 @@ enum DID_NUMBERS
     RPN_FNF_DAYNAME     ,
     RPN_FNF_DCOUNT      ,
     RPN_FNF_DCOUNTA     ,
-    RPN_FNF_DDB         ,
+    RPN_FNV_DDB         ,
     RPN_FNF_DEG         ,
     RPN_FNF_DEREF       ,
     RPN_FNF_DMAX        ,
@@ -567,6 +567,8 @@ enum DID_NUMBERS
     RPN_FNF_PROPER      ,
     RPN_FNF_PV          ,
 
+  /*RPN_FNF_QUOTIENT    ,*/
+
     RPN_FNF_RAD         ,
     RPN_FNV_RAND        ,
     RPN_FNV_RANK        ,
@@ -584,6 +586,7 @@ enum DID_NUMBERS
     RPN_FNF_SEC         ,
     RPN_FNF_SECH        ,
     RPN_FNF_SECOND      ,
+    RPN_FNF_SERIESSUM   ,
     RPN_FNF_SET_NAME    ,
     RPN_FNF_SET_VALUE   ,
     RPN_FNF_SGN         ,
@@ -719,6 +722,14 @@ ev_data_init(
 {
     zero_struct_ptr(p_ev_data);
     p_ev_data->did_num = RPN_DAT_BLANK;
+}
+
+_Check_return_
+static inline BOOL
+ev_data_is_error(
+    _InRef_     PC_EV_DATA p_ev_data)
+{
+    return(RPN_DAT_ERROR == p_ev_data->did_num);
 }
 
 static inline void
@@ -1048,12 +1059,12 @@ ev_make_slot(
 _Check_return_
 extern EV_COL
 ev_numcol(
-    _InRef_     PC_EV_SLR p_ev_slr);
+    _InVal_     DOCNO docno);
 
 _Check_return_
 extern EV_ROW
 ev_numrow(
-    _InRef_     PC_EV_SLR p_ev_slr);
+    _InVal_     DOCNO docno);
 
 _Check_return_
 _Ret_maybenone_
@@ -1081,6 +1092,10 @@ ev_recalc_all(void);
 extern void
 ev_recalc_status(
     S32 to_calc);
+
+extern void
+ev_report_ERROR_CUSTOM(
+    _InRef_     PC_EV_DATA p_ev_data);
 
 extern void
 ev_set_options(
@@ -1312,7 +1327,8 @@ error definition
     errorstring(EVAL_ERR_OWNCOLUMN,      "Set_value can't write above itself in same column") \
     errorstring(EVAL_ERR_MATRIX_NOT_SQUARE,   "Matrix is not square") \
     errorstring(EVAL_ERR_MATRIX_SINGULAR,     "Matrix is singular") \
-    errorstring(EVAL_ERR_NO_VALID_DATA,       "No valid data found")
+    errorstring(EVAL_ERR_NO_VALID_DATA,       "No valid data found")\
+    errorstring(EVAL_ERR_CALC_FAILURE,        "Internal evaluator error (CF)")
 
 /*
 error definition
@@ -1380,8 +1396,9 @@ error definition
 #define EVAL_ERR_MATRIX_NOT_SQUARE   (-2057)
 #define EVAL_ERR_MATRIX_SINGULAR     (-2058)
 #define EVAL_ERR_NO_VALID_DATA       (-2059)
+#define EVAL_ERR_CALC_FAILURE        (-2060)
 
-#define EVAL_ERR_END                 (-2060)
+#define EVAL_ERR_END                 (-2061)
 
 #endif /* __ev_eval_h */
 

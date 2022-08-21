@@ -1,0 +1,648 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Label Printing</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        .label-example-column-C {
+        }
+
+        .label-example-column-D {
+        }
+
+        .label-example-column-E {
+        }
+
+        .label-example-column-F {
+        }
+
+        .label-example-column-G {
+        }
+    </style>
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="keyboard.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="lookupfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Label">Label Printing</h1>
+    <p>PipeDream enables you to print labels for the names and addresses in your names and addresses database.</p>
+    <p>
+        If you are using a page printer with a RISC&nbsp;OS printer driver,
+        you can lay out the labels for printing on label sheets which generally have three columns of labels on each sheet.
+        If you are using a dot matrix or daisy wheel printer, the labels are printed in one column.
+    </p>
+    <p>First, you need to prepare a file of names and addresses which will be used to print your labels.</p>
+    <ol>
+        <li>Load your database of names and addresses.</li>
+        <li>
+            Save the database with a different name to the original.
+            This is for safety.
+            As you are going to make a selection from the records, you do not want to overwrite your original database.
+            After saving the database, check that PipeDream has changed the name of the file in the window to the new filename.
+        </li>
+        <li>
+            Make any selections or deletions required.
+            In particular, ensure that the last column contains the last line of the address.
+        </li>
+    </ol>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column label-example-column-C">C</th>
+                <th class="csg-sample-sheet-border-column label-example-column-D">D</th>
+                <th class="csg-sample-sheet-border-column label-example-column-E">E</th>
+                <th class="csg-sample-sheet-border-column label-example-column-F">F</th>
+                <th class="csg-sample-sheet-border-column label-example-column-G">G</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td>Southam School</td>
+                <td>Stratford Road</td>
+                <td>Southam</td>
+                <td>Warks</td>
+                <td>SO1 23B</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td>Cambridge High School</td>
+                <td>East Road</td>
+                <td>Cambridge</td>
+                <td>Cambs</td>
+                <td>CB1 23B</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td>Tatham Grammar School</td>
+                <td>Dallas Road</td>
+                <td>Higher Tatham</td>
+                <td>Lancs</td>
+                <td>LA2 12B</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td>Tunstall School</td>
+                <td>Cantsfield Ave.</td>
+                <td>Tunstall</td>
+                <td>Cumbria</td>
+                <td>TU1 23B</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td>Warrington High School</td>
+                <td>Widnes Road</td>
+                <td>Warrington</td>
+                <td>Cheshire</td>
+                <td>WA1 23B</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td>Abbeystead Academy</td>
+                <td>Dolphin Road</td>
+                <td>Abbeystead</td>
+                <td>Lancs</td>
+                <td>AB1 23B</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">7</th>
+                <td>Settle High School</td>
+                <td>Sedburgh Road</td>
+                <td>Settle</td>
+                <td>N Yorks</td>
+                <td>SE1 23B</td>
+            </tr>
+        </tbody>
+    </table>
+    <ul class="csg-netsurf-2434">
+        <li>
+            4. Save the file of names and addresses in ASCII format with a different name to the original database.
+            This ASCII format file will be used to produce the labels.
+        </li>
+    </ul>
+    <p>Now you need to create your label template.</p>
+    <p>We have provided a label template in a file called <span class="csg-filename">Label</span> in the <span class="csg-filename">Labels</span> directory in the PipeDream Examples.</p>
+    <ol>
+        <li>1. Open the <span class="csg-filename">Label</span> file.</li>
+    </ol>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">A</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">B</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">C</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">D</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">E</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">F</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td>@0</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td>@1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td>@2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td>@3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td>@4</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">6</th>
+                <td>@5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">7</th>
+                <td>@6</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        This is the label template for the names and addresses database shown above.
+        It is 7 lines long, one line for each field in the database.
+    </p>
+    <p>@0 represents the first column of the database, @1 the second column, @2 the third column, and so on.</p>
+    <p>The first label produced from the database above would be:</p>
+    <p class="csg-sample-indent csg-sample">
+        Joe Smith<br />
+        Headmaster<br />
+        Southam School<br />
+        Stratford Road<br />
+        Southam<br />
+        Warks<br />
+        SO1 23B
+    </p>
+    <p>You can edit the Label file if you need to, to suit your own labels.</p>
+    <ul class="csg-netsurf-2434">
+        <li>
+            2. In the <span class="csg-dbox">Page Layout</span> dialogue box, the page length is set to 8, the top margin to 1 and the other margins to 0.
+            This is necessary because each label is eight lines long, seven lines of text and one blank line.
+            Again, you can change this to suit your own labels if you need to do so.
+        </li>
+        <li>3. Save the label template file in the same directory as the names and addresses file in ASCII format.</li>
+    </ul>
+    <p>If you are using a page printer proceed to the section below called Page Printers.</p>
+    <p>If you are using a dot matrix or daisy wheel printer, you can now print out the labels on your printer:</p>
+    <ol>
+        <li>Ensure that the label template file is loaded.</li>
+        <li>Give the <span class="csg-command">Printer Config</span> command and enter the settings appropriate for your printer.</li>
+        <li>Give the <span class="csg-command">Print</span> command.</li>
+        <li>Set the <span class="csg-dbox-option">Print to</span> option to  <span class="csg-dbox-option-value">Printer</span>.</li>
+        <li>Click the <span class="csg-dbox-option">Fill from database</span> option to turn it on.</li>
+        <li>Type in the name of the ASCII format file of names and addresses.</li>
+        <li>
+            If you have any blank fields in your database which you want to close up, select the <span class="csg-dbox-option">Omit blank fields</span> option.
+            For example, you may have the postcode as the last column and other blank address fields before it in some records.
+            This option will lift the postcode so that it appears on the line of the label immediately beneath the last address line.
+            Note that if you have more fields after the postcode, these will come onto the label too.
+            This is why it is best to delete from your ASCII format database those columns which you do not want on the label.
+        </li>
+        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+    </ol>
+    <p>Your labels will be printed out in one column.</p>
+
+    <h2 id="Page">Page Printers</h2>
+    <p>Now that you have prepared the file of names and addresses and the label template, you need to print the labels into a file, not onto the printer at this stage.</p>
+    <ol>
+        <li>Ensure that the label template file is loaded.</li>
+        <li>In the <span class="csg-dbox">Printer Config</span> dialogue box, set the printer type to Parallel and ensure that the printer driver name field is blank.</li>
+        <li>Give the <span class="csg-command">Print</span> command.</li>
+        <li>Set the <span class="csg-dbox-option">Print to</span> option to File.</li>
+        <li>
+            Type in the name you want to give to the file of labels.
+            Just type in a leafname and PipeDream will put the file in the same directory as the label template file.
+        </li>
+        <li>
+            Select the <span class="csg-dbox-option">Fill from database</span> option to turn it on.
+        </li>
+        <li>Type in the name of the file of names and addresses in ASCII format.</li>
+        <li>
+            If you have any blank fields in your database which you want to close up,
+            click on the <span class="csg-dbox-option">Omit blank fields</span> option. For
+            example, you may have the postcode as the last column and blank fields before
+            it. This option will lift the postcode so that it appears on the line of the
+            label immediately beneath the last address line. Note that if you have more
+            fields after the postcode, these will come onto the label too. This is why it
+            is best to delete from your ASCII format database those columns which you do
+            not want on the label.
+        </li>
+        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+    </ol>
+    <p>PipeDream creates a new file containing the labels.</p>
+    <ul class="csg-netsurf-2434">
+        <li>10. Load the file of labels into PipeDream by dragging its file icon onto the PipeDream icon on the icon bar.</li>
+    </ul>
+        <table border="1" class="csg-sample-indent csg-sample">
+            <col />
+            <col />
+            <tbody>
+                <tr>
+                    <th class="csg-sample-sheet-border-row"></th>
+                    <th class="csg-sample-sheet-border-column">A</th>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">1</th>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">2</th>
+                    <td>Joe Smith</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">3</th>
+                    <td>Headmaster</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">4</th>
+                    <td>Southam School</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">5</th>
+                    <td>Stratford Road</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">6</th>
+                    <td>Southam</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">7</th>
+                    <td>Warks</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">8</th>
+                    <td>SO1 23B</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">9</th>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">10</th>
+                    <td>Mary Brown</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">11</th>
+                    <td>Head of Science</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">12</th>
+                    <td>Cambridge High School</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">13</th>
+                    <td>East Road</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">14</th>
+                    <td>Cambridge</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">15</th>
+                    <td>Cambs</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">16</th>
+                    <td>CB1 23B</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">17</th>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">18</th>
+                    <td>Susan Smith</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">19</th>
+                    <td>Headmistress</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">20</th>
+                    <td>Tatham Grammar School</td>
+                </tr>
+            </tbody>
+        </table>
+    <p>You should see your labels arranged in one column as shown above.</p>
+    <p>
+        The labels sheets we are working with in this example have three columns of eight labels,
+        so you need to arrange this single column of labels into three columns for your label sheets.
+    </p>
+    <p>To convert the single column of labels into three columns of labels, you should first mark the last third of the labels and move them to column B, then mark the middle third of the labels and move them to column C:</p>
+    <ol>
+        <li>Press the <span class="csg-key">End</span> key to position the caret in the bottom cell, A480.</li>
+        <li>
+            Note how many rows there are.
+            Divide this figure by three.
+            In our example, there are 480 rows, so dividing it by three gives the result 160.
+        </li>
+        <li>Drag across cell A480 to mark it.</li>
+        <li>Press <span class="csg-cmdseq">Cmd-CGS</span> (Go to cell).</li>
+        <li>
+            Type in A321 (480 - 160 + 1) and
+            click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+            This positions the caret two-thirds of the way down the rows.
+        </li>
+        <li>
+            When the caret is positioned in cell A321, on the blank line above a label, click Adjust.
+            This extends the marked block from cell A480 to cell A321.
+        </li>
+        <li>Press the <span class="csg-key">Home</span> key to position the caret in cell A1.</li>
+        <li>Press the <span class="csg-key">Tab</span> key to position the caret in cell B1.</li>
+        <li>Press <span class="csg-cmdseq">Cmd-BM</span> to move the marked block to column B.</li>
+        <li>Press <span class="csg-cmdseq">Cmd-Q</span> to clear the marked block.</li>
+        <li>Press the <span class="csg-key">End</span> key to position the caret in the new bottom cell, A320.</li>
+        <li>Drag Select across the cell to mark it.</li>
+        <li>Press <span class="csg-cmdseq">Cmd-CGS</span>.</li>
+        <li>
+            Type in A161 (320 - 160 + 1) and
+            click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        </li>
+        <li>
+            When the caret is positioned in cell A161, on the blank line above a label, click Adjust.
+            This extends the marked block from cell A320 to cell A161.
+        </li>
+        <li>Press the <span class="csg-key">Home</span> key to position the caret in cell A1.</li>
+        <li>Press the <span class="csg-key">Tab</span> key twice to position the caret in cell C1.</li>
+        <li>Press <span class="csg-cmdseq">Cmd-BM</span> to move the marked block into column C.</li>
+        <li>Press <span class="csg-cmdseq">Cmd-Q</span> to clear the marked block.</li>
+    </ol>
+    <p>There are now have three columns of labels in columns A, B, and C, each 160 lines long.</p>
+    <p>To tidy up the layout of the labels:</p>
+    <ol>
+        <li>Click the mark block box to mark the whole document</li>
+        <li>Give the <span class="csg-command">Auto Width</span> command (<span class="csg-cmdseq">Cmd-LAW</span>).</li>
+        <li>Click the mark block box to clear the marked block.</li>
+    </ol>
+        <table border="1" class="csg-sample-indent csg-sample">
+            <col />
+            <col />
+            <col />
+            <col />
+            <tbody>
+                <tr>
+                    <th class="csg-sample-sheet-border-column"></th>
+                    <th class="csg-sample-sheet-border-column">A</th>
+                    <th class="csg-sample-sheet-border-column">B</th>
+                    <th class="csg-sample-sheet-border-column">C</th>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">1</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">2</th>
+                    <td>Joe Smith</td>
+                    <td>Margaret Brown</td>
+                    <td>Joe Smith</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">3</th>
+                    <td>Headmaster</td>
+                    <td>Director</td>
+                    <td>Headmaster</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">4</th>
+                    <td>Southam School</td>
+                    <td>Abbeystead</td>
+                    <td>Southam School</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">5</th>
+                    <td>Stratford Road</td>
+                    <td>Dolphin Road</td>
+                    <td>Stratford Road</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">6</th>
+                    <td>Southam</td>
+                    <td>Abbeystead</td>
+                    <td>Southam</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">7</th>
+                    <td>Warks</td>
+                    <td>Lancs</td>
+                    <td>Warks</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">8</th>
+                    <td>SO1 23B</td>
+                    <td>AB1 23B</td>
+                    <td>SO1 23B</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">9</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">10</th>
+                    <td>Mary Brown</td>
+                    <td>Jane Jones</td>
+                    <td>Mary Brown</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">11</th>
+                    <td>Head of Science</td>
+                    <td>Headmistress</td>
+                    <td>Head of Science</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">12</th>
+                    <td>Cambridge High School</td>
+                    <td>Settle High School</td>
+                    <td>Cambridge High School</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">13</th>
+                    <td>East Road</td>
+                    <td>Sedbergh Road</td>
+                    <td>East Road</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">14</th>
+                    <td>Cambridge</td>
+                    <td>Settle</td>
+                    <td>Cambridge</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">15</th>
+                    <td>Cambs</td>
+                    <td>N Yorks</td>
+                    <td>Cambs</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">16</th>
+                    <td>CB1 23B</td>
+                    <td>SE1 23B</td>
+                    <td>CB1 23B</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">17</th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">18</th>
+                    <td>Susan Smith</td>
+                    <td>Joe Smith</td>
+                    <td>Susan Smith</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">19</th>
+                    <td>Headmistress</td>
+                    <td>Headmaster</td>
+                    <td>Headmistress</td>
+                </tr>
+                <tr>
+                    <th class="csg-sample-sheet-border-row">20</th>
+                    <td>Tatham Grammar School</td>
+                    <td>Southam School</td>
+                    <td>Tatham Grammar School</td>
+                </tr>
+            </tbody>
+        </table>
+    <p>Now you need to ensure that the labels fit exactly onto the page and are not broken up by page breaks.</p>
+    <p>
+        In our example, the labels are 8 lines long, 7 lines of text and a blank line.
+        Therefore, the number of printable lines on each page (the page length less any margins) needs to be divisible by 8.
+    </p>
+    <p>
+        As you can see in the <span class="csg-dbox">Page Layout</span> dialogue box,
+        we have a page length of 66, top margin of 1 and bottom margin of 1, giving us 64 printable lines on each page.
+    </p>
+    <ul class="csg-netsurf-2434">
+        <li>
+            4. Since the labels will be printed using a RISC&nbsp;OS printer driver, you need to set a font for the document using the <span class="csg-command">Font</span> command.
+            Leave the point size set to 12.
+            Homerton is a good clear font for label printing.
+        </li>
+    </ul>
+    <p>Now save the labels file in PipeDream format.</p>
+    <p>Printers and label sheets vary, but we have provided a template label sheet which you can work from to help you get exactly the right layout of labels for your particular set-up.</p>
+    <p>This is a file called <span class="csg-filename">Labelsheet</span> and is in the directory called <span class="csg-filename">Labels</span> in the PipeDream Examples.</p>
+    <p>To adjust the layout of your labels:</p>
+    <ol>
+        <li>Load the document called <span class="csg-filename">Labelsheet</span> by double-clicking on the file&rsquo;s icon.</li>
+        <li>Use the <span class="csg-command">Font</span> command to set the same font as you want to use for your labels.</li>
+        <li>Print out the file onto a blank piece of paper, using a RISC&nbsp;OS printer driver.</li>
+        <li>Compare the print-out with your label sheet and alter the column width, scale factor, page length, top margin or left margin settings until the template file fits your label sheet.</li>
+        <li>Make a note of the settings you used in the file <span class="csg-filename">Labelsheet</span> and apply them to your file of labels.</li>
+        <li>Save <span class="csg-filename">Labelsheet</span> so that you can use it for future reference.</li>
+        <li>Save your file of labels.</li>
+        <li>Print the labels out using a RISC&nbsp;OS printer driver.</li>
+    </ol>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>Printing standard letters</td>
+                <td><a href="mailshots.html">Mailshots</a></td>
+            </tr>
+            <tr>
+                <td>Selecting records from a database</td>
+                <td><a href="databaseuse.html">Database Use</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Keyboard Definition </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Lookup Functions</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="keyboard.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="lookupfns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

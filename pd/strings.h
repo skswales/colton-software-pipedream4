@@ -89,8 +89,6 @@ stringdef(DUMP_FILE_STR)
 stringdef(UNTITLED_ZD_STR)
 stringdef(ambiguous_tag_STR)
 
-stringdef(Ctrl__STR)
-stringdef(Shift__STR)
 stringdef(PRESSANYKEY_STR)
 stringdef(Initialising_STR)
 stringdef(Debug_STR)
@@ -114,18 +112,30 @@ stringdef(Page_Zd_wait_between_pages_STR)
 stringdef(Miss_Page_Chars_STR)
 stringdef(All_Pages_Chars_STR)
 
-stringdef(save_edited_file_Zs_STR)
-stringdef(save_edited_chart_Zs_STR)
-
 stringdef(Zd_file_edited_in_Zs_are_you_sure_STR)
 stringdef(Zd_files_edited_in_Zs_are_you_sure_STR)
+stringdef(query_quit_SDC_Q_STR)
 
-stringdef(close_dependent_files_winge_STR)
-stringdef(close_dependent_charts_winge_STR)
-stringdef(close_dependent_links_winge_STR)
+stringdef(save_edited_file_Zs_SDC_S_STR)
+stringdef(save_edited_file_SDC_Q_STR)
 
-stringdef(load_supporting_winge_STR)
-stringdef(name_supporting_winge_STR)
+stringdef(save_edited_chart_Zs_YN_S_STR)
+stringdef(save_edited_chart_YN_Q_STR)
+
+stringdef(close_dependent_files_YN_S_STR)
+stringdef(close_dependent_files_YN_Q_STR)
+
+stringdef(close_dependent_charts_DC_S_STR)
+stringdef(close_dependent_charts_DC_Q_STR)
+
+stringdef(close_dependent_links_YN_S_STR)
+stringdef(close_dependent_links_YN_Q_STR)
+
+stringdef(load_supporting_Zs_YN_S_STR)
+stringdef(load_supporting_YN_Q_STR)
+
+stringdef(name_supporting_Zs_YN_S_STR)
+stringdef(name_supporting_YN_Q_STR)
 
 stringdef(Dump_STR)
 stringdef(Dumping_STR)
@@ -144,8 +154,10 @@ stringdef(Insert_word_in_user_dictionary_dialog_STR)
 stringdef(Delete_word_from_user_dictionary_dialog_STR)
 stringdef(Insert_highlights_dialog_STR)
 
-stringdef(Overwrite_existing_file_STR)
-stringdef(Cannot_store_block_STR)
+stringdef(Overwrite_existing_file_YN_Q_STR)
+
+stringdef(Cannot_store_block_YN_S_STR)
+stringdef(Cannot_store_block_YN_Q_STR)
 
 stringdef(help_iconbar)
 stringdef(help_dialog_window)
@@ -155,7 +167,8 @@ stringdef(help_click_select_to)
 stringdef(help_click_adjust_to)
 stringdef(help_position_the_caret_in)
 stringdef(help_insert_a_reference_to)
-stringdef(help_slot)
+stringdef(help_cell)
+stringdef(help_drag_select_to_mark_block)
 stringdef(help_colh_inexpression_line)
 stringdef(help_colh_inexpression_box)
 stringdef(help_top_left_corner)
@@ -195,12 +208,21 @@ stringdef(memory_size_Zd_STR)
 
 stringdef(_unable_to_create_new_document_STR)
 
-stringdef(Blocks_STR)
-stringdef(Cursor_STR)
-stringdef(Edit_STR)
-stringdef(Files_STR)
-stringdef(Layout_STR)
-stringdef(Spell_STR)
+/* -------------------------------- Menus ---------------------------------- */
+
+/* Top-level menu headings */
+
+stringdef(Blocks_top_level_menu_STR)
+stringdef(Chart_top_level_menu_STR)
+stringdef(Cursor_top_level_menu_STR)
+stringdef(Edit_top_level_menu_STR)
+stringdef(Files_top_level_menu_STR)
+stringdef(Help_top_level_menu_STR)
+stringdef(Layout_top_level_menu_STR)
+stringdef(Print_top_level_menu_STR)
+stringdef(Spell_top_level_menu_STR)
+
+/* 'Blocks' submenu */
 
 stringdef(Mark_block_STR)
 stringdef(Clear_markers_STR)
@@ -212,6 +234,8 @@ stringdef(Delete_block_STR)
 stringdef(Clear_block_STR)
 stringdef(Replicate_down_STR)
 stringdef(Replicate_right_STR)
+stringdef(Replicate_up_STR)
+stringdef(Replicate_left_STR)
 stringdef(Replicate_STR)
 stringdef(Sort_STR)
 stringdef(Search_STR)
@@ -222,6 +246,8 @@ stringdef(Clear_protection_STR)
 stringdef(Number_X_Text_STR)
 stringdef(Snapshot_STR)
 stringdef(Word_count_STR)
+
+/* 'Caret' submenu */
 
 stringdef(Format_paragraph_STR)
 stringdef(FormatBlock_STR)
@@ -246,19 +272,17 @@ stringdef(Do_macro_file_STR)
 #endif
 stringdef(Define_command_STR)
 
+/* 'Edit' submenu */
+
 stringdef(Delete_character_STR)
 stringdef(Insert_space_STR)
-
-#if 0
-stringdef(Insert_character_STR)
-#endif
-
+/*stringdef(Insert_character_STR)*/
 stringdef(Delete_word_STR)
 stringdef(Delete_to_end_of_slot_STR)
 stringdef(Delete_row_STR)
 stringdef(Insert_row_STR)
 stringdef(Paste_STR)
-stringdef(Insert_STR)
+stringdef(Overtype_STR)
 stringdef(Swap_case_STR)
 stringdef(Edit_formula_STR)
 stringdef(Insert_reference_STR)
@@ -269,16 +293,24 @@ stringdef(Delete_row_in_column_STR)
 stringdef(Insert_column_STR)
 stringdef(Delete_column_STR)
 stringdef(Add_column_STR)
-stringdef(Insert_page_STR)
+stringdef(Insert_page_break_STR)
+stringdef(Insert_page_number_STR)
+stringdef(Insert_date_STR)
+stringdef(Insert_time_STR)
+stringdef(Insert_colour_change_STR)
 
-stringdef(Load_STR)
-stringdef(Save_STR)
+/* 'Files' submenu */
+
+stringdef(Load_file_STR)
+stringdef(Insert_file_STR)
+stringdef(Save_file_STR)
 stringdef(Save_template_STR)
 #ifndef Save_template_dialog_STR
 #define Save_template_dialog_STR Save_template_STR
 #endif
 stringdef(Name_STR)
 stringdef(New_window_STR)
+stringdef(Classic_menus_STR)
 stringdef(Short_menus_STR)
 stringdef(Options_STR)
 stringdef(Colours_STR)
@@ -291,9 +323,10 @@ stringdef(Auto_recalculation_STR)
 stringdef(Auto_chart_recalculation_STR)
 
 stringdef(RepeatCommand_STR)
-stringdef(Help_STR)
 stringdef(About_STR)
 stringdef(Exit_STR)
+
+/* 'Layout' submenu */
 
 stringdef(Set_column_width_STR)
 stringdef(Set_right_margin_STR)
@@ -314,6 +347,8 @@ stringdef(Sign_minus_STR)
 stringdef(Leading_characters_STR)
 stringdef(Trailing_characters_STR)
 stringdef(Default_format_STR)
+
+/* 'Print' submenu */
 
 stringdef(Print_STR)
 stringdef(Set_parameter_STR)
@@ -337,6 +372,8 @@ stringdef(Remove_highlights_STR)
 #define Remove_highlights_dialog_STR Remove_highlights_STR
 #endif
 stringdef(Highlight_block_STR)
+
+/* 'Spell' submenu */
 
 stringdef(Auto_check_STR)
 stringdef(Check_document_STR)
@@ -370,6 +407,8 @@ stringdef(Unlock_dictionary_STR)
 #define Unlock_dictionary_dialog_STR Unlock_dictionary_STR
 #endif
 
+/* 'Random' submenu */
+
 stringdef(Cursor_up_STR)
 stringdef(Cursor_down_STR)
 stringdef(Cursor_left_STR)
@@ -396,11 +435,20 @@ stringdef(Replace_STR)
 stringdef(Next_window_STR)
 stringdef(Close_window_STR)
 
+/* 'Help' submenu */
+
+stringdef(Help_STR)
+stringdef(Licence_STR)
+stringdef(Interactive_help_STR)
+
+
 stringdef(Tidy_up_STR)
 stringdef(Load_Template_STR)
 
 stringdef(Mark_sheet_STR)
 stringdef(New_slot_contents_STR)
+
+/* ------------------------------ Dialog boxes ------------------------------*/
 
 /* thousands separator options */
 
@@ -473,18 +521,64 @@ stringdef(Ctrl_Shift_F12_STR)
 
 /* month names */
 
-stringdef(month_January_STR)
-stringdef(month_February_STR)
-stringdef(month_March_STR)
-stringdef(month_April_STR)
-stringdef(month_May_STR)
-stringdef(month_June_STR)
-stringdef(month_July_STR)
-stringdef(month_August_STR)
-stringdef(month_September_STR)
-stringdef(month_October_STR)
-stringdef(month_November_STR)
-stringdef(month_December_STR)
+stringdef(month_name_01_STR)
+stringdef(month_name_02_STR)
+stringdef(month_name_03_STR)
+stringdef(month_name_04_STR)
+stringdef(month_name_05_STR)
+stringdef(month_name_06_STR)
+stringdef(month_name_07_STR)
+stringdef(month_name_08_STR)
+stringdef(month_name_09_STR)
+stringdef(month_name_10_STR)
+stringdef(month_name_11_STR)
+stringdef(month_name_12_STR)
+
+/* day names */
+
+stringdef(day_name_01_STR)
+stringdef(day_name_02_STR)
+stringdef(day_name_03_STR)
+stringdef(day_name_04_STR)
+stringdef(day_name_05_STR)
+stringdef(day_name_06_STR)
+stringdef(day_name_07_STR)
+
+stringdef(day_endings_STR)
+
+/* page number formats */
+
+stringdef(PN_FMT1_STR)
+stringdef(PN_FMT2_STR)
+stringdef(PN_FMT3_STR)
+
+/* date formats */
+
+stringdef(DATE_FMT01_STR)
+stringdef(DATE_FMT02_STR)
+stringdef(DATE_FMT03_STR)
+stringdef(DATE_FMT04_STR)
+stringdef(DATE_FMT05_STR)
+stringdef(DATE_FMT06_STR)
+stringdef(DATE_FMT07_STR)
+stringdef(DATE_FMT08_STR)
+stringdef(DATE_FMT09_STR)
+stringdef(DATE_FMT10_STR)
+stringdef(DATE_FMT11_STR)
+stringdef(DATE_FMT12_STR)
+stringdef(DATE_FMT13_STR)
+stringdef(DATE_FMT14_STR)
+stringdef(DATE_FMT15_STR)
+stringdef(DATE_FMT16_STR)
+stringdef(DATE_FMT17_STR)
+stringdef(DATE_FMT18_STR)
+stringdef(DATE_FMT19_STR)
+
+/* time formats */
+
+stringdef(TIME_FMT1_STR)
+stringdef(TIME_FMT2_STR)
+stringdef(TIME_FMT3_STR)
 
 stringdef(YES_STR)
 stringdef(NO_STR)
@@ -586,6 +680,7 @@ stringdef(SF_Backspace_STR)
 /*stringdef(CF_Backspace_STR)*/
 /*stringdef(CSF_Backspace_STR)*/
 
+stringdef(ToConstant_STR)
 stringdef(ToNumber_STR)
 stringdef(ToText_STR)
 
@@ -614,6 +709,7 @@ stringdef(colh_button_search)
 stringdef(colh_button_sort)
 stringdef(colh_button_spellcheck)
 
+stringdef(colh_button_mark)
 stringdef(colh_button_copy)
 stringdef(colh_button_delete)
 stringdef(colh_button_paste)
@@ -626,6 +722,14 @@ stringdef(colh_button_edit_cancel)
 stringdef(colh_button_formatblock)
 stringdef(colh_button_cmd_record)
 stringdef(colh_button_cmd_exec)
+
+stringdef(help_formwind_button_edit_ok)
+stringdef(help_formwind_button_edit_cancel)
+stringdef(help_formwind_button_function)
+stringdef(help_formwind_button_newline)
+stringdef(help_formwind_button_copy)
+stringdef(help_formwind_button_cut)
+stringdef(help_formwind_button_paste)
 
 #endif /* __strings_h */
 

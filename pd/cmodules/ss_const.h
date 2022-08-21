@@ -51,11 +51,11 @@ typedef int                 EV_ROW;
 
 typedef unsigned char       EV_IDNO; typedef EV_IDNO * P_EV_IDNO;
 
-#define EV_MAX_COL          0x7FFFFFF
-#define EV_MAX_ROW          0x7FFFFFF
+#define EV_MAX_COL          0x07FFFFFF
+#define EV_MAX_ROW          0x07FFFFFF
 #define EV_MAX_COL_LETS     3           /* maximum number of column letters */
 
-#define EV_MAX_ARRAY_ELES   0x8000000   /* maximum number of array elements */
+#define EV_MAX_ARRAY_ELES   0x08000000  /* maximum number of array elements */
 
 #define EV_MAX_SLR_LEN      (1/*%*/ + 1/*$*/ + 4/*cols*/ + 1/*$*/ + 10/*rows*/)
 #define BUF_EV_MAX_SLR_LEN  (EV_MAX_SLR_LEN + 1)
@@ -90,6 +90,20 @@ typedef struct EV_SLR
 }
 EV_SLR, * P_EV_SLR; typedef const EV_SLR * PC_EV_SLR;
 
+#define EV_SLR_INIT { 0 /*...*/ } /* this aggregate initialiser gives poor code on ARM Norcroft */
+
+#define ev_slr_init(p_ev_slr) \
+    zero_struct_ptr(p_ev_slr)
+
+#define ev_slr_docno(p_ev_slr) ( \
+    (p_ev_slr)->docno )
+
+#define ev_slr_col(p_ev_slr) ( \
+    (p_ev_slr)->col )
+
+#define ev_slr_row(p_ev_slr) ( \
+    (p_ev_slr)->row )
+
 /*
 packed slr type
 */
@@ -110,6 +124,9 @@ typedef struct EV_RANGE
 }
 EV_RANGE, * P_EV_RANGE; typedef const EV_RANGE * PC_EV_RANGE;
 
+#define ev_range_init(p_ev_range) \
+    zero_struct_ptr(p_ev_range)
+
 /*
 packed range type
 */
@@ -118,18 +135,6 @@ packed range type
                         sizeof(EV_COL)   * 2 +  \
                         sizeof(EV_ROW)   * 2 +  \
                         sizeof(EV_FLAGS) * 2)
-
-/*
-array structure
-*/
-
-typedef struct EV_ARRAY
-{
-    S32 x_size;                 /* x dimension of array */
-    S32 y_size;                 /* y dimension of array */
-    struct EV_DATA * elements;
-}
-EV_ARRAY, * P_EV_ARRAY; typedef const EV_ARRAY * PC_EV_ARRAY;
 
 /*
 date/time type
@@ -181,6 +186,18 @@ EV_ERROR, * P_EV_ERROR;
 #define ERROR_NORMAL 0
 #define ERROR_CUSTOM 1
 #define ERROR_PROPAGATED 2
+
+/*
+array structure
+*/
+
+typedef struct EV_ARRAY
+{
+    S32 x_size;                 /* x dimension of array */
+    S32 y_size;                 /* y dimension of array */
+    struct EV_DATA * elements;
+}
+EV_ARRAY, * P_EV_ARRAY; typedef const EV_ARRAY * PC_EV_ARRAY;
 
 /*
 string data (CH_NULL terminated in PipeDream but size field helps)
@@ -264,6 +281,23 @@ typedef struct RISCOS_TIME_ORDINALS
     S32 day_of_year;
 }
 RISCOS_TIME_ORDINALS;
+#endif
+
+static inline void
+f64_copy_words(
+    _OutRef_    P_F64 p_f64_out,
+    _InRef_     PC_F64 p_f64_in)
+{
+    P_U32 p_u32_out = (P_U32) p_f64_out;
+    PC_U32 p_u32_in = (PC_U32) p_f64_in;
+    p_u32_out[0] = p_u32_in[0];
+    p_u32_out[1] = p_u32_in[1];
+}
+
+#if RISCOS || 0
+#define f64_copy(lval, f64) f64_copy_words(&(lval), &(f64))
+#else
+#define f64_copy(lval, f64) (lval) = (f64)
 #endif
 
 /*
@@ -382,6 +416,17 @@ ss_string_make_ustr(
     _OutRef_    P_EV_DATA p_ev_data,
     _In_z_      PC_USTR ustr);
 
+_Check_return_
+extern U32
+ss_string_skip_leading_whitespace(
+    _InRef_     PC_EV_DATA p_ev_data);
+
+_Check_return_
+extern U32
+ss_string_skip_leading_whitespace_uchars(
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _InRef_     U32 uchars_n);
+
 extern S32
 two_nums_type_match(
     _InoutRef_  P_EV_DATA p_ev_data1,
@@ -465,6 +510,19 @@ _Check_return_
 extern S32
 sliding_window_year(
     _In_        S32 year);
+
+_Check_return_
+extern F64
+ui_strtod(
+    _In_z_      PC_USTR ustr,
+    _Out_opt_   P_PC_USTR p_ustr);
+
+_Check_return_
+extern S32
+ui_strtol(
+    _In_z_      PC_USTR ustr,
+    _Out_opt_   P_P_USTR p_ustr,
+    _In_        int radix);
 
 #endif /* __ss_const_h */
 

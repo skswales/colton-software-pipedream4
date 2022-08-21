@@ -59,14 +59,15 @@ internal functions
 
 static BOOL
 decodesubmenu(
-    const MENU_HEAD * mhptr,
-    S32 offset,
-    S32 nextoffset,
+    const MENU_HEAD * const mhptr,
+    _InVal_     S32 offset,
+    _InVal_     S32 nextoffset,
     BOOL submenurequest);
 
 static void
 encodesubmenu(
-    MENU_HEAD * mhptr,
+    _Inout_     MENU_HEAD * const mhptr,
+    BOOL classic_m,
     BOOL short_m);
 
 static void
@@ -124,7 +125,7 @@ iconbar_menu_maker(
 {
     S32 num_documents = 0;
 
-    IGNOREPARM(handle);            /* this handle is useless */
+    UNREFERENCED_PARAMETER(handle);            /* this handle is useless */
 
     trace_0(TRACE_APP_PD4, "iconbar_menu_maker()");
 
@@ -219,7 +220,7 @@ iconbar_menu_maker(
 
     /* encode 'Choices' submenu */
     if(iconbar_headline[0].m)
-        encodesubmenu(&iconbar_headline[0], short_menus());
+        encodesubmenu(&iconbar_headline[0], classic_menus(), short_menus());
 
 #if 0 /* this is now encoded as part of 'Choices' submenu */
     /* grey out 'Save choices' if not usable because no specified document */
@@ -250,9 +251,9 @@ iconbar_menu_handler(
     BOOL processed      = TRUE;
 
     trace_3(TRACE_APP_PD4, "iconbar_menu_handler([%d][%d]): submenurequest = %s",
-            selection, subselection, trace_boolstring(submenurequest));
+            selection, subselection, report_boolstring(submenurequest));
 
-    IGNOREPARM(handle);        /* this handle is useless */
+    UNREFERENCED_PARAMETER(handle);        /* this handle is useless */
 
     switch(selection)
     {
@@ -499,6 +500,7 @@ createfunctionsubmenu(
     }
 }
 
+#ifdef UNUSED
 static void
 substitute_spaces(
     _In_z_      P_U8Z buf,
@@ -512,6 +514,7 @@ substitute_spaces(
             *ptr = replacement_ch;
     }
 }
+#endif
 
 #if TRUE
 static void
@@ -557,14 +560,18 @@ create_sup_dep_submenu(
                                           (ROW) evdata.arg.slr.row);
                 if(p_cell)
                 {
-                    (void) expand_slot(evdata.arg.slr.docno, p_cell, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ,
-                                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                                       FALSE /*allow_fonty_result*/, FALSE /*cff*/);
+                    (void) expand_cell(
+                                evdata.arg.slr.docno, p_cell, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ,
+                                DEFAULT_EXPAND_REFS /*expand_refs*/,
+                                EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                                EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+                                EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+                                FALSE /*cff*/);
 
-                    xstrkat(namebuf, elemof32(namebuf), " ");
+                    xstrkat(namebuf, elemof32(namebuf), ": ");
                     xstrkat(namebuf, elemof32(namebuf), valubuf); /* plain non-fonty string */
 
-                    substitute_spaces(namebuf, 0xA0);
+                    /* substitute_spaces(namebuf, 0xA0); no longer needed */
                 }
             }
 
@@ -703,7 +710,7 @@ function__event_menu_filler(
             menu_function_numinfo_depname = NULL;
         }
 
-        if(!mergebuf() || xf_inexpression || xf_inexpression_box || xf_inexpression_line || ev_doc_is_custom_sheet(current_docno()))
+        if(!mergebuf() || xf_inexpression || xf_inexpression_box || xf_inexpression_line /*|| ev_doc_is_custom_sheet(current_docno())*/)
         {
         }
         else
@@ -723,18 +730,22 @@ function__event_menu_filler(
                 menu_function_numinfo = menu_new_c(menu_function_numinfo_title, menu_function_numinfo_entries);
 
                 {
-                char  entry[LIN_BUFSIZ + 1];
-                char  valubuf[LIN_BUFSIZ + 1];
+                char entry[LIN_BUFSIZ + 1];
+                char valubuf[LIN_BUFSIZ + 1];
 
-                (void) expand_slot(current_docno(), tcell, currow, valubuf, LIN_BUFSIZ,
-                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
-                                   FALSE /*allow_fonty_result*/, FALSE /*cff*/);
+                (void) expand_cell(
+                            current_docno(), tcell, currow, valubuf, LIN_BUFSIZ,
+                            DEFAULT_EXPAND_REFS /*expand_refs*/,
+                            EXPAND_FLAGS_EXPAND_ATS_ALL /*expand_ats*/ |
+                            EXPAND_FLAGS_EXPAND_CTRL /*expand_ctrl*/ |
+                            EXPAND_FLAGS_DONT_ALLOW_FONTY_RESULT /*!allow_fonty_result*/ /*expand_flags*/,
+                            FALSE /*cff*/);
 
                 xstrkpy(entry, elemof32(entry), coord);
-                xstrkat(entry, elemof32(entry), " ");
+                xstrkat(entry, elemof32(entry), ": ");
                 xstrkat(entry, elemof32(entry), valubuf); /* plain non-fonty string */
 
-                substitute_spaces(entry, 0xA0);
+                /* substitute_spaces(entry, 0xA0); no longer needed */
 
                 /* create menu 'unparsed' cos entry may contain ',' */
                 menu_function_numinfo_cellvalue = menu_new_unparsed(menu_function_numinfo_value_title, entry);
@@ -826,7 +837,7 @@ function__event_menu_proc(
     DOCNO old_docno = current_docno();
     enum EV_RESOURCE_TYPES category = (enum EV_RESOURCE_TYPES) -1; /* invalid */
 
-    IGNOREPARM(submenurequest);
+    UNREFERENCED_PARAMETER(submenurequest);
 
     if(select_document_using_callback_handle(handle))
     {
@@ -931,7 +942,7 @@ function__event_menu_proc(
                 switch(*hit++)
                 {
                 case MENU_FUNCTION_TEXTINFO_COMPILE:
-                    expedit_recompilecurrentslot_reporterrors();
+                    expedit_recompile_current_cell_reporterrors();
                     break;
 
                 case MENU_FUNCTION_TEXTINFO_DEPSLR:
@@ -999,7 +1010,7 @@ goto_dep_or_sup_cell(
             if(mergebuf())
             {
                 select_document_using_docno(evdata.arg.slr.docno);
-                xf_frontmainwindow = TRUE;
+                xf_front_document_window = TRUE;
                 chknlr((COL) evdata.arg.slr.col, (ROW) evdata.arg.slr.row);
                 lecpos = lescrl = 0;
                 xf_caretreposition = TRUE;
@@ -1036,59 +1047,65 @@ offsets starting from 1
 
 static BOOL
 createsubmenu(
-    MENU_HEAD * mhptr,
+    MENU_HEAD * const mhptr,
+    BOOL classic_m,
     BOOL short_m)
 {
     menu m = NULL;
     MENU *mptr       = mhptr->tail;
     MENU *last_mptr  = mptr + mhptr->items;
     char description[256];
-    char sep = '\0';
+    char sep = CH_NULL;
 
-    trace_1(TRACE_APP_PD4, "createsubmenu(short = %s)", trace_boolstring(short_m));
+    trace_2(TRACE_APP_PD4, "createsubmenu(classic = %s, short = %s)", report_boolstring(classic_m), report_boolstring(short_m));
 
     do  {
-        char *ptr    = &description[4];    /* could be 2 but 4 saves code */
-        /* process true if displaying long menus or item on short menus */
-        BOOL process = !short_m  ||  on_short_menus(mptr->flags);
+        const BOOL ignore = short_m  &&  !on_short_menus(mptr->flags);
+        char *ptr = &description[4]; /* could be 2 but 4 saves code */
 
-        if(!mptr->title)
+        if(NULL == mptr->title)
         {
-            trace_2(TRACE_APP_PD4, "looking at item line: short = %s -> process = %s",
-                    trace_boolstring(!(mptr->flags & LONG_ONLY)),
-                    trace_boolstring(process));
+            trace_2(TRACE_APP_PD4, "looking at item line: short = %s -> ignore = %s",
+                    report_boolstring(!(mptr->flags & MF_LONG_ONLY)),
+                    report_boolstring(ignore));
 
-            if(process && m /* !sep */)
-                sep = '|';
+            if(ignore)
+                continue;
+
+            if(NULL == m)
+                continue; /* no items yet for separator */
+
+            sep = '|';
         }
         else
         {
-            trace_3(TRACE_APP_PD4, "looking at command %s: short = %s -> process = %s",
+            trace_3(TRACE_APP_PD4, "looking at command %s: short = %s -> ignore = %s",
                     trace_string(*mptr->title),
-                    trace_boolstring(!(mptr->flags & LONG_ONLY)),
-                    trace_boolstring(process));
+                    report_boolstring(!(mptr->flags & MF_LONG_ONLY)),
+                    report_boolstring(ignore));
 
-            if(process)
-            {
-                if(get_menu_item(mhptr, mptr, ptr))
-                    /* menu item has a submenu/dbox */
-                    *--ptr = '>';
+            if(ignore)
+                continue;
 
-                if(!m /* sep == '\0' */)
-                {
-                    /* first item */
-                    m = menu_new_c(*mhptr->name, ptr);
-                    if(!m)
-                        return(FALSE);
-                }
-                else
-                {
-                    *--ptr = sep;
-                    menu_extend(m, ptr);
-                }
-
-                sep = ',';
+            if(get_menu_item(mhptr, mptr, classic_m, ptr))
+            {   /* menu item has a submenu or dialogue box */
+                *--ptr = '>';
             }
+
+            if(NULL == m)
+            {
+                /* first item */
+                m = menu_new_c(*mhptr->name, ptr);
+                if(!m)
+                    return(FALSE);
+            }
+            else
+            {
+                *--ptr = sep;
+                menu_extend(m, ptr);
+            }
+
+            sep = ',';
         }
     }
     while(++mptr < last_mptr);
@@ -1106,49 +1123,53 @@ createsubmenu(
 
 static void
 encodesubmenu(
-    MENU_HEAD * mhptr,
+    _Inout_     MENU_HEAD * const mhptr,
+    BOOL classic_m,
     BOOL short_m)
 {
-    MENU *mptr       = mhptr->tail;
-    MENU *last_mptr  = mptr + mhptr->items;
-    S32 offset      = 1;
-    BOOL tick, fade;
-    S32 flag;
-    BOOL has_a_document = (NO_DOCUMENT != find_document_with_input_focus());
+    MENU * mptr = mhptr->tail;
+    MENU * const last_mptr = mptr + mhptr->items;
+    S32 offset = 1; /* menu offsets start at 1 */
+    const BOOL has_a_document = (NO_DOCUMENT != find_document_with_input_focus());
 
-    trace_1(TRACE_APP_PD4, "encodesubmenu(%s)", trace_boolstring(short_m));
+    trace_2(TRACE_APP_PD4, "encodesubmenu(classic = %s, short = %s)", report_boolstring(classic_m), report_boolstring(short_m));
 
-    if(mhptr->m)
+    if(NULL == mhptr->m)
+        return; /* may have taken all the entries off this menu */
+
+    UNREFERENCED_PARAMETER(classic_m);
+
     do  {
-        if(mptr->title)    /* ignore gaps */
+        const S32 flags = mptr->flags;
+        const BOOL ignore = short_m  &&  !on_short_menus(flags);
+
+        if(ignore)
+            continue;
+
+        if(NULL == mptr->title) /* ignore gaps */
+            continue;
+
+        if(flags & (MF_TICKABLE | MF_GREYABLE | MF_GREY_EXPEDIT | MF_DOCUMENT_REQUIRED))
         {
-            flag = mptr->flags;
+            BOOL tick = FALSE;
+            BOOL fade = FALSE;
 
-            /* if this is a long menu, or item on short menu */
-            if(!short_m  ||  on_short_menus(flag))
-            {
-                if(flag & (TICKABLE | GREYABLE | GREY_EXPEDIT | DOC_REQ))
-                {
-                    tick = fade = FALSE;
+            if(flags & MF_TICKABLE)
+                tick = (0 != (flags & MF_TICK_STATUS));
 
-                    if(flag & TICKABLE)
-                        tick = flag & TICK_STATUS;
+            if(flags & MF_GREYABLE)
+                fade = (0 != (flags & MF_GREY_STATUS));
 
-                    if(flag & GREYABLE)
-                        fade = flag & GREY_STATUS;
+            if(flags & MF_GREY_EXPEDIT)
+                fade = fade || (xf_inexpression || xf_inexpression_box || xf_inexpression_line);
 
-                    if(flag & GREY_EXPEDIT)
-                        fade = fade || (xf_inexpression || xf_inexpression_box || xf_inexpression_line);
+            if(flags & MF_DOCUMENT_REQUIRED)
+                fade = fade || !has_a_document;
 
-                    if(flag & DOC_REQ)
-                        fade = fade || !has_a_document;
-
-                    menu_setflags(mhptr->m, offset, tick, fade);
-                }
-
-                ++offset;
-            }
+            menu_setflags(mhptr->m, offset, tick, fade);
         }
+
+        ++offset;
     }
     while(++mptr < last_mptr);
 }
@@ -1162,14 +1183,14 @@ encodesubmenu(
 
 static void
 createmainmenu(
+    BOOL classic_m,
     BOOL short_m)
 {
     char description[256];
-    S32 head_i;
+    U32 head_idx;
     char *ptr;
-    BOOL needsmain = (main_menu == NULL);
 
-    trace_1(TRACE_APP_PD4, "createmainmenu(%s)", trace_boolstring(short_m));
+    trace_2(TRACE_APP_PD4, "createmainmenu(classic = %s, short = %s)", report_boolstring(classic_m), report_boolstring(short_m));
 
     /* iconbar menu bits */
 
@@ -1177,10 +1198,10 @@ createmainmenu(
     menu_dispose((menu *) &iconbar_headline[0].m, 0);
     iconbar_headline[0].m = NULL;
 
-    if(!createsubmenu(&iconbar_headline[0], short_m))
+    if(!createsubmenu(&iconbar_headline[0], classic_m, short_m))
         reperr_null(status_nomem());
 
-    if(iconbar_headline[0].m)
+    if(NULL != iconbar_headline[0].m)
         (void) menu_submenu(iconbar_menu, mo_iconbar_choices, iconbar_headline[0].m);
 
 #if FALSE
@@ -1190,50 +1211,50 @@ createmainmenu(
     menu_dispose((menu *) &iconbar_headline[1].m, 0);
     iconbar_headline[1].m = NULL;
 
-    if(!createsubmenu(&iconbar_headline[1], short_m))
+    if(!createsubmenu(&iconbar_headline[1], classic_m, short_m))
         reperr_null(status_nomem());
 
-    if(iconbar_headline[1].m)
+    if(NULL != iconbar_headline[1].m)
         (void) menu_submenu(menu_function, MENU_FUNCTION_NAMES, iconbar_headline[1].m);
 #endif
 
-    /* create dynamic main menu bits */
-
-    for(head_i = 0; head_i < head_size; head_i++)
-        if(headline[head_i].installed)
+    /* create main menu if needed - once only operation */
+    if(NULL == main_menu)
+    {
+        for(head_idx = 0; head_idx < head_size; ++head_idx)
         {
-            /* create main menu if needed - once only operation */
-            if(needsmain)
+            ptr = description;
+            *ptr = '>';
+            strcpy(ptr + 1, * (headline[head_idx].name));
+
+            /* create/extend the top level menu */
+            if(NULL == main_menu)
             {
-                ptr = description;
-                *++ptr = '>';
-                strcpy(ptr + 1, *headline[head_i].name);
-
-                /* create/extend the top level menu */
-                if(!main_menu)
-                    main_menu = menu_new_c(product_id(), ptr);
-                else
-                {
-                    *--ptr = ',';
-                    menu_extend(main_menu, ptr);
-                }
-
-                if(!main_menu)
-                    break;
+                main_menu = menu_new_c(product_id(), ptr);
+            }
+            else
+            {
+                menu_extend(main_menu, ptr);
             }
 
-            /* dispose of existing submenu at this point */
-            menu_dispose((menu *) &headline[head_i].m, 0);
-            headline[head_i].m = NULL;
-
-            /* create the submenu and attach it here */
-
-            /* complain a little */
-            if(!createsubmenu(&headline[head_i], short_m))
-                reperr_null(status_nomem());
-
-            (void) menu_submenu(main_menu, mo_main_dynamic + head_i, headline[head_i].m);
+            if(NULL == main_menu)
+                break;
         }
+    }
+
+    /* create dynamic main menu bits */
+    for(head_idx = 0; head_idx < head_size; ++head_idx)
+    {
+        /* dispose of existing submenu at this point */
+        menu_dispose((menu *) &headline[head_idx].m, 0);
+        headline[head_idx].m = NULL;
+
+        /* create the submenu and attach it here */
+        if(!createsubmenu(&headline[head_idx], classic_m, short_m))
+            reperr_null(status_nomem()); /* complain a little */
+
+        (void) menu_submenu(main_menu, mo_main_dynamic + head_idx, headline[head_idx].m);
+    }
 }
 
 /******************************************************************************
@@ -1244,15 +1265,14 @@ createmainmenu(
 
 static void
 encodemainmenu(
+    BOOL classic_m,
     BOOL short_m)
 {
-    S32 head_i;
+    U32 head_idx;
 
     /* encode main menu */
-
-    for(head_i = 0; head_i < head_size; head_i++)
-        if(headline[head_i].installed)
-            encodesubmenu(&headline[head_i], short_m);
+    for(head_idx = 0; head_idx < head_size; ++head_idx)
+        encodesubmenu(&headline[head_idx], classic_m, short_m);
 
     /* encode chart submenus */
     pdchart_submenu_maker();
@@ -1280,8 +1300,7 @@ main_menu_maker(
     draw_caret();
 
     /* do menu encoding */
-
-    encodemainmenu(short_menus());
+    encodemainmenu(classic_menus(), short_menus());
 
     riscmenu__was_main = FALSE;
 
@@ -1317,36 +1336,39 @@ pdfontselect_is_active(void)
 
 static F64
 get_leading_from_selector(
-    wimp_w window)
+    _HwndRef_   HOST_WND window_handle)
 {
-    F64 dleading;
-    wimp_icon icon;
+    WimpGetIconStateBlock icon_state;
     char *icon_string;
+    double dleading;
 
-    wimp_get_icon_info(window, FONT_LEADING, &icon);
+    icon_state.window_handle = window_handle;
+    icon_state.icon_handle = FONT_LEADING;
+    if(NULL != WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state)))
+        return(0.0);
 
-    icon_string = icon.data.indirecttext.buffer;
+    icon_string = icon_state.icon.data.it.buffer;
 
     if(sscanf(icon_string, "%lf", &dleading) < 1)
-        return(0.);
+        return(0.0);
 
     return(dleading);
 }
 
 static void
 new_font_leading_based_on_field(
-    wimp_w window)
+    _HwndRef_   HOST_WND window_handle)
 {
-    F64 dleading = get_leading_from_selector(window);
+    const F64 dleading = get_leading_from_selector(window_handle);
 
-    if(dleading == 0)
+    if(dleading == 0.0)
     {
         auto_line_height = TRUE;
         new_font_leading_based_on_y();
     }
     else
     {
-        S32 leading = (S32) (dleading * 1000.0);
+        const S32 leading = (S32) (dleading * 1000.0);
         new_font_leading(leading);
     }
 }
@@ -1356,7 +1378,7 @@ pdfontselect_try_me(
     const char * font_name,
     PC_F64 width,
     PC_F64 height,
-    wimp_w w)
+    _HwndRef_   HOST_WND window_handle)
 {
     if(pdfontselect.docno != DOCNO_NONE)
     {
@@ -1370,25 +1392,25 @@ pdfontselect_try_me(
             if(pdfontselect.setting)
             {
                 /* set new font */
-                (void) mystr_set(&global_font, font_name);
+                consume_bool(mystr_set(&global_font, font_name));
                 global_font_x = font_x;
                 global_font_y = font_y;
                 riscos_fonts = TRUE;
 
                 /* bump up the leading (and reduce page length) if needed */
-                if(global_font_y * 1000 > global_font_leading_mp * 16)
+                if(global_font_y * 1000 > global_font_leading_millipoints * 16)
                     auto_line_height = TRUE;
 
                 if(auto_line_height)
                     new_font_leading_based_on_y();
                 else
-                    new_font_leading_based_on_field(w);
+                    new_font_leading_based_on_field(window_handle);
 
                 {
-                F64 dleading = global_font_leading_mp / 1000.0;
+                F64 dleading = global_font_leading_millipoints / 1000.0;
 
-                win_setonoff(w, FONT_LEADING_AUTO, auto_line_height);
-                win_setdouble(w, FONT_LEADING, &dleading, 2);
+                winf_setonoff(window_handle, FONT_LEADING_AUTO, auto_line_height);
+                winf_setdouble(window_handle, FONT_LEADING, &dleading, 2);
                 }
 
             }
@@ -1397,7 +1419,7 @@ pdfontselect_try_me(
                 /* insert font reference */
                 filbuf();
 
-                if(NULLCH != get_text_at_char())
+                if(CH_NULL != get_text_at_char())
                 {
                     if( insert_string(d_options_TA, FALSE)  &&
                         insert_string("F:", FALSE)          &&
@@ -1425,7 +1447,7 @@ pdfontselect_try_me(
                 riscos_fonts = FALSE;
 
                 /* get height information recomputed */
-                new_font_leading(global_font_leading_mp);
+                new_font_leading(global_font_leading_millipoints);
             }
             else
                 /* can't insert a ref to standard system font! */ ;
@@ -1476,7 +1498,7 @@ clicking Auto sets it to 1.2 times font height
 
 static void
 bump_line_height(
-    wimp_w window,
+    _HwndRef_   HOST_WND window_handle,
     BOOL up)
 {
     F64 dleading;
@@ -1484,7 +1506,7 @@ bump_line_height(
     char array[32];
     BOOL is_int;
 
-    dleading = get_leading_from_selector(window);
+    dleading = get_leading_from_selector(window_handle);
 
     /* round down */
     leading = (S32) dleading;
@@ -1496,43 +1518,102 @@ bump_line_height(
     else if(is_int)
         leading--;
 
-    (void) sprintf(array, "%d", (leading <= 0) ? 1 : leading);
+    consume_int(sprintf(array, "%d", (leading <= 0) ? 1 : leading));
 
-    set_icon_text(window, FONT_LEADING, array);
+    set_icon_text(window_handle, FONT_LEADING, array);
 }
 
 static void
 show_new_auto_line_height(
-    wimp_w w,
-    PC_F64 height)
+    _HwndRef_   HOST_WND window_handle,
+    _InRef_    PC_F64 height)
 {
     F64 dleading = *height * 1.2;
 
-    win_setdouble(w, FONT_LEADING, &dleading, 2);
+    winf_setdouble(window_handle, FONT_LEADING, &dleading, 2);
 }
 
 static void
 pdfontselect_init_fn(
-    wimp_w fontselect_wind,
+    _HwndRef_   HOST_WND fontselect_window_handle,
     P_ANY init_handle)
 {
-    IGNOREPARM(init_handle);
+    UNREFERENCED_PARAMETER(init_handle);
 
     if(pdfontselect.docno != DOCNO_NONE)
     {
-        F64 dleading = global_font_leading_mp / 1000.0;
+        const F64 dleading = global_font_leading_millipoints / 1000.0;
         DOCNO old_docno = change_document_using_docno(pdfontselect.docno);
 
-        win_unfadefield(fontselect_wind, FONT_LEADING);
-        win_unfadefield(fontselect_wind, FONT_LEADING_DOWN);
-        win_unfadefield(fontselect_wind, FONT_LEADING_UP);
-        win_unfadefield(fontselect_wind, FONT_LEADING_AUTO);
+        winf_unfadefield(fontselect_window_handle, FONT_LEADING);
+        winf_unfadefield(fontselect_window_handle, FONT_LEADING_DOWN);
+        winf_unfadefield(fontselect_window_handle, FONT_LEADING_UP);
+        winf_unfadefield(fontselect_window_handle, FONT_LEADING_AUTO);
 
-        win_setonoff(fontselect_wind, FONT_LEADING_AUTO, auto_line_height);
+        winf_setonoff(fontselect_window_handle, FONT_LEADING_AUTO, auto_line_height);
 
-        win_setdouble(fontselect_wind, FONT_LEADING, &dleading, 2);
+        winf_setdouble(fontselect_window_handle, FONT_LEADING, &dleading, 2);
 
         select_document_using_docno(old_docno);
+    }
+}
+
+static void
+pdfontselect_unknown_event_Mouse_Click(
+    const char * font_name,
+    PC_F64 width,
+    PC_F64 height,
+    const WimpMouseClickEvent * const mouse_click,
+    BOOL try_anyway)
+{
+    const int window_handle = mouse_click->window_handle;
+
+    switch(mouse_click->icon_handle)
+    {
+    /* can put in click on line height stuff here */
+    case FONT_LEADING_UP:
+    case FONT_LEADING_DOWN:
+        {
+        dbox_field f;
+        auto_line_height = FALSE;
+        f = (dbox_field) mouse_click->icon_handle; /* SKS 22.10.91 made bumpers reverse in RISC OS fashion */
+        dbox_adjusthit(&f, FONT_LEADING_UP, FONT_LEADING_DOWN, riscos_adjust_clicked());
+        bump_line_height(window_handle, (f == FONT_LEADING_UP));
+        winf_setonoff(window_handle, FONT_LEADING_AUTO, FALSE /*off*/);
+        break;
+        }
+
+    case FONT_LEADING_AUTO:
+        auto_line_height = winf_getonoff(window_handle, FONT_LEADING_AUTO);
+        if(auto_line_height)
+            show_new_auto_line_height(window_handle, height);
+        break;
+
+    default:
+        if(try_anyway)
+            pdfontselect_try_me(font_name, width, height, window_handle);
+        else if(auto_line_height)
+            show_new_auto_line_height(window_handle, height);
+        break;
+    }
+}
+
+static void
+pdfontselect_unknown_event_Key_Pressed(
+    const char * font_name,
+    PC_F64 width,
+    PC_F64 height,
+    const WimpKeyPressedEvent * const key_pressed,
+    BOOL try_anyway)
+{
+    const int window_handle = key_pressed->caret.window_handle;
+
+    switch(key_pressed->key_code)
+    {
+    default:
+        if(try_anyway)
+            pdfontselect_try_me(font_name, width, height, window_handle);
+        break;
     }
 }
 
@@ -1545,55 +1626,24 @@ pdfontselect_unknown_fn(
     P_ANY try_handle,
     BOOL try_anyway)
 {
+    const int event_code = (int) e->e;
+    WimpPollBlock * const event_data = (WimpPollBlock *) &e->data;
     BOOL processed = FALSE;
 
-    IGNOREPARM(try_handle);
+    UNREFERENCED_PARAMETER(try_handle);
 
     if(pdfontselect.docno != DOCNO_NONE)
     {
         DOCNO old_docno = change_document_using_docno(pdfontselect.docno);
 
-        switch(e->e)
+        switch(event_code)
         {
-        case wimp_EBUT:
-            switch(e->data.but.m.i)
-            {
-            /* can put in click on line height stuff here */
-            case FONT_LEADING_UP:
-            case FONT_LEADING_DOWN:
-                {
-                dbox_field f;
-                auto_line_height = FALSE;
-                f = (dbox_field) e->data.but.m.i; /* SKS 22.10.91 made bumpers reverse in RISC OS fashion */
-                dbox_adjusthit(&f, FONT_LEADING_UP, FONT_LEADING_DOWN, riscos_adjustclicked());
-                bump_line_height(e->data.but.m.w, (f == FONT_LEADING_UP));
-                win_setonoff(e->data.but.m.w, FONT_LEADING_AUTO, FALSE /*off*/);
-                }
-                break;
-
-            case FONT_LEADING_AUTO:
-                auto_line_height = win_getonoff(e->data.but.m.w, FONT_LEADING_AUTO);
-                if(auto_line_height)
-                    show_new_auto_line_height(e->data.but.m.w, height);
-                break;
-
-            default:
-                if(try_anyway)
-                    pdfontselect_try_me(font_name, width, height, e->data.but.m.w);
-                else if(auto_line_height)
-                    show_new_auto_line_height(e->data.but.m.w, height);
-                break;
-            }
+        case Wimp_EMouseClick:
+            pdfontselect_unknown_event_Mouse_Click(font_name, width, height, &event_data->mouse_click, try_anyway);
             break;
 
-        case wimp_EKEY:
-            switch(e->data.key.chcode)
-            {
-            default:
-                if(try_anyway)
-                    pdfontselect_try_me(font_name, width, height, e->data.key.c.w);
-                break;
-            }
+        case Wimp_EKeyPressed:
+            pdfontselect_unknown_event_Key_Pressed(font_name, width, height, &event_data->key_pressed, try_anyway);
             break;
 
         default:
@@ -1663,7 +1713,7 @@ InsertFont_fn(void)
     /* RJM adds this on 5.10.91.  Is it right? Does it need error message?, RCM & SKS 27.11.91 yes it does */
     if(!riscos_fonts)
     {
-        reperr_null(create_error(ERR_SYSTEMFONTSELECTED));
+        reperr_null(ERR_SYSTEMFONTSELECTED);
         return;
     }
 
@@ -1702,14 +1752,15 @@ InsertFont_fn(void)
 
 static BOOL
 decodesubmenu(
-    const MENU_HEAD * mhptr,
-    S32 offset,
-    S32 nextoffset,
+    const MENU_HEAD * const mhptr,
+    _InVal_     S32 offset,
+    _InVal_     S32 nextoffset,
     BOOL submenurequest)
 {
-    BOOL short_m = short_menus();
-    const MENU * mptr   = mhptr->tail;
-    S32 i = 1;    /* NB. offset == 1 is start of array */
+    /*const BOOL classic_m = classic_menus();*/
+    const BOOL short_m = short_menus();
+    const MENU * mptr = mhptr->tail;
+    S32 i = 1; /* NB. offset == 1 is start of array */
     S32 funcnum;
     BOOL processed = TRUE;
 
@@ -1717,19 +1768,20 @@ decodesubmenu(
 
     for(;; mptr++)
     {
+        const BOOL ignore = short_m  &&  !on_short_menus(mptr->flags);
+
         #if TRACE_ALLOWED
-        PC_U8 command = trace_string(*mptr->title);
+        PC_U8Z command = trace_string(*mptr->title);
         #endif
 
-        /* don't count the gaps and the missing items --- NB. NOT *mptr->title! */
-        if(!mptr->title)
-            continue;
-
-        if(short_m  && !on_short_menus(mptr->flags))
+        if(ignore)
         {
             trace_1(TRACE_APP_PD4, "--- ignoring command %s", command);
             continue;
         }
+
+        if(NULL == mptr->title) /* ignore gaps */
+            continue;
 
         trace_2(TRACE_APP_PD4, "--- looking at command %s, i = %d", command, i);
 
@@ -1817,50 +1869,55 @@ main_menu_handler(
     BOOL processed   = TRUE;
 
     trace_3(TRACE_APP_PD4, "main_menu_handler([%d][%d]): submenurequest = %s",
-            selection, subselection, trace_boolstring(submenurequest));
+            selection, subselection, report_boolstring(submenurequest));
 
-    if(select_document_using_callback_handle(handle))
+    if(!select_document_using_callback_handle(handle))
+        return(processed);
+
+    switch(selection)
     {
-        switch(selection)
+    case mo_noselection: /* I don't believe this ever happens */
+        break;           /* as it'd be far too useful ... */
+
+    default:
+        /* an event to do with the dynamic menu bits */
+        switch(subselection)
         {
-        case mo_noselection: /* I don't believe this ever happens */
-            break;           /* as it'd be far too useful ... */
+        case mo_noselection:
+            { /* open the given submenu */
+            processed = FALSE;
+            break;
+            }
 
         default:
-            /* an event to do with the dynamic menu bits */
-            switch(subselection)
             {
-            case mo_noselection:
-                /* open the given submenu */
-                processed = FALSE;
-                break;
+            /* always decode the selection: the called function
+             * may display a dialog box, in which case dbox does
+             * the right thing.
+            */
+            /* lookup in the dynamic menu structure */
+            const int offset = selection - mo_main_dynamic;
+            int thisoff = 0;
+            U32 head_idx;
 
-            default:
-                /* always decode the selection: the called function
-                 * may put up a dialog box, in which case dbox does
-                 * the right thing.
-                */
+            for(head_idx = 0; head_idx < head_size; ++head_idx)
+            {
+                if(offset == thisoff)
                 {
-                /* lookup in the dynamic menu structure */
-                int offset  = selection - mo_main_dynamic;
-                int thisoff = 0;
-                int head_i;
-
-                for(head_i = 0; head_i < head_size; head_i++)
-                    if(headline[head_i].installed)
-                        if(offset == thisoff++)
-                        {
-                            processed = decodesubmenu(&headline[head_i],
-                                                      subselection,
-                                                      hit[2],
-                                                      submenurequest);
-                            break;
-                        }
+                    processed = decodesubmenu(&headline[head_idx],
+                                              subselection,
+                                              hit[2],
+                                              submenurequest);
+                    break;
                 }
-                break;
+
+                ++thisoff;
             }
+
             break;
+            }
         }
+        break;
     }
 
     return(processed);
@@ -1874,10 +1931,10 @@ main_menu_handler(
 
 extern void
 riscmenu_attachmenutree(
-    wimp_w w)
+    _HwndRef_   HOST_WND window_handle)
 {
     event_attachmenumaker_to_w_i(
-        w, (wimp_i) -1,
+        window_handle, -1,
         main_menu_maker,
         main_menu_handler,
         (void *)(uintptr_t)current_docno());
@@ -1891,9 +1948,10 @@ riscmenu_attachmenutree(
 
 extern void
 riscmenu_buildmenutree(
+    BOOL classic_m,
     BOOL short_m)
 {
-    createmainmenu(short_m);
+    createmainmenu(classic_m, short_m);
 }
 
 /******************************************************************************
@@ -1918,9 +1976,9 @@ riscmenu_clearmenutree(void)
 
 extern void
 riscmenu_detachmenutree(
-    wimp_w w)
+    _HwndRef_   HOST_WND window_handle)
 {
-    event_attachmenumaker_to_w_i(w, (wimp_i) -1, NULL, NULL, NULL);
+    consume_bool(event_attachmenumaker_to_w_i(window_handle, -1, NULL, NULL, NULL));
 }
 
 extern void
@@ -1931,8 +1989,11 @@ riscmenu_initialise_once(void)
     iconbar_menu = menu_new_c(product_ui_id(), iconbar_menu_entries);
     function__event_menu_maker();       /* setup menu_function */
 
-    if(!iconbar_menu)
-        reperr_fatal(reperr_getstr(status_nomem()));
+    if(NULL == iconbar_menu)
+    {
+        consume_bool(reperr_null(status_nomem()));
+        exit(EXIT_FAILURE);
+    }
 
 #if TRACE_ALLOWED
     if(trace_is_enabled())
@@ -1940,7 +2001,7 @@ riscmenu_initialise_once(void)
 #endif
 
     event_attachmenumaker_to_w_i(
-        win_ICONBAR, (wimp_i) -1,
+        win_ICONBAR, -1,
         iconbar_menu_maker,
         iconbar_menu_handler,
         NULL);

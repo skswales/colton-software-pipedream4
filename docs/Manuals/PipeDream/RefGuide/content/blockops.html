@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Blocks - Operations</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        .transpose-example-column-width {
+            width: 160px;
+        }
+    </style>
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="blocks.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="caretmovements.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Blocks">Blocks - Operations</h1>
+
+    <h2 id="Copying">Copying and Moving Blocks</h2>
+    <p>
+        You can make a second copy of a marked block of text at a new location in any document.
+        Or you can move a marked block of text to a new location in any document.
+    </p>
+    <p>Once you have marked the required block of text, proceed as follows:</p>
+    <ol>
+        <li>
+            Position the caret at the cell position in the document to which the block of text is to be copied or moved.
+            This can be almost anywhere in the same column or in any other column of this or another document.
+            It cannot be on any row which overlaps the block other than the top row of the block.
+        </li>
+        <li>Give the <span class="csg-command">Copy Block</span> or <span class="csg-command">Move Block</span> command</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td rowspan="2">Blocks</td>
+                <td>Copy block</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BC</span></td>
+            </tr>
+            <tr>
+                <td>Move block</td>
+                <td>Adj-<img src="images/tbar_copy.png" style="vertical-align: bottom;" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BM</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>To move a block of text to the right:</p>
+    <ol>
+        <li>Mark the block.</li>
+        <li>
+            Position the caret in the cell to which you want the block to be moved.
+            This can be within the marked block.
+        </li>
+        <li>
+            Give the <span class="csg-command">Move Block</span> command.
+            The block of text will shift to the right.
+        </li>
+    </ol>
+    <p>Blocks can be moved to the left in the same way.</p>
+
+    <h2 id="Delete">Deleting Blocks</h2>
+    <p>To delete a block of text, first mark the block of text to be deleted, then give the <span class="csg-command">Delete Block</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Delete block</td>
+                <td><img src="images/tbar_cut.png" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BD</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 id="Insertion">Insertion Rules</h2>
+    <p>When you copy, move and delete blocks, PipeDream has some simple rules for deciding whether the block should be inserted into new cells or overwrite existing cells.</p>
+
+    <h4 id="Moving">Copying and moving blocks</h4>
+    <p>If the target area is completely blank, PipeDream simply overwrites the blank area.</p>
+    <p>
+        If the target area is not completely blank, PipeDream inserts before the target area as many rows across the whole document as there are in the marked block.
+        These newly inserted rows are then overwritten by the marked block.
+    </p>
+
+    <h4 id="Delete">Deleting blocks</h4>
+    <p>
+        PipeDream first blanks out the block.
+        Then, if all the other columns in the rows which contained the block are blank, PipeDream deletes all the rows.
+        Move Block works in the same way for the block it deletes.
+    </p>
+
+    <h2 id="Transposing">Transposing Blocks</h2>
+    <p>If you type in some names and addresses like this:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <tbody>
+            <tr>
+                <td class="transpose-example-column-width">Mr. R.T. Smith.</td>
+            </tr>
+            <tr>
+                <td>3, The Drive,</td>
+            </tr>
+            <tr>
+                <td>Tonbridge,</td>
+            </tr>
+            <tr>
+                <td>Kent.</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>Mr &amp; Mrs. G. Fox</td>
+            </tr>
+            <tr>
+                <td>192b High Street</td>
+            </tr>
+            <tr>
+                <td>Cambridge,</td>
+            </tr>
+            <tr>
+                <td>Cambs.</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>Mr. J. FitzHenry</td>
+            </tr>
+            <tr>
+                <td>"RiverView",</td>
+            </tr>
+            <tr>
+                <td>Sevenoaks,</td>
+            </tr>
+            <tr>
+                <td>Kent.</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>and then realise that you actually wanted to enter them like this:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td class="transpose-example-column-width">Mr. R.T. Smith.</td>
+                <td class="transpose-example-column-width">3, The Drive,</td>
+                <td class="transpose-example-column-width">Tonbridge,</td>
+                <td class="transpose-example-column-width">Kent.</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>Mr &amp; Mrs. G. Fox</td>
+                <td>192b High Street</td>
+                <td>Cambridge,</td>
+                <td>Cambs.</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>Mr. J. FitzHenry</td>
+                <td>"RiverView",</td>
+                <td>Sevenoaks,</td>
+                <td>Kent.</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>all you have to do is mark each name and address like this:</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td class="transpose-example-column-width">Mr. R.T. Smith.</td>
+                <td class="transpose-example-column-width">3, The Drive,</td>
+                <td class="transpose-example-column-width">Tonbridge,</td>
+                <td class="transpose-example-column-width">Kent.</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="color:#ffffff;background-color:#400040">
+                    Mr &amp; Mrs. G.
+                    Fox
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="color:#ffffff;background-color:#400040">192b High Street</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="color:#ffffff;background-color:#400040">Cambridge,</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="color:#ffffff;background-color:#400040">Cambs.</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Mr. J. FitzHenry</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>"RiverView",</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Sevenoaks,</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Kent.</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>and give the <span class="csg-command">Transpose Blocks</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Transpose blocks</td>
+                <td>Adj-<img src="images/tbar_sort.png" style="vertical-align: bottom;" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BT</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>
+                    Alternative methods of copying and moving text<br />
+                    <br />
+                    Recovering deleted text
+                </td>
+                <td><a href="paste.html">Paste</a></td>
+            </tr>
+            <tr>
+                <td>Copying number cells</td>
+                <td><a href="replication.html">Replication</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Blocks </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Caret Movements</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="blocks.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="caretmovements.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

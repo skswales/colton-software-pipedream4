@@ -650,14 +650,14 @@ write_rng(
 {
     P_U8 op_pos = op_at;
 
-    op_pos += writeuword_LE(op_pos, (U32) rngp->s.docno, sizeof32(EV_DOCNO));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_docno(&rngp->s), sizeof32(EV_DOCNO));
 
-    op_pos += writeuword_LE(op_pos, (U32) rngp->s.col,   sizeof32(EV_COL));
-    op_pos += writeuword_LE(op_pos, (U32) rngp->s.row,   sizeof32(EV_ROW));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_col(&rngp->s), sizeof32(EV_COL));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_row(&rngp->s), sizeof32(EV_ROW));
     op_pos += writeuword_LE(op_pos, (U32) rngp->s.flags, sizeof32(EV_FLAGS));
 
-    op_pos += writeuword_LE(op_pos, (U32) rngp->e.col,   sizeof32(EV_COL));
-    op_pos += writeuword_LE(op_pos, (U32) rngp->e.row,   sizeof32(EV_ROW));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_col(&rngp->e), sizeof32(EV_COL));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_row(&rngp->e), sizeof32(EV_ROW));
     op_pos += writeuword_LE(op_pos, (U32) rngp->e.flags, sizeof32(EV_FLAGS));
 
     return(op_pos - op_at);
@@ -676,10 +676,10 @@ write_slr(
 {
     P_U8 op_pos = op_at;
 
-    op_pos += writeuword_LE(op_pos, (U32) slrp->docno, sizeof32(EV_DOCNO));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_docno(slrp), sizeof32(EV_DOCNO));
 
-    op_pos += writeuword_LE(op_pos, (U32) slrp->col,   sizeof32(EV_COL));
-    op_pos += writeuword_LE(op_pos, (U32) slrp->row,   sizeof32(EV_ROW));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_col(slrp), sizeof32(EV_COL));
+    op_pos += writeuword_LE(op_pos, (U32) ev_slr_row(slrp), sizeof32(EV_ROW));
     op_pos += writeuword_LE(op_pos, (U32) slrp->flags, sizeof32(EV_FLAGS));
 
     return(op_pos - op_at);

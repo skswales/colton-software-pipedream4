@@ -29,7 +29,7 @@ typedef struct EV_NAME
     EV_FLAGS flags;             /* flags about entry */
     EV_SERIAL visited;          /* last visited count */
 }
-EV_NAME, * P_EV_NAME;
+EV_NAME, * P_EV_NAME; typedef const EV_NAME * PC_EV_NAME;
 
 /*
 user defined custom functions
@@ -79,7 +79,7 @@ extern void _p_proc_exec( \
     _InRef_     PC_EV_SLR p_cur_slr)
 
 #define exec_func_ignore_parms() \
-    (void) (IGNOREPARM(args), IGNOREPARM_InVal_(n_args), IGNOREPARM_InoutRef_(p_ev_data_res), IGNOREPARM_InRef_(p_cur_slr))
+    (void) (UNREFERENCED_PARAMETER(args), UNREFERENCED_PARAMETER_InVal_(n_args), UNREFERENCED_PARAMETER_InoutRef_(p_ev_data_res), UNREFERENCED_PARAMETER_InRef_(p_cur_slr))
 
 /* symbol information */
 
@@ -198,20 +198,20 @@ compare SLRs
 */
 
 #define slr_equal(slr1, slr2) ( \
-    ((slr2)->docno == (slr1)->docno) && \
-    ((slr2)->col == (slr1)->col) && \
-    ((slr2)->row == (slr1)->row) )
+    (ev_slr_docno(slr2) == ev_slr_docno(slr1)) && \
+    (ev_slr_col(slr2) == ev_slr_col(slr1)) && \
+    (ev_slr_row(slr2) == ev_slr_row(slr1)) )
 
 /*
 compare SLR to range
 */
 
 #define ev_slr_in_range(range, slr) ( \
-    ((slr)->docno == (range)->s.docno) && \
-    ((slr)->col >= (range)->s.col) && \
-    ((slr)->row >= (range)->s.row) && \
-    ((slr)->col <  (range)->e.col) && \
-    ((slr)->row <  (range)->e.row) )
+    (ev_slr_docno(slr) == (range)->s.docno) && \
+    (ev_slr_col(slr) >= (range)->s.col) && \
+    (ev_slr_row(slr) >= (range)->s.row) && \
+    (ev_slr_col(slr) <  (range)->e.col) && \
+    (ev_slr_row(slr) <  (range)->e.row) )
 
 /*
 compare ranges
@@ -812,6 +812,7 @@ ev_func.c external functions
 lookup and reference functions
 */
 
+PROC_EXEC_PROTO(c_address);
 PROC_EXEC_PROTO(c_choose);
 PROC_EXEC_PROTO(c_col);
 PROC_EXEC_PROTO(c_cols);
@@ -819,6 +820,7 @@ PROC_EXEC_PROTO(c_cols);
 PROC_EXEC_PROTO(c_index);
 /* NO c_lookup: LOOKUP_LOOKUP */
 /* NO c_match: LOOKUP_MATCH */
+PROC_EXEC_PROTO(c_odf_index);
 PROC_EXEC_PROTO(c_row);
 PROC_EXEC_PROTO(c_rows);
 /* NO c_vlookup: LOOKUP_VLOOKUP */
@@ -827,13 +829,37 @@ PROC_EXEC_PROTO(c_rows);
 miscellaneous functions
 */
 
+/* NO PROC_EXEC_PROTO(c_command); - PipeDream can't do this */
+/* NO c_countblank */
+PROC_EXEC_PROTO(c_current_cell);
 PROC_EXEC_PROTO(c_deref);
+PROC_EXEC_PROTO(c_doubleclick);
+PROC_EXEC_PROTO(c_even);
+PROC_EXEC_PROTO(c_false);
 PROC_EXEC_PROTO(c_flip);
+PROC_EXEC_PROTO(c_isblank);
+PROC_EXEC_PROTO(c_iserr);
+PROC_EXEC_PROTO(c_iserror);
+PROC_EXEC_PROTO(c_iseven);
+PROC_EXEC_PROTO(c_islogical);
+PROC_EXEC_PROTO(c_isna);
+PROC_EXEC_PROTO(c_isnontext);
+PROC_EXEC_PROTO(c_isnumber);
+PROC_EXEC_PROTO(c_isodd);
+PROC_EXEC_PROTO(c_isref);
+PROC_EXEC_PROTO(c_istext);
+PROC_EXEC_PROTO(c_na);
+PROC_EXEC_PROTO(c_odd);
+PROC_EXEC_PROTO(c_odf_type);
+/* PROC_EXEC_PROTO(c_page); - PipeDream can't do this */
+/* PROC_EXEC_PROTO(c_pages); - PipeDream can't do this */
 PROC_EXEC_PROTO(c_set_name);
-PROC_EXEC_PROTO(c_setvalue);
 PROC_EXEC_PROTO(c_sort);
+PROC_EXEC_PROTO(c_true);
 PROC_EXEC_PROTO(c_type);
 PROC_EXEC_PROTO(c_version);
+
+PROC_EXEC_PROTO(c_setvalue); /* PipeDream does this differently */
 
 /*
 ev_fndat.c external functions (date and time)
@@ -844,6 +870,9 @@ PROC_EXEC_PROTO(c_date);
 PROC_EXEC_PROTO(c_datevalue);
 PROC_EXEC_PROTO(c_day);
 PROC_EXEC_PROTO(c_dayname);
+PROC_EXEC_PROTO(c_days_360);
+PROC_EXEC_PROTO(c_edate);
+PROC_EXEC_PROTO(c_eomonth);
 PROC_EXEC_PROTO(c_hour);
 PROC_EXEC_PROTO(c_minute);
 PROC_EXEC_PROTO(c_month);
@@ -875,12 +904,34 @@ NO ev_fndba.c (database)
 /* NO c_dvarp: DBASE_VARP */
 
 /*
+ev_fneng.c external functions (engineering)
+*/
+
+PROC_EXEC_PROTO(c_besseli);
+PROC_EXEC_PROTO(c_besselj);
+PROC_EXEC_PROTO(c_besselk);
+PROC_EXEC_PROTO(c_bessely);
+PROC_EXEC_PROTO(c_delta);
+PROC_EXEC_PROTO(c_erf);
+PROC_EXEC_PROTO(c_erfc);
+PROC_EXEC_PROTO(c_gestep);
+
+/*
 ev_fnfin.c external functions (financial)
 */
 
 PROC_EXEC_PROTO(c_cterm);
+PROC_EXEC_PROTO(c_db);
 PROC_EXEC_PROTO(c_ddb);
 PROC_EXEC_PROTO(c_fv);
+PROC_EXEC_PROTO(c_fvschedule);
+/* NO c_irr */
+/* NO c_mirr */
+PROC_EXEC_PROTO(c_nper);
+/* NO c_npv */
+PROC_EXEC_PROTO(c_odf_fv);
+PROC_EXEC_PROTO(c_odf_irr);
+PROC_EXEC_PROTO(c_odf_pmt);
 PROC_EXEC_PROTO(c_pmt);
 PROC_EXEC_PROTO(c_pv);
 PROC_EXEC_PROTO(c_rate);
@@ -892,17 +943,133 @@ PROC_EXEC_PROTO(c_term);
 ev_fnsta.c external functions (statistical)
 */
 
+/* NO c_avedev */
+/* NO c_averagea */
+/* NO c_avg */
 PROC_EXEC_PROTO(c_beta);
 PROC_EXEC_PROTO(c_bin);
 PROC_EXEC_PROTO(c_combin);
+/* NO c_count */
+/* NO c_counta */
+/* NO c_devsq */
+PROC_EXEC_PROTO(c_frequency);
 PROC_EXEC_PROTO(c_gammaln);
+/* NO c_geomean */
 PROC_EXEC_PROTO(c_grand);
+/* NO c_harmean */
+/* NO c_kurt */
 PROC_EXEC_PROTO(c_listcount);
-PROC_EXEC_PROTO(c_median);
+/* NO c_max */
+/* c_median - PipeDream does this differently */
+/* NO c_min */
 PROC_EXEC_PROTO(c_permut);
 PROC_EXEC_PROTO(c_rand);
+PROC_EXEC_PROTO(c_randbetween);
 PROC_EXEC_PROTO(c_rank);
+/* NO c_skew */
+/* NO c_skew_p */
 PROC_EXEC_PROTO(c_spearman);
+/* NO c_std */
+/* NO c_stdp */
+/* NO c_var */
+/* NO c_varp */
+
+extern void
+binomial_coefficient_calc(
+    _OutRef_    P_EV_DATA p_ev_data_out, /* may return integer or fp or error */
+    _InVal_     S32 n,
+    _InVal_     S32 k);
+
+/*
+ev_fnstb.c external functions (statistical)
+*/
+
+
+PROC_EXEC_PROTO(c_combina);
+PROC_EXEC_PROTO(c_fisher);
+PROC_EXEC_PROTO(c_fisherinv);
+PROC_EXEC_PROTO(c_gamma);
+PROC_EXEC_PROTO(c_large);
+PROC_EXEC_PROTO(c_mode_sngl);
+PROC_EXEC_PROTO(c_percentile_exc);
+PROC_EXEC_PROTO(c_percentile_inc);
+PROC_EXEC_PROTO(c_percentrank_exc);
+PROC_EXEC_PROTO(c_percentrank_inc);
+PROC_EXEC_PROTO(c_quartile_exc);
+PROC_EXEC_PROTO(c_quartile_inc);
+PROC_EXEC_PROTO(c_rank_eq);
+PROC_EXEC_PROTO(c_small);
+PROC_EXEC_PROTO(c_standardize);
+PROC_EXEC_PROTO(c_trimmean);
+
+PROC_EXEC_PROTO(c_median); /* PipeDream does this differently */
+
+_Check_return_
+extern F64
+median_calc_span(
+    _InRef_     PC_EV_DATA p_ev_data,
+    _InVal_     S32 y_start /*incl*/,
+    _InVal_     S32 y_end   /*excl*/);
+
+_Check_return_
+extern BOOL
+statistics_value_next(
+    _OutRef_    P_EV_DATA p_ev_data_out,
+    _InRef_     PC_EV_DATA p_ev_data_in,
+    _InoutRef_  P_S32 p_ix,
+    _InoutRef_  P_S32 p_iy,
+    _InRef_     S32 x_size,
+    _InRef_     S32 y_size);
+
+/*
+ev_fnstc.c external functions (statistical - continuous distributions)
+*/
+
+PROC_EXEC_PROTO(c_beta_dist);
+PROC_EXEC_PROTO(c_beta_inv);
+PROC_EXEC_PROTO(c_chisq_dist);
+PROC_EXEC_PROTO(c_chisq_dist_rt);
+PROC_EXEC_PROTO(c_chisq_inv);
+PROC_EXEC_PROTO(c_chisq_inv_rt);
+PROC_EXEC_PROTO(c_chisq_test);
+PROC_EXEC_PROTO(c_confidence_norm);
+PROC_EXEC_PROTO(c_confidence_t);
+PROC_EXEC_PROTO(c_expon_dist);
+PROC_EXEC_PROTO(c_F_dist);
+PROC_EXEC_PROTO(c_F_dist_rt);
+PROC_EXEC_PROTO(c_F_inv);
+PROC_EXEC_PROTO(c_F_inv_rt);
+PROC_EXEC_PROTO(c_F_test);
+PROC_EXEC_PROTO(c_gamma_dist);
+PROC_EXEC_PROTO(c_gamma_inv);
+PROC_EXEC_PROTO(c_lognorm_dist);
+PROC_EXEC_PROTO(c_lognorm_inv);
+PROC_EXEC_PROTO(c_norm_dist);
+PROC_EXEC_PROTO(c_norm_s_dist);
+PROC_EXEC_PROTO(c_norm_inv);
+PROC_EXEC_PROTO(c_norm_s_inv);
+PROC_EXEC_PROTO(c_odf_betadist);
+PROC_EXEC_PROTO(c_odf_tdist);
+PROC_EXEC_PROTO(c_phi);
+PROC_EXEC_PROTO(c_t_dist);
+PROC_EXEC_PROTO(c_t_dist_rt);
+PROC_EXEC_PROTO(c_t_dist_2t);
+PROC_EXEC_PROTO(c_t_inv);
+PROC_EXEC_PROTO(c_t_inv_2t);
+PROC_EXEC_PROTO(c_t_test);
+PROC_EXEC_PROTO(c_weibull_dist);
+PROC_EXEC_PROTO(c_z_test);
+
+/*
+ev_fnstd.c external functions (statistical - discrete distributions)
+*/
+
+PROC_EXEC_PROTO(c_binom_dist);
+PROC_EXEC_PROTO(c_binom_dist_range);
+PROC_EXEC_PROTO(c_binom_inv);
+PROC_EXEC_PROTO(c_hypgeom_dist);
+PROC_EXEC_PROTO(c_negbinom_dist);
+PROC_EXEC_PROTO(c_poisson_dist);
 
 /*
 ev_fnstm.c external functions (statistical - multivariate fit)
@@ -914,25 +1081,59 @@ PROC_EXEC_PROTO(c_logest);
 PROC_EXEC_PROTO(c_trend);
 
 /*
+ev_fnstp.c external functions (statistical - paired statistics)
+*/
+
+PROC_EXEC_PROTO(c_correl);
+PROC_EXEC_PROTO(c_covariance_p);
+PROC_EXEC_PROTO(c_covariance_s);
+PROC_EXEC_PROTO(c_forecast);
+PROC_EXEC_PROTO(c_frequency);
+PROC_EXEC_PROTO(c_intercept);
+PROC_EXEC_PROTO(c_pearson);
+PROC_EXEC_PROTO(c_prob);
+PROC_EXEC_PROTO(c_rsq);
+PROC_EXEC_PROTO(c_slope);
+PROC_EXEC_PROTO(c_steyx);
+
+_Check_return_
+extern BOOL
+statistics_paired_values_next(
+    _OutRef_    P_EV_DATA p_ev_data_out_a,
+    _OutRef_    P_EV_DATA p_ev_data_out_b,
+    _InRef_     PC_EV_DATA p_ev_data_in_a,
+    _InRef_     PC_EV_DATA p_ev_data_in_b,
+    _InoutRef_  P_S32 p_ix,
+    _InoutRef_  P_S32 p_iy,
+    _InRef_     S32 x_size,
+    _InRef_     S32 y_size);
+
+/*
 ev_fnstr.c external functions (string)
 */
 
 PROC_EXEC_PROTO(c_char);
+PROC_EXEC_PROTO(c_clean);
 PROC_EXEC_PROTO(c_code);
+PROC_EXEC_PROTO(c_dollar);
 PROC_EXEC_PROTO(c_exact);
 PROC_EXEC_PROTO(c_find);
+PROC_EXEC_PROTO(c_fixed);
 PROC_EXEC_PROTO(c_formula_text);
 PROC_EXEC_PROTO(c_join);
 PROC_EXEC_PROTO(c_left);
 PROC_EXEC_PROTO(c_length);
 PROC_EXEC_PROTO(c_lower);
 PROC_EXEC_PROTO(c_mid);
+PROC_EXEC_PROTO(c_n);
 PROC_EXEC_PROTO(c_proper);
-PROC_EXEC_PROTO(c_replace);
 PROC_EXEC_PROTO(c_rept);
+PROC_EXEC_PROTO(c_replace);
 PROC_EXEC_PROTO(c_reverse);
 PROC_EXEC_PROTO(c_right);
 PROC_EXEC_PROTO(c_string);
+PROC_EXEC_PROTO(c_substitute);
+PROC_EXEC_PROTO(c_t);
 PROC_EXEC_PROTO(c_text);
 PROC_EXEC_PROTO(c_trim);
 PROC_EXEC_PROTO(c_upper);
@@ -942,6 +1143,7 @@ PROC_EXEC_PROTO(c_value);
 ev_help.c external functions
 */
 
+_Check_return_
 extern S32
 arg_normalise(
     _InoutRef_  P_EV_DATA p_ev_data,
@@ -949,11 +1151,13 @@ arg_normalise(
     _InoutRef_opt_ P_S32 max_x,
     _InoutRef_opt_ P_S32 max_y);
 
+_Check_return_
 extern STATUS
 array_copy(
     P_EV_DATA p_ev_data_to,
     _InRef_     PC_EV_DATA p_ev_data_from);
 
+_Check_return_
 extern S32
 array_expand(
     P_EV_DATA p_ev_data,
@@ -982,17 +1186,20 @@ array_range_sizes(
     _OutRef_    P_S32 p_x_size,
     _OutRef_    P_S32 p_y_size);
 
+_Check_return_
 extern S32
 array_scan_element(
     _InoutRef_  P_ARRAY_SCAN_BLOCK asbp,
     P_EV_DATA p_ev_data,
     EV_TYPE type_flags);
 
+_Check_return_
 extern S32
 array_scan_init(
     _OutRef_    P_ARRAY_SCAN_BLOCK asbp,
     P_EV_DATA p_ev_data);
 
+_Check_return_
 extern STATUS
 array_sort(
     P_EV_DATA p_ev_data,
@@ -1002,9 +1209,10 @@ extern void
 data_ensure_constant(
     P_EV_DATA p_ev_data);
 
+_Check_return_
 extern BOOL
 data_is_array_range(
-    P_EV_DATA p_ev_data);
+    _InRef_     PC_EV_DATA p_ev_data);
 
 extern void
 data_limit_types(
@@ -1016,44 +1224,47 @@ name_deref(
     P_EV_DATA p_ev_data,
     EV_NAMEID nameid);
 
+_Check_return_
 extern S32
 range_next(
     _InRef_     PC_EV_RANGE p_ev_range,
     _InoutRef_  P_EV_SLR slrp);
 
+_Check_return_
 extern S32
 range_scan_init(
     _InRef_     PC_EV_RANGE p_ev_range,
     _OutRef_    P_RANGE_SCAN_BLOCK rsbp);
 
+_Check_return_
 extern S32
 range_scan_element(
     _InoutRef_  P_RANGE_SCAN_BLOCK rsbp,
-    P_EV_DATA p_ev_data,
-    EV_TYPE type_flags);
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InVal_     EV_TYPE type_flags);
 
-_Check_return_
+_Check_return_ _Success_(return)
 extern BOOL
 two_nums_add_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2);
 
-_Check_return_
+_Check_return_ _Success_(return)
 extern BOOL
 two_nums_divide_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2);
 
-_Check_return_
+_Check_return_ _Success_(return)
 extern BOOL
 two_nums_multiply_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
     _InoutRef_  P_EV_DATA p_ev_data1,
     _InoutRef_  P_EV_DATA p_ev_data2);
 
-_Check_return_
+_Check_return_ _Success_(return)
 extern BOOL
 two_nums_subtract_try(
     _InoutRef_  P_EV_DATA p_ev_data_res,
@@ -1064,16 +1275,6 @@ two_nums_subtract_try(
 ev_math.c external functions
 */
 
-extern void
-product_between_calc(
-    _InoutRef_  P_EV_DATA p_ev_data_res,
-    _InVal_     S32 start,
-    _InVal_     S32 end);
-
-_Check_return_
-extern STATUS
-status_from_errno(void);
-
 /*
 mathematical functions
 */
@@ -1083,18 +1284,48 @@ PROC_EXEC_PROTO(c_exp);
 PROC_EXEC_PROTO(c_fact);
 PROC_EXEC_PROTO(c_int);
 PROC_EXEC_PROTO(c_ln);
+PROC_EXEC_PROTO(c_odf_log10);
 PROC_EXEC_PROTO(c_mod);
 PROC_EXEC_PROTO(c_sgn);
 PROC_EXEC_PROTO(c_sqr);
+/* c_sum */
+
+extern void
+factorial_calc(
+    _OutRef_    P_EV_DATA p_ev_data_out, /* may return integer or fp or error */
+    _InVal_     S32 n);
+
+extern void
+product_between_calc(
+    _InoutRef_  P_EV_DATA p_ev_data_res, /* denotes integer or fp; may return integer or fp */
+    _InVal_     S32 start,
+    _InVal_     S32 end);
+
+_Check_return_
+extern STATUS
+status_from_errno(void);
 
 /*
 ev_matb.c external functions (mathematical)
 */
 
 PROC_EXEC_PROTO(c_ceiling);
+PROC_EXEC_PROTO(c_factdouble);
 PROC_EXEC_PROTO(c_floor);
 PROC_EXEC_PROTO(c_log);
+PROC_EXEC_PROTO(c_mround);
+PROC_EXEC_PROTO(c_odf_int);
+PROC_EXEC_PROTO(c_quotient);
 PROC_EXEC_PROTO(c_round);
+PROC_EXEC_PROTO(c_rounddown);
+PROC_EXEC_PROTO(c_roundup);
+PROC_EXEC_PROTO(c_seriessum);
+/* c_sumsq */
+PROC_EXEC_PROTO(c_sumproduct);
+PROC_EXEC_PROTO(c_sum_x2my2);
+PROC_EXEC_PROTO(c_sum_x2py2);
+PROC_EXEC_PROTO(c_sum_xmy2);
+PROC_EXEC_PROTO(c_trunc);
 
 extern void
 round_common(
@@ -1110,6 +1341,7 @@ ev_matr.c external functions (matrix)
 PROC_EXEC_PROTO(c_m_determ);
 PROC_EXEC_PROTO(c_m_inverse);
 PROC_EXEC_PROTO(c_m_mult);
+PROC_EXEC_PROTO(c_m_unit);
 PROC_EXEC_PROTO(c_transpose);
 
 /*
@@ -1129,6 +1361,8 @@ PROC_EXEC_PROTO(c_c_asin);
 PROC_EXEC_PROTO(c_c_asinh);
 PROC_EXEC_PROTO(c_c_atan);
 PROC_EXEC_PROTO(c_c_atanh);
+PROC_EXEC_PROTO(c_c_complex);
+PROC_EXEC_PROTO(c_c_conjugate);
 PROC_EXEC_PROTO(c_c_cos);
 PROC_EXEC_PROTO(c_c_cosh);
 PROC_EXEC_PROTO(c_c_cosec);
@@ -1137,18 +1371,26 @@ PROC_EXEC_PROTO(c_c_cot);
 PROC_EXEC_PROTO(c_c_coth);
 PROC_EXEC_PROTO(c_c_div);
 PROC_EXEC_PROTO(c_c_exp);
+PROC_EXEC_PROTO(c_c_imaginary);
 PROC_EXEC_PROTO(c_c_ln);
+PROC_EXEC_PROTO(c_c_log_10);
+PROC_EXEC_PROTO(c_c_log_2);
 PROC_EXEC_PROTO(c_c_mul);
 PROC_EXEC_PROTO(c_c_power);
 PROC_EXEC_PROTO(c_c_radius);
+PROC_EXEC_PROTO(c_c_real);
+PROC_EXEC_PROTO(c_c_round);
 PROC_EXEC_PROTO(c_c_sec);
 PROC_EXEC_PROTO(c_c_sech);
 PROC_EXEC_PROTO(c_c_sin);
 PROC_EXEC_PROTO(c_c_sinh);
+PROC_EXEC_PROTO(c_c_sqrt);
 PROC_EXEC_PROTO(c_c_sub);
 PROC_EXEC_PROTO(c_c_tan);
 PROC_EXEC_PROTO(c_c_tanh);
 PROC_EXEC_PROTO(c_c_theta);
+
+PROC_EXEC_PROTO(c_odf_complex);
 
 /*
 ev_mtri.c external functions (trigonometrical)
@@ -1352,7 +1594,7 @@ extern PC_USTR
 func_name(
     EV_IDNO did_num);
 
-extern PC_USTR
+extern PC_A7STR
 type_from_flags(
     EV_TYPE type);
 

@@ -440,14 +440,14 @@ array_range_bytes_check(
     array_block_element_size(array_blockc(pc_array_handle)) )
 
 /* return whether given array handle is valid (NB doesn't check for handle zero) */
-#define array_handle_valid(pc_array_handle) ( \
+#define array_handle_is_valid(pc_array_handle) ( \
     (U32) *(pc_array_handle) < array_root.free )
 
 /* return whether given index is valid in array */
-#define array_index_valid(pc_array_handle, ele_index) ( \
+#define array_index_is_valid(pc_array_handle, ele_index) ( \
     (U32) (ele_index) < array_elements32(pc_array_handle) )
 
-#define array_offset_valid(pc_array_handle, ele_offset) ( \
+#define array_offset_is_valid(pc_array_handle, ele_offset) ( \
     (U32) (ele_offset) < array_elements32(pc_array_handle) )
 
 /* return the element index of a pointer to an element in an array */

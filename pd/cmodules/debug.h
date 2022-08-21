@@ -62,10 +62,6 @@ Designed for multiple inclusion with different TRACE_ALLOWED
 #undef trace_procedure_name
 #endif
 
-#ifdef trace_boolstring
-#undef trace_boolstring
-#endif
-
 #ifdef trace_list
 #undef trace_list
 #endif
@@ -355,13 +351,11 @@ extern int trace__count; /* exported only for tracing() */
 #define TRACE_WINDOWS_HOST      TRACE_APP_TYPE5_HOST
 
 /*
-PD4
+PipeDream 4
 */
 
 #define TRACE_APP_EXPEDIT       TRACE_APP_TYPE5_SSUI
 #define TRACE_APP_PD4_RENDER    TRACE_APP_TYPE5_SK_DRAW
-
-#define trace_boolstring(t)     report_boolstring(t)
 
 #define trace_string            report_sbstr
 

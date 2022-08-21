@@ -505,7 +505,7 @@ alloc_initialise_heap(
     if(ahp->increment)
     {
         new_size += RHM_SIZEOF_FLEX_USED_BLOCK;
-        new_size  = div_round_ceil_u(new_size, ahp->increment) * ahp->increment;
+        new_size  = idiv_ceil_u(new_size, ahp->increment) * ahp->increment;
         new_size -= RHM_SIZEOF_FLEX_USED_BLOCK;
     }
 
@@ -675,7 +675,7 @@ alloc_needtoallocate(
     if(ahp->increment)
     {
         new_size += RHM_SIZEOF_FLEX_USED_BLOCK;
-        new_size  = div_round_ceil_u(new_size, ahp->increment) * ahp->increment;
+        new_size  = idiv_ceil_u(new_size, ahp->increment) * ahp->increment;
         new_size -= RHM_SIZEOF_FLEX_USED_BLOCK;
     }
 
@@ -729,7 +729,7 @@ alloc_freeextrastore(
     U32 spare;
 
     new_size += RHM_SIZEOF_FLEX_USED_BLOCK;
-    new_size  = div_round_ceil_u(new_size, ahp->increment) * ahp->increment;
+    new_size  = idiv_ceil_u(new_size, ahp->increment) * ahp->increment;
     new_size -= RHM_SIZEOF_FLEX_USED_BLOCK;
 
     /* don't let heap size fall too low */
@@ -921,7 +921,7 @@ alloc_traversefree(
 {
     const PC_ALLOC_HEAP_DESC ahp = &alloc_main_heap_desc;
 
-    IGNOREPARM(which);
+    UNREFERENCED_PARAMETER(which);
 
     alloc_validate_heap(ahp, "traversefree", 0);
 }
@@ -941,9 +941,9 @@ alloc_validate_heap(
     _In_        int set_guards)
 {
 #if !TRACE_ALLOWED
-    IGNOREPARM_InRef_(ahp);
-    IGNOREPARM(routine);
-    IGNOREPARM(set_guards);
+    UNREFERENCED_PARAMETER_InRef_(ahp);
+    UNREFERENCED_PARAMETER(routine);
+    UNREFERENCED_PARAMETER(set_guards);
 #else
     const P_RISCOS_HEAP heap = ahp->heap;
     P_RISCOS_HEAP_DATA p;
@@ -1091,10 +1091,10 @@ alloc_validate_block(
     _In_        int set_guards)
 {
 #if !TRACE_ALLOWED
-    IGNOREPARM_InRef_(ahp);
-    IGNOREPARM(usrcore);
-    IGNOREPARM(routine);
-    IGNOREPARM(set_guards);
+    UNREFERENCED_PARAMETER_InRef_(ahp);
+    UNREFERENCED_PARAMETER(usrcore);
+    UNREFERENCED_PARAMETER(routine);
+    UNREFERENCED_PARAMETER(set_guards);
 #else
     const P_RISCOS_HEAP heap = ahp->heap;
     P_U8 syscore;
@@ -1104,7 +1104,7 @@ alloc_validate_block(
 #if defined(CHECK_ALLOCS)
     U32 actualusrsize;
 #else
-    IGNOREPARM(set_guards);
+    UNREFERENCED_PARAMETER(set_guards);
 #endif
 
     syscore      = PtrSubBytes(P_U8, usrcore, startguardsize);
@@ -1233,8 +1233,8 @@ alloc__ini_validate(
     P_ANY usrcore,
     _In_z_      PCTSTR msg)
 {
-    IGNOREPARM(usrcore);
-    IGNOREPARM(msg);
+    UNREFERENCED_PARAMETER(usrcore);
+    UNREFERENCED_PARAMETER(msg);
 }
 
 #endif

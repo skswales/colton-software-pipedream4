@@ -4,25 +4,32 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2015-2016 Stuart Swales
+| Copyright (C) 2015-2018 Stuart Swales
 
 | !!! ENSURE EVERYTHING IS BUILT AND CHECKED IN FIRST !!!
 
-IfThere $.Temp Then Else %CDir $.Temp
+Set pd$Release 1_12
+| Remember to update RiscPkg.Control and !PD123.Desc too
 
-Set pd$Disc $.Temp.PD123_1_1x
-| Remember to update RiscPkg.Control too
+Set pd$Disc $.Temp.PD4.PD123_<pd$Release>
+Set pd$Zip  $.Temp.PD4.PD123_<pd$Release>/zip
+
+IfThere $.Temp     Then Else %CDir $.Temp
+IfThere $.Temp.PD4 Then Else %CDir $.Temp.PD4
 
 X %Wipe <pd$Disc> ~cfr~v
 
 svn export <Obey$Dir> <pd$Disc>
 
-| The one in RiscPkg is the useful one
-| delete <pd$Disc>.LICENSE
+| The one in RiscPkg.Copyright is the useful one for the packaged converter
+delete <pd$Disc>.RiscPkg.LICENCE
 delete <pd$Disc>.MakeRiscPkg
 
 %Dir <pd$Disc>
-zip -r PD123_1_1x/zip RiscPkg Apps
+%Remove <pd$Zip>
+zip -r <pd$Zip> RiscPkg Apps
+SetType <pd$Zip> &A91
+Info <pd$Zip>
 %Back
 
 Filer_OpenDir <pd$Disc>

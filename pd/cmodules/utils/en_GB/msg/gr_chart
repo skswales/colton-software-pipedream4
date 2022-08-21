@@ -1,0 +1,103 @@
+#
+# gr_chart en_GB messages: keep consistent with CModules gr_chart.h
+#
+# menus
+#
+m8_0:Chart
+m8_1:>Options,>Save,>Gallery,>Selection,>Legend,>New text
+#
+m8_10:Save
+m8_11:>Chart,>Draw file
+#
+m8_20:Gallery
+m8_21:Pie ...,Bar ...,Line ...,Scatter ...,Overlays|Preferred,Set preferred,Save preferred
+#
+m8_30:Selection
+m8_31:>Line width,>Line colour,>Fill style,>Fill colour,>Line pattern|>Text,Text style ...,>Text colour,>Background|>Axis,>Series
+#
+m8_35:Text
+m8_36:>Edit,Delete
+#
+m8_40:Legend
+m8_41:Arrange vertically
+#
+# other strings
+#
+m8_100:ChartFile
+m8_101:Error in saving chart (%s)
+m8_102:Drawfile
+m8_103:Error in saving Draw file (%s)
+#
+# appended to whatever object name is having its colour edited
+m8_104: colour
+#
+# appended to whatever object is having its style edited
+m8_105: style
+#
+# appended to whatever object name is having its font style FontSelect'ed
+m8_106: text style
+#
+# appended to whatever object name is having its text colour dboxtcol'ed
+m8_107: text colour
+#
+# appended to whatever object name is having its hint colour dboxtcol'ed
+m8_108: background colour
+#
+# inserted when object is having 'xxxx border xxxx' edited
+m8_109: border
+#
+# inserted when object is having 'xxxx area xxxx' edited
+m8_110: area
+#
+# inserted when object is having 'xxxx line xxxx' edited
+m8_111: line
+#
+# inserted when object is having 'xxxx fill xxxx' edited
+m8_112: fill
+#
+# Default name for ith created text object
+m8_113:Text %ld
+#
+# Default font name - make empty (do NOT remove!) to use System font
+m8_114:Homerton.Medium
+#
+# inserted when chart is having 'Chart base text style' etc. edited
+m8_115: base
+#
+# thin lines are made of this
+m8_116:Thin
+#
+# name to give chart when newly created
+m8_117:Chart%d
+#
+# warning about not being able to autoload pictures for series
+m8_118:No Pictures.S%d: unable to load picture for Series %d
+#
+# warning about not being able to autoload markers for series
+m8_119:No Markers.S%d: unable to load marker for Series %d
+#
+m8_120:Pictures.S%d
+m8_121:Pictures.S%dP
+m8_122:Pictures.S%dP.P%d
+m8_123:Pictures.S%dP%d
+#
+# Poke value axis Position Left and Right when altering X Value axis
+m8_124:Bottom
+m8_125:Top
+#
+m8_126:Markers.S%d
+m8_127:Markers.S%dP
+m8_128:Markers.S%dP.P%d
+m8_129:Markers.S%dP%d
+#
+# Alternate default font name if primary font not found
+m8_130:Trinity.Medium
+#
+# Default font width
+m8_131:8
+#
+# Default font height
+m8_132:10
+#
+# name to give chart when newly created relative to an existing file
+m8_133:%.6s_C%.2d

@@ -61,6 +61,7 @@ hard_assertion = 1000; /* an OLE server really needs this */
 #define ASSERTION_TRAP_QUERY TEXT("Click OK to trap to debugger, Cancel to exit normally")
 #endif
 
+_Check_return_
 extern BOOL __cdecl
 __myasserted(
     _In_z_      PCTSTR p_function,
@@ -79,6 +80,7 @@ __myasserted(
     return(crash_and_burn);
 }
 
+_Check_return_
 extern BOOL __cdecl
 __myasserted_msg(
     _In_z_      PCTSTR p_function,
@@ -98,6 +100,7 @@ __myasserted_msg(
     return(crash_and_burn);
 }
 
+_Check_return_
 extern BOOL
 __myasserted_EQ(
     _In_z_      PCTSTR p_function,
@@ -112,13 +115,14 @@ __myasserted_EQ(
     return(__myasserted(p_function, p_file, line_no, U32_TFMT TEXT("==") U32_TFMT, val1, val2));
 }
 
+_Check_return_
 extern BOOL
 __vmyasserted(
     _In_z_      PCTSTR p_function,
     _In_z_      PCTSTR p_file,
     _InVal_     U32 line_no,
     _In_opt_z_  PCTSTR message,
-    _In_z_      PCTSTR format,
+    _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        va_list va_in)
 {
 
@@ -127,7 +131,7 @@ __vmyasserted(
     va_list va;
     _kernel_oserror err;
     PTSTR p = err.errmess;
-    wimp_errflags flags;
+    int button_clicked;
 
     /* we need to know how to copy this! */
 #if !RISCOS
@@ -159,7 +163,7 @@ __vmyasserted(
             /* plonk it in */
             memcpy32(p, ASSERTION_FAILURE_PREFIX_RISCOS, sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1);
 
-            (void) wimp_reporterror_rf(&err, wimp_EOK, product_ui_id(), &flags, NULL);
+            consume(const _kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK, &button_clicked, NULL, 3 /*STOP*/));
 
             format = NULL;
         }
@@ -176,15 +180,15 @@ __vmyasserted(
             *p = CH_NULL;
     }
 
-    (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL | wimp_ENOERRORFROM), product_ui_id(), &flags, NULL);
+    consume(const _kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK | Wimp_ReportError_Cancel | wimp_ENOERRORFROM, &button_clicked, NULL, 3 /*STOP*/));
 
-    if(flags & wimp_EOK)
+    if(1 == button_clicked)
     {
         tstr_xstrkpy(err.errmess, elemof32(err.errmess), message ? message : ASSERTION_TRAP_QUERY);
 
-        (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL), product_ui_id(), &flags, NULL);
+        consume(const _kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK | Wimp_ReportError_Cancel, &button_clicked, NULL, 3 /*STOP*/));
 
-        if(flags & wimp_EOK)
+        if(1 == button_clicked)
             return(TRUE);
 
         exit(EXIT_FAILURE);
@@ -313,14 +317,43 @@ __status_assert(
     return(status);
 }
 
-#if WINDOWS
+#if RISCOS
 
+/*ncr*/
+extern _kernel_oserror *
+__WrapOsErrorChecking(
+    _In_opt_    _kernel_oserror * const p_kernel_oserror,
+    _In_z_      PCTSTR p_function,
+    _In_z_      PCTSTR p_file,
+    _In_        int line_no,
+    _In_z_      PCTSTR tstr)
+{
+    const _kernel_oserror * const p_kernel_oserror_real = (const _kernel_oserror *) p_kernel_oserror;
+
+    if(NULL == p_kernel_oserror)
+        return(NULL);
+
+    if(__myasserted(p_function, p_file, line_no,
+                    TEXT("%s")
+                    TEXT("\n")
+                    TEXT("FAILED: err=%d:") U32_XTFMT TEXT(" %s"),
+                    tstr,
+                    p_kernel_oserror_real->errnum, p_kernel_oserror_real->errnum,
+                    p_kernel_oserror_real->errmess))
+        __crash_and_burn_here();
+
+    return(p_kernel_oserror);
+}
+
+#elif WINDOWS
+
+_Check_return_
 extern BOOL
-__WrapOsBool(
+__WrapOsBoolChecking(
     _InVal_     BOOL res,
     _In_z_      PCTSTR p_function,
     _In_z_      PCTSTR p_file,
-    _InVal_     int line_no,
+    _In_        int line_no,
     _In_z_      PCTSTR tstr)
 {
     if(res)
@@ -332,30 +365,33 @@ __WrapOsBool(
     if(NO_ERROR != dwLastError)
     {
         PTSTR buffer = NULL;
-        FormatMessage(
+
+        if(!FormatMessage(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
             NULL,
             dwLastError,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (LPTSTR) &buffer,
             0,
-            NULL);
-
-        if(hard_assertion)
-        {   /* best not to do assert message box in this state */
-            trace_7(TRACE_OUT | TRACE_ANY,
-                    TEXT("%s\n")
-                    TEXT("FAILED: err=%d:0x%08X %s at %s(%d)"),
-                    tstr,
-                    dwLastError, dwLastError,
-                    buffer ? buffer : TEXT("Error message unavailable"),
-                    p_function, p_file, line_no);
+            NULL))
+        {
+            buffer = NULL;
         }
-        else
+
+        reportf(TEXT("%s")
+                TEXT("\n")
+                TEXT("FAILED: err=%d:") U32_XTFMT TEXT(" %s at %s:%s(%d)"),
+                tstr,
+                dwLastError, dwLastError,
+                buffer ? buffer : TEXT("Error message unavailable"),
+                p_function, p_file, line_no);
+
+        if(!hard_assertion) /* best not to do assert message box in this state */
         {
             if(__myasserted(p_function, p_file, line_no,
-                            TEXT("%s\n")
-                            TEXT("FAILED: err=%d:0x%08X %s"),
+                            TEXT("%s")
+                            TEXT("\n")
+                            TEXT("FAILED: err=%d:") U32_XTFMT TEXT(" %s"),
                             tstr,
                             dwLastError, dwLastError,
                             buffer ? buffer : TEXT("Error message unavailable")))
@@ -363,13 +399,14 @@ __WrapOsBool(
 
         }
 
-        if(buffer) LocalFree(buffer);
+        if(NULL != buffer)
+            LocalFree(buffer);
     }
     } /*block*/
 
     return(res);
 }
 
-#endif
+#endif /* OS */
 
 /* end of myassert.c */

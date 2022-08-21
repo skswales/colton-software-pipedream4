@@ -23,37 +23,40 @@ extern void
 message_output(
     _In_z_      PC_U8Z buffer);
 
+/*ncr*/
 extern BOOL
 reperr(
     STATUS errornumber,
-    _In_z_      PC_U8Z text,
+    _In_opt_z_  PC_U8Z text,
     /**/        ...);
 
 extern PC_U8
 reperr_getstr(
     STATUS errornumber);
 
-#define reperr_module(module, errornumber) \
-    reperr_null(errornumber)
-
-extern STATUS
+/*ncr*/
+extern BOOL
 reperr_null(
     STATUS errornumber);
 
-extern STATUS
+/*ncr*/
+extern BOOL
 reperr_not_installed(
     STATUS errornumber);
 
-extern STATUS
+/*ncr*/
+extern BOOL
 rep_fserr(
     _In_z_      PC_U8Z str);
 
-extern void
-reperr_fatal(
-    _In_z_      PC_U8Z format,
-    /**/        ...);
+/*ncr*/
+extern BOOL
+reperr_kernel_oserror(
+    _In_        _kernel_oserror * const err);
 
 /* error definition */
+
+#define ERR_OUTPUTSTRING 1
 
 #define MAIN_ERR_BASE (0)
 

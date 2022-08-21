@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Dates and Times</title>
+    <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td id="navheader_PCN_L"><a accesskey="p" href="databaseuse.html">Prev</a> </td>
+                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td id="navheader_PCN_R"> <a accesskey="n" href="datetimefns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Dates">Dates and Times</h1>
+    <p>PipeDream has a set of date and time functions which enable you to build dates and times in number cells and do calculations with them.</p>
+    <p>You can enter dates and times in one of three ways:</p>
+    <ul>
+        <li>typing the date in the form <code>25.12.1973</code> or <code>25.12.73</code> or the time in the form <code>23:59:59</code>;</li>
+        <li>using the TODAY function which gives the current date;</li>
+        <li>using the NOW function which gives the current date and time;</li>
+        <li>using the functions DATE and TIME.</li>
+    </ul>
+    <p>You can specify whether you want to use British-style dates, American-style dates or textual dates.</p>
+    <ol>
+        <li>Bring up the <span class="csg-dbox">Options</span> dialogue box.</li>
+        <li>
+            Position the pointer on the <span class="csg-dbox-option">Date format</span> line and select
+            <span class="csg-dbox-option">M.D.Y</span> for American-style dates,
+            <span class="csg-dbox-option">D.M.Y</span> for British-style dates or
+            <span class="csg-dbox-option">Text</span> for textual dates (the default).
+        </li>
+        <li>Type the date into a number cell as <code>day.month.year</code> for British-style dates or <code>month.day.year</code> for American-style dates.</li>
+    </ol>
+    <p>The text @-field <code>@D@</code> inserts the current date into a text cell in the format selected in the <span class="csg-dbox">Options</span> dialogue box.</p>
+    <p>You can test whether two cells contain the same date with a statement such as:</p>
+    <p class="csg-sample-indent"><code>IF(B1=A1,...)</code></p>
+    <p>You can tell whether one date is later than another with a statement such as:</p>
+    <p class="csg-sample-indent"><code>IF(A1&gt;B1,...)</code></p>
+    <p>The date and time functions are listed in the <a href="datetimefns.html">next section</a>.</p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For information on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>@D@</td>
+                <td><a href="textatfields.html">Text @-fields</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td id="navfooter_PUN_L">Database Use </td>
+                <td id="navfooter_PUN_C"></td>
+                <td id="navfooter_PUN_R"> Date and Time Functions</td>
+            </tr>
+            <tr>
+                <td id="navfooter_PUN_L"><a accesskey="p" href="databaseuse.html">Prev</a> </td>
+                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td id="navfooter_PUN_R"> <a accesskey="n" href="datetimefns.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

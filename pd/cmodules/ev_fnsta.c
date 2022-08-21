@@ -17,7 +17,7 @@
 
 #include "cmodules/mathxtr2.h" /* for linest() */
 #include "cmodules/mathxtr3.h" /* for uniform_distribution() */
-#include "cmodules/mathxtr4.h" /* for mx_ln_factorial() */
+#include "cmodules/mathxtr4.h" /* for mx_ln_beta() */
 
 /******************************************************************************
 *
@@ -37,22 +37,6 @@ STDP()
 VAR()
 VARP()
 */
-
-/*
-flatten an x by y array into a 1 by x*y array
-*/
-
-static void
-ss_data_array_flatten(
-    _InoutRef_  P_EV_DATA p_ev_data)
-{
-    if(RPN_TMP_ARRAY == p_ev_data->did_num)
-    {
-        /* this is just so easy given the current array representation */
-        p_ev_data->arg.ev_array.y_size *= p_ev_data->arg.ev_array.x_size;
-        p_ev_data->arg.ev_array.x_size = 1;
-    }
-}
 
 /******************************************************************************
 *
@@ -85,6 +69,8 @@ PROC_EXEC_PROTO(c_beta)
 /******************************************************************************
 *
 * bin(array1, array2)
+*
+* frequency(array1, array2)
 *
 ******************************************************************************/
 
@@ -122,21 +108,22 @@ bin_and_frequency_calc(
             for(iy = 0; iy < y_size[0]; ++iy)
             {
                 EV_DATA ev_data;
-                const EV_IDNO data_id = array_range_index(&ev_data, array_data, ix, iy, EM_REA | EM_DAT | EM_STR | EM_INT);
+                const EV_IDNO data_id = array_range_index(&ev_data, array_data, ix, iy, EM_REA | EM_INT | EM_DAT | EM_STR);
 
                 switch(data_id)
                 {
                 case RPN_DAT_STRING:
 #if 0 /* just for diff minimization */
-                   if(ignore_blanks_and_strings)
-                   {   /* ignore this data item */
-                       break;
-                   }
+                    if(ignore_blanks_and_strings)
+                    {   /* ignore this data item */
+                        break;
+                    }
 #endif
 
-                   /*FALLTHRU*/
+                    /*FALLTHRU*/
 
                 case RPN_DAT_REAL:
+              /*case RPN_DAT_BOOL8:*/
                 case RPN_DAT_WORD8:
                 case RPN_DAT_WORD16:
                 case RPN_DAT_WORD32:
@@ -147,17 +134,18 @@ bin_and_frequency_calc(
                     for(bin_iy = 0; bin_iy < y_size[1]; ++bin_iy)
                     {
                         EV_DATA ev_data_bin;
-                        const EV_IDNO bin_id = array_range_index(&ev_data_bin, array_bins, 0, bin_iy, EM_REA | EM_DAT | EM_STR | EM_INT);
+                        const EV_IDNO bin_id = array_range_index(&ev_data_bin, array_bins, 0, bin_iy, EM_REA | EM_INT | EM_DAT | EM_STR);
                         S32 res;
 
 #if 0 /* just for diff minimization */
                         if(ignore_blanks_and_strings && (RPN_DAT_STRING == bin_id))
                         {   /* can't match anything against this bin - skip */
+                            ss_data_free_resources(&ev_data_bin);
                             continue;
                         }
 #else
-                        IGNOREPARM_InVal_(ignore_blanks_and_strings);
-                        IGNOREPARM_CONST(bin_id);
+                        UNREFERENCED_PARAMETER_InVal_(ignore_blanks_and_strings);
+                        UNREFERENCED_PARAMETER_CONST(bin_id);
 #endif
 
                         res = ss_data_compare(&ev_data, &ev_data_bin);
@@ -222,9 +210,9 @@ PROC_EXEC_PROTO(c_frequency)
 
 /* For k<=n, as factorials, nCk = (n k) = n!/((n-k)!*k!) */
 
-static void
+extern void
 binomial_coefficient_calc(
-    _OutRef_    P_EV_DATA p_ev_data_out,
+    _OutRef_    P_EV_DATA p_ev_data_out, /* may return integer or fp or error */
     _InVal_     S32 n,
     _InVal_     S32 k)
 {
@@ -250,13 +238,13 @@ binomial_coefficient_calc(
         p_ev_data_out->did_num = RPN_DAT_WORD32;
 
         /* function will go to fp as necessary */
-        product_between_calc(p_ev_data_out, (n - k) + 1, n);
+        product_between_calc(p_ev_data_out, (n - k) + 1, n); /* may return integer or fp */
 
         /* calculate divisor in same format as dividend (either still WORD32 or REAL)
          * NB divisor is always smaller than dividend so this is OK
          */
         ev_data_divisor.did_num = p_ev_data_out->did_num;
-        product_between_calc(&ev_data_divisor, 1, k);
+        product_between_calc(&ev_data_divisor, 1, k); /* may return integer or fp */
         assert(ev_data_divisor.did_num == p_ev_data_out->did_num);
 
         if(RPN_DAT_REAL == p_ev_data_out->did_num)
@@ -299,7 +287,7 @@ PROC_EXEC_PROTO(c_combin)
 
     exec_func_ignore_parms();
 
-    binomial_coefficient_calc(p_ev_data_res, n, k);
+    binomial_coefficient_calc(p_ev_data_res, n, k); /* may return integer or fp or error */
 }
 
 /******************************************************************************
@@ -393,7 +381,7 @@ PROC_EXEC_PROTO(c_listcount)
         status_assert(ss_data_resource_copy(&ev_data_temp_array, args[0]));
         data_ensure_constant(&ev_data_temp_array);
 
-        if(RPN_DAT_ERROR == ev_data_temp_array.did_num)
+        if(ev_data_is_error(&ev_data_temp_array))
         {
             ss_data_free_resources(p_ev_data_res);
             *p_ev_data_res = ev_data_temp_array;
@@ -416,10 +404,15 @@ PROC_EXEC_PROTO(c_listcount)
             while(status_ok(status))
             {
                 EV_DATA ev_data_t;
+                S32 res;
 
                 (void) array_range_index(&ev_data_t, &ev_data_temp_array, 0, iy, EM_CONST);
 
-                if(ss_data_compare(&ev_data, &ev_data_t))
+                res = ss_data_compare(&ev_data, &ev_data_t);
+
+                ss_data_free_resources(&ev_data_t);
+
+                if(0 != res)
                 {
                     if(status_ok(status = ss_array_element_make(p_ev_data_res, 1, n_unique)))
                     {
@@ -441,80 +434,11 @@ PROC_EXEC_PROTO(c_listcount)
                 else
                     count += 1.0;
 
-                iy += 1;
-                ss_data_free_resources(&ev_data_t);
+                ++iy;
             }
 
             ss_data_free_resources(&ev_data);
         }
-
-        break;
-        /*NOTREACHED*/
-    }
-
-    ss_data_free_resources(&ev_data_temp_array);
-
-    if(status_fail(status))
-    {
-        ss_data_free_resources(p_ev_data_res);
-        ev_data_set_error(p_ev_data_res, status);
-    }
-}
-
-/******************************************************************************
-*
-* NUMBER median(array)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_median)
-{
-    STATUS status = STATUS_OK;
-    EV_DATA ev_data_temp_array;
-
-    exec_func_ignore_parms();
-
-    ev_data_set_blank(&ev_data_temp_array);
-
-    for(;;)
-    {
-        S32 x_size, y_size;
-        S32 y_half;
-        F64 median;
-
-        /* find median by sorting a copy of the source */
-        status_assert(ss_data_resource_copy(&ev_data_temp_array, args[0]));
-        data_ensure_constant(&ev_data_temp_array);
-
-        if(ev_data_temp_array.did_num == RPN_DAT_ERROR)
-        {
-            ss_data_free_resources(p_ev_data_res);
-            *p_ev_data_res = ev_data_temp_array;
-            return;
-        }
-
-        ss_data_array_flatten(&ev_data_temp_array); /* SKS 04jun96 - flatten so we can median() on horizontal and rectangular ranges */
-
-        status_break(status = array_sort(&ev_data_temp_array, 0));
-
-        array_range_sizes(&ev_data_temp_array, &x_size, &y_size);
-        y_half = y_size / 2;
-
-        {
-        EV_DATA ev_data;
-        (void) array_range_index(&ev_data, &ev_data_temp_array, 0, y_half, EM_REA);
-        median = ev_data.arg.fp;
-        } /*block*/
-
-        if(0 == (y_size & 1))
-        {
-            /* if there are an even number of elements, the median is the mean of the two middle ones */
-            EV_DATA ev_data;
-            (void) array_range_index(&ev_data, &ev_data_temp_array, 0, y_half - 1, EM_REA);
-            median = (median + ev_data.arg.fp) / 2.0;
-        }
-
-        ev_data_set_real_ti(p_ev_data_res, median);
 
         break;
         /*NOTREACHED*/
@@ -543,7 +467,7 @@ PROC_EXEC_PROTO(c_median)
 
 static void
 permut_calc(
-    _OutRef_    P_EV_DATA p_ev_data_out,
+    _OutRef_    P_EV_DATA p_ev_data_out, /* may return integer or fp or error */
     _InVal_     S32 n,
     _InVal_     S32 k)
 {
@@ -567,7 +491,7 @@ permut_calc(
         p_ev_data_out->did_num = RPN_DAT_WORD32;
 
         /* function will go to fp as necessary */
-        product_between_calc(p_ev_data_out, (n - k) + 1, n);
+        product_between_calc(p_ev_data_out, (n - k) + 1, n); /* may return integer or fp */
 
         if(RPN_DAT_WORD32 == p_ev_data_out->did_num)
             p_ev_data_out->did_num = ev_integer_size(p_ev_data_out->arg.integer);
@@ -602,7 +526,7 @@ PROC_EXEC_PROTO(c_permut)
 
     exec_func_ignore_parms();
 
-    permut_calc(p_ev_data_res, n, k);
+    permut_calc(p_ev_data_res, n, k); /* may return integer or fp or error */
 }
 
 /******************************************************************************
@@ -676,8 +600,8 @@ PROC_EXEC_PROTO(c_rank)
                         equal += 1;
                     else if(res < 0)
                         position += 1;
-                     /* else */
-                         /* found a larger value - we can't stop as array_data must be assumed to be unsorted */
+                    /* else */
+                        /* found a larger value - we can't stop as array_data must be assumed to be unsorted */
                 }
             }
 

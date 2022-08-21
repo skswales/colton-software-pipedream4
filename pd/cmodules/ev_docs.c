@@ -1158,7 +1158,7 @@ ev_write_docname(
     strcpy(out_str + len, nam_str);
     len += strlen(nam_str);
     out_str[len++] = ']';
-    out_str[len] = '\0';
+    out_str[len] = CH_NULL;
 
     return(len);
 }
@@ -1242,7 +1242,7 @@ name_make_wholename(
     _InVal_     U32 elemof_buffer)
 {
     assert(0 != elemof_buffer);
-    buffer[0] = '\0';
+    buffer[0] = CH_NULL;
 
     if(NULL != p_docu_name->path_name)
         xstrkpy(buffer, elemof_buffer, p_docu_name->path_name);
