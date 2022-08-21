@@ -1,0 +1,27 @@
+| MakeRiscPkg for PipeDream-Manuals
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 1991-1998 Colton Software Limited
+| Copyright (C) 1998-2014 R W Colton
+
+IfThere $.Temp Then Else %CDir $.Temp
+
+Set pd$Disc $.Temp.PDManuals_20140215
+| Remember to update RiscPkg.Control too
+
+X %Wipe <pd$Disc> ~cfr~v
+
+svn export <Obey$Dir> <pd$Disc>
+
+settype <pd$Disc>.Apps.Manuals.PipeDream.RefGuide.index/html FAF
+
+settype <pd$Disc>.Apps.Manuals.PipeDream.Tutorial.index/html FAF
+
+| The one in RiscPkg is the useful one for the packaged docs
+delete <pd$Disc>.LICENSE
+delete <pd$Disc>.Make_TS
+
+Filer_OpenDir <pd$Disc>

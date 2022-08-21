@@ -38,15 +38,15 @@ dialog_title_make(
 {
     P_SS_DOC p_ss_doc;
 
-    void_strkpy(buffer, elemof_buffer, string);
+    safe_strkpy(buffer, elemof_buffer, string);
 
     if(NULL != (p_ss_doc = ev_p_ss_doc_from_docno(docno)))
         {
-        void_strkat(buffer, elemof_buffer, ": [");
+        safe_strkat(buffer, elemof_buffer, ": [");
 
-        void_strkat(buffer, elemof_buffer, p_ss_doc->docu_name.leaf_name);
+        safe_strkat(buffer, elemof_buffer, p_ss_doc->docu_name.leaf_name);
 
-        void_strkat(buffer, elemof_buffer, "]");
+        safe_strkat(buffer, elemof_buffer, "]");
         }
 }
 
@@ -177,9 +177,11 @@ ev_external_string(
         return(-1);
         }
 
-    expand_slot(slrp->docno, p_slot, (ROW) slrp->row, tbuf, elemof32(tbuf), TRUE, FALSE, TRUE, TRUE);
+    (void) expand_slot(slrp->docno, p_slot, (ROW) slrp->row, tbuf, elemof32(tbuf) /*fwidth*/,
+                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                       FALSE /*allow_fonty_result*/, TRUE /*cff*/);
 
-    void_strkpy(buffer, elemof_buffer, tbuf);
+    safe_strkpy(buffer, elemof_buffer, tbuf); /* plain non-fonty string */
 
     *outpp = buffer;
 
@@ -222,7 +224,8 @@ ev_ext_uref(
 
             assert(NULL != tslot);
 
-            text_slr_uref(tslot->content.text + byoffset, upp);
+            /*eportf("ex_ext_uref: text_csr_uref byoffset %d", byoffset);*/
+            (void) text_csr_uref(tslot->content.text + byoffset, upp);
 
             break;
             }
@@ -312,7 +315,7 @@ ev_make_slot(
     if(tracing(TRACE_MODULE_EVAL))
         {
         char buffer[BUF_EV_LONGNAMLEN];
-        ev_trace_slr(buffer, elemof32(buffer), "ev_make_slot $$\n", slrp);
+        ev_trace_slr(buffer, elemof32(buffer), "ev_make_slot $$", slrp);
         trace_0(TRACE_MODULE_EVAL, buffer);
         }
 #endif
@@ -537,7 +540,7 @@ ev_travel(
     if(tracing(TRACE_MODULE_EVAL))
         {
         char buffer[BUF_EV_LONGNAMLEN];
-        ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$\n", p_ev_slr);
+        ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$", p_ev_slr);
         trace_0(TRACE_MODULE_EVAL, buffer);
         }
 #endif
@@ -564,7 +567,7 @@ ev_travel(
     if(tracing(TRACE_MODULE_EVAL))
         {
         char buffer[BUF_EV_LONGNAMLEN];
-        ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$\n", p_ev_slr);
+        ev_trace_slr(buffer, elemof32(buffer), "ev_travel $$", p_ev_slr);
         trace_0(TRACE_MODULE_EVAL, buffer);
         }
 #endif

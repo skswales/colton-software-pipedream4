@@ -316,7 +316,7 @@ fontlist_enumerate(
             U32 weight_offset;
             fontlist_node * weight;
 
-            void_strkpy(szFontName, elemof32(szFontName), typeface->name);
+            safe_strkpy(szFontName, elemof32(szFontName), typeface->name);
 
             weight_offset = strlen(szFontName);
 
@@ -336,8 +336,8 @@ fontlist_enumerate(
                     U32 style_offset;
                     fontlist_node * style;
 
-                    void_strkpy(szFontName + weight_offset, elemof32(szFontName) - weight_offset, ".");
-                    void_strkat(szFontName + weight_offset, elemof32(szFontName) - weight_offset, weight->name);
+                    safe_strkpy(szFontName + weight_offset, elemof32(szFontName) - weight_offset, ".");
+                    safe_strkat(szFontName + weight_offset, elemof32(szFontName) - weight_offset, weight->name);
 
                     style_offset = strlen(szFontName);
 
@@ -350,8 +350,8 @@ fontlist_enumerate(
 
                     if(style)
                         do  {
-                            void_strkpy(szFontName + style_offset, elemof32(szFontName) - style_offset, ".");
-                            void_strkat(szFontName + style_offset, elemof32(szFontName) - style_offset, style->name);
+                            safe_strkpy(szFontName + style_offset, elemof32(szFontName) - style_offset, ".");
+                            safe_strkat(szFontName + style_offset, elemof32(szFontName) - style_offset, style->name);
 
                             (* enumproc) (enumhandle, szFontName, ++seqno);
 

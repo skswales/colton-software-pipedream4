@@ -253,7 +253,7 @@ pause(void)
     BOOL tprnbit;
     S32 res;
 
-    trace_0(TRACE_APP_PD4, "pause()\n");
+    trace_0(TRACE_APP_PD4, "pause()");
 
     if(ctrlflag  ||  escape_pressed)
         {
@@ -426,7 +426,8 @@ print_document_core_core(
 
             if(macrofile)
                 {
-                if((printing_macro_buffer = list_allocptr(MACROFILE_BUFSIZ)) != NULL)
+                STATUS status;
+                if(NULL != (printing_macro_buffer = al_ptr_alloc_bytes(char, MACROFILE_BUFSIZ, &status)))
                     file_buffer(macrofile, printing_macro_buffer, MACROFILE_BUFSIZ);
                 }
             else
@@ -464,7 +465,7 @@ print_document_core_core(
                 file_seek(macrofile, 0, SEEK_SET);
 
             sqobit = TRUE;
-            trace_0(TRACE_APP_PD4, "had_top := FALSE\n");
+            trace_0(TRACE_APP_PD4, "had_top := FALSE");
             had_top = FALSE;
 
             res = prnon();
@@ -500,7 +501,7 @@ print_document_core_core(
     if(macrofile)
         {
         pd_file_close(&macrofile);
-        list_disposeptr((void **) &macro_buffer);
+        al_ptr_dispose(P_P_ANY_PEDANTIC(&macro_buffer));
         }
 
     return(res);
@@ -588,7 +589,7 @@ print_document_core(
         /* it's going to printer */
         default:
             {
-            trace_1(TRACE_APP_PD4, "outputting to driver type %d\n", d_driver_PT);
+            trace_1(TRACE_APP_PD4, "outputting to driver type %d", d_driver_PT);
 
             switch(d_driver_PT)
                 {
@@ -806,7 +807,7 @@ print_document_core(
                 }
             }
 
-        trace_0(TRACE_APP_PD4, "closing printer_output\n");
+        trace_0(TRACE_APP_PD4, "closing printer_output");
         pd_file_close(&printer_output);
 
         escape_disable();
@@ -923,7 +924,7 @@ extern void
 mspace(
     S32 n)
 {
-    trace_1(TRACE_APP_PD4, "mspace(%d)\n", n);
+    trace_1(TRACE_APP_PD4, "mspace(%d)", n);
 
     if(riscos_printing)
         {
@@ -952,12 +953,12 @@ getfpn(void)
     if(encpln == 0)
         {
         curpnm = 0;
-        trace_1(TRACE_APP_PD4, "getfpn: curpnm := %d (encpln == 0)\n", curpnm);
+        trace_1(TRACE_APP_PD4, "getfpn: curpnm := %d (encpln == 0)", curpnm);
         }
     else if(reset_pnm)
         {
         curpnm = filpnm;
-        trace_1(TRACE_APP_PD4, "[getfpn: curpnm := %d (filpnm)]\n", curpnm);
+        trace_1(TRACE_APP_PD4, "[getfpn: curpnm := %d (filpnm)]", curpnm);
         }
 
     reset_pnm = FALSE;
@@ -969,7 +970,7 @@ static void
 drop_n_lines(
     S32 nlines)
 {
-    trace_1(TRACE_APP_PD4, "drop_n_lines(%d)\n", nlines);
+    trace_1(TRACE_APP_PD4, "drop_n_lines(%d)", nlines);
 
     if(nlines > 0)
         {
@@ -977,7 +978,7 @@ drop_n_lines(
             {
             /* drop baseline n lines */
             riscos_font_yad -= nlines * global_font_leading_mp;
-            trace_3(TRACE_APP_PD4, "riscos_font_yad = %d (mp) after dropping %d line%s\n",
+            trace_3(TRACE_APP_PD4, "riscos_font_yad = %d (mp) after dropping %d line%s",
                     riscos_font_yad, nlines, (nlines == 1) ? "" : "s");
             return;
             }
@@ -993,7 +994,7 @@ left_margin_width(void)
 
     nspaces = d_poptions_LM + ((left_page) ? 0 : two_sided_margin);
 
-    trace_1(TRACE_APP_PD4, "left_margin_width() gives %d spaces\n", nspaces);
+    trace_1(TRACE_APP_PD4, "left_margin_width() gives %d spaces", nspaces);
 
     return(nspaces);
 }
@@ -1028,7 +1029,7 @@ prchef(
 {
     char array[PAINT_STRSIZ];
 
-    trace_2(TRACE_APP_PD4, "prchef(%s), page number = %d\n", trace_string(field), curpnm);
+    trace_2(TRACE_APP_PD4, "prchef(%s), page number = %d", trace_string(field), curpnm);
 
     /* SKS after 4.12 21apr92 - must test header/footer even on page 0 */
     if(str_isblank(field))
@@ -1053,7 +1054,9 @@ prchef(
             }
 
         /* expand the lcr field and send it off */
-        expand_lcr(field, -1, array, header_footer_width, TRUE, TRUE, TRUE, TRUE);
+        expand_lcr(field, -1, array, header_footer_width,
+                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                   riscos_fonts /*allow_fonty_result*/, TRUE /*compile_lcr*/);
 
         lcrjust(array, header_footer_width, left_page);
         }
@@ -1176,11 +1179,11 @@ print_grid_lines(void)
 static BOOL
 topejc(void)
 {
-    trace_0(TRACE_APP_PD4, "topejc()\n");
+    trace_0(TRACE_APP_PD4, "topejc()");
 
     getfpn();
 
-    trace_0(TRACE_APP_PD4, "had_top := TRUE\n");
+    trace_0(TRACE_APP_PD4, "had_top := TRUE");
     had_top = TRUE;
 
     /* output top margin */
@@ -1216,7 +1219,7 @@ static BOOL
 outff(
     BOOL do_something)
 {
-    trace_1(TRACE_APP_PD4, "outff(%s)\n", trace_boolstring(do_something));
+    trace_1(TRACE_APP_PD4, "outff(%s)", trace_boolstring(do_something));
 
     if(riscos_printing)
         return(TRUE);
@@ -1250,9 +1253,9 @@ outff(
 static void
 botejc(void)
 {
-    trace_0(TRACE_APP_PD4, "botejc()\n");
+    trace_0(TRACE_APP_PD4, "botejc()");
 
-    trace_0(TRACE_APP_PD4, "had_top := FALSE\n");
+    trace_0(TRACE_APP_PD4, "had_top := FALSE");
     had_top = FALSE;
 
     /* if there are no footers and end of page string contains a FORMFEED,
@@ -1297,7 +1300,7 @@ botejc(void)
 static BOOL
 pagejc(void)
 {
-    trace_0(TRACE_APP_PD4, "pagejc()\n");
+    trace_0(TRACE_APP_PD4, "pagejc()");
 
     if(!encpln)
         return(TRUE);
@@ -1309,7 +1312,7 @@ pagejc(void)
             return(FALSE);
         getfpn();
         curpnm++;
-        trace_1(TRACE_APP_PD4, "pagejc: ++curpnm := %d\n", curpnm);
+        trace_1(TRACE_APP_PD4, "pagejc: ++curpnm := %d", curpnm);
         return(TRUE);
         }
 
@@ -1331,7 +1334,7 @@ macrocall(void)
     S32 key = 0;
     S32 mres;
 
-    trace_0(TRACE_APP_PD4, "macrocall()\n");
+    trace_0(TRACE_APP_PD4, "macrocall()");
 
     if(!macrofile)
         return(0);
@@ -1351,11 +1354,7 @@ macrocall(void)
             case CR:
             case TAB:
                 if(!str_isblank(buffer))
-                    {
-                    mres = add_to_list(&first_macro, key, buffer, NULL);
-                    if(mres <= 0)
-                        return(mres ? mres : status_nomem());
-                    }
+                    status_return(mres = add_to_list(&first_macro, key, buffer));
                 /* omit blank fields ? */
                 else if(d_print_QO == 'Y')
                     --key;
@@ -1381,7 +1380,7 @@ init_print_selection(void)
 {
     S32 page_width;
 
-    trace_0(TRACE_APP_PD4, "*** init_print_selection\n");
+    trace_0(TRACE_APP_PD4, "*** init_print_selection");
 
     /* use marked block? */
     if(block_option)
@@ -1402,10 +1401,10 @@ init_print_selection(void)
         printing_last.row  = numrow - 1;
         }
 
-    trace_4(TRACE_APP_PD4, "init_print_selection srow: %d, erow: %d, scol %d, ecol %d\n",
+    trace_4(TRACE_APP_PD4, "init_print_selection srow: %d, erow: %d, scol %d, ecol %d",
             printing_first.row, printing_last.row, printing_first.col, printing_last.col);
 
-    trace_0(TRACE_APP_PD4, "init_print_selection checking last.col\n");
+    trace_0(TRACE_APP_PD4, "init_print_selection checking last.col");
 
     /* find length of headers, footers */
     header_footer_width = header_footer_length(printing_first.col, printing_last.col + 1);
@@ -1416,9 +1415,9 @@ init_print_selection(void)
     if(page_width)
         header_footer_width = MIN(header_footer_width, page_width);
 
-    trace_1(TRACE_APP_PD4, "init_print_selection header_footer_width: %d\n", header_footer_width);
+    trace_1(TRACE_APP_PD4, "init_print_selection header_footer_width: %d", header_footer_width);
 
-    trace_0(TRACE_APP_PD4, "init_print_selection initing block\n");
+    trace_0(TRACE_APP_PD4, "init_print_selection initing block");
     init_block(&printing_first, &printing_last);
 }
 
@@ -1443,7 +1442,7 @@ print_page(void)
         P_SLOT tslot;
         coord fwidth, colwid, page_width;
 
-        trace_0(TRACE_APP_PD4, "print_page loop\n");
+        trace_0(TRACE_APP_PD4, "print_page loop");
 
         /* SKS after 4.11 06jan92 - see below */
         page_width = page_width_query();
@@ -1451,7 +1450,7 @@ print_page(void)
         /* for each slot in file or block */
         while(next_in_block(ACROSS_ROWS))
             {
-            trace_2(TRACE_APP_PD4, "print_page loop... col %d, row %d\n", in_block.col, in_block.row);
+            trace_2(TRACE_APP_PD4, "print_page loop... col %d, row %d", in_block.col, in_block.row);
 
             /* see if user wants to stop */
             if(ctrlflag  ||  escape_pressed)
@@ -1471,7 +1470,7 @@ print_page(void)
                     if( (in_block.row > 0)  &&  (pagcnt != enclns)  &&
                         chkpbs(in_block.row, pagcnt))
                         {
-                        trace_0(TRACE_APP_PD4, "found active hard break line\n");
+                        trace_0(TRACE_APP_PD4, "found active hard break line");
 
                         /* this code does not cater, like does VP, for
                          * hard/soft combinations and file boundaries
@@ -1487,7 +1486,7 @@ print_page(void)
                     #if TRACE_ALLOWED
                     else
                         {
-                        trace_0(TRACE_APP_PD4, "found inactive hard break line\n");
+                        trace_0(TRACE_APP_PD4, "found inactive hard break line");
                         }
                     #endif
 
@@ -1553,7 +1552,7 @@ print_page(void)
                         draw_find_file(current_docno(), in_block.col, in_block.row, &p_draw_diag, &dfrp))
                         {
                         /* pictures fill line, not just down from baseline */
-                        trace_2(TRACE_APP_PD4, "found picture at %d, %d\n", in_block.col, in_block.row);
+                        trace_2(TRACE_APP_PD4, "found picture at %d, %d", in_block.col, in_block.row);
 
                         /* origin of draw file at x0, y1 */
                         x = riscos_font_xad / MILLIPOINTS_PER_OS;
@@ -1570,7 +1569,7 @@ print_page(void)
                         }
                     else
                         {
-                        trace_2(TRACE_APP_PD4, "printing slot %d, %d\n", in_block.col, in_block.row);
+                        trace_2(TRACE_APP_PD4, "printing slot %d, %d", in_block.col, in_block.row);
 
                         if((fwidth > colwid)  &&  !slot_displays_contents(tslot))
                             fwidth = colwid;
@@ -1647,7 +1646,7 @@ print_page(void)
                 }
             }
 
-        trace_0(TRACE_APP_PD4, "complete current page\n");
+        trace_0(TRACE_APP_PD4, "complete current page");
 
         /* do bottom of page */
         if(had_top  &&  !pagejc())
@@ -1699,7 +1698,7 @@ save_print_state(void)
         first_macro = NULL;
         }
     riscos_print_save.saved_had_top     = had_top;
-    trace_1(TRACE_APP_PD4, "saved had_top %s\n", trace_boolstring(had_top));
+    trace_1(TRACE_APP_PD4, "saved had_top %s", trace_boolstring(had_top));
 }
 
 static S32
@@ -1720,7 +1719,7 @@ restore_saved_print_state(void)
         res = duplicate_list(&first_macro, &riscos_print_save.saved_macrolist);
         }
     had_top             = riscos_print_save.saved_had_top;
-    trace_1(TRACE_APP_PD4, "restored had_top := %s\n", trace_boolstring(had_top));
+    trace_1(TRACE_APP_PD4, "restored had_top := %s", trace_boolstring(had_top));
 
     return(res);
 }
@@ -1738,14 +1737,14 @@ static S32 riscos_res;
 static void
 application_printpage(void)
 {
-    trace_0(TRACE_APP_PD4, "application_printpage()\n");
+    trace_0(TRACE_APP_PD4, "application_printpage()");
 
     riscos_res = restore_saved_print_state();
 
     if(riscos_res > 0)
         riscos_res = print_page();
 
-    trace_1(TRACE_APP_PD4, "application_printpage got result %d\n", riscos_res);
+    trace_1(TRACE_APP_PD4, "application_printpage got result %d", riscos_res);
 }
 
 /******************************************************************************
@@ -1765,7 +1764,7 @@ printx(void)
     /* do a print of all files for each macro call */
     while(macrocall()  ||  firstmacro)
         {
-        trace_0(TRACE_APP_PD4, "in printx macrocall loop...\n");
+        trace_0(TRACE_APP_PD4, "in printx macrocall loop...");
 
         firstmacro = FALSE;
 
@@ -1782,12 +1781,12 @@ printx(void)
         /* initialise block, column range, row selection */
         init_print_selection();
 
-        trace_0(TRACE_APP_PD4, "printx done init\n");
+        trace_0(TRACE_APP_PD4, "printx done init");
 
         /* keep printing pages until this macro call complete */
         for(;;)
             {
-            trace_0(TRACE_APP_PD4, "printx about to call getfpn\n");
+            trace_0(TRACE_APP_PD4, "printx about to call getfpn");
             getfpn();
 
             /* does the user want wait between sheets etc. ? */
@@ -1874,7 +1873,7 @@ printx(void)
             if(escape_disable())
                 res = create_error(ERR_ESCAPE);
 
-            trace_1(TRACE_APP_PD4, "print_page returns %d\n", res);
+            trace_1(TRACE_APP_PD4, "print_page returns %d", res);
 
             switch(res)
                 {
@@ -1890,7 +1889,7 @@ printx(void)
                     break;
                 }
 
-            trace_0(TRACE_APP_PD4, "this macro call finished\n");
+            trace_0(TRACE_APP_PD4, "this macro call finished");
             break;
             }
 
@@ -1960,7 +1959,7 @@ out_one_ch(
 
     riscos_printing_abort("out_one_ch");
 
-    trace_1(TRACE_APP_PD4, "out_one_ch: %x\n", ch);
+    trace_1(TRACE_APP_PD4, "out_one_ch: %x", ch);
 
     /* try for character substitution */
     lptr = search_list(&highlight_list, (S32) ch);
@@ -2047,7 +2046,7 @@ riscos_drvon(void)
 {
     BOOL ok;
 
-    trace_0(TRACE_APP_PD4, "riscos_drvon()\n");
+    trace_0(TRACE_APP_PD4, "riscos_drvon()");
 
     /* only turn on right at start */
     if(out_h_on)
@@ -2061,7 +2060,7 @@ riscos_drvon(void)
         }
 
     /* always resume */
-    trace_0(TRACE_APP_PD4, "riscos_drvon: resuming print\n");
+    trace_0(TRACE_APP_PD4, "riscos_drvon: resuming print");
     ok = riscprint_resume();
     return(ok ? ok : create_error(ERR_GENFAIL));
 }
@@ -2072,10 +2071,10 @@ riscos_drvoff(
 {
     BOOL ok1;
 
-    trace_0(TRACE_APP_PD4, "riscos_drvoff()\n");
+    trace_0(TRACE_APP_PD4, "riscos_drvoff()");
 
     /* always suspend */
-    trace_0(TRACE_APP_PD4, "riscos_drvoff: suspending print\n");
+    trace_0(TRACE_APP_PD4, "riscos_drvoff: suspending print");
     ok1 = riscprint_suspend();
 
     if(ok)
@@ -2098,14 +2097,14 @@ riscos_drvout(
 {
     BOOL res = TRUE;
 
-    trace_2(TRACE_APP_PD4, "riscos_drvout(%d ('%c'))\n", ch, ch ? ch : '0');
+    trace_2(TRACE_APP_PD4, "riscos_drvout(%d ('%c'))", ch, ch ? ch : '0');
 
     switch(ch)
         {
         case CR:
             /* drop baseline one line; doesn't reposition xad */
             riscos_font_yad -= global_font_leading_mp;
-            trace_1(TRACE_APP_PD4, "riscos_font_yad = %d (mp) due to CR\n", riscos_font_yad);
+            trace_1(TRACE_APP_PD4, "riscos_font_yad = %d (mp) due to CR", riscos_font_yad);
             break;
 
         case EOS:
@@ -2131,7 +2130,7 @@ drvon(void)
 {
     riscos_printing_abort("drvon");
 
-    trace_0(TRACE_APP_PD4, "drvon()\n");
+    trace_0(TRACE_APP_PD4, "drvon()");
 
     escape_enable();
 
@@ -2410,11 +2409,11 @@ prnout(
     S32 nspaces;
     BOOL (* out) (_InVal_ U8 ch);
 
-    trace_2(TRACE_APP_PD4, "prnout(%d ('%c'))\n", ch, ch ? ch : '0');
+    trace_2(TRACE_APP_PD4, "prnout(%d ('%c'))", ch, ch ? ch : '0');
 
     if((ch == SPACE)  &&  !microspacing)
         {
-        trace_0(TRACE_APP_PD4, "absorbing space\n");
+        trace_0(TRACE_APP_PD4, "absorbing space");
         ++prnspc;
         return(TRUE);
         }
@@ -2431,7 +2430,7 @@ prnout(
         if(ch != CR)
             do { (* out) (SPACE); } while(--nspaces > 0);
         else
-            trace_1(TRACE_APP_PD4, "discarding %d trailing spaces at eol\n", nspaces);
+            trace_1(TRACE_APP_PD4, "discarding %d trailing spaces at eol", nspaces);
         }
 
     /* output character via driver */
@@ -2476,7 +2475,7 @@ extern void
 prnoff(
     BOOL ok)
 {
-    trace_0(TRACE_APP_PD4, "prnoff()\n");
+    trace_0(TRACE_APP_PD4, "prnoff()");
 
     if(!prnbit  &&  !out_h_off)
         return;
@@ -2537,7 +2536,7 @@ static void
 prncan(
     BOOL ok)
 {
-    trace_1(TRACE_APP_PD4, "prncan(%s)\n", trace_boolstring(ok));
+    trace_1(TRACE_APP_PD4, "prncan(%s)", trace_boolstring(ok));
 
     actind_end();
 
@@ -2713,7 +2712,7 @@ PrinterConfig_fn(void)
     if(!dialog_box_start())
         return;
 
-    enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED);
+    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
 
     while(dialog_box(D_DRIVER))
         {
@@ -2746,7 +2745,7 @@ EditPrinterDriver_fn(void)
     if(!mystr_set(&d_edit_driver[0].textfield, d_driver_PD))
         return;
 
-    enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED);
+    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, PDRIVERS_SUBDIR_STR, FILETYPE_UNDETERMINED));
 
     while(dialog_box(D_EDIT_DRIVER))
         {

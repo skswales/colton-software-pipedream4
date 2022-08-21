@@ -59,63 +59,8 @@ push_screen_down_one_line(void);
 static void
 push_screen_up_one_line(void);
 
-/* returns a pointer to horzvec */
-
-extern SCRCOL *
-horzvec(void)
-{
-    return(list_getptr(horzvec_mh));
-}
-
-extern SCRCOL *
-horzvec_entry(
-    coord coff)
-{
-    return((SCRCOL *) list_getptr(horzvec_mh) + coff);
-}
-
-/* returns the col number corresponding to a horzvec index */
-
-extern COL
-col_number(
-    coord coff)
-{
-    return(horzvec_entry(coff)->colno);
-}
-
-/* returns a pointer to vertvec */
-
-extern SCRROW *
-vertvec(void)
-{
-    return(list_getptr(vertvec_mh));
-}
-
-extern SCRROW *
-vertvec_entry(
-    coord roff)
-{
-    return((SCRROW *) list_getptr(vertvec_mh) + roff);
-}
-
-extern uchar
-vertvec_entry_flags(
-    coord roff);
-extern uchar
-vertvec_entry_flags(
-    coord roff)
-{
-    return(vertvec_entry(roff)->flags);
-}
-
-/* returns the row number corresponding to a vertvec index */
-
-extern ROW
-row_number(
-    coord roff)
-{
-    return(vertvec_entry(roff)->rowno);
-}
+#define vertvec_entry_flags(roff) \
+    vertvec_entry(roff)->flags
 
 extern void
 chknlr(
@@ -195,8 +140,8 @@ CentreWindow_fn(void)
 extern void
 ScrollUp_fn(void)
 {
-    SCRROW * rptr;
-    ROW     trow = currow;
+    P_SCRROW rptr;
+    ROW trow = currow;
 
     rptr = vertvec();
 
@@ -340,7 +285,7 @@ extern void
 mark_row_border(
     coord rowonscr)
 {
-    trace_2(TRACE_APP_PD4, "mark_row row: %d, offset: %d\n", row_number(rowonscr), rowonscr);
+    trace_2(TRACE_APP_PD4, "mark_row row: %d, offset: %d", row_number(rowonscr), rowonscr);
 
     /* allow multiple calls */
     if( (out_rowborout   &&  (rowonscr == rowborout ))  ||
@@ -360,7 +305,7 @@ extern void
 mark_row(
     coord rowonscr)
 {
-    trace_2(TRACE_APP_PD4, "mark_row row: %d, offset: %d\n", row_number(rowonscr), rowonscr);
+    trace_2(TRACE_APP_PD4, "mark_row row: %d, offset: %d", row_number(rowonscr), rowonscr);
 
     mark_row_border(rowonscr);
 
@@ -408,7 +353,7 @@ mark_row_praps(
         col = oldcol;
         row = row_number(rowonscr);
 
-        trace_4(TRACE_APP_PD4, "mark_row_praps col: %d, row: %d, lescrl %d, OLD_ROW %s\n", col, row, lescrl, trace_boolstring(old_row == OLD_ROW));
+        trace_4(TRACE_APP_PD4, "mark_row_praps col: %d, row: %d, lescrl %d, OLD_ROW %s", col, row, lescrl, trace_boolstring(old_row == OLD_ROW));
 
         if(chkrpb(row))
             break;
@@ -419,12 +364,12 @@ mark_row_praps(
         if(sl  &&  (sl->type != SL_TEXT))
             return;
 
-        trace_0(TRACE_APP_PD4, "mark_row_praps found empty slot/text slot\n");
+        trace_0(TRACE_APP_PD4, "mark_row_praps found empty slot/text slot");
 
         /* check for justification */
         if(sl  &&  ((sl->justify & J_BITS) != J_FREE))
             {
-            trace_0(TRACE_APP_PD4, "slot is justified\n");
+            trace_0(TRACE_APP_PD4, "slot is justified");
             break;
             }
 
@@ -435,13 +380,13 @@ mark_row_praps(
                 {
                 if(old_lescroll)
                     {
-                    trace_0(TRACE_APP_PD4, "old slot had been scrolled\n");
+                    trace_0(TRACE_APP_PD4, "old slot had been scrolled");
                     break;
                     }
 
                 if(grid_on  &&  (old_lecpos > colwidth(col)))
                     {
-                    trace_0(TRACE_APP_PD4, "grid is on and cursor was beyond a grid bar in the field\n");
+                    trace_0(TRACE_APP_PD4, "grid is on and cursor was beyond a grid bar in the field");
                     break;
                     }
                 }
@@ -455,14 +400,14 @@ mark_row_praps(
                 /* if fonts are on, mark and go home */
                 if(riscos_fonts)
                     {
-                    trace_0(TRACE_APP_PD4, "non-zero lecpos and fonts on\n");
+                    trace_0(TRACE_APP_PD4, "non-zero lecpos and fonts on");
                     break;
                     }
                 #endif
 
                 if(grid_on  &&  (lecpos > colwidth(col)))
                     {
-                    trace_0(TRACE_APP_PD4, "grid is on and cursor will be beyond a grid bar in the field\n");
+                    trace_0(TRACE_APP_PD4, "grid is on and cursor will be beyond a grid bar in the field");
                     break;
                     }
 
@@ -473,7 +418,7 @@ mark_row_praps(
 
                 if(lecpos > fwidth)
                     {
-                    trace_0(TRACE_APP_PD4, "new slot will be scrolled\n");
+                    trace_0(TRACE_APP_PD4, "new slot will be scrolled");
                     break;
                     }
                 }
@@ -495,7 +440,7 @@ mark_row_praps(
 
             if(i != col)
                 {
-                trace_0(TRACE_APP_PD4, "blank slot is overlapped by something to the left\n");
+                trace_0(TRACE_APP_PD4, "blank slot is overlapped by something to the left");
                 break;
                 }
             }
@@ -503,18 +448,15 @@ mark_row_praps(
         if(!sl)
             return;
 
-        /* search for text-at chars and highlights and anything nasty */
+        { /* search for text-at chars and highlights and anything nasty */
+        const uchar text_at_char = get_text_at_char();
         for(c = sl->content.text; *c; c++)
-            if( is_text_at_char(*c)  ||
-                #if TRUE
-                (*c == DELETE)  ||  (*c < SPACE))
-                #else
-                ((*c >= FIRST_HIGHLIGHT)  &&  (*c <= LAST_HIGHLIGHT)))
-                #endif
-                    {
-                    trace_0(TRACE_APP_PD4, "slot has highlights\n");
-                    goto mark_and_return;
-                    }
+            if((text_at_char == *c)  ||  (*c == DELETE)  ||  (*c < SPACE))
+                {
+                trace_0(TRACE_APP_PD4, "slot has highlights");
+                goto mark_and_return;
+                }
+        } /*block*/
 
         return;
         }
@@ -522,7 +464,7 @@ mark_row_praps(
 
 mark_and_return:
 
-    trace_0(TRACE_APP_PD4, "mark_row_praps marking slot\n");
+    trace_0(TRACE_APP_PD4, "mark_row_praps marking slot");
     mark_row(rowonscr);
 }
 
@@ -560,7 +502,7 @@ adjpud(
 
     curpnm = pagnum;
 
-    trace_2(TRACE_APP_PD4, "adjpud(%s, %d)\n", trace_boolstring(down), rowno);
+    trace_2(TRACE_APP_PD4, "adjpud(%s, %d)", trace_boolstring(down), rowno);
 
     if(down)
         {
@@ -640,7 +582,7 @@ fixpage(
     S32 amount = (down) ? 1 : -1;
     ROW trow;
 
-    trace_2(TRACE_APP_PD4, "fixpage(%d, %d)\n", o_row, n_row);
+    trace_2(TRACE_APP_PD4, "fixpage(%d, %d)", o_row, n_row);
 
     if(n_row == (ROW) 0)
         {
@@ -653,7 +595,7 @@ fixpage(
         {
         trow = o_row + amount;
 
-        trace_1(TRACE_APP_PD4, "trying trow %d\n", trow);
+        trace_1(TRACE_APP_PD4, "trying trow %d", trow);
 
         /* check hard and soft breaks together */
         if(down  &&  (pagoff == 0)  &&  chkrpb(trow))
@@ -729,7 +671,7 @@ it assumes the cursor is on the top (non-page break) line
 extern void
 push_screen_up_one_line(void)
 {
-    SCRROW *rptr = vertvec();
+    P_SCRROW rptr = vertvec();
     BOOL gone_over_pb;
     ROW trow;
 
@@ -948,8 +890,8 @@ do_up_scroll(void)
 static coord
 calpli(void)
 {
-    SCRROW *rptr = vertvec();
-    SCRROW *last_rptr;
+    P_SCRROW rptr = vertvec();
+    P_SCRROW last_rptr;
     coord res;
 
     if(rptr->flags & FIX)
@@ -1188,7 +1130,7 @@ col_off_right(void)
     while(  (colno < numcol)                            &&
             (incolfixes(colno)  ||  !colwidth(colno))   );
 
-    trace_1(TRACE_APP_PD4, "col_off_right returns %d\n", colno);
+    trace_1(TRACE_APP_PD4, "col_off_right returns %d", colno);
     return(colno);
 }
 
@@ -1203,7 +1145,7 @@ nextcol(void)
 {
     COL tcol;
     COL firstcol;
-    SCRCOL *cptr;
+    P_SCRCOL cptr;
 
     if(!xf_inexpression)        /* RCM thinks lecpos and lescrl will always be zeroed */
         lecpos = lescrl = 0;    /*     when old editor goes                           */
@@ -1263,7 +1205,7 @@ SavePosition_fn(void)
     if(saved_index == SAVE_DEPTH)
         {
         /* lose first stacked position */
-        void_memmove32(&saved_pos[0], &saved_pos[1], sizeof32(SAVPOS) * (SAVE_DEPTH - 2));
+        memmove32(&saved_pos[0], &saved_pos[1], sizeof32(SAVPOS) * (SAVE_DEPTH - 2));
 
         saved_index--;
         }
@@ -1299,7 +1241,7 @@ RestorePosition_fn(void)
     /* errors in POP are tough */
 
     docno = saved_pos[index].ref_docno;
-    trace_1(TRACE_APP_PD4, "POP to docno %d\n", docno);
+    trace_1(TRACE_APP_PD4, "POP to docno %d", docno);
 
     /* has document been deleted since position saved? */
     if(docno == DOCNO_NONE)
@@ -1313,7 +1255,7 @@ RestorePosition_fn(void)
     if(!mergebuf())
         return;
 
-    trace_2(TRACE_APP_PD4, "restoring position to col %d row %d\n",
+    trace_2(TRACE_APP_PD4, "restoring position to col %d row %d",
             saved_pos[index].ref_col, saved_pos[index].ref_row);
 
     chknlr(saved_pos[index].ref_col, saved_pos[index].ref_row);
@@ -1455,7 +1397,7 @@ calroff_click(
     else if(roff > rowsonscreen-1)
         roff = rowsonscreen-1;
 
-    trace_2(TRACE_APP_PD4, "calroff_click(%d) returns %d\n", ty, roff);
+    trace_2(TRACE_APP_PD4, "calroff_click(%d) returns %d", ty, roff);
     return(roff);
 }
 
@@ -1470,8 +1412,8 @@ calcad(
     coord coff)
 {
     coord sofar = borderwidth;
-    SCRCOL *cptr  = horzvec();
-    SCRCOL *there = cptr + coff;
+    P_SCRCOL cptr  = horzvec();
+    P_SCRCOL there = cptr + coff;
 
     while(cptr < there)
         sofar += colwidth(cptr++->colno);
@@ -1489,7 +1431,7 @@ extern coord
 calcoff(
     coord xpos)
 {
-    SCRCOL *cptr;
+    P_SCRCOL cptr;
     coord coff;
     coord sofar;
 
@@ -1518,7 +1460,7 @@ calcoff(
         sofar += colwidth(cptr++->colno);
         }
 
-    trace_2(TRACE_APP_PD4, "calcoff(%d) returns %d\n", xpos, coff);
+    trace_2(TRACE_APP_PD4, "calcoff(%d) returns %d", xpos, coff);
     return(coff);
 }
 
@@ -1533,7 +1475,7 @@ extern coord
 calcoff_click(
     coord xpos)
 {
-    SCRCOL *cptr;
+    P_SCRCOL cptr;
     coord coff;
     coord sofar;
 
@@ -1556,7 +1498,7 @@ calcoff_click(
         sofar += colwidth(cptr++->colno);
         }
 
-    trace_2(TRACE_APP_PD4, "calcoff_click(%d) returns %d\n", xpos, coff);
+    trace_2(TRACE_APP_PD4, "calcoff_click(%d) returns %d", xpos, coff);
     return(coff);
 }
 
@@ -1588,10 +1530,10 @@ extern coord
 schrsc(
     ROW row)
 {
-    SCRROW *i_rptr  = vertvec();
-    SCRROW *rptr    = i_rptr;
+    P_SCRROW i_rptr = vertvec();
+    P_SCRROW rptr = i_rptr;
 
-    trace_1(TRACE_APP_PD4, "schrsc(%d)\n", row);
+    trace_1(TRACE_APP_PD4, "schrsc(%d)", row);
 
     while(!(rptr->flags & LAST))
         {
@@ -1603,7 +1545,7 @@ schrsc(
         rptr++;
         }
 
-    trace_0(TRACE_APP_PD4, "row not found\n");
+    trace_0(TRACE_APP_PD4, "row not found");
     return(NOTFOUND);
 }
 
@@ -1616,8 +1558,8 @@ extern coord
 schcsc(
     COL col)
 {
-    SCRCOL *i_cptr  = horzvec();
-    SCRCOL *cptr    = i_cptr;
+    P_SCRCOL i_cptr = horzvec();
+    P_SCRCOL cptr = i_cptr;
 
     while(!(cptr->flags & LAST))
         {
@@ -1640,9 +1582,8 @@ extern void
 FixColumns_fn(void)
 {
     uchar flags;
-    SCRCOL *cptr, *last_cptr;
-
-    cptr = horzvec();
+    P_SCRCOL cptr = horzvec();
+    P_SCRCOL last_cptr;
 
     if(cptr->flags & FIX)
         {
@@ -1677,7 +1618,7 @@ filhorz(
     S32 scrwidth = (S32) cols_available;
     COL trycol;
     COL o_curcol = curcol;
-    SCRCOL *scol = horzvec();
+    P_SCRCOL scol = horzvec();
     COL first_col_number = scol->colno;
     COL fixed_colno = first_col_number;
     coord o_colsonscreen  = colsonscreen;
@@ -1689,7 +1630,7 @@ filhorz(
     S32 tlength;
     coord vecoffset = 0;
 
-    trace_2(TRACE_APP_PD4, "filhorz: nextcol %d curcolno %d\n", nextcol, currentcolno);
+    trace_2(TRACE_APP_PD4, "filhorz: nextcol %d curcolno %d", nextcol, currentcolno);
 
     out_rebuildhorz = FALSE;
 
@@ -1701,7 +1642,7 @@ filhorz(
 
         scol = horzvec_entry(vecoffset);
 
-        trace_2(TRACE_APP_PD4, "filhorz: vecoffset %d, fixed %s\n", vecoffset, trace_boolstring(fixed));
+        trace_2(TRACE_APP_PD4, "filhorz: vecoffset %d, fixed %s", vecoffset, trace_boolstring(fixed));
 
         if(!fixed)
             do  {
@@ -1765,12 +1706,12 @@ H_FILLED:
     /* how long to draw a horizontal bar - rightmost right margin or column edge */
     hbar_length = MAX(this_colstart, maxwrap);
 
-    trace_2(TRACE_APP_PD4, "filhorz: scrbrc := %d, numcol %d\n", scrbrc, numcol);
-    trace_3(TRACE_APP_PD4, "filhorz: colsonscreen %d != o_colsonscreen %d    %s\n",
+    trace_2(TRACE_APP_PD4, "filhorz: scrbrc := %d, numcol %d", scrbrc, numcol);
+    trace_3(TRACE_APP_PD4, "filhorz: colsonscreen %d != o_colsonscreen %d    %s",
             colsonscreen, o_colsonscreen, trace_boolstring(colsonscreen != o_colsonscreen));
-    trace_3(TRACE_APP_PD4, "filhorz: col_number(0) %d != first_col_number %d %s\n",
+    trace_3(TRACE_APP_PD4, "filhorz: col_number(0) %d != first_col_number %d %s",
             col_number(0), first_col_number, trace_boolstring(col_number(0) != first_col_number));
-    trace_3(TRACE_APP_PD4, "filhorz: o_ncx %d != fstncx() %d                 %s\n",
+    trace_3(TRACE_APP_PD4, "filhorz: o_ncx %d != fstncx() %d                 %s",
             o_ncx, fstncx(), trace_boolstring(o_ncx != fstncx()));
 
     /* if different number of columns, need to redraw */
@@ -1783,10 +1724,8 @@ H_FILLED:
 extern void
 FixRows_fn(void)
 {
-    SCRROW * rptr;
-    uchar    flags;
-
-    rptr = vertvec();
+    P_SCRROW rptr = vertvec();
+    uchar flags;
 
     if(rptr->flags & FIX)
         {
@@ -1828,9 +1767,9 @@ cencol(
     S32 stepback;
     S32 firstcol;
     coord fixwidth = 0;
-    SCRCOL *cptr = horzvec();
+    P_SCRCOL cptr = horzvec();
 
-    trace_1(TRACE_APP_PD4, "cencol(%d)\n", colno);
+    trace_1(TRACE_APP_PD4, "cencol(%d)", colno);
 
     colno = MIN(colno, numcol-1);
 
@@ -1896,7 +1835,7 @@ filvert(
     ROW currentrowno,
     BOOL call_fixpage)
 {
-    SCRROW *rptr;
+    P_SCRROW rptr;
     coord vecoffset;
     coord lines_on_screen = rows_available;
     S32 temp_pagoff;
@@ -1911,7 +1850,7 @@ filvert(
 
     out_forcevertcentre = out_rebuildvert = FALSE;
 
-    trace_3(TRACE_APP_PD4, "************** filvert(%d, %d, %s)\n",
+    trace_3(TRACE_APP_PD4, "************** filvert(%d, %d, %s)",
             nextrow, currentrowno, trace_boolstring(call_fixpage));
 
     if(nextrow < 0)
@@ -1934,7 +1873,7 @@ filvert(
 
         saveflags = rptr->flags & (~FIX & ~LAST & ~PAGE & ~PICT & ~UNDERPICT);
 
-        trace_2(TRACE_APP_PD4, "filvert - rptr " PTR_XTFMT ", %d\n", report_ptr_cast(rptr), vecoffset);
+        trace_2(TRACE_APP_PD4, "filvert - rptr " PTR_XTFMT ", %d", report_ptr_cast(rptr), vecoffset);
 
         if(vecoffset < n_rowfixes)
             {
@@ -1946,7 +1885,7 @@ filvert(
             {
             rptr->flags = LAST;
             rptr->rowno = 0;
-            trace_1(TRACE_APP_PD4, "filvert pict_on_screen is: %d\n", pict_on_screen);
+            trace_1(TRACE_APP_PD4, "filvert pict_on_screen is: %d", pict_on_screen);
             return;
             }
 
@@ -1960,7 +1899,7 @@ filvert(
                 {
                 rptr->flags = LAST;
                 rptr->rowno = 0;
-                trace_1(TRACE_APP_PD4, "filvert pict_on_screen is: %d\n", pict_on_screen);
+                trace_1(TRACE_APP_PD4, "filvert pict_on_screen is: %d", pict_on_screen);
                 return;
                 }
 
@@ -2005,7 +1944,7 @@ filvert(
                     pict_on_currow = TRUE;
                 else
                     {
-                    trace_2(TRACE_APP_PD4, "filvert found draw file row: %d, %d rows\n",
+                    trace_2(TRACE_APP_PD4, "filvert found draw file row: %d, %d rows",
                             nextrow, tsize_y(dfrp->ysize_os));
                     saveflags |= PICT;
                     pictrows = tsize_y(dfrp->ysize_os);
@@ -2061,7 +2000,7 @@ filvert(
 
     vertvec_entry(rowsonscreen)->flags = LAST;
 
-    trace_1(TRACE_APP_PD4, "filvert pict_on_screen is: %d\n", pict_on_screen);
+    trace_1(TRACE_APP_PD4, "filvert pict_on_screen is: %d", pict_on_screen);
 }
 
 /******************************************************************************
@@ -2145,8 +2084,8 @@ chkpac(
 extern COL
 fstncx(void)
 {
-    SCRCOL *i_cptr  = horzvec();
-    SCRCOL *cptr    = i_cptr - 1;
+    P_SCRCOL i_cptr = horzvec();
+    P_SCRCOL cptr = i_cptr - 1;
 
     while(!((++cptr)->flags & LAST))
         if(!(cptr->flags & FIX))
@@ -2166,8 +2105,8 @@ fstncx(void)
 extern ROW
 fstnrx(void)
 {
-    SCRROW *i_rptr  = vertvec();
-    SCRROW *rptr    = i_rptr - 1;
+    P_SCRROW i_rptr = vertvec();
+    P_SCRROW rptr = i_rptr - 1;
 
     while(!((++rptr)->flags & LAST))
         if(!(rptr->flags & (FIX | PAGE)))
@@ -2348,11 +2287,11 @@ chkmov(void)
     coord coff;
     coord roff, troff;
 
-    trace_4(TRACE_APP_PD4, "chkmov(): newcol %d newrow %d oldcol %d oldrow %d\n", newcol, newrow, oldcol, oldrow);
+    trace_4(TRACE_APP_PD4, "chkmov(): newcol %d newrow %d oldcol %d oldrow %d", newcol, newrow, oldcol, oldrow);
 
     if(!colwidth(newcol))
         {
-        trace_1(TRACE_APP_PD4, "chkmov: colwidth(%d) == 0 --- silly!\n", newcol);
+        trace_1(TRACE_APP_PD4, "chkmov: colwidth(%d) == 0 --- silly!", newcol);
 
         /* find somewhere to go then! */
         tcol = newcol;
@@ -2362,13 +2301,13 @@ chkmov(void)
 
         if(tcol == -1)
             {
-            trace_0(TRACE_APP_PD4, "chkmov: fell off left; try marching right\n");
+            trace_0(TRACE_APP_PD4, "chkmov: fell off left; try marching right");
             tcol = newcol;
             while((tcol < numcol)  &&  !colwidth(tcol))
                 ++tcol;
             }
 
-        trace_2(TRACE_APP_PD4, "chkmov: colwidth(%d) == 0; setting newcol %d\n", newcol, (tcol != numcol) ? tcol : curcol);
+        trace_2(TRACE_APP_PD4, "chkmov: colwidth(%d) == 0; setting newcol %d", newcol, (tcol != numcol) ? tcol : curcol);
         newcol = (tcol != numcol) ? tcol : curcol;
         }
 
@@ -2388,7 +2327,7 @@ chkmov(void)
     else
         curcoloffset = coff;
 
-    trace_3(TRACE_APP_PD4, "chkmov(): row: old %d cur %d new %d\n", oldrow, currow, newrow);
+    trace_3(TRACE_APP_PD4, "chkmov(): row: old %d cur %d new %d", oldrow, currow, newrow);
 
     currow = newrow;
 
@@ -2424,8 +2363,8 @@ curosc(void)
 {
     BOOL had_caret = (main_window == caret_window);
     BOOL maybe_caretreposition = FALSE;
-    SCRCOL *cptr;
-    SCRROW *rptr;
+    P_SCRCOL cptr;
+    P_SCRROW rptr;
 
     if(curcoloffset >= scrbrc)
         {
@@ -2545,7 +2484,7 @@ get_column(
         {
         trycoff = coff;
 
-        trace_0(TRACE_APP_PD4, "SELECT: find the leftmost column\n");
+        trace_0(TRACE_APP_PD4, "SELECT: find the leftmost column");
 
         /* find any preceding non-blank slot,
          * or stop at first column on screen.
@@ -2564,17 +2503,17 @@ get_column(
         if(tslot && (tslot->type == SL_TEXT))
             {
             g_newoffset = cal_offset_in_slot(tcol, trow, tslot, tryoffset, xcelloffset);
-            trace_2(TRACE_APP_PD4, "preceding text slot at coff %d, g_newoffset %d\n", trycoff, g_newoffset);
+            trace_2(TRACE_APP_PD4, "preceding text slot at coff %d, g_newoffset %d", trycoff, g_newoffset);
             return(trycoff);
             }
         else
             {
-            trace_0(TRACE_APP_PD4, "preceding non-text slot: first non-blank one\n");
+            trace_0(TRACE_APP_PD4, "preceding non-text slot: first non-blank one");
             return(coff);
             }
         }
 
-    trace_0(TRACE_APP_PD4, "ADJUST: found the underlying column\n");
+    trace_0(TRACE_APP_PD4, "ADJUST: found the underlying column");
 
     tcol  = col_number(coff);
     tslot = travel(tcol, trow);
@@ -2615,6 +2554,7 @@ cal_offset_in_slot(
     char wid_buf[PAINT_STRSIZ];
     S32 lead_spaces, lead_space_mp;
     S32 spaces;
+    S32 text_length;
 
     in_linbuf = is_protected_slot(sl)
                         ? FALSE
@@ -2671,8 +2611,8 @@ cal_offset_in_slot(
         fwidth_ch -= fwidth_adjust_ch;
         fwidth_mp = ch_to_mp(fwidth_ch);
 
-        trace_1(TRACE_APP_PD4, "cal_offset_in_slot: fwidth_ch = %d\n", fwidth_ch);
-        trace_2(TRACE_APP_PD4, "cal_offset_in_slot: fwidth_mp = %d, swidth_mp = %d\n", fwidth_mp, swidth_mp);
+        trace_1(TRACE_APP_PD4, "cal_offset_in_slot: fwidth_ch = %d", fwidth_ch);
+        trace_2(TRACE_APP_PD4, "cal_offset_in_slot: fwidth_mp = %d, swidth_mp = %d", fwidth_mp, swidth_mp);
 
         if( swidth_mp > fwidth_mp)
             {
@@ -2689,7 +2629,7 @@ cal_offset_in_slot(
             /* strip the goddamn leading spaces */
             lead_space_mp = font_strip_spaces(wid_buf, tbuf, &lead_spaces);
 
-            trace_3(TRACE_APP_PD4, "lead_spaces: %d, lead_space_mp: %d, fs.x: %d\n",
+            trace_3(TRACE_APP_PD4, "lead_spaces: %d, lead_space_mp: %d, fs.x: %d",
                     lead_spaces, lead_space_mp, fs.x);
 
             /* see if we clicked past the leading spaces */
@@ -2714,7 +2654,7 @@ cal_offset_in_slot(
                         c += font_skip(c);
                 /* I didn't */
 
-                trace_4(TRACE_APP_PD4, "fwidth_mp: %d, swidth_mp: %d, lead_space_mp: %d, spaces: %d\n",
+                trace_4(TRACE_APP_PD4, "fwidth_mp: %d, swidth_mp: %d, lead_space_mp: %d, spaces: %d",
                         fwidth_mp, swidth_mp, lead_space_mp, spaces);
 
                 if(spaces  &&  (swidth_mp > 0)  &&  (fwidth_mp >= swidth_mp))
@@ -2728,7 +2668,7 @@ cal_offset_in_slot(
                     success = TRUE;
                     /* well, everything's relative */
 
-                    trace_5(TRACE_APP_PD4, "offset_ch: %d, offset_os: %d, fs.x: %d, fs.y: %d, fs.term: %d\n",
+                    trace_5(TRACE_APP_PD4, "offset_ch: %d, offset_os: %d, fs.x: %d, fs.y: %d, fs.term: %d",
                             offset_ch, cell_offset_os, fs.x, fs.y, fs.term);
                     }
                 }
@@ -2755,7 +2695,7 @@ cal_offset_in_slot(
 
             fs.term = rs.r[1] - (int) fs.s;
 
-            trace_5(TRACE_APP_PD4, "offset_ch: %d, offset_os: %d, fs.x: %d, fs.y: %d, fs.term: %d\n",
+            trace_5(TRACE_APP_PD4, "offset_ch: %d, offset_os: %d, fs.x: %d, fs.y: %d, fs.term: %d",
                     offset_ch, cell_offset_os, fs.x, fs.y, fs.term);
             }
 
@@ -2777,7 +2717,7 @@ cal_offset_in_slot(
                     {
                     char ch = linbuf[offset_ch];
 
-                    trace_4(TRACE_APP_PD4, "cal_offset_in_slot: linbuf[%d] = %c %d, fs.term = %d\n", offset_ch, ch, ch, fs.term);
+                    trace_4(TRACE_APP_PD4, "cal_offset_in_slot: linbuf[%d] = %c %d, fs.term = %d", offset_ch, ch, ch, fs.term);
 
                     /* if clicked in the middle of a highlight/expanded ctrlchar, maybe put caret to left */
                     if(ishighlight(ch))
@@ -2831,7 +2771,7 @@ cal_offset_in_slot(
                     }
 
                 /* stop on <t-a-c>A1<t-a-c> field */
-                if(*c == SLRLDI)
+                if(SLRLD1 == *c)
                     {
                     justify = 0;
                     break;
@@ -2853,7 +2793,7 @@ cal_offset_in_slot(
                     non_odd_gaps = gaps - odd;
                 }
 
-            trace_6(TRACE_APP_PD4, "cal_off gaps: %d, fwidth: %d, swidth: %d, whole: %d, odd: %d, non_oddg: %d\n",
+            trace_6(TRACE_APP_PD4, "cal_off gaps: %d, fwidth: %d, swidth: %d, whole: %d, odd: %d, non_oddg: %d",
                     gaps, fwidth_ch, swidth_ch, whole, odd, non_odd_gaps);
             }
         else
@@ -2866,8 +2806,7 @@ cal_offset_in_slot(
                 ++c, --count)
                 switch(*c)
                     {
-                    /* give up if we get an SLRLDI - too hard */
-                    case SLRLDI:
+                    case SLRLD1: /* give up if we get an SLRLD1 - too hard */
                         count = 0;
                         break;
 
@@ -2893,7 +2832,7 @@ cal_offset_in_slot(
                         offset_ch -= to_remove;
                         count -= to_remove;
                         odd -= odd_used;
-                        trace_3(TRACE_APP_PD4, "gaps: %d, odd_used: %d, to_remove: %d\n",
+                        trace_3(TRACE_APP_PD4, "gaps: %d, odd_used: %d, to_remove: %d",
                                 gaps, odd_used, to_remove);
                         }
 
@@ -2911,17 +2850,11 @@ cal_offset_in_slot(
 
     /* check that offset is inside string */
     if(in_linbuf)
-        {
-        S32 slen = (S32) strlen(linbuf);
-        return(MIN(offset_ch, slen));
-        }
+        text_length = (S32) strlen(linbuf);
+    else
+        text_length = compiled_text_len(sl->content.text) - 1; /*included NULLCH*/
 
-    c = sl->content.text;
-    while(*c)
-        if(*c++ == SLRLDI)
-            c += SLRSIZE - 1;
-
-    return(MIN(offset_ch, c - sl->content.text));
+    return(MIN(offset_ch, text_length));
 }
 
 /******************************************************************************
@@ -2944,7 +2877,7 @@ insert_reference_to(
     DOCNO old_docno;
     EV_SLR slr;
 
-    trace_4(TRACE_APP_PD4, "inserting reference to docno %u, col #%d, row #%d in docno %u\n", docno_to, tcol, trow, docno_ins);
+    trace_4(TRACE_APP_PD4, "inserting reference to docno %u, col #%d, row #%d in docno %u", docno_to, tcol, trow, docno_ins);
 
     old_docno = change_document_using_docno(docno_ins);
 

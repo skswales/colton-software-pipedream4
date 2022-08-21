@@ -38,9 +38,9 @@ linest() : multivariate linear fit using least squares
 
 static S32
 data_in_columns_determinant(
-    PC_F64 A /*[m][m]*/,
-    U32 m,
-    P_F64 dp /*out*/)
+    _InRef_     PC_F64 A /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
 {
     switch(m)
         {
@@ -55,16 +55,17 @@ data_in_columns_determinant(
 
         default:
             { /* recurse evaluating minors */
+            STATUS status;
             P_F64 minorp;
-            U32 minor_m = m - 1;
-            U32 minor_nbytes_per_col = minor_m * sizeof(*minorp);
+            const U32 minor_m = m - 1;
+            const U32 minor_nbytes_per_col = minor_m * sizeof(*minorp);
             U32 col_idx, i_col_idx, o_col_idx;
             F64 minor_D;
             S32 res = 1;
 
             *dp = 0.0;
 
-            if(NULL == (minorp = list_allocptr(minor_m * minor_nbytes_per_col)))
+            if(NULL == (minorp = al_ptr_alloc_elem(F64, minor_m * minor_m, &status)))
                 return(0); /* unable to determine */
 
             for(col_idx = 0; col_idx < m; ++col_idx)
@@ -77,7 +78,7 @@ data_in_columns_determinant(
                     if(i_col_idx == col_idx)
                         ++i_col_idx;
 
-                    void_memcpy32(&minorp[0 + (o_col_idx * minor_m)], /* to   row_idx 0, o_col_idx */
+                    memcpy32(&minorp[0 + (o_col_idx * minor_m)], /* to   row_idx 0, o_col_idx */
                                   &A[     1 + (i_col_idx * m)      ], /* from row_idx 1, i_col_idx */
                                   minor_nbytes_per_col);
                     }
@@ -91,7 +92,7 @@ data_in_columns_determinant(
                 *dp += (A[0 + (col_idx * m)] * minor_D);
                 }
 
-            list_disposeptr((P_P_ANY)(&minorp));
+            al_ptr_dispose(P_P_ANY_PEDANTIC(&minorp));
             return(res);
             }
         }
@@ -103,7 +104,7 @@ data_in_columns_determinant(
 *
 ******************************************************************************/
 
-static __forceinline void
+static inline void
 linest_permute_for_cramer(
     P_F64 A /*[m][m]*/,
     P_F64 C /*[m]*/,
@@ -166,11 +167,12 @@ by the method of linear least squares: square up to the
 normal equations by multiplying both sides by transpose(A)
 */
 
+_Check_return_
 extern S32
 linest(
-    P_PROC_LINEST_DATA_GET p_proc_get,
-    P_PROC_LINEST_DATA_PUT p_proc_put,
-    P_ANY client_handle,
+    _InRef_     P_PROC_LINEST_DATA_GET p_proc_get,
+    _InRef_     P_PROC_LINEST_DATA_PUT p_proc_put,
+    _InVal_     CLIENT_HANDLE client_handle,
     _InVal_     U32 ext_m,   /* number of independent x variables */
     _InVal_     U32 n        /* number of data points */)
 {
@@ -183,8 +185,8 @@ linest(
     F64   a_ir, a_jr;
     S32   res;
                                 /* X,  V,  M */
-    if(NULL == (X = list_allocptr((1 + 1 + m) * m * sizeof(*X))))
-        return(0);
+    if(NULL == (X = al_ptr_alloc_bytes(F64, (1 + 1 + m) * m * sizeof32(*X), &res)))
+        return(res);
 
     V = X + m;
     M = V + m;
@@ -242,7 +244,7 @@ linest(
                 /* but keep looping anyway? */
         }
 
-    list_disposeptr((P_P_ANY)(&X));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&X));
 
     return(res);
 }

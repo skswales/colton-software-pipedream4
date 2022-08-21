@@ -57,8 +57,7 @@ error definition
 */
 
 #define VSLOAD_ERRLIST_DEF \
-    errorstring(VSLOAD_ERR_CANTREAD, "ViewSheet: Can't read file") \
-    errorstring(VSLOAD_ERR_NOMEMORY, "ViewSheet: Out of memory")
+    errorstring(VSLOAD_ERR_CANTREAD, "ViewSheet: Can't read file")
 
 #endif /* RC_INVOKED */
 
@@ -69,7 +68,6 @@ error definition
 #define VSLOAD_ERR_BASE      (-5000)
 
 #define VSLOAD_ERR_CANTREAD  (-5000)
-#define VSLOAD_ERR_NOMEMORY  (-5001)
 
 #define VSLOAD_ERR_END       (-5002)
 

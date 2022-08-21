@@ -839,10 +839,9 @@ create_new_docu_thunk(
     if(new_docno == DOCNO_MAX)
         return(reperr_null(create_error(ERR_TOOMANYDOCS)));
 
-    if(NULL == (p_docu = (P_DOCU) list_allocptr(sizeof(DOCU))))
+    if(NULL == (p_docu = al_ptr_alloc_elem(DOCU, 1, &res)))
         {
-        trace_0(TRACE_APP_PD4, "Unable to claim space for new document data\n");
-        res = status_nomem();
+        trace_0(TRACE_APP_PD4, "Unable to claim space for new document data");
         }
     else
         {
@@ -1067,8 +1066,6 @@ destroy_current_document(void)
     /* clear font selector only if this window */
     pdfontselect_finalise(FALSE);
 
-    font_close_all(FALSE);
-
     expedit_close_file(current_docno());
 
     screen_finalise();
@@ -1103,7 +1100,7 @@ destroy_current_document(void)
     /* this is now just a docu thunk */
 
     /* paranoically copy the core of the template data again (but not the SS_INSTANCE_DATA) */
-    void_memcpy32(current_document(), &initial_docu_data, offsetof32(DOCU, ss_instance_data));
+    memcpy32(current_document(), &initial_docu_data, offsetof32(DOCU, ss_instance_data));
 
     /* just reinstating this one critical element in the core */
     current_document()->docno = docno;
@@ -1196,7 +1193,7 @@ find_document_using_leafname(
     S32 count = 0;
     PCTSTR leafname = file_leafname(wholename);
 
-    trace_1(TRACE_APP_PD4, "find_document_using_leafname(%s)\n", wholename);
+    trace_1(TRACE_APP_PD4, "find_document_using_leafname(%s)", wholename);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
         {
@@ -1231,7 +1228,7 @@ find_document_using_wholename(
 {
     P_DOCU p_docu;
 
-    trace_1(TRACE_APP_PD4, "find_document_using_wholename(%s)\n", wholename);
+    trace_1(TRACE_APP_PD4, "find_document_using_wholename(%s)", wholename);
 
     for(p_docu = first_document(); NO_DOCUMENT != p_docu; p_docu = next_document(p_docu))
         {
@@ -1269,7 +1266,7 @@ find_document_using_window(
             break;
     }
 
-    trace_1(TRACE_APP_PD4, "yields &%p\n", p_docu);
+    trace_1(TRACE_APP_PD4, "yields &%p", p_docu);
     return(p_docu);
 }
 #endif
@@ -1308,7 +1305,7 @@ find_document_with_input_focus(void)
             break;
         }
 
-    trace_1(TRACE_APP_PD4, "yields " PTR_XTFMT "\n", report_ptr_cast(p_docu));
+    trace_1(TRACE_APP_PD4, "yields " PTR_XTFMT, report_ptr_cast(p_docu));
     return(p_docu);
 }
 
@@ -1439,7 +1436,7 @@ current_docno(void)
 {
     DOCNO docno = (current_p_docu != NO_DOCUMENT) ? current_p_docu->docno: DOCNO_NONE;
 
-    trace_1(TRACE_APP_PD4, TEXT("current_docno() yields docno=%u\n"), docno);
+    trace_1(TRACE_APP_PD4, TEXT("current_docno() yields docno=%u"), docno);
     return(docno);
 }
 
@@ -1487,7 +1484,7 @@ is_current_document(void)
 {
     BOOL res = (current_p_docu != NO_DOCUMENT);
 
-    trace_1(TRACE_APP_PD4, TEXT("is_current_document() yields %s\n"), trace_boolstring(res));
+    trace_1(TRACE_APP_PD4, TEXT("is_current_document() yields %s"), trace_boolstring(res));
     return(res);
 }
 

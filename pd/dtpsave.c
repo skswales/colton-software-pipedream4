@@ -81,12 +81,12 @@ dtp_save_slot(
     S32 trailing_spaces = 0;
     BOOL possible_para_dtp;
 
-    trace_3(TRACE_APP_PD4, "dtp_save_slot(" PTR_XTFMT ", %d, %d)\n", report_ptr_cast(tslot), tcol, trow);
+    trace_3(TRACE_APP_PD4, "dtp_save_slot(" PTR_XTFMT ", %d, %d)", report_ptr_cast(tslot), tcol, trow);
 
     if(tslot)
         plain_slot(tslot, tcol, trow, PARAGRAPH_CHAR, linbuf);
 
-    trace_1(TRACE_APP_PD4, "slot converted to '%s'\n", linbuf);
+    trace_1(TRACE_APP_PD4, "slot converted to '%s'", linbuf);
 
     /* if this and the slot above can be formatted together call it a paragraph */
     possible_para_dtp =
@@ -181,11 +181,11 @@ fwp_save_slot(
     S32 trailing_spaces = 0;
     BOOL possible_para_fwp, possible_para_dtp;
 
-    trace_3(TRACE_APP_PD4, "fwp_save_slot(" PTR_XTFMT ", %d, %d)\n", report_ptr_cast(tslot), tcol, trow);
+    trace_3(TRACE_APP_PD4, "fwp_save_slot(" PTR_XTFMT ", %d, %d)", report_ptr_cast(tslot), tcol, trow);
 
     plain_slot(tslot, tcol, trow, saving_fwp ? FWP_CHAR : PARAGRAPH_CHAR, linbuf);
 
-    trace_1(TRACE_APP_PD4, "slot converted to '%s'\n", linbuf);
+    trace_1(TRACE_APP_PD4, "slot converted to '%s'", linbuf);
 
     /* if this and the slot below can be formatted together call it a paragraph in FWP */
     possible_para_fwp =  saving_fwp  &&
@@ -275,11 +275,10 @@ fwp_head_foot(
 
     if(!str_isblank(lcr_field))
         {
-        expand_lcr(lcr_field,
-                   -1, expanded, LIN_BUFSIZ /* field width not buffer size */,
-                   FALSE, FALSE, FALSE,
-                   FALSE);
-        second = expanded + strlen(expanded) + 1;
+        expand_lcr(lcr_field, -1, expanded, LIN_BUFSIZ /* field width not buffer size */,
+                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                   FALSE /*allow_fonty_result*/, FALSE /*compile_lcr*/);
+        second = expanded + strlen(expanded) + 1; /* all three are plain non-fonty strings */
         third  = second   + strlen(second)   + 1;
 
         (void) sprintf(array,
@@ -311,7 +310,7 @@ fwp_ruler(
     coord rmargin, count;
     COL tcol = 0;
 
-    trace_0(TRACE_APP_PD4, "fwp_ruler()\n");
+    trace_0(TRACE_APP_PD4, "fwp_ruler()");
 
     if(!away_string("\x1F" "9[", output))
         return(FALSE);
@@ -376,7 +375,7 @@ fwp_save_file_preamble(
 {
     uchar array[LIN_BUFSIZ];
 
-    trace_0(TRACE_APP_PD4, "fwp_save_file_preamble()\n");
+    trace_0(TRACE_APP_PD4, "fwp_save_file_preamble()");
 
     fwp_save_stt_row = stt_row;
     fwp_save_end_row = end_row;
@@ -420,7 +419,7 @@ fwp_save_line_preamble(
     IGNOREPARM(output);
     IGNOREPARM(saving_fwp);
 
-    trace_0(TRACE_APP_PD4, "fwp_save_line_preamble()\n");
+    trace_0(TRACE_APP_PD4, "fwp_save_line_preamble()");
 
     fwp_save_first_slot_on_line = TRUE;
     return(TRUE);

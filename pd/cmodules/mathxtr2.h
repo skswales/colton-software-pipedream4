@@ -12,13 +12,8 @@
 #ifndef __mathxtr2_h
 #define __mathxtr2_h
 
-/* M[j,k] = mat[n*j+k] - data stored by cols across row, then cols across next row ... */
-
-#define em(_array, _n_cols_in_row, _j_idx, _k_idx) ( \
-    (_array) + (_j_idx) * (_n_cols_in_row))[_k_idx]
-
 /*
-colID states
+colID states (NB not the same as Fireworkz)
 */
 
 #define LINEST_A_COLOFF (-1)
@@ -31,27 +26,45 @@ typedef S32 LINEST_COLOFF;
 typedef S32 LINEST_ROWOFF;
 
 typedef /*_Check_return_*/ F64 (* P_PROC_LINEST_DATA_GET) (
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row);
+    _InVal_     CLIENT_HANDLE client_handle,
+    _In_        LINEST_COLOFF colID,
+    _In_        LINEST_ROWOFF row);
+
+#define PROC_LINEST_DATA_GET_PROTO(_e_s, _proc_name, client_handle, colID, row) \
+_Check_return_ \
+_e_s F64 \
+_proc_name( \
+    _InVal_     CLIENT_HANDLE client_handle, \
+    _In_        LINEST_COLOFF colID, \
+    _In_        LINEST_ROWOFF row)
 
 typedef /*_Check_return_*/ STATUS (* P_PROC_LINEST_DATA_PUT) (
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row,
+    _InVal_     CLIENT_HANDLE client_handle,
+    _In_        LINEST_COLOFF colID,
+    _In_        LINEST_ROWOFF row,
     _InRef_     PC_F64 value);
+
+#define PROC_LINEST_DATA_PUT_PROTO(_e_s, _proc_name, client_handle, colID, row, value) \
+_Check_return_ \
+_e_s STATUS \
+_proc_name( \
+    _InVal_     CLIENT_HANDLE client_handle, \
+    _In_        LINEST_COLOFF colID, \
+    _In_        LINEST_ROWOFF row, \
+    _InRef_     PC_F64 value)
 
 /*
 function declarations
 */
 
+_Check_return_
 extern S32
 linest(
-    P_PROC_LINEST_DATA_GET p_proc_get,
-    P_PROC_LINEST_DATA_PUT p_proc_put,
-    P_ANY client_handle,
-    _InVal_     U32 ext_m   /* number of independent x variables */,
-    _InVal_     U32 n       /* number of data points */);
+    _InRef_     P_PROC_LINEST_DATA_GET p_proc_get,
+    _InRef_     P_PROC_LINEST_DATA_PUT p_proc_put,
+    _InVal_     CLIENT_HANDLE client_handle,
+    _InVal_     U32 ext_m /* number of independent x variables */,
+    _InVal_     U32 n     /* number of data points */);
 
 #endif /* __mathxtr2_h */
 

@@ -27,24 +27,8 @@
 #include <errno.h>
 
 /*
-declare complex number type for internal usage
-*/
-
-typedef struct _COMPLEX
-{
-    F64 r, i;
-}
-COMPLEX, * P_COMPLEX; typedef const COMPLEX * PC_COMPLEX;
-
-/*
 internal functions
 */
-
-static S32
-complex_result_reals(
-    _InoutRef_  P_EV_DATA p_ev_data,
-    _InVal_     F64 real_part,
-    _InVal_     F64 imag_part);
 
 _Check_return_
 static STATUS
@@ -53,157 +37,10 @@ err_from_errno(void)
     switch(errno)
     {
     default:        return(STATUS_OK);
-    case EDOM:      return(create_error(EVAL_ERR_ARGRANGE));
-    case ERANGE:    return(create_error(EVAL_ERR_OUTOFRANGE));
+    case EDOM:      return(EVAL_ERR_ARGRANGE);
+    case ERANGE:    return(EVAL_ERR_OUTOFRANGE);
     }
 }
-
-/******************************************************************************
-*
-* the constant one as a complex number
-*
-******************************************************************************/
-
-static const COMPLEX
-complex_unity = { 1.0, 0.0 };
-
-/******************************************************************************
-*
-* check that an array is a 2 by 1
-* array of two real numbers
-*
-* --out--
-* <0  array was unsuitable
-* >=0 n1 and n2 set up with numbers
-*
-******************************************************************************/
-
-static S32
-complex_check_array(
-    P_EV_DATA p_ev_data_res,
-    _OutRef_    P_COMPLEX n,
-    P_EV_DATA p_ev_data_in)
-{
-    S32 res;
-    EV_DATA data1, data2;
-    EV_IDNO t1, t2;
-
-    /* extract elements from the array */
-    t1 = array_range_index(&data1, p_ev_data_in, 0, 0, EM_REA);
-    t2 = array_range_index(&data2, p_ev_data_in, 1, 0, EM_REA);
-
-    if(t1 != RPN_DAT_REAL ||
-       t2 != RPN_DAT_REAL)
-        {
-        data_set_error(p_ev_data_res, EVAL_ERR_BADCOMPLEX);
-        res = -1;
-        }
-    else
-        {
-        n->r = data1.arg.fp;
-        n->i = data2.arg.fp;
-        res = 0;
-        }
-
-    return(res);
-}
-
-/******************************************************************************
-*
-* find ln of complex number for internal routines
-*
-******************************************************************************/
-
-/* NB z = r.e^i.theta -> ln(z) = ln(r) + i.theta */
-
-static S32
-complex_lnz(
-    PC_COMPLEX in,
-    P_COMPLEX out)
-{
-    F64 r = in->r * in->r + in->i * in->i;
-    S32 res = 0;
-
-    errno = 0;
-
-    out->r = log(r)/2.0;
-
-    if(errno /* == ERANGE */ /*can't be EDOM here*/)
-        res = EVAL_ERR_BAD_LOG;
-
-    out->i = atan2(in->i, in->r);
-
-    return(res);
-}
-
-/******************************************************************************
-*
-* make a complex number result array from
-* an internal complex number type
-*
-******************************************************************************/
-
-static S32
-complex_result_complex(
-    P_EV_DATA p_ev_data,
-    PC_COMPLEX z)
-{
-    return(complex_result_reals(p_ev_data, z->r, z->i));
-}
-
-/******************************************************************************
-*
-* make a complex number array in the given
-* data structure and give it a complex number
-*
-******************************************************************************/
-
-static S32
-complex_result_reals(
-    _InoutRef_  P_EV_DATA p_ev_data,
-    _InVal_     F64 real_part,
-    _InVal_     F64 imag_part)
-{
-    P_EV_DATA elep;
-
-    if(status_ok(ss_array_make(p_ev_data, 2, 1)))
-        {
-        elep          = ss_array_element_index_wr(p_ev_data, 0, 0);
-        elep->did_num = RPN_DAT_REAL;
-        elep->arg.fp  = real_part;
-
-        elep          = ss_array_element_index_wr(p_ev_data, 1, 0);
-        elep->did_num = RPN_DAT_REAL;
-        elep->arg.fp  = imag_part;
-        }
-
-    return(p_ev_data->did_num);
-}
-
-/******************************************************************************
-*
-* find w*ln(z) for internal routines
-*
-******************************************************************************/
-
-static S32
-complex_wlnz(
-    _InRef_     PC_COMPLEX w,
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX out)
-{
-    COMPLEX lnz;
-    S32     res;
-
-    if((res = complex_lnz(z, &lnz)) < 0)
-        return(res);
-
-    out->r = w->r * lnz.r  -  w->i * lnz.i;
-    out->i = w->r * lnz.i  +  w->i * lnz.r;
-    return(0);
-}
-
-/*-------------------------------------------------------------------------*/
 
 /******************************************************************************
 *
@@ -213,17 +50,18 @@ complex_wlnz(
 
 PROC_EXEC_PROTO(c_acosh)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_acosh(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_acosh(number));
 
     /* input less than 1 invalid */
     /* large positive input causes overflow ***in current algorithm*** */
     if(errno /* == EDOM, ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -234,16 +72,17 @@ PROC_EXEC_PROTO(c_acosh)
 
 PROC_EXEC_PROTO(c_acosec)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_acosec(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_acosec(number));
 
     /* input of magnitude less than 1 invalid */
     if(errno /* == EDOM */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -254,17 +93,18 @@ PROC_EXEC_PROTO(c_acosec)
 
 PROC_EXEC_PROTO(c_acosech)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_acosech(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_acosech(number));
 
     /* input of zero invalid */
     /* input of magnitude near zero causes overflow */
     if(errno /* == EDOM, ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -275,10 +115,11 @@ PROC_EXEC_PROTO(c_acosech)
 
 PROC_EXEC_PROTO(c_acot)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
-    p_ev_data_res->arg.fp  = mx_acot(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_acot(number));
 
     /* no error cases */
 }
@@ -291,17 +132,18 @@ PROC_EXEC_PROTO(c_acot)
 
 PROC_EXEC_PROTO(c_acoth)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_acoth(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_acoth(number));
 
     /* input of magnitude less than 1 invalid */
     /* input of magnitude near 1 causes overflow */
     if(errno /* == EDOM */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -312,16 +154,17 @@ PROC_EXEC_PROTO(c_acoth)
 
 PROC_EXEC_PROTO(c_asec)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_asec(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_asec(number));
 
     /* input of values less than 1 invalid */
     if(errno /* == EDOM */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -332,17 +175,18 @@ PROC_EXEC_PROTO(c_asec)
 
 PROC_EXEC_PROTO(c_asech)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_asech(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_asech(number));
 
     /* negative input or positive values greater than one invalid */
     /* input of zero or small positive value causes overflow */
     if(errno /* == EDOM, ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -353,32 +197,35 @@ PROC_EXEC_PROTO(c_asech)
 
 PROC_EXEC_PROTO(c_asinh)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
-    p_ev_data_res->arg.fp  = mx_asinh(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_asinh(number));
 
     /* no error case */
 }
 
 /******************************************************************************
 *
-* atan_2(number)
+* atan_2(a, b)
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_atan_2)
 {
+    const F64 a = args[0]->arg.fp;
+    const F64 b = args[1]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = atan2(args[1]->arg.fp, args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, atan2(b, a));
 
     /* both input args zero? */
     if(errno /* == EDOM */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -389,17 +236,18 @@ PROC_EXEC_PROTO(c_atan_2)
 
 PROC_EXEC_PROTO(c_atanh)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_atanh(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_atanh(number));
 
     /* input of magnitude 1 or greater invalid */
     /* input of near magnitude 1 causes overflow */
     if(errno /* == EDOM, ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -410,16 +258,17 @@ PROC_EXEC_PROTO(c_atanh)
 
 PROC_EXEC_PROTO(c_cosh)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = cosh(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, cosh(number));
 
     /* large magnitude input causes overflow */
     if(errno /* == ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -430,17 +279,18 @@ PROC_EXEC_PROTO(c_cosh)
 
 PROC_EXEC_PROTO(c_cosec)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_cosec(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_cosec(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -451,16 +301,17 @@ PROC_EXEC_PROTO(c_cosec)
 
 PROC_EXEC_PROTO(c_cosech)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_cosech(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_cosech(number));
 
     /* zero | small magnitude input -> infinity | overflows */
     if(errno /* == EDOM, ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -471,17 +322,18 @@ PROC_EXEC_PROTO(c_cosech)
 
 PROC_EXEC_PROTO(c_cot)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_cot(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_cot(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -492,36 +344,40 @@ PROC_EXEC_PROTO(c_cot)
 
 PROC_EXEC_PROTO(c_coth)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_coth(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_coth(number));
 
     /* zero | small magnitude input -> infinity | overflows */
     if(errno /* == EDOM, ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
 *
-* sgn(number)
+* NUMBER sgn(number)
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_sgn)
 {
+    const F64 number = args[0]->arg.fp;
+    S32 sgn_result;
+
     exec_func_ignore_parms();
 
-    if(args[0]->arg.fp > DBL_MIN)
-        p_ev_data_res->arg.fp = 1.0;
-    else if(args[0]->arg.fp < -DBL_MIN)
-        p_ev_data_res->arg.fp = -1.0;
+    if(number > F64_MIN)
+        sgn_result = 1;
+    else if(number < -F64_MIN)
+        sgn_result = -1;
     else
-        p_ev_data_res->arg.fp = 0.0;
+        sgn_result = 0;
 
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_integer(p_ev_data_res, sgn_result);
 }
 
 /******************************************************************************
@@ -532,17 +388,18 @@ PROC_EXEC_PROTO(c_sgn)
 
 PROC_EXEC_PROTO(c_sec)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = mx_sec(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_sec(number));
 
     /* various periodic input yields infinity or overflows */
     /* large magnitude input yields imprecise value */
     if(errno /* == ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -553,10 +410,11 @@ PROC_EXEC_PROTO(c_sec)
 
 PROC_EXEC_PROTO(c_sech)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
-    p_ev_data_res->arg.fp  = mx_sech(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, mx_sech(number));
 
     /* no error cases */
 }
@@ -569,16 +427,17 @@ PROC_EXEC_PROTO(c_sech)
 
 PROC_EXEC_PROTO(c_sinh)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
     errno = 0;
 
-    p_ev_data_res->arg.fp  = sinh(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, sinh(number));
 
     /* large magnitude input causes overflow */
     if(errno /* == ERANGE */)
-        data_set_error(p_ev_data_res, err_from_errno());
+        ev_data_set_error(p_ev_data_res, err_from_errno());
 }
 
 /******************************************************************************
@@ -589,993 +448,14 @@ PROC_EXEC_PROTO(c_sinh)
 
 PROC_EXEC_PROTO(c_tanh)
 {
+    const F64 number = args[0]->arg.fp;
+
     exec_func_ignore_parms();
 
-    p_ev_data_res->arg.fp  = tanh(args[0]->arg.fp);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    ev_data_set_real(p_ev_data_res, tanh(number));
 
     /* no error cases */
 }
-
-/*-------------------------------------------------------------------------*/
-
-/******************************************************************************
-*
-* add two complex numbers
-* (a+ib) + (c+id) = (a+c) + i(b+d)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cadd)
-{
-    COMPLEX in1, in2;
-
-    exec_func_ignore_parms();
-
-    /* check the inputs are complex number arrays */
-    if(complex_check_array(p_ev_data_res, &in1, args[0]) < 0)
-        return;
-    if(complex_check_array(p_ev_data_res, &in2, args[1]) < 0)
-        return;
-
-    /* output a complex number array */
-    complex_result_reals(p_ev_data_res, in1.r + in2.r, in1.i + in2.i);
-}
-
-/******************************************************************************
-*
-* subtract second complex number from first
-* (a+ib) - (c+id) = (a-c) + i(b-d)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_csub)
-{
-    COMPLEX in1, in2;
-
-    exec_func_ignore_parms();
-
-    /* check the inputs are complex number arrays */
-    if(complex_check_array(p_ev_data_res, &in1, args[0]) < 0)
-        return;
-    if(complex_check_array(p_ev_data_res, &in2, args[1]) < 0)
-        return;
-
-    /* output a complex number array */
-    complex_result_reals(p_ev_data_res, in1.r - in2.r, in1.i - in2.i);
-}
-
-/******************************************************************************
-*
-* multiply two complex numbers
-* (a+ib)*(c+id) = (ac-bd) + i(bc+ad)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cmul)
-{
-    COMPLEX in1, in2;
-
-    exec_func_ignore_parms();
-
-    /* check the inputs are complex number arrays */
-    if(complex_check_array(p_ev_data_res, &in1, args[0]) < 0)
-        return;
-    if(complex_check_array(p_ev_data_res, &in2, args[1]) < 0)
-        return;
-
-    /* output a complex number array */
-    complex_result_reals(p_ev_data_res,  in1.r * in2.r - in1.i * in2.i,
-                                     in1.i * in2.r + in1.r * in2.i);
-}
-
-/******************************************************************************
-*
-* divide two complex numbers
-* (a+ib)/(c+id) = ((ac+bd) + i(bc-ad)) / (c*c + d*d)
-*
-******************************************************************************/
-
-static BOOL
-do_complex_divide(
-    P_EV_DATA p_ev_data_res,
-    PC_COMPLEX in1,
-    PC_COMPLEX in2,
-    P_COMPLEX out)
-{
-    F64 divisor;
-
-    /* c*c + d*d */
-    divisor = (in2->r * in2->r) + (in2->i * in2->i);
-
-    /* check for divide by 0 */
-    if(divisor < DBL_MIN)
-        {
-        data_set_error(p_ev_data_res, create_error(EVAL_ERR_DIVIDEBY0));
-        return(FALSE);
-        }
-
-    out->r = (in1->r * in2->r + in1->i * in2->i) / divisor;
-    out->i = (in1->i * in2->r - in1->r * in2->i) / divisor;
-
-    return(TRUE);
-}
-
-PROC_EXEC_PROTO(c_cdiv)
-{
-    COMPLEX in1, in2, out;
-
-    exec_func_ignore_parms();
-
-    /* check the inputs are complex number arrays */
-    if(complex_check_array(p_ev_data_res, &in1, args[0]) < 0)
-        return;
-    if(complex_check_array(p_ev_data_res, &in2, args[1]) < 0)
-        return;
-
-    if(!do_complex_divide(p_ev_data_res, &in1, &in2, &out))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* find radius of complex number
-* should this be called c_abs?
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cradius)
-{
-    COMPLEX in;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    p_ev_data_res->arg.fp  = mx_fhypot(in.r, in.i); /* SKS does carefully */
-    p_ev_data_res->did_num = RPN_DAT_REAL;
-}
-
-/******************************************************************************
-*
-* find theta of complex number
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_ctheta)
-{
-    COMPLEX in;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    p_ev_data_res->arg.fp  = atan2(in.i, in.r); /* note silly C library ordering */
-    p_ev_data_res->did_num = RPN_DAT_REAL;
-}
-
-/******************************************************************************
-*
-* ln(complex number)
-* ln(a+ib) = ln(a*a + b*b)/2 + i(atan2(b,a))
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cln)
-{
-    COMPLEX in, out;
-    S32     res;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    if((res = complex_lnz(&in, &out)) < 0)
-        data_set_error(p_ev_data_res, res);
-    else
-        /* output a complex number array */
-        complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* complex z^w
-*
-******************************************************************************/
-
-static BOOL
-do_complex_power(
-    P_EV_DATA p_ev_data_res,
-    PC_COMPLEX in1,
-    PC_COMPLEX in2,
-    P_COMPLEX out)
-{
-    S32 res;
-    COMPLEX wlnz;
-
-    /* find and check wlnz */
-    if((res = complex_wlnz(in2, in1, &wlnz)) < 0)
-        {
-        data_set_error(p_ev_data_res, res);
-        return(FALSE);
-        }
-
-    out->r = exp(wlnz.r) * cos(wlnz.i);
-    out->i = exp(wlnz.r) * sin(wlnz.i);
-    return(TRUE);
-}
-
-PROC_EXEC_PROTO(c_cpower)
-{
-    COMPLEX in1, in2, wlnz;
-    S32 res;
-
-    exec_func_ignore_parms();
-
-    /* check the inputs are complex number arrays */
-    if(complex_check_array(p_ev_data_res, &in1, args[0]) < 0)
-        return;
-    if(complex_check_array(p_ev_data_res, &in2, args[1]) < 0)
-        return;
-
-    /* find and check wlnz */
-    if((res = complex_wlnz(&in2, &in1, &wlnz)) < 0)
-        data_set_error(p_ev_data_res, res);
-    else if(do_complex_power(p_ev_data_res, &in1, &in2, &wlnz))
-        /* output a complex number array */
-        complex_result_complex(p_ev_data_res, &wlnz);
-}
-
-/******************************************************************************
-*
-* exp(complex number)
-* exp(a+ib) = exp(a) * cos(b) + i(exp(a) * sin(b))
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_cexp)
-{
-    COMPLEX in;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    /* make exp(a) */
-    in.r = exp(in.r);
-
-    /* output a complex number array */
-    complex_result_reals(p_ev_data_res, in.r * cos(in.i), in.r * sin(in.i));
-}
-
-/******************************************************************************
-*
-* sin(complex number)
-* sin(a+ib) = (exp(-b)+exp(b))sin(a)/2 + i((exp(b)-exp(-b))cos(a)/2)
-*
-******************************************************************************/
-
-static void
-do_complex_sin(
-    PC_COMPLEX in,
-    P_COMPLEX out)
-{
-    F64 eb, emb;
-
-    /* make exp(b) and exp(-b) */
-    eb =  exp(in->i);
-    emb = 1.0 / eb;
-
-    out->r = (eb + emb) * sin(in->r) / 2.0;
-    out->i = (eb - emb) * cos(in->r) / 2.0;
-}
-
-PROC_EXEC_PROTO(c_csin)
-{
-    COMPLEX in, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sin(&in, &out);
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* cos(complex number)
-* cos(a+ib) = (exp(-b)+exp(b))cos(a)/2 + i((exp(-b)-exp(b))sin(a)/2)
-*
-******************************************************************************/
-
-static void
-do_complex_cos(
-    PC_COMPLEX in,
-    P_COMPLEX out)
-{
-    F64 eb, emb;
-
-    /* make exp(b) and exp(-b) */
-    eb =  exp(in->i);
-    emb = 1.0 / eb;
-
-    out->r = (emb + eb) * cos(in->r) / 2.0;
-    out->i = (emb - eb) * sin(in->r) / 2.0;
-}
-
-PROC_EXEC_PROTO(c_ccos)
-{
-    COMPLEX in, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_cos(&in, &out);
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* tan(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_ctan)
-{
-    COMPLEX in, sin, cos, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sin(&in, &sin);
-    do_complex_cos(&in, &cos);
-
-    if(!do_complex_divide(p_ev_data_res, &sin, &cos, &out))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* cosec(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_ccosec)
-{
-    COMPLEX in, out, out2;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sin(&in, &out);
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &out, &out2))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out2);
-}
-
-/******************************************************************************
-*
-* sec(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_csec)
-{
-    COMPLEX in, out, out2;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_cos(&in, &out);
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &out, &out2))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out2);
-}
-
-/******************************************************************************
-*
-* cot(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_ccot)
-{
-    COMPLEX in, sin, cos, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sin(&in, &sin);
-    do_complex_cos(&in, &cos);
-
-    if(!do_complex_divide(p_ev_data_res, &cos, &sin, &out))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* sinh(complex number)
-* sinh(a+ib) = (exp(a)-exp(-a))cos(b)/2 + i((exp(a)+exp(-a))sin(b)/2)
-*
-******************************************************************************/
-
-static void
-do_complex_sinh(
-    const COMPLEX * in,
-    COMPLEX * out)
-{
-    F64 ea, ema;
-
-    /* make exp(b) and exp(-b) */
-    ea =  exp(in->r);
-    ema = 1.0 / ea;
-
-    out->r = (ea - ema) * cos(in->i) / 2.0;
-    out->i = (ea + ema) * sin(in->i) / 2.0;
-}
-
-PROC_EXEC_PROTO(c_csinh)
-{
-    COMPLEX in, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sinh(&in, &out);
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* cosh(complex number)
-* cosh(a+ib) = (exp(a)+exp(-a))cos(b)/2 + i((exp(a)-exp(-a))sin(b)/2)
-*
-******************************************************************************/
-
-static void
-do_complex_cosh(
-    const COMPLEX * in,
-    COMPLEX * out)
-{
-    F64 ea, ema;
-
-    /* make exp(b) and exp(-b) */
-    ea =  exp(in->r);
-    ema = 1.0 / ea;
-
-    out->r = (ea + ema) * cos(in->i) / 2.0;
-    out->i = (ea - ema) * sin(in->i) / 2.0;
-}
-
-PROC_EXEC_PROTO(c_ccosh)
-{
-    COMPLEX in, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_cosh(&in, &out);
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* tanh(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_ctanh)
-{
-    COMPLEX in, sin, cos, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sinh(&in, &sin);
-    do_complex_cosh(&in, &cos);
-
-    if(!do_complex_divide(p_ev_data_res, &sin, &cos, &out))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* cosech(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_ccosech)
-{
-    COMPLEX in, out, out2;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sinh(&in, &out);
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &out, &out2))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out2);
-}
-
-/******************************************************************************
-*
-* sech(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_csech)
-{
-    COMPLEX in, out, out2;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_cosh(&in, &out);
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &out, &out2))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out2);
-}
-
-/******************************************************************************
-*
-* coth(complex number)
-*
-******************************************************************************/
-
-PROC_EXEC_PROTO(c_ccoth)
-{
-    COMPLEX in, sin, cos, out;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    do_complex_sinh(&in, &sin);
-    do_complex_cosh(&in, &cos);
-
-    if(!do_complex_divide(p_ev_data_res, &cos, &sin, &out))
-        return;
-
-    /* output a complex number array */
-    complex_result_complex(p_ev_data_res, &out);
-}
-
-/******************************************************************************
-*
-* do the work for arccosh and arcsinh and their many relations
-*
-* arccosh(z) = ln(z + (z*z - 1) ^.5)
-* arcsinh(z) = ln(z + (z*z + 1) ^.5)
-*
-* rob thinks the following apply, from the expansions given further on
-* arccos(z) = -i arccosh(z)
-* arcsin(z) =  i arcsinh(-iz)
-*
-*   arccosh(z) = +- i arccos(z)
-* i arccosh(z) =      arccos(z)
-*
-*   arcsinh(z)   = -i arcsin(iz)
-* i arcsinh(z)   =    arcsin(iz)
-* i arcsinh(z/i) =    arcsin(z)
-* i arcsinh(-iz) =    arcsin(z)
-*
-*   arctanh(z)   = -i arctan(iz)
-*   arctanh(-iz) = -i arctan(z)
-* i arctanh(-iz) =    arctan(z)
-*
-******************************************************************************/
-
-#define C_COSH 1
-#define C_SINH 2
-#define C_TANH 3
-
-static void
-do_arc_cosh_sinh_tanh(
-    P_EV_DATA p_ev_data_res,
-    S32 type,
-    P_COMPLEX z /*inout*/,
-    PC_F64 mult_z_by_i,
-    PC_F64 mult_res_by_i)
-{
-    COMPLEX out;
-    COMPLEX half;
-    COMPLEX temp;
-    S32     res;
-
-    /* maybe preprocess z
-        multiply the input by   i * mult_z_by_i
-         i(a + ib) = -b + ia
-        -i(a + ib) =  b - ia
-        mult_z_by_i is 1 to multiply by i, -1 to multiply by -i
-    */
-    if(mult_z_by_i)
-        {
-        F64 t = z->r;
-
-        z->r = z->i * -*mult_z_by_i;
-        z->i = t    *  *mult_z_by_i;
-        }
-
-    if(type == C_TANH)
-        {
-        /* do temp = (1+z)/(1-z) */
-        COMPLEX in1, in2;
-
-        in1.r = 1.0 + z->r;
-        in1.i = z->i;
-        in2.r = 1.0 - z->r;
-        in2.i =     - z->i;
-
-        if(!do_complex_divide(p_ev_data_res, &in1, &in2, &temp))
-            return;
-        }
-    else
-        {
-        /* find z*z */
-        out.r = z->r * z->r - z->i * z->i;
-        out.i = z->r * z->i * 2.0;
-
-        /* z*z + add_in_middle */
-        out.r += (type == C_COSH ? -1.0 : +1.0);
-
-        /* sqrt it into temp */
-        half.r = 0.5;
-        half.i = 0.0;
-        if(!do_complex_power(p_ev_data_res, &out, &half, &temp))
-            return;
-
-        /* z + it  */
-        temp.r += z->r;
-        temp.i += z->i;
-        }
-
-    /* ln it to out */
-    if((res = complex_lnz(&temp, &out)) != 0)
-        {
-        data_set_error(p_ev_data_res, res);
-        return;
-        }
-
-    /* now its in out, halve it for arctans */
-    if(type == C_TANH)
-        {
-        /* halve it */
-        out.r /= 2.0;
-        out.i /= 2.0;
-        }
-
-    /* maybe postprocess out
-        multiply the output by   i * mult_res_by_i
-         i(a+ ib)  = -b + ia
-        -i(a + ib) =  b - ia
-        mult_res_by_i is 1 to multiply by i, -1 to multiply by -i
-    */
-    if(mult_res_by_i)
-        {
-        F64 t = out.r;
-
-        out.r = out.i  * -*mult_res_by_i;
-        out.i = t      *  *mult_res_by_i;
-        }
-
-    /* output a complex number array */
-    complex_result_reals(p_ev_data_res, out.r, out.i);
-}
-
-/*
-complex arctan
-*/
-
-PROC_EXEC_PROTO(c_catan)
-{
-    COMPLEX z;
-
-    static const F64 c_catan_z   = -1.0;
-    static const F64 c_catan_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &z, args[0]) < 0)
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, &c_catan_z, &c_catan_res);
-}
-
-/*
-complex arctanh
-*/
-
-PROC_EXEC_PROTO(c_catanh)
-{
-    COMPLEX z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &z, args[0]) < 0)
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, NULL, NULL);
-}
-
-/*
-complex arccos
-*/
-
-PROC_EXEC_PROTO(c_cacos)
-{
-    COMPLEX z;
-
-    static const F64 c_cacos_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &z, args[0]) < 0)
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, NULL, &c_cacos_res);
-}
-
-/*
-complex arccosh
-*/
-
-PROC_EXEC_PROTO(c_cacosh)
-{
-    COMPLEX z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &z, args[0]) < 0)
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, NULL, NULL);
-}
-
-/*
-complex arcsin
-*/
-
-PROC_EXEC_PROTO(c_casin)
-{
-    COMPLEX z;
-
-    static const F64 c_asin_z   = -1.0;
-    static const F64 c_asin_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &z, args[0]) < 0)
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, &c_asin_z, &c_asin_res);
-}
-
-/*
-complex arcsinh
-*/
-
-PROC_EXEC_PROTO(c_casinh)
-{
-    COMPLEX z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &z, args[0]) < 0)
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, NULL, NULL);
-}
-
-/*
-complex arccot
-*/
-
-PROC_EXEC_PROTO(c_cacot)
-{
-    COMPLEX in, z;
-
-    static const F64 c_cacot_z   = -1.0;
-    static const F64 c_cacot_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, &c_cacot_z, &c_cacot_res);
-}
-
-/*
-complex arccoth
-*/
-
-PROC_EXEC_PROTO(c_cacoth)
-{
-    COMPLEX in, z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_TANH, &z, NULL, NULL);
-}
-
-/*
-complex arcsec
-*/
-
-PROC_EXEC_PROTO(c_casec)
-{
-    COMPLEX in, z;
-
-    static const F64 c_casec_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, NULL, &c_casec_res);
-}
-
-/*
-complex arcsech
-*/
-
-PROC_EXEC_PROTO(c_casech)
-{
-    COMPLEX in, z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_COSH, &z, NULL, NULL);
-}
-
-/*
-complex arccosec
-*/
-
-PROC_EXEC_PROTO(c_cacosec)
-{
-    COMPLEX in, z;
-
-    static const F64 c_acosec_z   = -1.0;
-    static const F64 c_acosec_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, &c_acosec_z, &c_acosec_res);
-}
-
-/*
-complex arccosech
-*/
-
-PROC_EXEC_PROTO(c_cacosech)
-{
-    COMPLEX in, z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a complex number array */
-    if(complex_check_array(p_ev_data_res, &in, args[0]) < 0)
-        return;
-
-    if(!do_complex_divide(p_ev_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ev_data_res, C_SINH, &z, NULL, NULL);
-}
-
-/* [that's enough complex algebra - Ed] */
 
 /******************************************************************************
 *
@@ -1607,11 +487,12 @@ PROC_EXEC_PROTO(c_cacosech)
 *
 ******************************************************************************/
 
+_Check_return_
 static STATUS
 determinant(
-    /*_In_count_x_(m*m)*/ PC_F64 ap /*[m][m]*/,
-    /*_In_*/        U32 m,
-    /*_Out_*/       P_F64 dp)
+    _In_count_x_(m*m) PC_F64 ap /*[m][m]*/,
+    _InVal_     U32 m,
+    _OutRef_    P_F64 dp)
 {
     STATUS status = STATUS_OK;
 
@@ -1671,7 +552,7 @@ determinant(
 
         *dp = 0.0;
 
-        if(NULL == (minor = al_ptr_alloc_bytes(F64, minor_m * sizeof32(*minor), &status)))
+        if(NULL == (minor = al_ptr_alloc_elem(F64, minor_m * minor_m, &status)))
             return(status); /* unable to determine */
 
         for(col_idx = 0; col_idx < m; ++col_idx)
@@ -1705,8 +586,13 @@ determinant(
     return(status);
 }
 
-PROC_EXEC_PROTO(c_mdeterm)
+/*
+* NUMBER m_determ(square-array)
+*/
+
+PROC_EXEC_PROTO(c_m_determ)
 {
+    F64 m_determ_result;
     S32 xs, ys;
 
     exec_func_ignore_parms();
@@ -1716,21 +602,21 @@ PROC_EXEC_PROTO(c_mdeterm)
 
     if(xs != ys)
     {
-        data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_NOT_SQUARE);
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_NOT_SQUARE);
         return;
     }
 
     if(xs == 0)
     {
-        p_ev_data_res->did_num = RPN_DAT_REAL;
-        p_ev_data_res->arg.fp = 1.0; /* yes, really */
+        ev_data_set_integer(p_ev_data_res, 1); /* yes, really */
+        return;
     }
 
     {
     STATUS status = STATUS_OK;
     S32 m = xs;
     F64 nums[3*3]; /* don't really need to allocate for small ones */
-    P_F64 a /*[n][n]*/;
+    P_F64 a /*[m][m]*/;
 
     if(m <= 3)
         a = nums;
@@ -1748,17 +634,20 @@ PROC_EXEC_PROTO(c_mdeterm)
         {
             for(j = 0; j < m; ++j)
             {
-                EV_DATA data;
+                EV_DATA ev_data;
 
-                if(array_range_index(&data, args[0], j, i, EM_REA) != RPN_DAT_REAL) /* NB j,i */
+                if(array_range_index(&ev_data, args[0], j, i, EM_REA) != RPN_DAT_REAL) /* NB j,i */
                     status_break(status = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                _Aij(a, m, i, j) = data.arg.fp;
+                _Aij(a, m, i, j) = ev_data.arg.fp;
             }
         }
 
-        if(status_ok(status = determinant(a, m, &p_ev_data_res->arg.fp)))
-            p_ev_data_res->did_num = RPN_DAT_REAL;
+        if(status_ok(status = determinant(a, m, &m_determ_result)))
+        {
+            ev_data_set_real(p_ev_data_res, m_determ_result);
+            real_to_integer_try(p_ev_data_res);
+        }
 
         if(a != nums)
             al_ptr_dispose(P_P_ANY_PEDANTIC(&a));
@@ -1767,7 +656,7 @@ PROC_EXEC_PROTO(c_mdeterm)
     if(status_fail(status))
     {
         ss_data_free_resources(p_ev_data_res);
-        data_set_error(p_ev_data_res, status);
+        ev_data_set_error(p_ev_data_res, status);
     }
     } /*block*/
 }
@@ -1776,7 +665,7 @@ PROC_EXEC_PROTO(c_mdeterm)
 inverse of square matrix A is 1/det * adjunct(A)
 */
 
-PROC_EXEC_PROTO(c_minverse)
+PROC_EXEC_PROTO(c_m_inverse)
 {
     STATUS status = STATUS_OK;
     S32 xs, ys;
@@ -1794,7 +683,7 @@ PROC_EXEC_PROTO(c_minverse)
 
     if(xs != ys)
     {
-        data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_NOT_SQUARE);
         return;
     }
 
@@ -1897,8 +786,7 @@ PROC_EXEC_PROTO(c_minverse)
         for(j = 0; j < m; ++j)
         {
             P_EV_DATA p_ev_data = ss_array_element_index_wr(p_ev_data_res, j, i); /* NB j,i */
-            p_ev_data->did_num = RPN_DAT_REAL;
-            p_ev_data->arg.fp  = _Aij(adj, m, j, i) / D; /* NB j,i here too for transpose step 3 above */
+            ev_data_set_real(p_ev_data, _Aij(adj, m, j, i) / D); /* NB j,i here too for transpose step 3 above */
         }
     }
 
@@ -1911,7 +799,7 @@ endpoint:
     if(status_fail(status))
     {
         ss_data_free_resources(p_ev_data_res);
-        data_set_error(p_ev_data_res, status);
+        ev_data_set_error(p_ev_data_res, status);
     }
 }
 
@@ -1927,7 +815,7 @@ endpoint:
 *
 ******************************************************************************/
 
-PROC_EXEC_PROTO(c_mmult)
+PROC_EXEC_PROTO(c_m_mult)
 {
     S32 x1s, x2s, y1s, y2s;
 
@@ -1940,7 +828,7 @@ PROC_EXEC_PROTO(c_mmult)
     if(x1s != y2s)
         {
         /* whinge about dimensions */
-        data_set_error(p_ev_data_res, EVAL_ERR_MISMATCHED_MATRICES);
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_MISMATCHED_MATRICES);
         return;
         }
 
@@ -1949,13 +837,14 @@ PROC_EXEC_PROTO(c_mmult)
         S32 x, y;
 
         for(x = 0; x < x2s; x++)
+            {
             for(y = 0; y < y1s; y++)
                 {
                 F64 product = 0.0;
                 S32 elem;
                 P_EV_DATA elep;
 
-                for(elem=0; elem < x1s; elem++)
+                for(elem = 0; elem < x1s; elem++)
                     {
                     EV_DATA data1, data2;
 
@@ -1967,15 +856,16 @@ PROC_EXEC_PROTO(c_mmult)
                     else
                         {
                         ss_data_free_resources(p_ev_data_res);
-                        data_set_error(p_ev_data_res, create_error(EVAL_ERR_MATRIX_NOT_NUMERIC));
+                        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_NOT_NUMERIC);
                         return;
                         }
                     }
 
                 elep = ss_array_element_index_wr(p_ev_data_res, x, y);
-                elep->did_num = RPN_DAT_REAL;
-                elep->arg.fp  = product;
+                ev_data_set_real(elep, product);
+                real_to_integer_try(elep);
                 }
+            }
         }
 }
 
@@ -1989,15 +879,19 @@ PROC_EXEC_PROTO(c_transpose)
     /* get x and y sizes */
     array_range_sizes(args[0], &xs, &ys);
 
-    /* make a y by x array and swap elements */
+    /* make a y-dimension by x-dimension result array and swap elements */
     if(status_ok(ss_array_make(p_ev_data_res, ys, xs)))
+        {
         for(x = 0; x < xs; x++)
+            {
             for(y = 0; y < ys; y++)
                 {
-                EV_DATA temp;
-                array_range_index(&temp, args[0], x, y, EM_ANY);
-                ss_data_resource_copy(ss_array_element_index_wr(p_ev_data_res, y, x), &temp);
+                EV_DATA temp_data;
+                array_range_index(&temp_data, args[0], x, y, EM_ANY);
+                status_assert(ss_data_resource_copy(ss_array_element_index_wr(p_ev_data_res, y, x), &temp_data));
                 }
+            }
+        }
 }
 
 /******************************************************************************
@@ -2022,7 +916,7 @@ PROC_EXEC_PROTO(c_growth)
         ((y != 1 /*no stats*/)  &&
          (y != 3 /*stats*/   )  )  )
         {
-        data_set_error(p_ev_data_res, create_error(EVAL_ERR_MATRIX_WRONG_SIZE));
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
         return;
         }
 
@@ -2037,82 +931,72 @@ PROC_EXEC_PROTO(c_growth)
 
             for(row = 0; row < y; ++row)
                 {
-                EV_DATA xdata;
-                EV_DATA adata;
-                F64 product;
+                EV_DATA x_data;
+                EV_DATA a_data;
+                F64 product; /* NB. product computed carefully using logs */
                 S32 ci;
-                S32 negative;
+                BOOL negative;
                 P_EV_DATA elep;
 
-                /* NB. product computed carefully using logs */
-
                 /* start with the constant */
-                array_range_index(&adata, args[0],
+                array_range_index(&a_data, args[0],
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(adata.did_num != RPN_DAT_REAL)
-                    {
-                    err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                    goto endlabel;
-                    }
+                if(a_data.did_num != RPN_DAT_REAL)
+                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 errno = 0;
 
                 /* if initial y data was all -ve then this is a possibility ... */
-                negative = (adata.arg.fp < 0);
+                negative = (a_data.arg.fp < 0);
 
-                product = log(fabs(adata.arg.fp));
+                product = fabs(a_data.arg.fp);
 
-                /* loop across a row multiplying product by coefficients ^ x variables*/
-                for(ci = 0; ci < x_vars; ++ci)
+                if(product != 0.0)
                     {
-                    array_range_index(&adata, args[0],
-                                      ci + 1, /* NB. skip constant! */
-                                      0,
-                                      EM_REA);
+                    product = log(product);
+                    assert(errno == 0); /* log(+ve) cannot fail ho ho */
 
-                    if(adata.did_num != RPN_DAT_REAL)
+                    /* loop across a row multiplying product by coefficients ^ x variables*/
+                    for(ci = 0; ci < x_vars; ++ci)
                         {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
+                        array_range_index(&a_data, args[0],
+                                          ci + 1, /* NB. skip constant! */
+                                          0,
+                                          EM_REA);
+
+                        if(a_data.did_num != RPN_DAT_REAL)
+                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
+
+                        array_range_index(&x_data, args[1],
+                                          ci, /* NB. extract from nth col ! */
+                                          row,
+                                          EM_REA);
+
+                        if(x_data.did_num != RPN_DAT_REAL)
+                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
+
+                        product += log(a_data.arg.fp) * x_data.arg.fp;
                         }
 
-                    array_range_index(&xdata, args[1],
-                                      ci, /* NB. extract from nth col ! */
-                                      row,
-                                      EM_REA);
+                    if(errno /* == EDOM, ERANGE */)
+                        err = EVAL_ERR_BAD_LOG;
 
-                    if(xdata.did_num != RPN_DAT_REAL)
-                        {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
-                        }
+                    status_break(err);
 
-                    product += log(adata.arg.fp) * xdata.arg.fp;
-                    }
+                    product = exp(product); /* convert sum of products into a0 * PI(ai ** xi) */
 
-                if(errno /* == EDOM, ERANGE */)
-                    {
-                    err = create_error(EVAL_ERR_BAD_LOG);
-                    goto endlabel;
-                    }
-
-                product = exp(product); /* convert sum of products into a0 * PI(ai ** xi) */
-
-                if(product == HUGE_VAL) /* don't test for underflow case */
-                    {
-                    err = create_error(EVAL_ERR_OUTOFRANGE);
-                    goto endlabel;
+                    if(product == HUGE_VAL) /* don't test for underflow case */
+                        status_break(err = EVAL_ERR_OUTOFRANGE);
                     }
 
                 if(negative)
                     product = -product;
 
-                elep          = ss_array_element_index_wr(p_ev_data_res, 0, row);
-                elep->did_num = RPN_DAT_REAL;
-                elep->arg.fp  = product;
+                elep = ss_array_element_index_wr(p_ev_data_res, 0, row);
+                ev_data_set_real(elep, product);
                 }
 
             } /*fi*/
@@ -2125,99 +1009,86 @@ PROC_EXEC_PROTO(c_growth)
 
             for(col = 0; col < x; ++col)
                 {
-                EV_DATA xdata;
-                EV_DATA adata;
-                F64 product;
+                EV_DATA x_data;
+                EV_DATA a_data;
+                F64 product; /* NB. product computed carefully using logs */
                 S32 ci;
-                S32 negative;
+                BOOL negative;
                 P_EV_DATA elep;
 
-                /* NB. product computed carefully using logs */
-
                 /* start with the constant */
-                array_range_index(&adata, args[0],
+                array_range_index(&a_data, args[0],
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(adata.did_num != RPN_DAT_REAL)
-                    {
-                    err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                    goto endlabel;
-                    }
+                if(a_data.did_num != RPN_DAT_REAL)
+                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
                 errno = 0;
 
                 /* if initial y data was all -ve then this is a possibility ... */
-                negative = (adata.arg.fp < 0);
+                negative = (a_data.arg.fp < 0);
 
-                product = log(fabs(adata.arg.fp));
+                product = fabs(a_data.arg.fp);
 
-                /* loop multiplying product by coefficients ^ x variables*/
-                for(ci = 0; ci < x_vars; ++ci)
+                if(product != 0.0)
                     {
-                    array_range_index(&adata, args[0],
-                                      ci + 1, /* NB. skip constant! */
-                                      0,
-                                      EM_REA);
+                    product = log(product);
+                    assert(errno == 0); /* log(+ve) cannot fail ho ho */
 
-                    if(adata.did_num != RPN_DAT_REAL)
+                    /* loop multiplying product by coefficients ^ x variables*/
+                    for(ci = 0; ci < x_vars; ++ci)
                         {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
+                        array_range_index(&a_data, args[0],
+                                          ci + 1, /* NB. skip constant! */
+                                          0,
+                                          EM_REA);
+
+                        if(a_data.did_num != RPN_DAT_REAL)
+                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
+
+                        array_range_index(&x_data, args[1],
+                                          col,
+                                          ci, /* NB. extract from nth row ! */
+                                          EM_REA);
+
+                        if(x_data.did_num != RPN_DAT_REAL)
+                            status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
+
+                        product += log(a_data.arg.fp) * x_data.arg.fp;
                         }
 
-                    array_range_index(&xdata, args[1],
-                                      col,
-                                      ci, /* NB. extract from nth row ! */
-                                      EM_REA);
+                    if(errno /* == EDOM, ERANGE */)
+                        err = EVAL_ERR_BAD_LOG;
 
-                    if(xdata.did_num != RPN_DAT_REAL)
-                        {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
-                        }
+                    status_break(err);
 
-                    product += log(adata.arg.fp) * xdata.arg.fp;
-                    }
+                    product = exp(product); /* convert sum of products into a0 * PI(ai ** xi) */
 
-                if(errno /* == EDOM, ERANGE */)
-                    {
-                    err = create_error(EVAL_ERR_BAD_LOG);
-                    goto endlabel;
-                    }
-
-                product = exp(product); /* convert sum of products into a0 * PI(ai ** xi) */
-
-                if(product == HUGE_VAL) /* don't test for underflow case */
-                    {
-                    err = create_error(EVAL_ERR_OUTOFRANGE);
-                    goto endlabel;
+                    if(product == HUGE_VAL) /* don't test for underflow case */
+                        status_break(err = EVAL_ERR_OUTOFRANGE);
                     }
 
                 if(negative)
                     product = -product;
 
-                elep          = ss_array_element_index_wr(p_ev_data_res, col, 0);
-                elep->did_num = RPN_DAT_REAL;
-                elep->arg.fp  = product;
+                elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
+                ev_data_set_real(elep, product);
                 }
 
             } /*fi*/
         }
     else
         {
-        data_set_error(p_ev_data_res, create_error(EVAL_ERR_MATRIX_WRONG_SIZE));
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
         return;
         }
 
-endlabel:;
-
-    if(err)
+    if(status_fail(err))
         {
         ss_data_free_resources(p_ev_data_res);
-
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, err);
         }
 }
 
@@ -2243,7 +1114,7 @@ PROC_EXEC_PROTO(c_trend)
         ((y != 1 /*no stats*/)  &&
          (y != 3 /*stats*/  )   )  )
         {
-        data_set_error(p_ev_data_res, create_error(EVAL_ERR_MATRIX_WRONG_SIZE));
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
         return;
         }
 
@@ -2260,57 +1131,49 @@ PROC_EXEC_PROTO(c_trend)
 
             for(row = 0; row < y; ++row)
                 {
-                EV_DATA xdata;
-                EV_DATA adata;
+                EV_DATA x_data;
+                EV_DATA a_data;
                 F64 sum;
                 S32 ci;
                 P_EV_DATA elep;
 
                 /* start with the constant */
-                array_range_index(&adata, args[0],
+                array_range_index(&a_data, args[0],
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(adata.did_num != RPN_DAT_REAL)
-                    {
-                    err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                    goto endlabel;
-                    }
+                if(a_data.did_num != RPN_DAT_REAL)
+                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                sum = adata.arg.fp;
+                sum = a_data.arg.fp;
 
                 /* loop across a row summing coefficients * x variables */
                 for(ci = 0; ci < x_vars; ++ci)
                     {
-                    array_range_index(&adata, args[0],
+                    array_range_index(&a_data, args[0],
                                       ci + 1, /* NB. skip constant! */
                                       0,
                                       EM_REA);
 
-                    if(adata.did_num != RPN_DAT_REAL)
-                        {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
-                        }
+                    if(a_data.did_num != RPN_DAT_REAL)
+                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    array_range_index(&xdata, args[1],
+                    array_range_index(&x_data, args[1],
                                       ci, /* NB. extract from nth col! */
                                       row,
                                       EM_REA);
 
-                    if(xdata.did_num != RPN_DAT_REAL)
-                        {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
-                        }
+                    if(x_data.did_num != RPN_DAT_REAL)
+                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    sum += adata.arg.fp * xdata.arg.fp;
+                    sum += a_data.arg.fp * x_data.arg.fp;
                     }
 
-                elep          = ss_array_element_index_wr(p_ev_data_res, 0, row);
-                elep->did_num = RPN_DAT_REAL;
-                elep->arg.fp  = sum;
+                status_break(err);
+
+                elep = ss_array_element_index_wr(p_ev_data_res, 0, row);
+                ev_data_set_real(elep, sum);
                 }
             } /*fi*/
         }
@@ -2322,74 +1185,63 @@ PROC_EXEC_PROTO(c_trend)
 
             for(col = 0; col < x; ++col)
                 {
-                EV_DATA xdata;
-                EV_DATA adata;
+                EV_DATA x_data;
+                EV_DATA a_data;
                 F64 sum;
                 S32 ci;
                 P_EV_DATA elep;
 
                 /* start with the constant */
-                array_range_index(&adata, args[0],
+                array_range_index(&a_data, args[0],
                                   0, /* NB!*/
                                   0,
                                   EM_REA);
 
-                if(adata.did_num != RPN_DAT_REAL)
-                    {
-                    err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                    goto endlabel;
-                    }
+                if(a_data.did_num != RPN_DAT_REAL)
+                    status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                sum = adata.arg.fp;
+                sum = a_data.arg.fp;
 
                 /* loop down a column summing coefficients * x variables */
                 for(ci = 0; ci < x_vars; ++ci)
                     {
-                    array_range_index(&adata, args[0],
+                    array_range_index(&a_data, args[0],
                                       ci + 1, /* NB. skip constant! */
                                       0,
                                       EM_REA);
 
-                    if(adata.did_num != RPN_DAT_REAL)
-                        {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
-                        }
+                    if(a_data.did_num != RPN_DAT_REAL)
+                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    array_range_index(&xdata, args[1],
+                    array_range_index(&x_data, args[1],
                                       col,
                                       ci, /* NB. extract from nth row! */
                                       EM_REA);
 
-                    if(xdata.did_num != RPN_DAT_REAL)
-                        {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
-                        goto endlabel;
-                        }
+                    if(x_data.did_num != RPN_DAT_REAL)
+                        status_break(err = EVAL_ERR_MATRIX_NOT_NUMERIC);
 
-                    sum += adata.arg.fp * xdata.arg.fp;
+                    sum += a_data.arg.fp * x_data.arg.fp;
                     }
 
-                elep          = ss_array_element_index_wr(p_ev_data_res, col, 0);
-                elep->did_num = RPN_DAT_REAL;
-                elep->arg.fp  = sum;
+                status_break(err);
+
+                elep = ss_array_element_index_wr(p_ev_data_res, col, 0);
+                ev_data_set_real(elep, sum);
                 }
 
             } /*fi*/
         }
     else
         {
-        data_set_error(p_ev_data_res, create_error(EVAL_ERR_MATRIX_WRONG_SIZE));
+        ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_WRONG_SIZE);
         return;
         }
 
-endlabel:;
-
-    if(err)
+    if(status_fail(err))
         {
         ss_data_free_resources(p_ev_data_res);
-
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, err);
         }
 }
 
@@ -2412,17 +1264,14 @@ typedef struct _for_first_linest
 }
 for_first_linest;
 
-static F64
-ligp(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row)
+PROC_LINEST_DATA_GET_PROTO(static, ligp, client_handle, colID, row)
 {
-    for_first_linest * lidatap = (for_first_linest *) handle;
+    for_first_linest * lidatap = (for_first_linest *) client_handle;
 
     switch(colID)
         {
         case LINEST_A_COLOFF:
+            assert0();
             return(0.0);
 
         case LINEST_Y_COLOFF:
@@ -2436,14 +1285,9 @@ ligp(
         }
 }
 
-static STATUS
-lipp(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row,
-    _InRef_     PC_F64 value)
+PROC_LINEST_DATA_PUT_PROTO(static, lipp, client_handle, colID, row, value)
 {
-    for_first_linest * lidatap = (for_first_linest *) handle;
+    for_first_linest * lidatap = (for_first_linest *) client_handle;
 
     switch(colID)
         {
@@ -2478,7 +1322,7 @@ PROC_EXEC_PROTO(c_linest)
     S32     data_in_cols;
     S32     y_items;
     S32     x_vars;
-    S32     err = 0;
+    STATUS status = STATUS_OK;
     for_first_linest lidata;
 
     exec_func_ignore_parms();
@@ -2498,24 +1342,24 @@ PROC_EXEC_PROTO(c_linest)
             /* check known_ye's is an array and get x and y sizes */
             array_range_sizes(args[4], &known_e.cols, &known_e.rows);
 
-            /* deliberate drop thru ... */
+            /*FALLTHRU*/
 
         case 4:
             /* check known_a's is an array and get x and y sizes */
             array_range_sizes(args[3], &known_a.cols, &known_a.rows);
 
-            /* deliberate drop thru ... */
+            /*FALLTHRU*/
 
         case 3:
              stats = (args[2]->arg.fp != 0.0);
 
-            /* deliberate drop thru ... */
+            /*FALLTHRU*/
 
         case 2:
             /* check known_x's is an array and get x and y sizes */
             array_range_sizes(args[1], &known_x.cols, &known_x.rows);
 
-            /* deliberate drop thru ... */
+            /*FALLTHRU*/
 
         case 1:
             /* check known_y's is an array and get x and y sizes */
@@ -2537,37 +1381,25 @@ PROC_EXEC_PROTO(c_linest)
         x_vars = (data_in_cols) ? known_x.cols : known_x.rows;
 
     /* simple to allocate y and x arrays together */
-    known_y.val = list_allocptr((S32) y_items * ((S32) x_vars + 1) * (S32) sizeof(F64));
-    if(!known_y.val)
-        {
-        err = status_nomem();
+    if(NULL == (known_y.val = al_ptr_alloc_elem(F64, (U32) y_items * ((U32) x_vars + 1), &status)))
         goto endlabel;
-        }
     known_x.val = &known_y.val[y_items];
 
     result_a.cols = x_vars + 1;
     result_a.rows = stats ? 3 : 1;
-    result_a.val  = list_allocptr(result_a.cols * (S32) result_a.rows * (S32) sizeof(F64));
-    if(!result_a.val)
-        {
-        err = status_nomem();
+    if(NULL == (result_a.val = al_ptr_alloc_elem(F64, result_a.cols * (U32) result_a.rows, &status)))
         goto endlabel;
-        }
 
     if(known_a.cols != 0)
         {
         if(known_a.cols > result_a.cols)
             {
-            err = create_error(EVAL_ERR_MISMATCHED_MATRICES);
+            status = EVAL_ERR_MISMATCHED_MATRICES;
             goto endlabel;
             }
 
-        known_a.val = list_allocptr(result_a.cols * (S32) sizeof(F64));
-        if(!known_a.val)
-            {
-            err = status_nomem();
+        if(NULL == (known_a.val = al_ptr_alloc_elem(F64, result_a.cols, &status)))
             goto endlabel;
-            }
         }
 
     if(known_e.rows != 0)
@@ -2575,16 +1407,12 @@ PROC_EXEC_PROTO(c_linest)
         /* neatly covers both arrangements of y,e */
         if((known_e.rows > known_y.rows) || (known_e.rows > known_y.rows))
             {
-            err = create_error(EVAL_ERR_MISMATCHED_MATRICES);
+            status = EVAL_ERR_MISMATCHED_MATRICES;
             goto endlabel;
             }
 
-        known_e.val = list_allocptr(y_items * (S32) sizeof(F64));
-        if(!known_e.val)
-            {
-            err = status_nomem();
+        if(NULL == (known_e.val = al_ptr_alloc_elem(F64, y_items, &status)))
             goto endlabel;
-            }
         }
 
     if(status_ok(ss_array_make(p_ev_data_res, result_a.cols, result_a.rows)))
@@ -2602,7 +1430,7 @@ PROC_EXEC_PROTO(c_linest)
 
             if(data.did_num != RPN_DAT_REAL)
                 {
-                err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
+                status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
                 }
 
@@ -2612,7 +1440,7 @@ PROC_EXEC_PROTO(c_linest)
         /* copy x data into working array */
         for(i = 0; i < y_items; ++i)
             {
-            if(nargs >= 2)
+            if(nargs > 1)
                 for(j = 0; j < x_vars; ++j)
                     {
                     array_range_index(&data, args[1],
@@ -2622,19 +1450,19 @@ PROC_EXEC_PROTO(c_linest)
 
                     if(data.did_num != RPN_DAT_REAL)
                         {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
+                        status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
                         }
 
                     (known_x.val + i * x_vars)[j] = data.arg.fp;
                     }
             else
-                known_x.val[i] = (F64) i + 1.0; /* make simple {1.0, 2.0, 3.0, ...} */
+                known_x.val[i] = (F64) i + 1.0; /* make simple { 1.0, 2.0, 3.0 ... } */
             }
 
         /* <<< ignore the a data for the mo */
         if(known_a.val)
-            ;
+            { /*EMPTY*/ }
 
         /* copy (possibly partial) ye data into working array */
         if(known_e.val)
@@ -2649,7 +1477,7 @@ PROC_EXEC_PROTO(c_linest)
 
                     if(data.did_num != RPN_DAT_REAL)
                         {
-                        err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
+                        status = EVAL_ERR_MATRIX_NOT_NUMERIC;
                         goto endlabel;
                         }
 
@@ -2670,7 +1498,8 @@ PROC_EXEC_PROTO(c_linest)
 
         lidata.a = result_a.val;
 
-        linest(ligp, lipp, &lidata, x_vars, y_items);
+        if(status_fail(status = linest(ligp, lipp, (CLIENT_HANDLE) &lidata, x_vars, y_items)))
+            goto endlabel;
 
 /* ... to here */
 
@@ -2683,9 +1512,8 @@ PROC_EXEC_PROTO(c_linest)
 
             res = (result_a.val + 0 * result_a.cols)[j];
 
-            elep          = ss_array_element_index_wr(p_ev_data_res, j, 0);
-            elep->did_num = RPN_DAT_REAL;
-            elep->arg.fp  = res;
+            elep = ss_array_element_index_wr(p_ev_data_res, j, 0); /* NB j,i */
+            ev_data_set_real(elep, res);
 
             if(stats)
                 {
@@ -2696,9 +1524,8 @@ PROC_EXEC_PROTO(c_linest)
                 res = (result_a.val + 1 * result_a.cols)[j];
 #endif
 
-                elep          = ss_array_element_index_wr(p_ev_data_res, j, 1);
-                elep->did_num = RPN_DAT_REAL;
-                elep->arg.fp  = res;
+                elep = ss_array_element_index_wr(p_ev_data_res, j, 1); /* NB j,i */
+                ev_data_set_real(elep, res);
                 }
             }
 
@@ -2710,26 +1537,24 @@ PROC_EXEC_PROTO(c_linest)
 
             chi_sq = 0.0;
 
-            elep          = ss_array_element_index_wr(p_ev_data_res, 0, 2);
-            elep->did_num = RPN_DAT_REAL;
-            elep->arg.fp  = chi_sq;
+            elep = ss_array_element_index_wr(p_ev_data_res, 0, 2); /* NB j,i */
+            ev_data_set_real(elep, chi_sq);
             }
 
         } /*fi*/
 
 endlabel:;
 
-    if(err)
+    if(status_fail(status))
         {
         ss_data_free_resources(p_ev_data_res);
-
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, status);
         }
 
-    list_disposeptr((void **) &known_e.val);
-    list_disposeptr((void **) &known_a.val);
-    list_disposeptr((void **) &result_a.val);
-    list_disposeptr((void **) &known_y.val); /* and x too */
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&known_e.val));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&known_a.val));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&result_a.val));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&known_y.val)); /* and x too */
 }
 
 /******************************************************************************
@@ -2746,8 +1571,8 @@ endlabel:;
 PROC_EXEC_PROTO(c_logest)
 {
     EV_DATA y_data;
-    EV_DATA a_data;
-    EV_DATA data;
+    EV_DATA a_data = { RPN_DAT_BLANK };
+    EV_DATA ev_data;
     P_EV_DATA elep;
     P_EV_DATA targs0, targs3;
     F64 val;
@@ -2770,23 +1595,23 @@ PROC_EXEC_PROTO(c_logest)
                 return;
             }
         else
-            ss_data_resource_copy(&a_data, args[3]);
+            status_assert(ss_data_resource_copy(&a_data, args[3]));
 
         for(col = 0; col < x; ++col)
             {
-            if(array_range_index(&data, args[3], col, 0, EM_REA) != RPN_DAT_REAL)
+            if(array_range_index(&ev_data, args[3], col, 0, EM_REA) != RPN_DAT_REAL)
                 {
-                err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
+                err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel2;
                 }
 
-            val = data.arg.fp;
+            val = ev_data.arg.fp;
             /* do sign forcing before y transform */
             if(col == 0)
                 sign = (val < 0) ? -1 : +1;
-            data.arg.fp = log(val);
+            ev_data.arg.fp = log(val);
 
-            *ss_array_element_index_wr(&a_data, col, 0) = data;
+            *ss_array_element_index_wr(&a_data, col, 0) = ev_data;
             }
         }
 
@@ -2800,48 +1625,47 @@ PROC_EXEC_PROTO(c_logest)
             return;
         }
     else
-        ss_data_resource_copy(&y_data, args[0]);
+        status_assert(ss_data_resource_copy(&y_data, args[0]));
 
     /* simple layout-independent transform of y data */
     for(col = 0; col < x; ++col)
         for(row = 0; row < y; ++row)
             {
-            if(array_range_index(&data, args[0], col, row, EM_REA) != RPN_DAT_REAL)
+            if(array_range_index(&ev_data, args[0], col, row, EM_REA) != RPN_DAT_REAL)
                 {
-                err = create_error(EVAL_ERR_MATRIX_NOT_NUMERIC);
+                err = EVAL_ERR_MATRIX_NOT_NUMERIC;
                 goto endlabel;
                 }
 
-            if(data.arg.fp < 0.0)
+            if(ev_data.arg.fp < 0.0)
                 {
                 if(!sign)
                     sign = -1;
                 else if(sign != -1)
                     {
-                    err = create_error(EVAL_ERR_MIXED_SIGNS);
+                    err = EVAL_ERR_MIXED_SIGNS;
                     goto endlabel;
                     }
 
-                data.arg.fp = log(-data.arg.fp);
+                ev_data.arg.fp = log(-ev_data.arg.fp);
                 }
-            else if(data.arg.fp > 0.0)
+            else if(ev_data.arg.fp > 0.0)
                 {
                 if(!sign)
                     sign = +1;
                 else if(sign != +1)
                     {
-                    err = create_error(EVAL_ERR_MIXED_SIGNS);
+                    err = EVAL_ERR_MIXED_SIGNS;
                     goto endlabel;
                     }
 
-                data.arg.fp = log(data.arg.fp);
+                ev_data.arg.fp = log(ev_data.arg.fp);
                 }
             /* else 0.0 ... interesting case ... not necessarily wrong but very hard */
 
             /* poke back transformed data */
-            elep          = ss_array_element_index_wr(&y_data, col, row);
-            elep->did_num = RPN_DAT_REAL;
-            elep->arg.fp  = data.arg.fp;
+            elep = ss_array_element_index_wr(&y_data, col, row);
+            ev_data_set_real(elep, ev_data.arg.fp);
             }
 
     /* ask mrjc whether this is legal */
@@ -2890,24 +1714,55 @@ endlabel2:;
     ss_data_free_resources(&a_data);
 
     if(err)
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, err);
 }
 
+_Check_return_
 extern double lgamma_r(double, int *);
 
+_Check_return_
 static F64
 ln_fact(
-    S32 n)
+    _InVal_     S32 n)
 {
     int sign;
-
-    if(n < 0)
-        {
-        errno = EDOM;
-        return(-HUGE_VAL);
-        }
-
     return(lgamma_r(n + 1.0, &sign));
+}
+
+/* Beta(a,b) = Gamma(a) * Gamma(b) / Gamma(a+b) */
+
+PROC_EXEC_PROTO(c_beta)
+{
+    STATUS err = STATUS_OK;
+    const F64 z = args[0]->arg.fp;
+    const F64 w = args[1]->arg.fp;
+    F64 beta_result;
+
+    exec_func_ignore_parms();
+
+    errno = 0;
+
+    {
+    int sign;
+    const F64 a = lgamma_r(z, &sign);
+    const F64 b = lgamma_r(w, &sign);
+    const F64 c = lgamma_r(z + w, &sign);
+    beta_result = exp(a + b - c);
+    } /*block*/
+
+    ev_data_set_real(p_ev_data_res, beta_result);
+
+    if(errno)
+        err = err_from_errno();
+
+    if(status_fail(err))
+        ev_data_set_error(p_ev_data_res, err);
+}
+
+PROC_EXEC_PROTO(c_binom)
+{
+    /* SKS 02apr99 call my friend to do the hard work */
+    c_combin(args, nargs, p_ev_data_res, p_cur_slr);
 }
 
 /******************************************************************************
@@ -2920,9 +1775,9 @@ ln_fact(
 
 static void
 product_between(
-    P_EV_DATA p_ev_data_res /*inout*/,
-    S32 start,
-    S32 end)
+    _InoutRef_  P_EV_DATA p_ev_data_res,
+    _InVal_     S32 start,
+    _InVal_     S32 end)
 {
     S32 i;
 
@@ -2940,15 +1795,14 @@ product_between(
 
             umul64(p_ev_data_res->arg.integer, i, &result);
 
-            if ((0 == result.HighPart) && (0 == (result.LowPart >> 31)))
+            if((0 == result.HighPart) && (0 == (result.LowPart >> 31)))
                 { /* result still fits in integer */
                 p_ev_data_res->arg.integer = (S32) result.LowPart;
                 continue;
                 }
 
             /* have to go to fp now result has outgrown integer and retry the multiply */
-            p_ev_data_res->arg.fp = p_ev_data_res->arg.integer;
-            p_ev_data_res->did_num = RPN_DAT_REAL;
+            ev_data_set_real(p_ev_data_res, (F64) p_ev_data_res->arg.integer);
             }
 
         p_ev_data_res->arg.fp *= i;
@@ -2958,52 +1812,18 @@ product_between(
         p_ev_data_res->did_num = ev_integer_size(p_ev_data_res->arg.integer);
 }
 
-PROC_EXEC_PROTO(c_beta)
-{
-    STATUS err = STATUS_OK;
-
-    exec_func_ignore_parms();
-
-    errno = 0;
-
-    {
-    int sign;
-    F64 z = args[0]->arg.fp;
-    F64 w = args[1]->arg.fp;
-    F64 a = lgamma_r(z, &sign);
-    F64 b = lgamma_r(w, &sign);
-    F64 c = lgamma_r(z + w, &sign);
-    F64 d = exp(a + b - c);
-
-    p_ev_data_res->arg.fp  = d;
-    p_ev_data_res->did_num = RPN_DAT_REAL;
-    }
-
-    if(errno)
-        err = err_from_errno();
-
-    if(status_fail(err))
-        data_set_error(p_ev_data_res, err);
-}
-
-PROC_EXEC_PROTO(c_binom)
-{
-    /* SKS 02apr99 call my friend to do the hard work */
-    c_combin(args, nargs, p_ev_data_res, p_cur_slr);
-}
-
 PROC_EXEC_PROTO(c_combin) /* nCk = n!/((n-k)!*k!) */
 {
     STATUS err = STATUS_OK;
-    S32 n = args[0]->arg.integer;
-    S32 k = args[1]->arg.integer;
+    const S32 n = args[0]->arg.integer;
+    const S32 k = args[1]->arg.integer;
 
     exec_func_ignore_parms();
 
     errno = 0;
 
     if((n < 0) || (k < 0) || ((n - k) < 0))
-        err = create_error(EVAL_ERR_ARGRANGE);
+        err = EVAL_ERR_ARGRANGE;
     else if(n <= 163) /* SKS 02apr99 bigger range */
         {
         EV_DATA ev_data_divisor;
@@ -3022,10 +1842,12 @@ PROC_EXEC_PROTO(c_combin) /* nCk = n!/((n-k)!*k!) */
 
         if(RPN_DAT_REAL == p_ev_data_res->did_num)
             {
+            assert(ev_data_divisor.did_num == p_ev_data_res->did_num);
+
             p_ev_data_res->arg.fp /= ev_data_divisor.arg.fp;
 
             /* combination always integer result - see if we can get one! */
-            fp_to_integer_try(p_ev_data_res);
+            real_to_integer_try(p_ev_data_res);
             }
         else
             {
@@ -3037,33 +1859,30 @@ PROC_EXEC_PROTO(c_combin) /* nCk = n!/((n-k)!*k!) */
         }
     else
         {
-        F64 ln_numer = ln_fact(n);
-        F64 ln_denom = ln_fact(n - k) + ln_fact(k);
+        const F64 ln_numer = ln_fact(n);
+        const F64 ln_denom = ln_fact(n - k) + ln_fact(k);
 
-        p_ev_data_res->arg.fp  = exp(ln_numer - ln_denom);
-        p_ev_data_res->did_num = RPN_DAT_REAL;
+        ev_data_set_real(p_ev_data_res, exp(ln_numer - ln_denom));
 
         if(errno)
             err = err_from_errno();
-
-        fp_to_integer_try(p_ev_data_res);
         }
 
     if(status_fail(err))
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, err);
 }
 
 PROC_EXEC_PROTO(c_fact)
 {
     STATUS err = STATUS_OK;
-    S32 n = args[0]->arg.integer;
+    const S32 n = args[0]->arg.integer;
 
     exec_func_ignore_parms();
 
     errno = 0;
 
     if(n < 0)
-        err = create_error(EVAL_ERR_ARGRANGE);
+        err = EVAL_ERR_ARGRANGE;
     else if(n <= 163) /* SKS 13nov96 bigger range */
         {
         /* assume result will be integer to start with */
@@ -3074,20 +1893,21 @@ PROC_EXEC_PROTO(c_fact)
         }
     else
         {
-        p_ev_data_res->arg.fp  = exp(ln_fact(n));
-        p_ev_data_res->did_num = RPN_DAT_REAL;
+        ev_data_set_real(p_ev_data_res, exp(ln_fact(n)));
 
         if(errno)
             err = err_from_errno();
         }
 
     if(status_fail(err))
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, err);
 }
 
 PROC_EXEC_PROTO(c_gammaln)
 {
     STATUS err = STATUS_OK;
+    const F64 number = args[0]->arg.fp;
+    F64 gammaln_result;
 
     exec_func_ignore_parms();
 
@@ -3095,29 +1915,30 @@ PROC_EXEC_PROTO(c_gammaln)
 
     {
     int sign;
-    p_ev_data_res->arg.fp  = lgamma_r(args[0]->arg.fp, &sign);
-    p_ev_data_res->did_num = RPN_DAT_REAL;
+    gammaln_result = lgamma_r(number, &sign);
     } /*block*/
+
+    ev_data_set_real(p_ev_data_res, gammaln_result);
 
     if(errno)
         err = err_from_errno();
 
     if(status_fail(err))
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, err);
 }
 
 PROC_EXEC_PROTO(c_permut) /* nPk = n!/(n-k)! */
 {
     STATUS err = STATUS_OK;
-    S32 n = args[0]->arg.integer;
-    S32 k = args[1]->arg.integer;
+    const S32 n = args[0]->arg.integer;
+    const S32 k = args[1]->arg.integer;
 
     exec_func_ignore_parms();
 
     errno = 0;
 
     if((n < 0) || (k < 0) || ((n - k) < 0))
-        err = create_error(EVAL_ERR_ARGRANGE);
+        err = EVAL_ERR_ARGRANGE;
     else if(n <= 163) /* SKS 02apr99 bigger range */
         {
         /* every number in the divisor term (n-k)!
@@ -3134,20 +1955,17 @@ PROC_EXEC_PROTO(c_permut) /* nPk = n!/(n-k)! */
         }
     else
         {
-        F64 ln_numer = ln_fact(n);
-        F64 ln_denom = ln_fact(n - k);
+        const F64 ln_numer = ln_fact(n);
+        const F64 ln_denom = ln_fact(n - k);
 
-        p_ev_data_res->arg.fp  = exp(ln_numer - ln_denom);
-        p_ev_data_res->did_num = RPN_DAT_REAL;
+        ev_data_set_real(p_ev_data_res, exp(ln_numer - ln_denom));
 
         if(errno)
             err = err_from_errno();
-
-        fp_to_integer_try(p_ev_data_res);
         }
 
     if(status_fail(err))
-        data_set_error(p_ev_data_res, err);
+        ev_data_set_error(p_ev_data_res, err);
 }
 
 /* end of ev_math.c */

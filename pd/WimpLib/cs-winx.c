@@ -38,7 +38,7 @@ win_send_open(wimp_w w, BOOL immediate, const wimp_openstr * openstr)
 {
     wimp_eventstr e;
 
-    tracef2("[win_send_open(&%p, immediate = %s)]\n",
+    tracef2("[win_send_open(&%p, immediate = %s)]",
             w, trace_boolstring(immediate));
 
     e.data.o   = *openstr;
@@ -65,7 +65,7 @@ win_send_front(wimp_w w, BOOL immediate)
 {
     wimp_wstate wstate;
 
-    tracef2("[win_send_front(&%p, immediate = %s)]\n", w, trace_boolstring(immediate));
+    tracef2("[win_send_front(&%p, immediate = %s)]", w, trace_boolstring(immediate));
 
     wimpt_safe(wimp_get_wind_state(w, &wstate));
     wstate.o.behind = (wimp_w) -1;          /* force to the front */
@@ -77,7 +77,7 @@ win_send_front_at(wimp_w w, BOOL immediate, const wimp_box * box)
 {
     wimp_wstate wstate;
 
-    tracef2("[win_send_front_at(&%p, immediate = %s)]\n", w, trace_boolstring(immediate));
+    tracef2("[win_send_front_at(&%p, immediate = %s)]", w, trace_boolstring(immediate));
 
     /* get current scroll offsets */
     wimpt_safe(wimp_get_wind_state(w, &wstate));
@@ -161,7 +161,7 @@ win_getfield(wimp_w w, wimp_i i, char *buffer /*out*/, size_t size)
         }
 
     buffer[j] = NULLCH;
-    tracef1(" returns \"%s\"]\n", buffer);
+    tracef1(" returns \"%s\"]", buffer);
 }
 
 extern void
@@ -190,12 +190,12 @@ win_setfield(wimp_w w, wimp_i i, const char * value)
     oldlen = strlen(info.data.indirecttext.buffer);
     info.data.indirecttext.buffer[0] = NULLCH;
     strncat(info.data.indirecttext.buffer, value, maxlen);
-    tracef1(" indirect buffer now \"%s\"]\n", info.data.indirecttext.buffer);
+    tracef1(" indirect buffer now \"%s\"]", info.data.indirecttext.buffer);
     newlen = strlen(info.data.indirecttext.buffer);
 
     /* ensure that the caret moves correctly if it's in this icon */
     wimpt_safe(wimp_get_caret_pos(&caret));
-    tracef2("[caret in window &%p, icon &%p]\n", caret.w, caret.i);
+    tracef2("[caret in window &%p, icon &%p]", caret.w, caret.i);
 
     if((caret.w == w)  &&  (caret.i == i))
         {
@@ -776,10 +776,10 @@ win_register_child(wimp_w parentw, wimp_w w)
         wimpt_safe(wimp_get_wind_state(w,       &wstate));
         c->x = wstate.o.box.x0 - parx; /* add on to parent pos to recover child pos */
         c->y = wstate.o.box.y1 - pary;
-        tracef2("at offset %d,%d from parent]\n", c->x, c->y);
+        tracef2("at offset %d,%d from parent]", c->x, c->y);
     }
     else
-        tracef0("failed to register child]\n");
+        tracef0("failed to register child]");
 
     return(c != NULL);
 }
@@ -821,7 +821,7 @@ win_deregister_child(wimp_w w)
     {
         if(cp->w == w)
         {
-            tracef1("removing win__child_str &%p\n", cp);
+            tracef1("removing win__child_str &%p", cp);
             pp->link = cp->link;
             wlalloc_free(cp);
             return(TRUE);
@@ -830,7 +830,7 @@ win_deregister_child(wimp_w w)
             pp = cp;
     }
 
-    tracef0("failed to deregister child from parent\n");
+    tracef0("failed to deregister child from parent");
 
     return(FALSE);
 }
@@ -876,13 +876,13 @@ win_close_wind(wimp_w w)
 
         if(!win_submenu_query_closed())
         {
-            tracef0("- explicit closure of open window\n");
+            tracef0("- explicit closure of open window");
             /* window being closed without the menu tree knowing about it */
             /* cause the menu system to close the window */
             event_clear_current_menu();
         }
         else
-            tracef0("- already been closed by Wimp\n");
+            tracef0("- already been closed by Wimp");
 
         win_submenu_w = 0;
     }
@@ -1017,7 +1017,7 @@ win_open_wind(wimp_openstr * o)
     wimp_wstate      wstate;
     wimp_w           behind = o->behind;
 
-    tracef6("[win_open_wind(&%p at %d,%d;%d,%d behind &%p]\n",
+    tracef6("[win_open_wind(&%p at %d,%d;%d,%d behind &%p]",
             w, o->box.x0, o->box.y0, o->box.x1, o->box.y1, o->behind);
 
     if(p)
@@ -1031,7 +1031,7 @@ win_open_wind(wimp_openstr * o)
             {
                 /* see which window the pane stack is really behind */
                 wimpt_safe(wimp_get_wind_state(p->children->w, &wstate));
-                tracef2("[window &%p pane stack is behind window &%p]\n", w, wstate.o.behind);
+                tracef2("[window &%p pane stack is behind window &%p]", w, wstate.o.behind);
                 behind = wstate.o.behind;
             }
 

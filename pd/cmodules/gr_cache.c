@@ -92,7 +92,7 @@ gr_cache_drawfiles =
 the interested tagstrip list
 */
 
-static P_LIST_BLKREF
+static P_LIST_BLOCK
 gr_cache_tagstrippers = NULL;
 
 /******************************************************************************
@@ -200,11 +200,11 @@ gr_cache_entry_ensure(
     /* create a list entry */
     key = cahkey_gen++;
 
-    if((p_gr_cache = collect_add_entry(&gr_cache_drawfiles, sizeof(*p_gr_cache), &key)) == NULL)
+    if(NULL == (p_gr_cache = collect_add_entry(&gr_cache_drawfiles, sizeof32(*p_gr_cache), &key, &res)))
         {
         al_ptr_dispose(P_P_ANY_PEDANTIC(&p_draw_diag));
         str_clr(&name_copy);
-        return(status_nomem());
+        return(res);
         }
 
     zero_struct_ptr(p_gr_cache);
@@ -242,7 +242,9 @@ gr_cache_entry_query(
     /* search for the file on the list */
     *cahp = GR_CACHE_HANDLE_NONE;
 
-    for(p_gr_cache = collect_first(&gr_cache_drawfiles, &key); p_gr_cache; p_gr_cache = collect_next(&gr_cache_drawfiles, &key))
+    for(p_gr_cache = collect_first(&gr_cache_drawfiles.lbr, &key);
+        p_gr_cache;
+        p_gr_cache = collect_next( &gr_cache_drawfiles.lbr, &key))
         {
         testname  = name;
         entryname = p_gr_cache->name;
@@ -257,14 +259,14 @@ gr_cache_entry_query(
             {
             *cahp = (GR_CACHE_HANDLE) key;
 
-            trace_2(TRACE_MODULE_GR_CHART, "gr_cache_entry_query found file, keys: %p %d, in list\n", report_ptr_cast(*cahp), key);
+            trace_2(TRACE_MODULE_GR_CHART, "gr_cache_entry_query found file, keys: %p %d, in list", report_ptr_cast(*cahp), key);
 
-            trace_0(TRACE_MODULE_GR_CHART, "gr_cache_entry_query yields 1\n");
+            trace_0(TRACE_MODULE_GR_CHART, "gr_cache_entry_query yields 1");
             return(1);
             }
         }
 
-    trace_0(TRACE_MODULE_GR_CHART, "gr_cache_entry_query yields 0\n");
+    trace_0(TRACE_MODULE_GR_CHART, "gr_cache_entry_query yields 0");
     return(0);
 }
 
@@ -280,11 +282,11 @@ gr_cache_entry_remove(
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         {
         al_ptr_dispose(P_P_ANY_PEDANTIC(&p_gr_cache->p_draw_diag));
         str_clr(&p_gr_cache->name);
-        collect_subtract_entry(&gr_cache_drawfiles, &key);
+        collect_subtract_entry(&gr_cache_drawfiles.lbr, key);
         return(1);
         }
 
@@ -299,14 +301,14 @@ gr_cache_entry_rename(
     P_GR_CACHE  p_gr_cache;
     LIST_ITEMNO key;
 
-    trace_2(TRACE_MODULE_GR_CHART, "gr_cache_entry_rename(&%p->&%p)\n", report_ptr_cast(cahp), report_ptr_cast(*cahp));
+    trace_2(TRACE_MODULE_GR_CHART, "gr_cache_entry_rename(&%p->&%p)", report_ptr_cast(cahp), report_ptr_cast(*cahp));
 
     if(!*cahp)
         return(0);
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         {
         status_return(str_set(&p_gr_cache->name, name));
         return(1);
@@ -333,7 +335,7 @@ gr_cache_entry_set_autokill(
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         {
         p_gr_cache->autokill = 1;
 
@@ -356,7 +358,7 @@ gr_cache_error_query(
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         err = p_gr_cache->error;
 
     return(err);
@@ -375,7 +377,7 @@ gr_cache_error_set(
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
     {
         p_gr_cache->error = err;
 
@@ -465,7 +467,7 @@ gr_cache_loaded_ensure(
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         {
         if(NULL == p_gr_cache->p_draw_diag->data)
             {
@@ -493,9 +495,9 @@ gr_cache_name_query(
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         {
-        void_strkpy(buffer, buflen, p_gr_cache->name);
+        safe_strkpy(buffer, buflen, p_gr_cache->name);
         return(1);
         }
 
@@ -519,7 +521,7 @@ gr_cache_recache(
     PC_U8      leaf, testname, entryname;
     S32         res = 0;
 
-    trace_1(TRACE_MODULE_GR_CHART, "gr_cache_recache(%s)\n", drawfilename);
+    trace_1(TRACE_MODULE_GR_CHART, "gr_cache_recache(%s)", drawfilename);
 
     if(!gr_cache_drawfiles.lbr)
         return(0);
@@ -527,7 +529,9 @@ gr_cache_recache(
     rooted = file_is_rooted(drawfilename);
     leaf   = file_leafname(drawfilename);
 
-    for(p_gr_cache = collect_first(&gr_cache_drawfiles, &key); p_gr_cache; p_gr_cache = collect_next(&gr_cache_drawfiles, &key))
+    for(p_gr_cache = collect_first(&gr_cache_drawfiles.lbr, &key);
+        p_gr_cache;
+        p_gr_cache = collect_next( &gr_cache_drawfiles.lbr, &key))
         {
         testname  = drawfilename;
         entryname = p_gr_cache->name;
@@ -539,7 +543,7 @@ gr_cache_recache(
             entryname = file_leafname(entryname);
             }
 
-        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_recache: comparing entry %s with %s\n", entryname, testname);
+        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_recache: comparing entry %s with %s", entryname, testname);
 
         if(0 == _stricmp(testname, entryname))
             {
@@ -563,14 +567,14 @@ gr_cache_recache_key(
     P_GR_CACHE  p_gr_cache;
     S32         res = 0;
 
-    trace_2(TRACE_MODULE_GR_CHART, "gr_cache_recache_key(&%p->&%p)\n", report_ptr_cast(cahp), report_ptr_cast(cahp ? *cahp : 0));
+    trace_2(TRACE_MODULE_GR_CHART, "gr_cache_recache_key(&%p->&%p)", report_ptr_cast(cahp), report_ptr_cast(cahp ? *cahp : 0));
 
     if(!*cahp)
         return(res);
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         {
         /* throwing away the Draw file seems easiest way to recache */
         draw_diag_dispose(p_gr_cache->p_draw_diag);
@@ -596,14 +600,14 @@ gr_cache_recache_inform(
     P_GR_CACHE  p_gr_cache;
     S32         res = 0;
 
-    trace_4(TRACE_MODULE_GR_CHART, "gr_cache_recache_inform(&%p->&%p &%p, &%p)\n", report_ptr_cast(cahp), report_ptr_cast(*cahp), report_procedure_name(report_proc_cast(proc)), report_ptr_cast(handle));
+    trace_4(TRACE_MODULE_GR_CHART, "gr_cache_recache_inform(&%p->&%p &%p, &%p)", report_ptr_cast(cahp), report_ptr_cast(*cahp), report_procedure_name(report_proc_cast(proc)), report_ptr_cast(handle));
 
     if(!*cahp)
         return(res);
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         {
         p_gr_cache->recache.proc   = proc;
         p_gr_cache->recache.handle = handle;
@@ -628,29 +632,29 @@ gr_cache_ref(
     LIST_ITEMNO key;
     P_GR_CACHE  p_gr_cache;
 
-    trace_3(TRACE_MODULE_GR_CHART, "gr_cache_ref(&%p->&%p, %d)\n", report_ptr_cast(cahp), report_ptr_cast(*cahp), add);
+    trace_3(TRACE_MODULE_GR_CHART, "gr_cache_ref(&%p->&%p, %d)", report_ptr_cast(cahp), report_ptr_cast(*cahp), add);
 
     if(!*cahp)
         return(0);
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) == NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) == NULL)
         return(0);
 
     if(add)
         {
         ++p_gr_cache->refs;
-        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_ref: &%x refs up to %d\n", key, p_gr_cache->refs);
+        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_ref: &%x refs up to %d", key, p_gr_cache->refs);
         }
     else
         {
         --p_gr_cache->refs;
-        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_ref: &%x refs down to %d\n", key, p_gr_cache->refs);
+        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_ref: &%x refs down to %d", key, p_gr_cache->refs);
         myassert0x(p_gr_cache->refs >= 0, "gr_cache_ref decremented cache ref count past zero");
         if(!p_gr_cache->refs)
             {
-            trace_1(TRACE_MODULE_GR_CHART, "gr_cache_ref: refs down to 0, so free diagram &%p (leave the entry around)\n", p_gr_cache->p_draw_diag->data);
+            trace_1(TRACE_MODULE_GR_CHART, "gr_cache_ref: refs down to 0, so free diagram &%p (leave the entry around)", p_gr_cache->p_draw_diag->data);
             draw_diag_dispose(p_gr_cache->p_draw_diag);
 
             if(p_gr_cache->autokill)
@@ -701,7 +705,7 @@ gr_cache_refs(
 
     key = (LIST_ITEMNO) cah;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) == NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) == NULL)
         return(0);
 
     return(p_gr_cache->refs);
@@ -823,18 +827,18 @@ gr_cache_search(
     LIST_ITEMNO key;
     P_DRAW_DIAG p_draw_diag = NULL;
 
-    trace_2(TRACE_MODULE_GR_CHART, "gr_cache_search(&%p->&%p)\n", report_ptr_cast(cahp), report_ptr_cast(*cahp));
+    trace_2(TRACE_MODULE_GR_CHART, "gr_cache_search(&%p->&%p)", report_ptr_cast(cahp), report_ptr_cast(*cahp));
 
     if(!*cahp)
         return(NULL);
 
     key = (LIST_ITEMNO) *cahp;
 
-    if((p_gr_cache = collect_search(&gr_cache_drawfiles, &key)) != NULL)
+    if((p_gr_cache = collect_search(&gr_cache_drawfiles.lbr, key)) != NULL)
         if(NULL != p_gr_cache->p_draw_diag->data)
             p_draw_diag = p_gr_cache->p_draw_diag;
 
-    trace_1(TRACE_MODULE_GR_CHART, "gr_cache_search yields &%p\n", report_ptr_cast(p_draw_diag));
+    trace_1(TRACE_MODULE_GR_CHART, "gr_cache_search yields &%p", report_ptr_cast(p_draw_diag));
     return(p_draw_diag);
 }
 
@@ -873,7 +877,7 @@ gr_cache_load(
 
         if(!fin)
             {
-            trace_1(TRACE_MODULE_GR_CHART, "gr_cache_load: cannot open: %s\n", p_gr_cache->name);
+            trace_1(TRACE_MODULE_GR_CHART, "gr_cache_load: cannot open: %s", p_gr_cache->name);
             p_gr_cache->error = res ? res : create_error(FILE_ERR_CANTOPEN);
             break;
             }
@@ -888,7 +892,7 @@ gr_cache_load(
 
             if(!gr_cache_can_import(filetype))
                 {
-                trace_1(TRACE_MODULE_GR_CHART, "gr_cache_load: bad Draw file: %s\n", p_gr_cache->name);
+                trace_1(TRACE_MODULE_GR_CHART, "gr_cache_load: bad Draw file: %s", p_gr_cache->name);
                 p_gr_cache->error = create_error(GR_CHART_ERR_INVALID_DRAWFILE);
                 break; /* out of another loop */
                 }
@@ -940,16 +944,16 @@ gr_cache_load(
 
             if(!length || (res < 0))
                 {
-                trace_1(TRACE_MODULE_GR_CHART, "gr_cache_load: bad Draw file: %s\n", p_gr_cache->name);
+                trace_1(TRACE_MODULE_GR_CHART, "gr_cache_load: bad Draw file: %s", p_gr_cache->name);
                 p_gr_cache->error = (res < 0) ? res : create_error(GR_CHART_ERR_INVALID_DRAWFILE);
                 break; /* out of another loop */
                 }
 
-            trace_2(TRACE_MODULE_GR_CHART, "gr_cache_load: found Draw file length: %d, %d\n", lengthfile, length);
+            trace_2(TRACE_MODULE_GR_CHART, "gr_cache_load: found Draw file length: %d, %d", lengthfile, length);
 
             if(0 == (res = flex_alloc(&p_draw_diag->data, (int) length)))
                 {
-                p_gr_cache->error = create_error(GR_CHART_ERR_NOMEM);
+                p_gr_cache->error = status_nomem();
                 break; /* out of another loop */
                 }
 
@@ -1006,7 +1010,7 @@ gr_cache_load(
 
                 gr_riscdiag_diagram_init((P_DRAW_FILE_HEADER) p_gr_cache->p_draw_diag->data, "gr_cache");
 
-                trace_2(TRACE_MODULE_GR_CHART, "gr_cache_load: about to create sprite header &%p -> &%p\n", report_ptr_cast(p_gr_cache), report_ptr_cast(p_draw_diag->data));
+                trace_2(TRACE_MODULE_GR_CHART, "gr_cache_load: about to create sprite header &%p -> &%p", report_ptr_cast(p_gr_cache), report_ptr_cast(p_draw_diag->data));
 
                 /* first object in this diagram */
                 spriteObject = sizeof(DRAW_FILE_HEADER);
@@ -1154,7 +1158,7 @@ gr_cache_rebind_and_shift(
 
 #if TRACE_ALLOWED
     draw_box = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
-    trace_4(TRACE_MODULE_GR_CHART, "gr_cache_rebind: diagram bbox prior to rebind %d, %d, %d, %d (Draw)\n",
+    trace_4(TRACE_MODULE_GR_CHART, "gr_cache_rebind: diagram bbox prior to rebind %d, %d, %d, %d (Draw)",
             draw_box.x0, draw_box.y0, draw_box.x1, draw_box.y1);
 #endif
 
@@ -1174,7 +1178,7 @@ gr_cache_rebind_and_shift(
 
     /* get box in Draw units */
     draw_box = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
-    trace_4(TRACE_MODULE_GR_CHART, "gr_cache_rebind: diagram bbox after rebind %d, %d, %d, %d (Draw)\n",
+    trace_4(TRACE_MODULE_GR_CHART, "gr_cache_rebind: diagram bbox after rebind %d, %d, %d, %d (Draw)",
             draw_box.x0, draw_box.y0, draw_box.x1, draw_box.y1);
 
     /* move diagram over into the bottom left corner */
@@ -1182,7 +1186,7 @@ gr_cache_rebind_and_shift(
     shiftBy.y = -draw_box.y0;
     if((0 != shiftBy.x) || (0 != shiftBy.y))
     {
-        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_rebind: shift_diag by (%d, %d)\n", shiftBy.x, shiftBy.y);
+        trace_2(TRACE_MODULE_GR_CHART, "gr_cache_rebind: shift_diag by (%d, %d)", shiftBy.x, shiftBy.y);
 
         /* give loaded diagram away to temp diagram for shift process */
         gr_riscdiag_diagram_setup_from_draw_diag(&gr_riscdiag, p_draw_diag);
@@ -1193,7 +1197,7 @@ gr_cache_rebind_and_shift(
 
 #if TRACE_ALLOWED
         draw_box = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
-        trace_4(TRACE_MODULE_GR_CHART, "gr_cache_rebind: diagram bbox after shift %d, %d, %d, %d (Draw)\n",
+        trace_4(TRACE_MODULE_GR_CHART, "gr_cache_rebind: diagram bbox after shift %d, %d, %d, %d (Draw)",
                 draw_box.x0, draw_box.y0, draw_box.x1, draw_box.y1);
 #endif
     }
@@ -1227,7 +1231,7 @@ gr_cache_tagstrip(
 
         /* write interested tag data */
         funclist_writedata_ip(&gr_cache_tagstrippers,
-                              &item, &tag,
+                              item, &tag,
                               offsetof(gr_cache_tagstrip_extradata, tag),
                               sizeof(tag));
         }
@@ -1265,7 +1269,7 @@ gr_riscdiag_tagstrip_proto(static, gr_cache_tagstrippers_call)
 
         /* test request */
         funclist_readdata_ip(&gr_cache_tagstrippers,
-                             &item, &wantTag,
+                             item, &wantTag,
                              offsetof(gr_cache_tagstrip_extradata, tag),
                              sizeof(wantTag));
 

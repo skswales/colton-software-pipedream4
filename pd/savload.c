@@ -148,18 +148,18 @@ save_version_string(
     uchar array[LIN_BUFSIZ];
     char *tmp;
 
-    void_strkpy(array, elemof32(array), applicationversion);
-    void_strkat(array, elemof32(array), ", ");
+    safe_strkpy(array, elemof32(array), applicationversion);
+    safe_strkat(array, elemof32(array), ", ");
 
-    void_strkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
+    safe_strkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
     if(!str_isblank(user_organ_id()))
         {
-        void_strkat(array, elemof32(array), " - ");
-        void_strkat(array, elemof32(array), user_organ_id());
+        safe_strkat(array, elemof32(array), " - ");
+        safe_strkat(array, elemof32(array), user_organ_id());
         }
-    void_strkat(array, elemof32(array), ", ");
+    safe_strkat(array, elemof32(array), ", ");
 
-    void_strkat(array, elemof32(array), "R9200 7500 3900 8299");
+    safe_strkat(array, elemof32(array), "R9200 7500 3900 8299");
 
     /* sks 15nov91 - temporarily borrow the data */
     tmp = d_version[0].textfield;
@@ -296,7 +296,7 @@ save_opt_to_file(
     char ch1, ch2;
     BOOL not_on_list;
 
-    trace_2(TRACE_APP_PD4, "save_opt_to_file(output, &%p, %d)\n", report_ptr_cast(start), n);
+    trace_2(TRACE_APP_PD4, "save_opt_to_file(output, &%p, %d)", report_ptr_cast(start), n);
 
     for(dptr = start; dptr < start + n; dptr++)
         {
@@ -311,7 +311,7 @@ save_opt_to_file(
 
         not_on_list = !search_list(&def_first_option, ((S32) ch1 << 8) + (S32) ch2);
 
-        trace_3(TRACE_APP_PD4, "considering option %c%c, type %d\n", ch1, ch2, dptr->type);
+        trace_3(TRACE_APP_PD4, "considering option %c%c, type %d", ch1, ch2, dptr->type);
 
         switch(dptr->type)
             {
@@ -359,7 +359,7 @@ save_opt_to_file(
                 if(0 == strcmp(ptr1, ptr2))
                     continue;
 
-                void_strkat(linbuf, LIN_BUFSIZ, ptr1);
+                safe_strkat(linbuf, LIN_BUFSIZ, ptr1);
 #else
                 /* default options are blank, except leading,trailing characters */
 
@@ -374,7 +374,7 @@ save_opt_to_file(
                     continue;
 
                 if(dptr->textfield)
-                    void_strkat(linbuf, LIN_BUFSIZ, dptr->textfield);
+                    safe_strkat(linbuf, LIN_BUFSIZ, dptr->textfield);
 #endif
                 break;
 
@@ -382,7 +382,7 @@ save_opt_to_file(
                 break;
             }
 
-        void_strkat(linbuf, LIN_BUFSIZ, CR_STR);
+        safe_strkat(linbuf, LIN_BUFSIZ, CR_STR);
 
         /* output the string, expanding inline hilites */
         ptr = linbuf;
@@ -433,7 +433,7 @@ addcurrentdir(
     _InVal_     U32 elemof_buffer,
     const char *filename)
 {
-    void_strkpy(name, elemof_buffer, filename);
+    safe_strkpy(name, elemof_buffer, filename);
 }
 
 /******************************************************************************
@@ -757,7 +757,9 @@ plain_slot(
     {
     case SL_TEXT:
     case SL_PAGE:
-        expand_slot(current_docno(), tslot, trow, buffer, fwidth, TRUE, FALSE, FALSE, TRUE);
+        (void) expand_slot(current_docno(), tslot, trow, buffer, fwidth,
+                           DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
+                           FALSE /*allow_fonty_result*/, TRUE /*cff*/);
         return(FALSE);
 
     default:
@@ -794,15 +796,17 @@ plain_slot(
         break;
     }
 
-    trace_6(TRACE_APP_PD4, "plain_slot(&%p, %d, %d, '%c', &%p): fwidth %d\n", report_ptr_cast(tslot), tcol, trow, filetype_option, buffer, fwidth);
+    trace_6(TRACE_APP_PD4, "plain_slot(&%p, %d, %d, '%c', &%p): fwidth %d", report_ptr_cast(tslot), tcol, trow, filetype_option, buffer, fwidth);
 
-    expand_slot(current_docno(), tslot, trow, buffer, fwidth, TRUE, FALSE, FALSE, TRUE);
+    (void) expand_slot(current_docno(), tslot, trow, buffer, fwidth,
+                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
+                       FALSE /*allow_fonty_result*/, TRUE /*cff*/);
     /* does not move slot */
 
     tslot->format = oldformat;
     d_options_TH = thousands;
 
-    /* remove padding space */
+    /* remove padding space from plain non-fonty string */
     len = strlen(buffer);
 
     while(len--)
@@ -812,7 +816,7 @@ plain_slot(
             break;
             }
 
-    trace_1(TRACE_APP_PD4, "plain_slot returns '%s'\n", buffer);
+    trace_1(TRACE_APP_PD4, "plain_slot returns '%s'", buffer);
     return(TRUE);
 }
 
@@ -1414,9 +1418,9 @@ collup(
     char array[LIN_BUFSIZ];
     P_S32 widp, wwidp;
 
-    (void) xtos_buf(colnoarray, elemof32(colnoarray),
-                    tcol & COLNOBITS /* ignore bad and absolute */,
-                    1 /*uppercase*/);
+    (void) xtos_ubuf(colnoarray, elemof32(colnoarray),
+                     tcol & COLNOBITS /* ignore bad and absolute */,
+                     1 /*uppercase*/);
 
     /* note that to get the wrapwidth, we cannot call colwrapwidth here because it would not return a zero value */
     readpcolvars(tcol, &widp, &wwidp);
@@ -1659,7 +1663,7 @@ lukcon(
             /* luk_newcol is number of new column */
             luk_newcol = getcol() + firstcol;
 
-            /*reportf("lukcon: got C_COL; newcol = %d\n", luk_newcol);*/
+            /*reportf("lukcon: got C_COL; newcol = %d", luk_newcol);*/
             if(build_cols && !createcol(luk_newcol))
                 {
                 *outofmem = TRUE;
@@ -1920,7 +1924,7 @@ LoadTemplate_fn(void)
         if(!mystr_set(&d_load_template[0].textfield, DEFAULT_LTEMPLATE_FILE_STR))
             return;
 
-    enumerate_dir_to_list(&ltemplate_or_driver_list, LTEMPLATE_SUBDIR_STR, FILETYPE_UNDETERMINED);
+    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, LTEMPLATE_SUBDIR_STR, FILETYPE_UNDETERMINED));
 
     while(dialog_box(D_LOAD_TEMPLATE))
         {
@@ -1975,7 +1979,7 @@ loadfile(
 {
     BOOL res;
 
-    reportf("loadfile(%u:%s): filetype_option '%c'\n", strlen32(filename), filename, p_load_file_options->filetype_option);
+    reportf("loadfile(%u:%s): filetype_option '%c'", strlen32(filename), filename, p_load_file_options->filetype_option);
 
     /* NB all paths with p_load_file_options->filetype_option set to non-AUTO_CHAR have already checked readability */
 
@@ -1994,7 +1998,7 @@ loadfile(
 
         p_load_file_options->filetype_option = (char) auto_filetype_option;
 
-        reportf("loadfile: auto-detected filetype_option '%c'\n", p_load_file_options->filetype_option);
+        reportf("loadfile: auto-detected filetype_option '%c'", p_load_file_options->filetype_option);
         }
 
     res = loadfile_recurse(filename, p_load_file_options);
@@ -2077,7 +2081,7 @@ loadfile_recurse(
     BOOL ok;
     DOCNO docno = current_docno();
 
-    reportf("loadfile_recurse(%u:%s): filetype_option '%c'\n", strlen32(filename), filename, p_load_file_options->filetype_option);
+    reportf("loadfile_recurse(%u:%s): filetype_option '%c'", strlen32(filename), filename, p_load_file_options->filetype_option);
 
     if(PD4_CHART_CHAR == p_load_file_options->filetype_option)
         return(pdchart_load_isolated_chart(filename));
@@ -2170,7 +2174,7 @@ loadfile_recurse_load_supporting_documents(
 
     n_doc = ev_doc_get_sup_docs_for_sheet(current_docno(), &cur_docno, docno_array);
 
-    reportf("There may be %d supporting document(s) after loading %u:%s\n", n_doc, strlen32(filename), filename);
+    reportf("There may be %d supporting document(s) after loading %u:%s", n_doc, strlen32(filename), filename);
 
     for(i = 0, p_docno = docno_array; i < n_doc && !been_error; ++i, ++p_docno)
         {
@@ -2191,7 +2195,7 @@ loadfile_recurse_load_supporting_documents(
 
         path_name_supplied = p_ss_doc->docu_name.flags.path_name_supplied;
 
-        reportf("  sup-doc #%d: docno=%u loaded=%s path_name_supplied=%s %u:%s\n",
+        reportf("  sup-doc #%d: docno=%u loaded=%s path_name_supplied=%s %u:%s",
                 i, *p_docno, report_boolstring(!docu_is_thunk(p_docu)), report_boolstring(path_name_supplied), strlen32(sup_doc_filename), sup_doc_filename);
         }
 
@@ -2218,7 +2222,7 @@ loadfile_recurse_load_supporting_documents(
 
         path_name_supplied = p_ss_doc->docu_name.flags.path_name_supplied;
 
-        reportf("Trying to load sup-doc #%d: docno=%u %u:%s\n", i, *p_docno, strlen32(sup_doc_filename), sup_doc_filename);
+        reportf("Trying to load sup-doc #%d: docno=%u %u:%s", i, *p_docno, strlen32(sup_doc_filename), sup_doc_filename);
 
         { /* check the supporting document file exists and can be read (and while we're at it, suss file type as we need that for load anyway) */
         TCHARZ fullname[BUF_MAX_PATHSTRING];
@@ -2245,7 +2249,7 @@ loadfile_recurse_load_supporting_documents(
             char leaf_name[BUF_MAX_PATHSTRING];
 
             /* copy out so that it doesn't get overwritten */
-            void_strkpy(leaf_name, elemof32(leaf_name), file_leafname(sup_doc_filename));
+            safe_strkpy(leaf_name, elemof32(leaf_name), file_leafname(sup_doc_filename));
 
             try_path = add_path_using_dir(sup_doc_filename, elemof32(sup_doc_filename), leaf_name, EXTREFS_SUBDIR_STR);
             } /*block*/
@@ -2266,7 +2270,7 @@ loadfile_recurse_load_supporting_documents(
                 }
 
             if(0 == filetype_option)
-                void_strkpy(sup_doc_filename, elemof32(sup_doc_filename), p_ss_doc->docu_name.leaf_name); /* restore a better filename for error */
+                safe_strkpy(sup_doc_filename, elemof32(sup_doc_filename), p_ss_doc->docu_name.leaf_name); /* restore a better filename for error */
             }
 
         if(0 == filetype_option)
@@ -2284,17 +2288,18 @@ loadfile_recurse_load_supporting_documents(
 *
 ******************************************************************************/
 
-extern S32
+/*ncr*/
+extern STATUS
 enumerate_dir_to_list(
-    P_P_LIST_BLOCK list,
-    PC_U8 subdir /*maybe NULL*/,
-    FILETYPE_RISC_OS filetype)
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _In_opt_z_  PC_U8Z subdir /*maybe NULL*/,
+    _InVal_     FILETYPE_RISC_OS filetype)
 {
     P_FILE_OBJENUM     enumstrp;
     P_FILE_OBJINFO     infostrp;
     U8                 path[BUF_MAX_PATHSTRING];
     S32                entry = 0;
-    S32                res_error = 0;
+    STATUS             res_error = 0;
 
     /* SKS after 4.11 03feb92 - why was this only file_get_path() before? */
     file_combined_path(path, elemof32(path), is_current_document() ? currentfilename : NULL);
@@ -2303,16 +2308,16 @@ enumerate_dir_to_list(
         infostrp;
         infostrp = file_find_next(&enumstrp))
         {
-        if(file_objinfo_type(infostrp) == FILE_OBJECT_FILE)
+        if(file_objinfo_type(infostrp) != FILE_OBJECT_FILE)
+            continue;
+
+        if((FILETYPE_UNDETERMINED == filetype) || (file_objinfo_filetype(infostrp) == filetype))
             {
-            if((-1 == filetype) || (file_objinfo_filetype(infostrp) == filetype))
-                {
-                char leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 now cater for long leaf names (was BUF_MAX_LEAFNAME) */
+            char leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 now cater for long leaf names (was BUF_MAX_LEAFNAME) */
 
-                file_objinfo_name(infostrp, leafname, elemof32(leafname));
+            file_objinfo_name(infostrp, leafname, elemof32(leafname));
 
-                add_to_list(list, entry++, leafname, &res_error);
-                }
+            status_break(res_error = add_to_list(list, entry++, leafname));
             }
         }
 
@@ -2356,7 +2361,7 @@ find_filetype_option(
 
     size = pd_file_read(array, 1, BYTES_TO_SEARCH, input);
 
-    reportf("find_filetype_option: read %d bytes from file, requested %d\n", size, BYTES_TO_SEARCH);
+    reportf("find_filetype_option: read %d bytes from file, requested %d", size, BYTES_TO_SEARCH);
 
     /* error in reading? */
     if(size == -1)
@@ -2381,7 +2386,7 @@ find_filetype_option(
     res = vsload_fileheader_isvsfile(array, size);
     if(res != 0)
         {
-        trace_0(TRACE_APP_PD4, "ViewSheet file\n");
+        trace_0(TRACE_APP_PD4, "ViewSheet file");
         type = VIEWSHEET_CHAR;
         goto endpoint;
         }
@@ -2392,7 +2397,7 @@ find_filetype_option(
         (array[4] >= 4)  &&  (array[4] <= 6)    &&
         (array[5] == 4)                         )
         {
-        reportf("LOTUS FILE DETECTED: %s!!!\n", name);
+        reportf("LOTUS FILE DETECTED: %s!!!", name);
         reperr_not_installed(create_error(ERR_LOTUS));
         type = ERR_LOTUS;
         goto endpoint;
@@ -2403,7 +2408,7 @@ find_filetype_option(
     /* test for 1WP file */
     if(fwp_isfwpfile(array))
         {
-        trace_0(TRACE_APP_PD4, "1wp file\n");
+        trace_0(TRACE_APP_PD4, "1wp file");
         type = FWP_CHAR;
         goto endpoint;
         }
@@ -2416,7 +2421,7 @@ find_filetype_option(
     do  {
         ch = *ptr++;
 
-        trace_2(TRACE_APP_PD4, "read char %c (%d)\n", ch, ch);
+        trace_2(TRACE_APP_PD4, "read char %c (%d)", ch, ch);
 
         if(ch == '%')
             {
@@ -2434,12 +2439,12 @@ find_filetype_option(
                     */
                     if(0 == memcmp(ptr, "OP%VS", 5))
                         {
-                        trace_0(TRACE_APP_PD4, "PipeDream 4 file found (versioned)\n");
+                        trace_0(TRACE_APP_PD4, "PipeDream 4 file found (versioned)");
                         type = PD4_CHAR;
                         }
                     else
                         {
-                        trace_0(TRACE_APP_PD4, "PipeDream 4 file found (assumed, might be PD3 or PD4-transitional)\n");
+                        trace_0(TRACE_APP_PD4, "PipeDream 4 file found (assumed, might be PD3 or PD4-transitional)");
                         type = PD4_CHAR;
                         }
 
@@ -2453,7 +2458,7 @@ find_filetype_option(
             {
             case CTRLZ: /* MS-DOS end of file marker? */
             case TAB:
-                trace_0(TRACE_APP_PD4, "Tab file found\n");
+                trace_0(TRACE_APP_PD4, "Tab file found");
                 type = TAB_CHAR;
                 goto endpoint;
 
@@ -2463,7 +2468,7 @@ find_filetype_option(
                 if(ptr - start_of_line > 1)
                     if(comma_values > 1)
                         {
-                        trace_0(TRACE_APP_PD4, "Line of valid comma options: CSV\n");
+                        trace_0(TRACE_APP_PD4, "Line of valid comma options: CSV");
                         type = CSV_CHAR;
                         goto endpoint;
                         }
@@ -2479,7 +2484,7 @@ find_filetype_option(
                     /* numbers followed by one or more spaces then comma tend to be CSV */
                     do  {
                         ch = *ptr++;
-                        trace_2(TRACE_APP_PD4, "read char %c in skipspaces (%d)\n", ch, ch);
+                        trace_2(TRACE_APP_PD4, "read char %c in skipspaces (%d)", ch, ch);
                         }
                     while(ch == SPACE);
                     --ptr;
@@ -2510,7 +2515,7 @@ find_filetype_option(
                 do  {
                     ch = *ptr++;
 
-                    trace_2(TRACE_APP_PD4, "read char %c in string read (%d)\n", ch, ch);
+                    trace_2(TRACE_APP_PD4, "read char %c in string read (%d)", ch, ch);
 
                     switch(ch)
                         {
@@ -2518,7 +2523,7 @@ find_filetype_option(
                         case LF:
                         case '\0':
                             /* faulty quoted string */
-                            trace_0(TRACE_APP_PD4, "Tab file as quoted string was faulty\n");
+                            trace_0(TRACE_APP_PD4, "Tab file as quoted string was faulty");
                             type = TAB_CHAR;
                             goto endpoint;
 
@@ -2530,7 +2535,7 @@ find_filetype_option(
                                 ++comma_values;
                                 }
                             else
-                                trace_0(TRACE_APP_PD4, "escaped quote\n");
+                                trace_0(TRACE_APP_PD4, "escaped quote");
                             break;
 
                         default:
@@ -2548,7 +2553,7 @@ find_filetype_option(
 
                 if(isupper(*ptr)  &&  isupper(*(ptr+1)))
                     {
-                    trace_0(TRACE_APP_PD4, "VIEW stored command\n");
+                    trace_0(TRACE_APP_PD4, "VIEW stored command");
                     type = VIEW_CHAR;
                     goto endpoint;
                     }
@@ -2562,7 +2567,7 @@ find_filetype_option(
 
                 if((*ptr == '.')  &&  (*(ptr+1) == '.'))
                     {
-                    trace_0(TRACE_APP_PD4, "VIEW ruler\n");
+                    trace_0(TRACE_APP_PD4, "VIEW ruler");
                     type = VIEW_CHAR;
                     goto endpoint;
                     }
@@ -2585,7 +2590,7 @@ find_filetype_option(
 
     /* nothing recognized */
 
-    trace_0(TRACE_APP_PD4, "End of BYTES_TO_SEARCH/EOF - so call it Tab\n");
+    trace_0(TRACE_APP_PD4, "End of BYTES_TO_SEARCH/EOF - so call it Tab");
 
     type = TAB_CHAR;
 
@@ -2637,7 +2642,7 @@ rft_from_filetype_option(
             break;
         }
 
-    trace_2(TRACE_APP_PD4, "rft_from_filetype_option('%c') yields &%3.3X\n", filetype_option, res);
+    trace_2(TRACE_APP_PD4, "rft_from_filetype_option('%c') yields &%3.3X", filetype_option, res);
     return(res);
 }
 
@@ -2777,8 +2782,8 @@ loadfile_core(
         row_range_start = (ROW) getsbd()-1;
         row_range_end   = (ROW) getsbd()-1;
 
-        if( bad_row(row_range_start)    ||
-            bad_row(row_range_end)      ||
+        if( (row_range_start < 0)    ||
+            (row_range_end   < 0)    ||
             (row_range_end < row_range_start))
             return(reperr_null(create_error(ERR_BAD_RANGE)));
         }
@@ -2845,7 +2850,7 @@ loadfile_core(
             }
 
         riscos_readfileinfo(&currentfileinfo, name);
-        trace_2(TRACE_APP_PD4, "fileinfo: load = %8.8X exec = %8.8X\n", currentfileinfo.load, currentfileinfo.exec);
+        trace_2(TRACE_APP_PD4, "fileinfo: load = %8.8X exec = %8.8X", currentfileinfo.load, currentfileinfo.exec);
 
         if(TAB_CHAR != p_load_file_options->filetype_option)
             riscos_settype(&currentfileinfo, rft_from_filetype_option(p_load_file_options->filetype_option));
@@ -2865,7 +2870,7 @@ loadfile_core(
     if(!flength)
         flength = 1;
 
-    reportf("loadfile_core: reading data from %u:%s, length=%d\n", strlen32(filename), filename, flength);
+    reportf("loadfile_core: reading data from %u:%s, length=%d", strlen32(filename), filename, flength);
 
     switch(p_load_file_options->filetype_option)
         {
@@ -3334,8 +3339,6 @@ loadfile_core(
 
     actind_end();
 
-    setlogcolours();
-
     recalc_state_may_have_changed();
     chart_recalc_state_may_have_changed();
     insert_state_may_have_changed();
@@ -3358,7 +3361,7 @@ viewsheet_load_core(
 {
     S32 col, row;
 
-    trace_0(TRACE_APP_PD4, "loading ViewSheet\n");
+    trace_0(TRACE_APP_PD4, "loading ViewSheet");
 
     for(col = 0; col < 255; col++)
         {
@@ -3439,7 +3442,7 @@ static void
 rename_document(
     _InRef_     PC_DOCU_NAME p_docu_name)
 {
-    reportf("rename_document(path(%s) leaf(%s) %s)\n", report_tstr(p_docu_name->path_name), report_tstr(p_docu_name->leaf_name), report_boolstring(p_docu_name->flags.path_name_supplied));
+    reportf("rename_document(path(%s) leaf(%s) %s)", report_tstr(p_docu_name->path_name), report_tstr(p_docu_name->leaf_name), report_boolstring(p_docu_name->flags.path_name_supplied));
 
     ev_rename_sheet(p_docu_name, current_docno());
 
@@ -3458,7 +3461,7 @@ rename_document_prep_docu_name_flags(
 {
     BOOL is_loaded_from_path = 0;
 
-    trace_2(TRACE_APP_PD4, "rename_document_prep_docu_name_flags(path(%s) leaf(%s))\n", trace_tstr(p_docu_name->path_name), trace_tstr(p_docu_name->leaf_name));
+    trace_2(TRACE_APP_PD4, "rename_document_prep_docu_name_flags(path(%s) leaf(%s))", trace_tstr(p_docu_name->path_name), trace_tstr(p_docu_name->leaf_name));
 
     if(p_docu_name->path_name && file_is_rooted(p_docu_name->path_name))
         {
@@ -3471,9 +3474,9 @@ rename_document_prep_docu_name_flags(
 
         p_docu_name->flags.path_name_supplied = 1;
 
-        void_strkpy(dir_name, elemof32(dir_name), p_docu_name->path_name);
+        safe_strkpy(dir_name, elemof32(dir_name), p_docu_name->path_name);
         trail_ptr = dir_name + strlen32(dir_name) - 1;
-        if(*trail_ptr == FILE_DIR_SEP_CH) /* splat trailing '.' but NOT ':' */
+        if(*trail_ptr == FILE_DIR_SEP_CH) /* overwrite trailing '.' but NOT ':' */
             *trail_ptr = NULLCH;
 
         /* strip off trailing Library from dir_name if present */
@@ -3502,7 +3505,7 @@ rename_document_prep_docu_name_flags(
     else
         p_docu_name->flags.path_name_supplied = 0;
 
-    reportf("is_loaded_from_path = %s, p_docu_name->flags.path_name_supplied = %s\n", report_boolstring(is_loaded_from_path), report_boolstring(p_docu_name->flags.path_name_supplied));
+    reportf("is_loaded_from_path = %s, p_docu_name->flags.path_name_supplied = %s", report_boolstring(is_loaded_from_path), report_boolstring(p_docu_name->flags.path_name_supplied));
     return(is_loaded_from_path);
 }
 

@@ -75,33 +75,6 @@ vtracef(
     report_output(trace_buffer);
 }
 
-#ifdef TRACE_LIST
-
-static STATUS __cdecl
-writetodebugf(
-    PCTSTR format,
-    /**/        ...)
-{
-    va_list args;
-
-    va_start(args, format);
-
-#if RISCOS
-    (void) vsnprintf(trace_buffer, elemof32(trace_buffer), format, args);
-#else
-    (void) _vsntprintf(trace_buffer, elemof32(trace_buffer), _TRUNCATE, format, args);
-#endif
-
-    va_end(args);
-
-    if(writetodebug(trace_buffer) < 0)
-        return(STATUS_FAIL);
-
-    return(STATUS_OK);
-}
-
-#endif /* TRACE_LIST */
-
 extern void
 trace_disable(void)
 {
@@ -149,6 +122,8 @@ trace_on(void)
 
 #if defined(TRACE_LIST)
 
+#define writetodebugf vreportf
+
 extern void
 trace_list(
     _InVal_     U32 mask,
@@ -162,7 +137,7 @@ trace_list(
     if(!tracing(mask))
         return;
 
-    writetodebugf(TEXT("list &%p, numitem &%4lX, offsetc &%4hX, itemc &%4hX, ix_pooldesc &%2lX, h_pooldesc &%4lX, n_pooldesc &%2lX\n"),
+    writetodebugf(TEXT("list &%p, numitem &%4lX, offsetc &%4hX, itemc &%4hX, ix_pooldesc &%2lX, h_pooldesc &%4lX, n_pooldesc &%2lX"),
                   p_list_block, (S32) p_list_block->numitem,
                   (U16) p_list_block->offsetc, (U16) p_list_block->itemc,
                   (S32) p_list_block->ix_pooldesc, (S32) p_list_block->h_pooldesc,
@@ -172,7 +147,7 @@ trace_list(
     {
         P_POOLDESC p_pooldesc = array_ptr(&p_list_block->h_pooldesc, POOLDESC, i);
 
-        writetodebugf(TEXT("  pool &%2lX %s, &%p, h_pool &%4lX, pool item &%6lX, pool bytes &%6lX\n"),
+        writetodebugf(TEXT("  pool &%2lX %s, &%p, h_pool &%4lX, pool item &%6lX, pool bytes &%6lX"),
                       (S32) i, ((i == p_list_block->ix_pooldesc) ? "(*current*) " : ""),
                       p_pooldesc, (S32) p_pooldesc->h_pool,
                       (S32) p_pooldesc->poolitem, array_elements32(&p_pooldesc->h_pool));
@@ -185,7 +160,7 @@ trace_list(
             LIST_ITEMNO itemno  = p_pooldesc->poolitem;
 
             if(itemno < last_itemno)
-                writetodebugf(TEXT("*** list corrupt ***: itemno &%6lX < last pool itemno &%6lX\n"), (S32) itemno, (S32) last_itemno);
+                writetodebugf(TEXT("*** list corrupt ***: itemno &%6lX < last pool itemno &%6lX"), (S32) itemno, (S32) last_itemno);
 
             while(it < end_it)
             {
@@ -193,7 +168,7 @@ trace_list(
 
                 if(it == base_it)
                     if(it->offsetp)
-                        writetodebugf(TEXT("*** pool corrupt ***: base it &%p has non-zero offsetp &%4hX\n"), it, (U16) it->offsetp);
+                        writetodebugf(TEXT("*** pool corrupt ***: base it &%p has non-zero offsetp &%4hX"), it, (U16) it->offsetp);
 
                 if(it->offsetn)
                     itemsize = (OFF_TYPE) it->offsetn;
@@ -202,34 +177,34 @@ trace_list(
 
                 if(it->fill)
                 {
-                    writetodebugf(TEXT("    item &%6lX &%p, filler &%6lX\n"), (S32) itemno, it, (S32) it->i.itemfill);
+                    writetodebugf(TEXT("    item &%6lX &%p, filler &%6lX"), (S32) itemno, it, (S32) it->i.itemfill);
 
                     if(itemsize != sizeof32(*it))
-                        writetodebugf(TEXT("*** filler corrupt ***: size &%4hX > sizeof-LIST_ITEM &%4hX\n"), (U16) itemsize, (U16) sizeof32(*it));
+                        writetodebugf(TEXT("*** filler corrupt ***: size &%4hX > sizeof-LIST_ITEM &%4hX"), (U16) itemsize, (U16) sizeof32(*it));
                 }
                 else
                 {
-                    writetodebugf(TEXT("    item &%6lX &%p, contents &%p, size &%4hX\n"), (S32) itemno, it, list_itemcontents(void, it), itemsize - offsetof32(LIST_ITEM, i));
+                    writetodebugf(TEXT("    item &%6lX &%p, contents &%p, size &%4hX"), (S32) itemno, it, list_itemcontents(void, it), itemsize - offsetof32(LIST_ITEM, i));
                     high_itemno = MAX(high_itemno, itemno);
                 }
 
                 itemno += list_leapnext(it);
 
                 if(itemno > list_numitem(p_list_block))
-                    writetodebugf(TEXT("*** list corrupt ***: item &%6lX > numitem &%6lX\n"), (S32) itemno, (S32) list_numitem(p_list_block));
+                    writetodebugf(TEXT("*** list corrupt ***: item &%6lX > numitem &%6lX"), (S32) itemno, (S32) list_numitem(p_list_block));
 
                 it = (P_ANY) ((P_U8) it + itemsize);
             }
 
             if(it > end_it)
-                writetodebugf(TEXT("  *** pool corrupt ***: it &%p > end_it &%p\n"), it, end_it);
+                writetodebugf(TEXT("  *** pool corrupt ***: it &%p > end_it &%p"), it, end_it);
 
-            writetodebugf(TEXT("  pool end, itemno &%6lX\n"), (S32) itemno);
+            writetodebugf(TEXT("  pool end, itemno &%6lX"), (S32) itemno);
             last_itemno = itemno;
         }
     }
 
-    writetodebugf(TEXT("highest non-filler itemno &%6lX, highest &%6lX, numitem &%6lX\n"), (S32) high_itemno, (S32) last_itemno, (S32) list_numitem(p_list_block));
+    writetodebugf(TEXT("highest non-filler itemno &%6lX, highest &%6lX, numitem &%6lX"), (S32) high_itemno, (S32) last_itemno, (S32) list_numitem(p_list_block));
 }
 
 #endif /* TRACE_LIST */

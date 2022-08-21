@@ -127,11 +127,11 @@ get_user_info(void)
     make_var_name(var_name, elemof32(var_name), "$User1");
     if(NULL == _kernel_getenv(var_name, env_value, elemof32(env_value)))
         if(0 != strcmp(env_value, "NoInfo"))
-            void_strkpy(user_name, elemof32(user_name), env_value);
+            safe_strkpy(user_name, elemof32(user_name), env_value);
 
     make_var_name(var_name, elemof32(var_name), "$User2");
     if(NULL == _kernel_getenv(var_name, env_value, elemof32(env_value)))
-        void_strkpy(organ_name, elemof32(organ_name), env_value); /* SKS 13.12.98 */
+        safe_strkpy(organ_name, elemof32(organ_name), env_value); /* SKS 13.12.98 */
 }
 
 /******************************************************************************
@@ -215,10 +215,10 @@ main(
         if(0 != val)
         {
             trace_on();
-            trace_1(TRACE_APP_PD4, "main: sp ~= " PTR_XTFMT "\n", report_ptr_cast(&argc));
+            trace_1(TRACE_APP_PD4, "main: sp ~= " PTR_XTFMT, report_ptr_cast(&argc));
             scptr = _kernel_current_stack_chunk();
             scsize = scptr->sc_size;
-            trace_3(TRACE_APP_PD4, "main: stack chunk " PTR_XTFMT ", size %lu, top " PTR_XTFMT "\n", report_ptr_cast(scptr), scsize, report_ptr_cast((char *) scptr + scsize));
+            trace_3(TRACE_APP_PD4, "main: stack chunk " PTR_XTFMT ", size %lu, top " PTR_XTFMT, report_ptr_cast(scptr), scsize, report_ptr_cast((char *) scptr + scsize));
         }
     }
     } /* block */
@@ -509,8 +509,8 @@ make_var_name(
     _InVal_     U32 elemof_buffer,
     _In_z_      PC_USTR p_u8_suffix)
 {
-    void_strkpy(var_name, elemof_buffer, product_id());
-    void_strkat(var_name, elemof_buffer, p_u8_suffix);
+    safe_strkpy(var_name, elemof_buffer, product_id());
+    safe_strkat(var_name, elemof_buffer, p_u8_suffix);
 }
 
 /*
@@ -532,7 +532,7 @@ decode_command_line_options(
         char array[BUF_MAX_PATHSTRING];
 
         if(pass == 2)
-            reportf("main: *** got arg %d, '%s'\n", i, arg);
+            reportf("main: *** got arg %d, '%s'", i, arg);
 
         switch(ch)
             {
@@ -631,7 +631,7 @@ decode_run_options(void)
         if(NULLCH == *arg)
             break;
 
-        reportf("main: *** got run option arg '%s'\n", arg);
+        reportf("main: *** got run option arg '%s'", arg);
 
         if((*arg == '-')  && (arg[1] == '-'))
         {

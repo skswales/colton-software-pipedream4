@@ -86,10 +86,10 @@ typedef S32 ROW; typedef ROW * P_ROW;
 /* Output buffer for text slot compilation: worst case is LINBUF full of
  * small SLR, op such as '@A1@'
 */
-#define COMPILED_TEXT_BUFSIZ ((LIN_BUFSIZ / 4) * (SLRSIZE + 2))
+#define COMPILED_TEXT_BUFSIZ ((LIN_BUFSIZ / 4) * (COMPILED_TEXT_SLR_SIZE + 2))
 
-/* maximum length of a textual slot reference */
-#define BUF_MAX_REFERENCE (BUF_MAX_PATHSTRING + 2 + 10)
+/* maximum length of a textual slot reference [fullname]%$ABCDEFGH$1234567890 */
+#define BUF_MAX_REFERENCE (BUF_MAX_PATHSTRING + 2 + 8 + 1 + 10)
 
 /* maximum size of a low level slot */
 #define MAX_SLOTSIZE (EV_MAX_OUT_LEN + sizeof(struct _slot))
@@ -115,7 +115,7 @@ typedef struct _FULL_SLR /* SLR with col, row and an EV_DOCNO for completeness *
 }
 FULL_SLR, * P_FULL_SLR; typedef const FULL_SLR * PC_FULL_SLR;
 
-#define SLRSIZE (1 + sizeof(EV_DOCNO) + sizeof(COL) + sizeof(ROW))
+#define COMPILED_TEXT_SLR_SIZE (1/*SLRLD1*/ + 1/*SLRLD2*/ + sizeof(EV_DOCNO) + sizeof(COL) + sizeof(ROW))
 
 /*
 a type to go traversing blocks with
@@ -168,7 +168,7 @@ typedef struct colentry
     S32 colwidth;
     S32 colflags;
 }
-* P_COLENTRY;
+COLENTRY, * P_COLENTRY;
 
 /* object on deleted words list describing a block */
 
@@ -232,18 +232,18 @@ MENU_HEAD;
 
 typedef struct _scrrow
 {
-    ROW  rowno;
-    S32   page;
+    ROW rowno;
+    S32 page;
     uchar flags;
 }
-SCRROW;
+SCRROW, * P_SCRROW;
 
 typedef struct _scrcol
 {
-    COL  colno;
+    COL colno;
     uchar flags;
 }
-SCRCOL;
+SCRCOL, * P_SCRCOL;
 
 /* ------------------------------ dialog.c ------------------------------- */
 

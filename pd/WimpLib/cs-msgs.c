@@ -180,7 +180,7 @@ __msgs_readfile(
 
             if(ch == COMMENT_CH)
                 {
-                tracef1("[msgs_readfile: found comment at &%p]\n", in - 1);
+                tracef1("[msgs_readfile: found comment at &%p]", in - 1);
                 do
                     ch = (in != end) ? *in++ : LF;
                 while((ch != LF)  &&  (ch != CR));
@@ -195,13 +195,13 @@ __msgs_readfile(
                 {
                 if((ch ^ lastch) == (LF ^ CR))
                     {
-                    tracef0("[msgs_readfile: just got the second of a pair of LF,CR or CR,LF - NULLCH already placed so loop]\n");
+                    tracef0("[msgs_readfile: just got the second of a pair of LF,CR or CR,LF - NULLCH already placed so loop]");
                     lastch = NULLCH;
                     continue;
                     }
                 else
                     {
-                    tracef1("[msgs_readfile: got a line terminator at &%p - place a NULLCH]\n", in - 1);
+                    tracef1("[msgs_readfile: got a line terminator at &%p - place a NULLCH]", in - 1);
                     lastch = ch;
                     ch = NULLCH;
                     }
@@ -212,12 +212,12 @@ __msgs_readfile(
             /* don't place two NULLCHs together or one at the start (this also means you can have blank lines) */
             if(!ch)
                 {
-                tracef1("[msgs_readfile: placing NULLCH at &%p]\n", out);
+                tracef1("[msgs_readfile: placing NULLCH at &%p]", out);
                 if((out == msgs__block)  ||  !*(out - 1))
                     continue;
 #if TRACE
                 *out = ch;
-                tracef1("[msgs_readfile: ended line '%s']\n", start);
+                tracef1("[msgs_readfile: ended line '%s']", start);
                 start = out + 1;
 #endif
                 }
@@ -226,7 +226,7 @@ __msgs_readfile(
             }
         while(in != end);
 
-        tracef1("[msgs_readfile: placing last NULLCH at &%p]\n", out);
+        tracef1("[msgs_readfile: placing last NULLCH at &%p]", out);
         *out++ = NULLCH; /* need this last byte as end marker */
         }
 }

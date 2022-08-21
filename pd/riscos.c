@@ -197,7 +197,7 @@ riscos_LoadFile(
         return(FALSE);
     }
 
-    reportf("riscos_LoadFile been asked to %s file %u:'%s', temp = %s; DOCNO = %d\n",
+    reportf("riscos_LoadFile been asked to %s file %u:'%s', temp = %s; DOCNO = %d",
             inserting ? "insert" : "load", strlen32(filename), filename,
             report_boolstring(temp_file), current_docno());
 
@@ -234,7 +234,7 @@ riscos_LoadFile(
         load_file_options.inserting = inserting;
         load_file_options.filetype_option = filetype_option;
         res = loadfile(filename, &load_file_options);
-        trace_1(TRACE_APP_PD4, "loadfile returned %d\n", res);
+        trace_1(TRACE_APP_PD4, "loadfile returned %d", res);
 
         if(recording)
             out_comm_end_to_macro_file(N_LoadFile);
@@ -253,7 +253,7 @@ print_file(
     BOOL ok = 0;
     STATUS filetype_option;
 
-    reportf("print_file(%u:%s)\n", strlen32(filename), filename);
+    reportf("print_file(%u:%s)", strlen32(filename), filename);
 
     filetype_option = find_filetype_option(filename);
 
@@ -432,8 +432,8 @@ iconbar_event_EBUT_BLEFT(void)
         TCHARZ filename[BUF_MAX_PATHSTRING];
 
         /* open the user's Choices directory viewer, from where they can find CmdFiles, Templates etc. */
-        void_tstrkpy(filename, elemof32(filename), TEXT("<Choices$Write>") FILE_DIR_SEP_STR TEXT("PipeDream") FILE_DIR_SEP_STR);
-        void_tstrkat(filename, elemof32(filename), TEXT("X"));
+        safe_tstrkpy(filename, elemof32(filename), TEXT("<Choices$Write>") FILE_DIR_SEP_STR TEXT("PipeDream") FILE_DIR_SEP_STR);
+        safe_tstrkat(filename, elemof32(filename), TEXT("X"));
 
         filer_opendir(filename);
     }
@@ -481,7 +481,7 @@ iconbar_new_sprite(
 
     bi.spritename[0] = 'S';
     bi.spritename[1] = '\0';
-    void_strkat(bi.spritename, elemof32(bi.spritename), spritename);
+    safe_strkat(bi.spritename, elemof32(bi.spritename), spritename);
 
     i.w = -1; /* icon bar, right hand side */
 
@@ -517,10 +517,10 @@ iconbar_initialise(
 {
     static char iconbar_spritename[16] = "!";
 
-    trace_1(TRACE_APP_PD4, "iconbar_initialise(%s)\n", appname);
+    trace_1(TRACE_APP_PD4, "iconbar_initialise(%s)", appname);
 
     /* make name of icon bar icon sprite */
-    void_strkat(iconbar_spritename, elemof32(iconbar_spritename), appname);
+    safe_strkat(iconbar_spritename, elemof32(iconbar_spritename), appname);
 
     win_register_new_event_handler(win_ICONBAR,
                                    default_event_handler,
@@ -548,7 +548,7 @@ continue_draw(void)
 
         if(p_docu->Xxf_interrupted)
         {
-            trace_1(TRACE_NULL, "continuing with interrupted draw for document %d\n", p_docu->docno);
+            trace_1(TRACE_NULL, "continuing with interrupted draw for document %d", p_docu->docno);
 
             select_document(p_docu);
 
@@ -561,7 +561,7 @@ continue_draw(void)
 
         if(p_docu->Xxf_acquirecaret)
         {
-            trace_1(TRACE_NULL, "continuing with caret acquisition for document %d\n", p_docu->docno);
+            trace_1(TRACE_NULL, "continuing with caret acquisition for document %d", p_docu->docno);
 
             select_document(p_docu);
 
@@ -757,20 +757,25 @@ riscos_sendslotcontents(
                     tslot->format = t_format & ~(F_LDS | F_TRS | F_BRAC);
                     }
                 else
-                    t_format = 0; /* keep complier dataflow analyser happy */
+                    t_format = 0; /* keep compiler dataflow analyser happy */
                 t_opt_DF  = d_options_DF;
                 d_options_DF = 'E';
                 /* ensure no silly commas etc. output! */
                 t_opt_TH  = d_options_TH;
                 d_options_TH = TH_BLANK;
                 curpnm = 0;        /* we have really no idea */
-                expand_slot(current_docno(), tslot, row, buffer, LIN_BUFSIZ, TRUE, FALSE, TRUE, TRUE);
+
+                (void) expand_slot(current_docno(), tslot, row, buffer, LIN_BUFSIZ,
+                                   DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                                   FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+
                 tslot->justify               = t_justify;
                 if(tslot->type == SL_NUMBER)
                     tslot->format = t_format;
                 d_options_DF      = t_opt_DF;
                 d_options_TH      = t_opt_TH;
-                /* remove highlights & funny spaces etc */
+
+                /* remove highlights & funny spaces etc from plain non-fonty string */
                 ptr = buffer;
                 to  = buffer;
                 do  {
@@ -787,7 +792,7 @@ riscos_sendslotcontents(
 
         if(ptr)
             {
-            void_strkpy(msg.data.pd_dde.type.c.content.text, elemof32(msg.data.pd_dde.type.c.content.text), ptr);
+            safe_strkpy(msg.data.pd_dde.type.c.content.text, elemof32(msg.data.pd_dde.type.c.content.text), ptr);
             nbytes = strlen32p1(msg.data.pd_dde.type.c.content.text);
             }
 
@@ -802,7 +807,7 @@ riscos_sendslotcontents(
         msg.data.pd_dde.type.c.yoff   = yoff;
         msg.data.pd_dde.type.c.type   = type;
 
-        trace_2(TRACE_MODULE_UREF, "sendslotcontents x:%d, y:%d\n", xoff, yoff);
+        trace_2(TRACE_MODULE_UREF, "sendslotcontents x:%d, y:%d", xoff, yoff);
 
         wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, (wimp_t) glp->task));
         }
@@ -956,7 +961,7 @@ iconbar_message_DATAOPEN(
 
     IGNOREPARM(m); /* xferrecv uses last message mechanism */
 
-    trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can 'run' a file of type &%4.4X\n", filetype);
+    trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can 'run' a file of type &%4.4X", filetype);
 
     switch(filetype)
         {
@@ -967,7 +972,7 @@ iconbar_message_DATAOPEN(
             */
             xferrecv_insertfileok();
 
-            reportf("MDATAOPEN: file type &%4.4X, name %u:%s\n", filetype, strlen32(filename), filename);
+            reportf("MDATAOPEN: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
 
             if(mystr_set(&d_macro_file[0].textfield, filename))
                 {
@@ -984,7 +989,7 @@ iconbar_message_DATAOPEN(
 
                 xferrecv_insertfileok();
 
-                reportf("MDATAOPEN: file type &%4.4X, name %u:%s\n", filetype, strlen32(filename), filename);
+                reportf("MDATAOPEN: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
 
                 filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
 
@@ -1016,7 +1021,7 @@ iconbar_message_DATALOAD(
 
     IGNOREPARM(m); /* xferrecv uses last message mechanism */
 
-    reportf("MDATALOAD: file type &%4.4X, name %u:%s\n", filetype, strlen32(filename), filename);
+    reportf("MDATALOAD: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
         {
@@ -1044,11 +1049,11 @@ iconbar_message_DATALOAD(
         default:
             if(gr_cache_can_import(filetype))
                 {
-                trace_0(TRACE_APP_PD4, "ignore Draw file as we can't do anything sensible\n");
+                trace_0(TRACE_APP_PD4, "ignore Draw file as we can't do anything sensible");
                 break;
                 }
 
-            trace_0(TRACE_APP_PD4, "loading file as new file\n");
+            trace_0(TRACE_APP_PD4, "loading file as new file");
 
             if(filetype == FILETYPE_PDMACRO)
                 {
@@ -1191,13 +1196,13 @@ iconbar_PD_DDE(
     wimp_t task = m->hdr.task; /* caller's task id */
     S32 id = m->data.pd_dde.id;
 
-    trace_1(TRACE_APP_PD4, "ukprocessor got PD DDE message %d\n", id);
+    trace_1(TRACE_APP_PD4, "ukprocessor got PD DDE message %d", id);
 
     switch(id)
         {
         case Wimp_MPD_DDE_IdentifyMarkedBlock:
             {
-            trace_0(TRACE_APP_PD4, "IdentifyMarkedBlock\n");
+            trace_0(TRACE_APP_PD4, "IdentifyMarkedBlock");
 
             if((blkstart.col != NO_COL)  &&  (blkend.col != NO_COL))
                 {
@@ -1261,13 +1266,13 @@ iconbar_PD_DDE(
                     else if(ghan  &&  (ghan != status_nomem()))
                         reperr_null(ghan);
                     else
-                        trace_0(TRACE_APP_PD4, "IMB: failed to create ghandle - caller will get bounced msg\n");
+                        trace_0(TRACE_APP_PD4, "IMB: failed to create ghandle - caller will get bounced msg");
                     }
                 else
-                    trace_0(TRACE_APP_PD4, "IMB: leafname/tag too long - caller will get bounced msg\n");
+                    trace_0(TRACE_APP_PD4, "IMB: leafname/tag too long - caller will get bounced msg");
                 }
             else
-                trace_0(TRACE_APP_PD4, "IMB: no block marked/only one mark set - caller will get bounced msg\n");
+                trace_0(TRACE_APP_PD4, "IMB: no block marked/only one mark set - caller will get bounced msg");
             }
             break;
 
@@ -1283,7 +1288,7 @@ iconbar_PD_DDE(
             ROW row;
             P_SLOT tslot;
 
-            trace_4(TRACE_APP_PD4, "EstablishHandle: xsize %d, ysize %d, name %s, tag %s\n", xsize, ysize, tstr, tag);
+            trace_4(TRACE_APP_PD4, "EstablishHandle: xsize %d, ysize %d, name %s, tag %s", xsize, ysize, tstr, tag);
 
             if(file_is_rooted(tstr))
                 {
@@ -1339,7 +1344,7 @@ iconbar_PD_DDE(
                     wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, m, task));
                     }
                 else
-                    trace_0(TRACE_APP_PD4, "EST: failed to create ghandle - caller will get bounced msg\n");
+                    trace_0(TRACE_APP_PD4, "EST: failed to create ghandle - caller will get bounced msg");
 
                 break;
                 }
@@ -1352,7 +1357,7 @@ iconbar_PD_DDE(
             ghandle han = m->data.pd_dde.type.b.handle;
             graphlinkp glp;
 
-            trace_2(TRACE_APP_PD4, "%sRequestUpdates: handle %d\n", (id == Wimp_MPD_DDE_StopRequestUpdates) ? "Stop" : "", han);
+            trace_2(TRACE_APP_PD4, "%sRequestUpdates: handle %d", (id == Wimp_MPD_DDE_StopRequestUpdates) ? "Stop" : "", han);
 
             glp = graph_search_list(han);
 
@@ -1372,7 +1377,7 @@ iconbar_PD_DDE(
             ghandle han = m->data.pd_dde.type.b.handle;
             graphlinkp glp;
 
-            trace_1(TRACE_APP_PD4, "RequestContents: handle %d\n", han);
+            trace_1(TRACE_APP_PD4, "RequestContents: handle %d", han);
 
             glp = graph_search_list(han);
 
@@ -1399,7 +1404,7 @@ iconbar_PD_DDE(
             ghandle han = m->data.pd_dde.type.b.handle;
             graphlinkp glp;
 
-            trace_1(TRACE_APP_PD4, "GraphClosed: handle %d\n", han);
+            trace_1(TRACE_APP_PD4, "GraphClosed: handle %d", han);
 
             glp = graph_search_list(han);
 
@@ -1418,7 +1423,7 @@ iconbar_PD_DDE(
             {
             const char *drawfilename = m->data.pd_dde.type.d.leafname;
 
-            trace_1(TRACE_APP_PD4, "DrawFileChanged: name %s\n", drawfilename);
+            trace_1(TRACE_APP_PD4, "DrawFileChanged: name %s", drawfilename);
 
             /* don't ack this message: other people may want to see it too */
 
@@ -1428,7 +1433,7 @@ iconbar_PD_DDE(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "ignoring PD DDE type %d message\n", id);
+            trace_1(TRACE_APP_PD4, "ignoring PD DDE type %d message", id);
             processed = FALSE;
             break;
         }
@@ -1474,7 +1479,7 @@ iconbar_message(
             char * filename;
             FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkprint(&filename);
 
-            trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%4.4X\n", filetype);
+            trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%4.4X", filetype);
 
             if(pd_can_print(filetype))
                 {
@@ -1486,7 +1491,7 @@ iconbar_message(
             break;
 
         case wimp_MPrinterChange:
-            trace_0(TRACE_APP_PD4, "ukprocessor got informed of printer driver change\n");
+            trace_0(TRACE_APP_PD4, "ukprocessor got informed of printer driver change");
             riscprint_set_printer_data();
             break;
 
@@ -1505,7 +1510,7 @@ iconbar_message(
           {
               static int seen_my_birth = FALSE;
               const char *taskname = m->data.taskinit.taskname;
-              trace_1(TRACE_APP_PD4, "MTASKINIT for %s\n", taskname);
+              trace_1(TRACE_APP_PD4, "MTASKINIT for %s", taskname);
               if(0 == strcmp(wimpt_get_taskname(), taskname))
               {
                   if(seen_my_birth)
@@ -1514,12 +1519,12 @@ iconbar_message(
                       msg.hdr.size = sizeof(wimp_msghdr);
                       msg.hdr.your_ref = 0; /* fresh msg */
                       msg.hdr.action = wimp_MCLOSEDOWN;
-                      trace_1(TRACE_APP_PD4, "Another %s is trying to start! I'll kill it\n", taskname);
+                      trace_1(TRACE_APP_PD4, "Another %s is trying to start! I'll kill it", taskname);
                       wimpt_safe(wimp_sendmessage(wimp_ESEND, &msg, m->hdr.task));
                   }
                   else
                   {
-                      trace_0(TRACE_APP_PD4, "witnessing our own birth\n");
+                      trace_0(TRACE_APP_PD4, "witnessing our own birth");
                       seen_my_birth = TRUE;
                   }
               }
@@ -1527,7 +1532,7 @@ iconbar_message(
         break;
 
         case wimp_MHELPREQUEST:
-            trace_0(TRACE_APP_PD4, "ukprocessor got help request for icon bar icon\n");
+            trace_0(TRACE_APP_PD4, "ukprocessor got help request for icon bar icon");
             m->data.helprequest.m.i = 0;
             riscos_sendhelpreply(m, help_iconbar);
             break;
@@ -1537,7 +1542,7 @@ iconbar_message(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed %s message to iconbar handler\n",
+            trace_1(TRACE_APP_PD4, "unprocessed %s message to iconbar handler",
                     report_wimp_message(m, FALSE));
             processed = FALSE;
             break;
@@ -1553,7 +1558,7 @@ iconbar_PD_DDE_bounced(
     BOOL processed = TRUE;
     const S32 id = m->data.pd_dde.id;
 
-    trace_1(TRACE_APP_PD4, "ukprocessor got bounced PD DDE message %d\n", id);
+    trace_1(TRACE_APP_PD4, "ukprocessor got bounced PD DDE message %d", id);
 
     switch(id)
         {
@@ -1561,7 +1566,7 @@ iconbar_PD_DDE_bounced(
             {
             ghandle han = m->data.pd_dde.type.c.handle;
             graphlinkp glp;
-            trace_1(TRACE_APP_PD4, "SendSlotContents on handle %d bounced - receiver dead\n", han);
+            trace_1(TRACE_APP_PD4, "SendSlotContents on handle %d bounced - receiver dead", han);
             glp = graph_search_list(han);
             if(glp)
                 /* delete entry from list */
@@ -1573,7 +1578,7 @@ iconbar_PD_DDE_bounced(
             {
             ghandle han = m->data.pd_dde.type.a.handle;
             graphlinkp glp;
-            trace_1(TRACE_APP_PD4, "ReturnHandleAndBlock on handle %d bounced - receiver dead\n", han);
+            trace_1(TRACE_APP_PD4, "ReturnHandleAndBlock on handle %d bounced - receiver dead", han);
             glp = graph_search_list(han);
             if(glp)
                 /* delete entry from list */
@@ -1582,7 +1587,7 @@ iconbar_PD_DDE_bounced(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "ignoring bounced PD DDE type %d message\n", id);
+            trace_1(TRACE_APP_PD4, "ignoring bounced PD DDE type %d message", id);
             processed = FALSE;
             break;
         }
@@ -1603,7 +1608,7 @@ iconbar_message_bounced(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed %s bounced message to iconbar handler\n",
+            trace_1(TRACE_APP_PD4, "unprocessed %s bounced message to iconbar handler",
                     report_wimp_message(m, FALSE));
             processed = FALSE;
             break;
@@ -1621,7 +1626,7 @@ iconbar_message_bounced(
 static BOOL
 default_event_ENULL(void)
 {
-    trace_0(TRACE_NULL, "got a null event\n");
+    trace_0(TRACE_NULL, "got a null event");
 
     if(d_progvars[OR_AM].option == 'A')
         ev_recalc();
@@ -1666,7 +1671,7 @@ default_event_handler(
             break;
 
         case wimp_EUSERDRAG:
-            trace_0(TRACE_APP_PD4, "UserDrag: stopping drag as button released\n");
+            trace_0(TRACE_APP_PD4, "UserDrag: stopping drag as button released");
 
             /* send this to the right guy */
             select_document_using_docno(drag_docno);
@@ -1686,7 +1691,7 @@ default_event_handler(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event %s\n", report_wimp_event(e->e, &e->data));
+            trace_1(TRACE_APP_PD4, "unprocessed wimp event %s", report_wimp_event(e->e, &e->data));
             processed = FALSE;
             break;
         }
@@ -1704,7 +1709,7 @@ static void
 rear_open_request(
     wimp_eventstr *e)
 {
-    trace_0(TRACE_APP_PD4, "rear_open_request()\n");
+    trace_0(TRACE_APP_PD4, "rear_open_request()");
 
     application_open_request(e);
 }
@@ -1719,7 +1724,7 @@ static void
 rear_scroll_request(
     wimp_eventstr *e)
 {
-    trace_0(TRACE_APP_PD4, "rear_scroll_request()\n");
+    trace_0(TRACE_APP_PD4, "rear_scroll_request()");
 
     application_scroll_request(e);
 }
@@ -1745,7 +1750,7 @@ rear_close_request(
 
     IGNOREPARM(e);
 
-    trace_0(TRACE_APP_PD4, "rear_close_request()\n");
+    trace_0(TRACE_APP_PD4, "rear_close_request()");
 
     if(!justopening)
         {
@@ -1790,7 +1795,7 @@ main_redraw_request(
     wimp_redrawstr redraw;
     S32 redrawindex;
 
-    trace_0(TRACE_APP_PD4, "main_redraw_request()\n");
+    trace_0(TRACE_APP_PD4, "main_redraw_request()");
 
     redraw.w = e->data.o.w;
 
@@ -1799,7 +1804,7 @@ main_redraw_request(
 
 #if TRACE_ALLOWED
     if(!redrawindex)
-        trace_0(TRACE_APP_PD4, "no rectangles to redraw\n");
+        trace_0(TRACE_APP_PD4, "no rectangles to redraw");
 #endif
 
     while(!bum  &&  redrawindex)
@@ -1838,7 +1843,7 @@ main_key_pressed(
     S32 ch = e->data.key.chcode;
     S32 kh;
 
-    trace_1(TRACE_APP_PD4, "main_key_pressed: key &%3.3X\n", ch);
+    trace_1(TRACE_APP_PD4, "main_key_pressed: key &%3.3X", ch);
 
     /* Translate key from Window manager into what PipeDream expects */
 
@@ -1926,7 +1931,7 @@ main_key_pressed(
     if(!application_process_key(kh))
         {
         /* if unprocessed, send it back from whence it came */
-        trace_1(TRACE_APP_PD4, "main_key_pressed: unprocessed app_process_key(&%8X)\n", ch);
+        trace_1(TRACE_APP_PD4, "main_key_pressed: unprocessed app_process_key(&%8X)", ch);
         wimpt_safe(wimp_processkey(ch));
         }
 }
@@ -1943,7 +1948,7 @@ draw_insert_filename(
 {
     char cwd_buffer[BUF_MAX_PATHSTRING];
 
-    trace_0(TRACE_APP_PD4, "inserting minimalist reference to graphic/chart file as text-at G field\n");
+    trace_0(TRACE_APP_PD4, "inserting minimalist reference to graphic/chart file as text-at G field");
 
     /* try for minimal reference */
     if(NULL != file_get_cwd(cwd_buffer, elemof32(cwd_buffer), currentfilename))
@@ -1984,7 +1989,7 @@ main_DATALOAD(
 
     IGNOREPARM(m); /* xferrecv uses last message mechanism */
 
-    reportf("MDATALOAD(main): file type &%4.4X, name %u:%s\n", filetype, strlen32(filename), filename);
+    reportf("MDATALOAD(main): file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
         {
@@ -2006,7 +2011,7 @@ main_DATALOAD(
 
             if(PD4_CHART_CHAR == filetype_option)
                 {
-                trace_0(TRACE_APP_PD4, "pd chart about to be loaded via text-at field G mechanism\n");
+                trace_0(TRACE_APP_PD4, "pd chart about to be loaded via text-at field G mechanism");
                 draw_insert_filename(filename);
                 break;
                 }
@@ -2060,8 +2065,8 @@ main_HELPREQUEST(
     coord coff  = calcoff(tx);    /* not _click */
     coord roff  = calroff(ty);    /* not _click */
     coord o_roff = roff;
-    ROW  trow;
-    SCRROW *rptr;
+    ROW trow;
+    P_SCRROW rptr;
     BOOL append_drag_msg = xf_inexpression; /* for THIS window */
 
     if(dragtype != NO_DRAG_ACTIVE) /* stop pointer and message changing whilst dragging */
@@ -2073,10 +2078,10 @@ main_HELPREQUEST(
     if(roff >= rowsonscreen)
         roff = rowsonscreen - 1;
 
-    trace_1(TRACE_APP_PD4, " roff %d\n", roff);
+    trace_1(TRACE_APP_PD4, " roff %d", roff);
 
     /* default message */
-    void_strkpy(abuffer, elemof32(abuffer), help_main_window);
+    safe_strkpy(abuffer, elemof32(abuffer), help_main_window);
 
     prefix_len = strlen(abuffer); /* remember a possible cut place */
 
@@ -2087,7 +2092,7 @@ main_HELPREQUEST(
         rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
-            void_strkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_page_break);
+            safe_strkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_page_break);
         else
             {
             trow = rptr->rowno;
@@ -2101,7 +2106,7 @@ main_HELPREQUEST(
 
                 if( !insertref  &&
                     chkrpb(trow)  &&  chkfsb()  &&  chkpac(trow))
-                        void_strkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_hard_page_break);
+                        safe_strkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_hard_page_break);
                 else
                     {
                     msg = (insertref)
@@ -2109,14 +2114,14 @@ main_HELPREQUEST(
                                : help_position_the_caret_in;
 
                     tcol = col_number(coff);
-                    trace_2(TRACE_APP_PD4, "in sheet at row #%d, col #%d\n", trow, tcol);
+                    trace_2(TRACE_APP_PD4, "in sheet at row #%d, col #%d", trow, tcol);
                     (void) write_ref(abuf, elemof32(abuf), current_docno(), tcol, trow);
 
                     if(!insertref)
                         {
                         coff = get_column(tx, trow, 0, TRUE);
                         scol = col_number(coff);
-                        trace_2(TRACE_APP_PD4, "will position at row #%d, col #%d\n", trow, scol);
+                        trace_2(TRACE_APP_PD4, "will position at row #%d, col #%d", trow, scol);
                         (void) write_ref(sbuf, elemof32(sbuf), current_docno(), scol, trow);
                         }
                     else
@@ -2137,7 +2142,7 @@ main_HELPREQUEST(
             else if(IN_ROW_BORDER(coff))
                 {
                 if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
-                    trace_0(TRACE_APP_PD4, "no action cos editing in THIS sheet\n");
+                    trace_0(TRACE_APP_PD4, "no action cos editing in THIS sheet");
                 else
                     (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
                             "%s%s",
@@ -2147,14 +2152,14 @@ main_HELPREQUEST(
                                   : (const char *) NULLSTR);
                 }
             else
-                trace_0(TRACE_APP_PD4, "off left/right\n");
+                trace_0(TRACE_APP_PD4, "off left/right");
             }
         }
     else
-        trace_0(TRACE_APP_PD4, "above sheet data\n");
+        trace_0(TRACE_APP_PD4, "above sheet data");
 
     if(append_drag_msg && (strlen32p1(abuffer) + strlen32(help_drag_file_to_insert) < 240))
-         void_strkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
+         safe_strkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
 
     riscos_sendhelpreply(m, (strlen32p1(abuffer) < 240) ? abuffer : alt_msg);
 
@@ -2181,7 +2186,7 @@ main_message(
             break;
 
         case wimp_MHELPREQUEST:
-            trace_0(TRACE_APP_PD4, "Help request on main_window\n");
+            trace_0(TRACE_APP_PD4, "Help request on main_window");
             processed = main_HELPREQUEST(m);
             break;
 
@@ -2199,7 +2204,7 @@ main_message(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed %s message to main_window\n",
+            trace_1(TRACE_APP_PD4, "unprocessed %s message to main_window",
                      report_wimp_message(m, FALSE));
             processed = FALSE;
             break;
@@ -2227,7 +2232,7 @@ main_event_handler(
         return(FALSE);
         }
 
-    trace_4(TRACE_APP_PD4, TEXT("main_event_handler: event %s, dhan ") PTR_XTFMT TEXT(" window %d, document %d\n"),
+    trace_4(TRACE_APP_PD4, TEXT("main_event_handler: event %s, dhan ") PTR_XTFMT TEXT(" window %d, document %d"),
              report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) main_window, current_docno());
 
     switch(e->e)
@@ -2263,7 +2268,7 @@ main_event_handler(
         case wimp_EGAINCARET:
             trace_2(TRACE_APP_PD4, "GainCaret: new window %d icon %d",
                     e->data.c.w, e->data.c.i);
-            trace_4(TRACE_APP_PD4, " x %d y %d height %8.8X index %d\n",
+            trace_4(TRACE_APP_PD4, " x %d y %d height %8.8X index %d",
                     e->data.c.x, e->data.c.y,
                     e->data.c.height, e->data.c.index);
             caret_window = e->data.c.w;
@@ -2280,7 +2285,7 @@ main_event_handler(
         case wimp_ELOSECARET:
             trace_2(TRACE_APP_PD4, "LoseCaret: old window %d icon %d",
                     e->data.c.w, e->data.c.i);
-            trace_4(TRACE_APP_PD4, " x %d y %d height %X index %d\n",
+            trace_4(TRACE_APP_PD4, " x %d y %d height %X index %d",
                     e->data.c.x, e->data.c.y,
                     e->data.c.height, e->data.c.index);
 
@@ -2307,7 +2312,7 @@ main_event_handler(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event to main_window: %s\n",
+            trace_1(TRACE_APP_PD4, "unprocessed wimp event to main_window: %s",
                     report_wimp_event(e->e, &e->data));
             processed = FALSE;
             break;
@@ -2329,7 +2334,7 @@ rear_event_handler(
         return(FALSE);
         }
 
-    trace_4(TRACE_APP_PD4, TEXT("rear_event_handler: event %s, handle ") PTR_XTFMT TEXT(" window %d, document %d\n"),
+    trace_4(TRACE_APP_PD4, TEXT("rear_event_handler: event %s, handle ") PTR_XTFMT TEXT(" window %d, document %d"),
              report_wimp_event(e->e, &e->data), report_ptr_cast(handle), (int) rear_window, current_docno());
 
     switch(e->e)
@@ -2358,7 +2363,7 @@ rear_event_handler(
 
     /*    case wimp_EREDRAW:    */
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event to rear_window: %s\n",
+            trace_1(TRACE_APP_PD4, "unprocessed wimp event to rear_window: %s",
                     report_wimp_event(e->e, &e->data));
             processed = FALSE;
             break;
@@ -2404,7 +2409,7 @@ riscos_createmainwindow(void)
     DOCNO docno = current_docno();
     os_error * e;
 
-    trace_0(TRACE_APP_PD4, "riscos_createmainwindow()\n");
+    trace_0(TRACE_APP_PD4, "riscos_createmainwindow()");
 
     if(rear_window == window_NULL) /* a window needs creating? */
         {
@@ -2484,7 +2489,7 @@ riscos_createmainwindow(void)
 extern void
 riscos_destroymainwindow(void)
 {
-    trace_0(TRACE_APP_PD4, "riscos_destroymainwindow()\n");
+    trace_0(TRACE_APP_PD4, "riscos_destroymainwindow()");
 
     if(rear_window != window_NULL)
         {
@@ -2492,7 +2497,7 @@ riscos_destroymainwindow(void)
 
         win_delete_wind((wimp_w *) &rear_window);
         rear_window = window_NULL;
-        list_disposeptr((void **) &rear_template);
+        al_ptr_dispose(P_P_ANY_PEDANTIC(&rear_template));
         }
 
     if(colh_window != window_NULL)
@@ -2502,7 +2507,7 @@ riscos_destroymainwindow(void)
 
         win_delete_wind((wimp_w *) &colh_window);
         colh_window = window_NULL;
-        list_disposeptr((void **) &colh_template);
+        al_ptr_dispose(P_P_ANY_PEDANTIC(&colh_template));
 
         /*>>>should probably give caret away, if this window has it */
         }
@@ -2518,7 +2523,7 @@ riscos_destroymainwindow(void)
 
         win_delete_wind((wimp_w *) &main_window);
         main_window = window_NULL;
-        list_disposeptr((void **) &main_template);
+        al_ptr_dispose(P_P_ANY_PEDANTIC(&main_template));
         }
 }
 
@@ -2531,7 +2536,7 @@ riscos_destroymainwindow(void)
 extern void
 riscos_finalise(void)
 {
-    trace_0(TRACE_APP_PD4, "riscos_finalise()\n");
+    trace_0(TRACE_APP_PD4, "riscos_finalise()");
 
     riscos_destroymainwindow();
 }
@@ -2545,7 +2550,7 @@ riscos_finalise(void)
 extern void
 riscos_finalise_once(void)
 {
-    trace_0(TRACE_APP_PD4, "riscos_finalise_once()\n");
+    trace_0(TRACE_APP_PD4, "riscos_finalise_once()");
 
     if(riscos__initialised)
         {
@@ -2567,7 +2572,7 @@ extern void
 riscos_frontmainwindow(
     BOOL immediate)
 {
-    trace_1(TRACE_APP_PD4, "riscos_frontmainwindow(immediate = %s)\n", trace_boolstring(immediate));
+    trace_1(TRACE_APP_PD4, "riscos_frontmainwindow(immediate = %s)", trace_boolstring(immediate));
 
     if(main_window != window_NULL)
         {
@@ -2580,7 +2585,7 @@ extern void
 riscos_frontmainwindow_atbox(
     BOOL immediate)
 {
-    trace_1(TRACE_APP_PD4, "riscos_frontmainwindow_atbox(immediate = %s)\n", trace_boolstring(immediate));
+    trace_1(TRACE_APP_PD4, "riscos_frontmainwindow_atbox(immediate = %s)", trace_boolstring(immediate));
 
     if(main_window != window_NULL)
         {
@@ -2633,7 +2638,7 @@ riscos_initialise(void)
 extern void
 riscos_initialise_once(void)
 {
-    trace_0(TRACE_APP_PD4, "riscos_initialise_once()\n");
+    trace_0(TRACE_APP_PD4, "riscos_initialise_once()");
 
     resspr_init();
 
@@ -2669,14 +2674,14 @@ riscos_initialise_once(void)
     wimp_wind * fontselector_definition = template_syshandle_ua(fontselector_dboxname);
     wimp_icon * fontselector_firsticon  = (wimp_icon *) (fontselector_definition + 1);
 
-    (void) writeval_S32(&fontselector_firsticon[FONT_LEADING].flags,
-            readval_S32(&fontselector_firsticon[FONT_LEADING].flags)      | wimp_INOSELECT);
-    (void) writeval_S32(&fontselector_firsticon[FONT_LEADING_DOWN].flags,
-            readval_S32(&fontselector_firsticon[FONT_LEADING_DOWN].flags) | wimp_INOSELECT);
-    (void) writeval_S32(&fontselector_firsticon[FONT_LEADING_UP].flags,
-            readval_S32(&fontselector_firsticon[FONT_LEADING_UP].flags)   | wimp_INOSELECT);
-    (void) writeval_S32(&fontselector_firsticon[FONT_LEADING_AUTO].flags,
-            readval_S32(&fontselector_firsticon[FONT_LEADING_AUTO].flags) | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon[FONT_LEADING].flags,
+     readval_S32(&fontselector_firsticon[FONT_LEADING].flags)      | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon[FONT_LEADING_DOWN].flags,
+     readval_S32(&fontselector_firsticon[FONT_LEADING_DOWN].flags) | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon[FONT_LEADING_UP].flags,
+     readval_S32(&fontselector_firsticon[FONT_LEADING_UP].flags)   | wimp_INOSELECT);
+    writeval_S32(&fontselector_firsticon[FONT_LEADING_AUTO].flags,
+     readval_S32(&fontselector_firsticon[FONT_LEADING_AUTO].flags) | wimp_INOSELECT);
     }
 
     iconbar_initialise(product_id());
@@ -2785,7 +2790,7 @@ riscos_readfileinfo(
         rip->length = fileblk.start;
         }
 
-    reportf("riscos_readfileinfo(%u:%s): type=%d, length=%u, load=0x%08X, exec=0x%08X\n",
+    reportf("riscos_readfileinfo(%u:%s): type=%d, length=%u, load=0x%08X, exec=0x%08X",
             strlen(name), name, res, (size_t) rip->length, rip->load, rip->exec);
 
     return(res == OSFile_ObjectType_File);
@@ -2887,14 +2892,14 @@ riscos_sendhelpreply(
         m->hdr.your_ref = m->hdr.my_ref;
         m->hdr.action   = wimp_MHELPREPLY;
 
-        trace_2(TRACE_APP_PD4, "helpreply is %d long, %s\n", size, msg);
+        trace_2(TRACE_APP_PD4, "helpreply is %d long, %s", size, msg);
 
-        void_strkpy(m->data.helpreply.text, 256 - offsetof(wimp_msgstr, data.helpreply.text), msg);
+        safe_strkpy(m->data.helpreply.text, 256 - offsetof(wimp_msgstr, data.helpreply.text), msg);
 
         wimpt_safe(wimp_sendmessage(wimp_ESEND, m, m->hdr.task));
         }
     else
-        trace_0(TRACE_APP_PD4, "no reply for system icons\n");
+        trace_0(TRACE_APP_PD4, "no reply for system icons");
 }
 
 /******************************************************************************
@@ -2907,10 +2912,10 @@ extern void
 riscos_setdefwindowpos(
     S32 new_y1)
 {
-    S32 new_y0 = (S32) new_y1 - main_window_default_height;
+    S32 new_y0 = new_y1 - main_window_default_height;
 
-    (void) writeval_S32(&main_window_definition->box.y0, new_y0);
-    (void) writeval_S32(&main_window_definition->box.y1, new_y1);
+    writeval_S32(&main_window_definition->box.y0, new_y0);
+    writeval_S32(&main_window_definition->box.y1, new_y1);
 }
 
 extern void
@@ -2945,19 +2950,19 @@ riscos_settitlebar(
 {
     PCTSTR documentname = riscos_obtainfilename(filename);
 
-    trace_2(TRACE_APP_PD4, "riscos_settitlebar(%s): rear_window %d\n", documentname, rear_window);
+    trace_2(TRACE_APP_PD4, "riscos_settitlebar(%s): rear_window %d", documentname, rear_window);
 
 #ifndef TITLE_SPACE
 #define TITLE_SPACE " "
 #endif
 
     /* carefully copy information into the title string */
-    void_strkpy(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, product_ui_id());
-    void_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, ":" TITLE_SPACE);
-    void_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, documentname);
+    safe_strkpy(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, product_ui_id());
+    safe_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, ":" TITLE_SPACE);
+    safe_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, documentname);
     if(xf_filealtered)
-        void_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, TITLE_SPACE "*");
-    trace_1(TRACE_APP_PD4, "poked main document title to be '%s'\n", current_p_docu->Xwindow_title);
+        safe_strkat(current_p_docu->Xwindow_title, BUF_WINDOW_TITLE_LEN, TITLE_SPACE "*");
+    trace_1(TRACE_APP_PD4, "poked main document title to be '%s'", current_p_docu->Xwindow_title);
 
     if(rear_window != window_NULL)
         win_changedtitle(rear__window);
@@ -2998,7 +3003,7 @@ riscos_updatearea(
     wimp_redrawstr redraw;
     S32 redrawindex;
 
-    trace_6(TRACE_APP_PD4, "riscos_updatearea(%s, %d, %d, %d, %d, %d)\n",
+    trace_6(TRACE_APP_PD4, "riscos_updatearea(%s, %d, %d, %d, %d, %d)",
              report_procedure_name(report_proc_cast(redrawproc)), w, x0, y0, x1, y1);
 
     /* RISC OS graphics primitives all need coordinates limited to s16 */
@@ -3018,7 +3023,7 @@ riscos_updatearea(
 
 #if TRACE_ALLOWED
     if(!redrawindex)
-        trace_0(TRACE_APP_PD4, "no rectangles to update\n");
+        trace_0(TRACE_APP_PD4, "no rectangles to update");
 #endif
 
     while(!bum  &&  redrawindex)
@@ -3052,7 +3057,7 @@ riscos_writefileinfo(
     _kernel_osfile_block fileblk;
     int res;
 
-    reportf("riscos_writefileinfo(%u:%s): load=0x%08X, exec=0x%08X\n",
+    reportf("riscos_writefileinfo(%u:%s): load=0x%08X, exec=0x%08X",
             strlen32(name), name, rip->load, rip->exec);
 
     fileblk.load = rip->load;

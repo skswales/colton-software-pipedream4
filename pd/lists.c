@@ -19,11 +19,12 @@
 internal functions
 */
 
+_Check_return_
 static LIST_ITEMNO
 searchkey(
-    P_P_LIST_BLOCK list,
-    S32 key,
-    P_LIST_ITEM *itp);
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 key,
+    _OutRef_    P_P_LIST_ITEM itp);
 
 /******************************************************************************
 *
@@ -31,58 +32,57 @@ searchkey(
 *
 * --out--
 *   -ve, NULL: error
-*     0, NULL: no room
+*     0, NULL: zero size (up to caller if this is an error)
 *   +ve, xxxx: added
 *
 ******************************************************************************/
 
+_Check_return_
+_Ret_maybenull_
 extern LIST *
 add_list_entry(
-    P_P_LIST_BLOCK list,
-    S32 size,
-    P_S32 resp)
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 size,
+    _OutRef_    P_STATUS resp)
 {
     P_LIST_ITEM it;
-    S32 res = 0;
 
-    trace_3(TRACE_APP_PD4, "add_list_entry(" PTR_XTFMT ", %d, " PTR_XTFMT ")\n", report_ptr_cast(list), size, report_ptr_cast(resp));
+    trace_3(TRACE_APP_PD4, "add_list_entry(" PTR_XTFMT ", %d, " PTR_XTFMT ")", report_ptr_cast(list), size, report_ptr_cast(resp));
 
-    if(resp)
-        *resp = res;
+    *resp = STATUS_OK;
 
-    if(!size)
+    if(0 == size)
         return(NULL);
 
     /* allocate new list if pointer is null */
-    if(!*list)
+    if(NULL == *list)
+    {
+        STATUS res;
+
+        if(NULL == (*list = al_ptr_alloc_elem(LIST_BLOCK, 1, &res)))
         {
-        if((*list = list_allocptr(sizeof(LIST_BLOCK))) == NULL)
-            {
-            if(resp)
-                *resp = status_nomem();
+            *resp = res;
             return(NULL);
-            }
+        }
 
         list_init(*list, 400, 2000);
 
         list_register(*list);
-        }
+    }
 
     it = list_createitem(*list,
                          list_numitem(*list),
-                         sizeof(LIST) - 1 + size,
+                         (sizeof(LIST) - 1) + size,
                          FALSE);
 
     if(it)
-        {
-        if(resp)
-            *resp = 1;
+    {
+        *resp = STATUS_DONE;
 
         return((LIST *) it->i.inside);
-        }
+    }
 
-    if(resp)
-        *resp = res;
+    *resp = status_nomem();
 
     return(NULL);
 }
@@ -93,35 +93,33 @@ add_list_entry(
 *
 * --out--
 *   -ve: error
-*     0: no room
 *   +ve: added (or string empty)
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 add_to_list(
-    P_P_LIST_BLOCK list,
-    S32 key,
-    PC_U8 str,
-    P_S32 resp)
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 key,
+    _In_opt_z_  PC_U8Z str)
 {
-    LIST *lpt;
-    S32 res;
+    U32 n_bytes;
+    LIST * lpt;
+    STATUS res;
 
-    trace_4(TRACE_APP_PD4, "add_to_list(" PTR_XTFMT ", %d, %s, " PTR_XTFMT ")\n", report_ptr_cast(list), key, trace_string(str), report_ptr_cast(resp));
+    trace_3(TRACE_APP_PD4, "add_to_list(" PTR_XTFMT ", %d, %s, " PTR_XTFMT ")", report_ptr_cast(list), key, trace_string(str));
 
     if(!str)
         str = NULLSTR;
 
-    lpt = add_list_entry(list, strlen(str) + 1, resp);
-    if(lpt)
-        {
+    n_bytes = strlen32(str) + 1/*NULLCH*/;
+
+    if(NULL != (lpt = add_list_entry(list, n_bytes, &res)))
+    {
         lpt->key = key;
-        strcpy((char *) lpt->value, str);
-        res = 1;
-        }
-    else
-        res = resp ? *resp : 0;
+        memcpy32(lpt->value, str, n_bytes);
+    }
 
     return(res);
 }
@@ -135,25 +133,21 @@ add_to_list(
 *
 ******************************************************************************/
 
+/*ncr*/
 extern BOOL
 delete_from_list(
-    P_P_LIST_BLOCK list,
-    S32 key)
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 key)
 {
     LIST_ITEMNO item;
+    P_LIST_ITEM it;
 
-    if(*list)
-        {
-        item = searchkey(list, key, NULL);
+    if((item = searchkey(list, key, &it)) < 0)
+        return(FALSE);
 
-        if(item >= 0)
-            {
-            list_deleteitems(*list, item, (LIST_ITEMNO) 1);
-            return(TRUE);
-            }
-        }
+    list_deleteitems(*list, item, (LIST_ITEMNO) 1);
 
-    return(FALSE);
+    return(TRUE);
 }
 
 /******************************************************************************
@@ -164,16 +158,18 @@ delete_from_list(
 
 extern void
 delete_list(
-    P_P_LIST_BLOCK list)
+    _InoutRef_  P_P_LIST_BLOCK list)
 {
-    P_LIST_BLOCK lp;
+    P_LIST_BLOCK lp = *list;
 
-    if((lp = *list) != NULL)
-        {
-        list_free(lp);
-        list_deregister(lp);
-        list_disposeptr((void **) list);
-        }
+    if(NULL == lp)
+        return;
+
+    list_free(lp);
+
+    list_deregister(lp);
+
+    al_ptr_dispose(P_P_ANY_PEDANTIC(list));
 }
 
 /******************************************************************************
@@ -183,10 +179,11 @@ delete_list(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 duplicate_list(
-    P_P_LIST_BLOCK dst,
-    P_P_LIST_BLOCK src)
+    _InoutRef_  P_P_LIST_BLOCK dst,
+    _InoutRef_  P_P_LIST_BLOCK src)
 {
     LIST_ITEMNO item, nitems;
     P_LIST_ITEM it;
@@ -208,8 +205,7 @@ duplicate_list(
                 {
                 s_lptr = (LIST *) it->i.inside;
 
-                d_lptr = add_list_entry(dst, strlen((char *) s_lptr->value) + 1, &res);
-                if(!d_lptr)
+                if(NULL == (d_lptr = add_list_entry(dst, strlen((char *) s_lptr->value) + 1, &res)))
                     {
                     delete_list(dst);
                     return(res);
@@ -237,53 +233,19 @@ duplicate_list(
 *
 ******************************************************************************/
 
-extern LIST *
-first_in_list(
-    P_P_LIST_BLOCK list)
-{
-    return(list_first(list, NULL));
-}
-
-/******************************************************************************
-*
-* return the next element in the list
-*
-******************************************************************************/
-
-extern LIST *
-next_in_list(
-    P_P_LIST_BLOCK list)
-{
-    return(list_next(list, NULL));
-}
-
-/******************************************************************************
-*
-* initialise list for sequence and
-* return the first element in the list
-*
-******************************************************************************/
-
+_Check_return_
+_Ret_maybenull_
 extern P_ANY
 list_first(
-    P_P_LIST_BLOCK list,
-    P_LIST_ITEMNO key)
+    _InoutRef_  P_P_LIST_BLOCK list)
 {
     P_LIST_ITEM it;
-    LIST_ITEMNO item;
+    LIST_ITEMNO item = 0;
 
-    if(!*list)
+    if(NULL == *list)
         return(NULL);
 
-    if(key)
-        item = *key;
-    else
-        item = 0;
-
     it = list_initseq(*list, &item);
-
-    if(key)
-        *key = item;
 
     return(it ? it->i.inside : NULL);
 }
@@ -294,26 +256,19 @@ list_first(
 *
 ******************************************************************************/
 
+_Check_return_
+_Ret_maybenull_
 extern P_ANY
 list_next(
-    P_P_LIST_BLOCK list,
-    P_LIST_ITEMNO key)
+    _InoutRef_  P_P_LIST_BLOCK list)
 {
     P_LIST_ITEM it;
-    LIST_ITEMNO item;
+    LIST_ITEMNO item = list_atitem(*list);
 
-    if(!*list)
+    if(NULL == *list)
         return(NULL);
 
-    if(key)
-        item = *key;
-    else
-        item = list_atitem(*list);
-
     it = list_nextseq(*list, &item);
-
-    if(key)
-        *key = item;
 
     return(it ? it->i.inside : NULL);
 }
@@ -325,19 +280,17 @@ list_next(
 *
 ******************************************************************************/
 
+_Check_return_
+_Ret_maybenull_
 extern LIST *
 search_list(
-    P_P_LIST_BLOCK list,
-    S32 key)
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 key)
 {
     LIST_ITEMNO item;
-    P_LIST_ITEM  it;
+    P_LIST_ITEM it;
 
-    if(!*list)
-        return(NULL);
-
-    item = searchkey(list, key, &it);
-    if(item < 0)
+    if((item = searchkey(list, key, &it)) < 0)
         return(NULL);
 
     return((LIST *) it->i.inside);
@@ -350,16 +303,19 @@ search_list(
 *
 ******************************************************************************/
 
+_Check_return_
 static LIST_ITEMNO
 searchkey(
-    P_P_LIST_BLOCK list,
-    S32 key,
-    P_LIST_ITEM *itp)
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 key,
+    _OutRef_    P_P_LIST_ITEM itp)
 {
     LIST_ITEMNO i;
     P_LIST_ITEM it;
 
-    trace_2(TRACE_APP_PD4, "searchkey(" PTR_XTFMT ", %d)\n", report_ptr_cast(list), key);
+    trace_2(TRACE_APP_PD4, "searchkey(" PTR_XTFMT ", %d)", report_ptr_cast(list), key);
+
+    *itp = NULL;
 
     for(i = 0; i < list_numitem(*list); i++)
         {
@@ -367,19 +323,18 @@ searchkey(
         if(!it)
             continue;
 
-        trace_3(TRACE_APP_PD4, "comparing item %d key %d with key %d\n",
+        trace_3(TRACE_APP_PD4, "comparing item %d key %d with key %d",
                 i, ((LIST *) it->i.inside)->key, key);
 
         if(((LIST *) it->i.inside)->key == key)
             {
-            trace_1(TRACE_APP_PD4, "key matched at item %d\n", i);
-            if(itp)
-                *itp = it;
+            trace_1(TRACE_APP_PD4, "key matched at item %d", i);
+            *itp = it;
             return(i);
             }
         }
 
-    trace_0(TRACE_APP_PD4, "key not found in list\n");
+    trace_0(TRACE_APP_PD4, "key not found in list");
 
     return(STATUS_FAIL);
 }

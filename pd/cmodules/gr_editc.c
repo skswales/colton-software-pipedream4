@@ -139,16 +139,11 @@ extern P_GR_CHARTEDITOR
 gr_chartedit_cep_from_ceh(
     GR_CHARTEDIT_HANDLE ceh)
 {
-    LIST_ITEMNO     key;
-    P_GR_CHARTEDITOR cep;
+    P_GR_CHARTEDITOR cep = NULL;
 
-    if(!ceh)
-        cep = NULL;
-    else
+    if(ceh)
         {
-        key = (LIST_ITEMNO) ceh;
-
-        cep = collect_search(&gr_chart_editors, &key);
+        cep = collect_search(&gr_chart_editors.lbr, (LIST_ITEMNO) ceh);
 
         myassert1x(cep != NULL, "gr_chartedit_cep_from_ceh: failed to find chart editor handle &%p", ceh);
         }
@@ -192,7 +187,7 @@ gr_chartedit_dispose(
     LIST_ITEMNO         key;
 
     trace_2(TRACE_MODULE_GR_CHART,
-            "gr_chartedit_dispose(&%p->&%p)\n",
+            "gr_chartedit_dispose(&%p->&%p)",
             report_ptr_cast(cehp), report_ptr_cast(cehp ? *cehp : NULL));
 
     if(!cehp)
@@ -213,7 +208,9 @@ gr_chartedit_dispose(
     /* kill the link from chart to editor */
     cp->core.ceh = 0;
 
-    for(t = collect_first((P_NLISTS_BLK) &cp->text.lbr, &key); t; t = collect_next((P_NLISTS_BLK) &cp->text.lbr, &key))
+    for(t = collect_first(&cp->text.lbr, &key);
+        t;
+        t = collect_next(&cp->text.lbr, &key))
         {
         /* kill off the editing window for this object if there is one */
         if(t->bits.being_edited)
@@ -244,8 +241,8 @@ gr_chartedit_dispose(
     key = (LIST_ITEMNO) ceh;
 
     trace_1(TRACE_MODULE_GR_CHART,
-            "gr_chartedit_dispose: collect_subtract_entry %d from gr_chart_editors list\n", key);
-    collect_subtract_entry(&gr_chart_editors, &key);
+            "gr_chartedit_dispose: collect_subtract_entry %d from gr_chart_editors list", key);
+    collect_subtract_entry(&gr_chart_editors.lbr, key);
 }
 
 /******************************************************************************
@@ -291,7 +288,7 @@ gr_chartedit_new(
     STATUS              res;
 
     trace_4(TRACE_MODULE_GR_CHART,
-            "gr_chartedit_new(&%p, &%p, (&%p, &%p))\n",
+            "gr_chartedit_new(&%p, &%p, (&%p, &%p))",
             report_ptr_cast(cehp), report_ptr_cast(ch), report_procedure_name(report_proc_cast(nproc)), report_ptr_cast(nhandle));
 
     *cehp = NULL;
@@ -306,15 +303,15 @@ gr_chartedit_new(
     /* add to list of chart editors */
     key = cepkey_gen++;
 
-    if((cep = collect_add_entry(&gr_chart_editors, sizeof(*cep), &key)) == NULL)
-        return(create_error(GR_CHART_ERR_NOMEM));
+    if(NULL == (cep = collect_add_entry(&gr_chart_editors, sizeof32(*cep), &key, &res)))
+        return(res);
 
     zero_struct_ptr(cep);
 
     /* SKS after 4.12 26mar92 - allocate core for selection fake GR_DIAG */
     if(NULL == (cep->selection.p_gr_diag = al_ptr_calloc_elem(GR_DIAG, 1, &res)))
         {
-        collect_subtract_entry(&gr_chart_editors, &key);
+        collect_subtract_entry(&gr_chart_editors.lbr, key);
         return(res);
         }
 
@@ -324,7 +321,7 @@ gr_chartedit_new(
     *cehp = ceh;
 
     trace_3(TRACE_MODULE_GR_CHART,
-            "obtained core &%p with key %d, external handle &%p\n",
+            "obtained core &%p with key %d, external handle &%p",
             report_ptr_cast(cep), key, report_ptr_cast(ceh));
 
     cep->ceh          = ceh;
@@ -1148,7 +1145,7 @@ gr_chartedit_setwintitle(
         gr_chartedit_notify(cep, GR_CHARTEDIT_NOTIFY_TITLEREQ, &t);
 
         if(cp->core.modified)
-            void_strkat(t.title, elemof32(t.title), " *");
+            safe_strkat(t.title, elemof32(t.title), " *");
 
         win_settitle(cep->riscos.w, t.title);
         }
@@ -1704,7 +1701,7 @@ gr_chartedit_riscos_button_click(
 
                         key = id.no;
 
-                        if((t = collect_next((P_NLISTS_BLK) &cp->text.lbr, &key)) == NULL)
+                        if((t = collect_next(&cp->text.lbr, &key)) == NULL)
                             goto default_case;
 
                         id.no = (U8) key;
@@ -1795,7 +1792,7 @@ gr_chartedit_riscos_message(
             FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
             /* sets up reply too */
 
-            trace_1(TRACE_MODULE_GR_CHART, "chart editing window got a DataLoad for %s\n", trace_tstr(filename));
+            trace_1(TRACE_MODULE_GR_CHART, "chart editing window got a DataLoad for %s", trace_tstr(filename));
 
             if(gr_chart_saving_chart(NULL))
                 {
@@ -1838,7 +1835,7 @@ gr_chartedit_riscos_message(
                             {
                             const wimp_msgdataload * dataload = &wimpt_last_event()->data.msg.data.dataload;
 
-                            trace_0(TRACE_MODULE_GR_CHART, "no current selection - look for drop on object\n");
+                            trace_0(TRACE_MODULE_GR_CHART, "no current selection - look for drop on object");
 
                             switch(dataload->i)
                                 {
@@ -1868,7 +1865,7 @@ gr_chartedit_riscos_message(
 
                         if(id.name == GR_CHART_OBJNAME_ANON)
                             {
-                            trace_0(TRACE_MODULE_GR_CHART, "still nothing hit - how boring\n");
+                            trace_0(TRACE_MODULE_GR_CHART, "still nothing hit - how boring");
                             break;
                             }
 
@@ -1906,7 +1903,7 @@ gr_chartedit_riscos_message(
 
         default:
             trace_2(TRACE_MODULE_GR_CHART,
-                    "unprocessed wimp message to chartedit window: %s, ceh &%p\n",
+                    "unprocessed wimp message to chartedit window: %s, ceh &%p",
                     report_wimp_message(msg, FALSE), report_ptr_cast(ceh));
             processed = FALSE;
             break;
@@ -1924,7 +1921,7 @@ gr_chartedit_riscos_event_handler(
     S32                 processed = TRUE;
 
     trace_2(TRACE_MODULE_GR_CHART,
-            "gr_chartedit_event_handler: %s, ceh &%p\n",
+            "gr_chartedit_event_handler: %s, ceh &%p",
             report_wimp_event(e->e, &e->data), report_ptr_cast(ceh));
 
     switch(e->e)
@@ -1982,7 +1979,7 @@ gr_chartedit_riscos_event_handler(
 
         default:
             trace_2(TRACE_MODULE_GR_CHART,
-                    "unprocessed wimp event to chartedit window: %s, ceh &%p\n",
+                    "unprocessed wimp event to chartedit window: %s, ceh &%p",
                     report_wimp_event(e->e, &e->data), report_ptr_cast(ceh));
             processed = FALSE;
             break;

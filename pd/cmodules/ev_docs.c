@@ -152,7 +152,7 @@ doc_bind_docnos(
         switch(res)
         {
         case NAME_OK:
-            reportf("bind docno: %u, thunk=%s, mapped_docno: %u, path(%s) leaf(%s) %s\n",
+            reportf("bind docno: %u, thunk=%s, mapped_docno: %u, path(%s) leaf(%s) %s",
                     docno, report_boolstring(p_ss_doc->is_docu_thunk), mapped_docno,
                     report_tstr(p_ss_doc->docu_name.path_name), report_tstr(p_ss_doc->docu_name.leaf_name), report_boolstring(p_ss_doc->docu_name.flags.path_name_supplied));
             break;
@@ -171,7 +171,7 @@ doc_bind_docnos(
             if(docno == new_docno)
                 reportf("********* docu thunk not freed as it is being created");
             else if(!docno_void_entry(docno))
-                reportf("********* docu thunk not freed as !docno_void_entry(%u); slr: %d, rng: %d, ext: %d, nam: %d, mac: %d\n",
+                reportf("********* docu thunk not freed as !docno_void_entry(%u); slr: %d, rng: %d, ext: %d, nam: %d, mac: %d",
                         docno,
                         p_ss_doc->slr_table.next,
                         p_ss_doc->range_table.next,
@@ -197,7 +197,7 @@ doc_bind_docnos(
     /* try to release some stack */
     stack_release_check();
 
-    reportf("%s: names: %d, customs: %d, name uses: %d, custom uses: %d\n",
+    reportf("%s: names: %d, customs: %d, name uses: %d, custom uses: %d",
             __func__, names_def.next, custom_def.next, namtab.next, custom_use_table.next);
 }
 
@@ -217,7 +217,7 @@ doc_change(
     P_SS_DOC docep_from;
     UREF_PARM urefb;
 
-    trace_2(TRACE_MODULE_EVAL | TRACE_OUT, "doc_change docto: %d, docfrom: %d\n", docno_to, docno_from);
+    trace_2(TRACE_MODULE_EVAL | TRACE_OUT, "doc_change docto: %d, docfrom: %d", docno_to, docno_from);
 
     /* change document numbers */
     urefb.slr1.docno = docno_to;
@@ -271,11 +271,11 @@ ev_doc_establish_doc_from_docu_name(
     /* either use given doc, or get a new one */
     if(DOCNO_NONE != (docno = docno_find_name(p_docu_name, DOCNO_NONE, FALSE)))
         {
-        /*trace_1(TRACE_MODULE_EVAL, "matched existing docno: %u\n");*/
+        /*trace_1(TRACE_MODULE_EVAL, "matched existing docno: %u");*/
         return(docno);
         }
 
-    reportf("ev_doc_establish_doc_from_docu_name(path(%s) leaf(%s) %s)\n",
+    reportf("ev_doc_establish_doc_from_docu_name(path(%s) leaf(%s) %s)",
             report_tstr(p_docu_name->path_name), report_tstr(p_docu_name->leaf_name), report_boolstring(p_docu_name->flags.path_name_supplied));
 
     /* create a new docu thunk */
@@ -365,7 +365,7 @@ doc_free(
 
     if(p_ss_doc != NULL)
         {
-        reportf("********* freeing docno: %u, path(%s) leaf(%s)\n",
+        reportf("********* freeing docno: %u, path(%s) leaf(%s)",
                 docno, report_tstr(p_ss_doc->docu_name.path_name), report_tstr(p_ss_doc->docu_name.leaf_name));
 
         ev_tree_close(docno);
@@ -388,7 +388,7 @@ static void
 doc_free_table(
     P_DEPTABLE dpp)
 {
-    list_disposeptr(&dpp->ptr);
+    al_ptr_dispose(&dpp->ptr);
     dpp->next  = 0;
     dpp->size  = 0;
     dpp->flags = 0;
@@ -449,11 +449,11 @@ doc_get_dependent_docs(
                 if(p_ev_name->flags & TRF_TOBEDEL)
                     continue;
 
-                switch(p_ev_name->def.did_num)
+                switch(p_ev_name->def_data.did_num)
                     {
                     case RPN_DAT_SLR:
                         /* if name refers to this document */
-                        if(p_ev_name->def.arg.slr.docno == *p_docno)
+                        if(p_ev_name->def_data.arg.slr.docno == *p_docno)
                             ensure_refs_to_name_in_list(p_docno_array,
                                                         &count,
                                                         p_ev_name->key);
@@ -461,7 +461,7 @@ doc_get_dependent_docs(
 
                     case RPN_DAT_RANGE:
                         /* if name refers to this document */
-                        if(p_ev_name->def.arg.range.s.docno == *p_docno)
+                        if(p_ev_name->def_data.arg.range.s.docno == *p_docno)
                             ensure_refs_to_name_in_list(p_docno_array,
                                                         &count,
                                                         p_ev_name->key);
@@ -834,7 +834,7 @@ ev_doc_establish_doc_from_name(
     if(file_is_rooted(name_given))
         { /* this is rare */
         PTSTR leaf_p_ev_name = file_leafname(name_given);
-        void_strnkpy(path_name, elemof32(path_name), name_given, leaf_p_ev_name - name_given);
+        safe_strnkpy(path_name, elemof32(path_name), name_given, leaf_p_ev_name - name_given);
         docu_name.path_name = path_name;
         docu_name.leaf_name = leaf_p_ev_name;
         docu_name.flags.path_name_supplied = 1;
@@ -954,18 +954,18 @@ ev_doc_get_sup_docs_for_sheet(
 
                     if((p_ev_name = name_ptr(name_num)) != NULL)
                         {
-                        switch(p_ev_name->def.did_num)
+                        switch(p_ev_name->def_data.did_num)
                             {
                             case RPN_DAT_SLR:
                                 ensure_doc_in_list(p_docno_array,
                                                    &count,
-                                                   p_ev_name->def.arg.slr.docno);
+                                                   p_ev_name->def_data.arg.slr.docno);
                                 break;
 
                             case RPN_DAT_RANGE:
                                 ensure_doc_in_list(p_docno_array,
                                                    &count,
-                                                   p_ev_name->def.arg.range.s.docno);
+                                                   p_ev_name->def_data.arg.range.s.docno);
                                 break;
                             }
 
@@ -1220,10 +1220,10 @@ name_make_wholename(
     buffer[0] = '\0';
 
     if(NULL != p_docu_name->path_name)
-        void_strkpy(buffer, elemof_buffer, p_docu_name->path_name);
+        safe_strkpy(buffer, elemof_buffer, p_docu_name->path_name);
 
     assert(NULL != p_docu_name->leaf_name);
-    void_strkat(buffer, elemof_buffer, p_docu_name->leaf_name);
+    safe_strkat(buffer, elemof_buffer, p_docu_name->leaf_name);
 }
 
 /* end of ev_docs.c */

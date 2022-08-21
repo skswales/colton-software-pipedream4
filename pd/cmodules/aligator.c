@@ -13,10 +13,6 @@
 
 #include "common/gflags.h"
 
-#if defined(STUART) && 0 && WINDOWS
-#define WINDOWS_AL_PTR_GLOBALALLOC
-#endif
-
 /*
 internal functions
 */
@@ -151,7 +147,7 @@ aligator_init(void)
     array_root.parms.entry_free = 0;
     array_root.parms.clear_new_block = 0;
 #if WINDOWS
-    array_root.parms.use_GlobalAlloc = 0;
+    array_root.parms.use_alloc = ALLOC_USE_ALLOC;
 
     array_root.element_size = sizeof32(ARRAY_BLOCK);
     array_root.size_increment = 256;
@@ -250,26 +246,6 @@ _al_ptr_alloc(
 
     for(;;)
     {
-
-#if defined(WINDOWS_AL_PTR_GLOBALALLOC)
-
-        DWORD dw_bytes = n_bytes + sizeof32(HGLOBAL);
-        HGLOBAL hglobal;
-        P_BYTE p_data = GlobalAllocAndLock(GMEM_MOVEABLE, dw_bytes, &hglobal);
-
-        if(NULL != p_data)
-        {
-            HGLOBAL * p_hglobal = (HGLOBAL *) p_data;
-            if(NULL != p_hglobal)
-            {
-                *p_hglobal++ = hglobal;
-                *p_status = STATUS_OK;
-                return((P_BYTE) p_hglobal);
-            }
-        }
-
-#else
-
         P_BYTE p_byte_malloc = alloc_malloc(n_bytes);
 
         if(NULL != p_byte_malloc)
@@ -278,14 +254,12 @@ _al_ptr_alloc(
             return(p_byte_malloc);
         }
 
-#endif
-
         if(0 == tell_full_event_clients(n_bytes))
-            break;
+        {
+            *p_status = aligator_fail(n_bytes);
+            return(NULL);
+        }
     }
-
-    *p_status = aligator_fail(n_bytes);
-    return(NULL);
 }
 
 /******************************************************************************
@@ -305,7 +279,7 @@ _al_ptr_calloc(
     P_BYTE p_byte = _al_ptr_alloc(n_bytes, p_status);
 
     if(NULL != p_byte)
-        void_memset32(p_byte, 0, n_bytes);
+        memset32(p_byte, 0, n_bytes);
 
     return(p_byte);
 }
@@ -347,20 +321,7 @@ al_ptr_free(
     if(NULL == p_any)
         return;
 
-#if defined(WINDOWS_AL_PTR_GLOBALALLOC)
-
-    {
-    HGLOBAL * p_hglobal = p_any;
-    HGLOBAL hglobal = *--p_hglobal;
-    GlobalUnlock(hglobal);
-    GlobalFree(hglobal);
-    } /*block*/
-
-#else
-
     alloc_free(p_any);
-
-#endif
 }
 
 /******************************************************************************
@@ -448,37 +409,6 @@ _al_ptr_realloc(
         return(NULL);
     }
 
-#if defined(WINDOWS_AL_PTR_GLOBALALLOC)
-
-    {
-    HGLOBAL * p_hglobal = p_any;
-    HGLOBAL oldhglobal = *--p_hglobal;
-
-    GlobalUnlock(oldhglobal);
-
-    for(;;)
-    {
-        DWORD dw_bytes = n_bytes + sizeof32(HGLOBAL);
-        HGLOBAL hglobal = GlobalReAlloc(oldhglobal, (DWORD) n_bytes, 0);
-
-        if(NULL != hglobal)
-        {
-            p_hglobal = (HGLOBAL *) GlobalLock(hglobal);
-            *p_hglobal++ = hglobal;
-            *p_status = STATUS_OK;
-            return((P_BYTE) p_hglobal);
-        }
-
-        if(0 == tell_full_event_clients(n_bytes))
-            break;
-    }
-
-    /* failed to reallocate so better nail the old core back in place (still has old handle) */
-    p_hglobal = (HGLOBAL *) GlobalLock(oldhglobal);
-    } /*block*/
-
-#else
-
     for(;;)
     {
         P_BYTE p_byte_realloc = alloc_realloc(p_any, n_bytes);
@@ -490,13 +420,11 @@ _al_ptr_realloc(
         }
 
         if(0 == tell_full_event_clients(n_bytes))
-            break;
+        {
+            *p_status = aligator_fail(n_bytes);
+            return(NULL);
+        }
     }
-
-#endif
-
-    *p_status = aligator_fail(n_bytes);
-    return(NULL);
 }
 
 /******************************************************************************
@@ -522,7 +450,7 @@ _al_array_add(
         PC_ARRAY_BLOCK p_array_block = array_blockc_no_checks(p_array_handle);
         const U32 n_bytesof_elem_x_num_elem = n_elements * array_block_element_size(p_array_block);
         PREFAST_ONLY_ASSERT((n_bytesof_elem_x_num_elem == n_bytesof_elem_x_num_elem) || (0 == bytesof_elem_x_num_elem));
-        void_memcpy32(p_any, p_data_in, n_bytesof_elem_x_num_elem);
+        memcpy32(p_any, p_data_in, n_bytesof_elem_x_num_elem);
     }
 
     return(status);
@@ -592,7 +520,7 @@ _al_array_alloc(
     p_array_block->parms.entry_free       = 0;
     p_array_block->parms.clear_new_block  = (UBF) p_array_init_block->clear_new_block;
 #if WINDOWS
-    p_array_block->parms.use_GlobalAlloc  = (UBF) p_array_init_block->use_GlobalAlloc;
+    p_array_block->parms.use_alloc        = (UBF) p_array_init_block->use_alloc;
 #endif
 #if WINDOWS
     p_array_block->element_size                 = (0 != p_array_init_block->element_size)   ? p_array_init_block->element_size   : 1;
@@ -839,7 +767,9 @@ al_array_duplicate(
     array_init_block.element_size     = array_block_element_size(pc_src_array_block);
     array_init_block.clear_new_block  = UBF_UNPACK(U8, pc_src_array_block->parms.clear_new_block);
 #if WINDOWS
-    array_init_block.use_GlobalAlloc  = UBF_UNPACK(U8, pc_src_array_block->parms.use_GlobalAlloc);
+    array_init_block.use_alloc        = UBF_UNPACK(U8, pc_src_array_block->parms.use_alloc);
+#else
+    array_init_block.use_alloc        = ALLOC_USE_ALLOC;
 #endif
 
     p_any = _al_array_alloc(p_dup_array_handle, n_elements, &array_init_block, &status PREFAST_ONLY_ARG(n_elements * array_init_block.element_size));
@@ -852,7 +782,7 @@ al_array_duplicate(
     {
         const U32 n_bytes = n_elements * array_init_block.element_size;
         PC_BYTE p_src = array_basec_no_checks(pc_src_array_handle, BYTE);
-        void_memcpy32(p_any, p_src, n_bytes);
+        memcpy32(p_any, p_src, n_bytes);
     }
 
     if(src_auto_compact)
@@ -921,9 +851,9 @@ __al_array_free(
     if(P_DATA_NONE != p_array_block->p_any)
     {
 #if WINDOWS
-        if(p_array_block->parms.use_GlobalAlloc)
+        if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            HGLOBAL hglobal = GlobalPtrHandle(p_array_block->p_any);
+            HGLOBAL hglobal = GlobalHandle(p_array_block->p_any);
             assert(hglobal);
             if(NULL != hglobal)
             {
@@ -931,9 +861,15 @@ __al_array_free(
                 GlobalFree(hglobal);
             }
         }
-        else
+        else if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
+        {
+            dsapplib_ptr_free(p_array_block->p_any);
+        }
+        else /* if(ALLOC_USE_ALLOC == p_array_block->parms.use_alloc) */
 #endif
+        {
             al_ptr_free_us(p_array_block->p_any);
+        }
 
         p_array_block->p_any = P_DATA_NONE;
     }
@@ -1002,7 +938,7 @@ al_array_garbage_collect(
                 if(0 == (* p_proc_element_deleted) (p_in))
                 {
                     if(p_out != p_in)
-                        void_memcpy32(p_out, p_in, element_size);
+                        memcpy32(p_out, p_in, element_size);
 
                     p_out += element_size;
                     new_free += 1;
@@ -1021,11 +957,15 @@ al_array_garbage_collect(
         else if(al_garbage_flags.shrink && (p_array_block->free < p_array_block->size))
         {
 #if WINDOWS
-            if(p_array_block->parms.use_GlobalAlloc)
+            if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
             {
                 /* currently a NO OP */
             }
-            else /* SKS 18.01.2012 was missing! */
+            else if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
+            {
+                /* currently a NO OP */
+            }
+            else /* if(ALLOC_USE_ALLOC == p_array_block->parms.use_alloc) */ /* SKS 18.01.2012 else was missing! */
 #endif /* WINDOWS */
             {
                 STATUS status;
@@ -1170,7 +1110,7 @@ al_array_delete_at(
             p_dst = (P_U8) p_array_block->p_any + (delete_at * element_size);
             p_any = (P_U8) p_dst + (delete_elements * element_size);
 
-            void_memmove32(p_dst, p_any, move_elements * element_size);
+            memmove32(p_dst, p_any, move_elements * element_size);
         }
 
         assert(p_array_block->free + num_elements >= 0); /* another case of shrinking realloc */
@@ -1252,12 +1192,12 @@ _al_array_insert_before(
     {
         P_BYTE p_byte_dst = p_byte + (num_elements * element_size);
 
-        void_memmove32(p_byte_dst, p_byte, move_elements * element_size);
+        memmove32(p_byte_dst, p_byte, move_elements * element_size);
 
         if(p_array_block->parms.clear_new_block)
         {
             U32 n_bytes = num_elements * element_size;
-            void_memset32(p_byte, 0, n_bytes);
+            memset32(p_byte, 0, n_bytes);
         }
     }
 
@@ -1418,7 +1358,7 @@ al_array_shrink_by(
 #if WINDOWS
 
 extern void
-al_array_resized(
+al_array_resized_hglobal(
     _InRef_     P_ARRAY_HANDLE p_array_handle,
     _In_        HGLOBAL hglobal,
     _InVal_     U32 size)
@@ -1427,13 +1367,34 @@ al_array_resized(
 
     if(!array_handle_valid(p_array_handle))
     {
-        myassert3(TEXT("al_array_resized(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(" --- handle >= free ") S32_TFMT, p_array_handle, *p_array_handle, array_root.free);
+        myassert3(TEXT("al_array_resized_hglobal(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(" --- handle >= free ") S32_TFMT, p_array_handle, *p_array_handle, array_root.free);
         return;
     }
 
     p_array_block = array_block_wr_no_checks(p_array_handle);
 
     p_array_block->p_any = GlobalLock(hglobal);
+    p_array_block->free = size;
+    p_array_block->size = size;
+}
+
+extern void
+al_array_resized_ptr(
+    _InRef_     P_ARRAY_HANDLE p_array_handle,
+    _In_        P_ANY p_data,
+    _InVal_     U32 size)
+{
+    P_ARRAY_BLOCK p_array_block;
+
+    if(!array_handle_valid(p_array_handle))
+    {
+        myassert3(TEXT("al_array_resized_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(" --- handle >= free ") S32_TFMT, p_array_handle, *p_array_handle, array_root.free);
+        return;
+    }
+
+    p_array_block = array_block_wr_no_checks(p_array_handle);
+
+    p_array_block->p_any = p_data;
     p_array_block->free = size;
     p_array_block->size = size;
 }
@@ -1446,7 +1407,7 @@ _Check_return_
 _Ret_maybenull_
 extern HGLOBAL
 al_array_steal_hglobal(
-    _InoutRef_      P_ARRAY_HANDLE p_array_handle)
+    _InoutRef_  P_ARRAY_HANDLE p_array_handle)
 {
     HGLOBAL hglobal = 0;
 
@@ -1473,16 +1434,16 @@ al_array_steal_hglobal(
         /* reduce size of allocated object to final size (hopefully never zero) */
         al_array_trim(p_array_handle);
 
-        if(p_array_block->parms.use_GlobalAlloc)
+        if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            hglobal = GlobalPtrHandle(p_array_block->p_any);
+            hglobal = GlobalHandle(p_array_block->p_any);
             assert(hglobal);
             if(NULL != hglobal)
                 GlobalUnlock(hglobal);
 
             /* mark the handle as stolen */
             p_array_block->p_any = P_DATA_NONE;
-            p_array_block->parms.use_GlobalAlloc = 0;
+            p_array_block->parms.use_alloc = ALLOC_USE_ALLOC;
         }
 
         /* free the array itself */
@@ -1516,9 +1477,9 @@ al_array_trim(
     {
         /* shrink allocation to fit desired size */
 #if WINDOWS
-        if(p_array_block->parms.use_GlobalAlloc)
+        if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            HGLOBAL hglobal = GlobalPtrHandle(p_array_block->p_any);
+            HGLOBAL hglobal = GlobalHandle(p_array_block->p_any);
             assert(hglobal);
             if(NULL != hglobal)
             {
@@ -1531,7 +1492,13 @@ al_array_trim(
                     p_array_block->p_any = GlobalLock(hglobal);
             }
         }
-        else
+        else if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
+        {
+            STATUS status;
+            p_array_block->p_any = _dsapplib_ptr_realloc(p_array_block->p_any, p_array_block->free * array_block_element_size(p_array_block), &status);
+            IGNOREPARM(status);
+        }
+        else /* if(ALLOC_USE_ALLOC == p_array_block->parms.use_alloc) */
 #endif /* WINDOWS */
         {
             STATUS status;
@@ -1663,9 +1630,9 @@ realloc_array(
         p_array_block->parms.compact_off = 1;
 
 #if WINDOWS
-        if(p_array_block->parms.use_GlobalAlloc)
+        if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
         {
-            DWORD n_bytes = ((DWORD) p_array_block->size + extra) * array_block_element_size(p_array_block);
+            const DWORD n_bytes = ((DWORD) p_array_block->size + extra) * array_block_element_size(p_array_block);
             HGLOBAL hglobal = NULL;
 
 #if CHECKING
@@ -1688,7 +1655,7 @@ realloc_array(
             else
             {
                 /* resize some already-allocated core */
-                HGLOBAL oldhglobal = GlobalPtrHandle(p_array_block->p_any);
+                HGLOBAL oldhglobal = GlobalHandle(p_array_block->p_any);
                 assert(oldhglobal);
                 if(NULL != oldhglobal)
                 {
@@ -1714,10 +1681,24 @@ realloc_array(
                     p_new_array = NULL;
             }
         }
-        else
+        else if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
+        {
+            const U32 n_bytes = (p_array_block->size + extra) * array_block_element_size(p_array_block);
+
+#if CHECKING
+            if(IS_BAD_POINTER(p_array_block->p_any)) /* might be reusing debug mutilated one */
+                p_array_block->p_any = P_DATA_NONE; /* restore sanity for clarity */
+#endif
+
+            if(P_DATA_NONE == p_array_block->p_any)
+                p_new_array = _dsapplib_ptr_alloc(n_bytes, &status);
+            else
+                p_new_array = _dsapplib_ptr_realloc(p_array_block->p_any, n_bytes, &status);
+        }
+        else /* if(ALLOC_USE_ALLOC == p_array_block->parms.use_alloc) */
 #endif /* WINDOWS */
         {
-            U32 n_bytes =  (p_array_block->size + extra) * array_block_element_size(p_array_block);
+            const U32 n_bytes = (p_array_block->size + extra) * array_block_element_size(p_array_block);
 
 #if CHECKING
             if(IS_BAD_POINTER(p_array_block->p_any)) /* might be reusing debug mutilated one */
@@ -1746,7 +1727,7 @@ realloc_array(
     {
         P_ANY p_any = (P_U8) p_array_block->p_any + (cur_free * array_block_element_size(p_array_block));
         const U32 n_bytes = num_elements * array_block_element_size(p_array_block);
-        void_memset32(p_any, 0, n_bytes);
+        memset32(p_any, 0, n_bytes);
     }
 
     *p_array_index = cur_free;
@@ -1785,8 +1766,12 @@ tell_full_event_clients(
         p_array_block = de_const_cast(P_ARRAY_BLOCK, array_root.p_array_block) + next_array_client;
 
 #if WINDOWS
-        if(p_array_block->parms.use_GlobalAlloc)
+        if(ALLOC_USE_GLOBAL_ALLOC == p_array_block->parms.use_alloc)
             /* currently ignore HGLOBAL blocks 'cos their memory ain't as useful to us */
+            continue;
+
+        if(ALLOC_USE_DS_ALLOC == p_array_block->parms.use_alloc)
+            /* currently ignore Draw file blocks 'cos their memory is likely to be precisely allocated */
             continue;
 #endif
 
@@ -2013,195 +1998,5 @@ _array_ptr_check(
 }
 
 #endif /* CHECKING */
-
-/*
----------------------------------------------------------------------------------------------------------------------------
-AllocBlock stuff now part of aligator too
----------------------------------------------------------------------------------------------------------------------------
-*/
-
-/*extern*/ P_ALLOCBLOCK global_string_alloc_block;
-
-/*
-macro used to align allocations as desired
-*/
-
-#define ALLOCBLOCK_ROUNDUP(x) ( \
-    ((x) + (sizeof32(U32) - 1U)) & ~(sizeof32(U32) - 1U) )
-
-/******************************************************************************
-*
-* start off the chain of core with an initial allocation
-*
-******************************************************************************/
-
-_Check_return_
-extern STATUS
-alloc_block_create(
-    _OutRef_    P_P_ALLOCBLOCK lplpAllocBlock,
-    _InVal_     U32 n_bytes_wanted)
-{
-    STATUS status;
-    P_ALLOCBLOCK lpAllocBlock;
-    const U32 n_bytes_alloc = ALLOCBLOCK_ROUNDUP(n_bytes_wanted);
-
-    if(NULL != (*lplpAllocBlock = lpAllocBlock = al_ptr_alloc_bytes(ALLOCBLOCK, n_bytes_alloc, &status)))
-    {
-        lpAllocBlock->next = NULL;
-        lpAllocBlock->hwm = ALLOCBLOCK_ROUNDUP(sizeof32(*lpAllocBlock));
-        lpAllocBlock->size = n_bytes_alloc;
-    }
-
-    return(status);
-}
-
-/******************************************************************************
-*
-* blow away the chain of core
-*
-******************************************************************************/
-
-__pragma(warning(push)) __pragma(warning(disable:6001)) /* Using uninitialized memory '*lpAllocBlock' */
-
-extern void
-alloc_block_dispose(
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock)
-{
-    P_ALLOCBLOCK lpAllocBlock = *lplpAllocBlock;
-
-    *lplpAllocBlock = NULL;
-
-    while(NULL != lpAllocBlock)
-    {
-        P_ALLOCBLOCK next_lpAllocBlock = lpAllocBlock->next;
-        al_ptr_free(lpAllocBlock);
-        lpAllocBlock = next_lpAllocBlock;
-    }
-}
-
-__pragma(warning(pop))
-
-/******************************************************************************
-*
-* attempt to allocate some memory within the current block of core
-*
-* if this fails, try adding some more core to the chain
-* this does in fact waste a little at the end of each block
-* but that's the price you pay for simplicity
-*
-******************************************************************************/
-
-_Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes_requested, 0) /* may be NULL */
-extern P_BYTE
-alloc_block_malloc(
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock,
-    _InVal_     U32 n_bytes_requested,
-    _OutRef_    P_STATUS p_status)
-{
-    P_ALLOCBLOCK lpAllocBlock = *lplpAllocBlock;
-    const U32 n_bytes_alloc = ALLOCBLOCK_ROUNDUP(n_bytes_requested);
-    U32 bytes_left = lpAllocBlock->size - lpAllocBlock->hwm;
-
-    if(bytes_left < n_bytes_alloc)
-    {
-        /* try to get another chunk of core from the system and add it to the HEAD of the list (which is why we need the inout parameter) */
-        U32 new_block_size = lpAllocBlock->size;
-        P_ALLOCBLOCK new_lpAllocBlock;
-
-        if(NULL == (new_lpAllocBlock = al_ptr_alloc_bytes(ALLOCBLOCK, new_block_size, p_status)))
-            return(NULL);
-
-        new_lpAllocBlock->next = lpAllocBlock;
-        new_lpAllocBlock->hwm = ALLOCBLOCK_ROUNDUP(sizeof32(*new_lpAllocBlock));
-        new_lpAllocBlock->size = new_block_size;
-
-        *lplpAllocBlock = new_lpAllocBlock;
-        lpAllocBlock = new_lpAllocBlock;
-    }
-
-    { /* trivial allocation within current block */
-    P_BYTE p = (P_BYTE) lpAllocBlock;
-    p += lpAllocBlock->hwm;
-    lpAllocBlock->hwm += n_bytes_alloc;
-    *p_status = STATUS_OK;
-    return(p);
-    } /*block*/
-}
-
-/******************************************************************************
-*
-* do a string assignment without having to think about cleanup
-*
-******************************************************************************/
-
-_Check_return_
-extern STATUS
-alloc_block_ustr_set(
-    _OutRef_    P_P_USTR aa,
-    _In_z_      PC_USTR b,
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock)
-{
-    STATUS status;
-    P_USTR a;
-    U32 l;
-
-    *aa = NULL;
-
-    if(NULL == b)
-        return(STATUS_OK);
-
-    l = strlen32p1(b);
-
-#if CHECKING && defined(UNUSED_IN_PD)
-    if(contains_inline(b))
-    {
-        assert0();
-        /* "<<al_ustr_realloc - CONTAINS INLINES>>" */
-        l = 1 /*NULLCH*/ + ustr_inline_strlen32(b);
-    }
-#endif
-
-    if(!*lplpAllocBlock)
-        status_return(alloc_block_create(lplpAllocBlock, 0x0800 - sizeof32(ALLOCBLOCK)));
-
-    if(NULL == (*aa = a = (P_USTR) alloc_block_malloc(lplpAllocBlock, l, &status)))
-        return(status);
-
-    void_memcpy32(a, b, l);
-    return(STATUS_DONE);
-}
-
-#if defined(UNUSED_IN_PD)
-
-_Check_return_
-extern STATUS
-alloc_block_tstr_set(
-    _OutRef_    P_PTSTR aa,
-    _In_z_      PCTSTR b,
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock)
-{
-    STATUS status;
-    PTSTR a;
-    U32 l;
-
-    *aa = NULL;
-
-    if(NULL == b)
-        return(STATUS_OK);
-
-    l = tstrlen32p1(b);
-
-    if(!*lplpAllocBlock)
-        status_return(alloc_block_create(lplpAllocBlock, 0x0800 - sizeof32(ALLOCBLOCK)));
-
-    if(NULL == (*aa = a = (PTCH) alloc_block_malloc(lplpAllocBlock, l * sizeof32(*a), &status)))
-        return(status);
-
-    void_memcpy32(a, b, l * sizeof32(*a));
-    return(STATUS_DONE);
-}
-
-#endif /* UNUSED_IN_PD */
 
 /* end of aligator.c */

@@ -265,7 +265,7 @@ str_set(
 
     if(NULL != (*aa = a = _al_ptr_alloc(l + 1/*NULLCH*/, &status)))
     {
-        void_memcpy32(a, b, l + 1/*NULLCH*/);
+        memcpy32(a, b, l + 1/*NULLCH*/);
 
         status = STATUS_DONE;
     }
@@ -298,7 +298,7 @@ str_set_n(
         }
         else
         {
-            void_memcpy32(a, b, n);
+            memcpy32(a, b, n);
             a[n] = NULLCH;
             assert(n <= strlen32(a));
         }
@@ -412,7 +412,7 @@ stricmp_wild(
     S32 wild_x;
     S32 pos_res;
 
-    /*trace_2(0, "wild_stricmp('%s', '%s')\n", ptr1, ptr2);*/
+    /*trace_2(0, "wild_stricmp('%s', '%s')", ptr1, ptr2);*/
 
     /* skip leading spaces */
     while(*ptr2 == ' ')
@@ -445,7 +445,7 @@ stricmp_wild(
 STAR:
     /* skip a char & hilites in template string */
     do { ch = *++x; } while(is_control(ch));
-    /*trace_1(0, "wild_stricmp STAR (x hilite skipped): x -> '%s'\n", x);*/
+    /*trace_1(0, "wild_stricmp STAR (x hilite skipped): x -> '%s'", x);*/
 
     wild_x = (ch == '^');
     if(wild_x)
@@ -483,12 +483,12 @@ STAR:
                         break;
                     }
 
-            /*trace_3(0, "wild_stricmp loop3: x -> '%s', y -> '%s', wild_x %s\n", x, y, trace_boolstring(wild_x));*/
+            /*trace_3(0, "wild_stricmp loop3: x -> '%s', y -> '%s', wild_x %s", x, y, trace_boolstring(wild_x));*/
 
             /* are we at end of y string? */
             if(y == end_y)
                 {
-                /*trace_1(0, "wild_stricmp: end of y string: returns %d\n", (*x == '\0') ? 0 : -1);*/
+                /*trace_1(0, "wild_stricmp: end of y string: returns %d", (*x == '\0') ? 0 : -1);*/
                 if(x == end_x)
                     return(0);       /* equal */
                 else
@@ -507,7 +507,7 @@ STAR:
 
                     if(x == ptr2)
                         {
-                        /*trace_1(0, "wild_stricmp: returns %d\n", pos_res);*/
+                        /*trace_1(0, "wild_stricmp: returns %d", pos_res);*/
                         return(pos_res);
                         }
 
@@ -615,8 +615,8 @@ nth_power[] =
 };
 
 extern S32
-xtos_buf(
-    _Out_writes_z_(elemof_buffer) P_U8 string /*filled*/,
+xtos_ubuf(
+    _Out_writes_z_(elemof_buffer) P_USTR buffer /*filled*/,
     _InVal_     U32 elemof_buffer,
     _InVal_     S32 x,
     _InVal_     BOOL upper_case)
@@ -626,58 +626,53 @@ xtos_buf(
     U32 digit_n, i;
     PC_S32 nlp, npp;
     S32 col, nl, np;
-    S32 digit[elemof32(nth_power)];
+    S32 digit[1 + elemof32(nth_power)];
 
     col     = x;
     digit_n = 0;
 
-    if(col >= 26)
-        {
+    if(col >= 26 /*nth_letter[0]*/)
+    {
         if(col >= nth_letter[1])
-            {
+        {
             force = FALSE;
             nlp = nth_letter + elemof32(nth_letter) - 1;
             npp = nth_power  + elemof32(nth_power)  - 1;
 
             do  {
                 if(force || (col >= *nlp))
-                    {
+                {
                     nl = *(nlp - 1);
                     np = *npp;
                     col -= nl;
                     digit[digit_n++] = col / np - 1;
                     col = col % np + nl;
                     force = TRUE;
-                    }
+                }
 
                 --nlp;
                 --npp;
-                }
-            while(nlp > nth_letter);        /* don't ever loop with nth_letter[0] */
             }
+            while(nlp > nth_letter);        /* don't ever loop with nth_letter[0] */
+        }
 
         /* nl == 0 */
         digit[digit_n++] = col / 26 - 1;
         col = col % 26;
-        }
+    }
+    else if(col < 0) /* avoid catastrophe */
+        col = 0;
 
     digit[digit_n++] = col;
 
     /* make the string */
-    for(i = 0, c = string; i < digit_n; ++i)
-        {
-        if(i == elemof_buffer)
-            break;
-
+    for(i = 0, c = buffer; (i < elemof_buffer-1) && (i < digit_n); ++i)
+    {
         *c++ = (char) (digit[i] + (upper_case ? 'A' : 'a'));
-        }
+    }
 
-    if(i < elemof_buffer)
-        *c = NULLCH;
-    else
-        string[elemof_buffer - 1] = NULLCH;
-
-    return(c - string);
+    *c = NULLCH;
+    return(PtrDiffBytesU32(c, buffer));
 }
 
 /*
@@ -695,7 +690,7 @@ append up characters from src (until NULLCH found) to dst (subject to dst limit)
 */
 
 extern void
-void_strkat(
+safe_strkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src)
@@ -755,7 +750,7 @@ append up to src_n characters from src (or fewer, if NULLCH found) to dst (subje
 */
 
 extern void
-void_strnkat(
+safe_strnkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,
@@ -817,7 +812,7 @@ copy characters from src (until NULLCH found) to dst (subject to dst limit)
 */
 
 extern void
-void_strkpy(
+safe_strkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src)
@@ -857,7 +852,7 @@ copy up to src_n characters from src (or fewer, if NULLCH found) to dst (subject
 */
 
 extern void
-void_strnkpy(
+safe_strnkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,

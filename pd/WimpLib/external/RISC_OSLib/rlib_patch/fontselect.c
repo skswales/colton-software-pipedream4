@@ -212,7 +212,7 @@
     e->data.msg.hdr.action = wimp_MHELPREPLY;
     e->data.msg.hdr.size = 256;
 +#ifdef SKS_ACW
-+   void_strkpy( e->data.msg.data.helpreply.text, elemof32(e->data.msg.data.helpreply.text), text );
++   safe_strkpy( e->data.msg.data.helpreply.text, elemof32(e->data.msg.data.helpreply.text), text );
 +#else /* SKS_ACW */
     strcpy( e->data.msg.data.helpreply.text, text );
 +#endif /* SKS_ACW */

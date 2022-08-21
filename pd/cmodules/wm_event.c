@@ -72,7 +72,7 @@ wm_events_get(
         else
             {
             bgNullEventsWanted = FALSE;
-            bgNullTestWanted   = Null_HandlersPresent();
+            bgNullTestWanted   = 1 /*Null_HandlersPresent()*/;
             }
 
         peek = (fgNullEventsWanted || bgNullEventsWanted || bgNullTestWanted);

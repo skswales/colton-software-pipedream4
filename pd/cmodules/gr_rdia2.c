@@ -130,7 +130,7 @@ gr_riscdiag_path_new(
     if(NULL == (pObject.p_byte = gr_riscdiag_object_new(p_gr_riscdiag, pPathStart, DRAW_OBJECT_TYPE_PATH, nDashBytes + extraBytes, p_status)))
         return(NULL);
 
-    void_memcpy32(&path, pObject.p_byte, sizeof32(path));
+    memcpy32(&path, pObject.p_byte, sizeof32(path));
 
     path.fillcolour = fillstyle ?       gr_colour_to_riscDraw(fillstyle->fg) : DRAW_COLOUR_Transparent;
     path.pathcolour = linestyle ?       gr_colour_to_riscDraw(linestyle->fg) : DRAW_COLOUR_Transparent;
@@ -140,10 +140,10 @@ gr_riscdiag_path_new(
     if(NULL != dash_pattern)
         pObject.path->pathstyle.flags |= DRAW_PS_DASH_PACK_MASK;
 
-    void_memcpy32(pObject.p_byte, &path, sizeof32(path));
+    memcpy32(pObject.p_byte, &path, sizeof32(path));
 
     if(NULL != dash_pattern)
-        void_memcpy32(pObject.p_byte + sizeof32(path), dash_pattern, (size_t) nDashBytes);
+        memcpy32(pObject.p_byte + sizeof32(path), dash_pattern, (size_t) nDashBytes);
 
     *p_status = STATUS_DONE;
 
@@ -363,7 +363,7 @@ gr_riscdiag_piesector_new(
     DRAW_PATH_MOVE move;
     move.tag = DRAW_PATH_TYPE_MOVE;
     move.pt  = bezCentre;
-    void_memcpy32(pPathGuts, &move, sizeof32(move));
+    memcpy32(pPathGuts, &move, sizeof32(move));
     pPathGuts += sizeof32(move);
     } /*block*/
 
@@ -371,7 +371,7 @@ gr_riscdiag_piesector_new(
     DRAW_PATH_LINE line;
     line.tag = DRAW_PATH_TYPE_LINE;
     line.pt  = bezStart;
-    void_memcpy32(pPathGuts, &line, sizeof32(line));
+    memcpy32(pPathGuts, &line, sizeof32(line));
     pPathGuts += sizeof32(line);
     } /*block*/
 
@@ -382,7 +382,7 @@ gr_riscdiag_piesector_new(
         curve.cp1 = bezCP1;
         curve.cp2 = bezCP2;
         curve.end = bezEnd;
-        void_memcpy32(pPathGuts, &curve, sizeof32(curve));
+        memcpy32(pPathGuts, &curve, sizeof32(curve));
         pPathGuts += sizeof32(curve);
     }
     while((segment_id = bezier_arc_segment(segment_id, &bezEnd, &bezCP1, &bezCP2)) != 0);
@@ -391,7 +391,7 @@ gr_riscdiag_piesector_new(
     DRAW_PATH_LINE line;
     line.tag = DRAW_PATH_TYPE_LINE;
     line.pt  = bezCentre;
-    void_memcpy32(pPathGuts, &line, sizeof32(line));
+    memcpy32(pPathGuts, &line, sizeof32(line));
     pPathGuts += sizeof32(line);
     } /*block*/
 
@@ -437,7 +437,7 @@ gr_riscdiag_scaled_diagram_add(
     S32 isotropic = !fillstyle ||  fillstyle->bits.isotropic;
     S32 recolour  = !fillstyle || !fillstyle->bits.norecolour;
 
-    trace_8(TRACE_MODULE_GR_CHART, "gr_riscdiag_scaled_diagram_add(&%p, (%d,%d,%d,%d), (&%p,%d), iso=%d)\n",
+    trace_8(TRACE_MODULE_GR_CHART, "gr_riscdiag_scaled_diagram_add(&%p, (%d,%d,%d,%d), (&%p,%d), iso=%d)",
             report_ptr_cast(p_gr_riscdiag),
             pBox->x0, pBox->y0, pBox->x1, pBox->y1,
             report_ptr_cast(diag->data), diag->length,
@@ -493,10 +493,10 @@ gr_riscdiag_scaled_diagram_add(
         */
 
         /* first bit starts after diagram header and ends at start of font list */
-        void_memcpy32(pDiagCopy, pObject.p_byte, nBytesBefore);
+        memcpy32(pDiagCopy, pObject.p_byte, nBytesBefore);
 
         /* next bits starts after font list and ends at end of diagram */
-        void_memcpy32(pDiagCopy + nBytesBefore,
+        memcpy32(pDiagCopy + nBytesBefore,
                       PtrAddBytes(PC_BYTE, pFontList, fontListSize),
                       nBytesAfter);
         }
@@ -505,15 +505,15 @@ gr_riscdiag_scaled_diagram_add(
         if(NULL == (pDiagCopy = gr_riscdiag_ensure(BYTE, p_gr_riscdiag, diagLength, &status)))
             return(status);
 
-        void_memcpy32(pDiagCopy,
+        memcpy32(pDiagCopy,
                       PtrAddBytes(PC_BYTE, gr_riscdiag.draw_diag.data, sizeof32(DRAW_FILE_HEADER)),
                       diagLength);
         }
 
-    trace_2(TRACE_MODULE_GR_CHART, "gr_riscdiag_scaled_diagram_add: diag copy start %d end %d\n",
+    trace_2(TRACE_MODULE_GR_CHART, "gr_riscdiag_scaled_diagram_add: diag copy start %d end %d",
             diagStart, p_gr_riscdiag->draw_diag.length);
 
-    trace_0(TRACE_MODULE_GR_CHART, "gr_riscdiag_scaled_diagram_add: convert font references in copied diagram to this diagram's font references\n");
+    trace_0(TRACE_MODULE_GR_CHART, "gr_riscdiag_scaled_diagram_add: convert font references in copied diagram to this diagram's font references");
 
     /* note that we can't cope here with the main diagram's font table growing as
      * that'd bugger up all the sys_offs we've placed in the diagram! so if it uses
@@ -536,7 +536,7 @@ gr_riscdiag_scaled_diagram_add(
                     old_fontname = gr_riscdiag_fontlist_name(&gr_riscdiag, gr_riscdiag.dd_fontListR, old_fontref);
                     new_fontref  = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, p_gr_riscdiag->dd_fontListR, old_fontname);
                     * (P_U32) &pObjectText->textstyle = new_fontref;
-                    trace_3(TRACE_MODULE_GR_CHART, "converted copy ref %d to font %s to main ref %d\n",
+                    trace_3(TRACE_MODULE_GR_CHART, "converted copy ref %d to font %s to main ref %d",
                             old_fontref, old_fontname, new_fontref);
                     }
                     break;
@@ -696,11 +696,11 @@ gr_riscdiag_scaled_diagram_add(
                                 /* shift and scale and shift */
                                 DRAW_PATH_LINE line;
 
-                                void_memcpy32(&line, p_path, sizeof32(line));
+                                memcpy32(&line, p_path, sizeof32(line));
 
                                 draw_point_xform(&line.pt, &line.pt, &scale_xform);
 
-                                void_memcpy32(p_path, &line, sizeof32(line));
+                                memcpy32(p_path, &line, sizeof32(line));
 
                                 p_path += sizeof32(line);
                                 break;
@@ -711,13 +711,13 @@ gr_riscdiag_scaled_diagram_add(
                                 /* shift and scale and shift */
                                 DRAW_PATH_CURVE curve;
 
-                                void_memcpy32(&curve, p_path, sizeof32(curve));
+                                memcpy32(&curve, p_path, sizeof32(curve));
 
                                 draw_point_xform(&curve.cp1, &curve.cp1, &scale_xform);
                                 draw_point_xform(&curve.cp2, &curve.cp2, &scale_xform);
                                 draw_point_xform(&curve.end, &curve.end, &scale_xform);
 
-                                void_memcpy32(p_path, &curve, sizeof32(curve));
+                                memcpy32(p_path, &curve, sizeof32(curve));
 
                                 p_path += sizeof32(curve);
                                 break;
@@ -844,12 +844,12 @@ gr_riscdiag_shift_diagram(
                                 /* shift and scale and shift */
                                 DRAW_PATH_LINE line;
 
-                                void_memcpy32(&line, p_path, sizeof32(line));
+                                memcpy32(&line, p_path, sizeof32(line));
 
                                 line.pt.x += pShiftBy->x;
                                 line.pt.y += pShiftBy->y;
 
-                                void_memcpy32(p_path, &line, sizeof32(line));
+                                memcpy32(p_path, &line, sizeof32(line));
 
                                 p_path += sizeof32(line);
                                 break;
@@ -860,7 +860,7 @@ gr_riscdiag_shift_diagram(
                                 /* shift and scale and shift */
                                 DRAW_PATH_CURVE curve;
 
-                                void_memcpy32(&curve, p_path, sizeof32(curve));
+                                memcpy32(&curve, p_path, sizeof32(curve));
 
                                 curve.cp1.x += pShiftBy->x;
                                 curve.cp1.y += pShiftBy->y;
@@ -871,7 +871,7 @@ gr_riscdiag_shift_diagram(
                                 curve.end.x += pShiftBy->x;
                                 curve.end.y += pShiftBy->y;
 
-                                void_memcpy32(p_path, &curve, sizeof32(curve));
+                                memcpy32(p_path, &curve, sizeof32(curve));
 
                                 p_path += sizeof32(curve);
                                 break;

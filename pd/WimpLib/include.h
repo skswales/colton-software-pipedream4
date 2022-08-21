@@ -69,7 +69,7 @@
 
 /* standard includes for WimpLib */
 
-#include "cmodules/ansi.h"
+#include "cmodules/coltsoft/ansi.h"
 
 #include "cmodules/coltsoft/coltsoft.h"
 

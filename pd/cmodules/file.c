@@ -158,12 +158,12 @@ file_buffer(
     void * buffer;
 
     trace_3(TRACE_MODULE_FILE,
-            "file_buffer(" PTR_XTFMT ", " PTR_XTFMT ", %u)\n", report_ptr_cast(file_handle), userbuffer, bufsize);
+            "file_buffer(" PTR_XTFMT ", " PTR_XTFMT ", %u)", report_ptr_cast(file_handle), userbuffer, bufsize);
 
     if(!file_handle)
         {
         trace_1(TRACE_MODULE_FILE,
-                "file_buffer -- NULL FILE_HANDLE sets up default buffer size of %u\n",
+                "file_buffer -- NULL FILE_HANDLE sets up default buffer size of %u",
                 bufsize);
         file__defbufsiz = bufsize;
         return(0);
@@ -183,7 +183,7 @@ file_buffer(
 
         /* free buffer if any and we allocated it */
         if(!(file_handle->flags & _FILE_USERBUFFER))
-            list_disposeptr(&file_handle->bufbase);
+            al_ptr_dispose(&file_handle->bufbase);
 
         buffer = userbuffer;
 
@@ -200,7 +200,8 @@ file_buffer(
 
         if(bufsize)
             {
-            buffer = list_allocptr(bufsize);
+            STATUS status;
+            buffer = al_ptr_alloc_bytes(void, bufsize, &status);
             if(!buffer)
                 return(file__set_error(file_handle, create_error(FILE_ERR_HANDLEUNBUFFERED)));
             }
@@ -231,7 +232,7 @@ file_clearerror(
 {
     S32 res;
 
-    trace_1(TRACE_MODULE_FILE, "file_clearerror(" PTR_XTFMT ")\n", report_ptr_cast(file_handle));
+    trace_1(TRACE_MODULE_FILE, "file_clearerror(" PTR_XTFMT ")", report_ptr_cast(file_handle));
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
@@ -245,7 +246,7 @@ file_clearerror(
     res = file_handle->error;
     file_handle->error = 0;
 
-    trace_1(TRACE_MODULE_FILE, "file_clearerror returns old error %d\n", res);
+    trace_1(TRACE_MODULE_FILE, "file_clearerror returns old error %d", res);
     return(res);
 }
 
@@ -264,7 +265,7 @@ file_close(
     S32         res;
 
     trace_2(TRACE_MODULE_FILE,
-            "file_close(" PTR_XTFMT " -> " PTR_XTFMT ")\n", report_ptr_cast(fp), report_ptr_cast(fp ? *fp : NULL));
+            "file_close(" PTR_XTFMT " -> " PTR_XTFMT ")", report_ptr_cast(fp), report_ptr_cast(fp ? *fp : NULL));
 
     if(!fp)
         return(create_error(FILE_ERR_BADHANDLE));
@@ -316,18 +317,18 @@ file_close(
 
             /* free buffer if any and we allocated it */
             if(!(file_handle->flags & _FILE_USERBUFFER))
-                list_disposeptr(&file_handle->bufbase);
+                al_ptr_dispose(&file_handle->bufbase);
             }
         else
             /* nop if already closed on fs but good */
             res = 0;
 
         /* free file descriptor */
-        list_disposeptr(P_P_ANY_PEDANTIC(fp));
+        al_ptr_dispose(P_P_ANY_PEDANTIC(fp));
         }
 
     trace_3(TRACE_MODULE_FILE,
-            "file_close(" PTR_XTFMT " -> " PTR_XTFMT ") yields %d\n", report_ptr_cast(fp), report_ptr_cast(file_handle), res);
+            "file_close(" PTR_XTFMT " -> " PTR_XTFMT ") yields %d", report_ptr_cast(fp), report_ptr_cast(file_handle), res);
     return(res);
 }
 
@@ -339,9 +340,9 @@ file_create_directory(
 #if RISCOS
     _kernel_osfile_block osfile_block;
 
-    reportf("file_create_directory(%u:%s)\n", strlen32(dirname), dirname);
+    reportf("file_create_directory(%u:%s)", strlen32(dirname), dirname);
 
-    void_memset32(&osfile_block, NULLCH, sizeof32(osfile_block));
+    memset32(&osfile_block, NULLCH, sizeof32(osfile_block));
 
     if(_kernel_ERROR == _kernel_osfile(OSFile_CreateDir, dirname, &osfile_block))
         /*oops*/ (void) _kernel_last_oserror();
@@ -372,7 +373,7 @@ file_error(
 {
     S32 res;
 
-    trace_1(TRACE_MODULE_FILE, "file_error(" PTR_XTFMT ")\n", report_ptr_cast(file_handle));
+    trace_1(TRACE_MODULE_FILE, "file_error(" PTR_XTFMT ")", report_ptr_cast(file_handle));
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
@@ -386,7 +387,7 @@ file_error(
     file_handle->flags &= ~_FILE_EOFREAD;
     res = file_handle->error;
 
-    trace_2(TRACE_MODULE_FILE, "file_error(" PTR_XTFMT ") returns error %d\n", report_ptr_cast(file_handle), res);
+    trace_2(TRACE_MODULE_FILE, "file_error(" PTR_XTFMT ") returns error %d", report_ptr_cast(file_handle), res);
     return(res);
 }
 
@@ -395,7 +396,7 @@ file_finalise(void)
 {
     FILE_HANDLE file_handle;
 
-    trace_0(TRACE_MODULE_FILE, "file_finalise() -- closedown\n");
+    trace_0(TRACE_MODULE_FILE, "file_finalise() -- closedown");
 
     /* restart each time as file descriptors get deleted */
     while((file_handle = file_list) != _FILE_LIST_END)
@@ -417,7 +418,7 @@ file_flush(
 #endif
     S32              res;
 
-    trace_1(TRACE_MODULE_FILE, "file_flush(" PTR_XTFMT ")\n", report_ptr_cast(file_handle));
+    trace_1(TRACE_MODULE_FILE, "file_flush(" PTR_XTFMT ")", report_ptr_cast(file_handle));
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
@@ -450,7 +451,7 @@ file_flush(
 #endif
         }
 
-    trace_2(TRACE_MODULE_FILE, "file_flush(" PTR_XTFMT ") yields %d\n", report_ptr_cast(file_handle), res);
+    trace_2(TRACE_MODULE_FILE, "file_flush(" PTR_XTFMT ") yields %d", report_ptr_cast(file_handle), res);
     return(res);
 }
 
@@ -489,7 +490,7 @@ file_getpos(
 {
     S32 res32;
 
-    trace_2(TRACE_MODULE_FILE, "file_getpos(" PTR_XTFMT " to " PTR_XTFMT ")\n", report_ptr_cast(file_handle), report_ptr_cast(pos));
+    trace_2(TRACE_MODULE_FILE, "file_getpos(" PTR_XTFMT " to " PTR_XTFMT ")", report_ptr_cast(file_handle), report_ptr_cast(pos));
 
     assert_EQ(sizeof(filepos_t), sizeof(U32));
 
@@ -630,7 +631,7 @@ file_length(
     S32 length;
     S32 res;
 
-    trace_1(TRACE_MODULE_FILE, "file_length(" PTR_XTFMT ")\n", report_ptr_cast(file_handle));
+    trace_1(TRACE_MODULE_FILE, "file_length(" PTR_XTFMT ")", report_ptr_cast(file_handle));
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
@@ -674,7 +675,7 @@ file_length(
 #endif
     } /*block*/
 
-    trace_2(TRACE_MODULE_FILE, "file_length(" PTR_XTFMT ") yields %d\n", report_ptr_cast(file_handle), length);
+    trace_2(TRACE_MODULE_FILE, "file_length(" PTR_XTFMT ") yields %d", report_ptr_cast(file_handle), length);
     return(length);
 }
 
@@ -744,19 +745,19 @@ file_open(
         return(status_check());
 #endif
 
-    trace_3(TRACE_MODULE_FILE, TEXT("file_open(%s, %d, " PTR_XTFMT ")\n"), filename, openmode, report_ptr_cast(p_file_handle));
+    trace_3(TRACE_MODULE_FILE, TEXT("file_open(%s, %d, " PTR_XTFMT ")"), filename, openmode, report_ptr_cast(p_file_handle));
 
     /* would the name be too long to put in the allocated structure? */
 #if RISCOS
     if(strlen32(filename) >= sizeof32(file_handle->riscos.filename))
         {
-        reportf("file_open(%u:%s, &%02x): res=FILE_ERR_NAMETOOLONG\n", strlen(filename), filename, openatts[openmode]);
+        reportf("file_open(%u:%s, &%02x): res=FILE_ERR_NAMETOOLONG", strlen(filename), filename, openatts[openmode]);
         return(create_error(FILE_ERR_NAMETOOLONG));
         }
 #endif
 
-    if(NULL == (*p_file_handle = file_handle = list_allocptr(sizeof(*file_handle))))
-        return(create_error(FILE_ERR_NOMEM));
+    if(NULL == (*p_file_handle = file_handle = al_ptr_alloc_elem(_FILE_HANDLE, 1, &res)))
+        return(res);
 
     /* always initialise file to look silly */
     zero_struct_ptr(file_handle);
@@ -784,7 +785,7 @@ file_open(
         res = (file_handle->handle != _FILE_HANDLE_NULL);
         }
 
-    reportf("file_open(%u:%s, &%02x): res=%d, OS_handle=%d\n", strlen(filename), filename, openatts[openmode], res, file_handle->handle);
+    reportf("file_open(%u:%s, &%02x): res=%d, OS_handle=%d", strlen(filename), filename, openatts[openmode], res, file_handle->handle);
 
     if(res > 0)
         {
@@ -821,7 +822,7 @@ file_open(
         res = create_error(FILE_ERR_CANTOPEN);
 
     if(res <= 0)
-        list_disposeptr(P_P_ANY_PEDANTIC(p_file_handle));
+        al_ptr_dispose(P_P_ANY_PEDANTIC(p_file_handle));
     else
         {
         if(!file__initialised)
@@ -832,7 +833,7 @@ file_open(
         file_list = file_handle;
         }
 
-    trace_2(TRACE_MODULE_FILE, TEXT("file_open yields " PTR_XTFMT ", %d\n"), report_ptr_cast(file_handle), res);
+    trace_2(TRACE_MODULE_FILE, TEXT("file_open yields " PTR_XTFMT ", %d"), report_ptr_cast(file_handle), res);
     return(res);
 }
 
@@ -860,7 +861,7 @@ file_pad(
         return((S32) res32);
 
     trace_6(TRACE_MODULE_FILE,
-            "file_pad(" PTR_XTFMT ", %d): alignment %d, mask &%x, pos &%8.8x, needs %d\n",
+            "file_pad(" PTR_XTFMT ", %d): alignment %d, mask &%x, pos &%8.8x, needs %d",
             report_ptr_cast(file_handle), alignpower, alignment, alignmask, res32,
             ((res32 & alignmask) ? (alignment - (res32 & alignmask)) : 0));
 
@@ -868,7 +869,7 @@ file_pad(
         {
         alignment = alignment - (res32 & alignmask);
         do  {
-            trace_0(TRACE_MODULE_FILE, "file_pad outputting NULLCH\n");
+            trace_0(TRACE_MODULE_FILE, "file_pad outputting NULLCH");
             res = file_putc(NULLCH, file_handle);
             }
         while((res >= 0)  &&  --alignment);
@@ -1222,7 +1223,7 @@ file_write_err(
 
 /******************************************************************************
 *
-* internal procedures
+* internal routines
 *
 ******************************************************************************/
 
@@ -1238,7 +1239,7 @@ file__closefile(
 {
     S32 res;
 
-    trace_1(TRACE_MODULE_FILE, "file__closefile(" PTR_XTFMT ")\n", report_ptr_cast(file_handle));
+    trace_1(TRACE_MODULE_FILE, "file__closefile(" PTR_XTFMT ")", report_ptr_cast(file_handle));
 
     if(file_handle->flags & _FILE_CLOSED)
         /* no need to do anything; already closed on fs */
@@ -1254,7 +1255,7 @@ file__closefile(
         rs.r[0] = 0;
         rs.r[1] = file_handle->handle;
 
-        reportf("file__closefile(OS_handle=%d)\n", file_handle->handle);
+        reportf("file__closefile(OS_handle=%d)", file_handle->handle);
 
         if(file__obtain_error_string(_kernel_swi(OS_Find, &rs, &rs)))
             {
@@ -1385,7 +1386,7 @@ file___flushbuffer(
     S32    res;
 
     trace_2(TRACE_MODULE_FILE,
-            "file__flushbuffer(" PTR_XTFMT ") called by %s\n", report_ptr_cast(file_handle), caller);
+            "file__flushbuffer(" PTR_XTFMT ") called by %s", report_ptr_cast(file_handle), caller);
 
     if(file_handle->error)
         /* sticky error for ANSI closeness */
@@ -1426,7 +1427,7 @@ file___flushbuffer(
     if(res < 0)
         {
         trace_3(TRACE_MODULE_FILE | TRACE_OUT,
-                "*** file_flushbuffer(" PTR_XTFMT ") from %s returning error %d ***\n",
+                "*** file_flushbuffer(" PTR_XTFMT ") from %s returning error %d ***",
                 report_ptr_cast(file_handle), caller, res);
         }
 #endif
@@ -1483,14 +1484,14 @@ file__read(
     size_t membersread;
 
     trace_6(TRACE_MODULE_FILE,
-            "file__read(" PTR_XTFMT ", %u, %u, " PTR_XTFMT "): nbytes %u <- handle %d\n",
+            "file__read(" PTR_XTFMT ", %u, %u, " PTR_XTFMT "): nbytes %u <- handle %d",
             report_ptr_cast(ptr), size, nmemb, report_ptr_cast(file_handle), size * nmemb, file_handle->handle);
 
     /* sticky error for ANSI closeness */
     if(file_handle->error)
         {
         trace_1(TRACE_MODULE_FILE,
-                "file__read returns sticky error %d\n", file_handle->error);
+                "file__read returns sticky error %d", file_handle->error);
         return(file_handle->error);
         }
 
@@ -1519,7 +1520,7 @@ file__read(
     /* save spurious division */
     membersread = (size == 1) ? bytesread : bytesread / size;
 
-    trace_1(TRACE_MODULE_FILE, "file__read read %d members\n", membersread);
+    trace_1(TRACE_MODULE_FILE, "file__read read %d members", membersread);
     return(membersread);
 }
 
@@ -1561,7 +1562,7 @@ file__seek(
             if(!offset)
                 {
                 trace_4(TRACE_MODULE_FILE,
-                        "file__seek(" PTR_XTFMT ", &%8.8x, %d) (NO MOTION) yields &%8.8x\n",
+                        "file__seek(" PTR_XTFMT ", &%8.8x, %d) (NO MOTION) yields &%8.8x",
                         report_ptr_cast(file_handle), offset, origin, newptr);
                 return(newptr);
                 }
@@ -1635,7 +1636,7 @@ file__seek(
 #endif
     } /*block*/
 
-    trace_4(TRACE_MODULE_FILE, "file__seek(" PTR_XTFMT ", &%8.8x, %d) yields &%8.8x\n",
+    trace_4(TRACE_MODULE_FILE, "file__seek(" PTR_XTFMT ", &%8.8x, %d) yields &%8.8x",
             report_ptr_cast(file_handle), offset, origin, newptr);
     return(newptr);
 }
@@ -1652,7 +1653,7 @@ static S32
 file__set_error_string(
     PC_U8 errorstr)
 {
-    trace_1(TRACE_MODULE_FILE, "file__set_error_string(%s)\n", errorstr);
+    trace_1(TRACE_MODULE_FILE, "file__set_error_string(%s)", errorstr);
 
     if(errorstr  &&  !file__errorptr)
         {
@@ -1661,7 +1662,7 @@ file__set_error_string(
         }
 #if TRACE_ALLOWED
     else if(file__errorptr)
-        trace_0(TRACE_MODULE_FILE, "*** ERROR LOST ***\n");
+        trace_0(TRACE_MODULE_FILE, "*** ERROR LOST ***");
 #endif
 
     return(errorstr != NULL);
@@ -1709,7 +1710,7 @@ file__tell(
         {
         curptr = file__tell_using_buffer(file_handle);
         trace_2(TRACE_MODULE_FILE,
-                "file__tell(" PTR_XTFMT ") yields &%8.8x\n", report_ptr_cast(file_handle), curptr);
+                "file__tell(" PTR_XTFMT ") yields &%8.8x", report_ptr_cast(file_handle), curptr);
         return(curptr);
         }
 
@@ -1739,7 +1740,7 @@ file__tell(
 #endif
     } /*block*/
 
-    trace_2(TRACE_MODULE_FILE, "file__tell(" PTR_XTFMT ") yields &%8.8x\n", report_ptr_cast(file_handle), curptr);
+    trace_2(TRACE_MODULE_FILE, "file__tell(" PTR_XTFMT ") yields &%8.8x", report_ptr_cast(file_handle), curptr);
     return(curptr);
 }
 
@@ -1770,14 +1771,14 @@ file__write(
     size_t byteswritten;
 
     trace_7(TRACE_MODULE_FILE,
-            "file__write(" PTR_XTFMT ", %u, %u, " PTR_XTFMT "): nbytes %d -> handle %d at &%8.8X\n",
+            "file__write(" PTR_XTFMT ", %u, %u, " PTR_XTFMT "): nbytes %d -> handle %d at &%8.8X",
             report_ptr_cast(ptr), size, nmemb, report_ptr_cast(file_handle), size * nmemb, file_handle->handle, pos);
 
     /* sticky error for ANSI closeness */
     if(file_handle->error)
         {
         trace_1(TRACE_MODULE_FILE,
-                "file__write returns sticky error %d\n", file_handle->error);
+                "file__write returns sticky error %d", file_handle->error);
         return(file_handle->error);
         }
 
@@ -1993,7 +1994,7 @@ file__eof(
 {
     S32 res;
 
-    trace_1(TRACE_MODULE_FILE, "file__eof(" PTR_XTFMT ")\n", report_ptr_cast(file_handle));
+    trace_1(TRACE_MODULE_FILE, "file__eof(" PTR_XTFMT ")", report_ptr_cast(file_handle));
 
 #if CHECKING
     if(!file_handle || (file_handle->magic != _FILE_MAGIC_WORD))
@@ -2031,7 +2032,7 @@ file__eof(
 #endif
     } /*block*/
 
-    trace_2(TRACE_MODULE_FILE, "file__eof(" PTR_XTFMT ") yields %d\n", report_ptr_cast(file_handle), res);
+    trace_2(TRACE_MODULE_FILE, "file__eof(" PTR_XTFMT ") yields %d", report_ptr_cast(file_handle), res);
     return(res);
 }
 

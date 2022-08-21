@@ -96,13 +96,6 @@ stringdef(PRESSANYKEY_STR)
 stringdef(Initialising_STR)
 stringdef(Debug_STR)
 
-/* for registration numbers & checking */
-
-/* date format strings */
-
-stringdef(Zd_Zs_Zd_STR)
-stringdef(Zd_ZP3s_Zd_STR)
-
 stringdef(FZd_STR)
 stringdef(New_width_STR)
 stringdef(New_right_margin_position_STR)
@@ -527,6 +520,7 @@ stringdef(Select_chart_STR)
 stringdef(Chart_STR)
 
 stringdef(CustFuncErrStr)
+stringdef(PropagatedErrStr)
 
 stringdef(function_menu_title)
 stringdef(function_menu_entries)

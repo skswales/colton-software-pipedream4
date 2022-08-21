@@ -348,6 +348,7 @@ enum did_numbers
     RPN_DAT_NAME        ,
     RPN_DAT_BLANK       ,
     RPN_DAT_ERROR       ,
+#define RPN_DAT_BOOL8 RPN_DAT_WORD8 /* synonym in PipeDream */
 
     /* handle based resources owned by RPN */
     RPN_DAT_STRING      ,
@@ -405,7 +406,6 @@ enum did_numbers
     RPN_FNF_ACS         ,
     RPN_FNF_AGE         ,
     RPN_FNV_ALERT       ,
-
     RPN_FNF_ASEC        ,
     RPN_FNF_ASECH       ,
     RPN_FNF_ASINH       ,
@@ -414,44 +414,53 @@ enum did_numbers
     RPN_FNF_ATANH       ,
     RPN_FNF_ATN         ,
     RPN_FNV_AVG         ,
+
     RPN_FNF_BETA        ,
     RPN_FNF_BIN         ,
     RPN_FNF_BINOM       ,
     RPN_FNV_BREAK       ,
 
-    RPN_FNF_CACOS       ,
-    RPN_FNF_CACOSEC     ,
-    RPN_FNF_CACOSECH    ,
-    RPN_FNF_CACOSH      ,
-    RPN_FNF_CACOT       ,
-    RPN_FNF_CACOTH      ,
-    RPN_FNF_CADD        ,
-    RPN_FNF_CASEC       ,
-    RPN_FNF_CASECH      ,
-    RPN_FNF_CASIN       ,
-    RPN_FNF_CASINH      ,
-    RPN_FNF_CATAN       ,
-    RPN_FNF_CATANH      ,
-    RPN_FNF_CCOS        ,
-    RPN_FNF_CCOSEC      ,
-    RPN_FNF_CCOSECH     ,
-    RPN_FNF_CCOSH       ,
-    RPN_FNF_CCOT        ,
-    RPN_FNF_CCOTH       ,
-    RPN_FNF_CDIV        ,
-    RPN_FNF_CEXP        ,
+    RPN_FNF_C_ACOS      ,
+    RPN_FNF_C_ACOSEC    ,
+    RPN_FNF_C_ACOSECH   ,
+    RPN_FNF_C_ACOSH     ,
+    RPN_FNF_C_ACOT      ,
+    RPN_FNF_C_ACOTH     ,
+    RPN_FNF_C_ADD       ,
+    RPN_FNF_C_ASEC      ,
+    RPN_FNF_C_ASECH     ,
+    RPN_FNF_C_ASIN      ,
+    RPN_FNF_C_ASINH     ,
+    RPN_FNF_C_ATAN      ,
+    RPN_FNF_C_ATANH     ,
+    RPN_FNF_C_COS       ,
+    RPN_FNF_C_COSEC     ,
+    RPN_FNF_C_COSECH    ,
+    RPN_FNF_C_COSH      ,
+    RPN_FNF_C_COT       ,
+    RPN_FNF_C_COTH      ,
+    RPN_FNF_C_DIV       ,
+    RPN_FNF_C_EXP       ,
+    RPN_FNF_C_LN        ,
+    RPN_FNF_C_MUL       ,
+    RPN_FNF_C_POWER     ,
+    RPN_FNF_C_RADIUS    ,
+    RPN_FNF_C_SEC       ,
+    RPN_FNF_C_SECH      ,
+    RPN_FNF_C_SIN       ,
+    RPN_FNF_C_SINH      ,
+    RPN_FNF_C_SUB       ,
+    RPN_FNF_C_TAN       ,
+    RPN_FNF_C_TANH      ,
+    RPN_FNF_C_THETA     ,
+
     RPN_FNF_CHAR        ,
     RPN_FNV_CHOOSE      ,
-    RPN_FNF_CLN         ,
-    RPN_FNF_CMUL        ,
     RPN_FNF_CODE        ,
     RPN_FNV_COL         ,
-
     RPN_FNV_COLS        ,
-
     RPN_FNF_COMBIN      ,
     RPN_FN0_CONTINUE    ,
-
     RPN_FNF_COS         ,
     RPN_FNF_COSEC       ,
     RPN_FNF_COSECH      ,
@@ -459,98 +468,76 @@ enum did_numbers
     RPN_FNF_COT         ,
     RPN_FNF_COTH        ,
     RPN_FNV_COUNT       ,
-    RPN_FNF_CPOWER      ,
-    RPN_FNF_CRADIUS     ,
-    RPN_FNF_CSEC        ,
-    RPN_FNF_CSECH       ,
-    RPN_FNF_CSIN        ,
-    RPN_FNF_CSINH       ,
-    RPN_FNF_CSUB        ,
-    RPN_FNF_CTAN        ,
-    RPN_FNF_CTANH       ,
     RPN_FNF_CTERM       ,
-    RPN_FNF_CTHETA      ,
+
     RPN_FNF_DATE        ,
     RPN_FNF_DATEVALUE   ,
     RPN_FNF_DAVG        ,
-
     RPN_FNF_DAY         ,
     RPN_FNF_DAYNAME     ,
     RPN_FNF_DCOUNT      ,
-
     RPN_FNF_DCOUNTA     ,
-
     RPN_FNF_DDB         ,
     RPN_FNF_DEG         ,
     RPN_FNF_DEREF       ,
     RPN_FNF_DMAX        ,
-
     RPN_FNF_DMIN        ,
-
     RPN_FNF_DSTD        ,
-
     RPN_FNF_DSTDP       ,
-
     RPN_FNF_DSUM        ,
-
     RPN_FNF_DVAR        ,
-
     RPN_FNF_DVARP       ,
 
     RPN_FN0_ELSE        ,
-
     RPN_FNF_ELSEIF      ,
-
     RPN_FN0_ENDIF       ,
-
     RPN_FN0_ENDWHILE    ,
-
     RPN_FNF_ERROR       ,
     RPN_FNF_EXACT       ,
     RPN_FNF_EXP         ,
+
     RPN_FNF_FACT        ,
     RPN_FNV_FIND        ,
     RPN_FNF_FLIP        ,
     RPN_FNV_FOR         ,
-
-    RPN_FNF_FORMULA     ,
+    RPN_FNF_FORMULA_TEXT,
     RPN_FNM_FUNCTION    ,
     RPN_FNF_FV          ,
+
     RPN_FNF_GAMMALN     ,
     RPN_FNF_GOTO        ,
-
     RPN_FNV_GRAND       ,
-
     RPN_FNF_GROWTH      ,
-    RPN_FNF_HLOOKUP     ,
 
+    RPN_FNF_HLOOKUP     ,
     RPN_FNF_HOUR        ,
+
     RPN_FNV_IF          ,
     RPN_FNF_IFC         ,
-
     RPN_FNV_INDEX       ,
     RPN_FNV_INPUT       ,
-
     RPN_FNF_INT         ,
     RPN_FNF_IRR         ,
+
     RPN_FNV_JOIN        ,
-    RPN_FNF_LEFT        ,
+
+    RPN_FNV_LEFT        ,
     RPN_FNF_LENGTH      ,
     RPN_FNV_LINEST      ,
-    RPN_FNF_LISTCOUNT   ,
+  /*RPN_FNF_LISTCOUNT   ,*/
     RPN_FNF_LN          ,
     RPN_FNF_LOG         ,
     RPN_FNV_LOGEST      ,
     RPN_FNF_LOOKUP      ,
-
     RPN_FNF_LOWER       ,
-    RPN_FNF_MATCH       ,
 
+    RPN_FNF_M_DETERM    ,
+    RPN_FNF_M_INVERSE   ,
+    RPN_FNF_M_MULT      ,
+
+    RPN_FNF_MATCH       ,
     RPN_FNV_MAX         ,
-    RPN_FNF_MDETERM     ,
     RPN_FNF_MEDIAN      ,
-    RPN_FNF_MINVERSE    ,
-    RPN_FNF_MMULT       ,
     RPN_FNF_MID         ,
     RPN_FNV_MIN         ,
     RPN_FNF_MINUTE      ,
@@ -559,39 +546,36 @@ enum did_numbers
     RPN_FNF_MONTH       ,
     RPN_FNF_MONTHDAYS   ,
     RPN_FNF_MONTHNAME   ,
-    RPN_FN0_NEXT        ,
 
+    RPN_FN0_NEXT        ,
     RPN_FN0_NOW         ,
     RPN_FNF_NPV         ,
+
     RPN_FNF_PERMUT      ,
     RPN_FN0_PI          ,
     RPN_FNF_PMT         ,
     RPN_FNF_PROPER      ,
     RPN_FNF_PV          ,
+
     RPN_FNF_RAD         ,
     RPN_FNV_RAND        ,
     RPN_FNV_RANK        ,
-
     RPN_FNF_RATE        ,
     RPN_FN0_REPEAT      ,
-
     RPN_FNF_REPLACE     ,
     RPN_FNF_REPT        ,
     RPN_FNF_RESULT      ,
-
     RPN_FNF_REVERSE     ,
-    RPN_FNF_RIGHT       ,
+    RPN_FNV_RIGHT       ,
     RPN_FNV_ROUND       ,
     RPN_FNV_ROW         ,
-
     RPN_FNV_ROWS        ,
 
     RPN_FNF_SEC         ,
     RPN_FNF_SECH        ,
     RPN_FNF_SECOND      ,
-    RPN_FNF_SETNAME     ,
-    RPN_FNF_SETVALUE    ,
-
+    RPN_FNF_SET_NAME    ,
+    RPN_FNF_SET_VALUE   ,
     RPN_FNF_SGN         ,
     RPN_FNF_SIN         ,
     RPN_FNF_SINH        ,
@@ -604,6 +588,7 @@ enum did_numbers
     RPN_FNV_STRING      ,
     RPN_FNV_SUM         ,
     RPN_FNF_SYD         ,
+
     RPN_FNF_TAN         ,
     RPN_FNF_TANH        ,
     RPN_FNF_TERM        ,
@@ -615,9 +600,10 @@ enum did_numbers
     RPN_FNF_TREND       ,
     RPN_FNF_TRIM        ,
     RPN_FNF_TYPE        ,
-    RPN_FNF_UNTIL       ,
 
+    RPN_FNF_UNTIL       ,
     RPN_FNF_UPPER       ,
+
     RPN_FNF_VALUE       ,
     RPN_FNV_VAR         ,
     RPN_FNV_VARP        ,
@@ -629,8 +615,10 @@ enum did_numbers
     RPN_FNF_WHILE       ,
 
     RPN_FNF_YEAR        ,
+
     /* custom functions */
     RPN_FNM_CUSTOMCALL  ,
+
     /* arrays */
     RPN_FNA_MAKEARRAY   ,
 
@@ -696,6 +684,75 @@ typedef S16 EV_TYPE; typedef EV_TYPE * P_EV_TYPE; typedef const EV_TYPE * PC_EV_
 /*-------------------------------------------------------------------------*/
 
 /*
+should really be in ss_const.h but need RPN_DAT_xxx
+*/
+
+static inline EV_IDNO
+ev_integer_size(
+    _InVal_     S32 integer)
+{
+    if((integer >= 0) && (integer <= (S32) U8_MAX))
+        return(RPN_DAT_WORD8);
+
+    if((integer >= (S32) S16_MIN) && (integer <= (S32) S16_MAX))
+        return(RPN_DAT_WORD16);
+
+    return(RPN_DAT_WORD32);
+}
+
+static inline void
+ev_data_init(
+    _OutRef_    P_EV_DATA p_ev_data)
+{
+    zero_struct_ptr(p_ev_data);
+    p_ev_data->did_num = RPN_DAT_BLANK;
+}
+
+static inline void
+ev_data_set_blank(
+    _OutRef_    P_EV_DATA p_ev_data)
+{
+    PREFAST_ONLY_ZERO_STRUCT_PTR(p_ev_data); /* keep dataflower happy */
+    p_ev_data->did_num = RPN_DAT_BLANK;
+}
+
+static inline void
+ev_data_set_boolean(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InVal_     BOOL boolean)
+{
+    p_ev_data->did_num = RPN_DAT_WORD8;
+    p_ev_data->arg.boolean = boolean;
+}
+
+static inline void
+ev_data_set_integer(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InVal_     S32 s32)
+{
+    p_ev_data->arg.integer = s32;
+    p_ev_data->did_num = ev_integer_size(s32);
+}
+
+static inline void
+ev_data_set_WORD32( /* set the widest integer type */
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InVal_     S32 s32)
+{
+    p_ev_data->did_num = RPN_DAT_WORD32;
+    p_ev_data->arg.integer = s32;
+}
+
+static inline void
+ev_data_set_real(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InVal_     F64 f64)
+{
+    p_ev_data->did_num = RPN_DAT_REAL;
+    p_ev_data->arg.fp = f64;
+}
+
+/*
 evaluator external routines
 */
 
@@ -722,7 +779,7 @@ extern S32
 ss_recog_constant(
     P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 txt_in,
+    _In_z_      PC_U8Z txt_in,
     _InRef_     PC_EV_OPTBLOCK p_optblock,
     S32 refs_ok);
 
@@ -1182,7 +1239,6 @@ error definition
     errorstring(EVAL_ERR_MANYEXTREF,     "More than 1 file loaded") \
     errorstring(EVAL_ERR_BADRPN,         "Bad compiled data") \
     errorstring(EVAL_ERR_EXPTOOLONG,     "Formula too long") \
-    errorstring(EVAL_ERR_NOROOM,         "Memory full") \
     errorstring(EVAL_ERR_BADEXPR,        "Mistake in formula") \
     errorstring(EVAL_ERR_UNEXNUMBER,     "Number not expected") \
     errorstring(EVAL_ERR_UNEXSTRING,     "String not expected") \
@@ -1197,7 +1253,7 @@ error definition
     errorstring(EVAL_ERR_NORETURN,       "No RESULT in custom function") \
     errorstring(EVAL_ERR_NA,             "Value not defined") \
     errorstring(EVAL_ERR_NOTIMPLEMENTED, "Not implemented") \
-    errorstring(EVAL_ERR_BADSLR,         "Slot deleted") \
+    errorstring(EVAL_ERR_SLR_BAD_REF,    "Slot deleted") \
     errorstring(EVAL_ERR_NOTIME,         "No time value") \
     errorstring(EVAL_ERR_NODATE,         "No date value") \
     errorstring(EVAL_ERR_BADIDENT,       "Bad identifier") \
@@ -1251,7 +1307,7 @@ error definition
 #define EVAL_ERR_MANYEXTREF          (-2011)
 #define EVAL_ERR_BADRPN              (-2012)
 #define EVAL_ERR_EXPTOOLONG          (-2013)
-#define EVAL_ERR_NOROOM              (-2014)
+#define EVAL_ERR_spare_2014          (-2014)
 #define EVAL_ERR_BADEXPR             (-2015)
 #define EVAL_ERR_UNEXNUMBER          (-2016)
 #define EVAL_ERR_UNEXSTRING          (-2017)
@@ -1266,7 +1322,7 @@ error definition
 #define EVAL_ERR_NORETURN            (-2026)
 #define EVAL_ERR_NA                  (-2027)
 #define EVAL_ERR_NOTIMPLEMENTED      (-2028)
-#define EVAL_ERR_BADSLR              (-2029)
+#define EVAL_ERR_SLR_BAD_REF         (-2029)
 #define EVAL_ERR_NOTIME              (-2030)
 #define EVAL_ERR_NODATE              (-2031)
 #define EVAL_ERR_BADIDENT            (-2032)

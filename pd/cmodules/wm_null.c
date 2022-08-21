@@ -17,17 +17,19 @@
 
 #include "funclist.h"
 
-/*
-variable exported for macros - 
-*/
+static
+struct _NULL_EVENT_STATICS
+{
+    MONOTIMEDIFF max_slice;
 
-void * Null__EventList = NULL; /*really P_LIST_BLKREF */
+    P_LIST_BLOCK event_list;
+}
+null_ =
+{
+    MONOTIME_VALUE(250),
 
-#if RISCOS
-static MONOTIMEDIFF Null__MaxSlice = 25; /* cs */
-#else
-static MONOTIMEDIFF Null__MaxSlice = 1; /* s */
-#endif
+    NULL
+};
 
 /*
 data stored for us by funclist
@@ -72,21 +74,18 @@ Null_DoEvent(void)
     NULL_EVENT_RETURN_CODE req;
     NULL_EVENT_BLOCK null_event_block;
 
-    if(!Null_HandlersPresent())
-        return(res);
-
     initialTime = monotime();
 
     do  {
         /* require to start at head of list? */
         if(item == -1)
-            tag = funclist_first((P_P_LIST_BLKREF) &Null__EventList,
+            tag = funclist_first(&null_.event_list,
                                  &proc, &handle, &item, TRUE);
         else
             {
             /* can we call this handler? */
-            funclist_readdata_ip((P_P_LIST_BLKREF) &Null__EventList,
-                                 &item, &req,
+            funclist_readdata_ip(&null_.event_list,
+                                 item, &req,
                                  offsetof(null_funclist_extradata, req),
                                  sizeof(req));
 
@@ -98,13 +97,13 @@ Null_DoEvent(void)
                 null_event_block.rc = NULL_EVENT;
                 null_event_block.client_handle = handle;
                 null_event_block.initial_time = initialTime;
-                null_event_block.max_slice = Null__MaxSlice;
+                null_event_block.max_slice = null_.max_slice;
 
                 res = (* np) (&null_event_block);
                 }
 
             /* obtain next callee */
-            tag = funclist_next( (P_P_LIST_BLKREF) &Null__EventList,
+            tag = funclist_next( &null_.event_list,
                                  &proc, &handle, &item, TRUE);
 
             /* if handler not called, loop with this new one */
@@ -118,7 +117,7 @@ Null_DoEvent(void)
                 }
 
             /* did this process take longer than allowed? */
-            if(monotime_diff(initialTime) >= Null__MaxSlice)
+            if(monotime_diff(initialTime) >= null_.max_slice)
                 {
                 res = NULL_EVENT_TIMED_OUT;
                 break;
@@ -158,13 +157,10 @@ Null_DoQuery(void)
     NULL_EVENT_RETURN_CODE res2;
     NULL_EVENT_BLOCK null_event_block;
 
-    if(!Null_HandlersPresent())
-        return(res);
-
-    for(tag = funclist_first((P_P_LIST_BLKREF) &Null__EventList,
+    for(tag = funclist_first(&null_.event_list,
                              &proc, &null_event_block.client_handle, &item, FALSE);
         tag;
-        tag = funclist_next( (P_P_LIST_BLKREF) &Null__EventList,
+        tag = funclist_next( &null_.event_list,
                              &proc, &null_event_block.client_handle, &item, FALSE))
         {
         P_PROC_NULL_EVENT np = (P_PROC_NULL_EVENT) proc;
@@ -178,8 +174,8 @@ Null_DoQuery(void)
             res = NULL_EVENTS_REQUIRED;
 
         /* remember handler request for interlock */
-        funclist_writedata_ip((P_P_LIST_BLKREF) &Null__EventList,
-                              &item, &res2,
+        funclist_writedata_ip(&null_.event_list,
+                              item, &res2,
                               offsetof(null_funclist_extradata, req),
                               sizeof(res2));
         }
@@ -207,7 +203,7 @@ Null_EventHandler(
         NULL_EVENT_RETURN_CODE res2 = NULL_EVENTS_REQUIRED;
 
         status_return(
-            funclist_add((P_P_LIST_BLKREF) &Null__EventList,
+            funclist_add(&null_.event_list,
                          (funclist_proc) proc, client_handle,
                          &item,
                          1 /*non-zero tag*/,
@@ -215,14 +211,14 @@ Null_EventHandler(
                          sizeof(null_funclist_extradata)));
 
         /* ensure that if events are given before querying this one responds safely */
-        funclist_writedata_ip((P_P_LIST_BLKREF) &Null__EventList,
-                              &item, &res2,
+        funclist_writedata_ip(&null_.event_list,
+                              item, &res2,
                               offsetof(null_funclist_extradata, req),
                               sizeof(res2));
         }
     else
         {
-        funclist_remove((P_P_LIST_BLKREF) &Null__EventList,
+        funclist_remove(&null_.event_list,
                         (funclist_proc) proc, client_handle);
         }
 

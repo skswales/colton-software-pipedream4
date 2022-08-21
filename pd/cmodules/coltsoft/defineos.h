@@ -84,7 +84,7 @@ check that setup from selectos.h is ok
 #endif /* CROSS_COMPILE */
 
 #ifndef _In_reads_
-#include "cmodules/no-sal.h"
+#include "cmodules/coltsoft/no-sal.h"
 #endif
 
 #endif /* RISCOS */
@@ -111,7 +111,7 @@ check that setup from selectos.h is ok
 #if CROSS_COMPILE && defined(HOST_WINDOWS)
 #define inline __inline /* for MSVC < C99 */
 #else
-#define __forceinline inline /* macro MSVC tuning keyword for Norcroft et al */
+/*#define __forceinline inline*/ /* macro MSVC tuning keyword for Norcroft et al */
 #endif
 
 #endif /* RISCOS */

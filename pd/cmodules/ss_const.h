@@ -44,6 +44,7 @@ typedef U8                  EV_DOCNO; typedef EV_DOCNO * P_EV_DOCNO; /* NB same 
 
 typedef int                 EV_COL;
 #define EV_COL_BITS         32
+#define EV_COL_SBF          SBF
 
 typedef int                 EV_ROW;
 #define EV_ROW_BITS         32
@@ -118,13 +119,31 @@ packed range type
                         sizeof(EV_FLAGS) * 2)
 
 /*
+array structure
+*/
+
+typedef struct _ev_array
+{
+    S32 x_size;                 /* x dimension of array */
+    S32 y_size;                 /* y dimension of array */
+    struct _ev_data * elements;
+}
+EV_ARRAY, * P_EV_ARRAY; typedef const EV_ARRAY * PC_EV_ARRAY;
+
+/*
 date/time type
 */
 
+typedef S32 EV_DATE_DATE; typedef EV_DATE_DATE * P_EV_DATE_DATE; typedef const EV_DATE_DATE * PC_EV_DATE_DATE;
+#define EV_DATE_INVALID 0 /*S32_MIN*/
+
+typedef S32 EV_DATE_TIME; typedef EV_DATE_TIME * P_EV_DATE_TIME; typedef const EV_DATE_TIME * PC_EV_DATE_TIME;
+#define EV_TIME_INVALID 0 /*S32_MIN*/
+
 typedef struct _ev_date
 {
-    S32 date;
-    S32 time;
+    EV_DATE_DATE date;
+    EV_DATE_TIME time;
 }
 EV_DATE, * P_EV_DATE; typedef const EV_DATE * PC_EV_DATE;
 
@@ -141,17 +160,18 @@ evaluator error type
 
 typedef struct _ev_err
 {
-    S16 num;
-    S16 type;
-    EV_ROW row;
+    SBF         num   : 16;
+    UBF         spare : 8-2;
+    UBF         type  : 2;
+    UBF         docno : 8; /* packed to keep EV_CONSTANT size down */
+    EV_COL      col;
+    EV_ROW      row;
 }
-EV_ERROR;
+EV_ERROR, * P_EV_ERROR;
 
-enum error_types
-{
-    ERROR_NORMAL = 0,
-    ERROR_CUSTOM
-};
+#define ERROR_NORMAL 0
+#define ERROR_CUSTOM 1
+#define ERROR_PROPAGATED 2
 
 /*
 string data (is NULLCH terminated in PipeDream but size field helps)
@@ -176,16 +196,15 @@ EV_STRINGC, * P_EV_STRINGC;
 * see the dependent EV_DATA type below
 */
 
-typedef struct _ev_array EV_ARRAY, * P_EV_ARRAY, ** P_P_EV_ARRAY;
-
 typedef union _ev_constant
 {
     F64 fp;                 /* floating point */
     EV_STRING string;       /* string */
-    P_EV_ARRAY arrayp;      /* array */
+    EV_ARRAY array;         /* array */
     EV_DATE date;           /* date */
     EV_ERROR error;         /* error */
     S32 integer;            /* integer */
+    BOOL boolean;           /* alias: shadows integer */
 }
 EV_CONSTANT, * P_EV_CONSTANT;
 
@@ -198,10 +217,12 @@ typedef union _ev_data_arg
     F64 fp;                 /* floating point */
     EV_STRINGC stringc;     /* string variable (with const data) */
     EV_STRING string;       /* string variable (writable variant) */
-    P_EV_ARRAY arrayp;      /* array */
+    EV_STRING string_wr;    /* string variable (alias) */
+    EV_ARRAY array;         /* array */
     EV_DATE date;           /* date */
     EV_ERROR error;         /* error */
     S32 integer;            /* integer values */
+    BOOL boolean;           /* alias: shadows integer */
 
     EV_SLR slr;             /* slot reference */
     EV_RANGE range;         /* range */
@@ -217,25 +238,6 @@ typedef struct _ev_data
     EV_DATA_ARG arg;
 }
 EV_DATA, * P_EV_DATA; typedef const EV_DATA * PC_EV_DATA;
-
-typedef struct _ev_array_element
-{
-    EV_DATA ev_data;
-}
-EV_ARRAY_ELEMENT, * P_EV_ARRAY_ELEMENT; typedef const EV_ARRAY_ELEMENT * PC_EV_ARRAY_ELEMENT;
-
-/*
-array structure
-*/
-
-struct _ev_array
-{
-    S32 x_size;                 /* x dimension of array */
-    S32 y_size;                 /* y dimension of array */
-    EV_ARRAY_ELEMENT data[1];
-};
-
-#define EV_ARRAY_OVH offsetof(EV_ARRAY, data)
 
 #if RISCOS
 typedef struct _riscos_time_ordinals
@@ -263,24 +265,18 @@ extern signed char ev_days[];
 ss_const.c external functions
 */
 
+/*ncr*/
 extern S32
-data_set_error(
+ev_data_set_error(
     _OutRef_    P_EV_DATA p_ev_data,
-    S32 error);
+    _InVal_     S32 error);
 
-extern EV_IDNO
-fp_to_integer_force(
+extern void
+real_to_integer_force(
     _InoutRef_  P_EV_DATA p_ev_data);
 
-#define ev_integer_size(integer) ((EV_IDNO) \
-    ((((integer) >= 0) && ((integer) <= (S32) UCHAR_MAX)) \
-        ? RPN_DAT_WORD8  \
-        : (labs(integer) <= (S32) SHRT_MAX) \
-            ? RPN_DAT_WORD16 \
-            : RPN_DAT_WORD32) )
-
-extern EV_IDNO
-fp_to_integer_try(
+extern void
+real_to_integer_try(
     _InoutRef_  P_EV_DATA p_ev_data);
 
 extern void
@@ -347,21 +343,21 @@ ss_date_normalise(
 
 extern void
 ss_dateval_to_ymd(
-    _InRef_     PC_EV_DATE datep,
+    _InRef_     PC_EV_DATE_DATE p_ev_date_date,
     _OutRef_    P_S32 p_day,
     _OutRef_    P_S32 p_month,
     _OutRef_    P_S32 p_year);
 
 extern S32
 ss_ymd_to_dateval(
-    _InoutRef_  P_EV_DATE datep,
+    _InoutRef_  P_EV_DATE_DATE p_ev_date_date,
     _In_        S32 year,
     _In_        S32 month,
     _In_        S32 day);
 
 extern S32
 ss_hms_to_timeval(
-    _InoutRef_  P_EV_DATE datep,
+    _InoutRef_  P_EV_DATE_TIME p_ev_date_time,
     _InVal_     S32 hour,
     _InVal_     S32 minute,
     _InVal_     S32 second);
@@ -385,32 +381,32 @@ sliding_window_year(
 
 extern void
 ss_timeval_to_hms(
-    _InRef_     PC_EV_DATE datep,
+    _InRef_     PC_EV_DATE_TIME p_ev_date_time,
     _OutRef_    P_S32 p_hour,
     _OutRef_    P_S32 p_minute,
     _OutRef_    P_S32 p_second);
 
 _Check_return_
 extern BOOL
-str_hlp_blank(
+ss_string_is_blank(
     _InRef_     PC_EV_DATA p_ev_data);
 
 _Check_return_
 extern STATUS
-str_hlp_dup(
+ss_string_dup(
     _OutRef_    P_EV_DATA p_ev_data,
     _InRef_     PC_EV_DATA p_ev_data_src);
 
 _Check_return_
 extern STATUS
-str_hlp_make_uchars(
+ss_string_make_uchars(
     _OutRef_    P_EV_DATA p_ev_data,
     _In_reads_(len) PC_UCHARS uchars,
     _In_        S32 len);
 
 _Check_return_
 extern STATUS
-str_hlp_make_ustr(
+ss_string_make_ustr(
     _OutRef_    P_EV_DATA p_ev_data,
     _In_z_      PC_USTR ustr);
 

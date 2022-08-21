@@ -356,8 +356,8 @@ macro to get index pointer given
 either dictionary number or pointer
 */
 
-#define ixp(dict, ix) (((sixp) list_getptr((dictlist[(dict)].dicth))) + ix)
-#define ixpdp(dp, ix) (((sixp) list_getptr(((dp)->dicth))) + ix)
+#define ixp(dict, ix) array_ptr(&dictlist[(dict)].dicth, struct ixstruct, ix)
+#define ixpdp(dp, ix) array_ptr(&(dp)->dicth, struct ixstruct, ix)
 
 #define SPACE 32
 
@@ -543,9 +543,9 @@ spell_addword(
             temppos = newpos;
             lett = ixp(dict, newword.lettix);
             err = lett->blklen - newword.findpos;
-            void_memmove32(newpos + wordsize,
-                           newpos,
-                           lett->blklen - newword.findpos);
+            memmove32(newpos + wordsize,
+                      newpos,
+                      lett->blklen - newword.findpos);
 
             lett->blklen += wordsize;
 
@@ -621,14 +621,14 @@ spell_close(
     FILE_HANDLE dicthand;
     S32 err, close_err;
 
-    trace_0(TRACE_MODULE_SPELL,"spell_close\n");
+    trace_0(TRACE_MODULE_SPELL,"spell_close");
 
     if((dict < 0)  ||  (dict >= MAX_DICT))
         return(create_error(SPELL_ERR_BADDICT));
 
     if((dicthand = dictlist[dict].dicthandle) == NULL)
         {
-        trace_1(TRACE_OUT /*TRACE_MODULE_SPELL*/, "spell_close called to close non-open dictionary: %d\n", dict);
+        trace_1(TRACE_OUT /*TRACE_MODULE_SPELL*/, "spell_close called to close non-open dictionary: %d", dict);
         return(create_error(SPELL_ERR_CANTCLOSE));
         }
 
@@ -702,31 +702,31 @@ spell_createdict(
         file_buffer(newdict, NULL, BUF_SIZE);
         file_buffer(def_file, NULL, BUF_SIZE);
 
-        trace_0(TRACE_MODULE_SPELL, "spell_createdict about to write KEYSTR\n");
+        trace_0(TRACE_MODULE_SPELL, "spell_createdict about to write KEYSTR");
 
         /* write out file identifier */
         nbytes = strlen(KEYSTR);
         if((err = file_write(KEYSTR, sizeof(char), nbytes, newdict)) < 0)
             break;
 
-        trace_0(TRACE_MODULE_SPELL, "spell_createdict about to def_file_position\n");
+        trace_0(TRACE_MODULE_SPELL, "spell_createdict about to def_file_position");
 
         /* position definition file */
         if((err = def_file_position(def_file)) < 0)
             break;
 
-        trace_1(TRACE_MODULE_SPELL, "spell_createdict def_file_position returned: %d\n", err);
+        trace_1(TRACE_MODULE_SPELL, "spell_createdict def_file_position returned: %d", err);
 
         /* copy across definition file */
         while((res = read_def_line(def_file, buffer)) > 0)
             {
-            trace_1(TRACE_MODULE_SPELL, "spell_createdict def line: %s\n", trace_string(buffer));
+            trace_1(TRACE_MODULE_SPELL, "spell_createdict def line: %s", trace_string(buffer));
 
             if((err = file_write(buffer, sizeof(char), res, newdict)) < 0)
                 goto error;
             }
 
-        trace_1(TRACE_MODULE_SPELL, "spell_createdict after def file: %d\n", res);
+        trace_1(TRACE_MODULE_SPELL, "spell_createdict after def file: %d", res);
 
         /* stop ooon error */
         if(res < 0)
@@ -749,7 +749,7 @@ spell_createdict(
 
         newdict = 0;
 
-        trace_1(TRACE_MODULE_SPELL, "spell_createdict err: %d\n", err);
+        trace_1(TRACE_MODULE_SPELL, "spell_createdict err: %d", err);
 
         /* re-open for update */
         if(file_open(name, file_open_readwrite, &newdict), newdict == NULL)
@@ -783,7 +783,7 @@ spell_createdict(
                                  1,
                                  newdict)) < 0)
                 {
-                trace_1(TRACE_MODULE_SPELL, "spell_createdict failed to write out index entry %d\n", i);
+                trace_1(TRACE_MODULE_SPELL, "spell_createdict failed to write out index entry %d", i);
                 goto error;
                 }
             }
@@ -932,7 +932,7 @@ spell_deleteword(
 
     lett = ixp(dict, curword.lettix);
     blockbefore = (datap - sp) + delsize;
-    void_memmove32(datap, datap + delsize, lett->blklen - blockbefore);
+    memmove32(datap, datap + delsize, lett->blklen - blockbefore);
 
     lett->letflags |= LET_WRITE;
     lett->blklen -= delsize;
@@ -952,14 +952,14 @@ spell_flush(
     FILE_HANDLE dicthand;
     S32 err;
 
-    trace_0(TRACE_MODULE_SPELL, "spell_flush\n");
+    trace_0(TRACE_MODULE_SPELL, "spell_flush");
 
     if((dict < 0)  ||  (dict >= MAX_DICT))
         return(create_error(SPELL_ERR_BADDICT));
 
     if((dicthand = dictlist[dict].dicthandle) == NULL)
         {
-        trace_1(TRACE_OUT /*TRACE_MODULE_SPELL*/, "spell_flush called to flush non-open dictionary: %d\n", dict);
+        trace_1(TRACE_OUT /*TRACE_MODULE_SPELL*/, "spell_flush called to flush non-open dictionary: %d", dict);
         return(create_error(SPELL_ERR_CANTWRITE));
         }
 
@@ -997,7 +997,7 @@ spell_full_events(
         while(freecache(-1) > 0);
         }
 
-    trace_1(TRACE_MODULE_SPELL, "spell_full_events freed total of %u bytes\n", bytes_freed);
+    trace_1(TRACE_MODULE_SPELL, "spell_full_events freed total of %u bytes", bytes_freed);
 
     return(bytes_freed);
 }
@@ -1082,7 +1082,7 @@ spell_nextword(
 {
     S32 res, gotw;
 
-    trace_5(TRACE_MODULE_SPELL, "spell_nextword(%d, &%p, %s, %s, &%p)\n",
+    trace_5(TRACE_MODULE_SPELL, "spell_nextword(%d, &%p, %s, %s, &%p)",
             dict, report_ptr_cast(wordout), trace_string(wordin), trace_string(mask), report_ptr_cast(brkflg));
 
     if((dict < 0)  ||  (dict >= MAX_DICT)  ||
@@ -1124,7 +1124,7 @@ spell_nextword(
     if(!res)
         *wordout = '\0';
 
-    trace_2(TRACE_MODULE_SPELL, "spell_nextword yields %s, res = %d\n", wordout, res);
+    trace_2(TRACE_MODULE_SPELL, "spell_nextword yields %s, res = %d", wordout, res);
     return(res);
 }
 
@@ -1169,6 +1169,7 @@ spell_opendict(
 
     /* dummy loop for structure */
     do  {
+        SC_ARRAY_INIT_BLOCK array_init_block = aib_init(1, sizeof32(struct ixstruct), TRUE);
         /* save dictionary parameters */
         dp = &dictlist[dict];
 
@@ -1180,7 +1181,7 @@ spell_opendict(
             }
 
         /* take copy of name for reopening in setoptions */
-        void_strkpy(dp->dict_filename, elemof32(dp->dict_filename), name);
+        safe_strkpy(dp->dict_filename, elemof32(dp->dict_filename), name);
 
         file_buffer(dp->dicthandle, NULL, BUF_SIZE);
 
@@ -1188,14 +1189,11 @@ spell_opendict(
         if((err = load_dict_def(dict, def_name)) < 0)
             break;
 
-        if((dp->dicth = list_allochandle((S32) dp->n_index * sizeof(struct ixstruct))) == 0)
-            {
-            err = create_error(SPELL_ERR_NOMEM);
+        if(NULL == al_array_alloc(&dp->dicth, struct ixstruct, dp->n_index, &array_init_block, &err))
             break;
-            }
 
         /* load index */
-        tempix = list_getptr(dp->dicth);
+        tempix = array_base(&dp->dicth, struct ixstruct);
         nmemb  = dp->n_index;
         if((err = file_read(tempix,
                             sizeof(struct ixstruct),
@@ -1248,7 +1246,7 @@ spell_opendict(
     if(copy_right)
         *copy_right = dp->dict_name;
 
-    trace_1(TRACE_MODULE_SPELL, "spell_open returns: %d\n", dict);
+    trace_1(TRACE_MODULE_SPELL, "spell_open returns: %d", dict);
 
     return(dict);
 }
@@ -1336,7 +1334,7 @@ spell_prevword(
 {
     S32 res;
 
-    trace_5(TRACE_MODULE_SPELL, "spell_prevword(%d, &%p, %s, %s, &%p)\n",
+    trace_5(TRACE_MODULE_SPELL, "spell_prevword(%d, &%p, %s, %s, &%p)",
             dict, report_ptr_cast(wordout), trace_string(wordin), trace_string(mask), report_ptr_cast(brkflg));
 
     if( (dict < 0)  ||  (dict >= MAX_DICT)  ||
@@ -1365,7 +1363,7 @@ spell_prevword(
     if(!res)
         *wordout = '\0';
 
-    trace_2(TRACE_MODULE_SPELL, "spell_prevword yields %s, res = %d\n", wordout, res);
+    trace_2(TRACE_MODULE_SPELL, "spell_prevword yields %s, res = %d", wordout, res);
     return(res);
 }
 
@@ -1839,7 +1837,7 @@ def_file_position(
     S32 keylen, nbytes;
     S32 err;
 
-    trace_0(TRACE_MODULE_SPELL, "def_file_position\n");
+    trace_0(TRACE_MODULE_SPELL, "def_file_position");
 
     /* position to start of file */
     if((err = file_seek(def_file, 0, SEEK_SET)) < 0)
@@ -1857,7 +1855,7 @@ def_file_position(
     if(0 == strncmp(keystr, OLD_KEYSTR, strlen(OLD_KEYSTR)))
         return(create_error(SPELL_ERR_BADDEFFILE));
 
-    trace_0(TRACE_MODULE_SPELL, "def_file_position: is not old format dictionary\n");
+    trace_0(TRACE_MODULE_SPELL, "def_file_position: is not old format dictionary");
 
     if(0 == strncmp(keystr, KEYSTR, strlen(KEYSTR)))
         keylen = strlen(KEYSTR);
@@ -1867,7 +1865,7 @@ def_file_position(
     if((err = file_seek(def_file, keylen, SEEK_SET)) < 0)
         return(err);
 
-    trace_1(TRACE_MODULE_SPELL, "def_file_position keylen: %d\n", keylen);
+    trace_1(TRACE_MODULE_SPELL, "def_file_position keylen: %d", keylen);
 
     return(0);
 }
@@ -1887,7 +1885,7 @@ deletecache(
     cachep cp;
 
     /* remove cache block */
-    trace_2(TRACE_MODULE_SPELL, "deleting cache block: %d, %d items on list\n",
+    trace_2(TRACE_MODULE_SPELL, "deleting cache block: %d, %d items on list",
             cacheno, list_numitem(cachelp));
     list_deleteitems(cachelp, cacheno, (LIST_ITEMNO) 1);
 
@@ -1895,10 +1893,10 @@ deletecache(
     for(i = list_atitem(cachelp); i < list_numitem(cachelp); ++i)
         {
         cp = (cachep) list_gotoitem(cachelp, i)->i.inside;
-        trace_2(TRACE_MODULE_SPELL, "cp: %p, ixp: %p\n", report_ptr_cast(cp), report_ptr_cast(ixp(cp->dict, cp->lettix)));
+        trace_2(TRACE_MODULE_SPELL, "cp: %p, ixp: %p", report_ptr_cast(cp), report_ptr_cast(ixp(cp->dict, cp->lettix)));
         ixp(cp->dict, cp->lettix)->p.cacheno = i;
 
-        trace_2(TRACE_MODULE_SPELL, "deletecache adjusted: %d, numitems: %d\n",
+        trace_2(TRACE_MODULE_SPELL, "deletecache adjusted: %d, numitems: %d",
                 i, list_numitem(cachelp));
         }
 }
@@ -1943,15 +1941,12 @@ delreins(
         {
         wp->tail = *datap - token_start;
         len = decodeword(dict, realword, wp, 0);
-        if((deadwords[wordc] = list_allocptr_p1(len)) == NULL)
-            {
-            err = create_error(SPELL_ERR_NOMEM);
+        if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &err)))
             break;
-            }
         strcpy(deadwords[wordc++], realword);
         ocp = cp;
         cp = (cachep) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
-        /* SKS: list_allocptr can move core */
+        /* SKS: memory allocation can move core */
         datap += (P_U8) cp - (P_U8) ocp;
         ep += (P_U8) cp - (P_U8) ocp;
         ++datap;
@@ -1970,7 +1965,7 @@ delreins(
     if(i == wordc)
         {
         for(i = 0; i < wordc; ++i)
-            list_deallocptr(deadwords[i]);
+            al_ptr_free(deadwords[i]);
         return(0);
         }
 
@@ -1985,8 +1980,8 @@ delreins(
         }
 
     /* add the new word */
-    if((deadwords[wordc] = list_allocptr_p1(strlen(word))) == NULL)
-            return(create_error(SPELL_ERR_NOMEM));
+    if(NULL == (deadwords[wordc] = al_ptr_alloc_bytes(U8, strlen(word) + 1/*NULLCH*/, &err)))
+        return(err);
     strcpy(deadwords[wordc++], word);
 
     /* and put back all the words we deleted */
@@ -1999,7 +1994,7 @@ delreins(
         strcpy(word_buf, deadwords[i]);
         if((err = spell_addword(dict, word_buf)) < 0)
             return(err);
-        list_deallocptr(deadwords[i]);
+        al_ptr_free(deadwords[i]);
         }
 
     return(1);
@@ -2055,7 +2050,7 @@ ensuredict(
     S32 err, allerr, i;
     dixp dp;
 
-    trace_0(TRACE_MODULE_SPELL, "ensuredict\n");
+    trace_0(TRACE_MODULE_SPELL, "ensuredict");
 
     /* work down the index and write out anything altered */
     for(i = 0, err = allerr = 0, dp = &dictlist[dict];
@@ -2066,7 +2061,7 @@ ensuredict(
 
         lett = ixpdp(dp, i);
 
-        trace_1(TRACE_MODULE_SPELL, "ensure letter: %d\n", i);
+        trace_1(TRACE_MODULE_SPELL, "ensure letter: %d", i);
         if(lett->letflags & LET_WRITE)
             {
             if(lett->letflags & LET_CACHED)
@@ -2112,22 +2107,20 @@ fetchblock(
     if(ixpdp(dp, lettix)->letflags & LET_CACHED)
         return(0);
 
-    trace_3(TRACE_MODULE_SPELL, "fetchblock dict: %d, letter: %d, cachelp: %p\n",
+    trace_3(TRACE_MODULE_SPELL, "fetchblock dict: %d, letter: %d, cachelp: %p",
             dict, lettix, report_ptr_cast(cachelp));
 
     /* allocate a list block if we don't have one */
     err = 0;
     if(!cachelp)
         {
-        if((cachelp = list_allocptr((S32) sizeof(LIST_BLOCK))) == NULL)
-            err = create_error(SPELL_ERR_NOMEM);
-        else
+        if(NULL != (cachelp = al_ptr_alloc_elem(LIST_BLOCK, 1, &err)))
             {
             list_init(cachelp,
                       SPELL_MAXITEMSIZE,
                       SPELL_MAXPOOLSIZE);
             list_register(cachelp);
-            trace_0(TRACE_MODULE_SPELL, "fetchblock has allocated cache list block\n");
+            trace_0(TRACE_MODULE_SPELL, "fetchblock has allocated cache list block");
             }
         }
 
@@ -2136,7 +2129,7 @@ fetchblock(
         {
         cache_lock = 1;
         do  {
-            trace_0(TRACE_MODULE_SPELL, "fetchblock doing createitem\n");
+            trace_0(TRACE_MODULE_SPELL, "fetchblock doing createitem");
             if((it = list_createitem(cachelp,
                                      list_numitem(cachelp),
                                      sizeof(struct cacheblock) +
@@ -2144,7 +2137,7 @@ fetchblock(
                                      FALSE)) != NULL)
                 break;
 
-            trace_0(TRACE_MODULE_SPELL, "fetchblock doing freecache\n");
+            trace_0(TRACE_MODULE_SPELL, "fetchblock doing freecache");
             if((err = freecache(-1)) < 0)
                 break;
             }
@@ -2162,7 +2155,7 @@ fetchblock(
     if(lett->p.disk)
         {
         /* position for the read */
-        trace_0(TRACE_MODULE_SPELL, "fetchblock doing seek\n");
+        trace_0(TRACE_MODULE_SPELL, "fetchblock doing seek");
         dicthand = dictlist[dict].dicthandle;
         if((err = file_seek(dicthand, lett->p.disk, SEEK_SET)) < 0)
             {
@@ -2171,7 +2164,7 @@ fetchblock(
             }
 
         /* read in the block */
-        trace_0(TRACE_MODULE_SPELL, "fetchblock doing read\n");
+        trace_0(TRACE_MODULE_SPELL, "fetchblock doing read");
         nbytes = lett->blklen + sizeof(S32);
         if((err = file_read(&newblock->diskspace,
                             sizeof(char),
@@ -2218,7 +2211,7 @@ freecache(
     S32 err, bytes_freed;
 
     if(!cachelp)
-        return(create_error(SPELL_ERR_NOMEM));
+        return(status_nomem());
 
     minno = -1;
     cacheno = 0;
@@ -2241,7 +2234,7 @@ freecache(
         }
 
     if(minno < 0)
-        return(create_error(SPELL_ERR_NOMEM));
+        return(status_nomem());
 
     cp = (cachep) list_gotoitem(cachelp, minno)->i.inside;
     bytes_freed = ixp(cp->dict, cp->lettix)->blklen;
@@ -2251,15 +2244,15 @@ freecache(
     S32 blocks, largest;
     S32 totalmem;
 
-    trace_1(TRACE_MODULE_SPELL, "spell freecache has freed a block of: %d bytes\n",
+    trace_1(TRACE_MODULE_SPELL, "spell freecache has freed a block of: %d bytes",
             ixp(cp->dict, cp->lettix)->blklen);
     spell_stats(&blocks, &largest, &totalmem);
-    trace_3(TRACE_MODULE_SPELL, "spell stats: blocks: %d, largest: %d, totalmem: %d\n",
+    trace_3(TRACE_MODULE_SPELL, "spell stats: blocks: %d, largest: %d, totalmem: %d",
             blocks, largest, totalmem);
     }
     #endif
 
-    trace_1(TRACE_MODULE_SPELL, "freecache freeing: %d\n", minno);
+    trace_1(TRACE_MODULE_SPELL, "freecache freeing: %d", minno);
 
     if((err = killcache(minno)) < 0)
         return(err);
@@ -2375,7 +2368,7 @@ killcache(
     err = 0;
     cp = (cachep) list_gotoitem(cachelp, cacheno)->i.inside;
 
-    trace_1(TRACE_MODULE_SPELL, "killcache cacheno: %d\n", cacheno);
+    trace_1(TRACE_MODULE_SPELL, "killcache cacheno: %d", cacheno);
 
     /* write out block if altered */
     if((write = (ixp(cp->dict, cp->lettix)->letflags & LET_WRITE)) != 0)
@@ -2396,7 +2389,7 @@ killcache(
         /* make the dictionary useless
          * if not properly updated
         */
-        trace_1(TRACE_MODULE_SPELL, "write of index block: %d failed\n", cp->lettix);
+        trace_1(TRACE_MODULE_SPELL, "write of index block: %d failed", cp->lettix);
         file_clearerror(dicthand);
         (void) file_seek(dicthand, 0, SEEK_SET);
         (void) file_putc(0, dicthand);
@@ -2406,11 +2399,11 @@ killcache(
     deletecache(cacheno);
 
     /* flush buffer */
-    trace_0(TRACE_MODULE_SPELL, "flushing buffer\n");
+    trace_0(TRACE_MODULE_SPELL, "flushing buffer");
     if((flush_err = file_flush(dicthand)) < 0 && !err)
         err = flush_err;
 
-    trace_0(TRACE_MODULE_SPELL, "buffer flushed\n");
+    trace_0(TRACE_MODULE_SPELL, "buffer flushed");
     return(err);
 }
 
@@ -2505,7 +2498,7 @@ load_dict_def_now(
     if(read_def_line(def_file, buffer) <= 0)
         return(create_error(SPELL_ERR_BADDEFFILE));
 
-    void_strkat(dp->dict_name, elemof32(dp->dict_name), buffer);
+    safe_strkat(dp->dict_name, elemof32(dp->dict_name), buffer);
 
     /* read character offset */
     if(read_def_line(def_file, buffer) <= 0)
@@ -2662,7 +2655,7 @@ load_dict_def_now(
                                  (LIST_ITEMNO) i,
                                  bytes,
                                  FALSE)) == NULL)
-            return(create_error(SPELL_ERR_NOMEM));
+            return(status_nomem());
 
         iep = (i_endp) it->i.inside;
 
@@ -3625,7 +3618,7 @@ release_dict_entry(
     list_deregister(&dp->dict_end_list);
 
     /* free memory used by index */
-    list_disposehandle(&dp->dicth);
+    al_array_dispose(&dp->dicth);
 
     /* throw away file handle */
     dp->dicthandle = NULL;
@@ -3660,8 +3653,8 @@ setabval(
         return(iep->alpha);
 
     /* concoct whole ending */
-    void_strkpy(ending, elemof32(ending), wp->body + wp->matchc);
-    void_strkat(ending, elemof32(ending), iep->ending);
+    safe_strkpy(ending, elemof32(ending), wp->body + wp->matchc);
+    safe_strkat(ending, elemof32(ending), iep->ending);
 
     /* work out the alphabetic value of the non-token ending
     that we have - either the next lower, or next higher value */
@@ -3700,7 +3693,7 @@ stuffcache(
     LIST_ITEMNO i;
     cachep cp;
 
-    trace_0(TRACE_MODULE_SPELL, "stuffcache\n");
+    trace_0(TRACE_MODULE_SPELL, "stuffcache");
 
     /* write out/remove any blocks
     from this dictionary */
@@ -3783,7 +3776,7 @@ writeblock(
     dixp dp;
     sixp lett;
 
-    trace_2(TRACE_MODULE_SPELL, "writeblock dict: %d, letter: %d\n", cp->dict, cp->lettix);
+    trace_2(TRACE_MODULE_SPELL, "writeblock dict: %d, letter: %d", cp->dict, cp->lettix);
 
     lett = ixp(cp->dict, cp->lettix);
 

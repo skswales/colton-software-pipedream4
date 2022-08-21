@@ -72,7 +72,7 @@ extern F64
 mx_coth(
     F64 x);
 
-static __forceinline F64
+static inline F64
 mx_fsquare(
     F64 x)
 {

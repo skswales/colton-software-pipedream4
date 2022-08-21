@@ -94,13 +94,13 @@ new_marked_rectangle(void)
     P_SLOT tslot;
     BOOL in_new_rowr, in_old_rowr;
     BOOL in_new_rect, in_old_rect;
-    SCRCOL *cptr;
-    SCRROW *rptr;
+    P_SCRCOL cptr;
+    P_SCRROW rptr;
     coord c_width, overlap;
 
     trace_4(TRACE_MARK, "new_marked_rectangle(%d, %d, %d, %d): ",
             blkstart.col, blkstart.row, blkend.col, blkend.row);
-    trace_4(TRACE_MARK, "old rectangle was (%d, %d, %d, %d)\n",
+    trace_4(TRACE_MARK, "old rectangle was (%d, %d, %d, %d)",
             old_blkstart.col, old_blkstart.row,
             old_blkend.col,   old_blkend.row);
 
@@ -112,7 +112,7 @@ new_marked_rectangle(void)
             {
             start_coff = end_coff = -1;
 
-            trace_2(TRACE_MARK, "row offset %d, PICT | UNDERPICT = %d\n",
+            trace_2(TRACE_MARK, "row offset %d, PICT | UNDERPICT = %d",
                         roff, rptr->flags & (PICT | UNDERPICT));
 
             trow = rptr->rowno;
@@ -129,7 +129,7 @@ new_marked_rectangle(void)
 
             for(coff = 0; !((cptr = horzvec_entry(coff))->flags & LAST); coff++)
                 {
-                trace_1(TRACE_MARK, "column offset %d\n", coff);
+                trace_1(TRACE_MARK, "column offset %d", coff);
 
                 tcol = cptr->colno;
 
@@ -160,7 +160,7 @@ new_marked_rectangle(void)
                         )
                       )
                         {
-                        trace_5(TRACE_APP_PD4, "disasterville: draw this whole row and breakout because mustdraw %s, PICT %s, tslot " PTR_XTFMT " -> empty overlapped %s, text | fonts %s\n",
+                        trace_5(TRACE_APP_PD4, "disasterville: draw this whole row and breakout because mustdraw %s, PICT %s, tslot " PTR_XTFMT " -> empty overlapped %s, text | fonts %s",
                                 trace_boolstring(mustdraw),
                                 trace_boolstring(rptr->flags & (PICT | UNDERPICT)),
                                 report_ptr_cast(tslot),
@@ -183,13 +183,13 @@ new_marked_rectangle(void)
                             {
                             if(tslot->justify & PROTECTED)
                                 {
-                                trace_0(TRACE_APP_PD4, "slot is protected\n");
+                                trace_0(TRACE_APP_PD4, "slot is protected");
                                 bg = PROTECTC;
                                 }
 
                             if(result_sign(tslot) < 0)
                                 {
-                                trace_0(TRACE_APP_PD4, "slot is negative\n");
+                                trace_0(TRACE_APP_PD4, "slot is negative");
                                 fg = NEGATIVEC;
                                 }
                             }
@@ -199,18 +199,18 @@ new_marked_rectangle(void)
                             {
                             if(start_coff == -1)
                                 {
-                                trace_1(TRACE_APP_PD4, "starting buffering up at coff %d\n", coff);
+                                trace_1(TRACE_APP_PD4, "starting buffering up at coff %d", coff);
                                 start_coff = coff;
                                 }
 
-                            trace_1(TRACE_APP_PD4, "adding coff %d to end of buffer\n", coff);
+                            trace_1(TRACE_APP_PD4, "adding coff %d to end of buffer", coff);
                             end_coff = coff;
                             }
                         else
                             {
                             if(start_coff != -1)
                                 {
-                                trace_2(TRACE_APP_PD4, "flush inverted section because colour change %d - %d\n", start_coff, end_coff);
+                                trace_2(TRACE_APP_PD4, "flush inverted section because colour change %d - %d", start_coff, end_coff);
                                 please_invert_numeric_slots(start_coff, end_coff, roff, FORE, BACK);
                                 start_coff = -1;
                                 }
@@ -221,7 +221,7 @@ new_marked_rectangle(void)
                     }
                 else if(start_coff != -1)
                     {
-                    trace_2(TRACE_APP_PD4, "flush inverted section because rectangle edge %d - %d\n", start_coff, end_coff);
+                    trace_2(TRACE_APP_PD4, "flush inverted section because rectangle edge %d - %d", start_coff, end_coff);
                     please_invert_numeric_slots(start_coff, end_coff, roff, FORE, BACK);
                     start_coff = -1;
                     }
@@ -229,7 +229,7 @@ new_marked_rectangle(void)
 
             if(start_coff != -1)
                 {
-                trace_2(TRACE_APP_PD4, "flush inverted section because row end %d - %d\n", start_coff, end_coff);
+                trace_2(TRACE_APP_PD4, "flush inverted section because row end %d - %d", start_coff, end_coff);
                 please_invert_numeric_slots(start_coff, end_coff, roff, FORE, BACK);
                 }
 
@@ -269,7 +269,7 @@ alter_marked_block(
 {
     BOOL update = FALSE;
 
-    trace_2(TRACE_DRAG, "alter_marked_block(%d, %d)\n", nc, nr);
+    trace_2(TRACE_DRAG, "alter_marked_block(%d, %d)", nc, nr);
 
     old_blkstart = blkstart;            /* current marked block */
     old_blkend   = blkend;
@@ -279,7 +279,7 @@ alter_marked_block(
         trace_0(TRACE_DRAG, "marked area at (or right of) anchor: ");
         if(nc > blkend.col)
             {
-            trace_0(TRACE_DRAG, "end mark moving even further right\n");
+            trace_0(TRACE_DRAG, "end mark moving even further right");
             blkend.col = nc;
             update = TRUE;
             }
@@ -287,26 +287,26 @@ alter_marked_block(
             {
             if(nc > blkanchor.col)
                 {
-                trace_0(TRACE_DRAG, "end mark moving left a little\n");
+                trace_0(TRACE_DRAG, "end mark moving left a little");
                 blkend.col = nc;
                 }
             else
                 {
-                trace_0(TRACE_DRAG, "end mark moved to (or left over) anchor: flip\n");
+                trace_0(TRACE_DRAG, "end mark moved to (or left over) anchor: flip");
                 blkstart.col = nc;
                 blkend.col   = blkanchor.col;
                 }
             update = TRUE;
             }
         else
-            trace_0(TRACE_DRAG, "no col change\n");
+            trace_0(TRACE_DRAG, "no col change");
         }
     else
         {
         trace_0(TRACE_DRAG, "marked area left of anchor: ");
         if(nc < blkstart.col)
             {
-            trace_0(TRACE_DRAG, "start mark moving even further left\n");
+            trace_0(TRACE_DRAG, "start mark moving even further left");
             blkstart.col = nc;
             update = TRUE;
             }
@@ -314,19 +314,19 @@ alter_marked_block(
             {
             if(nc < blkanchor.col)
                 {
-                trace_0(TRACE_DRAG, "start mark moving right a little\n");
+                trace_0(TRACE_DRAG, "start mark moving right a little");
                 blkstart.col = nc;
                 }
             else
                 {
-                trace_0(TRACE_DRAG, "start mark moved to (or right over) anchor: flip\n");
+                trace_0(TRACE_DRAG, "start mark moved to (or right over) anchor: flip");
                 blkstart.col = blkanchor.col;
                 blkend.col   = nc;
                 }
             update = TRUE;
             }
         else
-            trace_0(TRACE_DRAG, "no col change\n");
+            trace_0(TRACE_DRAG, "no col change");
         }
 
     if(blkanchor.row == blkstart.row)
@@ -334,7 +334,7 @@ alter_marked_block(
         trace_0(TRACE_DRAG, "current marked area at (or below) anchor: ");
         if(nr > blkend.row)
             {
-            trace_0(TRACE_DRAG, "end mark moving even further down\n");
+            trace_0(TRACE_DRAG, "end mark moving even further down");
             blkend.row = nr;
             update = TRUE;
             }
@@ -342,26 +342,26 @@ alter_marked_block(
             {
             if(nr > blkstart.row)
                 {
-                trace_0(TRACE_DRAG, "end mark moving up a little, still below anchor\n");
+                trace_0(TRACE_DRAG, "end mark moving up a little, still below anchor");
                 blkend.row = nr;
                 }
             else
                 {
-                trace_0(TRACE_DRAG, "end mark moved up to (or above) anchor: flip\n");
+                trace_0(TRACE_DRAG, "end mark moved up to (or above) anchor: flip");
                 blkstart.row = nr;
                 blkend.row   = blkanchor.row;
                 }
             update = TRUE;
             }
         else
-            trace_0(TRACE_DRAG, "no row change\n");
+            trace_0(TRACE_DRAG, "no row change");
         }
     else
         {
         trace_0(TRACE_DRAG, "current marked area above anchor: ");
         if(nr < blkstart.row)
             {
-            trace_0(TRACE_DRAG, "start mark moving even further up\n");
+            trace_0(TRACE_DRAG, "start mark moving even further up");
             blkstart.row = nr;
             update = TRUE;
             }
@@ -369,19 +369,19 @@ alter_marked_block(
             {
             if(nr < blkend.row)
                 {
-                trace_0(TRACE_DRAG, "start mark moving down a little\n");
+                trace_0(TRACE_DRAG, "start mark moving down a little");
                 blkstart.row = nr;
                 }
             else
                 {
-                trace_0(TRACE_DRAG, "start mark moved down to (or below) anchor: flip\n");
+                trace_0(TRACE_DRAG, "start mark moved down to (or below) anchor: flip");
                 blkstart.row = blkanchor.row;
                 blkend.row   = nr;
                 }
             update = TRUE;
             }
         else
-            trace_0(TRACE_DRAG, "no row change\n");
+            trace_0(TRACE_DRAG, "no row change");
         }
 
     if(update)
@@ -403,7 +403,7 @@ alter_marked_block(
 extern void
 clear_markers(void)
 {
-    trace_0(TRACE_MARK, "clear_markers()\n");
+    trace_0(TRACE_MARK, "clear_markers()");
 
     if(blkstart.col != NO_COL)
         {
@@ -430,7 +430,7 @@ clear_markers(void)
         select_document_using_docno(old_docno);
         }
     else
-        trace_0(TRACE_MARK, "no mark(s) set\n");
+        trace_0(TRACE_MARK, "no mark(s) set");
 }
 
 /******************************************************************************
@@ -444,11 +444,11 @@ make_single_mark_into_block(void)
 {
     if((blkstart.col != NO_COL)  &&  (blkend.col == NO_COL))
         {
-        trace_0(TRACE_MARK, "making single mark into marked block\n");
+        trace_0(TRACE_MARK, "making single mark into marked block");
         blkend = blkstart;
         }
     else
-        trace_0(TRACE_MARK, "no mark set/full marked block set\n");
+        trace_0(TRACE_MARK, "no mark set/full marked block set");
 }
 
 /******************************************************************************
@@ -514,7 +514,7 @@ set_marked_block(
     COL i_scol = scol;
     ROW i_srow = srow;
 
-    trace_5(TRACE_MARK, "set_marked_block(%d, %d, %d, %d, new=%s)\n",
+    trace_5(TRACE_MARK, "set_marked_block(%d, %d, %d, %d, new=%s)",
                             scol, srow, ecol, erow, trace_boolstring(is_new_block));
 
     /* always keep markers ordered */
@@ -577,7 +577,7 @@ set_marker(
     ROW erow, srow;
     BOOL new;
 
-    trace_2(TRACE_MARK, "set_marker(%d, %d)\n", tcol, trow);
+    trace_2(TRACE_MARK, "set_marker(%d, %d)", tcol, trow);
 
     /* setting first mark if no marks, one set elsewhere or two anywhere */
     new = (blkstart.col == NO_COL)  ||  /* none? */
@@ -657,7 +657,7 @@ init_block(
     PC_SLR bs,
     PC_SLR be)
 {
-    trace_4(TRACE_APP_PD4, "init_block((%8x, %8x), (%8x, %8x))\n", bs->col, bs->row, be->col, be->row);
+    trace_4(TRACE_APP_PD4, "init_block((%8x, %8x), (%8x, %8x))", bs->col, bs->row, be->col, be->row);
 
     start_bl = *bs;
     end_bl   = *be;
@@ -686,7 +686,7 @@ init_block(
         end_bl       = start_bl;    /* NO_COL, currow */
         }
 
-    trace_4(TRACE_APP_PD4, "init_block set (%d, %d), (%d, %d)\n", start_bl.col, start_bl.row, end_bl.col, end_bl.row);
+    trace_4(TRACE_APP_PD4, "init_block set (%d, %d), (%d, %d)", start_bl.col, start_bl.row, end_bl.col, end_bl.row);
 
     start_block = TRUE;
 }
@@ -705,7 +705,7 @@ traverse_block_init(
     PC_SLR be,
     TRAVERSE_BLOCK_DIRECTION direction)
 {
-    trace_4(TRACE_APP_PD4, "traverse_block_init((&%8x, &%8x), (&%8x, &%8x))\n",
+    trace_4(TRACE_APP_PD4, "traverse_block_init((&%8x, &%8x), (&%8x, &%8x))",
             bs->col, bs->row, be->col, be->row);
 
     blk->docno = docno;
@@ -744,7 +744,7 @@ traverse_block_init(
         blk->end     = blk->stt;    /* NO_COL, currow */
         }
 
-    trace_4(TRACE_APP_PD4, "traverse_block_init set (%d, %d), (%d, %d)\n",
+    trace_4(TRACE_APP_PD4, "traverse_block_init set (%d, %d), (%d, %d)",
             blk->stt.col, blk->stt.row, blk->end.col, blk->end.row);
 }
 
@@ -942,7 +942,7 @@ percent_in_block(
     COL tcol = in_block.col - start_bl.col;
     ROW trow = in_block.row - start_bl.row;
 
-    trace_5(TRACE_APP_PD4, "percent_in_block: DOWN_COLUMNS %s ncol %d nrow %d tcol %d trow %d\n",
+    trace_5(TRACE_APP_PD4, "percent_in_block: DOWN_COLUMNS %s ncol %d nrow %d tcol %d trow %d",
             trace_boolstring(direction == DOWN_COLUMNS), ncol, nrow, tcol, trow);
 
     return( (S32) (
@@ -1180,9 +1180,9 @@ application_startdrag(
     BOOL ctrlpressed  = host_ctrl_pressed();
     coord coff = calcoff(tx); /* not _click */
     coord roff = calroff(ty); /* not _click */
-    COL  tcol;
-    ROW  trow;
-    SCRROW *rptr;
+    COL tcol;
+    ROW trow;
+    P_SCRROW rptr;
 
     BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed;
     BOOL extend = shiftpressed || !selectclicked;
@@ -1201,7 +1201,7 @@ application_startdrag(
         rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
-            trace_0(TRACE_APP_PD4, "in soft page break - drag ignored\n");
+            trace_0(TRACE_APP_PD4, "in soft page break - drag ignored");
         else
             {
             trow = rptr->rowno;
@@ -1212,7 +1212,7 @@ application_startdrag(
 
                 if((NO_DOCUMENT != p_docu)  &&  (p_docu->Xxf_inexpression || p_docu->Xxf_inexpression_box || p_docu->Xxf_inexpression_line))
                     {
-                    trace_0(TRACE_APP_PD4, "dragging to insert reference to a range - first coordinate already entered\n");
+                    trace_0(TRACE_APP_PD4, "dragging to insert reference to a range - first coordinate already entered");
                     start_drag(INSERTING_REFERENCE);
                     }
                 else
@@ -1223,12 +1223,12 @@ application_startdrag(
 
                     if(blkindoc && extend)
                         {
-                        trace_0(TRACE_APP_PD4, "continue mark\n");
+                        trace_0(TRACE_APP_PD4, "continue mark");
                         make_single_mark_into_block();
                         }
                     else
                         {
-                        trace_2(TRACE_APP_PD4, "col #%d, row #%d - start mark\n", tcol, trow);
+                        trace_2(TRACE_APP_PD4, "col #%d, row #%d - start mark", tcol, trow);
                         prepare_for_drag_mark(tx, ty, tcol, trow, tcol, trow);
                         }
 
@@ -1243,12 +1243,12 @@ application_startdrag(
                 /* mark all columns over given rows */
                 if(blkindoc && extend)
                     {
-                    trace_0(TRACE_APP_PD4, "in row border - continuing all columns mark\n");
+                    trace_0(TRACE_APP_PD4, "in row border - continuing all columns mark");
                     make_single_mark_into_block();
                     }
                 else
                     {
-                    trace_0(TRACE_APP_PD4, "in row border - starting all columns mark\n");
+                    trace_0(TRACE_APP_PD4, "in row border - starting all columns mark");
 #if 1 /* SKS */
                     prepare_for_drag_mark(tx, ty, numcol-1, trow, 0, trow);
 #else
@@ -1259,11 +1259,11 @@ application_startdrag(
                 start_drag(MARK_ALL_COLUMNS);
                 }
             else
-                trace_0(TRACE_APP_PD4, "off left - ignored\n");
+                trace_0(TRACE_APP_PD4, "off left - ignored");
             }
         }
     else
-        trace_0(TRACE_APP_PD4, "above column headings - ignored\n");
+        trace_0(TRACE_APP_PD4, "above column headings - ignored");
 }
 
 static void
@@ -1279,9 +1279,9 @@ application_singleclick_in_main(
     BOOL ctrlpressed  = host_ctrl_pressed();
     coord coff = calcoff(tx); /* not _click */
     coord roff = calroff(ty); /* not _click */
-    COL  tcol;
-    ROW  trow;
-    SCRROW *rptr;
+    COL tcol;
+    ROW trow;
+    P_SCRROW rptr;
 
     BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed;
     BOOL extend = shiftpressed || !selectclicked;       /* ie shift-anything or unshifted-adjust */
@@ -1300,7 +1300,7 @@ application_singleclick_in_main(
 
         if(rptr->flags & PAGE)
             {
-            trace_0(TRACE_APP_PD4, "in soft page break - click ignored\n");
+            trace_0(TRACE_APP_PD4, "in soft page break - click ignored");
             acquire = TRUE;
             }
         else
@@ -1340,13 +1340,13 @@ application_singleclick_in_main(
                     /* is being edited, so give its editor the focus & caret                  */
 
                     acquire = TRUE;
-                    trace_0(TRACE_APP_PD4, "clicked in document being edited, couldn't find anyone to give a slot ref too\n");
+                    trace_0(TRACE_APP_PD4, "clicked in document being edited, couldn't find anyone to give a slot ref too");
                     }
                 else
                     {
                     if(chkrpb(trow)  &&  chkfsb()  &&  chkpac(trow))
                         {
-                        trace_0(TRACE_APP_PD4, "in hard page break - go to the start\n");
+                        trace_0(TRACE_APP_PD4, "in hard page break - go to the start");
                         tcol = 0;
                         g_newoffset = 0;
                         }
@@ -1356,7 +1356,7 @@ application_singleclick_in_main(
                         tcol = col_number(coff);
                         }
 
-                    trace_2(TRACE_APP_PD4, "not editing expression: in sheet at row #%d, col #%d\n", trow, tcol);
+                    trace_2(TRACE_APP_PD4, "not editing expression: in sheet at row #%d, col #%d", trow, tcol);
 
                     if(extend)
                         {
@@ -1365,13 +1365,13 @@ application_singleclick_in_main(
                         */
                         if(blkindoc)
                             {
-                            trace_0(TRACE_APP_PD4, "extending marked block\n");
+                            trace_0(TRACE_APP_PD4, "extending marked block");
                             make_single_mark_into_block();
                             alter_marked_block(tcol, trow);
                             }
                         else
                             {
-                            trace_0(TRACE_APP_PD4, "creating a block - anchor at caret\n");
+                            trace_0(TRACE_APP_PD4, "creating a block - anchor at caret");
                             set_marked_block(curcol, currow, tcol, trow, TRUE);
                             }
                         }
@@ -1427,19 +1427,19 @@ application_singleclick_in_main(
                     */
                     if(blkindoc)
                         {
-                        trace_0(TRACE_APP_PD4, "alter number of marked rows\n");
+                        trace_0(TRACE_APP_PD4, "alter number of marked rows");
                         make_single_mark_into_block();
                         alter_marked_block(ACTIVE_COL, trow);
                         }
                     else
                         {
-                        trace_0(TRACE_APP_PD4, "mark all columns from caret to given row - anchor at caret row\n");
+                        trace_0(TRACE_APP_PD4, "mark all columns from caret to given row - anchor at caret row");
                         set_marked_block(0, currow, numcol-1, trow, TRUE);
                         }
                     }
                 else
                     {
-                    trace_0(TRACE_APP_PD4, "not extending\n");
+                    trace_0(TRACE_APP_PD4, "not extending");
 
                     if(trow != currow)
                         {
@@ -1455,14 +1455,14 @@ application_singleclick_in_main(
                 }
             else
                 {
-                trace_0(TRACE_APP_PD4, "off left/right - ignored\n");
+                trace_0(TRACE_APP_PD4, "off left/right - ignored");
                 acquire = TRUE;
                 }
             }
         }
     else
         {
-        trace_0(TRACE_APP_PD4, "above sheet data - mostly ignored\n");
+        trace_0(TRACE_APP_PD4, "above sheet data - mostly ignored");
         acquire = TRUE;
         }
 
@@ -1484,9 +1484,9 @@ application_doubleclick_in_main(
 {
     coord coff = calcoff(tx);   /* not _click */
     coord roff = calroff(ty);   /* not _click */
- /* COL  tcol;*/
-    ROW  trow;
-    SCRROW *rptr;
+ /* COL tcol;*/
+    ROW trow;
+    P_SCRROW rptr;
 
     BOOL shiftpressed = host_shift_pressed();
  /* BOOL ctrlpressed  = host_ctrl_pressed();*/
@@ -1507,7 +1507,7 @@ application_doubleclick_in_main(
         rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
-            trace_0(TRACE_APP_PD4, "in soft page break - double click ignored\n");
+            trace_0(TRACE_APP_PD4, "in soft page break - double click ignored");
         else
             {
             trow = rptr->rowno;
@@ -1517,19 +1517,19 @@ application_doubleclick_in_main(
                 if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)      /* everything suppressed whilst editing */
                     return;
 #if 1 /* SKS */
-                trace_0(TRACE_APP_PD4, "in row border - mark row - anchor at last col\n");
+                trace_0(TRACE_APP_PD4, "in row border - mark row - anchor at last col");
                 set_marked_block(numcol-1, trow, 0, trow, TRUE);
 #else
-                trace_0(TRACE_APP_PD4, "in row border - mark row - anchor at first col\n");
+                trace_0(TRACE_APP_PD4, "in row border - mark row - anchor at first col");
                 set_marked_block(0, trow, numcol-1, trow, TRUE);
 #endif
                 }
             else
-                trace_0(TRACE_APP_PD4, "not in row border - ignored\n");
+                trace_0(TRACE_APP_PD4, "not in row border - ignored");
             }
         }
     else
-        trace_0(TRACE_APP_PD4, "above column headings - ignored\n");
+        trace_0(TRACE_APP_PD4, "above column headings - ignored");
 }
 
 /******************************************************************************
@@ -1552,7 +1552,7 @@ application_button_click_in_main(
     S32 xcelloffset = tcoord_x_remainder(x);   /* x offset in cell (OS units) */
     BOOL selectclicked;
 
-    trace_6(TRACE_APP_PD4, "application_button_click_in_main: g(%d, %d) t(%d, %d) xco %d bstate %X\n",
+    trace_6(TRACE_APP_PD4, "application_button_click_in_main: g(%d, %d) t(%d, %d) xco %d bstate %X",
                 x, y, tx, ty, xcelloffset, buttonstate);
 
     /* ensure we can find slot for positioning, overlap tests etc. must allow spellcheck as we may move */
@@ -1649,7 +1649,7 @@ application_drag(
     coord roff  = calroff_click(ty);    /* map off top/bot to top/bot row */
     COL tcol;
     ROW trow;
-    SCRROW * rptr;
+    P_SCRROW rptr;
     SLR here;
     P_DOCU p_docu;
 
@@ -1659,7 +1659,7 @@ application_drag(
     else if(roff < 0)
         roff = 0;
 
-    trace_1(TRACE_DRAG, "application_drag: type = %d\n", dragtype);
+    trace_1(TRACE_DRAG, "application_drag: type = %d", dragtype);
 
     rptr = vertvec_entry(roff);
 
@@ -1860,9 +1860,9 @@ process_drag(void)
     x = m.x;
     y = m.y;
 
-    trace_4(TRACE_APP_PD4, "mouse pointer at w %d i %d x %d y %d\n", m.w, m.i, m.x, m.y);
+    trace_4(TRACE_APP_PD4, "mouse pointer at w %d i %d x %d y %d", m.w, m.i, m.x, m.y);
 
-    trace_0(TRACE_APP_PD4, "continuing drag: button still held\n");
+    trace_0(TRACE_APP_PD4, "continuing drag: button still held");
 
     switch(dragtype)
         {

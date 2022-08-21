@@ -15,13 +15,6 @@
 scinfo.c
 */
 
-extern BOOLEAN
-inrowfixes1(
-    ROW);
-
-#define inrowfixes(trow) ( \
-    (vertvec->flags & FIX) && inrowfixes1(trow) )
-
 extern void
 cencol(
     COL);
@@ -63,10 +56,6 @@ chkpbs(
 extern BOOLEAN
 chkpac(
     ROW);
-
-extern S32
-calsiz(
-    uchar *);
 
 extern void
 curosc(void);               /* check cursor on screen */

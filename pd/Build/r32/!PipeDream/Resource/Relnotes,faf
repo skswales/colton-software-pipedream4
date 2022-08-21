@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
 <META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
-<TITLE>Colton Software PipeDream for RISC OS - Release Notes</TITLE>
+<TITLE>Colton Software PipeDream for RISC&nbsp;OS - Release Notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Colton Software PipeDream for RISC OS</H1>
+<H1>Colton Software PipeDream for RISC&nbsp;OS</H1>
 
 <H2>Licence and Copyright</H2>
 
@@ -19,8 +19,8 @@
 <P>A copy of the MPL may be downloaded from <A
 HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
 
-<P>Copyright (C) 1989-1998 Colton Software Limited, Copyright (C) 1998-2014
-R W Colton</P>
+<P>Copyright (C) 1989-1998 Colton Software Limited,
+Copyright (C) 1998-2014 R W Colton</P>
 
 <P><A HREF="#CopyrightExtra">Additional copyrights</A></P>
 
@@ -68,7 +68,63 @@ obtained from
 
 <A HREF="http://croftnuisk.co.uk/coltsoft/pipedream">http://croftnuisk.co.uk/coltsoft/pipedream</A></P>
 
+
 <H2>Release history</H2>
+
+<H4>4.52/04 (04 Jul 2014)</H4>
+
+<P>Issue with PipeDream's font cache mechanism could sometimes lead to
+highlighted text not being rendered in the correct font variant.</P>
+
+<P>Text @-fields containing cell references to other cells containing text
+@-fields containing cell references&ellipsis; now render sensibly, allowing
+text to be concatenated. There is a fixed depth limit of nine (rather than
+the old effective limit of one).</P>
+
+<P>Text @-fields containing cell references to other cells containing text
+@-fields containing cell references (and these did't get expanded, by the
+way: see above) could yield incorrect cell references when the target cell
+was deleted. This has been there since the very early days of PipeDream as
+far as I can see! Any text @-field containing a bad cell is displayed with a
+leading percent character, as it would shown for bad cell references in
+formulae.</P>
+
+<P>Text @-fields containing cell references could yield incorrect cell
+references when updated (broken in 4.50/43). Several slightly inconsistent
+instances of cell reference reading/writing code replaced with fast
+consistent routines.</P>
+
+<P>Propagated errors now contain a reference to the cell that generated the
+initial error to help fault-finding.</P>
+
+<P>Unary plus and minus operators and ABS() spreadsheet function no longer
+unnecessarily convert integer arguments to floating point.</P>
+
+<P>If the <I>length</I> parameter is omitted for LEFT() and RIGHT()
+spreadsheet functions, <I>length</I> of 1 is assumed. A <I>length</I> of 0
+is now allowed (consistency with MID()).</P>
+
+<P>AVG() and SUM() spreadsheet functions fixed: operating on extremely large
+ranges of individually small integers could eventually give an undetected
+integer overflow.</P>
+
+<P>LOGEST() spreadsheet function fixed: could have crashed PipeDream when
+given fewer than three parameters.</P>
+
+<P>M_INVERSE() spreadsheet function now yields correct error for non-square
+input matrix.</P>
+
+<P>Calculation of determinants of large matrices would have caused heap
+corruption.</P>
+
+<P>Very large numbers formatted as X# (column name) could have crashed
+PipeDream.</P>
+
+<P>Group box captions use better icon style for patterned background.</P>
+
+<P>Changed writable field height to 60 OS units - the RISC&nbsp;OS Style
+Guide's suggested 68 OS units is way too tall.</P>
+
 
 <H4>4.52/03 (18 Feb 2014)</H4>
 
@@ -138,7 +194,7 @@ font.</P>
 
 <P>PipeDream now works out when null events are required and also registers
 the list of messages in which it is interested with the Window Manager
-(helps overall RISC OS Desktop efficiency).</P>
+(helps overall RISC&nbsp;OS Desktop efficiency).</P>
 
 <P>Use tboxlibs' flex module for deferred compaction.</P>
 
@@ -189,7 +245,7 @@ if any modified document was saved.</P>
 handle printing multi-file documents was removed (support for multi-file
 documents themselves having been dropped many many moons ago).</P>
 
-<P>Fixed RISC OS printing with line spacing &gt; 1 and grid turned on.</P>
+<P>Fixed RISC&nbsp;OS printing with line spacing &gt; 1 and grid turned on.</P>
 
 <P>Quit messsage with edited documents made more helpful.</P>
 
@@ -205,7 +261,7 @@ date, title etc expansion) and was in fact broken.</P>
 persistence works again (it was broken for most dialogue boxes in 4.50/36
 where Cancel buttons were added but there were already a couple where it
 would have gone wrong anyway; all due to non-zero ESG usage on action
-buttons being a hangover from RISC OS 2 menu-style buttons).</P>
+buttons being a hangover from RISC&nbsp;OS 2 menu-style buttons).</P>
 
 <P>More robust error handling of malformed command args from command files or
 key expansion: in some cases it could have tried to pop up a dialogue box.</P>
@@ -386,8 +442,8 @@ document icon being dragged to the PipeDream icon on the icon bar.</P>
 simply shows it in a chart editing window without giving an 'already loaded'
 error.</P>
 
-<P>The Save file dialogue box is now only created as a RISC OS submenu if it
-is invoked by traversing the RISC OS menu structure using the arrow at the
+<P>The Save file dialogue box is now only created as a RISC&nbsp;OS submenu if it
+is invoked by traversing the RISC&nbsp;OS menu structure using the arrow at the
 right of the Save menu option. If the Save file dialogue box is invoked by
 clicking on the Save menu option, from a command sequence (^FS), mapped
 keystroke (F3) or from the toolbar button, it is opened as a standalone
@@ -599,7 +655,7 @@ This had in fact been broken since the early days of PipeDream 3!
 <P>Larger dialogue box margins to better accomodate 3-D internal window
 borders and more modern, less cramped, style.</P>
 
-<P>Writable icons use RISC OS Style Guide compliant appearance and size.</P>
+<P>Writable icons use RISC&nbsp;OS Style Guide compliant appearance and size.</P>
 
 <P>No longer force use of PipeDream's own radio, check and up/down buttons.</P>
 
@@ -611,7 +667,7 @@ clarity.</P>
 
 <P>No longer bother to squash Messages and Sprite files.</P>
 
-<P>Code to handle running on systems prior to RISC OS 3.1 removed for clarity.</P>
+<P>Code to handle running on systems prior to RISC&nbsp;OS 3.1 removed for clarity.</P>
 
 <P>More work to clean up source for open-source release.</P>
 
@@ -628,11 +684,11 @@ first and then loaded into PipeDream.</P>
 that there will always be a couple of 26-bit only instructions present in
 the executable code as PipeDream's Escape and Event handlers are called in
 26-bit or 32-bit mode on different systems
-(e.g. RISC OS 4.39's 26-bit kernel and RISC OS 5.20's 32-bit kernel)
+(e.g. RISC&nbsp;OS 4.39's 26-bit kernel and RISC&nbsp;OS 5.20's 32-bit kernel)
 with the appropriate code being executed conditionally.</P>
 
-<P>Low-level memory allocator changed to pre-RISC OS 5.18 compatible allocator
-(from Fireworkz) that doesn't use OS_Heap SWIs to isolate from RISC OS 5.18
+<P>Low-level memory allocator changed to pre-RISC&nbsp;OS 5.18 compatible allocator
+(from Fireworkz) that doesn't use OS_Heap SWIs to isolate from RISC&nbsp;OS 5.18
 OS_Heap SWI changes. It's also faster due to no SWI overheads.</P>
 
 <P>The character used in text @-fields may now be set to other than '@' in a
@@ -690,10 +746,10 @@ about 34KB; only renders using Drawfile module).</P>
 
 <P>Allow --no-dynamic-areas option to be set in PipeDream$$RunOptions to avoid
 fragmenting address space on large memory systems (this is automatically
-done in !Run for RISC OS 5).</P>
+done in !Run for RISC&nbsp;OS 5).</P>
 
 <P>Check for CallASWI module in !Run for new SharedCLibrary (CallASWI needs
-loading on RISC OS 3.6 and below).</P>
+loading on RISC&nbsp;OS 3.6 and below).</P>
 
 
 <H4>4.50/33 (22 Mar 2012)</H4>
@@ -705,7 +761,7 @@ loading on RISC OS 3.6 and below).</P>
 
 <P>Really! Has it been that long?
 
-<P>First 32-bit release of PipeDream, built using RISC OS Open Limited C tools
+<P>First 32-bit release of PipeDream, built using RISC&nbsp;OS Open Limited C tools
 release 20.</P>
 
 <P>Registration number code and template info removed as the PipeDream
@@ -718,12 +774,12 @@ user and organisation name in the splash screen and Info box.</P>
 <H4>4.50/23 (10 Aug 2000)</H4>
 
 <P>PipeDream documents can now be saved with leafnames longer than 12
-characters where this is allowed, eg RISC OS 4 new format hard discs,
+characters where this is allowed, eg RISC&nbsp;OS 4 new format hard discs,
 ADFS E+/F+ format floppies and RAM discs. This may also work on earlier
 systems with the Longnames module loaded or into archive files, but this has
 not been tested.</P>
 
-<P>PipeDream tested against RISC OS 4.02 (patch 3 release 2)</P>
+<P>PipeDream tested against RISC&nbsp;OS 4.02 (patch 3 release 2)</P>
 
 
 <H4>4.50/22 (11 Apr 1999)</H4>
@@ -740,7 +796,7 @@ been broken since 4.50/08.</P>
 <P>E format numbers in chart axes no longer contain superfluous commas.</P>
 
 <P>@C:r,g,b@ can be used to set the colour of the following text on a line
-(only when using fonts and RISC OS 3.5 or later) eg aaa@C:240,0,0@bbb would
+(only when using fonts and RISC&nbsp;OS 3.5 or later) eg aaa@C:240,0,0@bbb would
 display aaa followed by bbb in red. Use @C@ to restore normal (black).</P>
 Versions prior to this one will display the full @ sequence instead of the
 colour change.</P>
@@ -748,7 +804,7 @@ colour change.</P>
 <P>Caters for loading Squashed Messages, Sprites, Sprites22.</P>
 
 <P>Superfluous !Help file removed from Resources directory; PipeDream always
-uses the one from the main !PipeDream directory, as does the RISC OS Filer.</P>
+uses the one from the main !PipeDream directory, as does the RISC&nbsp;OS Filer.</P>
 
 <P>First full (ie non-upgrade) version of PipeDream 4.5 released.</P>
 
@@ -764,7 +820,7 @@ uses the one from the main !PipeDream directory, as does the RISC OS Filer.</P>
 
 <H4>4.50/14 (12 Jan 1998)</H4>
 
-<P>Dialogue boxes dynamically modified on RISC OS 3.1 to use menu-type icons
+<P>Dialogue boxes dynamically modified on RISC&nbsp;OS 3.1 to use menu-type icons
 no longer force an explicit ESG (used to set ESG 15) to avoid unsetting
 radio buttons in the dialogue box. The templates have been modified to
 accomodate this.</P>
@@ -791,9 +847,9 @@ about the present year such that it yields a year in the range now-70 < year
 &lt;= now+30. This also applies to the DATE() and DATEVALUE() spreadsheet
 functions.</P>
 
-<P>Dialogue boxes now dynamically modified on RISC OS 3.1 to use menu-type
+<P>Dialogue boxes now dynamically modified on RISC&nbsp;OS 3.1 to use menu-type
 icons with R1 effect rather than standard R6,3 action buttons in order to
-work around the RISC OS 3.1 Window Manager problem where the Window Manager
+work around the RISC&nbsp;OS 3.1 Window Manager problem where the Window Manager
 would try to redraw an icon in a dialogue box that no longer exists.</P>
 
 
@@ -950,7 +1006,7 @@ Virtualise to have documents loaded which are bigger than physical memory.</P>
 automatically on restarting the machine.</P>
 
 <P>PipeDream uses the Acorn Drawfile renderer on systems where this is loaded
-and hence can render JPEGs on RISC OS 3.7 systems.</P>
+and hence can render JPEGs on RISC&nbsp;OS 3.7 systems.</P>
 
 <P>@G@ Draw file references can now take the form:</P>
 
@@ -1216,6 +1272,9 @@ files have the border flag applied, which is then stripped off at run-time.</P>
 
 <H2>Known problems in this release</H2>
 
+<P>It is still possible (since PipeDream 3) to create circular dependencies
+in @slot_ref@ chains which fail to complete calculation.</P>
+
 <P>Stack overflows which should raise(SIGSTAK) instead give 'Uncaught trap'.</P>
 
 <P>LISTCOUNT() function has not been successfully backported from Fireworkz.</P>
@@ -1238,7 +1297,7 @@ responded to.</P>
 <H2>32-bit !System</H2>
 
 <P>Please note that the latest distribution of !System for use with pre-RISC
-OS 5 machines may be found on the RISC OS Open website at:</P>
+OS 5 machines may be found on the RISC&nbsp;OS Open website at:</P>
 
 <P><A HREF="https://www.riscosopen.org/content/downloads/other-zipfiles">https://www.riscosopen.org/content/downloads/other-zipfiles</A></P>
 

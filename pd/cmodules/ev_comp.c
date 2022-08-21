@@ -74,7 +74,7 @@ static S32
 recog_array(
     _InoutRef_  P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     S32 american,
     S32 refs_ok,
     S32 names_ok);
@@ -83,14 +83,14 @@ static S32
 recog_array_row(
     _InoutRef_  P_EV_DATA p_ev_data_out,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     S32 american,
     S32 refs_ok,
     S32 names_ok,
     P_S32 x,
     P_S32 y);
 
-static S32
+static U32
 recog_dt(
     _In_z_      PC_USTR spos,
     _OutRef_    P_S32 one,
@@ -112,7 +112,7 @@ static S32
 recog_name(
     _InoutRef_  P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     P_U8 doc_name);
 
 static S32
@@ -124,13 +124,13 @@ static S32
 recog_slr_range(
     _InoutRef_  P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     P_U8 doc_name);
 
 static S32
 recog_string(
     _InoutRef_  P_EV_DATA p_ev_data,
-    PC_U8 in_str);
+    _In_z_      PC_U8Z in_str);
 
 static void
 rec_array_row(
@@ -333,7 +333,7 @@ ev_compile(
         /* we are allowed to fill the buffer with cc->op_maxlen bytes */
         if(cc->op_pos - cc->op_start > cc->op_maxlen)
             {
-            trace_2(TRACE_OUT, "ev_compile: expression too long %d %d\n", cc->op_pos - cc->op_start, cc->op_maxlen);
+            trace_2(TRACE_OUT, "ev_compile: expression too long %d %d", cc->op_pos - cc->op_start, cc->op_maxlen);
             res = create_error(EVAL_ERR_EXPTOOLONG);
             }
         else
@@ -406,7 +406,7 @@ extern S32
 ss_recog_constant(
     P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     _InRef_     PC_EV_OPTBLOCK p_optblock,
     S32 refs_ok)
 {
@@ -612,9 +612,9 @@ ident_validate(
 
 static void
 out_byte(
-    char byt)
+    U8 byt)
 {
-    if(out_chkspace(sizeof(char)))
+    if(out_chkspace(sizeof32(U8)))
         *cc->op_pos++ = byt;
 }
 
@@ -628,44 +628,13 @@ static S32
 out_chkspace(
     S32 needed)
 {
-    if(cc->op_pos - cc->op_start + needed > cc->op_maxlen)
+    if((cc->op_pos - cc->op_start) + needed > cc->op_maxlen)
         {
         set_error(create_error(EVAL_ERR_EXPTOOLONG));
         return(0);
         }
 
     return(1);
-}
-
-/******************************************************************************
-*
-* output date to rpn string
-*
-******************************************************************************/
-
-static void
-out_date(
-    _InRef_     PC_EV_DATE datep)
-{
-    if(out_chkspace(sizeof(U32) * 2))
-        {
-        cc->op_pos += writeval_S32(cc->op_pos, datep->date);
-        cc->op_pos += writeval_S32(cc->op_pos, datep->time);
-        }
-}
-
-/******************************************************************************
-*
-* output double to compiled expression
-*
-******************************************************************************/
-
-static void
-out_double(
-    F64 fpval)
-{
-    if(out_chkspace(sizeof(F64)))
-        cc->op_pos += writeval_F64(cc->op_pos, fpval);
 }
 
 /******************************************************************************
@@ -678,8 +647,8 @@ static void
 out_idno(
     EV_IDNO idno)
 {
-    if(out_chkspace(sizeof(EV_IDNO)))
-        cc->op_pos += writeuword(cc->op_pos, idno, sizeof(EV_IDNO));
+    if(out_chkspace(sizeof32(EV_IDNO)))
+        cc->op_pos += writeuword_LE(cc->op_pos, idno, sizeof32(EV_IDNO));
 }
 
 /******************************************************************************
@@ -694,14 +663,14 @@ out_idno_format(
     P_SYM_INF p_sym_inf)
 {
     if(p_sym_inf->sym_cr)
-        if(out_chkspace(2 * sizeof(char)))
+        if(out_chkspace(2 * sizeof32(char)))
             {
             *cc->op_pos++ = RPN_FRM_RETURN;
             *cc->op_pos++ = p_sym_inf->sym_cr;
             }
 
     if(p_sym_inf->sym_space)
-        if(out_chkspace(2 * sizeof(char)))
+        if(out_chkspace(2 * sizeof32(char)))
             {
             *cc->op_pos++ = RPN_FRM_SPACE;
             *cc->op_pos++ = p_sym_inf->sym_space;
@@ -720,7 +689,7 @@ static void
 out_nameid(
     EV_NAMEID nameid)
 {
-    if(out_chkspace(sizeof(EV_NAMEID)))
+    if(out_chkspace(sizeof32(EV_NAMEID)))
         cc->op_pos += write_nameid(nameid, cc->op_pos);
 }
 
@@ -770,14 +739,15 @@ out_string_free(
 
     len = strlen(*stringpp) + 1;
 
-    if(out_chkspace(sizeof(S16) + len))
+    if(out_chkspace(sizeof32(S16) + len))
         {
-        cc->op_pos += writeval_S16(cc->op_pos, len + sizeof(S16));
+        writeval_S16(cc->op_pos, len + sizeof32(S16));
+        cc->op_pos += sizeof32(S16);
         strcpy(cc->op_pos, *stringpp);
         cc->op_pos += len;
         }
 
-    list_disposeptr(P_P_ANY_PEDANTIC(stringpp));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(stringpp));
 }
 
 /******************************************************************************
@@ -787,25 +757,32 @@ out_string_free(
 ******************************************************************************/
 
 static void
-out_word16(
-    S16 wrd)
+out_S16(
+    _InVal_     S16 wrd)
 {
-    if(out_chkspace(sizeof(S16)))
-        cc->op_pos += writeval_S16(cc->op_pos, wrd);
+    if(out_chkspace(sizeof32(S16)))
+    {
+        writeval_S16(cc->op_pos, wrd);
+        cc->op_pos += sizeof32(S16);
+    }
 }
 
 /******************************************************************************
 *
-* output signed word to compiled expression
+* output data to the rpn string
 *
 ******************************************************************************/
 
 static void
-out_word32(
-    S32 wrd)
+out_to_rpn(
+    _InVal_     U32 n_bytes,
+    _In_reads_bytes_(n_bytes) PC_ANY p_data)
 {
-    if(out_chkspace(sizeof(S32)))
-        cc->op_pos += writeval_S32(cc->op_pos, wrd);
+    if(out_chkspace(n_bytes))
+    {
+        memcpy32(cc->op_pos, p_data, n_bytes);
+        cc->op_pos += n_bytes;
+    }
 }
 
 /******************************************************************************
@@ -932,7 +909,7 @@ proc_func_dbs(void)
     out_idno(RPN_FRM_COND);
     dbase_start = cc->op_pos;
     /* reserve space for condition length */
-    out_word16(0);
+    out_S16(0);
 
     /* scan conditional */
     rec_expr();
@@ -941,7 +918,7 @@ proc_func_dbs(void)
     out_idno(RPN_FRM_END);
 
     /* update condition length */
-    (void) writeval_S16(dbase_start, cc->op_pos - dbase_start);
+    writeval_S16(dbase_start, cc->op_pos - dbase_start);
 
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
@@ -996,12 +973,12 @@ proc_func_if(
     out_idno(RPN_FRM_SKIPFALSE);
     /* boolean stack offset = 0 */
     out_byte(0);
-    out_word16(0);
+    out_S16(0);
 
     /* get next argument */
     proc_func_arg_maybe_blank();
 
-    (void) writeval_S16(skip_post + 2, cc->op_pos - skip_post);
+    writeval_S16(skip_post + 2, cc->op_pos - skip_post);
 
     /* did he give up with 2 arguments? */
     if(scan_check_next(NULL) == SYM_CBRACKET)
@@ -1014,7 +991,7 @@ proc_func_if(
     out_idno(RPN_FRM_SKIPTRUE);
     /* boolean stack offset = 1 */
     out_byte(1);
-    out_word16(0);
+    out_S16(0);
 
     if(scan_check_next(NULL) != SYM_COMMA)
         return(set_error(create_error(EVAL_ERR_BADEXPR)));
@@ -1024,7 +1001,7 @@ proc_func_if(
     /* next argument */
     proc_func_arg_maybe_blank();
 
-    (void) writeval_S16(skip_posf + 2, cc->op_pos - skip_posf);
+    writeval_S16(skip_posf + 2, cc->op_pos - skip_posf);
 
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
@@ -1229,7 +1206,7 @@ static S32
 recog_array(
     _InoutRef_  P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     S32 american,
     S32 refs_ok,
     S32 names_ok)
@@ -1239,39 +1216,34 @@ recog_array(
 
     if(*in_pos == '{')
         {
-        if((p_ev_data->arg.arrayp = list_allocptr(EV_ARRAY_OVH)) == 0)
-            res = status_nomem();
+        S32 x, y;
 
-        if(res >= 0)
-            {
-            S32 x, y;
+        p_ev_data->did_num = RPN_TMP_ARRAY;
+        p_ev_data->arg.array.x_size = 0;
+        p_ev_data->arg.array.y_size = 0;
+        p_ev_data->arg.array.elements = NULL;
 
-            p_ev_data->did_num = RPN_TMP_ARRAY;
-            p_ev_data->arg.arrayp->x_size = 0;
-            p_ev_data->arg.arrayp->y_size = 0;
-
-            y = 0;
-            do  {
-                x = 0;
-                if((res = recog_array_row(p_ev_data,
-                                          docno_from,
-                                          in_pos,
-                                          american,
-                                          refs_ok,
-                                          names_ok,
-                                          &x, &y)) >= 0)
-                    {
-                    in_pos += res;
-                    y += 1;
-                    }
-                else
-                    {
-                    ss_array_free(p_ev_data);
-                    break;
-                    }
+        y = 0;
+        do  {
+            x = 0;
+            if((res = recog_array_row(p_ev_data,
+                                      docno_from,
+                                      in_pos,
+                                      american,
+                                      refs_ok,
+                                      names_ok,
+                                      &x, &y)) >= 0)
+                {
+                in_pos += res;
+                y += 1;
                 }
-            while(*in_pos == ';');
+            else
+                {
+                ss_array_free(p_ev_data);
+                break;
+                }
             }
+        while(*in_pos == ';');
         }
 
     /* check it's finished correctly */
@@ -1291,7 +1263,7 @@ static S32
 recog_array_row(
     _InoutRef_  P_EV_DATA p_ev_data_out,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     S32 american,
     S32 refs_ok,
     S32 names_ok,
@@ -1322,7 +1294,7 @@ recog_array_row(
             }
 
         /* can't expand array on subsequent rows */
-        if(*y && *x >= p_ev_data_out->arg.arrayp->x_size)
+        if(*y && *x >= p_ev_data_out->arg.array.x_size)
             {
             res = create_error(EVAL_ERR_SUBSCRIPT);
             break;
@@ -1358,7 +1330,7 @@ recog_array_row(
 *
 ******************************************************************************/
 
-static __forceinline S32
+static inline U32
 recog_date(
     _In_z_      PC_USTR spos,
     _OutRef_    P_S32 one,
@@ -1368,7 +1340,7 @@ recog_date(
     return(recog_dt(spos, one, two, three, '.', 3));
 }
 
-static __forceinline S32
+static inline U32
 recog_time(
     _In_z_      PC_USTR spos,
     _OutRef_    P_S32 one,
@@ -1388,11 +1360,11 @@ ss_recog_date_time(
     S32 hour, minute, second, time_scanned;
     PC_U8 pos = in_str;
 
-    p_ev_data->arg.date.date = 0;
-    p_ev_data->arg.date.time = 0;
+    p_ev_data->arg.date.date = EV_DATE_INVALID;
+    p_ev_data->arg.date.time = EV_TIME_INVALID;
 
     /* check for a date */
-    if((date_scanned = recog_date(pos, &day, &month, &year)) > 0)
+    if((date_scanned = recog_date(pos, &day, &month, &year)) != 0)
         {
         S32 tres;
 
@@ -1404,9 +1376,9 @@ ss_recog_date_time(
         year -= 1;
 
         if(american)
-            tres = ss_ymd_to_dateval(&p_ev_data->arg.date, year, day, month);
+            tres = ss_ymd_to_dateval(&p_ev_data->arg.date.date, year, day, month);
         else
-            tres = ss_ymd_to_dateval(&p_ev_data->arg.date, year, month, day);
+            tres = ss_ymd_to_dateval(&p_ev_data->arg.date.date, year, month, day);
 
         if(tres >= 0)
             {
@@ -1419,9 +1391,9 @@ ss_recog_date_time(
 
     /* check for a time */
     second = 0;
-    if((time_scanned = recog_time(pos, &hour, &minute, &second)) > 0)
+    if((time_scanned = recog_time(pos, &hour, &minute, &second)) != 0)
         {
-        if(ss_hms_to_timeval(&p_ev_data->arg.date, hour, minute, second) >= 0)
+        if(ss_hms_to_timeval(&p_ev_data->arg.date.time, hour, minute, second) >= 0)
             {
             pos += time_scanned;
             p_ev_data->did_num = RPN_DAT_DATE;
@@ -1441,7 +1413,7 @@ ss_recog_date_time(
 *
 ******************************************************************************/
 
-static S32
+static U32
 recog_dt(
     PC_USTR spos,
     _OutRef_    P_S32 one,
@@ -1680,7 +1652,7 @@ static S32
 recog_name(
     _InoutRef_  P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     P_U8 doc_name)
 {
     char name_name[BUF_EV_INTNAMLEN];
@@ -1746,8 +1718,7 @@ ss_recog_number(
 
             if(!try_fp)
             {
-                p_ev_data->arg.integer = negative ? - (S32) u32 : (S32) u32;
-                p_ev_data->did_num = ev_integer_size(p_ev_data->arg.integer);
+                ev_data_set_integer(p_ev_data, (negative ? - (S32) u32 : (S32) u32));
                 res = PtrDiffBytesS32(ep, in_str_in);
                 /*reportf("recog_number(%s) X scanned %d", in_str_in, p_ev_data->arg.integer);*/
             }
@@ -1777,8 +1748,7 @@ ss_recog_number(
                             try_fp = FALSE;
                             f64 = frac_u32 / tens_array[frac_digits - 1];
                             f64 += u32;
-                            p_ev_data->arg.fp = negative ? -f64 : f64;
-                            p_ev_data->did_num = RPN_DAT_REAL;
+                            ev_data_set_real(p_ev_data, negative ? -f64 : f64);
                             res = PtrDiffBytesS32(ep, in_str_in);
                             /*reportf("recog_number(%s) X.Y scanned %g from %u. %u(%u digits)", in_str_in, p_ev_data->arg.fp, u32, frac_u32, frac_digits);*/
                         }
@@ -1803,9 +1773,8 @@ ss_recog_number(
         /* must have scanned something and not be a date */
         if((ep != in_str) && (*ep != '.') && (*ep != ':'))
             {
-            p_ev_data->arg.fp = negative ? -f64 : f64;
-            p_ev_data->did_num = RPN_DAT_REAL;
-            /*fp_to_integer_try(p_ev_data);*//*SKS for t5 1.30 why the hell did it bother? means you cant preserve 1.0 typed in */
+            ev_data_set_real(p_ev_data, negative ? -f64 : f64);
+            /*real_to_integer_try(p_ev_data);*//*SKS for t5 1.30 why the hell did it bother? means you cant preserve 1.0 typed in */
             res = PtrDiffBytesS32(ep, in_str_in);
             /*reportf("recog_number(%s) FP scanned %g", in_str_in, p_ev_data->arg.fp);*/
         }
@@ -1886,7 +1855,7 @@ static S32
 recog_slr_range(
     _InoutRef_  P_EV_DATA p_ev_data,
     _InVal_     EV_DOCNO docno_from,
-    PC_U8 in_str,
+    _In_z_      PC_U8Z in_str,
     P_U8 doc_name)
 {
     EV_SLR s_slr, e_slr;
@@ -1955,7 +1924,7 @@ recog_slr_range(
 static S32
 recog_string(
     _InoutRef_  P_EV_DATA p_ev_data,
-    PC_U8 in_str)
+    _In_z_      PC_U8Z in_str)
 {
     S32 res = 0;
 
@@ -1983,7 +1952,7 @@ recog_string(
             }
 
         /* allocate memory for string */
-        if((stringp = list_allocptr_p1(len)) != NULL)
+        if(NULL != (stringp = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &res)))
             {
             ci = in_str + 1;
             co = stringp;
@@ -2001,7 +1970,7 @@ recog_string(
                 ci += 1;
                 }
 
-            *co = '\0';
+            *co = NULLCH;
 
             p_ev_data->arg.string.data = stringp;
             p_ev_data->arg.string.size = len;
@@ -2009,8 +1978,6 @@ recog_string(
 
             res = ci - in_str;
             }
-        else
-            res = status_nomem();
         }
 
     return(res);
@@ -2114,7 +2081,7 @@ rec_aterm(void)
         /* boolean stack offset = 0 */
         out_byte(0);
         skip_parm = cc->op_pos;
-        out_word16(0);
+        out_S16(0);
 
         if(!cc->error)
             {
@@ -2123,7 +2090,7 @@ rec_aterm(void)
             out_idno_format(&sym_inf);
 
             /* write in skip parameter */
-            (void) writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
+            writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
             }
         }
     return;
@@ -2264,7 +2231,7 @@ rec_expr(void)
         /* boolean stack offset = 0 */
         out_byte(0);
         skip_parm = cc->op_pos;
-        out_word16(0);
+        out_S16(0);
 
         if(!cc->error)
             {
@@ -2272,7 +2239,7 @@ rec_expr(void)
             rec_aterm();
             out_idno_format(&sym_inf);
 
-            (void) writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
+            writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
             }
         }
     return;
@@ -2360,7 +2327,7 @@ rec_lterm(void)
         case RPN_DAT_REAL:
             cc->cur.did_num = SYM_BLANK;
             out_idno_format(&sym_inf);
-            out_double(cc->cur_sym.arg.fp);
+            out_to_rpn(sizeof32(F64), &cc->cur_sym.arg.fp);
             break;
 
         case RPN_DAT_WORD8:
@@ -2372,13 +2339,13 @@ rec_lterm(void)
         case RPN_DAT_WORD16:
             cc->cur.did_num = SYM_BLANK;
             out_idno_format(&sym_inf);
-            out_word16((S16) cc->cur_sym.arg.integer);
+            out_S16((S16) cc->cur_sym.arg.integer);
             break;
 
         case RPN_DAT_WORD32:
             cc->cur.did_num = SYM_BLANK;
             out_idno_format(&sym_inf);
-            out_word32(cc->cur_sym.arg.integer);
+            out_to_rpn(sizeof32(S32), &cc->cur_sym.arg.integer);
             break;
 
         case RPN_DAT_SLR:
@@ -2401,7 +2368,7 @@ rec_lterm(void)
         case RPN_DAT_DATE:
             cc->cur.did_num = SYM_BLANK;
             out_idno_format(&sym_inf);
-            out_date(&cc->cur_sym.arg.date);
+            out_to_rpn(sizeof32(EV_DATE), &cc->cur_sym.arg.date);
             break;
 
         case SYM_OARRAY:
@@ -2435,8 +2402,8 @@ rec_lterm(void)
             out_idno_format(&sym_inf);
 
             /* output array sizes */
-            out_word32((S32) x_size);
-            out_word32((S32) y_size);
+            out_to_rpn(sizeof32(S32), &x_size);
+            out_to_rpn(sizeof32(S32), &y_size);
 
             break;
             }

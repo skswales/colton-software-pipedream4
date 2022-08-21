@@ -277,18 +277,18 @@ template_copy_new(
     ind_size = ip->indDataSize;
     src_ind  = template__ind_block[b] + ip->bits.indDataOffset;
 
-    tracef7("\n\n\n[template__copy: base &%p index %u, entry &%p, src_w &%p, size %u, extra ind ws &%p, size %u]\n",
+    tracef7("\n\n\n[template__copy: base &%p index %u, entry &%p, src_w &%p, size %u, extra ind ws &%p, size %u]",
             template__block[b], iTemplateHandle, ip, src_w, w_size, src_ind, ind_size);
 
     w = (wimp_wind *) wlalloc_malloc(w_size + ind_size);
     if(!w)
         return(w);
 
-    tracef3("[template__copy WIN DEFN from &%p to &%p, size %u]\n", src_w, w, w_size);
+    tracef3("[template__copy WIN DEFN from &%p to &%p, size %u]", src_w, w, w_size);
     memcpy(w, src_w, w_size);
 #if TRACE
     if(memcmp(w, src_w, w_size))
-        tracef0("[template__copy WIN DEFN failed]\n");
+        tracef0("[template__copy WIN DEFN failed]");
 #endif
 
     /* all offsets in file are relative to start of object */
@@ -299,11 +299,11 @@ template_copy_new(
 
     if(ind_size)
         {
-        tracef3("[template__copy IND DATA from &%p to &%p, size %u]\n", src_ind, newIndData, ind_size);
+        tracef3("[template__copy IND DATA from &%p to &%p, size %u]", src_ind, newIndData, ind_size);
         memcpy(newIndData, src_ind, ind_size);
 #if TRACE
         if(memcmp(newIndData, src_ind, ind_size))
-            tracef0("[template__copy IND DATA failed]\n");
+            tracef0("[template__copy IND DATA failed]");
 #endif
         }
 
@@ -315,7 +315,7 @@ template_copy_new(
         {
         indData = w->title.indirecttext.buffer;
         w->title.indirecttext.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
-        tracef1("[template__copy: relocated title to &%p]\n", w->title.indirecttext.buffer);
+        tracef1("[template__copy: relocated title to &%p]", w->title.indirecttext.buffer);
         }
 
     nIcons = w->nicons;
@@ -326,10 +326,10 @@ template_copy_new(
     while(++icon < nIcons)
         if((iconflags = (++iconp)->flags) & wimp_INDIRECT)
             {
-            tracef2("[template__copy: got indirected icon %u, flags &%p]\n", icon, iconflags);
+            tracef2("[template__copy: got indirected icon %u, flags &%p]", icon, iconflags);
             indData = iconp->data.indirecttext.buffer;
             iconp->data.indirecttext.buffer = indData + (((int) indData < w_size) ? w_ind_change : ind_ind_change);
-            tracef2("[template__copy: relocated icon %u data to &%p]\n", icon, iconp->data.indirecttext.buffer);
+            tracef2("[template__copy: relocated icon %u data to &%p]", icon, iconp->data.indirecttext.buffer);
 
             /* only needed for icon with text components
              * Note that the Wimp sometimes uses -1 as a
@@ -339,7 +339,7 @@ template_copy_new(
                 (((int) iconp->data.indirecttext.validstring) > 0))
                     {
                     iconp->data.indirecttext.validstring = iconp->data.indirecttext.validstring + w_ind_change;
-                    tracef2("[template__copy: relocated icon %u validstring to &%p]\n",
+                    tracef2("[template__copy: relocated icon %u validstring to &%p]",
                             icon, iconp->data.indirecttext.validstring);
                     }
             }
@@ -377,7 +377,7 @@ template__datalen(
     /* always make NULLCH terminated */
     *(ptr - 1) = NULLCH;
 
-    tracef2("'%s', length %u]\n", str, ptr - str);
+    tracef2("'%s', length %u]", str, ptr - str);
     return(ptr - str);
 }
 
@@ -415,7 +415,7 @@ template_find_new(
                     }
         }
 
-    tracef2("[template_find(%s) yields handle &%p]\n", name, templateHandle);
+    tracef2("[template_find(%s) yields handle &%p]", name, templateHandle);
     return(templateHandle);
 }
 
@@ -429,7 +429,7 @@ template__nameeq(
     int c, c12;
     int b12;
 
-    tracef2("[template__nameeq(%s, %12.12s)]\n", s, s12);
+    tracef2("[template__nameeq(%s, %12.12s)]", s, s12);
 
     d = s;
     do  {
@@ -468,9 +468,9 @@ template__readfile_do(
 {
     _kernel_osfile_block fileblk;
 
-    tracef1("[template_readfile: length = %u]\n", fileLength);
+    tracef1("[template_readfile: length = %u]", fileLength);
     template__block[b] = wlalloc_malloc(fileLength);
-    tracef2("[template_readfile: template__block[%u] now &%p]\n", b, template__block[b]);
+    tracef2("[template_readfile: template__block[%u] now &%p]", b, template__block[b]);
 
     if(!template__block[b])
         {
@@ -505,7 +505,7 @@ template_readfile(
             else
                 fileLength = fileblk.start; /* file length */
 
-            reportf("template_readfile(%u:%s): length=%u\n", strlen(filename), filename, fileLength);
+            reportf("template_readfile(%u:%s): length=%u", strlen(filename), filename, fileLength);
 
             if(fileLength < sizeof(template_header))
                 {
@@ -530,7 +530,7 @@ template_readfile(
 
     for(b = 0; template__block[b]; ++b)
         {
-        tracef2("[template_readfile: binding template__block[%u] at &%p]\n", b, template__block[b]);
+        tracef2("[template_readfile: binding template__block[%u] at &%p]", b, template__block[b]);
         template__resolve(b);
         }
 }
@@ -550,7 +550,7 @@ template__resolve_icon(
     wimp_ibtype button_type = (wimp_ibtype) ((iconflags & wimp_IBUTMASK) / wimp_IBTYPE);
     BOOL has_border = (0 != (wimp_IBORDER & iconflags));
 
-    /*tracef3("[template__readfile: looking at icon %u, ptr &%p, flags &%8.8x]\n", icon, p_icon, iconflags);*/
+    /*tracef3("[template__readfile: looking at icon %u, ptr &%p, flags &%8.8x]", icon, p_icon, iconflags);*/
 
 #ifdef TEMPLATE_FONT_RESOLVE
     if(iconflags & wimp_IFONT)
@@ -567,20 +567,20 @@ template__resolve_icon(
 
         if(iconLen != reqdLen)
             {
-            tracef1("[template__readfile: icon will need %u bytes]\n", reqdLen);
+            tracef1("[template__readfile: icon will need %u bytes]", reqdLen);
             *p_indSize = *p_indSize + reqdLen;
             if(pass == 2)
                 {
                 /* store address of new copy */
                 char * newIndData = template__ind_block[b] + *p_newIndDataOffset;
                 memcpy(newIndData, indData, iconLen);
-                writeuword((P_BYTE) &p_icon->data.indirecttext.buffer, (U32) newIndData, sizeof(U32)); /* compiler barfs */
-                tracef1("[template__readfile: relocated icon ? data to &%p]\n", newIndData);
+                writeval_U32(&p_icon->data.indirecttext.buffer, (U32) newIndData); /* compiler used to barf */
+                tracef1("[template__readfile: relocated icon ? data to &%p]", newIndData);
                 *p_newIndDataOffset = *p_newIndDataOffset + reqdLen;
                 }
             }
         else
-            tracef1("[template__readfile: indirected icon ? fits exactly at &%p - no extra allocation]\n", indData);
+            tracef1("[template__readfile: indirected icon ? fits exactly at &%p - no extra allocation]", indData);
 
         /* 06oct96 - look for some border stuff in the indirected validation string */
         /* NB only on the last pass (else we transform twice) */
@@ -649,8 +649,8 @@ template__resolve_icon(
                                                     iy1 = readval_S32(&p_icon->box.y1);
                                                     iy1 -= 8;
                                                     iy0 += 8;
-                                                    (void) writeval_S32(&p_icon->box.y0, iy0);
-                                                    (void) writeval_S32(&p_icon->box.y1, iy1);
+                                                    writeval_S32(&p_icon->box.y0, iy0);
+                                                    writeval_S32(&p_icon->box.y1, iy1);
                                                     }
                                                 p[-3] = '1'; /* mutate into R1 */
                                                 p[-2] = NULLCH; /* remove the depressing effect */
@@ -719,7 +719,7 @@ template__resolve_icon(
         }
 
     if(mutate_flags)
-        (void) writeval_U32(&p_icon->flags, iconflags);
+        writeval_U32(&p_icon->flags, iconflags);
 }
 
 static void
@@ -750,7 +750,7 @@ template__resolve(
     pass = 1;
 
     do  {
-        tracef1("\n\n[template_readfile looping over windows: pass %u]\n", pass);
+        tracef1("\n\n[template_readfile looping over windows: pass %u]", pass);
 
         totalIndSize = 0;
 
@@ -782,7 +782,7 @@ template__resolve(
                 /* note that loaded window definitions need NOT be aligned */
 
                 w = (wimp_wind *) (template__block[b] + ip->dataOffset);
-                tracef2("\n\n[template__readfile: looking at window def &%p, id %12.12s]\n", w, ip->name);
+                tracef2("\n\n[template__readfile: looking at window def &%p, id %12.12s]", w, ip->name);
 
                 indSize = 0;
 
@@ -804,24 +804,24 @@ template__resolve(
 
                     if(iconLen != reqdLen)
                         {
-                        tracef1("[template__readfile: title will need %u bytes]\n", reqdLen);
+                        tracef1("[template__readfile: title will need %u bytes]", reqdLen);
                         indSize += reqdLen;
                         if(pass == 2)
                             {
                             /* store address of new copy */
                             char * newIndData = template__ind_block[b] + newIndDataOffset;
                             memcpy(newIndData, indData, iconLen);
-                            writeuword((P_BYTE) &w->title.indirecttext.buffer, (U32) newIndData, sizeof(U32)); /* compiler barfs */
-                            tracef1("[template__readfile: relocated title to &%p]\n", newIndData);
+                            writeval_U32((P_BYTE) &w->title.indirecttext.buffer, (U32) newIndData); /* compiler used to barf */
+                            tracef1("[template__readfile: relocated title to &%p]", newIndData);
                             newIndDataOffset += reqdLen;
                             }
                         }
                     else
-                        tracef0("[template__readfile: indirected title fits exactly - no extra allocation]\n");
+                        tracef0("[template__readfile: indirected title fits exactly - no extra allocation]");
                     }
 
                 nIcons = readval_U16(&w->nicons);
-                tracef1("[template__readfile: window defn has %u icons]\n", nIcons);
+                tracef1("[template__readfile: window defn has %u icons]", nIcons);
 
                 /* relocate icon indirection pointers and bind sprites */
                 icon  = -1;
@@ -838,10 +838,10 @@ template__resolve(
                     {
                     /* abuse this size field */
                     ip->indDataSize = indSize;
-                    tracef3("[template__readfile: poked size field for window %12.12s to %u with %u]\n", ip->name, ip->indDataSize, indSize);
+                    tracef3("[template__readfile: poked size field for window %12.12s to %u with %u]", ip->name, ip->indDataSize, indSize);
 
-                    writeuword((void *) &w->spritearea, (U32) spriteArea, sizeof(U32));
-                    tracef1("[template__readfile: Binding sprites to area &%p]\n", spriteArea);
+                    writeval_U32(&w->spritearea, (U32) spriteArea);
+                    tracef1("[template__readfile: Binding sprites to area &%p]", spriteArea);
                     }
                 }
             else
@@ -849,7 +849,7 @@ template__resolve(
 
         if(pass == 1)
             {
-            trace_1(TRACE_OUT, "\n\n[template__readfile: need %u bytes indirected workspace]\n", totalIndSize);
+            trace_1(TRACE_OUT, "\n\n[template__readfile: need %u bytes indirected workspace]", totalIndSize);
 
             if(!totalIndSize)
                 break;      /* no indirected data - huh! */
@@ -945,7 +945,7 @@ template_settitle(
     *ptr = NULLCH;
     strncat(ptr, title, readval_U16(&w->title.indirecttext.bufflen));
 
-    tracef6("[template_settitle(%u) w &%p, size %u -> buffer &%p %s, length]\n",
+    tracef6("[template_settitle(%u) w &%p, size %u -> buffer &%p %s, length]",
             iTemplateHandle, w, w_size, ptr, ptr, readval_U16(&w->title.indirecttext.bufflen));
 }
 

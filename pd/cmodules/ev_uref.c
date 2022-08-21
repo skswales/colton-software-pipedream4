@@ -911,7 +911,7 @@ ev_uref(
                             names_def.flags |= TRF_TOBEDEL;
                             names_def.mindel = MIN(names_def.mindel, i);
 
-                            trace_1(TRACE_MODULE_UREF, "uref deleting name: %s\n", p_ev_name->id);
+                            trace_1(TRACE_MODULE_UREF, "uref deleting name: %s", p_ev_name->id);
                             }
 
                         /* it's definitely undefined now, anyway */
@@ -922,14 +922,14 @@ ev_uref(
                         /* check for the definition of the name
                          * itself being in the uref area
                          */
-                        switch(p_ev_name->def.did_num)
+                        switch(p_ev_name->def_data.did_num)
                             {
                             case RPN_DAT_SLR:
-                                if(ev_match_slr(&p_ev_name->def.arg.slr, upp) != DEP_NONE)
+                                if(ev_match_slr(&p_ev_name->def_data.arg.slr, upp) != DEP_NONE)
                                     ev_todo_add_name_dependents(p_ev_name->key);
                                 break;
                             case RPN_DAT_RANGE:
-                                if(ev_match_rng(&p_ev_name->def.arg.range, upp) != DEP_NONE)
+                                if(ev_match_rng(&p_ev_name->def_data.arg.range, upp) != DEP_NONE)
                                     ev_todo_add_name_dependents(p_ev_name->key);
                                 break;
                             }
@@ -1031,7 +1031,7 @@ ev_uref(
                             custom_def.flags |= TRF_TOBEDEL;
                             custom_def.mindel = MIN(custom_def.mindel, i);
 
-                            trace_1(TRACE_MODULE_UREF, "uref deleting custom: %s\n", p_ev_custom->id);
+                            trace_1(TRACE_MODULE_UREF, "uref deleting custom: %s", p_ev_custom->id);
                             }
 
                         /* it's definitely undefined now, anyway */
@@ -1044,7 +1044,7 @@ ev_uref(
             break;
         }
 
-    trace_0(TRACE_MODULE_UREF, " -- out\n");
+    trace_0(TRACE_MODULE_UREF, " -- out");
 }
 
 /******************************************************************************

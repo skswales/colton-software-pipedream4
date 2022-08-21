@@ -61,7 +61,7 @@ typedef unsigned short wchar_t;
 #pragma warning(pop)
 
 #ifndef _In_reads_
-#include "cmodules/no-sal.h"
+#include "cmodules/coltsoft/no-sal.h"
 #endif
 
 __pragma(warning(disable:4514)) /* 'x' : unreferenced inline function has been removed */

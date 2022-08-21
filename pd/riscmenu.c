@@ -129,7 +129,7 @@ iconbar_menu_maker(
 
     IGNOREPARM(handle);            /* this handle is useless */
 
-    trace_0(TRACE_APP_PD4, "iconbar_menu_maker()\n");
+    trace_0(TRACE_APP_PD4, "iconbar_menu_maker()");
 
     /* not the main window menu */
     riscmenu__was_main = FALSE;
@@ -138,7 +138,7 @@ iconbar_menu_maker(
 
     if(!event_is_menu_being_recreated())
         {
-        trace_0(TRACE_APP_PD4, "dispose of old & then create new documents menu list\n");
+        trace_0(TRACE_APP_PD4, "dispose of old & then create new documents menu list");
 
         /* ensure font selector goes bye-bye */
         pdfontselect_finalise(TRUE);
@@ -161,10 +161,11 @@ iconbar_menu_maker(
                 {
                 if(num_documents > iw_menu_array_upb)
                     {
+                    STATUS status;
                     DOCNO * ptr;
 
-                    if(NULL == (ptr = list_reallocptr(iw_menu_array, (S32) num_documents * sizeof(DOCNO))))
-                        reperr_null(status_nomem());
+                    if(NULL == (ptr = al_ptr_realloc_elem(DOCNO, iw_menu_array, num_documents, &status)))
+                        reperr_null(status);
 
                     if(ptr)
                         {
@@ -185,11 +186,11 @@ iconbar_menu_maker(
 
                     if(len > iw_menu_MAXWIDTH)
                         {
-                        void_strkpy(tempstring, elemof32(tempstring), iw_menu_prefix);
-                        void_strkat(tempstring, elemof32(tempstring), name + (len - iw_menu_MAXWIDTH) + strlen32(iw_menu_prefix));
+                        safe_strkpy(tempstring, elemof32(tempstring), iw_menu_prefix);
+                        safe_strkat(tempstring, elemof32(tempstring), name + (len - iw_menu_MAXWIDTH) + strlen32(iw_menu_prefix));
                         }
                     else
-                        void_strkpy(tempstring, elemof32(tempstring), name);
+                        safe_strkpy(tempstring, elemof32(tempstring), name);
 
                     /* create/extend menu 'unparsed' cos buffer may contain ',' */
                     if(iw_menu == NULL)
@@ -228,7 +229,7 @@ iconbar_menu_maker(
     menu_setflags(iconbar_menu, mo_iconbar_savechoices, FALSE, (NO_DOCUMENT == find_document_with_input_focus()));
 #endif
 
-    trace_1(TRACE_APP_PD4, "iconbar menus encoded: returning menu &%p\n", report_ptr_cast(iconbar_menu));
+    trace_1(TRACE_APP_PD4, "iconbar menus encoded: returning menu &%p", report_ptr_cast(iconbar_menu));
 
     return(iconbar_menu);
 }
@@ -251,7 +252,7 @@ iconbar_menu_handler(
     S32 subselection   = hit[1];
     BOOL processed      = TRUE;
 
-    trace_3(TRACE_APP_PD4, "iconbar_menu_handler([%d][%d]): submenurequest = %s\n",
+    trace_3(TRACE_APP_PD4, "iconbar_menu_handler([%d][%d]): submenurequest = %s",
             selection, subselection, trace_boolstring(submenurequest));
 
     IGNOREPARM(handle);        /* this handle is useless */
@@ -346,7 +347,7 @@ iconbar_menu_handler(
 #endif
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed iconbar menu hit %d\n", hit[0]);
+            trace_1(TRACE_APP_PD4, "unprocessed iconbar menu hit %d", hit[0]);
             break;
         }
 
@@ -542,9 +543,12 @@ create_sup_dep_submenu(
                                           (ROW) evdata.arg.slr.row);
                 if(p_slot)
                     {
-                    expand_slot(evdata.arg.slr.docno, p_slot, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ, TRUE, FALSE, TRUE, FALSE);
-                    void_strkat(namebuf, elemof32(namebuf), " ");
-                    void_strkat(namebuf, elemof32(namebuf), valubuf);
+                    (void) expand_slot(evdata.arg.slr.docno, p_slot, (ROW) evdata.arg.slr.row, valubuf, LIN_BUFSIZ,
+                                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                                       FALSE /*allow_fonty_result*/, FALSE /*cff*/);
+
+                    safe_strkat(namebuf, elemof32(namebuf), " ");
+                    safe_strkat(namebuf, elemof32(namebuf), valubuf); /* plain non-fonty string */
                     }
                 }
 
@@ -701,11 +705,13 @@ function__event_menu_filler(
                         char  entry[LIN_BUFSIZ + 1];
                         char  valubuf[LIN_BUFSIZ + 1];
 
-                        expand_slot(current_docno(), tslot, currow, valubuf, LIN_BUFSIZ, TRUE, FALSE, TRUE, FALSE);
+                        (void) expand_slot(current_docno(), tslot, currow, valubuf, LIN_BUFSIZ,
+                                           DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                                           FALSE /*allow_fonty_result*/, FALSE /*cff*/);
 
-                        void_strkpy(entry, elemof32(entry), coord);
-                        void_strkat(entry, elemof32(entry), " ");
-                        void_strkat(entry, elemof32(entry), valubuf);
+                        safe_strkpy(entry, elemof32(entry), coord);
+                        safe_strkat(entry, elemof32(entry), " ");
+                        safe_strkat(entry, elemof32(entry), valubuf); /* plain non-fonty string */
 
                         /* create menu 'unparsed' cos entry may contain ',' */
                         menu_function_numinfo_slotvalue = menu_new_unparsed(menu_function_numinfo_value_title, entry);
@@ -919,7 +925,7 @@ goto_dep_or_sup_slot(
     EV_DEPSUP   depsup;
     EV_DATA     evdata;
 
-    trace_0(TRACE_APP_EXPEDIT, "goto_dep_or_sup_slot\n");
+    trace_0(TRACE_APP_EXPEDIT, "goto_dep_or_sup_slot");
 
     cur_docno = (EV_DOCNO) current_docno();
 
@@ -933,7 +939,7 @@ goto_dep_or_sup_slot(
 
         if(evdata.did_num == RPN_DAT_SLR)
             {
-            trace_3(TRACE_APP_EXPEDIT, "goto - docno,col,row (%u,%d,%d)\n",
+            trace_3(TRACE_APP_EXPEDIT, "goto - docno,col,row (%u,%d,%d)",
                                       evdata.arg.slr.docno,
                                       (int) evdata.arg.slr.col,
                                       (int) evdata.arg.slr.row);
@@ -988,7 +994,7 @@ createsubmenu(
     char description[256];
     char sep = '\0';
 
-    trace_1(TRACE_APP_PD4, "createsubmenu(short = %s)\n", trace_boolstring(short_m));
+    trace_1(TRACE_APP_PD4, "createsubmenu(short = %s)", trace_boolstring(short_m));
 
     do  {
         char *ptr    = &description[4];    /* could be 2 but 4 saves code */
@@ -997,7 +1003,7 @@ createsubmenu(
 
         if(!mptr->title)
             {
-            trace_2(TRACE_APP_PD4, "looking at item line: short = %s -> process = %s\n",
+            trace_2(TRACE_APP_PD4, "looking at item line: short = %s -> process = %s",
                     trace_boolstring(!(mptr->flags & LONG_ONLY)),
                     trace_boolstring(process));
 
@@ -1006,7 +1012,7 @@ createsubmenu(
             }
         else
             {
-            trace_3(TRACE_APP_PD4, "looking at command %s: short = %s -> process = %s\n",
+            trace_3(TRACE_APP_PD4, "looking at command %s: short = %s -> process = %s",
                     trace_string(*mptr->title),
                     trace_boolstring(!(mptr->flags & LONG_ONLY)),
                     trace_boolstring(process));
@@ -1059,7 +1065,7 @@ encodesubmenu(
     S32 flag;
     BOOL has_a_document = (NO_DOCUMENT != find_document_with_input_focus());
 
-    trace_1(TRACE_APP_PD4, "encodesubmenu(%s)\n", trace_boolstring(short_m));
+    trace_1(TRACE_APP_PD4, "encodesubmenu(%s)", trace_boolstring(short_m));
 
     if(mhptr->m)
     do  {
@@ -1112,7 +1118,7 @@ createmainmenu(
     char *ptr;
     BOOL needsmain = (main_menu == NULL);
 
-    trace_1(TRACE_APP_PD4, "createmainmenu(%s)\n", trace_boolstring(short_m));
+    trace_1(TRACE_APP_PD4, "createmainmenu(%s)", trace_boolstring(short_m));
 
     /* iconbar menu bits */
 
@@ -1211,7 +1217,7 @@ static menu
 main_menu_maker(
     void * handle)
 {
-    trace_1(TRACE_APP_PD4, "main_menu_maker(%p)\n", handle);
+    trace_1(TRACE_APP_PD4, "main_menu_maker(%p)", handle);
 
     /* ensure font selector goes bye-bye */
     pdfontselect_finalise(TRUE);
@@ -1228,7 +1234,7 @@ main_menu_maker(
 
     riscmenu__was_main = FALSE;
 
-    trace_1(TRACE_APP_PD4, "main menus encoded: returning menu &%p\n", report_ptr_cast(main_menu));
+    trace_1(TRACE_APP_PD4, "main menus encoded: returning menu &%p", report_ptr_cast(main_menu));
 
     return(main_menu);
 }
@@ -1633,7 +1639,7 @@ decodesubmenu(
     S32 funcnum;
     BOOL processed = TRUE;
 
-    trace_2(TRACE_APP_PD4, "decodesubmenu([%d][%d])\n", offset, nextoffset);
+    trace_2(TRACE_APP_PD4, "decodesubmenu([%d][%d])", offset, nextoffset);
 
     for(; ; mptr++)
         {
@@ -1647,15 +1653,15 @@ decodesubmenu(
 
         if(short_m  && !on_short_menus(mptr->flags))
             {
-            trace_1(TRACE_APP_PD4, "--- ignoring command %s\n", command);
+            trace_1(TRACE_APP_PD4, "--- ignoring command %s", command);
             continue;
             }
 
-        trace_2(TRACE_APP_PD4, "--- looking at command %s, i = %d\n", command, i);
+        trace_2(TRACE_APP_PD4, "--- looking at command %s, i = %d", command, i);
 
         if(i == offset)
             {
-            trace_1(TRACE_APP_PD4, "--- found command %s\n", command);
+            trace_1(TRACE_APP_PD4, "--- found command %s", command);
             break;
             }
 
@@ -1736,7 +1742,7 @@ main_menu_handler(
     S32 subselection = hit[1];
     BOOL processed   = TRUE;
 
-    trace_3(TRACE_APP_PD4, "main_menu_handler([%d][%d]): submenurequest = %s\n",
+    trace_3(TRACE_APP_PD4, "main_menu_handler([%d][%d]): submenurequest = %s",
             selection, subselection, trace_boolstring(submenurequest));
 
     if(select_document_using_callback_handle(handle))
@@ -1825,7 +1831,7 @@ riscmenu_buildmenutree(
 extern void
 riscmenu_clearmenutree(void)
 {
-    trace_0(TRACE_APP_PD4, "destroying menu tree\n");
+    trace_0(TRACE_APP_PD4, "destroying menu tree");
 
     event_clear_current_menu();
 }

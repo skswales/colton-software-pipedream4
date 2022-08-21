@@ -97,7 +97,7 @@ postfix$ = ""
 postfix$ += " 32-bit"
 IF debug% THEN postfix$ += " DEBUG"
 IF profile% THEN postfix$ += " PROFILE"
-PROCo(f%,"| "+file$+" file for "+product$+postfix$+" ("+MID$(TIME$,5,11)+")")
+PROCo(f%,"| "+file$+" file for "+product$+postfix$+" "+version$+" ("+MID$(TIME$,5,11)+")")
 PROCo(f%,"|")
 IF alternate% THEN
   PROCs(f%,product$+"$Dir","<Obey$Dir>.!"+product$,boot%)

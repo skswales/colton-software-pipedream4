@@ -133,7 +133,7 @@ act_on_c(
         {
         MENU * mptr;
 
-        trace_1(TRACE_APP_PD4, "act_on_c(%d) (command)\n", c);
+        trace_1(TRACE_APP_PD4, "act_on_c(%d) (command)", c);
 
         if(!find_command(&mptr, -c))
             return(FALSE);
@@ -154,7 +154,7 @@ act_on_c(
         if(ctrlflag)                /* should have all been caught by now */
             {
             char array[256];
-            (void) xsnprintf(array, elemof32(array), ": command %d left escape unprocessed\n", -c);
+            (void) xsnprintf(array, elemof32(array), ": command %d left escape unprocessed", -c);
             ack_esc();
             reperr(create_error(ERR_ESCAPE), array);
             }
@@ -168,11 +168,11 @@ act_on_c(
             draw_caret();
             }
         else
-            trace_0(TRACE_APP_PD4, "document disappeared from under our feet\n");
+            trace_0(TRACE_APP_PD4, "document disappeared from under our feet");
         }
     else if(c > 0)
         {
-        trace_1(TRACE_APP_PD4, "act_on_c(%d) (key)\n", c);
+        trace_1(TRACE_APP_PD4, "act_on_c(%d) (key)", c);
 
         /* only add real keys to buffer! */
         if(c >= 0x100)
@@ -238,7 +238,7 @@ inpchr_riscos(
 {
     S32 c;
 
-    trace_1(TRACE_APP_PD4, "inpchr_riscos(&%3.3X)\n", keyfromriscos);
+    trace_1(TRACE_APP_PD4, "inpchr_riscos(&%3.3X)", keyfromriscos);
 
     do  {
         do  {
@@ -253,7 +253,7 @@ inpchr_riscos(
                 {
                 if(keyfromriscos == 0)
                     {
-                    trace_0(TRACE_APP_PD4, "read key for risc os already: returns 0\n");
+                    trace_0(TRACE_APP_PD4, "read key for risc os already: returns 0");
                     return(0);
                     }
 
@@ -275,7 +275,7 @@ inpchr_riscos(
                 /* half a command entered on function key or something */
                 cbuff_offset = 0;
                 reperr_null(create_error(ERR_BAD_PARM));
-                trace_0(TRACE_APP_PD4, "error in key expansion: returns 0\n");
+                trace_0(TRACE_APP_PD4, "error in key expansion: returns 0");
                 return(0);            /* an uninteresting result */
                 }
             }
@@ -303,7 +303,7 @@ inpchr_riscos(
         }
     while(!c  &&  (cbuff_offset > 0));    /* incomplete command? */
 
-    trace_1(TRACE_APP_PD4, "inpchr_riscos returns %d\n", c);
+    trace_1(TRACE_APP_PD4, "inpchr_riscos returns %d", c);
     return(c);
 }
 
@@ -1014,7 +1014,7 @@ resize_submenu(
 
     mhptr->titlelen   = maxtitlelen;
     mhptr->commandlen = maxcommandlen + 1;
-    trace_2(TRACE_APP_PD4, "set titlelen for menu %s to %d\n", mhptr->name ? *(mhptr->name) : "<invisible>", mhptr->titlelen);
+    trace_2(TRACE_APP_PD4, "set titlelen for menu %s to %d", mhptr->name ? *(mhptr->name) : "<invisible>", mhptr->titlelen);
 }
 
 static void
@@ -1046,7 +1046,7 @@ resize_menus(
 extern void
 headline_initialise_once(void)
 {
-    trace_0(TRACE_APP_PD4, "headline_initialise_once()\n");
+    trace_0(TRACE_APP_PD4, "headline_initialise_once()");
 
     resize_menus(short_menus());
 }
@@ -1106,7 +1106,7 @@ schkvl_this_menu(
                 keyidx = expanded_key_buff;
                 strcpy(keyidx + 1, mptr->command);
                 strcat(keyidx + 1, CR_STR);
-                trace_1(TRACE_APP_PD4, "schkvl found: %s\n", trace_string(keyidx));
+                trace_1(TRACE_APP_PD4, "schkvl found: %s", trace_string(keyidx));
                 return(TRUE);
                 }
         }
@@ -1121,7 +1121,7 @@ schkvl(
     LIST *lptr;
     MENU_HEAD *firstmhptr, *mhptr;
 
-    lptr = search_list(&first_key, (S32) c);
+    lptr = search_list(&first_key, c);
 
     if(lptr)
         keyidx = lptr->value;
@@ -1130,7 +1130,7 @@ schkvl(
         firstmhptr = headline;
         mhptr      = firstmhptr + HEAD_SIZE + 1; /* check random_menu too */
 
-        trace_0(TRACE_APP_PD4, "schkvl searching menu definitions\n");
+        trace_0(TRACE_APP_PD4, "schkvl searching menu definitions");
 
         /* NB --mhptr kosher */
         while(--mhptr >= firstmhptr)
@@ -1147,7 +1147,7 @@ schkvl(
 
 #if TRACE_ALLOWED
     if(keyidx)
-        trace_1(TRACE_APP_PD4, "schkvl found: %s\n", trace_string(keyidx));
+        trace_1(TRACE_APP_PD4, "schkvl found: %s", trace_string(keyidx));
 #endif
 
     return(keyidx != NULL);
@@ -1189,12 +1189,12 @@ part_command_core_menu(
                         {
                         if(!b)
                             {
-                            trace_0(TRACE_APP_PD4, "found whole command\n");
+                            trace_0(TRACE_APP_PD4, "found whole command");
                             *alt_array = '\0';
                             return(mptr);
                             }
 
-                        trace_0(TRACE_APP_PD4, "found partial command\n");
+                        trace_0(TRACE_APP_PD4, "found partial command");
                         return((MENU *) M_IS_SUBSET);
                         }
                     }
@@ -1211,7 +1211,7 @@ part_command_core(void)
     const MENU_HEAD *firstmhptr, *mhptr;
     MENU * res;
 
-    trace_1(TRACE_APP_PD4, "look up alt_array %s in menu structures\n", alt_array);
+    trace_1(TRACE_APP_PD4, "look up alt_array %s in menu structures", alt_array);
 
     firstmhptr = headline;
     mhptr      = firstmhptr + HEAD_SIZE + 1; /* check random_menu too */
@@ -1225,7 +1225,7 @@ part_command_core(void)
     if((res = part_command_core_menu(&iconbar_headline[0])) != 0)
         return(res);
 
-    trace_0(TRACE_APP_PD4, "invalid sequence - discarding\n");
+    trace_0(TRACE_APP_PD4, "invalid sequence - discarding");
     *alt_array = '\0';
     bleep();
 
@@ -1242,7 +1242,7 @@ part_command(
 
     if(allow_redef)
         {
-        trace_1(TRACE_APP_PD4, "look up alt_array %s on redefinition list\n", alt_array);
+        trace_1(TRACE_APP_PD4, "look up alt_array %s on redefinition list", alt_array);
 
         for(lptr = first_in_list(&first_command_redef);
             lptr;
@@ -1251,7 +1251,7 @@ part_command(
             aptr = alt_array;
             bptr = lptr->value;
 
-            trace_2(TRACE_APP_PD4, "comparing alt_array %s with redef %s\n", aptr, bptr);
+            trace_2(TRACE_APP_PD4, "comparing alt_array %s with redef %s", aptr, bptr);
 
             if(bptr)
                 do  {
@@ -1262,12 +1262,12 @@ part_command(
                         {
                         if(b == '_')
                             {
-                            trace_0(TRACE_APP_PD4, "found full redefined command - look it up\n");
+                            trace_0(TRACE_APP_PD4, "found full redefined command - look it up");
                             strcpy(alt_array, bptr);
                             return(part_command_core());
                             }
 
-                        trace_0(TRACE_APP_PD4, "found partial redefined command\n");
+                        trace_0(TRACE_APP_PD4, "found partial redefined command");
                         return(M_IS_SUBSET);
                         }
                     }
@@ -1292,7 +1292,7 @@ find_command(
     MENU_HEAD * firstmhptr, * mhptr;
     MENU *      firstmptr,  * mptr;
 
-    trace_1(TRACE_APP_PD4, "find_command(%d)\n", funcnum);
+    trace_1(TRACE_APP_PD4, "find_command(%d)", funcnum);
 
     firstmhptr = headline;
     mhptr      = firstmhptr + HEAD_SIZE + 1; /* check random_menu too */
@@ -1308,7 +1308,7 @@ find_command(
 
                 while(--mptr >= firstmptr)
                     {
-                    trace_1(FALSE, "mptr->funcnum = %d\n", mptr->funcnum);
+                    trace_1(FALSE, "mptr->funcnum = %d", mptr->funcnum);
 
                     if(mptr->funcnum == funcnum)
                         {
@@ -1328,7 +1328,7 @@ find_command(
 
             while(--mptr >= firstmptr)
                 {
-                trace_1(FALSE, "mptr->funcnum = %d\n", mptr->funcnum);
+                trace_1(FALSE, "mptr->funcnum = %d", mptr->funcnum);
 
                 if(mptr->funcnum == funcnum)
                     {
@@ -1399,7 +1399,7 @@ do_command(
         return(TRUE);
         }
 
-    trace_1(TRACE_APP_PD4, "do_command(%d)\n", funcnum);
+    trace_1(TRACE_APP_PD4, "do_command(%d)", funcnum);
 
     if(is_current_document())
         {
@@ -1422,7 +1422,7 @@ do_command(
 
         if(mptr->flags & DOC_REQ)
             {
-            reportf("no current document to process command\n");
+            reportf("no current document to process command");
             return(TRUE);
             }
         }
@@ -1502,7 +1502,7 @@ get_menu_item(
     out += strlen(out);
 
     /* pad title field with spaces */
-    trace_2(TRACE_APP_PD4, "out - array = %d, header->titlelen = %d\n",
+    trace_2(TRACE_APP_PD4, "out - array = %d, header->titlelen = %d",
                 out - array, header->titlelen);
     while((out - array) <= header->titlelen)
         *out++ = ' ';
@@ -1540,7 +1540,7 @@ fiddle_alt_riscos(
     uchar *str    = alt_array + strlen((char *) alt_array);
     uchar kh = alt_letter(ch);
 
-    trace_2(TRACE_APP_PD4, "fiddle_alt_riscos alt_letter: %d, %c\n",
+    trace_2(TRACE_APP_PD4, "fiddle_alt_riscos alt_letter: %d, %c",
             kh, kh);
 
     if(!kh)
@@ -1557,7 +1557,7 @@ fiddle_alt_riscos(
 
     *str++    = kh;
     *str    = '\0';
-    trace_1(TRACE_APP_PD4, "alt_array := \"%s\"\n", alt_array);
+    trace_1(TRACE_APP_PD4, "alt_array := \"%s\"", alt_array);
 
     mptr = part_command(TRUE);
     if(mptr == M_IS_SUBSET || mptr == M_IS_ERROR)
@@ -1766,8 +1766,8 @@ really_out_comm_start(void)
 
     if(macro_command_name)
         {
-        void_strkpy(array, elemof32(array), "\\");
-        void_strkat(array, elemof32(array), macro_command_name);
+        safe_strkpy(array, elemof32(array), "\\");
+        safe_strkat(array, elemof32(array), macro_command_name);
         macro_command_name = NULL;
         if(output_string_to_macro_file(array))
             return(strlen(array));
@@ -1790,9 +1790,9 @@ out_comm_end_to_macro_file(
         {
         sofar = really_out_comm_start();
                     /* 0123456789 */
-        void_strkpy(array, elemof32(array), "|m        ");
-        void_strkpy(array + (10 - sofar), elemof32(array) - (10 - sofar), *mptr->title);
-        void_strkat(array, elemof32(array), CR_STR);
+        safe_strkpy(array, elemof32(array), "|m        ");
+        safe_strkpy(array + (10 - sofar), elemof32(array) - (10 - sofar), *mptr->title);
+        safe_strkat(array, elemof32(array), CR_STR);
 
         macro_needs_lf = FALSE;
 
@@ -1813,7 +1813,7 @@ cvt_string_arg_for_macro_file(
     U32 offset = 0;
     U8 ch;
 
-    void_strkpy(ptr, elemof_buffer, "|i \"");
+    safe_strkpy(ptr, elemof_buffer, "|i \"");
     offset = strlen(ptr);
 
     while((ch = *arg++) != '\0')
@@ -1826,7 +1826,7 @@ cvt_string_arg_for_macro_file(
             ptr[offset++] = ch;
         }
 
-    void_strkpy(&ptr[offset], elemof_buffer - offset, "\" ");
+    safe_strkpy(&ptr[offset], elemof_buffer - offset, "\" ");
 }
 
 /* output the dialog box parameters to the macro file */

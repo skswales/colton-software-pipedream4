@@ -13,7 +13,6 @@
 
 #include "common/gflags.h"
 
-/* external header */
 #include "cmodules/typepack.h"
 
 /******************************************************************************
@@ -24,24 +23,6 @@
 
 /******************************************************************************
 *
-* read a double from memory
-*
-******************************************************************************/
-
-_Check_return_
-extern F64
-readval_F64(
-    _In_bytecount_c_(sizeof(F64)) PC_BYTE from)
-{
-#if RISCOS
-    return(readval_F64_from_ARM(from));
-#else
-    return(* ((PC_F64) from));
-#endif
-}
-
-/******************************************************************************
-*
 * read a double from unaligned memory (bytes are in 8087 format)
 *
 ******************************************************************************/
@@ -49,7 +30,7 @@ readval_F64(
 _Check_return_
 extern F64
 readval_F64_from_8087(
-    _In_bytecount_c_(sizeof(F64)) PC_BYTE from)
+    _In_bytecount_c_(sizeof(F64)) PC_ANY from)
 {
     union
     {
@@ -103,7 +84,7 @@ readval_F64_from_8087(
 _Check_return_
 extern F64
 readval_F64_from_ARM(
-    _In_bytecount_c_(sizeof(F64)) PC_BYTE from)
+    _In_bytecount_c_(sizeof(F64)) PC_ANY from)
 {
     union
     {
@@ -152,30 +133,6 @@ readval_F64_from_ARM(
 
 /******************************************************************************
 *
-* read an unsigned word of specified size
-*
-******************************************************************************/
-
-_Check_return_
-extern U32
-readuword(
-    _In_reads_bytes_(size) PC_BYTE from,
-    S32 size)
-{
-    U32 res;
-    S32 i;
-
-    for(res = 0, i = size - 1; i >= 0; i--)
-        {
-        res <<= 8;
-        res |= PtrGetByteOff(from, i);
-        }
-
-    return(res);
-}
-
-/******************************************************************************
-*
 * read an unsigned 16-bit value from unaligned memory
 *
 ******************************************************************************/
@@ -185,7 +142,7 @@ readuword(
 _Check_return_
 extern U16
 readval_U16(
-    _In_bytecount_c_(sizeof(U16)) PC_BYTE from)
+    _In_bytecount_c_(sizeof(U16)) PC_ANY from)
 {
     union
     {
@@ -212,7 +169,7 @@ readval_U16(
 _Check_return_
 extern U32
 readval_U32(
-    _In_bytecount_c_(sizeof(U32)) PC_BYTE from)
+    _In_bytecount_c_(sizeof(U32)) PC_ANY from)
 {
     union
     {
@@ -241,7 +198,7 @@ readval_U32(
 _Check_return_
 extern S16
 readval_S16(
-    _In_bytecount_c_(sizeof(S16)) PC_BYTE from)
+    _In_bytecount_c_(sizeof(S16)) PC_ANY from)
 {
     union
     {
@@ -268,7 +225,7 @@ readval_S16(
 _Check_return_
 extern S32
 readval_S32(
-    _In_bytecount_c_(sizeof(S32)) PC_BYTE from)
+    _In_bytecount_c_(sizeof(S32)) PC_ANY from)
 {
     union
     {
@@ -292,30 +249,16 @@ readval_S32(
 *
 ******************************************************************************/
 
-extern S32
-writeval_F64(
-    _Out_bytecapcount_x_(sizeof(F64)) P_BYTE to,
-    _In_        F64 f64)
-{
-#if RISCOS
-    return(writeval_F64_as_ARM(to, f64));
-#else
-    * ((P_F64) to) = f64;
-
-    return(sizeof(F64));
-#endif
-}
-
 /******************************************************************************
 *
 * output double as 8087 format
 *
 ******************************************************************************/
 
-extern S32
+extern void
 writeval_F64_as_8087(
-    _Out_bytecapcount_x_(sizeof(F64)) P_BYTE to,
-    _In_        F64 f64)
+    _Out_bytecapcount_x_(sizeof(F64)) P_ANY to,
+    _InVal_     F64 f64)
 {
     union
     {
@@ -326,6 +269,7 @@ writeval_F64_as_8087(
     u.f64 = f64;
 
 #if RISCOS
+
     /* ARM placed exp word 1st, 8087 requires exp word 2nd */
 
     /* mantissa word out 1st */
@@ -341,6 +285,7 @@ writeval_F64_as_8087(
     PtrPutByteOff(to, 7, u.bytes[3]);
 
 #elif WINDOWS
+
     PtrPutByteOff(to, 0, u.bytes[0]);
     PtrPutByteOff(to, 1, u.bytes[1]);
     PtrPutByteOff(to, 2, u.bytes[2]);
@@ -354,8 +299,6 @@ writeval_F64_as_8087(
 #else
 #error unknown FP layout
 #endif
-
-    return(sizeof(F64));
 }
 
 /******************************************************************************
@@ -364,10 +307,10 @@ writeval_F64_as_8087(
 *
 ******************************************************************************/
 
-extern S32
+extern void
 writeval_F64_as_ARM(
-    _Out_bytecapcount_x_(sizeof(F64)) P_BYTE to,
-    _In_        F64 f64)
+    _Out_bytecapcount_x_(sizeof(F64)) P_ANY to,
+    _InVal_     F64 f64)
 {
     union
     {
@@ -378,6 +321,7 @@ writeval_F64_as_ARM(
     u.f64 = f64;
 
 #if RISCOS
+
     /* ARM can't do unaligned FP store */
 
     PtrPutByteOff(to, 0, u.bytes[0]);
@@ -391,6 +335,7 @@ writeval_F64_as_ARM(
     PtrPutByteOff(to, 7, u.bytes[7]);
 
 #elif WINDOWS
+
     /* 8087 placed exp word 2nd, ARM requires exp word 1st */
 
     /* exponent word out 1st */
@@ -408,31 +353,6 @@ writeval_F64_as_ARM(
 #else
 #error unknown FP layout
 #endif
-
-    return(sizeof(F64));
-}
-
-/******************************************************************************
-*
-* write out unsigned word of specified size
-*
-******************************************************************************/
-
-extern S32
-writeuword(
-    _Out_writes_bytes_(size) P_BYTE to,
-    U32 word,
-    S32 size)
-{
-    S32 i;
-
-    for(i = 0; i < size; ++i)
-        {
-        PtrPutByteOff(to, i, (char) (word & 0xFF));
-        word >>= 8;
-        }
-
-    return(size);
 }
 
 /******************************************************************************
@@ -443,9 +363,9 @@ writeuword(
 
 #ifndef writeval_U16
 
-extern S32
+extern void
 writeval_U16(
-    _Out_bytecapcount_x_(sizeof(U16)) P_BYTE to,
+    _Out_bytecapcount_x_(sizeof(U16)) P_ANY to,
     _InVal_     U16 u16)
 {
     union
@@ -458,8 +378,6 @@ writeval_U16(
 
     PtrPutByteOff(to, 0, u.bytes[0]);
     PtrPutByteOff(to, 1, u.bytes[1]);
-
-    return(sizeof(U16));
 }
 
 #endif /* writeval_U16 */
@@ -472,10 +390,10 @@ writeval_U16(
 
 #ifndef writeval_U32
 
-extern S32
+extern void
 writeval_U32(
-    _Out_bytecapcount_x_(sizeof(U32)) P_BYTE to,
-    _In_        U32 u32)
+    _Out_bytecapcount_x_(sizeof(U32)) P_ANY to,
+    _InVal_     U32 u32)
 {
     union
     {
@@ -489,8 +407,6 @@ writeval_U32(
     PtrPutByteOff(to, 1, u.bytes[1]);
     PtrPutByteOff(to, 2, u.bytes[2]);
     PtrPutByteOff(to, 3, u.bytes[3]);
-
-    return(sizeof(U32));
 }
 
 #endif /* writeval_U32 */
@@ -503,9 +419,9 @@ writeval_U32(
 
 #ifndef writeval_S16
 
-extern S32
+extern void
 writeval_S16(
-    _Out_bytecapcount_x_(sizeof(S16)) P_BYTE to,
+    _Out_bytecapcount_x_(sizeof(S16)) P_ANY to,
     _InVal_     S16 s16)
 {
     union
@@ -518,8 +434,6 @@ writeval_S16(
 
     PtrPutByteOff(to, 0, u.bytes[0]);
     PtrPutByteOff(to, 1, u.bytes[1]);
-
-    return(sizeof(S16));
 }
 
 #endif /* writeval_S16 */
@@ -532,10 +446,10 @@ writeval_S16(
 
 #ifndef writeval_S32
 
-extern S32
+extern void
 writeval_S32(
-    _Out_bytecapcount_x_(sizeof(S32)) P_BYTE to,
-    _In_        S32 s32)
+    _Out_bytecapcount_x_(sizeof(S32)) P_ANY to,
+    _InVal_     S32 s32)
 {
     union
     {
@@ -549,8 +463,6 @@ writeval_S32(
     PtrPutByteOff(to, 1, u.bytes[1]);
     PtrPutByteOff(to, 2, u.bytes[2]);
     PtrPutByteOff(to, 3, u.bytes[3]);
-
-    return(sizeof(S32));
 }
 
 #endif /* writeval_S32 */

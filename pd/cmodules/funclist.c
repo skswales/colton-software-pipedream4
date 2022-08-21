@@ -59,17 +59,18 @@ typedef struct _FUNCLIST_HANDLER
 _Check_return_
 extern STATUS
 funclist_add(
-    P_P_LIST_BLKREF lbrp,
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
     funclist_proc proc,
     P_ANY handle,
     /*out*/ P_LIST_ITEMNO itemnop,
     S32 tag,
     S32 priority,
-    size_t extradata)
+    _InVal_     U32 extradata)
 {
-    P_NLISTS_BLK       nlbrp = (P_NLISTS_BLK) lbrp;
     P_FUNCLIST_HANDLER hp;
-    LIST_ITEMNO        itemno;
+    LIST_ITEMNO itemno;
+    NLISTS_BLK new_nlb;
+    STATUS status;
 
     if(!priority)
         priority = FUNCLIST_DEFAULT_PRIORITY;
@@ -78,13 +79,15 @@ funclist_add(
         itemnop = &itemno;
 
     trace_3(TRACE_MODULE_FUNCLIST,
-            "funclist_add(&%p, (&%p,&%p))\n", report_ptr_cast(*lbrp), report_procedure_name(report_proc_cast(*proc)), report_ptr_cast(handle));
+            "funclist_add(&%p, (&%p,&%p))", report_ptr_cast(p_p_list_block), report_procedure_name(report_proc_cast(*proc)), report_ptr_cast(handle));
 
     /* search for handler on list */
 
-    if(*lbrp)
+    if(NULL != *p_p_list_block)
         {
-        for(hp = collect_first(nlbrp, itemnop); hp; hp = collect_next(nlbrp, itemnop))
+        for(hp = collect_first(p_p_list_block, itemnop);
+            hp;
+            hp = collect_next( p_p_list_block, itemnop))
             {
             if(hp->priority < priority)
                 {
@@ -94,40 +97,31 @@ funclist_add(
 
             if((hp->proc == proc)  &&  (hp->handle == handle))
                 {
-                trace_2(TRACE_MODULE_FUNCLIST, "funclist_proc (&%p,&%p) already on list, retagging\n", report_procedure_name(report_proc_cast(proc)), report_ptr_cast(handle));
+                trace_2(TRACE_MODULE_FUNCLIST, "funclist_proc (&%p,&%p) already on list, retagging", report_procedure_name(report_proc_cast(proc)), report_ptr_cast(handle));
                 hp->tag = tag;
                 return(STATUS_OK);
                 }
             }
 
         /* if we ran out of list, add to end */
-        *itemnop = nlist_numitem(*lbrp);
+        *itemnop = list_numitem(*p_p_list_block);
         }
     else
         {
-        trace_0(TRACE_MODULE_FUNCLIST, "funclist_add: no list, so allocblkref\n");
-        /* allocate new list if null list */
-        if(!nlist_allocblkref(lbrp))
-            return(status_nomem());
-        else
-            {
-            /* retune temporarily */
-            myassert1x(extradata <= 256, "extradata %s too big for current pool initialiser", extradata);
-            list_deregister((P_LIST_BLOCK) *lbrp);
-            list_init(      (P_LIST_BLOCK) *lbrp, (sizeof(*hp) + 256), (sizeof(*hp) + 256) * 8);
-            list_register(  (P_LIST_BLOCK) *lbrp);
-            }
-
         /* add to start */
         *itemnop = 0;
         }
 
-    if((hp = collect_insert_entry(nlbrp, sizeof(*hp) + extradata, itemnop)) == NULL)
-        {
-        /* remove P_LIST_BLKREF if failed to add first block */
-        collect_compress(nlbrp);
-        return(status_nomem());
-        }
+    myassert1x(extradata <= 256, "extradata %s too big for current pool initialiser", extradata);
+
+    new_nlb.lbr = *p_p_list_block;
+    new_nlb.maxitemsize = (sizeof32(*hp) + 256);
+    new_nlb.maxpoolsize = new_nlb.maxitemsize * 8;
+
+    if(NULL == (hp = collect_insert_entry(&new_nlb, sizeof32(*hp) + extradata, *itemnop, &status)))
+        return(status);
+
+    *p_p_list_block = new_nlb.lbr;
 
     hp->proc     = proc;
     hp->handle   = handle;
@@ -150,50 +144,43 @@ funclist_add(
 
 extern S32
 funclist_first(
-    P_P_LIST_BLKREF lbrp,
-    /*out*/ funclist_proc * proc,
-    /*out*/ P_P_ANY handle,
-    /*out*/ P_LIST_ITEMNO itemnop,
-    S32 ascending)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _Out_       funclist_proc * proc,
+    _OutRef_    P_P_ANY handle,
+    _OutRef_    P_LIST_ITEMNO itemnop,
+    _InVal_     BOOL ascending)
 {
-    P_NLISTS_BLK       nlbrp = (P_NLISTS_BLK) lbrp;
     P_FUNCLIST_HANDLER hp;
     S32                tag;
 
     trace_2(TRACE_MODULE_FUNCLIST,
-            "funclist_first(&%p, %s)", report_ptr_cast(*lbrp), trace_boolstring(ascending));
+            "funclist_first(&%p, %s)", report_ptr_cast(p_p_list_block), trace_boolstring(ascending));
 
-    if(*lbrp)
+    *itemnop = list_numitem(*p_p_list_block);
+
+    if(*itemnop)
         {
-        *itemnop = nlist_numitem(*lbrp);
-
-        if(itemnop)
-            {
-            if(ascending)
-                *itemnop = 0;
-            else
-                if(*itemnop)
-                    --(*itemnop);
-
-            if((hp = collect_first_from(nlbrp, itemnop)) != NULL)
-                {
-                trace_3(TRACE_MODULE_FUNCLIST,
-                        " yields (&%p,&%p) %d\n", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
-                *proc   = hp->proc;
-                *handle = hp->handle;
-                tag     = hp->tag;
-
-                return(tag);
-                }
-            }
+        if(ascending)
+            *itemnop = 0;
         else
-            trace_0(TRACE_MODULE_FUNCLIST,
-                    " yields NONE -- found nothing on list\n");
+            if(*itemnop)
+                --(*itemnop);
+
+        if((hp = collect_first_from(p_p_list_block, itemnop)) != NULL)
+            {
+            trace_3(TRACE_MODULE_FUNCLIST,
+                    " yields (&%p,&%p) %d", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
+            *proc   = hp->proc;
+            *handle = hp->handle;
+            tag     = hp->tag;
+
+            return(tag);
+            }
         }
-    else
-        trace_0(TRACE_MODULE_FUNCLIST, " yields NONE -- found no list\n");
 
     *proc = funclist_proc_none;
+    *handle = NULL;
+    trace_0(TRACE_MODULE_FUNCLIST, " yields NONE");
     return(0);
 }
 
@@ -210,35 +197,32 @@ funclist_first(
 
 extern S32
 funclist_next(
-    P_P_LIST_BLKREF lbrp,
-    /*out*/ funclist_proc * proc,
-    /*out*/ P_P_ANY handle,
-    /*inout*/ P_LIST_ITEMNO itemnop,
-    S32 ascending)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _Out_       funclist_proc * proc,
+    _OutRef_    P_P_ANY handle,
+    _InoutRef_  P_LIST_ITEMNO itemnop,
+    _InVal_     BOOL ascending)
 {
-    P_NLISTS_BLK       nlbrp = (P_NLISTS_BLK) lbrp;
     P_FUNCLIST_HANDLER hp;
     S32                tag;
 
     trace_2(TRACE_MODULE_FUNCLIST,
-            "funclist_next(&%p, %s)", report_ptr_cast(*lbrp), trace_boolstring(ascending));
+            "funclist_next(&%p, %s)", report_ptr_cast(p_p_list_block), trace_boolstring(ascending));
 
-    if(*lbrp)
+    if((hp = (ascending ? collect_next : collect_prev) (p_p_list_block, itemnop)) != NULL)
         {
-        if((hp = (ascending ? collect_next : collect_prev) (nlbrp, itemnop)) != NULL)
-            {
-            trace_3(TRACE_MODULE_FUNCLIST,
-                    " yields (&%p,&%p) %d\n", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
-            *proc   = hp->proc;
-            *handle = hp->handle;
-            tag     = hp->tag;
+        trace_3(TRACE_MODULE_FUNCLIST,
+                " yields (&%p,&%p) %d", report_procedure_name(report_proc_cast(hp->proc)), report_ptr_cast(hp->handle), hp->tag);
+        *proc   = hp->proc;
+        *handle = hp->handle;
+        tag     = hp->tag;
 
-            return(tag);
-            }
+        return(tag);
         }
 
     *proc = funclist_proc_none;
-    trace_0(TRACE_MODULE_FUNCLIST, " yields NONE\n");
+    *handle = NULL;
+    trace_0(TRACE_MODULE_FUNCLIST, " yields NONE");
     return(0);
 }
 
@@ -255,30 +239,27 @@ funclist_next(
 
 extern S32
 funclist_readdata_ip(
-    P_P_LIST_BLKREF lbrp,
-    P_LIST_ITEMNO itemnop,
-    /*out*/ P_ANY dest,
-    size_t offset,
-    size_t nbytes)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO itemno,
+    _Out_writes_bytes_(nbytes) P_ANY dest,
+    _InVal_     U32 offset,
+    _InVal_     U32 nbytes)
 {
-    P_NLISTS_BLK       nlbrp = (P_NLISTS_BLK) lbrp;
     P_FUNCLIST_HANDLER hp;
 
     trace_5(TRACE_MODULE_FUNCLIST,
             "funclist_readdata_ip(&%p, %u): offset %u nbytes %u to &%p",
-            report_ptr_cast(*lbrp), *itemnop, offset, nbytes, report_ptr_cast(dest));
+            report_ptr_cast(p_p_list_block), itemno, offset, nbytes, report_ptr_cast(dest));
 
     /* got position of handler on list */
-    if((hp = collect_search(nlbrp, itemnop)) != NULL)
+    if((hp = collect_search(p_p_list_block, itemno)) != NULL)
         {
-        trace_1(TRACE_MODULE_FUNCLIST, " from &%p\n", PtrAddBytes(PC_BYTE, (hp + 1), offset));
-        void_memcpy32(dest, PtrAddBytes(PC_BYTE, (hp + 1), offset), nbytes);
-
+        trace_1(TRACE_MODULE_FUNCLIST, " from &%p", PtrAddBytes(PC_BYTE, (hp + 1), offset));
+        memcpy32(dest, PtrAddBytes(PC_BYTE, (hp + 1), offset), nbytes);
         return(1);
         }
-    else
-        trace_0(TRACE_MODULE_FUNCLIST, " -- not found\n");
 
+    trace_0(TRACE_MODULE_FUNCLIST, " -- not found");
     return(0);
 }
 
@@ -290,28 +271,30 @@ funclist_readdata_ip(
 
 extern void
 funclist_remove(
-    P_P_LIST_BLKREF lbrp,
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
     funclist_proc proc,
     P_ANY handle)
 {
-    P_NLISTS_BLK       nlbrp = (P_NLISTS_BLK) lbrp;
     P_FUNCLIST_HANDLER hp;
     LIST_ITEMNO        itemno;
 
     trace_3(TRACE_MODULE_FUNCLIST,
-            "funclist_remove(&%p, (&%p,&%p))\n", report_ptr_cast(*lbrp), report_procedure_name(report_proc_cast(proc)), report_ptr_cast(handle));
+            "funclist_remove(&%p, (&%p,&%p))",
+            report_ptr_cast(p_p_list_block), report_procedure_name(report_proc_cast(proc)), report_ptr_cast(handle));
 
     /* search for handler on list */
 
-    for(hp = collect_first(nlbrp, &itemno); hp; hp = collect_next(nlbrp, &itemno))
+    for(hp = collect_first(p_p_list_block, &itemno);
+        hp;
+        hp = collect_next(p_p_list_block, &itemno))
         {
         if((hp->proc == proc) && (hp->handle == handle))
             {
-            itemno = nlist_atitem(*lbrp);
+            itemno = list_atitem(*p_p_list_block);
 
-            (void) collect_delete_entry(nlbrp, &itemno);
+            (void) collect_delete_entry(p_p_list_block, itemno);
 
-            collect_compress(nlbrp);
+            collect_compress(p_p_list_block);
 
             return;
             }
@@ -331,30 +314,27 @@ funclist_remove(
 
 extern S32
 funclist_writedata_ip(
-    P_P_LIST_BLKREF lbrp,
-    P_LIST_ITEMNO itemnop,
-    PC_ANY from,
-    size_t offset,
-    size_t nbytes)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO itemno,
+    _In_reads_bytes_(nbytes) PC_ANY from,
+    _InVal_     U32 offset,
+    _InVal_     U32 nbytes)
 {
-    P_NLISTS_BLK       nlbrp = (P_NLISTS_BLK) lbrp;
     P_FUNCLIST_HANDLER hp;
 
     trace_5(TRACE_MODULE_FUNCLIST,
             "funclist_writedata_ip(&%p, %u): offset %u nbytes %u from &%p",
-            report_ptr_cast(*lbrp), *itemnop, offset, nbytes, report_ptr_cast(from));
+            report_ptr_cast(p_p_list_block), itemno, offset, nbytes, report_ptr_cast(from));
 
     /* got position of handler on list */
-    if((hp = collect_search(nlbrp, itemnop)) != NULL)
+    if((hp = collect_search(p_p_list_block, itemno)) != NULL)
         {
-        trace_1(TRACE_MODULE_FUNCLIST, " to &%p\n", PtrAddBytes(P_BYTE, (hp + 1), offset));
-        void_memcpy32(PtrAddBytes(P_BYTE, (hp + 1), offset), from, nbytes);
-
+        trace_1(TRACE_MODULE_FUNCLIST, " to &%p", PtrAddBytes(P_BYTE, (hp + 1), offset));
+        memcpy32(PtrAddBytes(P_BYTE, (hp + 1), offset), from, nbytes);
         return(1);
         }
-    else
-        trace_0(TRACE_MODULE_FUNCLIST, " -- not found\n");
 
+    trace_0(TRACE_MODULE_FUNCLIST, " -- not found");
     return(0);
 }
 

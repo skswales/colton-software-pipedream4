@@ -1742,13 +1742,14 @@ gr_barlinechart_addin(
                                             ? serp->bits.cumulative
                                             : p_axes->bits.cumulative;
 
-                    linest(cumulative
+                    status_consume(
+                        linest(cumulative
                                 ? gr_barlinescatch_linest_getproc_cumulative
                                 : gr_barlinescatch_linest_getproc,
-                           gr_barlinescatch_linest_putproc,
-                           &state,
-                           1, /* independent x variables */
-                           (U32) total_n_points);
+                               gr_barlinescatch_linest_putproc,
+                               (CLIENT_HANDLE) &state,
+                               1, /* independent x variables */
+                               (U32) total_n_points));
 
                     /* store m and c away for fuschia reference */
                     serp->cache.best_fit_c = state.a[0];
@@ -1940,7 +1941,7 @@ gr_barlinechart_addin(
                     break;
                 }
 
-            list_deallocptr(lc_array);
+            al_ptr_free(lc_array);
 
             if(bars_plotted)
                 if(barindex)

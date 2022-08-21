@@ -54,9 +54,8 @@ slot_ref_here(
 
 static S32
 text_slot_add_dependency(
-    COL col,
-    ROW row,
-    S32 sort);
+    _InVal_     COL col,
+    _InVal_     ROW row);
 
 /******************************************************************************
 *
@@ -82,7 +81,7 @@ actind(
             /* switch off and reset statics */
             last_number = -1;
             #if defined(DO_VISDELAY_BY_STEAM)
-            trace_0(TRACE_APP_PD4, "visdelay_end()\n");
+            trace_0(TRACE_APP_PD4, "visdelay_end()");
             riscos_visdelay_off();
             #endif
             }
@@ -96,7 +95,7 @@ actind(
     #if defined(DO_VISDELAY_BY_STEAM)
     if(last_number < 0)
         {
-        trace_0(TRACE_APP_PD4, "visdelay_begin()\n");
+        trace_0(TRACE_APP_PD4, "visdelay_begin()");
         riscos_visdelay_on();
         }
     #endif
@@ -107,7 +106,7 @@ actind(
 
     if(number > 0)
         {
-        trace_1(TRACE_APP_PD4, "riscos_hourglass_percent(%d)\n", number);
+        trace_1(TRACE_APP_PD4, "riscos_hourglass_percent(%d)", number);
         riscos_hourglass_percent(number);
         }
 }
@@ -255,7 +254,9 @@ bash_slots_about_a_bit(
 
                     /* note fall thru */
                     default:
-                        expand_slot(current_docno(), tslot, in_block.row, linbuf, LIN_BUFSIZ, TRUE, FALSE, FALSE, TRUE);
+                        (void) expand_slot(current_docno(), tslot, in_block.row, linbuf, LIN_BUFSIZ /*fwidth*/,
+                                           DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, FALSE /*expand_ctrl*/,
+                                           FALSE /*allow_fonty_result*/, TRUE /*cff*/);
                         break;
                     }
                 break;
@@ -324,31 +325,28 @@ compile_text_slot(
     P_U8 to = array;
     const uchar text_at_char = get_text_at_char();
 
-    trace_0(TRACE_APP_PD4, "compile_text_slot\n");
+    trace_0(TRACE_APP_PD4, "compile_text_slot");
 
     if(slot_refsp)
         *slot_refsp = 0;
 
     if(NULLCH == text_at_char)
         {
-        while(*from)
+        while(NULLCH != *from)
             *to++ = *from++;
         }
     else
         {
-        while(*from)
+        while(NULLCH != *from)
             {
             if((*to++ = *from++) != text_at_char)
                 continue;
 
-            /* if block of text-at chars just write them and continue */
+            /* if block of more than one text-at chars just write them and continue */
             if(*from == text_at_char)
                 {
                 while(*from == text_at_char)
-                    {
-                    *to++ = text_at_char;
-                    from++;
-                    }
+                    *to++ = *from++;
 
                 continue;
                 }
@@ -363,11 +361,8 @@ compile_text_slot(
 
                 if(slot_refsp)
                     *slot_refsp = SL_TREFS;
-                *to++ = SLRLDI;
 
                 from += ev_doc_establish_doc_from_name(from, (EV_DOCNO) current_docno(), &docno);
-                splat(to, (S32) docno, sizeof(DOCNO));
-                to += sizeof(DOCNO);
 
                 /* set up getcol and getsbd */
                 buff_sofar = (P_U8) from;
@@ -380,10 +375,7 @@ compile_text_slot(
                 tcol = getcol();
 
                 if(abscol)
-                    force_abs_col(tcol);
-
-                splat(to, (S32) tcol, sizeof(COL));
-                to += sizeof(COL);
+                    tcol = (COL) (tcol | ABSCOLBIT);
 
                 if(*buff_sofar == '$')
                     {
@@ -392,19 +384,26 @@ compile_text_slot(
                     }
 
                 trow = (ROW) getsbd() - 1;
-                if(absrow)
-                    force_abs_row(trow);
 
-                splat(to, (S32) trow, sizeof(ROW));
-                to += sizeof(ROW);
+                if(absrow)
+                    trow = (ROW) (trow | ABSROWBIT);
 
                 from = buff_sofar;
 
+                /* emit a compiled slot reference */
+                *to++ = SLRLD1;
+
+#if defined(SLRLD2) /* additional byte helps speed compiled_text_len()! */
+                *to++ = SLRLD2;
+#endif
+
+                /*eportf("compile_text_slot: splat docno %d col 0x%x row 0x%x", docno, tcol, trow);*/
+                to = splat_csr(to, docno, tcol, trow);
+
+                /* for a text-at field, write out subsequent text-at chars so they
+                 * don't get confused with anything following */
                 while(*from == text_at_char)
-                    {
-                    *to++ = text_at_char;
-                    from++;
-                    }
+                    *to++ = *from++;
 
                 continue;
                 }
@@ -420,18 +419,71 @@ compile_text_slot(
                 while(*from && (*from != text_at_char))
                     *to++ = *from++;
 
-                /* if a text-at field, write out subsequent text-at chars so they
+                /* for a text-at field, write out subsequent text-at chars so they
                  * don't get confused with anything following */
                 while(*from == text_at_char)
                     *to++ = *from++;
 
                 continue;
                 }
+
+            /* this was an isolated text-at char - just loop and put following content in as normal */
             }
         }
 
-    *to = '\0';
+    *to = NULLCH;
+
     return((to - array) + 1);
+}
+
+extern const uchar *
+report_compiled_text_string(
+    _In_z_      const uchar * cts_in)
+{
+    static uchar buffer[4096];
+
+    const uchar * cts = cts_in;
+    uchar * to = buffer;
+
+    /* quick pass to see if we need to copy for rewriting */
+    for(;;)
+        {
+        uchar c = *cts++;
+
+        if(NULLCH == c)
+            return(cts_in); /* nothing out-of-the-ordinary - just pass the source */
+
+        if((c < 0x20) || (c == 0x7F))
+            {
+            --cts; /* retract for rewriting loop */
+            break;
+            }
+        }
+
+    memcpy32(to, cts_in, cts - cts_in); /* copy what we have scanned over so far */
+    to += (cts - cts_in);
+
+    for(;;)
+        {
+        uchar c = (*to++ = *cts++);
+
+        if((to - buffer) >= elemof32(buffer))
+            {
+            to[-1] = NULLCH; /* ran out of space. NULLCH-terminate and exit */
+            return(buffer);
+            }
+
+        if(NULLCH == c)
+            return(buffer); /* buffer is NULLCH-terminated, exit */
+
+        if((c < 0x20) || (c == 0x7F))
+            {
+            to[-1] = c | 0x80; /* overwrite with tbs C1 equivalent */
+            if(SLRLD1 == c)
+                cts += COMPILED_TEXT_SLR_SIZE-1;
+            continue;
+            }
+        }
 }
 
 /******************************************************************************
@@ -443,18 +495,39 @@ compile_text_slot(
 
 extern S32
 compiled_text_len(
-    PC_U8 ptr)
+    PC_U8 str_in)
 {
-    PC_U8 p;
-    int ch;
+    PC_U8 str = str_in;
 
-    p = ptr;
+#if defined(SLRLD2) /* can optimise using fast Norcroft strlen() when SLRLD2==NULLCH is used after SLRLD1 */
+    if(NULLCH == *str) /* verifying string is not empty saves a test per loop */
+        return(1); /*NULLCH*/
 
-    while((ch = *p++) != NULLCH) /* leave p pointing past NULLCH */
-        if(ch == SLRLDI)
-            p += SLRSIZE - 1;
+    for(;;)
+        {
+        PC_U8 ptr = str + strlen(str);
 
-    return(p - ptr);
+        if(SLRLD1 == ptr[-1]) /* ptr is never == str */
+            { /* the NULLCH we found is SLRLD2 - keep going */
+            str = ptr + COMPILED_TEXT_SLR_SIZE-1; /* restart past the compiled SLR */
+            /*eportf("ctl: SLRLD2 @ %d in %s", PtrDiffBytesS32(ptr, str_in), report_compiled_text_string(str_in));*/
+            continue;
+            }
+
+        /* (NULLCH == *ptr) */
+        /*eportf("ctl: NULLCH @ %d in %s", PtrDiffBytesS32(ptr, str_in), report_compiled_text_string(str_in));*/
+        str = ptr + 1; /* want to leave str pointing past the real NULLCH */
+        return(PtrDiffBytesS32(str, str_in));
+        }
+#else
+    int c;
+
+    while((c = *str++) != NULLCH) /* leave p pointing past NULLCH */
+        if(SLRLD1 == c)
+            str += COMPILED_TEXT_SLR_SIZE-1;
+
+    return(PtrDiffBytesS32(str, str_in));
+#endif
 }
 
 /******************************************************************************
@@ -519,7 +592,7 @@ compile_expression(
             rpn_len = create_error(EVAL_ERR_BADEXPR);
         }
 
-    trace_0(TRACE_MODULE_EVAL, " compiled\n");
+    trace_0(TRACE_MODULE_EVAL, " compiled");
 
     return(rpn_len);
 }
@@ -561,10 +634,10 @@ draw_add_file_ref(
 
         /* key into list using external dependency handle */
 
-        if((dfrp = collect_add_entry(&draw_file_refs, sizeof(*dfrp), (P_LIST_ITEMNO) &ext_dep_han)) == NULL)
+        if(NULL == (dfrp = collect_add_entry(&draw_file_refs, sizeof32(*dfrp), (P_LIST_ITEMNO) &ext_dep_han, &res)))
             {
             ev_del_extdependency(rng.s.docno, ext_dep_han);
-            return(status_nomem());
+            return(res);
             }
 
         dfrp->draw_file_key = draw_file_key;
@@ -574,7 +647,7 @@ draw_add_file_ref(
 
         gr_cache_ref(&draw_file_key, 1); /* add a ref */
 
-        trace_1(TRACE_MODULE_UREF, "draw_add_file_ref adding draw file ref: " PTR_XTFMT "\n", report_ptr_cast(draw_file_key));
+        trace_1(TRACE_MODULE_UREF, "draw_add_file_ref adding draw file ref: " PTR_XTFMT, report_ptr_cast(draw_file_key));
         }
 
     /* check for range and load factors */
@@ -608,13 +681,13 @@ draw_adjust_file_ref(
 {
     P_DOCU p_docu;
     coord coff, roff;
-    SCRCOL *cptr;
-    SCRROW *rptr;
+    P_SCRCOL cptr;
+    P_SCRROW rptr;
     COL tcol;
     ROW trow;
     P_DRAW_DIAG sch_p_draw_diag;
 
-    trace_2(TRACE_APP_PD4, "draw_adjust_file_ref(" PTR_XTFMT ", " PTR_XTFMT ")\n", report_ptr_cast(p_draw_diag), report_ptr_cast(dfrp));
+    trace_2(TRACE_APP_PD4, "draw_adjust_file_ref(" PTR_XTFMT ", " PTR_XTFMT ")", report_ptr_cast(p_draw_diag), report_ptr_cast(dfrp));
 
     if(p_draw_diag->data)
         {
@@ -631,11 +704,11 @@ draw_adjust_file_ref(
         dfrp->xsize_os = roundtoceil((S32) ceil(xsize * dfrp->xfactor), GR_RISCDRAW_PER_RISCOS * 4) * 4;
         dfrp->ysize_os = roundtoceil((S32) ceil(ysize * dfrp->yfactor), GR_RISCDRAW_PER_RISCOS * 4) * 4;
 
-        trace_4(TRACE_APP_PD4, "draw_adjust_file_ref: bbox of file is %d %d %d %d (os)\n",
+        trace_4(TRACE_APP_PD4, "draw_adjust_file_ref: bbox of file is %d %d %d %d (os)",
                 box.x0, box.y0, box.x1, box.y1);
 
         /* scale sizes */
-        trace_2(TRACE_APP_PD4, "draw_adjust_file_ref: scaled sizes x: %d, y: %d (os)\n",
+        trace_2(TRACE_APP_PD4, "draw_adjust_file_ref: scaled sizes x: %d, y: %d (os)",
                 dfrp->xsize_os, dfrp->ysize_os);
         }
 
@@ -666,7 +739,7 @@ draw_adjust_file_ref(
 
                     if(draw_find_file(current_docno(), tcol, trow, &sch_p_draw_diag, NULL))
                         {
-                        trace_3(TRACE_APP_PD4, "found picture at col %d, row %d, dfp " PTR_XTFMT "\n", tcol, trow, report_ptr_cast(sch_p_draw_diag));
+                        trace_3(TRACE_APP_PD4, "found picture at col %d, row %d, dfp " PTR_XTFMT, tcol, trow, report_ptr_cast(sch_p_draw_diag));
 
                         if(p_draw_diag == sch_p_draw_diag)
                             {
@@ -711,9 +784,11 @@ draw_redraw_all_pictures(void)
     drawfrp dfrp;
     P_DRAW_DIAG dfp;
 
-    trace_0(TRACE_APP_PD4, "draw_redraw_all_pictures()\n");
+    trace_0(TRACE_APP_PD4, "draw_redraw_all_pictures()");
 
-    for(dfrp = collect_first(&draw_file_refs, &key); dfrp; dfrp = collect_next(&draw_file_refs, &key))
+    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+        dfrp;
+        dfrp = collect_next( &draw_file_refs.lbr, &key))
         {
         dfp = gr_cache_search(&dfrp->draw_file_key);
 
@@ -737,7 +812,9 @@ gr_cache_recache_proto(static, draw_file_recached)
     IGNOREPARM(handle);
     IGNOREPARM(cres);
 
-    for(dfrp = collect_first(&draw_file_refs, &key); dfrp; dfrp = collect_next(&draw_file_refs, &key))
+    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+        dfrp;
+        dfrp = collect_next( &draw_file_refs.lbr, &key))
         {
         if(dfrp->draw_file_key == cah)
             {
@@ -781,7 +858,7 @@ draw_cache_file(
     S32 chart_exists;
     S32 added_stripper = 0;
 
-    trace_1(TRACE_APP_PD4, "draw_cache_file(%s)\n", name);
+    trace_1(TRACE_APP_PD4, "draw_cache_file(%s)", name);
 
     res = is_current_document()
         ? file_find_on_path_or_relative(namebuf, elemof32(namebuf), name, currentfilename)
@@ -908,11 +985,13 @@ draw_find_file(
     LIST_ITEMNO key;
     drawfrp dfrp;
 
-    trace_3(TRACE_APP_PD4, "draw_find_file: docno %d %d, %d\n", docno, col, row);
+    trace_3(TRACE_APP_PD4, "draw_find_file: docno %d %d, %d", docno, col, row);
 
-    for(dfrp = collect_first(&draw_file_refs, &key); dfrp; dfrp = collect_next(&draw_file_refs, &key))
+    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+        dfrp;
+        dfrp = collect_next( &draw_file_refs.lbr, &key))
         {
-        trace_3(TRACE_APP_PD4, "draw_find_file found docno: %d, col: %d, row: %d\n",
+        trace_3(TRACE_APP_PD4, "draw_find_file found docno: %d, col: %d, row: %d",
                 dfrp->docno, dfrp->col, dfrp->row);
 
         if( (docno == dfrp->docno)  &&
@@ -923,7 +1002,7 @@ draw_find_file(
 
             if(p_draw_diag  &&  p_draw_diag->data)
                 {
-                trace_1(TRACE_APP_PD4, "draw_find_file found key: " PTR_XTFMT "\n", report_ptr_cast(dfrp->draw_file_key));
+                trace_1(TRACE_APP_PD4, "draw_find_file found key: " PTR_XTFMT, report_ptr_cast(dfrp->draw_file_key));
 
                 if(p_p_draw_diag)
                     *p_p_draw_diag = p_draw_diag;
@@ -957,18 +1036,17 @@ draw_remove_ref(
         ev_del_extdependency(dfrp->docno, ext_dep_han);
 
         trace_1(TRACE_MODULE_UREF,
-                "draw_remove_ref removing draw file ref: " PTR_XTFMT "\n",
+                "draw_remove_ref removing draw file ref: " PTR_XTFMT,
                 report_ptr_cast(dfrp->draw_file_key));
         gr_cache_ref(&dfrp->draw_file_key, 0); /* remove a ref */
 
-        collect_subtract_entry(&draw_file_refs, (P_LIST_ITEMNO) &ext_dep_han);
+        collect_subtract_entry(&draw_file_refs.lbr, (LIST_ITEMNO) ext_dep_han);
         }
 }
 
 /******************************************************************************
 *
-* search list of draw
-* file references
+* search list of draw file references
 *
 ******************************************************************************/
 
@@ -976,7 +1054,7 @@ static drawfrp
 draw_search_refs(
     S32 ext_dep_han)
 {
-    return(collect_search(&draw_file_refs, (P_LIST_ITEMNO) &ext_dep_han));
+    return(collect_search(&draw_file_refs.lbr, (LIST_ITEMNO) ext_dep_han));
 }
 
 /******************************************************************************
@@ -993,7 +1071,9 @@ draw_search_refs_slot(
     LIST_ITEMNO key;
     drawfrp     dfrp;
 
-    for(dfrp = collect_first(&draw_file_refs, &key); dfrp; dfrp = collect_next(&draw_file_refs, &key))
+    for(dfrp = collect_first(&draw_file_refs.lbr, &key);
+        dfrp;
+        dfrp = collect_next( &draw_file_refs.lbr, &key))
         {
         if( (dfrp->docno == p_slr->docno) &&
             (dfrp->col == p_slr->col) &&
@@ -1026,7 +1106,7 @@ draw_str_insertslot(
     P_U8 to;
     const uchar text_at_char = get_text_at_char();
 
-    trace_2(TRACE_APP_PD4, "draw_str_insertslot col: %d, row: %d\n", col, row);
+    trace_2(TRACE_APP_PD4, "draw_str_insertslot col: %d, row: %d", col, row);
 
     if(NULLCH == text_at_char)
         return(0);
@@ -1039,11 +1119,11 @@ draw_str_insertslot(
 
     c = sl->content.text;
 
-    while(*c)
+    while(NULLCH != *c)
         {
-        if(*c == SLRLDI)
+        if(SLRLD1 == *c) /* because of possibility of text-at char change, this need not be preceded by the current text-at char (orphaned) */
             {
-            c += SLRSIZE;
+            c += COMPILED_TEXT_SLR_SIZE;
             continue;
             }
 
@@ -1065,9 +1145,9 @@ draw_str_insertslot(
             {
             char namebuf[BUF_MAX_PATHSTRING];
 
-            void_strnkpy(namebuf, elemof32(namebuf), name, len);
+            safe_strnkpy(namebuf, elemof32(namebuf), name, len);
 
-            trace_0(TRACE_APP_PD4, "draw_str_insertslot found draw file ref\n");
+            trace_0(TRACE_APP_PD4, "draw_str_insertslot found draw file ref");
             if((res = draw_cache_file(namebuf, &x, &y, col, row, 0, 0)) >= 0)
                 found_file = 1;
             else
@@ -1096,7 +1176,9 @@ draw_tree_str_insertslot(
 {
     S32 res;
 
-    res = text_slot_add_dependency(col, row, sort);
+    IGNOREPARM(sort);
+
+    res = text_slot_add_dependency(col, row);
 
     if(draw_str_insertslot(col, row))
         out_rebuildvert = TRUE;
@@ -1117,7 +1199,7 @@ PROC_UREF_PROTO(static, draw_uref)
     IGNOREPARM(exthandle);
     IGNOREPARM(status);
 
-    trace_0(TRACE_MODULE_UREF, "draw_uref\n");
+    trace_0(TRACE_MODULE_UREF, "draw_uref");
 
     switch(upp->action)
         {
@@ -1146,7 +1228,7 @@ PROC_UREF_PROTO(static, draw_uref)
                         dfrp->row = at_rng->s.row;
 
                         trace_3(TRACE_MODULE_UREF,
-                                "draw uref updated doc: %d, col: %d, row: %d\n",
+                                "draw uref updated doc: %d, col: %d, row: %d",
                                 dfrp->docno, dfrp->col, dfrp->row);
                         break;
 
@@ -1154,7 +1236,7 @@ PROC_UREF_PROTO(static, draw_uref)
                     case UREF_DELETE:
                     case UREF_CLOSE:
                         trace_3(TRACE_MODULE_UREF,
-                                "draw uref frees doc: %d, col: %d, row: %d\n",
+                                "draw uref frees doc: %d, col: %d, row: %d",
                                 dfrp->docno, dfrp->col, dfrp->row);
                         draw_remove_ref(inthandle);
                         break;
@@ -1542,7 +1624,7 @@ graph_send_block(
     COL ecol,
     ROW erow)
 {
-    trace_4(TRACE_MODULE_UREF, "graph_send_block scol: %d, srow: %d, ecol: %d, erow: %d\n", scol, srow, ecol, erow);
+    trace_4(TRACE_MODULE_UREF, "graph_send_block scol: %d, srow: %d, ecol: %d, erow: %d", scol, srow, ecol, erow);
 
     if(glp->update)
         {
@@ -1570,7 +1652,7 @@ PROC_UREF_PROTO(static, graph_uref)
 {
     IGNOREPARM(inthandle);
 
-    trace_0(TRACE_MODULE_UREF, "graph_uref\n");
+    trace_0(TRACE_MODULE_UREF, "graph_uref");
 
     switch(upp->action)
         {
@@ -1667,8 +1749,8 @@ mark_slot(
     if(tslot)
         {
         orab(tslot->flags, SL_ALTERED);
-
         xf_drawsome = TRUE;
+        trace_0(TRACE_APP_PD4, "slot marked altered");
         }
 }
 
@@ -1847,13 +1929,13 @@ merge_compiled_exp(
                 break;
 
             case EVS_CON_RPN:
-                void_memcpy32(tslot->content.number.guts.rpn.con.rpn_str, compiled_out, rpn_len);
+                memcpy32(tslot->content.number.guts.rpn.con.rpn_str, compiled_out, rpn_len);
                 add_to_tree = 1;
                 break;
 
             case EVS_VAR_RPN:
                 tslot->content.number.guts.rpn.var.visited = 0;
-                void_memcpy32(tslot->content.number.guts.rpn.var.rpn_str, compiled_out, rpn_len);
+                memcpy32(tslot->content.number.guts.rpn.var.rpn_str, compiled_out, rpn_len);
                 add_to_tree = 1;
                 break;
             }
@@ -1922,33 +2004,102 @@ mergebuf_nocheck(void)
     return(mergebuf_core(FALSE, TRUE));
 }
 
+/* find first instance of ch or NULLCH in s */
+
+_Check_return_
+static inline const uchar *
+xstrzchr(
+    _In_z_      const uchar * s,
+    _InVal_     uchar ch)
+{
+    for(;;)
+    {
+        uchar c = *s++;
+
+        if((ch == c) || (NULLCH == c))
+            return(s - 1);
+    }
+}
+
 /*
 reasonably fast combined strlen / strchr for text-at fields
 */
 
 static S32
-buffer_contains_text_at_char(
+buffer_length_detecting_text_at_char(
     _In_z_      PC_U8 str_in,
     _OutRef_    P_BOOL p_contains_tac)
 {
     PC_U8 str = str_in;
-    const U8 text_at_char = get_text_at_char();
-    U8 ch;
+    const uchar text_at_char = get_text_at_char();
 
-    *p_contains_tac = 0;
+    *p_contains_tac = FALSE;
 
     /* Norcroft strlen() is FAST */
     if(NULLCH == text_at_char)
         return(strlen(str) + 1 /*NULLCH*/);
 
-    do  {
-        ch = *str++; /* leave str pointing past NULLCH */
+#if defined(SLRLD2) /* can optimise when SLRLD2==NULLCH is used after SLRLD1 */
+    if(NULLCH == *str) /* verifying string is not empty saves a test per loop */
+        return(1); /*NULLCH*/
 
-        if(text_at_char == ch)
-            *p_contains_tac = 1;
-    } while(ch);
+    for(;;)
+        {
+        PC_U8 ptr;
+
+        /* search for text-at char and NULLCH together using our xstrzchr() */
+        /* this will also find orphaned (text-at char changed) SLRLD1/2 */
+        /* if fact we only need to find first instance of text-at char, then speed up with fast Norcroft strlen() */
+        if(!*p_contains_tac)
+            {
+            ptr = xstrzchr(str, text_at_char);
+
+            if(text_at_char == *ptr)
+                {
+                *p_contains_tac = TRUE;
+                str = ptr + 1;
+                if(SLRLD1 == *str) /* cater for this common occurrence (saves one loop) */
+                    str += COMPILED_TEXT_SLR_SIZE;
+                continue;
+                }
+
+            /* failed to find text_at_char but ptr is pointing at a NULLCH (either real or SLRLD2) */
+            }
+        else
+            {
+            ptr = str + strlen(str);
+            }
+
+        if(SLRLD1 == ptr[-1]) /* ptr is never == str */
+            { /* the NULLCH we found is SLRLD2 - keep going */
+            str = ptr + COMPILED_TEXT_SLR_SIZE-1; /* restart past the compiled SLR */
+            continue;
+            }
+
+        /* (NULLCH == *ptr) */
+        str = ptr + 1; /* want to leave str pointing past the real NULLCH */
+        return(PtrDiffBytesS32(str, str_in));
+        }
+#else
+    for(;;)
+        {
+        uchar ch = *str++; /* want to leave str pointing past NULLCH */
+
+        if(NULLCH == ch)
+            break;
+
+        if(SLRLD1 == ch)
+            {
+            str += COMPILED_TEXT_SLR_SIZE-1;
+            continue;
+            }
+
+        if(text_at_char == ch) /* catered for NULLCH t-a-c above */
+            *p_contains_tac = TRUE;
+    }
 
     return(PtrDiffBytesS32(str, str_in));
+#endif
 }
 
 extern BOOL
@@ -1966,11 +2117,12 @@ merstr(
     if(buffer_altered)
         {
         P_SLOT newslot, oldslot;
-        S32 slen;
-        char justifyflag, slot_refs = 0;
+        char justifyflag;
+        U8 slot_refs = 0;
         /* note that SLRs can expand hugely on compilation */
         char array[COMPILED_TEXT_BUFSIZ];
         P_U8 source_text;
+        S32 source_len;
 
         oldslot = travel(tcol, trow);
 
@@ -1985,17 +2137,17 @@ merstr(
             justifyflag = J_FREE;
 
         { /* SKS 20130402 - most slots have no text-at chars, saves copying data yet again */
-        BOOL contains_tac;
+        BOOL contains_text_at_char;
         source_text = linbuf;
-        slen = buffer_contains_text_at_char(source_text, &contains_tac);
-        if(contains_tac)
+        source_len = buffer_length_detecting_text_at_char(source_text, &contains_text_at_char);
+        if(contains_text_at_char)
             {
-            slen = compile_text_slot(array, linbuf, &slot_refs);
+            source_len = compile_text_slot(array, linbuf, &slot_refs);
             source_text = array;
             }
         } /*block*/
 
-        if(slen == 1)
+        if(source_len == 1)
             {
             buffer_altered = FALSE;
 
@@ -2007,7 +2159,7 @@ merstr(
             }
         else
             {
-            if((newslot = createslot(tcol, trow, slen, SL_TEXT)) == NULL)
+            if((newslot = createslot(tcol, trow, source_len, SL_TEXT)) == NULL)
                 {
                 /* if user is typing in, delete the line, so we don't get caught.
                  * But if loading a file, don't delete the line because rebuffer
@@ -2022,7 +2174,7 @@ merstr(
                 {
                 newslot->justify = justifyflag;
                 newslot->flags   = slot_refs;
-                void_memcpy32(newslot->content.text, source_text, slen);
+                memcpy32(newslot->content.text, source_text, source_len);
 
                 if(add_refs && draw_tree_str_insertslot(tcol, trow, TRUE) < 0)
                     {
@@ -2072,11 +2224,11 @@ pdeval_initialise(void)
 }
 
 /*
-decompile slot, dealing with slot references, text-at fields etc
+decompile slot, dealing with compiled slot references, text-at fields etc
 decompile from ptr (text field in slot) to linbuf
 
-slot references are stored as SLR leadin, COL colno, ROW rowno.
-Note this may contain '\0' as part of slot reference, but not at end of string.
+compiled slot references are stored as SLR leadin bytes, DOCNO docno, COL colno, ROW rowno.
+Note this may contain NULLCH as part of compiled slot reference, but not at end of string.
 */
 
 extern void
@@ -2085,10 +2237,10 @@ prccon(
     P_SLOT ptr)
 {
     P_U8 to = target;
-    P_U8 from;
-    int   c;
+    PC_U8 from;
+    int c;
 
-    if(!ptr  ||  (ptr->type == SL_PAGE))
+    if((NULL == ptr)  ||  (ptr->type == SL_PAGE))
         {
         *to = '\0';
         return;
@@ -2114,49 +2266,27 @@ prccon(
         return;
         }
 
-    /* this copes with slot references in text slots.
+    /* this copes with compiled slot references in text slots.
      * On compilation, text-at chars are left in the slot so they can
      * be ignored on decompilation
     */
     do  {
-        c = *to++ = *from++;
-
-        if(c == SLRLDI)
+        if(SLRLD1 == (c = (*to++ = *from++)))
             {
+            const uchar * csr = from + 1; /* CSR is past the SLRLD1/2 */
+            EV_DOCNO docno;
             COL tcol;
             ROW trow;
-            EV_DOCNO docno;
-            const EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
 
-            --to;
+            from = talps_csr(csr, &docno, &tcol, &trow);
+            /*eportf("prccon: decompiled CSR docno %d col 0x%x row 0x%x", docno, tcol, trow);*/
 
-            docno = (EV_DOCNO) talps(from, sizeof(EV_DOCNO));
-            from += sizeof(EV_DOCNO);
+            to -= 1; /* we want to overwrite the SLRLD1 that we copied */
 
-            if(cur_docno != docno)
-                to += ev_write_docname(to, docno, cur_docno);
-
-            tcol = (COL) talps(from, sizeof(COL));
-            from += sizeof(COL);
-
-            trow = (ROW) talps(from, sizeof(ROW));
-            from += sizeof(ROW);
-
-            if(bad_reference(tcol, trow))
-                *to++ = '%';
-
-            if(abs_col(tcol))
-                *to++ = '$';
-
-            to += write_col(to, 16, tcol);
-
-            if(abs_row(trow))
-                *to++ = '$';
-
-            to += (int) sprintf(to, "%d", 1 + (trow & ROWNOBITS));
+            to += write_ref(to, BUF_MAX_REFERENCE, docno, tcol, trow);
             }
         }
-    while(c);
+    while(NULLCH != c);
 }
 
 /******************************************************************************
@@ -2184,7 +2314,7 @@ readfxy(
     P_U8 to;
     S32 namelen, scanned;
 
-    trace_1(TRACE_APP_PD4, "readfxy from: %s\n", *pfrom);
+    trace_1(TRACE_APP_PD4, "readfxy from: %s", *pfrom);
 
     from = *pfrom;
 
@@ -2224,13 +2354,13 @@ readfxy(
         if(*--from == ',')
             {
             consume(int, sscanf(from, ", %lg %n", xp, &scanned));
-            trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s\n", scanned, from);
+            trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s", scanned, from);
             while(scanned--)
                 *to++ = *from++;
 
             scanned = 0;
             consume(int, sscanf(from, ", %lg %n", yp, &scanned));
-            trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s\n", scanned, from);
+            trace_2(TRACE_APP_PD4, "readfxy scanned: %d, from: %s", scanned, from);
             while(scanned--)
                 *to++ = *from++;
             }
@@ -2238,7 +2368,7 @@ readfxy(
         /* there must be a following text-at-char */
         if(*from != text_at_char)
             {
-            trace_0(TRACE_APP_PD4, "readfxy found no trailing text-at-char\n");
+            trace_0(TRACE_APP_PD4, "readfxy found no trailing text-at-char");
             return(0);
             }
 
@@ -2253,8 +2383,8 @@ readfxy(
         #if TRACE_ALLOWED
         {
         char namebuf[BUF_MAX_PATHSTRING];
-        void_strnkpy(namebuf, elemof32(namebuf), *name, namelen);
-        trace_3(TRACE_APP_PD4, "readfxy name: %s, xp: %g, yp: %g\n", namebuf, *xp, *yp);
+        safe_strnkpy(namebuf, elemof32(namebuf), *name, namelen);
+        trace_3(TRACE_APP_PD4, "readfxy name: %s, xp: %g, yp: %g", namebuf, *xp, *yp);
         }
         #endif
 
@@ -2428,23 +2558,40 @@ slot_ref_here(
 }
 
 /*
-splat takes a S32 and writes it as size bytes at to, msb first
-used for converting slot references to stream of bytes in slot
+splat takes a U32 and writes it as size (>0) bytes at to, LSB first.
+used for converting compiled slot references to stream of bytes in slot
 */
 
-extern void
+static inline void
 splat(
-    P_U8 to,
-    S32 num,
-    S32 size)
+    _Out_writes_bytes_(size) P_U8 to,
+    _InVal_     U32 num,
+    _InVal_     U32 size)
 {
-    S32 i = -1;
+    *to++ = (U8) num;
 
-    while(++i < size)
-        {
-        to[i] = (char) (num & 0xFF);
-        num >>= 8;
-        }
+    if(size >= 2)
+        *to++ = (U8) (num >>  8);
+
+    if(size >= 3)
+        *to++ = (U8) (num >> 16);
+
+    if(size >= 4)
+        *to++ = (U8) (num >> 24);
+}
+
+extern uchar *
+splat_csr(
+    uchar * csr,
+    _InVal_     EV_DOCNO docno,
+    _InVal_     COL col,
+    _InVal_     ROW row)
+{
+    splat(csr,                                  (U32) docno, sizeof(EV_DOCNO));
+    splat(csr + sizeof(EV_DOCNO),               (U32) col,   sizeof(COL));
+    splat(csr + sizeof(EV_DOCNO) + sizeof(COL), (U32) row,   sizeof(ROW));
+
+    return(csr + sizeof(EV_DOCNO) + sizeof(COL) + sizeof(ROW));
 }
 
 extern void
@@ -2470,43 +2617,42 @@ Snapshot_fn(void)
 }
 
 /*
-talps reads size bytes from from, msb first, generates a S32
-which it returns
+talps reads size (>0) bytes from from, LSB first,
+generates a U32 which it returns.
 used for converting stream of bytes to slot reference
-SKS 20130404 unroll loop
 */
 
-extern S32
+static inline U32
 talps(
     _In_reads_bytes_(size) PC_U8 from,
     _InVal_     U32 size)
 {
-    S32 res = 0;
-
-    if(size >= 1)
-        {
-        res   = from[0];
-        }
+    U32 res = (U32) *from++;
 
     if(size >= 2)
-        {
-        res <<= 8;
-        res  += from[1];
-        }
+        res |= ((U32) *from++) <<  8;
 
     if(size >= 3)
-        {
-        res <<= 8;
-        res  += from[2];
-        }
+        res |= ((U32) *from++) << 16;
 
     if(size >= 4)
-        {
-        res <<= 8;
-        res  += from[3];
-        }
+        res |= ((U32) *from++) << 24;
 
     return(res);
+}
+
+extern const uchar *
+talps_csr(
+    const uchar * csr,
+    _OutRef_    P_EV_DOCNO p_docno,
+    _OutRef_    P_COL p_col,
+    _OutRef_    P_ROW p_row)
+{
+    *p_docno = (EV_DOCNO) talps(csr,  sizeof(EV_DOCNO));
+    *p_col   = (COL)      talps(csr + sizeof(EV_DOCNO),  sizeof(COL));
+    *p_row   = (ROW)      talps(csr + sizeof(EV_DOCNO) + sizeof(COL), sizeof(ROW));
+
+    return(csr + sizeof(EV_DOCNO) + sizeof(COL) + sizeof(ROW));
 }
 
 /******************************************************************************
@@ -2517,15 +2663,12 @@ talps(
 
 static S32
 text_slot_add_dependency(
-    COL col,
-    ROW row,
-    S32 sort)
+    _InVal_     COL col,
+    _InVal_     ROW row)
 {
-    P_U8 c;
+    uchar * csr;
     P_SLOT sl;
     struct ev_grub_state grubb;
-
-    IGNOREPARM(sort);
 
     if((sl = travel(col, row)) == NULL)
         return(0);
@@ -2535,38 +2678,41 @@ text_slot_add_dependency(
 
     set_ev_slr(&grubb.slr, col, row);
 
-    c = sl->content.text;
-    while((c = my_next_ref(c, SL_TEXT)) != NULL)
+    /* add dependency for each compiled slot reference found */
+    csr = sl->content.text;
+
+    while(NULL != (csr = find_next_csr(csr)))
         {
         COL tcol;
         ROW trow;
         S32 e_off;
 
-        /* for each slot reference */
-        grubb.data.arg.slr.docno = (EV_DOCNO) talps(c, sizeof(EV_DOCNO));
-        grubb.byoffset = c - sl->content.text;
-        c += sizeof(EV_DOCNO);
+        grubb.byoffset = csr - sl->content.text;
 
-        tcol = (COL) (talps(c, sizeof(COL)) & (COLNOBITS | BADCOLBIT));
-        c += sizeof(COL);
+        grubb.data.did_num = RPN_DAT_SLR;
 
-        trow = (ROW) (talps(c, sizeof(ROW)) & (ROWNOBITS | BADROWBIT));
-        c += sizeof(ROW);
+        csr = (uchar *) talps_csr(csr, &grubb.data.arg.slr.docno, &tcol, &trow);
 
-        /* calculate current offset */
-        e_off = c - sl->content.text;
+        /* calculate current offset for reload below */
+        e_off = csr - sl->content.text;
 
-        if(!(bad_col(tcol) || bad_row(trow)))
+        if(!bad_reference(tcol, trow))
             {
-            grubb.data.arg.slr.col = (EV_COL) tcol;
-            grubb.data.arg.slr.row = (EV_ROW) trow;
-            grubb.data.did_num     = RPN_DAT_SLR;
-
+            grubb.data.arg.slr.col = (EV_COL) (tcol & COLNOBITS);
+            grubb.data.arg.slr.row = (EV_ROW) (trow & ROWNOBITS);
+            /*eportf("adding SLR dependency byoffset %d for CSR docno %d col 0x%x row 0x%x", grubb.byoffset, grubb.data.arg.slr.docno, grubb.data.arg.slr.col, grubb.data.arg.slr.row);*/
             if(ev_add_slrdependency(&grubb) < 0)
                 return(-1);
             }
+        else
+            {/*EMPTY*/
+            /*eportf("NOT adding SLR dependency byoffset %d for CSR docno %d col 0x%x row 0x%x", grubb.byoffset, grubb.data.arg.slr.docno, tcol, trow);*/
+            }
 
-        c = travel(col, row)->content.text + e_off;
+        /* reload after adding dependency */
+        sl = travel(col, row);
+        __assume(sl);
+        csr = sl->content.text + e_off;
         }
 
     return(0);
@@ -2582,9 +2728,9 @@ write_col(
     _InVal_     U32 elemof_buffer,
                 COL col)
 {
-    return(xtos_buf(buffer, elemof_buffer,
-                    col & COLNOBITS /* ignore bad and absolute */,
-                    1 /*uppercase*/));
+    return(xtos_ubuf(buffer, elemof_buffer,
+                     col & COLNOBITS /* ignore bad and absolute */,
+                     1 /*uppercase*/));
 }
 
 /******************************************************************************
@@ -2604,16 +2750,25 @@ write_ref(
     EV_SLR slr;
 
     slr.docno = docno;
-    slr.col   = (EV_COL) tcol;
-    slr.row   = (EV_ROW) trow;
+    slr.col   = (EV_COL) (tcol & COLNOBITS) /* ignore bad and absolute */;
+    slr.row   = (EV_ROW) (trow & ROWNOBITS) /* ignore bad and absolute */;
     slr.flags = 0;
+
+    if(ABSCOLBIT & tcol)
+        slr.flags |= SLR_ABS_COL;
+
+    if(ABSROWBIT & trow)
+        slr.flags |= SLR_ABS_ROW;
+
+    if(bad_reference(tcol, trow))
+        slr.flags |= SLR_BAD_REF;
 
     return(write_slr_ref(buffer, elemof_buffer, &slr));
 }
 
 /******************************************************************************
 *
-* slightly more exotic writeref which also
+* slightly more exotic write_ref which also
 * can cope with external and absolute refs
 *
 ******************************************************************************/
@@ -2629,6 +2784,9 @@ write_slr_ref(
 
     if(slrp->docno != cur_docno)
         count = ev_write_docname(buffer, slrp->docno, cur_docno);
+
+    if(slrp->flags & SLR_BAD_REF)
+        buffer[count++] = '%';
 
     if(slrp->flags & SLR_ABS_COL)
         buffer[count++] = '$';

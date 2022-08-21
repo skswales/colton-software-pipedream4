@@ -275,11 +275,9 @@ load_driver(
                             goto ENDPOINT;
                             }
 
-                        res = add_to_list(&highlight_list, ((S32) h_no) + FIRST_HIGHLIGHT, linarray, &res);
-
-                        if(res <= 0)
+                        if(status_fail(res = add_to_list(&highlight_list, ((S32) h_no) + FIRST_HIGHLIGHT, linarray)))
                             {
-                            reperr_null(res ? res : status_nomem());
+                            reperr_null(res);
                             goto ENDPOINT;
                             }
                         }
@@ -306,11 +304,9 @@ load_driver(
                             goto ENDPOINT;
                             }
 
-                        res = add_to_list(&highlight_list, ((S32) h_no) + FIRST_HIGHLIGHT + 256, linarray, &res);
-
-                        if(res <= 0)
+                        if(status_fail(res = add_to_list(&highlight_list, ((S32) h_no) + FIRST_HIGHLIGHT + 256, linarray)))
                             {
-                            reperr_null(res ? res : status_nomem());
+                            reperr_null(res);
                             goto ENDPOINT;
                             }
                         }
@@ -405,11 +401,9 @@ load_driver(
                 goto ENDPOINT;
                 }
 
-            res = add_to_list(&highlight_list, saveparm, linarray, &res);
-
-            if(res <= 0)
+            if(status_fail(res = add_to_list(&highlight_list, saveparm, linarray)))
                 {
-                reperr_null(res ? res : status_nomem());
+                reperr_null(res);
                 goto ENDPOINT;
                 }
             }

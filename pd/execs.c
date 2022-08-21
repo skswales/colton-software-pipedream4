@@ -33,6 +33,9 @@ alnsto(
 
 #define NO_JUSTIFY 0xFF
 
+#define bad_col(tcol) (((tcol) < (COL) 0)  ||  ((tcol) & BADCOLBIT))
+#define bad_row(trow) (((trow) < (ROW) 0)  ||  ((trow) & BADROWBIT))
+
 extern BOOL
 bad_reference(
     COL tcol,
@@ -380,7 +383,7 @@ Return_fn_core(void)
 
     lecpos = lescrl = 0;
 
-    trace_2(TRACE_APP_PD4, "Return_fn currow: %d, numrow: %d\n", currow, numrow);
+    trace_2(TRACE_APP_PD4, "Return_fn currow: %d, numrow: %d", currow, numrow);
 
     if(currow + 1 >= numrow)
         {
@@ -511,10 +514,9 @@ DefineKey_fn(void)
         /* add new one */
         if(*array)
             {
-            res = add_to_list(&first_key, (S32) d_defkey[0].option, array, &res);
-            if(res <= 0)
+            if(status_fail(res = add_to_list(&first_key, (S32) d_defkey[0].option, array)))
                 {
-                reperr_null(res ? res : status_nomem());
+                reperr_null(res);
                 break;
                 }
             }
@@ -559,10 +561,9 @@ DefineFunctionKey_fn(void)
         /* add new definition */
         if(*array)
             {
-            res = add_to_list(&first_key, key, array, &res);
-            if(res <= 0)
+            if(status_fail(res = add_to_list(&first_key, key, array)))
                 {
-                reperr_null(res ? res : status_nomem());
+                reperr_null(res);
                 break;
                 }
             }
@@ -635,10 +636,9 @@ DefineCommand_fn(void)
             if(!str_isblank(array))
                 {
                 /* add new definition */
-                res = add_to_list(&first_command_redef, key, array, &res);
-                if(res <= 0)
+                if(status_fail(res = add_to_list(&first_command_redef, key, array)))
                     {
-                    reperr_null(res ? res : status_nomem());
+                    reperr_null(res);
                     break;
                     }
                 }
@@ -765,7 +765,7 @@ SplitLine_fn(void)
 
         /* leave lying around for merging later on */
         linbuf[splitpoint] = tempchar;
-        void_memmove32(linbuf, linbuf + splitpoint, (bufflength - splitpoint + 1));
+        memmove32(linbuf, linbuf + splitpoint, (bufflength - splitpoint + 1));
         }
 
     /* if insert on wrap is row insert slots in this row for each column to the right,
@@ -889,7 +889,7 @@ JoinLines_fn(void)
     if(actually_joining)
         {
         thislen = strlen(linbuf);
-        void_memcpy32(temparray, linbuf, thislen);
+        memcpy32(temparray, linbuf, thislen);
 
         inc(currow);
 
@@ -907,8 +907,8 @@ JoinLines_fn(void)
             return;
             }
 
-        void_memmove32(linbuf + thislen, linbuf,    nextlen+1);
-        void_memcpy32( linbuf,           temparray, thislen);
+        memmove32(linbuf + thislen, linbuf,    nextlen+1);
+        memcpy32( linbuf,           temparray, thislen);
 
         buffer_altered = slot_in_buffer = TRUE;
         dec(currow);
@@ -1227,7 +1227,7 @@ DoMacroFile_fn(void)
     if(!dialog_box_start())
         return;
 
-    enumerate_dir_to_list(&ltemplate_or_driver_list, NULL, FILETYPE_PDMACRO);
+    status_assert(enumerate_dir_to_list(&ltemplate_or_driver_list, NULL, FILETYPE_PDMACRO));
 
     while(dialog_box(D_EXECFILE))
         {
@@ -1434,8 +1434,8 @@ save_words(
 
     /* save deleted bit */
 
-    if((res = add_to_list(&deleted_words, ++latest_word_on_stack, ptr, &res)) <= 0)
-        reperr_null(res ? res : status_nomem());
+    if(status_fail(res = add_to_list(&deleted_words, ++latest_word_on_stack, ptr)))
+        reperr_null(res);
 
     if(been_error)
         {
@@ -1546,13 +1546,13 @@ protected_slot_in_range(
     P_SLOT tslot;
     BOOL res = FALSE;
 
-    trace_4(TRACE_APP_PD4, "\n\n[protected_slot_in_range: bs (%d, %d) be (%d, %d)\n", bs->col, bs->row, be->col, be->row);
+    trace_4(TRACE_APP_PD4, "\n\n[protected_slot_in_range: bs (%d, %d) be (%d, %d)", bs->col, bs->row, be->col, be->row);
 
     init_block(bs, be);
 
     while((tslot = next_slot_in_block(DOWN_COLUMNS)) != NULL)
         {
-        trace_3(TRACE_APP_PD4, "got slot " PTR_XTFMT ", (%d, %d)\n", report_ptr_cast(tslot), in_block.col, in_block.row);
+        trace_3(TRACE_APP_PD4, "got slot " PTR_XTFMT ", (%d, %d)", report_ptr_cast(tslot), in_block.col, in_block.row);
 
         if(is_protected_slot(tslot))
             {
@@ -1672,9 +1672,9 @@ save_names_to_file(
         itemno = -1
        )
         {
-        void_strkpy(array, elemof32(array), namebuf);
-        void_strkat(array, elemof32(array), ",");
-        void_strkat(array, elemof32(array), argbuf);
+        safe_strkpy(array, elemof32(array), namebuf);
+        safe_strkat(array, elemof32(array), ",");
+        safe_strkat(array, elemof32(array), argbuf);
         (void) mystr_set(&d_names_dbox[0].textfield, array);
         save_opt_to_file(output, d_names_dbox, 1);
         }
@@ -1793,16 +1793,14 @@ add_to_protect_list(
 {
     S32 res;
 
-    if(!str_isblank(ptr))
-        {
-        res = add_to_list(&protected_blocks, 0, ptr, &res);
-        if(res <= 0)
-            {
-            reperr_null(res ? res : status_nomem());
-            if(res)
-                been_error = FALSE;     /* shouldn't affect validity of loaded file if wally error */
-            }
-        }
+    if(str_isblank(ptr))
+        return;
+
+    if(status_fail(res = add_to_list(&protected_blocks, 0, ptr)))
+    {
+        reperr_null(res);
+        been_error = FALSE; /* shouldn't affect validity of loaded file if wally error */
+    }
 }
 
 /*
@@ -1885,16 +1883,14 @@ add_to_linked_columns_list(
 {
     S32 res;
 
-    if(!str_isblank(ptr))
-        {
-        res = add_to_list(&linked_columns, 0, ptr, &res);
-        if(res <= 0)
-            {
-            reperr_null(res ? res : status_nomem());
-            if(res)
-                been_error = FALSE;     /* shouldn't affect validity of loaded file if wally error */
-            }
-        }
+    if(str_isblank(ptr))
+        return;
+
+    if(status_fail(res = add_to_list(&linked_columns, 0, ptr)))
+    {
+        reperr_null(res);
+        been_error = FALSE; /* shouldn't affect validity of loaded file if wally error */
+    }
 }
 
 /*

@@ -58,7 +58,7 @@ file_add_prefix_to_name(
     if(!file_is_rooted(srcfilename))
         file_get_prefix(destfilename, elemof_buffer, currentfilename);
 
-    void_strkat(destfilename, elemof_buffer, srcfilename);
+    safe_strkat(destfilename, elemof_buffer, srcfilename);
 
     return(destfilename);
 }
@@ -82,9 +82,9 @@ file_combined_path(
     if(search_path && *search_path)
         {
         if(*destpath)
-            void_strkat(destpath, elemof_buffer, FILE_PATH_SEP_STR);
+            safe_strkat(destpath, elemof_buffer, FILE_PATH_SEP_STR);
 
-        void_strkat(destpath, elemof_buffer, search_path);
+        safe_strkat(destpath, elemof_buffer, search_path);
         }
 
     return(*destpath ? destpath : NULL);
@@ -138,7 +138,7 @@ file_find_close(
         {
         file_path_element_close(&p->pathenum);
 
-        list_disposeptr(P_P_ANY_PEDANTIC(pp));
+        al_ptr_dispose(P_P_ANY_PEDANTIC(pp));
         }
 }
 
@@ -157,38 +157,42 @@ file_find_close(
 
 extern P_FILE_OBJINFO
 file_find_first(
-    P_P_FILE_OBJENUM pp /*out*/, PC_U8 path,
-    PC_U8 pattern)
+    _OutRef_    P_P_FILE_OBJENUM pp /*out*/,
+    _In_z_      PC_U8Z path,
+    _In_z_      PC_U8Z pattern)
 {
     return(file_find_first_subdir(pp, path, pattern, NULL));
 }
 
 extern P_FILE_OBJINFO
 file_find_first_subdir(
-    P_P_FILE_OBJENUM pp /*out*/, PC_U8 path, PC_U8 pattern,
-    PC_U8 subdir)
+    _OutRef_    P_P_FILE_OBJENUM pp,
+    _In_z_      PC_U8Z path,
+    _In_z_      PC_U8Z pattern,
+    _In_opt_z_  PC_U8Z subdir)
 {
+    STATUS status;
     P_FILE_OBJENUM p;
 
-    *pp = p = list_allocptr(sizeof(FILE_OBJENUM));
+    *pp = p = al_ptr_alloc_elem(FILE_OBJENUM, 1, &status);
 
     if(!p)
         return(NULL);
 
     if(!file_path_element_first(&p->pathenum, path))
         {
-        list_disposeptr(P_P_ANY_PEDANTIC(pp));
+        al_ptr_dispose(P_P_ANY_PEDANTIC(pp));
         return(NULL);
         }
 
     /* initialise object enumeration structure */
 
     if(subdir)
-        void_strkpy(p->subdir, elemof32(p->subdir), subdir);
+        safe_strkpy(p->subdir, elemof32(p->subdir), subdir);
     else
         *p->subdir = NULLCH;
 
-    void_strkpy(p->pattern, elemof32(p->pattern), pattern);
+    safe_strkpy(p->pattern, elemof32(p->pattern), pattern);
 
     #if WINDOWS
     AnsiToOem(p->pattern, p->pattern);
@@ -255,12 +259,12 @@ file_find_next(
                 {
                 if(dirname == p->pathenum->res)
                 {
-                    void_strkpy(array, elemof32(array), dirname);
+                    safe_strkpy(array, elemof32(array), dirname);
                     dirname = array;
                 }
 
-                void_strkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
-                void_strkat(dirname, elemof32(array), p->subdir);
+                safe_strkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
+                safe_strkat(dirname, elemof32(array), p->subdir);
                 /* dirname IS valid, cos we checked it when p->state was 2 */
                 }
 
@@ -312,12 +316,12 @@ file_find_next(
                 {
                 if(dirname == p->pathenum->res)
                 {
-                    void_strkpy(array, elemof32(array), dirname);
+                    safe_strkpy(array, elemof32(array), dirname);
                     dirname = array;
                 }
 
-                void_strkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
-                void_strkat(dirname, elemof32(array), p->subdir);
+                safe_strkat(dirname, elemof32(array), FILE_DIR_SEP_STR);
+                safe_strkat(dirname, elemof32(array), p->subdir);
 
                 if(!file_is_dir(dirname))
                     {
@@ -442,7 +446,7 @@ file_find_query_dirname(
 
     if(dirname == p->pathenum->res)
     {
-        void_strkpy(destpath, elemof_buffer, dirname);
+        safe_strkpy(destpath, elemof_buffer, dirname);
         dirname = destpath;
     }
 
@@ -450,8 +454,8 @@ file_find_query_dirname(
 
     if(*p->subdir) /* not empty? */
     {
-        void_strkat(dirname, elemof_buffer, FILE_DIR_SEP_STR);
-        void_strkat(dirname, elemof_buffer, p->subdir);
+        safe_strkat(dirname, elemof_buffer, FILE_DIR_SEP_STR);
+        safe_strkat(dirname, elemof_buffer, p->subdir);
     }
 
     return(destpath);
@@ -471,7 +475,7 @@ file_objinfo_name(
     name = oip->ansiname;
     #endif
 
-    void_strkpy(destname, elemof_buffer, name);
+    safe_strkpy(destname, elemof_buffer, name);
 }
 
 extern U32
@@ -540,7 +544,7 @@ file_find_on_path(
     char * pathelem;
     S32 res;
 
-    reportf("file_find_on_path(%u:%s)\n", strlen32(srcfilename), srcfilename);
+    reportf("file_find_on_path(%u:%s)", strlen32(srcfilename), srcfilename);
 
     if(file_is_rooted(srcfilename))
         {
@@ -555,8 +559,8 @@ file_find_on_path(
         pathelem != NULL;
         pathelem = file_path_element_next(&path))
         {
-        void_strkpy(filename, elemof_buffer, pathelem);
-        void_strkat(filename, elemof_buffer, srcfilename);
+        safe_strkpy(filename, elemof_buffer, pathelem);
+        safe_strkat(filename, elemof_buffer, srcfilename);
 
         if(0 == (res = file_readable(filename)))
             continue;
@@ -571,7 +575,7 @@ file_find_on_path(
         }
 
     trace_2(TRACE_MODULE_FILE,
-            "file_find_on_path() yields filename \"%s\" & %s\n",
+            "file_find_on_path() yields filename \"%s\" & %s",
             filename, trace_boolstring(res > 0));
     return(res);
 }
@@ -591,7 +595,7 @@ file_find_on_path_or_relative(
     if(NULL == currentfilename)
         return(file_find_on_path(filename, elemof_buffer, srcfilename));
 
-    reportf("file_find_on_path_or_relative(%u:%s, cur=%u:%s)\n", strlen32(srcfilename), srcfilename, strlen32(currentfilename), currentfilename);
+    reportf("file_find_on_path_or_relative(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, strlen32(currentfilename), currentfilename);
 
     if(file_is_rooted(srcfilename))
         {
@@ -608,8 +612,8 @@ file_find_on_path_or_relative(
         pathelem != NULL;
         pathelem = file_path_element_next(&path))
         {
-        void_strkpy(filename, elemof_buffer, pathelem);
-        void_strkat(filename, elemof_buffer, srcfilename);
+        safe_strkpy(filename, elemof_buffer, pathelem);
+        safe_strkat(filename, elemof_buffer, srcfilename);
 
         if(0 == (res = file_readable(filename)))
             continue;
@@ -624,7 +628,7 @@ file_find_on_path_or_relative(
         }
 
     trace_2(TRACE_MODULE_FILE,
-            "file_find_on_path() yields filename \"%s\" & %s\n",
+            "file_find_on_path() yields filename \"%s\" & %s",
             filename, trace_boolstring(res > 0));
     return(res);
 }
@@ -653,7 +657,7 @@ file_find_dir_on_path(
     char * pathelem;
     S32 res;
 
-    reportf("file_find_dir_on_path(%u:%s, cur=%u:%s)\n", strlen32(srcfilename), srcfilename, currentfilename ? strlen32(currentfilename) : 0, currentfilename ? currentfilename : "<NULL>");
+    reportf("file_find_dir_on_path(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, currentfilename ? strlen32(currentfilename) : 0, currentfilename ? currentfilename : "<NULL>");
 
     if(file_is_rooted(srcfilename))
         {
@@ -672,8 +676,8 @@ file_find_dir_on_path(
         {
         if(file_is_dir(pathelem))
             {
-            void_strkpy(filename, elemof_buffer, pathelem);
-            void_strkat(filename, elemof_buffer, srcfilename);
+            safe_strkpy(filename, elemof_buffer, pathelem);
+            safe_strkat(filename, elemof_buffer, srcfilename);
 
             if((res = file_is_dir(filename)) != 0)
                 break;
@@ -683,7 +687,7 @@ file_find_dir_on_path(
         }
 
     trace_2(TRACE_MODULE_FILE,
-            "file_find_dir_on_path() yields dirname \"%s\" & %s\n",
+            "file_find_dir_on_path() yields dirname \"%s\" & %s",
             filename, trace_boolstring(res > 0));
     return(res);
 }
@@ -710,13 +714,13 @@ file_get_cwd(
         PC_U8 leafp = file_leafname(namep);
         S32 nchars = leafp - namep;
         if(nchars)
-            void_strnkpy(destpath, elemof_buffer, namep, nchars);
+            safe_strnkpy(destpath, elemof_buffer, namep, nchars);
         }
 
     res = *destpath ? destpath : NULL;
 
     trace_2(TRACE_MODULE_FILE,
-            "file_get_cwd() yields cwd = \"%s\", has cwd = %s\n",
+            "file_get_cwd() yields cwd = \"%s\", has cwd = %s",
             trace_string(res), trace_boolstring(*destpath));
     return(res);
 }
@@ -764,14 +768,14 @@ file_get_prefix(
         {
         if(file_is_dir(pathelem))
             {
-            void_strkpy(destpath, elemof_buffer, pathelem);
+            safe_strkpy(destpath, elemof_buffer, pathelem);
             break;
             }
 
         pathelem = file_path_element_next(&path);
         }
 
-    trace_1(TRACE_MODULE_FILE, "file_get_prefix yields %s\n", destpath);
+    trace_1(TRACE_MODULE_FILE, "file_get_prefix yields %s", destpath);
     return(*destpath ? destpath : NULL);
 }
 
@@ -811,7 +815,7 @@ file_is_dir(
     res = FALSE;
     #endif
 
-    reportf("file_is_dir(%u:%s): %d\n", strlen(dirname), dirname, res);
+    reportf("file_is_dir(%u:%s): %d", strlen(dirname), dirname, res);
 
     return(res);
 }
@@ -850,7 +854,7 @@ file_is_file(
     res = FALSE;
     #endif
 
-    reportf("file_is_file(%u:%s): %d\n", strlen(filename), filename, res);
+    reportf("file_is_file(%u:%s): %d", strlen(filename), filename, res);
 
     return(res);
 }
@@ -888,7 +892,7 @@ file_is_rooted(
     #endif
 
     trace_2(TRACE_MODULE_FILE,
-            "file_is_rooted(%s) yields %s\n", filename, trace_boolstring(res));
+            "file_is_rooted(%s) yields %s", filename, trace_boolstring(res));
     return(res);
 }
 
@@ -945,7 +949,7 @@ file_path_element_close(
     P_P_FILE_PATHENUM pp /*inout*/)
 {
     /* thankfully simple */
-    list_disposeptr(P_P_ANY_PEDANTIC(pp));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(pp));
 }
 
 /******************************************************************************
@@ -963,13 +967,14 @@ file_path_element_close(
 
 extern char *
 file_path_element_first(
-    P_P_FILE_PATHENUM pp /*out*/,
-    PC_U8 path)
+    _OutRef_    P_P_FILE_PATHENUM pp,
+    _In_z_      PC_U8Z path)
 {
+    STATUS status;
     P_FILE_PATHENUM p;
     PC_U8 ptr;
 
-    *pp = p = list_allocptr(sizeof(FILE_PATHENUM));
+    *pp = p = al_ptr_alloc_elem(FILE_PATHENUM, 1, &status);
 
     if(!p)
         return(NULL);
@@ -996,7 +1001,7 @@ file_path_element_first(
     p->ptr = p->path;
     p->pushed = NULLCH;
 
-    void_strnkpy(p->path, BUF_MAX_PATHSTRING, path, ptr - path);
+    safe_strnkpy(p->path, BUF_MAX_PATHSTRING, path, ptr - path);
 
     return(file_path_element_next(pp));
 }
@@ -1129,10 +1134,10 @@ file_readable(
         if((res = file_close(&f)) == 0)
             res = 1;
 
-    reportf("file_readable(%u:%s): status=%d\n", strlen(filename), filename, res);
+    reportf("file_readable(%u:%s): status=%d", strlen(filename), filename, res);
 
     trace_2(TRACE_MODULE_FILE,
-            "file_readable(%s) returns %d\n", filename, res);
+            "file_readable(%s) returns %d", filename, res);
     return(res);
 }
 
@@ -1151,7 +1156,7 @@ file_set_path(
     else
         status_consume(str_set(&search_path, pathstr));
 
-    reportf("file_set_path(%u:%s)\n",
+    reportf("file_set_path(%u:%s)",
             (NULL == search_path) ? 0 : strlen(search_path),
             (NULL == search_path) ? "NULL" : search_path);
 }
@@ -1176,7 +1181,7 @@ file_wild(
         if((ch == FILE_WILD_MULTIPLE)  ||  (ch == FILE_WILD_SINGLE))
             {
             trace_2(TRACE_MODULE_FILE,
-                    "file_wild(%s) returns %s\n", filename, ptr);
+                    "file_wild(%s) returns %s", filename, ptr);
             return((P_U8) ptr);
             }
 
@@ -1184,13 +1189,13 @@ file_wild(
         }
     while(ch);
 
-    trace_1(TRACE_MODULE_FILE, "file_wild(%s) returns NULL\n", filename);
+    trace_1(TRACE_MODULE_FILE, "file_wild(%s) returns NULL", filename);
     return(NULL);
 }
 
 /******************************************************************************
 *
-* internal procedures
+* internal routines
 *
 ******************************************************************************/
 
@@ -1226,7 +1231,7 @@ file__make_usable_dir(
         #endif
                 {
                 /* need to strip off that carefully placed dir sep */
-                void_strnkpy(buffer, elemof_buffer, dirname, ptr - dirname); /* no -1 ... */
+                safe_strnkpy(buffer, elemof_buffer, dirname, ptr - dirname); /* no -1 ... */
                 dirname = buffer;
                 }
         }
@@ -1234,8 +1239,8 @@ file__make_usable_dir(
     else if(ch == FILE_ROOT_CH)
         {
         /* need to add csd symbol on end */
-        void_strkpy(buffer, elemof_buffer, dirname);
-        void_strkat(buffer, elemof_buffer, "@");
+        safe_strkpy(buffer, elemof_buffer, dirname);
+        safe_strkat(buffer, elemof_buffer, "@");
         dirname = buffer;
         }
     #endif

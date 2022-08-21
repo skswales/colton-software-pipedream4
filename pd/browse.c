@@ -384,7 +384,7 @@ dict_number(
     char fulldictname[BUF_MAX_PATHSTRING];
     char olddictdefn[BUF_MAX_PATHSTRING];
 
-    trace_1(TRACE_APP_PD4, "dict_number(%s)\n", trace_string(name));
+    trace_1(TRACE_APP_PD4, "dict_number(%s)", trace_string(name));
 
     if(str_isblank(name))
         {
@@ -411,11 +411,10 @@ dict_number(
             if(file_find_on_path(olddictdefn, elemof32(olddictdefn), OLD_DICTDEFN_FILE_STR))
                 if((dict = spell_opendict(fulldictname, olddictdefn, NULL)) >= 0)
                     {
-                    res = add_to_list(&first_user_dict, (S32) dict, (uchar *) fulldictname, &res);
-                    if(res <= 0)
+                    if(status_fail(res = add_to_list(&first_user_dict, dict, fulldictname)))
                         {
                         (void) spell_close(dict);
-                        dict = res ? res : status_nomem();
+                        dict = (S32) res;
                         }
                     else
                         return(most_recent = dict);
@@ -443,7 +442,7 @@ get_word_from_line(
     PC_U8 src, ptr;
     S32 found_offset = stt_offset;
 
-    trace_2(TRACE_APP_PD4, "get_word_from_line(): linbuf '%s', stt_offset = %d\n", linbuf, stt_offset);
+    trace_2(TRACE_APP_PD4, "get_word_from_line(): linbuf '%s', stt_offset = %d", linbuf, stt_offset);
 
     if(is_current_document()  &&  !xf_inexpression  &&  slot_in_buffer)
         {
@@ -481,7 +480,7 @@ get_word_from_line(
     if(found_offsetp)
         *found_offsetp = found_offset;
 
-    trace_2(TRACE_APP_PD4, "get_word_from_line returns '%s', found_offset = %d\n",
+    trace_2(TRACE_APP_PD4, "get_word_from_line returns '%s', found_offset = %d",
             trace_string((*array != '\0') ? array : NULL), found_offsetp ? *found_offsetp : -1);
 
     return((*array != '\0') ? array : NULL);
@@ -577,7 +576,7 @@ CreateUserDict_fn(void)
 
     /* enumerate all files in subdirectory DICTDEFNS_SUBDIR_STR found in the directories listed by the PipeDream$Path variable */
 
-    enumerate_dir_to_list(&language_list, DICTDEFNS_SUBDIR_STR, FILETYPE_UNDETERMINED); /* errors are ignored */
+    status_assert(enumerate_dir_to_list(&language_list, DICTDEFNS_SUBDIR_STR, FILETYPE_UNDETERMINED)); /* errors are ignored */
 
     if(!mystr_set(&d_user_create[0].textfield, USERDICT_STR))
         return;
@@ -621,7 +620,7 @@ CreateUserDict_fn(void)
             }
         language = buffer2;
 
-        trace_2(TRACE_APP_PD4, "name='%s', language='%s'\n", name, language);
+        trace_2(TRACE_APP_PD4, "name='%s', language='%s'", name, language);
 
         if(TRUE /*checkoverwrite(name)*/)
             {
@@ -878,6 +877,7 @@ init_box(merge_dump_strukt *mdsp,
     S32 y;
     dbox d;
     void *core;
+    STATUS status;
     char *errorp;
 
     trace_3(TRACE_APP_PD4, "init_box(" PTR_XTFMT ", %s, static = %s):", report_ptr_cast(mdsp), dname, trace_boolstring(statik));
@@ -889,8 +889,8 @@ init_box(merge_dump_strukt *mdsp,
 
     /* get some memory for the words array */
 
-    if((core = list_allocptr(sizeof(char [BROWSE_DEPTH][MAX_WORD+1]))) == NULL)
-        return(reperr_null(status_nomem()));
+    if(NULL == (core = _al_ptr_alloc(sizeof(char [BROWSE_DEPTH][MAX_WORD+1]), &status)))
+        return(reperr_null(status));
 
     mdsp->words = core;
 
@@ -957,7 +957,7 @@ end_box(
 {
     mdsp->dict = -1;
 
-    list_disposeptr((void **) &mdsp->words);
+    al_ptr_dispose((P_P_ANY) /*_PEDANTIC*/ (&mdsp->words));
 
     dbox_dispose(&mdsp->d);
 }
@@ -1000,7 +1000,7 @@ browse_null_core(
     char *str = (browse_iswild) ? browse_wild_str : browse_template;
     char array[MAX_WORD+1];
 
-    trace_0(TRACE_APP_PD4, "browse_null()\n");
+    trace_0(TRACE_APP_PD4, "browse_null()");
 
     dbox_getfield(d, browsing_Template, array, sizeof(array));
 
@@ -1013,7 +1013,7 @@ browse_null_core(
             }
         else
             {
-            trace_2(TRACE_APP_PD4, "template changed from %s to %s\n", str, array);
+            trace_2(TRACE_APP_PD4, "template changed from %s to %s", str, array);
             if(array[0])
                 {
                 strcpy(str, array);
@@ -1030,7 +1030,7 @@ browse_null_core(
             }
         }
     else
-        trace_0(TRACE_APP_PD4, "no change in string\n");
+        trace_0(TRACE_APP_PD4, "no change in string");
 }
 
 extern void
@@ -1095,7 +1095,7 @@ get_and_display_words(
         while(ch);
         #endif
 
-        trace_3(TRACE_APP_PD4, "fillall: iswild = %s, wild = '%s', template = '%s'\n",
+        trace_3(TRACE_APP_PD4, "fillall: iswild = %s, wild = '%s', template = '%s'",
                 trace_boolstring(iswild), wild_string, template);
 
         if(iswild  ||  ((res = spell_checkword(dict, template)) == 0))
@@ -1151,7 +1151,7 @@ browse_raw_eventhandler(
     IGNOREPARM(d);
     IGNOREPARM(handle);
 
-    trace_1(TRACE_APP_PD4, "raw_event_browse got %s\n", report_wimp_event(e->e, &e->data));
+    trace_1(TRACE_APP_PD4, "raw_event_browse got %s", report_wimp_event(e->e, &e->data));
 
     switch(e->e)
         {
@@ -1415,7 +1415,7 @@ browse_process(void)
             }
         }
 
-    trace_1(TRACE_APP_PD4, "returning word_to_insert \"%s\"\n", word_to_insert);
+    trace_1(TRACE_APP_PD4, "returning word_to_insert \"%s\"", word_to_insert);
 
 #if 0
     status_assert(Null_EventHandler(browse_null_handler, mdsp, FALSE, 0));
@@ -1518,7 +1518,7 @@ BrowseDictionary_fn(void)
         }
     else if(*word_to_insert && is_current_document())
         {
-        trace_1(TRACE_APP_PD4, "SBRfunc * word_to_insert: %s\n", trace_string(word_to_insert));
+        trace_1(TRACE_APP_PD4, "SBRfunc * word_to_insert: %s", trace_string(word_to_insert));
 
         /* save word about to be trashed onto paste list */
         save_words(array);
@@ -1655,7 +1655,7 @@ add_word_to_box(
     merge_dump_strukt *mdsp,
     const char *str)
 {
-    trace_1(TRACE_APP_PD4, "adding word %s to box\n", str);
+    trace_1(TRACE_APP_PD4, "adding word %s to box", str);
 
     if(++(mdsp->sofar) >= BROWSE_DEPTH)
         {
@@ -1677,9 +1677,9 @@ add_error_to_box(
     bleep();
 
     add_word_to_box(mdsp, NULLSTR);
-    void_strkpy(buffer, elemof32(buffer), "*** ");
-    void_strkat(buffer, elemof32(buffer), reperr_getstr(mdsp->res));
-    void_strkat(buffer, elemof32(buffer), " ***");
+    safe_strkpy(buffer, elemof32(buffer), "*** ");
+    safe_strkat(buffer, elemof32(buffer), reperr_getstr(mdsp->res));
+    safe_strkat(buffer, elemof32(buffer), " ***");
     add_word_to_box(mdsp, buffer);
 
     /* error now reported, clear down and pause */
@@ -1765,7 +1765,7 @@ anagram_null_core(
     char newword[MAX_WORD+1];
     S32 res1;
 
-    trace_0(TRACE_APP_PD4, "anagram_null()\n");
+    trace_0(TRACE_APP_PD4, "anagram_null()");
 
     if(a_fillout(anagram_letters, newword, anagram_last_found, anagram_sub))
         {
@@ -1924,13 +1924,13 @@ ana_or_sub_gram(
             for(to = array; ; to++)
                 if(!*to  ||  (*to > ch))
                     {
-                    void_memmove32(to + 1, to, strlen32p1((char *) to));
+                    memmove32(to + 1, to, strlen32p1((char *) to));
                     *to = ch;
                     break;
                     }
             }
 
-        trace_1(TRACE_APP_PD4, "array=_%s_\n", array);
+        trace_1(TRACE_APP_PD4, "array=_%s_", array);
 
         /* copy letters into letters array */
         from = array;
@@ -2134,26 +2134,26 @@ get_next_misspell(
                 {
                 /* (NB. set sch_pos_stt.col = sch_stt.col - 1 to start) */
 
-                trace_0(TRACE_APP_PD4, "get_next_misspell: offset == -1 -> find another slot to scan for misspells\n");
+                trace_0(TRACE_APP_PD4, "get_next_misspell: offset == -1 -> find another slot to scan for misspells");
 
                 do  {
                     if(sch_pos_stt.col < sch_end.col)
                         {
                         ++sch_pos_stt.col;
-                        trace_1(TRACE_APP_PD4, "get_next_misspell stepped to column %d\n", sch_pos_stt.col);
+                        trace_1(TRACE_APP_PD4, "get_next_misspell stepped to column %d", sch_pos_stt.col);
                         }
                     else if(sch_pos_stt.row < sch_end.row)
                         {
                         ++sch_pos_stt.row;
                         sch_pos_stt.col = sch_stt.col;
-                        trace_2(TRACE_APP_PD4, "get_next_misspell stepped to row %d, reset to column %d\n", sch_pos_stt.row, sch_pos_stt.col);
+                        trace_2(TRACE_APP_PD4, "get_next_misspell stepped to row %d, reset to column %d", sch_pos_stt.row, sch_pos_stt.col);
                         actind((S32) ((100 * sch_pos_stt.row - sch_stt.row) / (sch_end.row - sch_stt.row + 1)));
                         if(ctrlflag)
                             return(FALSE);
                         }
                     else
                         {
-                        trace_0(TRACE_APP_PD4, "get_next_misspell ran out of slots\n");
+                        trace_0(TRACE_APP_PD4, "get_next_misspell ran out of slots");
                         return(FALSE);
                         }
 
@@ -2165,7 +2165,7 @@ get_next_misspell(
                 }
             else
                 {
-                trace_0(TRACE_APP_PD4, "get_next_misspell found no slot in buffer so reload\n");
+                trace_0(TRACE_APP_PD4, "get_next_misspell found no slot in buffer so reload");
                 tslot = travel(sch_pos_stt.col, sch_pos_stt.row);
                 }
 
@@ -2205,7 +2205,7 @@ get_next_misspell(
 
                 /* not in any dictionary, with or without quote: move there! */
                 /* chknlr() sets the state to be picked up by a draw_screen() */
-                trace_2(TRACE_APP_PD4, "get_next_misspell moving to %d, %d\n", sch_pos_stt.col, sch_pos_stt.row);
+                trace_2(TRACE_APP_PD4, "get_next_misspell moving to %d, %d", sch_pos_stt.col, sch_pos_stt.row);
                 chknlr(sch_pos_stt.col, sch_pos_stt.row);
                 return(TRUE);
                 }
@@ -2282,8 +2282,8 @@ CheckDocument_fn(void)
             d_check[C_CHANGE].option = d_check[C_BROWSE].option = 'N';
 
             /* take a copy of just the misplet worm */
-            void_strnkpy(original, elemof32(original), linbuf + sch_stt_offset, strlen(array));
-            trace_1(TRACE_APP_PD4, "CheckDocument_fn: misplet word is '%s'\n", original);
+            safe_strnkpy(original, elemof32(original), linbuf + sch_stt_offset, strlen(array));
+            trace_1(TRACE_APP_PD4, "CheckDocument_fn: misplet word is '%s'", original);
 
             word_to_invert = original;
             lecpos = sch_stt_offset;
@@ -2382,10 +2382,9 @@ CheckDocument_fn(void)
             /* if all set to no, add to temporary spell list */
             else if((d_check[C_BROWSE].option == 'N')  &&  (d_check[C_ADD].option == 'N'))
                 {
-                res = add_to_list(&first_spell, (S32) 0, array, &res);
-                if(res <= 0)
+                if(status_fail(res = add_to_list(&first_spell, 0, array)))
                     {
-                    reperr_null(res ? res : status_nomem());
+                    reperr_null(res);
                     break;
                     }
                 }
@@ -2474,7 +2473,7 @@ get_word_from_file(
             {
             c = pd_file_getc(in);
 
-            trace_1(TRACE_APP_PD4, "get_word_from_file: looking for good first char - trying %2.2X\n", c);
+            trace_1(TRACE_APP_PD4, "get_word_from_file: looking for good first char - trying %2.2X", c);
 
             if(c == EOF)
                 return(FALSE);
@@ -2483,7 +2482,7 @@ get_word_from_file(
                 break;
             }
 
-        trace_2(TRACE_APP_PD4, "get_word_from_file: got good first char %2.2X, %c\n", c, c);
+        trace_2(TRACE_APP_PD4, "get_word_from_file: got good first char %2.2X, %c", c, c);
 
         /* c is first letter of word. Ignore overlong words */
 
@@ -2494,7 +2493,7 @@ get_word_from_file(
 
             c = pd_file_getc(in);
 
-            trace_1(TRACE_APP_PD4, "get_word_from_file: looking for more valid chars - trying %2.2X\n", c);
+            trace_1(TRACE_APP_PD4, "get_word_from_file: looking for more valid chars - trying %2.2X", c);
 
             if((c == EOF)  ||  !spell_iswordc(dict, c))
                 {
@@ -2508,7 +2507,7 @@ get_word_from_file(
 
                 *ptr = '\0';
 
-                trace_1(TRACE_APP_PD4, "get_word_from_file: got word '%s'\n", array);
+                trace_1(TRACE_APP_PD4, "get_word_from_file: got word '%s'", array);
                 return(TRUE);
                 }
             }
@@ -2561,7 +2560,7 @@ mergedict_eventhandler(
     merge_dump_strukt * mdsp = handle;
     dbox_field f = dbox_get(d);
 
-    trace_2(TRACE_APP_PD4, "mergedict_eventhandler got button %d: mergedict_in = " PTR_XTFMT "\n", f, report_ptr_cast(mergedict_in));
+    trace_2(TRACE_APP_PD4, "mergedict_eventhandler got button %d: mergedict_in = " PTR_XTFMT, f, report_ptr_cast(mergedict_in));
 
     switch(f)
         {
@@ -2588,7 +2587,7 @@ static void
 mergedict_null_core(
     merge_dump_strukt * mdsp)
 {
-    trace_0(TRACE_APP_PD4, "mergedict_null()\n");
+    trace_0(TRACE_APP_PD4, "mergedict_null()");
 
     if(!get_word_from_file(mdsp->dict, mergedict_in, mergedict_array))
         {
@@ -2802,7 +2801,7 @@ dumpdict_eventhandler(
     merge_dump_strukt * mdsp = handle;
     dbox_field f = dbox_get(d);
 
-    trace_2(TRACE_APP_PD4, "dumpdict_eventhandler got button %d: dumpdict_out = " PTR_XTFMT "\n", f, report_ptr_cast(dumpdict_out));
+    trace_2(TRACE_APP_PD4, "dumpdict_eventhandler got button %d: dumpdict_out = " PTR_XTFMT, f, report_ptr_cast(dumpdict_out));
 
     switch(f)
         {
@@ -2832,7 +2831,7 @@ dumpdict_null_core(
     BOOL was_ctrlflag;
     U32 i;
 
-    trace_0(TRACE_APP_PD4, "dumpdict_null\n");
+    trace_0(TRACE_APP_PD4, "dumpdict_null");
 
     for(i = 1; i < 32; ++i)
     {
@@ -3124,7 +3123,7 @@ DictionaryOptions_fn(void)
 
         if(res >= 0)
             {
-            trace_2(TRACE_APP_PD4, "spell_setoptions(%d, %8x)\n", res, (d_user_options[0].option == 'Y') ? DICT_READONLY : 0);
+            trace_2(TRACE_APP_PD4, "spell_setoptions(%d, %8x)", res, (d_user_options[0].option == 'Y') ? DICT_READONLY : 0);
             res = spell_setoptions(res,
                         /* OR */   (d_user_options[0].option == 'Y') ? DICT_READONLY : 0,
                         /* AND */  ~DICT_READONLY);
@@ -3172,7 +3171,7 @@ DisplayOpenDicts_fn(void)
             if(lptr)
                 {
                 strcpy(mdsp->words[i], file_leafname((char *) (lptr->value)));
-                trace_1(TRACE_APP_PD4, "got user dict %s\n", mdsp->words[i]);
+                trace_1(TRACE_APP_PD4, "got user dict %s", mdsp->words[i]);
                 lptr = next_in_list(&first_user_dict);
                 }
             }
@@ -3244,7 +3243,7 @@ PackUserDict_fn(void)
             {
             /* use pathname of name0 for name1 if not rooted */
             leaf = file_leafname(name0);
-            void_memcpy32(array1, name0, leaf - name0);
+            memcpy32(array1, name0, leaf - name0);
             strcpy(array1 + (leaf - name0), name1);
             name1 = array1;
             }

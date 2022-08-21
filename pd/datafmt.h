@@ -26,54 +26,15 @@
 /* get declarations of marked block functions */
 #include "markers.h"
 
-#define bad_row(trow)           (((trow) < (ROW) 0)  ||  ((trow) & BADROWBIT))
-extern ROW
-(bad_row)(
-    ROW trow);
-
-#define bad_col(tcol)           (((tcol) < (COL) 0)  ||  ((tcol) & BADCOLBIT))
-extern COL
-(bad_col)(
-    COL tcol);
-
-#define abs_row(trow)           ((trow) & ABSROWBIT)
-extern ROW
-(abs_row)(
-    ROW trow);
-
-#define abs_col(tcol)           ((tcol) & ABSCOLBIT)
-extern COL
-(abs_col)(
-    COL tcol);
-
-#define force_abs_row(trow)     ((trow) |= ABSROWBIT)
-extern ROW
-(force_abs_row)(
-    ROW trow);
-
-#define force_abs_col(tcol)     ((tcol) |= ABSCOLBIT)
-extern COL
-(force_abs_col)(
-    COL tcol);
-
-#define force_not_abs_row(trow) ((trow) &= (ROWNOBITS | BADROWBIT))
-extern ROW
-(force_not_abs_row)(
-    ROW trow);
-
-#define force_not_abs_col(tcol) ((tcol) &= (COLNOBITS | BADCOLBIT))
-extern COL
-(force_not_abs_col)(
-    COL tcol);
-
 /******************************************************************************
 * character definitions
 ******************************************************************************/
 
+#define SLRLD2                  NULLCH /* this makes detecting SLRLD1 trivial and really helps debug! */
 #define TAB                     ((uchar) 0x09)
 #define FORMFEED                ((uchar) 0x0C)
 #define FUNNYSPACE              ((uchar) 0x0E)
-#define SLRLDI                  ((uchar) 0x10)
+#define SLRLD1                  ((uchar) 0x10)
 #define FIRST_HIGHLIGHT         ((uchar) 0x18)
 #define FIRST_HIGHLIGHT_TEXT    ((uchar) '1')
 #define CMDLDI                  (FIRST_HIGHLIGHT + 1)
@@ -550,7 +511,7 @@ macros
     x_indexcollb(current_p_docu, col)
 
 #define slot_contents(it) \
-    list_itemcontents(it)
+    list_itemcontents(struct _slot, it)
 
 /*
 allocator parameters
@@ -577,9 +538,6 @@ bleep(void);
 
 extern void
 clearkeyboardbuffer(void);
-
-extern void
-clearscreen(void);
 
 extern void
 curon(void);
@@ -728,10 +686,6 @@ macro definitions
 #define COLUMN_DOTS     (font_selected)
 #define DOWN_ARROW      (font_selected + 1)
 
-#define setlogcolours()         /* nothing */
-extern void
-(setlogcolours)(void);
-
 /******************************************************************************
 * savload.c
 ******************************************************************************/
@@ -770,11 +724,12 @@ SAVE_FILE_OPTIONS, * P_SAVE_FILE_OPTIONS;
 exported functions
 */
 
-extern S32
+/*ncr*/
+extern STATUS
 enumerate_dir_to_list(
-    P_P_LIST_BLOCK list,
-    PC_U8 dir,
-    FILETYPE_RISC_OS filetype);
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _In_opt_z_  PC_U8Z subdir /*maybe NULL*/,
+    _InVal_     FILETYPE_RISC_OS filetype);
 
 extern S32 /* filetype_option, 0 or error (reported) */
 find_filetype_option(
@@ -1450,9 +1405,8 @@ colh_colour_icons(void);
 #define LINKED_COLUMN_LINKSTOP  2
 
 extern uchar *
-my_next_ref(
-    uchar *,
-    uchar);
+find_next_csr(
+    uchar * csr);
 
 extern BOOL
 check_not_blank_sheet(void);
@@ -2502,8 +2456,8 @@ set_up_block(
     BOOL check_block_in_doc);
 
 extern char *
-text_slr_uref(
-    char *c,
+text_csr_uref(
+    uchar * csr,
     _InRef_     PC_UREF_PARM upp);
 
 extern void
@@ -2785,27 +2739,23 @@ chknlr(             /* for absolute movement */
 
 #define rstpag()    /* reset page counts */
 
-extern SCRCOL *
-horzvec(void); /* current address of horzvec (moveable) */
+#define horzvec() \
+    array_base(&horzvec_mh, SCRCOL)
 
-extern SCRCOL *
-horzvec_entry(
-    coord coff);
+#define horzvec_entry(coff) \
+    array_ptr(&horzvec_mh, SCRCOL, coff)
 
-extern COL
-col_number(
-    coord coff);
+#define col_number(coff) \
+    horzvec_entry(coff)->colno
 
-extern SCRROW *
-vertvec(void); /* current address of vertvec (moveable) */
+#define vertvec() \
+    array_base(&vertvec_mh, SCRROW)
 
-extern SCRROW *
-vertvec_entry(
-    coord roff);
+#define vertvec_entry(roff) \
+    array_ptr(&vertvec_mh, SCRROW, roff)
 
-extern ROW
-row_number(
-    coord roff);
+#define row_number(coff) \
+    vertvec_entry(coff)->rowno
 
 extern S32 g_newoffset;
 
@@ -3106,6 +3056,10 @@ readfxy(
     _OutRef_ P_F64 xp,
     _OutRef_ P_F64 yp);
 
+extern const uchar *
+report_compiled_text_string(
+    _In_z_      const uchar * cts_in);
+
 extern S32
 row_select(
     char *rpn_in,
@@ -3127,16 +3081,30 @@ extern S32
 slot_displays_contents(
     P_SLOT tslot);
 
-extern void
+/*extern void
 splat(
     uchar *to,
     S32 num,
-    S32 size);
+    S32 size);*/
 
-extern S32
+extern uchar *
+splat_csr(
+    uchar * csr,
+    _InVal_     EV_DOCNO docno,
+    _InVal_     COL col,
+    _InVal_     ROW row);
+
+/*extern S32
 talps(
     _In_reads_bytes_(size) PC_U8 from,
-    _InVal_     U32 size);
+    _InVal_     U32 size);*/
+
+extern const uchar *
+talps_csr(
+    const uchar * csr,
+    _OutRef_    P_EV_DOCNO p_docno,
+    _OutRef_    P_COL p_col,
+    _OutRef_    P_ROW p_row);
 
 extern S32
 write_col(
@@ -3232,7 +3200,7 @@ slot types
 #define SL_PAGE     ((uchar) 2)
 
 /******************************************************************************
-slot flags - mutually exclusive
+slot flags
 ******************************************************************************/
 
 #define SL_ALTERED  ((uchar) 1)         /* re-display flag */
@@ -3335,15 +3303,18 @@ expand_current_slot_in_fonts(
     BOOL partial,
     P_S32 this_fontp /*out*/);
 
+#define DEFAULT_EXPAND_REFS 9 /*was 1*/
+
 extern void
 expand_lcr(
     char *from,
     ROW row,
     char *array /*out*/,
     coord fwidth,
-    BOOL expand_refs,
-    S32 font_switch,
+    S32 expand_refs,
+    BOOL expand_ats,
     BOOL expand_ctrl,
+    BOOL allow_fonty_result,
     BOOL compile_lcr);
 
 extern char
@@ -3353,9 +3324,10 @@ expand_slot(
     ROW row,
     char *array /*out*/,
     coord fwidth,
-    BOOL expand_refs,
-    S32 font_switch,
+    S32 expand_refs,
+    BOOL expand_ats,
     BOOL expand_ctrl,
+    BOOL allow_fonty_result,
     BOOL cust_func_formula);
 
 extern void
@@ -3479,6 +3451,7 @@ expand_slot_for_chart_export(
     _InVal_     DOCNO docno,
     P_SLOT sl,
     char * buffer /*out*/,
+    U32 elemof_buffer,
     ROW row);
 
 extern S32

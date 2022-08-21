@@ -305,7 +305,7 @@ next_or_previous_match(
 
     xf_flush = TRUE;
 
-    trace_2(TRACE_APP_PD4, "next_or_prev_match: schhan %d curhan %d\n", sch_docno, current_docno());
+    trace_2(TRACE_APP_PD4, "next_or_prev_match: schhan %d curhan %d", sch_docno, current_docno());
 
     /* cannot check with str_isblank cos might be looking for spaces */
     if(!target_string  ||  (*target_string == '\0'))
@@ -394,12 +394,10 @@ save_wild_string(
     while(oldypos < y)
         *ptr++ = *oldypos++;
 
-    *ptr = '\0';
+    *ptr = NULLCH;
 
-    res = add_to_list(&wild_string_list, (S32) wild_strings, array, &res);
-
-    if(res <= 0)
-        reperr_null(res ? res : status_nomem());
+    if(status_fail(res = add_to_list(&wild_string_list, (S32) wild_strings, array)))
+        reperr_null(res);
     else
         last_wild_strings = wild_strings++;
 }

@@ -17,6 +17,7 @@
 #if 1 /* SKS */
 __pragma(warning(disable:4127)) /* conditional expression is constant */
 __pragma(warning(disable:4701)) /* potentially uninitialized local variable 'nadj' used */
+__pragma(warning(disable:4723)) /* potential divide by 0 (which is deliberate) */
 #else
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: src/lib/msun/src/e_lgamma_r.c,v 1.11 2011/10/15 07:00:28 das Exp $");

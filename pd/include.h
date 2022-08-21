@@ -1,4 +1,3 @@
-
 /* include.h */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -17,7 +16,7 @@
 
 /* standard includes for all programs */
 
-#include "cmodules/ansi.h"
+#include "cmodules/coltsoft/ansi.h"
 
 #include "cmodules/coltsoft/coltsoft.h"
 
@@ -35,6 +34,8 @@ typedef U8 DOCNO; typedef DOCNO * P_DOCNO; /* NB now exactly the same as EV_DOCN
 
 #include "cmodules/aligator.h"
 #include "cmodules/alloc.h"
+#include "cmodules/allocblk.h"
+#include "cmodules/quickblk.h"
 #include "cmodules/handlist.h"
 #include "cmodules/ev_eval.h"
 #include "cmodules/file.h"

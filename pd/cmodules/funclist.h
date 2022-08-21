@@ -18,8 +18,8 @@
 requires
 */
 
-#ifndef __handlist_h
-#include "handlist.h"
+#ifndef __collect_h
+#include "collect.h"
 #endif
 
 /*
@@ -51,58 +51,51 @@ exported functions
 _Check_return_
 extern STATUS
 funclist_add(
-    P_P_LIST_BLKREF lbrp,
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
     funclist_proc proc,
     P_ANY handle,
     /*out*/ P_LIST_ITEMNO itemnop,
     S32 tag,
     S32 priority,
-    size_t extradata);
+    _InVal_     U32 extradata);
 
 extern S32
 funclist_first(
-    P_P_LIST_BLKREF lbrp,
-    /*out*/ funclist_proc * proc,
-    /*out*/ P_P_ANY handle,
-    /*out*/ P_LIST_ITEMNO itemnop,
-    S32 ascending);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _Out_       funclist_proc * proc,
+    _OutRef_    P_P_ANY handle,
+    _OutRef_    P_LIST_ITEMNO itemnop,
+    _InVal_     BOOL ascending);
 
 extern S32
 funclist_next(
-    P_P_LIST_BLKREF lbrp,
-    /*out*/ funclist_proc * proc,
-    /*out*/ P_P_ANY handle,
-    /*inout*/ P_LIST_ITEMNO itemnop,
-    S32 ascending);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _Out_       funclist_proc * proc,
+    _OutRef_    P_P_ANY handle,
+    _InoutRef_  P_LIST_ITEMNO itemnop,
+    _InVal_     BOOL ascending);
 
 extern S32
 funclist_readdata_ip(
-    P_P_LIST_BLKREF lbrp,
-    P_LIST_ITEMNO itemnop,
-    /*out*/ P_ANY dest,
-    size_t offset,
-    size_t nbytes);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO itemno,
+    _Out_writes_bytes_(nbytes) P_ANY dest,
+    _InVal_     U32 offset,
+    _InVal_     U32 nbytes);
 
 extern void
 funclist_remove(
-    P_P_LIST_BLKREF lbrp,
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
     funclist_proc proc,
     P_ANY handle);
 
 extern S32
 funclist_writedata_ip(
-    P_P_LIST_BLKREF lbrp,
-    P_LIST_ITEMNO itemnop,
-    PC_ANY from,
-    size_t offset,
-    size_t nbytes);
-
-/*
-macros
-*/
-
-#define funclist_numprocs(lbrp) \
-    nlist_numitem(*(lbrp))
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO itemno,
+    _In_reads_bytes_(nbytes) PC_ANY from,
+    _InVal_     U32 offset,
+    _InVal_     U32 nbytes);
 
 #endif /* __funclist_h */
 

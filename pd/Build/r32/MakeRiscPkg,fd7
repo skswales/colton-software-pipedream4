@@ -1,4 +1,4 @@
-| Make_TS.oby - PipeDream
+| MakeRiscPkg for PipeDream
 |
 | This Source Code Form is subject to the terms of the Mozilla Public
 | License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,9 +36,7 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 
 %CDir                                           <pd$Disc>.Z.Resource
 |
-%Copy <ap$Resource$Dir>.HTMLHelp                <pd$Disc>.Z.Resource.* ~rf~cln~v
 %Copy <ap$Resource$Dir>.ODctDefn                <pd$Disc>.Z.Resource.* ~rf~cln~v
-%Copy <ap$Resource$Dir>.Relnotes                <pd$Disc>.Z.Resource.* ~rf~cln~v
 |
 %CDir                                           <pd$Disc>.Z.Resource.RISC_OS
 %Copy <ap$Resource$Dir>.RISC_OS.!Sprite         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
@@ -103,15 +101,19 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 %Copy <ap$Resource$Dir>.Templates.Text_Plain    <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
 %Access                                         <pd$Disc>.Z.Resource.Templates.* r/r
 
+| These used to be at top level - R-Comp can extract from here for PlingStore
+%Copy <ap$Resource$Dir>.HTMLHelp                <pd$Disc>.Z.Resource.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Relnotes                <pd$Disc>.Z.Resource.* ~rf~cln~v
+
 %Access                                         <pd$Disc>.Z.Resource.* r/r
 %Access                                         <pd$Disc>.Z.Resource r/r
 
-| Top level, User Choices (destined for Choices$Write on target system)
+| User Choices (destined for Choices$Write on target system)
 
 %CDir                                           <pd$Disc>.Z.uChoices
 
-%Copy <Obey$Dir>.!PipeDream.uChoices.DoCopy      <pd$Disc>.Z.uChoices.* ~rf~cln~v
-%Copy <Obey$Dir>.!PipeDream.uChoices.ReadMe      <pd$Disc>.Z.uChoices.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.uChoices.DoCopy     <pd$Disc>.Z.uChoices.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.uChoices.ReadMe     <pd$Disc>.Z.uChoices.* ~rf~cln~v
 
 %CDir                                           <pd$Disc>.Z.uChoices.PipeDream
 
@@ -130,15 +132,11 @@ Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
 %Access                                         <pd$Disc>.Z.uChoices.PipeDream wr/r
 %Access                                         <pd$Disc>.Z.uChoices wr/r
 
-| Top level, contains !PipeDream
+| Top level, contains just Apps and RiscPkg
 
-| Another copy of help file and release notes at top level
-| %Copy <ap$Resource$Dir>.HTMLHelp                <pd$Disc>.* ~rf~cln~v
-| %Copy <ap$Resource$Dir>.Relnotes                <pd$Disc>.* ~rf~cln~v
-
-%CDir               <pd$Disc>.Apps
-%CDir               <pd$Disc>.Apps.Document
-%Rename <pd$Disc>.Z <pd$Disc>.Apps.Document.!PipeDream
+%CDir                              <pd$Disc>.Apps
+%CDir                              <pd$Disc>.Apps.Document
+%Rename <pd$Disc>.Z                <pd$Disc>.Apps.Document.!PipeDream
 
 %CDir                              <pd$Disc>.RiscPkg
 %Copy <Obey$Dir>.RiscPkg.Control   <pd$Disc>.RiscPkg.* ~rf~cln~v

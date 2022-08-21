@@ -7,7 +7,7 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Scaling procedures for graphics modules */
+/* Scaling routines for graphics modules */
 
 #include "common/gflags.h"
 
@@ -28,10 +28,10 @@ local header
 #endif
 
 /*
-internal procedures
+internal routines
 */
 
-typedef const struct _GR_STYLE_COMMON_BLK * P_GR_STYLE_COMMON_BLK; /* NB. these are never modified */
+typedef const struct _GR_STYLE_COMMON_BLK * PC_GR_STYLE_COMMON_BLK; /* NB. these are never modified */
 
 static P_ANY
 gr_point_list_search(
@@ -323,7 +323,7 @@ gr_point_scatchstyle_common_blk =
 array tying GR_LIST_IDs to GR_STYLE_COMMON_BLKs
 */
 
-static const P_GR_STYLE_COMMON_BLK
+static const PC_GR_STYLE_COMMON_BLK
 gr_style_common_blks[GR_LIST_N_IDS] =
 {
     &gr_chart_text_common_blk,
@@ -353,50 +353,44 @@ gr_style_common_blks[GR_LIST_N_IDS] =
 
 static S32
 common_list_set(
-    P_NLISTS_BLK lbrp,
+    P_P_LIST_BLOCK p_p_list_block,
     LIST_ITEMNO item,
     PC_ANY style,
-    P_GR_STYLE_COMMON_BLK cbp)
+    _InRef_     PC_GR_STYLE_COMMON_BLK cbp)
 {
-    list_itempos itpos; /* <<< delete me soon! */
-    P_LIST_ITEM it;
     P_ANY pt;
 
-    assert(lbrp);
+    /* allocate new LIST_BLOCK if needed */
+    if(NULL == *p_p_list_block)
+        status_return(collect_alloc_list_block(p_p_list_block, cbp->nlb.maxitemsize, cbp->nlb.maxpoolsize));
 
-    /* allocate new list if null list */
-    if(!lbrp->lbr)
-        {
-        if(!nlist_allocblkref(&lbrp->lbr))
-            return(create_error(GR_CHART_ERR_NOMEM));
+    if(NULL == (pt = _list_gotoitemcontents(*p_p_list_block, item)))
+    {
+        P_LIST_ITEM it;
 
-        /* retune temporarily */
-        list_deregister((P_LIST_BLOCK) lbrp->lbr);
-        list_init(      (P_LIST_BLOCK) lbrp->lbr, cbp->nlb.maxitemsize, cbp->nlb.maxpoolsize);
-        list_register(  (P_LIST_BLOCK) lbrp->lbr);
-        }
+        if(NULL == (it = list_createitem(*p_p_list_block, item, cbp->nlb.maxitemsize, FALSE)))
+            return(status_nomem());
 
-    if(!nlist_gotoitem(lbrp->lbr, item, &it, &itpos))
-        if(!nlist_createitem(lbrp->lbr, item, &it, cbp->nlb.maxitemsize, FALSE))
-            return(create_error(GR_CHART_ERR_NOMEM));
-
-    pt = list_itemcontents(it);
+        pt = list_itemcontents(void, it);
+    }
 
     if(style)
-        void_memcpy32(pt, style, cbp->style_size);
+        memcpy32(pt, style, cbp->style_size);
 
     return(1);
 }
 
 static void
 common_list_fillstyle_reref(
-    P_NLISTS_BLK lbrp,
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
     S32 add)
 {
     LIST_ITEMNO key;
     P_GR_FILLSTYLE pt;
 
-    for(pt = collect_first(lbrp, &key); pt; pt = collect_next(lbrp, &key))
+    for(pt = collect_first(p_p_list_block, &key);
+        pt;
+        pt = collect_next( p_p_list_block, &key))
         {
         /* add/lose ref to particular picture. DOES NOT destroy stored pattern handle */
         gr_cache_ref((/*const*/ P_GR_CACHE_HANDLE) &pt->pattern, add);
@@ -409,20 +403,19 @@ common_list_fillstyle_reref(
 *
 ******************************************************************************/
 
-#define gr_chart_list_getlbrp(cp, cbp) ((P_NLISTS_BLK) ((P_U8) (cp) + (cbp)->offset_of_lbr))
+#define gr_chart_list_get_p_p_list_block(cp, cbp) \
+    PtrAddBytes(P_P_LIST_BLOCK, (cp), (cbp)->offset_of_lbr)
 
 extern S32
 gr_chart_list_delete(
     P_GR_CHART cp,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    P_NLISTS_BLK lbrp;
-
-    lbrp = gr_chart_list_getlbrp(cp, cbp);
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    P_P_LIST_BLOCK lbrp = gr_chart_list_get_p_p_list_block(cp, cbp);
 
     trace_2(TRACE_MODULE_GR_CHART,
-            "gr_chart_list_delete %s list &%p\n",
+            "gr_chart_list_delete %s list &%p",
             cbp->list_name, report_ptr_cast(lbrp));
 
     assert(!cbp->rerefproc);
@@ -437,22 +430,21 @@ gr_chart_list_duplic(
     P_GR_CHART cp,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    NLISTS_BLK   new_lbr = cbp->nlb;
-    P_NLISTS_BLK lbrp;
-    S32          res;
-
-    lbrp = gr_chart_list_getlbrp(cp, cbp);
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    NLISTS_BLK new_lbr = cbp->nlb;
+    P_P_LIST_BLOCK old_p_p_list_block = gr_chart_list_get_p_p_list_block(cp, cbp);
+    S32 res;
 
     trace_2(TRACE_MODULE_GR_CHART,
-            "gr_chart_list_duplic %s list &%p\n",
-            cbp->list_name, report_ptr_cast(lbrp));
+            "gr_chart_list_duplic %s list &%p",
+            cbp->list_name, report_ptr_cast(old_p_p_list_block));
 
+    assert(NULL == new_lbr.lbr);
     new_lbr.lbr = NULL;
 
-    res = collect_copy(&new_lbr, lbrp);
+    res = collect_copy(&new_lbr, old_p_p_list_block);
 
-    lbrp->lbr = new_lbr.lbr;
+    *old_p_p_list_block = new_lbr.lbr;
 
     assert(!cbp->rerefproc);
 
@@ -466,9 +458,9 @@ gr_chart_list_first(
     _OutRef_    P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
 
-    return(collect_first(gr_chart_list_getlbrp(cp, cbp), p_key));
+    return(collect_first(gr_chart_list_get_p_p_list_block(cp, cbp), p_key));
 }
 
 extern P_ANY
@@ -477,9 +469,9 @@ gr_chart_list_next(
     /*inout*/ P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
 
-    return(collect_next(gr_chart_list_getlbrp(cp, cbp), p_key));
+    return(collect_next(gr_chart_list_get_p_p_list_block(cp, cbp), p_key));
 }
 #endif
 
@@ -489,9 +481,9 @@ gr_chart_list_search(
     LIST_ITEMNO item,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
 
-    return(collect_search(gr_chart_list_getlbrp(cp, cbp), &item));
+    return(collect_search(gr_chart_list_get_p_p_list_block(cp, cbp), item));
 }
 
 static S32
@@ -501,9 +493,9 @@ gr_chart_list_set(
     PC_ANY style,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
 
-    return(common_list_set(gr_chart_list_getlbrp(cp, cbp), item, style, cbp));
+    return(common_list_set(gr_chart_list_get_p_p_list_block(cp, cbp), item, style, cbp));
 }
 
 /******************************************************************************
@@ -666,7 +658,7 @@ gr_chart_objid_chartstyle_query(
             break;
         }
 
-    void_memcpy32(style, bpt, desc->style_size);
+    memcpy32(style, bpt, desc->style_size);
 
     return(using_default);
 }
@@ -745,7 +737,7 @@ gr_chart_objid_chartstyle_set(
         }
 
     if(bpt)
-        void_memcpy32(bpt, style, desc->style_size);
+        memcpy32(bpt, style, desc->style_size);
 
     return(res);
 }
@@ -1514,7 +1506,8 @@ gr_fillstyle_ref_lose(
     gr_cache_ref((/*const*/ P_GR_CACHE_HANDLE) &style->pattern, 0);
 }
 
-#define gr_point_list_getlbrp(serp, cbp) ((P_NLISTS_BLK) ((P_U8) (serp) + (cbp)->offset_of_lbr))
+#define gr_point_list_get_p_p_list_block(serp, cbp) \
+    PtrAddBytes(P_P_LIST_BLOCK, (serp), (cbp)->offset_of_lbr)
 
 static S32
 gr_pdrop_point_common_fillstyle_set(
@@ -1537,7 +1530,7 @@ gr_pdrop_point_common_fillstyle_set(
         if(!style)
             {
             /* delete this style item */
-            P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+            PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
             LIST_ITEMNO item;
 
             /* lose the picture ref */
@@ -1546,7 +1539,7 @@ gr_pdrop_point_common_fillstyle_set(
             item = point;
 
             /* don't mangle following entry numbering */
-            collect_subtract_entry(gr_point_list_getlbrp(getserp(cp, seridx), cbp), &item);
+            collect_subtract_entry(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), item);
 
             pt = NULL;
             }
@@ -1711,20 +1704,18 @@ gr_point_list_delete(
     GR_SERIES_IX seridx,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    P_NLISTS_BLK lbrp;
-
-    lbrp = gr_point_list_getlbrp(getserp(cp, seridx), cbp);
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    P_P_LIST_BLOCK p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp);
 
     trace_3(TRACE_MODULE_GR_CHART,
-            "gr_point_list_delete seridx %u %s list &%p\n",
-            seridx, cbp->list_name, report_ptr_cast(lbrp));
+            "gr_point_list_delete seridx %u %s list &%p",
+            seridx, cbp->list_name, report_ptr_cast(p_p_list_block));
 
     /* remove refs before delete */
     if(cbp->rerefproc)
         (* cbp->rerefproc) (cp, seridx, 0);
 
-    collect_delete(lbrp);
+    collect_delete(p_p_list_block);
 
     return(1);
 }
@@ -1735,22 +1726,21 @@ gr_point_list_duplic(
     GR_SERIES_IX seridx,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    NLISTS_BLK   new_lbr = cbp->nlb;
-    P_NLISTS_BLK lbrp;
-    S32          res;
-
-    lbrp = gr_point_list_getlbrp(getserp(cp, seridx), cbp);
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    NLISTS_BLK new_lbr = cbp->nlb;
+    P_P_LIST_BLOCK old_p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp);
+    S32 res;
 
     trace_3(TRACE_MODULE_GR_CHART,
-            "gr_point_list_duplic seridx %u %s list &%p\n",
-            seridx, cbp->list_name, report_ptr_cast(lbrp));
+            "gr_point_list_duplic seridx %u %s list &%p",
+            seridx, cbp->list_name, report_ptr_cast(old_p_p_list_block));
 
+    assert(NULL == new_lbr.lbr);
     new_lbr.lbr = NULL;
 
-    res = collect_copy(&new_lbr, lbrp);
+    res = collect_copy(&new_lbr, old_p_p_list_block);
 
-    lbrp->lbr = new_lbr.lbr;
+    *old_p_p_list_block = new_lbr.lbr;
 
     /* add refs after successful duplic */
     if(res > 0)
@@ -1766,18 +1756,16 @@ gr_point_list_fillstyle_enum_for_save(
     GR_SERIES_IX seridx,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    P_NLISTS_BLK lbrp;
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    P_P_LIST_BLOCK p_p_list_block = gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp);
     LIST_ITEMNO key;
     P_GR_FILLSTYLE pt;
 
-    lbrp = gr_point_list_getlbrp(getserp(cp, seridx), cbp);
-
     trace_3(TRACE_MODULE_GR_CHART,
-            "gr_point_list_fillstyle_enum_for_save seridx %u %s list &%p\n",
-            seridx, cbp->list_name, report_ptr_cast(lbrp));
+            "gr_point_list_fillstyle_enum_for_save seridx %u %s list &%p",
+            seridx, cbp->list_name, report_ptr_cast(p_p_list_block));
 
-    for(pt = collect_first(lbrp, &key); pt; pt = collect_next(lbrp, &key))
+    for(pt = collect_first(p_p_list_block, &key); pt; pt = collect_next(p_p_list_block, &key))
         {
         S32 cres;
 
@@ -1796,7 +1784,7 @@ gr_pdrop_list_fillstyle_reref(
 {
     assert(cp);
 
-    common_list_fillstyle_reref((P_NLISTS_BLK) &getserp(cp, seridx)->lbr.pdrop_fill, add);
+    common_list_fillstyle_reref(&getserp(cp, seridx)->lbr.pdrop_fill, add);
 }
 
 extern void
@@ -1807,7 +1795,7 @@ gr_point_list_fillstyle_reref(
 {
     assert(cp);
 
-    common_list_fillstyle_reref((P_NLISTS_BLK) &getserp(cp, seridx)->lbr.point_fill, add);
+    common_list_fillstyle_reref(&getserp(cp, seridx)->lbr.point_fill, add);
 }
 
 extern P_ANY
@@ -1817,9 +1805,9 @@ gr_point_list_first(
     _OutRef_    P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
 
-    return(collect_first(gr_point_list_getlbrp(getserp(cp, seridx), cbp), p_key));
+    return(collect_first(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), p_key));
 }
 
 extern P_ANY
@@ -1829,9 +1817,9 @@ gr_point_list_next(
     _InoutRef_  P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
 
-    return(collect_next(gr_point_list_getlbrp(getserp(cp, seridx), cbp), p_key));
+    return(collect_next(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), p_key));
 }
 
 static P_ANY
@@ -1841,12 +1829,10 @@ gr_point_list_search(
     GR_POINT_NO point,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    LIST_ITEMNO item;
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    LIST_ITEMNO item = point;
 
-    item = point;
-
-    return(collect_search(gr_point_list_getlbrp(getserp(cp, seridx), cbp), &item));
+    return(collect_search(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), item));
 }
 
 static S32
@@ -1857,12 +1843,10 @@ gr_point_list_set(
     PC_ANY style,
     GR_LIST_ID list_id)
 {
-    P_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
-    LIST_ITEMNO item;
+    PC_GR_STYLE_COMMON_BLK cbp = gr_style_common_blks[list_id];
+    LIST_ITEMNO item = point;
 
-    item = point;
-
-    return(common_list_set(gr_point_list_getlbrp(getserp(cp, seridx), cbp), item, style, cbp));
+    return(common_list_set(gr_point_list_get_p_p_list_block(getserp(cp, seridx), cbp), item, style, cbp));
 }
 
 /******************************************************************************
@@ -2047,7 +2031,7 @@ gr_point_chartstyle_query(
             }
         }
 
-    void_memcpy32(style, bpt, desc->style_size);
+    memcpy32(style, bpt, desc->style_size);
 
     return(using_default);
 }

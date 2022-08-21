@@ -135,11 +135,6 @@ string(41, PRESSANYKEY_STR,                     "Press any key");
 string(42, Initialising_STR,                    "Initialising...");
 string(113, Debug_STR,                          "Debug");
 
-/* date format strings */
-
-string(48, Zd_Zs_Zd_STR,                        "%d %s %d");
-string(49, Zd_ZP3s_Zd_STR,                      "%d %.3s %d");
-
 string(50, FZd_STR,                             "F%d");
 string(51, New_width_STR,                       "New width");
 string(52, New_right_margin_position_STR,       "New right margin position");
@@ -624,6 +619,7 @@ string(385, Page_left_STR,                      "Page left");
 string(386, Page_right_STR,                     "Page right");
 
 string(407, CustFuncErrStr,                     "Error in custom function, row %d: ");
+string(421, PropagatedErrStr,                   "Propagated from %s: ");
 
 string(500, function_menu_title,                "Functions");
 string(501, function_menu_entries,              "123456789012|"

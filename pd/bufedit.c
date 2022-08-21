@@ -181,7 +181,7 @@ chrina(
     if(lecpos > length)
         {
         /* pad with spaces */
-        void_memset32(linbuf+length, SPACE, (lecpos-length));
+        memset32(linbuf+length, SPACE, (lecpos-length));
         length = lecpos;
         linbuf[length] = '\0';
         }
@@ -196,7 +196,7 @@ chrina(
             return;
             }
 
-        void_memmove32(currpos+1, currpos, (length-lecpos+1));
+        memmove32(currpos+1, currpos, (length-lecpos+1));
         }
     else if(lecpos == length)
         {
@@ -374,7 +374,7 @@ PageLeft_fn(void)
 {
     COL tcol;
     coord win_width, fixwidth;
-    SCRCOL * cptr;
+    P_SCRCOL cptr;
 
     /* find width of unfixed window */
 
@@ -597,18 +597,20 @@ WordCount_fn(void)
         ptr = tslot->content.text;
         inword = FALSE;
 
-        while((ch = *ptr++) != '\0')
+        while((ch = *ptr++) != NULLCH)
             {
-            if(ch == SLRLDI)
+            if(SLRLD1 == ch)
                 {
-                ptr += SLRSIZE - 1;
+                ptr += COMPILED_TEXT_SLR_SIZE-1;
                 continue;
                 }
 
             if(ishighlight(ch))
                 continue;
 
-            if(ch != SPACE)
+            if(SPACE == ch)
+                inword = FALSE;
+            else
                 {
                 if(!inword)
                     {
@@ -616,8 +618,6 @@ WordCount_fn(void)
                     count++;
                     }
                 }
-            else
-                inword = FALSE;
             }
         }
 
@@ -739,7 +739,7 @@ DeleteCharacterLeft_fn(void)
     /* in insert mode move text backwards,
     overtype mode replace with a space */
     if(xf_iovbit)
-        void_memmove32(currpos, currpos + 1, (length-lecpos));
+        memmove32(currpos, currpos + 1, (length-lecpos));
     else
         *currpos = SPACE;
 
@@ -819,11 +819,11 @@ highlight_words_on_line(
 
     lecpos = 0;
 
-    while((ch = linbuf[lecpos]) != '\0')
+    while((ch = linbuf[lecpos]) != NULLCH)
         {
-        if(ch == SLRLDI)
+        if(SLRLD1 == ch)
             {
-            plusab(lecpos, SLRSIZE);
+            lecpos += COMPILED_TEXT_SLR_SIZE;
             continue;
             }
 
@@ -1036,7 +1036,7 @@ delete_bit_of_line(
     buffer_altered = TRUE;
 
     /* compact up (+1 to copy NULLCH) */
-    void_memmove32(dst, src, strlen32p1(src));
+    memmove32(dst, src, strlen32p1(src));
 }
 
 /******************************************************************************
@@ -1210,15 +1210,29 @@ AutoWidth_fn(void)
 
                     /* deliberate fall-thru */
                 case SL_NUMBER:
-                    expand_slot(current_docno(), tslot, in_block.row, array, elemof32(array), TRUE, TRUE, TRUE, TRUE);
-
-                    /* remove trailing spaces */
-                    ptr = array + strlen(array);
-                    while((--ptr >= array) && (*ptr == SPACE))
-                        *ptr = '\0';
+                    (void) expand_slot(current_docno(), tslot, in_block.row, array, elemof32(array),
+                                       DEFAULT_EXPAND_REFS /*expand_refs*/, TRUE /*expand_ats*/, TRUE /*expand_ctrl*/,
+                                       riscos_fonts /*allow_fonty_result*/, TRUE /*cff*/);
 
                     if(riscos_fonts)
                         {
+                        /* remove trailing spaces CAREFULLY as we may have a multibyte font sequence */
+                        BOOL last_was_font_change = FALSE;
+
+                        ptr = array;
+                        while(NULLCH != *ptr)
+                            {
+                            S32 nchar = font_skip(ptr);
+
+                            last_was_font_change = (nchar != 1);
+
+                            ptr += nchar;
+                            }
+
+                        if(!last_was_font_change)
+                            while((--ptr >= array) && (*ptr == SPACE))
+                                *ptr = NULLCH;
+
                         /* SKS after 4.11 29jan92 - twiddle in this side for finer
                          * tuning in fonts considering 1/2 chars etc
                         */
@@ -1233,6 +1247,11 @@ AutoWidth_fn(void)
                         /* changed by rjm 18.10.91 */
                         char *aptr;
                         S32 hcount = 0;
+
+                        /* remove trailing spaces */
+                        ptr = array + strlen(array);
+                        while((--ptr >= array) && (*ptr == SPACE))
+                            *ptr = '\0';
 
                         for(aptr = array ; *aptr != '\0'; aptr++)
                             {
@@ -1320,7 +1339,7 @@ all_widths_zero(
 {
     COL trycol;
 
-    trace_3(TRACE_APP_PD4, "all_widths_zero(%d, %d): numcol = %d\n", tcol1, tcol2, numcol);
+    trace_3(TRACE_APP_PD4, "all_widths_zero(%d, %d): numcol = %d", tcol1, tcol2, numcol);
 
     for(trycol = 0; trycol < numcol; trycol++)
         if(((trycol < tcol1)  ||  (trycol > tcol2))  &&  colwidth(trycol))
@@ -1391,7 +1410,7 @@ ColumnWidth_fn(void)
 
             /* must have some other columns possibly visible */
             badparm = all_widths_zero(tcol1, tcol2);
-            trace_1(TRACE_APP_PD4, "all_widths_zero %d\n", badparm);
+            trace_1(TRACE_APP_PD4, "all_widths_zero %d", badparm);
 
             /* can't set fixed cols to zero width */
             if(!badparm)
@@ -1781,13 +1800,14 @@ fill_linbuf(
     ROW startrow)
 {
     char buffer[LIN_BUFSIZ];
-    uchar *to, *oldto, *ptr;
+    const uchar * from;
+    uchar * to;
     S32 wordlen, ch;
     P_SLOT tslot;
     coord splitpoint;
-    COL col;
-    ROW row;
-    DOCNO docno;
+    COL tcol;
+    ROW trow;
+    EV_DOCNO docno;
 
     firstword = TRUE;
 
@@ -1797,39 +1817,37 @@ fill_linbuf(
         firstword = FALSE;
 
         /* copy word and spaces to temp buffer: any slot references need decompiling */
-        ptr = lastword;
+        from = lastword;
         to = buffer;
-        while(((ch = *ptr++) != '\0')  &&  (ch != SPACE))
-            if(ch != SLRLDI)
-                *to++ = ch;
-            else
-                {
-                /* decompile slot ref */
-                oldto = to;
+        while(((ch = *from++) != NULLCH)  &&  (ch != SPACE))
+            {
+            if(SLRLD1 == ch)
+                { /* decompile compiled slot reference */
+                const uchar * csr = from + 1; /* CSR is past the SLRLD1/2 */
 
-                docno = (DOCNO) talps(ptr, sizeof(DOCNO));
+                from = talps_csr(csr, &docno, &tcol, &trow);
+                /*eportf("fill_linbuf: decompiled CSR docno %d col 0x%x row 0x%x", docno, tcol, trow);*/
 
-                col   = (COL)   talps(ptr + sizeof(DOCNO), sizeof(COL));
+                to += write_ref(to, elemof32(buffer) - (to - buffer), docno, tcol, trow);
 
-                row   = (ROW)   talps(ptr + sizeof(DOCNO) + sizeof(COL),
-                                      sizeof(ROW)) & ROWNOBITS;
-
-                ptr += SLRSIZE - 1;
-
-                to += write_ref(to, elemof32(buffer) - (to - buffer), docno, col, row);
+                continue;
                 }
+
+            *to++ = ch;
+            }
 
         /* and spaces after word */
         while(ch == SPACE)
             {
             *to++ = ch;
-            ch = *ptr++;
+            ch = *from++;
             }
 
-        *to = '\0';
+        --from; /* retract to point to NULLCH or first character after a SPACE */
+        *to = NULLCH;
 
         wordlen = strlen(buffer);
-        trace_2(TRACE_APP_PD4, "fill_linbuf received word '%s' of length %d\n", buffer, wordlen);
+        trace_2(TRACE_APP_PD4, "fill_linbuf received word '%s' of length %d", buffer, wordlen);
 
         /* don't join words together from joined lines */
         to = linbuf + lecpos;
@@ -1841,14 +1859,14 @@ fill_linbuf(
 
         if(wordlen > LIN_BUFSIZ - lecpos)
             {
-            trace_0(TRACE_APP_PD4, "fill_linbuf got a word that is too long!\n");
+            trace_0(TRACE_APP_PD4, "fill_linbuf got a word that is too long!");
             *to = '\0';
             splitpoint = lecpos;
             }
         else
             {
             /* update global if we've taken word */
-            lastword = --ptr;
+            lastword = (uchar *) from;
 
             strcpy(to, buffer);
             lecpos += wordlen;
@@ -1856,7 +1874,7 @@ fill_linbuf(
             ++word_out;
 
             splitpoint = fndlbr(curr_outrow);
-            trace_1(TRACE_APP_PD4, "fill_linbuf got splitpoint %d\n", splitpoint);
+            trace_1(TRACE_APP_PD4, "fill_linbuf got splitpoint %d", splitpoint);
             }
 
         if(splitpoint > 0)
@@ -1884,7 +1902,7 @@ fill_linbuf(
     linbuf[lecpos + 1] = NULLCH;
     new_just = J_FREE;
 
-    trace_2(TRACE_APP_PD4, "fill_linbuf settled on linbuf '%s', lecpos %d\n", linbuf, lecpos);
+    trace_2(TRACE_APP_PD4, "fill_linbuf settled on linbuf '%s', lecpos %d", linbuf, lecpos);
 
     if(firstword)
         /* no words to format */
@@ -1902,7 +1920,7 @@ fill_linbuf(
     else
         reset_numrow();
 
-    trace_0(TRACE_APP_PD4, "fill_linbuf about to do adjustment after reformat\n");
+    trace_0(TRACE_APP_PD4, "fill_linbuf about to do adjustment after reformat");
 
     /* if insert on wrap, need to insert lindif rows in other columns */
     if(lindif > 0)
@@ -1977,7 +1995,7 @@ fill_linbuf(
             }
         }
 
-    trace_1(TRACE_APP_PD4, "fill_linbuf numrow: %d\n", numrow);
+    trace_1(TRACE_APP_PD4, "fill_linbuf numrow: %d", numrow);
     return(TRUE);
 }
 
@@ -1995,7 +2013,6 @@ mergeinline(
 {
     uchar *from, *to;
     S32 splitch;
-    P_SLOT sl;
     ROW temp_row;
 
     splitch = linbuf[splitpoint];
@@ -2018,7 +2035,7 @@ mergeinline(
     curr_outrow++;
     linbuf[splitpoint] = splitch;
 
-    trace_5(TRACE_APP_PD4, "currow: %d, inrow: %d, outrow: %d, old_just: %d, new_just: %d\n",
+    trace_5(TRACE_APP_PD4, "currow: %d, inrow: %d, outrow: %d, old_just: %d, new_just: %d",
             currow, curr_inrow, curr_outrow,
             old_just, new_just);
 
@@ -2031,13 +2048,7 @@ mergeinline(
          (old_just == new_just)                 )
       )
         {
-        sl = travel(curcol, curr_outrow - 1);
-        if(sl)
-            {
-            orab(sl->flags, SL_ALTERED);
-            xf_drawsome = TRUE;
-            trace_0(TRACE_APP_PD4, "slot marked altered\n");
-            }
+        mark_slot(travel(curcol, curr_outrow - 1));
         }
 
     /* move word left at end of line back to start */
@@ -2050,19 +2061,18 @@ mergeinline(
     else
         word_out = 0;
 
-    while(*from)
+    while(NULLCH != *from)
         {
-        if(*from == SLRLDI)
-            {
-            void_memmove32(to, from, SLRSIZE);
-            to += SLRSIZE;
-            from += SLRSIZE;
+        if(SLRLD1 == (*to++ = *from++))
+            { /* copy the rest of the CSR over */
+            memmove32(to, from, COMPILED_TEXT_SLR_SIZE-1); /* NB may overlap! */
+            to += COMPILED_TEXT_SLR_SIZE-1;
+            from += COMPILED_TEXT_SLR_SIZE-1;
             }
-        else
-            *to++ = *from++;
         }
 
-    *to = '\0';
+    *to = NULLCH;
+
     lecpos = to - linbuf;
     return(TRUE);
 }
@@ -2128,7 +2138,7 @@ word_on_new_line(void)
     if(!tslot  ||  !chkcfm(tslot, was_curr_inrow))
         return(NULL);
 
-    void_memcpy32(lastwordbuff, tslot->content.text, slotcontentssize(tslot)); /* includes terminator */
+    memcpy32(lastwordbuff, tslot->content.text, slotcontentssize(tslot)); /* includes terminator */
     lastword = lastwordbuff;
 
     return(((*lastword == SPACE  &&  !firstword)  ||  *lastword == '\0')
@@ -2315,7 +2325,9 @@ del_chkwrp(void)
     if(splitpoint < 0)
         {
         nextrow = currow + 1;
+
         sl = travel(curcol, nextrow);
+
         if(sl  &&  chkcfm(sl, nextrow))
             {
             wrapwidth = chkolp(travel_here(), curcol, currow);
@@ -2325,25 +2337,35 @@ del_chkwrp(void)
                 /* get string with font changes and text-at chars */
                 font_expand_for_break(tbuf, sl->content.text);
                 c = tbuf;
-                }
-            else
-                c = sl->content.text;
 
-            while(*c && *c != SPACE)
-                c += font_skip(c);
+                while(*c && *c != SPACE)
+                    c += font_skip(c);
 
-            if(riscos_fonts)
-                {
                 *c = '\0';
                 word_wid = font_width(tbuf);
 
                 wrapwidth *= charwidth * x_scale;
-                if(wrapwidth - -splitpoint < word_wid)
+
+                if((wrapwidth - -splitpoint) < word_wid)
                     return;
                 }
             else
-                if(wrapwidth - -splitpoint < c - sl->content.text)
+                {
+                c = sl->content.text;
+
+                while((NULLCH != *c) && (SPACE != *c))
+                    {
+                    if(SLRLD1 == *c)
+                        c += COMPILED_TEXT_SLR_SIZE;
+                    else
+                        c++;
+                    }
+
+                word_wid = c - sl->content.text;
+
+                if((wrapwidth - -splitpoint) < word_wid)
                     return;
+                }
             }
         else
             return;
@@ -2456,10 +2478,12 @@ fndlbr(
     ROW row)
 {
     uchar *tptr;
+    uchar ch;
+    const uchar text_at_char = get_text_at_char();
     S32 width;
     coord startofword, wrapwidth;
     char tbuf[PAINT_STRSIZ], *break_point, *c;
-    S32 split_count, ch, had_space;
+    S32 split_count, had_space;
 
     wrapwidth = chkolp(travel(curcol, row), curcol, row) - 1;
 
@@ -2515,20 +2539,19 @@ fndlbr(
     /* for each word */
     while(*tptr)
         {
-        const S32 text_at_char = get_text_at_char();
-
         startofword = tptr - linbuf;
 
         /* walk past word - updating for text-at fields */
         while(((ch = *tptr) != '\0')  &&  (ch != SPACE))
-            if((ch == text_at_char) && (NULLCH != text_at_char))
+            {
+            if((text_at_char == ch) && (NULLCH != text_at_char))
                 {
                 /* length of text-at field is number of trailing text-at chars */
                 tptr++;
                 switch(toupper(*tptr))
                     {
-                    case SLRLDI:
-                        tptr += SLRSIZE;
+                    case SLRLD1:
+                        tptr += COMPILED_TEXT_SLR_SIZE;
                         break;
 
                     case 'N': /* now */
@@ -2580,17 +2603,18 @@ fndlbr(
                 }
             else
                 {
-                if(SLRLDI == *tptr) /* SKS - have to be paranoid now that text_at_char can change! */
-                    tptr += SLRSIZE-1;
-
                 if(!ishighlight(ch))
                     ++width;
 
-                ++tptr;
+                if(SLRLD1 == ch) /* have to cater for orphaned SLRLD1 (text_at_char changed) */
+                    tptr += COMPILED_TEXT_SLR_SIZE;
+                else
+                    ++tptr;
                 }
+            }
 
         /* end of word too far over so return offset of start of word */
-        trace_3(TRACE_APP_PD4, "fndlbr width: %d, wrapwidth: %d, tptr: %s\n",
+        trace_3(TRACE_APP_PD4, "fndlbr width: %d, wrapwidth: %d, tptr: %s",
                 width, wrapwidth, tptr);
 
         if((width > wrapwidth)  &&  startofword)
@@ -2639,7 +2663,7 @@ font_line_break(
     else
         res = fs.split + 1;
 
-    trace_5(TRACE_APP_PD4, "width: %d, split: %d, break: %d, '%s', res = %d\n", fs.x, fs.split, fs.term, str + fs.term, res);
+    trace_5(TRACE_APP_PD4, "width: %d, split: %d, break: %d, '%s', res = %d", fs.x, fs.split, fs.term, str + fs.term, res);
     return(res);
 }
 

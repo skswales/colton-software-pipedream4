@@ -56,7 +56,7 @@ conv_heading_to_angle(
 
     alpha = reduce_into_range(&alpha);
 
-    trace_2(TRACE_MODULE_GR_CHART, "conv_heading_to_angle(%g) yields %g\n", heading, alpha);
+    trace_2(TRACE_MODULE_GR_CHART, "conv_heading_to_angle(%g) yields %g", heading, alpha);
 
     return(alpha);
 }
@@ -260,7 +260,7 @@ gr_pie_addin(
                                 ','    /* ths_ch */);
 
                     if(NULL != t_trailer)
-                        void_strkat(cv.data.text, elemof32(cv.data.text), t_trailer);
+                        safe_strkat(cv.data.text, elemof32(cv.data.text), t_trailer);
                     }
                 else
                     gr_travel_categ_label(cp, point, &cv);

@@ -90,18 +90,6 @@ Null_EventHandler(
     _InVal_     BOOL add,
     S32 priority /*0->default*/);
 
-/*
-private variable exported for macros - do NOT use directly
-*/
-
-extern void * Null__EventList;
-
-/*
-macros
-*/
-
-#define Null_HandlersPresent() ( Null__EventList != NULL )
-
 #endif /* __wm_event_h */
 
 /* end of wm_event.h */

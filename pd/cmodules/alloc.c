@@ -368,7 +368,7 @@ P_RISCOS_HEAP_USED_DATA;
 
 #if defined(ALLOC_CLEAR_FREE)
 #define CLEAR_FREE(p_free_block) \
-    void_memset32(p_free_block.f + 1, 'x', p_free_block.f->size - sizeof32(*p_free_block.f));
+    memset32(p_free_block.f + 1, 'x', p_free_block.f->size - sizeof32(*p_free_block.f));
 #else
 #define CLEAR_FREE(p_free_block)
 #endif
@@ -752,7 +752,7 @@ alloc_freeextrastore(
         ahp->heap->size = flex_size((flex_ptr) &ahp->heap);
 
         trace_4(TRACE_MODULE_ALLOC,
-                "heap (&%p->&%p) now contracted to size %u,&%4.4x\n",
+                "heap (&%p->&%p) now contracted to size %u,&%4.4x",
                 report_ptr_cast(ahp), report_ptr_cast(ahp->heap), ahp->heap->size, ahp->heap->size);
         }
 }
@@ -914,7 +914,7 @@ alloc_validate_heap(
     endp         = (char *) ahp->heap + current_size;
 
     trace_6(TRACE_MODULE_ALLOC,
-            " heap (&%p->&%p) size &%4.4x,&%p hwm &%4.4x,&%p\n*** free/used blocks ***:\n",
+            " heap (&%p->&%p) size &%4.4x,&%p hwm &%4.4x,&%p\n*** free/used blocks ***:",
             report_ptr_cast(ahp), report_ptr_cast(ahp->heap), current_size, report_ptr_cast(endp), current_hwm, report_ptr_cast(hwmp));
 
     myassert5x(current_hwm < INT_MAX, "alloc__%s: heap (&%p->&%p) has corrupt hwm %u,&%4.4x",
@@ -941,7 +941,7 @@ alloc_validate_heap(
         if(p.c == hwmp)
             {
             trace_3(TRACE_MODULE_ALLOC,
-                    "  (last free block &%p,%u,&%4.4x)\n",
+                    "  (last free block &%p,%u,&%4.4x)",
                     p.c, endp - hwmp, endp - hwmp);
 
             p.c = endp;
@@ -952,7 +952,7 @@ alloc_validate_heap(
             syssize = p.f->size;
 
             trace_3(TRACE_MODULE_ALLOC,
-                    "  (free &%p,%u,&%4.4x)\n",
+                    "  (free &%p,%u,&%4.4x)",
                     report_ptr_cast(p.f), syssize, syssize);
 
             if(offset)
@@ -982,7 +982,7 @@ alloc_validate_heap(
             usrcore = (char *) (p.u + 1) + startguardsize;
 
             trace_6(TRACE_MODULE_ALLOC,
-                    "  (used &%p &%p size %u,&%4.4x %u,&%4.4x)\n",
+                    "  (used &%p &%p size %u,&%4.4x %u,&%4.4x)",
                     report_ptr_cast(p.u), report_ptr_cast(usrcore), syssize, syssize, usrsize, usrsize);
 
             myassert9x(((syssize & 3) == 0)  ||  (p.c + syssize > p.c)  &&  (p.c + syssize <= hwmp),
@@ -1263,7 +1263,7 @@ alloc__calloc(
     a = alloc__malloc(nbytes, ahp);
 
     if(a)
-        void_memset32(a, 0, nbytes);
+        memset32(a, 0, nbytes);
 
     return(a);
 }
@@ -1321,7 +1321,7 @@ alloc__free(
     alloc_trace_on_do(ahp);
 
     trace_3(TRACE_MODULE_ALLOC,
-            "alloc__free(&%p) (&%p->&%p)\n",
+            "alloc__free(&%p) (&%p->&%p)",
             report_ptr_cast(usrcore), report_ptr_cast(ahp), report_ptr_cast(ahp->heap));
 
 #if defined(CHECK_ALLOCS)
@@ -1342,7 +1342,7 @@ alloc__free(
     uintptr_t core       = (uintptr_t) usrcore;
     if((core < heap_start) || (core >= heap_hwm))
     {
-        reportf("alloc__free(0x%8.8X): outwith heap 0x%8.8X..0x%8.8X\n", core, heap_start, heap_hwm);
+        reportf("alloc__free(0x%8.8X): outwith heap 0x%8.8X..0x%8.8X", core, heap_start, heap_hwm);
         alloc_trace_off_do(ahp);
         return;
     }
@@ -1452,7 +1452,7 @@ alloc__malloc(
 
 #if TRACE_ALLOWED
         if(myassert(!e  &&  r.r[2]))
-            myasserted("alloc__malloc(%u) failed unexpectedly after heap (&%p->&%p) extension\n",
+            myasserted("alloc__malloc(%u) failed unexpectedly after heap (&%p->&%p) extension",
                         size, ahp, ahp->heap);
 #endif
 
@@ -1472,7 +1472,7 @@ alloc__malloc(
 
 #if defined(CHECK_ALLOCS)
     if(ahp->flags & alloc_validate_on) /* regardless of enable state */
-        void_memset32(core, FILL_BYTE, blocksize(core));
+        memset32(core, FILL_BYTE, blocksize(core));
 #endif
 
 #if defined(POST_CHECK_ALLOCS)
@@ -1481,7 +1481,7 @@ alloc__malloc(
             alloc_validate_heap(ahp, "AFTER_malloc");
 #endif
 
-    trace_1(TRACE_MODULE_ALLOC, " yields &%p\n", usrcore);
+    trace_1(TRACE_MODULE_ALLOC, " yields &%p", usrcore);
 
     alloc_trace_off_do(ahp);
 
@@ -1579,7 +1579,7 @@ alloc__realloc(
     uintptr_t core       = (uintptr_t) usrcore;
     if((core < heap_start) || (core >= heap_hwm))
     {
-        reportf("alloc__realloc(0x%8.8X): outwith heap 0x%8.8X..0x%8.8X\n", core, heap_start, heap_hwm);
+        reportf("alloc__realloc(0x%8.8X): outwith heap 0x%8.8X..0x%8.8X", core, heap_start, heap_hwm);
         alloc_trace_off_do(ahp);
         return(NULL);
     }
@@ -1613,7 +1613,7 @@ alloc__realloc(
         if(new_blksize == current_blksize)
             {
             trace_1(TRACE_MODULE_ALLOC,
-                    "yields &%p (not moved, same allocated size)\n",
+                    "yields &%p (not moved, same allocated size)",
                     usrcore);
             break;
             }
@@ -1652,7 +1652,7 @@ alloc__realloc(
 
             usrcore = syscore + startguardsize;
 
-            trace_1(TRACE_MODULE_ALLOC, "yields &%p (shrunk)\n", usrcore);
+            trace_1(TRACE_MODULE_ALLOC, "yields &%p (shrunk)", usrcore);
             break;
             }
 
@@ -1694,7 +1694,7 @@ alloc__realloc(
 
 #if TRACE_ALLOWED
             if(myassert(!e  &&  r.r[2]))
-                myasserted("alloc__realloc(&%p, %u) failed unexpectedly after heap (&%p->&%p) extension\n",
+                myasserted("alloc__realloc(&%p, %u) failed unexpectedly after heap (&%p->&%p) extension",
                             usrcore, usrsize, ahp, ahp->heap);
 #endif
 
@@ -1714,7 +1714,7 @@ alloc__realloc(
 
         usrcore = syscore + startguardsize;
 
-        trace_1(TRACE_MODULE_ALLOC, "yields &%p (grown)\n", usrcore);
+        trace_1(TRACE_MODULE_ALLOC, "yields &%p (grown)", usrcore);
 
         break; /* always - loop only for structure */
         }
@@ -1723,7 +1723,7 @@ alloc__realloc(
     /* startguard always copied safely on realloc - just consider endguard fill */
 
     if(ahp->flags & alloc_validate_on) /* regardless of enable state */
-        void_memset32(syscore + (blocksize(syscore) - endguardsize), FILL_BYTE, endguardsize);
+        memset32(syscore + (blocksize(syscore) - endguardsize), FILL_BYTE, endguardsize);
 #endif
 
 #if defined(POST_CHECK_ALLOCS)
@@ -2171,7 +2171,7 @@ riscos_ptr_realloc_grow(
 
                     heap->hwm -= p_free_block.f->size; /* hwm becomes invalid for a mo */
                     *p_free_offset = 0;
-                    void_memmove32(p_free_block.f, p_used_block.u, p_used_block.u->size);
+                    memmove32(p_free_block.f, p_used_block.u, p_used_block.u->size);
                     p_used_block.v = p_free_block.v;
                     break;
                 }
@@ -2285,7 +2285,7 @@ riscos_ptr_realloc_grow(
                     USED_PROCESS(7);
                     /* remove both lower and upper free blocks from list */
                     *p_free_offset = p_upper_free_block.f->free ? P_NEXT_FREE(p_upper_free_block) - (P_U8) p_free_offset : 0;
-                    void_memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
+                    memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
                     p_used_block.v = p_lower_free_block.v;
                     p_used_block.u->size = new_blksize;
                 }
@@ -2299,7 +2299,7 @@ riscos_ptr_realloc_grow(
                     p_next_free = p_upper_free_block.f->free ? P_NEXT_FREE(p_upper_free_block) : NULL;
                     lower_F_size = p_lower_free_block.f->size;
                     upper_F_size = p_upper_free_block.f->size;
-                    void_memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
+                    memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
                     p_used_block.v = p_lower_free_block.v;
                     p_used_block.u->size = new_blksize;
                     /* now just one free block, above the used block, at a completely different place */
@@ -2326,7 +2326,7 @@ riscos_ptr_realloc_grow(
                 USED_PROCESS(9);
                 /* remove lower free block from list */
                 *p_free_offset = p_lower_free_block.f->free ? P_NEXT_FREE(p_lower_free_block) - (P_U8) p_free_offset : 0;
-                void_memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
+                memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
                 p_used_block.v = p_lower_free_block.v;
                 p_used_block.u->size = new_blksize;
             }
@@ -2338,7 +2338,7 @@ riscos_ptr_realloc_grow(
                 USED_PROCESS(10);
                 p_next_free = p_lower_free_block.f->free ? P_NEXT_FREE(p_lower_free_block) : NULL;
                 lower_F_size = p_lower_free_block.f->size;
-                void_memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
+                memmove32(p_lower_free_block.f, p_used_block.u, p_used_block.u->size);
                 p_used_block.v = p_lower_free_block.v;
                 p_used_block.u->size = new_blksize;
                 /* free block now above the used block, at a completely different place */
@@ -2422,7 +2422,7 @@ riscos_ptr_realloc_grow(
         heap->hwm += new_blksize;
     }
 
-    void_memmove32(p_new_used_block.u, p_used_block.u, p_used_block.u->size);
+    memmove32(p_new_used_block.u, p_used_block.u, p_used_block.u->size);
     p_new_used_block.u->size = new_blksize;
 
     riscos_ptr_free(p_used_block.u, ahp);

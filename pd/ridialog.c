@@ -98,11 +98,11 @@ static BOOL
 dialog__create(
     const char * dboxname)
 {
-    trace_1(TRACE_APP_DIALOG, "dialog__create(%s)\n", dboxname);
+    trace_1(TRACE_APP_DIALOG, "dialog__create(%s)", dboxname);
 
     if(NULL != dialog__dbox)
         {
-        trace_1(TRACE_APP_DIALOG, "dialog__dbox already exists: " PTR_XTFMT " - hope it's the right one! (persisting?)\n", report_ptr_cast(dialog__dbox));
+        trace_1(TRACE_APP_DIALOG, "dialog__dbox already exists: " PTR_XTFMT " - hope it's the right one! (persisting?)", report_ptr_cast(dialog__dbox));
         }
     else
         {
@@ -136,14 +136,14 @@ dialog__fillin_for(
 
         if((NO_DOCUMENT == p_docu)  ||  docu_is_thunk(p_docu))
             {
-            reportf("dialog__fillin_for(&%p) returning %d to a killed caller context\n", report_ptr_cast(d), f);
+            reportf("dialog__fillin_for(&%p) returning %d to a killed caller context", report_ptr_cast(d), f);
             f = dbox_CLOSE;
             }
         else
             select_document(p_docu);
         }
 
-    trace_2(TRACE_APP_DIALOG, "dialog__fillin_for(&%p) yields %d\n", report_ptr_cast(d), f);
+    trace_2(TRACE_APP_DIALOG, "dialog__fillin_for(&%p) yields %d", report_ptr_cast(d), f);
     return(f);
 }
 
@@ -161,7 +161,7 @@ dialog__fillin(
     dbox d = dialog__dbox;
     dbox_field f;
 
-    trace_0(TRACE_APP_DIALOG, "dialog__fillin()\n");
+    trace_0(TRACE_APP_DIALOG, "dialog__fillin()");
 
     dbox_show(d);
 
@@ -172,7 +172,7 @@ dialog__fillin(
 
     dialog__fillin_ok = (f == dbox_OK);
 
-    trace_2(TRACE_APP_DIALOG, "dialog__fillin returns field %d, ok=%s\n", f, trace_boolstring(dialog__fillin_ok));
+    trace_2(TRACE_APP_DIALOG, "dialog__fillin returns field %d, ok=%s", f, trace_boolstring(dialog__fillin_ok));
     return(f);
 }
 
@@ -188,11 +188,11 @@ dialog__simple_fillin(
 {
     dbox_field f;
 
-    trace_0(TRACE_APP_DIALOG, "dialog__simple_fillin()\n");
+    trace_0(TRACE_APP_DIALOG, "dialog__simple_fillin()");
 
     do { f = dialog__fillin(has_cancel); } while((f != dbox_CLOSE)  &&  (f != dbox_OK));
 
-    trace_1(TRACE_APP_DIALOG, "dialog__simple_fillin returns dialog__fillin_ok=%s\n", trace_boolstring(dialog__fillin_ok));
+    trace_1(TRACE_APP_DIALOG, "dialog__simple_fillin returns dialog__fillin_ok=%s", trace_boolstring(dialog__fillin_ok));
 }
 
 /******************************************************************************
@@ -204,7 +204,7 @@ dialog__simple_fillin(
 static void
 dialog__dispose(void)
 {
-    trace_1(TRACE_APP_DIALOG, "dialog__dispose(): dialog__dbox = &%p\n", report_ptr_cast(dialog__dbox));
+    trace_1(TRACE_APP_DIALOG, "dialog__dispose(): dialog__dbox = &%p", report_ptr_cast(dialog__dbox));
 
     dbox_dispose(&dialog__dbox);
 }
@@ -237,12 +237,12 @@ riscdialog_ended(void)
     if(!dialog__dbox)
         {
         ended = TRUE;                /* already disposed of */
-        trace_0(TRACE_APP_DIALOG, "riscdialog_ended = TRUE as dialog__dbox already disposed\n");
+        trace_0(TRACE_APP_DIALOG, "riscdialog_ended = TRUE as dialog__dbox already disposed");
         }
     else
         {
         ended = !dialog__may_persist;
-        trace_1(TRACE_APP_DIALOG, "riscdialog_ended = %s\n", trace_boolstring(ended));
+        trace_1(TRACE_APP_DIALOG, "riscdialog_ended = %s", trace_boolstring(ended));
 
         if(ended)
             /* kill menu tree too (probably dead but don't take chances) */
@@ -302,7 +302,7 @@ dialog__raw_eventhandler(
         case wimp_ESENDWANTACK:
             if(e->data.msg.hdr.action == wimp_MHELPREQUEST)
                 {
-                trace_0(TRACE_APP_DIALOG, "help request on pd dialog box\n");
+                trace_0(TRACE_APP_DIALOG, "help request on pd dialog box");
                 riscos_sendhelpreply(&e->data.msg, help_dialog_window);
                 processed = TRUE;
                 }
@@ -338,15 +338,15 @@ riscdialog_execute(
 
     if(!dname)
         {
-        trace_2(TRACE_APP_DIALOG, "riscdialog_execute(%s, \"\", " PTR_XTFMT ")\n",
+        trace_2(TRACE_APP_DIALOG, "riscdialog_execute(%s, \"\", " PTR_XTFMT ")",
                     report_procedure_name(report_proc_cast(dproc)), report_ptr_cast(dptr));
 
-        trace_0(TRACE_APP_DIALOG, "calling dialog procedure without creating dialog__dbox\n");
+        trace_0(TRACE_APP_DIALOG, "calling dialog procedure without creating dialog__dbox");
         dproc(dptr);
         }
     else
         {
-        trace_3(TRACE_APP_DIALOG, "riscdialog_execute(%s, \"%s\", " PTR_XTFMT ")\n",
+        trace_3(TRACE_APP_DIALOG, "riscdialog_execute(%s, \"%s\", " PTR_XTFMT ")",
                     report_procedure_name(report_proc_cast(dproc)), dname, report_ptr_cast(dptr));
 
         switch(boxnumber)
@@ -431,17 +431,17 @@ riscdialog_execute(
 
             if(!dialog__fillin_ok) /* never persist if faulty */
                 {
-                trace_0(TRACE_APP_DIALOG, "disposing because of faulty fillin etc.\n");
+                trace_0(TRACE_APP_DIALOG, "disposing because of faulty fillin etc.");
                 dialog__dispose();
                 }
             }
         else
-            trace_0(TRACE_APP_DIALOG, "failed to create dialog__dbox\n");
+            trace_0(TRACE_APP_DIALOG, "failed to create dialog__dbox");
         }
 
     dialog__may_persist = dialog__fillin_ok ? dbox_persist() : FALSE;
 
-    trace_1(TRACE_APP_DIALOG, "riscdialog_execute returns %s\n", trace_boolstring(dialog__fillin_ok));
+    trace_1(TRACE_APP_DIALOG, "riscdialog_execute returns %s", trace_boolstring(dialog__fillin_ok));
     return(dialog__fillin_ok);
 }
 
@@ -461,7 +461,7 @@ mydboxquery(
     dbox d;
     dbox_field f;
 
-    trace_1(TRACE_APP_DIALOG, "mydboxquery(%s)\n", question);
+    trace_1(TRACE_APP_DIALOG, "mydboxquery(%s)", question);
 
     if(!*dd)
         {
@@ -506,7 +506,7 @@ mydboxquery(
             break;
         }
 
-    trace_2(TRACE_APP_DIALOG, "mydboxquery(%s) returns %d\n", question, res);
+    trace_2(TRACE_APP_DIALOG, "mydboxquery(%s) returns %d", question, res);
     return(res);
 }
 
@@ -564,7 +564,7 @@ riscdialog_query_save_existing(void)
 
     if(!xf_filealtered)
         {
-        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns NO because file not altered\n");
+        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns NO because file not altered");
         return(riscdialog_query_NO);
         }
 
@@ -576,21 +576,21 @@ riscdialog_query_save_existing(void)
         {
         case riscdialog_query_CANCEL:
             #if TRACE_ALLOWED
-            trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns CANCEL\n");
+            trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns CANCEL");
             return(res);
             #else
             /* deliberate drop thru ... */
             #endif
 
         case riscdialog_query_NO:
-            trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns NO\n");
+            trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns NO");
             return(res);
 
         default:
             assert(0);
 
         case riscdialog_query_YES:
-            trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() got YES; saving file\n");
+            trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() got YES; saving file");
             break;
         }
 
@@ -602,7 +602,7 @@ riscdialog_query_save_existing(void)
     if(been_error  ||  xf_filealtered)
         res = riscdialog_query_CANCEL;
 
-    trace_1(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns %d\n", res);
+    trace_1(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns %d", res);
     return(res);
 }
 
@@ -628,7 +628,7 @@ dialog__getfield(
 
     dbox_getfield(dialog__dbox, f, tempstring, sizeof(tempstring));
 
-    trace_3(TRACE_APP_DIALOG, "dialog__getfield(%d, " PTR_XTFMT ") yields \"%s\"\n",
+    trace_3(TRACE_APP_DIALOG, "dialog__getfield(%d, " PTR_XTFMT ") yields \"%s\"",
             f, report_ptr_cast(var), tempstring);
 
     /* translate ctrl chars too */
@@ -649,7 +649,7 @@ dialog__getfield_high(
 
     dbox_getfield(dialog__dbox, f, tempstring, sizeof(tempstring));
 
-    trace_3(TRACE_APP_DIALOG, "dialog__getfield(%d, " PTR_XTFMT ") yields \"%s\"\n",
+    trace_3(TRACE_APP_DIALOG, "dialog__getfield(%d, " PTR_XTFMT ") yields \"%s\"",
             f, report_ptr_cast(var), tempstring);
 
     /* translate ctrl chars */
@@ -683,7 +683,7 @@ dialog__setfield_high(
     char ch;
     const char *str = dptr->textfield;
 
-    trace_3(TRACE_APP_DIALOG, "dialog__setfield_high(%d, (&%p) \"%s\")\n",
+    trace_3(TRACE_APP_DIALOG, "dialog__setfield_high(%d, (&%p) \"%s\")",
                                     f, str, trace_string(str));
 
     if(!str)
@@ -716,7 +716,7 @@ dialog__setfield_str(
     dbox_field f,
     const char * str)
 {
-    trace_3(TRACE_APP_DIALOG, "dialog__setfield_str(%d, (&%p) \"%s\")\n",
+    trace_3(TRACE_APP_DIALOG, "dialog__setfield_str(%d, (&%p) \"%s\")",
                                     f, str, trace_string(str));
 
     if(!str)
@@ -810,7 +810,7 @@ dialog__getnumericlimited(
 
     dptr->option = num;
 
-    trace_2(TRACE_APP_DIALOG, "dialog__getnumeric(%d) yields %d\n", f, dptr->option);
+    trace_2(TRACE_APP_DIALOG, "dialog__getnumeric(%d) yields %d", f, dptr->option);
     assert((dptr->type==F_NUMBER) || (dptr->type==F_COLOUR) || (dptr->type==F_CHAR) || (dptr->type==F_LIST));
 }
 
@@ -829,7 +829,7 @@ dialog__setnumeric(
 {
     int num = dptr->option;
 
-    trace_2(TRACE_APP_DIALOG, "dialog__setnumeric(%d, %d)\n", f, num);
+    trace_2(TRACE_APP_DIALOG, "dialog__setnumeric(%d, %d)", f, num);
     assert((dptr->type==F_NUMBER) || (dptr->type==F_COLOUR) || (dptr->type==F_CHAR) || (dptr->type==F_LIST));
 
     dbox_setnumeric(dialog__dbox, f, num);
@@ -932,13 +932,13 @@ dialog__bumpstring(
     /* always inc,dec,value */
     if(hit+2 == valuefield)
         {
-        trace_0(TRACE_APP_DIALOG, "up\n");
+        trace_0(TRACE_APP_DIALOG, "up");
 
         *key = *key + 1;
 
         entry = search_list(listpp, *key);
 
-        trace_1(TRACE_APP_DIALOG, "entry=%p\n", report_ptr_cast(entry));
+        trace_1(TRACE_APP_DIALOG, "entry=%p", report_ptr_cast(entry));
 
         if(!entry)
             {
@@ -951,11 +951,11 @@ dialog__bumpstring(
         {
         LIST_ITEMNO lastkey = list_numitem(*listpp) - 1;
 
-        trace_0(TRACE_APP_DIALOG, "down\n");
+        trace_0(TRACE_APP_DIALOG, "down");
 
         if(*key == 0)
             {
-            trace_1(TRACE_APP_DIALOG, "numitem=%i\n", list_numitem(*listpp));
+            trace_1(TRACE_APP_DIALOG, "numitem=%i", list_numitem(*listpp));
             *key = lastkey;
             }
         else
@@ -972,7 +972,7 @@ dialog__bumpstring(
         }
 
     if(entry)
-        trace_3(TRACE_APP_DIALOG, "entry=%p, ->key=%d, ->value = %s\n", report_ptr_cast(entry), entry->key, entry->value);
+        trace_3(TRACE_APP_DIALOG, "entry=%p, ->key=%d, ->value = %s", report_ptr_cast(entry), entry->key, entry->value);
     else
         trace_0(TRACE_APP_DIALOG, "list empty");
 
@@ -1018,7 +1018,7 @@ dialog__getspecial(
     else
         dptr->option = ch;
 
-    trace_3(TRACE_APP_DIALOG, "dialog__getspecial(%d) returns option '%c' optptr &%p\n",
+    trace_3(TRACE_APP_DIALOG, "dialog__getspecial(%d) returns option '%c' optptr &%p",
                 f, dptr->option, optptr);
     assert(dptr->type == F_SPECIAL);
 
@@ -1089,11 +1089,11 @@ dialog__getarray(
     ptr = array;
 
     dbox_getfield(dialog__dbox, f, tempstring, sizeof(tempstring));
-    trace_1(TRACE_APP_DIALOG, "dialog__getarray got \"%s\"\n", tempstring);
+    trace_1(TRACE_APP_DIALOG, "dialog__getarray got \"%s\"", tempstring);
     assert(dptr->type == F_ARRAY);
 
     do  {
-        trace_1(TRACE_APP_DIALOG, "comparing with \"%s\"\n", **ptr);
+        trace_1(TRACE_APP_DIALOG, "comparing with \"%s\"", **ptr);
         if(0 == _stricmp(**ptr, tempstring))
             {
             res = ptr - array;
@@ -1102,7 +1102,7 @@ dialog__getarray(
         }
     while(*++ptr);
 
-    trace_3(TRACE_APP_DIALOG, "dialog__getarray(%d, " PTR_XTFMT ") yields %d\n",
+    trace_3(TRACE_APP_DIALOG, "dialog__getarray(%d, " PTR_XTFMT ") yields %d",
             f, report_ptr_cast(array), res);
     dptr->option = (char) res;
 }
@@ -1129,7 +1129,7 @@ dialog__lastarrayopt(
     do
         /* nothing */;
     while(*++ptr);
-    trace_1(TRACE_APP_DIALOG, "last array element is array[%d\n", ptr - array - 1);
+    trace_1(TRACE_APP_DIALOG, "last array element is array[%d", ptr - array - 1);
     return(ptr - array - 1);
 }
 
@@ -1179,7 +1179,7 @@ dialog__getonoff(
 {
     int option = (dbox_getnumeric(dialog__dbox, f) == 0) ? 'N' : 'Y';
 
-    trace_2(TRACE_APP_DIALOG, "dialog__getonoff(%d) yields '%c'\n", f, option);
+    trace_2(TRACE_APP_DIALOG, "dialog__getonoff(%d) yields '%c'", f, option);
     assert((dptr->type == F_SPECIAL)  ||  (dptr->type == F_COMPOSITE));
     assert(1 == strlen(*dptr->optionlist) - 1);
 
@@ -1191,7 +1191,7 @@ dialog__setonoff(
     dbox_field f,
     const DIALOG * dptr)
 {
-    trace_2(TRACE_APP_DIALOG, "dialog__setonoff(%d, '%c')\n", f, dptr->option);
+    trace_2(TRACE_APP_DIALOG, "dialog__setonoff(%d, '%c')", f, dptr->option);
     assert((dptr->type == F_SPECIAL)  ||  (dptr->type == F_COMPOSITE));
     assert(1 == strlen(*dptr->optionlist) - 1);
 
@@ -1224,7 +1224,7 @@ dialog__whichradio(
     do { f--; } while((f > start)  &&  (dbox_getnumeric(d, f) == 0));
     /* if none set, gets first */
 
-    trace_3(TRACE_APP_DIALOG, "dialog__whichradio(%d, %d) returns field %d\n", start, end, f);
+    trace_3(TRACE_APP_DIALOG, "dialog__whichradio(%d, %d) returns field %d", start, end, f);
 
     return(f);
 }
@@ -1242,7 +1242,7 @@ dialog__getradio(
 
     dptr->option = optlistptr[f - start];
 
-    trace_5(TRACE_APP_DIALOG, "dialog__getradio(%d, %d, \"%s\") returns field %d, option '%c'\n",
+    trace_5(TRACE_APP_DIALOG, "dialog__getradio(%d, %d, \"%s\") returns field %d, option '%c'",
             start, end, (const char *) dptr->optionlist, f, dptr->option);
     assert((dptr->type == F_SPECIAL)  ||  (dptr->type == F_COMPOSITE));
     assert(end - start == strlen(optlistptr) - 1);
@@ -1263,7 +1263,7 @@ dialog__setradio(
 
     this = start + (dbox_field) (strchr(optlistptr, dptr->option) - (char *) (optlistptr));
 
-    trace_5(TRACE_APP_DIALOG, "dialog__setradio(%d, %d, \"%s\", '%c'), index %d\n",
+    trace_5(TRACE_APP_DIALOG, "dialog__setradio(%d, %d, \"%s\", '%c'), index %d",
             start, end, optlistptr, dptr->option, this);
     assert((dptr->type == F_SPECIAL)  ||  (dptr->type == F_COMPOSITE));
     assert(end - start == strlen(optlistptr) - 1);
@@ -1394,7 +1394,7 @@ dproc_onenumeric(
         if(dialog__adjust(&f,   onenumeric_Value))
             dialog__bumpnumeric(onenumeric_Value, &dptr[0], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed onenumeric action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed onenumeric action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -1429,7 +1429,7 @@ dproc_onespecial(
         if(dialog__adjust(&f,   onespecial_Value))
             dialog__bumpspecial(onespecial_Value, &dptr[0], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed onespecial action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed onespecial action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -1466,7 +1466,7 @@ dproc_numtext(
         if(dialog__adjust(&f,   numtext_Number))
             dialog__bumpnumeric(numtext_Number, &dptr[0], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed numtext action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed numtext action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -1709,7 +1709,7 @@ dproc_loadtemplate(
         if(dialog__adjust(&f,  NAME_FIELD))
             dialog__bumpstring(NAME_FIELD, f, &ltemplate_or_driver_list, &key);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed load template or edit driver action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed load template or edit driver action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -1755,7 +1755,7 @@ dproc_createdict(
         if(dialog__adjust(&f,  createdict_Second))
             dialog__bumpstring(createdict_Second, f, &language_list, &language_key);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed createdict action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed createdict action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -1865,7 +1865,7 @@ savefile_clickproc(
 
     IGNOREPARM(d);
 
-    trace_3(TRACE_APP_DIALOG, "savefile_clickproc(%d, &%p, &%p)\n", f, report_ptr_cast(filetypep), handle);
+    trace_3(TRACE_APP_DIALOG, "savefile_clickproc(%d, &%p, &%p)", f, report_ptr_cast(filetypep), handle);
 
     if(!select_document_using_docno(i->docno))
         return;
@@ -1883,7 +1883,7 @@ savefile_clickproc(
             *filetypep = currentfiletype(optlistptr[f - savefile_filetype_stt]);
             }
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed savefile_clickproc action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed savefile_clickproc action %d", f);
         }
 }
 
@@ -1901,7 +1901,7 @@ savefile_saveproc(
     BOOL recording;
     BOOL res = TRUE;
 
-    trace_2(TRACE_APP_DIALOG, "savefile_saveproc(%s, %d)\n", filename, (int) handle);
+    trace_2(TRACE_APP_DIALOG, "savefile_saveproc(%s, %d)", filename, (int) handle);
 
     if(!select_document_using_docno(i->docno))
         return(FALSE);
@@ -1919,7 +1919,7 @@ savefile_saveproc(
     /* try to look for wally saves to the same window */
     e = wimpt_last_event();
 
-    trace_1(TRACE_APP_DIALOG, "last wimp event was %s\n", report_wimp_event(e->e, &e->data));
+    trace_1(TRACE_APP_DIALOG, "last wimp event was %s", report_wimp_event(e->e, &e->data));
 
     if(e->e != wimp_EKEY)
         {
@@ -1931,7 +1931,7 @@ savefile_saveproc(
         else
             {
             wimpt_safe(wimp_get_point_info(&ms));
-            trace_4(TRACE_APP_DIALOG, "mouse position at %d %d, window %d, icon %d\n",
+            trace_4(TRACE_APP_DIALOG, "mouse position at %d %d, window %d, icon %d",
                     ms.x, ms.y, ms.w, ms.i);
             }
 
@@ -1987,7 +1987,7 @@ savefile_printproc(
 
     IGNOREPARM(filename);
 
-    trace_2(TRACE_APP_DIALOG, "savefile_printproc(%s, %d)\n", filename, (int) handle);
+    trace_2(TRACE_APP_DIALOG, "savefile_printproc(%s, %d)", filename, (int) handle);
 
     if(!select_document_using_docno(i->docno))
         return(xfersend_printFailed);
@@ -2216,7 +2216,7 @@ dproc_options(
         else if(dialog__adjust(&f,    options_Thousands))
             dialog__bumparray(options_Thousands,    &dptr[8], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed options action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed options action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -2331,7 +2331,7 @@ dproc_pagelayout(
             dialog__bumpnumeric(pagelayout_PageWidth, &dptr[14], f);
 
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed pagelayout action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed pagelayout action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -2401,7 +2401,7 @@ dproc_decimal(
           if(dialog__adjust(&f,    decimal_Value))
             dialog__bumpspecial(decimal_Value,    &dptr[0], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed options action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed options action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -2440,7 +2440,7 @@ dproc_insertchar(
         else if(f == insertchar_Char)
             dialog__getnumericlimited(insertchar_Number,    &dptr[0], 0x01, 0xFF);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed insertchar action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed insertchar action %d", f);
 
         dialog__setchar(insertchar_Char, &dptr[0]);
         }
@@ -2487,7 +2487,7 @@ dproc_defkey(
             dialog__setchar(defkey_Char,        &dptr[0]);
             }
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed defkey action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed defkey action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -2524,7 +2524,7 @@ dproc_deffnkey(
         if(dialog__adjust(&f, deffnkey_Key))
             dialog__bumparray(deffnkey_Key,    &dptr[0], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed deffnkey action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed deffnkey action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -2635,7 +2635,7 @@ dproc_print(
         else if(dialog__adjust(&f,   print_Copies))
             dialog__bumpnumericlimited(print_Copies,  &dptr[P_COPIES], f, 1, 999);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed print action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed print action %d", f);
         }
 
     /* SKS 20.10.91 - cheap and nasty way of setting these is to press ESCAPE from Print dialog
@@ -2735,7 +2735,7 @@ dproc_printconfig(
         else if(dialog__adjust(&f, printconfig_Stop))
             dialog__bumpspecial(   printconfig_Stop,    &dptr[6], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed printconfig action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed printconfig action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -2777,7 +2777,7 @@ dproc_microspace(
         if(dialog__adjust(&f,   microspace_Pitch))
             dialog__bumpnumeric(microspace_Pitch, &dptr[1], f);
         else
-            trace_1(TRACE_APP_DIALOG, "unprocessed microspace action %d\n", f);
+            trace_1(TRACE_APP_DIALOG, "unprocessed microspace action %d", f);
         }
 
     if(!dialog__fillin_ok)
@@ -3112,7 +3112,7 @@ riscdialog_replace_dbox(
     S32 res;
     dbox d;
 
-    trace_2(TRACE_APP_DIALOG, "riscdialog_replace_dbox(%s, %s)\n",
+    trace_2(TRACE_APP_DIALOG, "riscdialog_replace_dbox(%s, %s)",
                 trace_string(mess1), trace_string(mess2));
 
     if(!dialog__dbox)
@@ -3159,14 +3159,14 @@ riscdialog_replace_dbox(
      * and must be closed explicitly with the below call
      * if the user is foolish enough to go clickaround he gets closed
     */
-    trace_1(TRACE_APP_DIALOG, "riscdialog_replace_dbox() returns %d\n", res);
+    trace_1(TRACE_APP_DIALOG, "riscdialog_replace_dbox() returns %d", res);
     return(res);
 }
 
 extern void
 riscdialog_replace_dbox_end(void)
 {
-    trace_0(TRACE_APP_DIALOG, "riscdialog_replace_dbox_end()\n");
+    trace_0(TRACE_APP_DIALOG, "riscdialog_replace_dbox_end()");
 
     dialog__dispose();
 }
@@ -3188,7 +3188,7 @@ static MONOTIMEDIFF lengthtime;
 extern void
 pausing_null(void)
 {
-    trace_1(TRACE_APP_DIALOG, "timesofar = %d\n", monotime_diff(starttime));
+    trace_1(TRACE_APP_DIALOG, "timesofar = %d", monotime_diff(starttime));
     if(monotime_diff(starttime) >= lengthtime)
         /* Cause dbox_CLOSE to be returned to the main process */
         win_send_close(dbox_syshandle(dialog__dbox));
@@ -3201,7 +3201,7 @@ riscdialog_dopause(
     dbox d;
     dbox_field f;
 
-    trace_1(TRACE_APP_DIALOG, "riscdialog_dopause(%d)\n", nseconds);
+    trace_1(TRACE_APP_DIALOG, "riscdialog_dopause(%d)", nseconds);
 
     if(!dialog__create_reperr("pausing", &dialog__dbox))
         /* failed miserably */

@@ -7,7 +7,7 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2014 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.52/03
+TEXTUAL_VERSION_NUMBER=4.52/04
 
 URD=$.pipedream.trunk
 
@@ -72,7 +72,7 @@ AOFGR=o.pdchart
 AOFD=
 #
 #
-AOFM1=o.modules.aligator o.modules.alloc o.modules.bezier o.modules.collect o.modules.file o.modules.fileutil o.modules.funclist o.modules.handlist o.modules.mlec
+AOFM1=o.modules.aligator o.modules.alloc o.modules.allocblk o.modules.bezier o.modules.collect o.modules.file o.modules.fileutil o.modules.funclist o.modules.handlist o.modules.mlec
 #
 AOFM2=o.modules.numform o.modules.quickblk o.modules.report o.modules.spell o.modules.stringlk o.modules.typepack o.modules.vsload o.modules.wm_event o.modules.wm_null o.modules.xstring
 #
@@ -80,7 +80,7 @@ AOFM3=o.modules.fontlxtr o.modules.tristate o.modules.wlalloc
 #
 AOFMA=o.modules.muldivas
 #
-AOFMEV=o.modules.ss_const o.modules.ev_comp o.modules.ev_dcom o.modules.ev_docs o.modules.ev_eval o.modules.ev_exec o.modules.ev_func o.modules.ev_help o.modules.ev_math o.modules.ev_name o.modules.ev_rpn o.modules.ev_tabl o.modules.ev_tree o.modules.ev_uref o.modules.k_sin o.modules.k_cos o.modules.e_lgamma_r o.modules.mathxtra o.modules.mathxtr2 o.modules.mathxtr3
+AOFMEV=o.modules.ss_const o.modules.ev_comp o.modules.ev_dcom o.modules.ev_docs o.modules.ev_eval o.modules.ev_exec o.modules.ev_func o.modules.ev_help o.modules.ev_math o.modules.ev_mcpx o.modules.ev_name o.modules.ev_rpn o.modules.ev_tabl o.modules.ev_tree o.modules.ev_uref o.modules.k_sin o.modules.k_cos o.modules.e_lgamma_r o.modules.mathxtra o.modules.mathxtr2 o.modules.mathxtr3
 #
 AOFMGR=o.modules.gr_axis2 o.modules.gr_axisp o.modules.gr_barch o.modules.gr_blgal o.modules.gr_cache o.modules.gr_chart o.modules.gr_chtIO o.modules.gr_coord o.modules.gr_diag o.modules.gr_editc o.modules.gr_editm o.modules.gr_editt o.modules.gr_numcv o.modules.gr_nodbg o.modules.gr_piesg o.modules.gr_rdiag o.modules.gr_rdia2 o.modules.gr_scale o.modules.gr_scatc
 #
@@ -103,6 +103,7 @@ AOFDB=$(AOFD) $(AOFMD)
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
         C:o.Stubs
+        @Echo If the link step fails, please look in GB_MapIm for the error
         $(LD) -v $(Linkflags) -base &8000 \
         $(AOFND) $(AOFDB) \
         $(WimpLib).r32.o.WimpLib \
@@ -210,6 +211,8 @@ o.Modules.aligator:   $(CMODULES).c.aligator
         $(CC) -o $@ $(CCflags) $(CMODULES).c.aligator
 o.Modules.alloc:      $(CMODULES).c.alloc
         $(CC) -o $@ $(CCflags) $(CMODULES).c.alloc
+o.Modules.allocblk:   $(CMODULES).c.allocblk
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.allocblk
 o.Modules.bezier:     $(CMODULES).c.bezier
         $(CC) -o $@ $(CCflags) $(CMODULES).c.bezier
 o.Modules.collect:    $(CMODULES).c.collect
@@ -232,6 +235,8 @@ o.Modules.ev_help:    $(CMODULES).c.ev_help
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_help
 o.Modules.ev_math:    $(CMODULES).c.ev_math
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_math
+o.Modules.ev_mcpx:    $(CMODULES).c.ev_mcpx
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_mcpx
 o.Modules.ev_name:    $(CMODULES).c.ev_name
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_name
 o.Modules.ev_rpn:     $(CMODULES).c.ev_rpn
@@ -356,6 +361,7 @@ o.Modules.muldivas:   $(CMODULES).riscos.c.muldivas
 #
 o.Modules.aligator :   $(CMODULES).h.aligator
 o.Modules.alloc :      $(CMODULES).h.alloc
+o.Modules.allocblk :   $(CMODULES).h.allocblk
 o.Modules.bezier :     $(CMODULES).h.bezier
 o.Modules.collect :    $(CMODULES).h.collect
 o.Modules.debug :      $(CMODULES).h.debug
@@ -367,6 +373,7 @@ o.Modules.ev_exec :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).
 o.Modules.ev_func :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_help :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_math :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
+o.Modules.ev_mcpx :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_name :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_rpn :     $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 o.Modules.ev_tabl :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const

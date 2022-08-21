@@ -230,13 +230,13 @@ expedit_editcurrentslot(
 
     if(xf_inexpression_box)
         {
-        trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot - fronting the formula window\n");
+        trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot - fronting the formula window");
 
         win_send_front(editexpression_formwind->mainwindow, TRUE);
         return;
         }
 
-    trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot\n");
+    trace_0(TRACE_APP_EXPEDIT, "expedit_editcurrentslot");
 
     if(xf_inexpression_line)
         return;
@@ -399,7 +399,7 @@ expedit_insert_char(
         if((length + 1) < icon.data.indirecttext.bufflen)
             {
             currpos = icon.data.indirecttext.buffer + caretpos;
-            void_memmove32(currpos+1, currpos, (length - caretpos + 1));
+            memmove32(currpos+1, currpos, (length - caretpos + 1));
             *currpos = ch;
 
             /* Nudge caret position, and force a redraw */
@@ -446,8 +446,8 @@ expedit_insert_string(
         if((length + insertlen) < icon.data.indirecttext.bufflen)
             {
             currpos = icon.data.indirecttext.buffer + caretpos;
-            void_memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
-            void_memmove32(currpos, insertstr, insertlen);                       /* splice text in */
+            memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
+            memmove32(currpos, insertstr, insertlen);                       /* splice text in */
 
             /* Nudge caret position, and force a redraw */
             caretpos += insertlen;
@@ -520,7 +520,7 @@ expedit_delete_bit_of_line(
         if(start < end)
             {
             /* chop characters from the buffer, position the caret at start of cut, and force a redraw */
-            void_memmove32(&icon.data.indirecttext.buffer[start], &icon.data.indirecttext.buffer[end], (length - end + 1));
+            memmove32(&icon.data.indirecttext.buffer[start], &icon.data.indirecttext.buffer[end], (length - end + 1));
             formline_cursor_setpos(start);
             wimp_set_icon_state(colh_window, (wimp_i)COLH_CONTENTS_LINE, (wimp_iconflags) 0, (wimp_iconflags) 0);
             }
@@ -574,7 +574,7 @@ expedit_close_file(
 {
     DOCNO old_docno;
 
-    trace_0(TRACE_APP_EXPEDIT, "expedit_close_file\n");
+    trace_0(TRACE_APP_EXPEDIT, "expedit_close_file");
 
     old_docno = change_document_using_docno(docno);
 
@@ -903,7 +903,7 @@ formwind_create(
     wimp_box         mainBB, paneBB;  /* visible area     */
     wimp_box         paneExtent;      /* work area extent */
 
-    *formwindp = formwind = list_allocptr(sizeof(_formwind_struct));
+    *formwindp = formwind = al_ptr_alloc_elem(FORMULA_WINDOW, 1, &err);
 
     if(formwind)
         {
@@ -1036,7 +1036,7 @@ formwind_destroy(
         if((*formwindp)->panetemplate)
             template_copy_dispose((wimp_wind **) &(*formwindp)->panetemplate);
 
-        list_disposeptr((void **) formwindp);
+        al_ptr_dispose(P_P_ANY_PEDANTIC(formwindp));
         }
 }
 
@@ -1188,7 +1188,7 @@ formwind_open_window(
     if(pane.o.behind == formwind->mainwindow)
         pane.o.behind = formwind->panewindow;
 
-    trace_2(TRACE_APP_PD4, "opening pane before, x=%d, behind=%d\n",pane.o.box.x0,pane.o.behind);
+    trace_2(TRACE_APP_PD4, "opening pane before, x=%d, behind=%d",pane.o.box.x0,pane.o.behind);
 
     wimp_open_wind(&pane.o);
 
@@ -1260,7 +1260,7 @@ formwind_open_window(
         /*pane.o.x = pane.o.y = 0;*/             /* zero the scrolls!!!! - wrong for this application */
         pane.o.behind = main->behind;
 
-        trace_2(TRACE_APP_PD4, "opening pane before, x=%d, behind=%d\n",pane.o.box.x0,pane.o.behind);
+        trace_2(TRACE_APP_PD4, "opening pane before, x=%d, behind=%d",pane.o.box.x0,pane.o.behind);
 
         wimp_open_wind(&pane.o);
         }
@@ -1279,7 +1279,7 @@ formwind_open_window(
     if((pane.flags & wimp_WOPEN) && (main->behind == pane.o.behind))
         main->behind = formwind->panewindow;
 
-    trace_2(TRACE_APP_PD4, "opening main, x=%d, behind=%d\n",main->box.x0,main->behind);
+    trace_2(TRACE_APP_PD4, "opening main, x=%d, behind=%d",main->box.x0,main->behind);
 
     wimp_open_wind(main);       /* open main (paper) window */
 
@@ -1303,10 +1303,10 @@ formwind_open_window(
     pane.o.behind = main->behind;
 #endif
 
-    trace_2(TRACE_APP_PD4, "opening pane after, x=%d, behind=%d\n",pane.o.box.x0,pane.o.behind);
+    trace_2(TRACE_APP_PD4, "opening pane after, x=%d, behind=%d",pane.o.box.x0,pane.o.behind);
     wimp_open_wind(&pane.o);
 
-    trace_0(TRACE_APP_PD4, "leaving formwind_open_window\n");
+    trace_0(TRACE_APP_PD4, "leaving formwind_open_window");
 }
 #endif
 
@@ -1422,7 +1422,7 @@ mlec_event_proto(static, formwind_mlec_event_handler)
     DOCNO old_docno;
     mlec_event_return_code res = mlec_event_unknown;
 
-    trace_1(TRACE_APP_EXPEDIT, "formwind_mlec_event_handler, rc=%d\n", rc);
+    trace_1(TRACE_APP_EXPEDIT, "formwind_mlec_event_handler, rc=%d", rc);
 
     old_docno = change_document_using_docno(formwind->docno);
 
@@ -1488,7 +1488,7 @@ formwind_pointershape_starttracking(
 {
     if(!formwind->tracking)
         {
-        trace_0(TRACE_APP_EXPEDIT, "formwind_pointershape_starttracking()\n");
+        trace_0(TRACE_APP_EXPEDIT, "formwind_pointershape_starttracking()");
 
         formwind->tracking = TRUE;
 
@@ -1520,19 +1520,19 @@ null_event_proto(static, formwind_pointershape_null_handler)
 {
     formwind_handle formwind = (formwind_handle) p_null_event_block->client_handle;
 
-    trace_1(TRACE_APP_EXPEDIT, "formwind_pointershape_null_handler, rc=%d\n", p_null_event_block->rc);
+    trace_1(TRACE_APP_EXPEDIT, "formwind_pointershape_null_handler, rc=%d", p_null_event_block->rc);
 
     switch(p_null_event_block->rc)
         {
         case NULL_QUERY:
-            trace_0(TRACE_APP_EXPEDIT, "call to ask if we want nulls\n");
+            trace_0(TRACE_APP_EXPEDIT, "call to ask if we want nulls");
             return(NULL_EVENTS_REQUIRED);
 
         case NULL_EVENT:
             {
             wimp_mousestr pointer;
 
-            trace_0(TRACE_APP_EXPEDIT, "null call\n");
+            trace_0(TRACE_APP_EXPEDIT, "null call");
 
             if(NULL == wimp_get_point_info(&pointer))
                 {
@@ -1541,12 +1541,12 @@ null_event_proto(static, formwind_pointershape_null_handler)
                     switch((int)pointer.i)
                         {
                         case FORMWIND_FUNCTION_SELECTOR:
-                            trace_0(TRACE_APP_EXPEDIT, "change pointer to drop-down-menu\n");
+                            trace_0(TRACE_APP_EXPEDIT, "change pointer to drop-down-menu");
                             setpointershape(POINTER_DROPMENU);
                             break;
 
                         default:
-                            trace_0(TRACE_APP_EXPEDIT, "restore default pointer\n");
+                            trace_0(TRACE_APP_EXPEDIT, "restore default pointer");
                             setpointershape(POINTER_DEFAULT);
                             break;
                         }
@@ -1691,7 +1691,7 @@ DefineName_fn(
 
     IGNOREPARM(category);
 
-    trace_0(TRACE_APP_EXPEDIT, "DefineName_fn()\n");
+    trace_0(TRACE_APP_EXPEDIT, "DefineName_fn()");
 
     if(!dialog_box_start())
         return;
@@ -1703,15 +1703,15 @@ DefineName_fn(
         name     = d_define_name[0].textfield;
         contents = d_define_name[1].textfield;
 
-        trace_1(TRACE_APP_EXPEDIT,"Name     : %s\n", trace_string(name));
-        trace_1(TRACE_APP_EXPEDIT,"Refers to: %s\n", trace_string(contents));
+        trace_1(TRACE_APP_EXPEDIT,"Name     : %s", trace_string(name));
+        trace_1(TRACE_APP_EXPEDIT,"Refers to: %s", trace_string(contents));
 
         /* define the name */
         ev_set_options(&optblock, cur_docno);
 
         err = ev_name_make(name, cur_docno, contents, &optblock, FALSE);
 
-        trace_1(TRACE_APP_EXPEDIT,"err=%d\n", err);
+        trace_1(TRACE_APP_EXPEDIT,"err=%d", err);
 
         if(err < 0)
             reperr_null(err);
@@ -1747,7 +1747,7 @@ EditName_fn(
     EV_DOCNO     cur_docno;
     S32          err;
 
-    trace_1(TRACE_APP_EXPEDIT, "EditName_fn(%d)\n", itemno);
+    trace_1(TRACE_APP_EXPEDIT, "EditName_fn(%d)", itemno);
 
     cur_docno = (EV_DOCNO) current_docno();
 
@@ -1769,15 +1769,15 @@ EditName_fn(
                     {
                     contents =  d_edit_name[1].textfield;
 
-                    trace_1(TRACE_APP_EXPEDIT,"Name     : %s\n", trace_string(namebuf));
-                    trace_1(TRACE_APP_EXPEDIT,"Change to: %s\n", trace_string(contents));
+                    trace_1(TRACE_APP_EXPEDIT,"Name     : %s", trace_string(namebuf));
+                    trace_1(TRACE_APP_EXPEDIT,"Change to: %s", trace_string(contents));
 
                     /* redefine the name */
                     ev_set_options(&optblock, cur_docno);
 
                     err = ev_name_make(namebuf, cur_docno, contents, &optblock, FALSE);
 
-                    trace_1(TRACE_APP_EXPEDIT,"err=%d\n", err);
+                    trace_1(TRACE_APP_EXPEDIT,"err=%d", err);
 
                     if(err < 0)
                         reperr_null(err);
@@ -1792,14 +1792,14 @@ EditName_fn(
 
                 if(d_edit_name[2].option == 'U')
                     {
-                    trace_1(TRACE_APP_EXPEDIT,"Undefine : %s\n", trace_string(namebuf));
+                    trace_1(TRACE_APP_EXPEDIT,"Undefine : %s", trace_string(namebuf));
 
                     /* undefine the name */
                     ev_set_options(&optblock, cur_docno);
 
                     err = ev_name_make(namebuf, cur_docno, contents /*<<< SKS says NULL surely? */, &optblock, TRUE);
 
-                    trace_1(TRACE_APP_EXPEDIT,"err=%d\n", err);
+                    trace_1(TRACE_APP_EXPEDIT,"err=%d", err);
 
                     if(err < 0)
                         reperr_null(err);
@@ -1825,7 +1825,7 @@ PasteName_fn(
     EV_DOCNO    cur_docno;
     S32         i;
 
-    trace_0(TRACE_APP_EXPEDIT, "PasteName_fn\n");
+    trace_0(TRACE_APP_EXPEDIT, "PasteName_fn");
 
     if(itemno >= 0)
         {
@@ -1837,16 +1837,16 @@ PasteName_fn(
 
         if(ev_enum_resource_get(&resource, &itemno, namebuf, (MAX_PATHSTRING + EV_INTNAMLEN), argbuf, sizeof(argbuf) - 1, &argcount) >= 0)
             {
-            trace_1(TRACE_APP_EXPEDIT, " selected '%s'\n", namebuf);
+            trace_1(TRACE_APP_EXPEDIT, " selected '%s'", namebuf);
 
             if(argcount)
                 {
-                void_strkat(namebuf, elemof32(namebuf), "(");
+                safe_strkat(namebuf, elemof32(namebuf), "(");
 
                 for(i = argcount; i > 1; i--)
-                    void_strkat(namebuf, elemof32(namebuf), ",");
+                    safe_strkat(namebuf, elemof32(namebuf), ",");
 
-                void_strkat(namebuf, elemof32(namebuf), ")");
+                safe_strkat(namebuf, elemof32(namebuf), ")");
                 }
 
             if(insert_string_check_numeric(namebuf, FALSE))     /* insert function, starts an editor if current slot */

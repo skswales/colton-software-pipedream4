@@ -104,7 +104,7 @@ view_convert(
     BOOL *been_ruler,
     uchar *pageoffset)
 {
-    trace_2(TRACE_APP_PD4, "view_convert(%c %d)\n", c, c);
+    trace_2(TRACE_APP_PD4, "view_convert(%c %d)", c, c);
 
     if(pending_space)
     {
@@ -169,7 +169,7 @@ view_convert(
 
                             if(c == VIEW_HIGH_UNDERLINE)
                             {
-                                trace_0(TRACE_APP_PD4, "view_convert got extended printer reset --- ignored\n");
+                                trace_0(TRACE_APP_PD4, "view_convert got extended printer reset --- ignored");
                                 c = 0;
                             }
                             else
@@ -241,10 +241,10 @@ view_convert(
 
                     default:
                         /* extended character set? */
-                        trace_2(TRACE_APP_PD4, "view_convert got h2 with %c %2x - extended char?\n", c, c);
+                        trace_2(TRACE_APP_PD4, "view_convert got h2 with %c %2x - extended char?", c, c);
                         if((c >= '>')  &&  (c <= '>' + 32))
                             c = extended_character_set[c - '>'];
-                        trace_2(TRACE_APP_PD4, "view_convert got extended char %c %2x\n", c, c);
+                        trace_2(TRACE_APP_PD4, "view_convert got extended char %c %2x", c, c);
 
                         break;
                     }
@@ -338,7 +338,7 @@ view_convert(
         break;
         }
 
-    trace_2(TRACE_APP_PD4, "view_convert returns %c %d\n", c, c);
+    trace_2(TRACE_APP_PD4, "view_convert returns %c %d", c, c);
     return(c);
 }
 
@@ -382,7 +382,7 @@ view_get_ruler(
 
                 case '>':
                 case '*':
-                    trace_2(TRACE_APP_PD4, "view_get_ruler creating column %d because %c found in ruler\n", tcol, c == CR ? 'e' : c);
+                    trace_2(TRACE_APP_PD4, "view_get_ruler creating column %d because %c found in ruler", tcol, c == CR ? 'e' : c);
                     if(!createcol(tcol))
                         return(-1);
 
@@ -449,13 +449,13 @@ view_get_stored_command(
     if(!isupper(ch2))
         return(ch2);
 
-    trace_2(TRACE_APP_PD4, "view_get_stored_command: Got stored command %c%c\n", ch1, ch2);
+    trace_2(TRACE_APP_PD4, "view_get_stored_command: Got stored command %c%c", ch1, ch2);
 
     to = array;
     do  {
         c = pd_file_getc(loadinput);
 
-        trace_2(TRACE_APP_PD4, "got char %c %d for stored command\n", c, c);
+        trace_2(TRACE_APP_PD4, "got char %c %d for stored command", c, c);
 
         switch(c)
             {
@@ -476,16 +476,16 @@ view_get_stored_command(
         }
     while(c);
 
-    trace_1(TRACE_APP_PD4, "view_get_stored_command: got parameters '%s'\n", array);
+    trace_1(TRACE_APP_PD4, "view_get_stored_command: got parameters '%s'", array);
 
     a_index = 0;
     optptr = &view_opts[a_index];
     do  {
-        trace_2(TRACE_APP_PD4, "Comparing with stored command %c%c\n", optptr->v_sc1, optptr->v_sc2);
+        trace_2(TRACE_APP_PD4, "Comparing with stored command %c%c", optptr->v_sc1, optptr->v_sc2);
 
         if((ch1 == optptr->v_sc1)  &&  (ch2 == optptr->v_sc2))
             {
-            trace_2(TRACE_APP_PD4, "Matched stored command %c%c\n", ch1, ch2);
+            trace_2(TRACE_APP_PD4, "Matched stored command %c%c", ch1, ch2);
 
             update_dialog_from_windvars(D_POPTIONS);
 
@@ -574,7 +574,7 @@ view_get_stored_command(
                         if(ch == '2')
                             {
                             extended_highlights = (atoi(from) == 130);
-                            trace_2(TRACE_APP_PD4, "view_get_stored_command: HT 2 %s -> extended highlights %s\n", from, trace_boolstring(extended_highlights));
+                            trace_2(TRACE_APP_PD4, "view_get_stored_command: HT 2 %s -> extended highlights %s", from, trace_boolstring(extended_highlights));
                             }
 
                         optptr->v_done = FALSE;     /* can do many times */
@@ -638,7 +638,7 @@ view_load_line_ended(void)
 extern void
 view_load_postinit(void)
 {
-    trace_0(TRACE_APP_PD4, "view_load_postinit()\n");
+    trace_0(TRACE_APP_PD4, "view_load_postinit()");
 
     if(str_isblank(d_poptions_HE))
         d_poptions_TM++;
@@ -663,7 +663,7 @@ view_load_preinit(
 {
     S32 count, offset, def;
 
-    trace_0(TRACE_APP_PD4, "view_load_preinit()\n");
+    trace_0(TRACE_APP_PD4, "view_load_preinit()");
 
     /* if inserting ignore any rulers that come in */
     *been_ruler = inserting;
@@ -946,7 +946,7 @@ view_save_slot(
     if((justify == J_LEFTRIGHT)  ||  (justify == J_RIGHTLEFT))
         {
         /* set null terminator */
-        void_memset32(linbuf, 0, LIN_BUFSIZ);
+        memset32(linbuf, 0, LIN_BUFSIZ);
 
         /* expand justified line into linbuf, not forgetting terminator */
         justifyline(tslot->content.text, rightmargin - *v_chars_sofar, justify, linbuf);

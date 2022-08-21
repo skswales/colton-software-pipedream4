@@ -290,7 +290,7 @@ extern PCTSTR
 report_tstr(
     _In_opt_z_  PCTSTR tstr)
 {
-    if((NULL == tstr) || (P_DATA_NONE == tstr))
+    if(IS_PTR_NONE_OR_NULL(PCTSTR, tstr))
         return(TEXT("<<NULL>>"));
 
 #if RISCOS
@@ -318,7 +318,7 @@ extern PCTSTR
 report_ustr(
     _In_opt_z_  PC_USTR ustr)
 {
-    if((NULL == ustr) || (P_DATA_NONE == ustr))
+    if(IS_PTR_NONE_OR_NULL(PC_USTR, ustr))
         return(TEXT("<<NULL>>"));
 
 #if RISCOS
@@ -346,7 +346,7 @@ extern PCTSTR
 report_l1str(
     _In_opt_z_  PC_L1STR l1str)
 {
-    if((NULL == l1str) || (P_DATA_NONE == l1str))
+    if(IS_PTR_NONE_OR_NULL(PC_L1STR, l1str))
         return(TEXT("<<NULL>>"));
 
 #if RISCOS
@@ -422,7 +422,7 @@ report_wimp_event(
 
     static TCHARZ messagebuffer[512];
 
-    void_tstrkpy(messagebuffer, elemof32(messagebuffer), report_wimp_event_code(event_code));
+    safe_tstrkpy(messagebuffer, elemof32(messagebuffer), report_wimp_event_code(event_code));
 
     switch(event_code)
     {
@@ -489,7 +489,7 @@ report_wimp_event(
     }
 
     if(*tempbuffer)
-        void_tstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
+        safe_tstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
 
     return(messagebuffer);
 }
@@ -622,7 +622,7 @@ report_wimp_message(
     }
 
     if(*tempbuffer)
-        void_tstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
+        safe_tstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
 
     return(messagebuffer);
 }

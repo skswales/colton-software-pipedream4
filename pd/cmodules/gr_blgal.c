@@ -1285,7 +1285,7 @@ gr_chartedit_gallery_barlinescatch_init(
 
     if(!d)
     {
-        message_output(errorp ? errorp : string_lookup(GR_CHART_ERR_NOMEM));
+        message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
         return(0);
     }
 

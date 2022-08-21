@@ -52,7 +52,7 @@ Creating a package for distribution
 
 Make sure you've got the version number consistent! See version.c for notes.
 
-Execute the Obey file r32.Make_TS.
+Execute the Obey file r32.MakeRiscPkg.
 
 This will copy only those files needed for distribution to PipeDream_4_xx_yy
 in $.Temp.

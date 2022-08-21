@@ -36,25 +36,25 @@ macros to select efficient reading routines
 #if EV_COL_BITS == 32
 #define read_colt(pos) (EV_COL) readval_U32((pos))
 #else
-#define read_colt(pos) (EV_COL) readuword((pos), sizeof(EV_COL))
+#define read_colt(pos) (EV_COL) readuword_LE((pos), sizeof32(EV_COL))
 #endif
 
 #if DOCNO_SIZE == 8
 #define read_docno(pos) (EV_DOCNO) (* ((PC_U8) pos))
 #else
-#define read_docno(pos) (EV_DOCNO) readuword((pos), sizeof(EV_DOCNO))
+#define read_docno(pos) (EV_DOCNO) readuword_LE((pos), sizeof32(EV_DOCNO))
 #endif
 
 #if FLAGS_SIZE == 8
 #define read_flags(pos) (EV_FLAGS) (* ((PC_U8) pos))
 #else
-#define read_flags(pos) (EV_FLAGS) readuword((pos), sizeof(EV_FLAGS))
+#define read_flags(pos) (EV_FLAGS) readuword_LE((pos), sizeof32(EV_FLAGS))
 #endif
 
 #if EV_ROW_BITS == 32
 #define read_rowt(pos) (EV_ROW) readval_U32((pos))
 #else
-#define read_rowt(pos) (EV_ROW) readuword((pos), sizeof(EV_ROW))
+#define read_rowt(pos) (EV_ROW) readuword_LE((pos), sizeof32(EV_ROW))
 #endif
 
 /******************************************************************************
@@ -348,43 +348,45 @@ read_cur_sym(
     rpnstatep rpnsp,
     P_EV_DATA p_ev_data)
 {
+    PC_U8 p_rpn_content = rpnsp->pos + sizeof32(EV_IDNO);
+
     switch(p_ev_data->did_num = rpnsp->num)
         {
         case RPN_DAT_REAL:
-            p_ev_data->arg.fp = readval_F64(rpnsp->pos + 1);
+            read_from_rpn(&p_ev_data->arg.fp, p_rpn_content, sizeof32(F64));
             return;
 
         case RPN_DAT_WORD8:
-            p_ev_data->arg.integer = (S32) *(rpnsp->pos + 1);
+            p_ev_data->arg.integer = (S32) *p_rpn_content;
             return;
 
         case RPN_DAT_WORD16:
-            p_ev_data->arg.integer = (S32) readval_S16(rpnsp->pos + 1);
+            p_ev_data->arg.integer = (S32) readval_S16(p_rpn_content);
             return;
 
         case RPN_DAT_WORD32:
-            p_ev_data->arg.integer = readval_S32(rpnsp->pos + 1);
+            read_from_rpn(&p_ev_data->arg.integer, p_rpn_content, sizeof32(S32));
             return;
 
         case RPN_DAT_SLR:
-            read_slr(&p_ev_data->arg.slr, rpnsp->pos + 1);
+            read_slr(&p_ev_data->arg.slr, p_rpn_content);
             return;
 
         case RPN_DAT_RANGE:
-            read_range(&p_ev_data->arg.range, rpnsp->pos + 1);
+            read_range(&p_ev_data->arg.range, p_rpn_content);
             return;
 
         case RPN_DAT_STRING:
-            p_ev_data->arg.stringc.data = rpnsp->pos + sizeof(S16) + 1;
+            p_ev_data->arg.stringc.data = p_rpn_content + sizeof(S16);
             p_ev_data->arg.stringc.size = strlen32(p_ev_data->arg.stringc.data);
             return;
 
         case RPN_DAT_DATE:
-            read_date(&p_ev_data->arg.date, rpnsp->pos + 1);
+            read_date(&p_ev_data->arg.date, p_rpn_content);
             return;
 
         case RPN_DAT_NAME:
-            read_nameid(&p_ev_data->arg.nameid, rpnsp->pos + 1);
+            read_nameid(&p_ev_data->arg.nameid, p_rpn_content);
             return;
 
         case RPN_DAT_BLANK:
@@ -403,10 +405,10 @@ read_date(
     _OutRef_    P_EV_DATE datep,
     PC_U8 ip_pos)
 {
-    datep->date = (U32) readuword(ip_pos, sizeof(U32));
-    ip_pos += sizeof(U32);
+    datep->date = (S32) readuword_LE(ip_pos, sizeof32(U32));
+    ip_pos += sizeof32(U32);
 
-    datep->time = (U32) readuword(ip_pos, sizeof(U32));
+    datep->time = (S32) readuword_LE(ip_pos, sizeof32(U32));
 }
 
 /******************************************************************************
@@ -420,7 +422,7 @@ read_nameid(
     _OutRef_    P_EV_NAMEID nameidp,
     PC_U8 ip_pos)
 {
-    *nameidp = (EV_NAMEID) readuword(ip_pos, sizeof(EV_NAMEID));
+    *nameidp = (EV_NAMEID) readuword_LE(ip_pos, sizeof32(EV_NAMEID));
 }
 
 /******************************************************************************
@@ -434,7 +436,7 @@ read_ptr(
     P_P_ANY ptrp,
     PC_U8 ip_pos)
 {
-    *ptrp = (P_ANY) readuword(ip_pos, sizeof(P_ANY));
+    *ptrp = (P_ANY) readuword_LE(ip_pos, sizeof32(P_ANY));
 }
 
 /******************************************************************************
@@ -622,23 +624,9 @@ write_nameid(
 {
     P_U8 op_pos = op_at;
 
-    op_pos += writeuword(op_pos, nameid, sizeof(EV_NAMEID));
+    op_pos += writeuword_LE(op_pos, nameid, sizeof32(EV_NAMEID));
 
     return(op_pos - op_at);
-}
-
-/******************************************************************************
-*
-* write pointer
-*
-******************************************************************************/
-
-extern S32
-write_ptr(
-    _InRef_     P_P_ANY ptrp,
-    P_U8 op_pos)
-{
-    return(writeval_U32(op_pos, (U32) *ptrp));
 }
 
 /******************************************************************************
@@ -654,15 +642,15 @@ write_rng(
 {
     P_U8 op_pos = op_at;
 
-    op_pos += writeuword(op_pos, (U32) rngp->s.docno, sizeof(EV_DOCNO));
+    op_pos += writeuword_LE(op_pos, (U32) rngp->s.docno, sizeof32(EV_DOCNO));
 
-    op_pos += writeuword(op_pos, (U32) rngp->s.col,   sizeof(EV_COL));
-    op_pos += writeuword(op_pos, (U32) rngp->s.row,   sizeof(EV_ROW));
-    op_pos += writeuword(op_pos, (U32) rngp->s.flags, sizeof(EV_FLAGS));
+    op_pos += writeuword_LE(op_pos, (U32) rngp->s.col,   sizeof32(EV_COL));
+    op_pos += writeuword_LE(op_pos, (U32) rngp->s.row,   sizeof32(EV_ROW));
+    op_pos += writeuword_LE(op_pos, (U32) rngp->s.flags, sizeof32(EV_FLAGS));
 
-    op_pos += writeuword(op_pos, (U32) rngp->e.col,   sizeof(EV_COL));
-    op_pos += writeuword(op_pos, (U32) rngp->e.row,   sizeof(EV_ROW));
-    op_pos += writeuword(op_pos, (U32) rngp->e.flags, sizeof(EV_FLAGS));
+    op_pos += writeuword_LE(op_pos, (U32) rngp->e.col,   sizeof32(EV_COL));
+    op_pos += writeuword_LE(op_pos, (U32) rngp->e.row,   sizeof32(EV_ROW));
+    op_pos += writeuword_LE(op_pos, (U32) rngp->e.flags, sizeof32(EV_FLAGS));
 
     return(op_pos - op_at);
 }
@@ -680,11 +668,11 @@ write_slr(
 {
     P_U8 op_pos = op_at;
 
-    op_pos += writeuword(op_pos, (U32) slrp->docno, sizeof(EV_DOCNO));
+    op_pos += writeuword_LE(op_pos, (U32) slrp->docno, sizeof32(EV_DOCNO));
 
-    op_pos += writeuword(op_pos, (U32) slrp->col,   sizeof(EV_COL));
-    op_pos += writeuword(op_pos, (U32) slrp->row,   sizeof(EV_ROW));
-    op_pos += writeuword(op_pos, (U32) slrp->flags, sizeof(EV_FLAGS));
+    op_pos += writeuword_LE(op_pos, (U32) slrp->col,   sizeof32(EV_COL));
+    op_pos += writeuword_LE(op_pos, (U32) slrp->row,   sizeof32(EV_ROW));
+    op_pos += writeuword_LE(op_pos, (U32) slrp->flags, sizeof32(EV_FLAGS));
 
     return(op_pos - op_at);
 }

@@ -88,8 +88,8 @@ a list of charts
 static NLISTS_BLK gr_charts =
 {
     NULL,
-    sizeof(GR_CHART),
-    sizeof(GR_CHART) * 8
+    sizeof32(GR_CHART),
+    sizeof32(GR_CHART) * 8
 };
 
 /*
@@ -196,7 +196,7 @@ gr_chart_cp_from_ch(
 
     if(ch)
         {
-        cp = collect_search(&gr_charts, &key);
+        cp = collect_search(&gr_charts.lbr, key);
         myassert1x(cp != NULL, "gr_chart_cp_from_ch: failed to find chart handle &%p", ch);
         }
 
@@ -418,7 +418,7 @@ gr_chart_dispose_noncore(
     al_ptr_dispose(P_P_ANY_PEDANTIC(&cp->series.mh));
 
     assert(offsetof(GR_CHART, core) == 0); /* else we'd need another memset of noncore info */
-    void_memset32(PtrAddBytes(P_BYTE, &cp->core, sizeof32(cp->core)), 0, sizeof32(*cp) - sizeof32(cp->core));
+    memset32(PtrAddBytes(P_BYTE, &cp->core, sizeof32(cp->core)), 0, sizeof32(*cp) - sizeof32(cp->core));
 }
 
 extern void
@@ -447,8 +447,8 @@ gr_chart_dispose(
     /* reconvert ch explicitly for subtract */
     key = (LIST_ITEMNO) ch;
 
-    trace_1(TRACE_MODULE_GR_CHART, "gr_chart_dispose: collect_subtract_entry %d from gr_charts list\n", key);
-    (void) collect_subtract_entry(&gr_charts, &key);
+    trace_1(TRACE_MODULE_GR_CHART, "gr_chart_dispose: collect_subtract_entry %d from gr_charts list", key);
+    collect_subtract_entry(&gr_charts.lbr, key);
 }
 
 /******************************************************************************
@@ -533,7 +533,7 @@ gr_chart_name_query(
 
     cp = gr_chart_cp_from_ch(*chp);
 
-    void_strkpy(szName, bufsiz, cp->core.currentfilename);
+    safe_strkpy(szName, bufsiz, cp->core.currentfilename);
 
     return(1);
 }
@@ -547,7 +547,7 @@ gr_chart_name_set(
 
     cp = gr_chart_cp_from_ch(*chp);
 
-    return((str_set(&cp->core.currentfilename, szName) >= 0) ? 1 : create_error(GR_CHART_ERR_NOMEM));
+    return((str_set(&cp->core.currentfilename, szName) >= 0) ? 1 : status_nomem());
 }
 
 /******************************************************************************
@@ -581,10 +581,11 @@ gr_chart_new(
     static U32         nextUntitledNumber = 1;
 
     GR_CHART_HANDLE ch;
-    P_GR_CHART       cp;
+    P_GR_CHART      cp;
     LIST_ITEMNO     key;
     GR_AXES_NO      axes;
     GR_AXIS_NO      axis;
+    STATUS status;
 
     if(!gr_chart_initialised)
         gr_chart_initialise();
@@ -594,8 +595,8 @@ gr_chart_new(
     /* add to list of charts */
     key  = cpkey_gen++;
 
-    if((cp = collect_add_entry(&gr_charts, sizeof(*cp), &key)) == NULL)
-        return(create_error(GR_CHART_ERR_NOMEM));
+    if(NULL == (cp = collect_add_entry(&gr_charts, sizeof32(*cp), &key, &status)))
+        return(status);
 
     /* convert ch explicitly */
     ch = (GR_CHART_HANDLE) key;
@@ -760,13 +761,12 @@ gr_chart_order_query(
             case GR_CHART_OBJNAME_TEXT:
                 {
                 /* SKS after 4.12 27mar92 - needed for live text reload mechanism */
-                P_NLISTS_BLK lbrp;
-                LIST_ITEMNO  key;
-                P_GR_TEXT     t;
+                LIST_ITEMNO key;
+                P_GR_TEXT t;
 
-                lbrp = (P_NLISTS_BLK) &cp->text.lbr;
-
-                for(t = collect_first(lbrp, &key); t; t = collect_next(lbrp, &key))
+                for(t = collect_first(&cp->text.lbr, &key);
+                    t;
+                    t = collect_next( &cp->text.lbr, &key))
                     {
                     P_GR_TEXT_GUTS gutsp;
 
@@ -811,7 +811,9 @@ gr_chart_query_exists(
     LIST_ITEMNO key;
     P_GR_CHART   cp;
 
-    for(cp = collect_first(&gr_charts, &key); cp; cp = collect_next(&gr_charts, &key))
+    for(cp = collect_first(&gr_charts.lbr, &key);
+        cp;
+        cp = collect_next( &gr_charts.lbr, &key))
         if(cp->core.currentfilename)
             if(0 == _stricmp(cp->core.currentfilename, szName))
                 {
@@ -958,9 +960,9 @@ gr_datasource_insert(
     P_GR_INT_HANDLE     p_int_handle_out,
     P_GR_INT_HANDLE     p_int_handle_after /*const*/)
 {
-    P_GR_DATASOURCE   i_dsp;
-    P_GR_DATASOURCE   dsp;
-    GR_DATASOURCE_NO before_ds, n_alloc;
+    P_GR_DATASOURCE  i_dsp;
+    P_GR_DATASOURCE  dsp;
+    GR_DATASOURCE_NO before_ds;
     P_ANY            mh;
     GR_CHART_OBJID   id;
 
@@ -990,7 +992,7 @@ gr_datasource_insert(
         if((res = gr_text_new(cp, key, NULL, NULL)) < 0)
             return(0);
 
-        t = collect_search((P_NLISTS_BLK) &cp->text.lbr, &key);
+        t = collect_search(&cp->text.lbr, key);
         assert(t);
 
         t->bits.live_text = 1;
@@ -1021,10 +1023,10 @@ gr_datasource_insert(
 
         if(cp->core.datasources.n == cp->core.datasources.n_alloc)
             {
-            n_alloc = cp->core.datasources.n_alloc + GR_DATASOURCES_DESC_INCR;
+            const U32 n_alloc = cp->core.datasources.n_alloc + GR_DATASOURCES_DESC_INCR;
+            STATUS status;
 
-            mh = list_reallocptr(cp->core.datasources.mh, (S32) n_alloc * sizeof(GR_DATASOURCE));
-            if(!mh)
+            if(NULL == (mh = _al_ptr_realloc(cp->core.datasources.mh, n_alloc * sizeof32(GR_DATASOURCE), &status)))
                 return(0);
 
             cp->core.datasources.mh      = mh;
@@ -1037,9 +1039,9 @@ gr_datasource_insert(
         dsp += before_ds;
 
         /* move rest of descriptors up to make way */
-        void_memmove32(dsp + 1, /* UP */
-                       dsp,
-                       sizeof32(*dsp) * (cp->core.datasources.n - before_ds));
+        memmove32(dsp + 1, /* UP */
+                  dsp,
+                  sizeof32(*dsp) * (cp->core.datasources.n - before_ds));
 
         ++cp->core.datasources.n;
 
@@ -1063,7 +1065,7 @@ gr_datasource_insert(
     *p_int_handle_out = dsp->dsh;
 
     trace_4(TRACE_MODULE_GR_CHART,
-            "gr_datasource_insert(&%p, (&%p,&%p), &%p\n",
+            "gr_datasource_insert(&%p, (&%p,&%p), &%p",
             report_ptr_cast(cp), report_procedure_name(report_proc_cast(ext_proc)), report_ptr_cast(ext_handle), report_ptr_cast(dsp->dsh));
     return(dsp->dsh);
 }
@@ -1128,22 +1130,24 @@ gr_chart_subtract_datasource_using_dsh(
                 i_dsp = cp->core.datasources.mh;
 
                 /* compact down datasource descriptor array */
-                void_memmove32(dsp, /* DOWN */
-                               dsp + 1,
-                               sizeof32(*dsp) * (cp->core.datasources.n - (dsp - i_dsp)) );
-                                                       /* max poss. # */  /* # preceding */
+                memmove32(dsp, /* DOWN */
+                          dsp + 1,
+                          sizeof32(*dsp) * (cp->core.datasources.n - (dsp - i_dsp)) );
+                                                 /* max poss. # */  /* # preceding */
 
                 /* free up some space if worthwhile */
                 if( !cp->core.datasources.n  ||
                     (cp->core.datasources.n + GR_DATASOURCES_DESC_DECR <= cp->core.datasources.n_alloc))
                     {
-                    P_ANY mh = list_reallocptr(cp->core.datasources.mh, (S32) cp->core.datasources.n * sizeof(GR_DATASOURCE));
+                    STATUS status;
+                    P_ANY mh = _al_ptr_realloc(cp->core.datasources.mh, cp->core.datasources.n * sizeof32(GR_DATASOURCE), &status);
 
                     /* yes, we can reallocate to zero elements! */
                     assert(mh || !cp->core.datasources.n);
+                    status_assert(status);
 
                     cp->core.datasources.mh      = mh;
-                    cp->core.datasources.n_alloc = cp->core.datasources.n;
+                    cp->core.datasources.n_alloc = mh ? cp->core.datasources.n : 0;
                     }
 
                 /* remove from use in a series */
@@ -1211,12 +1215,12 @@ gr_chart_add_series(
         if(cp->series.n_defined >= cp->series.n_alloc)
             {
             /* grow series descriptor for these axes to accomodate new series */
-            U32   n_alloc = cp->series.n_alloc + GR_SERIES_DESC_INCR;
+            const U32 n_alloc = cp->series.n_alloc + GR_SERIES_DESC_INCR;
+            STATUS status;
             P_ANY mh;
 
-            mh = list_reallocptr(cp->series.mh, (S32) n_alloc * sizeof(*serp));
-            if(!mh)
-                return(create_error(GR_CHART_ERR_NOMEM));
+            if(NULL == (mh = _al_ptr_realloc(cp->series.mh, n_alloc * sizeof32(*serp), &status)))
+                return(status);
 
             cp->series.mh      = mh;
             cp->series.n_alloc = n_alloc;
@@ -1227,9 +1231,9 @@ gr_chart_add_series(
             /* have to move existing defined descriptors from higher axes up (maybe 0) */
             serp = getserp(cp, cp->axes[1].series.stt_idx);
 
-            void_memmove32(serp + 1 /* UP */,
-                           serp,
-                           sizeof32(*serp) * (cp->series.n_defined - cp->axes[1].series.stt_idx));
+            memmove32(serp + 1 /* UP */,
+                      serp,
+                      sizeof32(*serp) * (cp->series.n_defined - cp->axes[1].series.stt_idx));
 
             /* overlay axes start higher up now (even during single axes set preparation) - move together */
             ++cp->axes[1].series.stt_idx;
@@ -1260,7 +1264,7 @@ gr_chart_add_series(
         else
             {
             /* clone some aspects of its friend */
-            void_memcpy32(serp, serp-1, offsetof(GR_SERIES, GR_SERIES_CLONE_END));
+            memcpy32(serp, serp-1, offsetof(GR_SERIES, GR_SERIES_CLONE_END));
 
             /* dup picture refs */
             gr_fillstyle_ref_add(&serp->style.pdrop_fill);
@@ -1737,7 +1741,6 @@ gr_chart_dsp_from_dsh(
 {
     P_GR_DATASOURCE dsp;
     P_GR_DATASOURCE last_dsp;
-    P_NLISTS_BLK lbrp;
     P_GR_TEXT t;
     LIST_ITEMNO key;
 
@@ -1764,9 +1767,9 @@ gr_chart_dsp_from_dsh(
             return(1);
             }
 
-    lbrp = (P_NLISTS_BLK) &cp->text.lbr;
-
-    for(t = collect_first(lbrp, &key); t; t = collect_next(lbrp, &key))
+    for(t = collect_first(&cp->text.lbr, &key);
+        t;
+        t = collect_next( &cp->text.lbr, &key))
         {
         P_GR_TEXT_GUTS gutsp;
 
@@ -2476,7 +2479,7 @@ gr_chart_legend_addin(
             /* apply margin (and baseline offset) to top edge */
             legendbox.y1 -= legend_margins.y1;
 
-            legendbox.y0 = INT_MIN; /* can grow to be as deep as it needs to be */
+            legendbox.y0 = S32_MIN; /* can grow to be as deep as it needs to be */
             }
         else
             {
@@ -2484,7 +2487,7 @@ gr_chart_legend_addin(
             GR_COORD estdepth, y_size;
 
             legendbox.x0 = cp->core.layout.width;
-            legendbox.x1 = INT_MAX; /* can grow to be as wide as it needs to be */
+            legendbox.x1 = S32_MAX; /* can grow to be as wide as it needs to be */
 
             /* ensure always 'reasonable' size even if punter has set wally */
             y_size = cp->core.layout.size.y;
@@ -2848,7 +2851,7 @@ gr_chart_build(
 
     if(setjmp(gr_chart_jmp_buf))
         {
-        reportf("*** gr_chart_build: setjmp returned from signal handler ***\n");
+        reportf("*** gr_chart_build: setjmp returned from signal handler ***");
         mysignal_end(&mss);
         return(create_error(GR_CHART_ERR_EXCEPTION));
         }
@@ -2961,20 +2964,20 @@ gr_chart_object_name_from_id(
             break;
 
         case GR_CHART_OBJNAME_CHART:
-            void_strkpy(out, elemof_buffer, "Chart");
+            safe_strkpy(out, elemof_buffer, "Chart");
             break;
 
         case GR_CHART_OBJNAME_PLOTAREA:
             if(id->no == 1)
-                void_strkpy(out, elemof_buffer, "Wall");
+                safe_strkpy(out, elemof_buffer, "Wall");
             else if(id->no == 2)
-                void_strkpy(out, elemof_buffer, "Floor");
+                safe_strkpy(out, elemof_buffer, "Floor");
             else
-                void_strkpy(out, elemof_buffer, "Plot area");
+                safe_strkpy(out, elemof_buffer, "Plot area");
             break;
 
         case GR_CHART_OBJNAME_LEGEND:
-            void_strkpy(out, elemof_buffer, "Legend");
+            safe_strkpy(out, elemof_buffer, "Legend");
             break;
 
         case GR_CHART_OBJNAME_TEXT:
@@ -3235,7 +3238,7 @@ gr_chart_clone(
 
     /* replicate current non-core contents from source */
     assert(offsetof(GR_CHART, core) == 0); /* else we'd need another memcpy of noncore info */
-    void_memcpy32(( P_BYTE) dst_cp  + sizeof32(dst_cp->core),
+    memcpy32(( P_BYTE) dst_cp  + sizeof32(dst_cp->core),
                   (PC_BYTE) src_cp  + sizeof32(dst_cp->core),
                   sizeof32(*dst_cp) - sizeof32(dst_cp->core));
 
@@ -3276,7 +3279,7 @@ gr_chart_clone(
             src_serp += src_cp->axes[axes].series.stt_idx;
             dst_serp += dst_cp->axes[axes].series.stt_idx;
 
-            void_memcpy32(dst_serp, src_serp, sizeof32(*dst_serp) *
+            memcpy32(dst_serp, src_serp, sizeof32(*dst_serp) *
                 (dst_cp->axes[axes].series.end_idx - dst_cp->axes[axes].series.stt_idx));
             }
         }

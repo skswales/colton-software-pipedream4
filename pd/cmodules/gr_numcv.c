@@ -188,7 +188,7 @@ gr_numtostr(
             inc = ((beforedot - 1) % 3) + 1;
             nextprint += inc;
 
-            void_memmove32(nextprint + 1, nextprint, strlen32p1(nextprint) /*for NULLCH*/);
+            memmove32(nextprint + 1, nextprint, strlen32p1(nextprint) /*for NULLCH*/);
             *nextprint++ = thousands_sep_ch;
 
             /* keep dot ptr updated */
@@ -226,7 +226,7 @@ gr_numtostr(
         if(*++eptr == '+')
             {
             --nextprint;
-            void_memmove32(eptr, eptr+1, strlen32p1(eptr+1) /*for NULLCH*/);
+            memmove32(eptr, eptr+1, strlen32p1(eptr+1) /*for NULLCH*/);
             }
         else if(*eptr == '-')
             eptr++;
@@ -240,7 +240,7 @@ gr_numtostr(
         if(eptr != tptr)
             {
             nextprint -= tptr - eptr;
-            void_memmove32(eptr, tptr, strlen32p1(tptr) /*for NULLCH*/);
+            memmove32(eptr, tptr, strlen32p1(tptr) /*for NULLCH*/);
             }
         }
 }

@@ -147,7 +147,7 @@ eval_trace(
     slr = stack_ptr->slr;
     slr.flags |= SLR_EXT_REF;
 
-    dec_slr(buffer, slr.docno, &slr, FALSE);
+    (void) ev_dec_slr(buffer, slr.docno, &slr, FALSE);
 
     trace_0(TRACE_MODULE_EVAL, buffer);
     trace_2(TRACE_MODULE_EVAL, " [SP=%d] %s", stack_offset(stack_ptr), string);
@@ -245,7 +245,7 @@ args_check(
                         case RPN_DAT_RANGE:
                         case RPN_TMP_ARRAY:
                         case RPN_RES_ARRAY:
-                            data_set_error(resultp, create_error(EVAL_ERR_NESTEDARRAY));
+                            ev_data_set_error(resultp, create_error(EVAL_ERR_NESTEDARRAY));
                             args_ok = 0;
                             break;
                         }
@@ -308,7 +308,7 @@ check_supporting_name(
 
         if((p_ev_name = name_ptr(name_num)) != NULL)
             {
-            switch(p_ev_name->def.did_num)
+            switch(p_ev_name->def_data.did_num)
                 {
                 case RPN_DAT_SLR:
                     if(p_ev_name->visited < ev_serial_num)
@@ -327,11 +327,11 @@ check_supporting_name(
 
                 stack_ptr->data.svn.nameid = grubp->data.arg.nameid;
 
-                switch(p_ev_name->def.did_num)
+                switch(p_ev_name->def_data.did_num)
                     {
                     case RPN_DAT_SLR:
                         /* go check out the slot */
-                        stack_inc(VISIT_SLOT, p_ev_name->def.arg.slr, 0);
+                        stack_inc(VISIT_SLOT, p_ev_name->def_data.arg.slr, 0);
                         grub_init(&stack_ptr->data.svs.grubb, &stack_ptr->slr);
                         break;
 
@@ -339,12 +339,12 @@ check_supporting_name(
                         /* prime visit_supporting_range
                          * to check out supporters
                          */
-                        stack_inc(VISIT_SUPPORTRNG, p_ev_name->def.arg.range.s, 0);
-                        stack_ptr->data.svr.range = p_ev_name->def.arg.range;
+                        stack_inc(VISIT_SUPPORTRNG, p_ev_name->def_data.arg.range.s, 0);
+                        stack_ptr->data.svr.range = p_ev_name->def_data.arg.range;
                         break;
                     }
 
-                eval_trace("<check_supporting_name>\n");
+                eval_trace("<check_supporting_name>");
 
                 res = NEW_STATE;
                 }
@@ -376,7 +376,7 @@ check_supporting_rng(
         {
         if(tree_rngptr(ev_p_ss_doc_from_docno_must(grubp->data.arg.range.s.docno), rix)->visited >= ev_serial_num)
             {
-            trace_0(TRACE_MODULE_EVAL, "*** range visit avoided since serial number up-to-date ***\n");
+            trace_0(TRACE_MODULE_EVAL, "*** range visit avoided since serial number up-to-date ***");
             return(SAME_STATE);
             }
         }
@@ -409,7 +409,7 @@ circ_check(
         stack_entryp stkentp;
         S32 found_it;
 
-        eval_trace("<circ_check> found EVS_CIRC\n");
+        eval_trace("<circ_check> found EVS_CIRC");
 
         /* now we must search back up the stack to find the
          * first visit to the slot and stop this recalcing the
@@ -430,7 +430,7 @@ circ_check(
                     {
                     char buffer[BUF_EV_LONGNAMLEN];
                     ev_trace_slr(buffer, elemof32(buffer),
-                                 "<circ_check> stack backtrack found $$\n",
+                                 "<circ_check> stack backtrack found $$",
                                  &stkentp->slr);
                     eval_trace(buffer);
                     }
@@ -487,7 +487,7 @@ ev_eval_rpn(
         else
             res = create_error(EVAL_ERR_BADEXPR);
 
-        *resultp = stack_ptr->data.sic.result;
+        *resultp = stack_ptr->data.sic.result_data;
 
         stack_set(stack_offset);
         }
@@ -511,7 +511,7 @@ eval_backtrack_error(
     void (*oldfpe)(int))
 {
     stack_set(stack_at);
-    data_set_error(&stack_base[stack_at].data.sic.result, error);
+    ev_data_set_error(&stack_base[stack_at].data.sic.result_data, error);
     signal(SIGFPE, oldfpe);
 
     return(SAME_STATE);
@@ -680,9 +680,9 @@ eval_rpn(
                     }
 
                 if(check_flags & SLR_BAD_REF)
-                    data_set_error(&stack_ptr->data.sdi.data, create_error(EVAL_ERR_BADSLR));
+                    ev_data_set_error(&stack_ptr->data.sdi.data, create_error(EVAL_ERR_SLR_BAD_REF));
                 else if((check_flags & SLR_EXT_REF) && ev_doc_error(check_docno))
-                    data_set_error(&stack_ptr->data.sdi.data, ev_doc_error(check_docno));
+                    ev_data_set_error(&stack_ptr->data.sdi.data, ev_doc_error(check_docno));
 
                 break;
                 }
@@ -758,7 +758,7 @@ eval_rpn(
                 stack_inc(DATA_ITEM, cur_slr, stack_ptr[-1].flags);
 
                 /* default to local argument undefined */
-                data_set_error(&stack_ptr->data.sdi.data, create_error(EVAL_ERR_LOCALUNDEF));
+                ev_data_set_error(&stack_ptr->data.sdi.data, create_error(EVAL_ERR_LOCALUNDEF));
 
                 /* look back up stack for custom call */
                 if((stkentp = stack_back_search(stack_ptr - 1, EXECUTING_CUSTOM)) != NULL)
@@ -894,7 +894,7 @@ eval_rpn(
                     stack_set(stack_offset(stack_ptr) - arg_count);
 
                     stack_inc(DATA_ITEM, cur_slr, stack_ptr[-1].flags);
-                    data_set_error(&stack_ptr->data.sdi.data, res);
+                    ev_data_set_error(&stack_ptr->data.sdi.data, res);
                     break;
                     }
 
@@ -985,7 +985,7 @@ eval_rpn(
                                 if(args[0]->did_num == RPN_DAT_RANGE)
                                     {
                                     struct stack_dbase_function sdb;
-                                    if((sdb.stbp = list_allocptr(sizeof(stat_block))) != NULL)
+                                    if(NULL != (sdb.stbp = al_ptr_alloc_elem(stat_block, 1, &res)))
                                         {
                                         /* initialise database function data block */
                                         sdb.dbase_slot = stack_ptr->slr;
@@ -1010,8 +1010,6 @@ eval_rpn(
                                         stack_ptr->data.sdb = sdb;
                                         res = NEW_STATE;
                                         }
-                                    else
-                                        res = status_nomem();
                                     }
                                 else
                                     res = create_error(EVAL_ERR_ARGTYPE);
@@ -1036,7 +1034,7 @@ eval_rpn(
                                 struct stack_lookup slk;
                                 S32 match;
 
-                                if((slk.lkbp = list_allocptr(sizeof(look_block))) != NULL)
+                                if(NULL != (slk.lkbp = al_ptr_alloc_elem(look_block, 1, &res)))
                                     {
                                     ss_data_resource_copy(&slk.arg1, args[1]);
                                     ss_data_resource_copy(&slk.arg2, args[2]);
@@ -1066,8 +1064,6 @@ eval_rpn(
                                     stack_ptr->data.slk = slk;
                                     res = NEW_STATE;
                                     }
-                                else
-                                    res = status_nomem();
 
                                 break;
                                 }
@@ -1123,7 +1119,7 @@ eval_rpn(
                         return(res);
 
                     if(res < 0)
-                        data_set_error(&func_result, res);
+                        ev_data_set_error(&func_result, res);
 
                     /* remove function arguments from stack */
                     stack_set(stack_offset(stack_ptr) - arg_count);
@@ -1173,7 +1169,7 @@ eval_rpn(
     if(stack_ptr->type != DATA_ITEM)
         return(eval_backtrack_error(create_error(EVAL_ERR_INTERNAL), stack_at, oldfpe));
     else
-        stack_base[stack_at].data.sic.result = stack_ptr->data.sdi.data;
+        stack_base[stack_at].data.sic.result_data = stack_ptr->data.sdi.data;
 
     /* clear final result from stack */
     --stack_ptr;
@@ -1197,8 +1193,8 @@ lookup_block_dispose(
 {
     ss_data_free_resources(&slkp->arg1);
     ss_data_free_resources(&slkp->arg2);
-    ss_data_free_resources(&slkp->lkbp->target);
-    list_disposeptr(P_P_ANY_PEDANTIC(&slkp->lkbp));
+    ss_data_free_resources(&slkp->lkbp->target_data);
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&slkp->lkbp));
 }
 
 /******************************************************************************
@@ -1272,7 +1268,7 @@ custom_result(
     /* if we were passed an error... */
     if(!p_ev_data)
         {
-        data_set_error(&err_res, error);
+        ev_data_set_error(&err_res, error);
         p_ev_data = &err_res;
         }
 
@@ -1289,7 +1285,7 @@ custom_result(
             P_EV_DATA array_elementp;
             EV_DATA temp_data;
 
-            temp_data.arg.arrayp = resultp->arg.arrayp; /* temp loan to get at array */
+            temp_data.arg.array = resultp->arg.array; /* temp loan to get at array */
 
             array_elementp =
                 ss_array_element_index_wr(&temp_data,
@@ -1297,7 +1293,7 @@ custom_result(
                                           custom_stackp->data.stack_executing_custom.ypos);
 
             if(data_is_array_range(p_ev_data))
-                data_set_error(array_elementp, create_error(EVAL_ERR_NESTEDARRAY));
+                ev_data_set_error(array_elementp, create_error(EVAL_ERR_NESTEDARRAY));
             else
                 ss_data_resource_copy(array_elementp, p_ev_data);
 
@@ -1311,8 +1307,13 @@ custom_result(
 
         if(finalp->did_num == RPN_DAT_ERROR)
             {
-            finalp->arg.error.type = ERROR_CUSTOM;
-            finalp->arg.error.row  = stack_ptr->slr.row;
+            if(finalp->arg.error.type != ERROR_CUSTOM)
+                { /* if possible, mark error's origin as given row in a custom function */
+                finalp->arg.error.type = ERROR_CUSTOM;
+                finalp->arg.error.docno = stack_ptr->slr.docno;
+                finalp->arg.error.col = stack_ptr->slr.col;
+                finalp->arg.error.row = stack_ptr->slr.row;
+                }
             }
 
         /* reset stack to executing custom */
@@ -1368,7 +1369,7 @@ custom_sequence(
 
         data_resp = stack_index_ptr_data(semp->data.stack_executing_custom.stack_base, -2);
         ss_data_free_resources(data_resp);
-        data_set_error(data_resp, res);
+        ev_data_set_error(data_resp, res);
         stack_ptr->type = CUSTOM_COMPLETE;
         }
 
@@ -1718,15 +1719,15 @@ process_control_for_cond(
         {
         P_EV_NAME p_ev_name = name_ptr(name_num);
 
-        if(p_ev_name->def.did_num == RPN_DAT_REAL)
+        if(p_ev_name->def_data.did_num == RPN_DAT_REAL)
             {
             if(step)
-                p_ev_name->def.arg.fp += sclp->step;
+                p_ev_name->def_data.arg.fp += sclp->step;
 
             if(sclp->step >= 0)
-                res = !(p_ev_name->def.arg.fp > sclp->end);
+                res = !(p_ev_name->def_data.arg.fp > sclp->end);
             else
-                res = !(p_ev_name->def.arg.fp < sclp->end);
+                res = !(p_ev_name->def_data.arg.fp < sclp->end);
             }
         }
 
@@ -1892,7 +1893,7 @@ ev_recalc(void)
         /* get trees ready for action */
         tree_sort_all();
 
-        trace_0(TRACE_MODULE_EVAL, "**************<recalc restarting after blow-up>*************\n");
+        trace_0(TRACE_MODULE_EVAL, "**************<recalc restarting after blow-up>*************");
 
         tree_flags &= ~TRF_BLOWN;
         complete = 1;
@@ -1900,7 +1901,7 @@ ev_recalc(void)
 
     #if TRACE_ALLOWED
     if(!complete)
-        eval_trace("-------- recalc continuing -------\n");
+        eval_trace("-------- recalc continuing -------");
     #endif
 
     time_started = monotime();
@@ -1915,7 +1916,7 @@ ev_recalc(void)
             if(todo_get_slr(&stack_ptr->slr))
                 {
                 #if TRACE_ALLOWED
-                eval_trace("*******************<ev_recalc>*********************\n");
+                eval_trace("*******************<ev_recalc>*********************");
                 #endif
 
                 stack_ptr->type  = VISIT_SLOT;
@@ -1948,7 +1949,7 @@ ev_recalc(void)
                             {
                             eval_trace("<visit_slot> ");
                             trace_2(TRACE_MODULE_EVAL,
-                                    "avoided slot visit: visited: %d, serial_num: %d\n",
+                                    "avoided slot visit: visited: %d, serial_num: %d",
                                     p_ev_slot->rpn.var.visited,
                                     ev_serial_num);
 
@@ -1965,7 +1966,7 @@ ev_recalc(void)
                             break;
                             }
 
-                        eval_trace("<visit_slot>\n");
+                        eval_trace("<visit_slot>");
 
                         if(circ_check(p_ev_slot) == NEW_STATE)
                             break;
@@ -2020,7 +2021,7 @@ ev_recalc(void)
                 stack_ptr->data.sic.travel_res = travel_res;
 
                 trace_2(TRACE_MODULE_EVAL,
-                        "VISIT_SLOT sic.start_calc set to: %d, serial_num: %d\n",
+                        "VISIT_SLOT sic.start_calc set to: %d, serial_num: %d",
                         stack_ptr->data.sic.start_calc,
                         ev_serial_num);
 
@@ -2082,7 +2083,7 @@ ev_recalc(void)
              */
             case IN_EVAL:
                 {
-                eval_trace("<IN_EVAL>\n");
+                eval_trace("<IN_EVAL>");
 
                 #ifdef SLOTS_MOVE
                 /* clear out any cached slot pointer */
@@ -2112,7 +2113,7 @@ ev_recalc(void)
                     /* store result in slot */
                     ev_result_free_resources(&stack_ptr->data.sic.p_ev_slot->result);
                     ev_data_to_result_convert(&stack_ptr->data.sic.p_ev_slot->result,
-                                              &stack_ptr->data.sic.result);
+                                              &stack_ptr->data.sic.result_data);
 
                     /* on error in custom function sheet, return custom function result error */
                     if(stack_ptr->data.sic.p_ev_slot->result.did_num == RPN_DAT_ERROR &&
@@ -2120,10 +2121,17 @@ ev_recalc(void)
                         {
                         EV_DATA data;
 
-                        data.did_num        = RPN_DAT_ERROR;
-                        data.arg.error.num  = stack_ptr->data.sic.p_ev_slot->result.arg.error.num;
-                        data.arg.error.type = stack_ptr->data.sic.p_ev_slot->result.arg.error.type = ERROR_CUSTOM;
-                        data.arg.error.row  = stack_ptr->slr.row;
+                        data.did_num = RPN_DAT_ERROR;
+                        data.arg.error = stack_ptr->data.sic.p_ev_slot->result.arg.error;
+
+                        if(data.arg.error.type != ERROR_CUSTOM)
+                        {
+                            data.arg.error.type = stack_ptr->data.sic.p_ev_slot->result.arg.error.type = ERROR_CUSTOM;
+                        
+                            data.arg.error.docno = stack_ptr->slr.docno;
+                            data.arg.error.col = stack_ptr->slr.col;
+                            data.arg.error.row = stack_ptr->slr.row;
+                        }
 
                         custom_result(&data, 0);
                         break;
@@ -2161,7 +2169,7 @@ ev_recalc(void)
                         {
                         stack_ptr->data.sic.p_ev_slot->rpn.var.visited = stack_ptr->data.sic.start_calc;
                         trace_2(TRACE_MODULE_EVAL,
-                                "END_CALC, slot->visited set to: %d, serial_num: %d\n",
+                                "END_CALC, slot->visited set to: %d, serial_num: %d",
                                 stack_ptr->data.sic.p_ev_slot->rpn.var.visited,
                                 ev_serial_num);
                         }
@@ -2285,12 +2293,10 @@ ev_recalc(void)
                                                           p_ev_slot->rpn.var.rpn_str + stack_ptr->data.sdb.cond_pos,
                                                           &target_slr, abs_col, abs_row);
 
-                        if((rpn_ptr = list_allocptr(rpn_len)) == NULL)
-                            error = status_nomem();
-                        else
+                        if(NULL != (rpn_ptr = al_ptr_alloc_bytes(U8, rpn_len, &error)))
                             {
                             stack_inc(DBASE_CALC, slr, stack_ptr[-1].flags);
-                            void_memcpy32(rpn_ptr, dbase_rpn, rpn_len);
+                            memcpy32(rpn_ptr, dbase_rpn, rpn_len);
                             stack_ptr->data.sic.ptr = rpn_ptr;
                             stack_ptr->data.sic.offset = 0;
                             stack_ptr->data.sic.type = INCALC_PTR;
@@ -2313,7 +2319,7 @@ ev_recalc(void)
                     stack_ptr[0] = stack_ptr[-1];
 
                     stack_ptr[-1].type = DATA_ITEM;
-                    data_set_error(&stack_ptr[-1].data.sdi.data, error);
+                    ev_data_set_error(&stack_ptr[-1].data.sdi.data, error);
                     }
 
                 break;
@@ -2325,10 +2331,10 @@ ev_recalc(void)
                 EV_SLR span;
 
                 /* throw away current conditional rpn string */
-                list_disposeptr((P_P_ANY) &stack_ptr->data.sic.ptr);
+                al_ptr_dispose((P_P_ANY) /*_PEDANTIC*/ (&stack_ptr->data.sic.ptr));
 
                 /* call the dbase routine to process the data */
-                dbase_sub_function(&stack_ptr[-1].data.sdb, &stack_ptr->data.sic.result);
+                dbase_sub_function(&stack_ptr[-1].data.sdb, &stack_ptr->data.sic.result_data);
 
                 /* remove DBASE_CALC state from stack */
                 --stack_ptr;
@@ -2350,7 +2356,7 @@ ev_recalc(void)
                         EV_DATA data;
 
                         dbase_sub_function_finish(&data, &stack_ptr->data.sdb);
-                        list_disposeptr(P_P_ANY_PEDANTIC(&stack_ptr->data.sdb.stbp));
+                        al_ptr_dispose(P_P_ANY_PEDANTIC(&stack_ptr->data.sdb.stbp));
 
                         /* pop previous state
                          * push dbase result
@@ -2375,7 +2381,7 @@ ev_recalc(void)
                     EV_DATA data;
 
                     if(!res || !stack_ptr->data.slk.lkbp->had_one)
-                        data_set_error(&data, create_error(EVAL_ERR_LOOKUP));
+                        ev_data_set_error(&data, create_error(EVAL_ERR_LOOKUP));
                     else
                         lookup_finish(&data, &stack_ptr->data.slk);
 
@@ -2407,12 +2413,12 @@ ev_recalc(void)
                 if(stack_ptr->data.stack_executing_custom.in_array)
                     {
                     ++stack_ptr->data.stack_executing_custom.xpos;
-                    if(stack_ptr->data.stack_executing_custom.xpos >= stack_ptr[-1].data.sdi.data.arg.arrayp->x_size)
+                    if(stack_ptr->data.stack_executing_custom.xpos >= stack_ptr[-1].data.sdi.data.arg.array.x_size)
                         {
                         stack_ptr->data.stack_executing_custom.xpos  = 0;
                         stack_ptr->data.stack_executing_custom.ypos += 1;
 
-                        if(stack_ptr->data.stack_executing_custom.ypos >= stack_ptr[-1].data.sdi.data.arg.arrayp->y_size)
+                        if(stack_ptr->data.stack_executing_custom.ypos >= stack_ptr[-1].data.sdi.data.arg.array.y_size)
                             custom_over = 1;
                         }
                     }
@@ -2470,13 +2476,13 @@ ev_recalc(void)
                 PC_EV_TYPE typep;
                 P_EV_DATA resp;
 
-                if(stack_ptr->data.spa.xpos >= stack_ptr[-1].data.sdi.data.arg.arrayp->x_size)
+                if(stack_ptr->data.spa.xpos >= stack_ptr[-1].data.sdi.data.arg.array.x_size)
                     {
                     stack_ptr->data.spa.xpos  = 0;
                     stack_ptr->data.spa.ypos += 1;
 
                     /* have we completed array ? */
-                    if(stack_ptr->data.spa.ypos >= stack_ptr[-1].data.sdi.data.arg.arrayp->y_size)
+                    if(stack_ptr->data.spa.ypos >= stack_ptr[-1].data.sdi.data.arg.array.y_size)
                         {
                         S32 nargs = stack_ptr->data.spa.nargs; /* SKS fixed 01may95 in Fireworkz; 21mar12 in PipeDream! */
                         struct _stack_entry result, state;
@@ -2565,14 +2571,14 @@ ev_recalc(void)
                 else if(res > 0)
                     {
                     ss_data_free_resources(resp);
-                    data_set_error(resp, create_error(EVAL_ERR_NESTEDARRAY));
+                    ev_data_set_error(resp, create_error(EVAL_ERR_NESTEDARRAY));
                     }
 
                 /* if function returned an array, correct and complain */
                 if(data_is_array_range(resp))
                     {
                     ss_data_free_resources(resp);
-                    data_set_error(resp, create_error(EVAL_ERR_NESTEDARRAY));
+                    ev_data_set_error(resp, create_error(EVAL_ERR_NESTEDARRAY));
                     }
 
                 break;
@@ -2581,15 +2587,14 @@ ev_recalc(void)
             case ALERT_INPUT:
                 {
                 S32 res;
-                EV_DATA data;
+                EV_DATA ev_data;
 
                 switch(stack_ptr->data.sai.alert_input)
                     {
                     case RPN_FNV_ALERT:
                         if((res = ev_alert_poll()) >= 0)
                             {
-                            data.did_num = RPN_DAT_WORD8;
-                            data.arg.integer = (S32) res;
+                            ev_data_set_integer(&ev_data, (S32) res);
                             ev_alert_close();
                             }
                         break;
@@ -2605,7 +2610,7 @@ ev_recalc(void)
                             /* get rid of input box */
                             ev_input_close();
 
-                            if(status_ok(str_hlp_make_ustr(&string_data, result_string)))
+                            if(status_ok(ss_string_make_ustr(&string_data, result_string)))
                                 {
                                 S32 name_res;
                                 EV_NAMEID name_key;
@@ -2616,17 +2621,16 @@ ev_recalc(void)
                                                          &string_data)) < 0)
                                     {
                                     ss_data_free_resources(&string_data);
-                                    data_set_error(&data, name_res);
+                                    ev_data_set_error(&ev_data, name_res);
                                     }
                                 else
                                     {
                                     EV_NAMEID name_num;
 
                                     name_num = name_def_find(name_key);
-                                    name_ptr(name_num)->def = string_data;
+                                    name_ptr(name_num)->def_data = string_data;
 
-                                    data.arg.integer = (S32) res;
-                                    data.did_num = RPN_DAT_WORD8;
+                                    ev_data_set_integer(&ev_data, (S32) res);
                                     }
                                 }
                             }
@@ -2643,7 +2647,7 @@ ev_recalc(void)
                     stack_ptr[0] = stack_ptr[-1];
 
                     stack_ptr[-1].type = DATA_ITEM;
-                    stack_ptr[-1].data.sdi.data = data;
+                    stack_ptr[-1].data.sdi.data = ev_data;
                     }
 
                 break;
@@ -2802,7 +2806,7 @@ stack_free_resources(
                 {
                 case RPN_TMP_STRING:
                     trace_1(TRACE_MODULE_EVAL,
-                            "stack_free_resources freeing string: %s\n",
+                            "stack_free_resources freeing string: %s",
                             stkentp->data.sdi.data.arg.string.data);
                     str_clr(&stkentp->data.sdi.data.arg.string.data);
                     break;
@@ -2856,13 +2860,13 @@ stack_free_resources(
 
         /* free indirected stats block */
         case DBASE_FUNCTION:
-            list_disposeptr(P_P_ANY_PEDANTIC(&stkentp->data.sdb.stbp));
+            al_ptr_dispose(P_P_ANY_PEDANTIC(&stkentp->data.sdb.stbp));
             break;
 
         /* free stored conditional rpn string */
         case DBASE_CALC:
             if(stkentp->data.sic.ptr)
-                list_disposeptr((P_P_ANY) &stkentp->data.sic.ptr);
+                al_ptr_dispose((P_P_ANY) /*_PEDANTIC*/ (&stkentp->data.sic.ptr));
             break;
 
         /* kill off an alert or input box */
@@ -2893,6 +2897,7 @@ stack_grow(
 {
     if(stack_ptr + n_spaces >= stack_end)
         {
+        STATUS status;
         P_ANY newp;
         S32 stack_ptr_offset, stack_new_size;
         stack_entryp old_stack_base;
@@ -2901,12 +2906,12 @@ stack_grow(
         stack_ptr_offset = stack_offset(stack_ptr);
         stack_new_size   = stack_offset(stack_end) + STACK_INC;
 
-        if((newp = list_reallocptr(stack_base, sizeof(struct _stack_entry) * stack_new_size)) == 0)
-            return(status_nomem());
+        if(NULL == (newp = al_ptr_realloc_elem(STACK_ENTRY, stack_base, stack_new_size, &status)))
+            return(status);
 
         #if TRACE_ALLOWED
         if(newp != stack_base)
-            trace_0(TRACE_MODULE_EVAL | TRACE_OUT, "!!!!!!!!!!!!!!!!!!!! stack moved !!!!!!!!!!!!!!!!!!\n");
+            trace_0(TRACE_MODULE_EVAL | TRACE_OUT, "!!!!!!!!!!!!!!!!!!!! stack moved !!!!!!!!!!!!!!!!!!");
         #endif
 
         stack_base = newp;
@@ -2926,7 +2931,7 @@ stack_grow(
             stack_base->type =_ERROR;
 
         trace_2(TRACE_MODULE_EVAL,
-                "stack realloced, now: %d entries, %d bytes\n",
+                "stack realloced, now: %d entries, %d bytes",
                 stack_new_size,
                 sizeof(struct _stack_entry) * (stack_new_size));
         }
@@ -2962,18 +2967,18 @@ stack_release_check(void)
 
     if(stack_max < stack_end - stack_base)
         {
+        STATUS status;
         P_ANY newp;
         S32 stack_ptr_offset;
 
         stack_ptr_offset = stack_offset(stack_ptr);
 
-        if((newp = list_reallocptr(stack_base,
-                                   sizeof(struct _stack_entry) * stack_max)) == 0)
-            return(status_nomem());
+        if(NULL == (newp = al_ptr_realloc_elem(STACK_ENTRY, stack_base, stack_max, &status)))
+            return(status);
 
         #if TRACE_ALLOWED
         if(newp != stack_base)
-            trace_0(TRACE_MODULE_EVAL | TRACE_OUT, "!!!!!!!!!!!!!!!!!!!! stack moved !!!!!!!!!!!!!!!!!!\n");
+            trace_0(TRACE_MODULE_EVAL | TRACE_OUT, "!!!!!!!!!!!!!!!!!!!! stack moved !!!!!!!!!!!!!!!!!!");
         #endif
 
         stack_base = newp;
@@ -2981,9 +2986,9 @@ stack_release_check(void)
         stack_ptr  = stack_base + stack_ptr_offset;
 
         trace_2(TRACE_MODULE_EVAL,
-                "stack freed, now: %d entries, %d bytes\n",
+                "stack freed, now: %d entries, %d bytes",
                 stack_max,
-                sizeof(struct _stack_entry) * (stack_max));
+                sizeof32(STACK_ENTRY) * (stack_max));
         }
 
     return(0);

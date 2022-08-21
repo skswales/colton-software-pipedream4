@@ -195,7 +195,7 @@ message_output(
 
     err.errnum = 0;
 
-    (void) void_strkpy(err.errmess, elemof32(err.errmess), buffer);
+    (void) safe_strkpy(err.errmess, elemof32(err.errmess), buffer);
 
     wimpt_complain(&err);
 }
@@ -211,7 +211,7 @@ reperr(
     PC_U8 errorp;
     va_list args;
 
-    trace_2(TRACE_APP_PD4, "reperr(%d, %s)\n", errornumber, trace_string(text));
+    trace_2(TRACE_APP_PD4, "reperr(%d, %s)", errornumber, trace_string(text));
 
     keyidx = NULL;
     cbuff_offset = 0;
@@ -232,8 +232,8 @@ reperr(
             /* if we have an arg then append it if not a %s error */
             if(text)
                 {
-                void_strkpy(array, elemof32(array), errorp);
-                void_strkat(array, elemof32(array), " %s");
+                safe_strkpy(array, elemof32(array), errorp);
+                safe_strkat(array, elemof32(array), " %s");
                 errorp = array;
                 }
             }
@@ -291,7 +291,7 @@ reperr_getstr(
     if(!res)
         res = "Error not found";
 
-    trace_2(TRACE_APP_PD4, "reperr_getstr(%d) yields '%s'\n", errornumber, trace_string(res));
+    trace_2(TRACE_APP_PD4, "reperr_getstr(%d) yields '%s'", errornumber, trace_string(res));
     return(res);
 }
 
@@ -391,7 +391,7 @@ extern STATUS
 create_error(
     _InVal_     STATUS status)
 {
-    /*status_assertc(status); not in PipeDream! */
+    /*status_assertc(status); not in PipeDream! */ /* just keep this function for breakpoints */
     return(status);
 }
 

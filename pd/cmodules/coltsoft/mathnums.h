@@ -1,4 +1,4 @@
-/* cmodules/mathnums.h */
+/* mathnums.h */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -44,4 +44,4 @@
 
 #endif /* __mathnums_h */
 
-/* end of cmodules/mathnums.h */
+/* end of mathnums.h */

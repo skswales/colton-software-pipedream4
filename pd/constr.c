@@ -177,7 +177,7 @@ check_not_blank_sheet(void)
 extern void
 constr_finalise(void)
 {
-    trace_0(TRACE_APP_PD4, "constr_finalise()\n");
+    trace_0(TRACE_APP_PD4, "constr_finalise()");
 
     delcol(0, numcol);
 
@@ -193,7 +193,7 @@ constr_finalise(void)
 extern BOOL
 constr_initialise(void)
 {
-    trace_0(TRACE_APP_PD4, "constr_initialise()\n");
+    trace_0(TRACE_APP_PD4, "constr_initialise()");
 
     reset_filpnm();
 
@@ -241,7 +241,7 @@ constr_initialise_once(void)
     LOAD_FILE_OPTIONS load_file_options;
     BOOL ok;
 
-    trace_0(TRACE_APP_PD4, "constr_initialise_once()\n");
+    trace_0(TRACE_APP_PD4, "constr_initialise_once()");
 
     /* load Choices file iff present */
     if(file_find_on_path(buffer, elemof32(buffer), CHOICES_FILE_STR))
@@ -361,20 +361,17 @@ isnewrec(
 
 /******************************************************************************
 *
-* get next slot ref in either text or numeric slot
+* get next compiled slot ref in either text or numeric slot
 *
 ******************************************************************************/
 
 extern uchar *
-my_next_ref(
-    uchar *ptr,
-    uchar type)
+find_next_csr(
+    uchar * csr)
 {
-    IGNOREPARM(type);
-
-    for( ; *ptr != '\0'; ptr++)
-        if(*ptr == SLRLDI)
-            return(ptr+1);
+    while(NULLCH != *csr)
+        if(SLRLD1 == *csr++)
+            return(csr + 1); /* past the SLRLD1/2 */
 
     return(NULL);
 }
@@ -460,9 +457,13 @@ SortBlock_fn(void)
     ROW i, n, row;
     S32 nrecs, rec, nrows;
     COL pkeycol;
-    ARRAY_HANDLE sortblkh, sortrowblkh;
+    SC_ARRAY_INIT_BLOCK sortblk_init_block = aib_init(1, sizeof32(SORT_ENTRY), FALSE);
+    ARRAY_HANDLE sortblkh = 0;
+    SC_ARRAY_INIT_BLOCK sortrowblk_init_block = aib_init(1, sizeof32(ROW), FALSE);
+    ARRAY_HANDLE sortrowblkh = 0;
     P_SORT_ENTRY sortblkp, sortp;
     P_ROW sortrowblkp, rowtp;
+    STATUS status;
     char array[20];
 
     if(!init_dialog_box(D_SORT))
@@ -529,8 +530,6 @@ SortBlock_fn(void)
 
         /* do the actual sort */
 
-        sortblkh = sortrowblkh = 0;
-
         /* we did a merge above */
         slot_in_buffer = FALSE;
 
@@ -543,24 +542,24 @@ SortBlock_fn(void)
                 ++nrecs;
 
         /* allocate array to be sorted */
-        if((sortblkh = list_allochandle(sizeof32(SORT_ENTRY) * (S32) nrecs)) == 0)
+        if(NULL == al_array_alloc(&sortblkh, SORT_ENTRY, nrecs, &sortblk_init_block, &status))
             {
             dialog_box_end();
-            reperr_null(status_nomem());
+            reperr_null(status);
             goto endpoint;
             }
 
-        trace_1(TRACE_MODULE_UREF, "allocated sort block, %d bytes\n", sizeof32(SORT_ENTRY) * (S32) nrecs);
+        trace_1(TRACE_MODULE_UREF, "allocated sort block, %d entries", nrecs);
 
         /* allocate row table */
-        if((sortrowblkh = list_allochandle(sizeof32(ROW) * ((S32) blkend.row - blkstart.row + 1))) == 0)
+        if(NULL == al_array_alloc(&sortrowblkh, ROW, ((S32) blkend.row - blkstart.row + 1), &sortrowblk_init_block, &status))
             {
             dialog_box_end();
-            reperr_null(status_nomem());
+            reperr_null(status);
             goto endpoint;
             }
 
-        trace_1(TRACE_MODULE_UREF, "allocated sort row block, %d bytes\n", sizeof32(ROW) * ((S32) blkend.row - blkstart.row + 1));
+        trace_1(TRACE_MODULE_UREF, "allocated sort row block, %d entries", ((S32) blkend.row - blkstart.row + 1));
 
         /* switch on indicator */
         actind(0);
@@ -568,12 +567,12 @@ SortBlock_fn(void)
         escape_enable();
 
         /* load pointer to array */
-        sortblkp = list_getptr(sortblkh);
+        sortblkp = array_base(&sortblkh, SORT_ENTRY);
 
         /* load array with records */
         for(i = blkstart.row, sortp = sortblkp; i <= blkend.row; ++i, ++sortp)
             {
-            trace_2(TRACE_APP_PD4, "SortBlock: adding " PTR_XTFMT ", row %d\n", report_ptr_cast(sortp), i);
+            trace_2(TRACE_APP_PD4, "SortBlock: adding " PTR_XTFMT ", row %d", report_ptr_cast(sortp), i);
             sortp->keyrow = i;
 
             while(++i <= blkend.row)
@@ -583,7 +582,7 @@ SortBlock_fn(void)
             sortp->rowsinrec = (i--) - sortp->keyrow;
             }
 
-        trace_2(TRACE_MODULE_UREF, "SortBlock: sorting array " PTR_XTFMT", %d elements\n", report_ptr_cast(sortblkp), nrecs);
+        trace_2(TRACE_MODULE_UREF, "SortBlock: sorting array " PTR_XTFMT", %d elements", report_ptr_cast(sortblkp), nrecs);
 
         if(setjmp(sortpoint))
             { /* NB current_p_docu global register furtling IS required as return here via longjmp() *may* have corrupted the register */
@@ -596,7 +595,7 @@ SortBlock_fn(void)
             }
 
         /* build table of rows to be sorted */
-        sortrowblkp = list_getptr(sortrowblkh);
+        sortrowblkp = array_base(&sortrowblkh, ROW);
 
         /* for each record */
         for(sortp = sortblkp, rec = 0, rowtp = sortrowblkp;
@@ -609,9 +608,9 @@ SortBlock_fn(void)
                 *rowtp = row;
 
         /* free sort array */
-        list_disposehandle(&sortblkh);
+        al_array_dispose(&sortblkh);
 
-        trace_0(TRACE_MODULE_UREF, "sort array freed; exchange starting\n");
+        trace_0(TRACE_MODULE_UREF, "sort array freed; exchange starting");
 
         /* exchange the rows in the spreadsheet */
         /* NB. difference between pointers still valid after dealloc */
@@ -635,7 +634,7 @@ SortBlock_fn(void)
                 }
 
             /* must re-load row block pointer each time, ahem */
-            rowtp = ((P_ROW) list_getptr(sortrowblkh)) + n;
+            rowtp = array_ptr(&sortrowblkh, ROW, n);
             row = n + blkstart.row;
             if(*rowtp != row)
                 {
@@ -661,16 +660,18 @@ SortBlock_fn(void)
                     P_ROW nrowtp;
 
                     /* must re-load row block pointer each time, ahem */
-                    rowtp = ((P_ROW) list_getptr(sortrowblkh)) + n;
+                    rowtp = array_ptr(&sortrowblkh, ROW, n);
 
                     for(nn = n + 1, nrowtp = rowtp + 1;
                         nn < nrows;
                         ++nn, ++nrowtp)
+                        {
                         if(*nrowtp == row)
                             {
                             *nrowtp = *rowtp;
                             break;
                             }
+                        }
                     }
                 }
             }
@@ -678,10 +679,10 @@ SortBlock_fn(void)
     endpoint:
 
         /* free sort array */
-        list_disposehandle(&sortblkh);
+        al_array_dispose(&sortblkh);
 
         /* free row table array */
-        list_disposehandle(&sortrowblkh);
+        al_array_dispose(&sortrowblkh);
 
         /* release any redundant storage */
         garbagecollect();

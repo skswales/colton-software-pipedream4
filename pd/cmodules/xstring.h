@@ -55,7 +55,7 @@ strrncmp(
     _In_reads_(n) PC_U8 b,
     _In_        U32 n);
 
-static __forceinline void
+static inline void
 str_clr(
     _InoutRef_opt_ P_P_USTR aa)
 {
@@ -125,8 +125,8 @@ stox(
     _OutRef_    P_S32 p_col);
 
 extern S32
-xtos_buf(
-    _Out_writes_z_(elemof_buffer) P_USTR string /*filled*/,
+xtos_ubuf(
+    _Out_writes_z_(elemof_buffer) P_USTR buffer /*filled*/,
     _InVal_     U32 elemof_buffer,
     _InVal_     S32 x,
     _InVal_     BOOL upper_case);
@@ -144,26 +144,26 @@ strcpy / _s() etc. replacements that ensure NULLCH-termination
 #define TRUNCATE U32_MAX
 
 extern void
-void_strkat(
+safe_strkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src);
 
 extern void
-void_strnkat(
+safe_strnkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,
     _InVal_     U32 src_n);
 
 extern void
-void_strkpy(
+safe_strkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_z_      PC_USTR src);
 
 extern void
-void_strnkpy(
+safe_strnkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
     _In_reads_(src_n) PC_U8 src,
@@ -171,19 +171,19 @@ void_strnkpy(
 
 #if USTR_IS_L1STR
 
-#define void_ustrkat  void_strkat
-#define void_ustrnkat void_strnkat
-#define void_ustrkpy  void_strkpy
-#define void_ustrnkpy void_strnkpy
+#define safe_ustrkat  safe_strkat
+#define safe_ustrnkat safe_strnkat
+#define safe_ustrkpy  safe_strkpy
+#define safe_ustrnkpy safe_strnkpy
 
 #endif /* USTR_IS_L1STR */
 
 #if TSTR_IS_L1STR
 
-#define void_tstrkat  void_strkat
-#define void_tstrnkat void_strnkat
-#define void_tstrkpy  void_strkpy
-#define void_tstrnkpy void_strnkpy
+#define safe_tstrkat  safe_strkat
+#define safe_tstrnkat safe_strnkat
+#define safe_tstrkpy  safe_strkpy
+#define safe_tstrnkpy safe_strnkpy
 
 #endif /* TSTR_IS_L1STR */
 

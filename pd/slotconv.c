@@ -31,6 +31,12 @@
 #include "riscdraw.h"
 
 /*
+need to know about ev_dec_range()
+*/
+
+#include "cmodules/ev_evali.h"
+
+/*
 entry in the font list
 */
 
@@ -39,7 +45,6 @@ typedef struct font_cache_entry
     font handle;
     S32 xsize;
     S32 ysize;
-    /*DOCNO docno;*/
     /* U8Z name[] follows */
 }
 * fep;
@@ -50,7 +55,7 @@ local routines
 
 static font
 font_cache(
-    const char *name,
+    _In_reads_bytes_(namlen) const char *name,
     S32 namlen,
     S32 xs,
     S32 ys);
@@ -62,13 +67,13 @@ font_cancel_hilites(
 static font
 font_derive(
     font handle,
-    char *name,
-    char *supplement,
-    S32 add);
+    _In_z_      const char * name,
+    _In_z_      const char * supplement,
+    _InVal_     BOOL add);
 
 static fep
 font_find_block(
-    font fonthan);
+    _InVal_     font fonthan);
 
 static font
 font_get_global(void);
@@ -90,12 +95,12 @@ font_stringwid(
     font str_font,
     char *str);
 
-static S32
+static STATUS
 font_strip(
-    const char *fontname,
-    const char *strip,
-    char *newname,
-    _InVal_     U32 elemof_newname);
+    _Out_writes_z_(elemof_newname) char * newname,
+    _InVal_     U32 elemof_newname,
+    _In_z_      const char * fontname,
+    _In_z_      const char * strip);
 
 static S32
 font_squash(
@@ -109,12 +114,13 @@ font_super_sub(
 static void
 result_to_string(
     P_EV_RESULT resp,
+    _InVal_     DOCNO docno,
     char *array_start,
     char *array,
     char format,
     coord fwidth,
     char *justify,
-    BOOL expand_refs,
+    S32 expand_refs,
     BOOL expand_ats,
     BOOL expand_ctrl);
 
@@ -219,7 +225,7 @@ bitstr(
     ROW row,
     char * buffer /*out*/,
     coord fwidth,
-    BOOL expand_refs,
+    S32 expand_refs,
     BOOL expand_ats,
     BOOL expand_ctrl)
 {
@@ -230,7 +236,7 @@ bitstr(
     P_SLOT tslot;
     COL tcol;
     ROW trow;
-    DOCNO docno;
+    EV_DOCNO docno;
     coord reflength;
     char *tempto;
     S32 i = 0;
@@ -255,21 +261,12 @@ bitstr(
         */
         if((*from != text_at_char)  /*||  (NULLCH == text_at_char)*/)
             {
-            if(SLRLDI == *from) /* SKS - have to be paranoid now that text_at_char can change! */
-                { /* need to do this otherwise we get the SLRLDI character and following bytes displayed... */
-                ++from;
+            if(SLRLD1 == *from) /* have to cater for orphaned SLRLD1 (text_at_char changed) */
+                { /* we need to do this otherwise we get the SLRLD1 character and following bytes displayed... */
+                const uchar * csr = from + 2; /* CSR is past the SLRLD1/2 */
 
-                /* get slot coordinates */
-                docno = (DOCNO) talps(from, sizeof(DOCNO));
-                from += sizeof(DOCNO);
-
-                tcol = (COL) talps(from, sizeof(COL));
-                force_not_abs_col(tcol);
-                from += sizeof(COL);
-
-                trow = (ROW) talps(from, sizeof(ROW));
-                force_not_abs_row(trow);
-                from += sizeof(ROW);
+                from = talps_csr(csr, &docno, &tcol, &trow);
+                /*eportf("bitstr: decompiled (orphaned) CSR docno %d col 0x%x row 0x%x", docno, tcol, trow);*/
 
                 reflength = write_ref(to, BUF_MAX_REFERENCE, docno, tcol, trow);
                 to += reflength;
@@ -280,14 +277,14 @@ bitstr(
 
             if(!ishighlight(*from))
                 {
-                /* check for 'ISO' control characters & Acorn redefs */
+                /* check for C0 control characters & Acorn C1 redefs */
                 if(expand_ctrl                                                                                         &&
-                    ((*from < SPACE)                            ||
-                     (!riscos_fonts  &&  (*from == DELETE))     ||
-                     ( riscos_fonts  &&  (*from >= 127)  &&  (*from < 160)  &&  !font_charwid(current_font, *from)))
-                                                                                                                        )
+                    ((*from < SPACE) || (*from == DELETE) ||
+                     (riscos_fonts  &&  (*from >= 128)  &&  (*from < 160)  &&  !font_charwid(current_font, *from)))
+                                                                                                                       )
                     {
                     to += sprintf(to, "[%.2x]", (S32) *from);
+                    length += 4;
                     from++;
                     continue;
                     }
@@ -305,11 +302,11 @@ bitstr(
                 continue;
                 }
 
-            /* turn highlights into font changes on RISCOS */
+            /* turn highlights into font changes on RISC OS */
             switch(*from)
                 {
                 case HIGH_UNDERLINE:
-                    trace_0(TRACE_APP_PD4, "bitstr highlight 1 underline\n");
+                    trace_0(TRACE_APP_PD4, "bitstr highlight 1 underline");
 
                     *to++ = UL_CHANGE;
 
@@ -332,118 +329,107 @@ bitstr(
 
                 case HIGH_BOLD:
                     {
-                    fep fp;
+                    fep fp = font_find_block(current_font);
 
-                    trace_0(TRACE_APP_PD4, "bitstr highlight 2 bold\n");
+                    trace_2(TRACE_APP_PD4, "bitstr highlight 2 bold B->%d I=%d", !hilite_state[1], hilite_state[3]);
 
-                    fp = font_find_block(current_font);
-
-                    if(fp)
+                    if(NULL != fp)
                         {
                         PC_U8Z fp_name = (PC_U8Z) (fp + 1);
-                        font newfont, newfonta;
+                        font newfont = 0;
                         char basefont[BUF_MAX_PATHSTRING];
-                        char tempfont[BUF_MAX_PATHSTRING];
 
-                        /* strip out any italic suffixes */
-                        font_strip(fp_name, ".Italic", basefont, elemof32(basefont));
-                        strcpy(tempfont, basefont);
-                        font_strip(tempfont, ".Oblique", basefont, elemof32(basefont));
-                        strcpy(tempfont, basefont);
+                        /* first strip off any Italic suffixes - they are always at the end if present */
+                        if(!status_done(font_strip(basefont, elemof32(basefont), fp_name, ".Italic")))
+                            (void) font_strip(basefont, elemof32(basefont), fp_name, ".Oblique");
 
-                        newfont = 0;
+                        /* basefont contains name stripped of any Italic suffixes */
 
                         if(hilite_state[1])
                             {
-                            font_strip(tempfont, ".Bold", basefont, elemof32(basefont));
+                            /* try removing any Bold suffix */
+                            (void) font_strip(basefont, elemof32(basefont), basefont, ".Bold");
 
-                            /* try to derive the base font */
-                            if((newfont = font_derive(current_font,
-                                                      basefont,
-                                                      "",
-                                                      TRUE)) < 1)
-                                if((newfont = font_derive(current_font,
-                                                          basefont,
-                                                          ".Medium",
-                                                          TRUE)) < 1)
-                                    newfont = font_derive(current_font,
-                                                          basefont,
-                                                          ".Roman",
-                                                          TRUE);
+                            /* basefont contains name stripped of any Bold and Italic suffixes */
 
-                            /* try to get italic version */
-                            if((newfont > 1)  &&  hilite_state[3])
-                                {
-                                if((newfonta = font_derive(newfont,
-                                                           NULL,
-                                                           ".Italic",
-                                                           TRUE)) < 1)
-                                    if((newfonta = font_derive(newfont,
-                                                               NULL,
-                                                               ".Oblique",
-                                                               TRUE)) > 0)
-                                        newfont = newfonta;
+                            /* try to derive the base font from the attribute-stripped current font */
+                            newfont = font_derive(current_font, basefont, ".Medium", TRUE);
+
+                            if(newfont < 1)
+                                newfont = font_derive(current_font, basefont, ".Roman", TRUE);
+
+                            if(newfont < 1)
+                                newfont = font_derive(current_font, basefont, "", TRUE);
+
+                            if(hilite_state[3] && (newfont > 1))
+                                { /* try to derive an Italic version iff base font found (saves having to try all possible permutations of Normal & Italic) */
+                                font newfont_i;
+
+                                fp = font_find_block(newfont);
+                                __assume(fp);
+                                fp_name = (PC_U8Z) (fp + 1);
+
+                                newfont_i = font_derive(newfont, fp_name, ".Italic", TRUE);
+
+                                if(newfont_i < 1)
+                                    newfont_i = font_derive(newfont, fp_name, ".Oblique", TRUE);
+
+                                if(newfont_i > 0)
+                                    newfont = newfont_i;
                                 }
                             }
                         else
                             {
-                            font_strip(tempfont, ".Medium", basefont, elemof32(basefont));
-                            strcpy(tempfont, basefont);
-                            font_strip(tempfont, ".Roman", basefont, elemof32(basefont));
+                            /* try removing any Normal suffixes */
+                            if(!status_done(font_strip(basefont, elemof32(basefont), basefont, ".Medium")))
+                                (void) font_strip(basefont, elemof32(basefont), basefont, ".Roman");
 
-                            /* try to get bold italic version */
+                            /* basefont contains name stripped of any Normal and Italic suffixes */
+
                             if(hilite_state[3])
-                                {
-                                if((newfont = font_derive(current_font,
-                                                          basefont,
-                                                          ".Bold.Italic",
-                                                          TRUE)) < 1)
-                                    newfont = font_derive(current_font,
-                                                          basefont,
-                                                          ".Bold.Oblique",
-                                                          TRUE);
+                                { /* try to derive a Bold Italic version */
+                                newfont = font_derive(current_font, basefont, ".Bold.Italic", TRUE);
+
+                                if(newfont < 1)
+                                    newfont = font_derive(current_font, basefont, ".Bold.Oblique", TRUE);
                                 }
 
-                            /* at least get bold version */
+                            /* at least try to derive a Bold version (either that's what we wanted or Bold Italic just failed) */
                             if(newfont < 1)
-                                newfont = font_derive(current_font,
-                                                      basefont,
-                                                      ".Bold",
-                                                      TRUE);
+                                newfont = font_derive(current_font, basefont, ".Bold", TRUE);
                             }
 
                         if(newfont > 0)
-                            {
                             font_insert_change(newfont, &to);
-                            hilite_state[1] ^= 1;
-                            }
-                        else
-                            hilite_state[1] = 0;
                         }
 
+                    hilite_state[1] ^= 1;
                     break;
                     }
 
                 case HIGH_ITALIC:
                     {
-                    font newfont;
-                    S32 add;
+                    fep fp = font_find_block(current_font);
 
-                    trace_0(TRACE_APP_PD4, "bitstr highlight 4 italic\n");
+                    trace_2(TRACE_APP_PD4, "bitstr highlight 4 italic B=%d I->%d", hilite_state[1], !hilite_state[3]);
 
-                    add = !hilite_state[3];
-                    if((newfont = font_derive(current_font, NULL,
-                                              ".Italic", add)) < 1)
-                        newfont = font_derive(current_font, NULL,
-                                              ".Oblique", add);
-                    if(newfont > 0)
+                    if(NULL != fp)
                         {
-                        font_insert_change(newfont, &to);
-                        hilite_state[3] ^= 1;
-                        }
-                    else
-                        hilite_state[3] = 0;
+                        PC_U8Z fp_name = (PC_U8Z) (fp + 1);
+                        const BOOL add = !hilite_state[3];
+                        font newfont;
 
+                        /* just need to try adding or removing Italic suffixes as they are always at the end */
+                        newfont = font_derive(current_font, fp_name, ".Italic", add);
+
+                        if(newfont < 1)
+                            newfont = font_derive(current_font, fp_name, ".Oblique", add);
+
+                        if(newfont > 0)
+                            font_insert_change(newfont, &to);
+                    }
+
+                    hilite_state[3] ^= 1;
                     break;
                     }
 
@@ -472,41 +458,31 @@ bitstr(
         /* skip leading text-at char */
         ++from;
 
-        *to = '\0';
+        *to = NULLCH;
         consume = 0;
         switch(toupper(*from))
             {
-            /* expand a slot reference */
-            case SLRLDI:
-                {
-                DOCNO docno;
+            case SLRLD1:
+                { /* expand a compiled slot reference */
+                const uchar * csr = from + 2; /* CSR is past the SLRLD1/2 */
 
-                ++from;
-
-                /* get slot coordinates */
-                docno = (DOCNO) talps(from, sizeof(DOCNO));
-                from += sizeof(DOCNO);
-
-                tcol = (COL) talps(from, sizeof(COL));
-                force_not_abs_col(tcol);
-                from += sizeof(COL);
-
-                trow = (ROW) talps(from, sizeof(ROW));
-                force_not_abs_row(trow);
-                from += sizeof(ROW);
+                from = talps_csr(csr, &docno, &tcol, &trow);
+                /*eportf("bitstr: CSR docno %d col 0x%x row 0x%x", docno, tcol, trow);*/
 
                 if(!expand_ats)
                     break;
 
-                tslot = travel_externally(docno, tcol, trow);
-
                 /* and expand it into current slot */
-                if(expand_refs)
+                if((expand_refs > 0) && !bad_reference(tcol, trow))
                     {
-                    if(tslot)
-                        expand_slot(docno, tslot, row, to, fwidth, FALSE, FALSE, expand_ctrl, TRUE);
+                    tslot = travel_externally(docno, tcol & COLNOBITS, trow & ROWNOBITS);
 
-                    /* skip string and delete funny spaces */
+                    if(tslot)
+                        (void) expand_slot(docno, tslot, row, to, fwidth,
+                                           expand_refs-1, expand_ats, expand_ctrl,
+                                           FALSE /*allow_fonty_result*/, TRUE /*cff*/);
+
+                    /* skip string and delete funny spaces from plain non-fonty string */
                     tempto = to;
                     while(*to)
                         {
@@ -526,8 +502,7 @@ bitstr(
                 else
                     {
                     /* if we are not allowed to expand it because we are
-                     * already expanding, just print slot reference
-                     * it doesn't print $ for absolutes - should it?
+                     * already expanding, or error, just print slot reference
                     */
                     *to++ = text_at_char;
                     reflength = write_ref(to, BUF_MAX_REFERENCE, docno, tcol, trow);
@@ -564,7 +539,7 @@ bitstr(
 
                     if(d_options_DF == 'T')
                         /* generate 21 March 1988 */
-                        sprintf(to, Zd_Zs_Zd_STR,
+                        sprintf(to, "%d %s %d",
                                 mday,
                                 *(asc_months[month-1]),
                                 year);
@@ -751,9 +726,9 @@ bitstr(
                     /* read current font if none given */
                     if(isdigit(*name))
                         {
-                        fep fp;
+                        fep fp = font_find_block(current_font);
 
-                        if((fp = font_find_block(current_font)) != NULL)
+                        if(NULL != fp)
                             {
                             PC_U8Z fp_name = (PC_U8Z) (fp + 1);
                             y = x; /* carry over 2nd parameter */
@@ -768,9 +743,9 @@ bitstr(
                     /* read current size if none given */
                     if(x == -1)
                         {
-                        fep fp;
+                        fep fp = font_find_block(current_font);
 
-                        if((fp = font_find_block(current_font)) != NULL)
+                        if(NULL != fp)
                             {
                             x = fp->xsize;
                             y = fp->ysize;
@@ -802,7 +777,7 @@ bitstr(
                     }
 
                 /* check for font revert */
-                trace_1(TRACE_APP_PD4, "bitstr text-at field F str: %s\n", trace_string(from));
+                trace_1(TRACE_APP_PD4, "bitstr text-at field F str: %s", report_l1str(from));
                 if((from[1] == text_at_char) || ((from[1] == ':') && (from[2] == text_at_char)))
                     {
                     ++from;
@@ -843,7 +818,7 @@ bitstr(
                     char namebuf[BUF_MAX_PATHSTRING];
                     GR_CACHE_HANDLE cah;
 
-                    void_strnkpy(namebuf, elemof32(namebuf), name, len);
+                    safe_strnkpy(namebuf, elemof32(namebuf), name, len);
 
                     err = 0;
 
@@ -959,7 +934,7 @@ bitstr(
         }
 
     /* add final delimiter */
-    *to = '\0';
+    *to = NULLCH;
 }
 
 /******************************************************************************
@@ -975,9 +950,10 @@ expand_lcr(
     ROW row,
     /*out*/ char *array,
     coord fwidth,
-    BOOL expand_refs,
-    S32 font_switch,
+    S32 expand_refs,
+    BOOL expand_ats,
     BOOL expand_ctrl,
+    BOOL allow_fonty_result,
     BOOL compile_lcr)
 {
     char delimiter = *from;
@@ -986,9 +962,11 @@ expand_lcr(
     char compiled[COMPILED_TEXT_BUFSIZ];
     char tbuf[PAINT_STRSIZ];
     char *tptr;
-    S32 old_riscos_fonts = font_stack(riscos_fonts);
+    S32 old_riscos_fonts;
 
-    if(!font_switch)
+    old_riscos_fonts = font_stack(riscos_fonts);
+
+    if(!allow_fonty_result)
         riscos_fonts = FALSE;
 
     if(riscos_fonts)
@@ -1011,13 +989,19 @@ expand_lcr(
             else
                 tptr = from;
 
-            bitstr(tptr,
-                   row, to, fwidth,
-                   expand_refs, TRUE/*expand_ats*/, expand_ctrl);
+            bitstr(tptr, row, to, fwidth,
+                   expand_refs, expand_ats, expand_ctrl);
 
-            /* move to after end of string */
-            while(*to)
-                to += font_skip(to);
+            /* move to after end of possibly fonty string */
+            if(riscos_fonts)
+                {
+                while(NULLCH != *to)
+                    to += font_skip(to);
+                }
+            else
+                {
+                to += strlen(to); /* plain non-fonty string */
+                }
             ++to;
             break;
             }
@@ -1030,16 +1014,16 @@ expand_lcr(
         tptr = tbuf;
 
         while(*from  &&  (*from != delimiter))
-            if(*from == SLRLDI)
-                {
-                void_memcpy32(tptr, from, SLRSIZE);
-                tptr += SLRSIZE;
-                from += SLRSIZE;
+            {
+            if(SLRLD1 == (*tptr++ = *from++))
+                { /* copy the rest of the CSR over */
+                tiny_memcpy32(tptr, from, COMPILED_TEXT_SLR_SIZE-1);
+                tptr += COMPILED_TEXT_SLR_SIZE-1;
+                from += COMPILED_TEXT_SLR_SIZE-1;
                 }
-            else
-                *tptr++ = *from++;
+            }
 
-        *tptr = '\0';
+        *tptr = NULLCH;
 
         /* revert to slot font before each section */
         if(riscos_fonts  &&  i)
@@ -1053,19 +1037,25 @@ expand_lcr(
         else
             tptr = tbuf;
 
-        bitstr(tptr,
-               row, to, fwidth,
-               expand_refs, TRUE/*expand_ats*/, expand_ctrl);
+        bitstr(tptr, row, to, fwidth,
+               expand_refs, expand_ats, expand_ctrl);
 
-        trace_1(TRACE_APP_PD4, "expand_lcr: %s\n", trace_string(to));
+        trace_1(TRACE_APP_PD4, "expand_lcr: %s", report_l1str(to));
 
-        while(*to)
-            to += font_skip(to);
+        if(riscos_fonts)
+            {
+            while(NULLCH != *to)
+                to += font_skip(to);
+            }
+        else
+            {
+            to += strlen(to); /* plain non-fonty string */
+            }
         ++to;
         }
 
     /* ensure three strings */
-    void_memset32(to, 0, 3);
+    memset32(to, 0, 3);
 
     /* restore old font state */
     riscos_fonts = font_unstack(old_riscos_fonts);
@@ -1074,14 +1064,15 @@ expand_lcr(
 /******************************************************************************
 *
 * expand the contents of the slot into array
-* expand_refs says whether we are allowed to expand slot references inside
-* the slot so text slots referring to themselves are not recursive
 *
 * returns the justification state
 *
-* note that strings returned by expand_slot in RISCOS can now contain
-* font changes and thus embedded NULLs. Use the function font_skip() to
-* work out the size of each character in the resulting string
+* expand_refs level says whether we are allowed to expand slot references inside
+* the slot so text slots referring to themselves are not recursive
+*
+* note that strings returned by expand_slot() can now contain RISC OS font
+* changes and thus embedded NULLCHs if riscos_fonts && allow_fonty_result.
+* Use the function font_skip() to work out the size of each character in the resulting string
 *
 ******************************************************************************/
 
@@ -1092,12 +1083,13 @@ expand_slot(
     ROW row,
     /*out*/ char *array,
     coord fwidth,
-    BOOL expand_refs,
-    S32 font_switch,
+    S32 expand_refs,
+    BOOL expand_ats,
     BOOL expand_ctrl,
+    BOOL allow_fonty_result,
     BOOL cust_func_formula)
 {
-    char justify;
+    char justify = tslot->justify & J_BITS;
     char *array_start;
     S32 old_riscos_fonts;
     P_EV_RESULT resp;
@@ -1106,13 +1098,11 @@ expand_slot(
     /* switch to target document */
     old_docno = change_document_using_docno(docno);
 
-    justify = tslot->justify & J_BITS;
     array_start = array;
 
     old_riscos_fonts = font_stack(riscos_fonts);
 
-    /* switch fonts off if requested */
-    if(!font_switch)
+    if(!allow_fonty_result)
         riscos_fonts = 0;
 
     if(riscos_fonts)
@@ -1127,15 +1117,17 @@ expand_slot(
         {
         case SL_TEXT:
             if(justify == J_LCR)
-                expand_lcr(tslot->content.text,
-                           row, array, fwidth,
-                           expand_refs, font_switch, expand_ctrl,
-                           FALSE);
+                {
+                expand_lcr(tslot->content.text, row, array, fwidth,
+                           expand_refs, expand_ats, expand_ctrl,
+                           allow_fonty_result, FALSE /*compile_lcr*/);
+                }
             else
-                bitstr(tslot->content.text,
-                       row, array, fwidth,
-                       expand_refs, TRUE/*expand_ats*/, expand_ctrl);
-
+                {
+                bitstr(tslot->content.text, row, array, fwidth,
+                       expand_refs, expand_ats, expand_ctrl);
+                /* bitstr() will return a fonty result if riscos_fonts and allow_fonty_result on entry */
+                }
             break;
 
         case SL_PAGE:
@@ -1144,8 +1136,7 @@ expand_slot(
             break;
 
         case SL_NUMBER:
-            if(cust_func_formula &&
-               ev_doc_is_custom_sheet(docno) &&
+            if(cust_func_formula && ev_doc_is_custom_sheet(docno) &&
                ev_is_formula(&tslot->content.number.guts))
                 {
                 EV_OPTBLOCK optblock;
@@ -1161,15 +1152,16 @@ expand_slot(
                     justify = J_LEFT;
                 }
             else
-                result_to_string(resp, array_start, array,
+                {
+                result_to_string(resp, docno, array_start, array,
                                  tslot->format,
                                  fwidth, &justify,
-                                 expand_refs, TRUE/*expand_ats*/, expand_ctrl);
-
+                                 expand_refs, expand_ats, expand_ctrl);
+                }
             break;
 
         default:
-            trace_0(TRACE_APP_PD4, "expand_slot found bad type\n");
+            trace_0(TRACE_APP_PD4, "expand_slot found bad type");
             break;
         }
 
@@ -1191,7 +1183,7 @@ expand_slot(
 
 static font
 font_cache(
-    const char *name,
+    _In_reads_bytes_(namlen) const char *name,
     S32 namlen,
     S32 xs,
     S32 ys)
@@ -1200,63 +1192,65 @@ font_cache(
     U32 namelen_p1;
     LIST *lptr;
     fep fp;
+    P_U8Z fp_name;
     font fonthan;
     S32 res;
 
-    void_strnkpy(namebuf, elemof32(namebuf), name, namlen);
+    safe_strnkpy(namebuf, elemof32(namebuf), name, namlen);
 
-    trace_3(TRACE_APP_PD4, "font_cache %s, x:%d, y:%d ************\n",
-            trace_string(namebuf), xs, ys);
+    trace_3(TRACE_APP_PD4, "font_cache %s, x:%d, y:%d ************", report_l1str(namebuf), xs, ys);
 
     /* search list for entry */
     for(lptr = first_in_list(&font_cache_list);
         lptr;
         lptr = next_in_list(&font_cache_list))
         {
-        PC_U8Z fp_name;
-
         fp = (fep) lptr->value;
 
-        fp_name = (PC_U8Z) (fp + 1);
+        fp_name = (P_U8Z) (fp + 1);
 
         if( (fp->xsize == xs)  &&
             (fp->ysize == ys)  &&
             (0 == _stricmp(namebuf, fp_name))
-            /* && (fp->docno == current_docno())*/
           ) {
-            fonthan = fp->handle;
-            if(fonthan < 0)
+            if(fp->handle > 0)
+                {
+                trace_4(TRACE_APP_PD4, "font_cache found cached font: (handle:%d), size: %d,%d %s",
+                        fp->handle, xs, ys, report_l1str(namebuf));
+                }
+            else
+                {
+                /* matched entry in cache but need to reestablish font handle */
                 if(font_find(namebuf, xs, ys, 0, 0, &fonthan))
-                    fonthan = -1;
-            trace_4(TRACE_APP_PD4, "font_cache found cached font: %s, size: %d, %d, handle: %d\n",
-                    trace_string(namebuf), xs, ys, fonthan);
-            return(fonthan);
+                    fonthan = 0;
+                fp->handle = fonthan;
+                if(fp->handle > 0)
+                    trace_4(TRACE_APP_PD4, "font_cache reestablish cached font OK: (handle:%d) size: %d,%d %s",
+                            fonthan, xs, ys, report_l1str(namebuf));
+                else
+                    trace_4(TRACE_APP_PD4, "font_cache reestablish cached font FAIL: (handle:%d) size: %d,%d %s",
+                            fp->handle, xs, ys, report_l1str(namebuf));
+                }
+            return(fp->handle);
             }
         }
 
     /* create entry for font */
 
     /* ask font manager for handle */
-    /* save looking up silly names time and time again
-     * keep a cache entry but leave it silly
-    */
     if(font_find(namebuf, xs, ys, 0, 0, &fonthan))
-        fonthan = -1;
-
-    trace_4(TRACE_APP_PD4, "font_cache found uncached font: %s, size: %d, %d, handle: %d\n",
-            trace_string(namebuf), xs, ys, fonthan);
+        fonthan = 0;
 
     namelen_p1 = strlen32p1(namebuf);
 
-    if((lptr = add_list_entry(&font_cache_list, sizeof(struct font_cache_entry) + namelen_p1, &res)) == NULL)
+    if(NULL == (lptr = add_list_entry(&font_cache_list, sizeof(struct font_cache_entry) + namelen_p1, &res)))
         {
-        if(!res)
-            res = status_nomem();
-        if(res < 0)
-            reperr_null(res);
+        trace_4(TRACE_APP_PD4, "font_cache failed to add entry for uncached font: (handle:%d) size: %d,%d  %s",
+                fonthan, xs, ys, report_l1str(namebuf));
+        reperr_null(res);
         if(fonthan > 0)
             font_LoseFont(fonthan);
-        return(-1);
+        return(0);
         }
 
     /* change key so we don't find it */
@@ -1266,10 +1260,12 @@ font_cache(
     fp->handle = fonthan;
     fp->xsize = xs;
     fp->ysize = ys;
-    /*fp->docno = current_docno();*/
-    memcpy(fp + 1, namebuf, namelen_p1);
 
-    trace_1(TRACE_APP_PD4, "font_cache returning handle: %d\n", fp->handle);
+    fp_name = (P_U8Z) (fp + 1);
+    memcpy(fp_name, namebuf, namelen_p1);
+
+    trace_4(TRACE_APP_PD4, "font_cache found uncached font: (handle:%d) size: %d,%d %s",
+            fonthan, xs, ys, report_l1str(namebuf));
     return(fp->handle);
 }
 
@@ -1318,7 +1314,7 @@ font_cancel_hilites(
     S32 i;
     char *to;
 
-    trace_0(TRACE_APP_PD4, "font_cancel_hilites\n");
+    trace_0(TRACE_APP_PD4, "font_cancel_hilites");
 
     to = *pto;
 
@@ -1384,24 +1380,20 @@ font_close_all(
     _InVal_     BOOL shutdown)
 {
     LIST * lptr;
-    fep fp;
 
     if(shutdown)
         lptr = NULL; /* just for breakpoint */
 
     lptr = first_in_list(&font_cache_list);
 
-    for(;;)
+    while(NULL != lptr)
     {
-        if(NULL == lptr)
-            break;
-
-        fp = (fep) lptr->value;
+        fep fp = (fep) lptr->value;
 
         if(fp->handle > 0)
         {
             font_LoseFont(fp->handle);
-            fp->handle = -1;
+            fp->handle = 0;
         }
 
         if(shutdown)
@@ -1409,10 +1401,12 @@ font_close_all(
             lptr->key = 1; /* key to be deleted with */
             delete_from_list(&font_cache_list, 1);
 
-            lptr = first_in_list(&font_cache_list);
+            lptr = first_in_list(&font_cache_list); /* restart */
         }
         else
+        {   /* leave cache entry valid to be reestablished when next needed */
             lptr = next_in_list(&font_cache_list);
+        }
     }
 }
 
@@ -1446,44 +1440,45 @@ font_complain(
 
 /******************************************************************************
 *
-* given a font handle and a string, derive a new
-* font name and try to cache it
+* given a font handle and a string, derive a new font name
+* and try to cache that variant at the current size
 *
 ******************************************************************************/
 
 static font
 font_derive(
     font handle,
-    char *name,
-    char *supplement,
-    S32 add)
+    _In_z_      const char * name,
+    _In_z_      const char * supplement,
+    _InVal_     BOOL add)
 {
     fep fp;
-    PC_U8Z fp_name;
     char namebuf[BUF_MAX_PATHSTRING];
 
-    trace_2(TRACE_APP_PD4, "font_derive handle: %d, add: %s\n",
-            handle, trace_string(supplement));
+    trace_4(TRACE_APP_PD4, "font_derive: handle: %d, name: %s %s supplement: %s",
+            handle, name, add ? "add" : "remove", report_l1str(supplement));
 
-    if((fp = font_find_block(handle)) == NULL)
-        return(-1);
-
-    fp_name = (PC_U8Z) (fp + 1);
+    if(NULL == (fp = font_find_block(handle)))
+        return(0);
 
     /* should we add or remove the supplement ? */
     if(add)
     {
-        void_strkpy(namebuf, elemof32(namebuf), name ? name : fp_name);
-        void_strkat(namebuf, elemof32(namebuf), supplement);
+        safe_strkpy(namebuf, elemof32(namebuf), name);
+        safe_strkat(namebuf, elemof32(namebuf), supplement);
     }
     else
     {
-        if(font_strip(fp_name, supplement, namebuf, elemof32(namebuf)) < 0)
-            return(-1);
+        PC_U8Z fp_name = (PC_U8Z) (fp + 1);
+
+        if(!status_done(font_strip(namebuf, elemof32(namebuf), fp_name, supplement)))
+            { /* unable to strip */
+            trace_0(TRACE_APP_PD4, "font_derive_font unable to strip");
+            return(0);
+            }
     }
 
-    trace_1(TRACE_APP_PD4, "font_derive_font about to cache: %s\n", trace_string(namebuf));
-
+    trace_1(TRACE_APP_PD4, "font_derive_font about to cache: %s", report_l1str(namebuf));
     return(font_cache(namebuf, strlen(namebuf), fp->xsize, fp->ysize));
 }
 
@@ -1507,7 +1502,8 @@ font_expand_for_break(
     if((slot_font = font_get_global()) > 0)
         font_insert_change(slot_font, &to);
 
-    bitstr(from, -1, to, 0, FALSE, FALSE, TRUE);
+    bitstr(from, -1, to, 0,
+           0 /*expand_refs*/, FALSE /*expand_ats*/, TRUE /*expand_ctrl*/);
 }
 
 /******************************************************************************
@@ -1518,11 +1514,11 @@ font_expand_for_break(
 
 static fep
 font_find_block(
-    font fonthan)
+    _InVal_     font fonthan)
 {
     LIST *lptr;
 
-    trace_1(TRACE_APP_PD4, "font_find_block: %d\n", fonthan);
+    trace_1(TRACE_APP_PD4, "font_find_block: %d", fonthan);
 
     for(lptr = first_in_list(&font_cache_list);
         lptr;
@@ -1534,12 +1530,12 @@ font_find_block(
 
         if(fp->handle == fonthan)
             {
-            trace_1(TRACE_APP_PD4, "font_find_block found: %d\n", fonthan);
+            trace_1(TRACE_APP_PD4, "font_find_block found: %d", fonthan);
             return(fp);
             }
         }
 
-    trace_1(TRACE_APP_PD4, "font_find_block %d failed\n", fonthan);
+    trace_1(TRACE_APP_PD4, "font_find_block %d failed", fonthan);
     return(NULL);
 }
 
@@ -1554,17 +1550,16 @@ font_get_global(void)
 {
     font glob_font;
 
-    trace_1(TRACE_APP_PD4, "font_get_global: %s\n", trace_string(global_font));
+    trace_1(TRACE_APP_PD4, "font_get_global: %s", report_l1str(global_font));
 
     if((glob_font = font_cache(global_font,
                                strlen(global_font),
                                global_font_x,
-                               font_squash(global_font_y))) <= 0)
-        {
-        riscos_fonts = FALSE;
-        riscos_font_error = TRUE;
-        }
+                               font_squash(global_font_y))) > 0)
+        return(glob_font);
 
+    riscos_fonts = FALSE;
+    riscos_font_error = TRUE;
     return(glob_font);
 }
 
@@ -1580,7 +1575,7 @@ font_insert_change(
     font handle,
     char **pto)
 {
-    trace_1(TRACE_APP_PD4, "font_insert_change: handle = %d\n", handle);
+    trace_1(TRACE_APP_PD4, "font_insert_change: handle = %d", handle);
 
     if(handle)
         {
@@ -1634,13 +1629,13 @@ font_insert_colour_inversion(
     S32 curbg, curfg, curoffset;
     S32 newbg, newfg, newoffset;
 
-    trace_0(TRACE_APP_PD4, "font_insert_colour_inversion\n");
+    trace_0(TRACE_APP_PD4, "font_insert_colour_inversion");
 
     curbg = fp->back_colour;
     curfg = fp->fore_colour;
     curoffset = fp->offset;
 
-    trace_3(TRACE_APP_PD4, "inversion: bg %d, fg %d, offset %d\n", curbg, curfg, curoffset);
+    trace_3(TRACE_APP_PD4, "inversion: bg %d, fg %d, offset %d", curbg, curfg, curoffset);
 
     if(wimpt_os_version_query() >= RISC_OS_3_5)
         {
@@ -1676,7 +1671,7 @@ font_insert_colour_inversion(
         newoffset = -((signed char) curoffset);
         }
 
-    trace_3(TRACE_APP_PD4, "inversion: bg' %d, fg' %d, offset' %d\n", newbg, newfg, newoffset);
+    trace_3(TRACE_APP_PD4, "inversion: bg' %d, fg' %d, offset' %d", newbg, newfg, newoffset);
 
     fp->back_colour = newbg;
     fp->fore_colour = newfg;
@@ -1758,7 +1753,7 @@ font_squash(
         return(ysize);
 
     limit = (fontscreenheightlimit_mp * 16) / 1000;
-    trace_3(TRACE_APP_PD4, "font_squash(%d): limit %d, limit_mp %d\n", ysize, limit, fontscreenheightlimit_mp);
+    trace_3(TRACE_APP_PD4, "font_squash(%d): limit %d, limit_mp %d", ysize, limit, fontscreenheightlimit_mp);
 
     return(MIN(ysize, limit));
 }
@@ -1805,29 +1800,34 @@ font_stringwid(
 
 /******************************************************************************
 *
-* strip a section from a font name
+* strip a section from a font name, possibly in-place
 *
 ******************************************************************************/
 
-static S32
+static STATUS
 font_strip(
-    const char *fontname,
-    const char *strip,
-    char *newname,
-    _InVal_     U32 elemof_newname)
+    _Out_writes_z_(elemof_newname) char * newname,
+    _InVal_     U32 elemof_newname,
+    _In_z_      const char * fontname,
+    _In_z_      const char * strip)
 {
-    const char *place;
-
     /* look for supplement in name */
-    if((place = stristr(fontname, strip)) == NULL)
+    const char * place = stristr(fontname, strip);
+
+    if(NULL == place)
         {
-        void_strkpy(newname, elemof_newname, fontname);
-        return(-1);
+        if(newname != fontname)
+            safe_strkpy(newname, elemof_newname, fontname);
+        return(STATUS_OK); /* supplement not stripped */
         }
 
-    void_strnkpy(newname, elemof_newname, fontname, place - fontname);
-    void_strkat(newname, elemof_newname, place + strlen(strip));
-    return(0);
+    if(newname != fontname)
+        safe_strnkpy(newname, elemof_newname, fontname, place - fontname);
+    else
+        newname[place - fontname] = NULLCH;
+
+    safe_strkat(newname, elemof_newname, place + strlen(strip));
+    return(STATUS_DONE); /* supplement stripped */
 }
 
 /******************************************************************************
@@ -1838,15 +1838,15 @@ font_strip(
 ******************************************************************************/
 
 static S32
-font_strip_copy(
-    char *to,
-    char *from)
+font_strip_strcpy(
+    char * to,
+    const char * from)
 {
-    char *oldto = to;
+    char * oldto = to;
 
     while(*from)
         {
-        if(riscos_fonts && *from < SPACE)
+        if(*from < SPACE)
             {
             ++from;
             continue;
@@ -1855,7 +1855,7 @@ font_strip_copy(
         *to++ = *from++;
         }
 
-    *to++ = '\0';
+    *to++ = NULLCH;
 
     return(to - oldto);
 }
@@ -1882,7 +1882,7 @@ font_super_sub(
         start_font = 0;
         old_height = 0;
 
-        /* reset hilight states */
+        /* reset both highlight states */
         hilite_state[4] = hilite_state[5] = 0;
         }
     else
@@ -1894,14 +1894,14 @@ font_super_sub(
                               font_calshift(hilite_n, old_height)
                                                 - current_shift,
                               pto);
+
             hilite_state[hilite_n] ^= 1;
             }
         else
-            /* not in either super or subs */
-            {
+            { /* not in either super or subs */
             fep fp = font_find_block(current_font);
 
-            if(fp)
+            if(NULL != fp)
                 {
                 PC_U8Z fp_name = (PC_U8Z) (fp + 1);
                 font subfont;
@@ -1917,10 +1917,10 @@ font_super_sub(
                     font_insert_change(subfont, pto);
                     font_insert_shift(Y_SHIFT, font_calshift(hilite_n,
                                                              old_height), pto);
-
-                    hilite_state[hilite_n] ^= 1;
                     }
                 }
+
+            hilite_state[hilite_n] ^= 1;
             }
         }
 }
@@ -2051,12 +2051,13 @@ result_sign(
 static void
 result_to_string(
     P_EV_RESULT resp,
+    _InVal_     DOCNO docno,
     char *array_start,
     char *array,
     char format,
     coord fwidth,
     char *justify,
-    BOOL expand_refs,
+    S32 expand_refs,
     BOOL expand_ats,
     BOOL expand_ctrl)
 {
@@ -2091,20 +2092,21 @@ result_to_string(
                 {
                 char *last = array + strlen(array);
 
-                if(*last == ' ')
-                    *last = '\0';
+                if(*last == SPACE) /* should be OK even with riscos_fonts */
+                    *last = NULLCH;
                 }
 
             /* free alignment should display numbers right */
             if(*justify == J_FREE)
                 *justify = J_RIGHT;
-
-            if(*justify == J_LCR)
+            else if(*justify == J_LCR)
                 *justify = J_LEFT;
             break;
 
         case RPN_RES_STRING:
-            bitstr(resp->arg.string.data, 0, array, fwidth, expand_refs, expand_ats, expand_ctrl);
+            bitstr(resp->arg.string.data, 0, array, fwidth,
+                   expand_refs, expand_ats, expand_ctrl);
+            /* bitstr() will return a fonty result if riscos_fonts */
             break;
 
         case RPN_DAT_BLANK:
@@ -2121,7 +2123,8 @@ result_to_string(
 
             ev_data_to_result_convert(&temp_res, ss_array_element_index_borrow(&temp_data, 0, 0));
 
-            result_to_string(&temp_res, array_start, array, format, fwidth, justify, expand_refs, expand_ats, expand_ctrl);
+            result_to_string(&temp_res, docno, array_start, array, format, fwidth, justify,
+                             expand_refs, expand_ats, expand_ctrl);
 
             ev_result_free_resources(&temp_res);
             break;
@@ -2145,17 +2148,17 @@ result_to_string(
                     temp.date = -temp.date;
                     }
 
-                ss_dateval_to_ymd(&temp, &year, &month, &day);
+                ss_dateval_to_ymd(&temp.date, &year, &month, &day);
 
                 if(d_options_DF == 'T')
                     /* generate 21 Mar 1988 */
-                    len += sprintf(array + len, Zd_ZP3s_Zd_STR,
+                    len += sprintf(array + len, "%d %.3s %.4d",
                                    day + 1,
                                    *(asc_months[month]),
                                    year + 1);
                 else
                     /* generate 21.3.1988 or 3.21.1988 */
-                    len += sprintf(array + len, "%d.%d.%d",
+                    len += sprintf(array + len, "%d.%d.%.4d",
                                    ((d_options_DF == 'A')) ? (month + 1) : (day + 1),
                                    ((d_options_DF == 'A')) ? (day + 1) : (month + 1),
                                    year + 1);
@@ -2169,7 +2172,7 @@ result_to_string(
                 if(temp.date)
                     array[len++] = ' ';
 
-                ss_timeval_to_hms(&temp, &hour, &minute, &second);
+                ss_timeval_to_hms(&temp.time, &hour, &minute, &second);
 
                 len += sprintf(array + len, "%.2d:%.2d:%.2d", hour, minute, second);
                 }
@@ -2183,14 +2186,28 @@ result_to_string(
             assert(0);
         case RPN_DAT_ERROR:
             {
-            S32 len;
+            S32 len = 0;
 
-            if(resp->arg.error.type == ERROR_CUSTOM)
-                len = sprintf(array,
-                              CustFuncErrStr,
-                              resp->arg.error.row + 1);
+            if(resp->arg.error.type == ERROR_PROPAGATED)
+            {
+                U8 buffer_slr[BUF_EV_MAX_SLR_LEN];
+                EV_SLR ev_slr; /* unpack */
+                ev_slr.col = resp->arg.error.col;
+                ev_slr.row = resp->arg.error.row;
+                ev_slr.docno = resp->arg.error.docno;
+                ev_slr.flags = 0;
+                (void) ev_dec_slr(buffer_slr, docno, &ev_slr, TRUE);
+                len += sprintf(array + len,
+                               PropagatedErrStr,
+                               buffer_slr);
+            }
             else
-                len = 0;
+            if(resp->arg.error.type == ERROR_CUSTOM)
+            {
+                len += sprintf(array + len,
+                               CustFuncErrStr,
+                               resp->arg.error.row + 1);
+            }
 
             strcpy(array + len, reperr_getstr(resp->arg.error.num));
             *justify = J_LEFT;
@@ -2279,28 +2296,26 @@ sprintnumber(
     /* process leading and trailing characters */
     if(format & F_LDS)
         {
+        *t_lead = NULLCH;
         if(d_options_LP)
             {
             if(riscos_fonts)
-                font_strip_copy(t_lead, d_options_LP);
+                font_strip_strcpy(t_lead, d_options_LP);
             else
                 strcpy(t_lead, d_options_LP);
             }
-        else
-            *t_lead = '\0';
         }
 
     if(format & F_TRS)
         {
+        *t_trail = NULLCH;
         if(d_options_TP)
             {
             if(riscos_fonts)
-                font_strip_copy(t_trail, d_options_TP);
+                font_strip_strcpy(t_trail, d_options_TP);
             else
                 strcpy(t_trail, d_options_TP);
             }
-        else
-            *t_trail = '\0';
         }
 
     if(decimals == 0xF)
@@ -2390,7 +2405,7 @@ sprintnumber(
             /* calculate space for digits */
             if(riscos_fonts)
                 {
-                trace_2(TRACE_APP_PD4, "sprintnumber width_mp: %d, width_digit: %d\n",
+                trace_2(TRACE_APP_PD4, "sprintnumber width_mp: %d, width_digit: %d",
                         width, (S32) width / digitwid_mp);
                 width /= digitwid_mp;
                 }
@@ -2422,8 +2437,8 @@ sprintnumber(
 
     len = sprintf(nextprint, formatstr, value);
 
-    trace_2(TRACE_APP_PD4, "sprintnumber formatstr: %s, result: %s\n",
-            trace_string(formatstr), trace_string(nextprint));
+    trace_2(TRACE_APP_PD4, "sprintnumber formatstr: %s, result: %s",
+            report_l1str(formatstr), report_l1str(nextprint));
 
     /* work out thousands separator */
     if(d_options_TH != TH_BLANK && !eformat)
@@ -2457,7 +2472,7 @@ sprintnumber(
             nextprint += inc;
             len -= inc;
 
-            void_memmove32(nextprint + 1, nextprint, len + 1);
+            memmove32(nextprint + 1, nextprint, len + 1);
             *nextprint++ = separator;
 
             beforedot -= inc;
@@ -2478,7 +2493,7 @@ sprintnumber(
                 {
                 if(*tptr == '+')
                     {
-                    void_memmove32(tptr, tptr + 1, strlen32(tptr));
+                    memmove32(tptr, tptr + 1, strlen32(tptr));
                     nextprint--;
                     }
                 else if(*tptr == '-')
@@ -2486,7 +2501,7 @@ sprintnumber(
 
                 while((*tptr == '0')  &&  (*(tptr+1) != '\0'))
                     {
-                    void_memmove32(tptr, tptr + 1, strlen32(tptr));
+                    memmove32(tptr, tptr + 1, strlen32(tptr));
                     nextprint--;
                     }
 
@@ -2511,7 +2526,7 @@ sprintnumber(
         char *dot, *comma, *point;
         S32 widpoint;
 
-        trace_1(TRACE_APP_PD4, "sprintnumber string width is: %d\n",
+        trace_1(TRACE_APP_PD4, "sprintnumber string width is: %d",
                 font_width(array_start));
 
         /* work out x shift to add to align numbers at the point */
@@ -2540,7 +2555,7 @@ sprintnumber(
 
         if(xshift)
             {
-            trace_2(TRACE_APP_PD4, "sprintnumber shift: %d, expected: %d\n",
+            trace_2(TRACE_APP_PD4, "sprintnumber shift: %d, expected: %d",
                     xshift, expect_wid);
 
             font_insert_shift(X_SHIFT, xshift, &nextprint);
@@ -2560,13 +2575,13 @@ sprintnumber(
 
     if(riscos_fonts)
         {
-        trace_2(TRACE_APP_PD4, "sprintnumber returns width: %d, fwidth is: %d\n",
+        trace_2(TRACE_APP_PD4, "sprintnumber returns width: %d, fwidth is: %d",
                 width, fwidth);
         return(width);
         }
     else
         {
-        trace_2(TRACE_APP_PD4, "sprintnumber returns width: %d, fwidth is: %d\n",
+        trace_2(TRACE_APP_PD4, "sprintnumber returns width: %d, fwidth is: %d",
                 nextprint - array, fwidth);
         return(nextprint - array);
         }
@@ -2604,7 +2619,7 @@ expand_current_slot_in_fonts(
 
     if(p1)
         {
-        trace_3(TRACE_APP_PD4, "word to invert is &%p &%p %s\n", p1, p2, word_to_invert);
+        trace_3(TRACE_APP_PD4, "word to invert is &%p &%p %s", p1, p2, word_to_invert);
 
         /* find out what colours we must use */
 
@@ -2620,25 +2635,25 @@ expand_current_slot_in_fonts(
             bg.word = wimpt_RGB_for_wimpcolour(current_bg);
             fg.word = wimpt_RGB_for_wimpcolour(current_fg);
             f_offset = 14;
-            trace_2(TRACE_APP_PD4, "expand_current_slot (256) has RGB bg %8.8X, fg %8.8X\n", bg.word, fg.word);
+            trace_2(TRACE_APP_PD4, "expand_current_slot (256) has RGB bg %8.8X, fg %8.8X", bg.word, fg.word);
             font_complain(colourtran_returnfontcolours(&fh, &bg, &fg, &f_offset));
             f.fore_colour = fg.word;
             f.offset = f_offset;
-            trace_2(TRACE_APP_PD4, "expand_current_slot (256) gets fg %d, offset %d\n", fg.word, f_offset);
+            trace_2(TRACE_APP_PD4, "expand_current_slot (256) gets fg %d, offset %d", fg.word, f_offset);
 
             fh = slot_font;
             bg.word = wimpt_RGB_for_wimpcolour(current_fg);
             fg.word = wimpt_RGB_for_wimpcolour(current_bg);
             f_offset = 14;
-            trace_2(TRACE_APP_PD4, "expand_current_slot (256) has RGB bg %8.8X, fg %8.8X\n", bg.word, fg.word);
+            trace_2(TRACE_APP_PD4, "expand_current_slot (256) has RGB bg %8.8X, fg %8.8X", bg.word, fg.word);
             font_complain(colourtran_returnfontcolours(&fh, &bg, &fg, &f_offset));
             f.back_colour = fg.word;
-            trace_2(TRACE_APP_PD4, "expand_current_slot (256) gets bg %d, offset %d\n", fg.word, f_offset);
+            trace_2(TRACE_APP_PD4, "expand_current_slot (256) gets bg %d, offset %d", fg.word, f_offset);
             }
         else
             {
             font_complain(font_current(&f));
-            trace_3(TRACE_APP_PD4, "expand_current_slot gets bg %d, fg %d, offset %d\n", f.back_colour, f.fore_colour, f.offset);
+            trace_3(TRACE_APP_PD4, "expand_current_slot gets bg %d, fg %d, offset %d", f.back_colour, f.fore_colour, f.offset);
             }
         }
 

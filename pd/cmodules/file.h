@@ -400,16 +400,16 @@ file_find_close(
 
 extern P_FILE_OBJINFO
 file_find_first(
-    P_P_FILE_OBJENUM pp /*out*/,
-    PC_U8 path,
-    PC_U8 pattern);
+    _OutRef_    P_P_FILE_OBJENUM pp,
+    _In_z_      PC_U8Z path,
+    _In_z_      PC_U8Z pattern);
 
 extern P_FILE_OBJINFO
 file_find_first_subdir(
-    P_P_FILE_OBJENUM pp /*out*/,
-    PC_U8 path,
-    PC_U8 pattern,
-    PC_U8 subdir);
+    _OutRef_    P_P_FILE_OBJENUM pp,
+    _In_z_      PC_U8Z path,
+    _In_z_      PC_U8Z pattern,
+    _In_opt_z_  PC_U8Z subdir);
 
 extern P_FILE_OBJINFO
 file_find_next(
@@ -501,8 +501,8 @@ file_path_element_close(
 
 extern char *
 file_path_element_first(
-    P_P_FILE_PATHENUM p /*out*/,
-    PC_U8 path);
+    _OutRef_    P_P_FILE_PATHENUM p,
+    _In_z_      PC_U8Z path);
 
 extern char *
 file_path_element_next(
@@ -610,7 +610,6 @@ error definition
     errorstring(FILE_ERR_DEVICEFULL,        "Device full") \
     errorstring(FILE_ERR_ACCESSDENIED,      "Access denied to file") \
     errorstring(FILE_ERR_TOOMANYFILES,      "Too many open files%0.s") \
-    errorstring(FILE_ERR_NOMEM,             "Memory full") \
     errorstring(FILE_ERR_BADHANDLE,         "Bad file handle") \
     errorstring(FILE_ERR_BADNAME,           "Bad filename") \
     errorstring(FILE_ERR_NOTFOUND,          "File %s not found") \
@@ -635,7 +634,7 @@ error definition
 #define FILE_ERR_DEVICEFULL       (-6006)
 #define FILE_ERR_ACCESSDENIED     (-6007)
 #define FILE_ERR_TOOMANYFILES     (-6008)
-#define FILE_ERR_NOMEM            (-6009)
+#define FILE_ERR_spare_6009       (-6009)
 #define FILE_ERR_BADHANDLE        (-6010)
 #define FILE_ERR_BADNAME          (-6011)
 #define FILE_ERR_NOTFOUND         (-6012)

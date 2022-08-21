@@ -17,9 +17,7 @@ requires
 */
 
 #ifndef __handlist_h
-#ifndef __newhlist_h
 #include "handlist.h"
-#endif
 #endif
 
 /*
@@ -28,11 +26,11 @@ exported types
 
 typedef struct _nlists_blk
 {
-    P_LIST_BLKREF lbr;
+    P_LIST_BLOCK lbr;
 
-    /* tuning parameters to use with auto-nlist_init() */
-    S32         maxitemsize;
-    S32         maxpoolsize;
+    /* tuning parameters to use with auto list_init() */
+    S32 maxitemsize;
+    S32 maxpoolsize;
 }
 NLISTS_BLK, * P_NLISTS_BLK;
 
@@ -42,63 +40,71 @@ external functions
 
 extern P_ANY
 collect_add_entry(
-    P_NLISTS_BLK lbrp,
+    _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
-    /*inout*/ P_LIST_ITEMNO key);
+    _InoutRef_opt_ P_LIST_ITEMNO key,
+    _OutRef_    P_STATUS p_status);
+
+_Check_return_
+extern STATUS
+collect_alloc_list_block(
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
+    _In_        S32 maxitemsize,
+    _In_        S32 maxpoolsize);
 
 extern void
 collect_compress(
-    P_NLISTS_BLK lbrp);
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block);
 
-extern S32
+_Check_return_
+extern STATUS
 collect_copy(
-    P_NLISTS_BLK new_lbrp,
-    P_NLISTS_BLK old_lbrp);
+    _InoutRef_  P_NLISTS_BLK new_nlbrp,
+    _InRef_     P_P_LIST_BLOCK old_p_p_list_block);
 
 extern void
 collect_delete(
-    P_NLISTS_BLK lbrp);
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block);
 
 extern void
 collect_delete_entry(
-    P_NLISTS_BLK lbrp,
-    PC_LIST_ITEMNO  key);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO key);
 
 extern P_ANY
 collect_first(
-    P_NLISTS_BLK lbrp,
-    /*out*/ P_LIST_ITEMNO key);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _OutRef_opt_ P_LIST_ITEMNO key);
 
 extern P_ANY
 collect_first_from(
-    P_NLISTS_BLK  lbrp,
-    /*inout*/ P_LIST_ITEMNO key);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InoutRef_opt_ P_LIST_ITEMNO key);
 
 extern P_ANY
 collect_insert_entry(
-    P_NLISTS_BLK lbrp,
+    _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
-    PC_LIST_ITEMNO key);
+    _InVal_     LIST_ITEMNO key,
+    _OutRef_    P_STATUS p_status);
 
 extern P_ANY
 collect_next(
-    P_NLISTS_BLK  lbrp,
-    /*inout*/ P_LIST_ITEMNO key);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InoutRef_opt_ P_LIST_ITEMNO key);
 
 extern P_ANY
 collect_prev(
-    P_NLISTS_BLK lbrp,
-    /*inout*/ P_LIST_ITEMNO key);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InoutRef_opt_ P_LIST_ITEMNO key);
 
-extern P_ANY
-collect_search(
-    P_NLISTS_BLK lbrp,
-    PC_LIST_ITEMNO key);
+#define collect_search(p_p_list_block, key) \
+    _list_gotoitemcontents(*p_p_list_block, key)
 
-extern S32
+extern void
 collect_subtract_entry(
-    P_NLISTS_BLK lbrp,
-    PC_LIST_ITEMNO key);
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO key);
 
 #endif /* __collect_h */
 

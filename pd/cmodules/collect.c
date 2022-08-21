@@ -33,67 +33,69 @@
 
 extern P_ANY
 collect_add_entry(
-    P_NLISTS_BLK lbrp,
+    _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
-    /*inout*/ P_LIST_ITEMNO key)
+    _InoutRef_opt_ P_LIST_ITEMNO key,
+    _OutRef_    P_STATUS p_status)
 {
+    P_P_LIST_BLOCK p_p_list_block = &nlbrp->lbr;
+    LIST_ITEMNO item;
     P_LIST_ITEM it;
-    S32 res = 1;
 
-    /* if empty item, make 1 */
-    if(!size)
+    *p_status = STATUS_OK;
+
+    /* if bad or empty item, make 1 */
+    if(size <= 0)
         size = 1;
 
-    myassert2x(key && ((S32) *key >= -1), "collect_add_entry key(&%p, %ld) missing or negative and not -1", key, key ? *key : 0);
+    myassert2x(key && ((S32) *key >= -1), "collect_add_entry key(&%p, %ld) missing or negative and not -1", p_p_list_block, key ? *key : 0);
 
-    /* allocate new list if null list */
-    if(!lbrp->lbr)
-        {
-        if(!nlist_allocblkref(&lbrp->lbr))
-            {
-            it  = NULL;
-            res = -1;
-            }
-        else
-            {
-            /* a little initialisation here temporarily till tuning sorted */
-            S32 maxitemsize = lbrp->maxitemsize;
-            S32 maxpoolsize = lbrp->maxpoolsize;
-            if((maxitemsize == maxpoolsize)  &&  (maxitemsize == 0))
-                {
-                /* use initialisers a la PD3 lists.c */
-                maxitemsize = 400;
-                maxpoolsize = 2000;
-                }
+    /* allocate new LIST_BLOCK if needed */
+    if(NULL == *p_p_list_block)
+        if(status_fail(*p_status = collect_alloc_list_block(p_p_list_block, nlbrp->maxitemsize, nlbrp->maxpoolsize)))
+            return(NULL);
 
-            /* call to retune pool */
-            list_deregister((P_LIST_BLOCK) lbrp->lbr);
-            list_init(      (P_LIST_BLOCK) lbrp->lbr, maxitemsize, maxpoolsize);
-            list_register(  (P_LIST_BLOCK) lbrp->lbr);
-            }
-        }
+    if(key && *key >= 0)
+        item = *key;
+    else
+        item = list_numitem(*p_p_list_block);
 
-    /* if failed, return NULL */
-    if(lbrp->lbr)
-        {
-        LIST_ITEMNO item;
+    if(NULL == (it = list_createitem(*p_p_list_block, item, size, FALSE)))
+    {
+        *p_status = status_nomem();
+        return(NULL);
+    }
 
-        if(key && *key >= 0)
-            item = *key;
-        else
-            item = nlist_numitem(lbrp->lbr);
+    if(key)
+        *key = item;
 
-        if(nlist_createitem(lbrp->lbr, item, &it, size, FALSE))
-            {
-            if(key)
-                *key = item;
-            }
-        else
-            res = -1;
-        }
+    return(list_itemcontents(void, it));
+}
 
-    /* SKS after 4.12 24mar92 - whoops, this will have caused much evil */
-    return(it ? list_itemcontents(it) : it);
+_Check_return_
+extern STATUS
+collect_alloc_list_block(
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block,
+    _In_        S32 maxitemsize,
+    _In_        S32 maxpoolsize)
+{
+    STATUS status;
+
+    if((maxitemsize == maxpoolsize)  &&  (maxitemsize == 0))
+    {   /* use initialisers a la PD3 lists.c */
+        maxitemsize = 400;
+        maxpoolsize = 2000;
+    }
+
+    if(NULL == (*p_p_list_block = al_ptr_alloc_elem(LIST_BLOCK, 1, &status)))
+        return(status);
+
+    /* ensure new list block gets sensible defaults */
+    list_init(*p_p_list_block, maxitemsize, maxpoolsize);
+
+    list_register(*p_p_list_block);
+
+    return(STATUS_OK);
 }
 
 /******************************************************************************
@@ -104,18 +106,20 @@ collect_add_entry(
 
 extern void
 collect_compress(
-    P_NLISTS_BLK lbrp)
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block)
 {
-    if(lbrp->lbr)
-        {
-        /* ensure any fillers get zapped */
-        nlist_garbagecollect(lbrp->lbr);
+    if(NULL == *p_p_list_block)
+        return;
 
-        nlist_packlist(lbrp->lbr, -1);
+    /* ensure any fillers get zapped */
+    list_garbagecollect(*p_p_list_block);
 
-        if(!nlist_numitem(lbrp->lbr))
-            collect_delete(lbrp);
-        }
+    list_packlist(*p_p_list_block, -1);
+
+    if(0 != list_numitem(*p_p_list_block))
+        return;
+
+    collect_delete(p_p_list_block);
 }
 
 /******************************************************************************
@@ -129,37 +133,37 @@ collect_compress(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 collect_copy(
-    P_NLISTS_BLK new_lbrp,
-    P_NLISTS_BLK old_lbrp)
+    _InoutRef_  P_NLISTS_BLK new_nlbrp,
+    _InRef_     P_P_LIST_BLOCK old_p_p_list_block)
 {
-    LIST_ITEMNO  key;
-    P_ANY        old_entp;
-    list_itempos old_itpos;
-    P_ANY        new_entp;
-    S32          entry_size;
+    LIST_ITEMNO key = 0;
 
-    key = 0;
-
-    if(collect_first(old_lbrp, &key))
+    if(collect_first(old_p_p_list_block, &key))
+        {
         do  {
-            entry_size = nlist_entsize(old_lbrp->lbr, nlist_atitem(old_lbrp->lbr));
+            S32 entry_size = list_entsize(*old_p_p_list_block, list_atitem(*old_p_p_list_block));
+            STATUS status;
+            PC_ANY old_entp;
+            P_ANY new_entp;
 
-            if((new_entp = collect_add_entry(new_lbrp, entry_size, &key)) == NULL)
+            if(NULL == (new_entp = collect_add_entry(new_nlbrp, entry_size, &key, &status)))
                 {
-                collect_delete(new_lbrp);
-                return(-1);
+                collect_delete(&new_nlbrp->lbr);
+                return(status);
                 }
 
-            /* reload after alloc since memory may move (a ce moment) */
-            nlist_gotoitemcontents(old_lbrp->lbr, nlist_atitem(old_lbrp->lbr), &old_entp, &old_itpos);
+            /* listed memory may move */
+            old_entp = _list_gotoitemcontents(*old_p_p_list_block, list_atitem(*old_p_p_list_block));
 
-            void_memcpy32(new_entp, old_entp, entry_size);
+            memcpy32(new_entp, old_entp, entry_size);
             }
-        while(collect_next(old_lbrp, &key));
+        while(collect_next(old_p_p_list_block, &key));
+        }
 
-    return(1);
+    return(STATUS_DONE);
 }
 
 /******************************************************************************
@@ -170,11 +174,13 @@ collect_copy(
 
 extern void
 collect_delete(
-    /*inout*/ P_NLISTS_BLK lbrp)
+    _InoutRef_  P_P_LIST_BLOCK p_p_list_block)
 {
-    nlist_free(lbrp->lbr);
+    list_free(*p_p_list_block);
 
-    nlist_disposeblkref(&lbrp->lbr);
+    list_deregister(*p_p_list_block);
+
+    al_ptr_dispose(P_P_ANY_PEDANTIC(p_p_list_block));
 }
 
 /******************************************************************************
@@ -187,17 +193,18 @@ collect_delete(
 
 extern void
 collect_delete_entry(
-    P_NLISTS_BLK lbrp,
-    PC_LIST_ITEMNO key)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO key)
 {
-    P_LIST_ITEM   it;
-    list_itempos itpos;
+    myassert2x(((S32) key >= 0), "collect_delete_entry key(&%p, %ld) negative", p_p_list_block, key);
 
-    myassert2x(key && ((S32) *key >= 0), "collect_delete_entry key(&%p, %ld) missing or negative", key, key ? *key : 0);
+    if(NULL == *p_p_list_block)
+        return;
 
-    if(lbrp->lbr)
-        if(nlist_gotoitem(lbrp->lbr, *key, &it, &itpos))
-            nlist_deleteitems(lbrp->lbr, *key, (LIST_ITEMNO) 1);
+    if(NULL == list_gotoitem(*p_p_list_block, key))
+        return;
+
+    list_deleteitems(*p_p_list_block, key, (LIST_ITEMNO) 1);
 }
 
 /******************************************************************************
@@ -213,22 +220,18 @@ collect_delete_entry(
 
 extern P_ANY
 collect_first(
-    P_NLISTS_BLK lbrp,
-    /*out*/ P_LIST_ITEMNO key)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _OutRef_opt_ P_LIST_ITEMNO key)
 {
-    P_LIST_ITEM    it;
-    LIST_ITEMNO   item;
-    list_itempos  itpos;
-    S32           res;
+    P_LIST_ITEM it;
+    LIST_ITEMNO item = 0;
 
-    item = 0;
-
-    res = nlist_initseq(lbrp->lbr, &item, &it, &itpos);
+    it = list_initseq(*p_p_list_block, &item);
 
     if(key)
         *key = item;
 
-    return(it ? list_itemcontents(it) : NULL);
+    return(it ? list_itemcontents(void, it) : NULL);
 }
 
 /******************************************************************************
@@ -246,29 +249,24 @@ collect_first(
 
 extern P_ANY
 collect_first_from(
-    P_NLISTS_BLK lbrp,
-    /*inout*/ P_LIST_ITEMNO key)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InoutRef_opt_ P_LIST_ITEMNO key)
 {
-    P_LIST_ITEM    it;
-    LIST_ITEMNO   item;
-    list_itempos  itpos;
-    S32           res;
+    P_LIST_ITEM it;
+    LIST_ITEMNO item = 0;
 
     if(key)
         {
         item = *key;
-
         myassert1x((S32) item >= 0, "collect_first key %ld negative", item);
         }
-    else
-        item = 0;
 
-    res = nlist_initseq(lbrp->lbr, &item, &it, &itpos);
+    it = list_initseq(*p_p_list_block, &item);
 
     if(key)
         *key = item;
 
-    return(it ? list_itemcontents(it) : NULL);
+    return(it ? list_itemcontents(void, it) : NULL);
 }
 
 /******************************************************************************
@@ -281,60 +279,40 @@ collect_first_from(
 
 extern P_ANY
 collect_insert_entry(
-    P_NLISTS_BLK lbrp,
+    _InoutRef_  P_NLISTS_BLK nlbrp,
     S32 size,
-    PC_LIST_ITEMNO key)
+    _InVal_     LIST_ITEMNO key,
+    _OutRef_    P_STATUS p_status)
 {
+    P_P_LIST_BLOCK p_p_list_block = &nlbrp->lbr;
     P_LIST_ITEM it;
-    S32 res = 1;
 
-    if(!size)
+    *p_status = STATUS_OK;
+
+    /* if bad or empty item, make 1 */
+    if(size <= 0)
         size = 1;
 
-    myassert2x(key && ((S32) *key >= 0), "collect_insert_entry key(&%p, %ld) missing or negative", key, key ? *key : 0);
+    myassert2x(((S32) key >= 0), "collect_insert_entry key(&%p, %ld) negative", p_p_list_block, key);
 
-    /* allocate new list if null list */
-    if(!lbrp->lbr)
-        {
-        if(!nlist_allocblkref(&lbrp->lbr /* pass tuning parms thru sometime */))
-            {
-            it  = NULL;
-            res = -1;
-            }
-        else
-            {
-            /* a little initialisation here temporarily till tuning sorted */
-            S32 maxitemsize = lbrp->maxpoolsize;
-            S32 maxpoolsize = lbrp->maxpoolsize;
-            if((maxitemsize == maxpoolsize)  &&  (maxitemsize == 0))
-                {
-                /* use initialisers a la PD3 lists.c */
-                maxitemsize = 400;
-                maxpoolsize = 2000;
-                }
+    /* allocate new LIST_BLOCK if needed */
+    if(NULL == *p_p_list_block)
+        if(status_fail(*p_status = collect_alloc_list_block(p_p_list_block, nlbrp->maxpoolsize, nlbrp->maxpoolsize)))
+            return(NULL);
 
-            /* call to retune pool */
-            list_deregister((P_LIST_BLOCK) lbrp->lbr);
-            list_init(      (P_LIST_BLOCK) lbrp->lbr, maxitemsize, maxpoolsize);
-            list_register(  (P_LIST_BLOCK) lbrp->lbr);
-            }
-        }
+    /* insert an item at this position if not off end of list */
+    if(key < list_numitem(*p_p_list_block))
+        if(status_fail(*p_status = list_insertitems(*p_p_list_block, key, 1)))
+            return(NULL);
 
-    /* if failed, return NULL */
-    if(lbrp->lbr)
-        {
-        /* insert an item at this position if not off end of list */
-        if(*key < nlist_numitem(lbrp->lbr))
-            if((res = nlist_insertitems(lbrp->lbr, *key, 1)) < 0)
-                return(NULL);
+    /* create an item at the given position */
+    if(NULL == (it = list_createitem(*p_p_list_block, key, size, FALSE)))
+    {
+        *p_status = status_nomem();
+        return(NULL);
+    }
 
-        /* create an item at the given position */
-        res = nlist_createitem(lbrp->lbr, *key, &it, size, FALSE)
-                     ? 1
-                     : -1;
-        }
-
-    return(it ? list_itemcontents(it) : NULL);
+    return(list_itemcontents(void, it));
 }
 
 /******************************************************************************
@@ -349,29 +327,26 @@ collect_insert_entry(
 
 extern P_ANY
 collect_next(
-    P_NLISTS_BLK lbrp,
-    /*inout*/ P_LIST_ITEMNO key)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InoutRef_opt_ P_LIST_ITEMNO key)
 {
-    P_LIST_ITEM    it;
-    LIST_ITEMNO   item;
-    list_itempos  itpos;
-    S32           res;
+    P_LIST_ITEM it;
+    LIST_ITEMNO item;
 
     if(key)
         {
         item = *key;
-
         myassert1x((S32) item >= 0, "collect_next key %ld negative", item);
         }
     else
-        item = nlist_atitem(lbrp->lbr);
+        item = list_atitem(*p_p_list_block);
 
-    res = nlist_nextseq(lbrp->lbr, &item, &it, &itpos);
+    it = list_nextseq(*p_p_list_block, &item);
 
     if(key)
         *key = item;
 
-    return(it ? list_itemcontents(it) : NULL);
+    return(it ? list_itemcontents(void, it) : NULL);
 }
 
 /******************************************************************************
@@ -386,56 +361,26 @@ collect_next(
 
 extern P_ANY
 collect_prev(
-    P_NLISTS_BLK lbrp,
-    /*inout*/ P_LIST_ITEMNO key)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InoutRef_opt_ P_LIST_ITEMNO key)
 {
-    P_LIST_ITEM    it;
-    LIST_ITEMNO   item;
-    list_itempos  itpos;
-    S32           res;
+    P_LIST_ITEM it;
+    LIST_ITEMNO item;
 
     if(key)
         {
         item = *key;
-
         myassert1x((S32) item >= 0, "collect_prev key %ld negative", item);
         }
     else
-        item = nlist_atitem(lbrp->lbr);
+        item = list_atitem(*p_p_list_block);
 
-    res = nlist_prevseq(lbrp->lbr, &item, &it, &itpos);
+    it = list_prevseq(*p_p_list_block, &item);
 
     if(key)
         *key = item;
 
-    return(it ? list_itemcontents(it) : NULL);
-}
-
-/******************************************************************************
-*
-* search the given list for the given target,
-* returning a pointer to the element
-*
-* --out--
-*
-*   0   entry not found
-*
-******************************************************************************/
-
-extern P_ANY
-collect_search(
-    P_NLISTS_BLK lbrp,
-    PC_LIST_ITEMNO key)
-{
-    P_ANY        mp;
-    list_itempos itpos;
-    S32          res;
-
-    myassert2x(key && ((S32) *key >= 0), "collect_search key(&%p, %ld) missing or negative", key, key ? *key : 0);
-
-    res = nlist_gotoitemcontents(lbrp->lbr, *key, &mp, &itpos);
-
-    return(mp);
+    return(it ? list_itemcontents(void, it) : NULL);
 }
 
 /******************************************************************************
@@ -446,21 +391,19 @@ collect_search(
 *
 ******************************************************************************/
 
-extern S32
+extern void
 collect_subtract_entry(
-    P_NLISTS_BLK lbrp,
-    PC_LIST_ITEMNO key)
+    _InRef_     P_P_LIST_BLOCK p_p_list_block,
+    _InVal_     LIST_ITEMNO key)
 {
-    P_LIST_ITEM it;
+    myassert2x(((S32) key >= 0), "collect_subtract_entry key(&%p, %ld) negative", *p_p_list_block, key);
 
-    myassert2x(key && ((S32) *key >= 0), "collect_subtract_entry key(&%p, %ld) missing or negative", key, key ? *key : 0);
+    if(NULL == *p_p_list_block)
+        return;
 
     /* create filler entry */
-    if(lbrp->lbr)
-        if(!nlist_createitem(lbrp->lbr, *key, &it, 0, FALSE))
-            return(-1);
-
-    return(0);
+    if(NULL == list_createitem(*p_p_list_block, key, 0, FALSE))
+        assert("failed to create filler");
 }
 
 /* end of collect.c */

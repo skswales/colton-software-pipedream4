@@ -278,7 +278,7 @@ gr_chart_save_chart_winge(
     string_lookup_buffer(error_id, errfmt, elemof32(errfmt));
 
     if(poss_file_err)
-        void_strkat(errfmt, elemof32(errfmt), " because %s");
+        safe_strkat(errfmt, elemof32(errfmt), " because %s");
 
     messagef(errfmt, string_lookup(res), poss_file_err);
 }
@@ -499,13 +499,13 @@ gr_fillstyle_create_pict_for_load(
         return(res ? res : create_error(FILE_ERR_NOTFOUND));
 
     if((res = gr_cache_entry_ensure(&cah, picture_namebuf)) <= 0)
-        return(res ? res : create_error(GR_CHART_ERR_NOMEM));
+        return(res ? res : status_nomem());
 
     /* use external handle as key into list */
     key = ekey;
 
-    if((cahp = collect_add_entry(&fillstyle_translation_table, sizeof(*cahp), &key)) == NULL)
-        return(create_error(GR_CHART_ERR_NOMEM));
+    if(NULL == (cahp = collect_add_entry(&fillstyle_translation_table, sizeof32(*cahp), &key, &res)))
+        return(res);
 
     /* stick cache handle on the list */
     *cahp = cah;
@@ -527,7 +527,7 @@ gr_fillstyle_translate_pict_for_load(
     key = (LIST_ITEMNO) fillstyle->pattern; /* small non-zero integer here! */
 
     if(key)
-        cahp = collect_search(&fillstyle_translation_table, &key);
+        cahp = collect_search(&fillstyle_translation_table.lbr, key);
     else
         cahp = NULL;
 
@@ -564,7 +564,7 @@ gr_fillstyle_translate_pict_for_save(
     if(!key)
         return(0);
 
-    if((p_u32 = collect_search(&fillstyle_translation_table, &key)) == NULL)
+    if((p_u32 = collect_search(&fillstyle_translation_table.lbr, key)) == NULL)
         return(0);
 
     return(*p_u32);
@@ -582,7 +582,8 @@ gr_fillstyle_make_key_for_save(
     PC_GR_FILLSTYLE fillstyle)
 {
     LIST_ITEMNO key;
-    P_U32       p_u32;
+    P_U32 p_u32;
+    STATUS status;
 
     /* use cache handle as key into list */
     key = (LIST_ITEMNO) fillstyle->pattern;
@@ -590,10 +591,10 @@ gr_fillstyle_make_key_for_save(
     if(!key)
         return(0);
 
-    if((p_u32 = collect_search(&fillstyle_translation_table, &key)) == NULL)
+    if((p_u32 = collect_search(&fillstyle_translation_table.lbr, key)) == NULL)
         {
-        if((p_u32 = collect_add_entry(&fillstyle_translation_table, sizeof(*p_u32), &key)) == NULL)
-            return(create_error(GR_CHART_ERR_NOMEM));
+        if(NULL == (p_u32 = collect_add_entry(&fillstyle_translation_table, sizeof32(*p_u32), &key, &status)))
+            return(status);
 
         *p_u32 = fillstyle_translation_ekey++;
         }
@@ -1576,7 +1577,9 @@ gr_fillstyle_table_save(
         {
         LIST_ITEMNO key;
 
-        for(p_u32 = collect_first(&fillstyle_translation_table, &key); p_u32; p_u32 = collect_next(&fillstyle_translation_table, &key))
+        for(p_u32 = collect_first(&fillstyle_translation_table.lbr, &key);
+            p_u32;
+            p_u32 = collect_next( &fillstyle_translation_table.lbr, &key))
             {
             if(ekey == *p_u32)
                 {
@@ -2165,7 +2168,9 @@ gr_chart_save_texts(
     LIST_ITEMNO key;
     P_GR_TEXT    t;
 
-    for(t = collect_first((P_NLISTS_BLK) &cp->text.lbr, &key); t; t = collect_next((P_NLISTS_BLK) &cp->text.lbr, &key))
+    for(t = collect_first(&cp->text.lbr, &key);
+        t;
+        t = collect_next( &cp->text.lbr, &key))
         {
         if(!t->bits.unused)
             {
@@ -2297,7 +2302,7 @@ gr_chart_save_internal(
     if((res = gr_chart_save_texts(cp, f)) < 0)
         return(0);
 
-    collect_delete(&fillstyle_translation_table);
+    collect_delete(&fillstyle_translation_table.lbr);
 
     return(res);
 }
@@ -2341,7 +2346,7 @@ gr_chart_construct_save_frag_txt(
 
                 /* copy good fragment to output stream */
                 nbytes = cvt_ptr - curptr;
-                void_memcpy32(out, curptr, nbytes);
+                memcpy32(out, curptr, nbytes);
                 curptr += nbytes;
                 out += nbytes;
                 *out = NULLCH;
@@ -2390,7 +2395,7 @@ gr_chart_construct_decode_frag_txt(
 
                 /* copy good fragment down to output pos */
                 nbytes = cvt_ptr - curptr;
-                void_memmove32(out, curptr, nbytes);
+                memmove32(out, curptr, nbytes);
                 curptr += nbytes;
                 out    += nbytes;
 
@@ -2408,7 +2413,7 @@ gr_chart_construct_decode_frag_txt(
 
     /* move tail fragment down INCLUDING NULLCH TERMINATOR */
     if(out != curptr)
-        void_memmove32(out, curptr, strlen32p1(curptr));
+        memmove32(out, curptr, strlen32p1(curptr));
 }
 
 extern S32

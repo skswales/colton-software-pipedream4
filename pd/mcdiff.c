@@ -443,7 +443,7 @@ wrch_undefinefunnies(void)
 
         if(chardefined & bitmask)
             {
-            trace_1(TRACE_APP_PD4, "undefining char %d\n", oldchardef[bitshift][1]);
+            trace_1(TRACE_APP_PD4, "undefining char %d", oldchardef[bitshift][1]);
             wimpt_safe(os_writeN, &oldchardef[bitshift][0], 10));
             chardefined ^= bitmask;
             }
@@ -459,7 +459,7 @@ wrch_undefinefunnies(void)
 extern void
 ack_esc(void)
 {
-    trace_0(TRACE_APP_PD4, "ack_esc()\n");
+    trace_0(TRACE_APP_PD4, "ack_esc()");
 
     if(ctrlflag)
         {
@@ -517,7 +517,7 @@ extern void
 down_scroll(
     coord first_line)
 {
-    trace_1(TRACE_APP_PD4, "down_scroll(%d)\n", first_line);
+    trace_1(TRACE_APP_PD4, "down_scroll(%d)", first_line);
 
     scroll_textarea(-1 /*lh slop*/, paghyt, pagwid_plus1, first_line, 1);
 }
@@ -597,7 +597,7 @@ keyinbuffer(void)
 
     if(carry != 0)
         {
-        trace_0(TRACE_APP_PD4, "keyinbuffer returns TRUE due to ESCAPE set\n");
+        trace_0(TRACE_APP_PD4, "keyinbuffer returns TRUE due to ESCAPE set");
         return(TRUE);
         }
 
@@ -609,11 +609,11 @@ keyinbuffer(void)
 #if TRACE_ALLOWED
     if(!carry)
         {
-        trace_0(TRACE_APP_PD4, "keyinbuffer returns TRUE\n");
+        trace_0(TRACE_APP_PD4, "keyinbuffer returns TRUE");
         }
     else
         {
-        /*trace_0(TRACE_APP_PD4, "keyinbuffer returns FALSE\n");*/
+        /*trace_0(TRACE_APP_PD4, "keyinbuffer returns FALSE");*/
         }
 #endif
 
@@ -636,19 +636,19 @@ init_mc(void)
     setlocale(LC_CTYPE, DefaultLocale_STR);
     /* use LC_ALL when we know what it does */
 
-    (void) add_to_list(&first_key,  HOME_KEY,       "\031" "ctc" "\x0D", NULL);  /* Top Of Column */
-    (void) add_to_list(&first_key, CHOME_KEY,       "\031" "ctc" "\x0D", NULL);  /* Top Of Column */
+    status_consume(add_to_list(&first_key,  HOME_KEY,       "\031" "ctc" "\x0D"));  /* Top Of Column */
+    status_consume(add_to_list(&first_key, CHOME_KEY,       "\031" "ctc" "\x0D"));  /* Top Of Column */
 
-    (void) add_to_list(&first_key,  END_KEY,        "\031" "cbc" "\x0D", NULL);  /* Bottom Of Column */
-    (void) add_to_list(&first_key, CEND_KEY,        "\031" "cbc" "\x0D", NULL);  /* Bottom Of Column */
+    status_consume(add_to_list(&first_key,  END_KEY,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
+    status_consume(add_to_list(&first_key, CEND_KEY,        "\031" "cbc" "\x0D"));  /* Bottom Of Column */
 
-    /*(void) add_to_list(&first_key,  CDELETE_KEY,    "\031" "crb" "\x0D", NULL);*/  /* Delete Character Left */
-    /*(void) add_to_list(&first_key, CSDELETE_KEY,    "\031" "g"   "\x0D", NULL);*/  /* Delete Character Right */
+    /*status_consume(add_to_list(&first_key,  CDELETE_KEY,    "\031" "crb" "\x0D"));*/  /* Delete Character Left */
+    /*status_consume(add_to_list(&first_key, CSDELETE_KEY,    "\031" "g"   "\x0D"));*/  /* Delete Character Right */
 
-    (void) add_to_list(&first_key,   BACKSPACE_KEY, "\031" "crb" "\x0D", NULL);  /* Delete Character Left */
-    (void) add_to_list(&first_key,  SBACKSPACE_KEY, "\031" "g"   "\x0D", NULL);  /* Delete Character Right */
-    /*(void) add_to_list(&first_key,  CBACKSPACE_KEY, "\031" "crb" "\x0D", NULL);*/  /* Delete Character Left */
-    /*(void) add_to_list(&first_key, CSBACKSPACE_KEY, "\031" "g"   "\x0D", NULL);*/  /* Delete Character Right */
+    status_consume(add_to_list(&first_key,   BACKSPACE_KEY, "\031" "crb" "\x0D"));  /* Delete Character Left */
+    status_consume(add_to_list(&first_key,  SBACKSPACE_KEY, "\031" "g"   "\x0D"));  /* Delete Character Right */
+    /*status_consume(add_to_list(&first_key,  CBACKSPACE_KEY, "\031" "crb" "\x0D"));*/  /* Delete Character Left */
+    /*status_consume(add_to_list(&first_key, CSBACKSPACE_KEY, "\031" "g"   "\x0D"));*/  /* Delete Character Right */
 
     mc__initialised = TRUE;
 }
@@ -771,7 +771,7 @@ extern void
 up_scroll(
     coord first_line)
 {
-    trace_1(TRACE_APP_PD4, "up_scroll(%d)\n", first_line);
+    trace_1(TRACE_APP_PD4, "up_scroll(%d)", first_line);
 
     scroll_textarea(-1 /*lh slop*/, paghyt, pagwid_plus1, first_line, -1);
 }

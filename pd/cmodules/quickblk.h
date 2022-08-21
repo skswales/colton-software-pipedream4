@@ -51,7 +51,7 @@ __aqb_fill(
     _Out_writes_bytes_(sizeof_buffer) P_U8 p_buf,
     _InVal_     U32 sizeof_buffer)
 {
-    void_memset32(p_buf, 0xEE, sizeof_buffer);
+    memset32(p_buf, 0xEE, sizeof_buffer);
 }
 
 #endif /* QUICK_BLOCK_CHECK */
@@ -113,7 +113,7 @@ _quick_block_setup(
     (p_quick_block)->h_array_buffer /* really only internal use but needed for QB sort, no brackets */
 
 _Check_return_
-static __forceinline U32
+static inline U32
 quick_block_bytes(
     _InRef_     PC_QUICK_BLOCK p_quick_block)
 {
@@ -125,7 +125,7 @@ quick_block_bytes(
 
 _Check_return_
 _Ret_notnull_
-static __forceinline P_U8
+static inline P_U8
 quick_block_ptr(
     _InRef_     P_QUICK_BLOCK p_quick_block)
 {
@@ -140,7 +140,7 @@ quick_block_ptr(
 
 _Check_return_
 _Ret_notnull_
-static __forceinline PC_U8
+static inline PC_U8
 quick_block_ptrc(
     _InRef_     PC_QUICK_BLOCK p_quick_block)
 {
@@ -155,7 +155,7 @@ quick_block_ptrc(
 
 _Check_return_
 _Ret_notnull_
-static __forceinline PC_U8
+static inline PC_U8
 quick_block_str(
     _InRef_     PC_QUICK_BLOCK p_quick_block)
 {
@@ -173,7 +173,7 @@ quick_block_bytes_add(
     _In_reads_bytes_(n_bytes) PC_ANY p_any_in,
     _InVal_     U32 n_bytes);
 
-static __forceinline void
+static inline void
 quick_block_dispose(
     _InoutRef_  P_QUICK_BLOCK p_quick_block)
 {
@@ -263,13 +263,13 @@ quick_block_nullch_add(
 UCHARS-based quick block
 */
 
-#if USTR_IS_L1STR || 1
+#if USTR_IS_L1STR
 
 #define    QUICK_UBLOCK    QUICK_BLOCK
 #define  P_QUICK_UBLOCK  P_QUICK_BLOCK
 #define PC_QUICK_UBLOCK PC_QUICK_BLOCK
 
-#define P_QUICK_UBLOCK_NONE P_QUICK_UBLOCK_NONE
+#define P_QUICK_UBLOCK_NONE P_QUICK_BLOCK_NONE
 
 #define QUICK_UBLOCK_WITH_BUFFER                QUICK_BLOCK_WITH_BUFFER
 
@@ -309,31 +309,6 @@ UCHARS-based quick block
 #define quick_ublock_wchars_add                 quick_block_wchars_add
 #define quick_ublock_printf                     quick_block_printf
 #define quick_ublock_vprintf                    quick_block_vprintf
-
-#else /* USTR_IS_L1STR */
-
-typedef struct _quick_ublock
-{
-    ARRAY_HANDLE ub_h_array_buffer;
-    P_UCHARS ub_p_static_buffer;
-    U32 ub_static_buffer_size; /* NB in bytes */
-    U32 ub_static_buffer_used; /* NB in bytes */
-}
-QUICK_UBLOCK, * P_QUICK_UBLOCK; typedef const QUICK_UBLOCK * PC_QUICK_UBLOCK;
-
-#define P_QUICK_UBLOCK_NONE _P_DATA_NONE(P_QUICK_UBLOCK)
-
-#define QUICK_UBLOCK_WITH_BUFFER(name, size) \
-    QUICK_UBLOCK name; UTF8B name ## _buffer[size]
-
-/* NB buffer ^^^ immediately follows qb in a structure for subsequent fixup */
-
-/* sadly can't usefully do ...
-#define QUICK_UBLOCK_INIT(buffer) \
-    { 0, buffer, elemof32(buffer), 0 } */
-
-#define QUICK_UBLOCK_INIT_NULL() \
-    { 0, NULL, 0, 0 }
 
 #endif /* USTR_IS_L1STR */
 
@@ -377,241 +352,6 @@ TCHAR-based quick block
 #define quick_tblock_tstr_with_nullch_add       quick_block_string_with_nullch_add
 #define quick_tblock_printf                     quick_block_printf
 #define quick_tblock_vprintf                    quick_block_vprintf
-
-#else /* TSTR_IS_L1STR */
-
-/*
-NB Same layout as QUICK_BLOCK
-so we can dispose in common fashion
-but tweaked member names for better type distinction
-*/
-
-typedef struct _quick_tblock
-{
-    ARRAY_HANDLE tb_h_array_buffer;
-    PTCH tb_p_static_buffer;
-    U32 tb_static_buffer_elem; /* NB in TCHARs */
-    U32 tb_static_buffer_used; /* NB in TCHARs */
-}
-QUICK_TBLOCK, * P_QUICK_TBLOCK; typedef const QUICK_TBLOCK * PC_QUICK_TBLOCK;
-
-#define P_QUICK_TBLOCK_NONE _P_DATA_NONE(P_QUICK_TBLOCK)
-
-#define QUICK_TBLOCK_WITH_BUFFER(name, elem) \
-    QUICK_TBLOCK name; TCHAR name ## _buffer[elem]
-
-/* NB buffer ^^^ immediately follows qb in a structure for subsequent fixup */
-
-/*
-functions as macros
-*/
-
-#if QUICK_BLOCK_CHECK
-
-static inline void
-__tqb_fill(
-    _Out_writes_(elemof_buffer) PTCH p_tbuf,
-    _InVal_     U32 elemof_buffer)
-{
-    void_memset32(p_tbuf, 0xEE, elemof_buffer * sizeof32(TCHAR));
-}
-
-#endif /* QUICK_BLOCK_CHECK */
-
-static inline void
-_quick_tblock_setup(
-    _OutRef_    P_QUICK_TBLOCK p_quick_tblock,
-#if QUICK_BLOCK_CHECK
-    _Out_writes_(elemof_buffer) PTCH p_tbuf,
-#else
-    _In_        PTCH p_tbuf,
-#endif
-    _InVal_     U32 elemof_buffer)
-{
-    p_quick_tblock->tb_h_array_buffer     = 0;
-    p_quick_tblock->tb_p_static_buffer    = p_tbuf;
-    p_quick_tblock->tb_static_buffer_elem = elemof_buffer;
-    p_quick_tblock->tb_static_buffer_used = 0;
-#if QUICK_BLOCK_CHECK
-    __tqb_fill(p_quick_tblock->tb_p_static_buffer, p_quick_tblock->tb_static_buffer_elem);
-#endif
-}
-
-#define quick_tblock_with_buffer_setup(name /*ref*/) \
-    _quick_tblock_setup(&name, name ## _buffer, elemof32(name ## _buffer))
-
-#define quick_tblock_setup(p_quick_tblock, tbuf /*ref*/) \
-    _quick_tblock_setup(p_quick_tblock, tbuf, elemof32(tbuf))
-
-/* set up a quick_tblock from an existing buffer (only for xtsnprintf - no tqb_init) */
-#define quick_tblock_setup_without_tqb_init(p_quick_tblock, p_tbuf, buf_elem) ( \
-    (p_quick_tblock)->tb_h_array_buffer     = 0,                \
-    (p_quick_tblock)->tb_p_static_buffer    = (p_tbuf),         \
-    (p_quick_tblock)->tb_static_buffer_elem = (buf_elem),       \
-    (p_quick_tblock)->tb_static_buffer_used = 0                 )
-
-/* set up a quick_tblock from an existing array handle */
-#define quick_tblock_from_array(p_quick_tblock, handle) (       \
-    (p_quick_tblock)->tb_h_array_buffer     = (handle),         \
-    (p_quick_tblock)->tb_p_static_buffer    = NULL,             \
-    (p_quick_tblock)->tb_static_buffer_elem = 0,                \
-    (p_quick_tblock)->tb_static_buffer_used = 0                 )
-
-/* set up a quick_tblock from an existing buffer */
-#define quick_tblock_fill_from_tbuf(p_quick_tblock, p_tbuf, buf_elem) ( \
-    (p_quick_tblock)->tb_h_array_buffer     = 0,                \
-    (p_quick_tblock)->tb_p_static_buffer    = (p_tbuf),         \
-    (p_quick_tblock)->tb_static_buffer_elem = (buf_elem),       \
-    (p_quick_tblock)->tb_static_buffer_used = (p_quick_tblock)->tb_static_buffer_elem )
-
-#define quick_tblock_array_handle_ref(p_quick_tblock) \
-    (p_quick_tblock)->tb_h_array_buffer /* really only internal use but needed for QB sort, no brackets */
-
-_Check_return_
-static __forceinline U32
-quick_tblock_elements(
-    _InRef_     PC_QUICK_TBLOCK p_quick_tblock)
-{
-    if(0 != quick_tblock_array_handle_ref(p_quick_tblock))
-        return(array_elements32(&quick_tblock_array_handle_ref(p_quick_tblock)));
-
-    return(p_quick_tblock->tb_static_buffer_used);
-}
-
-_Check_return_
-_Ret_notnull_
-static __forceinline PTCH
-quick_tblock_tptr(
-    _InRef_     P_QUICK_TBLOCK p_quick_tblock)
-{
-    if(0 != quick_tblock_array_handle_ref(p_quick_tblock))
-    {
-        assert(array_handle_valid(&quick_tblock_array_handle_ref(p_quick_tblock)));
-        return(array_base_no_checks(&quick_tblock_array_handle_ref(p_quick_tblock), TCHAR));
-    }
-
-    return(p_quick_tblock->tb_p_static_buffer);
-}
-
-_Check_return_
-_Ret_notnull_
-static __forceinline PCTCH
-quick_tblock_tptrc(
-    _InRef_     PC_QUICK_TBLOCK p_quick_tblock)
-{
-    if(0 != quick_tblock_array_handle_ref(p_quick_tblock))
-    {
-        assert(array_handle_valid(&quick_tblock_array_handle_ref(p_quick_tblock)));
-        return(array_basec_no_checks(&quick_tblock_array_handle_ref(p_quick_tblock), TCHAR));
-    }
-
-    return(p_quick_tblock->tb_p_static_buffer);
-}
-
-_Check_return_
-_Ret_notnull_
-static __forceinline PCTSTR
-quick_tblock_tstr(
-    _InRef_     PC_QUICK_TBLOCK p_quick_tblock)
-{
-    return((PCTSTR) quick_tblock_tptrc(p_quick_tblock));
-}
-
-/*
-exported routines
-*/
-
-static __forceinline void
-quick_tblock_dispose(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock)
-{
-#if QUICK_BLOCK_CHECK /* SKS 23jan95 trash buffer on exit */
-    if(p_quick_tblock->tb_static_buffer_elem)
-        __tqb_fill(p_quick_tblock->tb_p_static_buffer, p_quick_tblock->tb_static_buffer_elem);
-#endif
-    p_quick_tblock->tb_static_buffer_used = 0;
-
-    if(p_quick_tblock->tb_h_array_buffer)
-        al_array_dispose(&p_quick_tblock->tb_h_array_buffer);
-}
-
-extern void
-quick_tblock_dispose_leaving_text_valid(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock);
-
-extern void
-quick_tblock_empty(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock);
-
-extern void
-quick_tblock_nullch_strip(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock);
-
-_Check_return_
-_Ret_maybenull_
-extern PTCH
-quick_tblock_extend_by(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _InVal_     U32 elem_wanted,
-    _OutRef_    P_STATUS p_status);
-
-extern void
-quick_tblock_shrink_by(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _In_        S32 elem_wanted); /* NB -ve */
-
-_Check_return_
-extern STATUS
-quick_tblock_tchar_add(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _In_        TCHAR tchar);
-
-_Check_return_
-extern STATUS
-quick_tblock_tchars_add(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _In_reads_(len) PCTCH ptch_in,
-    _InVal_     U32 len);
-
-_Check_return_
-extern STATUS
-quick_tblock_tstr_add(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _In_z_      PCTSTR tstr);
-
-_Check_return_
-extern STATUS
-quick_tblock_tstr_with_nullch_add(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _In_z_      PCTSTR tstr);
-
-_Check_return_
-extern STATUS __cdecl
-quick_tblock_printf(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _In_z_ _Printf_format_string_ PCTSTR format,
-    /**/        ...);
-
-_Check_return_
-extern STATUS
-quick_tblock_vprintf(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock,
-    _In_z_ _Printf_format_string_ PCTSTR format,
-    /**/        va_list args);
-
-_Check_return_
-extern STATUS
-quick_tblock_ucs4_add(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock /*appended*/,
-    _InVal_     UCS4 ucs4);
-
-_Check_return_
-static inline STATUS
-quick_tblock_nullch_add(
-    _InoutRef_  P_QUICK_TBLOCK p_quick_tblock)
-{
-    return(quick_tblock_tchar_add(p_quick_tblock, NULLCH));
-}
 
 #endif /* TSTR_IS_L1STR */
 

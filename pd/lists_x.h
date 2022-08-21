@@ -26,54 +26,57 @@ LIST;
 function declarations
 */
 
+_Check_return_
+_Ret_maybenull_
 extern LIST *
 add_list_entry(
-    P_P_LIST_BLOCK list,
-    S32 size,
-    P_S32 resp);
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 size,
+    _OutRef_    P_STATUS resp);
 
-extern S32
+_Check_return_
+extern STATUS
 add_to_list(
-    P_P_LIST_BLOCK list,
-    S32 key,
-    const uchar *str,
-    P_S32 resp);
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 key,
+    _In_opt_z_  PC_U8Z str);
 
+/*ncr*/
 extern BOOL
 delete_from_list(
-    P_P_LIST_BLOCK list,
-    S32 key);
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InVal_     S32 key);
 
 extern void
 delete_list(
-    P_P_LIST_BLOCK);
+    _InoutRef_  P_P_LIST_BLOCK);
 
-extern S32
+_Check_return_
+extern STATUS
 duplicate_list(
-    P_P_LIST_BLOCK dst,
-    P_P_LIST_BLOCK src);
+    _InoutRef_  P_P_LIST_BLOCK dst,
+    _InoutRef_  P_P_LIST_BLOCK src);
 
+_Check_return_
+_Ret_maybenull_
 extern LIST *
 search_list(
-    P_P_LIST_BLOCK first_one,
-    S32 target);
+    _InoutRef_  P_P_LIST_BLOCK first_one,
+    _InVal_     S32 target);
 
-extern LIST *
-first_in_list(
-    P_P_LIST_BLOCK);
-
-extern LIST *
-next_in_list(
-    P_P_LIST_BLOCK);
-
+_Check_return_
+_Ret_maybenull_
 extern P_ANY
 list_first(
-    P_P_LIST_BLOCK list,
-    P_LIST_ITEMNO key);
+    _InoutRef_  P_P_LIST_BLOCK list);
 
+_Check_return_
+_Ret_maybenull_
 extern P_ANY
 list_next(
-    P_P_LIST_BLOCK list,
-    P_LIST_ITEMNO key);
+    _InoutRef_  P_P_LIST_BLOCK list);
+
+#define first_in_list(list) list_first(list)
+#define next_in_list(list)  list_next(list)
 
 /* end of lists_x.h */

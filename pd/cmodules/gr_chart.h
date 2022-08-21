@@ -338,7 +338,7 @@ typedef struct _gr_linestyle
 }
 GR_LINESTYLE, * P_GR_LINESTYLE; typedef const GR_LINESTYLE * PC_GR_LINESTYLE;
 
-#define gr_linestyle_init(linestylep) void_memset32((linestylep), '\0', sizeof32(*(linestylep)))
+#define gr_linestyle_init(linestylep) memset32((linestylep), '\0', sizeof32(*(linestylep)))
 
 /* NB. on WINDOWS thick or coloured lines must be done by rectangle fill */
 
@@ -376,7 +376,7 @@ typedef struct _gr_fillstyle
 }
 GR_FILLSTYLE, * P_GR_FILLSTYLE; typedef const GR_FILLSTYLE * PC_GR_FILLSTYLE;
 
-#define gr_fillstyle_init(fillstylep) void_memset32((fillstylep), '\0', sizeof32(*(fillstylep)))
+#define gr_fillstyle_init(fillstylep) memset32((fillstylep), '\0', sizeof32(*(fillstylep)))
 
 /*
 style for strings
@@ -929,7 +929,6 @@ error definition
 */
 
 #define GR_CHART_ERRLIST_DEF \
-    errorstring(GR_CHART_ERR_NOMEM,                     "Memory full") \
     errorstring(GR_CHART_ERR_INVALID_DRAWFILE,          "Not a valid Draw file") \
     errorstring(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED,   "Draw files must be saved before being imported") \
     errorstring(GR_CHART_ERR_NO_SELF_INSERT,            "Cannot save chart files into chart editing windows") \
@@ -946,7 +945,7 @@ error definition
 
 #define GR_CHART_ERR_BASE                       (-8000)
 
-#define GR_CHART_ERR_NOMEM                      (-8000)
+#define GR_CHART_ERR_spare_8000                 (-8000)
 #define GR_CHART_ERR_INVALID_DRAWFILE           (-8001)
 #define GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED    (-8002)
 #define GR_CHART_ERR_NO_SELF_INSERT             (-8003)

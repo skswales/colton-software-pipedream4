@@ -19,6 +19,10 @@ required includes
 #include "cmodules/bezier.h"
 #endif
 
+#ifndef          __collect_h
+#include "cmodules/collect.h"
+#endif
+
 #ifndef          __funclist_h
 #include "cmodules/funclist.h"
 #endif
@@ -31,16 +35,12 @@ required includes
 #include "cmodules/handlist.h"
 #endif
 
-#ifndef          __mathnums_h
-#include "cmodules/mathnums.h"
-#endif
-
 #ifndef          __mathxtr2_h
 #include "cmodules/mathxtr2.h"
 #endif
 
-#ifndef          __collect_h
-#include "cmodules/collect.h"
+#ifndef                   __mathnums_h
+#include "cmodules/coltsoft/mathnums.h"
 #endif
 
 #ifndef __stringlk_h
@@ -428,19 +428,19 @@ typedef struct _gr_series
 
     struct _gr_series_lbr
     {
-        P_LIST_BLKREF pdrop_fill;
-        P_LIST_BLKREF pdrop_line;
+        P_LIST_BLOCK pdrop_fill;
+        P_LIST_BLOCK pdrop_line;
 
-        P_LIST_BLKREF point_fill;
-        P_LIST_BLKREF point_line;
-        P_LIST_BLKREF point_text;
+        P_LIST_BLOCK point_fill;
+        P_LIST_BLOCK point_line;
+        P_LIST_BLOCK point_text;
 
-        P_LIST_BLKREF point_barch;
-        P_LIST_BLKREF point_barlinech;
-        P_LIST_BLKREF point_linech;
-        P_LIST_BLKREF point_piechdispl;
-        P_LIST_BLKREF point_piechlabel;
-        P_LIST_BLKREF point_scatch;
+        P_LIST_BLOCK point_barch;
+        P_LIST_BLOCK point_barlinech;
+        P_LIST_BLOCK point_linech;
+        P_LIST_BLOCK point_piechdispl;
+        P_LIST_BLOCK point_piechlabel;
+        P_LIST_BLOCK point_scatch;
     }
     lbr;
 
@@ -785,13 +785,13 @@ typedef struct _gr_chart
 
     struct _gr_chart_text
     {
-        P_LIST_BLKREF    lbr; /* list of gr_texts */
+        P_LIST_BLOCK    lbr; /* list of gr_texts */
 
         struct _gr_chart_text_style
         {
-            P_LIST_BLKREF    lbr; /* list of attributes for the gr_texts */
+            P_LIST_BLOCK    lbr; /* list of attributes for the gr_texts */
 
-            GR_TEXTSTYLE   base; /* base text style for text objects */
+            GR_TEXTSTYLE    base; /* base text style for text objects */
         }
         style;
     }
@@ -2010,24 +2010,11 @@ gr_barlinescatch_best_fit_addin(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp,
     GR_CHARTTYPE charttype);
 
-extern F64
-gr_barlinescatch_linest_getproc(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row);
+PROC_LINEST_DATA_GET_PROTO(extern, gr_barlinescatch_linest_getproc, client_handle, colID, row);
 
-extern F64
-gr_barlinescatch_linest_getproc_cumulative(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row);
+PROC_LINEST_DATA_GET_PROTO(extern, gr_barlinescatch_linest_getproc_cumulative, client_handle, colID, row);
 
-extern S32
-gr_barlinescatch_linest_putproc(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row,
-    _InRef_     PC_F64 value);
+PROC_LINEST_DATA_PUT_PROTO(extern, gr_barlinescatch_linest_putproc, client_handle, colID, row, value);
 
 extern void
 gr_barlinescatch_get_datasources(

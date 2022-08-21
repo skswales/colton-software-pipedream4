@@ -82,8 +82,6 @@ the source code in the external/OtherBSD/dSFMT-src-* directory
 #undef assert /* as it's contrarily included by dSFMT source */
 #endif
 
-#define inline __forceinline
-
 #include "external/OtherBSD/dSFMT-src-2.2/dSFMT.c"
 
 extern F64

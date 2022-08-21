@@ -222,10 +222,10 @@ __vmyasserted(
         if(strlen(p) > 32)
         {
             /* make a hole to put the first prefix in */
-            void_memmove32(p +  sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1 /*to*/, p /*from*/, strlen32(p) + 1);
+            memmove32(p +  sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1 /*to*/, p /*from*/, strlen32(p) + 1);
 
             /* plonk it in */
-            void_memcpy32(p, ASSERTION_FAILURE_PREFIX_RISCOS, sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1);
+            memcpy32(p, ASSERTION_FAILURE_PREFIX_RISCOS, sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1);
 
             (void) wimp_reporterror_rf(&err, wimp_EOK, product_ui_id(), &flags, NULL);
 
@@ -249,7 +249,7 @@ __vmyasserted(
 
     if(flags & wimp_EOK)
     {
-        void_tstrkpy(err.errmess, elemof32(err.errmess), message ? message : ASSERTION_TRAP_QUERY);
+        safe_tstrkpy(err.errmess, elemof32(err.errmess), message ? message : ASSERTION_TRAP_QUERY);
 
         (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL), product_ui_id(), &flags, NULL);
 

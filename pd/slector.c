@@ -35,15 +35,15 @@ add_path_using_dir( /* never relative to current document */
     char buffer[BUF_MAX_PATHSTRING];
     S32 res;
 
-    reportf("add_path_using_dir(%u:%s, dir=%s)\n", strlen32(src), src, dir);
+    reportf("add_path_using_dir(%u:%s, dir=%s)", strlen32(src), src, dir);
 
     if(file_is_rooted(src))
         return(file_readable(src) > 0);
 
     /* first try looking up dir.src along path */
-    void_strkpy(buffer, elemof32(buffer), dir);
-    void_strkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
-    void_strkat(buffer, elemof32(buffer), src);
+    safe_strkpy(buffer, elemof32(buffer), dir);
+    safe_strkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
+    safe_strkat(buffer, elemof32(buffer), src);
 
     res = file_find_on_path(filename, elemof_buffer, buffer);
 
@@ -70,15 +70,15 @@ add_path_or_relative_using_dir( /* may be relative to current document */
     if(!allow_cwd)
         return(add_path_using_dir(filename, elemof_buffer, src, dir));
 
-    reportf("add_path_or_relative_using_dir(%u:%s, dir=%s)\n", strlen32(src), src, dir);
+    reportf("add_path_or_relative_using_dir(%u:%s, dir=%s)", strlen32(src), src, dir);
 
     if(file_is_rooted(src))
         return(file_readable(src) > 0);
 
     /* first try looking up dir.src along path */
-    void_strkpy(buffer, elemof32(buffer), dir);
-    void_strkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
-    void_strkat(buffer, elemof32(buffer), src);
+    safe_strkpy(buffer, elemof32(buffer), dir);
+    safe_strkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
+    safe_strkat(buffer, elemof32(buffer), src);
 
     res = file_find_on_path_or_relative(filename, elemof_buffer, buffer, currentfilename);
 
@@ -101,7 +101,7 @@ add_prefix_to_name_using_dir(
     _InVal_     BOOL allow_cwd,
     _In_z_      PCTSTR dir)
 {
-    reportf("add_prefix_to_name_using_dir(%u:%s, dir=%s, allow_cwd=%s)\n", strlen32(name), name, dir, report_boolstring(allow_cwd));
+    reportf("add_prefix_to_name_using_dir(%u:%s, dir=%s, allow_cwd=%s)", strlen32(name), name, dir, report_boolstring(allow_cwd));
 
     if(!file_is_rooted(name))
         {
@@ -111,8 +111,8 @@ add_prefix_to_name_using_dir(
         if(file_is_dir(buffer) > 0)
             {
             /* dir of that name exists, so add file */
-            void_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
-            void_strkat(buffer, elemof_buffer, name);
+            safe_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
+            safe_strkat(buffer, elemof_buffer, name);
             return(buffer);
             }
         }
@@ -129,28 +129,28 @@ add_choices_write_prefix_to_name_using_dir(
     _In_z_      PCTSTR name,
     _In_opt_z_  PCTSTR dir)
 {
-    reportf("add_choices_write_prefix_to_name_using_dir(%u:%s, dir=%u:%s)\n", strlen32(name), name, dir ? strlen32(dir) : 0, dir ? dir : "<NULL>");
+    reportf("add_choices_write_prefix_to_name_using_dir(%u:%s, dir=%u:%s)", strlen32(name), name, dir ? strlen32(dir) : 0, dir ? dir : "<NULL>");
 
     if(file_is_rooted(name))
         {
-        void_strkpy(buffer, elemof_buffer, name);
+        safe_strkpy(buffer, elemof_buffer, name);
         return(buffer);
         }
 
-    void_strkpy(buffer, elemof_buffer, "<Choices$Write>" FILE_DIR_SEP_STR "PipeDream");
+    safe_strkpy(buffer, elemof_buffer, "<Choices$Write>" FILE_DIR_SEP_STR "PipeDream");
 
     (void) file_create_directory(buffer);
 
     if(NULL != dir)
         {
-        void_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
-        void_strkat(buffer, elemof_buffer, dir);
+        safe_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
+        safe_strkat(buffer, elemof_buffer, dir);
 
         (void) file_create_directory(buffer);
         }
 
-    void_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
-    void_strkat(buffer, elemof_buffer, name);
+    safe_strkat(buffer, elemof_buffer, FILE_DIR_SEP_STR);
+    safe_strkat(buffer, elemof_buffer, name);
 
     return(buffer);
 }
@@ -205,7 +205,7 @@ pd_file_open(
             reperr(res, name);
         }
 
-    trace_1(TRACE_APP_PD4, "returns " PTR_XTFMT "\n", report_ptr_cast(file));
+    trace_1(TRACE_APP_PD4, "returns " PTR_XTFMT, report_ptr_cast(file));
 
     return(file);
 }

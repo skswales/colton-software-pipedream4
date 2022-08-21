@@ -20,7 +20,7 @@
 #endif
 
 #ifndef _In_reads_
-#include "cmodules/no-sal.h"
+#include "cmodules/coltsoft/no-sal.h"
 #endif
 
 #undef  F64_IS_64_BIT_ALIGNED

@@ -362,6 +362,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\allocblk.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\allocblk.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\bezier.c"
 					>
 				</File>
@@ -423,6 +431,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\cmodules\ev_math.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\ev_mcpx.c"
 					>
 				</File>
 				<File
@@ -563,10 +575,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\cmodules\handlist.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\cmodules\mathnums.h"
 					>
 				</File>
 				<File
@@ -1769,51 +1777,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\..\cmodules\ansi.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\coltsoft.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\defineos.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\drawxtra.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\common\gflags.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\mysignal.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\no-sal.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\personal.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\pragma.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\pragmari.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\target_riscos_host_gccsdk.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\cmodules\coltsoft\target_riscos_host_windows.h"
 				>
 			</File>
 			<Filter
@@ -1833,6 +1801,54 @@
 				>
 				<File
 					RelativePath="..\..\..\..\..\t5-nonfree\Acorn\Library\32\tboxlibs\flex.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="coltsoft"
+				>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\ansi.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\coltsoft.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\defineos.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\drawxtra.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\mathnums.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\mysignal.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\no-sal.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\pragma.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\pragmari.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\target_riscos_host_gccsdk.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\coltsoft\target_riscos_host_windows.h"
 					>
 				</File>
 			</Filter>

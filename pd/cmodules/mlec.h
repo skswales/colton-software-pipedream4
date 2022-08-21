@@ -196,7 +196,6 @@ error definition
 */
 
 #define MLEC_ERRLIST_DEF \
-    errorstring(MLEC_ERR_NOMEM            , "Memory full") \
     errorstring(MLEC_ERR_NOSELECTION      , "No selected text") \
     errorstring(MLEC_ERR_GETTEXT_BUFOVF   , "Program error - Destination string too small") \
     errorstring(MLEC_ERR_NOPASTEBUFFER    , "Program error - No paste buffer") \
@@ -211,7 +210,7 @@ error definition
 
 #define MLEC_ERR_BASE                   (-7000)
 
-#define MLEC_ERR_NOMEM                  (-7000)
+#define MLEC_ERR_spare_7000             (-7000)
 #define MLEC_ERR_NOSELECTION            (-7001)
 #define MLEC_ERR_GETTEXT_BUFOVF         (-7002)
 #define MLEC_ERR_NOPASTEBUFFER          (-7003)

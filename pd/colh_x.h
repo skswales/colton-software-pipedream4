@@ -165,8 +165,6 @@ formline_claim_focus(void);
 
 /* exported types */
 
-typedef struct __formwind_struct * formwind_handle;
-
 typedef struct __formwind_struct
 {
     struct __mlec_struct * mlec;    /* was editexpression_mlec     */
@@ -180,7 +178,7 @@ typedef struct __formwind_struct
     DOCNO        docno;
     BOOL         tracking;
 }
-_formwind_struct;
+FORMULA_WINDOW, * formwind_handle;
 
 extern void
 EditFormula_fn(void);

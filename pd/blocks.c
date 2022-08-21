@@ -278,11 +278,11 @@ copy_slots_to_eoworld(
     ROW trow;
     S32 errorval = 1;
 
-    trace_0(TRACE_APP_PD4, "copy_slots_to_eoworld\n");
+    trace_0(TRACE_APP_PD4, "copy_slots_to_eoworld");
 
     for(tcol = 0; !ctrlflag  &&  (tcol < csize); tcol++)
         {
-        trace_2(TRACE_APP_PD4, "copy_slots_to_eoworld, tcol: %d, numcol: %d\n", tcol, numcol);
+        trace_2(TRACE_APP_PD4, "copy_slots_to_eoworld, tcol: %d, numcol: %d", tcol, numcol);
 
         /* copy from fromcol + tcol to o_numcol + tcol */
         /* create a gap in the column to copy the slots to  */
@@ -315,7 +315,7 @@ copy_slots_to_eoworld(
         /* tidy up mess */
         delcolandentry(o_numcol, numcol - o_numcol);
 
-    trace_0(TRACE_APP_PD4, "exit copy_slots_to_eoworld\n");
+    trace_0(TRACE_APP_PD4, "exit copy_slots_to_eoworld");
     return(errorval);
 }
 
@@ -468,7 +468,7 @@ do_delete_block(
 {
     S32 res = TRUE;
 
-    trace_0(TRACE_APP_PD4, "do_delete_block()\n");
+    trace_0(TRACE_APP_PD4, "do_delete_block()");
 
     if(!ignore_protection && protected_slot_in_range(&blkstart, &blkend))
         return(-1);
@@ -974,13 +974,13 @@ recover_deleted_block(
     /* put block at column starting at numcol */
     if(!createcol(new_numcol + delete_size_col - 1))
         {
-        trace_0(TRACE_APP_PD4, "failed to create enough columns for block: leave on list\n");
+        trace_0(TRACE_APP_PD4, "failed to create enough columns for block: leave on list");
         return(reperr_null(create_error(ERR_CANTLOADPASTEBLOCK)));
         }
 
     /* copy column lists into end of colstart */
     deregcoltab();
-    void_memcpy32(colstart + new_numcol, delete_colstart, sizeof32(struct colentry) * delete_size_col);
+    memcpy32(colstart + new_numcol, delete_colstart, sizeof32(COLENTRY) * delete_size_col);
     regcoltab();
 
     reset_numrow();
@@ -1070,11 +1070,12 @@ refs_adjust_add(
             {
             if(update_refs)
                 {
-                char *newtext;
-
-                newtext = slot->content.text;
-                while((newtext = my_next_ref(newtext, slot->type)) != NULL)
-                    newtext = text_slr_uref(newtext, upp);
+                uchar * csr = slot->content.text;
+                while(NULL != (csr = find_next_csr(csr)))
+                    {
+                    /*eportf("refs_adjust_add: text_csr_uref");*/
+                    csr = text_csr_uref(csr, upp);
+                    }
                 }
 
             if(add_refs)
@@ -1106,13 +1107,13 @@ remove_deletion(
     P_COLENTRY cptr;
     COL csize;
 
-    trace_4(TRACE_APP_PD4, "remove_deletion key: %d, start_pos: %d, latest: %d, allowed: %d\n",
+    trace_4(TRACE_APP_PD4, "remove_deletion key: %d, start_pos: %d, latest: %d, allowed: %d",
             key, start_pos_on_stack, latest_word_on_stack, words_allowed);
 
     /* try removing as a string */
     if(delete_from_list(&deleted_words, key))
         {
-        trace_0(TRACE_APP_PD4, "remove_deletion removed string\n");
+        trace_0(TRACE_APP_PD4, "remove_deletion removed string");
         return;
         }
 
@@ -1120,7 +1121,7 @@ remove_deletion(
     lptr = search_list(&deleted_words, key + BLOCK_OFFSET);
     if(lptr)
         {
-        trace_2(TRACE_APP_PD4, "remove_deletion lptr: %x, lptr->value: %x\n",
+        trace_2(TRACE_APP_PD4, "remove_deletion lptr: %x, lptr->value: %x",
                 (S32) lptr, (S32) lptr->value);
 
         sbdp    = (saved_block_descriptor *) lptr->value;
@@ -1128,22 +1129,22 @@ remove_deletion(
         cptr    = sbdp->del_colstart;
         csize   = sbdp->del_col_size;
 
-        trace_2(TRACE_APP_PD4, "remove_deletion cptr: %x, csize: %x\n",
+        trace_2(TRACE_APP_PD4, "remove_deletion cptr: %x, csize: %x",
                 (S32) cptr, (S32) csize);
 
         /* must register before deletion */
         regtempcoltab(cptr, csize);
 
-        trace_0(TRACE_APP_PD4, "remove_deletion about to delcolstart\n");
+        trace_0(TRACE_APP_PD4, "remove_deletion about to delcolstart");
         delcolstart(cptr, csize);
 
-        trace_0(TRACE_APP_PD4, "remove_deletion about to delete_from_list\n");
+        trace_0(TRACE_APP_PD4, "remove_deletion about to delete_from_list");
         delete_from_list(&deleted_words, key + BLOCK_OFFSET);
 
-        trace_0(TRACE_APP_PD4, "remove_deletion done delete_from_list\n");
+        trace_0(TRACE_APP_PD4, "remove_deletion done delete_from_list");
         }
 
-    trace_0(TRACE_APP_PD4, "exit remove_deletion\n");
+    trace_0(TRACE_APP_PD4, "exit remove_deletion");
 }
 
 /******************************************************************************
@@ -1297,15 +1298,16 @@ save_block_and_delete(
     SLR bs, be, curpos;
     DOCNO bd;
     BOOL res = TRUE;
-    S32 arraysize, copyres, save_active;
-    LIST * lptr;
+    S32 array_size_bytes = 0; /* keep compiler dataflow analyser happy */
+    S32 copyres, save_active;
+    LIST * lptr = NULL;
     P_COLENTRY delete_colstart;
     COL delete_size_col;
     ROW delete_size_row;
     saved_block_descriptor *sbdp;
     S32 mres, eres;
 
-    trace_0(TRACE_APP_PD4, "save_block_and_delete\n");
+    trace_0(TRACE_APP_PD4, "save_block_and_delete");
 
     if(!set_up_block(FALSE))
         return(FALSE);
@@ -1327,24 +1329,17 @@ save_block_and_delete(
         escape_enable();
 
         /* get new colstart first of all */
-        arraysize = sizeof(struct colentry) * delete_size_col;
+        array_size_bytes = sizeof32(COLENTRY) * delete_size_col;
 
-        if((delete_colstart = list_allocptr(arraysize)) == NULL)
-            mres = status_nomem();
-
-        if(delete_colstart)
-            /* put block on deleted_words list */
-            lptr = add_list_entry(&deleted_words, sizeof(saved_block_descriptor), &mres);
-        else
-            lptr = NULL;
-
-        if(lptr)
+        /* put block on deleted_words list */
+        if( (NULL != (delete_colstart = al_ptr_alloc_elem(COLENTRY, delete_size_col, &mres))) &&
+            (NULL != (lptr = add_list_entry(&deleted_words, sizeof(saved_block_descriptor), &mres))) )
             {
             lptr->key = ++latest_word_on_stack + BLOCK_OFFSET;
 
             sbdp = (saved_block_descriptor *) lptr->value;
 
-            trace_4(TRACE_APP_PD4, "save_block_and_delete saving block: key %d colstart " PTR_XTFMT ", cols %d, rows %d\n",
+            trace_4(TRACE_APP_PD4, "save_block_and_delete saving block: key %d colstart " PTR_XTFMT ", cols %d, rows %d",
                     lptr->key, report_ptr_cast(delete_colstart), delete_size_col, delete_size_row);
 
             sbdp->del_colstart  = delete_colstart;
@@ -1403,14 +1398,12 @@ save_block_and_delete(
             {
             ensure_paste_list_clipped();
 
-            trace_3(TRACE_APP_PD4, "save_block_and_delete, numcol: %d, curpos.col: %d, *cptr: " PTR_XTFMT "\n",
+            trace_3(TRACE_APP_PD4, "save_block_and_delete, numcol: %d, curpos.col: %d, *cptr: " PTR_XTFMT,
                     numcol, curpos.col, report_ptr_cast(delete_colstart));
 
-            trace_0(TRACE_APP_PD4, "save_block_and_delete: block copied - now curpos.col..numcol-1\n");
+            trace_0(TRACE_APP_PD4, "save_block_and_delete: block copied - now curpos.col..numcol-1");
             }
         }
-    else
-        arraysize = 0; /* keep compiler dataflow analyser happy */
 
     /* if it's a deletion, delete it and update refs for a move */
     if(is_deletion)
@@ -1420,20 +1413,19 @@ save_block_and_delete(
 
         updref(bs.col, bs.row, be.col, be.row, 0, 0, UREF_DELETE, DOCNO_NONE);
 
-        trace_0(TRACE_APP_PD4, "emptying the deleted block\n");
+        trace_0(TRACE_APP_PD4, "emptying the deleted block");
         for(tcol = bs.col; tcol <= be.col; tcol++)
             for(i = 0; !ctrlflag  &&  i < delete_size_row; i++)
                 {
-                trace_2(TRACE_APP_PD4, "killing slot col %d row %d\n", tcol, bs.row);
+                trace_2(TRACE_APP_PD4, "killing slot col %d row %d", tcol, bs.row);
                 killslot(tcol, bs.row);
                 }
 
-        trace_0(TRACE_APP_PD4, "recalcing number of rows\n");
+        trace_0(TRACE_APP_PD4, "recalcing number of rows");
         reset_numrow();
 
-        trace_0(TRACE_APP_PD4, "updref slots below which have moved up\n");
+        trace_0(TRACE_APP_PD4, "updref slots below which have moved up");
         updref(bs.col, be.row + 1, be.col, LARGEST_ROW_POSSIBLE, 0, -delete_size_row, UREF_UREF, DOCNO_NONE);
-
         }
 
     if(save_active)
@@ -1443,7 +1435,7 @@ save_block_and_delete(
 
     if(save_active)
         {
-        trace_0(TRACE_APP_PD4, "removing copied columns from sheet\n");
+        trace_0(TRACE_APP_PD4, "removing copied columns from sheet");
 
         /* lose the columns from curpos.col to numcol */
         updref(curpos.col, curpos.row, numcol - 1, curpos.row + delete_size_row - 1, 0, 0, UREF_DELETE, DOCNO_NONE);
@@ -1456,7 +1448,7 @@ save_block_and_delete(
         numcol = curpos.col;
 
         /* take a copy of the deregistered end segment to delete_colstart */
-        void_memcpy32(delete_colstart, colstart + numcol, arraysize);
+        memcpy32(delete_colstart, colstart + numcol, array_size_bytes);
 
         regcoltab();
         }
@@ -1474,7 +1466,7 @@ FINISH_OFF:
     blkend    = be;
     blk_docno = bd;
 
-    trace_0(TRACE_APP_PD4, "exit save_block_and_delete\n");
+    trace_0(TRACE_APP_PD4, "exit save_block_and_delete");
 
     /* Nothing to do (I think!), if our caller will call delcolentry() he should */
     /* do something about linked columns first, see DeleteColumn_fn() in execs.c */
@@ -1498,31 +1490,31 @@ set_up_block(
 
     if(blkend.col == NO_COL)
         {
-        trace_0(TRACE_APP_PD4, "set_up_block forcing single mark to block\n");
+        trace_0(TRACE_APP_PD4, "set_up_block forcing single mark to block");
         blkend = blkstart;
         }
 
     if(check_block_in_doc && (blk_docno != current_docno()))
         return(reperr_null(create_error(ERR_NOBLOCKINDOC)));
 
-    trace_4(TRACE_APP_PD4, "set_up_block ok: start %d %d; end %d %d\n", blkstart.col, blkstart.row, blkend.col, blkend.row);
+    trace_4(TRACE_APP_PD4, "set_up_block ok: start %d %d; end %d %d", blkstart.col, blkstart.row, blkend.col, blkend.row);
 
     return(TRUE);
 }
 
 /******************************************************************************
 *
-* uref a slot embedded in a PipeDream format
-* text slot - given pointer to compiled slot
+* uref a compiled slot reference embedded in a PipeDream format
+* text slot - given pointer to compiled slot reference
 *
 * --out--
-* pointer to byte after slot
+* pointer to byte after compiled slot reference
 *
 ******************************************************************************/
 
 extern char *
-text_slr_uref(
-    char *c,
+text_csr_uref(
+    uchar * csr,
     _InRef_     PC_UREF_PARM upp)
 {
     EV_SLR slr;
@@ -1530,19 +1522,14 @@ text_slr_uref(
     COL col;
     ROW row;
 
-    /* read slr from text slot */
-    docno = (EV_DOCNO) talps(c, sizeof(EV_DOCNO));
-    col   = (COL)      talps(c + sizeof(DOCNO), sizeof(COL));
-    row   = (ROW)      talps(c + sizeof(DOCNO) + sizeof(COL), sizeof(ROW));
+    /* read slr from text compiled slot reference */
+    (void) talps_csr(csr, &docno, &col, &row);
+    /*eportf("text_csr_uref: talps docno %d col 0x%x row 0x%x", docno, col, row);*/
 
     slr.docno = docno;
     slr.col = (EV_COL) (col & COLNOBITS);
     slr.row = (EV_ROW) (row & ROWNOBITS);
-
     slr.flags = 0;
-
-    if((col & BADCOLBIT) || (row & BADROWBIT))
-        slr.flags |= SLR_BAD_REF;
 
     if(col & ABSCOLBIT)
         slr.flags |= SLR_ABS_COL;
@@ -1550,17 +1537,14 @@ text_slr_uref(
     if(row & ABSROWBIT)
         slr.flags |= SLR_ABS_ROW;
 
+    if((col & BADCOLBIT) || (row & BADROWBIT))
+        slr.flags |= SLR_BAD_REF;
+
     ev_match_slr(&slr, upp);
 
     docno = slr.docno;
     col = (COL) slr.col;
     row = (ROW) slr.row;
-
-    if(slr.flags & SLR_BAD_REF)
-        {
-        col |= BADCOLBIT;
-        row |= BADROWBIT;
-        }
 
     if(slr.flags & SLR_ABS_COL)
         col |= ABSCOLBIT;
@@ -1568,11 +1552,14 @@ text_slr_uref(
     if(slr.flags & SLR_ABS_ROW)
         row |= ABSROWBIT;
 
-    splat(c,                                  (S32) docno, sizeof(EV_DOCNO));
-    splat(c + sizeof(EV_DOCNO),               (S32) col,   sizeof(COL));
-    splat(c + sizeof(EV_DOCNO) + sizeof(COL), (S32) row,   sizeof(ROW));
+    if(slr.flags & SLR_BAD_REF)
+        {
+        col |= BADCOLBIT;
+        row |= BADROWBIT;
+        }
 
-    return(c + sizeof(EV_DOCNO) + sizeof(COL) + sizeof(ROW));
+    /*eportf("text_csr_uref: splat docno %d col 0x%x row 0x%x", docno, col, row);*/
+    return(splat_csr(csr, docno, col, row));
 }
 
 /*
@@ -1599,7 +1586,7 @@ TransposeBlock_fn(void)
     extent          = no_of_rows > (ROW) no_of_cols ? no_of_rows : (ROW) no_of_cols;
     new_last_col    = blkstart.col + (COL) no_of_rows -1;
     new_last_row    = blkstart.row + (ROW) no_of_cols -1;
-    exchanges_to_do = (S32) (no_of_cols) * (S32) (no_of_rows) / 2;
+    exchanges_to_do = no_of_cols * no_of_rows / 2;
     exchanges_done  = 0;
     last_down       = no_of_rows < no_of_cols ? no_of_rows : no_of_cols;
     last_across     = no_of_rows < no_of_cols ? no_of_cols : no_of_rows;

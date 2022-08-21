@@ -109,7 +109,7 @@ larger by 1 and prefixed with BUF_:
 
 Where the parameters of a function include a source and a destination,
 the destination should appear first in the parameter list,
-as it does for example void_strkpy(dst, elemof_dst, src)
+as it does for example safe_strkpy(dst, elemof_dst, src)
 
 When you have start and end pointers / indexes they must be
 inclusive, exclusive whether they point to memory, slots, arrays or anything
@@ -235,16 +235,16 @@ typedef         UCS4 *  P_UCS4;
 typedef   const UCS4 * PC_UCS4;
 
 _Check_return_
-static __forceinline BOOL
-UCS4_is_ascii7(
+static inline BOOL
+ucs4_is_ascii7(
     _InVal_     UCS4 ucs4)
 {
     return((ucs4) < 0x00000080U);
 }
 
 _Check_return_
-static __forceinline BOOL
-UCS4_is_latin1(
+static inline BOOL
+ucs4_is_latin1(
     _InVal_     UCS4 ucs4)
 {
     return((ucs4) < 0x00000100U);
@@ -277,6 +277,7 @@ typedef P_PC_U8Z P_PC_A7STR;
 /*
 a Latin-1 8-bit character (ISO 8859-1) (may have top-bit-set)
 */
+
 #if 1
 typedef      U8       L1_U8;
 typedef    P_U8     P_L1CHARS;
@@ -329,7 +330,7 @@ UCHARZ is Latin-1
 #endif
 
 /* using inline function can spot any bad buffer-to-pointer casts that would otherwise happen silently */
-static __forceinline P_USTR
+static inline P_USTR
 ustr_bptr(UCHARZ buf[])
 {
     return((P_USTR) buf);
@@ -400,7 +401,8 @@ type limits
 
 #define  S8_MIN   SCHAR_MIN
 #define S16_MIN    SHRT_MIN
-#define S32_MIN     INT_MIN
+#define S32_MIN     INT_MIN /* but you might not want to use this! */
+#define F64_MIN     DBL_MIN
 
 /*
 buffer sizes for printf conversions
@@ -634,8 +636,17 @@ GDI_RECT, * P_GDI_RECT; typedef const GDI_RECT * PC_GDI_RECT;
 #define if_constant(expr) \
     __pragma(warning(push)) __pragma(warning(disable:4127)) if(expr) __pragma(warning(pop))
 
-static __forceinline void
-void_memcpy32(
+static inline int
+memcmp32(
+    _In_reads_bytes_(n_bytes) PC_ANY src_1,
+    _In_reads_bytes_(n_bytes) PC_ANY src_2,
+    _InVal_     U32 n_bytes)
+{
+    return(memcmp(src_1, src_2, n_bytes));
+}
+
+static inline void
+memcpy32(
     _Out_writes_bytes_(n_bytes) P_ANY dst,
     _In_reads_bytes_(n_bytes) PC_ANY src,
     _InVal_     U32 n_bytes)
@@ -643,8 +654,24 @@ void_memcpy32(
     (void) memcpy(dst, src, n_bytes);
 }
 
-static __forceinline void
-void_memmove32(
+static inline void
+tiny_memcpy32(
+    _Out_writes_bytes_(n_bytes) P_ANY dst,
+    _In_reads_bytes_(n_bytes) PC_ANY src,
+    _InVal_     U32 n_bytes) /* must be non-zero */
+{
+    P_BYTE to = (P_BYTE) dst;
+    PC_BYTE from = (PC_BYTE) src;
+    PC_BYTE from_end = from + n_bytes;
+
+    do  {
+        *to++ = *from++;
+        }
+    while(from != from_end);
+}
+
+static inline void
+memmove32(
     _Out_writes_bytes_(n_bytes) P_ANY dst,
     _In_reads_bytes_(n_bytes) PC_ANY src,
     _InVal_     U32 n_bytes)
@@ -652,8 +679,8 @@ void_memmove32(
     (void) memmove(dst, src, n_bytes);
 }
 
-static __forceinline void
-void_memset32(
+static inline void
+memset32(
     _Out_writes_bytes_(n_bytes) P_ANY dst,
     _In_        int byteval,
     _InVal_     U32 n_bytes)

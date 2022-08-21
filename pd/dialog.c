@@ -1004,7 +1004,7 @@ getoption(
     if(0 != memcmp(optr, "%OP%", (unsigned) 4))
         return;
 
-    trace_1(TRACE_APP_DIALOG, "getoption(%s)\n", optr);
+    trace_1(TRACE_APP_DIALOG, "getoption(%s)", optr);
 
     optr += 4;
 
@@ -1017,7 +1017,7 @@ getoption(
     dptr = find_option(optr[0], optr[1], &dbox_num);
     if(!dptr)
         {
-        trace_0(TRACE_APP_DIALOG, "no such option found\n");
+        trace_0(TRACE_APP_DIALOG, "no such option found");
         return;
         }
 
@@ -1156,11 +1156,9 @@ save_opt_to_list(
                 break;
             }
 
-        res = add_to_list(&def_first_option, key, (uchar *) ptr, &res);
-
-        if(res <= 0)
+        if(status_fail(res = add_to_list(&def_first_option, key, ptr)))
             {
-            reperr_null(res ? res : status_nomem());
+            reperr_null(res);
             break;
             }
         }
@@ -1275,9 +1273,6 @@ recover_options_from_list(void)
 
 #if 0
     /* update any variables that are not accessed thru dialog boxes */
-
-    setlogcolours();
-
     update_fontinfo_from_dialog();
 #endif
 }
@@ -1378,7 +1373,7 @@ update_dialog_from_windvars(
         dptr      = init_dptr;
         last_dptr = init_dptr + dhptr->items;
 
-        trace_2(TRACE_APP_DIALOG, "update_dialog_from_windvars(%d) dialog box " PTR_XTFMT "\n", boxnumber, report_ptr_cast(dhptr));
+        trace_2(TRACE_APP_DIALOG, "update_dialog_from_windvars(%d) dialog box " PTR_XTFMT, boxnumber, report_ptr_cast(dhptr));
 
         do  {
             wvoffset = dptr->offset;
@@ -1396,7 +1391,7 @@ update_dialog_from_windvars(
                         /* copy the windvars variable to dialog[n].textfield */
                         /* still need primary copy for screen updates */
                         (void) mystr_set(&dptr->textfield, * (char **) ptr);
-                        trace_2(TRACE_APP_DIALOG, "dialog[%d].textfield is now \"%s\"\n",
+                        trace_2(TRACE_APP_DIALOG, "dialog[%d].textfield is now \"%s\"",
                                 dptr - init_dptr,
                                 trace_string(dptr->textfield));
                         break;
@@ -1406,7 +1401,7 @@ update_dialog_from_windvars(
                     default:
                         /* copy the windvars variable to dialog[n].option */
                         dptr->option = * (uchar *) ptr;
-                        trace_3(TRACE_APP_DIALOG, "dialog[%d].option is now %d, '%c'\n",
+                        trace_3(TRACE_APP_DIALOG, "dialog[%d].option is now %d, '%c'",
                                 dptr - init_dptr,
                                 dptr->option, dptr->option);
                         break;
@@ -1416,7 +1411,7 @@ update_dialog_from_windvars(
         while(++dptr < last_dptr);
         }
     else
-        trace_0(TRACE_APP_DIALOG, "unable to update_dialog_from_windvars as no current document\n");
+        trace_0(TRACE_APP_DIALOG, "unable to update_dialog_from_windvars as no current document");
 }
 
 extern void
@@ -1436,7 +1431,7 @@ update_windvars_from_dialog(
         dptr      = init_dptr;
         last_dptr = init_dptr + dhptr->items;
 
-        trace_2(TRACE_APP_DIALOG, "update_windvars_from_dialog(%d) dialog box " PTR_XTFMT "\n", boxnumber, report_ptr_cast(dhptr));
+        trace_2(TRACE_APP_DIALOG, "update_windvars_from_dialog(%d) dialog box " PTR_XTFMT, boxnumber, report_ptr_cast(dhptr));
 
         do  {
             wvoffset = dptr->offset;
@@ -1455,7 +1450,7 @@ update_windvars_from_dialog(
                         str_clr((char **) ptr);
                         * (char **) ptr = dptr->textfield;
                         dptr->textfield = NULL;
-                        trace_2(TRACE_APP_DIALOG, "windvar for [%d].textfield is now \"%s\"\n",
+                        trace_2(TRACE_APP_DIALOG, "windvar for [%d].textfield is now \"%s\"",
                                     dptr - init_dptr,
                                     trace_string(* (char **) ptr));
                         break;
@@ -1465,7 +1460,7 @@ update_windvars_from_dialog(
                     default:
                         /* copy the dialog[n].option to windvars variable */
                         * (uchar *) ptr = dptr->option;
-                        trace_3(TRACE_APP_DIALOG, "windvar for [%d].option is now %d, '%c'\n",
+                        trace_3(TRACE_APP_DIALOG, "windvar for [%d].option is now %d, '%c'",
                                     dptr - init_dptr,
                                     * (uchar *)  ptr, * (uchar *) ptr);
                         break;
@@ -1475,7 +1470,7 @@ update_windvars_from_dialog(
         while(++dptr < last_dptr);
         }
     else
-        trace_0(TRACE_APP_DIALOG, "unable to update_windvars_from_dialog as no current document\n");
+        trace_0(TRACE_APP_DIALOG, "unable to update_windvars_from_dialog as no current document");
 }
 
 extern void
@@ -1508,7 +1503,7 @@ dialog_finalise(void)
 {
     S32 boxnumber;
 
-    trace_0(TRACE_APP_DIALOG, "dialog_finalise()\n");
+    trace_0(TRACE_APP_DIALOG, "dialog_finalise()");
 
     update_all_dialog_from_windvars();                /* move wvars -> dialog */
 
@@ -1544,7 +1539,7 @@ dialog_initialise(void)
 {
     BOOL res = TRUE;
 
-    trace_0(TRACE_APP_DIALOG, "dialog_initialise()\n");
+    trace_0(TRACE_APP_DIALOG, "dialog_initialise()");
 
     dialog_hardwired_defaults();
 
@@ -1554,9 +1549,6 @@ dialog_initialise(void)
 
 #if 1
     /* now update any variables that are not accessed thru dialog boxes */
-
-    setlogcolours();
-
     update_fontinfo_from_dialog();
 #endif
 
@@ -1575,7 +1567,7 @@ dialog_initialise_once(void)
 {
     S32 boxnumber;
 
-    trace_0(TRACE_APP_DIALOG, "dialog_initialise_once()\n");
+    trace_0(TRACE_APP_DIALOG, "dialog_initialise_once()");
 
     /* can't do as preprocessor check */
     assert((D_THE_LAST_ONE) != (NDIALOG_BOXES+1));
@@ -1707,7 +1699,7 @@ extract_parameters(
     uchar *ptr;
     S32 c;
 
-    trace_0(TRACE_APP_DIALOG, "extract parameters in\n");
+    trace_0(TRACE_APP_DIALOG, "extract parameters in");
 
     /* exec_ptr points at TAB to start */
     for(; *exec_ptr != CR; count++, dptr++)
@@ -1724,7 +1716,7 @@ extract_parameters(
         if(!read_parm(array))
             goto ERRORPOINT;
 
-        trace_1(TRACE_APP_DIALOG, "read_parm read: %s\n", trace_string(array));
+        trace_1(TRACE_APP_DIALOG, "read_parm read: %s", trace_string(array));
 
         switch(dptr->type)
             {
@@ -1773,14 +1765,14 @@ extract_parameters(
                 BOOL found = FALSE;
                 char ***list = (char ***) dptr->optionlist;
 
-                trace_1(TRACE_APP_DIALOG, "F_ARRAY searching for: %s\n", trace_string(array));
+                trace_1(TRACE_APP_DIALOG, "F_ARRAY searching for: %s", trace_string(array));
 
                 /* MRJC fix added here 16.8.89 to stop
                  * this loop zooming off end of array
                 */
                 for(c = 0; *(list + c); c++)
                     {
-                    trace_1(TRACE_APP_DIALOG, "F_ARRAY comparing with: %s\n", trace_string(**(list + c)));
+                    trace_1(TRACE_APP_DIALOG, "F_ARRAY comparing with: %s", trace_string(**(list + c)));
                     if(0 == _stricmp(array, **(list + c)))
                         {
                         dptr->option = c;
@@ -1791,7 +1783,7 @@ extract_parameters(
 
                 if(!found)
                     {
-                    trace_0(TRACE_APP_DIALOG, "F_ARRAY key not found\n");
+                    trace_0(TRACE_APP_DIALOG, "F_ARRAY key not found");
                     goto ERRORPOINT;
                     }
                 }
@@ -1802,7 +1794,7 @@ extract_parameters(
             }
         }
 
-    trace_0(TRACE_APP_DIALOG, "extract parameters out\n");
+    trace_0(TRACE_APP_DIALOG, "extract parameters out");
 
     return;
 
@@ -1832,7 +1824,7 @@ dialog_box(
     DIALOG * dptr;
     BOOL res;
 
-    trace_1(TRACE_APP_DIALOG, "dialog_box(%d)\n", boxnumber);
+    trace_1(TRACE_APP_DIALOG, "dialog_box(%d)", boxnumber);
 
     if(is_current_document())
         {
@@ -1895,7 +1887,7 @@ extern BOOL
 dialog_box_can_persist(void)
 {
     BOOL ended = exec_filled_dialog  ||  riscdialog_ended();
-    trace_1(TRACE_APP_DIALOG, "dialog_box_ended() returns %s\n", trace_boolstring(ended));
+    trace_1(TRACE_APP_DIALOG, "dialog_box_ended() returns %s", trace_boolstring(ended));
 
     /* SKS after 4.12 01apr92 - ensure people don't get persistent dialogs 'cos that screws up command file recording (which is too hard to fix) */
     if(!ended && macro_recorder_on)
@@ -1941,7 +1933,7 @@ dialog_box_can_retry(void)
 extern void
 dialog_box_end(void)
 {
-    trace_0(TRACE_APP_DIALOG, "dialog_box_end() --- explicit termination\n");
+    trace_0(TRACE_APP_DIALOG, "dialog_box_end() --- explicit termination");
     riscdialog_dispose();
 }
 

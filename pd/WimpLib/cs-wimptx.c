@@ -158,7 +158,7 @@ wimpt_checkpalette(void)
     {
     int i;
     for(i = 0; i < sizeof(wimpt__palette.c)/sizeof(wimpt__palette.c[0]); ++i)
-        tracef2("palette entry %2d = &%8.8X\n", i, wimpt__palette.c[i]);
+        tracef2("palette entry %2d = &%8.8X", i, wimpt__palette.c[i]);
     }
 #endif
 }

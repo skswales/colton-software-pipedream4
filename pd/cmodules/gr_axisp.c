@@ -188,7 +188,7 @@ gr_numtopowstr(
 
     if(value == 0.0)
         {
-        void_strkpy(buffer, elemof_buffer, "0");
+        safe_strkpy(buffer, elemof_buffer, "0");
         return(1);
         }
 
@@ -1882,7 +1882,7 @@ gr_chartedit_selection_cat_axis_process(
     d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS, &errorp);
     if(!d)
     {
-        message_output(errorp ? errorp : string_lookup(GR_CHART_ERR_NOMEM));
+        message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
         return;
     }
 
@@ -2303,7 +2303,7 @@ gr_chartedit_selection_axis_process(
     d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_AXIS, &errorp);
     if(!d)
     {
-        message_output(errorp ? errorp : string_lookup(GR_CHART_ERR_NOMEM));
+        message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
         return;
     }
 

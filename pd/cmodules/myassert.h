@@ -296,7 +296,7 @@ __WrapOsBool(
 #ifndef _status_assert_function_declared
 #define _status_assert_function_declared 1
 /*ncr*/
-static __forceinline STATUS
+static inline STATUS
 _status_assert(
     _InVal_     STATUS status,
     _In_z_      PCTSTR p_function,

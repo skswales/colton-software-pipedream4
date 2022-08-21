@@ -42,7 +42,7 @@ insert_this_ch(
     /* inserted by RJM 15.3.89, don't know how the problem was caused */
     slot_in_buffer = TRUE;
 
-    trace_1(TRACE_APP_PD4, "insert_this_ch(%c)\n", ch);
+    trace_1(TRACE_APP_PD4, "insert_this_ch(%c)", ch);
 
     chrina(ch, TRUE);
 }
@@ -171,7 +171,7 @@ delete_this_ch(void)
     if((curcol == sch_pos_end.col)  &&  (currow == sch_pos_end.row))
         --sch_end_offset;
 
-    trace_1(TRACE_APP_PD4, "delete_this_ch: deleting %c\n", linbuf[lecpos]);
+    trace_1(TRACE_APP_PD4, "delete_this_ch: deleting %c", linbuf[lecpos]);
 
     small_DeleteCharacter_fn();
 }
@@ -195,10 +195,10 @@ do_replace(
 
     next_replace_word = replace_str ? replace_str : UNULLSTR;
 
-    trace_8(TRACE_APP_PD4, "do_replace(%s, folding = %s): stt_off %d, end_off %d, (%d, %d) - (%d, %d)\n",
+    trace_8(TRACE_APP_PD4, "do_replace(%s, folding = %s): stt_off %d, end_off %d, (%d, %d) - (%d, %d)",
             next_replace_word, trace_boolstring(folding), sch_stt_offset, sch_end_offset,
             sch_pos_stt.col, sch_pos_stt.row, sch_pos_end.col, sch_pos_end.row);
-    trace_3(TRACE_APP_PD4, "linbuf %s, curcol %d, currow %d\n", linbuf, curcol, currow);
+    trace_3(TRACE_APP_PD4, "linbuf %s, curcol %d, currow %d", linbuf, curcol, currow);
 
     /* delete each word and replace with a word from the replace string */
 
@@ -264,7 +264,7 @@ do_replace(
             return(FALSE);
         }
 
-    trace_0(TRACE_APP_PD4, "leaving do_replace\n");
+    trace_0(TRACE_APP_PD4, "leaving do_replace");
 
     return(!been_error);
 }

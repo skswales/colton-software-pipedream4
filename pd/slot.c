@@ -174,7 +174,7 @@ copycont(
     switch(nsl->type)
         {
         case SL_TEXT:
-            void_memcpy32(nsl->content.text, osl->content.text, size);
+            memcpy32(nsl->content.text, osl->content.text, size);
             break;
 
         case SL_PAGE:
@@ -215,7 +215,7 @@ createcol(
     if(tcol > LARGEST_COL_POSSIBLE)
         return(FALSE);
 
-    trace_2(TRACE_APP_PD4, "createcol, numcol: %d, colsintable: %d\n",
+    trace_2(TRACE_APP_PD4, "createcol, numcol: %d, colsintable: %d",
             numcol, colsintable);
 
     /* allocate new column table if table not big enough */
@@ -224,17 +224,19 @@ createcol(
     if(tcol >= colsintable)
         {
         /* allocate new array */
-        newsize  = tcol + 1;
+        STATUS status;
 
-        if((newblock = list_allocptr(sizeof32(struct colentry) * (S32) newsize)) == NULL)
-            return(reperr_null(status_nomem()));
+        newsize = tcol + 1;
+
+        if(NULL == (newblock = al_ptr_alloc_elem(COLENTRY, (S32) newsize, &status)))
+            return(reperr_null(status));
 
         /* de-register old table */
         deregcoltab();
 
         /* copy across old table into the new one */
         if(colstart)
-            void_memcpy32(newblock, colstart, sizeof32(struct colentry) * numcol);
+            memcpy32(newblock, colstart, sizeof32(COLENTRY) * numcol);
 
         /* must re-register copied info before freeing old colstart
          * as the free may move the objects pointed to by the list blocks
@@ -247,7 +249,7 @@ createcol(
         colstart    = newblock;
         }
 
-    trace_2(TRACE_APP_PD4, "createcol *, numcol: %d, colsintable: %d\n",
+    trace_2(TRACE_APP_PD4, "createcol *, numcol: %d, colsintable: %d",
             numcol, colsintable);
 
     /* clear out new entries */
@@ -263,7 +265,7 @@ createcol(
 
     numcol = tcol + 1;
 
-    trace_2(TRACE_APP_PD4, "createcol **, numcol: %d, colsintable: %d\n",
+    trace_2(TRACE_APP_PD4, "createcol **, numcol: %d, colsintable: %d",
             numcol, colsintable);
 
     return(TRUE);
@@ -325,7 +327,7 @@ createslot(
     P_SLOT sl;
     P_LIST_BLOCK lp;
 
-    trace_4(TRACE_APP_PD4, "createslot(%d, %d; contents size %d, type %d)\n", col, row, size, type);
+    trace_4(TRACE_APP_PD4, "createslot(%d, %d; contents size %d, type %d)", col, row, size, type);
 
     /* make sure there is a column */
     if(col >= numcol && !createcol(col))
@@ -344,11 +346,11 @@ createslot(
             break;
         }
 
-    trace_1(TRACE_APP_PD4, "createslot full size %d\n", size);
+    trace_1(TRACE_APP_PD4, "createslot full size %d", size);
 
     sl = NULL;
     lp = indexcollb(col);
-    trace_3(TRACE_APP_PD4, "calling list_createitem(&%p, %d, %d, FALSE)\n", report_ptr_cast(lp), row, size);
+    trace_3(TRACE_APP_PD4, "calling list_createitem(&%p, %d, %d, FALSE)", report_ptr_cast(lp), row, size);
     if((it = list_createitem(lp, row, size, FALSE)) != NULL)
         {
         sl = slot_contents(it);
@@ -483,9 +485,9 @@ delcolentry(
     deregcoltab();
 
     /* close up table */
-    void_memmove32(colstart + tcol,
-                   colstart + tcol + size,
-                   (numcol - (tcol + size)) * sizeof32(struct colentry));
+    memmove32(colstart + tcol,
+              colstart + tcol + size,
+              (numcol - (tcol + size)) * sizeof32(COLENTRY));
 
     minusab(numcol, size);
 
@@ -608,9 +610,9 @@ inscolentry(
     deregcoltab();
 
     /* note that createcol increments numcol */
-    void_memmove32(colstart + tcol + 1,
-                   colstart + tcol,
-                   (numcol - (tcol + 1)) * sizeof32(struct colentry));
+    memmove32(colstart + tcol + 1,
+              colstart + tcol,
+              (numcol - (tcol + 1)) * sizeof32(COLENTRY));
 
     default_col_entries(colstart + tcol);
 
@@ -639,7 +641,7 @@ inscolentry(
 *
 ******************************************************************************/
 
-static S32
+static STATUS
 insertslot(
     _InVal_     DOCNO docno,
     COL col,
@@ -648,7 +650,7 @@ insertslot(
     P_LIST_BLOCK lp;
     P_DOCU p_docu;
 
-    trace_3(TRACE_APP_PD4, "insertslot: %d, %d, %d\n", docno, col, row);
+    trace_3(TRACE_APP_PD4, "insertslot: %d, %d, %d", docno, col, row);
 
     /*assert(docno < DOCNO_MAX);*/
     p_docu = p_docu_from_docno(docno);
@@ -657,15 +659,14 @@ insertslot(
 
     lp = x_indexcollb(p_docu, col);
 
-    if(list_insertitems(lp, row, (ROW) 1))
-        return(status_nomem());
+    status_return(list_insertitems(lp, row, (ROW) 1));
 
     if(list_numitem(lp) > numrow)
         numrow = (ROW) list_numitem(lp);
 
     filealtered(TRUE);
 
-    return(TRUE);
+    return(STATUS_DONE);
 }
 
 extern BOOL
@@ -736,12 +737,12 @@ next_slot_in_block(
     P_LIST_BLOCK lp;
     BOOL was_start;
 
-    trace_3(TRACE_APP_PD4, "next_slot_in_block(DOWN_COLUMNS = %s): in_block (%d, %d)\n", trace_boolstring(direction == DOWN_COLUMNS), in_block.col, in_block.row);
+    trace_3(TRACE_APP_PD4, "next_slot_in_block(DOWN_COLUMNS = %s): in_block (%d, %d)", trace_boolstring(direction == DOWN_COLUMNS), in_block.col, in_block.row);
 
     was_start = start_block;
     if(was_start)
         {
-        trace_0(TRACE_APP_PD4, "next_slot_in_block: starting block so set it := NULL\n");
+        trace_0(TRACE_APP_PD4, "next_slot_in_block: starting block so set it := NULL");
         start_block = FALSE;
         it = NULL;
         }
@@ -750,7 +751,7 @@ next_slot_in_block(
         {
         /* if zero or one markers, only return one slot */
         sl = was_start ? travel(in_block.col, in_block.row) : NULL;
-        trace_1(TRACE_APP_PD4, "next_slot_in_block(ONE_SLOT_ONLY) returns &%p\n", report_ptr_cast(sl));
+        trace_1(TRACE_APP_PD4, "next_slot_in_block(ONE_SLOT_ONLY) returns &%p", report_ptr_cast(sl));
         return(sl);
         }
 
@@ -767,13 +768,13 @@ next_slot_in_block(
                 {
                 in_block_item = (LIST_ITEMNO) start_bl.row;
 
-                trace_2(TRACE_APP_PD4, "calling list_initseq from position (%d, %d)\n", in_block.col, in_block_item);
+                trace_2(TRACE_APP_PD4, "calling list_initseq from position (%d, %d)", in_block.col, in_block_item);
                 it = list_initseq(lp, &in_block_item);
-                trace_4(TRACE_APP_PD4, "new column %d started, list_initseq returned &%p and row %d: end_bl.row = %d\n", in_block.col, report_ptr_cast(it), in_block_item, end_bl.row);
+                trace_4(TRACE_APP_PD4, "new column %d started, list_initseq returned &%p and row %d: end_bl.row = %d", in_block.col, report_ptr_cast(it), in_block_item, end_bl.row);
 
                 while(it  &&  (in_block_item < start_bl.row))
                     {
-                    trace_0(TRACE_APP_PD4, "slot found before start of block\n");
+                    trace_0(TRACE_APP_PD4, "slot found before start of block");
                     it = list_nextseq(lp, &in_block_item);
                     }
                 }
@@ -790,14 +791,14 @@ next_slot_in_block(
 
                 it = NULL;
 
-                trace_0(TRACE_APP_PD4, "beyond end row --- try a new column\n");
+                trace_0(TRACE_APP_PD4, "beyond end row --- try a new column");
                 }
             else
-                trace_0(TRACE_APP_PD4, "no slot found --- try a new column\n");
+                trace_0(TRACE_APP_PD4, "no slot found --- try a new column");
 
             if(++in_block.col > end_bl.col)
                 {
-                trace_0(TRACE_APP_PD4, "next_slot_in_block ran out of columns: returning NULL\n");
+                trace_0(TRACE_APP_PD4, "next_slot_in_block ran out of columns: returning NULL");
                 sl = NULL;
                 break;
                 }
@@ -820,21 +821,21 @@ next_slot_in_block(
 
             if(sl)
                 {
-                trace_1(TRACE_APP_PD4, "next_slot_in_block(ACROSS_ROWS) returns &%p\n", report_ptr_cast(sl));
+                trace_1(TRACE_APP_PD4, "next_slot_in_block(ACROSS_ROWS) returns &%p", report_ptr_cast(sl));
                 break;
                 }
 
             if(in_block.col >= end_bl.col)
                 {
                 /* at rhs so reset */
-                trace_0(TRACE_APP_PD4, "next_slot_in_block at end column --- try a new row\n");
+                trace_0(TRACE_APP_PD4, "next_slot_in_block at end column --- try a new row");
 
                 /* a new row */
                 it = NULL;
 
                 if(++in_block_item > end_bl.row)
                     {
-                    trace_0(TRACE_APP_PD4, "next_slot_in_block(ACROSS_ROWS) ran out of rows: returning NULL\n");
+                    trace_0(TRACE_APP_PD4, "next_slot_in_block(ACROSS_ROWS) ran out of rows: returning NULL");
                     sl = NULL;
                     break;
                     }
@@ -843,7 +844,7 @@ next_slot_in_block(
         while(TRUE);
         }
 
-    trace_1(TRACE_APP_PD4, "next_slot_in_block returns &%p\n", report_ptr_cast(sl));
+    trace_1(TRACE_APP_PD4, "next_slot_in_block returns &%p", report_ptr_cast(sl));
 
     in_block.row = (ROW) in_block_item;
     return(sl);
@@ -866,7 +867,7 @@ traverse_block_next_slot(
     P_LIST_BLOCK      lp;
     BOOL        was_start;
 
-    trace_4(TRACE_APP_PD4, "traverse_block_next_slot(&%p): blk->cur (%d, %d) %s\n",
+    trace_4(TRACE_APP_PD4, "traverse_block_next_slot(&%p): blk->cur (%d, %d) %s",
             report_ptr_cast(blk), blk->cur.col, blk->cur.row,
             ((blk->direction == TRAVERSE_DOWN_COLUMNS)
                              ? "TRAVERSE_DOWN_COLUMNS"
@@ -875,7 +876,7 @@ traverse_block_next_slot(
     was_start = blk->start;
     if(was_start)
         {
-        trace_0(TRACE_APP_PD4, "traverse_block_next_slot: starting block so set blk->it := NULL\n");
+        trace_0(TRACE_APP_PD4, "traverse_block_next_slot: starting block so set blk->it := NULL");
         blk->start = FALSE;
         blk->it    = NULL;
         }
@@ -884,7 +885,7 @@ traverse_block_next_slot(
         {
         /* if zero or one markers, only return one slot */
         sl = was_start ? traverse_block_travel(blk) : NULL;
-        trace_1(TRACE_APP_PD4, "traverse_block_next_slot: ONE_SLOT_ONLY returns &%p\n", report_ptr_cast(sl));
+        trace_1(TRACE_APP_PD4, "traverse_block_next_slot: ONE_SLOT_ONLY returns &%p", report_ptr_cast(sl));
         return(sl);
         }
 
@@ -903,14 +904,14 @@ traverse_block_next_slot(
                 {
                 item = (LIST_ITEMNO) blk->stt.row;
 
-                trace_2(TRACE_APP_PD4, "calling list_initseq from position (%d, %d)\n", blk->cur.col, item);
+                trace_2(TRACE_APP_PD4, "calling list_initseq from position (%d, %d)", blk->cur.col, item);
                 blk->it = list_initseq(lp, &item);
-                trace_4(TRACE_APP_PD4, "new column %d started, list_initseq returned &%p and row %d: blk->end.row = %d\n",
+                trace_4(TRACE_APP_PD4, "new column %d started, list_initseq returned &%p and row %d: blk->end.row = %d",
                         blk->cur.col, report_ptr_cast(blk->it), item, blk->end.row);
 
                 while(blk->it  &&  (item < blk->stt.row))
                     {
-                    trace_0(TRACE_APP_PD4, "slot found before start of block\n");
+                    trace_0(TRACE_APP_PD4, "slot found before start of block");
                     blk->it = list_nextseq(lp, &item);
                     }
                 }
@@ -927,14 +928,14 @@ traverse_block_next_slot(
 
                 blk->it = NULL;
 
-                trace_0(TRACE_APP_PD4, "beyond end row --- try a new column\n");
+                trace_0(TRACE_APP_PD4, "beyond end row --- try a new column");
                 }
             else
-                trace_0(TRACE_APP_PD4, "no slot found --- try a new column\n");
+                trace_0(TRACE_APP_PD4, "no slot found --- try a new column");
 
             if(++blk->cur.col > blk->end.col)
                 {
-                trace_0(TRACE_APP_PD4, "traverse_block_next_slot ran out of columns: returning NULL\n");
+                trace_0(TRACE_APP_PD4, "traverse_block_next_slot ran out of columns: returning NULL");
                 sl = NULL;
                 break;
                 }
@@ -957,21 +958,21 @@ traverse_block_next_slot(
 
             if(sl)
                 {
-                trace_1(TRACE_APP_PD4, "traverse_block_next_slot(ACROSS_ROWS) returns &%p\n", report_ptr_cast(sl));
+                trace_1(TRACE_APP_PD4, "traverse_block_next_slot(ACROSS_ROWS) returns &%p", report_ptr_cast(sl));
                 break;
                 }
 
             if(blk->cur.col >= blk->end.col)
                 {
                 /* at rhs so reset */
-                trace_0(TRACE_APP_PD4, "traverse_block_next_slot at end column --- try a new row\n");
+                trace_0(TRACE_APP_PD4, "traverse_block_next_slot at end column --- try a new row");
 
                 /* a new row */
                 blk->it = NULL;
 
                 if(++item > blk->end.row)
                     {
-                    trace_0(TRACE_APP_PD4, "traverse_block_next_slot(ACROSS_ROWS) ran out of rows: returning NULL\n");
+                    trace_0(TRACE_APP_PD4, "traverse_block_next_slot(ACROSS_ROWS) ran out of rows: returning NULL");
                     sl = NULL;
                     break;
                     }
@@ -980,7 +981,7 @@ traverse_block_next_slot(
         while(TRUE);
         }
 
-    trace_1(TRACE_APP_PD4, "traverse_block_next_slot returns &%p\n", report_ptr_cast(sl));
+    trace_1(TRACE_APP_PD4, "traverse_block_next_slot returns &%p", report_ptr_cast(sl));
 
     blk->cur.row = (ROW) item;
     return(sl);
@@ -1112,7 +1113,7 @@ restcoltab(void)
 
     deregcoltab();
 
-    void_memcpy32(colstart, d_colstart, sizeof32(struct colentry) * d_numcol);
+    memcpy32(colstart, d_colstart, sizeof32(COLENTRY) * d_numcol);
 
     regcoltab();
 
@@ -1221,7 +1222,7 @@ slotcontentssize(
     switch(tslot->type)
         {
         case SL_TEXT:
-            return(compiled_text_len(tslot->content.text));
+            return(compiled_text_len(tslot->content.text)); /* includes NULLCH */
 
         case SL_NUMBER:
             return(ev_len(&tslot->content.number.guts));
@@ -1248,10 +1249,11 @@ slotsize(
         {
         case SL_TEXT:
             return(SL_TEXTOVH +
-                   compiled_text_len(tslot->content.text));
+                   compiled_text_len(tslot->content.text)); /* includes NULLCH */
 
         case SL_NUMBER:
-            return(SL_NUMBEROVH + ev_len(&tslot->content.number.guts));
+            return(SL_NUMBEROVH +
+                   ev_len(&tslot->content.number.guts));
 
         case SL_PAGE:
             return(SL_PAGEOVH);
@@ -1307,14 +1309,14 @@ swap_rows(
 
     IGNOREPARM(updaterefs);
 
-    trace_2(TRACE_APP_PD4, "swap rows: %d, %d\n", (S32) trow1, (S32) trow2);
+    trace_2(TRACE_APP_PD4, "swap rows: %d, %d", (S32) trow1, (S32) trow2);
 
     s1.row = trow1;
     s2.row = trow2;
 
     for(col = firstcol; col <= lastcol; ++col)
         {
-        trace_1(TRACE_APP_PD4, "swap_rows: col %d\n", col);
+        trace_1(TRACE_APP_PD4, "swap_rows: col %d", col);
 
         s1.col = col;
         s2.col = col;
@@ -1324,7 +1326,7 @@ swap_rows(
             {
             s1.size = slotsize(s1.sl);
             s1.type = s1.sl->type;
-            trace_3(TRACE_APP_PD4, "swap_rows moved: %d, %d, type %d\n", col, s1.row, s1.type);
+            trace_3(TRACE_APP_PD4, "swap_rows moved: %d, %d, type %d", col, s1.row, s1.type);
             }
         else
             s1.size = 0;
@@ -1334,7 +1336,7 @@ swap_rows(
             {
             s2.size = slotsize(s2.sl);
             s2.type = s2.sl->type;
-            trace_3(TRACE_APP_PD4, "swap_rows moved: %d, %d, type %d\n", col, s2.row, s2.type);
+            trace_3(TRACE_APP_PD4, "swap_rows moved: %d, %d, type %d", col, s2.row, s2.type);
             }
         else
             s2.size = 0;
@@ -1342,30 +1344,30 @@ swap_rows(
         /* swapo the slots */
         if(s1.size > s2.size)
             {
-            trace_2(TRACE_APP_PD4, "swap_rows: size1 %d > size2 %d\n", s1.size, s2.size);
+            trace_2(TRACE_APP_PD4, "swap_rows: size1 %d > size2 %d", s1.size, s2.size);
             if(!swap_slot_core(&s1, &s2, tempslot))
                 return(FALSE);
             }
         else if(s1.size < s2.size)
             {
-            trace_2(TRACE_APP_PD4, "swap_rows: size1 %d < size2 %d\n", s1.size, s2.size);
+            trace_2(TRACE_APP_PD4, "swap_rows: size1 %d < size2 %d", s1.size, s2.size);
             if(!swap_slot_core(&s2, &s1, tempslot))
                 return(FALSE);
             }
         /* same size, non-zero? */
         else if(s1.size)
             {
-            trace_1(TRACE_APP_PD4, "swap_rows: same size %d\n", s1.size);
-            void_memcpy32(tempslot, s2.sl,    s2.size);
-            void_memcpy32(s2.sl,    s1.sl,    s1.size);
-            void_memcpy32(s1.sl,    tempslot, s2.size);
+            trace_1(TRACE_APP_PD4, "swap_rows: same size %d", s1.size);
+            memcpy32(tempslot, s2.sl,    s2.size);
+            memcpy32(s2.sl,    s1.sl,    s1.size);
+            memcpy32(s1.sl,    tempslot, s2.size);
             }
         }
 
-    trace_0(TRACE_APP_PD4, "swap_rows: update references\n");
+    trace_0(TRACE_APP_PD4, "swap_rows: update references");
     sortrefs(s1.row, s2.row, firstcol, lastcol);
 
-    trace_0(TRACE_APP_PD4, "swap_rows out\n");
+    trace_0(TRACE_APP_PD4, "swap_rows out");
 
     return(TRUE);
 }
@@ -1388,7 +1390,7 @@ swap_slots(
     swap_slot_struct s1, s2;
     UREF_PARM urefb;
 
-    trace_4(TRACE_APP_PD4, "swap slots: %d, %d, %d, %d\n", (S32) tcol1, (S32) trow1, (S32) tcol2, (S32) trow2);
+    trace_4(TRACE_APP_PD4, "swap slots: %d, %d, %d, %d", (S32) tcol1, (S32) trow1, (S32) tcol2, (S32) trow2);
 
     s1.row = trow1;
     s1.col = tcol1;
@@ -1428,9 +1430,9 @@ swap_slots(
         /* same size, non-zero? */
         else if(s1.size)
             {
-            void_memcpy32(tempslot, s2.sl,    s2.size);
-            void_memcpy32(s2.sl,    s1.sl,    s1.size);
-            void_memcpy32(s1.sl,    tempslot, s2.size);
+            memcpy32(tempslot, s2.sl,    s2.size);
+            memcpy32(s2.sl,    s1.sl,    s1.size);
+            memcpy32(s1.sl,    tempslot, s2.size);
             }
 
     /* set up uref block */
@@ -1440,7 +1442,7 @@ swap_slots(
 
     ev_uref(&urefb);
 
-    trace_0(TRACE_APP_PD4, "swap_slots out\n");
+    trace_0(TRACE_APP_PD4, "swap_slots out");
 
     return(TRUE);
 }
@@ -1459,7 +1461,7 @@ swap_slot_core(
 {
     /* copy p2 to temp slot */
     if(p2->size)
-        void_memcpy32(tempslot, p2->sl, p2->size);
+        memcpy32(tempslot, p2->sl, p2->size);
 
     /* create slot at p2 for p1 */
     if((p2->sl = createslot(p2->col, p2->row, p1->size + 4, p1->type)) == NULL)
@@ -1468,7 +1470,7 @@ swap_slot_core(
     p1->sl = travel(p1->col, p1->row);
 
     /* copy from p1 to p2 */
-    void_memcpy32(p2->sl, p1->sl, p1->size);
+    memcpy32(p2->sl, p1->sl, p1->size);
 
     /* if old p2 blank, make hole at p1 */
     if(!p2->size)
@@ -1478,7 +1480,7 @@ swap_slot_core(
     if((p1->sl = createslot(p1->col, p1->row, p2->size + 4, p2->type)) == NULL)
         return(FALSE);
 
-    void_memcpy32(p1->sl, tempslot, p2->size);
+    memcpy32(p1->sl, tempslot, p2->size);
 
     return(TRUE);
 }
@@ -1508,7 +1510,7 @@ travel(
     if(NULL != (it = list_gotoitem(indexcollb(col), row)))
         sl = slot_contents(it);
 
-    trace_3(TRACE_APP_PD4, "travel(%d, %d) to slot &%p\n", col, row, report_ptr_cast(sl));
+    trace_3(TRACE_APP_PD4, "travel(%d, %d) to slot &%p", col, row, report_ptr_cast(sl));
 
     return(sl);
 }

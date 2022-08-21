@@ -23,11 +23,11 @@
 #define RISCOS  1
 #define WINDOWS 0
 
-#include "coltsoft/defineos.h"
+#include "cmodules/coltsoft/defineos.h"
 
-#include "ansi.h"
+#include "cmodules/coltsoft/ansi.h"
 
-#include "coltsoft/coltsoft.h"
+#include "cmodules/coltsoft/coltsoft.h"
 
 /* external header */
 #include "pd123.h"

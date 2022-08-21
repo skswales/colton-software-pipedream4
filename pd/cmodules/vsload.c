@@ -127,7 +127,7 @@ vsload_fileheader_isvsfile(
     {
         p_vsfh = (const struct vsfileheader *) ptr;
 
-        trace_3(TRACE_APP_PD4, "vsload_fileheader_isvsfile curwin: %d, fileid: %d, scmode: %d\n",
+        trace_3(TRACE_APP_PD4, "vsload_fileheader_isvsfile curwin: %d, fileid: %d, scmode: %d",
                 p_vsfh->curwin, p_vsfh->fileid, p_vsfh->scmode);
 
         if( (p_vsfh->curwin <= 108)  &&
@@ -200,11 +200,11 @@ vsload_loadvsfile(
         return(create_error(VSLOAD_ERR_CANTREAD));
 
     /* allocate memory to receive it */
-    if((vsp = list_allocptr(vsfsize)) == NULL)
-        return(create_error(VSLOAD_ERR_NOMEMORY));
+    if(NULL == (vsp = al_ptr_alloc_bytes(struct vsfileheader, vsfsize, &res)))
+        return(res);
 
     /* loop for structure */
-    while(TRUE)
+    for(;;)
         {
         /* read in the file */
         if(file_seek(fin, 0, SEEK_SET) < 0)
@@ -219,16 +219,13 @@ vsload_loadvsfile(
             break;
             }
 
-        if((outbuf = list_allocptr((S32) VS_MAXSLOTLEN + 1)) == NULL)
-            {
-            res = create_error(VSLOAD_ERR_NOMEMORY);
+        if(NULL == (outbuf = al_ptr_alloc_bytes(char, (S32) VS_MAXSLOTLEN + 1, &res)))
             break;
-            }
+
+        res = vsp->maxrow;
 
         break; /* always */
         }
-
-    res = vsp->maxrow;
 
     if(res < 0)
         vsload_fileend();
@@ -269,9 +266,9 @@ vsdecodeslot(
                 if(0 == _strnicmp(vsfuncs[i].name, ip, strlen(vsfuncs[i].name)))
                     break;
 
-            trace_1(TRACE_APP_PD4, "vsfuncs[i].name: %s]\r\n", vsfuncs[i].name);
-            trace_1(TRACE_APP_PD4, "ip: %s]\r\n", ip);
-            trace_1(TRACE_APP_PD4, "i: %d]\r\n", i);
+            trace_1(TRACE_APP_PD4, "vsfuncs[i].name: %s]", vsfuncs[i].name);
+            trace_1(TRACE_APP_PD4, "ip: %s]", ip);
+            trace_1(TRACE_APP_PD4, "i: %d]", i);
 
             if(i < elemof(vsfuncs))
                 {
@@ -285,7 +282,7 @@ vsdecodeslot(
                     {
                     strcpy(op, vsfuncs[i].name);
                     op += strlen(vsfuncs[i].name);
-                    trace_0(TRACE_APP_PD4, "copied]\r\n");
+                    trace_0(TRACE_APP_PD4, "copied]");
                     }
 
                 ip += strlen(vsfuncs[i].name);
@@ -354,9 +351,9 @@ vsdecodeslot(
 extern void
 vsload_fileend(void)
 {
-    list_disposeptr((void**) &vsp);
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&vsp));
 
-    list_disposeptr((void**) &outbuf);
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&outbuf));
 }
 
 /******************************************************************************

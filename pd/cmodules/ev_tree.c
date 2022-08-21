@@ -117,9 +117,9 @@ add_custom_use(
     mep = tree_macptr(mix);
     __assume(mep);
     /* create a space to insert */
-    void_memmove32(mep + 1,
-                   mep,
-                   (custom_use_table.next - mix) * sizeof32(CUSTOM_USE));
+    memmove32(mep + 1,
+              mep,
+              (custom_use_table.next - mix) * sizeof32(CUSTOM_USE));
     ++custom_use_table.next;
 
     /* copy in new dependency */
@@ -155,9 +155,9 @@ add_namuse(
     nep = tree_namptr(nix);
     __assume(nep);
     /* create a space to insert */
-    void_memmove32(nep + 1,
-                   nep,
-                   (namtab.next - nix) * sizeof32(NAME_USE));
+    memmove32(nep + 1,
+              nep,
+              (namtab.next - nix) * sizeof32(NAME_USE));
     ++namtab.next;
 
     /* copy in new dependency */
@@ -173,8 +173,7 @@ add_namuse(
 
 /******************************************************************************
 *
-* ensure we can add an entry
-* to a dependency table
+* ensure we can add an entry to a dependency table
 *
 ******************************************************************************/
 
@@ -186,35 +185,38 @@ dep_table_check_add_one(
 {
     /* ensure we have space to add the dependency */
     if(dpp->next + 1 >= dpp->size)
-        {
+    {
+        STATUS status;
         P_ANY newblkp;
         EV_TRENT expand_size;
 
         expand_size = MAX(inc_size, dpp->size / 8);
 
-        if((newblkp = list_reallocptr(dpp->ptr, ent_size * (dpp->size + (S32) expand_size))) == NULL &&
-           expand_size > inc_size)
-            newblkp = list_reallocptr(dpp->ptr, ent_size * (dpp->size + (S32) expand_size));
+        if( ((newblkp = _al_ptr_realloc(dpp->ptr, ent_size * (dpp->size + (S32) expand_size), &status)) == NULL) &&
+            (expand_size > inc_size) )
+        {
+            expand_size = inc_size; /* SKS 18may14 surely this was the original intent? */
+            newblkp = _al_ptr_realloc(dpp->ptr, ent_size * (dpp->size + (S32) expand_size), &status);
+        }
 
-        if(!newblkp)
+        if(NULL == newblkp)
             return(-1);
 
         dpp->ptr   = newblkp;
         dpp->size += expand_size;
 
         trace_3(TRACE_MODULE_EVAL,
-                "dependency table " PTR_XTFMT " realloced, now: %d entries, %d bytes\n",
+                "dependency table " PTR_XTFMT " realloced, now: %d entries, %d bytes",
                 report_ptr_cast(dpp), dpp->size,
                 ent_size * dpp->size);
-        }
+    }
 
     return(0);
 }
 
 /******************************************************************************
 *
-* free some memory from a
-* dependency table if sensible
+* free some memory from a dependency table if sensible
 *
 ******************************************************************************/
 
@@ -227,20 +229,22 @@ dep_table_check_free_some(
     /* free the handle altogether */
     if(dpp->size && !dpp->next)
         {
-        list_disposeptr(&dpp->ptr);
+        al_ptr_dispose(&dpp->ptr);
         dpp->size = 0;
+        return;
         }
+
     /* free some memory */
-    else if(dpp->size - dpp->next >= inc_size)
+    if(dpp->size - dpp->next >= inc_size)
         {
+        STATUS status;
         P_ANY newptr;
 
-        if((newptr = list_reallocptr(dpp->ptr,
-                                     (dpp->next + (S32) inc_size) * ent_size)) != NULL)
-            {
-            dpp->ptr  = newptr;
-            dpp->size = dpp->next + inc_size;
-            }
+        if(NULL == (newptr = _al_ptr_realloc(dpp->ptr, (dpp->next + (S32) inc_size) * ent_size, &status)))
+            return;
+
+        dpp->ptr  = newptr;
+        dpp->size = dpp->next + inc_size;
         }
 }
 
@@ -404,9 +408,9 @@ ev_add_rngdependency(
     rep = tree_rngptr(p_ss_doc, rix);
     __assume(rep);
     /* create a space to insert */
-    void_memmove32(rep + 1,
-                   rep,
-                   (p_ss_doc->range_table.next - rix) * sizeof32(RANGE_USE));
+    memmove32(rep + 1,
+              rep,
+              (p_ss_doc->range_table.next - rix) * sizeof32(RANGE_USE));
     ++p_ss_doc->range_table.next;
 
     /* copy in new dependency */
@@ -447,9 +451,9 @@ ev_add_slrdependency(
     sep = tree_slrptr(p_ss_doc, six);
     __assume(sep);
     /* create a space to insert */
-    void_memmove32(sep + 1,
-                   sep,
-                   (p_ss_doc->slr_table.next - six) * sizeof32(SLR_USE));
+    memmove32(sep + 1,
+              sep,
+              (p_ss_doc->slr_table.next - six) * sizeof32(SLR_USE));
     ++p_ss_doc->slr_table.next;
 
     /* copy in new dependency */
@@ -625,15 +629,15 @@ ev_enum_dep_sup_get(
                             S32 got_ref;
 
                             got_ref = 0;
-                            switch(p_ev_name->def.did_num)
+                            switch(p_ev_name->def_data.did_num)
                                 {
                                 case RPN_DAT_SLR:
-                                    if(slr_equal(&p_ev_name->def.arg.slr, &dsp->slr))
+                                    if(slr_equal(&p_ev_name->def_data.arg.slr, &dsp->slr))
                                         got_ref = 1;
                                     break;
 
                                 case RPN_DAT_RANGE:
-                                    if(ev_slr_in_range(&p_ev_name->def.arg.range, &dsp->slr))
+                                    if(ev_slr_in_range(&p_ev_name->def_data.arg.range, &dsp->slr))
                                         got_ref = 1;
                                     break;
                                 }
@@ -1285,25 +1289,25 @@ todo_add_name_deps_of_slr(
                 S32 got_ref;
 
                 got_ref = 0;
-                switch(p_ev_name->def.did_num)
+                switch(p_ev_name->def_data.did_num)
                     {
                     case RPN_DAT_SLR:
                         if(all_doc)
                             {
-                            if(p_ev_name->def.arg.slr.docno == slrp->docno)
+                            if(p_ev_name->def_data.arg.slr.docno == slrp->docno)
                                 got_ref = 1;
                             }
-                        else if(slr_equal(&p_ev_name->def.arg.slr, slrp))
+                        else if(slr_equal(&p_ev_name->def_data.arg.slr, slrp))
                             got_ref = 1;
                         break;
 
                     case RPN_DAT_RANGE:
                         if(all_doc)
                             {
-                            if(p_ev_name->def.arg.range.s.docno == slrp->docno)
+                            if(p_ev_name->def_data.arg.range.s.docno == slrp->docno)
                                 got_ref = 1;
                             }
-                        if(ev_slr_in_range(&p_ev_name->def.arg.range, slrp))
+                        if(ev_slr_in_range(&p_ev_name->def_data.arg.range, slrp))
                             got_ref = 1;
                         break;
                     }
@@ -1363,7 +1367,7 @@ todo_add_slr(
                 while(todop > todops);
 
                 /* make space for new entry */
-                void_memmove32(todop + 1, todop, PtrDiffBytesU32(todope, todop));
+                memmove32(todop + 1, todop, PtrDiffBytesU32(todope, todop));
                 ++todotab.next;
                 ++todotab.sorted;
                 }
@@ -1379,7 +1383,7 @@ todo_add_slr(
             if(tracing(TRACE_MODULE_EVAL))
                 {
                 char buffer[BUF_EV_LONGNAMLEN];
-                ev_trace_slr(buffer, elemof32(buffer), "<todo_add_slr> added $$, serial_num=%ld, todo=%ld\n", slrp);
+                ev_trace_slr(buffer, elemof32(buffer), "<todo_add_slr> added $$, serial_num=%ld, todo=%ld", slrp);
                 trace_2(TRACE_MODULE_EVAL, buffer, ev_serial_num, todotab.next);
                 }
 #endif
@@ -1523,7 +1527,7 @@ todo_remove_slr(
         if(tracing(TRACE_MODULE_EVAL))
             {
             char buffer[BUF_EV_LONGNAMLEN];
-            ev_trace_slr(buffer, elemof32(buffer), "<todo_remove_slr> removed $$, todo=%ld\n", slrp);
+            ev_trace_slr(buffer, elemof32(buffer), "<todo_remove_slr> removed $$, todo=%ld", slrp);
             trace_1(TRACE_MODULE_EVAL, buffer, todotab.next);
             }
 #endif
@@ -1563,7 +1567,7 @@ tree_remove_tobedel(
                 if(!(*((EV_FLAGS *)(iep + flag_offset)) & TRF_TOBEDEL))
                     {
                     if(oep != iep)
-                        void_memcpy32(oep, iep, ent_size);
+                        memcpy32(oep, iep, ent_size);
 
                     oep += ent_size;
                     }
@@ -1756,7 +1760,7 @@ tree_sort_slrs(
 static void
 tree_sort_todo(void)
 {
-    trace_0(TRACE_MODULE_EVAL, "sort todo list\n");
+    trace_0(TRACE_MODULE_EVAL, "sort todo list");
 
     tree_sort(&todotab,
               sizeof32(TODO_ENTRY),

@@ -43,14 +43,16 @@
 #include "cmodules/mathxtra.h"
 #endif
 
-static __forceinline F64
+#include "cmodules/coltsoft/mathnums.h"
+
+static inline F64
 mathxtra_domain_error(void)
 {
     errno = EDOM;
     return(+F64_HUGE_VAL);
 }
 
-static __forceinline F64
+static inline F64
 mathxtra_range_error(
     F64 x)
 {

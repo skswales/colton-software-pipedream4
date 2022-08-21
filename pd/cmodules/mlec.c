@@ -914,7 +914,7 @@ mlec_SetText(
 {
     int err;
 
-    trace_0(TRACE_MODULE_MLEC, "mlec_SetText\n");
+    trace_0(TRACE_MODULE_MLEC, "mlec_SetText");
 
     if((err = checkspace_deletealltext(mlec, strlen(text))) >= 0)
         {
@@ -940,7 +940,7 @@ mlec_SetText(
         err = mlec__insert_text(mlec, text);  /* space test WILL be successful */
         }
 
-    trace_3(TRACE_MODULE_MLEC, "exit mlec_SetText with cursor (%d,%d,%d)\n", mlec->cursor.row,mlec->cursor.lcol,mlec->cursor.pcol);
+    trace_3(TRACE_MODULE_MLEC, "exit mlec_SetText with cursor (%d,%d,%d)", mlec->cursor.row,mlec->cursor.lcol,mlec->cursor.pcol);
     return(err);
 }
 
@@ -963,7 +963,7 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
     switch (e->e)
         {
         case wimp_EOPEN:                                                /* 2 */
-            trace_0(TRACE_MODULE_MLEC, "** Open_Window_Request on mlec pane window **\n");
+            trace_0(TRACE_MODULE_MLEC, "** Open_Window_Request on mlec pane window **");
             if(mlec->callbackproc)
                 {
                 if(mlec_event_openned == (*mlec->callbackproc)(Mlec_IsOpen, mlec->callbackhand, &e->data.o))
@@ -980,7 +980,7 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
 
         case wimp_ECLOSE:                                               /* 3 */
 #if TRUE
-            trace_0(TRACE_MODULE_MLEC, "** Close_Window_Request on mlec pane window **\n");
+            trace_0(TRACE_MODULE_MLEC, "** Close_Window_Request on mlec pane window **");
             if(mlec->callbackproc)
                 {
                 if(mlec_event_closed == (*mlec->callbackproc)(Mlec_IsClose, mlec->callbackhand, &e->data.close))
@@ -1023,7 +1023,7 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
             {
             int err = 0;
 
-            trace_1(TRACE_MODULE_MLEC, "** Key_Pressed on EditBox pane window, key code=%d **\n",e->data.key.chcode);
+            trace_1(TRACE_MODULE_MLEC, "** Key_Pressed on EditBox pane window, key code=%d **",e->data.key.chcode);
             switch(e->data.key.chcode)                                        /*>>>this is a load of crap, but it will do for now*/
                 {
                 case akbd_LeftK:                      mlec__cursor_left     (mlec); break;
@@ -1113,7 +1113,7 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
 
         case wimp_ESEND:
         case wimp_ESENDWANTACK:                                         /* 17 */
-            trace_1(TRACE_MODULE_MLEC, "action is %d\n",e->data.msg.hdr.action);           /* 18 */
+            trace_1(TRACE_MODULE_MLEC, "action is %d",e->data.msg.hdr.action);           /* 18 */
             switch(e->data.msg.hdr.action)
                 {
 #if SUPPORT_LOADSAVE
@@ -1177,7 +1177,7 @@ mlec__mouse_click(
     wimp_wstate r;
     int         x,y, orgx,orgy;
 
-    trace_3(TRACE_MODULE_MLEC, "** Mouse_Click on EditBox pane window at (%d,%d), state &%x **\n",mousep->x,mousep->y,mousep->bbits);
+    trace_3(TRACE_MODULE_MLEC, "** Mouse_Click on EditBox pane window at (%d,%d), state &%x **",mousep->x,mousep->y,mousep->bbits);
 
     wimp_get_wind_state(mousep->w, &r);
     orgx = r.o.box.x0 - r.o.scx; orgy = r.o.box.y1 - r.o.scy;
@@ -1274,7 +1274,7 @@ static void mlec__redraw_loop(mlec_handle mlec)
         }
 #endif
 
-    trace_0(TRACE_MODULE_MLEC, "** Redraw_Window_Request on EditBox pane window - mlec__redraw_loop called **\n");
+    trace_0(TRACE_MODULE_MLEC, "** Redraw_Window_Request on EditBox pane window - mlec__redraw_loop called **");
 
     lower_start = &mlec->buffptr[mlec->lower.start];                    /* first character                         */
     lower_row   = &mlec->buffptr[mlec->lower.end - mlec->cursor.pcol];  /* character at (0,cursor.row)             */
@@ -1288,7 +1288,7 @@ static void mlec__redraw_loop(mlec_handle mlec)
 
  trace_4(TRACE_MODULE_MLEC, "wimp_redraw_wind returns: (%d,%d,%d,%d) ",r.box.x0,r.box.y0,r.box.x1,r.box.y1);
  trace_2(TRACE_MODULE_MLEC, "(%d,%d) ",r.scx,r.scy);
- trace_4(TRACE_MODULE_MLEC, "(%d,%d,%d,%d)\n",r.g.x0,r.g.y0,r.g.x1,r.g.y1);
+ trace_4(TRACE_MODULE_MLEC, "(%d,%d,%d,%d)",r.g.x0,r.g.y0,r.g.x1,r.g.y1);
 
     /* Do the redraw loop */
     while (more)
@@ -1726,7 +1726,7 @@ mlec__cursor_setpos(
     int col,
     int row)
 {
-    trace_2(TRACE_MODULE_MLEC, "(%d,%d)\n",col,row);
+    trace_2(TRACE_MODULE_MLEC, "(%d,%d)",col,row);
 
     clear_selection(mlec);
 
@@ -2153,11 +2153,11 @@ void mlec_claim_focus(mlec_handle mlec)
       )
         {
         wimp_set_caret_pos(&carrot);
-        trace_3(TRACE_MODULE_MLEC, "place caret (%d,%d,%d)\n",carrot.x,carrot.y,carrot.height);
+        trace_3(TRACE_MODULE_MLEC, "place caret (%d,%d,%d)",carrot.x,carrot.y,carrot.height);
         }
     else
         {
-        trace_0(TRACE_MODULE_MLEC, " no action (we own input focus, caret already positioned)\n");
+        trace_0(TRACE_MODULE_MLEC, " no action (we own input focus, caret already positioned)");
         }
 }
 
@@ -2177,11 +2177,11 @@ void mlec_release_focus(mlec_handle mlec)
         current.height = 0x02000000;
 
         wimp_set_caret_pos(&current);
-        trace_0(TRACE_MODULE_MLEC, " focus given away\n");
+        trace_0(TRACE_MODULE_MLEC, " focus given away");
         }
     else
         {
-        trace_0(TRACE_MODULE_MLEC, " no action (focus belongs elsewhere)\n");
+        trace_0(TRACE_MODULE_MLEC, " no action (focus belongs elsewhere)");
         }
 }
 
@@ -2198,9 +2198,9 @@ void scroll_until_cursor_visible(mlec_handle mlec)
     int             extenty = - mlec->topmargin  - mlec->linespace * (mlec->linecount + 1); /* -ve */
     wimp_redrawstr  blk;
 
-    trace_4(TRACE_MODULE_MLEC, "window extent (%d,%d,%d,%d)\n",mlec->paneextent.x0,mlec->paneextent.y0,
+    trace_4(TRACE_MODULE_MLEC, "window extent (%d,%d,%d,%d)",mlec->paneextent.x0,mlec->paneextent.y0,
                                mlec->paneextent.x1,mlec->paneextent.y1);
-    trace_1(TRACE_MODULE_MLEC, "extenty=%d\n",extenty);
+    trace_1(TRACE_MODULE_MLEC, "extenty=%d",extenty);
 
     if(mlec->paneextent.x1 < extentx)
         {
@@ -2241,9 +2241,9 @@ void scroll_until_cursor_visible(mlec_handle mlec)
         curshape.y0               =  curshape.y1      - mlec->linespace;
         trace_4(TRACE_MODULE_MLEC, "wimp_get_window_state returns: visible area=(%d,%d, %d,%d)",state.o.box.x0,state.o.box.y0,
                                                                                                 state.o.box.x1,state.o.box.y1);
-        trace_2(TRACE_MODULE_MLEC, "scroll offset=(%d,%d)\n", state.o.scx,state.o.scy);
+        trace_2(TRACE_MODULE_MLEC, "scroll offset=(%d,%d)", state.o.scx,state.o.scy);
 
-        trace_2(TRACE_MODULE_MLEC, "cursor is (%d,%d)\n", curshape.x0, curshape.y1);
+        trace_2(TRACE_MODULE_MLEC, "cursor is (%d,%d)", curshape.x0, curshape.y1);
 
         while(state.o.scx > curshape.x0)
             {
@@ -2308,16 +2308,16 @@ void show_caret(mlec_handle mlec)
           )
             {
             wimp_set_caret_pos(&carrot);
-            trace_3(TRACE_MODULE_MLEC, "place caret (%d,%d,%d)\n",carrot.x,carrot.y,carrot.height);
+            trace_3(TRACE_MODULE_MLEC, "place caret (%d,%d,%d)",carrot.x,carrot.y,carrot.height);
             }
         else
             {
-            trace_0(TRACE_MODULE_MLEC, " no action (caret already positioned)\n");
+            trace_0(TRACE_MODULE_MLEC, " no action (caret already positioned)");
             }
         }
     else
         {
-        trace_0(TRACE_MODULE_MLEC, " no action (focus belongs elsewhere)\n");
+        trace_0(TRACE_MODULE_MLEC, " no action (focus belongs elsewhere)");
         }
 }
 
@@ -2456,7 +2456,7 @@ word_left(
     startp->col = scol;
     startp->row = mlec->cursor.row;
 
-    trace_1(TRACE_MODULE_MLEC, "word start %d\n", scol);
+    trace_1(TRACE_MODULE_MLEC, "word start %d", scol);
 }
 
 /******************************************************************************
@@ -2511,7 +2511,7 @@ word_limits(
     startp->row = endp->row = mlec->cursor.row;
     endp->col   = ecol;
 
-    trace_2(TRACE_MODULE_MLEC, "word limits %d..%d\n", scol, ecol);
+    trace_2(TRACE_MODULE_MLEC, "word limits %d..%d", scol, ecol);
 }
 
 static void
@@ -2621,10 +2621,10 @@ checkspace_deletealltext(
     /* we want to know if text will fit after current text is flushed */
     if(shortfall > 0)
         {
-        trace_2(TRACE_MODULE_MLEC, "do flex_midextend by %d bytes, at position %d\n", shortfall, mlec->upper.start);
+        trace_2(TRACE_MODULE_MLEC, "do flex_midextend by %d bytes, at position %d", shortfall, mlec->upper.start);
 
         if(!flex_midextend((flex_ptr)&mlec->buffptr, mlec->upper.start, shortfall))
-            return(create_error(MLEC_ERR_NOMEM));
+            return(create_error(status_nomem()));
 
         mlec->buffsiz     += shortfall;
         mlec->upper.start += shortfall;
@@ -2648,10 +2648,10 @@ checkspace_delete_selection(
         {
         shortfall = ((shortfall + 3) & -4);     /* round up to a word */
 
-        trace_2(TRACE_MODULE_MLEC, "do flex_midextend by %d bytes, at position %d\n", shortfall, mlec->upper.start);
+        trace_2(TRACE_MODULE_MLEC, "do flex_midextend by %d bytes, at position %d", shortfall, mlec->upper.start);
 
         if(!flex_midextend((flex_ptr)&mlec->buffptr, mlec->upper.start, shortfall))
-            return(create_error(MLEC_ERR_NOMEM));
+            return(status_nomem());
 
         mlec->buffsiz     += shortfall;
         mlec->upper.start += shortfall;
@@ -2837,7 +2837,7 @@ mlec__selection_adjust(
 {
     mark_position old;
 
-    trace_2(TRACE_MODULE_MLEC, "adjust selection to (%d,%d)\n",col,row);
+    trace_2(TRACE_MODULE_MLEC, "adjust selection to (%d,%d)",col,row);
 
     if(!mlec->selectvalid)
         {
@@ -3114,7 +3114,7 @@ mlec__update_loop(
         markstart.col = mark2.pcol; markstart.row = mark2.row; markend = mark1;
         }
 
- trace_4(TRACE_MODULE_MLEC, "mlec__update_loop (%d,%d, %d,%d)\n",markstart.col,markstart.row,markend.col,markend.row);
+ trace_4(TRACE_MODULE_MLEC, "mlec__update_loop (%d,%d, %d,%d)",markstart.col,markstart.row,markend.col,markend.row);
     r.w      =  mlec->pane;
     r.box.x0 = -0x1FFFFFFF;
     r.box.x1 =  0x1FFFFFFF;
@@ -3125,7 +3125,7 @@ mlec__update_loop(
     wimp_update_wind(&r, &more);
  trace_4(TRACE_MODULE_MLEC, "wimp_update_wind returns: (%d,%d,%d,%d) ",r.box.x0,r.box.y0,r.box.x1,r.box.y1);
  trace_2(TRACE_MODULE_MLEC, "(%d,%d) ",r.scx,r.scy);
- trace_4(TRACE_MODULE_MLEC, "(%d,%d,%d,%d)\n",r.g.x0,r.g.y0,r.g.x1,r.g.y1);
+ trace_4(TRACE_MODULE_MLEC, "(%d,%d,%d,%d)",r.g.x0,r.g.y0,r.g.x1,r.g.y1);
 
     while(more)
         {
@@ -3354,7 +3354,7 @@ mlec__atcursor_load(
     mlec_handle mlec,
     char *filename)
 {
-    trace_1(TRACE_MODULE_MLEC, "mlec__atcursor_load('%s')\n", filename);
+    trace_1(TRACE_MODULE_MLEC, "mlec__atcursor_load('%s')", filename);
 
     return(text_in(mlec, filename, file_read_open, file_read_getblock, file_read_close));
 }
@@ -3486,7 +3486,7 @@ int
 mlec__atcursor_paste(
     mlec_handle mlec)
 {
-    trace_0(TRACE_MODULE_MLEC, "mlec__atcursor_paste\n");
+    trace_0(TRACE_MODULE_MLEC, "mlec__atcursor_paste");
 
     return(text_in(mlec, "", paste_read_open, paste_read_getblock, paste_read_close));
 }
@@ -3615,12 +3615,7 @@ paste_write_open(
     xfer_handle *xferhandlep/*out*/)
 {
     if(!paste)
-        {
-        int err;
-
-        if((err = mlec_create(&paste)) < 0)
-            return(err);        /* probably MLEC_ERR_NOMEM */
-        }
+        status_return(mlec_create(&paste));
 
     xferhandlep->p = paste;
 

@@ -9,12 +9,8 @@
 
 /* SKS July 1991 */
 
-#include "mathnums.h"
-
 #define F64_MANT_DIG DBL_MANT_DIG
 #define F64_EPSILON  DBL_EPSILON
-#define F64_MIN      DBL_MIN
-#define F64_MAX      DBL_MAX
 #define F64_HUGE_VAL HUGE_VAL
 
 #if RISCOS || WINDOWS

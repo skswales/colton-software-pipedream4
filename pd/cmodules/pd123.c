@@ -25,7 +25,7 @@
 
 #include "cmodules/coltsoft/defineos.h"
 
-#include "ansi.h"
+#include "cmodules/coltsoft/ansi.h"
 
 #include "cmodules/coltsoft/coltsoft.h"
 
@@ -910,7 +910,7 @@ convslr(
 	/* if on second ref., check for highest and swap */
     if(*reslen && ((cc && (col < *cc)) || (cr && (row < *cr))))
 		{
-		void_memmove32(resstr + tlen, resstr, *reslen);
+		memmove32(resstr + tlen, resstr, *reslen);
 		strncpy((char *) resstr, (char *) tstr, tlen);
 		}
 	else

@@ -447,7 +447,7 @@ _gr_riscdiag_ensure(
 
 #if RISCOS
         if(!flex_realloc(&p_gr_riscdiag->draw_diag.data, (int) allocsize))
-            *p_status = create_error(GR_CHART_ERR_NOMEM);
+            *p_status = create_error(status_nomem());
 #endif
 
         if(status_fail(*p_status))
@@ -458,7 +458,7 @@ _gr_riscdiag_ensure(
         */
         mp = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, p_gr_riscdiag->dd_allocsize);
 
-        void_memset32(mp, 0, allocdelta);
+        memset32(mp, 0, allocdelta);
 
         /* optionally return pointer to base of ensured allocation and skip it */
         result = mp - p_gr_riscdiag->dd_allocsize + p_gr_riscdiag->draw_diag.length;
@@ -653,7 +653,7 @@ gr_riscdiag_fontlistR_new(
     if(NULL == (pObject = gr_riscdiag_ensure(BYTE, p_gr_riscdiag, objhdr.size, &status)))
         return(status);
 
-    void_memcpy32(pObject, &objhdr, sizeof32(objhdr));
+    memcpy32(pObject, &objhdr, sizeof32(objhdr));
     } /*block*/
     } /*block*/
 
@@ -670,7 +670,7 @@ gr_riscdiag_fontlistR_new(
 
         pFontListElem->fontref8 = (U8) (i + 1);
 
-        void_memcpy32(pFontListElem->szHostFontName, p->szHostFontName, lenp1);
+        memcpy32(pFontListElem->szHostFontName, p->szHostFontName, lenp1);
 
         fontListPos += thislen;
     }
@@ -760,8 +760,8 @@ gr_riscdiag_group_new(
     if(NULL == (pObject.p_byte = gr_riscdiag_object_new(p_gr_riscdiag, pGroupStart, DRAW_OBJECT_TYPE_GROUP, 0, &status)))
         return(status);
 
-    trace_3(TRACE_MODULE_GR_CHART, "gr_riscdiag_group_new(&%p) offset %d, name %s\n",
-            report_ptr_cast(p_gr_riscdiag), pGroupStart ? *pGroupStart : 0, trace_string(pGroupName));
+    trace_3(TRACE_MODULE_GR_CHART, "gr_riscdiag_group_new(&%p) offset %d, name %s",
+            report_ptr_cast(p_gr_riscdiag), pGroupStart ? *pGroupStart : 0, report_l1str(pGroupName));
 
     /* fill name, padding at end with spaces (mustn't be NULLCH terminated) */
     src = pGroupName;
@@ -834,13 +834,13 @@ gr_riscdiag_object_end(
 
     n_bytes = p_gr_riscdiag->draw_diag.length - *pObjectStart;
 
-    trace_4(TRACE_MODULE_GR_CHART, "gr_riscdiag_object_end(&%p): started %d ended %d nBytes %d\n",
+    trace_4(TRACE_MODULE_GR_CHART, "gr_riscdiag_object_end(&%p): started %d ended %d nBytes %d",
             report_ptr_cast(p_gr_riscdiag), *pObjectStart, p_gr_riscdiag->draw_diag.length, n_bytes);
 
     if(n_bytes == gr_riscdiag_object_base_size(pObject.hdr->type))
         {
-        trace_0(TRACE_MODULE_GR_CHART, "gr_riscdiag_object_end: destroy object and zero contents (for reuse) as nothing in it\n");
-        void_memset32(pObject.p_byte, 0, n_bytes);
+        trace_0(TRACE_MODULE_GR_CHART, "gr_riscdiag_object_end: destroy object and zero contents (for reuse) as nothing in it");
+        memset32(pObject.p_byte, 0, n_bytes);
         p_gr_riscdiag->draw_diag.length = *pObjectStart;
         n_bytes = 0;
         }

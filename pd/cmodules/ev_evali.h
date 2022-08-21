@@ -27,7 +27,7 @@ typedef struct _ev_name
     EV_NAMEID key;              /* internal id allocated to name */
     char id[BUF_EV_INTNAMLEN];  /* name of resource */
     EV_SLR owner;               /* document that owns name definition */
-    EV_DATA def;                /* data defined by name */
+    EV_DATA def_data;           /* data defined by name */
     EV_FLAGS flags;             /* flags about entry */
     EV_SERIAL visited;          /* last visited count */
 }
@@ -389,14 +389,14 @@ typedef struct stat_blockD
     F64 parm;
     F64 parm1;
     F64 result1;
-    EV_DATA result;
+    EV_DATA result_data;
 }
 stat_block, * stat_blockp;
 
 typedef struct lookup_blockD
 {
-    EV_DATA target;
-    EV_DATA result;
+    EV_DATA target_data;
+    EV_DATA result_data;
     rsblock rsb;
     S32 in_range;
     S32 in_array;
@@ -438,7 +438,7 @@ typedef struct stack_in_calc
     PC_U8 ptr;
     P_EV_DATA p_ev_data;
     P_EV_SLOT p_ev_slot;
-    EV_DATA result;
+    EV_DATA result_data;
     S32 did_calc;
     S32 travel_res;
     EV_SERIAL start_calc;
@@ -543,7 +543,7 @@ typedef struct _stack_entry
         struct stack_alert_input        sai;
     } data;
 }
-* stack_entryp;
+STACK_ENTRY, * stack_entryp;
 
 #define STACK_INC 20 /* size of stack increments */
 
@@ -611,17 +611,17 @@ ev_dcom.c external functions
 */
 
 extern S32
-dec_slr(
-    P_U8 op_buf,
-    _InVal_     EV_DOCNO this_docno,
-    _InRef_     PC_EV_SLR slrp,
-    BOOL upper_case);
-
-extern S32
-dec_rng(
+ev_dec_range(
     P_U8 op_buf,
     _InVal_     EV_DOCNO this_docno,
     _InRef_     PC_EV_RANGE p_ev_range,
+    BOOL upper_case);
+
+extern S32
+ev_dec_slr(
+    P_U8 op_buf,
+    _InVal_     EV_DOCNO this_docno,
+    _InRef_     PC_EV_SLR slrp,
     BOOL upper_case);
 
 /*
@@ -692,6 +692,7 @@ ev_exec.c external functions
 PROC_EXEC_PROTO(c_uplus);
 PROC_EXEC_PROTO(c_umi);
 PROC_EXEC_PROTO(c_not);
+
 PROC_EXEC_PROTO(c_and);
 PROC_EXEC_PROTO(c_mul);
 PROC_EXEC_PROTO(c_add);
@@ -707,33 +708,54 @@ PROC_EXEC_PROTO(c_lt);
 PROC_EXEC_PROTO(c_lteq);
 PROC_EXEC_PROTO(c_neq);
 
-PROC_EXEC_PROTO(c_now);
-PROC_EXEC_PROTO(c_today);
-PROC_EXEC_PROTO(c_version);
-
 PROC_EXEC_PROTO(c_age);
+PROC_EXEC_PROTO(c_avg);
+
+PROC_EXEC_PROTO(c_beta);
+PROC_EXEC_PROTO(c_bin);
+PROC_EXEC_PROTO(c_binom);
+
 PROC_EXEC_PROTO(c_char);
+PROC_EXEC_PROTO(c_choose);
 PROC_EXEC_PROTO(c_code);
+PROC_EXEC_PROTO(c_col);
 PROC_EXEC_PROTO(c_cols);
+PROC_EXEC_PROTO(c_combin);
+PROC_EXEC_PROTO(c_count);
 PROC_EXEC_PROTO(c_cterm);
+
 PROC_EXEC_PROTO(c_date);
 PROC_EXEC_PROTO(c_datevalue);
 PROC_EXEC_PROTO(c_day);
 PROC_EXEC_PROTO(c_dayname);
 PROC_EXEC_PROTO(c_ddb);
 PROC_EXEC_PROTO(c_deref);
+
 PROC_EXEC_PROTO(c_error);
 PROC_EXEC_PROTO(c_exact);
+
+PROC_EXEC_PROTO(c_fact);
+PROC_EXEC_PROTO(c_find);
 PROC_EXEC_PROTO(c_flip);
 PROC_EXEC_PROTO(c_formula_text);
 PROC_EXEC_PROTO(c_fv);
+
+PROC_EXEC_PROTO(c_gammaln);
+
 PROC_EXEC_PROTO(c_hour);
+
 PROC_EXEC_PROTO(c_if);
 PROC_EXEC_PROTO(c_index);
 PROC_EXEC_PROTO(c_irr);
+
+PROC_EXEC_PROTO(c_join);
+
 PROC_EXEC_PROTO(c_left);
 PROC_EXEC_PROTO(c_length);
 PROC_EXEC_PROTO(c_lower);
+
+PROC_EXEC_PROTO(c_max);
+PROC_EXEC_PROTO(c_min);
 PROC_EXEC_PROTO(c_median);
 PROC_EXEC_PROTO(c_mid);
 PROC_EXEC_PROTO(c_minute);
@@ -741,63 +763,59 @@ PROC_EXEC_PROTO(c_mirr);
 PROC_EXEC_PROTO(c_month);
 PROC_EXEC_PROTO(c_monthdays);
 PROC_EXEC_PROTO(c_monthname);
+
+PROC_EXEC_PROTO(c_now);
 PROC_EXEC_PROTO(c_npv);
+
+PROC_EXEC_PROTO(c_permut);
 PROC_EXEC_PROTO(c_pmt);
 PROC_EXEC_PROTO(c_proper);
 PROC_EXEC_PROTO(c_pv);
+
+PROC_EXEC_PROTO(c_rand);
+PROC_EXEC_PROTO(c_rank);
 PROC_EXEC_PROTO(c_rate);
 PROC_EXEC_PROTO(c_replace);
 PROC_EXEC_PROTO(c_rept);
 PROC_EXEC_PROTO(c_result);
 PROC_EXEC_PROTO(c_reverse);
 PROC_EXEC_PROTO(c_right);
+PROC_EXEC_PROTO(c_round);
+PROC_EXEC_PROTO(c_row);
 PROC_EXEC_PROTO(c_rows);
+
 PROC_EXEC_PROTO(c_second);
-PROC_EXEC_PROTO(c_setname);
+PROC_EXEC_PROTO(c_set_name);
 PROC_EXEC_PROTO(c_setvalue);
 PROC_EXEC_PROTO(c_sln);
 PROC_EXEC_PROTO(c_sort);
 PROC_EXEC_PROTO(c_spearman);
-PROC_EXEC_PROTO(c_syd);
-PROC_EXEC_PROTO(c_term);
-PROC_EXEC_PROTO(c_text);
-PROC_EXEC_PROTO(c_time);
-PROC_EXEC_PROTO(c_timevalue);
-PROC_EXEC_PROTO(c_trim);
-PROC_EXEC_PROTO(c_type);
-PROC_EXEC_PROTO(c_upper);
-PROC_EXEC_PROTO(c_value);
-PROC_EXEC_PROTO(c_weekday);
-PROC_EXEC_PROTO(c_weeknumber);
-PROC_EXEC_PROTO(c_while);
-PROC_EXEC_PROTO(c_year);
-
-PROC_EXEC_PROTO(c_avg);
-PROC_EXEC_PROTO(c_beta);
-PROC_EXEC_PROTO(c_bin);
-PROC_EXEC_PROTO(c_binom);
-PROC_EXEC_PROTO(c_choose);
-PROC_EXEC_PROTO(c_col);
-PROC_EXEC_PROTO(c_combin);
-PROC_EXEC_PROTO(c_count);
-PROC_EXEC_PROTO(c_comb);
-PROC_EXEC_PROTO(c_fact);
-PROC_EXEC_PROTO(c_find);
-PROC_EXEC_PROTO(c_gammaln);
-PROC_EXEC_PROTO(c_join);
-PROC_EXEC_PROTO(c_max);
-PROC_EXEC_PROTO(c_min);
-PROC_EXEC_PROTO(c_permut);
-PROC_EXEC_PROTO(c_rand);
-PROC_EXEC_PROTO(c_rank);
-PROC_EXEC_PROTO(c_round);
-PROC_EXEC_PROTO(c_row);
 PROC_EXEC_PROTO(c_std);
 PROC_EXEC_PROTO(c_stdp);
 PROC_EXEC_PROTO(c_string);
 PROC_EXEC_PROTO(c_sum);
+PROC_EXEC_PROTO(c_syd);
+
+PROC_EXEC_PROTO(c_term);
+PROC_EXEC_PROTO(c_text);
+PROC_EXEC_PROTO(c_time);
+PROC_EXEC_PROTO(c_timevalue);
+PROC_EXEC_PROTO(c_today);
+PROC_EXEC_PROTO(c_trim);
+PROC_EXEC_PROTO(c_type);
+
+PROC_EXEC_PROTO(c_upper);
+
+PROC_EXEC_PROTO(c_value);
 PROC_EXEC_PROTO(c_var);
 PROC_EXEC_PROTO(c_varp);
+PROC_EXEC_PROTO(c_version);
+
+PROC_EXEC_PROTO(c_weekday);
+PROC_EXEC_PROTO(c_weeknumber);
+PROC_EXEC_PROTO(c_while);
+
+PROC_EXEC_PROTO(c_year);
 
 extern void
 dbase_sub_function(
@@ -817,7 +835,7 @@ lookup_array_range_proc(
 extern void
 lookup_block_init(
     look_blockp lkbp,
-    P_EV_DATA targetp,
+    _InRef_opt_ P_EV_DATA p_ev_data_target,
     S32 lookup_id,
     S32 choose_count,
     S32 match);
@@ -969,67 +987,80 @@ PROC_EXEC_PROTO(c_asin);
 PROC_EXEC_PROTO(c_atan_2);
 PROC_EXEC_PROTO(c_atanh);
 PROC_EXEC_PROTO(c_atan);
-PROC_EXEC_PROTO(c_cacos);
-PROC_EXEC_PROTO(c_cacosh);
-PROC_EXEC_PROTO(c_cacosec);
-PROC_EXEC_PROTO(c_cacosech);
-PROC_EXEC_PROTO(c_cacot);
-PROC_EXEC_PROTO(c_cacoth);
-PROC_EXEC_PROTO(c_cadd);
-PROC_EXEC_PROTO(c_casec);
-PROC_EXEC_PROTO(c_casech);
-PROC_EXEC_PROTO(c_casin);
-PROC_EXEC_PROTO(c_casinh);
-PROC_EXEC_PROTO(c_catan);
-PROC_EXEC_PROTO(c_catanh);
-PROC_EXEC_PROTO(c_ccos);
-PROC_EXEC_PROTO(c_ccosh);
-PROC_EXEC_PROTO(c_ccosec);
-PROC_EXEC_PROTO(c_ccosech);
-PROC_EXEC_PROTO(c_ccot);
-PROC_EXEC_PROTO(c_ccoth);
-PROC_EXEC_PROTO(c_cdiv);
-PROC_EXEC_PROTO(c_cexp);
-PROC_EXEC_PROTO(c_cln);
-PROC_EXEC_PROTO(c_cmul);
+
+PROC_EXEC_PROTO(c_c_acos);
+PROC_EXEC_PROTO(c_c_acosh);
+PROC_EXEC_PROTO(c_c_acosec);
+PROC_EXEC_PROTO(c_c_acosech);
+PROC_EXEC_PROTO(c_c_acot);
+PROC_EXEC_PROTO(c_c_acoth);
+PROC_EXEC_PROTO(c_c_add);
+PROC_EXEC_PROTO(c_c_asec);
+PROC_EXEC_PROTO(c_c_asech);
+PROC_EXEC_PROTO(c_c_asin);
+PROC_EXEC_PROTO(c_c_asinh);
+PROC_EXEC_PROTO(c_c_atan);
+PROC_EXEC_PROTO(c_c_atanh);
+PROC_EXEC_PROTO(c_c_cos);
+PROC_EXEC_PROTO(c_c_cosh);
+PROC_EXEC_PROTO(c_c_cosec);
+PROC_EXEC_PROTO(c_c_cosech);
+PROC_EXEC_PROTO(c_c_cot);
+PROC_EXEC_PROTO(c_c_coth);
+PROC_EXEC_PROTO(c_c_div);
+PROC_EXEC_PROTO(c_c_exp);
+PROC_EXEC_PROTO(c_c_ln);
+PROC_EXEC_PROTO(c_c_mul);
+PROC_EXEC_PROTO(c_c_power);
+PROC_EXEC_PROTO(c_c_radius);
+PROC_EXEC_PROTO(c_c_sec);
+PROC_EXEC_PROTO(c_c_sech);
+PROC_EXEC_PROTO(c_c_sin);
+PROC_EXEC_PROTO(c_c_sinh);
+PROC_EXEC_PROTO(c_c_sub);
+PROC_EXEC_PROTO(c_c_tan);
+PROC_EXEC_PROTO(c_c_tanh);
+PROC_EXEC_PROTO(c_c_theta);
+
 PROC_EXEC_PROTO(c_cos);
 PROC_EXEC_PROTO(c_cosh);
 PROC_EXEC_PROTO(c_cosec);
 PROC_EXEC_PROTO(c_cosech);
 PROC_EXEC_PROTO(c_cot);
 PROC_EXEC_PROTO(c_coth);
-PROC_EXEC_PROTO(c_cpower);
-PROC_EXEC_PROTO(c_cradius);
-PROC_EXEC_PROTO(c_csec);
-PROC_EXEC_PROTO(c_csech);
-PROC_EXEC_PROTO(c_csin);
-PROC_EXEC_PROTO(c_csinh);
-PROC_EXEC_PROTO(c_csub);
-PROC_EXEC_PROTO(c_ctan);
-PROC_EXEC_PROTO(c_ctanh);
-PROC_EXEC_PROTO(c_ctheta);
+
 PROC_EXEC_PROTO(c_deg);
+
 PROC_EXEC_PROTO(c_exp);
+
 PROC_EXEC_PROTO(c_grand);
 PROC_EXEC_PROTO(c_growth);
+
 PROC_EXEC_PROTO(c_int);
+
 PROC_EXEC_PROTO(c_linest);
 PROC_EXEC_PROTO(c_listcount);
 PROC_EXEC_PROTO(c_ln);
 PROC_EXEC_PROTO(c_log);
 PROC_EXEC_PROTO(c_logest);
-PROC_EXEC_PROTO(c_mdeterm);
-PROC_EXEC_PROTO(c_minverse);
-PROC_EXEC_PROTO(c_mmult);
+
+PROC_EXEC_PROTO(c_m_determ);
+PROC_EXEC_PROTO(c_m_inverse);
+PROC_EXEC_PROTO(c_m_mult);
+
 PROC_EXEC_PROTO(c_mod);
+
 PROC_EXEC_PROTO(c_pi);
+
 PROC_EXEC_PROTO(c_rad);
+
 PROC_EXEC_PROTO(c_sec);
 PROC_EXEC_PROTO(c_sech);
 PROC_EXEC_PROTO(c_sin);
 PROC_EXEC_PROTO(c_sinh);
 PROC_EXEC_PROTO(c_sgn);
 PROC_EXEC_PROTO(c_sqr);
+
 PROC_EXEC_PROTO(c_tan);
 PROC_EXEC_PROTO(c_tanh);
 PROC_EXEC_PROTO(c_transpose);
@@ -1131,6 +1162,9 @@ read_cur_sym(
     rpnstatep rpnsp,
     P_EV_DATA p_ev_data);
 
+#define read_from_rpn(to, from, size) \
+    memcpy32((to), (from), (size))
+
 extern void
 read_nameid(
     _OutRef_    P_EV_NAMEID nameidp,
@@ -1162,11 +1196,6 @@ extern S32
 write_nameid(
     EV_NAMEID nameid,
     P_U8 op_at);
-
-extern S32
-write_ptr(
-    _InRef_     P_P_ANY ptrp,
-    P_U8 op_pos);
 
 extern S32
 write_rng(

@@ -47,6 +47,17 @@ _al_ptr_alloc(
 #define al_ptr_alloc_elem(__base_type, n_elem, p_status) ( \
     (__base_type *) _al_ptr_alloc((n_elem) * sizeof(__base_type), p_status) )
 
+#if WINDOWS
+
+_Check_return_
+_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+extern P_BYTE
+_dsapplib_ptr_alloc(
+    _InVal_     U32 n_bytes,
+    _OutRef_    P_STATUS p_status);
+
+#endif /* WINDOWS */
+
 /*
 calloc() replacement
 */
@@ -73,7 +84,7 @@ extern void
 al_ptr_free(
     _Pre_maybenull_ _Post_invalid_ P_ANY p_any);
 
-static __forceinline void
+static inline void
 al_ptr_dispose(
     _InoutRef_opt_ P_P_ANY p_p_any)
 {
@@ -88,6 +99,14 @@ al_ptr_dispose(
         }
     }
 }
+
+#if WINDOWS
+
+extern void
+dsapplib_ptr_free(
+    _Pre_maybenull_ _Post_invalid_ P_ANY p_any);
+
+#endif /* WINDOWS */
 
 /*
 realloc() replacement
@@ -106,6 +125,18 @@ _al_ptr_realloc(
 
 #define al_ptr_realloc_elem(__base_type, p_any, n_elem, p_status) ( \
     (__base_type *) _al_ptr_realloc(p_any, (n_elem) * sizeof(__base_type), p_status) )
+
+#if WINDOWS
+
+_Check_return_
+_Ret_writes_bytes_to_maybenull_(n_bytes, 0) /* may be NULL */
+extern P_BYTE
+_dsapplib_ptr_realloc(
+    _Pre_maybenull_ _Post_invalid_ P_ANY p_any,
+    _InVal_     U32 n_bytes,
+    _OutRef_    P_STATUS p_status);
+
+#endif /* WINDOWS */
 
 /*
 definition of al_array_xxx index type
@@ -128,15 +159,14 @@ typedef struct _array_block_parms
     UBF compact_off             : 1;
     UBF entry_free              : 1;
     UBF clear_new_block         : 1;
+#define ALLOC_USE_ALLOC         0 /* use standard allocator */
 #if WINDOWS
-    UBF use_GlobalAlloc         : 1; /* use GlobalAlloc()/GlobalLock()/GlobalFree() for HANDLE based allocation */
-#else
-    UBF _spare                  : 1;
-#endif
-#if WINDOWS
-    UBF _spare_was_packed_element_size     : 14;
-    UBF _spare_was_packed_size_increment   : 13;
+#define ALLOC_USE_GLOBAL_ALLOC  1 /* use GlobalAlloc()/GlobalLock()/GlobalFree() for HANDLE based allocation (e.g. clipboard) */
+#define ALLOC_USE_DS_ALLOC      2 /* use Dial Solutions DSAppLib allocator for Draw files */
+    UBF use_alloc               : 2;
+    UBF _spare                  : (1+14+13)-2;
 #elif RISCOS
+    UBF _spare                  : 1;
     UBF packed_element_size     : 14; /* needed visible for array_element_size32() */
     UBF packed_size_increment   : 13;
 #endif
@@ -358,11 +388,7 @@ typedef struct _array_init_block
     ARRAY_INDEX size_increment;     /* number of array elements to allocate at a time */
     U32         element_size;       /* sizeof32() the type stored */
     U8          clear_new_block;    /* boolean; zeroes allocated chunks */
-#if WINDOWS
-    U8          use_GlobalAlloc;    /* boolean; see ARRAY_BLOCK_PARMS */
-#else
-    U8          not_GlobalAlloc;
-#endif
+    U8          use_alloc;          /* see ARRAY_BLOCK_PARMS */
     U8          _spare[2];
 }
 ARRAY_INIT_BLOCK; typedef const ARRAY_INIT_BLOCK * PC_ARRAY_INIT_BLOCK;
@@ -374,18 +400,11 @@ ARRAY_INIT_BLOCK; typedef const ARRAY_INIT_BLOCK * PC_ARRAY_INIT_BLOCK;
 #define aib_init(size_increment, element_size, clear_new_block) \
     { (size_increment), (element_size), (clear_new_block), 0, { 0, 0 } }
 
-#if WINDOWS
 #define array_init_block_setup(block, a, b, c) ( \
     (block)->size_increment   = (a), \
     (block)->element_size     = (b), \
     (block)->clear_new_block  = (c), \
-    (block)->use_GlobalAlloc  = 0    )
-#else
-#define array_init_block_setup(block, a, b, c) ( \
-    (block)->size_increment  = (a), \
-    (block)->element_size    = (b), \
-    (block)->clear_new_block = (c)  )
-#endif
+    (block)->use_alloc        = ALLOC_USE_ALLOC )
 
 /*
 remove deleted info
@@ -524,7 +543,7 @@ extern void
 __al_array_free(
     _InVal_     ARRAY_HANDLE array_handle);
 
-static __forceinline void
+static inline void
 al_array_dispose(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle)
 {
@@ -613,9 +632,15 @@ al_array_shrink_by(
 #if WINDOWS
 
 extern void
-al_array_resized(
+al_array_resized_hglobal(
     _InRef_     P_ARRAY_HANDLE p_array_handle,
     _In_        HGLOBAL hglobal,
+    _InVal_     U32 size);
+
+extern void
+al_array_resized_ptr(
+    _InRef_     P_ARRAY_HANDLE p_array_handle,
+    _In_        P_ANY p_any,
     _InVal_     U32 size);
 
 _Check_return_
@@ -670,62 +695,6 @@ simply-typed variants of ARRAY_HANDLE
 
 #define array_tstr(pc_array_handle_tstr) \
     array_basec(pc_array_handle_tstr, TCHARZ)
-
-/*
----------------------------------------------------------------------------------------------------------------------------
-AllocBlock stuff now part of aligator too
----------------------------------------------------------------------------------------------------------------------------
-*/
-
-typedef struct _ALLOCBLOCK /* really private to implementation, but stop old ARM compiler barfing over debug info */
-{
-    struct _ALLOCBLOCK * next;
-    U32 hwm;
-    U32 size;
-#if !defined(_WIN64)
-    U32 _padding;
-#endif
-}
-ALLOCBLOCK, * P_ALLOCBLOCK, ** P_P_ALLOCBLOCK;
-
-#define ALLOCBLOCK_OVH 16 /* sizeof32(ALLOCBLOCK) */
-
-/* each DOCU has a general_string_alloc_block but there are a few *limited* occasions where this is useful, eg. fontmap, fileutil */
-extern P_ALLOCBLOCK global_string_alloc_block;
-
-_Check_return_
-extern STATUS
-alloc_block_create(
-    _OutRef_    P_P_ALLOCBLOCK lplpAllocBlock,
-    _InVal_     U32 n_bytes);
-
-extern void
-alloc_block_dispose(
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock);
-
-_Check_return_
-_Ret_writes_bytes_to_maybenull_(n_bytes_requested, 0) /* may be NULL */
-extern P_BYTE
-alloc_block_malloc(
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock,
-    _InVal_     U32 n_bytes_requested,
-    _OutRef_    P_STATUS p_status);
-
-_Check_return_
-extern STATUS
-alloc_block_ustr_set(
-    _OutRef_    P_P_USTR aa,
-    _In_z_      PC_USTR b,
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock);
-
-_Check_return_
-extern STATUS
-alloc_block_tstr_set(
-    _OutRef_    P_PTSTR aa,
-    _In_z_      PCTSTR b,
-    _InoutRef_  P_P_ALLOCBLOCK lplpAllocBlock);
-
-#include "cmodules/quickblk.h"
 
 #endif /* __aligator_h */
 

@@ -16,18 +16,18 @@ event__default_process(wimp_eventstr * e)
     {
     case wimp_ENULL:
         /* machine idle: say so */
-        tracef0("unclaimed idle event\n");
+        tracef0("unclaimed idle event");
         return(TRUE);
 
 
     case wimp_EOPEN:
-        trace_0(TRACE_RISCOS_HOST, "unclaimed open request - doing open\n");
+        trace_0(TRACE_RISCOS_HOST, "unclaimed open request - doing open");
         wimpt_complain(wimp_open_wind(&e->data.o));
         break;
 
 
     case wimp_ECLOSE:
-        trace_0(TRACE_RISCOS_HOST, "unclaimed close request - doing close\n");
+        trace_0(TRACE_RISCOS_HOST, "unclaimed close request - doing close");
         wimpt_complain(wimp_close_wind(e->data.close.w));
         break;
 
@@ -36,7 +36,7 @@ event__default_process(wimp_eventstr * e)
         {
         wimp_redrawstr r;
         BOOL more;
-        trace_0(TRACE_RISCOS_HOST, "unclaimed redraw request - doing redraw\n");
+        trace_0(TRACE_RISCOS_HOST, "unclaimed redraw request - doing redraw");
         r.w = e->data.redraw.w;
         if(!wimpt_complain(wimp_redraw_wind(&r, &more)))
             while(more)
@@ -53,7 +53,7 @@ event__default_process(wimp_eventstr * e)
 
     case wimp_ESEND:
     case wimp_ESENDWANTACK:
-        trace_1(TRACE_RISCOS_HOST, "unclaimed message %s\n", report_wimp_event(e->e, &e->data));
+        trace_1(TRACE_RISCOS_HOST, "unclaimed message %s", report_wimp_event(e->e, &e->data));
         switch(e->data.msg.hdr.action)
         {
         case wimp_MCLOSEDOWN:
@@ -65,7 +65,7 @@ event__default_process(wimp_eventstr * e)
         break;
 
     default:
-        trace_1(TRACE_RISCOS_HOST, "unclaimed event %s\n", report_wimp_event(e->e, &e->data));
+        trace_1(TRACE_RISCOS_HOST, "unclaimed event %s", report_wimp_event(e->e, &e->data));
         break;
     }
 

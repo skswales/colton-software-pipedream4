@@ -753,11 +753,12 @@ gr_scatterchart_addin(
                 serp->cache.best_fit_c = 0.0;
                 serp->cache.best_fit_m = 1.0;
 
-                linest(gr_barlinescatch_linest_getproc,
-                       gr_barlinescatch_linest_putproc,
-                       &state,
-                       1, /* independent x variables */
-                       (U32) total_n_points);
+                status_consume(
+                    linest(gr_barlinescatch_linest_getproc,
+                        gr_barlinescatch_linest_putproc,
+                        (CLIENT_HANDLE) &state,
+                        1, /* independent x variables */
+                        (U32) total_n_points));
 
                 /* store m and c away for fuschia reference */
                 serp->cache.best_fit_c = state.a[0];
@@ -991,13 +992,9 @@ gr_barlinescatch_best_fit_addin(
     return(gr_diag_line_new(cp->core.p_gr_diag, NULL, id, &line_box, &linestyle));
 }
 
-extern F64
-gr_barlinescatch_linest_getproc(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row)
+PROC_LINEST_DATA_GET_PROTO(extern, gr_barlinescatch_linest_getproc, client_handle, colID, row)
 {
-    P_GR_BARLINESCATCH_LINEST_STATE state = handle;
+    P_GR_BARLINESCATCH_LINEST_STATE state = (P_GR_BARLINESCATCH_LINEST_STATE) client_handle;
     F64 value;
     GR_DATASOURCE_HANDLE dsh;
 
@@ -1042,13 +1039,9 @@ gr_barlinescatch_linest_getproc(
 (Robin) Reliant on linest() requesting y data from row = 0 upwards
 */
 
-extern F64
-gr_barlinescatch_linest_getproc_cumulative(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row)
+PROC_LINEST_DATA_GET_PROTO(extern, gr_barlinescatch_linest_getproc_cumulative, client_handle, colID, row)
 {
-    P_GR_BARLINESCATCH_LINEST_STATE state = handle;
+    P_GR_BARLINESCATCH_LINEST_STATE state = (P_GR_BARLINESCATCH_LINEST_STATE) client_handle;
     F64 value;
     GR_DATASOURCE_HANDLE dsh;
 
@@ -1094,14 +1087,9 @@ gr_barlinescatch_linest_getproc_cumulative(
     return(value);
 }
 
-extern S32
-gr_barlinescatch_linest_putproc(
-    P_ANY handle,
-    _InVal_     LINEST_COLOFF colID,
-    _InVal_     LINEST_ROWOFF row,
-    _InRef_     PC_F64 value)
+PROC_LINEST_DATA_PUT_PROTO(extern, gr_barlinescatch_linest_putproc, client_handle, colID, row, value)
 {
-    P_GR_BARLINESCATCH_LINEST_STATE state = handle;
+    P_GR_BARLINESCATCH_LINEST_STATE state = (P_GR_BARLINESCATCH_LINEST_STATE) client_handle;
 
     switch(colID)
         {
@@ -1109,8 +1097,7 @@ gr_barlinescatch_linest_putproc(
             state->a[row] = *value;
             break;
 
-        default:
-            assert(0);
+        default: default_unhandled();
             break;
         }
 

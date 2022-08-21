@@ -152,7 +152,6 @@ error definition
     errorstring(SPELL_ERR_FILE,          "Spell: Filing system error") \
     errorstring(SPELL_ERR_CANTOPEN,      "Spell: Can't open dictionary") \
     errorstring(SPELL_ERR_BADDICT,       "Spell: Bad dictionary") \
-    errorstring(SPELL_ERR_NOMEM,         "Spell: Out of memory") \
     errorstring(SPELL_ERR_BADWORD,       "Spell: Bad word") \
     errorstring(SPELL_ERR_READONLY,      "Spell: Dictionary read only") \
     errorstring(SPELL_ERR_CANTCLOSE,     "Spell: Can't close dictionary") \
@@ -182,7 +181,7 @@ error definition
 #define SPELL_ERR_FILE          SPELL_ERR(2)
 #define SPELL_ERR_CANTOPEN      SPELL_ERR(3)
 #define SPELL_ERR_BADDICT       SPELL_ERR(4)
-#define SPELL_ERR_NOMEM         SPELL_ERR(5)
+#define SPELL_ERR_spare_1005    SPELL_ERR(5)
 #define SPELL_ERR_BADWORD       SPELL_ERR(6)
 #define SPELL_ERR_READONLY      SPELL_ERR(7)
 #define SPELL_ERR_CANTCLOSE     SPELL_ERR(8)

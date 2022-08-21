@@ -43,9 +43,9 @@ typedef struct decompiler_context
 {
     EV_DOCNO        docno;          /* document number of decompile data */
 
-    P_U8           *arg_stk;        /* pointer to argument stack */
-    S32             arg_sp;         /* argument stack pointer */
+    P_P_U8          arg_stk;        /* pointer to argument stack */
     S32             arg_stk_siz;    /* current size of argument stack */
+    S32             arg_sp;         /* argument stack pointer */
 
     EV_DATA         cur_sym;        /* current symbol */
     SYM_INF         cur;            /* information about current rpn item */
@@ -86,7 +86,7 @@ date_time_val_to_str(
             temp.date = -temp.date;
             }
 
-        ss_dateval_to_ymd(&temp, &year, &month, &day);
+        ss_dateval_to_ymd(&temp.date, &year, &month, &day);
 
         if(american)
             len += sprintf(op_buf + len, "%d.%d.%d", month + 1, day + 1, year + 1);
@@ -108,7 +108,7 @@ date_time_val_to_str(
             temp.time = -temp.time;
             }
 
-        ss_timeval_to_hms(&temp, &hour, &minute, &second);
+        ss_timeval_to_hms(&temp.time, &hour, &minute, &second);
 
         len += sprintf(op_buf + len, "%.2d:%.2d", hour, minute);
 
@@ -144,15 +144,15 @@ dec_const(
         case RPN_DAT_WORD8:
         case RPN_DAT_WORD16:
         case RPN_DAT_WORD32:
-            len  = sprintf(op_buf, "%d", p_ev_data->arg.integer);
+            len = sprintf(op_buf, "%d", p_ev_data->arg.integer);
             break;
 
         case RPN_DAT_SLR:
-            len = dec_slr(op_buf, dc->docno, &p_ev_data->arg.slr, dc->p_optblock->upper_case_slr);
+            len = ev_dec_slr(op_buf, dc->docno, &p_ev_data->arg.slr, dc->p_optblock->upper_case_slr);
             break;
 
         case RPN_DAT_RANGE:
-            len = dec_rng(op_buf, dc->docno, &p_ev_data->arg.range, dc->p_optblock->upper_case_slr);
+            len = ev_dec_range(op_buf, dc->docno, &p_ev_data->arg.range, dc->p_optblock->upper_case_slr);
             break;
 
         case RPN_RES_STRING:
@@ -187,17 +187,17 @@ dec_const(
             *op_buf = '{';
             len = 1;
 
-            for(iy = 0; iy < p_ev_data->arg.arrayp->y_size; ++iy)
+            for(iy = 0; iy < p_ev_data->arg.array.y_size; ++iy)
                 {
-                for(ix = 0; ix < p_ev_data->arg.arrayp->x_size; ++ix)
+                for(ix = 0; ix < p_ev_data->arg.array.x_size; ++ix)
                     {
                     len += dec_const(op_buf + len, ss_array_element_index_borrow(p_ev_data, ix, iy));
 
-                    if(ix + 1 < p_ev_data->arg.arrayp->x_size)
+                    if(ix + 1 < p_ev_data->arg.array.x_size)
                         op_buf[len++] = ',';
                     }
 
-                if(iy + 1 < p_ev_data->arg.arrayp->y_size)
+                if(iy + 1 < p_ev_data->arg.array.y_size)
                     op_buf[len++] = ';';
                 }
 
@@ -282,12 +282,12 @@ dec_freestk(void)
 
     /* free any items on the stack */
     while(dec_popptr(&ptr) >= 0)
-        list_disposeptr(P_P_ANY_PEDANTIC(&ptr));
+        al_ptr_dispose(P_P_ANY_PEDANTIC(&ptr));
 
     /* free the stack itself */
     if(dc->arg_stk)
         {
-        list_disposeptr((P_P_ANY) /*_PEDANTIC*/ (&dc->arg_stk));
+        al_ptr_dispose((P_P_ANY) /*_PEDANTIC*/ (&dc->arg_stk));
         dc->arg_stk_siz = 0;
         dc->arg_sp      = 0;
         }
@@ -330,7 +330,7 @@ dec_popstr(
         return(-1);
 
     strcpy(op_buf, stringp);
-    list_disposeptr(P_P_ANY_PEDANTIC(&stringp));
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&stringp));
     return(strlen(op_buf));
 }
 
@@ -345,29 +345,28 @@ dec_pushstr(
     P_U8 arg,
     S32 len)
 {
+    STATUS status;
     P_U8 newp;
 
     /* make stack big enough */
     if(dc->arg_sp == dc->arg_stk_siz)
         {
-        P_ANY newsp;
+        P_P_U8 newsp;
 
-        if((newsp = list_reallocptr(dc->arg_stk, (dc->arg_stk_siz + (S32) 50) * sizeof(P_U8))) == NULL)
-            return(status_nomem());
-        else
-            {
-            dc->arg_stk      = newsp;
-            dc->arg_stk_siz += 50;
-            }
+        if(NULL == (newsp = al_ptr_realloc_elem(P_U8, dc->arg_stk, dc->arg_stk_siz + 50, &status)))
+            return(status);
+
+        dc->arg_stk      = newsp;
+        dc->arg_stk_siz += 50;
         }
 
     /* allocate space for argument */
-    if((newp = list_allocptr_p1(len)) == NULL)
-        return(status_nomem());
+    if(NULL == (newp = al_ptr_alloc_bytes(U8, len + 1/*NULLCH*/, &status)))
+        return(status);
 
     /* copy argument into block */
-    strncpy(newp, arg, len);
-    newp[len] = '\0';
+    memcpy32(newp, arg, len);
+    newp[len] = NULLCH;
 
     dc->arg_stk[dc->arg_sp++] = newp;
 
@@ -386,7 +385,7 @@ dec_pushstr(
 /* SKS derived 02feb92 from dec_const for export */
 
 extern S32
-dec_rng(
+ev_dec_range(
     P_U8 op_buf,
     _InVal_     EV_DOCNO this_docno,
     _InRef_     PC_EV_RANGE p_ev_range,
@@ -395,14 +394,14 @@ dec_rng(
     EV_SLR slr;
     S32    len;
 
-    len = dec_slr(op_buf, this_docno, &p_ev_range->s, upper_case);
+    len = ev_dec_slr(op_buf, this_docno, &p_ev_range->s, upper_case);
 
     slr = p_ev_range->e;
     slr.docno = 0;
     slr.col -= 1;
     slr.row -= 1;
 
-    len += dec_slr(op_buf + len, this_docno, &slr, upper_case);
+    len += ev_dec_slr(op_buf + len, this_docno, &slr, upper_case);
 
     return(len);
 }
@@ -558,7 +557,7 @@ dec_rpn_token(
 
                 len2 = strlen(str2);
                 strcpy(op_buf + len, str2);
-                list_disposeptr(P_P_ANY_PEDANTIC(&str2));
+                al_ptr_dispose(P_P_ANY_PEDANTIC(&str2));
                 len += len2;
                 }
 
@@ -643,13 +642,13 @@ dec_rpn_token(
                     arg_len = strlen(stringp);
                     sep_len = arg_len + (first ? 0 : 1);
 
-                    void_memmove32(op_buf + fun_len + sep_len,
-                                   op_buf + fun_len,
-                                   len - fun_len);
+                    memmove32(op_buf + fun_len + sep_len,
+                              op_buf + fun_len,
+                              len - fun_len);
 
-                    void_memmove32(op_buf + fun_len, stringp, arg_len);
+                    memmove32(op_buf + fun_len, stringp, arg_len);
 
-                    list_disposeptr(P_P_ANY_PEDANTIC(&stringp));
+                    al_ptr_dispose(P_P_ANY_PEDANTIC(&stringp));
                     len += sep_len;
                     if(!first)
                         op_buf[fun_len + arg_len] = ',';
@@ -680,7 +679,7 @@ dec_rpn_token(
                     {
                     strcpy(op_buf + len, dc->arg_stk[sp]);
                     len += strlen(dc->arg_stk[sp]);
-                    list_disposeptr(P_P_ANY_PEDANTIC(&dc->arg_stk[sp]));
+                    al_ptr_dispose(P_P_ANY_PEDANTIC(&dc->arg_stk[sp]));
                     op_buf[len++] = ',';
                     ++sp;
                     }
@@ -715,7 +714,7 @@ dec_rpn_token(
 ******************************************************************************/
 
 extern S32
-dec_slr(
+ev_dec_slr(
     P_U8 op_buf,
     _InVal_     EV_DOCNO this_docno,
     _InRef_     PC_EV_SLR slrp,
@@ -734,7 +733,7 @@ dec_slr(
     if(slrp->flags & SLR_ABS_COL)
         *op_pos++ = '$';
 
-    op_pos += xtos_buf(op_pos, BUF_EV_INTNAMLEN, slrp->col, upper_case);
+    op_pos += xtos_ubuf(op_pos, BUF_EV_INTNAMLEN, slrp->col, upper_case);
 
     if(slrp->flags & SLR_ABS_ROW)
         *op_pos++ = '$';

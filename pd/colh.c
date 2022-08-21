@@ -222,7 +222,7 @@ set_icon_colours(
     if((info.flags & colmask) != colbits)
         wimp_set_icon_state(window, icon, (wimp_iconflags) colbits, (wimp_iconflags) colmask);
     else
-        trace_0(TRACE_APP_PD4, "colours not changed\n");
+        trace_0(TRACE_APP_PD4, "colours not changed");
 }
 
 static void
@@ -240,7 +240,7 @@ set_icon_flags(
         wimp_set_icon_state(window, icon, (wimp_iconflags) value, (wimp_iconflags) mask);
 #if FALSE
     else
-        trace_0(TRACE_APP_PD4, "icon flags not changed\n");
+        trace_0(TRACE_APP_PD4, "icon flags not changed");
 #endif
 }
 
@@ -421,7 +421,7 @@ colh_draw_column_headings(void)
     if(!borbit)
         return;
 
-    trace_0(TRACE_APP_PD4, "\n*** colh_draw_column_headings()\n");
+    trace_0(TRACE_APP_PD4, "\n*** colh_draw_column_headings()");
 
     wimp_get_icon_info(colh_window, (wimp_i)COLH_COLUMN_HEADINGS, &icon);
 
@@ -435,7 +435,7 @@ colh_forced_draw_column_headings(
 {
     IGNOREPARM(r);
 
-    trace_0(TRACE_APP_PD4, "colh_forced_draw_column_headings()\n");
+    trace_0(TRACE_APP_PD4, "colh_forced_draw_column_headings()");
 
     colh_really_draw_column_headings();
 }
@@ -443,7 +443,7 @@ colh_forced_draw_column_headings(
 static void
 colh_maybe_draw_column_headings(void)
 {
-    trace_0(TRACE_APP_PD4, "colh_maybe_draw_column_headings()\n");
+    trace_0(TRACE_APP_PD4, "colh_maybe_draw_column_headings()");
 
     if(!borbit)
         return;
@@ -455,7 +455,7 @@ colh_maybe_draw_column_headings(void)
 static void
 colh_really_draw_column_headings(void)
 {
-    SCRCOL *cptr;
+    P_SCRCOL cptr;
     S32 coff;
     COL colno;
     S32 cwid;
@@ -466,7 +466,7 @@ colh_really_draw_column_headings(void)
     int fgcol, bgcol;
     S32 wind_width;
 
-    trace_0(TRACE_APP_PD4, "colh_really_draw_column_headings()\n");
+    trace_0(TRACE_APP_PD4, "colh_really_draw_column_headings()");
 
     wimp_get_wind_state(colh_window, &wind);
 
@@ -557,7 +557,7 @@ colh_really_draw_column_headings(void)
                 : (wimp_IFORECOL * logcol(BORDERFOREC)) ));  /*FORE*/
 
 #ifndef POUNDS_BLEEDING_RJM
-        void_strkpy(number.data.sprite_name, elemof32(number.data.sprite_name), "pd4downarro");
+        safe_strkpy(number.data.sprite_name, elemof32(number.data.sprite_name), "pd4downarro");
 #else
         number.data.text[0] = 138;      /* a down arrow */
         number.data.text[1] = 0;
@@ -719,7 +719,7 @@ colh_redraw_request(
     wimp_redrawstr redraw;
     S32 redrawindex;
 
-    trace_0(TRACE_APP_PD4, "colh_redraw_request()\n");
+    trace_0(TRACE_APP_PD4, "colh_redraw_request()");
 
     redraw.w = e->data.o.w;     /* should be colh_window */
 
@@ -728,7 +728,7 @@ colh_redraw_request(
 
 #if TRACE_ALLOWED
     if(!redrawindex)
-        trace_0(TRACE_APP_PD4, "no rectangles to redraw\n");
+        trace_0(TRACE_APP_PD4, "no rectangles to redraw");
 #endif
 
     while(!bum  &&  redrawindex)
@@ -852,7 +852,7 @@ colh_event_handler(
             break;
 
         case wimp_ELOSECARET:
-            trace_6(TRACE_APP_PD4, "colh_event_handler - LoseCaret: old window %d icon %d x %d y %d height %8.8X index %d\n",
+            trace_6(TRACE_APP_PD4, "colh_event_handler - LoseCaret: old window %d icon %d x %d y %d height %8.8X index %d",
                     e->data.c.w, e->data.c.i,
                     e->data.c.x, e->data.c.y,
                     e->data.c.height, e->data.c.index);
@@ -863,7 +863,7 @@ colh_event_handler(
                (e->data.c.index >= 0)
               )
                 {
-                trace_0(TRACE_APP_PD4, "colh_event_handler - stashing caret position\n");
+                trace_0(TRACE_APP_PD4, "colh_event_handler - stashing caret position");
 
                 /* Someone is stealing the caret from the contents/formula-line, stash position away so it can be restored    */
                 /* when pipedream reclaims the caret. Also means we can paste formula etc into formula line at correct place. */
@@ -878,7 +878,7 @@ colh_event_handler(
             break;
 
         default:
-            trace_1(TRACE_APP_PD4, "unprocessed wimp event to colh_window: %s\n",
+            trace_1(TRACE_APP_PD4, "unprocessed wimp event to colh_window: %s",
                     report_wimp_event(e->e, &e->data));
             processed = FALSE;
             break;
@@ -927,7 +927,7 @@ application_button_click_in_colh(
     BOOL selectclicked;
 
     trace_4(TRACE_APP_PD4,
-            "application_button_click_in_colh: (%d, %d) bstate %X, icon %d\n",
+            "application_button_click_in_colh: (%d, %d) bstate %X, icon %d",
             pointer->x, pointer->y, buttonstate, (int)icon);
 
     /* ensure we can find slot for positioning, overlap tests etc. must allow spellcheck as we may move */
@@ -996,7 +996,7 @@ application_singleclick_in_colh(
     S32  funcnum = 0;
     S32  highlight_number = -1;
 
-    trace_0(TRACE_APP_PD4, "application_singleclick_in_colh\n");
+    trace_0(TRACE_APP_PD4, "application_singleclick_in_colh");
 
     switch((int)icon)
         {
@@ -1155,12 +1155,12 @@ application_singleclick_in_colh(
 
             if(selectclicked && !blkindoc)
                 {
-                trace_0(TRACE_APP_PD4, "click on slot coordinates - mark entire sheet\n");
+                trace_0(TRACE_APP_PD4, "click on slot coordinates - mark entire sheet");
                 funcnum = N_MarkSheet;
                 }
             else
                 {
-                trace_0(TRACE_APP_PD4, "click on slot coordinates - clear markers\n");
+                trace_0(TRACE_APP_PD4, "click on slot coordinates - clear markers");
                 funcnum = N_ClearMarkedBlock;
                 }
             break;
@@ -1192,13 +1192,13 @@ application_singleclick_in_colh(
                          */
                         if(blkindoc)
                             {
-                            trace_0(TRACE_APP_PD4, "alter number of marked columns\n");
+                            trace_0(TRACE_APP_PD4, "alter number of marked columns");
                             make_single_mark_into_block();
                             alter_marked_block(tcol, ACTIVE_ROW);
                             }
                         else
                             {
-                            trace_0(TRACE_APP_PD4, "mark all rows from caret to given column\n");
+                            trace_0(TRACE_APP_PD4, "mark all rows from caret to given column");
 #if 1 /* SKS */
                             set_marked_block(curcol, numrow-1, tcol, 0, TRUE);
 #else
@@ -1208,7 +1208,7 @@ application_singleclick_in_colh(
                         }
                     else
                         {
-                        trace_0(TRACE_APP_PD4, "not extending\n");
+                        trace_0(TRACE_APP_PD4, "not extending");
 
                         if(tcol != curcol)
                             {
@@ -1269,7 +1269,7 @@ application_doubleclick_in_colh(
 {
     BOOL extend = !selectclicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
 
-    trace_0(TRACE_APP_PD4, "application_doubleclick_in_colh\n");
+    trace_0(TRACE_APP_PD4, "application_doubleclick_in_colh");
 
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)  /* everything suppressed whilst editing */
         return;
@@ -1295,7 +1295,7 @@ application_doubleclick_in_colh(
                     {
                     P_S32 widp, wwidp;
 
-                    trace_0(TRACE_APP_PD4, "On the right margin arrow - linking margin to column width\n");
+                    trace_0(TRACE_APP_PD4, "On the right margin arrow - linking margin to column width");
 
                     readpcolvars(tcol, &widp, &wwidp);
                     *wwidp = 0;
@@ -1318,7 +1318,7 @@ application_doubleclick_in_colh(
                     }
 
                 case OVER_COLUMN_CENTRE:
-                    trace_0(TRACE_APP_PD4, "in column headings - mark column\n");
+                    trace_0(TRACE_APP_PD4, "in column headings - mark column");
 #if 1 /* SKS */
                     set_marked_block(tcol, numrow-1, tcol, 0, TRUE);
 #else
@@ -1327,7 +1327,7 @@ application_doubleclick_in_colh(
                     break;
 
                 default:
-                    trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored\n");
+                    trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
                     break;
 
                 } /* switch(subposition) */
@@ -1348,7 +1348,7 @@ application_startdrag_in_colh(
     BOOL blkindoc = (blkstart.col != NO_COL) && (docno == blk_docno);
     BOOL extend   = !selectclicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
 
-    trace_0(TRACE_APP_PD4, "application_startdrag_in_colh\n");
+    trace_0(TRACE_APP_PD4, "application_startdrag_in_colh");
 
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)  /* everything suppressed whilst editing */
         return;
@@ -1369,13 +1369,13 @@ application_startdrag_in_colh(
             switch(subposition)
                 {
                 case OVER_COLUMN_MARGIN_ADJUSTOR:
-                    trace_0(TRACE_APP_PD4, "Dragging the right margin\n");
+                    trace_0(TRACE_APP_PD4, "Dragging the right margin");
                     prepare_for_drag_column_wrapwidth(tx, tcol, extend);        /* extend means align margins of columns to */
                     start_drag(DRAG_COLUMN_WRAPWIDTH);                          /* our right as well                        */
                     break;
 
                 case OVER_COLUMN_WIDTH_ADJUSTOR:
-                    trace_1(TRACE_APP_PD4, "Dragging width of column %d\n", tcol);
+                    trace_1(TRACE_APP_PD4, "Dragging width of column %d", tcol);
 #if FALSE
                     slot_in_buffer = FALSE;     /* dragging tends to change curcol; mergebuf has been done by caller */
 #endif
@@ -1389,12 +1389,12 @@ application_startdrag_in_colh(
                     /* mark all rows over given columns */
                     if(blkindoc && extend)
                         {
-                        trace_0(TRACE_APP_PD4, "in column headings - continuing all rows mark\n");
+                        trace_0(TRACE_APP_PD4, "in column headings - continuing all rows mark");
                         make_single_mark_into_block();
                         }
                     else
                         {
-                        trace_0(TRACE_APP_PD4, "in column headings - starting all rows mark\n");
+                        trace_0(TRACE_APP_PD4, "in column headings - starting all rows mark");
 #if 1 /* SKS */
                         prepare_for_drag_mark(tx, ty, tcol, numrow-1, tcol, 0);
 #else
@@ -1406,7 +1406,7 @@ application_startdrag_in_colh(
                     break;
 
                 default:
-                    trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored\n");
+                    trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
                     break;
 
                 } /* switch(subposition) */
@@ -1486,7 +1486,7 @@ colh_HELPREQUEST(
     prefix_len = 0;
     #else
     /* default message */
-    void_strkpy(abuffer, elemof32(abuffer), help_main_window);
+    safe_strkpy(abuffer, elemof32(abuffer), help_main_window);
     prefix_len = strlen(abuffer);
     #endif
 
@@ -1728,11 +1728,11 @@ colh_HELPREQUEST(
             }
 
     if(msg)
-        void_strkpy(buffer, elemof32(abuffer) - prefix_len, msg);
+        safe_strkpy(buffer, elemof32(abuffer) - prefix_len, msg);
 
     #if FALSE
     if(append_drag_msg)
-        void_strkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
+        safe_strkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);
     #endif
 
     riscos_sendhelpreply(m, (strlen32p1(abuffer) < 240) ? abuffer : alt_msg);
@@ -1750,7 +1750,7 @@ colh_message(
             break;
 
         case wimp_MHELPREQUEST:
-            trace_0(TRACE_APP_PD4, "Help request on colh_window\n");
+            trace_0(TRACE_APP_PD4, "Help request on colh_window");
             colh_HELPREQUEST(m);
             break;
         }
@@ -1794,7 +1794,7 @@ colh_where_in_column_headings(
 #endif
       )
         {
-        trace_0(TRACE_APP_PD4, "Over right margin marker\n");
+        trace_0(TRACE_APP_PD4, "Over right margin marker");
 
         shape     = POINTER_DRAGMARGIN;
 
@@ -1834,7 +1834,7 @@ colh_where_in_column_headings(
 
             if((tcol > 0) && (prev_coff != coff))
                 {
-                trace_2(TRACE_APP_PD4, "At left of column %d, ready to drag width of column %d\n", tcol, tcol-1);
+                trace_2(TRACE_APP_PD4, "At left of column %d, ready to drag width of column %d", tcol, tcol-1);
 
                 drag_type = OVER_COLUMN_WIDTH_ADJUSTOR;
                 drag_tx   = tx;
@@ -1848,7 +1848,7 @@ colh_where_in_column_headings(
 
                 if(coff != calcoff(next_tx))
                     {
-                    trace_2(TRACE_APP_PD4, "At right of column %d, ready to drag width of column %d\n", tcol, tcol);
+                    trace_2(TRACE_APP_PD4, "At right of column %d, ready to drag width of column %d", tcol, tcol);
 
                     shape     = POINTER_DRAGCOLUMN;
 
@@ -1894,10 +1894,10 @@ colh_where_in_column_headings(
                     drag_tcol = prev_tcol;
                     }
 
-                trace_1(TRACE_APP_PD4, "off right of column headings, ready to drag width of column %d\n", drag_tcol);
+                trace_1(TRACE_APP_PD4, "off right of column headings, ready to drag width of column %d", drag_tcol);
                 }
             else
-                trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored\n");
+                trace_0(TRACE_APP_PD4, "off left/right of column headings - ignored");
             }
         }
 
@@ -1921,10 +1921,10 @@ colh_pointershape_drag_notification(
     drag_in_column_header = start;
 
     if(start)
-        trace_0(TRACE_APP_PD4, "colh_pointershape_drag_notification - STARTING\n");
+        trace_0(TRACE_APP_PD4, "colh_pointershape_drag_notification - STARTING");
     else
         {
-        trace_0(TRACE_APP_PD4, "colh_pointershape_drag_notification - ENDING\n");
+        trace_0(TRACE_APP_PD4, "colh_pointershape_drag_notification - ENDING");
 
         colh_pointershape_endtracking();
         }
@@ -1935,7 +1935,7 @@ colh_pointershape_starttracking(void)
 {
     track_docno = current_docno();
 
-    trace_1(TRACE_APP_PD4, "colh_pointershape_starttracking(): track_docno=%u\n", track_docno);
+    trace_1(TRACE_APP_PD4, "colh_pointershape_starttracking(): track_docno=%u", track_docno);
 
     status_assert(Null_EventHandler(colh_pointershape_null_handler, &track_docno, TRUE, 0));
 }
@@ -1951,7 +1951,7 @@ colh_pointershape_starttracking(void)
 static void
 colh_pointershape_endtracking(void)
 {
-    trace_1(TRACE_APP_PD4, "colh_pointershape_endtracking(): track_docno=%u\n", track_docno);
+    trace_1(TRACE_APP_PD4, "colh_pointershape_endtracking(): track_docno=%u", track_docno);
 
     status_assert(Null_EventHandler(colh_pointershape_null_handler, &track_docno, FALSE, 0));
 
@@ -1968,12 +1968,12 @@ null_event_proto(static, colh_pointershape_null_handler)
 {
     P_DOCNO dochanp = (P_DOCNO) p_null_event_block->client_handle;
 
-    trace_1(TRACE_APP_PD4, "colh_pointershape_null_handler, rc=%d\n", p_null_event_block->rc);
+    trace_1(TRACE_APP_PD4, "colh_pointershape_null_handler, rc=%d", p_null_event_block->rc);
 
     switch(p_null_event_block->rc)
         {
         case NULL_QUERY:
-            trace_0(TRACE_APP_PD4, "colh call to ask if we want nulls\n");
+            trace_0(TRACE_APP_PD4, "colh call to ask if we want nulls");
             return(dragtype == NO_DRAG_ACTIVE
                    ? NULL_EVENTS_REQUIRED
                    : NULL_EVENTS_OFF
@@ -1983,7 +1983,7 @@ null_event_proto(static, colh_pointershape_null_handler)
             {
             wimp_mousestr pointer;
 
-            trace_0(TRACE_APP_PD4, "colh null call\n");
+            trace_0(TRACE_APP_PD4, "colh null call");
 
             if(select_document_using_docno(*dochanp))
             if(NULL == wimp_get_point_info(&pointer))
@@ -2009,14 +2009,14 @@ null_event_proto(static, colh_pointershape_null_handler)
 
                         #if 0
                         case COLH_FUNCTION_SELECTOR:
-                            trace_0(TRACE_APP_PD4, "change pointer to drop-down-menu\n");
+                            trace_0(TRACE_APP_PD4, "change pointer to drop-down-menu");
 
                             setpointershape(POINTER_DROPMENU);
                             break;
                         #endif
 
                         default:
-                            trace_0(TRACE_APP_PD4, "restore default pointer\n");
+                            trace_0(TRACE_APP_PD4, "restore default pointer");
 
                             setpointershape(POINTER_DEFAULT);
                             break;

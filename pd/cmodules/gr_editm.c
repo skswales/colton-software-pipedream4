@@ -181,7 +181,7 @@ gr_chartedit_riscos_menu_handler(
     S32                 modified     = FALSE;
 
     trace_3(TRACE_MODULE_GR_CHART,
-            "gr_chartedit_riscos_menu_handler([%d][%d]): submenurequest = %s\n",
+            "gr_chartedit_riscos_menu_handler([%d][%d]): submenurequest = %s",
             selection, subselection, trace_boolstring(submenurequest));
 
     cep = gr_chartedit_cep_from_ceh(ceh);
@@ -490,7 +490,7 @@ gr_chartedit_riscos_menu_handler(
             break;
 
         default:
-            trace_2(TRACE_MODULE_GR_CHART, "unprocessed gr_chartedit menu hit %d, %d\n", selection, subselection);
+            trace_2(TRACE_MODULE_GR_CHART, "unprocessed gr_chartedit menu hit %d, %d", selection, subselection);
             break;
         }
 
@@ -706,7 +706,7 @@ gr_chartedit_riscos_menu_maker(
 
     if(fade)
         /* reinstate default title */
-        void_strkpy(title, elemof32(title), string_lookup(GR_CHART_MSG_MENUHDR_SELECTION));
+        safe_strkpy(title, elemof32(title), string_lookup(GR_CHART_MSG_MENUHDR_SELECTION));
     else
         gr_chart_object_name_from_id(title, elemof32(title), &cep->selection.id);
 
@@ -924,7 +924,7 @@ gr_chartedit_options_process(
     d = dbox_new_new(GR_CHARTEDIT_TEM_OPTIONS, &errorp);
     if(!d)
     {
-        message_output(errorp ? errorp : string_lookup(GR_CHART_ERR_NOMEM));
+        message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
         return;
     }
 
@@ -1144,7 +1144,7 @@ gr_chartedit_selection_series_process(
     d = dbox_new_new(GR_CHARTEDIT_TEM_SELECTION_SERIES, &errorp);
     if(!d)
     {
-        message_output(errorp ? errorp : string_lookup(GR_CHART_ERR_NOMEM));
+        message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
         return;
     }
 
@@ -1467,9 +1467,9 @@ gr_chartedit_selection_fillcolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        void_strkat(title, elemof32(title), string_lookup(appendage));
+        safe_strkat(title, elemof32(title), string_lookup(appendage));
 
-    void_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
+    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
     }
 
     {
@@ -1520,9 +1520,9 @@ gr_chartedit_selection_hintcolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        void_strkat(title, elemof32(title), string_lookup(appendage));
+        safe_strkat(title, elemof32(title), string_lookup(appendage));
 
-    void_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_HINTCOLOUR));
+    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_HINTCOLOUR));
     }
 
     {
@@ -1570,9 +1570,9 @@ gr_chartedit_selection_linecolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        void_strkat(title, elemof32(title), string_lookup(appendage));
+        safe_strkat(title, elemof32(title), string_lookup(appendage));
 
-    void_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
+    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_COLOUR));
     }
 
     {
@@ -1728,7 +1728,7 @@ gr_chartedit_selection_linestyle_edit(
     d = dbox_new_new(GR_CHARTEDIT_TEM_LINESTYLE, &errorp);
     if(!d)
     {
-        message_output(errorp ? errorp : string_lookup(GR_CHART_ERR_NOMEM));
+        message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
         return;
     }
 
@@ -1757,9 +1757,9 @@ gr_chartedit_selection_linestyle_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &modifying_id);
 
     if(appendage)
-        void_strkat(title, elemof32(title), string_lookup(appendage));
+        safe_strkat(title, elemof32(title), string_lookup(appendage));
 
-    void_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
+    safe_strkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
 
     win_settitle(w, title);
     }
@@ -1829,7 +1829,7 @@ gr_chartedit_selection_textcolour_edit(
     gr_chart_object_name_from_id(title, elemof32(title), &i.id);
 
     if(appendage)
-        void_strkat(title, elemof32(title), string_lookup(appendage));
+        safe_strkat(title, elemof32(title), string_lookup(appendage));
 
     switch(i.id.name)
         {
@@ -1843,7 +1843,7 @@ gr_chartedit_selection_textcolour_edit(
         }
 
     if(appendage)
-        void_strkat(title, elemof32(title), string_lookup(appendage));
+        safe_strkat(title, elemof32(title), string_lookup(appendage));
     }
 
     {

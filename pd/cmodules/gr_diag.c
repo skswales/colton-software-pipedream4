@@ -253,7 +253,7 @@ gr_diag_create_riscdiag_between(
 
                         textoff += seglen;
 
-                        void_strnkpy(szText, elemof32(szText), textp, seglen);
+                        safe_strnkpy(szText, elemof32(szText), textp, seglen);
 
                         gr_point_xform((P_GR_POINT) &draw_point, &point, &gr_riscdiag_riscDraw_from_pixit_xformer);
 
@@ -482,7 +482,7 @@ gr_diag_ensure_riscdiag_font_tableR_entry_for_TEXT(
     GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
     zero_struct(f);
-    void_strkpy(f.szHostFontName, sizeof32(f.szHostFontName), _l1str_from_tstr(pszFontName));
+    safe_strkpy(f.szHostFontName, sizeof32(f.szHostFontName), _l1str_from_tstr(pszFontName));
 
     return(gr_diag_ensure_riscdiag_font_tableR_entry(&f, p_array_handle));
 }
@@ -518,7 +518,7 @@ gr_diag_ensure_riscdiag_font_tableR_entries_for_PICTURE(
             GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
             zero_struct(f);
-            void_strkpy(f.szHostFontName, sizeof32(f.szHostFontName), pFontListElem->szHostFontName);
+            safe_strkpy(f.szHostFontName, sizeof32(f.szHostFontName), pFontListElem->szHostFontName);
 
             status_break(status = gr_diag_ensure_riscdiag_font_tableR_entry(&f, p_array_handle));
 
@@ -566,7 +566,7 @@ gr_diag_create_riscdiag_font_tables_between(
                 GR_CACHE_HANDLE picture;
                 P_DRAW_DIAG diag;
 
-                void_memcpy32(&pict, pObject.pict, sizeof32(pict));
+                memcpy32(&pict, pObject.pict, sizeof32(pict));
 
                 picture = pict.picture;
 
@@ -694,7 +694,7 @@ gr_diag_diagram_new(
 
         if(NULL != (pDiagHdr = (P_GR_DIAG_DIAGHEADER) al_array_alloc(&p_gr_diag->handle, BYTE, n_bytes, &array_init_block, p_status)))
             {
-            void_tstrkpy(pDiagHdr->szCreatorName, elemof32(pDiagHdr->szCreatorName), szCreatorName);
+            safe_tstrkpy(pDiagHdr->szCreatorName, elemof32(pDiagHdr->szCreatorName), szCreatorName);
             gr_box_make_bad(&pDiagHdr->bbox);
             }
         else
@@ -800,17 +800,17 @@ gr_diag_group_new(
         size_t nameLength;
 
         trace_3(TRACE_MODULE_GR_CHART,
-                "gr_diag_group_new(" PTR_XTFMT ") offset %d, name %s\n",
+                "gr_diag_group_new(" PTR_XTFMT ") offset %d, name %s",
                 report_ptr_cast(p_gr_diag), pGroupStart ? *pGroupStart : 0,
                 trace_string(szGroupName));
 
         /* fill name with twelve spaces */
-        void_memcpy32(&pObject.group->name, spaces_for_group_name, sizeof32(pObject.group->name));
+        memcpy32(&pObject.group->name, spaces_for_group_name, sizeof32(pObject.group->name));
 
         /* mustn't be NULLCH terminated */
         nameLength = strlen(szGroupName);
         nameLength = MIN(nameLength, sizeof32(pObject.group->name));
-        void_memcpy32(pObject.group->name, szGroupName, nameLength);
+        memcpy32(pObject.group->name, szGroupName, nameLength);
         }
 
     return(1);

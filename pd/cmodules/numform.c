@@ -95,7 +95,7 @@ typedef struct _NUMFORM_INFO
 NUMFORM_INFO, * P_NUMFORM_INFO;
 
 /*
-internal procedures
+internal routines
 */
 
 static STATUS
@@ -339,7 +339,7 @@ convert_number_exponential(
     (void) xusnprintf(p_numform_info->ustr_integer_section, p_numform_info->sizeof_integer_section,
                       "%#.*e", (int) p_numform_info->decimal_places_format, work_value);
     /* NB # flag forces e conversion to always have decimal point */
-    trace_1(TRACE_MODULE_NUMFORM, TEXT("numform expfmt : %s\n"), trace_ustr(p_numform_info->ustr_integer_section));
+    trace_1(TRACE_MODULE_NUMFORM, TEXT("numform expfmt : %s"), trace_ustr(p_numform_info->ustr_integer_section));
 
     ustr = p_numform_info->ustr_integer_section;
 
@@ -443,7 +443,7 @@ convert_number_spreadsheet(
     else
         work_value = p_numform_info->ev_data.arg.integer;
 
-    p_numform_info->integer_places_actual = xtos_buf(p_numform_info->ustr_integer_section, p_numform_info->sizeof_integer_section, work_value - 1, (p_numform_info->spreadsheet == 'X'));
+    p_numform_info->integer_places_actual = xtos_ubuf(p_numform_info->ustr_integer_section, p_numform_info->sizeof_integer_section, work_value - 1, (p_numform_info->spreadsheet == 'X'));
 
     p_numform_info->ustr_decimal_section = p_numform_info->ustr_integer_section + p_numform_info->integer_places_actual; /* point to NULLCH */
 }
@@ -541,7 +541,7 @@ convert_number_standard(
         (void) xusnprintf(p_numform_info->ustr_integer_section, p_numform_info->sizeof_integer_section,
                           "%#.*f", (int) p_numform_info->decimal_places_format, p_numform_info->ev_data.arg.fp);
         /* NB # flag forces f conversion to always have decimal point */
-        trace_1(TRACE_MODULE_NUMFORM, TEXT("numform stdfmt : %s\n"), trace_ustr(p_numform_info->ustr_integer_section));
+        trace_1(TRACE_MODULE_NUMFORM, TEXT("numform stdfmt : %s"), trace_ustr(p_numform_info->ustr_integer_section));
 
         if(*p_numform_info->ustr_integer_section == '0')
             p_numform_info->ustr_integer_section++;
@@ -572,7 +572,7 @@ convert_number_standard(
     {
         (void) xusnprintf(p_numform_info->ustr_integer_section, p_numform_info->sizeof_integer_section,
                           S32_FMT, p_numform_info->ev_data.arg.integer);
-        trace_1(TRACE_MODULE_NUMFORM, TEXT("numform intfmt : %s\n"), trace_ustr(p_numform_info->ustr_integer_section));
+        trace_1(TRACE_MODULE_NUMFORM, TEXT("numform intfmt : %s"), trace_ustr(p_numform_info->ustr_integer_section));
 
         if(*p_numform_info->ustr_integer_section == '0')
             p_numform_info->ustr_integer_section++;
@@ -752,8 +752,8 @@ numform(
     case RPN_DAT_DATE:
         numform_output_datetime_last_field = NULLCH;
 
-        ss_dateval_to_ymd(&numform_info.ev_data.arg.date, &numform_info.datetime.year, &numform_info.datetime.month,  &numform_info.datetime.day);
-        ss_timeval_to_hms(&numform_info.ev_data.arg.date, &numform_info.datetime.hour, &numform_info.datetime.minute, &numform_info.datetime.second);
+        ss_dateval_to_ymd(&numform_info.ev_data.arg.date.date, &numform_info.datetime.year, &numform_info.datetime.month,  &numform_info.datetime.day);
+        ss_timeval_to_hms(&numform_info.ev_data.arg.date.time, &numform_info.datetime.hour, &numform_info.datetime.minute, &numform_info.datetime.second);
 
         if(p_numform_parms->ustr_numform_datetime)
             numform_section_extract_datetime(&numform_info, own_numform, sizeof32(own_numform), p_numform_parms->ustr_numform_datetime);
@@ -1162,7 +1162,7 @@ numform_numeric_section_copy_and_parse(
     if(!p_numform_info->decimal_pt)
         p_numform_info->decimal_pt = '.';
 
-    trace_6(TRACE_MODULE_NUMFORM, TEXT("%c ths; ") S32_TFMT TEXT(" ip; %c dpc; ") S32_TFMT TEXT(" dp; ") S32_TFMT TEXT(" ep; %c es\n"),
+    trace_6(TRACE_MODULE_NUMFORM, TEXT("%c ths; ") S32_TFMT TEXT(" ip; %c dpc; ") S32_TFMT TEXT(" dp; ") S32_TFMT TEXT(" ep; %c es"),
             p_numform_info->thousands_sep ? p_numform_info->thousands_sep : ' ',
             p_numform_info->integer_places_format,
             p_numform_info->decimal_pt,
@@ -1711,16 +1711,15 @@ numform_section_extract_numeric(
         }
     }
 
-    trace_1(TRACE_MODULE_NUMFORM, TEXT("\nnumform buffer 1 %s\n"), trace_ustr(ustr_section));
+    trace_1(TRACE_MODULE_NUMFORM, TEXT("numform buffer 1 %s"), trace_ustr(ustr_section));
     shift_value = numform_numeric_section_copy_and_parse(p_numform_info, p_buffer, elemof_buffer, ustr_section);
-    trace_1(TRACE_MODULE_NUMFORM, TEXT("numform buffer 2 %s\n"), trace_ustr(p_buffer));
+    trace_1(TRACE_MODULE_NUMFORM, TEXT("numform buffer 2 %s"), trace_ustr(p_buffer));
 
     if(shift_value)
     {
         F64 multiplier = pow(10.0, shift_value);
         F64 work_value = (p_numform_info->ev_data.did_num == RPN_DAT_REAL) ? p_numform_info->ev_data.arg.fp : p_numform_info->ev_data.arg.integer;
-        p_numform_info->ev_data.did_num = RPN_DAT_REAL;
-        p_numform_info->ev_data.arg.fp = work_value * multiplier;
+        ev_data_set_real(&p_numform_info->ev_data, work_value * multiplier);
     }
 
     /* bounds check argument for given output format */
