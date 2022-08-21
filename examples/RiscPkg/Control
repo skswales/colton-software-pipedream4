@@ -5,11 +5,11 @@ Licence: Free
 Maintainer: Colton Software <colton-software-pipedream@googlegroups.com>
 Standards-Version: 0.4.0
 Version: 20200321
-Recommends: PipeDream,PipeDream-Manuals
+Recommends: PipeDream
 Description: Example & Tutorial files for PipeDream
  Example files to demonstrate, and help with using, various PipeDream facilities.
  .
- Also, files that should be used when working through the PipeDream Tutorial.
+ Also, files that should be used when working through the PipeDream Getting Started Guide.
 Components: Apps.Document.PDExamples (Movable)
 Homepage: http://www.croftnuisk.co.uk/coltsoft/pipedream/
 Environment: any

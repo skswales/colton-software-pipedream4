@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2019 Stuart Swales */
+/* Copyright (C) 2014-2020 Stuart Swales */
 
 /* More mathematical function routines for evaluator */
 
@@ -254,7 +254,7 @@ PROC_EXEC_PROTO(c_decimal)
 
 static void
 factdouble_calc(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return real or error */
     _InVal_     S32 n)
 {
     if(n <= 3)
@@ -273,7 +273,7 @@ factdouble_calc(
     {   /* where n = 2k, n!! = 2^k * k! */
         const S32 k = n >> 1;
 
-        factorial_calc(p_ss_data_out, k); /* may return integer or fp or error */
+        factorial_calc(p_ss_data_out, k); /* may return integer or real or error */
 
         switch(ss_data_get_data_id(p_ss_data_out))
         {
@@ -296,9 +296,9 @@ factdouble_calc(
         SS_DATA ss_data_numer;
         SS_DATA ss_data_denom;
 
-        factorial_calc(&ss_data_numer, n); /* may return integer or fp or error */
+        factorial_calc(&ss_data_numer, n); /* may return integer or real or error */
 
-        factdouble_calc(&ss_data_denom, n - 1); /* may return fp or error */
+        factdouble_calc(&ss_data_denom, n - 1); /* may return real or error */
 
         if(!two_nums_divide_try(p_ss_data_out, &ss_data_numer, &ss_data_denom, TRUE /*propagate_errors*/))
             ss_data_set_error(p_ss_data_out, EVAL_ERR_CALC_FAILURE);
@@ -311,7 +311,7 @@ PROC_EXEC_PROTO(c_factdouble)
 
     exec_func_ignore_parms();
 
-    factdouble_calc(p_ss_data_res, n); /* may return fp or error */
+    factdouble_calc(p_ss_data_res, n); /* may return real or error */
 
     consume_bool(ss_data_real_to_integer_try(p_ss_data_res));
 }

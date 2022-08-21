@@ -64,12 +64,6 @@ redefine_icon(
     _InVal_     int icon_handle,
     WimpCreateIconBlock * const create);
 
-extern void
-set_icon_text(
-    _HwndRef_   HOST_WND window_handle,
-    _InVal_     int icon_handle,
-    _In_z_      const char * text); /*>>>should really live elsewhere!*/
-
 /* Icons in the colh window */
 
 #define COLH_BUTTON_OK          (0)

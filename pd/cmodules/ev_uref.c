@@ -840,7 +840,7 @@ ev_uref(
 
             name_list_sort();
 
-            for(i = 0; i < namtab.next; ++i, ++nep)
+            for(i = 0; i < name_use_deptable.next; ++i, ++nep)
             {
                 S32 res;
 
@@ -851,8 +851,8 @@ ev_uref(
                 if((res = ev_match_slr(&nep->byslr, upp)) == DEP_DELETE)
                 {
                     nep->flags   |= TRF_TOBEDEL;
-                    namtab.flags |= TRF_TOBEDEL;
-                    namtab.mindel = MIN(namtab.mindel, i);
+                    name_use_deptable.flags |= TRF_TOBEDEL;
+                    name_use_deptable.mindel = MIN(name_use_deptable.mindel, i);
                     check_use = 1;
                 }
                 else if(res == DEP_UPDATE)
@@ -863,9 +863,9 @@ ev_uref(
              * in the middle of our fuddle
              */
             if(check_use)
-                names_def.flags |= TRF_CHECKUSE;
+                names_def_deptable.flags |= TRF_CHECKUSE;
             if(un_sort)
-                namtab.sorted = 0;
+                name_use_deptable.sorted = 0;
         }
         break;
     }
@@ -887,11 +887,11 @@ ev_uref(
     case UREF_REPLACE:
     case UREF_SWAPCELL:
     case UREF_CLOSE:
-        if((p_ev_name = names_def.ptr) != NULL)
+        if((p_ev_name = names_def_deptable.ptr) != NULL)
         {
             EV_NAMEID i;
 
-            for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+            for(i = 0; i < names_def_deptable.next; ++i, ++p_ev_name)
             {
                 if(p_ev_name->flags & TRF_TOBEDEL)
                     continue;
@@ -910,8 +910,8 @@ ev_uref(
 
                         p_ev_name->flags |= TRF_TOBEDEL;
 
-                        names_def.flags |= TRF_TOBEDEL;
-                        names_def.mindel = MIN(names_def.mindel, i);
+                        names_def_deptable.flags |= TRF_TOBEDEL;
+                        names_def_deptable.mindel = MIN(names_def_deptable.mindel, i);
 
                         trace_1(TRACE_MODULE_UREF, "uref deleting name: %s", p_ev_name->id);
                         }
@@ -988,7 +988,7 @@ ev_uref(
              * in the middle of our fuddle
              */
             if(check_use)
-                custom_def.flags |= TRF_CHECKUSE;
+                custom_def_deptable.flags |= TRF_CHECKUSE;
             if(un_sort)
                 custom_use_deptable.sorted = 0;
         }
@@ -1012,11 +1012,11 @@ ev_uref(
     case UREF_REPLACE:
     case UREF_SWAPCELL:
     case UREF_CLOSE:
-        if((p_ev_custom = custom_def.ptr) != NULL)
+        if((p_ev_custom = custom_def_deptable.ptr) != NULL)
         {
             EV_NAMEID i;
 
-            for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
+            for(i = 0; i < custom_def_deptable.next; ++i, ++p_ev_custom)
             {
                 if(p_ev_custom->flags & TRF_TOBEDEL)
                     continue;
@@ -1031,8 +1031,8 @@ ev_uref(
                     {
                         ev_p_ss_doc_from_docno_must(p_ev_custom->owner.docno)->custom_ref_count -= 1;
                         p_ev_custom->flags |= TRF_TOBEDEL;
-                        custom_def.flags |= TRF_TOBEDEL;
-                        custom_def.mindel = MIN(custom_def.mindel, i);
+                        custom_def_deptable.flags |= TRF_TOBEDEL;
+                        custom_def_deptable.mindel = MIN(custom_def_deptable.mindel, i);
 
                         trace_1(TRACE_MODULE_UREF, "uref deleting custom: %s", p_ev_custom->id);
                     }

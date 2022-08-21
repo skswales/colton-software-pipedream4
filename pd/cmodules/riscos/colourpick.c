@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2019 Stuart Swales */
+/* Copyright (C) 2014-2020 Stuart Swales */
 
 /* RISC OS specific colour picker routines for PipeDream (derived from Fireworkz) */
 
@@ -420,7 +420,7 @@ riscos_colour_picker(
     COLOURPICKER_CALLBACK colourpicker_callback;
     P_COLOURPICKER_CALLBACK p_colourpicker_callback = &colourpicker_callback;
 
-    zero_struct(colourpicker_callback);
+    zero_struct_fn(colourpicker_callback);
     colourpicker_callback.colour_picker_type = colour_picker_type;
     colourpicker_callback.parent_window_handle = parent_window_handle;
     colourpicker_callback.rgb = *p_rgb;

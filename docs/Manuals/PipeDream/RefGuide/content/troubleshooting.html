@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Troubleshooting</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="trigfns.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="view.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="functions/trig.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="view.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -91,27 +91,27 @@
         Alternatively, you will need to move the offending right margin marker to the left, using the <span class="csg-command">Move Margin Left</span> command.
     </p>
 
-    <h4 id="Printing">Printing is slow when using RISC&nbsp;OS printer drivers</h4>
+    <h4 id="Printing">Printing is slow when using RISC OS printer drivers</h4>
     <p>
-        Most RISC&nbsp;OS printer drivers, including those for inkjet and dotmatrix printers, have to build up a graphics image of the page being printed.
+        Most RISC OS printer drivers, including those for inkjet and dotmatrix printers, have to build up a graphics image of the page being printed.
         This is a lot of information and the higher the resolution the printout the longer it will take.
         For example printing a page at 300&times;300 dpi needs four times as much information, and is thus four times slower, than printing a page at 150&times;150 dpi.
         To ensure that you are printing at maximum speed check that you are using a recent printer driver.
         Check also the amount of memory that is free in your computer before you start printing.
         Free memory is used for buffer space by the printer driver.
-        You will find that RISC&nbsp;OS printing can be much slower if you have very little memory free.
+        You will find that RISC OS printing can be much slower if you have very little memory free.
         Aim to have 1MB or more free if you can.
         If you cannot free this amount of memory, free up as much as you can.
     </p>
 
     <h4 id="pound">My printer won&rsquo;t print the &pound; sign</h4>
     <p>
-        There is no ASCII code sequence recognised by all printers for the &pound; sign.
+        There is no 8-bit code sequence recognised by all printers for the &pound; sign.
         The &pound; sign is not being printed because your printer needs a different code or
         codes from the one(s) being sent by the printer driver you are using.
         You will need to create a character translation in the printer driver which has " &pound; " in column A and,
         in column B, the code sequence needed to generate the &pound; sign on your printer.
-        See <a href="printerdriverediting.html">PipeDream Printer Driver Editing</a>.
+        See <a href="printdrvediting.html">PipeDream Printer Driver Editing</a>.
     </p>
 
     <h4 id="pagelen">I cannot control the page length on my printer / after printing lots of blank sheets of paper are fed out of my printer</h4>
@@ -121,7 +121,7 @@
         However, it requires that the printer should be working to the same page length as PipeDream.
         Otherwise, the page breaks will come out strangely.
         The solution is to remove the line in the printer driver which has EP in column A, so that no formfeeds are printed.
-        See <a href="printerdriverediting.html">PipeDream Printer Driver Editing</a>.
+        See <a href="printdrvediting.html">PipeDream Printer Driver Editing</a>.
     </p>
 
     <h4 id="oneline">All of my text prints on one line on the printer</h4>
@@ -129,7 +129,7 @@
         Change the line in the printer driver which has LF in column A so that there is a Y in column B.
         This sends out a linefeed character with each carriage return character.
         Alternatively, your printer may have a DIP-switch to control this which you may prefer to use.
-        See <a href="printerdriverediting.html">PipeDream Printer Driver Editing</a>.
+        See <a href="printdrvediting.html">PipeDream Printer Driver Editing</a>.
     </p>
 
     <h4 id="driver">I edit my printer driver but there is no change to what comes out on the printer</h4>
@@ -138,14 +138,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Trigonometrical Functions </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> VIEW</td>
+                <td class="navfooter_PUN_L">Trigonometrical Functions </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> VIEW</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="trigfns.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="view.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="functions/trig.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="view.html">Next</a></td>
             </tr>
         </table>
     </div>

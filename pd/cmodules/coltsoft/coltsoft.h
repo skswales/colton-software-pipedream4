@@ -298,7 +298,7 @@ static inline BOOL
 ucs4_is_C1(
     _InVal_     UCS4 ucs4)
 {
-    return(((ucs4) >= 0x00000080U) && ((ucs4) < 0x0000009FU));
+    return(((ucs4) >= 0x00000080U) && ((ucs4) <= 0x0000009FU));
 }
 
 /*
@@ -385,7 +385,7 @@ typedef P_PC_U8Z P_PC_SBSTR;
 typedef U32 SBCHAR_CODEPAGE; /* for translation between code pages */
 
 /*
-RISC OS non-UNICODE build
+RISC OS non-Unicode build
 TCHAR/TSTR is Latin-N
 UCHARS/USTR is the same
 */
@@ -401,18 +401,44 @@ See http://www.cl.cam.ac.uk/~mgk25/unicode.html
 
 #define USTR_IS_SBSTR 1
 
-#if 1
-#define    UCHARB    U8
+/*
+UCHARS/USTR
+*/
 
-#define  P_UCHARS  P_U8
-#define PC_UCHARS PC_U8
+#if USTR_IS_SBSTR
+#define _UCHARS  U8
+#define _UCHARZ  U8Z
+#else
+#define _UCHARS _UTF8
+#define _UCHARZ _UTF8STR
+#endif /* USTR_IS_SBSTR */
 
-#define    UCHARZ      U8Z
-#define    P_USTR    P_U8Z /*_Null_terminated_*/
-#define  P_P_USTR  P_P_U8Z
-#define   PC_USTR   PC_U8Z /*_Null_terminated_*/
-#define P_PC_USTR P_PC_U8Z
-#endif
+typedef       _UCHARS *    P_UCHARS;
+typedef const _UCHARS *   PC_UCHARS;
+typedef      P_UCHARS *  P_P_UCHARS;
+typedef     PC_UCHARS * P_PC_UCHARS;
+
+#define P_UCHARS_NONE _P_DATA_NONE(P_UCHARS)
+
+typedef       _UCHARZ *    P_USTR; /*_Null_terminated_*/
+typedef const _UCHARZ *   PC_USTR; /*_Null_terminated_*/
+typedef       _UCHARZ ** P_P_USTR; /*_Null_terminated_*/
+typedef     PC_USTR   * P_PC_USTR;
+
+#define P_USTR_NONE _P_DATA_NONE(P_USTR)
+
+/* this is needed to make arrays of them on the stack */
+#if USTR_IS_SBSTR
+typedef U8       UCHARB;
+typedef U8Z      UCHARZ;
+#else
+typedef UTF8B    UCHARB;
+typedef UTF8STRB UCHARZ;
+#endif /* USTR_IS_SBSTR */
+
+#if 0 && (RELEASED) /* omit for PipeDream */
+
+#else
 
 /* using inline function can spot any bad buffer-to-pointer casts that would otherwise happen silently */
 _Check_return_
@@ -439,7 +465,7 @@ ustr_bptrc(const UCHARZ buf[])
     return((PC_USTR) buf);
 }
 
-#define P_USTR_NONE _P_DATA_NONE(P_USTR)
+#endif /* RELEASED */
 
 #define uchars_empty_string ((PC_UCHARS) "")
 
@@ -461,7 +487,7 @@ printf format strings
 #define S32_FMT         "%d"
 #define S32_FMT_POSTFIX  "d"
 #define U32_FMT         "%u"
-#define U32_XFMT        "%X"
+#define U32_XFMT        "%X" /* NB different to Fireworkz - check PipeDream uses! */
 #define S64_FMT         "%" PRId64
 #define U64_FMT         "%" PRIu64
 #define U64_XFMT        "%" PRIx64
@@ -839,6 +865,29 @@ GDI_RECT, * P_GDI_RECT; typedef const GDI_RECT * PC_GDI_RECT;
     (gdi_rect__ref).br.x, \
     (gdi_rect__ref).br.y
 
+/*
+S32 variants where we have neither GDI nor PIXIT units
+e.g. pixits-per-pixel values during scaling
+*/
+
+typedef struct S32_POINT
+{
+    S32 x, y;
+}
+S32_POINT, * P_S32_POINT; typedef const S32_POINT * PC_S32_POINT;
+
+typedef struct S32_BOX
+{
+    S32 x0, y0, x1, y1;
+}
+S32_BOX, * P_S32_BOX; typedef const S32_BOX * PC_S32_BOX;
+
+typedef struct S32_RECT
+{
+    S32_POINT tl, br;
+}
+S32_RECT, * P_S32_RECT; typedef const S32_RECT * PC_S32_RECT;
+
 /* NB suppressing C4127: conditional expression is constant */
 #define while_constant(c) \
     __pragma(warning(push)) __pragma(warning(disable:4127)) while(c) __pragma(warning(pop))
@@ -958,14 +1007,30 @@ SecureZeroMemory(
 
 #endif /* OS */
 
+/* slower way to clear memory, but it saves space when speed is not important */
+
+extern void
+memclr32(
+    _Out_writes_bytes_(n_bytes) P_ANY ptr,
+    _InVal_     U32 n_bytes);
+
 #define zero_array(_array) \
     (void) memset(_array, 0, sizeof(_array))
+
+#define zero_array_fn(_array) \
+    memclr32(_array, sizeof32(_array))
 
 #define zero_struct(_struct) \
     (void) memset(&_struct, 0, sizeof(_struct))
 
+#define zero_struct_fn(_struct) \
+    memclr32(&_struct, sizeof32(_struct))
+
 #define zero_struct_ptr(_ptr) \
     (void) memset(_ptr, 0, sizeof(*(_ptr)))
+
+#define zero_struct_ptr_fn(_ptr) \
+    memclr32(_ptr, sizeof32(*(_ptr)))
 
 #define zero_32(_struct) \
     * (P_U32) (&_struct) = 0
@@ -1132,6 +1197,8 @@ UCS-4 character definitions
 #define CH_FORWARDS_SLASH           CH_SOLIDUS
 
 #define CH_DIGIT_ZERO               0x30    /* 0 */
+#define CH_DIGIT_ONE                0x31    /* 1 */
+#define CH_DIGIT_SEVEN              0x37    /* 7 */
 #define CH_DIGIT_NINE               0x39    /* 9 */
 #define CH_COLON                    0x3A    /* : */
 #define CH_SEMICOLON                0x3B    /* ; */
@@ -1256,18 +1323,19 @@ idiv_floor_fn(
     return(idiv_floor(a, b));
 }
 
-#define UNREFERENCED_PARAMETER(p)                       (p)=(p)
-#define UNREFERENCED_PARAMETER_CONST(p)                 (void)(p)
-#define UNREFERENCED_PARAMETER_InRef_(p)                (void)(p)
-#define UNREFERENCED_PARAMETER_InoutRef_(p)             (void)(p)
-#define UNREFERENCED_PARAMETER_OutRef_(p)               (void)(p)
-#define UNREFERENCED_PARAMETER_InVal_(p)                (void)(p)
+#define UNREFERENCED_PARAMETER(p)           (p)=(p)
+#define UNREFERENCED_PARAMETER_CONST(p)     (void)(p)
+#define UNREFERENCED_PARAMETER_InRef_(p)    (void)(p)
+#define UNREFERENCED_PARAMETER_InoutRef_(p) (void)(p)
+#define UNREFERENCED_PARAMETER_OutRef_(p)   (void)(p)
+#define UNREFERENCED_PARAMETER_InVal_(p)    (void)(p)
 
-#define UNREFERENCED_LOCAL_VARIABLE(v)                  (void)(v)
+#define UNREFERENCED_LOCAL_VARIABLE(v)      (void)(v)
 
 #define consume(__base_type, expr) \
     do { \
-    __base_type __v = (expr); UNREFERENCED_LOCAL_VARIABLE(__v); \
+        const __base_type __consume_v = (expr); \
+        UNREFERENCED_LOCAL_VARIABLE(__consume_v); \
     } while_constant(0)
 
 #define consume_ptr(expr) consume(PC_ANY, expr)
@@ -1275,6 +1343,12 @@ idiv_floor_fn(
 #define consume_bool(expr) consume(BOOL, expr)
 
 #define consume_int(expr) consume(int, expr) /* quite useful for printf() etc. */
+
+#define PTR_IS_NULL(/*ANY*/ p) ( \
+    NULL == /*(PC_ANY)*/ (p) )
+
+#define PTR_NOT_NULL(/*ANY*/ p) ( \
+    NULL != /*(PC_ANY)*/ (p) )
 
 /*
 a pointer that will hopefully give a trap when dereferenced even when not CHECKING
@@ -1308,12 +1382,35 @@ a pointer that will hopefully give a trap when dereferenced even when not CHECKI
 
 #endif /* _WIN64 */
 
-#define IS_BAD_POINTER(p) ( \
-    ((uintptr_t) (p) - (uintptr_t) BAD_POINTER_X(uintptr_t, 0)) <= BAD_POINTER_X_RANGE )
+#define PTR_IS_BAD_POINTER(p) ( \
+    ((uintptr_t) (p) - BAD_POINTER_X(uintptr_t, 0)) <= BAD_POINTER_X_RANGE )
 
-/* paranoid compatibility NULL == NONE for all */
+#define PTR_NOT_BAD_POINTER(p) ( \
+    ((uintptr_t) (p) - BAD_POINTER_X(uintptr_t, 0)) >  BAD_POINTER_X_RANGE )
 
-/* Some SAL to reflect the fact that PTR_NONE is not NULL in this state */
+/* paranoid compatibility - all PTR_NONE == NULL */
+
+#define PTR_NONE_X(__ptr_type, X) ( \
+    (__ptr_type) NULL )
+
+/*#define PTR_IS_NONE(p) FALSE*/ /* don't use directly if not CHECKING */
+
+#define PTR_IS_NONE_X(p, X) ( \
+    PTR_IS_NULL(p) )
+
+#define PTR_IS_NULL_OR_NONE(/*ANY*/ p) ( \
+    PTR_IS_NULL(p) )
+
+#define PTR_NOT_NULL_OR_NONE(/*ANY*/ p) ( \
+    PTR_NOT_NULL(p) )
+
+#define PTR_IS_NULL_OR_NONE_X(__ptr_type, p, X) ( \
+    (__ptr_type) NULL == (p) )
+
+#define PTR_NOT_NULL_OR_NONE_X(__ptr_type, p, X) ( \
+    (__ptr_type) NULL != (p) )
+
+/* Some SAL to reflect the fact that PTR_NONE is NULL in this state */
 
 #define _In_maybenone_      _In_
 #define _Inout_maybenone_   _Inout_
@@ -1324,28 +1421,14 @@ a pointer that will hopefully give a trap when dereferenced even when not CHECKI
 
 #define _Ret_writes_maybenone_  _Ret_writes_
 
-#define PTR_NONE_X(__ptr_type, X) ( \
-    (__ptr_type) NULL)
-
-/*#define IS_PTR_NONE(p) FALSE*/ /* don't use directly if not CHECKING */
-
-#define IS_PTR_NONE_X(p, X) ( \
-    (NULL == (p))
-
-#define IS_PTR_NULL_OR_NONE(/*ANY*/ p) ( \
-    NULL == (p) )
-
-#define IS_PTR_NULL_OR_NONE_X(__ptr_type, p, X) ( \
-    (__ptr_type) NULL == (p) )
+#define PTR_ASSERT(p) \
+    assert(PTR_NOT_NULL_OR_NONE(p))
 
 #define _IS_P_DATA_NONE(__ptr_type, p) ( \
     (__ptr_type) NULL == (p) )
 
 #define _P_DATA_NONE(__ptr_type) ( \
     PTR_NONE_X(__ptr_type, 1))
-
-#define PTR_ASSERT(p) \
-    assert(!IS_PTR_NULL_OR_NONE(p))
 
 /*
 round up v if needed to the next r (r must be a power of 2)

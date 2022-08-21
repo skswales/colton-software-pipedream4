@@ -314,6 +314,10 @@ static void wimptx_signal_handler(int sig);
 #define handler wimptx_signal_handler
 #define errhandler wimptx_signal_handler
 
+#undef BOOL
+#undef TRUE
+#undef FALSE
+
 #include "wimpt.c"
 
 /* keep defaults for these in case of msgs death */

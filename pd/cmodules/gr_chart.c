@@ -365,7 +365,7 @@ gr_chart_dispose_core(
     str_clr(&cp->core.currentfilename);
     str_clr(&cp->core.currentdrawname);
 
-    zero_struct(cp->core);
+    zero_struct_fn(cp->core);
 }
 
 static void
@@ -598,7 +598,7 @@ gr_chart_new(
     *chp = ch;
 
     /* empty the descriptor */
-    zero_struct_ptr(cp);
+    zero_struct_ptr_fn(cp);
 
     cp->core.ch = ch;
 
@@ -1055,7 +1055,7 @@ gr_datasource_insert(
     }
 
     /* no prior inheritance; clear out descriptor */
-    zero_struct_ptr(dsp);
+    zero_struct_ptr_fn(dsp);
 
     /* invent a unique non-repeating handle for this datasource */
     gr_datasource_handle_gen = (GR_INT_HANDLE) ((P_U8) gr_datasource_handle_gen + 1);
@@ -1248,7 +1248,7 @@ gr_chart_add_series(
             serp = getserp(cp, cp->series.n_defined);
 
         /* zap this newly created descriptor */
-        zero_struct_ptr(serp);
+        zero_struct_ptr_fn(serp);
 
         ++cp->series.n_defined;
     }

@@ -129,7 +129,7 @@ string(371, PDRIVERS_SUBDIR_STR,                "PDrivers");
 string(406, EXTREFS_SUBDIR_STR,                 "Library");
 
 string(22, DUMP_FILE_STR,                       "DumpedFile");
-string(25, UNTITLED_ZD_STR,                     "Untitled%d");
+string(25, UNTITLED_STR,                        "Untitled");
 string(26, ambiguous_tag_STR,                   "$$$AmbiguousTag");
 
 string(41, PRESSANYKEY_STR,                     "Press any key");
@@ -186,26 +186,17 @@ string(449,name_supporting_YN_Q_STR,            "Do you want to rename it?");
 
 /* Titles to be poked into dialog boxes */
 
-/* string(75, Create_user_dictionary_dialog_STR,   "Create user dictionary"); */
-/* string(76, Open_user_dictionary_dialog_STR,     "Open user dictionary");   */
-/* string(77, Close_user_dictionary_dialog_STR,    "Close user dictionary");  */
-/* string(78, Lock_dictionary_dialog_STR,          "Lock dictionary");        */
-/* string(79, Unlock_dictionary_dialog_STR,        "Unlock dictionary");      */
 string(80, Dump_STR,                            "Dump");
 string(81, Dumping_STR,                         "Dumping");
 string(82, Merge_STR,                           "Merge");
 string(83, Merging_STR,                         "Merging");
 string(84, Anagrams_STR,                        "Anagrams");
 string(85, Subgrams_STR,                        "Subgrams");
-#if 1
-/* SKS after PD 4.12 26mar92 */
 string(86, Opened_user_dictionaries_STR,        "Opened dictionaries");
-#else
-string(86, Opened_user_dictionaries_STR,        "Opened user dictionaries");
-#endif
-string(87, Insert_word_in_user_dictionary_dialog_STR,   "Insert word in user dictionary");
-string(88, Delete_word_from_user_dictionary_dialog_STR, "Delete word from user dictionary");
-string(89, Insert_highlights_dialog_STR,                "Insert highlights");
+
+/* Action button labels to be poked into dialogue boxes */
+
+string(73, Action_Insert_STR,                   "Insert");
 
 /* Messages to be used for dproc__query */
 
@@ -341,10 +332,11 @@ string(453, Insert_colour_change_STR,           "Insert colour");
 
 /* 'Files' submenu */
 
-string(194, Load_file_STR,                      "Load");
+string(194, Load_file_STR,                      "Load file");
 string(432, Insert_file_STR,                    "Insert file");
-string(195, Save_file_STR,                      "Save");
-string(196, Save_template_STR,                  "Save template");
+string(195, Save_file_as_STR,                   "Save as");
+string(484, Save_file_simple_STR,               "Save");
+string(196, Save_template_STR,                  "Save as template");
 string(197, Name_STR,                           "Rename file");
 string(198, New_window_STR,                     "New window");
 string(200, Options_STR,                        "Options");
@@ -356,8 +348,11 @@ string(205, Bottom_file_STR,                    "Bottom file");
 
 string(207, Recalculate_STR,                    "Recalculate");
 
-string(210, About_STR,                          "About");
+string(210, About_STR,                          "Info"); /* was About */
 string(211, Exit_STR,                           "Quit");
+
+string(485, OK_STR,                             "OK");
+string(486, Cancel_STR,                         "Cancel");
 
 /* 'Layout' submenu */
 
@@ -414,7 +409,7 @@ string(257, Merge_file_with_user_dict_STR,      "Merge file with user dictionary
 string(258, Create_user_dictionary_STR,         "Create user dictionary");
 string(259, Open_user_dictionary_STR,           "Open user dictionary");
 string(260, Close_user_dictionary_STR,          "Close user dictionary");
-string(400, Flush_user_dictionary_STR,          "Flush dictionaries");
+string(400, Flush_user_dictionary_STR,          "Flush user dictionaries");
 string(261, Pack_user_dictionary_STR,           "Pack user dictionary");
 string(401, Dictionary_options_STR,             "User dictionary options");
 string(262, Lock_dictionary_STR,                "Lock dictionary");
@@ -612,7 +607,7 @@ string(370, SaveChoices_STR,                    "Save choices");
 
 string(373, New_slot_contents_STR,              "New cell contents");
 string(374, FullScreen_STR,                     "Full screen");
-string(375, SpreadArray_STR,                    "Transpose block");
+string(375, Transpose_block_STR,                "Transpose block");
 string(376, RepeatCommand_STR,                  "Repeat Command");
 
 string(377, New_chart_STR,                      "New chart");
@@ -676,10 +671,10 @@ string(529, formwind_menu_title,                "Formula");
 
 /* more function key-like strings */
 
-string(530,   F_Print_STR,                      "Print");
-string(531,  SF_Print_STR,                      "Shift Print");
-string(532,  CF_Print_STR,                      "Ctrl Print");
-string(533, CSF_Print_STR,                      "Ctrl-Shift Print");
+string(530,   F_Print_STR,                      "PRINT");
+string(531,  SF_Print_STR,                      "Shift PRINT");
+string(532,  CF_Print_STR,                      "Ctrl PRINT");
+string(533, CSF_Print_STR,                      "Ctrl-Shift PRINT");
 
 string(534,   F_Insert_STR,                     "Insert");
 string(535,  SF_Insert_STR,                     "Shift Insert");
@@ -691,10 +686,10 @@ string(539,  SF_Home_STR,                       "Shift Home");
 string(540,  CF_Home_STR,                       "Ctrl Home");
 string(541, CSF_Home_STR,                       "Ctrl-Shift Home");
 
-string(542,   F_Copy_STR,                       "Copy");
-string(543,  SF_Copy_STR,                       "Shift Copy");
-string(544,  CF_Copy_STR,                       "Ctrl Copy");
-string(545, CSF_Copy_STR,                       "Ctrl-Shift Copy");
+string(542,   F_End_STR,                        "End");
+string(543,  SF_End_STR,                        "Shift End");
+string(544,  CF_End_STR,                        "Ctrl End");
+string(545, CSF_End_STR,                        "Ctrl-Shift End");
 
 string(546,   F_Delete_STR,                     "Delete");
 string(547,  SF_Delete_STR,                     "Shift Delete");
@@ -731,8 +726,8 @@ string(92, help_iconbar,
 /* Help from a dialog window */
 
 string(93, help_dialog_window,                  "\\Wa PipeDream dialogue box.|M"
-                                                "Click OK or press Return to complete.|M"
-                                                "Click Cancel or press Escape to cancel.|M"
+                                                "Click OK (or press Return) to complete.|M"
+                                                "Click Cancel (or press Escape) to cancel.|M"
                                                 "Use Tab (or Shift-Tab) to move forwards "
                                                 "(or backwards) between writeable fields.");
 
@@ -782,7 +777,7 @@ string(414, help_colh_transfer_to_window,       "\\Spopup a menu of formula rela
                                                 "\\Atransfer the formula editing line contents to a formula \\w.");
 
 string(415, help_colh_edit_in_window,           "\\Spopup a menu of formula related topics.|M" \
-                                                "\\Aedit the current cell contents in a formula \\w.|M");
+                                                "\\Aedit the current cell contents in a formula \\w.");
 
 string(416, help_drag_column_width,             "\\Dalter the width of column ");
 string(417, help_drag_right_margin,             "\\Dalter the right margin of column ");
@@ -800,7 +795,7 @@ string(903, colh_button_save,                   "\\Sbring up the Save dialogue b
                                                 "\\Asave the file immediately.");
 string(904, colh_button_print,                  "\\Sbring up the Print dialogue box.|M"
                                                 "\\Abring up the Page layout dialogue box.");
-string(905, colh_button_ljustify,               "\\Sapply left justification to a marked block (or current cell)."
+string(905, colh_button_ljustify,               "\\Sapply left justification to a marked block (or current cell).|M"
                                                 "\\Aapply default justification to a marked block (or current cell).");
 string(906, colh_button_cjustify,               "\\Sapply centred justification to a marked block (or current cell).");
 string(907, colh_button_rjustify,               "\\Sapply right justification to a marked block (or current cell).");
@@ -858,7 +853,7 @@ string(937, help_formwind_button_paste,         "\\Scopy the contents of the cli
 
 /* use 561 as next if adding at end */
 
-/* use 484 as next in middle */
+/* use 487 as next in middle */
 
 } /* end of strings_init() */
 
@@ -912,6 +907,8 @@ fontselect_strings(void)
           "\n", stdout);
 }
 
+#if !CROSS_COMPILE
+
 extern int
 main(void)
 {
@@ -925,6 +922,8 @@ main(void)
                ? EXIT_FAILURE
                : EXIT_SUCCESS);
 }
+
+#endif /* CROSS_COMPILE */
 
 #endif /* MESSAGE_FILE */
 

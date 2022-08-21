@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>File Operations</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="financialfns.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="functions/financial.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -29,10 +29,10 @@
 
     <h2 id="Saving">Saving Files</h2>
     <p>
-        You can save an entire document to a named file.
-        Alternatively, you can save just a range of columns or a marked block.
+        You can save an entire document to a named file using the <span class="csg-command">Save</span> command.
+        Alternatively, you can save the content of a marked block or range of columns.
+        The <span class="csg-command">Save as</span> command enables you to specify further options, such as the format of the file to be saved.
         You can also save all rows satisfying a condition, enabling you to create a subset of a database or a document.
-        The <span class="csg-dbox">Save</span> dialogue box enables you to specify the format of the file to be saved.
     </p>
     <p>If you have finished editing a file and you want to save it, the simplest way is to close the window.</p>
     <p>If the file has been modified, a prompt will appear asking you whether you want to save the updated file.</p>
@@ -41,31 +41,30 @@
         The <span class="csg-dbox">Save</span> dialogue box then appears.
     </p>
     <p>
-        Type in the name with which you want the file to be saved.
         If you originally loaded the file from disc or have previously named the file with the
         <span class="csg-command">Rename file</span> command, the filename already appears at this point.
-    </p>
-    <p>
-        To save the file,
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
-    </p>
-    <p>
-        Another way to save the file is to drag its icon from the <span class="csg-dbox">Save</span> dialogue box into the directory you want to save it in.
+        Drag the file&rsquo;s icon from the <span class="csg-dbox">Save</span> dialogue box into the directory display you want to save it in.
         Obviously, you need to have the required directory display on the screen.
-        Then drag the file&rsquo;s icon from the <span class="csg-dbox">Save</span> dialogue box into the directory display.
         It will be saved there with the leafname you gave it in the <span class="csg-dbox">Save</span> dialogue box.
     </p>
+    <p>
+        Another way to save the file is to type in the name with which you want the file to be saved and then
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Save</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
+    </p>
 
-    <h3 id="Part">To save a marked block</h3>
+    <h3 id="Part">To save a selection (marked block)</h3>
     <ol>
         <li>The block you want to save must be marked before you give the <span class="csg-command">Save</span> command.</li>
         <li>When the <span class="csg-dbox">Save</span> dialogue box appears, type in the name of the file if necessary.</li>
-        <li>Click Select on the <span class="csg-dbox-option">Save only marked block</span> option.</li>
+        <li>Click Select on the <span class="csg-dbox-option">Selection</span> option.
+        If you give the <span class="csg-command">Save as</span> command then
+        click Select on the <span class="csg-dbox-option">Save only marked block</span> option.
+        </li>
     </ol>
 
     <h3>To save a selection of rows</h3>
     <ol>
-        <li>Give the <span class="csg-command">Save</span> command.</li>
+        <li>Give the <span class="csg-command">Save as</span> command.</li>
         <li>When the <span class="csg-dbox">Save</span> dialogue box appears, type in the name of the file if necessary.</li>
         <li>Click Select on the <span class="csg-dbox-option">Save selection of rows</span> option.</li>
         <li>Type in the condition you want to apply.</li>
@@ -102,12 +101,14 @@
         Click on the format you want.
     </p>
     <ul>
-        <li><span class="csg-dbox-option">PipeDream</span> saves a file in PipeDream format. This will be the default value for a new file.</li>
+        <li><span class="csg-dbox-option">PipeDream</span> saves a file in PipeDream format.
+        This will be the default format for a new document.
+        In order to save spreadsheet formulae as well as their calculated values, you must save your file in PipeDream format.</li>
         <li><span class="csg-dbox-option">CSV</span> saves the file in CSV (comma separated values) format.</li>
-        <li><span class="csg-dbox-option">ASCII</span> saves the file in ASCII (plain text) format.</li>
+        <li><span class="csg-dbox-option">Text</span> saves the file in plain Text ('ASCII') format.</li>
+        <li><span class="csg-dbox-option">Paragraph</span> saves the file in (plain text) Paragraph format for transfer to desktop publishing programs.</li>
         <li><span class="csg-dbox-option">VIEW</span> saves the file in VIEW format.</li>
-        <li><span class="csg-dbox-option">1WP</span> saves the file in First Word Plus format so that it can be loaded into First Word Plus.</li>
-        <li><span class="csg-dbox-option">Paragraph</span> saves the file in Paragraph (plain text) format for transfer to desktop publishing programs.</li>
+        <li><span class="csg-dbox-option">FWP</span> saves the file in First Word Plus format so that it can be loaded into First Word Plus.</li>
     </ul>
 
     <h2 id="Loadingfile">Loading Files</h2>
@@ -154,15 +155,14 @@
         To do this, bring up the <span class="csg-dbox">Load</span> dialogue box from the <span class="csg-menu">Files</span> menu.
         This will have remembered the name of the file last loaded.
         Select the desired file format and then
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Load</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
         When PipeDream has loaded a file in a particular format,
         it sets the default format in the <span class="csg-dbox">Save</span> dialogue box to match,
         so that when you save the file again, it will be replaced in its original format.
     </p>
     <p>
-        If the file was a ViewSheet file, PipeDream will set the file type in the
-        <span class="csg-dbox">Save</span> dialogue box to
-        <span class="csg-dbox-option">PipeDream</span> because it cannot save ViewSheet files.
+        If the file was a ViewSheet file, the document file type will be set to
+        <span class="csg-dbox-option">PipeDream</span> because PipeDream cannot save ViewSheet files.
     </p>
 
     <h2 id="Naming">Renaming Files</h2>
@@ -177,14 +177,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Files</td>
                 <td>Rename file</td>
-                <td><span class="csg-cmdseq">FC</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">FC</span></td>
             </tr>
         </tbody>
     </table>
@@ -205,13 +207,12 @@
             <tr>
                 <td>Different formats</td>
                 <td>
-                    <a href="ascii.html">ASCII and Paragraph File Formats</a><br />
-                    <a href="csv.html">CSV File Format</a><br />
-                    <a href="firstwordplus.html">First Word Plus File Format</a><br />
-                    <a href="pipedreamfileformat.html">PipeDream File Format</a><br />
-                    <a href="view.html">VIEW Transfer</a><br />
-                    <a href="viewsheet.html">ViewSheet Transfer</a><br />
-                    <a href="z88.html">Z88 Transfer</a>
+                    <a href="pipedreamfileformat.html">PipeDream</a><br />
+                    <a href="csv.html">CSV</a><br />
+                    <a href="ascii.html">Text and Paragraph</a><br />
+                    <a href="firstwordplus.html">First Word Plus</a><br />
+                    <a href="view.html">VIEW</a><br />
+                    <a href="viewsheet.html">ViewSheet</a>
                 </td>
             </tr>
         </tbody>
@@ -220,14 +221,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">External References </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Financial Functions</td>
+                <td class="navfooter_PUN_L">External References </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Financial Functions</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="financialfns.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="functions/financial.html">Next</a></td>
             </tr>
         </table>
     </div>

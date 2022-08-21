@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Lookup &amp; Reference Functions</title>
+    <link href="../help.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    
+    <h1 id="Lookup">Lookup &amp; Reference Functions</h1>
+
+    <h2 class="csg-function" id="CHOOSE">CHOOSE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        CHOOSE(<span class="csg-function-parameter">n</span>,
+        <span class="csg-function-parameter">list</span>)
+    </p>
+    <p>Select the <span class="csg-function-parameter">n</span>th value from the subsequent <span class="csg-function-parameter">list</span>.</p>
+    <p>Blank elements are included in the calculation.</p>
+
+    <h2 class="csg-function" id="COL">COL</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">COL</p>
+    <p>Returns the number of the column containing the cell in which the function is evaluated.</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">COL(<span class="csg-function-parameter">cell_reference</span>)</p>
+    <p>Returns the number of the column of <span class="csg-function-parameter">cell_reference</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>COL(A1)</code></p>
+    <p>returns 1.</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">COL(<span class="csg-function-parameter">range</span>)</p>
+    <p>Returns the number of the starting column of <span class="csg-function-parameter">range</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>COL(E1F10)</code></p>
+    <p>returns 5.</p>
+    <p>This is particularly useful if you have a name which is defined to be a range.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>COL(apples)</code></p>
+    <p>where <code>apples</code> is a name defined to be a range, returns the number of the first column of the range.</p>
+
+    <h2 class="csg-function" id="COLS">COLS</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">COLS</p>
+    <p>COLS with no parameters returns the number of columns in the document.</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">COLS(<span class="csg-function-parameter">array_or_range</span>)</p>
+    <p>Returns the number of columns in <span class="csg-function-parameter">array_or_range</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>COLS({1,2,3})</code></p>
+    <p>returns 3.</p>
+
+    <h2 class="csg-function" id="HLOOKUP">HLOOKUP</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        HLOOKUP(<span class="csg-function-parameter">key</span>,
+        <span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">offset_rows</span>)
+    </p>
+    <p>This function differs from LOOKUP in three ways:</p>
+    <ul>
+        <li>
+            <span class="csg-function-parameter">range</span> in HLOOKUP is horizontal
+            and must be a range, not an array, and must be sorted in ascending order.
+        </li>
+        <li>
+            If <span class="csg-function-parameter">key</span> cannot be matched exactly in
+            <span class="csg-function-parameter">range</span>, the closest lower value is matched.
+        </li>
+        <li>
+            The third parameter specifies a parallel range which is offset by
+            <span class="csg-function-parameter">offset_rows</span> rows down from
+            <span class="csg-function-parameter">range</span>.
+        </li>
+    </ul>
+
+    <h2 class="csg-function" id="INDEX">INDEX</h2>
+    <p>Returns one or more elements from an array or range of cells.</p>
+    <h5>Syntax #1:</h5>
+    <p class="csg-function-declaration">
+        INDEX(<span class="csg-function-parameter">data</span>:array|range,
+        <span class="csg-function-parameter">col</span>:<span class="csg-function-parameter-type">number</span>,
+        <span class="csg-function-parameter">row</span>:<span class="csg-function-parameter-type">number</span>)
+    </p>
+    <p>
+        Returns the element of the <span class="csg-function-parameter">data</span> array (or range of cells)
+        specified by <span class="csg-function-parameter">col</span>,<span class="csg-function-parameter">row</span>.
+    </p>
+    <p>Column and row indices start at 1.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>INDEX((1,2;3,4},2,2)</code></p>
+    <p>returns 4.</p>
+
+    <h5>Syntax #2:</h5>
+    <p class="csg-function-declaration">
+        INDEX(<span class="csg-function-parameter">data:</span>array|range,
+        <span class="csg-function-parameter">col</span>:<span class="csg-function-parameter-type">number</span>,
+        <span class="csg-function-parameter">row</span>:<span class="csg-function-parameter-type">number</span>,
+        <span class="csg-function-parameter">cols</span>:<span class="csg-function-parameter-type">number</span>,
+        <span class="csg-function-parameter">rows</span>:<span class="csg-function-parameter-type">number</span>)
+    </p>
+    <p>
+        With five parameters this function returns a sub-array of the <span class="csg-function-parameter">data</span> array (or range of cells)<br />
+        starting at the position <span class="csg-function-parameter">col</span>,<span class="csg-function-parameter">row</span>
+        with <span class="csg-function-parameter">cols</span> columns and <span class="csg-function-parameter">rows</span> rows.
+    </p>
+    <p class="csg-function-subheading">Examples:</p>
+    <p class="csg-sample-indent"><code>INDEX(A1C3,2,2,2,2)</code></p>
+    <p>returns an array containing <code>{B2,C2;B3,C3}</code>.</p>
+    <pre class="csg-sample-indent">INDEX(B1:D20, 2, 3, 2, 5)</pre>
+    <p>returns <code>C3:D7</code> as an array.</p>
+
+    <h5>Revisions:</h5>
+    <p>
+        Starting with 4.56, this function will accept zero for the column and/or row number.<br />
+        If the column number is zero, the whole of the specified row(s) is returned.<br />
+        If the row number is zero, the whole of the specified column(s) is returned.
+    </p>
+    <p>
+        Starting with 4.56, this function will accept zero for the optional column and/or row size.<br />
+        If the column size is zero, the rest of the specified row(s) beginning at the given column number is returned.<br />
+        If the row size is zero, the whole of the specified column(s) beginning at the given row number is returned.
+    </p>
+
+    <h2 class="csg-function" id="LOOKUP">LOOKUP</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        LOOKUP(<span class="csg-function-parameter">key</span>,
+        <span class="csg-function-parameter">array_or_range1</span>,
+        <span class="csg-function-parameter">array_or_range2</span>)
+    </p>
+    <p>
+        Returns the value in <span class="csg-function-parameter">array_or_range2</span>
+        corresponding to the position that <span class="csg-function-parameter">key</span>
+        occurs in <span class="csg-function-parameter">array_or_range1</span>.
+    </p>
+    <p>
+        <span class="csg-function-parameter">key</span> can be a date, a string or a number.
+        If it is a string, it can include the wildcards
+        <code>^?</code> (any single character) and
+        <code>^#</code> (any multiple characters).
+    </p>
+    <p>
+        If an exact match is found in <span class="csg-function-parameter">array_or_range1</span>,
+        the function returns the value of the cell the same number of elements
+        from the beginning of <span class="csg-function-parameter">array_or_range2</span>.
+    </p>
+    <p>If <span class="csg-function-parameter">key</span> is not found in <span class="csg-function-parameter">array_or_range1</span>, an error message is displayed.</p>
+
+    <h2 class="csg-function" id="MATCH">MATCH</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        MATCH(<span class="csg-function-parameter">key</span>,
+        <span class="csg-function-parameter">array_or_range</span>,
+        <span class="csg-function-parameter">lookup_type</span>)
+    </p>
+    <p>
+        Looks up <span class="csg-function-parameter">key</span> in
+        <span class="csg-function-parameter">array_or_range</span> using
+        <span class="csg-function-parameter">lookup_type</span> and returns its cell reference.
+    </p>
+    <p>
+        If <span class="csg-function-parameter">lookup_type</span> is 1,
+        finds the largest value which is less than or equal to <span class="csg-function-parameter">key</span>.
+        Note that, in this case, <span class="csg-function-parameter">array_or_range</span> must be sorted in ascending order.
+    </p>
+    <p>
+        If <span class="csg-function-parameter">lookup_type</span> is 0,
+        finds the value which exactly matches key.
+    </p>
+    <p>
+        If <span class="csg-function-parameter">lookup_type</span> is -1,
+        finds the smallest value which is greater than or equal to <span class="csg-function-parameter">key</span>.
+        Note that, in this case, <span class="csg-function-parameter">array_or_range</span> must be sorted in descending order.
+    </p>
+    <h5>Examples:</h5>
+    <p class="csg-sample-indent"><code>MATCH(2.5,{1,2,3},1)</code></p>
+    <p>returns 2.</p>
+    <p class="csg-sample-indent"><code>MATCH(2.5,A1A3,1)</code></p>
+    <p>where A1 contains 1, A2 contains 2 and A3 contains 3, returns A2.</p>
+    <p>Use the COL and ROW functions to return the offset from the start of the range.</p>
+
+    <h2 class="csg-function" id="ROW">ROW</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">ROW</p>
+    <p>Returns the number of the row containing the cell in which the function is evaluated.</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">ROW(<span class="csg-function-parameter">cell_reference</span>)</p>
+    <p>Returns the number of the row of <span class="csg-function-parameter">cell_reference</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>ROW(A1)</code></p>
+    <p>returns 1.</p>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">ROW(<span class="csg-function-parameter">range</span>)</p>
+    <p>Returns the number of the starting row of <span class="csg-function-parameter">range</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>ROW(E3F10)</code></p>
+    <p>returns 3.</p>
+
+    <h2 class="csg-function" id="ROWS">ROWS</h2>
+    <p>ROWS</p>
+    <p>ROWS with no parameters returns the number of rows in the document.</p>
+    <p>ROWS(<span class="csg-function-parameter">array_or_range</span>)</p>
+    <p>Returns the number of rows in <span class="csg-function-parameter">array_or_range</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>ROWS(A1F1O)</code></p>
+    <p>returns 10.</p>
+
+    <h2 class="csg-function" id="VLOOKUP">VLOOKUP</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        VLOOKUP(<span class="csg-function-parameter">key</span>,
+        <span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">offset_cols</span>)
+    </p>
+    <p>This function differs from LOOKUP in three ways:</p>
+    <ul>
+        <li>
+            <span class="csg-function-parameter">range</span> in VLOOKUP is vertical
+            and must be a range, not an array, and must be sorted in ascending order.
+        </li>
+        <li>
+            If <span class="csg-function-parameter">key</span> cannot be matched exactly in
+            <span class="csg-function-parameter">range</span>, the closest lower value is matched.
+        </li>
+        <li>
+            The third parameter specifies a parallel range which is offset by
+            <span class="csg-function-parameter">offset_cols</span> columns right of
+            <span class="csg-function-parameter">range</span>.
+        </li>
+    </ul>
+</body>
+</html>

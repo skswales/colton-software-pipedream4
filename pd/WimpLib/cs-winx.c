@@ -11,6 +11,7 @@
 
 #include "cmodules/aligator.h"
 
+_Check_return_
 extern BOOL
 winx_adjustclicked(void)
 {
@@ -247,6 +248,10 @@ winx_register_new_event_handler(
     return(winx__register_new(window_handle, newproc, handle, 1 /* for new binaries */));
 }
 
+#undef BOOL
+#undef TRUE
+#undef FALSE
+
 #define win__str WIN__STR
 
 #include "win.c"
@@ -447,7 +452,7 @@ winx_create_window(
 
     e = wimp_create_wind((wimp_wind *) p_window_template, (wimp_w *) p_window_handle);
 
-    if(!e)
+    if(NULL == e)
         if(!winx__register_new(*p_window_handle, proc, handle, 1))
             e = os_set_error(0, msgs_lookup("winT1" /* "Not enough memory to create window" */));
 

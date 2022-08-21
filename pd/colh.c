@@ -19,12 +19,16 @@
 #include "cs-wimptx.h"  /* includes wimpt.h -> wimp.h */
 #endif
 
-#ifndef __akbd_h
-#include "akbd.h"
+#ifndef __cs_winf_h
+#include "cs-winf.h"
 #endif
 
-#ifndef __resspr_h
-#include "resspr.h"     /* includes sprite.h */
+#ifndef __cs_resspr_h
+#include "cs-resspr.h"  /* includes resspr.h -> sprite.h */
+#endif
+
+#ifndef __akbd_h
+#include "akbd.h"
 #endif
 
 #ifndef          __wm_event_h
@@ -235,22 +239,15 @@ set_icon_colours(
     }
     } /*block*/
 
-    {
-    WimpSetIconStateBlock set_icon_state_block;
-    set_icon_state_block.window_handle = window_handle;
-    set_icon_state_block.icon_handle = icon_handle;
-    set_icon_state_block.EOR_word = (int) colour_bits;
-    set_icon_state_block.clear_word = (int) colour_mask;
-    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
-    } /*block*/
+    winf_changedfield_full(window_handle, icon_handle, (int) colour_bits, (int) colour_mask);
 }
 
 static void
 set_icon_flags(
     _HwndRef_   HOST_WND window_handle,
     _InVal_     int icon_handle,
-    int value,
-    int mask)
+    _InVal_     int value,
+    _InVal_     int mask)
 {
     BOOL change_value;
 
@@ -270,17 +267,10 @@ set_icon_flags(
     }
     } /*block*/
 
-    {
-    WimpSetIconStateBlock set_icon_state_block;
-    set_icon_state_block.window_handle = window_handle;
-    set_icon_state_block.icon_handle = icon_handle;
-    set_icon_state_block.EOR_word = value;
-    set_icon_state_block.clear_word = mask;
-    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
-    } /*block*/
+    winf_changedfield_full(window_handle, icon_handle, value, mask);
 }
 
-extern void
+static void
 set_icon_text(
     _HwndRef_   HOST_WND window_handle,
     _InVal_     int icon_handle,
@@ -304,14 +294,7 @@ set_icon_text(
         return;
     } /*block*/
 
-    { /* redraw iff changed */
-    WimpSetIconStateBlock set_icon_state_block;
-    set_icon_state_block.window_handle = window_handle;
-    set_icon_state_block.icon_handle = icon_handle;
-    set_icon_state_block.EOR_word = 0;
-    set_icon_state_block.clear_word = 0;
-    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
-    } /*block*/
+    winf_changedfield(window_handle, icon_handle); /* just poke it for redraw */
 }
 
 static void
@@ -343,14 +326,8 @@ set_icon_text_and_flags(
         return;
     } /*block*/
 
-    { /* redraw iff changed */
-    WimpSetIconStateBlock set_icon_state_block;
-    set_icon_state_block.window_handle = window_handle;
-    set_icon_state_block.icon_handle = icon_handle;
-    set_icon_state_block.EOR_word = value;
-    set_icon_state_block.clear_word = mask;
-    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
-    } /*block*/
+    /* redraw iff changed */
+    winf_changedfield_full(window_handle, icon_handle, value, mask);
 }
 
 /******************************************************************************
@@ -734,18 +711,10 @@ static void
 draw_status_box_no_interlock(
     _In_opt_z_      char *text)
 {
-    if(text)
+    if(NULL != text)
     {
-#if TRUE
         set_icon_text_and_flags(colh_window_handle, COLH_STATUS_TEXT, text,
                                                                 (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));
-
-#else
-      /*set_icon_flags(colh_window_handle, COLH_STATUS_TEXT  , (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));*/
-        set_icon_text(colh_window_handle , COLH_STATUS_TEXT  , text);
-
-        set_icon_flags(colh_window_handle, COLH_STATUS_TEXT  , (wimp_ITEXT   | wimp_IFILLED), (wimp_ITEXT   | wimp_IFILLED));
-#endif
     }
     else
     {
@@ -1100,9 +1069,9 @@ colh_event_Mouse_Click_single(
 {
     DOCNO docno   = current_docno();
     BOOL blkindoc = (blkstart.col != NO_COL) && (docno == blk_docno);
-    BOOL acquire  = FALSE;                                        /* don't want caret on block marking operations */
+    BOOL acquire  = FALSE;                                          /* don't want caret on block marking operations */
     BOOL motion   = FALSE;
-    BOOL extend   = !select_clicked || host_shift_pressed();          /* unshifted-adjust or shift-anything */
+    BOOL extend   = !select_clicked || host_shift_pressed();        /* unshifted-adjust or shift-anything */
     S32  funcnum = 0;
     S32  highlight_number = -1;
 
@@ -1122,11 +1091,15 @@ colh_event_Mouse_Click_single(
     case COLH_BUTTON_CANCEL:
         if(select_clicked)
             formline_cancel_edit();
+        else
+            funcnum = -1;
         break;
 
     case COLH_CONTENTS_LINE:
         if(select_clicked)
             EditContentsLine();
+        else
+            funcnum = -1;
         break;
 
     case COLH_FUNCTION_SELECTOR:
@@ -1159,7 +1132,7 @@ colh_event_Mouse_Click_single(
         break;
 
     case COLH_BUTTON_SAVE:
-        funcnum = (select_clicked) ? N_SaveFile : N_SaveFileAsIs;
+        funcnum = (select_clicked) ? (classic_menus() ? N_SaveFileAs : N_SaveFileSimple) : N_SaveFileSimple_Imm;
         break;
 
     case COLH_BUTTON_PRINT:
@@ -1171,11 +1144,11 @@ colh_event_Mouse_Click_single(
         break;
 
     case COLH_BUTTON_CJUSTIFY:
-        funcnum = (select_clicked) ? N_CentreAlign : 0;
+        funcnum = (select_clicked) ? N_CentreAlign : -1;
         break;
 
     case COLH_BUTTON_RJUSTIFY:
-        funcnum = (select_clicked) ? N_RightAlign : 0;
+        funcnum = (select_clicked) ? N_RightAlign : -1;
         break;
 
     case COLH_BUTTON_FJUSTIFY:
@@ -1192,6 +1165,8 @@ colh_event_Mouse_Click_single(
 
             update_variables();
         }
+        else
+            funcnum = -1;
 
         break;
         }
@@ -1201,27 +1176,27 @@ colh_event_Mouse_Click_single(
         break;
 
     case COLH_BUTTON_BOLD:
-        funcnum = N_Bold;
+        funcnum = (select_clicked) ? N_Bold : -1;
         highlight_number = HIGH_BOLD;
         break;
 
     case COLH_BUTTON_ITALIC:
-        funcnum = N_Italic;
+        funcnum = (select_clicked) ? N_Italic : -1;
         highlight_number = HIGH_ITALIC;
         break;
 
     case COLH_BUTTON_UNDERLINED:
-        funcnum = N_Underline;
+        funcnum = (select_clicked) ? N_Underline : -1;
         highlight_number = HIGH_UNDERLINE;
         break;
 
     case COLH_BUTTON_SUBSCRIPT:
-        funcnum = N_Subscript;
+        funcnum = (select_clicked) ? N_Subscript : -1;
         highlight_number = HIGH_SUBSCRIPT;
         break;
 
     case COLH_BUTTON_SUPERSCRIPT:
-        funcnum = N_Superscript;
+        funcnum = (select_clicked) ? N_Superscript : -1;
         highlight_number = HIGH_SUPERSCRIPT;
         break;
 
@@ -1242,11 +1217,11 @@ colh_event_Mouse_Click_single(
         break;
 
     case COLH_BUTTON_PASTE:
-        funcnum = (select_clicked) ? N_Paste : 0;
+        funcnum = (select_clicked) ? N_Paste : -1;
         break;
 
     case COLH_BUTTON_FORMATBLOCK:
-        funcnum = (select_clicked) ? N_FormatBlock : 0;
+        funcnum = (select_clicked) ? N_FormatBlock : -1;
         break;
 
     case COLH_BUTTON_SEARCH:
@@ -1262,11 +1237,11 @@ colh_event_Mouse_Click_single(
         break;
 
     case COLH_BUTTON_CMD_RECORD:
-        funcnum = (select_clicked) ? N_RecordMacroFile : 0;
+        funcnum = (select_clicked) ? N_RecordMacroFile : -1;
         break;
 
     case COLH_BUTTON_CMD_EXEC:
-        funcnum = (select_clicked) ? N_DoMacroFile : 0;
+        funcnum = (select_clicked) ? N_DoMacroFile : -1;
         break;
 
     case COLH_BUTTON_MARK:
@@ -1358,7 +1333,7 @@ colh_event_Mouse_Click_single(
 
     } /* switch(icon) */
 
-    if(highlight_number >= 0)
+    if( (highlight_number >= 0) && (funcnum > 0) )
     {
         /* is there a marked block in this document? */
         if((NO_COL != blkstart.col) && (blk_docno == current_docno()))
@@ -1367,7 +1342,7 @@ colh_event_Mouse_Click_single(
             block_highlight_core(!select_clicked, highlight_number);
 
             /* populate the dialogue box option in case we then wish to remove! */
-            d_inshigh[0].option = (highlight_number - FIRST_HIGHLIGHT) + FIRST_HIGHLIGHT_TEXT;
+            d_insremhigh[0].option = (highlight_number - FIRST_HIGHLIGHT) + FIRST_HIGHLIGHT_TEXT;
 
             funcnum = 0;
         }
@@ -1378,7 +1353,9 @@ colh_event_Mouse_Click_single(
         }
     }
 
-    if(0 != funcnum)
+    if(-1 == funcnum)
+        reperr_null(ERR_NO_ALTERNATE_COMMAND);
+    else if(0 != funcnum)
         application_process_command(funcnum);
 
     /* reselect document e.g. N_PRINTERFONT screws us up */

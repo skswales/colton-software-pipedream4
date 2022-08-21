@@ -39,6 +39,10 @@ riscos_vdu_define_graphics_window(
     return(os_writeN(buffer, sizeof32(buffer)));
 }
 
+#undef BOOL
+#undef TRUE
+#undef FALSE
+
 #include "bbc.c"
 
 /* end of cs-bbcx.c */

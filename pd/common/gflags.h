@@ -50,6 +50,8 @@
 
 #define ALIGATOR_USE_ALLOC 1
 
+#define COMPLEX_STRING 1
+
 #define EXTENDED_COLOUR 1 /* BBGGRR1n or 0000000n */
 
 /*
@@ -141,6 +143,16 @@ void_WrapOsErrorReporting(
     if(NULL != p_kernel_oserror)
         (void) reperr_kernel_oserror(p_kernel_oserror);
 }
+
+#ifndef sbchar_isdigit
+#define sbchar_isdigit /*"C"*/isdigit
+#endif
+#ifndef sbchar_isupper
+#define sbchar_isupper /*"C"*/isupper
+#endif
+#ifndef sbchar_tolower
+#define sbchar_tolower /*"C"*/tolower
+#endif
 
 #endif /* __flags_h */
 

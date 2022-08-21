@@ -7,12 +7,12 @@
 /* Copyright (C) 1988-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* External header file for PipeDream/LOTUS converter */
+/* External header file for PipeDream / Lotus 1-2-3 converter */
 
 /* MRJC March 1988 */
 
-#ifndef __pd123_ext
-#define __pd123_ext
+#ifndef __pd123_h
+#define __pd123_h
 
 /* flag for other modules */
 #define LOTUSREAD
@@ -21,8 +21,8 @@
 *
 * code selection
 *
-* UTIL_LTP creates stand-alone utility for Lotus to PipeDream
-* UTIL_PTL creates stand-alone utility for PipeDream to Lotus
+* UTIL_LTP creates stand-alone utility for Lotus 1-2-3 to PipeDream
+* UTIL_PTL creates stand-alone utility for PipeDream to Lotus 1-2-3
 * INT_LPTPL creates internal code for converter using function lp_lptpl
 *
 ******************************************************************************/
@@ -69,11 +69,11 @@ error definition
 */
 
 #define PD123_ERRLIST_DEF \
-	errorstring(PD123_ERR_FILE,    "Error reading or writing file") \
-	errorstring(PD123_ERR_MEM,     "Out of memory") \
-	errorstring(PD123_ERR_EXP,     "Expression not completely converted") \
-	errorstring(PD123_ERR_BADFILE, "Bad input file") \
-	errorstring(PD123_ERR_BIGFILE, "File has too many rows or columns")
+    errorstring(PD123_ERR_FILE,    "Error reading or writing file") \
+    errorstring(PD123_ERR_MEM,     "Out of memory") \
+    errorstring(PD123_ERR_EXP,     "Expression not completely converted") \
+    errorstring(PD123_ERR_BADFILE, "Bad input file") \
+    errorstring(PD123_ERR_BIGFILE, "File has too many rows or columns")
 
 /*
 error definition
@@ -89,6 +89,6 @@ error definition
 
 #define PD123_ERR_END     (-4005)
 
-#endif /* __pd123_ext */
+#endif /* __pd123_h */
 
-/* end of pd123.ext */
+/* end of pd123.h */

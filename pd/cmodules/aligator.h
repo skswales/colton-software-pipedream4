@@ -183,7 +183,7 @@ typedef struct ARRAY_BLOCK
 {
     /* private to aligator - export only for macros */
     P_BYTE              p_data;
-    ARRAY_INDEX         free;
+    ARRAY_INDEX         used_elements;
     ARRAY_INDEX         size;
     ARRAY_BLOCK_PARMS   parms;
 
@@ -219,7 +219,7 @@ typedef struct ARRAY_ROOT_BLOCK
 {
     /* private to aligator - export only for macros */
     PC_ARRAY_BLOCK      p_array_block; /* NB const makes for safer access outside of aligator */
-    U32                 free;
+    U32                 used_handles; /* same as 'used_elements' in ARRAY_BLOCK */
     U32                 size;
     ARRAY_BLOCK_PARMS   parms;
 
@@ -251,7 +251,7 @@ functions as macros
 
 /* return number of used elements in array */
 #define array_elements_no_checks(pc_array_handle) ( \
-    array_blockc_no_checks(pc_array_handle)->free )
+    array_blockc_no_checks(pc_array_handle)->used_elements )
 
 /* return number of used elements in array (unsigned 32-bit) */
 #define array_elements32_no_checks(pc_array_handle) \
@@ -401,11 +401,11 @@ array_range_bytes_check(
 
 /* return number of used elements in array */
 #define array_elements(pc_array_handle) ( \
-    array_blockc(pc_array_handle)->free )
+    array_blockc(pc_array_handle)->used_elements )
 
 /* return number of used elements in array (unsigned 32-bit) */
 #define array_elements32(pc_array_handle) ( \
-    (U32) array_blockc(pc_array_handle)->free )
+    (U32) array_blockc(pc_array_handle)->used_elements )
 
 /* return pointer to array element - NB. pc_array_handle must point to a valid handle */
 #define array_ptr(pc_array_handle, __base_type, ele_index) ( \
@@ -441,7 +441,7 @@ array_range_bytes_check(
 
 /* return whether given array handle is valid (NB doesn't check for handle zero) */
 #define array_handle_is_valid(pc_array_handle) ( \
-    (U32) *(pc_array_handle) < array_root.free )
+    (U32) *(pc_array_handle) < array_root.used_handles )
 
 /* return whether given index is valid in array */
 #define array_index_is_valid(pc_array_handle, ele_index) ( \
@@ -489,11 +489,11 @@ ARRAY_INIT_BLOCK; typedef const ARRAY_INIT_BLOCK * PC_ARRAY_INIT_BLOCK;
 remove deleted info
 */
 
-typedef S32 (* P_PROC_ELEMENT_DELETED) (
+typedef BOOL (* P_PROC_ELEMENT_IS_DELETED) (
     P_ANY p_any);
 
-#define PROC_ELEMENT_DELETED_PROTO(_e_s, _proc_name) \
-_e_s S32 \
+#define PROC_ELEMENT_IS_DELETED_PROTO(_e_s, _proc_name) \
+_e_s BOOL \
 _proc_name( \
     P_ANY p_any)
 
@@ -538,7 +538,7 @@ extern STATUS
 _al_array_add(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
     _InVal_     U32 num_elements,
-    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
+    _InRef_maybenone_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _In_reads_bytes_(bytesof_elem_x_num_elem) PC_ANY p_data_in /*copied*/
     CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
 
@@ -617,7 +617,7 @@ _al_array_bfind(
     CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
-_Ret_writes_maybenull_(bytesof_elem)
+_Ret_writes_maybenone_(bytesof_elem)
 extern P_BYTE
 _al_array_bsearch(
     _In_        PC_ANY key,
@@ -630,7 +630,7 @@ _al_array_bsearch(
     CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
-_Ret_writes_maybenull_(bytesof_elem)
+_Ret_writes_maybenone_(bytesof_elem)
 extern P_BYTE
 _al_array_lsearch(
     _In_        PC_ANY key,
@@ -669,7 +669,7 @@ extern S32 /* number of elements remaining */
 al_array_garbage_collect(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
     _InVal_     ARRAY_INDEX element_start,
-    _In_opt_    P_PROC_ELEMENT_DELETED p_proc_element_deleted,
+    _In_opt_    P_PROC_ELEMENT_IS_DELETED p_proc_element_is_deleted,
     _InVal_     AL_GARBAGE_FLAGS al_garbage_flags);
 
 _Check_return_
@@ -689,7 +689,7 @@ extern P_BYTE
 _al_array_insert_before(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
     _InVal_     S32 num_elements,
-    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
+    _InRef_maybenone_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status,
     _InVal_     ARRAY_INDEX insert_before
     CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
@@ -705,7 +705,7 @@ _e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
 al_array_insert_before_ ## __base_type( \
     _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
     _InVal_     S32 num_elements, \
-    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _InRef_maybenone_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
     _OutRef_    P_STATUS p_status, \
     _InVal_     ARRAY_INDEX insert_before)
 
@@ -717,7 +717,7 @@ _e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
 al_array_insert_before_ ## __base_type( \
     _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
     _InVal_     S32 num_elements, \
-    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _InRef_maybenone_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
     _OutRef_    P_STATUS p_status, \
     _InVal_     ARRAY_INDEX insert_before) \
 { \
@@ -744,7 +744,7 @@ extern P_BYTE
 _al_array_extend_by(
     _InoutRef_  P_ARRAY_HANDLE p_array_handle,
     _InVal_     U32 add_elements,
-    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
+    _InRef_maybenone_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status
     CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
 
@@ -759,7 +759,7 @@ _e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
 al_array_extend_by_ ## __base_type( \
     _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
     _InVal_     U32 add_elements, \
-    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _InRef_maybenone_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
     _OutRef_    P_STATUS p_status)
 
 #define AL_ARRAY_EXTEND_BY_IMPL(_e_s, __base_type) \
@@ -770,7 +770,7 @@ _e_s __base_type * /* pointer to new allocation if ok, NULL if failed */ \
 al_array_extend_by_ ## __base_type( \
     _InoutRef_  P_ARRAY_HANDLE p_array_handle, \
     _InVal_     U32 add_elements, \
-    _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
+    _InRef_maybenone_ PC_ARRAY_INIT_BLOCK p_array_init_block, \
     _OutRef_    P_STATUS p_status) \
 { \
     return( (__base_type *) \

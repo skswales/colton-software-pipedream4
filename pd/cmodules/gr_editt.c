@@ -238,7 +238,7 @@ gr_text_new(
 
     cp->text.lbr = new_lbr.lbr;
 
-    zero_struct_ptr(t);
+    zero_struct_ptr_fn(t);
 
     if(point)
     {
@@ -278,10 +278,10 @@ gr_text_box_query(
 {
     P_GR_TEXT t;
 
+    zero_struct_ptr_fn(p_box);
+
     if((t = gr_text_search_key(cp, key)) != NULL)
         *p_box = t->box;
-    else
-        zero_struct_ptr(p_box);
 }
 
 _Check_return_
@@ -387,7 +387,7 @@ mlsubmenu_create(
 
                 e = tbl_wimp_create_window((WimpWindow *) template_pane, &mls_pane_win_handle);
 
-                if(!e)
+                if(NULL == e)
                 {
                     /* Created window */
 
@@ -754,7 +754,7 @@ gr_chartedit_build_fillstyle_list(
     PC_U8            pict_dir;
     IMAGE_CACHE_HANDLE current_cah;
     LIST_ITEMNO      current_key;
-    U8               combined_path[BUF_MAX_PATHSTRING];
+    U8               combined_path[BUF_MAX_PATHSTRING * 4];
     U8               fullname[BUF_MAX_PATHSTRING];
     P_FILE_OBJENUM   enumstrp;
     P_FILE_OBJINFO   infostrp;
@@ -812,7 +812,7 @@ gr_chartedit_build_fillstyle_list(
                                    : NULL,
                       file_get_search_path());
 
-    trace_1(TRACE_MODULE_GR_CHART, "path='%s'", combined_path);
+    trace_2(TRACE_MODULE_GR_CHART, "path=%u:'%s'", strlen32(combined_path), combined_path);
 
     for(infostrp = file_find_first_subdir(&enumstrp, combined_path, FILE_WILD_MULTIPLE_STR, pict_dir);
         infostrp;
@@ -831,7 +831,7 @@ gr_chartedit_build_fillstyle_list(
             xstrkat(fullname, elemof32(fullname), FILE_DIR_SEP_STR);
             xstrkat(fullname, elemof32(fullname), leafname);
 
-            trace_1(TRACE_MODULE_GR_CHART, "fullname is '%s'", fullname);
+            trace_2(TRACE_MODULE_GR_CHART, "fullname is %u:'%s'", strlen32(fullname), fullname);
 
             res = image_cache_entry_ensure(&new_cah, fullname);   /* Tutu said to ignore errors */
 
@@ -1293,7 +1293,7 @@ gr_chartedit_fontselect_try_me(
     if(!cep)
         return;
 
-    zero_struct(new_style.szFontName);
+    zero_struct_fn(new_style.szFontName);
     xstrkpy(new_style.szFontName, sizeof32(new_style.szFontName), font_name);
 
     new_style.width  = (GR_COORD) (width  * GR_PIXITS_PER_POINT);

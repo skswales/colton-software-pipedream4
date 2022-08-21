@@ -795,8 +795,8 @@ convert_docu_thunk_to_document(
 
         { /* obtain the desired full document name */
         U8 buffer[BUF_MAX_PATHSTRING];
-        name_make_wholename(&p_docu->ss_instance_data.ss_doc.docu_name, buffer, elemof32(buffer));
-        if(!mystr_set(&currentfilename, buffer))
+        name_make_wholename(&current_p_docu->ss_instance_data.ss_doc.docu_name, buffer, elemof32(buffer));
+        if(!mystr_set(&current_p_docu->Xcurrentfilename, buffer))
             break;
         } /*block*/
 
@@ -1105,7 +1105,7 @@ destroy_current_document(void)
 
     riscos_finalise();
 
-    str_clr(&currentfilename);
+    str_clr(&current_p_docu->Xcurrentfilename);
 
     /* detach current document from document list */
     for(pp = NO_DOCUMENT, cp = document_list;
@@ -1176,34 +1176,44 @@ documents_modified(void)
 _Check_return_
 _Ret_notnull_
 extern PCTSTR
-get_untitled_document(void)
+get_untitled_document_with(
+    _In_z_      PCTSTR leafname)
 {
     static TCHARZ buffer[32];
-    S32 UntitledNumber = 1;
+    U32 name_len = tstrlen32(leafname);
+    S32 i = 1;
 
-    /* ensure we get a unique UntitledN that doesn't collide with
+    /* ensure we get a unique <Untitled>N that doesn't collide with
      * any that the user may have foolishly renamed / reloaded
     */
     for(;;)
     {
         DOCU_NAME docu_name;
-        DOCNO docno;
 
         name_init(&docu_name);
 
         docu_name.leaf_name = buffer;
 
-        (void) xsnprintf(buffer, elemof32(buffer), UNTITLED_ZD_STR, UntitledNumber);
+        tstr_xstrnkpy(buffer, elemof32(buffer), leafname, name_len);
 
-        if(DOCNO_NONE == (docno = docno_find_name(&docu_name, DOCNO_NONE, FALSE)))
+        consume_int(xsnprintf(buffer + name_len, elemof32(buffer) - name_len, S32_FMT, i++));
+
+        if(DOCNO_NONE == docno_find_name(&docu_name, DOCNO_NONE, FALSE))
             break;
 
         /* Otherwise it is already valid (loaded document or docu thunk), or DOCNO_SEVERAL. */
         /* In any case, loop and try the next one */
-        ++UntitledNumber;
     }
 
     return(buffer);
+}
+
+_Check_return_
+_Ret_notnull_
+extern PCTSTR
+get_untitled_document(void)
+{
+    return(get_untitled_document_with(UNTITLED_STR));
 }
 
 /******************************************************************************
@@ -1305,7 +1315,7 @@ find_document_using_window_handle(
 ******************************************************************************/
 
 _Check_return_
-_Ret_notnull_
+_Ret_notnone_
 extern P_DOCU /* may be NO_DOCUMENT */
 find_document_with_input_focus(void)
 {

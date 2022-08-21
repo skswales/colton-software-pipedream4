@@ -1,32 +1,40 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
-<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
+<META HTTP-EQUIV="Content-Type" Content="text/html; charset=iso-8859-1">
 <TITLE>PipeDream / 1-2-3 Converters - Release Notes</TITLE>
 </HEAD>
 <BODY>
     <H1>PipeDream to/from Lotus 1-2-3 .WK1 Converters - Release Notes</H1>
 
-    <H4>1.12.1</H4>
+    <H4>1.14</H4>
 
-    <P>Improve packaging.</P>
+    <p>Updated copyright in template files.</p>
+
+    <p>ROOL DDE 29c build environment used.</p>
+
+    <H4>1.13</H4>
+
+    <p>Improve packaging.</p>
+
+    <p>ROOL DDE 29a build environment used.</p>
 
     <H4>1.12</H4>
 
-    <P>
+    <p>
         Maps the Lotus 1-2-3 statistical spreadsheet functions STD() and VAR()
         to the correct corresponding population statistical functions in PipeDream (STDP() and VARP()).
-    </P>
+    </p>
 
-    <P>
+    <p>
         Maps the Lotus 1-2-3 text spreadsheet function REPEAT()
         to the correct corresponding function in PipeDream (REPT()).
-    </P>
+    </p>
 
-    <P>
+    <p>
         Maps the Lotus 1-2-3 trigonometrical spreadsheet function ATAN2()
         to the correct corresponding function in PipeDream (ATAN_2()).
-    </P>
+    </p>
 
 </BODY>
 </HTML>

@@ -1,14 +1,21 @@
 | !Help for PipeDream
 |
-| Determine style of help (text or HTML)
-If "<File$Type_FAF>"="" Then Set PipeDream$HelpSuffix Text Else Set PipeDream$HelpSuffix HTML.index/html
+If "%0"="" Then Set PipeDream$Help index/htm Else Set PipeDream$Help %0
 |
-| Try locating help on resources path
-Set PipeDream$HelpFile PipeDreamRes:Help.<PipeDream$HelpSuffix>
+| HTML help is preferred if a browser is available, with fallback to Text
 |
-| Fallback is direct (path may not be set)
-IfThere <PipeDream$HelpFile> Then Else Set PipeDream$HelpFile <Obey$Dir>.Res.UK.Help.<PipeDream$HelpSuffix>
+| Take care with possibly-unset paths
 |
-Unset PipeDream$HelpSuffix
+If "<PipeDream$Dir>"="" Then Set <PipeDream$Dir> <Obey$Dir>
 |
-IfThere <PipeDream$HelpFile> Then Filer_Run <PipeDream$HelpFile> Else Error Help not found
+If "<PipeDream$Path>"="" Then Set PipeDream$Path <PipeDream$Dir>.Resources.UK.,<PipeDream$Dir>.Resources.Neutral.
+|
+If "<Alias$@RunType_FAF>"="" Then Set PipeDream$Help PipeDream:RISC_OS.Help.Text Else Set PipeDream$Help PipeDream:RISC_OS.Help.HTML.<PipeDream$Help>
+|
+| Set up PipeDreamManuals$Path for links from HTML help to Manuals for !Store bundle
+If "<PipeDreamManuals$Path>"="" Then IfThere <PipeDream$Dir>.^.Manuals Then Set PipeDreamManuals$Path <PipeDream$Dir>.^.Manuals.
+|
+| Set up PipeDreamManuals$Path for links from HTML help to PipeDream-Manuals package if installed
+If "<PipeDreamManuals$Path>"="" Then Set PipeDreamManuals$Path <Boot$Dir>.^.Manuals.PipeDream.UK.
+|
+IfThere <PipeDream$Help> Then Filer_Run <PipeDream$Help> Else Error Help not found

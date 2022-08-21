@@ -153,7 +153,7 @@ eval_trace(
     slr = stack_ptr->slr;
     slr.flags |= SLR_EXT_REF;
 
-    (void) ev_dec_slr(buffer, slr.docno, &slr, FALSE);
+    (void) ev_dec_slr(buffer, slr.docno, &slr, false);
 
     trace_0(TRACE_MODULE_EVAL, buffer);
     trace_2(TRACE_MODULE_EVAL, " [SP=%d] %s", stack_offset(stack_ptr), string);
@@ -1932,10 +1932,132 @@ read_check_custom_def(
 *
 * function called to recalc sheet
 *
-* call as often as possible; it will return
-* as often as is reasonable
+* call as often as possible; it will return as often as is reasonable
 *
 ******************************************************************************/
+
+static BOOL
+ev_recalc_process_TRF_BLOWN(void)
+{
+    EV_SLR slr;
+
+    /* see if there's anything to do */
+    if(!todo_get_slr(&slr))
+    {
+        ev_recalc_status(0);
+        return(FALSE);
+    }
+
+    /* give up right away with no stack */
+    if(stack_check_n(1) < 0)
+        return(FALSE);
+
+    /* if evaluator has been disturbed,
+     * clear the stack and restart
+     */
+    stack_zap(NULL);
+
+    /* tell the world there's something to do */
+    ev_recalc_status(todotab.next);
+
+    /* get trees ready for action */
+    tree_sort_all();
+
+    tree_flags &= ~TRF_BLOWN;
+    return(TRUE);
+}
+
+static S32
+ev_recalc_for_ALERT(
+    _InoutRef_  P_SS_DATA p_ss_data)
+{
+    S32 res = ev_alert_poll();
+
+    if(res <  0)
+        return(res);
+
+    ev_alert_close();
+
+    ss_data_set_integer(p_ss_data, (S32) res);
+
+    return(res);
+}
+
+static S32
+ev_recalc_for_INPUT(
+    _InoutRef_  P_SS_DATA p_ss_data)
+{
+    char result_string[BUF_EV_LONGNAMLEN];
+    S32 res = ev_input_poll(result_string, EV_LONGNAMLEN);
+    SS_DATA string_data;
+
+    if(res <  0)
+        return(res);
+
+    /* get rid of input box */
+    ev_input_close();
+
+    if(status_ok(ss_string_make_ustr(&string_data, result_string)))
+    {
+        EV_NAMEID name_key;
+        S32 name_res = name_make(&name_key,
+                                 stack_ptr->slr.docno,
+                                 stack_ptr->data.stack_alert_input.name_id,
+                                 &string_data);
+
+        if(name_res < 0)
+        {
+            ss_data_free_resources(&string_data);
+            ss_data_set_error(p_ss_data, name_res);
+        }
+        else
+        {
+            EV_NAMEID name_num = name_def_find(name_key);
+            assert(name_num >= 0);
+
+            /* memory leak on old contents of name? */
+            name_ptr_must(name_num)->def_data = string_data;
+
+            ss_data_set_integer(p_ss_data, (S32) res);
+        }
+    }
+
+    return(res);
+}
+
+static void
+ev_recalc_for_ALERT_INPUT(void)
+{
+    S32 res;
+    SS_DATA ss_data;
+
+    switch(stack_ptr->data.stack_alert_input.alert_input)
+    {
+    default:
+#if CHECKING
+        default_unhandled();
+    case RPN_FNV_ALERT:
+#endif
+        res = ev_recalc_for_ALERT(&ss_data);
+        break;
+
+    case RPN_FNV_INPUT:
+        res = ev_recalc_for_INPUT(&ss_data);
+        break;
+    }
+
+    if(res < 0)
+        return; /* not yet complete */
+
+    /* pop previous state
+     * push alert/input result
+     * this leaves copies of flags & slr in [-1]
+     */
+    stack_ptr[0] = stack_ptr[-1];
+
+    stack_ptr[-1].type = DATA_ITEM;
+    stack_ptr[-1].data.stack_data_item.data = ss_data;
+}
 
 extern void
 ev_recalc(void)
@@ -1944,34 +2066,12 @@ ev_recalc(void)
 
     if(tree_flags & TRF_BLOWN)
     {
-        EV_SLR slr;
-
-        /* see if there's anything to do */
-        if(!todo_get_slr(&slr))
-        {
-            ev_recalc_status(0);
-            return;
-        }
-
-        /* give up right away with no stack */
-        if(stack_check_n(1) < 0)
+        if(ev_recalc_process_TRF_BLOWN())
             return;
 
-        /* if evaluator has been disturbed,
-         * clear the stack and restart
-         */
-        stack_zap(NULL);
-
-        /* tell the world there's something to do */
-        ev_recalc_status(todotab.next);
-
-        /* get trees ready for action */
-        tree_sort_all();
+        complete = 1;
 
         trace_0(TRACE_MODULE_EVAL, "**************<recalc restarting after blow-up>*************");
-
-        tree_flags &= ~TRF_BLOWN;
-        complete = 1;
     }
 
     #if TRACE_ALLOWED
@@ -2128,7 +2228,7 @@ ev_recalc(void)
 
             if((stack_ptr->data.stack_in_calc.travel_res > 0)                            &&
                !(stack_ptr->stack_flags & STF_CALCEDERROR)                               &&
-               (doc_check_custom(stack_ptr->slr.docno)                                 ||
+               (doc_check_is_custom(stack_ptr->slr.docno)                              ||
                 (stack_ptr->stack_flags & STF_CALCEDSUPPORTER)                         ||
                 (stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->parms.type == EVS_VAR_RPN &&
                  changed)                                                                        ||
@@ -2189,8 +2289,8 @@ ev_recalc(void)
                                           &stack_ptr->data.stack_in_calc.result_data);
 
                 /* on error in custom function sheet, return custom function result error */
-                if(stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result.data_id == DATA_ID_ERROR &&
-                   doc_check_custom(stack_ptr->slr.docno))
+                if( (stack_ptr->data.stack_in_calc.eval_block.p_ev_cell->ev_result.data_id == DATA_ID_ERROR) &&
+                    doc_check_is_custom(stack_ptr->slr.docno) )
                 {
                     SS_DATA data;
 
@@ -2211,7 +2311,7 @@ ev_recalc(void)
                 }
             }
 
-            if(!doc_check_custom(stack_ptr->slr.docno)               &&
+            if(!doc_check_is_custom(stack_ptr->slr.docno)            &&
                (stack_ptr->data.stack_in_calc.did_calc             ||
                 stack_ptr->stack_flags & STF_CALCEDERROR           ||
                 (stack_ptr->data.stack_in_calc.travel_res < 0 &&
@@ -2658,73 +2758,8 @@ ev_recalc(void)
             }
 
         case ALERT_INPUT:
-            {
-            S32 res;
-            SS_DATA ss_data;
-
-            switch(stack_ptr->data.stack_alert_input.alert_input)
-            {
-            case RPN_FNV_ALERT:
-                if((res = ev_alert_poll()) >= 0)
-                {
-                    ss_data_set_integer(&ss_data, (S32) res);
-                    ev_alert_close();
-                }
-                break;
-
-            case RPN_FNV_INPUT:
-                {
-                char result_string[BUF_EV_LONGNAMLEN];
-
-                if((res = ev_input_poll(result_string, EV_LONGNAMLEN)) >= 0)
-                {
-                    SS_DATA string_data;
-
-                    /* get rid of input box */
-                    ev_input_close();
-
-                    if(status_ok(ss_string_make_ustr(&string_data, result_string)))
-                    {
-                        S32 name_res;
-                        EV_NAMEID name_key;
-
-                        if((name_res = name_make(&name_key,
-                                                 stack_ptr->slr.docno,
-                                                 stack_ptr->data.stack_alert_input.name_id,
-                                                 &string_data)) < 0)
-                        {
-                            ss_data_free_resources(&string_data);
-                            ss_data_set_error(&ss_data, name_res);
-                        }
-                        else
-                        {
-                            EV_NAMEID name_num = name_def_find(name_key);
-                            assert(name_num >= 0);
-
-                            name_ptr_must(name_num)->def_data = string_data;
-
-                            ss_data_set_integer(&ss_data, (S32) res);
-                        }
-                    }
-                }
-                break;
-                }
-            }
-
-            if(res >= 0)
-            {
-                /* pop previous state
-                 * push alert/input result
-                 * this leaves copies of flags & slr in [-1]
-                 */
-                stack_ptr[0] = stack_ptr[-1];
-
-                stack_ptr[-1].type = DATA_ITEM;
-                stack_ptr[-1].data.stack_data_item.data = ss_data;
-            }
-
+            ev_recalc_for_ALERT_INPUT();
             break;
-            }
 
         /* all other states are treated as an error condition */
         /*case_ERROR:*/

@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Custom Functions</title>
+    <link href="../guide.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td class="navheader_PCN_L"><a accesskey="p" href="../../csv.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="../../fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="database.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="Custom">Custom Functions</h1>
+    <p>
+        PipeDream enables you to define your own functions.
+        You can use custom functions to simplify specialised calculations which you often perform.
+        Custom functions store in one place specialised formulae which you can use in many places.
+    </p>
+    <p>To create and use a custom function, you must first define the function, then call it.</p>
+
+    <h2 id="Defining">Defining the Function</h2>
+    <p>
+        This is done by typing its definition into a document which becomes a <em>custom function sheet</em>.
+        Custom function sheets behave differently to ordinary PipeDream documents.
+    </p>
+    <p>The definition starts with the function called FUNCTION and ends with the function called RESULT.</p>
+    <p>Before you define the function, you need to make the following decisions:</p>
+    <ul>
+        <li>What is the function&rsquo;s name?</li>
+        <li>What parameters does the function have?</li>
+        <li>Do the types of the function parameters need to be specified?</li>
+        <li>What does the function do?</li>
+        <li>What result does the function return?</li>
+    </ul>
+
+    <h2 id="Calling">Calling the Function</h2>
+    <p>
+        You call a custom function by typing its name into a formula, just as you do with built-in functions such as SUM.
+        Calls to custom functions are usually external references and so need to be prefixed by <code>[file]</code>,
+        where <code>file</code> is the name of the custom function sheet.
+        The exception to this is when you call one custom function from within another custom function on the same custom function sheet.
+    </p>
+
+    <h2 id="Library">Library Loading of Custom Functions</h2>
+    <p>If you wish, PipeDream can load a custom function sheet from a library directory.</p>
+
+    <h2 id="Names">Custom Function Names</h2>
+    <p>The same rules apply to custom function names as to names themselves:</p>
+    <ul>
+        <li>The maximum length is 24 characters.</li>
+        <li>They can include letters, digits and the underscore character.</li>
+        <li>There must be at least one underscore in the name before you use any digits.</li>
+    </ul>
+
+    <h2 id="FUNCTION">FUNCTION</h2>
+    <p>
+        The function FUNCTION is used to define a custom function.
+        Any document containing FUNCTION automatically becomes a custom function sheet.
+        FUNCTION must have at least one parameter and may have several.
+        All parameters to FUNCTION must be strings.
+    </p>
+    <p>The first parameter is the name of the custom function which you are defining.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>FUNCTION("fred")</code></p>
+    <p>defines a custom function called &lsquo;fred&rsquo;.</p>
+    <p>Parameters to FUNCTION after the first one specify the parameters to the custom function.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>FUNCTION("my_add","number_l","number_2")</code></p>
+    <p>defines a custom function called &lsquo;my_add&rsquo; with two parameters, called &lsquo;number_1&rsquo; and &lsquo;number_2&rsquo;.</p>
+    <p>You can specify the types of the parameters and it is usually best to do so.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>FUNCTION("my_divide","one:number","two:number")</code></p>
+    <p>
+        defines a custom function called &lsquo;my_divide&rsquo; with two parameters called &lsquo;one&rsquo; and &lsquo;two&rsquo;, both of which must be numbers.
+        Note that the type must be preceded by a colon.
+    </p>
+    <p>Several possible types may be given for each parameter, separated by commas.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>FUNCTION("my_convert","one:date,text","two:number")</code></p>
+    <p>
+        defines a custom function called &lsquo;my_convert&rsquo; with two parameters called &lsquo;one&rsquo; and &lsquo;two&rsquo;.
+        Parameter &lsquo;one&rsquo; can be either a date or a text string; &lsquo;two&rsquo; must be a number.
+    </p>
+    <p>Possible types are the same as those which may be returned by the TYPE function:</p>
+    <table border="0" class="csg-sample-indent">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <td><code>array</code></td>
+                <td>array, or range of cells</td>
+            </tr>
+            <tr>
+                <td><code>date</code></td>
+                <td>dates</td>
+            </tr>
+            <tr>
+                <td><code>error</code></td>
+                <td>error</td>
+            </tr>
+            <tr>
+                <td><code>number</code></td>
+                <td>numbers</td>
+            </tr>
+            <tr>
+                <td><code>reference </code></td>
+                <td>cell references</td>
+            </tr>
+            <tr>
+                <td><code>text</code></td>
+                <td>text</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        If you don&rsquo;t specify a type, PipeDream assumes that the function will accept numbers, text and dates.
+        If none of the custom function&rsquo;s parameters has the type set to array and you pass an array or range of cells to it, PipeDream performs automatic array expansion.
+    </p>
+
+    <h2 id="Parameters">Parameters</h2>
+    <p>When you want to use a parameter within a custom function, you need to give its name as defined in FUNCTION, preceded by an <code>@</code> character.</p>
+    <p>For example, inside the function <code>my_add</code> defined above, you might type:</p>
+    <p class="csg-sample-indent"><code>@number_1+@number_2</code></p>
+
+    <h2 id="RESULT">RESULT</h2>
+    <p>When the custom function has finished its processing, you must return a result using the function RESULT.</p>
+    <h5>Examples:</h5>
+    <p class="csg-sample-indent"><code>RESULT(10)</code></p>
+    <p>returns 10 to the caller.</p>
+    <p class="csg-sample-indent"><code>RESULT(A10)</code></p>
+    <p>returns the value of cell A10 on the custom function sheet to the caller.</p>
+
+    <h2 id="Exec">Custom Function Execution</h2>
+    <p>
+        On a custom function sheet, recalculation, or execution of custom function statements, works differently to a normal PipeDream document.
+        You can start a custom function in any cell you like on a custom function sheet.
+        Type FUNCTION into the cell where you want to start the custom function.
+        Execution then proceeds down the column containing FUNCTION.
+        A custom function sheet can contain many custom functions.
+    </p>
+    <p>
+        PipeDream proceeds row by row, evaluating the formula in each cell.
+        The result of the formula is then stored in the cell.
+        You can&rsquo;t see the results on a custom function sheet because PipeDream always shows the formulae rather than the results in custom function sheets.
+    </p>
+    <p>
+        Unless you use one of the custom function control statements, such as FOR, IF or WHILE,
+        execution keeps going down the column until RESULT is found, at which point control passes back to the caller.
+    </p>
+    <p>Formulae on custom function sheets are displayed with three dots (...) before them so that you can distinguish the formulae from text cells.</p>
+
+    <h2 id="Statements">Custom Function Control Statements</h2>
+    <p>The custom function control statements are:</p>
+    <ul>
+        <li>BREAK</li>
+        <li>CONTINUE</li>
+        <li>ELSE</li>
+        <li>ELSEIF</li>
+        <li>ENDIF</li>
+        <li>ENDWHILE</li>
+        <li>FOR</li>
+        <li>GOTO</li>
+        <li>IF</li>
+        <li>NEXT</li>
+        <li>REPEAT</li>
+        <li>RESULT</li>
+        <li>UNTIL</li>
+        <li>WHILE</li>
+    </ul>
+    <p>
+        These statements can be used to modify the flow of execution within a custom function.
+        Normally, execution proceeds down the column starting at the cell after FUNCTION and ending at RESULT.
+        Most control statements must appear in a cell on their own.
+        Exceptions to this are BREAK, CONTINUE, RESULT and GOTO which can appear in function parameters.
+    </p>
+    <h5>Examples:</h5>
+    <pre class="csg-sample-indent">
+IF(A76,,GOTO(A56))
+IF(C&lt;=D,RESULT(C))
+    </pre>
+
+    <h2 id="IF">IF &hellip; ELSE &hellip; ELSEIF &hellip; ENDIF</h2>
+    <p>
+        When IF is used with one parameter, it starts an IF &hellip; ENDIF sequence.
+        The parameter is a condition and if the condition is true, execution continues on the following line.
+        If the condition is not true, execution jumps to the first line after the IF statement which contains an ELSE or an ELSEIF or an ENDIF.
+        You must have an IF before ELSE, ELSEIF or ENDIF.
+        You do not need to provide ELSE or ELSEIF statements but you must provide an ENDIF.
+    </p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">
+IF(@parameter_1&gt;10)
+  SET_VALUE(C10,1)
+ELSEIF(@parameter_1&gt;8)
+  SET_VALUE(C12,1)
+ELSEIF(@parameter_1&gt;6)
+  SET_VALUE(C14,1)
+ELSE
+  SET_VALUE(C16,1)
+ENDIF
+    </pre>
+    <p>You can use spaces to make IF statements more readable.</p>
+    <p>You can nest IF statements inside each other.</p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">
+IF(A15&gt;B15)
+  IF(TYPE(DEREF(C16))="error")
+    RESULT("Bad value")
+  ENDIF
+  C16+4+SUM(E1E10)
+ENDIF
+    </pre>
+    <p>
+        You can also use an IF statement with two or three parameters.
+        In this case, the second and third parameters are used as the statements to be executed in the true and false cases and there is no ENDIF statement.
+    </p>
+    <p>Examples are:</p>
+    <pre class="csg-sample-indent">
+IF(B3&gt;7,RESULT(C3))
+IF(B5=2,,BREAK)
+IF(@num&lt;=0,RESULT(1),RESULT(@num))
+    </pre>
+
+    <h2 id="WHILE">WHILE &hellip; ENDWHILE</h2>
+    <p>Loops while the condition is true.</p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">
+WHILE(D56&lt;100)
+  SET_VALUE(D56,D56+E63)
+ENDWHILE
+    </pre>
+
+    <h2 id="REPEAT">REPEAT &hellip; UNTIL</h2>
+    <p>
+        Loops until the condition is true.
+        The loop always executes once.
+    </p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">
+A10  REPEAT
+A11    A11-C13
+A12  UNTIL(A11&lt;10)
+    </pre>
+    <p>This loop subtracts C13 from A11 until the value of A11 is less than 10.</p>
+    <p>
+        Notice that there is a circular reference in A11.
+        This is allowed in a custom function sheet.
+    </p>
+
+    <h2 id="FOR">FOR</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        FOR("<span class="csg-function-parameter">counter_name</span>",
+        <span class="csg-function-parameter">start_n</span>,
+        <span class="csg-function-parameter">end_n</span>
+        {,&nbsp;<span class="csg-function-parameter">step_n</span>})
+    </p>
+    <p>
+        Loops while incrementing or decrementing a counter.
+        PipeDream defines the name given in <span class="csg-function-parameter">counter_name</span>, if it is not already defined,
+        and its value is set to <span class="csg-function-parameter">start_n</span>.
+        Before each iteration of the loop, the counter value is compared to <span class="csg-function-parameter">end_n</span>.
+        If the counter value is greater than <span class="csg-function-parameter">end_n</span>
+        (or less than <span class="csg-function-parameter">end_n</span> if <span class="csg-function-parameter">step_n</span> is negative),
+        the loop stops and execution carries on after the next statement.
+        Otherwise, statements in the loop are executed.
+        After each loop iteration, <span class="csg-function-parameter">step_n</span> is added to the counter value and the process continues.
+        If <span class="csg-function-parameter">step_n</span> is not given, the value 1 (one) is used.
+    </p>
+    <h5>Example:</h5>
+    <pre class="csg-sample-indent">
+FOR("loop_counter",1,10)
+  IF(loop_counter&gt;9)
+    SET_VALUE(D10,"nearly finished" )
+  ELSE
+    SET_VALUE(D10,"not there yet")
+  ENDIF
+NEXT
+    </pre>
+
+    <h2 id="CONTINUE">CONTINUE</h2>
+    <p>Execution continues at the most recent loop.</p>
+    <ul>
+        <li>In a WHILE loop, it continues at the next WHILE;</li>
+        <li>In a REPEAT loop, it continues at the UNTIL;</li>
+        <li>In a FOR loop, it continues at the NEXT.</li>
+    </ul>
+
+    <h2 id="BREAK">BREAK</h2>
+    <p class="csg-function-declaration">BREAK{(<span class="csg-function-parameter">n</span>)}</p>
+    <p>
+        Breaks out of the most recent loop.
+        You can break out of more than one loop by giving a parameter.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>BREAK(2)</code></p>
+    <p>breaks out of two loops.</p>
+    <p>The following custom functions are provided in the PipeDream Examples:</p>
+    <pre class="csg-sample-indent">
+function("fact","arg_1")
+result(if(@arg_1=1,1,@arg_1*fact(@arg_1-1)))
+    </pre>
+    <p><code>fact</code> returns the factorial of a positive integer.</p>
+    <p>
+        Note that it is an example of a recursive custom function in that, for values greater than one, it calls itself.
+        It is also an example of a function which doesn&rsquo;t check its parameters to see if it has been given sensible values!
+    </p>
+    <pre class="csg-sample-indent">
+function("find_space","str:text")
+for("i",1,length(@str),1)
+  if(mid(@str,i,1)=char(32),break,0)
+next
+result(i)
+    </pre>
+    <p><code>find_space</code> finds the position of the first space in the input string.</p>
+    <p>
+        It sets up a FOR loop with a control variable called <code>i</code> and uses <code>i</code> as an index into the string.
+        When it finds a space, it breaks out of the loop and returns <code>i</code>.
+        If there are no spaces in the string, it returns the length of the string plus one.
+    </p>
+    <pre class="csg-sample-indent">
+function("strip_spaces","str:text")
+set_name("stringout",@str)
+while(code(stringout)=32)
+  set_name("stringout",right(stringout,length(stringout)-1))
+  if(length(stringout)&lt;1,break,)
+endwhile
+result(stringout)
+    </pre>
+    <p><code>strip_spaces</code> strips the spaces from the start of a string and gives back the string.</p>
+    <p>
+        The name <code>stringout</code> is used to store the string during the function&rsquo;s execution.
+        A WHILE loop tests whether the first character of the string is a space (ASCII 32).
+        If it is, <code>stringout</code> is reset so that it loses the initial space.
+        An IF statement tests to see if the resulting string still has any length and, if it hasn&rsquo;t, breaks out of the loop.
+        Notice that the IF does not need an ENDIF because it has more than one parameter.
+        Finally, when the loop terminates, or is broken out of, the new string is returned.
+    </p>
+    <p>You will find other custom function sheets in the PipeDream Examples.</p>
+    <p>
+        Often, the best way to learn how to write custom functions is to start with a function which someone else has written and develop it yourself.
+        For example, you may like to try extending <code>strip_spaces</code> so that it not only looks for spaces but also for dots at the start of the string.
+        Or rewrite <code>find_space</code> so that, instead of returning the position of a space, it converts all the spaces in a string to underscore characters.
+        When you can change existing custom functions successfully, you may then wish to start writing custom functions of your own.
+    </p>
+
+    <h2 id="Special">Special Functions</h2>
+    <p>The following functions can be used with custom functions. They are described in detail in <a href="misc.html">Miscellaneous Functions</a>.</p>
+    <p>ALERT</p>
+    <p>INPUT</p>
+    <p>SET_NAME</p>
+    <p>SET_VALUE</p>
+    <p>TYPE</p>
+
+    <table class="csg-info-table">
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th>For details on</th>
+                <th>See</th>
+            </tr>
+            <tr>
+                <td>Library loading of custom functions</td>
+                <td><a href="../externalreferences.html">External References</a></td>
+            </tr>
+            <tr>
+                <td>ALERT, INPUT, SET_NAME, SET_VALUE, TYPE</td>
+                <td><a href="misc.html">Miscellaneous Functions</a></td>
+            </tr>
+            <tr>
+                <td>Automatic array expansion</td>
+                <td><a href="../arrays.html">Arrays</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td class="navfooter_PUN_L">CSV </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Database Functions</td>
+            </tr>
+            <tr>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="../csv.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="database.html">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

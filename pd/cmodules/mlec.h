@@ -232,10 +232,10 @@ error definition
 
 #define MLEC_ERRLIST_DEF \
     errorstring(MLEC_ERR_NOSELECTION      , "No selected text") \
-    errorstring(MLEC_ERR_GETTEXT_BUFOVF   , "Program error - Destination string too small") \
-    errorstring(MLEC_ERR_NOPASTEBUFFER    , "Program error - No paste buffer") \
-    errorstring(MLEC_ERR_BUFFERWENT_AWOL  , "Program error - Paste buffer went AWOL") \
-    errorstring(MLEC_ERR_INVALID_PASTE_OP , "Program error - Invalid paste buffer operation")
+    errorstring(MLEC_ERR_GETTEXT_BUFOVF   , "Destination string too small") \
+    errorstring(MLEC_ERR_NOPASTEBUFFER    , "No paste buffer") \
+    errorstring(MLEC_ERR_BUFFERWENT_AWOL  , "Paste buffer went AWOL") \
+    errorstring(MLEC_ERR_INVALID_PASTE_OP , "Invalid paste buffer operation")
 
 /*
 error definition

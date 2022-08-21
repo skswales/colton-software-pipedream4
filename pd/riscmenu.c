@@ -1520,7 +1520,7 @@ bump_line_height(
 
     consume_int(sprintf(array, "%d", (leading <= 0) ? 1 : leading));
 
-    set_icon_text(window_handle, FONT_LEADING, array);
+    winf_setfield(window_handle, FONT_LEADING, array);
 }
 
 static void
@@ -1556,6 +1556,16 @@ pdfontselect_init_fn(
 
         select_document_using_docno(old_docno);
     }
+}
+
+static void
+pdfontselect_init_fn_Insert(
+    _HwndRef_   HOST_WND fontselect_window_handle,
+    P_ANY init_handle)
+{
+    UNREFERENCED_PARAMETER(init_handle);
+
+    winf_setfield(fontselect_window_handle, dbox_OK, Action_Insert_STR);
 }
 
 static void
@@ -1734,7 +1744,7 @@ InsertFont_fn(void)
                        global_font,                              /* font_name */
                        width,                                    /* font width */
                        height,                                   /* font height */
-                       NULL, NULL,
+                       pdfontselect_init_fn_Insert, NULL,
                        pdfontselect_unknown_fn, NULL);
 
     /* be careful here, there might not be a current document anymore! */
@@ -1805,9 +1815,10 @@ decodesubmenu(
     case N_ChartEdit:
     case N_ChartAdd:
     case N_ChartRemove:
-        if(submenurequest)
         {
-            /* a change from the usual way of things */
+        if(submenurequest)
+        {   /* a change from the usual way of things */
+            funcnum = 0;
             pdchart_submenu_show(submenurequest);
             break;
         }
@@ -1815,37 +1826,47 @@ decodesubmenu(
         pdchart_submenu_select_from(nextoffset);
 
         if(funcnum == N_ChartSelect)
-            /* function performed */
-            break;
+        {   /* function performed */
+            funcnum = 0;
+        }
 
-        application_process_command(funcnum);
         break;
+        }
 
     case N_SaveChoices:
         {
         /* can only save choices from a specified document as it takes structure */
         P_DOCU p_docu;
 
-        if(NO_DOCUMENT != (p_docu = find_document_with_input_focus()))
+        if(NO_DOCUMENT == (p_docu = find_document_with_input_focus()))
+        {
+            funcnum = 0; /* no document to process this command in */
+        }
+        else
         {
             select_document(p_docu);
-            application_process_command(funcnum);
         }
 
         break;
         }
 
-    case N_SaveFile:
+    case N_SaveFileAs:
         if(!submenurequest)
-            funcnum = N_SaveFileAsIs;
+            funcnum = N_SaveFileAs_Imm;
+        break;
 
-        /* deliberate drop thru */
+    case N_SaveFileSimple:
+        if(!submenurequest)
+            funcnum = N_SaveFileSimple_Imm;
+        break;
 
     default:
-        /* call the appropriate function */
-        application_process_command(funcnum);
         break;
     }
+
+    /* call the appropriate function */
+    if(0 != funcnum)
+        application_process_command(funcnum);
 
     return(processed);
 }

@@ -7,7 +7,7 @@
 /* Copyright (C) 1988-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* Local header file for PipeDream/LOTUS converters */
+/* Local header file for PipeDream / Lotus 1-2-3 converters */
 
 /* MRJC March 1988 */
 
@@ -20,10 +20,6 @@
 #define FALSE 0
 #endif
 
-#ifndef huge
-#define huge
-#endif
-
 #ifndef uchar
 #define uchar char
 #endif
@@ -34,13 +30,13 @@
 *
 * code selection
 *
-* UTIL_LTP creates stand-alone utility for Lotus to PipeDream
-* UTIL_PTL creates stand-alone utility for PipeDream to Lotus
+* UTIL_LTP creates stand-alone utility for Lotus 1-2-3 to PipeDream
+* UTIL_PTL creates stand-alone utility for PipeDream to Lotus 1-2-3
 * INT_LPTPL creates internal code for converter using function lp_lptpl
 *
 ******************************************************************************/
 
-/* LOTUS opcode types */
+/* Lotus 1-2-3 opcode types */
 #define L_BOF 0
 #define L_EOF 1
 #define L_CALCMODE 2
@@ -113,7 +109,7 @@
 #define L_DEFAULT 15
 
 /*
-lotus formula opcodes
+Lotus 1-2-3 formula opcodes
 */
 
 /* constants */
@@ -257,35 +253,33 @@ types of operators
 #define LO_BRACKETS 6
 
 /*
-table of PipeDream options page
-constructs and equivalents
+table of PipeDream options page constructs and equivalents
 */
 
 typedef struct OPTDEF
 {
-	uchar *optstr;
-	U16 opcode;
-	U16 offset;
-	U16 deflt;
-	S32 (* wropt)();
+    const char *optstr;
+    U16 opcode;
+    U16 offset;
+    U16 deflt;
+    S32 (* wropt)();
 }
-* optp;
+OPTDEF; typedef const OPTDEF * optp;
 
 /*
-table of LOTUS operators
-and equivalents
+table of Lotus 1-2-3 operators and equivalents
 */
 
 typedef struct OPRDEF
 {
-	uchar fno;
-	S32 ftype;
-	S32 n_args;
-	S32 ltpok;
-	uchar *pdeqv;
-	S32 argix;
+    uchar fno;
+    S32 ftype;
+    S32 n_args;
+    S32 ltpok;
+    const char *pdeqv;
+    S32 argix;
 }
-* oprp;
+OPRDEF; typedef const OPRDEF * oprp;
 
 /*
 index of argument modifiers
@@ -302,18 +296,18 @@ scanner communication
 
 struct SYMBOL
 {
-	S32 symno;
-	F64 fpval;
-	U16 stcol;
-	U16 strow;
-	U16 encol;
-	U16 enrow;
-	uchar *stringp;
-	S32 ixf;
-	S32 scandate;
-	S32 day;
-	S32 mon;
-	S32 yr;
+    S32 symno;
+    F64 fpval;
+    U16 stcol;
+    U16 strow;
+    U16 encol;
+    U16 enrow;
+    uchar *stringp;
+    S32 ixf;
+    S32 scandate;
+    S32 day;
+    S32 mon;
+    S32 yr;
 };
 
 /* special symbol constants */
@@ -325,20 +319,19 @@ struct SYMBOL
 #define SYM_FUNC -6
 
 /*
-table of lotus opcodes giving 1-2-3 file structure
+table of Lotus 1-2-3 opcodes giving file structure
 */
 
-struct LFINS
+typedef struct LFINS
 {
-	uchar opcode;
-	S32 length;
-	uchar *sdata;
-	uchar dlen;
-	uchar pattern;
-	S32 (* writefunc)();
-};
-
-typedef struct LFINS *lfip;
+    uchar opcode;
+    S32 length;
+    const void *sdata;
+    uchar dlen;
+    uchar pattern;
+    S32 (* writefunc)();
+}
+LFINS; typedef const LFINS * lfip;
 
 /*
 external definitions
@@ -350,12 +343,12 @@ extern S32           pd123__errexp;
 extern FILE *        pd123__fin;
 extern FILE *        pd123__fout;
 extern S32           pd123__maxcol;
-extern struct OPRDEF pd123__opreqv[];
+extern const OPRDEF  pd123__opreqv[];
 extern S32           pd123__poorfunc;
 
 extern S32
 pd123__flookup(
-    uchar *);
+    const char *);
 
 extern S32
 pd123__foutc(
@@ -368,11 +361,11 @@ pd123__ichlotus(
 
 extern S32
 pd123__olookup(
-    uchar *);
+    const char *);
 
 extern S32
 pd123__searchdefo(
-    uchar *);
+    const char *);
 
 /* 123pd.c */
 extern uchar         pd123__hidvec[];
@@ -384,4 +377,4 @@ pd123__scnslr(
     U16 *,
     U16 *);
 
-/* end of pd123.h */
+/* end of pd123_i.h */

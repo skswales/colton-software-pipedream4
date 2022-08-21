@@ -160,7 +160,7 @@ image_cache_can_import_without_conversion(
     {
     case FILETYPE_PIPEDREAM: /* may be legacy chart format */
     case FILETYPE_PD_CHART:
-    case FILETYPE_T5_DRAW:
+    case FILETYPE_T5_HYBRID_DRAW:
     case FILETYPE_DRAW:
     case FILETYPE_SPRITE:
     case FILETYPE_POSTER:
@@ -252,7 +252,7 @@ image_cache_entry_new(
 
     if(NULL != (p_image_cache = collect_add_entry_bytes(IMAGE_CACHE, &image_cache, sizeof32(*p_image_cache) + (sizeof32(*name) * namlenp1), &key, p_status)))
     {
-        zero_struct_ptr(p_image_cache);
+        zero_struct_ptr_fn(p_image_cache);
 
         memcpy32((p_image_cache + 1), name, (sizeof32(*name) * namlenp1));
 
@@ -940,7 +940,7 @@ image_cache_load_setup_foreign_diagram(
     {
     DRAW_OBJECT_OPTIONS options;
 
-    zero_struct(options); /* NB bounding box of options object must be ignored */
+    zero_struct_fn(options); /* NB bounding box of options object must be ignored */
 
     options.type = DRAW_OBJECT_TYPE_OPTIONS;
     options.size = sizeof32(options);
@@ -1031,7 +1031,7 @@ image_cache_load(
 
                 file_close(&fin);
 
-                if(status_fail(res = image_convert_do_convert(&converted_file, (PCTSTR) (p_image_cache + 1))))
+                if(status_fail(res = image_convert_do_convert_file(&converted_file, (PCTSTR) (p_image_cache + 1))))
                 {
                     p_image_cache->error = res;
                     break;
@@ -1064,7 +1064,7 @@ image_cache_load(
             default: default_unhandled();
 #if CHECKING
             case FILETYPE_PD_CHART:
-            case FILETYPE_T5_DRAW:
+            case FILETYPE_T5_HYBRID_DRAW:
             case FILETYPE_DRAW:
             case FILETYPE_POSTER:
             case FILETYPE_VECTOR:
@@ -1132,7 +1132,7 @@ image_cache_load(
             {
             default: default_unhandled();
 #if CHECKING
-            case FILETYPE_T5_DRAW:
+            case FILETYPE_T5_HYBRID_DRAW:
             case FILETYPE_DRAW:
             case FILETYPE_POSTER:
             case FILETYPE_VECTOR:
@@ -1161,7 +1161,7 @@ image_cache_load(
             {
             default: default_unhandled();
 #if CHECKING
-            case FILETYPE_T5_DRAW:
+            case FILETYPE_T5_HYBRID_DRAW:
             case FILETYPE_DRAW:
             case FILETYPE_POSTER:
             case FILETYPE_VECTOR:

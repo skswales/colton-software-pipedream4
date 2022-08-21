@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2013-2019 Stuart Swales */
+/* Copyright (C) 2013-2020 Stuart Swales */
 
 /* SKS February 2013 */
 
@@ -25,38 +25,56 @@
 #endif
 #endif
 
-static BOOL
-g_report_enabled = TRUE;
+static struct REPORT_STATICS
+{
+    BOOL enabled;
 
 #if RISCOS
-static int try_reporter = TRUE;
-static int try_rpcemu_report = TRUE;
+    BOOL try_reporter;
+    BOOL try_rpcemu_report;
 #endif
+
+    PTSTR buffer;
+    U32 buffer_offset;
+    U32 elemof_buffer;
+}
+g_report = { FALSE, TRUE, TRUE };
 
 extern void
 report_enable(
     _InVal_     BOOL enable)
 {
-    g_report_enabled = enable;
+    if( enable && (NULL == g_report.buffer) )
+    {
+        const U32 elemof_buffer = 1024; /* limit for PipeDream */ /*4096;*/
+#if RISCOS /* avoid our own redirection */
+#undef malloc
+#endif
+        if(NULL == (g_report.buffer = malloc(elemof_buffer * sizeof(TCHAR))))
+            return;
+        g_report.elemof_buffer = elemof_buffer;
+    }
+
+    g_report.enabled = enable;
 }
 
 _Check_return_
 extern BOOL
 report_enabled(void)
 {
-    return(g_report_enabled);
+    return(g_report.enabled);
 }
 
 _Check_return_
 extern BOOL
 reporting_is_enabled(void)
 {
-    if(!g_report_enabled)
+    if(!g_report.enabled)
         return(FALSE);
 
 #if RISCOS && !CROSS_COMPILE
-    if( !try_reporter &&
-        !try_rpcemu_report &&
+    if( !g_report.try_reporter &&
+        !g_report.try_rpcemu_report &&
         (0 == stderr->__file) /* not redirected? */ )
     {
         return(FALSE);
@@ -79,7 +97,7 @@ reportf(
 {
     va_list args;
 
-    if(!g_report_enabled) return;
+    if(!g_report.enabled) return;
 
     va_start(args, format);
     vreportf(format, args);
@@ -92,63 +110,63 @@ reportf(
 *
 ******************************************************************************/
 
-static TCHARZ report_buffer[4096];
-static U32    report_buffer_offset = 0;
-
 extern void
 vreportf(
     _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        va_list args)
 {
+    const U32 elemof_report_buffer = g_report.elemof_buffer;
     PCTSTR tail;
     BOOL wants_continuation;
     int len;
 
-    if(!g_report_enabled) return;
+    if(!g_report.enabled) return;
+
+    if(NULL == g_report.buffer) return;
 
     if(format[0] == CH_VERTICAL_LINE)
     {   /* this one is a continuation - doesn't matter if it's already been flushed */
         format++;
     }
-    else if(0 != report_buffer_offset)
+    else if(0 != g_report.buffer_offset)
     {   /* this one is a not a continuation - flush anything pending */
-        report_buffer_offset = 0;
-        report_output(report_buffer);
+        g_report.buffer_offset = 0;
+        report_output(g_report.buffer);
     }
 
     tail = format + tstrlen32(format);
     wants_continuation = (tail != format) && (tail[-1] == CH_VERTICAL_LINE);
 
 #if WINDOWS
-    len = _vsntprintf_s(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, _TRUNCATE, format, args);
+    len = _vsntprintf_s(g_report.buffer + g_report.buffer_offset, elemof_report_buffer - g_report.buffer_offset, _TRUNCATE, format, args);
     if(-1 == len)
-        len = strlen32(report_buffer); /* limit to what actually was achieved */
+        len = strlen32(g_report.buffer); /* limit to what actually was achieved */
 #else /* C99 CRT */
-    len = vsnprintf(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, format, args);
+    len = vsnprintf(g_report.buffer + g_report.buffer_offset, elemof_report_buffer - g_report.buffer_offset, format, args);
     if(len < 0)
         len = 0;
-    else if((U32) len >= elemof32(report_buffer))
-        len = strlen32(report_buffer); /* limit to what actually was achieved */
+    else if((U32) len >= elemof_report_buffer)
+        len = strlen32(g_report.buffer); /* limit to what actually was achieved */
 #endif
 
     if(wants_continuation)
     {
-        const U32 original_report_buffer_offset = report_buffer_offset;
+        const U32 original_report_buffer_offset = g_report.buffer_offset;
 
-        report_buffer_offset += len;
+        g_report.buffer_offset += len;
 
         if(0 != original_report_buffer_offset)
         {
-            if(report_buffer[report_buffer_offset - 1] == CH_VERTICAL_LINE) /* may have been truncated - if so, just output */
+            if(g_report.buffer[g_report.buffer_offset - 1] == CH_VERTICAL_LINE) /* may have been truncated - if so, just output */
             {
-                report_buffer[--report_buffer_offset] = CH_NULL; /* otherwise retract back over the terminal continuation char */
+                g_report.buffer[--g_report.buffer_offset] = CH_NULL; /* otherwise retract back over the terminal continuation char */
                 return;
             }
         }
     }
 
-    report_buffer_offset = 0;
-    report_output(report_buffer);
+    g_report.buffer_offset = 0;
+    report_output(g_report.buffer);
 }
 
 /******************************************************************************
@@ -191,21 +209,21 @@ report_output(
     PCTSTR ptr;
     U8 ch;
 
-    if(!g_report_enabled) return;
+    if(!g_report.enabled) return;
 
     tail = buffer + tstrlen32(buffer); /* Differs from Fireworkz - scratches head... */
     may_need_newline = (tail == buffer) || (tail[-1] != '\n');
 
-    if(try_reporter)
+    if(g_report.try_reporter)
     {
         if(__swi_XReport_Text0(buffer) == (int) buffer)
         {   /* Reporter module always sticks a newline on all output */
             return;
         }
-        try_reporter = FALSE;
+        g_report.try_reporter = FALSE;
     }
 
-    if(try_rpcemu_report)
+    if(g_report.try_rpcemu_report)
     {
         if(__swi_XRPCEmu_Debug(buffer) == (int) buffer)
         {
@@ -215,7 +233,7 @@ report_output(
             if(__swi_XRPCEmu_Debug(newline_buffer) == (int) newline_buffer)
                 return;
         }
-        try_rpcemu_report = FALSE;
+        g_report.try_rpcemu_report = FALSE;
     }
 
 #if defined(__CC_NORCROFT)
@@ -255,7 +273,7 @@ report_output(
     if(may_need_newline)
         fputc(0x0A, stderr);
 #elif WINDOWS
-    if(!g_report_enabled) return;
+    if(!g_report.enabled) return;
 
     tail = buffer + tstrlen32(buffer);
     may_need_newline = (tail == buffer) || (tail[-1] != '\n');
@@ -321,6 +339,21 @@ report_procedure_name(
 
 _Check_return_
 _Ret_z_
+static PCTSTR
+report_bad_pointer(
+    PC_ANY p_any)
+{
+    static TCHARZ bad_pointer_buffer[16];
+#if WINDOWS
+    consume_int(_sntprintf_s(bad_pointer_buffer, elemof32(bad_pointer_buffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), p_any));
+#else /* C99 CRT */
+    consume_int(snprintf(bad_pointer_buffer, elemof32(bad_pointer_buffer), TEXT("<<") PTR_XTFMT TEXT(">>"), p_any));
+#endif
+    return(bad_pointer_buffer);
+}
+
+_Check_return_
+_Ret_z_
 extern PCTSTR
 report_tstr(
     _In_opt_z_  PCTSTR tstr)
@@ -329,7 +362,7 @@ report_tstr(
         return(TEXT("<<NULL>>"));
 
 #if 0 && CHECKING
-    if(IS_PTR_NONE(tstr))
+    if(PTR_IS_NONE(tstr))
         return(TEXT("<<NONE>>"));
 #endif
 
@@ -338,15 +371,9 @@ report_tstr(
         ((uintptr_t) tstr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
         ((uintptr_t) tstr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
 #endif
-        IS_BAD_POINTER(tstr) )
+        PTR_IS_BAD_POINTER(tstr) )
     {
-        static TCHARZ stringbuffer[16];
-#if WINDOWS
-        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), tstr));
-#else /* C99 CRT */
-        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), tstr));
-#endif
-        return(stringbuffer);
+        return(report_bad_pointer(tstr));
     }
 
     return(tstr);
@@ -362,7 +389,7 @@ report_ustr(
         return(TEXT("<<NULL>>"));
 
 #if 0 && CHECKING
-    if(IS_PTR_NONE(ustr))
+    if(PTR_IS_NONE(ustr))
         return(TEXT("<<NONE>>"));
 #endif
 
@@ -371,15 +398,9 @@ report_ustr(
         ((uintptr_t) ustr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
         ((uintptr_t) ustr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
 #endif
-        IS_BAD_POINTER(ustr) )
+        PTR_IS_BAD_POINTER(ustr) )
     {
-        static TCHARZ stringbuffer[16];
-#if WINDOWS
-        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), ustr));
-#else /* C99 CRT */
-        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), ustr));
-#endif
-        return(stringbuffer);
+        return(report_bad_pointer(ustr));
     }
 
     /* No need in PipeDream to watch out for inlines in USTRs! */
@@ -399,7 +420,7 @@ report_wstr(
         return(TEXT("<<NULL>>"));
 
 #if CHECKING
-    if(IS_PTR_NONE(wstr))
+    if(PTR_IS_NONE(wstr))
         return(TEXT("<<NONE>>"));
 #endif
 
@@ -408,15 +429,9 @@ report_wstr(
         ((uintptr_t) wstr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
         ((uintptr_t) wstr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
 #endif
-        IS_BAD_POINTER(wstr) )
+        PTR_IS_BAD_POINTER(wstr) )
     {
-        static TCHARZ stringbuffer[16];
-#if WINDOWS
-        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), wstr));
-#else /* C99 CRT */
-        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), report_ptr_cast(wstr)));
-#endif
-        return(stringbuffer);
+        return(report_bad_pointer(wstr));
     }
 
     return(_tstr_from_wstr(wstr));
@@ -434,7 +449,7 @@ report_sbstr(
         return(TEXT("<<NULL>>"));
 
 #if 0 && CHECKING
-    if(IS_PTR_NONE(sbstr))
+    if(PTR_IS_NONE(sbstr))
         return(TEXT("<<NONE>>"));
 #endif
 
@@ -443,15 +458,9 @@ report_sbstr(
         ((uintptr_t) sbstr < (uintptr_t) LOW_MEMORY_LIMIT ) ||
         ((uintptr_t) sbstr > (uintptr_t) HIGH_MEMORY_LIMIT) ||
 #endif
-        IS_BAD_POINTER(sbstr) )
+        PTR_IS_BAD_POINTER(sbstr) )
     {
-        static TCHARZ stringbuffer[16];
-#if WINDOWS
-        consume_int(_sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
-#else /* C99 CRT */
-        consume_int(snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
-#endif
-        return(stringbuffer);
+        return(report_bad_pointer(sbstr));
     }
 
     /* No need in PipeDream to watch out for inlines in SBSTR! */
@@ -503,6 +512,21 @@ report_wimp_event_code(
 }
 
 _Check_return_
+static PTSTR
+report_wimp_get_buffer(
+    _InoutRef_  P_PTSTR p_buffer,
+    _InVal_     U32 elemof_buffer)
+{
+    if(NULL == *p_buffer)
+    {
+        STATUS status;
+        *p_buffer = al_ptr_alloc_elem(TCHAR, elemof_buffer, &status);
+    }
+
+    return(*p_buffer);
+}
+
+_Check_return_
 _Ret_z_
 extern PCTSTR
 report_wimp_event(
@@ -512,9 +536,13 @@ report_wimp_event(
     const WimpPollBlock * const event_data = (const WimpPollBlock * const) p_event_data;
     char tempbuffer[256];
 
-    static TCHARZ messagebuffer[512];
+    const U32 elemof_messagebuffer = 512;
+    static PTSTR messagebuffer;
 
-    tstr_xstrkpy(messagebuffer, elemof32(messagebuffer), report_wimp_event_code(event_code));
+    if(NULL == report_wimp_get_buffer(&messagebuffer, elemof_messagebuffer))
+        return(report_tstr(NULL));
+
+    tstr_xstrkpy(messagebuffer, elemof_messagebuffer, report_wimp_event_code(event_code));
 
     switch(event_code)
     {
@@ -600,7 +628,7 @@ report_wimp_event(
     }
 
     if(*tempbuffer)
-        tstr_xstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
+        tstr_xstrkat(messagebuffer, elemof_messagebuffer, tempbuffer);
 
     return(messagebuffer);
 }
@@ -688,10 +716,14 @@ report_wimp_message(
             : TEXT("%s, size ") INT_TFMT TEXT(", your_ref ") U32_XTFMT TEXT(" from task " U32_XTFMT ", my(his)_ref ") U32_XTFMT TEXT(" ");
     TCHARZ tempbuffer[256];
 
-    static TCHARZ messagebuffer[512];
+    const U32 elemof_messagebuffer = 512;
+    static PTSTR messagebuffer;
+
+    if(NULL == report_wimp_get_buffer(&messagebuffer, elemof_messagebuffer))
+        return(report_tstr(NULL));
 
     consume_int(
-        snprintf(messagebuffer, elemof32(messagebuffer), format,
+        snprintf(messagebuffer, elemof_messagebuffer, format,
                  report_wimp_message_action(user_message->hdr.action_code),
                  user_message->hdr.size, user_message->hdr.your_ref,
                  user_message->hdr.sender, user_message->hdr.my_ref));
@@ -778,7 +810,7 @@ report_wimp_message(
     }
 
     if(*tempbuffer)
-        tstr_xstrkat(messagebuffer, elemof32(messagebuffer), tempbuffer);
+        tstr_xstrkat(messagebuffer, elemof_messagebuffer, tempbuffer);
 
     return(messagebuffer);
 }

@@ -52,6 +52,10 @@ static const EV_TYPE arg_IoR[]  = { 1, EM_INT | EM_REA };
 /* IoRoD: integer, real or date */
 static const EV_TYPE arg_IoRoD[] = { 1, EM_REA | EM_DAT | EM_INT };
 
+/* D_I: date and integer */
+static const EV_TYPE arg_D_I[]  = { 2, EM_DAT,
+                                       EM_INT };
+
 /* S_I: string and integer */
 static const EV_TYPE arg_S_I[]  = { 2, EM_STR,
                                        EM_INT };
@@ -64,9 +68,20 @@ static const EV_TYPE arg_bse[]  = { 2, EM_REA | EM_INT,
 static const EV_TYPE arg_cho[]  = { 2, EM_INT,
                                        EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY };
 
-static const EV_TYPE arg_cpx[]  = { 1, EM_REA | EM_ARY };
+#if defined(COMPLEX_STRING)
+static const EV_TYPE arg_CPX[]  = { 1, EM_REA | EM_STR | EM_ARY };
+static const EV_TYPE arg_C_I[]  = { 2, EM_REA | EM_STR | EM_ARY,
+                                       EM_INT };
+#else
+static const EV_TYPE arg_CPX[]  = { 1, EM_REA | EM_ARY };
+static const EV_TYPE arg_C_I[]  = { 2, EM_REA | EM_ARY,
+                                       EM_INT };
+#endif
 
 static const EV_TYPE arg_cvr[]  = { 2, EM_REA | EM_STR,
+                                       EM_INT };
+
+static const EV_TYPE arg_dan[]  = { 2, EM_INT | EM_DAT,
                                        EM_INT };
 
 static const EV_TYPE arg_dbs[]  = { 2, EM_ARY,
@@ -252,39 +267,40 @@ const RPNDEF rpn_table[] =
     { RPN_FNV,  -1, EV_RESO_CONTROL , EXCTRL(CONTROL_BREAK, 0),
                                                    /*break*/ NAS,    arg_INT },
 
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acos,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acosec,       arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acosech,      arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acosh,        arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acot,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acoth,        arg_cpx },
-    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_add,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asec,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asech,        arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asin,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asinh,        arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_atan,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_atanh,        arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cos,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cosec,        arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cosech,       arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cosh,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cot,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_coth,         arg_cpx },
-    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_div,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_exp,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_ln,           arg_cpx },
-    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_mul,          arg_cpx },
-    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_power,        arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_radius,       arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sec,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sech,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sin,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sinh,         arg_cpx },
-    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_sub,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_tan,          arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_tanh,         arg_cpx },
-    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_theta,        arg_cpx },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acos,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acosec,       arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acosech,      arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acosh,        arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acot,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_acoth,        arg_CPX },
+    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_add,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asec,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asech,        arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asin,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_asinh,        arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_atan,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_atanh,        arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cos,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cosec,        arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cosech,       arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cosh,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_cot,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_coth,         arg_CPX },
+    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_div,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_exp,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_ln,           arg_CPX },
+    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_mul,          arg_CPX },
+    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_power,        arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_radius,       arg_CPX },
+    { RPN_FNV,  -2, EV_RESO_COMPLEX ,         NAP, c_c_round,        arg_C_I },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sec,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sech,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sin,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_sinh,         arg_CPX },
+    { RPN_FNF,   2, EV_RESO_COMPLEX ,         NAP, c_c_sub,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_tan,          arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_tanh,         arg_CPX },
+    { RPN_FNF,   1, EV_RESO_COMPLEX ,         NAP, c_c_theta,        arg_CPX },
 
     { RPN_FNV,  -2, EV_RESO_MATHS   ,         NAP, c_ceiling,        arg_REA },
     { RPN_FNF,   1, EV_RESO_STRING  ,         NAP, c_char,           arg_INT },
@@ -312,7 +328,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DAVG,    0, 1/*dbase*/, 0, 0),
                                                    /*dvag*/ NAS,     arg_dbs },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_day,            arg_DAT },
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_dayname,        arg_dmn },
+    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_dayname,        arg_dan },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNT,  0, 1/*dbase*/, 0, 0),
                                                    /*dcount*/ NAS,   arg_dbs },
     { RPN_FNF,   2, EV_RESO_DATABASE, FP_AGG(EXEC_DBASE, DBASE_DCOUNTA, 0, 1/*dbase*/, 0, 0),
@@ -482,7 +498,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   3, EV_RESO_LOOKUP  , FP_AGG(EXEC_LOOKUP, LOOKUP_VLOOKUP, 0, 0, 0, 0),
                                                    /*vlookup*/ NAS,  arg_hvl },
 
-    { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weekday,        arg_DAT },
+    { RPN_FNV,   1, EV_RESO_DATE    ,         NAP, c_weekday,        arg_D_I },
     { RPN_FNF,   1, EV_RESO_DATE    ,         NAP, c_weeknumber,     arg_DAT },
     { RPN_FNF,   1, EV_RESO_CONTROL , EXCTRL(CONTROL_WHILE, EVS_CNT_WHILE),
                                                    /*while*/ NAS,    arg_BOO },
@@ -575,6 +591,7 @@ look_table[] =
     { "c_mul",      RPN_FNF_C_MUL       },
     { "c_power",    RPN_FNF_C_POWER     },
     { "c_radius",   RPN_FNF_C_RADIUS    },
+    { "c_round",    RPN_FNV_C_ROUND     },
     { "c_sec",      RPN_FNF_C_SEC       },
     { "c_sech",     RPN_FNF_C_SECH      },
     { "c_sin",      RPN_FNF_C_SIN       },
@@ -856,8 +873,8 @@ ev_enum_resource_get(
         char doc_name_buf[BUF_EV_LONGNAMLEN];
         S32 item_at;
 
-        for(custom_num = 0, p_ev_custom = custom_def.ptr, item_at = 0;
-            custom_num < custom_def.next;
+        for(custom_num = 0, p_ev_custom = custom_def_deptable.ptr, item_at = 0;
+            custom_num < custom_def_deptable.next;
             ++custom_num, ++p_ev_custom)
         {
             __assume(p_ev_custom);
@@ -895,8 +912,8 @@ ev_enum_resource_get(
         char doc_name_buf[BUF_EV_LONGNAMLEN];
         S32 item_at;
 
-        for(name_num = 0, p_ev_name = names_def.ptr, item_at = 0;
-            name_num < names_def.next;
+        for(name_num = 0, p_ev_name = names_def_deptable.ptr, item_at = 0;
+            name_num < names_def_deptable.next;
             ++name_num, ++p_ev_name)
         {
             __assume(p_ev_name);

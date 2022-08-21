@@ -24,7 +24,7 @@ ASflags=$(ASflags_BASE)
 # NB PipeDream uses a global register for its sb variable, so avoid using that in this library code!
 
 CC = cc
-CCflags_BASE=-c -I$(WimpLib) -I$(PD) -throwback -DSB_GLOBAL_REGISTER -Wp
+CCflags_BASE=-c -I$(WimpLib) -I$(PD) -fafh -throwback -DSB_GLOBAL_REGISTER -Wp
 CCflags=$(CCflags_BASE) -Otime
 #CCflags=$(CCflags_BASE) -g
 
@@ -50,6 +50,10 @@ o.cs-flex:     $(WimpLib).c.flex
 o.cs-flex:     $(WimpLib).h.cs-flex
 o.cs-flex:     $(WimpLib).c.cs-flex
         $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-flex
+
+o.cs-resspr:   $(WimpLib).h.cs-resspr
+o.cs-resspr:   $(WimpLib).c.cs-resspr
+        $(CC) -o $@ $(CCflags_CSX) $(WimpLib).c.cs-resspr
 
 o.cs-wimptx:   $(WimpLib).c.wimpt $(WimpLib).h.wimpt
 o.cs-wimptx:   $(WimpLib).h.cs-wimptx
@@ -87,6 +91,7 @@ o.cs-bbcx \
 o.cs-event \
 o.cs-flex \
 o.cs-msgs \
+o.cs-resspr \
 o.cs-templat \
 o.cs-wimptx \
 o.cs-winf \
@@ -114,10 +119,6 @@ o.res:         $(WimpLib).h.res
 o.res:         $(WimpLib).c.res
         $(CC) -o $@ $(CCflags) $(WimpLib).c.res
 
-o.resspr:      $(WimpLib).h.resspr
-o.resspr:      $(WimpLib).c.resspr
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.resspr
-
 o.wimp:        $(WimpLib).h.wimp
 o.wimp:        $(WimpLib).c.wimp
         $(CC) -o $@ $(CCflags) $(WimpLib).c.wimp
@@ -139,16 +140,12 @@ o.fontlist \
 o.fontselect \
 o.menu \
 o.res \
-o.resspr \
 o.wimp \
 o.xferrecv \
 o.xfersend \
 o.swi
 
 # source files with no deltas (but wrapped with nd-xxx.c for context)
-
-o.dboxtcol:    $(WimpLib).c.dboxtcol $(WimpLib).c.nd-dboxtcol
-        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-dboxtcol
 
 o.drawcheck:   $(WimpLib).c.drawcheck $(WimpLib).c.nd-drawcheck
         $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-drawcheck
@@ -184,7 +181,6 @@ o.werr :       $(WimpLib).c.werr $(WimpLib).c.nd-werr
         $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-werr
 
 WRAPPED=\
-o.dboxtcol \
 o.drawmod \
 o.font \
 o.fileicon \

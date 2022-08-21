@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Error Messages</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,16 +16,16 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="editing.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="externalreferences.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="editing.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="externalreferences.html">Next</a></td>
             </tr>
         </table>
     </div>
 
-    <h1 id="Error">Error Messages</h1>
+    <h1 id="ErrorMessages">Error Messages</h1>
 
     <h2 id="Command">Command Errors</h2>
     <h4 id="Anagrams">Already doing anagrams</h4>
@@ -119,7 +119,7 @@
     </p>
     <h4 id="Badcell">Bad cell</h4>
     <p>The cell referred to in a replication command or the <span class="csg-command">Go To Cell</span> command does not exist.</p>
-    <h4 id="Bad">Bad string</h4>
+    <h4 id="BadString">Bad string</h4>
     <p>You have specified a search or next match or previous match but not specified a string to search for.</p>
     <h4 id="Badword">Bad word</h4>
     <p>You have specified a bad word in a spelling checker dialogue box.</p>
@@ -142,10 +142,10 @@
     <h4 id="Cantread">Can&rsquo;t read dictionary</h4>
     <p>PipeDream cannot read the dictionary.</p>
     <p>There may be a disc error. Try verifying the disc.</p>
-    <h4 id="Cantsave">Can&rsquo;t save a file from PipeDream into itself</h4>
-    <p>You cannot drag a file icon from the <span class="csg-dbox">Save</span> dialogue box back into the original PipeDream document.</p>
+    <h4 id="Cantsave">Can&rsquo;t save an entire file from PipeDream into itself</h4>
+    <p>You cannot drag a file icon from the <span class="csg-dbox">Save</span> dialogue box back into the original PipeDream document unless the <span class="csg-dbox-option">Selection</span> option is set.</p>
     <h4 id="Canttrans">Can&rsquo;t transfer file (use *Set Wimp$Scrap &lt;filename&gt;)</h4>
-    <p>RISC&nbsp;OS has not seen !Scrap, or Wimp$Scrap has been *Unset.</p>
+    <p>RISC OS has not seen !Scrap, or Wimp$Scrap has been *Unset.</p>
     <p>Set up a !Scrap on your hard disc or your data disc.</p>
     <h4 id="Cantupd">Can&rsquo;t update dictionary</h4>
     <p>PipeDream cannot update the dictionary.</p>
@@ -156,7 +156,7 @@
         It may be best to save your file onto another disc and then investigate what is wrong with the first disc.
         It may be that the disc is full or that it is faulty.
     </p>
-    <h4 id="Control">Control characters ignored</h4>
+    <h4 id="ControlCharacters">Control characters ignored</h4>
     <p>PipeDream has encountered control characters when loading the file and has ignored them.</p>
     <p>
         Check that the file is in the correct format and that it still contains all necessary information.
@@ -176,9 +176,9 @@
     <p>While you are editing a formula, the menu commands you cannot use are greyed out.</p>
     <h4>Escape</h4>
     <p>You have pressed the <span class="csg-key">Escape</span> key and the activity was abandoned.</p>
-    <h4 id="Fileexist">File already exists</h4>
+    <h4 id="FileExists">File already exists</h4>
     <p>You have asked PipeDream to create or save a file with the name of a file that already exists.</p>
-    <h4 id="File">File not found</h4>
+    <h4 id="FileNotFound">File not found</h4>
     <p>PipeDream cannot find the specified file.</p>
     <p>Check the filename carefully.</p>
     <h4 id="Filing">Filing system error</h4>
@@ -211,12 +211,12 @@
     <p>This is to prevent you form accidentally performing the operation on the wrong document.</p>
     <h4 id="Nopage">No pages</h4>
     <p>You have asked PipeDream to pause between printing each page but the page length is zero so there are no pages.</p>
-    <h4 id="Noprint">No RISC&nbsp;OS printer driver</h4>
-    <p>You have set RISC&nbsp;OS printing in the <span class="csg-dbox">Printer Config</span> dialogue box but there is no RISC&nbsp;OS printer driver installed.</p>
+    <h4 id="Noprint">No RISC OS printer driver</h4>
+    <p>You have set RISC OS printing in the <span class="csg-dbox">Printer Config</span> dialogue box but there is no RISC OS printer driver installed.</p>
     <h4 id="Nosel">No selected chart</h4>
     <p>You have tried to edit a chart but you do not have one selected.</p>
-    <h4 id="NotASCII">Not ASCII file</h4>
-    <p>The following types of file must be saved in ASCII format:</p>
+    <h4 id="NotASCII">Not a plain Text file</h4>
+    <p>The following types of file must be saved in plain Text ('ASCII') format:</p>
     <ul>
         <li>command files</li>
         <li>mailshot parameters</li>
@@ -269,11 +269,11 @@
     <p>You have passed an array to a function or custom function which was not expecting it.</p>
     <h4 id="Badcomp">Bad complex number</h4>
     <p>You have passed a complex number which is not a one row by two column array containing two numbers.</p>
-    <h4 id="Bad">Bad date</h4>
+    <h4 id="BadDate">Bad date</h4>
     <p>The date you have supplied is not a date, has the wrong format or lies outside the valid date range.</p>
     <h4 id="Badident">Bad identifier</h4>
     <p>You have entered a name, custom function or local parameter which does not adhere to the rules for naming these items.</p>
-    <p>See <a href="names.html">Names</a> and <a href="customfns.html">Custom Functions</a>.</p>
+    <p>See <a href="names.html">Names</a> and <a href="functions/custom.html">Custom Functions</a>.</p>
     <h4 id="Badindex">Bad index</h4>
     <ol>
         <li>One or both parameters in INDEX() is not numeric.</li>
@@ -289,7 +289,7 @@
     <p>You have a cycle of cell references.</p>
     <p>For example, A1 refers to C1 which refers to A1.</p>
     <p>Reorganise your spreadsheet to remove the circular reference.</p>
-    <h4 id="Control">Control function outside custom function</h4>
+    <h4 id="ControlFunction">Control function outside custom function</h4>
     <p>You have used a control statement outside a custom function sheet.</p>
     <h4 id="Custom">Custom function not defined</h4>
     <p>You have tried to use a custom function for which there is no definition.</p>
@@ -297,13 +297,13 @@
     <p>You have passed a date to a function or custom function which was not expecting it.</p>
     <h4 id="Divide">Divide by zero</h4>
     <p>Your division has a zero quotient or an average has failed because there were no number cells.</p>
-    <h4 id="File">File not loaded</h4>
+    <h4 id="FileNotLoaded">File not loaded</h4>
     <p>You have made an external reference to a spreadsheet which is not loaded.</p>
     <p>
         Load the file or create a spreadsheet with the name you have given.
         Check also the name of the file you have given.
     </p>
-    <h4 id="Formula">Formula too long</h4>
+    <h4 id="FormulaTooLong">Formula too long</h4>
     <p>You have entered a formula which is too long.</p>
     <h4 id="FP">FP error</h4>
     <p>The system floating point routines take exception to your number.</p>
@@ -378,14 +378,14 @@
     <hr />
 
     <h2 id="PD123">PipeDream - Lotus 1-2-3 Converter Error Messages</h2>
-    <h4 id="Bad">Bad input file</h4>
+    <h4 id="BadInputFile">Bad input file</h4>
     <p>The file being processed is neither a PipeDream file nor a Lotus 1-2-3 file.</p>
     <p>You may not have selected the correct file or it may be corrupted.</p>
-    <h4 id="Error">Error reading or writing file</h4>
+    <h4 id="ErrorReadingOrWritingFile">Error reading or writing file</h4>
     <p>There has been an error reading or writing the file when using the Lotus - PipeDream converter.</p>
-    <h4 id="File">File has too many rows or columns</h4>
+    <h4 id="TooManyRowsOrColumns">File has too many rows or columns</h4>
     <p>The file you want to convert with the PipeDream - Lotus converter has too many rows or columns for Lotus.</p>
-    <h4 id="Formula">Formula not completely converted</h4>
+    <h4 id="FormulaNotCompletelyConverted">Formula not completely converted</h4>
     <p>A formula has not been completely converted when using the Lotus - PipeDream converter.</p>
     <p>
         The rest of the file has been converted successfully.
@@ -396,14 +396,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Editing </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> External References</td>
+                <td class="navfooter_PUN_L">Editing </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> External References</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="editing.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="externalreferences.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="editing.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="externalreferences.html">Next</a></td>
             </tr>
         </table>
     </div>

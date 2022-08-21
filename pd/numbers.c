@@ -472,6 +472,8 @@ compile_text_slot(
     return((to - array) + 1);
 }
 
+#if 0 /* only enable when needed */
+
 extern const uchar *
 report_compiled_text_string(
     _In_z_      const uchar * cts_in)
@@ -521,6 +523,8 @@ report_compiled_text_string(
         }
     }
 }
+
+#endif
 
 /******************************************************************************
 *
@@ -909,7 +913,7 @@ draw_cache_file(
     trace_1(TRACE_APP_PD4, "draw_cache_file(%s)", name);
 
     res = loading_into_document
-        ? file_find_on_path_or_relative(namebuf, elemof32(namebuf), file_get_search_path(), name, currentfilename)
+        ? file_find_on_path_or_relative(namebuf, elemof32(namebuf), file_get_search_path(), name, currentfilename())
         : file_find_on_path(namebuf, elemof32(namebuf), file_get_search_path(), name);
 
     status_return(res);

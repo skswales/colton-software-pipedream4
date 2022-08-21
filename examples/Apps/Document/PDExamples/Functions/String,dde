@@ -145,8 +145,8 @@ Value
 
 Summary
 
-Converts ASCII value to character
-Converts character to ASCII value
+Converts value to corresponding character
+Converts character to corresponding value
 Compares two strings - 1 TRUE, 0 FALSE.
 Attempts to find first string within second, starting at %H4%Input3. Input3%H4% is optional
 Concatenates any number of strings onto the end of each other string.

@@ -1171,6 +1171,7 @@ PROC_EXEC_PROTO(c_odf_type)
 PROC_EXEC_PROTO(c_version)
 {
     exec_func_ignore_parms();
+    UNREFERENCED_PARAMETER(args);
 
     ss_data_set_real(p_ss_data_res, strtod(applicationversion, NULL));
 }

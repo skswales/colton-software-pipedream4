@@ -1,22 +1,22 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
-<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
-<TITLE>PipeDreamRes:!ReadMe</TITLE>
+<META HTTP-EQUIV="Content-Type" Content="text/html; charset=iso-8859-1">
+<TITLE>PipeDream:!ReadMe</TITLE>
 </HEAD>
 <BODY>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!-- Copyright (C) 2016-2018 Stuart Swales -->
+<!-- Copyright (C) 2016-2020 Stuart Swales -->
 
-<H1>PipeDreamRes:!ReadMe</H1>
+<H1>PipeDream:!ReadMe</H1>
 
 <P>This directory contains most of PipeDream's RISC OS Application Resources.</P>
 
-<P>These files are stored in this directory (and sub-directories thereof)to
+<P>These files are stored in this directory (and sub-directories thereof) to
 avoid inadvertent name collisions with items being looked for on
-PipeDream$Path.</P>
+PipeDream$DataPath.</P>
 
 
 <H4>!ReadMe</H4>

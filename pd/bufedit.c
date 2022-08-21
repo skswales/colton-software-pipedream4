@@ -76,8 +76,8 @@ static uchar *lastword;
 static S32 word_in;
 static S32 word_out;
 static S32 last_word_in;
-static S32 old_just;
-static S32 new_just;
+static uchar old_just;
+static uchar new_just;
 static S32 old_flags;
 static S32 cur_leftright;
 
@@ -243,7 +243,7 @@ insert_string(
     const char *str,
     BOOL allow_check)
 {
-    uchar t_xf_iovbit;
+    optiontype t_xf_iovbit;
     char ch;
 
     if(xf_inexpression_box || xf_inexpression_line)
@@ -936,7 +936,7 @@ HighlightBlock_fn(void)
 
     while(dialog_box(D_INSHIGH))
     {
-        block_highlight_core(H_INSERT, (d_inshigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
+        block_highlight_core(H_INSERT, (uchar) (d_insremhigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
 
         if(!dialog_box_can_persist())
             break;
@@ -959,7 +959,7 @@ RemoveHighlights_fn(void)
 
     while(dialog_box(D_REMHIGH))
     {
-        block_highlight_core(H_DELETE, (d_inshigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
+        block_highlight_core(H_DELETE, (uchar) (d_insremhigh[0].option - FIRST_HIGHLIGHT_TEXT) + FIRST_HIGHLIGHT);
 
         if(!dialog_box_can_persist())
             break;
@@ -1871,11 +1871,10 @@ fill_linbuf(
     char buffer[LIN_BUFSIZ];
     const uchar * from;
     uchar * to;
-    S32 wordlen, ch;
+    U8 ch;
+    S32 wordlen;
     P_CELL tcell;
     coord splitpoint;
-    COL tcol;
-    ROW trow;
     EV_DOCNO docno;
 
     firstword = TRUE;
@@ -1893,6 +1892,8 @@ fill_linbuf(
             if(SLRLD1 == ch)
             { /* decompile compiled cell reference */
                 const uchar * csr = from + 1; /* CSR is past the SLRLD1/2 */
+                COL tcol;
+                ROW trow;
 
                 from = talps_csr(csr, &docno, &tcol, &trow);
                 /*eportf("fill_linbuf: decompiled CSR docno %d col 0x%x row 0x%x", docno, tcol, trow);*/
@@ -2086,7 +2087,7 @@ mergeinline(
     coord splitpoint)
 {
     uchar *from, *to;
-    S32 splitch;
+    U8 splitch;
     ROW temp_row;
 
     splitch = linbuf[splitpoint];
@@ -2756,7 +2757,8 @@ init_colword(
     lastword = NULL;
     lindif = 0;
     last_word_in = word_in = word_out = 0;
-    old_just = old_flags = 0;
+    old_just = 0;
+    old_flags = 0;
     lecpos = 0;
     dspfld_from = -1;
 

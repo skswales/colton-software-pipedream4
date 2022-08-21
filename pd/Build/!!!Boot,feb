@@ -9,7 +9,7 @@
 |
 If "<Hdr$Path>"="" Then Error AcornC/C++ Tools not yet opened
 |
-If "<pd_root>"<>""  Then Error 0 Please reboot and reselect
+If "<pipedream_root>"<>""  Then Error 0 Please reboot and reselect
 |
 | SKS RISC PC
 If "<disc_root>"="" Then IfThere ADFS::id0.$.!Boot Then Set disc_root ADFS::id0.$
@@ -29,13 +29,13 @@ If "<disc_root>"="" Then Error 0 Please locate root disc
 | and not the svn:riscosfiletype property
 Set svn$filetypeext ""
 |
-Set pd_root <disc_root>.pipedream.pipedream__4_57__branch
+Set pipedream_root <disc_root>.pipedream.pipedream__4_58__branch
 |
 Unset disc_root
 |
-URD <pd_root>
+URD <pipedream_root>
 |Lib &.arm.library
-Dir &.pd
+Dir &
 |
 Set PipeDream$ReportEnable 1
 Set PipeDream$TraceEnable 1

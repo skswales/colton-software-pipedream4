@@ -1,0 +1,98 @@
+| MakeStore for PipeDream shipped by !Store
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 2020 Stuart Swales
+
+| !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
+
+| It helps to MakeRiscPkg all the individual packages first
+
+Set MakeStore$Dir <Obey$Dir>
+
+| NB As this whole bundle will be named in !Store
+Set pd$Release pd-45800
+
+Set makestore$Disc                       $.Temp.PD4.Store.<pd$Release>
+IfThere $.Temp           Then Else %CDir $.Temp
+IfThere $.Temp.PD4       Then Else %CDir $.Temp.PD4
+IfThere $.Temp.PD4.Store Then Else %CDir $.Temp.PD4.Store
+X %Wipe <makestore$Disc> ~cfr~v
+%CDir <makestore$Disc>
+
+Set makestore$Zip  <makestore$Disc>/zip
+%Remove <makestore$Zip>
+
+| Everything needs to go through Temp directory
+| Clean this at the end of each Copy phase
+| This stops svn export / renames complaining
+Set pd$Disc <makestore$Disc>.Temp
+
+|
+Echo Copying Application
+|
+Set pd$StoreDir <makestore$Disc>.!PipeDream
+Obey <MakeStore$Dir>.^.^.pd.Build.r32.CopyToTemp
+%Rename <pd$Disc>.Apps.Document.!PipeDream <pd$StoreDir>
+X Wipe <pd$Disc> ~cfr~v
+
+| Take a copy of the Release Notes
+| to use as top-level ReadMe for !Store
+%Copy <pd$StoreDir>.Relnotes <makestore$Disc>.ReadMe ~cf~v
+
+|
+Echo Copying Examples
+|
+Set pd$StoreDir <makestore$Disc>.Examples
+Obey <MakeStore$Dir>.^.^.examples.CopyToTemp
+%Rename <pd$Disc>.Apps.Document.PDExamples <pd$StoreDir>
+%Rename <pd$Disc>.RiscPkg.Copyright <pd$StoreDir>.Copyright
+X Wipe <pd$Disc> ~cfr~v
+
+|
+Echo Copying Import/Export - !123PD and !PD123
+|
+Set pd$StoreDir <makestore$Disc>.Import/Export
+%CDir <pd$StoreDir>
+|
+Obey <MakeStore$Dir>.^.^.extrautils.123PD.CopyToTemp
+%Rename <pd$Disc>.Apps.Utilities.!123PD <pd$StoreDir>.!123PD
+%Rename <pd$Disc>.RiscPkg.Copyright <pd$StoreDir>.!123PD.Copyright
+X Wipe <pd$Disc> ~cfr~v
+|
+Obey <MakeStore$Dir>.^.^.extrautils.PD123.CopyToTemp
+%Rename <pd$Disc>.Apps.Utilities.!PD123 <pd$StoreDir>.!PD123
+%Rename <pd$Disc>.RiscPkg.Copyright <pd$StoreDir>.!PD123.Copyright
+X Wipe <pd$Disc> ~cfr~v
+
+|
+Echo Copying Manuals
+|
+Set pd$StoreDir <makestore$Disc>.Manuals
+Obey <MakeStore$Dir>.^.^.docs.CopyToTemp
+%Rename <pd$Disc>.Manuals.PipeDream.UK <pd$StoreDir>
+%Rename <pd$Disc>.RiscPkg.Copyright <pd$StoreDir>.RefGuide.Copyright
+%Copy <pd$StoreDir>.RefGuide.Copyright <pd$StoreDir>.StartGuide.Copyright ~c~v
+X Wipe <pd$Disc> ~cfr~v
+
+|
+Echo Copying Extras for !Store
+|
+Set pd$StoreDir <makestore$Disc>
+Obey <MakeStore$Dir>.^.^.extrautils.PlingStore.Extras.CopyToTemp
+%Copy <pd$Disc>.* <pd$StoreDir>.* ~crf~v
+X Wipe <pd$Disc> ~cfr~v
+
+Unset pd$Disc
+
+%Dir <makestore$Disc>
+zip -r <makestore$Zip> !PipeDream Dictionaries Examples Import/Export Manual Manuals ReadMe
+SetType <makestore$Zip> &A91
+Info <makestore$Zip>
+Unset makestore$Zip
+%Back
+
+Filer_OpenDir <makestore$Disc>
+Unset makestore$Disc

@@ -29,16 +29,13 @@
 #include "cs-wimptx.h"
 #endif
 
-/*extern int
-C_stricmp(const char * a, const char * b);*/
-
 extern void
 wm_events_get(
     BOOL arg);
 
 /******************************************************************************
 *
-* cause the fontlist to be made up-to-date
+* cause the fontlist to be made up-to-date if changes detected
 *
 ******************************************************************************/
 
@@ -50,34 +47,26 @@ static BOOL
 fontlxtr__ensure_test(
     BOOL * ensure /*inout*/)
 {
-    char * new_font_var;
+    char var_buffer[256];
 
     if(!font__tree)
         *ensure = 1;
 
-    new_font_var = getenv("Font$Path");
+    if(NULL != _kernel_getenv("Font$Path", var_buffer, elemof(var_buffer)))
+        var_buffer[0] = CH_NULL;
 
-    if(!new_font_var)
+    if(0 != strcmp(fontlxtr__path, var_buffer))
     {
-        fontlxtr__path[0] = CH_NULL;
-        *ensure = 1;
-    }
-    else if(0 != strcmp(fontlxtr__path, new_font_var))
-    {
-        strcpy(fontlxtr__path, new_font_var);
+        strcpy(fontlxtr__path, var_buffer);
         *ensure = 1;
     }
 
-    new_font_var = getenv("Font$Prefix");
+    if(NULL != _kernel_getenv("Font$Prefix", var_buffer, elemof(var_buffer)))
+        var_buffer[0] = CH_NULL;
 
-    if(!new_font_var)
+    if(0 != strcmp(fontlxtr__prefix, var_buffer))
     {
-        fontlxtr__prefix[0] = CH_NULL;
-        *ensure = 1;
-    }
-    else if(0 != strcmp(fontlxtr__prefix, new_font_var))
-    {
-        strcpy(fontlxtr__prefix, new_font_var);
+        strcpy(fontlxtr__prefix, var_buffer);
         *ensure = 1;
     }
 

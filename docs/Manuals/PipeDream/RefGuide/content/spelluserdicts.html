@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Spell - User Dictionaries</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="spellchecking.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="statsfns.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="spellchecking.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="functions/stats.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -60,14 +60,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Create user dictionary</td>
-                <td><span class="csg-cmdseq">SN</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SN</span></td>
             </tr>
         </tbody>
     </table>
@@ -87,7 +89,7 @@
     </p>
     <p>
         When you are happy with the dictionary name,
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Create</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
         PipeDream will create the dictionary and return to the document.
     </p>
     <p>
@@ -110,21 +112,23 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Open user dictionary</td>
-                <td><span class="csg-cmdseq">SO</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SO</span></td>
             </tr>
         </tbody>
     </table>
     <p>A dialogue box will appear into which you should type the name of the user dictionary you have just created.</p>
     <p>
         When you
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>,
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Open</span></span> button (or press <span class="csg-key">Return&crarr;</span>),
         PipeDream will open the dictionary, and it is then ready for a check.
     </p>
     <p>
@@ -142,14 +146,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
-                <td>Choices</td>
+                <td>Spell</td>
                 <td>Dictionaries</td>
-                <td><span class="csg-cmdseq">SE</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SE</span></td>
             </tr>
         </tbody>
     </table>
@@ -165,9 +171,9 @@
 
     <h2 id="Adding">Adding Words To and Deleting Words From User Dictionaries</h2>
     <p>
-        Two commands, <span class="csg-command">Delete Word from Dictionary</span> and <span class="csg-command">Insert Word in Dictionary</span>
+        Two commands, <span class="csg-command">Insert Word in Dictionary</span> and <span class="csg-command">Delete Word from Dictionary</span>
         enable you to remove or to add any word to a user dictionary.
-        When you give either of these commands, a dialogue box will appear asking you for the word to be deleted or inserted, and the name of the dictionary on which to operate.
+        When you give either of these commands, a dialogue box will appear asking you for the word to be inserted or deleted, and the name of the dictionary on which to operate.
     </p>
     <table class="csg-command-table">
         <col />
@@ -179,19 +185,22 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td rowspan="2">Spell</td>
-                <td>Delete word from user dictionary</td>
-                <td><span class="csg-cmdseq">SD</span></td>
+                <td>Insert word in user dictionary</td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SI</span></td>
             </tr>
             <tr>
-                <td>Insert word in user dictionary</td>
-                <td><span class="csg-cmdseq">SI</span></td>
+                <td>Delete word from user dictionary</td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SD</span></td>
             </tr>
         </tbody>
     </table>
@@ -199,12 +208,15 @@
         If the caret is on a word in the text when you give either of these commands, PipeDream will offer the word as a suggestion in the dialogue box.
         You can accept or edit this word as you wish.
         If you want to put in a different word, the simplest way is probably to delete the existing word with <code>Backspace</code> and then re-type the word.
-        If you try to delete a word which is not in the dictionary that you specify, PipeDream will give you the <code>Word not found</code> error message.
     </p>
     <p>
         When you have entered the word and the name of the dictionary,
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>,
-        and the word will be deleted or inserted.
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Insert</span></span> button
+        - or the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Delete</span></span> button - (or press <span class="csg-key">Return&crarr;</span>),
+        and the word will be inserted (or deleted).
+    </p>
+    <p>
+        If you try to delete a word which is not in the dictionary that you specify, PipeDream will give you the <code>Word not found</code> error message.
     </p>
     <p>
         The words which are acceptable to the spelling checker depend on the alphabet of the master dictionary you are using.
@@ -235,22 +247,24 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Close user dictionary</td>
-                <td><span class="csg-cmdseq">SZ</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SZ</span></td>
             </tr>
         </tbody>
     </table>
     <p>
         PipeDream will ask you for the name of the dictionary to close; enter the name and then
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Close</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
     </p>
-    <p>You can check which user dictionaries are open with the <span class="csg-command">Dictionaries</span> command on the <span class="csg-menu">Choices</span> sub-menu.</p>
+    <p>You can check which user dictionaries are open with the <span class="csg-command">Dictionaries</span> command on the <span class="csg-menu">Spell</span> menu.</p>
     <p>
         Note that it is essential that user dictionaries are closed properly before PipeDream is exited.
         If you exit PipeDream using Quit, PipeDream will automatically close any user dictionaries which are open.
@@ -258,7 +272,7 @@
     </p>
     <p>If you want to ensure that all the words are written to the user dictionaries, but you do not want to close them, give the <span class="csg-command">Flush Dictionaries</span> command.</p>
     <p>
-        Note that some disc operations, such as *BACKUP in RISC&nbsp;OS 2.00, erroneously close the dictionaries.
+        Note that some disc operations, such as *BACKUP in RISC OS 2.00, erroneously close the dictionaries.
         This results in any unsaved words being lost and an error message being displayed next time you try to access the dictionaries.
         Before using disc commands such as *BACKUP, it is best to flush the dictionaries or quit PipeDream.
     </p>
@@ -283,14 +297,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Flush dictionaries</td>
-                <td><span class="csg-cmdseq">SF</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SF</span></td>
             </tr>
         </tbody>
     </table>
@@ -313,14 +329,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Pack user dictionary</td>
-                <td><span class="csg-cmdseq">SP</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SP</span></td>
             </tr>
         </tbody>
     </table>
@@ -354,14 +372,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Dump dictionary</td>
-                <td><span class="csg-cmdseq">SU</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SU</span></td>
             </tr>
         </tbody>
     </table>
@@ -383,12 +403,12 @@
     </p>
     <p>
         When you have filled in the dialogue box,
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Dump</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
         and PipeDream will start dumping the words.
         The Dump window appears, and PipeDream lists the words in the window as they are extracted from the dictionary.
         You can stop the dump temporarily to examine the window by clicking the <span class="csg-dbox-button">Pause</span> button.
         To stop the dump completely, before it has finished,
-        either click the <span class="csg-dbox-button">Cancel</span> button or press <span class="csg-key">Escape</span>.
+        either click the <span class="csg-dbox-button">Cancel</span> button (or press <span class="csg-key">Escape</span>).
     </p>
     <p>
         The extracted words are put in the file in alphabetical order,
@@ -408,8 +428,8 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
-                <th class="csg-ct-th-tool">Tool</th>
-                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
             </tr>
             <tr>
@@ -425,13 +445,13 @@
         This displays a dialogue box which asks for the name of the file which contains the words that you want to merge,
         and the name of the dictionary into which you wish to put the words.
         Fill in both fields, and
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Merge</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
         to start merging.
     </p>
     <p>
         The Merge window will appear as the words are merged into the dictionary.
         You can stop the Merge window display temporarily by clicking the <span class="csg-dbox-button">Pause</span> button.
-        To terminate the merge, click the <span class="csg-dbox-button">Cancel</span> button or press <span class="csg-key">Escape</span>.
+        To terminate the merge, click the <span class="csg-dbox-button">Cancel</span> button (or press <span class="csg-key">Escape</span>).
     </p>
     <p>
         The words in the file can be in any order, and separated by any characters.
@@ -462,14 +482,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Spell - Checking </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Statistical Functions</td>
+                <td class="navfooter_PUN_L">Spell - Checking </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Statistical Functions</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="spellchecking.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="statsfns.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="spellchecking.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="functions/stats.html">Next</a></td>
             </tr>
         </table>
     </div>

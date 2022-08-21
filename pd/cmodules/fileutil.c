@@ -543,7 +543,7 @@ file_find_on_path(
     _In_z_      PC_USTR srcfilename)
 {
     P_FILE_PATHENUM pathenum;
-    char * pathelem;
+    PCTSTR pathelem;
     STATUS res = STATUS_OK;
 
     reportf("file_find_on_path(%u:%s)", strlen32(srcfilename), srcfilename);
@@ -588,9 +588,8 @@ file_find_on_path_or_relative(
     _In_z_      PC_USTR srcfilename,
     _In_opt_z_  PC_USTR currentfilename)
 {
-    char combined_path[BUF_MAX_PATHSTRING];
     P_FILE_PATHENUM pathenum;
-    char * pathelem;
+    PCTSTR pathelem;
     STATUS res = STATUS_OK;
 
     if(NULL == currentfilename)
@@ -605,9 +604,9 @@ file_find_on_path_or_relative(
         return(file_readable(filename));
     }
 
-    file_combine_path(combined_path, elemof32(combined_path), currentfilename, path);
-
-    for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
+    for(pathelem = file_path_element_first2(&pathenum, currentfilename, path);
+        NULL != pathelem;
+        pathelem = file_path_element_next(&pathenum))
     {
         xstrkpy(filename, elemof_buffer, pathelem);
         xstrkat(filename, elemof_buffer, srcfilename);
@@ -654,9 +653,8 @@ file_find_dir_on_path_or_relative(
     _In_z_      PC_USTR srcfilename,
     _In_opt_z_  PC_USTR currentfilename)
 {
-    char combined_path[BUF_MAX_PATHSTRING];
     P_FILE_PATHENUM pathenum;
-    char * pathelem;
+    PCTSTR pathelem;
     BOOL res = FALSE;
 
     reportf("file_find_dir_on_path(%u:%s, cur=%u:%s)", strlen32(srcfilename), srcfilename, currentfilename ? strlen32(currentfilename) : 0, currentfilename ? currentfilename : "<NULL>");
@@ -668,9 +666,9 @@ file_find_dir_on_path_or_relative(
         return(file_is_dir(filename));
     }
 
-    file_combine_path(combined_path, elemof32(combined_path), currentfilename, path);
-
-    for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
+    for(pathelem = file_path_element_first2(&pathenum, currentfilename, path);
+        NULL != pathelem;
+        pathelem = file_path_element_next(&pathenum))
     {
         if(!file_is_dir(pathelem))
             continue;
@@ -757,15 +755,14 @@ file_get_prefix(
     _InVal_     U32 elemof_buffer,
     PC_U8 currentfilename)
 {
-    char combined_path[BUF_MAX_PATHSTRING];
     P_FILE_PATHENUM pathenum;
-    char * pathelem;
-
-    file_combine_path(combined_path, elemof32(combined_path), currentfilename, file_get_search_path());
+    PCTSTR pathelem;
 
     *destpath = CH_NULL;
 
-    for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
+    for(pathelem = file_path_element_first2(&pathenum, currentfilename, file_get_search_path());
+        NULL != pathelem;
+        pathelem = file_path_element_next(&pathenum))
     {
         if(file_is_dir(pathelem))
         {
@@ -969,6 +966,7 @@ file_path_element_close(
 *
 ******************************************************************************/
 
+_Check_return_
 extern char *
 file_path_element_first(
     _OutRef_    P_P_FILE_PATHENUM pp,
@@ -1010,6 +1008,22 @@ file_path_element_first(
     return(file_path_element_next(pp));
 }
 
+/* centralise big path buffer use and saves code in callers */
+
+_Check_return_
+extern PCTSTR
+file_path_element_first2(
+    _OutRef_    P_P_FILE_PATHENUM p,
+    _In_opt_z_  PCTSTR path1,
+    _In_z_      PCTSTR path2)
+{
+    TCHARZ combined_path[BUF_MAX_PATHSTRING * 4];
+
+    file_combine_path(combined_path, elemof32(combined_path), path1, path2);
+
+    return(file_path_element_first(p, combined_path));
+}
+
 /******************************************************************************
 *
 * --in--
@@ -1023,6 +1037,7 @@ file_path_element_first(
 *
 ******************************************************************************/
 
+_Check_return_
 extern char *
 file_path_element_next(
     P_P_FILE_PATHENUM pp /*inout*/)
@@ -1153,16 +1168,13 @@ file_readable(
 
 extern void
 file_set_path(
-    PC_U8 pathstr)
+    _In_z_      PCTSTR pathstr)
 {
-    if(!pathstr)
-        str_clr(&search_path);
-    else
-        status_consume(str_set(&search_path, pathstr));
+    status_consume(str_set(&search_path, pathstr));
 
     reportf("file_set_path(%u:%s)",
             (NULL == search_path) ? 0 : strlen(search_path),
-            (NULL == search_path) ? "NULL" : search_path);
+            report_tstr(search_path));
 }
 
 /******************************************************************************

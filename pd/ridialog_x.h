@@ -65,10 +65,6 @@ extern void
 dproc_namefile(
     DIALOG *dptr);
 
-extern void
-dproc_savefile(
-    DIALOG *dptr);
-
 /*
 exported variables
 */

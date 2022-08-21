@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Spreadsheets</title>
+    <link href="tutor.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+    <div class="navheader">
+        <table id="navheader" summary="Navigation header">
+            <tr>
+                <td class="navheader_PCN_L"><a accesskey="p" href="wrdpro.htm">Prev</a> </td>
+                <th class="navheader_PCN_C">PipeDream Getting Started Guide</th>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="db.htm">Next</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <h1>Spreadsheets</h1>
+    <p>As you have seen, a PipeDream document window is divided into cells formed where columns and rows meet.</p>
+    <p>Much of the power of PipeDream lies in the fact that you can create different types of cell:</p>
+    <ul>
+        <li>text cells which contain words and sentences;</li>
+        <li>number cells which contain numbers and formulae.</li>
+    </ul>
+    <p>Number cells can contain virtually any mathematical formula and can include references to other cells.</p>
+    <p>
+        The best way to learn about number cells and PipeDream&rsquo;s spreadsheet facilities is to put them into practice by building a spreadsheet yourself.
+        The spreadsheet you are going to build is shown here:
+    </p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tr>
+            <th class="csg-sample-sheet-border-column"></th>
+            <th class="csg-sample-sheet-border-column">A</th>
+            <th class="csg-sample-sheet-border-column">B</th>
+            <th class="csg-sample-sheet-border-column">C</th>
+            <th class="csg-sample-sheet-border-column">D</th>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">1</th>
+            <td>Item</td>
+            <td class="csg-sample-sheet-cell-number">Value</td>
+            <td class="csg-sample-sheet-cell-number">VAT</td>
+            <td class="csg-sample-sheet-cell-number">Total</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">2</th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">3</th>
+            <td>Computer</td>
+            <td class="csg-sample-sheet-cell-number">&pound;500.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;87.50</td>
+            <td class="csg-sample-sheet-cell-number">&pound;587.50</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">4</th>
+            <td>Monitor</td>
+            <td class="csg-sample-sheet-cell-number">&pound;200.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;35.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;235.00</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">5</th>
+            <td>Disc drive</td>
+            <td class="csg-sample-sheet-cell-number">&pound;250.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;43.75</td>
+            <td class="csg-sample-sheet-cell-number">&pound;293.75</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">6</th>
+            <td>Printer</td>
+            <td class="csg-sample-sheet-cell-number">&pound;350.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;61.25</td>
+            <td class="csg-sample-sheet-cell-number">&pound;411.25</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">7</th>
+            <td>Draw Program</td>
+            <td class="csg-sample-sheet-cell-number">&pound;120.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;21.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;141.00</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">8</th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">9</th>
+            <td>Total</td>
+            <td class="csg-sample-sheet-cell-number">&pound;1420.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;248.50</td>
+            <td class="csg-sample-sheet-cell-number">&pound;1668.50</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">10</th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">11</th>
+            <td>Offer price</td>
+            <td class="csg-sample-sheet-cell-number">&pound;1200.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;210.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;1410.00</td>
+        </tr>
+        <tr>
+            <th class="csg-sample-sheet-border-row">12</th>
+            <td>Saving made</td>
+            <td class="csg-sample-sheet-cell-number">&pound;220.00</td>
+            <td class="csg-sample-sheet-cell-number">&pound;38.50</td>
+            <td class="csg-sample-sheet-cell-number">&pound;258.50</td>
+        </tr>
+    </table>
+    <p>
+        PipeDream has a template file which contains the settings best suited to spreadsheet work.
+        It tells PipeDream that all new cells are number cells, unless they contain only text, and ensures that each column is formatted separately.
+        It also turns on the grid to make your spreadsheet easier to read.
+    </p>
+    <ol>
+        <li>Click Menu on the PipeDream icon on the icon bar.</li>
+        <li>Click the <span class="csg-menu-option">New document</span> option.</li>
+        <li>Click the <span class="csg-dbox-option-value">Numbers</span> option.</li>
+    </ol>
+    <p>A new PipeDream document window appears on the screen ready for you to enter your spreadsheet.</p>
+    <p>Click the toggle size icon so that the PipeDream document window fills the screen.</p>
+    <p>As usual when you start a new PipeDream document window, the caret is in cell A1.</p>
+
+    <h2>Building the Spreadsheet</h2>
+    <p>
+        First of all, you need to type in the names of the items whose prices the spreadsheet will manipulate.
+        Type the first name as follows:
+    </p>
+    <p class="csg-sample-indent"><span class="csg-user-text">Item</span></p>
+    <p>
+        You will see the word you have typed appear in the formula line at the top of the window.
+        This is where PipeDream displays the contents of number cells.
+        The Numbers template file has told PipeDream to expect numbers.
+    </p>
+    <p>
+        If you make any typing mistakes, you can carry out corrections on the formula line.
+        Position the caret in the formula line by moving the pointer to it and clicking.
+        You can use the following keys in the formula line:
+    </p>
+    <table border="0">
+        <col />
+        <col />
+        <tr>
+            <td class="csg-key-arrow">&larr;</td>
+            <td>to move the caret one character to the left</td>
+        </tr>
+        <tr>
+            <td class="csg-key-arrow">&rarr;</td>
+            <td>to move the caret one character to the right</td>
+        </tr>
+        <tr>
+            <td class="csg-key">Shift- <span class="csg-key-arrow">&larr;</span></td>
+            <td>to move the caret left one word</td>
+        </tr>
+        <tr>
+            <td class="csg-key">Shift- <span class="csg-key-arrow">&rarr;</span></td>
+            <td>to move the caret right one word</td>
+        </tr>
+        <tr>
+            <td class="csg-key">Ctrl- <span class="csg-key-arrow">&larr;</span></td>
+            <td>to move the caret to the beginning of the line</td>
+        </tr>
+        <tr>
+            <td class="csg-key">Ctrl- <span class="csg-key-arrow">&rarr;</span></td>
+            <td>to move the caret to the end of the line</td>
+        </tr>
+        <tr>
+            <td class="csg-key">Delete<br />Backspace</td>
+            <td>to delete the character to the left of the caret</td>
+        </tr>
+        <tr>
+            <td class="csg-key">Copy</td>
+            <td>to delete the character to the right of the caret</td>
+        </tr>
+        <tr>
+            <td class="csg-key">Ctrl-Copy</td>
+            <td>to delete forward to the end of the line</td>
+        </tr>
+        <tr>
+            <td class="csg-cmdseq">Cmd-U</td>
+            <td>to delete everything on the line</td>
+        </tr>
+    </table>
+    <p>
+        When you are happy with your entry in the formula line and you are ready to enter it in the cell,
+        click the <span class="csg-toolbar-button">Tick</span> toolbar button (press <span class="csg-key">Return&crarr;</span>).
+    </p>
+    <p>
+        The word that you typed appears in your document in a text cell.
+        PipeDream wasn&rsquo;t able to make sense of it as a formula so it put the word into a text cell.
+        Type in the names of the remaining items in column A, remembering to move on to the next line after each entry.
+    </p>
+    <p>Position the caret in cell A1 by moving the pointer to it and clicking.</p>
+    <p>
+        Press <span class="csg-key">Tab</span> to move the caret into cell B1.
+        You will see that column B&rsquo;s border is now displayed in a different colour.
+    </p>
+    <p>
+        Type the word <span class="csg-user-text">Value</span> and press <span class="csg-key">Tab</span>.
+        The caret is now in cell C1.
+        Column C&rsquo;s border is displayed in a different colour.
+    </p>
+    <p>Type <span class="csg-user-text">VAT</span> and press <span class="csg-key">Tab</span> to position the caret in cell D1.</p>
+    <p>Type the word <span class="csg-user-text">Total</span>.</p>
+    <p>
+        Position the caret in cell B3.
+        You can do this either by moving the pointer to it and clicking <span class="csg-key">Ctrl</span>-Select or by clicking Select and then pressing <span class="csg-key">Tab</span>.
+    </p>
+    <p>Type <span class="csg-user-text">500</span>.</p>
+    <p>The contents of cell B3 are displayed in the formula line.</p>
+    <p>
+        Click the <span class="csg-toolbar-button">Tick</span> toolbar button (or press <span class="csg-key">Return&crarr;</span>).
+        Cell B3 is a number cell containing the number 500.00.
+        Numbers in PipeDream are automatically displayed with two decimal places although you can change this if you want to.
+    </p>
+    <p>Press <span class="csg-key">Tab</span> to position the caret in cell C3.</p>
+    <p>
+        Type <span class="csg-user-text">B3 * 0.175</span>.
+        This formula multiplies the contents of cell B3 by 0.175 to work out the VAT.
+        (Note: this example was written in 1991 when the VAT rate was 17.5%)
+    </p>
+    <p>
+        Click the <span class="csg-toolbar-button">Tick</span> toolbar button (or press <span class="csg-key">Return&crarr;</span>).
+        Cell C3 now displays the result of the formula, i.e. 87.50.
+        The formula line displays the formula itself so that you can edit it if necessary.
+    </p>
+    <p>Press <span class="csg-key">Tab</span> to position the caret in cell D3.</p>
+    <p>
+        Move the pointer to the formula line and click to position the caret there.
+        Now move the pointer to cell B3 and click.
+        <span class="csg-user-text">B3</span> appears in the formula line.
+        Type <span class="csg-user-text">+</span>.
+        Now move the pointer to cell C3 and click.
+        <span class="csg-user-text">C3</span> appears in the formula line, so that the formula line now reads <span class="csg-user-text">B3+C3</span>.
+        Click the <span class="csg-toolbar-button">Tick</span> toolbar button (or press <span class="csg-key">Return&crarr;</span>).
+        The total price appears in cell D3, 587.50.
+    </p>
+
+    <h2>Alignment</h2>
+    <p>
+        You may have noticed whilst typing the above that the heading words Value, VAT and Total are not aligned with the numbers beneath them.
+        This is because text cells are automatically left-aligned whilst number cells are automatically right-aligned.
+        However, it will look better if the headings are right-aligned so that they line up with the numbers.
+        The simplest way to right align cells B1, C1 and D1 is:
+    </p>
+    <ol>
+        <li>Mark the cells by dragging across them.</li>
+        <li>Give the <span class="csg-command">Right Align</span> command:</li>
+    </ol>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Layout</td>
+                <td>Right align</td>
+                <td><img src="images/toolbar/aln_r.png" alt="Right align icon" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">LAR</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>The column headings will now line up with the numbers beneath them.</p>
+    <p>
+        If you make a mistake at any point and end up with something you do not want in the formula line,
+        click the <span class="csg-toolbar-button">Cross</span> toolbar button (or press <span class="csg-key">Escape</span>).
+    </p>
+    <p>Position the caret in cell B4 by moving the pointer to it and clicking <span class="csg-key">Ctrl</span>-Select, then type <span class="csg-user-text">200</span>.</p>
+    <p>
+        Press <span class="csg-key">Return&crarr;</span> twice and type <span class="csg-user-text">250</span>.
+        Continue to type the rest of the values down to cell B7.
+    </p>
+    <p>The next thing to do is to work out the VAT of the other prices in addition to that of the computer.</p>
+    <p>Position the caret in cell C3 by moving the pointer to it and clicking</p>
+    <p>Now drag to cell C7 so that cells C3 to C7 inclusive are marked as a block and displayed with a black background.</p>
+    <p>Give the <span class="csg-command">Replicate Down</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Replicate down</td>
+                <td><img src="images/toolbar/fill_d.png" alt="Fill down icon" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BRD</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        PipeDream replicates the formula you typed into cell C3 (B3 * 0.175) to all the cells in the block,
+        i.e. PipeDream copies the formula, updating the cell reference in the formula as required.
+        Cell C4, for example, now contains the formula B4 * 0.175.
+    </p>
+    <p>Clear the marked block by clicking the mark block box.</p>
+    <p>In the same way, the formula in cell D3 can be replicated into cells D4 to D7.</p>
+    <p>Mark the block from D3 to D7 inclusive.</p>
+    <p>Give the <span class="csg-command">Replicate Down</span> command.</p>
+    <p>Clear the marked block by clicking the mark block box.</p>
+
+    <h2>Totals</h2>
+    <p>Position the caret in cell B9 by moving the pointer to it and clicking <span class="csg-command">Ctrl</span>-Select.</p>
+    <p>
+        Type <span class="csg-user-text">SUM(B3B7)</span> and either
+        click the <span class="csg-toolbar-button">Tick</span> toolbar button (or press <span class="csg-key">Return&crarr;</span>).
+        The total value of all the items appears in cell B9.
+    </p>
+    <p>
+        SUM is a function which adds together the values of all cells in the range you type in.
+        Here it is the equivalent of typing B3+B4+B5+B6+B7 - and so much quicker and more accurate for larger ranges!
+    </p>
+    <p>Drag from cell B9 to cell D9 to mark cells B9, C9 and D9 as a block.</p>
+    <p>Give the <span class="csg-command">Replicate Right</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Blocks</td>
+                <td>Replicate right</td>
+                <td><img src="images/toolbar/fill_r.png" alt="Fill right icon" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">BRR</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        The formula in cell B9, SUM(B3B7), is replicated into cells C9 and D9 and updated accordingly.
+        Cell C9 contains SUM(C3C7) and cell D9 contains SUM(D3D7).
+    </p>
+    <p>Clear the marked block by clicking the mark block box.</p>
+    <p>Position the caret in cell B11 by moving the pointer to it and clicking <span class="csg-key">Ctrl</span>-Select.</p>
+    <p>
+        Type <span class="csg-user-text">1200</span> and either
+        click the <span class="csg-toolbar-button">Tick</span> toolbar button (or press <span class="csg-key">Return&crarr;</span>).
+    </p>
+    <p>Position the caret in cell B12 and type <span class="csg-user-text">D9-B11</span>.</p>
+    <p>
+        When you click the <span class="csg-toolbar-button">Tick</span> button (or press <span class="csg-key">Return&crarr;</span>),
+        PipeDream displays the result of the formula which tells you the difference between the total price for all the items and the sale price
+        and so lets you know how much money you are going to save.
+    </p>
+
+    <h2>Recalculating Your Spreadsheet</h2>
+    <p>One reason why spreadsheets are so useful is that they are dynamic, i.e. changing one entry changes all associated entries automatically.</p>
+    <p>Position the caret in cell B3, type <span class="csg-user-text">600</span> and press <span class="csg-key">Return&crarr;</span>.</p>
+    <p>Notice that all cells which refer to cell B3 change to suit the new contents of cell B3.</p>
+    <p>
+        Type <span class="csg-user-text">500</span> and press <span class="csg-key">Return&crarr;</span>
+        and the values in cells C3, D3, B9, C9, D9 and B12 will all change again.
+    </p>
+    <p>Try changing some values and see how your changes affect the spreadsheet.</p>
+
+    <h2>Leading Characters</h2>
+    <p>
+        As the figures in this spreadsheet are all prices, it would be appropriate for them all to have a currency sign in front of them.
+        Mark the whole document by clicking the mark block box.
+    </p>
+    <p>Give the <span class="csg-command">Leading Characters</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Layout</td>
+                <td>Leading characters</td>
+                <td><img src="images/toolbar/leadtr.png" alt="Leading characters icon" /></td>
+                <td></td>
+                <td><span class="csg-cmdseq">LCL</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        All the number cells in the document now have a &pound; sign as their first,
+        i.e. leading character.
+    </p>
+    <p>Clear the marked block by clicking the mark block box.</p>
+    <p>If you wish, you can specify which characters should be used as the leading characters:</p>
+    <p>Give the <span class="csg-command">Options</span> command.</p>
+    <p>
+        On the <span class="csg-dbox-option">Leading characters</span> line, you will see an input field containing the &pound; sign.
+        This is the leading character that is set when you start PipeDream.
+    </p>
+    <p>Click in the <span class="csg-dbox-option">Leading characters</span> input field just after the &pound; sign.</p>
+    <p>Delete the &pound; sign using the <span class="csg-key">Backspace</span> key and type <span class="csg-user-text">$</span>.</p>
+    <p>
+        Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Set</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
+        Now all the number cells have $ as their leading character.
+    </p>
+    <p>You may want to give the <span class="csg-command">Options</span> command again and change the leading character back to &pound;.</p>
+
+    <h2>Column Widths</h2>
+    <p>
+        When you are working with spreadsheets, you will often want to adjust the widths of columns to match the numbers they contain.
+        The quickest and easiest way to do this with PipeDream is with Auto Width:
+    </p>
+    <p>First, mark the whole document by clicking the mark block box.</p>
+    <p>Give the <span class="csg-command">Auto Width</span> command:</p>
+    <table class="csg-command-table">
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-ct-th-menu">Menu</th>
+                <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
+                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
+            </tr>
+            <tr>
+                <td>Layout</td>
+                <td>Auto width</td>
+                <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">LAW</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Each column is now the width necessary for the widest entry in that column.</p>
+    <p>Clear the marked block by clicking the mark block box.</p>
+    <p>This facility can be particularly useful when creating very big spreadsheets with many columns.</p>
+    <p>Now that your spreadsheet is complete, you can save it if you want to do so.</p>
+
+    <div class="navfooter">
+        <table id="navfooter" summary="Navigation footer">
+            <tr>
+                <td class="navfooter_PUN_L">Word Processing </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Databases</td>
+            </tr>
+            <tr>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="wrdpro.htm">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="db.htm">Next</a></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

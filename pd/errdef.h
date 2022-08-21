@@ -135,10 +135,11 @@ reperr_kernel_oserror(
 #define ERR_CHARTIMPORTNEEDSSAVEDDOC    MAIN_ERR_BASE - 80
 #define ERR_CHARTNONUMERICDATA  MAIN_ERR_BASE - 81
 #define ERR_HELP_URL_FAILURE    MAIN_ERR_BASE - 82
-#define ERR_SUPPORTING_DOC_NOT_FOUND MAIN_ERR_BASE - 83
+#define ERR_SUPPORTING_DOC_NOT_FOUND    MAIN_ERR_BASE - 83
 #define ERR_CANT_LOAD_FILETYPE  MAIN_ERR_BASE - 84
+#define ERR_NO_ALTERNATE_COMMAND        MAIN_ERR_BASE - 85
 
-#define MAIN_ERR_END           (MAIN_ERR_BASE - 85)
+#define MAIN_ERR_END           (MAIN_ERR_BASE - 86)
 
 /* module errors start here at intervals of increment */
 #ifndef MODULE_ERR_BASE
@@ -187,7 +188,7 @@ reperr_kernel_oserror(
     errorstring(-41, "Spell:") \
     errorstring(-42, "Word exists") \
     errorstring(-43, "Printer:") \
-    errorstring(-44, "'%s' is not an ASCII file") \
+    errorstring(-44, "'%s' is not an plain Text file") \
     errorstring(-45, "Lines split:") \
     errorstring(-46, "No room: column recalculation forced") \
     errorstring(-47, "Bad string") \
@@ -215,7 +216,7 @@ reperr_kernel_oserror(
     errorstring(-70, "No marked block in this document") \
     errorstring(-71, "Memory full: unable to store block to paste list") \
     errorstring(-72, "Memory full: unable to recover block from paste list") \
-    errorstring(-73, "Cannot save a file from PipeDream into itself") \
+    errorstring(-73, "Cannot save an entire file from PipeDream into itself") \
     errorstring(-74, "Bad language") \
     errorstring(-75, "Not installed") \
     errorstring(-76, "No selected chart") \
@@ -227,6 +228,7 @@ reperr_kernel_oserror(
     errorstring(-82, "No browser available to access URL") \
     errorstring(-83, "Supporting document '%s' not found") \
     errorstring(-84, "Can't load this type of file") \
+    errorstring(-85, "No alternate command for this toolbar button") \
 
 
 #endif /* __errdef_h */

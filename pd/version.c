@@ -16,13 +16,15 @@
  * Build.r32.Makefile (for !Boot/!Run building)
  * Build.r32.MakeRiscPkg
  * Build.r32.RiscPkg.Control
+ * &.extrautils.PlingStore.MakeStore
  */
 
-#define HexVersion   0x45701
-#define Version      "4.57.01"
-#define CurrentDate  "21-Mar-2020"
+#define HexVersion   0x45800
+#define Version      "4.58"
+#define CurrentDate  "29-Jul-2020"
 
 /*
+* 29 Jul 2020 - 4.58
 * 21 Mar 2020 - 4.57.01
 * 20 Dec 2019 - 4.57
 * 16 Aug 2019 - 4.57 Don't think anyone got this preview

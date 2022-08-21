@@ -277,7 +277,7 @@ ev_compile(
     P_COMPILER_CONTEXT old_cc;
     struct COMPILER_CONTEXT comp_cont;
 
-    zero_struct(comp_cont);
+    zero_struct_fn(comp_cont);
 
     /* set up current compiler context */
     old_cc = cc;
@@ -725,16 +725,14 @@ out_string_free(
     P_SYM_INF p_sym_inf,
     P_U8 *stringpp)
 {
-    S32 len;
+    const U32 len = strlen32p1(*stringpp);
 
     p_sym_inf->sym_idno = RPN_DAT_STRING;
     out_idno_format(p_sym_inf);
 
-    len = strlen(*stringpp) + 1;
-
     if(out_chkspace(sizeof32(S16) + len))
     {
-        writeval_S16(cc->op_pos, len + sizeof32(S16));
+        writeval_S16(cc->op_pos, /*(S16)*/ (sizeof32(S16) + len));
         cc->op_pos += sizeof32(S16);
         strcpy(cc->op_pos, *stringpp);
         cc->op_pos += len;
@@ -911,7 +909,7 @@ proc_func_dbs(void)
     out_idno(RPN_FRM_END);
 
     /* update condition length */
-    writeval_S16(dbase_start, cc->op_pos - dbase_start);
+    writeval_S16(dbase_start, /*(S16)*/ (cc->op_pos - dbase_start));
 
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
@@ -971,7 +969,7 @@ proc_func_if(
     /* get next argument */
     proc_func_arg_maybe_blank();
 
-    writeval_S16(skip_post + 2, cc->op_pos - skip_post);
+    writeval_S16(skip_post + 2, /*(S16)*/ (cc->op_pos - skip_post));
 
     /* did he give up with 2 arguments? */
     if(scan_check_next(NULL) == SYM_CBRACKET)
@@ -994,7 +992,7 @@ proc_func_if(
     /* next argument */
     proc_func_arg_maybe_blank();
 
-    writeval_S16(skip_posf + 2, cc->op_pos - skip_posf);
+    writeval_S16(skip_posf + 2, /*(S16)*/ (cc->op_pos - skip_posf));
 
     if(scan_check_next(NULL) != SYM_CBRACKET)
         return(set_error(create_error(EVAL_ERR_CBRACKETS)));
@@ -1632,7 +1630,7 @@ recog_slr(
     U32 row_temp;
     P_U8 epos;
 
-    zero_struct_ptr(p_slr);
+    ev_slr_init(p_slr);
 
     if(*pos == '%')
     {
@@ -1953,7 +1951,7 @@ rec_aterm(void)
             out_idno_format(&sym_inf);
 
             /* write in skip parameter */
-            writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
+            writeval_S16(skip_parm, /*(S16)*/ (cc->op_pos - skip_pos - sizeof(EV_IDNO)));
         }
     }
     return;
@@ -2099,7 +2097,7 @@ rec_expr(void)
             rec_aterm();
             out_idno_format(&sym_inf);
 
-            writeval_S16(skip_parm, cc->op_pos - skip_pos - sizeof(EV_IDNO));
+            writeval_S16(skip_parm, /*(S16)*/ (cc->op_pos - skip_pos - sizeof(EV_IDNO)));
         }
     }
     return;
@@ -2546,7 +2544,7 @@ scan_next_symbol(void)
     else if(ispunct(*cc->ip_pos))
     {
         P_U8 co;
-        S32 cur_ch;
+        U8 cur_ch;
 
         co = cc->ident;
         count = 0;
@@ -2574,8 +2572,14 @@ scan_next_symbol(void)
         *co++ = CH_NULL;
 
         if(count)
-            if((cc->cur.sym_idno = func_lookup(cc->ident)) >= 0)
+        {
+            const S32 func_did_num = func_lookup(cc->ident);
+            if(func_did_num >= 0)
+            {
+                cc->cur.sym_idno = (EV_IDNO) func_did_num;
                 return;
+            }
+        }
     }
 
     set_error(create_error(EVAL_ERR_BADEXPR));

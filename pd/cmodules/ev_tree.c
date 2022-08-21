@@ -38,17 +38,17 @@ todo_add_slr(
     S32 sort);
 
 static void
-tree_sort_customs(void);
+tree_sort_custom_use(void);
 
 static void
-tree_sort_names(void);
+tree_sort_name_use(void);
 
 static void
-tree_sort_ranges(
+tree_sort_range_use(
     _InVal_     EV_DOCNO docno);
 
 static void
-tree_sort_slrs(
+tree_sort_slr_use(
     _InVal_     EV_DOCNO docno);
 
 static void
@@ -58,7 +58,7 @@ tree_sort_todo(void);
 name use table
 */
 
-DEPTABLE namtab = DEPTABLE_INIT;
+DEPTABLE name_use_deptable = DEPTABLE_INIT;
 
 /*
 custom function use table
@@ -146,19 +146,19 @@ add_namuse(
     P_NAME_USE nep;
     EV_TRENT nix;
 
-    if(dep_table_check_add_one(&namtab,
+    if(dep_table_check_add_one(&name_use_deptable,
                                sizeof32(NAME_USE),
                                NAMBLKINC) < 0)
         return(-1);
 
-    nix = namtab.next;
+    nix = name_use_deptable.next;
     nep = tree_namptr(nix);
     __assume(nep);
     /* create a space to insert */
     memmove32(nep + 1,
               nep,
-              (namtab.next - nix) * sizeof32(NAME_USE));
-    ++namtab.next;
+              (name_use_deptable.next - nix) * sizeof32(NAME_USE));
+    ++name_use_deptable.next;
 
     /* copy in new dependency */
     nep->nameto   = grubp->data.arg.nameid;
@@ -311,11 +311,11 @@ ev_add_exp_slot_to_tree(
      * clear them; we don't want to delete definitions that
      * may have uses that we are about to add
      */
-    custom_flags     = custom_def.flags & TRF_CHECKUSE;
-    custom_def.flags &= ~TRF_CHECKUSE;
+    custom_flags     = custom_def_deptable.flags & TRF_CHECKUSE;
+    custom_def_deptable.flags &= ~TRF_CHECKUSE;
 
-    names_flags      = names_def.flags & TRF_CHECKUSE;
-    names_def.flags &= ~TRF_CHECKUSE;
+    names_flags      = names_def_deptable.flags & TRF_CHECKUSE;
+    names_def_deptable.flags &= ~TRF_CHECKUSE;
 
     grub_init(&grubb, slrp);
 
@@ -361,7 +361,7 @@ ev_add_exp_slot_to_tree(
 
                 /* mark document as a custom function sheet */
                 if(NULL != (p_ss_doc = ev_p_ss_doc_from_docno(ev_slr_docno(slrp))))
-                    p_ss_doc->flags |= DCF_CUSTOM;
+                    p_ss_doc->flags |= DCF_IS_CUSTOM;
 
                 ev_todo_add_custom_dependents(grubb.data.arg.nameid);
                 }
@@ -372,8 +372,8 @@ ev_add_exp_slot_to_tree(
     }
 
     /* restore flags */
-    custom_def.flags |= custom_flags;
-    names_def.flags |= names_flags;
+    custom_def_deptable.flags |= custom_flags;
+    names_def_deptable.flags |= names_flags;
 
     return(res);
 }
@@ -621,11 +621,11 @@ ev_enum_dep_sup_get(
             P_EV_NAME p_ev_name;
 
             /* look for name references */
-            if((p_ev_name = names_def.ptr) != NULL)
+            if((p_ev_name = names_def_deptable.ptr) != NULL)
             {
                 EV_TRENT i;
 
-                for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+                for(i = 0; i < names_def_deptable.next; ++i, ++p_ev_name)
                 {
                     S32 got_ref = 0;
 
@@ -760,11 +760,11 @@ ev_todo_add_doc_dependents(
     todo_add_name_deps_of_slr(&slr, TRUE);
 
     /* look for custom function references */
-    if((p_ev_custom = custom_def.ptr) != NULL)
+    if((p_ev_custom = custom_def_deptable.ptr) != NULL)
     {
         EV_NAMEID i;
 
-        for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
+        for(i = 0; i < custom_def_deptable.next; ++i, ++p_ev_custom)
         {
             if(0 != (p_ev_custom->flags & (TRF_TOBEDEL | TRF_UNDEFINED)))
                 continue;
@@ -950,7 +950,7 @@ search_for_custom_use(
     EV_TRENT res;
     CUSTOM_USE target;
 
-    tree_sort_customs();
+    tree_sort_custom_use();
 
     if((smep = tree_macptr(0)) == NULL)
         return(-1);
@@ -993,7 +993,7 @@ search_for_name_use(
     EV_TRENT res;
     NAME_USE target;
 
-    tree_sort_names();
+    tree_sort_name_use();
 
     if((snep = tree_namptr(0)) == NULL)
         return(-1);
@@ -1003,7 +1003,7 @@ search_for_name_use(
     /* search for reference */
     if((nep = bsearch(&target,
                       snep,
-                      namtab.sorted,
+                      name_use_deptable.sorted,
                       sizeof(NAME_USE),
                       namcomp)) != 0)
     {
@@ -1036,7 +1036,7 @@ search_for_rng_ref(
     P_RANGE_USE srep;
     EV_TRENT res;
 
-    tree_sort_ranges(p_ev_range->s.docno);
+    tree_sort_range_use(p_ev_range->s.docno);
 
     if((p_ss_doc = ev_p_ss_doc_from_docno(p_ev_range->s.docno)) == NULL)
         return(-1);
@@ -1082,7 +1082,7 @@ search_for_slrdependent(
     P_SLR_USE ssep;
     EV_TRENT res;
 
-    tree_sort_slrs(ev_slr_docno(slrp));
+    tree_sort_slr_use(ev_slr_docno(slrp));
 
     if(NULL == (p_ss_doc = ev_p_ss_doc_from_docno(ev_slr_docno(slrp))))
         return(-1);
@@ -1262,7 +1262,7 @@ todo_add_name_dependents(
 
             key.nameto = nameid;
 
-            for( ; nix < namtab.next && !namcomp(nep, &key); ++nix, ++nep)
+            for( ; nix < name_use_deptable.next && !namcomp(nep, &key); ++nix, ++nep)
             {
                 if(nep->flags & TRF_TOBEDEL)
                     continue;
@@ -1294,11 +1294,11 @@ todo_add_name_deps_of_slr(
     P_EV_NAME p_ev_name;
 
     /* look for name references */
-    if((p_ev_name = names_def.ptr) != NULL)
+    if((p_ev_name = names_def_deptable.ptr) != NULL)
     {
         EV_NAMEID i;
 
-        for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+        for(i = 0; i < names_def_deptable.next; ++i, ++p_ev_name)
         {
             S32 got_ref = 0;
 
@@ -1350,7 +1350,7 @@ todo_add_slr(
     _InRef_     PC_EV_SLR slrp,
     S32 sort)
 {
-    if(!doc_check_custom(ev_slr_docno(slrp)))
+    if(!doc_check_is_custom(ev_slr_docno(slrp)))
     {
         P_TODO_ENTRY todop;
 
@@ -1468,7 +1468,7 @@ todo_get_slr(
                 continue;
 
             /* don't leave custom function sheet todos behind */
-            if(doc_check_custom(todop->slr.docno))
+            if(doc_check_is_custom(todop->slr.docno))
             {
                 todop->flags  |= TRF_TOBEDEL;
                 todotab.flags |= TRF_TOBEDEL;
@@ -1662,12 +1662,12 @@ tree_sort_all(void)
                             EXTBLKINC,
                             offsetof(struct EXTENTRY, flags));
 
-        tree_sort_ranges(docno);
-        tree_sort_slrs(docno);
+        tree_sort_range_use(docno);
+        tree_sort_slr_use(docno);
     }
 
-    tree_sort_customs();
-    tree_sort_names();
+    tree_sort_custom_use();
+    tree_sort_name_use();
 
     custom_list_sort();
     name_list_sort();
@@ -1682,7 +1682,7 @@ tree_sort_all(void)
 ******************************************************************************/
 
 static void
-tree_sort_customs(void)
+tree_sort_custom_use(void)
 {
     if(tree_flags & TRF_LOCK)
         return;
@@ -1702,12 +1702,12 @@ tree_sort_customs(void)
 ******************************************************************************/
 
 static void
-tree_sort_names(void)
+tree_sort_name_use(void)
 {
     if(tree_flags & TRF_LOCK)
         return;
 
-    if(tree_sort(&namtab,
+    if(tree_sort(&name_use_deptable,
                  sizeof32(NAME_USE),
                  NAMBLKINC,
                  offsetof32(NAME_USE, flags),
@@ -1722,7 +1722,7 @@ tree_sort_names(void)
 ******************************************************************************/
 
 static void
-tree_sort_ranges(
+tree_sort_range_use(
     _InVal_     EV_DOCNO docno)
 {
     P_SS_DOC p_ss_doc;
@@ -1748,7 +1748,7 @@ tree_sort_ranges(
 ******************************************************************************/
 
 static void
-tree_sort_slrs(
+tree_sort_slr_use(
     _InVal_     EV_DOCNO docno)
 {
     P_SS_DOC p_ss_doc;

@@ -2844,7 +2844,7 @@ cal_offset_in_slot(
             rs.r[5] = 0;
             rs.r[6] = 0;
 
-            font_complain((os_error *) _kernel_swi(0x400A1 /*Font_ScanString*/, &rs, &rs));
+            font_complain(_kernel_swi(0x400A1 /*Font_ScanString*/, &rs, &rs));
 
             fs.term = rs.r[1] - (int) fs.s;
 

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Keyboard Definition</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="indentingparagraphs.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="labelprinting.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="indentingparagraphs.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="labelprinting.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -45,14 +45,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Caret</td>
                 <td>Define key</td>
-                <td><span class="csg-cmdseq">CDK</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">CDK</span></td>
             </tr>
         </tbody>
     </table>
@@ -60,10 +62,10 @@
     <ul class="csg-netsurf-2434">
         <li>
             2. Click the up / down arrow buttons until the key to which you want to assign the text appears in the right-hand box.
-            The number in the left-hand box is the ASCII value of the key.
+            The number in the left-hand box is the numeric value of the key (in the current character set).
         </li>
         <li>3. Type in the text string you want the key to produce.</li>
-        <li>4. Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+        <li>4. Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Define</span></span> button (or press <span class="csg-key">Return&crarr;</span>).</li>
     </ul>
     <p>
         If you set the <span class="csg-dbox-option">Key to define</span> option to
@@ -77,7 +79,7 @@
         <li>Give the <span class="csg-command">Define Key</span> command.</li>
         <li>Set the <span class="csg-dbox-option">Key to define</span> option to <code>121 y</code>.</li>
         <li>Leave the <span class="csg-dbox-option">Definition</span> option blank.</li>
-        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+        <li>Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Define</span></span> button (or press <span class="csg-key">Return&crarr;</span>).</li>
     </ol>
 
     <h2 id="Command">To Define a Command Sequence</h2>
@@ -92,7 +94,7 @@
     </ul>
     <p>If you want to include the <span class="csg-key">Return&crarr;</span> key in a sequence you should enter it as <span class="csg-user-text">\CEN|M</span> .</p>
     <p>
-        For example, if you set the <span class="csg-dbox-option">Definition</span> option to <span <span class="csg-user-text">>PipeDream\CEN|Mby Colton Software</span>,
+        For example, if you set the <span class="csg-dbox-option">Definition</span> option to <span class="csg-user-text">PipeDream\CEN|Mby Colton Software</span>,
         when you press the <span class="csg-key">y</span> key now, the following will appear on the screen:
     </p>
     <div class="csg-sample-indent csg-sample">
@@ -137,7 +139,7 @@
     <p class="csg-sample-indent csg-user-text">The cat sat on the mat</p>
     <p>
         and
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Define</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
     </p>
     <p>
         Now press <span class="csg-key">Shift-Ctrl-F1</span>.
@@ -179,10 +181,10 @@
         <code>&cent;</code> by holding down the
         <span class="csg-key">Alt</span> key whilst you type 162 (the value for &cent; in the Latin1 font encoding) on the numeric keypad.
         You should see <span class="csg-dbox-option-value">&cent;</span> appear in the Definition field.
-        Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span> to confirm the definition.
+        Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Define</span></span> button (or press <span class="csg-key">Return&crarr;</span>) to confirm the definition.
         Now press the <span class="csg-key">#</span> key and PipeDream will enter &cent; in the current cell.
         You may find it convenient to use the <span class="csg-filename">!Chars</span> application.
-        For the numerical values for particular characters consult your RISC&nbsp;OS <em>User&nbsp;Guide</em>.
+        For the numerical values for particular characters consult your RISC OS <em>User Guide</em>.
     </p>
 
     <h2 id="Commands">Commands</h2>
@@ -199,7 +201,7 @@
     </p>
     <p class="csg-sample-indent csg-user-text">\Y|M\CCD|M</p>
     <p>
-        Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span> to confirm the definition.
+        Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Define</span></span> button (or press <span class="csg-key">Return&crarr;</span>) to confirm the definition.
         Move to a paragraph of text and insert a blank line between every line in the paragraph.
         This will probably give you an idea of just how tedious deleting 500 alternate lines would be.
         The definition we entered tells PipeDream to perform a
@@ -208,7 +210,7 @@
     </p>
     <p>
         Check this by looking at the <span class="csg-menu">Edit</span> menu.
-        The <a href="commands.html">Commands</a> section of this <em>Reference&nbsp;Guide</em>
+        The <a href="commands.html">Commands</a> section of this <em>Reference Guide</em>
         contains a list of all the command sequences which do not appear anywhere on the long menus.
         Now move to the first blank line that you have just inserted.
         Press <span class="csg-key">Shift-Ctrl-F2</span> and you will see the line disappear and the pointer move down.
@@ -238,14 +240,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Indenting Paragraphs </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Label Printing</td>
+                <td class="navfooter_PUN_L">Indenting Paragraphs </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Label Printing</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="indentingparagraphs.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="labelprinting.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="indentingparagraphs.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="labelprinting.html">Next</a></td>
             </tr>
         </table>
     </div>

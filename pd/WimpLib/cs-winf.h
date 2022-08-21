@@ -29,6 +29,13 @@ winf_changedfield(
     int icon_handle);
 
 extern void
+winf_changedfield_full( /* i.e. Wimp_SetIconState */
+    _HwndRef_   HOST_WND window_handle,
+    int icon_handle,
+    int EOR_word,
+    int clear_word);
+
+extern void
 winf_getfield(
     _HwndRef_   HOST_WND window_handle,
     int icon_handle,

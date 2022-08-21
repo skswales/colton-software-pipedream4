@@ -63,6 +63,8 @@ PROC_EXEC_PROTO(c_char)
 PROC_EXEC_PROTO(c_clean)
 {
     U32 bytes_of_buffer = 0;
+    const PC_UCHARS uchars = ss_data_get_string(args[0]);
+    const U32 uchars_n = ss_data_get_string_size(args[0]);
     int pass = 1;
 
     exec_func_ignore_parms();
@@ -72,10 +74,10 @@ PROC_EXEC_PROTO(c_clean)
         U32 i_idx = 0;
 
         /* clean the string of unprintable chracters during transfer */
-        while(i_idx < ss_data_get_string_size(args[0]))
+        while(i_idx < uchars_n)
         {
             U32 bytes_of_char;
-            UCS4 ucs4 = uchars_char_decode_off(ss_data_get_string(args[0]), i_idx, /*ref*/bytes_of_char);
+            UCS4 ucs4 = uchars_char_decode_off(uchars, i_idx, /*ref*/bytes_of_char);
 
             i_idx += bytes_of_char;
 
@@ -118,14 +120,24 @@ PROC_EXEC_PROTO(c_clean)
 PROC_EXEC_PROTO(c_code)
 {
     S32 code_result = 0; /* SKS 20160801 allow empty string */
+    const PC_UCHARS uchars = ss_data_get_string(args[0]);
+    const U32 uchars_n = ss_data_get_string_size(args[0]);
 
     exec_func_ignore_parms();
 
-    if(0 != ss_data_get_string_size(args[0]))
-        code_result = (S32) PtrGetByte(ss_data_get_string(args[0]));
+    if(0 != uchars_n)
+        code_result = (S32) PtrGetByte(uchars);
 
     ss_data_set_integer(p_ss_data_res, code_result);
 }
+
+/******************************************************************************
+*
+* STRING dollar(number {, decimals})
+*
+* a bit like our old STRING() function but with a currency symbol and thousands commas (Excel)
+*
+******************************************************************************/
 
 _Check_return_
 static inline S32
@@ -140,21 +152,61 @@ get_decimal_places(
 
 #if 0 /* just for diff minimization */
 
-/******************************************************************************
-*
-* STRING dollar(number {, decimals})
-*
-* a bit like our old STRING() function but with a currency symbol and thousands commas (Excel)
-*
-******************************************************************************/
+_Check_return_
+static STATUS
+dollar_number_format_string(
+    _InRef_     P_QUICK_UBLOCK p_quick_ublock,
+    _InVal_     S32 decimal_places,
+    _InVal_     bool euro_suffix)
+{
+    STATUS status = STATUS_OK;
+    S32 i;
+
+    if(!euro_suffix)
+        status = quick_ublock_ucs4_add(p_quick_ublock, UCH_POUND_SIGN); /* FIXME */
+
+    if(status_ok(status))
+        status = quick_ublock_ustr_add(p_quick_ublock, USTR_TEXT("#,"));
+
+    if(status_ok(status))
+        status = quick_ublock_a7char_add(p_quick_ublock, get_ss_recog_context_alt(thousands_char));
+
+    if(status_ok(status))
+        status = quick_ublock_ustr_add(p_quick_ublock, USTR_TEXT("###0"));
+
+    if(decimal_places > 0)
+    {
+        if(status_ok(status))
+            status = quick_ublock_a7char_add(p_quick_ublock, get_ss_recog_context_alt(decimal_point_char));
+
+        for(i = 0; (i < decimal_places) && status_ok(status); ++i)
+            status = quick_ublock_a7char_add(p_quick_ublock, CH_DIGIT_ZERO);
+    }
+
+    if(euro_suffix)
+    {
+        if(status_ok(status))
+            status = quick_ublock_a7char_add(p_quick_ublock, CH_SPACE);
+
+#if USTR_IS_SBSTR
+        if(status_ok(status))
+            status = quick_ublock_ucs4_add(p_quick_ublock, ucs4_to_sbchar_force_with_codepage(UCH_EURO_CURRENCY_SIGN, get_system_codepage(), UCH_SPACE));
+#else
+        if(status_ok(status))
+            status = quick_ublock_ucs4_add(p_quick_ublock, UCH_EURO_CURRENCY_SIGN);
+#endif
+    }
+
+    return(status);
+}
 
 PROC_EXEC_PROTO(c_dollar)
 {
-    STATUS status;
-    S32 decimal_places = (n_args > 1) ? get_decimal_places(args[1]) : 2;
-    S32 i;
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 50);
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 50);
+    STATUS status = STATUS_OK;
+    const S32 decimal_places = (n_args > 1) ? get_decimal_places(args[1]) : 2; /* keep signed - can use negative decimal_places to round before decimal point */
+    bool euro_suffix = false;
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 64);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 64);
     quick_ublock_with_buffer_setup(quick_ublock_format);
     quick_ublock_with_buffer_setup(quick_ublock_result);
 
@@ -162,16 +214,20 @@ PROC_EXEC_PROTO(c_dollar)
 
     round_common(args, n_args, p_ss_data_res, RPN_FNV_ROUND); /* ROUND: uses n_args, args[0] and {args[1]}, yields DATA_ID_REAL (or an integer type) */
 
-    status = quick_ublock_ucs4_add(&quick_ublock_format, UCH_POUND_SIGN); /* FIXME */
+    euro_suffix = (CH_COMMA == get_ss_recog_context_alt(decimal_point_char)); /* FIXME */
+
+    /* positive format */
+    status = dollar_number_format_string(&quick_ublock_format, decimal_places, euro_suffix);
+
+    /* followed by negative format (in parentheses) */
+    if(status_ok(status))
+        status = quick_ublock_sbstr_add(&quick_ublock_format, "_;(");
 
     if(status_ok(status))
-        status = quick_ublock_ustr_add(&quick_ublock_format, USTR_TEXT("#,,###0"));
+        status = dollar_number_format_string(&quick_ublock_format, decimal_places, euro_suffix);
 
-    if((decimal_places > 0) && status_ok(status))
-        status = quick_ublock_a7char_add(&quick_ublock_format, CH_FULL_STOP);
-
-    for(i = 0; (i < decimal_places) && status_ok(status); ++i)
-        status = quick_ublock_a7char_add(&quick_ublock_format, CH_NUMBER_SIGN);
+    if(status_ok(status))
+        status = quick_ublock_a7char_add(&quick_ublock_format, CH_RIGHT_PARENTHESIS);
 
     if(status_ok(status))
         status = quick_ublock_nullch_add(&quick_ublock_format);
@@ -202,7 +258,7 @@ PROC_EXEC_PROTO(c_exact)
 
     exec_func_ignore_parms();
 
-    if( ss_data_get_string_size(args[0]) == ss_data_get_string_size(args[1]))
+    if( ss_data_get_string_size(args[0]) == ss_data_get_string_size(args[1]) )
         if(0 == memcmp32(ss_data_get_string(args[0]), ss_data_get_string(args[1]), ss_data_get_string_size(args[0])))
             exact_result = true;
 
@@ -218,7 +274,7 @@ PROC_EXEC_PROTO(c_exact)
 PROC_EXEC_PROTO(c_find)
 {
     S32 find_result = 0;
-    S32 find_len = ss_data_get_string_size(args[1]);
+    const S32 find_len = (S32) ss_data_get_string_size(args[1]);
     S32 start_n = (n_args > 2) ? ss_data_get_integer(args[2]) : 1;
     PC_UCHARS uchars;
 
@@ -251,11 +307,11 @@ PROC_EXEC_PROTO(c_find)
 PROC_EXEC_PROTO(c_fixed)
 {
     STATUS status;
-    S32 decimal_places = (n_args > 1) ? get_decimal_places(args[1]) : 2;
-    const BOOL no_commas = (n_args > 2) ? ss_data_get_logical(args[2]) : FALSE;
+    const S32 decimal_places = (n_args > 1) ? get_decimal_places(args[1]) : 2; /* keep signed - can use negative decimal_places to round before decimal point */
+    const bool no_commas = (n_args > 2) ? ss_data_get_logical(args[2]) : false;
     S32 i;
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 50);
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 50);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 64);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 64);
     quick_ublock_with_buffer_setup(quick_ublock_format);
     quick_ublock_with_buffer_setup(quick_ublock_result);
 
@@ -269,7 +325,7 @@ PROC_EXEC_PROTO(c_fixed)
         status = quick_ublock_a7char_add(&quick_ublock_format, CH_FULL_STOP);
 
     for(i = 0; (i < decimal_places) && status_ok(status); ++i)
-        status = quick_ublock_a7char_add(&quick_ublock_format, CH_NUMBER_SIGN);
+        status = quick_ublock_a7char_add(&quick_ublock_format, CH_DIGIT_ZERO);
 
     if(status_ok(status))
         status = quick_ublock_nullch_add(&quick_ublock_format);
@@ -307,7 +363,7 @@ PROC_EXEC_PROTO(c_formula_text)
         EV_OPTBLOCK optblock;
 
         ev_set_options(&optblock, docno);
-        optblock.lf = optblock.cr = 0;
+        optblock.lf = false;
 
         ev_decode_slot(docno, buffer, p_ev_cell, &optblock);
 
@@ -331,8 +387,8 @@ PROC_EXEC_PROTO(c_join)
 
     for(arg_idx = 0; arg_idx < n_args; ++arg_idx)
     {
-        const U32 arg_len = ss_data_get_string_size(args[arg_idx]);
-        len += arg_len;
+        const U32 arg_uchars_n = ss_data_get_string_size(args[arg_idx]);
+        len += arg_uchars_n;
     }
 
     if(0 == len)
@@ -345,9 +401,10 @@ PROC_EXEC_PROTO(c_join)
 
     for(arg_idx = 0; arg_idx < n_args; ++arg_idx)
     {
-        const U32 arg_len = ss_data_get_string_size(args[arg_idx]);
-        memcpy32(uchars, ss_data_get_string(args[arg_idx]), arg_len);
-        uchars_IncBytes_wr(uchars, arg_len);
+        const PC_UCHARS arg_uchars = ss_data_get_string(args[arg_idx]);
+        const U32 arg_uchars_n = ss_data_get_string_size(args[arg_idx]);
+        memcpy32(uchars, arg_uchars, arg_uchars_n);
+        uchars_IncBytes_wr(uchars, arg_uchars_n);
     }
 }
 
@@ -359,7 +416,8 @@ PROC_EXEC_PROTO(c_join)
 
 PROC_EXEC_PROTO(c_left)
 {
-    const S32 len = ss_data_get_string_size(args[0]);
+    const PC_UCHARS uchars = ss_data_get_string(args[0]);
+    const U32 uchars_n = ss_data_get_string_size(args[0]);
     S32 n = 1;
 
     exec_func_ignore_parms();
@@ -372,8 +430,7 @@ PROC_EXEC_PROTO(c_left)
             exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
     }
 
-    n = MIN(n, len);
-    status_assert(ss_string_make_uchars(p_ss_data_res, ss_data_get_string(args[0]), n));
+    status_assert(ss_string_make_uchars(p_ss_data_res, uchars, MIN((U32) n, uchars_n)));
 }
 
 /******************************************************************************
@@ -414,7 +471,9 @@ PROC_EXEC_PROTO(c_lower)
             const UCS4 ucs4_x = (UCS4) tolower(ucs4);
 
             if(ucs4_x != ucs4)
+            {
                 uchars[offset] = (U8) ucs4_x;
+            }
 
             offset += bytes_of_char;
             assert(offset <= len);
@@ -430,9 +489,10 @@ PROC_EXEC_PROTO(c_lower)
 
 PROC_EXEC_PROTO(c_mid)
 {
-    S32 len = ss_data_get_string_size(args[0]);
-    S32 start;
+    const PC_UCHARS uchars = ss_data_get_string(args[0]);
+    const S32 len = (S32) ss_data_get_string_size(args[0]);
     S32 n = ss_data_get_integer(args[2]);
+    S32 start;
 
     exec_func_ignore_parms();
 
@@ -443,7 +503,7 @@ PROC_EXEC_PROTO(c_mid)
 
     start = MIN(start, len);
     n = MIN(n, len - start);
-    status_assert(ss_string_make_uchars(p_ss_data_res, uchars_AddBytes(ss_data_get_string(args[0]), start), n));
+    status_assert(ss_string_make_uchars(p_ss_data_res, uchars_AddBytes(uchars, start), n));
 }
 
 #if 0 /* just for diff minimization */
@@ -464,14 +524,14 @@ PROC_EXEC_PROTO(c_n)
         ss_data_set_integer(p_ss_data_res, (S32) ss_data_get_logical(args[0]));
         break;
 
+    case DATA_ID_DATE:
+        /* might have just a date component, which is representable as an integer */
+        ss_data_set_real_try_integer(p_ss_data_res, ss_date_to_serial_number(ss_data_get_date(args[0])));
+        break;
+
     case DATA_ID_STRING:
         /* can't discriminate here between strings and text cells */
         ss_data_set_integer(p_ss_data_res, 0);
-        break;
-
-    case DATA_ID_DATE:
-        /* might have just a date component, which is representable as an integer */
-        ss_data_set_real_try_integer(p_ss_data_res, ss_date_to_serial_number(&args[0]->arg.ss_date));
         break;
 
     default:
@@ -535,12 +595,12 @@ PROC_EXEC_PROTO(c_replace)
     const S32 len = ss_data_get_string_size(args[0]);
     S32 start_n_chars;
     S32 excise_n_chars = ss_data_get_integer(args[2]);
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, BUF_EV_MAX_STRING_LEN);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 64);
     quick_ublock_with_buffer_setup(quick_ublock_result);
 
     exec_func_ignore_parms();
 
-    if((ss_data_get_integer(args[1]) < 0) || (excise_n_chars < 0))
+    if((ss_data_get_integer(args[1]) <= 0) || (excise_n_chars < 0))
         status = EVAL_ERR_ARGRANGE;
     else
     {
@@ -580,9 +640,10 @@ PROC_EXEC_PROTO(c_replace)
 
 PROC_EXEC_PROTO(c_rept)
 {
+    const PC_UCHARS uchars_in = ss_data_get_string(args[0]);
     const U32 len = ss_data_get_string_size(args[0]);
     S32 n = ss_data_get_integer(args[1]);
-    P_UCHARS uchars;
+    P_UCHARS uchars_out;
     S32 x;
 
     exec_func_ignore_parms();
@@ -596,12 +657,12 @@ PROC_EXEC_PROTO(c_rept)
     if(0 == n * len)
         return;
 
-    uchars = p_ss_data_res->arg.string_wr.uchars;
+    uchars_out = p_ss_data_res->arg.string_wr.uchars;
 
     for(x = 0; x < n; ++x)
     {
-        memcpy32(uchars, ss_data_get_string(args[0]), len);
-        uchars_IncBytes_wr(uchars, len);
+        memcpy32(uchars_out, uchars_in, len);
+        uchars_IncBytes_wr(uchars_out, len);
     }
 }
 
@@ -639,7 +700,8 @@ PROC_EXEC_PROTO(c_reverse)
 
 PROC_EXEC_PROTO(c_right)
 {
-    const S32 len = ss_data_get_string_size(args[0]);
+    const PC_UCHARS uchars = ss_data_get_string(args[0]);
+    const S32 len = (S32) ss_data_get_string_size(args[0]);
     S32 n = 1;
 
     exec_func_ignore_parms();
@@ -653,7 +715,7 @@ PROC_EXEC_PROTO(c_right)
     }
 
     n = MIN(n, len);
-    status_assert(ss_string_make_uchars(p_ss_data_res, uchars_AddBytes(ss_data_get_string(args[0]), (len - n)), n));
+    status_assert(ss_string_make_uchars(p_ss_data_res, uchars_AddBytes(uchars, (len - n)), n));
 }
 
 /******************************************************************************
@@ -664,18 +726,15 @@ PROC_EXEC_PROTO(c_right)
 
 PROC_EXEC_PROTO(c_string)
 {
-    S32 decimal_places = (n_args > 1) ? get_decimal_places(args[1]) : 2;
+    const S32 decimal_places = (n_args > 1) ? get_decimal_places(args[1]) : 2; /* keep signed - can use negative decimal_places to round before decimal point */
     F64 rounded_value;
-    U8Z buffer[BUF_EV_MAX_STRING_LEN];
+    U8Z buffer[127 + 1 + 32]; /* somewhat bigger than the MAX in get_decimal_places() */
 
     exec_func_ignore_parms();
 
     round_common(args, n_args, p_ss_data_res, RPN_FNV_ROUND); /* ROUND: uses n_args, args[0] and {args[1]}, yields DATA_ID_REAL (or an integer type) */
 
-    if(ss_data_is_real(p_ss_data_res))
-        rounded_value = ss_data_get_real(p_ss_data_res);
-    else
-        rounded_value = (F64) ss_data_get_integer(p_ss_data_res); /* take care now we can get integer types back */
+    rounded_value = ss_data_get_number(p_ss_data_res); /* take care now we can get integer types back */
 
     consume_int(xsnprintf(buffer, elemof32(buffer), "%.*f", (int) decimal_places, rounded_value));
 
@@ -711,7 +770,7 @@ PROC_EXEC_PROTO(c_substitute)
     {
         U32 instance = 1;
         U32 text_i = 0;
-        QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, BUF_EV_MAX_STRING_LEN);
+        QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 64);
         quick_ublock_with_buffer_setup(quick_ublock_result);
 
         while(text_i < text_size)
@@ -781,24 +840,6 @@ PROC_EXEC_PROTO(c_t)
 
 #endif
 
-_Check_return_
-extern STATUS
-ev_numform(
-    _InoutRef_  P_QUICK_UBLOCK p_quick_ublock,
-    _In_z_      PC_USTR ustr,
-    _InRef_     PC_SS_DATA p_ss_data)
-{
-    NUMFORM_PARMS numform_parms /*= NUMFORM_PARMS_INIT*/;
-
-    numform_parms.ustr_numform_numeric =
-    numform_parms.ustr_numform_datetime =
-    numform_parms.ustr_numform_texterror = ustr;
-
-    numform_parms.p_numform_context = get_p_numform_context();
-
-    return(numform(p_quick_ublock, P_QUICK_UBLOCK_NONE, p_ss_data, &numform_parms));
-}
-
 /******************************************************************************
 *
 * STRING text(n, numform_string)
@@ -808,8 +849,8 @@ ev_numform(
 PROC_EXEC_PROTO(c_text)
 {
     STATUS status;
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 50);
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 50);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_format, 64);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock_result, 64);
     quick_ublock_with_buffer_setup(quick_ublock_format);
     quick_ublock_with_buffer_setup(quick_ublock_result);
 
@@ -836,46 +877,53 @@ PROC_EXEC_PROTO(c_text)
 
 PROC_EXEC_PROTO(c_trim)
 {
-    U8Z buffer[BUF_EV_MAX_STRING_LEN];
-    U32 o_idx = 0;
-    PC_UCHARS s_ptr;
-    PC_UCHARS e_ptr;
-    PC_UCHARS i_ptr;
-    BOOL gap = FALSE;
+    PC_UCHARS s_ptr = ss_data_get_string(args[0]);
+    PC_UCHARS e_ptr = uchars_AddBytes(s_ptr, ss_data_get_string_size(args[0]));
+    P_UCHARS o_buf = P_DATA_NONE;
+    int pass = 1;
 
     exec_func_ignore_parms();
 
-    s_ptr = ss_data_get_string(args[0]);
-    e_ptr = uchars_AddBytes(s_ptr, ss_data_get_string_size(args[0]));
-
-    while( (s_ptr < e_ptr) && (PtrGetByte(s_ptr) == CH_SPACE) ) /* skip leading spaces */
+    while((s_ptr < e_ptr) && (PtrGetByte(s_ptr) == CH_SPACE)) /* skip leading spaces */
         uchars_IncByte(s_ptr);
 
-    while( (e_ptr > s_ptr) && (PtrGetByteOff(e_ptr, -1) == CH_SPACE) ) /* skip trailing spaces */
+    while((e_ptr > s_ptr) && (PtrGetByteOff(e_ptr, -1) == CH_SPACE)) /* skip trailing spaces */
         uchars_DecByte(e_ptr);
 
-    /* crunge runs of multiple spaces to a single space during transfer */
-    for(i_ptr = s_ptr; i_ptr < e_ptr; uchars_IncByte(i_ptr))
-    {
-        if(CH_SPACE == PtrGetByte(i_ptr))
+    do  {
+        PC_UCHARS i_ptr;
+        U32 o_idx = 0;
+        BOOL gap = FALSE;
+
+        /* crunge runs of multiple spaces to a single space during transfer */
+        for(i_ptr = s_ptr; i_ptr < e_ptr; uchars_IncByte(i_ptr))
         {
-            if(gap)
-                continue;
+            if(CH_SPACE == PtrGetByte(i_ptr))
+            {
+                if(gap)
+                    continue;
+                else
+                    gap = TRUE;
+            }
             else
-                gap = TRUE;
+            {
+                gap = FALSE;
+            }
+
+            if(1 == pass)
+                ++o_idx; /* sizing pass */
+            else
+                o_buf[o_idx++] = PtrGetByte(i_ptr);
         }
-        else
+
+        if(1 == pass)
         {
-            gap = FALSE;
+            status_break(ss_string_allocate(p_ss_data_res, o_idx));
+
+            o_buf = p_ss_data_res->arg.string_wr.uchars;
         }
-
-        buffer[o_idx++] = PtrGetByte(i_ptr);
-
-        if(o_idx >= elemof32(buffer))
-            break;
     }
-
-    status_assert(ss_string_make_uchars(p_ss_data_res, uchars_bptr(buffer), o_idx));
+    while(++pass <= 2);
 }
 
 /******************************************************************************
@@ -901,8 +949,9 @@ PROC_EXEC_PROTO(c_upper)
             const UCS4 ucs4_x = (UCS4) toupper(ucs4);
 
             if(ucs4_x != ucs4)
+            {
                 uchars[offset] = (U8) ucs4_x;
-
+            }
 
             offset += bytes_of_char;
             assert(offset <= len);

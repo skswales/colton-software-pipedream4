@@ -33,7 +33,7 @@ strings_lookup(
 
 /* Macro definitions */
 
-/* Both NorCroft and Microsoft give better code for shorter inline strings
+/* Both Norcroft and Microsoft give better code for shorter inline strings
  * as opposed to externals -- only language independent ones here!
 */
 
@@ -86,7 +86,7 @@ stringdef(PDRIVERS_SUBDIR_STR)
 stringdef(EXTREFS_SUBDIR_STR)
 
 stringdef(DUMP_FILE_STR)
-stringdef(UNTITLED_ZD_STR)
+stringdef(UNTITLED_STR)
 stringdef(ambiguous_tag_STR)
 
 stringdef(PRESSANYKEY_STR)
@@ -150,9 +150,8 @@ stringdef(Subgrams_STR)
 #define Subgrams_dialog_STR Subgrams_STR
 #endif
 stringdef(Opened_user_dictionaries_STR)
-stringdef(Insert_word_in_user_dictionary_dialog_STR)
-stringdef(Delete_word_from_user_dictionary_dialog_STR)
-stringdef(Insert_highlights_dialog_STR)
+
+stringdef(Action_Insert_STR)
 
 stringdef(Overwrite_existing_file_YN_Q_STR)
 
@@ -303,11 +302,9 @@ stringdef(Insert_colour_change_STR)
 
 stringdef(Load_file_STR)
 stringdef(Insert_file_STR)
-stringdef(Save_file_STR)
+stringdef(Save_file_as_STR)
+stringdef(Save_file_simple_STR)
 stringdef(Save_template_STR)
-#ifndef Save_template_dialog_STR
-#define Save_template_dialog_STR Save_template_STR
-#endif
 stringdef(Name_STR)
 stringdef(New_window_STR)
 stringdef(Classic_menus_STR)
@@ -326,6 +323,9 @@ stringdef(New_chart_files_STR)
 stringdef(RepeatCommand_STR)
 stringdef(About_STR)
 stringdef(Exit_STR)
+
+stringdef(OK_STR)
+stringdef(Cancel_STR)
 
 /* 'Layout' submenu */
 
@@ -369,9 +369,6 @@ stringdef(Superscript_STR)
 stringdef(Alternate_font_STR)
 stringdef(User_defined_STR)
 stringdef(Remove_highlights_STR)
-#ifndef Remove_highlights_dialog_STR
-#define Remove_highlights_dialog_STR Remove_highlights_STR
-#endif
 stringdef(Highlight_block_STR)
 
 /* 'Spell' submenu */
@@ -601,7 +598,7 @@ stringdef(Edit_formula_in_window_STR)
 
 stringdef(SaveChoices_STR)
 stringdef(FullScreen_STR)
-stringdef(SpreadArray_STR)
+stringdef(Transpose_block_STR)
 stringdef(ChangeMenus_STR)
 
 stringdef(New_chart_STR)
@@ -666,10 +663,10 @@ stringdef(SF_Home_STR)
 stringdef(CF_Home_STR)
 stringdef(CSF_Home_STR)
 
-stringdef(F_Copy_STR)
-stringdef(SF_Copy_STR)
-stringdef(CF_Copy_STR)
-stringdef(CSF_Copy_STR)
+stringdef(F_End_STR)
+stringdef(SF_End_STR)
+stringdef(CF_End_STR)
+stringdef(CSF_End_STR)
 
 stringdef(F_Delete_STR)
 stringdef(SF_Delete_STR)

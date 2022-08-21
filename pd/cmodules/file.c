@@ -761,7 +761,7 @@ file_open(
         return(res);
 
     /* always initialise file to look silly */
-    zero_struct_ptr(file_handle);
+    zero_struct_ptr_fn(file_handle);
 
     file_handle->count = -1;  /* nothing buffered; forces getc/putc to fns */
     file_handle->flags = (openmode == file_open_read)

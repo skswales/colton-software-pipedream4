@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Database functions</title>
+    <link href="../help.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+
+    <h1 id="Database">Database functions</h1>
+    <p>
+        Database functions are variants of the statistical functions AVG, COUNT, MAX, MIN, STD, STDP, SUM, VAR and VARP
+        which operate upon a range of cells (your database) subject to the condition which forms their second parameter.
+        There is an example of each database function in the PipeDream Examples.
+    </p>
+    <p>Database functions all have the form:</p>
+    <p class="csg-function-declaration">
+        D<em>function</em>(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <h5>Example:</h5>
+    <p>With data</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">A</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">B</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td>Jane</td>
+                <td class="csg-sample-sheet-cell-number">1.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td>Fred</td>
+                <td class="csg-sample-sheet-cell-number">3.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td>Alan</td>
+                <td class="csg-sample-sheet-cell-number">10.00</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>the formula</p>
+    <p class="csg-sample-indent"><code>DMAX(B2B4,B2B4&lt;10)</code></p>
+    <p>finds the maximum value in the range B2B4 which is less than 10, i.e. 3.00.</p>
+    <p>
+        These functions can also be used to manipulate text strings.
+        Use double quotation marks to enclose text strings.
+    </p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>DMAX(B2B4,A2A4&gt;="b")</code></p>
+    <p>
+        finds the maximum value in the range B2B4 for which the corresponding value in the range A2A4 starts with a letter greater than a.
+        The answer here is 3.00 since this is the greatest value in column B whose corresponding value in column A starts with a letter greater than a.
+    </p>
+    <p>
+        When scanning the range, PipeDream steps through each corresponding range in the condition.
+        In this example, A1 is the first cell examined when considering B1, A2 for B2, etc.
+        Any cell references in the condition are unaffected.
+    </p>
+    <p>
+        You can use the wildcards
+        <code>^?</code> (any single character) and
+        <code>^#</code> (any multiple character)
+        in the second half of the condition.
+    </p>
+    <h5>Example:</h5>
+    <p>With data</p>
+    <table border="1" class="csg-sample-indent csg-sample">
+        <col />
+        <col />
+        <col />
+        <col />
+        <tbody>
+            <tr>
+                <th class="csg-sample-sheet-border-column"></th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">A</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">B</th>
+                <th class="csg-sample-sheet-border-column csg-sample-sheet-column-stdwidth">C</th>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">1</th>
+                <td>Jane</td>
+                <td>Brighton</td>
+                <td class="csg-sample-sheet-cell-number">1.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">2</th>
+                <td>Fred</td>
+                <td>Blackpool</td>
+                <td class="csg-sample-sheet-cell-number">3.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">3</th>
+                <td>Alan</td>
+                <td>Coventry</td>
+                <td class="csg-sample-sheet-cell-number">10.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">4</th>
+                <td>Mary</td>
+                <td>Brighton</td>
+                <td class="csg-sample-sheet-cell-number">4.00</td>
+            </tr>
+            <tr>
+                <th class="csg-sample-sheet-border-row">5</th>
+                <td>Susan</td>
+                <td>Coventry</td>
+                <td class="csg-sample-sheet-cell-number">15.00</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>the formula</p>
+    <p class="csg-sample-indent"><code>DCOUNTA(B1B5,B1B5="B^#")</code></p>
+    <p>returns 3 which is the number of items in the range B1B5 which begin with &lsquo;B&rsquo;.</p>
+    <p>&nbsp;</p>
+    <p>The database functions are as follows:</p>
+
+    <h2 class="csg-function" id="DAVG">DAVG</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DAVG(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the average of the values in the range for which the condition is satisfied.</p>
+
+    <h2 class="csg-function" id="DCOUNT">DCOUNT</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DCOUNT(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the number of number cells in the range for which the condition is satisfied.</p>
+    <p>Note that this operates on number cells only.</p>
+
+    <h2 class="csg-function" id="DCOUNTA">DCOUNTA</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DCOUNTA(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>As DCOUNT, but applies to all cells, not just number cells.</p>
+    <p>Usually DCOUNTA should be used in preference to DCOUNT.</p>
+
+    <h2 class="csg-function" id="DMAX">DMAX</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DMAX(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the maximum value in the range for which the condition is satisfied.</p>
+
+    <h2 class="csg-function" id="DMIN">DMIN</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DMIN(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the minimum value in the range for which the condition is satisfied.</p>
+
+    <h2 class="csg-function" id="DSTD">DSTD</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DSTD(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the sample standard deviation of the values in the range for which the condition is satisfied.</p>
+    <p>This is the square root of the sample variance.</p>
+    <p>The equation used is:</p>
+    <p class="csg-function-formula">
+        &radic;<span class="csg-function-formula-outer-parentheses">{</span>
+        <span class="csg-function-formula-outer-parentheses">(</span>
+        <span class="csg-function-formula-variable">n</span> &middot;
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        -
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        <span class="csg-function-formula-outer-parentheses">)</span>
+        &nbsp;&divide;&nbsp;
+        (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span> - 1))
+        <span class="csg-function-formula-outer-parentheses">}</span>
+    </p>
+    <p>
+        where <span class="csg-function-formula-variable">x<sub>i</sub></span> is each value and
+        <span class="csg-function-formula-variable">n</span> is the number of values
+        satisfying <span class="csg-function-parameter">condition</span>.
+    </p>
+
+    <h2 class="csg-function" id="DSTDP">DSTDP</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DSTDP(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the population standard deviation of the values in the range for which the condition is satisfied.</p>
+    <p>This is the square root of the population variance.</p>
+    <p>The equation used is:</p>
+    <p class="csg-function-formula">
+        &radic;<span class="csg-function-formula-outer-parentheses">{</span>
+        <span class="csg-function-formula-outer-parentheses">(</span>
+        <span class="csg-function-formula-variable">n</span> &middot;
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        -
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        <span class="csg-function-formula-outer-parentheses">)</span>
+        &nbsp;&divide;&nbsp;
+        <span class="csg-function-formula-variable">n</span><sup>2</sup>
+        <span class="csg-function-formula-outer-parentheses">}</span>
+    </p>
+    <p>
+        where <span class="csg-function-formula-variable">x<sub>i</sub></span> is each value and
+        <span class="csg-function-formula-variable">n</span> is the number of values
+        satisfying <span class="csg-function-parameter">condition</span>.
+    </p>
+
+    <h2 class="csg-function" id="DSUM">DSUM</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DSUM(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the sum of the values in the range for which the condition is satisfied.</p>
+
+    <h2 class="csg-function" id="DVAR">DVAR</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DVAR(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the sample variance of the values in the range for which the condition is satisfied.</p>
+    <p>The equation used is:</p>
+    <p class="csg-function-formula">
+        <span class="csg-function-formula-outer-parentheses">(</span>
+        <span class="csg-function-formula-variable">n</span> &middot;
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        -
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        <span class="csg-function-formula-outer-parentheses">)</span>
+        &nbsp;&divide;&nbsp;
+        (<span class="csg-function-formula-variable">n</span> &middot; (<span class="csg-function-formula-variable">n</span> - 1))
+    </p>
+    <p>
+        where <span class="csg-function-formula-variable">x<sub>i</sub></span> is each value and
+        <span class="csg-function-formula-variable">n</span> is the number of values
+        satisfying <span class="csg-function-parameter">condition</span>.
+    </p>
+
+    <h2 class="csg-function" id="DVARP">DVARP</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DVARP(<span class="csg-function-parameter">range</span>,
+        <span class="csg-function-parameter">condition</span>)
+    </p>
+    <p>Returns the population variance of the values in the range for which the condition is satisfied.</p>
+    <p>The equation used is:</p>
+    <p class="csg-function-formula">
+        <span class="csg-function-formula-outer-parentheses">(</span>
+        <span class="csg-function-formula-variable">n</span> &middot;
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> (<span class="csg-function-formula-variable">x<sub>i</sub></span><sup>2</sup>))
+        -
+        (<span class="csg-math-symbol-upper-case">&Sigma;</span><sup class="csg-function-formula-variable csg-math-symbol-limit-upper">i=n</sup> <span class="csg-function-formula-variable">x<sub>i</sub></span>)<sup>2</sup>
+        <span class="csg-function-formula-outer-parentheses">)</span>
+        &nbsp;&divide;&nbsp;
+        <span class="csg-function-formula-variable">n</span><sup>2</sup>
+    </p>
+    <p>
+        where <span class="csg-function-formula-variable">x<sub>i</sub></span> is each value and
+        <span class="csg-function-formula-variable">n</span> is the number of values
+        satisfying <span class="csg-function-parameter">condition</span>.
+    </p>
+</body>
+</html>

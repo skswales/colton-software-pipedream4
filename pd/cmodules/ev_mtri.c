@@ -447,6 +447,7 @@ PROC_EXEC_PROTO(c_deg)
 PROC_EXEC_PROTO(c_pi)
 {
     exec_func_ignore_parms();
+    UNREFERENCED_PARAMETER(args);
 
     ss_data_set_real(p_ss_data_res, _pi);
 }

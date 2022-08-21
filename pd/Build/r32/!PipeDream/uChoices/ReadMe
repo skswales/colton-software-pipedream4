@@ -1,10 +1,11 @@
  PipeDream and User Choices
  --------------------------
 
- PipeDream now uses the Choices$Path to access the user's Choices. 
-Choices:PipeDream. has been added to the PipeDream$Path variable, replacing
-<PipeDream$Dir>.User (or <PipeDream$ResourceDir>.User if you used to use
-!PDGlobal to store global resources for PipeDream).
+ PipeDream now uses the Choices$Path to access the user's saved Choices
+(and other common data).  Choices:PipeDream. has been added to the
+PipeDream$DataPath variable, replacing <PipeDream$Dir>.User (or
+<PipeDream$ResourceDir>.User if you used to use !PDGlobal to store global
+resources for PipeDream).
 
  Choices, user dictionaries, new templates etc. are now written to the
 appropriate location in <Choices$Write>.PipeDream. Subdirectories of

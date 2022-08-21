@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Label Printing</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
     <style type="text/css">
         .label-example-column-C {
         }
@@ -32,11 +32,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="keyboard.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="lookupfns.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="keyboard.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="functions/lookup.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -44,7 +44,7 @@
     <h1 id="Label">Label Printing</h1>
     <p>PipeDream enables you to print labels for the names and addresses in your names and addresses database.</p>
     <p>
-        If you are using a page printer with a RISC&nbsp;OS printer driver,
+        If you are using a page printer with a RISC OS printer driver,
         you can lay out the labels for printing on label sheets which generally have three columns of labels on each sheet.
         If you are using a dot matrix or daisy wheel printer, the labels are printed in one column.
     </p>
@@ -138,8 +138,8 @@
     </table>
     <ul class="csg-netsurf-2434">
         <li>
-            4. Save the file of names and addresses in ASCII format with a different name to the original database.
-            This ASCII format file will be used to produce the labels.
+            4. Save the file of names and addresses in Text format with a different name to the original database.
+            This Text format file will be used to produce the labels.
         </li>
     </ul>
     <p>Now you need to create your label template.</p>
@@ -252,7 +252,7 @@
             This is necessary because each label is eight lines long, seven lines of text and one blank line.
             Again, you can change this to suit your own labels if you need to do so.
         </li>
-        <li>3. Save the label template file in the same directory as the names and addresses file in ASCII format.</li>
+        <li>3. Save the label template file in the same directory as the names and addresses file in Text format.</li>
     </ul>
     <p>If you are using a page printer proceed to the section below called Page Printers.</p>
     <p>If you are using a dot matrix or daisy wheel printer, you can now print out the labels on your printer:</p>
@@ -262,15 +262,15 @@
         <li>Give the <span class="csg-command">Print</span> command.</li>
         <li>Set the <span class="csg-dbox-option">Print to</span> option to  <span class="csg-dbox-option-value">Printer</span>.</li>
         <li>Click the <span class="csg-dbox-option">Fill from database</span> option to turn it on.</li>
-        <li>Type in the name of the ASCII format file of names and addresses.</li>
+        <li>Type in the name of the Text format file of names and addresses.</li>
         <li>
             If you have any blank fields in your database which you want to close up, select the <span class="csg-dbox-option">Omit blank fields</span> option.
             For example, you may have the postcode as the last column and other blank address fields before it in some records.
             This option will lift the postcode so that it appears on the line of the label immediately beneath the last address line.
             Note that if you have more fields after the postcode, these will come onto the label too.
-            This is why it is best to delete from your ASCII format database those columns which you do not want on the label.
+            This is why it is best to delete from your Text format database those columns which you do not want on the label.
         </li>
-        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+        <li>Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Print</span></span> button (or press <span class="csg-key">Return&crarr;</span>).</li>
     </ol>
     <p>Your labels will be printed out in one column.</p>
 
@@ -288,7 +288,7 @@
         <li>
             Select the <span class="csg-dbox-option">Fill from database</span> option to turn it on.
         </li>
-        <li>Type in the name of the file of names and addresses in ASCII format.</li>
+        <li>Type in the name of the file of names and addresses in Text format.</li>
         <li>
             If you have any blank fields in your database which you want to close up,
             click on the <span class="csg-dbox-option">Omit blank fields</span> option. For
@@ -296,10 +296,10 @@
             it. This option will lift the postcode so that it appears on the line of the
             label immediately beneath the last address line. Note that if you have more
             fields after the postcode, these will come onto the label too. This is why it
-            is best to delete from your ASCII format database those columns which you do
+            is best to delete from your Text format database those columns which you do
             not want on the label.
         </li>
-        <li>Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.</li>
+        <li>Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Print</span></span> button (or press <span class="csg-key">Return&crarr;</span>).</li>
     </ol>
     <p>PipeDream creates a new file containing the labels.</p>
     <ul class="csg-netsurf-2434">
@@ -412,7 +412,7 @@
         <li>Press <span class="csg-cmdseq">Cmd-CGS</span> (Go to cell).</li>
         <li>
             Type in A321 (480 - 160 + 1) and
-            click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+            click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Go to cell</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
             This positions the caret two-thirds of the way down the rows.
         </li>
         <li>
@@ -428,7 +428,7 @@
         <li>Press <span class="csg-cmdseq">Cmd-CGS</span>.</li>
         <li>
             Type in A161 (320 - 160 + 1) and
-            click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+            click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Go to cell</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
         </li>
         <li>
             When the caret is positioned in cell A161, on the blank line above a label, click Adjust.
@@ -591,7 +591,7 @@
     </p>
     <ul class="csg-netsurf-2434">
         <li>
-            4. Since the labels will be printed using a RISC&nbsp;OS printer driver, you need to set a font for the document using the <span class="csg-command">Font</span> command.
+            4. Since the labels will be printed using a RISC OS printer driver, you need to set a font for the document using the <span class="csg-command">Font</span> command.
             Leave the point size set to 12.
             Homerton is a good clear font for label printing.
         </li>
@@ -603,12 +603,12 @@
     <ol>
         <li>Load the document called <span class="csg-filename">Labelsheet</span> by double-clicking on the file&rsquo;s icon.</li>
         <li>Use the <span class="csg-command">Font</span> command to set the same font as you want to use for your labels.</li>
-        <li>Print out the file onto a blank piece of paper, using a RISC&nbsp;OS printer driver.</li>
+        <li>Print out the file onto a blank piece of paper, using a RISC OS printer driver.</li>
         <li>Compare the print-out with your label sheet and alter the column width, scale factor, page length, top margin or left margin settings until the template file fits your label sheet.</li>
         <li>Make a note of the settings you used in the file <span class="csg-filename">Labelsheet</span> and apply them to your file of labels.</li>
         <li>Save <span class="csg-filename">Labelsheet</span> so that you can use it for future reference.</li>
         <li>Save your file of labels.</li>
-        <li>Print the labels out using a RISC&nbsp;OS printer driver.</li>
+        <li>Print the labels out using a RISC OS printer driver.</li>
     </ol>
 
     <table class="csg-info-table">
@@ -633,14 +633,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Keyboard Definition </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Lookup Functions</td>
+                <td class="navfooter_PUN_L">Keyboard Definition </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Lookup Functions</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="keyboard.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="lookupfns.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="keyboard.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="functions/lookup.html">Next</a></td>
             </tr>
         </table>
     </div>

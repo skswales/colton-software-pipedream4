@@ -4,10 +4,11 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2019 Stuart Swales
+| Copyright (C) 2013-2020 Stuart Swales
 |
 echo This script requires GNU diff - install DiffUtils (temporarily if needs be) to acquire
 IfThere $.coltsoft.trunk.cs-free.GNU.riscos.diff Then Set alias$gnu-diff Run $.coltsoft.trunk.cs-free.GNU.riscos.diff %%*0
+WimpSlot -min 1024K
 gnu-diff --version
 |
 echo <Obey$Dir>

@@ -33,7 +33,7 @@
 #include "coltsoft/pragma.h"
 
 #define NAM_SIZE     100    /* maximum size of names */
-#define MAX_DICT       5    /* maximum number of dictionaries */
+#define MAX_DICT       4    /* maximum number of dictionaries */
 #define EXT_SIZE     500    /* size of disk extend */
 #define DICT_NAMLEN   80    /* length of dictionary name */
 #define ESC_CHAR     '|'    /* escape character */
@@ -107,6 +107,8 @@ typedef struct DICT
     ARRAY_HANDLE dicth;                 /* handle of index memory */
     S32 dictsize;                       /* size of dictionary on disk */
     LIST_BLOCK dict_end_list;           /* list block for ending list */
+    char * dict_filename;               /* dictionary filename - str_set() */
+    char dictflags;                     /* dictionary flags */
     char char_offset;                   /* character offset */
     char token_start;                   /* number of first token */
     char man_token_start;               /* manually supplied token start */
@@ -119,8 +121,6 @@ typedef struct DICT
     char letter_1[MAX_INDEX];           /* mapping of chars for 1st letter */
     char letter_2[MAX_INDEX];           /* mapping of chars for 2nd letter */
     char case_map[256];                 /* case equivalence map */
-    char dictflags;                     /* dictionary flags */
-    char dict_filename[BUF_MAX_PATHSTRING];/* dictionary filename */
 }
 DICT, * P_DICT, ** P_P_DICT;
 
@@ -1188,8 +1188,16 @@ spell_opendict(
 
     for(;;) /* loop for structure */
     {
+        /* need to take copy of name for reopening in setoptions */
+        PTSTR dict_filename = NULL;
+
+        status_break(err = str_set(&dict_filename, name));
+
+        /* take copy of name for reopening in setoptions */
+        p_dict->dict_filename = dict_filename;
+
         /* look for the file */
-        status_break(err = file_open(name, file_open_read, &p_dict->file_handle_dict));
+        status_break(err = file_open(dict_filename, file_open_read, &p_dict->file_handle_dict));
         if(NULL == p_dict->file_handle_dict)
         {
             err = create_error(SPELL_ERR_CANTOPEN);
@@ -1202,9 +1210,6 @@ spell_opendict(
             status_assert(al_full_event_client_register(spell_full_events));
             full_event_registered = 1;
         }
-
-        /* take copy of name for reopening in setoptions */
-        xstrkpy(p_dict->dict_filename, elemof32(p_dict->dict_filename), name);
 
         /* load dictionary definition */
         status_break(err = load_dict_def(p_dict));

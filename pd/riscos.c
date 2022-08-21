@@ -39,8 +39,8 @@
 #include "akbd.h"
 #endif
 
-#ifndef __resspr_h
-#include "resspr.h"
+#ifndef __cs_resspr_h
+#include "cs-resspr.h"
 #endif
 
 #ifndef __cs_template_h
@@ -118,14 +118,14 @@ scraptransfer_file_PDChart(
         */
         if(iconbar)
             reperr_null(GR_CHART_ERR_DRAWFILES_MUST_BE_SAVED);
-        else if(!file_is_rooted(currentfilename))
+        else if(!file_is_rooted(currentfilename()))
             reperr_null(ERR_CHARTIMPORTNEEDSSAVEDDOC);
         else
         {
             U32 prefix_len;
             S32 num = 0;
 
-            file_get_prefix(myname, elemof32(myname), currentfilename);
+            file_get_prefix(myname, elemof32(myname), currentfilename());
 
             prefix_len = strlen32(myname);
 
@@ -136,7 +136,7 @@ scraptransfer_file_PDChart(
                 /* invent a new leafname and stick it on the end */
                 (void) xsnprintf(myname + prefix_len, elemof32(myname) - prefix_len,
                         string_lookup(GR_CHART_MSG_DEFAULT_CHARTINNAMEZD),
-                        file_leafname(currentfilename),
+                        file_leafname(currentfilename()),
                         num);
 
                 /* see if there's any file of this name already */
@@ -254,11 +254,9 @@ riscos_LoadFile(
             out_comm_parms_to_macro_file(dhptr->dialog_box, dhptr->items, FALSE);
         }
 
-        zero_struct(load_file_options);
-        load_file_options.document_name = filename;
+        load_file_options_init(&load_file_options, filename, filetype_option);
         load_file_options.temp_file = temp_file;
         load_file_options.inserting = inserting;
-        load_file_options.filetype_option = filetype_option;
         res = loadfile(filename, &load_file_options);
         trace_1(TRACE_APP_PD4, "loadfile returned %d", res);
 
@@ -511,7 +509,7 @@ static void
 iconbar_new_sprite_setup(
     _Out_ WimpIconBlockWithBitset * p_icon)
 {
-    zero_struct_ptr(p_icon);
+    zero_struct_ptr_fn(p_icon);
 
     p_icon->bbox.xmin = 0;
     p_icon->bbox.ymin = 0;
@@ -1268,7 +1266,7 @@ iconbar_event_Message_SaveDesktop(
         p_main_app = user_path;
     }
 
-    if(!e)
+    if(NULL == e)
     {
         /* now run app */
         if((e = _kernel_fwrite0(os_file_handle, "Run ")) == NULL)
@@ -1276,7 +1274,7 @@ iconbar_event_Message_SaveDesktop(
             e = _kernel_fwrite0(os_file_handle, "\x0A");
     }
 
-    if(e)
+    if(NULL != e)
     {
         void_WrapOsErrorReporting(e);
 
@@ -1403,7 +1401,7 @@ iconbar_event_Message_PD_DDE(
             (void) mergebuf_nocheck();
             filbuf();
 
-            leaf = file_leafname(currentfilename);
+            leaf = file_leafname(currentfilename());
             ptr = strnpcpyind(ptr, leaf, &nbytes);
 
             tcell = travel(blkstart.col, blkstart.row);
@@ -1882,8 +1880,8 @@ rear_event_Close_Window_Request(
     }
 
     if(adjust_clicked)
-        if(file_is_rooted(currentfilename))
-            filer_opendir(currentfilename);
+        if(file_is_rooted(currentfilename()))
+            filer_opendir(currentfilename());
 
     if(want_to_close)
         close_window();
@@ -2397,7 +2395,7 @@ draw_insert_filename(
     trace_0(TRACE_APP_PD4, "inserting minimalist reference to graphic/chart file as text-at G field");
 
     /* try for minimal reference */
-    if(NULL != file_get_cwd(cwd_buffer, elemof32(cwd_buffer), currentfilename))
+    if(NULL != file_get_cwd(cwd_buffer, elemof32(cwd_buffer), currentfilename()))
     {
         size_t cwd_len = strlen(cwd_buffer);
 
@@ -2645,7 +2643,7 @@ main_event_Message_WindowInfo(
 
     user_message->data.window_info.reserved_0 = 0;
     (void) strcpy(user_message->data.window_info.sprite, /*"ic_"*/ "dde"); /* dde == PipeDream */
-    (void) strcpy(user_message->data.window_info.title, file_leafname(currentfilename));
+    (void) strcpy(user_message->data.window_info.title, file_leafname(currentfilename()));
 
     void_WrapOsErrorReporting(wimp_send_message_to_task(Wimp_EUserMessage, (WimpMessage *) user_message, user_message->hdr.sender));
 
@@ -2798,13 +2796,14 @@ riscos_create_document_window(void)
         if(NULL == rear_window_template)
             return(reperr_null(status_nomem()));
 
-        riscos_settitlebar(currentfilename); /* set the buffer content up */
+        riscos_settitlebar(currentfilename()); /* set the buffer content up */
 
         ((WimpWindowWithBitset *) (current_p_docu->Xrear_window_template))->title_data.it.buffer = current_p_docu->Xwindow_title;
         ((WimpWindowWithBitset *) (current_p_docu->Xrear_window_template))->title_data.it.buffer_size = BUF_WINDOW_TITLE_LEN; /* includes terminator */
 
-        if((e = winx_create_window(rear_window_template, &rear_window_handle,
-                                   rear_event_handler, (void *)(uintptr_t)docno)) != NULL)
+        if(NULL != (e =
+            winx_create_window(rear_window_template, &rear_window_handle,
+                               rear_event_handler, (void *)(uintptr_t)docno)))
             return(reperr_kernel_oserror(e));
 
         /* Bump the y coordinate for the next window to be created */
@@ -2822,8 +2821,9 @@ riscos_create_document_window(void)
         if(NULL == colh_window_template)
             return(reperr_null(status_nomem()));
 
-        if((e = winx_create_window(colh_window_template, &colh_window_handle,
-                                   colh_event_handler, (void *)(uintptr_t)docno)) != NULL)
+        if(NULL != (e =
+            winx_create_window(colh_window_template, &colh_window_handle,
+                               colh_event_handler, (void *)(uintptr_t)docno)))
             return(reperr_kernel_oserror(e));
 
         colh_position_icons();      /*>>>errors???*/
@@ -2836,8 +2836,9 @@ riscos_create_document_window(void)
         if(NULL == main_window_template)
             return(reperr_null(status_nomem()));
 
-        if((e = winx_create_window(main_window_template, &main_window_handle,
-                                   main_event_handler, (void *)(uintptr_t)docno)) != NULL)
+        if(NULL != (e =
+            winx_create_window(main_window_template, &main_window_handle,
+                               main_event_handler, (void *)(uintptr_t)docno)))
             return(reperr_kernel_oserror(e));
 
         riscmenu_attachmenutree(main_window_handle);
@@ -3028,6 +3029,8 @@ riscos_initialise(void)
 #define MIN_Y (5 * (normal_charheight + 2*4))
 #endif
 
+#define WTEMPLATES_PREFIX "WTemplates."
+
 extern void
 riscos_initialise_once(void)
 {
@@ -3042,14 +3045,14 @@ riscos_initialise_once(void)
     g_kill_duplicates = 1;
 
     /* SKS 25oct96 allow templates to go out */
-    template_require(0, "tem_risc");
-    template_require(1, "tem_main");
-    template_require(2, "tem_cht");
-    template_require(3, "tem_bc");
-    template_require(4, "tem_el");
-    template_require(5, "tem_f");
-    template_require(6, "tem_p");
-    template_require(7, "tem_s");
+    template_require(0, WTEMPLATES_PREFIX "tem_risc");
+    template_require(1, WTEMPLATES_PREFIX "tem_main");
+    template_require(2, WTEMPLATES_PREFIX "tem_cht");
+    template_require(3, WTEMPLATES_PREFIX "tem_bc");
+    template_require(4, WTEMPLATES_PREFIX "tem_el");
+    template_require(5, WTEMPLATES_PREFIX "tem_f");
+    template_require(6, WTEMPLATES_PREFIX "tem_p");
+    template_require(7, WTEMPLATES_PREFIX "tem_s");
     template_init(); /* NB before dbox_init() */
     dbox_init();
 

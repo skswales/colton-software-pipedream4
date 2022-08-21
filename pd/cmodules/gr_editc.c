@@ -301,7 +301,7 @@ gr_chartedit_new(
     if(NULL == (cep = collect_add_entry_elem(GR_CHARTEDITOR, &gr_chart_editors, &key, &res)))
         return(res);
 
-    zero_struct_ptr(cep);
+    zero_struct_ptr_fn(cep);
 
     /* SKS after PD 4.12 26mar92 - allocate core for selection fake GR_DIAG */
     if(NULL == (cep->selection.p_gr_diag = al_ptr_calloc_elem(GR_DIAG, 1, &res)))
@@ -957,7 +957,7 @@ gr_riscdiag_path_render(
     {
         e = gr_editc_colourtrans_SetGCOL(* (PC_U32) &pObject.path->fillcolour, 0, rip->action);
 
-        if(e)
+        if(NULL != e)
             return(0);
 
         fill = (drawmod_filltype) (fill_FBint | fill_FNonbint);
@@ -972,7 +972,7 @@ gr_riscdiag_path_render(
                          /* flatness (no DrawFiles recommendation. Draw module recommends 2 OS units) */
                          2 * GR_RISCDRAW_PER_RISCOS);
 
-        if(e)
+        if(NULL != e)
             return(0);
     }
 
@@ -1021,7 +1021,7 @@ gr_riscdiag_path_render(
                            &path_xform    /* xform matrix  */,
                            &line          /* line style    */);
 
-        if(e)
+        if(NULL != e)
             return(0);
     }
 
@@ -1408,17 +1408,10 @@ gr_chartedit_riscos_redraw_core(
     }
 
     /* set our own graphics window */
-#if 1
     wimpt_safe(riscos_vdu_define_graphics_window(passed_redraw_window_block.redraw_area.xmin,
                                                  passed_redraw_window_block.redraw_area.ymin,
                                                  passed_redraw_window_block.redraw_area.xmax - wimpt_dx(),
                                                  passed_redraw_window_block.redraw_area.ymax - wimpt_dy()));
-#else
-    wimpt_safe(bbc_gwindow(passed_redraw_window_block.redraw_area.xmin,
-                           passed_redraw_window_block.redraw_area.ymin,
-                           passed_redraw_window_block.redraw_area.xmax - wimpt_dx(),
-                           passed_redraw_window_block.redraw_area.ymax - wimpt_dy()));
-#endif
 
     gr_chart_diagram(&cep->ch, &p_gr_diag);
 
@@ -1445,17 +1438,10 @@ gr_chartedit_riscos_redraw_core(
     }
 
     /* restore caller's graphics window */
-#if 1
     wimpt_safe(riscos_vdu_define_graphics_window(redraw_window_block->redraw_area.xmin,
                                                  redraw_window_block->redraw_area.ymin,
                                                  redraw_window_block->redraw_area.xmax - wimpt_dx(),
                                                  redraw_window_block->redraw_area.ymax - wimpt_dy()));
-#else
-    wimpt_safe(bbc_gwindow(redraw_window_block->redraw_area.xmin,
-                           redraw_window_block->redraw_area.ymin,
-                           redraw_window_block->redraw_area.xmax - wimpt_dx(),
-                           redraw_window_block->redraw_area.ymax - wimpt_dy()));
-#endif
 
     /* and the selection too */
     if(0 != cep->selection.p_gr_diag->gr_riscdiag.draw_diag.length)

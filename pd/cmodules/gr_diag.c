@@ -480,7 +480,7 @@ gr_diag_ensure_riscdiag_font_tableR_entry_for_TEXT(
 {
     GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
-    zero_struct(f);
+    zero_struct_fn(f);
     xstrkpy(f.szHostFontName, sizeof32(f.szHostFontName), _sbstr_from_tstr(pszFontName));
 
     return(gr_diag_ensure_riscdiag_font_tableR_entry(&f, p_array_handle));
@@ -516,7 +516,7 @@ gr_diag_ensure_riscdiag_font_tableR_entries_for_PICTURE(
             const DRAW_DIAG_OFFSET thislen = offsetof32(DRAW_FONTLIST_ELEM, szHostFontName) + strlen32p1(pFontListElem->szHostFontName); /* for CH_NULL */
             GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
-            zero_struct(f);
+            zero_struct_fn(f);
             xstrkpy(f.szHostFontName, sizeof32(f.szHostFontName), pFontListElem->szHostFontName);
 
             status_break(status = gr_diag_ensure_riscdiag_font_tableR_entry(&f, p_array_handle));

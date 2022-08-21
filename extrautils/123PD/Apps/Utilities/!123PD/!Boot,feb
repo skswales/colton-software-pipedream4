@@ -3,5 +3,5 @@
 Set 123PD$Dir <Obey$Dir>
 IconSprites <123PD$Dir>.!Sprites
 
-Set Alias$123PD WimpSlot -min 128k|MRun <123PD$Dir>.u_ltp %%*0
 | Syntax: 123PD <infile> <outfile>
+Set Alias$123PD WimpSlot -min 128k|MRun <123PD$Dir>.u_ltp %%*0

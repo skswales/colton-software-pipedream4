@@ -891,7 +891,7 @@ cond_rpn_range_adjust(
                 S16 skip_dist = readval_S16(rpnbs.pos + 2);
                 if(rpnbs.pos + skip_dist + bytes_adjust > *out_pos)
                 {
-                    writeval_S16(rpnbs.pos + 2, skip_dist + bytes_adjust);
+                    writeval_S16(rpnbs.pos + 2, /*(S16)*/ (skip_dist + bytes_adjust));
                     *skip_seen = de_const_cast(P_U8, rpnbs.pos); /* hmm */
                 }
                 else
@@ -967,8 +967,9 @@ data_constant_array_from_range(
             S32 ix, iy;
             EV_SLR slr;
 
-            zero_struct(slr);
+            /*zero_struct_fn(slr);*/
             slr.docno = p_ss_data->arg.range.s.docno;
+            slr.flags = 0;
 
             for(iy = 0, slr.row = p_ss_data->arg.range.s.row;
                 iy < y_size;
@@ -1641,7 +1642,7 @@ ev_trace_slr(
         char buffer[BUF_EV_LONGNAMLEN];
         xstrnkpy(buffer, elemof32(buffer), string_in, dollar - string_in);
         slr.flags |= SLR_EXT_REF;
-        (void) ev_dec_slr(buffer + (dollar - string_in), slr.docno, &slr, FALSE);
+        (void) ev_dec_slr(buffer + (dollar - string_in), slr.docno, &slr, false);
         xstrkat(buffer, elemof32(buffer), dollar + 2);
         xstrkpy(string_out, elemof_buffer, buffer);
     }

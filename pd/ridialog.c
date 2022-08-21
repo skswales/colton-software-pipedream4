@@ -329,7 +329,8 @@ riscdialog_execute(
     DIALOG * dptr,
     _InVal_     U32 boxnumber)
 {
-    const char * title;
+    const char * title = NULL;
+    const char * action = NULL;
 
     dialog__fillin_ok = FALSE; /* will be set TRUE by a good fillin */
     dialog__may_persist = FALSE; /* will be set TRUE by a good fillin AND adjust-click */
@@ -351,25 +352,6 @@ riscdialog_execute(
 
         switch(boxnumber)
         {
-        /* opnclsdict */
-        case D_USER_OPEN:
-            title = Open_user_dictionary_dialog_STR;
-            break;
-
-        /* opnclsdict */
-        case D_USER_CLOSE:
-            title = Close_user_dictionary_dialog_STR;
-            break;
-
-        /* unlockdict */
-        case D_USER_LOCK:
-            title = Lock_dictionary_dialog_STR;
-            break;
-
-        case D_USER_UNLOCK:
-            title = Unlock_dictionary_dialog_STR;
-            break;
-
         /* anasubgram */
         case D_USER_ANAG:
             title = Anagrams_dialog_STR;
@@ -379,17 +361,8 @@ riscdialog_execute(
             title = Subgrams_dialog_STR;
             break;
 
-        /* insdelword */
-        case D_USER_INSERT:
-            title = Insert_word_in_user_dictionary_dialog_STR;
-            break;
-
-        case D_USER_DELETE:
-            title = Delete_word_from_user_dictionary_dialog_STR;
-            break;
-
-        case D_SAVE_TEMPLATE:
-            title = Save_template_STR;
+        case D_LOAD:
+            title = (d_load[1].option == 'Y') ? Insert_file_STR : Load_file_STR; /* need both as we poke the template */
             break;
 
         case D_EXECFILE:
@@ -398,23 +371,6 @@ riscdialog_execute(
 
         case D_MACRO_FILE:
             title = Record_macro_file_dialog_STR;
-            break;
-
-        /* insremhigh */
-        case D_INSHIGH:
-            title = Insert_highlights_dialog_STR;
-            break;
-
-        case D_REMHIGH:
-            title = Remove_highlights_dialog_STR;
-            break;
-
-        case D_LOAD_TEMPLATE:
-            title = Load_Template_STR;
-            break;
-
-        case D_EDIT_DRIVER:
-            title = Edit_printer_driver_STR;
             break;
 
         case D_INSERT_DATE:
@@ -426,15 +382,28 @@ riscdialog_execute(
             break;
 
         default:
-            title = NULL;
             break;
         }
 
-        if(title)
+        if(NULL != title)
             template_settitle(template_find_new(dname), title);
 
         if(dialog__create(dname))
         {
+            switch(boxnumber)
+            {
+            case D_LOAD:
+                if(d_load[1].option == 'Y')
+                    action = Action_Insert_STR;
+                break;
+
+            default:
+                break;
+            }
+
+            if(NULL != action)
+                dbox_setfield(dialog__dbox, dbox_OK, de_const_cast(char *, action));
+
             dproc(dptr);
 
             if(!dialog__fillin_ok) /* never persist if faulty */
@@ -615,7 +584,7 @@ static enum RISCDIALOG_QUERY_SDC_REPLY
 riscdialog_query_save_or_discard_existing_do_save(void)
 {
     dbox_noted_position_save(); /* in case called from Quit sequence */
-    application_process_command(N_SaveFile);
+    application_process_command(N_SaveFileAs);
     dbox_noted_position_restore();
 
     /* may have failed to save or saved to unsafe receiver */
@@ -637,7 +606,7 @@ riscdialog_query_save_or_discard_existing(void)
         return(riscdialog_query_SDC_DISCARD);
     }
 
-    consume_int(xsnprintf(statement_buffer, elemof32(statement_buffer), save_edited_file_Zs_SDC_S_STR, currentfilename));
+    consume_int(xsnprintf(statement_buffer, elemof32(statement_buffer), save_edited_file_Zs_SDC_S_STR, currentfilename()));
 
     SDC_res = riscdialog_query_SDC(statement_buffer, save_edited_file_SDC_Q_STR);
 
@@ -811,14 +780,9 @@ dialog__patch_set_colour(
     trace_4(TRACE_APP_DIALOG, "dialog__setcolour(%d, %d) window_handle %d icon_handle %d",
                 f, dptr->option & 0x0F, window_handle, icon_handle);
 
-    {
-    WimpSetIconStateBlock set_icon_state_block;
-    set_icon_state_block.window_handle = window_handle;
-    set_icon_state_block.icon_handle = icon_handle;
-    set_icon_state_block.EOR_word   = (int) ( ((dptr->option & 0x0FU) * WimpIcon_BGColour) );
-    set_icon_state_block.clear_word = (int) ( ((               0x0FU) * WimpIcon_BGColour) );
-    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
-    } /*block*/
+    winf_changedfield_full(window_handle, icon_handle,
+                           /*EOR_word  */ (int) ( ((dptr->option & 0x0FU) * WimpIcon_BGColour) ) ,
+                           /*clear_word*/ (int) ( ((               0x0FU) * WimpIcon_BGColour) ) );
 }
 
 /* a bumpable item is composed of an Inc, Dec and Value fields */
@@ -1649,7 +1613,7 @@ dproc_aboutfile(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutfile_Name, riscos_obtainfilename(currentfilename));
+    dialog__setfield_str(aboutfile_Name, riscos_obtainfilename(currentfilename()));
 
     dialog__setfield_str(aboutfile_Modified, xf_filealtered ? YES_STR : NO_STR);
 
@@ -1713,7 +1677,7 @@ dproc_aboutprog(
 
     UNREFERENCED_PARAMETER(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2019 Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2020 Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 
@@ -1722,7 +1686,7 @@ dproc_aboutprog(
         if(aboutprog_Web == f)
         {
             char buffer[1024];
-            if(NULL == _kernel_getenv("PipeDream$Web", buffer, elemof32(buffer)-1))
+            if(NULL == _kernel_getenv("PipeDream$Web", buffer, elemof32(buffer)))
                 status_consume(ho_help_url(buffer));
             break;
         }
@@ -2122,6 +2086,7 @@ enum SAVEFILE_OFFSETS
     savefile_Name = 1,    /* == xfersend_FName */
     savefile_Icon,        /* == xfersend_FIcon */
     savefile_Cancel,
+
     savefile_format_frame,
     savefile_format_label,
     savefile_RowSelection,
@@ -2138,12 +2103,15 @@ enum SAVEFILE_OFFSETS
     savefile_VIEW,
     savefile_Paragraph
 #define savefile_filetype_end savefile_Paragraph
+
+,   savefilesimple_Selection = (savefile_Cancel + 1)
 };
 
 typedef struct SAVEFILE_CALLBACK_INFO
 {
     DIALOG *   dptr;
     DOCNO      docno;
+    BOOL       simple;
 }
 SAVEFILE_CALLBACK_INFO;
 
@@ -2169,6 +2137,9 @@ savefile_clickproc(
 
     /* now data^ valid */
     dptr = i->dptr;
+
+    if(i->simple)
+        return;
 
     if(dialog__adjust(&f, savefile_Separator))
         dialog__bumparray(savefile_Separator, &dptr[SAV_LINESEP], f);
@@ -2207,10 +2178,17 @@ savefile_saveproc(
 
     consume_bool(mystr_set(&dptr[SAV_NAME].textfield, filename)); /* esp. for macro recorder */
 
-    dialog__getcomponoff(savefile_RowSelection,                    &dptr[SAV_ROWCOND]);
-    dialog__getonoff(savefile_MarkedBlock,                         &dptr[SAV_BLOCK]);
-    dialog__getarray(savefile_Separator,                           &dptr[SAV_LINESEP]);
-    dialog__getradio(savefile_filetype_stt, savefile_filetype_end, &dptr[SAV_FORMAT]);
+    if(i->simple)
+    {
+        dialog__getonoff(savefilesimple_Selection,                     &dptr[SAV_BLOCK]);
+    }
+    else
+    {
+        dialog__getcomponoff(savefile_RowSelection,                    &dptr[SAV_ROWCOND]);
+        dialog__getonoff(savefile_MarkedBlock,                         &dptr[SAV_BLOCK]);
+        dialog__getarray(savefile_Separator,                           &dptr[SAV_LINESEP]);
+        dialog__getradio(savefile_filetype_stt, savefile_filetype_end, &dptr[SAV_FORMAT]);
+    }
 
     /* try to look for wally saves to the same window */
     e = wimpt_last_event();
@@ -2258,31 +2236,30 @@ savefile_saveproc(
 
     if(res)
     {
-        SAVE_FILE_OPTIONS save_file_options;
-
         /* spurt pseudo-save-command to macro file */
         recording = macro_recorder_on;
 
         if(recording)
         {
-            DHEADER * dhptr = &dialog_head[D_SAVE];
+            DHEADER * dhptr = &dialog_head[i->simple ? D_SAVE_FILE_SIMPLE : D_SAVE_FILE_AS];
 
-            out_comm_start_to_macro_file(N_SaveFile);
+            out_comm_start_to_macro_file(i->simple ? N_SaveFileSimple : N_SaveFileAs);
             out_comm_parms_to_macro_file(dhptr->dialog_box, dhptr->items, TRUE);
         }
 
-        zero_struct(save_file_options);
-        save_file_options.filetype_option = dptr[SAV_FORMAT].option;
-        save_file_options.line_sep_option = dptr[SAV_LINESEP].option;
-        if(('Y' == dptr[SAV_ROWCOND].option)  &&  !str_isblank(dptr[SAV_ROWCOND].textfield))
+        {
+        SAVE_FILE_OPTIONS save_file_options;
+        save_file_options_init(&save_file_options, dptr[SAV_FORMAT].option, dptr[SAV_LINESEP].option);
+        if( ('Y' == dptr[SAV_ROWCOND].option)  &&  !str_isblank(dptr[SAV_ROWCOND].textfield) )
             save_file_options.row_condition = dptr[SAV_ROWCOND].textfield;
         if('Y' == dptr[SAV_BLOCK].option)
             save_file_options.saving_block = TRUE;
         save_file_options.temp_file = !xfersend_file_is_safe();
         res = savefile(filename, &save_file_options);
+        } /*block*/
 
         if(recording)
-            out_comm_end_to_macro_file(N_SaveFile);
+            out_comm_end_to_macro_file(N_SaveFileAs);
     }
 
     return(res);
@@ -2327,11 +2304,11 @@ savefile_printproc(
     return(res);
 }
 
-extern void
-dproc_savefile(
-    DIALOG * dptr)
+static void
+dproc_savefile_common(
+    DIALOG * dptr,
+    SAVEFILE_CALLBACK_INFO * i)
 {
-    SAVEFILE_CALLBACK_INFO i;
     PCTSTR filename = riscos_obtainfilename(dptr[SAV_NAME].textfield);
     FILETYPE_RISC_OS filetype = currentfiletype(dptr[SAV_FORMAT].option);
     S32 estsize = 42;
@@ -2342,17 +2319,10 @@ dproc_savefile(
     if(NULL != WrapOsErrorReporting(tbl_wimp_get_caret_position(&caret)))
         can_restore_caret = FALSE;
 
-    i.dptr = dptr;
-    i.docno = current_docno();
+    i->dptr = dptr;
+    i->docno = current_docno();
 
-    assert_dialog(SAV_FORMAT, D_SAVE);
-    assert_dialog(SAV_FORMAT, D_SAVE_POPUP);
-
-    dialog__setfield_str(savefile_Name,                            filename);
-    dialog__setcomponoff(savefile_RowSelection,                    &dptr[SAV_ROWCOND]);
-    dialog__setonoff(savefile_MarkedBlock,                         &dptr[SAV_BLOCK]);
-    dialog__setarray(savefile_Separator,                           &dptr[SAV_LINESEP]);
-    dialog__setradio(savefile_filetype_stt, savefile_filetype_end, &dptr[SAV_FORMAT]);
+    dialog__setfield_str(savefile_Name, filename);
 
     dialog__register_help_for(dialog__dbox);
 
@@ -2378,14 +2348,58 @@ dproc_savefile(
             savefile_saveproc,         /* save file */
             NULL,                      /* send file - RAM transmit */
             savefile_printproc,        /* print file */
-            &i, dialog__dbox,
-            savefile_clickproc, &i);
+            i, dialog__dbox,
+            savefile_clickproc, i);
 
-    if(select_document_using_docno(i.docno))
+    if(select_document_using_docno(i->docno))
         if(can_restore_caret && do_restore_caret)
             try_to_restore_caret(&caret, TRUE);
 
     dialog__fillin_ok = FALSE;
+}
+
+extern void
+dproc_savefileas(
+    DIALOG * dptr)
+{
+    SAVEFILE_CALLBACK_INFO i;
+    zero_struct_fn(i);
+    i.simple = FALSE;
+
+    assert_dialog(SAV_FORMAT, D_SAVE_FILE_AS);
+    assert_dialog(SAV_FORMAT, D_SAVE_FILE_AS_POPUP);
+
+    dialog__setcomponoff(savefile_RowSelection,                    &dptr[SAV_ROWCOND]);
+    dialog__setonoff(savefile_MarkedBlock,                         &dptr[SAV_BLOCK]);
+    dialog__setarray(savefile_Separator,                           &dptr[SAV_LINESEP]);
+    dialog__setradio(savefile_filetype_stt, savefile_filetype_end, &dptr[SAV_FORMAT]);
+
+    if(!MARKER_DEFINED())
+        dbox_fadefield(dialog__dbox, savefile_MarkedBlock);
+
+    /* all the action takes place in here */
+    dproc_savefile_common(dptr, &i);
+}
+
+extern void
+dproc_savefilesimple(
+    DIALOG * dptr)
+{
+    SAVEFILE_CALLBACK_INFO i;
+    zero_struct_fn(i);
+    i.simple = TRUE;
+
+    assert_dialog(SAV_FORMAT, D_SAVE_FILE_SIMPLE);
+    assert_dialog(SAV_FORMAT, D_SAVE_FILE_SIMPLE_POPUP);
+
+    dialog__setonoff(savefilesimple_Selection,                     &dptr[SAV_BLOCK]);
+    /* simple dialogue box doesn't have other additional controls */
+
+    if(!MARKER_DEFINED())
+        dbox_fadefield(dialog__dbox, savefilesimple_Selection);
+
+    /* all the action takes place in here */
+    dproc_savefile_common(dptr, &i);
 }
 
 /******************************************************************************
@@ -2712,16 +2726,13 @@ extended_colours_update_patch(
                 ? 7 /*black*/
                 : 0 /*white*/ ;
 
-        WimpSetIconStateBlock set_icon_state_block;
-        set_icon_state_block.window_handle = window_handle;
-        set_icon_state_block.icon_handle = icon_handle;
-        set_icon_state_block.EOR_word = (int) (
-            ((wimp_colour_value & 0x0FU) * WimpIcon_BGColour) |
-            ((fg_wimp_colour_index     ) * WimpIcon_FGColour) );
-        set_icon_state_block.clear_word = (int) (
-            ((                    0x0FU) * WimpIcon_BGColour) |
-            ((                    0x0FU) * WimpIcon_FGColour) );
-        void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
+        winf_changedfield_full(window_handle, icon_handle,
+                               /*EOR_word  */ (int) (
+                                    ((wimp_colour_value & 0x0FU) * WimpIcon_BGColour) |
+                                    ((fg_wimp_colour_index     ) * WimpIcon_FGColour) ) ,
+                               /*clear_word*/ (int) (
+                                    ((                    0x0FU) * WimpIcon_BGColour) |
+                                    ((                    0x0FU) * WimpIcon_FGColour) ) );
     }
 }
 

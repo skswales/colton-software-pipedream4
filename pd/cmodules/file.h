@@ -14,7 +14,7 @@
 #ifndef __file_h
 #define __file_h
 
-#include "cmodules/riscos/filetype.h"
+#include "cmodules/coltsoft/filetype.h"
 
 /*
 macro definitions
@@ -24,7 +24,7 @@ macro definitions
 /* rely on FileSwitch buffering and FileCore
  * readahead/writebehind for performance
 */
-#define FILE_DEFBUFSIZ      256
+#define FILE_DEFBUFSIZ      1024
 
 /* possibly limited by C library */
 #define MAX_PATHSTRING      (1+255)
@@ -47,8 +47,8 @@ macro definitions
 #define FILE_ROOT_CH        ':'
 #define FILE_DIR_SEP_CH     '.'
 #define FILE_DIR_SEP_STR    "."
-/* no real file extensions on RISC OS but _ has become conventional (6_3) */
-#define FILE_EXT_SEP_CH     '_'
+/* no real file extensions on RISC OS but / has become conventional (8/3) on DOS floppies */
+#define FILE_EXT_SEP_CH     '/'
 
 #define FILE_PATH_SEP_CH    ','
 #define FILE_PATH_SEP_STR   ","
@@ -493,11 +493,20 @@ extern void
 file_path_element_close(
     P_P_FILE_PATHENUM p /*inout*/);
 
+_Check_return_
 extern char *
 file_path_element_first(
     _OutRef_    P_P_FILE_PATHENUM p,
     _In_z_      PC_U8Z path);
 
+_Check_return_
+extern PCTSTR
+file_path_element_first2(
+    _OutRef_    P_P_FILE_PATHENUM p,
+    _In_opt_z_  PCTSTR path1,
+    _In_z_      PCTSTR path2);
+
+_Check_return_
 extern char *
 file_path_element_next(
     P_P_FILE_PATHENUM p /*inout*/);
@@ -508,7 +517,7 @@ file_readable(
 
 extern void
 file_set_path(
-    PC_U8 pathstr);
+    _In_z_      PCTSTR pathstr);
 
 extern P_U8
 file_wild(

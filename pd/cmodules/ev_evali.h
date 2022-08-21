@@ -79,7 +79,6 @@ extern void _p_proc_exec( \
     _InRef_     PC_EV_SLR p_cur_slr)
 
 #define exec_func_ignore_parms() (void) ( \
-    UNREFERENCED_PARAMETER(args), \
     UNREFERENCED_PARAMETER_InVal_(n_args), \
     UNREFERENCED_PARAMETER_InRef_(p_cur_slr) )
 
@@ -262,7 +261,7 @@ ranges overlap ?
 document flags
 */
 
-#define DCF_CUSTOM      1   /* document is a custom function sheet */
+#define DCF_IS_CUSTOM   1   /* document is a custom function sheet */
 #define DCF_TREEDAMAGED 2   /* tree of document is damaged */
 
 /*
@@ -646,14 +645,14 @@ ev_dec_range(
     P_U8 op_buf,
     _InVal_     EV_DOCNO this_docno,
     _InRef_     PC_EV_RANGE p_ev_range,
-    BOOL upper_case);
+    _InVal_     bool upper_case);
 
 extern S32
 ev_dec_slr(
     P_U8 op_buf,
     _InVal_     EV_DOCNO this_docno,
     _InRef_     PC_EV_SLR slrp,
-    BOOL upper_case);
+    _InVal_     bool upper_case);
 
 /*
 ev_docs.c
@@ -663,11 +662,11 @@ ev_docs.c
 ev_docs.c external functions
 */
 
-#define doc_check_custom(docno) ( \
-    ev_p_ss_doc_from_docno_must(docno)->flags & DCF_CUSTOM )
+#define doc_check_is_custom(ev_docno) ( \
+    ev_p_ss_doc_from_docno_must(ev_docno)->flags & DCF_IS_CUSTOM )
 
-#define ev_doc_error(docno) ( \
-    ev_p_ss_doc_from_docno_must(docno)->is_docu_thunk ? EVAL_ERR_CANTEXTREF : 0 )
+#define ev_doc_error(ev_docno) ( \
+    ev_p_ss_doc_from_docno_must(ev_docno)->is_docu_thunk ? EVAL_ERR_CANTEXTREF : 0 )
 
 extern S32
 doc_move_extref(
@@ -980,7 +979,7 @@ PROC_EXEC_PROTO(c_spearman);
 
 extern void
 binomial_coefficient_calc(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or real or error */
     _InVal_     S32 n,
     _InVal_     S32 k);
 
@@ -1143,13 +1142,6 @@ PROC_EXEC_PROTO(c_trim);
 PROC_EXEC_PROTO(c_upper);
 PROC_EXEC_PROTO(c_value);
 
-_Check_return_
-extern STATUS
-ev_numform(
-    _InoutRef_  P_QUICK_UBLOCK p_quick_ublock,
-    _In_z_      PC_USTR ustr,
-    _InRef_     PC_SS_DATA p_ss_data);
-
 /*
 ev_help.c external functions
 */
@@ -1259,29 +1251,29 @@ range_scan_element(
     _InVal_     EV_TYPE type_flags);
 
 _Check_return_ _Success_(return)
-extern BOOL
+extern bool
 two_nums_add_try(
     _InoutRef_  P_SS_DATA p_ss_data_res,
     _InoutRef_  P_SS_DATA p_ss_data_1,
     _InoutRef_  P_SS_DATA p_ss_data_2);
 
 _Check_return_ _Success_(return)
-extern BOOL
-two_nums_divide_try(
+extern bool
+two_nums_subtract_try(
     _InoutRef_  P_SS_DATA p_ss_data_res,
     _InoutRef_  P_SS_DATA p_ss_data_1,
     _InoutRef_  P_SS_DATA p_ss_data_2);
 
 _Check_return_ _Success_(return)
-extern BOOL
+extern bool
 two_nums_multiply_try(
     _InoutRef_  P_SS_DATA p_ss_data_res,
     _InoutRef_  P_SS_DATA p_ss_data_1,
     _InoutRef_  P_SS_DATA p_ss_data_2);
 
 _Check_return_ _Success_(return)
-extern BOOL
-two_nums_subtract_try(
+extern bool
+two_nums_divide_try(
     _InoutRef_  P_SS_DATA p_ss_data_res,
     _InoutRef_  P_SS_DATA p_ss_data_1,
     _InoutRef_  P_SS_DATA p_ss_data_2);
@@ -1307,12 +1299,12 @@ PROC_EXEC_PROTO(c_sqr);
 
 extern void
 factorial_calc(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or real or error */
     _InVal_     S32 n);
 
 extern void
 product_between_calc(
-    _InoutRef_  P_SS_DATA p_ss_data_res, /* denotes integer or fp; may return integer or fp. NB must contain 'start' value as integer or real */
+    _InoutRef_  P_SS_DATA p_ss_data_res, /* denotes integer or real; may return integer or real. NB must contain 'start' value as integer or real */
   /*_InVal_     S32 start,*/
     _InVal_     S32 end);
 
@@ -1446,9 +1438,9 @@ PROC_EXEC_PROTO(c_tanh);
 ev_name.c
 */
 
-extern DEPTABLE custom_def;
+extern DEPTABLE custom_def_deptable;
 
-extern DEPTABLE names_def;
+extern DEPTABLE names_def_deptable;
 
 /*
 ev_name.c external functions
@@ -1490,12 +1482,12 @@ extern void
 custom_list_sort(void);
 
 #define custom_ptr(custom_num) ( \
-    custom_def.ptr \
-    ? ((P_EV_CUSTOM) custom_def.ptr + (S32) (custom_num)) \
+    custom_def_deptable.ptr \
+    ? ((P_EV_CUSTOM) custom_def_deptable.ptr + (S32) (custom_num)) \
     : NULL )
 
 #define custom_ptr_must(custom_num) ( \
-    ((P_EV_CUSTOM) custom_def.ptr + (S32) (custom_num)) )
+    ((P_EV_CUSTOM) custom_def_deptable.ptr + (S32) (custom_num)) )
 
 _Check_return_
 extern EV_NAMEID
@@ -1517,12 +1509,12 @@ name_make(
     P_SS_DATA p_ss_data_in);
 
 #define name_ptr(name_num) ( \
-    names_def.ptr \
-    ? ((P_EV_NAME) names_def.ptr + (S32) (name_num)) \
+    names_def_deptable.ptr \
+    ? ((P_EV_NAME) names_def_deptable.ptr + (S32) (name_num)) \
     : NULL )
 
 #define name_ptr_must(name_num) ( \
-    ((P_EV_NAME) names_def.ptr + (S32) (name_num)) )
+    ((P_EV_NAME) names_def_deptable.ptr + (S32) (name_num)) )
 
 /*
 ev_rpn.c external functions
@@ -1625,7 +1617,7 @@ ev_tree.c
 
 extern DEPTABLE custom_use_deptable;
 
-extern DEPTABLE namtab;
+extern DEPTABLE name_use_deptable;
 
 extern DEPTABLE todotab;
 
@@ -1717,8 +1709,8 @@ todo_remove_slr(
     : NULL )
 
 #define tree_namptr(entry) ( \
-    namtab.ptr \
-    ? (P_NAME_USE) namtab.ptr + (S32) (entry) \
+    name_use_deptable.ptr \
+    ? (P_NAME_USE) name_use_deptable.ptr + (S32) (entry) \
     : NULL )
 
 #define tree_rngptr(p_ss_doc, entry) ( \

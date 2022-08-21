@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Paths</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="paste.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="pictures.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="paste.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="pictures.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -28,7 +28,7 @@
     <h1>Paths</h1>
     <p>
         There are several types of data file which are used in PipeDream but which are not normal PipeDream documents.
-        These include dictionaries, command files, printer drivers, the choices file and the key file.
+        These include dictionaries, command files, printer drivers, the Choices file and the key file.
         Because you do not tell PipeDream where these files are by dragging them from a directory display
         to the PipeDream icon or a window, PipeDream has to know where to look for them.
         It needs two pieces of information to do this:
@@ -40,14 +40,14 @@
     <p>
         Sometimes PipeDream already knows the leafname.
         For example, the leafname of the Choices file is always <span class="csg-filename">Choices</span>
-        and the leafname of the master dictionary is always <span class="csg-filename">master</span>.
+        and the leafname of the master dictionary is always <span class="csg-filename">Master</span>.
         But for other types of file, such as user dictionaries, you specify the leafname.
     </p>
     <p>
         PipeDream also needs to know in which directory or directories it should look for the file.
         The path, <span class="csg-filename">PipeDream$Path</span> (or more simply <span class="csg-filename">PipeDream:</span>), tells it where to look.
         The path can be a single directory name or, more usually, a list of directories.
-        By default, the path is a combination of two directories:
+        By default, the path is a combination of three directories:
     </p>
     <ul>
         <li>
@@ -56,9 +56,14 @@
             <span class="csg-filename">Choices:</span> system path;
         </li>
         <li>
-            <span class="csg-filename">&lt;PipeDream$Dir&gt;.Resource.</span><br />this is a sub-directory called
-            <span class="csg-filename">Resource</span> in the
-            PipeDream application directory.
+            <span class="csg-filename">&lt;PipeDream$Dir&gt;.Resources.UK.</span><br />this is a sub-directory called
+            <span class="csg-filename">Resources.UK</span> in the
+            PipeDream application directory, containing language-dependent data such as document templates and dictionaries.
+        </li>
+        <li>
+            <span class="csg-filename">&lt;PipeDream$Dir&gt;.Resources.Neutral.</span><br />this is a sub-directory called
+            <span class="csg-filename">Resources.Neutral</span> in the
+            PipeDream application directory, containing language-independent data such as chart markers.
         </li>
     </ul>
     <p>If you want to, you can modify the path to make PipeDream look for the files in other directories, discs, drives, filing systems or paths.</p>
@@ -69,10 +74,11 @@
     </ul>
     <p>The path is specified in the file <span class="csg-filename">!PipeDream.!Run</span>, which may be found in the PipeDream application directory.</p>
     <p>By default this is set up as follows:</p>
-    <pre class="csg-sample-indent">Set PipeDream$Path Choices:PipeDream.,&lt;PipeDream$Dir&gt;.</pre>
+    <pre class="csg-sample-indent">Set PipeDream$Path Choices:PipeDream.,&lt;PipeDream$Dir&gt;.Resources.UK.,&lt;PipeDream$Dir&gt;.Resources.Neutral.</pre>
     <p>
-        The Set operating system command is used to create up a system variable called <code>PipeDream$Path</code> and to set it to
-        <span class="csg-filename">Choices:PipeDream.,&lt;PipeDream$Dir&gt;.Resource.</span> which are to be the directories PipeDream will look in for its files.
+        The Loader is used to create up a system variable called <code>PipeDream$Path</code> and to set it to
+        <span class="csg-filename">Choices:PipeDream.,&lt;PipeDream$Dir&gt;.Resources.UK.,&lt;PipeDream$Dir&gt;.Resources.Neutral.</span>
+        which are to be the directories PipeDream will look in for its files.
         Note the dot on the end of each of the directory names.
         This is necessary because PipeDream will simply append the leafname to each of the path elements in turn to create a whole filename.
         If you want to change the path, you can edit the <span class="csg-filename">!Run</span> file using !Edit.
@@ -159,14 +165,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Paste </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Pictures</td>
+                <td class="navfooter_PUN_L">Paste </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Pictures</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="paste.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="pictures.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="paste.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="pictures.html">Next</a></td>
             </tr>
         </table>
     </div>

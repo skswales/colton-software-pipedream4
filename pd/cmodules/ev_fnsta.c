@@ -240,7 +240,7 @@ PROC_EXEC_PROTO(c_frequency)
 
 extern void
 binomial_coefficient_calc(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or real or error */
     _InVal_     S32 n,
     _InVal_     S32 k)
 {
@@ -264,7 +264,7 @@ binomial_coefficient_calc(
 
         /* assume result will be (widest) integer to start with; function will go to fp as necessary */
         ss_data_set_WORD32(p_ss_data_out, (n - k) + 1); /* start */
-        product_between_calc(p_ss_data_out, /*(n - k) + 1,*/ n); /* may return integer or fp */
+        product_between_calc(p_ss_data_out, /*(n - k) + 1,*/ n); /* may return integer or real */
 
         /* calculate divisor in same format as dividend (either still WORD32 or REAL)
          * NB divisor is always smaller than dividend so this is OK
@@ -273,7 +273,7 @@ binomial_coefficient_calc(
         if(ss_data_is_real(p_ss_data_out))
             ss_data_set_real(&ss_data_divisor, 1.0); /* start */
         assert_EQ(ss_data_get_data_id(&ss_data_divisor), ss_data_get_data_id(p_ss_data_out));
-        product_between_calc(&ss_data_divisor, /*1,*/ k); /* may return integer or fp */
+        product_between_calc(&ss_data_divisor, /*1,*/ k); /* may return integer or real */
         assert_EQ(ss_data_get_data_id(&ss_data_divisor), ss_data_get_data_id(p_ss_data_out));
 
         if(ss_data_is_real(p_ss_data_out))
@@ -320,7 +320,7 @@ PROC_EXEC_PROTO(c_combin)
 
     exec_func_ignore_parms();
 
-    binomial_coefficient_calc(p_ss_data_res, n, k); /* may return integer or fp or error */
+    binomial_coefficient_calc(p_ss_data_res, n, k); /* may return integer or real or error */
 }
 
 /******************************************************************************
@@ -496,7 +496,7 @@ PROC_EXEC_PROTO(c_listcount)
 
 static void
 permut_calc(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or real or error */
     _InVal_     S32 n,
     _InVal_     S32 k)
 {
@@ -518,7 +518,7 @@ permut_calc(
     {
         /* assume result will be (widest) integer to start with; function will go to fp as necessary */
         ss_data_set_WORD32(p_ss_data_out, (n - k) + 1); /* start */
-        product_between_calc(p_ss_data_out, /*(n - k) + 1,*/ n); /* may return integer or fp */
+        product_between_calc(p_ss_data_out, /*(n - k) + 1,*/ n); /* may return integer or real */
 
         if(ss_data_is_integer(p_ss_data_out))
             ss_data_set_integer_size(p_ss_data_out);
@@ -553,7 +553,7 @@ PROC_EXEC_PROTO(c_permut)
 
     exec_func_ignore_parms();
 
-    permut_calc(p_ss_data_res, n, k); /* may return integer or fp or error */
+    permut_calc(p_ss_data_res, n, k); /* may return integer or real or error */
 }
 
 /******************************************************************************
@@ -568,8 +568,8 @@ PROC_EXEC_PROTO(c_rand)
 
     if(!uniform_distribution_test_seeded(false /*test*/))
     {
-        if((0 != n_args) && (ss_data_get_real(args[0]) != 0.0))
-            uniform_distribution_seed((unsigned int) ss_data_get_real(args[0]));
+        if((0 != n_args) && (arg_get_real_INT(args[0]) != 0.0))
+            uniform_distribution_seed((unsigned int) arg_get_real_INT(args[0]));
         else
             uniform_distribution_test_seeded(true /*ensure*/);
     }
@@ -683,8 +683,8 @@ PROC_EXEC_PROTO(c_spearman)
         if( (DATA_ID_REAL == ev_idno_0) && (DATA_ID_REAL == ev_idno_1) ) /* ignore non-numeric values */
         {
             const F64 d = ss_data_get_real(&ss_data[1]) - ss_data_get_real(&ss_data[0]);
-            const F64 d2 = d * d;
-            sum_d_squared += d2;
+            const F64 d_squared = d * d;
+            sum_d_squared += d_squared;
             n_counted += 1;
         }
 

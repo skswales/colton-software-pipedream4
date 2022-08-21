@@ -40,6 +40,8 @@
 #include "swis.h" /* C: */
 #endif
 
+#include "cs-flex.h"
+
 /* Install a new ESCAPE handler, replacing that set by the C runtime library.
  *
  * When an ESCAPE condition is detected, the flag word is set non-zero.
@@ -277,7 +279,7 @@ main(
     docu_array_init_once();
 
     /* need to have set up the resource place and the program name for all to work ok */
-    res_init("PipeDream" "Res"); /* RISC_OSLib-type resources may be found along appnameRes$Path: */
+    res_init("PipeDream"); /* RISC_OSLib-type resources may be found along PipeDream$Path */
 
     /* Startup Window Manager interface */
     wimpt_wimpversion(310);
@@ -287,6 +289,17 @@ main(
 #ifdef PROFILING
     /* Task ID may now have changed, so re-register */
     profile_taskchange();
+#endif
+
+#if defined(__cs_flex_h)
+    {
+    _kernel_swi_regs rs;
+    if(NULL == _kernel_swi(OS_ReadMemMapInfo, &rs, &rs))
+    {
+        flex_granularity = rs.r[0];
+        reportf("flex_granularity is now %u", flex_granularity);
+    }
+    } /*block*/
 #endif
 
     if(status_fail(aligator_init()))
@@ -371,6 +384,8 @@ main(
         break;
     }
 
+    _kernel_setenv("PipeDream$Running", "Yes"); /* Set */
+
     /* Go and find something to do now -  just loop getting events until we are told to curl up and die */
     for(;;)
     {
@@ -398,6 +413,8 @@ application__atexit(void)
     file_finalise();
 
     riscos_hourglass_off();
+
+    _kernel_setenv("PipeDream$Running", NULL); /* Unset */
 
 /* On RISC OS don't bother to release the escape & event handlers
  * as the C runtime library restores the caller's handlers prior to exiting
@@ -685,9 +702,7 @@ decode_command_line_options(
             if(pass == 2)
             {
                 LOAD_FILE_OPTIONS load_file_options;
-                zero_struct(load_file_options);
-                load_file_options.document_name = arg;
-                load_file_options.filetype_option = AUTO_CHAR; /* therefore must go via loadfile() */
+                load_file_options_init(&load_file_options, arg, AUTO_CHAR /* therefore must go via loadfile() */);
                 (void) loadfile(arg, &load_file_options);
             }
             break;
@@ -759,22 +774,9 @@ host_initialise_file_path(void)
 {
     TCHARZ resource_path[BUF_MAX_PATHSTRING * 4];
 
-#if 0
-    _kernel_swi_regs r;
-    r.r[0] = (int) "PipeDream$Path";
-    r.r[1] = (int) resource_path;
-    r.r[2] = elemof32(resource_path) - 1;
-    r.r[3] = 0;
-    r.r[4] = 0; /* don't expand here in case user really does want SetMacro */
-    if(NULL == _kernel_swi(OS_ReadVarVal, &r, &r))
-    {
-        resource_path[r.r[2]] = CH_NULL;
-        file_set_path(resource_path);
-    }
-#else
+    /* _kernel_getenv() expands the path even if SetMacro used - helps when supporting documents are loaded via the path */
     if(NULL == _kernel_getenv("PipeDream$Path", resource_path, elemof32(resource_path)))
         file_set_path(resource_path);
-#endif
 }
 
 /* end of pdmain.c */

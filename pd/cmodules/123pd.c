@@ -7,7 +7,7 @@
 /* Copyright (C) 1988-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* Program to convert a PipeDream file into a LOTUS 1-2-3 (rel 2) .WK1 file */
+/* Program to convert a PipeDream file into a Lotus 1-2-3 (rel 2) .WK1 file */
 
 /* MRJC February 1988 */
 
@@ -20,8 +20,10 @@
 
 /* target machine type - mutually exclusive options */
 
+#if !defined(RISCOS) && !defined(WINDOWS)
 #define RISCOS  1
 #define WINDOWS 0
+#endif
 
 #include "cmodules/coltsoft/defineos.h"
 
@@ -34,6 +36,10 @@
 
 /* local header file */
 #include "pd123_i.h"
+
+#if RISCOS
+#include "kernel.h"
+#endif
 
 /*
 function declarations
@@ -129,15 +135,15 @@ procpct(
     uchar *,
     P_S32);
 
-static uchar huge *
+static uchar *
 searchcon(
-    uchar huge *startp,
-    uchar huge *endp,
-    uchar *conid);
+    uchar *startp,
+    uchar *endp,
+    const char *conid);
 
-static uchar huge *
+static uchar *
 searchopt(
-    uchar *);
+    const char *);
 
 static S32
 reccon(
@@ -255,7 +261,7 @@ lts_writeword(S16);
 
 static S32
 wrlmar(
-    uchar *);
+    const char *);
 
 static S32
 wrlmargins(void);
@@ -277,42 +283,42 @@ u_strnicmp(
 
 #define NOPT 0xFF
 
-static struct LFINS lfstruct[] =
+static const LFINS lfstruct[] =
 {
-    { L_BOF,            2, (uchar *) "\x6\x4",          2,    NOPT,       NULL },
-    { L_RANGE,          8, (uchar *) "",                0,    NOPT,       NULL },
-    { L_CPI,            6, (uchar *) "",                0,    NOPT,       NULL },
-    { L_CALCCOUNT,      1, (uchar *) "\x1",             1,    NOPT,       NULL },
-    { L_CALCMODE,       1, (uchar *) "",                0,    NOPT,wrlcalcmode },
-    { L_CALCORDER,      1, (uchar *) "",                0,    NOPT, wrlcalcord },
-    { L_SPLIT,          1, (uchar *) "",                0,    NOPT,       NULL },
-    { L_SYNC,           1, (uchar *) "",                0,    NOPT,       NULL },
-    { L_WINDOW1,       32, (uchar *) "",                0,    NOPT,  wrwindow1 },
-    { L_COLW1,          3, (uchar *) "",                0,    NOPT,    wrcolws },
-    { L_HIDVEC1,       32, (uchar *) "",                0,    NOPT,   wrhidvec },
-    { L_CURSORW12,      1, (uchar *) "",                0,    NOPT,       NULL },
-    { L_TABLE,         25, (uchar *) "\xFF\xFF\x0\x0",  4,       1,       NULL },
-    { L_QRANGE,        25, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_PRANGE,         8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_UNFORMATTED,    1, (uchar *) "",                0,    NOPT,       NULL },
-    { L_FRANGE,         8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_SRANGE,         8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_KRANGE,         9, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_KRANGE2,        9, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_RRANGES,       25, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_MATRIXRANGES,  40, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_HRANGE,        16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_PARSERANGES,   16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_PROTEC,         1, (uchar *) "",                0,    NOPT,       NULL },
-    { L_FOOTER,       242, (uchar *) "",                0,    NOPT,   wrfooter },
-    { L_HEADER,       242, (uchar *) "",                0,    NOPT,   wrheader },
-    { L_SETUP,         40, (uchar *) "",                0,    NOPT,       NULL },
-    { L_MARGINS,       10, (uchar *) "",                0,    NOPT, wrlmargins },
-    { L_LABELFMT,       1, (uchar *) "\x27",            1,    NOPT,       NULL },
-    { L_TITLES,        16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
-    { L_GRAPH,        439, (uchar *) "",                4,       0,    wrgraph },
-    { L_FORMULA,        0, (uchar *) "",                0,    NOPT,     wrcols },
-    { L_EOF,            0, (uchar *) "",                0,    NOPT,       NULL }
+    { L_BOF,            2, "\x6\x4",          2,    NOPT,       NULL },
+    { L_RANGE,          8, "",                0,    NOPT,       NULL },
+    { L_CPI,            6, "",                0,    NOPT,       NULL },
+    { L_CALCCOUNT,      1, "\x1",             1,    NOPT,       NULL },
+    { L_CALCMODE,       1, "",                0,    NOPT,wrlcalcmode },
+    { L_CALCORDER,      1, "",                0,    NOPT, wrlcalcord },
+    { L_SPLIT,          1, "",                0,    NOPT,       NULL },
+    { L_SYNC,           1, "",                0,    NOPT,       NULL },
+    { L_WINDOW1,       32, "",                0,    NOPT,  wrwindow1 },
+    { L_COLW1,          3, "",                0,    NOPT,    wrcolws },
+    { L_HIDVEC1,       32, "",                0,    NOPT,   wrhidvec },
+    { L_CURSORW12,      1, "",                0,    NOPT,       NULL },
+    { L_TABLE,         25, "\xFF\xFF\x0\x0",  4,       1,       NULL },
+    { L_QRANGE,        25, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_PRANGE,         8, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_UNFORMATTED,    1, "",                0,    NOPT,       NULL },
+    { L_FRANGE,         8, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_SRANGE,         8, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_KRANGE,         9, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_KRANGE2,        9, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_RRANGES,       25, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_MATRIXRANGES,  40, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_HRANGE,        16, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_PARSERANGES,   16, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_PROTEC,         1, "",                0,    NOPT,       NULL },
+    { L_FOOTER,       242, "",                0,    NOPT,   wrfooter },
+    { L_HEADER,       242, "",                0,    NOPT,   wrheader },
+    { L_SETUP,         40, "",                0,    NOPT,       NULL },
+    { L_MARGINS,       10, "",                0,    NOPT, wrlmargins },
+    { L_LABELFMT,       1, "\x27",            1,    NOPT,       NULL },
+    { L_TITLES,        16, "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_GRAPH,        439, "",                4,       0,    wrgraph },
+    { L_FORMULA,        0, "",                0,    NOPT,     wrcols },
+    { L_EOF,            0, "",                0,    NOPT,       NULL }
 };
 
 /*
@@ -340,32 +346,32 @@ table of valid constructs for cells
 #define BIT_RYT 0x0040
 #define BIT_EXP 0x0080
 
-typedef struct CONSTR *conp;
+typedef const struct CONSTR *conp;
 
-static struct CONSTR
+static const struct CONSTR
 {
-    uchar * conid;
+    const char * conid;
     U16 mask;
     uchar * (* proccons)(uchar *, uchar *, P_S32 );
 }
 constab[] =
 {
-    { (uchar *) "V",    BIT_EXP,    NULL },
-    { (uchar *) "DF",   BIT_DCF,    NULL },
-    { (uchar *) "R",    BIT_RYT,    NULL },
-    { (uchar *) "C",    BIT_CEN,    NULL },
-    { (uchar *) "B",    BIT_BRK,    NULL },
-    { (uchar *) "D",    BIT_DCN,    procdcp },
-    { (uchar *) "LCR",        0,    NULL },
-    { (uchar *) "LC",   BIT_CUR,    NULL },
-    { (uchar *) "L",    BIT_LFT,    NULL },
-    { (uchar *) "TC",         0,    NULL },
-    { (uchar *) "PC",         0,    procpct },
-    { (uchar *) "F",          0,    NULL },
-    { (uchar *) "H",          0,    NULL },
-    { (uchar *) "JL",         0,    NULL },
-    { (uchar *) "JR",         0,    NULL },
-    { (uchar *) "P",          0,    NULL }
+    { "V",    BIT_EXP,    NULL },
+    { "DF",   BIT_DCF,    NULL },
+    { "R",    BIT_RYT,    NULL },
+    { "C",    BIT_CEN,    NULL },
+    { "B",    BIT_BRK,    NULL },
+    { "D",    BIT_DCN,    procdcp },
+    { "LCR",        0,    NULL },
+    { "LC",   BIT_CUR,    NULL },
+    { "L",    BIT_LFT,    NULL },
+    { "TC",         0,    NULL },
+    { "PC",         0,    procpct },
+    { "F",          0,    NULL },
+    { "H",          0,    NULL },
+    { "JL",         0,    NULL },
+    { "JR",         0,    NULL },
+    { "P",          0,    NULL }
 };
 
 /* pd constants */
@@ -374,8 +380,8 @@ constab[] =
 #define PD_INTEGER 3
 
 /* arrays of column information */
-static uchar huge *colend[LOTUS_MAXCOL];
-static uchar huge *colcur[LOTUS_MAXCOL];
+static uchar *colend[LOTUS_MAXCOL];
+static uchar *colcur[LOTUS_MAXCOL];
 static S32 colwid[LOTUS_MAXCOL];
 uchar pd123__hidvec[32];
 
@@ -383,11 +389,11 @@ uchar pd123__hidvec[32];
 static S32 decplc = 2;
 
 /* end of options page */
-static uchar huge *optend;
+static uchar *optend;
 
-/* PD file details */
-static uchar huge *pdf;
-static uchar huge *pdend;
+/* PipeDream file details */
+static uchar *pdf;
+static uchar *pdend;
 static size_t pdsize;
 
 /* expression output buffer */
@@ -409,12 +415,12 @@ static S32 (* counter)(S32);
 
 /******************************************************************************
 *
-* main loop for PipeDream to Lotus
+* main loop for PipeDream to Lotus 1-2-3
 * this main procedure is compiled if the constant
 * UTIL_PTL is defined:
 *
-* UTIL_LTP creates stand-alone utility for Lotus to PipeDream
-* UTIL_PTL creates stand-alone utility for PipeDream to Lotus
+* UTIL_LTP creates stand-alone utility for Lotus 1-2-3 to PipeDream
+* UTIL_PTL creates stand-alone utility for PipeDream to Lotus 1-2-3
 * INT_LPTPL creates internal code for converter using function lp_lptpl
 *
 ******************************************************************************/
@@ -432,9 +438,11 @@ main(
 #endif
 {
     S32 err;
+    const char * infile;
+    const char * outfile;
 
     /* banner */
-    printf("PipeDream to Lotus 123 converter\nColton Software 1988\n");
+    printf("PipeDream to Lotus 1-2-3 converter\nColton Software 1988-2020\n");
 
     /* argument checking */
     if(argc < 3)
@@ -443,16 +451,13 @@ main(
         return(EXIT_FAILURE);
     }
 
-    if((pd123__fin = fopen(*++argv, "rb")) == NULL)
-    {
-        printf("Can't open %s\n", *argv);
-        return(EXIT_FAILURE);
-    }
+    infile = *++argv;
+    outfile = *++argv;
 
-    if((pd123__fout = fopen(*++argv, "wb")) == NULL)
+    if((pd123__fin = fopen(infile, "rb")) == NULL)
     {
-        printf("Can't open %s\n", *argv);
-        return(EXIT_FAILURE);
+        fprintf(stderr, "Can't open %s\n", infile);
+        exit(EXIT_FAILURE);
     }
 
     if(fseek(pd123__fin, 0l, SEEK_END))
@@ -463,20 +468,26 @@ main(
 
     if((pdf = malloc(pdsize)) == NULL)
     {
-        printf("Not enough memory for PD file\n");
+        printf("Not enough memory for PipeDream file\n");
         return(EXIT_FAILURE);
     }
 
-    /* read in PD file */
+    /* read in PipeDream file */
     fread(pdf, 1, pdsize, pd123__fin);
     pdend = pdf + pdsize;
     fclose(pd123__fin);
+
+    if((pd123__fout = fopen(outfile, "wb")) == NULL)
+    {
+        fprintf(stderr, "Can't open %s\n", outfile);
+        exit(EXIT_FAILURE);
+    }
 
     /* set pd level */
     pd123__curpd = PD_Z88;
     counter = showrow;
 
-    /* write out lotus file */
+    /* write out Lotus file */
     err = dolotus();
     printf("\n");
 
@@ -503,10 +514,18 @@ main(
 
     if(!err && pd123__errexp)
         fprintf(stderr, "%d bad expressions found\n", pd123__errexp);
-    if(!err)
-        printf("Conversion complete\n");
-    else
+
+    if(err)
+    {
         remove(*argv);
+    }
+    else
+    {
+        _kernel_osfile_block fileblk;
+        fileblk.load /*r2*/ = 0xDB0 /*FILETYPE_LOTUS123*/;
+        (void) _kernel_osfile(18 /*SetType*/, outfile, &fileblk);
+        printf("Conversion complete\n");
+    }
 
     return(EXIT_SUCCESS);
 }
@@ -518,7 +537,7 @@ main(
 *
 * --in--
 * fin and fout are file pointers to open channels
-* level specifies the level of the PD file
+* level specifies the level of the PipeDream file
 * routine is the address of a routine to call to show activity
 * this returns non-zero if an abort is required
 *
@@ -534,7 +553,7 @@ writelotus(
 {
     S32 err;
     #ifdef MS_HUGE
-    uchar huge *op;
+    uchar *op;
     #endif
 
     /* save file pointers */
@@ -556,7 +575,7 @@ writelotus(
     if((pdf = malloc(pdsize)) == NULL)
         return(PD123_ERR_MEM);
 
-    /* read in PD file */
+    /* read in PipeDream file */
     if(fread(pdf, 1, pdsize, pd123__fin) != pdsize)
         return(PD123_ERR_FILE);
     pdend = pdf + pdsize;
@@ -575,7 +594,7 @@ writelotus(
 
 /******************************************************************************
 *
-* compile PipeDream expression into RPN for LOTUS
+* compile PipeDream expression into RPN for Lotus
 *
 ******************************************************************************/
 
@@ -1054,7 +1073,7 @@ dolotus(void)
             {
                 S32 len = (S32) curlfi->length;
                 S32 dlen = (S32) curlfi->dlen;
-                uchar *dp = curlfi->sdata;
+                const uchar *dp = curlfi->sdata;
 
                 /* check for a pattern to be output */
                 if(curlfi->pattern == NOPT)
@@ -1213,7 +1232,7 @@ ewout(
 
 /******************************************************************************
 *
-* search loaded PD file for column constructs
+* search loaded PipeDream file for column constructs
 * and note their positions in the array
 *
 ******************************************************************************/
@@ -1221,7 +1240,7 @@ ewout(
 static S32
 findcolumns(void)
 {
-    uchar huge *fp = pdf;
+    uchar *fp = pdf;
     S32 i, lastcol = -1;
 
     pd123__maxcol = 0;
@@ -1231,10 +1250,10 @@ findcolumns(void)
         colwid[i] = 0;
     }
 
-    while((fp = searchcon(fp, pdend, (uchar *) "CO:")) != 0)
+    while((fp = searchcon(fp, pdend, "CO:")) != 0)
     {
         S32 col, cw, ww, cr1, cr2;
-        uchar huge *tp = fp, huge *fpend = fp - 4;
+        uchar *tp = fp, *fpend = fp - 4;
         uchar tstr[12];
 
         i = 0;
@@ -1243,7 +1262,7 @@ findcolumns(void)
 
         cr1 = lotus_stox(tstr, &col);
 
-        i = sscanf((char *) tstr + cr1, ",%d,%d%n", &cw, &ww, &cr2);
+        i = sscanf(tstr + cr1, ",%d,%d%n", &cw, &ww, &cr2);
         if((i == 2) && (*(fp + cr1 + cr2) == '%'))
         {
             fp += cr1 + cr2 + 1;
@@ -1331,7 +1350,7 @@ nxtsym(void)
             {
             case PD_DATE:
                 pd123__csym.scandate = 7;
-                pd123__flookup((uchar *) "datef");
+                pd123__flookup("datef");
                 pd123__csym.symno = SYM_FUNC;
                 break;
             case PD_INTEGER:
@@ -1428,7 +1447,7 @@ procdcp(
     uchar *body,
     P_S32 dcp)
 {
-    consume_int(sscanf((char *) body, "%d", dcp));
+    consume_int(sscanf(body, "%d", dcp));
     return(constr);
 }
 
@@ -1453,18 +1472,20 @@ procpct(
 
 /******************************************************************************
 *
-* search PD file for construct
+* search PipeDream file for construct
 *
 ******************************************************************************/
 
-static uchar huge *
+static uchar *
 searchcon(
-    uchar huge *startp,
-    uchar huge *endp,
-    uchar *conid)
+    uchar *startp,
+    uchar *endp,
+    const char *conid)
 {
-    S32 tlen, conlen = strlen(conid);
-    uchar *tp, huge *ip;
+    const S32 conlen = strlen(conid);
+    S32 tlen;
+    const char *tp;
+    uchar *ip;
 
     if(endp > startp)
     {
@@ -1475,14 +1496,17 @@ searchcon(
                 tlen = conlen;
                 tp = conid;
                 ip = startp;
+
                 do
                 {
-                    if(toupper(*ip) != toupper(*tp))
-                        break;
+                    if(*ip != *tp)
+                        if(toupper(*ip) != toupper(*tp))
+                            break;
                     ++ip;
                     ++tp;
                 }
                 while(--tlen);
+
                 if(!tlen)
                     return(ip);
             }
@@ -1495,20 +1519,22 @@ searchcon(
 
 /******************************************************************************
 *
-* search PD file for option
+* search PipeDream file for option
 *
 ******************************************************************************/
 
-static uchar huge *
+static uchar *
 searchopt(
-    uchar *optid)
+    const char *optid)
 {
-    uchar huge *curp = pdf, huge *endp = optend ? optend : pdend;
-    uchar huge *oldp = pdf;
-    S32 tlen, optlen = strlen((char *) optid);
-    uchar *tp, huge *ip;
+    const S32 optlen = strlen(optid);
+    uchar *curp = pdf, *endp = optend ? optend : pdend;
+    uchar *oldp = pdf;
+    S32 tlen;
+    const char *tp;
+    uchar *ip;
 
-    while((curp = searchcon(curp, endp, (uchar *) "OP")) != 0)
+    while((curp = searchcon(curp, endp, "OP")) != 0)
     {
         if(*curp++ != '%')
             continue;
@@ -1518,8 +1544,9 @@ searchopt(
         ip = curp;
         do
         {
-            if(toupper(*ip) != toupper(*tp))
-                break;
+            if(*ip != *tp)
+                if(toupper(*ip) != toupper(*tp))
+                    break;
             ++ip;
             ++tp;
         }
@@ -1561,7 +1588,7 @@ reccon(
     uchar tstr[25], *tp;
 
     /* check for date without brackets */
-    if((res = sscanf((char *) slot, "%d.%d.%d%n", day, mon, yr, cs)) == 3)
+    if((res = sscanf(slot, "%d.%d.%d%n", day, mon, yr, cs)) == 3)
     {
         #if WINDOWS
         /* check for sscanf bug */
@@ -1572,7 +1599,7 @@ reccon(
     }
 
     /* check for date with brackets */
-    if((res = sscanf((char *) slot, "(%d.%d.%d)%n", day, mon, yr, cs)) == 3)
+    if((res = sscanf(slot, "(%d.%d.%d)%n", day, mon, yr, cs)) == 3)
     {
         /* check for sscanf bug */
         #if WINDOWS
@@ -1586,8 +1613,8 @@ reccon(
     tp = tstr;
     if(*slot == '.')
         *tp++ = '0';
-    strncpy((char *) tp, (char *) slot, 25);
-    if((res = sscanf((char *) tstr, "%lf%n", fpval, cs)) > 0)
+    strncpy(tp, slot, 25);
+    if((res = sscanf(tstr, "%lf%n", fpval, cs)) > 0)
     {
         /* account for inserted zero */
         if(tp != tstr)
@@ -1667,7 +1694,7 @@ pd123__scnslr(
     if(!isdigit(*c))
         return(0);
 
-    res = sscanf((char *) c, "%d%n", &tr, &cr);
+    res = sscanf(c, "%d%n", &tr, &cr);
     if((res < 1) || !cr)
         return(0);
 
@@ -1728,14 +1755,14 @@ static S32
 wrlcalcmode(void)
 {
     S32 err;
-    uchar huge *optp;
+    uchar *optp;
     S32 ofmt;
 
-    optp = searchopt((uchar *) "AM");
+    optp = searchopt("AM");
     if(optp)
         ofmt = (toupper(*optp) == 'M') ? 0 : 0xFF;
     else
-        ofmt = pd123__searchdefo((uchar *) "AM");
+        ofmt = pd123__searchdefo("AM");
 
     if((err = writeins(curlfi)) != 0)
         return(err);
@@ -1752,9 +1779,9 @@ static S32
 wrlcalcord(void)
 {
     S32 err, ofmt;
-    uchar huge *optp;
+    uchar *optp;
 
-    optp = searchopt((uchar *) "RC");
+    optp = searchopt("RC");
     if(optp)
     {
         switch(toupper(*optp))
@@ -1772,7 +1799,7 @@ wrlcalcord(void)
         }
     }
     else
-        ofmt = pd123__searchdefo((uchar *) "RC");
+        ofmt = pd123__searchdefo("RC");
 
     if((err = writeins(curlfi)) != 0)
         return(err);
@@ -1790,11 +1817,10 @@ wrcols(void)
 {
     S32 err, row = 0, col, didacol;
     S32 dcp, slotbits;
-    uchar huge *c, *constr;
+    uchar *c, *constr;
     uchar slot[256], cc, *op;
 
-    do
-    {
+    do  {
         didacol = 0;
         for(col = 0; col < pd123__maxcol; ++col)
         {
@@ -1816,7 +1842,7 @@ wrcols(void)
                             for(i = 0; i < elemof32(constab); ++i)
                             {
                                 uchar *c1 = constr + 1;
-                                uchar *c2 = constab[i].conid;
+                                const char *c2 = constab[i].conid;
 
                                 while(isalpha(*c1) && (toupper(*c1) == *c2))
                                 {
@@ -1869,7 +1895,7 @@ wrcols(void)
                 colcur[col] = c;
 
                 /* now write out cell contents */
-                if(strlen((char *) slot))
+                if(strlen(slot))
                     if((err = writeslot(slot, col, row, slotbits, dcp)) != 0)
                         return(err);
                 didacol = 1;
@@ -1928,7 +1954,7 @@ wrcolws(void)
 static S32
 wrfooter(void)
 {
-    return(wrlheadfoot((uchar *) "FO"));
+    return(wrlheadfoot("FO"));
 }
 
 /******************************************************************************
@@ -1979,7 +2005,7 @@ wrgraph(void)
 static S32
 wrheader(void)
 {
-    return(wrlheadfoot((uchar *) "HE"));
+    return(wrlheadfoot("HE"));
 }
 
 /******************************************************************************
@@ -1993,7 +2019,7 @@ wrlheadfoot(
     uchar *optid)
 {
     S32 err, len;
-    uchar huge *optp;
+    uchar *optp;
     uchar delim, co, tstr[10];
 
     if((err = writeins(curlfi)) != 0)
@@ -2156,7 +2182,7 @@ writelabel(
     if((err = lts_writeuword(L_LABEL)) != 0)
         return(err);
     /* length: overhead + align + contents + null */
-    if((err = lts_writeuword((U16) (5 + 1 + strlen((char *) slot) + 1))) != 0)
+    if((err = lts_writeuword((U16) (5 + 1 + strlen(slot) + 1))) != 0)
         return(err);
     if((err = pd123__foutc(0xFF, pd123__fout)) != 0)
         return(err);
@@ -2444,10 +2470,10 @@ lts_writeword(
 
 static S32
 wrlmar(
-    uchar *optid)
+    const char *optid)
 {
     S32 i;
-    uchar huge *optp;
+    uchar *optp;
     S32 curv;
     uchar tstr[5];
 
@@ -2456,7 +2482,7 @@ wrlmar(
     {
         for(i = 0; i < 5; ++i)
             tstr[i] = *optp++;
-        if(sscanf((char *) tstr, "%d", &curv) < 1)
+        if(sscanf(tstr, "%d", &curv) < 1)
             optp = NULL;
     }
 
@@ -2480,15 +2506,15 @@ wrlmargins(void)
     if((err = writeins(curlfi)) != 0)
         return(err);
 
-    if((err = wrlmar((uchar *) "LM")) != 0)
+    if((err = wrlmar("LM")) != 0)
         return(err);
     if((err = lts_writeuword(76)) != 0)
         return(err);
-    if((err = wrlmar((uchar *) "PL")) != 0)
+    if((err = wrlmar("PL")) != 0)
         return(err);
-    if((err = wrlmar((uchar *) "TM")) != 0)
+    if((err = wrlmar("TM")) != 0)
         return(err);
-    return(wrlmar((uchar *) "BM"));
+    return(wrlmar("BM"));
 }
 
 /******************************************************************************
@@ -2501,7 +2527,7 @@ static S32
 wrwindow1(void)
 {
     S32 err, i;
-    uchar huge *optp;
+    uchar *optp;
     S32 ofmt, widleft, ncols;
 
     if((err = writeins(curlfi)) != 0)
@@ -2514,7 +2540,7 @@ wrwindow1(void)
         return(err);
 
     /* work out format byte */
-    optp = searchopt((uchar *) "DP");
+    optp = searchopt("DP");
     if(optp)
     {
         if(toupper(*optp) == 'F')
@@ -2524,22 +2550,22 @@ wrwindow1(void)
         }
         else
         {
-            uchar huge *tp = optp;
+            uchar *tp = optp;
             uchar tstr[12];
 
             for(i = 0; i < 12; ++i)
                 tstr[i] = *tp++;
 
-            consume_int(sscanf((char *) tstr, "%d", &decplc));
+            consume_int(sscanf(tstr, "%d", &decplc));
             ofmt = decplc | L_FIXED;
-            optp = searchopt((uchar *) "MB");
+            optp = searchopt("MB");
             if(optp && (toupper(*optp) == 'B'))
                 ofmt = decplc | L_COMMA;
         }
     }
     else
     {
-        ofmt = pd123__searchdefo((uchar *) "DP");
+        ofmt = pd123__searchdefo("DP");
     }
 
     /* write out format byte */
@@ -2597,7 +2623,7 @@ wrwindow1(void)
 
 /******************************************************************************
 *
-* case insensitive lexical comparison of part of two strings
+* case-insensitive lexical comparison of part of two strings
 *
 ******************************************************************************/
 
@@ -2612,17 +2638,22 @@ u_strnicmp(
     while(n-- > 0)
     {
         c1 = *a++;
-        c1 = tolower(c1);
         c2 = *b++;
+
+        if(c1 == c2)
+            continue;
+
+        c1 = tolower(c1);
         c2 = tolower(c2);
 
         if(c1 != c2)
             return(c1 - c2);
 
         if(c1 == 0)
-            return(0);          /* no need to check c2 */
+            return(0); /* strings ended together before limit */
     }
 
+    /* strings are equal up to n characters */
     return(0);
 }
 

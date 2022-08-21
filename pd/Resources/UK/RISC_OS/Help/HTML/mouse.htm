@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>PipeDream - Mouse operations</title>
+    <link href="help.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+
+    <h1>PipeDream - Mouse operations</h1>
+    <p>
+        This gives a summary of the mouse operations available in PipeDream.
+        It is intended as a reminder rather than an exhaustive reference.
+        For more information refer to the section called Caret Movements in the <em>Reference Guide</em>.
+    </p>
+    <p>Many of these mouse operations are described interactively in the RISC OS !Help application when used in conjunction with PipeDream.</p>
+
+    <h2>Opening a Pipedream window</h2>
+    <p>To open a new PipeDream window, click Select on the PipeDream icon on the icon bar.</p>
+
+    <h2>Bringing up menus and choosing commands</h2>
+    <p>With the pointer in a PipeDream window, click Menu to bring up the top level menu.</p>
+    <p>To bring up a sub-menu, drag the pointer over the arrow to the right of the menu name.</p>
+    <p>
+        To choose a command, click Select on the command name.
+        This carries out the command and removes the menu from the screen.
+        If you click Adjust, the menu remains on the screen.
+    </p>
+
+    <h2>Loading documents</h2>
+    <p>To load a PipeDream document, either double-click on its icon, or drag its icon onto the Pipedream icon on the icon bar.</p>
+    <p>To insert a file at the caret position, drag the file's icon into the window.</p>
+
+    <h2>Positioning the caret</h2>
+    <p>
+        Always use the Select button to position the caret within cells.
+        Normally the caret will be positioned in the cell you are pointing at.
+        However, if there is a text cell to the left of the cell you are pointing at,
+        PipeDream will position the caret in the cell to the left.
+        This prevents you accidentally typing in columns to the right of where you expected.
+    </p>
+    <p>
+        If you really want to position the caret to the right of a text cell, hold down Ctrl when you click Select.
+        Alternatively a single click in the column border will move the caret into that column.
+    </p>
+
+    <h2>Marking blocks</h2>
+    <p>To mark a block, hold down the Select button and drag from the top-left of the block to the bottom right.</p>
+    <p>To mark complete columns, drag Select across the column borders.</p>
+    <p>To mark complete rows, drag Select down the row borders.</p>
+    <p>To mark one complete row, double-click Select in the row border.</p>
+    <p>To mark one complete column, double-click Select in the column border.</p>
+    <p>To clear any marked block, click in the Mark Block box at the intersection of the row and column borders.</p>
+    <p>To mark the whole document, click Select in the Mark Block box at the intersection of the row and column borders.  </p>
+    <p>
+        To adjust a marked block after marking it, move the pointer to the point at which you now want the block to end and click Adjust.
+        The marked block will now end where you click.
+        The starting point will remain the same.
+    </p>
+
+    <h2>Scrolling the window</h2>
+    <h3>Up and down</h3>
+    <p>
+        Position the pointer on the scroll arrow and click Select to scroll one line in the direction of the arrow.
+        Hold down Select to continue scrolling.
+        Click Adjust to scroll in the other direction.
+        The caret always remains within the PipeDream window, staying as near as possible to its original position.
+    </p>
+    <p>
+        Position the pointer on the darker part of the scroll bar
+        (above the slider to scroll up, below the slider to scroll down) and click Select.
+        The next windowful of the document will appear.
+        Click Adjust to scroll back the other way.
+        The caret always remains within the PipeDream window, moving, if necessary, to the point nearest to its position before scrolling.
+    </p>
+    <p>To move a long distance up or down drag the slider in the vertical scroll bar.</p>
+
+    <h3>Left and right</h3>
+    <p>Click on the left and right arrows in the horizontal scroll bars to move one column left or right.</p>
+    <p>Click in the dark grey area of the scroll bar to move the window one windowful left or right.</p>
+    <p>To move a long distance left or right drag the slider in the horizontal scroll bar.</p>
+
+    <h2>Entering cell references into the editing line</h2>
+    <p>
+        To enter a cell reference into the editing line whilst you are editing an expression, click Select in the cell.
+        The cell can be in the current window or in another, in which case you will insert an external reference.
+    </p>
+
+</body>
+</html>

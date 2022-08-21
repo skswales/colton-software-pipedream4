@@ -1,0 +1,22 @@
+| CopyToTemp for PD123
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 2020 Stuart Swales
+
+| !!! ENSURE EVERYTHING IS BUILT AND CHECKED IN FIRST !!!
+
+| Caller must Set pd$Disc
+If "<pd$Disc>"="" Then Error pd$Disc must be specified
+
+Time
+Echo Starting svn export (local) for PD123
+svn export <Obey$Dir> <pd$Disc>
+Time
+
+| The one in RiscPkg.Copyright is the useful one for the packaged converter
+%Remove <pd$Disc>.RiscPkg.LICENCE
+%Remove <pd$Disc>.CopyToTemp
+%Remove <pd$Disc>.MakeRiscPkg

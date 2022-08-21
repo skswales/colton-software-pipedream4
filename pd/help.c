@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2013-2019 Stuart Swales */
+/* Copyright (C) 2013-2020 Stuart Swales */
 
 /* Help system for PipeDream */
 
@@ -21,7 +21,7 @@
 extern void
 Help_fn(void)
 {
-    PTSTR tempstr = "Run <PipeDream$Dir>.!Help";
+    PTSTR tempstr = "Run <PipeDream$Dir>.!Help index/htm";
     reportf("StartTask %s", tempstr);
     void_WrapOsErrorReporting(wimp_starttask(tempstr));
 }
@@ -37,7 +37,9 @@ InteractiveHelp_fn(void)
 extern void
 ShowLicence_fn(void)
 {
-    status_consume(ho_help_url("file:///PipeDreamRes:/Help/HTML/licence.html"));
+    PTSTR tempstr = "Run <PipeDream$Dir>.!Help licenc/htm"; /* NB limit to ten chars for systems without long file names */
+    reportf("StartTask %s", tempstr);
+    void_WrapOsErrorReporting(wimp_starttask(tempstr));
 }
 
 _Check_return_
@@ -48,7 +50,7 @@ ho_help_url(
     STATUS status = STATUS_OK;
     char tempstr[1024];
 
-    if( (NULL == _kernel_getenv("Alias$Open_URI_http", tempstr, elemof32(tempstr)-1)) &&
+    if( (NULL == _kernel_getenv("Alias$Open_URI_http", tempstr, elemof32(tempstr))) &&
         (CH_NULL != tempstr[0]) )
     {
        _kernel_swi_regs rs;
@@ -62,7 +64,7 @@ ho_help_url(
         }
     }
 
-    if( (NULL == _kernel_getenv("Alias$URLOpen_HTTP", tempstr, elemof32(tempstr)-1)) &&
+    if( (NULL == _kernel_getenv("Alias$URLOpen_HTTP", tempstr, elemof32(tempstr))) &&
         (CH_NULL != tempstr[0]) )
     {
         consume_int(snprintf(tempstr, elemof32(tempstr), "URLOpen_HTTP %s", url));

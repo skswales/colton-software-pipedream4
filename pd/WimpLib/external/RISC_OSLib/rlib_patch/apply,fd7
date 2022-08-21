@@ -4,13 +4,13 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2019 Stuart Swales
+| Copyright (C) 2013-2020 Stuart Swales
 |
 echo <Obey$Dir>
 |
 dir <Obey$Dir>
 |
-Set flexlib_tmp$Dir <Obey$Dir>.^.gitlab.RiscOS.Sources.Toolbox.ToolboxLib.flexlib
+Set flexlib_tmp$Dir <Obey$Dir>.^.gitlab.RiscOS.Sources.Toolbox.Toolboxlib.flexlib
 Set rlib_tmp$Dir <Obey$Dir>.^.gitlab.RiscOS.Sources.Lib.RISC_OSLib.rlib
 Set WimpLib_tmp$Dir ^.^.^
 |
@@ -24,7 +24,6 @@ echo Populate WimpLib with unmodifed files from the checked-out copy of RISC_OSL
 |
 copy "<flexlib_tmp$Dir>.h.swiextra" "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 |
-copy "<rlib_tmp$Dir>.c.dboxtcol"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.c.drawmod"    "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.c.fileicon"   "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.c.font"       "<WimpLib_tmp$Dir>.c.*" ~CF~NSV
@@ -40,7 +39,6 @@ copy "<rlib_tmp$Dir>.h.bbc"        "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.h.colourpick" "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.h.coords"     "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.h.dbox"       "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
-copy "<rlib_tmp$Dir>.h.dboxtcol"   "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.h.dragasprit" "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.h.drawmod"    "<WimpLib_tmp$Dir>.h.*" ~CF~NSV
 copy "<rlib_tmp$Dir>.h.event"      "<WimpLib_tmp$Dir>.h.*" ~CF~NSV

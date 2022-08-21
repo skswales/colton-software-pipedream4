@@ -1,5 +1,5 @@
---- _src	2019-07-29 19:42:18.000000000 +0100
-+++ _dst	2019-07-30 11:45:38.690000000 +0100
+--- _src	2020-07-01 11:43:05.680000000 +0100
++++ _dst	2020-07-01 11:46:45.360000000 +0100
 @@ -32,6 +32,8 @@
   * History: IDJ: 05-Feb-92: prepared for source release
   */
@@ -9,7 +9,7 @@
  #define BOOL int
  #define TRUE 1
  #define FALSE 0
-@@ -78,6 +80,12 @@
+@@ -75,6 +77,12 @@
  
  #pragma -s1
  
@@ -22,7 +22,7 @@
  #ifndef UROM
  /* Set screen mode. */
  os_error *bbc_mode(int n)
-@@ -130,6 +138,8 @@
+@@ -127,6 +135,8 @@
  }
  #endif
  
@@ -31,7 +31,7 @@
  int bbc_modevar (int mode, int varno)
  
  { int flags, result;
-@@ -220,23 +230,45 @@
+@@ -217,6 +227,8 @@
  
  /* ---------- Graphics ----------- */
  
@@ -40,44 +40,7 @@
  /* Clear graphics window. */
  os_error *bbc_clg(void)
  {
-    return (bbc_vdu(bbc_ClearGraph));
- }
- 
-+#endif /* SKS_ACW */
-+
- /* Set up graphics window. */
- os_error *bbc_gwindow(int a, int b, int c, int d)
- {
-+#ifdef SKS_ACW
-+    /* SKS get round VDU funnel/multiple SWI overhead */
-+    char buffer[9 /*length of VDU 24 sequence*/];
-+    char * p_u8 = buffer;
-+    *p_u8++ = 24;
-+    *p_u8++ = (a);
-+    *p_u8++ = (a >> 8);
-+    *p_u8++ = (b);
-+    *p_u8++ = (b >> 8);
-+    *p_u8++ = (c);
-+    *p_u8++ = (c >> 8);
-+    *p_u8++ = (d);
-+    *p_u8++ = (d >> 8);
-+    return(os_writeN(buffer, sizeof(buffer)));
-+#else /* NOT SKS_ACW */
-    os_error *e = bbc_vdu(bbc_DefGraphWindow);
-    if (!e) e = bbc_vduw(a);
-    if (!e) e = bbc_vduw(b);
-    if (!e) e = bbc_vduw(c);
-    if (!e) e = bbc_vduw(d);
-    return(e);
-+#endif /* SKS_ACW */
- }
- 
-+#ifndef SKS_ACW
-+
- #ifndef UROM
- /* Move the graphics origin to the given absolute coordinates. */
- os_error *bbc_origin(int x, int y)
-@@ -248,15 +280,32 @@
+@@ -245,15 +257,32 @@
  }
  #endif
  
@@ -110,7 +73,7 @@
  
  /* Perform an operating system plot operation. Plot number, x, y. */
  os_error *bbc_plot(int n, int x, int y)
-@@ -549,6 +598,8 @@
+@@ -546,6 +575,8 @@
  }
  #endif
  

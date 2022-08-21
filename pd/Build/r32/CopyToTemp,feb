@@ -1,0 +1,241 @@
+| CopyToTemp for PipeDream
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 2020 Stuart Swales
+
+| Caller must Set pd$Disc
+If "<pd$Disc>"="" Then Error pd$Disc must be specified. Did you mean to run MakeRiscPkg?
+
+%CDir                                                           <pd$Disc>
+
+| Resources from source
+Set ap$Resources$Dir    <Obey$Dir>.^.^.Resources
+
+| Resources from build
+Set pd$Resources$Dir    <Obey$Dir>.!PipeDream.Resources
+
+|
+| Top level, contains just Apps (RiscPkg added by caller if required)
+|
+%CDir                                                           <pd$Disc>.Apps
+%CDir                                                           <pd$Disc>.Apps.Document
+
+| Directory is renamed at the end
+%CDir                                                           <pd$Disc>.Z
+
+%Copy <Obey$Dir>.!PipeDream.!Boot                               <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Help                               <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Run                                <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!RunImage                           <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Sprites                            <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Sprites11                          <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Sprites22                          <pd$Disc>.Z.* ~rf~cln~v
+| RISC OS 4/6 have different orientation pin in ic_xxx
+%Copy <Obey$Dir>.!PipeDream.!SpritesR4                          <pd$Disc>.Z.* ~rf~cln~v
+
+| Use the same licence in the distributed package
+|%Copy <Obey$Dir>.RiscPkg.Copyright                              <pd$Disc>.Z.LICENCE ~rf~cln~v
+| Nah, use the HTML licence
+%Copy <ap$Resources$Dir>.UK.RISC_OS.Help.HTML.licenc/htm        <pd$Disc>.Z.Licence ~rf~cln~v
+%SetType                                                        <pd$Disc>.Z.Licence &FAF
+
+%Copy <Obey$Dir>.!PipeDream.Relnotes                            <pd$Disc>.Z.* ~rf~cln~v
+
+%Access                                                         <pd$Disc>.Z.* r/r
+
+|
+| Resources (Application Data)
+|
+| PipeDream$Path is used to locate application data presented to the PipeDream user
+| e.g. document templates, dictionaries, chart markers
+|
+%CDir                                                           <pd$Disc>.Z.Resources
+%CDir                                                           <pd$Disc>.Z.Resources.Neutral
+%CDir                                                           <pd$Disc>.Z.Resources.UK
+%CDir                                                           <pd$Disc>.Z.Resources.Germany
+|
+| Markers
+|
+%CDir                                                           <pd$Disc>.Z.Resources.Neutral.Markers
+| Language-independent
+%Copy <ap$Resources$Dir>.Neutral.Markers.S1                     <pd$Disc>.Z.Resources.Neutral.Markers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.Markers.S2                     <pd$Disc>.Z.Resources.Neutral.Markers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.Markers.S3                     <pd$Disc>.Z.Resources.Neutral.Markers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.Markers.S4                     <pd$Disc>.Z.Resources.Neutral.Markers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.Markers.S5                     <pd$Disc>.Z.Resources.Neutral.Markers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.Markers.S6                     <pd$Disc>.Z.Resources.Neutral.Markers.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.Resources.Neutral.Markers.* r/r
+|
+| Pictures
+|
+%CDir                                                           <pd$Disc>.Z.Resources.Neutral.Pictures
+| Language-independent
+%Copy <ap$Resources$Dir>.Neutral.Pictures.S1                    <pd$Disc>.Z.Resources.Neutral.Pictures.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.Pictures.S2                    <pd$Disc>.Z.Resources.Neutral.Pictures.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.Resources.Neutral.Pictures.* r/r
+|
+| Choices
+|
+| Language-dependent (Germany) - Euro leading characters
+%Copy <ap$Resources$Dir>.Germany.Choices                        <pd$Disc>.Z.Resources.Germany.* ~rf~cln~v
+|
+| CmdFiles
+|
+| Language-dependent (UK)
+%CDir                                                           <pd$Disc>.Z.Resources.UK.CmdFiles
+%Copy <ap$Resources$Dir>.UK.CmdFiles.CopyDelete                 <pd$Disc>.Z.Resources.UK.CmdFiles.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.CmdFiles.Indent5                    <pd$Disc>.Z.Resources.UK.CmdFiles.* ~rf~cln~v
+|
+| DictDefn
+|
+| Language-dependent (UK)
+%CDir                                                           <pd$Disc>.Z.Resources.UK.DictDefn
+%Copy <ap$Resources$Dir>.UK.DictDefn.English                    <pd$Disc>.Z.Resources.UK.DictDefn.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.DictDefn.Latin1                     <pd$Disc>.Z.Resources.UK.DictDefn.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.Resources.UK.DictDefn.* r/r
+| Language-dependent (Germany)
+%CDir                                                           <pd$Disc>.Z.Resources.Germany.DictDefn
+%Copy <ap$Resources$Dir>.Germany.DictDefn.Deutsch               <pd$Disc>.Z.Resources.Germany.DictDefn.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.Resources.Germany.DictDefn.* r/r
+|
+| Dicts
+|
+| Language-dependent (UK)
+%CDir                                                           <pd$Disc>.Z.Resources.UK.Dicts
+%Copy <ap$Resources$Dir>.UK.Dicts.Master-s                      <pd$Disc>.Z.Resources.UK.Dicts.Master ~rf~cln~v
+|
+| PDrivers
+|
+| Language-dependent (although I can't seem them being translated!)
+%CDir                                                           <pd$Disc>.Z.Resources.UK.PDrivers
+%Copy <ap$Resources$Dir>.UK.PDrivers.BJ10                       <pd$Disc>.Z.Resources.UK.PDrivers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.PDrivers.DaisyWheel                 <pd$Disc>.Z.Resources.UK.PDrivers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.PDrivers.Default                    <pd$Disc>.Z.Resources.UK.PDrivers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.PDrivers.DotMatrix                  <pd$Disc>.Z.Resources.UK.PDrivers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.PDrivers.HPJet                      <pd$Disc>.Z.Resources.UK.PDrivers.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.PDrivers.JP150                      <pd$Disc>.Z.Resources.UK.PDrivers.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.Resources.UK.PDrivers.* r/r
+|
+| Templates
+|
+| Language-dependent
+%CDir                                                           <pd$Disc>.Z.Resources.UK.Templates
+%Copy <ap$Resources$Dir>.UK.Templates.Numbers                   <pd$Disc>.Z.Resources.UK.Templates.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.Templates.Records                   <pd$Disc>.Z.Resources.UK.Templates.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.Templates.Text                      <pd$Disc>.Z.Resources.UK.Templates.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.Templates.Text_Plain                <pd$Disc>.Z.Resources.UK.Templates.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.Resources.UK.Templates.* r/r
+|
+%Access                                                         <pd$Disc>.Z.Resources.Neutral.* r/r
+%Access                                                         <pd$Disc>.Z.Resources.UK.* r/r
+%Access                                                         <pd$Disc>.Z.Resources.Germany.* r/r
+%Access                                                         <pd$Disc>.Z.Resources.* r/r
+%Access                                                         <pd$Disc>.Z.Resources r/r
+
+|
+| Resources (RISC OS specific - located in RISC_OS sub-directory)
+|
+| PipeDream$Path:RISC_OS is used to locate these resources which are needed to run PipeDream
+| e.g. messages, sprite files and window templates
+|
+%CDir                                                           <pd$Disc>.Z.Resources
+|
+| Language-independent
+%CDir                                                           <pd$Disc>.Z.Resources.Neutral
+%CDir                                                           <pd$Disc>.Z.Resources.Neutral.RISC_OS
+%Copy <ap$Resources$Dir>.Neutral.RISC_OS.!Sprite                <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.Neutral.RISC_OS.BuildVer               <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.RISC_OS.ImageSlot              <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.RISC_OS.Loader                 <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.Neutral.RISC_OS.Splash                 <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.Neutral.RISC_OS.SprCht                 <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.Neutral.RISC_OS.SprCht22               <pd$Disc>.Z.Resources.Neutral.RISC_OS.* ~rf~cln~v
+|
+%Access                                                         <pd$Disc>.Z.Resources.Neutral.RISC_OS.* r/r
+|
+| Language-dependent (UK)
+%CDir                                                           <pd$Disc>.Z.Resources.UK
+%CDir                                                           <pd$Disc>.Z.Resources.UK.RISC_OS
+| Built resources - Messages and Sprite files
+%Copy <pd$Resources$Dir>.UK.RISC_OS.Messages                    <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.RISC_OS.Sprites                     <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.RISC_OS.Sprites11                   <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
+%Copy <pd$Resources$Dir>.UK.RISC_OS.Sprites22                   <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
+| Static resources - Window Templates
+%Copy <ap$Resources$Dir>.UK.RISC_OS.WTemplates                  <pd$Disc>.Z.Resources.UK.RISC_OS.* ~rf~cln~v
+|
+%Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.* r/r
+
+|
+| Help
+|
+| Language-dependent (UK)
+%CDir                                                           <pd$Disc>.Z.Resources.UK.RISC_OS.Help
+%Copy <ap$Resources$Dir>.UK.RISC_OS.Help.Text                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.* ~rf~cln~v
+
+| HTML files
+%Copy <ap$Resources$Dir>.UK.RISC_OS.Help.HTML                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.* ~rf~cln~v
+%Copy <ap$Resources$Dir>.UK.RISC_OS.Help.HTML.functions         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.* ~rf~cln~v
+SetMacro Alias$pd_SetType_HTM SetType %%0 &FAF
+Repeat         pd_SetType_HTM                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML -files
+Repeat         pd_SetType_HTM                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.functions -files
+Unset    Alias$pd_SetType_HTM
+
+| CSS files
+SetMacro Alias$pd_SetType_CSS SetType %%0 &F79
+               pd_SetType_CSS                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.help/css
+Unset    Alias$pd_SetType_CSS
+
+| PNG files
+%CDir                                                           <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images
+%Copy <ap$Resources$Dir>.UK.RISC_OS.Help.HTML.images.toolbar    <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.* ~rf~cln~v
+SetMacro Alias$pd_SetType_PNG SetType %%0 &B60
+Repeat         pd_SetType_PNG                                   <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.toolbar -files
+Unset    Alias$pd_SetType_PNG
+
+%Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.functions.* r/r
+%Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.toolbar.* r/r
+%Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.images.* r/r
+%Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.HTML.* r/r
+%Access                                                         <pd$Disc>.Z.Resources.UK.RISC_OS.Help.* r/r
+
+|||%Access                                                         <pd$Disc>.Z.Resources.Neutral.* r/r
+|||%Access                                                         <pd$Disc>.Z.Resources.UK.* r/r
+|||%Access                                                         <pd$Disc>.Z.Resources.* r/r
+|||%Access                                                         <pd$Disc>.Z.Resources r/r
+
+|
+| User Choices (destined for <Choices$Write>.PipeDream on user's system)
+|
+%CDir                                                           <pd$Disc>.Z.uChoices
+
+%CDir                                                           <pd$Disc>.Z.uChoices.PipeDream
+%CDir                                                           <pd$Disc>.Z.uChoices.PipeDream.CmdFiles
+%CDir                                                           <pd$Disc>.Z.uChoices.PipeDream.Dicts
+%CDir                                                           <pd$Disc>.Z.uChoices.PipeDream.Library
+%CDir                                                           <pd$Disc>.Z.uChoices.PipeDream.Markers
+%CDir                                                           <pd$Disc>.Z.uChoices.PipeDream.Pictures
+%CDir                                                           <pd$Disc>.Z.uChoices.PipeDream.Templates
+
+%Copy <Obey$Dir>.!PipeDream.uChoices.PipeDream.Dicts.*          <pd$Disc>.Z.uChoices.PipeDream.Dicts.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.uChoices.PipeDream.Dicts.* wr/r
+
+%Copy <Obey$Dir>.!PipeDream.uChoices.PipeDream.Library.*        <pd$Disc>.Z.uChoices.PipeDream.Library.* ~rf~cln~v
+%Access                                                         <pd$Disc>.Z.uChoices.PipeDream.Library.* wr/r
+
+%Copy <Obey$Dir>.!PipeDream.uChoices.DoCopy                     <pd$Disc>.Z.uChoices.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.uChoices.ReadMe                     <pd$Disc>.Z.uChoices.* ~rf~cln~v
+
+%Access                                                         <pd$Disc>.Z.uChoices.PipeDream.* wr/r
+%Access                                                         <pd$Disc>.Z.uChoices.PipeDream wr/r
+%Access                                                         <pd$Disc>.Z.uChoices wr/r
+
+Unset Alias$pd_SetType
+
+%Rename <pd$Disc>.Z                                             <pd$Disc>.Apps.Document.!PipeDream
+
+| Not an svn export, but a careful copy of components, so no need to do tidying like
+| %Remove <pd$Disc>.CopyToTemp

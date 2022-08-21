@@ -261,10 +261,10 @@ func_list[] =
     &CF_Home_STR,
     &CSF_Home_STR,
 
-    &F_Copy_STR,
-    &SF_Copy_STR,
-    &CF_Copy_STR,
-    &CSF_Copy_STR,
+    &F_End_STR,
+    &SF_End_STR,
+    &CF_End_STR,
+    &CSF_End_STR,
 
     NULL
 };
@@ -552,7 +552,7 @@ DIALOG d_decimal[] =
     DN(  F_SPECIAL,   '\0','\0', NO_OPT, DecimalPlaces_Parm_STR, 0 )
 };
 
-DIALOG d_inshigh[] =
+DIALOG d_insremhigh[] =
 {
     DN(  F_SPECIAL,   '\0','\0', NO_OPT, ONE2345678STR,       0 )
 };
@@ -906,7 +906,7 @@ DHEADER dialog_head[] =
     dhead_none,
     dhead(d_load,               dproc_loadfile,          "loadfile",     EXEC_CAN_FILL ),
     dhead(d_overwrite,          dproc_overwrite,         NULL,           0             ),    /* may pop up; uses dboxquery on RISCOS */
-    dhead(d_save,               dproc_savefile,          "savefile",     EXEC_CAN_FILL ),
+    dhead(d_save,               dproc_savefileas,        "savefileas",   EXEC_CAN_FILL ),
     dhead(d_save_template,      dproc_onetext,           "savetempl",    EXEC_CAN_FILL ),
     dhead(d_print,              dproc_print,             "print",        EXEC_CAN_FILL ),
     dhead(d_mspace,             dproc_microspace,        "microspace",   EXEC_CAN_FILL ),
@@ -920,15 +920,15 @@ DHEADER dialog_head[] =
     dhead(d_width,              dproc_numtext,           "columnwidth",  EXEC_CAN_FILL ),
     dhead(d_width,              dproc_numtext,           "rightmargin",  EXEC_CAN_FILL ),
     dhead(d_name,               dproc_onetext,           "namefile",     EXEC_CAN_FILL ),
-    dhead(d_execfile,           dproc_execfile,          "execfile",     EXEC_CAN_FILL ),
+    dhead(d_execfile,           dproc_execfile,          "cmdf_exec",    EXEC_CAN_FILL ),
     dhead(d_goto,               dproc_onetext,           "gotoslot",     EXEC_CAN_FILL ),
     dhead(d_decimal,            dproc_decimal,           "decimal",      EXEC_CAN_FILL ),
-    dhead(d_inshigh,            dproc_onespecial,        "insremhigh",   EXEC_CAN_FILL ),
-    dhead(d_inshigh,            dproc_onespecial,        "insremhigh",   EXEC_CAN_FILL ),
+    dhead(d_insremhigh,         dproc_onespecial,        "inshigh",      EXEC_CAN_FILL ),
+    dhead(d_insremhigh,         dproc_onespecial,        "remhigh",      EXEC_CAN_FILL ),
     dhead(d_defkey,             dproc_defkey,            "defkey",       EXEC_CAN_FILL ),
     dhead(d_def_fkey,           dproc_deffnkey,          "deffnkey",     EXEC_CAN_FILL ),
     dhead(d_insert_page_break,  dproc_onenumeric,        "pagebreak",    EXEC_CAN_FILL ),
-    dhead(d_save,               dproc_savefile,          "savefile",     0             ),    /* always pop up */
+    dhead(d_save,               dproc_savefileas,        "savefileas",   0             ),    /* always pop up */
     dhead(d_colours,            dproc_colours,           "colours",      EXEC_CAN_FILL ),
     dhead(d_colours,            dproc_extended_colours,  "extcolours",   EXEC_CAN_FILL ),    /* NB this refers to the same data as D_COLOURS */
     dhead(d_about,              dproc_aboutfile,         "aboutfile",    EXEC_CAN_FILL ),
@@ -941,17 +941,17 @@ DHEADER dialog_head[] =
     dhead(d_checkon,            dproc_checkdoc,          "checkdoc",     EXEC_CAN_FILL ),
     dhead(d_check,              dproc_checking,          "checking",     0             ),    /* may pop up */
     dhead(d_check_mess,         dproc_checked,           "checked",      0             ),    /* may pop up */
-    dhead(d_user_create,        dproc_createdict,        "createdict",   EXEC_CAN_FILL ),
-    dhead(d_user_open,          dproc_onetext,           "opnclsdict",   EXEC_CAN_FILL ),
-    dhead(d_user_close,         dproc_onetext,           "opnclsdict",   EXEC_CAN_FILL ),
-    dhead(d_user_delete,        dproc_twotext,           "insdelword",   EXEC_CAN_FILL ),
-    dhead(d_user_insert,        dproc_twotext,           "insdelword",   EXEC_CAN_FILL ),
+    dhead(d_user_create,        dproc_createdict,        "createuser",   EXEC_CAN_FILL ),
+    dhead(d_user_open,          dproc_onetext,           "openuser",     EXEC_CAN_FILL ),
+    dhead(d_user_close,         dproc_onetext,           "closeuser",    EXEC_CAN_FILL ),
+    dhead(d_user_insert,        dproc_twotext,           "insword",      EXEC_CAN_FILL ),
+    dhead(d_user_delete,        dproc_twotext,           "delword",      EXEC_CAN_FILL ),
     dhead(d_user_browse,        dproc_browse,            "browse",       EXEC_CAN_FILL ),
     dhead(d_user_dump,          dproc_dumpdict,          "dumpdict",     EXEC_CAN_FILL ),
-    dhead(d_user_merge,         dproc_twotext,           "mergedict",    EXEC_CAN_FILL ),
+    dhead(d_user_merge,         dproc_twotext,           "mergeuser",    EXEC_CAN_FILL ),
     dhead(d_user_anag,          dproc_anasubgram,        "anasubgram",   EXEC_CAN_FILL ),
     dhead(d_user_anag,          dproc_anasubgram,        "anasubgram",   EXEC_CAN_FILL ),
-    dhead(d_user_lock,          dproc_onecomponoff,      "unlockdict",   EXEC_CAN_FILL ),
+    dhead(d_user_lock,          dproc_onecomponoff,      "lockdict",     EXEC_CAN_FILL ),
     dhead(d_user_unlock,        dproc_onecomponoff,      "unlockdict",   EXEC_CAN_FILL ),
     dhead(d_user_pack,          dproc_twotext,           "packuser",     EXEC_CAN_FILL ),
 
@@ -961,7 +961,7 @@ DHEADER dialog_head[] =
     dhead_dummy(d_protect),         /* dummy dialog box for saving protection */
     dhead_dummy(d_version),         /* dummy dialog box for saving version */
     dhead_dummy(d_names_dbox),      /* dummy dialog box for saving names */
-    dhead(d_macro_file,         dproc_onetext,           "onefile",      EXEC_CAN_FILL ),
+    dhead(d_macro_file,         dproc_onetext,           "cmdf_record",  EXEC_CAN_FILL ),
     dhead_dummy(d_fonts),
     dhead_dummy(d_menu),
     dhead(d_def_cmd,            dproc_twotext,           "defcmd",       EXEC_CAN_FILL ),
@@ -974,12 +974,14 @@ DHEADER dialog_head[] =
     dhead_dummy(d_open_box),        /* dummy dialog box for saving window position */
     dhead_dummy(d_linked_columns),  /* dummy dialog box for saving linked cols */
     dhead(d_load_template,      dproc_loadtemplate,      "ltemplate",    EXEC_CAN_FILL ),
-    dhead(d_edit_driver,        dproc_edit_driver,       "ltemplate",    EXEC_CAN_FILL ),
+    dhead(d_edit_driver,        dproc_edit_driver,       "prndrvedit",   EXEC_CAN_FILL ),
     dhead(d_formula_error,      dproc_formula_error,     "formula_err",  0             ),    /* may pop up */
     dhead(d_chart_options,      dproc_chartopts,         "chartopts",    EXEC_CAN_FILL ),
     dhead(d_insert_page_number, dproc_insert_page_number,"inspagenum",   EXEC_CAN_FILL ),
     dhead(d_insert_date,        dproc_insert_date,       "insdatetime",  EXEC_CAN_FILL ),
-    dhead(d_insert_time,        dproc_insert_time,       "insdatetime",  EXEC_CAN_FILL )
+    dhead(d_insert_time,        dproc_insert_time,       "insdatetime",  EXEC_CAN_FILL ),
+    dhead(d_save,               dproc_savefilesimple,    "savefilesim",  EXEC_CAN_FILL ),
+    dhead(d_save,               dproc_savefilesimple,    "savefilesim",  0             )     /* always pop up */
 };
 #define NDIALOG_BOXES elemof32(dialog_head)
 
@@ -1218,7 +1220,7 @@ save_opt_to_list(
             if(dptr->option == **dptr->optionlist)
                 continue;
 
-            array[0] = dptr->option;
+            array[0] = (char) dptr->option;
             array[1] = CH_NULL;
             break;
 

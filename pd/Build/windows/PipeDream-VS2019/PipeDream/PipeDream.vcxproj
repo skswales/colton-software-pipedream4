@@ -54,7 +54,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(ProgramFiles)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\external\cs-nonfree\Acorn\Library\32\CLib\msvchack;$(SolutionDir)..\..\..\external\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CROSS_COMPILE;HOST_WINDOWS;TRACE_ALLOWED;CHECKING;UNRELEASED;_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <MinimalRebuild>false</MinimalRebuild>
@@ -62,13 +62,13 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>-J %(AdditionalOptions)</AdditionalOptions>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat />
-      <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4068;4081;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <EnablePREfast>false</EnablePREfast>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>common/gflags.h</PrecompiledHeaderFile>
+      <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -86,7 +86,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(ProgramFiles)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\external\cs-nonfree\Acorn\Library\32\CLib\msvchack;$(SolutionDir)..\..\..\external\cs-nonfree\Acorn\Library\32\tboxlibs;$(SolutionDir)..\..\..\WimpLib;$(IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CROSS_COMPILE;HOST_WINDOWS;RELEASED;$(PLATFORMDEFINES);$(ARCHFAM);$(_ARCHFAM_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <ExceptionHandling />
@@ -94,7 +94,6 @@
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat />
-      <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4068;4081;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <ResourceCompile>
@@ -169,6 +168,7 @@
     <ClCompile Include="..\..\..\..\cmodules\gr_scatc.c" />
     <ClCompile Include="..\..\..\..\cmodules\gr_style.c" />
     <ClCompile Include="..\..\..\..\cmodules\handlist.c" />
+    <ClCompile Include="..\..\..\..\cmodules\mathxcpx.c" />
     <ClCompile Include="..\..\..\..\cmodules\mathxtr2.c" />
     <ClCompile Include="..\..\..\..\cmodules\mathxtr3.c" />
     <ClCompile Include="..\..\..\..\cmodules\mathxtr4.c" />
@@ -200,6 +200,7 @@
     <ClCompile Include="..\..\..\..\cmodules\wm_event.c" />
     <ClCompile Include="..\..\..\..\cmodules\wm_null.c" />
     <ClCompile Include="..\..\..\..\cmodules\xstring.c" />
+    <ClCompile Include="..\..\..\..\cmodules\xustring.c" />
     <ClCompile Include="..\..\..\..\colh.c" />
     <ClCompile Include="..\..\..\..\colour.c" />
     <ClCompile Include="..\..\..\..\commlin.c" />
@@ -239,6 +240,8 @@
     <ClCompile Include="..\..\..\..\strings.c" />
     <ClCompile Include="..\..\..\..\UserIO.c" />
     <ClCompile Include="..\..\..\..\userdict.c" />
+    <ClCompile Include="..\..\..\..\utils\u_reperr.c" />
+    <ClCompile Include="..\..\..\..\utils\u_strings.c" />
     <ClCompile Include="..\..\..\..\version.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -390,12 +393,12 @@
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\coltsoft.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\defineos.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\drawxtra.h" />
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\filetype.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\mathnums.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\no-sal.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\ns-sal.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\pragma.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\pragmari.h" />
-    <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_clang.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_gccsdk.h" />
     <ClInclude Include="..\..\..\..\cmodules\coltsoft\target_riscos_host_windows.h" />
     <ClInclude Include="..\..\..\..\cmodules\debug.h" />
@@ -408,6 +411,7 @@
     <ClInclude Include="..\..\..\..\cmodules\gr_chart.h" />
     <ClInclude Include="..\..\..\..\cmodules\gr_coord.h" />
     <ClInclude Include="..\..\..\..\cmodules\handlist.h" />
+    <ClInclude Include="..\..\..\..\cmodules\mathxcpx.h" />
     <ClInclude Include="..\..\..\..\cmodules\mathxtr2.h" />
     <ClInclude Include="..\..\..\..\cmodules\mathxtr3.h" />
     <ClInclude Include="..\..\..\..\cmodules\mathxtr4.h" />
@@ -423,7 +427,6 @@
     <ClInclude Include="..\..\..\..\cmodules\quickblk.h" />
     <ClInclude Include="..\..\..\..\cmodules\report.h" />
     <ClInclude Include="..\..\..\..\cmodules\riscos\colourpick.h" />
-    <ClInclude Include="..\..\..\..\cmodules\riscos\filetype.h" />
     <ClInclude Include="..\..\..\..\cmodules\riscos\fontlxtr.h" />
     <ClInclude Include="..\..\..\..\cmodules\riscos\osfile.h" />
     <ClInclude Include="..\..\..\..\cmodules\riscos\profile.h" />
@@ -438,6 +441,8 @@
     <ClInclude Include="..\..\..\..\cmodules\vsload.h" />
     <ClInclude Include="..\..\..\..\cmodules\wm_event.h" />
     <ClInclude Include="..\..\..\..\cmodules\xstring.h" />
+    <ClInclude Include="..\..\..\..\cmodules\xtstring.h" />
+    <ClInclude Include="..\..\..\..\cmodules\xustring.h" />
     <ClInclude Include="..\..\..\..\colh_x.h" />
     <ClInclude Include="..\..\..\..\common\gflags.h" />
     <ClInclude Include="..\..\..\..\datafmt.h" />
@@ -457,8 +462,6 @@
     <ClInclude Include="..\..\..\..\riscdraw_x.h" />
     <ClInclude Include="..\..\..\..\riscmenu.h" />
     <ClInclude Include="..\..\..\..\riscos_x.h" />
-    <ClInclude Include="..\..\..\..\scdraw_x.h" />
-    <ClInclude Include="..\..\..\..\screen.h" />
     <ClInclude Include="..\..\..\..\strings.h" />
     <ClInclude Include="..\..\..\..\userIO_x.h" />
     <ClInclude Include="..\..\..\..\version_x.h" />
@@ -528,24 +531,26 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\colours.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\commandfiles.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\commands.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\complexfns.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\csguide.css" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\complex.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\misc.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\guide.css" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\csv.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\customfns.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\databasefns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\custom.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\database.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\databaseuse.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\datetime.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\datetimefns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\datetime.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\editing.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\errormessages.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\externalreferences.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fileops.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\financialfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\financial.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\firstwordplus.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fixingcolsrows.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fonts.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fullindex.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\index.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\glossary.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\highlights.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\hotlinks.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\iconmenu.html" />
@@ -553,14 +558,13 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\intro.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\keyboard.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\labelprinting.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\lookupfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\lookup.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\lotus123.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mailshots.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mathfns.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\matrixfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\math.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\matrix.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\memory.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\menus.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\miscfns.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mouse.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\names.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\numbercells.html" />
@@ -572,7 +576,7 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\paths.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\pictures.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\pipedreamfileformat.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printerdriverediting.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printdrvediting.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printerdrivers.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printing.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\protection.html" />
@@ -584,13 +588,13 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\sorting.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\spellchecking.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\spelluserdicts.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\statsfns.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\stringfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\stats.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\string.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\tables.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\templates.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\textatfields.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\toolbar.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\trigfns.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\trig.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\troubleshooting.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\view.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\viewsheet.html" />
@@ -598,19 +602,19 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\wordcount.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\z88.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\index.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutpipedream.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutthistutorial.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\combineddocuments.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\commands.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\conventions.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\csguide.css" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\databases.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\glossary.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\installation.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\spreadsheets.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\thepipedreamwindow.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\wordprocessing.html" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\index.html" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\aboutp.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\aboutt.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\comdoc.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\cmds.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\conven.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\tutor.css" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\db.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\gloss.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\instal.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\sheets.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\pdwind.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\wrdpro.htm" />
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\index.html" />
     <None Include="..\..\..\..\..\docs\RiscPkg\Control" />
     <None Include="..\..\..\..\..\docs\RiscPkg\Copyright" />
     <None Include="..\..\..\..\..\extrautils\123PD\Apps\Utilities\!123PD\!Help" />
@@ -627,41 +631,48 @@
     <None Include="..\..\..\..\..\extrautils\PD123\MakeRiscPkg,fd7" />
     <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\Control" />
     <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\Copyright" />
-    <None Include="..\..\..\..\..\extrautils\Relnotes,faf" />
+    <None Include="..\..\..\..\..\extrautils\Relnotes" />
     <None Include="..\..\..\..\cmodules\GB\msg\gr_chart" />
     <None Include="..\..\..\..\cmodules\GB\msg\mlec" />
     <None Include="..\..\..\..\RelHistPrev.html" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\financ.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\..\..\WimpLib\cs-pollfpm.s" />
     <None Include="..\..\..\..\WimpLib\cs-riscasm.s" />
     <None Include="..\..\..\..\WimpLib\GB\msg_risc" />
     <None Include="..\..\..\..\WimpLib\r32\Makefile" />
     <None Include="..\..\..\..\WimpLib\swi.s" />
     <None Include="..\..\..\r32\!PipeDream\!Help,feb" />
-    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\cmds.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\complex.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\custom.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\database.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\datetime.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\index.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\lookup.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\math.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\matrix.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\misc.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\stats.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\string.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\trig.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\help.css" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\index.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\licence.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\mouse.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\toolb.html,faf" />
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\Text" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\cmds.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\complx.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\custom.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\db.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\date.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\index.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\lookup.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\math.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\matrix.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\misc.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\stats.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\string.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\trig.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\help.css" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\index.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\licenc.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\mouse.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\toolb.htm" />
+    <None Include="..\..\..\..\utils\en_GB\Help\Text" />
+    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="..\..\..\r32\as_flags_h" />
+    <None Include="..\..\..\r32\CopyToTemp,feb" />
     <None Include="..\..\..\r32\Makefile" />
     <None Include="..\..\..\r32\MakeRiscPkg,fd7" />
     <None Include="..\..\..\r32\RiscPkg\Control" />
     <None Include="..\..\..\r32\RiscPkg\Copyright" />
+    <None Include="..\..\..\Tools\BootRunGen" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -409,7 +409,7 @@ print_document_core_core(
 
         if(parmfile)
         {
-            res = status_done(file_find_on_path_or_relative(parmfile_array, elemof32(parmfile_array), file_get_search_path(), parmfile, currentfilename))
+            res = status_done(file_find_on_path_or_relative(parmfile_array, elemof32(parmfile_array), file_get_search_path(), parmfile, currentfilename()))
                         /* doing macros - check it's a tab file */
                         ? find_filetype_option(parmfile_array, FILETYPE_UNDETERMINED)
                         : CH_NULL;
@@ -564,7 +564,7 @@ print_document_core(
         if(str_isblank(outnamerep))
             return(create_error(ERR_BAD_NAME));
 
-        (void) file_add_prefix_to_name(outfile_array, elemof32(outfile_array), outnamerep, currentfilename);
+        (void) file_add_prefix_to_name(outfile_array, elemof32(outfile_array), outnamerep, currentfilename());
 
         outname = outfile_array;
 
@@ -2779,9 +2779,7 @@ editprinterdriver_fn_core(void)
 
     {
     LOAD_FILE_OPTIONS load_file_options;
-    zero_struct(load_file_options);
-    load_file_options.document_name = buffer;
-    load_file_options.filetype_option = AUTO_CHAR; /* therefore must go via loadfile() */
+    load_file_options_init(&load_file_options, buffer, AUTO_CHAR /* therefore must go via loadfile() */);
     if(!loadfile(buffer, &load_file_options))
         return(FALSE);
     } /*block*/

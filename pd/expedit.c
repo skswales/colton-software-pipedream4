@@ -390,16 +390,8 @@ expedit_transfer_line_to_box(
     }
 }
 
-static void
-expedit_force_redraw(void)
-{
-    WimpSetIconStateBlock set_icon_state_block;
-    set_icon_state_block.window_handle = colh_window_handle;
-    set_icon_state_block.icon_handle = COLH_CONTENTS_LINE;
-    set_icon_state_block.EOR_word = 0;
-    set_icon_state_block.clear_word = 0;
-    void_WrapOsErrorReporting(tbl_wimp_set_icon_state(&set_icon_state_block));
-}
+#define expedit_force_redraw() \
+    winf_changedfield(colh_window_handle, COLH_CONTENTS_LINE) /* just poke it for redraw */
 
 extern BOOL
 expedit_insert_char(

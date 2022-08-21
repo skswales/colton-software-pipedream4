@@ -250,7 +250,11 @@ compile_wild_string(
                 }
             }
             else if(((ptr == from) ? spell_valid_1 : spell_iswordc) (dict, ch))
-                *to++ = spell_tolower(dict, ch);
+            {
+                STATUS status;
+                status_return(status = spell_tolower(dict, ch));
+                *to++ = (char) status;
+            }
             else
                 return(create_error(SPELL_ERR_BADWORD));
         }
@@ -479,7 +483,7 @@ get_and_display_words(
     S32 res = 1;
     PC_U8 src;
     P_U8 dst;
-    S32 ch;
+    U8 ch;
     S32 y;
 
     if(fillall)
@@ -493,7 +497,7 @@ get_and_display_words(
         do  {
             ch = *src++;
             if(ch)
-                ch = spell_tolower(dict, ch);
+                ch = (char) spell_tolower(dict, ch);
             *dst++ = ch;
         }
         while(ch);
@@ -1369,7 +1373,10 @@ anagrams_fn_action(
     *array = CH_NULL;
     while((ch = *from++) != CH_NULL)
     {
-        ch = spell_tolower(mdsp->dict, ch);
+        res = spell_tolower(mdsp->dict, ch);
+        if(status_fail(res))
+            return(reperr_null(res));
+        ch = (char) res;
 
         for(to = array; ; to++)
         {
@@ -1701,7 +1708,7 @@ dumpdictionary_fn_action(void)
     if(str_isblank(name))
         return(reperr_null(ERR_BAD_NAME));
 
-    (void) file_add_prefix_to_name(buffer, elemof32(buffer), name, currentfilename);
+    (void) file_add_prefix_to_name(buffer, elemof32(buffer), name, currentfilename());
 
     false_return(mystr_set(&dumpdict_statics.name, buffer));
 

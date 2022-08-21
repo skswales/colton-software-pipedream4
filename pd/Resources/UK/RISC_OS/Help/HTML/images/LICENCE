@@ -1,0 +1,27 @@
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+| Copyright (C) 2014-2020 Stuart Swales
+
+This licence also applies to the following files in this directory and in
+the given subdirectories that do not contain the above licence and are not
+covered by any other licence:
+
+ *.png
+
+The following files in this directory are Public Domain and do not contain
+any licence statement:
+
+ toolbar/copy.png
+ toolbar/cut.png
+ toolbar/paste.png
+ toolbar/print.png
+ toolbar/save.png
+ toolbar/search.png
+
+These files were derived from the (Public Domain) Tango Icon Library 0.8.90
+icon sets and have been converted via RISC OS Sprite format for RISC OS
+application toolbar usage with suitable contrast enhancements.
+
+ http://tango.freedesktop.org/Tango_Icon_Library

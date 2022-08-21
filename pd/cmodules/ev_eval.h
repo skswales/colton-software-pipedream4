@@ -143,16 +143,15 @@ typedef struct EV_CELL
 EV_CELL, * P_EV_CELL, ** P_P_EV_CELL;
 
 /*
-evaluator option block
+evaluator option block (no need to be packed)
 */
 
 typedef struct EV_OPTBLOCK
 {
-    UBF american_date : 1;
-    UBF upper_case : 1;
-    UBF cr : 1;
-    UBF lf : 1;
-    UBF upper_case_slr : 1;
+    bool american_date;
+    bool upper_case;
+    bool lf;
+    bool upper_case_slr;
 }
 EV_OPTBLOCK, * P_EV_OPTBLOCK; typedef const EV_OPTBLOCK * PC_EV_OPTBLOCK;
 
@@ -452,6 +451,7 @@ enum DID_NUMBERS
     RPN_FNF_C_MUL       ,
     RPN_FNF_C_POWER     ,
     RPN_FNF_C_RADIUS    ,
+    RPN_FNV_C_ROUND     ,
     RPN_FNF_C_SEC       ,
     RPN_FNF_C_SECH      ,
     RPN_FNF_C_SIN       ,
@@ -814,7 +814,7 @@ static inline BOOL
 ss_data_is_string(
     _InRef_     PC_SS_DATA p_ss_data)
 {
-    return( (RPN_DAT_STRING >= ss_data_get_data_id(p_ss_data)) || (RPN_RES_STRING <= ss_data_get_data_id(p_ss_data)) );
+    return( (ss_data_get_data_id(p_ss_data) >= RPN_DAT_STRING) && (ss_data_get_data_id(p_ss_data) <= RPN_RES_STRING) );
 }
 
 _Check_return_
@@ -833,6 +833,15 @@ ss_data_get_real(
 {
     assert(ss_data_is_real(p_ss_data));
     return(p_ss_data->arg.fp);
+}
+
+_Check_return_
+static inline PC_F64
+ss_data_get_pc_real(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_real(p_ss_data));
+    return(&p_ss_data->arg.fp);
 }
 
 _Check_return_
@@ -1161,8 +1170,8 @@ extern S32
 ev_alert(
     _InVal_     EV_DOCNO docno,
     _In_z_      PC_U8Z message,
-    _In_z_      PC_U8Z but1_text,
-    _In_z_      PC_U8Z but2_text);
+    _In_opt_z_  PC_U8Z but1_text,
+    _In_opt_z_  PC_U8Z but2_text);
 
 extern void
 ev_alert_close(void);
@@ -1198,8 +1207,8 @@ extern S32
 ev_input(
     _InVal_     EV_DOCNO docno,
     _In_z_      PC_U8Z message,
-    _In_z_      PC_U8Z but1_text,
-    _In_z_      PC_U8Z but2_text);
+    _In_opt_z_  PC_U8Z but1_text,
+    _In_opt_z_  PC_U8Z but2_text);
 
 extern void
 ev_input_close(void);
@@ -1223,6 +1232,13 @@ _Check_return_
 extern EV_ROW
 ev_numrow(
     _InVal_     DOCNO docno);
+
+_Check_return_
+extern STATUS
+ev_numform(
+    _InoutRef_  P_QUICK_UBLOCK p_quick_ublock,
+    _In_z_      PC_USTR ustr,
+    _InRef_     PC_SS_DATA p_ss_data);
 
 _Check_return_
 _Ret_maybenone_
@@ -1441,6 +1457,7 @@ error definition
     errorstring(EVAL_ERR_MANYEXTREF,     "More than 1 file loaded") \
     errorstring(EVAL_ERR_BADRPN,         "Bad compiled data") \
     errorstring(EVAL_ERR_EXPTOOLONG,     "Formula too long") \
+    errorstring(EVAL_ERR_CALC_FAILURE,   "Internal evaluator error (CF)") \
     errorstring(EVAL_ERR_BADEXPR,        "Mistake in formula") \
     errorstring(EVAL_ERR_UNEXNUMBER,     "Number not expected") \
     errorstring(EVAL_ERR_UNEXSTRING,     "String not expected") \
@@ -1466,7 +1483,7 @@ error definition
     errorstring(EVAL_ERR_BADGOTO,        "Bad target for GOTO") \
     errorstring(EVAL_ERR_BADLOOPNEST,    "Wrongly nested loop") \
     errorstring(EVAL_ERR_ARGRANGE,       "Parameter out of range") \
-    errorstring(EVAL_ERR_BADTIME,        "Bad time") \
+    errorstring(EVAL_ERR_BAD_TIME,       "Bad time") \
     errorstring(EVAL_ERR_BADIFNEST,      "Wrongly nested IF ELSE ELSEIF ENDIF") \
     errorstring(EVAL_ERR_MISMATCHED_MATRICES, "Mismatched matrices") \
     errorstring(EVAL_ERR_MATRIX_NOT_NUMERIC,  "Matrix not numeric") \
@@ -1486,77 +1503,89 @@ error definition
     errorstring(EVAL_ERR_MATRIX_NOT_SQUARE,   "Matrix is not square") \
     errorstring(EVAL_ERR_MATRIX_SINGULAR,     "Matrix is singular") \
     errorstring(EVAL_ERR_NO_VALID_DATA,       "No valid data found")\
-    errorstring(EVAL_ERR_CALC_FAILURE,        "Internal evaluator error (CF)")
+    errorstring(EVAL_ERR_ODF_VALUE,       "#VALUE!") \
+    errorstring(EVAL_ERR_ODF_NUM,         "#NUM!") \
+    errorstring(EVAL_ERR_ODF_NA,          "#N/A")
 
 /*
 error definition
 */
 
-#define EVAL_ERR_BASE                (-2000)
+#define EVAL_ERR_BASE   (-2000)
 
-#define EVAL_ERR_IRR                 (-2000)
-#define EVAL_ERR_BAD_LOG             (-2001)
-#define EVAL_ERR_BAD_DATE            (-2002)
-#define EVAL_ERR_LOOKUP              (-2003)
-#define EVAL_ERR_NEG_ROOT            (-2004)
-#define EVAL_ERR_PROPAGATED          (-2005)
-#define EVAL_ERR_DIVIDEBY0           (-2006)
-#define EVAL_ERR_BAD_INDEX           (-2007)
-#define EVAL_ERR_FPERROR             (-2008)
-#define EVAL_ERR_CIRC                (-2009)
-#define EVAL_ERR_CANTEXTREF          (-2010)
-#define EVAL_ERR_MANYEXTREF          (-2011)
-#define EVAL_ERR_BADRPN              (-2012)
-#define EVAL_ERR_EXPTOOLONG          (-2013)
-#define EVAL_ERR_spare_2014          (-2014)
-#define EVAL_ERR_BADEXPR             (-2015)
-#define EVAL_ERR_UNEXNUMBER          (-2016)
-#define EVAL_ERR_UNEXSTRING          (-2017)
-#define EVAL_ERR_UNEXDATE            (-2018)
-#define EVAL_ERR_NAMEUNDEF           (-2019)
-#define EVAL_ERR_UNEXRANGE           (-2020)
-#define EVAL_ERR_INTERNAL            (-2021)
-#define EVAL_ERR_CUSTOMUNDEF         (-2022)
-#define EVAL_ERR_NESTEDARRAY         (-2023)
-#define EVAL_ERR_UNEXARRAY           (-2024)
-#define EVAL_ERR_LOCALUNDEF          (-2025)
-#define EVAL_ERR_NORETURN            (-2026)
-#define EVAL_ERR_NA                  (-2027)
-#define EVAL_ERR_NOTIMPLEMENTED      (-2028)
-#define EVAL_ERR_SLR_BAD_REF         (-2029)
-#define EVAL_ERR_NOTIME              (-2030)
-#define EVAL_ERR_NODATE              (-2031)
-#define EVAL_ERR_BADIDENT            (-2032)
-#define EVAL_ERR_BADCOMPLEX          (-2033)
-#define EVAL_ERR_OUTOFRANGE          (-2034)
-#define EVAL_ERR_SUBSCRIPT           (-2035)
-#define EVAL_ERR_BADCONTROL          (-2036)
-#define EVAL_ERR_BADGOTO             (-2037)
-#define EVAL_ERR_BADLOOPNEST         (-2038)
-#define EVAL_ERR_ARGRANGE            (-2039)
-#define EVAL_ERR_BADTIME             (-2040)
-#define EVAL_ERR_BADIFNEST           (-2041)
-#define EVAL_ERR_MISMATCHED_MATRICES (-2042)
-#define EVAL_ERR_MATRIX_NOT_NUMERIC  (-2043)
-#define EVAL_ERR_MATRIX_WRONG_SIZE   (-2044)
-#define EVAL_ERR_MIXED_SIGNS         (-2045)
-#define EVAL_ERR_ACCURACY_LOST       (-2046)
-#define EVAL_ERR_UNEXFORMULA         (-2047)
-#define EVAL_ERR_FUNARGS             (-2048)
-#define EVAL_ERR_CBRACKETS           (-2049)
-#define EVAL_ERR_DBASENEST           (-2050)
-#define EVAL_ERR_ARGTYPE             (-2051)
-#define EVAL_ERR_CUSTOMEXISTS        (-2052)
-#define EVAL_ERR_ARGCUSTTYPE         (-2053)
-#define EVAL_ERR_ARRAYEXPAND         (-2054)
-#define EVAL_ERR_CARRAY              (-2055)
-#define EVAL_ERR_OWNCOLUMN           (-2056)
-#define EVAL_ERR_MATRIX_NOT_SQUARE   (-2057)
-#define EVAL_ERR_MATRIX_SINGULAR     (-2058)
-#define EVAL_ERR_NO_VALID_DATA       (-2059)
-#define EVAL_ERR_CALC_FAILURE        (-2060)
+#define EVAL_ERR(n)     (EVAL_ERR_BASE - (n))
 
-#define EVAL_ERR_END                 (-2061)
+#define EVAL_ERR_IRR                 EVAL_ERR(0)
+#define EVAL_ERR_error_rq            EVAL_ERR(1) /* not used as such in PipeDream */
+#define EVAL_ERR_BAD_DATE            EVAL_ERR(2)
+#define EVAL_ERR_LOOKUP              EVAL_ERR(3)
+#define EVAL_ERR_NEG_ROOT            EVAL_ERR(4)
+#define EVAL_ERR_PROPAGATED          EVAL_ERR(5)
+#define EVAL_ERR_DIVIDEBY0           EVAL_ERR(6)
+#define EVAL_ERR_BAD_INDEX           EVAL_ERR(7)
+#define EVAL_ERR_FPERROR             EVAL_ERR(8)
+#define EVAL_ERR_CIRC                EVAL_ERR(9)
+#define EVAL_ERR_CANTEXTREF          EVAL_ERR(10)
+#define EVAL_ERR_MANYEXTREF          EVAL_ERR(11) /* different */
+#define EVAL_ERR_BADRPN              EVAL_ERR(12)
+#define EVAL_ERR_EXPTOOLONG          EVAL_ERR(13)
+#define EVAL_ERR_CALC_FAILURE        EVAL_ERR(14)
+#define EVAL_ERR_BADEXPR             EVAL_ERR(15)
+#define EVAL_ERR_UNEXNUMBER          EVAL_ERR(16)
+#define EVAL_ERR_UNEXSTRING          EVAL_ERR(17)
+#define EVAL_ERR_UNEXDATE            EVAL_ERR(18)
+#define EVAL_ERR_NAMEUNDEF           EVAL_ERR(19)
+#define EVAL_ERR_UNEXRANGE           EVAL_ERR(20)
+#define EVAL_ERR_INTERNAL            EVAL_ERR(21)
+#define EVAL_ERR_CUSTOMUNDEF         EVAL_ERR(22)
+#define EVAL_ERR_NESTEDARRAY         EVAL_ERR(23)
+#define EVAL_ERR_UNEXARRAY           EVAL_ERR(24)
+#define EVAL_ERR_LOCALUNDEF          EVAL_ERR(25)
+#define EVAL_ERR_NORETURN            EVAL_ERR(26)
+#define EVAL_ERR_NA                  EVAL_ERR(27) /* different */
+#define EVAL_ERR_NOTIMPLEMENTED      EVAL_ERR(28)
+#define EVAL_ERR_SLR_BAD_REF         EVAL_ERR(29)
+#define EVAL_ERR_NOTIME              EVAL_ERR(30)
+#define EVAL_ERR_NODATE              EVAL_ERR(31)
+#define EVAL_ERR_BADIDENT            EVAL_ERR(32)
+#define EVAL_ERR_BADCOMPLEX          EVAL_ERR(33)
+#define EVAL_ERR_OUTOFRANGE          EVAL_ERR(34)
+#define EVAL_ERR_SUBSCRIPT           EVAL_ERR(35)
+#define EVAL_ERR_BADCONTROL          EVAL_ERR(36)
+#define EVAL_ERR_BADGOTO             EVAL_ERR(37)
+#define EVAL_ERR_BADLOOPNEST         EVAL_ERR(38)
+#define EVAL_ERR_ARGRANGE            EVAL_ERR(39)
+#define EVAL_ERR_BAD_TIME            EVAL_ERR(40)
+#define EVAL_ERR_BADIFNEST           EVAL_ERR(41)
+#define EVAL_ERR_MISMATCHED_MATRICES EVAL_ERR(42)
+#define EVAL_ERR_MATRIX_NOT_NUMERIC  EVAL_ERR(43)
+#define EVAL_ERR_MATRIX_WRONG_SIZE   EVAL_ERR(44)
+#define EVAL_ERR_MIXED_SIGNS         EVAL_ERR(45)
+#define EVAL_ERR_ACCURACY_LOST       EVAL_ERR(46)
+#define EVAL_ERR_UNEXFORMULA         EVAL_ERR(47)
+#define EVAL_ERR_FUNARGS             EVAL_ERR(48)
+#define EVAL_ERR_CBRACKETS           EVAL_ERR(49)
+#define EVAL_ERR_DBASENEST           EVAL_ERR(50)
+#define EVAL_ERR_ARGTYPE             EVAL_ERR(51)
+#define EVAL_ERR_CUSTOMEXISTS        EVAL_ERR(52)
+#define EVAL_ERR_ARGCUSTTYPE         EVAL_ERR(53)
+#define EVAL_ERR_ARRAYEXPAND         EVAL_ERR(54)
+#define EVAL_ERR_CARRAY              EVAL_ERR(55)
+#define EVAL_ERR_OWNCOLUMN           EVAL_ERR(56)
+#define EVAL_ERR_BAD_LOG             EVAL_ERR(57)
+#define EVAL_ERR_MATRIX_NOT_SQUARE   EVAL_ERR(58)
+#define EVAL_ERR_MATRIX_SINGULAR     EVAL_ERR(59)
+#define EVAL_ERR_NO_VALID_DATA       EVAL_ERR(60)
+#define EVAL_ERR_database            EVAL_ERR(61) /* not used as such in PipeDream */
+#define EVAL_ERR_ODF_VALUE           EVAL_ERR(62)
+#define EVAL_ERR_ODF_NUM             EVAL_ERR(63)
+#define EVAL_ERR_ODF_NA              EVAL_ERR(64)
+
+#define EVAL_ERR_END                 EVAL_ERR(65)
+
+#define EVAL_ERR_ODF_DIV0            EVAL_ERR_DIVIDEBY0
+
+#define EVAL_ERR_TOO_MANY_FUNARGS    EVAL_ERR_FUNARGS
 
 #endif /* __ev_eval_h */
 

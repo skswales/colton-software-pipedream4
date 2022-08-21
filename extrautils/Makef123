@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (C) 2013-2018 Stuart Swales
+# Copyright (C) 2013-2020 Stuart Swales
 
 URD=$.pipedream.trunk
 
@@ -19,7 +19,7 @@ CMODULES=$(PD).cmodules
 
 CC=cc
 CCflags_BASE=-c -I$(PD) -DRISCOS -DNDEBUG -throwback
-CCflags=$(CCflags_BASE) -Otime
+CCflags=$(CCflags_BASE) -Otime -faf
 #CCflags=$(CCflags_BASE) -g
 
 LD=link
@@ -60,20 +60,20 @@ lotus-converters:   \
     @.o.123pd_ltp \
     @.o.pd123_ltp \
     C:o.Stubs
-    $(LD) $(Linkflags) -base &8000 \
+    $(LD) $(Linkflags) \
     @.o.123pd_ltp \
     @.o.pd123_ltp \
     C:o.Stubs
-    Squeeze $@
+    Squeeze -v $@
     Info $@
 
 @.PD123.Apps.Utilities.!PD123.u_ptl: \
     @.o.123pd_ptl \
     @.o.pd123_ptl \
     C:o.Stubs
-    $(LD) $(Linkflags) -base &8000 \
+    $(LD) $(Linkflags) \
     @.o.123pd_ptl \
     @.o.pd123_ptl \
     C:o.Stubs
-    Squeeze $@
+    Squeeze -v $@
     Info $@

@@ -1,5 +1,5 @@
---- _src	2019-07-29 19:42:18.000000000 +0100
-+++ _dst	2019-07-30 11:45:38.810000000 +0100
+--- _src	2020-07-01 11:59:59.930000000 +0100
++++ _dst	2020-07-01 11:57:30.440000000 +0100
 @@ -32,6 +32,8 @@
   *
   */
@@ -174,7 +174,12 @@
      if ((i->flags & mask) == settings) {
        tracef1("Found icon %i.\n", *j);
        return(1);
-@@ -188,8 +283,15 @@
+@@ -184,12 +279,20 @@
+   return(0);
+ }
+ 
++#ifndef SKS_ACW
+ static int dbox__findiconbefore(dbox d,
    wimp_iconflags mask, wimp_iconflags settings, wimp_i *j)
  /* Does not look at the current icon. */
  {
@@ -190,7 +195,11 @@
      if ((i->flags & mask) == settings) {
        tracef1("Found icon %i.\n", *j);
        return(1);
-@@ -200,6 +302,8 @@
+@@ -197,9 +300,12 @@
+   }
+   return(0);
+ }
++#endif /* SKS_ACW */
  
  /* -------- Icons and Fields. -------- */
  
@@ -199,7 +208,7 @@
  #ifndef UROM
  static dbox_field dbox__icontofield(wimp_i i)
  {
-@@ -207,6 +311,8 @@
+@@ -207,6 +313,8 @@
  }
  #endif
  
@@ -208,7 +217,7 @@
  static wimp_i dbox__fieldtoicon(dbox_field f)
  {
    return(f);
-@@ -214,7 +320,12 @@
+@@ -214,7 +322,12 @@
  
  static wimp_icon *dbox__iconhandletoptr(dbox d, wimp_i i)
  {
@@ -221,7 +230,7 @@
  }
  
  static wimp_icon *dbox__fieldtoiconptr(dbox d, dbox_field f)
-@@ -224,7 +335,11 @@
+@@ -224,7 +337,11 @@
  
  static wimp_iconflags dbox__ibutflags(wimp_icon *i)
  {
@@ -233,7 +242,7 @@
  }
  
  static dbox_fieldtype dbox__iconfieldtype(wimp_icon *i)
-@@ -245,6 +360,8 @@
+@@ -245,6 +362,8 @@
    }
  }
  
@@ -242,7 +251,7 @@
  static BOOL dbox__has_action_button(dbox d)
  {
     wimp_i j;
-@@ -264,26 +381,37 @@
+@@ -264,26 +383,37 @@
  
  static int dbox__min(int a, int b) {if (a<b) {return(a);} else {return(b);}}
  
@@ -280,7 +289,7 @@
    wimp_icon *i = dbox__fieldtoiconptr(d, f);
    if ((i->flags & wimp_ITEXT) == 0)
    {
-@@ -324,10 +452,14 @@
+@@ -324,10 +454,14 @@
      /* prod it, to cause redraw */
      wimpt_noerr(wimp_set_icon_state(d->w, dbox__fieldtoicon(f), 0, 0));
    }
@@ -295,7 +304,7 @@
    wimp_icon *i = dbox__fieldtoiconptr(d, f);
    int j = 0;
    char *from;
-@@ -348,6 +480,9 @@
+@@ -348,6 +482,9 @@
      (void) memcpy(buffer, from, j);
    }
    buffer[j] = 0;
@@ -305,7 +314,7 @@
    tracef1("GetField returns %s.\n", (int) buffer);
  }
  
-@@ -361,6 +496,7 @@
+@@ -361,6 +498,7 @@
  
  void dbox_setnumeric(dbox d, dbox_field f, int n)
  {
@@ -313,7 +322,7 @@
    char a[20];
    wimp_icon *i = dbox__fieldtoiconptr(d, f);
    dbox_fieldtype ftype = dbox__iconfieldtype(i);
-@@ -379,10 +515,25 @@
+@@ -379,10 +517,25 @@
        sprintf(a, "%i", n);
        dbox_setfield((dbox) d, f, a);
    }
@@ -339,7 +348,7 @@
    char a[20];
    int n;
    int i;
-@@ -420,6 +571,20 @@
+@@ -420,6 +573,20 @@
      if (neg) {n = -n;}
      if (fail) {n = 0;}
    }
@@ -360,7 +369,7 @@
    return(n);
  }
  
-@@ -469,6 +634,140 @@
+@@ -469,6 +636,140 @@
    }
  }
  
@@ -501,7 +510,7 @@
  static BOOL dbox__hitbutton(dbox d, int button)
  /* A button is an action button or an on/off switch. "button" counts only
  such interesting buttons, button==0 -> the first one in the DBox. Find the
-@@ -478,6 +777,7 @@
+@@ -478,6 +779,7 @@
    wimp_icon *i;
    int j = 0; /* counts icons */
    dbox_fieldtype f;
@@ -509,7 +518,7 @@
    wimp_icon icon;
    BOOL icon_found = FALSE;
  
-@@ -511,57 +811,125 @@
+@@ -511,57 +813,125 @@
        /* not the right sort of icon: keep going. */
      }
    }
@@ -646,7 +655,7 @@
        case akbd_Fn+1:
        case akbd_Fn+2:
        case akbd_Fn+3:
-@@ -571,87 +939,150 @@
+@@ -571,87 +941,152 @@
        case akbd_Fn+7:
        case akbd_Fn+8:
        case akbd_Fn+9:
@@ -740,6 +749,7 @@
 -          tracef1("Caret is in icon %i.\n", c.i);
 -          if (c.i == (wimp_i) -1) {
 +
++#ifndef SKS_ACW /* leave to Window Manager Kat validation processing now */
 +#if defined(PDACTION)
 +      case akbd_TabK:
 +#endif /* PDACTION */
@@ -825,6 +835,7 @@
 +            setcaretpos = TRUE;
            }
            break;
++#endif /* SKS_ACW */
 +
        default:
            /* If not to a field and this is a letter, try matching it
@@ -847,7 +858,7 @@
                  BOOL found = FALSE;
  
                  if ((i->flags & wimp_INDIRECT) != 0) {
-@@ -663,12 +1094,13 @@
+@@ -663,12 +1098,13 @@
                  while (1) {
                    target = *targetptr++;
                    if (target == 0) break;
@@ -863,7 +874,7 @@
                    if (isupper(target)) break;
                  }
                  if (found) break;
-@@ -680,17 +1112,33 @@
+@@ -680,17 +1116,33 @@
              tracef1("Key code %i ignored.\n", e->data.key.chcode);
              wimp_processkey(e->data.key.chcode);
            }
@@ -899,7 +910,7 @@
  dbox dbox_new(char *name)
  {
    dbox d = dbox__fromtemplate(template_find(name));
-@@ -734,7 +1182,50 @@
+@@ -734,7 +1186,50 @@
    return d;
  }
  
@@ -951,7 +962,7 @@
  
  static void dbox__doshow(dbox d, BOOL isstatic)
  /* This is complicated by the following case: if the show is as a result
-@@ -744,61 +1235,100 @@
+@@ -744,61 +1239,100 @@
    wimp_mousestr m;
    wimp_caretstr c;
    wimp_openstr o;
@@ -1093,7 +1104,7 @@
    }
  }
  
-@@ -810,13 +1340,15 @@
+@@ -810,13 +1344,15 @@
    dbox__doshow(d, TRUE);
  }
  
@@ -1112,7 +1123,7 @@
      win_activedec();
      if (d->w == dbox__submenu) {
        wimp_wstate ws;
-@@ -835,18 +1367,42 @@
+@@ -835,18 +1371,42 @@
        tracef0("hiding non-submenu dbox.\n");
        wimpt_noerr(wimp_close_wind(d->w));
      }
@@ -1156,7 +1167,7 @@
  }
  
  /* -------- Event processing. -------- */
-@@ -856,106 +1412,172 @@
+@@ -856,106 +1416,172 @@
  to see where in the text they've got to so far. dboxes with no fill-in fields
  do not even try to get the caret. */
  
@@ -1415,7 +1426,7 @@
  dbox_field dbox_fillin(dbox d)
  {
    wimp_i j = 0;
-@@ -996,6 +1618,16 @@
+@@ -996,6 +1622,16 @@
     return dbox_fillin_loop(d);
  }
  
@@ -1432,7 +1443,7 @@
  
  #ifndef UROM
  dbox_field dbox_popup(char *name, char *message)
-@@ -1012,6 +1644,8 @@
+@@ -1012,6 +1648,8 @@
  }
  #endif
  
@@ -1441,7 +1452,7 @@
  BOOL dbox_persist(void) {
    wimp_mousestr m;
    wimpt_noerr(wimp_get_point_info(&m));
-@@ -1031,7 +1665,76 @@
+@@ -1033,7 +1671,76 @@
  void dbox_init(void)
  {
  

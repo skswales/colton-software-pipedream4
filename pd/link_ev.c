@@ -67,8 +67,8 @@ extern S32
 ev_alert(
     _InVal_     EV_DOCNO docno,
     _In_z_      PC_U8Z message,
-    _In_z_      PC_U8Z but1_text,
-    _In_z_      PC_U8Z but2_text)
+    _In_opt_z_  PC_U8Z but1_text,
+    _In_opt_z_  PC_U8Z but2_text)
 {
     S32 res;
     char title[BUF_EV_LONGNAMLEN];
@@ -77,7 +77,9 @@ ev_alert(
     if(user_alert)
         userIO_alert_user_close(&user_alert);
 
-    res = userIO_alert_user_open(&user_alert, title, message, but1_text, but2_text);
+    res = userIO_alert_user_open(&user_alert, title, message,
+                                 str_isblank(but1_text) ? OK_STR : but1_text,
+                                 (NULL != but2_text) && str_isblank(but2_text) ? Cancel_STR : but2_text);
 
     return(res);
 }
@@ -255,8 +257,8 @@ extern S32
 ev_input(
     _InVal_     EV_DOCNO docno,
     _In_z_      PC_U8Z message,
-    _In_z_      PC_U8Z but1_text,
-    _In_z_      PC_U8Z but2_text)
+    _In_opt_z_  PC_U8Z but1_text,
+    _In_opt_z_  PC_U8Z but2_text)
 {
     S32 res;
     char title[BUF_EV_LONGNAMLEN];
@@ -265,7 +267,9 @@ ev_input(
     if(user_input)
         userIO_input_from_user_close(&user_input);
 
-    res = userIO_input_from_user_open(&user_input, title, message, but1_text, but2_text);
+    res = userIO_input_from_user_open(&user_input, title, message,
+                                      str_isblank(but1_text) ? OK_STR : but1_text,
+                                      (NULL != but2_text) && str_isblank(but2_text) ? Cancel_STR : but2_text);
 
     return(res);
 }
@@ -418,6 +422,30 @@ ev_numrow(
 
 /******************************************************************************
 *
+* convert a value to a string
+*
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+ev_numform(
+    _InoutRef_  P_QUICK_UBLOCK p_quick_ublock,
+    _In_z_      PC_USTR ustr,
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    NUMFORM_PARMS numform_parms /*= NUMFORM_PARMS_INIT*/;
+
+    numform_parms.ustr_numform_numeric =
+    numform_parms.ustr_numform_datetime =
+    numform_parms.ustr_numform_texterror = ustr;
+
+    numform_parms.p_numform_context = get_p_numform_context();
+
+    return(numform(p_quick_ublock, P_QUICK_UBLOCK_NONE, p_ss_data, &numform_parms));
+}
+
+/******************************************************************************
+*
 * get pointer to spreadsheet instance data
 *
 ******************************************************************************/
@@ -488,11 +516,12 @@ ev_report_ERROR_CUSTOM(
     _InRef_     PC_SS_DATA p_ss_data)
 {
     U8Z buffer[BUF_MAX_REFERENCE];
+    const EV_DOCNO report_ev_docno = (EV_DOCNO) p_ss_data->arg.ss_error.docno;
 
     if(!reporting_is_enabled())
         return;
 
-    (void) ev_write_docname(buffer, p_ss_data->arg.ss_error.docno, current_docno());
+    (void) ev_write_docname(buffer, report_ev_docno, report_ev_docno); /* current_docno() is likely to be DOCNO_NONE */
 
     reportf("ERROR_CUSTOM: %s Row: %d Error: %s",
             buffer,
@@ -513,11 +542,10 @@ ev_set_options(
 {
     P_DOCU p_docu;
 
-    p_optblock->american_date = 0;
-    p_optblock->upper_case = 0;
-    p_optblock->cr = 0;
-    p_optblock->lf = 1;
-    p_optblock->upper_case_slr = 1;
+    p_optblock->american_date = false;
+    p_optblock->upper_case = false;
+    p_optblock->lf = true;
+    p_optblock->upper_case_slr = true;
 
     if((NO_DOCUMENT == (p_docu = p_docu_from_docno(docno)))  ||  docu_is_thunk(p_docu))
         return;

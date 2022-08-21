@@ -422,7 +422,7 @@ InsertColourChange_fn(void)
     if(CH_NULL == get_text_at_char())
         return;
 
-    if(!riscdialog_choose_colour(&wimp_colour_value, "title"))
+    if(!riscdialog_choose_colour(&wimp_colour_value, Insert_colour_change_STR))
         return;
 
     if(CH_NULL != get_text_at_char())
@@ -602,9 +602,7 @@ constr_initialise_once(void)
     /* load Choices file iff present */
     if(status_done(file_find_on_path(buffer, elemof32(buffer), file_get_search_path(), CHOICES_FILE_STR)))
     {
-        zero_struct(load_file_options);
-        load_file_options.document_name = buffer;
-        load_file_options.filetype_option = PD4_CHAR;
+        load_file_options_init(&load_file_options, buffer, PD4_CHAR);
 
         ok = loadfile_recurse(buffer, &load_file_options);
 

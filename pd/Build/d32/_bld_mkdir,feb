@@ -4,30 +4,56 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2013-2018 Stuart Swales
+| Copyright (C) 2013-2020 Stuart Swales
 |
-dir <Obey$Dir>
+Dir <Obey$Dir>
 |
-cdir            o
-copy ^.!!!waste o.!!!waste ~CF~V
-settype         o.!!!waste Obey
+CDir            o
+Copy ^.!!!waste o.!!!waste ~CF~V
+SetType         o.!!!waste Obey
+Access          o.!!!waste LR/R
 |
-cdir            o.modules
-copy ^.!!!waste o.modules.!!!waste ~CF~V
-settype         o.modules.!!!waste Obey
+CDir            o.modules
+Copy ^.!!!waste o.modules.!!!waste ~CF~V
+SetType         o.modules.!!!waste Obey
+Access          o.modules.!!!waste LR/R
 |
-cdir            utils
-cdir            utils.GB
-cdir            utils.GB.o
-copy ^.!!!waste utils.GB.o.!!!waste ~CF~V
-settype         utils.GB.o.!!!waste obey
+CDir            utils
+CDir            utils.Neutral
+Copy ^.!!!waste utils.Neutral.!!!waste ~CF~V
+SetType         utils.Neutral.!!!waste obey
+Access          utils.Neutral.!!!waste LR/R
+CDir            utils.UK
+Copy ^.!!!waste utils.UK.!!!waste ~CF~V
+SetType         utils.UK.!!!waste obey
+Access          utils.UK.!!!waste LR/R
+CDir            utils.UK.o
+Copy ^.!!!waste utils.UK.o.!!!waste ~CF~V
+SetType         utils.UK.o.!!!waste obey
+Access          utils.UK.o.!!!waste LR/R
 |
-back
+| Extras for d32
+CDir            !PipeDream.Resources
+CDir            !PipeDream.Resources.Neutral
+CDir            !PipeDream.Resources.UK
 |
-dir <Obey$Dir>.^.^.WimpLib.r32
+CDir            !PipeDream.Resources.Neutral.RISC_OS
 |
-cdir                       o
-copy <Obey$Dir>.^.!!!waste o.!!!waste ~CF~V
-settype                    o.!!!waste Obey
+CDir            !PipeDream.Resources.UK.RISC_OS
+CDir            !PipeDream.Resources.UK.RISC_OS.WTemplates
 |
-back
+CDir            !PipeDream.Resources.Neutral.Markers
+CDir            !PipeDream.Resources.Neutral.Pictures
+|
+CDir            !PipeDream.Resources.UK.Templates
+|
+Back
+|
+Dir <Obey$Dir>.^.^.WimpLib.r32
+|
+CDir                       o
+Copy <Obey$Dir>.^.!!!waste o.!!!waste ~CF~V
+SetType                    o.!!!waste Obey
+Access                     o.!!!waste LR/R
+|
+Back

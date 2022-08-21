@@ -1,0 +1,79 @@
+* PipeDream - Help *
+
+You are seeing this text help file as no browser was
+available to display HTML help files. It may be
+helpful to run a browser and then display Help again.
+
+
+* Online Resources *
+
+Many resources for PipeDream are available online:
+
+The PipeDream Getting Started Guide
+may be accessed online at
+http://croftnuisk.co.uk/coltsoft/pipedream/getting_started/
+
+The PipeDream Reference Guide
+may be accessed online at
+http://croftnuisk.co.uk/coltsoft/pipedream/reference_guide/
+
+Addenda and Errata to the printed documentation
+may be accessed online at
+http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/
+
+Hints and Tips on using PipeDream
+may be accessed online at
+http://croftnuisk.co.uk/coltsoft/pipedream/hints_and_tips/
+
+Updated PipeDream packages, including manuals and
+example files used in the PipeDream Getting Started Guide,
+may be obtained from
+http://croftnuisk.co.uk/coltsoft/pipedream/downloads/
+
+
+* Support *
+
+PipeDream is now open source and completely free to use,
+so support is a self-help affair.
+There is a Google Group colton-software-pipedream
+ Web site: http://groups.google.com/group/colton-software-pipedream
+ E-mail: colton-software-pipedream@googlegroups.com
+where you may seek help from other users.
+Please include files which demonstrate any problems
+(using a Spark or ZIP archive).
+
+
+* Copyright and Licence *
+
+Copyright (C) 1987-2020 Colton Software
+
+The HTML help files contain additional copyright information
+that pertains to certain portions of PipeDream.
+
+Thanks to Richard Colton, PipeDream is now
+open source and completely free to use!
+
+PipeDream is made available to you under the terms
+of the Mozilla Public License, v. 2.0.
+You may obtain a copy of the MPL at:
+http://mozilla.org/MPL/2.0/ .
+
+This means you may use, copy and distribute PipeDream
+to others. You are also welcome to modify the source
+code of PipeDream as you want to meet your needs
+The Mozilla Public License also gives you the right
+to distribute your modified versions.
+
+The PipeDream source code may be downloaded from its
+Subversion repository, kindly hosted on riscos.info:
+svn://svn.riscos.info/pipedream . 
+
+
+* Release Notes *
+
+The release notes for this version of PipeDream may
+be found in the application's directory. As they are
+in HTML format you will need to use a browser.
+
+A fuller release history may be found online:
+http://croftnuisk.co.uk/coltsoft/pipedream/release_history/

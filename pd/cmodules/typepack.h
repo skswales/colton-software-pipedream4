@@ -318,13 +318,21 @@ writing to memory - assume unaligned access works, even if slower
 */
 
 /* used below for things that work ok by simple pointer op */
+#ifdef CROSS_COMPILE
+/* stop winges about narrowing with /W4 */
+#define __writeval_generic16(to, val, type) ( \
+    * (type *) (to) = (type) (val) )
+#else
+#define __writeval_generic16(to, val, type) ( \
+    * (type *) (to) = (val) )
+#endif
 #define __writeval_generic(to, val, type) ( \
     * (type *) (to) = (val) )
 
 #if BYTE_ORDER == BIG_ENDIAN
-#define writeval_U16_BE(to, u16) __writeval_generic(to, u16, U16)
+#define writeval_U16_BE(to, u16) __writeval_generic16(to, u16, U16)
 #define writeval_U32_BE(to, u32) __writeval_generic(to, u32, U32)
-#define writeval_S16_BE(to, s16) __writeval_generic(to, s16, S16)
+#define writeval_S16_BE(to, s16) __writeval_generic16(to, s16, S16)
 #define writeval_S32_BE(to, s32) __writeval_generic(to, s32, S32)
 
 #define writeval_U16(to, u16) writeval_U16_BE(to, u16)
@@ -332,9 +340,9 @@ writing to memory - assume unaligned access works, even if slower
 #define writeval_S16(to, s16) writeval_S16_BE(to, s16)
 #define writeval_S32(to, s32) writeval_S32_BE(to, s32)
 #elif BYTE_ORDER == LITTLE_ENDIAN
-#define writeval_U16_LE(to, u16) __writeval_generic(to, u16, U16)
+#define writeval_U16_LE(to, u16) __writeval_generic16(to, u16, U16)
 #define writeval_U32_LE(to, u32) __writeval_generic(to, u32, U32)
-#define writeval_S16_LE(to, s16) __writeval_generic(to, s16, S16)
+#define writeval_S16_LE(to, s16) __writeval_generic16(to, s16, S16)
 #define writeval_S32_LE(to, s32) __writeval_generic(to, s32, S32)
 
 #define writeval_U16(to, u16) writeval_U16_LE(to, u16)

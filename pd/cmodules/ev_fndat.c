@@ -17,15 +17,37 @@
 
 #include "datafmt.h"
 
+#if RISCOS
+#define EXPOSE_RISCOS_SWIS 1
 #include "kernel.h" /*C:*/
-
 #include "swis.h" /*C:*/
+#endif
+
+#include <time.h> /* for struct tm */
 
 /******************************************************************************
 *
 * Date and time functions
 *
 ******************************************************************************/
+
+_Check_return_
+static inline SS_DATE_DATE
+ss_data_get_date_date(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_date(p_ss_data));
+    return(p_ss_data->arg.ss_date.date);
+}
+
+_Check_return_
+static inline SS_DATE_TIME
+ss_data_get_date_time(
+    _InRef_     PC_SS_DATA p_ss_data)
+{
+    assert(ss_data_is_date(p_ss_data));
+    return(p_ss_data->arg.ss_date.time);
+}
 
 /******************************************************************************
 *
@@ -44,14 +66,14 @@ PROC_EXEC_PROTO(c_age)
 
     ss_date_init(&ss_date);
 
-    if( (SS_DATE_NULL != ss_data_get_date(args[0])->date) && (SS_DATE_NULL != ss_data_get_date(args[1])->date) )
+    if( (SS_DATE_NULL != ss_data_get_date_date(args[0])) && (SS_DATE_NULL != ss_data_get_date_date(args[1])) )
     {
-        ss_date.date = ss_data_get_date(args[0])->date - ss_data_get_date(args[1])->date;
+        ss_date.date = ss_data_get_date_date(args[0]) - ss_data_get_date_date(args[1]);
 
-        if( (SS_TIME_NULL != ss_data_get_date(args[0])->time) || (SS_TIME_NULL != ss_data_get_date(args[1])->time) )
+        if( (SS_TIME_NULL != ss_data_get_date_time(args[0])) || (SS_TIME_NULL != ss_data_get_date_time(args[1])) )
         {   /* here 31/12/2015 00:00:00 == 31/12/2015 */
-            SS_DATE_TIME time_1 = (SS_TIME_NULL != ss_data_get_date(args[0])->time) ? ss_data_get_date(args[0])->time : 0;
-            SS_DATE_TIME time_2 = (SS_TIME_NULL != ss_data_get_date(args[1])->time) ? ss_data_get_date(args[1])->time : 0;
+            SS_DATE_TIME time_1 = (SS_TIME_NULL != ss_data_get_date_time(args[0])) ? ss_data_get_date_time(args[0]) : 0;
+            SS_DATE_TIME time_2 = (SS_TIME_NULL != ss_data_get_date_time(args[1])) ? ss_data_get_date_time(args[1]) : 0;
             ss_date.time = time_1 - time_2;
         }
 
@@ -78,6 +100,7 @@ PROC_EXEC_PROTO(c_date)
     S32 our_year = year;
     S32 month = ss_data_get_integer(args[1]);
     S32 day = ss_data_get_integer(args[2]);
+    SS_DATE_DATE dateval;
 
     exec_func_ignore_parms();
 
@@ -86,11 +109,10 @@ PROC_EXEC_PROTO(c_date)
         our_year = sliding_window_year(our_year);
 #endif
 
-    ss_date_init(&p_ss_data_res->arg.ss_date);
-    ss_data_set_data_id(p_ss_data_res, DATA_ID_DATE);
-
-    if(ss_ymd_to_dateval(&p_ss_data_res->arg.ss_date.date, our_year, month, day) < 0)
+    if(ss_ymd_to_dateval(&dateval, our_year, month, day) < 0)
         exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
+
+    ss_data_set_date(p_ss_data_res, dateval, SS_TIME_NULL);
 }
 
 /******************************************************************************
@@ -99,24 +121,43 @@ PROC_EXEC_PROTO(c_date)
 *
 ******************************************************************************/
 
+_Check_return_
+static STATUS
+date_time_value_common_init(
+    _InRef_     PC_SS_DATA p_ss_data,
+    _InoutRef_  P_QUICK_UBLOCK p_quick_ublock)
+{
+    STATUS status;
+    PC_UCHARS uchars = ss_data_get_string(p_ss_data);
+    U32 uchars_n = ss_data_get_string_size(p_ss_data);
+
+    uchars = ss_string_trim_leading_whitespace_uchars(uchars, &uchars_n);
+    uchars = ss_string_trim_trailing_whitespace_uchars(uchars, &uchars_n);
+
+    if(status_ok(status = quick_ublock_uchars_add(p_quick_ublock, uchars, uchars_n)))
+        status = quick_ublock_nullch_add(p_quick_ublock);
+
+    return(status);
+}
+
 PROC_EXEC_PROTO(c_datevalue)
 {
-    UCHARZ buffer[BUF_EV_MAX_STRING_LEN];
-    PC_UCHARS uchars;
-    U32 wss, len;
+    STATUS status;
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 64);
+    quick_ublock_with_buffer_setup(quick_ublock);
 
     exec_func_ignore_parms();
 
-    wss = ss_string_skip_leading_whitespace(args[0]);
-    uchars = uchars_AddBytes_wr(ss_data_get_string(args[0]), wss);
-    len = ss_data_get_string_size(args[0]) - wss;
+    if(status_ok(status = date_time_value_common_init(args[0], &quick_ublock)))
+        status = ss_recog_date_time(p_ss_data_res, quick_ublock_ustr(&quick_ublock), false);
 
-    len = MIN(len, sizeof32(buffer)-1);
-    memcpy32(buffer, uchars, len);
-    buffer[len] = CH_NULL;
+    quick_ublock_dispose(&quick_ublock);
 
-    if( (ss_recog_date_time(p_ss_data_res, ustr_bptr(buffer), 0) < 0) || (SS_DATE_NULL == p_ss_data_res->arg.ss_date.date) )
-        exec_func_status_return(p_ss_data_res, EVAL_ERR_BAD_DATE);
+    if(status_ok(status))
+        if( (status /*recog_res*/ <= 0) || (SS_DATE_NULL == ss_data_get_date_date(p_ss_data_res)) )
+            status = EVAL_ERR_BAD_DATE;
+
+    exec_func_status_return(p_ss_data_res, status);
 }
 
 /******************************************************************************
@@ -133,7 +174,7 @@ PROC_EXEC_PROTO(c_day)
 
     exec_func_ignore_parms();
 
-    status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date, &year, &month, &day);
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &year, &month, &day);
     exec_func_status_return(p_ss_data_res, status);
 
     day_result = day;
@@ -143,52 +184,132 @@ PROC_EXEC_PROTO(c_day)
 
 /******************************************************************************
 *
-* STRING dayname(n | date)
+* STRING dayname(n | date {, mode})
 *
 ******************************************************************************/
+
+static void
+ss_string_ini_cap(
+    _InoutRef_  P_SS_DATA p_ss_data)
+{
+    const U8 u8 = *ss_data_get_string(p_ss_data);
+    const U8 u8_uc = (U8) toupper(u8);
+    *(p_ss_data->arg.string_wr.uchars) = u8_uc;
+}
 
 PROC_EXEC_PROTO(c_dayname)
 {
     PC_USTR ustr_dayname;
-    S32 day = 1;
+    S32 weekday;
+    S32 remainder;
+    S32 day_idx = 0;
 
     exec_func_ignore_parms();
 
     switch(ss_data_get_data_id(args[0]))
     {
     case DATA_ID_DATE:
-        if(SS_DATE_NULL == ss_data_get_date(args[0])->date)
+        if(SS_DATE_NULL == ss_data_get_date_date(args[0]))
             exec_func_status_return(p_ss_data_res, EVAL_ERR_NODATE);
 
-        day = ((ss_data_get_date(args[0])->date + 1) % 7) + 1;
+        weekday = ((ss_data_get_date_date(args[0]) + 1) % 7) + 1; /* [1 (Sunday),7 (Saturday)] - obviously can NOT be modified */
+
+        day_idx = weekday - 1; /* [0,6] */
+
+        if(n_args > 1)
+            exec_func_status_return(p_ss_data_res, EVAL_ERR_TOO_MANY_FUNARGS);
         break;
 
+    default: default_unhandled();
+#if CHECKING
     case DATA_ID_LOGICAL:
     case DATA_ID_WORD16:
     case DATA_ID_WORD32:
-        day = MAX(1, ss_data_get_integer(args[0]));
-        break;
+#endif
+        weekday = ss_data_get_integer(args[0]); /* usually  [1 (Sunday),7 (Saturday)] - may be modified - will range reduce in any case at the end */
 
-    default: default_unhandled(); break;
+        if(n_args > 1)
+        {
+            const S32 mode = ss_data_get_integer(args[1]);
+
+            switch(mode)
+            {
+            case 1: /* Sunday is day one, system 1 */
+                /* normal */
+                break;
+
+            case 2: /* Monday is day one, system 1 */
+                weekday += 1;
+                break;
+
+            case 3: /* Monday is day zero */
+                weekday += 2;
+                break;
+
+            case 11: /* Monday is day one, system 1 */
+            case 12: /* Tuesday is day one, system 1 */
+            case 13: /* Wednesday is day one, system 1 */
+            case 14: /* Thursday is day one, system 1 */
+            case 15: /* Friday is day one, system 1 */
+            case 16: /* Saturday is day one, system 1 */
+            case 17: /* Sunday is day one, system 1 */
+                weekday += (mode - 10);
+                break;
+
+            case 21: /* Monday is day one, system 2 (ISO 8601) */
+            case 150: /* Monday is day one, system 2 (ISO 8601 - as LibreOffice WEEKNUM() for interoperability with Gnumeric) */
+                weekday += 1;
+                break;
+
+            default:
+                exec_func_status_return(p_ss_data_res, EVAL_ERR_ODF_NUM);
+            }
+        }
+
+#if 1
+        remainder = (weekday - 1) % 7; /* deal with implementation-defined negative behaviour */
+        if(remainder < 0)
+            remainder = remainder + 7; /* -> [0,6] */
+
+        day_idx = remainder; /* [0,6] */
+#else
+        day_idx = (weekday - 1) % 7;
+#endif
+        break;
     }
 
-    day = (day - 1) % 7;
-
-    ustr_dayname = get_p_numform_context()->day_names[day];
+    ustr_dayname = get_p_numform_context()->day_names[day_idx]; /* [0 (Sunday),6 (Saturday)] */
 
     if(status_ok(ss_string_make_ustr(p_ss_data_res, ustr_dayname)))
-    {
-        const U8 u8 = *ss_data_get_string(p_ss_data_res);
-        const U8 u8_uc = (U8) toupper(u8);
-        *(p_ss_data_res->arg.string_wr.uchars) = u8_uc;
-    }
+        ss_string_ini_cap(p_ss_data_res);
 }
 
 #if 0 /* just for diff minimization */
 
 /******************************************************************************
 *
-* INTEGER days_360(start_date, end_date {, method})
+* INTEGER days(end_date, start_end)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_days)
+{
+    S32 days_result;
+
+    exec_func_ignore_parms();
+
+    if( (SS_DATE_NULL == ss_data_get_date_date(args[0])) || (SS_DATE_NULL == ss_data_get_date_date(args[1])) )
+        exec_func_status_return(p_ss_data_res, EVAL_ERR_NODATE);
+
+    /* return number of days between two dates */
+    days_result = ss_data_get_date_date(args[0]) /* end_date */ - ss_data_get_date_date(args[1]) /* start_date */;
+
+    ss_data_set_integer(p_ss_data_res, days_result);
+}
+
+/******************************************************************************
+*
+* INTEGER days_360(start_date, end_date {, method:Logical=FALSE})
 *
 ******************************************************************************/
 
@@ -202,7 +323,7 @@ The European Method (30E/360)[1]
 If either date A or B falls on the 31st of the month, that date will be changed to the 30th;
 Where date B falls on the last day of February, the actual date B will be used.
 
-The US/NASD Method (30US/360)[2]
+The National Association of Securities Dealers (NASD) 'US' Method (30US/360)[2]
 If both date A and B fall on the last day of February, then date B will be changed to the 30th.
 If date A falls on the 31st of a month or last day of February, then date A will be changed to the 30th.
 If date A falls on the 30th of a month after applying (2) above and date B falls on the 31st of a month, then date B will be changed to the 30th.
@@ -214,9 +335,9 @@ PROC_EXEC_PROTO(c_days_360)
 {
     BOOL negate_result = FALSE;
     STATUS status;
-    SS_DATE_DATE start_date = ss_data_get_date(args[0])->date;
-    SS_DATE_DATE end_date   = ss_data_get_date(args[1])->date;
-    BOOL european_method = (n_args > 2) (0 != ss_data_get_integer(args[0])) ? FALSE; 
+    SS_DATE_DATE start_date = ss_data_get_date_date(args[0]);
+    SS_DATE_DATE end_date   = ss_data_get_date_date(args[1]);
+    const bool european_method = (n_args > 2) ? ss_data_get_logical(args[2]) : false; 
     S32 start_year, start_month, start_day;
     S32 end_year, end_month, end_day;
     S32 days_360_result;
@@ -302,6 +423,7 @@ edate_eomonth_calc(
     S32 result_month = start_month + delta_months;
     S32 result_day = start_day;
     S32 monthdays;
+    SS_DATE_DATE dateval;
 
     /* does adjusted month underflow or overflow the current year? */
     /* NB can be adjusting by more than one year */
@@ -328,15 +450,14 @@ edate_eomonth_calc(
             result_day = monthdays;
     }
 
-    ss_date_init(&p_ss_data_out->arg.ss_date);
-    ss_data_set_data_id(p_ss_data_res, DATA_ID_DATE);
-    /* I did think about taking the time component across but Excel doesn't */
-
-    if(ss_ymd_to_dateval(&p_ss_data_out->arg.ss_date.date, result_year, result_month, result_day) < 0)
+    if(ss_ymd_to_dateval(&dateval, result_year, result_month, result_day) < 0)
     {
         ss_data_set_error(p_ss_data_out, EVAL_ERR_ARGRANGE);
         return;
     }
+
+    /* I did think about taking the time component across but Excel doesn't */
+    ss_data_set_date(p_ss_data_out, dateval, SS_TIME_NULL);
 }
 
 PROC_EXEC_PROTO(c_edate)
@@ -347,7 +468,7 @@ PROC_EXEC_PROTO(c_edate)
 
     exec_func_ignore_parms();
 
-    status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date, &start_year, &start_month, &start_day);
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &start_year, &start_month, &start_day);
     exec_func_status_return(p_ss_data_res, status);
 
     edate_eomonth_calc(p_ss_data_res, start_year, start_month, start_day, delta_months, FALSE);
@@ -367,7 +488,7 @@ PROC_EXEC_PROTO(c_eomonth)
 
     exec_func_ignore_parms();
 
-    status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date), &start_year, &start_month, &start_day);
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &start_year, &start_month, &start_day);
     exec_func_status_return(p_ss_data_res, status);
 
     edate_eomonth_calc(p_ss_data_res, start_year, start_month, start_day, delta_months, TRUE);
@@ -389,13 +510,65 @@ PROC_EXEC_PROTO(c_hour)
 
     exec_func_ignore_parms();
 
-    status = ss_timeval_to_hms(ss_data_get_date(args[0])->time, &hours, &minutes, &seconds);
+    status = ss_timeval_to_hms(ss_data_get_date_time(args[0]), &hours, &minutes, &seconds);
     exec_func_status_return(p_ss_data_res, status);
 
     hour_result = hours;
 
     ss_data_set_integer(p_ss_data_res, hour_result);
 }
+
+#if 0 /* just for diff minimization */
+
+/******************************************************************************
+*
+* INTEGER return the week number for a date (ISO 8601)
+*
+******************************************************************************/
+
+_Check_return_
+static S32
+calc_isoweeknum(
+    _InVal_     S32 year,
+    _InVal_     S32 month,
+    _InVal_     S32 day)
+{
+    S32 weeknum;
+    U8Z buffer[32];
+    struct tm tm;
+
+    zero_struct_fn(tm);
+    tm.tm_year = (int) (year - 1900);
+    tm.tm_mon  = (int) (month - 1);
+    tm.tm_mday = (int) (day);
+
+    /* actually needs wday and yday setting up! */
+    consume(time_t, mktime(&tm)); /* normalise */
+
+    consume(size_t, strftime(buffer, elemof32(buffer), "%V", &tm)); /* result in [01,53], as we want */
+
+    weeknum = fast_strtoul(buffer, NULL);
+
+    return(weeknum);
+}
+
+PROC_EXEC_PROTO(c_isoweeknum)
+{
+    S32 isoweeknum_result;
+    STATUS status;
+    S32 year, month, day;
+
+    exec_func_ignore_parms();
+
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &year, &month, &day);
+    exec_func_status_return(p_ss_data_res, status); /* bad/missing date? */
+
+    isoweeknum_result = calc_isoweeknum(year, month, day);
+
+    ss_data_set_integer(p_ss_data_res, isoweeknum_result);
+}
+
+#endif
 
 /******************************************************************************
 *
@@ -411,7 +584,7 @@ PROC_EXEC_PROTO(c_minute)
 
     exec_func_ignore_parms();
 
-    status = ss_timeval_to_hms(ss_data_get_date(args[0])->time, &hours, &minutes, &seconds);
+    status = ss_timeval_to_hms(ss_data_get_date_time(args[0]), &hours, &minutes, &seconds);
     exec_func_status_return(p_ss_data_res, status);
 
     minute_result = minutes;
@@ -433,7 +606,7 @@ PROC_EXEC_PROTO(c_month)
 
     exec_func_ignore_parms();
 
-    status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date, &year, &month, &day);
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &year, &month, &day);
     exec_func_status_return(p_ss_data_res, status);
 
     month_result = month;
@@ -455,7 +628,7 @@ PROC_EXEC_PROTO(c_monthdays)
 
     exec_func_ignore_parms();
 
-    status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date, &year, &month, &day);
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &year, &month, &day);
     exec_func_status_return(p_ss_data_res, status);
 
     monthdays_result = (LEAP_YEAR_ACTUAL(year) ? ev_days_in_month_leap[month - 1] : ev_days_in_month[month - 1]);
@@ -482,32 +655,27 @@ PROC_EXEC_PROTO(c_monthname)
         {
         STATUS status;
         S32 year, month, day;
-
-        status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date, &year, &month, &day);
+        status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &year, &month, &day);
         exec_func_status_return(p_ss_data_res, status);
-
         month_idx = month - 1;
         break;
         }
 
+    default: default_unhandled();
+#if CHECKING
     case DATA_ID_LOGICAL:
     case DATA_ID_WORD16:
     case DATA_ID_WORD32:
+#endif
         month_idx = MAX(0, ss_data_get_integer(args[0]) - 1);
         month_idx = month_idx % 12;
         break;
-
-    default: default_unhandled(); break;
     }
 
     ustr_monthname = get_p_numform_context()->month_names[month_idx];
 
     if(status_ok(ss_string_make_ustr(p_ss_data_res, ustr_monthname)))
-    {
-        const U8 u8 = *ss_data_get_string(p_ss_data_res);
-        const U8 u8_uc = (U8) toupper(u8);
-        *(p_ss_data_res->arg.string_wr.uchars) = u8_uc;
-    }
+        ss_string_ini_cap(p_ss_data_res);
 }
 
 /******************************************************************************
@@ -519,6 +687,7 @@ PROC_EXEC_PROTO(c_monthname)
 PROC_EXEC_PROTO(c_now)
 {
     exec_func_ignore_parms();
+    UNREFERENCED_PARAMETER(args);
 
     ss_data_set_data_id(p_ss_data_res, DATA_ID_DATE);
     ss_date_set_from_local_time(&p_ss_data_res->arg.ss_date);
@@ -538,7 +707,7 @@ PROC_EXEC_PROTO(c_second)
 
     exec_func_ignore_parms();
 
-    status = ss_timeval_to_hms(ss_data_get_date(args[0])->time, &hours, &minutes, &seconds);
+    status = ss_timeval_to_hms(ss_data_get_date_time(args[0]), &hours, &minutes, &seconds);
     exec_func_status_return(p_ss_data_res, status);
 
     second_result = seconds;
@@ -554,18 +723,19 @@ PROC_EXEC_PROTO(c_second)
 
 PROC_EXEC_PROTO(c_time)
 {
+    SS_DATE_TIME timeval;
+
     exec_func_ignore_parms();
 
-    ss_date_init(&p_ss_data_res->arg.ss_date);
-    ss_data_set_data_id(p_ss_data_res, DATA_ID_DATE);
-
-    if(ss_hms_to_timeval(&p_ss_data_res->arg.ss_date.time,
+    if(ss_hms_to_timeval(&timeval,
                          ss_data_get_integer(args[0]),
                          ss_data_get_integer(args[1]),
                          ss_data_get_integer(args[2])) < 0)
     {
         exec_func_status_return(p_ss_data_res, EVAL_ERR_ARGRANGE);
     }
+
+    ss_data_set_date(p_ss_data_res, SS_DATE_NULL, timeval);
 
     ss_date_normalise(&p_ss_data_res->arg.ss_date);
 }
@@ -578,24 +748,22 @@ PROC_EXEC_PROTO(c_time)
 
 PROC_EXEC_PROTO(c_timevalue)
 {
-    UCHARZ buffer[BUF_EV_MAX_STRING_LEN];
-    PC_UCHARS uchars = ss_data_get_string(args[0]);
-    U32 uchars_n = ss_data_get_string_size(args[0]);
-    U32 wss, len;
+    STATUS status;
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 64);
+    quick_ublock_with_buffer_setup(quick_ublock);
 
     exec_func_ignore_parms();
 
-    wss = ss_string_skip_leading_whitespace(args[0]);
-    uchars = uchars_AddBytes_wr(uchars, wss);
-    uchars_n -= wss;
+    if(status_ok(status = date_time_value_common_init(args[0], &quick_ublock)))
+        status = ss_recog_date_time(p_ss_data_res, quick_ublock_ustr(&quick_ublock), false);
 
-    len = MIN(uchars_n, sizeof32(buffer)-1);
-    memcpy32(buffer, uchars, len);
-    buffer[len] = CH_NULL;
+    quick_ublock_dispose(&quick_ublock);
 
-    /* Hmm. */
-    if( (ss_recog_date_time(p_ss_data_res, ustr_bptr(buffer), 0) < 0) || (SS_DATE_NULL != p_ss_data_res->arg.ss_date.date) )
-        exec_func_status_return(p_ss_data_res, EVAL_ERR_BADTIME);
+    if(status_ok(status))
+        if( (status /*recog_res*/ <= 0) || (SS_DATE_NULL == ss_data_get_date_date(p_ss_data_res)) )
+            status = EVAL_ERR_BAD_TIME;
+
+    exec_func_status_return(p_ss_data_res, status);
 }
 
 /******************************************************************************
@@ -610,7 +778,7 @@ PROC_EXEC_PROTO(c_today)
 
     c_now(args, n_args, p_ss_data_res, p_cur_slr);
 
-    if(DATA_ID_DATE == ss_data_get_data_id(p_ss_data_res))
+    if(ss_data_is_date(p_ss_data_res))
         p_ss_data_res->arg.ss_date.time = SS_TIME_NULL;
 }
 
@@ -626,12 +794,65 @@ PROC_EXEC_PROTO(c_weekday)
 
     exec_func_ignore_parms();
 
-    if(SS_DATE_NULL == ss_data_get_date(args[0])->date)
+    if(SS_DATE_NULL == ss_data_get_date_date(args[0]))
         exec_func_status_return(p_ss_data_res, EVAL_ERR_NODATE);
 
-    weekday = (ss_data_get_date(args[0])->date + 1) % 7;
+#if 1
+    weekday = ((ss_data_get_date_date(args[0]) + 1) % 7) + 1; /* [1 (Sunday),7 (Saturday)] */
 
-    ss_data_set_integer(p_ss_data_res, weekday + 1);
+    if(n_args > 1)
+    {
+        const S32 mode = ss_data_get_integer(args[1]);
+        S32 remainder;
+
+        switch(mode)
+        {
+        case 1: /* Sunday is day one, system 1 */
+            /* normal */
+            break;
+
+        case 2: /* Monday is day one, system 1 */
+            weekday -= 1;
+            break;
+
+        case 3: /* Monday is day zero */
+            weekday -= 2;
+            break;
+
+        case 11: /* Monday is day one, system 1 */
+        case 12: /* Tuesday is day one, system 1 */
+        case 13: /* Wednesday is day one, system 1 */
+        case 14: /* Thursday is day one, system 1 */
+        case 15: /* Friday is day one, system 1 */
+        case 16: /* Saturday is day one, system 1 */
+        case 17: /* Sunday is day one, system 1 */
+            weekday -= (mode - 10);
+            break;
+
+        case 21: /* Monday is day one, system 2 (ISO 8601) */
+        case 150: /* Monday is day one, system 2 (ISO 8601 - as LibreOffice WEEKNUM() for interoperability with Gnumeric) */
+            weekday -= 1;
+            break;
+
+        default:
+            exec_func_status_return(p_ss_data_res, EVAL_ERR_ODF_NUM);
+        }
+
+        remainder = (weekday - 1) % 7; /* deal with implementation-defined negative behaviour */
+        if(remainder < 0)
+            remainder = remainder + 7; /* -> [0,6] */
+
+        weekday = remainder + 1; /* back to [1,7] */
+
+        if(3 == mode) /* remap to [0,6] for this peculiar mode */
+            if(/*Monday*/ 7 == weekday)
+                weekday = 0;
+    }
+#else
+    weekday = ((ss_data_get_date_date(args[0]) + 1) % 7) + 1;
+#endif
+
+    ss_data_set_integer(p_ss_data_res, weekday);
 }
 
 /******************************************************************************
@@ -665,7 +886,7 @@ fivebytetime_from_date(
         return(status);
     }
 
-    zero_struct(time_ordinals);
+    zero_struct_fn(time_ordinals);
     time_ordinals.year  = year;
     time_ordinals.month = month;
     time_ordinals.day   = day;
@@ -685,14 +906,16 @@ PROC_EXEC_PROTO(c_weeknumber)
 {
     S32 weeknumber_result;
     STATUS status;
+
+    exec_func_ignore_parms();
+
+    {
 #if RISCOS
     FIVEBYTE fivebyte;
     U8Z buffer[32];
     _kernel_swi_regs rs;
 
-    exec_func_ignore_parms();
-
-    status = fivebytetime_from_date(&fivebyte, ss_data_get_date(args[0])->date);
+    status = fivebytetime_from_date(&fivebyte, ss_data_get_date_date(args[0]));
     exec_func_status_return(p_ss_data_res, status); /* bad/missing date? */
 
     rs.r[0] = -1; /* use current territory */
@@ -704,17 +927,18 @@ PROC_EXEC_PROTO(c_weeknumber)
         weeknumber_result = 0; /* a result of zero -> info not available */
     else
         weeknumber_result = (S32) fast_strtoul(buffer, NULL);
+
+    assert(weeknumber_result >= 0);
+    ss_data_set_integer(p_ss_data_res, weeknumber_result);
 #else
     S32 year, month, day;
     U8Z buffer[32];
     struct tm tm;
 
-    exec_func_ignore_parms();
-
-    status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date, &year, &month, &day);
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &year, &month, &day);
     exec_func_status_return(p_ss_data_res, status); /* bad/missing date? */
 
-    zero_struct(tm);
+    zero_struct_fn(tm);
     tm.tm_year = (int) (year - 1900);
     tm.tm_mon  = (int) (month - 1);
     tm.tm_mday = (int) (day);
@@ -727,10 +951,11 @@ PROC_EXEC_PROTO(c_weeknumber)
     weeknumber_result = fast_strtoul(buffer, NULL);
 
     weeknumber_result += 1;
-#endif
 
     assert(weeknumber_result >= 0);
     ss_data_set_integer(p_ss_data_res, weeknumber_result);
+#endif
+    } /*block*/
 }
 
 /******************************************************************************
@@ -747,10 +972,7 @@ PROC_EXEC_PROTO(c_year)
 
     exec_func_ignore_parms();
 
-    if(SS_DATE_NULL == ss_data_get_date(args[0])->date)
-        exec_func_status_return(p_ss_data_res, EVAL_ERR_NODATE);
-
-    status = ss_dateval_to_ymd(ss_data_get_date(args[0])->date, &year, &month, &day);
+    status = ss_dateval_to_ymd(ss_data_get_date_date(args[0]), &year, &month, &day);
     exec_func_status_return(p_ss_data_res, status);
 
     year_result = year;

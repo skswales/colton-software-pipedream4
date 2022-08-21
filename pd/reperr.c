@@ -333,7 +333,7 @@ reperr_kernel_oserror(
 
     if(been_error++ < 3) /* allow just a few errors to be reported before we start suppressing them */
     {
-        consume(const _kernel_oserror *, wimp_reporterror_rf(err, errflags, &button_clicked, NULL, 2/*Warning*/));
+        consume(_kernel_oserror *, wimp_reporterror_rf(err, errflags, &button_clicked, NULL, 2/*Warning*/));
     }
     else
     {   /* but do log suppressed errors */
@@ -369,6 +369,8 @@ wimp_reporterror(
 }
 
 #endif /* MAKE_MESSAGE_FILE */
+
+#if !CROSS_COMPILE
 
 #ifdef MAKE_MESSAGE_FILE
 
@@ -427,5 +429,7 @@ status_check(void)
     status_assertc(status);
     return(status);
 }
+
+#endif /* CROSS_COMPILE */
 
 /* end of reperr.c */

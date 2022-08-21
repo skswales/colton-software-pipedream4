@@ -25,6 +25,10 @@
 #include "cs-xfersend.h"
 #endif
 
+#ifndef xfersend_Cancel
+#define xfersend_Cancel (xfersend_FIcon+1) /* 3 */
+#endif
+
 /*
 exported header
 */
@@ -185,6 +189,8 @@ gr_chart_save_chart_with_dialog(
         gr_chart__saving_chart = TRUE;
 
         dbox_show(gr_chart__save_dbox);
+
+        xfersend_set_cancel_button(xfersend_Cancel);
 
         (void) xfersend_x(gr_chart_save_as_filetype(),
                filename ? filename :
@@ -1644,14 +1650,13 @@ gr_fillstyle_table_save(
                 picture_name = namebuffer;
 
                 {
-                U8 combined_path[BUF_MAX_PATHSTRING];
                 P_FILE_PATHENUM pathenum;
-                P_U8 pathelem;
+                PCTSTR pathelem;
 
-                /* loop over path to find minimalist reference */
-                file_combine_path(combined_path, elemof32(combined_path), file_is_rooted(filename) ? filename : NULL, file_get_search_path());
-
-                for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
+                /* loop over combined path to find minimalist reference */
+                for(pathelem = file_path_element_first2(&pathenum, file_is_rooted(filename) ? filename : NULL, file_get_search_path());
+                    NULL != pathelem;
+                    pathelem = file_path_element_next(&pathenum))
                 {
                     U32 pathlen = strlen(pathelem);
 

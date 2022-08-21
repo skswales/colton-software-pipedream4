@@ -583,22 +583,22 @@ getsbd(void)
 static MENU
 files_menu[] =
 {
-    MIK("Fl",   SHT |       GEX | DLG,                         Load_file_STR,                  LoadFile_fn,               N_LoadFile,                 0, SG_KEY_LOAD_DOCUMENT),
+    MIT("Fa",   SHT | DRQ       | DLG,                         About_STR,                      About_fn,                  N_About),
+    MIK("Fl",   LNG |       GEX | DLG,                         Load_file_STR,                  LoadFile_fn,               N_LoadFile,                 0, SG_KEY_LOAD_DOCUMENT),
     MIK("Fgt",  LNG | DRQ | GEX | DLG | MBF       | NRP,       Insert_file_STR,                InsertFile_fn,             N_InsertFile,               0, SG_KEY_INSERT_DOCUMENT),
-    MIK("Fs",   SHT | DRQ | GEX | DLG | MBF | NMF | NRP,       Save_file_STR,                  SaveFile_fn,               N_SaveFile,                 CLASSIC_KEY_SAVE, SG_KEY_SAVE_DOCUMENT),
+    MIK("Fgv",  SHT | DRQ | GEX | DLG | MBF | NMF | NRP,       Save_file_simple_STR,           SaveFileSimple_fn,         N_SaveFileSimple,           0, SG_KEY_SAVE_DOCUMENT),
+    MIK("Fs",   SHT | DRQ | GEX | DLG | MBF | NMF | NRP,       Save_file_as_STR,               SaveFileAs_fn,             N_SaveFileAs,               CLASSIC_KEY_SAVE, 0),
     MIT("Fi",   SHT | DRQ | GEX | DLG,                         Save_template_STR,              SaveTemplateFile_fn,       N_SaveTemplateFile),
     MIT("Fc",   LNG | DRQ | GEX | DLG,                         Name_STR,                       NameFile_fn,               N_NameFile),
-    MIT("Fa",   SHT | DRQ       | DLG,                         About_STR,                      About_fn,                  N_About),
     MSP,
 
-    MIT("Bnew", LNG       | GEX,                               New_window_STR,                 NewWindow_fn,              N_NewWindow),
-    MIT("Fw",   LNG | DRQ | GEX       | MBF,                   Next_window_STR,                NextWindow_fn,             N_NextWindow),
-    MIK("Fq",   LNG | DRQ | GEX       | MBF,                   Close_window_STR,               CloseWindow_fn,            N_CloseWindow,              0, SG_KEY_CLOSE_WINDOW),
-    MSP,
     MIT("O",    SHT | DRQ       | DLG,                         Options_STR,                    Options_fn,                N_Options),
 #if defined(EXTENDED_COLOUR_WINDVARS)
     MIT("Fr",   SHT             | DLG,                         Colours_STR,                    Colours_fn,                N_Colours),
 #endif
+    MSP,
+
+    MIK("Fq",   LNG | DRQ | GEX       | MBF,                   Close_window_STR,               CloseWindow_fn,            N_CloseWindow,              0, SG_KEY_CLOSE_WINDOW),
     MSP,
 
     MIT("A",    LNG | DRQ | GEX       | MBF,                   Recalculate_STR,                Recalculate_fn,            N_Recalculate),
@@ -606,7 +606,7 @@ files_menu[] =
     MSP,
 
 /* need address of tickable entry */
-#define record_option files_menu[16]
+#define record_option files_menu[14]
     MIT("Fy",   LNG | DRQ | GEX             | NMF | TCK,       Record_macro_file_STR,          RecordMacroFile_fn,        N_RecordMacroFile),
     MIT("Fz",   LNG | DRQ | GEX | DLG | MBF | NMF,             Do_macro_file_STR,              DoMacroFile_fn,            N_DoMacroFile)
 };
@@ -616,10 +616,6 @@ files_menu[] =
 static MENU
 edit_menu[] =
 {
-    MIT("R",    SHT | DRQ | GEX       | MBF,                   Format_paragraph_STR,           FormatParagraph_fn,        N_FormatParagraph),
-    MIT("Efb",  SHT | DRQ | GEX       | MBF,                   FormatBlock_STR,                FormatBlock_fn,            N_FormatBlock),
-    MSP,
-
     MIK("G",    LNG | DRQ | GEX,                               Delete_character_STR,           DeleteCharacterRight_fn,   N_DeleteCharacterRight,     KMAP_FUNC_SDELETE, 0),
     MIK("U",    LNG | DRQ | GEX,                               Insert_space_STR,               InsertSpace_fn,            N_InsertSpace,              KMAP_FUNC_INSERT, 0),
     MIK("T",    LNG | DRQ | GEX,                               Delete_word_STR,                DeleteWord_fn,             N_DeleteWord,               CLASSIC_KEY_DELETE_WORD, 0),
@@ -632,20 +628,26 @@ edit_menu[] =
     MIT("Efw",  LNG | DRQ                   | NMF,             Edit_formula_in_window_STR,     EditFormulaInWindow_fn,    N_EditFormulaInWindow),
     MSP,
 
+    MIT("R",    SHT | DRQ | GEX       | MBF,                   Format_paragraph_STR,           FormatParagraph_fn,        N_FormatParagraph),
+    MIT("Efb",  SHT | DRQ | GEX       | MBF,                   FormatBlock_STR,                FormatBlock_fn,            N_FormatBlock),
+    MSP,
+
     MIT("Esl",  LNG | DRQ | GEX       | MBF,                   Split_line_STR,                 SplitLine_fn,              N_SplitLine),
     MIT("Ejl",  LNG | DRQ | GEX       | MBF,                   Join_lines_STR,                 JoinLines_fn,              N_JoinLines),
-    MIK("N",    LNG | DRQ | GEX       | MBF,                   Insert_row_STR,                 InsertRow_fn,              N_InsertRow,                CLASSIC_KEY_INSERT_ROW, SG_KEY_INSERT_ROW),
-    MIK("Y",    LNG | DRQ | GEX /*no mergebuf*/,               Delete_row_STR,                 DeleteRow_fn,              N_DeleteRow,                CLASSIC_KEY_DELETE_ROW, SG_KEY_DELETE_ROW),
+    MIK("N",    SHT | DRQ | GEX       | MBF,                   Insert_row_STR,                 InsertRow_fn,              N_InsertRow,                CLASSIC_KEY_INSERT_ROW, SG_KEY_INSERT_ROW),
+    MIK("Y",    SHT | DRQ | GEX /*no mergebuf*/,               Delete_row_STR,                 DeleteRow_fn,              N_DeleteRow,                CLASSIC_KEY_DELETE_ROW, SG_KEY_DELETE_ROW),
     MIT("Eirc", LNG | DRQ | GEX       | MBF,                   Insert_row_in_column_STR,       InsertRowInColumn_fn,      N_InsertRowInColumn),
     MIT("Edrc", LNG | DRQ | GEX /*no mergebuf*/,               Delete_row_in_column_STR,       DeleteRowInColumn_fn,      N_DeleteRowInColumn),
     MIK("Eic",  SHT | DRQ | GEX       | MBF,                   Insert_column_STR,              InsertColumn_fn,           N_InsertColumn,             CLASSIC_KEY_INSERT_COLUMN, SG_KEY_INSERT_COLUMN),
     MIK("Edc",  SHT | DRQ | GEX       | MBF,                   Delete_column_STR,              DeleteColumn_fn,           N_DeleteColumn,             CLASSIC_KEY_DELETE_COLUMN, SG_KEY_DELETE_COLUMN),
     MIT("Eac",  SHT | DRQ | GEX       | MBF,                   Add_column_STR,                 AddColumn_fn,              N_AddColumn),
+    MSP,
+
     MIT("Eip",  SHT | DRQ | GEX | DLG,                         Insert_page_break_STR,          InsertPageBreak_fn,        N_InsertPageBreak),
-    MIT("Eitc", SHT | DRQ | GEX | DLG       | NMF,             Insert_colour_change_STR,       InsertColourChange_fn,     N_InsertColourChange),
+    MIK("Eitp", SHT | DRQ | GEX | DLG,                         Insert_page_number_STR,         InsertPageNumber_fn,       N_InsertPageNumber,         0, (KMAP_CODE_ADDED_CTRL | 'P')),
     MIK("Eitd", SHT | DRQ | GEX | DLG,                         Insert_date_STR,                InsertDate_fn,             N_InsertDate,               0, (KMAP_CODE_ADDED_CTRL | 'D')),
     MIK("Eitt", SHT | DRQ | GEX | DLG,                         Insert_time_STR,                InsertTime_fn,             N_InsertTime,               0, (KMAP_CODE_ADDED_CTRL | 'T')),
-    MIK("Eitp", SHT | DRQ | GEX | DLG,                         Insert_page_number_STR,         InsertPageNumber_fn,       N_InsertPageNumber,         0, (KMAP_CODE_ADDED_CTRL | 'P'))
+    MIT("Eitc", SHT | DRQ | GEX | DLG       | NMF,             Insert_colour_change_STR,       InsertColourChange_fn,     N_InsertColourChange)
 };
 
 /*              LNG . DRQ . GEX . DLG . MBF . NMF . NRP */
@@ -661,13 +663,9 @@ layout_menu[] =
     MIT("Lco",  SHT | DRQ | GEX,                               Link_columns_STR,               LinkColumns_fn,            N_LinkColumns),
     MSP,
 
-    MIT("Lfr",  SHT | DRQ | GEX       | MBF,                   Fix_row_STR,                    FixRows_fn,                N_FixRows),
-    MIT("Lfc",  SHT | DRQ | GEX       | MBF,                   Fix_column_STR,                 FixColumns_fn,             N_FixColumns),
-    MSP,
-
-    MIT("Lal",  SHT | DRQ | GEX       | MBF,                   Left_align_STR,                 LeftAlign_fn,              N_LeftAlign),
-    MIT("Lac",  SHT | DRQ | GEX       | MBF,                   Centre_align_STR,               CentreAlign_fn,            N_CentreAlign),
-    MIT("Lar",  SHT | DRQ | GEX       | MBF,                   Right_align_STR,                RightAlign_fn,             N_RightAlign),
+    MIK("Lal",  SHT | DRQ | GEX       | MBF,                   Left_align_STR,                 LeftAlign_fn,              N_LeftAlign,                0, (KMAP_CODE_ADDED_CTRL | 'L')),
+    MIK("Lac",  SHT | DRQ | GEX       | MBF,                   Centre_align_STR,               CentreAlign_fn,            N_CentreAlign,              0, (KMAP_CODE_ADDED_CTRL | 'E')),
+    MIK("Lar",  SHT | DRQ | GEX       | MBF,                   Right_align_STR,                RightAlign_fn,             N_RightAlign,               0, (KMAP_CODE_ADDED_CTRL | 'R')),
     MIT("Llcr", LNG | DRQ | GEX       | MBF,                   LCR_align_STR,                  LCRAlign_fn,               N_LCRAlign),
     MIT("Laf",  SHT | DRQ | GEX       | MBF,                   Free_align_STR,                 FreeAlign_fn,              N_FreeAlign),
     MSP,
@@ -677,7 +675,11 @@ layout_menu[] =
     MIT("Lsm",  LNG | DRQ | GEX       | MBF,                   Sign_minus_STR,                 SignMinus_fn,              N_SignMinus),
     MIT("Lcl",  SHT | DRQ | GEX       | MBF,                   Leading_characters_STR,         LeadingCharacters_fn,      N_LeadingCharacters),
     MIT("Lct",  SHT | DRQ | GEX       | MBF,                   Trailing_characters_STR,        TrailingCharacters_fn,     N_TrailingCharacters),
-    MIT("Ldf",  LNG | DRQ | GEX       | MBF,                   Default_format_STR,             DefaultFormat_fn,          N_DefaultFormat)
+    MIT("Ldf",  LNG | DRQ | GEX       | MBF,                   Default_format_STR,             DefaultFormat_fn,          N_DefaultFormat),
+    MSP,
+
+    MIT("Lfc",  SHT | DRQ | GEX       | MBF,                   Fix_column_STR,                 FixColumns_fn,             N_FixColumns),
+    MIT("Lfr",  SHT | DRQ | GEX       | MBF,                   Fix_row_STR,                    FixRows_fn,                N_FixRows)
 };
 
 /*              LNG . DRQ . GEX . DLG . MBF . NMF . NRP */
@@ -687,7 +689,7 @@ print_menu[] =
 {
     MIK("Po",   SHT | DRQ | GEX | DLG,                         Print_STR,                      Print_fn,                  N_Print,                    KMAP_FUNC_PRINT, KMAP_FUNC_PRINT),
     MIT("Py",   SHT | DRQ | GEX | DLG,                         Page_layout_STR,                PageLayout_fn,             N_PageLayout),
-    MIT("Pd",   SHT | DRQ | GEX | DLG,                         Printer_configuration_STR,      PrinterConfig_fn,          N_PrinterConfig),
+    MIT("Pd",   LNG | DRQ | GEX | DLG,                         Printer_configuration_STR,      PrinterConfig_fn,          N_PrinterConfig),
     MIT("Pm",   LNG | DRQ | GEX | DLG,                         Microspace_pitch_STR,           MicrospacePitch_fn,        N_MicrospacePitch),
     MIT("Pgd",  LNG | DRQ | GEX | DLG,                         Edit_printer_driver_STR,        EditPrinterDriver_fn,      N_EditPrinterDriver),
     MSP,
@@ -716,26 +718,25 @@ static MENU
 blocks_menu[] =
 {
     MIT("Z",    LNG | DRQ | GEX       | MBF,                   Mark_block_STR,                 MarkSlot_fn,               N_MarkSlot),
-    MIT("Q",    LNG | DRQ             | MBF,                   Clear_markers_STR,              ClearMarkedBlock_fn,       N_ClearMarkedBlock),
+    MIK("Q",    LNG | DRQ             | MBF,                   Clear_markers_STR,              ClearMarkedBlock_fn,       N_ClearMarkedBlock,         0, (KMAP_CODE_ADDED_CTRL | 'Z')),
     MSP,
 
     MIT("Bc",   SHT | DRQ | GEX       | MBF,                   Copy_block_STR,                 CopyBlock_fn,              N_CopyBlock),
-    MIT("Bf",   LNG | DRQ | GEX       | MBF,                   Copy_block_to_paste_list_STR,   CopyBlockToPasteList_fn,   N_CopyBlockToPasteList),
+    MIK("Bf",   LNG | DRQ | GEX       | MBF,                   Copy_block_to_paste_list_STR,   CopyBlockToPasteList_fn,   N_CopyBlockToPasteList,     0, (KMAP_CODE_ADDED_CTRL | 'C')),
     MIT("Bm",   SHT | DRQ | GEX       | MBF,                   Move_block_STR,                 MoveBlock_fn,              N_MoveBlock),
-    MIT("Bd",   SHT | DRQ | GEX       | MBF,                   Delete_block_STR,               DeleteBlock_fn,            N_DeleteBlock),
+    MIK("Bd",   SHT | DRQ | GEX       | MBF,                   Delete_block_STR,               DeleteBlock_fn,            N_DeleteBlock,              0, (KMAP_CODE_ADDED_CTRL | 'X')),
     MIT("Blc",  SHT | DRQ | GEX       | MBF,                   Clear_block_STR,                ClearBlock_fn,             N_ClearBlock),
     MSP,
 
+    MIT("Bre",  SHT | DRQ | GEX | DLG | MBF,                   Replicate_STR,                  Replicate_fn,              N_Replicate),
     MIT("Brd",  SHT | DRQ | GEX       | MBF,                   Replicate_down_STR,             ReplicateDown_fn,          N_ReplicateDown),
     MIT("Bru",  LNG | DRQ | GEX       | MBF,                   Replicate_up_STR,               ReplicateUp_fn,            N_ReplicateUp),
     MIT("Brr",  SHT | DRQ | GEX       | MBF,                   Replicate_right_STR,            ReplicateRight_fn,         N_ReplicateRight),
     MIT("Brl",  LNG | DRQ | GEX       | MBF,                   Replicate_left_STR,             ReplicateLeft_fn,          N_ReplicateLeft),
-    MIT("Bre",  SHT | DRQ | GEX | DLG | MBF,                   Replicate_STR,                  Replicate_fn,              N_Replicate),
     MIK("Bso",  SHT | DRQ | GEX | DLG | MBF,                   Sort_STR,                       SortBlock_fn,              N_SortBlock,                CLASSIC_KEY_SORT, SG_KEY_SORT),
-/* following needs changing to Transpose_block_STR when everyone wants to recompile everything again */
-    MIT("Bt",   LNG | DRQ | GEX       | MBF,                   SpreadArray_STR,                TransposeBlock_fn,         N_TransposeBlock),
+    MIT("Bt",   LNG | DRQ | GEX       | MBF,                   Transpose_block_STR,            TransposeBlock_fn,         N_TransposeBlock),
     MIK("Bse",  SHT | DRQ       | DLG,                         Search_STR,                     Search_fn,                 N_Search,                   CLASSIC_KEY_SEARCH, SG_KEY_FIND),
-    MIK("Bnm",  SHT | DRQ,                                     Next_match_STR,                 NextMatch_fn,              N_NextMatch,                CLASSIC_KEY_NEXT_MATCH, 0),
+    MIK("Bnm",  SHT | DRQ,                                     Next_match_STR,                 NextMatch_fn,              N_NextMatch,                CLASSIC_KEY_NEXT_MATCH, (KMAP_CODE_ADDED_CTRL | 'N')),
     MIT("Bpm",  SHT | DRQ,                                     Previous_match_STR,             PrevMatch_fn,              N_PrevMatch),
     MSP,
 
@@ -756,10 +757,10 @@ blocks_menu[] =
 static MENU
 cursor_menu[] =
 {
-    MIK("Cfc",  SHT | DRQ             | MBF | NRP,             First_column_STR,               FirstColumn_fn,            N_FirstColumn,              KMAP_FUNC_CSTAB, 0),
-    MIK("Clc",  SHT | DRQ             | MBF | NRP,             Last_column_STR,                LastColumn_fn,             N_LastColumn,               KMAP_FUNC_CTAB, 0),
-    MIK("Cnw",  SHT | DRQ | GEX             | NRP,             Next_word_STR,                  NextWord_fn,               N_NextWord,                 KMAP_FUNC_SARROW_RIGHT, 0),
-    MIK("Cpw",  SHT | DRQ | GEX             | NRP,             Previous_word_STR,              PrevWord_fn,               N_PrevWord,                 KMAP_FUNC_SARROW_LEFT, 0),
+    MIK("Cfc",  SHT | DRQ             | MBF | NRP,             First_column_STR,               FirstColumn_fn,            N_FirstColumn,              KMAP_FUNC_CSTAB, KMAP_FUNC_CSTAB),
+    MIK("Clc",  SHT | DRQ             | MBF | NRP,             Last_column_STR,                LastColumn_fn,             N_LastColumn,               KMAP_FUNC_CTAB, KMAP_FUNC_CTAB),
+    MIK("Cnw",  SHT | DRQ | GEX             | NRP,             Next_word_STR,                  NextWord_fn,               N_NextWord,                 KMAP_FUNC_SARROW_RIGHT, KMAP_FUNC_SARROW_RIGHT),
+    MIK("Cpw",  SHT | DRQ | GEX             | NRP,             Previous_word_STR,              PrevWord_fn,               N_PrevWord,                 KMAP_FUNC_SARROW_LEFT, KMAP_FUNC_SARROW_LEFT),
     MIT("Cwi",  SHT | DRQ             | MBF | NRP,             Centre_window_STR,              CentreWindow_fn,           N_CentreWindow),
     MSP,
 
@@ -780,25 +781,26 @@ static MENU
 spell_menu[] =  /*no mergebufs*/
 {
     MIT("Sc",   SHT | DRQ | GEX | DLG,                         Check_document_STR,             CheckDocument_fn,          N_CheckDocument),
-    MIT("Sd",   LNG             | DLG,                         Delete_word_from_user_dict_STR, DeleteWordFromDict_fn,     N_DeleteWordFromDict),
-    MIT("Si",   LNG             | DLG,                         Insert_word_in_user_dict_STR,   InsertWordInDict_fn,       N_InsertWordInDict),
     MSP,
 
     MIT("Sb",   SHT             | DLG,                         Browse_STR,                     BrowseDictionary_fn,       N_BrowseDictionary),
-    MIT("Su",   LNG             | DLG,                         Dump_dictionary_STR,            DumpDictionary_fn,         N_DumpDictionary),
-    MIT("Sm",   LNG             | DLG,                         Merge_file_with_user_dict_STR,  MergeFileWithDict_fn,      N_MergeFileWithDict),
     MIT("Sg",   SHT             | DLG,                         Anagrams_STR,                   Anagrams_fn,               N_Anagrams),
     MIT("Sh",   SHT             | DLG,                         Subgrams_STR,                   Subgrams_fn,               N_Subgrams),
     MSP,
 
     MIT("Sn",   LNG             | DLG,                         Create_user_dictionary_STR,     CreateUserDict_fn,         N_CreateUserDict),
-    MIT("So",   LNG             | DLG,                         Open_user_dictionary_STR,       OpenUserDict_fn,           N_OpenUserDict),
+    MIT("So",   SHT             | DLG,                         Open_user_dictionary_STR,       OpenUserDict_fn,           N_OpenUserDict),
     MIT("Sz",   LNG             | DLG,                         Close_user_dictionary_STR,      CloseUserDict_fn,          N_CloseUserDict),
-    MIT("Sf",   LNG,                                           Flush_user_dictionary_STR,      FlushUserDict_fn,          N_FlushUserDict),
+    MIT("Si",   LNG             | DLG,                         Insert_word_in_user_dict_STR,   InsertWordInDict_fn,       N_InsertWordInDict),
+    MIT("Sd",   LNG             | DLG,                         Delete_word_from_user_dict_STR, DeleteWordFromDict_fn,     N_DeleteWordFromDict),
+    MIT("Su",   LNG             | DLG,                         Dump_dictionary_STR,            DumpDictionary_fn,         N_DumpDictionary),
+    MIT("Sm",   LNG             | DLG,                         Merge_file_with_user_dict_STR,  MergeFileWithDict_fn,      N_MergeFileWithDict),
     MIT("Sp",   LNG             | DLG,                         Pack_user_dictionary_STR,       PackUserDict_fn,           N_PackUserDict),
     MIT("Sq",   LNG             | DLG,                         Dictionary_options_STR,         DictionaryOptions_fn,      N_DictionaryOptions),
     MIT("Sl",   LNG             | DLG,                         Lock_dictionary_STR,            LockDictionary_fn,         N_LockDictionary),
-    MIT("Sk",   LNG             | DLG,                         Unlock_dictionary_STR,          UnlockDictionary_fn,       N_UnlockDictionary)
+    MIT("Sk",   LNG             | DLG,                         Unlock_dictionary_STR,          UnlockDictionary_fn,       N_UnlockDictionary),
+    MIT("Sf",   LNG,                                           Flush_user_dictionary_STR,      FlushUserDict_fn,          N_FlushUserDict),
+    MIT("Se",   SHT             | DLG,                         Display_user_dictionaries_STR,  DisplayOpenDicts_fn,       N_DisplayOpenDicts)
 };
 
 /*              LNG . DRQ . GEX . DLG . MBF . NMF . NRP */
@@ -843,23 +845,23 @@ random_menu[] =
     MIK("Ccl",  SHT | DRQ | GEX                   | NRP | NEU, Cursor_left_STR,                CursorLeft_fn,             N_CursorLeft,               KMAP_FUNC_ARROW_LEFT, KMAP_FUNC_ARROW_LEFT),
     MIK("Ccr",  SHT | DRQ | GEX                   | NRP | NEU, Cursor_right_STR,               CursorRight_fn,            N_CursorRight,              KMAP_FUNC_ARROW_RIGHT, KMAP_FUNC_ARROW_RIGHT),
 
-    MIK("Csu",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_up_STR,                  ScrollUp_fn,               N_ScrollUp,                 KMAP_FUNC_CSARROW_UP, 0),
-    MIK("Csd",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_down_STR,                ScrollDown_fn,             N_ScrollDown,               KMAP_FUNC_CSARROW_DOWN, 0),
-    MIK("Csl",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_left_STR,                ScrollLeft_fn,             N_ScrollLeft,               KMAP_FUNC_CSARROW_LEFT, 0),
-    MIK("Csr",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_right_STR,               ScrollRight_fn,            N_ScrollRight,              KMAP_FUNC_CSARROW_RIGHT, 0),
+    MIK("Csu",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_up_STR,                  ScrollUp_fn,               N_ScrollUp,                 KMAP_FUNC_CSARROW_UP, KMAP_FUNC_CSARROW_UP),
+    MIK("Csd",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_down_STR,                ScrollDown_fn,             N_ScrollDown,               KMAP_FUNC_CSARROW_DOWN, KMAP_FUNC_CSARROW_DOWN),
+    MIK("Csl",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_left_STR,                ScrollLeft_fn,             N_ScrollLeft,               KMAP_FUNC_CSARROW_LEFT, KMAP_FUNC_CSARROW_LEFT),
+    MIK("Csr",  SHT | DRQ             | MBF       | NRP | NEU, Scroll_right_STR,               ScrollRight_fn,            N_ScrollRight,              KMAP_FUNC_CSARROW_RIGHT, KMAP_FUNC_CSARROW_RIGHT),
 
-    MIK("Cpu",  SHT | DRQ             | MBF       | NRP | NEU, Page_up_STR,                    PageUp_fn,                 N_PageUp,                   KMAP_FUNC_SARROW_UP, 0),
-    MIK("Cpd",  SHT | DRQ             | MBF       | NRP | NEU, Page_down_STR,                  PageDown_fn,               N_PageDown,                 KMAP_FUNC_SARROW_DOWN, 0),
+    MIK("Cpu",  SHT | DRQ             | MBF       | NRP | NEU, Page_up_STR,                    PageUp_fn,                 N_PageUp,                   KMAP_FUNC_SARROW_UP, KMAP_FUNC_SARROW_UP),
+    MIK("Cpd",  SHT | DRQ             | MBF       | NRP | NEU, Page_down_STR,                  PageDown_fn,               N_PageDown,                 KMAP_FUNC_SARROW_DOWN, KMAP_FUNC_SARROW_DOWN),
     MIT("Cpl",  SHT | DRQ             | MBF       | NRP | NEU, Page_left_STR,                  PageLeft_fn,               N_PageLeft),
     MIT("Cpr",  SHT | DRQ             | MBF       | NRP | NEU, Page_right_STR,                 PageRight_fn,              N_PageRight),
 
-    MIK("Ctc",  SHT | DRQ             | MBF       | NRP | NEU, Top_of_column_STR,              TopOfColumn_fn,            N_TopOfColumn,              KMAP_FUNC_CARROW_UP, 0),
-    MIK("Cbc",  SHT | DRQ             | MBF       | NRP | NEU, Bottom_of_column_STR,           BottomOfColumn_fn,         N_BottomOfColumn,           KMAP_FUNC_CARROW_DOWN, 0),
+    MIK("Ctc",  SHT | DRQ             | MBF       | NRP | NEU, Top_of_column_STR,              TopOfColumn_fn,            N_TopOfColumn,              KMAP_FUNC_CARROW_UP, KMAP_FUNC_CARROW_UP),
+    MIK("Cbc",  SHT | DRQ             | MBF       | NRP | NEU, Bottom_of_column_STR,           BottomOfColumn_fn,         N_BottomOfColumn,           KMAP_FUNC_CARROW_DOWN, KMAP_FUNC_CARROW_DOWN),
     MIK("Cpc",  SHT | DRQ             | MBF       | NRP | NEU, Previous_column_STR,            PrevColumn_fn,             N_PrevColumn,               KMAP_FUNC_STAB, KMAP_FUNC_STAB),
     MIK("Cnc",  SHT | DRQ             | MBF       | NRP | NEU, Next_column_STR,                NextColumn_fn,             N_NextColumn,               KMAP_FUNC_TAB, KMAP_FUNC_TAB),
 
-    MIK("Cbs",  SHT | DRQ | GEX                   | NRP | NEU, Start_of_slot_STR,              StartOfSlot_fn,            N_StartOfSlot,              KMAP_FUNC_CARROW_LEFT, 0),
-    MIK("Ces",  SHT | DRQ | GEX                   | NRP | NEU, End_of_slot_STR,                EndOfSlot_fn,              N_EndOfSlot,                KMAP_FUNC_CARROW_RIGHT, 0),
+    MIK("Cbs",  SHT | DRQ | GEX                   | NRP | NEU, Start_of_slot_STR,              StartOfSlot_fn,            N_StartOfSlot,              KMAP_FUNC_CARROW_LEFT, KMAP_FUNC_CARROW_LEFT),
+    MIK("Ces",  SHT | DRQ | GEX                   | NRP | NEU, End_of_slot_STR,                EndOfSlot_fn,              N_EndOfSlot,                KMAP_FUNC_CARROW_RIGHT, KMAP_FUNC_CARROW_RIGHT),
 
     MIK("Cen",  SHT | DRQ                         | NRP | NEU, Enter_STR,                      Return_fn,                 N_Return,                   CR, CR),
     MIK("Cx",   SHT | DRQ                               | NEU, Escape_STR,                     Escape_fn,                 N_Escape,                   ESCAPE, ESCAPE),
@@ -873,8 +875,11 @@ random_menu[] =
 
     MIK("Fgz",  SHT | DRQ | GEX       | MBF             | NEU, Mark_sheet_STR,                 MarkSheet_fn,              N_MarkSheet,                0, (KMAP_CODE_ADDED_CTRL | 'A')),
     MIT("Fgf",  SHT | DRQ                               | NEU, FullScreen_STR,                 FullScreen_fn,             N_FullScreen),
-    MIT("Fgs",  SHT | DRQ | GEX       | MBF             | NEU, Save_file_STR,                  SaveFileAsIs_fn,           N_SaveFileAsIs),
+    MIT("Fgs",  SHT | DRQ | GEX       | MBF             | NEU, Save_file_as_STR,               SaveFileAs_Imm_fn,         N_SaveFileAs_Imm),
+    MIT("Fgy",  SHT | DRQ | GEX       | MBF             | NEU, Save_file_simple_STR,           SaveFileSimple_Imm_fn,     N_SaveFileSimple_Imm),
     MIT("Fgl",  SHT       | GEX | DLG                   | NEU, Load_Template_STR,              LoadTemplate_fn,           N_LoadTemplate),
+    MIT("Bnew", LNG       | GEX,                               New_window_STR,                 NewWindow_fn,              N_NewWindow),
+    MIT("Fw",   LNG | DRQ | GEX       | MBF,                   Next_window_STR,                NextWindow_fn,             N_NextWindow),
     MIT("Fx",   SHT       | GEX                         | NEU, Exit_STR,                       Quit_fn,                   N_Quit)
 };
 
@@ -893,27 +898,24 @@ choices_menu[] =
     MIT("Fgm",  MF_ALWAYS_SHORT                         | NEU,       ChangeMenus_STR,                ChangeMenus_fn,            N_ChangeMenus),
     MSP,
 
-    MIT("Se",   SHT             | DLG                   | NEU,       Display_user_dictionaries_STR,  DisplayOpenDicts_fn,       N_DisplayOpenDicts),
+/* need address of tickable entry */
+#define insert_overtype_option   choices_menu[4]
+    MIT("V",    SHT                                     | NEU | TCK, Overtype_STR,                   InsertOvertype_fn,         N_InsertOvertype),
 /* need address of tickable entry */
 #define check_option    choices_menu[5]
     MIT("Sa",   SHT                                     | NEU | TCK, Auto_check_STR,                 AutoSpellCheck_fn,         N_AutoSpellCheck),
-    MSP,
-
 /* need address of tickable entry */
-#define recalc_option   choices_menu[7]
+#define recalc_option   choices_menu[6]
     MIT("Fo",   SHT                                     | NEU | TCK, Auto_recalculation_STR,         AutoRecalculation_fn,      N_AutoRecalculation),
 /* need address of tickable entry */
-#define chart_recalc_option choices_menu[8]
+#define chart_recalc_option choices_menu[7]
     MIT("Chc",  SHT                                     | NEU | TCK, Auto_chart_recalculation_STR,   AutoChartRecalculation_fn, N_AutoChartRecalculation),
 /* need address of tickable entry */
-#define chart_format_option choices_menu[9]
+#define chart_format_option choices_menu[8]
     MIT("Chf",  SHT                                     | NEU | TCK, New_chart_files_STR,            ChartFormat_fn,            N_ChartFormat),
 #if !defined(EXTENDED_COLOUR_WINDVARS)
     MIT("Fr",   SHT             | DLG                   | NEU,       Colours_STR,                    Colours_fn,                N_Colours),
 #endif
-/* need address of tickable entry */
-#define insert_overtype_option   choices_menu[11]
-    MIT("V",    SHT                                     | NEU | TCK, Overtype_STR,                   InsertOvertype_fn,         N_InsertOvertype),
     MIT("Bpd",  SHT             | DLG                   | NEU,       Size_of_paste_list_STR,         PasteListDepth_fn,         N_PasteListDepth),
     MSP,
 
@@ -1561,35 +1563,35 @@ key_name_lookup(
     switch(kmap_code)
     {
     /* KMAP_BASE_FUNC range */
-    case KMAP_FUNC_PRINT:       return("Print");
+    case KMAP_FUNC_PRINT:       return(F_Print_STR);
 
-    case KMAP_BASE_FUNC + 1:    return("F1");
-    case KMAP_BASE_FUNC + 2:    return("F2");
-    case KMAP_BASE_FUNC + 3:    return("F3");
-    case KMAP_BASE_FUNC + 4:    return("F4");
-    case KMAP_BASE_FUNC + 5:    return("F5");
-    case KMAP_BASE_FUNC + 6:    return("F6");
-    case KMAP_BASE_FUNC + 7:    return("F7");
-    case KMAP_BASE_FUNC + 8:    return("F8");
-    case KMAP_BASE_FUNC + 9:    return("F9");
-    case KMAP_BASE_FUNC + 10:   return("F10");
-    case KMAP_BASE_FUNC + 11:   return("F11");
-    case KMAP_BASE_FUNC + 12:   return("F12");
+    case KMAP_BASE_FUNC + 1:    return(F1_STR);
+    case KMAP_BASE_FUNC + 2:    return(F2_STR);
+    case KMAP_BASE_FUNC + 3:    return(F3_STR);
+    case KMAP_BASE_FUNC + 4:    return(F4_STR);
+    case KMAP_BASE_FUNC + 5:    return(F5_STR);
+    case KMAP_BASE_FUNC + 6:    return(F6_STR);
+    case KMAP_BASE_FUNC + 7:    return(F7_STR);
+    case KMAP_BASE_FUNC + 8:    return(F8_STR);
+    case KMAP_BASE_FUNC + 9:    return(F9_STR);
+    case KMAP_BASE_FUNC + 10:   return(F10_STR);
+    case KMAP_BASE_FUNC + 11:   return(F11_STR);
+    case KMAP_BASE_FUNC + 12:   return(F12_STR);
 
-    case KMAP_FUNC_INSERT:      return("Insert");
+    case KMAP_FUNC_INSERT:      return(F_Insert_STR);
 
     /* KMAP_BASE_FUNC2 range */
-    case KMAP_FUNC_DELETE:      return("Delete");
-    case KMAP_FUNC_HOME:        return("Home");
-    case KMAP_FUNC_BACKSPACE:   return("Backspace");
+    case KMAP_FUNC_DELETE:      return(F_Delete_STR);
+    case KMAP_FUNC_HOME:        return(F_Home_STR);
+    case KMAP_FUNC_BACKSPACE:   return(F_Backspace_STR);
 
-    case KMAP_FUNC_TAB:         return("Tab");
-    case KMAP_FUNC_END:         return("End");
+    case KMAP_FUNC_TAB:         return(F_Tab_STR);
+    case KMAP_FUNC_END:         return(F_End_STR);
 
     default:
         if((kmap_code >= 'A') && (kmap_code <= 'Z'))
         {
-            static char buffer[16];
+            static char buffer[2];
             buffer[0] = (char) kmap_code;
             buffer[1] = CH_NULL;
             return(buffer);
@@ -2172,9 +2174,9 @@ start_macro_recorder_core(void)
         return(2); /*continue*/
     }
 
-    if(file_is_rooted(currentfilename))
+    if(file_is_rooted(currentfilename()))
     {   /* Record to the directory of the current document */
-        file_get_cwd(buffer, elemof32(buffer), currentfilename);
+        file_get_cwd(buffer, elemof32(buffer), currentfilename());
         xstrkat(buffer, elemof32(buffer), name);
     }
     else

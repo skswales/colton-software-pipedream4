@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Printing</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,57 +16,25 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="printerdrivers.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="protection.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="printerdrivers.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="protection.html">Next</a></td>
             </tr>
         </table>
     </div>
 
     <h1>Printing</h1>
 
-    <h2 id="Print">To Print a Document Using a RISC&nbsp;OS Printer Driver</h2>
+    <h2 id="Print">To Print a Document Using a RISC OS Printer Driver</h2>
     <p>
-        First ensure that a RISC&nbsp;OS printer driver is loaded.
-        Your RISC&nbsp;OS printer driver icon must be on the icon bar.
+        First ensure that a RISC OS printer driver is loaded.
+        Your RISC OS printer driver icon must be on the icon bar.
     </p>
     <ol>
-        <li>Give the <span class="csg-command">Printer Config</span> command:</li>
+        <li>Give the <span class="csg-command">Print</span> command:</li>
     </ol>
-    <table class="csg-command-table">
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
-        <tbody>
-            <tr>
-                <th class="csg-ct-th-menu">Menu</th>
-                <th class="csg-ct-th-command">Command</th>
-                <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
-            </tr>
-            <tr>
-                <td>Print</td>
-                <td>Printer config</td>
-                <td><span class="csg-cmdseq">PD</span></td>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
-    <!-- ol start="2" -->
-    <ul class="csg-netsurf-2434">
-        <li>
-            2. Set the <span class="csg-dbox-option">Printer type</span> option to <span class="csg-dbox-option-value">RISC&nbsp;OS</span>.
-            Ignore the other options.
-        </li>
-        <li>
-            3. Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
-        </li>
-        <li>4. Give the <span class="csg-command">Print</span> command.</li>
-    </ul>
     <table class="csg-command-table">
         <col />
         <col />
@@ -84,7 +52,7 @@
             <tr>
                 <td>Print</td>
                 <td>Print</td>
-                <td><img src="images/tbar_print.png" /></td>
+                <td><img src="images/toolbar/print.png" alt="Print icon" /></td>
                 <td><span class="csg-key">Print</span></td>
                 <td><span class="csg-cmdseq">PO</span></td>
             </tr>
@@ -92,13 +60,13 @@
     </table>
     <p>
         You will see the <span class="csg-dbox">Print</span> dialogue box.
-        At the top of the dialogue box, you will see the type of RISC&nbsp;OS printer driver currently available.
+        At the top of the dialogue box, you will see the type of RISC OS printer driver currently available.
     </p>
-    <!-- ol start="5" -->
+    <!-- ol start="2" -->
     <ul class="csg-netsurf-2434">
-        <li>5. If you want to print more than one copy of the document, specify the number of copies.</li>
+        <li>2. If you want to print more than one copy of the document, specify the number of copies.</li>
         <li>
-            6. Select the <span class="csg-dbox-option">Landscape</span> to print the document horizontally
+            3. Select the <span class="csg-dbox-option">Landscape</span> to print the document horizontally
             or <span class="csg-dbox-option">Portrait</span> to print it vertically.
             If you decide to print your document in landscape format, remember that the page length will change as a result.
             If you do not have the <span class="csg-dbox-option">Auto line height</span> option switched on,
@@ -114,15 +82,15 @@
             Specify the number of characters you want to add to the margins on the right hand pages.
         </li>
         <li>
-            7. Select the <span class="csg-dbox-option">Wait between pages</span> option if you want to wait after each page to insert single sheets of paper.
+            4. Select the <span class="csg-dbox-option">Wait between pages</span> option if you want to wait after each page to insert single sheets of paper.
             For each page, you will be given the following options:
+            <ul>
+                <li>miss out the page;</li>
+                <li>print to the end of the document;</li>
+                <li>print the current page;</li>
+                <li>stop printing.</li>
+            </ul>
         </li>
-        <ul>
-            <li>miss out the page;</li>
-            <li>print to the end of the document;</li>
-            <li>print the current page;</li>
-            <li>stop printing.</li>
-        </ul>
     </ul>
 
     <h2 id="Document">To Print a Document Using a PipeDream Printer Driver</h2>
@@ -139,14 +107,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Print</td>
                 <td>Printer config</td>
-                <td><span class="csg-cmdseq">PD</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">PD</span></td>
             </tr>
         </tbody>
     </table>
@@ -169,7 +139,7 @@
         </li>
         <li>
             4. When you have set the configuration,
-            click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+            click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Set</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
         </li>
         <li>5. Give the <span class="csg-command">Print</span> command:</li>
     </ul>
@@ -190,7 +160,7 @@
             <tr>
                 <td>Print</td>
                 <td>Print</td>
-                <td><img src="images/tbar_print.png" /></td>
+                <td><img src="images/toolbar/print.png" alt="Print icon" /></td>
                 <td><span class="csg-key">Print</span></td>
                 <td><span class="csg-cmdseq">PO</span></td>
             </tr>
@@ -207,13 +177,13 @@
         <li>
             8. Select the <span class="csg-dbox-option">Wait between pages</span> option if you want to wait after each page to insert single sheets of paper.
             For each page, you will be given the following options:
+            <ul>
+                <li>miss out the page;</li>
+                <li>print to the end of the document;</li>
+                <li>print the current page;</li>
+                <li>stop printing.</li>
+            </ul>
         </li>
-        <ul>
-            <li>miss out the page;</li>
-            <li>print to the end of the document;</li>
-            <li>print the current page;</li>
-            <li>stop printing.</li>
-        </ul>
     </ul>
 
     <h2 id="Part">To Print Part of a Document</h2>
@@ -236,7 +206,7 @@
     </p>
 
     <h2 id="File">To Print to a File</h2>
-    <p>If you are using a RISC&nbsp;OS printer driver, click Menu on the printer icon on the icon bar and type in the name of the file to which you want to print.</p>
+    <p>If you are using a RISC OS printer driver, click Menu on the printer icon on the icon bar and type in the name of the file to which you want to print.</p>
     <p>
         If you are using a PipeDream printer driver, select the <span class="csg-dbox-option">File</span> option in the
         <span class="csg-dbox">Print</span> dialogue box and type in the name of the file to which you want to print.
@@ -252,14 +222,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Printer Drivers </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Protection</td>
+                <td class="navfooter_PUN_L">Printer Drivers </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Protection</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="printerdrivers.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="protection.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="printerdrivers.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="protection.html">Next</a></td>
             </tr>
         </table>
     </div>

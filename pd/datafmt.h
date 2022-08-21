@@ -113,10 +113,10 @@ enum HIGHLIGHT_BITS
 extra bits added in to basic key codes
 */
 
-#define KMAP_CODE_ADDED_FN    0x0100 /* function keys */
-#define KMAP_CODE_ADDED_SHIFT 0x0200
-#define KMAP_CODE_ADDED_CTRL  0x0400
-#define KMAP_CODE_ADDED_ALT   0x0800 /* 'alt' letters */
+#define KMAP_CODE_ADDED_SHIFT 0x0100
+#define KMAP_CODE_ADDED_CTRL  0x0200
+#define KMAP_CODE_ADDED_ALT   0x0400 /* 'alt' letters */
+#define KMAP_CODE_ADDED_FN    0x0800 /* function keys */
 
 #define RISCOS_EKEY_ESCAPE 27
 
@@ -159,8 +159,8 @@ enum CLASSIC_KEY_VALUES
 
     CLASSIC_KEY_REPEAT_COMMAND  = KMAP_BASE_FUNC   +  5,
     CLASSIC_KEY_NEXT_MATCH      = KMAP_BASE_FUNC   +  6,
-    CLASSIC_KEY_INSERT_ROW      = KMAP_BASE_FUNC   +  7, /* moves to CSF7 in SG mode */
-    CLASSIC_KEY_DELETE_ROW      = KMAP_BASE_FUNC   +  8, /* moves to CSF7 in SG mode */
+    CLASSIC_KEY_INSERT_ROW      = KMAP_BASE_FUNC   +  7, /* moves to CF7 in SG mode */
+    CLASSIC_KEY_DELETE_ROW      = KMAP_BASE_FUNC   +  8, /* moves to CF8 in SG mode */
 
     CLASSIC_KEY_PASTE           = KMAP_BASE_FUNC   +  9,
     CLASSIC_KEY_DELETE_WORD     = KMAP_BASE_FUNC   + 10,
@@ -169,8 +169,8 @@ enum CLASSIC_KEY_VALUES
 
     CLASSIC_KEY_GOTO            = KMAP_BASE_SFUNC  +  5, /* added in 4.56 */
     CLASSIC_KEY_SORT            = KMAP_BASE_SFUNC  +  6, /* added in 4.56 */
-    CLASSIC_KEY_INSERT_COLUMN   = KMAP_BASE_SFUNC  +  7, /* added in 4.56 */
-    CLASSIC_KEY_DELETE_COLUMN   = KMAP_BASE_SFUNC  +  8, /* added in 4.56 */
+    CLASSIC_KEY_INSERT_COLUMN   = KMAP_BASE_SFUNC  +  7, /* added in 4.56 (same as Fireworkz) */
+    CLASSIC_KEY_DELETE_COLUMN   = KMAP_BASE_SFUNC  +  8, /* added in 4.56 (same as Fireworkz) */
 
 };
 
@@ -188,10 +188,10 @@ enum STYLE_GUIDE_KEY_VALUES
     SG_KEY_F10              = KMAP_BASE_FUNC   + 10,
     SG_KEY_F11              = KMAP_BASE_FUNC   + 11,
 
-    SG_KEY_INSERT_DOCUMENT  = KMAP_BASE_SFUNC  +  2, /* RO SG */ /* not in PipeDream */
+    SG_KEY_INSERT_DOCUMENT  = KMAP_BASE_SFUNC  +  2, /* RO SG */
     SG_KEY_SORT             = KMAP_BASE_SFUNC  +  6, /* PipeDream (same as Classic) */
-    SG_KEY_INSERT_COLUMN    = KMAP_BASE_SFUNC  +  7, /* PipeDream (same as Fireworkz) */
-    SG_KEY_DELETE_COLUMN    = KMAP_BASE_SFUNC  +  8, /* PipeDream (same as Fireworkz) */
+    SG_KEY_INSERT_COLUMN    = KMAP_BASE_SFUNC  +  7, /* PipeDream (same as Classic) */
+    SG_KEY_DELETE_COLUMN    = KMAP_BASE_SFUNC  +  8, /* PipeDream (same as Classic) */
 
     SG_KEY_CLOSE_WINDOW     = KMAP_BASE_CFUNC  +  2, /* RO SG */
     SG_KEY_REPLACE          = KMAP_BASE_CFUNC  +  4, /* RO SG */
@@ -674,20 +674,14 @@ wrch_undefinefunnies(void);
 /* can always undefine the lot in current use */
 #define wrch_undefinefunny(ch)  wrch_undefinefunnies()
 
+/*ncr*/
 extern S32
 fx_x(
-    S32 a,
-    S32 x,
-    S32 y);
+    _InVal_     S32 a,
+    _InVal_     S32 x,
+    _InVal_     S32 y);
 
-extern S32
-fx_x2(
-    S32 a,
-    S32 x);
-
-extern char *
-mysystem(
-    const char *str);
+#define fx_x2(a, x) fx_x(a, x, 0)
 
 extern void
 wrch_h(
@@ -736,6 +730,12 @@ typedef struct LOAD_FILE_OPTIONS
 }
 LOAD_FILE_OPTIONS, * P_LOAD_FILE_OPTIONS;
 
+extern void
+load_file_options_init(
+    _OutRef_    P_LOAD_FILE_OPTIONS p_load_file_options,
+    _In_z_      const char * document_name,
+    _InVal_     S32 filetype_option /* PD4_CHAR etc. */);
+
 typedef struct SAVE_FILE_OPTIONS
 {
     /* these can be derived from d_save[] options */
@@ -751,6 +751,12 @@ typedef struct SAVE_FILE_OPTIONS
 }
 SAVE_FILE_OPTIONS, * P_SAVE_FILE_OPTIONS;
 
+extern void
+save_file_options_init(
+    _OutRef_    P_SAVE_FILE_OPTIONS p_save_file_options,
+    _InVal_     S32 filetype_option /* PD4_CHAR etc. */,
+    _InVal_     S32 line_sep_option /* LINE_SEP_LF etc. */);
+
 /*
 exported functions
 */
@@ -761,6 +767,16 @@ enumerate_dir_to_list(
     _InoutRef_  P_P_LIST_BLOCK list,
     _InoutRef_  P_LIST_ITEMNO p_key,
     _In_opt_z_  PC_U8Z subdir /*maybe NULL*/,
+    _InVal_     FILETYPE_RISC_OS filetype);
+
+/*ncr*/
+extern STATUS
+enumerate_dir_to_list_using_path(
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InoutRef_  P_LIST_ITEMNO p_key,
+    _In_opt_z_  PCTSTR doc_subdir /*maybe NULL*/,
+    _In_z_      PCTSTR path,
+    _In_opt_z_  PCTSTR path_subdir /*maybe NULL*/,
     _InVal_     FILETYPE_RISC_OS filetype);
 
 extern S32 /* filetype_option, 0 or error (reported) */
@@ -850,6 +866,7 @@ enum LINE_SEP_LIST_OFFSETS /* fits in U8 */
 #define CSV_CHAR_STR        "C"
 #define FWP_CHAR            'F'
 #define FWP_CHAR_STR        "F"
+#define LOTUS123_CHAR       'L'
 #define PD4_CHAR            'P'
 #define PD_CHAR_STR         "P"
 #define PD4_CHART_CHAR      'R'
@@ -1214,7 +1231,7 @@ enum DIALOG_HEADER_OFFSETS
     D_ERROR,
     D_LOAD,
     D_OVERWRITE,
-    D_SAVE,
+    D_SAVE_FILE_AS,
     D_SAVE_TEMPLATE,
     D_PRINT,
     D_MSPACE,
@@ -1231,12 +1248,12 @@ enum DIALOG_HEADER_OFFSETS
     D_EXECFILE,
     D_GOTO,
     D_DECIMAL,
-    D_REMHIGH,
     D_INSHIGH,
+    D_REMHIGH,
     D_DEFKEY,
     D_DEF_FKEY,
     D_INSERT_PAGE_BREAK,
-    D_SAVE_POPUP,
+    D_SAVE_FILE_AS_POPUP,
     D_COLOURS,
     D_EXTENDED_COLOURS,
     D_ABOUT,
@@ -1251,8 +1268,8 @@ enum DIALOG_HEADER_OFFSETS
     D_USER_CREATE,
     D_USER_OPEN,
     D_USER_CLOSE,
-    D_USER_DELETE,
     D_USER_INSERT,
+    D_USER_DELETE,
     D_USER_BROWSE,
     D_USER_DUMP,
     D_USER_MERGE,
@@ -1284,6 +1301,8 @@ enum DIALOG_HEADER_OFFSETS
     D_INSERT_PAGE_NUMBER,
     D_INSERT_DATE,
     D_INSERT_TIME,
+    D_SAVE_FILE_SIMPLE,
+    D_SAVE_FILE_SIMPLE_POPUP,
     D_THE_LAST_ONE
 };
 
@@ -1325,7 +1344,7 @@ extern DIALOG d_name[];
 extern DIALOG d_execfile[];
 extern DIALOG d_goto[];
 extern DIALOG d_decimal[];
-extern DIALOG d_inshigh[];
+extern DIALOG d_insremhigh[];
 extern DIALOG d_defkey[];
 extern DIALOG d_def_fkey[];
 extern DIALOG d_insert_page_break[];
@@ -1788,7 +1807,7 @@ enum FUNCTION_NUMBERS
 
     N_LoadFile,
     N_NameFile,
-    N_SaveFile,
+    N_SaveFileAs,
     N_SaveTemplateFile,
 
     N_Print,
@@ -1844,7 +1863,7 @@ enum FUNCTION_NUMBERS
 ,   N_PRINTERFONT
 ,   N_INSERTFONT
 ,   N_PRINTERLINESPACE
-,   N_SaveFileAsIs
+,   N_SaveFileAs_Imm
 ,   N_MarkSheet
 ,   N_Debug
 ,   N_DictionaryOptions
@@ -1893,6 +1912,9 @@ enum FUNCTION_NUMBERS
 ,   N_InteractiveHelp
 
 ,   N_ChartFormat /* added in PD 4.57 */
+
+,   N_SaveFileSimple /* added in PD 4.58 */
+,   N_SaveFileSimple_Imm
 };
 
 extern void
@@ -2245,10 +2267,16 @@ extern void
 NameFile_fn(void);
 
 extern void
-SaveFile_fn(void);
+SaveFileAs_fn(void);
 
 extern void
-SaveFileAsIs_fn(void);
+SaveFileAs_Imm_fn(void);
+
+extern void
+SaveFileSimple_fn(void);
+
+extern void
+SaveFileSimple_Imm_fn(void);
 
 extern void
 SaveTemplateFile_fn(void);

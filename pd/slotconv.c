@@ -27,7 +27,7 @@
 #include "riscdraw.h"
 
 /*
-need to know about ev_dec_range()
+need to know about ev_dec_slr()
 */
 
 #include "cmodules/ev_evali.h"
@@ -2787,7 +2787,7 @@ result_to_string(
             ev_slr.row = p_ev_result->arg.ss_error.row;
             ev_slr.docno = p_ev_result->arg.ss_error.docno;
             ev_slr.flags = 0;
-            (void) ev_dec_slr(buffer_slr, docno, &ev_slr, TRUE);
+            (void) ev_dec_slr(buffer_slr, docno, &ev_slr, true);
             len += sprintf(array + len,
                            PropagatedErrStr,
                            buffer_slr);

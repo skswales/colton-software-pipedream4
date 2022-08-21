@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2012-2019 Stuart Swales */
+/* Copyright (C) 2012-2020 Stuart Swales */
 
 #ifndef __target_riscos_host_windows_h
 #define __target_riscos_host_windows_h
@@ -78,12 +78,12 @@ typedef unsigned short wchar_t;
 #define _USE_DECLSPECS_FOR_SAL  1
 #define _USE_ATTRIBUTES_FOR_SAL 0
 /* Ideally #include "%VCINSTALLDIR%\Include\sal.h" */
-#if _MSC_VER >= 1900
+#if _MSC_VER >= 1900 /* VS2015 */
 #include "sal.h" /* Needs C:\Program Files\Microsoft Visual Studio 1x.0\VC\Include at end of path for more includes */
-#elif _MSC_VER >= 1500
+#elif _MSC_VER >= 1500 /* VS2008 */
 #include "C:\Program Files\Microsoft Visual Studio 9.0\VC\Include\sal.h"
-#elif _MSC_VER >= 1400
-#include "C:\Program Files\Microsoft Visual Studio 8\VC\Include\sal.h"
+#else
+/* VC2005 sal.h is different */
 #endif
 #endif
 
@@ -120,7 +120,14 @@ typedef unsigned int _Bool;
 #endif /* _MSC_VER */
 #endif /* __cplusplus */
 
+#define __STDC_NO_COMPLEX__ 1 /* only for CROSS_COMPILE - see RISC OS complex.h */
+
 #define inline_when_fast_fp inline
+
+#if defined(__INTELLISENSE__)
+#include "kernel.h" /*C:*/
+#include "swis.h" /*C:*/
+#endif
 
 #endif /* __target_riscos_host_windows_h */
 

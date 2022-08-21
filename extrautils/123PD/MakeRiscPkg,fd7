@@ -4,32 +4,30 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 |
-| Copyright (C) 2015-2019 Stuart Swales
+| Copyright (C) 2015-2020 Stuart Swales
 
 | !!! ENSURE EVERYTHING IS BUILT AND CHECKED IN FIRST !!!
 
-Set pd$Release 1_12_1
+Set pd$Release 1_14
 | Remember to update RiscPkg.Control and !123PD.Desc too
 
-Set pd$Disc $.Temp.PD4.123PD_<pd$Release>
-Set pd$Zip  $.Temp.PD4.123PD_<pd$Release>/zip
-
-IfThere $.Temp     Then Else %CDir $.Temp
-IfThere $.Temp.PD4 Then Else %CDir $.Temp.PD4
-
+Set pd$Disc                                $.Temp.PD4.RiscPkg.123PD_<pd$Release>
+IfThere $.Temp             Then Else %CDir $.Temp
+IfThere $.Temp.PD4         Then Else %CDir $.Temp.PD4
+IfThere $.Temp.PD4.RiscPkg Then Else %CDir $.Temp.PD4.RiscPkg
 X %Wipe <pd$Disc> ~cfr~v
 
-svn export <Obey$Dir> <pd$Disc>
+Set pd$Zip <pd$Disc>/zip
+%Remove <pd$Zip>
 
-| The one in RiscPkg.Copyright is the useful one for the packaged converter
-delete <pd$Disc>.RiscPkg.LICENCE
-delete <pd$Disc>.MakeRiscPkg
+Obey <Obey$Dir>.CopyToTemp
 
 %Dir <pd$Disc>
-%Remove <pd$Zip>
 zip -r <pd$Zip> RiscPkg Apps
 SetType <pd$Zip> &A91
 Info <pd$Zip>
+Unset <pd$Zip>
 %Back
 
 Filer_OpenDir <pd$Disc>
+Unset <pd$Disc>

@@ -41,13 +41,13 @@ PROC_QSORT_PROTO(static, nameid_lookcomp, EV_NAME);
 resource lists
 */
 
-DEPTABLE custom_def = DEPTABLE_INIT;
+DEPTABLE custom_def_deptable = DEPTABLE_INIT;
 
 static EV_NAMEID next_custom_key = 0;
 
 #define MACDEFINC 2
 
-DEPTABLE names_def = DEPTABLE_INIT;
+DEPTABLE names_def_deptable = DEPTABLE_INIT;
 
 static EV_NAMEID next_name_key  = 0;
 
@@ -68,11 +68,11 @@ change_doc_mac_nam(
     P_EV_CUSTOM p_ev_custom;
     P_EV_NAME p_ev_name;
 
-    while((p_ev_custom = custom_def.ptr) != NULL)
+    while((p_ev_custom = custom_def_deptable.ptr) != NULL)
     {
         EV_NAMEID i;
 
-        for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
+        for(i = 0; i < custom_def_deptable.next; ++i, ++p_ev_custom)
         {
             if(p_ev_custom->flags & TRF_TOBEDEL)
                 continue;
@@ -88,8 +88,8 @@ change_doc_mac_nam(
 
                     custom_change_id(t_p_ev_custom->key, p_ev_custom->key);
                     p_ev_custom->flags |= TRF_TOBEDEL;
-                    custom_def.flags |= TRF_TOBEDEL;
-                    custom_def.mindel = MIN(custom_def.mindel, i);
+                    custom_def_deptable.flags |= TRF_TOBEDEL;
+                    custom_def_deptable.mindel = MIN(custom_def_deptable.mindel, i);
                     ev_todo_add_custom_dependents(t_p_ev_custom->key);
 
                     trace_2(TRACE_MODULE_EVAL,
@@ -101,15 +101,15 @@ change_doc_mac_nam(
             }
         }
 
-        if(i >= custom_def.next)
+        if(i >= custom_def_deptable.next)
             break;
     }
 
-    while((p_ev_name = names_def.ptr) != NULL)
+    while((p_ev_name = names_def_deptable.ptr) != NULL)
     {
         EV_NAMEID i;
 
-        for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+        for(i = 0; i < names_def_deptable.next; ++i, ++p_ev_name)
         {
             if(p_ev_name->flags & TRF_TOBEDEL)
                 continue;
@@ -125,8 +125,8 @@ change_doc_mac_nam(
 
                     name_change_id(t_p_ev_name->key, p_ev_name->key);
                     p_ev_name->flags |= TRF_TOBEDEL;
-                    names_def.flags |= TRF_TOBEDEL;
-                    names_def.mindel = MIN(names_def.mindel, i);
+                    names_def_deptable.flags |= TRF_TOBEDEL;
+                    names_def_deptable.mindel = MIN(names_def_deptable.mindel, i);
                     ev_todo_add_name_dependents(t_p_ev_name->key);
 
                     trace_2(TRACE_MODULE_EVAL,
@@ -138,7 +138,7 @@ change_doc_mac_nam(
             }
         }
 
-        if(i >= names_def.next)
+        if(i >= names_def_deptable.next)
             break;
     }
 }
@@ -167,12 +167,12 @@ ensure_custom_in_list(
     if((customid = find_custom_in_list(owner_docno, custom_name)) >= 0)
         return(customid);
 
-    if(dep_table_check_add_one(&custom_def,
+    if(dep_table_check_add_one(&custom_def_deptable,
                                sizeof(EV_CUSTOM),
                                MACDEFINC) < 0)
         return(-1);
 
-    new_entry = custom_def.next++;
+    new_entry = custom_def_deptable.next++;
 
     p_ev_custom = custom_ptr_must(new_entry);
 
@@ -215,12 +215,12 @@ ensure_name_in_list(
     if((name_num = find_name_in_list(owner_docno, name)) >= 0)
         return(name_num);
 
-    if(dep_table_check_add_one(&names_def,
+    if(dep_table_check_add_one(&names_def_deptable,
                                sizeof(EV_NAME),
                                NAMDEFINC) < 0)
         return(-1);
 
-    new_entry = names_def.next++;
+    new_entry = names_def_deptable.next++;
 
     p_ev_name = name_ptr_must(new_entry);
 
@@ -249,7 +249,7 @@ ensure_name_in_list(
 extern void
 ev_custom_del_hold(void)
 {
-    custom_def.flags |= TRF_DELHOLD;
+    custom_def_deptable.flags |= TRF_DELHOLD;
 }
 
 /******************************************************************************
@@ -261,7 +261,7 @@ ev_custom_del_hold(void)
 extern void
 ev_custom_del_release(void)
 {
-    custom_def.flags &= ~TRF_DELHOLD;
+    custom_def_deptable.flags &= ~TRF_DELHOLD;
 }
 
 /******************************************************************************
@@ -273,7 +273,7 @@ ev_custom_del_release(void)
 extern void
 ev_name_del_hold(void)
 {
-    names_def.flags |= TRF_DELHOLD;
+    names_def_deptable.flags |= TRF_DELHOLD;
 }
 
 /******************************************************************************
@@ -285,7 +285,7 @@ ev_name_del_hold(void)
 extern void
 ev_name_del_release(void)
 {
-    names_def.flags &= ~TRF_DELHOLD;
+    names_def_deptable.flags &= ~TRF_DELHOLD;
 }
 
 /******************************************************************************
@@ -374,10 +374,10 @@ find_custom_in_list(
     EV_NAMEID i;
     P_EV_CUSTOM p_ev_custom;
 
-    if((p_ev_custom = custom_def.ptr) == NULL)
+    if((p_ev_custom = custom_def_deptable.ptr) == NULL)
         return(-1);
 
-    for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
+    for(i = 0; i < custom_def_deptable.next; ++i, ++p_ev_custom)
     {
         if(p_ev_custom->flags & TRF_TOBEDEL)
             continue;
@@ -411,10 +411,10 @@ find_name_in_list(
     EV_NAMEID i;
     P_EV_NAME p_ev_name;
 
-    if((p_ev_name = names_def.ptr) == NULL)
+    if((p_ev_name = names_def_deptable.ptr) == NULL)
         return(-1);
 
-    for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+    for(i = 0; i < names_def_deptable.next; ++i, ++p_ev_name)
     {
         if(p_ev_name->flags & TRF_TOBEDEL)
             continue;
@@ -485,12 +485,12 @@ custom_def_find(
     custom_list_sort();
 
     temp.key = key;
-    if((custom_listp = custom_def.ptr) == NULL)
+    if((custom_listp = custom_def_deptable.ptr) == NULL)
         return(-1);
 
     if((p_ev_custom = bsearch(&temp,
                          custom_listp,
-                         custom_def.sorted,
+                         custom_def_deptable.sorted,
                          sizeof(EV_CUSTOM),
                          customid_lookcomp)
        ) == NULL
@@ -512,15 +512,15 @@ custom_list_sort(void)
     /* check through custom table to see if the deletion of a
      * custom use has rendered the definition record useless
      */
-    if((custom_def.flags & TRF_CHECKUSE) && !(custom_def.flags & TRF_DELHOLD))
+    if((custom_def_deptable.flags & TRF_CHECKUSE) && !(custom_def_deptable.flags & TRF_DELHOLD))
     {
         P_EV_CUSTOM p_ev_custom;
 
-        if((p_ev_custom = custom_def.ptr) != NULL)
+        if((p_ev_custom = custom_def_deptable.ptr) != NULL)
         {
             EV_NAMEID i;
 
-            for(i = 0; i < custom_def.next; ++i, ++p_ev_custom)
+            for(i = 0; i < custom_def_deptable.next; ++i, ++p_ev_custom)
             {
                 if(p_ev_custom->flags & TRF_TOBEDEL)
                     continue;
@@ -537,8 +537,8 @@ custom_list_sort(void)
                         p_ss_doc->custom_ref_count -= 1;
 
                     p_ev_custom->flags |= TRF_TOBEDEL;
-                    custom_def.flags |= TRF_TOBEDEL;
-                    custom_def.mindel = MIN(custom_def.mindel, i);
+                    custom_def_deptable.flags |= TRF_TOBEDEL;
+                    custom_def_deptable.mindel = MIN(custom_def_deptable.mindel, i);
 
                     trace_1(TRACE_MODULE_EVAL,
                             "custom_list_sort deleting custom: %s",
@@ -547,10 +547,10 @@ custom_list_sort(void)
             }
         }
 
-        custom_def.flags &= ~TRF_CHECKUSE;
+        custom_def_deptable.flags &= ~TRF_CHECKUSE;
     }
 
-    tree_sort(&custom_def,
+    tree_sort(&custom_def_deptable,
               sizeof(EV_CUSTOM),
               MACDEFINC,
               offsetof(EV_CUSTOM, flags),
@@ -620,7 +620,7 @@ name_change_id(
     if((nep = tree_namptr(0)) == NULL)
         return;
 
-    for(i = 0; i < namtab.next; ++i, ++nep)
+    for(i = 0; i < name_use_deptable.next; ++i, ++nep)
     {
         if(nep->flags & TRF_TOBEDEL)
             continue;
@@ -633,7 +633,7 @@ name_change_id(
                 write_nameid(id_to, p_ev_cell->rpn.var.rpn_str + nep->byoffset);
 
             nep->nameto = id_to;
-            namtab.sorted = 0;
+            name_use_deptable.sorted = 0;
         }
     }
 }
@@ -659,13 +659,13 @@ name_def_find(
     name_list_sort();
 
     temp.key = key;
-    if((name_listp = names_def.ptr) == NULL)
+    if((name_listp = names_def_deptable.ptr) == NULL)
         return(-1);
 
     if((p_ev_name =
             bsearch(&temp,
                     name_listp,
-                    names_def.sorted,
+                    names_def_deptable.sorted,
                     sizeof(EV_NAME),
                     nameid_lookcomp)
        ) == NULL
@@ -703,15 +703,15 @@ name_list_sort(void)
     /* check through name table to see if the deletion of a
      * name use has rendered the definition record useless
      */
-    if((names_def.flags & TRF_CHECKUSE) && !(names_def.flags & TRF_DELHOLD))
+    if((names_def_deptable.flags & TRF_CHECKUSE) && !(names_def_deptable.flags & TRF_DELHOLD))
     {
         P_EV_NAME p_ev_name;
 
-        if((p_ev_name = names_def.ptr) != NULL)
+        if((p_ev_name = names_def_deptable.ptr) != NULL)
         {
             EV_NAMEID i;
 
-            for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+            for(i = 0; i < names_def_deptable.next; ++i, ++p_ev_name)
             {
                 if(p_ev_name->flags & TRF_TOBEDEL)
                     continue;
@@ -730,18 +730,18 @@ name_list_sort(void)
                         p_ss_doc->nam_ref_count -= 1;
 
                     p_ev_name->flags |= TRF_TOBEDEL;
-                    names_def.flags |= TRF_TOBEDEL;
-                    names_def.mindel = MIN(names_def.mindel, i);
+                    names_def_deptable.flags |= TRF_TOBEDEL;
+                    names_def_deptable.mindel = MIN(names_def_deptable.mindel, i);
 
                     trace_1(TRACE_MODULE_EVAL, "name_list_sort deleting name: %s", p_ev_name->id);
                 }
             }
         }
 
-        names_def.flags &= ~TRF_CHECKUSE;
+        names_def_deptable.flags &= ~TRF_CHECKUSE;
     }
 
-    tree_sort(&names_def,
+    tree_sort(&names_def_deptable,
               sizeof(EV_NAME),
               NAMDEFINC,
               offsetof(EV_NAME, flags),

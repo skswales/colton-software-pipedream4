@@ -293,6 +293,9 @@ template_copy_new(
         tracef0("[template__copy WIN DEFN failed]");
 #endif
 
+    w->sprite_area = resspr_area(); /* whatever is in operation right now */
+    /*reportf("resspr_area %p", resspr_area());*/
+
     /* all offsets in file are relative to start of object */
     w_ind_change = (char *) w - (char *) 0;
 

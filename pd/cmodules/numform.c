@@ -474,7 +474,7 @@ convert_number_exponential(
     p_numform_info->decimal_places_actual = PtrDiffBytesS32(ustr, p_numform_info->ustr_decimal_section);
 
     /* strip sign and leading zero(es) from exponent */
-    p_numform_info->exponent_sign_actual = ustr_GetByteInc(p_numform_info->ustr_exponent_section);
+    p_numform_info->exponent_sign_actual = ustr_GetByteInc_wr(p_numform_info->ustr_exponent_section);
     assert((p_numform_info->exponent_sign_actual == CH_PLUS_SIGN) || (p_numform_info->exponent_sign_actual == CH_MINUS_SIGN__BASIC));
 
     ustr = p_numform_info->ustr_exponent_section;
@@ -733,7 +733,7 @@ convert_to_floating_point_hexadecimal(
     /* NB with DBL_MANT_DIG 53 there are 52 bits actually stored, divided by 4 -> 13 hex digits after the point */
     assert(DBL_MANT_DIG == 53);
     consume_int(ustr_xsnprintf(p_numform_info->ustr_integer_section, p_numform_info->elemof_integer_section,
-                               /*"C"*/isupper(p_numform_info->base_basechar) ? USTR_TEXT("%.13A") : USTR_TEXT("%.13a"),
+                               sbchar_isupper(p_numform_info->base_basechar) ? USTR_TEXT("%.13A") : USTR_TEXT("%.13a"),
                                f64));
 
     p_numform_info->integer_places_actual = ustrlen32(p_numform_info->ustr_integer_section);
@@ -836,7 +836,7 @@ check_real_nan_inf(
         else
             p_numform_info->number.infinity = 1;
 
-        ss_data_set_real(&p_numform_info->ss_data, 0.0);
+        p_numform_info->ss_data = ss_data_real_zero;
 
         return(TRUE);
     }
@@ -856,7 +856,7 @@ quickly_check_numform_numeric_for_date(
         return; /* e.g. during autoformat() */
 
     /* just test the first character */
-    switch(/*"C"*/tolower(PtrGetByte(ustr_numform_numeric)))
+    switch(sbchar_tolower(PtrGetByte(ustr_numform_numeric)))
     {
     default:
         return;
@@ -896,7 +896,7 @@ eE   - exponent (followed by +, - or nothing)
 %    - % char and *100
 gG   - Engineering notation (afpnum.kMGTPE)
 rR   - Roman numerals (if < 4999)
-xX   - Spreadsheet (1 -> A  etc.)
+xX   - Spreadsheet (1 -> A etc.)
 hH   - hours
 nN   - minutes
 sS   - seconds
@@ -995,7 +995,7 @@ numform(
         }
         else if(ss_data_get_real(&numform_info.ss_data) == 0.0)
         {
-            ss_data_set_real(&numform_info.ss_data, 0.0); /* NB We DO get -0.0 !!! which screws up rest of printing code ... */
+            numform_info.ss_data = ss_data_real_zero; /* NB We DO get -0.0 !!! which screws up rest of printing code ... */
             numform_info.number.zero = 1;
         }
         else if(ss_data_get_real(&numform_info.ss_data) < 0.0)
@@ -1004,7 +1004,7 @@ numform(
             numform_info.number.negative = 1;
         }
 
-        if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_numeric))
+        if(PTR_NOT_NULL_OR_NONE(p_numform_parms->ustr_numform_numeric))
             numform_section_extract_numeric(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_numeric, ustr_bptr(num_ustr_buf), sizeof32(num_ustr_buf));
         break;
 
@@ -1026,36 +1026,33 @@ numform(
             numform_info.number.negative = 1;
         }
 
-        if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_numeric))
+        if(PTR_NOT_NULL_OR_NONE(p_numform_parms->ustr_numform_numeric))
             numform_section_extract_numeric(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_numeric, ustr_bptr(num_ustr_buf), sizeof32(num_ustr_buf));
         break;
 
     case DATA_ID_DATE:
         numform_output_datetime_last_field = CH_NULL;
 
-        numform_info.date.valid = status_ok(ss_dateval_to_ymd(numform_info.ss_data.arg.ss_date.date, &numform_info.date.year, &numform_info.date.month,  &numform_info.date.day));
-        numform_info.time.valid = status_ok(ss_timeval_to_hms(numform_info.ss_data.arg.ss_date.time, &numform_info.time.hours, &numform_info.time.minutes, &numform_info.time.seconds));
+        numform_info.date.valid = status_ok(ss_dateval_to_ymd(ss_data_get_date(&numform_info.ss_data)->date, &numform_info.date.year,  &numform_info.date.month,   &numform_info.date.day));
+        numform_info.time.valid = status_ok(ss_timeval_to_hms(ss_data_get_date(&numform_info.ss_data)->time, &numform_info.time.hours, &numform_info.time.minutes, &numform_info.time.seconds));
 
-        if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_datetime))
+        if(PTR_NOT_NULL_OR_NONE(p_numform_parms->ustr_numform_datetime))
             numform_section_extract_datetime(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_datetime);
         break;
 
-    default:
 #if CHECKING
-        default_unhandled();
-        /*FALLTHRU*/
     case RPN_DAT_NEXT_NUMBER:
         assert0();
-
         /*FALLTHRU*/
 
+    default: default_unhandled();
     case DATA_ID_STRING:
     case DATA_ID_BLANK:
     case DATA_ID_ERROR:
 #endif
         numform_info.type = DATA_ID_STRING;
 
-        if(!IS_P_DATA_NONE(p_numform_parms->ustr_numform_texterror))
+        if(PTR_NOT_NULL_OR_NONE(p_numform_parms->ustr_numform_texterror))
             numform_section_extract_texterror(&numform_info, ustr_bptr(own_numform), sizeof32(own_numform), p_numform_parms->ustr_numform_texterror);
         break;
 
@@ -1291,7 +1288,7 @@ numform_numeric_section_copy_and_parse(
             {
             p_numform_info->base_basechar = (U8) (ch - 1); /* a or A */
 
-            if(!/*"C"*/isdigit(PtrGetByte(ustr_numform_section)))
+            if(!sbchar_isdigit(PtrGetByte(ustr_numform_section)))
                 p_numform_info->base = 0;  /* turn conversion off again */
             else
             {
@@ -1800,7 +1797,7 @@ numform_output_number_fields(
     /* Integer length overflows or matches specifier */
     while(p_numform_info->integer_places_format < p_numform_info->integer_places_actual)
     {
-        status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc(p_numform_info->ustr_integer_section)));
+        status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc_wr(p_numform_info->ustr_integer_section)));
         p_numform_info->integer_places_actual--;
         p_numform_info->integer_section_result_output = 2;
 
@@ -1843,7 +1840,7 @@ numform_output_number_fields(
         else
         {
             assert(p_numform_info->integer_places_format == p_numform_info->integer_places_actual);
-            status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc(p_numform_info->ustr_integer_section)));
+            status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc_wr(p_numform_info->ustr_integer_section)));
             p_numform_info->integer_places_actual--;
 
             p_numform_info->integer_section_result_output = 2;
@@ -1914,8 +1911,8 @@ numform_output_number_fields(
     /* Exponent length overflows or matches specifier */
     while(p_numform_info->exponent_places_format < p_numform_info->exponent_places_actual)
     {
-        assert(/*"C"*/isdigit(PtrGetByte(p_numform_info->ustr_exponent_section)));
-        status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc(p_numform_info->ustr_exponent_section)));
+        assert(sbchar_isdigit(PtrGetByte(p_numform_info->ustr_exponent_section)));
+        status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc_wr(p_numform_info->ustr_exponent_section)));
         p_numform_info->exponent_places_actual--;
     }
 
@@ -1948,8 +1945,8 @@ numform_output_number_fields(
         else
         {
             assert(p_numform_info->exponent_places_format == p_numform_info->exponent_places_actual);
-            assert(/*"C"*/isdigit(PtrGetByte(p_numform_info->ustr_exponent_section)));
-            status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc(p_numform_info->ustr_exponent_section)));
+            assert(sbchar_isdigit(PtrGetByte(p_numform_info->ustr_exponent_section)));
+            status_return(quick_ublock_ucs4_add(p_numform_info->p_quick_ublock, ustr_GetByteInc_wr(p_numform_info->ustr_exponent_section)));
             p_numform_info->exponent_places_actual--;
         }
 
@@ -2186,6 +2183,7 @@ numform_section_extract_numeric(
 
     p_numform_info->ustr_integer_section = ustr_numeric_buf;
     p_numform_info->elemof_integer_section = elemof_numeric_buffer;
+    CODE_ANALYSIS_ONLY(ustr_numeric_buf[0] = CH_NULL); /* all code paths below set it but CA can't see that */
 
     /* now handle exceptional stuff */
     if(p_numform_info->number.nan || p_numform_info->number.infinity)

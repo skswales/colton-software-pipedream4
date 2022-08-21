@@ -80,8 +80,8 @@ PROC_EXEC_PROTO(c_db)
 {
     const F64 cost = ss_data_get_real(args[0]);
     const F64 salvage = ss_data_get_real(args[1]);
-    const S32 life = (S32) real_floor(ss_data_get_real(args[2]));
-    const S32 period = (S32) real_floor(ss_data_get_real(args[3]));
+    const S32 life = (S32) arg_get_real_INT(args[2]);
+    const S32 period = (S32) arg_get_real_INT(args[3]); /* ODF has as Number, but how??? */
     const F64 month = (n_args > 4) ? ss_data_get_real(args[4]) : 12.0;
     F64 rate;
     F64 db_result;

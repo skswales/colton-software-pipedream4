@@ -2,7 +2,7 @@
 | License, v. 2.0. If a copy of the MPL was not distributed with this
 | file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-| Copyright (C) 2019 Stuart Swales
+| Copyright (C) 2019-2020 Stuart Swales
 
 WimpSlot -min 20480K
 |
@@ -14,15 +14,15 @@ cdir <Obey$Dir>.gitlab.RiscOS
 cdir <Obey$Dir>.gitlab.RiscOS.Sources
 |
 dir <Obey$Dir>.gitlab.RiscOS.Sources
-sgit clone http://gitlab.riscosopen.org/RiscOS/Sources/Lib/RISC_OSLib.git Lib/RISC_OSLib
+IfThere Lib.RISC_OSLib Then Else sgit clone http://gitlab.riscosopen.org/RiscOS/Sources/Lib/RISC_OSLib.git Lib/RISC_OSLib
 back
 |
 dir <Obey$Dir>.gitlab.RiscOS.Sources
-sgit clone http://gitlab.riscosopen.org/RiscOS/Sources/Toolbox/Toolboxlib.git Toolbox/Toolboxlib
+IfThere Toolbox.Toolboxlib Then Else sgit clone http://gitlab.riscosopen.org/RiscOS/Sources/Toolbox/Toolboxlib.git Toolbox/Toolboxlib
 back
 |
 dir <Obey$Dir>.gitlab.RiscOS.Sources.Lib.RISC_OSLib
-sgit checkout RISC_OSLib-5_75
+sgit checkout RISC_OSLib-5_82
 back
 |
 dir <Obey$Dir>.gitlab.RiscOS.Sources.Toolbox.Toolboxlib

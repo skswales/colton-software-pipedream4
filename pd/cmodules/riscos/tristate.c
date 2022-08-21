@@ -106,7 +106,7 @@ riscos_tristate_set(
     assert(state < elemof32(riscos_tristate_sprite_names));
     strcpy(tristate_name, riscos_tristate_sprite_names[state]);
 
-    winf_changedfield(window_handle, icon_handle); /* poke it for redraw */
+    winf_changedfield(window_handle, icon_handle); /* just poke it for redraw */
 }
 
 /* end of tristate.c */

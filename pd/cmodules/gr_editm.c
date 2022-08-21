@@ -25,6 +25,8 @@ local header
 
 #include "gr_chari.h"
 
+#define USE_RISCOS_COLOUR_PICKER 1
+
 /*
 internal functions
 */
@@ -47,13 +49,15 @@ internal functions
 #include "cs-dbox.h"    /* includes dbox.h */
 #endif
 
-#ifndef __dboxtcol_h
-#include "dboxtcol.h"   /* no includes */
-#endif
-
+#if defined(USE_RISCOS_COLOUR_PICKER)
 #ifndef                 __colourpick_h
 #include "cmodules/riscos/colourpick.h" /* no includes */
 #endif
+#else
+#ifndef __dboxtcol_h
+#include "dboxtcol.h"   /* no includes */
+#endif
+#endif /* USE_RISCOS_COLOUR_PICKER */
 
 #ifndef                 __tristate_h
 #include "cmodules/riscos/tristate.h" /* no includes */
@@ -175,6 +179,122 @@ static menu gr_chartedit_riscos_submenu_legend         = NULL;
 *
 ******************************************************************************/
 
+static void
+gr_chartedit_riscos_menu_handler_needs_sprites(
+    P_GR_CHARTEDITOR cep,
+    PC_GR_CHART cp,
+    P_U8 hit,
+    S32 submenurequest)
+{
+    S32 selection    = hit[0];
+    S32 subselection = hit[1];
+    BOOL needs_sprites = FALSE;
+
+    switch(selection)
+    {
+    case GR_CHART_MO_CHART_OPTIONS:
+    case GR_CHART_MO_CHART_SAVE:
+        break;
+
+    case GR_CHART_MO_CHART_GALLERY:
+        switch(subselection)
+        {
+        case mo_no_selection:
+            if(submenurequest)
+                break;
+
+            switch(cp->axes[0].charttype)
+            {
+            case GR_CHARTTYPE_PIE:
+            case GR_CHARTTYPE_BAR:
+            case GR_CHARTTYPE_LINE:
+            case GR_CHARTTYPE_SCAT:
+                needs_sprites = TRUE;
+                break;
+
+            default:
+                break;
+            }
+            break;
+
+        case GR_CHART_MO_GALLERY_PIE:
+        case GR_CHART_MO_GALLERY_BAR:
+        case GR_CHART_MO_GALLERY_LINE:
+        case GR_CHART_MO_GALLERY_SCATTER:
+            needs_sprites = TRUE;
+            break;
+
+        case GR_CHART_MO_GALLERY_OVERLAYS:
+        case GR_CHART_MO_GALLERY_PREFERRED:
+        case GR_CHART_MO_GALLERY_SET_PREFERRED:
+        case GR_CHART_MO_GALLERY_SAVE_PREFERRED:
+            break;
+
+        default:
+            break;
+        }
+        break;
+
+    case GR_CHART_MO_CHART_SELECTION:
+        {
+        switch(subselection)
+        {
+        case mo_no_selection:
+            /* mostly ignore clicks on 'Selection =>' */
+            if(submenurequest)
+                break;
+
+            switch(cep->selection.id.name)
+            {
+            case GR_CHART_OBJNAME_AXIS:
+                needs_sprites = TRUE;
+                break;
+
+            case GR_CHART_OBJNAME_SERIES:
+            case GR_CHART_OBJNAME_DROPSER:
+            default:
+                break;
+            }
+            break;
+
+        case GR_CHART_MO_SELECTION_FILLSTYLE:
+        case GR_CHART_MO_SELECTION_FILLCOLOUR:
+            break;
+
+        case GR_CHART_MO_SELECTION_LINEPATTERN:
+        case GR_CHART_MO_SELECTION_LINEWIDTH:
+            needs_sprites = TRUE;
+            break;
+
+        case GR_CHART_MO_SELECTION_LINECOLOUR:
+        case GR_CHART_MO_SELECTION_TEXT:
+        case GR_CHART_MO_SELECTION_TEXTCOLOUR:
+        case GR_CHART_MO_SELECTION_TEXTSTYLE:
+        case GR_CHART_MO_SELECTION_HINTCOLOUR:
+            break;
+
+        case GR_CHART_MO_SELECTION_AXIS:
+            needs_sprites = TRUE;
+            break;
+
+        case GR_CHART_MO_SELECTION_SERIES:
+            break;
+        }
+        }
+        break;
+
+    case GR_CHART_MO_CHART_LEGEND:
+    case GR_CHART_MO_CHART_NEW_TEXT:
+        break;
+
+    default:
+        break;
+    }
+
+    if(needs_sprites)
+        gr_chart_ensure_sprites();
+}
+
 static S32
 gr_chartedit_riscos_menu_handler(
     P_ANY handle,
@@ -182,8 +302,8 @@ gr_chartedit_riscos_menu_handler(
     S32 submenurequest)
 {
     GR_CHARTEDIT_HANDLE ceh          = handle;
-    P_GR_CHARTEDITOR     cep;
-    P_GR_CHART           cp;
+    P_GR_CHARTEDITOR    cep;
+    P_GR_CHART          cp;
     S32                 selection    = hit[0];
     S32                 subselection = hit[1];
     S32                 processed    = TRUE;
@@ -198,6 +318,8 @@ gr_chartedit_riscos_menu_handler(
 
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
+
+    gr_chartedit_riscos_menu_handler_needs_sprites(cep, cp, hit, submenurequest);
 
     switch(selection)
     {
@@ -1343,27 +1465,27 @@ gr_chartedit_selection_series_process(
 
 /******************************************************************************
 *
-* callback from dboxtcol to set an object colour
+* callback from colour picker to set an object colour
 *
 ******************************************************************************/
 
-typedef enum GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_TAG
+typedef enum GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_TAG
 {
-    gr_chartedit_riscos_dboxtcol_callback_linecolour,
-    gr_chartedit_riscos_dboxtcol_callback_fillcolour,
-    gr_chartedit_riscos_dboxtcol_callback_textcolour,
-    gr_chartedit_riscos_dboxtcol_callback_hintcolour
+    gr_chartedit_riscos_colpick_callback_linecolour,
+    gr_chartedit_riscos_colpick_callback_fillcolour,
+    gr_chartedit_riscos_colpick_callback_textcolour,
+    gr_chartedit_riscos_colpick_callback_hintcolour
 }
-GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_TAG;
+GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_TAG;
 
-typedef struct GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO
+typedef struct GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO
 {
     GR_CHARTEDIT_HANDLE ceh;
     GR_CHART_OBJID      id;
 
-    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_TAG tag;
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_TAG tag;
 
-    union GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO_STYLE
+    union GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO_STYLE
     {
         GR_LINESTYLE line;
         GR_FILLSTYLE fill;
@@ -1371,21 +1493,54 @@ typedef struct GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO
     }
     style;
 }
-GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO;
+GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO;
+
+#if defined(USE_RISCOS_COLOUR_PICKER)
+
+static GR_COLOUR
+gr_colour_from_rgb(
+    _InRef_     PC_RGB p_rgb)
+{
+    GR_COLOUR colour;
+
+    * (int *) &colour = 0;
+
+    colour.red   = p_rgb->r;
+    colour.green = p_rgb->g;
+    colour.blue  = p_rgb->b;
+
+    if(0 == p_rgb->transparent)
+        colour.visible  = 1;
+
+    return(colour);
+}
 
 static void
-gr_chartedit_riscos_dboxtcol_handler(
-    dboxtcol_colour ecol,
+gr_colour_to_rgb(
+    _OutRef_    P_RGB p_rgb,
+    _InVal_     GR_COLOUR colour)
+{
+    rgb_set(p_rgb, colour.red, colour.green, colour.blue);
+
+    if(!colour.visible)
+    {   /* transparent (if it gets this far) */
+        p_rgb->transparent = 0xFF;
+    }
+}
+
+static void
+gr_chartedit_riscos_colour_picker_handler(
+    _InRef_     PC_RGB p_rgb,
     P_ANY handle)
 {
-    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO * const i = handle;
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO * const i = handle;
     P_GR_CHARTEDITOR cep;
     P_GR_CHART cp;
     GR_COLOUR col;
     BOOL modify = FALSE;
     STATUS res = 1;
 
-    col = gr_colour_from_riscDraw(ecol);
+    col = gr_colour_from_rgb(p_rgb);
 
     cep = gr_chartedit_cep_from_ceh(i->ceh);
     assert(cep);
@@ -1395,7 +1550,7 @@ gr_chartedit_riscos_dboxtcol_handler(
 
     switch(i->tag)
     {
-    case gr_chartedit_riscos_dboxtcol_callback_linecolour:
+    case gr_chartedit_riscos_colpick_callback_linecolour:
         {
         P_GR_LINESTYLE cur_style = &i->style.line;
         GR_LINESTYLE  new_style = *cur_style;
@@ -1413,7 +1568,7 @@ gr_chartedit_riscos_dboxtcol_handler(
         break;
         }
 
-    case gr_chartedit_riscos_dboxtcol_callback_fillcolour:
+    case gr_chartedit_riscos_colpick_callback_fillcolour:
         {
         P_GR_FILLSTYLE cur_style = &i->style.fill;
         GR_FILLSTYLE  new_style = *cur_style;
@@ -1431,13 +1586,13 @@ gr_chartedit_riscos_dboxtcol_handler(
         break;
         }
 
-    case gr_chartedit_riscos_dboxtcol_callback_textcolour:
-    case gr_chartedit_riscos_dboxtcol_callback_hintcolour:
+    case gr_chartedit_riscos_colpick_callback_textcolour:
+    case gr_chartedit_riscos_colpick_callback_hintcolour:
         {
         P_GR_TEXTSTYLE cur_style = &i->style.text;
         GR_TEXTSTYLE  new_style = *cur_style;
 
-        if(i->tag == gr_chartedit_riscos_dboxtcol_callback_hintcolour)
+        if(i->tag == gr_chartedit_riscos_colpick_callback_hintcolour)
             new_style.bg = col;
         else
             new_style.fg = col;
@@ -1465,18 +1620,148 @@ gr_chartedit_riscos_dboxtcol_handler(
 }
 
 static void
+gr_chartedit_selection_colour_edit_common(
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO * i,
+    _In_z_      PC_U8Z title,
+    _InoutRef_  P_RGB p_rgb)
+{
+    BOOL ok;
+
+    ok = riscos_colour_picker(COLOUR_PICKER_SUBMENU,
+                              HOST_WND_NONE,
+                              p_rgb, TRUE /*allow_transparent*/, title);
+
+    if(ok)
+        gr_chartedit_riscos_colour_picker_handler(p_rgb, i);
+}
+
+#else /* NOT defined(USE_RISCOS_COLOUR_PICKER) */
+
+static void
+gr_chartedit_riscos_dboxtcol_handler(
+    dboxtcol_colour ecol,
+    P_ANY handle)
+{
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO * const i = handle;
+    P_GR_CHARTEDITOR cep;
+    P_GR_CHART cp;
+    GR_COLOUR col;
+    BOOL modify = FALSE;
+    STATUS res = 1;
+
+    col = gr_colour_from_riscDraw(ecol);
+
+    cep = gr_chartedit_cep_from_ceh(i->ceh);
+    assert(cep);
+
+    cp = gr_chart_cp_from_ch(cep->ch);
+    assert(cp);
+
+    switch(i->tag)
+    {
+    case gr_chartedit_riscos_colpick_callback_linecolour:
+        {
+        P_GR_LINESTYLE cur_style = &i->style.line;
+        GR_LINESTYLE  new_style = *cur_style;
+
+        new_style.fg = col;
+
+        modify = (0 != memcmp(&new_style, cur_style, sizeof(new_style)));
+
+        if(modify)
+        {
+            new_style.fg.manual = 1;
+            *cur_style = new_style;
+            res = gr_chart_objid_linestyle_set(cp, i->id, cur_style);
+        }
+        break;
+        }
+
+    case gr_chartedit_riscos_colpick_callback_fillcolour:
+        {
+        P_GR_FILLSTYLE cur_style = &i->style.fill;
+        GR_FILLSTYLE  new_style = *cur_style;
+
+        new_style.fg = col;
+
+        modify = (0 != memcmp(&new_style, cur_style, sizeof(new_style)));
+
+        if(modify)
+        {
+            new_style.fg.manual = 1;
+            *cur_style = new_style;
+            res = gr_chart_objid_fillstyle_set(cp, i->id, cur_style);
+        }
+        break;
+        }
+
+    case gr_chartedit_riscos_colpick_callback_textcolour:
+    case gr_chartedit_riscos_colpick_callback_hintcolour:
+        {
+        P_GR_TEXTSTYLE cur_style = &i->style.text;
+        GR_TEXTSTYLE  new_style = *cur_style;
+
+        if(i->tag == gr_chartedit_riscos_colpick_callback_hintcolour)
+            new_style.bg = col;
+        else
+            new_style.fg = col;
+
+        modify = (0 != memcmp(&new_style, cur_style, sizeof(new_style)));
+
+        if(modify)
+        {
+            new_style.fg.manual = 1; /* yes, in EITHER case */
+            *cur_style = new_style;
+            res = gr_chart_objid_textstyle_set(cp, i->id, cur_style);
+        }
+        break;
+        }
+
+    default:
+        break;
+    }
+
+    if(status_fail(res))
+        gr_chartedit_winge(res);
+
+    if(modify)
+        gr_chart_modify_and_rebuild(&cep->ch);
+}
+
+#endif /* defined(USE_RISCOS_COLOUR_PICKER) */
+
+static void
+gr_chartedit_selection_fillcolour_edit_do(
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO * i,
+    _In_z_      PC_U8Z title)
+{
+#if defined(USE_RISCOS_COLOUR_PICKER)
+    RGB rgb;
+
+    gr_colour_to_rgb(&rgb, i->style.fill.fg);
+
+    gr_chartedit_selection_colour_edit_common(i, title, &rgb);
+#else
+    dboxtcol_colour col = gr_colour_to_riscDraw(i->style.fill.fg);
+
+    dboxtcol(&col, TRUE /*allow_transparent*/,
+             de_const_cast(char *, title),
+             gr_chartedit_riscos_dboxtcol_handler, i);
+#endif
+}
+
+static void
 gr_chartedit_selection_fillcolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
-    dboxtcol_colour col;
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO i;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
     assert(cep);
 
     i.id  = cep->selection.id;
     i.ceh = cep->ceh;
-    i.tag = gr_chartedit_riscos_dboxtcol_callback_fillcolour;
+    i.tag = gr_chartedit_riscos_colpick_callback_fillcolour;
 
     {
     S32 appendage = GR_CHART_MSG_EDIT_APPEND_FILL;
@@ -1511,26 +1796,41 @@ gr_chartedit_selection_fillcolour_edit(
     gr_chart_objid_fillstyle_query(cp, i.id, &i.style.fill);
     }
 
-    col = gr_colour_to_riscDraw(i.style.fill.fg);
+    gr_chartedit_selection_fillcolour_edit_do(&i, title);
+}
+
+static void
+gr_chartedit_selection_hintcolour_edit_do(
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO * i,
+    _In_z_      PC_U8Z title)
+{
+#if defined(USE_RISCOS_COLOUR_PICKER)
+    RGB rgb;
+
+    gr_colour_to_rgb(&rgb, i->style.text.bg);
+
+    gr_chartedit_selection_colour_edit_common(i, title, &rgb);
+#else
+    dboxtcol_colour col = gr_colour_to_riscDraw(i->style.text.bg);
 
     dboxtcol(&col, TRUE /*allow_transparent*/,
-             title,
-             gr_chartedit_riscos_dboxtcol_handler, &i);
+             de_const_cast(char *, title),
+             gr_chartedit_riscos_dboxtcol_handler, i);
+#endif
 }
 
 static void
 gr_chartedit_selection_hintcolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
-    dboxtcol_colour col;
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO i;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
     assert(cep);
 
     i.id  = cep->selection.id;
     i.ceh = cep->ceh;
-    i.tag = gr_chartedit_riscos_dboxtcol_callback_hintcolour;
+    i.tag = gr_chartedit_riscos_colpick_callback_hintcolour;
 
     {
     S32 appendage = 0;
@@ -1564,26 +1864,41 @@ gr_chartedit_selection_hintcolour_edit(
     gr_chart_objid_textstyle_query(cp, i.id, &i.style.text);
     }
 
-    col = gr_colour_to_riscDraw(i.style.text.bg);
+    gr_chartedit_selection_hintcolour_edit_do(&i, title);
+}
+
+static void
+gr_chartedit_selection_linecolour_edit_do(
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO * i,
+    _In_z_      PC_U8Z title)
+{
+#if defined(USE_RISCOS_COLOUR_PICKER)
+    RGB rgb;
+
+    gr_colour_to_rgb(&rgb, i->style.line.fg);
+
+    gr_chartedit_selection_colour_edit_common(i, title, &rgb);
+#else
+    dboxtcol_colour col = gr_colour_to_riscDraw(i->style.line.fg);
 
     dboxtcol(&col, TRUE /*allow_transparent*/,
-             title,
-             gr_chartedit_riscos_dboxtcol_handler, &i);
+             de_const_cast(char *, title),
+             gr_chartedit_riscos_dboxtcol_handler, i);
+#endif
 }
 
 static void
 gr_chartedit_selection_linecolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
-    dboxtcol_colour col;
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO i;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
     assert(cep);
 
     i.id  = cep->selection.id;
     i.ceh = cep->ceh;
-    i.tag = gr_chartedit_riscos_dboxtcol_callback_linecolour;
+    i.tag = gr_chartedit_riscos_colpick_callback_linecolour;
 
     {
     S32 appendage = GR_CHART_MSG_EDIT_APPEND_LINE;
@@ -1614,11 +1929,7 @@ gr_chartedit_selection_linecolour_edit(
     gr_chart_objid_linestyle_query(cp, i.id, &i.style.line);
     }
 
-    col = gr_colour_to_riscDraw(i.style.line.fg);
-
-    dboxtcol(&col, TRUE /*allow_transparent*/,
-             title,
-             gr_chartedit_riscos_dboxtcol_handler, &i);
+    gr_chartedit_selection_linecolour_edit_do(&i, title);
 }
 
 static void
@@ -1996,18 +2307,39 @@ gr_chartedit_selection_linewidth_edit(
 }
 
 static void
+gr_chartedit_selection_textcolour_edit_do(
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO * i,
+    _In_z_      PC_U8Z title)
+{
+#if defined(USE_RISCOS_COLOUR_PICKER)
+    RGB rgb;
+
+    gr_colour_to_rgb(&rgb, i->style.text.fg);
+
+    gr_chartedit_selection_colour_edit_common(i, title, &rgb);
+#else
+    dboxtcol_colour col;
+
+    col = gr_colour_to_riscDraw(i->style.text.fg);
+
+    dboxtcol(&col, TRUE /*allow_transparent*/,
+             de_const_cast(char *, title),
+             gr_chartedit_riscos_dboxtcol_handler, i);
+#endif
+}
+
+static void
 gr_chartedit_selection_textcolour_edit(
     P_GR_CHARTEDITOR cep)
 {
-    GR_CHARTEDIT_RISCOS_DBOXTCOL_CALLBACK_INFO i;
-    dboxtcol_colour col;
+    GR_CHARTEDIT_RISCOS_COLPICK_CALLBACK_INFO i;
     U8 title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
 
     assert(cep);
 
     i.id  = cep->selection.id;
     i.ceh = cep->ceh;
-    i.tag = gr_chartedit_riscos_dboxtcol_callback_textcolour;
+    i.tag = gr_chartedit_riscos_colpick_callback_textcolour;
 
     {
     S32 appendage = 0;
@@ -2053,11 +2385,7 @@ gr_chartedit_selection_textcolour_edit(
     gr_chart_objid_textstyle_query(cp, i.id, &i.style.text);
     }
 
-    col = gr_colour_to_riscDraw(i.style.text.fg);
-
-    dboxtcol(&col, TRUE /*allow_transparent*/,
-             title,
-             gr_chartedit_riscos_dboxtcol_handler, &i);
+    gr_chartedit_selection_textcolour_edit_do(&i, title);
 }
 
 #endif /* RISCOS */

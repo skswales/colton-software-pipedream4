@@ -7,7 +7,9 @@
 /* Copyright (C) 1992-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* MRJC April 1992 / August 1993; SKS derived from Fireworkz for PipeDream use */
+/* MRJC April 1992 / August 1993 */
+
+/* SKS derived from Fireworkz for PipeDream use */
 
 #include "common/gflags.h"
 
@@ -21,6 +23,17 @@
 
 #define SECS_IN_24 (60 * 60 * 24)
 
+const SS_DATA
+ss_data_real_zero =
+{
+#if defined(SS_DATA_HAS_EV_IDNO_IN_TOP_16_BITS)
+    0, 0, DATA_ID_REAL,
+#else
+    DATA_ID_REAL,
+#endif
+    { 0.0 }
+};
+
 /******************************************************************************
 *
 * set error type into data element
@@ -33,7 +46,7 @@ ss_data_set_error(
     _OutRef_    P_SS_DATA p_ss_data,
     _InVal_     STATUS error)
 {
-    zero_struct_ptr(p_ss_data);
+    zero_struct_ptr_fn(p_ss_data);
     ss_data_set_data_id(p_ss_data, DATA_ID_ERROR);
     p_ss_data->arg.ss_error.status = error;
     p_ss_data->arg.ss_error.type = ERROR_NORMAL;
@@ -163,24 +176,17 @@ ss_data_real_to_integer_force(
 
     f64 = ss_data_get_real(p_ss_data);
 
-    if(fabs(f64) > (F64) S32_MAX)
-    {
-        ss_data_set_integer(p_ss_data, (f64 < 0.0) ? -S32_MAX : S32_MAX);
-        return(STATUS_OK); /* out of range */
-    }
-
     floor_value = real_floor(f64);
 
-    s32 = (S32) floor_value;
-
-    if(s32 == S32_MIN)
+    if(islessequal(fabs(floor_value), (F64) S32_MAX)) /* test rejects NaN */
     {
-        ss_data_set_integer(p_ss_data, -S32_MAX);
-        return(STATUS_OK); /* out of range */
+        s32 = (S32) floor_value;
+        ss_data_set_integer(p_ss_data, s32);
+        return(STATUS_DONE); /* converted OK */
     }
 
-    ss_data_set_integer(p_ss_data, s32);
-    return(STATUS_DONE); /* converted OK */
+    ss_data_set_integer(p_ss_data, isless(floor_value, 0.0) ? -S32_MAX : S32_MAX);
+    return(STATUS_OK); /* out of range */
 }
 
 /******************************************************************************
@@ -205,16 +211,17 @@ ss_data_real_to_integer_try(
 
     floor_value = real_floor(f64);
 
-    if(fabs(floor_value) > (F64) S32_MAX)
-        return(FALSE);
-
-    if(floor_value != f64)
+    if(floor_value != ss_data_get_real(p_ss_data)/*f64*/) /* reloading saves SFM/LFN/STF ! */
         return(FALSE); /* unmodified */
 
-    s32 = (S32) floor_value;
+    if(islessequal(fabs(floor_value), (F64) S32_MAX))
+    {
+        s32 = (S32) floor_value;
+        ss_data_set_integer(p_ss_data, s32);
+        return(TRUE); /* converted OK */
+    }
 
-    ss_data_set_integer(p_ss_data, s32);
-    return(TRUE); /* converted OK */
+    return(FALSE); /* unmodified */
 }
 
 /******************************************************************************
@@ -841,6 +848,48 @@ ss_data_get_number(
 
 /******************************************************************************
 *
+* allocate space for a string
+*
+* NB MUST cater for zero-length strings
+*
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+ss_string_allocate(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _In_/*Val_*/ U32 len)
+{
+    assert(p_ss_data);
+    assert((S32) len >= 0);
+
+    // len = MIN(len, EV_MAX_STRING_LEN); /* SKS 27oct96 limit in any case */
+
+#if 0 /* can't do this in PipeDream - gets transferred to a result and then freed */
+    /*if(0 == len)*/
+    {   /* SKS 27oct96 optimise empty strings */
+        p_ss_data->arg.string.uchars = "";
+        ss_data_set_data_id(p_ss_data, DATA_ID_STRING);
+    }
+#endif
+    {
+        STATUS status;
+
+        if(NULL == (p_ss_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, len + 1/*CH_NULL*/, &status)))
+            return(ss_data_set_error(p_ss_data, status));
+
+        p_ss_data->arg.string_wr.uchars[len] = CH_NULL; /* keep whole string terminated (unlike Fireworkz) so that callers don't need to worry */
+
+        ss_data_set_data_id(p_ss_data, RPN_TMP_STRING); /* copy is now owned by the caller */
+    }
+
+    p_ss_data->arg.string.size = len;
+
+    return(STATUS_OK);
+}
+
+/******************************************************************************
+*
 * is a string blank ?
 *
 ******************************************************************************/
@@ -897,30 +946,17 @@ ss_string_make_uchars(
 {
     assert(p_ss_data);
     assert((S32) uchars_n >= 0);
+    assert(uchars_n <= EV_MAX_STRING_LEN); /* sometimes we get copied willy-nilly into buffers! */
 
-    uchars_n = MIN(uchars_n, EV_MAX_STRING_LEN); /* SKS 27oct96 limit in any case */
+    status_return(ss_string_allocate(p_ss_data, uchars_n)); /* NB caters for zero-length strings */
 
-    /*if(0 != uchars_n)*/
+    if(0 != uchars_n)
     {
-        STATUS status;
-        if(NULL == (p_ss_data->arg.string_wr.uchars = al_ptr_alloc_bytes(P_U8Z, uchars_n + 1/*CH_NULL*/, &status)))
-            return(ss_data_set_error(p_ss_data, status));
         if(NULL == uchars)
             PtrPutByte(p_ss_data->arg.string_wr.uchars, CH_NULL); /* allows append (like ustr_set_n()) */
         else
             memcpy32(p_ss_data->arg.string_wr.uchars, uchars, uchars_n);
-        p_ss_data->arg.string_wr.uchars[uchars_n] = CH_NULL;
-        ss_data_set_data_id(p_ss_data, RPN_TMP_STRING); /* copy is now owned by the caller */
     }
-#if 0 /* can't do this in PipeDream - gets transferred to a result and then freed */
-    else
-    {   /* SKS 27oct96 optimise empty strings */
-        p_ss_data->arg.string.uchars = "";
-        ss_data_set_data_id(p_ss_data, DATA_ID_STRING);
-    }
-#endif
-
-    p_ss_data->arg.string.size = uchars_n;
 
     return(STATUS_OK);
 }
@@ -986,7 +1022,7 @@ ss_string_skip_internal_whitespace_uchars(
     U32 buf_idx = uchars_idx;
     U32 wss;
 
-    assert((0 == uchars_n) || (!IS_PTR_NULL_OR_NONE(uchars)));
+    assert( (0 == uchars_n) || PTR_NOT_NULL_OR_NONE(uchars) );
 
     while(buf_idx < uchars_n)
     {
@@ -999,6 +1035,31 @@ ss_string_skip_internal_whitespace_uchars(
     }
 
     wss = buf_idx - uchars_idx;
+    return(wss);
+}
+
+_Check_return_
+extern U32
+ss_string_skip_trailing_whitespace_uchars(
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _InRef_     U32 uchars_n)
+{
+    U32 buf_idx = uchars_n;
+    U32 wss;
+
+    assert( (0 == uchars_n) || PTR_NOT_NULL_OR_NONE(uchars) );
+
+    while(0 != buf_idx)
+    {
+        const U8 u8 = PtrGetByteOff(uchars, buf_idx-1);
+
+        if(!ss_string_ucs4_is_space(u8))
+            break;
+
+        --buf_idx;
+    }
+
+    wss = uchars_n - buf_idx;
     return(wss);
 }
 

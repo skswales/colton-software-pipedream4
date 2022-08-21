@@ -1204,13 +1204,8 @@ set_graphics_window_from_textarea(
         trace_4(TRACE_APP_PD4_RENDER, "setting gw (%d, %d, %d, %d) (OS)", clipper.x0, clipper.y0, clipper.x1, clipper.y1);
 
         /* when setting graphics window, all points are inclusive */
-#if 1
         wimpt_safe(riscos_vdu_define_graphics_window(clipper.x0,      clipper.y0,
                                                      clipper.x1 - dx, clipper.y1 - dy));
-#else
-        wimpt_safe(bbc_gwindow(clipper.x0,      clipper.y0,
-                               clipper.x1 - dx, clipper.y1 - dy));
-#endif
     }
 
     return(TRUE);
@@ -1222,13 +1217,8 @@ restore_graphics_window(void)
     /* restore from saved copy  */
     graphics_window = saved_graphics_window;
 
-#if 1
     wimpt_safe(riscos_vdu_define_graphics_window(graphics_window.x0,      graphics_window.y0,
                                                  graphics_window.x1 - dx, graphics_window.y1 - dy));
-#else
-    wimpt_safe(bbc_gwindow(graphics_window.x0,      graphics_window.y0,
-                           graphics_window.x1 - dx, graphics_window.y1 - dy));
-#endif
 }
 
 /******************************************************************************
@@ -2516,11 +2506,11 @@ filealtered(
 {
     if(xf_filealtered != newstate)
     {
-        reportf("filealtered := %d for %s", newstate, report_tstr(currentfilename));
+        reportf("filealtered := %d for %s", newstate, report_tstr(currentfilename()));
 
         xf_filealtered = newstate;
 
-        riscos_settitlebar(currentfilename);
+        riscos_settitlebar(currentfilename());
     }
 }
 

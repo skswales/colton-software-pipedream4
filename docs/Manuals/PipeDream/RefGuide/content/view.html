@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
-    <title>VIEW Transfer</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <title>VIEW File Transfer</title>
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,16 +16,16 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="troubleshooting.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="viewsheet.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="troubleshooting.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="viewsheet.html">Next</a></td>
             </tr>
         </table>
     </div>
 
-    <h1 id="VIEW">VIEW Transfer</h1>
+    <h1 id="VIEW">VIEW File Transfer</h1>
     <p>
         PipeDream can load and save files in VIEW format.
         Since the file structures and philosophies of VIEW and PipeDream are different, it is not possible to perform a perfect conversion on all files.
@@ -37,7 +37,7 @@
     <p>
         When loading with the <span class="csg-dbox-option">Format</span> option set to <span class="csg-dbox-option-value">Auto</span>
         in the <span class="csg-dbox">Load</span> dialogue box, PipeDream will recognise a file as being in VIEW format if there is a stored command or ruler near the beginning.
-        If there is no stored command or ruler near the beginning, PipeDream will probably load the file in ASCII format
+        If there is no stored command or ruler near the beginning, PipeDream will probably load the file in Text format
         so you will need to reload with the <span class="csg-dbox-option">Format</span> option set to <span class="csg-dbox-option">VIEW</span>.
         Only the first ruler, header, footer and margin settings will be used.
         Any subsequent stored commands resetting these items will be ignored by PipeDream since PipeDream cannot cope with the page layout changing within a file.
@@ -166,7 +166,7 @@
         page numbering will start at the value of <span class="csg-function-parameter">n</span>.
     </p>
 
-    <h4 id=Headers">Headers and footers</h4>
+    <h4 id="Headers">Headers and footers</h4>
     <p>
         The format of headers and footers is similar in PipeDream and VIEW but their effect on the page length is not.
         VIEW always prints a line for both the header and footer so if they have not been set VIEW will print a blank line for each.
@@ -261,14 +261,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Troubleshooting </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> ViewSheet</td>
+                <td class="navfooter_PUN_L">Troubleshooting </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> ViewSheet</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="troubleshooting.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="viewsheet.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="troubleshooting.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="viewsheet.html">Next</a></td>
             </tr>
         </table>
     </div>

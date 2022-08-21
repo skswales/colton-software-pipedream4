@@ -9,8 +9,8 @@
 
 /* Some target-specific definitions for the target machine and OS */
 
-#ifndef _defineos_h
-#define _defineos_h
+#ifndef __defineos_h
+#define __defineos_h
 
 /*
  * target machine definition
@@ -131,9 +131,13 @@ check that setup from selectos.h is ok
 #define __analysis_assume(expr) __assume(expr)
 #endif
 
+#ifndef _Analysis_assume_
+#define _Analysis_assume_(expr) __assume(expr)
+#endif
+
 /* much more of differences covered in coltsoft/coltsoft.h ... */
 
-#endif /* _defineos_h */
+#endif /* __defineos_h */
 
 /* end of defineos.h */
 

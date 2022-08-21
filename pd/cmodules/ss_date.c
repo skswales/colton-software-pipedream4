@@ -21,10 +21,6 @@
 
 #include <time.h> /* for struct tm */
 
-#ifndef sbchar_isdigit
-#define sbchar_isdigit isdigit
-#endif
-
 #define SECS_IN_24 ((S32) 60 * (S32) 60 * (S32) 24)
 #define FP_SECS_IN_24 (60.0 * 60.0 * 24.0)
 
@@ -300,15 +296,14 @@ ss_ymd_to_dateval(
         year += (month_index - 12) / 12;
         month_index = 12 + (month_index % 12); /* 12 + (-11,-10,..,-1,0) => 0..11 : month_index now positive */
         month = month_index + 1; /* reduces month into 1..12 */
-        UNREFERENCED_PARAMETER(month); /* useful for debug */
-
+        UNREFERENCED_LOCAL_VARIABLE(month); /* useful for debug */
     }
     else if(month_index > 11)
     {
         year += (month_index / 12);
         month_index = (month_index % 12); /* reduce month_index into 0..11 */
         month = month_index + 1; /* reduces month into 1..12 */
-        UNREFERENCED_PARAMETER(month);
+        UNREFERENCED_LOCAL_VARIABLE(month);
     }
 
     if(year <= 0)

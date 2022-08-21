@@ -43,11 +43,12 @@
 *
 ******************************************************************************/
 
+/*ncr*/
 extern S32
 fx_x(
-    S32 a,
-    S32 x,
-    S32 y)
+    _InVal_     S32 a,
+    _InVal_     S32 x,
+    _InVal_     S32 y)
 {
     _kernel_swi_regs rs;
 
@@ -57,35 +58,6 @@ fx_x(
     (void) _kernel_swi(OS_Byte, &rs, &rs);
 
     return(rs.r[1]);
-}
-
-/******************************************************************************
-*
-* Perform an OS_Byte call, returning the R1 value, with R2 = 0
-*
-******************************************************************************/
-
-extern S32
-fx_x2(
-    S32 a,
-    S32 x)
-{
-    _kernel_swi_regs rs;
-
-    rs.r[0] = a;
-    rs.r[1] = x;
-    rs.r[2] = 0;
-    (void) _kernel_swi(OS_Byte, &rs, &rs);
-
-    return(rs.r[1]);
-}
-
-extern char *
-mysystem(
-    const char *str)
-{
-    os_error * err = os_cli((char *) str);
-    return(err ? err->errmess : NULL);
 }
 
 /******************************************************************************

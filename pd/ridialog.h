@@ -263,7 +263,11 @@ dproc_printconfig(
     DIALOG *dptr);
 
 extern void
-dproc_savefile(
+dproc_savefileas(
+    DIALOG *dptr);
+
+extern void
+dproc_savefilesimple(
     DIALOG *dptr);
 
 extern void

@@ -501,7 +501,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\r32\!PipeDream\Relnotes,faf"
+				RelativePath="..\..\..\r32\!PipeDream\Relnotes"
 				>
 			</File>
 			<Filter
@@ -620,7 +620,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\extrautils\Relnotes,faf"
+					RelativePath="..\..\..\..\..\extrautils\Relnotes"
 					>
 				</File>
 				<Filter
@@ -732,7 +732,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\cmodules\riscos\filetype.h"
+					RelativePath="..\..\..\..\cmodules\coltsoft\filetype.h"
 					>
 				</File>
 				<File
@@ -868,7 +868,19 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\cmodules\xustring.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\cmodules\xstring.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\xtstring.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\xustring.h"
 					>
 				</File>
 			</Filter>
@@ -1084,10 +1096,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\screen.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\slector.c"
 					>
 				</File>
@@ -1121,6 +1129,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\userIO_x.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\utils\u_reperr.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\utils\u_strings.c"
 					>
 				</File>
 				<File
@@ -2772,81 +2788,81 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\Text"
+					RelativePath="..\..\..\..\utils\en_GB\Help\Text"
 					>
 				</File>
 				<Filter
 					Name="HTML"
 					>
 					<File
-						RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\cmds.html,faf"
+						RelativePath="..\..\..\..\utils\en_GB\Help\HTML\cmds.htm"
 						>
 					</File>
 					<File
-						RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\help.css"
+						RelativePath="..\..\..\..\utils\en_GB\Help\HTML\help.css"
 						>
 					</File>
 					<File
-						RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\index.html,faf"
+						RelativePath="..\..\..\..\utils\en_GB\Help\HTML\index.htm"
 						>
 					</File>
 					<File
-						RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\licence.html,faf"
+						RelativePath="..\..\..\..\utils\en_GB\Help\HTML\licenc.htm"
 						>
 					</File>
 					<File
-						RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\mouse.html,faf"
+						RelativePath="..\..\..\..\utils\en_GB\Help\HTML\mouse.htm"
 						>
 					</File>
 					<File
-						RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\toolb.html,faf"
+						RelativePath="..\..\..\..\utils\en_GB\Help\HTML\toolb.htm"
 						>
 					</File>
 					<Filter
 						Name="functions"
 						>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\complex.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\complx.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\custom.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\custom.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\database.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\db.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\index.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\index.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\lookup.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\lookup.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\math.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\math.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\matrix.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\matrix.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\misc.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\misc.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\stats.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\stats.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\string.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\string.htm"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\r32\!PipeDream\Res\UK\Help\HTML\functions\trig.html,faf"
+							RelativePath="..\..\..\..\utils\en_GB\Help\HTML\functions\trig.htm"
 							>
 						</File>
 					</Filter>
@@ -2935,58 +2951,58 @@
 			Name="docs"
 			>
 			<Filter
-				Name="Tutorial"
+				Name="StartGuide"
 				>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutpipedream.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\aboutp.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutthistutorial.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\aboutt.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\combineddocuments.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\comdoc.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\commands.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\cmds.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\conventions.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\conven.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\csguide.css"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\tutor.css"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\databases.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\db.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\glossary.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\gloss.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\index.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\index.html"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\installation.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\instal.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\spreadsheets.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\sheets.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\thepipedreamwindow.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\pdwind.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\wordprocessing.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\wrdpro.htm"
 					>
 				</File>
 			</Filter>
@@ -3034,11 +3050,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\complexfns.html"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\csguide.css"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\complex.html"
 					>
 				</File>
 				<File
@@ -3046,11 +3058,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\customfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\custom.html"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\databasefns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\database.html"
 					>
 				</File>
 				<File
@@ -3062,7 +3074,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\datetimefns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\datetime.html"
 					>
 				</File>
 				<File
@@ -3082,7 +3094,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\financialfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\financial.html"
 					>
 				</File>
 				<File
@@ -3103,6 +3115,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions.html"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\glossary.html"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\guide.css"
 					>
 				</File>
 				<File
@@ -3138,7 +3158,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\lookupfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\lookup.html"
 					>
 				</File>
 				<File
@@ -3150,11 +3170,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mathfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\math.html"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\matrixfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\matrix.html"
 					>
 				</File>
 				<File
@@ -3166,7 +3186,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\miscfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\misc.html"
 					>
 				</File>
 				<File
@@ -3214,7 +3234,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printerdriverediting.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printdrvediting.html"
 					>
 				</File>
 				<File
@@ -3262,11 +3282,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\statsfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\stats.html"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\stringfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\string.html"
 					>
 				</File>
 				<File
@@ -3286,7 +3306,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\trigfns.html"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\trig.html"
 					>
 				</File>
 				<File

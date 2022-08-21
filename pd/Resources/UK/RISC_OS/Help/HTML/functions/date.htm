@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+    <title>Date and Time Functions</title>
+    <link href="../help.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <!-- Copyright (C) 1991-1998 Colton Software Limited
+       - Copyright (C) 1998-2015 R W Colton -->
+
+    <h1 id="Dates">Date and Time Functions</h1>
+    <p>PipeDream has a set of date and time functions which enable you to build dates and times in number cells and do calculations with them.</p>
+    <p>You can enter dates and times in one of three ways:</p>
+    <ul>
+        <li>typing the date in the form <code>25.12.1973</code> or <code>25.12.73</code> or the time in the form <code>23:59:59</code>;</li>
+        <li>using the TODAY function which gives the current date;</li>
+        <li>using the NOW function which gives the current date and time;</li>
+        <li>using the functions DATE and TIME.</li>
+    </ul>
+
+    <h2 class="csg-function" id="AGE">AGE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        AGE(<span class="csg-function-parameter">date1</span>,
+        <span class="csg-function-parameter">date2</span>)
+    </p>
+    <p>
+        Works out the difference between two dates in years and months.
+        <span class="csg-function-parameter">date1</span> should be the more recent date,
+        and <span class="csg-function-parameter">date2</span> the earlier date.
+    </p>
+    <h5>Example:</h5>
+    <p>AGE(26.6.1994, 25.8.1982)</p>
+    <p>returns the age as a number, expressed as 12.10, that is, someone aged 12 years and 10 months.</p>
+    <p>Use INT() to extract the number of years from the result and 100*(n-INT(n)) to extract the number of months.</p>
+
+    <h2 class="csg-function" id="DATE">DATE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        DATE(<span class="csg-function-parameter">year</span>,
+        <span class="csg-function-parameter">month</span>,
+        <span class="csg-function-parameter">day</span>)
+    </p>
+    <p>Builds a date from individual components.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>DATE(61,3,17)</code></p>
+    <p>returns <code>17.03.1961</code>.</p>
+
+    <h2 class="csg-function" id="DATEVALUE">DATEVALUE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">DATEVALUE(<span class="csg-function-parameter">text</span>)</p>
+    <p>Converts <span class="csg-function-parameter">text</span> to a date.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>DATEVALUE("17.3.61")</code></p>
+    <p>returns <code>17.3.1961</code>.</p>
+    <p><span class="csg-function-parameter">text</span> can also include a time.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>DATEVALUE("17.3.61 17:15")</code></p>
+    <p>returns <code>17.3.1961 17:15</code>.</p>
+
+    <h2 class="csg-function" id="DAY">DAY</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">DAY(<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns the days component of <span class="csg-function-parameter">date</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>DAY(17.3.61)</code></p>
+    <p>returns <code>17</code>.</p>
+
+    <h2 class="csg-function" id="DAYNAME">DAYNAME</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">DAYNAME(<span class="csg-function-parameter">number</span>|<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns a day name string corresponding to the <span class="csg-function-parameter">number</span> or <span class="csg-function-parameter">date</span> (where Sunday is day one).</p>
+
+    <h2 class="csg-function" id="HOUR">HOUR</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">HOUR(<span class="csg-function-parameter">time</span>)</p>
+    <p>Returns the hours component of <span class="csg-function-parameter">time</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>HOUR(18:33:04)</code></p>
+    <p>returns <code>18</code>.</p>
+
+    <h2 class="csg-function" id="MINUTE">MINUTE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">MINUTE(<span class="csg-function-parameter">time</span>)</p>
+    <p>Returns the minutes component of <span class="csg-function-parameter">time</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>MINUTE(18:33:04)</code></p>
+    <p>returns <code>33</code>.</p>
+
+    <h2 class="csg-function" id="MONTH">MONTH</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">MONTH(<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns the months component of <span class="csg-function-parameter">date</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>MONTH(2.9.91)</code></p>
+    <p>returns <code>9</code></p>
+
+    <h2 class="csg-function" id="MONTHDAYS">MONTHDAYS</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">MONTHDAYS(<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns the number of days in the month of <span class="csg-function-parameter">date</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>MONTHDAYS(1.2.84)</code></p>
+    <p>returns <code>29</code>.</p>
+
+    <h2 class="csg-function" id="MONTHNAME">MONTHNAME</h2>
+    <p>MONTHNAME(<span class="csg-function-parameter">number</span>|<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns a month name string corresponding to the <span class="csg-function-parameter">number</span> or <span class="csg-function-parameter">date</span> (where January is month one).</p>
+
+    <h2 class="csg-function" id="NOW">NOW</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">NOW</p>
+    <p>Returns today&rsquo;s date and time, in the form <code>2.9.1991 18:33:04</code>.</p>
+
+    <h2 class="csg-function" id="SECOND">SECOND</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">SECOND(<span class="csg-function-parameter">time</span>)</p>
+    <p>Returns the seconds component of <span class="csg-function-parameter">time</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>SECOND(18:33:04)</code></p>
+    <p>returns <code>4</code>.</p>
+
+    <h2 class="csg-function" id="TIME">TIME</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">
+        TIME(<span class="csg-function-parameter">hour</span>,
+        <span class="csg-function-parameter">minute</span>,
+        <span class="csg-function-parameter">second</span>)
+    </p>
+    <p>Builds a time from individual components.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>TIME(18,33,04)</code></p>
+    <p>returns <code>18:33:04</code>.</p>
+
+    <h2 class="csg-function" id="TIMEVALUE">TIMEVALUE</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">TIMEVALUE(<span class="csg-function-parameter">text</span>)</p>
+    <p>Converts <span class="csg-function-parameter">text</span> to a time.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>TIMEVALUE("18:33")</code></p>
+    <p>returns <code>18:33:00</code>.</p>
+
+    <h2 class="csg-function" id="TODAY">TODAY</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">TODAY</p>
+    <p>Returns today&rsquo;s date, in the form <code>2.9.1991</code>.</p>
+
+    <h2 class="csg-function" id="WEEKDAY">WEEKDAY</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">WEEKDAY(<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns the weekday of <span class="csg-function-parameter">date</span>, where Sunday is 1.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>WEEKDAY(17.3.61)</code></p>
+    <p>returns <code>6</code> (Friday).</p>
+
+    <h2 class="csg-function" id="WEEKNUMBER">WEEKNUMBER</h2>
+    <p>WEEKNUMBER(<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns the week number corresponding to the <span class="csg-function-parameter">date</span>.</p>
+    <h5>Revisions:</h5>
+    <p>This function was added in 4.50/06.</p>
+
+    <h2 class="csg-function" id="YEAR">YEAR</h2>
+    <h5>Syntax:</h5>
+    <p class="csg-function-declaration">YEAR(<span class="csg-function-parameter">date</span>)</p>
+    <p>Returns the years component of <span class="csg-function-parameter">date</span>.</p>
+    <h5>Example:</h5>
+    <p class="csg-sample-indent"><code>YEAR(15.3.1066)</code></p>
+    <p>returns <code>1066</code>.</p>
+</body>
+</html>

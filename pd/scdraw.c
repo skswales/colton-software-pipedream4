@@ -2247,8 +2247,8 @@ onejst_plain(
     return(spaces + strout(str, fwidth_ch));
 }
 
-#ifndef font_KERNING /* why doesn't RISC_OSLib define this? */
-#define font_KERNING 0x200  /* perform kerning on the plot */
+#ifndef font_KERN /* RISC_OSLib does define this - but only at tag RISC_OSLib-5_77 (Mar 2013)! */
+#define font_KERN 0x200  /* perform kerning on the plot */
 #endif
 
 static GR_MILLIPOINT
@@ -2318,7 +2318,7 @@ onejst_riscos_fonts(
     }
     if('Y' == d_options_KE)
     {
-        paint_op |= font_KERNING;
+        paint_op |= font_KERN;
     }
 
     trace_2(TRACE_APP_PD4, "onejst_riscos_fonts font_paint x: %d, y: %d",
@@ -2492,7 +2492,7 @@ lcrjust_riscos_fonts(
 
     if('Y' == d_options_KE)
     {
-        paint_op |= font_KERNING;
+        paint_op |= font_KERN;
     }
 
     font_strip_spaces(paint1_buf, str,  NULL);
@@ -2587,7 +2587,7 @@ font_paint_justify(
 
     if('Y' == d_options_KE)
     {
-        paint_op |= font_KERNING;
+        paint_op |= font_KERN;
     }
 
     if(paint_op & font_JUSTIFY)
@@ -2867,7 +2867,7 @@ font_width(
     rs.r[5] = (int) &c;
     rs.r[6] = (int) NULL;
 
-    font_complain((os_error *) _kernel_swi(0x400A1 /*Font_ScanString*/, &rs, &rs));
+    font_complain(_kernel_swi(0x400A1 /*Font_ScanString*/, &rs, &rs));
 
     return(rs.r[3] /*length*/);
 }
@@ -3265,7 +3265,7 @@ dspfld(
 
         if('Y' == d_options_KE)
         {
-            paint_op |= font_KERNING;
+            paint_op |= font_KERN;
         }
 
         if( swidth_mp > fwidth_mp)

@@ -198,7 +198,7 @@ doc_bind_docnos(
     stack_release_check();
 
     reportf("%s: names: %d, customs: %d, name uses: %d, custom uses: %d",
-            __func__, names_def.next, custom_def.next, namtab.next, custom_use_deptable.next);
+            __func__, names_def_deptable.next, custom_def_deptable.next, name_use_deptable.next, custom_use_deptable.next);
 }
 
 /******************************************************************************
@@ -448,11 +448,11 @@ doc_get_dependent_docs(
             }
         }
 
-        if(p_ss_doc->nam_ref_count && (p_ev_name = names_def.ptr) != NULL)
+        if(p_ss_doc->nam_ref_count && (p_ev_name = names_def_deptable.ptr) != NULL)
         {
             EV_NAMEID i;
 
-            for(i = 0; i < names_def.next; ++i, ++p_ev_name)
+            for(i = 0; i < names_def_deptable.next; ++i, ++p_ev_name)
             {
                 if(p_ev_name->flags & TRF_TOBEDEL)
                     continue;
@@ -740,7 +740,7 @@ ensure_refs_to_name_in_list(
 
             key.nameto = name;
 
-            while(nix < namtab.next && !namcomp(nep, &key))
+            while(nix < name_use_deptable.next && !namcomp(nep, &key))
             {
                 ensure_doc_in_list(p_docno_array, count, nep->byslr.docno);
                 ++nep;
@@ -964,7 +964,7 @@ ev_doc_get_sup_docs_for_sheet(
     {
         EV_TRENT i;
 
-        for(i = 0; i < namtab.next; ++i, ++nep)
+        for(i = 0; i < name_use_deptable.next; ++i, ++nep)
         {
             if(nep->flags & TRF_TOBEDEL)
                 continue;
@@ -1043,7 +1043,7 @@ ev_doc_is_custom_sheet(
     if(docno == DOCNO_NONE)
         return(0);
 
-    return(doc_check_custom(docno));
+    return(doc_check_is_custom(docno));
 }
 
 /******************************************************************************
@@ -1133,9 +1133,16 @@ ev_write_docname(
         return(0);
 
     if((docep_to = ev_p_ss_doc_from_docno(docno_to)) == NULL)
+    {
+        assert(docep_to);
         return(0);
+    }
 
-    docep_from = ev_p_ss_doc_from_docno_must(docno_from);
+    if((docep_from = ev_p_ss_doc_from_docno(docno_from)) == NULL)
+    {
+        assert(docep_from);
+        return(0);
+    }
 
     /* strip out a pathname common to target and source documents */
     nam_str = buffer;

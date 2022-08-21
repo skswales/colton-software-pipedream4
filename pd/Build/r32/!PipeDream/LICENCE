@@ -16,10 +16,7 @@ covered by any other licence:
  !Sprites
  !Sprites22
  !SpritesR5
-
- Resources.Neutral.!Sprite
- Resources.Neutral.ImageSlot
- Resources.Neutral.Loader
+ !SpritesR511
 
  AppData.Neutral.Markers.S1
  AppData.Neutral.Markers.S2
@@ -29,6 +26,7 @@ covered by any other licence:
  AppData.Neutral.Markers.S6
  AppData.Neutral.Pictures.S1
  AppData.Neutral.Pictures.S2
+
  AppData.UK.CmdFiles.CopyDelete
  AppData.UK.CmdFiles.Indent5
  AppData.UK.CmdFiles.PD4Keys
@@ -38,6 +36,24 @@ covered by any other licence:
  AppData.UK.Templates.Records
  AppData.UK.Templates.Text
  AppData.UK.Templates.Text_Plain
+
+ Resources.Neutral.!Sprite
+ Resources.Neutral.BuildVer
+ Resources.Neutral.ImageSlot
+ Resources.Neutral.Loader
+
+ Resources.UK.Messages
+ Resources.UK.Sprites
+ Resources.UK.Sprites11
+ Resources.UK.Sprites22
+ Resources.UK.tem_bc
+ Resources.UK.tem_cht
+ Resources.UK.tem_el
+ Resources.UK.tem_f
+ Resources.UK.tem_main
+ Resources.UK.tem_p
+ Resources.UK.tem_risc
+ Resources.UK.tem_s
 
  uChoices.DoCopy
  uChoices.ReadMe

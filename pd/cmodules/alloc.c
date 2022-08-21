@@ -416,7 +416,7 @@ alloc_main_heap_desc =
 {
     NULL,    /* heap */
     0,       /* minsize */
-    0x8000,  /* increment (a 32K lump) */
+    0x8000,  /* increment (a 32K lump) */ /* overridden by flex_granularity if non-zero */
 #if defined(TRACE_MAIN_ALLOCS)
     alloc_trace_on |
 #endif
@@ -824,9 +824,8 @@ alloc_init(void)
         {
             alloc_main_heap_desc.minsize = alloc_main_heap_minsize;
 
-            /* SKS 27sep94 attempt to get memory back for 2MB owners. Made sensible for other systems 10nov96 */
-            if(0x4000 == flex_granularity)
-                alloc_main_heap_desc.increment = 0x2000;
+            if(0 != flex_granularity)
+                alloc_main_heap_desc.increment = flex_granularity;
 
             if(!alloc_initialise_heap(&alloc_main_heap_desc))
                 break;

@@ -1,0 +1,19 @@
+| CopyToTemp for PipeDream PlingStore Extras
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 2020 Stuart Swales
+
+| !!! ENSURE EVERYTHING IS CHECKED IN FIRST !!!
+
+| Caller must Set pd$Disc
+If "<pd$Disc>"="" Then Error pd$Disc must be specified
+
+Time
+Echo Starting svn export (local) for PlingStore Extras - please be patient
+svn export <Obey$Dir> <pd$Disc>
+Time
+
+%Remove <pd$Disc>.CopyToTemp

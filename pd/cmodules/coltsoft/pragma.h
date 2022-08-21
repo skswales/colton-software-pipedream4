@@ -13,7 +13,7 @@
 
 #if RISCOS
 
-#if CROSS_COMPILE /* TARGET_RISCOS */
+#if CROSS_COMPILE && defined(HOST_WINDOWS) /* TARGET_RISCOS */
 
 /* incompatible pragmas */
 
@@ -48,4 +48,3 @@
 #endif /* OS */
 
 /* end of pragma.h */
-

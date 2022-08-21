@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Copyright (C) 2014-2019 Stuart Swales */
+/* Copyright (C) 2014-2020 Stuart Swales */
 
 /* Statistical function routines for evaluator */
 
@@ -159,7 +159,7 @@ PROC_EXEC_PROTO(c_combina)
 
     exec_func_ignore_parms();
 
-    binomial_coefficient_calc(p_ss_data_res, n + m - 1, n - 1); /* may return integer or fp or error */
+    binomial_coefficient_calc(p_ss_data_res, n + m - 1, n - 1); /* may return integer or real or error */
 }
 
 /******************************************************************************
@@ -545,7 +545,7 @@ percentile_calc(
 
 static void
 percentile_inc_exc_common(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or real or error */
     _InRef_     PC_SS_DATA array_data,
     _InVal_     F64 percentile_fraction,
     _InVal_     BOOL exclusive)
@@ -603,7 +603,7 @@ PROC_EXEC_PROTO(c_percentile_exc)
 
     exec_func_ignore_parms();
 
-    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, TRUE/*exclusive*/); /* may return integer or fp or error */
+    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, TRUE/*exclusive*/); /* may return integer or real or error */
 }
 
 PROC_EXEC_PROTO(c_percentile_inc)
@@ -613,7 +613,7 @@ PROC_EXEC_PROTO(c_percentile_inc)
 
     exec_func_ignore_parms();
 
-    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, FALSE/*exclusive*/); /* may return integer or fp or error */
+    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, FALSE/*exclusive*/); /* may return integer or real or error */
 }
 
 /******************************************************************************
@@ -637,7 +637,7 @@ interpolate_fraction_between(
 
 static void
 percentrank_inc_exc_common(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return real or error */
     _InRef_     PC_SS_DATA array_data,
     _InRef_     PC_SS_DATA number,
     _InVal_     S32 decimal_places,
@@ -741,7 +741,7 @@ PROC_EXEC_PROTO(c_percentrank_exc)
 
     exec_func_ignore_parms();
 
-    percentrank_inc_exc_common(p_ss_data_res, array_data, number, decimal_places, TRUE/*exclusive*/); /* may return fp or error */
+    percentrank_inc_exc_common(p_ss_data_res, array_data, number, decimal_places, TRUE/*exclusive*/); /* may return real or error */
 }
 
 PROC_EXEC_PROTO(c_percentrank_inc)
@@ -752,7 +752,7 @@ PROC_EXEC_PROTO(c_percentrank_inc)
 
     exec_func_ignore_parms();
 
-    percentrank_inc_exc_common(p_ss_data_res, array_data, number, decimal_places, FALSE/*exclusive*/); /* may return fp or error */
+    percentrank_inc_exc_common(p_ss_data_res, array_data, number, decimal_places, FALSE/*exclusive*/); /* may return real or error */
 }
 
 /******************************************************************************
@@ -778,7 +778,7 @@ PROC_EXEC_PROTO(c_quartile_exc)
 
     exec_func_ignore_parms();
 
-    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, TRUE/*exclusive*/); /* may return integer or fp or error */
+    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, TRUE/*exclusive*/); /* may return integer or real or error */
 }
 
 PROC_EXEC_PROTO(c_quartile_inc)
@@ -789,7 +789,7 @@ PROC_EXEC_PROTO(c_quartile_inc)
 
     exec_func_ignore_parms();
 
-    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, FALSE/*exclusive*/); /* may return integer or fp or error */
+    percentile_inc_exc_common(p_ss_data_res, array_data, percentile_fraction, FALSE/*exclusive*/); /* may return integer or real or error */
 }
 
 #else

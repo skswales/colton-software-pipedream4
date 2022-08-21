@@ -172,7 +172,7 @@ PROC_EXEC_PROTO(c_exp)
 
 extern void
 factorial_calc(
-    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or fp or error */
+    _OutRef_    P_SS_DATA p_ss_data_out, /* may return integer or real or error */
     _InVal_     S32 n)
 {
     if( (n < 0) || (n > 170) ) /* SKS maximum factorial that will fit in F64 */
@@ -183,7 +183,7 @@ factorial_calc(
 
     /* assume result will be (widest) integer to start with; function will go to fp as necessary */
     ss_data_set_WORD32(p_ss_data_out, 1); /* start */
-    product_between_calc(p_ss_data_out, /*1,*/ n); /* n==0 is handled by that */ /* may return integer or fp */
+    product_between_calc(p_ss_data_out, /*1,*/ n); /* n==0 is handled by that */ /* may return integer or real */
 }
 
 PROC_EXEC_PROTO(c_fact)
@@ -192,7 +192,7 @@ PROC_EXEC_PROTO(c_fact)
 
     exec_func_ignore_parms();
 
-    factorial_calc(p_ss_data_res, n); /* may return integer or fp or error */
+    factorial_calc(p_ss_data_res, n); /* may return integer or real or error */
 
     if(ss_data_is_integer(p_ss_data_res))
         ss_data_set_integer_size(p_ss_data_res);

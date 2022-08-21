@@ -42,6 +42,10 @@ event__default_process(
 static wimp_menuptr
 event_read_submenudata(void);
 
+#undef BOOL
+#undef TRUE
+#undef FALSE
+
 #include "event.c"
 
 static BOOL

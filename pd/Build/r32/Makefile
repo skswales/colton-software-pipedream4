@@ -7,8 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.57
-TEXTUAL_VERSION_NUMBER=4.57.01
+TEXTUAL_VERSION_NUMBER=4.58
+#TEXTUAL_VERSION_NUMBER=4.58.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 
@@ -35,11 +35,13 @@ WimpLib=$(PD).WimpLib
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 AS=ObjAsm
-ASflags_BASE=-I$(CMODULES).Hdr --throwback
+ASflags_BASE=-I$(CMODULES).Hdr --cpu=3M --throwback
+# vvv current ObjAsm has noisy useless deprecation warnings
+ASflags_BASE=-I$(CMODULES).Hdr --cpu=3M
 ASflags=$(ASflags_BASE)
 
 CC=cc
-CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -fah -throwback -DSB_GLOBAL_REGISTER
+CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -fafh -throwback -DSB_GLOBAL_REGISTER
 CCflags=$(CCflags_BASE) -Otime
 #
 # CCflags=$(CCflags_BASE) -Otime -DCHECKING
@@ -75,22 +77,42 @@ PipeDream:   \
     @.!PipeDream.!Run \
     @.!PipeDream.!RunImage \
     @.!PipeDream.!Sprites \
+    @.!PipeDream.!Sprites11 \
     @.!PipeDream.!Sprites22 \
-    @.!PipeDream.!SpritesR5 \
-    @.!PipeDream.!SpritesR511 \
-    @.!PipeDream.Resources.UK.Messages \
-    @.!PipeDream.Resources.UK.tem_risc \
-    @.!PipeDream.Resources.UK.tem_main \
-    @.!PipeDream.Resources.UK.tem_cht \
-    @.!PipeDream.Resources.UK.tem_bc \
-    @.!PipeDream.Resources.UK.tem_el \
-    @.!PipeDream.Resources.UK.tem_f \
-    @.!PipeDream.Resources.UK.tem_p \
-    @.!PipeDream.Resources.UK.tem_s \
-    @.!PipeDream.Resources.UK.Sprites \
-    @.!PipeDream.Resources.UK.Sprites11 \
-    @.!PipeDream.Resources.UK.Sprites22 \
-    @.!PipeDream.Resources.Neutral.BuildVer
+    @.!PipeDream.!SpritesR4 \
+    @.!PipeDream.Resources.Neutral.RISC_OS.!Sprite \
+    @.!PipeDream.Resources.Neutral.RISC_OS.BuildVer \
+    @.!PipeDream.Resources.Neutral.RISC_OS.ImageSlot \
+    @.!PipeDream.Resources.Neutral.RISC_OS.ImgConvert \
+    @.!PipeDream.Resources.Neutral.RISC_OS.Loader \
+    @.!PipeDream.Resources.Neutral.RISC_OS.Splash \
+    @.!PipeDream.Resources.Neutral.RISC_OS.SprCht \
+    @.!PipeDream.Resources.Neutral.RISC_OS.SprCht22 \
+    @.!PipeDream.Resources.UK.RISC_OS.Messages \
+    @.!PipeDream.Resources.UK.RISC_OS.Sprites \
+    @.!PipeDream.Resources.UK.RISC_OS.Sprites11 \
+    @.!PipeDream.Resources.UK.RISC_OS.Sprites22 \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_risc \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_main \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_cht \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_bc \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_el \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_f \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_p \
+    @.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_s \
+    @.!PipeDream.Resources.Neutral.Markers.S1 \
+    @.!PipeDream.Resources.Neutral.Markers.S2 \
+    @.!PipeDream.Resources.Neutral.Markers.S3 \
+    @.!PipeDream.Resources.Neutral.Markers.S4 \
+    @.!PipeDream.Resources.Neutral.Markers.S5 \
+    @.!PipeDream.Resources.Neutral.Markers.S6 \
+    @.!PipeDream.Resources.Neutral.Pictures.S1 \
+    @.!PipeDream.Resources.Neutral.Pictures.S2 \
+    @.!PipeDream.Resources.UK.Templates.Numbers \
+    @.!PipeDream.Resources.UK.Templates.Numb_Plain \
+    @.!PipeDream.Resources.UK.Templates.Records \
+    @.!PipeDream.Resources.UK.Templates.Text \
+    @.!PipeDream.Resources.UK.Templates.Text_Plain 
 
 AOF1=\
 o.version \
@@ -171,7 +193,8 @@ o.modules.typepack \
 o.modules.vsload \
 o.modules.wm_event \
 o.modules.wm_null \
-o.modules.xstring
+o.modules.xstring \
+o.modules.xustring
 #
 AOFM3=\
 o.modules.colourpick \
@@ -212,7 +235,8 @@ o.modules.ev_uref \
 o.modules.mathxtra \
 o.modules.mathxtr2 \
 o.modules.mathxtr3 \
-o.modules.mathxtr4
+o.modules.mathxtr4 \
+o.modules.mathxcpx
 #
 AOFMGR=\
 o.modules.gr_axis2 \
@@ -285,67 +309,75 @@ o.aof: \
              utils.UK.!Sprites24
         Copy utils.UK.!Sprites24 $@ ~C FV
 
-@.!PipeDream.!Sprites22:   \
-             utils.UK.!Sprites22
-        Copy utils.UK.!Sprites22 $@ ~C FV
-
-@.!PipeDream.!SpritesR5:   \
-             utils.UK.!SpritesR522
-        Copy utils.UK.!SpritesR522 $@ ~C FV
-
-@.!PipeDream.!SpritesR511:   \
+@.!PipeDream.!Sprites11:   \
              utils.UK.!SpritesR511
         Copy utils.UK.!SpritesR511 $@ ~C FV
 
-@.!PipeDream.Resources.UK.Sprites:   \
+@.!PipeDream.!Sprites22:   \
+             utils.UK.!SpritesR522
+        Copy utils.UK.!SpritesR522 $@ ~C FV
+
+@.!PipeDream.!SpritesR4:   \
+             utils.UK.!SpritesR422
+        Copy utils.UK.!SpritesR422 $@ ~C FV
+
+@.!PipeDream.Resources.UK.RISC_OS.Sprites:   \
              utils.UK.Sprites24
       Copy @.utils.UK.Sprites24 $@ ~C FV
 
-@.!PipeDream.Resources.UK.Sprites11:   \
+@.!PipeDream.Resources.UK.RISC_OS.Sprites11:   \
              utils.UK.Sprites11
       Copy @.utils.UK.Sprites11 $@ ~C FV
 
-@.!PipeDream.Resources.UK.Sprites22:   \
+@.!PipeDream.Resources.UK.RISC_OS.Sprites22:   \
              utils.UK.Sprites22
       Copy @.utils.UK.Sprites22 $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.RISC_OS.SprCht:   \
+             utils.Neutral.SprCht24
+      Copy @.utils.Neutral.SprCht24 $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.RISC_OS.SprCht22:   \
+             utils.Neutral.SprCht22
+      Copy @.utils.Neutral.SprCht22 $@ ~C FV
 #
-# and the template files too
+# and the window template files too
 #
-@.!PipeDream.Resources.UK.tem_risc:   \
-             $(PD).utils.en_GB.tem_risc
-        Copy $(PD).utils.en_GB.tem_risc $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_risc:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_risc
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_risc $@ ~C FV
 
-@.!PipeDream.Resources.UK.tem_main:   \
-             $(PD).utils.en_GB.tem_main
-        Copy $(PD).utils.en_GB.tem_main $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_main:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_main
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_main $@ ~C FV
 
-@.!PipeDream.Resources.UK.tem_cht:   \
-             $(PD).utils.en_GB.tem_cht
-        Copy $(PD).utils.en_GB.tem_cht $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_cht:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_cht
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_cht $@ ~C FV
 
-@.!PipeDream.Resources.UK.tem_bc:   \
-             $(PD).utils.en_GB.tem_bc
-        Copy $(PD).utils.en_GB.tem_bc $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_bc:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_bc
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_bc $@ ~C FV
 
-@.!PipeDream.Resources.UK.tem_el:   \
-             $(PD).utils.en_GB.tem_el
-        Copy $(PD).utils.en_GB.tem_el $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_el:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_el
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_el $@ ~C FV
 
-@.!PipeDream.Resources.UK.tem_f:   \
-             $(PD).utils.en_GB.tem_f
-        Copy $(PD).utils.en_GB.tem_f $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_f:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_f
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_f $@ ~C FV
 
-@.!PipeDream.Resources.UK.tem_p:   \
-             $(PD).utils.en_GB.tem_p
-        Copy $(PD).utils.en_GB.tem_p $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_p:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_p
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_p $@ ~C FV
 
-@.!PipeDream.Resources.UK.tem_s:   \
-             $(PD).utils.en_GB.tem_s
-        Copy $(PD).utils.en_GB.tem_s $@ ~C FV
+@.!PipeDream.Resources.UK.RISC_OS.WTemplates.tem_s:   \
+             $(PD).Resources.UK.RISC_OS.WTemplates.tem_s
+        Copy $(PD).Resources.UK.RISC_OS.WTemplates.tem_s $@ ~C FV
 #
 # and the message file too
 #
-@.!PipeDream.Resources.UK.Messages:   \
+@.!PipeDream.Resources.UK.RISC_OS.Messages:   \
              utils.UK.Messages
         Copy @.utils.UK.Messages $@ ~C FV
 
@@ -356,8 +388,9 @@ o.aof: \
 
 @.!PipeDream.!Run: \
         $(PD).Build.Tools.BootRunGen \
+        @.!PipeDream.!RunImage \
         @.Makefile
-        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -product pipedream -version $(TEXTUAL_VERSION_NUMBER) -r32
+        Basic -quit $(PD).Build.Tools.BootRunGen -output $@ -product pipedream -version $(TEXTUAL_VERSION_NUMBER) -r32 -runimage @.!PipeDream.!RunImage
 
 @.!RunDB: \
         $(PD).Build.Tools.BootRunGen \
@@ -491,6 +524,8 @@ o.Modules.mathxtr3:   $(CMODULES).c.mathxtr3
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr3
 o.Modules.mathxtr4:   $(CMODULES).c.mathxtr4
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxtr4
+o.Modules.mathxcpx:   $(CMODULES).c.mathxcpx
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.mathxcpx
 o.Modules.mlec:       $(CMODULES).c.mlec
         $(CC) -o $@ $(CCflags) $(CMODULES).c.mlec
 o.Modules.muldiv:     $(CMODULES).c.muldiv
@@ -521,6 +556,8 @@ o.Modules.wm_null:    $(CMODULES).c.wm_null
         $(CC) -o $@ $(CCflags) $(CMODULES).c.wm_null
 o.Modules.xstring:    $(CMODULES).c.xstring
         $(CC) -o $@ $(CCflags) $(CMODULES).c.xstring
+o.Modules.xustring:   $(CMODULES).c.xustring
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.xustring
 #
 # RISCOS specific
 #
@@ -627,6 +664,7 @@ o.Modules.typepack :   $(CMODULES).h.typepack
 o.Modules.vsload :     $(CMODULES).h.vsload
 o.Modules.wm_null :    $(CMODULES).h.wm_event
 o.Modules.xstring :    $(CMODULES).h.xstring
+o.Modules.xustring :   $(CMODULES).h.xustring
 #
 o.Modules.colourpick : $(CMODULES).riscos.h.colourpick
 o.Modules.fontlxtr :   $(CMODULES).riscos.h.fontlxtr
@@ -764,32 +802,36 @@ utils.UK.t_strings:      utils.UK.u_strings
         Run <Prefix$Dir>.utils.UK.u_strings > $@
 
 utils.UK.u_reperr:   \
-        utils.UK.o.reperr \
+        utils.UK.o.u_reperr \
         C:o.Stubs
         Link -o $@ -aif \
-        utils.UK.o.reperr \
+        utils.UK.o.u_reperr \
         C:o.Stubs
 
 utils.UK.u_strings:   \
-        utils.UK.o.strings \
+        utils.UK.o.u_strings \
         C:o.Stubs
         Link -o $@ -aif \
-        utils.UK.o.strings \
+        utils.UK.o.u_strings \
         C:o.Stubs
 
-utils.UK.o.reperr:   $(PD).h.personal $(PD).h.errdef
-utils.UK.o.reperr:   $(PD).c.reperr
-        @CDir @.utils
-        @CDir @.utils.UK
-        @CDir @.utils.UK.o
-        $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.reperr
+utils.UK.o.u_reperr:   $(PD).h.personal $(PD).h.errdef
+utils.UK.o.u_reperr:   \
+        $(PD).cmodules.h.spell \
+        $(PD).cmodules.h.ev_eval \
+        $(PD).cmodules.h.vsload \
+        $(PD).cmodules.h.file \
+        $(PD).cmodules.h.mlec \
+        $(PD).cmodules.h.gr_chart \
+        $(PD).c.reperr \
+        $(PD).utils.c.u_reperr
+        $(CC) -o $@ $(CCflags_BASE) $(PD).utils.c.u_reperr
 
-utils.UK.o.strings:   $(PD).h.personal
-utils.UK.o.strings:   $(PD).c.strings
-        @CDir @.utils
-        @CDir @.utils.UK
-        @CDir @.utils.UK.o
-        $(CC) -o $@ $(CCflags_BASE) -DMAKE_MESSAGE_FILE $(PD).c.strings
+utils.UK.o.u_strings:   $(PD).h.personal $(PD).h.strings
+utils.UK.o.u_strings:   \
+        $(PD).c.strings \
+        $(PD).utils.c.u_strings
+        $(CC) -o $@ $(CCflags_BASE) $(PD).utils.c.u_strings
 
 ###############################################################################
 #
@@ -797,23 +839,7 @@ utils.UK.o.strings:   $(PD).c.strings
 #
 ###############################################################################
 
-# Do ship extra file type icons that are in not RISC OS 4.02 ROM
-
-utils.UK.!Sprites22:   \
-        $(PD).utils.Neutral.spr_app22 \
-        $(PD).utils.Neutral.spr_file22 \
-        $(PD).utils.Neutral.spr_fxtr22R4
-        ChangeDynamicArea -SpriteSize 256k
-        SNew
-        SLoad   $(PD).utils.Neutral.spr_app22
-        SMerge  $(PD).utils.Neutral.spr_file22
-        SMerge  $(PD).utils.Neutral.spr_fxtr22R4
-        X SDelete now_empty
-       -SInfo
-       -SList
-        SSave   $@
-       -SNew
-       -ChangeDynamicArea -SpriteSize 32k
+# Lowest-res sprites are OS-neutral
 
 utils.UK.!Sprites24:   \
         $(PD).utils.Neutral.spr_app24 \
@@ -831,9 +857,27 @@ utils.UK.!Sprites24:   \
        -SNew
        -ChangeDynamicArea -SpriteSize 32k
 
-# !SpritesR5XX have different ic_dde pin position
+# !SpritesR4XX have different ic_dde pin position
 
-# Also don't ship extra file type icons that are in RISC OS 5 ROM
+# Do ship extra file type icons that are in not RISC OS 4.02 ROM
+
+utils.UK.!SpritesR422:   \
+        $(PD).utils.Neutral.spr_app22 \
+        $(PD).utils.Neutral.spr_file22 \
+        $(PD).utils.Neutral.spr_fxtr22R4
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_app22
+        SMerge  $(PD).utils.Neutral.spr_file22
+        SMerge  $(PD).utils.Neutral.spr_fxtr22R4
+        X SDelete now_empty
+       -SInfo
+       -SList
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+# Don't ship extra file type icons that are in RISC OS 5 ROM
 
 utils.UK.!SpritesR511:   \
         $(PD).utils.Neutral.spr_app11 \
@@ -869,6 +913,8 @@ utils.UK.!SpritesR522:   \
 
 # SpritesXX need !pipedream but not sm!pipedream
 
+# Systems supporting Sprites11 will have ptr_menu and ptr_write in ROM
+
 utils.UK.Sprites11:   \
         $(PD).utils.Neutral.spr_app11 \
         $(PD).utils.en_GB.spr_pd \
@@ -876,8 +922,6 @@ utils.UK.Sprites11:   \
         $(PD).utils.en_GB.tangod.spr_tg22  \
         $(PD).utils.en_GB.spr_pd11  \
         $(PD).utils.en_GB.tangod.spr_tg11  \
-        $(PD).utils.Neutral.spr_chart \
-        $(PD).utils.Neutral.spr_chart22 \
         $(WimpLib).utils.en_GB.spr_risc
         ChangeDynamicArea -SpriteSize 256k
         SNew
@@ -890,75 +934,139 @@ utils.UK.Sprites11:   \
        -SDelete ptr_write
         SMerge  $(PD).utils.en_GB.spr_pd11
         SMerge  $(PD).utils.en_GB.tangod.spr_tg11
-        SMerge  $(PD).utils.Neutral.spr_chart
-        SMerge  $(PD).utils.Neutral.spr_chart22
         SMerge  $(WimpLib).utils.en_GB.spr_risc
         X SDelete now_empty
        -SInfo
        -SList
-       @CDir    @.utils
-       @CDir    @.utils.UK
         SSave   $@
        -SNew
        -ChangeDynamicArea -SpriteSize 32k
 
 utils.UK.Sprites22:   \
         $(PD).utils.Neutral.spr_app22 \
-        $(PD).utils.Neutral.spr_file22 \
         $(PD).utils.en_GB.spr_pd \
         $(PD).utils.en_GB.spr_pd22  \
         $(PD).utils.en_GB.tangod.spr_tg22  \
-        $(PD).utils.Neutral.spr_chart \
-        $(PD).utils.Neutral.spr_chart22 \
         $(WimpLib).utils.en_GB.spr_risc
         ChangeDynamicArea -SpriteSize 256k
         SNew
         SLoad   $(PD).utils.Neutral.spr_app22
        -SDelete sm!pipedream
-        SMerge  $(PD).utils.Neutral.spr_file22
         SMerge  $(PD).utils.en_GB.spr_pd
         SMerge  $(PD).utils.en_GB.spr_pd22
         SMerge  $(PD).utils.en_GB.tangod.spr_tg22
-        SMerge  $(PD).utils.Neutral.spr_chart
-        SMerge  $(PD).utils.Neutral.spr_chart22
         SMerge  $(WimpLib).utils.en_GB.spr_risc
         X SDelete now_empty
        -SInfo
        -SList
-       @CDir    @.utils
-       @CDir    @.utils.UK
         SSave   $@
        -SNew
        -ChangeDynamicArea -SpriteSize 32k
 
 utils.UK.Sprites24:   \
         $(PD).utils.Neutral.spr_app24 \
-        $(PD).utils.Neutral.spr_file24 \
         $(PD).utils.en_GB.spr_pd \
         $(PD).utils.en_GB.spr_pd24  \
-        $(PD).utils.Neutral.spr_chart \
-        $(PD).utils.Neutral.spr_chart24  \
         $(WimpLib).utils.en_GB.spr_risc
         ChangeDynamicArea -SpriteSize 256k
         SNew
         SLoad   $(PD).utils.Neutral.spr_app24
        -SDelete sm!pipedream
-        SMerge  $(PD).utils.Neutral.spr_file24
         SMerge  $(PD).utils.en_GB.spr_pd
         SMerge  $(PD).utils.en_GB.spr_pd24
-        SMerge  $(PD).utils.Neutral.spr_chart
-        SMerge  $(PD).utils.Neutral.spr_chart24
         SMerge  $(WimpLib).utils.en_GB.spr_risc
         X SDelete now_empty
        -SInfo
        -SList
-       @CDir    @.utils
-       @CDir    @.utils.UK
         SSave   $@
        -SNew
        -ChangeDynamicArea -SpriteSize 32k
 
-@.!PipeDream.Resources.Neutral.BuildVer: o.version
+utils.Neutral.SprCht22:   \
+        $(PD).utils.Neutral.spr_chart \
+        $(PD).utils.Neutral.spr_chart22
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_chart
+        SMerge  $(PD).utils.Neutral.spr_chart22
+        X SDelete now_empty
+       -SInfo
+       -SList
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+utils.Neutral.SprCht24:   \
+        $(PD).utils.Neutral.spr_chart \
+        $(PD).utils.Neutral.spr_chart24
+        ChangeDynamicArea -SpriteSize 256k
+        SNew
+        SLoad   $(PD).utils.Neutral.spr_chart
+        SMerge  $(PD).utils.Neutral.spr_chart24
+        X SDelete now_empty
+       -SInfo
+       -SList
+        SSave   $@
+       -SNew
+       -ChangeDynamicArea -SpriteSize 32k
+
+# language-independent resources
+
+@.!PipeDream.Resources.Neutral.RISC_OS.!Sprite: $(PD).Resources.Neutral.RISC_OS.!Sprite
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.RISC_OS.BuildVer: o.version
         decaof -a o.version > $@
+
+@.!PipeDream.Resources.Neutral.RISC_OS.ImageSlot: $(PD).Resources.Neutral.RISC_OS.ImageSlot
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.RISC_OS.ImgConvert: $(PD).utils.Neutral.ImgConvert
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.RISC_OS.Loader: $(PD).Resources.Neutral.RISC_OS.Loader
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.RISC_OS.Splash: $(PD).Resources.Neutral.RISC_OS.Splash
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Markers.S1: $(PD).Resources.Neutral.Markers.S1
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Markers.S2: $(PD).Resources.Neutral.Markers.S2
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Markers.S3: $(PD).Resources.Neutral.Markers.S3
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Markers.S4: $(PD).Resources.Neutral.Markers.S4
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Markers.S5: $(PD).Resources.Neutral.Markers.S5
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Markers.S6: $(PD).Resources.Neutral.Markers.S6
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Pictures.S1: $(PD).Resources.Neutral.Pictures.S1
+ Copy $? $@ ~C FV
+
+@.!PipeDream.Resources.Neutral.Pictures.S2: $(PD).Resources.Neutral.Pictures.S2
+ Copy $? $@ ~C FV
+
+# language-dependent resources
+
+@.!PipeDream.Resources.UK.Templates.Numbers:     $(PD).Resources.UK.Templates.Numbers
+ Copy $? $@ ~C FV
+@.!PipeDream.Resources.UK.Templates.Numb_Plain:  $(PD).Resources.UK.Templates.Numb_Plain
+ Copy $? $@ ~C FV
+@.!PipeDream.Resources.UK.Templates.Records:     $(PD).Resources.UK.Templates.Records
+ Copy $? $@ ~C FV
+@.!PipeDream.Resources.UK.Templates.Text:        $(PD).Resources.UK.Templates.Text
+ Copy $? $@ ~C FV
+@.!PipeDream.Resources.UK.Templates.Text_Plain:  $(PD).Resources.UK.Templates.Text_Plain
+ Copy $? $@ ~C FV
+
+# only populate CmdFiles, DictDefn, Dicts, PDrivers when making package
 
 # end of Makefile

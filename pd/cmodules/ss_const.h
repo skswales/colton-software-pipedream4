@@ -9,14 +9,16 @@
 
 /* Data definitions */
 
-/* MRJC April 1992; SKS derived from Fireworkz for PipeDream use */
+/* MRJC April 1992 */
+
+/* SKS derived from Fireworkz for PipeDream use */
 
 #ifndef __ss_const_h
 #define __ss_const_h
 
 #define LEAP_YEAR_ACTUAL(year) ( \
-    (((year) % 4)   ? 0 : 1) &&                     \
-    (((year) % 100) ? 1 : (((year) % 400) ? 0 : 1)) )
+    (((year    ) % 4  ) ? 0 : 1) && \
+    (((year    ) % 100) ? 1 : (((year    ) % 400) ? 0 : 1)) )
 
 /* maximum size of symbol */
 #define EV_INTNAMLEN        25
@@ -215,7 +217,7 @@ typedef struct SS_STRINGC
     U32 size;
     PC_USTR uchars;
 }
-SS_STRINGC, * P_SS_STRINGC;
+SS_STRINGC, * P_SS_STRINGC; typedef const SS_STRINGC * PC_SS_STRINGC;
 
 /*
 * evaluator constant type (external mixed data)
@@ -266,7 +268,7 @@ typedef struct SS_DATA
 
     SS_DATA_ARG arg;
 }
-SS_DATA, * P_SS_DATA; typedef const SS_DATA * PC_SS_DATA;
+SS_DATA, * P_SS_DATA, ** P_P_SS_DATA; typedef const SS_DATA * PC_SS_DATA;
 
 typedef struct SS_RECOG_CONTEXT
 {
@@ -446,6 +448,12 @@ ss_data_resource_copy(
     _InRef_     PC_SS_DATA p_ss_data_in);
 
 _Check_return_
+extern STATUS
+ss_string_allocate(
+    _OutRef_    P_SS_DATA p_ss_data,
+    _In_/*Val_*/ U32 len);
+
+_Check_return_
 extern BOOL
 ss_string_is_blank(
     _InRef_     PC_SS_DATA p_ss_data);
@@ -487,6 +495,34 @@ ss_string_skip_internal_whitespace_uchars(
     _InRef_     U32 uchars_n,
     _InVal_     U32 uchars_idx);
 
+_Check_return_
+extern U32
+ss_string_skip_trailing_whitespace_uchars(
+    _In_reads_(uchars_n) PC_UCHARS uchars,
+    _InRef_     U32 uchars_n);
+
+_Check_return_
+static inline PC_UCHARS
+ss_string_trim_leading_whitespace_uchars(
+    _In_reads_(*p_uchars_n) PC_UCHARS uchars,
+    _InoutRef_  P_U32 p_uchars_n)
+{
+    const U32 wss = ss_string_skip_internal_whitespace_uchars(uchars, *p_uchars_n, 0U);
+    *p_uchars_n -= wss;
+    return(PtrAddBytes(PC_UCHARS, uchars, wss));
+}
+
+_Check_return_
+static inline PC_UCHARS
+ss_string_trim_trailing_whitespace_uchars(
+    _In_reads_(*p_uchars_n) PC_UCHARS uchars,
+    _InoutRef_  P_U32 p_uchars_n)
+{
+    const U32 wss = ss_string_skip_trailing_whitespace_uchars(uchars, *p_uchars_n);
+    *p_uchars_n -= wss;
+    return(uchars);
+}
+
 extern S32
 two_nums_type_match(
     _InoutRef_  P_SS_DATA p_ss_data_1,
@@ -513,6 +549,9 @@ enum two_nums_type_match_result
     TWO_MIXED
 };
 
+extern const SS_DATA
+ss_data_real_zero;
+
 /*
 ss_date.c
 */
@@ -534,7 +573,7 @@ extern S32
 ss_dateval_to_serial_number(
     _InVal_     SS_DATE_DATE ss_date_date);
 
-_Check_return_ _Success_(return >= 0)
+_Check_return_ _Success_(status_ok(return))
 extern STATUS
 ss_serial_number_to_dateval(
     _OutRef_    P_SS_DATE_DATE p_ss_date_date,
@@ -571,10 +610,10 @@ ss_serial_fraction_to_timeval(
 _Check_return_
 extern STATUS
 ss_timeval_to_hms(
-    _InRef_     SS_DATE_TIME ss_date_time,
-    _OutRef_    P_S32 p_hours,
-    _OutRef_    P_S32 p_minutes,
-    _OutRef_    P_S32 p_seconds);
+    _InVal_     SS_DATE_TIME ss_date_time,
+    _OutRef_    P_S32 hours,
+    _OutRef_    P_S32 minutes,
+    _OutRef_    P_S32 seconds);
 
 /*ncr*/
 extern S32
@@ -625,14 +664,14 @@ extern S32
 sliding_window_year(
     _In_        S32 year);
 
-_Check_return_ _Success_(return >= 0)
+_Check_return_ _Success_(status_ok(return))
 extern S32
 ss_recog_date_time(
     _InoutRef_  P_SS_DATA p_ss_data,
     _In_z_      PC_USTR in_str,
     _InVal_     bool american_date);
 
-_Check_return_ _Success_(return >= 0)
+_Check_return_ _Success_(status_ok(return))
 extern STATUS
 ss_recog_date_time_as_t5( /* diff minimization - PipeDream has more args */
     _OutRef_    P_SS_DATA p_ss_data,

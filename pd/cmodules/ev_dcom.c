@@ -179,8 +179,7 @@ dec_const(
 
 /******************************************************************************
 *
-* insert formatting space and
-* returns into output buffer
+* insert formatting space and newlines into output buffer
 *
 ******************************************************************************/
 
@@ -195,8 +194,6 @@ dec_format_space(
     while(dc->cur.sym_cr)
     {
         --dc->cur.sym_cr;
-        if(dc->p_optblock->cr)
-            *ptr++ = CR;
         if(dc->p_optblock->lf)
             *ptr++ = LF;
     }
@@ -329,7 +326,7 @@ ev_dec_range(
     P_U8 op_buf,
     _InVal_     EV_DOCNO this_docno,
     _InRef_     PC_EV_RANGE p_ev_range,
-    BOOL upper_case)
+    _InVal_     bool upper_case)
 {
     EV_SLR slr;
     S32    len;
@@ -659,7 +656,7 @@ ev_dec_slr(
     P_U8 op_buf,
     _InVal_     EV_DOCNO this_docno,
     _InRef_     PC_EV_SLR slrp,
-    BOOL upper_case)
+    _InVal_     bool upper_case)
 {
     P_U8 op_pos;
 
@@ -818,10 +815,11 @@ ev_decompile(
         for(temp_len = len, ci = op_buf, co = txt_out;
             temp_len;
             --temp_len, ++ci, ++co)
+        {
+            *co = *ci;
             if(dc->p_optblock->upper_case)
                 *co = (char) toupper(*ci);
-            else
-                *co = *ci;
+        }
 
         *co = CH_NULL;
         res = len;

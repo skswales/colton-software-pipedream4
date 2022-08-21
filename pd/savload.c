@@ -593,7 +593,7 @@ namefile_fn_core(void)
         return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
     }
 
-    if(0 == C_stricmp(filename, currentfilename))
+    if(0 == C_stricmp(filename, currentfilename()))
         return(TRUE);
 
     if(same_name_warning(filename, name_supporting_Zs_YN_S_STR, name_supporting_YN_Q_STR))
@@ -619,7 +619,7 @@ namefile_fn_prepare(void)
 {
     false_return(dialog_box_can_start());
 
-    false_return(mystr_set(&d_name[0].textfield, currentfilename));
+    false_return(mystr_set(&d_name[0].textfield, currentfilename()));
 
     return(dialog_box_start());
 }
@@ -665,8 +665,7 @@ savetemplatefile_fn_core(void)
 
     { /* and save away in PipeDream format */
     SAVE_FILE_OPTIONS save_file_options;
-    zero_struct(save_file_options);
-    save_file_options.filetype_option = PD4_CHAR;
+    save_file_options_init(&save_file_options, PD4_CHAR, current_line_sep_option);
     return(savefile_core(buffer, &save_file_options));
     } /*block*/
 }
@@ -675,7 +674,7 @@ static BOOL
 savetemplatefile_fn_prepare(void)
 {
     /* push out the leafname of the current file as a suggestion */
-    PCTSTR leafname = file_leafname(currentfilename);
+    PCTSTR leafname = file_leafname(currentfilename());
 
     false_return(dialog_box_can_start());
 
@@ -717,8 +716,7 @@ SaveChoices_fn(void)
     (void) add_choices_write_prefix_to_name_using_dir(buffer, elemof32(buffer), CHOICES_FILE_STR, NULL);
     {
     SAVE_FILE_OPTIONS save_file_options;
-    zero_struct(save_file_options);
-    save_file_options.filetype_option = PD4_CHAR;
+    save_file_options_init(&save_file_options, PD4_CHAR, 0);
     save_file_options.saving_choices_file = TRUE;
     (void) savefile_core(buffer, &save_file_options);
     } /*block*/
@@ -734,6 +732,18 @@ SaveChoices_fn(void)
 *
 ******************************************************************************/
 
+extern void
+save_file_options_init(
+    _OutRef_    P_SAVE_FILE_OPTIONS p_save_file_options,
+    _InVal_     S32 filetype_option /* PD4_CHAR etc. */,
+    _InVal_     S32 line_sep_option /* LINE_SEP_LF etc. */)
+{
+    zero_struct_ptr_fn(p_save_file_options);
+
+    p_save_file_options->filetype_option = (char) filetype_option;
+    p_save_file_options->line_sep_option = (char) line_sep_option;
+}
+
 static BOOL
 do_SaveFile_prepare(
     _InVal_     U32 boxnumber)
@@ -743,7 +753,7 @@ do_SaveFile_prepare(
     d_save[SAV_FORMAT].option = current_filetype_option;
     d_save[SAV_LINESEP].option = current_line_sep_option;
 
-    false_return(mystr_set(&d_save[SAV_NAME].textfield, currentfilename));
+    false_return(mystr_set(&d_save[SAV_NAME].textfield, currentfilename()));
 
     return(dialog_box_start());
 }
@@ -752,7 +762,12 @@ static int
 do_SaveFile_core(void)
 {
     SAVE_FILE_OPTIONS save_file_options;
-    zero_struct(save_file_options);
+    save_file_options_init(&save_file_options, d_save[SAV_FORMAT].option, d_save[SAV_LINESEP].option);
+
+    if( ('Y' == d_save[SAV_ROWCOND].option)  &&  !str_isblank(d_save[SAV_ROWCOND].textfield) )
+        save_file_options.row_condition = d_save[SAV_ROWCOND].textfield;
+    if('Y' == d_save[SAV_BLOCK].option)
+        save_file_options.saving_block = TRUE;
 
     if(str_isblank(d_save[SAV_NAME].textfield))
     {
@@ -760,12 +775,6 @@ do_SaveFile_core(void)
         return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
     }
 
-    save_file_options.filetype_option = (char) d_save[SAV_FORMAT].option;
-    save_file_options.line_sep_option = (char) d_save[SAV_LINESEP].option;
-    if(('Y' == d_save[SAV_ROWCOND].option)  &&  !str_isblank(d_save[SAV_ROWCOND].textfield))
-        save_file_options.row_condition = d_save[SAV_ROWCOND].textfield;
-    if('Y' == d_save[SAV_BLOCK].option)
-        save_file_options.saving_block = TRUE;
     return(savefile(d_save[SAV_NAME].textfield, &save_file_options));
 }
 
@@ -793,26 +802,48 @@ do_SaveFile(
     dialog_box_end();
 }
 
-extern void
-SaveFile_fn(void)
+_Check_return_
+static BOOL
+try_save_immediate(void)
 {
-    do_SaveFile(D_SAVE);
+    SAVE_FILE_OPTIONS save_file_options;
+    save_file_options_init(&save_file_options, current_filetype_option, current_line_sep_option);
+
+    if(!file_is_rooted(currentfilename()))
+        return(FALSE);
+
+    (void) savefile_core(currentfilename(), &save_file_options);
+    return(TRUE);
 }
 
 extern void
-SaveFileAsIs_fn(void)
+SaveFileAs_fn(void)
 {
-    if(file_is_rooted(currentfilename))
-    {
-        SAVE_FILE_OPTIONS save_file_options;
-        zero_struct(save_file_options);
-        save_file_options.filetype_option = current_filetype_option;
-        save_file_options.line_sep_option = current_line_sep_option;
-        (void) savefile_core(currentfilename, &save_file_options);
-        return;
-    }
+    do_SaveFile(D_SAVE_FILE_AS);
+}
 
-    do_SaveFile(D_SAVE_POPUP); /* different as we may be in_execfile || command_expansion */
+extern void
+SaveFileAs_Imm_fn(void)
+{
+    if(try_save_immediate())
+        return;
+
+    do_SaveFile(D_SAVE_FILE_AS_POPUP); /* different as we may be in_execfile || command_expansion */
+}
+
+extern void
+SaveFileSimple_fn(void)
+{
+    do_SaveFile(D_SAVE_FILE_SIMPLE);
+}
+
+extern void
+SaveFileSimple_Imm_fn(void)
+{
+    if(try_save_immediate())
+        return;
+
+    do_SaveFile(D_SAVE_FILE_SIMPLE_POPUP); /* different as we may be in_execfile || command_expansion */
 }
 
 /******************************************************************************
@@ -938,7 +969,7 @@ savefile(
     /* rename file BEFORE saving to get external refs output correctly */
     if(saving_whole_file)
     {
-        if(0 != C_stricmp(filename, currentfilename))
+        if(0 != C_stricmp(filename, currentfilename()))
         {
             if(same_name_warning(filename, name_supporting_Zs_YN_S_STR, name_supporting_YN_Q_STR))
             {
@@ -1049,7 +1080,7 @@ savefile_core(
     if(NULL == (output = pd_file_open(filename, file_open_write)))
         return(reperr_null(ERR_CANNOTOPEN));
 
-    (void) file_buffer(output, NULL, 64*1024); /* no messing about for save */
+    (void) file_buffer(output, NULL, 16*1024); /* no messing about for save */
 
     /* file successfully opened at this point */
 
@@ -1971,11 +2002,29 @@ stoslt(
 *
 ******************************************************************************/
 
+extern void
+load_file_options_init(
+    _OutRef_    P_LOAD_FILE_OPTIONS p_load_file_options,
+    _In_z_      const char * document_name,
+    _InVal_     S32 filetype_option /* PD4_CHAR etc. */)
+{
+    zero_struct_ptr_fn(p_load_file_options);
+
+    p_load_file_options->document_name = document_name;
+    p_load_file_options->filetype_option = (char) filetype_option;
+}
+
 static BOOL
 loadfile_fn_core(void)
 {
     LOAD_FILE_OPTIONS load_file_options;
-    zero_struct(load_file_options);
+    load_file_options_init(&load_file_options, d_load[0].textfield, d_load[3].option);
+
+    load_file_options.inserting = ('Y' == d_load[1].option) && is_current_document();
+    if(load_file_options.inserting)
+        load_file_options.insert_at_slot = d_load[1].textfield;
+    if('Y' == d_load[2].option)
+        load_file_options.row_range = d_load[2].textfield;
 
     if(str_isblank(d_load[0].textfield))
     {
@@ -1983,13 +2032,6 @@ loadfile_fn_core(void)
         return(dialog_box_can_retry() ? 2 /*continue*/ : FALSE);
     }
 
-    load_file_options.document_name = d_load[0].textfield;
-    load_file_options.inserting = ('Y' == d_load[1].option) && is_current_document();
-    if(load_file_options.inserting)
-        load_file_options.insert_at_slot = d_load[1].textfield;
-    if('Y' == d_load[2].option)
-        load_file_options.row_range = d_load[2].textfield;
-    load_file_options.filetype_option = (char) d_load[3].option;
     return(loadfile(d_load[0].textfield, &load_file_options));
 }
 
@@ -2098,9 +2140,7 @@ loadtemplate_fn_core(void)
 
     {
     LOAD_FILE_OPTIONS load_file_options;
-    zero_struct(load_file_options);
-    load_file_options.document_name = get_untitled_document();
-    load_file_options.filetype_option = PD4_CHAR;
+    load_file_options_init(&load_file_options, get_untitled_document_with(template_name), PD4_CHAR);
     return(loadfile_recurse(buffer, &load_file_options));
     } /*block*/
 }
@@ -2108,6 +2148,8 @@ loadtemplate_fn_core(void)
 static BOOL
 loadtemplate_fn_prepare(void)
 {
+    TCHARZ templates_path[BUF_MAX_PATHSTRING * 4];
+    PCTSTR templates_path_subdir;
     LIST_ITEMNO templates_list_key;
 
     false_return(dialog_box_can_start());
@@ -2117,8 +2159,19 @@ loadtemplate_fn_prepare(void)
 
     delete_list(&templates_list);
 
+    if(NULL == _kernel_getenv("PipeDream$TemplatesPath", templates_path, elemof32(templates_path)))
+    {
+        reportf("TemplatesPath(%u:%s)", strlen(templates_path), templates_path);
+        templates_path_subdir = NULL; /* No subdir as path elements on PipeDream$TemplatesPath all have Templates suffix already */
+    }
+    else
+    {   /* Not there, revert to the old way */
+        tstr_xstrkpy(templates_path, elemof32(templates_path), file_get_search_path());
+        templates_path_subdir = LTEMPLATE_SUBDIR_STR;
+    }
+
     templates_list_key = 0;
-    status_assert(enumerate_dir_to_list(&templates_list, &templates_list_key, LTEMPLATE_SUBDIR_STR, FILETYPE_UNDETERMINED));
+    status_assert(enumerate_dir_to_list_using_path(&templates_list, &templates_list_key, LTEMPLATE_SUBDIR_STR, templates_path, templates_path_subdir, FILETYPE_UNDETERMINED));
 
     return(dialog_box_start());
 }
@@ -2146,6 +2199,90 @@ LoadTemplate_fn(void)
     dialog_box_end();
 
     delete_list(&templates_list);
+}
+
+/******************************************************************************
+*
+* Use Lotus 1-2-3 converter if available for ease-of-use
+*
+******************************************************************************/
+
+static TCHARZ
+u_ltp_name_buffer[256];
+
+_Check_return_
+static BOOL
+u_ltp_available(void)
+{
+    static int available = -1;
+
+    if(available < 0)
+    {
+        const char * var_name = "123PD$Dir";
+
+        available = 0;
+
+        if(NULL == _kernel_getenv(var_name, u_ltp_name_buffer, elemof32(u_ltp_name_buffer)))
+        {
+            tstr_xstrkat(u_ltp_name_buffer, elemof32(u_ltp_name_buffer), ".u_ltp");
+
+            if(file_is_file(u_ltp_name_buffer))
+                available = 1;
+        }
+    }
+
+    return(available);
+}
+
+_Check_return_
+static BOOL
+loadfile_convert_lotus123(
+    _Out_       PTSTR new_filename,
+    _In_z_      PCTSTR filename)
+{
+    static TCHARZ command_line_buffer[BUF_MAX_PATHSTRING * 3];
+
+    if(!u_ltp_available())
+        return(FALSE);
+
+    tstr_xstrkpy(new_filename, BUF_MAX_PATHSTRING, filename);
+    if(NULL != file_extension(new_filename))
+    {
+        PTSTR p_ext = file_extension(new_filename);
+        p_ext[-1] = CH_NULL;
+    }
+    tstr_xstrkat(new_filename, BUF_MAX_PATHSTRING, "/pd");
+
+    tstr_xstrkpy(command_line_buffer, elemof32(command_line_buffer), "WimpTask Run ");
+    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), u_ltp_name_buffer);
+    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), " ");
+    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), filename     /* <in file>  */ );
+    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), " ");
+    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), new_filename /* <out file> */ );
+    tstr_xstrkat(command_line_buffer, elemof32(command_line_buffer), " > null:");
+
+    { /* check that there will be enough memory in the Window Manager next slot to run this converter */
+#define MIN_NEXT_SLOT 512 * 1024
+    _kernel_swi_regs rs;
+    rs.r[0] = -1; /* read */
+    rs.r[1] = -1; /* read next slot */
+    (void) _kernel_swi(Wimp_SlotSize, &rs, &rs);
+    if(rs.r[1] < MIN_NEXT_SLOT)
+    {
+        rs.r[0] = -1; /* read */
+        rs.r[1] = MIN_NEXT_SLOT; /* write next slot */
+        (void) _kernel_swi(Wimp_SlotSize, &rs, &rs); /* sorry for the override, but it does need some space to run! */
+    }
+    } /*block*/
+
+    reportf(command_line_buffer);
+    _kernel_oscli(command_line_buffer);
+
+    if(!file_is_file(new_filename))
+        return(FALSE);
+
+    /* caller should mutate the load to use the converted file */
+    return(TRUE);
 }
 
 /******************************************************************************
@@ -2181,6 +2318,18 @@ loadfile(
         p_load_file_options->filetype_option = (char) auto_filetype_option;
 
         reportf("loadfile: auto-detected filetype_option '%c'", p_load_file_options->filetype_option);
+    }
+
+    if(LOTUS123_CHAR == p_load_file_options->filetype_option)
+    {
+        static TCHARZ new_filename[BUF_MAX_PATHSTRING];
+
+        if(!loadfile_convert_lotus123(new_filename, filename))
+            return(reperr(ERR_CANT_LOAD_FILETYPE, filename));
+
+        /* mutate this load to use the converted file */
+        p_load_file_options->document_name = filename = new_filename;
+        p_load_file_options->filetype_option = PD4_CHAR;
     }
 
     res = loadfile_recurse(filename, p_load_file_options);
@@ -2417,9 +2566,7 @@ loadfile_recurse_load_supporting_documents(
         if(filetype_option > 0)
         {
             LOAD_FILE_OPTIONS load_file_options;
-            zero_struct(load_file_options);
-            load_file_options.document_name = sup_doc_filename;
-            load_file_options.filetype_option = (char) filetype_option;
+            load_file_options_init(&load_file_options, sup_doc_filename, filetype_option);
             (void) loadfile_recurse(sup_doc_filename, &load_file_options);
             n_loaded++;
         }
@@ -2443,9 +2590,7 @@ loadfile_recurse_load_supporting_documents(
                 if(filetype_option > 0)
                 {
                     LOAD_FILE_OPTIONS load_file_options;
-                    zero_struct(load_file_options);
-                    load_file_options.document_name = sup_doc_filename;
-                    load_file_options.filetype_option = (char) filetype_option;
+                    load_file_options_init(&load_file_options, sup_doc_filename, filetype_option);
                     (void) loadfile_recurse(sup_doc_filename, &load_file_options);
                     n_loaded++;
                 }
@@ -2472,6 +2617,63 @@ loadfile_recurse_load_supporting_documents(
 *
 ******************************************************************************/
 
+_Check_return_
+static STATUS
+enumerate_dir_to_list_common(
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InoutRef_  P_LIST_ITEMNO p_key,
+    _In_z_      PCTSTR path,
+    _In_z_      PCTSTR subdir,
+    _InVal_     FILETYPE_RISC_OS filetype)
+{
+    P_FILE_OBJENUM enumstrp;
+    P_FILE_OBJINFO infostrp;
+    STATUS res_error = 0;
+
+    for(infostrp = file_find_first_subdir(&enumstrp, path, FILE_WILD_MULTIPLE_STR, subdir);
+        infostrp;
+        infostrp = file_find_next(&enumstrp))
+    {
+        if(file_objinfo_type(infostrp) != FILE_OBJECT_FILE)
+            continue;
+
+        if((FILETYPE_UNDETERMINED == filetype) || (file_objinfo_filetype(infostrp) == filetype))
+        {
+            char leafname[BUF_MAX_PATHSTRING]; /* SKS 26oct96 now cater for long leaf names (was BUF_MAX_LEAFNAME) */
+
+            file_objinfo_name(infostrp, leafname, elemof32(leafname));
+            reportf("enumerate_dir_to_list(subdir=%s) matched file %s", report_tstr(subdir), leafname);
+
+            status_break(res_error = add_to_list(list, (*p_key)++, leafname));
+        }
+    }
+
+    return(res_error);
+}
+
+/*ncr*/
+extern STATUS
+enumerate_dir_to_list_using_path(
+    _InoutRef_  P_P_LIST_BLOCK list,
+    _InoutRef_  P_LIST_ITEMNO p_key,
+    _In_opt_z_  PCTSTR doc_subdir /*maybe NULL*/,
+    _In_z_      PCTSTR path,
+    _In_opt_z_  PCTSTR path_subdir /*maybe NULL*/,
+    _InVal_     FILETYPE_RISC_OS filetype)
+{
+    if( (NULL != doc_subdir) && is_current_document() )
+    {
+        TCHAR doc_path[BUF_MAX_PATHSTRING];
+
+        if(NULL != file_get_cwd(doc_path, elemof32(doc_path), currentfilename()))
+        {
+            status_return(enumerate_dir_to_list_common(list, p_key, doc_path, doc_subdir, filetype));
+        }
+    }
+
+    return(enumerate_dir_to_list_common(list, p_key, path, path_subdir, filetype));
+}
+
 /*ncr*/
 extern STATUS
 enumerate_dir_to_list(
@@ -2480,13 +2682,17 @@ enumerate_dir_to_list(
     _In_opt_z_  PC_U8Z subdir /*maybe NULL*/,
     _InVal_     FILETYPE_RISC_OS filetype)
 {
+#if 1
+    /* relative to current document first (if there is one), then use the path */
+    return(enumerate_dir_to_list_using_path(list, p_key, subdir, file_get_search_path(), subdir, filetype));
+#else
     P_FILE_OBJENUM     enumstrp;
     P_FILE_OBJINFO     infostrp;
-    U8                 combined_path[BUF_MAX_PATHSTRING];
+    U8                 combined_path[BUF_MAX_PATHSTRING * 4];
     STATUS             res_error = 0;
 
     /* SKS after PD 4.11 03feb92 - why was this only file_get_path() before? */
-    file_combine_path(combined_path, elemof32(combined_path), is_current_document() ? currentfilename : NULL, file_get_search_path());
+    file_combine_path(combined_path, elemof32(combined_path), is_current_document() ? currentfilename() : NULL, file_get_search_path());
 
     for(infostrp = file_find_first_subdir(&enumstrp, combined_path, FILE_WILD_MULTIPLE_STR, subdir);
         infostrp;
@@ -2507,6 +2713,7 @@ enumerate_dir_to_list(
     }
 
     return(res_error);
+#endif
 }
 
 /******************************************************************************
@@ -2529,9 +2736,12 @@ reject_this_filetype(
     case FILETYPE_DATAPOWER:
     case FILETYPE_DATAPOWERGPH:
     case FILETYPE_RTF:
-    case FILETYPE_LOTUS123:
         /* we know that it's not sensible to try to load these ones */
         return(TRUE);
+
+    case FILETYPE_LOTUS123:
+        /* can only load these ones if suitable converter is available */
+        return(!u_ltp_available());
 
     default:
         return(FALSE);
@@ -2602,7 +2812,7 @@ filetype_from_data(
     {
         if( (n_bytes > (0x0C + sizeof32(buffer_t5_draw_0C))) &&
             (0 == try_memcmp32(&p_data[0x0C], n_bytes - 0x0C, buffer_t5_draw_0C, sizeof32(buffer_t5_draw_0C))) )
-            return(FILETYPE_T5_DRAW);
+            return(FILETYPE_T5_HYBRID_DRAW);
 
         if( (n_bytes > (0x0C + sizeof32(buffer_pd_chart_0C))) &&
             (0 == try_memcmp32(&p_data[0x0C], n_bytes - 0x0C, buffer_pd_chart_0C, sizeof32(buffer_pd_chart_0C))) )
@@ -2692,12 +2902,17 @@ find_filetype_option(
     if(reject_this_filetype(filetype))
         return(ERR_CANT_LOAD_FILETYPE);
 
-    /* centralise handling for this one to check readability */
-    if(FILETYPE_CSV == filetype)
+    /* centralise handling for these just to check readability */
+    switch(filetype)
     {
+    case FILETYPE_CSV:
+    case FILETYPE_LOTUS123:
         if((filetype_option = file_readable(filename)) > 0)
-            filetype_option = CSV_CHAR;
+            filetype_option = (FILETYPE_CSV == filetype) ? CSV_CHAR : LOTUS123_CHAR;
         return(filetype_option);
+
+    default:
+        break;
     }
 
     input = pd_file_open(filename, file_open_read);
@@ -3246,7 +3461,7 @@ loadfile_core(
     if(NULL == (loadinput = pd_file_open(filename, file_open_read)))
         return(reperr(ERR_CANNOTOPEN, filename));
 
-    (void) file_buffer(loadinput, NULL, 64*1024); /* no messing about for load */
+    (void) file_buffer(loadinput, NULL, 16*1024); /* no messing about for load */
 
     flength = file_length(loadinput);
     /* we're going to divide by this */
@@ -3845,10 +4060,10 @@ rename_document(
     { /* NB the given DOCU_NAME now always takes prority */
     U8 buffer[BUF_MAX_PATHSTRING];
     name_make_wholename(p_docu_name, buffer, elemof32(buffer));
-    consume_bool(mystr_set(&currentfilename, buffer));
+    consume_bool(mystr_set(&current_p_docu->Xcurrentfilename, buffer));
     } /*block*/
 
-    riscos_settitlebar(currentfilename);
+    riscos_settitlebar(currentfilename());
 }
 
 static BOOL
@@ -3862,7 +4077,6 @@ name_preprocess_docu_name_flags_for_rename(
     if(p_docu_name->path_name && file_is_rooted(p_docu_name->path_name))
     {
         char dir_name[BUF_MAX_PATHSTRING];
-        char combined_path[BUF_MAX_PATHSTRING];
         P_FILE_PATHENUM pathenum;
         PCTSTR pathelem;
         P_U8 trail_ptr;
@@ -3884,9 +4098,7 @@ name_preprocess_docu_name_flags_for_rename(
 
         reportf("dir_name: %s", dir_name);
 
-        file_combine_path(combined_path, elemof32(combined_path), NULL, file_get_search_path());
-
-        for(pathelem = file_path_element_first(&pathenum, combined_path); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
+        for(pathelem = file_path_element_first(&pathenum, file_get_search_path()); NULL != pathelem; pathelem = file_path_element_next(&pathenum))
         {
             reportf("compare with pathelem: %s", pathelem);
 

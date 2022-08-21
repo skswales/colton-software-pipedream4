@@ -871,7 +871,7 @@ pdchart_element_subtract(
     if(kill_to_gr && pdchartelem->gr_int_handle) /* DEAD ROWs and COLs will have NULL handles */
         gr_chart_subtract(&pdchart->ch, &pdchartelem->gr_int_handle);
 
-    zero_struct_ptr(pdchartelem);
+    zero_struct_ptr_fn(pdchartelem);
 
     /* try shrinking descriptor usage after that clearout */
     pdchartelem = &pdchart->elem.base[pdchart->elem.n];
@@ -924,7 +924,7 @@ pdchart_init_shape_suss_holes(
         /* if there's a cell, mark the col & row it's in */
         const COL col = traverse_block_cur_col(&traverse_blk);
         const ROW row = traverse_block_cur_row(&traverse_blk);
-        const S32 is_number_cell = (sl->type == SL_NUMBER);
+        const U8 is_number_cell = (sl->type == SL_NUMBER);
         P_NLISTS_BLK nlbrp;
         LIST_ITEMNO key;
         P_U8 entryp;
@@ -1315,7 +1315,7 @@ pdchart_init_shape_from_marked_block(
 
      * SKS after PD 4.12 24mar92 - rather different to what has gone before...
     */
-    if(0 && !p_chart_shapedesc->bits.label_first_range)
+    if_constant(0 && !p_chart_shapedesc->bits.label_first_range)
     {
         /* if adding to a chart see if already added else ask preferred chart whether it wants them */
         S32 wants_labels = 0;
@@ -1403,7 +1403,7 @@ pdchart_listed_dep_new(
     if(NULL == (*p_itdep = itdep = collect_add_entry_elem(PDCHART_DEP, &pdchart_listed_deps, &itdepkey, &status)))
         return(status);
 
-    zero_struct_ptr(itdep);
+    zero_struct_ptr_fn(itdep);
 
     itdep->type = type;
 
@@ -1477,7 +1477,7 @@ pdchart_new(
     pdchart_submenu_kill();
 
     /* clear out allocation */
-    zero_struct_ptr(pdchart);
+    zero_struct_ptr_fn(pdchart);
 
     pdchart->recalc.state = PDCHART_UNMODIFIED;
 
@@ -3454,7 +3454,7 @@ expand_cell_for_chart_export(
 {
     P_DOCU p_docu;
     char * ptr, * to, ch;
-    S32 t_justify;
+    uchar t_justify;
     S32 t_curpnm;
 
     t_justify   = sl->justify;
@@ -3564,9 +3564,7 @@ pdchart_load_dependents(
 
             if((status = find_filetype_option(filename, FILETYPE_UNDETERMINED)) > 0)
             {
-                zero_struct(load_file_options);
-                load_file_options.document_name = filename;
-                load_file_options.filetype_option = (char) status;
+                load_file_options_init(&load_file_options, filename, status);
                 (void) loadfile_recurse(filename, &load_file_options); /* only BOOL anyway */
             }
 
@@ -3687,7 +3685,7 @@ pdchart_submenu_maker(void)
         i = 0;
 
         /* note cwd for minimalist references to charts from current document */
-        cwd_len = (is_current_document() && (NULL != file_get_cwd(cwd_buffer, elemof32(cwd_buffer), currentfilename)))
+        cwd_len = (is_current_document() && (NULL != file_get_cwd(cwd_buffer, elemof32(cwd_buffer), currentfilename())))
                         ? strlen(cwd_buffer)
                         : 0;
 
@@ -3897,7 +3895,7 @@ pdchart_make_range_for_save(
     _InRef_     PC_EV_RANGE rng)
 {
     UNREFERENCED_PARAMETER_InVal_(elemof_buffer);
-    return(ev_dec_range(buffer, pdchart_load_save_docno, rng, 1));
+    return(ev_dec_range(buffer, pdchart_load_save_docno, rng, true));
 }
 
 PROC_QSORT_PROTO(static, pdchart_sort_list, PDCHART_SORT_ELEM)
@@ -4275,7 +4273,7 @@ gr_ext_construct_load_this(
 
     UNREFERENCED_PARAMETER(ch);
 
-    zero_struct(rng);
+    zero_struct_fn(rng);
 
     switch(contab_ix)
     {
@@ -4443,6 +4441,19 @@ pdchart_load_ended(
 /*
 required functions
 */
+
+#ifndef __cs_resspr_h
+#include "cs-resspr.h"
+#endif
+
+extern BOOL
+gr_chart_ensure_sprites(void)
+{
+    static int loaded = -1;
+    if(loaded < 0)
+        loaded = resspr_mergesprites("SprCht");
+    return((BOOL) loaded);
+}
 
 extern FILETYPE_RISC_OS
 gr_chart_save_as_filetype(void)

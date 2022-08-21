@@ -38,7 +38,7 @@ typedef struct DOCU
 
     DOCNO docno;
 
-    #define currentfilename             (current_p_docu->Xcurrentfilename)
+    #define currentfilename()           (current_p_docu->Xcurrentfilename)
     PTSTR Xcurrentfilename;
 
     #define currentfileinfo             (current_p_docu->Xcurrentfileinfo)
@@ -804,6 +804,12 @@ _Check_return_
 _Ret_notnull_
 extern PCTSTR
 get_untitled_document(void);
+
+_Check_return_
+_Ret_notnull_
+extern PCTSTR
+get_untitled_document_with(
+    _In_z_      PCTSTR leafname);
 
 extern BOOL
 mergebuf_all(void);

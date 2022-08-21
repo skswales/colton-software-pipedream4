@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Printer Drivers</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="printerdriverediting.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="printing.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="printdrvediting.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="printing.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -35,20 +35,20 @@
     </ul>
     <p>Both methods use a printer driver which you can think of as acting as an interpreter between your document as it appears on the screen and your document when printed.</p>
     <p>
-        You can either use a PipeDream printer driver or a RISC&nbsp;OS printer driver.
+        You can either use a PipeDream printer driver or a RISC OS printer driver.
         The fundamental difference between the two is that PipeDream printer drivers are text-oriented
-        whereas RISC&nbsp;OS printer drivers are graphics-oriented, i.e. they build up a graphic picture of your document in tiny dots and then print those dots.
+        whereas RISC OS printer drivers are graphics-oriented, i.e. they build up a graphic picture of your document in tiny dots and then print those dots.
         This means that the fonts you can produce are completely independent of the printer&rsquo;s built-in typefaces.
-        They are defined by what is available in the RISC&nbsp;OS computer.
+        They are defined by what is available in the RISC OS computer.
     </p>
 
-    <h4 id="RISC">RISC&nbsp;OS printer drivers</h4>
+    <h4 id="RISC">RISC OS printer drivers</h4>
     <ul>
         <li>are graphics-oriented;</li>
         <li>print quickly on PostScript and PCL laser and inkjet printers, slowly on dot-matrix printers and not at all on daisywheel printers;</li>
         <li>can print pictures from PipeDream;</li>
         <li>can print the grid;</li>
-        <li>can print using any of the RISC&nbsp;OS fonts available to you either as a global font or as a local font change (@F@);</li>
+        <li>can print using any of the RISC OS fonts available to you either as a global font or as a local font change (@F@);</li>
         <li>can print both portrait (vertically) and landscape (horizontally).</li>
     </ul>
 
@@ -67,18 +67,18 @@
         PipeDream printer drivers contain fields in which you type sequences of codes to perform operations such as
         underlining, bold, italics, superscripts and subscripts and, to a limited extent, font changes.
         These font changes are produced by the printer, using the different typestyles it has available;
-        they are nothing to do with the fonts that RISC&nbsp;OS has available.
-        The RISC&nbsp;OS printer drivers differ in that, if you want to print in bold or italic,
-        there must be a bold or italic version of the font available on your RISC&nbsp;OS computer.
+        they are nothing to do with the fonts that RISC OS has available.
+        The RISC OS printer drivers differ in that, if you want to print in bold or italic,
+        there must be a bold or italic version of the font available on your RISC OS computer.
     </p>
     <p>
         It may seem confusing to have two different ways of printing but in fact PipeDream is giving you the best of both worlds.
         In practice, you will probably find that one method suits your set-up and needs and stick to that method.
-        If you have a laser or inkjet printer, you will probably use an appropriate RISC&nbsp;OS printer driver.
+        If you have a laser or inkjet printer, you will probably use an appropriate RISC OS printer driver.
         If you have a daisywheel printer, the choice is easy - use the PipeDream printer driver called
         <span class="csg-filename">Daisywheel</span> provided in the PipeDream Examples.
         If you have a dot-matrix printer, you can use either type of printer driver:
-        use RISC&nbsp;OS if you want to print pictures within your text or to have different fonts or sizes,
+        use RISC OS if you want to print pictures within your text or to have different fonts or sizes,
         or PipeDream if you want to print quickly and need no more than simple highlights such as underline or bold.
     </p>
 
@@ -92,7 +92,7 @@
             </tr>
             <tr>
                 <td>Editing PipeDream printer drivers</td>
-                <td><a href="printerdriverediting.html">PipeDream Printer Driver Editing</a></td>
+                <td><a href="printdrvediting.html">PipeDream Printer Driver Editing</a></td>
             </tr>
         </tbody>
     </table>
@@ -100,14 +100,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">PipeDream Printer Driver Editing </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Printing</td>
+                <td class="navfooter_PUN_L">PipeDream Printer Driver Editing </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Printing</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="printerdriverediting.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="printing.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="printdrvediting.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="printing.html">Next</a></td>
             </tr>
         </table>
     </div>

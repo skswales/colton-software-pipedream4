@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Commands</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="intro.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="alignment.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="intro.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="alignment.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -40,7 +40,7 @@
     <p>The <span class="csg-menu">Choices</span> sub-menu is available from the <span class="csg-menu">Icon</span> menu.</p>
     <p>The <span class="csg-menu">Function</span> menu is displayed by clicking the <span class="csg-toolbar-button">Function</span> toolbar button.</p>
 
-    <h4 id="L/S">L/S</h4>
+    <h4 id="LongShort">L/S</h4>
     <p>
         This tells you whether the command is found on long or short menus and applies to the menus reached via the PipeDream main menu.
         Other menus always show all their menu options.
@@ -59,7 +59,7 @@
 	</p>
 
     <h4 id="Section">Section</h4>
-    <p>This gives the name of the section in the <em>Reference&nbsp;Guide</em> in which the command is explained in detail.</p>
+    <p>This gives the name of the section in the <em>Reference Guide</em> in which the command is explained in detail.</p>
 
     <p>
         As you can see, PipeDream provides several methods of giving commands.
@@ -67,7 +67,7 @@
         Some people use one method all the time; others use a combination of all of them.
     </p>
     <p>
-        Throughout this <em>Reference&nbsp;Guide</em> and the <em>Tutorial</em>,
+        Throughout this <em>Reference Guide</em> and the <em>Getting Started Guide</em>,
         the various methods will generally be shown as follows and it is up to you which method you use:
     </p>
     <table class="csg-command-table">
@@ -87,7 +87,7 @@
             <tr>
                 <td>File</td>
                 <td>Save</td>
-                <td><img src="images/tbar_save.png" /></td>
+                <td><img src="images/toolbar/save.png" alt="Save icon" /></td>
                 <td><span class="csg-key">F3</span></td>
                 <td><span class="csg-cmdseq">FS</span></td>
             </tr>
@@ -105,7 +105,7 @@
     </ol>
     <p><em>Or:</em></p>
     <ul style="list-style-type: none;">
-        <li>Press the <img src="images/tbar_save.png" /> button on the toolbar.</li>
+        <li>Press the <img src="images/toolbar/save.png" alt="Save icon" />&nbsp;button on the toolbar.</li>
     </ul>
     <p><em>Or:</em></p>
     <ul style="list-style-type: none;">
@@ -131,14 +131,6 @@
                 <th>Key</th>
                 <th>Cmd-sequence</th>
                 <th>Section</th>
-            </tr>
-            <tr>
-                <td>About</td>
-                <td>Files</td>
-                <td>L</td>
-                <td></td>
-                <td class="csg-cmdseq">FA</td>
-                <td>Help</td>
             </tr>
             <tr>
                 <td>Add column</td>
@@ -175,7 +167,7 @@
             <tr>
                 <td>Auto check</td>
                 <td>Choices</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">SA</td>
                 <td><a href="spellchecking.html#Spell">Spell - checking</a></td>
@@ -183,7 +175,7 @@
             <tr>
                 <td>Auto recalc</td>
                 <td>Choices</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">FO</td>
                 <td><a href="recalculation.html">Recalculation</a></td>
@@ -271,7 +263,7 @@
             <tr>
                 <td>Change menus</td>
                 <td>Choices</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">FGM</td>
                 <td><a href="menus.html#Customising">Menus</a></td>
@@ -287,8 +279,8 @@
             <tr>
                 <td>Clear markers</td>
                 <td>Blocks</td>
-                <td></td>
-                <td></td>
+                <td>S</td>
+                <td>Ctrl-Z</td>
                 <td class="csg-cmdseq">Q</td>
                 <td><a href="blocks.html#Clearing">Blocks</a></td>
             </tr>
@@ -319,7 +311,7 @@
             <tr>
                 <td>Colours</td>
                 <td>Choices</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">FR</td>
                 <td><a href="colours.html">Colours</a></td>
@@ -335,8 +327,8 @@
             <tr>
                 <td>Copy block to paste list</td>
                 <td>Blocks</td>
-                <td></td>
-                <td></td>
+                <td>L</td>
+                <td>Ctrl-C</td>
                 <td class="csg-cmdseq">BF</td>
                 <td><a href="paste.html">Paste</a></td>
             </tr>
@@ -391,7 +383,7 @@
             <tr>
                 <td>Define name</td>
                 <td>Function</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td></td>
                 <td><a href="names.html#Defining">Names</a></td>
@@ -400,7 +392,7 @@
                 <td>Delete block</td>
                 <td>Blocks</td>
                 <td>S</td>
-                <td></td>
+                <td>Ctrl-X</td>
                 <td class="csg-cmdseq">BD</td>
                 <td><a href="blockops.html#Delete">Blocks - operations</a></td>
             </tr>
@@ -424,7 +416,7 @@
                 <td>Delete column</td>
                 <td>Edit</td>
                 <td>S</td>
-                <td></td>
+                <td class="csg-key">Shift-F8</td>
                 <td class="csg-cmdseq">EDC</td>
                 <td><a href="editing.html#Delcol">Editing</a></td>
             </tr>
@@ -432,7 +424,7 @@
                 <td>Delete row</td>
                 <td>Edit</td>
                 <td>S</td>
-                <td class="csg-key">F8</td>
+                <td class="csg-key">Ctrl-F8</td>
                 <td class="csg-cmdseq">Y</td>
                 <td><a href="editing.html#Delcell">Editing</a></td>
             </tr>
@@ -470,8 +462,8 @@
             </tr>
             <tr>
                 <td>Dictionaries</td>
-                <td>Choices</td>
-                <td></td>
+                <td>Spell</td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">SE</td>
                 <td><a href="spelluserdicts.html">Spell - user dictionaries</a></td>
@@ -519,7 +511,7 @@
             <tr>
                 <td>Edit name</td>
                 <td>Function</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td></td>
                 <td><a href="names.html#Changing">Names</a></td>
@@ -531,7 +523,7 @@
                 <td></td>
                 <td class="csg-cmdseq">PGD</td>
                 <td>
-                    <a href="printerdriverediting.html">
+                    <a href="printdrvediting.html">
                         PipeDream printer<br />
                         driver editing
                     </a>
@@ -658,7 +650,7 @@
                 <td><a href="highlights.html#Hiblock">Highlights</a></td>
             </tr>
             <tr>
-                <td>Info</td>
+                <td>Info (about application)</td>
                 <td>Icon</td>
                 <td></td>
                 <td></td>
@@ -666,9 +658,17 @@
                 <td><a href="iconmenu.html">Icon menu</a></td>
             </tr>
             <tr>
+                <td>Info (about file)</td>
+                <td>Files</td>
+                <td>S</td>
+                <td></td>
+                <td class="csg-cmdseq">FA</td>
+                <td>Help</td>
+            </tr>
+            <tr>
                 <td>Insert</td>
                 <td>Choices</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">V</td>
                 <td><a href="editing.html">Editing</a></td>
@@ -677,12 +677,12 @@
                 <td>Insert column</td>
                 <td>Edit</td>
                 <td>S</td>
-                <td></td>
+                <td class="csg-key">Shift-F7</td>
                 <td class="csg-cmdseq">EIC</td>
                 <td><a href="editing.html#Insert">Editing</a></td>
             </tr>
             <tr>
-                <td>Insert page</td>
+                <td>Insert page break</td>
                 <td>Edit</td>
                 <td></td>
                 <td></td>
@@ -701,7 +701,7 @@
                 <td>Insert row</td>
                 <td>Edit</td>
                 <td>S</td>
-                <td class="csg-key">F7</td>
+                <td class="csg-key">Ctrl-F7</td>
                 <td class="csg-cmdseq">N</td>
                 <td><a href="editing.html#Blankrow">Editing</a></td>
             </tr>
@@ -848,7 +848,7 @@
                 <td></td>
                 <td class="csg-cmdseq">PM</td>
                 <td>
-                    <a href="printerdriverediting.html">
+                    <a href="printdrvediting.html">
                         PipeDream printer<br />
                         driver editing
                     </a>
@@ -1017,7 +1017,7 @@
             <tr>
                 <td>Paste depth</td>
                 <td>Choices</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">BPD</td>
                 <td><a href="paste.html">Paste</a></td>
@@ -1065,7 +1065,7 @@
             <tr>
                 <td>Printer config</td>
                 <td>Print</td>
-                <td>S</td>
+                <td>L</td>
                 <td></td>
                 <td class="csg-cmdseq">PD</td>
                 <td><a href="printing.html">Printing</a></td>
@@ -1289,7 +1289,7 @@
             <tr>
                 <td>Short menus</td>
                 <td>Choices</td>
-                <td></td>
+                <td>S</td>
                 <td></td>
                 <td class="csg-cmdseq">M</td>
                 <td><a href="menus.html#">Menus</a></td>
@@ -1467,14 +1467,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Introduction </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Alignment</td>
+                <td class="navfooter_PUN_L">Introduction </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Alignment</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="intro.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="alignment.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="intro.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="alignment.html">Next</a></td>
             </tr>
         </table>
     </div>

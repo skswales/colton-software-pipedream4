@@ -7,9 +7,9 @@
 /* Copyright (C) 1991-1998 Colton Software Limited
  * Copyright (C) 1998-2015 R W Colton */
 
-/* Semantic routines for evaluator */
+/* Complex number functions for evaluator */
 
-/* MRJC May 1991 */
+/* MRJC May 1991; SKS May 2014 split off from ev_math; SKS December 2019 split off complex core functions */
 
 #include "common/gflags.h"
 
@@ -18,8 +18,12 @@
 
 #include "cmodules/mathxtra.h"
 
+#include "cmodules/mathxcpx.h"
+
 /* local header file */
 #include "ev_evali.h"
+
+#ifndef __mathxcpx_h
 
 /*
 declare complex number type for internal usage
@@ -30,6 +34,8 @@ typedef struct COMPLEX
     F64 r, i;
 }
 COMPLEX, * P_COMPLEX; typedef const COMPLEX * PC_COMPLEX;
+
+#endif /* __mathxcpx_h */
 
 /*
 internal functions
@@ -54,33 +60,11 @@ complex_result_reals_string(
 
 /******************************************************************************
 *
-* the constant one as a complex number
-*
-******************************************************************************/
-
-static const COMPLEX
-complex_unity = { 1.0, 0.0 };
-
-#if 0 /* just for diff minimization */
-
-/******************************************************************************
-*
-* the constant one half as a complex number
-*
-******************************************************************************/
-
-static const COMPLEX
-complex_one_half = { 0.5, 0.0 };
-
-#endif
-
-/******************************************************************************
-*
 * check that arg is a 2 by 1 array of two real numbers (or one real)
 *
 * --out--
 * <0  arg data was unsuitable
-* >=0 n->r and n->i set up with numbers
+* >=0 COMPLEX z was set up with numbers
 *
 ******************************************************************************/
 
@@ -88,34 +72,39 @@ _Check_return_
 static STATUS
 complex_check_arg_array(
     /**/        P_SS_DATA p_ss_data_res,
-    _OutRef_    P_COMPLEX n,
+    _OutRef_    P_COMPLEX z,
     _InRef_     P_SS_DATA p_ss_data_in)
 {
-    if(ss_data_is_real(p_ss_data_in))
+    switch(ss_data_get_data_id(p_ss_data_in))
     {
-        n->r = ss_data_get_real(p_ss_data_in);
-        n->i = 0.0;
-        return(STATUS_OK);
-    }
-
-    if(RPN_TMP_ARRAY == ss_data_get_data_id(p_ss_data_in))
-    {
+    case RPN_TMP_ARRAY:
+    case RPN_RES_ARRAY:
+    case DATA_ID_RANGE:
+        { /* extract elements from the array */
         SS_DATA ss_data_1, ss_data_2;
-
-        /* extract elements from the array */
         const EV_IDNO t1 = array_range_index(&ss_data_1, p_ss_data_in, 0, 0, EM_REA);
         const EV_IDNO t2 = array_range_index(&ss_data_2, p_ss_data_in, 1, 0, EM_REA);
 
         if( (DATA_ID_REAL == t1) && (DATA_ID_REAL == t2) )
         {
-            n->r = ss_data_get_real(&ss_data_1);
-            n->i = ss_data_get_real(&ss_data_2);
+            complex_set_ri(z, ss_data_get_real(&ss_data_1), ss_data_get_real(&ss_data_2));
             return(STATUS_OK);
         }
+
+        break;
+        }
+
+    default:
+        if(ss_data_is_real(p_ss_data_in))
+        {
+            complex_set_ri(z, ss_data_get_real(p_ss_data_in), 0.0);
+            return(STATUS_OK);
+        }
+
+        break;
     }
 
-    n->r = 0.0;
-    n->i = 0.0;
+    *z = complex_zero;
     return(ss_data_set_error(p_ss_data_res, EVAL_ERR_BADCOMPLEX));
 }
 
@@ -127,7 +116,7 @@ complex_check_arg_array(
 *
 * --out--
 * <0  string was unsuitable
-* >=0 n->r and n->i set up with numbers
+* >=0 COMPLEX z was set up with numbers
 *
 * parse <real>[+|-]<imag>[i|j], which may be just
 * <real> or
@@ -139,7 +128,7 @@ complex_check_arg_array(
 _Check_return_
 static STATUS
 complex_check_arg_ustr(
-    _InoutRef_  P_COMPLEX n,
+    _InoutRef_  P_COMPLEX z,
     _InoutRef_  P_U8 p_imag_suffix_char,
     _In_z_      PC_USTR ustr)
 {
@@ -175,8 +164,7 @@ complex_check_arg_ustr(
         if(CH_NULL == PtrGetByteOff(ustr, uchars_read))
         {   /* early exit, got just a real part */
             real_part = f64;
-            n->r = real_part;
-            n->i = 0.0;
+            complex_set_ri(z, real_part, 0.0);
             return(STATUS_OK);
         }
 
@@ -192,8 +180,7 @@ complex_check_arg_ustr(
             imag_part = f64; /* <imag>[i|j] */
         else
             imag_part = negate ? -1.0 : 1.0; /* {[+|-]}[i|j] */
-        n->r = 0.0;
-        n->i = imag_part;
+        complex_set_ri(z, 0.0, imag_part);
         return(STATUS_OK);
     }
 
@@ -244,8 +231,7 @@ complex_check_arg_ustr(
             imag_part = f64; /* <real>[+|-]<imag>[i|j] */
         else
             imag_part = negate ? -1.0 : 1.0; /* <real>[+|-][i|j] */
-        n->r = real_part;
-        n->i = imag_part;
+        complex_set_ri(z, real_part, imag_part);
         return(STATUS_OK);
     }
 
@@ -256,19 +242,18 @@ _Check_return_
 static STATUS
 complex_check_arg_string(
     /**/        P_SS_DATA p_ss_data_res,
-    _OutRef_    P_COMPLEX n,
+    _OutRef_    P_COMPLEX z,
     _OutRef_    P_U8 p_imag_suffix_char,
     _InRef_     P_SS_DATA p_ss_data_in)
 {
     STATUS status;
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 50);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 64);
     quick_ublock_with_buffer_setup(quick_ublock);
 
-    n->r = 0.0;
-    n->i = 0.0;
+    *z = complex_zero;
     *p_imag_suffix_char = CH_NULL;
 
-    if(DATA_ID_STRING != ss_data_get_data_id(p_ss_data_in))
+    if(!ss_data_is_string(p_ss_data_in))
         return(ss_data_set_error(p_ss_data_res, EVAL_ERR_BADCOMPLEX));
 
     /* need a CH_NULL-terminated string to parse */
@@ -276,7 +261,7 @@ complex_check_arg_string(
         status = quick_ublock_nullch_add(&quick_ublock);
 
     if(status_ok(status))
-        status = complex_check_arg_ustr(n, p_imag_suffix_char, quick_ublock_ustr(&quick_ublock));
+        status = complex_check_arg_ustr(z, p_imag_suffix_char, quick_ublock_ustr(&quick_ublock));
 
     quick_ublock_dispose(&quick_ublock);
 
@@ -290,20 +275,20 @@ _Check_return_
 static STATUS
 complex_check_arg_string_pair(
     /**/        P_SS_DATA p_ss_data_res,
-    _OutRef_    P_COMPLEX n1,
-    _OutRef_    P_COMPLEX n2,
+    _OutRef_    P_COMPLEX z1,
+    _OutRef_    P_COMPLEX z2,
     _OutRef_    P_U8 p_imag_suffix_char,
     _InRef_     P_SS_DATA p_ss_data_1,
     _InRef_     P_SS_DATA p_ss_data_2)
 {
     U8 imag_suffix_char_1, imag_suffix_char_2;
 
-    CODE_ANALYSIS_ONLY((n2->r = 0.0, n2->i = 0.0));
+    CODE_ANALYSIS_ONLY(*z2 = complex_zero);
 
     *p_imag_suffix_char = CH_NULL;
 
-    status_return(complex_check_arg_string(p_ss_data_res, n1, &imag_suffix_char_1, p_ss_data_1));
-    status_return(complex_check_arg_string(p_ss_data_res, n2, &imag_suffix_char_2, p_ss_data_2));
+    status_return(complex_check_arg_string(p_ss_data_res, z1, &imag_suffix_char_1, p_ss_data_1));
+    status_return(complex_check_arg_string(p_ss_data_res, z2, &imag_suffix_char_2, p_ss_data_2));
 
     if((CH_NULL == imag_suffix_char_1) && (CH_NULL == imag_suffix_char_2))
          *p_imag_suffix_char = 'i';
@@ -329,85 +314,56 @@ _Check_return_
 static STATUS
 complex_check_arg(
     /**/        P_SS_DATA p_ss_data_res,
-    _OutRef_    P_COMPLEX n,
+    _OutRef_    P_COMPLEX z,
     _OutRef_    P_U8 p_imag_suffix_char,
     _InRef_     P_SS_DATA p_ss_data)
 {
 #if defined(COMPLEX_STRING)
-    if(DATA_ID_STRING == ss_data_get_data_id(p_ss_data))
-        return(complex_check_arg_string(p_ss_data_res, n, p_imag_suffix_char, p_ss_data));
+    if(ss_data_is_string(p_ss_data))
+        return(complex_check_arg_string(p_ss_data_res, z, p_imag_suffix_char, p_ss_data));
 #endif /* COMPLEX_STRING */
 
     *p_imag_suffix_char = CH_NULL;
 
-    return(complex_check_arg_array(p_ss_data_res, n, p_ss_data));
+    return(complex_check_arg_array(p_ss_data_res, z, p_ss_data));
 }
 
 _Check_return_
 static STATUS
 complex_check_arg_pair(
     /**/        P_SS_DATA p_ss_data_res,
-    _OutRef_    P_COMPLEX n1,
-    _OutRef_    P_COMPLEX n2,
+    _OutRef_    P_COMPLEX z1,
+    _OutRef_    P_COMPLEX z2,
     _OutRef_    P_U8 p_imag_suffix_char,
     _InRef_     P_SS_DATA p_ss_data_1,
     _InRef_     P_SS_DATA p_ss_data_2)
 {
 #if defined(COMPLEX_STRING)
     /* easy if both are strings */
-    if( (DATA_ID_STRING == ss_data_get_data_id(p_ss_data_1)) && (DATA_ID_STRING == ss_data_get_data_id(p_ss_data_2)) )
-        return(complex_check_arg_string_pair(p_ss_data_res, n1, n2, p_imag_suffix_char, p_ss_data_1, p_ss_data_2));
+    if( ss_data_is_string(p_ss_data_1) && ss_data_is_string(p_ss_data_2) )
+        return(complex_check_arg_string_pair(p_ss_data_res, z1, z2, p_imag_suffix_char, p_ss_data_1, p_ss_data_2));
 
     *p_imag_suffix_char = CH_NULL;
 
-    CODE_ANALYSIS_ONLY((n2->r = 0.0, n2->i = 0.0));
+    CODE_ANALYSIS_ONLY(*z2 = complex_zero);
 
-    if(DATA_ID_STRING == ss_data_get_data_id(p_ss_data_1))
-        status_return(complex_check_arg_string(p_ss_data_res, n1, p_imag_suffix_char, p_ss_data_1));
+    if(ss_data_is_string(p_ss_data_1))
+        status_return(complex_check_arg_string(p_ss_data_res, z1, p_imag_suffix_char, p_ss_data_1));
     else
-        status_return(complex_check_arg_array(p_ss_data_res, n1, p_ss_data_1));
+        status_return(complex_check_arg_array(p_ss_data_res, z1, p_ss_data_1));
 
-    if(DATA_ID_STRING == ss_data_get_data_id(p_ss_data_2))
-        return(complex_check_arg_string(p_ss_data_res, n2, p_imag_suffix_char, p_ss_data_2));
+    if(ss_data_is_string(p_ss_data_2))
+        return(complex_check_arg_string(p_ss_data_res, z2, p_imag_suffix_char, p_ss_data_2));
     else
-        return(complex_check_arg_array(p_ss_data_res, n2, p_ss_data_2));
+        return(complex_check_arg_array(p_ss_data_res, z2, p_ss_data_2));
 #else
     *p_imag_suffix_char = CH_NULL;
 
-    CODE_ANALYSIS_ONLY((n2->r = 0.0, n2->i = 0.0));
+    CODE_ANALYSIS_ONLY(*z2 = complex_zero);
 
-    status_return(complex_check_arg_array(p_ss_data_res, n1, p_ss_data_1));
-           return(complex_check_arg_array(p_ss_data_res, n2, p_ss_data_2));
+    status_return(complex_check_arg_array(p_ss_data_res, z1, p_ss_data_1));
+           return(complex_check_arg_array(p_ss_data_res, z2, p_ss_data_2));
 #endif /* COMPLEX_STRING */
-}
-
-/******************************************************************************
-*
-* find ln of complex number for internal routines
-*
-******************************************************************************/
-
-/* NB z = r.e^i.theta -> ln(z) = ln(r) + i.theta */
-
-_Check_return_
-static STATUS
-complex_lnz(
-    _InRef_     PC_COMPLEX in,
-    _OutRef_    P_COMPLEX out)
-{
-    const F64 r_squared = (in->r * in->r) + (in->i * in->i);
-    STATUS status = STATUS_OK;
-
-    errno = 0;
-
-    out->r = log(r_squared) * 0.5; /* x saves a sqrt() */
-
-    if(errno /* == ERANGE */ /*can't be EDOM here*/)
-        status = EVAL_ERR_BAD_LOG;
-
-    out->i = atan2(in->i, in->r);
-
-    return(status);
 }
 
 /******************************************************************************
@@ -416,7 +372,7 @@ complex_lnz(
 *
 ******************************************************************************/
 
-static inline void
+static void
 complex_result_complex(
     _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     PC_COMPLEX z,
@@ -425,14 +381,14 @@ complex_result_complex(
 #if defined(COMPLEX_STRING)
     if(CH_NULL != imag_suffix_char)
     {
-        complex_result_reals_string(p_ss_data, z->r, z->i, imag_suffix_char);
+        complex_result_reals_string(p_ss_data, complex_real(z), complex_imag(z), imag_suffix_char);
         return;
     }
 #else
     UNREFERENCED_PARAMETER_InVal_(imag_suffix_char);
 #endif
 
-    complex_result_reals(p_ss_data, z->r, z->i);
+    complex_result_reals(p_ss_data, complex_real(z), complex_imag(z));
 }
 
 /******************************************************************************
@@ -461,16 +417,20 @@ complex_result_reals(
 
 #if defined(COMPLEX_STRING)
 
+#if defined(UNUSED_KEEP_ALIVE)
+
 static inline void
 complex_result_complex_string(
     _OutRef_    P_SS_DATA p_ss_data,
     _InRef_     PC_COMPLEX z,
     _InVal_     U8 imag_suffix_char)
 {
-    complex_result_reals_string(p_ss_data, z->r, z->i, imag_suffix_char);
+    complex_result_reals_string(p_ss_data, complex_real(z), complex_imag(z), imag_suffix_char);
 }
 
-static U32 /* bytes currently in output */
+#endif /* UNUSED */
+
+static inline U32 /* bytes currently in output */
 decode_fp(
     _Out_writes_z_(elemof_buffer) P_USTR ustr_buf,
     _InVal_     U32 elemof_buffer,
@@ -525,7 +485,7 @@ complex_result_reals_string(
     F64 imag_abs = fabs(imag_part);
     U8 imag_sign_char = imag_negative ? CH_MINUS_SIGN__BASIC : CH_PLUS_SIGN;
     UCHARZ fp_buffer[64];
-    QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 50);
+    QUICK_UBLOCK_WITH_BUFFER(quick_ublock, 64);
     quick_ublock_with_buffer_setup(quick_ublock);
 
     /* always output real part first if it is non-zero */
@@ -574,30 +534,8 @@ complex_result_reals_string(
 
 /******************************************************************************
 *
-* find w*ln(z) for internal routines
-*
-******************************************************************************/
-
-_Check_return_ _Success_(return)
-static STATUS
-complex_wlnz(
-    _InRef_     PC_COMPLEX w,
-    _InRef_     PC_COMPLEX z,
-    _OutRef_    P_COMPLEX out)
-{
-    COMPLEX lnz;
-
-    status_return(complex_lnz(z, &lnz));
-
-    out->r = w->r * lnz.r  -  w->i * lnz.i;
-    out->i = w->r * lnz.i  +  w->i * lnz.r;
-
-    return(STATUS_OK);
-}
-
-/******************************************************************************
-*
 * add two complex numbers
+*
 * (a+ib) + (c+id) = (a+c) + i(b+d)
 *
 ******************************************************************************/
@@ -605,16 +543,15 @@ complex_wlnz(
 PROC_EXEC_PROTO(c_c_add)
 {
     U8 imag_suffix_char;
-    COMPLEX in1, in2, add_result;
+    COMPLEX z1, z2, add_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &z1, &z2, &imag_suffix_char, args[0], args[1])))
         return;
 
-    add_result.r = in1.r + in2.r;
-    add_result.i = in1.i + in2.i;
+    complex_add(&z1, &z2, &add_result);
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &add_result, imag_suffix_char);
@@ -623,6 +560,7 @@ PROC_EXEC_PROTO(c_c_add)
 /******************************************************************************
 *
 * subtract second complex number from first
+*
 * (a+ib) - (c+id) = (a-c) + i(b-d)
 *
 ******************************************************************************/
@@ -630,16 +568,15 @@ PROC_EXEC_PROTO(c_c_add)
 PROC_EXEC_PROTO(c_c_sub)
 {
     U8 imag_suffix_char;
-    COMPLEX in1, in2, sub_result;
+    COMPLEX z1, z2, sub_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &z1, &z2, &imag_suffix_char, args[0], args[1])))
         return;
 
-    sub_result.r = in1.r - in2.r;
-    sub_result.i = in1.i - in2.i;
+    complex_subtract(&z1, &z2, &sub_result);
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &sub_result, imag_suffix_char);
@@ -648,23 +585,23 @@ PROC_EXEC_PROTO(c_c_sub)
 /******************************************************************************
 *
 * multiply two complex numbers
-* (a+ib)*(c+id) = (ac-bd) + i(bc+ad)
+*
+* (a+ib) * (c+id) = (ac-bd) + i(bc+ad)
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_mul)
 {
     U8 imag_suffix_char;
-    COMPLEX in1, in2, mul_result;
+    COMPLEX z1, z2, mul_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &z1, &z2, &imag_suffix_char, args[0], args[1])))
         return;
 
-    mul_result.r = in1.r * in2.r - in1.i * in2.i;
-    mul_result.i = in1.i * in2.r + in1.r * in2.i;
+    complex_multiply(&z1, &z2, &mul_result);
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &mul_result, imag_suffix_char);
@@ -673,47 +610,24 @@ PROC_EXEC_PROTO(c_c_mul)
 /******************************************************************************
 *
 * divide two complex numbers
-* (a+ib)/(c+id) = ((ac+bd) + i(bc-ad)) / (c*c + d*d)
+*
+* (a+ib) / (c+id) = ((ac+bd) + i(bc-ad)) / (c*c + d*d)
 *
 ******************************************************************************/
-
-_Check_return_ _Success_(return)
-static BOOL
-do_complex_divide(
-    /**/        P_SS_DATA p_ss_data_res,
-    _InRef_     PC_COMPLEX in1,
-    _InRef_     PC_COMPLEX in2,
-    _OutRef_    P_COMPLEX out)
-{
-    /* c*c + d*d */
-    const F64 divisor = (in2->r * in2->r) + (in2->i * in2->i);
-
-    /* check for divide by zero about to trap */
-    if(divisor < F64_MIN)
-    {
-        ss_data_set_error(p_ss_data_res, EVAL_ERR_DIVIDEBY0);
-        return(FALSE);
-    }
-
-    out->r = (in1->r * in2->r + in1->i * in2->i) / divisor;
-    out->i = (in1->i * in2->r - in1->r * in2->i) / divisor;
-
-    return(TRUE);
-}
 
 PROC_EXEC_PROTO(c_c_div)
 {
     U8 imag_suffix_char;
-    COMPLEX in1, in2, div_result;
+    COMPLEX z1, z2, div_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &z1, &z2, &imag_suffix_char, args[0], args[1])))
         return;
 
-    if(!do_complex_divide(p_ss_data_res, &in1, &in2, &div_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_divide(&z1, &z2, &div_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &div_result, imag_suffix_char);
@@ -723,13 +637,13 @@ PROC_EXEC_PROTO(c_c_div)
 
 /******************************************************************************
 *
-* COMPLEX c_complex(real_part:number, imag_part:number {, suffix:string})
+* COMPLEX c_complex(real_part:number {, imag_part:number {, suffix:string}})
 *
 * STRING odf.complex(real_part:number, imag_part:number {, suffix:string})
 *
 ******************************************************************************/
 
-static inline void
+static void
 c_c_complex_common(
     _In_reads_(n_args) P_SS_DATA args[],
     _InVal_     S32 n_args,
@@ -739,14 +653,12 @@ c_c_complex_common(
     COMPLEX complex_result;
     U8 imag_suffix_char = default_imag_suffix_char;
 
-    assert(n_args > 0);
-    complex_result.r = ss_data_get_real(args[0]);
-
-    complex_result.i = (n_args > 1) ? ss_data_get_real(args[1]) : 0.0;
+    assert(n_args >= 1);
+    complex_set_ri(&complex_result, ss_data_get_real(args[0]), (n_args > 1) ? ss_data_get_real(args[1]) : 0.0);
 
     if(n_args > 2)
     {
-        PC_UCHARS uchars = ss_data_get_string(args[2]);
+        const PC_UCHARS uchars = ss_data_get_string(args[2]);
 
         if( (1 != ss_data_get_string_size(args[2])) || ((PtrGetByte(uchars) != 'i') && (PtrGetByte(uchars) != 'j')) )
         {
@@ -783,16 +695,15 @@ PROC_EXEC_PROTO(c_odf_complex)
 PROC_EXEC_PROTO(c_c_conjugate)
 {
     U8 imag_suffix_char;
-    COMPLEX in, conjugate_result;
+    COMPLEX z, conjugate_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    conjugate_result.r =   in.r;
-    conjugate_result.i = - in.i;
+    complex_conjugate(&z, &conjugate_result);
 
     complex_result_complex(p_ss_data_res, &conjugate_result, imag_suffix_char);
 }
@@ -806,15 +717,15 @@ PROC_EXEC_PROTO(c_c_conjugate)
 PROC_EXEC_PROTO(c_c_real)
 {
     U8 imag_suffix_char;
-    COMPLEX in;
+    COMPLEX z;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    ss_data_set_real(p_ss_data_res, in.r);
+    ss_data_set_real(p_ss_data_res, complex_real(&z));
 }
 
 /******************************************************************************
@@ -826,15 +737,15 @@ PROC_EXEC_PROTO(c_c_real)
 PROC_EXEC_PROTO(c_c_imaginary)
 {
     U8 imag_suffix_char;
-    COMPLEX in;
+    COMPLEX z;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    ss_data_set_real(p_ss_data_res, in.i);
+    ss_data_set_real(p_ss_data_res, complex_imag(&z));
 }
 
 #endif
@@ -848,16 +759,16 @@ PROC_EXEC_PROTO(c_c_imaginary)
 PROC_EXEC_PROTO(c_c_radius)
 {
     U8 imag_suffix_char;
-    COMPLEX in;
+    COMPLEX z;
     F64 radius_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    radius_result = hypot(in.r, in.i); /* SKS does carefully */
+    radius_result = complex_modulus(&z);
 
     ss_data_set_real(p_ss_data_res, radius_result);
 }
@@ -871,68 +782,96 @@ PROC_EXEC_PROTO(c_c_radius)
 PROC_EXEC_PROTO(c_c_theta)
 {
     U8 imag_suffix_char;
-    COMPLEX in;
+    COMPLEX z;
     F64 theta_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    theta_result = atan2(in.i, in.r); /* note silly C library ordering */
+    theta_result = complex_argument(&z);
 
     ss_data_set_real(p_ss_data_res, theta_result);
 }
 
-#if 0 /* just for diff minimization */
-
 /******************************************************************************
 *
-* round(complex number {, decimal_places:number=2})
+* c_round(complex number {, decimal_places:number=2})
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_round)
 {
     U8 imag_suffix_char;
-    COMPLEX in, round_result;
+    COMPLEX z, round_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
     { /* round components separately to the desired number of decimal places */
+    F64 round_result_real, round_result_imag;
     SS_DATA number, decimal_places;
     P_SS_DATA local_args[2];
 
     local_args[0] = &number;
     local_args[1] = &decimal_places;
 
-    ss_data_set_integer(&decimal_places, (n_args > 1) ? MIN(15, ss_data_get_integer(args[1])) : 2);
+    if(n_args > 1)
+        ss_data_set_integer(&decimal_places, MIN(15, ss_data_get_integer(args[1])));
+    else
+        ss_data_set_integer(&decimal_places, 2);
 
-    ss_data_set_real(&number, in.r);
+    ss_data_set_real(&number, complex_real(&z));
     round_common(local_args, 2, p_ss_data_res, RPN_FNV_ROUND);
     assert(ss_data_is_real(p_ss_data_res));
-    round_result.r = ss_data_get_real(p_ss_data_res);
+    round_result_real = ss_data_get_real(p_ss_data_res);
 
-    ss_data_set_real(&number, in.i);
+    ss_data_set_real(&number, complex_imag(&z));
     round_common(local_args, 2, p_ss_data_res, RPN_FNV_ROUND);
     assert(ss_data_is_real(p_ss_data_res));
-    round_result.i = ss_data_get_real(p_ss_data_res);
+    round_result_imag = ss_data_get_real(p_ss_data_res);
+
+    complex_set_ri(&round_result, round_result_real, round_result_imag);
     } /*block*/
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &round_result, imag_suffix_char);
 }
 
-#endif
+/******************************************************************************
+*
+* c_exp(complex number) - complex exponent
+*
+* exp(a+ib) = exp(a) * cos(b) + i(exp(a) * sin(b))
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_exp)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, exp_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    complex_exp(&z, &exp_result);
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &exp_result, imag_suffix_char);
+}
 
 /******************************************************************************
 *
-* ln(complex number)
+* c_ln(complex number) - complex natural logarithm
+*
 * ln(a+ib) = ln(a*a + b*b)/2 + i(atan2(b,a))
 *
 ******************************************************************************/
@@ -940,17 +879,16 @@ PROC_EXEC_PROTO(c_c_round)
 PROC_EXEC_PROTO(c_c_ln)
 {
     U8 imag_suffix_char;
-    COMPLEX in, ln_result;
-    STATUS status;
+    COMPLEX z, ln_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    status = complex_lnz(&in, &ln_result);
-    exec_func_status_return(p_ss_data_res, status);
+    exec_func_status_return(p_ss_data_res,
+        complex_log_e(&z, &ln_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &ln_result, imag_suffix_char);
@@ -960,7 +898,7 @@ PROC_EXEC_PROTO(c_c_ln)
 
 /******************************************************************************
 *
-* log_10(complex number)
+* c_log_10(complex number)
 *
 * z = r.e^i.theta -> ln(z) = ln(r) + i.theta
 *
@@ -968,41 +906,19 @@ PROC_EXEC_PROTO(c_c_ln)
 *
 ******************************************************************************/
 
-_Check_return_
-static inline STATUS
-complex_log10_z(
-    _InRef_     PC_COMPLEX in,
-    _OutRef_    P_COMPLEX out)
-{
-    const F64 r_squared = mx_fsquare(in->r) + mx_fsquare(in->i);
-    STATUS status = STATUS_OK;
-
-    errno = 0;
-
-    out->r = log10(r_squared) * 0.5; /* x saves a sqrt() */
-
-    if(errno /* == ERANGE */ /*can't be EDOM here*/)
-        status = EVAL_ERR_BAD_LOG;
-
-    out->i = atan2(in->i, in->r) * _log10_e; /* rotate */
-
-    return(status);
-}
-
 PROC_EXEC_PROTO(c_c_log_10)
 {
     U8 imag_suffix_char;
-    COMPLEX in, log10_result;
-    STATUS status;
+    COMPLEX z, log10_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    status = complex_log10_z(&in, &log10_result);
-    exec_func_status_return(p_ss_data_res, status);
+    exec_func_status_return(p_ss_data_res,
+        complex_log_10(&z, &log10_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &log10_result, imag_suffix_char);
@@ -1010,45 +926,23 @@ PROC_EXEC_PROTO(c_c_log_10)
 
 /******************************************************************************
 *
-* log_2(complex number)
+* c_log_2(complex number)
 *
 ******************************************************************************/
-
-_Check_return_
-static inline STATUS
-complex_log2_z(
-    _InRef_     PC_COMPLEX in,
-    _OutRef_    P_COMPLEX out)
-{
-    const F64 r_squared = mx_fsquare(in->r) + mx_fsquare(in->i);
-    STATUS status = STATUS_OK;
-
-    errno = 0;
-
-    out->r = log2(r_squared) * 0.5; /* x saves a sqrt() */
-
-    if(errno /* == ERANGE */ /*can't be EDOM here*/)
-        status = EVAL_ERR_BAD_LOG;
-
-    out->i = atan2(in->i, in->r) * _log2_e; /* rotate */
-
-    return(status);
-}
 
 PROC_EXEC_PROTO(c_c_log_2)
 {
     U8 imag_suffix_char;
-    COMPLEX in, log2_result;
-    STATUS status;
+    COMPLEX z, log2_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    status = complex_log2_z(&in, &log2_result);
-    exec_func_status_return(p_ss_data_res, status);
+    exec_func_status_return(p_ss_data_res,
+        complex_log_2(&z, &log2_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &log2_result, imag_suffix_char);
@@ -1058,42 +952,23 @@ PROC_EXEC_PROTO(c_c_log_2)
 
 /******************************************************************************
 *
-* complex z^w
+* c_power(complex number) - complex z^w
 *
 ******************************************************************************/
-
-_Check_return_ _Success_(status_ok(return))
-static STATUS
-do_complex_power(
-    _InRef_     PC_COMPLEX in1,
-    _InRef_     PC_COMPLEX in2,
-    _OutRef_    P_COMPLEX out)
-{
-    COMPLEX wlnz;
-
-    /* find and check wlnz */
-    status_return(complex_wlnz(in2, in1, &wlnz));
-
-    out->r = exp(wlnz.r) * cos(wlnz.i);
-    out->i = exp(wlnz.r) * sin(wlnz.i);
-
-    return(STATUS_OK);
-}
 
 PROC_EXEC_PROTO(c_c_power)
 {
     U8 imag_suffix_char;
-    COMPLEX in1, in2, power_result;
-    STATUS status;
+    COMPLEX z1, z2, power_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a pair of suitable complex numbers */
-    if(status_fail(complex_check_arg_pair(p_ss_data_res, &in1, &in2, &imag_suffix_char, args[0], args[1])))
+    if(status_fail(complex_check_arg_pair(p_ss_data_res, &z1, &z2, &imag_suffix_char, args[0], args[1])))
         return;
 
-    status = do_complex_power(&in1, &in2, &power_result);
-    exec_func_status_return(p_ss_data_res, status);
+    exec_func_status_return(p_ss_data_res,
+        complex_power(&z1, &z2, &power_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &power_result, imag_suffix_char);
@@ -1101,125 +976,49 @@ PROC_EXEC_PROTO(c_c_power)
 
 #if 0 /* just for diff minimization */
 
+/******************************************************************************
+*
+* c_sqrt(complex number) - complex square root
+*
+******************************************************************************/
+
 PROC_EXEC_PROTO(c_c_sqrt)
 {
     U8 imag_suffix_char;
-    COMPLEX in, power_result;
-    STATUS status;
+    COMPLEX z, sqrt_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    status = do_complex_power(&in, &complex_one_half, &power_result);
-    exec_func_status_return(p_ss_data_res, status);
+    complex_square_root(&z, &sqrt_result);
 
     /* output a complex number */
-    complex_result_complex(p_ss_data_res, &power_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &sqrt_result, imag_suffix_char);
 }
 
 #endif
 
 /******************************************************************************
 *
-* exp(complex number)
-* exp(a+ib) = exp(a) * cos(b) + i(exp(a) * sin(b))
+* c_cos(complex number) - complex cosine
 *
 ******************************************************************************/
-
-PROC_EXEC_PROTO(c_c_exp)
-{
-    U8 imag_suffix_char;
-    COMPLEX in, exp_result;
-    F64 ea;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
-        return;
-
-    /* make exp(a) */
-    ea = exp(in.r);
-
-    exp_result.r = ea * cos(in.i);
-    exp_result.i = ea * sin(in.i);
-
-    /* output a complex number */
-    complex_result_complex(p_ss_data_res, &exp_result, imag_suffix_char);
-}
-
-/******************************************************************************
-*
-* sin(complex number)
-* sin(a+ib) = (exp(-b)+exp(b))sin(a)/2 + i((exp(b)-exp(-b))cos(a)/2)
-*
-******************************************************************************/
-
-static void
-do_complex_sin(
-    _InRef_     PC_COMPLEX in,
-    _OutRef_    P_COMPLEX out)
-{
-    /* make exp(b) and exp(-b) */
-    const F64 eb = exp(in->i);
-    const F64 emb = 1.0 / eb;
-
-    out->r = (eb + emb) * sin(in->r) * 0.5;
-    out->i = (eb - emb) * cos(in->r) * 0.5;
-}
-
-PROC_EXEC_PROTO(c_c_sin)
-{
-    U8 imag_suffix_char;
-    COMPLEX in, sin_result;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
-        return;
-
-    do_complex_sin(&in, &sin_result);
-
-    /* output a complex number */
-    complex_result_complex(p_ss_data_res, &sin_result, imag_suffix_char);
-}
-
-/******************************************************************************
-*
-* cos(complex number)
-* cos(a+ib) = (exp(-b)+exp(b))cos(a)/2 + i((exp(-b)-exp(b))sin(a)/2)
-*
-******************************************************************************/
-
-static void
-do_complex_cos(
-    _InRef_     PC_COMPLEX in,
-    _OutRef_    P_COMPLEX out)
-{
-    /* make exp(b) and exp(-b) */
-    const F64 eb = exp(in->i);
-    const F64 emb = 1.0 / eb;
-
-    out->r = (emb + eb) * cos(in->r) * 0.5;
-    out->i = (emb - eb) * sin(in->r) * 0.5;
-}
 
 PROC_EXEC_PROTO(c_c_cos)
 {
     U8 imag_suffix_char;
-    COMPLEX in, cos_result;
+    COMPLEX z, cos_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_cos(&in, &cos_result);
+    complex_cosine(&z, &cos_result);
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &cos_result, imag_suffix_char);
@@ -1227,26 +1026,94 @@ PROC_EXEC_PROTO(c_c_cos)
 
 /******************************************************************************
 *
-* tan(complex number)
+* c_acos(complex number) - complex arc cosine
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_acos)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, acos_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_arc_cosine(&z, &acos_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &acos_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_sin(complex number) - complex sine
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_sin)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, sin_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    complex_sine(&z, &sin_result);
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &sin_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_asin(complex number) - complex arc sine
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_asin)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, asin_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_arc_sine(&z, &asin_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &asin_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_tan(complex number) - complex tangent
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_tan)
 {
     U8 imag_suffix_char;
-    COMPLEX in, sin, cos, tan_result;
+    COMPLEX z, tan_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_sin(&in, &sin);
-    do_complex_cos(&in, &cos);
-
-    if(!do_complex_divide(p_ss_data_res, &sin, &cos, &tan_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_tangent(&z, &tan_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &tan_result, imag_suffix_char);
@@ -1254,25 +1121,47 @@ PROC_EXEC_PROTO(c_c_tan)
 
 /******************************************************************************
 *
-* cosec(complex number)
+* c_atan(complex number) - complex arc tangent
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_atan)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, atan_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_arc_tangent(&z, &atan_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &atan_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_cosec(complex number) - complex cosecant
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_cosec)
 {
     U8 imag_suffix_char;
-    COMPLEX in, temp, cosec_result;
+    COMPLEX z, cosec_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_sin(&in, &temp);
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &cosec_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_cosecant(&z, &cosec_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &cosec_result, imag_suffix_char);
@@ -1280,25 +1169,47 @@ PROC_EXEC_PROTO(c_c_cosec)
 
 /******************************************************************************
 *
-* sec(complex number)
+* c_acosec(complex number) - complex arc cosecant
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_acosec)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, acosec_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_arc_cosecant(&z, &acosec_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &acosec_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_sec(complex number) - complex secant
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_sec)
 {
     U8 imag_suffix_char;
-    COMPLEX in, temp, sec_result;
+    COMPLEX z, sec_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_cos(&in, &temp);
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &sec_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_secant(&z, &sec_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &sec_result, imag_suffix_char);
@@ -1306,26 +1217,47 @@ PROC_EXEC_PROTO(c_c_sec)
 
 /******************************************************************************
 *
-* cot(complex number)
+* c_asec(complex number) - complex arc secant
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_asec)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, asec_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_arc_secant(&z, &asec_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &asec_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_cot(complex number) - complex cotangent
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_cot)
 {
     U8 imag_suffix_char;
-    COMPLEX in, sin, cos, cot_result;
+    COMPLEX z, cot_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_sin(&in, &sin);
-    do_complex_cos(&in, &cos);
-
-    if(!do_complex_divide(p_ss_data_res, &cos, &sin, &cot_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_cotangent(&z, &cot_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &cot_result, imag_suffix_char);
@@ -1333,73 +1265,46 @@ PROC_EXEC_PROTO(c_c_cot)
 
 /******************************************************************************
 *
-* sinh(complex number)
-* sinh(a+ib) = (exp(a)-exp(-a))cos(b)/2 + i((exp(a)+exp(-a))sin(b)/2)
+* c_acot(complex number) - complex arc cotangent
 *
 ******************************************************************************/
 
-static void
-do_complex_sinh(
-    _InRef_     PC_COMPLEX in,
-    _OutRef_    P_COMPLEX out)
-{
-    /* make exp(a) and exp(-a) */
-    const F64 ea = exp(in->r);
-    const F64 ema = 1.0 / ea;
-
-    out->r = (ea - ema) * cos(in->i) * 0.5;
-    out->i = (ea + ema) * sin(in->i) * 0.5;
-}
-
-PROC_EXEC_PROTO(c_c_sinh)
+PROC_EXEC_PROTO(c_c_acot)
 {
     U8 imag_suffix_char;
-    COMPLEX in, sinh_result;
+    COMPLEX z, acot_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_sinh(&in, &sinh_result);
+    exec_func_status_return(p_ss_data_res,
+        complex_arc_cotangent(&z, &acot_result));
 
     /* output a complex number */
-    complex_result_complex(p_ss_data_res, &sinh_result, imag_suffix_char);
+    complex_result_complex(p_ss_data_res, &acot_result, imag_suffix_char);
 }
 
 /******************************************************************************
 *
-* cosh(complex number)
-* cosh(a+ib) = (exp(a)+exp(-a))cos(b)/2 + i((exp(a)-exp(-a))sin(b)/2)
+* c_cosh(complex number) - complex hyperbolic cosine
 *
 ******************************************************************************/
-
-static void
-do_complex_cosh(
-    _InRef_     PC_COMPLEX in,
-    _OutRef_    P_COMPLEX out)
-{
-    /* make exp(a) and exp(-a) */
-    const F64 ea = exp(in->r);
-    const F64 ema = 1.0 / ea;
-
-    out->r = (ea + ema) * cos(in->i) * 0.5;
-    out->i = (ea - ema) * sin(in->i) * 0.5;
-}
 
 PROC_EXEC_PROTO(c_c_cosh)
 {
     U8 imag_suffix_char;
-    COMPLEX in, cosh_result;
+    COMPLEX z, cosh_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_cosh(&in, &cosh_result);
+    complex_hyperbolic_cosine(&z, &cosh_result);
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &cosh_result, imag_suffix_char);
@@ -1407,26 +1312,94 @@ PROC_EXEC_PROTO(c_c_cosh)
 
 /******************************************************************************
 *
-* tanh(complex number)
+* c_acosh(complex number) - complex inverse hyperbolic cosine
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_acosh)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, acosh_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_inverse_hyperbolic_cosine(&z, &acosh_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &acosh_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_sinh(complex number) - complex hyperbolic sine
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_sinh)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, sinh_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    complex_hyperbolic_sine(&z, &sinh_result);
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &sinh_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_asinh(complex number) - complex inverse hyperbolic sine
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_asinh)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, asinh_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_inverse_hyperbolic_sine(&z, &asinh_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &asinh_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_tanh(complex number) - complex hyperbolic tangent
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_tanh)
 {
     U8 imag_suffix_char;
-    COMPLEX in, sin, cos, tanh_result;
+    COMPLEX z, tanh_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_sinh(&in, &sin);
-    do_complex_cosh(&in, &cos);
-
-    if(!do_complex_divide(p_ss_data_res, &sin, &cos, &tanh_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_hyperbolic_tangent(&z, &tanh_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &tanh_result, imag_suffix_char);
@@ -1434,25 +1407,47 @@ PROC_EXEC_PROTO(c_c_tanh)
 
 /******************************************************************************
 *
-* cosech(complex number)
+* c_atanh(complex number) - complex inverse hyperbolic tangent
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_atanh)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, atanh_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_inverse_hyperbolic_tangent(&z, &atanh_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &atanh_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_cosech(complex number) - complex hyperbolic cosecant
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_cosech)
 {
     U8 imag_suffix_char;
-    COMPLEX in, temp, cosech_result;
+    COMPLEX z, cosech_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_sinh(&in, &temp);
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &cosech_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_hyperbolic_cosecant(&z, &cosech_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &cosech_result, imag_suffix_char);
@@ -1460,25 +1455,47 @@ PROC_EXEC_PROTO(c_c_cosech)
 
 /******************************************************************************
 *
-* sech(complex number)
+* c_acosech(complex number) - complex inverse hyperbolic cosecant
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_acosech)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, acosech_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_inverse_hyperbolic_cosecant(&z, &acosech_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &acosech_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_sech(complex number) - complex hyperbolic secant
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_sech)
 {
     U8 imag_suffix_char;
-    COMPLEX in, temp, sech_result;
+    COMPLEX z, sech_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_cosh(&in, &temp);
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &temp, &sech_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_hyperbolic_secant(&z, &sech_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &sech_result, imag_suffix_char);
@@ -1486,26 +1503,47 @@ PROC_EXEC_PROTO(c_c_sech)
 
 /******************************************************************************
 *
-* coth(complex number)
+* c_asech(complex number) - complex inverse hyperbolic secant
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_c_asech)
+{
+    U8 imag_suffix_char;
+    COMPLEX z, asech_result;
+
+    exec_func_ignore_parms();
+
+    /* check the input is a suitable complex number */
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
+        return;
+
+    exec_func_status_return(p_ss_data_res,
+        complex_inverse_hyperbolic_secant(&z, &asech_result));
+
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &asech_result, imag_suffix_char);
+}
+
+/******************************************************************************
+*
+* c_coth(complex number) - complex hyperbolic cotangent
 *
 ******************************************************************************/
 
 PROC_EXEC_PROTO(c_c_coth)
 {
     U8 imag_suffix_char;
-    COMPLEX in, sin, cos, coth_result;
+    COMPLEX z, coth_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    do_complex_sinh(&in, &sin);
-    do_complex_cosh(&in, &cos);
-
-    if(!do_complex_divide(p_ss_data_res, &cos, &sin, &coth_result))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_hyperbolic_cotangent(&z, &coth_result));
 
     /* output a complex number */
     complex_result_complex(p_ss_data_res, &coth_result, imag_suffix_char);
@@ -1513,380 +1551,26 @@ PROC_EXEC_PROTO(c_c_coth)
 
 /******************************************************************************
 *
-* do the work for arccosh and arcsinh and their many relations
-*
-* arccosh(z) = ln(z + (z*z - 1) ^.5)
-* arcsinh(z) = ln(z + (z*z + 1) ^.5)
-*
-* rob thinks the following apply, from the expansions given further on
-* arccos(z) = -i arccosh(z)
-* arcsin(z) =  i arcsinh(-iz)
-*
-*   arccosh(z) = +- i arccos(z)
-* i arccosh(z) =      arccos(z)
-*
-*   arcsinh(z)   = -i arcsin(iz)
-* i arcsinh(z)   =    arcsin(iz)
-* i arcsinh(z/i) =    arcsin(z)
-* i arcsinh(-iz) =    arcsin(z)
-*
-*   arctanh(z)   = -i arctan(iz)
-*   arctanh(-iz) = -i arctan(z)
-* i arctanh(-iz) =    arctan(z)
+* c_acoth(complex number) - complex inverse hyperbolic cotangent
 *
 ******************************************************************************/
-
-#define C_COSH 1
-#define C_SINH 2
-#define C_TANH 3
-
-static void
-do_arc_cosh_sinh_tanh(
-    P_SS_DATA p_ss_data_res,
-    _InVal_     S32 type,
-    _InoutRef_  P_COMPLEX z,
-    _InVal_     U8 imag_suffix_char,
-    _InRef_opt_ PC_F64 mult_z_by_i,
-    _InRef_opt_ PC_F64 mult_res_by_i)
-{
-    COMPLEX out;
-    COMPLEX half;
-    COMPLEX temp;
-    STATUS status;
-
-    /* maybe preprocess z
-        multiply the input by   i * mult_z_by_i
-         i(a + ib) = -b + ia
-        -i(a + ib) =  b - ia
-        mult_z_by_i is 1 to multiply by i, -1 to multiply by -i
-    */
-    if(NULL != mult_z_by_i)
-    {
-        F64 t = z->r;
-
-        z->r = z->i * -(*mult_z_by_i);
-        z->i = t    *  (*mult_z_by_i);
-    }
-
-    if(type == C_TANH)
-    {
-        /* do temp = (1+z)/(1-z) */
-        COMPLEX in1, in2;
-
-        in1.r = 1.0 + z->r;
-        in1.i =   z->i;
-        in2.r = 1.0 - z->r;
-        in2.i = - z->i;
-
-        if(!do_complex_divide(p_ss_data_res, &in1, &in2, &temp))
-            return;
-    }
-    else
-    {
-        /* find z*z */
-        out.r = z->r * z->r - z->i * z->i;
-        out.i = z->r * z->i * 2.0;
-
-        /* z*z + add_in_middle */
-        out.r += (type == C_COSH ? -1.0 : +1.0);
-
-        /* sqrt it into temp */
-        half.r = 0.5;
-        half.i = 0.0;
-        if(status_fail(status = do_complex_power(&out, &half, &temp)))
-        {
-            ss_data_set_error(p_ss_data_res, status);
-            return;
-        }
-
-        /* z + it  */
-        temp.r += z->r;
-        temp.i += z->i;
-    }
-
-    /* ln it to out */
-    if(status_fail(status = complex_lnz(&temp, &out)))
-    {
-        ss_data_set_error(p_ss_data_res, status);
-        return;
-    }
-
-    /* now its in out, halve it for arctans */
-    if(type == C_TANH)
-    {
-        /* halve it */
-        out.r /= 2.0;
-        out.i /= 2.0;
-    }
-
-    /* maybe postprocess out
-        multiply the output by   i * mult_res_by_i
-         i(a+ ib)  = -b + ia
-        -i(a + ib) =  b - ia
-        mult_res_by_i is 1 to multiply by i, -1 to multiply by -i
-    */
-    if(NULL != mult_res_by_i)
-    {
-        F64 t = out.r;
-
-        out.r = out.i  * -(*mult_res_by_i);
-        out.i = t      *  (*mult_res_by_i);
-    }
-
-    /* output a complex number */
-    complex_result_complex(p_ss_data_res, &out, imag_suffix_char);
-}
-
-/*
-complex arctan
-*/
-
-PROC_EXEC_PROTO(c_c_atan)
-{
-    U8 imag_suffix_char;
-    COMPLEX z;
-
-    static const F64 c_catan_z   = -1.0;
-    static const F64 c_catan_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, &c_catan_z, &c_catan_res);
-}
-
-/*
-complex arctanh
-*/
-
-PROC_EXEC_PROTO(c_c_atanh)
-{
-    U8 imag_suffix_char;
-    COMPLEX z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, NULL, NULL);
-}
-
-/*
-complex arccos
-*/
-
-PROC_EXEC_PROTO(c_c_acos)
-{
-    U8 imag_suffix_char;
-    COMPLEX z;
-
-    static const F64 c_cacos_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, &c_cacos_res);
-}
-
-/*
-complex arccosh
-*/
-
-PROC_EXEC_PROTO(c_c_acosh)
-{
-    U8 imag_suffix_char;
-    COMPLEX z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, NULL);
-}
-
-/*
-complex arcsin
-*/
-
-PROC_EXEC_PROTO(c_c_asin)
-{
-    U8 imag_suffix_char;
-    COMPLEX z;
-
-    static const F64 c_asin_z   = -1.0;
-    static const F64 c_asin_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, &c_asin_z, &c_asin_res);
-}
-
-/*
-complex arcsinh
-*/
-
-PROC_EXEC_PROTO(c_c_asinh)
-{
-    U8 imag_suffix_char;
-    COMPLEX z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, NULL, NULL);
-}
-
-/*
-complex arccot
-*/
-
-PROC_EXEC_PROTO(c_c_acot)
-{
-    U8 imag_suffix_char;
-    COMPLEX in, z;
-
-    static const F64 c_cacot_z   = -1.0;
-    static const F64 c_cacot_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
-        return;
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, &c_cacot_z, &c_cacot_res);
-}
-
-/*
-complex arccoth
-*/
 
 PROC_EXEC_PROTO(c_c_acoth)
 {
     U8 imag_suffix_char;
-    COMPLEX in, z;
+    COMPLEX z, acoth_result;
 
     exec_func_ignore_parms();
 
     /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
+    if(status_fail(complex_check_arg(p_ss_data_res, &z, &imag_suffix_char, args[0])))
         return;
 
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
-        return;
+    exec_func_status_return(p_ss_data_res,
+        complex_inverse_hyperbolic_cotangent(&z, &acoth_result));
 
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_TANH, &z, imag_suffix_char, NULL, NULL);
+    /* output a complex number */
+    complex_result_complex(p_ss_data_res, &acoth_result, imag_suffix_char);
 }
-
-/*
-complex arcsec
-*/
-
-PROC_EXEC_PROTO(c_c_asec)
-{
-    U8 imag_suffix_char;
-    COMPLEX in, z;
-
-    static const F64 c_casec_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
-        return;
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, &c_casec_res);
-}
-
-/*
-complex arcsech
-*/
-
-PROC_EXEC_PROTO(c_c_asech)
-{
-    U8 imag_suffix_char;
-    COMPLEX in, z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
-        return;
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_COSH, &z, imag_suffix_char, NULL, NULL);
-}
-
-/*
-complex arccosec
-*/
-
-PROC_EXEC_PROTO(c_c_acosec)
-{
-    U8 imag_suffix_char;
-    COMPLEX in, z;
-
-    static const F64 c_acosec_z   = -1.0;
-    static const F64 c_acosec_res = +1.0;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
-        return;
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, &c_acosec_z, &c_acosec_res);
-}
-
-/*
-complex arccosech
-*/
-
-PROC_EXEC_PROTO(c_c_acosech)
-{
-    U8 imag_suffix_char;
-    COMPLEX in, z;
-
-    exec_func_ignore_parms();
-
-    /* check the input is a suitable complex number */
-    if(status_fail(complex_check_arg(p_ss_data_res, &in, &imag_suffix_char, args[0])))
-        return;
-
-    if(!do_complex_divide(p_ss_data_res, &complex_unity, &in, &z))
-        return;
-
-    do_arc_cosh_sinh_tanh(p_ss_data_res, C_SINH, &z, imag_suffix_char, NULL, NULL);
-}
-
-/* [that's enough complex algebra - Ed] */
 
 /* end of ev_mcpx.c */

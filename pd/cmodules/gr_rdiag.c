@@ -25,10 +25,6 @@
 #include "cs-flex.h"
 #endif
 
-#ifndef __fontlxtr_h
-#include "cmodules/riscos/fontlxtr.h"
-#endif
-
 #ifndef GR_RISCDIAG_SIZE_INIT
 #define GR_RISCDIAG_SIZE_INIT 0x1000
 #endif
@@ -399,7 +395,7 @@ gr_riscdiag_diagram_setup_from_draw_diag(
     _OutRef_    P_GR_RISCDIAG p_gr_riscdiag,
     _InoutRef_  P_DRAW_DIAG p_draw_diag) /* flex data stolen */
 {
-    zero_struct_ptr(p_gr_riscdiag);
+    zero_struct_ptr_fn(p_gr_riscdiag);
 
     draw_diag_give_away(&p_gr_riscdiag->draw_diag, p_draw_diag);
 

@@ -264,9 +264,9 @@ image_convert_can_convert(
 
 _Check_return_
 extern STATUS
-image_convert_do_convert(
+image_convert_do_convert_file(
     _OutRef_    P_PTSTR p_converted_name,
-    _In_z_      PCTSTR name);
+    _In_z_      PCTSTR source_file_name);
 
 #endif /* __im_cache_h */
 

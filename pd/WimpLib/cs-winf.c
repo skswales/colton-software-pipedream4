@@ -30,11 +30,21 @@ winf_changedfield(
     _HwndRef_   HOST_WND window_handle,
     int icon_handle)
 {
+    winf_changedfield_full(window_handle, icon_handle, 0, 0); /* just poke it for redraw */
+}
+
+extern void
+winf_changedfield_full( /* i.e. Wimp_SetIconState */
+    _HwndRef_   HOST_WND window_handle,
+    int icon_handle,
+    int EOR_word,
+    int clear_word)
+{
     WimpSetIconStateBlock set_icon_state_block;
     set_icon_state_block.window_handle = window_handle;
     set_icon_state_block.icon_handle = icon_handle;
-    set_icon_state_block.EOR_word = 0; /* poke it for redraw */
-    set_icon_state_block.clear_word = 0;
+    set_icon_state_block.EOR_word = EOR_word;
+    set_icon_state_block.clear_word = clear_word;
     (void) wimpt_complain(tbl_wimp_set_icon_state(&set_icon_state_block));
 }
 

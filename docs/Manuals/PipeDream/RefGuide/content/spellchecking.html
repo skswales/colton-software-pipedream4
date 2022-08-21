@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
     <title>Spell - Checking</title>
-    <link href="csguide.css" rel="stylesheet" type="text/css" />
+    <link href="guide.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,11 +16,11 @@
     <div class="navheader">
         <table id="navheader" summary="Navigation header">
             <tr>
-                <td id="navheader_PCN_L"><a accesskey="p" href="sorting.html">Prev</a> </td>
-                <td id="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
-                <th id="navheader_PCN_C">PipeDream Reference Guide</th>
-                <td id="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
-                <td id="navheader_PCN_R"> <a accesskey="n" href="spelluserdicts.html">Next</a></td>
+                <td class="navheader_PCN_L"><a accesskey="p" href="sorting.html">Prev</a> </td>
+                <td class="navheader_PCN_LC"><a href="../index.html">Contents</a> </td>
+                <th class="navheader_PCN_C">PipeDream Reference Guide</th>
+                <td class="navheader_PCN_CR"> <a href="fullindex.html">Index</a></td>
+                <td class="navheader_PCN_R"> <a accesskey="n" href="spelluserdicts.html">Next</a></td>
             </tr>
         </table>
     </div>
@@ -104,13 +104,13 @@
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
                 <th class="csg-ct-th-tool">Tool</th>
-                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Browse</td>
-                <td>Adj-<img src="images/tbar_spell_check.png" style="vertical-align: bottom;" /></td>
+                <td>Adjust <img src="images/toolbar/spell_check.png" alt="Spelling icon" style="vertical-align: bottom;" /></td>
                 <td></td>
                 <td><span class="csg-cmdseq">SB</span></td>
             </tr>
@@ -130,7 +130,7 @@
     <p>By using this feature, you will find that you can move quickly about the dictionary to search for words.</p>
     <p>
         To leave the Browse window and return to the text, press <span class="csg-key">Escape</span>.
-        If you click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+        If you click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
         to leave the Browse window, the word shown in the small input field at the top of the Browse window
         will be inserted into the text at the caret position and will replace the original word.
     </p>
@@ -157,7 +157,7 @@
         If you type a word containing one or more of these symbols into the Browse dialogue box,
         PipeDream will search the dictionary for all the words that fit the pattern that you have given.
         Any words which fit the pattern will appear in the Browse window after you
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
     </p>
     <h5>Example:</h5>
     <p class="csg-sample-indent"><code>a^#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>will match all words starting with &lsquo;a&rsquo;.</p>
@@ -193,13 +193,13 @@
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
                 <th class="csg-ct-th-tool">Tool</th>
-                <th class="csg-ct-th-key">Key</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Check document</td>
-                <td><img src="images/tbar_spell_check.png" /></td>
+                <td><img src="images/toolbar/spell_check.png" alt="Spelling icon" /></td>
                 <td></td>
                 <td><span class="csg-cmdseq">SC</span></td>
             </tr>
@@ -208,7 +208,7 @@
     <p>
         You will see the <span class="csg-dbox">Check Document</span> dialogue box.
         If you have a block marked which you wish to check, select on the <span class="csg-dbox-option">Check marked block</span> option.
-        Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+        Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Check</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
         when you are ready to start checking the document.
         PipeDream starts at the top of the document and checking proceeds word by word through the document until it encounters a word which is not in the dictionary.
         Then the <span class="csg-dbox">Checking</span> dialogue box will appear.
@@ -219,7 +219,7 @@
         <li>Accept the word as it is:</li>
     </ul>
     <p class="csg-sample-indent">
-        Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
         Once you have accepted a word as it is, PipeDream will remember the word,
         and you won&rsquo;t be asked about further occurrences of the word until you leave and restart PipeDream.
     </p>
@@ -240,7 +240,7 @@
     <p class="csg-sample-indent">
         When you finish browsing, you will switch back to the <span class="csg-dbox">Checking</span> dialogue box.
         If you press <span class="csg-key">Escape</span> to leave the Browse window, the word in the dialogue box will be left unaltered; if you
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>,
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>),
         the current word in the Browse window will replace the original word in the <span class="csg-dbox">Checking</span> dialogue box.
     </p>
     <p class="csg-sample-indent">Once you are back in the <span class="csg-dbox">Checking</span> dialogue box, you may choose again any of the options available in it.</p>
@@ -253,13 +253,13 @@
         You can select a different user dictionary, if you wish, by editing the user dictionary name in the usual way.
     </p>
     <p class="csg-sample-indent">
-        When you are ready to add the word, click the
-        <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        When you are ready to add the word,
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
     </p>
     <p>You can stop checking the document, before PipeDream has finished, by pressing <span class="csg-key">Escape</span> when the <span class="csg-dbox">Checking</span> dialogue box appears.</p>
     <p>
         When the whole document has been checked, an information box will appear showing how many words were not recognised, and how many words were added to user dictionaries.
-        Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+        Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">Close</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
         to return to the document; PipeDream will replace the caret at the position in the document where you were before starting the document check.
     </p>
 
@@ -284,14 +284,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Lock dictionary</td>
-                <td><span class="csg-cmdseq">SL</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SL</span></td>
             </tr>
         </tbody>
     </table>
@@ -309,14 +311,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Unlock dictionary</td>
-                <td><span class="csg-cmdseq">SK</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SK</span></td>
             </tr>
         </tbody>
     </table>
@@ -347,14 +351,16 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Anagrams</td>
-                <td><span class="csg-cmdseq">SG</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SG</span></td>
             </tr>
         </tbody>
     </table>
@@ -365,7 +371,7 @@
     </p>
     <p>
         When you are ready,
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
         and PipeDream will begin searching for anagrams.
     </p>
     <p>
@@ -380,7 +386,7 @@
     </p>
     <p>
         When you are ready to return to the text
-        click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>.
+        click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>).
     </p>
 
     <h2 id="Subgrams">Subgrams</h2>
@@ -397,20 +403,22 @@
             <tr>
                 <th class="csg-ct-th-menu">Menu</th>
                 <th class="csg-ct-th-command">Command</th>
+                <th class="csg-ct-th-tool-none">Tool</th>
+                <th class="csg-ct-th-key-none">Key</th>
                 <th class="csg-ct-th-cmdseq">Cmd-sequence</th>
-                <th class="csg-ct-th-key">Key</th>
             </tr>
             <tr>
                 <td>Spell</td>
                 <td>Subgrams</td>
-                <td><span class="csg-cmdseq">SH</span></td>
                 <td></td>
+                <td></td>
+                <td><span class="csg-cmdseq">SH</span></td>
             </tr>
         </tbody>
     </table>
     <p>When the dialogue box appears, type in the word whose subgrams you want to find.</p>
     <p>
-        Click the <span class="csg-dbox-button">OK</span> button or press <span class="csg-key">Return&crarr;</span>
+        Click the <span class="csg-dbox-button-default"><span class="csg-dbox-button">OK</span></span> button (or press <span class="csg-key">Return&crarr;</span>)
         to see a window listing the word&rsquo;s subgrams.
     </p>
 
@@ -438,14 +446,14 @@
     <div class="navfooter">
         <table id="navfooter" summary="Navigation footer">
             <tr>
-                <td id="navfooter_PUN_L">Sorting </td>
-                <td id="navfooter_PUN_C"></td>
-                <td id="navfooter_PUN_R"> Spell - User Dictionaries</td>
+                <td class="navfooter_PUN_L">Sorting </td>
+                <td class="navfooter_PUN_C"></td>
+                <td class="navfooter_PUN_R"> Spell - User Dictionaries</td>
             </tr>
             <tr>
-                <td id="navfooter_PUN_L"><a accesskey="p" href="sorting.html">Prev</a> </td>
-                <td id="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
-                <td id="navfooter_PUN_R"> <a accesskey="n" href="spelluserdicts.html">Next</a></td>
+                <td class="navfooter_PUN_L"><a accesskey="p" href="sorting.html">Prev</a> </td>
+                <td class="navfooter_PUN_C"><a accesskey="h" href="../index.html">Home</a></td>
+                <td class="navfooter_PUN_R"> <a accesskey="n" href="spelluserdicts.html">Next</a></td>
             </tr>
         </table>
     </div>

@@ -65,6 +65,10 @@
 #include "cs-xfersend.h"
 #endif
 
+#ifndef xfersend_Cancel
+#define xfersend_Cancel (xfersend_FIcon+1) /* 3 */
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -4242,6 +4246,8 @@ mlec__event_save(
     if(0 != (mlec__save_dbox = dbox_new("xfer_send")))
     {
         dbox_show(mlec__save_dbox);
+
+        xfersend_set_cancel_button(xfersend_Cancel);
 
         (void) xfersend_x(FILETYPE_TEXT,
                     selection

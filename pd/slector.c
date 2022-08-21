@@ -83,13 +83,13 @@ add_path_or_relative_using_dir( /* may be relative to current document */
     xstrkat(buffer, elemof32(buffer), FILE_DIR_SEP_STR);
     xstrkat(buffer, elemof32(buffer), src);
 
-    res = file_find_on_path_or_relative(filename, elemof_buffer, file_get_search_path(), buffer, currentfilename);
+    res = file_find_on_path_or_relative(filename, elemof_buffer, file_get_search_path(), buffer, currentfilename());
 
     if(res != 0)
         return(res);
 
     /* finally try looking up just src along path */
-    res = file_find_on_path_or_relative(filename, elemof_buffer, file_get_search_path(), src, currentfilename);
+    res = file_find_on_path_or_relative(filename, elemof_buffer, file_get_search_path(), src, currentfilename());
 
     return(res);
 }
@@ -109,7 +109,7 @@ add_prefix_to_name_using_dir(
     if(!file_is_rooted(name))
     {
         /* see if we can invent a file in an existing directory */
-        (void) file_add_prefix_to_name(buffer, elemof_buffer, dir, allow_cwd ? currentfilename : NULL);
+        (void) file_add_prefix_to_name(buffer, elemof_buffer, dir, allow_cwd ? currentfilename() : NULL);
 
         if(file_is_dir(buffer))
         {
@@ -120,7 +120,7 @@ add_prefix_to_name_using_dir(
         }
     }
 
-    return(file_add_prefix_to_name(buffer, elemof_buffer, name, allow_cwd ? currentfilename : NULL));
+    return(file_add_prefix_to_name(buffer, elemof_buffer, name, allow_cwd ? currentfilename() : NULL));
 }
 
 #endif

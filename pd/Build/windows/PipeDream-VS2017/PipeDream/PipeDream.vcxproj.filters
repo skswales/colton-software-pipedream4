@@ -54,7 +54,7 @@
     <Filter Include="docs">
       <UniqueIdentifier>{8bd92f3f-771e-42aa-a999-203c6d47cd8e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="docs\Tutorial">
+    <Filter Include="docs\StartGuide">
       <UniqueIdentifier>{5bf0ae4c-ef68-4ae3-b8cc-d8193f70e40d}</UniqueIdentifier>
     </Filter>
     <Filter Include="docs\RefGuide">
@@ -65,12 +65,6 @@
     </Filter>
     <Filter Include="docs\RiscPkg">
       <UniqueIdentifier>{fc8dc8ed-25cc-4ce1-8416-02fe03702c87}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Help">
-      <UniqueIdentifier>{d2823e92-82a7-4195-8a2d-5eb3763d0e05}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Help\HTMLHelp">
-      <UniqueIdentifier>{bcab7e45-8768-45a7-994f-1e63a032b269}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\pd_extrautils">
       <UniqueIdentifier>{9bbded68-e834-488b-ab7c-1ebc9f231aa7}</UniqueIdentifier>
@@ -87,8 +81,20 @@
     <Filter Include="Source Files\pd_extrautils\pd_extrautils_123pd\RiscPkg">
       <UniqueIdentifier>{130ae24c-7695-4fcc-b54b-55028fbef9ff}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Help\HTMLHelp\functions">
+    <Filter Include="docs\Help">
+      <UniqueIdentifier>{d2823e92-82a7-4195-8a2d-5eb3763d0e05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="docs\Help\HTMLHelp">
+      <UniqueIdentifier>{bcab7e45-8768-45a7-994f-1e63a032b269}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="docs\Help\HTMLHelp\functions">
       <UniqueIdentifier>{9b5ad970-94f9-4dec-b65e-45e6037b35db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="docs\RefGuide\functions">
+      <UniqueIdentifier>{1050b11f-ddd0-43a0-9db8-086ac6eb17e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pd\building">
+      <UniqueIdentifier>{0cccd794-1b7f-4b48-b473-c4b7831fe382}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -566,6 +572,18 @@
     <ClCompile Include="..\..\..\..\cmodules\ev_arith.c">
       <Filter>Source Files\eval_cmodules</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\xustring.c">
+      <Filter>Source Files\pd_cmodules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\cmodules\mathxcpx.c">
+      <Filter>Source Files\pd_cmodules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\utils\u_reperr.c">
+      <Filter>Source Files\pd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\utils\u_strings.c">
+      <Filter>Source Files\pd</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\cmodules\pd123.h">
@@ -587,9 +605,6 @@
       <Filter>Source Files\pd_cmodules</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\cmodules\file.h">
-      <Filter>Source Files\pd_cmodules</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\cmodules\riscos\filetype.h">
       <Filter>Source Files\pd_cmodules</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\cmodules\funclist.h">
@@ -689,12 +704,6 @@
       <Filter>Source Files\pd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\riscos_x.h">
-      <Filter>Source Files\pd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\scdraw_x.h">
-      <Filter>Source Files\pd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\screen.h">
       <Filter>Source Files\pd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\strings.h">
@@ -970,11 +979,20 @@
     <ClInclude Include="..\..\..\..\cmodules\riscos\colourpick.h">
       <Filter>Source Files\pd_cmodules_riscos</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\cmodules\coltsoft\filetype.h">
+      <Filter>Header Files\coltsoft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\cmodules\xtstring.h">
+      <Filter>Source Files\pd_cmodules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\cmodules\xustring.h">
+      <Filter>Source Files\pd_cmodules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\cmodules\mathxcpx.h">
+      <Filter>Source Files\pd_cmodules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\r32\Makefile">
-      <Filter>Source Files\pd</Filter>
-    </None>
     <None Include="..\..\..\r32\as_flags_h">
       <Filter>Source Files\pd_cmodules_riscos</Filter>
     </None>
@@ -990,47 +1008,47 @@
     <None Include="..\..\..\..\WimpLib\swi.s">
       <Filter>Source Files\WimpLib\RISC_OSLib_patched</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\index.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\index.html">
+      <Filter>docs\StartGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\index.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutpipedream.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\aboutp.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\aboutthistutorial.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\aboutt.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\combineddocuments.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\comdoc.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\commands.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\cmds.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\conventions.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\conven.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\csguide.css">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\tutor.css">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\databases.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\db.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\glossary.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\gloss.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\installation.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\instal.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\spreadsheets.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\sheets.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\thepipedreamwindow.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\pdwind.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\Tutorial\content\wordprocessing.html">
-      <Filter>docs\Tutorial</Filter>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\wrdpro.htm">
+      <Filter>docs\StartGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\alignment.html">
       <Filter>docs\RefGuide</Filter>
@@ -1062,19 +1080,7 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\commands.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\complexfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\csguide.css">
-      <Filter>docs\RefGuide</Filter>
-    </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\csv.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\customfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\databasefns.html">
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\databaseuse.html">
@@ -1095,9 +1101,6 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fileops.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\financialfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\firstwordplus.html">
       <Filter>docs\RefGuide</Filter>
     </None>
@@ -1107,7 +1110,7 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\fonts.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions.html">
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\glossary.html">
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\highlights.html">
@@ -1131,28 +1134,16 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\labelprinting.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\lookupfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\lotus123.html">
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mailshots.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mathfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\matrixfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\memory.html">
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\menus.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\miscfns.html">
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\mouse.html">
@@ -1188,7 +1179,7 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\pipedreamfileformat.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printerdriverediting.html">
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printdrvediting.html">
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\printerdrivers.html">
@@ -1224,12 +1215,6 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\spelluserdicts.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\statsfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\stringfns.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\tables.html">
       <Filter>docs\RefGuide</Filter>
     </None>
@@ -1237,9 +1222,6 @@
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\textatfields.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\trigfns.html">
       <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\troubleshooting.html">
@@ -1265,9 +1247,6 @@
     </None>
     <None Include="..\..\..\..\..\docs\LICENCE">
       <Filter>docs</Filter>
-    </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\datetimefns.html">
-      <Filter>docs\RefGuide</Filter>
     </None>
     <None Include="..\..\..\..\WimpLib\GB\msg_risc">
       <Filter>Source Files\WimpLib</Filter>
@@ -1302,14 +1281,14 @@
     <None Include="..\..\..\..\..\docs\MakeRiscPkg,fd7">
       <Filter>docs\RiscPkg</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\help.css">
-      <Filter>Source Files\Help\HTMLHelp</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\help.css">
+      <Filter>docs\Help\HTMLHelp</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\Text">
-      <Filter>Source Files\Help</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\Text">
+      <Filter>docs\Help</Filter>
     </None>
     <None Include="..\..\..\r32\!PipeDream\!Help,feb">
-      <Filter>Source Files\Help</Filter>
+      <Filter>docs\Help</Filter>
     </None>
     <None Include="..\..\..\..\..\extrautils\PD123\RiscPkg\Control">
       <Filter>Source Files\pd_extrautils\pd_extrautils_pd123\RiscPkg</Filter>
@@ -1350,68 +1329,122 @@
     <None Include="..\..\..\..\..\extrautils\Makef123">
       <Filter>Source Files\pd_extrautils</Filter>
     </None>
-    <None Include="..\..\..\..\..\extrautils\Relnotes,faf">
+    <None Include="..\..\..\..\..\extrautils\Relnotes">
       <Filter>Source Files\pd_extrautils</Filter>
     </None>
     <None Include="..\..\..\..\..\extrautils\LICENCE">
       <Filter>Source Files\pd_extrautils</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf">
-      <Filter>Source Files</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\complx.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\complex.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\custom.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\custom.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\db.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\database.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\index.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\index.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\lookup.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\lookup.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\math.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\math.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\matrix.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\matrix.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\misc.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\misc.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\stats.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\stats.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\string.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\string.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\trig.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\trig.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\date.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\cmds.html,faf">
-      <Filter>Source Files\Help\HTMLHelp</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\cmds.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\index.html,faf">
-      <Filter>Source Files\Help\HTMLHelp</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\index.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\licence.html,faf">
-      <Filter>Source Files\Help\HTMLHelp</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\licenc.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\mouse.html,faf">
-      <Filter>Source Files\Help\HTMLHelp</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\mouse.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\toolb.html,faf">
-      <Filter>Source Files\Help\HTMLHelp</Filter>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\toolb.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
     </None>
     <None Include="..\..\..\..\RelHistPrev.html">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\..\..\r32\!PipeDream\Resources\UK\Help\HTML\functions\datetime.html,faf">
-      <Filter>Source Files\Help\HTMLHelp\functions</Filter>
+    <None Include="..\..\..\r32\!PipeDream\Relnotes,faf">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\complex.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\custom.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\database.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\datetime.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\financial.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\lookup.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\math.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\matrix.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\misc.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\stats.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\string.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\trig.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\index.html">
+      <Filter>docs\RefGuide\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\financ.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\r32\Makefile">
+      <Filter>Source Files\pd\building</Filter>
+    </None>
+    <None Include="..\..\..\Tools\BootRunGen">
+      <Filter>Source Files\pd\building</Filter>
+    </None>
+    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\guide.css">
+      <Filter>docs\RefGuide</Filter>
+    </None>
+    <None Include="..\..\..\r32\CopyToTemp,feb">
+      <Filter>Source Files\RiscPkg</Filter>
     </None>
   </ItemGroup>
 </Project>

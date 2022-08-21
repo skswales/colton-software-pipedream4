@@ -155,7 +155,7 @@ __vmyasserted(
             /* plonk it in */
             memcpy32(p, ASSERTION_FAILURE_PREFIX_RISCOS, sizeof32(ASSERTION_FAILURE_PREFIX_RISCOS)-1);
 
-            consume(const _kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK, &button_clicked, NULL, 3 /*STOP*/));
+            consume(_kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK, &button_clicked, NULL, 3 /*STOP*/));
 
             format = NULL;
         }
@@ -172,13 +172,13 @@ __vmyasserted(
             *p = CH_NULL;
     }
 
-    consume(const _kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK | Wimp_ReportError_Cancel | wimp_ENOERRORFROM, &button_clicked, NULL, 3 /*STOP*/));
+    consume(_kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK | Wimp_ReportError_Cancel | wimp_ENOERRORFROM, &button_clicked, NULL, 3 /*STOP*/));
 
     if(1 == button_clicked)
     {
         tstr_xstrkpy(err.errmess, elemof32(err.errmess), message ? message : ASSERTION_TRAP_QUERY);
 
-        consume(const _kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK | Wimp_ReportError_Cancel, &button_clicked, NULL, 3 /*STOP*/));
+        consume(_kernel_oserror *, wimp_reporterror_rf(&err, Wimp_ReportError_OK | Wimp_ReportError_Cancel, &button_clicked, NULL, 3 /*STOP*/));
 
         if(1 == button_clicked)
             return(TRUE);

@@ -4,9 +4,9 @@
 @rem License, v. 2.0. If a copy of the MPL was not distributed with this
 @rem file, You can obtain one at http://mozilla.org/MPL/2.0/.
 @rem
-@rem Copyright (C) 2013-2019 Stuart Swales
+@rem Copyright (C) 2013-2020 Stuart Swales
 @rem
-Set flexlib_tmp_dir=..\gitlab\RiscOS\Sources\Toolbox\ToolboxLib\flexlib
+Set flexlib_tmp_dir=..\gitlab\RiscOS\Sources\Toolbox\Toolboxlib\flexlib
 Set rlib_tmp_dir=..\gitlab\RiscOS\Sources\Lib\RISC_OSLib\rlib
 @rem
 @echo Populate WimpLib with unmodifed files from the checked-out copy of RISC_OSLib

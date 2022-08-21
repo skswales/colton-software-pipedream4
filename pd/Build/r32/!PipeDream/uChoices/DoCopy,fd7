@@ -12,4 +12,4 @@ CDir <Choices$Write>.PipeDream.Markers
 CDir <Choices$Write>.PipeDream.Pictures
 CDir <Choices$Write>.PipeDream.Templates
 |
-Copy <Obey$Dir>.PipeDream.* <Choices$Write>.PipeDream.* ~CFR~V
+Copy <Obey$Dir>.PipeDream.* <Choices$Write>.PipeDream.* ~C~FNR~V
