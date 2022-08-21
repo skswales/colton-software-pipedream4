@@ -18,16 +18,19 @@
 functions
 */
 
-extern S32
+_Check_return_
+extern BOOL
 vsload_fileheader_isvsfile(
     _In_reads_(size) PC_U8 ptr,
     _InVal_     U32 size);
 
-extern S32
+_Check_return_
+extern STATUS
 vsload_isvsfile(
     FILE_HANDLE fin);
 
-extern S32
+_Check_return_
+extern STATUS
 vsload_loadvsfile(
     FILE_HANDLE fin);
 

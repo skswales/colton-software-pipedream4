@@ -71,6 +71,12 @@ obtained from
 
 <H2>Release history</H2>
 
+<H4>4.52/07 (05 Nov 2014)</H4>
+
+<P>!Run ensures ColourPicker module is available on startup - this module is
+used in colour selection in charts, and PipeDream would otherwise fail on
+systems where this was not already loaded, e.g. RISC&nbsp;OS 3.1.</P>
+
 <H4>4.52/06 (01 Nov 2014)</H4>
 
 <P>Splash screen now creates a window in which to render objects.</P>
@@ -112,9 +118,6 @@ exposed by changes in 4.50/39).</P>
 
 <P>SORT() spreadsheet function no longer masks potential memory full errors
 during creation of temporary data array prior to the sort.</P>
-
-
-<H4>4.52/05a (17 Jul 2014)</H4>
 
 <P>Problem with Ctrl-CGS (Goto Slot) and long document names fixed.</P>
 

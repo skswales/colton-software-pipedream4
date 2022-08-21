@@ -73,14 +73,14 @@ static char *                outbuf = NULL;
 
 struct VSFUNC
 {
-    char * name;
+    const char * name;
     char   flags;
 };
 
 #define BRACKET 0
 #define NO_SUM 1
 
-static struct VSFUNC vsfuncs[] =
+static const struct VSFUNC vsfuncs[] =
 {
     "abs(",     BRACKET,
     "acs(",     BRACKET,
@@ -116,7 +116,8 @@ static struct VSFUNC vsfuncs[] =
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 vsload_fileheader_isvsfile(
     _In_reads_(size) PC_U8 ptr,
     _InVal_     U32 size)
@@ -140,14 +141,15 @@ vsload_fileheader_isvsfile(
 
 #ifdef UNUSED
 
-extern S32
+_Check_return_
+extern STATUS
 vsload_isvsfile(
     FILE_HANDLE fin)
 {
     U8 vsfh[sizeof(struct VSFILEHEADER)];
     filepos_t pos;
     S32 bytes_read;
-    S32 res;
+    STATUS res;
 
     file_getpos(fin, &pos);
 
@@ -188,12 +190,13 @@ vsload_isvsfile(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 vsload_loadvsfile(
     FILE_HANDLE fin)
 {
     S32 vsfsize;
-    S32 res;
+    STATUS res;
 
     /* read file size */
     if((vsfsize = file_length(fin)) <= 0)

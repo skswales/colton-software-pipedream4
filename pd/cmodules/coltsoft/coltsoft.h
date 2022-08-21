@@ -991,6 +991,26 @@ typedef char align_t;
 #define div_round_floor(a, b) ( \
     (((a) >= 0) ? (a) : ((a) - (b) + 1)) / (b))
 
+/* functions for where it can't be avoided */
+
+_Check_return_
+static inline S32
+div_round_ceil_fn(
+    _InVal_     S32 a,
+    _InVal_     S32 b)
+{
+    return(div_round_ceil(a, b));
+}
+
+_Check_return_
+static inline S32
+div_round_floor_fn(
+    _InVal_     S32 a,
+    _InVal_     S32 b)
+{
+    return(div_round_floor(a, b));
+}
+
 #define IGNOREPARM(p)   p=p
 #define IGNOREPARM_CONST(p) (void)p
 #define IGNOREPARM_InRef_(p)                (void)p

@@ -2383,8 +2383,7 @@ find_filetype_option(
         goto endpoint;
         }
 
-    res = vsload_fileheader_isvsfile(array, size);
-    if(res != 0)
+    if(vsload_fileheader_isvsfile(array, size))
         {
         trace_0(TRACE_APP_PD4, "ViewSheet file");
         type = VIEWSHEET_CHAR;

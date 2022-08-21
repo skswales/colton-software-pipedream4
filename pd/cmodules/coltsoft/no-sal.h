@@ -17,13 +17,15 @@ Some SAL2.0 fakes to SAL1.1 - only defined as needed
 #define _In_reads_(size)                                _In_count_(size)
 #define _In_reads_opt_(size)                            _In_opt_count_(size)
 
-#define _In_reads_z_(size)                              _In_z_count_(size)
+#define _In_reads_or_z_(size)                           _In_z_count_(size)
 
 #define _In_reads_bytes_(size)                          _In_bytecount_(size)
 #define _In_reads_bytes_opt_(size)                      _In_opt_bytecount_(size)
 
 #define _Out_writes_(size)                              _Out_cap_(size)
 #define _Out_writes_opt_(size)                          _Out_opt_cap_(size)
+
+#define _Out_writes_all_(size)                          _Out_cap_post_count_(size,size)
 
 #define _Out_writes_z_(size)                            _Out_z_cap_(size)
 #define _Out_writes_opt_z_(size)                        _Out_opt_z_cap_(size)

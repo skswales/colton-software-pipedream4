@@ -79,7 +79,7 @@ ELSE
   ENDIF
 ENDIF
 :
-colour_picker% = FALSE
+colour_picker% = TRUE: REM WimpLib dboxtcol now uses ColourPicker module
 :
 reg_extra$ = ""
 :
@@ -147,14 +147,14 @@ REM IF boot% THEN
   PROCo(f%,"If Boot$OSVersion>=350 Then DOSMap WK1 &DB0")
 :
 REM Go for the minimal version we can cope with
-REM FPEmulator 4.32 is the lastest ROOL seen to date (May 2013)
 REM NB FPEmulator 4.09 in RISC OS 4.02 ROM (also in 4.39 ROM) has poor precision
 REM FPEmulator 4.10 in RISC OS 4.39 ROM is better
+REM FPEmulator 4.32 is the latest ROOL seen to date (May 2013)
 FPEVersion$="FPEmulator 4.10"
 :
 REM Go for the minimal version we can cope with using the Stubs we built with
 REM and the required functionality (we need working C99 functions)
-REM SharedCLibrary 5.78 is the lastest ROOL seen to date (Oct 2013)
+REM SharedCLibrary 5.83 is the latest ROOL seen to date (Aug 2014)
 CLibVersion$="SharedCLibrary 5.45"
 :
 IF NOT boot% THEN

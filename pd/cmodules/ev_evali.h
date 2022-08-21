@@ -420,17 +420,23 @@ typedef struct STACK_VISIT_NAME
 }
 STACK_VISIT_NAME;
 
-typedef struct STACK_IN_CALC
+typedef struct EVAL_BLOCK
 {
     S32 offset;
-    S32 type;
     EV_SLR slr;
-    PC_U8 ptr;
-    P_EV_DATA p_ev_data;
     P_EV_SLOT p_ev_slot;
+}
+EVAL_BLOCK;
+
+typedef struct STACK_IN_CALC
+{
+    EVAL_BLOCK eval_block;
+    S32 travel_res;
     EV_DATA result_data;
     S32 did_calc;
-    S32 travel_res;
+
+    S32 type;
+    PC_U8 ptr;
     EV_SERIAL start_calc;
 }
 STACK_IN_CALC, * P_STACK_IN_CALC;

@@ -727,7 +727,8 @@ setcolour(
             }
         }
 
-    riscos_setcolours(logcol(back), logcol(fore));
+    riscos_setcolour(logcol(back), TRUE);
+    riscos_setcolour(logcol(fore), FALSE);
 }
 
 /******************************************************************************

@@ -1545,11 +1545,11 @@ print_page(void)
                 if(tslot)
                     {
                     P_DRAW_DIAG p_draw_diag;
-                    P_DRAW_FILE_REF dfrp;
+                    P_DRAW_FILE_REF p_draw_file_ref;
                     S32 x, y;
 
                     if( riscos_printing  &&
-                        draw_find_file(current_docno(), in_block.col, in_block.row, &p_draw_diag, &dfrp))
+                        draw_find_file(current_docno(), in_block.col, in_block.row, &p_draw_diag, &p_draw_file_ref))
                         {
                         /* pictures fill line, not just down from baseline */
                         trace_2(TRACE_APP_PD4, "found picture at %d, %d", in_block.col, in_block.row);
@@ -1558,10 +1558,10 @@ print_page(void)
                         x = riscos_font_xad / MILLIPOINTS_PER_OS;
                         y =(riscos_font_yad
                              + (global_font_leading_mp - baseline_offset)
-                             - (dfrp->ysize_os * MILLIPOINTS_PER_OS)
+                             - (p_draw_file_ref->ysize_os * MILLIPOINTS_PER_OS)
                             ) / MILLIPOINTS_PER_OS;
 
-                        if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, dfrp->xfactor, dfrp->yfactor, &printing_draw_box)))
+                        if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, p_draw_file_ref->xfactor, p_draw_file_ref->yfactor, &printing_draw_box)))
                             /*print_complain(&err.err.os)*/;
 
                         /* Draw rendering has invalidated our colour cache */

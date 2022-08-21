@@ -945,11 +945,20 @@ percent_in_block(
     trace_5(TRACE_APP_PD4, "percent_in_block: DOWN_COLUMNS %s ncol %d nrow %d tcol %d trow %d",
             trace_boolstring(direction == DOWN_COLUMNS), ncol, nrow, tcol, trow);
 
-    return( (S32) (
-            (direction == DOWN_COLUMNS)
-                    ? (100 * (S32) tcol + muldiv64(100, trow, nrow)) / ncol
-                    : (100 * (S32) trow + muldiv64(100, tcol, ncol)) / nrow
-            ));
+    if(direction == DOWN_COLUMNS)
+    {   /* a bit less than S32_MAX / 100 */
+        if(trow <= 0x01400000)
+            return( (100 * (S32) tcol +     ((100 * trow) / nrow)) / ncol );
+        else
+            return( (100 * (S32) tcol + muldiv64(100, trow, nrow)) / ncol );
+    }
+    else
+    {
+        if(tcol <= 0x01400000)
+            return( (100 * (S32) trow +     ((100 * tcol) / ncol)) / nrow );
+        else
+            return( (100 * (S32) trow + muldiv64(100, tcol, ncol)) / nrow );
+    }
 }
 
 /******************************************************************************

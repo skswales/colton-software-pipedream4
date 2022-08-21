@@ -1061,7 +1061,7 @@ gr_chartedit_set_scales(
     P_GR_CHARTEDITOR cep)
 {
     P_GR_DIAG p_gr_diag;
-    P_DRAW_FILE_HEADER dfp = NULL;
+    P_DRAW_FILE_HEADER p_draw_file_header = NULL;
     char buffer[32];
     F64 pct_scale;
     S32 diagbelow;
@@ -1069,14 +1069,14 @@ gr_chartedit_set_scales(
     gr_chart_diagram(&cep->ch, &p_gr_diag);
 
     if(p_gr_diag)
-        dfp = gr_riscdiag_getoffptr(DRAW_FILE_HEADER, &p_gr_diag->gr_riscdiag, 0);
+        p_draw_file_header = gr_riscdiag_getoffptr(DRAW_FILE_HEADER, &p_gr_diag->gr_riscdiag, 0);
 
     cep->riscos.scale_from_diag = 1.0;
     cep->riscos.diagram_off_x   = GR_CHARTEDIT_DISPLAY_LM_OS;
     cep->riscos.diagram_off_y   = GR_CHARTEDIT_DISPLAY_BM_OS;
     diagbelow                   = 0;
 
-    if(dfp)
+    if(p_draw_file_header)
         {
         P_GR_CHART  cp;
         F64 scale_from_layout;
@@ -1088,8 +1088,8 @@ gr_chartedit_set_scales(
         /* size has already had margins subtracted so ok to use like this */
         scale_from_layout = (F64) cep->size.y / (F64) cp->core.layout.size.y;
 
-        diagbelow = (dfp->bbox.y0 < 0) ? -dfp->bbox.y0 : 0;
-        diagsize   = dfp->bbox.y1 + diagbelow;
+        diagbelow = (p_draw_file_header->bbox.y0 < 0) ? -p_draw_file_header->bbox.y0 : 0;
+        diagsize   = p_draw_file_header->bbox.y1 + diagbelow;
 
         if(diagsize)
             cep->riscos.scale_from_diag = (((F64) cep->size.y) * GR_RISCDRAW_PER_PIXIT) / diagsize;

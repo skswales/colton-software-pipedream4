@@ -28,11 +28,6 @@
 #define wimpt_safe(a) a
 #endif
 
-#ifndef RISC_OS_3_1
-#define RISC_OS_3_1 0xa4
-#define RISC_OS_3_5 0xa5
-#endif
-
 /*
 wimpt.c
 */
@@ -101,6 +96,10 @@ cs-wimptx.c
 
 extern os_error *
 os_set_error(int errnum, const char * errmess);
+
+#ifndef RISC_OS_3_5
+#define RISC_OS_3_5 0xa5
+#endif
 
 extern void
 wimpt_os_version_determine(void);

@@ -15,17 +15,7 @@
 #define __progvars_h
 
 #define charheight normal_charheight
-#ifdef SKS_NEW_CHAR_WIDTH
-/* SKS 20.10.91 - make one char width become 1/12 of an inch in fonty world */
-#define charwidth  (riscos_fonts ? 15 /*180/12*/ : normal_charwidth /*16*/)
-#else
 #define charwidth  normal_charwidth
-#endif
-
-#ifndef RISC_OS_3_1
-#define RISC_OS_3_1 0xa4
-#define RISC_OS_3_5 0xa5
-#endif
 
 /* ------------------------------ windvars.c ------------------------------- */
 

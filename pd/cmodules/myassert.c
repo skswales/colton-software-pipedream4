@@ -44,7 +44,7 @@ hard_assertion = 1000; /* an OLE server really needs this */
 #define ASSERTION_FAILURE_PREFIX TEXT("Runtime failure: %s in file %s, line ") U32_TFMT TEXT(".")
 
 #if RISCOS
-#define ASSERTION_FAILURE_YN TEXT("Click OK to exit immediately, losing data, Cancel to attempt to resume execution.")
+#define ASSERTION_FAILURE_YN TEXT("Click Continue to exit immediately, losing data, Cancel to attempt to resume execution.")
 #elif WINDOWS
 #define ASSERTION_FAILURE_YN TEXT("Click OK to exit immediately, losing data, Cancel to attempt to resume execution.")
 #else
@@ -55,7 +55,11 @@ hard_assertion = 1000; /* an OLE server really needs this */
 #define ASSERTION_FAILURE_PREFIX_RISCOS TEXT("Assert: ")
 #endif
 
+#if RISCOS
+#define ASSERTION_TRAP_QUERY TEXT("Click Continue to trap to debugger, Cancel to exit normally")
+#elif WINDOWS
 #define ASSERTION_TRAP_QUERY TEXT("Click OK to trap to debugger, Cancel to exit normally")
+#endif
 
 extern BOOL __cdecl
 __myasserted(

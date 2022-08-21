@@ -154,12 +154,10 @@ S32 log2bpp;
 /* OS units per real pixel - needed for drawing correctly */
 
        S32 dx;
-       S32 dxm1;       /* dx - 1 for AND/BIC */
-static S32 two_dx;
+static S32 dxm1;       /* dx - 1 for AND/BIC */
 
        S32 dy;
 static S32 dym1;
-static S32 two_dy;
 static S32 chmdy;      /* charheight - dy */
 
 /* a mode independent y spacing value */
@@ -330,15 +328,6 @@ riscos_setcolour(
 }
 
 extern void
-riscos_setcolours(
-    int bg,
-    int fg)
-{
-    riscos_setcolour(bg, TRUE);
-    riscos_setcolour(fg, FALSE);
-}
-
-extern void
 new_font_leading(
     S32 new_font_leading_mp)
 {
@@ -347,10 +336,10 @@ new_font_leading(
     if(riscos_fonts)
         {
         /* line spacing - round up to nearest OS unit */
-        charallocheight = roundtoceil(global_font_leading_mp, MILLIPOINTS_PER_OS);
+        charallocheight = div_round_ceil(global_font_leading_mp, MILLIPOINTS_PER_OS);
 
         /* and then to nearest pixel corresponding */
-        charallocheight = roundtoceil(charallocheight, dy) * dy;
+        charallocheight = div_round_ceil(charallocheight, dy) * dy;
 
         /* lines are at least two pixels high */
         charallocheight = MAX(charallocheight, 2*dy);
@@ -433,11 +422,9 @@ cachemodevariables(void)
     /* OS units per pixel */
     dx      = wimpt_dx();
     dxm1    = dx - 1;
-    two_dx  = 2 * dx;
 
     dy      = wimpt_dy();
     dym1    = dy - 1;
-    two_dy  = 2 * dy;
     chmdy   = charheight - dy;
 
     trace_4(TRACE_APP_PD4_RENDER, "dx = %d, dy = %d, xsize = %d, ysize = %d", dx, dy, x, y);
@@ -1103,30 +1090,7 @@ restore_graphics_window(void)
 
 /******************************************************************************
 *
-*  round to ± infinity at multiples of a given number
-*
-******************************************************************************/
-
-extern S32
-roundtoceil(
-    S32 a,
-    S32 b)
-{
-    return( ((a <= 0) ? a : (a + (b - 1))) / b );
-}
-
-extern S32
-roundtofloor(
-    S32 a,
-    S32 b)
-{
-    return( ((a >= 0) ? a : (a - (b - 1))) / b );
-}
-
-/******************************************************************************
-*
-* scroll the given area down by n lines
-* as if it were a real text window
+* scroll the given area down by n lines as if it were a real text window
 *
 ******************************************************************************/
 
@@ -1201,28 +1165,28 @@ extern S32
 tsize_x(
     S32 x)
 {
-    return(roundtoceil(x, charwidth));
+    return(div_round_ceil(x, charwidth));
 }
 
 extern S32
 tsize_y(
     S32 y)
 {
-    return(roundtoceil(y, charvspace));
+    return(div_round_ceil(y, charvspace));
 }
 
 extern S32
 tcoord_x(
     S32 x)
 {
-    return(roundtofloor(x - textcell_xorg, charwidth));
+    return(div_round_floor_fn(x - textcell_xorg, charwidth));
 }
 
 extern S32
 tcoord_y(
     S32 y)
 {
-    return(roundtoceil(textcell_yorg - y, charvspace) - 1);
+    return(div_round_ceil_fn(textcell_yorg - y, charvspace) - 1);
 }
 
 extern S32
@@ -1238,14 +1202,14 @@ extern S32
 tcoord_x1(
     S32 x)
 {
-    return(roundtoceil(x - textcell_xorg, charwidth));
+    return(div_round_ceil_fn(x - textcell_xorg, charwidth));
 }
 
 extern S32
 tcoord_y1(
     S32 y)
 {
-    return(roundtofloor(textcell_yorg - y, charvspace) - 1);
+    return(div_round_floor_fn(textcell_yorg - y, charvspace) - 1);
 }
 
 /******************************************************************************
@@ -2341,7 +2305,10 @@ print_setcolours(
     if(riscos_printer.has_colour)
         setcolour(fore, back);
     else
-        riscos_setcolours(0 /*bg*/, 7 /*fg*/);
+    {
+        riscos_setcolour(0 /*bg*/, TRUE);
+        riscos_setcolour(7 /*fg*/, FALSE);
+    }
 }
 
 extern void
@@ -2402,10 +2369,10 @@ riscprint_set_printer_data(void)
             riscos_printer.psize.bbox.x1, riscos_printer.psize.bbox.y1);
     trace_2(TRACE_APP_PD4_RENDER, "usable x = %d (mp), %d (os 100%%)",
             riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0,
-            roundtofloor(riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0, MILLIPOINTS_PER_OS));
+            div_round_floor_fn(riscos_printer.psize.bbox.x1 - riscos_printer.psize.bbox.x0, MILLIPOINTS_PER_OS));
     trace_2(TRACE_APP_PD4_RENDER, "usable y = %d (mp), %d (os 100%%)",
             riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0,
-            roundtofloor(riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0, MILLIPOINTS_PER_OS));
+            div_round_floor_fn(riscos_printer.psize.bbox.y1 - riscos_printer.psize.bbox.y0, MILLIPOINTS_PER_OS));
 }
 
 extern BOOL

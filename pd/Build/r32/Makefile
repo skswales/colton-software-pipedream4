@@ -7,7 +7,7 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2014 R W Colton
 
-TEXTUAL_VERSION_NUMBER=4.52/06
+TEXTUAL_VERSION_NUMBER=4.52/07
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk

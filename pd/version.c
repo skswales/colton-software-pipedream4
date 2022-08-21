@@ -17,11 +17,13 @@
  * r32.!PipeDream.Resource.Relnotes
  */
 
-#define Version      "4.52/06"
-#define CurrentDate  "(01-Nov-2014)"
+#define Version      "4.52/07"
+#define CurrentDate  "(05-Nov-2014)"
 
 /*
-* 16 Jul 2014 - 4.52/04
+* 05 Nov 2014 - 4.52/07
+* 01 Nov 2014 - 4.52/06
+* 16 Jul 2014 - 4.52/05
 * 04 Jul 2014 - 4.52/04
 * 18 Feb 2014 - 4.52/03
 * 12 Feb 2014 - 4.52/02

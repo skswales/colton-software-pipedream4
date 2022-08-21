@@ -479,11 +479,11 @@ ev_eval_rpn(
         stack_offset = stack_offset(stack_ptr);
         stack_inc(CALC_SLOT, *slrp, 0);
 
+        stack_ptr->data.stack_in_calc.eval_block.offset = 0;
+        stack_ptr->data.stack_in_calc.eval_block.slr = *slrp;
+        stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = NULL;
         stack_ptr->data.stack_in_calc.type = INCALC_PTR;
         stack_ptr->data.stack_in_calc.ptr = rpn_in;
-        stack_ptr->data.stack_in_calc.offset = 0;
-        stack_ptr->data.stack_in_calc.slr = *slrp;
-        stack_ptr->data.stack_in_calc.p_ev_slot = NULL;
 
         if((res = eval_rpn(stack_offset(stack_ptr))) == SAME_STATE)
             res = 0;
@@ -586,6 +586,37 @@ eval_optimise(
     return(did_opt);
 }
 
+/* recache slot pointer as needed */
+
+static inline void
+stack_in_calc_ensure_slot(
+    _InoutRef_  P_STACK_IN_CALC p_stack_in_calc,
+    _InRef_     PC_EV_SLR p_ev_slr,
+    _In_z_      PCTSTR caller)
+{
+#if 1
+    if(NULL != p_stack_in_calc->eval_block.p_ev_slot)
+    {
+        P_EV_SLOT p_ev_slot;
+        S32 travel_res = ev_travel(&p_ev_slot, p_ev_slr);
+        if(p_stack_in_calc->eval_block.p_ev_slot != p_ev_slot)
+        {
+            reportf(TEXT("%s: slot ") U32_TFMT TEXT(":") S32_TFMT TEXT(",") S32_TFMT TEXT(" moved from ") PTR_TFMT TEXT(" to ") PTR_TFMT,
+                caller, (U32) p_ev_slr->docno, p_ev_slr->col, p_ev_slr->row, report_ptr_cast(stack_ptr->data.stack_in_calc.eval_block.p_ev_slot), report_ptr_cast(p_ev_slot));
+            p_stack_in_calc->eval_block.p_ev_slot = p_ev_slot;
+            p_stack_in_calc->travel_res = travel_res;
+        }
+    }
+#else
+    IGNOREPARM(caller);
+#endif
+
+    if(NULL != p_stack_in_calc->eval_block.p_ev_slot)
+        return;
+
+    p_stack_in_calc->travel_res = ev_travel(&p_stack_in_calc->eval_block.p_ev_slot, p_ev_slr);
+}
+
 /******************************************************************************
 *
 * wander along an rpn string and evaluate it
@@ -621,22 +652,21 @@ eval_rpn(
         case INCALC_SLR:
         default:
             {
-            if(!p_stack_in_calc->p_ev_slot)
-                (void) ev_travel(&p_stack_in_calc->p_ev_slot, &p_stack_in_calc->slr);
+            stack_in_calc_ensure_slot(p_stack_in_calc, &p_stack_in_calc->eval_block.slr, "eval_rpn");
 
-            if(p_stack_in_calc->p_ev_slot->parms.type == EVS_CON_RPN)
-                rpn_start = p_stack_in_calc->p_ev_slot->rpn.con.rpn_str;
+            if(p_stack_in_calc->eval_block.p_ev_slot->parms.type == EVS_CON_RPN)
+                rpn_start = p_stack_in_calc->eval_block.p_ev_slot->rpn.con.rpn_str;
             else
-                rpn_start = p_stack_in_calc->p_ev_slot->rpn.var.rpn_str;
+                rpn_start = p_stack_in_calc->eval_block.p_ev_slot->rpn.var.rpn_str;
             break;
             }
         }
 
-    rpnb.pos = rpn_start + p_stack_in_calc->offset;
+    rpnb.pos = rpn_start + p_stack_in_calc->eval_block.offset;
     rpn_check(&rpnb);
-    cur_slr = p_stack_in_calc->slr;
+    cur_slr = p_stack_in_calc->eval_block.slr;
 
-    /* we can't access sicp after this point: the stack may move!
+    /* we can't access p_stack_in_calc after this point: the stack may move!
      * we must indirect through stack_base each time
      */
     while(rpnb.num != RPN_FRM_END)
@@ -875,8 +905,8 @@ eval_rpn(
                         /* save current state */
                         rpn_skip(&rpnb);
                         stack_inc(IN_EVAL, cur_slr, stack_ptr[-1].stack_flags);
-                        stack_base[stack_at].data.stack_in_calc.offset = rpnb.pos - rpn_start;
-                        stack_ptr->data.stack_in_eval.stack_offset     = stack_at;
+                        stack_base[stack_at].data.stack_in_calc.eval_block.offset = rpnb.pos - rpn_start;
+                        stack_ptr->data.stack_in_eval.stack_offset = stack_at;
 
                         /* create custom result area on stack */
                         stack_inc(DATA_ITEM, cur_slr, stack_ptr[-1].stack_flags);
@@ -958,7 +988,7 @@ eval_rpn(
                         /* save resume position */
                         rpn_skip(&rpnb);
                         stack_inc(IN_EVAL, cur_slr, stack_ptr[-1].stack_flags);
-                        stack_base[stack_at].data.stack_in_calc.offset = rpnb.pos - rpn_start;
+                        stack_base[stack_at].data.stack_in_calc.eval_block.offset = rpnb.pos - rpn_start;
                         stack_ptr->data.stack_in_eval.stack_offset = stack_at;
 
                         /* push result array */
@@ -1014,7 +1044,7 @@ eval_rpn(
                                         /* save current state */
                                         rpn_skip(&rpnb);
                                         stack_inc(IN_EVAL, cur_slr, stack_ptr[-1].stack_flags);
-                                        stack_base[stack_at].data.stack_in_calc.offset = rpnb.pos - rpn_start;
+                                        stack_base[stack_at].data.stack_in_calc.eval_block.offset = rpnb.pos - rpn_start;
                                         stack_ptr->data.stack_in_eval.stack_offset = stack_at;
 
                                         /* switch to dbase state */
@@ -1068,7 +1098,7 @@ eval_rpn(
                                     /* save current state */
                                     rpn_skip(&rpnb);
                                     stack_inc(IN_EVAL, cur_slr, stack_ptr[-1].stack_flags);
-                                    stack_base[stack_at].data.stack_in_calc.offset = rpnb.pos - rpn_start;
+                                    stack_base[stack_at].data.stack_in_calc.eval_block.offset = rpnb.pos - rpn_start;
                                     stack_ptr->data.stack_in_eval.stack_offset = stack_at;
 
                                     /* switch to lookup state */
@@ -1112,7 +1142,7 @@ eval_rpn(
                                     /* save current state */
                                     rpn_skip(&rpnb);
                                     stack_inc(IN_EVAL, cur_slr, stack_ptr[-1].stack_flags);
-                                    stack_base[stack_at].data.stack_in_calc.offset = rpnb.pos - rpn_start;
+                                    stack_base[stack_at].data.stack_in_calc.eval_block.offset = rpnb.pos - rpn_start;
                                     stack_ptr->data.stack_in_eval.stack_offset = stack_at;
 
                                     /* switch to lookup state */
@@ -1368,8 +1398,8 @@ custom_sequence(
         {
         stack_inc(CALC_SLOT, next_slot, 0);
         stack_ptr->stack_flags |= STF_INCUSTOM;
-        stack_ptr->data.stack_in_calc.start_calc  = ev_serial_num;
-        stack_ptr->data.stack_in_calc.p_ev_slot   = NULL;
+        stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = NULL;
+        stack_ptr->data.stack_in_calc.start_calc = ev_serial_num;
         }
 
     /* if we get an error, abort and go to complete state */
@@ -2027,9 +2057,9 @@ ev_recalc(void)
                 /* all slot's supporters are calced - check
                 if this slot now needs to be recalced */
                 stack_ptr->type = CALC_SLOT;
-                stack_ptr->data.stack_in_calc.start_calc = ev_serial_num;
-                stack_ptr->data.stack_in_calc.p_ev_slot  = p_ev_slot;
+                stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = p_ev_slot;
                 stack_ptr->data.stack_in_calc.travel_res = travel_res;
+                stack_ptr->data.stack_in_calc.start_calc = ev_serial_num;
 
                 trace_2(TRACE_MODULE_EVAL,
                         "VISIT_SLOT sic.start_calc set to: %d, serial_num: %d",
@@ -2059,41 +2089,26 @@ ev_recalc(void)
                 else
                     changed = 0;
 
-#if 1
-                if(stack_ptr->data.stack_in_calc.p_ev_slot)
-                {
-                    P_EV_SLOT p_ev_slot;
-                    S32 travel_res = ev_travel(&p_ev_slot, &stack_ptr->slr);
-                    if(stack_ptr->data.stack_in_calc.p_ev_slot != p_ev_slot)
-                    {
-                        reportf(TEXT("CALC_SLOT: slot ") U32_TFMT TEXT(":") S32_TFMT TEXT(",") S32_TFMT TEXT(" moved from ") PTR_TFMT TEXT(" to ") PTR_TFMT, (U32) stack_ptr->slr.docno, stack_ptr->slr.col, stack_ptr->slr.row, report_ptr_cast(stack_ptr->data.stack_in_calc.p_ev_slot), report_ptr_cast(p_ev_slot));
-                        stack_ptr->data.stack_in_calc.p_ev_slot = p_ev_slot;
-                        stack_ptr->data.stack_in_calc.travel_res = travel_res;
-                    }
-                }
-#endif
-
                 /* recache pointer */
-                if(!stack_ptr->data.stack_in_calc.p_ev_slot)
-                    stack_ptr->data.stack_in_calc.travel_res = ev_travel(&stack_ptr->data.stack_in_calc.p_ev_slot, &stack_ptr->slr);
+                stack_in_calc_ensure_slot(&stack_ptr->data.stack_in_calc, &stack_ptr->slr, "CALC_SLOT");
 
                 if((stack_ptr->data.stack_in_calc.travel_res > 0)                            &&
                    !(stack_ptr->stack_flags & STF_CALCEDERROR)                               &&
                    (doc_check_custom(stack_ptr->slr.docno)                                 ||
                     (stack_ptr->stack_flags & STF_CALCEDSUPPORTER)                         ||
-                    (stack_ptr->data.stack_in_calc.p_ev_slot->parms.type == EVS_VAR_RPN &&
-                     changed)                                                              ||
-                    (stack_ptr->data.stack_in_calc.p_ev_slot->parms.type == EVS_CON_RPN &&
-                     changed)                                                              ||
-                    (stack_ptr->data.stack_in_calc.p_ev_slot->ev_result.did_num == RPN_DAT_ERROR &&
-                     stack_ptr->data.stack_in_calc.p_ev_slot->ev_result.arg.ev_error.status == STATUS_NOMEM)
+                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.type == EVS_VAR_RPN &&
+                     changed)                                                                        ||
+                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.type == EVS_CON_RPN &&
+                     changed)                                                                        ||
+                    (stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.did_num == RPN_DAT_ERROR &&
+                     stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.arg.ev_error.status == STATUS_NOMEM)
                    )
                   )
                     {
+                    stack_ptr->data.stack_in_calc.eval_block.offset = 0;
+                    stack_ptr->data.stack_in_calc.eval_block.slr = stack_ptr->slr;
                     stack_ptr->data.stack_in_calc.did_calc = 1;
-                    stack_ptr->data.stack_in_calc.offset   = 0;
-                    stack_ptr->data.stack_in_calc.type     = INCALC_SLR;
-                    stack_ptr->data.stack_in_calc.slr      = stack_ptr->slr;
+                    stack_ptr->data.stack_in_calc.type = INCALC_SLR;
 
                     eval_rpn(stack_offset(stack_ptr));
                     }
@@ -2111,8 +2126,8 @@ ev_recalc(void)
                 eval_trace("<IN_EVAL>");
 
                 #ifdef SLOTS_MOVE
-                /* clear out any cached slot pointer */
-                stack_base[stack_ptr->data.stack_in_eval.stack_offset].data.stack_in_calc.p_ev_slot = NULL;
+                /* clear out any cached slot pointer for later reload */
+                stack_base[stack_ptr->data.stack_in_eval.stack_offset].data.stack_in_calc.eval_block.p_ev_slot = NULL;
                 #endif
 
                 /* remove IN_EVAL state and continue with recalc */
@@ -2127,44 +2142,30 @@ ev_recalc(void)
                 S32 calc_parent;
                 P_TODO_ENTRY todop;
 
-#if 1
-                if(stack_ptr->data.stack_in_calc.p_ev_slot)
-                {
-                    P_EV_SLOT p_ev_slot;
-                    S32 travel_res = ev_travel(&p_ev_slot, &stack_ptr->slr);
-                    if(stack_ptr->data.stack_in_calc.p_ev_slot != p_ev_slot)
-                    {
-                        reportf(TEXT("END_CALC: slot ") U32_TFMT TEXT(":") S32_TFMT TEXT(",") S32_TFMT TEXT(" moved from ") PTR_TFMT TEXT(" to ") PTR_TFMT, (U32) stack_ptr->slr.docno, stack_ptr->slr.col, stack_ptr->slr.row, report_ptr_cast(stack_ptr->data.stack_in_calc.p_ev_slot), report_ptr_cast(p_ev_slot));
-                        stack_ptr->data.stack_in_calc.p_ev_slot = p_ev_slot;
-                        stack_ptr->data.stack_in_calc.travel_res = travel_res;
-                    }
-                }
-#endif
-                /* re-travel to slot if necessary */
-                if(!stack_ptr->data.stack_in_calc.p_ev_slot)
-                    stack_ptr->data.stack_in_calc.travel_res = ev_travel(&stack_ptr->data.stack_in_calc.p_ev_slot, &stack_ptr->slr);
+                /* recache pointer */
+                stack_in_calc_ensure_slot(&stack_ptr->data.stack_in_calc, &stack_ptr->slr, "END_CALC");
 
                 /* did we actually get a result ? */
                 if(stack_ptr->data.stack_in_calc.travel_res > 0 &&
                    stack_ptr->data.stack_in_calc.did_calc)
                     {
                     /* store result in slot */
-                    ev_result_free_resources(&stack_ptr->data.stack_in_calc.p_ev_slot->ev_result);
-                    ev_data_to_result_convert(&stack_ptr->data.stack_in_calc.p_ev_slot->ev_result,
+                    ev_result_free_resources(&stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result);
+                    ev_data_to_result_convert(&stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result,
                                               &stack_ptr->data.stack_in_calc.result_data);
 
                     /* on error in custom function sheet, return custom function result error */
-                    if(stack_ptr->data.stack_in_calc.p_ev_slot->ev_result.did_num == RPN_DAT_ERROR &&
+                    if(stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.did_num == RPN_DAT_ERROR &&
                        doc_check_custom(stack_ptr->slr.docno))
                         {
                         EV_DATA data;
 
                         data.did_num = RPN_DAT_ERROR;
-                        data.arg.ev_error = stack_ptr->data.stack_in_calc.p_ev_slot->ev_result.arg.ev_error;
+                        data.arg.ev_error = stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.arg.ev_error;
 
                         if(data.arg.ev_error.type != ERROR_CUSTOM)
                         {
-                            data.arg.ev_error.type = stack_ptr->data.stack_in_calc.p_ev_slot->ev_result.arg.ev_error.type = ERROR_CUSTOM;
+                            data.arg.ev_error.type = stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->ev_result.arg.ev_error.type = ERROR_CUSTOM;
                         
                             data.arg.ev_error.docno = stack_ptr->slr.docno;
                             data.arg.ev_error.col = stack_ptr->slr.col;
@@ -2203,16 +2204,16 @@ ev_recalc(void)
                 if(stack_ptr->data.stack_in_calc.travel_res > 0)
                     {
                     /* clear circular flag and set visited */
-                    if(stack_ptr->data.stack_in_calc.p_ev_slot->parms.type == EVS_VAR_RPN)
+                    if(stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.type == EVS_VAR_RPN)
                         {
-                        stack_ptr->data.stack_in_calc.p_ev_slot->rpn.var.visited = stack_ptr->data.stack_in_calc.start_calc;
+                        stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->rpn.var.visited = stack_ptr->data.stack_in_calc.start_calc;
                         trace_2(TRACE_MODULE_EVAL,
                                 "END_CALC, slot->visited set to: %d, serial_num: %d",
-                                stack_ptr->data.stack_in_calc.p_ev_slot->rpn.var.visited,
+                                stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->rpn.var.visited,
                                 ev_serial_num);
                         }
 
-                    stack_ptr->data.stack_in_calc.p_ev_slot->parms.circ = 0;
+                    stack_ptr->data.stack_in_calc.eval_block.p_ev_slot->parms.circ = 0;
                     }
 
                 /* remove this slot's entry from the todo list */
@@ -2334,10 +2335,11 @@ ev_recalc(void)
                             {
                             stack_inc(DBASE_CALC, slr, stack_ptr[-1].stack_flags);
                             memcpy32(rpn_ptr, dbase_rpn, rpn_len);
+
+                            stack_ptr->data.stack_in_calc.eval_block.slr = slr;
+                            stack_ptr->data.stack_in_calc.eval_block.offset = 0;
                             stack_ptr->data.stack_in_calc.ptr = rpn_ptr;
-                            stack_ptr->data.stack_in_calc.offset = 0;
                             stack_ptr->data.stack_in_calc.type = INCALC_PTR;
-                            stack_ptr->data.stack_in_calc.slr = slr;
 
                             /* go to evaluate condition */
                             eval_rpn(stack_offset(stack_ptr));
@@ -2713,7 +2715,7 @@ ev_recalc(void)
         {
         case CALC_SLOT:
         case END_CALC:
-            stack_ptr->data.stack_in_calc.p_ev_slot = NULL;
+            stack_ptr->data.stack_in_calc.eval_block.p_ev_slot = NULL;
             break;
         }
     #endif
@@ -2739,7 +2741,7 @@ slot_error_complete(
 
     stack_ptr->type = CALC_SLOT;
     stack_ptr->data.stack_in_calc.start_calc = ev_serial_num;
-    stack_ptr->data.stack_in_calc.p_ev_slot  = NULL;
+    stack_ptr->data.stack_in_calc.eval_block.p_ev_slot  = NULL;
 
     stack_ptr->stack_flags |= STF_CALCEDERROR | STF_CALCEDSUPPORTER;
 
@@ -2868,8 +2870,8 @@ stack_free_resources(
                 res = DEP_UPDATE;
 
             /* we must do travel since document may have been deleted */
-            if(res != DEP_DELETE && ev_travel(&stkentp->data.stack_in_calc.p_ev_slot, &stkentp->slr) > 0)
-                stkentp->data.stack_in_calc.p_ev_slot->parms.circ = 0;
+            if(res != DEP_DELETE && ev_travel(&stkentp->data.stack_in_calc.eval_block.p_ev_slot, &stkentp->slr) > 0)
+                stkentp->data.stack_in_calc.eval_block.p_ev_slot->parms.circ = 0;
             break;
             }
 

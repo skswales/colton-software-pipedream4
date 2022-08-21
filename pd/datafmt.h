@@ -2554,16 +2554,6 @@ outslt(
 extern void
 position_cursor(void);
 
-extern S32
-roundtoceil(
-    S32 a,
-    S32 b);
-
-extern S32
-roundtofloor(
-    S32 a,
-    S32 b);
-
 extern void
 topline(
     coord xpos,

@@ -674,7 +674,7 @@ draw_screen(void)
 static void
 really_draw_picture(
     P_DRAW_DIAG p_draw_diag,
-    P_DRAW_FILE_REF dfrp,
+    P_DRAW_FILE_REF p_draw_file_ref,
     S32 x0,
     S32 y0,
     S32 x1,
@@ -699,10 +699,10 @@ really_draw_picture(
 
     /* origin of diagram positioned at r.box.x0,r.box.y1 (abs) */
     x = gcoord_x(x0);
-    y = gcoord_y(y1) - dfrp->ysize_os - dy; /* <<< do we REALLY want this dy? */
+    y = gcoord_y(y1) - p_draw_file_ref->ysize_os - dy; /* <<< do we REALLY want this dy? */
 
-    if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, dfrp->xfactor, dfrp->yfactor, &graphics_window)))
-        gr_cache_error_set(&dfrp->draw_file_key, create_error(ERR_BADDRAWFILE));
+    if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, p_draw_file_ref->xfactor, p_draw_file_ref->yfactor, &graphics_window)))
+        gr_cache_error_set(&p_draw_file_ref->draw_file_key, create_error(ERR_BADDRAWFILE));
 
     restore_graphics_window();
 
@@ -746,7 +746,7 @@ maybe_draw_pictures(void)
     COL tcol;
     ROW trow;
     P_DRAW_DIAG p_draw_diag;
-    P_DRAW_FILE_REF dfrp;
+    P_DRAW_FILE_REF p_draw_file_ref;
     S32 x0, x1, y0, y1;
     P_SCRCOL cptr;
     P_SCRROW rptr;
@@ -769,24 +769,24 @@ maybe_draw_pictures(void)
                     {
                     tcol = cptr->colno;
 
-                    if(draw_find_file(current_docno(), tcol, trow, &p_draw_diag, &dfrp))
+                    if(draw_find_file(current_docno(), tcol, trow, &p_draw_diag, &p_draw_file_ref))
                         {
                         trace_2(TRACE_APP_PD4, "found picture at col %d, row %d", tcol, trow);
 
-                        x0 = calcad(coff /*find_coff(dfrp->col)*/);
-                        x1 = x0 + tsize_x(dfrp->xsize_os + 4); /* SKS after 4.11 09feb92 - make pictures oversize for redraw consideration */
+                        x0 = calcad(coff /*find_coff(p_draw_file_ref->col)*/);
+                        x1 = x0 + tsize_x(p_draw_file_ref->xsize_os + 4); /* SKS after 4.11 09feb92 - make pictures oversize for redraw consideration */
                         y1 = calrad(roff) - 1;      /* NB. picture hangs from top */
-                        y0 = y1 + tsize_y(dfrp->ysize_os + 4);
+                        y0 = y1 + tsize_y(p_draw_file_ref->ysize_os + 4);
                         y0 = MIN(y0, paghyt);
 
                         trace_6(TRACE_APP_PD4, "xsize = %d, ysize = %d; (%d %d %d %d)",
-                                tsize_x(dfrp->xsize_os), tsize_y(dfrp->ysize_os), x0, y0, x1, y1);
+                                tsize_x(p_draw_file_ref->xsize_os), tsize_y(p_draw_file_ref->ysize_os), x0, y0, x1, y1);
 
                         if(textobjectintersects(x0, y0, x1, y1))
                             {
                             draw_screen_donePict = 1;
 
-                            really_draw_picture(p_draw_diag, dfrp, x0, y0, x1, y1);
+                            really_draw_picture(p_draw_diag, p_draw_file_ref, x0, y0, x1, y1);
 
                             /* reload as drawing may shuffle core */
                             /* cptr = horzvec_entry(coff); */
@@ -1513,7 +1513,7 @@ really_draw_slot(
 
             if(riscos_fonts)
                 /* come down from mp to OS units, via pixel rounding */
-                widthofslot = roundtoceil(widthofslot, x_scale * dx) * dx;
+                widthofslot = div_round_ceil_fn(widthofslot, x_scale * dx) * dx;
             }
         else if(slotblank)
             {
@@ -1544,7 +1544,7 @@ really_draw_slot(
 
                 ensurefontcolours();
 
-                widthofslot = roundtoceil(outslt(thisslot, trow, fwidth), x_scale * dx) * dx;
+                widthofslot = div_round_ceil_fn(outslt(thisslot, trow, fwidth), x_scale * dx) * dx;
                 }
             else
                 {
@@ -2073,8 +2073,7 @@ outslt(
 
 /******************************************************************************
 *
-* set up a font rubout box
-* given swidth and current pos
+* set up a font rubout box given swidth and current pos
 *
 * NB. Only for screen use!
 *
@@ -2084,7 +2083,7 @@ static void
 font_setruboutbox(
     S32 swidth_mp)
 {
-    S32 swidth_os = roundtoceil(swidth_mp, x_scale * dx) * dx;
+    S32 swidth_os = div_round_ceil_fn(swidth_mp, x_scale * dx) * dx;
 
     trace_1(TRACE_APP_PD4, "font_ruboutbox: swidth_os = %d", swidth_os);
 
@@ -2479,7 +2478,7 @@ font_paint_justify(
 
     if(paint_op & font_JUSTIFY)
         /* provide right-hand justification point */
-        wimpt_safe(bbc_move(roundtofloor(riscos_font_xad + fwidth_mp, x_scale * dx) * dx,
+        wimpt_safe(bbc_move(div_round_floor_fn(riscos_font_xad + fwidth_mp, x_scale * dx) * dx,
                             riscos_font_yad / y_scale));
 
     font_complain(font_paint(paint_buf, paint_op,
@@ -3310,7 +3309,7 @@ position_cursor(void)
         else
             swidth_mp = 0;
 
-        x = ch_to_os(x) + roundtofloor(swidth_mp, x_scale * dx) * dx;     /* mp into OS via pixels */
+        x = ch_to_os(x) + div_round_floor_fn(swidth_mp, x_scale * dx) * dx;     /* mp into OS via pixels */
         }
     else
         {

@@ -155,7 +155,7 @@ memswap32(
 _Check_return_
 extern U32
 xustrlen32(
-    _In_reads_z_(elemof_buffer) PC_USTR buffer,
+    _In_reads_(elemof_buffer) PC_USTR buffer,
     _InVal_     U32 elemof_buffer)
 {
     PC_USTR p = memchr(buffer, NULLCH, elemof_buffer);
@@ -753,7 +753,7 @@ extern void
 xstrnkat(
     _Inout_updates_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
-    _In_reads_(src_n) PC_U8 src,
+    _In_reads_or_z_(src_n) PC_U8 src,
     _InVal_     U32 src_n)
 {
     U32 dst_idx = 0;
@@ -855,7 +855,7 @@ extern void
 xstrnkpy(
     _Out_writes_z_(dst_n) P_USTR dst,
     _InVal_     U32 dst_n,
-    _In_reads_(src_n) PC_U8 src,
+    _In_reads_or_z_(src_n) PC_U8 src,
     _InVal_     U32 src_n)
 {
     U32 dst_idx = 0;

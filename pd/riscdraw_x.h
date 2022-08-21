@@ -58,18 +58,6 @@ gcoord_y_textout(
 
 _Check_return_
 extern int
-roundtoceil(
-    int a,
-    int b);
-
-_Check_return_
-extern int
-roundtofloor(
-    int a,
-    int b);
-
-_Check_return_
-extern int
 tcoord_x(
     int x);
 

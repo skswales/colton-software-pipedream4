@@ -1780,7 +1780,7 @@ colh_where_in_column_headings(
     rel_x = pointer->x - orgx;
     rel_y = pointer->y - orgy;
 
-    tx        = roundtofloor(rel_x - texttooffset_x(COLUMNHEAD_t_X0), charwidth);
+    tx        = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0), charwidth);
     shape     = POINTER_DEFAULT;
     drag_type = OVER_COLUMN_DEAD_SPACE;
 
@@ -1822,7 +1822,7 @@ colh_where_in_column_headings(
 
         gcoord hitband   = charwidth/2;
         coord  coff      = calcoff(tx);
-        coord  prev_tx   = roundtofloor(rel_x - texttooffset_x(COLUMNHEAD_t_X0) - hitband, charwidth);
+        coord  prev_tx   = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0) - hitband, charwidth);
         coord  prev_coff = calcoff(prev_tx);
 
         drag_tcol = 0; /* SKS 29sep96 paranoia */
@@ -1844,7 +1844,7 @@ colh_where_in_column_headings(
                 }
             else
                 {
-                coord next_tx = roundtofloor(rel_x - texttooffset_x(COLUMNHEAD_t_X0) + hitband, charwidth);
+                coord next_tx = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0) + hitband, charwidth);
 
                 if(coff != calcoff(next_tx))
                     {

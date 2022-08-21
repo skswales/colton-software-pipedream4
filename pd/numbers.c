@@ -28,8 +28,8 @@ internal functions
 
 static void
 draw_adjust_file_ref(
-    P_DRAW_DIAG dfp,
-    P_DRAW_FILE_REF dfrp);
+    P_DRAW_DIAG p_draw_diag,
+    P_DRAW_FILE_REF p_draw_file_ref);
 
 static P_DRAW_FILE_REF
 draw_search_refs(
@@ -611,8 +611,8 @@ draw_add_file_ref(
     COL col,
     ROW row)
 {
-    P_DRAW_DIAG dfp;
-    P_DRAW_FILE_REF dfrp;
+    P_DRAW_DIAG p_draw_diag;
+    P_DRAW_FILE_REF p_draw_file_ref;
     EV_RANGE rng;
     S32 res;
     S32 ext_dep_han;
@@ -622,7 +622,7 @@ draw_add_file_ref(
     set_ev_slr(&rng.e, col + 1, row + 1);
 
     /* search for a duplicate reference */
-    if((dfrp = draw_search_refs_slot(&rng.s)) == NULL)
+    if((p_draw_file_ref = draw_search_refs_slot(&rng.s)) == NULL)
         {
         /* add external dependency */
         if((res = ev_add_extdependency(0,
@@ -634,16 +634,16 @@ draw_add_file_ref(
 
         /* key into list using external dependency handle */
 
-        if(NULL == (dfrp = collect_add_entry_elem(DRAW_FILE_REF, &draw_file_refs, (P_LIST_ITEMNO) &ext_dep_han, &res)))
+        if(NULL == (p_draw_file_ref = collect_add_entry_elem(DRAW_FILE_REF, &draw_file_refs, (P_LIST_ITEMNO) &ext_dep_han, &res)))
             {
             ev_del_extdependency(rng.s.docno, ext_dep_han);
             return(res);
             }
 
-        dfrp->draw_file_key = draw_file_key;
-        dfrp->docno = rng.s.docno;
-        dfrp->col = col;
-        dfrp->row = row;
+        p_draw_file_ref->draw_file_key = draw_file_key;
+        p_draw_file_ref->docno = rng.s.docno;
+        p_draw_file_ref->col = col;
+        p_draw_file_ref->row = row;
 
         gr_cache_ref(&draw_file_key, 1); /* add a ref */
 
@@ -652,18 +652,18 @@ draw_add_file_ref(
 
     /* check for range and load factors */
     if((*xp > SHRT_MAX)  ||  (*xp < 1.0))
-        dfrp->xfactor = 1.0;
+        p_draw_file_ref->xfactor = 1.0;
     else
-        dfrp->xfactor = *xp / 100.0;
+        p_draw_file_ref->xfactor = *xp / 100.0;
 
     if((*yp > SHRT_MAX)  ||  (*yp < 1.0))
-        dfrp->yfactor = 1.0;
+        p_draw_file_ref->yfactor = 1.0;
     else
-        dfrp->yfactor = *yp / 100.0;
+        p_draw_file_ref->yfactor = *yp / 100.0;
 
-    dfp = gr_cache_search(&dfrp->draw_file_key);
+    p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
-    draw_adjust_file_ref(dfp, dfrp);
+    draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
 
     return(1);
 }
@@ -677,7 +677,7 @@ draw_add_file_ref(
 static void
 draw_adjust_file_ref(
     P_DRAW_DIAG p_draw_diag,
-    P_DRAW_FILE_REF dfrp)
+    P_DRAW_FILE_REF p_draw_file_ref)
 {
     P_DOCU p_docu;
     coord coff, roff;
@@ -687,12 +687,13 @@ draw_adjust_file_ref(
     ROW trow;
     P_DRAW_DIAG sch_p_draw_diag;
 
-    trace_2(TRACE_APP_PD4, "draw_adjust_file_ref(" PTR_XTFMT ", " PTR_XTFMT ")", report_ptr_cast(p_draw_diag), report_ptr_cast(dfrp));
+    trace_2(TRACE_APP_PD4, "draw_adjust_file_ref(" PTR_XTFMT ", " PTR_XTFMT ")", report_ptr_cast(p_draw_diag), report_ptr_cast(p_draw_file_ref));
 
     if(p_draw_diag->data)
         {
         DRAW_BOX box;
         S32 xsize, ysize;
+        S32 scaled_xsize, scaled_ysize;
 
         /* get box in Draw units */
         box = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
@@ -700,20 +701,23 @@ draw_adjust_file_ref(
         xsize = box.x1 - box.x0;
         ysize = box.y1 - box.y0;
 
-        /* save size in OS units rounded out to pixels */
-        dfrp->xsize_os = roundtoceil((S32) ceil(xsize * dfrp->xfactor), GR_RISCDRAW_PER_RISCOS * 4) * 4;
-        dfrp->ysize_os = roundtoceil((S32) ceil(ysize * dfrp->yfactor), GR_RISCDRAW_PER_RISCOS * 4) * 4;
+        scaled_xsize = (S32) ceil(xsize * p_draw_file_ref->xfactor);
+        scaled_ysize = (S32) ceil(ysize * p_draw_file_ref->yfactor);
+
+        /* save size in OS units rounded out to worst-case pixels */
+        p_draw_file_ref->xsize_os = div_round_ceil(scaled_xsize, GR_RISCDRAW_PER_RISCOS * 4) * 4;
+        p_draw_file_ref->ysize_os = div_round_ceil(scaled_ysize, GR_RISCDRAW_PER_RISCOS * 4) * 4;
 
         trace_4(TRACE_APP_PD4, "draw_adjust_file_ref: bbox of file is %d %d %d %d (os)",
                 box.x0, box.y0, box.x1, box.y1);
 
         /* scale sizes */
         trace_2(TRACE_APP_PD4, "draw_adjust_file_ref: scaled sizes x: %d, y: %d (os)",
-                dfrp->xsize_os, dfrp->ysize_os);
+                p_draw_file_ref->xsize_os, p_draw_file_ref->ysize_os);
         }
 
     /* a certain amount of redrawing may be necessary */
-    p_docu = p_docu_from_docno(dfrp->docno);
+    p_docu = p_docu_from_docno(p_draw_file_ref->docno);
     assert(NO_DOCUMENT != p_docu);
     assert(!docu_is_thunk(p_docu));
 
@@ -739,7 +743,7 @@ draw_adjust_file_ref(
 
                     if(draw_find_file(current_docno(), tcol, trow, &sch_p_draw_diag, NULL))
                         {
-                        trace_3(TRACE_APP_PD4, "found picture at col %d, row %d, dfp " PTR_XTFMT, tcol, trow, report_ptr_cast(sch_p_draw_diag));
+                        trace_3(TRACE_APP_PD4, "found picture at col %d, row %d, p_draw_diag " PTR_XTFMT, tcol, trow, report_ptr_cast(sch_p_draw_diag));
 
                         if(p_draw_diag == sch_p_draw_diag)
                             {
@@ -781,18 +785,17 @@ extern void
 draw_redraw_all_pictures(void)
 {
     LIST_ITEMNO key;
-    P_DRAW_FILE_REF dfrp;
-    P_DRAW_DIAG dfp;
+    P_DRAW_FILE_REF p_draw_file_ref;
 
     trace_0(TRACE_APP_PD4, "draw_redraw_all_pictures()");
 
-    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
-        dfrp;
-        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
+    for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
+        p_draw_file_ref;
+        p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
-        dfp = gr_cache_search(&dfrp->draw_file_key);
+        P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
-        draw_adjust_file_ref(dfp, dfrp);
+        draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
         }
 }
 
@@ -806,24 +809,23 @@ gr_cache_recache_proto(static, draw_file_recached)
 {
     /* search draw file ref list and reload scale info, cause redraw etc. */
     LIST_ITEMNO key;
-    P_DRAW_FILE_REF dfrp;
-    P_DRAW_DIAG dfp;
+    P_DRAW_FILE_REF p_draw_file_ref;
 
     IGNOREPARM(handle);
     IGNOREPARM(cres);
 
-    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
-        dfrp;
-        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
+    for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
+        p_draw_file_ref;
+        p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
-        if(dfrp->draw_file_key == cah)
+        if(p_draw_file_ref->draw_file_key == cah)
             {
-            dfp = gr_cache_search(&dfrp->draw_file_key);
+            P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
-            if(!dfp)
-                dfp = gr_cache_search_empty(); /* paranoia in case of reload failure */
+            if(NULL == p_draw_diag)
+                p_draw_diag = gr_cache_search_empty(); /* paranoia in case of reload failure */
 
-            draw_adjust_file_ref(dfp, dfrp);
+            draw_adjust_file_ref(p_draw_diag, p_draw_file_ref);
             }
         }
 }
@@ -982,32 +984,32 @@ draw_find_file(
     P_P_DRAW_FILE_REF p_p_draw_file_ref)
 {
     LIST_ITEMNO key;
-    P_DRAW_FILE_REF dfrp;
+    P_DRAW_FILE_REF p_draw_file_ref;
 
     trace_3(TRACE_APP_PD4, "draw_find_file: docno %d %d, %d", docno, col, row);
 
-    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
-        dfrp;
-        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
+    for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
+        p_draw_file_ref;
+        p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
         trace_3(TRACE_APP_PD4, "draw_find_file found docno: %d, col: %d, row: %d",
-                dfrp->docno, dfrp->col, dfrp->row);
+                p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
 
-        if( (docno == dfrp->docno)  &&
-            ((col == -1) || (col == dfrp->col))  &&
-            (row == dfrp->row))
+        if( (docno == p_draw_file_ref->docno)  &&
+            ((col == -1) || (col == p_draw_file_ref->col))  &&
+            (row == p_draw_file_ref->row))
             {
-            P_DRAW_DIAG p_draw_diag = gr_cache_search(&dfrp->draw_file_key);
+            P_DRAW_DIAG p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
             if(p_draw_diag  &&  p_draw_diag->data)
                 {
-                trace_1(TRACE_APP_PD4, "draw_find_file found key: " PTR_XTFMT, report_ptr_cast(dfrp->draw_file_key));
+                trace_1(TRACE_APP_PD4, "draw_find_file found key: " PTR_XTFMT, report_ptr_cast(p_draw_file_ref->draw_file_key));
 
                 if(p_p_draw_diag)
                     *p_p_draw_diag = p_draw_diag;
 
                 if(p_p_draw_file_ref)
-                    *p_p_draw_file_ref = dfrp;
+                    *p_p_draw_file_ref = p_draw_file_ref;
 
                 return(1);
                 }
@@ -1027,17 +1029,17 @@ static void
 draw_remove_ref(
     S32 ext_dep_han)
 {
-    P_DRAW_FILE_REF dfrp;
+    P_DRAW_FILE_REF p_draw_file_ref;
 
-    if((dfrp = draw_search_refs(ext_dep_han)) != NULL)
+    if((p_draw_file_ref = draw_search_refs(ext_dep_han)) != NULL)
         {
         /* remove external dependency */
-        ev_del_extdependency(dfrp->docno, ext_dep_han);
+        ev_del_extdependency(p_draw_file_ref->docno, ext_dep_han);
 
         trace_1(TRACE_MODULE_UREF,
                 "draw_remove_ref removing draw file ref: " PTR_XTFMT,
-                report_ptr_cast(dfrp->draw_file_key));
-        gr_cache_ref(&dfrp->draw_file_key, 0); /* remove a ref */
+                report_ptr_cast(p_draw_file_ref->draw_file_key));
+        gr_cache_ref(&p_draw_file_ref->draw_file_key, 0); /* remove a ref */
 
         collect_subtract_entry(&draw_file_refs.lbr, (LIST_ITEMNO) ext_dep_han);
         }
@@ -1067,16 +1069,16 @@ draw_search_refs_slot(
     _InRef_     PC_EV_SLR p_slr)
 {
     LIST_ITEMNO key;
-    P_DRAW_FILE_REF dfrp;
+    P_DRAW_FILE_REF p_draw_file_ref;
 
-    for(dfrp = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
-        dfrp;
-        dfrp = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
+    for(p_draw_file_ref = collect_first(DRAW_FILE_REF, &draw_file_refs.lbr, &key);
+        p_draw_file_ref;
+        p_draw_file_ref = collect_next( DRAW_FILE_REF, &draw_file_refs.lbr, &key))
         {
-        if( (dfrp->docno == p_slr->docno) &&
-            (dfrp->col == p_slr->col) &&
-            (dfrp->row == p_slr->row) )
-                return(dfrp);
+        if( (p_draw_file_ref->docno == p_slr->docno) &&
+            (p_draw_file_ref->col == p_slr->col) &&
+            (p_draw_file_ref->row == p_slr->row) )
+                return(p_draw_file_ref);
         }
 
     return(NULL);
@@ -1213,21 +1215,21 @@ PROC_UREF_PROTO(static, draw_uref)
         case UREF_SWAPSLOT:
         case UREF_CLOSE:
             {
-            P_DRAW_FILE_REF dfrp = draw_search_refs(inthandle);
+            P_DRAW_FILE_REF p_draw_file_ref = draw_search_refs(inthandle);
 
-            if(dfrp != NULL)
+            if(p_draw_file_ref != NULL)
                 {
                 switch(upp->action)
                     {
                     case UREF_SWAP:
                     case UREF_SWAPSLOT:
                     case UREF_UREF:
-                        dfrp->col = at_rng->s.col;
-                        dfrp->row = at_rng->s.row;
+                        p_draw_file_ref->col = at_rng->s.col;
+                        p_draw_file_ref->row = at_rng->s.row;
 
                         trace_3(TRACE_MODULE_UREF,
                                 "draw uref updated doc: %d, col: %d, row: %d",
-                                dfrp->docno, dfrp->col, dfrp->row);
+                                p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
                         break;
 
                     case UREF_REPLACE:
@@ -1235,7 +1237,7 @@ PROC_UREF_PROTO(static, draw_uref)
                     case UREF_CLOSE:
                         trace_3(TRACE_MODULE_UREF,
                                 "draw uref frees doc: %d, col: %d, row: %d",
-                                dfrp->docno, dfrp->col, dfrp->row);
+                                p_draw_file_ref->docno, p_draw_file_ref->col, p_draw_file_ref->row);
                         draw_remove_ref(inthandle);
                         break;
 

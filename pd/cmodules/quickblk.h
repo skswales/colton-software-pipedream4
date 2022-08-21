@@ -50,7 +50,7 @@ functions as macros
 
 static inline void
 _do_aqb_fill(
-    _Out_writes_bytes_(bytesof_buffer) P_BYTE buf,
+    _Out_writes_all_(bytesof_buffer) P_BYTE buf,
     _InVal_     U32 bytesof_buffer)
 {
     (void) memset(buf, 0xEE, bytesof_buffer);
@@ -64,7 +64,7 @@ static inline void
 _quick_block_setup(
     _OutRef_    P_QUICK_BLOCK p_quick_block /*set up*/,
 #if CHECKING_QUICK_BLOCK
-    _Out_writes_bytes_(bytesof_buffer) P_BYTE buf,
+    _Out_writes_all_(bytesof_buffer) P_BYTE buf,
 #else
     _In_        P_BYTE buf,
 #endif

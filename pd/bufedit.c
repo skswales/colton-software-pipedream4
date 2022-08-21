@@ -1237,7 +1237,7 @@ AutoWidth_fn(void)
                         */
                         iwidth  = font_width(array);
                         iwidth += (charwidth * MILLIPOINTS_PER_OS * 3) / 2;
-                        this_width = roundtoceil(iwidth, charwidth * MILLIPOINTS_PER_OS);
+                        this_width = div_round_ceil_fn(iwidth, charwidth * MILLIPOINTS_PER_OS);
                         }
                     else
                         {

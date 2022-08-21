@@ -183,11 +183,6 @@ rgb_for_wimpcolour(
     S32 wimpcolour);
 
 extern void
-riscos_setcolours(
-    int bg,
-    int fg);
-
-extern void
 riscos_movespaces(
     S32 nspaces);
 
@@ -318,7 +313,6 @@ exported variables
 */
 
 extern S32 dx;
-extern S32 dxm1;
 extern S32 dy;
 extern S32 current_bg;
 extern S32 current_fg;
@@ -326,8 +320,8 @@ extern S32 log2bpp;
 
 /* PipeDream specific character printing stuff */
 
-#define leftslop    two_dx      /* needed for visible lhs caret */
-#define topslop     0 /* (charheight/4) */
+#define leftslop    8   /* needed for visible lhs caret */
+#define topslop     0   /* (charheight/4) */
 
 #define CARET_REALCOLOUR    (1 << 27)
 #define CARET_COLOURED      (1 << 26)

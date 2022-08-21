@@ -1929,21 +1929,21 @@ filvert(
         if(!on_break && !(saveflags & PAGE))
             {
             P_DRAW_DIAG p_draw_diag;
-            P_DRAW_FILE_REF dfrp;
+            P_DRAW_FILE_REF p_draw_file_ref;
 
             /* check for a picture */
             if(draw_file_refs.lbr &&
                draw_find_file(current_docno(),
-                              -1, nextrow, &p_draw_diag, &dfrp))
+                              -1, nextrow, &p_draw_diag, &p_draw_file_ref))
                 {
                 if(nextrow == currentrowno)
                     pict_on_currow = TRUE;
                 else
                     {
                     trace_2(TRACE_APP_PD4, "filvert found draw file row: %d, %d rows",
-                            nextrow, tsize_y(dfrp->ysize_os));
+                            nextrow, tsize_y(p_draw_file_ref->ysize_os));
                     saveflags |= PICT;
-                    pictrows = tsize_y(dfrp->ysize_os);
+                    pictrows = tsize_y(p_draw_file_ref->ysize_os);
                     }
                 }
             }

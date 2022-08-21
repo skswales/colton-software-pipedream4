@@ -227,7 +227,7 @@ macro definitions
 
 #define OS_PER_INCH          (180)
 #define MILLIPOINTS_PER_INCH (72000)
-#define MILLIPOINTS_PER_OS   (MILLIPOINTS_PER_INCH/OS_PER_INCH)
+#define MILLIPOINTS_PER_OS   (MILLIPOINTS_PER_INCH/OS_PER_INCH) /* 400 */
 
 /*
 riscmenu.c

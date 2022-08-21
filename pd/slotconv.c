@@ -1657,7 +1657,7 @@ font_insert_colour_inversion(
 
     if(log2bpp >= 3)
         {
-        /* bg ignored by font manager in 256 colour modes, but preserve to reinvert later on */
+        /* bg ignored by font manager in 256 colour modes on old systems, but preserve to reinvert later on */
         newbg = curfg;
         newfg = curbg;
         newoffset = curoffset;
@@ -2626,7 +2626,7 @@ expand_current_slot_in_fonts(
             f.back_colour = wimpt_RGB_for_wimpcolour(current_bg);
             f.offset = 14;
             }
-        else if(log2bpp >= 3)
+        else if(log2bpp >= 3) /* 256 colour modes on old systems */
             {
             fh = slot_font;
             bg.word = wimpt_RGB_for_wimpcolour(current_bg);
@@ -2647,7 +2647,7 @@ expand_current_slot_in_fonts(
             f.back_colour = fg.word;
             trace_2(TRACE_APP_PD4, "expand_current_slot (256) gets bg %d, offset %d", fg.word, f_offset);
             }
-        else
+        else /* old systems */
             {
             font_complain(font_current(&f));
             trace_3(TRACE_APP_PD4, "expand_current_slot gets bg %d, fg %d, offset %d", f.back_colour, f.fore_colour, f.offset);
