@@ -513,13 +513,13 @@ gr_chartedit_riscos_correlate(
 
     if(adjust_clicked)
     {
-        /* tighter click box if ADJUST clicked (but remember some objects may be truly subpixel ...) */
+        /* tighter click box if Adjust clicked (but remember some objects may be truly subpixel ...) */
         selsize.cx = gr_pixit_from_riscos(1);
         selsize.cy = gr_pixit_from_riscos(1);
     }
     else
     {
-        /* larger (but still small) click box if SELECT clicked */
+        /* larger (but still small) click box if Select clicked */
         selsize.cx = gr_pixit_from_riscos(4);
         selsize.cy = selsize.cx;
     }

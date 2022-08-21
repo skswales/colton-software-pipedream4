@@ -865,13 +865,7 @@ colh_event_Lose_Caret(
 static BOOL
 colh_event_Gain_Caret(void)
 {
-    /* This document is gaining the caret, and will show the cell count (recalculation status) from now on */
-    if(slotcount_docno != current_docno())
-    {
-        colh_draw_cell_count_in_document(NULL); /* kill the current indicatior (if any) */
-
-        slotcount_docno = current_docno();
-    }
+    EditContentsLine();
 
     return(TRUE);
 }
@@ -1096,10 +1090,7 @@ colh_event_Mouse_Click_single(
         break;
 
     case COLH_CONTENTS_LINE:
-        if(select_clicked)
-            EditContentsLine();
-        else
-            funcnum = -1;
+        EditContentsLine();                             /* either click is OK, let Wimp do its job */
         break;
 
     case COLH_FUNCTION_SELECTOR:

@@ -205,11 +205,11 @@ expedit_transfer_line_to_box(
 
 extern BOOL
 expedit_insert_char(
-    char ch);
+    _InVal_     char ch);
 
 extern BOOL
 expedit_insert_string(
-    const char *insertstr);
+    _In_z_      const char *insertstr);
 
 extern BOOL
 expedit_mergebacktext(

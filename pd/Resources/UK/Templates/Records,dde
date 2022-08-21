@@ -1,4 +1,4 @@
-%OP%VS4.019 (20-Nov-91), Colton Software test 22.11.91, R9200 7500 3900 8299 
+%OP%VS4.58.01 (15-Sep-2020), Development copy - Colton Software, R9200 7500 3900 8299
 %OP%WRN
 %OP%GRY
 %OP%PL0
@@ -9,7 +9,7 @@
 %OP%FY
 %OP%FS
 %OP%PDDefault
-%OP%WC2,1238,592,980,0,0,0,2
+%OP%WC2,1258,592,980,0,0,0,2
 %OP%FR0,2
 %CO:A,24,72%%CO:B,12,0%
 

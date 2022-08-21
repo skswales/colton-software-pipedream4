@@ -2631,7 +2631,7 @@ get_column(
     {
         trycoff = coff;
 
-        trace_0(TRACE_APP_PD4, "SELECT: find the leftmost column");
+        trace_0(TRACE_APP_PD4, "Select: find the leftmost column");
 
         /* find any preceding non-blank cell,
          * or stop at first column on screen.
@@ -2663,7 +2663,7 @@ get_column(
         }
     }
 
-    trace_0(TRACE_APP_PD4, "ADJUST: found the underlying column");
+    trace_0(TRACE_APP_PD4, "Adjust: found the underlying column");
 
     assert(horzvec_entry_valid(coff));
     tcol  = col_number(coff);

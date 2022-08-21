@@ -92,7 +92,7 @@ ss_dateval_to_serial_number(
 
 /* reverse conversion */
 
-_Check_return_ _Success_(return >= 0)
+_Check_return_ _Success_(status_ok(return))
 extern STATUS
 ss_serial_number_to_dateval(
     _OutRef_    P_SS_DATE_DATE p_ss_date_date,
@@ -392,7 +392,7 @@ ss_ymd_to_dateval(
 _Check_return_
 extern F64
 ss_timeval_to_serial_fraction(
-    _InRef_     SS_DATE_TIME ss_date_time)
+    _InVal_     SS_DATE_TIME ss_date_time)
 {
     if(SS_TIME_NULL == ss_date_time)
         return(0.0);
@@ -1149,7 +1149,7 @@ recog_time(
 *
 ******************************************************************************/
 
-_Check_return_ _Success_(return >= 0)
+_Check_return_ _Success_(status_ok(return))
 extern S32
 ss_recog_date_time(
     _InoutRef_  P_SS_DATA p_ss_data,

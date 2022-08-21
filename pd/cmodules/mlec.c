@@ -50,7 +50,7 @@
 #endif
 
 #ifndef __cs_akbd_h
-#include "cs-akbd.h"
+#include "cs-akbd.h"    /* includes akbd.h */
 #endif
 
 #ifndef __cs_xferrecv_h
@@ -362,6 +362,10 @@ mlec__selection_delete(
     MLEC_HANDLE mlec);
 
 static void
+mlec__select_all(
+    MLEC_HANDLE mlec);
+
+static void
 mlec__select_word(
     MLEC_HANDLE mlec);
 
@@ -434,6 +438,11 @@ mlec__selection_save(
     char *filename,
     FILETYPE_RISC_OS filetype,
     char *lineterm);
+
+static void
+mlec__event_save(
+    MLEC_HANDLE mlec,
+    BOOL selection);
 
 #endif
 
@@ -1117,6 +1126,13 @@ mlec_SetText(
 *
 ******************************************************************************/
 
+extern void
+riscos_event_handler_report(
+    _InVal_     int event_code,
+    _In_        const WimpPollBlock * const event_data,
+    void * handle,
+    _In_z_      const char * name);
+
 #define mlec_event_handler_report(event_code, event_data, handle) \
     riscos_event_handler_report(event_code, event_data, handle, "mlec")
 
@@ -1144,27 +1160,32 @@ mlec__event_handler(
         return(mlec__event_Redraw_Window_Request(mlec)); /* redraw text & selection */
 
     case Wimp_EOpenWindow:
+        /*mlec_event_handler_report(event_code, event_data, handle);*/
         return(mlec__event_Open_Window_Request(mlec, &event_data->open_window_request));
 
     case Wimp_ECloseWindow:
+        /*mlec_event_handler_report(event_code, event_data, handle);*/
         return(mlec__event_Close_Window_Request(mlec, &event_data->close_window_request));
 
     case Wimp_EMouseClick:
+        /*mlec_event_handler_report(event_code, event_data, handle);*/
         return(mlec__event_Mouse_Click(&event_data->mouse_click, mlec));
 
 #if SUPPORT_SELECTION
     case Wimp_EUserDrag:
         /* Returned when a 'User_Drag_Box' operation (started by winx_drag_box) completes */
+        /*mlec_event_handler_report(event_code, event_data, handle);*/
         mlec__drag_complete(mlec, &event_data->user_drag_box.bbox);
         break;
 #endif
 
     case Wimp_EKeyPressed:
+        /*mlec_event_handler_report(event_code, event_data, handle);*/
         return(mlec__event_Key_Pressed((const WimpKeyPressedEvent *) &e->data, mlec));
 
     case Wimp_EUserMessage:
     case Wimp_EUserMessageRecorded:
-        trace_1(TRACE_MODULE_MLEC, "action is %d",e->data.msg.hdr.action); 
+        /*mlec_event_handler_report(event_code, event_data, handle);*/
         switch(e->data.msg.hdr.action)
         {
 #if SUPPORT_LOADSAVE
@@ -1318,19 +1339,48 @@ mlec__event_Key_Pressed(
 {
     int err = 0;
 
-    trace_1(TRACE_MODULE_MLEC, "** Key_Pressed on EditBox pane window, key code=%d **", key_pressed->key_code);
+    reportf(/*trace_1(TRACE_MODULE_MLEC,*/ "** Key_Pressed on EditBox pane window, key code=%d **", key_pressed->key_code);
 
     switch(key_pressed->key_code) /*>>>this is a load of crap, but it will do for now*/
     {
+    /* shortcuts which are menu equivalents */
+#ifdef SUPPORT_SELECTION
+    case  1: /*^A*/                       mlec__select_all      (mlec); break;
+#endif
+#ifdef SUPPORT_CUTPASTE
+    case  3 /*^C*/:                 err = mlec__selection_copy  (mlec); break;
+#endif
+    case 11 /*^K*/:                       mlec__selection_delete(mlec); break;
+    case 21 /*^U*/:                       mlec__delete_line     (mlec); break;
+#ifdef SUPPORT_CUTPASTE
+    case 22 /*^V*/:                 err = mlec__atcursor_paste  (mlec); break;
+    case 24 /*^X*/:                 err = mlec__selection_cut   (mlec); break;
+#endif
+#ifdef SUPPORT_SELECTION
+    case 26 /*^Z*/:                       mlec__selection_clear (mlec); break;
+#endif
+
+#if SUPPORT_LOADSAVE
+    case akbd_Fn+3:                       mlec__event_save      (mlec, FALSE); break;
+#endif
+
+    /* movement */
     case akbd_LeftK:                      mlec__cursor_left     (mlec); break;
     case akbd_RightK:                     mlec__cursor_right    (mlec); break;
     case akbd_DownK:                      mlec__cursor_down     (mlec); break;
     case akbd_UpK:                        mlec__cursor_up       (mlec); break;
 
+    case cs_akbd_HomeK:
     case akbd_LeftK  + akbd_Ctl:          mlec__cursor_linehome (mlec); break;
+
+    case akbd_CopyK: /* End */
     case akbd_RightK + akbd_Ctl:          mlec__cursor_lineend  (mlec); break;
-    case akbd_DownK  + akbd_Ctl:          mlec__cursor_textend  (mlec); break;
+
+    case cs_akbd_HomeK + akbd_Ctl:
     case akbd_UpK    + akbd_Ctl:          mlec__cursor_texthome (mlec); break;
+
+    case akbd_CopyK  + akbd_Ctl: /* Ctrl-End */
+    case akbd_DownK  + akbd_Ctl:          mlec__cursor_textend  (mlec); break;
 
     case akbd_LeftK  + akbd_Sh:           mlec__cursor_wordleft (mlec); break;
     case akbd_RightK + akbd_Sh:           mlec__cursor_wordright(mlec); break;
@@ -1338,10 +1388,8 @@ mlec__event_Key_Pressed(
     case akbd_TabK:                 err = mlec__insert_tab      (mlec); break;
     case akbd_TabK + akbd_Sh:             mlec__cursor_tab_left (mlec); break;
 
-    case akbd_CopyK:                      mlec__delete_right    (mlec); break;
-    case akbd_CopyK           + akbd_Ctl: mlec__delete_line     (mlec); break;
-    case akbd_CopyK + akbd_Sh:            mlec__delete_lineend  (mlec); break;
-    case akbd_CopyK + akbd_Sh + akbd_Ctl: mlec__delete_linehome (mlec); break;
+    case akbd_CopyK + akbd_Sh:            mlec__delete_lineend  (mlec); break; /*Shift-End*/
+    case akbd_CopyK + akbd_Sh + akbd_Ctl: mlec__delete_linehome (mlec); break; /*Ctrl-Shift-End*/
 
     case cs_akbd_BackspaceK:              mlec__delete_left     (mlec); break;
 
@@ -1351,10 +1399,10 @@ mlec__event_Key_Pressed(
         if(akbd_pollsh())
             err = mlec__selection_cut(mlec);
         else
-                  mlec__delete_left  (mlec);
+                  mlec__delete_right (mlec);
         break;
 #else
-    case akbd_DeleteK:                    mlec__delete_left     (mlec); break;
+    case akbd_DeleteK:                    mlec__delete_right    (mlec); break;
 #endif
 
 #ifdef SUPPORT_CUTPASTE
@@ -1363,7 +1411,7 @@ mlec__event_Key_Pressed(
     case akbd_InsertK + akbd_Ctl:   err = mlec__selection_copy(mlec); break;
 #endif
 
-    case 13 :
+    case 13 /*^M*/:
         if(!akbd_pollctl())
         {
             if(mlec->callbackproc)
@@ -1378,7 +1426,7 @@ mlec__event_Key_Pressed(
         err = mlec__insert_newline(mlec);
         break;
 
-    case 27 :
+    case 27 /*ESC*/:
         if(mlec->callbackproc)
         {
             if(mlec_event_escape == (*mlec->callbackproc)(Mlec_IsEscape, mlec->callbackhand, NULL))
@@ -3150,7 +3198,6 @@ null_event_proto(static, mlec__drag_null_handler)
     default:
         return(NULL_EVENT_UNKNOWN);
     }
-
 }
 
 /******************************************************************************
@@ -3209,6 +3256,15 @@ mlec__selection_delete(
 {
     delete_selection(mlec);
     scroll_until_cursor_visible(mlec);
+}
+
+static void
+mlec__select_all(
+    MLEC_HANDLE mlec)
+{
+    /* move cursor to end; set anchor there, moving back to start */
+    mlec__cursor_textend(mlec);
+    mlec__selection_adjust(mlec, 0, 0);
 }
 
 static void
@@ -4168,16 +4224,17 @@ text_out(
 #define MENU_ROOT_SAVE      1
 #define                         MENU_SAVE_FILE        1
 #define                         MENU_SAVE_SELECTION   2
-#define MENU_ROOT_SELECTION 2
-#define                         MENU_SELECTION_CLEAR  1
-#define                         MENU_SELECTION_COPY   2
-#define                         MENU_SELECTION_CUT    3
-#define                         MENU_SELECTION_DELETE 4
-#define MENU_ROOT_PASTE     3
+#define MENU_ROOT_EDIT      2
+#define                         MENU_EDIT_SELECTION_COPY   1
+#define                         MENU_EDIT_SELECTION_CUT    2
+#define                         MENU_EDIT_PASTE            3
+#define                         MENU_EDIT_SELECTION_DELETE 4
+#define                         MENU_EDIT_SELECT_ALL       5
+#define                         MENU_EDIT_SELECTION_CLEAR  6
 
-static menu mlec_menu_root      = NULL;
-static menu mlec_menu_save      = NULL;
-static menu mlec_menu_selection = NULL;
+static menu mlec_menu_root = NULL;
+static menu mlec_menu_save = NULL;
+static menu mlec_menu_edit = NULL;
 #endif
 
 #if SUPPORT_PANEMENU
@@ -4198,11 +4255,12 @@ static void mlec__event_menu_maker(const char *menu_title)
 
         mlec_menu_save      = menu_new_c(string_lookup(MLEC_MSG_MENUHDR_SAVE),
                                          string_lookup(MLEC_MSG_MENUBDY_SAVE));
-        mlec_menu_selection = menu_new_c(string_lookup(MLEC_MSG_MENUHDR_SELECTION),
+
+        mlec_menu_edit      = menu_new_c(string_lookup(MLEC_MSG_MENUHDR_SELECTION),
                                          string_lookup(MLEC_MSG_MENUBDY_SELECTION));
 
-        menu_submenu(mlec_menu_root, MENU_ROOT_SAVE     , mlec_menu_save);
-        menu_submenu(mlec_menu_root, MENU_ROOT_SELECTION, mlec_menu_selection);
+        menu_submenu(mlec_menu_root, MENU_ROOT_SAVE, mlec_menu_save);
+        menu_submenu(mlec_menu_root, MENU_ROOT_EDIT, mlec_menu_edit);
     }
 }
 
@@ -4214,21 +4272,20 @@ menu mlec__event_menu_filler(void *handle)
     {
         const BOOL fade_if_no_selection = !mlec->selection.valid;
 
-        menu_setflags(mlec_menu_root, MENU_ROOT_PASTE, FALSE, paste == NULL);    /*>>>Paste NYA, so fade it*/
-
         if(mlec_menu_save)
         {
             menu_setflags(mlec_menu_save, MENU_SAVE_SELECTION, FALSE, fade_if_no_selection);
         }
 
-        if(mlec_menu_selection)
+        if(mlec_menu_edit)
         {
-            /* Copy, Cut & Delete only allowed for a valid selection */
+            /* Clear, Copy, Cut & Delete only allowed for a valid selection */
+            menu_setflags(mlec_menu_edit, MENU_EDIT_SELECTION_CLEAR , FALSE, fade_if_no_selection);
+            menu_setflags(mlec_menu_edit, MENU_EDIT_SELECTION_COPY  , FALSE, fade_if_no_selection);
+            menu_setflags(mlec_menu_edit, MENU_EDIT_SELECTION_CUT   , FALSE, fade_if_no_selection);
+            menu_setflags(mlec_menu_edit, MENU_EDIT_SELECTION_DELETE, FALSE, fade_if_no_selection);
 
-            menu_setflags(mlec_menu_selection, MENU_SELECTION_CLEAR , FALSE, fade_if_no_selection);
-            menu_setflags(mlec_menu_selection, MENU_SELECTION_COPY  , FALSE, fade_if_no_selection);
-            menu_setflags(mlec_menu_selection, MENU_SELECTION_CUT   , FALSE, fade_if_no_selection);
-            menu_setflags(mlec_menu_selection, MENU_SELECTION_DELETE, FALSE, fade_if_no_selection);
+            menu_setflags(mlec_menu_edit, MENU_EDIT_PASTE           , FALSE, paste == NULL);    /*>>>Paste NYA, so fade it*/
         }
     }
 
@@ -4279,6 +4336,7 @@ BOOL mlec__event_menu_proc(void *handle, char *hit, BOOL submenurequest)
     case MENU_ROOT_SAVE:
         switch(*hit++)
         {
+        case 0: /* hit on top-level menu item */
         case MENU_SAVE_FILE:
             mlec__event_save(mlec, FALSE);
             break;
@@ -4289,29 +4347,33 @@ BOOL mlec__event_menu_proc(void *handle, char *hit, BOOL submenurequest)
         }
         break;
 
-    case MENU_ROOT_SELECTION:
+    case MENU_ROOT_EDIT:
         switch(*hit++)
         {
-        case MENU_SELECTION_CLEAR:
-            mlec__selection_clear(mlec);
-            break;
-
-        case MENU_SELECTION_COPY:
+        case MENU_EDIT_SELECTION_COPY:
             err = mlec__selection_copy(mlec);
             break;
 
-        case MENU_SELECTION_CUT:
+        case MENU_EDIT_SELECTION_CUT:
             err = mlec__selection_cut(mlec);
             break;
 
-        case MENU_SELECTION_DELETE:
+        case MENU_EDIT_PASTE:
+            err = mlec__atcursor_paste(mlec);
+            break;
+
+        case MENU_EDIT_SELECTION_DELETE:
             mlec__selection_delete(mlec);
             break;
-        }
-        break;
 
-    case MENU_ROOT_PASTE:
-        err = mlec__atcursor_paste(mlec);
+        case MENU_EDIT_SELECT_ALL:
+            mlec__select_all(mlec);
+            break;
+
+        case MENU_EDIT_SELECTION_CLEAR:
+            mlec__selection_clear(mlec);
+            break;
+        }
         break;
     }
 

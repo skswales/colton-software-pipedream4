@@ -231,7 +231,7 @@
 -      else if (p->maker != 0)
 +        if(e->data.but.m.bbits & wimp_BMID)
 +        {
-+            /* don't use MENU to get menus for registered to icons; fake work area */
++            /* don't use Menu to get menus for registered to icons; fake work area */
 +            icon_handle = -1;
 +
 +            if(!p)
@@ -297,7 +297,7 @@
 +          tracef1("[%d]", hit[i]);
 +      } while(e->data.menu[i++] != -1);
 +
-+      tracef1(", ADJUST = %s\n", report_boolstring(event_statics.recreatepending));
++      tracef1(", Adjust = %s\n", report_boolstring(event_statics.recreatepending));
 +
 +      /* allow access to initial click cache during handler */
 +      event_statics.menuclick.valid = TRUE;
@@ -356,7 +356,7 @@
 +        /* Twas an ADJ-hit on a menu item.
 +         * The menu should be recreated.
 +        */
-+        tracef0("menu hit caused by ADJUST - recreating menu\n");
++        tracef0("menu hit caused by Adjust - recreating menu\n");
 +        event_statics.menuclick.valid = TRUE;
 +        event__createmenu(TRUE);
 +      }
@@ -364,7 +364,7 @@
 +      else if(submenu_fake_hit)
 +        tracef0("menu hit was faked\n");
 +      else
-+        tracef0("menu hit caused by SELECT - let tree collapse\n");
++        tracef0("menu hit caused by Select - let tree collapse\n");
 +#endif
 +
 +      /* initial click cache no longer valid */

@@ -3,10 +3,10 @@
 #
 # menus
 #
-m7_1:Save,Selection,Paste
+m7_1:Save F3,Edit
 #
 m7_10:Save
 m7_11:>File,>Selection
 #
-m7_20:Selection
-m7_21:Clear,Copy,Cut,Delete
+m7_20:Edit
+m7_21:Copy ^C,Cut ^X,Paste ^V,Delete ^K,Select all ^A,Clear ^Z

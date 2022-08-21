@@ -520,7 +520,6 @@
   <ItemGroup>
     <None Include="..\..\..\..\..\docs\LICENCE" />
     <None Include="..\..\..\..\..\docs\MakeRiscPkg,fd7" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\addenda.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\alignment.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\arrays.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\ascii.html" />

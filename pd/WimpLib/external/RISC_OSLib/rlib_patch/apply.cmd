@@ -84,23 +84,23 @@ copy %rlib_tmp_dir%\s\swi        ..\..\..\swi.s
 @rem
 @echo Patch these files in WimpLib so that it is in the WimpLib state for PipeDream
 @rem
-gnu-paatch --unified < flex.c       ..\..\..\flex.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < flex.c       ..\..\..\flex.c
 @rem
-gnu-paatch --unified < bbc.c        ..\..\..\bbc.c
-gnu-paatch --unified < dbox.c       ..\..\..\dbox.c
-gnu-paatch --unified < event.c      ..\..\..\event.c
-@rem gnu-paatch --unified < flex.c       ..\..\..\flex.c
-gnu-paatch --unified < fontlist.c   ..\..\..\fontlist.c
-gnu-paatch --unified < fontselect.c ..\..\..\fontselect.c
-gnu-paatch --unified < menu.c       ..\..\..\menu.c
-gnu-paatch --unified < res.c        ..\..\..\res.c
-gnu-paatch --unified < resspr.c     ..\..\..\resspr.c
-gnu-paatch --unified < win.c        ..\..\..\win.c
-gnu-paatch --unified < wimp.c       ..\..\..\wimp.c
-gnu-paatch --unified < wimpt.c      ..\..\..\wimpt.c
-gnu-paatch --unified < xferrecv.c   ..\..\..\xferrecv.c
-gnu-paatch --unified < xfersend.c   ..\..\..\xfersend.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < bbc.c        ..\..\..\bbc.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < dbox.c       ..\..\..\dbox.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < event.c      ..\..\..\event.c
+@rem ..\..\..\..\external\cs-free\GNU\win32\paatch --unified < flex.c       ..\..\..\flex.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < fontlist.c   ..\..\..\fontlist.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < fontselect.c ..\..\..\fontselect.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < menu.c       ..\..\..\menu.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < res.c        ..\..\..\res.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < resspr.c     ..\..\..\resspr.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < win.c        ..\..\..\win.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < wimp.c       ..\..\..\wimp.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < wimpt.c      ..\..\..\wimpt.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < xferrecv.c   ..\..\..\xferrecv.c
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < xfersend.c   ..\..\..\xfersend.c
 @rem
-gnu-paatch --unified < wimp.h       ..\..\..\wimp.h
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < wimp.h       ..\..\..\wimp.h
 @rem
-gnu-paatch --unified < swi.s        ..\..\..\swi.s
+..\..\..\..\external\cs-free\GNU\win32\paatch --unified < swi.s        ..\..\..\swi.s

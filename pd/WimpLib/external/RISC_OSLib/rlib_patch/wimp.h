@@ -206,12 +206,12 @@
 +#ifdef SKS_ACW
 +
 +/* SKS 10 Feb 1989 Corrected wimp_openstr scx,scy
-+ * SKS 14 Jan 1998 Corrected wimp_IESGMASK definition
++ * SKS 14 Jan 1998 Corrected wimp_IESGMASK definition (and limited to 1..15 20200729)
 + * SKS 17 Oct 1999 Corrected datasave leaf[] size for RISC OS 4
 + */
 +
 +#define wimp_IBUTMASK (0xF * wimp_IBTYPE)
-+#define wimp_IESGMASK (0x1F * wimp_IESG)
++#define wimp_IESGMASK (0xF * wimp_IESG)
 +#define wimp_IFOREMASK 0x0F000000
 +#define wimp_IBACKMASK 0xF0000000U
 +

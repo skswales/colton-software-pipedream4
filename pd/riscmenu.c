@@ -115,7 +115,7 @@ static S32     iw_menu_array_upb  = 0;
 
 /******************************************************************************
 *
-* icon bar MENU maker - called when MENU pressed on an icon
+* icon bar MENU maker - called when Menu pressed on an icon
 *
 ******************************************************************************/
 
@@ -236,7 +236,7 @@ iconbar_menu_maker(
 
 /******************************************************************************
 *
-* icon bar MENU selection - called when selection is made from icon MENU
+* icon bar menu selection - called when selection is made from icon menu
 *
 ******************************************************************************/
 
@@ -1259,7 +1259,7 @@ createmainmenu(
 
 /******************************************************************************
 *
-* encode main menu each MENU press
+* encode main menu each Menu click
 *
 ******************************************************************************/
 
@@ -1280,7 +1280,7 @@ encodemainmenu(
 
 /******************************************************************************
 *
-*  process main window MENU press
+*  process main window Menu click
 *
 ******************************************************************************/
 

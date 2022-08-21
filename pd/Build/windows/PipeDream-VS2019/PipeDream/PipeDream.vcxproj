@@ -520,7 +520,6 @@
   <ItemGroup>
     <None Include="..\..\..\..\..\docs\LICENCE" />
     <None Include="..\..\..\..\..\docs\MakeRiscPkg,fd7" />
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\addenda.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\alignment.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\arrays.html" />
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\ascii.html" />
@@ -635,34 +634,68 @@
     <None Include="..\..\..\..\cmodules\GB\msg\gr_chart" />
     <None Include="..\..\..\..\cmodules\GB\msg\mlec" />
     <None Include="..\..\..\..\RelHistPrev.html" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\financ.htm">
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\cmds.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\complx.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\custom.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\date.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\db.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\financ.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\index.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\lookup.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\math.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\matrix.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\misc.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\stats.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\string.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\trig.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\help.css" />
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\index.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\licenc.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\mouse.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\toolb.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\Text" />
     <None Include="..\..\..\..\WimpLib\cs-pollfpm.s" />
     <None Include="..\..\..\..\WimpLib\cs-riscasm.s" />
     <None Include="..\..\..\..\WimpLib\GB\msg_risc" />
     <None Include="..\..\..\..\WimpLib\r32\Makefile" />
     <None Include="..\..\..\..\WimpLib\swi.s" />
     <None Include="..\..\..\r32\!PipeDream\!Help,feb" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\cmds.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\complx.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\custom.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\db.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\date.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\index.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\lookup.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\math.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\matrix.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\misc.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\stats.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\string.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\trig.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\help.css" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\index.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\licenc.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\mouse.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\toolb.htm" />
-    <None Include="..\..\..\..\utils\en_GB\Help\Text" />
     <None Include="..\..\..\r32\!PipeDream\Relnotes,faf">
       <SubType>Designer</SubType>
     </None>

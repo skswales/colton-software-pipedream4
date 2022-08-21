@@ -331,6 +331,9 @@ MLSUBMENU_STRUCT;
 #define MLSUBMENU_BUTTON_OK      (1)
 #define MLSUBMENU_BUTTON_CANCEL  (2)
 #define MLSUBMENU_BUTTON_NEWLINE (3)
+#define MLSUBMENU_BUTTON_COPY    (4)
+#define MLSUBMENU_BUTTON_CUT     (5)
+#define MLSUBMENU_BUTTON_PASTE   (6)
 
 /******************************************************************************
 *
@@ -591,6 +594,47 @@ MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsReturn)
     return(mlec_event_return);
 }
 
+static void
+report_if_error(
+    int err)
+{
+    if(err < 0)
+        message_output(string_lookup(err));
+}
+
+static void
+editt_wind_button_copy(
+    MLEC_HANDLE mlec)
+{
+    S32 err = mlec__selection_copy(mlec);
+
+    report_if_error(err);
+}
+
+static void
+editt_wind_button_cut(
+    MLEC_HANDLE mlec,
+    BOOL adjust)
+{
+    S32 err = 0;
+
+    if(adjust)
+        mlec__selection_delete(mlec);
+    else
+        err = mlec__selection_cut(mlec);
+
+    report_if_error(err);
+}
+
+static void
+editt_wind_button_paste(
+    MLEC_HANDLE mlec)
+{
+    S32 err = mlec__atcursor_paste(mlec);
+
+    report_if_error(err);
+}
+
 MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsClick)
 {
     MLSUBMENU_HANDLE mlsubmenu = handle;
@@ -599,7 +643,8 @@ MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsClick)
 
     UNREFERENCED_PARAMETER(rc);
 
-    if(mouse_click->buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust)) /* 'Select' or 'Adjust' */
+    /* 'Select' or 'Adjust' click? */
+    if(mouse_click->buttons & Wimp_MouseButtonSelect)
     {
         switch(mouse_click->icon_handle)
         {
@@ -616,6 +661,33 @@ MLEC_EVENT_PROTO(static, mlsubmenu_mlec_event_IsClick)
         case MLSUBMENU_BUTTON_NEWLINE:
             mlec__insert_newline(mlsubmenu->mlec);
             return(mlec_event_click);
+
+        case MLSUBMENU_BUTTON_COPY:
+            editt_wind_button_copy(mlsubmenu->mlec);
+            return(mlec_event_click);
+
+        case MLSUBMENU_BUTTON_CUT:
+            editt_wind_button_cut(mlsubmenu->mlec, false);
+            return(mlec_event_click);
+
+        case MLSUBMENU_BUTTON_PASTE:
+            editt_wind_button_paste(mlsubmenu->mlec);
+            return(mlec_event_click);
+
+        default:
+            break;
+        }
+    }
+    else if(mouse_click->buttons & Wimp_MouseButtonAdjust)
+    {
+        switch(mouse_click->icon_handle)
+        {
+        case MLSUBMENU_BUTTON_CUT:
+            editt_wind_button_cut(mlsubmenu->mlec, true);
+            return(mlec_event_click);
+
+        default:
+            break;
         }
     }
 

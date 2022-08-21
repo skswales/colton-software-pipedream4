@@ -1260,9 +1260,6 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\toolbar.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\addenda.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
     <None Include="..\..\..\r32\RiscPkg\Control">
       <Filter>Source Files\RiscPkg</Filter>
     </None>
@@ -1280,12 +1277,6 @@
     </None>
     <None Include="..\..\..\..\..\docs\MakeRiscPkg,fd7">
       <Filter>docs\RiscPkg</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\help.css">
-      <Filter>docs\Help\HTMLHelp</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\Text">
-      <Filter>docs\Help</Filter>
     </None>
     <None Include="..\..\..\r32\!PipeDream\!Help,feb">
       <Filter>docs\Help</Filter>
@@ -1335,57 +1326,6 @@
     <None Include="..\..\..\..\..\extrautils\LICENCE">
       <Filter>Source Files\pd_extrautils</Filter>
     </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\complx.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\custom.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\db.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\index.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\lookup.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\math.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\matrix.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\misc.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\stats.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\string.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\trig.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\date.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\cmds.htm">
-      <Filter>docs\Help\HTMLHelp</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\index.htm">
-      <Filter>docs\Help\HTMLHelp</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\licenc.htm">
-      <Filter>docs\Help\HTMLHelp</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\mouse.htm">
-      <Filter>docs\Help\HTMLHelp</Filter>
-    </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\toolb.htm">
-      <Filter>docs\Help\HTMLHelp</Filter>
-    </None>
     <None Include="..\..\..\..\RelHistPrev.html">
       <Filter>Source Files</Filter>
     </None>
@@ -1431,9 +1371,6 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\functions\index.html">
       <Filter>docs\RefGuide\functions</Filter>
     </None>
-    <None Include="..\..\..\..\utils\en_GB\Help\HTML\functions\financ.htm">
-      <Filter>docs\Help\HTMLHelp\functions</Filter>
-    </None>
     <None Include="..\..\..\r32\Makefile">
       <Filter>Source Files\pd\building</Filter>
     </None>
@@ -1445,6 +1382,66 @@
     </None>
     <None Include="..\..\..\r32\CopyToTemp,feb">
       <Filter>Source Files\RiscPkg</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\cmds.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\help.css">
+      <Filter>docs\Help\HTMLHelp</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\index.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\licenc.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\mouse.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\toolb.htm">
+      <Filter>docs\Help\HTMLHelp</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\complx.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\custom.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\date.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\db.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\financ.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\index.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\lookup.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\math.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\matrix.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\misc.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\stats.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\string.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\HTML\functions\trig.htm">
+      <Filter>docs\Help\HTMLHelp\functions</Filter>
+    </None>
+    <None Include="..\..\..\..\Resources\UK\RISC_OS\Help\Text">
+      <Filter>docs\Help</Filter>
     </None>
   </ItemGroup>
 </Project>

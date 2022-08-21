@@ -650,7 +650,7 @@ string(513, menu_function_control_title,        "Control");
 string(514, menu_function_custom_title,         "Custom");
 string(515, menu_function_names_title,          "Names");
 string(518, Edit_name_STR,                      "Edit name");
-string(520, formwind_title_STR,                 "Formula window: %s");
+string(520, formwind_title_STR,                 "Formula window: cell %s");
 
 string(521, menu_function_numinfo_title,        "Number cell");
 string(522, menu_function_numinfo_entries,      "Cell value,"
@@ -771,7 +771,9 @@ string(108, help_row_is_hard_page_break,        "This row is an expanded hard pa
 string(109, help_colh_contents_line,            "\\Sstart editing the current cell contents in the formula editing line.");
 
 string(110, help_colh_contents_line_inexpression,
-                                                "\\Sposition the caret within the formula editing line.");
+                                                "\\Sposition the caret within the formula editing line.|M" \
+                                                "Drag \\s to set a selection.|M" \
+                                                "\\Aset a selection.");
 
 string(414, help_colh_transfer_to_window,       "\\Spopup a menu of formula related topics.|M" \
                                                 "\\Atransfer the formula editing line contents to a formula \\w.");

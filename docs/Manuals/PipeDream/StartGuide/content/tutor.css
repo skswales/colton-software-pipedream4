@@ -19,7 +19,7 @@ body {
     line-height: 1.33em;
     margin-left: 2.0em;
     margin-right: 2.0em;
-    max-width: 750pt;
+    max-width: 750px;
 }
 
 /* paragraphs */
@@ -163,6 +163,19 @@ dl p {
 
 /* start of csg-* definitions */
 
+/* Most UI elements in bold text */
+.csg-dbox,
+.csg-dbox-button,
+.csg-dbox-button-core,
+.csg-dbox-option,
+.csg-dbox-option-value,
+.csg-menu,
+.csg-menu-option,
+.csg-toolbar-button {
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
 /* A PipeDream Command sequence, e.g. EIRC */
 .csg-command {
     font-family: sans-serif;
@@ -176,36 +189,41 @@ dl p {
 
 /* A dialogue box */
 .csg-dbox {
-    font-family: sans-serif;
-    font-weight: bold;
 }
 
 /* An action button in a dialogue box */
 .csg-dbox-button {
-    font-family: sans-serif;
-    font-weight: bold;
     display: inline-block;
+    padding: 0px 4px;
     background-color: #E4E4E4;
-    padding: 1px 4px;
+    border: 1px solid #BBB;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.csg-dbox-button-core {
+    display: inline-block;
+    padding: 0px 4px;
+    background-color: #E4E4E4;
+    border: 1px solid #CCC;
 }
 
 /* Container for default action button */
 .csg-dbox-button-default {
     display: inline-block;
-    background-color: #EEEEBB;
-    padding: 3px;
+    padding: 1px;
+    background-color: #FFFFAA;
+    border: 1px solid #BBB;
+    margin-left: 2px;
+    margin-right: 2px;
 }
 
 /* An option button or field in a dialogue box */
 .csg-dbox-option {
-    font-family: sans-serif;
-    font-weight: bold;
 }
 
 /* A specific option button value (e.g. radio button label) */
 .csg-dbox-option-value {
-    font-family: sans-serif;
-    font-weight: bold;
 }
 
 /* Filename elements */
@@ -232,14 +250,10 @@ dl p {
 
 /* A menu */
 .csg-menu {
-    font-family: sans-serif;
-    font-weight: bold;
 }
 
 /* An option on a menu */
 .csg-menu-option {
-    font-family: sans-serif;
-    font-weight: bold;
 }
 
 /* Sample text */
@@ -285,8 +299,6 @@ dl p {
 
 /* A button on the PipeDream toolbar */
 .csg-toolbar-button {
-    font-family: sans-serif;
-    font-weight: bold;
 }
 
 /* Text typed by the user */
@@ -367,6 +379,7 @@ table.csg-command-table td img {
 .navheader_PCN_L {
     width: 20%;
     text-align: left;
+    padding-left: 0;
     vertical-align: bottom;
 }
 
@@ -379,6 +392,7 @@ table.csg-command-table td img {
 .navheader_PCN_R {
     width: 20%;
     text-align: right;
+    padding-right: 0;
     vertical-align: bottom;
 }
 
@@ -398,6 +412,7 @@ div.navfooter {
 .navfooter_PUN_L {
     width: 40%;
     text-align: left;
+    padding-left: 0;
     vertical-align: top;
 }
 
@@ -410,5 +425,6 @@ div.navfooter {
 .navfooter_PUN_R {
     width: 40%;
     text-align: right;
+    padding-right: 0;
     vertical-align: top;
 }

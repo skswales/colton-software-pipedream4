@@ -3463,7 +3463,7 @@ filer_launch(
 Re-written replacements for RISC_OSLib:akbd.c functions
 */
 
-static __inline int
+static int
 akbd__poll(
     int x)
 {

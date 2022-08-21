@@ -75,13 +75,14 @@ typedef unsigned short wchar_t;
 #endif
 
 #if 1 /* turn on for a big surprise with MSVC /analyze ! */
+#if _MSC_VER >= 1900 /* VS2015 */
 #define _USE_DECLSPECS_FOR_SAL  1
 #define _USE_ATTRIBUTES_FOR_SAL 0
-/* Ideally #include "%VCINSTALLDIR%\Include\sal.h" */
-#if _MSC_VER >= 1900 /* VS2015 */
 #include "sal.h" /* Needs C:\Program Files\Microsoft Visual Studio 1x.0\VC\Include at end of path for more includes */
 #elif _MSC_VER >= 1500 /* VS2008 */
-#include "C:\Program Files\Microsoft Visual Studio 9.0\VC\Include\sal.h"
+#define _USE_DECLSPECS_FOR_SAL  0
+#define _USE_ATTRIBUTES_FOR_SAL 1
+#include "sal.h" /* Needs C:\Program Files\Microsoft Visual Studio 9.0\VC\Include at end of path */
 #else
 /* VC2005 sal.h is different */
 #endif

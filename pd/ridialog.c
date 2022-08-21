@@ -1665,9 +1665,9 @@ dproc_aboutfile(
 ******************************************************************************/
 
 #define aboutprog_Name      0
-#define aboutprog_Author    1
-#define aboutprog_Version   2
-#define aboutprog_Web       7
+#define aboutprog_Author    2
+#define aboutprog_Version   3
+#define aboutprog_Web       5
 
 extern void
 dproc_aboutprog(

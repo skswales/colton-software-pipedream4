@@ -437,7 +437,7 @@
 +                        }
 +                    else
 +                        {
-+                        /* SELECT clicked on selected icon - keep selected */
++                        /* Select clicked on selected icon - keep selected */
 +                        icon_to_select = (wimp_i) hit_j;
 +                        allow_invert = FALSE;
 +                        }
@@ -453,7 +453,7 @@
 +                    else
 +                        {
 +                        if(k == (wimp_i) hit_j)
-+                            /* SELECT clicked on unselected icon - will need inversion to select */
++                            /* Select clicked on unselected icon - will need inversion to select */
 +                            icon_to_select = (wimp_i) hit_j;
 +                        }
 +                    }
@@ -539,7 +539,7 @@
 +      if(esg)
 +      {
 +        /* only consider the first member of an ESG, ignore others for count */
-+            esg = esg / wimp_IESG; /* number in 1..31 */
++            esg = esg / wimp_IESG; /* number in 1..15 */
 +        esg = 1 << esg;
 +        if(esg_seen_mask & esg)
 +        {

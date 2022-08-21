@@ -1260,9 +1260,6 @@
     <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\toolbar.html">
       <Filter>docs\RefGuide</Filter>
     </None>
-    <None Include="..\..\..\..\..\docs\Manuals\PipeDream\RefGuide\content\addenda.html">
-      <Filter>docs\RefGuide</Filter>
-    </None>
     <None Include="..\..\..\r32\RiscPkg\Control">
       <Filter>Source Files\RiscPkg</Filter>
     </None>

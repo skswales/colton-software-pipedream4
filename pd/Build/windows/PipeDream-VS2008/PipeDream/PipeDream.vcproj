@@ -10,98 +10,12 @@
 	>
 	<Platforms>
 		<Platform
-			Name="Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-		/>
-		<Platform
 			Name="Win32"
 		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
-		<Configuration
-			Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="4"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				ExecutionBucket="7"
-				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;"
-				PreprocessorDefinitions="CROSS_COMPILE;HOST_WINDOWS;TRACE_ALLOWED;CHECKING;UNRELEASED;$(NOINHERIT)"
-				IgnoreStandardIncludePath="true"
-				MinimalRebuild="false"
-				ExceptionHandling="0"
-				RuntimeLibrary="1"
-				DefaultCharIsUnsigned="true"
-				TreatWChar_tAsBuiltInType="false"
-				WarningLevel="3"
-				DebugInformationFormat="0"
-				CompileAs="0"
-				DisableSpecificWarnings="4068;4081"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES)"
-				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				AdditionalOptions=" /subsystem:windowsce,5.01"
-				OutputFile="$(OutDir)/PipeDream.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCCodeSignTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-			<DeploymentTool
-				ForceDirty="-1"
-				RemoteDirectory=""
-				RegisterOutput="0"
-				AdditionalFiles=""
-			/>
-			<DebuggerTool
-			/>
-		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(ConfigurationName)"
@@ -127,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;;&quot;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include&quot;"
 				PreprocessorDefinitions="CROSS_COMPILE;HOST_WINDOWS;TRACE_ALLOWED;CHECKING;UNRELEASED;$(NOINHERIT)"
 				IgnoreStandardIncludePath="true"
 				MinimalRebuild="false"
@@ -171,92 +85,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="4"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				ExecutionBucket="7"
-				AdditionalOptions="/analyze -D_PREFAST_ -D_PREFAST_BARF_"
-				Optimization="3"
-				EnableIntrinsicFunctions="true"
-				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;"
-				PreprocessorDefinitions="CROSS_COMPILE;HOST_WINDOWS;RELEASED;$(NOINHERIT)"
-				IgnoreStandardIncludePath="true"
-				ExceptionHandling="0"
-				RuntimeLibrary="0"
-				DefaultCharIsUnsigned="true"
-				TreatWChar_tAsBuiltInType="false"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="0"
-				CompileAs="0"
-				DisableSpecificWarnings="4068;4081"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES)"
-				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				AdditionalOptions=" /subsystem:windowsce,5.01"
-				OutputFile="$(OutDir)/PipeDream.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCCodeSignTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-			<DeploymentTool
-				ForceDirty="-1"
-				RemoteDirectory=""
-				RegisterOutput="0"
-				AdditionalFiles=""
-			/>
-			<DebuggerTool
 			/>
 		</Configuration>
 		<Configuration
@@ -287,8 +115,8 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;"
-				PreprocessorDefinitions="$(NOINHERIT)"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;;&quot;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include&quot;"
+				PreprocessorDefinitions="CROSS_COMPILE;HOST_WINDOWS;$(NOINHERIT)"
 				IgnoreStandardIncludePath="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -334,91 +162,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="4"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="1"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				ExecutionBucket="7"
-				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;"
-				PreprocessorDefinitions="CROSS_COMPILE;HOST_WINDOWS;TRACE_ALLOWED;CHECKING;UNRELEASED;$(NOINHERIT)"
-				IgnoreStandardIncludePath="true"
-				MinimalRebuild="false"
-				ExceptionHandling="0"
-				RuntimeLibrary="1"
-				DefaultCharIsUnsigned="true"
-				TreatWChar_tAsBuiltInType="false"
-				WarningLevel="3"
-				DebugInformationFormat="0"
-				CompileAs="0"
-				DisableSpecificWarnings="4068;4081"
-				EnablePREfast="true"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES)"
-				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				AdditionalOptions=" /subsystem:windowsce,5.01"
-				OutputFile="$(OutDir)/PipeDream.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCCodeSignTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-			<DeploymentTool
-				ForceDirty="-1"
-				RemoteDirectory=""
-				RegisterOutput="0"
-				AdditionalFiles=""
-			/>
-			<DebuggerTool
-			/>
-		</Configuration>
-		<Configuration
 			Name="Debug with Analyze|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
@@ -445,7 +188,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/analyze -D_PREFAST_"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\CLib\msvchack&quot;;&quot;\coltsoft\trunk\cs-nonfree\Acorn\Library\32\tboxlibs&quot;;&quot;$(SolutionDir)..\..\..\WimpLib&quot;;&quot;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include&quot;"
 				PreprocessorDefinitions="CROSS_COMPILE;HOST_WINDOWS;TRACE_ALLOWED;CHECKING;UNRELEASED;$(NOINHERIT)"
 				IgnoreStandardIncludePath="true"
 				MinimalRebuild="false"
@@ -511,14 +254,6 @@
 					RelativePath="..\..\..\..\cmodules\123pd.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="UTIL_PTL"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -527,23 +262,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="UTIL_PTL"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="UTIL_PTL"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -563,14 +282,6 @@
 					RelativePath="..\..\..\..\cmodules\pd123.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="UTIL_PTL"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -579,23 +290,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="UTIL_PTL"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="UTIL_PTL"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -868,15 +563,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\cmodules\xustring.c"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\cmodules\xstring.h"
 					>
 				</File>
 				<File
 					RelativePath="..\..\..\..\cmodules\xtstring.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\cmodules\xustring.c"
 					>
 				</File>
 				<File
@@ -962,14 +657,6 @@
 				<File
 					RelativePath="..\..\..\..\help.c"
 					>
-					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UndefineAllPreprocessorDefinitions="false"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\..\..\include.h"
@@ -1120,6 +807,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\utils\u_reperr.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\utils\u_strings.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\userdict.c"
 					>
 				</File>
@@ -1129,14 +824,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\userIO_x.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\utils\u_reperr.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\utils\u_strings.c"
 					>
 				</File>
 				<File
@@ -1215,14 +902,6 @@
 					RelativePath="..\..\..\..\cmodules\riscos\muldivas.s"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						ExcludedFromBuild="true"
 						>
@@ -1231,23 +910,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -1307,14 +970,6 @@
 					RelativePath="..\..\..\..\WimpLib\cs-event.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -1323,27 +978,11 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1363,14 +1002,6 @@
 					RelativePath="..\..\..\..\WimpLib\cs-flex.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -1379,27 +1010,11 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1427,14 +1042,6 @@
 					RelativePath="..\..\..\..\WimpLib\cs-msgs.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -1443,27 +1050,11 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1487,14 +1078,6 @@
 					RelativePath="..\..\..\..\WimpLib\cs-templat.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -1503,27 +1086,11 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1547,14 +1114,6 @@
 					RelativePath="..\..\..\..\WimpLib\cs-wimptx.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -1563,27 +1122,11 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1603,14 +1146,6 @@
 					RelativePath="..\..\..\..\WimpLib\cs-winx.c"
 					>
 					<FileConfiguration
-						Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
@@ -1619,27 +1154,11 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="COMPILING_WIMPLIB_EXTENSIONS"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="COMPILING_WIMPLIB;COMPILING_WIMPLIB_EXTENSIONS"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1682,14 +1201,6 @@
 						RelativePath="..\..\..\..\WimpLib\dboxtcol.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -1698,23 +1209,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -1734,14 +1229,6 @@
 						RelativePath="..\..\..\..\WimpLib\drawmod.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -1750,23 +1237,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -1786,14 +1257,6 @@
 						RelativePath="..\..\..\..\WimpLib\fileicon.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -1802,23 +1265,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -1838,14 +1285,6 @@
 						RelativePath="..\..\..\..\WimpLib\font.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -1854,23 +1293,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -1890,14 +1313,6 @@
 						RelativePath="..\..\..\..\WimpLib\os.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -1906,23 +1321,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -1942,14 +1341,6 @@
 						RelativePath="..\..\..\..\WimpLib\pointer.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -1958,23 +1349,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -1994,14 +1369,6 @@
 						RelativePath="..\..\..\..\WimpLib\print.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -2010,23 +1377,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -2046,14 +1397,6 @@
 						RelativePath="..\..\..\..\WimpLib\werr.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -2062,23 +1405,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -2146,14 +1473,6 @@
 						RelativePath="..\..\..\..\WimpLib\event.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -2162,23 +1481,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -2198,14 +1501,6 @@
 						RelativePath="..\..\..\..\WimpLib\flex.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -2214,23 +1509,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -2282,14 +1561,6 @@
 						RelativePath="..\..\..\..\WimpLib\wimpt.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -2298,23 +1569,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -2334,14 +1589,6 @@
 						RelativePath="..\..\..\..\WimpLib\win.c"
 						>
 						<FileConfiguration
-							Name="Debug|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Debug|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -2350,23 +1597,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Release|Win32"
-							ExcludedFromBuild="true"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug with Analyze|Windows Mobile 5.0 Smartphone SDK (ARMV4I)"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -2962,19 +2193,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\comdoc.htm"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\cmds.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\conven.htm"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\comdoc.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\tutor.css"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\conven.htm"
 					>
 				</File>
 				<File
@@ -2994,11 +2221,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\pdwind.htm"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\sheets.htm"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\pdwind.htm"
+					RelativePath="..\..\..\..\..\docs\Manuals\PipeDream\StartGuide\content\tutor.css"
 					>
 				</File>
 				<File

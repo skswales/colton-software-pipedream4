@@ -33,12 +33,12 @@ uniform_distribution(void);
 
 extern void
 uniform_distribution_seed(
-    const unsigned int seed);
+    _In_    const unsigned int seed);
 
 /*ncr*/
 extern bool
 uniform_distribution_test_seeded(
-    const bool fEnsure);
+    _In_    const bool fEnsure);
 
 #endif /* __mathxtr3_h */
 

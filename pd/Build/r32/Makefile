@@ -8,7 +8,7 @@
 # Copyright (C) 1998-2015 R W Colton
 
 TEXTUAL_VERSION_NUMBER=4.58
-#TEXTUAL_VERSION_NUMBER=4.58.01
+TEXTUAL_VERSION_NUMBER=4.58.01
 # ^^^ Needed for !Boot/!Run building
 # the master list is in version.c
 

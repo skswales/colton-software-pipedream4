@@ -854,33 +854,83 @@ xsnprintf(
     va_list args;
     int ret;
 
-#if RISCOS && 1 /* C99 CRT */
+    va_start(args, format);
+    ret = xvsnprintf(dst, dst_n, format, args);
+    va_end(args);
+
+    return(ret);
+}
+
+_Check_return_
+extern int __cdecl
+xvsnprintf(
+    _Out_writes_z_(dst_n) char * dst,
+    _InVal_     U32 dst_n,
+    _In_z_ _Printf_format_string_ const char * format,
+    /**/        va_list args)
+{
+    int ret;
+
+#if WINDOWS
 
     if(0 == dst_n)
         return(0);
 
-    va_start(args, format);
+    ret = _vsnprintf_s(dst, dst_n, _TRUNCATE, format, args);
+
+    if(-1 == ret) /* limit the answer */
+        ret = strlen32(dst);
+
+#elif 1 /* C99 CRT */
+
+    if(0 == dst_n)
+        return(0);
+
     ret = vsnprintf(dst, dst_n, format, args);
-    va_end(args);
 
     if(ret < 0)
     {
         ret = 0;
         dst[0] = CH_NULL; /* ensure terminated */
     }
-    else if((U32) ret >= dst_n) /* limit to what actually was achieved */
-    {
+
+    if(ret >= (int) dst_n) /* limit the answer */
         ret = strlen32(dst);
+
+#else /* fallback implementation */
+
+    STATUS status;
+    U32 used;
+    QUICK_BLOCK quick_block;
+
+    if(0 == dst_n)
+        return(0);
+
+    quick_block_setup_without_aqb_fill(&quick_block, dst, dst_n); /* don't splurge on the remains of the buffer */
+
+    status = quick_block_vprintf(&quick_block, format, args);
+
+    /* have we overflowed the buffer and gone into handle allocation? NB if so, don't undo our good work!!! */
+    if(0 != quick_block_array_handle_ref(&quick_block))
+    {   /* copy as much stuff as possible back down before deleting the handle */
+        quick_block_dispose_leaving_buffer_valid(&quick_block);
+        used = dst_n;
     }
+    else
+        used = quick_block.static_buffer_used;
 
-#else
+    status_assert(status);
 
-#error See Fireworkz if needed
+    /* ensure dst buffer is CH_NULL-terminated */
+    if(dst_n == used)
+        used -= 1; /* retract to make room */
+    dst[used] = CH_NULL;
+
+    ret = (int) used;
 
 #endif /* OS */
 
     return(ret);
-
 }
 
 /******************************************************************************

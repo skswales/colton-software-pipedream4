@@ -149,7 +149,8 @@ static void
 formwind_button_copy(void);
 
 static void
-formwind_button_cut(void);
+formwind_button_cut(
+    BOOL adjust);
 
 static void
 formwind_button_paste(void);
@@ -393,42 +394,52 @@ expedit_transfer_line_to_box(
 #define expedit_force_redraw() \
     winf_changedfield(colh_window_handle, COLH_CONTENTS_LINE) /* just poke it for redraw */
 
+static /*inline*/ BOOL
+expedit_insert_char_in_line(
+    _InVal_     char ch)
+{
+    BOOL had_error = FALSE;
+    WimpGetIconStateBlock icon_state;
+    S32 caretpos;
+    S32 length;
+    char *currpos;
+
+    icon_state.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_CONTENTS_LINE;
+    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+
+    caretpos = formline_cursor_get_position();
+    length   = strlen(icon_state.icon.data.it.buffer);
+
+    caretpos = MAX(caretpos, 0);
+    caretpos = MIN(caretpos, length);
+
+    if((length + 1) < icon_state.icon.data.it.buffer_size)
+    {
+        currpos = icon_state.icon.data.it.buffer + caretpos;
+        memmove32(currpos+1, currpos, (length - caretpos + 1));
+        *currpos = ch;
+
+        /* Nudge caret position, and force a redraw */
+        ++caretpos;
+        formline_cursor_set_position(caretpos);
+        expedit_force_redraw();
+    }
+    else
+        had_error = TRUE;
+
+    return(had_error);
+}
+
 extern BOOL
 expedit_insert_char(
-    char ch)
+    _InVal_     char ch)
 {
     BOOL had_error = FALSE;
 
     if(xf_inexpression_line)
     {
-        WimpGetIconStateBlock icon_state;
-        S32 caretpos;
-        S32 length;
-        char *currpos;
-
-        icon_state.window_handle = colh_window_handle;
-        icon_state.icon_handle = COLH_CONTENTS_LINE;
-        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
-
-        caretpos = formline_cursor_get_position();
-        length   = strlen(icon_state.icon.data.it.buffer);
-
-        caretpos = MAX(caretpos, 0);
-        caretpos = MIN(caretpos, length);
-
-        if((length + 1) < icon_state.icon.data.it.buffer_size)
-        {
-            currpos = icon_state.icon.data.it.buffer + caretpos;
-            memmove32(currpos+1, currpos, (length - caretpos + 1));
-            *currpos = ch;
-
-            /* Nudge caret position, and force a redraw */
-            ++caretpos;
-            formline_cursor_set_position(caretpos);
-            expedit_force_redraw();
-        }
-        else
-            had_error = TRUE;
+        had_error = expedit_insert_char_in_line(ch);
     }
     else if(xf_inexpression_box)
     {
@@ -438,9 +449,47 @@ expedit_insert_char(
     return(had_error);
 }
 
+static /*inline*/ BOOL
+expedit_insert_string_in_line(
+    _In_z_      const char *insertstr,
+    _InVal_     S32 insertlen)
+{
+    BOOL had_error = FALSE;
+    WimpGetIconStateBlock icon_state;
+    S32 caretpos;
+    S32 length;
+    char *currpos;
+
+    icon_state.window_handle = colh_window_handle;
+    icon_state.icon_handle = COLH_CONTENTS_LINE;
+    void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
+
+    caretpos = formline_cursor_get_position();
+    length   = strlen(icon_state.icon.data.it.buffer);
+
+    caretpos = MAX(caretpos, 0);
+    caretpos = MIN(caretpos, length);
+
+    if((length + insertlen) < icon_state.icon.data.it.buffer_size)
+    {
+        currpos = icon_state.icon.data.it.buffer + caretpos;
+        memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
+        memmove32(currpos, insertstr, insertlen);                       /* splice text in */
+
+        /* Nudge caret position, and force a redraw */
+        caretpos += insertlen;
+        formline_cursor_set_position(caretpos);
+        expedit_force_redraw();
+    }
+    else
+        had_error = TRUE;
+
+    return(had_error);
+}
+
 extern BOOL
 expedit_insert_string(
-    const char *insertstr)
+    _In_z_      const char *insertstr)
 {
     S32 insertlen = strlen(insertstr);
     BOOL had_error = FALSE;
@@ -450,34 +499,7 @@ expedit_insert_string(
 
     if(xf_inexpression_line)
     {
-        WimpGetIconStateBlock icon_state;
-        S32 caretpos;
-        S32 length;
-        char *currpos;
-
-        icon_state.window_handle = colh_window_handle;
-        icon_state.icon_handle = COLH_CONTENTS_LINE;
-        void_WrapOsErrorReporting(tbl_wimp_get_icon_state(&icon_state));
-
-        caretpos = formline_cursor_get_position();
-        length   = strlen(icon_state.icon.data.it.buffer);
-
-        caretpos = MAX(caretpos, 0);
-        caretpos = MIN(caretpos, length);
-
-        if((length + insertlen) < icon_state.icon.data.it.buffer_size)
-        {
-            currpos = icon_state.icon.data.it.buffer + caretpos;
-            memmove32(currpos+insertlen, currpos, (length - caretpos + 1)); /* make a gap */
-            memmove32(currpos, insertstr, insertlen);                       /* splice text in */
-
-            /* Nudge caret position, and force a redraw */
-            caretpos += insertlen;
-            formline_cursor_set_position(caretpos);
-            expedit_force_redraw();
-        }
-        else
-            had_error = TRUE;
+        had_error = expedit_insert_string_in_line(insertstr, insertlen);
     }
     else if(xf_inexpression_box)
     {
@@ -1174,7 +1196,8 @@ static BOOL
 formwind_event_Mouse_Click(
     const WimpMouseClickEvent * const mouse_click)
 {
-    if(mouse_click->buttons & (Wimp_MouseButtonSelect | Wimp_MouseButtonAdjust)) /* 'Select' or 'Adjust' */
+    /* 'Select' or 'Adjust' click? */
+    if(mouse_click->buttons & Wimp_MouseButtonSelect)
     {
         switch(mouse_click->icon_handle)
         {
@@ -1195,11 +1218,23 @@ formwind_event_Mouse_Click(
             break;
 
         case FORMWIND_BUTTON_CUT:
-            formwind_button_cut();
+            formwind_button_cut(false);
             break;
 
         case FORMWIND_BUTTON_PASTE:
             formwind_button_paste();
+            break;
+        }
+    }
+    else if(mouse_click->buttons & Wimp_MouseButtonAdjust)
+    {
+        switch(mouse_click->icon_handle)
+        {
+        case FORMWIND_BUTTON_CUT:
+            formwind_button_cut(true);
+            break;
+
+        default:
             break;
         }
     }
@@ -1555,10 +1590,11 @@ formwind_mergebacktext(
 }
 
 static void
-report_error(
+report_if_error(
     int err)
 {
-    message_output(string_lookup(err));
+    if(err < 0)
+        message_output(string_lookup(err));
 }
 
 static void
@@ -1566,17 +1602,21 @@ formwind_button_copy(void)
 {
     S32 err = mlec__selection_copy(editexpression_formwind->mlec);
 
-    if(err < 0)
-        report_error(err);
+    report_if_error(err);
 }
 
 static void
-formwind_button_cut(void)
+formwind_button_cut(
+    BOOL adjust)
 {
-    S32 err = mlec__selection_cut(editexpression_formwind->mlec);
+    S32 err = 0;
 
-    if(err < 0)
-        report_error(err);
+    if(adjust)
+        mlec__selection_delete(editexpression_formwind->mlec);
+    else
+        err = mlec__selection_cut(editexpression_formwind->mlec);
+
+    report_if_error(err);
 }
 
 static void
@@ -1584,8 +1624,7 @@ formwind_button_paste(void)
 {
     S32 err = mlec__atcursor_paste(editexpression_formwind->mlec);
 
-    if(err < 0)
-        report_error(err);
+    report_if_error(err);
 }
 
 static void

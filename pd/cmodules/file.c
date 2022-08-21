@@ -46,6 +46,7 @@ file__flushbuffer(
 
 #else
 
+_Check_return_
 static S32
 file___flushbuffer(
     FILE_HANDLE file_handle);

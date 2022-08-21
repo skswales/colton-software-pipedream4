@@ -2780,13 +2780,14 @@ ev_recalc(void)
 
     #ifdef SLOTS_MOVE
     /* clear cached cell pointer when leaving evaluator */
-    switch(stack_ptr->type)
-    {
-    case CALC_SLOT:
-    case END_CALC:
-        stack_ptr->data.stack_in_calc.eval_block.p_ev_cell = NULL;
-        break;
-    }
+    if(NULL != stack_ptr)
+        switch(stack_ptr->type)
+        {
+        case CALC_SLOT:
+        case END_CALC:
+            stack_ptr->data.stack_in_calc.eval_block.p_ev_cell = NULL;
+            break;
+        }
     #endif
 
     ev_recalc_status(todotab.next);

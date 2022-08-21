@@ -4,11 +4,11 @@ Priority: Optional
 Licence: Free
 Maintainer: Colton Software <colton-software-pipedream@googlegroups.com>
 Standards-Version: 0.4.0
-Version: 4.58.0
+Version: 4.58.1
 Recommends: PipeDream-Manuals,PipeDream-Examples
-Description: Word Processor & Spreadsheet
+Description: Spreadsheet & Word Processor
  PipeDream offers all the facilities you would expect from the following separate programs:
- word processor, spreadsheet, database and charts package.
+ spreadsheet, word processor, database and charts package.
  .
  Thanks to Richard Colton, PipeDream is now open source and completely free to use.
 Components: Apps.Document.!PipeDream (Movable LookAt)

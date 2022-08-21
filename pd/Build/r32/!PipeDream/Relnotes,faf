@@ -57,11 +57,11 @@ href="http://croftnuisk.co.uk/coltsoft/pipedream/">online</a>:</p>
 <ul>
 <li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/getting_started/">Getting Started Guide</a>;</li>
 <li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/reference_guide/">Reference Guide</a>;</li>
-<li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a>
- - updates since the documentation was printed, and errata therein;</li>
-<li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/hints_and_tips">Hints and Tips</a>;</li>
 <li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/downloads/">Downloads</a>
  - updated PipeDream packages, including example files used in the PipeDream Getting Started Guide.</li>
+<li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/hints_and_tips">Hints and Tips</a>;</li>
+<li><a href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda and Errata</a>
+ - updates since the documentation was printed, and errata therein;</li>
 </ul>
 
 
@@ -76,12 +76,38 @@ Please include files which demonstrate any problems (using a Spark or ZIP archiv
 
 <h2 id="ReleaseHistory">Release History</h2>
 
-<p>The full release history may be found <a href="http://croftnuisk.co.uk/coltsoft/pipedream/release_history/">online</a>;
-just the last few revisions of PipeDream are documented here.</p>
+<p>
+    The full release history may be found <a href="http://croftnuisk.co.uk/coltsoft/pipedream/release_history/">online</a>;
+    just the last few revisions of PipeDream are documented here.
+</p>
 
 <p>Please refer to the <a
 href="http://croftnuisk.co.uk/coltsoft/pipedream/addenda_and_errata/">Addenda
 and Errata</a> for details of changes to functionality.</p>
+
+
+<h4>4.58.01 (24 Sep 2020)</h4>
+
+<p>Fixed Zero Page access during Null events prior to any spreadsheet having
+been loaded.</p>
+
+<p>Fixed issue where clicking Adjust on the formula editing line would give
+an inappropriate error.</p>
+
+<p>Changed the icon type of the formula editing line to Writable (from
+Writable/Drag) so that the Window Manager selection processing code is
+enabled on newer OSes. Text may be copied to or from the formula editing
+line via the global clipboard.</p>
+
+<p>Standard selection processing keyboard shortcuts added to the formula
+editing window (see its menu) and the Chart text editing window. These also
+use Home and End as text navigation keys and Delete deletes the character to
+the left of the caret as in the formula editing line.</p>
+
+<p>Copy/Cut/Paste buttons added to Chart text editing window.</p>
+
+<p>Document template files all made slightly wider so that all the initial
+columns are shown fully.</p>
 
 
 <h4>4.58 (29 Jul 2020)</h4>
@@ -142,7 +168,7 @@ Files in the Reference Guide have been renamed so as to be unique within
 their first ten characters, so allowing them to be installed and used on
 older systems so long as truncation is enabled.</p>
 
-<p>PipeDream gives an error for ADJUST-click on toolbar buttons where that is not appropriate.</p>
+<p>PipeDream gives an error for Adjust-click on toolbar buttons where that is not appropriate.</p>
 
 <p>The <code>End</code> key is no longer referred to as the <code>Copy</code> key.</p>
 
@@ -168,7 +194,7 @@ Ctrl-down arrow == Bottom of column;
 <p>PipeDream dialogue box buttons are now somewhat more Style Guide compliant.</p>
 
 <p>The standard File &gt; Save dialogue box is now Style Guide compliant and less daunting.
-The full File > Save dialogue box is still available from the menu.</p>
+The full File &gt; Save dialogue box is still available from the menu.</p>
 
 <p>!RunImage has been reduced in size by about 10% by stripping C function names.</p>
 
@@ -338,7 +364,7 @@ are those used by the TEXT() spreadsheet function.</p>
 to enable a composite date with time string to be displayed. Example:
 @D:yyyy-mm-dd\Thh:mm:ss@ displays an ISO 8601 date/time.</p>
 
-<p>Typing a text-@ character or clicking on a highlight Toolbar button (e.g.
+<p>Typing a text-@ character or clicking on a highlight toolbar button (e.g.
 Bold) enters the data as text when the caret is in an empty cell regardless
 of the New cell format option.</p>
 
@@ -359,7 +385,7 @@ Markers / Pictures in the icon.</p>
 <p>Replicate command restored to short menus.</p>
 
 <p>Replicate Left (\BRL) and Replicate Up (\BRU) commands implemented and
-added to long menus. These may also be accessed by clicking Adjust on the
+added to long menus. These may also be accessed by clicking adjust on the
 Replicate Right and Replicate Down buttons respectively.</p>
 
 <p>Fixed running a PipeDream command file when PipeDream is not running.
@@ -432,25 +458,25 @@ Library.</p>
 
 <p>Toolbar is slightly less tall, leaving some more room for data.</p>
 
-<p>Mark document/Clear selection Toolbar button added, replacing the box to
+<p>Mark document/Clear selection toolbar button added, replacing the box to
 the left of the column headings.</p>
 
-<p>Using one of the highlight Toolbar buttons with a marked block now
+<p>Using one of the highlight toolbar buttons with a marked block now
 redraws correctly. Additionally, the corresponding option is set in the
 Remove highlights dialogue box in case you wish to remove the highlights
 thus set.</p>
 
-<p>Clicking Adjust on the Left justify Toolbar button will restore the
+<p>Clicking Adjust on the Left justify toolbar button will restore the
 default justification on the marked block (or current cell).</p>
 
-<p>Clicking Adjust on the Decimal places Toolbar button will restore the
+<p>Clicking Adjust on the Decimal places toolbar button will restore the
 default format on the marked block (or current cell).</p>
 
-<p>Clicking Adjust on Toolbar buttons with no alternate function defined
+<p>Clicking Adjust on toolbar buttons with no alternate function defined
 will no longer execute the standard function used when Select is
 clicked.</p>
 
-<p>Formula Editing Window buttons more consistent with Toolbar buttons.</p>
+<p>Formula Editing Window buttons more consistent with toolbar buttons.</p>
 
 <p>Copy/Cut/Paste buttons added to Formula Editing Window.</p>
 

@@ -373,9 +373,6 @@ IF release% THEN
     REM Round up to 16KB (not 32KB) here to maximise free memory for 2MB systems
     REM Note that may end up with some trivial wastage on modern 4KB page systems
     REM NB min/max are usually crossed here
-    PROCo(f%,"|")
-    PROCo(f%,"| The higher value is specified as the minimum first so that there is sufficient memory to get "+true_product$+" fully running")
-    PROCo(f%,"| The lower value is specified as the maximum last so that becomes the initial slot that "+true_product$+" is started with")
     wimpslotparm_min$ = "-min "+STR$(FNround_up(slot_size% + imageslotparm_1% + imageslotparm_2%, 16384)/1024)+"K"
     wimpslotparm_max$ = "-max "+STR$(FNround_up(slot_size% + imageslotparm_1%, 16384)/1024)+"K"
     IF TRUE THEN
@@ -384,7 +381,11 @@ IF release% THEN
     wimpslotparm_max$ = "-max "+STR$(FNround_up(slot_size% + imageslotparm_1%, 4096)/1024)+"K"
     ENDIF
     PRINT "WimpSlot "+wimpslotparm_min$+" "+wimpslotparm_max$
-    PROCo(f%,"WimpSlot "+wimpslotparm_min$+" "+wimpslotparm_max$)
+    PROCo(f%,"|")
+    PROCo(f%,"| The higher value is specified as the minimum first so that there is sufficient memory to get "+true_product$+" fully running")
+    PROCo(f%,"WimpSlot "+wimpslotparm_min$)
+    PROCo(f%,"| The lower value is specified as the maximum last so that becomes the initial slot that "+true_product$+" is started with")
+    PROCo(f%,"WimpSlot "+wimpslotparm_max$)
     PROCo(f%,"| Equivalent to Run "+product$+":RISC_OS.ImageSlot "+var_product_dir$+".!RunImage "+imageslotparm$)
   ENDIF
   IF alternate% THEN
