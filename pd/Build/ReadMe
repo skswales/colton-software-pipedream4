@@ -1,0 +1,63 @@
+ReadMe for PipeDream Build
+--------------------------
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Copyright (C) 2013-2014 Stuart Swales
+
+Prerequisites
+-------------
+
+Acorn C/C++ Release 20 or later (!Amu, C compiler, headers, libraries, linker).
+
+InfoZip (install with PackMan) for creating a zip of the final build.
+
+
+First-time configuration and build
+----------------------------------
+
+Ensure that the system has 'seen' AcornC/C++ and set that environment.
+
+Run !!!Boot to set up the PipeDream build environment.
+
+Run configure to create the build directories.
+
+You need to then check out and build a pruned and patched variant of
+RISC_OSLib with PipeDream-specific build options. See ^.WimpLib.ReadMe and
+^.WimpLib.external.RISC_OSLib.ReadMe for instructions on how to do this.
+
+Run !Amu.
+
+Then drag 'r32.Makefile' to !Amu... and wait...  A PipeDream build takes
+about 16 minutes on a SA RISC PC.  Building on a Raspberry Pi takes about
+1/4 of that time.
+
+
+Subsequent builds
+-----------------
+
+Drag 'r32.Makefile' to !Amu... and wait...
+
+After any reboot, you will need to:
+
+Ensure that the system has 'seen' AcornC/C++ and set that environment.
+
+Run !!!Boot to set up the PipeDream build environment.
+
+
+Creating a package for distribution
+-----------------------------------
+
+Execute the Obey file r32.Make_TS.
+
+This will copy only those files needed for distribution to PipeDream_4_xx_yy
+in $.Temp.
+
+Rename that directory as PipeDream_4_<xx>_<yy> where <xx> is the actual
+major version number and <yy> the minor version number (usually 00).
+
+Use !InfoZip to create the distributable ZIP package file
+PipeDream_4_<xx>_<yy>/zip containing the RiscPkg then the Apps directories
+from the PipeDream_4_<xx>_<yy> directory.

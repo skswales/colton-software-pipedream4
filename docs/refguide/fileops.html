@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>File Operations</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="financialfns.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>File Operations</h1>
+
+<h2>Naming Files</h2>
+
+<p>To name or rename the file in memory, give the <span
+class="csguide-command">Rename File</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Files</td>
+      <td>Rename file</td>
+      <td><span class="csguide-key">FC</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The name you specify appears on the window's title bar and in the <span
+class="csguide-dbox">Save</span> dialogue box when you save the file.</p>
+
+<h2>Saving Files</h2>
+
+<p>You can save an entire document to a named file. Alternatively, you can save
+just a range of columns or a marked block. You can also save all rows
+satisfying a condition, enabling you to create a subset of a database or a
+document. The <span class="csguide-dbox">Save</span> dialogue box enables
+you to specify the format of the file to be saved.</p>
+
+<p>If you have finished editing a file and you want to save it, the simplest
+way is to close the window.</p>
+
+<p>If the file has been modified, a prompt will appear asking you whether you
+want to save the updated file.</p>
+
+<p>Click on <span class="csguide-dbox-button">Yes</span>. The <span
+class="csguide-dbox">Save</span> dialogue box then appears.</p>
+
+<p>Type in the name with which you want the file to be saved. If you originally
+loaded the file from disc or have previously named the file with the <span
+class="csguide-command">Rename file</span> command, the filename already
+appears at this point.</p>
+
+<p>Click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span> to save the file.</p>
+
+<p>Another way to save the file is to drag its icon from the <span
+class="csguide-dbox">Save</span> dialogue box into the directory you want to
+save it in. Obviously, you need to have the required directory viewer on the
+screen. Then drag the file's icon from the <span
+class="csguide-dbox">Save</span> dialogue box into the directory viewer. It
+will be saved there with the leafname you gave it in the <span
+class="csguide-dbox">Save</span> dialogue box.</p>
+
+<h3>To save part of a document</h3>
+
+<p>1. Give the <span class="csguide-command">Save</span> command.</p>
+
+<p>2. When the <span class="csguide-dbox">Save</span> dialogue box appears, type in the name of the file if necessary and specify the other options as follows:</p>
+
+<p>If you want to save a marked block:</p>
+
+<p>The block you want to save must be marked before you give the <span
+class="csguide-command">Save</span> command.</p>
+<ul>
+  <li>Click Select on the <span class="csguide-option">Save only marked
+    block</span> option.</li>
+</ul>
+
+<p>If you want to save a selection of rows:</p>
+
+<p>1. Click Select on the <span class="csguide-option">Save selection of
+rows</span> option.</p>
+
+<p>2. Type in the condition you want to apply.</p>
+
+<p>The condition you type in will be evaluated before each row is saved. Only
+if the result is true will the row be saved. The condition will normally
+contain ranges. These are updated one row for each new line.</p>
+
+<p>For example, if you type B1B100&gt;600 as the condition, all rows up to row
+100 where the second column evaluates to a number greater than 600 will be
+saved.</p>
+
+<p>You can include text strings in the condition, but they must be placed
+within double quotation marks.</p>
+
+<p>For example, <code>A1A100&gt;"Fred"</code> will save all rows up to row 100
+lying alphabetically after Fred.</p>
+
+<p>A string can contain the wildcards <code>^?</code> (any single character)
+and <code>^#</code> (any multiple character). All string comparisons treat
+lower- and upper-case letters as matching.</p>
+
+<p>You can save rows which satisfy more than one condition by using the
+<code>&amp;</code> (AND) operator and rows which match one of several
+conditions by using the <code>|</code> (OR) operator.</p>
+
+<h3>To save a document in different formats</h3>
+
+<p>Click on the format you want. The format of the file you loaded will appear
+as the default setting.</p>
+
+<p><span class="csguide-option">PipeDream</span> saves a file in PipeDream
+format. This will be the default value for a new file.</p>
+
+<p><span class="csguide-option">CSV</span> saves the file in CSV (comma
+separated values) format.</p>
+
+<p><span class="csguide-option">ASCII</span> saves the file in ASCII
+format.</p>
+
+<p><span class="csguide-option">VIEW</span> saves the file in VIEW format.</p>
+
+<p><span class="csguide-option">1WP</span> saves the file in First Word Plus
+format so that it can be loaded into First Word Plus.</p>
+
+<p><span class="csguide-option">Paragraph</span> saves the file in Paragraph
+format for transfer to desktop publishing programs.</p>
+
+<h2>Loading Files</h2>
+
+<p>You can load an entire document into the computer. You can also add to a
+document already in memory. You can load part of a document by specifying a
+range of row numbers that you want to load; this enables you to load a file in
+sections that would be too large to load in one piece. Plain text from another
+program can be loaded into PipeDream; fields separated by <code>TAB</code>
+characters will automatically be put into separate columns on the document.
+PipeDream automatically recognises the format of files and loads them in the
+correct format.</p>
+
+<h3>To load a PipeDream document</h3>
+
+<p>The simplest way to load a PipeDream document is to get the directory viewer
+containing the file on the screen and double-click Select on the file's
+icon.</p>
+
+<h3>To load another file format</h3>
+
+<p>If the file is not a PipeDream file, drag the file's icon from the directory
+viewer onto the PipeDream icon on the icon bar.</p>
+
+<h3>Loading a file on start-up</h3>
+
+<p>If you are not already running PipeDream, double-clicking Select on a
+PipeDream file's icon will start up PipeDream and load the file.</p>
+
+<h3>To insert one file into another</h3>
+
+<p>Position the caret at the point in one document (file-a) where you want the
+other file (file-b) to be inserted. Drag file-b's icon into file-a's window.
+The merged file will take file-a's column structure and settings.</p>
+
+<h3>To load part of a document</h3>
+
+<p>1. Give the <span class="csguide-command">Load</span> command. You will see
+the <span class="csguide-dbox">Load</span> dialogue box.</p>
+
+<p>2. Type in the name of the file of which you want to load part.</p>
+
+<p>3. Click Select on the <span class="csguide-option">Load only range of
+rows</span> option.</p>
+
+<p>4. Type in the first and last rows of the range.</p>
+
+<h3>To load a file in different formats</h3>
+
+<p>Click Select on the required format in the <span
+class="csguide-dbox">Load</span> dialogue box.</p>
+
+<p><span class="csguide-option">Auto</span> is the default format. If you do
+not change this, PipeDream looks at the start of the file to decide what type
+of file it is and loads it assuming that format. It is possible, but very rare,
+for PipeDream to make the wrong choice for unusual files. If this happens,
+reload the file but this time specify the type explicitly. To do this, bring up
+the <span class="csguide-dbox">Load</span> dialogue box from the <span
+class="csguide-menu">Files</span> menu. This will have remembered the name of
+the file last loaded. Click Select on the desired file format and then click the <span
+class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>. When PipeDream has loaded a file in a
+particular format, it sets the default format in the <span
+class="csguide-dbox">Save</span> dialogue box to match, so that when you
+save the file again, it will be replaced in its original format.</p>
+
+<p>If the file was a ViewSheet file, PipeDream will set the file type in the
+<span class="csguide-dbox">Save</span> dialogue box to <span
+class="csguide-option">PipeDream</span> because it cannot save ViewSheet
+files.</p>
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>Using file templates</td>
+      <td><a href="templates.html">Template Files</a></td>
+    </tr>
+    <tr>
+      <td>Different formats</td>
+      <td><a href="ascii.html">ASCII and Paragraph File</a><br />
+        <a href="csv.html">CSV Format<br />
+        </a><a href="firstwordplus.html">First Word Plus Format<br />
+        </a><a href="pipedreamfileformat.html">PipeDream File Format<br />
+        </a><a href="view.html">VIEW Transfer<br />
+        </a><a href="viewsheet.html">ViewSheet Transfer<br />
+        </a><a href="z88.html">Z88 Transfer</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="externalreferences.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="financialfns.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">External References </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Financial Functions</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

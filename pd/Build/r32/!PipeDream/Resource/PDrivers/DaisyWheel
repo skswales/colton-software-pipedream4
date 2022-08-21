@@ -1,0 +1,117 @@
+	PipeDream printer drivers
+
+	This driver is for the Juki 6100 and compatibles.
+
+	Created 02-Aug-89.  Last modified 13-Mar-91.
+
+	When loading a printer driver, PipeDream reads each 
+	successive line looking for valid options.  Each valid 
+	option contains a field in column A.  If column A is blank 
+	PipeDream ignores the whole line.  So these opening 
+	paragraphs will be ignored.
+
+	The following three options all take one parameter which is 
+	specified in column B.  The Printer on string specifies the 
+	codes sent to the printer at the start of each print 
+	session and, in the case of single page printing, at the 
+	start of each page.  The Printer off string specifies the 
+	codes sent to the printer at the end of each print session 
+	and, in the case of single page printing, at the end of 
+	each page.  The End of page string specifies the codes sent 
+	at the end of each page.  Some printers can handle 
+	formfeeds which are faster and quieter than the alternative 
+	of sending linefeeds to end the page.
+
+				Description
+
+PON				Printer on string
+POFF				Printer off string
+EP				End of page string
+LF	N			Linefeeds (off)
+
+
+	Highlights
+
+	On	Off	Off at CR?	Description
+
+H1	ESC "E" 	ESC "R" 	Y	Underlined text
+H2	ESC "W"	ESC "&"	Y	Bold text
+H3			N
+H4			Y	Italics
+H5	ESC "U"	ESC "D"	Y	Subscript downup
+H6	ESC "D"	ESC "U"	Y	Superscript updown
+H7			N	Alternative font
+H8			N	User defined
+
+
+	ISO Latin 1 translations
+
+" "	" "			non-break space
+"¢"	ESC "Y"			cent
+"£"	ESC "I"			pound
+"¥"	"Y" 8 "="			yen
+"±"	"+" 8 "_"			plus or minus
+"­"	"-"			hyphen
+"À"	"A"			A grave
+"Á"	"A"			A acute
+"Â"	"A"			A circumflex
+"Ã"	"A"			A tilde
+"Ä"	"A"			A umlaut
+"Ç"	"C"			C cedilla
+"È"	"E"			E grave
+"É"	"E"			E acute
+"Ê"	"E"			E circumflex
+"Ë"	"E"			E umlaut
+"Ì"	"I"			I grave
+"Í"	"I"			I acute
+"Î"	"I"			I circumflex
+"Ï"	"I"			I umlaut
+"Ñ"	"N"			N tilde
+"Ò"	"O"			O grave
+"Ó"	"O"			O acute
+"Ô"	"O"			O circumflex
+"Õ"	"O"			O tilde
+"Ö"	"O"			O umlaut
+"×"	"x"			multiply by
+"Ù"	"U"			U grave
+"Ú"	"U"			U acute
+"Û"	"U"			U circumflex
+"Ü"	"U"			U umlaut
+"Ý"	"Y"			Y acute
+"à"	"a" 8 "`"			a grave
+"á"	"a" 8 "'"			a acute
+"â"	"a" 8 "^"			a circumflex
+"ã"	"a" 8 "~"			a tilde
+"ä"	"a" 8 ESC "J"			a umlaut
+"ç"	ESC "K"			c cedilla
+"è"	"e" 8 "`"			e grave
+"é"	"e" 8 "'"			e acute
+"ê"	"e" 8 "^"			e circumflex
+"ë"	"e" 8 ESC "J"			e umlaut
+"ì"	"i" 8 "`"			i grave
+"í"	"i" 8 "'"			i acute
+"î"	"i" 8 "^"			i circumflex
+"ï"	"i" 8 ESC "J"			i umlaut
+"ñ"	"n" 8 "~"			n tilde
+"ò"	"o" 8 "`" 			o grave
+"ó"	"o" 8 "'" 			o acute
+"ô"	"o" 8 "^"			o circumflex
+"õ"	"o" 8 "~"			o tilde
+"ö"	"o" 8 ESC "J"			o umlaut
+"÷"	"-" 8 ":"			divide by
+"ù"	"u" 8 "`"			u grave
+"ú"	"u" 8 "'"			u acute
+"û"	"u" 8 "^"			u circumflex
+"ü"	"u" 8 ESC "J"			u umlaut
+"ý"	"y" 8 "'"			y acute
+"ÿ"	"y" 8 ESC "J"			y umlaut
+
+
+	Microspacing
+
+HMIP	ESC 31			HMI prefix - column spacing index
+HMIS				HMI suffix
+HMIO	1			HMI offset
+
+
+	End of PipeDream printer driver

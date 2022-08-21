@@ -1,0 +1,103 @@
+| Generate patches to tranform the checked-out copy of RISC_OSLib into WimpLib
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 2013-2014 Stuart Swales
+|
+echo <Obey$Dir>
+|
+dir <Obey$Dir>
+|
+Set rlib_tmp$Dir <Obey$Dir>.^.castle.RiscOS.Sources.Lib.RISC_OSLib.rlib
+Set WimpLib_tmp$Dir $._coltsoft.pd-nonfree.WimpLib
+|
+IfThere <WimpLib_tmp$Dir> Then Else Error WimpLib_tmp$Dir not present
+|
+cdir c
+|
+copy <rlib_tmp$Dir>.c.bbc    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.bbc _dst ~CF~N~V
+diff --unified > "@.c.bbc"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.dbox    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.dbox _dst ~CF~N~V
+diff --unified > "@.c.dbox"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.event    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.event _dst ~CF~N~V
+diff --unified > "@.c.event"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.flex    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.flex _dst ~CF~N~V
+diff --unified > "@.c.flex"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.fontlist    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.fontlist _dst ~CF~N~V
+diff --unified > "@.c.fontlist"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.fontselect    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.fontselect _dst ~CF~N~V
+diff --unified > "@.c.fontselect"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.menu    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.menu _dst ~CF~N~V
+diff --unified > "@.c.menu"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.res    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.res _dst ~CF~N~V
+diff --unified > "@.c.res"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.resspr    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.resspr _dst ~CF~N~V
+diff --unified > "@.c.resspr"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.wimp    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.wimp _dst ~CF~N~V
+diff --unified > "@.c.wimp"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.wimpt    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.wimpt _dst ~CF~N~V
+diff --unified > "@.c.wimpt"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.win    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.win _dst ~CF~N~V
+diff --unified > "@.c.win"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.xferrecv    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.xferrecv _dst ~CF~N~V
+diff --unified > "@.c.xferrecv"   _src _dst
+|
+copy <rlib_tmp$Dir>.c.xfersend    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.c.xfersend _dst ~CF~N~V
+diff --unified > "@.c.xfersend"   _src _dst
+|
+cdir h
+|
+copy <rlib_tmp$Dir>.h.wimp    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.h.wimp _dst ~CF~N~V
+diff --unified > "@.h.wimp"   _src _dst
+|
+cdir s
+|
+copy <rlib_tmp$Dir>.s.swi    _src ~CF~N~V
+copy <WimpLib_tmp$Dir>.s.swi _dst ~CF~N~V
+diff --unified > "@.s.swi"   _src _dst
+|
+remove _src
+remove _dst
+|
+info c
+info c.*
+|
+info h
+info h.*
+|
+info s
+info s.*
+|
+back
+|
+Unset rlib_tmp$Dir
+Unset WimpLib_tmp$Dir

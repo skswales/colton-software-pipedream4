@@ -1,0 +1,61 @@
+	PipeDream printer driver
+
+	This driver is for the Acorn/Olivetti JP150 printer 
+
+	It is based on the driver for the Hewlett-Packard DeskJet
+	and other HP PCL III compatibles.
+
+	Created 31-Aug-89. Last modified 31-Oct-91.
+
+	When loading a printer driver, PipeDream reads each 
+	successive line looking for valid options.  Each valid 
+	option contains a field in column A.  If column A is blank 
+	PipeDream ignores the whole line.  So these opening 
+	paragraphs will be ignored.
+
+	The following three options all take one parameter which is 
+	specified in column B.  The Printer on string specifies the 
+	codes sent to the printer at the start of each print 
+	session and, in the case of single page printing, at the 
+	start of each page.  The Printer off string specifies the 
+	codes sent to the printer at the end of each print session 
+	and, in the case of single page printing, at the end of 
+	each page.  The End of page string specifies the codes sent 
+	at the end of each page.  Some printers can handle 
+	formfeeds which are faster and quieter than the alternative 
+	of sending linefeeds to end the page.
+
+				Description
+
+PON	ESC "(" "0" "N" ESC ")" "1" "0" "U"			Printer on string (use primary character set ECMA-94 ISO Latin1 and secondary character set PC-8)
+POFF	ESC "E"			Printer off string (reset printer to defaults)
+EP	12			End of page string
+LF	Y			Linefeeds (on)
+
+
+	Highlights
+
+	On	Off	Off at CR?	Description
+
+H1	ESC "&" "d" "1" "D"	ESC "&" "d" "@"	Y	Underlined text (use single fixed underline)
+H2	ESC "(" "s" "3" "B"	ESC "(" "s" "0" "B"	Y	Bold text
+H3			N
+H4	ESC "(" "s" "1" "S"	ESC "(" "s" "0" "S"	Y	Italics
+H5	ESC "&" "a" "+" "3" "0" "V" ESC "(" "s" "6" "V"	ESC "&" "a" "-" "3" "0" "V" ESC "(" "s" "1" "2" "V" 	Y	Subscript downup (30 decipoints, 6pt text)
+H6	ESC "&" "a" "-" "6" "0" "V" ESC "(" "s" "6" "V"	ESC "&" "a" "+" "6" "0" "V" ESC "(" "s" "1" "2" "V" 	Y	Superscript updown (60 decipoints, 6pt text)
+H7	14	15	N	Alternative font: swap to/from secondary character set
+H8			N	User defined
+
+
+	No translations needed
+
+
+	Microspacing
+
+HMIP	ESC "&" "k"			HMI prefix
+HMIS	"H"			HMI suffix
+HMIO				HMI offset
+HMIT	Y			HMI as text
+
+
+	End of PipeDream printer driver

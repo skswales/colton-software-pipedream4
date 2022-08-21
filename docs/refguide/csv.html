@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>CSV (Comma Separated Value) Format</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="complexfns.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="customfns.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>CSV (Comma Separated Value) Format</h1>
+
+<p>CSV stands for comma separated values and is a common file format for simple spreadsheet and database transfer between applications.</p>
+
+<p>A CSV file consists of numbers and textual labels, with fields separated by commas and lines by a line separator. The following line demonstrates most of the characteristics of CSV format:</p>
+
+<table border="0">
+  <col />
+  <col />
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td><code>"textstring1",</code></td>
+      <td><code>123.456,</code></td>
+      <td><code>"text""string2",</code></td>
+      <td><code>7.8E9,</code></td>
+      <td><code>"text,string3" </code></td>
+      <td><code>{LS}</code></td>
+    </tr>
+    <tr style="text-align:center;">
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>5</td>
+      <td>6</td>
+    </tr>
+  </tbody>
+</table>
+
+<ol>
+<li>Text strings appear in double quotes.</li>
+
+<li>Numbers do not appear in quotes.</li>
+
+<li>Double quotes characters can be included in text strings and are represented as two double quotes characters. The example above should be interpreted as <code>text"string2</code>.</li>
+
+<li>Scientific notation is understood with both upper-case <code>E</code> and lower-case <code>e</code> being acceptable.</li>
+
+<li>Commas may appear in text strings.</li>
+
+<li>A line separator (<code>LF</code>, <code>CR</code>, <code>CR-LF</code> or <code>LF-CR</code>) may be saved with the file.</li>
+
+<li>White space (spaces or TAB characters) on either side of comma separators is ignored. Spaces within numbers are erroneous.</li>
+</ol>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="complexfns.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="customfns.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Complex Number Functions </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Custom Functions</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

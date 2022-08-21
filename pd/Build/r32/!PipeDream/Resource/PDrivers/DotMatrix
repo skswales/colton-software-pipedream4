@@ -1,0 +1,166 @@
+	PipeDream printer drivers
+
+	This driver is for the Epson FX80 and compatibles. 
+
+	Created 15-Jan-90.  Last modified 13-Mar-91.
+
+	When loading a printer driver, PipeDream reads each 
+	successive line looking for valid options.  Each valid 
+	option contains a field in column A.  If column A is blank 
+	PipeDream ignores the whole line.  So these opening 
+	paragraphs will be ignored.
+
+	The following three options all take one parameter which is 
+	specified in column B.  The Printer on string specifies the 
+	codes sent to the printer at the start of each print 
+	session and, in the case of single page printing, at the 
+	start of each page.  The Printer off string specifies the 
+	codes sent to the printer at the end of each print session 
+	and, in the case of single page printing, at the end of 
+	each page.  The End of page string specifies the codes sent 
+	at the end of each page.  Some printers can handle 
+	formfeeds which are faster and quieter than the alternative 
+	of sending linefeeds to end the page.
+
+				Description
+
+PON	ESC "@" ESC "I" 1			Printer on string
+POFF				Printer off string 
+EP				End of page string
+LF	Y			Linefeeds (on)
+
+
+	Highlights
+
+	On	Off	Off at CR?	Description
+
+H1	ESC "-" 1	ESC "-" 0	Y	Underlined text
+H2	ESC "E"	ESC "F"	Y	Bold text
+H3			N
+H4	ESC "4"	ESC "5"	Y	Italics
+H5	ESC "S" 1	ESC "T"	Y	Subscript downup
+H6	ESC "S" 0	ESC "T"	Y	Superscript updown
+H7	15	18	N	Alternative font
+H8	ESC 120 1	ESC 120 0	N	User defined (NLQ)
+
+
+	ISO Latin 1 translations
+
+"#"	ESC "R" 0  35  ESC "R" 3			hash
+"$"	ESC "R" 3  "$"			dollar
+"@"	ESC "R" 3  "@"			commercial at
+"["	ESC "R" 3  "["			bracket left
+"\"	ESC "R" 3  "\"			backslash
+"]"	ESC "R" 3  "]"			bracket right
+"^"	ESC "R" 3  "^"			circumflex
+"`"	ESC "R" 3  "`"			grave
+"{"	ESC "R" 3  "{"			brace left
+"|"	ESC "R" 3  "|"			solidus
+"}"	ESC "R" 3  "}"			brace right
+"~"	ESC "R" 3  "~"			tilde
+" "	" "			non-break space
+"¡"	ESC "R" 7  91  ESC "R" 3			inverted exclamation
+"¢"	ESC "6" ESC "t" 1  155			cent
+"£"	ESC "R" 3  35			pound
+"¤"	ESC "R" 5  36  ESC "R" 3			currency symbol
+"¥"	ESC "R" 8  92  ESC "R" 3			yen
+"¦"	ESC "R" 3  124			broken vertical bar
+"§"	ESC "R" 1  93  ESC "R" 3			section mark
+"¨"	ESC "R" 1  126 ESC "R" 3			dieresis
+				no copyright symbol
+"ª"	ESC "t" 1  166			feminine ordinal
+"«"	ESC "t" 1  174			guillemot left
+"¬"	ESC "t" 1  170			logical not
+"­"	"-"			hyphen
+				no registration mark
+				no macron
+"°"	ESC "R" 1  91  ESC "R" 3			ring
+"±"	ESC "t" 1  241			plus/minus
+"²"	ESC "t" 1  253			superscript two
+				no superscript three
+"´"	"'"			acute
+"µ"	ESC "t" 1  230			mu
+				no paragraph mark
+"·"	ESC "t" 1  250			centred period
+				no cedilla
+				no superscript one
+"º"	ESC "t" 1  167			masculine ordinal
+"»"	ESC "t" 1  175			guillemot right
+"¼"	ESC "t" 1  172			one quarter
+"½"	ESC "t" 1  171			one half
+"¾"	"3" "/" "4"			faked three quarters
+"¿"	ESC "R" 7  93  ESC "R" 3			inverted query
+"À"	"A"			faked Capital A grave
+"Á"	"A"			faked Capital A acute
+"Â"	"A"			faked Capital A circumflex
+"Ã"	"A"			faked Capital A tilde
+"Ä"	ESC "R" 2  91  ESC "R" 3			Capital A dieresis
+"Å"	ESC "R" 4  93  ESC "R" 3			Capital A ring
+"Æ"	ESC "R" 4  91  ESC "R" 3			Capital AE
+"Ç"	ESC "6" ESC "t" 1  128			Capital C cedilla
+"È"	"E"			faked Capital E grave
+"É"	ESC "R" 5  64  ESC "R" 3			Capital E acute
+"Ê"	"E"			faked Capital E circumflex
+"Ë"	"E"			faked Capital E dieresis
+"Ì"	"I"			faked Capital I grave
+"Í"	"I"			faked Capital I acute
+"Î"	"I"			faked Capital I circumflex
+"Ï"	"I"			faked Capital I dieresis
+"Ð"	"-"                      8 "D"			faked Capital Eth
+"Ñ"	ESC "R" 7  92  ESC "R" 3			Capital N tilde
+"Ò"	"O"			faked Capital O grave
+"Ó"	"O"			faked Capital O acute
+"Ô"	"O"			faked Capital O circumflex
+"Õ"	"O"			faked Capital O tilde
+"Ö"	ESC "R" 2  92  ESC "R" 3			Capital O dieresis
+"×"	"*"			faked multiply
+"Ø"	ESC "R" 4  92  ESC "R" 3			Capital O slash
+"Ù"	ESC "R" 3  96            8 "U"			faked Capital U grave
+"Ú"	"'"                      8 "U"			faked Capital U acute
+"Û"	ESC "R" 2  93  ESC "R" 3 8 "^"			faked Capital U circumflex
+"Ü"	ESC "R" 2  93  ESC "R" 3			Capital U dieresis
+"Ý"	"'"                      8 "Y"			faked Capital Y acute
+"Þ"	"P"			faked Capital Thorn
+"ß"	ESC "R" 2  126 ESC "R" 3			german double s
+"à"	ESC "R" 1  64  ESC "R" 3			a grave
+"á"	ESC "R" 11 64  ESC "R" 3			a acute
+"â"	ESC "6" ESC "t" 1  131			a circumflex
+"ã"	ESC "R" 3  126           8 "a"			faked a tilde
+"ä"	ESC "R" 2  123 ESC "R" 3			a dieresis
+"å"	ESC "R" 4  125 ESC "R" 3			a ring
+"æ"	ESC "R" 4  123 ESC "R" 3			ae
+"ç"	ESC "R" 1  92  ESC "R" 3			c cedilla
+"é"	ESC "R" 1  123 ESC "R" 3			e acute
+"è"	ESC "R" 1  125 ESC "R" 3			e grave
+"ê"	ESC "6" ESC "t" 1  136			e circumflex
+"ë"	ESC "6" ESC "t" 1  137			e dieresis
+"ì"	ESC "R" 6  126 ESC "R" 3			i grave
+"í"	ESC "R" 11 123 ESC "R" 3			i acute
+"î"	ESC "6" ESC "t" 1  140			i circumflex
+"ï"	ESC "6" ESC "t" 1  139			i dieresis
+"ð"	"-"                      8 "d"			faked eth
+"ñ"	ESC "R" 7  124 ESC "R" 3			n tilde
+"ò"	ESC "R" 6  124 ESC "R" 3			o grave
+"ó"	ESC "R" 11 125 ESC "R" 3			o acute
+"ô"	ESC "6" ESC "t" 1  147			o circumflex
+"õ"	ESC "R" 3  126           8 "o"			faked o tilde
+"ö"	ESC "R" 2  124 ESC "R" 3			o dieresis
+"÷"	ESC "t" 1  246			divide
+"ø"	ESC "R" 4  124 ESC "R" 3			o slash
+"ù"	ESC "R" 1  124 ESC "R" 3			u grave
+"ú"	ESC "R" 11 126 ESC "R" 3			u acute
+"û"	ESC "6" ESC "t" 1  150			u circumflex
+"ü"	ESC "R" 2  125 ESC "R" 3			u dieresis
+"ý"	"'"                      8 "y"			faked y acute
+"þ"	"p"			faked thorn
+"ÿ"	ESC "6" ESC "t" 1  152			y dieresis
+
+
+	Microspacing
+
+HMIP	27 "M" 27 32			HMI prefix
+HMIS				HMI suffix
+HMIO	246			HMI offset
+
+
+	End of PipeDream printer driver

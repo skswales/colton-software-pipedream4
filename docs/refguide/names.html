@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Names</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="mouse.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="numberformats.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Names</h1>
+
+<p>Generally, when you refer to items of data in a formula, you enter the data
+explicitly or refer to slot coordinates, for example 10, A1, B1F10 or {1, 2, 3}.</p>
+
+<p>Names enable you to give a name to items of data. Names can be easier to
+remember and are often easier to change than data items in your spreadsheet.</p>
+
+<p>For example, you could have a name VAT, which you would use instead of
+entering 0.175 into your formulae directly. Then, when the Chancellor puts up
+VAT to 20%, all you have to do is change the definition of the name VAT instead
+of having to find all occurrences of 0.175 in your spreadsheets and change them
+individually.</p>
+
+<p>The following rules apply to names:</p>
+<ul>
+  <li>they can be up to 24 characters long;</li>
+  <li>they can contain letters, digits and underscore characters (_);</li>
+  <li>you must have an underscore character in the name before any digits
+    appear;</li>
+  <li>they are not case-sensitive (eg 'VAT' is identical to 'vat').</li>
+</ul>
+
+<p>Names can refer to the following:</p>
+<ul>
+  <li>numbers;</li>
+  <li>dates;</li>
+  <li>strings;</li>
+  <li>slots, in the same document or a different document;</li>
+  <li>ranges, in the same document or a different document;</li>
+  <li>arrays.</li>
+</ul>
+
+<p>Examples:</p>
+
+<table border="1">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>Name</th>
+      <th>Refers to</th>
+    </tr>
+    <tr>
+      <td><code>apples</code></td>
+      <td><code>A1A100</code></td>
+    </tr>
+    <tr>
+      <td><code>VAT</code></td>
+      <td><code>0.175</code></td>
+    </tr>
+    <tr>
+      <td><code>January_sales </code></td>
+      <td><code>[sales]A56 </code></td>
+    </tr>
+    <tr>
+      <td><code>[costs]total</code></td>
+      <td><code>B78</code></td>
+    </tr>
+    <tr>
+      <td><code>_freda</code></td>
+      <td><code>"freda"</code></td>
+    </tr>
+    <tr>
+      <td><code>arg_123</code></td>
+      <td><code>{1,2,3}</code></td>
+    </tr>
+    <tr>
+      <td><code>SalesDate</code></td>
+      <td><code>12.6.1989</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Examples of bad names:</p>
+
+<p><code>A1</code> - The digit is not preceded by an underscore character;</p>
+
+<p><code>abcdefghijklmnopqrstuvwxyz</code> - Too long.</p>
+
+<h2>Defining a Name</h2>
+
+<p>To define a name:</p>
+
+<p>1. Click Select on the <span class="csguide-toolbar-button">Function</span> button.</p>
+
+<p>2. In the <span class="csguide-menu">Function</span> menu, slide off the <span class="csguide-menu-option">Define name</span> option to bring up the <span class="csguide-dbox">Define Name</span> dialogue box.</p>
+
+<p>3. Type in the name that you want to define on the <span
+class="csguide-option">Name</span> line.</p>
+
+<p>4. Type in the item the name refers to on the <span
+class="csguide-option">Refers to</span> line.</p>
+
+<p>5. Click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>.</p>
+
+<p>The name is now defined. It 'belongs' to the document in which you defined
+it and its definition will be saved when the document is saved.</p>
+
+<h2>Using a Name</h2>
+
+<p>To insert a name into your document, either type it in or:</p>
+
+<p>1. Position the caret where you want to insert the name.</p>
+
+<p>2. Click Select on the <span class="csguide-toolbar-button">Function</span> button.</p>
+
+<p>3. When the <span class="csguide-menu">Function</span> menu appears, slide off the <span class="csguide-menu-option">Names</span> option.</p>
+
+<p>4. When the list of names appears, click Select on the name that you want to
+insert.</p>
+
+<p>The name will be inserted into your document.</p>
+
+<h2>Changing the Definition of a Name</h2>
+
+<p>To change a name's definition:</p>
+
+<p>1. Click Select on the <span class="csguide-toolbar-button">Function</span> button.</p>
+
+<p>2. When the <span class="csguide-menu">Function</span> menu appears, slide off the <span class="csguide-menu-option">Edit name</span> option.</p>
+
+<p>3. When the list of names appears, click Select on the name you want to
+edit.</p>
+
+<p>4. When the <span class="csguide-dbox">Edit Name</span> dialogue box
+appears for the chosen name, change the <span class="csguide-option">Refers
+to</span> line as required.</p>
+
+<p>5. Click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>.</p>
+
+<p>The name's definition is now changed.</p>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="mouse.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="numberformats.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Mouse Techniques </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Number Formats</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

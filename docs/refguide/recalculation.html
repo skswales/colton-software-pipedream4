@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Recalculation</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="protection.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="reformattingtext.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Recalculation</h1>
+
+<p>Recalculation ensures that the contents of number slots remain up to date at
+all times. Every time you make a change to a slot, PipeDream recalculates all
+other slots which depend upon it.</p>
+
+<p>PipeDream 4 recalculates automatically unless you specify otherwise. With
+PipeDream 4&apos;s advanced recalculation facilities, you should never need to
+switch to manual recalculation. However, the option to do so exists. You can
+switch off automatic recalculation by clicking on the <span
+class="csguide-option">Auto recalc</span> option on the <span
+class="csguide-menu">Choices</span> sub-menu to turn it off.
+If you switch to manual recalculation, when you give the <span
+class="csguide-command">Recalculate</span> command, PipeDream will recalculate
+all those slots which have changed since the last recalculation. Switching
+recalculation to manual applies to all documents in your computer.</p>
+
+<p>PipeDream uses natural recalculation. This means that when you change a
+value in the spreadsheet, or enter a new value, instead of recalculating the
+whole spreadsheet, PipeDream recalculates only those slots which need to be
+altered as a result of the change you have made. Therefore, only a small
+section usually needs to be recalculated, and recalculation is completed
+quickly. Natural recalculation also means that forward references are
+automatically resolved; if you have forward references, you do not have to give
+the Recalculate command several times to get the values to stabilise. With
+natural recalculation, you cannot have circular or self-references. If you put
+the formula A1+1 in slot A1, PipeDream will display the error <strong>Circular
+reference</strong>.</p>
+
+<h3>Background Recalculation</h3>
+
+<p>PipeDream 4 recalculates in the background, ie when nothing else is going on
+in the computer. This means that you can get on with something else either in
+PipeDream or in another program whilst recalculation is going on. PipeDream
+will carry on recalculating the spreadsheet whenever there is some time to do
+so. Whilst PipeDream is recalculating, a number is shown in the mark block box
+at the top left-hand side of the screen. This number represents the number of
+slots PipeDream knows it has to recalculate. Due to the complexities of natural
+recalculation, the number may go up during a recalculation if PipeDream finds
+more slots needing recalculation, but generally it goes down until it reaches
+zero.</p>
+
+<h3>To Recalculate</h3>
+
+<p>If you have chosen to use manual recalculation, you will need to gave the
+<span class="csguide-command">Recalculate</span> command to recalculate your
+spreadsheet:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Files</td>
+      <td>Recalculate</td>
+      <td><span class="csguide-key">A</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>All slots in the document which need recalculating will be recalculated. The
+hourglass may be displayed while PipeDream completes this operation if there
+are many slots to recalculate.</p>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="protection.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="reformattingtext.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Protection </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Reformatting Text</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

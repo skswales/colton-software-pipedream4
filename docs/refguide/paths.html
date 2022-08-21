@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Paths</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="paste.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="pictures.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Paths</h1>
+
+<p>There are several types of data file which are used in PipeDream but which
+are not normal PipeDream documents. These include dictionaries, command files,
+printer drivers, the choices file and the key file. Because you do not tell
+PipeDream where these files are by dragging them from a directory viewer to the
+PipeDream icon or a window, PipeDream has to know where to look for them. It
+needs two pieces of information to do this:</p>
+<ul>
+  <li>the name of the directory containing the file</li>
+  <li>the name of the file within the directory (this is known as the
+  leafname).</li>
+</ul>
+
+<p>Sometimes PipeDream already knows the leafname. For example, the leafname
+of the Choices file is always <em>Choices</em> and the leafname of the master
+dictionary is always <em>master</em>. But for other types of file, such as user
+dictionaries, you specify the leafname.</p>
+
+<p>PipeDream also needs to know in which directory or directories it should
+look for the file. The path, <em>PipeDream$Path</em> or more simply
+<em>PipeDream:</em>, tells it where to look. The path can be a single
+directory name or, more usually, a list of directories. By default, the path is
+a combination of two directories:</p>
+<ul>
+  <li><em>Choices:PipeDream.</em></li>
+  <li><em>&lt;PipeDream$Dir&gt;.Resource.</em></li>
+</ul>
+
+<p>where</p>
+
+<p style="margin-left:2em;"><em>Choices:PipeDream</em> is a sub-directory
+<em>PipeDream</em> accessible on the <em>Choices:</em> system path and</p>
+
+<p style="margin-left:2em;"><em>&lt;PipeDream$Dir&gt;.Resource</em> is a
+sub-directory called <em>Resource</em> in the PipeDream application
+directory.</p>
+
+<p>If you want to, you can modify the path to make PipeDream look for the files
+in other directories, discs, drives, filing systems or paths.</p>
+
+<p>This can be useful for the following reasons:</p>
+<ul>
+  <li>to specify a place where PipeDream should always look for command files
+    or dictionaries;</li>
+  <li>to specify other directories where you wish to store libraries of custom
+    functions or data.</li>
+</ul>
+
+<p>The path is specified in the file !PipeDream.!Run, which may be found in the
+PipeDream application directory.</p>
+
+<p>By default this is set up as follows:</p>
+
+<p style="margin-left:2em;"><code>Set PipeDream$Path
+Choices:PipeDream.,&lt;PipeDream$Dir&gt;.</code></p>
+
+<p>The Set command is used to set up a system variable called
+<code>PipeDream$Path</code> and to set it to
+<code>Choices:PipeDream.,&lt;PipeDream$Dir&gt;.Resource.</code> which are to be
+the directories PipeDream will look in for its files. Note the dot on the end
+of each of the directory names. This is necessary because PipeDream will merely
+append the leafname to each of the path elements in turn to create a whole
+filename. If you want to change the path, you can edit the !Run file in
+Edit.</p>
+
+<p>The following table illustrates where PipeDream looks for each type of file.
+'CWD' stands for Current Window Directory and refers to the directory from
+which the file in the current window has been loaded. If there is no current
+directory, because you have started a new document or renamed a loaded
+document, PipeDream will look only on the path.</p>
+
+<table border="1" style="width: 100%">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td><strong>File</strong></td>
+      <td><strong>Sub-directory</strong></td>
+      <td><strong>Loading</strong></td>
+      <td><strong>Saving</strong></td>
+    </tr>
+    <tr>
+      <td>Dictionaries</td>
+      <td>Dicts</td>
+      <td>CWD, Path</td>
+      <td>CWD, Path</td>
+    </tr>
+    <tr>
+      <td>Command files</td>
+      <td>CmdFiles</td>
+      <td>CWD, Path</td>
+      <td>CWD, Path</td>
+    </tr>
+    <tr>
+      <td>Choices file</td>
+      <td></td>
+      <td>Path</td>
+      <td>&lt;Choices$Write&gt;.PipeDream</td>
+    </tr>
+    <tr>
+      <td>Key file</td>
+      <td></td>
+      <td>Path</td>
+      <td>&lt;Choices$Write&gt;.PipeDream</td>
+    </tr>
+    <tr>
+      <td>Printer drivers </td>
+      <td>PDrivers</td>
+      <td>CWD, Path</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Draw files</td>
+      <td>Pictures</td>
+      <td>CWD</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>External references</td>
+      <td>Library</td>
+      <td>CWD, Path</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Template files</td>
+      <td>Templates</td>
+      <td>Path</td>
+      <td>&lt;Choices$Write&gt;.PipeDream</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If files are saved or placed in the sub-directories listed above, they will
+be included in the lists of files displayed in dialogue boxes, from which you
+can select the file you want. It is therefore recommended that you save each
+type of file in the appropriate sub-directory.</p>
+
+<h3>Networks</h3>
+
+<p>PipeDream's paths make it possible to install PipeDream onto a network so
+that it looks for main system resources such as the program and master
+dictionary in the public area of the file server, but for user resources such
+as user dictionaries and template files in the user's own area.</p>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="paste.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="pictures.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Paste </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Pictures</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

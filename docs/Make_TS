@@ -1,0 +1,34 @@
+| Make_TS.oby - PipeDream-Manuals
+
+IfThere $.Temp Then Else %CDir $.Temp
+
+Set pd$Disc $.Temp.PDManuals_20140207
+| Remember to update RiscPkg.Control too
+
+%CDir <pd$Disc>
+
+X %Wipe <pd$Disc>.* ~cfr~v
+
+%CDir <pd$Disc>.Apps
+%CDir <pd$Disc>.Apps.Manuals
+%CDir <pd$Disc>.Apps.Manuals.PipeDream
+
+%CDir <pd$Disc>.Apps.Manuals.PipeDream.tutorial
+%Copy <Obey$Dir>.tutorial.*        <pd$Disc>.Apps.Manuals.PipeDream.tutorial.* ~rf~cln~v
+%SetType                           <pd$Disc>.Apps.Manuals.PipeDream.tutorial.index/html &FAF
+
+%CDir <pd$Disc>.Apps.Manuals.PipeDream.tutorial.images
+%Copy <Obey$Dir>.tutorial.images.* <pd$Disc>.Apps.Manuals.PipeDream.tutorial.images.* ~rf~cln~v
+
+%CDir <pd$Disc>.Apps.Manuals.PipeDream.refguide
+%Copy <Obey$Dir>.refguide.*        <pd$Disc>.Apps.Manuals.PipeDream.refguide.* ~rf~cln~v
+%SetType                           <pd$Disc>.Apps.Manuals.PipeDream.refguide.index/html &FAF
+
+%CDir <pd$Disc>.Apps.Manuals.PipeDream.refguide.images
+%Copy <Obey$Dir>.refguide.images.* <pd$Disc>.Apps.Manuals.PipeDream.refguide.images.* ~rf~cln~v
+
+%CDir                              <pd$Disc>.RiscPkg
+%Copy <Obey$Dir>.RiscPkg.Control   <pd$Disc>.RiscPkg.* ~rf~cln~v
+%Copy <Obey$Dir>.RiscPkg.Copyright <pd$Disc>.RiscPkg.* ~rf~cln~v
+
+Filer_OpenDir <pd$Disc>

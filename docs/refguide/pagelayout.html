@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Page Layout</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="pagebreaks.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="paste.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Page Layout</h1>
+
+<p>The <span class="csguide-dbox">Page Layout</span> dialogue box enables
+you to change the page length, margins and line spacing of your document. You
+can also use it to set up headers and footers, to specify at which number page
+numbering should start and to set the page width to which PipeDream should
+work.</p>
+
+<p>The default settings are as follows:</p>
+
+<table>
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td class="csguide-option">Page length</td>
+      <td>66</td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Top margin</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Header margin&nbsp;&nbsp;</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Footer margin</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Bottom margin</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Left margin</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Page width</td>
+      <td>80</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Headers, Footers and Page Numbering</h2>
+
+<p>You can define a header and a footer for each document. These will be
+printed out at the top and bottom of each printed page. Headers and footers can
+include text @-fields. Thus the page number (@P@), date (@D@) or document title
+(@T@) can be included in the header or footer text. Headers and footers can
+also include bold or underlined text, or any of the other highlight codes.
+Headers and footers can be up to three lines long.</p>
+
+<p>Remember that having headers and footers reduces the lines available for
+your text.</p>
+
+<h3>To define a header or footer</h3>
+
+<p>In the <span class="csguide-dbox">Page Layout</span> dialogue box, you
+will see that there are three lines for you to type your header and footer.
+Headers and footers can be one, two or three lines long. Specify each line of
+the header and footer as three fields, separated by a character such as
+<code>/</code>, on the Header or Footer line of the dialogue box.</p>
+
+<p>For example:</p>
+
+<p style="margin-left:2em;" class="csguide-sample">/left/centre/right/</p>
+
+<p>Note that you can use another character instead of <code>/</code> if you
+prefer but it must not occur elsewhere in the header or footer and must appear
+as the first character.</p>
+
+<p>The fields are printed respectively left-justified, centred and
+right-justified on the page.</p>
+
+<p>Note that PipeDream centres and right justifies with respect to the
+right-most right margin point of all the columns, so, if your header or footer
+appears in the wrong place, you need to adjust the right margin for the
+offending column.</p>
+
+<p>Examples:</p>
+
+<p>If you type your header text as follows:</p>
+
+<div class="csguide-sample" style="margin-left:2em;">
+<p>/Colton Software///</p>
+
+<p>/Tutorial/Chapter 1/Word Processing</p>
+
+<p>///Draft only</p>
+</div>
+
+<p>Your header will appear as follows:</p>
+
+<div class="csguide-sample" style="margin-left:2em;">
+
+<table border="0" style="width: 80%">
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td>Colton Software</td>
+      <td></td>
+      <td style="text-align:right;margin-left:auto;margin-right:0;"></td>
+    </tr>
+    <tr>
+      <td>Tutorial</td>
+      <td style="text-align:center;margin-left:auto;margin-right:auto;">Chapter
+        1</td>
+      <td style="text-align:right;margin-left:auto;margin-right:0;">Word
+        Processing</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td style="text-align:right;margin-left:auto;margin-right:0;">Draft
+      only</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>If you want to include a blank line in your header or footer, you need to
+type delimiters with nothing between them (<code>///</code>) onto that line in
+the dialogue box. Completely empty lines are ignored.</p>
+
+<h3>To include page numbering</h3>
+
+<p>The header and footer give you a great deal of flexibility in the way you
+choose to number pages.</p>
+
+<p>For example, to number pages in the form</p>
+
+<p class="csguide-sample" style="margin-left:2em;">-23-</p>
+
+<p>centred at the bottom of each page, define the footer as:</p>
+
+<p class="csguide-sample" style="margin-left:2em;">//-@P@-//</p>
+
+<p>To include highlights, type <span class="csguide-key">^<span
+class="csguide-arg">n</span></span> where <span class="csguide-arg">n</span>
+is the highlight number. <code>^2</code>, for example, is bold.</p>
+
+<h3>To control page numbering</h3>
+
+<p>You can choose the number for page numbering to start on any file with the
+<span class="csguide-dbox">Page Layout</span> dialogue box option <span
+class="csguide-option">Start page</span>. This can be set to any number. If
+you leave it blank, it will automatically start at page 1. If you set it to 0,
+the first page will be printed with no header or footer. This can be useful for
+title pages when you do not want a page number on the first page of the
+document. The next page will be page 1.</p>
+
+<h3>Page Width</h3>
+
+<p>You can set a page width to which PipeDream should work which will be
+determined by your printer and the paper size you are using. This option is
+useful when you are printing very wide documents such as large spreadsheets or
+databases.</p>
+
+
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>@D@, @P@, @T@</td>
+      <td>Text @-fields</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="pagebreaks.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="paste.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Page Breaks </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Paste</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

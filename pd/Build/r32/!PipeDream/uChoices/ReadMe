@@ -1,0 +1,25 @@
+ PipeDream and User Choices
+ --------------------------
+
+ PipeDream now uses the Choices$Path to access the user's Choices. 
+Choices:PipeDream. has been added to the PipeDream$Path variable, replacing
+<PipeDream$Dir>.User (or <PipeDream$ResourceDir>.User if you used to use
+!PDGlobal to store global resources for PipeDream).
+
+ Choices, user dictionaries, new templates etc. are now written to the
+appropriate location in <Choices$Write>.PipeDream. Subdirectories of
+<Choices$Write>.PipeDream will be created as needed by PipeDream.
+
+ If this is a fresh installation of PipeDream, PipeDream will run the
+TaskObey script file DoCopy in this Choices directory which will copy the
+contents of this directory into <Choices$Write>.PipeDream.
+
+ As before, please note that if you already have modified user dictionaries
+etc. in a previous non-choices installation of PipeDream (i.e. one prior to
+4.50/37), you may wish to copy the contents of your existing
+<PipeDream$Dir>.User tree into the new location <Choices$Write>.PipeDream.
+If so, run your old !PipeDream (to set the correct <PipeDream$Dir>) and type
+the following in a (Ctrl-F12) Task window:
+
+ CDir <Choices$Write>.PipeDream
+ Copy <PipeDream$Dir>.User.* <Choices$Write>.PipeDream.* ~CF~NRV

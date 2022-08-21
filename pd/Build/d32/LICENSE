@@ -1,0 +1,45 @@
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Copyright (C) 1989-1998 Colton Software Limited
+Copyright (C) 1998-2014 R W Colton
+
+This licence also applies to the following files in this directory
+and in the given subdirectories:
+
+!PipeDream.!Help
+!PipeDream.Resource.HTMLHelp
+!PipeDream.Resource.Relnotes
+!PipeDream.Resource.CmdFiles.CopyDelete
+!PipeDream.Resource.CmdFiles.Indent5
+!PipeDream.Resource.CmdFiles.PD4Keys
+!PipeDream.Resource.Dicts.Master
+!PipeDream.Resource.Markers.S1
+!PipeDream.Resource.Markers.S2
+!PipeDream.Resource.Markers.S3
+!PipeDream.Resource.Markers.S4
+!PipeDream.Resource.Markers.S5
+!PipeDream.Resource.Markers.S6
+!PipeDream.Resource.PDrivers.BJ10
+!PipeDream.Resource.PDrivers.DaisyWheel
+!PipeDream.Resource.PDrivers.Default
+!PipeDream.Resource.PDrivers.DotMatrix
+!PipeDream.Resource.PDrivers.HPJet
+!PipeDream.Resource.PDrivers.JP150
+!PipeDream.Resource.Pictures.S1
+!PipeDream.Resource.Pictures.S2
+!PipeDream.Resource.RISC_OS.!Sprite
+!PipeDream.Resource.RISC_OS.ImageSlot
+!PipeDream.Resource.RISC_OS.Loader
+!PipeDream.Resource.RISC_OS.u_ltp
+!PipeDream.Resource.RISC_OS.u_ptl
+!PipeDream.Resource.Templates.Numb_Plain
+!PipeDream.Resource.Templates.Numbers
+!PipeDream.Resource.Templates.Records
+!PipeDream.Resource.Templates.Text
+!PipeDream.Resource.Templates.Text_Plain
+!PipeDream.uChoices.DoCopy
+!PipeDream.uChoices.ReadMe
+!PipeDream.uChoices.PipeDream.Dicts.UserDict
+!PipeDream.uChoices.PipeDream.Library.Example

@@ -1,0 +1,78 @@
+/* vsload.h */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Copyright (C) 1989-1998 Colton Software Limited
+ * Copyright (C) 1998-2014 R W Colton */
+
+/* External definitions for ViewSheet loader */
+
+/* MRJC May 1989 */
+
+#ifndef __vsload_h
+#define __vsload_h
+
+#ifndef RC_INVOKED
+
+/*
+functions
+*/
+
+extern S32
+vsload_fileheader_isvsfile(
+    _In_reads_(size) PC_U8 ptr,
+    _InVal_     U32 size);
+
+extern S32
+vsload_isvsfile(
+    FILE_HANDLE fin);
+
+extern S32
+vsload_loadvsfile(
+    FILE_HANDLE fin);
+
+extern void
+vsload_fileend(void);
+
+extern char *
+vsload_travel(
+    S32 col,
+    S32 row,
+    P_S32 type,
+    P_S32 decp,
+    P_S32 justright,
+    P_S32 minus);
+
+/*
+types of slot
+*/
+
+#define VS_TEXT   0
+#define VS_NUMBER 1
+
+/*
+error definition
+*/
+
+#define VSLOAD_ERRLIST_DEF \
+    errorstring(VSLOAD_ERR_CANTREAD, "ViewSheet: Can't read file") \
+    errorstring(VSLOAD_ERR_NOMEMORY, "ViewSheet: Out of memory")
+
+#endif /* RC_INVOKED */
+
+/*
+error definition
+*/
+
+#define VSLOAD_ERR_BASE      (-5000)
+
+#define VSLOAD_ERR_CANTREAD  (-5000)
+#define VSLOAD_ERR_NOMEMORY  (-5001)
+
+#define VSLOAD_ERR_END       (-5002)
+
+#endif /* __vsload_h */
+
+/* end of vsload.h */

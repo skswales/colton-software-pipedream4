@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Keyboard Definition</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="indentingparagraphs.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="labelprinting.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Keyboard Definition</h1>
+
+<p>If you often need to type the same word or number into a document, you can
+set it up on a key so that you can enter it with a single key press. You can
+likewise set up a frequently used sequence of commands as a single key
+press.</p>
+
+<h2>To Define a Text Sequence</h2>
+
+<p>1. Give the <span class="csguide-command">Define Key</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Caret</td>
+      <td>Define key</td>
+      <td><span class="csguide-key">CDK</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>2. Click Select on the arrow icons until the key to which you want to assign
+the text appears in the right-hand box. The number in the left-hand box is the
+ASCII value of the key.</p>
+
+<p>3. Type in the text string you want the key to produce.</p>
+
+<p>4. Click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>.</p>
+
+<p>For example:</p>
+
+<p>If you set the <span class="csguide-option">Key to define</span> option to <code>121 y</code> and the <span class="csguide-option">Definition</span> option to <code>PipeDream</code>, then every time you press the <span class="csguide-key">y</span> key the word <span class="csguide-sample">PipeDream</span> will be inserted into the current document.</p>
+
+<p>To set the <span class="csguide-key">y</span> key back to its original function:</p>
+
+<p>1. Give the <span class="csguide-command">Define Key</span> command.</p>
+
+<p>2. Set the <span class="csguide-option">Key to define</span> option to
+<code>121 y</code>.</p>
+
+<p>3. Leave the <span class="csguide-option">Definition</span> option
+blank.</p>
+
+<p>4. Click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>.</p>
+
+<h2>To Define a Command Sequence</h2>
+
+<p>A command sequence is defined in exactly the same way, by listing what you
+would type to issue the commands.</p>
+
+<p>The differences are:</p>
+<ul>
+  <li><code>\</code> is used to represent the Ctrl-key. To split a line, for
+    example, you would type <code>\ESL|M</code> .</li>
+  <li>You must type <code>|M</code> after each command.</li>
+</ul>
+
+<p>If you want to include the <span class="csguide-key">Enter</span> key in a sequence you should
+enter it as <code>\CEN|M</code> .</p>
+
+<p>For example, if you set the <span class="csguide-option">Definition</span>
+option to <code>PipeDream\CEN|Mby Colton Software</code>, when you press the
+<span class="csguide-key">y</span> key now, the following will appear on the screen:</p>
+
+<div class="csguide-sample" style="margin-left:2em;">
+<p>PipeDream</p>
+<p>by Colton Software</p>
+</div>
+
+<p><code>CEN</code> is the Ctrl-key sequence which is generated when the
+<span class="csguide-key">Enter</span> key is pressed.</p>
+
+<p>You can find the Ctrl-key sequences for other caret movements in this Reference
+Guide. All other sequences appear on the menus, some on long menus only.</p>
+
+<p>For example:</p>
+
+<p style="margin-left:2em;"><code>\ESL|M\CEN|M</code></p>
+
+<p>splits the line before doing a carriage return.</p>
+
+<h2>To Redefine a Function Key</h2>
+
+<p>The <span class="csguide-command">Define Function Key</span> command enables you to redefine the effect of the function keys <span class="csguide-key">F1</span> to <span class="csguide-key">F12</span>, with <span class="csguide-key">Ctrl-F<span class="csguide-arg">n</span></span>,
+<span class="csguide-key">Shift-F<span class="csguide-arg">n</span></span> and
+<span class="csguide-key">Shift-Ctrl-F<span class="csguide-arg">n</span></span> variants. So, if
+you prefer a different function key layout, you can define your own.</p>
+
+<p>As a simple example, give the <span class="csguide-command">Define Function
+Key</span> command. You will see the <span class="csguide-option">Function key
+to define</span> option in the dialogue box. Use this option to determine which
+function key you want to redefine. Click Select on the up arrow icon. PipeDream
+displays a list of the function keys <code>F1</code> to <code>F12</code>, then
+<code>Shift-F1</code> to <code>Shift-F12</code>, then <code>Ctrl-F1</code> to
+<code>Ctrl-F12</code>, and finally <code>Shift-Ctrl-F1</code> to
+<code>Shift-Ctrl-F12</code>. Release the Select button when PipeDream gets to
+<code>Shift-Ctrl-F1</code>. If you overshoot, do not worry; simply click Select
+on the down arrow icon until you get back to it.</p>
+
+<h4>Entering Strings</h4>
+
+<p>The <span class="csguide-option">Definition</span> option is where you
+specify what you want PipeDream to do when you press
+<span class="csguide-key">Shift-Ctrl-F1</span>. Type in</p>
+
+<p style="margin-left:2em;"><code>The cat sat on the mat</code></p>
+
+<p>and click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>.</p>
+
+<p>Now press <span class="csguide-key">Shift-Ctrl-F1</span>. You will see that PipeDream enters the
+string just as if you had typed it at the keyboard.</p>
+
+<h2>To Redefine a Ctrl-Key Sequence</h2>
+
+<p>The <span class="csguide-command">Define Command</span> command enables you
+to redefine the key sequences. It is only useful for those of you using foreign
+language versions of PipeDream.</p>
+
+<p>For example, if you want <span class="csguide-key">Ctrl-Q</span> to perform an <span
+class="csguide-command">Edit Formula</span> command (<span class="csguide-key">Ctrl-X</span>),
+specify:</p>
+
+<p><span class="csguide-option">Command to define</span> <code>X</code></p>
+
+<p><span class="csguide-option">Define as</span> <code>Q</code></p>
+
+<p>Now, when you press <span class="csguide-key">Ctrl-Q</span>, the <span
+class="csguide-command">Edit Formula</span> command is carried out.</p>
+
+<p>Think carefully before redefining the Ctrl-key sequences in this way.</p>
+
+<p>Remember that PipeDream uses the letters F, E, L, P, B, C and S as the first
+character of multiple key commands and so if you redefine any of these, you
+will be affecting a lot of commands. Note that redefining keys in this way does
+not affect the backslash sequences in command files or keyboard redefinition.
+Neither do the redefined sequences appear on menus.</p>
+
+<h2>Foreign Characters</h2>
+
+<p>As well as using keyboard redefinition to enable you to enter common
+strings, you can also use it to configure your keyboard for foreign character
+sets, although you will probably prefer to use the international keyboard
+modules.</p>
+
+<p>As an example, redefine the character <code>#</code> to the produce the
+character <code>&cent;</code>. Give the <span class="csguide-command">Define
+Key</span> command. On the <span class="csguide-option">Key to define</span>
+line, click Select on the down arrow icon until PipeDream displays <code>35
+#</code>. Set the <span class="csguide-option">Definition</span> option to
+<code>&cent;</code> by holding down the <span
+class="csguide-key">Alt</span> key whilst you type 162
+(the value for &cent; in the Latin1 font encoding) on the numeric keypad.
+You should see <code>&cent;</code> appear in the Definition field. Click the <span
+class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span> to confirm the definition. Now press the
+<span class="csguide-key">#</span> key and PipeDream will enter &cent; in the current slot.
+You may find it convenient to use the <strong>!Chars<strong> application.
+For the numerical values for particular characters consult your RISC OS User Guide.</p>
+
+<h2>Commands</h2>
+
+<p>As well as redefining keys to produce strings or other characters, you can
+also redefine keys to perform PipeDream commands.</p>
+
+<p>Imagine that you want to delete every alternate line in a file which is a
+thousand lines long. One way to do this is to move to every alternate line and
+delete it by pressing and giving the <span class="csguide-command">Delete
+Row</span> command repeatedly. But you would probably get rather tired of doing
+this after a while and start making mistakes, deleting the wrong lines. There
+is a better way. Load a file from which you do not mind deleting a few lines.
+Give the <span class="csguide-command">Define Function Key</span> command and
+click Select on the arrow icons until the top line indicates
+<code>Shift-Ctrl-F2</code>. Type the following on the <span
+class="csguide-option">Definition</span> line:</p>
+
+<p style="margin-left:2em;"><code>\Y|M\CCD|M</code></p>
+
+<p>Now click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span> to confirm the
+definition. Move to a paragraph of text and insert a blank line between every
+line in the paragraph. This will probably give you an idea of just how tedious
+deleting 500 alternate lines would be. The definition we entered tells
+PipeDream to perform a <span class="csguide-command">Delete Row</span> command
+(<span class="csguide-key">Ctrl-Y</span>) followed by a <span class="csguide-command">Caret
+Down</span> command (<span class="csguide-key">Ctrl-CCD</span>).</p>
+
+<p>Check this by looking at the <span class="csguide-menu">Edit</span> menu and this Reference Guide.
+This Reference Guide contains a list of all the command sequences which do not
+appear anywhere on the long menus. Now move to the first blank line that you have just
+inserted. Press <span class="csguide-key">Shift-Ctrl-F2</span> and you will see the line disappear
+and the pointer move down. Press <span class="csguide-key">Shift-Ctrl-F2</span> again and this time
+hold it down. You will see each blank line disappear. If you delete some text
+by mistake, you may be able to recover these lines by defining another function
+key to insert lines and paste.</p>
+
+<h2>Clearing Definitions</h2>
+
+<p>To redefine a key to its original definition, simply define the key with a
+blank definition string, or one composed entirely of spaces.</p>
+
+
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>Redefining your whole keyboard layout</td>
+      <td><a href="commandfiles.html">Command Files</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="indentingparagraphs.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="labelprinting.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Indenting Paragraphs </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Label Printing</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

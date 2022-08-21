@@ -1,0 +1,53 @@
+#
+# WimpLib.GB.msg_risc
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright (C) 1989-1998 Colton Software Limited
+# Copyright (C) 1998-2014 R W Colton
+#
+saveasT0:Memory full: unable to create save dialogue box
+saveas1:To save, drag the icon to a directory viewer
+#
+template3:Memory full: unable to create dialogue boxes
+template6:Template file not found
+#
+wimptT1:Abnormal termination
+wimptT2:Arithmetic exception
+wimptT3:Illegal instruction
+wimptT4:Attention request received
+wimptT5:Address exception
+wimptT6:Termination request received
+wimptT7:Stack overflow
+wimptT10:OS error
+#
+wimpt1:type=%d
+wimpt2:%s has suffered a fatal internal error (%s) and must exit immediately
+wimptT42:%s has suffered a serious internal error (%s). Click OK to exit immediately, losing data, Cancel to attempt to resume execution.
+#
+winT1:Not enough memory to create window
+#
+xfersend1:Bad data transfer, receiver dead
+xferrecv1:Can't transfer file (use *Set Wimp$Scrap <filename>)
+xferrecv2:Data transfer failed
+#
+FontSel01:Must call fontselector_init before font_selector
+FNTSELM00:Failed to find FontSelect template
+# FNTSELM01:Out of memory for allocating global data for font selector
+# FNTSELM02:Out of memory for allocating panes
+FNTSELM01:Memory full (FS01)
+FNTSELM02:Memory full (FS02)
+FNTSELM03:Memory full (FS03)
+#FNTSELI00:Click here to apply the above data to the selected substyles
+FNTSELI00:Click here to apply the above data
+FNTSELI01:Click here to go back to the last applied or chosen values
+# NB SKS has renumbered the icons in PipeDream's font selector dialogue box!
+FNTSELIZZ:This is the font selector window
+FNTSELPNT:Click here to set the height and the width to %d point.
+FNTSELW0:Click here to choose '%s' as the font.
+FNTSELW1:Click here to choose '%s' as the weight.
+FNTSELW2:Click here to choose '%s' as the style.
+#
+# end of WimpLib.GB.msg_risc

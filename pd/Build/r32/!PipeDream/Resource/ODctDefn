@@ -1,0 +1,184 @@
+| Dictionary definition file for Spellcheck II that allows
+| Spellcheck I dictionaries to be processed
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 1990-1998 Colton Software Limited
+| Copyright (C) 1998-2014 R W Colton
+|
+| MRJC April 1990
+|
+| '|' is the comment character; use || if you really want a |
+| leading spaces are not significant
+|
+| Copyright string follows:
+|
+PipeDream English Dictionary Definition Copyright Colton Software 1990
+|
+32 | Max word length  (min 32, max 63; set to 32 for old dictionaries)
+91 | Ending offset    (normally 0 for auto-calculation; otherwise min 64)
+|
+| valid first letters MUST BE A SUBSET of valid other letters
+| valid first letters and valid other letters MUST BE IN UPPER CASE
+| maximum number of valid other letters is 96
+| (Character offset) + (number of valid other letters) + (number of endings)
+|   MUST BE LESS THAN 256
+|
+  ABCDEFGHIJKLMNOPQRSTUVWXYZ     | valid first letters (in ascending order)
+'-ABCDEFGHIJKLMNOPQRSTUVWXYZ     | valid other letters (in ascending order)
+'-abcdefghijklmnopqrstuvwxyz     | lower case equivalents (must line up)
+|
+| Ending list
+| ordering is not vital, but if you order with most common endings 
+| of a given length first, this will improve speed
+|
+LESSNESS
+FULNESS
+ABILITY
+IBILITY
+LESSLY
+IOUSLY
+ISHING
+ICALLY
+ATIONS
+SOMELY
+NESSES
+IONING
+IETIES
+ISABLE
+IZABLE
+ANCES
+EABLE
+INESS
+MENTS
+INGLY
+FULLY
+ISHED
+STERS
+ERING
+ISING
+IZING
+ATION
+ATORS
+ATELY
+ENCES
+ENTLY
+ERIES
+ESSES
+IALLY
+IVELY
+OUSLY
+IFIES
+ANTLY
+ICALS
+ITIES
+IFIED
+ISHES
+SHIPS
+ATING
+URING
+ENESS
+EMENT
+ERERS
+AGING
+HOOD
+ANCE
+LIKE
+ABLE
+SHIP
+LESS
+NESS
+ERED
+MENT
+IEST
+ABLY
+IBLY
+IBLE
+EDLY
+ALLY
+IOUS
+ICAL
+FULS
+IERS
+IONS
+ISES
+IZES
+ISTS
+IANS
+ISED
+IZED
+ATOR
+AGES
+ENCE
+ANTS
+SOME
+STER
+ATED
+INGS
+YING
+AGED
+ENTS
+IALS
+URAL
+URES
+URED
+ATES
+IVES
+ERER
+IETY
+ING
+IED
+ISH
+UAL
+FUL
+DOM
+ISM
+IAN
+MAN
+MEN
+ION
+IER
+IES
+EST
+ILY
+ITY
+ERS
+ORS
+ANT
+IST
+ISE
+IZE
+ATE
+AGE
+ENT
+ARY
+EES
+ERY
+ANS
+ESE
+IFY
+ESS
+IAL
+IVE
+OUS
+URE
+ELY
+ALS
+ICS
+ED
+IC
+AL
+EN
+ER
+OR
+ES
+LY
+AN
+EE
+RY
+CY
+E
+S
+Y

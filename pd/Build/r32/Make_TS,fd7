@@ -1,0 +1,145 @@
+| Make_TS.oby - PipeDream
+|
+| This Source Code Form is subject to the terms of the Mozilla Public
+| License, v. 2.0. If a copy of the MPL was not distributed with this
+| file, You can obtain one at http://mozilla.org/MPL/2.0/.
+|
+| Copyright (C) 1991-1998 Colton Software Limited
+| Copyright (C) 1998-2014 R W Colton
+
+IfThere $.Temp Then Else %CDir $.Temp
+
+Set pd$Disc $.Temp.PipeDream_4_xx_yy
+
+%CDir <pd$Disc>
+
+X %Wipe <pd$Disc>.* ~cfr~v
+
+Set ap$Country GB
+
+Set ap$Resource$Dir <Obey$Dir>.!PipeDream.Resource
+
+%CDir                                           <pd$Disc>.Z
+
+%Copy <Obey$Dir>.!PipeDream.!Boot               <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Help               <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Run                <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!RunImage           <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Sprites            <pd$Disc>.Z.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.!Sprites22          <pd$Disc>.Z.* ~rf~cln~v
+
+%Access                                         <pd$Disc>.Z.* r/r
+
+| Resource
+
+%CDir                                           <pd$Disc>.Z.Resource
+|
+%Copy <ap$Resource$Dir>.HTMLHelp                <pd$Disc>.Z.Resource.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.ODctDefn                <pd$Disc>.Z.Resource.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Relnotes                <pd$Disc>.Z.Resource.* ~rf~cln~v
+|
+%CDir                                           <pd$Disc>.Z.Resource.RISC_OS
+%Copy <ap$Resource$Dir>.RISC_OS.!Sprite         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+|%Copy <ap$Resource$Dir>.RISC_OS.BorderUtil      <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.ImageSlot       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.Loader          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.Messages        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.Sprites         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.Sprites22       <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+| Templates in the same order that we load them in (used to save seeking)
+%Copy <ap$Resource$Dir>.RISC_OS.tem_risc        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.tem_main        <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.tem_cht         <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.tem_bc          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.tem_el          <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.tem_f           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.tem_p           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.tem_s           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.u_ltp           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.RISC_OS.u_ptl           <pd$Disc>.Z.Resource.RISC_OS.* ~rf~cln~v
+
+%CDir                                           <pd$Disc>.Z.Resource.CmdFiles
+%Copy <ap$Resource$Dir>.CmdFiles.CopyDelete     <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.CmdFiles.Indent5        <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.CmdFiles.PD4Keys        <pd$Disc>.Z.Resource.CmdFiles.* ~rf~cln~v
+
+%CDir                                           <pd$Disc>.Z.Resource.DictDefn
+%Copy <ap$Resource$Dir>.DictDefn.English        <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.DictDefn.Latin1         <pd$Disc>.Z.Resource.DictDefn.* ~rf~cln~v
+%Access                                         <pd$Disc>.Z.Resource.DictDefn.* r/r
+
+%CDir                                           <pd$Disc>.Z.Resource.Dicts
+%Copy <ap$Resource$Dir>.Dicts.Master            <pd$Disc>.Z.Resource.Dicts.* ~rf~cln~v
+
+%CDir                                           <pd$Disc>.Z.Resource.Markers
+%Copy <ap$Resource$Dir>.Markers.S1              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Markers.S2              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Markers.S3              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Markers.S4              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Markers.S5              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Markers.S6              <pd$Disc>.Z.Resource.Markers.* ~rf~cln~v
+%Access                                         <pd$Disc>.Z.Resource.Markers.* r/r
+
+%CDir                                           <pd$Disc>.Z.Resource.PDrivers
+%Copy <ap$Resource$Dir>.PDrivers.BJ10           <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.PDrivers.DaisyWheel     <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.PDrivers.Default        <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.PDrivers.DotMatrix      <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.PDrivers.HPJet          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.PDrivers.JP150          <pd$Disc>.Z.Resource.PDrivers.* ~rf~cln~v
+%Access                                         <pd$Disc>.Z.Resource.PDrivers.* r/r
+
+%CDir                                           <pd$Disc>.Z.Resource.Pictures
+%Copy <ap$Resource$Dir>.Pictures.S1             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Pictures.S2             <pd$Disc>.Z.Resource.Pictures.* ~rf~cln~v
+%Access                                         <pd$Disc>.Z.Resource.Pictures.* r/r
+
+%CDir                                           <pd$Disc>.Z.Resource.Templates
+%Copy <ap$Resource$Dir>.Templates.Numbers       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Templates.Records       <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Templates.Text          <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Copy <ap$Resource$Dir>.Templates.Text_Plain    <pd$Disc>.Z.Resource.Templates.* ~rf~cln~v
+%Access                                         <pd$Disc>.Z.Resource.Templates.* r/r
+
+%Access                                         <pd$Disc>.Z.Resource.* r/r
+%Access                                         <pd$Disc>.Z.Resource r/r
+
+| Top level, User Choices (destined for Choices$Write on target system)
+
+%CDir                                           <pd$Disc>.Z.uChoices
+
+%Copy <Obey$Dir>.!PipeDream.uChoices.DoCopy      <pd$Disc>.Z.uChoices.* ~rf~cln~v
+%Copy <Obey$Dir>.!PipeDream.uChoices.ReadMe      <pd$Disc>.Z.uChoices.* ~rf~cln~v
+
+%CDir                                           <pd$Disc>.Z.uChoices.PipeDream
+
+%CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.CmdFiles
+%CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Dicts
+%Copy <Obey$Dir>.!PipeDream.uChoices.PipeDream.Dicts.*      <pd$Disc>.Z.uChoices.PipeDream.Dicts.* ~rf~cln~v
+%Access                                                     <pd$Disc>.Z.uChoices.PipeDream.Dicts.* wr/r
+%CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Library
+%Copy <Obey$Dir>.!PipeDream.uChoices.PipeDream.Library.*    <pd$Disc>.Z.uChoices.PipeDream.Library.* ~rf~cln~v
+%Access                                                     <pd$Disc>.Z.uChoices.PipeDream.Library.* wr/r
+%CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Markers
+%CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Pictures
+%CDir                                                       <pd$Disc>.Z.uChoices.PipeDream.Templates
+
+%Access                                         <pd$Disc>.Z.uChoices.PipeDream.* wr/r
+%Access                                         <pd$Disc>.Z.uChoices.PipeDream wr/r
+%Access                                         <pd$Disc>.Z.uChoices wr/r
+
+| Top level, contains !PipeDream
+
+| Another copy of help file and release notes at top level
+| %Copy <ap$Resource$Dir>.HTMLHelp                <pd$Disc>.* ~rf~cln~v
+| %Copy <ap$Resource$Dir>.Relnotes                <pd$Disc>.* ~rf~cln~v
+
+%CDir               <pd$Disc>.Apps
+%CDir               <pd$Disc>.Apps.Document
+%Rename <pd$Disc>.Z <pd$Disc>.Apps.Document.!PipeDream
+
+%CDir                              <pd$Disc>.RiscPkg
+%Copy <Obey$Dir>.RiscPkg.Control   <pd$Disc>.RiscPkg.* ~rf~cln~v
+%Copy <Obey$Dir>.RiscPkg.Copyright <pd$Disc>.RiscPkg.* ~rf~cln~v
+
+Filer_OpenDir <pd$Disc>

@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Number Formats</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="names.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="numberslots.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Number Formats</h1>
+
+<p>The <span class="csguide-dbox">Options</span> dialogue box gives the
+format in which the value of number slots will normally be displayed. This is
+called the default format. You can override this default setting for a single
+slot or for a marked block of slots.</p>
+
+<p>Numbers can be displayed:</p>
+<ul>
+  <li>with up to 9 decimal places or in 'floating format' which displays the
+    value in exponent form if necessary;</li>
+  <li>with negative numbers in brackets, as in accountancy practice, or with
+    the usual minus sign;</li>
+  <li>with negative numbers in red (or another colour of your choice);</li>
+  <li>with thousands separated by a comma, a full stop, a space or no separator
+    (the default).</li>
+</ul>
+
+<h2>To Change the Default Format</h2>
+
+<p>The default format for numbers is set by the corresponding option in the
+<span class="csguide-dbox">Options</span> dialogue box.</p>
+
+<p>All slots in the document are displayed in the default format unless their
+format is specifically altered. Once a slot format is altered from the default
+format, its format is fixed, and will not change if the default format is
+altered. A slot or marked block can be restored to the default format by giving
+the <span class="csguide-option">Default Format</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Layout</td>
+      <td>Default format</td>
+      <td><span class="csguide-key">LDF</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>To Select the Number of Decimal Places</h2>
+
+<p>The <span class="csguide-option">Decimal places</span> option in the <span
+class="csguide-dbox">Options</span> dialogue box determines the default
+setting. This can be set to any value from <span
+class="csguide-option">0</span> to <span class="csguide-option">9</span> or
+to <span class="csguide-option">F</span> for floating format.</p>
+
+<p>To change the number of decimal places displayed for a single slot or marked
+block, give the <span class="csguide-command">Decimal Places</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Layout</td>
+      <td>Decimal Places</td>
+      <td><span class="csguide-key">LDP</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>A dialogue box appears where you can specify the number or F.</p>
+
+<p>The result of displaying 12345.67890 in different formats with a column
+width of 12 in a monospace font is shown below:</p>
+
+<table border="0">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td class="csguide-option">0</td>
+      <td class="csguide-sample-number"><code>12346</code></td>
+    </tr>
+    <tr>
+      <td class="csguide-option">2</td>
+      <td class="csguide-sample-number"><code>12345.68</code></td>
+    </tr>
+    <tr>
+      <td class="csguide-option">5&nbsp;&nbsp;</td>
+      <td class="csguide-sample-number"><code>12345.67890</code></td>
+    </tr>
+    <tr>
+      <td class="csguide-option">6</td>
+      <td class="csguide-sample-number"><code>1.234568E4</code></td>
+    </tr>
+    <tr>
+      <td class="csguide-option">F</td>
+      <td class="csguide-sample-number"><code>12345.6789</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Note that the number format affects only the display of numbers and not the
+accuracy of the numbers when used in calculations. If you want to round a
+number before calculating with it, use the ROUND function to round it to a
+specified number of decimal places. For example, typing
+<code>ROUND(12.256,2)</code> returns 12.26. The number has been rounded to two
+decimal places. A negative decimal place value indicates that the number should
+be rounded to the left of the decimal point so <code>ROUND(12.256,-1)</code>
+returns 10.</p>
+
+<h2>To Display Negative Numbers in Brackets</h2>
+
+<p>The <span class="csguide-option">Negative numbers</span> option in the
+<span class="csguide-dbox">Options</span> dialogue box determines the
+default setting; click Select on <span class="csguide-option">Minus</span> for
+a minus sign or on <span class="csguide-option">Brackets</span> for
+brackets.</p>
+
+<p>To change a single slot or a marked block of slots, give the <span
+class="csguide-command">Sign Brackets</span> or <span
+class="csguide-command">Sign Minus</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td rowspan="2">Layout</td>
+      <td>Sign brackets</td>
+      <td><span class="csguide-key">LSB</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Sign minus</td>
+      <td><span class="csguide-key">LSM</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The result of displaying -12345.67890 in each format is shown below:</p>
+
+<table border="0">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td class="csguide-option">Minus</td>
+      <td><code>-12345.68</code></td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Brackets&nbsp;&nbsp;</td>
+      <td><code>(12345.68)</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>To Change the Thousands Separator</h2>
+
+<p>The <span class="csguide-option">Thousands separator</span> option in the
+<span class="csguide-dbox">Options</span> dialogue box is a default setting;
+use the arrow icons to set it to a comma, a full stop, space or nothing.</p>
+
+<p>The result of displaying the same number in each format is as follows:</p>
+
+<table border="0">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td><span class="csguide-option">,</span></td>
+      <td><code>1,234,567.89</code></td>
+    </tr>
+    <tr>
+      <td><span class="csguide-option">.</span></td>
+      <td><code>1.234.567,89</code> (the decimal point becomes a comma)</td>
+    </tr>
+    <tr>
+      <td><span class="csguide-option">space&nbsp;&nbsp;</span></td>
+      <td><code>1 234 567.89</code></td>
+    </tr>
+    <tr>
+      <td><span class="csguide-option">none</span></td>
+      <td><code>&nbsp;&nbsp;1234567.89</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Displaying Leading and Trailing Characters</h2>
+
+<p>The <span class="csguide-option">Options</span> dialogue box enables you to
+define characters to be displayed in front of or after the results of number
+slots.</p>
+
+<p>For example, you could display <code>&pound;K</code> in front of your financial
+totals or <code>hrs</code> after times.</p>
+
+<p>You can specify a string of up to four leading characters and a string of up
+to four trailing characters, for each document.</p>
+
+<h3>To define leading and/or trailing characters</h3>
+
+<p>A string of up to four leading characters can be set up in the <span
+class="csguide-dbox">Options</span> dialogue box for a document. Likewise a
+second string of up to four trailing characters can be set up.</p>
+
+<p>For example, to set up the leading characters &pound;K, and the trailing
+characters hrs, alter the <span class="csguide-dbox">Options</span> dialogue
+box settings to read:</p>
+
+<table border="0">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td class="csguide-option">Leading characters&nbsp;</td>
+      <td>&pound;K</td>
+    </tr>
+    <tr>
+      <td class="csguide-option">Trailing characters</td>
+      <td>hrs</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>You can include highlights in the leading characters or trailing characters
+string but these will only be displayed when using system font on the screen
+and only printed when using PipeDream printer drivers. Use the ^ character
+followed by the number of the highlight you require.</p>
+
+<p>For example, <code>^I</code> will underline the string.</p>
+
+<p>Spaces can be included to improve the final appearance.</p>
+
+<h3>To display leading and/or trailing characters in slots</h3>
+
+<p>1. Position the caret in the slot to be altered or mark a block of slots to
+be altered.</p>
+
+<p>2. Give the <span class="csguide-command">Leading Characters</span> or <span
+class="csguide-command">Trailing Characters</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td rowspan="2">Layout</td>
+      <td>Leading characters</td>
+      <td><span class="csguide-key">LCL</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Trailing characters</td>
+      <td><span class="csguide-key">LCT</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Note that the leading and trailing character strings are not stored in the
+slots; if you change the strings defined in the <span
+class="csguide-dbox">Options</span> dialogue box, all slots with leading and
+trailing characters 'turned on' will take on the strings defined in the <span
+class="csguide-dbox">Options</span> dialogue box for that document.</p>
+
+<h3>Converting a Formula to a Value</h3>
+
+<p>You can fix the current value of a numeric slot or block of slots so that it
+does not change on subsequent calculations.</p>
+
+<p>To do this, mark the block of slots and give the <span
+class="csguide-command">Snapshot</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Blocks</td>
+      <td>Snapshot</td>
+      <td><span class="csguide-key">BSS</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Note that slots on which the Snapshot command has been performed contain
+only values, not formulae.</p>
+
+<p>You can convert text slots into number slots and vice versa with the <span
+class="csguide-command">Number &lt;&gt; Text</span> command. One application of
+this is to convert text slots containing numbers into numeric slots so that you
+can do calculations with them.</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Blocks</td>
+      <td>Number &lt;&gt; Text</td>
+      <td><span class="csguide-key">BNT</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Both of these commands work on a marked block of slots, if there is one;
+otherwise on the current slot.</p>
+
+<h3>Adjusting Column Widths to New Slot Formats</h3>
+
+<p>If your number formats are too wide to fit into the current column width,
+PipeDream first tries to display the numbers in scientific E notation. If they
+are still too long, PipeDream displays % signs in the slots. To solve this
+problem, you need to change the column widths. You can do this by dragging the
+column borders. Alternatively, you can give the <span
+class="csguide-command">Auto Width</span> command (<span
+class="csguide-key">Ctrl-LAW</span>) which
+automatically adjusts the column widths so that everything fits neatly. Auto
+Width operates on a marked block or on the current column if there is no marked
+block.</p>
+
+
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>Displaying negative numbers in red</td>
+      <td><a href="colours.html">Colours</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="names.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="numberslots.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Names </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Number Slots</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Printing</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="printerdrivers.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="protection.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Printing</h1>
+
+<h2>To Print a Document Using a RISC OS Printer Driver</h2>
+
+<p>First ensure that a RISC OS printer driver is loaded. Your RISC OS printer driver icon must be on the icon bar.</p>
+
+<p>1. Give the <span class="csguide-command">Printer Config</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Print</td>
+      <td>Printer config</td>
+      <td><span class="csguide-key">PD</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>2. Set the <span class="csguide-option">Printer type</span> option to <span
+class="csguide-option">RISC OS</span>. Ignore the other options.</p>
+
+<p>3. Click the <span class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>.</p>
+
+<p>4. Give the <span class="csguide-command">Print</span> command.</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Print</td>
+      <td>Print</td>
+      <td><span class="csguide-key">PO</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>You will see the <span class="csguide-dbox">Print</span> dialogue box. At
+the top of the dialogue box, you will see the type of RISC OS printer driver
+currently available.</p>
+
+<p>5. If you want to print more than one copy of the document, specify the
+number of copies.</p>
+
+<p>6. Click Select on <span class="csguide-option">Landscape</span> to print
+the document horizontally or <span class="csguide-option">Portrait</span> to
+print it vertically. If you decide to print your document in landscape format,
+remember that the page length will change as a result. If you do not have <span
+class="csguide-option">Auto line height</span> switched on, you will need to
+tell PipeDream the new page length in the <span class="csguide-dbox">Page
+Layout</span> dialogue box. Try about three quarters of the portrait page
+length as your new page length. For example, if the portrait page length is 66,
+try 48. You may also need to tell PipeDream the new page width. Try the
+portrait page width plus a third. For example, if the portrait page width is
+80, try 106. If the document you are printing is to be bound as a book, click
+Select on the <span class="csguide-option">Two sided, margin</span> option to
+print out your document with the headers and footers reversed on left-hand
+pages and with extra characters added to the right-hand pages' left margins to
+leave space for the binding. Specify the number of characters you want to add
+to the margins on the right hand pages.</p>
+
+<p>7. Click Select on <span class="csguide-option">Wait between pages</span>
+if you want to wait after each page to insert single sheets of paper. For each
+page, you will be given the following options:</p>
+<ul>
+  <li>miss out the page;</li>
+  <li>print to the end of the document;</li>
+  <li>print the current page;</li>
+  <li>stop printing.</li>
+</ul>
+
+<h2>To Print a Document Using a PipeDream Printer Driver</h2>
+
+<p>1. Give the <span class="csguide-command">Printer Config</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Print</td>
+      <td>Printer config</td>
+      <td><span class="csguide-key">PD</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>2. Select the PipeDream printer driver you are going to use by clicking on
+the arrow icons.</p>
+
+<p>If you have loaded a PipeDream printer driver already, its name will appear
+here. Printer drivers are provided for dot matrix printers, daisy wheel printers
+and HP PCL printers. These are called DotMatrix, Daisywheel and HPJet and are
+found in the !PipeDream.Resources directory.</p>
+
+<p>3. On the Printer type line, specify whether you have a serial or parallel
+printer connected by using the arrow icons to set this option to <span
+class="csguide-option">Serial</span> or <span
+class="csguide-option">Parallel</span>. Most printers require the <span
+class="csguide-option">Parallel</span> setting. Set the option to <span
+class="csguide-option">Network</span> if you want to use an Econet printer
+server. If you do, on the <span class="csguide-option">Printer server</span>
+line, type in the number or name of the printer server. The remaining options
+apply only to serial ports. The default settings will probably work; if not,
+refer to your printer's user guide for the settings you should use.</p>
+
+<p>4. When you have set the configuration, click the <span
+class="csguide-dbox-button">OK</span> button or press <span
+class="csguide-key">Enter</span>.</p>
+
+<p>5. Give the <span class="csguide-command">Print</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Print</td>
+      <td>Print</td>
+      <td><span class="csguide-key">PO</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>You will see the <span class="csguide-dbox">Print</span> dialogue box.</p>
+
+<p>6. If you want more than one copy of the document, type in the number of
+copies you require.</p>
+
+<p>7. Click Select on <span class="csguide-option">Printer</span> to ensure
+that the file is sent to your printer. This is the default option.</p>
+
+<p>8. Click Select on <span class="csguide-option">Wait between pages</span>
+if you want to wait after each page to insert single sheets of paper. For each
+page, you will be given the following options:</p>
+<ul>
+  <li>miss out the page;</li>
+  <li>print to the end of the document;</li>
+  <li>print the current page;</li>
+  <li>stop printing.</li>
+</ul>
+
+<h2>To Print Part of a Document</h2>
+
+<p>To print a marked block:</p>
+
+<p>1. Mark the block you want to print.</p>
+
+<p>2. Give the <span class="csguide-command">Print</span> command.</p>
+
+<p>3. When the dialogue box appears, click Select on the option <span
+class="csguide-option">Print marked block</span>.</p>
+
+<h2>To See the Results of Printing on the Screen</h2>
+
+<p>This option is only useful for seeing where headers and footers appear.</p>
+
+<p>1. Give the <span class="csguide-command">Print</span> command.</p>
+
+<p>2. When the dialogue box appears, click Select on the <span
+class="csguide-option">Screen</span> option.</p>
+
+<p>You will see your document on the screen including headers and footers.
+Fonts are not displayed.</p>
+
+<h2>To Print to a File</h2>
+
+<p>If you are using a PipeDream printer driver, click Select on <span
+class="csguide-option">File</span> in the <span
+class="csguide-dbox">Print</span> dialogue box and type in the name of the
+file to which you want to print. Printer codes from the printer driver are
+included in the file.</p>
+
+<p>If you are using a RISC OS printer driver, click Menu on the printer icon on
+the icon bar and type in the name of the file to which you want to print.</p>
+
+<h2>To Cancel Printing</h2>
+
+<p>You can cancel printing by pressing the <span class="csguide-key">Esc</span> key.
+Text already in the print buffer may be printed.</p>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="printerdrivers.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="protection.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Printer Drivers </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Protection</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

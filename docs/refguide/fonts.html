@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Fonts</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="fixingcolsrows.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="functions.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Fonts</h1>
+
+<p>Many printers are able to print your text in a range of different fonts. You
+can also see fonts displayed on your screen. A font is the name given to a
+design of character.</p>
+
+<p>You can use fonts to make your documents appear much more stylish and
+professional. You might want to have your headings printed in one font and your
+main text in another or you might want to pick out certain words or phrases by
+printing them in a different font to that used for the rest of the text. In
+this Reference Guide, for example, the main text, such as this paragraph, is in
+a sans-serif font and text which appears on the screen is shown in a monospace
+font.</p>
+
+<p>With PipeDream, you can use any outline font which is compatible with RISC
+OS. Fonts are displayed on the screen and can be printed out on a suitable
+printer using a RISC OS printer driver.</p>
+
+<h2>Setting a Global Font</h2>
+
+<p>The <span class="csguide-command">Font</span> command sets a global font for
+the document. Note that you will only be able to print the font if you use a
+RISC OS printer driver.</p>
+
+<p>1. Move the pointer over the arrow to the right of <span class="csguide-menu-option">Font</span> in the <span class="csguide-menu">Print</span> menu to see the <span class="csguide-dbox">Font Selector</span> dialogue box.</p>
+
+<p>2. Click Select on the name of the <span class="csguide-option">Font</span>
+you require. You may have to use the arrow icons to scroll through the list of
+fonts to find the one you want. The weights and styles available for the font
+you have chosen will be displayed.</p>
+
+<p>3. Select the <span class="csguide-option">Weight</span> you require by
+clicking Select on the weight's name.</p>
+
+<p>4. Select the <span class="csguide-option">Style</span> you require by
+clicking Select on the style's name.</p>
+
+<p>5. Click Select on the <span class="csguide-option">Point size</span> you
+require. If you want to, you can change either the height or width by setting
+it to what you require with the arrow icons.</p>
+
+<p>6. If you want to see what the font will look like, click the <span
+class="csguide-dbox-button">Try</span> button. The alphabet will be displayed in the font
+you have chosen. You can type in other characters to see what they look like in
+your chosen font.</p>
+
+<p>7. Set the <span class="csguide-option">Line height</span> you require.
+Font sizes and line height settings are rather subjective but having a Line
+height about 120% of the font height usually gives a pleasant effect. By
+default, the line height is set to <span class="csguide-option">Auto</span>
+which means that PipeDream will give you 120% of the current height setting.
+You can change this if you want to do so.</p>
+
+<p>8. Click the <span class="csguide-dbox-button">OK</span> button or press
+<span class="csguide-key">Enter</span> to select the font.</p>
+
+<p>Note that if you select a very small font, PipeDream will display it on the
+screen within PipeDream's minimum screen line height. It will be printed with
+the correct line height for the font you have selected.</p>
+
+<h2>Specifying a Change of Font</h2>
+
+<p>The <span class="csguide-command">Local Font</span> command enables you to
+specify a local change of font for a slot. At the end of the slot, PipeDream switches
+back to the font you have set for the whole document with the <span
+class="csguide-command">Font</span> command. Note that you can only have a
+local change of font if you have already selected a global font using the <span
+class="csguide-command">Font</span> command.</p>
+
+<p>For example:</p>
+
+<p class="csguide-sample"
+style="margin-left:2em;">@F:Corpus.Medium,24,24@Chapter Ten</p>
+
+<p>would print your chapter title in 24 point medium Corpus.</p>
+
+<p>To specify a change of font, proceed as follows:</p>
+
+<p>1. Position the caret at the beginning of the slot you want to change.</p>
+
+<p>2. Bring up the <span class="csguide-menu">Print</span> menu.</p>
+
+<p>3. Move the pointer over the arrow to the right of the <span
+class="csguide-menu-option">Local Font</span> option in the <span
+class="csguide-menu">Print</span> menu to see the <span
+class="csguide-dbox">Local Font</span> dialogue box.</p>
+
+<p>4. Click Select on the name of the <span class="csguide-option">Font</span>
+you require.</p>
+
+<p>5. Select the <span class="csguide-option">Weight</span> you require by
+clicking Select on its name.</p>
+
+<p>6. Select the <span class="csguide-option">Style</span> you require by
+clicking Select on its name.</p>
+
+<p>7. Click Select on the <span class="csguide-option">Point size</span> you
+require. If you want to, you can change either the height or width by setting
+it to what you require with the arrow icons.</p>
+
+<p>8. If you want to see what the font will look like, click the <span
+class="csguide-dbox-button">Try</span> button. The alphabet will be displayed in the font
+you have chosen. You can type in other characters to see what they look like in
+your chosen font.</p>
+
+<p>9. Click the <span class="csguide-dbox-button">OK</span> button or press
+<span class="csguide-key">Enter</span> to insert the local font.</p>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="fixingcolsrows.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="functions.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Fixing Rows and Columns </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Functions</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

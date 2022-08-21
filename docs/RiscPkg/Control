@@ -1,0 +1,12 @@
+Package: PipeDream-Manuals
+Version: 20140212
+Section: Manuals
+Priority: Optional
+Maintainer: Colton Software <colton-software-pipedream@googlegroups.com>
+Standards-Version: 0.4.0
+Licence: Free
+Description: PipeDream Tutorial and Reference Guide
+ PipeDream offers all the facilities you would expect from the following separate programs:
+ word processor, spreadsheet, database and charts package.
+ Thanks to Richard Colton, PipeDream is now open source and completely free.
+Components: Apps.Manuals.PipeDream (Movable LookAt)

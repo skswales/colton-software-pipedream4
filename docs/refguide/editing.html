@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Editing</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="datetime.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="errormessages.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Editing</h1>
+
+<p>PipeDream has a wide range of commands which enable you to edit your
+document to make changes and improvements and to correct mistakes. Some editing
+commands, such as those to insert or delete a column or row, affect the layout
+of the document. Others enable you to make changes to individual words or
+letters.</p>
+
+<h2>Adding or Deleting a Line (Row)</h2>
+
+<p>You can insert a new blank line in just one column, or as a row of lines
+across all the columns on the document. Likewise, you can delete any line from
+a column, or the row of slots across the whole document.</p>
+
+<h3>To insert a blank row of slots across all columns</h3>
+
+<p>1. Position the caret where you want the blank row.</p>
+
+<p>2. Give the <span class="csguide-command">Insert Row</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Insert row</td>
+      <td><span class="csguide-key">N</span></td>
+      <td><span class="csguide-key">F7</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For example:</p>
+
+<p>1. Position the caret in slot B3:</p>
+
+<div class="csguide-sample">
+
+<table border="1">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr class="csguide-border-colhead">
+      <th></th>
+      <th class="csguide-example-column">A</th>
+      <th class="csguide-example-column">B</th>
+      <th class="csguide-example-column">C</th>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">1</th>
+      <td>one</td>
+      <td>one</td>
+      <td>one</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">2</th>
+      <td>two</td>
+      <td>two</td>
+      <td>two</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">3</th>
+      <td>three</td>
+      <td><img alt="caret" src="images/caret.png" />three</td>
+      <td>three</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">4</th>
+      <td>four</td>
+      <td>four</td>
+      <td>four</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">5</th>
+      <td>five</td>
+      <td>five</td>
+      <td>five</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">6</th>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>2. Give the Insert Row command.</p>
+
+<div class="csguide-sample">
+
+<table border="1">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr class="csguide-border-colhead">
+      <th></th>
+      <th class="csguide-example-column">A</th>
+      <th class="csguide-example-column">B</th>
+      <th class="csguide-example-column">C</th>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">1</th>
+      <td>one</td>
+      <td>one</td>
+      <td>one</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">2</th>
+      <td>two</td>
+      <td>two</td>
+      <td>two</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">3</th>
+      <td></td>
+      <td><img alt="caret" src="images/caret.png" /></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">4</th>
+      <td>three</td>
+      <td>three</td>
+      <td>three</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">5</th>
+      <td>four</td>
+      <td>four</td>
+      <td>four</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">6</th>
+      <td>five</td>
+      <td>five</td>
+      <td>five</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>The caret will be in a blank slot and the previous text in all columns will
+move down.</p>
+
+<h3>To insert a blank slot in one column</h3>
+
+<p>1. Position the caret where you want the blank slot.</p>
+
+<p>2. Give the <span class="csguide-command">Insert Row in Column</span>
+command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Insert row in column</td>
+      <td><span class="csguide-key">EIRC</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>3. The caret will now be in a blank slot, and the previous text will move
+down.</p>
+
+<p>For example:</p>
+
+<p>1. Position the caret in slot B3.</p>
+
+<p>2. Give the <span class="csguide-command">Insert Row in Column</span>
+command.</p>
+
+<div class="csguide-sample">
+
+<table border="1">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr class="csguide-border-colhead">
+      <th></th>
+      <th class="csguide-example-column">A</th>
+      <th class="csguide-example-column">B</th>
+      <th class="csguide-example-column">C</th>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">1</th>
+      <td>one</td>
+      <td>one</td>
+      <td>one</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">2</th>
+      <td>two</td>
+      <td>two</td>
+      <td>two</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">3</th>
+      <td>three</td>
+      <td><img alt="caret" src="images/caret.png" /></td>
+      <td>three</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">4</th>
+      <td>four</td>
+      <td>three</td>
+      <td>four</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">5</th>
+      <td>five</td>
+      <td>four</td>
+      <td>five</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">6</th>
+      <td></td>
+      <td>five</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>3. The caret will be in a blank slot and the previous text in column B will
+move down.</p>
+
+<h3>To add a blank row at the end of the document</h3>
+
+<p>Position the caret on the last line and press <span
+class="csguide-key">Enter</span>.</p>
+
+<h3>To delete a slot or row of slots</h3>
+
+<p>1. Position the caret in the row of slots you wish to delete.</p>
+
+<p>2. Give the <span class="csguide-command">Delete Row</span> command to
+delete the whole row or the <span class="csguide-command">Delete Row in
+Column</span> command to delete a slot from just the one column containing the
+caret.</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td rowspan="2">Edit</td>
+      <td>Delete row</td>
+      <td><span class="csguide-key">Y</span></td>
+      <td><span class="csguide-key">F8</span></td>
+    </tr>
+    <tr>
+      <td>Delete row in column</td>
+      <td><span class="csguide-key">EDRC</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For example:</p>
+
+<p>1. Position the caret in slot B3.</p>
+
+<p>2a. If you give the <span class="csguide-command">Delete Row</span> command,
+row 3 is deleted and the rows beneath it move up.</p>
+
+<p>2b. If you give the <span class="csguide-command">Delete Row in
+Column</span> command, only slot B3 is deleted and the other slots in column B
+move up.</p>
+
+<h2>Adding or Deleting a Column</h2>
+
+<p>You can insert a new column to the left of an existing column, add a new
+column at the right-hand side of the document, or delete an existing column.</p>
+
+<h3>To insert a new column to the left of another column</h3>
+
+<p>1. Position the caret in the column.</p>
+
+<p>2. Give the <span class="csguide-command">Insert Column</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Insert column</td>
+      <td><span class="csguide-key">EIC</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>3. The column containing the caret will move right, and a new column will be
+inserted with an initial width of 12 characters.</p>
+
+<h3>To add a column to the right of the other columns</h3>
+
+<p>Give the <span class="csguide-command">Add Column</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Add column</td>
+      <td><span class="csguide-key">EAC</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>3. The caret will be in the new column which is created with a width of 12
+characters, and a right margin of zero. Note that when a column has a right
+margin of zero, the text wraps at the end of the column.</p>
+
+<h3>To delete a column</h3>
+
+<p>1. Position the caret in the column you wish to delete.</p>
+
+<p>2. Give the <span class="csguide-command">Delete Column</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Delete column</td>
+      <td><span class="csguide-key">EDC</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If you change your mind about deleting the column or if you want to move it
+to another position, you can recover it using the <span
+class="csguide-command">Paste</span> command.</p>
+
+<h2>Joining and Splitting Lines</h2>
+
+<p>You can split a line of text so that the second part of the line moves to
+the next row of the document. You may want to split a line when you want to
+perform a block operation on text that starts or ends in the middle of a line.
+You can also join the next line onto the end of the line you are on.</p>
+
+<h3>To split a line</h3>
+
+<p>1. Position the caret just behind the first character that you want to move
+to the next line.</p>
+
+<p>2. Give the <span class="csguide-command">Split Line</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Split line</td>
+      <td><span class="csguide-key">ESL</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>To join two lines</h3>
+
+<p>1. Position the caret on the first of the two lines.</p>
+
+<p>2. Give the <span class="csguide-command">Join Lines</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Join lines</td>
+      <td><span class="csguide-key">EJL</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>3. The text on the next line will be moved up to the end of the line with
+the caret on it.</p>
+
+<p>The <span class="csguide-command">Split Line</span> and <span
+class="csguide-command">Join Lines</span> commands use the <span
+class="csguide-option">Insert on wrap</span> setting in the <span
+class="csguide-dbox">Options</span> dialogue box to determine how to
+maintain alignment over the document.</p>
+
+<p>Another way to split and join lines is to turn on the <span
+class="csguide-option">Insert on Return</span> option in the <span
+class="csguide-dbox">Options</span> dialogue box. Then pressing
+<span class="csguide-key">Enter</span> splits a line at the caret position and either giving the
+<span class="csguide-command">Delete Character</span> command at the end of a
+line or pressing <span class="csguide-key">Backspace</span> at the beginning of a line join
+lines.</p>
+
+<h2>Typing and Inserting Text</h2>
+
+<p>You can add text or blank lines anywhere in the document. Text is always
+entered at the caret position. PipeDream provides two alternative ways to type
+text into a document. By default, text you type is inserted before the
+character at the caret position. If you switch to overtyping, text types over
+any text previously on the line.</p>
+
+<h3>To switch between inserting and overtyping</h3>
+
+<p>The <span class="csguide-menu">Choices</span> sub-menu has an option called <span
+class="csguide-menu-option">Insert</span>, which has a tick next to it by default
+to show that all text you type will be inserted. To change to overtyping, click
+Select on the <span class="csguide-menu-option">Insert</span> option. The tick will
+disappear and what you type will overwrite what was there before.</p>
+
+<h3>Swapping case</h3>
+
+<p>You can alter text which you have typed in from upper-case to lower-case and
+vice versa with the <span class="csguide-command">Swap Case</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Swap case</td>
+      <td><span class="csguide-key">SS</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>To insert text</h3>
+
+<p>1. Use the mouse to move the pointer to the required position in the
+document.</p>
+
+<p>2. Click Select to position the caret at the required position.</p>
+
+<p>3. If you are currently inserting, just type in the text. If you are
+currently overtyping, give the <span class="csguide-command">Insert
+Space</span> command to make space for the new text:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Insert space</td>
+      <td><span class="csguide-key">U</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>To insert a character</h3>
+
+<p>You can insert any &#39;top-bit-set&#39; character. These are characters you may not
+find on the keyboard, such as foreign letters and accented characters. To
+insert such a character, position the caret where you want the character to
+appear. Find !Chars in the RISC OS Apps directory. Double-click Select on the
+!Chars icon to activate it. You will see a window which displays all the
+characters available in the system font. If you wish you can change the font
+displayed by !Chars by bringing up a menu in the !Chars window and clicking
+Select on the font. Click Select on the character you want to insert. It will
+appear in your PipeDream document at the caret position.</p>
+
+<p>Another way to insert &#39;top-bit-set&#39; characters is to hold down the <span class="csguide-key">Alt</span> key whilst you type in the ASCII value of the &#39;top-bit-set&#39; character, using the numeric keypad. Tables of ASCII values can be found in your RISC OS User Guide.</p>
+
+<h2>Deleting Text</h2>
+
+<p>The <span class="csguide-key">Backspace</span> key (Rubout) deletes anything to the left of the caret.</p>
+
+<p>The <span class="csguide-command">Delete Word</span> and <span
+class="csguide-command">Delete Character</span> commands can be used to delete
+words and characters respectively.</p>
+
+<p>The <span class="csguide-command">Delete to End of Slot</span> command
+deletes all the contents of the slot to the right of the caret.</p>
+
+<h2>Recovering Deleted Text</h2>
+
+<p>Text deleted with the <span class="csguide-command">Delete Row</span>, <span
+class="csguide-command">Delete Word</span>, <span
+class="csguide-command">Delete Column</span>, <span
+class="csguide-command">Delete Block</span>, <span
+class="csguide-command">Delete to End of Slot</span> and <span
+class="csguide-command">Delete Row in Column</span> commands can be retrieved
+with the <span class="csguide-command">Paste</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Paste</td>
+      <td><span class="csguide-key">I</span></td>
+      <td><span class="csguide-key">F9</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For example:</p>
+
+<p>1. Position the caret at the beginning of a sentence.</p>
+
+<p>2. Give the <span class="csguide-command">Delete Word</span> command
+repeatedly until the sentence disappears.</p>
+
+<p>3. Give the <span class="csguide-command">Paste</span> command repeatedly
+and the sentence will reappear.</p>
+
+<p>With <span class="csguide-command">Delete to End of Slot</span>, if the slot
+deleted is a number slot, when it is recovered using the <span
+class="csguide-command">Paste</span> command, the formula it contained will be
+pasted in as text. Give the <span class="csguide-command">Edit Formula</span>
+command to make it into a formula again.</p>
+
+<h2>Repeating a Command</h2>
+
+<p>Very often, you may want to repeat a command that you have just performed.
+For example, you might want to use the <span class="csguide-command">Add
+Column</span> command to add 15 columns to your spreadsheet. You can do this in
+one of three ways:</p>
+<ul>
+  <li>press <span class="csguide-key">Ctrl-EAC</span> 15 times.</li>
+  <li>Select the <span class="csguide-command">Add column</span> command from the <span class="csguide-menu">Edit</span> menu by clicking Adjust on it. If you use Adjust, the menu remains on the screen so that you can click on the command again.</li>
+  <li>Select the <span class="csguide-command">Add column</span> command once and use the <span class="csguide-command">Repeat</span> command:</li>
+</ul>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Files</td>
+      <td>Repeat command</td>
+      <td><span class="csguide-key">J</span></td>
+      <td><span class="csguide-key">F5</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This has the effect of repeating the last command given and is probably the
+easiest method to use.</p>
+
+
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>Deleting blocks of text</td>
+      <td><a href="blockops.html">Block Operations</a></td>
+    </tr>
+    <tr>
+      <td>Other uses of the Paste command</td>
+      <td><a href="paste.html">Paste</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="datetime.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="errormessages.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Dates and Times </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Error Messages</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

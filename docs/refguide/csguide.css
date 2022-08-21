@@ -1,0 +1,287 @@
+/* Modern style for Amaya Editor Lite */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Copyright (C) 1991-1998 Colton Software Limited
+ * Copyright (C) 1998-2014 R W Colton */
+
+/* default rules for the whole document */
+body {
+    font-size: 12pt;
+    font-family: Calibri, Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    color: black;
+    background-color: white;
+    line-height: 1.2em;
+    margin-left: 2em;
+    margin-right: 2em;
+   }
+
+/* paragraphs */
+p  {
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    text-align: left;
+   }
+
+/* headings */
+h1 {
+    font-size: 150%;
+    font-weight: bold;
+    font-style: normal;
+    padding: 0;
+    margin-top: 0.5em;
+    margin-bottom: 1.5em;
+   }
+h2 {
+    font-size: 120%;
+    font-weight: bold;
+    font-style: normal;
+    padding: 0;
+    margin-top: 1.0em;
+    margin-bottom: 1.1em;
+   }
+h3 {
+    font-size: 110%;
+    font-weight: bold;
+    font-style: normal;
+    padding: 0;
+    margin-top: 1.0em;
+    margin-bottom: 1.1em;
+   }
+h4 {
+    font-size: 100%;
+    font-weight: bold;
+    font-style: normal;
+    padding: 0;
+    margin-top: 1.0em;
+    margin-bottom: 1.1em;
+   }
+h5 {
+    font-size: 100%;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+h6 {
+    font-size: 100%;
+    font-weight: normal;
+    font-style: italic;
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+
+/* divisions */
+div {
+    padding: 0;
+    margin-top: 0em;
+    margin-bottom: 0em;
+   }
+
+/* lists */
+ul, ol {
+    padding: 0 0 0 3em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+ul ul, ol ol, ul ol, ol ul {
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+li {
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    text-align: left;
+   }
+li p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+dl {
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 1em;
+   }
+dl dl {
+    margin-top: 0em;
+    margin-bottom: 0em;
+   }
+dt {
+    padding: 0;
+    font-weight: bold;
+    margin-top: .3em;
+    margin-bottom: .3em;
+   }
+dd {
+    padding: 0;
+    margin-top: .3em;
+    margin-left: 3em;
+    margin-bottom: .3em;
+   }
+dl p {
+    margin-top: .3em;
+    margin-bottom: .3em;
+   }
+
+/* inline */
+strong {
+    font-weight: bold;
+   }
+em {
+    font-style: italic;
+   }
+code {
+    font-family: Courier New, Courier, monospace;
+   }
+ins {
+    background-color: yellow;
+    text-decoration: underline;
+   }
+del {
+    text-decoration: line-through;
+   }
+
+/* anchors */
+a[href] {
+    color: blue;
+    text-decoration: underline;
+   }
+
+/* end of Amaya definitions */
+
+.csguide-arg {
+    font-family: Courier New, Courier, monospace;
+    font-style: italic;
+}
+
+.csguide-border-colhead {
+    background-color: #f4f4f4;
+    text-align: center;
+}
+
+.csguide-border-rowhead {
+    background-color: #f4f4f4;
+    text-align: center;
+    width: 48px;
+}
+
+.csguide-button {
+    font-weight: bold;
+}
+
+.csguide-command {
+    font-weight: bold;
+}
+
+.csguide-dbox {
+    font-weight: bold;
+}
+
+.csguide-dbox-button {
+    font-weight: bold;
+}
+
+.csguide-example-column {
+    width: 96px;
+}
+
+.csguide-greek-symbol {
+    font-family: Symbol, Times, serif;
+}
+
+.csguide-key {
+    font-family: Courier New, Courier, monospace;
+    font-weight: bold;
+}
+
+.csguide-menu {
+    font-weight: bold;
+}
+
+.csguide-menu-option {
+    font-weight: bold;
+}
+
+.csguide-option {
+    font-weight: bold;
+}
+
+.csguide-sample {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11pt;
+    font-weight: normal;
+    font-style: normal;
+}
+
+.csguide-sample p  {
+    padding: 0;
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+}
+
+.csguide-sample-number {
+    text-align: right;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.csguide-toolbar-button {
+    font-weight: bold;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table.csguide-command-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.csguide-command-table, table.csguide-command-table th, table.csguide-command-table td {
+    border: 1px solid black;
+}
+
+table.csguide-command-table th {
+    text-align: left;
+    font-weight: bold;
+}
+
+table.csguide-command-table th.csgcth-menu {
+    width : 20%;
+}
+
+table.csguide-command-table th.csgcth-command {
+    width : 30%;
+}
+
+table.csguide-command-table th.csgcth-ctrl {
+    width : 30%;
+}
+
+table.csguide-command-table th.csgcth-key {
+    width : 20%;
+}
+
+table.csguide-info-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.csguide-info-table, table.csguide-info-table th, table.csguide-info-table td {
+    border: 1px solid black;
+}
+
+table.csguide-info-table th {
+    text-align: left;
+    font-weight: bold;
+}

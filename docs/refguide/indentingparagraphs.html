@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Indenting Paragraphs</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="iconmenu.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="keyboard.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Indenting Paragraphs</h1>
+
+<p>In PipeDream you can indent paragraphs in one of two ways:</p>
+<ul>
+  <li>indenting just the first line of the paragraph by a few spaces;</li>
+  <li>indenting the whole paragraph.</li>
+</ul>
+
+<h2>Indenting Just the First Line</h2>
+
+<p>To indent a paragraph by a few spaces, simply type the spaces on the first
+line of the paragraph. Note that you cannot press the <span class="csguide-key">Tab</span> key to
+do this as moves the caret into the next column which results in the whole
+paragraph being typed into the new column.</p>
+
+<p>To be able to create an indent by pressing one key, you can redefine a key
+to insert any number of spaces.</p>
+
+<p>As an example, in the directory <code>!PipeDream.Resources.CmdFiles</code>,
+there is a command file called Indent5 which redefines <span class="csguide-key">Shift-F1</span> to
+insert five spaces. If you double-click Select on this file, the key will be
+defined; you can now press <span class="csguide-key">Shift-F1</span> to give you an indent of five
+spaces at the start of each paragraph If you always want <span class="csguide-key">Shift-F1</span>
+to do this, copy the file so that it is called
+<code>&lt;Choices$Write&gt;.PipeDream.key</code>. This is a
+special command file which PipeDream always attempts to run when it starts up.</p>
+
+<p>If you want to change the number of spaces that pressing
+<span class="csguide-key">Shift-F1</span> gives, you can edit the command file by dragging it to
+the PipeDream icon on the icon bar. The five spaces are between the second pair
+of double quotation marks. You can add any text to this string and it will be
+defined onto <span class="csguide-key">Shift-F1</span> when PipeDream starts up.</p>
+
+<h2>Indenting the Whole Paragraph</h2>
+
+<p>To indent a new paragraph, move to the beginning of column A, press <span
+class="csguide-key">Tab</span> and start typing. <span
+class="csguide-key">Tab</span> moves the caret into the
+next column and the paragraph that you type will all go into column B. Note
+that when the caret wraps from the first line of the paragraph to the second,
+the caret stays within column B.</p>
+
+<p>To vary the indent before your paragraph in column B, you need to change the
+width of column A. You can do this before or after you have typed the
+paragraph. The easiest way to vary the width of a column is to move the pointer
+into the column border at the top of the window and drag the column border to
+the left or right.</p>
+
+<p>After varying the indent, you will need to reformat your text to a new right
+margin. You can drag the right margin to the new position that you want. To
+reformat a single paragraph put the caret on the top line of the paragraph and
+give the <span class="csguide-command">Reformat Paragraph</span> command
+(<span class="csguide-key">Ctrl-R</span>). To reformat a lot of text mark the text as a block and
+give the <span class="csguide-command">Format Block</span> command
+(<span class="csguide-key">Ctrl-EFB</span>).</p>
+
+<p>PipeDream also enables you to move paragraphs of text which you have already
+typed. For example to move a paragraph of text from column A to column B, first
+mark the paragraph as a block. Then place the caret on the first line of the
+paragraph and press the <span class="csguide-key">Tab</span> key to move the caret into column B. You will
+notice that the text which was previously to the right of the caret has
+temporarily disappeared. Do not worry about this; Pipedream is simply showing
+you that you are in column B. Now give the <span class="csguide-command">Move
+Block</span> command (<span class="csguide-key">Ctrl-BM</span>). The text will move from column A
+to column B. If you wish, you can put the caret back in column A and move the
+block back again.</p>
+
+<p>If you get the error message <strong>Overlap</strong> when trying to move paragraphs in this
+way, it is because the caret is between the top and bottom lines of the block.
+Move the caret to the top line of the block or to a line which does not run
+through the block.</p>
+
+
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>Redefining your keyboard</td>
+      <td><a href="commandfiles.html">Command Files</a></td>
+    </tr>
+    <tr>
+      <td>Copying, moving and deleting blocks</td>
+      <td><a href="blockops.html">Block Operations</a></td>
+    </tr>
+    <tr>
+      <td>Reformatting text</td>
+      <td><a href="reformattingtext.html">Reformatting Text</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="iconmenu.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="keyboard.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Icon Menu </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Keyboard Definition</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

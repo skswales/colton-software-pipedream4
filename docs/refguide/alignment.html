@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Alignment</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<body>
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="commands.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="arrays.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Alignment</h1>
+
+<h2>Default Alignment</h2>
+
+<p>Text typed into text slots is normally aligned with the left-hand margin.
+The values of number slots are normally displayed right-aligned within the
+column width. For tables of figures displayed with the same number of decimal
+places, this ensures that the decimal points line up.</p>
+
+<h2>Altering Alignment</h2>
+
+<p>The default alignment of both text slots and number slots can be changed.
+You can choose to have the values of number slots left-aligned or centred over
+the column. You can choose to have text centred, right-aligned or sections of
+the line aligned in all three ways.</p>
+
+<p>With text slots, the effect can only be seen when the caret is not in the
+slot. When the caret is in the slot, the text is displayed left aligned. This
+makes the editing of text slots easier.</p>
+
+<p>1. Mark the slot or block of slots whose alignment you want to change.</p>
+
+<p>2. Give one of the following commands:</p>
+<ul>
+  <li><span class="csguide-option">Left Align</span> to align the text or
+    value with the left-hand margin.</li>
+  <li><span class="csguide-option">Right Align</span> to align the text or
+    value with the right-hand margin.</li>
+  <li><span class="csguide-option">Centre Align</span> to centre the text or
+    value.</li>
+  <li><span class="csguide-option">Free Align</span> to remove any previous
+    alignment. This resets text slots back to left alignment and number slots
+    back to right alignment.</li>
+  <li><span class="csguide-option">LCR Align</span> to align text left,
+    centred and right on the same line (text slots only). The first character
+    on the line is taken as a delimiter to separate the line into three
+    sections. The first section is left aligned, the second centred and the
+    third right aligned.</li>
+</ul>
+
+<p>The commands are given as follows:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td rowspan="5">Layout</td>
+      <td>Left align</td>
+      <td><span class="csguide-key">LAL</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Centre align</td>
+      <td><span class="csguide-key">LAC</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Right align</td>
+      <td><span class="csguide-key">LAR</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>LCR align</td>
+      <td><span class="csguide-key">LLCR</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Free align</td>
+      <td><span class="csguide-key">LAF</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<p>For example:</p>
+
+<div class="csguide-sample" style="margin-left:2em;">
+
+<p>/Chapter 1/PipeDream Tutorial/Word Processing/</p>
+</div>
+
+<p>would be displayed:</p>
+
+<div class="csguide-sample" style="margin-left:2em;">
+
+<table border="0" style="width: 80%">
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <td style="text-align:left;">Chapter 1</td>
+      <td style="text-align:center;">PipeDream Tutorial</td>
+      <td style="text-align:right;">Word Processing</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>If you do not mark a slot or a block, the layout command you give is applied
+to the current slot only.</p>
+
+
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>Marking</td>
+      <td><a href="blocks.html">Blocks</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="commands.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="arrays.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Commands </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Arrays</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

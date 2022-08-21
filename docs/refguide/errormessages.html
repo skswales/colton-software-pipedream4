@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Error Messages</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="editing.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="externalreferences.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Error Messages</h1>
+
+<h2>Command Errors</h2>
+
+<h4>Already doing anagrams</h4>
+
+<p>Only one anagram operation can take place at a time.</p>
+
+<h4>Already doing subgrams</h4>
+
+<p>Only one subgram operation can take place at a time.</p>
+
+<h4>Already dumping</h4>
+
+<p>Only one dumping operation can take place at a time.</p>
+
+<h4>Already merging</h4>
+
+<p>Only one merging operation can take place at a time.</p>
+
+<h4>Bad ^ field</h4>
+
+<p>You have specified an incorrect ^ (hat) field in a search string.</p>
+
+<p>If you want to search or replace the ^ character use ^^.</p>
+
+<h4>Bad column</h4>
+
+<p>You have not specified a column on which to sort or the one you have
+specified is not within the marked block.</p>
+
+<h4>Bad data transfer, receiver dead</h4>
+
+<p>The data transfer protocol has broken down when transferring between
+PipeDream and another resident application.</p>
+
+<h4>Bad dictionary</h4>
+
+<p>The file that PipeDream is trying to open as a dictionary is not a
+dictionary file or has become corrupted.</p>
+
+<h4>Bad draw file</h4>
+
+<p>You have specified a file which is not recognisable as a draw format
+file.</p>
+
+<h4>Bad language</h4>
+
+<p>You have not supplied a language for PipeDream to use for the alphabet when
+opening a dictionary.</p>
+
+<h4>Bad marker</h4>
+
+<p>You have specified an operation which requires a marked block but you do not
+have a suitable block marked.</p>
+
+<p>For example, the <span class="csguide-command">Replicate Right</span>
+command requires more than one column, <span class="csguide-command">Replicate
+Down</span> requires more than one row and <span
+class="csguide-command">Sort</span> requires more than one row.</p>
+
+<h4>Bad name</h4>
+
+<p>You have not specified a name for the file to be saved or you have specified
+one that the filing system does not like.</p>
+
+<p>Check that you do not have too may characters in a directory or leafname for
+the given filing system and that you are not using punctuation characters which
+are confusing the filing system.</p>
+
+<h4>Bad option</h4>
+
+<p>1. You have asked to search a marked block and either a column range or all
+files in a multi-file document. Both of these combinations of options are
+invalid.</p>
+
+<p>2. You have specified that PipeDream should save a marked block and a column
+range. This combination of options is invalid.</p>
+
+<p>3. You have specified a microspace pitch of 0. This is not possible.</p>
+
+<h4>Bad parameter</h4>
+
+<p>This is a general message given after supplying incompatible entries in
+dialogue boxes. Some examples are:</p>
+
+<p>1. In the <span class="csguide-dbox">Set Column Width</span> dialogue box
+you have specified that the widths of all columns should be zero, or that the
+width of a fixed column should be zero.</p>
+
+<p>2. In a column range you have specified that the second column is to the
+left of the first.</p>
+
+<p>3. There is incorrect command syntax in a key definition or command file. It
+is often easiest to check command syntax by performing commands with the
+command file recorder switched on and examining the resulting command file.</p>
+
+<p>4. A command file has tried to start another command file. Command files
+cannot be nested.</p>
+
+<p>5. PipeDream cannot understand the entries in the fields of a printer
+driver.</p>
+
+<h4>Bad range</h4>
+
+<p>1. In a <span class="csguide-command">Replicate</span> command you have
+specified two column ranges or two ranges. You need to specify either a column
+range and then a row range to copy to, or vice versa. Maybe it would be
+possible and easier to use <span class="csguide-command">Replicate Right</span>
+or <span class="csguide-command">Replicate Down</span>.</p>
+
+<p>2. The second slot reference in the range is above or to the left of the
+first. You must specify ranges as tl-slot1 br-slot where tl-slot is the top
+left-hand slot and br-slot the bottom right-hand slot.</p>
+
+<h4>Bad selection</h4>
+
+<p>You have not specified a valid row selection in the <span
+class="csguide-dbox">Save</span> dialogue box.</p>
+
+<p>The row selection should be a conditional formula. See <a
+href="fileops.html">File Operations</a>.</p>
+
+<h4>Bad slot</h4>
+
+<p>The slot referred to in a replication command or the <span
+class="csguide-command">Go To Slot</span> command does not exist.</p>
+
+<h4>Bad string</h4>
+
+<p>You have specified a search or next match or previous match but not
+specified a string to search for.</p>
+
+<h4>Bad word</h4>
+
+<p>You have specified a bad word in a spelling checker dialogue box.</p>
+
+<p>If you are using the English alphabet, words must begin with a letter and
+consist of only letters, apostrophes (') and hyphens (-) and may be only 31
+characters long.</p>
+
+<h4>Can't close</h4>
+
+<p>PipeDream cannot save the changes that you have made to a dictionary.</p>
+
+<p>The dictionary may have been closed without your explicitly telling
+PipeDream, by *SHUT, *BACKUP, *DISMOUNT or *BYE, for example.</p>
+
+<h4>Can't close file</h4>
+
+<p>PipeDream cannot close the file you are saving to disc.</p>
+
+<p>It is probably best to make a backup of the file on another disc immediately
+before returning to work out what is wrong on the first disc. It may be that
+the disc is full or that it is faulty.</p>
+
+<h4>Can't enlarge dictionary</h4>
+
+<p>You have added some words to a dictionary but there is not enough space on
+the disc to save the words.</p>
+
+<p>Either pack the dictionary, delete some files on the disc to make space or
+copy the dictionary to a new disc .</p>
+
+<h4>Can't open</h4>
+
+<p>PipeDream cannot open the file or dictionary you have specified.</p>
+
+<p>Check the name carefully. There may be a disc error.</p>
+
+<h4>Can't read dictionary</h4>
+
+<p>PipeDream cannot read the dictionary.</p>
+
+<p>There may be a disc error. Try verifying the disc.</p>
+
+<h4>Can't save a file from PipeDream into itself</h4>
+
+<p>You cannot drag a file icon from the <span
+class="csguide-dbox">Save</span> dialogue box back into the
+original PipeDream window.</p>
+
+<h4>Can't transfer file (use *Set Wimp$Scrap &lt;filename&gt;)</h4>
+
+<p>RISC OS has not seen !Scrap, or Wimp$Scrap has been *Unset.</p>
+
+<p>Set up a !Scrap on your hard disc or your data disc.</p>
+
+<h4>Can't update dictionary</h4>
+
+<p>PipeDream cannot update the dictionary.</p>
+
+<p>There may be a disc error. Try verifying the disc.</p>
+
+<h4>Can't write to file</h4>
+
+<p>PipeDream is unable to finish writing to the file.</p>
+
+<p>It may be best to save your file onto another disc and then investigate what
+is wrong with the first disc. It may be that the disc is full or that it is
+faulty.</p>
+
+<h4>Control characters ignored</h4>
+
+<p>PipeDream has encountered control characters when loading the file and has
+ignored them.</p>
+
+<p>Check that the file is in the correct format and that it still contains all
+necessary information. If not, close the window without saving the file back to
+disc.</p>
+
+<h4>Data transfer failed</h4>
+
+<p>The data transfer protocol has broken down when transferring between
+PipeDream and another resident application.</p>
+
+<h4>Dictionary read only</h4>
+
+<p>You cannot add words to the master dictionary.</p>
+
+<p>It can only be checked or browsed through for words.</p>
+
+<h4>Driver does not support microspacing</h4>
+
+<p>The current printer driver does not support microspacing.</p>
+
+<p>Have you loaded the correct driver?</p>
+
+<h4>Editing formula</h4>
+
+<p>Some commands are not allowed whilst you are editing a formula.</p>
+
+<p>Press <span class="csguide-key">Enter</span> to enter the number or the <span
+class="csguide-key">Esc</span> key to abandon it and continue.</p>
+
+<p>While you are editing a formula, the menu commands you cannot use are greyed
+out.</p>
+
+<h4>Escape</h4>
+
+<p>You have pressed the <span class="csguide-key">Esc</span> key and the activity was abandoned.</p>
+
+<h4>File already exists</h4>
+
+<p>You have asked PipeDream to create or save a file with the name of a file
+that already exists.</p>
+
+<h4>File not found</h4>
+
+<p>PipeDream cannot find the specified file.</p>
+
+<p>Check the filename carefully.</p>
+
+<h4>Filing system error</h4>
+
+<p>An error has occurred whilst trying to read from or write to the disc .</p>
+
+<h4>is a directory</h4>
+
+<p>You have tried to drag a directory to the PipeDream icon.</p>
+
+<h4>Line too long</h4>
+
+<p>1. You have tried to join two lines together but the resultant line would be
+too long. Lines are restricted to 255 characters.</p>
+
+<p>2. PipeDream cannot replace the old string with the new string because the
+line would be too long.</p>
+
+<h4>Lines split</h4>
+
+<p>PipeDream has had to split lines during a save in VIEW format.</p>
+
+<p>This is because VIEW has a limit of 132 characters on its line length.</p>
+
+<h4>Memory full</h4>
+
+<p>All the available memory in the computer has been used up.</p>
+
+<p>Try quitting applications on the icon bar to free some more memory, and
+reducing the size of the memory indicators in the task display.</p>
+
+<p>If you have any dictionaries locked into memory, unlock them.</p>
+
+<p>If none of this works, try quitting PipeDream and reloading.</p>
+
+<p>If you still cannot load your file you will have to split it up into smaller
+files by loading in ranges of rows and saving the subsets with different
+names.</p>
+
+<h4>No driver loaded</h4>
+
+<p>Before setting the microspace option you must load a PipeDream printer
+driver.</p>
+
+<h4>No marked block</h4>
+
+<p>You have specified a command which requires a marked block, but there is no
+block marked.</p>
+
+<h4>No marked block in this document</h4>
+
+<p>For many block operations, PipeDream insists that the block is in the
+current document.</p>
+
+<p>This is to prevent you form accidentally performing the operation on the
+wrong file.</p>
+
+<h4>No pages</h4>
+
+<p>You have asked PipeDream to pause between printing each page but the page
+length is 0 so there are no pages.</p>
+
+<h4>No RISC OS printer driver</h4>
+
+<p>You have set RISC OS printing in the <span class="csguide-dbox">Printer
+Config</span> dialogue box but there is no RISC OS printer driver installed on
+the icon bar.</p>
+
+<h4>No selected chart</h4>
+
+<p>You have tried to edit a chart but you do not have one selected.</p>
+
+<h4>Not ASCII file</h4>
+
+<p>The following types of file must be saved in ASCII format:</p>
+<ul>
+  <li>command files</li>
+  <li>mailshot parameters</li>
+  <li>printer drivers</li>
+</ul>
+
+<h4>Not enough memory or not within Desktop world</h4>
+
+<p>1. You have tried to run PipeDream from outside the desktop.</p>
+
+<p>2. You have altered PipeDream's memory allocation.</p>
+
+<h4>Not enough memory to create window</h4>
+
+<p>You are very close to filling all the memory in the computer.</p>
+
+<h4>Not enough space to create dialogue box</h4>
+
+<p>You are very close to filling all the memory in the computer.</p>
+
+<h4>Oldest position lost</h4>
+
+<p>You already had five caret positions saved and PipeDream has thrown away the
+oldest.</p>
+
+<h4>Overlap</h4>
+
+<p>1. In a <span class="csguide-command">Transpose Block</span> command, your
+block would overwrite slots containing data.</p>
+
+<p>2. In a <span class="csguide-command">Move Block</span> command, you have
+tried to move a block down such that the new top line intersects the old block.
+You cannot do this. If you want to move the block down, the new position must
+be beneath the bottom row of the original block.</p>
+
+<h4>Protected slot</h4>
+
+<p>You have tried to edit or delete a protected slot.</p>
+
+<p>If you want to remove protection from the whole file, mark it by clicking
+select in the mark block box and give the <span class="csguide-command">Clear
+Protection</span> command.</p>
+
+<h4>To save, drag the icon to a directory viewer</h4>
+
+<p>You have tried to save a file without specifying which directory to put it
+in.</p>
+
+<h4>Too many dictionaries open</h4>
+
+<p>PipeDream can use only five dictionaries at any time.</p>
+
+<h4>Too many windows</h4>
+
+<p>This is a system error informing you that you have too many windows open at
+the same time.</p>
+
+<p>Note that menus count as windows.</p>
+
+<h4>Word exists</h4>
+
+<p>You have tried to insert a word into a user dictionary which already exists
+within the dictionary.</p>
+
+<h4>word not found</h4>
+
+<p>You are trying to delete a word which is not in the dictionary that you have
+specified.</p>
+
+<h2>PD123 Error Messages</h2>
+
+<h4>Bad input file</h4>
+
+<p>The file being processed is neither a PipeDream file nor a Lotus 123
+file.</p>
+
+<p>You may not have selected the correct file or it may be corrupted.</p>
+
+<h4>Error reading or writing file</h4>
+
+<p>There has been an error reading or writing the file when using the Lotus -
+PipeDream converter.</p>
+
+<h4>File has too many rows or columns</h4>
+
+<p>The file you want to convert with the PipeDream - Lotus converter has too
+many rows or columns for Lotus.</p>
+
+<h4>Formula not completely converted</h4>
+
+<p>A formula has not been completely converted when using the Lotus - PipeDream
+converter.</p>
+
+<p>The rest of the file has been converted successfully. The offending slot or
+slots will display an error message or the formula will be stored as text.
+Check the converted document for such slots.</p>
+
+<h2>Errors in Number Slots</h2>
+
+<h4>Accuracy lost</h4>
+
+<p>The parameter to a trigonometrical function was so large in magnitude that
+it could not be brought into range by subtracting &pi;'s.</p>
+
+<h4>Array not expected</h4>
+
+<p>You have passed an array to a function or custom function which was not
+expecting it.</p>
+
+<h4>Bad complex number</h4>
+
+<p>You have passed a complex number which is not a one row by two column array
+containing two numbers.</p>
+
+<h4>Bad date</h4>
+
+<p>The date you have supplied is not a date, has the wrong format or lies
+outside the valid date range.</p>
+
+<h4>Bad identifier</h4>
+
+<p>You have entered a name, custom function or local parameter which does not
+adhere to the rules for naming these items.</p>
+
+<p>See <a href="names.html">Names</a> and <a href="customfns.html">Custom
+Functions</a>.</p>
+
+<h4>Bad index</h4>
+
+<p>1. One or both parameters in INDEX() is not numeric.</p>
+
+<p>2. The value in CHOOSE() does not correspond to an element in the list.</p>
+
+<h4>Bad logarithm</h4>
+
+<p>You have specified a negative or zero value to a log function.</p>
+
+<h4>Bad target for GOTO</h4>
+
+<p>You have passed a slot to GOTO which is not in the custom function sheet,
+does not exist or is in a different column.</p>
+
+<h4>Bad time</h4>
+
+<p>You have passed a bad time string to TIMEVALUE.</p>
+
+<h4>Circular reference</h4>
+
+<p>You have a 'circle' of references.</p>
+
+<p>For example, A1 refers to C1 which refers to A1.</p>
+
+<p>Reorganise your spreadsheet to remove the circular reference.</p>
+
+<h4>Control function outside custom function</h4>
+
+<p>You have used a control statement outside a custom function sheet.</p>
+
+<h4>Custom function not defined</h4>
+
+<p>You have tried to use a custom function for which there is no definition.</p>
+
+<h4>Date not expected</h4>
+
+<p>You have passed a date to a function or custom function which was not
+expecting it.</p>
+
+<h4>Divide by zero</h4>
+
+<p>Your division has a zero quotient or an average has failed because there
+were no number slots.</p>
+
+<h4>File not loaded</h4>
+
+<p>You have made an external reference to a spreadsheet which is not loaded.</p>
+
+<p>Load the file or create a spreadsheet with the name you have given. Check
+also the name of the file you have given.</p>
+
+<h4>Formula too long</h4>
+
+<p>You have entered a formula which is too long.</p>
+
+<h4>FP error</h4>
+
+<p>The system floating point routines take exception to your number.</p>
+
+<p>The calculation may be too big or too small or you may have passed invalid
+negative values to routines which use log series.</p>
+
+<h4>Irr</h4>
+
+<p>IRR() cannot converge in 20 iterations.</p>
+
+<p>Try guesses between zero and one.</p>
+
+<h4>Local parameter not declared</h4>
+
+<p>You have passed a local parameter to a custom function for which no local
+parameter was declared in FUNCTION.</p>
+
+<h4>Lookup</h4>
+
+<p>1. LOOKUP() has the wrong number of parameters or cannot find the value in
+the first range.</p>
+
+<p>2. VLOOKUP() or HLOOKUP() cannot find a value which is smaller (more
+negative) than the value supplied.</p>
+
+<h4>Matrix not numeric</h4>
+
+<p>You have tried to multiply, invert or find the determinant of a matrix which
+is not completely numeric.</p>
+
+<h4>Matrix wrong size</h4>
+
+<p>You cannot invert or find the determinant of a matrix of this size.</p>
+
+<h4>Mismatched matrices</h4>
+
+<p>You cannot multiply matrices if the number of rows in the second is not the
+same as the number of columns in the first.</p>
+
+<h4>Mistake in formula</h4>
+
+<p>You have made a mistake when typing in a formula.</p>
+
+<p>Check what you have typed.</p>
+
+<h4>Mixed signs</h4>
+
+<p>The y-values supplied to LOGEST were not all of the same sign, which is
+essential for LOGEST fitting.</p>
+
+<h4>More than 1 file loaded</h4>
+
+<p>You have referred to a file in an external reference but there is more than
+one file of this name loaded.</p>
+
+<p>Slot references can only refer to one file at once. Close one of the files
+or rename it. Do not continue editing documents whilst this message is
+displayed since PipeDream cannot update references in dependent documents if
+there is more than one supporting document of the same name loaded.</p>
+
+<h4>Name not defined</h4>
+
+<p>You have used a name for which there is no definition.</p>
+
+<h4>Negative root</h4>
+
+<p>A negative value has been supplied to the square root function.</p>
+
+<h4>Nested array</h4>
+
+<p>Arrays cannot contain other arrays or ranges.</p>
+
+<h4>No date value</h4>
+
+<p>You have used a date function on a time which contains only a time and not a
+date.</p>
+
+<h4>No RESULT in custom function</h4>
+
+<p>PipeDream has reached the end of the custom function sheet without finding a
+RESULT.</p>
+
+<h4>No time value</h4>
+
+<p>You have used a time function on a date which contains only a date and not a
+time.</p>
+
+<h4>Number not expected</h4>
+
+<p>You have passed a number to a function or custom function which was not
+expecting it.</p>
+
+<h4>Out of range</h4>
+
+<p>The function has produced a number outside the range of floating point
+numbers.</p>
+
+<h4>Parameter out of range</h4>
+
+<p>You have passed a parameter which the custom function was not expecting.</p>
+
+<h4>Propagated</h4>
+
+<p>A slot reference or range refers to a slot containing an error.</p>
+
+<h4>Range not expected</h4>
+
+<p>You have passed a range to a function or custom function which was not
+expecting it.</p>
+
+<h4>Slot deleted</h4>
+
+<p>You have referred to a slot which has been deleted.</p>
+
+<h4>Stack overflow</h4>
+
+<p>PipeDream does not have enough space to extend its internal stack.</p>
+
+<h4>String not expected</h4>
+
+<p>You have passed a string to a function or custom function which was not
+expecting it.</p>
+
+<h4>Value not defined</h4>
+
+<p>This message appears in the elements of an array which has been
+automatically expanded by both columns and rows.</p>
+
+<h4>Wrongly nested IF ELSE ELSEIF ENDIF</h4>
+
+<p>You have entered an ELSE, ELSEIF or ENDIF without a corresponding IF.</p>
+
+<p>Note that you must have only one parameter to IF for IF to have an ELSE,
+ELSEIF or ENDIF.</p>
+
+<h4>Wrongly nested loop</h4>
+
+<p>1. BREAK or CONTINUE are not inside a LOOP.</p>
+
+<p>2. NEXT, ENDWHILE or UNTIL appear out of sequence.</p>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="editing.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="externalreferences.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Editing </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> External References</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

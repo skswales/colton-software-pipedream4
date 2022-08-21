@@ -1,0 +1,10 @@
+| !Help for PipeDream
+|
+If "<File$Type_FAF>"="" Then Error No browser found to display HTML help
+|
+|If "<SparkFS$Dir>"="" Then Error SparkFS needs to be running to extract HTML help files
+|RMEnsure SparkFS 1.42 Error SparkFS needs to be running to extract HTML help files
+|
+Set PipeDream$HelpFile <Obey$Dir>.Resource.HTMLHelp
+IfThere <PipeDream$HelpFile> Then Else Set PipeDream$HelpFile <Obey$Dir>.^.HTMLHelp
+IfThere <PipeDream$HelpFile> Then Filer_Run <PipeDream$HelpFile> Else Error PipeDream HTML help file not found

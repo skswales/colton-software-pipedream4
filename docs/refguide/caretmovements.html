@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Caret Movements</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="blockops.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="charts.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Caret Movements</h1>
+
+<h2>Moving to a Specific Position</h2>
+
+<p>To position the caret at a specific place in your document, you move the
+pointer to the slot required and click Select. Note that if the slot you are
+pointing at is a blank slot and there is a text slot to the left, PipeDream
+will place the caret in the text slot. It does this to prevent you accidentally
+typing text into the wrong column. If you really want to be in the slot you are
+pointing at and not the text slot, hold down and click Select in the slot.</p>
+
+<h2>Using the Keyboard</h2>
+
+<p>You can also use the keyboard to move around the document.</p>
+
+<p>Press the <span class="csguide-key">&uarr;</span> or <span
+class="csguide-key">&darr;</span> arrow keys to move up
+or down a line at a time. PipeDream will scroll the window if necessary.</p>
+
+<p>Press the <span class="csguide-key">&larr;</span> arrow key to move the caret one character to
+the left, or to the previous column.</p>
+
+<p>Press the <span class="csguide-key">&rarr;</span> arrow key to move the caret one character to
+the right.</p>
+
+<p>Press <span class="csguide-key">Page Up</span> or <span
+class="csguide-key">Page Down</span> to move a windowful
+down or up at a time.</p>
+
+<p>Press <span class="csguide-key">Ctrl-CPL</span> or <span
+class="csguide-key">Ctrl-CPR</span> to move a windowful
+left or right. It may be easier to do this by clicking Select in the horizontal
+scroll bar.</p>
+
+<p>Press <span class="csguide-key">Home</span> to go to the top of the column.</p>
+
+<p>Press <span class="csguide-key">End</span> to go to the bottom of the column.</p>
+
+<p>Press <span class="csguide-key">Tab</span> to move to the next column.</p>
+
+<p>Press <span class="csguide-key">Shift-Tab</span> to move to the previous column.</p>
+
+<p>Press <span class="csguide-key">Shift-&rarr;</span> to move the caret to the next word.</p>
+
+<p>Press <span class="csguide-key">Shift-&larr;</span> to move the caret to the previous word.</p>
+
+<p>Press <span class="csguide-key">Ctrl-&rarr;</span> to move the caret to the end of the slot.</p>
+
+<p>Press <span class="csguide-key">Ctrl-&larr;</span> to move the caret to the start of the
+slot.</p>
+
+<p>(Note that <span class="csguide-key">&larr;</span> is the left arrow key and should not be
+confused with <span class="csguide-key">&#x21a4;</span> (<span
+class="csguide-key">Backspace</span>) which deletes the
+character to the left of the caret.)</p>
+
+<p>Give the <span class="csguide-command">First Column</span> command to move
+to the first column or the <span class="csguide-command">Last Column</span>
+command to move to the last column.</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td rowspan="2">Caret</td>
+      <td>First column</td>
+      <td><span class="csguide-key">CFC</span></td>
+      <td><span class="csguide-key">Ctrl-Shift-Tab</span></td>
+    </tr>
+    <tr>
+      <td>Last column</td>
+      <td><span class="csguide-key">CLC</span></td>
+      <td><span class="csguide-key">Ctrl-Tab</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>To move to a particular slot</h4>
+
+<p>Give the <span class="csguide-command">Go to Slot</span> command</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Caret</td>
+      <td>Go to Slot</td>
+      <td><span class="csguide-key">CGS</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When the dialogue box appears, type in the reference of the slot you want to
+move to. The slot reference can be an external reference to a slot in another
+document. In this case, type in the slot reference as
+<code>[document]slotref</code>, where document is the name of the document you
+want to move to. For example, if you type <span
+class="csguide-key">[letter]A3</span>, the caret
+will be positioned in slot A3 of the document called 'letter'. The new window
+will come to the front of the screen.</p>
+
+<h4>To position the line containing the caret in the centre of the window</h4>
+
+<p>The <span class="csguide-command">Centre Window</span> command puts the line
+with the caret on it in the centre of the window:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Caret</td>
+      <td>Centre Window</td>
+      <td><span class="csguide-key">CWI</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<p>PipeDream has three commands which help you switch between two parts of a
+document very quickly.</p>
+
+<p>You can tell PipeDream to remember ('save') the current position. Then, from
+another part of the document, you can jump back to this position in one of two
+ways:</p>
+<ul>
+  <li>with PipeDream forgetting the second position</li>
+  <li>with PipeDream remembering the second position.</li>
+</ul>
+
+<p>Using the latter method, you can jump backwards and forwards between the two
+positions simply by giving the command.</p>
+
+<h4>To save the caret position</h4>
+
+<p>1. Position the caret at the point you want PipeDream to remember.</p>
+
+<p>2. Give the <span class="csguide-command">Save Position</span> command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Caret</td>
+      <td>Save Position</td>
+      <td><span class="csguide-key">CSP</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>3. Move to another part of the document.</p>
+
+<p>4. Give the <span class="csguide-command">Restore Position</span>
+command:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Caret</td>
+      <td>Restore Position</td>
+      <td><span class="csguide-key">CRP</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The caret will move back to the position you saved. If the restored caret
+position is in another document, that document's window will come to the front
+of the screen. This command is especially useful if you are working on a very
+large document.</p>
+
+<p>The <span class="csguide-command">Swap Position and Caret</span> command
+enables you to move between the last saved position and the caret position:</p>
+
+<table class="csguide-command-table">
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th class="csgcth-menu">Menu</th>
+      <th class="csgcth-command">Command</th>
+      <th class="csgcth-ctrl">Ctrl-sequence</th>
+      <th class="csgcth-key">Key</th>
+    </tr>
+    <tr>
+      <td>Caret</td>
+      <td>Swap Position and Caret</td>
+      <td><span class="csguide-key">CWC</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="blockops.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="charts.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Blocks - Operations </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Charts</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

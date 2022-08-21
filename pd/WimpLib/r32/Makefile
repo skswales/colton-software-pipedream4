@@ -1,0 +1,202 @@
+# WimpLib.release (32-bit)
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Copyright (C) 1989-1999 Colton Software
+# Copyright (C) 1998-2014 R W Colton
+
+#URD=$.pipedream.trunk
+
+WimpLib=^
+
+PD=$(WimpLib).^
+
+CMODULES=$(PD).cmodules
+
+# Use current set of 32-bit tools on Run$Path and libraries on C$Path
+
+AS = ObjAsm
+ASflags_BASE=-I$(PD).cmodules.Hdr -APCS 3/32bit/SWSTackCheck -throwBack -stamp -quit -CloseExec
+ASflags=$(ASflags_BASE)
+
+# NB PipeDream uses a global register for its sb variable, so avoid using that in this library code!
+
+CC = cc
+CCflags_BASE=-c -I$(WimpLib) -I$(PD) -APCS 3/32bit/fpe3/swst/fp/nofpr -throwback -DSB_GLOBAL_REGISTER -Wp
+CCflags=$(CCflags_BASE) -Otime
+#CCflags=$(CCflags_BASE) -g
+
+LibFile = libfile
+LibFileflags = -o -c $@
+
+WimpLib: o.WimpLib
+
+# Colton Software extras, replacement and wrappers of patched files
+
+o.cs-event:    $(WimpLib).c.event $(WimpLib).h.event
+o.cs-event:    $(WimpLib).c.cs-event
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-event
+
+#o.cs-flex:     $(WimpLib).c.flex $(WimpLib).h.flex
+o.cs-flex:     $(WimpLib).h.cs-flex
+o.cs-flex:     $(WimpLib).c.cs-flex
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-flex
+
+o.cs-wimptx:   $(WimpLib).c.wimpt $(WimpLib).h.wimpt
+o.cs-wimptx:   $(WimpLib).h.cs-wimptx
+o.cs-wimptx:   $(WimpLib).c.cs-wimptx
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-wimptx
+
+o.cs-winx:     $(WimpLib).c.win $(WimpLib).h.win
+o.cs-winx:     $(WimpLib).h.cs-winx
+o.cs-winx:     $(WimpLib).c.cs-winx
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-winx
+
+o.cs-riscasm:  $(WimpLib).s.cs-riscasm
+        $(AS) -to $@ $(ASflags) -from $(WimpLib).s.cs-riscasm
+
+o.cs-pollfpm:  $(WimpLib).s.cs-pollfpm
+        $(AS) -to $@ $(ASflags) -from $(WimpLib).s.cs-pollfpm
+
+# Colton Software replacements
+
+o.cs-msgs:     $(WimpLib).h.msgs
+o.cs-msgs:     $(WimpLib).c.cs-msgs
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-msgs
+
+o.cs-templat:  $(WimpLib).h.template
+o.cs-templat:  $(WimpLib).h.cs-template
+o.cs-templat:  $(WimpLib).c.cs-templat
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.cs-templat
+
+COLTON_XTRAS=\
+o.cs-event \
+o.cs-flex \
+o.cs-msgs \
+o.cs-templat \
+o.cs-wimptx \
+o.cs-winx \
+o.cs-pollfpm \
+o.cs-riscasm
+
+# source files with deltas (patched from RISC_OSLib source, without extra wrapping)
+
+o.bbc:         $(WimpLib).h.cs-bbcx
+o.bbc:         $(WimpLib).c.bbc
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.bbc
+
+o.dbox:        $(WimpLib).h.cs-dbox
+o.dbox:        $(WimpLib).c.dbox
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.dbox
+
+o.fontlist:    $(WimpLib).c.fontlist
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.fontlist
+
+o.fontselect:  $(WimpLib).c.fontselect
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.fontselect
+
+o.menu:        $(WimpLib).h.menu
+o.menu:        $(WimpLib).c.menu
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.menu
+
+o.res:         $(WimpLib).h.res
+o.res:         $(WimpLib).c.res
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.res
+
+o.resspr:      $(WimpLib).h.resspr
+o.resspr:      $(WimpLib).c.resspr
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.resspr
+
+o.wimp:        $(WimpLib).h.wimp
+o.wimp:        $(WimpLib).c.wimp
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.wimp
+
+o.xferrecv:    $(WimpLib).h.xferrecv $(WimpLib).h.cs-xferrecv
+o.xferrecv:    $(WimpLib).c.xferrecv
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.xferrecv
+
+o.xfersend:    $(WimpLib).h.xfersend $(WimpLib).h.cs-xfersend
+o.xfersend:    $(WimpLib).c.xfersend
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.xfersend
+
+o.swi:         $(WimpLib).s.swi
+        $(AS) -to $@ $(ASflags) -from $(WimpLib).s.swi
+
+PATCHED=\
+o.bbc \
+o.dbox \
+o.fontlist \
+o.fontselect \
+o.menu \
+o.res \
+o.resspr \
+o.wimp \
+o.xferrecv \
+o.xfersend \
+o.swi
+
+# source files with no deltas (but wrapped with nd-xxx.c for context)
+
+o.colourtran:  $(WimpLib).c.colourtran $(WimpLib).c.nd-colourtran
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-colourtran
+
+o.dboxtcol:    $(WimpLib).c.dboxtcol $(WimpLib).c.nd-dboxtcol
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-dboxtcol
+
+o.drawcheck:   $(WimpLib).c.drawcheck $(WimpLib).c.nd-drawcheck
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-drawcheck
+
+o.drawfdiag:   $(WimpLib).c.drawfdiag $(WimpLib).c.nd-drawfdiag
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-drawfdiag
+
+o.drawfobj:    $(WimpLib).c.drawfobj $(WimpLib).c.nd-drawfobj
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-drawfobj
+
+o.drawmod:     $(WimpLib).c.drawmod $(WimpLib).c.nd-drawmod
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-drawmod
+
+o.font:        $(WimpLib).c.font $(WimpLib).c.nd-font
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-font
+
+o.fileicon:    $(WimpLib).c.fileicon $(WimpLib).c.nd-fileicon
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-fileicon
+
+o.os:          $(WimpLib).c.os $(WimpLib).c.nd-os
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-os
+
+o.pointer:     $(WimpLib).c.pointer $(WimpLib).c.nd-pointer
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-pointer
+
+o.print:       $(WimpLib).c.print $(WimpLib).c.nd-print
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-print
+
+o.sprite :     $(WimpLib).c.sprite $(WimpLib).c.nd-sprite
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-sprite
+
+o.werr :       $(WimpLib).c.werr $(WimpLib).c.nd-werr
+        $(CC) -o $@ $(CCflags) $(WimpLib).c.nd-werr
+
+WRAPPED=\
+o.colourtran \
+o.dboxtcol \
+o.drawmod \
+o.font \
+o.fileicon \
+o.os \
+o.pointer \
+o.print \
+o.werr
+
+o.WimpLib:  Makefile \
+        $(COLTON_XTRAS) \
+        $(PATCHED) \
+        $(WRAPPED)
+        $(LibFile) $(LibFileflags) \
+        $(COLTON_XTRAS) \
+        $(PATCHED) \
+        $(WRAPPED)
+        $(LibFile) -l -s $@ > o.WimpLibLst
+
+# end of Makefile

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Printer Drivers</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="printerdriverediting.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="printing.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Printer Drivers</h1>
+
+<p>There are two ways of printing your PipeDream document. The method you
+choose depends upon:</p>
+<ul>
+  <li>the type of printer you have</li>
+  <li>whether you want to print pictures within your text</li>
+  <li>whether you want to have different fonts within your text</li>
+  <li>the speed of printing.</li>
+</ul>
+
+<p>Both methods use a printer driver which you can think of as acting as an
+interpreter between your document as it appears on the screen and your document
+when printed.</p>
+
+<p>You can either use a PipeDream printer driver or a RISC OS printer driver.
+The fundamental difference between the two is that PipeDream printer drivers
+are text-oriented whereas RISC OS printer drivers are graphics-oriented, ie
+they build up a graphic picture of your document in tiny dots and then print
+those dots. This means that the fonts you can produce are completely
+independent of the printer's typefaces. They are defined by what is available
+in the computer.</p>
+
+<h4>RISC OS printer drivers</h4>
+<ul>
+  <li>are graphics-oriented;</li>
+  <li>print quickly on PostScript and PCL laser and inkjet printers, slowly on
+    dot-matrix printers and not at all on daisywheel printers;</li>
+  <li>can print pictures from PipeDream;</li>
+  <li>can print the grid;</li>
+  <li>can print using any of the fonts available in your system either as a
+    global font or as a local font change (@F@);</li>
+  <li>can print both portrait (vertically) and landscape (horizontally).</li>
+</ul>
+
+<h4>PipeDream printer drivers</h4>
+<ul>
+  <li>are text-oriented;</li>
+  <li>can send highlight codes to the printer to exploit its special
+  facilities;</li>
+  <li>print as quickly as the printer will allow on all types of printer;</li>
+  <li>cannot generate PostScript or other page description languages;</li>
+  <li>cannot print pictures from PipeDream;</li>
+  <li>cannot print the grid;</li>
+  <li>cannot print using either the global font or any local font changes
+  (@F@).</li>
+</ul>
+
+<p>Highlight characters are treated differently. PipeDream printer drivers
+contain fields in which you type sequences of codes to perform operations such
+as underlining, bold, italics, superscripts and subscripts and, to a limited
+extent, font changes. These font changes are produced by the printer, using the
+different typestyles it has available; they are nothing to do with the fonts
+that RISC OS has available. The RISC OS printer drivers differ in that, if you
+want to print in bold or italic, there must be a bold or italic version of the
+font available on your Archimedes.</p>
+
+<p>It may seem confusing to have two different ways of printing but in fact
+PipeDream is giving you the best of both worlds. In practice, you will probably
+find that one method suits your set-up and needs and stick to that method. If
+you have a daisywheel printer, the choice is easy - use the PipeDream printer
+driver called DAISYWHEEL provided in the PipeDream archive. If you have a laser
+or inkjet printer, you will probably use an appropriate RISC OS printer driver.
+If you have a dot-matrix printer, you can use either type of printer driver -
+RISC OS if you want to print pictures within your text or to have different
+fonts or sizes, PipeDream if you want to print quickly and need no more than
+simple highlights such as underline or bold.</p>
+
+
+
+<table class="csguide-info-table">
+  <col />
+  <col />
+  <tbody>
+    <tr>
+      <th>For information on</th>
+      <th>See</th>
+    </tr>
+    <tr>
+      <td>Editing PipeDream printer drivers</td>
+      <td><a href="printerdriverediting.html">PipeDream Printer Driver
+        Editing</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="printerdriverediting.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="printing.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">PipeDream Printer Driver Editing </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> Printing</td>
+</tr>
+</table>
+</div>
+</body>
+</html>

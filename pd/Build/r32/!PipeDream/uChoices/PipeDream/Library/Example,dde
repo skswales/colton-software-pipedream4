@@ -1,0 +1,15 @@
+%OP%VS4.019 (20-Nov-91), Colton Software test 22.11.91, R9200 7500 3900 8299 
+%OP%LP(
+%OP%TP)
+%OP%PL53
+%OP%FM3
+%OP%BM3
+%OP%LM6
+%OP%FX
+%OP%FY
+%OP%FS
+%OP%PDDefault
+%OP%WC2,1238,776,1128,0,1,0,0
+%CO:A,12,72%%V%%L%function("Example")
+%V%%L%result("Custom Function Library Example")
+%CO:B,12,60%%CO:C,12,48%%CO:D,12,36%%CO:E,12,24%%CO:F,12,12%

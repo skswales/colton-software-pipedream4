@@ -1,0 +1,1271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii">
+<TITLE>Colton Software PipeDream for RISC OS - Release Notes</TITLE>
+</HEAD>
+<BODY>
+<H1>Colton Software PipeDream for RISC OS</H1>
+
+<H2>Licence and Copyright</H2>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
+(MPL).</P>
+
+<P>A copy of the MPL may be downloaded from <A
+HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
+
+<P>Copyright (C) 1989-1998 Colton Software Limited, Copyright (C) 1998-2014
+R W Colton</P>
+
+<P><A HREF="#CopyrightExtra">Additional copyrights</A></P>
+
+
+<H2>Online resources</H2>
+
+<P>The following resources for PipeDream are available online:</P>
+
+<P>Updated PipeDream packages and example files, including those used in the PipeDream Tutorial, may be
+obtained directly from
+
+<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream">PipeDream Downloads and Examples</A></P>
+
+<P>The PipeDream Tutorial may be accessed online at
+
+<A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/tutorial/index.html">PipeDream Tutorial</A></P>
+
+<P>The PipeDream Reference Guide may be accessed online at
+
+<A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/refguide/index.html">PipeDream Reference Guide</A></P>
+
+
+<H2>Support</H2>
+
+<P>PipeDream is now open source and completely free, so support is a self-help affair.</P>
+
+<P>There is a Google Group colton-software-pipedream where you may seek help
+from other users. Please include files (in a ZIP archive) which demonstrate
+any problems.</P>
+
+<P>Google Group website: <A HREF="http://groups.google.com/group/colton-software-pipedream">http://groups.google.com/group/colton-software-pipedream</A></P>
+
+<P>Email: colton-software-pipedream@googlegroups.com</P>
+
+<P>The PipeDream Tutorial may be accessed online at<BR/>
+
+<A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/tutorial/index.html">http://croftnuisk.co.uk/coltsoft/docs/pipedream/tutorial/index.html</A></P
+
+<P>The PipeDream Reference Guide may be accessed online at<BR/>
+
+<A HREF="http://croftnuisk.co.uk/coltsoft/docs/pipedream/refguide/index.html">http://croftnuisk.co.uk/coltsoft/docs/pipedream/refguide/index.html</A></P>
+
+<P>Example files, including those used in the PipeDream Tutorial, may be
+obtained from
+
+<A HREF="http://croftnuisk.co.uk/coltsoft/pipedream">http://croftnuisk.co.uk/coltsoft/pipedream</A></P>
+
+<H2>Release history</H2>
+
+<H4>4.52/02 (12 Feb 2014)</H4>
+
+<P>PipeDream released under the Mozilla Public License 2.0 (MPL).</P>
+
+<P>The installed Event and Escape handlers are now truly 26/32-bit agnostic:
+they do not modify flags, so do not attempt to restore them.</P>
+
+
+<H4>4.52/01 (09 Feb 2014)</H4>
+
+<P>Initialisation order with flex and dynamic areas fixed. Caused exception
+on shutdown if fonts had been used in any documents when a dyanamic area had
+been created (bug was introduced in 4.51).</P>
+
+
+<H4>4.52 (06 Feb 2014)</H4>
+
+<P>PipeDream package created for use with !PackMan or RiscPkg. If you do not
+wish to use a package manager, you may extract !PipeDream as before from the
+ZIP archive - it is in Apps.Document.</P>
+
+<P>Choices directory moved back from top level into !PipeDream as uChoices to
+assist packaging.  PipeDream will now test for the existence of choices in
+&lt;Choices$Write&gt;.PipeDream on startup and, if needed, copy the default
+choices directories and files from uChoices over to Choices:PipeDream.</P>
+
+<P>As before, please note that if you already have modified user dictionaries
+etc. in a previous non-choices installation of PipeDream (i.e. one prior to
+4.50/37), you may wish to copy the contents of your existing
+&lt;PipeDream$Dir&gt;.User tree into the new location &lt;Choices$Write&gt;.PipeDream.</P>
+If so, run your old !PipeDream (to set the correct &lt;PipeDream$Dir&gt;) and type
+the following in a (Ctrl-F12) Task window:</P>
+
+<PRE>
+CDir &lt;Choices$Write&gt;.PipeDream
+Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CF~NRV
+</PRE>
+
+<P>Release notes are now in HTML format and linked into !Help.</P>
+
+<P>Changed release notes to include PipeDream Google Group info (was Fireworkz).</P>
+
+<P>Changed Loader to display PipeDream Google Group info (was Fireworkz).</P>
+
+
+<H4>4.51 (06 Jan 2014)</H4>
+
+<P>Fonts used in Draw files that are used as pictures / markers in charts now
+match up with existing fonts in the charts much better.  It is now also
+possible to include Draw files that use text in a font that is otherwise
+unused in the chart: since 4.50/41 (when an optimised font table was added)
+this would have mapped text in the included font to display using System
+font.</P>
+
+<P>PipeDream now works out when null events are required and also registers
+the list of messages in which it is interested with the Window Manager
+(helps overall RISC OS Desktop efficiency).</P>
+
+<P>Use tboxlibs' flex module for deferred compaction.</P>
+
+<P>Fixed SIGOSERROR handling and reporting of other exceptions.</P>
+
+<P>Patched out more unused bits of RISC_OSLib.</P>
+
+<P>Replaced multiple calls to OS_WriteC with OS_WriteN to speed graphics past
+the VDU funnel and multiple SWI overheads.</P>
+
+<P>Calls to OS_Plot via SWI CallASWI replaced with direct SWI OS_Plot.</P>
+
+<P>Many more return paths from Window Manager (and other) SWIs now check for
+unlikely, but still possible, errors which could otherwise have been hidden
+and not reported.  Use of inline function wrapper means this is just a CMP
+#0; BLNE report per call.</P>
+
+<P>PipeDream can now be built on 32-bit systems, including RPCEmu (RO 5.20).</P>
+
+<P>PipeDream repository converted to Subversion (from CVS).</P>
+
+<P>Fixed !Help for Save dialogue box.</P>
+
+<P>Messages file now supplied uncompressed and unpreprocessed.</P>
+
+<P>No longer supports squashed Sprites or Sprites22.</P>
+
+<P>Reporter output is now disabled by default. It may be enabled by *Set
+PipeDream$ReportEnable 1 before running PipeDream.</P>
+
+
+<H4>4.50/50 (08 Aug 2013)</H4>
+
+<P>Adjust-clicking the Yes (or No) button in Yes/No choice dialogue boxes acts
+as if the No (or Yes) button had been clicked.  This restores the sense
+prior to the 4.50/49 fix.  This also applies to the Save/Discard choice box.</P>
+
+<P>Sequences of consequent dialogue boxes (when closing PipeDream with a
+number of modified documents) now remember the Yes/No dialogue box position
+for the subsequent Yes/No dialogue box to be opened at, preventing the
+progressive crawl of dialogue boxes towards the bottom right of the screen
+if any modified document was saved.</P>
+
+
+<H4>4.50/49 (02 Aug 2013)</H4>
+
+<P>Fixed page numbering on printing. This had broken in 4.50/37 when code to
+handle printing multi-file documents was removed (support for multi-file
+documents themselves having been dropped many many moons ago).</P>
+
+<P>Fixed RISC OS printing with line spacing &gt; 1 and grid turned on.</P>
+
+<P>Quit messsage with edited documents made more helpful.</P>
+
+<P>Removed spurious '&gt;' from Edit Name menu entries.</P>
+
+<P>Text @-field sequences are all now fully expanded when displaying the
+contents of a string cell in the same way as a text cell would be.  Prior to
+this version, the display of string cells containing text @-field sequences
+was inconsistent (PipeDream did try to use font and colour changes, but not
+date, title etc expansion) and was in fact broken.</P>
+
+<P>Adjust-clicking the OK button in dialogue boxes to allow sub-menu
+persistence works again (it was broken for most dialogue boxes in 4.50/36
+where Cancel buttons were added but there were already a couple where it
+would have gone wrong anyway; all due to non-zero ESG usage on action
+buttons being a hangover from RISC OS 2 menu-style buttons).</P>
+
+<P>More robust error handling of malformed command args from command files or
+key expansion: in some cases it could have tried to pop up a dialogue box.</P>
+
+
+<H4>4.50/48 (28 Jun 2013)</H4>
+
+<P>Numbers template now uses Homerton.Medium font. There is also a copy of the
+previous Numbers template, shipped as Numb_Plain, that still uses the system
+font.</P>
+
+<P>Save Choices command moved into the PipeDream icon bar Choices sub-menu.</P>
+
+<P>The user name & organisation name are no longer displayed in the 'About
+this program' dialogue box as PipeDream is now free-to-use and no longer has
+a registration process.  If you have upgraded PipeDream from a paid version
+and have valid registration information in &lt;PipeDream$Dir&gt;.Info, it will
+still be displayed on the splash screen and stored in your saved files.</P>
+
+<P>Help command added to the PipeDream icon bar menu for ease of access.</P>
+
+<P>PipeDream Help now also mentions the on-line Tutorial.</P>
+
+<P>Certain commands are no longer greyed out on menus when in expression
+editing as they do specifically cater for this case:
+<UL>
+<LI>   Next Match,
+<LI>   Previous Match,
+<LI>   Replace *,
+<LI>   Search.
+</UL>
+
+<P>* Command does not appear on visible menus.</P>
+
+<P>Superfluous (since 1989!) field removed from menu structures.</P>
+
+<P>The field in the Print dialogue box that contains the Printer name now has
+a transparent background so as to conform with textured window backgrounds.</P>
+
+<P>Background colour of the text section in the splash screen adjusted to be
+closer to that of the image backrgound on high-colour displays.</P>
+
+<P>PD3Keys command file is no longer shipped - you've all had plenty of time
+to adapt!</P>
+
+
+<H4>4.50/47 (24 Jun 2013)</H4>
+
+<P>Save processing now always ignores RISC_OSLib's initially poorly defined
+xfersend_file_is_safe() state unless the save has been performed using
+xfersend() - ie by dragging the file icon or clicking OK in the Save
+dialogue box.  This fixes the long-standing \Fgs failure to reset the file
+modified flag problem.</P>
+
+<P>Standalone Save dialogue box re-enabled now \Fgs problem fixed.</P>
+
+<P>Pressing ESCAPE during a non-PipeDream file save could possibly not abort
+the save process if recalculation was not complete.</P>
+
+<P>File-&gt;About now shows correct file modification date again.</P>
+
+
+<H4>4.50/46 (20 Jun 2013)</H4>
+
+<P>Standalone Save dialogue box temporarily disabled while we try to get to
+the bottom of a particularly opaque \Fgs problem.</P>
+
+<P>Pop-up version (one that does not read its arguments from a command file or
+function key) of the Save dialogue box created for use when \Fgs|M is issued
+in a command file or function key expansion and the current document does
+not yet have a full pathname.</P>
+
+<P>Macro recording could sometimes fail when writing out a post-command
+newline.</P>
+
+<P>Full pathname of macro file given when write fails.</P>
+
+<P>More commands greyed out on menus when in expression editing.</P>
+
+<P>No longer explicitly set Spell Dump Dictionary output buffer size (it was
+smaller than the current default).</P>
+
+<P>Dump Dictionary is now much faster with empty template for quicker
+dictionary maintenance (it updates the on-screen dialogue box less often and
+processes more words per null event).</P>
+
+
+<H4>4.50/45 (05 Jun 2013)</H4>
+
+<P>HTML Help now refers to the online PipeDream Reference Guide.</P>
+
+<P>When dragging, eg column width adjusting, inappropriate BubbleHelp for
+PipeDream document windows is suppressed.</P>
+
+<P>Files loaded from sources that are not deemed as 'safe', eg as a selection
+dragged to the PipeDream icon from another editor, are once again marked as
+modified and untitled, rather than as unmodified and with the name of the
+Scrap file used for the transfer (was broken in 4.50/41).</P>
+
+<P>Inserting a file which contains external references now causes the document
+into which it is inserted to attempt to load any newly supporting documents.</P>
+
+<P>Inserting files, either by dragging or Ctrl-FL, no longer cause the
+document window to be re-opened at a 'new document' position.</P>
+
+<P>PipeDream's dialogue box processing no longer greedily steals the caret
+back to the current field in open dialogue boxes, so allowing the user to
+perform other useful tasks (eg file rename, directory creation) whilst in a
+standalone dialogue box such as Save file.</P>
+
+<P>The Save file dialogue box now attempts to restore the caret on closing
+when it is opened as a standalone dialogue box.</P>
+
+<P>Several potential buffer overflow bugs (esp. with long filenames) fixed.</P>
+
+<P>32-bit Lotus 1-2-3 converter utilities u_ltp (Lotus to PipeDream) and u_ptl
+(PipeDream to Lotus) are now supplied in PipeDream's Resource.RISC_OS
+directory (this being a bit more out of the way of other files loaded on the
+PipeDream path).  Please note that there is no cute front end tool - you
+will need to invoke them in a (Ctrl-F12) Task window:</P>
+
+<PRE>
+PipeDream:RISC_OS.u_ltp &lt;infile-lotus&gt; &lt;outfile-pipedream&gt;
+PipeDream:RISC_OS.u_ptl &lt;infile-pipedream&gt; &lt;outfile-lotus&gt;
+</PRE>
+
+
+<H4>4.50/44 (13 May 2013)</H4>
+
+<P>Failed supporting document load reporting in 4.50/43 had the unwanted
+side-effects of (a) stopping any subsequent supporting document loading for
+that stack of dependent and supporting documents and (b) possibly aborting
+any command file execution.</P>
+
+<P>Some useful error messages were being suppressed.</P>
+
+<P>All error messages displayed in Window Manager Message Box are now
+additionaly logged to Reporter.</P>
+
+<P>Supply the user Choices directory in the top-level alongside !PipeDream.
+Please refer to the ReadMe in the Choices directory for further details.</P>
+
+
+<H4>4.50/43 (09 May 2013)</H4>
+
+<P>The spreadsheet evaluator and general document internal identifiers have
+been unified (like in Fireworkz) to rid PipeDream of this artifical and
+unnecessary distinction.  This had hampered getting to the bottom of many
+external reference and supporting document loading problems through the
+years.  It also simplifies the document handling to spreadsheet module
+interface code somewhat (with incidental speed up).</P>
+
+<P>Loading supporting documents and external references code rationalised.
+Where some of the supporting documents were being loaded along
+PipeDream$UserPath, a redundant and sometimes conflicting copy of a file
+name variable was present before, also the 'looser match' flags was not
+being set correctly in all cases.</P>
+
+<P>These two modifications above also permit supporting documents with the
+same leafname but in different directories to be loaded at the same time,
+e.g. ADFS:...Tax.2012.Summary would load supporting files Rental and Bank
+from ...2012 but loading ADFS:...Tax.2013.Summary at the same time would
+load the supporting files with the same names from ...2013 as you would want
+rather than refusing.</P>
+
+<P>Failed supporting document load is now reported (to screen and log) again.</P>
+
+<P>When a document window that contains the input focus in a cell is reduced
+in extent, the caret is correctly repositioned within the adjusted current
+cell position.</P>
+
+<P>Double-clicking on a document icon in a directory viewer that is already
+loaded in PipeDream (whether modified or not) will simply bring that
+document to the front, acquiring the input focus.  This also applies to a
+document icon being dragged to the PipeDream icon on the icon bar.</P>
+
+<P>Double-clicking on a chart file icon that is used in a PipeDream document
+simply shows it in a chart editing window without giving an 'already loaded'
+error.</P>
+
+<P>The Save file dialogue box is now only created as a RISC OS submenu if it
+is invoked by traversing the RISC OS menu structure using the arrow at the
+right of the Save menu option.  If the Save file dialogue box is invoked by
+clicking on the Save menu option, from a command sequence (^FS), mapped
+keystroke (F3) or from the toolbar button, it is opened as a standalone
+dialogue box.  This allows the user to then find a suitable directory viewer
+to drag the file icon to without the dialogue box collapsing.  To cancel the
+dialogue box, press ESCAPE or click the Cancel button.  Note that no other
+PipeDream dialogue boxes can be invoked whilst the Save dialogue box is
+being shown as a standalone dialogue box.</P>
+
+<P>In addition to checking whether a file is being saved to a 'safe' place, or
+is only having a partial range saved, saving a document to a file now also
+only renames the document in memory if it is being saved in its original
+format or in PipeDream format.  This permits exporting documents to other
+formats using the Save file function without perturbing any external
+references.</P>
+
+<P>Large file loading speeded up by optimising inner loops of load procedure
+for PipeDream files, together with an early check whether each cell contains
+text @-fields (most do not) allowing elimination of superfluous data copies.</P>
+
+<P>Use larger buffer and improved buffered I/O code when reading and writing
+files (overall factor of 2+ speed improvement in both seen for large text
+files on a RISC PC).</P>
+
+<P>Spreadsheet file loading speeded up by use of improved number reading code
+that performs earlier rejection of character sequences that won't be
+recognised as numbers (e.g dates, slot / range references).  It now also
+reads numbers as integers where that is possible.  Both these cases used to
+spend too much time in FP number decode.</P>
+
+<P>File loading attempts to determine the line separator character(s) for use
+when saving non-PipeDream format documents. PipeDream format documents
+default to suggesting LF for save.</P>
+
+<P>Shift-click on the PipeDream icon will open the Choices:PipeDream
+directory, in which you can find sub-directories containing the user-created
+Templates and CmdFiles (amongst others) that are used by PipeDream.</P>
+
+<P>'Log labels' option in chart value axes dialogue boxes has been changed to
+'Power (10^n) labels'.  When used with log scaling, this gives the same
+results as before, but now can be applied without selecting log scaling.</P>
+
+<P>Filenames containing commas no longer cause the Documents and Charts
+sub-menus to foul up.</P>
+
+<P>Documents and Charts sub-menus are now potentially double the width before
+entries are truncated and prefixed with ellipsis (for modern wider screens
+and fonty menus with thinner chars).</P>
+
+<P>Help changed from PipeDream file to HTML help.</P>
+
+<P>32-bit Lotus 1-2-3 converter utilities u_ltp (Lotus to PipeDream) and u_ptl
+(PipeDream to Lotus) are now supplied in PipeDream's Resource directory.</P>
+Please note that there is no cute front end tool - you will need to invoke
+them in a (Ctrl-F12) Task window:</P>
+
+<PRE>
+PipeDream:u_ltp &lt;infile-lotus&gt; &lt;outfile-pipedream&gt;
+PipeDream:u_ptl &lt;infile-pipedream&gt; &lt;outfile-lotus&gt;
+</PRE>
+
+<P>Removed archaic floppy-disc outline logo from splash screen.</P>
+
+
+<H4>4.50/42 (22 Mar 2013)</H4>
+
+<P>Fixed bug where a reference to a document that failed to load could crash
+on use (could affect both spreadsheet and charts).</P>
+
+
+<H4>4.50/41 (19 Mar 2013)</H4>
+
+<P>Dependent document loading / naming code overhauled.</P>
+
+<P>Allow code to run again on processors that don't support UMULL (i.e. all
+pre-ARM600 CPUs) by dynamic patching of code for those systems. This was
+broken in 4.50/35 when PipeDream began using UMULL to speed 64-bit multiply
+operations.</P>
+
+<P>Shift-click on the PipeDream icon will open the Choices: Templates
+directory.</P>
+
+<P>Avoid chart creation exception when one series' data is all emptied.</P>
+
+<P>Charts are created with a Draw font table that specifies just the fonts
+actually used by the chart, not all the fonts present in the system.</P>
+
+<P>Chart line gallery code works again (it was broken in 4.50/36 where Cancel
+buttons added).</P>
+
+<P>Lighter grid colour used by default.</P>
+
+<P>Document title bar modified indicator is set/reset at correct point.</P>
+
+
+<H4>4.50/40 (30 Oct 2012)</H4>
+
+<P>Loading sheets with multiple levels of supporting documents now works as
+intended. For example, where Sheet_A depends on Sheet_B which depends on
+Sheet_C; and where Sheet_A also depends on Sheet_C. Sheet_B load could
+sometimes have failed or a spurious error could have been given after a
+successful load of all of the set of supporting documents.</P>
+
+
+<H4>4.50/39 (26 Oct 2012)</H4>
+
+<P>@C@ (colour change) behaviour is now consistent between printing and
+screen - the colour change is automatically cancelled at the end of a cell
+rather than at the end of the printout or end of the line.</P>
+
+<P>PipeDream no longer incorrectly warns about saving to itself when Return is
+pressed in Save dialog box with mouse pointer over the PipeDream window.</P>
+
+<P>Fixed potential for evaluator crash (esp. custom functions) with
+zero-length strings that has existed since 4.50/08.</P>
+
+<P>Evaluator long buffer size for named objects increased to match longer
+filename possibility.</P>
+
+<P>Sliding window date handling would have failed in 2099!</P>
+
+<P>Removed arbitrary 16-bit limit on evaluator array sizes.</P>
+
+<P>Allow matrix inverse to be calculated for n &gt; 3.</P>
+
+<P>BIN(), FLIP(), FORMULA_TEXT(), MEDIAN(), RANK(), SORT(), SPEARMAN(), TEXT()
+functions backported from Fireworkz (see functions added since 4.50/00
+below).</P>
+
+<P>CTERM() function can now take negative fv and pv arguments to calculate
+debt accrual (as in Fireworkz).</P>
+
+<P>INT() function now performs rounding (at the 14th significant place) such
+that formulas which are affected by the imprecise floating point
+representation of fractional numbers eg INT((0.06-0.02)/2E-6) yield the
+correct integer value.</P>
+
+<P>Ships with Master dictionary again (oops).</P>
+
+
+<H4>4.50/38 (11 Oct 2012)</H4>
+
+<P>Fixed possible crash when chart window is closed (introduced in /36).</P>
+
+<P>Longer 'Goto slot' field and amended validation string for possible
+external reference.</P>
+
+<P>More code tidying.</P>
+
+<P>ROOL RISC_OSLib now imported into separate pd/external directory.</P>
+
+<P>Attempts support for Wimp$IconTheme for Sprites (RISC_OSLib convergence)
+although no new themed sprites are actually supplied.</P>
+
+
+<H4>4.50/37 (19 Sep 2012)</H4>
+
+<P>Add Choices:PipeDream. to the PipeDream$Path variable, replacing
+&lt;PipeDream$Dir&gt;.User.  Please note that if you already have user
+dictionaries etc., you may wish to copy the contents of your existing
+&lt;PipeDream$Dir&gt;.User into &lt;Choices$Write&gt;.PipeDream:</P>
+
+<PRE>
+CDir &lt;Choices$Write&gt;.PipeDream
+Copy &lt;PipeDream$Dir&gt;.User.* &lt;Choices$Write&gt;.PipeDream.* ~CRV
+</PRE>
+
+<P>User directory in !PipeDream has now been renamed as Choices.PipeDream.</P>
+There is a TaskObey script file DoCopy in the Choices directory which will
+copy the contents of this directory to &lt;Choices$Write&gt;.PipeDream.</P>
+
+<P>Newly created user dictionaries, templates etc. are now written to the
+appropriate location in &lt;Choices$Write&gt;.PipeDream so that each user's
+choices may be placed outwith the !PipeDream directory. Subdirectories of
+&lt;Choices$Write&gt;.PipeDream will be created as needed by PipeDream.</P>
+
+<P>Save choices option is greyed out if there isn't a current document context
+to execute the command in.</P>
+
+<P>Larger buffer for the PipeDream$Path variable to be expanded into for deep
+paths and/or very long PipeDream$UserPath path prefix dirs.</P>
+
+<P>Now only checks that path element is a directory during each file load iff
+there's a plausible match, eliminating redundant SWI calls.</P>
+
+<P>Eliminated several redundant file open & close operations during file load.</P>
+
+<P>Simplify !Boot and !Run now we no longer cater for running from a pair of
+floppy disks.</P>
+
+<P>Moved all Sprites, Templates and Messages files used by RISC_OSLib and
+other assorted run-time stuff from the !PipeDream.Resources directory into
+the new !PipeDream.Resource.RISC_OS directory to avoid any potential name
+clashes with user's custom function sheets etc.</P>
+
+<P>When closing a document window, no longer bring another document to the
+front and set the caret into it.  This avoids unwanted unpinning of
+documents from the Pinboard.</P>
+
+<P>Sequences of consequent dialogue boxes (when closing PipeDream with a
+number of modified documents) now remember the dialogue box position for the
+subsequent dialogue box to be opened at, preventing the progressive crawl of
+dialogue boxes towards the bottom right of the screen.</P>
+
+<P>Dialogue boxes opened as a result of a keyboard shortcut now appear near
+the caret (in fact a short distance right and down), as originally intended.</P>
+This had in fact been broken since the early days of PipeDream 3!
+
+<P>Larger dialogue box margins to better accomodate 3-D internal window
+borders and more modern, less cramped, style.</P>
+
+<P>Writable icons use RISC OS Style Guide compliant appearance and size.</P>
+
+<P>No longer force use of PipeDream's own radio, check and up/down buttons.</P>
+
+<P>Large chart gallery and colour options dialogue boxes that are expandable
+using the toggle icon now also have vertical scroll bars for operational
+clarity.</P>
+
+<P>Fixed !Help for font selector dialogue box.</P>
+
+<P>No longer bother to squash Messages and Sprite files.</P>
+
+<P>Code to handle running on systems prior to RISC OS 3.1 removed for clarity.</P>
+
+<P>More work to clean up source for open-source release.</P>
+
+<P>Dropped optimised support for loading files directly from Z88 filing system
+for clarity in source. It's much better for them to be copied off the Z88
+first and then loaded into PipeDream.</P>
+
+<P>Now works with Avisoft Reporter (when built with selected instrumentation).</P>
+
+
+<H4>4.50/36 (31 Aug 2012)</H4>
+
+<P>Eliminated a couple of MOVS pc, lr that fouled up on ARMv7 systems. Note
+that there will always be a couple of 26-bit only instructions present in
+the executable code as PipeDream's Escape and Event handlers are called in
+26-bit or 32-bit mode on different systems
+(e.g. RISC OS 4.39's 26-bit kernel and RISC OS 5.20's 32-bit kernel)
+with the appropriate code being executed conditionally.</P>
+
+<P>Low-level memory allocator changed to pre-RISC OS 5.18 compatible allocator
+(from Fireworkz) that doesn't use OS_Heap SWIs to isolate from RISC OS 5.18
+OS_Heap SWI changes. It's also faster due to no SWI overheads.</P>
+
+<P>The character used in text @-fields may now be set to other than '@' in a
+document's Options dialogue box.  Important notes: this does not change any
+existing text. When changing this character, all cells containing slot
+reference text @-fields will need to be 'recompiled' to reflect this - the
+easiest (and safest) way of doing this is to save the document and reload it
+immediately after closing the Options dialogue box. Other text @-fields will
+update immediately.</P>
+
+<P>Dialogue boxes that have a Cancel button or are definitely always raised as
+menus or submenus (e.g. About this program) no longer have a close icon (and
+thereby possibly unwanted iconise icon) on the title bar.  This was a
+hangover from having always had to use a very, very old template editor
+prior to using !WinEd.</P>
+
+<P>Chart bar / line / pie / scatter galleries spruced up with higher res
+sprites.</P>
+
+<P>Can now directly import JPEG files.</P>
+
+<P>New mode sprite bounding box correctly calculated using its dpi.</P>
+
+<P>DragASprite in Save dialogue box now respects configuration set by !Boot.</P>
+
+<P>Use ColourPicker module to select chart colours rather than old dboxtcol.</P>
+
+<P>Uses 24-bit palette entries rather than copying nibbles a la RO2.</P>
+
+<P>Eliminate redundant Draw groups in chart text objects.</P>
+
+<P>Removed archaic Drawfile loading and rendering code from RISC_OSLib (saves
+about 34KB; only renders using Drawfile module).</P>
+
+<P>Begin merge of PipeDream's copy of RISC_OSLib with modern one from ROOL.</P>
+
+<P>Allow matrix determinant to be calculated for larger sizes.</P>
+
+
+<H4>4.50/35 (23 Mar 2012)</H4>
+
+<P>Fully 32-bit-ised the muldiv64 assember code module for ARMv7.</P>
+
+<P>Updated ImageSlot to 32-bit compatible version (same as used by Fireworkz)
+
+<P>No longer require the very latest FPEmulator in !Run.</P>
+
+
+<H4>4.50/34 (22 Mar 2012)</H4>
+
+<P>Fixed spreadsheet array formula processing code that could crash PipeDream
+(the new C compiler no longer concealed this bug!).</P>
+
+<P>Fixed call to Wimp_SlotSize to save critcal regs around call (was corrupt).</P>
+
+<P>Allow --no-dynamic-areas option to be set in PipeDream$$RunOptions to avoid
+fragmenting address space on large memory systems (this is automatically
+done in !Run for RISC OS 5).</P>
+
+<P>Check for CallASWI module in !Run for new SharedCLibrary (CallASWI needs
+loading on RISC OS 3.6 and below).</P>
+
+
+<H4>4.50/33 (22 Mar 2012)</H4>
+
+<P>Evaluator compiled without -Otime optimisation - crashed some stats sheets.</P>
+
+
+<H4>4.50/32 (21 Mar 2012)</H4>
+
+<P>Really! Has it been that long?
+
+<P>First 32-bit release of PipeDream, built using RISC OS Open Limited C tools
+release 20.</P>
+
+<P>Registration number code and template info removed as the PipeDream
+installer no longer generates one.  Previous Info files may be used to show
+user and organisation name in the splash screen and Info box.</P>
+
+
+<H3>Release history (26-bit version)</H3>
+
+<H4>4.50/23 (10 Aug 2000)</H4>
+
+<P>PipeDream documents can now be saved with leafnames longer than 12
+characters where this is allowed, eg RISC OS 4 new format hard discs,
+ADFS E+/F+ format floppies and RAM discs. This may also work on earlier
+systems with the Longnames module loaded or into archive files, but this has
+not been tested.</P>
+
+<P>PipeDream tested against RISC OS 4.02 (patch 3 release 2)</P>
+
+
+<H4>4.50/22 (11 Apr 1999)</H4>
+
+<P>Range over which combin() and permut() functions work increased, avoiding
+integer overflow.</P>
+
+
+<H4>4.50/21 (17 Jan 1999)</H4>
+
+<P>^LAW (auto width) now works correctly again using marked blocks. This had
+been broken since 4.50/08.</P>
+
+<P>E format numbers in chart axes no longer contain superfluous commas.</P>
+
+<P>@C:r,g,b@ can be used to set the colour of the following text on a line
+(only when using fonts and RISC OS 3.5 or later) eg aaa@C:240,0,0@bbb would
+display aaa followed by bbb in red. Use @C@ to restore normal (black).</P>
+Versions prior to this one will display the full @ sequence instead of the
+colour change.</P>
+
+<P>Caters for loading Squashed Messages, Sprites, Sprites22.</P>
+
+<P>Superfluous !Help file removed from Resources directory; PipeDream always
+uses the one from the main !PipeDream directory, as does the RISC OS Filer.</P>
+
+<P>First full (ie non-upgrade) version of PipeDream 4.5 released.</P>
+
+
+<H4>4.50/20 (14 Nov 1998)</H4>
+
+<P>Bug whereby 31.12.2000 displayed as 01.01.2001 fixed.</P>
+
+<P>Save file as paragraph type no longer forces paragraph separator to LF.</P>
+
+<P>Tristate icons (don't care / yes / no choice) now work correctly.</P>
+
+
+<H4>4.50/14 (12 Jan 1998)</H4>
+
+<P>Dialogue boxes dynamically modified on RISC OS 3.1 to use menu-type icons
+no longer force an explicit ESG (used to set ESG 15) to avoid unsetting
+radio buttons in the dialogue box. The templates have been modified to
+accomodate this.</P>
+
+
+<H4>4.50/13 (13 Nov 1997)</H4>
+
+<P>Thin grid lines are now printed again using a default line width of zero.</P>
+In order to get round various printer driver faults you may need to add an
+extra argument into the last line of !PipeDream.!Run so that it reads:
+
+<P>Run &lt;PipeDream$$ImageDir&gt;.Resource.Image -k 64 %*0
+
+<P>where the number after -k is the desired line thickness in Draw units
+(there are 256 of these per OS unit), 64 being the value previously
+hard-coded in v4.50/10 - v4.50/12. You may need to make this number larger
+or smaller depending on the particular printer driver you use.</P>
+
+
+<H4>4.50/12 (10 Nov 1997)</H4>
+
+<P>Entering a date with a two digit year is how handled using a sliding window
+about the present year such that it yields a year in the range now-70 < year
+&lt;= now+30. This also applies to the DATE() and DATEVALUE() spreadsheet
+functions.</P>
+
+<P>Dialogue boxes now dynamically modified on RISC OS 3.1 to use menu-type
+icons with R1 effect rather than standard R6,3 action buttons in order to
+work around the RISC OS 3.1 Window Manager problem where the Window Manager
+would try to redraw an icon in a dialogue box that no longer exists.</P>
+
+
+<H4>4.50/11 (08 Sep 1997)</H4>
+
+<P>Sassoon.Primary now changes to Sassoon.Bold when bold highlight is used.</P>
+
+<P>Delete Row In Column now sets file modified.</P>
+
+<P>PROPER("o'connor") now correctly returns "O'Connor".</P>
+
+<P>PROPER("barnes-wallis") now correctly returns "Barnes-Wallis".</P>
+
+<P>VALUE() function fixed to return 0 when presented with input that doesn't
+yield a numeric result.</P>
+
+
+<H4>4.50/10 (28 May 1997)</H4>
+
+<P>PipeDream now claims an extra 4KB of stack memory whilst starting up in
+order to prevent itself running out of memory whilst starting to print when
+this is invoked from the button bar.</P>
+
+<P>You can now raise negative numbers to odd fractional powers eg (-8)^(1/3)
+will find the cube root of two - in fact the cube root with zero imaginary
+part.</P>
+
+<P>Thin grid lines are now printed using a very small (but non-zero) line
+width in order to get round some printer driver faults.</P>
+
+
+<H4>4.50/09 (27 Jan 1997)</H4>
+
+<P>PipeDream now claims an extra 32KB of memory before starting to print in
+order to prevent itself running out of memory whilst printing.</P>
+
+
+<H4>4.50/08 (17 Jan 1997)</H4>
+
+<P>Ctrl-TAB and Shift-Ctrl-TAB when text is in the editing line didn't enter
+the text into the edited slot before moving.</P>
+
+<P>Manual axis settings now override any automatically calculated limits. Data
+values beyond the min/max axis values are now clipped at the min/max axis
+values.</P>
+
+<P>Cumulative bar/line charts now add in negative values rather than ignoring
+them.</P>
+
+<P>^BRP now enters the Search & Replace dialogue box with the replace option
+already checked.</P>
+
+<P>Borders removed from icons in Chart-&gt;Selection-&gt;Series dialogue box.</P>
+
+<P>Chart-&gt;Selection-&gt;Fill style dialogue box now displays file name correctly.</P>
+
+<P>monthname function corrected (was one month out).</P>
+
+<P>row number alignment now behaves the same on all systems.</P>
+
+
+<H4>4.50/07 (08 Jan 1997)</H4>
+
+<P>Colour inversion handling in &gt; 256 colour modes should now be right: it
+used to sometimes leave 'droppings' of previously marked areas temporarily
+greyed out on the document.</P>
+
+<P>Spell check word inversion should now work in &gt; 256 colour modes.</P>
+
+<P>No longer keeps bringing dialogue boxes to the front so that BubbleHelp
+throbs less when pointing at a PipeDream dialogue box.</P>
+
+<P>Recalc number (and column width indicator) now lines up properly.</P>
+
+<P>The document window with the input focus now changes properly to the input
+focus colour.</P>
+
+
+<H4>4.50/06 (01 Dec 1996)</H4>
+
+<P>weeknumber function added.</P>
+
+<P>@D@ now outputs century prefix in English/American format as well as Text.</P>
+
+<P>@F:x[,y]@ now accepted as way of performing font size change without
+changing font too.</P>
+
+<P>Call to Font_ScanString fixed so super/subscripts display correctly.</P>
+
+<P>Residual debugging information removed from release version.</P>
+
+
+<H4>4.50/05 (27 Nov 1996)</H4>
+
+<P>Handles PD4.5(old) -&gt; PD4.5(new) upgrade.</P>
+
+<P>Handles PD3 upgrade much smoother.</P>
+
+<P>Problem whereby sheet data and protection state was corrupted when sorting
+the contents of a file with Dynamic area handling in use fixed.</P>
+
+<P>Sliders in colour selector dialogue boxes now display correctly.</P>
+
+<P>Word count now displays correctly.</P>
+
+<P>Text/English/American date display option fixed.</P>
+
+<P>Justify button now correctly updates internal state.</P>
+
+<P>Factorials more accurately calculated for larger n.</P>
+
+<P>Formula window selections now invert correctly in &gt;= 256 colour modes.</P>
+
+
+<H2>User Interface changes since 4.13</H2>
+
+<P>PipeDream now has a revised toolbar, bringing quick access to many useful
+(both existing and new) functions.  Each tool button responds to help
+requests, so it may be useful to run !Help for a while to get used to what
+each button can do for you.  !BubbleHelp (available from David Pilling) is a
+most excellent replacement for !Help and works well with PipeDream.</P>
+
+<P>When PipeDream is loaded in a high resolution screen mode, it loads its set
+of high resolution sprites for better on-screen appearance.  Low resolution
+sprites are still available for use by (and selected automatically for)
+users who are not running in such screen modes.</P>
+
+<P>Clicking SELECT on the iconbar icon now invites the user to create a
+document using a template; the old default document create is available by
+clicking ADJUST on the iconbar icon.</P>
+
+<P>Save dialogue boxes now use DragASprite to enhance the appearance of
+dragging the file icon.</P>
+
+<P>Double click on column adjuster now performs the Auto Width command.</P>
+
+<P>Do command file function enhanced to list command files which are in the
+same directory as the selected document.</P>
+
+<P>Column and row numbers now position themselves correctly on RISC PCs.</P>
+
+<P>Full screen window toggle now works correctly on RISC PCs.</P>
+
+<P>Menus now align their shortcuts correctly on RISC PCs.</P>
+
+
+<H2>Other changes since 4.13</H2>
+
+<P>Dynamic area storage for PipeDream file data implemented.  This speeds up
+task swapping on RISC PCs considerably, and permits the use of Clares'
+Virtualise to have documents loaded which are bigger than physical memory.</P>
+
+<P>PipeDream now responds to the Desktop save protocol and so can be reloaded
+automatically on restarting the machine.</P>
+
+<P>PipeDream uses the Acorn Drawfile renderer on systems where this is loaded
+and hence can render JPEGs on RISC OS 3.7 systems.</P>
+
+<P>@G@ Draw file references can now take the form:</P>
+
+<PRE>
+@G:&lt;draw file name&gt;,&lt;x scale factor&gt;,&lt;y scale factor&gt;@
+</PRE>
+
+<P> (this only works if the Drawfile module is loaded)</P>
+
+<P>PipeDream now iconises to the Pinboard correctly.</P>
+
+<P>Kerning in outline fonts implemented.  See the Options dialogue box.</P>
+
+<P>Messages and sprites are no longer bound to the PipeDream !RunImage.</P>
+
+<P>Clear Block function added.</P>
+
+<P>Make number/Make text functions added.</P>
+
+
+<H2>Functions added since 4.50/00</H2>
+
+<H4>BIN(<I>array1</I>, <I>array2</I>)</H4>
+
+<P><I>array2</I> defines a set of 'bins' into which the data of <I>array1</I> is counted.</P>
+
+<P>For example, if array2 is {20,40,60,80}, the returned array gives the
+number of elements of array1 whose value satisfies value&lt;=20, 20<value&lt;=40,
+40&lt;value&lt;=60, 60&lt;=value&lt;=80 and finally value&gt;80. The returned array will
+therefore always have one more element than array2. Neither array need be
+sorted.</P>
+
+<P>One use of this function is to organise data for making a histogram.</P>
+
+<P>For example, with data in A1A100, and bin categories in B1B5, the
+following formula would provide the basis for a bar chart:</P>
+
+<PRE>
+SET_VALUE(C1C6, BIN(A1A100, B1B5))
+</PRE>
+
+<P>You would then make a bar chart from the range B1 to C6, using column B as
+labels.</P>
+
+<H4>FLIP(<I>array</I>)</H4>
+
+<P>Swaps rows about the middle row of an <I>array</I>.</P>
+
+<P>e.g. {1;2;3} becomes {3;2;1}
+
+<H4>FORMULA_TEXT(<I>cell_reference</I>)</H4>
+
+<P>Returns as a string the formula in the cell referenced, so that it can be
+displayed in the worksheet. This is useful for annotating worksheets, and
+printing out the formula which created the results shown in the worksheet.</P>
+
+<H4>MEDIAN(<I>array</I>)</H4>
+
+<P>Returns the median value in the (not necessarily sorted) range.</P>
+
+<P>If there are an even number of values in the range, the mean of the two
+middle values is returned.</P>
+
+<H4>RANK(<I>array</I>{,<I>spearflag</I>})</H4>
+
+<P>Takes an <I>array</I> and ranks the values it contains, producing as an output an
+array with two columns { <I>rank</I>, <I>entries</I> }, where</P>
+
+<P><I>Rank</I> is the rank of each value (from highest to lowest).</P>
+
+<P><I>Entries</I> contains the number of entries of that value in the input array.</P>
+
+<P>If <I>spearflag</I> is present and is non-zero, equally ranked entries are
+adjusted so that the output is suitable for passing to the SPEARMAN() rank
+correlation function.</P>
+
+<H4>SORT(<I>array</I>, <I>number</I>)</H4>
+
+<P>Sorts the rows in the <I>array</I> in ascending order based on the values in
+column <I>number</I>.</P>
+
+<P>For example, SORT(B1E100,2) sorts rows 1..100 based on the contents of
+column C.</P>
+
+<P>Use with FLIP() to sort in descending order.</P>
+
+<P>Use with TRANSPOSE() to sort by column based on values in rows.</P>
+
+<H4>SPEARMAN(<I>array1</I>, <I>array2</I>)</H4>
+
+<P>Returns the Spearman's rank correlation coefficient for the two arrays.</P>
+
+<P>The input <I>array</I>s can be taken from the RANK() function.</P>
+
+<H4>TEXT(<I>number</I>, <I>string</I>)</H4>
+
+<P>Returns a string of the <I>number</I> in the style specified. This allows
+formatted results other than those provided by PipeDream's style system.</P>
+
+<P><I>number</I> may be a number or a date.</P>
+
+<P><I>string</I> is a format string in Fireworkz number format style.</P>
+
+<P>Please refer to the Fireworkz Spreadsheet Guide for details. For example,</P>
+
+<P>TEXT(1234.567, "$#,###.00") returns $1,234.57</P>
+
+<P>TEXT(1234.567, "g0.###\m") returns 1.235km</P>
+
+
+<H2>Functions added since 4.13</H2>
+
+<H4>AGE(</I>date1</I>, </I>date2</I>)</H4>
+
+<P>Works out the difference between two dates in years and months.
+<I>date1</I> should be the more recent date, and <I>date2</I> the earlier date.</P>
+
+<P>For example:</P>
+
+<P>AGE(26.6.1994, 25.8.1982)</P>
+
+<P>returns the age as a number, expressed as 12.10, that is, someone aged 12
+years and 10 months.</P>
+
+<P>Use INT() to extract the number of years from the result and 100*(n-INT(n))
+to extract the number of months.</P>
+
+<H4>COMBIN(<I>n</I>, <I>k</I>)</H4>
+
+<P><I>n</I>C<I>k</I> = <I>n</I>! / ((<I>n</I>-<I>k</I>)! <I>k</I>!)</P>
+
+<P>This function yields the number of combinations of <I>n</I> unlike things
+taken <I>k</I> at a time.</P>
+
+<H4>DAYNAME(<I>number</I>|<I>date</I>)</H4>
+
+<P>Returns a day name string corresponding to the <I>number</I> or
+<I>date</I> (where Sunday is day one).</P>
+
+<H4>FACT(n)</H4>
+
+<P>This function yields the factorial of </>n</I> (most commonly shortened
+to <I>n</I>!).  <I>n</I> must be an integer greater than or equal to zero. 
+If <I>n</I> &lt; 12, the result is an integer, else it is floating point.</P>
+
+<H4>MONTHNAME(<I>number</I>|<I>date</I>)</H4>
+
+<P>Returns a month name string corresponding to the <I>number</I> or
+<I>date</I> (where January is month one).</P>
+
+<H4>PERMUT(<I>n</I>, <I>k</I>)</H4>
+
+<P><I>n</I>P<I>k</I> = <I>n</I>! / (<I>n</I>-<I>k</I>)!
+
+<P>This function yields the number of permutations of <I>n</I> unlike things
+taken <I>k</I> at a time.</P>
+
+<H4>WEEKNUMBER(<I>date</I>)</H4>
+
+<P>Returns the week number corresponding to the <I>date</I>.</P>
+
+
+<H2>Toolbar to PipeDream command mapping</H2>
+
+<PRE>
+Top row          SELECT  ADJUST
+-------------------------------
+
+Replicate Down  - ^BFD    ^BRE
+
+Replicate Right - ^BRR    ^BRE
+
+Make text       - ^BLT    ^BNT
+
+Make number     - ^BLN    ^BNT
+
+Chart           - ^CHN    ^CHO
+
+Function        - ....    ^EFW
+
+Cancel editing
+
+Enter formula
+
+Bottom row       SELECT  ADJUST
+-------------------------------
+
+Save            - ^FS     ^FGS
+
+Print           - ^PO     ^PY
+
+Left align      - ^LAL
+
+Centre align    - ^LAC
+
+Right align     - ^LAR
+
+Fully justify   - ....
+
+Font            - ^PFG    ^PFL
+
+Bold            - ^PB           (when marked block, ^PHB/^PHR of H2)
+
+Italic          - ^PI           (ditto, H4)
+
+Underline       - ^PU           (ditto, H1)
+
+Subscript       - ^PL           (ditto, H5)
+
+Superscript     - ^PR           (ditto, H6)
+
+Lead/Trail char - ^LCL    ^LCT
+
+Copy            - ^BF     ^BM
+
+Cut             - ^BD     ^BLC
+
+Paste           - ^I
+
+Format block    - ^R            (when marked block, ^EFB)
+
+Search          - ^BSE    ^BNM
+
+Sort            - ^BSO    ^BT
+
+Check           - ^SC     ^SB
+
+Record command  - ^FY
+
+Execute command - ^FZ
+</PRE>
+
+
+<H2>Warnings</H2>
+
+<P>When using Virtualise or a similar virtual memory manager on RISC PCs,
+install Virtualise *before* you load in PipeDream.  This is because
+PipeDream optimises its memory handling differently when VM is active on its
+area - the only way it knows this is by comparing the maximum size of the
+area with what it should be were VM not active i.e. Virtualise must have
+been allowed to alter the maximum size of an area before PipeDream loads in.</P>
+
+
+<H2>Resources</H2>
+
+<P>Resources are no longer bound into the PipeDream code.</P>
+
+<P>The Messages file has been preprocessed (comments have been stripped and
+newlines replaced) for faster loading and reduced run-time space
+requirements.  Each line is NUL (ASCII 0) terminated, the end of file being
+two adjacent NUL characters.</P>
+
+<P>Templates are grouped by menu:</P>
+
+<TABLE>
+<TR><TD>   tem_bc     </TD><TD>Block and Cursor menu dialogue boxes.</TD></TR>
+<TR><TD>   tem_cht    </TD><TD>Chart editing dialogue boxes.</TD></TR>
+<TR><TD>   tem_el     </TD><TD>Edit and Layout dialogue boxes.</TD></TR>
+<TR><TD>   tem_f      </TD><TD>File menu dialogue boxes.</TD></TR>
+<TR><TD>   tem_p      </TD><TD>Print menu dialogue boxes.</TD></TR>
+<TR><TD>   tem_s      </TD><TD>Spell menu dialogue boxes.</TD></TR>
+<TR></TR>
+<TR><TD>   tem_main   </TD><TD>Main window definitions.</TD></TR>
+<TR><TD>   tem_risc   </TD><TD>RISC_OSLib derived dialogue boxes.</TD></TR>
+</TABLE>
+
+<P>NB To help design-time icon alignment, most icons in PipeDream's template
+files have the border flag applied, which is then stripped off at run-time.</P>
+
+
+<H2>Known problems in this release</H2>
+
+<P>Stack overflows which should raise(SIGSTAK) instead give 'Uncaught trap'.</P>
+
+<P>LISTCOUNT() function has not been successfully backported from Fireworkz.</P>
+
+<P>Pressing ESCAPE whilst dragging a file somewhere to be saved may sometimes
+cause a Data Abort.</P>
+
+<P>There is a problem whereby a document does not reload a newly created chart
+properly. If an chart is created and a copy of the chart is saved out as a
+drawfile (with a different name) then the chart will not reload after being
+closed down. It will reload successfully if PipeDream is restarted.</P>
+
+<P>Exporting charts directly to other applications (eg EasyWriter) as Draw
+files via the Message_RAMFetch / Message_RAMTransfer mechanism only works if
+the application being exported to asks for the whole file in one go as the
+protocol is stopped by PipeDream after the first Message_RAMFetch is
+responded to.</P>
+
+
+<H2>32-bit !System</H2>
+
+<P>Please note that the latest distribution of !System for use with pre-RISC
+OS 5 machines may be found on the RISC OS Open website at:</P>
+
+<P><A HREF="https://www.riscosopen.org/content/downloads/other-zipfiles">https://www.riscosopen.org/content/downloads/other-zipfiles</A></P>
+
+<p>under the heading:</P>
+
+<P><B>System resources</B></P>
+
+<P>NB Do NOT use the merge dialogue in</P>
+
+<P> !Boot &gt; Configuration &gt; System Merge</P>
+
+<P>because part of the update must refresh files in a directory that the merge
+dialogue cannot reach. Instead, a simple obey file is included called
+!SysMerge. Just double click on !SysMerge.</P>
+
+
+<HR/>
+<A ID="CopyrightExtra">
+<H4>Portions (Reporter interface code)</H4>
+<P>Copyright (C) 2012-2014 Stuart Swales.</P>
+
+<HR/>
+<H4>Portions (log-gamma function code)</H4>
+<P>Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.</P>
+<PRE>
+"Developed at SunSoft, a Sun Microsystems, Inc. business. Permission to use,
+copy, modify, and distribute this software is freely granted, provided that
+this notice is preserved."
+</PRE>
+
+<HR/>
+<P>End of PipeDream Release Notes</P>
+</BODY>
+</HTML>
+

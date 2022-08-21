@@ -1,0 +1,4388 @@
+/* pdchart.c */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Copyright (C) 1991-1998 Colton Software Limited
+ * Copyright (C) 1998-2014 R W Colton */
+
+/* PipeDream to charting module interface */
+
+/* SKS 30-Apr-1991 */
+
+#include "common/gflags.h"
+
+#include "datafmt.h"
+
+#ifndef __cs_wimptx_h
+#include "cs-wimptx.h"
+#endif
+
+#ifndef __cs_event_h
+#include "cs-event.h"
+#endif
+
+#ifndef __cs_menu_h
+#include "cs-menu.h"
+#endif
+
+#ifndef __akbd_h
+#include "akbd.h"
+#endif
+
+#include "version_x.h"
+
+/*
+need to know about dec_rng()
+*/
+
+#include "cmodules/ev_evali.h"
+
+/*
+local header
+*/
+
+#include "pdchart.h"
+
+/*
+callback functions
+*/
+
+null_event_proto(static, pdchart_null_handler);
+
+gr_cache_tagstrip_proto(extern, pdchart_tagstrip);
+
+gr_chart_travel_proto(static, pdchart_travel_for_input);
+
+gr_chart_travel_proto(static, pdchart_travel_for_text_input);
+
+PROC_UREF_PROTO(static, pdchart_uref_handler);
+
+PROC_UREF_PROTO(static, pdchart_text_uref_handler);
+
+static S32
+ChartEdit_notify_proc(
+    P_ANY handle,
+    GR_CHARTEDIT_HANDLE ceh,
+    GR_CHARTEDIT_NOTIFY_TYPE ntype,
+    P_ANY nextra);
+
+/*
+internal functions
+*/
+
+static S32
+pdchart_add_into(
+    P_PDCHART_HEADER pdchart,
+    PDCHART_PROCESS process,
+    P_PDCHART_DEP itdep,
+    EV_COL stt,
+    EV_COL end);
+
+static P_PDCHART_ELEMENT
+pdchart_element_add(
+    P_PDCHART_HEADER pdchart);
+
+static S32
+pdchart_element_ensure(
+    P_PDCHART_HEADER pdchart,
+    U32 n_ranges);
+
+static void
+pdchart_element_subtract(
+    P_PDCHART_HEADER pdchart,
+    P_PDCHART_ELEMENT pdchartelem,
+    S32 kill_to_gr);
+
+static void
+pdchart_extdependency_dispose(
+    P_PDCHART_DEP itdep /*inout*/);
+
+static S32
+pdchart_extdependency_new(
+    P_PDCHART_DEP itdep /*inout*/);
+
+static void
+pdchart_init_shape_suss_holes_end(
+    PDCHART_SHAPEDESC * p /*inout*/);
+
+static void
+pdchart_listed_dep_dispose(
+    P_P_PDCHART_DEP p_itdep /*inout*/);
+
+static S32
+pdchart_listed_dep_new(
+    P_P_PDCHART_DEP p_itdep /*out*/,
+    PDCHART_RANGE_TYPE type);
+
+_Check_return_
+static STATUS
+pdchart_modify(
+    P_PDCHART_HEADER pdchart);
+
+static void
+pdchart_select_something(
+    S32 iff_just_one);
+
+static void
+pdchart_submenu_kill(void);
+
+/* try to allocate pdcharts in multiples of this */
+#define PDCHART_ELEMENT_GRANULAR 8
+
+/*
+the list of charts
+*/
+
+static NLISTS_BLK
+pdchart_listed_data =
+{
+    NULL,
+    sizeof(struct _PDCHART_LISTED_DATA),
+    sizeof(struct _PDCHART_LISTED_DATA) * 32
+};
+
+/*
+the list of chart dependencies
+*/
+
+static NLISTS_BLK
+pdchart_listed_deps =
+{
+    NULL,
+    sizeof(struct _PDCHART_DEP),
+    sizeof(struct _PDCHART_DEP) * 16
+};
+
+/*
+the 'current' chart. PD functions operate on this
+*/
+
+static P_PDCHART_HEADER
+pdchart_current = NULL;
+
+/******************************************************************************
+*
+* add the given shape of data to the 'current' chart
+*
+******************************************************************************/
+
+static S32
+pdchart_add(
+    P_PDCHART_HEADER pdchart,
+    const PDCHART_SHAPEDESC * p,
+    S32 initial)
+{
+    S32               this_initial      = initial;
+    S32               maybe_add_labels  = FALSE;
+    S32               has_unused_labels = FALSE;
+    PDCHART_SHAPEDESC pdcsd;
+    P_NLISTS_BLK      nlbp;
+    LIST_ITEMNO       stt_key, end_key;
+    U32               n_ranges;
+    S32               res, res1;
+
+    n_ranges = p->n_ranges;
+
+    /* only consider adding labels if we haven't already done so to this chart */
+    if(p->bits.label_first_range)
+        {
+        if(!gr_chart_query_labels(&pdchart->ch))
+            maybe_add_labels = TRUE;
+        else
+            {
+            /* this is one range we won't have to bother adding then.
+             * if it's the only one then do nothing more
+            */
+            if(!--n_ranges)
+                return(1);
+
+            has_unused_labels = TRUE;
+            }
+        }
+
+    /* cater for the PipeDream side of the chart descriptor growing */
+    if((res = pdchart_element_ensure(pdchart, n_ranges)) < 0)
+        return(res);
+
+    /* derive new blocks from the passed block & nz lists */
+    pdcsd = *p;
+
+    nlbp     = (/*noconst*/ P_NLISTS_BLK) ((p->bits.range_over_columns) ? &p->cols.nz : &p->rows.nz);
+
+    end_key  = (p->bits.range_over_columns) ? p->stt.col : p->stt.row;
+
+    if(has_unused_labels)
+        {
+        /* turn them off and skip them */
+        pdcsd.bits.label_first_range = 0;
+        ++end_key;
+        }
+
+#if 1
+    /* SKS after 4.12 25mar92 - now sussing seems good, allow additions to use deduced series labelling */
+    pdcsd.bits.label_first_item = p->bits.label_first_item;
+#else
+    {
+    /* look at what's already allocated in this chart for a
+     * hint about series label usage from all these dependencies
+     * ie. find the first valid non-category labels range of the same orientation as us!
+    */
+    P_PDCHART_ELEMENT ep = pdchart->elem.base;
+    U32 ix = 0;
+
+    while(ep[ix].bits.label_first_range  ||
+          (ep[ix].type != (p->bits.range_over_columns ? PDCHART_RANGE_COL : PDCHART_RANGE_ROW)))
+        if(++ix >= pdchart->elem.n)
+            goto keep;
+
+    assert(  offsetof(struct _PDCHART_ELEMENT, rng.col.stt_row) ==   offsetof(struct _PDCHART_ELEMENT, rng.row.stt_col));
+    assert(sizeofmemb(struct _PDCHART_ELEMENT, rng.col.stt_row) == sizeofmemb(struct _PDCHART_ELEMENT, rng.row.stt_col));
+    if(ep->rng.col.stt_row ==  (p->bits.range_over_columns ? p->stt.row : p->stt.col))
+        pdcsd.bits.label_first_item = ep->bits.label_first_item;
+
+    keep:;
+    }
+#endif
+
+    for(;;)
+        {
+        P_PDCHART_DEP   itdep;
+        PDCHART_PROCESS process;
+        P_U8            entryp;
+
+        /* find a contiguous range of columns/rows to add as a block */
+        stt_key = end_key;
+
+        if((entryp = collect_first_from(nlbp, &stt_key)) == NULL)
+            /* no more ranges */
+            break;
+
+        if(stt_key /*found*/ < end_key /*desired start*/)
+            {
+            /* stt_key was in a hole and found the previous item, so do a next */
+            if((entryp = collect_next(nlbp, &stt_key)) == NULL)
+                break;
+            }
+
+        end_key = stt_key;
+
+        /* slots in this range, find the end */
+
+        do  {
+            ++end_key;
+
+            entryp = collect_search(nlbp, &end_key);
+            }
+        while(entryp);
+
+        /* stt_key and end_key are new incl,excl range so bodge the dependency in a bit */
+
+        /* create a new dependency block (at end of list) for all sub-ranges to refer to */
+        if((res = pdchart_listed_dep_new(&itdep,
+                                         (p->bits.range_over_columns
+                                                    ? PDCHART_RANGE_COL
+                                                    : PDCHART_RANGE_ROW))) < 0)
+            return(res);
+
+        /* need to be able to key back to chart */
+        itdep->pdchartdatakey = pdchart->pdchartdatakey;
+
+        itdep->bits.label_first_range = pdcsd.bits.label_first_range;
+        itdep->bits.label_first_item  = pdcsd.bits.label_first_item;
+
+        if(DOCNO_NONE != (itdep->rng.s.docno = pdcsd.docno))
+            {
+            /* store whole range in there */
+            itdep->rng.s.col = p->bits.range_over_columns ? (EV_COL) stt_key : (EV_COL) pdcsd.stt.col;
+            itdep->rng.s.row = p->bits.range_over_columns ? (EV_ROW) pdcsd.stt.row : (EV_ROW) stt_key;
+            itdep->rng.e.col = p->bits.range_over_columns ? (EV_COL) end_key : (EV_COL) pdcsd.end.col;
+            itdep->rng.e.row = p->bits.range_over_columns ? (EV_ROW) pdcsd.end.row : (EV_ROW) end_key;
+
+            /* add an external reference to this whole pdchart range */
+            res = pdchart_extdependency_new(itdep);
+            }
+        else
+            res = create_error(EVAL_ERR_CANTEXTREF);
+
+        if(res > 0)
+            {
+            * (int *) &process = 0;
+
+            process.initial   = this_initial;
+            process.force_add = 1; /* all are adds from PD commands */
+
+            res = pdchart_add_into(pdchart, process, itdep, (EV_COL) stt_key, (EV_COL) end_key);
+            }
+
+        this_initial = 0;     /* only the first block of the first add is initial */
+        maybe_add_labels = 0; /* only the first block of any add is searched for labels */
+
+        pdcsd.bits.label_first_range = 0;
+
+        if(res <= 0)
+            {
+            pdchart_extdependency_dispose(itdep);
+
+            pdchart_listed_dep_dispose(&itdep);
+
+            /* I simply can't be bothered to roll back the previous changes from earlier times round this loop ... */
+            break;
+            }
+        }
+
+    res1 = pdchart_modify(pdchart);
+
+    return((res > 0) ? res : res1);
+}
+
+static S32
+pdchart_add_into(
+    P_PDCHART_HEADER pdchart,
+    PDCHART_PROCESS process,
+    P_PDCHART_DEP itdep,
+    EV_COL stt,
+    EV_COL end)
+{
+    P_PDCHART_ELEMENT i_pdchartelem, pdchartelem;
+    P_PDCHART_ELEMENT ep;
+    EV_COL           cur;
+    S32               res = 1;
+    S32               range_over_columns = (itdep->type == PDCHART_RANGE_COL);
+
+    cur = stt;
+
+    do  {
+        pdchartelem = pdchart_element_add(pdchart);
+
+        pdchartelem->type     = itdep->type;
+        pdchartelem->itdepkey = itdep->itdepkey;
+
+        pdchartelem->rng.col.docno = itdep->rng.s.docno; /* EV_DOCNO */
+        pdchartelem->rng.col.col = cur;
+
+        pdchartelem->rng.col.stt_row = (range_over_columns) ? itdep->rng.s.row : itdep->rng.s.col;
+        pdchartelem->rng.col.end_row = (range_over_columns) ? itdep->rng.e.row : itdep->rng.e.col;
+
+        /* category ranges only at start of dependency! */
+        pdchartelem->bits.label_first_range = itdep->bits.label_first_range &&
+                                                (cur == (range_over_columns ? itdep->rng.s.col : itdep->rng.s.row));
+
+        pdchartelem->bits.label_first_item = itdep->bits.label_first_item;
+
+        if(pdchartelem->bits.label_first_range)
+            res = gr_chart_add_labels(&pdchart->ch,
+                                      pdchart_travel_for_input,
+                                      pdchartelem,
+                                      &pdchartelem->gr_int_handle);
+        else
+            {
+            P_PDCHART_ELEMENT epf;
+
+            /* look for handle to insert after */
+            epf = NULL;
+
+            if(!process.force_add)
+                {
+                EV_COL try_this = cur - 1;
+
+                if(0 != pdchart->elem.n)
+                    {
+                    i_pdchartelem = &pdchart->elem.base[0];
+                    ep = i_pdchartelem + pdchart->elem.n;
+
+                    while(--ep >= i_pdchartelem)
+                        {
+                        if(ep->itdepkey == itdep->itdepkey)
+                            {
+                            switch(ep->type)
+                                {
+                                default:
+                                    myassert2x(0, "Found chart element of different type %d to dep type %d", ep->type, itdep->type);
+
+                                case PDCHART_RANGE_NONE:
+                                    break;
+
+                                case PDCHART_RANGE_COL_DEAD:
+                                    if(ep->rng.col.col == try_this)
+                                        --try_this;
+                                    break;
+
+                                case PDCHART_RANGE_ROW_DEAD:
+                                    if(ep->rng.row.row == try_this)
+                                        --try_this;
+                                    break;
+
+                                case PDCHART_RANGE_COL:
+                                    if(ep->rng.col.col == try_this)
+                                        {
+                                        epf = ep;
+                                        goto endwhile_add_after;
+                                        }
+                                    break;
+
+                                case PDCHART_RANGE_ROW:
+                                    if(ep->rng.row.row == try_this)
+                                        {
+                                        epf = ep;
+                                        goto endwhile_add_after;
+                                        }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                endwhile_add_after:;
+
+                myassert0x((epf != NULL) || process.initial, "Failed to find element to insert after");
+                }
+
+            if(epf)
+                res = gr_chart_insert(&pdchart->ch,
+                                      pdchart_travel_for_input,
+                                      pdchartelem,
+                                      &pdchartelem->gr_int_handle,
+                                      &epf->gr_int_handle);
+            else
+                res = gr_chart_add(&pdchart->ch,
+                                   pdchart_travel_for_input,
+                                   pdchartelem,
+                                   &pdchartelem->gr_int_handle);
+
+            if(res < 0)
+                /* failed to add, so remove allocation */
+                pdchart_element_subtract(pdchart, pdchartelem, 0);
+            }
+
+        if(res < 0)
+            {
+            /* failed to add this col/row as range, so remove and loop back removing others we just added */
+
+            i_pdchartelem = &pdchart->elem.base[0];
+
+            while(--cur >= stt)
+                {
+                pdchartelem = i_pdchartelem + pdchart->elem.n;
+
+                while(--pdchartelem >= i_pdchartelem)
+                    if(pdchartelem->itdepkey == itdep->itdepkey)
+                        if(cur == (range_over_columns ? pdchartelem->rng.col.col : pdchartelem->rng.row.row))
+                            {
+                            pdchart_element_subtract(pdchart, pdchartelem, 1);
+                            break;
+                            }
+                }
+
+            break;
+            }
+        }
+    while(++cur < end);
+
+    return(res);
+}
+
+static S32
+pdchart_add_range_for_load(
+    P_PDCHART_HEADER pdchart,
+    PDCHART_RANGE_TYPE type,
+    _InRef_     PC_EV_RANGE rng,
+    U16 bits)
+{
+    P_PDCHART_DEP   itdep;
+    PDCHART_PROCESS process;
+    S32             res;
+
+    /* create a new dependency block (at end of list) for all sub-ranges to refer to */
+    if((res = pdchart_listed_dep_new(&itdep, type)) < 0)
+        return(res);
+
+    /* need to be able to key back to chart */
+    itdep->pdchartdatakey = pdchart->pdchartdatakey;
+
+    * (P_U16) &itdep->bits = bits;
+
+    itdep->rng  = *rng;
+
+    /* add an external reference to this whole pdchart range */
+    if((res = pdchart_extdependency_new(itdep)) > 0)
+        {
+        * (int *) &process = 0;
+
+        process.initial   = 1;
+        process.force_add = 1; /* all are adds from reload */
+
+        if((res = pdchart_add_into(pdchart, process, itdep,
+                                   ((type == PDCHART_RANGE_COL) ? itdep->rng.s.col : itdep->rng.s.row),
+                                   ((type == PDCHART_RANGE_COL) ? itdep->rng.e.col : itdep->rng.e.row))) < 0)
+            pdchart_extdependency_dispose(itdep);
+        }
+
+    if(res <= 0)
+        {
+        pdchart_listed_dep_dispose(&itdep);
+
+        return(res);
+        }
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* allocate offset for a new element
+*
+******************************************************************************/
+
+static P_PDCHART_ELEMENT
+pdchart_element_add(
+    P_PDCHART_HEADER pdchart)
+{
+    P_PDCHART_ELEMENT stt_pdchartelem, end_pdchartelem, pdchartelem;
+
+    /* try to find a hole if present */
+    stt_pdchartelem = &pdchart->elem.base[0];
+    end_pdchartelem = stt_pdchartelem + pdchart->elem.n;
+
+    if(0 != pdchart->elem.n)
+        {
+        pdchartelem = end_pdchartelem;
+
+        while(--pdchartelem >= stt_pdchartelem)
+            if(pdchartelem->type == PDCHART_RANGE_NONE)
+                return(pdchartelem);
+        }
+
+    ++pdchart->elem.n;
+
+    /* allocate at end unless holey */
+    return(end_pdchartelem);
+}
+
+/******************************************************************************
+*
+* dispose of a chart
+*
+******************************************************************************/
+
+static void
+pdchart_dispose(
+    P_P_PDCHART_HEADER p_pdchart /*inout*/)
+{
+    P_PDCHART_HEADER  pdchart;
+    P_PDCHART_ELEMENT i_pdchartelem, pdchartelem;
+    P_PDCHART_DEP     itdep;
+
+    pdchart = *p_pdchart;
+    if(!pdchart)
+        return;
+    *p_pdchart = NULL;
+
+    pdchart_submenu_kill();
+
+    /* kill the chart editor window if any */
+    gr_chartedit_dispose(&pdchart->ceh);
+
+    /* loop over data sources, removing deps */
+    if(pdchart->elem.base)
+        {
+        if(0 != pdchart->elem.n)
+            {
+            i_pdchartelem = &pdchart->elem.base[0];
+            pdchartelem = i_pdchartelem + pdchart->elem.n;
+
+            while(--pdchartelem >= i_pdchartelem)
+                {
+                /* remove extref and dep for this range if not already done */
+                if((itdep = collect_search(&pdchart_listed_deps, &pdchartelem->itdepkey)) != NULL)
+                    {
+                    pdchart_extdependency_dispose(itdep);
+
+                    pdchart_listed_dep_dispose(&itdep);
+                    }
+
+                /* being pedantic one could remove data sources individually ... */
+                #if TRACE_ALLOWED
+                pdchart_element_subtract(pdchart, pdchartelem, 1);
+                #endif
+                /* ... but it's far quicker to leave that to the chart module */
+                }
+            }
+
+        al_ptr_dispose(P_P_ANY_PEDANTIC(&pdchart->elem.base));
+        }
+
+    /* remove any cache entry that may have been this chart's Draw file */
+    {
+    U8 filename[BUF_MAX_PATHSTRING];
+    GR_CACHE_HANDLE cah;
+
+    gr_chart_name_query(&pdchart->ch, filename, sizeof(filename) - 1);
+
+    if(gr_cache_entry_query(&cah, filename))
+        {
+        gr_cache_ref(&cah, 1);
+        gr_cache_ref(&cah, 0); /* autokill will remove this entry from the cache if refs go to zero, else it's referenced elsewhere */
+        }
+    }
+
+    /* can kill the chart and its baggage in one (quick) fell swoop */
+    gr_chart_dispose(&pdchart->ch);
+
+    /* kill the pdchart list entry */
+    collect_subtract_entry(&pdchart_listed_data, &pdchart->pdchartdatakey);
+
+    /* were we 'current'? find another gullible chart if so */
+    if(pdchart_current == pdchart)
+        pdchart_select_something(0 /*any will do*/);
+
+    /* some twerp may have set off a background process to kill this chart so bash that in */
+    /* or else you can imagine the consequences as it accesses ... */
+    if(pdchart->recalc.state != PDCHART_UNMODIFIED)
+        status_assert(Null_EventHandler(pdchart_null_handler, pdchart, FALSE, 0));
+
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&pdchart));
+}
+
+/******************************************************************************
+*
+* kill external dependency for chart
+*
+******************************************************************************/
+
+static void
+pdchart_extdependency_dispose(
+    P_PDCHART_DEP itdep /*inout*/)
+{
+    EV_DOCNO docno;
+
+    if((docno = itdep->rng.s.docno) != DOCNO_NONE)
+        {
+        itdep->rng.s.docno = DOCNO_NONE;
+
+        ev_del_extdependency(docno, itdep->ev_int_handle);
+        }
+}
+
+/******************************************************************************
+*
+* add external dependency for chart
+*
+******************************************************************************/
+
+static S32
+pdchart_extdependency_new(
+    P_PDCHART_DEP itdep /*inout*/)
+{
+    S32 res;
+
+    /* little fixups for cleaner results */
+    itdep->rng.e.docno = itdep->rng.s.docno;
+
+    itdep->rng.s.flags = itdep->rng.e.flags = 0;
+
+    if((res = ev_add_extdependency(
+                        itdep->itdepkey,
+                        0,
+                       &itdep->ev_int_handle,
+                      ((itdep->type == PDCHART_RANGE_TXT)
+                                    ? pdchart_text_uref_handler
+                                    : pdchart_uref_handler),
+                       &itdep->rng)) < 0)
+        {
+        itdep->rng.s.docno = DOCNO_NONE;
+        return(res);
+        }
+
+    /* NB. res == 0 is good from ev_add_extdependency() */
+    return(1);
+}
+
+/******************************************************************************
+*
+* try to get a numeric value out of this!
+* 0 -> failed, expand as string in caller
+*
+******************************************************************************/
+
+static S32
+pdchart_extract_numeric_result(
+    P_EV_RESULT resp,
+    P_GR_CHART_VALUE val /*out. NULL->nopoke*/)
+{
+    switch(resp->did_num)
+        {
+        case RPN_DAT_REAL:
+            if(val)
+                {
+                val->type        = GR_CHART_VALUE_NUMBER;
+                val->data.number = resp->arg.fp;
+                }
+            return(1);
+
+        case RPN_DAT_WORD8:
+        case RPN_DAT_WORD16:
+        case RPN_DAT_WORD32:
+            if(val)
+                {
+                val->type        = GR_CHART_VALUE_NUMBER;
+                val->data.number = (F64) resp->arg.integer;
+                }
+            return(1);
+
+        case RPN_RES_ARRAY:
+            {
+            S32 res;
+            EV_RESULT temp_res;
+            EV_DATA temp_data;
+
+            /* go via EV_DATA */
+            ev_result_to_data_convert(&temp_data, resp);
+
+            ev_data_to_result_convert(&temp_res, ss_array_element_index_borrow(&temp_data, 0, 0));
+
+            /* recurse to convert result */
+            res = pdchart_extract_numeric_result(&temp_res, val);
+
+            ev_result_free_resources(&temp_res);
+
+            return(res);
+            }
+
+        default:
+            return(0);
+        }
+}
+
+/******************************************************************************
+*
+* grow pdchart descriptor as necessary to take more elements
+*
+******************************************************************************/
+
+static S32
+pdchart_element_ensure(
+    P_PDCHART_HEADER pdchart,
+    U32 n_ranges)
+{
+    P_PDCHART_ELEMENT i_pdchartelem, pdchartelem;
+    U32               n_ranges_total;
+
+    /* nuffink to allocate */
+    if(!n_ranges)
+        return(1);
+
+    /* count number of holes present. don't reuse dead entries - they're there for a purpose! */
+    if(0 != pdchart->elem.n)
+        {
+        i_pdchartelem = &pdchart->elem.base[0];
+        pdchartelem = i_pdchartelem + pdchart->elem.n;
+
+        while(--pdchartelem >= i_pdchartelem)
+            {
+            if(pdchartelem->type == PDCHART_RANGE_NONE)
+                if(n_ranges > 0)
+                    if(--n_ranges == 0)
+                        /* holes can take the load */
+                        return(1);
+            }
+        }
+
+    /* cater for the PipeDream side of the chart descriptor growing */
+    n_ranges_total = pdchart->elem.n + n_ranges;
+
+    if(n_ranges_total > pdchart->elem.n_alloc)
+        {
+        P_PDCHART_ELEMENT t_base;
+        U32               delta;
+
+        /* round up to next multiple of n elements */
+        n_ranges_total = round_up(n_ranges_total, PDCHART_ELEMENT_GRANULAR);
+
+        /* number of new elements being allocated */
+        delta = n_ranges_total - pdchart->elem.n_alloc;
+
+        t_base = list_reallocptr(pdchart->elem.base, (S32) sizeof(*pdchartelem) * n_ranges_total);
+        if(!t_base)
+            return(status_nomem());
+
+        pdchart->elem.base = t_base;
+
+        /* clear out new element allocation */
+        void_memset32(&pdchart->elem.base[pdchart->elem.n_alloc], 0, delta * sizeof32(*pdchartelem));
+
+        /* then update our note of size */
+        pdchart->elem.n_alloc = n_ranges_total;
+
+        /* update references to the currently allocated chart elements (stored for us by gr_chart.c) */
+
+        if(0 != pdchart->elem.n)
+            {
+            i_pdchartelem = &pdchart->elem.base[0];
+            pdchartelem = i_pdchartelem + pdchart->elem.n;
+
+            while(--pdchartelem >= i_pdchartelem)
+                if(pdchartelem->type != PDCHART_RANGE_NONE)
+                    gr_chart_update_handle(&pdchart->ch, pdchartelem, &pdchartelem->gr_int_handle);
+            }
+        }
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* remove element
+*
+******************************************************************************/
+
+static void
+pdchart_element_subtract(
+    P_PDCHART_HEADER pdchart,
+    P_PDCHART_ELEMENT pdchartelem,
+    S32 kill_to_gr)
+{
+    assert(pdchartelem->type != PDCHART_RANGE_NONE);
+    assert(pdchart->elem.n);
+
+    if(kill_to_gr && pdchartelem->gr_int_handle) /* DEAD ROWs and COLs will have NULL handles */
+        gr_chart_subtract(&pdchart->ch, &pdchartelem->gr_int_handle);
+
+    zero_struct_ptr(pdchartelem);
+
+    /* try shrinking descriptor usage after that clearout */
+    pdchartelem = &pdchart->elem.base[pdchart->elem.n];
+
+    while(pdchart->elem.n)
+        {
+        if((--pdchartelem)->type != PDCHART_RANGE_NONE)
+            break;
+
+        /* removing at end: shrink end back as far as possible */
+        --pdchart->elem.n;
+        }
+}
+
+/******************************************************************************
+*
+* set up chart shape from marked block in sheet
+*
+******************************************************************************/
+
+static S32
+pdchart_init_shape_suss_holes(
+    PDCHART_SHAPEDESC * p)
+{
+    SLR end;
+    TRAVERSE_BLOCK traverse_blk;
+    P_SLOT sl;
+    S32 res = 1;
+
+    end.col = p->end.col - 1; /* make these incl again for PipeDream block routines */
+    end.row = p->end.row - 1;
+
+    p->cols.nz.lbr = NULL;
+    p->cols.nz.maxitemsize = 1;
+    p->cols.nz.maxpoolsize = 16;
+
+    p->rows.nz.lbr = NULL;
+    p->rows.nz.maxitemsize = 1;
+    p->rows.nz.maxpoolsize = 16;
+
+    traverse_block_init(&traverse_blk, p->docno, &p->stt, &end, TRAVERSE_DOWN_COLUMNS);
+
+    p->cols.min = LARGEST_COL_POSSIBLE;
+    p->cols.max = 0;
+    p->rows.min = LARGEST_ROW_POSSIBLE;
+    p->rows.max = 0;
+
+    while((sl = traverse_block_next_slot(&traverse_blk)) != NULL)
+        {
+        /* if there's a slot, mark the col & row it's in */
+        COL          col;
+        ROW          row;
+        S32          number_slot;
+        P_NLISTS_BLK lbrp;
+        LIST_ITEMNO  key;
+        P_U8         entryp;
+
+        if(sl->type == SL_PAGE)
+            continue;
+
+        number_slot = (sl->type == SL_NUMBER);
+
+        col = traverse_block_cur_col(&traverse_blk);
+        row = traverse_block_cur_row(&traverse_blk);
+
+        /* this column is not blank */
+        p->cols.min = MIN(p->cols.min, col);
+        p->cols.max = MAX(p->cols.max, col);
+
+        lbrp = &p->cols.nz;
+        key  = col;
+
+        if((entryp = collect_search(lbrp, &key)) == NULL)
+            {
+            entryp = collect_add_entry(lbrp, sizeof(*entryp), &key);
+            if(!entryp)
+                {
+                res = status_nomem();
+                break;
+                }
+            *entryp = number_slot;
+            }
+        else if(!*entryp)
+            *entryp = number_slot; /* numbers in slots force their way in */
+
+        /* this row is not blank */
+        p->rows.min = MIN(p->rows.min, row);
+        p->rows.max = MAX(p->rows.max, row);
+
+        lbrp = &p->rows.nz;
+        key  = row;
+
+        if((entryp = collect_search(lbrp, &key)) == NULL)
+            {
+            entryp = collect_add_entry(lbrp, sizeof(*entryp), &key);
+            if(!entryp)
+                {
+                res = status_nomem();
+                break;
+                }
+            *entryp = number_slot;
+            }
+        else if(!*entryp)
+            *entryp = number_slot;
+        }
+
+    p->bits.something = 1;
+
+    if(res < 0)
+        {
+        p->bits.something = 0;
+
+        pdchart_init_shape_suss_holes_end(p);
+        }
+    else
+        {
+        /* adjust the end points */
+        if(p->cols.min < p->cols.max + 1)
+            {
+            p->stt.col = p->cols.min;
+            p->end.col = p->cols.max + 1; /*excl*/
+            }
+        else
+            p->bits.something = 0;
+
+        if(p->rows.min < p->rows.max + 1)
+            {
+            p->stt.row = p->rows.min;
+            p->end.row = p->rows.max + 1; /*excl*/
+            }
+        else
+            p->bits.something = 0;
+        }
+
+    return(res);
+}
+
+static void
+pdchart_init_shape_suss_holes_end(
+    PDCHART_SHAPEDESC * p /*inout*/)
+{
+    collect_delete(&p->cols.nz);
+    collect_delete(&p->rows.nz);
+}
+
+static S32
+pdchart_init_shape_from_marked_block(
+    PDCHART_SHAPEDESC * p /*out*/,
+    P_PDCHART_HEADER pdchart /*const, maybe NULL*/)
+{
+    P_SLOT       sl;
+    P_EV_RESULT  resp;
+    S32          res;
+    COL          cols_tx_n;
+    ROW          rows_tx_n;
+    LIST_ITEMNO  key;
+    P_NLISTS_BLK lbrp;
+    P_U8         entryp;
+
+    init_marked_block();
+
+    p->docno = blk_docno;
+
+    ++end_bl.col; /* convert end from incl to excl */
+    ++end_bl.row;
+
+    /* SKS after 4.12 24mar92 - made forced recalc so that yet-to-be-recalced numbers appear as numbers not text */
+    ev_recalc_all();
+
+    #if TRACE_ALLOWED
+    * (int *) &p->bits = 0;
+    #endif
+
+    /* read the options */
+    p->bits.range_over_manual  = (d_chart_options[0].option != 'A');
+    p->bits.range_over_columns = (d_chart_options[0].option == 'C');
+
+    /* SKS after 4.12 24mar92 - merged from_marked_block and from_range as one was only ever called as the tail of t'other */
+
+    p->stt.col = start_bl.col;
+    p->stt.row = start_bl.row;
+    p->end.col = end_bl.col; /*excl*/
+    p->end.row = end_bl.row; /*excl*/
+
+    if((res = pdchart_init_shape_suss_holes(p)) < 0)
+        return(res);
+
+    p->cols.n = p->end.col - p->stt.col;
+    p->rows.n = p->end.row - p->stt.row;
+
+    /* count the number of cols actually used */
+    p->cols.nz_n = 0;
+    cols_tx_n    = 0;
+
+    lbrp = &p->cols.nz;
+
+    for(entryp = collect_first(lbrp, &key); entryp; entryp = collect_next(lbrp, &key))
+        {
+        ++p->cols.nz_n;
+
+        if(!*entryp)
+            ++cols_tx_n;
+        }
+
+    /* count the number of rows actually used */
+    p->rows.nz_n = 0;
+    rows_tx_n    = 0;
+
+    lbrp = &p->rows.nz;
+
+    for(entryp = collect_first(lbrp, &key); entryp; entryp = collect_next(lbrp, &key))
+        {
+        ++p->rows.nz_n;
+
+        if(!*entryp)
+            ++rows_tx_n;
+        }
+
+    p->bits.number_top_left = 0;
+    p->bits.label_top_left  = 0;
+    p->bits.number_left_col = 0;
+    p->bits.label_left_col  = 0;
+    p->bits.number_top_row  = 0;
+    p->bits.label_top_row   = 0;
+
+    /* what is at the top left? */
+    sl = travel_externally(p->docno, p->stt.col, p->stt.row);
+
+    if(sl)
+        switch(result_extract(sl, &resp))
+            {
+            case SL_PAGE:
+                break;
+
+            case SL_NUMBER:
+                if(pdchart_extract_numeric_result(resp, NULL))
+                    {
+                    p->bits.number_top_left = 1;
+                    break;
+                    }
+
+            /* else deliberate drop thru ... */
+
+            default:
+                p->bits.label_top_left = 1;
+            }
+
+    /* see whether left column is a label set. can skip top left as that's been covered */
+    {
+    ROW row = p->stt.row + 1;
+
+    if(row < p->end.row)
+        do {
+            sl = travel_externally(p->docno, p->stt.col, row);
+
+            if(sl)
+                switch(result_extract(sl, &resp))
+                    {
+                    case SL_PAGE:
+                        break;
+
+                    case SL_NUMBER:
+                        if(pdchart_extract_numeric_result(resp, NULL))
+                            {
+                            p->bits.number_left_col = 1;
+                            break;
+                            }
+
+                    /* else deliberate drop thru ... */
+
+                    default:
+                        p->bits.label_left_col = 1;
+                        break;
+                    }
+            }
+        while(++row < p->end.row); /* in ideal case one would be able to zip down a sparse list... */
+    }
+
+    /* see whether top row is a label set. can skip top left as that's been covered */
+    {
+    COL col = p->stt.col + 1;
+
+    if(col < p->end.col)
+        do  {
+            sl = travel_externally(p->docno, col, p->stt.row);
+
+            if(sl)
+                switch(result_extract(sl, &resp))
+                    {
+                    case SL_PAGE:
+                        break;
+
+                    case SL_NUMBER:
+                        if(pdchart_extract_numeric_result(resp, NULL))
+                            {
+                            p->bits.number_top_row = 1;
+                            break;
+                            }
+
+                    /* else deliberate drop thru ... */
+
+                    default:
+                        p->bits.label_top_row = 1;
+                        break;
+                    }
+            }
+        while(++col < p->end.col); /* in ideal case one would be able to zip down a sparse list... (but not in PipeDream) */
+    }
+
+    /* SKS after 4.12 24mar92 -  more care needed with top left corner for predictability */
+    if(p->bits.label_top_left)
+        {
+        if(p->bits.range_over_manual && !p->bits.range_over_columns)
+            {
+            /* if we are definitely arranging across rows then do opposite to the below case */
+            if(!p->bits.label_left_col)
+                {
+                if((p->rows.nz_n > 1) && p->bits.number_left_col)
+                    p->bits.label_top_row  = 1;
+                else
+                    p->bits.label_left_col = 1;
+                }
+            }
+        else
+            {
+            /* give the label at top left to the top row only if it already has labels,
+             * otherwise give to the left column if more than one column and otherwise empty top row
+             * (else adding a column with a series label is impossible)
+             * this makes adding to chart with series headings work as before (sort of)
+            */
+            if(!p->bits.label_top_row)
+                {
+                if((p->cols.nz_n > 1) && p->bits.number_top_row)
+                    p->bits.label_left_col = 1;
+                else
+                    p->bits.label_top_row  = 1;
+                }
+            }
+        }
+
+    /* can sort bits out now (and soon probably remove as irrelevant) */
+    if(p->bits.label_top_left)
+        p->bits.number_top_left = 0;
+
+    if(p->bits.label_left_col)
+        p->bits.number_left_col = 0;
+
+    if(p->bits.label_top_row)
+        p->bits.number_top_row = 0;
+
+    if(!p->bits.range_over_manual)
+        {
+        /* SKS after 4.12 24mar92 - change test to be more careful and predictable */
+        S32 datacols = p->cols.nz_n;
+        S32 datarows = p->rows.nz_n;
+        if(p->bits.label_left_col)
+            --datacols;
+        if(p->bits.label_top_row)
+            --datarows;
+        if(datacols != datarows)
+            p->bits.range_over_columns = (datacols < datarows);
+        else if(p->bits.label_top_row)
+            p->bits.range_over_columns = TRUE;
+        else if(p->bits.label_left_col)
+            p->bits.range_over_columns = FALSE;
+        else
+            p->bits.range_over_columns = TRUE;
+        }
+
+    p->bits.label_first_range = (p->bits.range_over_columns)
+                                            ? p->bits.label_left_col
+                                            : p->bits.label_top_row;
+
+    p->bits.label_first_item  = (p->bits.range_over_columns)
+                                            ? p->bits.label_top_row
+                                            : p->bits.label_left_col;
+
+    lbrp = (p->bits.range_over_columns)
+                        ? &p->cols.nz
+                        : &p->rows.nz;
+
+    if(p->bits.label_first_range)
+        {
+        /* protect range from deletion */
+        if(p->bits.range_over_columns)
+            {
+            --cols_tx_n;
+            key = p->stt.col;
+            }
+        else
+            {
+            --rows_tx_n;
+            key = p->stt.row;
+            }
+
+        entryp = collect_search(lbrp, &key);
+        assert(entryp);
+        *entryp = 1; /* protect */
+        }
+
+    /* remove superfluous non-numeric ranges now */
+    p->cols.nz_n -= cols_tx_n;
+    p->rows.nz_n -= rows_tx_n;
+
+    p->n_ranges = (p->bits.range_over_columns)
+                            ? p->cols.nz_n
+                            : p->rows.nz_n;
+
+    key = (p->bits.range_over_columns)
+                    ? p->stt.col
+                    : p->stt.row;
+
+    for(entryp = collect_first_from(lbrp, &key); entryp; entryp = collect_next(lbrp, &key))
+        if(!*entryp)
+            collect_subtract_entry(lbrp, &key);
+
+    /* SKS after 4.12 24mar92 - see whether there is any data left after that! */
+    if(p->n_ranges == 0)
+        return(create_error(ERR_CHARTNONUMERICDATA));
+    else if((p->n_ranges == 1) && p->bits.label_first_range)
+        {
+        /* go interactive */
+        switch(riscdialog_query_YN("There is no numeric data in the marked block. Do you want to continue?"))
+            {
+            case riscdialog_query_YES:
+                /* punter has given us the go-ahead */
+                break;
+
+            default:
+                assert(0);
+            case riscdialog_query_NO:
+            case riscdialog_query_CANCEL:
+                /* abandon operation */
+                pdchart_init_shape_suss_holes_end(p);
+                return(0);
+            }
+        }
+
+    /* if no category labels found and the chart would prefer to
+     * have them then ask the punter whether he knows better
+
+     * SKS after 4.12 24mar92 - rather different to what has gone before...
+    */
+    if(0 && !p->bits.label_first_range)
+        {
+        /* if adding to a chart see if already added else ask preferred chart whether it wants them */
+        S32 wants_labels = 0;
+
+        if(!pdchart)
+            wants_labels = gr_chart_query_labelling(NULL);
+        else
+            {
+            if(gr_chart_query_labelling(&pdchart->ch))
+                wants_labels = !gr_chart_query_labels(&pdchart->ch);
+            }
+
+        if(wants_labels)
+            {
+            /* go interactive */
+            char buffer[128];
+
+            (void) xsnprintf(buffer, elemof32(buffer),
+                    "Use %snumeric %s as category labels?",
+                    (p->n_ranges > 1)            ? "first " : "",
+                    (p->bits.range_over_columns) ? "column" : "row");
+
+            switch(riscdialog_query_YN(buffer))
+                {
+                case riscdialog_query_YES:
+                    p->bits.label_first_range = 1;
+                    break;
+
+                case riscdialog_query_CANCEL:
+                    /* abandon operation */
+                    pdchart_init_shape_suss_holes_end(p);
+                    return(0);
+
+                default:
+                    assert(0);
+                case riscdialog_query_NO:
+                    break;
+                }
+            }
+        }
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* deallocate a dependency block
+*
+******************************************************************************/
+
+static void
+pdchart_listed_dep_dispose(
+    P_P_PDCHART_DEP p_itdep /*inout*/)
+{
+    LIST_ITEMNO   itdepkey;
+    P_PDCHART_DEP itdep;
+
+    itdep = *p_itdep;
+
+    *p_itdep = NULL;
+
+    itdepkey = itdep->itdepkey;
+
+    collect_subtract_entry(&pdchart_listed_deps, &itdepkey);
+}
+
+/******************************************************************************
+*
+* allocate a new dependency block
+*
+******************************************************************************/
+
+static S32
+pdchart_listed_dep_new(
+    P_P_PDCHART_DEP p_itdep,
+    PDCHART_RANGE_TYPE type)
+{
+    static LIST_ITEMNO itdepkey_gen = 0x42224000; /* NB. not tbs */
+
+    LIST_ITEMNO   itdepkey;
+    P_PDCHART_DEP itdep;
+
+    /* create a new block for all sub-ranges to refer to */
+    itdepkey = itdepkey_gen++;
+
+    *p_itdep = NULL;
+
+    if((itdep = collect_add_entry(&pdchart_listed_deps, sizeof(*itdep), &itdepkey)) == NULL)
+        return(status_nomem());
+
+    *p_itdep = itdep;
+
+    zero_struct_ptr(itdep);
+
+    itdep->type = type;
+
+    /* need to be able to key back to this entry */
+    itdep->itdepkey = itdepkey;
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* prepare for modifying a chart sometime when we get idle time
+*
+******************************************************************************/
+
+_Check_return_
+static STATUS
+pdchart_modify(
+    P_PDCHART_HEADER pdchart)
+{
+    STATUS status;
+
+#if 0
+    pdchart->recalc.last_mod_time = monotime();
+#endif
+
+    /* mark chart for recalc if not already done so */
+    if(pdchart->recalc.state == PDCHART_UNMODIFIED)
+        {
+        pdchart->recalc.state = PDCHART_MODIFIED;
+
+        /* and claim some nulls, monitoring till we seem to have
+         * recalced areas of interest in this chart
+        */
+        if(status_fail(status = Null_EventHandler(pdchart_null_handler, pdchart, TRUE, 0)))
+            {
+            /* fail pathetically */
+            pdchart->recalc.state = PDCHART_UNMODIFIED;
+            return(status);
+            }
+        }
+
+    return(STATUS_DONE);
+}
+
+/******************************************************************************
+*
+* prepare a new chart for adding to, suggested size given so no realloc initially
+*
+******************************************************************************/
+
+static S32
+pdchart_new(
+    P_P_PDCHART_HEADER p_pdchart /*out*/, U32 n_ranges, S32 use_preferred,
+    S32 new_untitled)
+{
+    static LIST_ITEMNO    pdchartdatakey_gen = 0x52834000; /* NB. starting at a non-zero position, not tbs! */
+
+    P_PDCHART_HEADER      pdchart;
+    LIST_ITEMNO           pdchartdatakey;
+    P_PDCHART_LISTED_DATA pdchartdata;
+    S32                   res;
+
+    /* allocate header */
+    if(NULL == (pdchart = *p_pdchart = al_ptr_calloc_elem(PDCHART_HEADER, 1, &res)))
+        return(res);
+
+    pdchart_submenu_kill();
+
+    /* clear out allocation */
+    zero_struct_ptr(pdchart);
+
+    pdchart->recalc.state = PDCHART_UNMODIFIED;
+
+    if((res = pdchart_element_ensure(pdchart, n_ranges /*may be 0*/)) > 0)
+        {
+        /* subsequent failure irrelevant to monotonic handle generator */
+        pdchartdatakey = pdchartdatakey_gen++;
+
+        if((pdchartdata = collect_add_entry(&pdchart_listed_data, sizeof(*pdchartdata), &pdchartdatakey)) == NULL)
+            res = status_nomem();
+        else
+            {
+            /* merely store pointer to pdchart header on list */
+            pdchartdata->pdchart = pdchart;
+
+            /* store key in pdchart header */
+            pdchart->pdchartdatakey = pdchartdatakey;
+
+            if((res = (use_preferred
+                            ? gr_chart_preferred_new(&pdchart->ch, (P_ANY) pdchartdatakey)
+                            : gr_chart_new(&pdchart->ch, (P_ANY) pdchartdatakey, new_untitled))) < 0)
+                collect_subtract_entry(&pdchart_listed_data, &pdchartdatakey);
+            }
+
+        if(res < 0)
+            al_ptr_dispose(P_P_ANY_PEDANTIC(&pdchart->elem.base));
+        }
+
+    if(res < 0)
+        {
+        al_ptr_dispose(P_P_ANY_PEDANTIC(p_pdchart));
+        return(res);
+        }
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* call-back from null engine to start charts recalculation
+*
+******************************************************************************/
+
+null_event_proto(static, pdchart_null_handler)
+{
+    P_PDCHART_HEADER pdchart = (P_PDCHART_HEADER) p_null_event_block->client_handle;
+
+    switch(p_null_event_block->rc)
+        {
+        case NULL_QUERY:
+            /* SKS after 4.11 13jan92 - added auto/manual update */
+            if(d_progvars[OR_AC].option != 'A')
+                return(NULL_EVENTS_OFF);
+
+            return((pdchart->recalc.state == PDCHART_UNMODIFIED)
+                           ? NULL_EVENTS_OFF
+                           : NULL_EVENTS_REQUIRED);
+
+        case NULL_EVENT:
+            /* SKS after 4.11 13jan92 - added auto/manual update */
+            if(d_progvars[OR_AC].option != 'A')
+                return(NULL_EVENT_COMPLETED);
+
+            switch(pdchart->recalc.state)
+                {
+                default:
+                    assert(0);
+
+                case PDCHART_MODIFIED:
+                    pdchart->recalc.state = PDCHART_AWAITING_RECALC;
+
+                /* deliberate drop thru ... */
+
+                case PDCHART_AWAITING_RECALC:
+#if 1
+                    if(!ev_todo_check())
+#else
+                    if((p_null_event_block->initial_time - pdchart->recalc.last_mod_time) >= MONOTIME_VALUE(250))
+#endif
+                        {
+                        trace_2(TRACE_MODULE_GR_CHART,
+                                "pdchart: chart " PTR_XTFMT "," PTR_XTFMT " has now waited a respectable time since last modification\n",
+                                report_ptr_cast(pdchart), report_ptr_cast(pdchart->ch));
+
+                        /* kill off null process to this chart */
+                        pdchart->recalc.state = PDCHART_UNMODIFIED;
+                        status_assert(Null_EventHandler(pdchart_null_handler, p_null_event_block->client_handle, FALSE, 0));
+
+                        /* ask chart to rebuild if it hasn't done so since given time */
+                        gr_chart_diagram_ensure(&pdchart->ch);
+                        }
+                    break;
+                }
+
+            return(NULL_EVENT_COMPLETED);
+
+        default:
+            return(NULL_EVENT_UNKNOWN);
+        }
+}
+
+/******************************************************************************
+*
+* add a dynamic text object to the 'current' chart. works for either PD cmd or reload
+*
+******************************************************************************/
+
+static S32
+pdchart_text_add(
+    P_PDCHART_HEADER pdchart,
+    _InRef_     PC_EV_RANGE rng)
+{
+    P_PDCHART_DEP     itdep;
+    P_PDCHART_ELEMENT pdchartelem;
+    S32               res;
+
+    /* create a new dependency block (at end of list) for this slot to refer to */
+    if((res = pdchart_listed_dep_new(&itdep, PDCHART_RANGE_TXT)) < 0)
+        return(res);
+
+    /* need to be able to key back to chart */
+    itdep->pdchartdatakey = pdchart->pdchartdatakey;
+
+    /* store whole range in there */
+    itdep->rng = *rng;
+
+    /* add an external reference to this whole pdchart range */
+    if((res = pdchart_extdependency_new(itdep)) > 0)
+        {
+        pdchartelem = pdchart_element_add(pdchart);
+
+        pdchartelem->type     = itdep->type;
+        pdchartelem->itdepkey = itdep->itdepkey;
+
+        pdchartelem->rng.txt.docno = itdep->rng.s.docno; /* EV_DOCNO */
+        pdchartelem->rng.txt.col = itdep->rng.s.col;
+        pdchartelem->rng.txt.row = itdep->rng.s.row;
+
+        if((res = gr_chart_add_text(&pdchart->ch,
+                                    pdchart_travel_for_text_input,
+                                    pdchartelem,
+                                    &pdchartelem->gr_int_handle)) < 0)
+            pdchart_element_subtract(pdchart, pdchartelem, 0);
+
+        if(res < 0)
+            pdchart_extdependency_dispose(itdep);
+        }
+
+    if(res < 0)
+        {
+        pdchart_listed_dep_dispose(&itdep);
+
+        return(res);
+        }
+
+    status_return(pdchart_modify(pdchart));
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* remove dynamic text object
+*
+******************************************************************************/
+
+static S32
+pdchart_text_subtract(
+    P_PDCHART_HEADER pdchart,
+    P_PDCHART_ELEMENT pdchartelem)
+{
+    P_PDCHART_DEP itdep;
+
+    itdep = collect_search(&pdchart_listed_deps, &pdchartelem->itdepkey);
+    assert(itdep);
+
+    /* remove this range */
+    pdchart_extdependency_dispose(itdep);
+
+    pdchart_listed_dep_dispose(&itdep);
+
+    /* source slots going away: must kill use in chart */
+    pdchart_element_subtract(pdchart, pdchartelem, 1);
+
+    return(pdchart_modify(pdchart));
+}
+
+/******************************************************************************
+*
+* procedure exported to the chart module to get data from the sheet
+*
+******************************************************************************/
+
+gr_chart_travel_proto(static, pdchart_travel_for_input)
+{
+    P_PDCHART_ELEMENT pdchartelem = handle;
+    DOCNO docno;
+    P_LIST_ITEM it;
+    P_SLOT sl;
+    COL col;
+    ROW row;
+    P_EV_RESULT resp;
+
+    IGNOREPARM(ch);
+
+    /* initial guess is nothing */
+    if(val)
+        val->type = GR_CHART_VALUE_NONE;
+
+    /* determine actual slot to go to */
+    switch(pdchartelem->type)
+        {
+        case PDCHART_RANGE_COL:
+            {
+            /* col as input source: travel to the nth row therein */
+
+            if(!val)
+                {
+                /* client calling us to remove ourseleves */
+                pdchartelem->type          = PDCHART_RANGE_COL_DEAD;
+                pdchartelem->gr_int_handle = 0;
+                return(1);
+                }
+
+            /* return size of range -- gets complicated with array handling:
+             * need to construct an enumeration list mapping external chart
+             * addresses to real sub-travel() addresses
+             * or else limit such to only supply one array per range
+            */
+            if(item < 0)
+                {
+                switch(item)
+                    {
+                    case GR_CHART_ITEMNO_N_ITEMS:
+                        /* return size of range */
+                        {
+                        val->type         = GR_CHART_VALUE_N_ITEMS;
+                        val->data.n_items = (GR_CHART_ITEMNO) (
+                                            pdchartelem->rng.col.end_row -
+                                            pdchartelem->rng.col.stt_row);
+
+                        /* if range has a label then number of items is one less */
+                        if(pdchartelem->bits.label_first_item)
+                            --val->data.n_items;
+                        return(1);
+                        }
+
+                    case GR_CHART_ITEMNO_LABEL:
+                        /* return label for range */
+                        {
+                        /* if range has label then it's the first item */
+                        if(pdchartelem->bits.label_first_item)
+                            item = 0;
+                        else
+                            return(0);
+                        }
+                        break;
+
+                    default:
+                        return(0);
+                    }
+                }
+            else
+                {
+                /* if range has label then skip the first item */
+                if(pdchartelem->bits.label_first_item)
+                    item += 1;
+                }
+
+            col = pdchartelem->rng.col.col;
+            row = pdchartelem->rng.col.stt_row + (ROW) item;
+
+            if(row >= pdchartelem->rng.col.end_row)
+                return(0);
+            }
+            break;
+
+        default:
+            myassert1x(pdchartelem->type == PDCHART_RANGE_NONE, "chart element type %d not COL or ROW or NONE", pdchartelem->type);
+
+            /* deliberate drop thru ... */
+
+        case PDCHART_RANGE_NONE:
+            {
+            if(item == GR_CHART_ITEMNO_N_ITEMS)
+                {
+                assert(val);
+                val->type         = GR_CHART_VALUE_N_ITEMS;
+                val->data.n_items = 0;
+                }
+            }
+            return(1);
+
+        case PDCHART_RANGE_ROW:
+            {
+            /* row as input source: travel to the nth column therein */
+
+            if(!val)
+                {
+                /* client calling us to remove ourseleves */
+                pdchartelem->type          = PDCHART_RANGE_ROW_DEAD;
+                pdchartelem->gr_int_handle = 0;
+                return(1);
+                }
+
+            if(item < 0)
+                {
+                switch(item)
+                    {
+                    case GR_CHART_ITEMNO_N_ITEMS:
+                        /* return size of range */
+                        {
+                        val->type         = GR_CHART_VALUE_N_ITEMS;
+                        val->data.n_items = pdchartelem->rng.row.end_col -
+                                            pdchartelem->rng.row.stt_col;
+                        /* if range has a label then number of items is one less */
+                        if(pdchartelem->bits.label_first_item)
+                            --val->data.n_items;
+                        return(1);
+                        }
+
+                    case GR_CHART_ITEMNO_LABEL:
+                        /* return label for range */
+                        {
+                        /* if range has label then it's the first item */
+                        if(pdchartelem->bits.label_first_item)
+                            item = 0;
+                        else
+                            return(0);
+                        }
+                        break;
+
+                    default:
+                        return(0);
+                    }
+                }
+            else
+                {
+                /* if range has label then skip the first item */
+                if(pdchartelem->bits.label_first_item)
+                    item += 1;
+                }
+
+            col = pdchartelem->rng.row.stt_col + (COL) item;
+            row = pdchartelem->rng.row.row;
+
+            if(col >= pdchartelem->rng.row.end_col)
+                return(0);
+            }
+            break;
+        }
+
+#ifndef OFFICIAL_PDCHART_TRAVEL
+/* this is a hackers slightly more efficient version of pdchart_travel_for_input;
+ * for the official version, see below
+*/
+
+    {
+    P_DOCU p_docu;
+
+    if((NO_DOCUMENT == (p_docu = p_docu_from_docno(pdchartelem->rng.col.docno)))  ||  docu_is_thunk(p_docu))
+    {
+        assert(DOCNO_NONE != pdchartelem->rng.col.docno);
+        assert(pdchartelem->rng.col.docno < DOCNO_MAX);
+        return(0);
+    }
+
+    if(NULL == (it = list_gotoitem(x_indexcollb(p_docu, col), row)))
+        return(0);
+    } /*block*/
+
+    sl = slot_contents(it);
+
+    docno = pdchartelem->rng.col.docno;
+
+#else
+
+    docno = pdchartelem->rng.col.docno;
+
+    sl = travel_externally(docno, col, row);
+    if(!sl)
+        return(0);
+
+#endif
+
+    switch(result_extract(sl, &resp))
+        {
+        case SL_NUMBER:
+            if(pdchart_extract_numeric_result(resp, val))
+                break;
+
+            /* else deliberate drop thru ... */
+
+        default:
+            {
+            char buffer[LIN_BUFSIZ];
+
+            expand_slot_for_chart_export(docno, sl, buffer, row);
+
+            val->type = GR_CHART_VALUE_TEXT;
+            void_strkpy(val->data.text, elemof32(val->data.text), buffer);
+            }
+            break;
+        }
+
+    return(1);
+}
+
+gr_chart_travel_proto(static, pdchart_travel_for_text_input)
+{
+    P_PDCHART_ELEMENT pdchartelem = handle;
+    DOCNO docno;
+    P_SLOT sl;
+    ROW row;
+    P_EV_RESULT resp;
+
+    IGNOREPARM(ch);
+    IGNOREPARM(item);
+
+    if(!val)
+        {
+        /* client calling us to remove ourselves */
+        P_PDCHART_DEP         itdep;
+        P_PDCHART_LISTED_DATA pdchartdata;
+        P_PDCHART_HEADER      pdchart;
+
+        assert(pdchartelem->type == PDCHART_RANGE_TXT);
+
+        /* boy is this ludicrous & circuitous ... */
+
+        itdep = collect_search(&pdchart_listed_deps, &pdchartelem->itdepkey);
+        assert(itdep);
+
+        pdchartdata = collect_search(&pdchart_listed_data, &itdep->pdchartdatakey);
+        assert(pdchartdata);
+
+        pdchart = pdchartdata->pdchart; /* was your journey really necessary? */
+
+        pdchart_text_subtract(pdchart, pdchartelem);
+        return(1);
+        }
+
+    /* initial guess is nothing */
+    val->type = GR_CHART_VALUE_NONE;
+
+    /* determine actual slot to go to */
+    row = pdchartelem->rng.txt.row;
+
+    /* use official means for texts */
+    docno = pdchartelem->rng.txt.docno;
+
+    if(NULL == (sl = travel_externally(docno, pdchartelem->rng.txt.col, row)))
+        return(0);
+
+    switch(result_extract(sl, &resp))
+        {
+        case SL_PAGE:
+            return(0);
+
+        default:
+            {
+            /* force to text form ALWAYS */
+            char buffer[LIN_BUFSIZ];
+
+            expand_slot_for_chart_export(docno, sl, buffer, row);
+
+            val->type = GR_CHART_VALUE_TEXT;
+            void_strkpy(val->data.text, elemof32(val->data.text), buffer);
+            }
+            break;
+        }
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* send damage messages off to the chart for all elements in this dependency
+*
+******************************************************************************/
+
+static void
+pdchart_damage_chart_for_dep(
+    P_PDCHART_HEADER pdchart,
+    P_PDCHART_DEP itdep)
+{
+    P_PDCHART_ELEMENT i_pdchartelem, pdchartelem;
+    S32 modify = 0;
+
+    if(0 != pdchart->elem.n)
+        {
+        i_pdchartelem = &pdchart->elem.base[0];
+        pdchartelem = i_pdchartelem + pdchart->elem.n;
+
+        while(--pdchartelem >= i_pdchartelem)
+            if(pdchartelem->itdepkey == itdep->itdepkey)
+                switch(pdchartelem->type)
+                    {
+                    case PDCHART_RANGE_COL:
+                    case PDCHART_RANGE_ROW:
+                    case PDCHART_RANGE_TXT:
+                        gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                        modify = 1;
+                        break;
+
+                    default:
+                        break;
+                    }
+        }
+
+    if(modify)
+        status_assert(pdchart_modify(pdchart));
+}
+
+/******************************************************************************
+*
+* evaluator document number has changed
+*
+******************************************************************************/
+
+static void
+pdchart_uref_changedoc(
+    P_PDCHART_HEADER pdchart,
+    P_PDCHART_DEP itdep)
+{
+    P_PDCHART_ELEMENT i_pdchartelem, pdchartelem;
+
+    itdep->rng.e.docno = itdep->rng.s.docno;
+
+    if(0 != pdchart->elem.n)
+        {
+        i_pdchartelem = &pdchart->elem.base[0];
+        pdchartelem = i_pdchartelem + pdchart->elem.n;
+
+        while(--pdchartelem >= i_pdchartelem)
+            if(pdchartelem->itdepkey == itdep->itdepkey)
+                pdchartelem->rng.col.docno = itdep->rng.s.docno;
+        }
+}
+
+/******************************************************************************
+*
+* call-back from evaluator uref to update references
+*
+******************************************************************************/
+
+PROC_UREF_PROTO(static, pdchart_uref_handler)
+{
+    LIST_ITEMNO           itdepkey = (LIST_ITEMNO) exthandle;
+    P_PDCHART_DEP         itdep;
+    P_PDCHART_LISTED_DATA pdchartdata;
+    P_PDCHART_HEADER      pdchart;
+    P_PDCHART_ELEMENT     i_pdchartelem, pdchartelem;
+    S32                   stt_col, stt_row;
+    S32                   end_col, end_row;
+    S32                   modify = 0;
+
+    IGNOREPARM(inthandle);
+    IGNOREPARM_InRef_(at_rng);
+
+    switch(upp->action)
+        {
+        case UREF_UREF:
+        case UREF_DELETE:
+        case UREF_SWAP:
+        case UREF_CHANGEDOC:
+        case UREF_CHANGE:
+        /*case UREF_REPLACE:*/
+        case UREF_COPY:
+        case UREF_SWAPSLOT:
+        case UREF_CLOSE:
+        case UREF_REDRAW:
+        /*case UREF_ADJUST:*/
+        case UREF_RENAME:
+            break;
+
+        default:
+            assert(0);
+        case UREF_REPLACE:
+        case UREF_ADJUST:
+            return;
+        }
+
+    itdep = collect_search(&pdchart_listed_deps, &itdepkey);
+    assert(itdep);
+
+    pdchartdata = collect_search(&pdchart_listed_data, &itdep->pdchartdatakey);
+    assert(pdchartdata);
+
+    pdchart = pdchartdata->pdchart;
+
+    /* remember to reload these as needed */
+    i_pdchartelem = &pdchart->elem.base[0];
+    pdchartelem   = i_pdchartelem + pdchart->elem.n;
+
+    switch(upp->action)
+        {
+        /* SKS after 4.12 26mar92 - added new rename document case */
+        case UREF_RENAME:
+            pdchart_damage_chart_for_dep(pdchart, itdep);
+            break;
+
+        case UREF_CHANGEDOC:
+            trace_0(TRACE_MODULE_GR_CHART, "pdchart_uref_handler: UREF_CHANGEDOC\n");
+            assert(itdep->rng.s.docno == upp->slr2.docno);
+            itdep->rng.s.docno = upp->slr1.docno;
+
+            pdchart_uref_changedoc(pdchart, itdep);
+
+            /* SKS after 4.12 26mar92 - this is needed for document unresolved/multiple -> resolved */
+            modify = 1;
+            break;
+
+        case UREF_CLOSE:
+            trace_0(TRACE_MODULE_GR_CHART, "pdchart_uref_handler: UREF_CLOSE\n");
+
+            /* REMOVE NEITHER THIS EXTDEPENDENCY OR OUR LISTED_DEP (needed for save) */
+
+            /* source sheet going away: must bash chart to get it to request these still-live empties */
+            pdchart_damage_chart_for_dep(pdchart, itdep);
+            break;
+
+        kill_ref:
+            {
+            switch(upp->action)
+                {
+                case UREF_CLOSE:
+                    trace_0(TRACE_MODULE_GR_CHART,
+                        "pdchart_uref_handler: UREF_CLOSE\n");
+                    break;
+
+                default:
+                    trace_1(TRACE_MODULE_GR_CHART,
+                        "pdchart_uref_handler: UREF_%d killing ref\n", upp->action);
+                    break;
+                }
+
+            /* remove this range */
+            pdchart_extdependency_dispose(itdep);
+
+            pdchart_listed_dep_dispose(&itdep);
+
+            /* source slots going away: must kill use in chart */
+            if(pdchartelem != i_pdchartelem)
+                while(--pdchartelem >= i_pdchartelem)
+                    if(pdchartelem->itdepkey == itdepkey)
+                        {
+                        pdchart_element_subtract(pdchart, pdchartelem, 1);
+                        modify = 1;
+                        }
+
+#if 0
+            /* possibility of killing chart too */
+
+            /* SKS after 4.11 13jan92 - leave an empty chart. user must kill it */
+            if(!pdchart->elem.n)
+                pdchart_dispose(&pdchart);
+#endif
+            }
+            break; /* end of UREF_CLOSE/kill_ref */
+
+        case UREF_CHANGE:
+        case UREF_SWAPSLOT:
+            {
+#if TRACE_ALLOWED
+            switch(upp->action)
+                {
+                case UREF_CHANGE:
+                    /* a single slot (upp->slr1) in the range has had a value change: recalc */
+                    trace_3(TRACE_MODULE_GR_CHART,
+                            "pdchart_uref_handler: UREF_CHANGE for (%d,%d,%d)\n",
+                            upp->slr1.docno, upp->slr1.col, upp->slr1.row);
+                    break;
+
+                case UREF_SWAPSLOT:
+                    /* a pair of slots (upp->slr1, upp->slr2) in the range have been swapped: recalc */
+                    trace_6(TRACE_MODULE_GR_CHART,
+                            "pdchart_uref_handler: UREF_SWAPSLOT for (%d,%d,%d), (%d,%d,%d)\n",
+                            upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                            upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+                    break;
+                }
+#endif
+
+            if(pdchartelem != i_pdchartelem)
+                {
+                while(--pdchartelem >= i_pdchartelem)
+                    {
+                    if(pdchartelem->itdepkey == itdepkey)
+                        {
+                        switch(pdchartelem->type)
+                            {
+                            case PDCHART_RANGE_COL:
+                                if( (pdchartelem->rng.col.col == upp->slr1.col) || ((upp->action != UREF_CHANGE) &&
+                                    (pdchartelem->rng.col.col == upp->slr2.col)    ))
+                                    {
+                                    gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                                    modify = 1;
+                                    goto endwhile_change;
+                                    }
+                                break;
+
+                            case PDCHART_RANGE_ROW:
+                                if( (pdchartelem->rng.row.row == upp->slr1.row) || ((upp->action != UREF_CHANGE) &&
+                                    (pdchartelem->rng.col.col == upp->slr2.col)    )) /* should these be rows? */
+                                    {
+                                    gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                                    modify = 1;
+                                    goto endwhile_change;
+                                    }
+                                break;
+
+                            default:
+                                myassert1x(0, "chart element type %d not COL or ROW or NONE or DEAD", pdchartelem->type);
+
+                            /* no need to worry about TXTs in the same pdchart; they'll be on different itdepkeys */
+
+                            case PDCHART_RANGE_NONE:
+                            case PDCHART_RANGE_COL_DEAD:
+                            case PDCHART_RANGE_ROW_DEAD:
+                                break;
+                            }
+                        }
+                    }
+                }
+            endwhile_change:;
+            }
+            break; /* end of UREF_CHANGE/UREF_SWAPSLOT */
+
+        case UREF_SWAP:
+            {
+            trace_6(TRACE_MODULE_GR_CHART,
+                    "pdchart_uref_handler: UREF_SWAP for (%d,%d,%d), (%d,%d,%d)\n",
+                    upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                    upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+
+            /* a pair of rows (upp->slr1, upp->slr2) in the range have been swapped: recalc */
+
+            switch(itdep->type)
+                {
+                case PDCHART_RANGE_COL:
+                    /* damage all ranges across this dependency */
+                    pdchart_damage_chart_for_dep(pdchart, itdep);
+                    break;
+
+                default:
+                    myassert1x(0, "chart dep type %d not COL or ROW", itdep->type);
+
+                    /* deliberate drop thru ... */
+
+                case PDCHART_RANGE_ROW:
+                    /* damage just the two swapped rows and swap the refs */
+
+                    if(pdchartelem != i_pdchartelem)
+                        {
+                        while(--pdchartelem >= i_pdchartelem)
+                            {
+                            if(pdchartelem->itdepkey == itdepkey)
+                                {
+                                if(pdchartelem->type == PDCHART_RANGE_ROW)
+                                    {
+                                    S32 hit = 0;
+
+                                    if(pdchartelem->rng.row.row == upp->slr1.row)
+                                        {
+                                        hit = 1;
+                                        pdchartelem->rng.row.row = upp->slr2.row;
+                                        }
+                                    else if(pdchartelem->rng.row.row == upp->slr2.row)
+                                        {
+                                        hit = 1;
+                                        pdchartelem->rng.row.row = upp->slr1.row;
+                                        }
+
+                                    if(hit)
+                                        {
+                                        gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                                        modify = 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    break;
+                }
+            }
+            break; /* end of UREF_SWAP */
+
+        case UREF_UREF:
+            {
+            /* simple motion of deps and elements harmless; just update structures
+
+             * if columns(rows) have been inserted/added into
+             * a col(row)-based dep then insert new elements into chart
+
+             * if rows(columns) have been inserted/added into
+             * a col(row)-based element then recalc chart
+            */
+            S32 add;
+            S32 res;
+
+            trace_8(TRACE_MODULE_GR_CHART,
+                    "pdchart_uref_handler: UREF_UREF for (%d,%d,%d), (%d,%d,%d) by (%d,%d)\n",
+                    upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                    upp->slr2.docno, upp->slr2.col, upp->slr2.row,
+                                     upp->slr3.col, upp->slr3.row);
+
+            /* SKS after 4.12 26mar92 - consider moving a block from one doc to another */
+            if(itdep->rng.s.docno != upp->slr3.docno)
+                {
+                itdep->rng.s.docno = upp->slr3.docno;
+                pdchart_uref_changedoc(pdchart, itdep);
+                status_assert(pdchart_modify(pdchart));
+                }
+
+            if(status != DEP_UPDATE)
+                {
+                trace_0(TRACE_MODULE_GR_CHART, "pdchart_uref_handler: UREF_UREF not DEP_UPDATE\n");
+                modify = 1;
+                break;
+                }
+
+            /* look for insertions while noting updrefs to dep block */
+
+            stt_col = (itdep->rng.s.col >= upp->slr1.col)  &&
+                      (itdep->rng.s.col <= upp->slr2.col);
+
+            stt_row = (itdep->rng.s.row >= upp->slr1.row)  &&
+                      (itdep->rng.s.row <= upp->slr2.row);
+
+            end_col = (itdep->rng.e.col >= upp->slr1.col)  &&
+                      (itdep->rng.e.col <= upp->slr2.col);
+
+            end_row = (itdep->rng.e.row >= upp->slr1.row)  &&
+                      (itdep->rng.e.row <= upp->slr2.row);
+
+            /* updref our range */
+            if(stt_col)
+                itdep->rng.s.col += upp->slr3.col;
+            if(stt_row)
+                itdep->rng.s.row += upp->slr3.row;
+            if(end_col)
+                itdep->rng.e.col += upp->slr3.col;
+            if(end_row)
+                itdep->rng.e.row += upp->slr3.row;
+
+            /* the range has been updrefed; modify elements correspondingly */
+
+            if(pdchartelem != i_pdchartelem)
+                {
+                while(--pdchartelem >= i_pdchartelem)
+                    {
+                    if(pdchartelem->itdepkey == itdepkey)
+                        {
+                        switch(pdchartelem->type)
+                            {
+                            case PDCHART_RANGE_COL:
+                            case PDCHART_RANGE_COL_DEAD:
+                                {
+                                S32 elem_stt_row, elem_end_row;
+
+                                /* column goes walkabout independently */
+                                if( (pdchartelem->rng.col.col >= upp->slr1.col)  &&
+                                    (pdchartelem->rng.col.col <= upp->slr2.col)  )
+                                     pdchartelem->rng.col.col += upp->slr3.col;
+
+                                /* check for row insertion */
+                                elem_stt_row = (pdchartelem->rng.col.stt_row >= upp->slr1.row)  &&
+                                               (pdchartelem->rng.col.stt_row <= upp->slr2.row);
+
+                                elem_end_row = (pdchartelem->rng.col.end_row >= upp->slr1.row)  &&
+                                               (pdchartelem->rng.col.end_row <= upp->slr2.row);
+
+                                if(elem_stt_row)
+                                    pdchartelem->rng.col.stt_row += upp->slr3.row;
+                                if(elem_end_row)
+                                    pdchartelem->rng.col.end_row += upp->slr3.row;
+
+                                if(elem_stt_row != elem_end_row)
+                                    if(pdchartelem->type == PDCHART_RANGE_COL)
+                                        {
+                                        /* col-based live range has had row insertion: recalc */
+                                        gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                                        modify = 1;
+                                        }
+                                }
+                                break;
+
+                            default:
+                                myassert1x(0, "chart element type %d not COL or ROW or NONE or DEAD", pdchartelem->type);
+
+                                /* deliberate drop thru ... */
+
+                            case PDCHART_RANGE_NONE:
+                                break;
+
+                            case PDCHART_RANGE_ROW:
+                            case PDCHART_RANGE_ROW_DEAD:
+                                {
+                                S32 elem_stt_col, elem_end_col;
+
+                                /* row goes walkabout independently */
+                                if( (pdchartelem->rng.row.row >= upp->slr1.row)  &&
+                                    (pdchartelem->rng.row.row <= upp->slr2.row)  )
+                                     pdchartelem->rng.row.row += upp->slr3.row;
+
+                                /* check for column insertion */
+                                elem_stt_col = (pdchartelem->rng.row.stt_col >= upp->slr1.col)  &&
+                                               (pdchartelem->rng.row.stt_col <= upp->slr2.col);
+
+                                elem_end_col = (pdchartelem->rng.row.end_col >= upp->slr1.col)  &&
+                                               (pdchartelem->rng.row.end_col <= upp->slr2.col);
+
+                                if(elem_stt_col)
+                                    pdchartelem->rng.row.stt_col += upp->slr3.col;
+                                if(elem_end_col)
+                                    pdchartelem->rng.row.end_col += upp->slr3.col;
+
+                                if(elem_stt_col != elem_end_col)
+                                    if(pdchartelem->type == PDCHART_RANGE_ROW)
+                                        {
+                                        /* row-based live range has had col insertion: recalc */
+                                        gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                                        modify = 1;
+                                        }
+                                }
+                                break;
+                            } /*esac*/
+                        } /*fi*/
+                    }
+                }
+
+            /* all existing elements now processed; consider insertions into range */
+
+            add = (itdep->type == PDCHART_RANGE_COL)
+                                ? ((stt_col != end_col)  &&  end_col  &&  (upp->slr3.col > 0))
+                                : ((stt_row != end_row)  &&  end_row  &&  (upp->slr3.row > 0));
+
+            if(add)
+                {
+                PDCHART_PROCESS process;
+
+                * (int *) &process = 0;
+
+                switch(itdep->type)
+                    {
+                    case PDCHART_RANGE_COL:
+                        /* have inserted upp->slr3.col column(s): supply insert(s) to chart */
+                        if(0 > (res = pdchart_element_ensure(pdchart, upp->slr3.col)))
+                            break;
+
+                        /* insert into chart in current dependency block */
+                        res = pdchart_add_into(pdchart, process, itdep,
+                                               upp->slr1.col,
+                                               upp->slr1.col + upp->slr3.col /*excl*/);
+                        break;
+
+                    default:
+                        myassert1x(0, "chart dep type %d not COL or ROW", itdep->type);
+
+                        /* deliberate drop thru ... */
+
+                    case PDCHART_RANGE_ROW:
+                        /* have inserted upp->slr3.row row(s): supply insert(s) to chart */
+                        if(0 > (res = pdchart_element_ensure(pdchart, upp->slr3.row)))
+                            break;
+
+                        /* insert into chart in current dependency block */
+                        res = pdchart_add_into(pdchart, process, itdep,
+                                               upp->slr1.row,
+                                               upp->slr1.row + upp->slr3.row /*excl*/);
+                        break;
+                    }
+
+                if(res < 0)
+                    break;
+
+                /* no need to free suss_holes resources as UREF insertions always insert
+                 * across the entire range and at the right row,col limits & no holes
+                */
+
+                /* get chart rebuilt sometime */
+                modify = 1;
+                }
+            }
+            break; /* end of UREF_UREF */
+
+        case UREF_DELETE:
+            {
+            /* some (or all) of the slots in the range have been deleted - NOT NECESSARILY UPDATING RANGE
+
+             * if columns(rows) have been deleted from a
+             * col(row)-based dep then remove elements from chart
+
+             * if slots in rows(columns) have been deleted from a
+             * col(row)-based element then recalc chart
+            */
+
+            trace_6(TRACE_MODULE_GR_CHART,
+                    "pdchart_uref_handler: UREF_DELETE for (%d,%d,%d), (%d,%d,%d)\n",
+                    upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                    upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+
+            if(status == DEP_DELETE)
+                {
+                trace_0(TRACE_MODULE_GR_CHART, "pdchart_uref_handler: UREF_DELETE got DEP_DELETE\n");
+                goto kill_ref;
+                }
+
+            /* look for removes in dep block */
+
+            stt_col = (itdep->rng.s.col >= upp->slr1.col)  &&
+                      (itdep->rng.s.col <= upp->slr2.col);
+
+            stt_row = (itdep->rng.s.row >= upp->slr1.row)  &&
+                      (itdep->rng.s.row <= upp->slr2.row);
+
+            end_col = (itdep->rng.e.col >= upp->slr1.col)  &&
+                      (itdep->rng.e.col <= upp->slr2.col);
+
+            end_row = (itdep->rng.e.row >= upp->slr1.row)  &&
+                      (itdep->rng.e.row <= upp->slr2.row);
+
+            switch(itdep->type)
+                {
+                case PDCHART_RANGE_COL:
+                case PDCHART_RANGE_COL_DEAD:
+                    {
+                    if(stt_row && end_row)
+                        {
+                        /* have wholly removed column(s): supply remove(s) to chart */
+                        COL col  = MIN(itdep->rng.e.col, upp->slr2.col);
+
+                        while(col > MAX(itdep->rng.s.col, upp->slr1.col))
+                            {
+                            --col;
+
+                            /* find handle to remove */
+                            if(0 != pdchart->elem.n)
+                                {
+                                i_pdchartelem = &pdchart->elem.base[0];
+                                pdchartelem   = i_pdchartelem + pdchart->elem.n;
+
+                                while(--pdchartelem >= i_pdchartelem)
+                                    {
+                                    if(pdchartelem->itdepkey == itdepkey)
+                                        {
+                                        switch(pdchartelem->type)
+                                            {
+                                            default:
+                                                myassert2x(0, "UREF_DELETE RANGE_COL found chart element of different type %d to dep type %d",
+                                                           pdchartelem->type, itdep->type);
+
+                                            case PDCHART_RANGE_NONE:
+                                                break;
+
+                                            case PDCHART_RANGE_COL:
+                                                if(pdchartelem->rng.col.col == col)
+                                                    modify = 1;
+
+                                            /* deliberate drop thru ... */
+
+                                            case PDCHART_RANGE_COL_DEAD:
+                                                if(pdchartelem->rng.col.col == col)
+                                                    {
+                                                    pdchart_element_subtract(pdchart, pdchartelem, 1);
+                                                    goto endwhile_delete_col;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            endwhile_delete_col:;
+                            }
+                        }
+                    }
+                    break;
+
+                default:
+                    myassert1x(0, "chart dep type %d not COL or ROW", itdep->type);
+
+                    /* deliberate drop thru ... */
+
+                case PDCHART_RANGE_ROW:
+                case PDCHART_RANGE_ROW_DEAD:
+                    {
+                    if(stt_col && end_col)
+                        {
+                        /* have wholly removed row(s): supply remove(s) to chart */
+                        ROW row  = MIN(itdep->rng.e.row, (ROW) upp->slr2.row);
+
+                        while(row > MAX(itdep->rng.s.row, (ROW) upp->slr1.row))
+                            {
+                            --row;
+
+                            /* find handle to remove */
+                            if(0 != pdchart->elem.n)
+                                {
+                                i_pdchartelem = &pdchart->elem.base[0];
+                                pdchartelem   = i_pdchartelem + pdchart->elem.n;
+
+                                while(--pdchartelem >= i_pdchartelem)
+                                    {
+                                    if(pdchartelem->itdepkey == itdepkey)
+                                        {
+                                        switch(pdchartelem->type)
+                                            {
+                                            default:
+                                                myassert2x(0, "UREF_DELETE RANGE_ROW found chart element of different type %d to dep type %d",
+                                                           pdchartelem->type, itdep->type);
+
+                                            case PDCHART_RANGE_NONE:
+                                                break;
+
+                                            case PDCHART_RANGE_ROW:
+                                                if(pdchartelem->rng.row.row == row)
+                                                    modify = 1;
+
+                                            /* deliberate drop thru ... */
+
+                                            case PDCHART_RANGE_ROW_DEAD:
+                                                if(pdchartelem->rng.row.row == row)
+                                                    {
+                                                    pdchart_element_subtract(pdchart, pdchartelem, 1);
+                                                    goto endwhile_delete_row;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            endwhile_delete_row:;
+                            }
+                        }
+                    }
+                    break;
+                }
+
+            /* part of the range has been deleted; don't modify elements:
+             * in the case of full block removal they're all gone anyway
+             * and in the case of partial block removal just need chart updating
+             */
+
+            pdchartelem = i_pdchartelem + pdchart->elem.n;
+
+            if(0 != pdchart->elem.n)
+                {
+                while(--pdchartelem >= i_pdchartelem)
+                    {
+                    if(pdchartelem->itdepkey == itdepkey)
+                        {
+                        switch(pdchartelem->type)
+                            {
+                            case PDCHART_RANGE_COL:
+                                {
+                                if( (pdchartelem->rng.col.col >= upp->slr1.col)  &&
+                                    (pdchartelem->rng.col.col <= upp->slr2.col)  )
+                                    {
+                                    /* col-based range has had row deletion: recalc */
+                                    gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                                    modify = 1;
+                                    }
+                                }
+                                break;
+
+                            default:
+                                myassert1x(0, "chart element type %d not COL or ROW or NONE", pdchartelem->type);
+
+                                /* deliberate drop thru ... */
+
+                            case PDCHART_RANGE_NONE:
+                            case PDCHART_RANGE_COL_DEAD:
+                            case PDCHART_RANGE_ROW_DEAD:
+                                break;
+
+                            case PDCHART_RANGE_ROW:
+                                {
+                                if( (pdchartelem->rng.row.row >= upp->slr1.row)  &&
+                                    (pdchartelem->rng.row.row <= upp->slr2.row)  )
+                                    {
+                                    /* row-based range has had col deletion: recalc */
+                                    gr_chart_damage(&pdchart->ch, &pdchartelem->gr_int_handle);
+                                    modify = 1;
+                                    }
+                                }
+                                break;
+                            } /*esac*/
+                        }
+                    }
+                }
+
+            /* all elements now done */
+            }
+            break; /* end of UREF_DELETE */
+
+        default:
+            trace_6(TRACE_MODULE_GR_CHART,
+                    "pdchart_uref_handler: UREF_??? for (%d,%d,%d), (%d,%d,%d)\n",
+                    upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                    upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+            break;
+        }
+
+    if(modify)
+        status_assert(pdchart_modify(pdchart));
+}
+
+/******************************************************************************
+*
+* call-back from evaluator uref to update references to text objects
+*
+******************************************************************************/
+
+PROC_UREF_PROTO(static, pdchart_text_uref_handler)
+{
+    LIST_ITEMNO           itdepkey = (LIST_ITEMNO) exthandle;
+    P_PDCHART_DEP         itdep;
+    P_PDCHART_LISTED_DATA pdchartdata;
+    P_PDCHART_HEADER      pdchart;
+    P_PDCHART_ELEMENT     i_pdchartelem, pdchartelem;
+    S32                   modify = 0;
+
+    IGNOREPARM(inthandle);
+    IGNOREPARM_InRef_(at_rng);
+
+    switch(upp->action)
+        {
+        case UREF_UREF:
+        case UREF_DELETE:
+        case UREF_SWAP:
+        case UREF_CHANGEDOC:
+        case UREF_CHANGE:
+        /*case UREF_REPLACE:*/
+        case UREF_COPY:
+        case UREF_SWAPSLOT:
+        case UREF_CLOSE:
+        case UREF_REDRAW:
+        /*case UREF_ADJUST:*/
+        case UREF_RENAME:
+            break;
+
+        default:
+            assert(0);
+        case UREF_REPLACE:
+        case UREF_ADJUST:
+            return;
+        }
+
+    itdep = collect_search(&pdchart_listed_deps, &itdepkey);
+    assert(itdep);
+
+    pdchartdata = collect_search(&pdchart_listed_data, &itdep->pdchartdatakey);
+    assert(pdchartdata);
+
+    pdchart = pdchartdata->pdchart;
+
+    /* no realloc by this uref handler so we can common up here */
+    i_pdchartelem = &pdchart->elem.base[0];
+    pdchartelem   = i_pdchartelem + pdchart->elem.n;
+
+    switch(upp->action)
+        {
+        /* SKS after 4.12 26mar92 - added new rename document case */
+        case UREF_RENAME:
+            pdchart_damage_chart_for_dep(pdchart, itdep);
+            break;
+
+        case UREF_CHANGEDOC:
+            trace_0(TRACE_MODULE_GR_CHART, "pdchart_text_uref_handler: UREF_CHANGEDOC\n");
+            assert(itdep->rng.s.docno == upp->slr2.docno);
+            itdep->rng.s.docno = upp->slr1.docno;
+
+            pdchart_uref_changedoc(pdchart, itdep);
+
+            /* SKS after 4.12 26mar92 - this is needed for document unresolved/multiple -> resolved */
+            modify = 1;
+            break;
+
+        case UREF_CLOSE:
+            trace_0(TRACE_MODULE_GR_CHART, "pdchart_text_uref_handler: UREF_CLOSE\n");
+
+            /* REMOVE NEITHER THIS EXTDEPENDENCY OR OUR LISTED_DEP (needed for save) */
+
+            /* source sheet going away: must bash chart to get it to request this still-live empty slot */
+            pdchart_damage_chart_for_dep(pdchart, itdep);
+            break;
+
+        kill_ref:
+            {
+#if TRACE_ALLOWED
+            switch(upp->action)
+                {
+                case UREF_CLOSE:
+                    trace_0(TRACE_MODULE_GR_CHART, "pdchart_text_uref_handler: UREF_CLOSE\n");
+                    break;
+
+                default:
+                    trace_1(TRACE_MODULE_GR_CHART, "pdchart_text_uref_handler: UREF_%d killing ref\n", upp->action);
+                    break;
+                }
+#endif /* TRACE_ALLOWED */
+
+            /* remove this range */
+            pdchart_extdependency_dispose(itdep);
+
+            pdchart_listed_dep_dispose(&itdep);
+
+            /* source slots going away: must kill use in chart and dep */
+            if(pdchartelem != i_pdchartelem)
+                {
+                while(--pdchartelem >= i_pdchartelem)
+                    {
+                    if(pdchartelem->itdepkey == itdepkey)
+                        {
+                        assert(pdchartelem->type == PDCHART_RANGE_TXT);
+                        pdchart_text_subtract(pdchart, pdchartelem);
+                        modify = 1;
+                        break; /* never more than one element per dependency */
+                        }
+                    }
+                }
+            }
+            break; /* end of UREF_CLOSE/kill_ref */
+
+        case UREF_CHANGE:
+        case UREF_SWAPSLOT:
+        case UREF_SWAP:
+            {
+#if TRACE_ALLOWED
+            switch(upp->action)
+                {
+                case UREF_CHANGE:
+                    /* a single slot (upp->slr1) in the range has had a value change: recalc */
+                    trace_3(TRACE_MODULE_GR_CHART,
+                            "pdchart_text_uref_handler: UREF_CHANGE for (%d,%d,%d)\n",
+                            upp->slr1.docno, upp->slr1.col, upp->slr1.row);
+                    break;
+
+                case UREF_SWAPSLOT:
+                    /* a pair of slots (upp->slr1, upp->slr2) in the range have been swapped: recalc */
+                    trace_6(TRACE_MODULE_GR_CHART,
+                            "pdchart_text_uref_handler: UREF_SWAPSLOT for (%d,%d,%d), (%d,%d,%d)\n",
+                            upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                            upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+                    break;
+
+                case UREF_SWAP:
+                    /* a pair of rows (upp->slr1, upp->slr2) in the range have been swapped: recalc */
+                    trace_6(TRACE_MODULE_GR_CHART,
+                            "pdchart_text_uref_handler: UREF_SWAP for (%d,%d,%d), (%d,%d,%d)\n",
+                            upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                            upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+                    break;
+                }
+#endif
+
+            pdchart_damage_chart_for_dep(pdchart, itdep);
+            }
+            break;
+
+        case UREF_UREF:
+            {
+            /* simple motion of text elements harmless; just update structures
+            */
+            trace_8(TRACE_MODULE_GR_CHART,
+                    "pdchart_text_uref_handler: UREF_UREF for (%d,%d,%d), (%d,%d,%d) by (%d,%d)\n",
+                    upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                    upp->slr2.docno, upp->slr2.col, upp->slr2.row,
+                                     upp->slr3.col, upp->slr3.row);
+
+            /* SKS after 4.12 26mar92 - consider moving a block from one doc to another */
+            if(itdep->rng.s.docno != upp->slr3.docno)
+                {
+                itdep->rng.s.docno = upp->slr3.docno;
+                pdchart_uref_changedoc(pdchart, itdep);
+                status_assert(pdchart_modify(pdchart));
+                }
+
+            if(status != DEP_UPDATE)
+                {
+                trace_0(TRACE_MODULE_GR_CHART, "pdchart_text_uref_handler: UREF_UREF not DEP_UPDATE\n");
+                modify = 1;
+                break;
+                }
+
+            itdep->rng.s.col += upp->slr3.col;
+            itdep->rng.s.row += upp->slr3.row;
+            itdep->rng.e.col += upp->slr3.col;
+            itdep->rng.e.row += upp->slr3.row;
+
+            if(pdchartelem != i_pdchartelem)
+                {
+                while(--pdchartelem >= i_pdchartelem)
+                    {
+                    if(pdchartelem->itdepkey == itdepkey)
+                        {
+                        pdchartelem->rng.txt.col += upp->slr3.col;
+                        pdchartelem->rng.txt.row += upp->slr3.row;
+                        break; /* never more than one element per dependency */
+                        }
+                    }
+                }
+            }
+            break; /* end of UREF_UREF */
+
+        case UREF_DELETE:
+            {
+            /* some (or all) of the slots in the range have been deleted - NOT NECESSARILY UPDATING RANGE
+            */
+
+            trace_6(TRACE_MODULE_GR_CHART,
+                    "pdchart_text_uref_handler: UREF_DELETE for (%d,%d,%d), (%d,%d,%d)\n",
+                    upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                    upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+
+            if(status == DEP_DELETE)
+                {
+                trace_0(TRACE_MODULE_GR_CHART, "pdchart_text_uref_handler: UREF_DELETE got DEP_DELETE\n");
+                goto kill_ref;
+                }
+
+            assert(0);
+            }
+            break; /* end of UREF_DELETE */
+
+        default:
+            trace_6(TRACE_MODULE_GR_CHART,
+                    "pdchart_text_uref_handler: UREF_??? for (%d,%d,%d), (%d,%d,%d)\n",
+                    upp->slr1.docno, upp->slr1.col, upp->slr1.row,
+                    upp->slr2.docno, upp->slr2.col, upp->slr2.row);
+
+            break;
+        }
+
+    /* SKS after 4.12 26mar92 - best done here I feel */
+    if(modify)
+        status_assert(pdchart_modify(pdchart));
+}
+
+/******************************************************************************
+*
+* command function interface to rest of PipeDream
+*
+******************************************************************************/
+
+extern void
+ChartNew_fn(void)
+{
+    PDCHART_SHAPEDESC pdcsd;
+    P_PDCHART_HEADER  pdchart;
+    S32               res;
+
+    if(!MARKER_DEFINED())
+        {
+        reperr_null((blkstart.col != NO_COL)
+                            ? create_error(ERR_NOBLOCKINDOC)
+                            : create_error(ERR_NOBLOCK));
+        return;
+        }
+
+    if((res = pdchart_init_shape_from_marked_block(&pdcsd, NULL)) < 0)
+        {
+        reperr_null(res);
+        return;
+        }
+
+    /* cancelled chart creation */
+    if(!res)
+        return;
+
+    if((res = pdchart_new(&pdchart, pdcsd.n_ranges, 1, 1)) < 0)
+        {
+        pdchart_init_shape_suss_holes_end(&pdcsd);
+        reperr_null(res);
+        return;
+        }
+
+    res = pdchart_add(pdchart, &pdcsd, 1);
+
+    pdchart_init_shape_suss_holes_end(&pdcsd);
+
+    if(res < 0)
+        {
+        pdchart_dispose(&pdchart);
+        reperr_null(res);
+        return;
+        }
+
+    if((res =
+        gr_chartedit_new(&pdchart->ceh,
+                        pdchart->ch,
+                        ChartEdit_notify_proc,
+                        pdchart)) < 0)
+        {
+        pdchart_dispose(&pdchart);
+        reperr_null(res);
+        return;
+        }
+
+    /* select as current */
+    pdchart_current = pdchart;
+}
+
+/******************************************************************************
+*
+* add the marked block as more data to be charted to the 'current' chart
+*
+******************************************************************************/
+
+extern void
+ChartAdd_fn(void)
+{
+    PDCHART_SHAPEDESC pdcsd;
+    S32               res;
+
+    /* SKS after 4.12 26mar92 */
+    if(!pdchart_current)
+        pdchart_select_something(1 /*iff only one*/);
+
+    if(!pdchart_current)
+        {
+        reperr_null(create_error(ERR_NOSELCHART));
+        return;
+        }
+
+    if(!MARKER_DEFINED())
+        {
+        reperr_null((blkstart.col != NO_COL)
+                            ? create_error(ERR_NOBLOCKINDOC)
+                            : create_error(ERR_NOBLOCK));
+        return;
+        }
+
+    /* SKS after 4.11 07feb92 - made condition correct to allow single marks to add text (blkend.col may == NO_COL) */
+    if(  (blkend.col == NO_COL) ||
+        ((blkstart.col == blkend.col) && (blkstart.row == blkend.row)))
+        {
+        EV_RANGE rng;
+
+        /* cater for the PipeDream side of the chart descriptor growing */
+        if((res = pdchart_element_ensure(pdchart_current, 1)) > 0)
+            {
+            rng.s.docno = (EV_DOCNO) current_docno();
+
+            rng.s.col = (EV_COL) blkstart.col;
+            rng.s.row = (EV_ROW) blkstart.row;
+
+            rng.e.col = rng.s.col + 1;
+            rng.e.row = rng.s.row + 1;
+
+            res = pdchart_text_add(pdchart_current, &rng);
+            }
+        }
+    else
+        {
+        if((res = pdchart_init_shape_from_marked_block(&pdcsd, pdchart_current)) < 0)
+            {
+            reperr_null(res);
+            return;
+            }
+
+        /* cancelled chart creation */
+        if(!res)
+            return;
+
+        res = pdchart_add(pdchart_current, &pdcsd, 0);
+
+        pdchart_init_shape_suss_holes_end(&pdcsd);
+        }
+
+    if(res < 0)
+        reperr_null(res);
+}
+
+/******************************************************************************
+*
+* delete the 'current' chart
+*
+******************************************************************************/
+
+extern void
+ChartDelete_fn(void)
+{
+    U8  filename[BUF_MAX_PATHSTRING];
+    S32 res;
+
+    /* SKS after 4.12 26mar92 */
+    if(!pdchart_current)
+        pdchart_select_something(1 /*iff only one*/);
+
+    if(!pdchart_current)
+        {
+        reperr_null(create_error(ERR_NOSELCHART));
+        return;
+        }
+
+    /* convert the live Chart file to a dead Draw file if it's saved out already */
+    gr_chart_name_query(&pdchart_current->ch, filename, sizeof(filename)-1);
+    if(file_is_rooted(filename))
+        {
+        res = gr_chart_save_draw_file_without_dialog(&pdchart_current->ch, filename);
+        if(res < 0)
+            reperr(res, filename);
+        }
+
+    pdchart_dispose(&pdchart_current);
+}
+
+extern void
+ChartOptions_fn(void)
+{
+    if(!dialog_box_start())
+        return;
+
+    while(dialog_box(D_CHART_OPTIONS))
+        {
+        /* options read from windvars when required */
+
+        filealtered(TRUE);
+
+        if(!dialog_box_can_persist())
+            break;
+        }
+
+    dialog_box_end();
+}
+
+/* some user function will be needed (esp. for macro files)
+* to set a chart as 'current'
+*/
+
+extern void
+ChartSelect_fn(void)
+{
+    /* nothing here but us comments */
+}
+
+/******************************************************************************
+*
+* the chart editor has called us back for something
+*
+******************************************************************************/
+
+static S32
+ChartEdit_notify_proc(
+    P_ANY handle,
+    GR_CHARTEDIT_HANDLE ceh,
+    GR_CHARTEDIT_NOTIFY_TYPE ntype,
+    P_ANY nextra)
+{
+    P_PDCHART_HEADER pdchart = handle;
+    S32 res;
+
+    IGNOREPARM(ceh);
+    IGNOREPARM(nextra);
+
+    switch(ntype)
+        {
+        case GR_CHARTEDIT_NOTIFY_RESIZEREQ:
+            /* always allow resize ops */
+            res = 1;
+            break;
+
+        case GR_CHARTEDIT_NOTIFY_CLOSEREQ:
+            {
+            char name_buffer[BUF_MAX_PATHSTRING];
+            S32  nRefs;
+            BOOL adjustclicked = riscos_adjustclicked();
+            BOOL shiftpressed  = akbd_pollsh();
+            BOOL justopening   = (shiftpressed  &&  adjustclicked);
+            BOOL wanttoclose   = TRUE;
+
+            /* default is to allow window closure */
+            res = 1;
+
+            gr_chart_name_query(&pdchart->ch, name_buffer, sizeof(name_buffer) - 1);
+
+            /* if on disc ok, close editing window NOW, otherwise ask ... */
+            if(!justopening && !file_is_rooted(name_buffer))
+                {
+                char buffer[LIN_BUFSIZ];
+
+                (void) xsnprintf(buffer, elemof32(buffer), save_edited_chart_Zs_STR, name_buffer);
+
+                switch(riscdialog_query_YN(buffer))
+                    {
+                    case riscdialog_query_YES:
+                        /* use a dialog box */
+                        res = gr_chart_save_chart_with_dialog(&pdchart->ch);
+
+                        /* test for unsafe receiver; don't close if sent off to Edit for instance */
+                        if(res > 0)
+                            {
+                            gr_chart_name_query(&pdchart->ch, name_buffer, sizeof(name_buffer) - 1);
+
+                            if(!file_is_rooted(name_buffer))
+                                res = 0;
+                            }
+
+                        break;
+
+                    case riscdialog_query_NO:
+                        res = 1;
+                        break;
+
+                    default:
+                        assert(0);
+
+                    case riscdialog_query_CANCEL:
+                        res = 0;
+                        break;
+                    }
+                }
+
+            if(adjustclicked)
+                filer_opendir(name_buffer);
+
+            if(!justopening  &&  wanttoclose && (res > 0))
+                {
+                /* destroy the editing window */
+                gr_chartedit_dispose(&pdchart->ceh);
+
+                /* may have been saved into a PipeDream window */
+                nRefs = gr_cache_refs(name_buffer);
+
+                /* if there is no use of this chart elsewhere in PipeDream then kill completely */
+                if(!nRefs)
+                    pdchart_dispose(&pdchart);
+                }
+            }
+            break;
+
+        default:
+            /* pass back */
+            res = gr_chartedit_notify_default(handle, ceh, ntype, nextra);
+            break;
+        }
+
+    return(res);
+}
+
+static S32
+pdchart_show_editor(
+    P_PDCHART_HEADER pdchart)
+{
+    GR_CHARTEDIT_HANDLE ceh;
+    S32 res;
+
+    if(pdchart->ceh)
+        {
+        /* already editing this chart! - do NOT winge */
+        gr_chartedit_front(&pdchart->ceh);
+        return(1);
+        }
+
+    if((res =
+        gr_chartedit_new(&ceh,
+                        pdchart->ch,
+                        ChartEdit_notify_proc,
+                        pdchart)) <= 0)
+        {
+        return(res
+                ? ((res != create_error(GR_CHART_ERR_ALREADY_EDITING)) ? res : 1)
+                : status_nomem());
+        }
+
+    pdchart->ceh = ceh;
+
+    return(1);
+}
+
+extern S32
+pdchart_show_editor_using_handle(
+    P_ANY epdchartdatakey)
+{
+    LIST_ITEMNO           pdchartdatakey;
+    P_PDCHART_LISTED_DATA pdchartdata;
+
+    pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
+
+    pdchartdata = collect_search(&pdchart_listed_data, &pdchartdatakey);
+
+    return(pdchart_show_editor(pdchartdata->pdchart));
+}
+
+extern void
+ChartEdit_fn(void)
+{
+    S32 res;
+
+    /* SKS after 4.12 26mar92 */
+    if(!pdchart_current)
+        pdchart_select_something(0 /*any will do*/);
+
+    if(!pdchart_current)
+        {
+        reperr_null(create_error(ERR_NOSELCHART));
+        return;
+        }
+
+    if((res = pdchart_show_editor(pdchart_current)) < 0)
+        reperr_null(res);
+}
+
+/*
+this is to just warn of any **unsaved** charts that depend on this document
+other dependencies via charts are dealt with earlier
+*/
+
+extern BOOL
+dependent_charts_warning(void)
+{
+    EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
+    S32 res = riscdialog_query_CANCEL;
+    LIST_ITEMNO pdchartdatakey;
+    P_PDCHART_LISTED_DATA pdchartdata;
+
+    for(pdchartdata = collect_first(&pdchart_listed_data, &pdchartdatakey); pdchartdata; pdchartdata = collect_next(&pdchart_listed_data, &pdchartdatakey))
+        {
+        P_PDCHART_HEADER  pdchart;
+        U8                filename[BUF_MAX_PATHSTRING];
+        P_PDCHART_ELEMENT ep, last_ep;
+        S32               saved_to_disc;
+        S32               hit_doc_cur   = 0;
+        S32               hit_doc_other = 0;
+
+        pdchart = pdchartdata->pdchart;
+
+        gr_chart_name_query(&pdchart->ch, filename, sizeof(filename) - 1);
+
+        saved_to_disc = file_is_rooted(filename);
+
+        ep = &pdchart->elem.base[0];
+
+        for(last_ep = ep + pdchart->elem.n; ep < last_ep; ++ep)
+            switch(ep->type)
+                {
+                case PDCHART_RANGE_COL:
+                case PDCHART_RANGE_ROW:
+                case PDCHART_RANGE_TXT:
+                    if(cur_docno == ep->rng.col.docno)
+                        hit_doc_cur = 1;
+                    else if(ep->rng.col.docno != DOCNO_NONE)
+                        hit_doc_other = 1;
+                    break;
+
+                default:
+                    break;
+                }
+
+        /* if it doesn't depend on us at all, loop */
+        if(!hit_doc_cur)
+            continue;
+
+        if(!saved_to_disc)
+            {
+            /* only ask once for all such */
+            if(res == riscdialog_query_CANCEL)
+                res = riscdialog_query_DC(close_dependent_charts_winge_STR);
+
+            /* have mercy, the user went 'Cancel' */
+            if(res == riscdialog_query_CANCEL)
+                return(FALSE);
+
+            /* next time round we won't ask */
+            }
+
+        /* if it depended just on us then kill it */
+        if(!hit_doc_other)
+            pdchart_dispose(&pdchart);
+        }
+
+    /* ok to kill this doc */
+    return(TRUE);
+}
+
+/*
+return the number of documents other than this one
+that use charts that have dependencies into this sheet
+*/
+
+extern S32
+pdchart_dependent_documents(
+    _InVal_     EV_DOCNO cur_docno)
+{
+    LIST_ITEMNO           pdchartdatakey;
+    P_PDCHART_LISTED_DATA pdchartdata;
+    S32                   nDepDocs = 0;
+
+    for(pdchartdata = collect_first(&pdchart_listed_data, &pdchartdatakey); pdchartdata; pdchartdata = collect_next(&pdchart_listed_data, &pdchartdatakey))
+        {
+        P_PDCHART_HEADER  pdchart;
+        P_PDCHART_ELEMENT ep, last_ep;
+
+        pdchart = pdchartdata->pdchart;
+
+        ep = &pdchart->elem.base[0];
+
+        for(last_ep = ep + pdchart->elem.n; ep < last_ep; ++ep)
+            switch(ep->type)
+                {
+                case PDCHART_RANGE_COL:
+                case PDCHART_RANGE_ROW:
+                case PDCHART_RANGE_TXT:
+                    if(cur_docno == ep->rng.col.docno)
+                        {
+                        U8 filename[BUF_MAX_PATHSTRING];
+
+                        gr_chart_name_query(&pdchart->ch, filename, sizeof(filename) - 1);
+
+                        if(file_is_rooted(filename))
+                            {
+                            GR_CACHE_HANDLE cah;
+
+                            if(gr_cache_entry_query(&cah, filename))
+                                {
+                                /* loop over draw file references and see who
+                                 * (other than us) has a use of this chart
+                                */
+                                drawfrp     dfrp;
+                                LIST_ITEMNO key;
+
+                                for(dfrp = collect_first(&draw_file_refs, &key); dfrp; dfrp = collect_next(&draw_file_refs, &key))
+                                    if(dfrp->draw_file_key == cah)
+                                        if(dfrp->docno != cur_docno)
+                                            ++nDepDocs;
+                                }
+                            /* else not in cache */
+                            }
+                        /* else unsaved, so won't be in cache */
+
+                        goto next_pdchart;
+                        }
+                    break;
+
+                default:
+                    break;
+                }
+
+        next_pdchart:;
+        }
+
+    return(nDepDocs);
+}
+
+/******************************************************************************
+*
+* clean up text and date slots for export
+* a la send slot via hot link - common up!
+*
+******************************************************************************/
+
+extern void
+expand_slot_for_chart_export(
+    _InVal_     DOCNO docno,
+    P_SLOT sl,
+    char * buffer /*out*/,
+    ROW row)
+{
+    P_DOCU p_docu;
+    char * ptr, * to, ch;
+    S32 t_justify;
+    S32 t_curpnm;
+
+    t_justify   = sl->justify;
+    sl->justify = J_LEFT;
+
+    p_docu = p_docu_from_docno(docno);
+    assert(NO_DOCUMENT != p_docu);
+    assert(!docu_is_thunk(p_docu));
+
+    t_curpnm = p_docu->Xcurpnm;
+    p_docu->Xcurpnm = 0; /* we have really no idea what page a slot is on */
+
+    expand_slot(docno, sl, row, buffer, LIN_BUFSIZ, TRUE, FALSE, TRUE, TRUE);
+
+    /* remove highlights & funny spaces etc */
+    ptr = to = buffer;
+    do  {
+        ch = *ptr++;
+        if((ch >= SPACE)  ||  !ch)
+            *to++ = ch;
+        }
+    while(ch);
+
+    p_docu->Xcurpnm = t_curpnm;
+
+    sl->justify = t_justify;
+}
+
+/******************************************************************************
+*
+* attempt to load any documents that this chart
+* has established external dependencies upon
+*
+******************************************************************************/
+
+extern S32
+pdchart_load_dependents(
+    P_ANY epdchartdatakey,
+    PC_U8 chartfilename)
+{
+#if 0 /* can't do this are we haven't got an established set of urefs */
+    IGNOREPARM(epdchartdatakey);
+
+    (void) loadfile_recurse_load_supporting_documents(chartfilename);
+#else
+    LIST_ITEMNO           pdchartdatakey;
+    P_PDCHART_LISTED_DATA pdchartdata;
+    P_PDCHART_HEADER      pdchart;
+#if 1
+    LIST_ITEMNO           itdepkey;
+    P_PDCHART_DEP         itdep;
+#else
+    P_PDCHART_ELEMENT     ep, last_ep;
+#endif
+    P_SS_DOC              p_ss_doc;
+
+    IGNOREPARM(chartfilename);
+
+    pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
+    pdchartdata    = collect_search(&pdchart_listed_data, &pdchartdatakey);
+
+    assert(pdchartdata);
+    if(!pdchartdata)
+        return(1);
+
+    pdchart = pdchartdata->pdchart;
+
+#if 1
+    /* SKS after 4.12 26mar92 - more helpful on errors perchance - loop over deps of this chart not chart elements */
+    for(itdep = collect_first(&pdchart_listed_deps, &itdepkey); itdep; itdep = collect_next(&pdchart_listed_deps, &itdepkey))
+        {
+        if(itdep->pdchartdatakey != pdchartdatakey)
+            continue;
+#else
+    ep = &pdchart->elem.base[0];
+
+    for(last_ep = ep + pdchart->elem.n; ep < last_ep; ++ep)
+        {
+        /* what is the state of this dependency? */
+        P_PDCHART_DEP itdep;
+
+        itdep = collect_search(&pdchart_listed_deps, &ep->itdepkey);
+#endif
+
+        p_ss_doc = ev_p_ss_doc_from_docno(itdep->rng.s.docno);
+        assert(p_ss_doc);
+
+        if(p_ss_doc  &&  p_ss_doc->is_docu_thunk)
+            {
+            /* not loaded yet so attempt to load it and its friends */
+            DOCNO old_docno = current_docno();
+            TCHARZ filename[BUF_MAX_PATHSTRING];
+            LOAD_FILE_OPTIONS load_file_options;
+            STATUS status;
+
+            name_make_wholename(&p_ss_doc->docu_name, filename, elemof32(filename));
+
+            if((status = find_filetype_option(filename)) > 0)
+                {
+                zero_struct(load_file_options);
+                load_file_options.document_name = filename;
+                load_file_options.filetype_option = (char) status;
+                (void) loadfile_recurse(filename, &load_file_options); /* only BOOL anyway */
+                }
+
+            else if(status == 0)
+                {
+                status = create_error(FILE_ERR_NOTFOUND);
+
+                messagef(string_lookup(status), filename);
+                }
+
+            select_document_using_docno(old_docno);
+            }
+        }
+#endif
+
+    return(1);
+}
+
+extern S32
+pdchart_preferred_save(
+    P_U8 filename)
+{
+    if(gr_chart_preferred_query())
+        return(gr_chart_preferred_save(filename));
+
+    return(0);
+}
+
+/* SKS after 4.12 26mar92 - something like this was needed... */
+
+static void
+pdchart_select_something(
+    S32 iff_only_one)
+{
+    P_PDCHART_LISTED_DATA pdchartdata;
+    LIST_ITEMNO           pdchartdatakey;
+
+    if(!iff_only_one /*|| (nlist_numitem(pdchart_listed_data) <= 1)*/)
+        {
+        if((pdchartdata = collect_first(&pdchart_listed_data, &pdchartdatakey)) != NULL)
+            pdchart_current = pdchartdata->pdchart;
+        else
+            pdchart_current = NULL;
+        }
+}
+
+/******************************************************************************
+*
+* 'Charts' submenu
+*
+******************************************************************************/
+
+static menu          cl_submenu         = NULL;
+static P_LIST_ITEMNO cl_submenu_array   = NULL;
+static U32           cl_submenu_array_n = 0;
+
+#define mo_cl_dynamic  1
+
+#define cl_submenu_MAXWIDTH 96
+
+/*
+kill off the lists of Charts
+*/
+
+static void
+pdchart_submenu_kill(void)
+{
+    menu_dispose(&cl_submenu, 0);
+    cl_submenu = NULL;
+}
+
+extern BOOL
+pdchart_submenu_maker(void)
+{
+    if(!event_is_menu_being_recreated())
+        {
+        trace_0(TRACE_APP_PD4, "dispose of old & then create new charts menu list\n");
+
+        pdchart_submenu_kill();
+        }
+
+    if(!cl_submenu)
+        {
+        P_PDCHART_LISTED_DATA pdchartdata;
+        LIST_ITEMNO           pdchartdatakey;
+        U32                   i;
+        U8                    cwd_buffer[BUF_MAX_PATHSTRING];
+        size_t                cwd_len;
+
+        i = 0;
+
+        for(pdchartdata = collect_first(&pdchart_listed_data, &pdchartdatakey); pdchartdata; pdchartdata = collect_next(&pdchart_listed_data, &pdchartdatakey))
+            ++i;
+
+        if(i == 0)
+            return(1);
+
+        /* enlarge array as needed */
+        if(i > cl_submenu_array_n)
+            {
+            P_ANY ptr;
+
+            if((ptr = list_reallocptr(cl_submenu_array,
+                                      (S32) i * sizeof(cl_submenu_array[0]))) == NULL)
+                reperr_null(status_nomem());
+
+            if(ptr)
+                {
+                cl_submenu_array   = ptr;
+                cl_submenu_array_n = i;
+                }
+            }
+
+        i = 0;
+
+        /* note cwd for minimalist references to charts from current document */
+        cwd_len = (is_current_document() && (NULL != file_get_cwd(cwd_buffer, elemof32(cwd_buffer), currentfilename)))
+                        ? strlen(cwd_buffer)
+                        : 0;
+
+        for(pdchartdata = collect_first(&pdchart_listed_data, &pdchartdatakey); pdchartdata; pdchartdata = collect_next(&pdchart_listed_data, &pdchartdatakey))
+            {
+            U8Z buffer[BUF_MAX_PATHSTRING];
+            P_U8 ptr;
+            U8Z tempstring[BUF_MAX_PATHSTRING];
+            U32 len;
+
+            if(i >= cl_submenu_array_n)
+                break;
+
+            gr_chart_name_query(&pdchartdata->pdchart->ch, buffer, sizeof(buffer)-1);
+            ptr = buffer;
+
+            if(cwd_len && (0 == _strnicmp(cwd_buffer, ptr, cwd_len)))
+                ptr += cwd_len;
+
+            len = strlen32(ptr);
+
+            if(len > cl_submenu_MAXWIDTH)
+                {
+                void_strkpy(tempstring, elemof32(tempstring), iw_menu_prefix);
+                void_strkat(tempstring, elemof32(tempstring), ptr + (len - cl_submenu_MAXWIDTH) + strlen32(iw_menu_prefix));
+                }
+            else
+                void_strkpy(tempstring, elemof32(tempstring), ptr);
+
+            /* create/extend menu 'unparsed' cos buffer may contain ',' */
+            if(cl_submenu == NULL)
+                {
+                if((cl_submenu = menu_new_unparsed(Chart_STR, tempstring)) != NULL)
+                    cl_submenu_array[i++] = pdchartdatakey;
+                }
+            else
+                {
+                menu_extend_unparsed(&cl_submenu, tempstring);
+                cl_submenu_array[i++] = pdchartdatakey;
+                }
+            }
+
+        /* we cannot submenu here as it's all in flux due to short/long menuism */
+        }
+
+    return(1);
+}
+
+extern void
+pdchart_submenu_show(
+    BOOL submenurequest)
+{
+    S32 x, y;
+
+    if(!cl_submenu)
+        return;
+
+    event_read_submenupos(&x, &y);
+
+    (submenurequest
+            ? event_create_submenu
+            : event_create_menu)
+        (menu_syshandle(cl_submenu), x, y);
+}
+
+extern void
+pdchart_submenu_select_from(
+    S32 hit)
+{
+    if(hit)
+        pdchart_select_using_handle((P_ANY) cl_submenu_array[hit - mo_cl_dynamic]);
+}
+
+/******************************************************************************
+*
+* select chart from an external handle
+* called by numbers.c draw_cache_file
+* on a successful non-preferred load
+*
+******************************************************************************/
+
+extern void
+pdchart_select_using_handle(
+    P_ANY epdchartdatakey)
+{
+    LIST_ITEMNO           pdchartdatakey;
+    P_PDCHART_LISTED_DATA pdchartdata;
+
+    pdchartdatakey  = (LIST_ITEMNO) epdchartdatakey;
+    pdchartdata     = collect_search(&pdchart_listed_data, &pdchartdatakey);
+
+    if(pdchartdata)
+        pdchart_current = pdchartdata->pdchart;
+    else
+        pdchart_current = NULL;
+}
+
+/*
+explicit callbacks
+*/
+
+extern S32
+gr_chart_preferred_get_name(
+    P_U8 buffer,
+    U32 bufsiz)
+{
+    /* Preferred should be saved in <Choices$Write>.PipeDream directory */
+    add_choices_write_prefix_to_name_using_dir(buffer, bufsiz, PREFERRED_FILE_STR, NULL);
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* loading & shaving
+*
+******************************************************************************/
+
+/******************************************************************************
+*
+* ensure that a given 'document' has a document number
+*
+******************************************************************************/
+
+_Check_return_
+static EV_DOCNO
+ev_docno_ensure_for_pdchart_bodge(void)
+{
+    TCHARZ path_buffer[BUF_EV_LONGNAMLEN];
+    TCHARZ leaf_buffer[BUF_EV_LONGNAMLEN];
+    DOCU_NAME docu_name;
+    PCTSTR fullname = pdchart_docname_query();
+    PCTSTR leafname = file_leafname(fullname);
+    EV_DOCNO docno;
+
+    name_init(&docu_name);
+
+    void_strnkpy(path_buffer, elemof32(path_buffer), fullname, leafname - fullname);
+    docu_name.path_name = path_buffer;
+
+    void_strkpy(leaf_buffer, elemof32(leaf_buffer), leafname);
+    docu_name.leaf_name = leaf_buffer;
+
+    if(file_is_rooted(docu_name.path_name))
+        docu_name.flags.path_name_supplied = 1;
+
+    if(DOCNO_NONE != (docno = ev_doc_establish_doc_from_docu_name(&docu_name)))
+        ev_p_ss_doc_from_docno_must(docno)->is_docu_thunk = FALSE; /* have to bodge this otherwise we get deleted when establishing our dependents */
+
+    return(docno);
+}
+
+typedef enum
+    {
+    PDCHART_CON_RANGE_COL = 0,
+    PDCHART_CON_RANGE_ROW,
+    PDCHART_CON_RANGE_TXT,
+    PDCHART_CON_VERSION,
+
+    /* SKS after 4.12 27mar92 - needed for live text object ordering on reload */
+    PDCHART_CON_RANGE_TXT_ORDER,
+
+    PDCHART_CON_N_TABLE_OFFSETS
+    }
+PDCHART_CONSTRUCT_TABLE_OFFSETS;
+
+static GR_CONSTRUCT_TABLE_ENTRY
+pdchart_construct_table[PDCHART_CON_N_TABLE_OFFSETS + 1 /*end marker*/] =
+{
+    gr_contab_entry("PCC,*,",  PDCHART_CON_RANGE_COL),
+    gr_contab_entry("PCR,*,",  PDCHART_CON_RANGE_ROW),
+    gr_contab_entry("PCT,*,",  PDCHART_CON_RANGE_TXT),
+    gr_contab_entry("PCV,*,",  PDCHART_CON_VERSION),
+    gr_contab_entry("PCTO,*,", PDCHART_CON_RANGE_TXT_ORDER),
+
+    gr_contab_entry_last
+};
+
+static const PC_U8
+pdchart_range_flags_fmt = "&" U16_XFMT ","; /* flags leadin sequence for ranges */
+
+static P_PDCHART_HEADER
+pdchart_load_save_pdchart;
+
+static EV_DOCNO
+pdchart_load_save_docno;
+
+static U8
+pdchart_load_save_docname[BUF_MAX_PATHSTRING];
+
+static S32
+pdchart_make_range_flags_for_save(
+    P_U8 buffer /*out*/,
+    _InVal_     U32 elemof_buffer,
+    _InRef_     PC_U16 p_u16)
+{
+    return(xsnprintf(buffer, elemof_buffer, pdchart_range_flags_fmt, *p_u16));
+}
+
+static S32
+pdchart_make_range_for_save(
+    P_U8 buffer /*out*/,
+    _InVal_     U32 elemof_buffer,
+    _InRef_     PC_EV_RANGE rng)
+{
+    IGNOREPARM_InVal_(elemof_buffer);
+    return(dec_rng(buffer, pdchart_load_save_docno, rng, 1));
+}
+
+PROC_QSORT_PROTO(static, pdchart_sort_list, PDCHART_SORT_ELEM)
+{
+    P_PDCHART_SORT_ELEM slip1 = (P_PDCHART_SORT_ELEM) arg1;
+    P_PDCHART_SORT_ELEM slip2 = (P_PDCHART_SORT_ELEM) arg2;
+
+    /* NB no sb global register furtling required */
+
+    return(slip1->gr_order_no > slip2->gr_order_no);
+}
+
+static S32
+pdchart_save_external_core(
+    FILE_HANDLE f,
+    GR_CHART_HANDLE ch,
+    P_ANY ext_handle)
+{
+    P_PDCHART_LISTED_DATA pdchartdata;
+    LIST_ITEMNO           pdchartdatakey;
+    P_PDCHART_HEADER      pdchart;
+    P_PDCHART_ELEMENT     ep, last_ep;
+    U32                   sort_ix;
+    P_PDCHART_SORT_ELEM   sort_list;
+    EV_RANGE rng;
+    P_U16  p_bits;
+    S32    res;
+
+    IGNOREPARM(ch);
+
+    pdchartdatakey = (LIST_ITEMNO) ext_handle;
+
+    pdchartdata = collect_search(&pdchart_listed_data, &pdchartdatakey);
+    assert(pdchartdata);
+
+    pdchart = pdchartdata->pdchart;
+
+    /*
+    build a list for sorting into usage order
+    */
+
+    if(NULL == (sort_list = al_ptr_alloc_elem(PDCHART_SORT_ELEM, pdchart->elem.n, &res)))
+        return(res);
+
+    sort_ix = 0;
+    ep      = &pdchart->elem.base[0];
+
+    for(last_ep = ep + pdchart->elem.n; ep < last_ep; ++ep)
+        switch(ep->type)
+            {
+            default:
+                continue;
+
+            case PDCHART_RANGE_COL:
+            case PDCHART_RANGE_ROW:
+                sort_list[sort_ix].ep          = ep;
+                sort_list[sort_ix].gr_order_no = gr_chart_order_query(&pdchart->ch, &ep->gr_int_handle);
+                ++sort_ix;
+                break;
+            }
+
+    res = 1;
+
+    if(sort_ix)
+        {
+        U32 stt_ix;
+
+        qsort(sort_list, sort_ix, sizeof(*sort_list), pdchart_sort_list);
+
+        /* output contiguous ranges of things. this ignores the current state
+         * of the chart wrt. DEAD_COLs and DEAD_ROWs etc. but what the hell
+        */
+
+        stt_ix = 0;
+
+        do  {
+            P_PDCHART_ELEMENT stt_ep;
+            EV_COL           try_col;
+            U32               cur_ix;
+
+            stt_ep = sort_list[stt_ix].ep;
+            try_col = stt_ep->rng.col.col;
+            cur_ix = stt_ix;
+
+            for(;;)
+                {
+                P_PDCHART_ELEMENT cur_ep;
+
+                cur_ep = sort_list[++cur_ix].ep;
+
+                ++try_col;
+
+                if(cur_ix >= sort_ix)
+                    break;
+
+                if(cur_ep->type != stt_ep->type)
+                    /* output what we've got so far then (stt_ix..cur_ix i.e.) */
+                    break;
+
+                if(cur_ep->rng.col.col != try_col)
+                    /* output what we've got so far then (stt_ix..cur_ix i.e.) */
+                    break;
+                }
+
+            /* output what we've got so far then (stt_ix..cur_ix i.e.) */
+            {
+            U8   buffer[LIN_BUFSIZ];
+            P_U8 out;
+            U16  contab_ix;
+            P_PDCHART_DEP itdep;
+
+            rng.s.docno = stt_ep->rng.col.docno;
+            rng.e.docno = rng.s.docno;
+
+            rng.s.flags = rng.e.flags = 0;
+
+            if(stt_ep->type == PDCHART_RANGE_COL)
+                {
+                rng.s.col = stt_ep->rng.col.col;
+                rng.s.row = stt_ep->rng.col.stt_row;
+                rng.e.col = rng.s.col + (cur_ix - stt_ix);
+                rng.e.row = stt_ep->rng.col.end_row;
+
+                contab_ix = PDCHART_CON_RANGE_COL;
+                }
+            else
+                {
+                rng.s.col = stt_ep->rng.row.stt_col;
+                rng.s.row = stt_ep->rng.row.row;
+                rng.e.col = stt_ep->rng.row.end_col;
+                rng.e.row = rng.s.row + (cur_ix - stt_ix);
+
+                contab_ix = PDCHART_CON_RANGE_ROW;
+                }
+
+            itdep = collect_search(&pdchart_listed_deps, &stt_ep->itdepkey);
+            assert(itdep);
+            p_bits = (P_U16) &itdep->bits;
+
+            out  = buffer;
+            out += pdchart_make_range_flags_for_save(out, elemof32(buffer), p_bits);
+            out += pdchart_make_range_for_save(out, elemof32(buffer) - (out - buffer), &rng);
+
+            if((res = gr_chart_construct_save_frag_stt(f, contab_ix)) < 0)
+                break;
+
+            if((res = gr_chart_construct_save_frag_txt(f, buffer)) < 0)
+                break;
+
+            if((res = gr_chart_construct_save_frag_end(f)) < 0)
+                break;
+            }
+
+            stt_ix = cur_ix;
+            }
+        while(stt_ix < sort_ix);
+        }
+
+    al_ptr_dispose(P_P_ANY_PEDANTIC(&sort_list));
+
+    if(res < 0)
+        return(res);
+
+    /*
+    live text objects - separately done for neatness
+    */
+
+    ep = &pdchart->elem.base[0];
+
+    for(last_ep = ep + pdchart->elem.n; ep < last_ep; ++ep)
+        if(ep->type == PDCHART_RANGE_TXT)
+            {
+            U8 buffer[LIN_BUFSIZ];
+            P_U8 out;
+            P_PDCHART_DEP itdep;
+
+            rng.s.docno = ep->rng.txt.docno;
+            rng.s.col = ep->rng.txt.col;
+            rng.s.row = ep->rng.txt.row;
+
+            rng.e.docno = rng.s.docno;
+            rng.e.col = rng.s.col + 1;
+            rng.e.row = rng.s.row + 1;
+
+            rng.s.flags = rng.e.flags = 0;
+
+            itdep = collect_search(&pdchart_listed_deps, &ep->itdepkey);
+            assert(itdep);
+            p_bits = (P_U16) &itdep->bits;
+
+#if 1
+            /* SKS after 4.12 27mar92 - needed for (compatible) live text object ordering on reload */
+            (void) sprintf(buffer, "%d", gr_chart_order_query(&pdchart->ch, &ep->gr_int_handle));
+
+            if((res = gr_chart_construct_save_frag_stt(f, PDCHART_CON_RANGE_TXT_ORDER)) < 0)
+                return(res);
+
+            if((res = gr_chart_construct_save_frag_txt(f, buffer)) < 0)
+                return(res);
+
+            if((res = gr_chart_construct_save_frag_end(f)) < 0)
+                return(res);
+#endif
+
+            out  = buffer;
+            out += pdchart_make_range_flags_for_save(out, elemof32(buffer), p_bits);
+            out += pdchart_make_range_for_save(out, elemof32(buffer) - (out - buffer), &rng);
+
+            if((res = gr_chart_construct_save_frag_stt(f, PDCHART_CON_RANGE_TXT)) < 0)
+                return(res);
+
+            if((res = gr_chart_construct_save_frag_txt(f, buffer)) < 0)
+                return(res);
+
+            if((res = gr_chart_construct_save_frag_end(f)) < 0)
+                return(res);
+            }
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* direct callback from chart module to save
+* out any constructs from our side
+*
+******************************************************************************/
+
+extern S32
+gr_chart_save_external(
+    GR_CHART_HANDLE ch,
+    FILE_HANDLE f,
+    P_U8 save_filename /*const*/,
+    P_ANY ext_handle)
+{
+    S32 res;
+
+    /* set up as document name */
+    void_strkpy(pdchart_load_save_docname, elemof32(pdchart_load_save_docname), save_filename);
+
+    /* register our construct table with chart module */
+    gr_chart_construct_table_register(pdchart_construct_table, PDCHART_CON_N_TABLE_OFFSETS);
+
+    /* make the chart a document for relative extref saves */
+    if(DOCNO_NONE == (pdchart_load_save_docno = ev_docno_ensure_for_pdchart_bodge()))
+        return(create_error(GR_CHART_ERR_NOMEM));
+
+    { /* SKS after 4.12 26mar92 - keep consistent with save_version_string */
+    U8 array[LIN_BUFSIZ];
+
+    void_strkpy(array, elemof32(array), applicationversion);
+    void_strkat(array, elemof32(array), ", ");
+
+    void_strkat(array, elemof32(array), !str_isblank(user_id()) ? user_id() : "Colton Software");
+    if(!str_isblank(user_organ_id()))
+        {
+        void_strkat(array, elemof32(array), " - ");
+        void_strkat(array, elemof32(array), user_organ_id());
+        }
+    void_strkat(array, elemof32(array), ", ");
+
+    void_strkat(array, elemof32(array), "R9200 7500 3900 8299");
+
+    res = gr_chart_construct_save_txt(f, PDCHART_CON_VERSION, array);
+    }
+
+    if(res > 0)
+        {
+        if(ext_handle)
+            res = pdchart_save_external_core(f, ch, ext_handle);
+
+        /* otherwise it's doing a preferred save; we don't have anything more to say */
+        }
+
+    /* kill name prior to close */
+    pdchart_load_save_docname[0] = NULLCH;
+
+    ev_p_ss_doc_from_docno_must(pdchart_load_save_docno)->is_docu_thunk = TRUE; /* bodge back - we aren't a real document */
+
+    ev_close_sheet((DOCNO) pdchart_load_save_docno);
+
+    pdchart_load_save_docno = DOCNO_NONE;
+
+    if(res < 0)
+        return(res);
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* reloading
+*
+******************************************************************************/
+
+_Check_return_
+_Ret_notnull_
+extern char *
+pdchart_docname_query(void)
+{
+    return(pdchart_load_save_docname);
+}
+
+static P_U8
+pdchart_read_range_flags(
+    P_U8 args,
+    P_U16 p_u16 /*out*/)
+{
+    U8  format[64];
+    int len;
+
+    /* wot a bummer */
+    void_strkpy(format, elemof32(format), pdchart_range_flags_fmt);
+    void_strkat(format, elemof32(format), "%n");
+
+    if(sscanf(args, format, p_u16, &len) < 1)
+        return(NULL);
+
+    return(args + len);
+}
+
+/******************************************************************************
+*
+* read a range out of the file
+*
+******************************************************************************/
+
+static P_U8
+pdchart_read_range(
+    P_U8 args,
+    _OutRef_    P_EV_RANGE rng /*out*/)
+{
+    P_U8 ptr = args;
+    S32  len;
+
+    len = ev_doc_establish_doc_from_name(ptr, pdchart_load_save_docno, &rng->s.docno);
+    if(!len)
+        return(NULL);
+
+    ptr += len;
+
+    rng->e.docno = rng->s.docno;
+
+    ptr += stox(ptr, &rng->s.col);
+
+    rng->s.row = (S32) strtol(ptr, &ptr, 10);
+    --rng->s.row;
+
+    rng->e.col = rng->s.col;
+    rng->e.row = rng->s.row;
+
+    len = stox(ptr, &rng->e.col);
+
+    if(len)
+        {
+        ptr += len;
+
+        rng->e.row = (S32) strtol(ptr, &ptr, 10);
+        --rng->e.row;
+        }
+
+    ++rng->e.col;
+    ++rng->e.row;
+
+    return(ptr);
+}
+
+extern S32
+gr_ext_construct_load_this(
+    GR_CHART_HANDLE ch,
+    P_U8 args,
+    U16 contab_ix)
+{
+    P_U8   ptr = args;
+    U16    bits = 0;
+    EV_RANGE rng;
+    S32    res;
+
+    IGNOREPARM(ch);
+
+    zero_struct(rng);
+
+    switch(contab_ix)
+        {
+        case PDCHART_CON_VERSION:
+            /* ignore */
+            break;
+
+        case PDCHART_CON_RANGE_COL:
+            ptr = pdchart_read_range_flags(ptr, &bits);
+            if(ptr)
+                {
+                ptr = pdchart_read_range(ptr, &rng);
+                if(ptr)
+                    {
+                    /* cater for the PipeDream side of the chart descriptor growing */
+                    if(0 > (res = pdchart_element_ensure(pdchart_load_save_pdchart, rng.e.col - rng.s.col)))
+                        return(res);
+
+                    if((res = pdchart_add_range_for_load(pdchart_load_save_pdchart, PDCHART_RANGE_COL, &rng, bits)) < 0)
+                        return(res);
+                    }
+                }
+            break;
+
+        case PDCHART_CON_RANGE_ROW:
+            ptr = pdchart_read_range_flags(ptr, &bits);
+            if(ptr)
+                {
+                ptr = pdchart_read_range(ptr, &rng);
+                if(ptr)
+                    {
+                    /* cater for the PipeDream side of the chart descriptor growing */
+                    if(0 > (res = pdchart_element_ensure(pdchart_load_save_pdchart, rng.e.row - rng.s.row)))
+                        return(res);
+
+                    if((res = pdchart_add_range_for_load(pdchart_load_save_pdchart, PDCHART_RANGE_ROW, &rng, bits)) < 0)
+                        return(res);
+                    }
+                }
+            break;
+
+        case PDCHART_CON_RANGE_TXT:
+            /* a live text object is the simplest thing for us to reload */
+            ptr = pdchart_read_range_flags(ptr, &bits);
+            if(ptr)
+                {
+                ptr = pdchart_read_range(ptr, &rng);
+                if(ptr)
+                    {
+                    /* cater for the PipeDream side of the chart descriptor growing */
+                    if(0 > (res = pdchart_element_ensure(pdchart_load_save_pdchart, 1)))
+                        return(res);
+
+                    if((res = pdchart_text_add(pdchart_load_save_pdchart, &rng)) < 0)
+                        return(res);
+                    }
+                }
+            break;
+
+#if 1
+        /* SKS after 4.12 27mar92 - live text objects not as easy as originally claimed */
+        case PDCHART_CON_RANGE_TXT_ORDER:
+            {
+            S32 order;
+
+            if(sscanf(args, "%d", &order) < 1)
+                return(1);
+
+            gr_chart_text_order_set(&pdchart_load_save_pdchart->ch, order);
+            }
+            break;
+#endif
+        }
+
+    return(1);
+}
+
+gr_cache_tagstrip_proto(extern, pdchart_tagstrip)
+{
+    P_PDCHART_TAGSTRIP_INFO p_tag_info = handle;
+    S32 res;
+
+    p_tag_info->pdchartdatakey = NULL;
+
+    if((res = pdchart_new(&pdchart_load_save_pdchart, 0, 0, 0)) < 0)
+        {
+        reperr_null(res);
+        return(1);
+        }
+
+    /* name needed for doc creation */
+    gr_cache_name_query(&p_info->cah, pdchart_load_save_docname, sizeof(pdchart_load_save_docname)-1);
+
+    /* set the name up in the newly created chart */
+    if((res = gr_chart_name_set(&pdchart_load_save_pdchart->ch, pdchart_load_save_docname)) < 0)
+        return(reperr_null(res), 1);
+
+    /* register our construct table with chart module */
+    gr_chart_construct_table_register(pdchart_construct_table, PDCHART_CON_N_TABLE_OFFSETS);
+
+    if(DOCNO_NONE == (pdchart_load_save_docno = ev_docno_ensure_for_pdchart_bodge()))
+        return(create_error(GR_CHART_ERR_NOMEM));
+
+    /* get chart module to process constructs for both it and us */
+    res = gr_chart_construct_tagstrip_process(&pdchart_load_save_pdchart->ch, p_info);
+
+    p_tag_info->pdchartdatakey = (P_ANY) pdchart_load_save_pdchart->pdchartdatakey;
+
+    return(res);
+}
+
+/******************************************************************************
+*
+* we must close our 'sheet' down after dependents have been loaded
+*
+******************************************************************************/
+
+extern void
+pdchart_load_ended(
+    P_ANY epdchartdatakey,
+    S32 loaded_preferred)
+{
+    LIST_ITEMNO           pdchartdatakey;
+    P_PDCHART_LISTED_DATA pdchartdata;
+
+    assert(pdchart_load_save_docno != DOCNO_NONE);
+
+    /* kill name prior to close */
+    pdchart_load_save_docname[0] = NULLCH;
+
+    ev_p_ss_doc_from_docno_must(pdchart_load_save_docno)->is_docu_thunk = TRUE; /* bodge back - we aren't a real document */
+
+    ev_close_sheet((DOCNO) pdchart_load_save_docno);
+
+    pdchart_load_save_docno = DOCNO_NONE;
+
+    pdchartdatakey = (LIST_ITEMNO) epdchartdatakey;
+    pdchartdata    = collect_search(&pdchart_listed_data, &pdchartdatakey);
+    assert(pdchartdata);
+
+    if(pdchartdata)
+        {
+        P_PDCHART_HEADER pdchart = pdchartdata->pdchart;
+
+        if(loaded_preferred)
+            {
+            gr_chart_preferred_set(&pdchart->ch);
+
+            pdchart_dispose(&pdchart);
+            }
+            else
+            {
+            /* ensure recalced sometime */
+            status_assert(pdchart_modify(pdchart));
+            }
+        }
+}
+
+/* end of pdchart.c */

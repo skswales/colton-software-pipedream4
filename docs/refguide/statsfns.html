@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+  <title>Statistical Functions</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+  <link href="csguide.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1991-1998 Colton Software Limited
+   - Copyright (C) 1998-2014 R W Colton -->
+<div class="navheader">
+<table width="100%" summary="Navigation header">
+<tr>
+<td width="20%" align="left"><a accesskey="p" href="spelluserdicts.html">Prev</a> </td>
+<th width="60%" align="center">PipeDream 4 Reference Guide</th>
+<td width="20%" align="right"> <a accesskey="n" href="stringfns.html">Next</a></td>
+</tr>
+</table>
+<hr/>
+</div>
+
+<h1>Statistical Functions</h1>
+
+<p>The following statistical functions are provided which operate on a range or
+a list of several slots. Note that lists can include arrays. There are examples
+of the statistical functions in the PipeDream Examples archive.</p>
+
+<h2>AVG</h2>
+
+<p><code>AVG(<span class="csguide-arg">list</span>)</code></p>
+
+<p>Returns the arithmetic mean value of <span
+class="csguide-arg">list</span>.</p>
+
+<p>Only numeric elements are evaluated so that blank slots do not upset
+averages.</p>
+
+<h2>COUNT</h2>
+
+<p><code>COUNT(<span class="csguide-arg">list</span>)</code></p>
+
+<p>Counts the number of numeric elements in <span
+class="csguide-arg">list</span>.</p>
+
+<h2>GRAND</h2>
+
+<p><code>GRAND(<span class="csguide-arg">m</span>,<span
+class="csguide-arg">s</span>)</code></p>
+
+<p>Returns a random number with gaussian distribution, mean <span
+class="csguide-arg">m</span> and standard deviation <span
+class="csguide-arg">s</span>.</p>
+
+<p>If <span class="csguide-arg">m</span> is not given, PipeDream assumes 0; if
+<span class="csguide-arg">s</span> is not given, PipeDream assumes 1.</p>
+
+<h2>GROWTH</h2>
+
+<p><code>GROWTH(<span class="csguide-arg">LOGEST_data</span>, <span
+class="csguide-arg">x_data</span>)</code></p>
+
+<p>Takes the result of the LOGEST function (<span
+class="csguide-arg">LOGEST_data</span>) and applies it to <span
+class="csguide-arg">x_data</span> to return estimated <span
+class="csguide-arg">y_data</span>.</p>
+
+<h2>LINEST</h2>
+
+<p><code>LINEST(<span class="csguide-arg">known_y's</span>,<span
+class="csguide-arg">known_x's</span>)</code></p>
+
+<p>Calculates the formula of the straight line which best fits your data (<span
+class="csguide-arg">known_y's</span> and <span
+class="csguide-arg">known_x's</span>) and returns an array.</p>
+
+<h3>Simple linear regression</h3>
+
+<p>The result is an array of 2 values giving {c,m} for the straight line fit</p>
+
+<p style="margin-left:2em;">y = mx + c</p>
+
+<p>where the first array element, c, is the y-intercept value (ie where x=0) of
+the best-fitting straight line and the second array element, m, is the gradient
+of that line.</p>
+
+<p>An example is given below. LINEST is used to calculate the gradient and
+intercept of the best-fitting straight line through the data points. INDEX is
+used to extract separate elements of the result array.</p>
+
+<div class="csguide-sample">
+<table border="1">
+  <col />
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr class="csguide-border-colhead">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">1</th>
+      <td class="csguide-sample-number">2.00</td>
+      <td class="csguide-sample-number">4.00</td>
+      <td class="csguide-sample-number">-2.00</td>
+      <td>C1=linest(B1B5,A1A5)</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">2</th>
+      <td class="csguide-sample-number">3.00</td>
+      <td class="csguide-sample-number">7.00</td>
+      <td class="csguide-sample-number">3.00</td>
+      <td>C2=index(C1,2,1)</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">3</th>
+      <td class="csguide-sample-number">5.00</td>
+      <td class="csguide-sample-number">13.00</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">4</th>
+      <td class="csguide-sample-number">7.00</td>
+      <td class="csguide-sample-number">19.00</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">5</th>
+      <td class="csguide-sample-number">&nbsp;10.00</td>
+      <td class="csguide-sample-number">&nbsp;28.00</td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>To verify the results, a scatter chart of the data series can be drawn and a
+line of best fit may be specified to be drawn on the chart.</p>
+
+<h3>Multiple linear regression</h3>
+
+<p>The result is an array of m+1 values such that</p>
+
+<p style="margin-left:2em;">y = a<sub>0</sub> + <span
+style="font-size: 120%">&Sigma;</span><sup>i=m</sup>(a<sub>i</sub>&middot;x<sub>i</sub>)</p>
+
+<p>where the x<sub>i</sub> are the independent x variables.</p>
+
+<p>An example is given below. It is assumed that the value of a house is
+related to the garden size, number of bedrooms and distance from the city
+centre. Values for eight houses are known and these are used to calculate (in
+A10) an array of the coefficients. Expanding the array into the slots A12 to
+C12 shows the resulting formula to be</p>
+
+<p>Value = 40688 + 62*Garden + 3021*Bedrooms - 956*Distance</p>
+
+<p>This is then used to calculate a value for a house with a garden of 600
+square metres, 4 bedrooms and 2 miles from the city centre. D14 and D15 show
+two ways of calculating the result.</p>
+
+<div class="csguide-sample">
+<table border="1">
+  <col />
+  <col />
+  <col />
+  <col />
+  <col />
+  <col />
+  <tbody>
+    <tr class="csguide-border-colhead">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+      <th>E</th>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">1</th>
+      <td class="csguide-sample-number">Garden m<sup>2</sup></td>
+      <td class="csguide-sample-number">Bedrooms</td>
+      <td class="csguide-sample-number">Distance</td>
+      <td class="csguide-sample-number">Value</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">2</th>
+      <td class="csguide-sample-number">1600</td>
+      <td class="csguide-sample-number">4</td>
+      <td class="csguide-sample-number">4</td>
+      <td class="csguide-sample-number">150000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">3</th>
+      <td class="csguide-sample-number">450</td>
+      <td class="csguide-sample-number">3</td>
+      <td class="csguide-sample-number"></td>
+      <td class="csguide-sample-number">67000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">4</th>
+      <td class="csguide-sample-number">50</td>
+      <td class="csguide-sample-number">2</td>
+      <td class="csguide-sample-number">0.5</td>
+      <td class="csguide-sample-number">55000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">5</th>
+      <td class="csguide-sample-number">0</td>
+      <td class="csguide-sample-number">2</td>
+      <td class="csguide-sample-number">1</td>
+      <td class="csguide-sample-number">45000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">6</th>
+      <td class="csguide-sample-number">650</td>
+      <td class="csguide-sample-number">4</td>
+      <td class="csguide-sample-number">3</td>
+      <td class="csguide-sample-number">100000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">7</th>
+      <td class="csguide-sample-number">200</td>
+      <td class="csguide-sample-number">1</td>
+      <td class="csguide-sample-number">3.5</td>
+      <td class="csguide-sample-number">58000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">8</th>
+      <td class="csguide-sample-number">250</td>
+      <td class="csguide-sample-number"></td>
+      <td class="csguide-sample-number">4</td>
+      <td class="csguide-sample-number">55000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">9</th>
+      <td class="csguide-sample-number">620</td>
+      <td class="csguide-sample-number">3</td>
+      <td class="csguide-sample-number">2</td>
+      <td class="csguide-sample-number">75000</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">10</th>
+      <td class="csguide-sample-number">40688</td>
+      <td colspan="2">A10=linest(D2D9,A2C9)</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">11</th>
+      <td class="csguide-sample-number">2</td>
+      <td colspan="4">A11=set_value(A12C12,index(A10,2,1,3,1))</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">12</th>
+      <td class="csguide-sample-number">62</td>
+      <td class="csguide-sample-number">3021</td>
+      <td class="csguide-sample-number">-956</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">13</th>
+      <td class="csguide-sample-number"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">14</th>
+      <td class="csguide-sample-number">600</td>
+      <td class="csguide-sample-number">4</td>
+      <td class="csguide-sample-number">2</td>
+      <td class="csguide-sample-number">87949</td>
+      <td>D14=trend(A10,A14C14)</td>
+    </tr>
+    <tr>
+      <th class="csguide-border-rowhead">15</th>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="csguide-sample-number">87949</td>
+      <td>D15=sum(A12C12*A14C14)+A10</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>LOGEST</h2>
+
+<p><code>LOGEST(<span class="csguide-arg">known_y's</span>,<span
+class="csguide-arg">known_x's</span>)</code></p>
+
+<p>Calculates an exponential curve which fits your data and returns an array
+which describes the curve.</p>
+
+<p>The equation for the curve is:</p>
+
+<p style="margin-left:2em;">y = b &middot; (m<sup>x</sup>)</p>
+
+<p>or</p>
+
+<p style="margin-left:2em;">y = b &middot; <span
+style="font-size: 120%">&Pi;</span><sup>i=m</sup>(m<sub>i</sub><sup>x<sub>i</sub></sup>)</p>
+
+<p>where the x<sub>i</sub> are the independent x variables.</p>
+
+<p>This function is simply a logarithmic version of LINEST.</p>
+
+<h2>MAX</h2>
+
+<p><code>MAX(<span class="csguide-arg">list</span>)</code></p>
+
+<p>Returns the maximum value in <span class="csguide-arg">list</span>.</p>
+
+<h2>MIN</h2>
+
+<p><code>MIN(<span class="csguide-arg">list</span>)</code></p>
+
+<p>Returns the minimum value in <span class="csguide-arg">list</span>.</p>
+
+<h2>RAND</h2>
+
+<p><code>RAND</code></p>
+
+<p>Returns a random number in the range 0 to 1 from a sequence which is the
+same each time PipeDream starts.</p>
+
+<p>RAND(0) generates a random number in the range 0 to 1 using a random
+seed.</p>
+
+
+
+<p><code>RAND(<span class="csguide-arg">number</span>)</code></p>
+
+<p>Generates a random number in the range 0 to 1 using <span
+class="csguide-arg">number</span> as the initial seed.</p>
+
+<h2>STD</h2>
+
+<p><code>STD(<span class="csguide-arg">list</span>)</code></p>
+
+<p>Returns the standard deviation of the values in <span
+class="csguide-arg">list</span>.</p>
+
+<p>This is the square root of the variance. See VAR for the equation used.</p>
+
+<h2>STDP</h2>
+
+<p><code>STDP(<span class="csguide-arg">list</span>)</code></p>
+
+<p>Returns the population standard deviation of the values in <span
+class="csguide-arg">list</span>.</p>
+
+<p>This is the square root of the population variance. See VARP for the
+equation used.</p>
+
+<h2>TREND</h2>
+
+<p><code>TREND(<span class="csguide-arg">LINEST_data</span>,<span
+class="csguide-arg">x_data</span>)</code></p>
+
+<p>Takes the result of the LINEST function (<span
+class="csguide-arg">LINEST_data</span>) and applies it to <span
+class="csguide-arg">x_data</span> to return estimated <span
+class="csguide-arg">y_data</span>.</p>
+
+<h2>VAR</h2>
+
+<p><code>VAR(<span class="csguide-arg"></span><span
+class="csguide-arg">list</span>)</code></p>
+
+<p>Returns the variance of the values in <span
+class="csguide-arg">list</span>.</p>
+
+<p>The equation used is:</p>
+
+<p style="margin-left:2em;">(<span class="csguide-arg">n</span>&middot;(<span
+style="font-size: 120%">&Sigma;</span>(<span
+class="csguide-arg">x</span><sup>2</sup>)) - (<span
+style="font-size: 120%">&Sigma;</span><span
+class="csguide-arg">x</span>)<sup>2</sup>) &divide; <span
+class="csguide-arg">n</span>&middot;(<span class="csguide-arg">n</span>-1)</p>
+
+<p>where <span class="csguide-arg">x</span> is each value and <span
+class="csguide-arg">n</span> is the number of values.</p>
+
+<h2>VARP</h2>
+
+<p><code>VARP(<span class="csguide-arg"></span><span
+class="csguide-arg">list</span>)</code></p>
+
+<p>Returns the population variance of the values in <span
+class="csguide-arg">list</span>.</p>
+
+<p>The equation used is:</p>
+
+<p style="margin-left:2em;">(<span class="csguide-arg">n</span>&middot;(<span
+style="font-size: 120%">&Sigma;</span>(<span
+class="csguide-arg">x</span><sup>2</sup>)) - (<span
+style="font-size: 120%">&Sigma;</span><span
+class="csguide-arg">x</span>)<sup>2</sup>) &divide; <span
+class="csguide-arg">n</span><sup>2</sup></p>
+
+<p>where <span class="csguide-arg">x</span> is each value and <span
+class="csguide-arg">n</span> is the number of values.</p>
+
+
+
+<div class="navfooter">
+<hr/>
+<table width="100%" summary="Navigation footer">
+<tr>
+<td width="40%" align="left"><a accesskey="p" href="spelluserdicts.html">Prev</a> </td>
+<td width="20%" align="center"></td>
+<td width="40%" align="right"> <a accesskey="n" href="stringfns.html">Next</a></td>
+</tr>
+<tr>
+<td width="40%" align="left" valign="top">Spell - User Dictionaries </td>
+<td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
+<td width="40%" align="right" valign="top"> String Functions</td>
+</tr>
+</table>
+</div>
+</body>
+</html>
