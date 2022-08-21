@@ -42,20 +42,19 @@ gr_nodbg_bring_me_the_head_of_yuri_gagarin(
     return(gr_chartedit_riscos_correlate(cep, &point, id, hitObject, 64, adjustclicked));
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_nodbg_chart_save(
     P_GR_CHART cp,
     FILE_HANDLE f,
     P_U8 save_filename /*const*/)
 {
     filepos_t wackytag_pos;
-    S32 res;
 
     if(cp->core.p_gr_diag && cp->core.p_gr_diag->gr_riscdiag.draw_diag.length)
     {
         /* write out the RISC OS Draw file representation */
-        if((res = gr_riscdiag_diagram_save_into(&cp->core.p_gr_diag->gr_riscdiag, f)) < 0)
-            return(res);
+        status_return(gr_riscdiag_diagram_save_into(&cp->core.p_gr_diag->gr_riscdiag, f));
     }
     else
     {
@@ -64,29 +63,24 @@ gr_nodbg_chart_save(
 
         diag = gr_cache_search_empty();
 
-        if((res = file_write_err(diag->data, diag->length, 1, f)) < 0)
-            return(res);
+        status_return(file_write_err(diag->data, diag->length, 1, f));
     }
 
     /* save tag header and object */
-    if((res = gr_riscdiag_wackytag_save_start(f, &wackytag_pos)) < 0)
-        return(res);
+    status_return(gr_riscdiag_wackytag_save_start(f, &wackytag_pos));
 
     /* save user tag components for chart reload - client must note preferred save using NULL handle */
-    if((res = gr_chart_save_external(cp->core.ch, f, save_filename,
-                                     (cp->core.ext_handle == &gr_chart_preferred_ch)
+    status_return(gr_chart_save_external(cp->core.ch, f, save_filename,
+                                         (cp->core.ext_handle == &gr_chart_preferred_ch)
                                                     ? NULL
-                                                    : cp->core.ext_handle)) < 0)
-        return(res);
+                                                    : cp->core.ext_handle));
 
     /* save tag components for chart reload */
-    if((res = gr_chart_save_internal(cp, f, save_filename)) < 0)
-        return(res);
+    status_return(gr_chart_save_internal(cp, f, save_filename));
 
 #if 0
     /* update tag header size field */
-    if((res = gr_riscdiag_wackytag_save_end(f, &wackytag_pos)) < 0)
-        return(res);
+    status_return(gr_riscdiag_wackytag_save_end(f, &wackytag_pos));
 #endif
 
     return(1);

@@ -138,12 +138,6 @@ xtos_ustr_buf(
     _InVal_     S32 x,
     _InVal_     BOOL upper_case);
 
-_Check_return_
-extern U32
-xustrlen32(
-    _In_reads_(elemof_buffer) PC_USTR buffer,
-    _InVal_     U32 elemof_buffer);
-
 /*
 strcpy / _s() etc. replacements that ensure NULLCH-termination
 */
@@ -174,23 +168,23 @@ xstrnkpy(
     _In_reads_or_z_(src_n) PC_U8 src,
     _InVal_     U32 src_n);
 
-#if USTR_IS_L1STR
+#if USTR_IS_SBSTR
 
 #define ustr_xstrkat  xstrkat
 #define ustr_xstrnkat xstrnkat
 #define ustr_xstrkpy  xstrkpy
 #define ustr_xstrnkpy xstrnkpy
 
-#endif /* USTR_IS_L1STR */
+#endif /* USTR_IS_SBSTR */
 
-#if TSTR_IS_L1STR
+#if TSTR_IS_SBSTR
 
 #define tstr_xstrkat  xstrkat
 #define tstr_xstrnkat xstrnkat
 #define tstr_xstrkpy  xstrkpy
 #define tstr_xstrnkpy xstrnkpy
 
-#endif /* TSTR_IS_L1STR */
+#endif /* TSTR_IS_SBSTR */
 
 #define ustr_IncByte(ustr__ref) \
     PtrIncBytes(PC_USTR, ustr__ref, 1)
@@ -235,12 +229,12 @@ xvsnprintf(
     _In_z_ _Printf_format_string_ const char * format,
     /**/        va_list args);
 
-#if USTR_IS_L1STR
+#if USTR_IS_SBSTR
 
 #define  ustr_xsnprintf  xsnprintf
 #define ustr_xvsnprintf xvsnprintf
 
-#else /* USTR_IS_L1STR */
+#else /* USTR_IS_SBSTR */
 
 _Check_return_
 extern int __cdecl
@@ -258,14 +252,14 @@ ustr_xvsnprintf(
     _In_z_ _Printf_format_string_ PC_USTR format,
     /**/        va_list args);
 
-#endif /* USTR_IS_L1STR */
+#endif /* USTR_IS_SBSTR */
 
-#if TSTR_IS_L1STR
+#if TSTR_IS_SBSTR
 
 #define  tstr_xsnprintf  xsnprintf
 #define tstr_xvsnprintf xvsnprintf
 
-#else /* TSTR_IS_L1STR */
+#else /* TSTR_IS_SBSTR */
 
 _Check_return_
 extern int __cdecl
@@ -283,17 +277,17 @@ tstr_xvsnprintf(
     _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        va_list args);
 
-#endif /* TSTR_IS_L1STR */
+#endif /* TSTR_IS_SBSTR */
 
-#if TSTR_IS_L1STR
+#if TSTR_IS_SBSTR
 
 #define tstrlen(s)                  strlen(s)
 
 #define tstrcmp(s1, s2)             strcmp(s1, s2)
 #define tstrncmp(s1, s2, n)         strncmp(s1, s2, n)
 #if 1
-#define tstricmp(s1, s2)            l1_stricmp(s1, U32_MAX, s2, U32_MAX)
-#define tstrnicmp(s1, s2, n)        l1_strnicmp(s1, s2, n)
+#define tstricmp(s1, s2)            sb_stricmp(s1, U32_MAX, s2, U32_MAX)
+#define tstrnicmp(s1, s2, n)        sb_strnicmp(s1, s2, n)
 #else
 #define tstricmp(s1, s2)            _stricmp(s1, s2)
 #define tstrnicmp(s1, s2, n)        _strnicmp(s1, s2, n)
@@ -307,28 +301,28 @@ tstr_xvsnprintf(
 #define tstrtol(p, pp, r)           strtol(p, pp, r)
 #define tstrtoul(p, pp, r)          strtoul(p, pp, r)
 
-#endif /* TSTR_IS_L1STR */
+#endif /* TSTR_IS_SBSTR */
 
-#if TSTR_IS_L1STR
+#if TSTR_IS_SBSTR
 
-#define _l1str_from_tstr(tstr)  ((PC_L1STR) (tstr))
-#define _tstr_from_l1str(l1str) ((PCTSTR) (l1str))
+#define _sbstr_from_tstr(tstr)  ((PC_SBSTR) (tstr))
+#define _tstr_from_sbstr(sbstr) ((PCTSTR) (sbstr))
 
-#endif /* TSTR_IS_L1STR */
+#endif /* TSTR_IS_SBSTR */
 
-#if USTR_IS_L1STR
+#if USTR_IS_SBSTR
 
-#define _l1str_from_ustr(ustr)  ((PC_L1STR) (ustr))
-#define _ustr_from_l1str(l1str) ((PC_USTR) (l1str))
+#define _sbstr_from_ustr(ustr)  ((PC_SBSTR) (ustr))
+#define _ustr_from_sbstr(sbstr) ((PC_USTR) (sbstr))
 
-#endif /* USTR_IS_L1STR */
+#endif /* USTR_IS_SBSTR */
 
-#if TSTR_IS_L1STR && USTR_IS_L1STR
+#if TSTR_IS_SBSTR && USTR_IS_SBSTR
 
 #define _tstr_from_ustr(ustr) ((PCTSTR) (ustr))
 #define _ustr_from_tstr(tstr) ((PC_USTR) (tstr))
 
-#endif /* TSTR_IS_L1STR && USTR_IS_L1STR */
+#endif /* TSTR_IS_SBSTR && USTR_IS_SBSTR */
 
 #endif /* __xstring_h */
 

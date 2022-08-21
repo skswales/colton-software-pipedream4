@@ -66,18 +66,6 @@ Designed for multiple inclusion with different TRACE_ALLOWED
 #undef trace_boolstring
 #endif
 
-#ifdef trace_tstr
-#undef trace_tstr
-#endif
-
-#ifdef trace_ustr
-#undef trace_ustr
-#endif
-
-#ifdef trace_l1str
-#undef trace_l1str
-#endif
-
 #ifdef trace_list
 #undef trace_list
 #endif
@@ -170,8 +158,7 @@ exported functions
 
 /* tracef(...) should really only appear #if TRACE_ALLOWED */
 
-#if RISCOS
-/* RISC OS can check parameters for matching format */
+#if defined(__CC_NORCROFT) /* this can check parameters for matching format */
 #pragma check_printf_formats
 #endif
 
@@ -181,7 +168,7 @@ tracef(
     _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        ...);
 
-#if RISCOS
+#if defined(__CC_NORCROFT)
 #pragma no_check_printf_formats
 #endif
 
@@ -291,17 +278,7 @@ extern int trace__count; /* exported only for tracing() */
 
 #if TRACE_ALLOWED
 
-#define trace_boolstring(t)             report_boolstring(t)
-#define trace_tstr(tstr)                report_tstr(tstr)
-#define trace_ustr(ustr)                report_ustr(ustr)
-#define trace_l1str(str)                report_l1str(str)
-
 #else
-
-#define trace_boolstring(t)             NULL
-#define trace_tstr(tstr)                NULL
-#define trace_ustr(ustr)                NULL
-#define trace_l1str(str)                NULL
 
 #define trace_disable()
 #define trace_is_enabled()              FALSE
@@ -384,7 +361,9 @@ PD4
 #define TRACE_APP_EXPEDIT       TRACE_APP_TYPE5_SSUI
 #define TRACE_APP_PD4_RENDER    TRACE_APP_TYPE5_SK_DRAW
 
-#define trace_string            trace_l1str
+#define trace_boolstring(t)     report_boolstring(t)
+
+#define trace_string            report_sbstr
 
 #endif /* TRACE_OUT */
 

@@ -41,13 +41,13 @@ PROC_QSORT_PROTO(static, nameid_lookcomp, EV_NAME);
 resource lists
 */
 
-DEPTABLE custom_def = {0, 0, 0, 0, 0};
+DEPTABLE custom_def = DEPTABLE_INIT;
 
 static EV_NAMEID next_custom_key = 0;
 
 #define MACDEFINC 2
 
-DEPTABLE names_def = {0, 0, 0, 0, 0};
+DEPTABLE names_def = DEPTABLE_INIT;
 
 static EV_NAMEID next_name_key  = 0;
 

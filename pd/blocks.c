@@ -61,7 +61,7 @@ recover_deleted_block(
 /*ncr*/
 static S32
 refs_adjust_add(
-    P_CELL slot,
+    P_CELL p_cell,
     _InRef_     PC_EV_SLR slrp,
     _InRef_     PC_UREF_PARM upp,
     S32 update_refs,
@@ -198,7 +198,7 @@ do_CopyBlock(
 
     /* if the target block is blank just replicate over it */
     /* if block not blank, insert over all rows */
-    if(!is_block_blank(curcol, currow, curcol+colsno-1, currow+rowsno-1))
+    if(!is_blank_block(curcol, currow, curcol+colsno-1, currow+rowsno-1))
     {
         block_was_blank = 0;
 
@@ -479,7 +479,7 @@ do_delete_block(
 
     trace_0(TRACE_APP_PD4, "do_delete_block()");
 
-    if(!ignore_protection && protected_slot_in_range(&blkstart, &blkend))
+    if(!ignore_protection && protected_cell_in_range(&blkstart, &blkend))
         return(-1);
 
     /* just save the block to the paste list, don't delete it yet */
@@ -496,8 +496,8 @@ do_delete_block(
             /* can widen so see if we are blank at sides */
 
             /* if blank to the side of the block */
-            if( is_block_blank(0, blkstart.row, blkstart.col-1, blkend.row) &&
-                is_block_blank(blkend.col+1,blkstart.row,numcol-1,blkend.row) )
+            if( is_blank_block(0, blkstart.row, blkstart.col-1, blkend.row) &&
+                is_blank_block(blkend.col+1,blkstart.row,numcol-1,blkend.row) )
             {
                 /* blank at sides so delete the whole rows */
                 blkstart.col = 0;
@@ -604,7 +604,7 @@ do_the_replicate(
     if(res_end->row == res_start->row)
         actual_res_end.row += src_end->row - src_start->row;
 
-    if(protected_slot_in_range(res_start, &actual_res_end))
+    if(protected_cell_in_range(res_start, &actual_res_end))
         return;
 
     /* do tree operation */
@@ -723,7 +723,7 @@ is this block all blank
 
 _Check_return_
 extern BOOL
-is_block_blank(
+is_blank_block(
     COL cs,
     ROW rs,
     COL ce,
@@ -732,15 +732,19 @@ is_block_blank(
     COL tcol;
     ROW trow;
 
-    for(tcol=cs; tcol <= ce; tcol++)
-        for(trow=rs; trow <= re; trow++)
+    for(tcol = cs; tcol <= ce; tcol++)
+    {
+        for(trow = rs; trow <= re; trow++)
         {
             /* see if past the end of the column */
-            if(atend(tcol,trow))
+            if(atend(tcol, trow))
                 break;
-            if(!isslotblank(travel(tcol, trow)))
+
+            if(!is_blank_cell(travel(tcol, trow)))
                 return(FALSE);
         }
+    }
+
     return(TRUE);
 }
 
@@ -790,7 +794,7 @@ MoveBlock_fn_do(S32 add_refs)
                 will not be inserted.  Looks like I thought
                 about this before and decided to save precious RAM
             */
-            if(!is_block_blank(curcol, currow, curcol+colsize, currow+rowsize))
+            if(!is_blank_block(curcol, currow, curcol+colsize, currow+rowsize))
             {
                 reperr_null(create_error(ERR_OVERLAP));
                 return;
@@ -826,8 +830,8 @@ MoveBlock_fn_do(S32 add_refs)
     /* maybe deleting old block affects position of new block ; better check */
     if((docno_from == docno_to) &&
         (blkend.row < currow) &&
-        is_block_blank(0,blkstart.row, blkstart.col-1, blkend.row) &&
-        is_block_blank(blkend.col+1, blkstart.row, numcol-1, blkend.row))
+        is_blank_block(0,blkstart.row, blkstart.col-1, blkend.row) &&
+        is_blank_block(blkend.col+1, blkstart.row, numcol-1, blkend.row))
         {
         block_will_move = blkend.row - blkstart.row + 1;
         }
@@ -1045,7 +1049,7 @@ recover_deleted_block(
 /*ncr*/
 static S32
 refs_adjust_add(
-    P_CELL slot,
+    P_CELL p_cell,
     _InRef_     PC_EV_SLR slrp,
     _InRef_     PC_UREF_PARM upp,
     S32 update_refs,
@@ -1054,9 +1058,9 @@ refs_adjust_add(
     S32 err;
 
     err = 0;
-    if(slot && (update_refs || add_refs))
+    if(p_cell && (update_refs || add_refs))
     {
-        if(slot->type == SL_NUMBER)
+        if(p_cell->type == SL_NUMBER)
         {
             P_EV_CELL p_ev_cell;
 
@@ -1078,11 +1082,11 @@ refs_adjust_add(
                 }
             }
         }
-        else if(slot->type != SL_PAGE)
+        else if(p_cell->type != SL_PAGE)
         {
             if(update_refs)
             {
-                uchar * csr = slot->content.text;
+                uchar * csr = p_cell->content.text;
                 while(NULL != (csr = find_next_csr(csr)))
                 {
                     /*eportf("refs_adjust_add: text_csr_uref");*/
@@ -1196,7 +1200,7 @@ Replicate_fn(void)
         if((blkend.col != blkstart.col)  ||  (blkend.row != blkstart.row))
         {
             array[out_idx++] = SPACE;
-            out_idx += write_ref(&array[out_idx], elemof32(array) - out_idx, current_docno(), blkend.col, blkend.row);
+            /*out_idx +=*/ (void) write_ref(&array[out_idx], elemof32(array) - out_idx, current_docno(), blkend.col, blkend.row);
         }
 
         if(!mystr_set(&d_replicate[0].textfield, array))
@@ -1461,6 +1465,8 @@ save_block_and_delete(
         numcol = curpos.col;
 
         /* take a copy of the deregistered end segment to delete_colstart */
+        assert(delete_colstart); /* otherwise we would not have got here */
+        CODE_ANALYSIS_ONLY(if(NULL != delete_colstart)) /* but clang isn't convinced... */
         memcpy32(delete_colstart, colstart + numcol, array_size_bytes);
 
         regcoltab();
@@ -1589,7 +1595,7 @@ TransposeBlock_fn(void)
 {
     S32 exchanges_to_do, exchanges_done, latest_down, last_across, no_of_cols, no_of_rows, last_down;
     COL tcol, new_last_col;
-    ROW trow, new_last_row, more_rows, extent;
+    ROW trow, new_last_row, more_rows/*, extent*/;
 
     /* get size of markers */
     if(!set_up_block(TRUE))
@@ -1598,7 +1604,7 @@ TransposeBlock_fn(void)
     no_of_cols      = blkend.col - blkstart.col + 1;
     no_of_rows      = blkend.row - blkstart.row + 1;
     more_rows       = no_of_rows - (ROW) no_of_cols;
-    extent          = no_of_rows > (ROW) no_of_cols ? no_of_rows : (ROW) no_of_cols;
+  /*extent          = no_of_rows > (ROW) no_of_cols ? no_of_rows : (ROW) no_of_cols; never used */
     new_last_col    = blkstart.col + (COL) no_of_rows -1;
     new_last_row    = blkstart.row + (ROW) no_of_cols -1;
     exchanges_to_do = no_of_cols * no_of_rows / 2;
@@ -1610,7 +1616,7 @@ TransposeBlock_fn(void)
     if(more_rows > 0)
     {
         /* too many rows */
-        if(!is_block_blank(blkend.col+1, blkstart.row, new_last_col, new_last_row))
+        if(!is_blank_block(blkend.col+1, blkstart.row, new_last_col, new_last_row))
         {
             /* need to insert columns here, can't use insert_blank_block */
 
@@ -1630,7 +1636,7 @@ TransposeBlock_fn(void)
     else if(more_rows < 0)
     {
         /* too many cols */
-        if(!is_block_blank(blkstart.col, blkend.row+1, new_last_col, new_last_row))
+        if(!is_blank_block(blkstart.col, blkend.row+1, new_last_col, new_last_row))
             /* RJM on 6.2.91, after 4.11
                 changes numcol-1 to numcol in the following
             */
@@ -1651,7 +1657,7 @@ TransposeBlock_fn(void)
             !ctrlflag && latest_right < last_across;
             tcol++, latest_right++)
         {
-            if(!swap_slots(tcol, trow, blkstart.col+latest_down, blkstart.row+latest_right))
+            if(!swap_cells(tcol, trow, blkstart.col+latest_down, blkstart.row+latest_right))
             {
                 /* we're in deep doo-doo here - half a block transposed and can't go further */
                 reperr_null(status_nomem());

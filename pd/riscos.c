@@ -257,7 +257,7 @@ print_file(
 
     reportf("print_file(%u:%s)", strlen32(filename), filename);
 
-    filetype_option = find_filetype_option(filename);
+    filetype_option = find_filetype_option(filename, FILETYPE_UNDETERMINED);
 
     /* yes, we can print these! (sort of) */
     if(PD4_CHART_CHAR == filetype_option)
@@ -289,7 +289,7 @@ riscos_quit_okayed(
 {
     DOCNO old_docno = current_docno();
     P_DOCU p_docu;
-    S32 res;
+    enum RISCDIALOG_QUERY_SDC_REPLY SDC_res;
     char mess[256];
 
     dbox_note_position_on_completion(TRUE);
@@ -301,13 +301,13 @@ riscos_quit_okayed(
             nmodified,
             product_ui_id());
 
-    res = riscdialog_query_SDC(mess);
+    SDC_res = riscdialog_query_quit_SDC(mess);
 
     /* Discard   -> ok, quit application (also known as 'Discard') */
-    /* Save      -> save files, then quit application (aka 'Save') */
     /* Cancel    -> abandon closedown */
+    /* Save      -> save files, then quit application (aka 'Save') */
 
-    if(res == riscdialog_query_SDC_SAVE)
+    if(SDC_res == riscdialog_query_SDC_SAVE)
     {
         /* loop over all documents in sequence trying to save them */
 
@@ -318,9 +318,9 @@ riscos_quit_okayed(
             dbox_note_position_on_completion(TRUE);
 
             /* If punter (or program) cancels any save, he means abort the shutdown */
-            if(riscdialog_query_save_existing() == riscdialog_query_CANCEL)
+            if(riscdialog_query_save_or_discard_existing() == riscdialog_query_SDC_CANCEL)
             {
-                res = riscdialog_query_CANCEL;
+                SDC_res = riscdialog_query_SDC_CANCEL;
                 break;
             }
         }
@@ -330,7 +330,7 @@ riscos_quit_okayed(
 
     /* if not aborted then all modified documents either saved or ignored - delete all documents (must be at least one) */
 
-    if((res == riscdialog_query_SDC_SAVE) || (res == riscdialog_query_SDC_DISCARD))
+    if((SDC_res == riscdialog_query_SDC_SAVE) || (SDC_res == riscdialog_query_SDC_DISCARD))
     {
         for(;;)
         {
@@ -433,7 +433,7 @@ iconbar_event_EBUT_BLEFT(void)
     {
         TCHARZ filename[BUF_MAX_PATHSTRING];
 
-        /* open the user's Choices directory viewer, from where they can find CmdFiles, Templates etc. */
+        /* open the user's Choices directory display, from where they can find CmdFiles, Templates etc. */
         tstr_xstrkpy(filename, elemof32(filename), TEXT("<Choices$Write>") FILE_DIR_SEP_STR TEXT("PipeDream") FILE_DIR_SEP_STR);
         tstr_xstrkat(filename, elemof32(filename), TEXT("X"));
 
@@ -684,7 +684,7 @@ riscos_sendsheetclosed(
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.b)
                        + sizeof(WIMP_MSGPD_DDETYPEB);
         msg.hdr.my_ref = 0;        /* fresh msg */
-        msg.hdr.action = Wimp_MPD_DDE;
+        msg.hdr.action = wimp_MPD_DDE;
 
         msg.data.pd_dde.id            = Wimp_MPD_DDE_SheetClosed;
         msg.data.pd_dde.type.b.handle = glp->ghan;
@@ -702,8 +702,8 @@ riscos_sendsheetclosed(
 extern void
 riscos_sendslotcontents(
     _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp,
-    S32 xoff,
-    S32 yoff)
+    S32 x_off,
+    S32 y_off)
 {
     if(glp)
     {
@@ -720,10 +720,10 @@ riscos_sendslotcontents(
 
         nbytes = 0;
         type = Wimp_MPD_DDE_typeC_type_Text;
-        row = glp->row + yoff;
+        row = glp->row + y_off;
         ptr = NULL;
 
-        tcell = travel(glp->col + xoff, row);
+        tcell = travel(glp->col + x_off, row);
 
         if(tcell)
         {
@@ -805,15 +805,15 @@ riscos_sendslotcontents(
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.c.content)
                        + nbytes;
         msg.hdr.my_ref = 0;        /* fresh msg */
-        msg.hdr.action = Wimp_MPD_DDE;
+        msg.hdr.action = wimp_MPD_DDE;
 
         msg.data.pd_dde.id            = Wimp_MPD_DDE_SendSlotContents;
         msg.data.pd_dde.type.c.handle = glp->ghan;
-        msg.data.pd_dde.type.c.xoff   = xoff;
-        msg.data.pd_dde.type.c.yoff   = yoff;
+        msg.data.pd_dde.type.c.x_off  = x_off;
+        msg.data.pd_dde.type.c.y_off  = y_off;
         msg.data.pd_dde.type.c.type   = type;
 
-        trace_2(TRACE_MODULE_UREF, "sendslotcontents x:%d, y:%d", xoff, yoff);
+        trace_2(TRACE_MODULE_UREF, "sendslotcontents x:%d, y:%d", x_off, y_off);
 
         wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, (wimp_t) glp->task));
     }
@@ -831,9 +831,9 @@ riscos_sendallslots(
         do  {
             riscos_sendslotcontents(glp, xoff, yoff);
         }
-        while(++yoff <= glp->ysize);
+        while(++yoff <= glp->y_size);
     }
-    while(++xoff <= glp->xsize);
+    while(++xoff <= glp->x_size);
 }
 
 /******************************************************************************
@@ -855,7 +855,7 @@ riscos_sendendmarker(
         msg.hdr.size   = offsetof(wimp_msgstr, data.pd_dde.type.c)
                        + sizeof(WIMP_MSGPD_DDETYPEC);
         msg.hdr.my_ref = 0;        /* fresh msg */
-        msg.hdr.action = Wimp_MPD_DDE;
+        msg.hdr.action = wimp_MPD_DDE;
 
         msg.data.pd_dde.id            = Wimp_MPD_DDE_SendSlotContents;
         msg.data.pd_dde.type.c.handle = glp->ghan;
@@ -955,78 +955,132 @@ strnpcpyind(
 *
 ******************************************************************************/
 
+static void
+iconbar_message_DATAOPEN_PDMacro(
+    char * filename)
+{
+    if(mystr_set(&d_macro_file[0].textfield, filename))
+    {
+        exec_file(d_macro_file[0].textfield);
+        str_clr( &d_macro_file[0].textfield);
+    }
+}
+
+static void
+iconbar_message_DATAOPEN_others(
+    char * filename,
+    FILETYPE_RISC_OS filetype)
+{
+    STATUS filetype_option = find_filetype_option(filename, filetype); /* check the readability & do the auto-detect here for consistency */
+
+    (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
+}
+
 static BOOL
 iconbar_message_DATAOPEN(
     wimp_msgstr *m)
 {
-    BOOL processed = TRUE;
     char * filename;
     FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
-    STATUS filetype_option;
+    DOCNO docno;
 
     IGNOREPARM(m); /* xferrecv uses last message mechanism */
 
-    trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can 'run' a file of type &%4.4X", filetype);
+    trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can 'run' a file of type &%03X", filetype);
 
-    switch(filetype)
+    if(!pd_can_run(filetype))
+        return(TRUE);
+
+    reportf("MDATAOPEN: file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
+
+    /* if it's a macro file we need this here to stop pause in macro file allowing message bounce
+     * thereby allowing Filer to try to invoke another copy of PipeDream to run this macro file ...
+     * and it helps anyway.
+     */
+    xferrecv_insertfileok();
+
+    docno = find_document_using_wholename(filename);
+
+    if(DOCNO_NONE != docno)
     {
-    case FILETYPE_PDMACRO:
-        /* need this here to stop pause in macro file allowing message bounce
-         * thereby allowing Filer to try to invoke another copy of PipeDream
-         * to run this macro file ...
-        */
-        xferrecv_insertfileok();
-
-        reportf("MDATAOPEN: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
-
-        if(mystr_set(&d_macro_file[0].textfield, filename))
-        {
-            exec_file(d_macro_file[0].textfield);
-            str_clr( &d_macro_file[0].textfield);
-        }
-
-        break;
-
-    default:
-        if(pd_can_run(filetype))
-        {
-            DOCNO docno;
-
-            xferrecv_insertfileok();
-
-            reportf("MDATAOPEN: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
-
-            filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
-
-            if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
-            {
-                front_document_using_docno(docno);
-            }
-            else
-            {
-                (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
-            }
-        }
-
-        break;
+        front_document_using_docno(docno);
+    }
+    else if(FILETYPE_PDMACRO == filetype)
+    {
+        iconbar_message_DATAOPEN_PDMacro(filename);
+    }
+    else
+    {
+        iconbar_message_DATAOPEN_others(filename, filetype);
     }
 
-    return(processed);
+    return(TRUE);
+}
+
+static void
+iconbar_message_DATALOAD_PipeDream(
+    char * filename,
+    FILETYPE_RISC_OS filetype)
+{
+    DOCNO docno = find_document_using_wholename(filename);
+
+    if(DOCNO_NONE != docno)
+    {
+        front_document_using_docno(docno);
+    }
+    else if(FILETYPE_PDMACRO == filetype)
+    {
+        STATUS filetype_option = 'T';
+
+        (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
+    }
+    else
+    {
+        STATUS filetype_option = find_filetype_option(filename, filetype); /* checks readability and discriminates PipeDream chart files */
+
+        (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
+    }
+
+    /* delete NOW if was scrap */
+    xferrecv_insertfileok();
+}
+
+static void
+iconbar_message_DATALOAD_others(
+    char * filename,
+    FILETYPE_RISC_OS filetype)
+{
+    DOCNO docno = find_document_using_wholename(filename);
+
+    if(DOCNO_NONE != docno)
+    {
+        front_document_using_docno(docno);
+    }
+    else if(gr_cache_can_import(filetype))
+    {
+        trace_0(TRACE_APP_PD4, "ignore Draw file as we can't do anything sensible");
+    }
+    else
+    {   /* loading other file as new file */
+        STATUS filetype_option = find_filetype_option(filename, filetype); /* check the readability & do the auto-detect here for consistency */
+
+        (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
+    }
+
+    /* delete NOW if was scrap */
+    xferrecv_insertfileok();
 }
 
 static BOOL
 iconbar_message_DATALOAD(
     wimp_msgstr *m)
 {
-    BOOL processed = TRUE;
     char * filename;
     FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
-    STATUS filetype_option;
-    DOCNO docno;
 
     IGNOREPARM(m); /* xferrecv uses last message mechanism */
 
-    reportf("MDATALOAD: file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
+    reportf("MDATALOAD: file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
     {
@@ -1035,59 +1089,17 @@ iconbar_message_DATALOAD(
         reperr(create_error(FILE_ERR_ISADIR), filename);
         break;
 
+    case FILETYPE_PDMACRO:
     case FILETYPE_PIPEDREAM:
-        filetype_option = find_filetype_option(filename); /* checks readability and discriminates PipeDream chart files */
-
-        if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
-        {
-            front_document_using_docno(docno);
-        }
-        else
-        {
-            (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
-        }
-
-        /* delete NOW if was scrap */
-        xferrecv_insertfileok();
+        iconbar_message_DATALOAD_PipeDream(filename, filetype);
         break;
 
     default:
-        if(gr_cache_can_import(filetype))
-        {
-            trace_0(TRACE_APP_PD4, "ignore Draw file as we can't do anything sensible");
-            break;
-        }
-
-        trace_0(TRACE_APP_PD4, "loading file as new file");
-
-        if(filetype == FILETYPE_PDMACRO)
-        {
-            if((filetype_option = file_readable(filename)) > 0)
-                filetype_option = 'T';
-        }
-        else if(filetype == FILETYPE_CSV)
-        {
-            if((filetype_option = file_readable(filename)) > 0)
-                filetype_option = CSV_CHAR;
-        }
-        else
-            filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
-
-        if((filetype_option > 0)  &&  (DOCNO_NONE != (docno = find_document_using_wholename(filename))))
-        {
-            front_document_using_docno(docno);
-        }
-        else
-        {
-            (void) riscos_LoadFile(filename, FALSE, filetype_option /*may be 0,Err*/);
-        }
-
-        /* delete NOW if was scrap */
-        xferrecv_insertfileok();
+        iconbar_message_DATALOAD_others(filename, filetype);
         break;
     }
 
-    return(processed);
+    return(TRUE);
 }
 
 static BOOL
@@ -1215,8 +1227,8 @@ iconbar_PD_DDE(
             char *ptr = msg.data.pd_dde.type.a.text;
             size_t nbytes = sizeof(WIMP_MSGPD_DDETYPEA_TEXT)-1;
             ghandle ghan;
-            S32 xsize = (S32) (blkend.col - blkstart.col);
-            S32 ysize = (S32) (blkend.row - blkstart.row);
+            S32 x_size = (S32) (blkend.col - blkstart.col);
+            S32 y_size = (S32) (blkend.row - blkstart.row);
             const char *leaf;
             const char *tag;
             S32 taglen;
@@ -1249,23 +1261,23 @@ iconbar_PD_DDE(
                 /* create entry on list - even if already there */
                 ghan = graph_add_entry(m->hdr.my_ref,        /* unique number */
                                        blk_docno, blkstart.col, blkstart.row,
-                                       xsize, ysize, leaf, tag,
+                                       x_size, y_size, leaf, tag,
                                        (int) task);
 
                 if(ghan > 0)
                 {
-                    trace_5(TRACE_APP_PD4, "IMB: ghan %d xsize %d ysize %d leafname %s tag %s]",
-                            ghan, xsize, ysize, leaf, tag);
+                    trace_5(TRACE_APP_PD4, "IMB: ghan %d x_size %d y_size %d leafname %s tag %s]",
+                            ghan, x_size, y_size, leaf, tag);
 
-                    msg.data.pd_dde.id                = Wimp_MPD_DDE_ReturnHandleAndBlock;
-                    msg.data.pd_dde.type.a.handle    = ghan;
-                    msg.data.pd_dde.type.a.xsize    = xsize;
-                    msg.data.pd_dde.type.a.ysize    = ysize;
+                    msg.data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
+                    msg.data.pd_dde.type.a.handle = ghan;
+                    msg.data.pd_dde.type.a.x_size = x_size;
+                    msg.data.pd_dde.type.a.y_size = y_size;
 
                     /* send message as ack to his one */
                     msg.hdr.size     = ptr - (char *) &msg;
                     msg.hdr.your_ref = m->hdr.my_ref;
-                    msg.hdr.action     = Wimp_MPD_DDE;
+                    msg.hdr.action     = wimp_MPD_DDE;
                     wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, &msg, task));
                 }
                 else if(ghan  &&  (ghan != status_nomem()))
@@ -1284,8 +1296,8 @@ iconbar_PD_DDE(
     case Wimp_MPD_DDE_EstablishHandle:
         {
         ghandle ghan;
-        S32 xsize = m->data.pd_dde.type.a.xsize;
-        S32 ysize = m->data.pd_dde.type.a.ysize;
+        S32 x_size = m->data.pd_dde.type.a.x_size;
+        S32 y_size = m->data.pd_dde.type.a.y_size;
         const char *tstr = m->data.pd_dde.type.a.text;
         const char *tag  = tstr + strlen(tstr) + 1;
         DOCNO docno;
@@ -1293,7 +1305,7 @@ iconbar_PD_DDE(
         ROW row;
         P_CELL tcell;
 
-        trace_4(TRACE_APP_PD4, "EstablishHandle: xsize %d, ysize %d, name %s, tag %s", xsize, ysize, tstr, tag);
+        trace_4(TRACE_APP_PD4, "EstablishHandle: x_size %d, y_size %d, name %s, tag %s", x_size, y_size, tstr, tag);
 
         if(file_is_rooted(tstr))
         {
@@ -1332,20 +1344,20 @@ iconbar_PD_DDE(
             /* add entry to list */
             ghan = graph_add_entry(m->hdr.my_ref,        /* unique number */
                                    docno, col, row,
-                                   xsize, ysize, tstr, tag,
+                                   x_size, y_size, tstr, tag,
                                    (int) task);
 
             if(ghan > 0)
             {
-                trace_5(TRACE_APP_PD4, "EST: ghan %d xsize %d ysize %d name %s tag %s]",
-                        ghan, xsize, ysize, tstr, tag);
+                trace_5(TRACE_APP_PD4, "EST: ghan %d x_size %d y_size %d name %s tag %s]",
+                        ghan, x_size, y_size, tstr, tag);
 
                 m->data.pd_dde.id            = Wimp_MPD_DDE_ReturnHandleAndBlock;
                 m->data.pd_dde.type.a.handle = ghan;
 
                 /* send same message as ack to his one */
                 m->hdr.your_ref = m->hdr.my_ref;
-                m->hdr.action   = Wimp_MPD_DDE;
+                m->hdr.action   = wimp_MPD_DDE;
                 wimpt_safe(wimp_sendmessage(wimp_ESENDWANTACK, m, task));
             }
             else
@@ -1484,7 +1496,7 @@ iconbar_message(
         char * filename;
         FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkprint(&filename);
 
-        trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%4.4X", filetype);
+        trace_1(TRACE_APP_PD4, "ukprocessor got asked if it can print a file of type &%03X", filetype);
 
         if(pd_can_print(filetype))
         {
@@ -1542,7 +1554,7 @@ iconbar_message(
         riscos_sendhelpreply(m, help_iconbar);
         break;
 
-    case Wimp_MPD_DDE:
+    case wimp_MPD_DDE:
         processed = iconbar_PD_DDE(m);
         break;
 
@@ -1608,7 +1620,7 @@ iconbar_message_bounced(
 
     switch(m->hdr.action)
     {
-    case Wimp_MPD_DDE:
+    case wimp_MPD_DDE:
         processed = iconbar_PD_DDE_bounced(m);
         break;
 
@@ -1766,7 +1778,7 @@ rear_close_request(
         filbuf();
 
         if(wanttoclose)
-            wanttoclose = save_existing();
+            wanttoclose = save_or_discard_existing();
 
         if(wanttoclose)
             wanttoclose = dependent_files_warning();
@@ -1983,18 +1995,62 @@ draw_insert_filename(
     return(0);
 }
 
+static void
+main_DATALOAD_PDMacro(
+    char * filename)
+{
+    if(mystr_set(&d_macro_file[0].textfield, filename))
+    {
+        do_execfile(d_macro_file[0].textfield);
+        str_clr(   &d_macro_file[0].textfield);
+    }
+}
+
+static void
+main_DATALOAD_PipeDream(
+    char * filename,
+    FILETYPE_RISC_OS filetype)
+{
+    STATUS filetype_option = find_filetype_option(filename, filetype); /* checks readability and discriminates PipeDream chart files */
+
+    if(PD4_CHART_CHAR == filetype_option)
+    {
+        trace_0(TRACE_APP_PD4, "pd chart about to be loaded via text-at field G mechanism");
+        draw_insert_filename(filename);
+        return;
+    }
+
+    (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
+}
+
+static void
+main_DATALOAD_others(
+    char * filename,
+    FILETYPE_RISC_OS filetype)
+{
+    STATUS filetype_option;
+
+    if(gr_cache_can_import(filetype))
+    {
+        draw_insert_filename(filename);
+        return;
+    }
+
+    filetype_option = find_filetype_option(filename, filetype); /* check the readability & do the auto-detect here for consistency */
+
+    (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
+}
+
 static BOOL
 main_DATALOAD(
     wimp_msgstr *m)
 {
-    BOOL processed = TRUE;
     char * filename;
     FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename); /* sets up reply too */
-    STATUS filetype_option;
 
     IGNOREPARM(m); /* xferrecv uses last message mechanism */
 
-    reportf("MDATALOAD(main): file type &%4.4X, name %u:%s", filetype, strlen32(filename), filename);
+    reportf("MDATALOAD(main): file type &%03X, name %u:%s", filetype, strlen32(filename), filename);
 
     switch(filetype)
     {
@@ -2004,51 +2060,22 @@ main_DATALOAD(
         break;
 
     case FILETYPE_PDMACRO:
-        if(mystr_set(&d_macro_file[0].textfield, filename))
-        {
-            do_execfile(d_macro_file[0].textfield);
-            str_clr(   &d_macro_file[0].textfield);
-        }
+        main_DATALOAD_PDMacro(filename);
         break;
 
     case FILETYPE_PIPEDREAM:
-        filetype_option = find_filetype_option(filename); /* checks readability and discriminates PipeDream chart files */
-
-        if(PD4_CHART_CHAR == filetype_option)
-        {
-            trace_0(TRACE_APP_PD4, "pd chart about to be loaded via text-at field G mechanism");
-            draw_insert_filename(filename);
-            break;
-        }
-
-        (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
-
+        main_DATALOAD_PipeDream(filename, filetype);
         break;
 
     default:
-        if(gr_cache_can_import(filetype))
-        {
-            draw_insert_filename(filename);
-            break;
-        }
-
-        if(filetype == FILETYPE_CSV)
-        {
-            if((filetype_option = file_readable(filename)) > 0)
-                filetype_option = CSV_CHAR;
-        }
-        else
-            filetype_option = find_filetype_option(filename); /* check the readability & do the auto-detect here for consistency */
-
-        (void) riscos_LoadFile(filename, TRUE, filetype_option /*may be 0,Err*/);
-
+        main_DATALOAD_others(filename, filetype);
         break;
     }
 
     /* this is mandatory */
     xferrecv_insertfileok();
 
-    return(processed);
+    return(TRUE);
 }
 
 static BOOL
@@ -2071,19 +2098,12 @@ main_HELPREQUEST(
     coord roff  = calroff(ty);    /* not _click */
     coord o_roff = roff;
     ROW trow;
-    P_SCRROW rptr;
     BOOL append_drag_msg = xf_inexpression; /* for THIS window */
 
     if(dragtype != NO_DRAG_ACTIVE) /* stop pointer and message changing whilst dragging */
         return(processed);
 
     trace_4(TRACE_APP_PD4, "get_slr_for_point: g(%d, %d) t(%d, %d)", x, y, tx, ty);
-
-    /* stop us wandering off bottom of sheet */
-    if(roff >= rowsonscreen)
-        roff = rowsonscreen - 1;
-
-    trace_1(TRACE_APP_PD4, " roff %d", roff);
 
     /* default message */
     xstrkpy(abuffer, elemof32(abuffer), help_main_window);
@@ -2092,17 +2112,19 @@ main_HELPREQUEST(
 
     alt_msg = buffer = abuffer + prefix_len;
 
-    if(roff >= 0)
+    if(vertvec_entry_valid(roff))
     {
-        rptr = vertvec_entry(roff);
+        P_SCRROW rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
+        {
             xstrkpy(buffer, elemof32(abuffer) - prefix_len, help_row_is_page_break);
+        }
         else
         {
             trow = rptr->rowno;
 
-            if((coff >= 0)  ||  (coff == OFF_RIGHT))
+            if(horzvec_entry_valid(coff)  ||  (coff == OFF_RIGHT))
             {
                 COL tcol, scol;
                 U8 sbuf[BUF_MAX_REFERENCE];
@@ -2118,6 +2140,10 @@ main_HELPREQUEST(
                                ? help_insert_a_reference_to
                                : help_position_the_caret_in;
 
+                    if(coff == OFF_RIGHT);
+                        coff = get_column(tx, trow, 0, FALSE);
+
+                    assert(horzvec_entry_valid(coff));
                     tcol = col_number(coff);
                     trace_2(TRACE_APP_PD4, "in sheet at row #%d, col #%d", trow, tcol);
                     (void) write_ref(abuf, elemof32(abuf), current_docno(), tcol, trow);
@@ -2125,12 +2151,15 @@ main_HELPREQUEST(
                     if(!insertref)
                     {
                         coff = get_column(tx, trow, 0, TRUE);
+                        assert(horzvec_entry_valid(coff));
                         scol = col_number(coff);
                         trace_2(TRACE_APP_PD4, "will position at row #%d, col #%d", trow, scol);
                         (void) write_ref(sbuf, elemof32(sbuf), current_docno(), scol, trow);
                     }
                     else
+                    {
                         scol = tcol;
+                    }
 
                     (void) xsnprintf(buffer, elemof32(abuffer) - prefix_len,
                             (scol != tcol)
@@ -2161,7 +2190,7 @@ main_HELPREQUEST(
         }
     }
     else
-        trace_0(TRACE_APP_PD4, "above sheet data");
+        trace_0(TRACE_APP_PD4, "above/below sheet data");
 
     if(append_drag_msg && (strlen32p1(abuffer) + strlen32(help_drag_file_to_insert) < 240))
          xstrkat(abuffer, elemof32(abuffer), help_drag_file_to_insert);

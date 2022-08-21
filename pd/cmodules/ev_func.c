@@ -117,9 +117,9 @@ PROC_EXEC_PROTO(c_cols)
         cols_result = (S32) ev_numcol(p_cur_slr);
     else
     {
-        S32 xs, ys;
-        array_range_sizes(args[0], &xs, &ys);
-        cols_result = xs;
+        S32 x_size, y_size;
+        array_range_sizes(args[0], &x_size, &y_size);
+        cols_result = (S32) x_size;
     }
 
     ev_data_set_integer(p_ev_data_res, cols_result);
@@ -127,7 +127,7 @@ PROC_EXEC_PROTO(c_cols)
 
 /******************************************************************************
 *
-* SLR|other index(array, number, number {, xsize, ysize})
+* SLR|other index(array, number, number {, x_size, y_size})
 *
 * returns SLR if it can
 *
@@ -233,9 +233,9 @@ PROC_EXEC_PROTO(c_rows)
         rows_result = (S32) ev_numrow(p_cur_slr);
     else
     {
-        S32 xs, ys;
-        array_range_sizes(args[0], &xs, &ys);
-        rows_result = ys;
+        S32 x_size, y_size;
+        array_range_sizes(args[0], &x_size, &y_size);
+        rows_result = (S32) y_size;
     }
 
     ev_data_set_integer(p_ev_data_res, rows_result);
@@ -371,7 +371,10 @@ PROC_EXEC_PROTO(c_false)
 
 PROC_EXEC_PROTO(c_flip)
 {
-    S32 xs, ys, ys_half, iy, y_swap;
+    S32 x_size, y_size;
+    S32 y_half;
+    S32 y_swap;
+    S32 ix, iy;
 
     exec_func_ignore_parms();
 
@@ -380,13 +383,12 @@ PROC_EXEC_PROTO(c_flip)
 
     if(p_ev_data_res->did_num == RPN_TMP_ARRAY)
     {
-        array_range_sizes(p_ev_data_res, &xs, &ys);
-        ys_half = ys / 2;
-        y_swap = ys - 1;
-        for(iy = 0; iy < ys_half; ++iy, y_swap -= 2)
+        array_range_sizes(p_ev_data_res, &x_size, &y_size);
+        y_half = y_size / 2;
+        y_swap = y_size - 1;
+        for(iy = 0; iy < y_half; ++iy, y_swap -= 2)
         {
-            S32 ix;
-            for(ix = 0; ix < xs; ++ix)
+            for(ix = 0; ix < x_size; ++ix)
             {
                 EV_DATA temp_data;
                 temp_data = *ss_array_element_index_borrow(p_ev_data_res, ix, iy + y_swap);
@@ -761,13 +763,13 @@ PROC_EXEC_PROTO(c_set_name)
 
 PROC_EXEC_PROTO(c_sort)
 {
-    S32 x_coord = 0;
+    U32 x_index = 0;
     STATUS status;
 
     exec_func_ignore_parms();
 
     if(n_args > 1)
-        x_coord = args[1]->arg.integer - 1; /* array_sort() does range checking */
+        x_index = (U32) args[1]->arg.integer; /* array_sort() does range checking */ /* NB NOT -1 - SORT() is zero-based */
 
     status_assert(ss_data_resource_copy(p_ev_data_res, args[0]));
     data_ensure_constant(p_ev_data_res);
@@ -775,7 +777,7 @@ PROC_EXEC_PROTO(c_sort)
     if(RPN_DAT_ERROR == p_ev_data_res->did_num)
         return;
 
-    if(status_fail(status = array_sort(p_ev_data_res, x_coord)))
+    if(status_fail(status = array_sort(p_ev_data_res, x_index)))
     {
         ss_data_free_resources(p_ev_data_res);
         ev_data_set_error(p_ev_data_res, status);

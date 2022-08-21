@@ -411,7 +411,7 @@ print_document_core_core(
         {
             res = file_find_on_path_or_relative(parmfile_array, elemof32(parmfile_array), parmfile, currentfilename)
                         /* doing macros - check it's a tab file */
-                        ? find_filetype_option(parmfile_array)
+                        ? find_filetype_option(parmfile_array, FILETYPE_UNDETERMINED)
                         : '\0';
 
             if(res != 'T')
@@ -748,7 +748,7 @@ print_document_core(
              * in the block/doc to be printed are empty
              * stop print loop if so
             */
-            if(is_block_blank(blkstart.col, blkstart.row,
+            if(is_blank_block(blkstart.col, blkstart.row,
                               use_be.col,   use_be.row  ))
                 break;
 
@@ -1080,7 +1080,11 @@ static drawmod_line printing_draw_line_style =
     /* spec.leadcap */          cap_butt,
     /* spec.trailcap */         cap_butt,
     /* spec.reserved8 */        0,
-    /* spec.mitrelimit */       0x000A0000
+    /* spec.mitrelimit */       0x000A0000,
+    /* spec.lead_tricap_w */    0,
+    /* spec.lead_tricap_h */    0,
+    /* spec.trail_tricap_w */   0,
+    /* spec.trail_tricap_h */   0
                             },
     /* dash_pattern */      NULL
 };
@@ -1558,10 +1562,10 @@ print_page(void)
                         x = riscos_font_xad / MILLIPOINTS_PER_OS;
                         y =(riscos_font_yad
                              + (global_font_leading_mp - baseline_offset)
-                             - (p_draw_file_ref->ysize_os * MILLIPOINTS_PER_OS)
+                             - (p_draw_file_ref->y_size_os * MILLIPOINTS_PER_OS)
                             ) / MILLIPOINTS_PER_OS;
 
-                        if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, p_draw_file_ref->xfactor, p_draw_file_ref->yfactor, &printing_draw_box)))
+                        if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, p_draw_file_ref->x_factor, p_draw_file_ref->y_factor, &printing_draw_box)))
                             /*print_complain(&err.err.os)*/;
 
                         /* Draw rendering has invalidated our colour cache */

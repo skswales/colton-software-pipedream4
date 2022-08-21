@@ -92,7 +92,7 @@ typedef struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE
     struct GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE_PIE_XTRA
     {
         S32 anticlockwise;
-        F64  start_heading;
+        F64 start_heading_degrees;
     }
     pie_xtra;
     S32 pie_xtra_modified;
@@ -113,8 +113,8 @@ enum GR_CHARTEDIT_GALLERY_BARLINESCATCH_ICONS
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_SCAT_WIDTH,
 
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ON,
-    GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ROLL,
-    GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_PITCH,
+    GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN,
+    GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP,
 
     GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY,
 
@@ -275,7 +275,9 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
     if(res <= 0)
         return(0);
 
-    if((res = gr_cache_entry_ensure(&cah, filename)) <= 0)
+    res = gr_cache_entry_ensure(&cah, filename);
+
+    if(res <= 0)
         return(0);
 
     fillstyle.pattern = (GR_FILL_PATTERN_HANDLE) cah;
@@ -291,7 +293,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(
 
     fillstyle.fg.manual = 1;
 
-    return(gr_chart_objid_fillstyle_set(cp, &id, &fillstyle));
+    return(gr_chart_objid_fillstyle_set(cp, id, &fillstyle));
 }
 
 static S32
@@ -317,10 +319,10 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
         return(1);
 
     case GR_CHART_OBJNAME_POINT:
-        if((res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, id, file_id)) < 0)
+        if(status_fail(res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, id, file_id)))
             return(0);
 
-        if(res > 0)
+        if(status_done(res))
             return(res);
 
         /* deliberate drop thru ... */
@@ -330,7 +332,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
 
         series_idx = gr_series_idx_from_external(cp, eseries_no);
 
-        gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
+        gr_chart_objid_fillstyle_query(cp, id, &fillstyle);
 
         if(fillstyle.pattern == GR_FILL_PATTERN_NONE)
         {
@@ -361,7 +363,9 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
                     return(0);
             }
 
-            if((res = gr_cache_entry_ensure(&cah, filename)) <= 0)
+            res = gr_cache_entry_ensure(&cah, filename);
+
+            if(res <= 0)
                 return(0);
 
             fillstyle.pattern = (GR_FILL_PATTERN_HANDLE) cah;
@@ -380,8 +384,7 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
 
     fillstyle.fg.manual = 1;
 
-    if((res = gr_chart_objid_fillstyle_set(cp, &id, &fillstyle)) < 0)
-        return(res);
+    status_return(gr_chart_objid_fillstyle_set(cp, id, &fillstyle));
 
     switch(id.name)
     {
@@ -410,7 +413,9 @@ gr_chartedit_gallery_barlinescatch_get_fillpattern_using_series(
             {
                 point_id.subno = (U16) gr_point_external_from_key(point);
 
-                if((res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, point_id, file_id)) <= 0)
+                res = gr_chartedit_gallery_barlinescatch_get_fillpattern_using_point(cp, point_id, file_id);
+
+                if(res <= 0)
                     break;
             }
         }
@@ -503,14 +508,14 @@ gr_chartedit_gallery_barlinescatch_kill_pictures(
     case GR_CHART_OBJNAME_SERIES:
     case GR_CHART_OBJNAME_POINT:
     #endif
-        gr_chart_objid_fillstyle_query(cp, &modifying_id, &fillstyle);
+        gr_chart_objid_fillstyle_query(cp, modifying_id, &fillstyle);
 
         if(fillstyle.pattern != GR_FILL_PATTERN_NONE)
         {
             fillstyle.bits.pattern = 0;
             fillstyle.pattern      = GR_FILL_PATTERN_NONE;
             fillstyle.fg.manual    = 1;
-            (void) gr_chart_objid_fillstyle_set(cp, &modifying_id, &fillstyle);
+            status_consume(gr_chart_objid_fillstyle_set(cp, modifying_id, &fillstyle));
         }
         break;
     }
@@ -525,14 +530,14 @@ gr_chartedit_gallery_scatch_lines_onoff(
     GR_SCATCHSTYLE scatchstyle;
     S32            lines_off = !lines_on;
 
-    gr_chart_objid_scatchstyle_query(cp, &id, &scatchstyle);
+    gr_chart_objid_scatchstyle_query(cp, id, &scatchstyle);
 
     if(scatchstyle.bits.lines_off != lines_off)
     {
         scatchstyle.bits.lines_off = lines_off;
 
         scatchstyle.bits.manual = 1;
-        (void) gr_chart_objid_scatchstyle_set(cp, &id, &scatchstyle);
+        status_consume(gr_chart_objid_scatchstyle_set(cp, id, &scatchstyle));
     }
 }
 
@@ -547,13 +552,13 @@ static const F64 pct_max_limit = 100.0;
 static const S32 pct_decplaces =     1;
 static const F64 pct_bumpvalue =   1.0;
 
-static const F64 roll_min_limit  =  0.0;
-static const F64 roll_max_limit  = 60.0;
-static const S32 roll_decplaces  =    1;
+static const F64 turn_min_limit  =  0.0;
+static const F64 turn_max_limit  = 90.0;
+static const S32 turn_decplaces  =    1;
 
-static const F64 pitch_min_limit =  0.0;
-static const F64 pitch_max_limit = 60.0;
-static const S32 pitch_decplaces =    1;
+static const F64 droop_min_limit =  0.0;
+static const F64 droop_max_limit = 75.0;
+static const S32 droop_decplaces =    1;
 
 static const F64 pct_radial_dsp_increment =    1.0;
 static const F64 pct_radial_dsp_min_limit =    0.0;
@@ -633,11 +638,11 @@ static void
 gr_chartedit_gallery_barlinescatch_decode(
     P_GR_CHARTEDIT_GALLERY_BARLINESCATCH_STATE state /*inout*/)
 {
-    P_GR_CHART      cp;
+    P_GR_CHART cp;
     wimp_w         w;
     const wimp_i * icons;
     wimp_i         i;
-    S32            res;
+    STATUS res;
 
     cp    = state->cp;
     w     = state->w;
@@ -687,19 +692,19 @@ gr_chartedit_gallery_barlinescatch_decode(
                             &state->scatch_modified,
                             &pct_min_limit, &pct_max_limit, pct_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ROLL];
+        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
         if(i && cp->d3.bits.on)
             win_checkdouble(w, i,
-                            &cp->d3.roll,
+                            &cp->d3.turn,
                             NULL,
-                            &roll_min_limit, &roll_max_limit, roll_decplaces);
+                            &turn_min_limit, &turn_max_limit, turn_decplaces);
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_PITCH];
+        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
         if(i && cp->d3.bits.on)
             win_checkdouble(w, i,
-                            &cp->d3.pitch,
+                            &cp->d3.droop,
                             NULL,
-                            &pitch_min_limit, &pitch_max_limit, pitch_decplaces);
+                            &droop_min_limit, &droop_max_limit, droop_decplaces);
     }
     else if(state->charttype == GR_CHARTTYPE_PIE)
     {
@@ -715,7 +720,7 @@ gr_chartedit_gallery_barlinescatch_decode(
         i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL;
         if(i)
             win_checkdouble(w, i,
-                            &state->pie_xtra.start_heading,
+                            &state->pie_xtra.start_heading_degrees,
                             &state->pie_xtra_modified,
                             &pie_heading_min_limit,
                             &pie_heading_max_limit,
@@ -913,48 +918,42 @@ gr_chartedit_gallery_barlinescatch_decode(
             {
                 state->barch_modified = 0;
                 state->barch.bits.manual = 1;
-                if((res = gr_chart_objid_barchstyle_set(cp, &state->modifying_id, &state->barch)) < 0)
-                    break;
+                status_break(res = gr_chart_objid_barchstyle_set(cp, state->modifying_id, &state->barch));
             }
 
             if(state->linech_modified)
             {
                 state->linech_modified = 0;
                 state->linech.bits.manual = 1;
-                if((res = gr_chart_objid_linechstyle_set(cp, &state->modifying_id, &state->linech)) < 0)
-                    break;
+                status_break(res = gr_chart_objid_linechstyle_set(cp, state->modifying_id, &state->linech));
             }
 
             if(state->barlinech_modified)
             {
                 state->barlinech_modified = 0;
                 state->barlinech.bits.manual = 1;
-                if((res = gr_chart_objid_barlinechstyle_set(cp, &state->modifying_id, &state->barlinech)) < 0)
-                    break;
+                status_break(res = gr_chart_objid_barlinechstyle_set(cp, state->modifying_id, &state->barlinech));
             }
 
             if(state->piechdispl_modified)
             {
                 state->piechdispl_modified = 0;
                 state->piechdispl.bits.manual = 1;
-                if((res = gr_chart_objid_piechdisplstyle_set(cp, &state->modifying_id, &state->piechdispl)) < 0)
-                    break;
+                status_break(res = gr_chart_objid_piechdisplstyle_set(cp, state->modifying_id, &state->piechdispl));
             }
 
             if(state->piechlabel_modified)
             {
                 state->piechlabel_modified = 0;
                 state->piechlabel.bits.manual = 1;
-                if((res = gr_chart_objid_piechlabelstyle_set(cp, &state->modifying_id, &state->piechlabel)) < 0)
-                    break;
+                status_break(res = gr_chart_objid_piechlabelstyle_set(cp, state->modifying_id, &state->piechlabel));
             }
 
             if(state->scatch_modified)
             {
                 state->scatch_modified = 0;
                 state->scatch.bits.manual = 1;
-                if((res = gr_chart_objid_scatchstyle_set(cp, &state->modifying_id, &state->scatch)) < 0)
-                    break;
+                status_break(res = gr_chart_objid_scatchstyle_set(cp, state->modifying_id, &state->scatch));
             }
 
             if(state->pie_xtra_modified)
@@ -966,14 +965,14 @@ gr_chartedit_gallery_barlinescatch_decode(
 
                 serp = getserp(cp, state->modifying_series_idx);
 
-                serp->bits.pie_anticlockwise  = state->pie_xtra.anticlockwise;
-                serp->style.pie_start_heading = state->pie_xtra.start_heading;
+                serp->bits.pie_anticlockwise = state->pie_xtra.anticlockwise;
+                serp->style.pie_start_heading_degrees = state->pie_xtra.start_heading_degrees;
             }
 
             break;
         }
 
-        if(res < 0)
+        if(status_fail(res))
             gr_chartedit_winge(res);
 
         gr_chart_modify_and_rebuild(&state->cep->ch);
@@ -1003,10 +1002,10 @@ gr_chartedit_gallery_barlinescatch_encode(
     w     = state->w;
     icons = state->icons;
 
-    /* on if 2d */
+    /* on if 2-D */
     unfadeproc2d = cp->d3.bits.on ? win_fadefield : win_unfadefield;
 
-    /* on if 3d */
+    /* on if 3-D */
     unfadeproc3d = cp->d3.bits.on ? win_unfadefield : win_fadefield;
 
     /* on iff overlay present */
@@ -1014,6 +1013,8 @@ gr_chartedit_gallery_barlinescatch_encode(
 
     if(state->charttype == GR_CHARTTYPE_PIE)
     {
+        U32 pie_idx;
+
         win_setdouble(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_EXPLODE_VAL,
                       &state->piechdispl.radial_displacement, pct_radial_dsp_decplaces);
 
@@ -1021,11 +1022,11 @@ gr_chartedit_gallery_barlinescatch_encode(
                      state->pie_xtra.anticlockwise);
 
         win_setdouble(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL,
-                      &state->pie_xtra.start_heading, pie_heading_decplaces);
+                      &state->pie_xtra.start_heading_degrees, pie_heading_decplaces);
 
-        for(i = 0; i < elemof32(pie_start_headings); ++i)
-            win_setonoff(w, i + GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000,
-                         (state->pie_xtra.start_heading == pie_start_headings[i]));
+        for(pie_idx = 0; pie_idx < elemof32(pie_start_headings); ++pie_idx)
+            win_setonoff(w, (wimp_i) pie_idx + GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000,
+                         (state->pie_xtra.start_heading_degrees == pie_start_headings[pie_idx]));
 
         return;
     }
@@ -1080,24 +1081,24 @@ gr_chartedit_gallery_barlinescatch_encode(
     if(i)
         win_setonoff(w, i, cp->d3.bits.on);
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ROLL];
+    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
     if(i)
     {
         (* unfadeproc3d) (w, i - 2); /* triplet field */
         (* unfadeproc3d) (w, i - 1);
         (* unfadeproc3d) (w, i);
 
-        win_setdouble(w, i, &cp->d3.roll, roll_decplaces);
+        win_setdouble(w, i, &cp->d3.turn, turn_decplaces);
     }
 
-    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_PITCH];
+    i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
     if(i)
     {
         (* unfadeproc3d) (w, i - 2); /* triplet field */
         (* unfadeproc3d) (w, i - 1);
         (* unfadeproc3d) (w, i);
 
-        win_setdouble(w, i, &cp->d3.pitch, pitch_decplaces);
+        win_setdouble(w, i, &cp->d3.droop, droop_decplaces);
     }
 
     i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
@@ -1208,30 +1209,30 @@ gr_chartedit_gallery_barlinescatch_getsel(
     /* read current state */
 
     if(state->charttype == GR_CHARTTYPE_BAR)
-        gr_chart_objid_barchstyle_query(     cp, &state->modifying_id, &state->barch);
+        gr_chart_objid_barchstyle_query(     cp, state->modifying_id, &state->barch);
 
     if(state->charttype == GR_CHARTTYPE_LINE)
-        gr_chart_objid_linechstyle_query(    cp, &state->modifying_id, &state->linech);
+        gr_chart_objid_linechstyle_query(    cp, state->modifying_id, &state->linech);
 
     if((state->charttype == GR_CHARTTYPE_BAR) || (state->charttype == GR_CHARTTYPE_LINE))
-        gr_chart_objid_barlinechstyle_query( cp, &state->modifying_id, &state->barlinech);
+        gr_chart_objid_barlinechstyle_query( cp, state->modifying_id, &state->barlinech);
 
     if(state->charttype == GR_CHARTTYPE_PIE)
     {
         /* currently read one series */
         P_GR_SERIES serp;
 
-        gr_chart_objid_piechdisplstyle_query(cp, &state->modifying_id, &state->piechdispl);
-        gr_chart_objid_piechlabelstyle_query(cp, &state->modifying_id, &state->piechlabel);
+        gr_chart_objid_piechdisplstyle_query(cp, state->modifying_id, &state->piechdispl);
+        gr_chart_objid_piechlabelstyle_query(cp, state->modifying_id, &state->piechlabel);
 
         serp = getserp(cp, state->modifying_series_idx);
 
         state->pie_xtra.anticlockwise = serp->bits.pie_anticlockwise;
-        state->pie_xtra.start_heading = serp->style.pie_start_heading;
+        state->pie_xtra.start_heading_degrees = serp->style.pie_start_heading_degrees;
     }
 
     if(state->charttype == GR_CHARTTYPE_SCAT)
-        gr_chart_objid_scatchstyle_query(    cp, &state->modifying_id, &state->scatch);
+        gr_chart_objid_scatchstyle_query(    cp, state->modifying_id, &state->scatch);
 
     state->barch_modified           = 0;
     state->linech_modified          = 0;
@@ -1397,18 +1398,18 @@ gr_chartedit_gallery_barlinescatch_process(
             return;
         }
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_ROLL];
+        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_TURN];
         if(i && cp->d3.bits.on && win_bumpdouble(w, f, i,
-                            &cp->d3.roll,
+                            &cp->d3.turn,
                             &double_1,
-                            &roll_min_limit, &roll_max_limit, roll_decplaces))
+                            &turn_min_limit, &turn_max_limit, turn_decplaces))
             return;
 
-        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_PITCH];
+        i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_3D_DROOP];
         if(i && cp->d3.bits.on && win_bumpdouble(w, f, i,
-                            &cp->d3.pitch,
+                            &cp->d3.droop,
                             &double_1,
-                            &pitch_min_limit, &pitch_max_limit, pitch_decplaces))
+                            &droop_min_limit, &droop_max_limit, droop_decplaces))
             return;
 
         i = icons[GR_CHARTEDIT_GALLERY_BARLINESCATCH_REMOVE_OVERLAY];
@@ -1493,19 +1494,19 @@ gr_chartedit_gallery_barlinescatch_process(
         if( (f >= GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000) &&
             (f <= GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_315) )
         {
-            state->pie_xtra.start_heading = pie_start_headings[f - GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000];
+            state->pie_xtra.start_heading_degrees = pie_start_headings[f - GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_000];
             state->pie_xtra_modified = 1;
 
             /* reflect into icon as this is checked for value */
             win_setdouble(w, GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL,
-                          &state->pie_xtra.start_heading, pie_heading_decplaces);
+                          &state->pie_xtra.start_heading_degrees, pie_heading_decplaces);
 
             return;
         }
 
         i = GR_CHARTEDIT_TEM_GALLERY_PIE_ICON_HEADING_VAL;
         if(i && win_bumpdouble(w, f, i,
-                            &state->pie_xtra.start_heading,
+                            &state->pie_xtra.start_heading_degrees,
                             &pie_heading_increment,
                             &pie_heading_min_limit,
                             &pie_heading_max_limit,
@@ -1552,8 +1553,8 @@ gr_chartedit_gallery_icons_barch[GR_CHARTEDIT_GALLERY_BARLINESCATCH_N_ICONS] =
     0,
 
     GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_ON,
-    GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_ROLL,
-    GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_PITCH,
+    GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_TURN,
+    GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_DROOP,
 
     GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_REMOVE_OVERLAY,
 
@@ -1736,8 +1737,8 @@ gr_chartedit_gallery_icons_linech[GR_CHARTEDIT_GALLERY_BARLINESCATCH_N_ICONS] =
     0,
 
     GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_ON,
-    GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_ROLL,
-    GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_PITCH,
+    GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_TURN,
+    GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_DROOP,
 
     GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_REMOVE_OVERLAY,
 
@@ -2240,11 +2241,11 @@ gr_chartedit_gallery_pie_process(
 
                     state.piechdispl_modified = 0;
 
-                    gr_chart_objid_piechdisplstyle_query(cp, &tmp_id, &tmp_style);
+                    gr_chart_objid_piechdisplstyle_query(cp, tmp_id, &tmp_style);
                     tmp_style.radial_displacement = state.piechdispl.radial_displacement;
-                    gr_chart_objid_piechdisplstyle_set(  cp, &tmp_id, &tmp_style);
-                    }
+                    status_consume(gr_chart_objid_piechdisplstyle_set(cp, tmp_id, &tmp_style));
                     break;
+                    }
 
                 case 5:
                     {
@@ -2256,11 +2257,11 @@ gr_chartedit_gallery_pie_process(
 
                     gr_chart_objid_from_series_idx(cp, state.modifying_series_idx, &tmp_id);
 
-                    gr_chart_objid_piechdisplstyle_query(cp, &tmp_id, &tmp_style);
+                    gr_chart_objid_piechdisplstyle_query(cp, tmp_id, &tmp_style);
                     tmp_style.radial_displacement = state.piechdispl.radial_displacement;
-                    gr_chart_objid_piechdisplstyle_set(  cp, &tmp_id, &tmp_style);
-                    }
+                    status_consume(gr_chart_objid_piechdisplstyle_set(cp, tmp_id, &tmp_style));
                     break;
+                    }
 
                 default:
                     assert(0);

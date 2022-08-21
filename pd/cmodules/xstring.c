@@ -161,19 +161,6 @@ memswap32(
 
 #undef SWAPTYPE
 
-_Check_return_
-extern U32
-xustrlen32(
-    _In_reads_(elemof_buffer) PC_USTR buffer,
-    _InVal_     U32 elemof_buffer)
-{
-    PC_USTR p = memchr(buffer, NULLCH, elemof_buffer);
-    assert(elemof_buffer);
-    if(NULL == p)
-        return(elemof_buffer - 1);
-    return(PtrDiffBytesU32(p, buffer));
-}
-
 /******************************************************************************
 *
 * find first occurrence of b in a, or NULL, case insensitive
@@ -923,8 +910,15 @@ xsnprintf(
     ret = vsnprintf(dst, dst_n, format, args);
     va_end(args);
 
-    if(ret >= (int) dst_n) /* limit the answer */
+    if(ret < 0)
+    {
+        ret = 0;
+        dst[0] = NULLCH; /* ensure terminated */
+    }
+    else if((U32) ret >= dst_n) /* limit to what actually was achieved */
+    {
         ret = strlen32(dst);
+    }
 
     return(ret);
 

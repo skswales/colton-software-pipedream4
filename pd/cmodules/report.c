@@ -78,6 +78,7 @@ vreportf(
 {
     PCTSTR tail;
     BOOL wants_continuation;
+    int len;
 
     if(!g_report_enabled) return;
 
@@ -95,18 +96,30 @@ vreportf(
     wants_continuation = (tail != format) && (tail[-1] == '|');
 
 #if WINDOWS
-    consume_int(_vsntprintf_s(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, _TRUNCATE, format, args));
+    len = _vsntprintf_s(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, _TRUNCATE, format, args);
+    if(-1 == len)
+        len = strlen32(report_buffer); /* limit to what actually was achieved */
 #else/* C99 CRT */
-    consume_int(vsnprintf(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, format, args));
+    len = vsnprintf(report_buffer + report_buffer_offset, elemof32(report_buffer) - report_buffer_offset, format, args);
+    if(len < 0)
+        len = 0;
+    else if((U32) len >= elemof32(report_buffer))
+        len = strlen32(report_buffer); /* limit to what actually was achieved */
 #endif
 
     if(wants_continuation)
     {
-        report_buffer_offset += tstrlen32(report_buffer + report_buffer_offset);
-        if(report_buffer[report_buffer_offset - 1] == '|') /* may have been truncated - if so, just output */
+        const U32 original_report_buffer_offset = report_buffer_offset;
+
+        report_buffer_offset += len;
+
+        if(0 != original_report_buffer_offset)
         {
-            report_buffer[--report_buffer_offset] = NULLCH; /* otherwise retract back over the terminal continuation char */
-            return;
+            if(report_buffer[report_buffer_offset - 1] == '|') /* may have been truncated - if so, just output */
+            {
+                report_buffer[--report_buffer_offset] = NULLCH; /* otherwise retract back over the terminal continuation char */
+                return;
+            }
         }
     }
 
@@ -122,17 +135,23 @@ vreportf(
 
 #if RISCOS
 
+#if defined(__CC_NORCROFT)
 #ifndef __swis_h
 #include "swis.h" /*C:*/
 #endif
 
 #define XReport_Text0 (XOS_Bit | /*Report_Text0*/ 0x54C80)
-
-extern int __swi(XReport_Text0) __swi_XReport_Text0(const char * s);
-
 #define XRPCEmu_Debug (XOS_Bit | /*RPCEmu_Debug*/ 0x56AC2)
 
+extern int __swi(XReport_Text0) __swi_XReport_Text0(const char * s);
 extern int __swi(XRPCEmu_Debug) __swi_XRPCEmu_Debug(const char * s);
+
+#else
+
+extern int /*__swi(XReport_Text0)*/ __swi_XReport_Text0(const char * s);
+extern int /*__swi(XRPCEmu_Debug)*/ __swi_XRPCEmu_Debug(const char * s);
+
+#endif
 
 #endif /* RISCOS */
 
@@ -343,29 +362,29 @@ report_ustr(
 _Check_return_
 _Ret_z_
 extern PCTSTR
-report_l1str(
-    _In_opt_z_  PC_L1STR l1str)
+report_sbstr(
+    _In_opt_z_  PC_SBSTR sbstr)
 {
-    if(IS_PTR_NONE_OR_NULL(PC_L1STR, l1str))
+    if(IS_PTR_NONE_OR_NULL(PC_SBSTR, sbstr))
         return(TEXT("<<NULL>>"));
 
 #if RISCOS
-    if( ((uintptr_t) l1str < (uintptr_t) 0x00008000U)  ||
-        ((uintptr_t) l1str > (uintptr_t) HIGH_MEMORY_LIMIT))
+    if( ((uintptr_t) sbstr < (uintptr_t) 0x00008000U)  ||
+        ((uintptr_t) sbstr > (uintptr_t) HIGH_MEMORY_LIMIT))
 #else
-    if(IS_BAD_POINTER(l1str))
+    if(IS_BAD_POINTER(sbstr))
 #endif
     {
         static TCHARZ stringbuffer[16];
 #if RISCOS
-        consume(int, snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), l1str));
+        consume(int, snprintf(stringbuffer, elemof32(stringbuffer), TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
 #else
-        consume(int, _sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), l1str));
+        consume(int, _sntprintf_s(stringbuffer, elemof32(stringbuffer), _TRUNCATE, TEXT("<<") PTR_XTFMT TEXT(">>"), sbstr));
 #endif
         return(stringbuffer);
     }
 
-    return(/*_tstr_from_l1str*/(l1str));
+    return(/*_tstr_from_sbstr*/(sbstr));
 }
 
 #if RISCOS

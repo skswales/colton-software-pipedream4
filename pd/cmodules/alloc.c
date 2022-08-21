@@ -2428,7 +2428,9 @@ alloc_barf =
     alloc__barf_calloc,
     alloc__barf_free,
     alloc__barf_malloc,
-    alloc__barf_realloc
+    alloc__barf_realloc,
+    NULL,   /* size */
+    NULL    /* validate */
 };
 
 #endif /* RISCOS */

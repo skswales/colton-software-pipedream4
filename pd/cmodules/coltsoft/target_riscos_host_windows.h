@@ -100,8 +100,6 @@ __pragma(warning(disable:6246)) /* Local declaration of 'x' hides declaration of
 #error Just don't even think about it!
 #endif
 
-#define __swi(inline_swi_number) /* Norcroft specific */
-
 #define ___assert(e, s) 0 /* Norcroft specific */
 
 #endif /* __target_riscos_host_windows_h */

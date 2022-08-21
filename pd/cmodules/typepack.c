@@ -56,7 +56,7 @@ readval_F64_from_8087(
 
 #elif WINDOWS
 
-    PREFAST_ONLY_ZERO_STRUCT(u); /* otherwise it winges */
+    CODE_ANALYSIS_ONLY(zero_struct(u)); /* otherwise it winges */
 
     u.bytes[0] = PtrGetByteOff(from, 0);
     u.bytes[1] = PtrGetByteOff(from, 1);
@@ -108,7 +108,7 @@ readval_F64_from_ARM(
 
 #elif WINDOWS
 
-    PREFAST_ONLY_ZERO_STRUCT(u); /* otherwise it winges */
+    CODE_ANALYSIS_ONLY(zero_struct(u)); /* otherwise it winges */
 
     /* 8087 has exponent word as 2nd word, ARM at 1st word */
 

@@ -174,7 +174,7 @@ static PC_USTR
 numform_section_scan_next(
     _In_z_      PC_USTR ustr_section);
 
-#if USTR_IS_L1STR
+#if USTR_IS_SBSTR
 
 #define ustr_GetByteInc(ustr) \
     *(ustr++)
@@ -319,13 +319,11 @@ convert_number_engineering(
     P_NUMFORM_INFO p_numform_info)
 {
     F64 work_value = (RPN_DAT_REAL == p_numform_info->ev_data.did_num) ? p_numform_info->ev_data.arg.fp : p_numform_info->ev_data.arg.integer;
-    S32 remainder;
+    S32 remainder = 0;
     S32 decimal_places;
     P_USTR ustr;
 
-    if(work_value < F64_MIN)
-        remainder = 0;
-    else
+    if(work_value >= F64_MIN)
     {
         F64 log10_work_value = log10(work_value);
         F64 f64_exponent;
@@ -839,6 +837,16 @@ default_numform_context =
     },
 
     {
+    USTR_TEXT("sunday"),
+    USTR_TEXT("monday"),
+    USTR_TEXT("tuesday"),
+    USTR_TEXT("wednesday"),
+    USTR_TEXT("thursday"),
+    USTR_TEXT("friday"),
+    USTR_TEXT("saturday")
+    },
+
+    {
 /*              0                1                2                3                4                5                6                7                8                9 */
                      USTR_TEXT("st"), USTR_TEXT("nd"), USTR_TEXT("rd"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"),
     USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"), USTR_TEXT("th"),
@@ -856,13 +864,14 @@ numform(
     _InRef_     PC_NUMFORM_PARMS p_numform_parms)
 {
     PC_NUMFORM_CONTEXT p_numform_context = p_numform_parms->p_numform_context;
-    NUMFORM_INFO numform_info = { 0 };
+    NUMFORM_INFO numform_info;
     UCHARZ own_numform[BUF_SECTION_MAX]; /* buffer into which numform section is extracted */
     UCHARZ num_ustr_buf[1 /*sign*/ + (1+DBL_MAX_10_EXP) /*digits*/ + 1 /*paranoia*/ + 1 /*CH_NULL*/]; /* Contains the number to be output */
 
     if(IS_P_DATA_NONE(p_numform_context))
         p_numform_context = &default_numform_context;
 
+    zero_struct(numform_info);
     numform_info.p_quick_ublock = p_quick_ublock;
     numform_info.ustr_style_name = NULL;
 
@@ -1524,9 +1533,8 @@ numform_output_date_fields(
             for(offset = 0, i = 0; (offset < len) && (i < limit); ++i)
             {
                 /* NB we use a -ve index here as we've skipped over specifier chars when counting */
-                S32 specifier_index = (S32) i - (S32) count;
-                U32 bytes_of_char;
 #if 1 /* PipeDream */
+                const U32 bytes_of_char = 1;
                 U8 ch = ustr_month_name[i];
 
                 /* uppercase corresponding chars of the monthname */
@@ -1538,9 +1546,9 @@ numform_output_date_fields(
                     ch = (U8) toupper(ch);
 
                 status_break(status = quick_ublock_ucs4_add(p_quick_ublock, ch));
-
-                bytes_of_char = 1;
 #else
+                S32 specifier_index = (S32) i - (S32) count;
+                U32 bytes_of_char;
                 UCS4 ucs4 = ustr_char_decode_off(ustr_month_name, offset, /*ref*/bytes_of_char);
 
                 /* uppercase corresponding chars of the monthname */

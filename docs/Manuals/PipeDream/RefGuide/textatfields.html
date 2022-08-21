@@ -30,7 +30,7 @@
 
 <p>Text @-fields enable you to put the page number, the date, the document
 title as defined in the <span class="csguide-dbox">Options</span> dialogue
-box, a picture, a colour or font change or a reference to another slot into
+box, a picture, a colour or font change or a reference to another cell into
 your document. Text @-fields are also used to put the required entries into
 mail shots. Text @-fields can be included in headers and footers, for page
 numbering and document titling.</p>
@@ -59,10 +59,10 @@ class="csguide-dbox">Options</span> dialogue box</p>
 <p><code><span class="csguide-arg">number</span>&nbsp;&nbsp;&nbsp;&nbsp;</code><span
 class="csguide-arg">number</span> is number of field for a mailshot</p>
 
-<p><code class="csguide-arg">slot ref&nbsp;&nbsp;</code>value of slot referred to</p>
+<p><code class="csguide-arg">cell ref&nbsp;&nbsp;</code>value of cell referred to</p>
 
-<p>When the caret is not in the slot containing the Text @-field, the slot
-shows the value of the Text @-field. When the caret is moved onto the slot, the
+<p>When the caret is not in the cell containing the Text @-field, the cell
+shows the value of the Text @-field. When the caret is moved onto the cell, the
 actual @ identifier is shown, for editing.</p>
 
 <p>The number of @ characters after the identifier determines the size of the
@@ -75,14 +75,14 @@ any extra spaces are distributed throughout the line if it is justified.</p>
 
 <p>Inserts the current date.</p>
 
-<p>If you want to fix the date into the slot, mark it as a block and give the
+<p>If you want to fix the date into the cell, mark it as a block and give the
 <span class="csguide-command">Snapshot</span> command.</p>
 
 <h3>F</h3>
 
 <p><code>@F:<span class="csguide-arg">fontname</span>,<span
 class="csguide-arg">x</span>,<span class="csguide-arg">y</span>@</code>
-specifies a change of font within a slot.</p>
+specifies a change of font within a cell.</p>
 
 <p>For example,</p>
 
@@ -115,7 +115,7 @@ where you want the picture and drag the picture into the PipeDream document.</p>
 
 <p>Inserts the current time.</p>
 
-<p>If you want to fix the time into the slot, mark it as a block and give the
+<p>If you want to fix the time into the cell, mark it as a block and give the
 <span class="csguide-command">Snapshot</span> command.</p>
 
 <h3>P</h3>
@@ -148,7 +148,7 @@ after the T to reserve space for the title.</p>
 <h3 class="csguide-arg">number</h3>
 
 <p>Inserts the field represented by <span class="csguide-arg">number</span>
-into a text slot in a mailshot.</p>
+into a text cell in a mailshot.</p>
 
 <p>For example,</p>
 
@@ -157,32 +157,32 @@ into a text slot in a mailshot.</p>
 <p>inserts field 2 into a mailshot, allowing for a width of up to 7
 characters.</p>
 
-<h3 class="csguide-arg">slot_ref</h3>
+<h3 class="csguide-arg">cell_ref</h3>
 
-<p>Inserts the value of the slot referred to.</p>
+<p>Inserts the value of the cell referred to.</p>
 
 <p>For example, the field</p>
 
 <p>@A5 @@@@@</p>
 
-<p>reserves five characters for the contents of slot A5 to be displayed.</p>
+<p>reserves five characters for the contents of cell A5 to be displayed.</p>
 
 <p>There must be as many @-signs following the Text @-field identifier as the
 maximum number of characters needed to display the item, including any minus
 signs, brackets, and leading and trailing characters. This is necessary to
 maintain formatting when the item is included.</p>
 
-<p>If the reference is to a number slot, the value will be displayed in the
-same format as in the slot itself, with alignment ignored.</p>
+<p>If the reference is to a number cell, the value will be displayed in the
+same format as in the cell itself, with alignment ignored.</p>
 
-<p><span class="csguide-arg">slot_ref</span> can be an external reference, ie
-a reference to a slot in a different document.</p>
+<p><span class="csguide-arg">cell_ref</span> can be an external reference,
+i.e. a reference to a cell in a different document.</p>
 
 <p>For example</p>
 
 <p style="margin-left:2em;"><code>[fred]A1</code></p>
 
-<p>is a reference to slot A1 in the document called 'fred'.</p>
+<p>is a reference to cell A1 in the document called 'fred'.</p>
 
 
 

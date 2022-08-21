@@ -28,12 +28,12 @@
 
 <h1>Arrays</h1>
 
-<p>An array is a group of items within a number slot. Arrays consist of columns
+<p>An array is a group of items within a number cell. Arrays consist of columns
 and rows of data. The smallest array would have one column and one row; the
 largest would have many columns and many rows, but in practice, the size of an
 array is limited by the memory in your computer.</p>
 
-<p>Arrays can only be entered in number slots. Enter an array by enclosing the
+<p>Arrays can only be entered in number cells. Enter an array by enclosing the
 array contents in curly brackets (<code>{ }</code>). Data in the same row in an
 array is separated by commas; rows in the array are separated by
 semi-colons.</p>
@@ -47,17 +47,17 @@ rows</p>
 
 <p style="margin-left:2em;"><code>{A1,B1;A2,B2}</code> two columns, two rows</p>
 
-<p>Arrays can contain constant numbers, dates, strings, names or slot
+<p>Arrays can contain constant numbers, dates, strings, names or cell
 references. Arrays cannot contain ranges or other arrays or formulae.</p>
 
 <p>You can mix different types of data in the same array. The following array
-contains a text string, a number and a slot reference:</p>
+contains a text string, a number and a cell reference:</p>
 
 <p style="margin-left:2em;"><code>{"fred",10,A1}</code> three columns, one
 row</p>
 
-<p>If you enter an array into a number slot, PipeDream displays the first
-element in the array, ie the element in column one, row one. To see what else
+<p>If you enter an array into a number cell, PipeDream displays the first
+element in the array, i.e. the element in column one, row one. To see what else
 is in the array, you must use the INDEX function or pass the array to another
 function to calculate a result.</p>
 
@@ -115,7 +115,7 @@ columns is different PipeDream fills the spaces in the array with blanks.</p>
 <p>You can also pass arrays to custom functions. This will have one of two
 effects depending on whether or not the custom function expects an array as one
 of its parameters. If it does not expect an array as a parameter, it will
-behave as an ordinary function does, ie it will return an array of results. If
+behave as an ordinary function does, i.e. it will return an array of results. If
 the custom function does expect arrays as one or more of its parameters, you
 must supply arrays only for those parameters. The custom function must contain
 the instructions to process the array itself. If you supply an array for
@@ -131,15 +131,15 @@ the contents of the range.</p>
 <h2>Arrays and Ranges in Lists</h2>
 
 <p>If you put arrays and ranges as the parameters to functions which expect
-lists, like SUM, PipeDream includes every element in each array and every slot
+lists, like SUM, PipeDream includes every element in each array and every cell
 in each range in the list.</p>
 
 <p>For example:</p>
 
 <p style="margin-left:2em;"><code>SUM(A1A2,{1,2})</code> adds the contents of
-slot A1, the contents of slot A2, 1 and 2.<br />
-If slots A1 and A2 contain arrays themselves, each element of these arrays will
-be added too, so if slot A1 contains <code>{3,4}</code> and slot A2 contains
+cell A1, the contents of cell A2, 1 and 2.<br />
+If cells A1 and A2 contain arrays themselves, each element of these arrays will
+be added too, so if cell A1 contains <code>{3,4}</code> and cell A2 contains
 <code>{5,6}</code>, the result will be <code>1+2+3+4+5+6</code>.</p>
 
 <p>A powerful usage of arrays, ranges and functions is to have one function

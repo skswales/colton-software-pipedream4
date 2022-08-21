@@ -14,6 +14,12 @@
 #ifndef __flags_h
 #define __flags_h
 
+#if defined(_PREFAST_)
+#ifndef CODE_ANALYSIS
+#define CODE_ANALYSIS 1
+#endif
+#endif /* _PREFAST_ */
+
 #ifdef RELEASED
 #undef UNRELEASED
 #endif
@@ -88,10 +94,16 @@ _Ret_z_
 extern PC_USTR
 product_ui_id(void);
 
-/* RISC OS can check parameters for matching format */
+#if defined(__CC_NORCROFT) /* this can check parameters for matching format */
 #pragma check_printf_formats
+#endif
+
 extern void messagef(_In_z_ _Printf_format_string_ PCTSTR format, ...); /* to message box */
+
+#if defined(__CC_NORCROFT)
 #pragma no_check_printf_formats
+#endif
+
 extern void message_output(_In_z_ PCTSTR buffer);
 
 #endif /* __flags_h */

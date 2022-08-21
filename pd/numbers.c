@@ -169,7 +169,7 @@ bash_slots_about_a_bit(
     {
         actind_in_block(DOWN_COLUMNS);
 
-        if(is_protected_slot(tcell))
+        if(is_protected_cell(tcell))
             continue;
 
         d_options_DF = 'E';
@@ -469,7 +469,7 @@ report_compiled_text_string(
     {
         uchar c = (*to++ = *cts++);
 
-        if((to - buffer) >= elemof32(buffer))
+        if(PtrDiffBytesU32(to, buffer) >= elemof32(buffer))
         {
             to[-1] = NULLCH; /* ran out of space. NULLCH-terminate and exit */
             return(buffer);
@@ -608,8 +608,8 @@ compile_expression(
 static S32
 draw_add_file_ref(
     GR_CACHE_HANDLE draw_file_key,
-    P_F64 xp,
-    P_F64 yp,
+    _InRef_opt_ PC_F64 xp,
+    _InRef_opt_ PC_F64 yp,
     COL col,
     ROW row)
 {
@@ -653,15 +653,15 @@ draw_add_file_ref(
     }
 
     /* check for range and load factors */
-    if((*xp > SHRT_MAX)  ||  (*xp < 1.0))
-        p_draw_file_ref->xfactor = 1.0;
+    if( (NULL == xp)  ||  (*xp > SHRT_MAX)  ||  (*xp < 1.0) )
+        p_draw_file_ref->x_factor = 1.0;
     else
-        p_draw_file_ref->xfactor = *xp / 100.0;
+        p_draw_file_ref->x_factor = *xp / 100.0;
 
-    if((*yp > SHRT_MAX)  ||  (*yp < 1.0))
-        p_draw_file_ref->yfactor = 1.0;
+    if( (NULL == yp)  ||  (*yp > SHRT_MAX)  ||  (*yp < 1.0) )
+        p_draw_file_ref->y_factor = 1.0;
     else
-        p_draw_file_ref->yfactor = *yp / 100.0;
+        p_draw_file_ref->y_factor = *yp / 100.0;
 
     p_draw_diag = gr_cache_search(&p_draw_file_ref->draw_file_key);
 
@@ -694,28 +694,28 @@ draw_adjust_file_ref(
     if(p_draw_diag->data)
     {
         DRAW_BOX box;
-        S32 xsize, ysize;
-        S32 scaled_xsize, scaled_ysize;
+        S32 x_size, y_size;
+        S32 scaled_x_size, scaled_y_size;
 
         /* get box in Draw units */
         box = ((PC_DRAW_FILE_HEADER) p_draw_diag->data)->bbox;
 
-        xsize = box.x1 - box.x0;
-        ysize = box.y1 - box.y0;
+        x_size = box.x1 - box.x0;
+        y_size = box.y1 - box.y0;
 
-        scaled_xsize = (S32) ceil(xsize * p_draw_file_ref->xfactor);
-        scaled_ysize = (S32) ceil(ysize * p_draw_file_ref->yfactor);
+        scaled_x_size = (S32) ceil(x_size * p_draw_file_ref->x_factor);
+        scaled_y_size = (S32) ceil(y_size * p_draw_file_ref->y_factor);
 
         /* save size in OS units rounded out to worst-case pixels */
-        p_draw_file_ref->xsize_os = div_round_ceil(scaled_xsize, GR_RISCDRAW_PER_RISCOS * 4) * 4;
-        p_draw_file_ref->ysize_os = div_round_ceil(scaled_ysize, GR_RISCDRAW_PER_RISCOS * 4) * 4;
+        p_draw_file_ref->x_size_os = div_round_ceil(scaled_x_size, GR_RISCDRAW_PER_RISCOS * 4) * 4;
+        p_draw_file_ref->y_size_os = div_round_ceil(scaled_y_size, GR_RISCDRAW_PER_RISCOS * 4) * 4;
 
         trace_4(TRACE_APP_PD4, "draw_adjust_file_ref: bbox of file is %d %d %d %d (os)",
                 box.x0, box.y0, box.x1, box.y1);
 
         /* scale sizes */
         trace_2(TRACE_APP_PD4, "draw_adjust_file_ref: scaled sizes x: %d, y: %d (os)",
-                p_draw_file_ref->xsize_os, p_draw_file_ref->ysize_os);
+                p_draw_file_ref->x_size_os, p_draw_file_ref->y_size_os);
     }
 
     /* a certain amount of redrawing may be necessary */
@@ -729,18 +729,26 @@ draw_adjust_file_ref(
 
         select_document(p_docu);
 
+        assert(0 != array_elements(&vertvec_mh));
         rptr = vertvec();
+        PTR_ASSERT(rptr);
 
         for(roff = 0; roff < rowsonscreen; roff++, rptr++)
         {
+            assert(vertvec_entry_valid(roff));
+
             if(rptr->flags & PICT)
             {
                 trow = rptr->rowno;
 
+                assert(0 != array_elements(&horzvec_mh));
                 cptr = horzvec();
+                PTR_ASSERT(cptr);
 
                 for(coff = 0; !(cptr->flags & LAST); coff++, cptr++)
                 {
+                    assert(horzvec_entry_valid(coff));
+
                     tcol = cptr->colno;
 
                     if(draw_find_file(current_docno(), tcol, trow, &sch_p_draw_diag, NULL))
@@ -845,8 +853,8 @@ gr_cache_recache_proto(static, draw_file_recached)
 static S32
 draw_cache_file(
     PC_U8 name,
-    P_F64 xp,
-    P_F64 yp,
+    _InRef_opt_ PC_F64 xp,
+    _InRef_opt_ PC_F64 yp,
     COL col,
     ROW row,
     S32 load_as_preferred,
@@ -1488,23 +1496,22 @@ graph_add_entry(
     _InVal_     DOCNO docno,
     COL col,
     ROW row,
-    S32 xsize,
-    S32 ysize,
+    S32 x_size,
+    S32 y_size,
     PC_U8 leaf,
     PC_U8 tag,
     S32 task)
 {
-    S32 leaflen = strlen(leaf);
-    S32 taglen  = strlen(tag);
+    U32 leaflen = strlen(leaf);
+    U32 taglen  = strlen(tag);
     P_LIST lptr;
     P_GRAPHICS_LINK_ENTRY glp;
     P_U8 ptr;
     S32 res;
     EV_RANGE rng;
 
-    /* extra +1 accounted for in sizeof() */
     lptr = add_list_entry(&graphics_link_list,
-                          sizeof32(struct GRAPHICS_LINK_ENTRY) + leaflen + taglen + 1,
+                          sizeof32(GRAPHICS_LINK_ENTRY) + (leaflen + 1U) + (taglen + 1U),
                           &res);
 
     if(!lptr)
@@ -1521,17 +1528,17 @@ graph_add_entry(
     glp->update = FALSE;
 
     glp->ghan   = ghan;
-    glp->xsize  = xsize;
-    glp->ysize  = ysize;
+    glp->x_size = x_size;
+    glp->y_size = y_size;
 
-    ptr = glp->text;
-    strcpy(ptr, leaf);
-    ptr += leaflen + 1;
-    strcpy(ptr, tag);
+    ptr = (P_U8) (glp + 1); /* associated text string is off the end of the declared structure */
+    memcpy32(ptr, leaf, leaflen);
+    ptr += leaflen + 1U;
+    memcpy32(ptr, tag, taglen + 1U);
 
     /* add external dependency */
-    set_ev_slr(&rng.s,             col,             row);
-    set_ev_slr(&rng.e, col + xsize + 1, row + ysize + 1);
+    set_ev_slr(&rng.s,              col,              row);
+    set_ev_slr(&rng.e, col + x_size + 1, row + y_size + 1);
     if((res = ev_add_extdependency((U32) ghan,
                                    0,
                                    &glp->ext_dep_han,
@@ -1629,8 +1636,8 @@ graph_send_block(
 
         scol = MAX(scol, glp->col);
         srow = MAX(srow, glp->row);
-        ecol = MIN(ecol, glp->col + glp->xsize + 1);
-        erow = MIN(erow, glp->row + glp->ysize + 1);
+        ecol = MIN(ecol, glp->col + glp->x_size + 1);
+        erow = MIN(erow, glp->row + glp->y_size + 1);
 
         for(tcol = scol; tcol < ecol; ++tcol)
             for(trow = srow; trow < erow; ++trow)
@@ -1691,14 +1698,14 @@ PROC_UREF_PROTO(static, graph_uref)
                     glp->row = at_rng->s.row;
 
                     /* transmit if block has changed size */
-                    if( at_rng->e.col - at_rng->s.col != glp->xsize + 1 ||
-                        at_rng->e.row - at_rng->s.row != glp->ysize + 1)
+                    if( at_rng->e.col - at_rng->s.col != glp->x_size + 1 ||
+                        at_rng->e.row - at_rng->s.row != glp->y_size + 1)
                     {
                         riscos_sendallslots(glp);
 
                         /* reset extent of dependency */
-                        at_rng->e.col = at_rng->s.col + glp->xsize + 1;
-                        at_rng->e.row = at_rng->s.row + glp->ysize + 1;
+                        at_rng->e.col = at_rng->s.col + glp->x_size + 1;
+                        at_rng->e.row = at_rng->s.row + glp->y_size + 1;
                     }
                     else
                         graph_send_block(glp, upp->slr1.col, upp->slr1.row, upp->slr2.col, upp->slr2.row);

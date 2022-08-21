@@ -20,6 +20,10 @@ typedef struct SS_INSTANCE_DATA
 }
 SS_INSTANCE_DATA;
 
+#define SS_INSTANCE_DATA_INIT { \
+    SS_DOC_INIT \
+}
+
 /*
 all the document data collected together into one single object
 */
@@ -685,8 +689,8 @@ DOCU, * P_DOCU;
 
 /* special values of P_DOCU types */
 
-#if CROSS_COMPILE && defined(_PREFAST_)
-#define NO_DOCUMENT ((P_DOCU) NULL) /* Hmm... the below value freaks out Code Analysis */
+#if CROSS_COMPILE && defined(CODE_ANALYSIS)
+#define NO_DOCUMENT ((P_DOCU) NULL) /* Hmm... the below value freaks out VS Code Analysis */
 #else
 #define NO_DOCUMENT BAD_POINTER_X(P_DOCU, 3) /* trap if accessed - unaligned and very large (but still ARM rotated small constant) */
 #endif
@@ -775,6 +779,7 @@ extern BOOL
 select_document_using_callback_handle(
     void * handle);
 
+/*ncr*/
 extern BOOL
 select_document_using_docno(
     _InVal_     DOCNO docno);

@@ -683,7 +683,7 @@ rdch_riscos(void)
     if(c)
         return(c);
 
-    c = bbc_get();
+    (void) bbc_get();
 
     return(CR); /* approximate - only needed for printing wait between pages */
 }

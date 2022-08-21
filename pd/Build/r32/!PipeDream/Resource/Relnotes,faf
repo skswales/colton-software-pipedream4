@@ -8,37 +8,16 @@
 <H1>Colton Software PipeDream</H1>
 
 <H1>Release Notes</H1>
-<p><A HREF="#Copyright">Licence and Copyright</A></p>
 <p><A HREF="#OnlineResources">Online Resources</A></p>
 <p><A HREF="#Support">Support</A></p>
+<p><A HREF="#Copyright">Licence and Copyright</A></p>
 <p><A HREF="#ReleaseHistory">Release History</A></p>
 <p><A HREF="#Resources">Application Resources</A></p>
 <p><A HREF="#Toolbar">Toolbar Commands</A></p>
 <p><A HREF="#KnownProblems">Known Problems</A></p>
 
-<A ID="Copyright">
-<H2>Licence and Copyright</H2>
-
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!-- Copyright (C) 1989-1998 Colton Software Limited,
-   - Copyright (C) 1998-2015 R W Colton -->
-
-<P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
-(MPL).</P>
-
-<P>A copy of the MPL may be downloaded from <A
-HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
-
-<P>Copyright (C) 1987-1998 Colton Software Limited,
-Copyright (C) 1998-2015 R W Colton</P>
-
-<P><A HREF="#CopyrightExtra">Additional copyrights</A></P>
-
-
 <A ID="OnlineResources">
-<H2>Online resources</H2>
+<H2>Online Resources</H2>
 
 <P>The following resources for PipeDream are available online:</P>
 
@@ -70,8 +49,29 @@ any problems.</P>
 <P>Email: colton-software-pipedream@googlegroups.com</P>
 
 
+<A ID="Copyright">
+<H2>Licence and Copyright</H2>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Copyright (C) 1989-1998 Colton Software Limited,
+   - Copyright (C) 1998-2015 R W Colton -->
+
+<P>PipeDream is subject to the terms of the Mozilla Public License, v. 2.0
+(MPL).</P>
+
+<P>A copy of the MPL may be downloaded from <A
+HREF="http://mozilla.org/MPL/2.0/">http://mozilla.org/MPL/2.0/</A></P>
+
+<P>Copyright (C) 1987-1998 Colton Software Limited,
+Copyright (C) 1998-2015 R W Colton</P>
+
+<P><A HREF="#CopyrightExtra">Additional copyrights</A></P>
+
+
 <A ID="ReleaseHistory">
-<H2>Release history</H2>
+<H2>Release History</H2>
 
 <p>The full release history may be found
 <A HREF="http://croftnuisk.co.uk/coltsoft/pipedream/pipedream-release-history">online</A>;
@@ -79,16 +79,62 @@ just the last few revisions of PipeDream are documented here.</p>
 
 <P>&nbsp;</P>
 
-<H4>4.53/07 (xx Sep 2015)</H4>
+<H4>4.54 (22 Nov 2015)</H4>
+
+<p>Dialogue box fields and buttons in Templates updated to conform to Style Guide Issue 3.
+These still work OK if a slightly larger Desktop font for is selected for readability (tested with 14pt Homerton.Medium set by Paul Vigay's !MiscSetup) and also with RISC OS 4.39 styled icons.</P>
+
+<p><strong>IMPORTANT</strong>: Quit query dialogue box buttons have been reordered to be Style Guide Issue 3 compliant (Discard / Cancel / Save).
+Take care to click in the right place! The Save-on-close dialogue box now uses the same button set as the Quit query dialogue box.</p>
+
+<p>References to 'Slot' replaced by 'Cell' to better relate to other spreadsheet terminology.</p>
+
+<p>Fix for lines longer than the maximum window width causing unrelated nearby memory to be accessed.</p>
+
+<p>If a PipeDream macro file is open for editing in PipeDream, double-clicking on it or dragging it to the PipeDream icon will bring the corresponding document window to the front, as happens with other documents, rather than executing it.</p>
+
+<p>'Can't load this type of file' error will be given when DataPower, Lotus .WK1/.WK3 or Microsoft Excel files are dragged to PipeDream.</p>
+
+<p>COUNTA() spreadsheet function has been backported from Fireworkz.</p>
+
+<p>SORT() spreadsheet function uses zero-based column index as per documentation (and Fireworkz).</p>
+
+<p>AVG() / MAX() / MIN() / SUM() functions now actually use the optimised for integer arguments code that has been in there and laying dormant for twenty-odd years!</p>
 
 <p>Formula editing window (obtained by pressing Ctrl-Return in the formula line) uses DejaVuSans.Mono if it is available.</p>
+
+<p>Fix for loading chart file before the document on which it is dependent.</p>
+
+<p>The 3-D chart terms roll and pitch have been replaced by the terms turn and droop that better describe their actions (chart turns about y-axis, floor of chart droops forwards from the x-axis).</p>
+
+<p>Selected objects in chart editing window are indicated using improved exclusive OR colour selection code.</p>
+
+<p>Chart legend object may be resized in chart editing window by dragging on its top left corner (or bottom right corner as before).</p>
+
+<p>Cancel buttons in chart style dialogue boxes.</p>
+
+<P>Chart dialogue boxes no longer have a close icon (and thereby possibly unwanted iconise icon) on the title bar.</P>
+
+<p>Dashed lines in charts work correctly.</p>
+
+<p>Polygonal Draw objects in charts now closed correctly.</p>
+
+<p>Non-rectangular quadrilateral Draw paths in charts use rounded joints. This avoids mitred joints of non-Thin lines poking well beyond 3-D bars.</p>
+
+<p>Greatly improved click selection of objects in charts; more refined tests are applied if the simple object bounding box is hit.</p>
+
+<p>Acorn SID format files will be detected and loaded as CSV.</p>
+
+<p>Some JPEG/JFIF files (e.g. with thumbnail pictures) were not being automatically detected as such.</p>
+
+<p>ROOL DDE 26 build environment used.</p>
 
 
 <H4>4.53/06 (21 Sep 2015)</H4>
 
 <p>Choices:PipeDream. replaced by &lt;Choices$Write&gt;.PipeDream. in the PipeDream$Path variable. This should allow better resolution of custom function files when they have been opened by Shift-click on the PipeDream icon.</p>
 
-<p>PipeDream compiled with ROOL DDE 25 (used DDE 20 prior to this release).</p>
+<p>ROOL DDE 25 build environment used (used ROOL DDE 20 for 32-bit builds prior to this release).</p>
 
 <p>Lotus 1-2-3 file converters moved out to separate packaged utilities.</p>
 
@@ -311,7 +357,7 @@ they do not modify flags, so do not attempt to restore them.</P>
 
 
 <A ID="Toolbar">
-<H2>Toolbar to PipeDream command mapping</H2>
+<H2>Toolbar to PipeDream Command Mapping</H2>
 
 <PRE>
 Top row          SELECT  ADJUST
@@ -374,7 +420,7 @@ files have the border flag applied, which is then stripped off at run-time.</P>
 
 
 <A ID="KnownProblems">
-<H2>Known problems in this release</H2>
+<H2>Known Problems In This Release</H2>
 
 <P>It is still possible (and has been since PipeDream 3) to create circular dependencies
 in @slot_ref@ chains which fail to complete calculation.</P>
@@ -427,7 +473,7 @@ dialogue cannot reach. Instead, a simple obey file is included called
 
 
 <A ID="CopyrightExtra">
-<H2>Additional copyright information</H2>
+<H2>Additional Copyright Information</H2>
 
 <H4>Portions Copyright (C) 2012-2015 Stuart Swales</H4>
 <P>Reporter interface code.</P>

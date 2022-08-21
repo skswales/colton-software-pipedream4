@@ -193,7 +193,7 @@ alnsto_block(
 {
     P_CELL tcell;
 
-    if(fault_protection  &&  protected_slot_in_range(bs, be))
+    if(fault_protection  &&  protected_cell_in_range(bs, be))
         return;
 
     if(blkstart.col != NO_COL && !set_up_block(TRUE))
@@ -267,7 +267,7 @@ alnst1(
     P_CELL tcell;
     uchar format;
 
-    if(protected_slot_in_range(&blkstart, &blkend))
+    if(protected_cell_in_range(&blkstart, &blkend))
         return;
 
     /* RJM adds this check on 15.10.91 */
@@ -509,12 +509,12 @@ DefineKey_fn(void)
         key = (S32) d_defkey[0].option;
 
         /* remove old definition */
-        delete_from_list(&first_key, (S32) d_defkey[0].option);
+        delete_from_list(&first_key, key);
 
         /* add new one */
         if(*array)
         {
-            if(status_fail(res = add_to_list(&first_key, (S32) d_defkey[0].option, array)))
+            if(status_fail(res = add_to_list(&first_key, key, array)))
             {
                 reperr_null(res);
                 break;
@@ -729,6 +729,19 @@ mark_to_end(
 *
 ******************************************************************************/
 
+_Check_return_
+static U32
+xustrlen32(
+    _In_reads_(elemof_buffer) PC_USTR buffer,
+    _InVal_     U32 elemof_buffer)
+{
+    PC_USTR p = memchr(buffer, NULLCH, elemof_buffer);
+    assert(elemof_buffer);
+    if(NULL == p)
+        return(elemof_buffer - 1);
+    return(PtrDiffBytesU32(p, buffer));
+}
+
 extern void
 SplitLine_fn(void)
 {
@@ -741,12 +754,12 @@ SplitLine_fn(void)
     if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
         return;
 
-    if(lecpos  &&  protected_slot(curcol, currow))
+    if(lecpos  &&  protected_cell(curcol, currow))
         return;
 
     tcell = travel_here();
 
-    if(!tcell  ||  ((tcell->type == SL_TEXT))  &&  !is_protected_slot(tcell))
+    if(!tcell  ||  ((tcell->type == SL_TEXT)  &&  !is_protected_cell(tcell)))
     {
         U32 bufflength = xustrlen32(linbuf, elemof32(linbuf));
         U32 splitpoint = MIN(bufflength, (U32) lecpos);
@@ -883,7 +896,7 @@ JoinLines_fn(void)
         actually_joining = FALSE;
     }
 
-    if(protected_slot_in_block(curcol, currow, curcol, currow+1))
+    if(protected_cell_in_block(curcol, currow, curcol, currow+1))
         return;
 
     if(actually_joining)
@@ -938,7 +951,7 @@ JoinLines_fn(void)
                 continue;
 
             tcell = travel(tcol, trow);
-            if(!isslotblank(tcell)  ||  (tcell  &&  (tcell->type != SL_TEXT)))
+            if(!is_blank_cell(tcell)  ||  (tcell  &&  (tcell->type != SL_TEXT)))
             {
                 allblank = FALSE;
                 break;
@@ -1016,7 +1029,7 @@ DeleteRowInColumn_fn(void)
 
     xf_flush = TRUE;
 
-    if(protected_slot(tcol, trow))
+    if(protected_cell(tcol, trow))
         return;
 
     /* save to list first */
@@ -1090,7 +1103,7 @@ DeleteColumn_fn(void)
     if(all_widths_zero(tcol, tcol))
         return;
 
-    if(protected_slot_in_block(tcol, (ROW) 0, tcol, numrow-1))
+    if(protected_cell_in_block(tcol, (ROW) 0, tcol, numrow-1))
         return;
 
     bd = blk_docno;
@@ -1324,7 +1337,7 @@ DeleteRow_fn(void)
 
     xf_flush = TRUE;
 
-    if(protected_slot_in_block(0, currow, numcol-1, currow))
+    if(protected_cell_in_block(0, currow, numcol-1, currow))
         return;
 
     if(!mergebuf())
@@ -1459,7 +1472,7 @@ DeleteToEndOfSlot_fn(void)
 {
     P_CELL tcell;
 
-    if(protected_slot(curcol, currow))
+    if(protected_cell(curcol, currow))
         return;
 
     mark_row(currowoffset);
@@ -1510,21 +1523,21 @@ DeleteToEndOfSlot_fn(void)
 ******************************************************************************/
 
 extern BOOL
-test_protected_slot(
+test_protected_cell(
     COL tcol,
     ROW trow)
 {
     P_CELL tcell = travel(tcol, trow);
 
-    return(tcell  &&  is_protected_slot(tcell));
+    return(tcell  &&  is_protected_cell(tcell));
 }
 
 extern BOOL
-protected_slot(
+protected_cell(
     COL tcol,
     ROW trow)
 {
-    if(test_protected_slot(tcol, trow))
+    if(test_protected_cell(tcol, trow))
         return(!reperr_null(create_error(ERR_PROTECTED)));
 
     return(FALSE);
@@ -1539,14 +1552,14 @@ protected_slot(
 ******************************************************************************/
 
 extern BOOL
-protected_slot_in_range(
+protected_cell_in_range(
     PC_SLR bs,
     PC_SLR be)
 {
     P_CELL tcell;
     BOOL res = FALSE;
 
-    trace_4(TRACE_APP_PD4, "\n\n[protected_slot_in_range: bs (%d, %d) be (%d, %d)", bs->col, bs->row, be->col, be->row);
+    trace_4(TRACE_APP_PD4, "\n\n[protected_cell_in_range: bs (%d, %d) be (%d, %d)", bs->col, bs->row, be->col, be->row);
 
     init_block(bs, be);
 
@@ -1554,7 +1567,7 @@ protected_slot_in_range(
     {
         trace_3(TRACE_APP_PD4, "got cell " PTR_XTFMT ", (%d, %d)", report_ptr_cast(tcell), in_block.col, in_block.row);
 
-        if(is_protected_slot(tcell))
+        if(is_protected_cell(tcell))
         {
             res = !reperr_null(create_error(ERR_PROTECTED));
             break;
@@ -1565,7 +1578,7 @@ protected_slot_in_range(
 }
 
 extern BOOL
-protected_slot_in_block(
+protected_cell_in_block(
     COL firstcol,
     ROW firstrow,
     COL lastcol,
@@ -1579,7 +1592,7 @@ protected_slot_in_block(
     be.col = lastcol;
     be.row = lastrow;
 
-    return(protected_slot_in_range(&bs, &be));
+    return(protected_cell_in_range(&bs, &be));
 }
 
 extern void
@@ -1608,7 +1621,7 @@ setprotectedstatus(
 {
     S32 fg;
 
-    if(tcell  &&  is_protected_slot(tcell))
+    if(tcell  &&  is_protected_cell(tcell))
     {
         currently_protected = TRUE;
 
@@ -1631,15 +1644,15 @@ check_prot_range(
     COL firstcol,
     COL lastcol)
 {
-    if((firstcol > 0)  &&  test_protected_slot(firstcol-1, trow))
+    if((firstcol > 0)  &&  test_protected_cell(firstcol-1, trow))
         return(FALSE);
 
     while(firstcol <= lastcol)
-        if(!test_protected_slot(firstcol++, trow))
+        if(!test_protected_cell(firstcol++, trow))
             return(FALSE);
 
     /* check cell following lastcol */
-    return(!test_protected_slot(firstcol, trow));
+    return(!test_protected_cell(firstcol, trow));
 }
 
 /*
@@ -1692,7 +1705,7 @@ add_to_names_list(
     char        *contents;
     EV_OPTBLOCK  optblock;
     EV_DOCNO     cur_docno;
-    S32          err;
+    STATUS       err;
 
     name = from;
     for(contents = from; *contents != ','; contents++)
@@ -1749,15 +1762,15 @@ save_protected_bits(
         if((in_block.col == last.col)  &&  (last.row > in_block.row))
             continue;
 
-        if(is_protected_slot(tcell))
+        if(is_protected_cell(tcell))
         {
             /* if cell to left is protected, this cell already saved */
             /* honest */
-            if((in_block.col > 0)  &&  test_protected_slot(in_block.col-1, in_block.row))
+            if((in_block.col > 0)  &&  test_protected_cell(in_block.col-1, in_block.row))
                 continue;
 
             last.col = in_block.col + 1;
-            while(test_protected_slot(last.col, in_block.row))
+            while(test_protected_cell(last.col, in_block.row))
                 ++last.col;
             --last.col;
 

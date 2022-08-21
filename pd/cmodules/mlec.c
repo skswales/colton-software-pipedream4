@@ -137,6 +137,8 @@ typedef struct RGB
 }
 RGB, * P_RGB; typedef const RGB * PC_RGB;
 
+#define RGB_INIT(r, g, b) { r, g, b, 0 }
+
 typedef struct MLEC_STRUCT
 {
     char            *buffptr;      /* ptr to the text buffer held in flex space                            */
@@ -668,7 +670,7 @@ mlec_get_host_font(void)
     _kernel_swi_regs rs;
     _kernel_oserror * p_kernel_oserror;
 
-    rs.r[1] = (int) "\\F" "DejaVuSans.Mono" "\\E" "Latin1";
+    rs.r[1] = (int) "\\F" "DejaVuSans.Mono" /*"\\E" "Latin1"*/;
     rs.r[2] = /*x16_size_x ? x16_size_x :*/ x16_size_y;
     rs.r[3] = x16_size_y;
     rs.r[4] = 0;
@@ -680,7 +682,7 @@ mlec_get_host_font(void)
         return(host_font);
     }
 
-    rs.r[1] = (int) "\\F" "Corpus.Medium" "\\E" "Latin1";
+    rs.r[1] = (int) "\\F" "Corpus.Medium" /*"\\E" "Latin1"*/;
     rs.r[2] = /*x16_size_x ? x16_size_x :*/ x16_size_y;
     rs.r[3] = x16_size_y;
     rs.r[4] = 0;
@@ -705,8 +707,8 @@ int
 mlec_create(
     MLEC_HANDLE *mlecp)
 {
-    static const RGB rgb_background = { 0xFF, 0xFF, 0xFF }; /* white */
-    static const RGB rgb_foreground = { 0x00, 0x00, 0x00 }; /* black */
+    static const RGB rgb_background = RGB_INIT(0xFF, 0xFF, 0xFF); /* white */
+    static const RGB rgb_foreground = RGB_INIT(0x00, 0x00, 0x00); /* black */
 
     STATUS status;
     MLEC_HANDLE mlec;
@@ -1212,7 +1214,7 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
             if(((e->data.key.chcode >= 32)  && (e->data.key.chcode <127)) ||
                ((e->data.key.chcode >= 128) && (e->data.key.chcode <256))
               )
-                err = mlec__insert_char(mlec,e->data.key.chcode);
+                err = mlec__insert_char(mlec, (char) e->data.key.chcode);
             else
                 return(FALSE);
             break;
@@ -1231,8 +1233,8 @@ BOOL mlec__event_handler(wimp_eventstr *e, void *handle)
         switch(e->data.msg.hdr.action)
         {
 #if SUPPORT_LOADSAVE
-        case wimp_MDATALOAD:   /* File dragged from file viewer, dropped on our window */
-        case wimp_MDATAOPEN:   /* File double clicked in file viewer */
+        case wimp_MDATALOAD:   /* File dragged from directory display, dropped on our window */
+        case wimp_MDATAOPEN:   /* File double clicked in directory display */
             {
             char *filename;
 
@@ -2793,7 +2795,7 @@ report_error(
     MLEC_HANDLE mlec,
     int err)
 {
-    mlec = mlec;
+    IGNOREPARM(mlec);
     message_output(string_lookup(err));
 }
 
@@ -3765,7 +3767,7 @@ paste_read_getblock(
 {
     MLEC_HANDLE mlec = xferhandlep->p;
 
-    datasize = datasize;
+    IGNOREPARM(datasize);
 
     if(mlec)
     {

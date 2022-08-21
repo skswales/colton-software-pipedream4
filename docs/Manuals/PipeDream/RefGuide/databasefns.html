@@ -31,7 +31,7 @@
 <p>Database functions are variants of the functions AVG, COUNT, MAX, MIN, STD,
 STDP, SUM, VAR and VARP.</p>
 
-<p>They operate upon a range of slots (your database) subject to the condition
+<p>They operate upon a range of cells (your database) subject to the condition
 which forms their second parameter. Note that there is an example of each
 database function in the PipeDream Examples archive.</p>
 
@@ -75,7 +75,7 @@ class="csguide-arg">condition</span>)</code></p>
 
 <p style="margin-left:2em;"><code>DMAX(B2B4,B2B4&lt;10)</code></p>
 
-<p>finds the maximum value in the range B2B4 which is less than 10, ie 3.00.</p>
+<p>finds the maximum value in the range B2B4 which is less than 10, i.e. 3.00.</p>
 
 <p>These functions can also be used to manipulate text strings. Use double
 quotation marks to enclose text strings.</p>
@@ -90,8 +90,8 @@ since this is the greatest value in column B whose corresponding value in
 column A starts with a letter greater than a.</p>
 
 <p>When scanning the range, PipeDream steps through each corresponding range in
-the condition. In this example, A1 is the first slot examined when considering
-B1, A2 for B2, etc. Any slot references in the condition are unaffected.</p>
+the condition. In this example, A1 is the first cell examined when considering
+B1, A2 for B2, etc. Any cell references in the condition are unaffected.</p>
 
 <p>Text strings must be within double quotation marks.</p>
 
@@ -161,7 +161,7 @@ condition.</p>
 <p><code>DAVG(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
-<p>Returns the average of values in the slots in the range for which the
+<p>Returns the average of values in the cells in the range for which the
 condition is satisfied.</p>
 
 
@@ -170,15 +170,15 @@ condition is satisfied.</p>
 <p><code>DCOUNT(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">condition</span>)</code></p>
 
-<p>Returns the number of number slots in the range for which the condition is
+<p>Returns the number of number cells in the range for which the condition is
 satisfied.</p>
 
-<p>Note that this operates on number slots only.</p>
+<p>Note that this operates on number cells only.</p>
 
 
 <h2>DCOUNTA</h2>
 
-<p>As DCOUNT, but applies to all slots, not just number slots.</p>
+<p>As DCOUNT, but applies to all cells, not just number cells.</p>
 
 <p>Usually DCOUNTA should be used in preference to DCOUNT.</p>
 
@@ -283,7 +283,7 @@ class="csguide-arg">n</span> is the number of values.</p>
       <th>See</th>
     </tr>
     <tr>
-      <td>Other functions which operate upon a range of slots to produce
+      <td>Other functions which operate upon a range of cells to produce
         statistics</td>
       <td><a href="statsfns.html">Statistical functions</a></td>
     </tr>

@@ -279,40 +279,40 @@ u_strnicmp(
 
 static struct LFINS lfstruct[] =
 {
-	L_BOF,          2, (uchar *) "\x6\x4",          2,    NOPT,       NULL,
-	L_RANGE,        8, (uchar *) "",                0,    NOPT,       NULL,
-	L_CPI,          6, (uchar *) "",                0,    NOPT,       NULL,
-	L_CALCCOUNT,    1, (uchar *) "\x1",             1,    NOPT,       NULL,
-	L_CALCMODE,     1, (uchar *) "",                0,    NOPT,wrlcalcmode,
-	L_CALCORDER,    1, (uchar *) "",                0,    NOPT, wrlcalcord,
-	L_SPLIT,        1, (uchar *) "",                0,    NOPT,       NULL,
-	L_SYNC,         1, (uchar *) "",                0,    NOPT,       NULL,
-	L_WINDOW1,     32, (uchar *) "",                0,    NOPT,  wrwindow1,
-	L_COLW1,        3, (uchar *) "",                0,    NOPT,    wrcolws,
-	L_HIDVEC1,     32, (uchar *) "",                0,    NOPT,   wrhidvec,
-	L_CURSORW12,    1, (uchar *) "",                0,    NOPT,       NULL,
-	L_TABLE,       25, (uchar *) "\xFF\xFF\x0\x0",  4,       1,       NULL,
-	L_QRANGE,      25, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_PRANGE,       8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_UNFORMATTED,  1, (uchar *) "",                0,    NOPT,       NULL,
-	L_FRANGE,       8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_SRANGE,       8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_KRANGE,       9, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_KRANGE2,      9, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_RRANGES,     25, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_MATRIXRANGES,40, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_HRANGE,      16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_PARSERANGES, 16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_PROTEC,       1, (uchar *) "",                0,    NOPT,       NULL,
-	L_FOOTER,     242, (uchar *) "",                0,    NOPT,   wrfooter,
-	L_HEADER,     242, (uchar *) "",                0,    NOPT,   wrheader,
-	L_SETUP,       40, (uchar *) "",                0,    NOPT,       NULL,
-	L_MARGINS,     10, (uchar *) "",                0,    NOPT, wrlmargins,
-	L_LABELFMT,     1, (uchar *) "\x27",            1,    NOPT,       NULL,
-	L_TITLES,      16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL,
-	L_GRAPH,      439, (uchar *) "",                4,       0,    wrgraph,
-	L_FORMULA,      0, (uchar *) "",                0,    NOPT,     wrcols,
-	L_EOF,          0, (uchar *) "",                0,    NOPT,       NULL
+    { L_BOF,            2, (uchar *) "\x6\x4",          2,    NOPT,       NULL },
+    { L_RANGE,          8, (uchar *) "",                0,    NOPT,       NULL },
+    { L_CPI,            6, (uchar *) "",                0,    NOPT,       NULL },
+    { L_CALCCOUNT,      1, (uchar *) "\x1",             1,    NOPT,       NULL },
+    { L_CALCMODE,       1, (uchar *) "",                0,    NOPT,wrlcalcmode },
+    { L_CALCORDER,      1, (uchar *) "",                0,    NOPT, wrlcalcord },
+    { L_SPLIT,          1, (uchar *) "",                0,    NOPT,       NULL },
+    { L_SYNC,           1, (uchar *) "",                0,    NOPT,       NULL },
+    { L_WINDOW1,       32, (uchar *) "",                0,    NOPT,  wrwindow1 },
+    { L_COLW1,          3, (uchar *) "",                0,    NOPT,    wrcolws },
+    { L_HIDVEC1,       32, (uchar *) "",                0,    NOPT,   wrhidvec },
+    { L_CURSORW12,      1, (uchar *) "",                0,    NOPT,       NULL },
+    { L_TABLE,         25, (uchar *) "\xFF\xFF\x0\x0",  4,       1,       NULL },
+    { L_QRANGE,        25, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_PRANGE,         8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_UNFORMATTED,    1, (uchar *) "",                0,    NOPT,       NULL },
+    { L_FRANGE,         8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_SRANGE,         8, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_KRANGE,         9, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_KRANGE2,        9, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_RRANGES,       25, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_MATRIXRANGES,  40, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_HRANGE,        16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_PARSERANGES,   16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_PROTEC,         1, (uchar *) "",                0,    NOPT,       NULL },
+    { L_FOOTER,       242, (uchar *) "",                0,    NOPT,   wrfooter },
+    { L_HEADER,       242, (uchar *) "",                0,    NOPT,   wrheader },
+    { L_SETUP,         40, (uchar *) "",                0,    NOPT,       NULL },
+    { L_MARGINS,       10, (uchar *) "",                0,    NOPT, wrlmargins },
+    { L_LABELFMT,       1, (uchar *) "\x27",            1,    NOPT,       NULL },
+    { L_TITLES,        16, (uchar *) "\xFF\xFF\x0\x0",  4,       0,       NULL },
+    { L_GRAPH,        439, (uchar *) "",                4,       0,    wrgraph },
+    { L_FORMULA,        0, (uchar *) "",                0,    NOPT,     wrcols },
+    { L_EOF,            0, (uchar *) "",                0,    NOPT,       NULL }
 };
 
 /*
@@ -1026,7 +1026,8 @@ element(void)
 static S32
 dolotus(void)
 {
-	S32 err, i;
+	S32 err;
+    U32 i;
 
 	if(!findcolumns())
 		return(PD123_ERR_BADFILE);
@@ -1787,7 +1788,7 @@ wrlcalcord(void)
 static S32
 wrcols(void)
 {
-	S32 err, row = 0, col, didacol, i;
+	S32 err, row = 0, col, didacol;
 	S32 dcp, slotbits;
 	uchar huge *c, *constr;
 	uchar slot[256], cc, *op;
@@ -1810,6 +1811,7 @@ wrcols(void)
 						if(constr && (op - constr < 25))
 						{
 							conp pcons = NULL;
+                            U32 i;
 
 							for(i = 0; i < elemof32(constab); ++i)
 							{
@@ -2087,7 +2089,8 @@ static S32
 lts_writedouble(
     F64 fpval)
 {
-	S32 err, i;
+	S32 err;
+    U32 i;
 	union LTS_WRITEDOUBLE_U
 	{
 		F64 fpval;

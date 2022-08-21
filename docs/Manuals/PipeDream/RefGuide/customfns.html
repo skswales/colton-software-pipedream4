@@ -154,7 +154,7 @@ function:</p>
     </tr>
     <tr>
       <td><code>reference </code></td>
-      <td>slot references</td>
+      <td>cell references</td>
     </tr>
     <tr>
       <td><code>text</code></td>
@@ -191,18 +191,18 @@ result. You do so with the function RESULT.</p>
 
 <p style="margin-left:2em;"><code>RESULT(A10)</code></p>
 
-<p>returns the value of slot A10 on the custom function sheet to the caller.</p>
+<p>returns the value of cell A10 on the custom function sheet to the caller.</p>
 
 <h2>Custom Function Execution</h2>
 
 <p>On a custom function sheet, recalculation, or execution, works differently
-to a normal PipeDream document. You can start a custom function in any slot you
-like on a custom function sheet. Type FUNCTION into the slot where you want to
+to a normal PipeDream document. You can start a custom function in any cell you
+like on a custom function sheet. Type FUNCTION into the cell where you want to
 start the custom function. Execution then proceeds down the column containing
 FUNCTION. A custom function sheet can contain many custom functions.</p>
 
-<p>PipeDream proceeds row by row, evaluating the formula in each slot. The
-result of the formula is then stored in the slot. You can't see the results on
+<p>PipeDream proceeds row by row, evaluating the formula in each cell. The
+result of the formula is then stored in the cell. You can't see the results on
 a custom function sheet because PipeDream always shows the formulae rather than
 the results in custom function sheets.</p>
 
@@ -211,7 +211,7 @@ IF or FOR, execution keeps going down the column until RESULT is found, at
 which point control passes back to the caller.</p>
 
 <p>Formulae on custom function sheets are displayed with three dots (...)
-before them so that you can distinguish the formulae from text slots.</p>
+before them so that you can distinguish the formulae from text cells.</p>
 
 <h2>Custom Function Control Statements</h2>
 
@@ -246,9 +246,9 @@ before them so that you can distinguish the formulae from text slots.</p>
 <p>WHILE</p>
 
 <p>These statements can be used to modify the flow of execution within a custom
-function. Normally, execution proceeds down the column starting at the slot
+function. Normally, execution proceeds down the column starting at the cell
 after FUNCTION and ending at RESULT. Most control statements must appear in a
-slot on their own. Exceptions to this are BREAK, CONTINUE, RESULT and GOTO
+cell on their own. Exceptions to this are BREAK, CONTINUE, RESULT and GOTO
 which can appear in function parameters.</p>
 
 <p>Examples are:</p>

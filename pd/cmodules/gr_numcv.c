@@ -35,6 +35,7 @@
 
 /* sugaring function for system font use */
 
+_Check_return_
 extern S32
 gr_font_stringwidth(
     HOST_FONT f,

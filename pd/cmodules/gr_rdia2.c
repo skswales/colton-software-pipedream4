@@ -89,6 +89,7 @@ gr_linestyle_riscos_dash_dot_dot =
 static const PC_DRAW_DASH_HEADER
 gr_linestyle_riscos_dashes[] =
 {
+    NULL, /* 0 (GR_LINE_PATTERN_STANDARD) -> solid line */
     &gr_linestyle_riscos_dash.hdr,
     &gr_linestyle_riscos_dot.hdr,
     &gr_linestyle_riscos_dash_dot.hdr,
@@ -97,13 +98,17 @@ gr_linestyle_riscos_dashes[] =
 
 static PC_DRAW_DASH_HEADER
 gr_linestyle_to_riscDraw(
-    GR_LINE_PATTERN_HANDLE pattern)
+    _InRef_opt_ PC_GR_LINESTYLE linestyle)
 {
-    S32 i = (S32) pattern;
+    U32 i;
 
-    /* 0 (GR_LINE_PATTERN_STANDARD) and unknown handles -> solid line */
-    if(!i  ||  (--i >= elemof32(gr_linestyle_riscos_dashes)))
+    if(NULL == linestyle)
         return(NULL);
+
+    i = (U32) linestyle->pattern;
+
+    if(i >= elemof32(gr_linestyle_riscos_dashes))
+        return(NULL); /* unknown handles -> solid line */
 
     return(gr_linestyle_riscos_dashes[i]);
 }
@@ -112,14 +117,15 @@ _Check_return_
 _Ret_writes_bytes_maybenull_(extraBytes)
 extern P_ANY /* -> path guts */
 gr_riscdiag_path_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_DRAW_DIAG_OFFSET pPathStart,
     _InRef_opt_ PC_GR_LINESTYLE linestyle,
     _InRef_opt_ PC_GR_FILLSTYLE fillstyle,
+    _InRef_opt_ PC_DRAW_PATH_STYLE pathstyle,
     _InVal_     U32 extraBytes,
     _OutRef_    P_STATUS p_status)
 {
-    PC_DRAW_DASH_HEADER dash_pattern = linestyle ? gr_linestyle_to_riscDraw(linestyle->pattern) : NULL;
+    PC_DRAW_DASH_HEADER dash_pattern = linestyle ? gr_linestyle_to_riscDraw(linestyle) : NULL;
     U32 nDashBytes = 0;
     DRAW_OBJECT_PATH path;
     P_DRAW_OBJECT pObject;
@@ -135,10 +141,10 @@ gr_riscdiag_path_new(
     path.fillcolour = fillstyle ?       gr_colour_to_riscDraw(fillstyle->fg) : DRAW_COLOUR_Transparent;
     path.pathcolour = linestyle ?       gr_colour_to_riscDraw(linestyle->fg) : DRAW_COLOUR_Transparent;
     path.pathwidth  = linestyle ? (int) gr_riscDraw_from_pixit(linestyle->width) : 0;
-    path.pathstyle  = gr_riscdiag_path_style_default;
+    path.pathstyle  = pathstyle ? *pathstyle : gr_riscdiag_path_style_default;
 
     if(NULL != dash_pattern)
-        pObject.path->pathstyle.flags |= DRAW_PS_DASH_PACK_MASK;
+        path.pathstyle.flags |= DRAW_PS_DASH_PACK_MASK;
 
     memcpy32(pObject.p_byte, &path, sizeof32(path));
 
@@ -245,95 +251,63 @@ gr_riscdiag_path_recompute_bbox(
 
 /******************************************************************************
 *
-* no parallelogram object; we make as composite path
+* line object
 *
 ******************************************************************************/
 
-struct GR_RISCDIAG_PARALLELOGRAM_GUTS
+struct GR_RISCDIAG_LINE_GUTS
 {
-    DRAW_PATH_MOVE  bl;  /* move to bottom left  */
-    DRAW_PATH_LINE  br;  /* line to bottom right */
-    DRAW_PATH_LINE  tr;  /* line to top right    */
-    DRAW_PATH_LINE  tl;  /* line to top left    */
-    DRAW_PATH_LINE  bl2; /* line to bottom left again */
-    DRAW_PATH_CLOSE close;
+    DRAW_PATH_MOVE  pos;    /* move to first point  */
+    DRAW_PATH_LINE  second; /* line to second point */
     DRAW_PATH_TERM  term;
 };
 
 _Check_return_
 extern STATUS
-gr_riscdiag_parallelogram_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_DRAW_DIAG_OFFSET epParaStart,
-    _InRef_     PC_DRAW_POINT pOriginBL,
-    _InRef_     PC_DRAW_POINT pOffsetBR,
-    _InRef_     PC_DRAW_POINT pOffsetTR,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle)
+gr_riscdiag_line_new(
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_DRAW_DIAG_OFFSET pObjectStart,
+    _InRef_     PC_DRAW_POINT pPos,
+    _InRef_     PC_DRAW_POINT pOffset,
+    _InRef_     PC_GR_LINESTYLE linestyle)
 {
-    struct GR_RISCDIAG_PARALLELOGRAM_GUTS * pPara;
-    DRAW_DIAG_OFFSET  paraStart;
-    P_DRAW_DIAG_OFFSET pParaStart = epParaStart ? epParaStart : &paraStart;
+    struct GR_RISCDIAG_LINE_GUTS * pLine;
     STATUS status;
-    U32 para_line_diff;
 
-    para_line_diff = ((pOffsetBR->x == pOffsetTR->x) && (pOffsetBR->y == pOffsetTR->y))
-                                        ? 3 * sizeof(DRAW_PATH_LINE)
-                                        : 0;
-
-    if(NULL == (pPara = gr_riscdiag_path_new(p_gr_riscdiag, pParaStart, linestyle, fillstyle, sizeof(*pPara) - para_line_diff, &status)))
+    if(NULL == (pLine = gr_riscdiag_path_new(p_gr_riscdiag, pObjectStart, linestyle, NULL, NULL, sizeof32(*pLine), &status)))
         return(status);
 
-    pPara->bl.tag    = DRAW_PATH_TYPE_MOVE;
-    pPara->bl.pt     = *pOriginBL;
+    pLine->pos.tag      = DRAW_PATH_TYPE_MOVE;
+    pLine->pos.pt       = *pPos;
 
-    pPara->br.tag    = DRAW_PATH_TYPE_LINE;
-    pPara->br.pt.x   = (pOriginBL->x + pOffsetBR->x);
-    pPara->br.pt.y   = (pOriginBL->y + pOffsetBR->y);
+    pLine->second.tag   = DRAW_PATH_TYPE_LINE;
+    pLine->second.pt.x  = pPos->x + pOffset->x;
+    pLine->second.pt.y  = pPos->y + pOffset->y;
 
-    if(para_line_diff)
-        /* knock pointer back to write end correctly */
-        pPara = (P_ANY) ((PC_U8) pPara - para_line_diff);
-    else
-    {
-        pPara->tr.tag    = DRAW_PATH_TYPE_LINE;
-        pPara->tr.pt.x   = (pOriginBL->x + pOffsetTR->x);
-        pPara->tr.pt.y   = (pOriginBL->y + pOffsetTR->y);
-
-        pPara->tl.tag    = DRAW_PATH_TYPE_LINE;
-        pPara->tl.pt.x   = (pOriginBL->x + pOffsetTR->x - pOffsetBR->x);
-        pPara->tl.pt.y   = (pOriginBL->y + pOffsetTR->y - pOffsetBR->y);
-
-        pPara->bl2.tag   = DRAW_PATH_TYPE_LINE;
-        pPara->bl2.pt    = pPara->bl.pt;
-    }
-
-    pPara->close.tag = DRAW_PATH_TYPE_CLOSE;
-
-    pPara->term.tag  = DRAW_PATH_TYPE_TERM;
+    pLine->term.tag     = DRAW_PATH_TYPE_TERM;
 
     return(1);
 }
 
 /******************************************************************************
 *
-* no pie sector object; we make as composite path
+* pie sector object
 *
 ******************************************************************************/
 
 _Check_return_
 extern STATUS
 gr_riscdiag_piesector_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_DRAW_DIAG_OFFSET pPieStart,
-    PC_DRAW_POINT pOrigin,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_DRAW_DIAG_OFFSET pObjectStart,
+    PC_DRAW_POINT pPos,
     DRAW_COORD radius,
     PC_F64 alpha,
     PC_F64 beta,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle)
 {
-    DRAW_POINT bezCentre = *pOrigin;
+    DRAW_POINT bezCentre = *pPos;
     DRAW_COORD bezRadius = radius;
     DRAW_POINT bezStart, bezEnd, bezCP1, bezCP2;
     U32 n_segments, segment_id;
@@ -347,7 +321,8 @@ gr_riscdiag_piesector_new(
 
     /* NB. variable number of segments precludes fixed structure */
     if(NULL == (pPathGuts =
-        gr_riscdiag_path_new(p_gr_riscdiag, pPieStart, linestyle, fillstyle,
+        gr_riscdiag_path_new(p_gr_riscdiag, pObjectStart,
+                             linestyle, fillstyle, NULL,
                              sizeof32(DRAW_PATH_MOVE)  +
                              sizeof32(DRAW_PATH_LINE)  +
                              (sizeof32(DRAW_PATH_CURVE) * n_segments) +
@@ -395,12 +370,495 @@ gr_riscdiag_piesector_new(
     pPathGuts += sizeof32(line);
     } /*block*/
 
-    * (P_U32) pPathGuts = DRAW_PATH_TYPE_CLOSE; /* ok to poke single words */
+    * (P_U32) pPathGuts = DRAW_PATH_TYPE_CLOSE_WITH_LINE; /* ok to poke single words */
     pPathGuts += sizeof32(DRAW_PATH_CLOSE);
 
     * (P_U32) pPathGuts = DRAW_PATH_TYPE_TERM;
 
     return(STATUS_OK);
+}
+
+/******************************************************************************
+*
+* quadrilateral object
+*
+******************************************************************************/
+
+struct GR_RISCDIAG_QUADRILATERAL_GUTS
+{
+    DRAW_PATH_MOVE  pos;    /* move to bottom left  */
+    DRAW_PATH_LINE  second; /* line to bottom right */
+    DRAW_PATH_LINE  third;  /* line to top right    */
+    DRAW_PATH_LINE  fourth; /* line to top left    */
+    DRAW_PATH_CLOSE close;
+    DRAW_PATH_TERM  term;
+};
+
+_Check_return_
+extern STATUS
+gr_riscdiag_quadrilateral_new(
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_DRAW_DIAG_OFFSET pObjectStart,
+    _InRef_     PC_DRAW_POINT pPos,
+    _InRef_     PC_DRAW_POINT pOffset1,
+    _InRef_     PC_DRAW_POINT pOffset2,
+    _InRef_     PC_DRAW_POINT pOffset3,
+    PC_GR_LINESTYLE linestyle,
+    PC_GR_FILLSTYLE fillstyle)
+{
+    DRAW_PATH_STYLE pathstyle;
+    struct GR_RISCDIAG_QUADRILATERAL_GUTS * pQuad;
+    STATUS status;
+
+    zero_struct(pathstyle);
+
+    pathstyle.flags |= DRAW_PS_JOIN_ROUND;
+
+    if(NULL == (pQuad = gr_riscdiag_path_new(p_gr_riscdiag, pObjectStart, linestyle, fillstyle, &pathstyle, sizeof(*pQuad), &status)))
+        return(status);
+
+    pQuad->pos.tag      = DRAW_PATH_TYPE_MOVE;
+    pQuad->pos.pt       = *pPos;
+
+    pQuad->second.tag   = DRAW_PATH_TYPE_LINE;
+    pQuad->second.pt.x  = pPos->x + pOffset1->x;
+    pQuad->second.pt.y  = pPos->y + pOffset1->y;
+
+    pQuad->third.tag    = DRAW_PATH_TYPE_LINE;
+    pQuad->third.pt.x   = pPos->x + pOffset2->x;
+    pQuad->third.pt.y   = pPos->y + pOffset2->y;
+
+    pQuad->fourth.tag   = DRAW_PATH_TYPE_LINE;
+    pQuad->fourth.pt.x  = pPos->x + pOffset3->x;
+    pQuad->fourth.pt.y  = pPos->y + pOffset3->y;
+
+    pQuad->close.tag = DRAW_PATH_TYPE_CLOSE_WITH_LINE;
+
+    pQuad->term.tag  = DRAW_PATH_TYPE_TERM;
+
+    return(1);
+}
+
+/******************************************************************************
+*
+* rectangle object
+*
+******************************************************************************/
+
+struct GR_RISCDIAG_RECTANGLE_GUTS
+{
+    DRAW_PATH_MOVE  bl;  /* move to bottom left  */
+    DRAW_PATH_LINE  br;  /* line to bottom right */
+    DRAW_PATH_LINE  tr;  /* line to top left     */
+    DRAW_PATH_LINE  tl;  /* line to top right    */
+    DRAW_PATH_CLOSE close;
+    DRAW_PATH_TERM  term;
+};
+
+_Check_return_
+extern STATUS
+gr_riscdiag_rectangle_new(
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_DRAW_DIAG_OFFSET pObjectStart,
+    _InRef_     PC_DRAW_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_opt_ PC_GR_FILLSTYLE fillstyle)
+{
+    struct GR_RISCDIAG_RECTANGLE_GUTS * pRect;
+    STATUS status;
+
+    if(NULL == (pRect = gr_riscdiag_path_new(p_gr_riscdiag, pObjectStart, linestyle, fillstyle, NULL, sizeof(*pRect), &status)))
+        return(status);
+
+    pRect->bl.tag    = DRAW_PATH_TYPE_MOVE;
+    pRect->bl.pt.x   = pBox->x0;
+    pRect->bl.pt.y   = pBox->y0;
+
+    pRect->br.tag    = DRAW_PATH_TYPE_LINE;
+    pRect->br.pt.x   = pBox->x1;
+    pRect->br.pt.y   = pBox->y0;
+
+    pRect->tr.tag    = DRAW_PATH_TYPE_LINE;
+    pRect->tr.pt.x   = pBox->x1;
+    pRect->tr.pt.y   = pBox->y1;
+
+    pRect->tl.tag    = DRAW_PATH_TYPE_LINE;
+    pRect->tl.pt.x   = pBox->x0;
+    pRect->tl.pt.y   = pBox->y1;
+
+    pRect->close.tag = DRAW_PATH_TYPE_CLOSE_WITH_LINE;
+
+    pRect->term.tag  = DRAW_PATH_TYPE_TERM;
+
+    return(1);
+}
+
+extern void
+gr_riscdiag_sprite_recompute_bbox(
+    P_GR_RISCDIAG p_gr_riscdiag,
+    _InVal_     DRAW_DIAG_OFFSET spriteStart)
+{
+    P_DRAW_OBJECT_SPRITE pObject;
+
+    pObject = gr_riscdiag_getoffptr(DRAW_OBJECT_SPRITE, p_gr_riscdiag, spriteStart);
+
+    /* only recalculate (and therefore set default size) if deliberately made bad */
+    if(pObject->bbox.x0 >= pObject->bbox.x1)
+    {
+        PC_BYTE p_sprite = PtrAddBytes(PC_BYTE, pObject, sizeof32(DRAW_OBJECT_HEADER));
+        PC_SCB p_scb = (PC_SCB) p_sprite;
+        S32 x1, y1;
+        SPRITE_TYPE sprite_type;
+        _kernel_swi_regs rs;
+
+        * (P_U32) &sprite_type = (U32) p_scb->mode;
+
+        rs.r[0] = 40 + 512;
+        rs.r[1] = (int) 0x89ABFEDC; /* kill the OS or any twerp who dares to access this! */
+        rs.r[2] = (int) p_sprite;
+
+        (void) _kernel_swi(/*OS_SpriteOp*/ 0x2E, &rs, &rs);
+
+        if(sprite_type.type == 0)
+        {
+            int XEigFactor = bbc_modevar(p_scb->mode, 4/*XEigFactor*/);
+            int YEigFactor = bbc_modevar(p_scb->mode, 5/*YEigFactor*/);
+
+            x1 = (rs.r[3] << XEigFactor) * GR_RISCDRAW_PER_RISCOS;
+            y1 = (rs.r[4] << YEigFactor) * GR_RISCDRAW_PER_RISCOS;
+        }
+        else
+        {
+            x1 = (rs.r[3] * GR_RISCDRAW_PER_INCH) / sprite_type.h_dpi;
+            y1 = (rs.r[4] * GR_RISCDRAW_PER_INCH) / sprite_type.v_dpi;
+        }
+
+        /* assumes bbox.x0, bbox.y0 correct */
+        pObject->bbox.x1 = pObject->bbox.x0 + x1;
+        pObject->bbox.y1 = pObject->bbox.y0 + y1;
+    }
+}
+
+/******************************************************************************
+*
+* add a fonty string to the file
+*
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+gr_riscdiag_string_new(
+    P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_DRAW_DIAG_OFFSET pObjectStart,
+    PC_DRAW_POINT    point,
+    PC_U8Z           szText,
+    PC_U8Z           szFontName,
+    GR_COORD         fsizex,
+    GR_COORD         fsizey,
+    GR_COLOUR        fg,
+    GR_COLOUR        bg)
+{
+    U32 size;
+    P_DRAW_OBJECT pObject;
+    DRAW_OBJECT_TEXT * pObjectText;
+    DRAW_FONT_REF16 fontRef;
+    S32 fsizey_mp;
+    STATUS status;
+    DRAW_DIAG_OFFSET rectStart;
+
+    size = strlen32p1(szText); /* includes NULLCH*/
+
+    /* round up to output word boundary */
+    size = round_up(size, 4);
+
+    if(bg.visible)
+    {
+        DRAW_BOX dummy_box;
+        GR_FILLSTYLE fillstyle;
+
+        dummy_box.x0 = point->x;
+        dummy_box.y0 = point->y;
+        dummy_box.x1 = point->x + 1;
+        dummy_box.y1 = point->y + 1;
+
+        fillstyle.fg = bg;
+
+        status_return(status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &rectStart, &dummy_box, NULL, &fillstyle));
+    }
+
+    if(NULL == (pObject.p_byte = gr_riscdiag_object_new(p_gr_riscdiag, pObjectStart, DRAW_OBJECT_TYPE_TEXT, size, &status)))
+        return(status);
+
+    pObjectText = (DRAW_OBJECT_TEXT *) pObject.hdr;
+
+    pObjectText->textcolour = gr_colour_to_riscDraw(fg);
+
+    if(bg.visible)
+        pObjectText->background = gr_colour_to_riscDraw(bg); /* hint colour */
+    else
+        pObjectText->background = (int) 0xFFFFFF00; /* hint is white if unspecified */
+
+    fontRef = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, p_gr_riscdiag->dd_fontListR, szFontName);
+
+    /* blat reserved fields in this 32-bit structure */
+    * (P_U32) &pObjectText->textstyle = (U32) fontRef;
+
+    /* NB. NOT DRAW UNITS!!! --- 1/640 point */
+    pObjectText->fsize_x = (int) draw_fontsize_from_mp(gr_mp_from_pixit(fsizex));
+    fsizey_mp            = (int) gr_mp_from_pixit(fsizey);
+    pObjectText->fsize_y = (int) draw_fontsize_from_mp(fsizey_mp);
+
+    /* baseline origin coords */
+    pObjectText->coord.x = point->x;
+    pObjectText->coord.y = point->y;
+
+    if(fontRef == 0)
+        /* Draw rendering positions system font strangely: quickly correct baseline */
+        pObjectText->coord.y -= (int) (gr_riscDraw_from_pixit(fsizey) / 8);
+
+    /* now poke the variable part */
+    strcpy((P_USTR) (pObjectText + 1), szText);
+
+    if(bg.visible)
+    {
+        /* poke background box path */
+        struct GR_RISCDIAG_RECTANGLE_GUTS * pRect;
+        S32 bot_y, top_y;
+
+        gr_riscdiag_string_recompute_bbox(p_gr_riscdiag, *pObjectStart);
+
+        pObject.p_byte = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, *pObjectStart);
+
+        pRect = gr_riscdiag_path_query_guts(p_gr_riscdiag, rectStart);
+
+        bot_y = pObjectText->coord.y - (fsizey_mp * 1 * GR_RISCDRAW_PER_POINT) / (GR_MILLIPOINTS_PER_POINT * 4);
+        bot_y = MIN(bot_y, pObjectText->bbox.y0);
+
+        top_y = pObjectText->coord.y + (fsizey_mp * 3 * GR_RISCDRAW_PER_POINT) / (GR_MILLIPOINTS_PER_POINT * 4);
+        top_y = MAX(top_y, pObjectText->bbox.y1);
+
+        pRect->bl.pt.x = pObjectText->bbox.x0;
+        pRect->bl.pt.y = bot_y;
+
+        pRect->br.pt.x = pObjectText->bbox.x1;
+        pRect->br.pt.y = bot_y;
+
+        pRect->tr.pt.x = pObjectText->bbox.x1;
+        pRect->tr.pt.y = top_y;
+
+        pRect->tl.pt.x = pObjectText->bbox.x0;
+        pRect->tl.pt.y = top_y;
+    }
+
+    return(STATUS_DONE);
+}
+
+/******************************************************************************
+*
+* recompute a jpeg object's bbox
+*
+******************************************************************************/
+
+extern void
+gr_riscdiag_jpeg_recompute_bbox(
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _InVal_     DRAW_DIAG_OFFSET jpegStart)
+{
+    P_DRAW_OBJECT_JPEG pJpegObject = gr_riscdiag_getoffptr(DRAW_OBJECT_JPEG, p_gr_riscdiag, jpegStart);
+
+    /* only recalculate (and therefore set default size) if deliberately made bad */
+
+    if(pJpegObject->bbox.x0 >= pJpegObject->bbox.x1)
+    {
+        S32 x1, y1;
+
+        x1 = muldiv64(pJpegObject->width,  GR_RISCDRAW_PER_INCH, pJpegObject->dpi_x);
+        y1 = muldiv64(pJpegObject->height, GR_RISCDRAW_PER_INCH, pJpegObject->dpi_y);
+
+        /* assumes bbox.x0, bbox.y0 correct */
+        pJpegObject->bbox.x1 = pJpegObject->bbox.x0 + x1;
+        pJpegObject->bbox.y1 = pJpegObject->bbox.y0 + y1;
+    }
+}
+
+extern void
+gr_riscdiag_string_recompute_bbox(
+    P_GR_RISCDIAG p_gr_riscdiag,
+    _InVal_     DRAW_DIAG_OFFSET textStart)
+{
+    DRAW_OBJECT_TEXT * pObjectText;
+    font f = 0;
+    S32 fsizex16, fsizey16; /* in 16ths of a point */
+    PC_U8Z szHostFontName;
+
+    pObjectText = gr_riscdiag_getoffptr(DRAW_OBJECT_TEXT, p_gr_riscdiag, textStart);
+
+    szHostFontName = gr_riscdiag_fontlist_name(p_gr_riscdiag, GR_RISCDIAG_OBJECT_NONE, pObjectText->textstyle.fontref16);
+
+    /* structure font sizes stored in 1/640th point; FontManager requires 1/16 point */
+    fsizex16 = (pObjectText->fsize_x * 16) / 640;
+    fsizey16 = (pObjectText->fsize_y * 16) / 640;
+
+    if(szHostFontName)
+        if(font_find((char *) szHostFontName, fsizex16, fsizey16, 0, 0, &f))
+            f = 0;
+
+    if(f)
+    {
+        if(NULL == font_SetFont(f))
+            (void) font_stringbbox((P_USTR) (pObjectText + 1),
+                                   (font_info *) &pObjectText->bbox); /* NB. in mp */
+
+        font_LoseFont(f);
+
+        /* scale bbox to riscDraw units (**imprecise**) */
+        pObjectText->bbox.x0 = (int) gr_round_pixit_to_floor((GR_COORD) pObjectText->bbox.x0 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
+        pObjectText->bbox.x1 = (int) gr_round_pixit_to_ceil( (GR_COORD) pObjectText->bbox.x1 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
+        pObjectText->bbox.y0 = (int) gr_round_pixit_to_floor((GR_COORD) pObjectText->bbox.y0 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
+        pObjectText->bbox.y1 = (int) gr_round_pixit_to_ceil( (GR_COORD) pObjectText->bbox.y1 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
+    }
+    else
+    {
+        /* have a stab at VDU 5 System font bboxing
+         * (I'd wondered why 1/640th point; its GR_POINTS_PER_RISCDRAW!)
+         * note that Draw expects standard System font to be 12.80pt x 6.40pt
+        */
+        pObjectText->bbox.x0 = 0;
+        pObjectText->bbox.x1 = pObjectText->fsize_x * strlen((PC_USTR) (pObjectText + 1));
+        pObjectText->bbox.y0 = 0;
+        pObjectText->bbox.y1 = pObjectText->fsize_y;
+    }
+
+    /* move box to have its origin at string baseline origin */
+    draw_box_translate(&pObjectText->bbox, NULL, &pObjectText->coord);
+}
+
+extern void
+gr_riscdiag_diagram_tagged_object_strip(
+    P_GR_RISCDIAG p_gr_riscdiag,
+    gr_riscdiag_tagstrip_proc proc,
+    P_ANY handle)
+{
+    DRAW_DIAG_OFFSET thisObject, endObject, wastagObject;
+    P_DRAW_OBJECT pObject;
+    U32 objectSize;
+    U32 hdrandgoopSize;
+
+    /* loop till all the little buggers removed */
+    for(wastagObject = GR_RISCDIAG_OBJECT_NONE, hdrandgoopSize = 0;;)
+    {
+        thisObject = GR_RISCDIAG_OBJECT_FIRST;
+        endObject  = GR_RISCDIAG_OBJECT_LAST; /* keeps getting closer */
+
+        if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
+        {
+            do  {
+                if(wastagObject != GR_RISCDIAG_OBJECT_NONE)
+                {
+                    /* remove test for removed goop when past where the header was */
+                    if(wastagObject <= thisObject)
+                        wastagObject = GR_RISCDIAG_OBJECT_NONE;
+                    else if(pObject.hdr->type == DRAW_OBJECT_TYPE_GROUP)
+                    {
+                        objectSize = pObject.hdr->size;
+
+                        /* did this group enclose the tag hdr and goop we removed? */
+                        if(thisObject + objectSize > wastagObject)
+                            pObject.hdr->size -= (int) hdrandgoopSize;
+                    }
+                }
+
+                if(pObject.hdr->type == DRAW_OBJECT_TYPE_TAG)
+                {
+                    P_DRAW_OBJECT pEnclObject;
+                    U32 tagHdrSize, enclObjectSize, tagGoopSize;
+                    S32 PRM_conformant;
+                    U32 tag;
+
+                    wastagObject   = thisObject;
+
+                    /* limit tagged object size to end of diagram for debungling chart reloading */
+                    if(pObject.hdr->size < (U32) (p_gr_riscdiag->draw_diag.length - thisObject))
+                        objectSize = pObject.hdr->size;
+                    else
+                        objectSize = (p_gr_riscdiag->draw_diag.length - thisObject);
+
+                    /* test for PRM or Draw conformant file - is it a tag or a kosher object here? */
+                    tag            = ((const DRAW_OBJECT_TAG *) pObject.p_byte)->intTag;
+
+                    PRM_conformant = (tag > 0x0C); /* as of 28jan92 */
+
+                    tagHdrSize = sizeof(DRAW_OBJECT_TAG);
+                    if(!PRM_conformant)
+                        tagHdrSize -= 4;
+
+                    pEnclObject.p_byte = pObject.p_byte + tagHdrSize;
+                    enclObjectSize    = pEnclObject.hdr->size;
+
+                    if(!PRM_conformant)
+                        tag = * (P_U32) (pEnclObject.p_byte + enclObjectSize);
+
+                    tagGoopSize       = objectSize - enclObjectSize - tagHdrSize;
+
+                    if(proc)
+                    {
+                        GR_RISCDIAG_TAGSTRIP_INFO info;
+
+                        info.ppDiag         = &p_gr_riscdiag->draw_diag.data;
+                        info.tag            = tag;
+                        info.PRM_conformant = PRM_conformant;
+                        info.thisObject     = thisObject;
+                        info.goopOffset     = thisObject + tagHdrSize + enclObjectSize;
+                        info.goopSize       = tagGoopSize;
+
+                        if(!PRM_conformant)
+                        {
+                            /* skip first word for Draw conformant tagged objects */
+                            info.goopOffset += 4;
+                            info.goopSize   -= 4;
+                        }
+
+                        (* proc) (handle, &info);
+                    }
+
+                    /* remove the tag goop by copying the rest of the diagram down over it */
+                    /* note stupid way midextend works */
+                    if(tagGoopSize)
+                        flex_midextend(&p_gr_riscdiag->draw_diag.data,
+                                       (int) (thisObject + tagHdrSize + enclObjectSize + tagGoopSize),
+                                       - (int) tagGoopSize);
+
+                    /* remove the tag header by copying the enclosed object over it */
+                    flex_midextend(&p_gr_riscdiag->draw_diag.data,
+                                   (int) (thisObject + tagHdrSize),
+                                   - (int) tagHdrSize);
+
+                    hdrandgoopSize    = tagHdrSize + tagGoopSize;
+
+                    assert(p_gr_riscdiag->dd_allocsize == p_gr_riscdiag->draw_diag.length);
+                    p_gr_riscdiag->draw_diag.length -= hdrandgoopSize;
+                    p_gr_riscdiag->dd_allocsize = p_gr_riscdiag->draw_diag.length;
+
+                    /* extreme paranoia updrefs */
+                    if(p_gr_riscdiag->dd_fontListR > thisObject)
+                        p_gr_riscdiag->dd_fontListR -= hdrandgoopSize;
+
+                    if(p_gr_riscdiag->dd_rootGroupStart > thisObject)
+                        p_gr_riscdiag->dd_rootGroupStart -= hdrandgoopSize;
+
+                    break;
+                }
+            }
+            while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
+        }
+
+        if(thisObject != GR_RISCDIAG_OBJECT_FIRST)
+            /* continue, resetting end offset first */
+            continue;
+
+        /* done the lot */
+        break;
+    }
 }
 
 /******************************************************************************
@@ -414,8 +872,8 @@ gr_riscdiag_piesector_new(
 _Check_return_
 extern STATUS
 gr_riscdiag_scaled_diagram_add(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_DRAW_DIAG_OFFSET pPictStart,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_DRAW_DIAG_OFFSET pObjectStart,
     PC_DRAW_BOX pBox,
     P_DRAW_DIAG diag,
     PC_GR_FILLSTYLE  fillstyle)
@@ -450,13 +908,8 @@ gr_riscdiag_scaled_diagram_add(
         return(create_error(GR_CHART_ERR_INVALID_DRAWFILE));
     diagLength -= sizeof(DRAW_FILE_HEADER);
 
-#ifdef GR_CHART_NAME_GROUPS
-    if((status = gr_riscdiag_group_new(p_gr_riscdiag, &groupStart, "pdEmbedDiag")) < 0)
-        return(status);
-#else
     if((status = gr_riscdiag_group_new(p_gr_riscdiag, &groupStart, NULL)) < 0)
         return(status);
-#endif
 
     /* note offset of where diagram body (skip file header and font table) is to be copied */
     diagStart = gr_riscdiag_query_offset(p_gr_riscdiag);
@@ -604,6 +1057,7 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
     endObject = diagStart + diagLength;
 
     if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
+    {
         do  {
             switch(pObject.hdr->type)
             {
@@ -626,6 +1080,7 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
             }
         }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
+    }
 
     /* now can give source diagram back to its rightful owner */
     draw_diag_give_away(diag, &source_gr_riscdiag.draw_diag);
@@ -702,6 +1157,7 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
     endObject  = diagStart + diagLength;
 
     if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
+    {
         do  {
             /* note that there is no awkward font table object now !*/
             switch(pObject.hdr->type)
@@ -809,7 +1265,7 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
 
                         /*FALLTHRU*/
 
-                    case DRAW_PATH_TYPE_CLOSE:
+                    case DRAW_PATH_TYPE_CLOSE_WITH_LINE:
 #endif
                         p_path += sizeof32(DRAW_PATH_CLOSE);
                         break;
@@ -836,9 +1292,10 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
             }
         }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
+    }
 
     /* ensure this group recomputed and rebound */
-    * (int *) &process = 0;
+    zero_struct(process);
     process.recurse    = 1;
     process.recompute  = 1;
     gr_riscdiag_object_reset_bbox_between(p_gr_riscdiag,
@@ -852,14 +1309,14 @@ reportf(TEXT("sda: ") PTR_XTFMT TEXT(" %d at %d"), &source_gr_riscdiag, *DRAW_OB
     */
 
     /* not forgetting to tell client where we put it! */
-    *pPictStart = groupStart;
+    *pObjectStart = groupStart;
 
     return(STATUS_DONE);
 }
 
 extern void
 gr_riscdiag_shift_diagram(
-    P_GR_RISCDIAG p_gr_riscdiag,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
     PC_DRAW_POINT pShiftBy)
 {
     DRAW_DIAG_OFFSET thisObject = GR_RISCDIAG_OBJECT_FIRST;
@@ -869,6 +1326,7 @@ gr_riscdiag_shift_diagram(
     draw_box_translate(&((P_DRAW_FILE_HEADER) (p_gr_riscdiag->draw_diag.data))->bbox, NULL, pShiftBy);
 
     if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
+    {
         do  {
             switch(pObject.hdr->type)
             {
@@ -963,7 +1421,7 @@ gr_riscdiag_shift_diagram(
 
                         /*FALLTHRU*/
 
-                    case DRAW_PATH_TYPE_CLOSE:
+                    case DRAW_PATH_TYPE_CLOSE_WITH_LINE:
 #endif
                         p_path += sizeof32(DRAW_PATH_CLOSE);
                         break;
@@ -986,496 +1444,7 @@ gr_riscdiag_shift_diagram(
             }
         }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
-}
-
-/******************************************************************************
-*
-* no rectangle object; we make as composite path
-*
-******************************************************************************/
-
-struct GR_RISCDIAG_RECTANGLE_GUTS
-{
-    DRAW_PATH_MOVE  bl;  /* move to bottom left  */
-    DRAW_PATH_LINE  br;  /* line to bottom right */
-    DRAW_PATH_LINE  tr;  /* line to top left     */
-    DRAW_PATH_LINE  tl;  /* line to top right    */
-    DRAW_PATH_LINE  bl2; /* line to bottom left again */
-    DRAW_PATH_CLOSE close;
-    DRAW_PATH_TERM  term;
-};
-
-_Check_return_
-extern STATUS
-gr_riscdiag_rectangle_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_DRAW_DIAG_OFFSET epRectStart,
-    PC_DRAW_BOX      pBox,
-    PC_GR_LINESTYLE  linestyle,
-    PC_GR_FILLSTYLE  fillstyle)
-{
-    struct GR_RISCDIAG_RECTANGLE_GUTS * pRect;
-    DRAW_DIAG_OFFSET  rectStart;
-    P_DRAW_DIAG_OFFSET pRectStart = epRectStart ? epRectStart : &rectStart;
-    STATUS status;
-
-    if(NULL == (pRect = gr_riscdiag_path_new(p_gr_riscdiag, pRectStart, linestyle, fillstyle, sizeof(*pRect), &status)))
-        return(status);
-
-    pRect->bl.tag    = DRAW_PATH_TYPE_MOVE;
-    pRect->bl.pt.x   = pBox->x0;
-    pRect->bl.pt.y   = pBox->y0;
-
-    pRect->br.tag    = DRAW_PATH_TYPE_LINE;
-    pRect->br.pt.x   = pBox->x1;
-    pRect->br.pt.y   = pBox->y0;
-
-    pRect->tr.tag    = DRAW_PATH_TYPE_LINE;
-    pRect->tr.pt.x   = pBox->x1;
-    pRect->tr.pt.y   = pBox->y1;
-
-    pRect->tl.tag    = DRAW_PATH_TYPE_LINE;
-    pRect->tl.pt.x   = pBox->x0;
-    pRect->tl.pt.y   = pBox->y1;
-
-    pRect->bl2.tag   = DRAW_PATH_TYPE_LINE;
-    pRect->bl2.pt    = pRect->bl.pt;
-
-    pRect->close.tag = DRAW_PATH_TYPE_CLOSE;
-
-    pRect->term.tag  = DRAW_PATH_TYPE_TERM;
-
-    return(1);
-}
-
-extern void
-gr_riscdiag_sprite_recompute_bbox(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _InVal_     DRAW_DIAG_OFFSET spriteStart)
-{
-    P_DRAW_OBJECT_SPRITE pObject;
-
-    pObject = gr_riscdiag_getoffptr(DRAW_OBJECT_SPRITE, p_gr_riscdiag, spriteStart);
-
-    /* only recalculate (and therefore set default size) if deliberately made bad */
-    if(pObject->bbox.x0 >= pObject->bbox.x1)
-    {
-        PC_BYTE p_sprite = PtrAddBytes(PC_BYTE, pObject, sizeof32(DRAW_OBJECT_HEADER));
-        PC_SCB p_scb = (PC_SCB) p_sprite;
-        S32 x1, y1;
-        SPRITE_TYPE sprite_type;
-        _kernel_swi_regs rs;
-
-        * (P_U32) &sprite_type = (U32) p_scb->mode;
-
-        rs.r[0] = 40 + 512;
-        rs.r[1] = (int) 0x89ABFEDC; /* kill the OS or any twerp who dares to access this! */
-        rs.r[2] = (int) p_sprite;
-
-        (void) _kernel_swi(/*OS_SpriteOp*/ 0x2E, &rs, &rs);
-
-        if(sprite_type.type == 0)
-        {
-            int XEigFactor = bbc_modevar(p_scb->mode, 4/*XEigFactor*/);
-            int YEigFactor = bbc_modevar(p_scb->mode, 5/*YEigFactor*/);
-
-            x1 = (rs.r[3] << XEigFactor) * GR_RISCDRAW_PER_RISCOS;
-            y1 = (rs.r[4] << YEigFactor) * GR_RISCDRAW_PER_RISCOS;
-        }
-        else
-        {
-            x1 = (rs.r[3] * GR_RISCDRAW_PER_INCH) / sprite_type.h_dpi;
-            y1 = (rs.r[4] * GR_RISCDRAW_PER_INCH) / sprite_type.v_dpi;
-        }
-
-        /* assumes bbox.x0, bbox.y0 correct */
-        pObject->bbox.x1 = pObject->bbox.x0 + x1;
-        pObject->bbox.y1 = pObject->bbox.y0 + y1;
     }
-}
-
-/******************************************************************************
-*
-* add a fonty string to the file
-*
-******************************************************************************/
-
-_Check_return_
-extern STATUS
-gr_riscdiag_string_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_DRAW_DIAG_OFFSET pTextStart,
-    PC_DRAW_POINT    point,
-    PC_U8Z           szText,
-    PC_U8Z           szFontName,
-    GR_COORD         fsizex,
-    GR_COORD         fsizey,
-    GR_COLOUR        fg,
-    GR_COLOUR        bg)
-{
-    U32 size;
-    P_DRAW_OBJECT pObject;
-    DRAW_OBJECT_TEXT * pObjectText;
-    DRAW_FONT_REF16 fontRef;
-    S32 fsizey_mp;
-    STATUS status;
-    DRAW_DIAG_OFFSET rectStart;
-
-    size = strlen32p1(szText); /* includes NULLCH*/
-
-    /* round up to output word boundary */
-    size = round_up(size, 4);
-
-    if(bg.visible)
-    {
-        DRAW_BOX dummy_box;
-        GR_FILLSTYLE fillstyle;
-
-        dummy_box.x0 = point->x;
-        dummy_box.y0 = point->y;
-        dummy_box.x1 = point->x + 1;
-        dummy_box.y1 = point->y + 1;
-
-        fillstyle.fg = bg;
-
-        status_return(status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &rectStart, &dummy_box, NULL, &fillstyle));
-    }
-
-    if(NULL == (pObject.p_byte = gr_riscdiag_object_new(p_gr_riscdiag, pTextStart, DRAW_OBJECT_TYPE_TEXT, size, &status)))
-        return(status);
-
-    pObjectText = (DRAW_OBJECT_TEXT *) pObject.hdr;
-
-    pObjectText->textcolour = gr_colour_to_riscDraw(fg);
-
-    if(bg.visible)
-        pObjectText->background = gr_colour_to_riscDraw(bg); /* hint colour */
-    else
-        pObjectText->background = (int) 0xFFFFFF00; /* hint is white if unspecified */
-
-    fontRef = gr_riscdiag_fontlist_lookup(p_gr_riscdiag, p_gr_riscdiag->dd_fontListR, szFontName);
-
-    /* blat reserved fields in this 32-bit structure */
-    * (P_U32) &pObjectText->textstyle = (U32) fontRef;
-
-    /* NB. NOT DRAW UNITS!!! --- 1/640 point */
-    pObjectText->fsize_x = (int) draw_fontsize_from_mp(gr_mp_from_pixit(fsizex));
-    fsizey_mp            = (int) gr_mp_from_pixit(fsizey);
-    pObjectText->fsize_y = (int) draw_fontsize_from_mp(fsizey_mp);
-
-    /* baseline origin coords */
-    pObjectText->coord.x = point->x;
-    pObjectText->coord.y = point->y;
-
-    if(fontRef == 0)
-        /* Draw rendering positions system font strangely: quickly correct baseline */
-        pObjectText->coord.y -= (int) (gr_riscDraw_from_pixit(fsizey) / 8);
-
-    /* now poke the variable part */
-    strcpy((P_USTR) (pObjectText + 1), szText);
-
-    if(bg.visible)
-    {
-        /* poke background box path */
-        struct GR_RISCDIAG_RECTANGLE_GUTS * pRect;
-        S32 bot_y, top_y;
-
-        gr_riscdiag_string_recompute_bbox(p_gr_riscdiag, *pTextStart);
-
-        pObject.p_byte = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, *pTextStart);
-
-        pRect = gr_riscdiag_path_query_guts(p_gr_riscdiag, rectStart);
-
-        bot_y = pObjectText->coord.y - (fsizey_mp * 1 * GR_RISCDRAW_PER_POINT) / (GR_MILLIPOINTS_PER_POINT * 4);
-        bot_y = MIN(bot_y, pObjectText->bbox.y0);
-
-        top_y = pObjectText->coord.y + (fsizey_mp * 3 * GR_RISCDRAW_PER_POINT) / (GR_MILLIPOINTS_PER_POINT * 4);
-        top_y = MAX(top_y, pObjectText->bbox.y1);
-
-        pRect->bl.pt.x = pObjectText->bbox.x0;
-        pRect->bl.pt.y = bot_y;
-
-        pRect->br.pt.x = pObjectText->bbox.x1;
-        pRect->br.pt.y = bot_y;
-
-        pRect->tr.pt.x = pObjectText->bbox.x1;
-        pRect->tr.pt.y = top_y;
-
-        pRect->tl.pt.x = pObjectText->bbox.x0;
-        pRect->tl.pt.y = top_y;
-
-        pRect->bl2.pt = pRect->bl.pt;
-    }
-
-    return(STATUS_DONE);
-}
-
-/******************************************************************************
-*
-* recompute a jpeg object's bbox
-*
-******************************************************************************/
-
-extern void
-gr_riscdiag_jpeg_recompute_bbox(
-    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
-    _InVal_     DRAW_DIAG_OFFSET jpegStart)
-{
-    P_DRAW_OBJECT_JPEG pJpegObject = gr_riscdiag_getoffptr(DRAW_OBJECT_JPEG, p_gr_riscdiag, jpegStart);
-
-    /* only recalculate (and therefore set default size) if deliberately made bad */
-
-    if(pJpegObject->bbox.x0 >= pJpegObject->bbox.x1)
-    {
-        S32 x1, y1;
-
-        x1 = muldiv64(pJpegObject->width,  GR_RISCDRAW_PER_INCH, pJpegObject->dpi_x);
-        y1 = muldiv64(pJpegObject->height, GR_RISCDRAW_PER_INCH, pJpegObject->dpi_y);
-
-        /* assumes bbox.x0, bbox.y0 correct */
-        pJpegObject->bbox.x1 = pJpegObject->bbox.x0 + x1;
-        pJpegObject->bbox.y1 = pJpegObject->bbox.y0 + y1;
-    }
-}
-
-extern void
-gr_riscdiag_string_recompute_bbox(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _InVal_     DRAW_DIAG_OFFSET textStart)
-{
-    DRAW_OBJECT_TEXT * pObjectText;
-    font f = 0;
-    S32 fsizex16, fsizey16; /* in 16ths of a point */
-    PC_U8Z szHostFontName;
-
-    pObjectText = gr_riscdiag_getoffptr(DRAW_OBJECT_TEXT, p_gr_riscdiag, textStart);
-
-    szHostFontName = gr_riscdiag_fontlist_name(p_gr_riscdiag, GR_RISCDIAG_OBJECT_NONE, pObjectText->textstyle.fontref16);
-
-    /* structure font sizes stored in 1/640th point; FontManager requires 1/16 point */
-    fsizex16 = (pObjectText->fsize_x * 16) / 640;
-    fsizey16 = (pObjectText->fsize_y * 16) / 640;
-
-    if(szHostFontName)
-        if(font_find((char *) szHostFontName, fsizex16, fsizey16, 0, 0, &f))
-            f = 0;
-
-    if(f)
-    {
-        if(NULL == font_SetFont(f))
-            (void) font_stringbbox((P_USTR) (pObjectText + 1),
-                                   (font_info *) &pObjectText->bbox); /* NB. in mp */
-
-        font_LoseFont(f);
-
-        /* scale bbox to riscDraw units (**imprecise**) */
-        pObjectText->bbox.x0 = (int) gr_round_pixit_to_floor((GR_COORD) pObjectText->bbox.x0 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
-        pObjectText->bbox.x1 = (int) gr_round_pixit_to_ceil( (GR_COORD) pObjectText->bbox.x1 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
-        pObjectText->bbox.y0 = (int) gr_round_pixit_to_floor((GR_COORD) pObjectText->bbox.y0 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
-        pObjectText->bbox.y1 = (int) gr_round_pixit_to_ceil( (GR_COORD) pObjectText->bbox.y1 * GR_RISCDRAW_PER_POINT, GR_MILLIPOINTS_PER_POINT);
-    }
-    else
-    {
-        /* have a stab at VDU 5 System font bboxing
-         * (I'd wondered why 1/640th point; its GR_POINTS_PER_RISCDRAW!)
-         * note that Draw expects standard System font to be 12.80pt x 6.40pt
-        */
-        pObjectText->bbox.x0 = 0;
-        pObjectText->bbox.x1 = pObjectText->fsize_x * strlen((PC_USTR) (pObjectText + 1));
-        pObjectText->bbox.y0 = 0;
-        pObjectText->bbox.y1 = pObjectText->fsize_y;
-    }
-
-    /* move box to have its origin at string baseline origin */
-    draw_box_translate(&pObjectText->bbox, NULL, &pObjectText->coord);
-}
-
-extern void
-gr_riscdiag_diagram_tagged_object_strip(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    gr_riscdiag_tagstrip_proc proc,
-    P_ANY handle)
-{
-    DRAW_DIAG_OFFSET thisObject, endObject, wastagObject;
-    P_DRAW_OBJECT pObject;
-    U32 objectSize;
-    U32 hdrandgoopSize;
-
-    /* loop till all the little buggers removed */
-    for(wastagObject = GR_RISCDIAG_OBJECT_NONE, hdrandgoopSize = 0;;)
-    {
-        thisObject = GR_RISCDIAG_OBJECT_FIRST;
-        endObject  = GR_RISCDIAG_OBJECT_LAST; /* keeps getting closer */
-
-        if(gr_riscdiag_object_first(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE))
-            do  {
-                if(wastagObject != GR_RISCDIAG_OBJECT_NONE)
-                {
-                    /* remove test for removed goop when past where the header was */
-                    if(wastagObject <= thisObject)
-                        wastagObject = GR_RISCDIAG_OBJECT_NONE;
-                    else if(pObject.hdr->type == DRAW_OBJECT_TYPE_GROUP)
-                    {
-                        objectSize = pObject.hdr->size;
-
-                        /* did this group enclose the tag hdr and goop we removed? */
-                        if(thisObject + objectSize > wastagObject)
-                            pObject.hdr->size -= (int) hdrandgoopSize;
-                    }
-                }
-
-                if(pObject.hdr->type == DRAW_OBJECT_TYPE_TAG)
-                {
-                    P_DRAW_OBJECT pEnclObject;
-                    U32 tagHdrSize, enclObjectSize, tagGoopSize;
-                    S32 PRM_conformant;
-                    U32 tag;
-
-                    wastagObject   = thisObject;
-
-                    /* limit tagged object size to end of diagram for debungling chart reloading */
-                    if(pObject.hdr->size < (U32) (p_gr_riscdiag->draw_diag.length - thisObject))
-                        objectSize = pObject.hdr->size;
-                    else
-                        objectSize = (p_gr_riscdiag->draw_diag.length - thisObject);
-
-                    /* test for PRM or Draw conformant file - is it a tag or a kosher object here? */
-                    tag            = ((const DRAW_OBJECT_TAG *) pObject.p_byte)->intTag;
-
-                    PRM_conformant = (tag > 0x0C); /* as of 28jan92 */
-
-                    tagHdrSize = sizeof(DRAW_OBJECT_TAG);
-                    if(!PRM_conformant)
-                        tagHdrSize -= 4;
-
-                    pEnclObject.p_byte = pObject.p_byte + tagHdrSize;
-                    enclObjectSize    = pEnclObject.hdr->size;
-
-                    if(!PRM_conformant)
-                        tag = * (P_U32) (pEnclObject.p_byte + enclObjectSize);
-
-                    tagGoopSize       = objectSize - enclObjectSize - tagHdrSize;
-
-                    if(proc)
-                    {
-                        GR_RISCDIAG_TAGSTRIP_INFO info;
-
-                        info.ppDiag         = &p_gr_riscdiag->draw_diag.data;
-                        info.tag            = tag;
-                        info.PRM_conformant = PRM_conformant;
-                        info.thisObject     = thisObject;
-                        info.goopOffset     = thisObject + tagHdrSize + enclObjectSize;
-                        info.goopSize       = tagGoopSize;
-
-                        if(!PRM_conformant)
-                        {
-                            /* skip first word for Draw conformant tagged objects */
-                            info.goopOffset += 4;
-                            info.goopSize   -= 4;
-                        }
-
-                        (* proc) (handle, &info);
-                    }
-
-                    /* remove the tag goop by copying the rest of the diagram down over it */
-                    /* note stupid way midextend works */
-                    if(tagGoopSize)
-                        flex_midextend(&p_gr_riscdiag->draw_diag.data,
-                                       (int) (thisObject + tagHdrSize + enclObjectSize + tagGoopSize),
-                                       - (int) tagGoopSize);
-
-                    /* remove the tag header by copying the enclosed object over it */
-                    flex_midextend(&p_gr_riscdiag->draw_diag.data,
-                                   (int) (thisObject + tagHdrSize),
-                                   - (int) tagHdrSize);
-
-                    hdrandgoopSize    = tagHdrSize + tagGoopSize;
-
-                    assert(p_gr_riscdiag->dd_allocsize == p_gr_riscdiag->draw_diag.length);
-                    p_gr_riscdiag->draw_diag.length -= hdrandgoopSize;
-                    p_gr_riscdiag->dd_allocsize = p_gr_riscdiag->draw_diag.length;
-
-                    /* extreme paranoia updrefs */
-                    if(p_gr_riscdiag->dd_fontListR > thisObject)
-                        p_gr_riscdiag->dd_fontListR -= hdrandgoopSize;
-
-                    if(p_gr_riscdiag->dd_rootGroupStart > thisObject)
-                        p_gr_riscdiag->dd_rootGroupStart -= hdrandgoopSize;
-
-                    break;
-                }
-            }
-            while(gr_riscdiag_object_next(p_gr_riscdiag, &thisObject, &endObject, &pObject, TRUE));
-
-        if(thisObject != GR_RISCDIAG_OBJECT_FIRST)
-            /* continue, resetting end offset first */
-            continue;
-
-        /* done the lot */
-        break;
-    }
-}
-
-/******************************************************************************
-*
-* no trapezoid object; we make as composite path
-*
-******************************************************************************/
-
-struct GR_RISCDIAG_TRAPEZOID_GUTS
-{
-    DRAW_PATH_MOVE  bl;  /* move to bottom left  */
-    DRAW_PATH_LINE  br;  /* line to bottom right */
-    DRAW_PATH_LINE  tr;  /* line to top right    */
-    DRAW_PATH_LINE  tl;  /* line to top left    */
-    DRAW_PATH_LINE  bl2; /* line to bottom left again */
-    DRAW_PATH_CLOSE close;
-    DRAW_PATH_TERM  term;
-};
-
-_Check_return_
-extern STATUS
-gr_riscdiag_trapezoid_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_DRAW_DIAG_OFFSET epTrapStart,
-    _InRef_     PC_DRAW_POINT pOriginBL,
-    _InRef_     PC_DRAW_POINT pOffsetBR,
-    _InRef_     PC_DRAW_POINT pOffsetTR,
-    _InRef_     PC_DRAW_POINT pOffsetTL,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle)
-{
-    struct GR_RISCDIAG_TRAPEZOID_GUTS * pTrap;
-    DRAW_DIAG_OFFSET  trapStart;
-    P_DRAW_DIAG_OFFSET pTrapStart = epTrapStart ? epTrapStart : &trapStart;
-    S32 res;
-
-    if(NULL == (pTrap = gr_riscdiag_path_new(p_gr_riscdiag, pTrapStart, linestyle, fillstyle, sizeof(*pTrap), &res)))
-        return(res);
-
-    pTrap->bl.tag    = DRAW_PATH_TYPE_MOVE;
-    pTrap->bl.pt     = *pOriginBL;
-
-    pTrap->br.tag    = DRAW_PATH_TYPE_LINE;
-    pTrap->br.pt.x   = (pOriginBL->x + pOffsetBR->x);
-    pTrap->br.pt.y   = (pOriginBL->y + pOffsetBR->y);
-
-    pTrap->tr.tag    = DRAW_PATH_TYPE_LINE;
-    pTrap->tr.pt.x   = (pOriginBL->x + pOffsetTR->x);
-    pTrap->tr.pt.y   = (pOriginBL->y + pOffsetTR->y);
-
-    pTrap->tl.tag    = DRAW_PATH_TYPE_LINE;
-    pTrap->tl.pt.x   = (pOriginBL->x + pOffsetTL->x);
-    pTrap->tl.pt.y   = (pOriginBL->y + pOffsetTL->y);
-
-    pTrap->bl2.tag   = DRAW_PATH_TYPE_LINE;
-    pTrap->bl2.pt    = pTrap->bl.pt;
-
-    pTrap->close.tag = DRAW_PATH_TYPE_CLOSE;
-
-    pTrap->term.tag  = DRAW_PATH_TYPE_TERM;
-
-    return(1);
 }
 
 extern font
@@ -1569,30 +1538,23 @@ gr_riscdiag_wackytag_tag_object =
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_wackytag_save_start(
     FILE_HANDLE f,
     filepos_t * pos /*out*/)
 {
-    S32 res;
+    status_return(file_getpos(f, pos));
 
-    if((res = file_getpos(f, pos)) < 0)
-        return(res);
+    status_return(file_write_err(&gr_riscdiag_wackytag_tag_object, sizeof(gr_riscdiag_wackytag_tag_object), 1, f));
 
-    if((res = file_write_err(&gr_riscdiag_wackytag_tag_object,
-                             sizeof(gr_riscdiag_wackytag_tag_object),
-                             1, f)) < 0)
-        return(res);
-
-    if((res = file_write_err(gr_riscdiag_wackytag_encapsulated_object,
-                             sizeof(gr_riscdiag_wackytag_encapsulated_object),
-                             1, f)) < 0)
-        return(res);
+    status_return(file_write_err(gr_riscdiag_wackytag_encapsulated_object, sizeof(gr_riscdiag_wackytag_encapsulated_object), 1, f));
 
     return(1);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_wackytag_save_end(
     FILE_HANDLE       f,
     const filepos_t * pos)
@@ -1600,28 +1562,22 @@ gr_riscdiag_wackytag_save_end(
     filepos_t curpos;
     filepos_t oldpos = *pos;
     filepos_t size;
-    S32      res;
 
     /* Draw objects and tag goop must be word-aligned/sized */
-    if((res = file_pad(f, 2  /* == log2(4) */)) < 0)
-        return(res);
+    status_return(file_pad(f, 2  /* == log2(4) */));
 
-    if((res = file_getpos(f, &curpos)) < 0)
-        return(res);
+    status_return(file_getpos(f, &curpos));
 
     oldpos.lo += offsetof(DRAW_OBJECT_TAG, size);
 
     /* number of bytes written as tag, object and goop */
     size.lo = curpos.lo - pos->lo;
 
-    if((res = file_setpos(f, &oldpos)) < 0)
-        return(res);
+    status_return(file_setpos(f, &oldpos));
 
-    if((res = file_write_err(&size, sizeofmemb(DRAW_OBJECT_TAG, size), 1, f)) < 0)
-        return(res);
+    status_return(file_write_err(&size, sizeofmemb(DRAW_OBJECT_TAG, size), 1, f));
 
-    if((res = file_setpos(f, &curpos)) < 0)
-        return(res);
+    status_return(file_setpos(f, &curpos));
 
     return(1);
 }

@@ -15,8 +15,6 @@
  * but we also define PipeDream specific messages here
  */
 
-#define Wimp_MPD_DDE ((wimp_msgaction) 0x0600) /* PipeDream dynamic data exchange */
-
 typedef enum WIMP_MSGPD_DDE_ID {            /* ddetype */
 
 /* PD tramsmits */
@@ -38,8 +36,8 @@ typedef char WIMP_MSGPD_DDETYPEA_TEXT[236 -4 -12];
 
 typedef struct WIMP_MSGPD_DDETYPEA {
     int                         handle;
-    int                         xsize;
-    int                         ysize;
+    int                         x_size;
+    int                         y_size;
     WIMP_MSGPD_DDETYPEA_TEXT    text;       /* leafname & tag, both 0-terminated */
 } WIMP_MSGPD_DDETYPEA;
 
@@ -55,8 +53,8 @@ typedef enum WIMP_MSGPD_DDETYPEC_TYPE {
 
 typedef struct WIMP_MSGPD_DDETYPEC {
     int                         handle;
-    int                         xoff;
-    int                         yoff;
+    int                         x_off;
+    int                         y_off;
     WIMP_MSGPD_DDETYPEC_TYPE    type;
     union WIMP_MSGPD_DDETYPEC_CONTENT {
         char                        text[236 -4 -16]; /* textual content 0-terminated */

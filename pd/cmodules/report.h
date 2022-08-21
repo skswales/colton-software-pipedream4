@@ -88,8 +88,8 @@ report_ustr(
 _Check_return_
 _Ret_z_
 extern PCTSTR
-report_l1str(
-    _In_opt_z_  PC_L1STR l1str);
+report_sbstr(
+    _In_opt_z_  PC_SBSTR sbstr);
 
 #if RISCOS
 

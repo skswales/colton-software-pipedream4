@@ -42,9 +42,8 @@ data_ensure_constant_sub(
 
 /******************************************************************************
 *
-* given a data item and a set of data
-* allowable flags, convert as many different
-* data items as possible into acceptable types
+* given a data item and a set of data allowable flags,
+* convert as many different data items as possible into acceptable types
 *
 * --out--
 * <0  error returned
@@ -54,82 +53,136 @@ data_ensure_constant_sub(
 
 extern S32
 arg_normalise(
-    P_EV_DATA p_ev_data,
-    EV_TYPE type_flags,
-    P_S32 max_x,
-    P_S32 max_y)
+    _InoutRef_  P_EV_DATA p_ev_data,
+    _InVal_     EV_TYPE type_flags,
+    _InoutRef_opt_ P_S32 max_x,
+    _InoutRef_opt_ P_S32 max_y)
 {
+    /* what have we currently got? */
     switch(p_ev_data->did_num)
     {
     case RPN_DAT_REAL:
-        if(!(type_flags & (EM_INT | EM_REA)))
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
-        else if(!(type_flags & EM_REA))
-            real_to_integer_force(p_ev_data);
-        break;
+        {
+        if(type_flags & EM_REA)
+            break; /* preferred */
+
+        if(type_flags & EM_INT)
+        {   /* try to obtain integer value from this real arg */
+            if(status_done(real_to_integer_force(p_ev_data)))
+                break;
+        }
+
+        return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
+        }
 
     case RPN_DAT_WORD8:
     case RPN_DAT_WORD16:
     case RPN_DAT_WORD32:
-        if(!(type_flags & (EM_INT | EM_REA)))
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
-        else if(!(type_flags & EM_INT))
+        {
+        if(type_flags & EM_INT)
+            break; /* preferred */
+
+        if(type_flags & EM_REA)
+        {   /* promote this integer arg to real value */
             ev_data_set_real(p_ev_data, (F64) p_ev_data->arg.integer);
-        break;
+            break;
+        }
+
+        return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXNUMBER)));
+        }
 
     case RPN_DAT_SLR:
-        /* if function doesn't want SLRs, dereference them */
-        if(!(type_flags & EM_SLR))
         {
-            ev_slr_deref(p_ev_data, &p_ev_data->arg.slr, TRUE);
-            return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
-        }
-        break;
+        if(type_flags & EM_SLR)
+            break; /* preferred */
 
+        /* function doesn't want SLRs, so dereference them and retry */
+        ev_slr_deref(p_ev_data, &p_ev_data->arg.slr, TRUE);
+        return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
+        }
+
+    case RPN_DAT_DATE:
+        {
+        if(type_flags & EM_DAT)
+            break; /* preferred */
+
+        return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXDATE)));
+        }
+
+    case RPN_DAT_NAME:
+        {
+        /* no function handles NAME args, so dereference them and retry */
+        name_deref(p_ev_data, p_ev_data->arg.nameid);
+        return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
+        }
+
+    case RPN_DAT_BLANK:
+        {
+        if(type_flags & EM_BLK)
+            break; /* preferred */
+
+        if(type_flags & EM_STR)
+        {   /* map blank arg to empty string */
+            p_ev_data->arg.string.uchars = "";
+            p_ev_data->arg.string.size = 0;
+            p_ev_data->did_num = RPN_DAT_STRING;
+            break;
+        }
+
+        /* map blank arg to zero and retry */
+        ev_data_set_real(p_ev_data, 0.0);
+        return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
+        }
+
+    case RPN_DAT_ERROR:
+        {
+        if(type_flags & EM_ERR)
+            break; /* preferred */
+
+        return(p_ev_data->arg.ev_error.status);
+        }
+
+    case RPN_DAT_STRING:
     case RPN_TMP_STRING:
-        if(!(type_flags & EM_STR))
+    case RPN_RES_STRING:
+        {
+        if(type_flags & EM_STR)
+            break; /* preferred */
+
+        if(p_ev_data->did_num == RPN_TMP_STRING)
         {
             trace_1(TRACE_MODULE_EVAL, "arg_normalise freeing string: %s", p_ev_data->arg.string.uchars);
             str_clr(&p_ev_data->arg.string_wr.uchars);
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
         }
-        break;
+        /* else string arg is not owned by us so don't free it */
 
-    case RPN_DAT_STRING:
-    case RPN_RES_STRING:
-        if(!(type_flags & EM_STR))
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
-        break;
-
-    case RPN_DAT_DATE:
-        if(!(type_flags & EM_DAT))
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXDATE)));
-        break;
+        return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXSTRING)));
+        }
 
     case RPN_DAT_RANGE:
-        if(!(type_flags & EM_ARY) && max_x && max_y)
         {
-            EV_COL col_size;
-            EV_ROW row_size;
+        if(type_flags & EM_ARY)
+            break; /* preferred */
 
-            col_size = p_ev_data->arg.range.e.col - p_ev_data->arg.range.s.col;
-            row_size = p_ev_data->arg.range.e.row - p_ev_data->arg.range.s.row;
+        if(max_x && max_y)
+        {
+            EV_COL col_size = p_ev_data->arg.range.e.col - p_ev_data->arg.range.s.col;
+            EV_ROW row_size = p_ev_data->arg.range.e.row - p_ev_data->arg.range.s.row;
 
             *max_x = MAX(col_size, *max_x);
             *max_y = MAX(row_size, *max_y);
+            break;
         }
-        else if(!(type_flags & EM_ARY))
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
 
-        break;
+        return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
+        }
 
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
+        {
         if(type_flags & EM_AR0)
         {
-            EV_DATA temp;
-
-            temp = *ss_array_element_index_borrow(p_ev_data, 0, 0);
+            EV_DATA temp = *ss_array_element_index_borrow(p_ev_data, 0, 0);
 
             if(p_ev_data->did_num == RPN_TMP_ARRAY)
                 ss_array_free(p_ev_data);
@@ -137,51 +190,31 @@ arg_normalise(
             *p_ev_data = temp;
             return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
         }
-        else if(!(type_flags & EM_ARY) && max_x && max_y)
+
+        if(type_flags & EM_ARY)
+            break; /* preferred */
+
+        if(max_x && max_y)
         {
             *max_x = MAX(*max_x, p_ev_data->arg.ev_array.x_size);
             *max_y = MAX(*max_y, p_ev_data->arg.ev_array.y_size);
-        }
-        else if(!(type_flags & EM_ARY))
-        {
-            if(p_ev_data->did_num == RPN_TMP_ARRAY)
-                ss_array_free(p_ev_data);
-
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
+            break;
         }
 
-        break;
+        if(p_ev_data->did_num == RPN_TMP_ARRAY)
+            ss_array_free(p_ev_data);
+        /* else array arg is not owned by us so don't free it */
 
-    case RPN_DAT_NAME:
-        name_deref(p_ev_data, p_ev_data->arg.nameid);
-        return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
-
-    case RPN_DAT_BLANK:
-        if(!(type_flags & EM_BLK))
-        {
-            if(!(type_flags & EM_STR))
-            {
-                ev_data_set_real(p_ev_data, 0.0);
-                return(arg_normalise(p_ev_data, type_flags, max_x, max_y));
-            }
-            else
-            {
-                p_ev_data->arg.string.uchars = "";
-                p_ev_data->arg.string.size = 0;
-                p_ev_data->did_num = RPN_DAT_STRING;
-            }
+        return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_UNEXARRAY)));
         }
-        break;
-
-    case RPN_DAT_ERROR:
-        if(!(type_flags & EM_ERR))
-            return(p_ev_data->arg.ev_error.status);
-        break;
 
     case RPN_FRM_COND:
-        if(!(type_flags & EM_CDX))
-            return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_BADEXPR)));
-        break;
+        {
+        if(type_flags & EM_CDX)
+            break; /* preferred */
+
+        return(ev_data_set_error(p_ev_data, create_error(EVAL_ERR_BADEXPR)));
+        }
     }
 
     return(p_ev_data->did_num);
@@ -401,12 +434,12 @@ array_range_index(
     _InVal_     S32 iy,
     _InVal_     EV_TYPE types)
 {
-    S32 xs, ys;
+    S32 x_size, y_size;
 
-    array_range_sizes(p_ev_data_in, &xs, &ys);
+    array_range_sizes(p_ev_data_in, &x_size, &y_size);
 
-    if( ((U32) ix >= (U32) xs) ||
-        ((U32) iy >= (U32) ys) ) /* caters for negative indexing */
+    if( ((U32) ix >= (U32) x_size) ||
+        ((U32) iy >= (U32) y_size) ) /* caters for negative indexing */
     {
         ev_data_set_error(p_ev_data_out, EVAL_ERR_SUBSCRIPT);
         return(p_ev_data_out->did_num);
@@ -449,19 +482,19 @@ array_range_mono_index(
     _InVal_     S32 mono_ix,
     _InVal_     EV_TYPE types)
 {
-    S32 xs, ys;
+    S32 x_size, y_size;
 
-    array_range_sizes(p_ev_data_in, &xs, &ys);
+    array_range_sizes(p_ev_data_in, &x_size, &y_size);
 
-    if((0 == xs) || (0 == ys))
+    if((0 == x_size) || (0 == y_size))
     {
         ev_data_set_error(p_ev_data_out, create_error(EVAL_ERR_SUBSCRIPT));
         return;
     }
 
     {
-    const S32 iy  =       mono_ix / xs;
-    const S32 ix  = mono_ix - (iy * xs);
+    const S32 iy  =       mono_ix / x_size;
+    const S32 ix  = mono_ix - (iy * x_size);
 
     array_range_index(p_ev_data_out, p_ev_data_in, ix, iy, types);
     } /*block*/
@@ -476,28 +509,28 @@ array_range_mono_index(
 extern void
 array_range_sizes(
     _InRef_     PC_EV_DATA p_ev_data_in,
-    _OutRef_    P_S32 xs,
-    _OutRef_    P_S32 ys)
+    _OutRef_    P_S32 p_x_size,
+    _OutRef_    P_S32 p_y_size)
 {
     switch(p_ev_data_in->did_num)
     {
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
         {
-        *xs = p_ev_data_in->arg.ev_array.x_size;
-        *ys = p_ev_data_in->arg.ev_array.y_size;
+        *p_x_size = p_ev_data_in->arg.ev_array.x_size;
+        *p_y_size = p_ev_data_in->arg.ev_array.y_size;
         break;
         }
 
     case RPN_DAT_RANGE:
         {
-        *xs = p_ev_data_in->arg.range.e.col - p_ev_data_in->arg.range.s.col;
-        *ys = p_ev_data_in->arg.range.e.row - p_ev_data_in->arg.range.s.row;
+        *p_x_size = p_ev_data_in->arg.range.e.col - p_ev_data_in->arg.range.s.col;
+        *p_y_size = p_ev_data_in->arg.range.e.row - p_ev_data_in->arg.range.s.row;
         break;
         }
 
     default:
-        *xs = *ys = 0;
+        *p_x_size = *p_y_size = 0;
         break;
     }
 }
@@ -555,15 +588,15 @@ array_scan_init(
 *
 ******************************************************************************/
 
-static S32 x_coord_static;
+static U32 x_index_static;
 
 PROC_QSORT_PROTO(static, proc_array_sort, EV_DATA)
 {
     PC_EV_DATA p_ev_data_row_1 = (PC_EV_DATA) arg1;
     PC_EV_DATA p_ev_data_row_2 = (PC_EV_DATA) arg2;
 
-    PC_EV_DATA p_ev_data_1 = p_ev_data_row_1 + x_coord_static;
-    PC_EV_DATA p_ev_data_2 = p_ev_data_row_2 + x_coord_static;
+    PC_EV_DATA p_ev_data_1 = p_ev_data_row_1 + x_index_static;
+    PC_EV_DATA p_ev_data_2 = p_ev_data_row_2 + x_index_static;
 
     return((int) ss_data_compare(p_ev_data_1, p_ev_data_2));
 }
@@ -577,19 +610,19 @@ PROC_QSORT_PROTO(static, proc_array_sort, EV_DATA)
 extern STATUS
 array_sort(
     P_EV_DATA p_ev_data,
-    _InVal_     S32 x_coord)
+    _InVal_     U32 x_index)
 {
     STATUS status = STATUS_OK;
 
     assert((p_ev_data->did_num == RPN_RES_ARRAY) || (p_ev_data->did_num == RPN_TMP_ARRAY));
 
     {
-    S32 row_size = p_ev_data->arg.ev_array.x_size * sizeof32(EV_DATA);
+    U32 row_size = (U32) p_ev_data->arg.ev_array.x_size * sizeof32(EV_DATA);
 
-    if(x_coord < p_ev_data->arg.ev_array.x_size)
+    if(x_index < (U32) p_ev_data->arg.ev_array.x_size)
     {
-        x_coord_static = x_coord;
-        qsort(p_ev_data->arg.ev_array.elements, (size_t) p_ev_data->arg.ev_array.y_size, (size_t) row_size, proc_array_sort);
+        x_index_static = x_index;
+        qsort(p_ev_data->arg.ev_array.elements, (size_t) p_ev_data->arg.ev_array.y_size, row_size, proc_array_sort);
     }
     else
         status = create_error(EVAL_ERR_OUTOFRANGE);
@@ -701,11 +734,11 @@ data_constant_array_from_range(
     if(p_ev_data->did_num == RPN_DAT_RANGE)
     {
         EV_DATA array_out;
-        S32 xs, ys;
+        S32 x_size, y_size;
 
-        array_range_sizes(p_ev_data, &xs, &ys);
+        array_range_sizes(p_ev_data, &x_size, &y_size);
 
-        if(status_ok(ss_array_make(&array_out, xs, ys)))
+        if(status_ok(ss_array_make(&array_out, x_size, y_size)))
         {
             S32 ix, iy;
             EV_SLR slr;
@@ -714,16 +747,18 @@ data_constant_array_from_range(
             slr.docno = p_ev_data->arg.range.s.docno;
 
             for(iy = 0, slr.row = p_ev_data->arg.range.s.row;
-                iy < ys;
+                iy < y_size;
                 ++iy, ++slr.row)
+            {
                 for(ix = 0, slr.col = p_ev_data->arg.range.s.col;
-                    ix < xs;
+                    ix < x_size;
                     ++ix, ++slr.col)
                 {
                     P_EV_DATA p_ev_data_i = ss_array_element_index_wr(&array_out, ix, iy);
                     ev_slr_deref(p_ev_data_i, &slr, TRUE);
                     data_ensure_constant_sub(p_ev_data_i, TRUE);
                 }
+            }
         }
 
         *p_ev_data = array_out;
@@ -891,11 +926,11 @@ data_limit_types(
         else
         {
             EV_DATA array_out;
-            S32 xs, ys;
+            S32 x_size, y_size;
 
-            array_range_sizes(p_ev_data, &xs, &ys);
+            array_range_sizes(p_ev_data, &x_size, &y_size);
 
-            if(status_fail(ss_array_make(&array_out, xs, ys)))
+            if(status_fail(ss_array_make(&array_out, x_size, y_size)))
                 ev_data_set_error(p_ev_data, status_nomem());
             else
             {
@@ -906,10 +941,11 @@ data_limit_types(
                 slr.flags = 0;
 
                 for(iy = 0, slr.row = p_ev_data->arg.range.s.row;
-                    iy < ys;
+                    iy < y_size;
                     ++iy, ++slr.row)
+                {
                     for(ix = 0, slr.col = p_ev_data->arg.range.s.col;
-                        ix < xs;
+                        ix < x_size;
                         ++ix, ++slr.col)
                     {
                         EV_DATA temp;
@@ -920,6 +956,7 @@ data_limit_types(
                         data_ensure_owner(p_ev_data_a, &temp);
                         data_limit_types(p_ev_data_a, TRUE);
                     }
+                }
             }
 
             *p_ev_data = array_out;

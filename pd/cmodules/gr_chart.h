@@ -318,19 +318,22 @@ _e_s S32 _p_proc_gr_chart_travel( \
     GR_CHART_ITEMNO item, \
     _OutRef_    P_GR_CHART_VALUE val /*out*/)
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_preferred_get_name(
     P_U8 buffer,
     U32 bufsiz);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_save_external(
     GR_CHART_HANDLE ch,
     FILE_HANDLE f,
     P_U8 save_filename /*const*/,
     P_ANY ext_handle);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_ext_construct_load_this(
     GR_CHART_HANDLE ch,
     P_U8 args,
@@ -340,21 +343,24 @@ gr_ext_construct_load_this(
 exported functions
 */
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_add(
     P_GR_CHART_HANDLE chp /*inout*/,
     gr_chart_travelproc proc,
     P_ANY ext_handle,
     P_GR_INT_HANDLE p_int_handle_out);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_add_labels(
     P_GR_CHART_HANDLE chp /*inout*/,
     gr_chart_travelproc proc,
     P_ANY ext_handle,
     P_GR_INT_HANDLE p_int_handle_out);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_add_text(
     P_GR_CHART_HANDLE chp /*inout*/,
     gr_chart_travelproc proc,
@@ -366,10 +372,10 @@ gr_chart_damage(
     PC_GR_CHART_HANDLE chp,
     P_GR_INT_HANDLE p_int_handle /*const*/);
 
-extern S32
+extern void
 gr_chart_diagram(
     PC_GR_CHART_HANDLE chp,
-    /*out*/ P_GR_DIAG * dcpp);
+    _OutRef_    P_P_GR_DIAG dcpp);
 
 extern void
 gr_chart_diagram_ensure(
@@ -379,7 +385,8 @@ extern void
 gr_chart_dispose(
     P_GR_CHART_HANDLE chp /*inout*/);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_insert(
     P_GR_CHART_HANDLE chp /*inout*/,
     gr_chart_travelproc proc,
@@ -391,78 +398,86 @@ extern void
 gr_chart_modify_and_rebuild(
     PC_GR_CHART_HANDLE chp);
 
-extern S32
+extern void
 gr_chart_name_query(
     PC_GR_CHART_HANDLE chp,
-    /*out*/ P_U8 szName,
-    size_t bufsiz);
+    _Out_writes_(bufsiz) P_U8Z szName,
+    _InVal_     U32 bufsiz);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_name_set(
     PC_GR_CHART_HANDLE chp,
-    P_U8 szName /*const*/);
+    _In_opt_z_  PC_U8Z szName);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_new(
     P_GR_CHART_HANDLE chp /*out*/,
     P_ANY ext_handle,
     S32 new_untitled);
 
+_Check_return_
 extern U32
 gr_chart_order_query(
     PC_GR_CHART_HANDLE chp,
     P_GR_INT_HANDLE p_int_handle /*const*/);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_new(
     /*out*/ P_GR_CHART_HANDLE chp,
     P_ANY ext_handle);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_preferred_query(void);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_save(
     P_U8 filename /*const*/);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_set(
     PC_GR_CHART_HANDLE chp);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_use(
     PC_GR_CHART_HANDLE chp);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_exists(
     /*out*/ P_GR_CHART_HANDLE chp,
-     /*out*/P_P_ANY p_ext_handle,
-    P_U8 szName /*const*/);
+    /*out*/ P_P_ANY p_ext_handle,
+    _In_z_      PC_U8Z szName);
 
-extern S32
-gr_chart_query_name(
-    PC_GR_CHART_HANDLE chp,
-    /*out*/ char * szName,
-    size_t bufsiz);
-
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_labelling(
     PC_GR_CHART_HANDLE chp);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_labels(
     PC_GR_CHART_HANDLE chp);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_modified(
     PC_GR_CHART_HANDLE chp);
 
+/*ncr*/
 extern S32
 gr_chart_subtract(
     PC_GR_CHART_HANDLE chp,
     P_GR_INT_HANDLE p_int_handle /*inout*/);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_update_handle(
     PC_GR_CHART_HANDLE chp,
     P_ANY new_ext_handle,
@@ -504,55 +519,65 @@ GR_CONSTRUCT_TABLE_ENTRY; typedef GR_CONSTRUCT_TABLE_ENTRY * P_GR_CONSTRUCT_TABL
 #define gr_contab_entry_last                {  NULL, 0, 0, 0, 0 }
 #endif
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_construct_save_frag_end(
     FILE_HANDLE f);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_construct_save_frag_stt(
     FILE_HANDLE f,
     U16 ext_contab_ix);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_construct_save_frag_txt(
     FILE_HANDLE f,
     P_U8 str /*const*/);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_construct_save_txt(
     FILE_HANDLE f,
     U16 ext_contab_ix,
     P_U8 str /*const*/);
 
-extern S32
+extern void
 gr_chart_construct_table_register(
     P_GR_CONSTRUCT_TABLE_ENTRY table,
     U16 last_ext_contab_ix);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_construct_tagstrip_process(
     P_GR_CHART_HANDLE chp,
     P_GR_CACHE_TAGSTRIP_INFO p_info);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_save_chart_with_dialog(
     PC_GR_CHART_HANDLE chp);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_save_chart_without_dialog(
     PC_GR_CHART_HANDLE chp,
     P_U8 filename /*const*/);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_save_draw_file_with_dialog(
     PC_GR_CHART_HANDLE cehp);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_save_draw_file_without_dialog(
     PC_GR_CHART_HANDLE chp,
     P_U8 filename /*const*/);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_saving_chart(
     /*out*/ P_U8 name_during_send);
 
@@ -599,14 +624,14 @@ GR_CHARTEDIT_NOTIFY_TITLE_STR;
 callback from chart editor to owner for various reasons
 */
 
-typedef S32 (* gr_chartedit_notify_proc) (
+typedef STATUS (* gr_chartedit_notify_proc) (
     P_ANY handle,
     GR_CHARTEDIT_HANDLE ceh,
     GR_CHARTEDIT_NOTIFY_TYPE ntype,
     P_ANY nextra);
 
 #define gr_chartedit_notify_proto(_e_s, _p_proc_gr_chartedit_notify, handle, ceh, ntype, nextra) \
-_e_s S32 _p_proc_gr_chartedit_notify( \
+_e_s STATUS _p_proc_gr_chartedit_notify( \
     P_ANY handle, \
     GR_CHARTEDIT_HANDLE ceh, \
     GR_CHARTEDIT_NOTIFY_TYPE ntype, \
@@ -643,22 +668,6 @@ end of exports from gr_editc.c
 */
 
 /*
-exports from gr_editm.c
-*/
-
-/*
-exported functions
-*/
-
-extern S32
-gr_chartedit_saving_chart(
-    char * leaf_during_send /*out*/);
-
-/*
-end of exports from gr_editm.c
-*/
-
-/*
 exports from gr_editt.c
 */
 
@@ -673,42 +682,6 @@ gr_chart_text_order_set(
 
 /*
 end of exports from gr_editt.c
-*/
-
-/*
-exports from gr_scale.c
-*/
-
-/*
-exported functions
-*/
-
-extern GR_OSUNIT
-gr_os_from_pixit_floor(
-    GR_COORD a);
-
-extern GR_OSUNIT
-gr_round_os_to_ceil(
-    GR_OSUNIT a,
-    S32 b);
-
-extern GR_OSUNIT
-gr_round_os_to_floor(
-    GR_OSUNIT a,
-    S32 b);
-
-extern GR_COORD
-gr_round_pixit_to_ceil(
-    GR_COORD a,
-    S32 b);
-
-extern GR_COORD
-gr_round_pixit_to_floor(
-    GR_COORD a,
-    S32 b);
-
-/*
-end of exports from gr_scale.c
 */
 
 #endif /* ERRDEF_EXPORT */
@@ -794,10 +767,11 @@ enum GR_CHART_MO_GALLERY_ENUM
 
 enum GR_CHART_MO_SELECTION_ENUM
 {
-    GR_CHART_MO_SELECTION_FILLSTYLE = 1,
-    GR_CHART_MO_SELECTION_FILLCOLOUR,
-    GR_CHART_MO_SELECTION_LINESTYLE,
+    GR_CHART_MO_SELECTION_LINEWIDTH = 1,
     GR_CHART_MO_SELECTION_LINECOLOUR,
+    GR_CHART_MO_SELECTION_FILLSTYLE,
+    GR_CHART_MO_SELECTION_FILLCOLOUR,
+    GR_CHART_MO_SELECTION_LINEPATTERN,
     GR_CHART_MO_SELECTION_TEXT,
     GR_CHART_MO_SELECTION_TEXTSTYLE,
     GR_CHART_MO_SELECTION_TEXTCOLOUR,
@@ -842,7 +816,7 @@ enum GR_CHART_MSG_ID
     GR_CHART_MSG_TEXT_ZD                 = 8113,
     GR_CHART_MSG_DEFAULT_FONTNAME        = 8114,
     GR_CHART_MSG_EDIT_APPEND_BASE        = 8115,
-    GR_CHART_MSG_EDITOR_LINESTYLE_THIN   = 8116,
+    GR_CHART_MSG_EDITOR_LINEWIDTH_THIN   = 8116,
     GR_CHART_MSG_DEFAULT_CHARTZD         = 8117,
     GR_CHART_MSG_WINGE_SERIES_PICTURE    = 8118,
     GR_CHART_MSG_WINGE_SERIES_MARKER     = 8119,

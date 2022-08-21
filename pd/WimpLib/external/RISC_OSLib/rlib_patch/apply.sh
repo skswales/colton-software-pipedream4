@@ -86,23 +86,25 @@ cp -p $rlib_tmp_dir/s/swi        ../../../swi.s
 #
 echo Patch these files in WimpLib so that it is in the state for PipeDream
 #
-patch --unified < flex.c       ../../../flex.c
+pushd ../../..
+patch --unified < $OLDPWD/flex.c       flex.c
 #
-patch --unified < bbc.c        ../../../bbc.c
-patch --unified < dbox.c       ../../../dbox.c
-patch --unified < event.c      ../../../event.c
-# patch --unified < flex.c       ../../../flex.c
-patch --unified < fontlist.c   ../../../fontlist.c
-patch --unified < fontselect.c ../../../fontselect.c
-patch --unified < menu.c       ../../../menu.c
-patch --unified < res.c        ../../../res.c
-patch --unified < resspr.c     ../../../resspr.c
-patch --unified < win.c        ../../../win.c
-patch --unified < wimp.c       ../../../wimp.c
-patch --unified < wimpt.c      ../../../wimpt.c
-patch --unified < xferrecv.c   ../../../xferrecv.c
-patch --unified < xfersend.c   ../../../xfersend.c
+patch --unified < $OLDPWD/bbc.c        bbc.c
+patch --unified < $OLDPWD/dbox.c       dbox.c
+patch --unified < $OLDPWD/event.c      event.c
+# patch --unified < $OLDPWD/flex.c       flex.c
+patch --unified < $OLDPWD/fontlist.c   fontlist.c
+patch --unified < $OLDPWD/fontselect.c fontselect.c
+patch --unified < $OLDPWD/menu.c       menu.c
+patch --unified < $OLDPWD/res.c        res.c
+patch --unified < $OLDPWD/resspr.c     resspr.c
+patch --unified < $OLDPWD/win.c        win.c
+patch --unified < $OLDPWD/wimp.c       wimp.c
+patch --unified < $OLDPWD/wimpt.c      wimpt.c
+patch --unified < $OLDPWD/xferrecv.c   xferrecv.c
+patch --unified < $OLDPWD/xfersend.c   xfersend.c
 #
-patch --unified < wimp.h       ../../../wimp.h
+patch --unified < $OLDPWD/wimp.h       wimp.h
 #
-patch --unified < swi.s        ../../../swi.s
+patch --unified < $OLDPWD/swi.s        swi.s
+popd

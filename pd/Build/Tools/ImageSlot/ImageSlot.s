@@ -5,7 +5,7 @@
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ; Copyright (C) 1991-1998 Colton Software Limited
-; Copyright (C) 1998-2014 R W Colton
+; Copyright (C) 1998-2015 R W Colton
 
         GBLL    No26bitCode
         GBLL    No32bitCode
@@ -436,7 +436,7 @@ ReadSize ROUT
         SWI     XOS_ReadUnsigned
         BVS     ErrorExit
 
-        LDRB    R0,[R1],#0
+        LDRB    R0,[R1,#0]
 
 ; is it some form of kilobyte suffix?
         TEQ     R0,#&6B            ; ="k"
@@ -476,7 +476,7 @@ OsExitLiteral
 ; +++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 IdString
-        DCB "ImageSlot 0.11",0
+        DCB "ImageSlot 0.12",0
 
         ALIGN
 

@@ -158,7 +158,7 @@ pd_wimp_messages[] =
 
     wimp_MHELPREQUEST,
 
-    Wimp_MPD_DDE,
+    wimp_MPD_DDE,
 
     wimp_MMENUWARN,
     wimp_MMODECHANGE,
@@ -548,7 +548,7 @@ decode_command_line_options(
         {
         case '-':
             ch = *++arg;
-            ch = tolower(ch);
+            ch = (char) tolower(ch);
             switch(ch)
             {
             case 'h':

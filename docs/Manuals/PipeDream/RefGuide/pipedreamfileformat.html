@@ -31,7 +31,7 @@
 <p>The PipeDream file format is designed to facilitate manipulation by other
 programs. No control characters are used in the file, unless they have been
 explicitly typed in, apart from carriage return and/or linefeed characters
-which are used as slot separators. The files are sequential, and can be edited
+which are used as cell separators. The files are sequential, and can be edited
 by any text editor.</p>
 
 <p>PipeDream uses a special form of construct to add information about the
@@ -50,12 +50,12 @@ This is followed by the main body of the file.</p>
 
 <p>The file is arranged column by column and each column in the file is
 preceded by a column construct which gives details about the column followed by
-all the slots in the column. Every slot that is defined in that column has an
+all the cells in the column. Every cell that is defined in that column has an
 entry.</p>
 
 <p>Each entry is separated from the next one with a carriage return and/or
 linefeed. On each line can be a collection of constructs giving details about
-the slot.</p>
+the cell.</p>
 
 <p>For each column in the file there is a column construct, followed by all the
 entries for that column, until the end of file.</p>
@@ -215,7 +215,7 @@ processes PipeDream format files must do so too.</p>
 
 <p><code>CB&nbsp;&nbsp;&nbsp;</code>Text background colour</p>
 
-<p><code>CP&nbsp;&nbsp;&nbsp;</code>Protected slots colour</p>
+<p><code>CP&nbsp;&nbsp;&nbsp;</code>Protected cells colour</p>
 
 <p><code>CL&nbsp;&nbsp;&nbsp;</code>Negative numbers colour</p>
 
@@ -262,7 +262,7 @@ class="csguide-arg">wrap_width</span>%</code></p>
   </tbody>
 </table>
 
-<p>These constructs can appear anywhere in the entry for each slot</p>
+<p>These constructs can appear anywhere in the entry for each cell</p>
 
 <p><code>%B%&nbsp;&nbsp;&nbsp;</code>brackets format</p>
 
@@ -297,9 +297,9 @@ class="csguide-arg">n</span> gives the parameter, 0 for unconditional</p>
 
 <p><code>%TC%&nbsp;&nbsp;</code>trailing character format</p>
 
-<p><code>%V%&nbsp;&nbsp;&nbsp;</code>slot is a number (value) slot</p>
+<p><code>%V%&nbsp;&nbsp;&nbsp;</code>cell is a number (value) cell</p>
 
-<h2>PipeDream Slot Format</h2>
+<h2>PipeDream Cell Format</h2>
 
 <p><code><span class="csguide-arg">construct</span> <span
 class="csguide-arg">text</span> <span class="csguide-arg">construct</span>
@@ -316,7 +316,7 @@ class="csguide-arg">ls</span></code></p>
     </tr>
     <tr>
       <td><span class="csguide-arg">text</span></td>
-      <td>ASCII characters being the slot contents;</td>
+      <td>ASCII characters being the cell contents;</td>
     </tr>
     <tr>
       <td><span class="csguide-arg">ls</span></td>

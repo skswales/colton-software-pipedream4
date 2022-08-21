@@ -427,7 +427,7 @@ cachemodevariables(void)
     dym1    = dy - 1;
     chmdy   = charheight - dy;
 
-    trace_4(TRACE_APP_PD4_RENDER, "dx = %d, dy = %d, xsize = %d, ysize = %d", dx, dy, x, y);
+    trace_4(TRACE_APP_PD4_RENDER, "dx = %d, dy = %d, x_size = %d, y_size = %d", dx, dy, x, y);
 
     max_poss_width  = x - leftline_width - wimpt_vscroll_width();
     max_poss_height = y - wimpt_title_height() - wimpt_hscroll_height() /* has hscroll not bottomline */;
@@ -535,14 +535,14 @@ windowheight(void)
     S32 os_height;
     S32 height;
     S32 min_height = calrad(3);        /* else rebols & friends explode */
-    BOOL err;
+    BOOL ok;
 
-    err = (main_window == window_NULL);
+    ok = (main_window != window_NULL);
 
-    if(!err)
-        err = (BOOL) wimpt_safe(wimp_get_wind_state(main__window, &s));
+    if(ok)
+        ok = (NULL == wimpt_safe(wimp_get_wind_state(main__window, &s)));
 
-    if(!err)
+    if(ok)
         os_height = (s.o.box.y1 - topslop) - s.o.box.y0;
     else
         os_height = min_height * charvspace;
@@ -564,14 +564,14 @@ windowwidth(void)
 {
     wimp_wstate s;
     S32 width;
-    BOOL err;
+    BOOL ok;
 
-    err = (main_window == window_NULL);
+    ok = (main_window != window_NULL);
 
-    if(!err)
-        err = (BOOL) wimpt_safe(wimp_get_wind_state(main__window, &s));
+    if(ok)
+        ok = (NULL == wimpt_safe(wimp_get_wind_state(main__window, &s)));
 
-    if(!err)
+    if(ok)
         width = (s.o.box.x1 - (s.o.box.x0 + leftslop)) / charwidth;
     else
         width = BORDERWIDTH + 4;
@@ -672,21 +672,21 @@ extern void
 clear_underlay(
     S32 len)
 {
-    S32 x, ypos, yneg;
+    S32 x, y_pos, y_neg;
 
     trace_1(TRACE_DRAW, "clear_underlay(%d)", len);
 
     if(len > 0)
     {
         x = len * charwidth - dx;
-        ypos = charvrubout_pos;
-        yneg = charvrubout_neg;
+        y_pos = charvrubout_pos;
+        y_neg = charvrubout_neg;
 
-        if(ypos)
-            wimpt_safe(os_plot(bbc_MoveCursorRel,               0, +ypos));
+        if(y_pos)
+            wimpt_safe(os_plot(bbc_MoveCursorRel,               0, +y_pos));
 
-        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack, x, -ypos -yneg));
-        wimpt_safe(os_plot(bbc_MoveCursorRel,                  -x,       +yneg));
+        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack, x, -y_pos -y_neg));
+        wimpt_safe(os_plot(bbc_MoveCursorRel,                  -x,        +y_neg));
     }
 }
 
@@ -896,8 +896,10 @@ please_invert_numeric_slots(
     S32 tx0, tx1, ty0, ty1;
 
     if(grid_on)
+    {
         while(start_coff <= end_coff)
             please_invert_numeric_slot(start_coff++, roff, fg, bg);
+    }
     else
     {
         tx0 = calcad(start_coff);
@@ -1341,7 +1343,7 @@ extern void
 riscos_printspaces(
     S32 nspaces)
 {
-    S32 ldx, x, ypos, yneg;
+    S32 ldx, x, y_pos, y_neg;
 
     trace_1(TRACE_DRAW, "riscos_printspaces(%d)", nspaces);
 
@@ -1349,14 +1351,14 @@ riscos_printspaces(
     {
         ldx = dx;
         x = nspaces * charwidth - ldx;
-        ypos = charvrubout_pos;
-        yneg = charvrubout_neg;
+        y_pos = charvrubout_pos;
+        y_neg = charvrubout_neg;
 
-        if(ypos)
-            wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +ypos));
+        if(y_pos)
+            wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +y_pos));
 
-        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -ypos  -yneg));
-        wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,        +yneg));
+        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -y_pos  -y_neg));
+        wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,         +y_neg));
     }
 }
 
@@ -1364,7 +1366,7 @@ extern void
 riscos_printspaces_fonts(
     S32 nspaces)
 {
-    S32 ldx, x, ypos, yneg;
+    S32 ldx, x, y_pos, y_neg;
 
     trace_1(TRACE_DRAW, "riscos_printspaces_fonts(%d)", nspaces);
 
@@ -1372,14 +1374,14 @@ riscos_printspaces_fonts(
     {
         ldx = dx;
         x = (riscos_fonts ? nspaces : nspaces * charwidth) - ldx;
-        ypos = charvrubout_pos;
-        yneg = charvrubout_neg;
+        y_pos = charvrubout_pos;
+        y_neg = charvrubout_neg;
 
-        if(ypos)
-            wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +ypos));
+        if(y_pos)
+            wimpt_safe(os_plot(bbc_MoveCursorRel,                0, +y_pos));
 
-        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -ypos  -yneg));
-        wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,        +yneg));
+        wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack,  x, -y_pos  -y_neg));
+        wimpt_safe(os_plot(bbc_MoveCursorRel,                  ldx,         +y_neg));
     }
 }
 
@@ -1397,17 +1399,17 @@ extern void
 riscos_printchar(
     S32 ch)
 {
-    S32 x    = charwidth - dx;                      /* avoids reload over procs */
-    S32 ypos = charvrubout_pos;
-    S32 yneg = charvrubout_neg;
+    S32 x = charwidth - dx; /* avoids reload over procs */
+    S32 y_pos = charvrubout_pos;
+    S32 y_neg = charvrubout_neg;
 
     trace_1(TRACE_DRAW, "riscos_printchar(%d)", ch);
 
-    if(ypos)
-        wimpt_safe(os_plot(bbc_MoveCursorRel,               0, +ypos));
+    if(y_pos)
+        wimpt_safe(os_plot(bbc_MoveCursorRel,               0, +y_pos));
 
-    wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack, x, -ypos -yneg));
-    wimpt_safe(os_plot(bbc_MoveCursorRel,                  -x,       +yneg));
+    wimpt_safe(os_plot(bbc_RectangleFill + bbc_DrawRelBack, x, -y_pos -y_neg));
+    wimpt_safe(os_plot(bbc_MoveCursorRel,                  -x,        +y_neg));
 
     wimpt_safe(bbc_vdu(ch));
 }
@@ -1511,8 +1513,11 @@ compute_scx(void)
     S32 scx;
 
     if(nfixes)
+    {
+        assert(horzvec_entry_valid(0));
         if(ffc >= col_number(0))
             ffc -= nfixes;
+    }
 
     scx = pd_muldiv64(curr_xext, (S32) ffc, cols_for_extent());
 
@@ -1543,8 +1548,11 @@ compute_scy(void)
     S32 scy;
 
     if(nfixes)
+    {
+        assert(vertvec_entry_valid(0));
         if(ffr >= row_number(0))
             ffr -= nfixes;
+    }
 
     scy = pd_muldiv64(curr_yext, (S32) ffr, rows_for_extent()); /* -ve, +ve, +ve */
 
@@ -1745,8 +1753,11 @@ application_open_request(
         leftcol = (COL) pd_muldiv64(scx, cols_for_extent(), curr_xext);
 
         if(nfixes)
+        {
+            assert(horzvec_entry_valid(0));
             if(leftcol >= col_number(0))
                 leftcol += nfixes;
+        }
 
         if( leftcol > numcol - 1)
             leftcol = numcol - 1;
@@ -1808,8 +1819,11 @@ application_open_request(
         toprow = (ROW) pd_muldiv64(rows_for_extent(), scy, curr_yext);  /* +ve, -ve, -ve */
 
         if(nfixes)
+        {
+            assert(vertvec_entry_valid(0));
             if(toprow >= row_number(0))
                 toprow += nfixes;
+        }
 
         trace_3(TRACE_APP_PD4, "row %d is my first guess, numrow %d, rows_available %d", toprow, numrow, rows_available);
 
@@ -2216,14 +2230,14 @@ draw_grid_vbar(
 {
     S32 fg = current_fg;
     S32 ldx = dx;
-    S32 ypos = charvrubout_pos;
-    S32 yneg = charvrubout_neg + (include_hbar ? dy : 0);
+    S32 y_pos = charvrubout_pos;
+    S32 y_neg = charvrubout_neg + (include_hbar ? dy : 0);
 
     setfgcolour(GRIDC);
 
-    wimpt_safe(os_plot(bbc_MoveCursorRel,              -ldx, +ypos));
-    wimpt_safe(os_plot(bbc_SolidBoth + bbc_DrawRelFore,   0, -ypos -yneg));
-    wimpt_safe(os_plot(bbc_MoveCursorRel,              +ldx,       +yneg));
+    wimpt_safe(os_plot(bbc_MoveCursorRel,              -ldx, +y_pos));
+    wimpt_safe(os_plot(bbc_SolidBoth + bbc_DrawRelFore,   0, -y_pos -y_neg));
+    wimpt_safe(os_plot(bbc_MoveCursorRel,              +ldx,        +y_neg));
 
     riscos_setcolour(fg, FALSE);
 }

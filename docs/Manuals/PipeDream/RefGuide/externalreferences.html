@@ -28,9 +28,9 @@
 
 <h1>External References</h1>
 
-<p>As well as having references in slots to other slots inside the document,
-you can also have references to slots in other documents.Such references to
-slots in other documents are called external references.</p>
+<p>As well as having references in cells to other cells inside the document,
+you can also have references to cells in other documents.Such references to
+cells in other documents are called external references.</p>
 
 <p>This can be useful if you have spreadsheets which use figures from other
 spreadsheets. For example, you may need to have a turnover spreadsheet whose
@@ -45,23 +45,23 @@ document. The documents referred to by the dependent document are called
 supporting documents. Normally, both dependent and supporting documents are
 stored in the same directory on your disc.</p>
 
-<p>To include a slot reference from another document, you should have loaded
+<p>To include a cell reference from another document, you should have loaded
 both the dependent document you are editing and the supporting documents. To
 insert an external reference in the dependent document, click in the relevant
-slot in the supporting document whilst you are editing a number ie after having
+cell in the supporting document whilst you are editing a number i.e. after having
 given the <span class="csguide-command">Edit Formula</span> command. The
 external reference will appear on the formula line of the dependent document at
 the caret position as follows:</p>
 
-<p><code>[filename]slot reference</code></p>
+<p><code>[filename]cell reference</code></p>
 
 <p>where <code>filename</code> is the name of the supporting document and
-<code>slot reference</code> is the slot referred to in that document.</p>
+<code>cell reference</code> is the cell referred to in that document.</p>
 
-<p>For example, <code>[turnover]A3</code> would be a reference to slot A3 in
+<p>For example, <code>[turnover]A3</code> would be a reference to cell A3 in
 the document called 'turnover'.</p>
 
-<p>Instead of clicking in the relevant slot in the supporting document, you can
+<p>Instead of clicking in the relevant cell in the supporting document, you can
 type in the external reference on the formula line using the above syntax. Any
 document referred to should be loaded. If you try to type in a reference to a
 document which is not loaded, you will get an error message <code>File not
@@ -81,7 +81,7 @@ supporting documents.</p>
 
 <p>Example 1:</p>
 
-<p>Sheet A has references to slots in B, C and D. It is a dependent
+<p>Sheet A has references to cells in B, C and D. It is a dependent
 document.</p>
 
 <p>Sheets B, C, D are supporting documents.</p>
@@ -94,9 +94,9 @@ automatically.</p>
 
 <p>Example 2:</p>
 
-<p>Sheet A has references to slots in B, C and D.</p>
+<p>Sheet A has references to cells in B, C and D.</p>
 
-<p>Sheets B, C, D have references to slots in A.</p>
+<p>Sheets B, C, D have references to cells in A.</p>
 
 <p>All sheets are both supporting and dependent documents.</p>
 
@@ -112,7 +112,7 @@ provided you have not switched to manual recalculation.</p>
 it in dependent documents which are loaded will change accordingly.</p>
 
 <p>If you carry out moves, copies or deletions in one of the linked documents
-such that slot references need to be updated, this will be done automatically
+such that cell references need to be updated, this will be done automatically
 for all the dependent documents which are loaded.</p>
 
 <p>Note that, if you have dependent documents which are not in memory when you

@@ -79,7 +79,8 @@ null_event_proto(static, gr_chartedit_selected_object_drag_null_handler);
 internal functions
 */
 
-static S32
+_Check_return_
+static STATUS
 gr_chartedit_text_editor_make(
     P_GR_CHART cp,
     LIST_ITEMNO key,
@@ -99,24 +100,23 @@ mlsubmenu_destroy(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_text_addin(
     P_GR_CHART cp)
 {
     struct GR_CHART_TEXT * text = &cp->text;
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    GR_CHART_OBJID id = gr_chart_objid_anon;
+    GR_CHART_OBJID id;
     GR_DIAG_OFFSET textsStart;
     GR_TEXTSTYLE   textstyle;
     P_GR_TEXT      t;
     LIST_ITEMNO    key;
     P_GR_TEXT_GUTS gutsp;
-    S32            res;
+    STATUS res;
     GR_CHART_VALUE value;
     PC_U8          textsrc;
 
-    if((res = gr_chart_group_new(cp, &textsStart, &id)) < 0)
-        return(res);
+    status_return(res = gr_chart_group_new(cp, &textsStart, gr_chart_objid_anon));
 
     for(t = collect_first(GR_TEXT, &text->lbr, &key);
         t;
@@ -128,7 +128,7 @@ gr_text_addin(
 
         gr_chart_objid_from_text(key, &id);
 
-        gr_chart_objid_textstyle_query(cp, &id, &textstyle);
+        gr_chart_objid_textstyle_query(cp, id, &textstyle);
 
         gutsp.mp = t + 1;
 
@@ -141,14 +141,14 @@ gr_text_addin(
         else
             textsrc = gutsp.textp;
 
-        if((res = gr_diag_text_new(p_gr_diag, NULL, id,
-                                   &t->box, textsrc, &textstyle)) < 0)
-            return(res);
+        status_break(res = gr_chart_text_new(cp, id, &t->box, textsrc, &textstyle));
+
+        res = STATUS_DONE;
     }
 
-    gr_diag_group_end(p_gr_diag, &textsStart);
+    gr_chart_group_end(cp, &textsStart);
 
-    return(1);
+    return(res);
 }
 
 /* SKS after 4.12 27mar92 - needed for live text reload mechanism */
@@ -205,7 +205,8 @@ gr_text_nlists_blk_proto =
     4096
 };
 
-extern S32
+_Check_return_
+extern STATUS
 gr_text_new(
     P_GR_CHART        cp,
     LIST_ITEMNO      key,
@@ -265,15 +266,18 @@ extern void
 gr_text_box_query(
     P_GR_CHART cp,
     LIST_ITEMNO key,
-    /*out*/ P_GR_BOX p_box)
+    _OutRef_    P_GR_BOX p_box)
 {
     P_GR_TEXT t;
 
     if((t = gr_text_search_key(cp, key)) != NULL)
         *p_box = t->box;
+    else
+        zero_struct_ptr(p_box);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_text_box_set(
     P_GR_CHART cp,
     LIST_ITEMNO key,
@@ -423,6 +427,7 @@ mlsubmenu_create(
 *
 ******************************************************************************/
 
+_Check_return_
 static S32
 mlsubmenu_process(
     P_MLSUBMENU_HANDLE mlsubmenup,
@@ -471,7 +476,8 @@ mlsubmenu_process(
     return(mlsubmenu->state == MLSUBMENU_ENDED_OK);
 }
 
-static S32
+_Check_return_
+static STATUS
 mlsubmenu_settext(
     P_MLSUBMENU_HANDLE mlsubmenup,
     P_U8 text)
@@ -479,7 +485,8 @@ mlsubmenu_settext(
     return(mlec_SetText((*mlsubmenup)->mlec, text));
 }
 
-static S32
+_Check_return_
+static STATUS
 mlsubmenu_gettext(
     P_MLSUBMENU_HANDLE mlsubmenup,
     P_U8 destptr,
@@ -488,6 +495,7 @@ mlsubmenu_gettext(
     return(mlec_GetText((*mlsubmenup)->mlec, destptr, destsize));
 }
 
+_Check_return_
 static S32
 mlsubmenu_gettextlen(
     P_MLSUBMENU_HANDLE mlsubmenup)
@@ -680,7 +688,7 @@ gr_chartedit_encode_selected_fillstyle(
 static void
 gr_chartedit_build_fillstyle_list(
     P_GR_CHARTEDITOR cep,
-    P_GR_CHART_OBJID id /*const*/)
+    _InVal_     GR_CHART_OBJID id)
 {
     P_GR_CHART       cp;
     GR_FILLSTYLE     fillstyle;
@@ -705,12 +713,12 @@ gr_chartedit_build_fillstyle_list(
     collect_delete(&fillstyle_list.lbr);
 
     /* enumerate Markers or Pictures into a list and gr_cache_ensure_entry each of them */
-    switch(id->name)
+    switch(id.name)
     {
     case GR_CHART_OBJNAME_SERIES:
     case GR_CHART_OBJNAME_POINT:
         {
-        GR_SERIES_IDX series_idx = gr_series_idx_from_external(cp, id->no);
+        GR_SERIES_IDX series_idx = gr_series_idx_from_external(cp, id.no);
         PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
 
         if( (p_axes->charttype == GR_CHARTTYPE_LINE) ||
@@ -979,7 +987,7 @@ gr_chartedit_selection_fillstyle_edit(
         break;
     }
 
-    gr_chart_object_name_from_id(title, elemof32(title), &cep->selection.id);
+    gr_chart_object_name_from_id(title, elemof32(title), cep->selection.id);
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));
@@ -993,7 +1001,7 @@ gr_chartedit_selection_fillstyle_edit(
 
     if(!disallow_piccie)
     {
-        gr_chartedit_build_fillstyle_list(cep, &cep->selection.id);
+        gr_chartedit_build_fillstyle_list(cep, cep->selection.id);
 
         dbox_raw_eventhandler(d, fillstyle_event_handler, &fillstyle_key);
     }
@@ -1004,7 +1012,7 @@ gr_chartedit_selection_fillstyle_edit(
         /* load chart structure up to local structure */
         cp = gr_chart_cp_from_ch(cep->ch);
         assert(cp);
-        gr_chart_objid_fillstyle_query(cp, &cep->selection.id, &fillstyle);
+        gr_chart_objid_fillstyle_query(cp, cep->selection.id, &fillstyle);
 
         {
         LIST_ITEMNO key;
@@ -1030,64 +1038,73 @@ gr_chartedit_selection_fillstyle_edit(
             if((f = dbox_fillin(d)) == dbox_CLOSE)
                 break;
 
-            switch(f)
+            if(f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_CANCEL)
             {
-            case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID:
-                fillstyle.bits.notsolid = !win_getonoff(w, f);
+                f = dbox_CLOSE;
                 break;
+            }
 
-            case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN:
-                fillstyle.bits.pattern = win_getonoff(w, f);
+            if(f != dbox_OK)
+            {
+                switch(f)
+                {
+                case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID:
+                    fillstyle.bits.notsolid = !win_getonoff(w, f);
+                    break;
 
-                fillstyle.pattern = fillstyle.bits.pattern
-                                            ? gr_chartedit_riscos_fillstyle_pattern_query(fillstyle_key)
-                                            : GR_FILL_PATTERN_NONE;
-                break;
+                case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN:
+                    fillstyle.bits.pattern = win_getonoff(w, f);
 
-            case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC:
-                fillstyle.bits.isotropic = win_getonoff(w, f);
-                break;
+                    fillstyle.pattern = fillstyle.bits.pattern
+                                                ? gr_chartedit_riscos_fillstyle_pattern_query(fillstyle_key)
+                                                : GR_FILL_PATTERN_NONE;
+                    break;
 
-            case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR:
-                fillstyle.bits.norecolour  = !win_getonoff(w, f);
-                break;
+                case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC:
+                    fillstyle.bits.isotropic = win_getonoff(w, f);
+                    break;
 
-            default:
-                if(win_adjustbumphit(&f, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME)) /* inverts dirn. for click */
-                {                                                                    /* with adjust button      */
-                    LIST_ITEMNO last_key;
-                    const char * leafname;
+                case GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR:
+                    fillstyle.bits.norecolour  = !win_getonoff(w, f);
+                    break;
 
-                    last_key = list_numitem(fillstyle_list.lbr);
-                    if(!last_key)
-                        break;
+                default:
+                    if(win_adjustbumphit(&f, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME)) /* inverts dirn. for click */
+                    {                                                                    /* with adjust button      */
+                        LIST_ITEMNO last_key;
+                        const char * leafname;
 
-                    if(f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC)
-                        entryp = collect_next(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &fillstyle_key);
-                    else
-                        entryp = collect_prev(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &fillstyle_key);
+                        last_key = list_numitem(fillstyle_list.lbr);
+                        if(!last_key)
+                            break;
 
-                    if(NULL == entryp)
-                    {
-                        /* either: 'next' whilst showing last item or 'prev' whilst showing first item, */
-                        /*         so wrap to other end of list                                         */
-                        fillstyle_key = (f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC ? 0 : last_key - 1);
+                        if(f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC)
+                            entryp = collect_next(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &fillstyle_key);
+                        else
+                            entryp = collect_prev(FILLSTYLE_ENTRY, &fillstyle_list.lbr, &fillstyle_key);
 
-                        if((entryp = fillstyle_list_search_key(fillstyle_key)) == NULL)
+                        if(NULL == entryp)
                         {
-                            fillstyle_key = 0;
-                            assert(0);  /* SKS is more paranoid */
-                            break;      /* not found - will never happen! (or so says RCM) */
+                            /* either: 'next' whilst showing last item or 'prev' whilst showing first item, */
+                            /*         so wrap to other end of list                                         */
+                            fillstyle_key = (f == GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC ? 0 : last_key - 1);
+
+                            if((entryp = fillstyle_list_search_key(fillstyle_key)) == NULL)
+                            {
+                                fillstyle_key = 0;
+                                assert(0);  /* SKS is more paranoid */
+                                break;      /* not found - will never happen! (or so says RCM) */
+                            }
                         }
-                    }
 
-                    /* show the picture's leafname, trigger a (later) redraw of picture icon */
-                    leafname = entryp->leafname;
+                        /* show the picture's leafname, trigger a (later) redraw of picture icon */
+                        leafname = entryp->leafname;
 
-                    win_setfield(       w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME, leafname);
-                    wimp_set_icon_state(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT, (wimp_iconflags) 0, (wimp_iconflags) 0);
+                        win_setfield(       w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME, leafname);
+                        wimp_set_icon_state(w, GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT, (wimp_iconflags) 0, (wimp_iconflags) 0);
                     }
-                break;
+                    break;
+                }
             }
 
             /* check what the current pattern is set to */
@@ -1101,9 +1118,9 @@ gr_chartedit_selection_fillstyle_edit(
             {
                 fillstyle.fg.manual = 1;
 
-                res = gr_chart_objid_fillstyle_set(cp, &cep->selection.id, &fillstyle);
+                res = gr_chart_objid_fillstyle_set(cp, cep->selection.id, &fillstyle);
 
-                if(res < 0)
+                if(status_fail(res))
                     gr_chartedit_winge(res);
 
                 gr_chart_modify_and_rebuild(&cep->ch);
@@ -1185,7 +1202,7 @@ gr_chartedit_fontselect_try_me(
 
         new_style.fg.manual = 1;
         *cur_style = new_style;
-        gr_chartedit_winge(gr_chart_objid_textstyle_set(cp, &i->id, cur_style));
+        gr_chartedit_winge(gr_chart_objid_textstyle_set(cp, i->id, cur_style));
 
         gr_chart_modify_and_rebuild(&cep->ch);
     }
@@ -1261,7 +1278,7 @@ gr_chartedit_selection_textstyle_edit(
         break;
     }
 
-    gr_chart_object_name_from_id(title, elemof32(title), &i.id);
+    gr_chart_object_name_from_id(title, elemof32(title), i.id);
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));
@@ -1284,7 +1301,7 @@ gr_chartedit_selection_textstyle_edit(
     {
     P_GR_CHART cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
-    gr_chart_objid_textstyle_query(cp, &i.id, &i.style);
+    gr_chart_objid_textstyle_query(cp, i.id, &i.style);
     }
 
     width  = i.style.width  / (F64) GR_PIXITS_PER_POINT;
@@ -1314,7 +1331,7 @@ gr_chartedit_selection_textstyle_edit(
 *
 ******************************************************************************/
 
-extern S32
+extern void
 gr_chartedit_selection_text_delete(
     P_GR_CHARTEDITOR cep)
 {
@@ -1326,8 +1343,6 @@ gr_chartedit_selection_text_delete(
     assert(cp);
 
     gr_text_delete(cp, cep->selection.id.no);
-
-    return(1);
 }
 
 extern void
@@ -1366,7 +1381,8 @@ gr_text_delete(
 enum GR_OBJECT_DRAG_TYPE
 {
     GR_OBJECT_DRAG_REPOSITION = 0,
-    GR_OBJECT_DRAG_RESIZE     = 1
+    GR_OBJECT_DRAG_RESIZE_TL  = 1,
+    GR_OBJECT_DRAG_RESIZE_BR  = 2,
 };
 
 static GR_POINT drag_start_point;
@@ -1404,11 +1420,11 @@ static void
 object_dragging_eor_bbox(
     P_GR_CHARTEDITOR cep,
     P_GR_CHART cp,
-    PC_GR_POINT start_point,
-    PC_GR_POINT curr_point)
+    _InRef_     PC_GR_POINT start_point,
+    _InRef_     PC_GR_POINT curr_point)
 {
     GR_POINT moveby;
-    GR_POINT upperleft, lowerright;
+    GR_POINT tl, br;
     int             os_orgx, os_orgy;
     wimp_box        os_outline;
     wimp_redrawstr  r;
@@ -1417,23 +1433,39 @@ object_dragging_eor_bbox(
     moveby.x = curr_point->x - start_point->x;
     moveby.y = curr_point->y - start_point->y;
 
-    /* reposition adjusts all coords, resize adjusts (x1, y0) only */
+    tl.x = cep->selection.box.x0;
+    tl.y = cep->selection.box.y1;
 
-    lowerright.x = cep->selection.box.x1 + moveby.x;
-    lowerright.y = cep->selection.box.y0 + moveby.y;
+    br.x = cep->selection.box.x1;
+    br.y = cep->selection.box.y0;
 
-    upperleft.x = cep->selection.box.x0;
-    upperleft.y = cep->selection.box.y1;
-
-    if(drag_type == GR_OBJECT_DRAG_REPOSITION)
+    switch(drag_type)
     {
-        upperleft.x += moveby.x;
-        upperleft.y += moveby.y;
+    default: default_unhandled();
+    case GR_OBJECT_DRAG_REPOSITION:
+        /* reposition adjusts all coords */
+        tl.x += moveby.x;
+        tl.y += moveby.y;
+        br.x += moveby.x;
+        br.y += moveby.y;
+        break;
+
+    case GR_OBJECT_DRAG_RESIZE_TL:
+        /* resize TL adjusts (x0, y1) only */
+        tl.x += moveby.x;
+        tl.y += moveby.y;
+        break;
+
+    case GR_OBJECT_DRAG_RESIZE_BR:
+        /* resize BR adjusts (x1, y0) only */
+        br.x += moveby.x;
+        br.y += moveby.y;
+        break;
     }
 
     /* scale by chart zoom factor (pixit->pixit) */
-    gr_point_scale(&lowerright, &lowerright, NULL, &cep->riscos.scale_from_diag16);
-    gr_point_scale(&upperleft,  &upperleft,  NULL, &cep->riscos.scale_from_diag16);
+    gr_point_scale(&tl, &tl, NULL, &cep->riscos.scale_from_diag16);
+    gr_point_scale(&br, &br, NULL, &cep->riscos.scale_from_diag16);
 
     /* plot origin */
     os_orgx = cp->core.editsave.open_box.x0 - cp->core.editsave.open_scx;
@@ -1444,10 +1476,10 @@ object_dragging_eor_bbox(
     os_orgy += cep->riscos.diagram_off_y;
 
     /* bbox in absolute screen coords */
-    os_outline.x0 = (int) (os_orgx + gr_riscos_from_pixit(upperleft.x ));
-    os_outline.y0 = (int) (os_orgy + gr_riscos_from_pixit(lowerright.y));
-    os_outline.x1 = (int) (os_orgx + gr_riscos_from_pixit(lowerright.x));
-    os_outline.y1 = (int) (os_orgy + gr_riscos_from_pixit(upperleft.y ));
+    os_outline.x0 = (int) (os_orgx + gr_riscos_from_pixit(tl.x));
+    os_outline.y0 = (int) (os_orgy + gr_riscos_from_pixit(br.y));
+    os_outline.x1 = (int) (os_orgx + gr_riscos_from_pixit(br.x));
+    os_outline.y1 = (int) (os_orgy + gr_riscos_from_pixit(tl.y));
 
     r.w      = cep->riscos.w;
     r.box.x0 = -0x1FFFFFFF; r.box.y0 = -0x1FFFFFFF;
@@ -1473,9 +1505,10 @@ gr_chartedit_selected_object_drag_start(
     PC_GR_POINT point,
     PC_GR_POINT workareaoff)
 {
-    GR_POINT resize_patch;
-    wimp_dragstr   dragstr;
-    P_GR_CHART      cp;
+    GR_POINT resize_patch_tl;
+    GR_POINT resize_patch_br;
+    wimp_dragstr dragstr;
+    P_GR_CHART cp;
 
     IGNOREPARM(workareaoff);
 
@@ -1487,16 +1520,31 @@ gr_chartedit_selected_object_drag_start(
     trace_4(TRACE_MODULE_GR_CHART, "gr_chartedit_selected_object_drag point (%d,%d), workareaoff(%d,%d)",
                                    point->x, point->y, workareaoff->x, workareaoff->y);
 
-    /* treat the lower right hand corner of the bounding box as 'drag-to-resize', */
-    /* the rest rest of the box as 'drag-to-reposition'                           */
+    /* treat the top left hand and lower right hand corners of the selection box as 'drag-to-resize', */
+    /* treat the rest of the selection box as 'drag-to-reposition'                                    */
+    drag_type = GR_OBJECT_DRAG_REPOSITION;
 
-    resize_patch.x = cep->selection.box.x1 - MIN(gr_pixit_from_riscos(16), ((cep->selection.box.x1 - cep->selection.box.x0) / 2));
-    resize_patch.y = cep->selection.box.y0 + MIN(gr_pixit_from_riscos(8),  ((cep->selection.box.y1 - cep->selection.box.y0) / 2));
+    {
+    GR_SIZE half_size;
+    GR_SIZE patch_size;
 
-    drag_type = ((point->x >= resize_patch.x) && (point->y <= resize_patch.y)
-                 ? GR_OBJECT_DRAG_RESIZE
-                 : GR_OBJECT_DRAG_REPOSITION
-                );
+    half_size.cx = (cep->selection.box.x1 - cep->selection.box.x0) / 2;
+    half_size.cy = (cep->selection.box.y1 - cep->selection.box.y0) / 2;
+
+    patch_size.cx = MIN(gr_pixit_from_riscos(8), half_size.cx);
+    patch_size.cy = MIN(gr_pixit_from_riscos(8), half_size.cy);
+
+    resize_patch_tl.x = cep->selection.box.x0 + patch_size.cx;
+    resize_patch_tl.y = cep->selection.box.y1 - patch_size.cy;
+
+    resize_patch_br.x = cep->selection.box.x1 - patch_size.cx;
+    resize_patch_br.y = cep->selection.box.y0 + patch_size.cy;
+    } /*block*/
+
+    if((point->x >= resize_patch_br.x) && (point->y <= resize_patch_br.y))
+        drag_type = GR_OBJECT_DRAG_RESIZE_BR;
+    else if((point->x <= resize_patch_tl.x) && (point->y >= resize_patch_tl.y))
+        drag_type = GR_OBJECT_DRAG_RESIZE_TL;
 
     /* confine the drag to the chart edit window */
 
@@ -1541,8 +1589,8 @@ gr_chartedit_selected_object_drag_complete(
 
     object_dragging_eor_bbox(cep, cp, &drag_start_point, &drag_curr_point);
 
-    moveby.x  = drag_curr_point.x - drag_start_point.x;
-    moveby.y  = drag_curr_point.y - drag_start_point.y;
+    moveby.x = drag_curr_point.x - drag_start_point.x;
+    moveby.y = drag_curr_point.y - drag_start_point.y;
 
     Null_EventHandlerRemove(gr_chartedit_selected_object_drag_null_handler, (P_ANY) cp->core.ch);
 
@@ -1554,16 +1602,31 @@ gr_chartedit_selected_object_drag_complete(
 
         gr_text_box_query(cp, cep->selection.id.no, &box);
 
-        /* reposition adjusts all coords, resize adjusts (x1, y0) only */
-
-        box.x1 += moveby.x;
-        box.y0 += moveby.y;
-
-        if(drag_type == GR_OBJECT_DRAG_REPOSITION)
+        switch(drag_type)
         {
+        default: default_unhandled();
+        case GR_OBJECT_DRAG_REPOSITION:
+            /* reposition adjusts all coords */
+            box.x0 += moveby.x;
+            box.y0 += moveby.y;
+            box.x1 += moveby.x;
+            box.y1 += moveby.y;
+            break;
+
+        case GR_OBJECT_DRAG_RESIZE_TL:
+            /* resize TL adjusts (x0, y1) only */
             box.x0 += moveby.x;
             box.y1 += moveby.y;
+            break;
+
+        case GR_OBJECT_DRAG_RESIZE_BR:
+            /* resize BR adjusts (x1, y0) only */
+            box.x1 += moveby.x;
+            box.y0 += moveby.y;
+            break;
         }
+
+        gr_box_sort(&box, &box);
 
         gr_text_box_set(cp, cep->selection.id.no, &box);
         break;
@@ -1571,29 +1634,43 @@ gr_chartedit_selected_object_drag_complete(
 
     case GR_CHART_OBJNAME_LEGEND:
         {
-        GR_BOX legendbox;
+        GR_BOX box;
 
-        /* reposition adjusts all coords, resize adjusts bottom right corner only */
-        legendbox.x0 = cp->legend.posn.x;
-        legendbox.y0 = cp->legend.posn.y;
-        legendbox.x1 = cp->legend.posn.x + cp->legend.size.x;
-        legendbox.y1 = cp->legend.posn.y + cp->legend.size.y;
+        box.x0 = cp->legend.posn.x;
+        box.y0 = cp->legend.posn.y;
+        box.x1 = cp->legend.posn.x + cp->legend.size.x;
+        box.y1 = cp->legend.posn.y + cp->legend.size.y;
 
-        legendbox.x1 += moveby.x;
-        legendbox.y0 += moveby.y;
-
-        if(drag_type == GR_OBJECT_DRAG_REPOSITION)
+        switch(drag_type)
         {
-            legendbox.x0 += moveby.x;
-            legendbox.y1 += moveby.y;
+        default: default_unhandled();
+        case GR_OBJECT_DRAG_REPOSITION:
+            /* reposition adjusts all coords */
+            box.x0 += moveby.x;
+            box.x1 += moveby.x;
+            box.y0 += moveby.y;
+            box.y1 += moveby.y;
+            break;
+
+        case GR_OBJECT_DRAG_RESIZE_TL:
+            /* resize TL adjusts (x0, y1) only */
+            box.x0 += moveby.x;
+            box.y1 += moveby.y;
+            break;
+
+        case GR_OBJECT_DRAG_RESIZE_BR:
+            /* resize BR adjusts (x1, y0) only */
+            box.x1 += moveby.x;
+            box.y0 += moveby.y;
+            break;
         }
 
-        gr_box_sort(&legendbox, &legendbox); /* in case scale in x or y was -ve */
+        gr_box_sort(&box, &box);
 
-        cp->legend.posn.x = legendbox.x0;
-        cp->legend.posn.y = legendbox.y0;
-        cp->legend.size.x = legendbox.x1 - legendbox.x0;
-        cp->legend.size.y = legendbox.y1 - legendbox.y0;
+        cp->legend.posn.x = box.x0;
+        cp->legend.posn.y = box.y0;
+        cp->legend.size.x = box.x1 - box.x0;
+        cp->legend.size.y = box.y1 - box.y0;
 
         cp->legend.bits.manual = 1;
         break;
@@ -1700,7 +1777,8 @@ gr_chartedit_text_editor_kill(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 gr_chartedit_text_editor_make(
     P_GR_CHART cp,
     LIST_ITEMNO key,
@@ -1709,7 +1787,7 @@ gr_chartedit_text_editor_make(
     P_GR_TEXT         t;
     P_GR_TEXT_GUTS    gutsp;
     MLSUBMENU_HANDLE mlsubmenu;
-    S32              res = 1;
+    STATUS res = 1;
 
     if((t = gr_text_search_key(cp, key)) == NULL)
         /* wot? */
@@ -1724,10 +1802,9 @@ gr_chartedit_text_editor_make(
     {
     GR_CHART_OBJID id;
     gr_chart_objid_from_text(key, &id);
-    if(0 > (res = mlsubmenu_create(&mlsubmenu, GR_CHART_TEM_TEXT_EDITOR,
-                                   (P_U8) gr_chart_object_name_from_id_quick(&id))))
-        return(res);
-    }
+    res = mlsubmenu_create(&mlsubmenu, GR_CHART_TEM_TEXT_EDITOR, (P_U8) gr_chart_object_name_from_id_quick(id));
+    status_return(res);
+    } /*block*/
 
     gutsp.mp = (t + 1);
 
@@ -1740,12 +1817,14 @@ gr_chartedit_text_editor_make(
         res = mlsubmenu_settext(&mlsubmenu, value.data.text);
     }
     else
+    {
         res = mlsubmenu_settext(&mlsubmenu, gutsp.textp);
+    }
 
-    if(res >= 0)
+    if(status_ok(res))
         res = mlsubmenu_process(&mlsubmenu, submenu);
 
-    if(res > 0)
+    if(status_done(res))
     {
         /* successful edit, copy over text descriptor and new text*/
         NLISTS_BLK edit_lbr = gr_text_nlists_blk_proto;
@@ -1793,7 +1872,8 @@ gr_chartedit_text_editor_make(
     return(res);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chartedit_text_new_and_edit(
     P_GR_CHART cp,
     LIST_ITEMNO key,
@@ -1802,10 +1882,8 @@ gr_chartedit_text_new_and_edit(
     P_GR_POINT point)
 {
     P_GR_TEXT t;
-    S32 res;
 
-    if((res = gr_text_new(cp, key, text, point)) < 0)
-        return(res);
+    status_return(gr_text_new(cp, key, text, point));
 
     t = gr_text_search_key(cp, key);
     assert(t);

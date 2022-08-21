@@ -88,6 +88,8 @@ product$ = "PipeDream"
 info$ = product$ + " " + info$
 PRINT info$
 :
+quote$ = """"
+:
 PRINT "Creating "+outfile$
 f% = OPENOUT(outfile$)
 LOCAL ERROR: ON ERROR LOCAL: RESTORE ERROR: CLOSE#f%: PROCraise
@@ -97,7 +99,8 @@ postfix$ = ""
 postfix$ += " 32-bit"
 IF debug% THEN postfix$ += " DEBUG"
 IF profile% THEN postfix$ += " PROFILE"
-PROCo(f%,"| "+file$+" file for "+product$+postfix$+" "+version$+" ("+MID$(TIME$,5,11)+")")
+version_and_date$ = version$+" ("+MID$(TIME$,5,11)+")"
+PROCo(f%,"| "+file$+" file for "+product$+postfix$+" "+version_and_date$)
 PROCo(f%,"|")
 IF alternate% THEN
   PROCs(f%,product$+"$Dir","<Obey$Dir>.!"+product$,boot%)
@@ -210,7 +213,7 @@ IF NOT boot% THEN
   :
   PROCo(f%,"|")
   PROCo(f%,"WimpSlot -min 32K -max 32K")
-  PROCo(f%,"Run "+product$+":RISC_OS.Loader -dir <"+product$+"$Dir> -id "+product$+reg_extra$+" -ver "+version$)
+  PROCo(f%,"Run "+product$+":RISC_OS.Loader -dir <"+product$+"$Dir> -id "+product$+reg_extra$+" -ver "+quote$+version_and_date$+quote$)
   :
   PROCo(f%,"|")
   PROCo(f%,"Set "+product$+"$RunOptions """"")

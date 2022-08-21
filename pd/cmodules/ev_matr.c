@@ -159,20 +159,20 @@ determinant(
 PROC_EXEC_PROTO(c_m_determ)
 {
     F64 m_determ_result;
-    S32 xs, ys;
+    S32 x_size, y_size;
 
     exec_func_ignore_parms();
 
     /* get x and y sizes */
-    array_range_sizes(args[0], &xs, &ys);
+    array_range_sizes(args[0], &x_size, &y_size);
 
-    if(xs != ys)
+    if(x_size != y_size)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_NOT_SQUARE);
         return;
     }
 
-    if(xs == 0)
+    if(x_size == 0)
     {
         ev_data_set_integer(p_ev_data_res, 1); /* yes, really */
         return;
@@ -180,7 +180,7 @@ PROC_EXEC_PROTO(c_m_determ)
 
     {
     STATUS status = STATUS_OK;
-    S32 m = xs;
+    S32 m = x_size;
     F64 nums[3*3]; /* don't really need to allocate for small ones */
     P_F64 a /*[m][m]*/;
 
@@ -233,7 +233,7 @@ inverse of square matrix A is 1/det * adjunct(A)
 PROC_EXEC_PROTO(c_m_inverse)
 {
     STATUS status = STATUS_OK;
-    S32 xs, ys;
+    S32 x_size, y_size;
     U32 m, minor_m;
     P_F64 a /*[m][m]*/ = NULL;
     P_F64 adj /*[m][m]*/ = NULL;
@@ -244,15 +244,15 @@ PROC_EXEC_PROTO(c_m_inverse)
     exec_func_ignore_parms();
 
     /* get x and y sizes */
-    array_range_sizes(args[0], &xs, &ys);
+    array_range_sizes(args[0], &x_size, &y_size);
 
-    if(xs != ys)
+    if(x_size != y_size)
     {
         ev_data_set_error(p_ev_data_res, EVAL_ERR_MATRIX_NOT_SQUARE);
         return;
     }
 
-    m = xs;
+    m = x_size;
 
     if(status_fail(ss_array_make(p_ev_data_res, m, m)))
         return;
@@ -382,43 +382,43 @@ endpoint:
 
 PROC_EXEC_PROTO(c_m_mult)
 {
-    S32 xs_0, ys_0;
-    S32 xs_1, ys_1;
+    S32 x_size[2];
+    S32 y_size[2];
 
     exec_func_ignore_parms();
 
     /* check it is an array and get x and y sizes */
-    array_range_sizes(args[0], &xs_0, &ys_0);
-    array_range_sizes(args[1], &xs_1, &ys_1);
+    array_range_sizes(args[0], &x_size[0], &y_size[0]);
+    array_range_sizes(args[1], &x_size[1], &y_size[1]);
 
-    if(xs_0 != ys_1)
+    if(x_size[0] != y_size[1])
     {   /* whinge about dimensions */
         ev_data_set_error(p_ev_data_res, EVAL_ERR_MISMATCHED_MATRICES);
         return;
     }
 
-    if(status_ok(ss_array_make(p_ev_data_res, xs_1, ys_0)))
+    if(status_ok(ss_array_make(p_ev_data_res, x_size[1], y_size[0])))
     {
         S32 ix, iy;
 
-        for(ix = 0; ix < xs_1; ++ix)
+        for(ix = 0; ix < x_size[1]; ++ix)
         {
-            for(iy = 0; iy < ys_0; ++iy)
+            for(iy = 0; iy < y_size[0]; ++iy)
             {
                 F64 product = 0.0;
                 S32 elem;
                 P_EV_DATA elep;
 
-                for(elem = 0; elem < xs_0; elem++)
+                for(elem = 0; elem < x_size[0]; elem++)
                 {
-                    EV_DATA data1, data2;
+                    EV_DATA data[2];
 
-                    (void) array_range_index(&data1, args[0], elem, iy, EM_REA);
-                    (void) array_range_index(&data2, args[1], ix, elem, EM_REA);
+                    (void) array_range_index(&data[0], args[0], elem, iy, EM_REA);
+                    (void) array_range_index(&data[1], args[1], ix, elem, EM_REA);
 
-                    if((RPN_DAT_REAL == data1.did_num) && (RPN_DAT_REAL == data2.did_num))
+                    if((RPN_DAT_REAL == data[0].did_num) && (RPN_DAT_REAL == data[1].did_num))
                     {
-                        product += data1.arg.fp * data2.arg.fp;
+                        product += data[0].arg.fp * data[1].arg.fp;
                     }
                     else
                     {
@@ -471,20 +471,20 @@ PROC_EXEC_PROTO(c_m_unit)
 
 PROC_EXEC_PROTO(c_transpose)
 {
-    S32 xs, ys;
+    S32 x_size, y_size;
     S32 ix, iy;
 
     exec_func_ignore_parms();
 
     /* get x and y sizes */
-    array_range_sizes(args[0], &xs, &ys);
+    array_range_sizes(args[0], &x_size, &y_size);
 
     /* make a y-dimension by x-dimension result array and swap elements */
-    if(status_ok(ss_array_make(p_ev_data_res, ys, xs)))
+    if(status_ok(ss_array_make(p_ev_data_res, y_size, x_size)))
     {
-        for(ix = 0; ix < xs; ++ix)
+        for(ix = 0; ix < x_size; ++ix)
         {
-            for(iy = 0; iy < ys; ++iy)
+            for(iy = 0; iy < y_size; ++iy)
             {
                 EV_DATA temp_data;
 

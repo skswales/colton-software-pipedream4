@@ -127,7 +127,6 @@ __vmyasserted(
     va_list va;
     _kernel_oserror err;
     PTSTR p = err.errmess;
-    PTSTR p_out;
     wimp_errflags flags;
 
     /* we need to know how to copy this! */
@@ -142,7 +141,8 @@ __vmyasserted(
     /* test output string for overrun of wimp error box */
     if(!IS_P_DATA_NONE(format))
     {
-        consume_int(vsnprintf(p, elemof32(err.errmess), format, va));
+        if(vsnprintf(p, elemof32(err.errmess), format, va) < 0)
+            *p = CH_NULL;
 
         /* unbeknown to SKS, vsprintf modifies va, so reload necessary ... */
 #if !RISCOS
@@ -169,12 +169,11 @@ __vmyasserted(
 
     p += xsnprintf(p, elemof32(err.errmess) - (p - err.errmess), TEXT("%s"), message ? message : ASSERTION_FAILURE_YN);
 
-    p_out = p;
-
     if(!IS_P_DATA_NONE(format))
     {
         *p++ = ' ';
-        consume_int(vsnprintf(p, elemof32(err.errmess) - (p - err.errmess), format, va));
+        if(vsnprintf(p, elemof32(err.errmess) - (p - err.errmess), format, va) < 0)
+            *p = CH_NULL;
     }
 
     (void) wimp_reporterror_rf(&err, (wimp_errflags) (wimp_EOK | wimp_ECANCEL | wimp_ENOERRORFROM), product_ui_id(), &flags, NULL);
@@ -203,7 +202,9 @@ __vmyasserted(
                        p_function, p_file, line_no, message ? message : ASSERTION_FAILURE_YN);
     assert(len != (size_t) -1);
 
+#if TRACE_ALLOWED
     p_out = szBuffer + len;
+#endif
 
     if(!IS_P_DATA_NONE(format))
     {

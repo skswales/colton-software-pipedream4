@@ -68,7 +68,11 @@ gr_chartedit_selection_linecolour_edit(
     P_GR_CHARTEDITOR cep);
 
 static void
-gr_chartedit_selection_linestyle_edit(
+gr_chartedit_selection_linepattern_edit(
+    P_GR_CHARTEDITOR cep);
+
+static void
+gr_chartedit_selection_linewidth_edit(
     P_GR_CHARTEDITOR cep);
 
 static void
@@ -117,6 +121,7 @@ gr_chartedit_menu_finalise(
     #endif
 }
 
+/*ncr*/
 extern S32
 gr_chartedit_menu_initialise(
     P_GR_CHARTEDITOR cep)
@@ -366,8 +371,12 @@ gr_chartedit_riscos_menu_handler(
             gr_chartedit_selection_fillcolour_edit(cep);
             break;
 
-        case GR_CHART_MO_SELECTION_LINESTYLE:
-            gr_chartedit_selection_linestyle_edit(cep);
+        case GR_CHART_MO_SELECTION_LINEPATTERN:
+            gr_chartedit_selection_linepattern_edit(cep);
+            break;
+
+        case GR_CHART_MO_SELECTION_LINEWIDTH:
+            gr_chartedit_selection_linewidth_edit(cep);
             break;
 
         case GR_CHART_MO_SELECTION_LINECOLOUR:
@@ -465,7 +474,7 @@ gr_chartedit_riscos_menu_handler(
         GR_POINT point;
         LIST_ITEMNO    key;
         char           new_text[32];
-        S32            res;
+        STATUS res;
 
         event_read_menuclickdata(&but.m.x, &but.m.y, &dummy_w, &but.m.i);
 
@@ -482,9 +491,9 @@ gr_chartedit_riscos_menu_handler(
 
         res = gr_chartedit_text_new_and_edit(cp, key, submenurequest, new_text, &point);
 
-        modified = (res > 0);
+        modified = status_done(res);
 
-        if(res < 0)
+        if(status_fail(res))
             gr_chartedit_winge(res);
         }
         break;
@@ -708,7 +717,7 @@ gr_chartedit_riscos_menu_maker(
         /* reinstate default title */
         xstrkpy(title, elemof32(title), string_lookup(GR_CHART_MSG_MENUHDR_SELECTION));
     else
-        gr_chart_object_name_from_id(title, elemof32(title), &cep->selection.id);
+        gr_chart_object_name_from_id(title, elemof32(title), cep->selection.id);
 
     menu_settitle(gr_chartedit_riscos_submenu_selection, title);
     }
@@ -787,16 +796,19 @@ gr_chartedit_riscos_menu_maker(
         break;
     }
 
-    menu_setflags(m, GR_CHART_MO_SELECTION_FILLSTYLE,
-                  tick, fade_fillstyle);
-
     menu_setflags(m, GR_CHART_MO_SELECTION_FILLCOLOUR,
                   tick, fade_fillcolour);
 
-    menu_setflags(m, GR_CHART_MO_SELECTION_LINESTYLE,
-                  tick, fade_linestyle);
+    menu_setflags(m, GR_CHART_MO_SELECTION_FILLSTYLE,
+                  tick, fade_fillstyle);
 
     menu_setflags(m, GR_CHART_MO_SELECTION_LINECOLOUR,
+                  tick, fade_linestyle);
+
+    menu_setflags(m, GR_CHART_MO_SELECTION_LINEPATTERN,
+                  tick, fade_linestyle);
+
+    menu_setflags(m, GR_CHART_MO_SELECTION_LINEWIDTH,
                   tick, fade_linestyle);
 
     menu_setflags(m, GR_CHART_MO_SELECTION_TEXT,
@@ -954,6 +966,12 @@ gr_chartedit_options_process(
 
             if((f = dbox_fillin(d)) == dbox_CLOSE)
                 break;
+
+            if(f == GR_CHARTEDIT_TEM_OPTIONS_ICON_CANCEL)
+            {
+                f = dbox_CLOSE;
+                break;
+            }
 
             if(f != dbox_OK)
             {
@@ -1180,10 +1198,10 @@ gr_chartedit_selection_series_process(
 
     gr_chart_objid_from_series_idx(cp, modifying_series_idx, &modifying_id);
 
-    gr_chart_object_name_from_id(title, elemof32(title), &modifying_id);
+    gr_chart_object_name_from_id(title, elemof32(title), modifying_id);
 
     win_settitle(w, title);
-    }
+    } /*block*/
 
     do  {
         /* load current settings into structure */
@@ -1200,6 +1218,12 @@ gr_chartedit_selection_series_process(
 
             if((f = dbox_fillin(d)) == dbox_CLOSE)
                 break;
+
+            if(f == GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CANCEL)
+            {
+                f = dbox_CLOSE;
+                break;
+            }
 
             if(f != dbox_OK)
             {
@@ -1350,7 +1374,7 @@ gr_chartedit_riscos_dboxtcol_handler(
     P_GR_CHART       cp;
     GR_COLOUR       col;
     S32             modify = 0;
-    S32             res = 1;
+    STATUS res = 1;
 
     col = gr_colour_from_riscDraw(ecol);
 
@@ -1375,7 +1399,7 @@ gr_chartedit_riscos_dboxtcol_handler(
         {
             new_style.fg.manual = 1;
             *cur_style = new_style;
-            res = gr_chart_objid_linestyle_set(cp, &i->id, cur_style);
+            res = gr_chart_objid_linestyle_set(cp, i->id, cur_style);
         }
         break;
         }
@@ -1393,7 +1417,7 @@ gr_chartedit_riscos_dboxtcol_handler(
         {
             new_style.fg.manual = 1;
             *cur_style = new_style;
-            res = gr_chart_objid_fillstyle_set(cp, &i->id, cur_style);
+            res = gr_chart_objid_fillstyle_set(cp, i->id, cur_style);
         }
         break;
         }
@@ -1415,7 +1439,7 @@ gr_chartedit_riscos_dboxtcol_handler(
         {
             new_style.fg.manual = 1; /* yes, in EITHER case */
             *cur_style = new_style;
-            res = gr_chart_objid_textstyle_set(cp, &i->id, cur_style);
+            res = gr_chart_objid_textstyle_set(cp, i->id, cur_style);
         }
         break;
         }
@@ -1424,7 +1448,7 @@ gr_chartedit_riscos_dboxtcol_handler(
         break;
     }
 
-    if(res < 0)
+    if(status_fail(res))
         gr_chartedit_winge(res);
 
     if(modify)
@@ -1464,7 +1488,7 @@ gr_chartedit_selection_fillcolour_edit(
         break;
     }
 
-    gr_chart_object_name_from_id(title, elemof32(title), &i.id);
+    gr_chart_object_name_from_id(title, elemof32(title), i.id);
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));
@@ -1475,7 +1499,7 @@ gr_chartedit_selection_fillcolour_edit(
     {
     P_GR_CHART cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
-    gr_chart_objid_fillstyle_query(cp, &i.id, &i.style.fill);
+    gr_chart_objid_fillstyle_query(cp, i.id, &i.style.fill);
     }
 
     col = gr_colour_to_riscDraw(i.style.fill.fg);
@@ -1517,7 +1541,7 @@ gr_chartedit_selection_hintcolour_edit(
         break;
     }
 
-    gr_chart_object_name_from_id(title, elemof32(title), &i.id);
+    gr_chart_object_name_from_id(title, elemof32(title), i.id);
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));
@@ -1528,7 +1552,7 @@ gr_chartedit_selection_hintcolour_edit(
     {
     P_GR_CHART cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
-    gr_chart_objid_textstyle_query(cp, &i.id, &i.style.text);
+    gr_chart_objid_textstyle_query(cp, i.id, &i.style.text);
     }
 
     col = gr_colour_to_riscDraw(i.style.text.bg);
@@ -1567,7 +1591,7 @@ gr_chartedit_selection_linecolour_edit(
         break;
     }
 
-    gr_chart_object_name_from_id(title, elemof32(title), &i.id);
+    gr_chart_object_name_from_id(title, elemof32(title), i.id);
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));
@@ -1578,7 +1602,7 @@ gr_chartedit_selection_linecolour_edit(
     {
     P_GR_CHART cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
-    gr_chart_objid_linestyle_query(cp, &i.id, &i.style.line);
+    gr_chart_objid_linestyle_query(cp, i.id, &i.style.line);
     }
 
     col = gr_colour_to_riscDraw(i.style.line.fg);
@@ -1588,27 +1612,13 @@ gr_chartedit_selection_linecolour_edit(
              gr_chartedit_riscos_dboxtcol_handler, &i);
 }
 
-static const GR_COORD
-gr_chartedit_riscos_dialog_linewidth[] = /* pixits */
-{
-    0,                              /*w0 == 'Thin' */
-    (1 * GR_PIXITS_PER_POINT) / 10, /*w1*/
-    (1 * GR_PIXITS_PER_POINT) / 4,  /*w2*/
-    (1 * GR_PIXITS_PER_POINT) / 2,  /*w3*/
-    (1 * GR_PIXITS_PER_POINT) / 1,  /*w4*/
-    (2 * GR_PIXITS_PER_POINT) / 1,  /*w5*/
-    (4 * GR_PIXITS_PER_POINT) / 1,  /*w6*/
-};
-
 static void
-gr_chartedit_riscos_linestyle_callback(
+gr_chartedit_riscos_linepattern_callback(
     P_GR_CHARTEDITOR  cep,
-    P_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     wimp_w           w,
     P_GR_LINESTYLE    cur_style)
 {
-    F64          dval;
-    GR_COORD     ival;
     wimp_i       i;
     GR_LINESTYLE new_style;
 
@@ -1621,33 +1631,12 @@ gr_chartedit_riscos_linestyle_callback(
 
     /* line pattern */
     i = win_whichonoff(w,
-                       GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_FIRST,
-                       GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_LAST,
-                       GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_FIRST);
+                       GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST,
+                       GR_CHARTEDIT_TEM_LINEPATTERN_ICON_LAST,
+                       GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST);
 
     new_style.pattern = (GR_LINE_PATTERN_HANDLE)
-                        (i - GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_FIRST);
-
-    /* line width */
-    dval = win_getdouble(w, GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER, NULL, INT_MAX);
-
-    /* allow number field as default hit if conversion kosher */
-    if((dval < 0.0)  ||  (dval > (F64) INT_MAX /* covers HUGE_VAL case */))
-        ival = -1;
-    else
-        ival = (GR_COORD) (dval * GR_PIXITS_PER_POINT);
-
-    if((ival == cur_style->width)  ||  (ival == -1))
-    {
-        i = win_whichonoff(w,
-                           GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST,
-                           GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST,
-                           GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST);
-
-        new_style.width = gr_chartedit_riscos_dialog_linewidth[i - GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST];
-    }
-    else
-        new_style.width = ival;
+                        (i - GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST);
 
     if(0 != memcmp(&new_style, cur_style, sizeof(new_style)))
     {
@@ -1665,9 +1654,9 @@ gr_chartedit_riscos_linestyle_callback(
 }
 
 static void
-gr_chartedit_riscos_linestyle_encode(
+gr_chartedit_riscos_linepattern_encode(
     P_GR_CHARTEDITOR  cep,
-    P_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     wimp_w           w,
     P_GR_LINESTYLE    cur_style /*out*/)
 {
@@ -1676,7 +1665,6 @@ gr_chartedit_riscos_linestyle_encode(
     */
     P_GR_CHART cp;
     wimp_i i;
-    F64 dval;
 
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
@@ -1684,48 +1672,29 @@ gr_chartedit_riscos_linestyle_encode(
 
     /* line pattern */
 
-    for(i  = GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_FIRST;
-        i <= GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_LAST;
+    for(i  = GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST;
+        i <= GR_CHARTEDIT_TEM_LINEPATTERN_ICON_LAST;
         i++)
         win_setonoff(w, i,
                      ((int) cur_style->pattern ==
-                      (i - GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_FIRST)));
-
-    /* line width */
-
-    if(cur_style->width == 0)
-        win_setfield(w, GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER,
-                     string_lookup(GR_CHART_MSG_EDITOR_LINESTYLE_THIN));
-    else
-    {
-        dval = (F64) cur_style->width / GR_PIXITS_PER_POINT;
-        win_setdouble(w, GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER, &dval, 2);
-    }
-
-    for(i  = GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST;
-        i <= GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST;
-        i++)
-        win_setonoff(w, i,
-                     (cur_style->width ==
-                      gr_chartedit_riscos_dialog_linewidth[i - GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST]));
+                      (i - GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST)));
 }
 
 static void
-gr_chartedit_selection_linestyle_edit(
+gr_chartedit_selection_linepattern_edit(
     P_GR_CHARTEDITOR cep)
 {
     dbox           d;
     char * errorp;
     wimp_w         w;
     dbox_field     f;
-    wimp_i         i;
     S32            ok, persist;
     GR_CHART_OBJID modifying_id;
     GR_LINESTYLE   linestyle;
 
     assert(cep);
 
-    d = dbox_new_new(GR_CHARTEDIT_TEM_LINESTYLE, &errorp);
+    d = dbox_new_new(GR_CHARTEDIT_TEM_LINEPATTERN, &errorp);
     if(!d)
     {
         message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
@@ -1754,7 +1723,7 @@ gr_chartedit_selection_linestyle_edit(
         break;
     }
 
-    gr_chart_object_name_from_id(title, elemof32(title), &modifying_id);
+    gr_chart_object_name_from_id(title, elemof32(title), modifying_id);
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));
@@ -1765,27 +1734,245 @@ gr_chartedit_selection_linestyle_edit(
     }
 
     do  {
-        gr_chartedit_riscos_linestyle_encode(cep, &modifying_id, w, &linestyle);
+        gr_chartedit_riscos_linepattern_encode(cep, modifying_id, w, &linestyle);
 
-        while(((f = dbox_fillin(d)) != dbox_CLOSE) && (f != dbox_OK))
-            switch(f)
-            {
-            case GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER:
-                /* clicking in user editing box turns off all width buttons */
-                for(i  = GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST;
-                    i <= GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST;
-                    i++)
-                    win_setonoff(w, i, 0);
+        for(;;)
+        {
+            if((f = dbox_fillin(d)) == dbox_CLOSE)
                 break;
 
-            default:
+            if(f == GR_CHARTEDIT_TEM_LINEPATTERN_ICON_CANCEL)
+            {
+                f = dbox_CLOSE;
                 break;
             }
+
+            if(f != dbox_OK)
+            {
+                switch(f)
+                {
+                default:
+                    break;
+                }
+            }
+
+            if(f == dbox_OK)
+                break;
+        }
 
         ok = (f == dbox_OK);
 
         if(ok)
-            gr_chartedit_riscos_linestyle_callback(cep, &modifying_id, w, &linestyle);
+            gr_chartedit_riscos_linepattern_callback(cep, modifying_id, w, &linestyle);
+
+        persist = ok ? dbox_persist() : FALSE;
+    }
+    while(persist);
+
+    dbox_dispose(&d);
+}
+
+static const GR_COORD
+gr_chartedit_riscos_dialog_linewidth[] = /* pixits */
+{
+    0,                              /*w0 == 'Thin' */
+    (1 * GR_PIXITS_PER_POINT) / 10, /*w1*/
+    (1 * GR_PIXITS_PER_POINT) / 4,  /*w2*/
+    (1 * GR_PIXITS_PER_POINT) / 2,  /*w3*/
+    (1 * GR_PIXITS_PER_POINT) / 1,  /*w4*/
+    (2 * GR_PIXITS_PER_POINT) / 1,  /*w5*/
+    (4 * GR_PIXITS_PER_POINT) / 1,  /*w6*/
+};
+
+static void
+gr_chartedit_riscos_linewidth_callback(
+    P_GR_CHARTEDITOR  cep,
+    _InVal_     GR_CHART_OBJID id,
+    wimp_w           w,
+    P_GR_LINESTYLE    cur_style)
+{
+    F64          dval;
+    GR_COORD     ival;
+    wimp_i       i;
+    GR_LINESTYLE new_style;
+
+    assert(cep);
+
+    /* copy over bits we won't modify */
+    new_style = *cur_style;
+
+    /* process using selection from dialog box */
+
+    /* line width */
+    dval = win_getdouble(w, GR_CHARTEDIT_TEM_LINEWIDTH_ICON_USER, NULL, INT_MAX);
+
+    /* allow number field as default hit if conversion kosher */
+    if((dval < 0.0)  ||  (dval > (F64) INT_MAX /* covers HUGE_VAL case */))
+        ival = -1;
+    else
+        ival = (GR_COORD) (dval * GR_PIXITS_PER_POINT);
+
+    if((ival == cur_style->width)  ||  (ival == -1))
+    {
+        i = win_whichonoff(w,
+                           GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST,
+                           GR_CHARTEDIT_TEM_LINEWIDTH_ICON_LAST,
+                           GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST);
+
+        new_style.width = gr_chartedit_riscos_dialog_linewidth[i - GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST];
+    }
+    else
+        new_style.width = ival;
+
+    if(0 != memcmp(&new_style, cur_style, sizeof(new_style)))
+    {
+        P_GR_CHART cp;
+
+        cp = gr_chart_cp_from_ch(cep->ch);
+        assert(cp);
+
+        new_style.fg.manual = 1;
+        *cur_style = new_style;
+        gr_chartedit_winge(gr_chart_objid_linestyle_set(cp, id, cur_style));
+
+        gr_chart_modify_and_rebuild(&cep->ch);
+    }
+}
+
+static void
+gr_chartedit_riscos_linewidth_encode(
+    P_GR_CHARTEDITOR  cep,
+    _InVal_     GR_CHART_OBJID id,
+    wimp_w           w,
+    P_GR_LINESTYLE    cur_style /*out*/)
+{
+    /* encode icons from current state (ok, ought to
+     * use tristates but RISC OS doesn't have the concept)
+    */
+    P_GR_CHART cp;
+    wimp_i i;
+    F64 dval;
+
+    cp = gr_chart_cp_from_ch(cep->ch);
+    assert(cp);
+    gr_chart_objid_linestyle_query(cp, id, cur_style);
+
+    /* line width */
+
+    if(cur_style->width == 0)
+        win_setfield(w, GR_CHARTEDIT_TEM_LINEWIDTH_ICON_USER,
+                     string_lookup(GR_CHART_MSG_EDITOR_LINEWIDTH_THIN));
+    else
+    {
+        dval = (F64) cur_style->width / GR_PIXITS_PER_POINT;
+        win_setdouble(w, GR_CHARTEDIT_TEM_LINEWIDTH_ICON_USER, &dval, 2);
+    }
+
+    for(i  = GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST;
+        i <= GR_CHARTEDIT_TEM_LINEWIDTH_ICON_LAST;
+        i++)
+    {
+        win_setonoff(w, i,
+                     (cur_style->width ==
+                      gr_chartedit_riscos_dialog_linewidth[i - GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST]));
+    }
+}
+
+static void
+gr_chartedit_selection_linewidth_edit(
+    P_GR_CHARTEDITOR cep)
+{
+    dbox           d;
+    char * errorp;
+    wimp_w         w;
+    dbox_field     f;
+    wimp_i         i;
+    S32            ok, persist;
+    GR_CHART_OBJID modifying_id;
+    GR_LINESTYLE   linestyle;
+
+    assert(cep);
+
+    d = dbox_new_new(GR_CHARTEDIT_TEM_LINEWIDTH, &errorp);
+    if(!d)
+    {
+        message_output(errorp ? errorp : string_lookup(STATUS_NOMEM));
+        return;
+    }
+
+    dbox_show(d);
+
+    w = dbox_syshandle(d);
+
+    modifying_id = cep->selection.id;
+
+    {
+    U8  title[BUF_MAX_GR_CHART_OBJID_REPR + 32];
+    S32 appendage = GR_CHART_MSG_EDIT_APPEND_LINE;
+
+    switch(modifying_id.name)
+    {
+    case GR_CHART_OBJNAME_CHART:
+    case GR_CHART_OBJNAME_PLOTAREA:
+    case GR_CHART_OBJNAME_LEGEND:
+        appendage = GR_CHART_MSG_EDIT_APPEND_BORDER;
+        break;
+
+    default:
+        break;
+    }
+
+    gr_chart_object_name_from_id(title, elemof32(title), modifying_id);
+
+    if(appendage)
+        xstrkat(title, elemof32(title), string_lookup(appendage));
+
+    xstrkat(title, elemof32(title), string_lookup(GR_CHART_MSG_EDIT_APPEND_STYLE));
+
+    win_settitle(w, title);
+    }
+
+    do  {
+        gr_chartedit_riscos_linewidth_encode(cep, modifying_id, w, &linestyle);
+
+        for(;;)
+        {
+            if((f = dbox_fillin(d)) == dbox_CLOSE)
+                break;
+
+            if(f == GR_CHARTEDIT_TEM_LINEWIDTH_ICON_CANCEL)
+            {
+                f = dbox_CLOSE;
+                break;
+            }
+
+            if(f != dbox_OK)
+            {
+                switch(f)
+                {
+                case GR_CHARTEDIT_TEM_LINEWIDTH_ICON_USER:
+                    /* clicking in user editing box turns off all width buttons */
+                    for(i  = GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST;
+                        i <= GR_CHARTEDIT_TEM_LINEWIDTH_ICON_LAST;
+                        i++)
+                    {
+                        win_setonoff(w, i, 0);
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            if(f == dbox_OK)
+                break;
+        }
+
+        ok = (f == dbox_OK);
+
+        if(ok)
+            gr_chartedit_riscos_linewidth_callback(cep, modifying_id, w, &linestyle);
 
         persist = ok ? dbox_persist() : FALSE;
     }
@@ -1826,7 +2013,7 @@ gr_chartedit_selection_textcolour_edit(
         break;
     }
 
-    gr_chart_object_name_from_id(title, elemof32(title), &i.id);
+    gr_chart_object_name_from_id(title, elemof32(title), i.id);
 
     if(appendage)
         xstrkat(title, elemof32(title), string_lookup(appendage));
@@ -1849,7 +2036,7 @@ gr_chartedit_selection_textcolour_edit(
     {
     P_GR_CHART cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
-    gr_chart_objid_textstyle_query(cp, &i.id, &i.style.text);
+    gr_chart_objid_textstyle_query(cp, i.id, &i.style.text);
     }
 
     col = gr_colour_to_riscDraw(i.style.text.fg);
@@ -1863,9 +2050,9 @@ gr_chartedit_selection_textcolour_edit(
 
 extern void
 gr_chartedit_winge(
-    S32 err)
+    _InVal_     STATUS err)
 {
-    if(err < 0)
+    if(status_fail(err))
         messagef(string_lookup(err), ""); /* SKS after 4.12 03apr92 - for error strings that demand args */
 }
 

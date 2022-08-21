@@ -668,7 +668,7 @@ static DOCU initial_docu_data =
 
 /* ----------------------------------------------------------------------- */
 
-    { DONT_CARE },
+    TRAVERSE_BLOCK_INIT,
     /* TRAVERSE_BLOCK tr_block */
 
     0,
@@ -681,7 +681,7 @@ static DOCU initial_docu_data =
 
 /* ----------------------------------------------------------------------- */
 
-    { { 0 } }                   /* SS_INSTANCE_DATA ss_instance_data */
+    SS_INSTANCE_DATA_INIT       /* SS_INSTANCE_DATA ss_instance_data */
 };
 /* end of initial_docu_data */
 
@@ -836,7 +836,10 @@ create_new_docu_thunk(
             break;
 
     if(new_docno == DOCNO_MAX)
-        return(reperr_null(create_error(ERR_TOOMANYDOCS)));
+    {
+        reperr_null(ERR_TOOMANYDOCS);
+        return(DOCNO_NONE);
+    }
 
     if(NULL == (p_docu = al_ptr_alloc_elem(DOCU, 1, &res)))
     {
@@ -1397,11 +1400,15 @@ select_document_using_callback_handle(
     return(TRUE);
 }
 
+/*ncr*/
 extern BOOL
 select_document_using_docno(
     _InVal_     DOCNO docno)
 {
     P_DOCU p_docu;
+
+    if(DOCNO_NONE == docno)
+        return(FALSE); /* no winge */
 
     p_docu = p_docu_from_docno(docno);
 
@@ -1525,9 +1532,15 @@ p_docu_from_docno(
 {
     P_DOCU p_docu;
 
-    assert(docno < DOCNO_MAX);
-
-    p_docu = docu_array[docno];
+    if(docno < DOCNO_MAX)
+    {
+        p_docu = docu_array[docno];
+    }
+    else
+    {
+        assert(docno < DOCNO_MAX);
+        p_docu = NO_DOCUMENT;
+    }
 
     trace_2(TRACE_APP_PD4, TEXT("p_docu_from_docno(docno=%u) yields p_docu=") PTR_XTFMT, docno, report_ptr_cast(p_docu));
     return(p_docu);
@@ -1561,7 +1574,7 @@ select_document(
             }
         }
 
-        assert(found);
+        assert(found); IGNOREVAR(found);
     }
 
     current_p_docu_global_register_assign(p_docu_new);

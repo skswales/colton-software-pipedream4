@@ -38,7 +38,7 @@ user defined custom functions
 typedef struct EV_CUSTOM_ARGS
 {
     S32 n;                      /* number of arguments for custom */
-    L1_U8Z id[EV_MAX_ARGS][BUF_EV_INTNAMLEN];
+    SB_U8Z id[EV_MAX_ARGS][BUF_EV_INTNAMLEN];
     EV_TYPE types[EV_MAX_ARGS];
 }
 EV_CUSTOM_ARGS, * P_EV_CUSTOM_ARGS;
@@ -367,18 +367,47 @@ typedef struct RANGE_SCAN_BLOCK
 }
 RANGE_SCAN_BLOCK, * P_RANGE_SCAN_BLOCK;
 
+enum EXEC_ARRAY_RANGE
+{
+    ARRAY_RANGE_AVERAGE = 1,
+    ARRAY_RANGE_COUNT,
+    ARRAY_RANGE_COUNTA,
+    ARRAY_RANGE_IRR,
+    ARRAY_RANGE_MAX,
+    ARRAY_RANGE_MIN,
+    ARRAY_RANGE_MIRR,
+    ARRAY_RANGE_NPV,
+    ARRAY_RANGE_STD,
+    ARRAY_RANGE_STDP,
+    ARRAY_RANGE_SUM,
+    ARRAY_RANGE_VAR,
+    ARRAY_RANGE_VARP
+};
+
 typedef struct STAT_BLOCK
 {
-    EV_IDNO function_id;
+    enum EXEC_ARRAY_RANGE exec_array_range_id;
+    EV_DATA running_data;
     S32 count;
     S32 count_a;
+
     S32 count1;
     F64 temp;
     F64 temp1;
     F64 parm;
     F64 parm1;
     F64 result1;
-    EV_DATA running_data;
+
+    /* STD/STDP/VAR/VARP */
+    F64 sum_x2;
+  /*F64 shift_value;*/
+
+#if CHECKING
+    EV_IDNO _function_id;
+#if !defined(EV_IDNO_U32)
+    U8 _spare[4-sizeof(EV_IDNO)];
+#endif
+#endif
 }
 STAT_BLOCK, * P_STAT_BLOCK;
 
@@ -495,8 +524,8 @@ typedef struct STACK_EXECUTING_CUSTOM
     EV_SLR custom_slot;
     EV_SLR next_slot;
     S32 in_array;
-    S32 xpos;
-    S32 ypos;
+    S32 x_pos;
+    S32 y_pos;
     S32 elseif;
 }
 STACK_EXECUTING_CUSTOM, * P_STACK_EXECUTING_CUSTOM;
@@ -506,8 +535,8 @@ typedef struct STACK_PROCESSING_ARRAY
     S32 stack_base;
     S32 n_args;
     P_PROC_EXEC exec;
-    S32 xpos;
-    S32 ypos;
+    S32 x_pos;
+    S32 y_pos;
     S32 type_count;
     PC_EV_TYPE arg_types;
 }
@@ -646,14 +675,14 @@ extern S32
 doc_move_rngref(
     P_SS_DOC docep_from,
     _InVal_     EV_DOCNO docno_from,
-    P_RANGE_USE rep,
+    _InoutRef_  P_RANGE_USE rep,
     EV_TRENT rix);
 
 extern S32
 doc_move_slrref(
     P_SS_DOC docep_from,
     _InVal_     EV_DOCNO docno_from,
-    P_SLR_USE sep,
+    _InoutRef_  P_SLR_USE sep,
     EV_TRENT six);
 
 extern void
@@ -727,12 +756,18 @@ statistical functions that use array processing
 
 PROC_EXEC_PROTO(c_avg);
 PROC_EXEC_PROTO(c_count);
+PROC_EXEC_PROTO(c_counta);
 PROC_EXEC_PROTO(c_max);
 PROC_EXEC_PROTO(c_min);
 PROC_EXEC_PROTO(c_std);
 PROC_EXEC_PROTO(c_stdp);
 PROC_EXEC_PROTO(c_var);
 PROC_EXEC_PROTO(c_varp);
+
+extern void
+dbase_stat_block_init(
+    P_STAT_BLOCK stbp,
+    _InVal_     U32 no_exec_id);
 
 extern void
 dbase_sub_function(
@@ -765,7 +800,7 @@ lookup_finish(
 extern void
 stat_block_init(
     P_STAT_BLOCK stbp,
-    S32 function_id,
+    _InVal_     EV_IDNO function_id,
     F64 parm,
     F64 parm1);
 
@@ -909,10 +944,10 @@ ev_help.c external functions
 
 extern S32
 arg_normalise(
-    P_EV_DATA p_ev_data,
-    EV_TYPE type_flags,
-    P_S32 max_x,
-    P_S32 max_y);
+    _InoutRef_  P_EV_DATA p_ev_data,
+    _InVal_     EV_TYPE type_flags,
+    _InoutRef_opt_ P_S32 max_x,
+    _InoutRef_opt_ P_S32 max_y);
 
 extern STATUS
 array_copy(
@@ -944,8 +979,8 @@ array_range_mono_index(
 extern void
 array_range_sizes(
     _InRef_     PC_EV_DATA p_ev_data_in,
-    _OutRef_    P_S32 xs,
-    _OutRef_    P_S32 ys);
+    _OutRef_    P_S32 p_x_size,
+    _OutRef_    P_S32 p_y_size);
 
 extern S32
 array_scan_element(
@@ -961,7 +996,7 @@ array_scan_init(
 extern STATUS
 array_sort(
     P_EV_DATA p_ev_data,
-    _InVal_     S32 x_coord);
+    _InVal_     U32 x_index);
 
 extern void
 data_ensure_constant(

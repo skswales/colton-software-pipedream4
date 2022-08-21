@@ -58,19 +58,19 @@ tree_sort_todo(void);
 name use table
 */
 
-DEPTABLE namtab = { 0, 0, 0, 0, 0, 0 };
+DEPTABLE namtab = DEPTABLE_INIT;
 
 /*
 custom function use table
 */
 
-DEPTABLE custom_use_deptable = { 0, 0, 0, 0, 0, 0 };
+DEPTABLE custom_use_deptable = DEPTABLE_INIT;
 
 /*
 to do table
 */
 
-DEPTABLE todotab = { 0, 0, 0, 0, 0, 0 };
+DEPTABLE todotab = DEPTABLE_INIT;
 
 /*
 flags about all trees

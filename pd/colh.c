@@ -935,7 +935,7 @@ application_button_click_in_colh(
     filbuf();
     /* but guaranteed that we can simply slot_in_buffer = FALSE for movement */
 
-    if((icon == (wimp_i)COLH_COLUMN_HEADINGS))
+    if(icon == (wimp_i)COLH_COLUMN_HEADINGS)
     {
         /* have to cope with Pink 'Plonker' Duck Man's ideas on double clicks (fixed in new RISC OS+):
         * He says that left then right (or vice versa) is a double click!
@@ -1764,8 +1764,8 @@ colh_where_in_column_headings(
     coord *txp)
 {
     wimp_wstate    r;
-    int            orgx, orgy;
-    int            rel_x, rel_y;
+    int            orgx/*, orgy*/;
+    int            rel_x/*, rel_y*/;
     int            arrowcentre;
     pointer_shape *shape;
     int            drag_type;
@@ -1775,9 +1775,9 @@ colh_where_in_column_headings(
 
     wimp_get_wind_state(pointer->w, &r);
     orgx = r.o.box.x0 - r.o.scx;
-    orgy = r.o.box.y1 - r.o.scy;
+  /*orgy = r.o.box.y1 - r.o.scy; never used */
     rel_x = pointer->x - orgx;
-    rel_y = pointer->y - orgy;
+  /*rel_y = pointer->y - orgy; never used */
 
     tx        = div_round_floor_fn(rel_x - texttooffset_x(COLUMNHEAD_t_X0), charwidth);
     shape     = POINTER_DEFAULT;
@@ -1827,7 +1827,7 @@ colh_where_in_column_headings(
         drag_tcol = 0; /* SKS 29sep96 paranoia */
         drag_tx   = 0;
 
-        if(coff >= 0)
+        if(horzvec_entry_valid(coff))
         {
             COL tcol = col_number(coff);
 
@@ -1869,7 +1869,7 @@ colh_where_in_column_headings(
         }
         else
         {
-            if(prev_coff >= 0)
+            if(horzvec_entry_valid(prev_coff))
             {
                 COL prev_tcol = col_number(prev_coff); /* exists, is on screen, slightly to left of drag point */
                 COL tcol      = prev_tcol + 1;         /* assume there is a zero width col we should drag      */

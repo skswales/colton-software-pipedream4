@@ -79,6 +79,30 @@ gr_diag_create_riscdiag_between(
     _InVal_     GR_DIAG_OFFSET sttObject_in,
     _InVal_     GR_DIAG_OFFSET endObject_in);
 
+_Check_return_
+static BOOL
+gr_diag_line_hit(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OFFSET testObject,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size);
+
+_Check_return_
+static BOOL
+gr_diag_piesector_hit(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OFFSET testObject,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size);
+
+_Check_return_
+static BOOL
+gr_diag_quadrilateral_hit(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OFFSET testObject,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size);
+
 /* ------------------------------------------------------------------------- */
 
 /* diagrams are built as a pair of representations:
@@ -154,13 +178,13 @@ gr_diag_create_riscdiag_between(
         P_GR_DIAG_OBJECT pObject;
         U32 objectSize;
         GR_DIAG_OBJTYPE objectType;
-        GR_DIAG_OFFSET sys_off;
+        GR_DIAG_OFFSET sys_off = GR_RISCDIAG_OBJECT_NONE; /* just in case */
         STATUS status = STATUS_DONE;
 
         pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, thisObject);
 
         objectType = pObject.hdr->tag;
-        objectSize = pObject.hdr->size;
+        objectSize = pObject.hdr->n_bytes;
 
         myassert2x(objectSize >= sizeof(*pObject.hdr),
                    "gr_diag_create_riscdiag_between object " U32_XTFMT " size " U32_XTFMT " > sizeof(*pObject.hdr)",
@@ -170,7 +194,6 @@ gr_diag_create_riscdiag_between(
                    "gr_diag_create_riscdiag_between object " U32_XTFMT " size " U32_XTFMT " > p_gr_diag->offset " U32_XTFMT,
                    thisObject, objectSize, array_elements32(&p_gr_diag->handle));
 
-        sys_off = GR_RISCDIAG_OBJECT_NONE; /* just in case */
         status = STATUS_DONE;
 
         switch(objectType)
@@ -180,7 +203,7 @@ gr_diag_create_riscdiag_between(
             /* recurse unconditionally creating group contents.
              * could proceed linearly if we had a patchup list - but it don't go that deep
             */
-            if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off, *pObject.group->name ? pObject.group->name : NULL)) < 0)
+            if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off, NULL)) < 0)
                 break;
 
             status = gr_diag_create_riscdiag_between(p_gr_diag,
@@ -189,11 +212,13 @@ gr_diag_create_riscdiag_between(
 
             /* fix up the group even if error */
             gr_riscdiag_group_end(p_gr_riscdiag, &sys_off);
-            }
+
             break;
+            }
 
         case GR_DIAG_OBJTYPE_TEXT:
             {
+            GR_DIAG_OFFSET sys_off_group = GR_RISCDIAG_OBJECT_NONE;
             GR_BOX   box;
             GR_POINT point;
             GR_SIZE  size;
@@ -205,7 +230,7 @@ gr_diag_create_riscdiag_between(
             size_t    textoff, seglen, wholelen;
 
             point  = pObject.text->pos;
-            size   = pObject.text->wid_hei;
+            size   = pObject.text->size;
             fsizex = pObject.text->textstyle.width;
             fsizey = pObject.text->textstyle.height;
             fg     = pObject.text->textstyle.fg;
@@ -247,9 +272,14 @@ gr_diag_create_riscdiag_between(
                             ++textoff; /* skip line term iff whole line sent */
 
                         /* defer group creation till actually needed */
-                        if(GR_RISCDIAG_OBJECT_NONE == sys_off)
-                            if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off, NULL)) < 0)
+                        if(GR_RISCDIAG_OBJECT_NONE == sys_off_group)
+                        {
+                            if((status = gr_riscdiag_group_new(p_gr_riscdiag, &sys_off_group, NULL)) < 0)
                                 break;
+
+                            assert(GR_RISCDIAG_OBJECT_NONE == sys_off);
+                            sys_off = sys_off_group;
+                        }
                     }
 
                     textoff += seglen;
@@ -264,6 +294,9 @@ gr_diag_create_riscdiag_between(
                         break;
 
                     point.y -= (fsizey * 12) / 10;
+
+                    if(GR_RISCDIAG_OBJECT_NONE == sys_off)
+                        sys_off = sys_off_string;
                 }
 
                 /* end of loop for structure */
@@ -271,10 +304,11 @@ gr_diag_create_riscdiag_between(
             }
 
             /* fix up the group even if error (iff created) */
-            if(GR_RISCDIAG_OBJECT_NONE != sys_off)
-                gr_riscdiag_group_end(p_gr_riscdiag, &sys_off);
-            }
+            if(GR_RISCDIAG_OBJECT_NONE != sys_off_group)
+                gr_riscdiag_group_end(p_gr_riscdiag, &sys_off_group);
+
             break;
+            }
 
         case GR_DIAG_OBJTYPE_RECTANGLE:
             {
@@ -285,95 +319,68 @@ gr_diag_create_riscdiag_between(
 
             box.x0 = pObject.rect->pos.x;
             box.y0 = pObject.rect->pos.y;
-            box.x1 = pObject.rect->pos.x + pObject.rect->wid_hei.cx;
-            box.y1 = pObject.rect->pos.y + pObject.rect->wid_hei.cy;
+            box.x1 = pObject.rect->pos.x + pObject.rect->size.cx;
+            box.y1 = pObject.rect->pos.y + pObject.rect->size.cy;
 
             linestyle = pObject.rect->linestyle;
             fillstyle = pObject.rect->fillstyle;
 
             draw_box_from_gr_box(&draw_box, &box);
 
-            status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &sys_off,
-                                               &draw_box, &linestyle, &fillstyle);
-            }
+            status = gr_riscdiag_rectangle_new(p_gr_riscdiag, &sys_off, &draw_box, &linestyle, &fillstyle);
+
             break;
+            }
 
         case GR_DIAG_OBJTYPE_LINE:
             {
-            GR_POINT origin_BL, offset_BR;
-            DRAW_POINT draw_origin_BL, draw_offset_BR;
+            GR_POINT pos, offset;
+            DRAW_POINT draw_point, draw_offset;
             GR_LINESTYLE linestyle;
 
-            origin_BL = pObject.line->pos;
-            offset_BR.x = pObject.line->d.cx;
-            offset_BR.y = pObject.line->d.cy;
+            pos = pObject.line->pos;
+            offset = pObject.line->offset;
 
             linestyle = pObject.line->linestyle;
 
-            draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
-            draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
+            draw_point_from_gr_point(&draw_point, &pos);
+            draw_point_from_gr_point(&draw_offset, &offset);
 
-            status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
-                                                   &draw_origin_BL, &draw_offset_BR, &draw_offset_BR,
-                                                   &linestyle, NULL);
-            }
+            status = gr_riscdiag_line_new(p_gr_riscdiag, &sys_off, &draw_point, &draw_offset, &linestyle);
+
             break;
+            }
 
-        case GR_DIAG_OBJTYPE_PARALLELOGRAM:
+        case GR_DIAG_OBJTYPE_QUADRILATERAL:
             {
-            GR_POINT origin_BL, offset_BR, offset_TR;
-            DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR;
+            GR_POINT pos, offset1, offset2, offset3;
+            DRAW_POINT draw_point, draw_offset1, draw_offset2, draw_offset3;
             GR_LINESTYLE linestyle;
             GR_FILLSTYLE fillstyle;
 
-            origin_BL = pObject.para->pos;
-            offset_BR = pObject.para->offset_BR;
-            offset_TR = pObject.para->offset_TR;
+            pos = pObject.quad->pos;
+            offset1 = pObject.quad->offset1;
+            offset2 = pObject.quad->offset2;
+            offset3 = pObject.quad->offset3;
 
-            linestyle = pObject.para->linestyle;
-            fillstyle = pObject.para->fillstyle;
+            linestyle = pObject.quad->linestyle;
+            fillstyle = pObject.quad->fillstyle;
 
-            draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
-            draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
-            draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
+            draw_point_from_gr_point(&draw_point, &pos);
+            draw_point_from_gr_point(&draw_offset1, &offset1);
+            draw_point_from_gr_point(&draw_offset2, &offset2);
+            draw_point_from_gr_point(&draw_offset3, &offset3);
 
-            status = gr_riscdiag_parallelogram_new(p_gr_riscdiag, &sys_off,
-                                                   &draw_origin_BL, &draw_offset_BR, &draw_offset_TR,
-                                                   &linestyle, &fillstyle);
-            }
+            status = gr_riscdiag_quadrilateral_new(p_gr_riscdiag, &sys_off, &draw_point, &draw_offset1, &draw_offset2, &draw_offset3, &linestyle, &fillstyle);
+
             break;
-
-        case GR_DIAG_OBJTYPE_TRAPEZOID:
-            {
-            GR_POINT origin_BL, offset_BR, offset_TR, offset_TL;
-            DRAW_POINT draw_origin_BL, draw_offset_BR, draw_offset_TR, draw_offset_TL;
-            GR_LINESTYLE linestyle;
-            GR_FILLSTYLE fillstyle;
-
-            origin_BL = pObject.trap->pos;
-            offset_BR = pObject.trap->offset_BR;
-            offset_TR = pObject.trap->offset_TR;
-            offset_TL = pObject.trap->offset_TL;
-
-            linestyle = pObject.trap->linestyle;
-            fillstyle = pObject.trap->fillstyle;
-
-            draw_point_from_gr_point(&draw_origin_BL, &origin_BL);
-            draw_point_from_gr_point(&draw_offset_BR, &offset_BR);
-            draw_point_from_gr_point(&draw_offset_TR, &offset_TR);
-            draw_point_from_gr_point(&draw_offset_TL, &offset_TL);
-
-            status = gr_riscdiag_trapezoid_new(p_gr_riscdiag, &sys_off,
-                                               &draw_origin_BL, &draw_offset_BR, &draw_offset_TR, &draw_offset_TL,
-                                               &linestyle, &fillstyle);
             }
-            break;
 
         case GR_DIAG_OBJTYPE_PIESECTOR:
             {
             GR_POINT pos;
             GR_COORD       radius;
-            DRAW_POINT     draw_origin;
+            DRAW_POINT     draw_point;
             DRAW_COORD     draw_radius;
             F64            alpha, beta;
             GR_LINESTYLE   linestyle;
@@ -386,14 +393,13 @@ gr_diag_create_riscdiag_between(
             linestyle = pObject.pie->linestyle;
             fillstyle = pObject.pie->fillstyle;
 
-            draw_point_from_gr_point(&draw_origin, &pos);
+            draw_point_from_gr_point(&draw_point, &pos);
             draw_radius = gr_riscDraw_from_pixit(radius);
 
-            status = gr_riscdiag_piesector_new(p_gr_riscdiag, &sys_off,
-                                               &draw_origin, draw_radius, &alpha, &beta,
-                                               &linestyle, &fillstyle);
-            }
+            status = gr_riscdiag_piesector_new(p_gr_riscdiag, &sys_off, &draw_point, draw_radius, &alpha, &beta, &linestyle, &fillstyle);
+
             break;
+            }
 
         case GR_DIAG_OBJTYPE_PICTURE:
             {
@@ -407,8 +413,8 @@ gr_diag_create_riscdiag_between(
 
             box.x0 = pObject.pict->pos.x;
             box.y0 = pObject.pict->pos.y;
-            box.x1 = pObject.pict->pos.x + pObject.pict->wid_hei.cx;
-            box.y1 = pObject.pict->pos.y + pObject.pict->wid_hei.cy;
+            box.x1 = pObject.pict->pos.x + pObject.pict->size.cx;
+            box.y1 = pObject.pict->pos.y + pObject.pict->size.cy;
 
             picture   = pObject.pict->picture;
 
@@ -422,10 +428,10 @@ gr_diag_create_riscdiag_between(
             draw_box.y1 = gr_riscDraw_from_pixit(box.y1);
 
             if(diag)
-                status = gr_riscdiag_scaled_diagram_add(p_gr_riscdiag, &sys_off,
-                                                        &draw_box, diag, &fillstyle);
-            }
+                status = gr_riscdiag_scaled_diagram_add(p_gr_riscdiag, &sys_off, &draw_box, diag, &fillstyle);
+
             break;
+            }
 
         default:
             break;
@@ -475,7 +481,7 @@ gr_diag_ensure_riscdiag_font_tableR_entry_for_TEXT(
     GR_RISCDIAG_RISCOS_FONTLIST_ENTRY f;
 
     zero_struct(f);
-    xstrkpy(f.szHostFontName, sizeof32(f.szHostFontName), _l1str_from_tstr(pszFontName));
+    xstrkpy(f.szHostFontName, sizeof32(f.szHostFontName), _sbstr_from_tstr(pszFontName));
 
     return(gr_diag_ensure_riscdiag_font_tableR_entry(&f, p_array_handle));
 }
@@ -583,35 +589,6 @@ gr_diag_create_riscdiag_font_tables_between(
     return(status);
 }
 
-#ifdef GR_DIAG_FULL_SET
-
-/******************************************************************************
-*
-* run backwards over diagram looking for top object that clips
-*
-* Hierarchy does help here too!
-*
-******************************************************************************/
-
-extern S32
-gr_diag_diagram_correlate(
-    P_GR_DIAG         p_gr_diag,
-    PC_GR_POINT point,
-    PC_GR_POINT semimajor,
-    P_GR_DIAG_OFFSET  pHitObject /*[]out*/,
-    S32              recursionLimit)
-{
-    return(gr_diag_object_correlate_between(
-                p_gr_diag, point,
-                semimajor,
-                pHitObject,
-                GR_DIAG_OBJECT_FIRST,
-                GR_DIAG_OBJECT_LAST,
-                recursionLimit));
-}
-
-#endif
-
 /******************************************************************************
 *
 * dispose of a diagram
@@ -655,7 +632,7 @@ gr_diag_diagram_end(
     /* build new system-dependent representation */
     status_assert(gr_diag_create_riscdiag(p_gr_diag));
 
-    * (int *) &process       = 0;
+    zero_struct(process);
     process.recurse          = 1;
     process.recompute        = 1;
     process.severe_recompute = 0;
@@ -707,11 +684,11 @@ gr_diag_diagram_new(
 
 extern void
 gr_diag_diagram_reset_bbox(
-    P_GR_DIAG          p_gr_diag,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
     GR_DIAG_PROCESS_T process)
 {
     P_GR_DIAG_DIAGHEADER pDiagHdr;
-    GR_BOX        diag_box;
+    GR_BOX diag_box;
 
     gr_diag_object_reset_bbox_between(p_gr_diag,
                                       &diag_box,
@@ -735,11 +712,11 @@ gr_diag_diagram_reset_bbox(
 extern GR_DIAG_OFFSET
 gr_diag_diagram_search(
     P_GR_DIAG p_gr_diag,
-    GR_DIAG_OBJID_T objid)
+    _InVal_     GR_DIAG_OBJID_T objid)
 {
     GR_DIAG_PROCESS_T process;
 
-    * (int *) &process = 0;
+    zero_struct(process);
     process.recurse    = 1;
 
     return(gr_diag_object_search_between(p_gr_diag, objid,
@@ -749,96 +726,6 @@ gr_diag_diagram_search(
 }
 
 #endif
-
-/******************************************************************************
-*
-* end a group: go back and patch its size field (leave bbox till diag end)
-*
-******************************************************************************/
-
-extern U32
-gr_diag_group_end(
-    P_GR_DIAG         p_gr_diag,
-    PC_GR_DIAG_OFFSET pGroupStart)
-{
-    return(gr_diag_object_end(p_gr_diag, pGroupStart));
-}
-
-/******************************************************************************
-*
-* start a group: leave size & bbox empty to be patched later
-*
-******************************************************************************/
-
-extern S32
-gr_diag_group_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pGroupStart,
-    GR_DIAG_OBJID_T objid,
-    PC_U8 szGroupName)
-{
-    static const char spaces_for_group_name[] =
-        /* 012345678901 */
-          "            ";
-
-    P_GR_DIAG_OBJECT pObject;
-    S32 res;
-
-    if((res = gr_diag_object_new(p_gr_diag, pGroupStart, objid, &pObject, GR_DIAG_OBJTYPE_GROUP, 0)) < 0)
-        return(res);
-
-    /* leave name empty? */
-    if(szGroupName)
-    {
-        size_t nameLength;
-
-        trace_3(TRACE_MODULE_GR_CHART,
-                "gr_diag_group_new(" PTR_XTFMT ") offset %d, name %s",
-                report_ptr_cast(p_gr_diag), pGroupStart ? *pGroupStart : 0,
-                trace_string(szGroupName));
-
-        /* fill name with twelve spaces */
-        memcpy32(&pObject.group->name, spaces_for_group_name, sizeof32(pObject.group->name));
-
-        /* mustn't be NULLCH terminated */
-        nameLength = strlen(szGroupName);
-        nameLength = MIN(nameLength, sizeof32(pObject.group->name));
-        memcpy32(pObject.group->name, szGroupName, nameLength);
-    }
-
-    return(1);
-}
-
-/******************************************************************************
-*
-* add a line as a named object in the diagram
-*
-******************************************************************************/
-
-extern S32
-gr_diag_line_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_BOX pBox,
-    _InRef_     PC_GR_LINESTYLE linestyle)
-{
-    P_GR_DIAG_OBJECT pObject;
-    S32             res;
-
-    if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_LINE, 0)) < 0)
-        return(res);
-
-    pObject.line->pos.x = pBox->x0;
-    pObject.line->pos.y = pBox->y0;
-
-    pObject.line->d.cx = pBox->x1 - pBox->x0;
-    pObject.line->d.cy = pBox->y1 - pBox->y0;
-
-    pObject.line->linestyle = *linestyle;
-
-    return(1);
-}
 
 /******************************************************************************
 *
@@ -864,17 +751,14 @@ gr_diag_object_base_size(
     case GR_DIAG_OBJTYPE_RECTANGLE:
         return(sizeof(GR_DIAG_OBJRECTANGLE));
 
-    case GR_DIAG_OBJTYPE_PARALLELOGRAM:
-        return(sizeof(GR_DIAG_OBJPARALLELOGRAM));
-
-    case GR_DIAG_OBJTYPE_TRAPEZOID:
-        return(sizeof(GR_DIAG_OBJTRAPEZOID));
-
     case GR_DIAG_OBJTYPE_PIESECTOR:
         return(sizeof(GR_DIAG_OBJPIESECTOR));
 
     case GR_DIAG_OBJTYPE_PICTURE:
         return(sizeof(GR_DIAG_OBJPICTURE));
+
+    case GR_DIAG_OBJTYPE_QUADRILATERAL:
+        return(sizeof(GR_DIAG_OBJQUADRILATERAL));
 
     default:
         myassert1x(0, "gr_diag_object_base_size of objectType %d", objectType);
@@ -890,15 +774,15 @@ gr_diag_object_base_size(
 *
 ******************************************************************************/
 
-extern S32
+extern BOOL
 gr_diag_object_correlate_between(
     P_GR_DIAG p_gr_diag,
-    PC_GR_POINT point,
-    PC_GR_POINT semimajor,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size,
     P_GR_DIAG_OFFSET pHitObject /*[]out*/,
+    S32 recursionLimit,
     _InVal_     GR_DIAG_OFFSET sttObject_in,
-    _InVal_     GR_DIAG_OFFSET endObject_in,
-    S32 recursionLimit)
+    _InVal_     GR_DIAG_OFFSET endObject_in)
 {
     const GR_DIAG_OFFSET sttObject = gr_diag_normalise_stt(p_gr_diag, sttObject_in);
     const GR_DIAG_OFFSET endObject = gr_diag_normalise_end(p_gr_diag, endObject_in);
@@ -918,21 +802,19 @@ gr_diag_object_correlate_between(
     /* whenever current object becomes same as start object we've missed */
     while(thisObject > sttObject)
     {
-        S32 hit;
+        BOOL hit;
 
-        /* block to reduce recursion stack overhead */
-        {
+        { /* block to reduce recursion stack overhead */
         /* find next object to process: scan up from start till we meet current object */
         GR_DIAG_OFFSET findObject = sttObject;
         P_GR_DIAG_OBJECT pObject;
-        GR_POINT hit_point;
 
         pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, findObject);
 
         for(;;)
         {
             objectType = pObject.hdr->tag;
-            objectSize = pObject.hdr->size;
+            objectSize = pObject.hdr->n_bytes;
 
             myassert2x(objectSize >= sizeof32(*pObject.hdr),
                        "gr_diag_object_correlate_between object " U32_XTFMT " size " U32_XTFMT " > sizeof(*pObject.hdr)",
@@ -954,52 +836,62 @@ gr_diag_object_correlate_between(
             pObject.p_byte += objectSize;
         }
 
-        /* test to see whether we hit this object */
-        hit = gr_box_hit(&hit_point, &pObject.hdr->bbox, point, semimajor);
-        } /*block*/
-
-        if(hit > 0)
+        /* refine hit where this is easy enough to do */
+        switch(pObject.hdr->tag)
         {
-            pHitObject[0] = thisObject;
-            pHitObject[1] = GR_DIAG_OBJECT_NONE; /* keep terminated */
+        case GR_DIAG_OBJTYPE_LINE:
+            hit = gr_diag_line_hit(p_gr_diag, findObject, point, size);
+            break;
 
-            /* did we hit hierarchy that needs searching at a finer level
-             * and that we are allowed to search into?
-            */
-            if((objectType == GR_DIAG_OBJTYPE_GROUP)  &&  (recursionLimit != 0))
-            {
-                /* find a new version of hit as we may have hit a group
-                 * at this level but miss all its components at the next
-                 * so groups are not found as leaves when recursing
+        case GR_DIAG_OBJTYPE_PIESECTOR:
+            hit = gr_diag_piesector_hit(p_gr_diag, findObject, point, size);
+            break;
 
-                 * SKS after 4.12 12feb92 - must limit search to the part of
-                 *                          this group spanned by stt...end
-                */
-                hit = gr_diag_object_correlate_between(p_gr_diag, point,
-                                                       semimajor,
-                                                       pHitObject + 1, /* will be poked at a finer level */
-                                                       thisObject + sizeof(GR_DIAG_OBJGROUP),
-#if 1
-                                                       MIN(thisObject + objectSize, endObject),
-#else
-                                                       thisObject + objectSize,
-#endif
-                                                       recursionLimit - 1);
+        case GR_DIAG_OBJTYPE_QUADRILATERAL:
+            hit = gr_diag_quadrilateral_hit(p_gr_diag, findObject, point, size);
+            break;
 
-                if(hit > 0)
-                    return(hit);
-
-                /* kill group hit, keep terminated */
-                pHitObject[0] = GR_DIAG_OBJECT_NONE;
-            }
-            else
-                return(hit);
+        default:
+            /* simple test to see whether we hit this object */
+            hit = gr_box_hit(&pObject.hdr->bbox, point, size);
+            break;
         }
 
-        /* loop for next object */
+        if(!hit)
+            continue; /* loop for next object */
+        } /*block*/
+
+        pHitObject[0] = thisObject;
+        pHitObject[1] = GR_DIAG_OBJECT_NONE; /* keep terminated */
+
+        /* did we hit hierarchy that needs searching at a finer level
+         * and that we are allowed to search into?
+        */
+        if((objectType == GR_DIAG_OBJTYPE_GROUP)  &&  (recursionLimit != 0))
+        {
+            /* find a new version of hit as we may have hit a group
+             * at this level but miss all its components at the next
+             * so groups are not found as leaves when recursing
+             */
+
+            /* SKS after PD 4.12 12feb92 - must limit search to the part of this group spanned by stt...end */
+            hit = gr_diag_object_correlate_between(p_gr_diag, point, size,
+                                                   pHitObject + 1, /* will be poked at a finer level */
+                                                   recursionLimit - 1,
+                                                   thisObject + sizeof(GR_DIAG_OBJGROUP),
+                                                   MIN(thisObject + objectSize, endObject));
+
+            if(!hit)
+            {   /* kill group hit, keep terminated */
+                pHitObject[0] = GR_DIAG_OBJECT_NONE;
+                continue; /* loop for next object */
+            }
+        }
+
+        return(hit);
     }
 
-    return(0);
+    return(FALSE);
 }
 
 /******************************************************************************
@@ -1010,7 +902,7 @@ gr_diag_object_correlate_between(
 
 extern U32
 gr_diag_object_end(
-    P_GR_DIAG        p_gr_diag,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
     PC_GR_DIAG_OFFSET pObjectStart)
 {
     P_GR_DIAG_OBJECT pObject;
@@ -1032,7 +924,7 @@ gr_diag_object_end(
     }
     else
         /* update object size */
-        pObject.hdr->size = n_bytes;
+        pObject.hdr->n_bytes = n_bytes;
 
     return(n_bytes);
 }
@@ -1080,9 +972,9 @@ extern STATUS
 gr_diag_object_new(
     _InoutRef_  P_GR_DIAG p_gr_diag,
     _OutRef_opt_ P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
+    _InVal_     GR_DIAG_OBJID_T objid,
     _OutRef_    P_P_GR_DIAG_OBJECT ppObject,
-    GR_DIAG_OBJTYPE objectType,
+    _InVal_     GR_DIAG_OBJTYPE objectType,
     _InVal_     U32 extraBytes)
 {
     U32 baseBytes, allocBytes;
@@ -1103,8 +995,8 @@ gr_diag_object_new(
     if(NULL == (pObject.p_byte = al_array_extend_by(&p_gr_diag->handle, BYTE, allocBytes, PC_ARRAY_INIT_BLOCK_NONE, &status)))
         return(status);
 
-    pObject.hdr->tag   = objectType;
-    pObject.hdr->size  = (int) allocBytes;
+    pObject.hdr->tag = objectType;
+    pObject.hdr->n_bytes = (int) allocBytes;
     pObject.hdr->objid = objid;
 
     /* everything has bbox */
@@ -1129,22 +1021,22 @@ gr_diag_object_next(
     _OutRef_    P_P_GR_DIAG_OBJECT ppObject)
 {
     P_GR_DIAG_OBJECT pObject;
-    U32 size;
+    U32 n_bytes;
 
     pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, *pSttObject);
 
-    size = pObject.hdr->size;
+    n_bytes = pObject.hdr->n_bytes;
 
     /* force scans to be linear, not recursive */
     if(pObject.hdr->tag == GR_DIAG_OBJTYPE_GROUP)
-        size = sizeof32(GR_DIAG_OBJGROUP);
+        n_bytes = sizeof32(GR_DIAG_OBJGROUP);
 
-    myassert2x(size >= sizeof32(GR_DIAG_OBJHDR),
-               TEXT("gr_diag_object_next object ") U32_XTFMT TEXT(" size ") U32_XTFMT TEXT(" < sizeof(*pObject.hdr)"), *pSttObject, size);
-    myassert3x(*pSttObject + size <= array_elements32(&p_gr_diag->handle),
-               TEXT("gr_diag_diagram_render object ") U32_XTFMT TEXT(" size ") U32_XTFMT TEXT(" > p_gr_diag->offset ") U32_XTFMT, *pSttObject, size, array_elements32(&p_gr_diag->handle));
+    myassert2x(n_bytes >= sizeof32(GR_DIAG_OBJHDR),
+               TEXT("gr_diag_object_next object ") U32_XTFMT TEXT(" size ") U32_XTFMT TEXT(" < sizeof(*pObject.hdr)"), *pSttObject, n_bytes);
+    myassert3x(*pSttObject + n_bytes <= array_elements32(&p_gr_diag->handle),
+               TEXT("gr_diag_diagram_render object ") U32_XTFMT TEXT(" size ") U32_XTFMT TEXT(" > p_gr_diag->offset ") U32_XTFMT, *pSttObject, n_bytes, array_elements32(&p_gr_diag->handle));
 
-    *pSttObject += size;
+    *pSttObject += n_bytes;
 
     if(*pSttObject >= endObject)
     {
@@ -1165,8 +1057,8 @@ gr_diag_object_next(
 
 extern void
 gr_diag_object_reset_bbox_between(
-    P_GR_DIAG p_gr_diag,
-    _OutRef_        P_GR_BOX pBox,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _OutRef_    P_GR_BOX pBox,
     _InVal_     GR_DIAG_OFFSET sttObject_in,
     _InVal_     GR_DIAG_OFFSET endObject_in,
     GR_DIAG_PROCESS_T process)
@@ -1188,7 +1080,7 @@ gr_diag_object_reset_bbox_between(
 
     while(thisObject < endObject)
     {
-        objectSize = pObject.hdr->size;
+        objectSize = pObject.hdr->n_bytes;
         objectType = pObject.hdr->tag;
 
         myassert2x(objectSize >= sizeof32(*pObject.hdr),
@@ -1228,24 +1120,25 @@ gr_diag_object_reset_bbox_between(
                 /* pObject.p_byte = gr_diag_getoffptr(BYTE, p_gr_diag, thisObject); */
             }
 
-            {
-            /* merely copy over bbox info from corresponding object in Draw file */
-            P_DRAW_OBJECT pObjectR;
-            S32 div_x, div_y, mul_x, mul_y;
+            assert(GR_RISCDIAG_OBJECT_NONE != pObject.hdr->sys_off);
+            if(GR_RISCDIAG_OBJECT_NONE != pObject.hdr->sys_off)
+            {   /* merely copy over bbox info from corresponding object in Draw file */
+                P_DRAW_OBJECT pObjectR;
+                S32 div_x, div_y, mul_x, mul_y;
 
-            pObjectR.p_byte = gr_riscdiag_getoffptr(BYTE, &p_gr_diag->gr_riscdiag, pObject.hdr->sys_off);
+                pObjectR.p_byte = gr_riscdiag_getoffptr(BYTE, &p_gr_diag->gr_riscdiag, pObject.hdr->sys_off);
 
-            /* pixits from riscDraw ain't exact so take care - even go via pixels */
-            div_x = GR_RISCDRAW_PER_RISCOS * wimpt_dx();
-            div_y = GR_RISCDRAW_PER_RISCOS * wimpt_dy();
-            mul_x = GR_PIXITS_PER_RISCOS   * wimpt_dx();
-            mul_y = GR_PIXITS_PER_RISCOS   * wimpt_dy();
+                /* pixits from riscDraw ain't exact so take care - even go via pixels */
+                div_x = GR_RISCDRAW_PER_RISCOS * wimpt_dx();
+                div_y = GR_RISCDRAW_PER_RISCOS * wimpt_dy();
+                mul_x = GR_PIXITS_PER_RISCOS   * wimpt_dx();
+                mul_y = GR_PIXITS_PER_RISCOS   * wimpt_dy();
 
-            pObject.hdr->bbox.x0 = gr_round_pixit_to_floor(pObjectR.hdr->bbox.x0, div_x) * mul_x;
-            pObject.hdr->bbox.y0 = gr_round_pixit_to_floor(pObjectR.hdr->bbox.y0, div_y) * mul_y;
-            pObject.hdr->bbox.x1 = gr_round_pixit_to_ceil( pObjectR.hdr->bbox.x1, div_x) * mul_x;
-            pObject.hdr->bbox.y1 = gr_round_pixit_to_ceil( pObjectR.hdr->bbox.y1, div_y) * mul_y;
-            } /*block*/
+                pObject.hdr->bbox.x0 = gr_round_pixit_to_floor(pObjectR.hdr->bbox.x0, div_x) * mul_x;
+                pObject.hdr->bbox.y0 = gr_round_pixit_to_floor(pObjectR.hdr->bbox.y0, div_y) * mul_y;
+                pObject.hdr->bbox.x1 = gr_round_pixit_to_ceil( pObjectR.hdr->bbox.x1, div_x) * mul_x;
+                pObject.hdr->bbox.y1 = gr_round_pixit_to_ceil( pObjectR.hdr->bbox.y1, div_y) * mul_y;
+            }
         }
 
         gr_box_union(pBox, NULL, &pObject.hdr->bbox);
@@ -1264,7 +1157,7 @@ gr_diag_object_reset_bbox_between(
 extern GR_DIAG_OFFSET
 gr_diag_object_search_between(
     P_GR_DIAG          p_gr_diag,
-    GR_DIAG_OBJID_T   objid,
+    _InVal_     GR_DIAG_OBJID_T objid,
     _InVal_     GR_DIAG_OFFSET sttObject_in,
     _InVal_     GR_DIAG_OFFSET endObject_in,
     GR_DIAG_PROCESS_T process)
@@ -1286,7 +1179,7 @@ gr_diag_object_search_between(
 
     while(thisObject < endObject)
     {
-        objectSize = pObject.hdr->size;
+        objectSize = pObject.hdr->n_bytes;
         objectType = pObject.hdr->tag;
 
         myassert2x(objectSize >= sizeof32(*pObject.hdr),
@@ -1339,36 +1232,201 @@ gr_diag_object_search_between(
 
 /******************************************************************************
 *
+* end a group: go back and patch its size field (leave bbox till diag end)
+*
+******************************************************************************/
+
+extern U32
+gr_diag_group_end(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    PC_GR_DIAG_OFFSET pGroupStart)
+{
+    return(gr_diag_object_end(p_gr_diag, pGroupStart));
+}
+
+/******************************************************************************
+*
+* start a group: leave size & bbox empty to be patched later
+*
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+gr_diag_group_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pGroupStart,
+    _InVal_     GR_DIAG_OBJID_T objid)
+{
+    P_GR_DIAG_OBJECT pObject;
+
+    return(gr_diag_object_new(p_gr_diag, pGroupStart, objid, &pObject, GR_DIAG_OBJTYPE_GROUP, 0));
+}
+
+/******************************************************************************
+*
+* add a line as a named object in the diagram
+*
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+gr_diag_line_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_POINT pPos,
+    _InRef_     PC_GR_POINT pOffset,
+    _InRef_     PC_GR_LINESTYLE linestyle)
+{
+    P_GR_DIAG_OBJECT pObject;
+
+    status_return(gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_LINE, 0));
+
+    pObject.line->pos = *pPos;
+
+    pObject.line->offset = *pOffset;
+
+    pObject.line->linestyle = *linestyle;
+
+    return(STATUS_OK);
+}
+
+/* NB this refining test presumes the bounding box test has passed */
+
+_Check_return_
+static BOOL
+line_hit(
+    _InRef_     PC_GR_POINT line_p1,
+    _InRef_     PC_GR_POINT line_p2,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size)
+{
+    const GR_COORD Tx = point->x;
+    const GR_COORD Ty = point->y;
+    const GR_COORD Ex = size->cx;
+    const GR_COORD Ey = size->cy;
+    /* x3 = Tx + Ex; x4 = Tx - Ex; */
+    /* y3 = Ty + Ey; y4 = Ty - Ey; */
+    const GR_COORD x1 = line_p1->x;
+    const GR_COORD y1 = line_p1->y;
+    const GR_COORD x2 = line_p2->x;
+    const GR_COORD y2 = line_p2->y;
+    const GR_COORD dx = x1 - x2;
+    const GR_COORD dy = y1 - y2;
+    GR_COORD Px, Py;
+
+    /* where does the line (x1,y1) (x2,y2) pass through the horizontal line defined by Ty? */
+    if(0 == dy)
+    {   /* this line is horizontal */
+        Py = y1;
+
+        if(Py < (Ty - Ey))
+            return(FALSE);
+        if(Py > (Ty + Ey))
+            return(FALSE);
+    }
+    else
+    {
+        Px = ((Ty * dx) - (x1 * y2 - y1 * x2)) / dy;
+
+        if(Px < (Tx - Ex))
+            return(FALSE);
+        if(Px > (Tx + Ex))
+            return(FALSE);
+    }
+
+    /* where does the line (x1,y1) (x2,y2) pass through the vertical line defined by Tx? */
+    if(0 == dx)
+    {   /* this line is vertical */
+        /* if dx == dy == 0 it is a point, but these combined tests effectively do point-in-box test */
+        Px = x1;
+
+        if(Px < (Tx - Ex))
+            return(FALSE);
+        if(Px > (Tx + Ex))
+            return(FALSE);
+    }
+    else
+    {
+        Py = ((Tx * dy) + (x1 * y2 - y1 * x2)) / dx;
+
+        if(Py < (Ty - Ey))
+            return(FALSE);
+        if(Py > (Ty + Ey))
+            return(FALSE);
+    }
+
+    return(TRUE);
+}
+
+_Check_return_
+static BOOL
+gr_diag_line_hit_refine(
+    const GR_DIAG_OBJLINE * const line,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size)
+{
+    GR_POINT line_p1;
+    GR_POINT line_p2 = line->pos;
+
+    line_p1.x = line->pos.x + line->offset.x;
+    line_p1.y = line->pos.y + line->offset.y;
+
+    return(line_hit(&line_p1, &line_p2, point, size));
+}
+
+_Check_return_
+static BOOL
+gr_diag_line_hit(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OFFSET testObject,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size)
+{
+    const PC_BYTE pObject = array_ptrc(&p_gr_diag->handle, BYTE, testObject);
+    const GR_DIAG_OBJLINE * const line = (const GR_DIAG_OBJLINE *) pObject;
+
+    /* simple test to see whether we hit this object */
+    if(!gr_box_hit(&line->bbox, point, size))
+        return(FALSE);
+
+    return(gr_diag_line_hit_refine(line, point, size));
+}
+
+/******************************************************************************
+*
 * add a parallelogram as a named object in the diagram
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_diag_parallelogram_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET  pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_POINT pOriginBL,
-    _InRef_     PC_GR_POINT pOffsetBR,
-    _InRef_     PC_GR_POINT pOffsetTR,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_POINT pPos,
+    _InRef_     PC_GR_POINT pOffset1,
+    _InRef_     PC_GR_POINT pOffset2,
     _InRef_     PC_GR_LINESTYLE linestyle,
     _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
-    S32             res;
 
-    if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_PARALLELOGRAM, 0)) < 0)
-        return(res);
+    status_return(gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_QUADRILATERAL, 0));
 
-    pObject.para->pos       = *pOriginBL;
+    pObject.quad->pos       = *pPos;
 
-    pObject.para->offset_BR = *pOffsetBR;
-    pObject.para->offset_TR = *pOffsetTR;
+    pObject.quad->offset1   = *pOffset1;
+    pObject.quad->offset2   = *pOffset2;
 
-    pObject.para->linestyle = *linestyle;
-    pObject.para->fillstyle = *fillstyle;
+    pObject.quad->offset3.x = pOffset2->x - pOffset1->x;
+    pObject.quad->offset3.y = pOffset2->y - pOffset1->y;
 
-    return(1);
+    pObject.quad->linestyle = *linestyle;
+    pObject.quad->fillstyle = *fillstyle;
+
+    return(STATUS_OK);
 }
 
 /******************************************************************************
@@ -1377,11 +1435,12 @@ gr_diag_parallelogram_new(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_diag_piesector_new(
-    P_GR_DIAG p_gr_diag,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
+    _InVal_     GR_DIAG_OBJID_T objid,
     _InRef_     PC_GR_POINT pPos,
     _InVal_     GR_COORD radius,
     _InRef_     PC_F64 alpha,
@@ -1390,10 +1449,8 @@ gr_diag_piesector_new(
     _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
-    S32             res;
 
-    if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_PIESECTOR, 0)) < 0)
-        return(res);
+    status_return(gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_PIESECTOR, 0));
 
     pObject.pie->pos       = *pPos;
 
@@ -1404,7 +1461,173 @@ gr_diag_piesector_new(
     pObject.pie->linestyle = *linestyle;
     pObject.pie->fillstyle = *fillstyle;
 
-    return(1);
+    return(STATUS_OK);
+}
+
+_Check_return_
+static BOOL
+piesector_hit(
+    _InRef_     PC_GR_POINT pPos,
+    _InVal_     GR_COORD radius,
+    _InRef_     PC_F64 alpha,
+    _InRef_     PC_F64 beta,
+    _InRef_     PC_GR_POINT point)
+{
+    const GR_COORD dx = point->x - pPos->x;
+    const GR_COORD dy = point->y - pPos->y;
+
+    { /* trivial no-trig check - is point within the bounding circle? */
+    const S32 dx_2_plus_dy_2 = (dx * dx) + (dy * dy);
+    const S32 radius_squared = radius * radius;
+    if(dx_2_plus_dy_2 > radius_squared)
+        return(FALSE);
+    } /*block*/
+
+    {
+    F64 theta = atan2(dy, dx);
+    assert(*alpha <= *beta);
+
+    /*reportf(TEXT("piesector_hit 1: test %g < %g < %g"), *alpha, theta, *beta);*/
+    if((theta >= *alpha) && (theta <= *beta))
+        return(TRUE);
+
+    if(theta < 0.0)
+    {
+        theta += _two_pi;
+    }
+    else
+    {
+        theta -= _two_pi;
+    }
+
+    /*reportf(TEXT("piesector_hit 2: test %g < %g < %g"), *alpha, theta, *beta);*/
+    if((theta >= *alpha) && (theta <= *beta))
+        return(TRUE);
+    } /*block*/
+
+    return(FALSE);
+}
+
+_Check_return_
+static BOOL
+gr_diag_piesector_hit_refine(
+    const GR_DIAG_OBJPIESECTOR * const pie,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size)
+{
+    IGNOREPARM_InRef_(size);
+
+    return(piesector_hit(&pie->pos, pie->radius, &pie->alpha, &pie->beta, point));
+}
+
+_Check_return_
+static BOOL
+gr_diag_piesector_hit(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OFFSET testObject,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size)
+{
+    const PC_BYTE pObject = array_ptrc(&p_gr_diag->handle, BYTE, testObject);
+    const GR_DIAG_OBJPIESECTOR * const pie = (const GR_DIAG_OBJPIESECTOR *) pObject;
+
+    /* simple test to see whether we hit this object */
+    if(!gr_box_hit(&pie->bbox, point, size))
+        return(FALSE);
+
+    return(gr_diag_piesector_hit_refine(pie, point, size));
+}
+
+/******************************************************************************
+*
+* add a quadrilateral as a named object in the diagram
+*
+******************************************************************************/
+
+_Check_return_
+extern STATUS
+gr_diag_quadrilateral_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_POINT pPos,
+    _InRef_     PC_GR_POINT pOffset1,
+    _InRef_     PC_GR_POINT pOffset2,
+    _InRef_     PC_GR_POINT pOffset3,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle)
+{
+    P_GR_DIAG_OBJECT pObject;
+
+    status_return(gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_QUADRILATERAL, 0));
+
+    pObject.quad->pos       = *pPos;
+
+    pObject.quad->offset1   = *pOffset1;
+    pObject.quad->offset2   = *pOffset2;
+    pObject.quad->offset3   = *pOffset3;
+
+    pObject.quad->linestyle = *linestyle;
+    pObject.quad->fillstyle = *fillstyle;
+
+    return(STATUS_OK);
+}
+
+_Check_return_
+static BOOL
+gr_diag_quadrilateral_hit_refine(
+    const GR_DIAG_OBJQUADRILATERAL * const quad,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size)
+{
+    GR_POINT points[4 + 1];
+
+    IGNOREPARM_InRef_(size);
+
+    points[0] = quad->pos;
+
+    points[1].x = quad->pos.x + quad->offset1.x;
+    points[1].y = quad->pos.y + quad->offset1.y;
+
+    points[2].x = quad->pos.x + quad->offset2.x;
+    points[2].y = quad->pos.y + quad->offset2.y;
+
+    points[3].x = quad->pos.x + quad->offset3.x;
+    points[3].y = quad->pos.y + quad->offset3.y;
+
+    points[4] = points[0];
+
+    if(0 != wn_PnPoly(point, points, elemof32(points))) /* NB NOT n */
+        return(TRUE);
+
+    { /* might be very thin, line-like, so test for proximity to edges */
+    U32 i;
+    for(i = 0; i < 4; ++i)
+    {
+        if(line_hit(&points[i], &points[i+1], point, size))
+            return(TRUE);
+    }
+    } /*block*/
+
+    return(FALSE);
+}
+
+_Check_return_
+static BOOL
+gr_diag_quadrilateral_hit(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OFFSET testObject,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size)
+{
+    const PC_BYTE pObject = array_ptrc(&p_gr_diag->handle, BYTE, testObject);
+    const GR_DIAG_OBJQUADRILATERAL * const quad = (const GR_DIAG_OBJQUADRILATERAL *) pObject;
+
+    /* simple test to see whether we hit this object */
+    if(!gr_box_hit(&quad->bbox, point, size))
+        return(FALSE);
+
+    return(gr_diag_quadrilateral_hit_refine(quad, point, size));
 }
 
 /******************************************************************************
@@ -1413,31 +1636,30 @@ gr_diag_piesector_new(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_diag_rectangle_new(
-    P_GR_DIAG p_gr_diag,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
+    _InVal_     GR_DIAG_OBJID_T objid,
     _InRef_     PC_GR_BOX pBox,
     _InRef_     PC_GR_LINESTYLE linestyle,
     _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
-    S32             res;
 
-    if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_RECTANGLE, 0)) < 0)
-        return(res);
+    status_return(gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_RECTANGLE, 0));
 
     pObject.rect->pos.x = pBox->x0;
     pObject.rect->pos.y = pBox->y0;
 
-    pObject.rect->wid_hei.cx = pBox->x1 - pBox->x0;
-    pObject.rect->wid_hei.cy = pBox->y1 - pBox->y0;
+    pObject.rect->size.cx = pBox->x1 - pBox->x0;
+    pObject.rect->size.cy = pBox->y1 - pBox->y0;
 
     pObject.rect->linestyle = *linestyle;
     pObject.rect->fillstyle = *fillstyle;
 
-    return(1);
+    return(STATUS_OK);
 }
 
 /******************************************************************************
@@ -1446,102 +1668,70 @@ gr_diag_rectangle_new(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_diag_scaled_picture_add(
-    P_GR_DIAG p_gr_diag,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_BOX pBox,
     GR_CACHE_HANDLE picture,
     _InRef_     PC_GR_FILLSTYLE fillstyle)
 {
     P_GR_DIAG_OBJECT pObject;
-    S32             res;
 
-    if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_PICTURE, 0)) < 0)
-        return(res);
+    status_return(gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_PICTURE, 0));
 
     pObject.pict->pos.x = pBox->x0;
     pObject.pict->pos.y = pBox->y0;
 
-    pObject.pict->wid_hei.cx = pBox->x1 - pBox->x0;
-    pObject.pict->wid_hei.cy = pBox->y1 - pBox->y0;
+    pObject.pict->size.cx = pBox->x1 - pBox->x0;
+    pObject.pict->size.cy = pBox->y1 - pBox->y0;
 
     pObject.pict->picture = picture;
 
     pObject.pict->fillstyle = *fillstyle;
 
-    return(1);
+    return(STATUS_OK);
 }
 
-extern S32
+/******************************************************************************
+*
+* add a string as a named object in the diagram
+*
+******************************************************************************/
+
+_Check_return_
+extern STATUS
 gr_diag_text_new(
-    P_GR_DIAG p_gr_diag,
+    _InoutRef_  P_GR_DIAG p_gr_diag,
     _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
+    _InVal_     GR_DIAG_OBJID_T objid,
     _InRef_     PC_GR_BOX pBox,
-    PC_USTR szText,
+    _In_z_      PC_USTR szText,
     _InRef_     PC_GR_TEXTSTYLE textstyle)
 {
     U32 size;
     P_GR_DIAG_OBJECT pObject;
-    S32 res;
 
     size = strlen32p1(szText); /* includes NULLCH */
 
     /* round up to output word boundary */
     size = round_up(size, 4);
 
-    if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_TEXT, size)) < 0)
-        return(res);
+    status_return(gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_TEXT, size));
 
     pObject.text->pos.x = pBox->x0;
     pObject.text->pos.y = pBox->y0;
 
-    pObject.text->wid_hei.cx = pBox->x1 - pBox->x0;
-    pObject.text->wid_hei.cy = pBox->y1 - pBox->y0;
+    pObject.text->size.cx = pBox->x1 - pBox->x0;
+    pObject.text->size.cy = pBox->y1 - pBox->y0;
 
     pObject.text->textstyle = *textstyle;
 
-    strcpy((P_U8) (pObject.text + 1), szText);
+    strcpy((char *) (pObject.text + 1), szText);
 
-    return(1);
-}
-
-/******************************************************************************
-*
-* add a trapezoid as a named object in the diagram
-*
-******************************************************************************/
-
-extern S32
-gr_diag_trapezoid_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET  pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_POINT pOriginBL,
-    _InRef_     PC_GR_POINT pOffsetBR,
-    _InRef_     PC_GR_POINT pOffsetTR,
-    _InRef_     PC_GR_POINT pOffsetTL,
-    _InRef_     PC_GR_LINESTYLE linestyle,
-    _InRef_     PC_GR_FILLSTYLE fillstyle)
-{
-    P_GR_DIAG_OBJECT pObject;
-    S32             res;
-
-    if((res = gr_diag_object_new(p_gr_diag, pObjectStart, objid, &pObject, GR_DIAG_OBJTYPE_TRAPEZOID, 0)) < 0)
-        return(res);
-
-    pObject.trap->pos       = *pOriginBL;
-
-    pObject.trap->offset_BR = *pOffsetBR;
-    pObject.trap->offset_TR = *pOffsetTR;
-    pObject.trap->offset_TL = *pOffsetTL;
-
-    pObject.trap->linestyle = *linestyle;
-    pObject.trap->fillstyle = *fillstyle;
-
-    return(1);
+    return(STATUS_OK);
 }
 
 /* end of gr_diag.c */

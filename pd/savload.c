@@ -51,13 +51,13 @@ loadfile_core(
     _In_z_      PCTSTR filename,
     _InRef_     P_LOAD_FILE_OPTIONS p_load_file_options);
 
+static BOOL
+name_preprocess_docu_name_flags_for_rename(
+    _InoutRef_  P_DOCU_NAME p_docu_name);
+
 static void
 rename_document(
     _InRef_     PC_DOCU_NAME p_docu_name);
-
-static BOOL
-rename_document_prep_docu_name_flags(
-    _InoutRef_  P_DOCU_NAME p_docu_name);
 
 static BOOL
 savefile_core(
@@ -318,7 +318,7 @@ save_opt_to_file(
             if(not_on_list  &&  (dptr->option == **dptr->optionlist))
                 continue;
 
-            ptr[0] = dptr->option;
+            ptr[0] = (char) dptr->option;
             ptr[1] = '\0';
             break;
 
@@ -441,12 +441,13 @@ addcurrentdir(
 *
 ******************************************************************************/
 
+_Check_return_
 extern BOOL
-save_existing(void)
+save_or_discard_existing(void)
 {
-    S32 res = riscdialog_query_save_existing();
+    enum RISCDIALOG_QUERY_SDC_REPLY SDC_res = riscdialog_query_save_or_discard_existing();
 
-    return(res != riscdialog_query_CANCEL);
+    return(SDC_res != riscdialog_query_SDC_CANCEL);
 }
 
 /*
@@ -577,7 +578,7 @@ NameFile_fn(void)
 
                 if(ok)
                 {
-                    xf_loaded_from_path = rename_document_prep_docu_name_flags(&docu_name);
+                    xf_loaded_from_path = (BOOLEAN) name_preprocess_docu_name_flags_for_rename(&docu_name);
 
                     rename_document(&docu_name);
 
@@ -664,7 +665,7 @@ SaveChoices_fn(void)
 
 static void
 do_SaveFile(
-    _InVal_     S32 boxnumber)
+    _InVal_     U32 boxnumber)
 {
     SAVE_FILE_OPTIONS save_file_options;
 
@@ -691,8 +692,8 @@ do_SaveFile(
         }
 
         zero_struct(save_file_options);
-        save_file_options.filetype_option = d_save[SAV_FORMAT].option;
-        save_file_options.line_sep_option = d_save[SAV_LINESEP].option;
+        save_file_options.filetype_option = (char) d_save[SAV_FORMAT].option;
+        save_file_options.line_sep_option = (char) d_save[SAV_LINESEP].option;
         if(('Y' == d_save[SAV_ROWCOND].option)  &&  !str_isblank(d_save[SAV_ROWCOND].textfield))
             save_file_options.row_condition = d_save[SAV_ROWCOND].textfield;
         if('Y' == d_save[SAV_BLOCK].option)
@@ -852,7 +853,7 @@ savefile(
 
                 if(ok)
                 {
-                    xf_loaded_from_path = rename_document_prep_docu_name_flags(&docu_name);
+                    xf_loaded_from_path = (BOOLEAN) name_preprocess_docu_name_flags_for_rename(&docu_name);
 
                     rename_document(&docu_name);
 
@@ -975,12 +976,14 @@ savefile_core(
 
     if(n_rowfixes)
     {
+        assert(vertvec_entry_valid(0));
         (void) sprintf(array, "%d,%d", row_number(0), n_rowfixes);
         (void) mystr_set(&d_fixes[0].textfield, array);
     }
 
     if(n_colfixes)
     {
+        assert(horzvec_entry_valid(0));
         (void) sprintf(array, "%d,%d", col_number(0), n_colfixes);
         (void) mystr_set(&d_fixes[1].textfield, array);
     }
@@ -1158,7 +1161,7 @@ savefile_core(
                     /* if it's a blank cell don't bother outputting field separators
                      * watch out for numeric cells masquerading as blanks
                     */
-                    if( !isslotblank(tcell)  ||
+                    if( !is_blank_cell(tcell)  ||
                         (tcell  &&  (tcell->type != SL_TEXT)))
                     {
                         while(prevcol < tcol)
@@ -1896,7 +1899,7 @@ LoadFile_fn(void)
             load_file_options.insert_at_slot = d_load[1].textfield;
         if('Y' == d_load[2].option)
             load_file_options.row_range = d_load[2].textfield;
-        load_file_options.filetype_option = d_load[3].option;
+        load_file_options.filetype_option = (char) d_load[3].option;
 
         if(!loadfile(d_load[0].textfield, &load_file_options))
             break;
@@ -1988,7 +1991,7 @@ loadfile(
         /* check readable for loadfile_recurse() */
         STATUS auto_filetype_option;
 
-        if((auto_filetype_option = find_filetype_option(filename)) <= 0)
+        if((auto_filetype_option = find_filetype_option(filename, FILETYPE_UNDETERMINED)) <= 0)
         {
             if(0 == auto_filetype_option)
                 reperr(ERR_NOTFOUND, filename);
@@ -2110,13 +2113,13 @@ loadfile_recurse(
 
         if(ok)
         {
-            BOOL will_be_loaded_from_path = rename_document_prep_docu_name_flags(&docu_name);
+            BOOL will_be_loaded_from_path = name_preprocess_docu_name_flags_for_rename(&docu_name);
 
             ok = create_new_document(&docu_name);
 
             if(ok)
             {
-                xf_loaded_from_path = will_be_loaded_from_path;
+                xf_loaded_from_path = (BOOLEAN) will_be_loaded_from_path;
 
                 /* rename_document(&docu_name); no need now */
             }
@@ -2229,7 +2232,7 @@ loadfile_recurse_load_supporting_documents(
 
         addcurrentdir(fullname, elemof32(fullname), sup_doc_filename);
 
-        filetype_option = find_filetype_option(fullname);
+        filetype_option = find_filetype_option(fullname, FILETYPE_UNDETERMINED);
         } /*block*/
 
         if(filetype_option > 0)
@@ -2237,7 +2240,7 @@ loadfile_recurse_load_supporting_documents(
             LOAD_FILE_OPTIONS load_file_options;
             zero_struct(load_file_options);
             load_file_options.document_name = sup_doc_filename;
-            load_file_options.filetype_option = filetype_option;
+            load_file_options.filetype_option = (char) filetype_option;
             (void) loadfile_recurse(sup_doc_filename, &load_file_options);
             n_loaded++;
         }
@@ -2256,14 +2259,14 @@ loadfile_recurse_load_supporting_documents(
 
             if(try_path)
             {
-                filetype_option = find_filetype_option(sup_doc_filename);
+                filetype_option = find_filetype_option(sup_doc_filename, FILETYPE_UNDETERMINED);
 
                 if(filetype_option > 0)
                 {
                     LOAD_FILE_OPTIONS load_file_options;
                     zero_struct(load_file_options);
                     load_file_options.document_name = sup_doc_filename;
-                    load_file_options.filetype_option = filetype_option;
+                    load_file_options.filetype_option = (char) filetype_option;
                     (void) loadfile_recurse(sup_doc_filename, &load_file_options);
                     n_loaded++;
                 }
@@ -2330,15 +2333,110 @@ enumerate_dir_to_list(
 *
 ******************************************************************************/
 
-static const char lotus_leadin[4] = { '\x00', '\x00', '\x02', '\x00' };
+#define BYTES_TO_SEARCH 1024
+
+_Check_return_
+static BOOL
+reject_this_filetype(
+    _InVal_     FILETYPE_RISC_OS filetype)
+{
+    switch(filetype)
+    {
+    case FILETYPE_PNG:
+    case FILETYPE_MS_XLS:
+    case FILETYPE_DATAPOWER:
+    case FILETYPE_DATAPOWERGPH:
+    case FILETYPE_RTF:
+    case FILETYPE_LOTUS123:
+    case FILETYPE_TIFF:
+        /* we know that it's not sensible to try to load these ones */
+        return(TRUE);
+
+    default:
+        return(FALSE);
+    }
+}
+
+_Check_return_
+static FILETYPE_RISC_OS
+filetype_from_data(
+    PC_BYTE buffer)
+{
+    static const BYTE buffer_fireworkz[]    = { '{',    'V',    'e',    'r',    's',    'i',    'o',    'n',   ':' };
+    static const BYTE buffer_pipedream[]    = { '%',    'O',    'P',    '%' };
+    static const BYTE buffer_pipedream_2[]  = { '%',    'C',    'O',    ':' };
+    static const BYTE buffer_rtf[]          = { '{',    '\\',   'r',    't',    'f' };
+    static const BYTE buffer_acorn_draw[]   = { 'D',    'r',    'a',    'w',    '\xC9' };
+    static const BYTE buffer_acorn_sprite[] = { '\x01', '\x00', '\x00', '\x00', '\x10', '\x00', '\x00', '\x00' }; /* assumes only one sprite and no extension area */
+    static const BYTE buffer_jfif_0[]       = { '\xFF', '\xD8', /*SOI*/ '\xFF', '\xE0' /*APP0*/ };
+    static const BYTE buffer_jfif_6[]       = { 'J',    'F',    'I',    'F',    '\x00' /*JFIF*/ };
+    static const BYTE buffer_tiff_LE[]      = { 'I',    'I',    '*',    '\x00' };
+    static const BYTE buffer_tiff_BE[]      = { 'M',    'M',    '\x00', '*'    };
+    static const BYTE buffer_png[]          = { '\x89', 'P',    'N',    'G',    '\x0D', '\x0A', '\x1A', '\x0A' };
+    static const BYTE buffer_gif87a[]       = { 'G',    'I',    'F',    '8',    '7',    'a' };
+    static const BYTE buffer_gif89a[]       = { 'G',    'I',    'F',    '8',    '9',    'a' };
+    static const BYTE buffer_compound_file[]= { '\xD0', '\xCF', '\x11', '\xE0', '\xA1', '\xB1', '\x1A', '\xE1' };
+    static const BYTE buffer_excel_biff4w[] = { '\x09', '\x04', '\x06', '\x00', '\x00', '\x04', '\x00', '\x01' };
+    static const BYTE buffer_excel_biff4[]  = { '\x09', '\x04', '\x06', '\x00', '\x00', '\x00', '\x02', '\x00' };
+    static const BYTE buffer_excel_biff3[]  = { '\x09', '\x02', '\x06', '\x00', '\x00', '\x00', '\x02', '\x00' };
+    static const BYTE buffer_excel_biff2[]  = { '\x09', '\x00', '\x06', '\x00', '\x00', '\x00', '\x02', '\x00' };
+    static const BYTE buffer_lotus_wk1[]    = { '\x00', '\x00', '\x02', '\x00' /*BOF*/ };
+    static const BYTE buffer_lotus_wk3[]    = { '\x00', '\x00', '\x1A', '\x00' /*BOF*/ };
+    static const BYTE buffer_acorn_sid[]    = { '%',    '%' };
+
+    FILETYPE_RISC_OS filetype = FILETYPE_UNDETERMINED;
+
+    if(0 == memcmp32(buffer, buffer_fireworkz, sizeof32(buffer_fireworkz)))
+        filetype = FILETYPE_T5_FIREWORKZ;
+    else if(0 == memcmp32(buffer, buffer_pipedream, sizeof32(buffer_pipedream)))
+        filetype = FILETYPE_PIPEDREAM;
+    else if(0 == memcmp32(buffer, buffer_pipedream_2, sizeof32(buffer_pipedream_2)))
+        filetype = FILETYPE_PIPEDREAM;
+    else if(0 == memcmp32(buffer, buffer_rtf, sizeof32(buffer_rtf)))
+        filetype = FILETYPE_RTF;
+    else if(0 == memcmp32(buffer, buffer_acorn_draw, sizeof32(buffer_acorn_draw)))
+        filetype = FILETYPE_DRAW;
+    else if(0 == memcmp32(buffer, buffer_acorn_sprite, sizeof32(buffer_acorn_sprite)))
+        filetype = FILETYPE_SPRITE;
+    else if( (0 == memcmp32(&buffer[6], buffer_jfif_0, sizeof32(buffer_jfif_0))) &&
+             (0 == memcmp32(&buffer[6], buffer_jfif_6, sizeof32(buffer_jfif_6))) )
+        filetype = FILETYPE_JPEG;
+    else if(0 == memcmp32(buffer, buffer_tiff_LE, sizeof32(buffer_tiff_LE)))
+        filetype = FILETYPE_TIFF;
+    else if(0 == memcmp32(buffer, buffer_tiff_BE, sizeof32(buffer_tiff_BE)))
+        filetype = FILETYPE_TIFF;
+    else if(0 == memcmp32(buffer, buffer_png, sizeof32(buffer_png)))
+        filetype = FILETYPE_PNG;
+    else if(0 == memcmp32(buffer, buffer_gif87a, sizeof32(buffer_gif87a)))
+        filetype = FILETYPE_GIF;
+    else if(0 == memcmp32(buffer, buffer_gif89a, sizeof32(buffer_gif89a)))
+        filetype = FILETYPE_GIF;
+    else if(0 == memcmp32(buffer, buffer_compound_file, sizeof32(buffer_compound_file)))
+        filetype = FILETYPE_MS_XLS; /*detect_compound_document_file(file_handle);*/
+    else if(0 == memcmp32(buffer, buffer_excel_biff4w, sizeof32(buffer_excel_biff4w)))
+        filetype = FILETYPE_MS_XLS;
+    else if(0 == memcmp32(buffer, buffer_excel_biff4, sizeof32(buffer_excel_biff4)))
+        filetype = FILETYPE_MS_XLS;
+    else if(0 == memcmp32(buffer, buffer_excel_biff3, sizeof32(buffer_excel_biff3)))
+        filetype = FILETYPE_MS_XLS;
+    else if(0 == memcmp32(buffer, buffer_excel_biff2, sizeof32(buffer_excel_biff2)))
+        filetype = FILETYPE_MS_XLS;
+    else if(0 == memcmp32(buffer, buffer_lotus_wk1, sizeof32(buffer_lotus_wk1)))
+        filetype = FILETYPE_LOTUS123;
+    else if(0 == memcmp32(buffer, buffer_lotus_wk3, sizeof32(buffer_lotus_wk3)))
+        filetype = FILETYPE_LOTUS123;
+    else if(0 == memcmp32(buffer, buffer_acorn_sid, sizeof32(buffer_acorn_sid)))
+        filetype = FILETYPE_SID;
+
+    return(filetype);
+}
 
 /* we know that name is not null */
 
-#define BYTES_TO_SEARCH 1024
-
 extern S32 /* filetype_option, 0 or error (reported) */
 find_filetype_option(
-    _In_z_      PCTSTR name)
+    _In_z_      PCTSTR filename,
+                FILETYPE_RISC_OS filetype)
 {
     FILE_HANDLE input;
     char array[BYTES_TO_SEARCH];
@@ -2352,12 +2450,37 @@ find_filetype_option(
     ROW dummy_row = 0;
     uchar dch;
     BOOL dbool;
-    S32 type;
+    S32 filetype_option;
 
-    input = pd_file_open(name, file_open_read);
+    /* do we know that we can't handle it? */
+    if(FILETYPE_UNDETERMINED != filetype)
+        if(reject_this_filetype(filetype))
+            return(ERR_CANT_LOAD_FILETYPE);
+
+    /* centralise handling for this one to check readability */
+    if(FILETYPE_CSV == filetype)
+    {
+        if((filetype_option = file_readable(filename)) > 0)
+            filetype_option = CSV_CHAR;
+        return(filetype_option);
+    }
+
+    input = pd_file_open(filename, file_open_read);
 
     if(!input)
         return('\0'); /* not an error at this level */
+
+    if(FILETYPE_UNDETERMINED == filetype)
+    {
+        filetype = file_get_type(input);
+
+        /* do we now know that we can't handle it? */
+        if(reject_this_filetype(filetype))
+        {
+            filetype_option = ERR_CANT_LOAD_FILETYPE;
+            goto endpoint;
+        }
+    }
 
     size = pd_file_read(array, 1, BYTES_TO_SEARCH, input);
 
@@ -2366,7 +2489,7 @@ find_filetype_option(
     /* error in reading? */
     if(size == -1)
     {
-        type = -1;
+        filetype_option = -1;
         goto endpoint;
     }
 
@@ -2375,40 +2498,43 @@ find_filetype_option(
         --size;
     array[size] = '\0';
 
-    /* is it a chart file? */
+    /* is it a chart file? search early or may get confused with just normal Draw file */
     res = gr_cache_fileheader_is_chart(array, size);
     if(res != 0)
     {
-        type = PD4_CHART_CHAR;
+        filetype_option = PD4_CHART_CHAR;
         goto endpoint;
     }
 
     if(vsload_fileheader_isvsfile(array, size))
     {
         trace_0(TRACE_APP_PD4, "ViewSheet file");
-        type = VIEWSHEET_CHAR;
+        filetype_option = VIEWSHEET_CHAR;
         goto endpoint;
     }
-
-    /* look to see if it's a LOTUS file, yuk */
-    if( (size > 8)                              &&
-        (0 == memcmp(array, lotus_leadin, 4))   &&
-        (array[4] >= 4)  &&  (array[4] <= 6)    &&
-        (array[5] == 4)                         )
-    {
-        reportf("LOTUS FILE DETECTED: %s!!!", name);
-        reperr_not_installed(create_error(ERR_LOTUS));
-        type = ERR_LOTUS;
-        goto endpoint;
-    }
-
-    /* not lotus */
 
     /* test for 1WP file */
     if(fwp_isfwpfile(array))
     {
         trace_0(TRACE_APP_PD4, "1wp file");
-        type = FWP_CHAR;
+        filetype_option = FWP_CHAR;
+        goto endpoint;
+    }
+
+    /* ignore filetype we've got to this point and scan the buffer for other known patterns */
+    filetype = filetype_from_data(array);
+
+    /* do we now know that we can't handle it? */
+    if(reject_this_filetype(filetype))
+    {
+        filetype_option = ERR_CANT_LOAD_FILETYPE;
+        goto endpoint;
+    }
+
+    /* mutate this one into one we know we can handle - user will just have to ignore top row */
+    if(FILETYPE_SID == filetype)
+    {
+        filetype_option = CSV_CHAR;
         goto endpoint;
     }
 
@@ -2439,12 +2565,12 @@ find_filetype_option(
                 if(0 == memcmp(ptr, "OP%VS", 5))
                 {
                     trace_0(TRACE_APP_PD4, "PipeDream 4 file found (versioned)");
-                    type = PD4_CHAR;
+                    filetype_option = PD4_CHAR;
                 }
                 else
                 {
                     trace_0(TRACE_APP_PD4, "PipeDream 4 file found (assumed, might be PD3 or PD4-transitional)");
-                    type = PD4_CHAR;
+                    filetype_option = PD4_CHAR;
                 }
 
                 goto endpoint;
@@ -2458,7 +2584,7 @@ find_filetype_option(
         case CTRLZ: /* MS-DOS end of file marker? */
         case TAB:
             trace_0(TRACE_APP_PD4, "Tab file found");
-            type = TAB_CHAR;
+            filetype_option = TAB_CHAR;
             goto endpoint;
 
         case CR:
@@ -2468,7 +2594,7 @@ find_filetype_option(
                 if(comma_values > 1)
                 {
                     trace_0(TRACE_APP_PD4, "Line of valid comma options: CSV");
-                    type = CSV_CHAR;
+                    filetype_option = CSV_CHAR;
                     goto endpoint;
                 }
 
@@ -2523,7 +2649,7 @@ find_filetype_option(
                 case '\0':
                     /* faulty quoted string */
                     trace_0(TRACE_APP_PD4, "Tab file as quoted string was faulty");
-                    type = TAB_CHAR;
+                    filetype_option = TAB_CHAR;
                     goto endpoint;
 
                 case QUOTES:
@@ -2553,7 +2679,7 @@ find_filetype_option(
             if(isupper(*ptr)  &&  isupper(*(ptr+1)))
             {
                 trace_0(TRACE_APP_PD4, "VIEW stored command");
-                type = VIEW_CHAR;
+                filetype_option = VIEW_CHAR;
                 goto endpoint;
             }
 
@@ -2567,7 +2693,7 @@ find_filetype_option(
             if((*ptr == '.')  &&  (*(ptr+1) == '.'))
             {
                 trace_0(TRACE_APP_PD4, "VIEW ruler");
-                type = VIEW_CHAR;
+                filetype_option = VIEW_CHAR;
                 goto endpoint;
             }
 
@@ -2591,13 +2717,13 @@ find_filetype_option(
 
     trace_0(TRACE_APP_PD4, "End of BYTES_TO_SEARCH/EOF - so call it Tab");
 
-    type = TAB_CHAR;
+    filetype_option = TAB_CHAR;
 
 endpoint:;
 
     pd_file_close(&input);
 
-    return(type);
+    return(filetype_option);
 }
 
 /******************************************************************************
@@ -2605,6 +2731,8 @@ endpoint:;
 *  return the RISC OS filetype from our letter options
 *
 ******************************************************************************/
+
+#define FILETYPE_PARAGRAPH FILETYPE_TEXT
 
 extern FILETYPE_RISC_OS
 rft_from_filetype_option(
@@ -3464,12 +3592,12 @@ rename_document(
 }
 
 static BOOL
-rename_document_prep_docu_name_flags(
+name_preprocess_docu_name_flags_for_rename(
     _InoutRef_  P_DOCU_NAME p_docu_name)
 {
     BOOL is_loaded_from_path = 0;
 
-    trace_2(TRACE_APP_PD4, "rename_document_prep_docu_name_flags(path(%s) leaf(%s))", report_tstr(p_docu_name->path_name), report_tstr(p_docu_name->leaf_name));
+    trace_2(TRACE_APP_PD4, "name_preprocess_docu_name_flags_for_rename(path(%s) leaf(%s))", report_tstr(p_docu_name->path_name), report_tstr(p_docu_name->leaf_name));
 
     if(p_docu_name->path_name && file_is_rooted(p_docu_name->path_name))
     {

@@ -7,8 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-#TEXTUAL_VERSION_NUMBER=4.54
-TEXTUAL_VERSION_NUMBER=4.53/03
+#TEXTUAL_VERSION_NUMBER=4.54.01
+TEXTUAL_VERSION_NUMBER=4.54
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -18,7 +18,9 @@ PD=^.^
 
 CMODULES=$(PD).cmodules
 
-LIB_MSUN=$(PD).external.FreeBSD.srcp.lib.msun
+PD_EXTERNAL=$(PD).external
+
+LIB_MSUN=$(PD_EXTERNAL).FreeBSD.srcp.lib.msun
 
 WimpLib=$(PD).WimpLib
 
@@ -32,15 +34,18 @@ WimpLib=$(PD).WimpLib
 # Use current set of 32-bit tools on Run$Path and libraries on C$Path
 
 AS=ObjAsm
-ASflags_BASE=-I$(CMODULES).Hdr -APCS 3/32bit/SWSTackCheck -throwback -stamp -quit -CloseExec
+ASflags_BASE=-I$(CMODULES).Hdr -throwback -stamp -quit -CloseExec
 ASflags=$(ASflags_BASE)
 
 CC=cc
-CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -APCS 3/32bit/fpe3/swst/fp/nofpr -fah -throwback -DSB_GLOBAL_REGISTER
+CCflags_BASE=-c $(INC_RAM_PD) -I$(PD) $(INC_RAM_WimpLib) -I$(WimpLib) -fah -throwback -DSB_GLOBAL_REGISTER
 CCflags=$(CCflags_BASE) -Otime
 #
+CCflags=$(CCflags_BASE) -Otime -DCHECKING
+# Uncomment the above line ^^^ to get some modules compiled with assertion
+#
 # CCflags=$(CCflags_BASE) -Otime -DUNRELEASED
-# Uncomment the above line ^^^ to get some modules compiled with trace info
+# Uncomment the above line ^^^ to get some modules compiled with trace info and assertion
 #
 # Stuart's top tip - just copy over the set of r32.o
 # then delete the ones you want compiled with trace info
@@ -48,7 +53,7 @@ CCflags=$(CCflags_BASE) -Otime
 # o.pdmain as that sets up TRACE_ALLOWED stuff
 # o.modules.aligator as that exports some CHECKING functions
 #
-CCflags=$(CCflags_BASE) -g
+# CCflags=$(CCflags_BASE) -g
 # Uncomment the above line ^^^ to get some modules compiled with debug info
 #
 # CCflags=$(CCflags_BASE) -g -DUNRELEASED
@@ -60,9 +65,9 @@ CCflags=$(CCflags_BASE) -g
 # put a profile_on()/off() pair around interesting code
 
 LD=link
-AOFLinkflags=-d -aof -o $@
-Linkflags=-d -aif -o $@
-# For Profiling add -d for more symbols
+AOFLinkflags=-aof -o $@
+Linkflags=-aif -o $@
+# For Profiling add -d for more symbols; -d is needed for debug info!
 
 PipeDream:   \
     @.!PipeDream.!Boot \
@@ -70,6 +75,7 @@ PipeDream:   \
     @.!PipeDream.!RunImage \
     @.!PipeDream.!Sprites \
     @.!PipeDream.!Sprites22 \
+    @.!PipeDream.!SpritesR5 \
     @.!PipeDream.Resource.RISC_OS.Messages \
     @.!PipeDream.Resource.RISC_OS.tem_risc \
     @.!PipeDream.Resource.RISC_OS.tem_main \
@@ -168,6 +174,7 @@ o.modules.muldivas
 #
 AOFMEV=\
 o.modules.ss_const \
+o.modules.ss_date \
 o.modules.ev_comp \
 o.modules.ev_dcom \
 o.modules.ev_docs \
@@ -213,8 +220,9 @@ o.modules.gr_nodbg \
 o.modules.gr_piesg \
 o.modules.gr_rdiag \
 o.modules.gr_rdia2 \
-o.modules.gr_scale \
-o.modules.gr_scatc
+o.modules.gr_scatc \
+o.modules.gr_style \
+o.modules.wn_pnpoly
 #
 AOFMD=\
 o.modules.debug \
@@ -270,6 +278,10 @@ o.aof_GB:   \
 @.!PipeDream.!Sprites22:   \
              $(PD).utils.GB.spr_fi22
         Copy $(PD).utils.GB.spr_fi22 $@ ~C FV
+
+@.!PipeDream.!SpritesR5:   \
+             $(PD).utils.GB.spr_fiR5
+        Copy $(PD).utils.GB.spr_fiR5 $@ ~C FV
 
 @.!PipeDream.Resource.RISC_OS.Sprites:   \
              utils.GB.s24_mrg
@@ -371,6 +383,8 @@ o.Modules.ev_fnfin:    $(CMODULES).c.ev_fnfin
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnfin
 o.Modules.ev_fnsta:    $(CMODULES).c.ev_fnsta
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnsta
+o.Modules.ev_fnstm:    $(CMODULES).c.ev_fnstm
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnstm
 o.Modules.ev_fnstr:    $(CMODULES).c.ev_fnstr
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_fnstr
 o.Modules.ev_func:    $(CMODULES).c.ev_func
@@ -379,6 +393,10 @@ o.Modules.ev_help:    $(CMODULES).c.ev_help
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_help
 o.Modules.ev_math:    $(CMODULES).c.ev_math
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_math
+o.Modules.ev_matb:    $(CMODULES).c.ev_matb
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_matb
+o.Modules.ev_matr:    $(CMODULES).c.ev_matr
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_matr
 o.Modules.ev_mcpx:    $(CMODULES).c.ev_mcpx
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ev_mcpx
 o.Modules.ev_mtri:    $(CMODULES).c.ev_mtri
@@ -433,10 +451,10 @@ o.Modules.gr_rdiag:    $(CMODULES).c.gr_rdiag
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_rdiag
 o.Modules.gr_rdia2:    $(CMODULES).c.gr_rdia2
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_rdia2
-o.Modules.gr_scale:    $(CMODULES).c.gr_scale
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_scale
 o.Modules.gr_scatc:    $(CMODULES).c.gr_scatc
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_scatc
+o.Modules.gr_style:    $(CMODULES).c.gr_style
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_style
 o.Modules.handlist:   $(CMODULES).c.handlist
         $(CC) -o $@ $(CCflags) $(CMODULES).c.handlist
 o.Modules.list:       $(CMODULES).c.list
@@ -465,6 +483,8 @@ o.Modules.spell:      $(CMODULES).c.spell
         $(CC) -o $@ $(CCflags) $(CMODULES).c.spell
 o.Modules.ss_const:   $(CMODULES).c.ss_const
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ss_const
+o.Modules.ss_date:   $(CMODULES).c.ss_date
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ss_date
 o.Modules.stringlk:   $(CMODULES).c.stringlk
         $(CC) -o $@ $(CCflags) $(CMODULES).c.stringlk
 o.Modules.typepack:   $(CMODULES).c.typepack
@@ -499,6 +519,11 @@ o.Modules.k_cos:    $(LIB_MSUN).src.c.k_cos
         $(CC) -o $@ $(CCflags) $(LIB_MSUN).src.c.k_cos
 o.Modules.k_sin:    $(LIB_MSUN).src.c.k_sin
         $(CC) -o $@ $(CCflags) $(LIB_MSUN).src.c.k_sin
+#
+# OtherFree
+#
+o.Modules.wn_pnpoly:	$(PD_EXTERNAL).OtherFree.c.wn_pnpoly
+        $(CC) -o $@ $(CCflags) $(PD_EXTERNAL).OtherFree.c.wn_pnpoly
 #
 # ARM assembler modules static dependencies
 #
@@ -538,24 +563,24 @@ o.Modules.ev_uref :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).
 o.Modules.file :       $(CMODULES).h.file
 o.Modules.fileutil :   $(CMODULES).h.file
 o.Modules.funclist :   $(CMODULES).h.funclist
-o.Modules.gr_axisp :   $(CMODULES).h.gr_chart
-o.Modules.gr_barch :   $(CMODULES).h.gr_chart
-o.Modules.gr_blgal :   $(CMODULES).h.gr_chart
-o.Modules.gr_cache :   $(CMODULES).h.gr_chart
-o.Modules.gr_chart :   $(CMODULES).h.gr_chart
-o.Modules.gr_chtIO :   $(CMODULES).h.gr_chart
+o.Modules.gr_axisp :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_barch :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_blgal :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_cache :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_chart :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_chtIO :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_coord :   $(CMODULES).h.gr_coord
-o.Modules.gr_diag :    $(CMODULES).h.gr_chart
-o.Modules.gr_editc :   $(CMODULES).h.gr_chart
-o.Modules.gr_editm :   $(CMODULES).h.gr_chart
-o.Modules.gr_editt :   $(CMODULES).h.gr_chart
-o.Modules.gr_nodbg :   $(CMODULES).h.gr_chart
-o.Modules.gr_numcv :   $(CMODULES).h.gr_chart
-o.Modules.gr_piesg :   $(CMODULES).h.gr_chart
-o.Modules.gr_rdiag :   $(CMODULES).h.gr_chart
-o.Modules.gr_rdia2 :   $(CMODULES).h.gr_chart
-o.Modules.gr_scale :   $(CMODULES).h.gr_chart
-o.Modules.gr_scatc :   $(CMODULES).h.gr_chart
+o.Modules.gr_diag :    $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_editc :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_editm :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_editt :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_nodbg :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_numcv :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_piesg :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_rdiag :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_rdia2 :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_scatc :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_style :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.handlist :   $(CMODULES).h.handlist
 o.Modules.list :       $(CMODULES).h.list
 o.Modules.mathxtra :   $(CMODULES).h.mathxtra
@@ -677,7 +702,7 @@ o.reperr:  $(PD).h.errdef
 o.link_ev o.slotconv: $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 
 o.pdchart: $(PD).h.pdchart
-o.pdchart: $(CMODULES).h.gr_chart
+o.pdchart: $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 
 ###############################################################################
 #

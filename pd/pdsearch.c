@@ -960,7 +960,7 @@ find_and_replace(
                 continue;
         }
 
-        if(protected_slot(curcol, currow))
+        if(protected_cell(curcol, currow))
             continue;
 
         escape_disable();

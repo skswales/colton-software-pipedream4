@@ -66,28 +66,6 @@ _e_s S32 _p_proc_gr_riscdiag_tagstrip( \
 
 #endif
 
-/*
-*/
-
-#if RISCOS
-#define SYSCHARWIDTH_OS     16
-#define SYSCHARHEIGHT_OS    32
-#define SYSCHARWIDTH_PIXIT  gr_pixit_from_riscos(SYSCHARWIDTH_OS)
-#define SYSCHARHEIGHT_PIXIT gr_pixit_from_riscos(SYSCHARHEIGHT_OS)
-#endif
-
-typedef /*unsigned*/ int GR_DATASOURCE_NO;
-
-typedef struct GR_MINMAX_NUMBER
-{
-    GR_CHART_NUMBER min, max;
-}
-GR_MINMAX_NUMBER;
-
-/*
-an index into the series table of a chart
-*/
-typedef /*unsigned*/ int GR_SERIES_IDX;
 
 /*
 chart object 'names'
@@ -142,12 +120,431 @@ typedef struct GR_CHART_OBJID
 }
 GR_CHART_OBJID, * P_GR_CHART_OBJID; typedef const GR_CHART_OBJID * PC_GR_CHART_OBJID;
 
-#define gr_chart_objid_clear(p_id) * (U32 *) (p_id) = 0
+#define GR_CHART_OBJID_INIT(name, has_no, has_subno, no, subno) \
+{ \
+    (name), 0, (has_no), (has_subno), (no), (subno) \
+}
+
+#define GR_CHART_OBJID_INIT_NAME(name) \
+    GR_CHART_OBJID_INIT(name, 0, 0, 0, 0)
+
+#define GR_CHART_OBJID_INIT_NAME_NO(name, no) \
+    GR_CHART_OBJID_INIT(name, 1, 0, no, 0)
+
+#define GR_CHART_OBJID_INIT_NAME_NO_SUBNO(name, no, subno) \
+    GR_CHART_OBJID_INIT(name, 1, 1, no, subno)
+
+#define gr_chart_objid_clear(p_id) \
+    * (U32 *) (p_id) = 0
 
 #define BUF_MAX_GR_CHART_OBJID_REPR 32
 
 #define GR_CHART_OBJID_SUBNO_MAX U16_MAX
 
+/*
+internal exports from gr_diag.c -- diagram building
+*/
+
+/*
+internally exported structure from gr_diag.c
+*/
+
+typedef struct GR_DIAG_PROCESS_T
+{
+    UBF recurse : 1;          /* recurse into group objects */
+    UBF recompute : 1;        /* ensure object bboxes recomputed */
+    UBF severe_recompute : 1; /* go to system level and recompute too */
+    UBF find_children : 1;    /* return children of the id being searched for */
+
+    UBF reserved : 8*sizeof(U16)-1-1-1-1;
+}
+GR_DIAG_PROCESS_T;
+
+/*
+an id stored in the diagram
+*/
+
+#define GR_DIAG_OBJID_T GR_CHART_OBJID
+
+/*
+diagram
+*/
+
+typedef struct GR_DIAG_DIAGHEADER
+{
+    GR_BOX bbox;
+
+    TCHARZ szCreatorName[12 + 4]; /* must fit PDreamCharts and NULLCH */
+
+    /* followed immediately by objects */
+}
+GR_DIAG_DIAGHEADER, * P_GR_DIAG_DIAGHEADER;
+
+/*
+objects
+*/
+
+/*
+object 'names'
+*/
+
+#define GR_DIAG_OBJECT_NONE  ((GR_DIAG_OFFSET) 0U)
+#define GR_DIAG_OBJECT_FIRST ((GR_DIAG_OFFSET) 1U)
+#define GR_DIAG_OBJECT_LAST  ((GR_DIAG_OFFSET) 0xFFFFFFFFU)
+
+#define GR_DIAG_OBJTYPE_NONE          0U
+#define GR_DIAG_OBJTYPE_GROUP         1U
+#define GR_DIAG_OBJTYPE_TEXT          2U
+#define GR_DIAG_OBJTYPE_LINE          3U
+#define GR_DIAG_OBJTYPE_RECTANGLE     4U
+#define GR_DIAG_OBJTYPE_PIESECTOR     5U
+#define GR_DIAG_OBJTYPE_was_MARKER    6U
+#define GR_DIAG_OBJTYPE_PICTURE       7U
+#define GR_DIAG_OBJTYPE_QUADRILATERAL 8U
+
+typedef U32 GR_DIAG_OBJTYPE;
+
+#define GR_DIAG_OBJHDR_DEF    \
+    GR_DIAG_OBJTYPE    tag;   \
+    U32                n_bytes; \
+    GR_BOX             bbox;  \
+    GR_DIAG_OBJID_T    objid; \
+    GR_DIAG_OFFSET     sys_off /* offset in system-dependent representation of corresponding object */
+
+typedef struct GR_DIAG_OBJHDR
+{
+    GR_DIAG_OBJHDR_DEF;
+}
+GR_DIAG_OBJHDR;
+
+/*
+groups are simply encapulators
+*/
+
+typedef struct GR_DIAG_OBJGROUP
+{
+    GR_DIAG_OBJHDR_DEF;
+  /*SB_U8Z name[12];*/
+}
+GR_DIAG_OBJGROUP;
+
+/*
+objects with position
+*/
+
+#define GR_DIAG_POSOBJHDR_DEF \
+    GR_DIAG_OBJHDR_DEF; \
+    GR_POINT pos
+
+typedef struct GR_DIAG_POSOBJHDR
+{
+    GR_DIAG_POSOBJHDR_DEF;
+}
+GR_DIAG_POSOBJHDR;
+
+typedef struct GR_DIAG_OBJLINE
+{
+    GR_DIAG_POSOBJHDR_DEF;
+
+    GR_POINT          offset;
+    GR_LINESTYLE      linestyle;
+}
+GR_DIAG_OBJLINE;
+
+typedef struct GR_DIAG_OBJRECTANGLE
+{
+    GR_DIAG_POSOBJHDR_DEF;
+
+    GR_SIZE           size;
+    GR_LINESTYLE      linestyle;
+    GR_FILLSTYLE      fillstyle;
+}
+GR_DIAG_OBJRECTANGLE;
+
+typedef struct GR_DIAG_OBJPIESECTOR
+{
+    GR_DIAG_POSOBJHDR_DEF;
+
+    GR_COORD          radius;
+    F64               alpha, beta;
+    GR_LINESTYLE      linestyle;
+    GR_FILLSTYLE      fillstyle;
+
+    GR_POINT          p0, p1;
+}
+GR_DIAG_OBJPIESECTOR;
+
+typedef struct GR_DIAG_OBJPICTURE
+{
+    GR_DIAG_POSOBJHDR_DEF;
+
+    GR_SIZE           size;
+    GR_CACHE_HANDLE   picture;
+    GR_FILLSTYLE      fillstyle;
+}
+GR_DIAG_OBJPICTURE;
+
+typedef struct GR_DIAG_OBJQUADRILATERAL
+{
+    GR_DIAG_POSOBJHDR_DEF;
+
+    GR_POINT          offset1;
+    GR_POINT          offset2;
+    GR_POINT          offset3;
+    GR_LINESTYLE      linestyle;
+    GR_FILLSTYLE      fillstyle;
+}
+GR_DIAG_OBJQUADRILATERAL;
+
+typedef struct GR_DIAG_OBJTEXT
+{
+    GR_DIAG_POSOBJHDR_DEF;
+
+    GR_SIZE           size;
+    GR_TEXTSTYLE      textstyle;
+
+    /* data stored in here */
+}
+GR_DIAG_OBJTEXT;
+
+typedef union P_GR_DIAG_OBJECT
+{
+    P_BYTE                     p_byte;
+
+    GR_DIAG_OBJHDR *           hdr;
+
+    GR_DIAG_OBJGROUP *         group;
+    GR_DIAG_OBJLINE *          line;
+    GR_DIAG_OBJRECTANGLE *     rect;
+    GR_DIAG_OBJPIESECTOR *     pie;
+    GR_DIAG_OBJPICTURE *       pict;
+    GR_DIAG_OBJQUADRILATERAL * quad;
+    GR_DIAG_OBJTEXT *          text;
+}
+P_GR_DIAG_OBJECT, * P_P_GR_DIAG_OBJECT;
+
+/*
+internally exported functions from gr_diag.c
+*/
+
+extern S32
+gr_diag_diagram_correlate(
+    P_GR_DIAG p_gr_diag,
+    PC_GR_POINT point,
+    PC_GR_POINT semimajor,
+    /*out*/ P_GR_DIAG_OFFSET pHitObject /*[]*/,
+    S32 recursionLimit);
+
+extern void
+gr_diag_diagram_dispose(
+    _InoutRef_  P_P_GR_DIAG dcpp);
+
+extern GR_DIAG_OFFSET
+gr_diag_diagram_end(
+    P_GR_DIAG p_gr_diag);
+
+_Check_return_
+_Ret_maybenull_
+extern P_GR_DIAG
+gr_diag_diagram_new(
+    _In_z_      PCTSTR szCreatorName,
+    _OutRef_    P_STATUS p_status);
+
+extern void
+gr_diag_diagram_reset_bbox(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    GR_DIAG_PROCESS_T process);
+
+extern GR_DIAG_OFFSET
+gr_diag_diagram_search(
+    P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OBJID_T objid);
+
+extern U32
+gr_diag_group_end(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    PC_GR_DIAG_OFFSET pGroupStart);
+
+_Check_return_
+extern STATUS
+gr_diag_group_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pGroupStart,
+    _InVal_     GR_DIAG_OBJID_T objid);
+
+_Check_return_
+extern STATUS
+gr_diag_line_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_POINT pPos,
+    _InRef_     PC_GR_POINT pOffset,
+    _InRef_     PC_GR_LINESTYLE linestyle);
+
+extern U32
+gr_diag_object_base_size(
+    GR_DIAG_OBJTYPE objectType);
+
+extern S32
+gr_diag_object_correlate_between(
+    P_GR_DIAG p_gr_diag,
+    _InRef_     PC_GR_POINT point,
+    _InRef_     PC_GR_SIZE size,
+    /*out*/ P_GR_DIAG_OFFSET pHitObject /*[]*/,
+    S32 recursionLimit,
+    _InVal_     GR_DIAG_OFFSET sttObject_in,
+    _InVal_     GR_DIAG_OFFSET endObject_in);
+
+extern U32
+gr_diag_object_end(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    PC_GR_DIAG_OFFSET pObjectStart);
+
+extern BOOL
+gr_diag_object_first(
+    _InRef_     P_GR_DIAG p_gr_diag,
+    _InoutRef_  P_GR_DIAG_OFFSET pSttObject,
+    _InoutRef_  P_GR_DIAG_OFFSET pEndObject,
+    _OutRef_    P_P_GR_DIAG_OBJECT ppObjHdr);
+
+_Check_return_
+extern STATUS
+gr_diag_object_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _OutRef_opt_ P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _OutRef_    P_P_GR_DIAG_OBJECT ppObjHdr,
+    _InVal_     GR_DIAG_OBJTYPE objectType,
+    _InVal_     U32 extraBytes);
+
+extern BOOL
+gr_diag_object_next(
+    _InRef_     P_GR_DIAG p_gr_diag,
+    _InoutRef_  P_GR_DIAG_OFFSET pSttObject,
+    _InVal_     GR_DIAG_OFFSET endObject,
+    _OutRef_    P_P_GR_DIAG_OBJECT ppObjHdr);
+
+extern void
+gr_diag_object_reset_bbox_between(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _OutRef_    P_GR_BOX pBox,
+    _InVal_     GR_DIAG_OFFSET sttObject_in,
+    _InVal_     GR_DIAG_OFFSET endObject_in,
+    GR_DIAG_PROCESS_T process);
+
+extern GR_DIAG_OFFSET
+gr_diag_object_search_between(
+    P_GR_DIAG p_gr_diag,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InVal_     GR_DIAG_OFFSET sttObject_in,
+    _InVal_     GR_DIAG_OFFSET endObject_in,
+    GR_DIAG_PROCESS_T process);
+
+_Check_return_
+extern STATUS
+gr_diag_parallelogram_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_POINT pPos,
+    _InRef_     PC_GR_POINT pOffset1,
+    _InRef_     PC_GR_POINT pOffset2,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
+
+_Check_return_
+extern STATUS
+gr_diag_piesector_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_POINT pPos,
+    _InVal_     GR_COORD radius,
+    _InRef_     PC_F64 alpha,
+    _InRef_     PC_F64 beta,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
+
+_Check_return_
+extern STATUS
+gr_diag_quadrilateral_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_POINT pPos,
+    _InRef_     PC_GR_POINT pOffset1,
+    _InRef_     PC_GR_POINT pOffset2,
+    _InRef_     PC_GR_POINT pOffset3,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
+
+_Check_return_
+extern STATUS
+gr_diag_rectangle_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
+
+_Check_return_
+extern STATUS
+gr_diag_scaled_picture_add(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_BOX pBox,
+    GR_CACHE_HANDLE picture,
+    _InRef_     PC_GR_FILLSTYLE fillstyle);
+
+_Check_return_
+extern STATUS
+gr_diag_text_new(
+    _InoutRef_  P_GR_DIAG p_gr_diag,
+    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
+    _InVal_     GR_DIAG_OBJID_T objid,
+    _InRef_     PC_GR_BOX pBox,
+    _In_z_      PC_USTR szText,
+    _InRef_     PC_GR_TEXTSTYLE textstyle);
+
+/*
+internally exported functions as macros from gr_diag.c
+*/
+
+#define gr_diag_getoffptr(__base_type, p_gr_diag, offset) ( (__base_type *) \
+    array_ptr(&(p_gr_diag)->handle, BYTE, (offset)) )
+
+#define gr_diag_query_offset(p_gr_diag) \
+    array_elements32(&(p_gr_diag)->handle)
+
+/*
+end of internal exports from gr_diag.c
+*/
+
+/*
+*/
+
+#if RISCOS
+#define SYSCHARWIDTH_OS     16
+#define SYSCHARHEIGHT_OS    32
+#define SYSCHARWIDTH_PIXIT  gr_pixit_from_riscos(SYSCHARWIDTH_OS)
+#define SYSCHARHEIGHT_PIXIT gr_pixit_from_riscos(SYSCHARHEIGHT_OS)
+#endif
+
+typedef /*unsigned*/ int GR_DATASOURCE_NO;
+
+typedef struct GR_MINMAX_NUMBER
+{
+    GR_CHART_NUMBER min, max;
+}
+GR_MINMAX_NUMBER;
+
+/*
+an index into the series table of a chart
+*/
+typedef /*unsigned*/ int GR_SERIES_IDX;
 /*
 an array of data sources is held on a per chart basis
 */
@@ -382,7 +779,7 @@ typedef struct GR_SERIES
 
     struct GR_SERIES_STYLE
     {
-        F64                pie_start_heading;
+        F64                pie_start_heading_degrees;
 
         GR_FILLSTYLE       pdrop_fill;
         GR_LINESTYLE       pdrop_line;
@@ -486,19 +883,20 @@ descriptor for an individual axis
 where an axis is drawn
 */
 
-#define GR_AXIS_POSITION_ZERO     0 /* zero or closest edge of plotted area */
-#define GR_AXIS_POSITION_LEFT     1 /* left(bottom) edge of plotted area */
-#define GR_AXIS_POSITION_BOTTOM   GR_AXIS_POSITION_LEFT
-#define GR_AXIS_POSITION_RIGHT    2 /* right(top) edge of plotted area */
-#define GR_AXIS_POSITION_TOP      GR_AXIS_POSITION_RIGHT
+#define GR_AXIS_POSITION_LZR_ZERO   0 /* zero or closest edge of plotted area */
+#define GR_AXIS_POSITION_BZT_ZERO   GR_AXIS_POSITION_LZR_ZERO
+#define GR_AXIS_POSITION_LZR_LEFT   1 /* left(bottom) edge of plotted area */
+#define GR_AXIS_POSITION_BZT_BOTTOM GR_AXIS_POSITION_LZR_LEFT
+#define GR_AXIS_POSITION_LZR_RIGHT  2 /* right(top) edge of plotted area */
+#define GR_AXIS_POSITION_BZT_TOP    GR_AXIS_POSITION_LZR_RIGHT
 
-#define GR_AXIS_POSITION_LZR_BITS 2 /* one spare entry */
+#define GR_AXIS_POSITION_LZR_BITS   2 /* one spare entry */
 
-#define GR_AXIS_POSITION_AUTO     0 /* deduce position from lzr in 3d */
-#define GR_AXIS_POSITION_REAR     1
-#define GR_AXIS_POSITION_FRONT    2
+#define GR_AXIS_POSITION_ARF_AUTO   0 /* deduce position from lzr in 3-D */
+#define GR_AXIS_POSITION_ARF_REAR   1
+#define GR_AXIS_POSITION_ARF_FRONT  2
 
-#define GR_AXIS_POSITION_ARF_BITS 2 /* one spare entry */
+#define GR_AXIS_POSITION_ARF_BITS   2 /* one spare entry */
 
 /*
 where ticks are drawn on the axis
@@ -812,14 +1210,14 @@ typedef struct GR_CHART
         struct GR_CHART_D3_BITS
         {
             UBF on       : 1; /* 3-D embellishment? applies to whole chart */
-            UBF use      : 1; /* whether 3D is in use, eg pie & scat turn off */
+            UBF use      : 1; /* whether 3-D is in use, eg pie & scat turn off */
 
             UBF reserved : sizeof(U32)*8 - 1;
         }
         bits; /* U32 for sys indep expansion */
 
-        F64 pitch;            /* angle pitched about a horizontal axis, bringing top into view */
-        F64 roll;             /* angle pitched about the vertical axis, bringing side into view */
+        F64 droop;            /* angle about the horizontal x-axis, bringing top into view */
+        F64 turn;             /* angle about the vertical y-axis, bringing side into view */
 
         /* validity bits for cached items */
         struct GR_CHART_D3_VALID
@@ -979,11 +1377,94 @@ typedef struct GR_BARLINESCATCH_LINEST_STATE
 }
 GR_BARLINESCATCH_LINEST_STATE, * P_GR_BARLINESCATCH_LINEST_STATE;
 
+_Check_return_
+static inline STATUS
+gr_chart_group_new(
+    P_GR_CHART cp,
+    P_GR_DIAG_OFFSET groupStart,
+    _InVal_     GR_CHART_OBJID id)
+{
+    status_return(gr_diag_group_new(cp->core.p_gr_diag, groupStart, id));
+
+    return(STATUS_DONE);
+}
+
+static inline void
+gr_chart_group_end(
+    P_GR_CHART cp,
+    PC_GR_DIAG_OFFSET pGroupStart)
+{
+    (void) gr_diag_group_end(cp->core.p_gr_diag, pGroupStart);
+}
+
+_Check_return_
+static inline STATUS
+gr_chart_line_new(
+    P_GR_CHART cp,
+    _InVal_     GR_CHART_OBJID id,
+    _InRef_     PC_GR_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle)
+{
+    GR_POINT pos, offset;
+
+    pos.x = pBox->x0;
+    pos.y = pBox->y0;
+
+    offset.x = pBox->x1 - pBox->x0;
+    offset.y = pBox->y1 - pBox->y0;
+
+    status_return(gr_diag_line_new(cp->core.p_gr_diag, NULL, id, &pos, &offset, linestyle));
+
+    return(STATUS_DONE);
+}
+
+_Check_return_
+static inline STATUS
+gr_chart_rectangle_new(
+    P_GR_CHART cp,
+    _InVal_     GR_CHART_OBJID id,
+    _InRef_     PC_GR_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_     PC_GR_FILLSTYLE fillstyle)
+{
+    status_return(gr_diag_rectangle_new(cp->core.p_gr_diag, NULL, id, pBox, linestyle, fillstyle));
+
+    return(STATUS_DONE);
+}
+
+_Check_return_
+static inline STATUS
+gr_chart_scaled_picture_add(
+    P_GR_CHART cp,
+    _InVal_     GR_CHART_OBJID id,
+    _InRef_     PC_GR_BOX box,
+    PC_GR_FILLSTYLE style)
+{
+    status_return(gr_diag_scaled_picture_add(cp->core.p_gr_diag, NULL, id, box, style ? (GR_CACHE_HANDLE) style->pattern : GR_CACHE_HANDLE_NONE, style));
+
+    return(STATUS_DONE);
+}
+
+_Check_return_
+static inline STATUS
+gr_chart_text_new(
+    P_GR_CHART cp,
+    _InVal_     GR_CHART_OBJID id,
+    _InRef_     PC_GR_BOX pBox,
+    _In_z_      PC_USTR szText,
+    _InRef_     PC_GR_TEXTSTYLE textstyle)
+{
+    status_return(gr_diag_text_new(cp->core.p_gr_diag, NULL, id, pBox, szText, textstyle));
+
+    return(STATUS_DONE);
+}
+
 /*
 internally exported functions from gr_chart.c
 */
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_add_series(
     P_GR_CHART  cp,
     GR_AXES_IDX axes_idx,
@@ -993,13 +1474,15 @@ extern P_GR_CHART
 gr_chart_cp_from_ch(
     GR_CHART_HANDLE ch);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_dsp_from_dsh(
     P_GR_CHART cp,
     _OutRef_    P_P_GR_DATASOURCE dspp,
     GR_DATASOURCE_HANDLE dsh);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_legend_addin(
     P_GR_CHART cp);
 
@@ -1007,37 +1490,26 @@ extern void
 gr_chart_object_name_from_id(
     /*out*/ P_U8 szName,
     _InVal_ U32 elemof_buffer,
-    PC_GR_CHART_OBJID id);
+    _InVal_     GR_CHART_OBJID id);
 
-extern PC_U8
+extern PC_U8Z
 gr_chart_object_name_from_id_quick(
-    PC_GR_CHART_OBJID id);
+    _InVal_     GR_CHART_OBJID id);
 
-extern S32
+extern void
 gr_chart_objid_find_parent(
     _InoutRef_  P_GR_CHART_OBJID id);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_realloc_series(
     P_GR_CHART cp);
 
+/*ncr*/
 extern S32
 gr_chart_subtract_datasource_using_dsh(
     P_GR_CHART cp,
     GR_DATASOURCE_HANDLE dsh);
-
-extern S32
-gr_chart_group_new(
-    P_GR_CHART cp,
-    P_GR_DIAG_OFFSET  groupStart,
-    PC_GR_CHART_OBJID id);
-
-extern S32
-gr_chart_scaled_picture_add(
-    P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
-    PC_GR_BOX box,
-    PC_GR_FILLSTYLE style);
 
 extern void
 gr_travel_categ_label(
@@ -1132,11 +1604,13 @@ end of internal exports from gr_chart.c
 internally exported functions from gr_chtIO.c
 */
 
-extern S32
+_Check_return_
+extern STATUS
 gr_fillstyle_make_key_for_save(
     PC_GR_FILLSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_save_internal(
     P_GR_CHART cp,
     FILE_HANDLE f,
@@ -1257,12 +1731,12 @@ gr_chartedit_setwintitle(
 
 extern void
 gr_chartedit_winge(
-    S32 err);
+    _InVal_     STATUS err);
 
 extern void
 gr_chartedit_warning(
     P_GR_CHART cp,
-    S32 err);
+    _InVal_     STATUS err);
 
 #if RISCOS
 
@@ -1300,6 +1774,7 @@ extern void
 gr_chartedit_menu_finalise(
     P_GR_CHARTEDITOR cep);
 
+/*ncr*/
 extern S32
 gr_chartedit_menu_initialise(
     P_GR_CHARTEDITOR cep);
@@ -1320,7 +1795,8 @@ internal exports from gr_editt.c
 internally exported functions from gr_editt.c
 */
 
-extern S32
+_Check_return_
+extern STATUS
 gr_text_addin(
     P_GR_CHART cp);
 
@@ -1333,7 +1809,8 @@ extern LIST_ITEMNO
 gr_text_key_for_new(
     P_GR_CHART cp);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_text_new(
     P_GR_CHART cp,
     LIST_ITEMNO key,
@@ -1344,9 +1821,10 @@ extern void
 gr_text_box_query(
     P_GR_CHART cp,
     LIST_ITEMNO key,
-    /*out*/ P_GR_BOX p_box);
+    _OutRef_    P_GR_BOX p_box);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_text_box_set(
     P_GR_CHART cp,
     LIST_ITEMNO key,
@@ -1375,7 +1853,7 @@ extern S32
 gr_chartedit_selection_textstyle_edit(
     P_GR_CHARTEDITOR cep);
 
-extern S32
+extern void
 gr_chartedit_selection_text_delete(
     P_GR_CHARTEDITOR cep);
 
@@ -1389,7 +1867,8 @@ gr_chartedit_text_editor_kill(
     P_GR_CHART cp,
     LIST_ITEMNO key);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chartedit_text_new_and_edit(
     P_GR_CHART cp,
     LIST_ITEMNO key,
@@ -1412,50 +1891,58 @@ end of internal exports from gr_editt.c
 internal exports from P_GR_AXIS.c -- axis processing
 */
 
+_Check_return_
 extern GR_EAXES_NO
 gr_axes_external_from_idx(
     PC_GR_CHART cp,
     GR_AXES_IDX axes_idx,
     GR_AXIS_IDX axis_idx);
 
+/*ncr*/
 extern GR_AXIS_IDX
 gr_axes_idx_from_external(
     PC_GR_CHART cp,
     GR_EAXES_NO eaxes_no,
     _OutRef_    P_GR_AXES_IDX p_axes_idx);
 
+_Check_return_
 extern GR_AXES_IDX
 gr_axes_idx_from_series_idx(
     PC_GR_CHART cp,
     GR_SERIES_IDX series_idx);
 
+_Check_return_
 extern P_GR_AXES
 gr_axesp_from_series_idx(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx);
 
+_Check_return_
 extern P_GR_AXIS
 gr_axisp_from_external(
     P_GR_CHART cp,
     GR_EAXES_NO eaxes_no);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_axis_addin_category(
     P_GR_CHART cp,
     GR_POINT_NO total_n_points,
-    S32 front);
+    _InVal_     BOOL front_phase);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_axis_addin_value_x(
     P_GR_CHART cp,
     GR_AXES_IDX axes_idx,
-    S32 front);
+    _InVal_     BOOL front_phase);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_axis_addin_value_y(
     P_GR_CHART cp,
     GR_AXES_IDX axes_idx,
-    S32 front);
+    _InVal_     BOOL front_phase);
 
 extern void
 gr_axis_form_category(
@@ -1472,413 +1959,19 @@ extern void
 gr_chartedit_selection_axis_process(
     P_GR_CHARTEDITOR cep);
 
+_Check_return_
 extern F64
 gr_lin_major(
     F64 span);
 
+/*ncr*/
+extern F64
+_splitlognum(
+    _InRef_     PC_F64 logval,
+    _OutRef_    P_F64 exponent /*out*/);
+
 /*
 end of internal exports from P_GR_AXIS.c
-*/
-
-/*
-internal exports from gr_diag.c -- diagram building
-*/
-
-/*
-internally exported structure from gr_diag.c
-*/
-
-typedef struct GR_DIAG_PROCESS_T
-{
-    UBF recurse : 1;          /* recurse into group objects */
-    UBF recompute : 1;        /* ensure object bboxes recomputed */
-    UBF severe_recompute : 1; /* go to system level and recompute too */
-    UBF find_children : 1;    /* return children of the id being searched for */
-
-    UBF reserved : 8*sizeof(U16)-1-1-1-1;
-}
-GR_DIAG_PROCESS_T;
-
-/*
-an id stored in the diagram
-*/
-
-#define GR_DIAG_OBJID_T GR_CHART_OBJID
-
-/*
-diagram
-*/
-
-typedef struct GR_DIAG_DIAGHEADER
-{
-    GR_BOX bbox;
-
-    TCHARZ szCreatorName[12 + 4]; /* must fit PDreamCharts and NULLCH */
-
-    /* followed immediately by objects */
-}
-GR_DIAG_DIAGHEADER, * P_GR_DIAG_DIAGHEADER;
-
-/*
-objects
-*/
-
-/*
-object 'names'
-*/
-
-#define GR_DIAG_OBJECT_NONE  ((GR_DIAG_OFFSET) 0U)
-#define GR_DIAG_OBJECT_FIRST ((GR_DIAG_OFFSET) 1U)
-#define GR_DIAG_OBJECT_LAST  ((GR_DIAG_OFFSET) 0xFFFFFFFFU)
-
-#define GR_DIAG_OBJTYPE_NONE          0U
-#define GR_DIAG_OBJTYPE_GROUP         1U
-#define GR_DIAG_OBJTYPE_TEXT          2U
-#define GR_DIAG_OBJTYPE_LINE          3U
-#define GR_DIAG_OBJTYPE_RECTANGLE     4U
-#define GR_DIAG_OBJTYPE_PIESECTOR     5U
-#define GR_DIAG_OBJTYPE_was_MARKER    6U
-#define GR_DIAG_OBJTYPE_PICTURE       7U
-#define GR_DIAG_OBJTYPE_PARALLELOGRAM 8U
-#define GR_DIAG_OBJTYPE_TRAPEZOID     9U
-
-typedef U32 GR_DIAG_OBJTYPE;
-
-#define GR_DIAG_OBJHDR_DEF    \
-    GR_DIAG_OBJTYPE    tag;   \
-    U32                size;  \
-    GR_BOX             bbox;  \
-    GR_DIAG_OBJID_T    objid; \
-    GR_DIAG_OFFSET     sys_off /* offset in system-dependent representation of corresponding object */
-
-typedef struct GR_DIAG_OBJHDR
-{
-    GR_DIAG_OBJHDR_DEF;
-}
-GR_DIAG_OBJHDR;
-
-/*
-groups are simply encapulators
-*/
-
-typedef struct GR_DIAG_OBJGROUP
-{
-    GR_DIAG_OBJHDR_DEF;
-    L1_U8Z name[12];
-}
-GR_DIAG_OBJGROUP;
-
-/*
-objects with position
-*/
-
-#define GR_DIAG_POSOBJHDR_DEF \
-    GR_DIAG_OBJHDR_DEF; \
-    GR_POINT pos
-
-typedef struct GR_DIAG_POSOBJHDR
-{
-    GR_DIAG_POSOBJHDR_DEF;
-}
-GR_DIAG_POSOBJHDR;
-
-typedef struct GR_DIAG_OBJLINE
-{
-    GR_DIAG_POSOBJHDR_DEF;
-
-    GR_SIZE           d;
-    GR_LINESTYLE      linestyle;
-}
-GR_DIAG_OBJLINE;
-
-typedef struct GR_DIAG_OBJRECTANGLE
-{
-    GR_DIAG_POSOBJHDR_DEF;
-
-    GR_SIZE           wid_hei;
-    GR_LINESTYLE      linestyle;
-    GR_FILLSTYLE      fillstyle;
-}
-GR_DIAG_OBJRECTANGLE;
-
-typedef struct GR_DIAG_OBJPARALLELOGRAM
-{
-    GR_DIAG_POSOBJHDR_DEF; /* pos == BL */
-
-    GR_POINT          offset_BR;
-    GR_POINT          offset_TR;
-    GR_LINESTYLE      linestyle;
-    GR_FILLSTYLE      fillstyle;
-}
-GR_DIAG_OBJPARALLELOGRAM;
-
-typedef struct GR_DIAG_OBJTRAPEZOID
-{
-    GR_DIAG_POSOBJHDR_DEF; /* pos == BL */
-
-    GR_POINT          offset_BR;
-    GR_POINT          offset_TR;
-    GR_POINT          offset_TL;
-    GR_LINESTYLE      linestyle;
-    GR_FILLSTYLE      fillstyle;
-}
-GR_DIAG_OBJTRAPEZOID;
-
-typedef struct GR_DIAG_OBJPIESECTOR
-{
-    GR_DIAG_POSOBJHDR_DEF;
-
-    GR_COORD          radius;
-    F64               alpha, beta;
-    GR_LINESTYLE      linestyle;
-    GR_FILLSTYLE      fillstyle;
-
-    GR_POINT          p0, p1;
-}
-GR_DIAG_OBJPIESECTOR;
-
-typedef struct GR_DIAG_OBJPICTURE
-{
-    GR_DIAG_POSOBJHDR_DEF;
-
-    GR_SIZE           wid_hei;
-    GR_CACHE_HANDLE   picture;
-    GR_FILLSTYLE      fillstyle;
-}
-GR_DIAG_OBJPICTURE;
-
-typedef struct GR_DIAG_OBJTEXT
-{
-    GR_DIAG_POSOBJHDR_DEF;
-
-    GR_SIZE           wid_hei;
-    GR_TEXTSTYLE      textstyle;
-
-    /* data stored in here */
-}
-GR_DIAG_OBJTEXT;
-
-typedef union P_GR_DIAG_OBJECT
-{
-    P_BYTE                     p_byte;
-
-    GR_DIAG_OBJHDR *           hdr;
-
-    GR_DIAG_OBJGROUP *         group;
-    GR_DIAG_OBJLINE *          line;
-    GR_DIAG_OBJRECTANGLE *     rect;
-    GR_DIAG_OBJPARALLELOGRAM * para;
-    GR_DIAG_OBJTRAPEZOID *     trap;
-    GR_DIAG_OBJPIESECTOR *     pie;
-    GR_DIAG_OBJPICTURE *       pict;
-    GR_DIAG_OBJTEXT *          text;
-}
-P_GR_DIAG_OBJECT, * P_P_GR_DIAG_OBJECT;
-
-/*
-internally exported functions from gr_diag.c
-*/
-
-extern S32
-gr_diag_diagram_correlate(
-    P_GR_DIAG p_gr_diag,
-    PC_GR_POINT point,
-    PC_GR_POINT semimajor,
-    /*out*/ P_GR_DIAG_OFFSET pHitObject /*[]*/,
-    S32 recursionLimit);
-
-extern void
-gr_diag_diagram_dispose(
-    _InoutRef_  P_P_GR_DIAG dcpp);
-
-extern GR_DIAG_OFFSET
-gr_diag_diagram_end(
-    P_GR_DIAG p_gr_diag);
-
-_Check_return_
-_Ret_maybenull_
-extern P_GR_DIAG
-gr_diag_diagram_new(
-    _In_z_      PCTSTR szCreatorName,
-    _OutRef_    P_STATUS p_status);
-
-extern void
-gr_diag_diagram_reset_bbox(
-    P_GR_DIAG p_gr_diag,
-    GR_DIAG_PROCESS_T process);
-
-_Check_return_
-extern STATUS
-gr_diag_diagram_save(
-    P_GR_DIAG p_gr_diag,
-    PC_U8 filename);
-
-extern GR_DIAG_OFFSET
-gr_diag_diagram_search(
-    P_GR_DIAG p_gr_diag,
-    GR_DIAG_OBJID_T objid);
-
-extern U32
-gr_diag_group_end(
-    P_GR_DIAG p_gr_diag,
-    PC_GR_DIAG_OFFSET pGroupStart);
-
-_Check_return_
-extern STATUS
-gr_diag_group_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pGroupStart,
-    GR_DIAG_OBJID_T objid,
-    PC_U8 szGroupName);
-
-_Check_return_
-extern STATUS
-gr_diag_line_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_BOX pBox,
-    _InRef_     PC_GR_LINESTYLE linestyle);
-
-extern U32
-gr_diag_object_base_size(
-    GR_DIAG_OBJTYPE objectType);
-
-extern S32
-gr_diag_object_correlate_between(
-    P_GR_DIAG p_gr_diag,
-    PC_GR_POINT point,
-    PC_GR_POINT semimajor,
-    /*out*/ P_GR_DIAG_OFFSET pHitObject /*[]*/,
-    _InVal_     GR_DIAG_OFFSET sttObject_in,
-    _InVal_     GR_DIAG_OFFSET endObject_in,
-    S32 recursionLimit);
-
-extern U32
-gr_diag_object_end(
-    P_GR_DIAG p_gr_diag,
-    PC_GR_DIAG_OFFSET pObjectStart);
-
-extern BOOL
-gr_diag_object_first(
-    _InRef_     P_GR_DIAG p_gr_diag,
-    _InoutRef_  P_GR_DIAG_OFFSET pSttObject,
-    _InoutRef_  P_GR_DIAG_OFFSET pEndObject,
-    _OutRef_    P_P_GR_DIAG_OBJECT ppObjHdr);
-
-_Check_return_
-extern STATUS
-gr_diag_object_new(
-    _InoutRef_  P_GR_DIAG p_gr_diag,
-    _OutRef_opt_ P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _OutRef_    P_P_GR_DIAG_OBJECT ppObjHdr,
-    GR_DIAG_OBJTYPE objectType,
-    _InVal_     U32 extraBytes);
-
-extern BOOL
-gr_diag_object_next(
-    _InRef_     P_GR_DIAG p_gr_diag,
-    _InoutRef_  P_GR_DIAG_OFFSET pSttObject,
-    _InVal_     GR_DIAG_OFFSET endObject,
-    _OutRef_    P_P_GR_DIAG_OBJECT ppObjHdr);
-
-extern void
-gr_diag_object_reset_bbox_between(
-    P_GR_DIAG p_gr_diag,
-    _OutRef_    P_GR_BOX pBox,
-    _InVal_     GR_DIAG_OFFSET sttObject_in,
-    _InVal_     GR_DIAG_OFFSET endObject_in,
-    GR_DIAG_PROCESS_T process);
-
-extern GR_DIAG_OFFSET
-gr_diag_object_search_between(
-    P_GR_DIAG p_gr_diag,
-    GR_DIAG_OBJID_T objid,
-    _InVal_     GR_DIAG_OFFSET sttObject_in,
-    _InVal_     GR_DIAG_OFFSET endObject_in,
-    GR_DIAG_PROCESS_T process);
-
-_Check_return_
-extern STATUS
-gr_diag_parallelogram_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_POINT pOriginBL,
-    _InRef_     PC_GR_POINT pOffsetBR,
-    _InRef_     PC_GR_POINT pOffsetTR,
-    _InRef_     PC_GR_LINESTYLE linestyle,
-    _InRef_     PC_GR_FILLSTYLE fillstyle);
-
-_Check_return_
-extern STATUS
-gr_diag_piesector_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_POINT pPos,
-    _InVal_     GR_COORD radius,
-    _InRef_     PC_F64 alpha,
-    _InRef_     PC_F64 beta,
-    _InRef_     PC_GR_LINESTYLE linestyle,
-    _InRef_     PC_GR_FILLSTYLE fillstyle);
-
-_Check_return_
-extern STATUS
-gr_diag_rectangle_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_BOX pBox,
-    _InRef_     PC_GR_LINESTYLE linestyle,
-    _InRef_     PC_GR_FILLSTYLE fillstyle);
-
-_Check_return_
-extern STATUS
-gr_diag_scaled_picture_add(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    PC_GR_BOX pBox,
-    GR_CACHE_HANDLE picture,
-    _InRef_     PC_GR_FILLSTYLE fillstyle);
-
-_Check_return_
-extern STATUS
-gr_diag_text_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_BOX pBox,
-    PC_USTR szText,
-    _InRef_     PC_GR_TEXTSTYLE textstyle);
-
-_Check_return_
-extern STATUS
-gr_diag_trapezoid_new(
-    P_GR_DIAG p_gr_diag,
-    _Out_opt_   P_GR_DIAG_OFFSET pObjectStart,
-    GR_DIAG_OBJID_T objid,
-    _InRef_     PC_GR_POINT pOriginBL,
-    _InRef_     PC_GR_POINT pOffsetBR,
-    _InRef_     PC_GR_POINT pOffsetTR,
-    _InRef_     PC_GR_POINT pOffsetTL,
-    _InRef_     PC_GR_LINESTYLE linestyle,
-    _InRef_     PC_GR_FILLSTYLE fillstyle);
-
-/*
-internally exported functions as macros from gr_diag.c
-*/
-
-#define gr_diag_getoffptr(__base_type, p_gr_diag, offset) \
-    array_ptr(&(p_gr_diag)->handle, __base_type, (offset))
-
-#define gr_diag_query_offset(p_gr_diag) \
-    array_elements32(&(p_gr_diag)->handle)
-
-/*
-end of internal exports from gr_diag.c
 */
 
 /*
@@ -1894,25 +1987,28 @@ extern STATUS
 gr_barlinechart_addin(
     P_GR_CHART cp);
 
+_Check_return_
 extern GR_COORD
 gr_categ_pos(
     PC_GR_CHART cp,
     GR_POINT_NO point);
 
 extern void
-gr_chart_d3_cache_vector(
-    P_GR_CHART cp);
-
-extern void
 gr_map_point(
-    /*inout*/ P_GR_POINT xpoint,
-    P_GR_CHART cp,
+    _InoutRef_  P_GR_POINT xpoint,
+    _InRef_     PC_GR_CHART cp,
     S32 plotindex);
 
 extern void
+gr_map_point_front_or_back(
+    _InoutRef_  P_GR_POINT xpoint,
+    _InRef_     PC_GR_CHART cp,
+    _InVal_     BOOL front);
+
+extern void
 gr_map_box_front_and_back(
-    /*inout*/ P_GR_BOX xbox,
-    P_GR_CHART cp);
+    _InoutRef_  P_GR_BOX xbox,
+    _InRef_     PC_GR_CHART cp);
 
 extern void
 gr_point_partial_z_shift(
@@ -1921,6 +2017,7 @@ gr_point_partial_z_shift(
     P_GR_CHART cp,
     const F64 * z_frac_p);
 
+_Check_return_
 extern GR_COORD
 gr_value_pos(
     PC_GR_CHART cp,
@@ -1928,6 +2025,7 @@ gr_value_pos(
     GR_AXIS_IDX axis_idx,
     const GR_CHART_NUMBER * value);
 
+_Check_return_
 extern GR_COORD
 gr_value_pos_rel(
     PC_GR_CHART cp,
@@ -1979,7 +2077,8 @@ internal exports from gr_piesg.c
 internally exported functions from gr_piesg.c
 */
 
-extern S32
+_Check_return_
+extern STATUS
 gr_pie_addin(
     P_GR_CHART cp);
 
@@ -1995,7 +2094,8 @@ internal exports from gr_scatc.c
 internally exported functions from gr_scatc.c
 */
 
-extern S32
+_Check_return_
+extern STATUS
 gr_barlinescatch_best_fit_addin(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp,
     GR_CHARTTYPE charttype);
@@ -2012,7 +2112,8 @@ gr_barlinescatch_get_datasources(
     GR_SERIES_IDX series_idx,
     /*out*/ P_GR_DATASOURCE_FOURSOME dsh);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_scatterchart_addin(
     P_GR_CHART cp);
 
@@ -2039,7 +2140,7 @@ GR_RISCDIAG_PROCESS_T;
 
 typedef struct GR_RISCDIAG_RISCOS_FONTLIST_ENTRY
 {
-    L1_U8Z szHostFontName[64];
+    SB_U8Z szHostFontName[64];
 }
 GR_RISCDIAG_RISCOS_FONTLIST_ENTRY, * P_GR_RISCDIAG_RISCOS_FONTLIST_ENTRY; typedef const GR_RISCDIAG_RISCOS_FONTLIST_ENTRY * PC_GR_RISCDIAG_RISCOS_FONTLIST_ENTRY;
 
@@ -2122,13 +2223,13 @@ gr_riscdiag_diagram_end(
 extern void
 gr_riscdiag_diagram_init(
     _OutRef_    P_DRAW_FILE_HEADER pDrawFileHdr,
-    _In_z_      PC_L1STR szCreatorName);
+    _In_z_      PC_SBSTR szCreatorName);
 
 _Check_return_
 extern STATUS
 gr_riscdiag_diagram_new(
     P_GR_RISCDIAG p_gr_riscdiag,
-    _In_z_      PC_L1STR szCreatorName,
+    _In_z_      PC_SBSTR szCreatorName,
     _InVal_     ARRAY_HANDLE array_handleR);
 
 extern void
@@ -2136,12 +2237,14 @@ gr_riscdiag_diagram_reset_bbox(
     P_GR_RISCDIAG p_gr_riscdiag,
     GR_RISCDIAG_PROCESS_T process);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_diagram_save(
     P_GR_RISCDIAG p_gr_riscdiag,
-    PC_U8 filename);
+    _In_z_      PC_U8Z filename);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_diagram_save_into(
     P_GR_RISCDIAG p_gr_riscdiag,
     FILE_HANDLE f);
@@ -2174,7 +2277,8 @@ gr_riscdiag_object_end(
     P_GR_RISCDIAG p_gr_riscdiag,
     PC_GR_DIAG_OFFSET pObjectStart);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_riscdiag_object_first(
     P_GR_RISCDIAG p_gr_riscdiag,
     _InoutRef_  P_DRAW_DIAG_OFFSET pSttObject,
@@ -2190,7 +2294,8 @@ gr_riscdiag_object_new(
     U32 extraBytes,
     _OutRef_    P_STATUS p_status);
 
-extern S32
+_Check_return_
+extern BOOL
 gr_riscdiag_object_next(
     P_GR_RISCDIAG p_gr_riscdiag,
     _InoutRef_  P_GR_DIAG_OFFSET pSttObject,
@@ -2225,7 +2330,7 @@ extern STATUS
 gr_riscdiag_group_new(
     P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_GR_DIAG_OFFSET pGroupStart,
-    _In_opt_z_  PC_L1STR pGroupName);
+    _In_opt_z_  PC_SBSTR pGroupName);
 
 /*
 RISC OS Draw font table object
@@ -2238,7 +2343,7 @@ gr_riscdiag_fontlist_lookup(
     _In_        DRAW_DIAG_OFFSET fontListR,
     PC_U8 szFontName);
 
-extern PC_L1STR
+extern PC_SBSTR
 gr_riscdiag_fontlist_name(
     P_GR_RISCDIAG p_gr_riscdiag,
     _In_        DRAW_DIAG_OFFSET fontListR,
@@ -2313,10 +2418,11 @@ _Check_return_
 _Ret_writes_bytes_maybenull_(extraBytes)
 extern P_ANY /* -> path guts */
 gr_riscdiag_path_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_GR_DIAG_OFFSET pPathStart,
     _InRef_opt_ PC_GR_LINESTYLE linestyle,
     _InRef_opt_ PC_GR_FILLSTYLE fillstyle,
+    _InRef_opt_ PC_DRAW_PATH_STYLE pathstyle,
     _InVal_     U32 extraBytes,
     _OutRef_    P_STATUS p_status);
 
@@ -2347,7 +2453,7 @@ _Check_return_
 extern STATUS
 gr_riscdiag_string_new(
     P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_GR_DIAG_OFFSET pTextStart,
+    _OutRef_    P_GR_DIAG_OFFSET pObjectStart,
     PC_DRAW_POINT point,
     PC_U8 szText,
     PC_U8 szFontName,
@@ -2367,21 +2473,19 @@ RISC OS Draw pseudo objects
 
 _Check_return_
 extern STATUS
-gr_riscdiag_parallelogram_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_GR_DIAG_OFFSET pRectStart,
-    _InRef_     PC_DRAW_POINT pOriginBL,
-    _InRef_     PC_DRAW_POINT pOffsetBR,
-    _InRef_     PC_DRAW_POINT pOffsetTR,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle);
+gr_riscdiag_line_new(
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_GR_DIAG_OFFSET pObjectStart,
+    _InRef_     PC_DRAW_POINT pPos,
+    _InRef_     PC_DRAW_POINT pOffset,
+    _InRef_     PC_GR_LINESTYLE linestyle);
 
 _Check_return_
 extern STATUS
 gr_riscdiag_piesector_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_GR_DIAG_OFFSET pPieStart,
-    PC_DRAW_POINT pOrigin,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_GR_DIAG_OFFSET pObjectStart,
+    PC_DRAW_POINT pPos,
     DRAW_COORD radius,
     PC_F64 alpha,
     PC_F64 beta,
@@ -2390,17 +2494,33 @@ gr_riscdiag_piesector_new(
 
 _Check_return_
 extern STATUS
-gr_riscdiag_rectangle_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_GR_DIAG_OFFSET pRectStart,
-    PC_DRAW_BOX pBox,
+gr_riscdiag_quadrilateral_new(
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_GR_DIAG_OFFSET pObjectStart,
+    _InRef_     PC_DRAW_POINT pPos,
+    _InRef_     PC_DRAW_POINT pOffset1,
+    _InRef_     PC_DRAW_POINT pOffset2,
+    _InRef_     PC_DRAW_POINT pOffset3,
     PC_GR_LINESTYLE linestyle,
     PC_GR_FILLSTYLE fillstyle);
 
 _Check_return_
 extern STATUS
+gr_riscdiag_rectangle_new(
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
+    _OutRef_    P_GR_DIAG_OFFSET pObjectStart,
+    _InRef_     PC_DRAW_BOX pBox,
+    _InRef_     PC_GR_LINESTYLE linestyle,
+    _InRef_opt_ PC_GR_FILLSTYLE fillstyle);
+
+/*
+scaled diagram
+*/
+
+_Check_return_
+extern STATUS
 gr_riscdiag_scaled_diagram_add(
-    P_GR_RISCDIAG p_gr_riscdiag,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_GR_DIAG_OFFSET pPictStart,
     PC_DRAW_BOX pBox,
     P_DRAW_DIAG diag,
@@ -2408,20 +2528,8 @@ gr_riscdiag_scaled_diagram_add(
 
 extern void
 gr_riscdiag_shift_diagram(
-    P_GR_RISCDIAG p_gr_riscdiag,
+    _InoutRef_  P_GR_RISCDIAG p_gr_riscdiag,
     PC_DRAW_POINT pShiftBy);
-
-_Check_return_
-extern STATUS
-gr_riscdiag_trapezoid_new(
-    P_GR_RISCDIAG p_gr_riscdiag,
-    _OutRef_    P_GR_DIAG_OFFSET pRectStart,
-    _InRef_     PC_DRAW_POINT pOriginBL,
-    _InRef_     PC_DRAW_POINT pOffsetBR,
-    _InRef_     PC_DRAW_POINT pOffsetTR,
-    _InRef_     PC_DRAW_POINT pOffsetTL,
-    PC_GR_LINESTYLE linestyle,
-    PC_GR_FILLSTYLE fillstyle);
 
 static inline void
 draw_box_from_gr_box(
@@ -2449,12 +2557,14 @@ gr_riscdiag_diagram_tagged_object_strip(
     gr_riscdiag_tagstrip_proc proc,
     P_ANY handle);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_wackytag_save_start(
     FILE_HANDLE f,
     /*out*/ filepos_t * pos);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_wackytag_save_end(
     FILE_HANDLE f,
     const filepos_t * pos);
@@ -2514,11 +2624,11 @@ typedef enum GR_LIST_ID
 GR_LIST_ID;
 
 /*
-internal exports from gr_scale.c
+internal exports from gr_style.c
 */
 
 /*
-internally exported functions from gr_scale.c
+internally exported functions from gr_style.c
 */
 
 extern GR_COORD
@@ -2549,16 +2659,13 @@ gr_round_pixit_to_floor(
     GR_COORD a,
     S32 b);
 
-extern F64
-gr_lin_major(
-    F64 span);
-
-extern S32
+extern void
 gr_chart_list_delete(
     P_GR_CHART cp,
     GR_LIST_ID list_id);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_list_duplic(
     P_GR_CHART cp,
     GR_LIST_ID list_id);
@@ -2610,112 +2717,130 @@ gr_chart_objid_from_text(
     LIST_ITEMNO key,
     _OutRef_    P_GR_CHART_OBJID id);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_fillstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_FILLSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_fillstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_FILLSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_linestyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_LINESTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_linestyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_LINESTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_textstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_TEXTSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_textstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_TEXTSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_barchstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_BARCHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_barchstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_BARCHSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_barlinechstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_BARLINECHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_barlinechstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_BARLINECHSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_linechstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_LINECHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_linechstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_LINECHSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_piechdisplstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_PIECHDISPLSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_piechdisplstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_PIECHDISPLSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_piechlabelstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_PIECHLABELSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_piechlabelstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_PIECHLABELSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_objid_scatchstyle_query(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     _OutRef_    P_GR_SCATCHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_objid_scatchstyle_set(
     P_GR_CHART cp,
-    PC_GR_CHART_OBJID id,
+    _InVal_     GR_CHART_OBJID id,
     PC_GR_SCATCHSTYLE style);
 
 extern void
@@ -2735,28 +2860,32 @@ extern void
 gr_fillstyle_ref_lose(
     PC_GR_FILLSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_pdrop_fillstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_FILLSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_pdrop_fillstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_FILLSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_pdrop_linestyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINESTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_pdrop_linestyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
@@ -2767,19 +2896,21 @@ gr_pdrop_linestyle_set(
 
 #define gr_point_key_from_external(extPointID) ((LIST_ITEMNO) (extPointID) - 1)
 
-extern S32
+extern void
 gr_point_list_delete(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_list_duplic(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_LIST_ID list_id);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_list_fillstyle_enum_for_save(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
@@ -2811,126 +2942,144 @@ gr_point_list_next(
     _InoutRef_  P_LIST_ITEMNO p_key,
     GR_LIST_ID list_id);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_fillstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_FILLSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_fillstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_FILLSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_linestyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINESTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_linestyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINESTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_textstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_TEXTSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_textstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_TEXTSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_barchstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_BARCHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_barchstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_BARCHSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_barlinechstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_BARLINECHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_barlinechstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_BARLINECHSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_linechstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_LINECHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_linechstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_LINECHSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_piechdisplstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_PIECHDISPLSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_piechdisplstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_PIECHDISPLSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_piechlabelstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_PIECHLABELSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_piechlabelstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     PC_GR_PIECHLABELSTYLE style);
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_point_scatchstyle_query(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
     GR_POINT_NO point,
     _OutRef_    P_GR_SCATCHSTYLE style);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_point_scatchstyle_set(
     P_GR_CHART cp,
     GR_SERIES_IDX series_idx,
@@ -2953,13 +3102,14 @@ gr_seriesp_from_external(
     GR_ESERIES_NO eseries_no);
 
 /*
-end of internal exports from gr_scale.c
+end of internal exports from gr_style.c
 */
 
 /*
 number to string conversion
 */
 
+_Check_return_
 extern S32
 gr_font_stringwidth(
     HOST_FONT f,
@@ -3008,38 +3158,54 @@ options window
 #define GR_CHARTEDIT_TEM_OPTIONS_ICON_PCT_MARGIN_BOTTOM ((wimp_i) 39)
 #define GR_CHARTEDIT_TEM_OPTIONS_ICON_IN_MARGIN_BOTTOM  ((wimp_i) 41)
 
+#define GR_CHARTEDIT_TEM_OPTIONS_ICON_CANCEL            ((wimp_i) 43)
+
 /*
 fill style
 */
 
 #define GR_CHARTEDIT_TEM_FILLSTYLE "gr_ec_fstyl"
 
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT ((wimp_i) 9)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC  ((wimp_i) 2)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_DEC  ((wimp_i) 3)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME ((wimp_i) 4)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_PICT   ((wimp_i) 9)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_INC    ((wimp_i) 2)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_DEC    ((wimp_i) 3)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_DRAW_NAME   ((wimp_i) 4)
 
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID     ((wimp_i) 5)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN   ((wimp_i) 6)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_SOLID       ((wimp_i) 5)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_PATTERN     ((wimp_i) 6)
 
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC ((wimp_i) 7)
-#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR  ((wimp_i) 8)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_ISOTROPIC   ((wimp_i) 7)
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_RECOLOUR    ((wimp_i) 8)
+
+#define GR_CHARTEDIT_TEM_FILLSTYLE_ICON_CANCEL      ((wimp_i) 10)
 
 /*
-line style
+line pattern
 */
 
-#define GR_CHARTEDIT_TEM_LINESTYLE "gr_ec_lstyl"
+#define GR_CHARTEDIT_TEM_LINEPATTERN "gr_ec_lpat"
+
+#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_CANCEL    ((wimp_i)  1)
 
 /* made harder by having display icons overlapped by radio buttons */
 
-#define GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_FIRST ((wimp_i) 10)
-#define GR_CHARTEDIT_TEM_LINESTYLE_ICON_PAT_LAST  ((wimp_i) 14)
+#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_FIRST     ((wimp_i)  9)
+#define GR_CHARTEDIT_TEM_LINEPATTERN_ICON_LAST      ((wimp_i) 13)
 
-#define GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_FIRST ((wimp_i) 30)
-#define GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_LAST  ((wimp_i) 36)
+/*
+line width
+*/
 
-#define GR_CHARTEDIT_TEM_LINESTYLE_ICON_WID_USER  ((wimp_i) 37)
+#define GR_CHARTEDIT_TEM_LINEWIDTH "gr_ec_lwid"
+
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_CANCEL  ((wimp_i)  1)
+
+/* made harder by having display icons overlapped by radio buttons */
+
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_FIRST   ((wimp_i) 18)
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_LAST    ((wimp_i) 24)
+
+#define GR_CHARTEDIT_TEM_LINEWIDTH_ICON_USER    ((wimp_i) 25)
 
 /*
 category axis dialog
@@ -3047,13 +3213,13 @@ category axis dialog
 
 #define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS "gr_ec_cax"
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BOTTOM            ((wimp_i)  7)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ZERO              ((wimp_i)  8)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_TOP               ((wimp_i)  9)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_BOTTOM        ((wimp_i)  7)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_ZERO          ((wimp_i)  8)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_BZT_TOP           ((wimp_i)  9)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_FRONT          ((wimp_i) 10)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_AUTO           ((wimp_i) 11)
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_3D_REAR           ((wimp_i) 12)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_FRONT         ((wimp_i) 10)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_AUTO          ((wimp_i) 11)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_POSN_ARF_REAR          ((wimp_i) 12)
 
 #define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_AUTO             ((wimp_i) 13)
 #define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MAJOR_MANUAL           ((wimp_i) 14)
@@ -3075,7 +3241,7 @@ category axis dialog
 #define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_TOP    ((wimp_i) 35)
 #define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_MINOR_TICK_HALF_BOTTOM ((wimp_i) 36)
 
-#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_CANCEL                 ((wimp_i) 52)
+#define GR_CHARTEDIT_TEM_SELECTION_CAT_AXIS_ICON_CANCEL                 ((wimp_i) 37)
 
 /*
 selection => axis => dialog
@@ -3083,13 +3249,13 @@ selection => axis => dialog
 
 #define GR_CHARTEDIT_TEM_SELECTION_AXIS "gr_ec_vax"
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LEFT              ((wimp_i)  7)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ZERO              ((wimp_i)  8)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_RIGHT             ((wimp_i)  9)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_LEFT          ((wimp_i)  7)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_ZERO          ((wimp_i)  8)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_LZR_RIGHT         ((wimp_i)  9)
 
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_FRONT          ((wimp_i) 10)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_AUTO           ((wimp_i) 11)
-#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_3D_REAR           ((wimp_i) 12)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_FRONT         ((wimp_i) 10)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_AUTO          ((wimp_i) 11)
+#define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_POSN_ARF_REAR          ((wimp_i) 12)
 
 #define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_AUTO             ((wimp_i) 13)
 #define GR_CHARTEDIT_TEM_SELECTION_AXIS_ICON_MAJOR_MANUAL           ((wimp_i) 14)
@@ -3134,11 +3300,14 @@ selection => series => dialog
 
 #define GR_CHARTEDIT_TEM_SELECTION_SERIES "gr_ec_ser"
 
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CUMULATIVE    ((wimp_i) 1)
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_POINT_VARY    ((wimp_i) 2)
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_BEST_FIT      ((wimp_i) 3)
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_FILL_AXIS     ((wimp_i) 4)
-#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_REMOVE_SERIES ((wimp_i) 5)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CANCEL           ((wimp_i) 1)
+
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_REMOVE_SERIES    ((wimp_i) 2)
+
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_CUMULATIVE       ((wimp_i) 3)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_POINT_VARY       ((wimp_i) 4)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_BEST_FIT         ((wimp_i) 5)
+#define GR_CHARTEDIT_TEM_SELECTION_SERIES_ICON_FILL_AXIS        ((wimp_i) 6)
 
 /*
 text editor
@@ -3182,8 +3351,8 @@ bar gallery
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_2D_OVERLAP     ((wimp_i) 17)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_DEPTH       ((wimp_i) 21)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_ON          ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_ROLL        ((wimp_i) 28)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_PITCH       ((wimp_i) 32)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_TURN        ((wimp_i) 28)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_3D_DROOP       ((wimp_i) 32)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_REMOVE_OVERLAY ((wimp_i) 34)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_CUMULATIVE     ((wimp_i) 35)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_BAR_POINT_VARY     ((wimp_i) 36)
@@ -3207,8 +3376,8 @@ line gallery
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_2D_SHIFT       ((wimp_i) 17)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_DEPTH       ((wimp_i) 21)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_ON          ((wimp_i) 25)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_ROLL        ((wimp_i) 28)
-#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_PITCH       ((wimp_i) 32)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_TURN        ((wimp_i) 28)
+#define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_3D_DROOP       ((wimp_i) 32)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_REMOVE_OVERLAY ((wimp_i) 34)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_CUMULATIVE     ((wimp_i) 35)
 #define GR_CHARTEDIT_TEM_GALLERY_ICON_LINE_POINT_VARY     ((wimp_i) 36)
@@ -3270,7 +3439,8 @@ gr_nodbg_bring_me_the_head_of_yuri_gagarin(
     GR_COORD y,
     BOOL adjustclicked);
 
-extern S32
+_Check_return_
+extern STATUS
 gr_nodbg_chart_save(
     P_GR_CHART cp,
     FILE_HANDLE f,

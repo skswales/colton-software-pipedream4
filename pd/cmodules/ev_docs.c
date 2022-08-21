@@ -556,11 +556,12 @@ extern S32
 doc_move_rngref(
     P_SS_DOC docep_from,
     _InVal_     EV_DOCNO docno_from,
-    P_RANGE_USE rep,
+    _InoutRef_  P_RANGE_USE rep,
     EV_TRENT rix)
 {
     S32 res;
 
+    CODE_ANALYSIS_ONLY(if(NULL == rep) return(0);)
     if(!(rep->flags & TRF_TOBEDEL) && (rep->refto.s.docno != docno_from))
     {
         struct EV_GRUB_STATE grubb;
@@ -597,11 +598,12 @@ extern S32
 doc_move_slrref(
     P_SS_DOC docep_from,
     _InVal_     EV_DOCNO docno_from,
-    P_SLR_USE sep,
+    _InoutRef_  P_SLR_USE sep,
     EV_TRENT six)
 {
     S32 res;
 
+    CODE_ANALYSIS_ONLY(if(NULL == sep) return(0);)
     if(!(sep->flags & TRF_TOBEDEL) && (sep->refto.docno != docno_from))
     {
         struct EV_GRUB_STATE grubb;

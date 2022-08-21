@@ -61,7 +61,8 @@ PROC_UREF_PROTO(static, pdchart_uref_handler);
 
 PROC_UREF_PROTO(static, pdchart_text_uref_handler);
 
-static S32
+_Check_return_
+static STATUS
 ChartEdit_notify_proc(
     P_ANY handle,
     GR_CHARTEDIT_HANDLE ceh,
@@ -72,7 +73,8 @@ ChartEdit_notify_proc(
 internal functions
 */
 
-static S32
+_Check_return_
+static STATUS
 pdchart_add_into(
     P_PDCHART_HEADER pdchart,
     PDCHART_PROCESS process,
@@ -84,7 +86,8 @@ static P_PDCHART_ELEMENT
 pdchart_element_add(
     P_PDCHART_HEADER pdchart);
 
-static S32
+_Check_return_
+static STATUS
 pdchart_element_ensure(
     P_PDCHART_HEADER pdchart,
     U32 n_ranges);
@@ -99,7 +102,8 @@ static void
 pdchart_extdependency_dispose(
     P_PDCHART_DEP itdep /*inout*/);
 
-static S32
+_Check_return_
+static STATUS
 pdchart_extdependency_new(
     P_PDCHART_DEP itdep /*inout*/);
 
@@ -111,7 +115,8 @@ static void
 pdchart_listed_dep_dispose(
     _InoutRef_  P_P_PDCHART_DEP p_itdep);
 
-static S32
+_Check_return_
+static STATUS
 pdchart_listed_dep_new(
     _OutRef_    P_P_PDCHART_DEP p_itdep,
     _InVal_     PDCHART_RANGE_TYPE type);
@@ -174,20 +179,21 @@ pdchart_current = NULL;
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 pdchart_add(
     P_PDCHART_HEADER pdchart,
     const PDCHART_SHAPEDESC * const p_chart_shapedesc,
     S32 initial)
 {
     S32               this_initial      = initial;
-    S32               maybe_add_labels  = FALSE;
+  /*S32               maybe_add_labels  = FALSE; never used */
     S32               has_unused_labels = FALSE;
     PDCHART_SHAPEDESC chart_shapedesc;
     P_P_LIST_BLOCK    p_p_list_block;
     LIST_ITEMNO       stt_key, end_key;
     U32               n_ranges;
-    S32               res, res1;
+    STATUS res, res1;
 
     n_ranges = p_chart_shapedesc->n_ranges;
 
@@ -195,7 +201,9 @@ pdchart_add(
     if(p_chart_shapedesc->bits.label_first_range)
     {
         if(!gr_chart_query_labels(&pdchart->ch))
-            maybe_add_labels = TRUE;
+        {
+            /*maybe_add_labels = TRUE*/ /*EMPTY*/
+        }
         else
         {
             /* this is one range we won't have to bother adding then.
@@ -287,11 +295,9 @@ pdchart_add(
         /* stt_key and end_key are new incl,excl range so bodge the dependency in a bit */
 
         /* create a new dependency block (at end of list) for all sub-ranges to refer to */
-        if((res = pdchart_listed_dep_new(&itdep,
-                                         (p_chart_shapedesc->bits.range_over_columns
-                                                    ? PDCHART_RANGE_COL
-                                                    : PDCHART_RANGE_ROW))) < 0)
-            return(res);
+        res = pdchart_listed_dep_new(&itdep, (p_chart_shapedesc->bits.range_over_columns ? PDCHART_RANGE_COL : PDCHART_RANGE_ROW));
+
+        status_return(res);
 
         /* need to be able to key back to chart */
         itdep->pdchartdatakey = pdchart->pdchartdatakey;
@@ -313,10 +319,9 @@ pdchart_add(
         else
             res = create_error(EVAL_ERR_CANTEXTREF);
 
-        if(res > 0)
+        if(status_done(res))
         {
-            * (int *) &process = 0;
-
+            zero_struct(process);
             process.initial   = this_initial;
             process.force_add = 1; /* all are adds from PD commands */
 
@@ -324,7 +329,7 @@ pdchart_add(
         }
 
         this_initial = 0;     /* only the first block of the first add is initial */
-        maybe_add_labels = 0; /* only the first block of any add is searched for labels */
+      /*maybe_add_labels = 0;*/ /* only the first block of any add is searched for labels */
 
         chart_shapedesc.bits.label_first_range = 0;
 
@@ -341,10 +346,11 @@ pdchart_add(
 
     res1 = pdchart_modify(pdchart);
 
-    return((res > 0) ? res : res1);
+    return(status_done(res) ? res : res1);
 }
 
-static S32
+_Check_return_
+static STATUS
 pdchart_add_into(
     P_PDCHART_HEADER pdchart,
     PDCHART_PROCESS process,
@@ -354,9 +360,9 @@ pdchart_add_into(
 {
     P_PDCHART_ELEMENT i_pdchartelem, pdchartelem;
     P_PDCHART_ELEMENT ep;
-    EV_COL           cur;
-    S32               res = 1;
-    S32               range_over_columns = (itdep->type == PDCHART_RANGE_COL);
+    BOOL range_over_columns = (itdep->type == PDCHART_RANGE_COL);
+    EV_COL cur;
+    STATUS res = 1;
 
     cur = stt;
 
@@ -379,10 +385,12 @@ pdchart_add_into(
         pdchartelem->bits.label_first_item = itdep->bits.label_first_item;
 
         if(pdchartelem->bits.label_first_range)
+        {
             res = gr_chart_add_labels(&pdchart->ch,
                                       pdchart_travel_for_input,
                                       pdchartelem,
                                       &pdchartelem->gr_int_handle);
+        }
         else
         {
             P_PDCHART_ELEMENT epf;
@@ -489,7 +497,8 @@ pdchart_add_into(
     return(res);
 }
 
-static S32
+_Check_return_
+static STATUS
 pdchart_add_range_for_load(
     P_PDCHART_HEADER pdchart,
     PDCHART_RANGE_TYPE type,
@@ -498,7 +507,7 @@ pdchart_add_range_for_load(
 {
     P_PDCHART_DEP   itdep;
     PDCHART_PROCESS process;
-    S32             res;
+    STATUS res;
 
     /* create a new dependency block (at end of list) for all sub-ranges to refer to */
     if((res = pdchart_listed_dep_new(&itdep, type)) < 0)
@@ -512,16 +521,19 @@ pdchart_add_range_for_load(
     itdep->rng  = *rng;
 
     /* add an external reference to this whole pdchart range */
-    if((res = pdchart_extdependency_new(itdep)) > 0)
-    {
-        * (int *) &process = 0;
+    res = pdchart_extdependency_new(itdep);
 
+    if(status_done(res))
+    {
+        zero_struct(process);
         process.initial   = 1;
         process.force_add = 1; /* all are adds from reload */
 
-        if((res = pdchart_add_into(pdchart, process, itdep,
-                                   ((type == PDCHART_RANGE_COL) ? itdep->rng.s.col : itdep->rng.s.row),
-                                   ((type == PDCHART_RANGE_COL) ? itdep->rng.e.col : itdep->rng.e.row))) < 0)
+        res = pdchart_add_into(pdchart, process, itdep,
+                               ((type == PDCHART_RANGE_COL) ? itdep->rng.s.col : itdep->rng.s.row),
+                               ((type == PDCHART_RANGE_COL) ? itdep->rng.e.col : itdep->rng.e.row));
+
+        if(status_fail(res))
             pdchart_extdependency_dispose(itdep);
     }
 
@@ -624,7 +636,7 @@ pdchart_dispose(
     U8 filename[BUF_MAX_PATHSTRING];
     GR_CACHE_HANDLE cah;
 
-    gr_chart_name_query(&pdchart->ch, filename, sizeof(filename) - 1);
+    gr_chart_name_query(&pdchart->ch, filename, sizeof32(filename) - 1);
 
     if(gr_cache_entry_query(&cah, filename))
     {
@@ -677,25 +689,25 @@ pdchart_extdependency_dispose(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 pdchart_extdependency_new(
     P_PDCHART_DEP itdep /*inout*/)
 {
-    S32 res;
+    STATUS res;
 
     /* little fixups for cleaner results */
     itdep->rng.e.docno = itdep->rng.s.docno;
 
     itdep->rng.s.flags = itdep->rng.e.flags = 0;
 
-    if((res = ev_add_extdependency(
-                        itdep->itdepkey,
-                        0,
-                       &itdep->ev_int_handle,
-                      ((itdep->type == PDCHART_RANGE_TXT)
-                                    ? pdchart_text_uref_handler
-                                    : pdchart_uref_handler),
-                       &itdep->rng)) < 0)
+    res = ev_add_extdependency(itdep->itdepkey,
+                               0,
+                               &itdep->ev_int_handle,
+                               ((itdep->type == PDCHART_RANGE_TXT) ? pdchart_text_uref_handler : pdchart_uref_handler),
+                               &itdep->rng);
+
+    if(status_fail(res))
     {
         itdep->rng.s.docno = DOCNO_NONE;
         return(res);
@@ -712,7 +724,8 @@ pdchart_extdependency_new(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static BOOL
 pdchart_extract_numeric_result(
     _InRef_     PC_EV_RESULT p_ev_result,
     _OutRef_opt_ P_GR_CHART_VALUE val /*out. NULL->nopoke*/)
@@ -739,7 +752,7 @@ pdchart_extract_numeric_result(
 
     case RPN_RES_ARRAY:
         {
-        S32 res;
+        BOOL res;
         EV_RESULT temp_ev_result;
         EV_DATA temp_data;
 
@@ -767,7 +780,8 @@ pdchart_extract_numeric_result(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 pdchart_element_ensure(
     P_PDCHART_HEADER pdchart,
     U32 n_ranges)
@@ -987,14 +1001,15 @@ pdchart_init_shape_suss_holes_end(
     collect_delete(&p_chart_shapedesc->nz_rows.lbr);
 }
 
-static S32
+_Check_return_
+static STATUS
 pdchart_init_shape_from_marked_block(
     PDCHART_SHAPEDESC * const p_chart_shapedesc /*out*/,
     P_PDCHART_HEADER pdchart /*const, maybe NULL*/)
 {
     P_CELL       sl;
     P_EV_RESULT  p_ev_result;
-    S32          res;
+    STATUS res;
     COL          cols_tx_n;
     ROW          rows_tx_n;
     LIST_ITEMNO  key;
@@ -1073,6 +1088,7 @@ pdchart_init_shape_from_marked_block(
     sl = travel_externally(p_chart_shapedesc->docno, p_chart_shapedesc->stt.col, p_chart_shapedesc->stt.row);
 
     if(sl)
+    {
         switch(result_extract(sl, &p_ev_result))
         {
         case SL_PAGE:
@@ -1091,11 +1107,13 @@ pdchart_init_shape_from_marked_block(
             p_chart_shapedesc->bits.label_top_left = 1;
             break;
         }
+    }
 
     { /* see whether left column is a label set. can skip top left as that's been covered */
     ROW row = p_chart_shapedesc->stt.row + 1;
 
     if(row < p_chart_shapedesc->end.row)
+    {
         do {
             sl = travel_externally(p_chart_shapedesc->docno, p_chart_shapedesc->stt.col, row);
 
@@ -1120,12 +1138,14 @@ pdchart_init_shape_from_marked_block(
                 }
         }
         while(++row < p_chart_shapedesc->end.row); /* in ideal case one would be able to zip down a sparse list... */
+    }
     } /*block*/
 
     { /* see whether top row is a label set. can skip top left as that's been covered */
     COL col = p_chart_shapedesc->stt.col + 1;
 
     if(col < p_chart_shapedesc->end.col)
+    {
         do  {
             sl = travel_externally(p_chart_shapedesc->docno, col, p_chart_shapedesc->stt.row);
 
@@ -1150,6 +1170,7 @@ pdchart_init_shape_from_marked_block(
                 }
         }
         while(++col < p_chart_shapedesc->end.col); /* in ideal case one would be able to zip down a sparse list... (but not in PipeDream) */
+    }
     } /*block*/
 
     /* SKS after 4.12 24mar92 -  more care needed with top left corner for predictability */
@@ -1276,10 +1297,11 @@ pdchart_init_shape_from_marked_block(
             /* punter has given us the go-ahead */
             break;
 
-        default:
-            assert(0);
+        default: default_unhandled();
+#if CHECKING
         case riscdialog_query_NO:
         case riscdialog_query_CANCEL:
+#endif
             /* abandon operation */
             pdchart_init_shape_suss_holes_end(p_chart_shapedesc);
             return(0);
@@ -1325,8 +1347,7 @@ pdchart_init_shape_from_marked_block(
                 pdchart_init_shape_suss_holes_end(p_chart_shapedesc);
                 return(0);
 
-            default:
-                assert(0);
+            default: default_unhandled();
             case riscdialog_query_NO:
                 break;
             }
@@ -1360,7 +1381,8 @@ pdchart_listed_dep_dispose(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 pdchart_listed_dep_new(
     _OutRef_    P_P_PDCHART_DEP p_itdep,
     _InVal_     PDCHART_RANGE_TYPE type)
@@ -1429,7 +1451,8 @@ pdchart_modify(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 pdchart_new(
     P_P_PDCHART_HEADER p_pdchart /*out*/,
     U32 n_ranges,
@@ -1454,7 +1477,7 @@ pdchart_new(
 
     pdchart->recalc.state = PDCHART_UNMODIFIED;
 
-    if((res = pdchart_element_ensure(pdchart, n_ranges /*may be 0*/)) > 0)
+    if(status_done(res = pdchart_element_ensure(pdchart, n_ranges /*may be 0*/)))
     {
         /* subsequent failure irrelevant to monotonic handle generator */
         pdchartdatakey = pdchartdatakey_gen++;
@@ -1557,14 +1580,15 @@ null_event_proto(static, pdchart_null_handler)
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 pdchart_text_add(
     P_PDCHART_HEADER pdchart,
     _InRef_     PC_EV_RANGE rng)
 {
     P_PDCHART_DEP     itdep;
     P_PDCHART_ELEMENT pdchartelem;
-    S32               res;
+    STATUS res;
 
     /* create a new dependency block (at end of list) for this cell to refer to */
     if((res = pdchart_listed_dep_new(&itdep, PDCHART_RANGE_TXT)) < 0)
@@ -1577,7 +1601,7 @@ pdchart_text_add(
     itdep->rng = *rng;
 
     /* add an external reference to this whole pdchart range */
-    if((res = pdchart_extdependency_new(itdep)) > 0)
+    if(status_done(res = pdchart_extdependency_new(itdep)))
     {
         pdchartelem = pdchart_element_add(pdchart);
 
@@ -1588,20 +1612,18 @@ pdchart_text_add(
         pdchartelem->rng.txt.col = itdep->rng.s.col;
         pdchartelem->rng.txt.row = itdep->rng.s.row;
 
-        if((res = gr_chart_add_text(&pdchart->ch,
-                                    pdchart_travel_for_text_input,
-                                    pdchartelem,
-                                    &pdchartelem->gr_int_handle)) < 0)
+        if(status_fail(res = gr_chart_add_text(&pdchart->ch, pdchart_travel_for_text_input, pdchartelem, &pdchartelem->gr_int_handle)))
+        {
             pdchart_element_subtract(pdchart, pdchartelem, 0);
+        }
 
-        if(res < 0)
+        if(status_fail(res))
             pdchart_extdependency_dispose(itdep);
     }
 
-    if(res < 0)
+    if(status_fail(res))
     {
         pdchart_listed_dep_dispose(&itdep);
-
         return(res);
     }
 
@@ -1616,7 +1638,8 @@ pdchart_text_add(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 pdchart_text_subtract(
     P_PDCHART_HEADER pdchart,
     P_PDCHART_ELEMENT pdchartelem)
@@ -1634,7 +1657,9 @@ pdchart_text_subtract(
     /* source cells going away: must kill use in chart */
     pdchart_element_subtract(pdchart, pdchartelem, 1);
 
-    return(pdchart_modify(pdchart));
+    status_return(pdchart_modify(pdchart));
+
+    return(1);
 }
 
 /******************************************************************************
@@ -1737,8 +1762,11 @@ gr_chart_travel_proto(static, pdchart_travel_for_input)
         if(item == GR_CHART_ITEMNO_N_ITEMS)
         {
             assert(val);
-            val->type         = GR_CHART_VALUE_N_ITEMS;
-            val->data.n_items = 0;
+            if(NULL != val)
+            {
+                val->type         = GR_CHART_VALUE_N_ITEMS;
+                val->data.n_items = 0;
+            }
         }
         return(1);
         }
@@ -1888,7 +1916,7 @@ gr_chart_travel_proto(static, pdchart_travel_for_text_input)
 
         pdchart = pdchartdata->pdchart; /* was your journey really necessary? */
 
-        pdchart_text_subtract(pdchart, pdchartelem);
+        status_assert(pdchart_text_subtract(pdchart, pdchartelem));
         return(1);
     }
 
@@ -2390,7 +2418,7 @@ PROC_UREF_PROTO(static, pdchart_uref_handler)
         {
             PDCHART_PROCESS process;
 
-            * (int *) &process = 0;
+            zero_struct(process);
 
             switch(itdep->type)
             {
@@ -2764,7 +2792,7 @@ PROC_UREF_PROTO(static, pdchart_text_uref_handler)
                 if(pdchartelem->itdepkey == itdepkey)
                 {
                     assert(pdchartelem->type == PDCHART_RANGE_TXT);
-                    pdchart_text_subtract(pdchart, pdchartelem);
+                    status_assert(pdchart_text_subtract(pdchart, pdchartelem));
                     modify = 1;
                     break; /* never more than one element per dependency */
                 }
@@ -2898,8 +2926,8 @@ extern void
 ChartNew_fn(void)
 {
     PDCHART_SHAPEDESC chart_shapedesc;
-    P_PDCHART_HEADER  pdchart;
-    S32               res;
+    P_PDCHART_HEADER pdchart;
+    STATUS res;
 
     if(!MARKER_DEFINED())
     {
@@ -2909,14 +2937,14 @@ ChartNew_fn(void)
         return;
     }
 
-    if((res = pdchart_init_shape_from_marked_block(&chart_shapedesc, NULL)) < 0)
+    if(status_fail(res = pdchart_init_shape_from_marked_block(&chart_shapedesc, NULL)))
     {
         reperr_null(res);
         return;
     }
 
     /* cancelled chart creation */
-    if(!res)
+    if(0 == res)
         return;
 
     if((res = pdchart_new(&pdchart, chart_shapedesc.n_ranges, 1, 1)) < 0)
@@ -2930,18 +2958,16 @@ ChartNew_fn(void)
 
     pdchart_init_shape_suss_holes_end(&chart_shapedesc);
 
-    if(res < 0)
+    if(status_fail(res))
     {
         pdchart_dispose(&pdchart);
         reperr_null(res);
         return;
     }
 
-    if((res =
-        gr_chartedit_new(&pdchart->ceh,
-                        pdchart->ch,
-                        ChartEdit_notify_proc,
-                        pdchart)) < 0)
+    res = gr_chartedit_new(&pdchart->ceh, pdchart->ch, ChartEdit_notify_proc, pdchart);
+
+    if(status_fail(res))
     {
         pdchart_dispose(&pdchart);
         reperr_null(res);
@@ -2962,7 +2988,7 @@ extern void
 ChartAdd_fn(void)
 {
     PDCHART_SHAPEDESC chart_shapedesc;
-    S32               res;
+    STATUS res;
 
     /* SKS after 4.12 26mar92 */
     if(!pdchart_current)
@@ -3004,14 +3030,14 @@ ChartAdd_fn(void)
     }
     else
     {
-        if((res = pdchart_init_shape_from_marked_block(&chart_shapedesc, pdchart_current)) < 0)
+        if(status_fail(res = pdchart_init_shape_from_marked_block(&chart_shapedesc, pdchart_current)))
         {
             reperr_null(res);
             return;
         }
 
         /* cancelled chart creation */
-        if(!res)
+        if(0 == res)
             return;
 
         res = pdchart_add(pdchart_current, &chart_shapedesc, 0);
@@ -3046,7 +3072,7 @@ ChartDelete_fn(void)
     }
 
     /* convert the live Chart file to a dead Draw file if it's saved out already */
-    gr_chart_name_query(&pdchart_current->ch, filename, sizeof(filename)-1);
+    gr_chart_name_query(&pdchart_current->ch, filename, sizeof32(filename)-1);
     if(file_is_rooted(filename))
     {
         res = gr_chart_save_draw_file_without_dialog(&pdchart_current->ch, filename);
@@ -3092,7 +3118,8 @@ ChartSelect_fn(void)
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 ChartEdit_notify_proc(
     P_ANY handle,
     GR_CHARTEDIT_HANDLE ceh,
@@ -3100,7 +3127,7 @@ ChartEdit_notify_proc(
     P_ANY nextra)
 {
     P_PDCHART_HEADER pdchart = handle;
-    S32 res;
+    STATUS res;
 
     IGNOREPARM(ceh);
     IGNOREPARM(nextra);
@@ -3124,7 +3151,7 @@ ChartEdit_notify_proc(
         /* default is to allow window closure */
         res = 1;
 
-        gr_chart_name_query(&pdchart->ch, name_buffer, sizeof(name_buffer) - 1);
+        gr_chart_name_query(&pdchart->ch, name_buffer, sizeof32(name_buffer) - 1);
 
         /* if on disc ok, close editing window NOW, otherwise ask ... */
         if(!justopening && !file_is_rooted(name_buffer))
@@ -3140,9 +3167,9 @@ ChartEdit_notify_proc(
                 res = gr_chart_save_chart_with_dialog(&pdchart->ch);
 
                 /* test for unsafe receiver; don't close if sent off to Edit for instance */
-                if(res > 0)
+                if(status_done(res))
                 {
-                    gr_chart_name_query(&pdchart->ch, name_buffer, sizeof(name_buffer) - 1);
+                    gr_chart_name_query(&pdchart->ch, name_buffer, sizeof32(name_buffer) - 1);
 
                     if(!file_is_rooted(name_buffer))
                         res = 0;
@@ -3154,9 +3181,7 @@ ChartEdit_notify_proc(
                 res = 1;
                 break;
 
-            default:
-                assert(0);
-
+            default: default_unhandled();
             case riscdialog_query_CANCEL:
                 res = 0;
                 break;
@@ -3166,7 +3191,7 @@ ChartEdit_notify_proc(
         if(adjustclicked)
             filer_opendir(name_buffer);
 
-        if(!justopening  &&  wanttoclose && (res > 0))
+        if(!justopening  &&  wanttoclose && status_done(res))
         {
             /* destroy the editing window */
             gr_chartedit_dispose(&pdchart->ceh);
@@ -3190,12 +3215,13 @@ ChartEdit_notify_proc(
     return(res);
 }
 
-static S32
+_Check_return_
+static STATUS
 pdchart_show_editor(
     P_PDCHART_HEADER pdchart)
 {
     GR_CHARTEDIT_HANDLE ceh;
-    S32 res;
+    STATUS res;
 
     if(pdchart->ceh)
     {
@@ -3204,11 +3230,9 @@ pdchart_show_editor(
         return(1);
     }
 
-    if((res =
-        gr_chartedit_new(&ceh,
-                        pdchart->ch,
-                        ChartEdit_notify_proc,
-                        pdchart)) <= 0)
+    res = gr_chartedit_new(&ceh, pdchart->ch, ChartEdit_notify_proc, pdchart);
+
+    if(res <= 0)
     {
         return(res
                 ? ((res != create_error(GR_CHART_ERR_ALREADY_EDITING)) ? res : 1)
@@ -3220,7 +3244,8 @@ pdchart_show_editor(
     return(1);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 pdchart_show_editor_using_handle(
     P_ANY epdchartdatakey)
 {
@@ -3237,7 +3262,7 @@ pdchart_show_editor_using_handle(
 extern void
 ChartEdit_fn(void)
 {
-    S32 res;
+    STATUS res;
 
     /* SKS after 4.12 26mar92 */
     if(!pdchart_current)
@@ -3249,7 +3274,7 @@ ChartEdit_fn(void)
         return;
     }
 
-    if((res = pdchart_show_editor(pdchart_current)) < 0)
+    if(status_fail(res = pdchart_show_editor(pdchart_current)))
         reperr_null(res);
 }
 
@@ -3262,7 +3287,7 @@ extern BOOL
 dependent_charts_warning(void)
 {
     EV_DOCNO cur_docno = (EV_DOCNO) current_docno();
-    S32 res = riscdialog_query_CANCEL;
+    enum RISCDIALOG_QUERY_DC_REPLY DC_res = riscdialog_query_DC_CANCEL;
     LIST_ITEMNO pdchartdatakey;
     P_PDCHART_LISTED_DATA pdchartdata;
 
@@ -3279,7 +3304,7 @@ dependent_charts_warning(void)
 
         pdchart = pdchartdata->pdchart;
 
-        gr_chart_name_query(&pdchart->ch, filename, sizeof(filename) - 1);
+        gr_chart_name_query(&pdchart->ch, filename, sizeof32(filename) - 1);
 
         saved_to_disc = file_is_rooted(filename);
 
@@ -3308,11 +3333,11 @@ dependent_charts_warning(void)
         if(!saved_to_disc)
         {
             /* only ask once for all such */
-            if(res == riscdialog_query_CANCEL)
-                res = riscdialog_query_DC(close_dependent_charts_winge_STR);
+            if(DC_res == riscdialog_query_DC_CANCEL)
+                DC_res = riscdialog_query_DC(close_dependent_charts_winge_STR);
 
             /* have mercy, the user went 'Cancel' */
-            if(res == riscdialog_query_CANCEL)
+            if(DC_res == riscdialog_query_DC_CANCEL)
                 return(FALSE);
 
             /* next time round we won't ask */
@@ -3361,7 +3386,7 @@ pdchart_dependent_documents(
                 {
                     U8 filename[BUF_MAX_PATHSTRING];
 
-                    gr_chart_name_query(&pdchart->ch, filename, sizeof(filename) - 1);
+                    gr_chart_name_query(&pdchart->ch, filename, sizeof32(filename) - 1);
 
                     if(file_is_rooted(filename))
                     {
@@ -3468,11 +3493,11 @@ pdchart_load_dependents(
 #else
     LIST_ITEMNO           pdchartdatakey;
     P_PDCHART_LISTED_DATA pdchartdata;
-    P_PDCHART_HEADER      pdchart;
 #if 1
     LIST_ITEMNO           itdepkey;
     P_PDCHART_DEP         itdep;
 #else
+    P_PDCHART_HEADER      pdchart;
     P_PDCHART_ELEMENT     ep, last_ep;
 #endif
     P_SS_DOC              p_ss_doc;
@@ -3487,8 +3512,6 @@ pdchart_load_dependents(
     if(!pdchartdata)
         return(1);
 
-    pdchart = pdchartdata->pdchart;
-
 #if 1
     /* SKS after 4.12 26mar92 - more helpful on errors perchance - loop over deps of this chart not chart elements */
     for(itdep = collect_first(PDCHART_DEP, &pdchart_listed_deps.lbr, &itdepkey);
@@ -3498,6 +3521,8 @@ pdchart_load_dependents(
         if(itdep->pdchartdatakey != pdchartdatakey)
             continue;
 #else
+    pdchart = pdchartdata->pdchart;
+
     ep = &pdchart->elem.base[0];
 
     for(last_ep = ep + pdchart->elem.n; ep < last_ep; ++ep)
@@ -3521,7 +3546,7 @@ pdchart_load_dependents(
 
             name_make_wholename(&p_ss_doc->docu_name, filename, elemof32(filename));
 
-            if((status = find_filetype_option(filename)) > 0)
+            if((status = find_filetype_option(filename, FILETYPE_UNDETERMINED)) > 0)
             {
                 zero_struct(load_file_options);
                 load_file_options.document_name = filename;
@@ -3544,14 +3569,15 @@ pdchart_load_dependents(
     return(1);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 pdchart_preferred_save(
     P_U8 filename)
 {
     if(gr_chart_preferred_query())
         return(gr_chart_preferred_save(filename));
 
-    return(0);
+    return(STATUS_OK);
 }
 
 /* SKS after 4.12 26mar92 - something like this was needed... */
@@ -3661,7 +3687,7 @@ pdchart_submenu_maker(void)
             if(i >= cl_submenu_array_n)
                 break;
 
-            gr_chart_name_query(&pdchartdata->pdchart->ch, buffer, sizeof(buffer)-1);
+            gr_chart_name_query(&pdchartdata->pdchart->ch, buffer, sizeof32(buffer)-1);
             ptr = buffer;
 
             if(cwd_len && (0 == _strnicmp(cwd_buffer, ptr, cwd_len)))
@@ -3715,9 +3741,9 @@ pdchart_submenu_show(
 
 extern void
 pdchart_submenu_select_from(
-    S32 hit)
+    _InVal_     S32 hit)
 {
-    if(hit)
+    if(0 != hit)
         pdchart_select_using_handle((P_ANY) cl_submenu_array[hit - mo_cl_dynamic]);
 }
 
@@ -3750,7 +3776,8 @@ pdchart_select_using_handle(
 explicit callbacks
 */
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_preferred_get_name(
     P_U8 buffer,
     U32 bufsiz)
@@ -3867,7 +3894,8 @@ PROC_QSORT_PROTO(static, pdchart_sort_list, PDCHART_SORT_ELEM)
     return(slip1->gr_order_no > slip2->gr_order_no);
 }
 
-static S32
+_Check_return_
+static STATUS
 pdchart_save_external_core(
     FILE_HANDLE f,
     GR_CHART_HANDLE ch,
@@ -3881,7 +3909,7 @@ pdchart_save_external_core(
     P_PDCHART_SORT_ELEM   sort_list;
     EV_RANGE rng;
     P_U16  p_bits;
-    S32    res;
+    STATUS res;
 
     IGNOREPARM(ch);
 
@@ -3996,16 +4024,14 @@ pdchart_save_external_core(
 
             out  = buffer;
             out += pdchart_make_range_flags_for_save(out, elemof32(buffer), p_bits);
-            out += pdchart_make_range_for_save(out, elemof32(buffer) - (out - buffer), &rng);
+            /*out +=*/
+            (void) pdchart_make_range_for_save(out, elemof32(buffer) - (out - buffer), &rng);
 
-            if((res = gr_chart_construct_save_frag_stt(f, contab_ix)) < 0)
-                break;
+            status_break(res = gr_chart_construct_save_frag_stt(f, contab_ix));
 
-            if((res = gr_chart_construct_save_frag_txt(f, buffer)) < 0)
-                break;
+            status_break(res = gr_chart_construct_save_frag_txt(f, buffer));
 
-            if((res = gr_chart_construct_save_frag_end(f)) < 0)
-                break;
+            status_break(res = gr_chart_construct_save_frag_end(f));
             }
 
             stt_ix = cur_ix;
@@ -4015,8 +4041,7 @@ pdchart_save_external_core(
 
     al_ptr_dispose(P_P_ANY_PEDANTIC(&sort_list));
 
-    if(res < 0)
-        return(res);
+    status_return(res);
 
     /*
     live text objects - separately done for neatness
@@ -4025,6 +4050,7 @@ pdchart_save_external_core(
     ep = &pdchart->elem.base[0];
 
     for(last_ep = ep + pdchart->elem.n; ep < last_ep; ++ep)
+    {
         if(ep->type == PDCHART_RANGE_TXT)
         {
             U8 buffer[LIN_BUFSIZ];
@@ -4049,48 +4075,46 @@ pdchart_save_external_core(
             /* SKS after 4.12 27mar92 - needed for (compatible) live text object ordering on reload */
             (void) sprintf(buffer, "%d", gr_chart_order_query(&pdchart->ch, &ep->gr_int_handle));
 
-            if((res = gr_chart_construct_save_frag_stt(f, PDCHART_CON_RANGE_TXT_ORDER)) < 0)
-                return(res);
+            status_break(res = gr_chart_construct_save_frag_stt(f, PDCHART_CON_RANGE_TXT_ORDER));
 
-            if((res = gr_chart_construct_save_frag_txt(f, buffer)) < 0)
-                return(res);
+            status_break(res = gr_chart_construct_save_frag_txt(f, buffer));
 
-            if((res = gr_chart_construct_save_frag_end(f)) < 0)
-                return(res);
+            status_break(res = gr_chart_construct_save_frag_end(f));
 #endif
 
             out  = buffer;
             out += pdchart_make_range_flags_for_save(out, elemof32(buffer), p_bits);
-            out += pdchart_make_range_for_save(out, elemof32(buffer) - (out - buffer), &rng);
+            /*out +=*/
+            (void) pdchart_make_range_for_save(out, elemof32(buffer) - (out - buffer), &rng);
 
-            if((res = gr_chart_construct_save_frag_stt(f, PDCHART_CON_RANGE_TXT)) < 0)
-                return(res);
+            status_break(res = gr_chart_construct_save_frag_stt(f, PDCHART_CON_RANGE_TXT));
 
-            if((res = gr_chart_construct_save_frag_txt(f, buffer)) < 0)
-                return(res);
+            status_break(res = gr_chart_construct_save_frag_txt(f, buffer));
 
-            if((res = gr_chart_construct_save_frag_end(f)) < 0)
-                return(res);
+            status_break(res = gr_chart_construct_save_frag_end(f));
         }
+    }
+
+    status_return(res);
 
     return(1);
 }
 
 /******************************************************************************
 *
-* direct callback from chart module to save
-* out any constructs from our side
+* direct callback from chart module to save out any constructs from our side
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_save_external(
     GR_CHART_HANDLE ch,
     FILE_HANDLE f,
     P_U8 save_filename /*const*/,
     P_ANY ext_handle)
 {
-    S32 res;
+    STATUS res;
 
     /* set up as document name */
     xstrkpy(pdchart_load_save_docname, elemof32(pdchart_load_save_docname), save_filename);
@@ -4121,7 +4145,7 @@ gr_chart_save_external(
     res = gr_chart_construct_save_txt(f, PDCHART_CON_VERSION, array);
     }
 
-    if(res > 0)
+    if(status_done(res))
     {
         if(ext_handle)
             res = pdchart_save_external_core(f, ch, ext_handle);
@@ -4138,8 +4162,7 @@ gr_chart_save_external(
 
     pdchart_load_save_docno = DOCNO_NONE;
 
-    if(res < 0)
-        return(res);
+    status_return(res);
 
     return(1);
 }
@@ -4222,7 +4245,8 @@ pdchart_read_range(
     return(ptr);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_ext_construct_load_this(
     GR_CHART_HANDLE ch,
     P_U8 args,
@@ -4231,7 +4255,7 @@ gr_ext_construct_load_this(
     P_U8   ptr = args;
     U16    bits = 0;
     EV_RANGE rng;
-    S32    res;
+    STATUS res;
 
     IGNOREPARM(ch);
 
@@ -4251,11 +4275,11 @@ gr_ext_construct_load_this(
             if(ptr)
             {
                 /* cater for the PipeDream side of the chart descriptor growing */
-                if(0 > (res = pdchart_element_ensure(pdchart_load_save_pdchart, rng.e.col - rng.s.col)))
-                    return(res);
+                res = pdchart_element_ensure(pdchart_load_save_pdchart, rng.e.col - rng.s.col);
+                status_return(res);
 
-                if((res = pdchart_add_range_for_load(pdchart_load_save_pdchart, PDCHART_RANGE_COL, &rng, bits)) < 0)
-                    return(res);
+                res = pdchart_add_range_for_load(pdchart_load_save_pdchart, PDCHART_RANGE_COL, &rng, bits);
+                status_return(res);
             }
         }
         break;
@@ -4268,11 +4292,11 @@ gr_ext_construct_load_this(
             if(ptr)
             {
                 /* cater for the PipeDream side of the chart descriptor growing */
-                if(0 > (res = pdchart_element_ensure(pdchart_load_save_pdchart, rng.e.row - rng.s.row)))
-                    return(res);
+                res = pdchart_element_ensure(pdchart_load_save_pdchart, rng.e.row - rng.s.row);
+                status_return(res);
 
-                if((res = pdchart_add_range_for_load(pdchart_load_save_pdchart, PDCHART_RANGE_ROW, &rng, bits)) < 0)
-                    return(res);
+                res = pdchart_add_range_for_load(pdchart_load_save_pdchart, PDCHART_RANGE_ROW, &rng, bits);
+                status_return(res);
             }
         }
         break;
@@ -4286,11 +4310,11 @@ gr_ext_construct_load_this(
             if(ptr)
             {
                 /* cater for the PipeDream side of the chart descriptor growing */
-                if(0 > (res = pdchart_element_ensure(pdchart_load_save_pdchart, 1)))
-                    return(res);
+                res = pdchart_element_ensure(pdchart_load_save_pdchart, 1);
+                status_return(res);
 
-                if((res = pdchart_text_add(pdchart_load_save_pdchart, &rng)) < 0)
-                    return(res);
+                res = pdchart_text_add(pdchart_load_save_pdchart, &rng);
+                status_return(res);
             }
         }
         break;
@@ -4316,7 +4340,7 @@ gr_ext_construct_load_this(
 gr_cache_tagstrip_proto(extern, pdchart_tagstrip)
 {
     P_PDCHART_TAGSTRIP_INFO p_tag_info = handle;
-    S32 res;
+    STATUS res;
 
     p_tag_info->pdchartdatakey = NULL;
 
@@ -4330,7 +4354,7 @@ gr_cache_tagstrip_proto(extern, pdchart_tagstrip)
     gr_cache_name_query(&p_info->cah, pdchart_load_save_docname, sizeof(pdchart_load_save_docname)-1);
 
     /* set the name up in the newly created chart */
-    if((res = gr_chart_name_set(&pdchart_load_save_pdchart->ch, pdchart_load_save_docname)) < 0)
+    if(status_fail(res = gr_chart_name_set(&pdchart_load_save_pdchart->ch, pdchart_load_save_docname)))
         return(reperr_null(res), 1);
 
     /* register our construct table with chart module */

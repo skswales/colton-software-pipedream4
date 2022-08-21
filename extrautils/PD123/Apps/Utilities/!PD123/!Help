@@ -7,3 +7,9 @@
       ----                    --------------                       -------
       File                    Name of file to be processed           nil
                               (typed or dragged).
+
+   This application may also be used from the command line.
+
+   Syntax:
+
+      *PD123 <infile> <outfile>

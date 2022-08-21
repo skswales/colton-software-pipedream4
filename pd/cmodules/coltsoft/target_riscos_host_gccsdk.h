@@ -11,7 +11,7 @@
 #ifndef __target_riscos_host_gccsdk_h
 #define __target_riscos_host_gccsdk_h
 
-#ifndef _CHAR_UNSIGNED
+#ifndef __CHAR_UNSIGNED__
 #if 1
 #define _CHAR_UNSIGNED 1
 #else
@@ -26,9 +26,17 @@
 #undef  F64_IS_64_BIT_ALIGNED
 #define F64_IS_64_BIT_ALIGNED 1
 
-#define __swi(inline_swi_number) /* Norcroft specific */
-
 #define ___assert(e, s) 0 /* Norcroft specific */
+
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wchar-subscripts"
+
+#if defined(CODE_ANALYSIS)
+#define INTRINSIC_MEMCMP 1
+#define INTRINSIC_MEMCPY 1
+#define INTRINSIC_MEMSET 1
+#endif
+#endif /* __clang__ */
 
 #endif /* __target_riscos_host_gccsdk_h */
 

@@ -63,16 +63,25 @@ vtracef(
     _In_z_ _Printf_format_string_ PCTSTR format,
     /**/        va_list args)
 {
+    int len;
+
     if(!tracing(mask))
         return;
 
 #if WINDOWS
-    consume_int(_vsntprintf_s(trace_buffer, elemof32(trace_buffer), _TRUNCATE, format, args));
+    len = _vsntprintf_s(trace_buffer, elemof32(trace_buffer), _TRUNCATE, format, args);
+    if(-1 == len)
+        len = strlen32(trace_buffer); /* limit to what actually was achieved */
 #else /* C99 CRT */
-    consume_int(vsnprintf(trace_buffer, elemof32(trace_buffer), format, args));
+    len = vsnprintf(trace_buffer, elemof32(trace_buffer), format, args);
+    if(len < 0)
+        len = 0;
+    /*else if((U32) len >= elemof32(trace_buffer))
+        len = strlen32(trace_buffer);*/ /* limit to what actually was achieved */
 #endif
 
-    report_output(trace_buffer);
+    if(0 != len)
+        report_output(trace_buffer);
 }
 
 extern void

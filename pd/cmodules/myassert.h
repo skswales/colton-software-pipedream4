@@ -401,14 +401,4 @@ override normal C assert() usage
 #define default_unhandled() \
     myassert0(TEXT("Unhandled value in switch")) /*then often...*/ /*FALLTHRU*/
 
-#ifdef PREFAST_ONLY_ASSERT
-#undef PREFAST_ONLY_ASSERT
-#endif
-
-#if defined(_PREFAST_)
-#define PREFAST_ONLY_ASSERT(expr) assert(expr)
-#else
-#define PREFAST_ONLY_ASSERT(expr) /* no expr */
-#endif
-
 /* end of myassert.h */

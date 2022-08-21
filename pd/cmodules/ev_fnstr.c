@@ -74,12 +74,12 @@ PROC_EXEC_PROTO(c_clean)
 
             i_idx += bytes_of_char;
 
-#if !USTR_IS_L1STR
+#if !USTR_IS_SBSTR
             if(!ucs4_validate(ucs4))
                 continue;
 #endif
 
-            if(ucs4_is_latin1(ucs4) && !t5_isprint((U8) ucs4))
+            if(ucs4_is_sbchar(ucs4) && !t5_isprint((U8) ucs4))
                 continue;
 
             if(pass == 2)

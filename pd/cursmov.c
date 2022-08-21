@@ -143,7 +143,9 @@ ScrollUp_fn(void)
     P_SCRROW rptr;
     ROW trow = currow;
 
+    assert(0 != array_elements(&vertvec_mh));
     rptr = vertvec();
+    PTR_ASSERT(rptr);
 
     currowoffset = (rptr->flags & PAGE) ? 1 : 0;
     currow = rptr[currowoffset].rowno;
@@ -194,7 +196,10 @@ ScrollDown_fn(void)
         mark_row_praps(currowoffset, NEW_ROW);
     }
     else
+    {
+        assert(vertvec_entry_valid(currowoffset));
         currow = row_number(currowoffset);
+    }
 }
 
 /******************************************************************************
@@ -225,6 +230,7 @@ ScrollLeft_fn(void)
     if((curcoloffset == NOTFOUND)  ||  (curcoloffset == scrbrc))
         curcoloffset = !scrbrc ? scrbrc : scrbrc-1;
 
+    assert(horzvec_entry_valid(curcoloffset));
     curcol = col_number(curcoloffset);
 
     out_screen = TRUE;
@@ -285,6 +291,8 @@ extern void
 mark_row_border(
     coord rowonscr)
 {
+    assert(vertvec_entry_valid(rowonscr));
+
     trace_2(TRACE_APP_PD4, "mark_row row: %d, offset: %d", row_number(rowonscr), rowonscr);
 
     /* allow multiple calls */
@@ -305,6 +313,8 @@ extern void
 mark_row(
     coord rowonscr)
 {
+    assert(vertvec_entry_valid(rowonscr));
+
     trace_2(TRACE_APP_PD4, "mark_row row: %d, offset: %d", row_number(rowonscr), rowonscr);
 
     mark_row_border(rowonscr);
@@ -350,6 +360,7 @@ mark_row_praps(
         if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
             break;
 
+        assert(vertvec_entry_valid(rowonscr));
         col = oldcol;
         row = row_number(rowonscr);
 
@@ -434,7 +445,7 @@ mark_row_praps(
                 if(!tsl  ||  (tsl->type != SL_TEXT))
                     continue;
 
-                if(!isslotblank(tsl))
+                if(!is_blank_cell(tsl))
                     break;
             }
 
@@ -635,6 +646,7 @@ curup(void)
 
     origoffset = currowoffset--;
 
+    assert(vertvec_entry_valid(currowoffset));
     if(vertvec_entry_flags(currowoffset) & PAGE)
     {
         /* move up over the page break */
@@ -658,6 +670,7 @@ curup(void)
     else
     {
         mark_row_praps(origoffset, OLD_ROW);
+        assert(vertvec_entry_valid(currowoffset));
         currow = row_number(currowoffset);
         mark_row_praps(currowoffset, NEW_ROW);
     }
@@ -671,11 +684,13 @@ it assumes the cursor is on the top (non-page break) line
 extern void
 push_screen_up_one_line(void)
 {
-    P_SCRROW rptr = vertvec();
-    BOOL gone_over_pb;
+    P_SCRROW rptr;
+    BOOL gone_over_pb = FALSE;
     ROW trow;
 
-    gone_over_pb = FALSE;
+    assert(0 != array_elements(&vertvec_mh));
+    rptr = vertvec();
+    PTR_ASSERT(rptr);
 
     if(rptr->flags & FIX)
     {
@@ -783,6 +798,7 @@ curdown(void)
     if(currowoffset >= rows_available-1)
     {
         /* cursor at bottom of screen */
+        assert(vertvec_entry_valid(currowoffset));
         if( (vertvec_entry_flags(currowoffset) & FIX)  ||
             !push_screen_down_one_line())
             return;
@@ -790,6 +806,7 @@ curdown(void)
     else
     {
         /* cursor not yet at bottom of screen */
+        assert(vertvec_entry_valid(currowoffset+1));
         flags = vertvec_entry_flags(currowoffset+1);
 
         if((flags & PAGE))
@@ -812,6 +829,7 @@ curdown(void)
         }
     }
 
+    assert(vertvec_entry_valid(currowoffset));
     currow = row_number(currowoffset);
 }
 
@@ -840,6 +858,7 @@ push_screen_down_one_line(void)
 
     filvert(tnewrow, currow+1, DONT_CALL_FIXPAGE);
 
+    assert(vertvec_entry_valid(rows_available-1));
     if(vertvec_entry_flags(rows_available-1) & PAGE)
     {
         currowoffset = rows_available-1;
@@ -890,12 +909,18 @@ do_up_scroll(void)
 static coord
 calpli(void)
 {
-    P_SCRROW rptr = vertvec();
+    P_SCRROW rptr;
     P_SCRROW last_rptr;
     coord res;
 
+    assert(0 != array_elements(&vertvec_mh));
+    rptr = vertvec();
+    PTR_ASSERT(rptr);
+
     if(rptr->flags & FIX)
+    {
         res = rows_available - n_rowfixes;
+    }
     else
     {
         res = 0;
@@ -944,10 +969,16 @@ cursdown(void)
                             ? rowsonscreen-1
                             : oldcuroff;
 
+    assert(vertvec_entry_valid(currowoffset));
+
     if(vertvec_entry_flags(currowoffset) & PAGE)
+    {
         currowoffset = (currowoffset == 0)
                                 ? 1
                                 : currowoffset-1;
+
+        assert(vertvec_entry_valid(currowoffset));
+    }
 
     currow = row_number(currowoffset);
     mark_to_end(n_rowfixes);
@@ -975,6 +1006,7 @@ cursup(void)
     if(firstrow == fstnrx())
         return;
 
+    assert(0 != array_elements(&vertvec_mh));
     if(vertvec()->flags & PAGE)
     {
         pagnum++;
@@ -987,10 +1019,16 @@ cursup(void)
                         ? (coord) 0
                         : oldcuroff;
 
+    assert(vertvec_entry_valid(currowoffset));
+
     if(vertvec_entry_flags(currowoffset) & PAGE)
+    {
         currowoffset = (currowoffset == 0)
                                 ? 1
                                 : currowoffset-1;
+
+        assert(vertvec_entry_valid(currowoffset));
+    }
 
     currow = row_number(currowoffset);
     mark_to_end(n_rowfixes);
@@ -1094,7 +1132,9 @@ prevcol(void)
     /* can we move to a column to the left on screen? */
     if(curcoloffset > 0)
     {
-        curcol = col_number(--curcoloffset);
+        --curcoloffset;
+        assert(horzvec_entry_valid(curcoloffset));
+        curcol = col_number(curcoloffset);
         xf_drawcolumnheadings = TRUE;
         mark_row(currowoffset);
         return;
@@ -1108,6 +1148,7 @@ prevcol(void)
 
     filhorz(tcol, tcol);
     curcoloffset = 0;
+    assert(horzvec_entry_valid(curcoloffset));
     curcol = col_number(curcoloffset);
 
     out_screen = TRUE;
@@ -1122,7 +1163,11 @@ prevcol(void)
 extern COL
 col_off_right(void)
 {
-    COL colno = col_number((scrbrc && (curcoloffset != scrbrc)) ? scrbrc-1 : scrbrc);
+    coord coff = (scrbrc && (curcoloffset != scrbrc)) ? scrbrc-1 : scrbrc;
+    COL colno;
+    
+    assert(horzvec_entry_valid(coff));
+    colno = col_number(coff);
 
     do  {
         ++colno;
@@ -1153,7 +1198,9 @@ nextcol(void)
     /* can we move to a column to the right on screen? */
     if(curcoloffset + 1 < scrbrc)
     {
-        curcol = col_number(++curcoloffset);
+        ++curcoloffset;
+        assert(horzvec_entry_valid(curcoloffset));
+        curcol = col_number(curcoloffset);
         xf_drawcolumnheadings = TRUE;
         mark_row(currowoffset);
         return;
@@ -1161,7 +1208,14 @@ nextcol(void)
 
     tcol = col_off_right();
 
-    if((tcol >= numcol)  ||  (tcol == col_number(curcoloffset)))
+    if(tcol >= numcol)
+    {
+        xf_flush = TRUE;
+        return;
+    }
+
+    assert(horzvec_entry_valid(curcoloffset));
+    if(tcol == col_number(curcoloffset))
     {
         xf_flush = TRUE;
         return;
@@ -1177,6 +1231,7 @@ nextcol(void)
 
         if(schcsc(tcol) != NOTFOUND)
         {
+            assert(horzvec_entry_valid(scrbrc));
             cptr = horzvec_entry(scrbrc);
 
             if((cptr->flags & LAST)  ||  (cptr->colno != tcol))
@@ -1377,6 +1432,23 @@ reportf("GotoSlot: unrooted %s is docno %d", report_tstr(tstr_buf), docno);
 
 /******************************************************************************
 *
+* offset in vertvec that gives vertical position on screen
+*
+******************************************************************************/
+
+extern coord
+calroff(
+    coord ty)
+{
+    coord roff = (ty);
+
+    /* may be above or below screen limits, caller must check */
+
+    return(roff);
+}
+
+/******************************************************************************
+*
 * offset in vertvec that gives vertical position on screen,
 * mapping off top/bottom to top/bottom row of data visible on sheet
 *
@@ -1388,11 +1460,13 @@ calroff_click(
 {
     coord roff = calroff(ty);
 
+    /* clip to screen limits */
     if(roff < 0)
         roff = 0;
     else if(roff > rowsonscreen-1)
         roff = rowsonscreen-1;
 
+    assert(vertvec_entry_valid(roff));
     trace_2(TRACE_APP_PD4, "calroff_click(%d) returns %d", ty, roff);
     return(roff);
 }
@@ -1408,42 +1482,54 @@ calcad(
     coord coff)
 {
     coord sofar = borderwidth;
-    P_SCRCOL cptr  = horzvec();
-    P_SCRCOL there = cptr + coff;
+    P_SCRCOL cptr;
+    P_SCRCOL there;
+
+    assert(0 != array_elements(&horzvec_mh));
+    cptr = horzvec();
+    PTR_ASSERT(cptr);
+
+    assert(horzvec_entry_valid(coff));
+    there = cptr + coff;
 
     while(cptr < there)
+    {
         sofar += colwidth(cptr++->colno);
+    }
 
     return(sofar);
 }
 
 /******************************************************************************
 *
-*  offset in horzvec that gives horizontal position on screen
+* offset in horzvec that gives horizontal position on screen
 *
 ******************************************************************************/
 
 extern coord
 calcoff(
-    coord xpos)
+    coord x_pos)
 {
     P_SCRCOL cptr;
     coord coff;
     coord sofar;
 
-    if(xpos < 0)
+    if(x_pos < 0)
         return(OFF_LEFT);
 
-    if(xpos < borderwidth)
-        return(-1);
+    if(x_pos < borderwidth)
+        return(OFF_LEFT);
 
-    /* loop till we've passed the xpos or falled off horzvec */
+    /* loop till we've passed the x_pos or falled off horzvec */
 
-    cptr  = horzvec();
+    assert(0 != array_elements(&horzvec_mh));
+    cptr = horzvec();
+    PTR_ASSERT(cptr);
+
     coff  = -1;
     sofar = borderwidth;
 
-    while(sofar <= xpos)
+    while(sofar <= x_pos)
     {
         if(cptr->flags & LAST)
         {
@@ -1456,7 +1542,7 @@ calcoff(
         sofar += colwidth(cptr++->colno);
     }
 
-    trace_2(TRACE_APP_PD4, "calcoff(%d) returns %d", xpos, coff);
+    trace_2(TRACE_APP_PD4, "calcoff(%d) returns %d", x_pos, coff);
     return(coff);
 }
 
@@ -1469,22 +1555,25 @@ calcoff(
 
 extern coord
 calcoff_click(
-    coord xpos)
+    coord x_pos)
 {
     P_SCRCOL cptr;
     coord coff;
     coord sofar;
 
-    if(xpos < borderwidth)
+    if(x_pos < borderwidth)
         return(0);                      /* OFF_LEFT, -1 -> first column */
 
-    /* loop till we've passed the xpos or falled off horzvec */
+    /* loop till we've passed the x_pos or falled off horzvec */
 
-    cptr  = horzvec();
+    assert(0 != array_elements(&horzvec_mh));
+    cptr = horzvec();
+    PTR_ASSERT(cptr);
+
     coff  = -1;
     sofar = borderwidth;
 
-    while(sofar <= xpos)
+    while(sofar <= x_pos)
     {
         if(cptr->flags & LAST)
             break;                      /* OFF_RIGHT -> last kosher column */
@@ -1494,7 +1583,7 @@ calcoff_click(
         sofar += colwidth(cptr++->colno);
     }
 
-    trace_2(TRACE_APP_PD4, "calcoff_click(%d) returns %d", xpos, coff);
+    trace_2(TRACE_APP_PD4, "calcoff_click(%d) returns %d", x_pos, coff);
     return(coff);
 }
 
@@ -1509,11 +1598,13 @@ incolfixes(
 {
     coord coff;
 
+    assert(0 != array_elements(&horzvec_mh));
     if(!(horzvec()->flags & FIX))
         return(FALSE);
 
     coff = schcsc(colno);
 
+    assert((coff == NOTFOUND) || horzvec_entry_valid(coff));
     return((coff != NOTFOUND)  &&  (horzvec_entry(coff)->flags & FIX));
 }
 
@@ -1526,8 +1617,14 @@ extern coord
 schrsc(
     ROW row)
 {
-    P_SCRROW i_rptr = vertvec();
-    P_SCRROW rptr = i_rptr;
+    P_SCRROW i_rptr;
+    P_SCRROW rptr;
+
+    assert(0 != array_elements(&vertvec_mh));
+    i_rptr = vertvec();
+    PTR_ASSERT(i_rptr);
+
+    rptr = i_rptr;
 
     trace_1(TRACE_APP_PD4, "schrsc(%d)", row);
 
@@ -1554,8 +1651,14 @@ extern coord
 schcsc(
     COL col)
 {
-    P_SCRCOL i_cptr = horzvec();
-    P_SCRCOL cptr = i_cptr;
+    P_SCRCOL i_cptr;
+    P_SCRCOL cptr;
+
+    assert(0 != array_elements(&horzvec_mh));
+    i_cptr = horzvec();
+    PTR_ASSERT(i_cptr);
+
+    cptr = i_cptr;
 
     while(!(cptr->flags & LAST))
     {
@@ -1577,9 +1680,13 @@ schcsc(
 extern void
 FixColumns_fn(void)
 {
-    uchar flags;
-    P_SCRCOL cptr = horzvec();
+    P_SCRCOL cptr;
     P_SCRCOL last_cptr;
+    uchar flags;
+
+    assert(0 != array_elements(&horzvec_mh));
+    cptr = horzvec();
+    PTR_ASSERT(cptr);
 
     if(cptr->flags & FIX)
     {
@@ -1614,9 +1721,9 @@ filhorz(
     S32 scrwidth = (S32) cols_available;
     COL trycol;
     COL o_curcol = curcol;
-    P_SCRCOL scol = horzvec();
-    COL first_col_number = scol->colno;
-    COL fixed_colno = first_col_number;
+    P_SCRCOL scol;
+    COL first_col_number;
+    COL fixed_colno;
     coord o_colsonscreen  = colsonscreen;
     COL o_ncx = fstncx();
     coord maxwrap = 0;
@@ -1628,6 +1735,13 @@ filhorz(
 
     trace_2(TRACE_APP_PD4, "filhorz: nextcol %d curcolno %d", nextcol, currentcolno);
 
+    assert(0 != array_elements(&horzvec_mh));
+    scol = horzvec();
+    PTR_ASSERT(scol);
+
+    first_col_number = scol->colno;
+    fixed_colno = first_col_number;
+
     out_rebuildhorz = FALSE;
 
     colsonscreen = 0;
@@ -1636,6 +1750,7 @@ filhorz(
     {
         fixed = (vecoffset < n_colfixes) ? FIX : 0;
 
+        assert(horzvec_entry_valid(vecoffset));
         scol = horzvec_entry(vecoffset);
 
         trace_2(TRACE_APP_PD4, "filhorz: vecoffset %d, fixed %s", vecoffset, trace_boolstring(fixed));
@@ -1694,6 +1809,7 @@ filhorz(
 H_FILLED:
 
     curcoloffset = MIN(curcoloffset, colsonscreen-1);
+    assert(horzvec_entry_valid(curcoloffset));
     curcol = col_number(curcoloffset);
 
     if(curcol != o_curcol)
@@ -1720,8 +1836,12 @@ H_FILLED:
 extern void
 FixRows_fn(void)
 {
-    P_SCRROW rptr = vertvec();
+    P_SCRROW rptr;
     uchar flags;
+
+    assert(0 != array_elements(&vertvec_mh));
+    rptr = vertvec();
+    PTR_ASSERT(rptr);
 
     if(rptr->flags & FIX)
     {
@@ -1763,9 +1883,13 @@ cencol(
     S32 stepback;
     S32 firstcol;
     coord fixwidth = 0;
-    P_SCRCOL cptr = horzvec();
+    P_SCRCOL cptr;
 
     trace_1(TRACE_APP_PD4, "cencol(%d)", colno);
+
+    assert(0 != array_elements(&horzvec_mh));
+    cptr = horzvec();
+    PTR_ASSERT(cptr);
 
     colno = MIN(colno, numcol-1);
 
@@ -1836,10 +1960,13 @@ filvert(
     coord lines_on_screen = rows_available;
     S32 temp_pagoff;
     uchar saveflags;
-    ROW first_row_number = row_number(0);
+    ROW first_row_number;
     P_CELL tcell;
     BOOL on_break;
     S32 pictrows;
+
+    assert(vertvec_entry_valid(0));
+    first_row_number = row_number(0);
 
     pict_currow = currow;
     pict_on_currow = 0;
@@ -1865,6 +1992,7 @@ filvert(
     {
         on_break = FALSE;
 
+        assert(vertvec_entry_valid(vecoffset));
         rptr = vertvec_entry(vecoffset);
 
         saveflags = rptr->flags & (~FIX & ~LAST & ~PAGE & ~PICT & ~UNDERPICT);
@@ -1941,9 +2069,9 @@ filvert(
                 else
                 {
                     trace_2(TRACE_APP_PD4, "filvert found draw file row: %d, %d rows",
-                            nextrow, tsize_y(p_draw_file_ref->ysize_os));
+                            nextrow, tsize_y(p_draw_file_ref->y_size_os));
                     saveflags |= PICT;
-                    pictrows = tsize_y(p_draw_file_ref->ysize_os);
+                    pictrows = tsize_y(p_draw_file_ref->y_size_os);
                 }
             }
         }
@@ -1994,6 +2122,7 @@ filvert(
             currowoffset = rowsonscreen;
     }
 
+    assert(vertvec_entry_valid(rowsonscreen));
     vertvec_entry(rowsonscreen)->flags = LAST;
 
     trace_1(TRACE_APP_PD4, "filvert pict_on_screen is: %d", pict_on_screen);
@@ -2019,6 +2148,7 @@ inrowfixes1(
 {
     coord roff = schrsc(row);
 
+    assert((roff == NOTFOUND) || vertvec_entry_valid(roff));
     return((roff != NOTFOUND)  &&  (vertvec_entry_flags(roff) & FIX));
 }
 
@@ -2080,12 +2210,20 @@ chkpac(
 extern COL
 fstncx(void)
 {
-    P_SCRCOL i_cptr = horzvec();
-    P_SCRCOL cptr = i_cptr - 1;
+    P_SCRCOL i_cptr;
+    P_SCRCOL cptr;
+
+    assert(0 != array_elements(&horzvec_mh));
+    i_cptr = horzvec();
+    PTR_ASSERT(i_cptr);
+
+    cptr = i_cptr - 1; /* transiently set to BEFORE first element */
 
     while(!((++cptr)->flags & LAST))
+    {
         if(!(cptr->flags & FIX))
             return(cptr->colno);
+    }
 
     return(i_cptr->colno);
 }
@@ -2101,12 +2239,20 @@ fstncx(void)
 extern ROW
 fstnrx(void)
 {
-    P_SCRROW i_rptr = vertvec();
-    P_SCRROW rptr = i_rptr - 1;
+    P_SCRROW i_rptr;
+    P_SCRROW rptr;
+
+    assert(0 != array_elements(&vertvec_mh));
+    i_rptr = vertvec();
+    PTR_ASSERT(i_rptr);
+
+    rptr = i_rptr - 1; /* transiently set to BEFORE first element */
 
     while(!((++rptr)->flags & LAST))
+    {
         if(!(rptr->flags & (FIX | PAGE)))
             return(rptr->rowno);
+    }
 
     return(i_rptr->rowno);
 }
@@ -2195,11 +2341,13 @@ update_variables(void)
 
     grid_on = (d_options_GR == 'Y');
     new_grid_state();
-    /* may need to move caret if grid state different */
+
+    (void) new_window_width(windowwidth());
+    (void) new_window_height(windowheight());
+
+    /* may need to move caret if grid state different but do after creating horzvec & vertvec */
     position_cursor();
     xf_caretreposition = TRUE;
-
-    (void) new_window_height(windowheight());
 
     if((old_borbit != borbit)       &&
        (rear_window != window_NULL) &&
@@ -2366,7 +2514,9 @@ curosc(void)
     {
         /* if nothing on screen */
 
+        assert(0 != array_elements(&horzvec_mh));
         cptr = horzvec();
+        PTR_ASSERT(cptr);
 
         if(!scrbrc  &&  (cptr->flags & LAST))
         {
@@ -2374,16 +2524,20 @@ curosc(void)
             return;
         }
 
+        assert(horzvec_entry_valid(scrbrc));
         curcoloffset = (cptr[scrbrc].flags & LAST)
                             ? (scrbrc-1)
                             : scrbrc;
 
+        assert(horzvec_entry_valid(curcoloffset));
         curcol = cptr[curcoloffset].colno;
 
         maybe_caretreposition = TRUE;
     }
 
+    assert(0 != array_elements(&vertvec_mh));
     rptr = vertvec();
+    PTR_ASSERT(rptr);
 
     if(rptr->flags & LAST)
     {
@@ -2421,13 +2575,13 @@ curosc(void)
 ******************************************************************************/
 
 extern BOOL
-isslotblank(
+is_blank_cell(
     P_CELL tcell)
 {
     uchar *str;
     uchar ch;
 
-    if(!tcell)
+    if(NULL == tcell)
         return(TRUE);
 
     switch(tcell->type)
@@ -2487,6 +2641,7 @@ get_column(
         */
         do  {
             tryoffset = tx - calcad(trycoff);
+            assert(horzvec_entry_valid(trycoff));
             tcol  = col_number(trycoff);
             tcell = travel(tcol, trow);
         }
@@ -2500,17 +2655,20 @@ get_column(
         {
             g_newoffset = cal_offset_in_slot(tcol, trow, tcell, tryoffset, xcelloffset);
             trace_2(TRACE_APP_PD4, "preceding text cell at coff %d, g_newoffset %d", trycoff, g_newoffset);
+            assert(horzvec_entry_valid(trycoff));
             return(trycoff);
         }
         else
         {
             trace_0(TRACE_APP_PD4, "preceding non-text cell: first non-blank one");
+            assert(horzvec_entry_valid(coff));
             return(coff);
         }
     }
 
     trace_0(TRACE_APP_PD4, "ADJUST: found the underlying column");
 
+    assert(horzvec_entry_valid(coff));
     tcol  = col_number(coff);
     tcell = travel(tcol, trow);
 
@@ -2552,7 +2710,7 @@ cal_offset_in_slot(
     S32 spaces;
     S32 text_length;
 
-    in_linbuf = is_protected_slot(sl)
+    in_linbuf = is_protected_cell(sl)
                         ? FALSE
                         : ((col == curcol)  &&  (row == currow));
 
@@ -2613,6 +2771,7 @@ cal_offset_in_slot(
         if( swidth_mp > fwidth_mp)
         {
             swidth_mp = font_truncate(tbuf, fwidth_mp + ch_to_mp(fwidth_adjust_ch));
+            IGNOREVAR(swidth_mp);
 
             justify = 0;
         }

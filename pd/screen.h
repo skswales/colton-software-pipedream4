@@ -91,11 +91,11 @@ cursup(void);
 
 extern coord
 calcoff(
-    coord xpos);
+    coord x_pos);
 
 extern coord
 calcoff_overlap(
-    coord xpos,
+    coord x_pos,
     ROW trow);
 
 /* end of screen.h */

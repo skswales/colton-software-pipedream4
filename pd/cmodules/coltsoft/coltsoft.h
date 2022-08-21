@@ -244,7 +244,7 @@ ucs4_is_ascii7(
 
 _Check_return_
 static inline BOOL
-ucs4_is_latin1(
+ucs4_is_sbchar(
     _InVal_     UCS4 ucs4)
 {
     return((ucs4) < 0x00000100U);
@@ -275,46 +275,46 @@ typedef P_PC_U8Z P_PC_A7STR;
 #endif
 
 /*
-a Latin-1 8-bit character (ISO 8859-1) (may have top-bit-set)
+a Latin-N 8-bit Single Byte character (ISO 8859-N) (may have top-bit-set)
 */
 
 #if 1
-typedef      U8       L1_U8;
-typedef    P_U8     P_L1CHARS;
-typedef  P_P_U8   P_P_L1CHARS;
-typedef   PC_U8    PC_L1CHARS;
-typedef P_PC_U8  P_PC_L1CHARS;
+typedef      U8       SB_U8;
+typedef    P_U8     P_SBCHARS;
+typedef  P_P_U8   P_P_SBCHARS;
+typedef   PC_U8    PC_SBCHARS;
+typedef P_PC_U8  P_PC_SBCHARS;
 
-typedef      U8Z      L1_U8Z;
-typedef    P_U8Z    P_L1STR; /*_NullTerminated_*/
-typedef  P_P_U8Z  P_P_L1STR;
-typedef   PC_U8Z   PC_L1STR; /*_NullTerminated_*/
-typedef P_PC_U8Z P_PC_L1STR;
+typedef      U8Z      SB_U8Z;
+typedef    P_U8Z    P_SBSTR; /*_NullTerminated_*/
+typedef  P_P_U8Z  P_P_SBSTR;
+typedef   PC_U8Z   PC_SBSTR; /*_NullTerminated_*/
+typedef P_PC_U8Z P_PC_SBSTR;
 #else
-#define      L1_U8        U8
-#define    P_L1CHARS    P_U8
-#define  P_P_L1CHARS  P_P_U8
-#define   PC_L1CHARS   PC_U8
-#define P_PC_L1CHARS P_PC_U8
+#define      SB_U8        U8
+#define    P_SBCHARS    P_U8
+#define  P_P_SBCHARS  P_P_U8
+#define   PC_SBCHARS   PC_U8
+#define P_PC_SBCHARS P_PC_U8
 
-#define      L1_U8Z       U8Z
-#define    P_L1STR      P_U8Z /*_NullTerminated_*/
-#define  P_P_L1STR    P_P_U8Z
-#define   PC_L1STR     PC_U8Z /*_NullTerminated_*/
-#define P_PC_L1STR   P_PC_U8Z
+#define      SB_U8Z       U8Z
+#define    P_SBSTR      P_U8Z /*_NullTerminated_*/
+#define  P_P_SBSTR    P_P_U8Z
+#define   PC_SBSTR     PC_U8Z /*_NullTerminated_*/
+#define P_PC_SBSTR   P_PC_U8Z
 #endif
 
-#define L1STR_TEXT(text) ((PC_L1STR) (text)) /* akin to the TEXT() macro */
+#define SBSTR_TEXT(text) ((PC_SBSTR) (text)) /* akin to the TEXT() macro */
 
 /*
-RISC OS non-UNICODE
-TCHAR is Latin-1
-UCHARZ is Latin-1
+RISC OS non-UNICODE build
+TCHAR is Latin-N
+UCHARZ is Latin-N
 */
 
-#define TSTR_IS_L1STR 1
+#define TSTR_IS_SBSTR 1
 
-#define USTR_IS_L1STR 1
+#define USTR_IS_SBSTR 1
 
 #if 1
 #define    UCHARB    U8
@@ -649,6 +649,20 @@ GDI_RECT, * P_GDI_RECT; typedef const GDI_RECT * PC_GDI_RECT;
 #define if_constant(expr) \
     __pragma(warning(push)) __pragma(warning(disable:4127)) if(expr) __pragma(warning(pop))
 
+#if defined(CODE_ANALYSIS)
+#define CODE_ANALYSIS_ONLY(stmt)      stmt
+#else
+#define CODE_ANALYSIS_ONLY(stmt)      /* stmt omitted in normal build */
+#endif
+
+#if defined(CODE_ANALYSIS)
+#define CODE_ANALYSIS_ONLY_ARG(arg)   , arg
+#else
+#define CODE_ANALYSIS_ONLY_ARG(arg)   /* no arg in normal build */
+#endif
+
+#if !defined(INTRINSIC_MEMCMP)
+
 static inline int
 memcmp32(
     _In_reads_bytes_(n_bytes) PC_ANY src_1,
@@ -658,14 +672,12 @@ memcmp32(
     return(memcmp(src_1, src_2, n_bytes));
 }
 
-static inline void
-memcpy32(
-    _Out_writes_bytes_(n_bytes) P_ANY dst,
-    _In_reads_bytes_(n_bytes) PC_ANY src,
-    _InVal_     U32 n_bytes)
-{
-    (void) memcpy(dst, src, n_bytes);
-}
+#else
+
+#define memcmp32(src_1, src_2, n_bytes) \
+    memcmp(src_1, src_2, n_bytes)
+
+#endif /* INTRINSIC_MEMCMP */
 
 static inline void
 short_memcpy32nz(
@@ -682,6 +694,17 @@ short_memcpy32nz(
     while(src < end_src);
 }
 
+#if !defined(INTRINSIC_MEMCPY)
+
+static inline void
+memcpy32(
+    _Out_writes_bytes_(n_bytes) P_ANY dst,
+    _In_reads_bytes_(n_bytes) PC_ANY src,
+    _InVal_     U32 n_bytes)
+{
+    (void) memcpy(dst, src, n_bytes);
+}
+
 static inline void
 memmove32(
     _Out_writes_bytes_(n_bytes) P_ANY dst,
@@ -691,6 +714,18 @@ memmove32(
     (void) memmove(dst, src, n_bytes);
 }
 
+#else
+
+#define memcpy32(dst, src, n_bytes) \
+    (void) memcpy(dst, src, n_bytes)
+
+#define memmove32(dst, src, n_bytes) \
+    (void) memmove(dst, src, n_bytes)
+
+#endif /* INTRINSIC_MEMCPY */
+
+#if !defined(INTRINSIC_MEMSET)
+
 static inline void
 memset32(
     _Out_writes_bytes_(n_bytes) P_ANY dst,
@@ -699,6 +734,13 @@ memset32(
 {
     (void) memset(dst, byteval, n_bytes);
 }
+
+#else
+
+#define memset32(dst, byteval, n_bytes) \
+    (void) memset(dst, byteval, (n_bytes))
+
+#endif /* INTRINSIC_MEMSET */
 
 #define zero_array(_array) \
     (void) memset(_array, 0, sizeof(_array))
@@ -714,31 +756,6 @@ memset32(
 
 #define zero_32_ptr(_ptr) \
     * (P_U32) (_ptr) = 0
-
-#if defined(_PREFAST_)
-#define PREFAST_ONLY_ZERO(_ptr, _size) \
-    (void) memset(_ptr, 0, _size)
-#define PREFAST_ONLY_ZERO_STRUCT(_struct) \
-    zero_struct(_struct)
-#define PREFAST_ONLY_ZERO_STRUCT_PTR(_ptr) \
-    zero_struct_ptr(_ptr)
-#else
-#define PREFAST_ONLY_ZERO(_ptr, _size) /* nothing */
-#define PREFAST_ONLY_ZERO_STRUCT(_struct) /* nothing */
-#define PREFAST_ONLY_ZERO_STRUCT_PTR(_ptr) /* nothing */
-#endif
-
-#if defined(_PREFAST_)
-#define PREFAST_ONLY(stmt)      stmt
-#else
-#define PREFAST_ONLY(stmt)      /* stmt omitted in normal build */
-#endif
-
-#if defined(_PREFAST_)
-#define PREFAST_ONLY_ARG(arg) , arg
-#else
-#define PREFAST_ONLY_ARG(arg) /* no arg */
-#endif
 
 /******************************************************************************
 
@@ -871,7 +888,7 @@ UCS-4 character definitions
 */
 
 /*
-UCS-4 0000..001F C0 Controls
+ 0000..001F C0 Controls
 */
 
 #define CH_NULL                     0x00
@@ -880,7 +897,7 @@ UCS-4 0000..001F C0 Controls
 #define CH_ESCAPE                   0x1B
 
 /*
-UCS-4 0020..007F Basic Latin
+0020..007F Basic Latin
 */
 
 #define CH_SPACE                    0x20    /*   */
@@ -925,11 +942,11 @@ UCS-4 0020..007F Basic Latin
 #define CH_DELETE                   0x7F
 
 /*
-UCS-4 0080..009F C1 Controls
+0080..009F C1 Controls
 */
 
 /*
-UCS-4 00A0..00FF Latin-1 Supplement
+00A0..00FF Latin-1 Supplement
 */
 
 #define CH_NO_BREAK_SPACE           0xA0U
@@ -937,30 +954,30 @@ UCS-4 00A0..00FF Latin-1 Supplement
 #define CH_INVERTED_QUESTION_MARK   0xBFU
 
 /*
-UCS-4 D800..DBFF High, Low Surrogates (these are used to obtain characters >= U+10000 under UTF-16 - requires Windows 2000 or later)
+D800..DBFF High, Low Surrogates (these are used to obtain characters >= U+10000 under UTF-16 - requires Windows 2000 or later)
 */
 
-#define CH_SURROGATE_HIGH           0xD800U
-#define CH_SURROGATE_HIGH_END       0xDBFFU
-#define CH_SURROGATE_LOW            0xDC00U
-#define CH_SURROGATE_LOW_END        0xDFFFU
+#define UCH_SURROGATE_HIGH          0xD800U
+#define UCH_SURROGATE_HIGH_END      0xDBFFU
+#define UCH_SURROGATE_LOW           0xDC00U
+#define UCH_SURROGATE_LOW_END       0xDFFFU
 
 /*
 UCS-4 Noncharacters
 */
 
-#define CH_NONCHARACTER_STT         0xFDD0U
-#define CH_NONCHARACTER_END         0xFDEFU
+#define UCH_NONCHARACTER_STT        0xFDD0U
+#define UCH_NONCHARACTER_END        0xFDEFU
 
 /*
 UCS-4 Specials
 */
 
-#define CH_REPLACEMENT_CHARACTER    0xFFFDU
-#define CH_NONCHARACTER_XXFFFE      0xFFFEU
-#define CH_NONCHARACTER_XXFFFF      0xFFFFU
+#define UCH_REPLACEMENT_CHARACTER   0xFFFDU
+#define UCH_NONCHARACTER_XXFFFE     0xFFFEU
+#define UCH_NONCHARACTER_XXFFFF     0xFFFFU
 
-#define CH_UNICODE_END              0x10FFFFU /* only UCS-4 values <= this character value are valid */
+#define UCH_UNICODE_END             0x10FFFFU /* only UCS-4 values <= this character value are valid */
 
 /* type for worst case alignment */
 #if RISCOS
@@ -1011,24 +1028,18 @@ div_round_floor_fn(
     return(div_round_floor(a, b));
 }
 
-#define IGNOREPARM(p)   p=p
-#define IGNOREPARM_CONST(p) (void)p
-#define IGNOREPARM_InRef_(p)                (void)p
-#define IGNOREPARM_InoutRef_(p)             (void)p
-#define IGNOREPARM_OutRef_(p)               (void)p
-#define IGNOREPARM_InVal_(p)                (void)p
+#define IGNOREPARM(p)                       (p)=(p)
+#define IGNOREPARM_CONST(p)                 (void)(p)
+#define IGNOREPARM_InRef_(p)                (void)(p)
+#define IGNOREPARM_InoutRef_(p)             (void)(p)
+#define IGNOREPARM_OutRef_(p)               (void)(p)
+#define IGNOREPARM_InVal_(p)                (void)(p)
 
-#if defined(_PREFAST_)
-#define PREFAST_ONLY_IGNOREPARM(p)          IGNOREPARM(p)
-#define PREFAST_ONLY_IGNOREPARM_InVal_(p)   IGNOREPARM_InVal_(p)
-#else
-#define PREFAST_ONLY_IGNOREPARM(p)          /*nothing*/
-#define PREFAST_ONLY_IGNOREPARM_InVal_(p)   /*nothing*/
-#endif
+#define IGNOREVAR(v)                        (void)(v)
 
 #define consume(__base_type, expr) \
     do { \
-    __base_type v = (expr); IGNOREPARM(v); \
+    __base_type v = (expr); IGNOREVAR(v); \
     } while_constant(0)
 
 #define consume_ptr(expr) consume(PC_ANY, expr)

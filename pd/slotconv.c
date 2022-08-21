@@ -7,7 +7,7 @@
 /* Copyright (C) 1987-1998 Colton Software Limited
  * Copyright (C) 1998-2014 R W Colton */
 
-/* Slot to text conversion module */
+/* Cell to text conversion module */
 
 /* RJM 1987 */
 
@@ -43,8 +43,8 @@ entry in the font list
 typedef struct FONT_CACHE_ENTRY
 {
     font handle;
-    S32 xsize;
-    S32 ysize;
+    S32 x_size;
+    S32 y_size;
     /* U8Z name[] follows */
 }
 * P_FONT_CACHE_ENTRY;
@@ -57,8 +57,8 @@ static font
 font_cache(
     _In_reads_bytes_(namlen) const char * name,
     S32 namlen,
-    S32 xs,
-    S32 ys);
+    S32 x_size,
+    S32 y_size);
 
 static void
 font_cancel_hilites(
@@ -104,7 +104,7 @@ font_strip(
 
 static S32
 font_squash(
-    S32 ysize);
+    S32 y_size);
 
 static void
 font_super_sub(
@@ -747,8 +747,8 @@ bitstr(
 
                     if(NULL != fp)
                     {
-                        x = fp->xsize;
-                        y = fp->ysize;
+                        x = fp->x_size;
+                        y = fp->y_size;
                     }
                     else
                         x = y = 12 * 16;
@@ -777,7 +777,7 @@ bitstr(
             }
 
             /* check for font revert */
-            trace_1(TRACE_APP_PD4, "bitstr text-at field F str: %s", report_l1str(from));
+            trace_1(TRACE_APP_PD4, "bitstr text-at field F str: %s", report_sbstr(from));
             if((from[1] == text_at_char) || ((from[1] == ':') && (from[2] == text_at_char)))
             {
                 ++from;
@@ -819,8 +819,6 @@ bitstr(
                 GR_CACHE_HANDLE cah;
 
                 xstrnkpy(namebuf, elemof32(namebuf), name, len);
-
-                err = 0;
 
                 if(gr_cache_entry_query(&cah, namebuf))
                     err = gr_cache_error_query(&cah);
@@ -930,7 +928,7 @@ bitstr(
     if(revert_colour_change)
     {
         font_insert_colour_change(0, 0, 0, &to);
-        revert_colour_change = FALSE;
+      /*revert_colour_change = FALSE; redundant assignment */
     }
 
     /* add final delimiter */
@@ -1040,7 +1038,7 @@ expand_lcr(
         bitstr(tptr, row, to, fwidth,
                expand_refs, expand_ats, expand_ctrl);
 
-        trace_1(TRACE_APP_PD4, "expand_lcr: %s", report_l1str(to));
+        trace_1(TRACE_APP_PD4, "expand_lcr: %s", report_sbstr(to));
 
         if(riscos_fonts)
         {
@@ -1185,8 +1183,8 @@ static font
 font_cache(
     _In_reads_bytes_(namlen) const char *name,
     S32 namlen,
-    S32 xs,
-    S32 ys)
+    S32 x_size,
+    S32 y_size)
 {
     char namebuf[BUF_MAX_PATHSTRING];
     U32 namelen_p1;
@@ -1198,7 +1196,7 @@ font_cache(
 
     xstrnkpy(namebuf, elemof32(namebuf), name, namlen);
 
-    trace_3(TRACE_APP_PD4, "font_cache %s, x:%d, y:%d ************", report_l1str(namebuf), xs, ys);
+    trace_3(TRACE_APP_PD4, "font_cache %s, x:%d, y:%d ************", report_sbstr(namebuf), x_size, y_size);
 
     /* search list for entry */
     for(lptr = first_in_list(&font_cache_list);
@@ -1209,27 +1207,27 @@ font_cache(
 
         fp_name = (P_U8Z) (fp + 1);
 
-        if( (fp->xsize == xs)  &&
-            (fp->ysize == ys)  &&
+        if( (fp->x_size == x_size)  &&
+            (fp->y_size == y_size)  &&
             (0 == _stricmp(namebuf, fp_name)) )
         {
             if(fp->handle > 0)
             {
                 trace_4(TRACE_APP_PD4, "font_cache found cached font: (handle:%d), size: %d,%d %s",
-                        fp->handle, xs, ys, report_l1str(namebuf));
+                        fp->handle, x_size, y_size, report_sbstr(namebuf));
             }
             else
             {
                 /* matched entry in cache but need to reestablish font handle */
-                if(font_find(namebuf, xs, ys, 0, 0, &fonthan))
+                if(font_find(namebuf, x_size, y_size, 0, 0, &fonthan))
                     fonthan = 0;
                 fp->handle = fonthan;
                 if(fp->handle > 0)
                     trace_4(TRACE_APP_PD4, "font_cache reestablish cached font OK: (handle:%d) size: %d,%d %s",
-                            fonthan, xs, ys, report_l1str(namebuf));
+                            fonthan, x_size, y_size, report_sbstr(namebuf));
                 else
                     trace_4(TRACE_APP_PD4, "font_cache reestablish cached font FAIL: (handle:%d) size: %d,%d %s",
-                            fp->handle, xs, ys, report_l1str(namebuf));
+                            fp->handle, x_size, y_size, report_sbstr(namebuf));
             }
             return(fp->handle);
         }
@@ -1238,7 +1236,7 @@ font_cache(
     /* create entry for font */
 
     /* ask font manager for handle */
-    if(font_find(namebuf, xs, ys, 0, 0, &fonthan))
+    if(font_find(namebuf, x_size, y_size, 0, 0, &fonthan))
         fonthan = 0;
 
     namelen_p1 = strlen32p1(namebuf);
@@ -1246,7 +1244,7 @@ font_cache(
     if(NULL == (lptr = add_list_entry(&font_cache_list, sizeof32(struct FONT_CACHE_ENTRY) + namelen_p1, &res)))
     {
         trace_4(TRACE_APP_PD4, "font_cache failed to add entry for uncached font: (handle:%d) size: %d,%d  %s",
-                fonthan, xs, ys, report_l1str(namebuf));
+                fonthan, x_size, y_size, report_sbstr(namebuf));
         reperr_null(res);
         if(fonthan > 0)
             font_LoseFont(fonthan);
@@ -1258,14 +1256,14 @@ font_cache(
 
     fp = (P_FONT_CACHE_ENTRY) lptr->value;
     fp->handle = fonthan;
-    fp->xsize = xs;
-    fp->ysize = ys;
+    fp->x_size = x_size;
+    fp->y_size = y_size;
 
     fp_name = (P_U8Z) (fp + 1);
     memcpy(fp_name, namebuf, namelen_p1);
 
     trace_4(TRACE_APP_PD4, "font_cache found uncached font: (handle:%d) size: %d,%d %s",
-            fonthan, xs, ys, report_l1str(namebuf));
+            fonthan, x_size, y_size, report_sbstr(namebuf));
     return(fp->handle);
 }
 
@@ -1456,7 +1454,7 @@ font_derive(
     char namebuf[BUF_MAX_PATHSTRING];
 
     trace_4(TRACE_APP_PD4, "font_derive: handle: %d, name: %s %s supplement: %s",
-            handle, name, add ? "add" : "remove", report_l1str(supplement));
+            handle, name, add ? "add" : "remove", report_sbstr(supplement));
 
     if(NULL == (fp = font_find_block(handle)))
         return(0);
@@ -1478,8 +1476,8 @@ font_derive(
         }
     }
 
-    trace_1(TRACE_APP_PD4, "font_derive_font about to cache: %s", report_l1str(namebuf));
-    return(font_cache(namebuf, strlen(namebuf), fp->xsize, fp->ysize));
+    trace_1(TRACE_APP_PD4, "font_derive_font about to cache: %s", report_sbstr(namebuf));
+    return(font_cache(namebuf, strlen(namebuf), fp->x_size, fp->y_size));
 }
 
 /******************************************************************************
@@ -1548,7 +1546,7 @@ font_get_global(void)
 {
     font glob_font;
 
-    trace_1(TRACE_APP_PD4, "font_get_global: %s", report_l1str(global_font));
+    trace_1(TRACE_APP_PD4, "font_get_global: %s", report_sbstr(global_font));
 
     if((glob_font = font_cache(global_font,
                                strlen(global_font),
@@ -1743,17 +1741,17 @@ font_skip(
 
 static S32
 font_squash(
-    S32 ysize)
+    S32 y_size)
 {
     S32 limit;
 
     if(sqobit)
-        return(ysize);
+        return(y_size);
 
     limit = (fontscreenheightlimit_mp * 16) / 1000;
-    trace_3(TRACE_APP_PD4, "font_squash(%d): limit %d, limit_mp %d", ysize, limit, fontscreenheightlimit_mp);
+    trace_3(TRACE_APP_PD4, "font_squash(%d): limit %d, limit_mp %d", y_size, limit, fontscreenheightlimit_mp);
 
-    return(MIN(ysize, limit));
+    return(MIN(y_size, limit));
 }
 
 /******************************************************************************
@@ -1906,10 +1904,10 @@ font_super_sub(
 
                 if((subfont = font_cache(fp_name,
                                          strlen(fp_name),
-                                         (fp->xsize * 3) / 4,
-                                         (fp->ysize * 3) / 4)) > 0)
+                                         (fp->x_size * 3) / 4,
+                                         (fp->y_size * 3) / 4)) > 0)
                 {
-                    old_height = fp->ysize;
+                    old_height = fp->y_size;
                     start_font = fp->handle;
 
                     font_insert_change(subfont, pto);
@@ -2178,7 +2176,7 @@ result_to_string(
 
             ss_timeval_to_hms(&temp.time, &hours, &minutes, &seconds);
 
-            len += sprintf(array + len, "%.2d:%.2d:%.2d", hours, minutes, seconds);
+            /*len +=*/ consume_int(sprintf(array + len, "%.2d:%.2d:%.2d", hours, minutes, seconds));
         }
 
         if(*justify == J_LCR)
@@ -2254,7 +2252,8 @@ sprintnumber(
     width = 0, inc;
     char t_lead[10], t_trail[10];
     S32 padding, logval;
-    S32 digitwid_mp = 0, dotwid_mp = 0, thswid_mp = 0, bracwid_mp = 0;
+    S32 digitwid_mp = 1; /* keep clang happy */
+    S32 dotwid_mp = 0, thswid_mp = 0, bracwid_mp = 0;
 
     negative = brackets = FALSE;
     nextprint = array;
@@ -2263,8 +2262,10 @@ sprintnumber(
     {
         digitwid_mp = font_charwid(current_font, '0');
         dotwid_mp   = font_charwid(current_font, '.');
+        assert(0 != digitwid_mp);
 
         if(d_options_TH != TH_BLANK)
+        {
             switch(d_options_TH)
             {
             case TH_DOT:
@@ -2278,6 +2279,7 @@ sprintnumber(
                 thswid_mp = font_charwid(current_font, ' ');
                 break;
             }
+        }
     }
 
     if(value < 0.)
@@ -2442,7 +2444,7 @@ sprintnumber(
     len = sprintf(nextprint, formatstr, value);
 
     trace_2(TRACE_APP_PD4, "sprintnumber formatstr: %s, result: %s",
-            report_l1str(formatstr), report_l1str(nextprint));
+            report_sbstr(formatstr), report_sbstr(nextprint));
 
     /* work out thousands separator */
     if(d_options_TH != TH_BLANK && !eformat)

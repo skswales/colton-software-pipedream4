@@ -352,7 +352,7 @@ array_range_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
     _InVal_     ARRAY_INDEX ele_index,
     _InVal_     U32 ele_size
-    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) );
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 total_n_bytes) );
 
 _Check_return_
 _Ret_writes_(total_n_bytes) /* may be P_BYTE_NONE */
@@ -361,17 +361,17 @@ array_rangec_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
     _InVal_     ARRAY_INDEX ele_index,
     _InVal_     U32 ele_size
-    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) );
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 total_n_bytes) );
 
 /* return pointer to n array elements at given offset - NB. p_handle must point to a valid handle */
 #define array_range(pc_array_handle, __base_type, ele_index, n_elements) \
-    ((__base_type *) array_range_check(pc_array_handle, (ele_index), sizeof32(__base_type) PREFAST_ONLY_ARG(sizeof32(__base_type) * (n_elements))))
+    ((__base_type *) array_range_check(pc_array_handle, (ele_index), sizeof32(__base_type) CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type) * (n_elements))))
 
 #define array_rangec(pc_array_handle, __base_type, ele_index, n_elements) \
-    ((const __base_type *) array_rangec_check(pc_array_handle, (ele_index), sizeof32(__base_type) PREFAST_ONLY_ARG(sizeof32(__base_type) * (n_elements))))
+    ((const __base_type *) array_rangec_check(pc_array_handle, (ele_index), sizeof32(__base_type) CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type) * (n_elements))))
 
 #define array_range_generic(pc_array_handle, ele_size, ele_index, n_elements) \
-    ((P_ANY) array_range_check(pc_array_handle, (ele_index), ele_size PREFAST_ONLY_ARG(ele_size * (n_elements))))
+    ((P_ANY) array_range_check(pc_array_handle, (ele_index), ele_size CODE_ANALYSIS_ONLY_ARG(ele_size * (n_elements))))
 
 /* return pointer to n bytes at given offset */
 _Check_return_
@@ -380,10 +380,10 @@ extern P_BYTE
 array_range_bytes_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
     _InVal_     U32 byte_offset
-    PREFAST_ONLY_ARG(_InVal_ U32 n_bytes) );
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 n_bytes) );
 
 #define array_range_bytes(pc_array_handle, __ptr_type, byte_offset, n_bytes) \
-    ((__ptr_type) array_range_bytes_check(pc_array_handle, (byte_offset) PREFAST_ONLY_ARG(n_bytes)))
+    ((__ptr_type) array_range_bytes_check(pc_array_handle, (byte_offset) CODE_ANALYSIS_ONLY_ARG(n_bytes)))
 
 #else /* NOT CHECKING */
 
@@ -539,11 +539,11 @@ _al_array_add(
     _InVal_     U32 num_elements,
     _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _In_reads_bytes_(bytesof_elem_x_num_elem) PC_ANY p_data_in /*copied*/
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
 
 #define al_array_add(p_array_handle, __base_type, num_elements, p_array_init_block, p_data_in) \
     _al_array_add(p_array_handle, num_elements, p_array_init_block, p_data_in \
-    PREFAST_ONLY_ARG((num_elements) * sizeof32(__base_type)))
+    CODE_ANALYSIS_ONLY_ARG((num_elements) * sizeof32(__base_type)))
 
 _Check_return_
 _Ret_writes_maybenull_(bytesof_elem_x_num_elem)
@@ -553,11 +553,11 @@ _al_array_alloc(
     _InVal_     U32 num_elements,
     _InRef_     PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
 
 #define al_array_alloc(p_array_handle, __base_type, num_elements, p_array_init_block, p_status) ( \
     (__base_type *) _al_array_alloc(p_array_handle, num_elements, p_array_init_block, p_status \
-    PREFAST_ONLY_ARG((num_elements) * sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG((num_elements) * sizeof32(__base_type))) )
 
 _Check_return_
 extern STATUS
@@ -582,11 +582,11 @@ _al_array_bfind(
     _InRef_     PC_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch,
     _OutRef_    P_BOOL p_hit
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
 #define al_array_bfind(key, p_array_handle, __base_type, p_proc_bsearch, p_hit) ( \
     _al_array_bfind(key, p_array_handle, p_proc_bsearch, p_hit \
-    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
 _Ret_writes_maybenull_(bytesof_elem)
@@ -595,11 +595,11 @@ _al_array_bsearch(
     _In_        PC_ANY key,
     _InRef_     PC_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
 #define al_array_bsearch(key, p_array_handle, __base_type, p_proc_bsearch) ( \
     (__base_type *) _al_array_bsearch(key, p_array_handle, p_proc_bsearch \
-    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
 _Ret_writes_maybenull_(bytesof_elem)
@@ -608,11 +608,11 @@ _al_array_lsearch(
     _In_        PC_ANY key,
     _InRef_     P_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
 #define al_array_lsearch(key, p_array_handle, __base_type, p_proc_bsearch) ( \
     (__base_type *) _al_array_lsearch(key, p_array_handle, p_proc_bsearch \
-    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 extern void
 _al_array_dispose(
@@ -664,11 +664,11 @@ _al_array_insert_before(
     _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status,
     _InVal_     ARRAY_INDEX insert_before
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
 
 #define al_array_insert_before(p_array_handle, __base_type, num_elements, p_array_init_block, p_status, insert_before) ( \
     (__base_type *) _al_array_insert_before(p_array_handle, num_elements, p_array_init_block, p_status, insert_before \
-    PREFAST_ONLY_ARG((num_elements) * sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG((num_elements) * sizeof32(__base_type))) )
 
 extern void
 al_array_qsort(
@@ -688,11 +688,11 @@ _al_array_extend_by(
     _InVal_     U32 add_elements,
     _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem));
 
 #define al_array_extend_by(p_array_handle, __base_type, add_elements, p_array_init_block, p_status) ( \
     (__base_type *) _al_array_extend_by(p_array_handle, add_elements, p_array_init_block, p_status \
-    PREFAST_ONLY_ARG((add_elements) * sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG((add_elements) * sizeof32(__base_type))) )
 
 extern void
 al_array_shrink_by(
@@ -749,8 +749,8 @@ al_list_big_handles(
 simply-typed variants of ARRAY_HANDLE
 */
 
-#define    ARRAY_HANDLE_L1STR    ARRAY_HANDLE
-#define  P_ARRAY_HANDLE_L1STR  P_ARRAY_HANDLE
+#define    ARRAY_HANDLE_SBSTR    ARRAY_HANDLE
+#define  P_ARRAY_HANDLE_SBSTR  P_ARRAY_HANDLE
 
 #define    ARRAY_HANDLE_UCHARS    ARRAY_HANDLE
 #define  P_ARRAY_HANDLE_UCHARS  P_ARRAY_HANDLE

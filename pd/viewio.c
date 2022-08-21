@@ -67,7 +67,7 @@ static struct OPT_TABLE view_opts[] =
     {   O_BM,   4,          'B',    'M',    FALSE   },
     {   O_LM,   0,          'L',    'M',    FALSE   },
     {   O_PS,   255,        'S',    'R',    FALSE   },  /* convert start page to SR P n */
-#define NO_OF_PAGE_OPTS 10
+#define NO_OF_PAGE_OPTS 10U
     {   O_PE,   J_FREE,     'P',    'E',    FALSE   },
     {   O_PB,   J_FREE,     'P',    'B',    FALSE   },
     {   O_LJ,   J_LEFT,     'L',    'J',    FALSE   },
@@ -90,8 +90,50 @@ static const PC_USTR highlight_table[] =
 };
 #define HTABLE_SIZE 8
 
+#if 0
                                           /* >?@   ABCDEFGHIJK   LMNOPQRSTUVWXYZ[\] */
 static const char *extended_character_set = "© \xa0ÄÖÜäöüß`éè\x9a_ùç  °¶¢¡~§® ¥µ¼½¾";
+
+#else
+
+static const char
+extended_character_set[] =
+{
+    '\xA9', /* > -> © */
+    '\x20', /* ? ->  */
+    '\xA0', /* @ -> \xa0 */
+    '\xC4', /* A -> Ä */
+    '\xD6', /* B -> Ö */
+    '\xDC', /* C -> Ü */
+    '\xE4', /* D -> ä */
+    '\xF6', /* E -> ö */
+    '\xFC', /* F -> ü */
+    '\xDF', /* G -> ß */
+    '\x60', /* H -> ` */
+    '\xE9', /* I -> é */
+    '\xE8', /* J -> è */
+    '\x9A', /* K -> \x9a */
+    '\x5F', /* L ->  _*/
+    '\xF9', /* M -> ù */
+    '\xE7', /* N -> ç */
+    '\x20', /* O ->   */
+    '\x20', /* P ->   */
+    '\xB0', /* Q -> ° */
+    '\xB6', /* R -> ¶ */
+    '\xA2', /* S -> ¢ */
+    '\xA1', /* T -> ¡ */
+    '\x7E', /* U -> ~ */
+    '\xA7', /* V -> § */
+    '\xAE', /* W -> ® */
+    '\x20', /* X ->   */
+    '\xA5', /* Y -> ¥ */
+    '\xB5', /* Z -> µ */
+    '\xBC', /* [ -> ¼ */
+    '\xBD', /* \ -> ½ */
+    '\xBE'  /* ] -> ¾ */
+};
+
+#endif
 
 extern S32
 view_convert(
@@ -268,7 +310,7 @@ view_convert(
                     if(NULLCH != get_text_at_char())
                     {
                         linbuf[lecpos++] = get_text_at_char();
-                        *lastch = linbuf[lecpos++] = c;
+                        *lastch = linbuf[lecpos++] = (char) c;
                         c = get_text_at_char();
                         break;
                     }
@@ -431,7 +473,7 @@ view_get_stored_command(
     uchar *pageoffset)
 {
     S32 c, ch1, ch2;
-    S32 a_index = 0;
+    U32 a_index = 0;
     char array[LIN_BUFSIZ];
     char cvtarray[LIN_BUFSIZ];
     PC_USTR from;
@@ -466,7 +508,7 @@ view_get_stored_command(
             c = '\0';
 
         default:
-            if(to - array >= sizeof(array))
+            if(PtrDiffBytesU32(to, array) >= sizeof(array))
                 return(-1);
 
             *to++ = (char) c;
@@ -525,7 +567,7 @@ view_get_stored_command(
                                 break;
                             }
 
-                        *to++ = ch;
+                        *to++ = (char) ch;
                     }
                     while(ch);
 
@@ -660,7 +702,8 @@ view_load_preinit(
     BOOL *been_ruler,
     BOOL inserting)
 {
-    S32 count, offset, def;
+    U32 opt_idx;
+    S32 offset, def;
 
     trace_0(TRACE_APP_PD4, "view_load_preinit()");
 
@@ -669,24 +712,25 @@ view_load_preinit(
 
     update_dialog_from_windvars(D_POPTIONS);
 
-    count = 0;
+    opt_idx = 0;
     do  {
-        offset = view_opts[count].p_OFFset;
-        def    = view_opts[count].v_default;
+        offset = view_opts[opt_idx].p_OFFset;
+        def    = view_opts[opt_idx].v_default;
 
-        view_opts[count].v_done = FALSE;
+        view_opts[opt_idx].v_done = FALSE;
 
         if(def == 255)
             (void) mystr_set(&d_poptions[offset].textfield, NULL);
         else
             d_poptions[offset].option = (uchar) def;
     }
-    while(++count < NO_OF_PAGE_OPTS);
+    while(++opt_idx < NO_OF_PAGE_OPTS);
 
     /*count = NO_OF_PAGE_OPTS;*/
-    do
-        view_opts[count].v_done = FALSE;
-    while(++count < NO_OF_ALL_OPTS);
+    do  {
+        view_opts[opt_idx].v_done = FALSE;
+    }
+    while(++opt_idx < NO_OF_ALL_OPTS);
 
     update_windvars_from_dialog(D_POPTIONS);
 
@@ -705,6 +749,7 @@ view_save_ruler_options(
     FILE_HANDLE output)
 {
     coord rmargin, count, thiswidth, scount;
+    U32 opt_idx;
     COL tcol;
     S32 offset;
     uchar array[20];
@@ -771,16 +816,16 @@ view_save_ruler_options(
 
     update_dialog_from_windvars(D_POPTIONS);
 
-    for(count = 0; res  &&  (count < NO_OF_PAGE_OPTS); count++)
+    for(opt_idx = 0; res  &&  (opt_idx < NO_OF_PAGE_OPTS); opt_idx++)
     {
         out_stored = FALSE;
         margin = -1;
 
         /* set up 2 letter stored command */
-        *array   = view_opts[count].v_sc1;
-        array[1] = view_opts[count].v_sc2;
+        *array   = view_opts[opt_idx].v_sc1;
+        array[1] = view_opts[opt_idx].v_sc2;
 
-        offset = view_opts[count].p_OFFset;
+        offset = view_opts[opt_idx].p_OFFset;
 
         switch(offset)
         {
@@ -823,7 +868,7 @@ view_save_ruler_options(
                             break;
                         }
 
-                    *to++ = ch;
+                    *to++ = (char) ch;
                 }
                 while(ch);
 
@@ -844,7 +889,7 @@ view_save_ruler_options(
             }
 
             /* don't bother if same as VIEW default */
-            if(view_opts[count].v_default == (uchar) margin)
+            if(view_opts[opt_idx].v_default == (uchar) margin)
                 margin = -1;
 
             break;
@@ -860,7 +905,7 @@ view_save_ruler_options(
             }
 
             /* don't bother if same as VIEW default */
-            if(view_opts[count].v_default == (uchar) margin)
+            if(view_opts[opt_idx].v_default == (uchar) margin)
                 margin = -1;
 
             break;
@@ -868,7 +913,7 @@ view_save_ruler_options(
         case O_PL:
         case O_LM:
             /* PD and VIEW the same */
-            if(view_opts[count].v_default != d_poptions[offset].option)
+            if(view_opts[opt_idx].v_default != d_poptions[offset].option)
                 margin = d_poptions[offset].option;
 
             break;

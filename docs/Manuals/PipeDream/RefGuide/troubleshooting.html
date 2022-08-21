@@ -37,17 +37,17 @@ solutions.</p>
 turned on in the <span class="csguide-dbox">Options</span> dialogue box.
 Have you typed any spaces into the line? If you have typed just one long word
 or string of characters without spaces, when you get to the right margin,
-PipeDream scrolls the slot rather than splitting your word and starting a new
+PipeDream scrolls the cell rather than splitting your word and starting a new
 line.</p>
 
-<h4>When I perform a layout operation on a slot, nothing seems to happen</h4>
+<h4>When I perform a layout operation on a cell, nothing seems to happen</h4>
 
-<p>Many operations act on either a slot or on a block of slots. If there is a
+<p>Many operations act on either a cell or on a block of cells. If there is a
 marked block, the operation will be performed on the block. If there is no
-marked block, it will be performed on the slot containing the caret. If you
-want the operation to act only upon the current slot, you need to ensure that
+marked block, it will be performed on the cell containing the caret. If you
+want the operation to act only upon the current cell, you need to ensure that
 there isn't a marked block in the document. If there is a marked block in the
-document, the mark block box will be inverted. Either mark the slot to which
+document, the mark block box will be inverted. Either mark the cell to which
 you want the operation to apply or click Select on the mark block box before
 carrying out the operation.</p>
 
@@ -56,26 +56,26 @@ Free Align, Decimal Places, Sign Brackets, Sign Minus, Leading Characters,
 Trailing Characters, Default Format, Remove Highlights, Highlight Block, Number
 &lt;&gt; Text, Snapshot, Clear Protection, Set Protection.</p>
 
-<h4>I cannot get arithmetic to work. For example, if I put A1+B1 in slot C1, I
+<h4>I cannot get arithmetic to work. For example, if I put A1+B1 in cell C1, I
 just get what was in A1 or l get 0 or the message Unexpected string</h4>
 
-<p>Arithmetic can only be done on number slots. If a formula in one slot
-contains references to other slots, you must ensure that all the slots referred
-to are number slots. A simple way to see if a slot is a number slot is to look
-at its justification. If it is a text slot, it will probably be left-justified;
-if it is a number slot, it will probably be right-justified with two decimal
-places. Slots are text slots by default. To convert a text slot to a number
-slot, position the caret in the slot, click Select in the formula line and
-press <span class="csguide-key">Enter</span>. To convert a lot of slots from text slots to number
-slots, mark the slots as a block and give the <span
+<p>Arithmetic can only be done on number cells. If a formula in one cell
+contains references to other cells, you must ensure that all the cells referred
+to are number cells. A simple way to see if a cell is a number cell is to look
+at its justification. If it is a text cell, it will probably be left-justified;
+if it is a number cell, it will probably be right-justified with two decimal
+places. Cells are text cells by default. To convert a text cell to a number
+cell, position the caret in the cell, click Select in the formula line and
+press <span class="csguide-key">Enter</span>. To convert a lot of cells from text cells to number
+cells, mark the cells as a block and give the <span
 class="csguide-option">Number&lt;&gt;Text</span> command
 (<span class="csguide-key">Ctrl-ENT</span>). Note that this command works both ways, so that any
-number slots in your marked block will be converted to text slots. If you want
-to enter a lot of number slots all at once, you may find it helpful to set the
-<span class="csguide-option">New slot format</span> option in the <span
+number cells in your marked block will be converted to text cells. If you want
+to enter a lot of number cells all at once, you may find it helpful to set the
+<span class="csguide-option">New cell format</span> option in the <span
 class="csguide-dbox">Options</span> dialogue box to <span
-class="csguide-option">Numbers</span>. See <a href="numberslots.html">Number
-Slots</a>.</p>
+class="csguide-option">Numbers</span>. See <a href="numbercells.html">Number
+Cells</a>.</p>
 
 <h4>When I type in numbers, they are displayed as % signs</h4>
 
@@ -86,7 +86,7 @@ that all columns are the correct width to display the widest entry in the
 column.</p>
 
 <h4>When I load my file, it has lost all its column information and highlights
-and I just get the values from number slots, without the formulae.</h4>
+and I just get the values from number cells, without the formulae.</h4>
 
 <p>The file was not saved in PipeDream format. Bring up the <span
 class="csguide-dbox">Save</span> dialogue box and set the <span

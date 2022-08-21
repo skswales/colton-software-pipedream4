@@ -176,7 +176,8 @@ messagef(
 
     err.errnum = 0;
 
-    consume_int(vsnprintf(err.errmess, elemof32(err.errmess), format, args));
+    if(vsnprintf(err.errmess, elemof32(err.errmess), format, args) < 0)
+        err.errmess[0] = CH_NULL;
 
     wimpt_complain(&err);
 #endif
@@ -219,10 +220,10 @@ reperr(
     /* unusual start due to text being passed too */
     va_start(args, errornumber);
 
-    errorp = reperr_getstr(errornumber);
-
     if(errornumber == ERR_OUTPUTSTRING)
+    {
         errorp = "%s";
+    }
     else
     {
         errorp = reperr_getstr(errornumber);
@@ -236,12 +237,6 @@ reperr(
                 xstrkat(array, elemof32(array), " %s");
                 errorp = array;
             }
-        }
-        else
-        {
-            /* ensure %s error messages don't look too bad */
-            if(!text)
-                text = "";
         }
     }
 
@@ -264,7 +259,8 @@ reperr(
 
         err.errnum = 0;
 
-        consume_int(vsnprintf(err.errmess, elemof32(err.errmess), errorp, args));
+        if(vsnprintf(err.errmess, elemof32(err.errmess), errorp, args) < 0)
+            err.errmess[0] = CH_NULL;
 
         wimpt_complain(&err);
     }
@@ -303,7 +299,7 @@ reperr_getstr(
 *
 ******************************************************************************/
 
-extern S32
+extern STATUS
 reperr_not_installed(
     STATUS errornumber)
 {
@@ -318,14 +314,14 @@ reperr_not_installed(
 *
 ******************************************************************************/
 
-extern S32
+extern STATUS
 reperr_null(
     STATUS errornumber)
 {
     return(reperr(errornumber, NULL));
 }
 
-extern S32
+extern STATUS
 rep_fserr(
     PC_U8 str)
 {
@@ -349,7 +345,8 @@ reperr_fatal(
 
     err.errnum = 0;
 
-    consume_int(vsnprintf(err.errmess, elemof32(err.errmess), format, args));
+    if(vsnprintf(err.errmess, elemof32(err.errmess), format, args) < 0)
+        err.errmess[0] = CH_NULL;
 
     wimpt_noerr(&err);
 #else

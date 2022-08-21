@@ -19,7 +19,7 @@
 <table width="100%" summary="Navigation header">
 <tr>
 <td width="20%" align="left"><a accesskey="p" href="installation.html">Prev</a> </td>
-<th width="60%" align="center">PipeDream 4 Tutorial</th>
+<th width="60%" align="center">PipeDream Tutorial</th>
 <td width="20%" align="right"> <a accesskey="n" href="commands.html">Next</a></td>
 </tr>
 </table>
@@ -43,27 +43,27 @@ bar.</p>
 <div><img src="images/pd_new_window.png" width=683 height=277 alt="PipeDream window" /></div>
 
 <p>What you see is an empty PipeDream document window. It is divided into rows and
-columns referred to by A,B,C, etc. from left to right. When you first open a
+columns referred to by A, B, C, etc. from left to right. When you first open a
 PipeDream window, only row 1 is displayed.</p>
 
-<p>The part of a document lying in one row and one column is called a slot and
+<p>The part of a document lying in one row and one column is called a cell and
 can be referred to by its column and row coordinates, for example B1.</p>
 
 <h2>Columns</h2>
 
-<p>A PipeDream document is made up of slots of two types: text slots and number
-slots. Text in a text slot is allowed to overlap any blank slots to its right
-up to the right margin position. However, number slots are not allowed to
+<p>A PipeDream document is made up of cells of two types: text cells and number
+cells. Text in a text cell is allowed to overlap any blank cells to its right
+up to the right margin position. However, number cells are not allowed to
 overlap other columns. It is this very simple distinction between text and
 numbers which is at the heart of PipeDream.</p>
 
 <p>It can be helpful to think of each column as being a transparent sheet of
 paper overlaying the columns to its left.</p>
 
-<p>Moving the pointer into a slot and clicking Select positions the caret in
-the slot, unless there is anything in a text slot to the left which could
-overlap the slot containing the pointer. Remember that number slots cannot
-overlap slots to the right of them.</p>
+<p>Moving the pointer into a cell and clicking Select positions the caret in
+the cell, unless there is anything in a text cell to the left which could
+overlap the cell containing the pointer. Remember that number cells cannot
+overlap cells to the right of them.</p>
 
 <p>Consider the following case:</p>
 
@@ -93,7 +93,7 @@ overlap slots to the right of them.</p>
     <tr>
       <th class="csguide-border-rowhead">2</th>
       <td colspan="2">This text in column A overlaps
-        slot B2. </td>
+        cell B2. </td>
       <td></td>
       <td></td>
     </tr>
@@ -129,31 +129,31 @@ overlap slots to the right of them.</p>
 </table>
 </div>
 
-<p>If you move the pointer into slot C1 and click Select, the caret will be
-positioned in slot C1. There is nothing to the left of slot C1 which could
+<p>If you move the pointer into cell C1 and click Select, the caret will be
+positioned in cell C1. There is nothing to the left of cell C1 which could
 overlap it.</p>
 
-<p>If you move the pointer into slot C2 and click Select, the caret will be
-positioned in slot A2 as slot A2 contains text and could overlap slot C2.</p>
+<p>If you move the pointer into cell C2 and click Select, the caret will be
+positioned in cell A2 as cell A2 contains text and could overlap cell C2.</p>
 
-<p>If you move the pointer into slot C3 and click Select, the caret will be
-positioned in slot A3 as slot A3 contains text and could overlap slot C3.</p>
+<p>If you move the pointer into cell C3 and click Select, the caret will be
+positioned in cell A3 as cell A3 contains text and could overlap cell C3.</p>
 
-<p>If you move the pointer into slot C4 and click Select, the caret will be
-positioned in slot B4 as slot B4 contains text and could overlap slot C4</p>
+<p>If you move the pointer into cell C4 and click Select, the caret will be
+positioned in cell B4 as cell B4 contains text and could overlap cell C4</p>
 
-<p>If you position the pointer in slot C5 and click Select, the caret will be
-positioned in slot C5. Because slot B5 is a number slot, it cannot overlap slot
+<p>If you position the pointer in cell C5 and click Select, the caret will be
+positioned in cell C5. Because cell B5 is a number cell, it cannot overlap cell
 C5.</p>
 
-<p>If you position the pointer in slot C6 and click Select, the caret will be
-positioned in slot C6. Although slot A6 has contents, it is a number slot and
-so cannot overlap slot C6.</p>
+<p>If you position the pointer in cell C6 and click Select, the caret will be
+positioned in cell C6. Although cell A6 has contents, it is a number cell and
+so cannot overlap cell C6.</p>
 
 <p>Clicking <span class="csguide-key">Ctrl</span>-Select always positions the
-caret in the slot containing the pointer. So, in all the above cases, clicking
+caret in the cell containing the pointer. So, in all the above cases, clicking
 <span class="csguide-key">Ctrl</span>-Select would position the caret in the
-relevant slot in column C.</p>
+relevant cell in column C.</p>
 
 <h2>Interactive Help</h2>
 

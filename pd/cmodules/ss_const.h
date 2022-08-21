@@ -65,6 +65,7 @@ typedef unsigned char       EV_IDNO; typedef EV_IDNO * P_EV_IDNO;
 
 typedef unsigned char       EV_FLAGS;
 #define FLAGS_SIZE          8
+#define EV_FLAGS_INIT       0
 
 typedef int                 EV_NAMEID; typedef EV_NAMEID * P_EV_NAMEID;
 
@@ -135,10 +136,10 @@ date/time type
 */
 
 typedef S32 EV_DATE_DATE; typedef EV_DATE_DATE * P_EV_DATE_DATE; typedef const EV_DATE_DATE * PC_EV_DATE_DATE;
-#define EV_DATE_INVALID 0 /*S32_MIN*/
+#define EV_DATE_NULL 0 /*S32_MIN*/
 
 typedef S32 EV_DATE_TIME; typedef EV_DATE_TIME * P_EV_DATE_TIME; typedef const EV_DATE_TIME * PC_EV_DATE_TIME;
-#define EV_TIME_INVALID 0 /*S32_MIN*/
+#define EV_TIME_NULL 0 /*S32_MIN*/
 
 typedef struct EV_DATE
 {
@@ -151,8 +152,8 @@ static inline void
 ev_date_init(
     _OutRef_    P_EV_DATE p_ev_date)
 {
-    p_ev_date->date = EV_DATE_INVALID;
-    p_ev_date->time = EV_TIME_INVALID;
+    p_ev_date->date = EV_DATE_NULL;
+    p_ev_date->time = EV_TIME_NULL;
 }
 
 /*
@@ -269,9 +270,6 @@ RISCOS_TIME_ORDINALS;
 ss_const.c
 */
 
-extern const S32 ev_days_in_month[];
-extern const S32 ev_days_in_month_leap[];
-
 /*
 ss_const.c external functions
 */
@@ -292,7 +290,8 @@ extern F64
 real_trunc(
     _InVal_     F64 f64);
 
-extern void
+/*ncr*/
+extern STATUS
 real_to_integer_force(
     _InoutRef_  P_EV_DATA p_ev_data);
 
@@ -359,60 +358,6 @@ ss_data_resource_copy(
     _OutRef_    P_EV_DATA p_ev_data_out,
     _InRef_     PC_EV_DATA p_ev_data_in);
 
-extern void
-ss_date_normalise(
-    _InoutRef_  P_EV_DATE datep);
-
-_Check_return_
-extern STATUS
-ss_dateval_to_ymd(
-    _InRef_     PC_EV_DATE_DATE p_ev_date_date,
-    _OutRef_    P_S32 p_day,
-    _OutRef_    P_S32 p_month,
-    _OutRef_    P_S32 p_year);
-
-/*ncr*/
-extern S32
-ss_ymd_to_dateval(
-    _OutRef_    P_EV_DATE_DATE p_ev_date_date,
-    _In_        S32 year,
-    _In_        S32 month,
-    _In_        S32 day);
-
-/*ncr*/
-extern S32
-ss_hms_to_timeval(
-    _OutRef_    P_EV_DATE_TIME p_ev_date_time,
-    _InVal_     S32 hours,
-    _InVal_     S32 minutes,
-    _InVal_     S32 seconds);
-
-extern void
-ss_local_time(
-    _OutRef_    P_S32 p_year,
-    _OutRef_    P_S32 p_month,
-    _OutRef_    P_S32 p_day,
-    _OutRef_    P_S32 p_hours,
-    _OutRef_    P_S32 p_minutes,
-    _OutRef_    P_S32 p_seconds);
-
-extern void
-ss_local_time_as_ev_date(
-    _OutRef_    P_EV_DATE p_ev_date);
-
-_Check_return_
-extern S32
-sliding_window_year(
-    _In_        S32 year);
-
-_Check_return_
-extern STATUS
-ss_timeval_to_hms(
-    _InRef_     PC_EV_DATE_TIME p_ev_date_time,
-    _OutRef_    P_S32 p_hours,
-    _OutRef_    P_S32 p_minutes,
-    _OutRef_    P_S32 p_seconds);
-
 _Check_return_
 extern BOOL
 ss_string_is_blank(
@@ -449,6 +394,77 @@ enum TWO_NUM_TYPES
     TWO_REALS,
     TWO_MIXED
 };
+
+/*
+ss_date.c
+*/
+
+extern const S32 ev_days_in_month[];
+extern const S32 ev_days_in_month_leap[];
+
+/*
+ss_date.c external functions
+*/
+
+/* conversion to / from dateval */
+
+_Check_return_
+extern STATUS
+ss_dateval_to_ymd(
+    _InRef_     PC_EV_DATE_DATE p_ev_date_date,
+    _OutRef_    P_S32 p_day,
+    _OutRef_    P_S32 p_month,
+    _OutRef_    P_S32 p_year);
+
+/*ncr*/
+extern S32
+ss_ymd_to_dateval(
+    _OutRef_    P_EV_DATE_DATE p_ev_date_date,
+    _In_        S32 year,
+    _In_        S32 month,
+    _In_        S32 day);
+
+/* conversion to / from timeval */
+
+_Check_return_
+extern STATUS
+ss_timeval_to_hms(
+    _InRef_     PC_EV_DATE_TIME p_ev_date_time,
+    _OutRef_    P_S32 p_hours,
+    _OutRef_    P_S32 p_minutes,
+    _OutRef_    P_S32 p_seconds);
+
+/*ncr*/
+extern S32
+ss_hms_to_timeval(
+    _OutRef_    P_EV_DATE_TIME p_ev_date_time,
+    _InVal_     S32 hours,
+    _InVal_     S32 minutes,
+    _InVal_     S32 seconds);
+
+/* date processing */
+
+extern void
+ss_date_normalise(
+    _InoutRef_  P_EV_DATE datep);
+
+extern void
+ss_local_time(
+    _OutRef_    P_S32 p_year,
+    _OutRef_    P_S32 p_month,
+    _OutRef_    P_S32 p_day,
+    _OutRef_    P_S32 p_hours,
+    _OutRef_    P_S32 p_minutes,
+    _OutRef_    P_S32 p_seconds);
+
+extern void
+ss_local_time_as_ev_date(
+    _OutRef_    P_EV_DATE p_ev_date);
+
+_Check_return_
+extern S32
+sliding_window_year(
+    _In_        S32 year);
 
 #endif /* __ss_const_h */
 

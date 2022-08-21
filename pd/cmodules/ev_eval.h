@@ -23,6 +23,8 @@
 #if RISCOS || WINDOWS
 
 typedef int                 EV_TRENT;
+#define EV_TRENT_INIT       0
+
 typedef U32                 EV_SERIAL;
 
 #define SLOTS_MOVE                      /* pool-based handlist */
@@ -49,8 +51,10 @@ typedef struct DOCU_NAME
 }
 DOCU_NAME, * P_DOCU_NAME; typedef const DOCU_NAME * PC_DOCU_NAME;
 
+#define DOCU_NAME_INIT { NULL, NULL, { 0 } }
+
 /*
-slot/range flags
+cell/range flags
 */
 
 #define SLR_ABS_COL         1
@@ -292,9 +296,17 @@ typedef struct DEPTABLE
 }
 DEPTABLE, * P_DEPTABLE;
 
+#define DEPTABLE_INIT { \
+    NULL, \
+    EV_TRENT_INIT, \
+    EV_TRENT_INIT, \
+    EV_TRENT_INIT, \
+    EV_FLAGS_INIT, \
+    EV_TRENT_INIT  \
+}
+
 /*
-* the document tree is an array of docentry
-* structures, indexed by document number
+* the document tree is an array of docentry structures, indexed by document number
 */
 
 typedef struct SS_DOC
@@ -314,6 +326,19 @@ typedef struct SS_DOC
     S32 stack_max;                      /* maximum size of stack used by this doc */
 }
 SS_DOC, * P_SS_DOC;
+
+#define SS_DOC_INIT { \
+    DOCU_NAME_INIT, \
+    EV_FLAGS_INIT, \
+    FALSE, \
+    0, \
+    DEPTABLE_INIT, \
+    DEPTABLE_INIT, \
+    DEPTABLE_INIT, \
+    0, \
+    0, \
+    0  \
+}
 
 /*
 rpn atomic numbers
@@ -452,6 +477,7 @@ enum DID_NUMBERS
     RPN_FNF_COT         ,
     RPN_FNF_COTH        ,
     RPN_FNV_COUNT       ,
+    RPN_FNV_COUNTA      ,
     RPN_FNF_CTERM       ,
 
     RPN_FNF_DATE        ,
@@ -606,6 +632,8 @@ enum DID_NUMBERS
     /* arrays */
     RPN_FNA_MAKEARRAY   ,
 
+#define ELEMOF_RPN_TABLE (RPN_FNA_MAKEARRAY + 1)
+
     /* special symbol constants - these symbols
      * don't appear in the final rpn string
     */
@@ -660,8 +688,8 @@ type mask bits
 #define EM_ERR      256
 #define EM_INT      512     /* function wants integers */
 
-#define EM_ANY      (EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_ERR)
-#define EM_CONST    (EM_REA | EM_INT |          EM_STR | EM_DAT          | EM_BLK | EM_ERR)
+#define EM_ANY      (EM_REA | EM_SLR | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_ERR | EM_INT)
+#define EM_CONST    (EM_REA          | EM_STR | EM_DAT          | EM_BLK | EM_ERR | EM_INT)
 
 typedef S16 EV_TYPE; typedef EV_TYPE * P_EV_TYPE; typedef const EV_TYPE * PC_EV_TYPE;
 
@@ -673,10 +701,13 @@ static inline EV_IDNO
 ev_integer_size(
     _InVal_     S32 integer)
 {
-    if((integer >= 0) && (integer <= (S32) U8_MAX))
+    if( (integer <=   (S32) S8_MAX) &&
+        (integer >=   (S32) S8_MIN) )
         return(RPN_DAT_WORD8);
 
-    if((integer >= (S32) S16_MIN) && (integer <= (S32) S16_MAX))
+    /* S16_MAX + 1 for ARM immediate constant */
+    if( (integer <   ((S32) S16_MAX + 1)) &&
+        (integer > - ((S32) S16_MAX + 1)) /*NB NOT S16_MIN */ )
         return(RPN_DAT_WORD16);
 
     return(RPN_DAT_WORD32);
@@ -694,7 +725,7 @@ static inline void
 ev_data_set_blank(
     _OutRef_    P_EV_DATA p_ev_data)
 {
-    PREFAST_ONLY_ZERO_STRUCT_PTR(p_ev_data); /* keep dataflower happy */
+    CODE_ANALYSIS_ONLY(zero_struct_ptr(p_ev_data)); /* keep dataflower happy */
     p_ev_data->did_num = RPN_DAT_BLANK;
 }
 
@@ -703,7 +734,7 @@ ev_data_set_boolean(
     _OutRef_    P_EV_DATA p_ev_data,
     _InVal_     BOOL boolean)
 {
-    p_ev_data->did_num = RPN_DAT_WORD8;
+    p_ev_data->did_num = RPN_DAT_BOOL8;
     p_ev_data->arg.boolean = boolean;
 }
 
@@ -1036,7 +1067,9 @@ static inline P_SS_DOC
 ev_p_ss_doc_from_docno_must(
     _InVal_     EV_DOCNO docno)
 {
-    return(ev_p_ss_doc_from_docno(docno));
+    P_SS_DOC p_ss_doc = ev_p_ss_doc_from_docno(docno);
+    PTR_ASSERT(p_ss_doc);
+    return(p_ss_doc);
 }
 
 extern void
@@ -1088,7 +1121,8 @@ ev_name_del_hold(void);
 extern void
 ev_name_del_release(void);
 
-extern S32
+_Check_return_
+extern STATUS
 ev_name_make(
     P_U8 name_text,
     _InVal_     EV_DOCNO docno_from,
@@ -1248,7 +1282,7 @@ error definition
     errorstring(EVAL_ERR_NORETURN,       "No RESULT in custom function") \
     errorstring(EVAL_ERR_NA,             "Value not defined") \
     errorstring(EVAL_ERR_NOTIMPLEMENTED, "Not implemented") \
-    errorstring(EVAL_ERR_SLR_BAD_REF,    "Slot deleted") \
+    errorstring(EVAL_ERR_SLR_BAD_REF,    "Cell deleted") \
     errorstring(EVAL_ERR_NOTIME,         "No time value") \
     errorstring(EVAL_ERR_NODATE,         "No date value") \
     errorstring(EVAL_ERR_BADIDENT,       "Bad identifier") \

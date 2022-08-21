@@ -325,7 +325,7 @@ do_execfile(
     uchar array[LIN_BUFSIZ];
     uchar *ptr;
 
-    if((filetype_option = find_filetype_option(filename)) < 0)
+    if((filetype_option = find_filetype_option(filename, FILETYPE_UNDETERMINED)) < 0)
         return; /* error already reported */
 
     if(filetype_option != 'T')

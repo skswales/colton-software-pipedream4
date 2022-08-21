@@ -122,14 +122,14 @@ PROC_EXEC_PROTO(c_add)
         case RPN_DAT_DATE:
             p_ev_data_res->did_num = RPN_DAT_DATE;
 
-            if(EV_DATE_INVALID != args[1]->arg.ev_date.date)
+            if(EV_DATE_NULL != args[1]->arg.ev_date.date)
             {
                 p_ev_data_res->arg.ev_date.date = args[1]->arg.ev_date.date + args[0]->arg.integer;
                 p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time;
             }
             else
             {
-                p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                p_ev_data_res->arg.ev_date.date = EV_DATE_NULL;
                 p_ev_data_res->arg.ev_date.time = args[1]->arg.ev_date.time + args[0]->arg.integer;
                 ss_date_normalise(&p_ev_data_res->arg.ev_date);
             }
@@ -151,14 +151,14 @@ PROC_EXEC_PROTO(c_add)
         case RPN_DAT_WORD32:
             p_ev_data_res->did_num = RPN_DAT_DATE;
 
-            if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
+            if(EV_DATE_NULL != args[0]->arg.ev_date.date)
             {
                 p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date + args[1]->arg.integer;
                 p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
             }
             else
             {
-                p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                p_ev_data_res->arg.ev_date.date = EV_DATE_NULL;
                 p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time + args[1]->arg.integer;
                 ss_date_normalise(&p_ev_data_res->arg.ev_date);
             }
@@ -220,14 +220,14 @@ PROC_EXEC_PROTO(c_sub)
         case RPN_DAT_WORD32:
             p_ev_data_res->did_num = RPN_DAT_DATE;
 
-            if(EV_DATE_INVALID != args[0]->arg.ev_date.date)
+            if(EV_DATE_NULL != args[0]->arg.ev_date.date)
             {
                 p_ev_data_res->arg.ev_date.date = args[0]->arg.ev_date.date - args[1]->arg.integer;
                 p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time;
             }
             else
             {
-                p_ev_data_res->arg.ev_date.date = EV_DATE_INVALID;
+                p_ev_data_res->arg.ev_date.date = EV_DATE_NULL;
                 p_ev_data_res->arg.ev_date.time = args[0]->arg.ev_date.time - args[1]->arg.integer;
                 ss_date_normalise(&p_ev_data_res->arg.ev_date);
             }
@@ -578,31 +578,26 @@ args_array_range_proc(
     P_EV_DATA args[EV_MAX_ARGS],
     S32 n_args,
     P_EV_DATA p_ev_data_res,
-    EV_IDNO function_id);
+    _InVal_     EV_IDNO function_id);
 
 static void
 array_range_proc(
-    P_STAT_BLOCK stbp,
+    P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data);
 
 static void
 array_range_proc_array(
-    P_STAT_BLOCK stbp,
+    P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data);
 
 static void
 array_range_proc_finish(
     _OutRef_    P_EV_DATA p_ev_data,
-    P_STAT_BLOCK stbp);
+    _InRef_     P_STAT_BLOCK p_stat_block);
 
 static void
 array_range_proc_item(
-    P_STAT_BLOCK stbp,
-    P_EV_DATA p_ev_data);
-
-static void
-array_range_proc_item_add(
-    P_STAT_BLOCK stbp,
+    P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data);
 
 static S32
@@ -639,7 +634,7 @@ PROC_EXEC_PROTO(c_avg)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DAVG);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_AVG);
 }
 
 /******************************************************************************
@@ -652,7 +647,20 @@ PROC_EXEC_PROTO(c_count)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DCOUNT);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_COUNT);
+}
+
+/******************************************************************************
+*
+* counta(list)
+*
+******************************************************************************/
+
+PROC_EXEC_PROTO(c_counta)
+{
+    exec_func_ignore_parms();
+
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_COUNTA);
 }
 
 /******************************************************************************
@@ -714,7 +722,7 @@ PROC_EXEC_PROTO(c_max)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DMAX);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_MAX);
 }
 
 /******************************************************************************
@@ -727,12 +735,12 @@ PROC_EXEC_PROTO(c_min)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DMIN);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_MIN);
 }
 
 /******************************************************************************
 *
-* mirr(values_array, finance_rate, reinvest_rate
+* mirr(values_array, finance_rate, reinvest_rate)
 *
 ******************************************************************************/
 
@@ -772,7 +780,7 @@ PROC_EXEC_PROTO(c_std)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DSTD);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_STD);
 }
 
 /******************************************************************************
@@ -785,7 +793,7 @@ PROC_EXEC_PROTO(c_stdp)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DSTDP);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_STDP);
 }
 
 /******************************************************************************
@@ -798,7 +806,7 @@ PROC_EXEC_PROTO(c_sum)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DSUM);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_SUM);
 }
 
 /******************************************************************************
@@ -811,7 +819,7 @@ PROC_EXEC_PROTO(c_var)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DVAR);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_VAR);
 }
 
 /******************************************************************************
@@ -824,7 +832,7 @@ PROC_EXEC_PROTO(c_varp)
 {
     exec_func_ignore_parms();
 
-    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNF_DVARP);
+    args_array_range_proc(args, n_args, p_ev_data_res, RPN_FNV_VARP);
 }
 
 /******************************************************************************
@@ -838,7 +846,7 @@ args_array_range_proc(
     P_EV_DATA args[EV_MAX_ARGS],
     S32 n_args,
     P_EV_DATA p_ev_data_res,
-    EV_IDNO function_id)
+    _InVal_     EV_IDNO function_id)
 {
     S32 i;
     STAT_BLOCK stb;
@@ -853,21 +861,20 @@ args_array_range_proc(
 
 /******************************************************************************
 *
-* process data for arrays and ranges for
-* the statistical functions
+* process data for arrays and ranges for the statistical functions
 *
 ******************************************************************************/
 
 static void
 array_range_proc(
-    P_STAT_BLOCK stbp,
+    P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data)
 {
     switch(p_ev_data->did_num)
     {
     case RPN_TMP_ARRAY:
     case RPN_RES_ARRAY:
-        array_range_proc_array(stbp, p_ev_data);
+        array_range_proc_array(p_stat_block, p_ev_data);
         break;
 
     case RPN_DAT_RANGE:
@@ -878,26 +885,26 @@ array_range_proc(
         {
             EV_DATA element;
 
-            while(range_scan_element(&rsb,
-                                     &element,
-                                     EM_REA | EM_ARY | EM_BLK | EM_DAT) != RPN_FRM_END)
+            while(range_scan_element(&rsb, &element, EM_REA | EM_ARY | EM_BLK | EM_DAT | EM_INT) != RPN_FRM_END)
+            {
                 switch(element.did_num)
                 {
                 case RPN_TMP_ARRAY:
                 case RPN_RES_ARRAY:
-                    array_range_proc_array(stbp, &element);
+                    array_range_proc_array(p_stat_block, &element);
                     break;
                 default:
-                    array_range_proc_item(stbp, &element);
+                    array_range_proc_item(p_stat_block, &element);
                     break;
                 }
+            }
         }
 
         break;
         }
 
     default:
-        array_range_proc_item(stbp, p_ev_data);
+        array_range_proc_item(p_stat_block, p_ev_data);
         break;
     }
 }
@@ -910,7 +917,7 @@ array_range_proc(
 
 static void
 array_range_proc_array(
-    P_STAT_BLOCK stbp,
+    P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data)
 {
     ARRAY_SCAN_BLOCK asb;
@@ -919,35 +926,9 @@ array_range_proc_array(
     {
         EV_DATA element;
 
-        while(array_scan_element(&asb, &element,
-                                 EM_REA | EM_AR0 | EM_BLK | EM_DAT) != RPN_FRM_END)
-            array_range_proc_item(stbp, &element);
+        while(array_scan_element(&asb, &element, EM_REA | EM_AR0 | EM_BLK | EM_DAT | EM_INT) != RPN_FRM_END)
+            array_range_proc_item(p_stat_block, &element);
     }
-}
-
-/*
-* SKS 27oct96 purchased from Fireworkz
-*
-* helper routine for std/var(p)
-* which accounts for small errors
-* in our friendly floating point
-*/
-
-static F64
-array_range_proc_stdvar_help(
-    P_STAT_BLOCK stbp,
-    BOOL n_1)
-{
-    F64 n_sum_x2 = stbp->temp * (F64) stbp->count;
-    F64 sum_2 = stbp->running_data.arg.fp * stbp->running_data.arg.fp;
-    F64 res = n_sum_x2 - sum_2;
-
-    res = (res < 0.0) ? 0.0 : res; /* ensure we never go gaga */
-
-    res /= (F64) stbp->count;
-    res /= n_1 ? (F64) stbp->count - 1.0 : (F64) stbp->count;
-
-    return(res);
 }
 
 /******************************************************************************
@@ -957,253 +938,245 @@ array_range_proc_stdvar_help(
 ******************************************************************************/
 
 static void
-array_range_proc_finish(
+array_range_proc_finish_running_data(
     _OutRef_    P_EV_DATA p_ev_data,
-    P_STAT_BLOCK stbp)
+    _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    ev_data_set_real(p_ev_data, 0.0);
-
-    switch(stbp->function_id)
+    if(0 != p_stat_block->count)
     {
-    case RPN_FNF_DAVG:
-        if(stbp->count)
+        switch(p_stat_block->running_data.did_num)
         {
-            if(stbp->running_data.did_num != RPN_DAT_REAL)
-                ev_data_set_real(p_ev_data, (F64) stbp->running_data.arg.integer / (F64) stbp->count);
-            else
-                ev_data_set_real(p_ev_data, stbp->running_data.arg.fp / (F64) stbp->count);
-        }
-        break;
+        default: default_unhandled();
+#if CHECKING
+        case RPN_DAT_DATE:
+        case RPN_DAT_REAL:
+#endif
+            *p_ev_data = p_stat_block->running_data;
+            break;
 
-    case RPN_FNF_DMAX:
-    case RPN_FNF_DMIN:
-    case RPN_FNF_DSUM:
-        if(stbp->count)
+        /*case RPN_DAT_BOOL8:*/ /* really shouldn't occur */
+        case RPN_DAT_WORD8:
+        case RPN_DAT_WORD16:
+        case RPN_DAT_WORD32:
+            ev_data_set_integer(p_ev_data, p_stat_block->running_data.arg.integer);
+            break;
+        }
+    }
+    else
+        ev_data_set_real(p_ev_data, 0.0);
+}
+
+static void
+array_range_proc_finish_average(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    if(0 != p_stat_block->count)
+    {
+        switch(p_stat_block->running_data.did_num)
         {
-            switch(stbp->running_data.did_num)
+        default:
+            p_stat_block->running_data.arg.fp = (F64) p_stat_block->running_data.arg.integer;
+
+            /*FALLTHRU*/
+
+        case RPN_DAT_REAL:
             {
-            case RPN_DAT_WORD8:
-            case RPN_DAT_WORD16:
-            case RPN_DAT_WORD32:
-                ev_data_set_integer(p_ev_data, stbp->running_data.arg.integer);
-                break;
-
-            default:
-                *p_ev_data = stbp->running_data;
-                break;
+            F64 avg_result = p_stat_block->running_data.arg.fp / (F64) p_stat_block->count;
+            ev_data_set_real_ti(p_ev_data, avg_result);
+            break;
             }
+
+        case RPN_DAT_DATE:
+            *p_ev_data = p_stat_block->running_data;
+#if (EV_DATE_NULL == 0)
+            p_ev_data->arg.ev_date.date /= p_stat_block->count;
+            p_ev_data->arg.ev_date.time /= p_stat_block->count;
+#else
+            if(EV_DATE_NULL != p_ev_data->arg.ev_date.date)
+                p_ev_data->arg.ev_date.date /= p_stat_block->count;
+            if(EV_TIME_NULL != p_ev_data->arg.ev_date.time)
+                p_ev_data->arg.ev_date.time /= p_stat_block->count;
+#endif
+            ss_date_normalise(&p_ev_data->arg.ev_date);
+            break;
         }
-        break;
+    }
+    else
+        ev_data_set_real(p_ev_data, 0.0);
+}
 
-    case RPN_FNF_DCOUNT:
-        ev_data_set_integer(p_ev_data, stbp->count);
-        break;
+static void
+array_range_proc_finish_COUNT(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    ev_data_set_integer(p_ev_data, p_stat_block->count);
+}
 
-    case RPN_FNF_DCOUNTA:
-        ev_data_set_integer(p_ev_data, stbp->count_a);
-        break;
+static void
+array_range_proc_finish_COUNTA(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    ev_data_set_integer(p_ev_data, p_stat_block->count_a);
+}
 
-    case RPN_FNF_DSTD:
-        if(stbp->count > 1)
-            ev_data_set_real(p_ev_data, sqrt(array_range_proc_stdvar_help(stbp, 1)));
-        break;
+_Check_return_
+static F64
+calc_variance(
+    _InRef_     P_STAT_BLOCK p_stat_block,
+    _InVal_     BOOL population_statistics)
+{
+    F64 n = (F64) p_stat_block->count;
+    F64 n_sum_x2 = p_stat_block->sum_x2 * (F64) p_stat_block->count;
+    F64 sum_2 = p_stat_block->running_data.arg.fp * p_stat_block->running_data.arg.fp;
+    F64 delta = n_sum_x2 - sum_2;
+    F64 variance;
 
-    case RPN_FNF_DSTDP:
-        if(stbp->count)
-            ev_data_set_real(p_ev_data, sqrt(array_range_proc_stdvar_help(stbp, 0)));
-        break;
+    if(delta < 0.0)
+        delta = 0.0;
 
-    case RPN_FNF_DVAR:
-        if(stbp->count > 1)
-            ev_data_set_real(p_ev_data, array_range_proc_stdvar_help(stbp, 1));
-        break;
+    variance = delta / n;
+    variance /= population_statistics ? n : (n - 1.0);
 
-    case RPN_FNF_DVARP:
-        if(stbp->count)
-            ev_data_set_real(p_ev_data, array_range_proc_stdvar_help(stbp, 0));
-        break;
+    return(variance);
+}
 
-    case RPN_FNF_NPV:
-        if(stbp->count)
-            ev_data_set_real(p_ev_data, stbp->running_data.arg.fp);
-        break;
+static void
+array_range_proc_finish_standard_deviation(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    BOOL population_statistics = FALSE;
 
-    case RPN_FNF_MIRR:
-        if(stbp->count_a > 1)
-        {
-            ev_data_set_real(p_ev_data,
-                             pow(-stbp->result1
-                                * pow(stbp->parm1, (F64) stbp->count1)
-                                / (stbp->running_data.arg.fp * stbp->parm),
-                                1.0 / ((F64) stbp->count_a - 1.0)
-                               ) - 1.0);
-        }
+    switch(p_stat_block->exec_array_range_id)
+    {
+    case ARRAY_RANGE_STDP:
+        population_statistics = TRUE;
         break;
 
     default:
         break;
     }
+
+    if(p_stat_block->count > (population_statistics ? 0 /*stdp*/: 1 /*std*/))
+    {
+        F64 variance = calc_variance(p_stat_block, population_statistics);
+        F64 standard_deviation = sqrt(variance);
+
+        ev_data_set_real(p_ev_data, standard_deviation);
+        return;
+    }
+
+    ev_data_set_error(p_ev_data, EVAL_ERR_DIVIDEBY0);
 }
 
-/******************************************************************************
-*
-* process a data item for array_range
-*
-******************************************************************************/
-
 static void
-array_range_proc_item(
-    P_STAT_BLOCK stbp,
-    P_EV_DATA p_ev_data)
+array_range_proc_finish_variance(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
 {
-    switch(p_ev_data->did_num)
+    BOOL population_statistics = FALSE;
+
+    switch(p_stat_block->exec_array_range_id)
     {
-    case RPN_DAT_REAL:
-    case RPN_DAT_WORD8:
-    case RPN_DAT_WORD16:
-    case RPN_DAT_WORD32:
-        {
-        BOOL size_worry = FALSE;
-        BOOL int_done = 0;
-
-        switch(stbp->function_id)
-        {
-        case RPN_FNF_DAVG:
-        case RPN_FNF_DSUM:
-            size_worry = TRUE; /* need to worry about adding >16-bit integers and overflowing */
-            break;
-
-        default:
-            break;
-        }
-
-        if(two_nums_type_match(p_ev_data, &stbp->running_data, size_worry) == TWO_INTS)
-        {
-            switch(stbp->function_id)
-            {
-            case RPN_FNF_DAVG:
-            case RPN_FNF_DSUM:
-                /* only dealing with individual narrower integer types here but SKS shows this may eventually overflow WORD16 */
-                if(!stbp->count)
-                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer);
-                else
-                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer + stbp->running_data.arg.integer);
-                trace_1(TRACE_MODULE_EVAL, "DSUM result now int: %d", stbp->running_data.arg.integer);
-                int_done = 1;
-                break;
-
-            case RPN_FNF_DMAX:
-                if(!stbp->count || (p_ev_data->arg.integer > stbp->running_data.arg.integer))
-                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer);
-                int_done = 1;
-                break;
-
-            case RPN_FNF_DMIN:
-                if(!stbp->count || (p_ev_data->arg.integer < stbp->running_data.arg.integer))
-                    ev_data_set_integer(&stbp->running_data, p_ev_data->arg.integer);
-                int_done = 1;
-                break;
-            }
-        }
-
-        if(!int_done)
-        {
-            switch(stbp->function_id)
-            {
-            case RPN_FNF_DAVG:
-            case RPN_FNF_DSUM:
-                if(stbp->running_data.did_num == RPN_DAT_REAL)
-                {
-                    if(!stbp->count)
-                        stbp->running_data.arg.fp  = p_ev_data->arg.fp;
-                    else
-                        stbp->running_data.arg.fp += p_ev_data->arg.fp;
-                    trace_1(TRACE_MODULE_EVAL, "DSUM result now float: %g", stbp->running_data.arg.fp);
-                }
-                else
-                    array_range_proc_item_add(stbp, p_ev_data);
-                break;
-
-            case RPN_FNF_DMAX:
-                if(!stbp->count || (p_ev_data->arg.fp > stbp->running_data.arg.fp))
-                    stbp->running_data.arg.fp = p_ev_data->arg.fp;
-                break;
-
-            case RPN_FNF_DMIN:
-                if(!stbp->count || (p_ev_data->arg.fp < stbp->running_data.arg.fp))
-                    stbp->running_data.arg.fp = p_ev_data->arg.fp;
-                break;
-
-            case RPN_FNF_DSTD:
-            case RPN_FNF_DSTDP:
-            case RPN_FNF_DVAR:
-            case RPN_FNF_DVARP:
-                {
-                F64 x2 = p_ev_data->arg.fp * p_ev_data->arg.fp;
-
-                if(!stbp->count)
-                {
-                    stbp->temp = x2;
-                    stbp->running_data.arg.fp = p_ev_data->arg.fp;
-                }
-                else
-                {
-                    stbp->temp += x2;
-                    stbp->running_data.arg.fp += p_ev_data->arg.fp;
-                }
-
-                break;
-                }
-
-            case RPN_FNF_NPV:
-                npv_item(p_ev_data, &stbp->count, &stbp->parm, &stbp->temp, &stbp->running_data.arg.fp);
-                stbp->count -= 1;
-                break;
-
-            case RPN_FNF_MIRR:
-                if(p_ev_data->arg.fp >= 0)
-                    npv_item(p_ev_data, &stbp->count1, &stbp->parm1, &stbp->temp1, &stbp->result1);
-                else
-                    npv_item(p_ev_data, &stbp->count,  &stbp->parm,  &stbp->temp,  &stbp->running_data.arg.fp);
-                stbp->count -= 1;
-                break;
-
-            case RPN_FNF_DCOUNT:
-            default:
-                break;
-            }
-        }
-
-        stbp->count   += 1;
-        stbp->count_a += 1;
+    case ARRAY_RANGE_VARP:
+        population_statistics = TRUE;
         break;
-        }
-
-    /* cope with dates and times within a SUM by calling the add routine */
-    case RPN_DAT_DATE:
-        {
-        stbp->count_a += 1;
-
-        if(stbp->function_id == RPN_FNF_DSUM)
-        {
-            array_range_proc_item_add(stbp, p_ev_data);
-            stbp->count += 1;
-        }
-
-        break;
-        }
-
-    case RPN_DAT_BLANK:
-        break;
-
-    case RPN_DAT_STRING:
-        if(ss_string_is_blank(p_ev_data))
-            break;
-
-    /* FALLTHRU */
 
     default:
-        stbp->count_a += 1;
+        break;
+    }
+
+    if(p_stat_block->count > (population_statistics ? 0 /*varp*/: 1 /*var*/))
+    {
+        F64 variance = calc_variance(p_stat_block, population_statistics);
+
+        ev_data_set_real(p_ev_data, variance);
+        return;
+    }
+
+    ev_data_set_error(p_ev_data, EVAL_ERR_DIVIDEBY0);
+}
+
+static void
+array_range_proc_finish_NPV(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    if(0 != p_stat_block->count)
+        ev_data_set_real(p_ev_data, p_stat_block->running_data.arg.fp);
+    else
+        ev_data_set_real(p_ev_data, 0.0);
+}
+
+static inline F64
+array_range_proc_MIRR_help(
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    return(  pow(-p_stat_block->result1
+                * pow(p_stat_block->parm1, (F64) p_stat_block->count1)
+                / (p_stat_block->running_data.arg.fp * p_stat_block->parm),
+                1.0 / ((F64) p_stat_block->count_a - 1.0)
+                ) - 1.0  );
+}
+
+static void
+array_range_proc_finish_MIRR(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    if(p_stat_block->count_a > 1)
+        ev_data_set_real(p_ev_data, array_range_proc_MIRR_help(p_stat_block));
+    else
+        ev_data_set_real(p_ev_data, 0.0);
+}
+
+static void
+array_range_proc_finish(
+    _OutRef_    P_EV_DATA p_ev_data,
+    _InRef_     P_STAT_BLOCK p_stat_block)
+{
+    switch(p_stat_block->exec_array_range_id)
+    {
+    case ARRAY_RANGE_MAX:
+    case ARRAY_RANGE_MIN:
+    case ARRAY_RANGE_SUM:
+        array_range_proc_finish_running_data(p_ev_data, p_stat_block);
+        break;
+
+    case ARRAY_RANGE_AVERAGE:
+        array_range_proc_finish_average(p_ev_data, p_stat_block);
+        break;
+
+    case ARRAY_RANGE_COUNT:
+        array_range_proc_finish_COUNT(p_ev_data, p_stat_block);
+        break;
+
+    case ARRAY_RANGE_COUNTA:
+        array_range_proc_finish_COUNTA(p_ev_data, p_stat_block);
+        break;
+
+    case ARRAY_RANGE_STD:
+    case ARRAY_RANGE_STDP:
+        array_range_proc_finish_standard_deviation(p_ev_data, p_stat_block);
+        break;
+
+    case ARRAY_RANGE_VAR:
+    case ARRAY_RANGE_VARP:
+        array_range_proc_finish_variance(p_ev_data, p_stat_block);
+        break;
+
+    case ARRAY_RANGE_NPV:
+        array_range_proc_finish_NPV(p_ev_data, p_stat_block);
+        break;
+
+    case ARRAY_RANGE_MIRR:
+        array_range_proc_finish_MIRR(p_ev_data, p_stat_block);
+        break;
+
+    default:
         break;
     }
 }
@@ -1216,11 +1189,13 @@ array_range_proc_item(
 
 static void
 array_range_proc_item_add(
-    P_STAT_BLOCK stbp,
+    P_STAT_BLOCK p_stat_block,
     P_EV_DATA p_ev_data)
 {
-    if(!stbp->count)
-        stbp->running_data = *p_ev_data;
+    if(0 == p_stat_block->count)
+    {
+        p_stat_block->running_data = *p_ev_data;
+    }
     else
     {
         P_EV_DATA args[2];
@@ -1228,11 +1203,253 @@ array_range_proc_item_add(
         EV_SLR dummy_slr;
 
         args[0] = p_ev_data;
-        args[1] = &stbp->running_data;
+        args[1] = &p_stat_block->running_data;
 
         c_add(args, 2, &result_data, &dummy_slr);
 
-        stbp->running_data = result_data;
+        p_stat_block->running_data = result_data;
+    }
+}
+
+/******************************************************************************
+*
+* process a data item for array_range
+*
+******************************************************************************/
+
+static void
+array_range_proc_blank(
+    P_STAT_BLOCK p_stat_block,
+    P_EV_DATA p_ev_data)
+{
+    IGNOREPARM(p_stat_block);
+    IGNOREPARM(p_ev_data);
+}
+
+static void
+array_range_proc_date(
+    P_STAT_BLOCK p_stat_block,
+    P_EV_DATA p_ev_data)
+{
+    switch(p_stat_block->exec_array_range_id)
+    {
+    case ARRAY_RANGE_SUM:
+        /* cope with dates and times within a SUM by calling the add routine */
+        array_range_proc_item_add(p_stat_block, p_ev_data);
+        p_stat_block->count += 1;
+        break;
+
+    case ARRAY_RANGE_MAX:
+        if((0 == p_stat_block->count) || (ss_data_compare(&p_stat_block->running_data, p_ev_data) < 0))
+            p_stat_block->running_data = *p_ev_data;
+        p_stat_block->count += 1;
+        break;
+
+    case ARRAY_RANGE_MIN:
+        if((0 == p_stat_block->count) || (ss_data_compare(&p_stat_block->running_data, p_ev_data) > 0))
+            p_stat_block->running_data = *p_ev_data;
+        p_stat_block->count += 1;
+        break;
+
+    default:
+        break;
+    }
+
+    p_stat_block->count_a += 1;
+}
+
+_Check_return_
+static BOOL
+array_range_proc_number_try_integer(
+    P_STAT_BLOCK p_stat_block,
+    P_EV_DATA p_ev_data)
+{
+    BOOL int_done = 0;
+
+    switch(p_stat_block->exec_array_range_id)
+    {
+    default: default_unhandled();
+        break;
+
+    case ARRAY_RANGE_MAX:
+        if((0 == p_stat_block->count) || (p_ev_data->arg.integer > p_stat_block->running_data.arg.integer))
+            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer);
+        int_done = 1;
+        break;
+
+    case ARRAY_RANGE_MIN:
+        if((0 == p_stat_block->count) || (p_ev_data->arg.integer < p_stat_block->running_data.arg.integer))
+            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer);
+        int_done = 1;
+        break;
+
+    case ARRAY_RANGE_SUM:
+    case ARRAY_RANGE_AVERAGE:
+        /* only dealing with individual narrower integer types here but SKS shows this may eventually overflow WORD16 */
+        if(0 == p_stat_block->count)
+            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer);
+        else
+            ev_data_set_integer(&p_stat_block->running_data, p_ev_data->arg.integer + p_stat_block->running_data.arg.integer);
+        int_done = 1;
+        break;
+    }
+
+    if(!int_done)
+        return(FALSE);
+
+    p_stat_block->count   += 1;
+    p_stat_block->count_a += 1;
+    return(TRUE);
+}
+
+static void
+array_range_proc_number(
+    P_STAT_BLOCK p_stat_block,
+    P_EV_DATA p_ev_data)
+{
+    BOOL size_worry = FALSE;
+
+    switch(p_stat_block->exec_array_range_id)
+    {
+    case ARRAY_RANGE_SUM:
+    case ARRAY_RANGE_AVERAGE:
+        size_worry = TRUE; /* need to worry about adding >16-bit integers and overflowing */
+        break;
+
+    default:
+        break;
+    }
+
+    if(TWO_INTS == two_nums_type_match(p_ev_data, &p_stat_block->running_data, size_worry))
+        if(array_range_proc_number_try_integer(p_stat_block, p_ev_data))
+            return;
+
+    /* two_nums_type_match will have promoted */
+    assert(RPN_DAT_REAL == p_ev_data->did_num);
+    assert(RPN_DAT_REAL == p_stat_block->running_data.did_num);
+
+    switch(p_stat_block->exec_array_range_id)
+    {
+    case ARRAY_RANGE_MAX:
+        if((0 == p_stat_block->count) || (p_ev_data->arg.fp > p_stat_block->running_data.arg.fp))
+            p_stat_block->running_data.arg.fp = p_ev_data->arg.fp;
+        break;
+
+    case ARRAY_RANGE_MIN:
+        if((0 == p_stat_block->count) || (p_ev_data->arg.fp < p_stat_block->running_data.arg.fp))
+            p_stat_block->running_data.arg.fp = p_ev_data->arg.fp;
+        break;
+
+    case ARRAY_RANGE_SUM:
+    case ARRAY_RANGE_AVERAGE:
+        if(p_stat_block->running_data.did_num == RPN_DAT_REAL)
+        {
+            if(0 == p_stat_block->count)
+                p_stat_block->running_data.arg.fp  = p_ev_data->arg.fp;
+            else
+                p_stat_block->running_data.arg.fp += p_ev_data->arg.fp;
+        }
+        else
+            array_range_proc_item_add(p_stat_block, p_ev_data);
+        break;
+
+    case ARRAY_RANGE_STD:
+    case ARRAY_RANGE_STDP:
+    case ARRAY_RANGE_VAR:
+    case ARRAY_RANGE_VARP:
+        {
+        const F64 x2 = p_ev_data->arg.fp * p_ev_data->arg.fp;
+
+        if(0 == p_stat_block->count)
+        {
+            p_stat_block->sum_x2 = x2;
+            p_stat_block->running_data.arg.fp = p_ev_data->arg.fp;
+        }
+        else
+        {
+            p_stat_block->sum_x2 += x2;
+            p_stat_block->running_data.arg.fp += p_ev_data->arg.fp;
+        }
+
+        break;
+        }
+
+    case ARRAY_RANGE_NPV:
+        npv_item(p_ev_data, &p_stat_block->count, &p_stat_block->parm, &p_stat_block->temp, &p_stat_block->running_data.arg.fp);
+        p_stat_block->count -= 1;
+        break;
+
+    case ARRAY_RANGE_MIRR:
+        if(p_ev_data->arg.fp >= 0)
+            npv_item(p_ev_data, &p_stat_block->count1, &p_stat_block->parm1, &p_stat_block->temp1, &p_stat_block->result1);
+        else
+            npv_item(p_ev_data, &p_stat_block->count,  &p_stat_block->parm,  &p_stat_block->temp,  &p_stat_block->running_data.arg.fp);
+        p_stat_block->count -= 1;
+        break;
+
+    default: default_unhandled();
+#if CHECKING
+    case ARRAY_RANGE_COUNT:
+    case ARRAY_RANGE_COUNTA:
+#endif
+        break;
+    }
+
+    p_stat_block->count   += 1;
+    p_stat_block->count_a += 1;
+}
+
+static void
+array_range_proc_others(
+    P_STAT_BLOCK p_stat_block,
+    P_EV_DATA p_ev_data)
+{
+    IGNOREPARM(p_ev_data);
+
+    p_stat_block->count_a += 1;
+}
+
+static void
+array_range_proc_string(
+    P_STAT_BLOCK p_stat_block,
+    P_EV_DATA p_ev_data)
+{
+    if(!ss_string_is_blank(p_ev_data))
+    {
+        array_range_proc_others(p_stat_block, p_ev_data);
+        return;
+    }
+}
+
+static void
+array_range_proc_item(
+    P_STAT_BLOCK p_stat_block,
+    P_EV_DATA p_ev_data)
+{
+    switch(p_ev_data->did_num)
+    {
+    case RPN_DAT_REAL:
+    case RPN_DAT_WORD8:
+    case RPN_DAT_WORD16:
+    case RPN_DAT_WORD32:
+        array_range_proc_number(p_stat_block, p_ev_data);
+        break;
+
+    case RPN_DAT_DATE:
+        array_range_proc_date(p_stat_block, p_ev_data);
+        break;
+
+    case RPN_DAT_BLANK:
+        array_range_proc_blank(p_stat_block, p_ev_data);
+        break;
+
+    case RPN_DAT_STRING:
+        array_range_proc_string(p_stat_block, p_ev_data);
+        break;
+
+    default:
+        array_range_proc_others(p_stat_block, p_ev_data);
+        break;
     }
 }
 
@@ -1328,9 +1545,7 @@ lookup_array_range_proc(
             EV_DATA element;
 
             lkbp->in_range = 0;
-            while(range_scan_element(&lkbp->rsb,
-                                     &element,
-                                     EM_REA | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_INT) != RPN_FRM_END)
+            while(range_scan_element(&lkbp->rsb, &element, EM_REA | EM_STR | EM_DAT | EM_ARY | EM_BLK | EM_INT) != RPN_FRM_END)
             {
                 switch(element.did_num)
                 {
@@ -1407,8 +1622,7 @@ lookup_array_range_proc_array(
     {
         EV_DATA element;
 
-        while(array_scan_element(&asb, &element,
-                                 EM_REA | EM_STR | EM_DAT | EM_AR0 | EM_BLK | EM_INT) != RPN_FRM_END)
+        while(array_scan_element(&asb, &element, EM_REA | EM_STR | EM_DAT | EM_AR0 | EM_BLK | EM_INT) != RPN_FRM_END)
         {
             if(element.did_num == RPN_DAT_BLANK)
                 continue;
@@ -1469,7 +1683,7 @@ lookup_array_range_proc_item(
         {
             match = -match;
 
-            if(match < 0 && lkbp->match > 0 || match > 0 && lkbp->match < 0)
+            if((match < 0 && lkbp->match > 0) || (match > 0 && lkbp->match < 0))
                 res = -1;
         }
         break;
@@ -1644,75 +1858,147 @@ npv_item(
 
 extern void
 stat_block_init(
-    P_STAT_BLOCK stbp,
-    S32 function_id,
+    P_STAT_BLOCK p_stat_block,
+    _InVal_     EV_IDNO function_id,
     F64 parm,
     F64 parm1)
 {
-    EV_IDNO id;
+    p_stat_block->count       = 0;
+    p_stat_block->count_a     = 0;
+
+    p_stat_block->count1      = 0;
+    p_stat_block->temp        = 0;
+    p_stat_block->temp1       = 0;
+    p_stat_block->parm        = parm;
+    p_stat_block->parm1       = parm1;
+    p_stat_block->result1     = 0;
 
     switch(function_id)
     {
-    case DBASE_DAVG:
-        id = RPN_FNF_DAVG;
+    case RPN_FNV_MAX:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_MAX;
+        ev_data_set_integer(&p_stat_block->running_data, 0);
         break;
-    case DBASE_DCOUNT:
-        id = RPN_FNF_DCOUNT;
+
+    case RPN_FNV_MIN:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_MIN;
+        ev_data_set_integer(&p_stat_block->running_data, 0);
         break;
-    case DBASE_DCOUNTA:
-        id = RPN_FNF_DCOUNTA;
+
+    case RPN_FNV_SUM:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_SUM;
+        ev_data_set_integer(&p_stat_block->running_data, 0);
         break;
-    case DBASE_DMAX:
-        id = RPN_FNF_DMAX;
+
+    case RPN_FNV_AVG:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_AVERAGE;
+        ev_data_set_integer(&p_stat_block->running_data, 0);
         break;
-    case DBASE_DMIN:
-        id = RPN_FNF_DMIN;
+
+    case RPN_FNF_NPV:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_NPV;
+        ev_data_set_real(&p_stat_block->running_data, 0.0);
         break;
-    case DBASE_DSTD:
-        id = RPN_FNF_DSTD;
+
+    case RPN_FNF_IRR:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_IRR;
+        ev_data_set_real(&p_stat_block->running_data, 0.0);
         break;
-    case DBASE_DSTDP:
-        id = RPN_FNF_DSTDP;
+
+    case RPN_FNF_MIRR:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_MIRR;
+        ev_data_set_real(&p_stat_block->running_data, 0.0);
         break;
-    case DBASE_DSUM:
-        id = RPN_FNF_DSUM;
+
+    case RPN_FNV_STD:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_STD;
+        ev_data_set_real(&p_stat_block->running_data, 0.0);
         break;
-    case DBASE_DVAR:
-        id = RPN_FNF_DVAR;
+
+    case RPN_FNV_STDP:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_STDP;
+        ev_data_set_real(&p_stat_block->running_data, 0.0);
         break;
-    case DBASE_DVARP:
-        id = RPN_FNF_DVARP;
+
+    case RPN_FNV_VAR:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_VAR;
+        ev_data_set_real(&p_stat_block->running_data, 0.0);
         break;
-    default:
-        id = (EV_IDNO) function_id;
+
+    case RPN_FNV_VARP:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_VARP;
+        ev_data_set_real(&p_stat_block->running_data, 0.0);
+        break;
+
+    case RPN_FNV_COUNT:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_COUNT;
+        break;
+
+    case RPN_FNV_COUNTA:
+        p_stat_block->exec_array_range_id = ARRAY_RANGE_COUNTA;
+        break;
+
+    default: default_unhandled();
         break;
     }
 
-    stbp->function_id = id;
-    stbp->count       = 0;
-    stbp->count_a     = 0;
-    stbp->count1      = 0;
-    stbp->temp        = 0;
-    stbp->temp1       = 0;
-    stbp->parm        = parm;
-    stbp->parm1       = parm1;
-    stbp->result1     = 0;
+#if CHECKING
+    p_stat_block->_function_id = function_id;
+#endif
+}
 
-    /* configure for those functions which can process integers */
-    switch(id)
+extern void
+dbase_stat_block_init(
+    P_STAT_BLOCK stbp,
+    _InVal_     U32 no_exec_id)
+{
+    EV_IDNO function_id;
+
+    switch(no_exec_id)
     {
-    case RPN_FNF_DMAX:
-    case RPN_FNF_DMIN:
-    case RPN_FNF_DSUM:
-    case RPN_FNF_DAVG:
-        stbp->running_data.did_num     = RPN_DAT_WORD8; /* start with narrowest integer type */
-        stbp->running_data.arg.integer = 0;
+    case DBASE_DAVG:
+        function_id = RPN_FNV_AVG;
         break;
 
-    default:
-        ev_data_set_real(&stbp->running_data, 0.0);
+    default: default_unhandled();
+    case DBASE_DCOUNT:
+        function_id = RPN_FNV_COUNT;
+        break;
+
+    case DBASE_DCOUNTA:
+        function_id = RPN_FNV_COUNTA;
+        break;
+
+    case DBASE_DMAX:
+        function_id = RPN_FNV_MAX;
+        break;
+
+    case DBASE_DMIN:
+        function_id = RPN_FNV_MIN;
+        break;
+
+    case DBASE_DSTD:
+        function_id = RPN_FNV_STD;
+        break;
+
+    case DBASE_DSTDP:
+        function_id = RPN_FNV_STDP;
+        break;
+
+    case DBASE_DSUM:
+        function_id = RPN_FNV_SUM;
+        break;
+
+    case DBASE_DVAR:
+        function_id = RPN_FNV_VAR;
+        break;
+
+    case DBASE_DVARP:
+        function_id = RPN_FNV_VARP;
         break;
     }
+
+    stat_block_init(stbp, function_id, 0.0, 0.0);
 }
 
 /* end of ev_exec.c */

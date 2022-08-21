@@ -264,7 +264,7 @@ quick_block_str(
 UCHARS-based quick block (for Fireworkz-derived numform and evaluator functions)
 */
 
-#if USTR_IS_L1STR
+#if USTR_IS_SBSTR
 
 #define    QUICK_UBLOCK    QUICK_BLOCK
 #define  P_QUICK_UBLOCK  P_QUICK_BLOCK
@@ -307,13 +307,13 @@ quick_ublock_ustr_add(
     _InoutRef_      P_QUICK_UBLOCK p_quick_ublock,
     _In_z_          PC_USTR ustr);
 
-#endif /* USTR_IS_L1STR */
+#endif /* USTR_IS_SBSTR */
 
 /*
 TCHAR-based quick block (for Fireworkz-derived numform)
 */
 
-#if TSTR_IS_L1STR
+#if TSTR_IS_SBSTR
 
 #define    QUICK_TBLOCK    QUICK_BLOCK
 #define  P_QUICK_TBLOCK  P_QUICK_BLOCK
@@ -346,7 +346,7 @@ TCHAR-based quick block (for Fireworkz-derived numform)
 #define quick_tblock_nullch_add                     quick_block_nullch_add
 #define quick_tblock_nullch_strip                   quick_block_nullch_strip
 
-#endif /* TSTR_IS_L1STR */
+#endif /* TSTR_IS_SBSTR */
 
 #endif /* __quickblk_h */
 

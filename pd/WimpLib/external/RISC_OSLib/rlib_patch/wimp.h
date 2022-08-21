@@ -1,5 +1,5 @@
---- _src	2011-11-13 20:13:59 +0100
-+++ _dst	2013-09-15 14:18:09 +0100
+--- _src	2011-11-13 19:13:59.000000000 +0000
++++ _dst	2015-11-18 16:29:49.260000000 +0000
 @@ -221,7 +221,11 @@
  typedef struct {
    wimp_w w;               /* window handle */
@@ -22,7 +22,23 @@
  
    wimp_FilerOpenDir  = 0x0400,
    wimp_FilerCloseDir = 0x0401,
-@@ -376,7 +383,6 @@
+@@ -349,10 +356,14 @@
+   wimp_MICONIZEAT    = 0x400d0,
+   wimp_MTOGGLEBACKDROP         = 0x400d1,
+   wimp_MSCREENEDGENOTIFICATION = 0x400d2,
+-  
++
+   wimp_MHELPREQUEST  = 0x502,         /* interactive help request */
+   wimp_MHELPREPLY    = 0x503,         /* interactive help message */
+ 
++#if defined(SKS_ACW)
++  wimp_MPD_DDE       = 0x600,
++#endif
++
+   /* Messages for dialogue with printer applications */
+ 
+   wimp_MPrintFile       = 0x80140,    /* Printer app's first response to */
+@@ -376,7 +387,6 @@
  } wimp_msghdr;
  /* size is the size of the whole msgstr, see below. */
  
@@ -30,7 +46,7 @@
  typedef struct {
    wimp_w w;               /* window in which save occurs. */
    wimp_i i;               /* icon there */
-@@ -425,8 +431,18 @@
+@@ -425,8 +435,18 @@
    int nbyteswritten;         /* number of bytes written */
  } wimp_msgramtransmit;
  
@@ -49,7 +65,7 @@
  } wimp_msgsavedesk;
  
  typedef struct {
-@@ -440,7 +456,11 @@
+@@ -440,7 +460,11 @@
  } wimp_msghelprequest;
  
  typedef struct {
@@ -61,7 +77,7 @@
  } wimp_msghelpreply;
  
  typedef struct {         /* structure used in all print messages */
-@@ -449,6 +469,74 @@
+@@ -449,6 +473,74 @@
    char name[256-44] ;    /* filename */
  } wimp_msgprint ;
  
@@ -136,7 +152,7 @@
  typedef struct {          /* message block */
    wimp_msghdr hdr;
    union {
-@@ -465,12 +553,38 @@
+@@ -465,12 +557,38 @@
      wimp_msgprint       print;
      wimp_msgsavedesk    savedesk;
      wimp_msgdevice      device;
@@ -177,7 +193,7 @@
        wimp_mousestr m;
        wimp_bbits b;} but;   /* for button change event */
      wimp_box dragbox;       /* for user drag box event */
-@@ -508,8 +622,10 @@
+@@ -508,8 +626,10 @@
  /* use wimp_INOSELECT to shade the item as unselectable,
  and the button type to mark it as writable. */
  
@@ -188,7 +204,7 @@
  
  typedef struct {
    wimp_menuflags flags;         /* menu entry flags */
-@@ -831,6 +947,32 @@
+@@ -831,6 +951,32 @@
     It is the application's responsibility to set the tag correctly.
   */
  

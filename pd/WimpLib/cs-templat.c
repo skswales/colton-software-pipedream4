@@ -497,7 +497,7 @@ template_readfile(
         if(!template__block[b])
         {
             _kernel_osfile_block fileblk;
-            size_t fileLength;
+            int fileLength;
 
             if(_kernel_osfile(5, filename, &fileblk) != 1)
                 fileLength = -1;
@@ -506,7 +506,7 @@ template_readfile(
 
             reportf("template_readfile(%u:%s): length=%u", strlen(filename), filename, fileLength);
 
-            if(fileLength < sizeof(TEMPLATE_HEADER))
+            if(fileLength < (int) sizeof32(TEMPLATE_HEADER))
             {
                 werr(TRUE, msgs_lookup("template6" /*"Template file not found"*/));
                 return;

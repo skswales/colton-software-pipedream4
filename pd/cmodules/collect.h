@@ -85,11 +85,11 @@ extern P_BYTE
 _collect_first(
     _InRef_     P_LIST_BLOCK p_list_block,
     _OutRef_    P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
 #define collect_first(__base_type, p_p_list_block, p_key) ( \
     (__base_type *) _collect_first(*(p_p_list_block), p_key \
-    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
 _Ret_writes_maybenull_(bytesof_elem)
@@ -97,11 +97,11 @@ extern P_BYTE
 _collect_first_from(
     _InRef_     P_LIST_BLOCK p_list_block,
     _InoutRef_  P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
 #define collect_first_from(__base_type, p_p_list_block, p_key) ( \
     (__base_type *) _collect_first_from(*(p_p_list_block), p_key \
-    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 #define collect_goto_item(__base_type, p_p_list_block, p_key) \
     list_gotoitemcontents_opt(__base_type, *(p_p_list_block), p_key)
@@ -127,11 +127,11 @@ extern P_BYTE
 _collect_next(
     _InRef_     P_LIST_BLOCK p_list_block,
     _InoutRef_  P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
 #define collect_next(__base_type, p_p_list_block, p_key) ( \
     (__base_type *) _collect_next(*(p_p_list_block), p_key \
-    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 _Check_return_
 _Ret_writes_maybenull_(bytesof_elem)
@@ -139,11 +139,11 @@ extern P_BYTE
 _collect_prev(
     _InRef_     P_LIST_BLOCK p_list_block,
     _InoutRef_  P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem));
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem));
 
 #define collect_prev(__base_type, p_p_list_block, p_key) ( \
     (__base_type *) _collect_prev(*(p_p_list_block), p_key \
-    PREFAST_ONLY_ARG(sizeof32(__base_type))) )
+    CODE_ANALYSIS_ONLY_ARG(sizeof32(__base_type))) )
 
 extern void
 collect_subtract_entry(

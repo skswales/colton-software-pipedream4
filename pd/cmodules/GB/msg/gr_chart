@@ -20,7 +20,7 @@ m8_20:Gallery
 m8_21:Pie ...,Bar ...,Line ...,Scatter ...,Overlays|Preferred,Set preferred,Save preferred
 #
 m8_30:Selection
-m8_31:>Fill style,>Fill colour,>Line style,>Line colour|>Text,Text style ...,>Text colour,>Text background|>Axis,>Series
+m8_31:>Line width,>Line colour,>Fill style,>Fill colour,>Line pattern|>Text,Text style ...,>Text colour,>Background|>Axis,>Series
 #
 m8_35:Text
 m8_36:>Edit,Delete

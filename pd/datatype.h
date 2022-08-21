@@ -111,6 +111,8 @@ typedef struct SLR /* SLR with just col, row */
 }
 SLR, * P_SLR; typedef const SLR * PC_SLR;
 
+#define SLR_INIT { 0, 0 }
+
 typedef struct FULL_SLR /* SLR with col, row and an EV_DOCNO for completeness */
 {
     COL col;
@@ -145,6 +147,17 @@ typedef struct TRAVERSE_BLOCK
     struct DOCU * p_docu;
 }
 TRAVERSE_BLOCK, * TRAVERSE_BLOCKP;
+
+#define TRAVERSE_BLOCK_INIT { \
+    DOCNO_NONE, \
+    SLR_INIT, \
+    SLR_INIT, \
+    SLR_INIT, \
+    TRAVERSE_ACROSS_ROWS, \
+    FALSE, \
+    NULL, \
+    NULL, \
+}
 
 #define traverse_block_cur_col(blk) ((blk)->cur.col)
 #define traverse_block_cur_row(blk) ((blk)->cur.row)
@@ -314,10 +327,10 @@ typedef struct DRAW_FILE_REF
     EV_DOCNO docno;
     COL col;
     ROW row;
-    F64 xfactor;
-    F64 yfactor;
-    S32 xsize_os;
-    S32 ysize_os;
+    F64 x_factor;
+    F64 y_factor;
+    S32 x_size_os;
+    S32 y_size_os;
 }
 DRAW_FILE_REF, * P_DRAW_FILE_REF, ** P_P_DRAW_FILE_REF;
 
@@ -338,9 +351,9 @@ typedef struct GRAPHICS_LINK_ENTRY
 
     S32 ext_dep_han;        /* handle to external dependency */
     ghandle ghan;
-    S32 xsize;
-    S32 ysize;
-    char text[1];           /* leafname & tag, 0-terminated */
+    S32 x_size;
+    S32 y_size;
+    //char text[1];           /* leafname & tag, 0-terminated */
 }
 GRAPHICS_LINK_ENTRY, * P_GRAPHICS_LINK_ENTRY; typedef const GRAPHICS_LINK_ENTRY * PC_GRAPHICS_LINK_ENTRY;
 

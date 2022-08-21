@@ -72,7 +72,7 @@ gr_barlinescatch_get_datasources(
     }
 }
 
-static S32
+static void
 gr_actualise_series_point(
     P_GR_CHART    cp,
     GR_SERIES_IDX series_idx,
@@ -128,11 +128,9 @@ gr_actualise_series_point(
 
         serp->valid.limits = 1;
     }
-
-    return(1);
 }
 
-static S32
+static void
 gr_actualise_series_point_error1(
     P_GR_CHART    cp,
     GR_SERIES_IDX series_idx,
@@ -210,11 +208,9 @@ gr_actualise_series_point_error1(
 
         serp->valid.limits = 1;
     }
-
-    return(1);
 }
 
-static S32
+static void
 gr_actualise_series_point_error2(
     P_GR_CHART    cp,
     GR_SERIES_IDX series_idx,
@@ -308,8 +304,6 @@ gr_actualise_series_point_error2(
 
         serp->valid.limits = 1;
     }
-
-    return(1);
 }
 
 /******************************************************************************
@@ -318,14 +312,14 @@ gr_actualise_series_point_error2(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 gr_scatterchart_series_addin(
     P_GR_CHART    cp,
     GR_AXES_IDX   axes_idx,
     GR_SERIES_IDX series_idx)
 {
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
-    P_GR_SERIES            serp = getserp(cp, series_idx);
+    const P_GR_SERIES serp = getserp(cp, series_idx);
     GR_DATASOURCE_FOURSOME dsh;
     GR_CHART_OBJID         serid;
     GR_CHART_ITEMNO        n_points;
@@ -340,14 +334,13 @@ gr_scatterchart_series_addin(
     GR_COORD               pict_halfsize;
     GR_COORD               tbar_halfsize;
     GR_DIAG_OFFSET         lineStart, pointStart;
-    S32                    res;
+    STATUS res;
     S32                    best_fit;
     S32                    point_pass;
 
     gr_chart_objid_from_series_idx(cp, series_idx, &serid);
 
-    if((res = gr_chart_group_new(cp, &lineStart, &serid)) < 0)
-        return(res);
+    status_return(res = gr_chart_group_new(cp, &lineStart, serid));
 
     gr_barlinescatch_get_datasources(cp, series_idx, &dsh);
 
@@ -363,8 +356,7 @@ gr_scatterchart_series_addin(
         GR_CHART_OBJID id;
         S32            had_first;
 
-        if((res = gr_chart_group_new(cp, &linepassStart, &serid)) < 0)
-            return(res);
+        status_break(res = gr_chart_group_new(cp, &linepassStart, serid));
 
         id           = serid;
         id.name      = GR_CHART_OBJNAME_POINT;
@@ -439,8 +431,7 @@ gr_scatterchart_series_addin(
                     continue;
                 }
 
-            if((res = gr_chart_group_new(cp, &pointStart, &id)) < 0)
-                break;
+            status_break(res = gr_chart_group_new(cp, &pointStart, id));
 
             gr_point_fillstyle_query(cp, series_idx, point, &fillstyle);
             gr_point_linestyle_query(cp, series_idx, point, &linestyle);
@@ -487,8 +478,7 @@ gr_scatterchart_series_addin(
 
                 err_box.y0 = err_box.y1 = valpoint.y;
 
-                if((res = gr_diag_line_new(p_gr_diag, NULL, id, &err_box, &linestyle)) < 0)
-                    break;
+                status_break(res = gr_chart_line_new(cp, id, &err_box, &linestyle));
 
                 /* vertical part of H at left */
                 right_side = err_box.x1;
@@ -497,14 +487,12 @@ gr_scatterchart_series_addin(
                 err_box.y1 = err_box.y0 + tbar_halfsize;
                 err_box.y0 = err_box.y0 - tbar_halfsize;
 
-                if((res = gr_diag_line_new(p_gr_diag, NULL, id, &err_box, &linestyle)) < 0)
-                    break;
+                status_break(res = gr_chart_line_new(cp, id, &err_box, &linestyle));
 
                 /* vertical part of H at right */
                 err_box.x0 = err_box.x1 = right_side;
 
-                if((res = gr_diag_line_new(p_gr_diag, NULL, id, &err_box, &linestyle)) < 0)
-                    break;
+                status_break(res = gr_chart_line_new(cp, id, &err_box, &linestyle));
             }
 
             /* y error tits plotted below point? */
@@ -536,8 +524,7 @@ gr_scatterchart_series_addin(
                     err_box.y1 = valpoint.y + errsize;
                 }
 
-                if((res = gr_diag_line_new(p_gr_diag, NULL, id, &err_box, &linestyle)) < 0)
-                    break;
+                status_break(res = gr_chart_line_new(cp, id, &err_box, &linestyle));
 
                 /* horizontal part of I at bottom */
                 err_box.x1 = err_box.x0 + tbar_halfsize;
@@ -546,14 +533,12 @@ gr_scatterchart_series_addin(
                 top_side   = err_box.y1;
                 err_box.y1 = err_box.y0;
 
-                if((res = gr_diag_line_new(p_gr_diag, NULL, id, &err_box, &linestyle)) < 0)
-                    break;
+                status_break(res = gr_chart_line_new(cp, id, &err_box, &linestyle));
 
                 /* horizontal part of I at top */
                 err_box.y0 = err_box.y1 = top_side;
 
-                if((res = gr_diag_line_new(p_gr_diag, NULL, id, &err_box, &linestyle)) < 0)
-                    break;
+                status_break(res = gr_chart_line_new(cp, id, &err_box, &linestyle));
             }
 
             if(!had_first)
@@ -570,8 +555,7 @@ gr_scatterchart_series_addin(
                     line_box.x1 =     valpoint.x;
                     line_box.y1 =     valpoint.y;
 
-                    if((res = gr_diag_line_new(p_gr_diag, NULL, id, &line_box, &linestyle)) < 0)
-                        break;
+                    status_break(res = gr_chart_line_new(cp, id, &line_box, &linestyle));
                 }
             }
 
@@ -588,19 +572,18 @@ gr_scatterchart_series_addin(
                 pict_box.x1 = valpoint.x + pict_halfsize;
                 pict_box.y1 = valpoint.y + pict_halfsize;
 
-                if((res = gr_chart_scaled_picture_add(cp, &id, &pict_box, &fillstyle)) < 0)
-                    break;
+                status_break(res = gr_chart_scaled_picture_add(cp, id, &pict_box, &fillstyle));
             }
 
-            gr_diag_group_end(p_gr_diag, &pointStart);
+            gr_chart_group_end(cp, &pointStart);
         }
 
-        if(res < 0)
-            break;
+        status_break(res);
 
-        gr_diag_group_end(p_gr_diag, &linepassStart);
+        gr_chart_group_end(cp, &linepassStart);
 
         if(point_pass == 0)
+        {
             if(best_fit)
             {
                 GR_BARLINESCATCH_SERIES_CACHE   single_series_cache;
@@ -614,54 +597,50 @@ gr_scatterchart_series_addin(
 
                 lcp->serid  = serid;
 
-                if((res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_SCAT)) <= 0)
-                    break;
+                status_break(res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_SCAT));
             }
+        }
 
         /* end of point_pass loop */
     }
 
-    if(res < 0)
-        return(res);
+    gr_chart_group_end(cp, &lineStart);
 
-    gr_diag_group_end(p_gr_diag, &lineStart);
+    status_return(res);
 
     return(1);
 }
 
-static S32
+_Check_return_
+static STATUS
 gr_scatterchart_axes_addin(
     P_GR_CHART cp,
-    S32       front)
+    _InVal_     BOOL front_phase)
 {
-    GR_CHART_OBJID id = gr_chart_objid_anon;
     GR_DIAG_OFFSET axesGroupStart;
-    GR_AXES_IDX    axes_idx;
-    S32            res;
+    GR_AXES_IDX axes_idx;
+    STATUS res;
 
-    if((res = gr_chart_group_new(cp, &axesGroupStart, &id)) < 0)
-        return(res);
+    status_return(res = gr_chart_group_new(cp, &axesGroupStart, gr_chart_objid_anon));
 
     axes_idx = cp->axes_idx_max;
 
     do  {
-        if((res = gr_axis_addin_value_x(cp, axes_idx, front)) < 0)
-            break;
+        status_break(res = gr_axis_addin_value_x(cp, axes_idx, front_phase));
 
-        if((res = gr_axis_addin_value_y(cp, axes_idx, front)) < 0)
-            break;
+        status_break(res = gr_axis_addin_value_y(cp, axes_idx, front_phase));
     }
     while(axes_idx-- > 0);
 
-    if(res < 0)
-        return(res);
+    gr_chart_group_end(cp, &axesGroupStart);
 
-    gr_diag_group_end(cp->core.p_gr_diag, &axesGroupStart);
+    status_return(res);
 
     return(1);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_scatterchart_addin(
     P_GR_CHART cp)
 {
@@ -669,7 +648,7 @@ gr_scatterchart_addin(
     GR_AXES_IDX     axes_idx;
     GR_SERIES_IDX   series_idx;
     P_GR_SERIES     serp;
-    S32             res;
+    STATUS res;
 
     total_n_points = 0; /* category datasource ignored */
 
@@ -721,7 +700,7 @@ gr_scatterchart_addin(
     }
 
     /* loop over axes again after total_n_points accumulated,
-     * sussing best fit lines and forming X axis & Y axis for each axes set
+     * sussing best fit lines and forming x-axis & y-axis for each axes set
     */
     for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
     {
@@ -769,14 +748,13 @@ gr_scatterchart_addin(
     }
 
     /* add in rear axes and gridlines */
-    if((res = gr_scatterchart_axes_addin(cp, 0)) < 0)
-        return(res);
+    status_return(res = gr_scatterchart_axes_addin(cp, FALSE));
 
     /* add in data on axes - always plot from the back to the front */
     axes_idx = cp->axes_idx_max;
 
     do {
-        P_GR_AXES p_axes = &cp->axes[axes_idx];
+        const P_GR_AXES p_axes = &cp->axes[axes_idx];
 
         series_idx = p_axes->series.end_idx;
 
@@ -784,26 +762,23 @@ gr_scatterchart_addin(
         {
             --series_idx;
 
-            if((res = gr_scatterchart_series_addin(cp, axes_idx, series_idx)) < 0)
-                break;
+            status_break(res = gr_scatterchart_series_addin(cp, axes_idx, series_idx));
         }
 
-        if(res < 0)
-            break;
+        status_break(res);
     }
     while(axes_idx-- > 0);
 
-    if(res < 0)
-        return(res);
+    status_return(res);
 
     /* add in front axes and gridlines */
-    if((res = gr_scatterchart_axes_addin(cp, 1)) < 0)
-        return(res);
+    status_return(gr_scatterchart_axes_addin(cp, TRUE));
 
     return(1);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_barlinescatch_best_fit_addin(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp,
     GR_CHARTTYPE charttype)
@@ -959,7 +934,7 @@ gr_barlinescatch_best_fit_addin(
     line_box.y0 = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &fpy0);
     line_box.y1 = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &fpy1);
 
-    /* map together into 3d world */
+    /* map together into 3-D world */
     if(cp->d3.bits.use)
     {
         gr_map_point((P_GR_POINT) &line_box.x0, cp, lcp->plotindex);
@@ -985,9 +960,9 @@ gr_barlinescatch_best_fit_addin(
     id      = lcp->serid;
     id.name = GR_CHART_OBJNAME_BESTFITSER;
 
-    gr_chart_objid_linestyle_query(cp, &id, &linestyle);
+    gr_chart_objid_linestyle_query(cp, id, &linestyle);
 
-    return(gr_diag_line_new(cp->core.p_gr_diag, NULL, id, &line_box, &linestyle));
+    return(gr_chart_line_new(cp, id, &line_box, &linestyle));
 }
 
 PROC_LINEST_DATA_GET_PROTO(extern, gr_barlinescatch_linest_getproc, client_handle, colID, row)

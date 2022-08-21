@@ -149,7 +149,7 @@ application_drag(
 
 #define MARKED_BLOCK_DEFINED()  (MARKER_DEFINED()  &&  (blkend.col != NO_COL))
 
-#define IN_ROW_BORDER(coff)     ((coff == -1)  &&  (borderwidth  != 0))
+#define IN_ROW_BORDER(coff)     ((coff == OFF_LEFT)  &&  (borderwidth  != 0))
 
 /* 'Active' corner of a marked block */
 #define ACTIVE_COL  ((blkanchor.col == blkstart.col) ? blkend.col : blkstart.col)

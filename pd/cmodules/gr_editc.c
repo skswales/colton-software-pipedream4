@@ -15,6 +15,10 @@
 
 #include "common/gflags.h"
 
+#ifndef __swis_h
+#include "swis.h" /*C:*/
+#endif
+
 #ifndef __os_h
 #include "os.h"
 #endif
@@ -77,11 +81,6 @@ gr_chartedit_riscos_point_from_rel(
 static void
 gr_chartedit_selection_display(
     P_GR_CHARTEDITOR cep);
-
-static S32
-gr_chartedit_selection_make(
-    P_GR_CHARTEDITOR cep,
-    const GR_CHART_OBJID * id);
 
 static void
 gr_chartedit_selection_xor(
@@ -166,7 +165,7 @@ gr_chartedit_diagram_update_later(
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
 
-    if(cp->core.p_gr_diag)
+    if(NULL != cp->core.p_gr_diag)
         gr_chartedit_riscos_force_redraw(cep, &cp->core.p_gr_diag->gr_riscdiag.draw_diag.data, FALSE);
 }
 
@@ -395,6 +394,7 @@ gr_chartedit_new(
 *
 ******************************************************************************/
 
+/*ncr*/
 static S32
 gr_chartedit_notify(
     P_GR_CHARTEDITOR cep,
@@ -502,40 +502,39 @@ gr_chartedit_riscos_correlate(
     size_t           hitObjectDepth,
     S32              adjustclicked)
 {
-    P_GR_CHART       cp;
+    P_GR_CHART cp;
     P_GR_DIAG_OBJECT pObject;
-    GR_POINT selpoint, selellipse;
-    unsigned int    hitIndex;
-    GR_DIAG_OFFSET  endObject;
+    GR_POINT selpoint;
+    GR_SIZE selsize;
+    unsigned int hitIndex;
+    GR_DIAG_OFFSET endObject;
 
     assert(cep);
 
     cp = gr_chart_cp_from_ch(cep->ch);
     assert(cp);
 
-    /* tighter correlation if ADJUST clicked (but remember some objects may be truly subpixel ...) */
     if(adjustclicked)
     {
-        /* tight error ellipse centred on pixel centre */
-        selellipse.x = gr_pixit_from_riscos(wimpt_dx()) / 2;
-        selellipse.y = gr_pixit_from_riscos(wimpt_dy()) / 2;
-        selpoint.x   = point->x + selellipse.x;
-        selpoint.y   = point->y + selellipse.y;
+        /* tighter click box if ADJUST clicked (but remember some objects may be truly subpixel ...) */
+        selsize.cx = gr_pixit_from_riscos(1);
+        selsize.cy = gr_pixit_from_riscos(1);
     }
     else
     {
-        /* larger (but still small) error circle if SELECT clicked */
-        selellipse.x = gr_pixit_from_riscos(8);
-        selellipse.y = selellipse.x;
-        selpoint     = *point;
+        /* larger (but still small) click box if SELECT clicked */
+        selsize.cx = gr_pixit_from_riscos(4);
+        selsize.cy = selsize.cx;
     }
+
+    selpoint = *point;
 
     /* scanning backwards from the front of the diagram */
     endObject = GR_DIAG_OBJECT_LAST;
 
     *id = gr_chart_objid_anon;
 
-    if(!cp->core.p_gr_diag)
+    if(NULL == cp->core.p_gr_diag)
     {
         hitObject[0] = GR_DIAG_OBJECT_NONE;
             return(0);
@@ -543,11 +542,11 @@ gr_chartedit_riscos_correlate(
 
     for(;;)
     {
-        gr_diag_object_correlate_between(cp->core.p_gr_diag, &selpoint, &selellipse,
+        gr_diag_object_correlate_between(cp->core.p_gr_diag, &selpoint, &selsize,
                                          hitObject,
+                                         hitObjectDepth - 1,
                                          GR_DIAG_OBJECT_FIRST,
-                                         endObject,
-                                         hitObjectDepth - 1);
+                                         endObject);
 
         if(hitObject[0] == GR_DIAG_OBJECT_NONE)
             return(0);
@@ -688,7 +687,7 @@ gr_chartedit_selection_display(
 
     assert(cep);
 
-    gr_chart_object_name_from_id(title, elemof32(title), &cep->selection.id);
+    gr_chart_object_name_from_id(title, elemof32(title), cep->selection.id);
 
     #if RISCOS
     win_setfield(cep->riscos.w, (wimp_i) GR_CHARTEDIT_TEM_ICON_SELECTION, title);
@@ -717,7 +716,8 @@ gr_chartedit_selection_kill_repr(
 *
 ******************************************************************************/
 
-extern S32
+/*ncr*/
+static BOOL
 gr_chartedit_selection_make(
     P_GR_CHARTEDITOR cep,
     const GR_CHART_OBJID * id)
@@ -759,13 +759,13 @@ extern void
 gr_chartedit_selection_make_repr(
     P_GR_CHARTEDITOR cep)
 {
-    P_GR_CHART         cp;
+    P_GR_CHART        cp;
     GR_DIAG_OFFSET    hitObject;
-    P_GR_DIAG_OBJECT   pObject;
+    P_GR_DIAG_OBJECT  pObject;
     GR_DIAG_PROCESS_T process;
     GR_LINESTYLE      linestyle;
     S32               simple_box;
-    S32               res;
+    STATUS res;
 
     assert(cep);
 
@@ -787,7 +787,7 @@ gr_chartedit_selection_make_repr(
     assert(cp);
 
     /* search **actual** diagram for first object of right class OR ONE OF ITS CHILDREN */
-    * (int *) &process    = 0;
+    zero_struct(process);
     process.recurse       = 1;
     process.find_children = 1;
 
@@ -803,7 +803,7 @@ gr_chartedit_selection_make_repr(
 
         pObject.p_byte = gr_diag_getoffptr(BYTE, cp->core.p_gr_diag, hitObject);
 
-        objectSize         = pObject.hdr->size;
+        objectSize         = pObject.hdr->n_bytes;
         cep->selection.box = pObject.hdr->bbox;
 
         simple_box = 1;
@@ -822,7 +822,7 @@ gr_chartedit_selection_make_repr(
                 break;
 
             pObject.p_byte = gr_diag_getoffptr(BYTE, cp->core.p_gr_diag, hitObject);
-            objectSize = pObject.hdr->size;
+            objectSize = pObject.hdr->n_bytes;
             gr_box_union(&cep->selection.box, NULL, &pObject.hdr->bbox);
         }
     }
@@ -855,8 +855,7 @@ gr_chartedit_selection_make_repr(
         {
             DRAW_BOX draw_box;
 
-            if((res = gr_riscdiag_diagram_new(&cep->selection.p_gr_diag->gr_riscdiag, "selection", 0)) < 0)
-                break;
+            status_break(res = gr_riscdiag_diagram_new(&cep->selection.p_gr_diag->gr_riscdiag, "selection", 0));
 
             if((cep->selection.box.x1 - cep->selection.box.x0) < 2 * GR_PIXITS_PER_RISCOS)
                 cep->selection.box.x1 = cep->selection.box.x0  + 2 * GR_PIXITS_PER_RISCOS;
@@ -866,10 +865,9 @@ gr_chartedit_selection_make_repr(
 
             draw_box_from_gr_box(&draw_box, &cep->selection.box);
 
-            res = gr_riscdiag_rectangle_new(&cep->selection.p_gr_diag->gr_riscdiag, &selectionPathStart,
-                                            &draw_box, &linestyle, NULL);
+            res = gr_riscdiag_rectangle_new(&cep->selection.p_gr_diag->gr_riscdiag, &selectionPathStart, &draw_box, &linestyle, NULL);
 
-            if(res > 0)
+            if(status_done(res))
             {
                 gr_riscdiag_diagram_end(&cep->selection.p_gr_diag->gr_riscdiag);
 
@@ -881,7 +879,7 @@ gr_chartedit_selection_make_repr(
             break;
         }
 
-        if(res < 0)
+        if(status_fail(res))
             gr_chartedit_winge(res);
     }
 }
@@ -892,7 +890,17 @@ gr_chartedit_selection_make_repr(
 *
 ******************************************************************************/
 
-static S32
+static int /*colnum*/
+colourtrans_ReturnColourNumber(
+    wimp_paletteword entry)
+{
+    _kernel_swi_regs rs;
+    rs.r[0] = entry.word;
+    return(_kernel_swi(ColourTrans_ReturnColourNumber, &rs, &rs) ? 0 : rs.r[0]);
+}
+
+_Check_return_
+static STATUS
 gr_riscdiag_path_render(
     P_GR_RISCDIAG p_gr_riscdiag,
     GR_DIAG_OFFSET pathStart,
@@ -932,10 +940,12 @@ gr_riscdiag_path_render(
 
     /* fill the path */
 
-    if(pObject.path->fillcolour != -1)
+    if(pObject.path->fillcolour != (DRAW_COLOUR) -1)
     {
-        e = colourtran_setGCOL(* (wimp_paletteword *) &pObject.path->fillcolour,
-                               0, rip->action, &gcol_out);
+        e = colourtran_setGCOL(* (wimp_paletteword *) &pObject.path->fillcolour, 0, rip->action, &gcol_out);
+
+        if(e)
+            return(0);
 
         fill = (drawmod_filltype) (fill_FBint | fill_FNonbint);
 
@@ -955,10 +965,27 @@ gr_riscdiag_path_render(
 
     /* stroke the path */
 
-    if(pObject.path->pathcolour != -1)
+    if(pObject.path->pathcolour != (DRAW_COLOUR) -1)
     {
-        e = colourtran_setGCOL(* (wimp_paletteword *) &pObject.path->pathcolour,
-                               0, rip->action, &gcol_out);
+        // e = colourtran_setGCOL(* (wimp_paletteword *) &pObject.path->pathcolour, 0, rip->action, &gcol_out);
+        wimp_paletteword os_rgb_foreground;
+        wimp_paletteword os_rgb_background;
+
+        os_rgb_foreground.word = pObject.path->pathcolour;
+
+        os_rgb_background.bytes.gcol  = 0;
+        os_rgb_background.bytes.red   = 0xFF; /*p_rgb_background->r;*/
+        os_rgb_background.bytes.green = 0xFF; /*p_rgb_background->g;*/
+        os_rgb_background.bytes.blue  = 0xFF; /*p_rgb_background->b;*/
+
+        { /* New machines usually demand this mechanism */
+        int colnum_foreground = colourtrans_ReturnColourNumber(os_rgb_foreground);
+        int colnum_background = colourtrans_ReturnColourNumber(os_rgb_background);
+        _kernel_swi_regs rs;
+        rs.r[0] = 3;
+        rs.r[1] = colnum_foreground ^ colnum_background;
+        (void) _kernel_swi(OS_SetColour, &rs, &rs);
+        } /*block*/
 
         fill = (drawmod_filltype) (fill_FBint | fill_FNonbint | fill_FBext);
 
@@ -1023,7 +1050,7 @@ gr_chartedit_selection_xor_core(
     rin.cliprect.y1 = (GR_COORD) r.g.y1 * GR_PIXITS_PER_RISCOS;
     rin.action      = 3;
 
-    gr_riscdiag_path_render(&cep->selection.p_gr_diag->gr_riscdiag, selectionPathStart, &rin);
+    status_consume(gr_riscdiag_path_render(&cep->selection.p_gr_diag->gr_riscdiag, selectionPathStart, &rin));
 }
 
 static void
@@ -1156,11 +1183,11 @@ gr_chartedit_setwintitle(
 extern void
 gr_chartedit_warning(
     P_GR_CHART cp,
-    S32 err)
+    _InVal_     STATUS err)
 {
     if(!cp->core.ceh)
     {
-        if(err)
+        if(status_fail(err))
             gr_chartedit_winge(err);
     }
     else
@@ -1633,9 +1660,10 @@ gr_chartedit_riscos_button_click(
 
                 ++id.no;
 
-                /* skip 3D Axes 3 and 6 until punters can do anything to 'em */
-                if(cp->d3.bits.use && (id.no == 3) || (id.no == 6))
-                    ++id.no;
+                /* skip 3-D Axes 3 and 6 until punters can do anything to 'em */
+                if(cp->d3.bits.use)
+                    if((id.no == 3) || (id.no == 6))
+                        ++id.no;
 
                 /* skip second category axis for similar reasons */
                 if((cp->axes[0].charttype == GR_CHARTTYPE_BAR) || (cp->axes[0].charttype == GR_CHARTTYPE_LINE))
@@ -1792,7 +1820,7 @@ gr_chartedit_riscos_message(
         FILETYPE_RISC_OS filetype = (FILETYPE_RISC_OS) xferrecv_checkinsert(&filename);
         /* sets up reply too */
 
-        trace_1(TRACE_MODULE_GR_CHART, "chart editing window got a DataLoad for %s", trace_tstr(filename));
+        trace_1(TRACE_MODULE_GR_CHART, "chart editing window got a DataLoad for %s", report_tstr(filename));
 
         if(gr_chart_saving_chart(NULL))
         {
@@ -1871,11 +1899,13 @@ gr_chartedit_riscos_message(
 
                 /* load the file, disallowing recolouring */
 
-                if((res = gr_cache_entry_ensure(&cah, filename)) > 0)
+                res = gr_cache_entry_ensure(&cah, filename);
+
+                if(status_done(res))
                 {
                     GR_FILLSTYLE style;
 
-                    gr_chart_objid_fillstyle_query(cp, &id, &style);
+                    gr_chart_objid_fillstyle_query(cp, id, &style);
 
                     style.fg.manual = 1;
                     style.pattern = (GR_FILL_PATTERN_HANDLE) cah;
@@ -1884,10 +1914,10 @@ gr_chartedit_riscos_message(
                     style.bits.pattern    = 1;
                     style.bits.norecolour = 1;
 
-                    res = gr_chart_objid_fillstyle_set(cp, &id, &style);
+                    res = gr_chart_objid_fillstyle_set(cp, id, &style);
                 }
 
-                if(res < 0)
+                if(status_fail(res))
                     gr_chartedit_winge(res);
                 else
                     gr_chart_modify_and_rebuild(&cep->ch);

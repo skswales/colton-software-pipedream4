@@ -1219,7 +1219,7 @@ file__make_usable_dir(
 
     ch = *--ptr;
 
-    if( (ch == FILE_DIR_SEP_CH)
+    if(  ch == FILE_DIR_SEP_CH
         #ifdef FILE_DIR_SEP_CH2
     ||  (ch == FILE_DIR_SEP_CH2)
         #endif

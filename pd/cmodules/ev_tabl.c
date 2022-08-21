@@ -295,6 +295,7 @@ const RPNDEF rpn_table[] =
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_cot,            arg_REA },
     { RPN_FNF,   1, EV_RESO_TRIG    ,         NAP, c_coth,           arg_REA },
     { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_count,          arg_mix },
+    { RPN_FNV,  -2, EV_RESO_STATS   ,         NAP, c_counta,         arg_mix },
     { RPN_FNF,   3, EV_RESO_FINANCE ,         NAP, c_cterm,          arg_REA },
 
     { RPN_FNF,   3, EV_RESO_DATE    ,         NAP, c_date,           arg_INT },
@@ -584,6 +585,7 @@ look_table[] =
     { "cot",        RPN_FNF_COT         },
     { "coth",       RPN_FNF_COTH        },
     { "count",      RPN_FNV_COUNT       },
+    { "counta",     RPN_FNV_COUNTA      },
     { "cterm",      RPN_FNF_CTERM       },
 
     { "date",       RPN_FNF_DATE        },
@@ -984,6 +986,8 @@ func_lookup(
 {
     PC_LOOKDEF opr;
 
+    assert(elemof32(rpn_table) == ELEMOF_RPN_TABLE);
+
     {
         opr = (PC_LOOKDEF)
             bsearch(id, look_table, elemof(look_table) - LOOK_TABLE_EXTRA, sizeof(look_table[0]), func_lookcomp);
@@ -1025,7 +1029,7 @@ extern PC_USTR
 type_from_flags(
     EV_TYPE type)
 {
-    S32 i;
+    U32 i;
     PC_TYPES typ;
 
     for(i = 0, typ = type_table; i < elemof32(type_table); ++i, ++typ)

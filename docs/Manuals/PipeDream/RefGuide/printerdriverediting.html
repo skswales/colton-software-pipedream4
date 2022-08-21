@@ -159,13 +159,13 @@ the highlight.</p>
 highlight.</p>
 
 <p>In column D, specify whether PipeDream should switch off the highlight
-automatically at the end of the slot. For most types of highlight, you should
+automatically at the end of the cell. For most types of highlight, you should
 set this to Y, meaning yes. For alternate font and other global highlights, you
 would set it to N.</p>
 
 <p>The example shows how the daisy wheel printers should do underlining. It is
 switched on by ESC "E" (these are ASCII characters 27,69) and switched off by
-ESC "R" (ASCII 27,82). PipeDream will switch it off at the end of each slot.</p>
+ESC "R" (ASCII 27,82). PipeDream will switch it off at the end of each cell.</p>
 
 <p>The line could be written</p>
 
@@ -176,7 +176,7 @@ ESC "R" (ASCII 27,82). PipeDream will switch it off at the end of each slot.</p>
 <p>Some printers do not have automatic facilities for underlining and bold
 effects, but you might still be able to create these effects with a special
 printer driver facility. Suppose your printer does not do underlining but it
-can backspace the print head, ie it can move the print head backwards so that
+can backspace the print head, i.e. it can move the print head backwards so that
 the next character printed overwrites the previous character. You can use this
 to print each character, backspace, and print an underline character before
 moving on to the next character. To do this, you would specify the following
@@ -188,7 +188,7 @@ line in the printer driver:</p>
 include a string containing a ?, PipeDream prints the string for every
 character, replacing the ? with each character. Notice that if you want to send
 a real question mark from the printer driver you must put double quotation
-marks around the question mark, ie " ? ".</p>
+marks around the question mark, i.e. " ? ".</p>
 
 <p>So, in this case, when you switch on underlining, every character to be
 underlined will be sent to the printer followed by ASCII 8 which is backspace,
@@ -327,8 +327,8 @@ whiskers.</p>
 the word <span class="text-underline">very</span> will be underlined.</p>
 
 <p>In most cases printer drivers will also switch off the highlight
-automatically at the end of the slot. However you can specify that a highlight
-should not be switched off at the end of a slot. On the screen PipeDream
+automatically at the end of the cell. However you can specify that a highlight
+should not be switched off at the end of a cell. On the screen PipeDream
 displays bold text, underlined text, italic text, superscripts and subscripts.
 The other highlights are displayed as their highlight number in inverse.</p>
 
@@ -472,7 +472,7 @@ field, knowing that the printer will be forced to a particular pitch.</p>
 spacing.</p>
 
 <p>The HMIO setting, 247, is the number which tells PipeDream to subtract 9
-from the HMI. How does it do this? Well, for numbers less than 128 (ie O to
+from the HMI. How does it do this? Well, for numbers less than 128 (i.e. O to
 127), the printer driver adds the number to the HMI. Hence putting 1 in the
 field for the Juki example causes PipeDream to add 1. For numbers between 128
 and 255, PipeDream subtracts an amount. The amount which is subtracted is

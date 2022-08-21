@@ -74,7 +74,7 @@ gr_series_n_datasources_req(
 #define GR_DATASOURCES_DESC_DECR 5
 #endif
 
-static S32
+static BOOL
 gr_chart_initialised = FALSE;
 
 /*
@@ -93,13 +93,13 @@ exported variables
 */
 
 const GR_CHART_OBJID
-gr_chart_objid_anon = { GR_CHART_OBJNAME_ANON };
+gr_chart_objid_anon = GR_CHART_OBJID_INIT_NAME(GR_CHART_OBJNAME_ANON);
 
 const GR_CHART_OBJID
-gr_chart_objid_chart = { GR_CHART_OBJNAME_CHART };
+gr_chart_objid_chart = GR_CHART_OBJID_INIT_NAME(GR_CHART_OBJNAME_CHART);
 
 const GR_CHART_OBJID
-gr_chart_objid_legend = { GR_CHART_OBJNAME_LEGEND };
+gr_chart_objid_legend = GR_CHART_OBJID_INIT_NAME(GR_CHART_OBJNAME_LEGEND);
 
 /*
 preferred defaults - exported solely for check in chtIO
@@ -118,7 +118,8 @@ static /*const*/ GR_INT_HANDLE gr_datasource_handle_none  = GR_DATASOURCE_HANDLE
 static /*const*/ GR_INT_HANDLE gr_datasource_handle_start = GR_DATASOURCE_HANDLE_START;
 static /*const*/ GR_INT_HANDLE gr_datasource_handle_texts = GR_DATASOURCE_HANDLE_TEXTS;
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_add(
     P_GR_CHART_HANDLE    chp /*inout*/,
     gr_chart_travelproc proc,
@@ -137,7 +138,8 @@ gr_chart_add(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_add_labels(
     P_GR_CHART_HANDLE    chp /*inout*/,
     gr_chart_travelproc proc,
@@ -167,7 +169,8 @@ gr_chart_add_labels(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_add_text(
     P_GR_CHART_HANDLE    chp /*inout*/,
     gr_chart_travelproc proc,
@@ -276,18 +279,14 @@ gr_chart_damage(
     }
 }
 
-extern S32
+extern void
 gr_chart_diagram(
     PC_GR_CHART_HANDLE chp,
-    GR_DIAG **        dcpp /*out*/)
+    _OutRef_    P_P_GR_DIAG dcpp)
 {
-    P_GR_CHART cp;
-
-    cp = gr_chart_cp_from_ch(*chp);
+    P_GR_CHART cp = gr_chart_cp_from_ch(*chp);
 
     *dcpp = cp->core.p_gr_diag;
-
-    return(*dcpp != NULL);
 }
 
 /******************************************************************************
@@ -326,13 +325,16 @@ gr_chart_diagram_ensure(
 
     gr_diag_diagram_dispose(&cp->core.p_gr_diag);
 
-    if((res = gr_chart_build(&cp->core.ch)) < 0)
+    if(status_fail(res = gr_chart_build(&cp->core.ch)))
+    {
         gr_chartedit_winge(res);
+    }
     else
-        /* only save out if built ok: do we know where to save this? */
+    {   /* only save out if built ok: do we know where to save this? */
         if(file_is_rooted(cp->core.currentfilename))
-            if((res = gr_chart_save_chart_without_dialog(chp, NULL)) < 0)
+            if(status_fail(res = gr_chart_save_chart_without_dialog(chp, NULL)))
                 gr_chart_save_chart_winge(GR_CHART_MSG_CHARTSAVE_ERROR, res);
+    }
 
     if(cep)
     {
@@ -467,7 +469,7 @@ gr_chart_initialise(void)
 *
 ******************************************************************************/
 
-extern S32
+extern BOOL
 gr_chart_insert(
     P_GR_CHART_HANDLE    chp /*inout*/,
     gr_chart_travelproc proc,
@@ -519,29 +521,24 @@ gr_chart_modify_and_rebuild(
 *
 ******************************************************************************/
 
-extern S32
+extern void
 gr_chart_name_query(
     PC_GR_CHART_HANDLE chp,
-    P_U8              szName /*out*/,
-    size_t            bufsiz)
+    _Out_writes_(bufsiz) P_U8Z szName,
+    _InVal_     U32 bufsiz)
 {
-    P_GR_CHART cp;
-
-    cp = gr_chart_cp_from_ch(*chp);
+    P_GR_CHART cp = gr_chart_cp_from_ch(*chp);
 
     xstrkpy(szName, bufsiz, cp->core.currentfilename);
-
-    return(1);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_name_set(
     PC_GR_CHART_HANDLE chp,
-    P_U8              szName /*const*/)
+    _In_opt_z_  PC_U8Z szName)
 {
-    P_GR_CHART cp;
-
-    cp = gr_chart_cp_from_ch(*chp);
+    P_GR_CHART cp = gr_chart_cp_from_ch(*chp);
 
     return((str_set(&cp->core.currentfilename, szName) >= 0) ? 1 : status_nomem());
 }
@@ -561,12 +558,14 @@ gr_chart_layout_default = /* only approx. A8 */
     { (GR_PIXITS_PER_INCH * 4) / 10, /* LM */
       (GR_PIXITS_PER_INCH * 3) / 10, /* BM */
       (GR_PIXITS_PER_INCH * 4) / 10, /* RM */
-      (GR_PIXITS_PER_INCH * 3) / 10  /* TM */ }
+      (GR_PIXITS_PER_INCH * 3) / 10  /* TM */ },
 
     /* dependent fields filled in by user of this structure */
+    { 0, 0 }
 };
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_new(
     P_GR_CHART_HANDLE chp /*out*/,
     P_ANY            ext_handle,
@@ -621,8 +620,8 @@ gr_chart_new(
     cp->legend.bits.on = 1;
 
     cp->d3.bits.on     = 1;
-    cp->d3.pitch       = 10.0; /* DEGREES */
-    cp->d3.roll        = 10.0;
+    cp->d3.droop       = 10.0; /* DEGREES */
+    cp->d3.turn        = 10.0;
 
     cp->barch.slot_overlap_percentage = 0.0; /* no overlap */
     cp->linech.slot_shift_percentage  = 0.0; /* complete overlap */
@@ -655,7 +654,7 @@ gr_chart_new(
 
         for(axis_idx = 0; axis_idx < 3; ++axis_idx)
         {
-            P_GR_AXIS p_axis = &p_axes->axis[axis_idx];
+            const P_GR_AXIS p_axis = &p_axes->axis[axis_idx];
 
             p_axis->bits.incl_zero = 1; /* this is RJM's fault */
 
@@ -670,8 +669,8 @@ gr_chart_new(
         }
     }
 
-    cp->axes[1].axis[X_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_TOP;
-    cp->axes[1].axis[Y_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_RIGHT;
+    cp->axes[1].axis[X_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_BZT_TOP; /* bzt for category or x-axis */
+    cp->axes[1].axis[Y_AXIS_IDX].bits.lzr = GR_AXIS_POSITION_LZR_RIGHT;
 
     gr_colour_set_BLACK(  cp->chart.borderstyle.fg);
                           cp->chart.borderstyle.fg.manual = 1;
@@ -679,18 +678,18 @@ gr_chart_new(
                           cp->chart.areastyle.fg.manual = 1;
                           cp->chart.areastyle.bits.norecolour = 1;
 
-    gr_colour_set_BLACK(  cp->plotarea.area[0].borderstyle.fg);
+    gr_colour_set_MIDGRAY(cp->plotarea.area[0].borderstyle.fg);
                           cp->plotarea.area[0].borderstyle.fg.manual = 1;
     gr_colour_set_VLTGRAY(cp->plotarea.area[0].areastyle.fg);
                           cp->plotarea.area[0].areastyle.fg.manual = 1;
                           cp->plotarea.area[0].areastyle.bits.norecolour = 1;
 
-    gr_colour_set_BLACK(  cp->plotarea.area[1].borderstyle.fg);
+    gr_colour_set_MIDGRAY(cp->plotarea.area[1].borderstyle.fg);
                           cp->plotarea.area[1].borderstyle.fg.manual = 1;
     gr_colour_set_LTGRAY( cp->plotarea.area[1].areastyle.fg);
                           cp->plotarea.area[1].areastyle.fg.manual = 1;
 
-    gr_colour_set_BLACK(  cp->plotarea.area[2].borderstyle.fg);
+    gr_colour_set_MIDGRAY(cp->plotarea.area[2].borderstyle.fg);
                           cp->plotarea.area[2].borderstyle.fg.manual = 1;
     gr_colour_set_LTGRAY( cp->plotarea.area[2].areastyle.fg);
                           cp->plotarea.area[2].areastyle.fg.manual = 1;
@@ -728,6 +727,7 @@ gr_chart_new(
     return(1);
 }
 
+_Check_return_
 extern U32
 gr_chart_order_query(
     PC_GR_CHART_HANDLE chp,
@@ -798,11 +798,12 @@ gr_chart_order_query(
         }
 }
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_exists(
-    P_GR_CHART_HANDLE chp /*out*/,
-    P_P_ANY          p_ext_handle /*out*/,
-    P_U8             szName /*const*/)
+    /*out*/ P_GR_CHART_HANDLE chp,
+    /*out*/ P_P_ANY p_ext_handle,
+    _In_z_      PC_U8Z szName)
 {
     LIST_ITEMNO key;
     P_GR_CHART   cp;
@@ -810,7 +811,9 @@ gr_chart_query_exists(
     for(cp = collect_first(GR_CHART, &gr_charts.lbr, &key);
         cp;
         cp = collect_next( GR_CHART, &gr_charts.lbr, &key))
+    {
         if(cp->core.currentfilename)
+        {
             if(0 == _stricmp(cp->core.currentfilename, szName))
             {
                 if(chp)
@@ -819,18 +822,20 @@ gr_chart_query_exists(
                     *p_ext_handle = cp->core.ext_handle;
                 return(1);
             }
+        }
+    }
 
     return(0);
 }
 
 /******************************************************************************
 *
-* ask chart whether category labels ought
-* to be provided (they are optional even so)
+* ask chart whether category labels ought to be provided (they are optional even so)
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_labelling(
     PC_GR_CHART_HANDLE chp)
 {
@@ -863,7 +868,8 @@ gr_chart_query_labelling(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_labels(
     PC_GR_CHART_HANDLE chp)
 {
@@ -885,6 +891,7 @@ gr_chart_query_labels(
 *
 ******************************************************************************/
 
+/*ncr*/
 extern S32
 gr_chart_subtract(
     PC_GR_CHART_HANDLE chp,
@@ -914,7 +921,8 @@ gr_chart_subtract(
 *
 ******************************************************************************/
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_update_handle(
     PC_GR_CHART_HANDLE chp,
     P_ANY             ext_handle,
@@ -985,7 +993,7 @@ gr_datasource_insert(
 
         key = gr_text_key_for_new(cp);
 
-        if((res = gr_text_new(cp, key, NULL, NULL)) < 0)
+        if(status_fail(res = gr_text_new(cp, key, NULL, NULL)))
             return(0);
 
         t = gr_text_search_key(cp, key);
@@ -1072,6 +1080,7 @@ gr_datasource_insert(
 *
 ******************************************************************************/
 
+/*ncr*/
 extern S32
 gr_chart_subtract_datasource_using_dsh(
     P_GR_CHART            cp,
@@ -1193,7 +1202,8 @@ gr_chart_subtract_datasource_using_dsh(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_add_series(
     P_GR_CHART cp,
     GR_AXES_IDX axes_idx,
@@ -1277,7 +1287,8 @@ gr_chart_add_series(
     return(1);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_realloc_series(
     P_GR_CHART cp)
 {
@@ -1288,7 +1299,6 @@ gr_chart_realloc_series(
     GR_AXES_IDX      axes_idx;
     GR_SERIES_IDX    old_n_series_0, old_n_series_1;
     P_GR_DATASOURCE  dsp, last_dsp;
-    S32              res;
 
     cp->bits.realloc_series = 0;
 
@@ -1344,8 +1354,7 @@ gr_chart_realloc_series(
 #endif
         {
         /* whether to bomb the new descriptor or leave as is: vvv */
-        if((res = gr_chart_add_series(cp, 0, (series_idx >= old_n_series_0))) < 0)
-            return(res);
+        status_return(gr_chart_add_series(cp, 0, (series_idx >= old_n_series_0)));
 
         serp = getserp(cp, series_idx);
 
@@ -1387,8 +1396,7 @@ gr_chart_realloc_series(
             new_seridx = cp->axes[1].series.end_idx;
 
             /* concoct new series for overlay axes */
-            if((res = gr_chart_add_series(cp, 1, ((new_seridx - cp->axes[1].series.end_idx) >= old_n_series_1))) < 0)
-                return(res);
+            status_return(gr_chart_add_series(cp, 1, ((new_seridx - cp->axes[1].series.end_idx) >= old_n_series_1)));
 
             /* count number of series we'd have to fully move over from main axes set
              * to satisfy this one new series on the overlay axes
@@ -1546,6 +1554,7 @@ gr_chart_realloc_series(
         id.no = gr_series_external_from_idx(cp, series_idx);
 
         for(ds = 0; ds < serp->datasources.n_req; ++ds)
+        {
             if(serp->datasources.dsh[ds] != GR_DATASOURCE_HANDLE_NONE)
             {
                 gr_chart_dsp_from_dsh(cp, &dsp, serp->datasources.dsh[ds]);
@@ -1553,6 +1562,7 @@ gr_chart_realloc_series(
                 id.subno = ds;
                 dsp->id  = id;
             }
+        }
     }
 
     return(1);
@@ -1731,7 +1741,8 @@ gr_chart_empty_traveller_datasource =
 *
 ******************************************************************************/
 
-extern S32
+/*ncr*/
+extern BOOL
 gr_chart_dsp_from_dsh(
     P_GR_CHART cp,
     _OutRef_    P_P_GR_DATASOURCE dspp,
@@ -1759,11 +1770,13 @@ gr_chart_dsp_from_dsh(
     dsp = cp->core.datasources.mh;
 
     for(last_dsp = dsp + cp->core.datasources.n; dsp < last_dsp; ++dsp)
+    {
         if(dsp->dsh == dsh)
         {
             *dspp = dsp;
             return(1);
         }
+    }
 
     for(t = collect_first(GR_TEXT, &cp->text.lbr, &key);
         t;
@@ -1808,7 +1821,7 @@ gr_travel_dsh(
 
     pValue->type = GR_CHART_VALUE_NONE;
 
-    if(gr_chart_dsp_from_dsh(cp, &dsp, dsh) <= 0)
+    if(!gr_chart_dsp_from_dsh(cp, &dsp, dsh))
         return(0);
 
     myassert3x(dsp->ext_proc != NULL, "gr_travel about to call NULL travel proc: chart &%p dsh &%p item %d", cp, dsh, item);
@@ -1888,7 +1901,7 @@ gr_travel_dsh_n_items(
     GR_CHART_VALUE value;
     P_GR_DATASOURCE dsp;
 
-    if(gr_chart_dsp_from_dsh(cp, &dsp, dsh) <= 0)
+    if(!gr_chart_dsp_from_dsh(cp, &dsp, dsh))
         return(0);
 
     if(dsp->valid.n_items)
@@ -2102,81 +2115,47 @@ gr_travel_series_n_items_total(
 
 /* add in actual chart area iff patterned or coloured */
 
-extern S32
-gr_chart_scaled_picture_add(
-    P_GR_CHART        cp,
-    PC_GR_CHART_OBJID id /*const*/,
-    PC_GR_BOX   box,
-    PC_GR_FILLSTYLE   style)
-{
-    return(gr_diag_scaled_picture_add(
-                cp->core.p_gr_diag, NULL, *id,
-                box,
-                style ? (GR_CACHE_HANDLE) style->pattern : GR_CACHE_HANDLE_NONE,
-                style));
-}
-
-extern S32
-gr_chart_group_new(
-    P_GR_CHART        cp,
-    P_GR_DIAG_OFFSET  groupStart,
-    PC_GR_CHART_OBJID id /*const*/)
-{
-#ifdef GR_CHART_NAME_GROUPS
-    return(gr_diag_group_new(
-            cp->core.p_gr_diag, groupStart, *id,
-            (id->name == GR_CHART_OBJNAME_ANON) ? NULL : gr_chart_object_name_from_id_quick(id)));
-#else
-    return(gr_diag_group_new(cp->core.p_gr_diag, groupStart, *id, NULL));
-#endif
-}
-
-static S32
+_Check_return_
+static STATUS
 gr_chart_chart_addin(
     P_GR_CHART cp)
 {
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_OBJID id = gr_chart_objid_chart;
     GR_DIAG_OFFSET chartGroupStart;
     GR_BOX chartbox;
-    S32 res = 1;
     GR_FILLSTYLE fillstyle;
     GR_LINESTYLE linestyle;
 
-    if((res = gr_chart_group_new(cp, &chartGroupStart, &id)) < 0)
-        return(res);
+    status_return(gr_chart_group_new(cp, &chartGroupStart, id));
 
     chartbox.x0 = 0;
     chartbox.y0 = 0;
     chartbox.x1 = chartbox.x0 + cp->core.layout.width;
     chartbox.y1 = chartbox.y0 + cp->core.layout.height;
 
-    gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
-    gr_chart_objid_linestyle_query(cp, &id, &linestyle);
+    gr_chart_objid_fillstyle_query(cp, id, &fillstyle);
+    gr_chart_objid_linestyle_query(cp, id, &linestyle);
 
     if(!fillstyle.bits.notsolid)
         if(linestyle.fg.visible || fillstyle.fg.visible)
-            if((res = gr_diag_rectangle_new(p_gr_diag, NULL, id,
-                                            &chartbox, &linestyle, &fillstyle)) < 0)
-                return(res);
+            status_return(gr_chart_rectangle_new(cp, id, &chartbox, &linestyle, &fillstyle));
 
     if(fillstyle.bits.pattern)
-        if((res = gr_chart_scaled_picture_add(cp, &id, &chartbox, &fillstyle)) < 0)
-            return(res);
+        status_return(gr_chart_scaled_picture_add(cp, id, &chartbox, &fillstyle));
 
-    gr_diag_group_end(p_gr_diag, &chartGroupStart);
+    gr_chart_group_end(cp, &chartGroupStart);
 
     return(1);
 }
 
 /* add in plot area */
 
-static S32
+_Check_return_
+static STATUS
 gr_chart_plotarea_addin(
     P_GR_CHART cp)
 {
     struct GR_CHART_PLOTAREA * plotarea = &cp->plotarea;
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_OBJID id;
     GR_BOX plotareabox;
     GR_DIAG_OFFSET plotGroupStart;
@@ -2185,10 +2164,7 @@ gr_chart_plotarea_addin(
     S32 res = 1;
 
     /* SKS after 4.12 30mar92 - now individual plotareas don't inherit from each other, divorce selection grouping */
-    id = gr_chart_objid_anon;
-
-    if((res = gr_chart_group_new(cp, &plotGroupStart, &id)) < 0)
-        return(res);
+    status_return(res = gr_chart_group_new(cp, &plotGroupStart, gr_chart_objid_anon));
 
     gr_chart_objid_clear(&id);
     id.name   = GR_CHART_OBJNAME_PLOTAREA;
@@ -2202,27 +2178,24 @@ gr_chart_plotarea_addin(
 
     /* NB. never display wall and floor of box for pies or scatters! */
 
-    gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
-    gr_chart_objid_linestyle_query(cp, &id, &linestyle);
+    gr_chart_objid_fillstyle_query(cp, id, &fillstyle);
+    gr_chart_objid_linestyle_query(cp, id, &linestyle);
 
     if(!fillstyle.bits.notsolid)
-        if((res = gr_diag_rectangle_new(p_gr_diag, NULL, id,
-                                        &plotareabox, &linestyle, &fillstyle)) < 0)
-            return(res);
+        status_return(gr_chart_rectangle_new(cp, id, &plotareabox, &linestyle, &fillstyle));
 
     if(fillstyle.bits.pattern)
-        if((res = gr_chart_scaled_picture_add(cp, &id, &plotareabox, &fillstyle)) < 0)
-            return(res);
+        status_return(gr_chart_scaled_picture_add(cp, id, &plotareabox, &fillstyle));
 
     if(cp->d3.bits.use)
     {
-        GR_POINT origin, ps1, ps2;
+        GR_POINT origin, ps1, ps2, ps3;
 
         /* wall */
         id.no = GR_CHART_PLOTAREA_WALL;
 
-        gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
-        gr_chart_objid_linestyle_query(cp, &id, &linestyle);
+        gr_chart_objid_fillstyle_query(cp, id, &fillstyle);
+        gr_chart_objid_linestyle_query(cp, id, &linestyle);
 
         origin.x = cp->plotarea.posn.x;
         origin.y = cp->plotarea.posn.y;
@@ -2233,31 +2206,31 @@ gr_chart_plotarea_addin(
         ps2.x    = ps1.x;
         ps2.y    = ps1.y + plotarea->size.y;
 
+        ps3.x    = 0;
+        ps3.y    = plotarea->size.y;
+
         if(ps1.x)
             if(!fillstyle.bits.notsolid)
-                if((res = gr_diag_parallelogram_new(p_gr_diag, NULL, id,
-                                                    &origin, &ps1, &ps2,
-                                                    &linestyle, &fillstyle)) < 0)
-                    return(res);
+                status_return(gr_diag_quadrilateral_new(cp->core.p_gr_diag, NULL, id, &origin, &ps1, &ps2, &ps3, &linestyle, &fillstyle));
 
         /* floor */
         id.no = GR_CHART_PLOTAREA_FLOOR;
 
-        gr_chart_objid_fillstyle_query(cp, &id, &fillstyle);
-        gr_chart_objid_linestyle_query(cp, &id, &linestyle);
+        gr_chart_objid_fillstyle_query(cp, id, &fillstyle);
+        gr_chart_objid_linestyle_query(cp, id, &linestyle);
 
         ps2.x = ps1.x + plotarea->size.x;
         ps2.y = ps1.y;
 
+        ps3.x = plotarea->size.x;
+        ps3.y = 0;
+
         if(ps2.y)
             if(!fillstyle.bits.notsolid)
-                if((res = gr_diag_parallelogram_new(p_gr_diag, NULL, id,
-                                                    &origin, &ps1, &ps2,
-                                                    &linestyle, &fillstyle)) < 0)
-                    return(res);
+                status_return(gr_diag_quadrilateral_new(cp->core.p_gr_diag, NULL, id, &origin, &ps1, &ps2, &ps3, &linestyle, &fillstyle));
     }
 
-    gr_diag_group_end(p_gr_diag, &plotGroupStart);
+    gr_chart_group_end(cp, &plotGroupStart);
 
     return(1);
 }
@@ -2306,7 +2279,8 @@ gr_chart_legend_boxes_prepare(
     text_box->y1 = text_box->y0 + textstyle->height;
 }
 
-static S32
+_Check_return_
+static S32 /*0,1,2*/
 gr_chart_legend_boxes_fitq(
     S32             in_rows,
     PC_GR_BOX  legendbox,
@@ -2367,12 +2341,12 @@ gr_chart_legend_boxes_fitq(
     return(res);
 }
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_legend_addin(
     P_GR_CHART cp)
 {
     struct GR_CHART_LEGEND * legend = &cp->legend;
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_BOX legendbox;
     GR_BOX legend_margins;
     GR_DIAG_OFFSET legendGroupStart;
@@ -2401,9 +2375,9 @@ gr_chart_legend_addin(
     if(!legend->bits.on)
         return(1);
 
-    gr_chart_objid_fillstyle_query(cp, &legend_id, &fillstyle);
-    gr_chart_objid_linestyle_query(cp, &legend_id, &linestyle);
-    gr_chart_objid_textstyle_query(cp, &legend_id, &textstyle);
+    gr_chart_objid_fillstyle_query(cp, legend_id, &fillstyle);
+    gr_chart_objid_linestyle_query(cp, legend_id, &linestyle);
+    gr_chart_objid_textstyle_query(cp, legend_id, &textstyle);
 
     linespacing = (textstyle.height * 12) / 10;
 
@@ -2552,8 +2526,7 @@ gr_chart_legend_addin(
         {
             GR_BOX legend_outer_rect;
 
-            if((res = gr_chart_group_new(cp, &legendGroupStart, &legend_id)) < 0)
-                break;
+            status_break(res = gr_chart_group_new(cp, &legendGroupStart, legend_id));
 
             legend_outer_rect.x0 = legend->posn.x;
             legend_outer_rect.y0 = legend->posn.y;
@@ -2561,13 +2534,10 @@ gr_chart_legend_addin(
             legend_outer_rect.y1 = legend->posn.y + legend->size.y;
 
             if(!fillstyle.bits.notsolid)
-                if((res = gr_diag_rectangle_new(p_gr_diag, NULL, legend_id,
-                                                &legend_outer_rect, &linestyle, &fillstyle)) < 0)
-                    break;
+                status_break(res = gr_chart_rectangle_new(cp, legend_id, &legend_outer_rect, &linestyle, &fillstyle));
 
             if(fillstyle.bits.pattern)
-                if((res = gr_chart_scaled_picture_add(cp, &legend_id, &legend_outer_rect, &fillstyle)) < 0)
-                    break;
+                status_break(res = gr_chart_scaled_picture_add(cp, legend_id, &legend_outer_rect, &fillstyle));
         }
 
         switch(charttype)
@@ -2606,17 +2576,16 @@ gr_chart_legend_addin(
 
                     intern_id.subno = (U16) gr_point_external_from_key(point);
 
-                    gr_chart_objid_linestyle_query(cp, &intern_id, &linestyle);
-                    gr_chart_objid_fillstyle_query(cp, &intern_id, &fillstyle);
+                    gr_chart_objid_linestyle_query(cp, intern_id, &linestyle);
+                    gr_chart_objid_fillstyle_query(cp, intern_id, &fillstyle);
 
-                    if((res = gr_diag_rectangle_new(p_gr_diag, NULL, legend_id,
-                                                    &rect_box, &linestyle, &fillstyle)) < 0)
-                        break;
+                    status_break(res = gr_chart_rectangle_new(cp, legend_id, &rect_box, &linestyle, &fillstyle));
 
                     if(swidth_px)
-                        if((res = gr_diag_text_new(p_gr_diag, NULL, gr_chart_objid_legend,
-                                                    &text_box, cv.data.text, &textstyle)) < 0)
-                            break;
+                    {
+                        status_break(res = gr_chart_text_new(cp, gr_chart_objid_legend, &text_box, cv.data.text, &textstyle));
+                        res = STATUS_DONE;
+                    }
                 }
 
                 if(legend->bits.in_rows)
@@ -2664,8 +2633,8 @@ gr_chart_legend_addin(
                         gr_chart_objid_from_series_no(gr_series_external_from_idx(cp, series_idx), &intern_id);
 
                         linestyle_using_default =
-                        gr_chart_objid_linestyle_query(cp, &intern_id, &linestyle);
-                        gr_chart_objid_fillstyle_query(cp, &intern_id, &fillstyle);
+                        gr_chart_objid_linestyle_query(cp, intern_id, &linestyle);
+                        gr_chart_objid_fillstyle_query(cp, intern_id, &fillstyle);
 
                         serp = getserp(cp, series_idx);
 
@@ -2676,13 +2645,10 @@ gr_chart_legend_addin(
                         if(charttype == GR_CHARTTYPE_BAR)
                         {
                             if(!fillstyle.bits.notsolid)
-                                if((res = gr_diag_rectangle_new(p_gr_diag, NULL, legend_id,
-                                                                &rect_box, &linestyle, &fillstyle)) < 0)
-                                    break;
+                                status_break(res = gr_chart_rectangle_new(cp, legend_id, &rect_box, &linestyle, &fillstyle));
 
                             if(fillstyle.bits.pattern)
-                                if((res = gr_chart_scaled_picture_add(cp, &legend_id, &rect_box, &fillstyle)) < 0)
-                                    break;
+                                status_break(res = gr_chart_scaled_picture_add(cp, legend_id, &rect_box, &fillstyle));
                         }
                         else
                         {
@@ -2693,32 +2659,28 @@ gr_chart_legend_addin(
                                 line_box.y1 += (rect_box.x1 - rect_box.x0) / 4;
 
                                 if(!fillstyle.bits.notsolid)
-                                    if((res = gr_diag_rectangle_new(p_gr_diag, NULL, gr_chart_objid_legend,
-                                                                    &line_box, &linestyle, &fillstyle)) < 0)
-                                        break;
+                                    status_break(res = gr_chart_rectangle_new(cp, gr_chart_objid_legend, &line_box, &linestyle, &fillstyle));
                             }
                             else
                             {
                                 /* draw a centred line through the box */
 
-                                /* BODGE: in 2d line chart mode derive line chart line colour from fill colour */
+                                /* BODGE: in 2-D line chart mode derive line chart line colour from fill colour */
                                 if(linestyle_using_default && (charttype == GR_CHARTTYPE_LINE))
                                     linestyle.fg = fillstyle.fg;
 
-                                if((res = gr_diag_line_new(p_gr_diag, NULL, legend_id,
-                                                           &line_box, &linestyle)) < 0)
-                                    break;
+                                status_break(res = gr_chart_line_new(cp, legend_id, &line_box, &linestyle));
                             }
 
                             if(fillstyle.bits.pattern)
-                                if((res = gr_chart_scaled_picture_add(cp, &legend_id, &pict_box, &fillstyle)) < 0)
-                                    break;
+                                status_break(res = gr_chart_scaled_picture_add(cp, legend_id, &pict_box, &fillstyle));
                         }
 
                         if(swidth_px)
-                            if((res = gr_diag_text_new(p_gr_diag, NULL, legend_id,
-                                                        &text_box, cv.data.text, &textstyle)) < 0)
-                                break;
+                        {
+                            status_break(res = gr_chart_text_new(cp, legend_id, &text_box, cv.data.text, &textstyle));
+                            res = STATUS_DONE;
+                        }
                     }
 
                     if(legend->bits.in_rows)
@@ -2730,11 +2692,10 @@ gr_chart_legend_addin(
             break;
         }
 
-        if(res < 0)
-            break;
-
         if(pass_out)
-            gr_diag_group_end(p_gr_diag, &legendGroupStart);
+            gr_chart_group_end(cp, &legendGroupStart);
+
+        status_break(res);
     }
 
     gr_riscdiag_font_dispose(&f);
@@ -2750,7 +2711,7 @@ gr_chart_init_for_build(
     S32 /*GR_SERIES_NO*/ n_series_deep;
     GR_POINT new_posn;
 
-    /* reflect 3D usability */
+    /* reflect 3-D usability */
     switch(cp->axes[0].charttype)
     {
     case GR_CHARTTYPE_PIE:
@@ -2781,10 +2742,10 @@ gr_chart_init_for_build(
 
     if(cp->d3.bits.use)
     {
-        F64 sir = sin(cp->d3.roll  * _radians_per_degree);
-        F64 cor = cos(cp->d3.roll  * _radians_per_degree);
-        F64 sip = sin(cp->d3.pitch * _radians_per_degree);
-        F64 cop = cos(cp->d3.pitch * _radians_per_degree);
+        F64 sin_t = sin(cp->d3.turn  * _radians_per_degree);
+        F64 cos_t = cos(cp->d3.turn  * _radians_per_degree);
+        F64 sin_d = sin(cp->d3.droop * _radians_per_degree);
+        F64 cos_d = cos(cp->d3.droop * _radians_per_degree);
         /* NB. the following is now an int 'cos unsigneds promote ints
          * to unsigned and crap on the division result for -ve numbers
         */
@@ -2792,16 +2753,16 @@ gr_chart_init_for_build(
 
         /* given current allowable size, work out how to share it out */
         size.x = plotarea.x1 - plotarea.x0;
-        size.x = (GR_COORD) ((size.x * cor) / (cor + sir));
+        size.x = (GR_COORD) ((size.x * cos_t) / (cos_t + sin_t));
         size.y = plotarea.y1 - plotarea.y0;
-        size.y = (GR_COORD) ((size.y * cop) / (cop + sip));
+        size.y = (GR_COORD) ((size.y * cos_d) / (cos_d + sin_d));
 
         new_posn.x = plotarea.x1 - size.x;
         new_posn.y = plotarea.y1 - size.y;
     }
     else
     {
-        /* make null 3d vectors */
+        /* make null 3-D vectors */
         new_posn.x = plotarea.x0;
         new_posn.y = plotarea.y0;
     }
@@ -2875,27 +2836,22 @@ gr_chart_build(
     {
         cp->core.p_gr_diag = p_gr_diag = gr_diag_diagram_new(GR_CHART_CREATORNAME, &res);
 
-        if(!p_gr_diag)
+        if(NULL == p_gr_diag)
             break;
 
-        /* create some hierarchy to help correlator */
-        {
+        { /* create some hierarchy to help correlator */
         GR_DIAG_OFFSET bgGroupStart;
-        GR_CHART_OBJID id = gr_chart_objid_anon;
 
-        if((res = gr_chart_group_new(cp, &bgGroupStart, &id)) < 0)
-            break;
+        status_break(res = gr_chart_group_new(cp, &bgGroupStart, gr_chart_objid_anon));
 
         /* add in actual chart area */
-        if((res = gr_chart_chart_addin(cp)) < 0)
-            break;
+        status_break(res = gr_chart_chart_addin(cp));
 
         /* add in plot area */
-        if((res = gr_chart_plotarea_addin(cp)) < 0)
-            break;
+        status_break(res = gr_chart_plotarea_addin(cp));
 
-        gr_diag_group_end(p_gr_diag, &bgGroupStart);
-        }
+        gr_chart_group_end(cp, &bgGroupStart);
+        } /*block*/
 
         switch(cp->axes[0].charttype)
         {
@@ -2919,23 +2875,18 @@ gr_chart_build(
         if(res < 0)
             break;
 
-        /* create some more hierarchy to help correlator */
-        {
+        { /* create some more hierarchy to help correlator */
         GR_DIAG_OFFSET fgGroupStart;
-        GR_CHART_OBJID id = gr_chart_objid_anon;
 
-        if((res = gr_chart_group_new(cp, &fgGroupStart, &id)) < 0)
-            break;
+        status_break(res = gr_chart_group_new(cp, &fgGroupStart, gr_chart_objid_anon));
 
         /* add in legend */
-        if((res = gr_chart_legend_addin(cp)) < 0)
-            break;
+        status_break(res = gr_chart_legend_addin(cp));
 
-        if((res = gr_text_addin(cp)) < 0)
-            break;
+        status_break(res = gr_text_addin(cp));
 
-        gr_diag_group_end(p_gr_diag, &fgGroupStart);
-        }
+        gr_chart_group_end(cp, &fgGroupStart);
+        } /*block*/
 
         gr_diag_diagram_end(p_gr_diag);
 
@@ -2950,13 +2901,13 @@ gr_chart_build(
 
 extern void
 gr_chart_object_name_from_id(
-    P_U8 szName /*out*/,
+    P_U8Z szName /*out*/,
     _InVal_ U32 elemof_buffer,
-    PC_GR_CHART_OBJID id /*const*/)
+    _InVal_     GR_CHART_OBJID id)
 {
-    P_U8 out = szName;
+    P_U8Z out = szName;
 
-    switch(id->name)
+    switch(id.name)
     {
     case GR_CHART_OBJNAME_ANON:
         assert(elemof_buffer);
@@ -2969,9 +2920,9 @@ gr_chart_object_name_from_id(
         break;
 
     case GR_CHART_OBJNAME_PLOTAREA:
-        if(id->no == 1)
+        if(id.no == 1)
             xstrkpy(out, elemof_buffer, "Wall");
-        else if(id->no == 2)
+        else if(id.no == 2)
             xstrkpy(out, elemof_buffer, "Floor");
         else
             xstrkpy(out, elemof_buffer, "Plot area");
@@ -2982,63 +2933,63 @@ gr_chart_object_name_from_id(
         break;
 
     case GR_CHART_OBJNAME_TEXT:
-        (void) xsnprintf(out, elemof_buffer, "Text " U16_FMT, id->no /*.text*/);
+        (void) xsnprintf(out, elemof_buffer, "Text " U16_FMT, id.no /*.text*/);
         break;
 
     case GR_CHART_OBJNAME_SERIES:
-        (void) xsnprintf(out, elemof_buffer, "Series " U16_FMT, id->no /*.series*/);
+        (void) xsnprintf(out, elemof_buffer, "Series " U16_FMT, id.no /*.series*/);
         break;
 
     case GR_CHART_OBJNAME_POINT:
-        (void) xsnprintf(out, elemof_buffer, "S" U16_FMT "P" U16_FMT, id->no /*.series*/, id->subno);
+        (void) xsnprintf(out, elemof_buffer, "S" U16_FMT "P" U16_FMT, id.no /*.series*/, id.subno);
         break;
 
     case GR_CHART_OBJNAME_DROPSER:
-        (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT, id->no /*.series*/);
+        (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT, id.no /*.series*/);
         break;
 
     case GR_CHART_OBJNAME_DROPPOINT:
-        (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT "P" U16_FMT, id->no /*.series*/, id->subno);
+        (void) xsnprintf(out, elemof_buffer, "Drop S" U16_FMT "P" U16_FMT, id.no /*.series*/, id.subno);
         break;
 
     case GR_CHART_OBJNAME_AXIS:
-        (void) xsnprintf(out, elemof_buffer, "Axis " U16_FMT, id->no /*.axis*/);
+        (void) xsnprintf(out, elemof_buffer, "Axis " U16_FMT, id.no /*.axis*/);
         break;
 
     case GR_CHART_OBJNAME_AXISGRID:
-        out += xsnprintf(out, elemof_buffer, "Grid " U16_FMT, id->no /*.axis*/);
-        if(id->subno > 1)
-            (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id->subno);
+        out += xsnprintf(out, elemof_buffer, "Grid " U16_FMT, id.no /*.axis*/);
+        if(id.subno > 1)
+            (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id.subno);
         break;
 
     case GR_CHART_OBJNAME_AXISTICK:
-        out += xsnprintf(out, elemof_buffer, "Tick " U16_FMT, id->no /*.axis*/);
-        if(id->subno > 1)
-            (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id->subno);
+        out += xsnprintf(out, elemof_buffer, "Tick " U16_FMT, id.no /*.axis*/);
+        if(id.subno > 1)
+            (void) xsnprintf(out, elemof_buffer - (out - szName), "-" U16_FMT, id.subno);
         break;
 
     case GR_CHART_OBJNAME_BESTFITSER:
-        (void) xsnprintf(out, elemof_buffer, "Best fit " U16_FMT, id->no /*.series*/);
+        (void) xsnprintf(out, elemof_buffer, "Best fit " U16_FMT, id.no /*.series*/);
         break;
 
     default:
         (void) xsnprintf(out, elemof_buffer,
-                         id->has_subno
+                         id.has_subno
                              ? "O%u(%u.%u)"
                              :
-                         id->has_no
+                         id.has_no
                              ? "O%u(%u)"
                              : "O%u",
-                         id->name, id->no, id->subno);
+                         id.name, id.no, id.subno);
         break;
     }
 }
 
-extern PC_U8
+extern PC_U8Z
 gr_chart_object_name_from_id_quick(
-    PC_GR_CHART_OBJID id /*const*/)
+    _InVal_     GR_CHART_OBJID id)
 {
-    static U8 name[BUF_MAX_GR_CHART_OBJID_REPR];
+    static U8Z name[BUF_MAX_GR_CHART_OBJID_REPR];
 
     gr_chart_object_name_from_id(name, elemof32(name), id);
 
@@ -3051,7 +3002,7 @@ gr_chart_object_name_from_id_quick(
 *
 ******************************************************************************/
 
-extern S32
+extern void
 gr_chart_objid_find_parent(
      _InoutRef_  P_GR_CHART_OBJID p_id)
 {
@@ -3073,18 +3024,16 @@ gr_chart_objid_find_parent(
         break;
     }
 
-    if(new_name != GR_CHART_OBJNAME_ANON)
-    {
-        p_id->name      = new_name;
-        p_id->has_subno = 0;
-        p_id->subno     = 0; /* no longer just for debugging clarity, needed for diagram searches too */
-        return(1);
-    }
+    if(new_name == GR_CHART_OBJNAME_ANON)
+        return;
 
-    return(0);
+    p_id->name      = new_name;
+    p_id->has_subno = 0;
+    p_id->subno     = 0; /* no longer just for debugging clarity, needed for diagram searches too */
 }
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_query_modified(
     PC_GR_CHART_HANDLE chp)
 {
@@ -3102,15 +3051,13 @@ gr_chart_query_modified(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_new(
     P_GR_CHART_HANDLE chp /*out*/,
     P_ANY            ext_handle)
 {
-    S32 res;
-
-    if((res = gr_chart_new(chp, ext_handle, 1)) < 0)
-        return(res);
+    status_return(gr_chart_new(chp, ext_handle, 1));
 
     if(!gr_chart_preferred_ch)
         return(1);
@@ -3124,7 +3071,8 @@ gr_chart_preferred_new(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 gr_chart_preferred_query(void)
 {
     return(gr_chart_preferred_ch != 0);
@@ -3136,7 +3084,8 @@ gr_chart_preferred_query(void)
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_save(
     P_U8 filename /*const*/)
 {
@@ -3153,22 +3102,22 @@ gr_chart_preferred_save(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_set(
     PC_GR_CHART_HANDLE chp)
 {
-    P_GR_CHART    pcp;
+    P_GR_CHART pcp;
     GR_SERIES_IDX series_idx;
-    P_GR_SERIES   serp;
-    S32          res;
+    P_GR_SERIES serp;
+    STATUS res;
 
     if(gr_chart_preferred_ch)
         gr_chart_dispose(&gr_chart_preferred_ch);
 
-    if((res = gr_chart_new(&gr_chart_preferred_ch, &gr_chart_preferred_ch /*internal creation*/, 0)) < 0)
-        return(res);
+    status_return(gr_chart_new(&gr_chart_preferred_ch, &gr_chart_preferred_ch /*internal creation*/, 0));
 
-    if((res = gr_chart_clone(&gr_chart_preferred_ch, chp, 1 /*non-core info too*/)) < 0)
+    if(status_fail(res = gr_chart_clone(&gr_chart_preferred_ch, chp, 1 /*non-core info too*/)))
     {
         gr_chart_dispose(&gr_chart_preferred_ch);
         return(res);
@@ -3195,7 +3144,8 @@ gr_chart_preferred_set(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_chart_preferred_use(
     PC_GR_CHART_HANDLE chp)
 {
@@ -3221,7 +3171,7 @@ gr_chart_clone(
     GR_SERIES_IDX series_idx;
     GR_AXES_IDX  axes_idx;
     P_GR_SERIES  dst_serp;
-    STATUS       res;
+    STATUS res = STATUS_OK;
 
     dst_cp = gr_chart_cp_from_ch(*dst_chp);
 
@@ -3325,11 +3275,11 @@ gr_chart_clone(
 
     dst_cp->bits.realloc_series = 1;
 
-    assert(res > 0);
+    assert(status_done(res));
 
     /* if anything failed blow the new copied non-core contents away */
     /* but only when we have reached a consistent state with no stolen list_blkrefs etc */
-    if(res < 0)
+    if(status_fail(res))
         gr_chart_dispose_noncore(dst_cp);
 
     return(res);

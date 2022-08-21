@@ -443,16 +443,16 @@ _al_array_add(
     _InVal_     U32 n_elements,
     _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _In_reads_bytes_(bytesof_elem_x_num_elem) PC_ANY p_data_in /*copied*/
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
 {
     STATUS status;
-    P_ANY p_any = _al_array_extend_by(p_array_handle, n_elements, p_array_init_block, &status PREFAST_ONLY_ARG(bytesof_elem_x_num_elem));
+    P_ANY p_any = _al_array_extend_by(p_array_handle, n_elements, p_array_init_block, &status CODE_ANALYSIS_ONLY_ARG(bytesof_elem_x_num_elem));
 
     if(NULL != p_any)
     {
         PC_ARRAY_BLOCK p_array_block = array_blockc_no_checks(p_array_handle);
         const U32 n_bytesof_elem_x_num_elem = n_elements * array_block_element_size(p_array_block);
-        PREFAST_ONLY_ASSERT((n_bytesof_elem_x_num_elem == n_bytesof_elem_x_num_elem) || (0 == bytesof_elem_x_num_elem));
+        CODE_ANALYSIS_ONLY(assert((n_bytesof_elem_x_num_elem == n_bytesof_elem_x_num_elem) || (0 == bytesof_elem_x_num_elem)));
         memcpy32(p_any, p_data_in, n_bytesof_elem_x_num_elem);
     }
 
@@ -473,13 +473,13 @@ _al_array_alloc(
     _InVal_     U32 num_elements,
     _InRef_     PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
 {
     *p_array_handle = 0;
 
     *p_status = STATUS_OK;
 
-    PREFAST_ONLY(IGNOREPARM_InVal_(bytesof_elem_x_num_elem));
+    CODE_ANALYSIS_ONLY(IGNOREPARM_InVal_(bytesof_elem_x_num_elem));
 
     /* first of all, acquire a handle */
     if(0 != next_free_block)
@@ -567,7 +567,7 @@ al_array_alloc_zero(
     _InRef_     PC_ARRAY_INIT_BLOCK p_array_init_block)
 {
     STATUS status = STATUS_OK;
-    consume_ptr(_al_array_alloc(p_array_handle, 0, p_array_init_block, &status PREFAST_ONLY_ARG(0)));
+    consume_ptr(_al_array_alloc(p_array_handle, 0, p_array_init_block, &status CODE_ANALYSIS_ONLY_ARG(0)));
     return(status);
 }
 
@@ -580,7 +580,7 @@ al_array_preallocate_zero(
     _InRef_     PC_ARRAY_INIT_BLOCK p_array_init_block)
 {
     STATUS status = STATUS_OK;
-    if(NULL != _al_array_alloc(p_array_handle, 1, p_array_init_block, &status PREFAST_ONLY_ARG(1 * p_array_init_block->element_size)))
+    if(NULL != _al_array_alloc(p_array_handle, 1, p_array_init_block, &status CODE_ANALYSIS_ONLY_ARG(1 * p_array_init_block->element_size)))
         al_array_empty(p_array_handle);
     return(status);
 }
@@ -618,7 +618,7 @@ _al_array_bfind(
     _InRef_     PC_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch,
     _OutRef_    P_BOOL p_hit
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     U32 array_index = 0; /* for simple insert_before at start if !*p_hit */
 
@@ -635,7 +635,7 @@ _al_array_bfind(
         const U32 array_element_size = array_element_size32_no_checks(p_array_handle);
         P_ANY p_any;
 
-        PREFAST_ONLY_ASSERT(bytesof_elem == array_element_size);
+        CODE_ANALYSIS_ONLY(assert(bytesof_elem == array_element_size));
 
         p_any =
             _bfind(key,
@@ -665,7 +665,7 @@ _al_array_bsearch(
     _In_        PC_ANY key,
     _InRef_     PC_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_BYTE p_data = P_DATA_NONE;
 
@@ -678,7 +678,7 @@ _al_array_bsearch(
     if(0 == array_elements32_no_checks(p_array_handle))
         return(P_DATA_NONE);
         
-    PREFAST_ONLY_ASSERT(bytesof_elem == array_element_size32_no_checks(p_array_handle));
+    CODE_ANALYSIS_ONLY(assert(bytesof_elem == array_element_size32_no_checks(p_array_handle)));
 
     p_data =
         bsearch(key,
@@ -702,7 +702,7 @@ _al_array_lsearch(
     _In_        PC_ANY key,
     _InRef_     P_ARRAY_HANDLE p_array_handle,
     _In_        P_PROC_BSEARCH p_proc_bsearch
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_BYTE p_data = P_DATA_NONE;
 
@@ -793,7 +793,7 @@ al_array_duplicate(
     array_init_block.use_alloc        = ALLOC_USE_ALLOC;
 #endif
 
-    p_data = _al_array_alloc(p_dup_array_handle, n_elements, &array_init_block, &status PREFAST_ONLY_ARG(n_elements * array_init_block.element_size));
+    p_data = _al_array_alloc(p_dup_array_handle, n_elements, &array_init_block, &status CODE_ANALYSIS_ONLY_ARG(n_elements * array_init_block.element_size));
 
     /* NB can have handles with no memory */
     if(0 == *p_dup_array_handle)
@@ -1145,7 +1145,7 @@ _al_array_insert_before(
     _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status,
     _InVal_     ARRAY_INDEX insert_before
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
 {
     P_ARRAY_BLOCK p_array_block;
     S32 cur_elements;
@@ -1189,7 +1189,7 @@ _al_array_insert_before(
     {
         assert(insert_before == 0);
         /* use realloc: there may be a handle but no elements */
-        return(_al_array_extend_by(p_array_handle, num_elements, p_array_init_block, p_status PREFAST_ONLY_ARG(bytesof_elem_x_num_elem)));
+        return(_al_array_extend_by(p_array_handle, num_elements, p_array_init_block, p_status CODE_ANALYSIS_ONLY_ARG(bytesof_elem_x_num_elem)));
     }
 
     assert(insert_before >= 0);
@@ -1271,7 +1271,7 @@ _al_array_extend_by(
     _InVal_     U32 add_elements,
     _InRef_opt_ PC_ARRAY_INIT_BLOCK p_array_init_block,
     _OutRef_    P_STATUS p_status
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem_x_num_elem))
 {
     P_ARRAY_BLOCK p_array_block;
 
@@ -1295,7 +1295,7 @@ _al_array_extend_by(
     if(0 == *p_array_handle)
     {
         assert(!_IS_P_DATA_NONE(PC_ARRAY_INIT_BLOCK, p_array_init_block));
-        return(_al_array_alloc(p_array_handle, add_elements, p_array_init_block, p_status PREFAST_ONLY_ARG(bytesof_elem_x_num_elem)));
+        return(_al_array_alloc(p_array_handle, add_elements, p_array_init_block, p_status CODE_ANALYSIS_ONLY_ARG(bytesof_elem_x_num_elem)));
     }
 
 #if CHECKING
@@ -2055,7 +2055,7 @@ array_ptr_check(
 
     if((0 != *pc_array_handle) && (ele_size != array_block_element_size(p_array_block)))
     {
-        myassert4(TEXT("array_ptr32(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ele_size ") S32_TFMT TEXT(" != handle info block ele_size " S32_TFMT),
+        myassert4(TEXT("array_ptr(") PTR_XTFMT TEXT("->h:") S32_TFMT TEXT(") --- index ele_size ") S32_TFMT TEXT(" != handle info block ele_size " S32_TFMT),
                   pc_array_handle, *pc_array_handle, ele_size, array_block_element_size(p_array_block));
         return(P_BYTE_NONE);
     }
@@ -2131,7 +2131,7 @@ array_range_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
     _InVal_     ARRAY_INDEX ele_index,
     _InVal_     U32 ele_size
-    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) )
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 total_n_bytes) )
 {
     PC_ARRAY_BLOCK p_array_block;
 
@@ -2181,7 +2181,7 @@ array_range_check(
         return(P_BYTE_NONE);
     }
 
-    PREFAST_ONLY(IGNOREPARM_InVal_(total_n_bytes));
+    CODE_ANALYSIS_ONLY(IGNOREPARM_InVal_(total_n_bytes));
 
     return(PtrAddBytes(P_BYTE, p_array_block->p_data, (ele_index * ele_size)));
 }
@@ -2193,9 +2193,9 @@ array_rangec_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
     _InVal_     ARRAY_INDEX ele_index,
     _InVal_     U32 ele_size
-    PREFAST_ONLY_ARG(_InVal_ U32 total_n_bytes) )
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 total_n_bytes) )
 {
-    return(array_range_check(pc_array_handle, ele_index, ele_size PREFAST_ONLY_ARG(total_n_bytes)));
+    return(array_range_check(pc_array_handle, ele_index, ele_size CODE_ANALYSIS_ONLY_ARG(total_n_bytes)));
 }
 
 _Check_return_
@@ -2204,7 +2204,7 @@ extern P_BYTE /* may be P_BYTE_NONE */
 array_range_bytes_check(
     _InRef_     PC_ARRAY_HANDLE pc_array_handle,
     _InVal_     U32 byte_offset
-    PREFAST_ONLY_ARG(_InVal_ U32 n_bytes) )
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 n_bytes) )
 {
     PC_ARRAY_BLOCK p_array_block;
 
@@ -2247,7 +2247,7 @@ array_range_bytes_check(
         return(P_BYTE_NONE);
     }
 
-    PREFAST_ONLY(IGNOREPARM_InVal_(n_bytes));
+    CODE_ANALYSIS_ONLY(IGNOREPARM_InVal_(n_bytes));
 
     return(PtrAddBytes(P_BYTE, p_array_block->p_data, byte_offset));
 }

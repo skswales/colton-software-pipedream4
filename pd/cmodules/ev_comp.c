@@ -28,7 +28,7 @@ internal functions
 
 static void
 out_byte(
-    char byt);
+    U8 u8);
 
 static S32
 out_chkspace(
@@ -489,7 +489,7 @@ func_call(
             out_idno_format(p_sym_inf);
 
             if(which_if == RPN_FNV_IF)
-                out_byte((char) narg);
+                out_byte((U8) (S8) narg);
         }
     }
     else if(p_sym_inf->did_num == RPN_FNM_FUNCTION)
@@ -503,7 +503,7 @@ func_call(
         if((narg = proc_func_custom(&customid)) >= 0)
         {
             out_idno_format(p_sym_inf);
-            out_byte((char) narg);
+            out_byte((U8) (S8) narg);
             out_nameid(customid);
         }
     }
@@ -522,7 +522,7 @@ func_call(
             if((narg = proc_func(funp)) >= 0)
             {
                 out_idno_format(p_sym_inf);
-                out_byte((char) narg);
+                out_byte((U8) (S8) narg);
 
                 /* custom calls have their id tagged on t'end */
                 if(p_sym_inf->did_num == RPN_FNM_CUSTOMCALL)
@@ -571,6 +571,7 @@ ident_validate(
 {
     PC_U8 pos;
     S32 had_digit, digit_ok;
+    S32 ident_len;
 
     pos       = ident;
     had_digit = 0;
@@ -597,13 +598,15 @@ ident_validate(
     while(*pos == ' ')
         ++pos;
 
-    if(*pos                   ||
-       pos == ident           ||
-       had_digit && !digit_ok ||
-       pos - ident > EV_INTNAMLEN)
+    ident_len = PtrDiffBytesS32(pos, ident);
+
+    if( (CH_NULL != *pos)           ||
+        (0 == ident_len)            ||
+        (ident_len > EV_INTNAMLEN)  ||
+        (had_digit && !digit_ok)    )
         return(create_error(EVAL_ERR_BADIDENT));
 
-    return(pos - ident);
+    return(ident_len);
 }
 
 /******************************************************************************
@@ -614,10 +617,10 @@ ident_validate(
 
 static void
 out_byte(
-    U8 byt)
+    U8 u8)
 {
     if(out_chkspace(sizeof32(U8)))
-        *cc->op_pos++ = byt;
+        *cc->op_pos++ = u8;
 }
 
 /******************************************************************************
@@ -630,7 +633,7 @@ static S32
 out_chkspace(
     S32 needed)
 {
-    if((cc->op_pos - cc->op_start) + needed > cc->op_maxlen)
+    if(((cc->op_pos - cc->op_start) + needed) > cc->op_maxlen)
     {
         set_error(create_error(EVAL_ERR_EXPTOOLONG));
         return(0);
@@ -1365,8 +1368,8 @@ ss_recog_date_time(
     U32 time_scanned;
     PC_U8 pos = in_str;
 
-    p_ev_data->arg.ev_date.date = EV_DATE_INVALID;
-    p_ev_data->arg.ev_date.time = EV_TIME_INVALID;
+    p_ev_data->arg.ev_date.date = EV_DATE_NULL;
+    p_ev_data->arg.ev_date.time = EV_TIME_NULL;
 
     /* check for a date */
     if((date_scanned = recog_date(pos, &day, &month, &year)) != 0)
@@ -2344,7 +2347,7 @@ rec_lterm(void)
     case RPN_DAT_WORD8:
         cc->cur.did_num = SYM_BLANK;
         out_idno_format(&sym_inf);
-        out_byte((char) cc->cur_sym.arg.integer);
+        out_byte((U8) (S8) cc->cur_sym.arg.integer);
         break;
 
     case RPN_DAT_WORD16:

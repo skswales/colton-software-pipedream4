@@ -20,7 +20,7 @@
 <tr>
 <td width="20%" align="left"><a accesskey="p" href="names.html">Prev</a> </td>
 <th width="60%" align="center">PipeDream 4 Reference Guide</th>
-<td width="20%" align="right"> <a accesskey="n" href="numberslots.html">Next</a></td>
+<td width="20%" align="right"> <a accesskey="n" href="numbercells.html">Next</a></td>
 </tr>
 </table>
 <hr/>
@@ -29,9 +29,9 @@
 <h1>Number Formats</h1>
 
 <p>The <span class="csguide-dbox">Options</span> dialogue box gives the
-format in which the value of number slots will normally be displayed. This is
+format in which the value of number cells will normally be displayed. This is
 called the default format. You can override this default setting for a single
-slot or for a marked block of slots.</p>
+cell or for a marked block of cells.</p>
 
 <p>Numbers can be displayed:</p>
 <ul>
@@ -49,10 +49,10 @@ slot or for a marked block of slots.</p>
 <p>The default format for numbers is set by the corresponding option in the
 <span class="csguide-dbox">Options</span> dialogue box.</p>
 
-<p>All slots in the document are displayed in the default format unless their
-format is specifically altered. Once a slot format is altered from the default
+<p>All cells in the document are displayed in the default format unless their
+format is specifically altered. Once a cell format is altered from the default
 format, its format is fixed, and will not change if the default format is
-altered. A slot or marked block can be restored to the default format by giving
+altered. A cell or marked block can be restored to the default format by giving
 the <span class="csguide-option">Default Format</span> command:</p>
 
 <table class="csguide-command-table">
@@ -84,7 +84,7 @@ setting. This can be set to any value from <span
 class="csguide-option">0</span> to <span class="csguide-option">9</span> or
 to <span class="csguide-option">F</span> for floating format.</p>
 
-<p>To change the number of decimal places displayed for a single slot or marked
+<p>To change the number of decimal places displayed for a single cell or marked
 block, give the <span class="csguide-command">Decimal Places</span> command:</p>
 
 <table class="csguide-command-table">
@@ -157,7 +157,7 @@ default setting; click Select on <span class="csguide-option">Minus</span> for
 a minus sign or on <span class="csguide-option">Brackets</span> for
 brackets.</p>
 
-<p>To change a single slot or a marked block of slots, give the <span
+<p>To change a single cell or a marked block of cells, give the <span
 class="csguide-command">Sign Brackets</span> or <span
 class="csguide-command">Sign Minus</span> command:</p>
 
@@ -239,7 +239,7 @@ use the arrow icons to set it to a comma, a full stop, space or nothing.</p>
 
 <p>The <span class="csguide-option">Options</span> dialogue box enables you to
 define characters to be displayed in front of or after the results of number
-slots.</p>
+cells.</p>
 
 <p>For example, you could display <code>&pound;K</code> in front of your financial
 totals or <code>hrs</code> after times.</p>
@@ -281,9 +281,9 @@ followed by the number of the highlight you require.</p>
 
 <p>Spaces can be included to improve the final appearance.</p>
 
-<h3>To display leading and/or trailing characters in slots</h3>
+<h3>To display leading and/or trailing characters in cells</h3>
 
-<p>1. Position the caret in the slot to be altered or mark a block of slots to
+<p>1. Position the caret in the cell to be altered or mark a block of cells to
 be altered.</p>
 
 <p>2. Give the <span class="csguide-command">Leading Characters</span> or <span
@@ -316,17 +316,17 @@ class="csguide-command">Trailing Characters</span> command:</p>
 </table>
 
 <p>Note that the leading and trailing character strings are not stored in the
-slots; if you change the strings defined in the <span
-class="csguide-dbox">Options</span> dialogue box, all slots with leading and
+cells; if you change the strings defined in the <span
+class="csguide-dbox">Options</span> dialogue box, all cells with leading and
 trailing characters 'turned on' will take on the strings defined in the <span
 class="csguide-dbox">Options</span> dialogue box for that document.</p>
 
 <h3>Converting a Formula to a Value</h3>
 
-<p>You can fix the current value of a numeric slot or block of slots so that it
-does not change on subsequent calculations.</p>
+<p>You can fix the current value of a numeric cell (or block of numeric cells)
+so that it does not change on subsequent calculations.</p>
 
-<p>To do this, mark the block of slots and give the <span
+<p>To do this, mark the block of cells and give the <span
 class="csguide-command">Snapshot</span> command:</p>
 
 <table class="csguide-command-table">
@@ -350,12 +350,12 @@ class="csguide-command">Snapshot</span> command:</p>
   </tbody>
 </table>
 
-<p>Note that slots on which the Snapshot command has been performed contain
+<p>Note that cells on which the Snapshot command has been performed contain
 only values, not formulae.</p>
 
-<p>You can convert text slots into number slots and vice versa with the <span
+<p>You can convert text cells into number cells and vice versa with the <span
 class="csguide-command">Number &lt;&gt; Text</span> command. One application of
-this is to convert text slots containing numbers into numeric slots so that you
+this is to convert text cells containing numbers into numeric cells so that you
 can do calculations with them.</p>
 
 <table class="csguide-command-table">
@@ -379,14 +379,14 @@ can do calculations with them.</p>
   </tbody>
 </table>
 
-<p>Both of these commands work on a marked block of slots, if there is one;
-otherwise on the current slot.</p>
+<p>Both of these commands work on a marked block of cells, if there is one;
+otherwise on the current cell.</p>
 
-<h3>Adjusting Column Widths to New Slot Formats</h3>
+<h3>Adjusting Column Widths to New Cell Formats</h3>
 
 <p>If your number formats are too wide to fit into the current column width,
 PipeDream first tries to display the numbers in scientific E notation. If they
-are still too long, PipeDream displays % signs in the slots. To solve this
+are still too long, PipeDream displays % signs in the cells. To solve this
 problem, you need to change the column widths. You can do this by dragging the
 column borders. Alternatively, you can give the <span
 class="csguide-command">Auto Width</span> command (<span
@@ -420,12 +420,12 @@ block.</p>
 <tr>
 <td width="40%" align="left"><a accesskey="p" href="names.html">Prev</a> </td>
 <td width="20%" align="center"></td>
-<td width="40%" align="right"> <a accesskey="n" href="numberslots.html">Next</a></td>
+<td width="40%" align="right"> <a accesskey="n" href="numbercells.html">Next</a></td>
 </tr>
 <tr>
 <td width="40%" align="left" valign="top">Names </td>
 <td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td>
-<td width="40%" align="right" valign="top"> Number Slots</td>
+<td width="40%" align="right" valign="top"> Number Cells</td>
 </tr>
 </table>
 </div>

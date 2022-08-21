@@ -346,7 +346,7 @@ isnewrec(
     if(d_sort[SORT_MULTI_ROW].option != 'Y')
         return(TRUE);
 
-    if(!sl  ||  isslotblank(sl))
+    if(!sl  ||  is_blank_cell(sl))
         return(FALSE);
 
     #if 0
@@ -525,7 +525,7 @@ SortBlock_fn(void)
         updaterefs = (d_sort[SORT_UPDATE_REFS].option == 'Y');
 #endif
 
-        n = blkend.row - blkstart.row + 1;
+      /*n = blkend.row - blkstart.row + 1; never used */
 
         /* do the actual sort */
 
@@ -600,11 +600,15 @@ SortBlock_fn(void)
         for(sortp = sortblkp, rec = 0, rowtp = sortrowblkp;
             rec < nrecs;
             ++rec, ++sortp)
+        {
             /* for each row in the record */
             for(row = sortp->keyrow, n = sortp->rowsinrec;
                 n;
                 --n, ++row, ++rowtp)
+            {
                 *rowtp = row;
+            }
+        }
 
         /* free sort array */
         al_array_dispose(&sortblkh);
@@ -633,6 +637,7 @@ SortBlock_fn(void)
             }
 
             /* must re-load row block pointer each time, ahem */
+            assert(array_index_valid(&sortrowblkh, n));
             rowtp = array_ptr(&sortrowblkh, ROW, n);
             row = n + blkstart.row;
             if(*rowtp != row)
@@ -659,6 +664,7 @@ SortBlock_fn(void)
                     P_ROW nrowtp;
 
                     /* must re-load row block pointer each time, ahem */
+                    assert(array_index_valid(&sortrowblkh, n));
                     rowtp = array_ptr(&sortrowblkh, ROW, n);
 
                     for(nn = n + 1, nrowtp = rowtp + 1;
@@ -765,7 +771,7 @@ CloseWindow_fn(void)
     filbuf();
 
     /* see rear_window */
-    if(riscdialog_warning()  &&  save_existing()  &&  dependent_files_warning()  &&  dependent_charts_warning()  &&  dependent_links_warning())
+    if(riscdialog_warning()  &&  save_or_discard_existing()  &&  dependent_files_warning()  &&  dependent_charts_warning()  &&  dependent_links_warning())
         close_window();
 }
 

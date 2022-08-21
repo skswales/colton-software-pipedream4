@@ -80,34 +80,35 @@ struct VSFUNC
 #define BRACKET 0
 #define NO_SUM 1
 
-static const struct VSFUNC vsfuncs[] =
+static const struct VSFUNC
+vsfuncs[] =
 {
-    "abs(",     BRACKET,
-    "acs(",     BRACKET,
-    "asn(",     BRACKET,
-    "atn(",     BRACKET,
-    "average(",  NO_SUM,
-    "choose(",  BRACKET,
-    "col",      BRACKET,
-    "cos(",     BRACKET,
-    "deg(",     BRACKET,
-    "exp(",     BRACKET,
-    "if(",      BRACKET,
-    "int(",     BRACKET,
-    "ln(",      BRACKET,
-    "log(",     BRACKET,
-    "lookup(",   NO_SUM,
-    "max(",      NO_SUM,
-    "min(",      NO_SUM,
-    "pi",       BRACKET,
-    "rad(",     BRACKET,
-    "read(",    BRACKET,
-    "row",      BRACKET,
-    "sgn(",     BRACKET,
-    "sin(",     BRACKET,
-    "sqr(",     BRACKET,
-    "tan(",     BRACKET,
-    "write(",   BRACKET,
+    { "abs(",     BRACKET },
+    { "acs(",     BRACKET },
+    { "asn(",     BRACKET },
+    { "atn(",     BRACKET },
+    { "average(",  NO_SUM },
+    { "choose(",  BRACKET },
+    { "col",      BRACKET },
+    { "cos(",     BRACKET },
+    { "deg(",     BRACKET },
+    { "exp(",     BRACKET },
+    { "if(",      BRACKET },
+    { "int(",     BRACKET },
+    { "ln(",      BRACKET },
+    { "log(",     BRACKET },
+    { "lookup(",   NO_SUM },
+    { "max(",      NO_SUM },
+    { "min(",      NO_SUM },
+    { "pi",       BRACKET },
+    { "rad(",     BRACKET },
+    { "read(",    BRACKET },
+    { "row",      BRACKET },
+    { "sgn(",     BRACKET },
+    { "sin(",     BRACKET },
+    { "sqr(",     BRACKET },
+    { "tan(",     BRACKET },
+    { "write(",   BRACKET },
 };
 
 /******************************************************************************
@@ -245,18 +246,18 @@ vsload_loadvsfile(
 #define SLR_START 1
 
 static char *
-vsdecodeslot(
-    char * slot)
+vsdecodecell(
+    char * cell_data)
 {
     char * op;
     char * ip;
     char rangebuf[25];
     char bracstac[255];
-    S32 slrcount, rangeix, bracix, i;
+    S32 slrcount, rangeix, bracix;
 
     slrcount = rangeix = 0;
     op = outbuf;
-    ip = slot;
+    ip = cell_data;
 
     bracstac[0] = BRACKET;
     bracix = 1;
@@ -265,6 +266,8 @@ vsdecodeslot(
     {
         if(isalpha(*ip))
         {
+            U32 i;
+
             for(i = 0; i < elemof32(vsfuncs); ++i)
                 if(0 == _strnicmp(vsfuncs[i].name, ip, strlen(vsfuncs[i].name)))
                     break;
@@ -296,6 +299,7 @@ vsdecodeslot(
         }
         else if(*ip == '(')
         {
+            assert(bracix >= 1);
             bracstac[bracix] = bracstac[bracix - 1];
             bracix++;
         }
@@ -374,7 +378,7 @@ vsload_travel(
     P_S32 justright,
     P_S32 minus)
 {
-    char *vsdp, *rtbp, *slotcont;
+    char *vsdp, *rtbp, *cell_cont;
     struct ROWTABENTRY * rixp;
     U16 coloff;
     char * res;
@@ -408,13 +412,13 @@ vsload_travel(
     coloff &= 0x7FFF;
 
     /* calculate final cell pointer */
-    slotcont = vsdp + readval_S16(&vsp->ctbpn1) + coloff;
+    cell_cont = vsdp + readval_S16(&vsp->ctbpn1) + coloff;
 
     if(*type == VS_NUMBER)
     {
         char formatb;
 
-        formatb = *(slotcont + 5);
+        formatb = *(cell_cont + 5);
         if((formatb & 0x7F) == 0x7F)
         {
             /* default to FRM */
@@ -440,17 +444,17 @@ vsload_travel(
                 *minus = TRUE;
         }
 
-        res = vsdecodeslot(slotcont + 6);
+        res = vsdecodecell(cell_cont + 6);
         return(res);
     }
 
     /* bash off right-justify label bit */
-    if(*slotcont & 0x80)
+    if(*cell_cont & 0x80)
         *justright = TRUE;
     else
         *justright = FALSE;
 
-    strcpy(outbuf, slotcont);
+    strcpy(outbuf, cell_cont);
     *outbuf &= 0x7F;
 
     return(outbuf);

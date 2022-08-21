@@ -1,15 +1,15 @@
+| Run file for PD123
+
+/<Obey$Dir>.!Boot
+
 *If "<System$Path>" = "" Then Error 0 System resources cannot be found
-*WimpSlot -Min 128k -Max 128k
-*IconSprites <Obey$Dir>.!Sprites
-*Set PD123$Dir <Obey$Dir>
-*Set alias$PD123 /<PD123$Dir>.u_ptl
 *RMEnsure UtilityModule 3.10 Error This application only runs on RISC OS 3 (version 3.10) or later
 *RMEnsure SharedCLibrary 5.28 Error This application requires CLib 5.28 or later
 *RMEnsure FPEmulator 2.87 Error This application requires the FP Emulator module (is it unplugged?)
+*RMEnsure DDEUtils 0 System:Modules.DDEUtils
+*RMEnsure DDEUtils 1.52 Error You need version 1.52 of the DDEUtils module to run this application
+*RMEnsure FrontEnd 0 System:Modules.FrontEnd
+*RMEnsure FrontEnd 1.21 Error You need version 1.21 of the FrontEnd module to run this application GUI
 *RMEnsure TaskWindow 0.47 Error This application requires the Task Window module (is it unplugged?)
-*RMEnsure FrontEnd 0 System:modules.frontend
-*RMEnsure Frontend 1.21 Error You need version 1.21 of the FrontEnd module to run !PD123
-*RMEnsure DDEUtils 0 System:modules.ddeutils
-*RMEnsure DDEUtils 1.52 Error You need version 1.52 of the DDEUtils module to run !PD123
 *WimpSlot -Min 32k -Max 32k
-*FrontEnd_Start -app PD123 -desc <PD123$Dir>.desc
+*FrontEnd_Start -app PD123 -desc <PD123$Dir>.Desc

@@ -107,6 +107,7 @@ new_marked_rectangle(void)
     /* loop over all visible cells and 'update' cells in
      * visible range of changing rows and columns
     */
+    assert(vertvec_entry_valid(0));
     for(roff = 0; !((rptr = vertvec_entry(roff))->flags & LAST); roff++)
         if(!(rptr->flags & PAGE))
         {
@@ -117,6 +118,7 @@ new_marked_rectangle(void)
 
             trow = rptr->rowno;
 
+            assert(horzvec_entry_valid(0));
             tcell = travel(col_number(0), trow);
             if(tcell  &&  (tcell->type == SL_PAGE))
                 continue;
@@ -127,6 +129,7 @@ new_marked_rectangle(void)
             in_old_rowr =   (old_blkstart.row <= trow)  &&
                             (trow <= old_blkend.row);
 
+            assert(horzvec_entry_valid(0));
             for(coff = 0; !((cptr = horzvec_entry(coff))->flags & LAST); coff++)
             {
                 trace_1(TRACE_MARK, "column offset %d", coff);
@@ -815,6 +818,7 @@ more_in_block(
         {
             /* off bottom so would reset and step to next column */
             row = start_bl.row;
+            IGNOREVAR(row);
 
             if(++col > end_bl.col)
                 return(FALSE);                  /* off side too */
@@ -826,6 +830,7 @@ more_in_block(
         {
             /* off rhs so would reset and step to next row */
             col = start_bl.col;
+            IGNOREVAR(col);
 
             if(++row > end_bl.row)
                 return(FALSE);                  /* off bottom too */
@@ -1188,16 +1193,12 @@ application_startdrag(
     BOOL shiftpressed = host_shift_pressed();
     BOOL ctrlpressed  = host_ctrl_pressed();
     coord coff = calcoff(tx); /* not _click */
-    coord roff = calroff(ty); /* not _click */
+    coord roff = calroff_click(ty);
     COL tcol;
     ROW trow;
-    P_SCRROW rptr;
 
     BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed;
     BOOL extend = shiftpressed || !selectclicked;
-
-    /* stop us wandering off bottom of sheet */
-    roff = MIN(roff, rowsonscreen - 1);
 
     trace_3(TRACE_APP_PD4, "it's a drag start: at roff %d, coff %d, select = %s: ",
                 roff, coff, trace_boolstring(selectclicked));
@@ -1205,17 +1206,19 @@ application_startdrag(
     dragcol = -1;                       /* no constraint on drag yet */
     drag_not_started_to_mark = FALSE;   /* drags mark immediately */
 
-    if(roff >= 0)
+    if(vertvec_entry_valid(roff))
     {
-        rptr = vertvec_entry(roff);
+        P_SCRROW rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
+        {
             trace_0(TRACE_APP_PD4, "in soft page break - drag ignored");
+        }
         else
         {
             trow = rptr->rowno;
 
-            if((coff >= 0)  ||  (coff == OFF_RIGHT))
+            if(horzvec_entry_valid(coff)  ||  (coff == OFF_RIGHT))
             {
                 P_DOCU p_docu = find_document_with_input_focus();
 
@@ -1228,6 +1231,7 @@ application_startdrag(
                 {
                     /* mark normal block */
                     coff = get_column(tx, trow, 0, huntleft);
+                    assert(horzvec_entry_valid(coff));
                     tcol = col_number(coff);
 
                     if(blkindoc && extend)
@@ -1271,8 +1275,6 @@ application_startdrag(
                 trace_0(TRACE_APP_PD4, "off left - ignored");
         }
     }
-    else
-        trace_0(TRACE_APP_PD4, "above column headings - ignored");
 }
 
 static void
@@ -1287,10 +1289,9 @@ application_singleclick_in_main(
     BOOL shiftpressed = host_shift_pressed();
     BOOL ctrlpressed  = host_ctrl_pressed();
     coord coff = calcoff(tx); /* not _click */
-    coord roff = calroff(ty); /* not _click */
+    coord roff = calroff_click(ty);
     COL tcol;
     ROW trow;
-    P_SCRROW rptr;
 
     BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed;
     BOOL extend = shiftpressed || !selectclicked;       /* ie shift-anything or unshifted-adjust */
@@ -1298,14 +1299,11 @@ application_singleclick_in_main(
     BOOL acquire    = FALSE; /* don't want caret on block marking operations */
     BOOL motion     = FALSE;
 
-    /* stop us wandering off bottom of sheet */
-    roff = MIN(roff, rowsonscreen - 1);
-
     trace_0(TRACE_APP_PD4, "it's a click: ");
 
-    if(roff >= 0)
+    if(vertvec_entry_valid(roff))
     {
-        rptr = vertvec_entry(roff);
+        P_SCRROW rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
         {
@@ -1316,7 +1314,7 @@ application_singleclick_in_main(
         {
             trow = rptr->rowno;
 
-            if((coff >= 0)  ||  (coff == OFF_RIGHT))
+            if(horzvec_entry_valid(coff)  ||  (coff == OFF_RIGHT))
             {
                 /* ie a click on a sheet */
                 P_DOCU p_docu = find_document_with_input_focus(); /* examines all sheets, editlines & edit boxes */
@@ -1327,6 +1325,7 @@ application_singleclick_in_main(
                     /* so give that sheet a reference to the clicked-on-document          */
 
                     coff = calcoff_click(tx);
+                    assert(horzvec_entry_valid(coff));
                     tcol = col_number(coff);
 
                     trace_0(TRACE_APP_PD4, "editing expression, use ADJUST paradigm: ");
@@ -1362,6 +1361,7 @@ application_singleclick_in_main(
                     else
                     {
                         coff = get_column(tx, trow, xcelloffset, huntleft);
+                        assert(horzvec_entry_valid(coff));
                         tcol = col_number(coff);
                     }
 
@@ -1425,7 +1425,7 @@ application_singleclick_in_main(
                 /* if editing, suppress (curcol,currow) movement and selection dragging etc. */
                 if(xf_inexpression || xf_inexpression_box || xf_inexpression_line)
                 {
-                    acquire = !extend;
+                  /*acquire = !extend; redundant assignment as we're exiting */
                     return;
                 }
 
@@ -1469,11 +1469,6 @@ application_singleclick_in_main(
             }
         }
     }
-    else
-    {
-        trace_0(TRACE_APP_PD4, "above sheet data - mostly ignored");
-        acquire = TRUE;
-    }
 
     if(acquire)
         xf_caretreposition = TRUE;
@@ -1492,7 +1487,7 @@ application_doubleclick_in_main(
     BOOL selectclicked)
 {
     coord coff = calcoff(tx);   /* not _click */
-    coord roff = calroff(ty);   /* not _click */
+    coord roff = calroff_click(ty);
  /* COL tcol;*/
     ROW trow;
     P_SCRROW rptr;
@@ -1502,21 +1497,20 @@ application_doubleclick_in_main(
  /* BOOL huntleft = selectclicked && !shiftpressed && !ctrlpressed; */
     BOOL extend = shiftpressed || !selectclicked;
 
-    /* stop us wandering off bottom of sheet */
-    roff = MIN(roff, rowsonscreen - 1);
-
     trace_3(TRACE_APP_PD4, "it's a double-click: at roff %d, coff %d, select = %s: ",
                 roff, coff, trace_boolstring(selectclicked));
 
     if(extend)
         return;
 
-    if(roff >= 0)
+    if(vertvec_entry_valid(roff))
     {
         rptr = vertvec_entry(roff);
 
         if(rptr->flags & PAGE)
+        {
             trace_0(TRACE_APP_PD4, "in soft page break - double click ignored");
+        }
         else
         {
             trow = rptr->rowno;
@@ -1537,8 +1531,6 @@ application_doubleclick_in_main(
                 trace_0(TRACE_APP_PD4, "not in row border - ignored");
         }
     }
-    else
-        trace_0(TRACE_APP_PD4, "above column headings - ignored");
 }
 
 /******************************************************************************
@@ -1662,14 +1654,9 @@ application_drag(
     SLR here;
     P_DOCU p_docu;
 
-    /* stop us wandering off bottom (or top) of sheet */
-    if(roff > rowsonscreen - 1)
-        roff = rowsonscreen - 1;
-    else if(roff < 0)
-        roff = 0;
-
     trace_1(TRACE_DRAG, "application_drag: type = %d", dragtype);
 
+    assert(vertvec_entry_valid(roff));
     rptr = vertvec_entry(roff);
 
     switch(dragtype)
@@ -1681,6 +1668,7 @@ application_drag(
 
             if((NO_DOCUMENT != p_docu)  &&  (p_docu->Xxf_inexpression || p_docu->Xxf_inexpression_box || p_docu->Xxf_inexpression_line))
             {
+                assert(horzvec_entry_valid(coff));
                 here.col = col_number(coff);
                 here.row = rptr->rowno;
 
@@ -1734,7 +1722,15 @@ application_drag(
         /* marking fixed set of rows in dynamic selection of columns */
         if(now_marking(tx, ty))
         {
-            tcol = (dragcol < 0) ? col_number(coff) : dragcol;
+            if(dragcol >= 0)
+            {
+                tcol = dragcol;
+            }
+            else
+            {
+                assert(horzvec_entry_valid(coff));
+                tcol = col_number(coff);
+            }
             alter_marked_block(tcol, ACTIVE_ROW);
         }
         break;
@@ -1743,7 +1739,15 @@ application_drag(
         /* marking arbitrary (or constrained) block */
         if(!(rptr->flags & PAGE)  &&  now_marking(tx, ty))
         {
-            tcol = (dragcol < 0) ? col_number(coff) : dragcol;
+            if(dragcol >= 0)
+            {
+                tcol = dragcol;
+            }
+            else
+            {
+                assert(horzvec_entry_valid(coff));
+                tcol = col_number(coff);
+            }
             trow = rptr->rowno;
             alter_marked_block(tcol, trow);
         }

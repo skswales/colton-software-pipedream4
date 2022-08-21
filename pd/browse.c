@@ -44,13 +44,17 @@ typedef struct
 {
     dbox d;
     S32 dict;
+
     S32 res;
     S32 sofar;
-    S32 wants_nulls;
-    S32 stopped;
+    BOOL wants_nulls;
+    BOOL stopped;
+
     char (*words) [MAX_WORD+1];
 }
 merge_dump_strukt;
+
+#define MDS_INIT { NULL, -1,  0, 0, FALSE, FALSE,  NULL }
 
 /*
 internal functions
@@ -91,10 +95,10 @@ open_master_dict(void);
 
 #define BROWSE_CENTRE (BROWSE_DEPTH/2 - 1)
 
-static merge_dump_strukt anagram_mds    = { NULL, -1 };
-static merge_dump_strukt browse_mds     = { NULL, -1 };
-static merge_dump_strukt dumpdict_mds   = { NULL, -1 };
-static merge_dump_strukt mergedict_mds  = { NULL, -1 };
+static merge_dump_strukt anagram_mds    = MDS_INIT;
+static merge_dump_strukt browse_mds     = MDS_INIT;
+static merge_dump_strukt dumpdict_mds   = MDS_INIT;
+static merge_dump_strukt mergedict_mds  = MDS_INIT;
 
 /* be generous as to what letters one allows into the spelling buffers */
 /* - fault foreign words at adding stage */
@@ -539,7 +543,7 @@ open_master_dict(void)
         name = MASTERDICT_STR;
 
         /* SKS after 4.12 26mar92 - treat master dictionary just like user dictionaries */
-        master_dictionary = dict_number(MASTERDICT_STR, TRUE);
+        master_dictionary = dict_number(name, TRUE);
 
         /* don't hint that this is the one to be molested */
         most_recent = -1;
@@ -2369,7 +2373,7 @@ CheckDocument_fn(void)
                 sch_pos_end.row = sch_pos_stt.row;
                 sch_end_offset  = sch_stt_offset + strlen((char *) array);
 
-                if(protected_slot(sch_pos_stt.col, sch_pos_stt.row))
+                if(protected_cell(sch_pos_stt.col, sch_pos_stt.row))
                     break;
 
                 filbuf();

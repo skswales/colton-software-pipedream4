@@ -356,7 +356,10 @@ macro to get index pointer given
 either dictionary number or pointer
 */
 
+#define ixv(dict, ix) array_index_valid(&dictlist[(dict)].dicth, ix)
 #define ixp(dict, ix) array_ptr(&dictlist[(dict)].dicth, struct IXSTRUCT, ix)
+
+#define ixpdv(dp, ix) array_index_valid(&(dp)->dicth, ix)
 #define ixpdp(dp, ix) array_ptr(&(dp)->dicth, struct IXSTRUCT, ix)
 
 #define SPACE 32
@@ -380,7 +383,7 @@ spell_addword(
     struct TOKWORD newword;
     S32 res, wordsize, err, rootlen;
     char token_start;
-    P_U8 newpos, temppos;
+    P_U8 newpos;
     char *ci;
     CACHEP cp;
     P_LIST_ITEM it;
@@ -411,11 +414,13 @@ spell_addword(
     {
     /* single letter word */
     case 1:
+        assert(ixv(dict, newword.lettix));
         ixp(dict, newword.lettix)->letflags |= LET_ONE;
         break;
 
     /* two letter word */
     case 2:
+        assert(ixv(dict, newword.lettix));
         ixp(dict, newword.lettix)->letflags |= LET_TWO;
         break;
 
@@ -448,6 +453,7 @@ spell_addword(
                     delword = newword;
                     strcpy(delword.bodyd, delword.bodydp);
 
+                    assert(ixv(dict, delword.lettix));
                     cp = (CACHEP) list_gotoitem(cachelp,
                                                 ixp(dict, delword.lettix)->
                                                 p.cacheno)->i.inside;
@@ -499,6 +505,7 @@ spell_addword(
         for(;;)
         {
             /* loop to get some memory */
+            assert(ixv(dict, newword.lettix));
             lett = ixp(dict, newword.lettix);
 
             if((it = list_createitem(cachelp,
@@ -540,7 +547,7 @@ spell_addword(
         }
 
         /* make space for new word */
-        temppos = newpos;
+        assert(ixv(dict, newword.lettix));
         lett = ixp(dict, newword.lettix);
         err = lett->blklen - newword.findpos;
         memmove32(newpos + wordsize,
@@ -579,6 +586,7 @@ spell_addword(
     }
 
     /* mark that it needs a write */
+    assert(ixv(dict, newword.lettix));
     ixp(dict, newword.lettix)->letflags |= LET_WRITE;
 
     return(1);
@@ -658,7 +666,7 @@ spell_createdict(
     char *name,
     char *def_name)
 {
-    S32  err;
+    S32 err = 0;
     S32 dict, nbytes, i, res;
     FILE_HANDLE newdict, def_file;
     DIXP dp;
@@ -681,7 +689,6 @@ spell_createdict(
 
     /* dummy loop for structure */
     do  {
-        err = 0;
         newdict = def_file = NULL;
 
         /* try to open definition file */
@@ -852,6 +859,7 @@ spell_deleteword(
     if(!res)
         return(create_error(SPELL_ERR_NOTFOUND));
 
+    assert(ixv(dict, curword.lettix));
     lett = ixp(dict, curword.lettix);
     lett->letflags |= LET_WRITE;
 
@@ -877,6 +885,7 @@ spell_deleteword(
 
     /* after succesful find, the pointer points
     at the token of the word found */
+    assert(ixv(dict, curword.lettix));
     lett = ixp(dict, curword.lettix);
     cp = (CACHEP) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
     sp = cp->data;
@@ -930,6 +939,7 @@ spell_deleteword(
         datap = sp + curword.findpos;
     }
 
+    assert(ixv(dict, curword.lettix));
     lett = ixp(dict, curword.lettix);
     blockbefore = (datap - sp) + delsize;
     memmove32(datap, datap + delsize, lett->blklen - blockbefore);
@@ -1044,12 +1054,14 @@ spell_load(
     for(i = 0; i < dp->n_index; ++i)
     {
         /* is there a block defined ? */
+        assert(ixpdv(dp, i));
         if(!ixpdp(dp, i)->blklen)
             continue;
 
         if((err = fetchblock(dict, i)) != 0)
             return(err);
 
+        assert(ixpdv(dp, i));
         ixpdp(dp, i)->letflags |= LET_LOCKED;
     }
 
@@ -1238,6 +1250,7 @@ spell_opendict(
     }
 
     /* loop over index, masking off unwanted bits */
+    assert(ixpdv(dp, 0));
     for(i = 0, lett = ixpdp(dp, 0); i < dp->n_index; ++i, ++lett)
         lett->letflags &= (LET_ONE | LET_TWO);
 
@@ -1277,7 +1290,10 @@ spell_pack(
 
     for(i = 0; i < olddp->n_index; ++i)
     {
+        assert(ixpdv(olddp, i));
         lettin  = ixpdp(olddp, i);
+
+        assert(ixpdv(newdp, i));
         lettout = ixpdp(newdp, i);
 
         /* if no block, copy index entries and continue */
@@ -1293,7 +1309,10 @@ spell_pack(
             break;
 
         /* re-load index pointers */
+        assert(ixpdv(olddp, i));
         lettin  = ixpdp(olddp, i);
+
+        assert(ixpdv(newdp, i));
         lettout = ixpdp(newdp, i);
 
         /* clear input index flags */
@@ -1439,6 +1458,7 @@ spell_stats(
             CACHEP cp = (CACHEP) it->i.inside;
 
             ++(*cblocks);
+            assert(ixv(cp->dict, cp->lettix));
             blksiz = sizeof(struct CACHEBLOCK) +
                      ixp(cp->dict, cp->lettix)->blklen;
             *largest = MAX(*largest, blksiz);
@@ -1551,10 +1571,13 @@ spell_unlock(
         ((dp = &dictlist[dict])->dicthandle == NULL) )
             return(create_error(SPELL_ERR_BADDICT));
 
+    assert(ixv(dict, 0));
     for(i = 0, lett = ixp(dict, 0), n_index = dp->n_index;
         i < n_index;
         ++i, ++lett)
+    {
         lett->letflags &= ~LET_LOCKED;
+    }
 
     return(0);
 }
@@ -1705,10 +1728,10 @@ char_ordinal_3(
 *
 ******************************************************************************/
 
-PROC_QSORT_PROTO(static, compar, PC_L1STR)
+PROC_QSORT_PROTO(static, compar, PC_SBSTR)
 {
-    P_PC_L1STR word_1 = (P_PC_L1STR) arg1;
-    P_PC_L1STR word_2 = (P_PC_L1STR) arg2;
+    P_PC_SBSTR word_1 = (P_PC_SBSTR) arg1;
+    P_PC_SBSTR word_2 = (P_PC_SBSTR) arg2;
 
     /* NB no current_p_docu global register furtling required */
 
@@ -1888,6 +1911,8 @@ deletecache(
     for(i = list_atitem(cachelp); i < list_numitem(cachelp); ++i)
     {
         CACHEP cp = (CACHEP) list_gotoitem(cachelp, i)->i.inside;
+
+        assert(ixv(cp->dict, cp->lettix));
         trace_2(TRACE_MODULE_SPELL, "cp: %p, ixp: %p", report_ptr_cast(cp), report_ptr_cast(ixp(cp->dict, cp->lettix)));
         ixp(cp->dict, cp->lettix)->p.cacheno = i;
 
@@ -1922,6 +1947,8 @@ delreins(
     SIXP lett;
 
     token_start = dictlist[dict].token_start;
+
+    assert(ixv(dict, wp->lettix));
     lett = ixp(dict, wp->lettix);
     cp = (CACHEP) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
     datap = ep = cp->data;
@@ -2051,7 +2078,10 @@ ensuredict(
         i < dp->n_index;
         ++i)
     {
-        SIXP lett = ixpdp(dp, i);
+        SIXP lett;
+
+        assert(ixpdv(dp, i));
+        lett = ixpdp(dp, i);
 
         trace_1(TRACE_MODULE_SPELL, "ensure letter: %d", i);
         if(lett->letflags & LET_WRITE)
@@ -2066,9 +2096,14 @@ ensuredict(
             }
 
             if(err)
+            {
                 allerr = allerr ? allerr : err;
+            }
             else
+            {
+                assert(ixpdv(dp, i));
                 ixpdp(dp, i)->letflags &= ~LET_WRITE;
+            }
         }
     }
 
@@ -2096,6 +2131,7 @@ fetchblock(
     dp = &dictlist[dict];
 
     /* check if it's already cached */
+    assert(ixpdv(dp, lettix));
     if(ixpdp(dp, lettix)->letflags & LET_CACHED)
         return(0);
 
@@ -2123,6 +2159,7 @@ fetchblock(
         for(;;)
         {
             trace_0(TRACE_MODULE_SPELL, "fetchblock doing createitem");
+            assert(ixpdv(dp, lettix));
             if((it = list_createitem(cachelp,
                                      list_numitem(cachelp),
                                      sizeof(struct CACHEBLOCK) +
@@ -2141,6 +2178,7 @@ fetchblock(
         return(err);
 
     newblock = (CACHEP) it->i.inside;
+    assert(ixpdv(dp, lettix));
     lett = ixpdp(dp, lettix);
 
     /* read the data if there is any */
@@ -2229,6 +2267,7 @@ freecache(
         return(status_nomem());
 
     cp = (CACHEP) list_gotoitem(cachelp, minno)->i.inside;
+    assert(ixv(cp->dict, cp->lettix));
     bytes_freed = ixp(cp->dict, cp->lettix)->blklen;
 
     #if TRACE_ALLOWED
@@ -2325,6 +2364,7 @@ initmatch(
                     *co++ = dictlist[dict].letter_1[0];
                     *co = '\0';
 
+                    assert(ixv(dict, 0));
                     return((ixp(dict, 0)->letflags & LET_ONE) ? 1 : 0);
                 }
                 *co = '\0';
@@ -2363,6 +2403,7 @@ killcache(
     trace_1(TRACE_MODULE_SPELL, "killcache cacheno: %d", cacheno);
 
     /* write out block if altered */
+    assert(ixv(cp->dict, cp->lettix));
     if((write = (ixp(cp->dict, cp->lettix)->letflags & LET_WRITE)) != 0)
         if((err = writeblock(cp)) != 0)
             return(err);
@@ -2708,6 +2749,7 @@ lookupword(
         wp->findpos = wp->matchc = wp->match = wp->matchcp = wp->matchp = 0;
     }
 
+    assert(ixv(dict, wp->lettix));
     lett = ixp(dict, wp->lettix);
 
     /* check one/two letter words */
@@ -2738,6 +2780,7 @@ lookupword(
     dlp = &dp->dict_end_list;
 
     /* search the block for the word */
+    assert(ixv(dict, wp->lettix));
     lett = ixp(dict, wp->lettix);
     cp = (CACHEP) list_gotoitem(cachelp, lett->p.cacheno)->i.inside;
     ++cp->usecount;
@@ -2746,7 +2789,7 @@ lookupword(
     do a binary search on the third letter
     */
 
-    startlim = cp->data;
+    startlim = datap = cp->data;
     endlim = cp->data + lett->blklen;
     found = updown = 0;
 
@@ -3086,20 +3129,26 @@ nextword(
     if((res = lookupword(dict, &curword, TRUE)) < 0)
         return(res);
 
-    if((curword.len == 1) && (ixp(dict, curword.lettix)->letflags & LET_TWO))
-        return(decodeword(dict, word, &curword, 2));
+    if(curword.len == 1)
+    {
+        assert(ixv(dict, curword.lettix));
+        if(ixp(dict, curword.lettix)->letflags & LET_TWO)
+            return(decodeword(dict, word, &curword, 2));
+    }
 
     n_index     = dictlist[dict].n_index;
     token_start = dictlist[dict].token_start;
     dlp         = &dictlist[dict].dict_end_list;
 
     do  {
+        assert(ixv(dict, curword.lettix));
         if(ixp(dict, curword.lettix)->blklen)
         {
             /* check we have a cache block */
             if((err = fetchblock(dict, curword.lettix)) != 0)
                 return(err);
 
+            assert(ixv(dict, curword.lettix));
             lett = ixp(dict, curword.lettix);
             cp = (CACHEP) list_gotoitem(cachelp,
                                         lett->p.cacheno)->i.inside;
@@ -3197,7 +3246,9 @@ nextword(
         an entry with some words in it */
         if(++curword.lettix < n_index)
         {
+            assert(ixv(dict, curword.lettix));
             lett = ixp(dict, curword.lettix);
+
             if(lett->letflags & LET_ONE)
                 return(decodeword(dict, word, &curword, 1));
 
@@ -3297,8 +3348,12 @@ prevword(
     if((err = lookupword(dict, &curword, TRUE)) < 0)
         return(err);
 
-    if((curword.len == 2) && (ixp(dict, curword.lettix)->letflags & LET_ONE))
-        return(decodeword(dict, word, &curword, 1));
+    if(curword.len == 2)
+    {
+        assert(ixv(dict, curword.lettix));
+        if(ixp(dict, curword.lettix)->letflags & LET_ONE)
+            return(decodeword(dict, word, &curword, 1));
+    }
 
     dp = &dictlist[dict];
     token_start = dp->token_start;
@@ -3306,12 +3361,14 @@ prevword(
     dlp         = &dp->dict_end_list;
 
     do  {
+        assert(ixv(dict, curword.lettix));
         if(ixp(dict, curword.lettix)->blklen)
         {
             /* check we have a cache block */
             if((err = fetchblock(dict, curword.lettix)) != 0)
                 return(err);
 
+            assert(ixv(dict, curword.lettix));
             lett = ixp(dict, curword.lettix);
             cp = (CACHEP) list_gotoitem(cachelp,
                                         lett->p.cacheno)->i.inside;
@@ -3420,6 +3477,7 @@ prevword(
             }
         }
 
+        assert(ixv(dict, curword.lettix));
         lett = ixp(dict, curword.lettix);
         if(datap == sp || !lett->blklen)
         {
@@ -3437,6 +3495,7 @@ prevword(
                 if(--curword.lettix < 0)
                     break;
 
+                assert(ixv(dict, curword.lettix));
                 lett = ixp(dict, curword.lettix);
             }
             while(!lett->blklen);
@@ -3765,6 +3824,7 @@ writeblock(
 
     trace_2(TRACE_MODULE_SPELL, "writeblock dict: %d, letter: %d", cp->dict, cp->lettix);
 
+    assert(ixv(cp->dict, cp->lettix));
     lett = ixp(cp->dict, cp->lettix);
 
     if(lett->blklen)
@@ -3826,6 +3886,7 @@ writeindex(
                         SEEK_SET)) < 0)
         return(err);
 
+    assert(ixpdv(dp, lettix));
     if((err = file_write(ixpdp(dp, lettix),
                          sizeof(struct IXSTRUCT),
                          1,

@@ -226,7 +226,7 @@ extern P_BYTE
 _collect_first(
     _InRef_     P_LIST_BLOCK p_list_block,
     _OutRef_    P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item = 0;
@@ -258,7 +258,7 @@ extern P_BYTE
 _collect_first_from(
     _InRef_     P_LIST_BLOCK p_list_block,
     _InoutRef_  P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item;
@@ -336,7 +336,7 @@ extern P_BYTE
 _collect_next(
     _InRef_     P_LIST_BLOCK p_list_block,
     _InoutRef_  P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item;
@@ -371,7 +371,7 @@ extern P_BYTE
 _collect_prev(
     _InRef_     P_LIST_BLOCK p_list_block,
     _InoutRef_  P_LIST_ITEMNO p_key
-    PREFAST_ONLY_ARG(_InVal_ U32 bytesof_elem))
+    CODE_ANALYSIS_ONLY_ARG(_InVal_ U32 bytesof_elem))
 {
     P_LIST_ITEM it;
     LIST_ITEMNO item;

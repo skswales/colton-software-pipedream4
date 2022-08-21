@@ -122,8 +122,8 @@ riscos_sendhelpreply(
 extern void
 riscos_sendslotcontents(
     _InoutRef_opt_ P_GRAPHICS_LINK_ENTRY glp,
-    int xoff,
-    int yoff);
+    int x_off,
+    int y_off);
 
 extern void
 riscos_sendallslots(

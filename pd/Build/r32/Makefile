@@ -7,8 +7,8 @@
 # Copyright (C) 1989-1998 Colton Software Limited
 # Copyright (C) 1998-2015 R W Colton
 
-#TEXTUAL_VERSION_NUMBER=4.54
-TEXTUAL_VERSION_NUMBER=4.53/06
+#TEXTUAL_VERSION_NUMBER=4.54.01
+TEXTUAL_VERSION_NUMBER=4.54
 # ^^^ Needed for !Boot/!Run building
 
 URD=$.pipedream.trunk
@@ -18,7 +18,9 @@ PD=^.^
 
 CMODULES=$(PD).cmodules
 
-LIB_MSUN=$(PD).external.FreeBSD.srcp.lib.msun
+PD_EXTERNAL=$(PD).external
+
+LIB_MSUN=$(PD_EXTERNAL).FreeBSD.srcp.lib.msun
 
 WimpLib=$(PD).WimpLib
 
@@ -148,6 +150,7 @@ o.modules.muldivas
 #
 AOFMEV=\
 o.modules.ss_const \
+o.modules.ss_date \
 o.modules.ev_comp \
 o.modules.ev_dcom \
 o.modules.ev_docs \
@@ -193,8 +196,9 @@ o.modules.gr_nodbg \
 o.modules.gr_piesg \
 o.modules.gr_rdiag \
 o.modules.gr_rdia2 \
-o.modules.gr_scale \
-o.modules.gr_scatc
+o.modules.gr_scatc \
+o.modules.gr_style \
+o.modules.wn_pnpoly
 #
 AOFMD=
 # o.modules.debug \
@@ -417,10 +421,10 @@ o.Modules.gr_rdiag:    $(CMODULES).c.gr_rdiag
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_rdiag
 o.Modules.gr_rdia2:    $(CMODULES).c.gr_rdia2
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_rdia2
-o.Modules.gr_scale:    $(CMODULES).c.gr_scale
-        $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_scale
 o.Modules.gr_scatc:    $(CMODULES).c.gr_scatc
         $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_scatc
+o.Modules.gr_style:    $(CMODULES).c.gr_style
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.gr_style
 o.Modules.handlist:   $(CMODULES).c.handlist
         $(CC) -o $@ $(CCflags) $(CMODULES).c.handlist
 o.Modules.list:       $(CMODULES).c.list
@@ -449,6 +453,8 @@ o.Modules.spell:      $(CMODULES).c.spell
         $(CC) -o $@ $(CCflags) $(CMODULES).c.spell
 o.Modules.ss_const:   $(CMODULES).c.ss_const
         $(CC) -o $@ $(CCflags) $(CMODULES).c.ss_const
+o.Modules.ss_date:   $(CMODULES).c.ss_date
+        $(CC) -o $@ $(CCflags) $(CMODULES).c.ss_date
 o.Modules.stringlk:   $(CMODULES).c.stringlk
         $(CC) -o $@ $(CCflags) $(CMODULES).c.stringlk
 o.Modules.typepack:   $(CMODULES).c.typepack
@@ -483,6 +489,11 @@ o.Modules.k_cos:    $(LIB_MSUN).src.c.k_cos
         $(CC) -o $@ $(CCflags) $(LIB_MSUN).src.c.k_cos
 o.Modules.k_sin:    $(LIB_MSUN).src.c.k_sin
         $(CC) -o $@ $(CCflags) $(LIB_MSUN).src.c.k_sin
+#
+# OtherFree
+#
+o.Modules.wn_pnpoly:	$(PD_EXTERNAL).OtherFree.c.wn_pnpoly
+        $(CC) -o $@ $(CCflags) $(PD_EXTERNAL).OtherFree.c.wn_pnpoly
 #
 # ARM assembler modules static dependencies
 #
@@ -522,24 +533,24 @@ o.Modules.ev_uref :    $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).
 o.Modules.file :       $(CMODULES).h.file
 o.Modules.fileutil :   $(CMODULES).h.file
 o.Modules.funclist :   $(CMODULES).h.funclist
-o.Modules.gr_axisp :   $(CMODULES).h.gr_chart
-o.Modules.gr_barch :   $(CMODULES).h.gr_chart
-o.Modules.gr_blgal :   $(CMODULES).h.gr_chart
-o.Modules.gr_cache :   $(CMODULES).h.gr_chart
-o.Modules.gr_chart :   $(CMODULES).h.gr_chart
-o.Modules.gr_chtIO :   $(CMODULES).h.gr_chart
+o.Modules.gr_axisp :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_barch :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_blgal :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_cache :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_chart :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_chtIO :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.gr_coord :   $(CMODULES).h.gr_coord
-o.Modules.gr_diag :    $(CMODULES).h.gr_chart
-o.Modules.gr_editc :   $(CMODULES).h.gr_chart
-o.Modules.gr_editm :   $(CMODULES).h.gr_chart
-o.Modules.gr_editt :   $(CMODULES).h.gr_chart
-o.Modules.gr_nodbg :   $(CMODULES).h.gr_chart
-o.Modules.gr_numcv :   $(CMODULES).h.gr_chart
-o.Modules.gr_piesg :   $(CMODULES).h.gr_chart
-o.Modules.gr_rdiag :   $(CMODULES).h.gr_chart
-o.Modules.gr_rdia2 :   $(CMODULES).h.gr_chart
-o.Modules.gr_scale :   $(CMODULES).h.gr_chart
-o.Modules.gr_scatc :   $(CMODULES).h.gr_chart
+o.Modules.gr_diag :    $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_editc :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_editm :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_editt :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_nodbg :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_numcv :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_piesg :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_rdiag :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_rdia2 :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_scatc :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
+o.Modules.gr_style :   $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 o.Modules.handlist :   $(CMODULES).h.handlist
 o.Modules.list :       $(CMODULES).h.list
 o.Modules.mathxtra :   $(CMODULES).h.mathxtra
@@ -661,7 +672,7 @@ o.reperr:  $(PD).h.errdef
 o.link_ev o.slotconv: $(CMODULES).h.ev_eval $(CMODULES).h.ev_evali $(CMODULES).h.ss_const
 
 o.pdchart: $(PD).h.pdchart
-o.pdchart: $(CMODULES).h.gr_chart
+o.pdchart: $(CMODULES).h.gr_chart $(CMODULES).h.gr_chari
 
 ###############################################################################
 #

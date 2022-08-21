@@ -23,21 +23,21 @@ internal functions
 typedef struct
 {
     COL col;
-    ROW  row;
-    P_CELL sl;
-    S32   size;
+    ROW row;
+    P_CELL p_cell;
+    S32 size;
     uchar type;
 }
-swap_slot_struct;
+swap_cell_struct;
 
 static void
 default_col_entries(
     P_COLENTRY cp);
 
 static S32
-swap_slot_core(
-    swap_slot_struct *p1,
-    swap_slot_struct *p2,
+swap_cell_core(
+    swap_cell_struct *p1,
+    swap_cell_struct *p2,
     P_ANY tempslot);
 
 /******************************************************************************
@@ -1302,8 +1302,8 @@ swap_rows(
     BOOL updaterefs)
 {
     COL col;
-    char tempslot[MAX_SLOTSIZE];
-    swap_slot_struct s1, s2;
+    char temp[MAX_SLOTSIZE];
+    swap_cell_struct s1, s2;
 
     IGNOREPARM(updaterefs);
 
@@ -1319,21 +1319,21 @@ swap_rows(
         s1.col = col;
         s2.col = col;
 
-        s1.sl = travel(col, s1.row);
-        if(s1.sl)
+        s1.p_cell = travel(col, s1.row);
+        if(s1.p_cell)
         {
-            s1.size = slotsize(s1.sl);
-            s1.type = s1.sl->type;
+            s1.type = s1.p_cell->type;
+            s1.size = slotsize(s1.p_cell);
             trace_3(TRACE_APP_PD4, "swap_rows moved: %d, %d, type %d", col, s1.row, s1.type);
         }
         else
             s1.size = 0;
 
-        s2.sl = travel(col, s2.row);
-        if(s2.sl)
+        s2.p_cell = travel(col, s2.row);
+        if(s2.p_cell)
         {
-            s2.size = slotsize(s2.sl);
-            s2.type = s2.sl->type;
+            s2.type = s2.p_cell->type;
+            s2.size = slotsize(s2.p_cell);
             trace_3(TRACE_APP_PD4, "swap_rows moved: %d, %d, type %d", col, s2.row, s2.type);
         }
         else
@@ -1343,22 +1343,22 @@ swap_rows(
         if(s1.size > s2.size)
         {
             trace_2(TRACE_APP_PD4, "swap_rows: size1 %d > size2 %d", s1.size, s2.size);
-            if(!swap_slot_core(&s1, &s2, tempslot))
+            if(!swap_cell_core(&s1, &s2, temp))
                 return(FALSE);
         }
         else if(s1.size < s2.size)
         {
             trace_2(TRACE_APP_PD4, "swap_rows: size1 %d < size2 %d", s1.size, s2.size);
-            if(!swap_slot_core(&s2, &s1, tempslot))
+            if(!swap_cell_core(&s2, &s1, temp))
                 return(FALSE);
         }
         /* same size, non-zero? */
         else if(s1.size)
         {
             trace_1(TRACE_APP_PD4, "swap_rows: same size %d", s1.size);
-            memcpy32(tempslot, s2.sl,    s2.size);
-            memcpy32(s2.sl,    s1.sl,    s1.size);
-            memcpy32(s1.sl,    tempslot, s2.size);
+            memcpy32(temp,      s2.p_cell, s2.size);
+            memcpy32(s2.p_cell, s1.p_cell, s1.size);
+            memcpy32(s1.p_cell, temp,      s2.size);
         }
     }
 
@@ -1378,14 +1378,14 @@ swap_rows(
 ******************************************************************************/
 
 extern BOOL
-swap_slots(
+swap_cells(
     COL tcol1,
     ROW trow1,
     COL tcol2,
     ROW trow2)
 {
-    char tempslot[MAX_SLOTSIZE];
-    swap_slot_struct s1, s2;
+    char temp[MAX_SLOTSIZE];
+    swap_cell_struct s1, s2;
     UREF_PARM urefb;
 
     trace_4(TRACE_APP_PD4, "swap cells: %d, %d, %d, %d", (S32) tcol1, (S32) trow1, (S32) tcol2, (S32) trow2);
@@ -1396,20 +1396,20 @@ swap_slots(
     s2.row = trow2;
     s2.col = tcol2;
 
-        s1.sl = travel(s1.col, s1.row);
-        if(s1.sl)
+        s1.p_cell = travel(s1.col, s1.row);
+        if(s1.p_cell)
         {
-            s1.size = slotsize(s1.sl);
-            s1.type = s1.sl->type;
+            s1.type = s1.p_cell->type;
+            s1.size = slotsize(s1.p_cell);
         }
         else
             s1.size = 0;
 
-        s2.sl = travel(s2.col, s2.row);
-        if(s2.sl)
+        s2.p_cell = travel(s2.col, s2.row);
+        if(s2.p_cell)
         {
-            s2.size = slotsize(s2.sl);
-            s2.type = s2.sl->type;
+            s2.type = s2.p_cell->type;
+            s2.size = slotsize(s2.p_cell);
         }
         else
             s2.size = 0;
@@ -1417,20 +1417,20 @@ swap_slots(
         /* swapo the cells */
         if(s1.size > s2.size)
         {
-            if(!swap_slot_core(&s1, &s2, tempslot))
+            if(!swap_cell_core(&s1, &s2, temp))
                 return(FALSE);
         }
         else if(s1.size < s2.size)
         {
-            if(!swap_slot_core(&s2, &s1, tempslot))
+            if(!swap_cell_core(&s2, &s1, temp))
                 return(FALSE);
         }
         /* same size, non-zero? */
         else if(s1.size)
         {
-            memcpy32(tempslot, s2.sl,    s2.size);
-            memcpy32(s2.sl,    s1.sl,    s1.size);
-            memcpy32(s1.sl,    tempslot, s2.size);
+            memcpy32(temp,      s2.p_cell, s2.size);
+            memcpy32(s2.p_cell, s1.p_cell, s1.size);
+            memcpy32(s1.p_cell, temp,      s2.size);
         }
 
     /* set up uref block */
@@ -1440,45 +1440,45 @@ swap_slots(
 
     ev_uref(&urefb);
 
-    trace_0(TRACE_APP_PD4, "swap_slots out");
+    trace_0(TRACE_APP_PD4, "swap_cells out");
 
     return(TRUE);
 }
 
 /******************************************************************************
 *
-* helper routine for swap rows - to swap two cells
+* helper routine for swap rows / cells - to swap two cells
 *
 ******************************************************************************/
 
 static S32
-swap_slot_core(
-    swap_slot_struct *p1,
-    swap_slot_struct *p2,
-    P_ANY tempslot)
+swap_cell_core(
+    swap_cell_struct *p1,
+    swap_cell_struct *p2,
+    P_ANY temp)
 {
-    /* copy p2 to temp cell */
-    if(p2->size)
-        memcpy32(tempslot, p2->sl, p2->size);
+    /* copy p2 to temp area */
+    if(0 != p2->size)
+        memcpy32(temp, p2->p_cell, p2->size);
 
     /* create cell at p2 for p1 */
-    if((p2->sl = createslot(p2->col, p2->row, p1->size + 4, p1->type)) == NULL)
+    if((p2->p_cell = createslot(p2->col, p2->row, p1->size + 4, p1->type)) == NULL)
         return(FALSE);
 
-    p1->sl = travel(p1->col, p1->row);
+    p1->p_cell = travel(p1->col, p1->row);
 
     /* copy from p1 to p2 */
-    memcpy32(p2->sl, p1->sl, p1->size);
+    memcpy32(p2->p_cell, p1->p_cell, p1->size);
 
     /* if old p2 blank, make hole at p1 */
-    if(!p2->size)
+    if(0 == p2->size)
         return(createhole(p1->col, p1->row));
 
     /* otherwise copy p2 to p1 */
-    if((p1->sl = createslot(p1->col, p1->row, p2->size + 4, p2->type)) == NULL)
+    if((p1->p_cell = createslot(p1->col, p1->row, p2->size + 4, p2->type)) == NULL)
         return(FALSE);
 
-    memcpy32(p1->sl, tempslot, p2->size);
+    memcpy32(p1->p_cell, temp, p2->size);
 
     return(TRUE);
 }
@@ -1594,7 +1594,7 @@ tree_insert_fail(
 static void
 update_marks(
     _InVal_     DOCNO docno,
-    _InoutRef_  P_SLR slot,
+    _InoutRef_  P_SLR p_slr,
     COL mrksco,
     COL mrkeco,
     ROW mrksro,
@@ -1605,18 +1605,18 @@ update_marks(
     if(docno != current_docno())
         return;
 
-    if( slot->col <= mrkeco  &&  slot->col >= mrksco  &&
-        slot->row <= mrkero  &&  slot->row >= mrksro)
+    if( (p_slr->col <= mrkeco)  &&  (p_slr->col >= mrksco) &&
+        (p_slr->row <= mrkero)  &&  (p_slr->row >= mrksro) )
     {
-        slot->row += rowdiff;
-        slot->col += coldiff;
+        p_slr->row += rowdiff;
+        p_slr->col += coldiff;
     }
 
-    if((slot->row > numrow-1)  &&  (slot->row < LARGEST_ROW_POSSIBLE))
-        slot->row = numrow-1;
+    if((p_slr->row > numrow-1)  &&  (p_slr->row < LARGEST_ROW_POSSIBLE))
+        p_slr->row = numrow-1;
 
-    if((slot->col > numcol-1)  &&  (slot->col < LARGEST_COL_POSSIBLE))
-        slot->col = numcol-1;
+    if((p_slr->col > numcol-1)  &&  (p_slr->col < LARGEST_COL_POSSIBLE))
+        p_slr->col = numcol-1;
 }
 
 /******************************************************************************

@@ -1463,6 +1463,7 @@ mlec_event_proto(static, formwind_mlec_event_handler)
         formwind_mergebacktext(TRUE, NULL);         /* report formula compilation errors */
         res = mlec_event_return;
         break;
+
 #if TRUE
     case Mlec_IsWorkAreaChanged:
         {
@@ -1473,9 +1474,10 @@ mlec_event_proto(static, formwind_mlec_event_handler)
         }
         break;
 #endif
-  /*default:    */
-  /*    res = 0;*/
-  /*    break;  */
+
+    default:
+        /*res = 0;*/
+        break;  
     }
 
     select_document_using_docno(old_docno);
@@ -1686,7 +1688,7 @@ DefineName_fn(void)
     char        *contents;
     EV_OPTBLOCK  optblock;
     EV_DOCNO     cur_docno;
-    S32          err;
+    STATUS       err;
 
     trace_0(TRACE_APP_EXPEDIT, "DefineName_fn()");
 
@@ -1742,7 +1744,7 @@ EditName_fn(
     char         argbuf[LIN_BUFSIZ + 1];
     S32          argcount;
     EV_DOCNO     cur_docno;
-    S32          err;
+    STATUS       err;
 
     trace_1(TRACE_APP_EXPEDIT, "EditName_fn(%d)", itemno);
 

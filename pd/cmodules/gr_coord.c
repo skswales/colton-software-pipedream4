@@ -58,46 +58,42 @@ gr_scale_from_s32_pair(
 ******************************************************************************/
 
 _Check_return_
-extern S32
+extern BOOL
 gr_box_hit(
-    _OutRef_    P_GR_POINT offset,
-    _InRef_     PC_GR_BOX abox,
-    _InRef_     PC_GR_POINT apoint,
-    _InRef_opt_ PC_GR_POINT semimajor /*NULL->exact hit required*/)
+    _InRef_     PC_GR_BOX box,
+    _InRef_     PC_GR_POINT point,
+    _InRef_opt_ PC_GR_SIZE size /*NULL->exact hit required*/)
 {
-    offset->x = apoint->x - abox->x0;
-    offset->y = apoint->y - abox->y0;
-
-    if(semimajor)
+    if(NULL != size)
     {
         /* inclusive */
-        if((apoint->x + semimajor->x) < abox->x0)
-            return(-1);
-        if((apoint->y + semimajor->y) < abox->y0)
-            return(-1);
+        if((point->x + size->cx) < box->x0)
+            return(FALSE);
+        if((point->y + size->cy) < box->y0)
+            return(FALSE);
 
         /* exclusive */
-        if((apoint->x - semimajor->x) > abox->x1)
-            return(-1);
-        if((apoint->y - semimajor->y) > abox->y1)
-            return(-1);
+        if((point->x - size->cx) > box->x1)
+            return(FALSE);
+        if((point->y - size->cy) > box->y1)
+            return(FALSE);
     }
     else
     {
         /* inclusive */
-        if(offset->x < 0)
-            return(-1);
-        if(offset->y < 0)
-            return(-1);
+        if(point->x < box->x0)
+            return(FALSE);
+        if(point->y < box->y0)
+            return(FALSE);
 
         /* exclusive */
-        if(apoint->x > abox->x1)
-            return(-1);
-        if(apoint->y > abox->y1)
-            return(-1);
+        if(point->x > box->x1)
+            return(FALSE);
+        if(point->y > box->y1)
+            return(FALSE);
     }
 
-    return(1);
+    return(TRUE);
 }
 
 /******************************************************************************

@@ -52,7 +52,7 @@ riscdialog_execute(
     dialog_proc proc,
     const char *dname,
     DIALOG *dptr,
-    S32 boxnumber);
+    _InVal_     U32 boxnumber);
 
 extern S32
 riscdialog_fillin_for_browse(
@@ -79,20 +79,44 @@ riscdialog_input_from_user(
     char *text_out,
     int max_len);
 
-extern S32
-riscdialog_query_YN(
-    const char *mess);
+enum RISCDIALOG_QUERY_DC_REPLY
+{
+    riscdialog_query_DC_DISCARD = 1,
+    riscdialog_query_DC_CANCEL  = 2
+};
 
-extern S32
+extern enum RISCDIALOG_QUERY_DC_REPLY
 riscdialog_query_DC(
     const char *mess);
 
-extern S32
+enum RISCDIALOG_QUERY_YN_REPLY
+{
+    riscdialog_query_YES     = 1,
+    riscdialog_query_CANCEL  = 2,
+    riscdialog_query_NO      = 3
+};
+
+extern enum RISCDIALOG_QUERY_YN_REPLY
+riscdialog_query_YN(
+    const char *mess);
+
+enum RISCDIALOG_QUERY_SDC_REPLY
+{
+    riscdialog_query_SDC_SAVE    = 1,
+    riscdialog_query_SDC_CANCEL  = 2,
+    riscdialog_query_SDC_DISCARD = 3
+};
+
+extern enum RISCDIALOG_QUERY_SDC_REPLY
 riscdialog_query_SDC(
     const char *mess);
 
-extern S32
-riscdialog_query_save_existing(void);
+extern enum RISCDIALOG_QUERY_SDC_REPLY
+riscdialog_query_quit_SDC(
+    const char *mess);
+
+extern enum RISCDIALOG_QUERY_SDC_REPLY
+riscdialog_query_save_or_discard_existing(void);
 
 extern S32
 riscdialog_replace_dbox(
@@ -252,26 +276,6 @@ dproc_edit_name(
 extern void
 dproc_formula_error(
     DIALOG *dptr);
-
-enum RISCDIALOG_QUERY_YN_REPLY
-{
-    riscdialog_query_YES     = 1,
-    riscdialog_query_CANCEL  = 2,
-    riscdialog_query_NO      = 3
-};
-
-enum RISCDIALOG_QUERY_DC_REPLY
-{
-    riscdialog_query_DC_DISCARD = 1
-  /*riscdialog_query_DC_CANCEL  = 2*/
-};
-
-enum RISCDIALOG_QUERY_SDC_REPLY
-{
-    riscdialog_query_SDC_SAVE    = 1,
-  /*riscdialog_query_SDC_CANCEL  = 2*/
-    riscdialog_query_SDC_DISCARD = 3
-};
 
 #endif  /* __pd__riscdialog_h */
 

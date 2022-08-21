@@ -805,20 +805,20 @@ duffo_diagram =
       },
 
       { /* pathGuts */
-        { DRAW_PATH_TYPE_MOVE, 0x0,     0x0     }, /* move (bl) */
-        { DRAW_PATH_TYPE_LINE, 0x10000, 0x0     }, /* br */
-        { DRAW_PATH_TYPE_LINE, 0x10000, 0x10000 }, /* tr */
-        { DRAW_PATH_TYPE_LINE, 0x0,     0x10000 }, /* tl */
-        { DRAW_PATH_TYPE_LINE, 0x0,     0x0     }, /* bl */
-        { DRAW_PATH_TYPE_CLOSE },                /* close1 */
+        { DRAW_PATH_TYPE_MOVE, { 0x0,     0x0     } }, /* move (bl) */
+        { DRAW_PATH_TYPE_LINE, { 0x10000, 0x0     } }, /* br */
+        { DRAW_PATH_TYPE_LINE, { 0x10000, 0x10000 } }, /* tr */
+        { DRAW_PATH_TYPE_LINE, { 0x0,     0x10000 } }, /* tl */
+        { DRAW_PATH_TYPE_LINE, { 0x0,     0x0     } }, /* bl */
+        { DRAW_PATH_TYPE_CLOSE_WITH_LINE            }, /* close1 */
 
-        { DRAW_PATH_TYPE_MOVE, 0x0,     0x0     }, /* bl2 */
-        { DRAW_PATH_TYPE_LINE, 0x10000, 0x10000 }, /* tr2 */
-        { DRAW_PATH_TYPE_CLOSE },                /* close2a */
+        { DRAW_PATH_TYPE_MOVE, { 0x0,     0x0     } }, /* bl2 */
+        { DRAW_PATH_TYPE_LINE, { 0x10000, 0x10000 } }, /* tr2 */
+        { DRAW_PATH_TYPE_CLOSE_WITH_LINE            }, /* close2a */
 
-        { DRAW_PATH_TYPE_MOVE, 0x0,     0x10000 }, /* tl2 */
-        { DRAW_PATH_TYPE_LINE, 0x10000, 0x0     }, /* br2 */
-        { DRAW_PATH_TYPE_CLOSE },                /* close2b */
+        { DRAW_PATH_TYPE_MOVE, { 0x0,     0x10000 } }, /* tl2 */
+        { DRAW_PATH_TYPE_LINE, { 0x10000, 0x0     } }, /* br2 */
+        { DRAW_PATH_TYPE_CLOSE_WITH_LINE            }, /* close2b */
 
         { DRAW_PATH_TYPE_TERM }
       }
@@ -1190,7 +1190,7 @@ gr_cache_rebind_and_shift(
             draw_box.x0, draw_box.y0, draw_box.x1, draw_box.y1);
 #endif
 
-    * (int *) &process = 0;
+    zero_struct(process);
     process.recurse    = 1;
     process.recompute  = 1; /* especially for loaded sprite - see above */
 

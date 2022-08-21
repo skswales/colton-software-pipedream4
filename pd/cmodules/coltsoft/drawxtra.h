@@ -138,7 +138,7 @@ DRAW_OBJECT_FONTLIST, * P_DRAW_OBJECT_FONTLIST;
 typedef struct DRAW_FONTLIST_ELEM
 {
     U8 fontref8;                    /* 1 byte   */
-    U8Z szHostFontName[31];         /* >= 2 bytes */ /* Latin-1 string, NULLCH terminated (size only for compiler and debugger - do not use sizeof()) */
+    U8Z szHostFontName[31];         /* >= 2 bytes */ /* Latin-N string, NULLCH terminated (size only for compiler and debugger - do not use sizeof()) */
 }
 DRAW_FONTLIST_ELEM, * P_DRAW_FONTLIST_ELEM; typedef const DRAW_FONTLIST_ELEM * PC_DRAW_FONTLIST_ELEM;
 
@@ -218,7 +218,7 @@ typedef struct DRAW_PATH_STYLE
     U8 tricap_w;                    /* 1 byte   */  /* 1/16th of line width */
     U8 tricap_h;                    /* 1 byte   */  /* 1/16th of line width */
 }                                   /* 1 word   */
-DRAW_PATH_STYLE;
+DRAW_PATH_STYLE, * P_DRAW_PATH_STYLE; typedef const DRAW_PATH_STYLE * PC_DRAW_PATH_STYLE;
 
 typedef struct DRAW_OBJECT_PATH
 {
@@ -247,6 +247,13 @@ DRAW_DASH_HEADER, * P_DRAW_DASH_HEADER; typedef const DRAW_DASH_HEADER * PC_DRAW
 Elements within a path
 */
 
+typedef struct DRAW_PATH_TERM
+{
+#define DRAW_PATH_TYPE_TERM     0 /* end of path */
+    U32 tag;
+}
+DRAW_PATH_TERM;
+
 typedef struct DRAW_PATH_MOVE
 {
 #define DRAW_PATH_TYPE_MOVE     2 /* move to (x,y), starts new subpath */
@@ -255,13 +262,13 @@ typedef struct DRAW_PATH_MOVE
 }
 DRAW_PATH_MOVE;
 
-typedef struct DRAW_PATH_LINE
+typedef struct DRAW_PATH_CLOSE
 {
-#define DRAW_PATH_TYPE_LINE     8 /* line to (x,y) */
+#define DRAW_PATH_TYPE_CLOSE_WITH_GAP   4 /* close current subpath with a gap */
+#define DRAW_PATH_TYPE_CLOSE_WITH_LINE  5 /* close current subpath with a line */
     U32 tag;
-    DRAW_POINT pt;
 }
-DRAW_PATH_LINE;
+DRAW_PATH_CLOSE;
 
 typedef struct DRAW_PATH_CURVE
 {
@@ -273,19 +280,13 @@ typedef struct DRAW_PATH_CURVE
 }
 DRAW_PATH_CURVE;
 
-typedef struct DRAW_PATH_CLOSE
+typedef struct DRAW_PATH_LINE
 {
-#define DRAW_PATH_TYPE_CLOSE    5 /* close current subpath with a line */
+#define DRAW_PATH_TYPE_LINE     8 /* line to (x,y) */
     U32 tag;
+    DRAW_POINT pt;
 }
-DRAW_PATH_CLOSE;
-
-typedef struct DRAW_PATH_TERM
-{
-#define DRAW_PATH_TYPE_TERM     0 /* end of path */
-    U32 tag;
-}
-DRAW_PATH_TERM;
+DRAW_PATH_LINE;
 
 /*
 A RISC OS sprite

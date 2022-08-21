@@ -90,7 +90,7 @@ dspfld(
 
 static S32
 end_of_block(
-    S32 xpos,
+    S32 x_pos,
     ROW trow);
 
 static S32
@@ -239,7 +239,7 @@ stringout_field(
 *
 * set up row information done
 * whenever screen height set:
-* init_screen, DSfunc, window size change
+* new_window_height, DSfunc, window size change
 *
 ******************************************************************************/
 
@@ -272,9 +272,7 @@ new_window_height(
 {
     SC_ARRAY_INIT_BLOCK vertvec_init_block = aib_init(8, sizeof32(SCRROW), TRUE);
     S32 nrows;
-    S32 old_maximum_rows;
     STATUS status;
-    P_SCRROW rptr, last_rptr;
 
     trace_1(TRACE_APP_PD4, "new_window_height(%d)", height);
 
@@ -282,16 +280,26 @@ new_window_height(
      * (and headline present) +1 for terminating row -> nrows=23
     */
     /* eg h=7, b=2 -> nrows=6 (7+1-2) */
-    nrows = (height + 1);
+    nrows = (height + 1 /*one for LAST*/);
 
     if(nrows > maximum_rows) /* never consider shrinking! */
         if(NULL == al_array_extend_by(&vertvec_mh, SCRROW, nrows - maximum_rows, &vertvec_init_block, &status))
             return(0);
 
-    if((nrows != maximum_rows)  &&  vertvec_mh)
+    if((nrows != maximum_rows)  &&  (0 != vertvec_mh))
     {
         /* only (re)set variables if realloc ok */
-        old_maximum_rows = maximum_rows;
+        S32 old_maximum_rows = maximum_rows;
+
+        if(nrows > old_maximum_rows)
+        {
+            const S32 limit = nrows - maximum_rows;
+            P_SCRROW rptr = vertvec_entry(old_maximum_rows);
+            S32 i;
+
+            for(i = 0; i < limit; ++i)
+                rptr[i].flags = LAST;
+        }
 
         maximum_rows = nrows;
         trace_1(TRACE_APP_PD4, "maximum_rows   := %d", maximum_rows);
@@ -301,23 +309,12 @@ new_window_height(
 
         reinit_rows();          /* derives things from paghyt */
 
-        if(nrows > old_maximum_rows)
-        {
-            rptr      = vertvec_entry(old_maximum_rows);
-            last_rptr = vertvec_entry(nrows);
-
-            do  {
-                rptr->flags = LAST;
-            }
-            while(++rptr < last_rptr);
-        }
-
         out_rebuildvert = TRUE;     /* shrinking or growing */
     }
     else
         trace_0(TRACE_APP_PD4, "no row change: why were we called?");
 
-    return((BOOL) vertvec_mh);  /* 0 -> buggered */
+    return(0 != vertvec_mh); /* 0 -> buggered */
 }
 
 /******************************************************************************
@@ -336,10 +333,8 @@ new_window_width(
 {
     SC_ARRAY_INIT_BLOCK horzvec_init_block = aib_init(4, sizeof32(SCRCOL), TRUE);
     /* number of columns needed: +1 for terminating column */
-    S32 ncols = width + 1;
-    S32 old_maximum_cols;
+    S32 ncols = (width + 1 /*one for LAST*/);
     STATUS status;
-    P_SCRCOL cptr, last_cptr;
 
     trace_1(TRACE_APP_PD4, "new_window_width(%d)", width);
 
@@ -347,10 +342,20 @@ new_window_width(
         if(NULL == al_array_extend_by(&horzvec_mh, SCRROW, ncols - maximum_cols, &horzvec_init_block, &status))
             return(0);
 
-    if((ncols != maximum_cols)  &&  horzvec_mh)
+    if((ncols != maximum_cols)  &&  (0 != horzvec_mh))
     {
         /* only (re)set variables if realloc ok */
-        old_maximum_cols = maximum_cols;
+        S32 old_maximum_cols = maximum_cols;
+
+        if(ncols > old_maximum_cols)
+        {
+            const S32 limit = ncols - maximum_cols;
+            P_SCRCOL cptr = horzvec_entry(old_maximum_cols);
+            S32 i;
+
+            for(i = 0; i < limit; ++i)
+                cptr[i].flags = LAST;
+        }
 
         maximum_cols = ncols;
         trace_1(TRACE_APP_PD4, "maximum_cols   := %d", maximum_cols);
@@ -366,41 +371,13 @@ new_window_width(
         cols_available = maxncol - borderwidth;
         trace_1(TRACE_APP_PD4, "cols_available := %d", cols_available);
 
-        if(ncols > old_maximum_cols)
-        {
-            cptr      = horzvec_entry(old_maximum_cols);
-            last_cptr = horzvec_entry(ncols);
-
-            do  {
-                cptr++->flags = LAST;
-            }
-            while(cptr < last_cptr);
-        }
-
         /* columns need much more redrawing than rows on resize */
         out_rebuildhorz = TRUE;
     }
     else
         trace_0(TRACE_APP_PD4, "no col change: why were we called?");
 
-    return((BOOL) horzvec_mh);  /* NULL -> buggered */
-}
-
-/******************************************************************************
-*
-*  initialise screen data
-*
-******************************************************************************/
-
-extern BOOL
-init_screen(void)
-{
-    BOOL ok;
-
-    ok =    new_window_height(paghyt)   &&
-            new_window_width(pagwid);
-
-    return(ok);
+    return(0 != horzvec_mh); /* 0 -> buggered */
 }
 
 /******************************************************************************
@@ -413,18 +390,14 @@ extern BOOL
 screen_initialise(void)
 {
     BOOL ok;
-    S32 ph, pw;
 
     trace_0(TRACE_APP_PD4, "screen_initialise()");
 
     new_grid_state();       /* set charvspace/vrubout - doesn't redraw */
 
-    ph = windowheight();
-    pw = windowwidth();
-
     /* even on RISC OS, may have changed from burned-in grid state */
-    ok =    new_window_height(ph)   &&
-            new_window_width(pw);
+    ok =    new_window_height(windowheight())  &&
+            new_window_width(windowwidth());
 
     if(!ok)
     {
@@ -516,6 +489,7 @@ draw_screen(void)
     if(colh_mark_state_indicator_new != colh_mark_state_indicator)
         colh_draw_mark_state_indicator(colh_mark_state_indicator_new);
 
+    assert(vertvec_entry_valid(0));
     if(row_number(0) >= numrow)
         cenrow(numrow-1);
 
@@ -699,9 +673,9 @@ really_draw_picture(
 
     /* origin of diagram positioned at r.box.x0,r.box.y1 (abs) */
     x = gcoord_x(x0);
-    y = gcoord_y(y1) - p_draw_file_ref->ysize_os - dy; /* <<< do we REALLY want this dy? */
+    y = gcoord_y(y1) - p_draw_file_ref->y_size_os - dy; /* <<< do we REALLY want this dy? */
 
-    if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, p_draw_file_ref->xfactor, p_draw_file_ref->yfactor, &graphics_window)))
+    if(status_fail(draw_do_render(p_draw_diag->data, p_draw_diag->length, x, y, p_draw_file_ref->x_factor, p_draw_file_ref->y_factor, &graphics_window)))
         gr_cache_error_set(&p_draw_file_ref->draw_file_key, create_error(ERR_BADDRAWFILE));
 
     restore_graphics_window();
@@ -719,6 +693,8 @@ find_coff(
 {
     P_SCRCOL cptr = horzvec();
     S32 coff;
+
+    PTR_ASSERT(cptr);
 
     if(tcol < cptr->colno)
         return(-1);
@@ -755,18 +731,26 @@ maybe_draw_pictures(void)
 
     if(pict_on_screen)
     {
+        assert(0 != array_elements(&vertvec_mh));
         rptr = vertvec();
+        PTR_ASSERT(rptr);
 
         for(roff = 0; roff < rowsonscreen; roff++, rptr++)
         {
+            assert(vertvec_entry_valid(roff));
+
             if(rptr->flags & PICT)
             {
                 trow = rptr->rowno;
 
+                assert(0 != array_elements(&horzvec_mh));
                 cptr = horzvec();
+                PTR_ASSERT(cptr);
 
                 for(coff = 0; !(cptr->flags & LAST); coff++, cptr++)
                 {
+                    assert(horzvec_entry_valid(coff));
+
                     tcol = cptr->colno;
 
                     if(draw_find_file(current_docno(), tcol, trow, &p_draw_diag, &p_draw_file_ref))
@@ -774,13 +758,13 @@ maybe_draw_pictures(void)
                         trace_2(TRACE_APP_PD4, "found picture at col %d, row %d", tcol, trow);
 
                         x0 = calcad(coff /*find_coff(p_draw_file_ref->col)*/);
-                        x1 = x0 + tsize_x(p_draw_file_ref->xsize_os + 4); /* SKS after 4.11 09feb92 - make pictures oversize for redraw consideration */
+                        x1 = x0 + tsize_x(p_draw_file_ref->x_size_os + 4); /* SKS after 4.11 09feb92 - make pictures oversize for redraw consideration */
                         y1 = calrad(roff) - 1;      /* NB. picture hangs from top */
-                        y0 = y1 + tsize_y(p_draw_file_ref->ysize_os + 4);
+                        y0 = y1 + tsize_y(p_draw_file_ref->y_size_os + 4);
                         y0 = MIN(y0, paghyt);
 
-                        trace_6(TRACE_APP_PD4, "xsize = %d, ysize = %d; (%d %d %d %d)",
-                                tsize_x(p_draw_file_ref->xsize_os), tsize_y(p_draw_file_ref->ysize_os), x0, y0, x1, y1);
+                        trace_6(TRACE_APP_PD4, "x_size = %d, y_size = %d; (%d %d %d %d)",
+                                tsize_x(p_draw_file_ref->x_size_os), tsize_y(p_draw_file_ref->y_size_os), x0, y0, x1, y1);
 
                         if(textobjectintersects(x0, y0, x1, y1))
                         {
@@ -1096,6 +1080,7 @@ draw_row(
 
     trace_1(TRACE_DRAW, "\n*** draw_row(%d) --- ", roff);
 
+    assert(vertvec_entry_valid(roff));
     if(vertvec_entry(roff)->flags & LAST)
     {
         trace_0(TRACE_REALLY, "last row");
@@ -1143,6 +1128,7 @@ draw_row_border(
 
     trace_1(TRACE_DRAW, "\n*** draw_row_border(%d) --- ", roff);
 
+    assert(vertvec_entry_valid(roff));
     if(vertvec_entry(roff)->flags & LAST)
     {
         trace_0(TRACE_REALLY, "last row");
@@ -1186,6 +1172,7 @@ really_draw_row_border(
 
   /*  at(0, rpos);*/
 
+    assert(vertvec_entry_valid(roff));
     rptr = vertvec_entry(roff);
 
     /* is the row a soft page break? if RISCOS, draw just that bit of it
@@ -1283,12 +1270,15 @@ really_draw_row_contents(
     S32 roff,
     S32 rpos)
 {
-    P_SCRROW rptr = vertvec_entry(roff);
+    P_SCRROW rptr;
     S32 newlen, len;
     S32 coff;
     char tbuf[32];
 
     trace_1(TRACE_REALLY, "really_draw_row_contents(%d): ", roff);
+
+    assert(vertvec_entry_valid(roff));
+    rptr = vertvec_entry(roff);
 
     /* is the row a soft (automatic) page break? */
 
@@ -1347,6 +1337,7 @@ really_draw_row_contents(
 
         newlen = 0;     /* maybe nothing drawn! */
 
+        assert(horzvec_entry_valid(0));
         for(coff = 0; !(horzvec_entry(coff)->flags & LAST); coff++)
         {
             newlen = really_draw_slot(coff, roff, TRUE);
@@ -1370,11 +1361,20 @@ draw_slot(
 {
     S32 cpos = calcad(coff);
     S32 rpos = calrad(roff);
-    COL tcol = col_number(coff);
-    ROW trow = row_number(roff);
-    P_CELL tcell = travel(tcol, trow);
-    S32 fwidth = colwidth(tcol);
+    COL tcol;
+    ROW trow;
+    P_CELL tcell;
+    S32 fwidth;
     S32 overlap;
+
+    assert(horzvec_entry_valid(coff));
+    assert(vertvec_entry_valid(roff));
+    tcol = col_number(coff);
+    trow = row_number(roff);
+
+    fwidth = colwidth(tcol);
+
+    tcell = travel(tcol, trow);
 
     IGNOREPARM(in_draw_row);    /* NEVER in_draw_row in RISC OS */
 
@@ -1403,19 +1403,32 @@ really_draw_slot(
 {
     S32 cpos = calcad(coff);
     S32 rpos = calrad(roff);
-    COL tcol = col_number(coff);
-    P_SCRROW rptr = vertvec_entry(roff);
-    ROW trow = rptr->rowno;
-    P_CELL thisslot = travel(tcol, trow);
-    BOOL slotblank = isslotblank(thisslot);
-    S32 os_cpos = os_if_fonts(cpos);
-    S32 c_width = colwidth(tcol);
+    COL tcol;
+    P_SCRROW rptr;
+    ROW trow;
+    P_CELL thisslot;
+    BOOL slotblank;
+    S32 os_cpos;
+    S32 c_width;
     S32 fwidth, overlap;
     S32 widthofslot, spaces_at_end, spaces_to_draw;
     S32 end_of_inverse, to_do_inverse;
     BOOL slot_in_block, slot_visible;
 
     static S32 last_offset;        /* last draw_slot finished here */
+
+    assert(horzvec_entry_valid(coff));
+    tcol = col_number(coff);
+
+    assert(vertvec_entry_valid(roff));
+    rptr = vertvec_entry(roff);
+    trow = rptr->rowno;
+
+    thisslot = travel(tcol, trow);
+    slotblank = is_blank_cell(thisslot);
+
+    os_cpos = os_if_fonts(cpos);
+    c_width = colwidth(tcol);
 
     trace_4(TRACE_REALLY, "really_draw_slot(%d, %d, %s): slotblank = %s",
                 coff, roff, trace_boolstring(in_draw_row),
@@ -1630,7 +1643,7 @@ draw_spaces_with_grid(
         /* which column are we starting to draw spaces in? */
         coff = calcoff(riscos_fonts ? start / charwidth : start);
 
-        if(coff >= 0)
+        if(horzvec_entry_valid(coff))
         {
             tcol = col_number(coff);
             c_width = os_if_fonts(colwidth(tcol)) - (start - os_if_fonts(calcad(coff)));
@@ -1670,10 +1683,12 @@ draw_spaces_with_grid(
 
             coff++;
 
+            assert(horzvec_entry_valid(coff));
             last = (horzvec_entry(coff)->flags & LAST);
 
             if(!last  &&  (spaces_left > 0))
             {
+                assert(horzvec_entry_valid(coff));
                 tcol = col_number(coff);
                 c_width = os_if_fonts(colwidth(tcol));
 
@@ -1698,7 +1713,10 @@ static S32
 adjust_rowout(
     S32 rowoff)
 {
-    uchar flags = vertvec_entry(rowoff)->flags;
+    uchar flags;
+    
+    assert(vertvec_entry_valid(rowoff));
+    flags = vertvec_entry(rowoff)->flags;
 
     if((flags & PAGE)  &&  !(flags & LAST))
         draw_row(rowoff + 1);
@@ -1710,7 +1728,10 @@ static S32
 adjust_rowborout(
     S32 rowoff)
 {
-    uchar flags = vertvec_entry(rowoff)->flags;
+    uchar flags;
+
+    assert(vertvec_entry_valid(rowoff));
+    flags = vertvec_entry(rowoff)->flags;
 
     if((flags & PAGE)  &&  !(flags & LAST))
         draw_row_border(rowoff + 1);
@@ -1780,8 +1801,8 @@ setivs(
 static void
 draw_altered_slots(void)
 {
-    P_SCRCOL i_cptr = horzvec();
-    P_SCRROW i_rptr = vertvec();
+    P_SCRCOL i_cptr;
+    P_SCRROW i_rptr;
     P_SCRCOL cptr;
     P_SCRROW rptr;
     S32 coff;
@@ -1789,6 +1810,14 @@ draw_altered_slots(void)
     P_CELL tcell;
 
     trace_0(TRACE_DRAW, "\n*** draw_altered_slots()");
+
+    assert(0 != array_elements(&horzvec_mh));
+    i_cptr = horzvec();
+    PTR_ASSERT(i_cptr);
+
+    assert(0 != array_elements(&vertvec_mh));
+    i_rptr = vertvec();
+    PTR_ASSERT(i_rptr);
 
     rptr = i_rptr;
 
@@ -1814,10 +1843,19 @@ draw_altered_slots(void)
 
                         draw_slot(coff, roff, FALSE);
 
+                        assert(0 != array_elements(&horzvec_mh));
                         i_cptr  = horzvec();
+                        PTR_ASSERT(i_cptr);
+
+                        assert(0 != array_elements(&vertvec_mh));
                         i_rptr  = vertvec();
-                        cptr    = i_cptr + coff;
-                        rptr    = i_rptr + roff;
+                        PTR_ASSERT(i_rptr);
+
+                        assert(horzvec_entry_valid(coff));
+                        cptr = i_cptr + coff;
+
+                        assert(vertvec_entry_valid(roff));
+                        rptr = i_rptr + roff;
 
                         invoff();
                     }
@@ -1853,13 +1891,24 @@ draw_one_altered_slot(
     COL col,
     ROW row)
 {
-    P_SCRCOL i_cptr = horzvec();
-    P_SCRROW i_rptr = vertvec();
-    P_SCRCOL cptr = i_cptr;
-    P_SCRROW rptr = i_rptr;
+    P_SCRCOL i_cptr;
+    P_SCRROW i_rptr;
+    P_SCRCOL cptr;
+    P_SCRROW rptr;
     P_CELL tcell;
 
     trace_0(TRACE_DRAW, "\n*** draw_one_altered_slot()");
+
+    assert(0 != array_elements(&horzvec_mh));
+    i_cptr = horzvec();
+    PTR_ASSERT(i_cptr);
+
+    assert(0 != array_elements(&vertvec_mh));
+    i_rptr = vertvec();
+    PTR_ASSERT(i_rptr);
+
+    cptr = i_cptr;
+    rptr = i_rptr;
 
     /* cheap tests to save loops if cell not in window - fixing complicates */
     if( !(rptr->flags & FIX)  &&
@@ -2965,28 +3014,35 @@ an x position in inverse and the column
 
 static S32
 end_of_block(
-    S32 xpos,
+    S32 x_pos_in,
     ROW trow)
 {
-    S32 coff = calcoff(riscos_fonts ? (xpos / charwidth) : xpos);
-    P_SCRCOL cptr = horzvec_entry(coff);
+    S32 x_pos = x_pos_in;
+    S32 coff = calcoff(riscos_fonts ? (x_pos / charwidth) : x_pos);
+    P_SCRCOL cptr;
     COL tcol;
 
+    if(!horzvec_entry_valid(coff)) /* expect OFF_RIGHT */
+        return(x_pos_in);
+
     /* get screen address of beginning of column underneath x */
-    xpos = os_if_fonts(calcad(coff));
+    x_pos = os_if_fonts(calcad(coff));
+
+    assert(horzvec_entry_valid(coff));
+    cptr = horzvec_entry(coff);
 
     /* while the column is marked add its width on to x */
     for(;;)
     {
         if(cptr->flags & LAST)
-            return(xpos);
+            return(x_pos);
 
         tcol = cptr->colno;
 
         if(!inblock(tcol, trow))
-            return(xpos);
+            return(x_pos);
 
-        xpos += os_if_fonts(colwidth(tcol));
+        x_pos += os_if_fonts(colwidth(tcol));
 
         cptr++;
     }
@@ -3432,7 +3488,7 @@ chkolp(
         return(totalwidth);
 
     /* check to see if its a weirdo masquerading as a blank */
-    if(tcell  &&  (tcell->type != SL_TEXT)  &&  isslotblank(tcell))
+    if(tcell  &&  (tcell->type != SL_TEXT)  &&  is_blank_cell(tcell))
         return(totalwidth);
 
     if(printing)
@@ -3440,7 +3496,9 @@ chkolp(
     else
     {
         /* cptr := horzvec entry (+1) for trycol */
+        assert(0 != array_elements(&horzvec_mh));
         cptr = horzvec();
+        PTR_ASSERT(cptr);
 
         do  {
             if(cptr->flags & LAST)
@@ -3470,16 +3528,18 @@ chkolp(
         /* can we overlap it? */
         trace_2(TRACE_OVERLAP, "travelling to %d, %d", trycol, trow);
         tcell = travel(trycol, trow);
-        if(tcell  &&  !isslotblank(tcell))
+        if(tcell  &&  !is_blank_cell(tcell))
             break;
 
         if(!printing)
+        {
             /* don't overlap to current cell */
             if( ((trycol == curcol)  &&  (trow == currow))          ||
                 /* don't allow overlap from non-marked to marked */
                 (inblock(trycol, trow)  &&  !inblock(tcol, trow))
                 )
                 break;
+        }
 
         totalwidth += colwidth(trycol);
     }
@@ -3501,13 +3561,19 @@ is_overlapped(
     S32 coff,
     S32 roff)
 {
-    ROW trow = row_number(roff);
+    COL tcol;
+    ROW trow;
+    P_CELL tcell;
     S32 gap = 0;
+
+    assert(vertvec_entry_valid(roff));
+    trow = row_number(roff);
 
     while(--coff >= 0)
     {
-        COL  tcol  = col_number(coff);
-        P_CELL tcell = travel(tcol, trow);
+        assert(horzvec_entry_valid(coff));
+        tcol  = col_number(coff);
+        tcell = travel(tcol, trow);
 
         gap += colwidth(tcol);
 

@@ -377,7 +377,9 @@ check_supporting_rng(
     if((rix = search_for_rng_ref(&grubp->data.arg.range)) >= 0)
     {
         const P_SS_DOC p_ss_doc = ev_p_ss_doc_from_docno_must(grubp->data.arg.range.s.docno);
-        if(tree_rngptr(p_ss_doc, rix)->visited >= ev_serial_num)
+        const P_RANGE_USE p_range_use = tree_rngptr(p_ss_doc, rix);
+        PTR_ASSERT(p_range_use);
+        if(p_range_use->visited >= ev_serial_num)
         {
             trace_0(TRACE_MODULE_EVAL, "*** range visit avoided since serial number up-to-date ***");
             return(SAME_STATE);
@@ -851,8 +853,8 @@ eval_rpn(
 
                         array_range_index(&temp,
                                           p_ev_data,
-                                          stkentp->data.stack_executing_custom.xpos,
-                                          stkentp->data.stack_executing_custom.ypos,
+                                          stkentp->data.stack_executing_custom.x_pos,
+                                          stkentp->data.stack_executing_custom.y_pos,
                                           p_ev_custom->args.types[arg_ix]);
 
                         ss_data_resource_copy(&stack_ptr->data.stack_data_item.data, &temp);
@@ -922,8 +924,8 @@ eval_rpn(
                     stack_ptr->data.stack_executing_custom.n_args = arg_count;
                     stack_ptr->data.stack_executing_custom.stack_base = stack_offset(stack_ptr - 3);
                     stack_ptr->data.stack_executing_custom.in_array = (max_x || max_y);
-                    stack_ptr->data.stack_executing_custom.xpos =
-                    stack_ptr->data.stack_executing_custom.ypos = 0;
+                    stack_ptr->data.stack_executing_custom.x_pos =
+                    stack_ptr->data.stack_executing_custom.y_pos = 0;
                     stack_ptr->data.stack_executing_custom.custom_slot = p_ev_custom->owner;
                     stack_ptr->data.stack_executing_custom.custom_slot.row += 1;
                     stack_ptr->data.stack_executing_custom.next_slot =
@@ -1001,8 +1003,8 @@ eval_rpn(
 
                     /* swap to processing array state */
                     stack_inc(PROCESSING_ARRAY, cur_slr, stack_ptr[-1].stack_flags);
-                    stack_ptr->data.stack_processing_array.xpos =
-                    stack_ptr->data.stack_processing_array.ypos = 0;
+                    stack_ptr->data.stack_processing_array.x_pos =
+                    stack_ptr->data.stack_processing_array.y_pos = 0;
                     stack_ptr->data.stack_processing_array.n_args = arg_count;
                     stack_ptr->data.stack_processing_array.stack_base = stack_offset(stack_ptr - 3);
                     stack_ptr->data.stack_processing_array.exec = p_proc_exec;
@@ -1039,9 +1041,8 @@ eval_rpn(
                                 stack_dbase.cond_pos = (S32) args[1]->arg.cond_pos;
                                 stack_dbase.offset.col = 0;
                                 stack_dbase.offset.row = 0;
-                                stat_block_init(stack_dbase.p_stat_block,
-                                                (EV_IDNO) func_data->parms.no_exec,
-                                                0, 0);
+                                dbase_stat_block_init(stack_dbase.p_stat_block,
+                                                      (U32) func_data->parms.no_exec);
 
                                 stack_set(stack_offset(stack_ptr) - arg_count);
 
@@ -1334,8 +1335,8 @@ custom_result(
 
             array_elementp =
                 ss_array_element_index_wr(&temp_data,
-                                          custom_stackp->data.stack_executing_custom.xpos,
-                                          custom_stackp->data.stack_executing_custom.ypos);
+                                          custom_stackp->data.stack_executing_custom.x_pos,
+                                          custom_stackp->data.stack_executing_custom.y_pos);
 
             if(data_is_array_range(p_ev_data))
                 ev_data_set_error(array_elementp, create_error(EVAL_ERR_NESTEDARRAY));
@@ -2455,13 +2456,13 @@ ev_recalc(void)
 
             if(stack_ptr->data.stack_executing_custom.in_array)
             {
-                ++stack_ptr->data.stack_executing_custom.xpos;
-                if(stack_ptr->data.stack_executing_custom.xpos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.x_size)
+                ++stack_ptr->data.stack_executing_custom.x_pos;
+                if(stack_ptr->data.stack_executing_custom.x_pos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.x_size)
                 {
-                    stack_ptr->data.stack_executing_custom.xpos  = 0;
-                    stack_ptr->data.stack_executing_custom.ypos += 1;
+                    stack_ptr->data.stack_executing_custom.x_pos  = 0;
+                    stack_ptr->data.stack_executing_custom.y_pos += 1;
 
-                    if(stack_ptr->data.stack_executing_custom.ypos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.y_size)
+                    if(stack_ptr->data.stack_executing_custom.y_pos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.y_size)
                         custom_over = 1;
                 }
             }
@@ -2519,13 +2520,13 @@ ev_recalc(void)
             PC_EV_TYPE typep;
             P_EV_DATA resp;
 
-            if(stack_ptr->data.stack_processing_array.xpos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.x_size)
+            if(stack_ptr->data.stack_processing_array.x_pos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.x_size)
             {
-                stack_ptr->data.stack_processing_array.xpos  = 0;
-                stack_ptr->data.stack_processing_array.ypos += 1;
+                stack_ptr->data.stack_processing_array.x_pos  = 0;
+                stack_ptr->data.stack_processing_array.y_pos += 1;
 
                 /* have we completed array ? */
-                if(stack_ptr->data.stack_processing_array.ypos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.y_size)
+                if(stack_ptr->data.stack_processing_array.y_pos >= stack_ptr[-1].data.stack_data_item.data.arg.ev_array.y_size)
                 {
                     S32 n_args = stack_ptr->data.stack_processing_array.n_args; /* SKS fixed 01may95 in Fireworkz; 21mar12 in PipeDream! */
                     STACK_ENTRY result, state;
@@ -2554,7 +2555,7 @@ ev_recalc(void)
             /* make a copy of processing_array data */
             stack_processing_array = stack_ptr->data.stack_processing_array;
 
-            stack_ptr->data.stack_processing_array.xpos += 1;
+            stack_ptr->data.stack_processing_array.x_pos += 1;
 
             /* get the arguments and array pointers */
             for(ix = 0, datapp = args_in, typec = stack_processing_array.type_count,
@@ -2577,8 +2578,8 @@ ev_recalc(void)
                         EV_SLR slr;
 
                         slr = (*datapp)->arg.range.s;
-                        slr.col += stack_processing_array.xpos;
-                        slr.row += stack_processing_array.ypos;
+                        slr.col += stack_processing_array.x_pos;
+                        slr.row += stack_processing_array.y_pos;
 
                         ev_slr_deref(&arg_dat[ix], &slr, FALSE);
                         args[ix] = &arg_dat[ix];
@@ -2588,7 +2589,7 @@ ev_recalc(void)
                         /* don't give a pointer into the array itself,
                          * otherwise someone will poo on it
                          */
-                        arg_dat[ix] = *ss_array_element_index_borrow((*datapp), stack_processing_array.xpos, stack_processing_array.ypos);
+                        arg_dat[ix] = *ss_array_element_index_borrow((*datapp), stack_processing_array.x_pos, stack_processing_array.y_pos);
                         args[ix] = &arg_dat[ix];
                     }
                 }
@@ -2601,7 +2602,7 @@ ev_recalc(void)
             }
 
             /* get pointer to result element */
-            resp = ss_array_element_index_wr(&stack_ptr[-1].data.stack_data_item.data, stack_processing_array.xpos, stack_processing_array.ypos);
+            resp = ss_array_element_index_wr(&stack_ptr[-1].data.stack_data_item.data, stack_processing_array.x_pos, stack_processing_array.y_pos);
 
             /* call semantic routine with array
              * elements as arguments instead of arrays
@@ -3103,7 +3104,9 @@ visit_supporting_range(void)
             if((rix = search_for_rng_ref(&stack_ptr->data.stack_visit_range.range)) >= 0)
             {
                 const P_SS_DOC p_ss_doc = ev_p_ss_doc_from_docno_must(stack_ptr->data.stack_visit_range.range.s.docno);
-                tree_rngptr(p_ss_doc, rix)->visited = ev_serial_num;
+                const P_RANGE_USE p_range_use = tree_rngptr(p_ss_doc, rix);
+                PTR_ASSERT(p_range_use);
+                p_range_use->visited = ev_serial_num;
             }
 
             changed = stack_ptr->stack_flags & (EV_FLAGS) STF_CALCEDSUPPORTER;

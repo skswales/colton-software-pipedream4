@@ -95,19 +95,19 @@ bin_and_frequency_calc(
     _InRef_     PC_EV_DATA array_bins,
     _InVal_     BOOL ignore_blanks_and_strings)
 {
-    S32 xs_0, ys_0;
-    S32 xs_1, ys_1;
+    S32 x_size[2];
+    S32 y_size[2];
 
-    array_range_sizes(array_data, &xs_0, &ys_0);
-    array_range_sizes(array_bins, &xs_1, &ys_1);
+    array_range_sizes(array_data, &x_size[0], &y_size[0]);
+    array_range_sizes(array_bins, &x_size[1], &y_size[1]);
 
     /* make result array */
-    if(status_ok(ss_array_make(p_ev_data_out, 1, ys_1 + 1)))
+    if(status_ok(ss_array_make(p_ev_data_out, 1, y_size[1] + 1)))
     {
         { /* clear result array to zero as widest integers */
         S32 iy;
 
-        for(iy = 0; iy < ys_1 + 1; ++iy)
+        for(iy = 0; iy < y_size[1] + 1; ++iy)
         {
             P_EV_DATA p_ev_data = ss_array_element_index_wr(p_ev_data_out, 0, iy);
             ev_data_set_WORD32(p_ev_data, 0);
@@ -117,12 +117,12 @@ bin_and_frequency_calc(
         { /* put each item into a bin */
         S32 ix, iy;
 
-        for(ix = 0; ix < xs_0; ++ix)
+        for(ix = 0; ix < x_size[0]; ++ix)
         {
-            for(iy = 0; iy < ys_0; ++iy)
+            for(iy = 0; iy < y_size[0]; ++iy)
             {
                 EV_DATA ev_data;
-                const EV_IDNO data_id = array_range_index(&ev_data, array_data, ix, iy, EM_REA | EM_INT | EM_DAT | EM_STR);
+                const EV_IDNO data_id = array_range_index(&ev_data, array_data, ix, iy, EM_REA | EM_DAT | EM_STR | EM_INT);
 
                 switch(data_id)
                 {
@@ -142,12 +142,12 @@ bin_and_frequency_calc(
                 case RPN_DAT_WORD32:
                 case RPN_DAT_DATE:
                     {
-                    S32 bin_iy, bin_out_iy = ys_1;
+                    S32 bin_iy, bin_out_iy = y_size[1];
 
-                    for(bin_iy = 0; bin_iy < ys_1; ++bin_iy)
+                    for(bin_iy = 0; bin_iy < y_size[1]; ++bin_iy)
                     {
                         EV_DATA ev_data_bin;
-                        const EV_IDNO bin_id = array_range_index(&ev_data_bin, array_bins, 0, bin_iy, EM_REA | EM_INT | EM_DAT | EM_STR);
+                        const EV_IDNO bin_id = array_range_index(&ev_data_bin, array_bins, 0, bin_iy, EM_REA | EM_DAT | EM_STR | EM_INT);
                         S32 res;
 
 #if 0 /* just for diff minimization */
@@ -386,7 +386,9 @@ PROC_EXEC_PROTO(c_listcount)
 
     for(;;)
     {
-        S32 xs, ys, n_unique = 0, iy = 0;
+        S32 x_size, y_size;
+        S32 n_unique = 0;
+        S32 iy = 0;
 
         status_assert(ss_data_resource_copy(&ev_data_temp_array, args[0]));
         data_ensure_constant(&ev_data_temp_array);
@@ -402,9 +404,9 @@ PROC_EXEC_PROTO(c_listcount)
 
         status_break(status = ss_array_make(p_ev_data_res, 0, 0));
 
-        array_range_sizes(&ev_data_temp_array, &xs, &ys);
+        array_range_sizes(&ev_data_temp_array, &x_size, &y_size);
 
-        while((iy < ys) && status_ok(status))
+        while((iy < y_size) && status_ok(status))
         {
             EV_DATA ev_data;
             F64 count = 0;
@@ -428,11 +430,11 @@ PROC_EXEC_PROTO(c_listcount)
                     }
                     break;
                 }
-                else if(xs > 1)
+                else if(x_size > 1)
                 {
                     EV_DATA ev_data_count;
                     /* ignore content of all columns between the first (data) and last (count) */
-                    if(RPN_DAT_REAL == array_range_index(&ev_data_count, &ev_data_temp_array, xs-1, iy, EM_REA))
+                    if(RPN_DAT_REAL == array_range_index(&ev_data_count, &ev_data_temp_array, x_size-1, iy, EM_REA))
                         count += ev_data_count.arg.fp; /* SKS 19may97 was just using [1, iy] before */
                     ss_data_free_resources(&ev_data_count);
                 }
@@ -476,7 +478,8 @@ PROC_EXEC_PROTO(c_median)
 
     for(;;)
     {
-        S32 xs, ys, ys_half;
+        S32 x_size, y_size;
+        S32 y_half;
         F64 median;
 
         /* find median by sorting a copy of the source */
@@ -494,20 +497,20 @@ PROC_EXEC_PROTO(c_median)
 
         status_break(status = array_sort(&ev_data_temp_array, 0));
 
-        array_range_sizes(&ev_data_temp_array, &xs, &ys);
-        ys_half = ys / 2;
+        array_range_sizes(&ev_data_temp_array, &x_size, &y_size);
+        y_half = y_size / 2;
 
         {
         EV_DATA ev_data;
-        (void) array_range_index(&ev_data, &ev_data_temp_array, 0, ys_half, EM_REA);
+        (void) array_range_index(&ev_data, &ev_data_temp_array, 0, y_half, EM_REA);
         median = ev_data.arg.fp;
         } /*block*/
 
-        if(0 == (ys & 1))
+        if(0 == (y_size & 1))
         {
             /* if there are an even number of elements, the median is the mean of the two middle ones */
             EV_DATA ev_data;
-            (void) array_range_index(&ev_data, &ev_data_temp_array, 0, ys_half - 1, EM_REA);
+            (void) array_range_index(&ev_data, &ev_data_temp_array, 0, y_half - 1, EM_REA);
             median = (median + ev_data.arg.fp) / 2.0;
         }
 
@@ -633,21 +636,21 @@ PROC_EXEC_PROTO(c_rank)
 {
     const PC_EV_DATA array_data = args[0];
     BOOL spearman_correct = FALSE;
-    S32 xs, ys;
+    S32 x_size, y_size;
 
     exec_func_ignore_parms();
 
     if(n_args > 1)
         spearman_correct = (0 != args[1]->arg.integer);
 
-    array_range_sizes(array_data, &xs, &ys);
+    array_range_sizes(array_data, &x_size, &y_size);
 
     /* make result array */
-    if(status_ok(ss_array_make(p_ev_data_res, 2, ys)))
+    if(status_ok(ss_array_make(p_ev_data_res, 2, y_size)))
     {
         S32 iy;
 
-        for(iy = 0; iy < ys; ++iy)
+        for(iy = 0; iy < y_size; ++iy)
         {
             S32 iy_t;
             S32 position = 1;
@@ -656,7 +659,7 @@ PROC_EXEC_PROTO(c_rank)
 
             (void) array_range_index(&ev_data, array_data, 0, iy, EM_CONST);
 
-            for(iy_t = 0; iy_t < ys; ++iy_t)
+            for(iy_t = 0; iy_t < y_size; ++iy_t)
             {
                 if(iy_t != iy)
                 {
@@ -704,38 +707,39 @@ PROC_EXEC_PROTO(c_rank)
 PROC_EXEC_PROTO(c_spearman)
 {
     F64 spearman_result;
-    S32 xs_0, ys_0;
-    S32 xs_1, ys_1;
-    S32 iy, ys;
+    S32 x_size[2];
+    S32 y_size[2];
+    S32 limit;
+    S32 iy;
     F64 sum_d_squared = 0.0;
     S32 n_counted = 0;
 
     exec_func_ignore_parms();
 
-    array_range_sizes(args[0], &xs_0, &ys_0);
-    array_range_sizes(args[1], &xs_1, &ys_1);
+    array_range_sizes(args[0], &x_size[0], &y_size[0]);
+    array_range_sizes(args[1], &x_size[1], &y_size[1]);
 
-    ys = MAX(ys_0, ys_1);
+    limit = MAX(y_size[0], y_size[1]);
 
-    for(iy = 0; iy < ys; ++iy)
+    for(iy = 0; iy < limit; ++iy)
     {
-        EV_DATA ev_data_0;
-        EV_DATA ev_data_1;
-        const EV_IDNO ev_idno_0 = array_range_index(&ev_data_0, args[0], 0, iy, EM_REA);
-        const EV_IDNO ev_idno_1 = array_range_index(&ev_data_1, args[1], 0, iy, EM_REA);
+        EV_DATA ev_data[2];
+        const EV_IDNO ev_idno_0 = array_range_index(&ev_data[0], args[0], 0, iy, EM_REA);
+        const EV_IDNO ev_idno_1 = array_range_index(&ev_data[1], args[1], 0, iy, EM_REA);
 
         if( (RPN_DAT_REAL == ev_idno_0) &&
             (RPN_DAT_REAL == ev_idno_1) &&
-            (ev_data_0.arg.fp != 0.0) &&
-            (ev_data_1.arg.fp != 0.0) )
+            (ev_data[0].arg.fp != 0.0) &&
+            (ev_data[1].arg.fp != 0.0) )
         {
-            F64 d = ev_data_1.arg.fp - ev_data_0.arg.fp;
+            const F64 d = ev_data[1].arg.fp - ev_data[0].arg.fp;
+            const F64 d2 = d * d;
+            sum_d_squared += d2;
             n_counted += 1;
-            sum_d_squared += d * d;
         }
 
-        ss_data_free_resources(&ev_data_0);
-        ss_data_free_resources(&ev_data_1);
+        ss_data_free_resources(&ev_data[0]);
+        ss_data_free_resources(&ev_data[1]);
     }
 
     if(0 == n_counted)

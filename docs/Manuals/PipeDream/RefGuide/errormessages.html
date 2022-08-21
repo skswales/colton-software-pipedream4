@@ -137,9 +137,9 @@ range and then a row range to copy to, or vice versa. Maybe it would be
 possible and easier to use <span class="csguide-command">Replicate Right</span>
 or <span class="csguide-command">Replicate Down</span>.</p>
 
-<p>2. The second slot reference in the range is above or to the left of the
-first. You must specify ranges as tl-slot1 br-slot where tl-slot is the top
-left-hand slot and br-slot the bottom right-hand slot.</p>
+<p>2. The second cell reference in the range is above or to the left of the
+first. You must specify ranges as tl-cell br-cell where tl-cell is the top
+left-hand cell and br-cell the bottom right-hand cell.</p>
 
 <h4>Bad selection</h4>
 
@@ -149,10 +149,10 @@ class="csguide-dbox">Save</span> dialogue box.</p>
 <p>The row selection should be a conditional formula. See <a
 href="fileops.html">File Operations</a>.</p>
 
-<h4>Bad slot</h4>
+<h4>Bad cell</h4>
 
-<p>The slot referred to in a replication command or the <span
-class="csguide-command">Go To Slot</span> command does not exist.</p>
+<p>The cell referred to in a replication command or the <span
+class="csguide-command">Go To Cell</span> command does not exist.</p>
 
 <h4>Bad string</h4>
 
@@ -380,16 +380,16 @@ oldest.</p>
 <h4>Overlap</h4>
 
 <p>1. In a <span class="csguide-command">Transpose Block</span> command, your
-block would overwrite slots containing data.</p>
+block would overwrite cells containing data.</p>
 
 <p>2. In a <span class="csguide-command">Move Block</span> command, you have
 tried to move a block down such that the new top line intersects the old block.
 You cannot do this. If you want to move the block down, the new position must
 be beneath the bottom row of the original block.</p>
 
-<h4>Protected slot</h4>
+<h4>Protected cell</h4>
 
-<p>You have tried to edit or delete a protected slot.</p>
+<p>You have tried to edit or delete a protected cell.</p>
 
 <p>If you want to remove protection from the whole file, mark it by clicking
 select in the mark block box and give the <span class="csguide-command">Clear
@@ -445,11 +445,11 @@ many rows or columns for Lotus.</p>
 <p>A formula has not been completely converted when using the Lotus - PipeDream
 converter.</p>
 
-<p>The rest of the file has been converted successfully. The offending slot or
-slots will display an error message or the formula will be stored as text.
-Check the converted document for such slots.</p>
+<p>The rest of the file has been converted successfully. The offending cell or
+cells will display an error message or the formula will be stored as text.
+Check the converted document for such cells.</p>
 
-<h2>Errors in Number Slots</h2>
+<h2>Errors in Number Cells</h2>
 
 <h4>Accuracy lost</h4>
 
@@ -491,7 +491,7 @@ Functions</a>.</p>
 
 <h4>Bad target for GOTO</h4>
 
-<p>You have passed a slot to GOTO which is not in the custom function sheet,
+<p>You have passed a cell to GOTO which is not in the custom function sheet,
 does not exist or is in a different column.</p>
 
 <h4>Bad time</h4>
@@ -522,7 +522,7 @@ expecting it.</p>
 <h4>Divide by zero</h4>
 
 <p>Your division has a zero quotient or an average has failed because there
-were no number slots.</p>
+were no number cells.</p>
 
 <h4>File not loaded</h4>
 
@@ -591,7 +591,7 @@ essential for LOGEST fitting.</p>
 <p>You have referred to a file in an external reference but there is more than
 one file of this name loaded.</p>
 
-<p>Slot references can only refer to one file at once. Close one of the files
+<p>Cell references can only refer to one file at once. Close one of the files
 or rename it. Do not continue editing documents whilst this message is
 displayed since PipeDream cannot update references in dependent documents if
 there is more than one supporting document of the same name loaded.</p>
@@ -639,16 +639,16 @@ numbers.</p>
 
 <h4>Propagated</h4>
 
-<p>A slot reference or range refers to a slot containing an error.</p>
+<p>A cell reference or range refers to a cell containing an error.</p>
 
 <h4>Range not expected</h4>
 
 <p>You have passed a range to a function or custom function which was not
 expecting it.</p>
 
-<h4>Slot deleted</h4>
+<h4>Cell deleted</h4>
 
-<p>You have referred to a slot which has been deleted.</p>
+<p>You have referred to a cell which has been deleted.</p>
 
 <h4>Stack overflow</h4>
 

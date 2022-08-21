@@ -425,7 +425,7 @@ swap_rows(
     BOOL updaterefs);
 
 extern BOOL
-swap_slots(
+swap_cells(
     COL tcol1,
     ROW trow1,
     COL tcol2,
@@ -712,7 +712,8 @@ enumerate_dir_to_list(
 
 extern S32 /* filetype_option, 0 or error (reported) */
 find_filetype_option(
-    _In_z_      PCTSTR name);
+    _In_z_      PCTSTR name,
+                FILETYPE_RISC_OS filetype);
 
 extern BOOL
 loadfile(
@@ -741,8 +742,9 @@ savefile(
     _In_z_      PCTSTR filename,
     _InRef_     P_SAVE_FILE_OPTIONS p_save_file_options);
 
+_Check_return_
 extern BOOL
-save_existing(void);
+save_or_discard_existing(void);
 
 extern void
 save_opt_to_file(
@@ -791,8 +793,6 @@ enum LINE_SEP_LIST_OFFSETS /* fits in U8 */
 #define CSV_CHAR_STR        "C"
 #define FWP_CHAR            'F'
 #define FWP_CHAR_STR        "F"
-#define LOTUS_CHAR          'L'
-#define LOTUS_CHAR_STR      "L"
 #define PD4_CHAR            'P'
 #define PD_CHAR_STR         "P"
 #define PD4_CHART_CHAR      'R'
@@ -1289,7 +1289,7 @@ allowed_in_dialog(
 
 extern BOOL
 dialog_box(
-    S32 boxnumber);
+    _InVal_     U32 boxnumber);
 
 extern BOOL
 dialog_box_can_persist(void);
@@ -1317,7 +1317,7 @@ dialog_initialise_once(void);
 
 extern BOOL
 init_dialog_box(
-    S32 boxnumber);
+    _InVal_     U32 boxnumber);
 
 extern void
 save_options_to_list(void);
@@ -1333,14 +1333,14 @@ update_dialog_from_fontinfo(void);
 
 extern void
 update_dialog_from_windvars(
-    S32 boxnumber);
+    _InVal_     U32 boxnumber);
 
 extern void
 update_fontinfo_from_dialog(void);
 
 extern void
 update_windvars_from_dialog(
-    S32 boxnumber);
+    _InVal_     U32 boxnumber);
 
 /******************************************************************************
 * colh.c
@@ -1482,8 +1482,8 @@ do_execfile(
 
 extern void
 draw_bar(
-    coord xpos,
-    coord ypos,
+    coord x_pos,
+    coord y_pos,
     coord length);
 
 extern S32
@@ -2316,19 +2316,19 @@ prccml(
     uchar *array);
 
 extern BOOL
-protected_slot(
+protected_cell(
     COL tcol,
     ROW trow);
 
 extern BOOL
-protected_slot_in_block(
+protected_cell_in_block(
     COL firstcol,
     ROW firstrow,
     COL lastcol,
     ROW lastrow);
 
 extern BOOL
-protected_slot_in_range(
+protected_cell_in_range(
     PC_SLR bs,
     PC_SLR be);
 
@@ -2353,13 +2353,13 @@ save_words(
     uchar *ptr);
 
 extern BOOL
-test_protected_slot(
+test_protected_cell(
     COL tcol,
     ROW trow);
 
 extern S32 latest_word_on_stack;
 
-#define is_protected_slot(tcell) ((tcell)->justify & PROTECTED)
+#define is_protected_cell(tcell) ((tcell)->justify & PROTECTED)
 
 #define words_allowed ((S32) (d_deleted[0].option))
 
@@ -2400,7 +2400,7 @@ ensure_paste_list_clipped(void);
 
 _Check_return_
 extern BOOL
-is_block_blank(
+is_blank_block(
     COL cs,
     ROW rs,
     COL ce,
@@ -2480,9 +2480,9 @@ exported functions
 
 extern void
 bottomline(
-    coord xpos,
-    coord ypos,
-    coord xsize);
+    coord x_pos,
+    coord y_pos,
+    coord x_size);
 
 extern void
 display_heading(
@@ -2534,10 +2534,10 @@ limited_fwidth_of_slot(
 
 extern void
 my_rectangle(
-    coord xpos,
-    coord ypos,
-    coord xsize,
-    coord ysize);
+    coord x_pos,
+    coord y_pos,
+    coord x_size,
+    coord y_size);
 
 extern coord
 onejst(
@@ -2556,9 +2556,9 @@ position_cursor(void);
 
 extern void
 topline(
-    coord xpos,
-    coord ypos,
-    coord xsize);
+    coord x_pos,
+    coord y_pos,
+    coord x_size);
 
 extern void
 twzchr(
@@ -2647,7 +2647,7 @@ calcad(                 /* horzvec offset -> x pos */
     coord coff);
 
 extern coord
-calcoff(                /* x pos -> horzvec offset */
+calcoff(                /* x pos -> horzvec offset or OFF_LEFT/OFF_RIGHT */
     coord tx);
 
 extern coord
@@ -2656,14 +2656,15 @@ calcoff_click(          /* ditto, but round into l/r cols */
 
 extern coord
 calcoff_overlap(
-    coord xpos,
+    coord x_pos,
     ROW trow);
 
 #define calrad(roff) /* vertvec offset -> y pos */ \
     (roff)
 
-#define calroff(ty) /* y pos -> vertvec offset */ \
-    (ty)
+extern coord
+calroff(                /* y pos -> vertvec offset */
+    coord ty);
 
 extern coord
 calroff_click(          /* ditto, but round into t/b rows */
@@ -2709,8 +2710,15 @@ chknlr(             /* for absolute movement */
 
 #define rstpag()    /* reset page counts */
 
+/*
+horzvec SCRCOL[maximum_cols]
+*/
+
 #define horzvec() \
     array_base(&horzvec_mh, SCRCOL)
+
+#define horzvec_entry_valid(coff) \
+    array_index_valid(&horzvec_mh, coff)
 
 #define horzvec_entry(coff) \
     array_ptr(&horzvec_mh, SCRCOL, coff)
@@ -2718,14 +2726,21 @@ chknlr(             /* for absolute movement */
 #define col_number(coff) \
     horzvec_entry(coff)->colno
 
+/*
+vertvec SCRROW[maximum_rows]
+*/
+
 #define vertvec() \
     array_base(&vertvec_mh, SCRROW)
+
+#define vertvec_entry_valid(roff) \
+    array_index_valid(&vertvec_mh, roff)
 
 #define vertvec_entry(roff) \
     array_ptr(&vertvec_mh, SCRROW, roff)
 
-#define row_number(coff) \
-    vertvec_entry(coff)->rowno
+#define row_number(roff) \
+    vertvec_entry(roff)->rowno
 
 extern S32 g_newoffset;
 
@@ -2816,7 +2831,7 @@ inrowfixes1(
     ROW trow);
 
 extern BOOL
-isslotblank(
+is_blank_cell(
     P_CELL tcell);
 
 extern void
@@ -2943,8 +2958,8 @@ graph_add_entry(
     _InVal_     DOCNO docno,
     COL col,
     ROW row,
-    S32 xsize,
-    S32 ysize,
+    S32 x_size,
+    S32 y_size,
     const char *leaf,
     const char *tag,
     S32 task);
@@ -3205,9 +3220,6 @@ justification flags
 /* things that need to find a home */
 
 extern BOOL
-init_screen(void);
-
-extern BOOL
 new_window_height(
     coord height);
 
@@ -3411,7 +3423,8 @@ pdchart_load_ended(
     P_ANY epdchartdatakey,
     S32 loaded_preferred);
 
-extern S32
+_Check_return_
+extern STATUS
 pdchart_preferred_save(
     P_USTR filename);
 
@@ -3419,7 +3432,8 @@ extern void
 pdchart_select_using_handle(
     P_ANY epdchartdatakey);
 
-extern S32
+_Check_return_
+extern STATUS
 pdchart_show_editor_using_handle(
     P_ANY epdchartdatakey);
 
@@ -3428,7 +3442,7 @@ pdchart_submenu_maker(void);
 
 extern void
 pdchart_submenu_select_from(
-    S32 hit);
+    _InVal_     S32 hit);
 
 extern void
 pdchart_submenu_show(

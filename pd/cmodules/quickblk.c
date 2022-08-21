@@ -370,7 +370,9 @@ quick_block_vprintf(
             len = strlen32(buffer); /* limit transfer to what actually was achieved */
 #else /* C99 CRT */
         len = vsnprintf(buffer, elemof32(buffer), buffer_format, args /* will be updated accordingly */);
-        if(len >= elemof32(buffer))
+        if(len < 0)
+            len = 0;
+        else if((U32) len >= elemof32(buffer))
             len = strlen32(buffer); /* limit transfer to what actually was achieved */
 #endif
 

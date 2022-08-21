@@ -215,13 +215,13 @@ __msgs_readfile(
                 if((out == msgs__block)  ||  !*(out - 1))
                     continue;
 #if TRACE
-                *out = ch;
+                *out = (char) ch;
                 tracef1("[msgs_readfile: ended line '%s']", start);
                 start = out + 1;
 #endif
             }
 
-            *out++ = ch;
+            *out++ = (char) ch;
         }
         while(in != end);
 

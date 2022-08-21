@@ -332,7 +332,7 @@ riscdialog_execute(
     dialog_proc dproc,
     const char * dname,
     DIALOG * dptr,
-    S32 boxnumber)
+    _InVal_     U32 boxnumber)
 {
     const char * title;
 
@@ -456,13 +456,14 @@ riscdialog_execute(
 #define dboxquery_FCancel    3    /* optional cancel button */
 #define dboxquery_FWriteable 4    /* dummy writeable icon off the bottom so we acquire focus */
 
-static S32
+static enum RISCDIALOG_QUERY_YN_REPLY
 mydboxquery(
     /*const*/ char * question,
     /*const*/ char * dboxname,
-    dbox * dd)
+    dbox * dd,
+    _InVal_     BOOL allow_adjust)
 {
-    S32 res;
+    enum RISCDIALOG_QUERY_YN_REPLY YN_res;
     dbox d;
     dbox_field f;
 
@@ -493,12 +494,16 @@ mydboxquery(
     switch(f)
     {
     case dboxquery_FYes:
-        res = win_adjustclicked() ? riscdialog_query_NO : riscdialog_query_YES;
+        YN_res = riscdialog_query_YES;
+        if(allow_adjust && win_adjustclicked())
+            YN_res = riscdialog_query_NO;
         dialog__fillin_ok = TRUE;
         break;
 
     case dboxquery_FNo:
-        res = win_adjustclicked() ? riscdialog_query_YES : riscdialog_query_NO;
+        YN_res = riscdialog_query_NO;
+        if(allow_adjust && win_adjustclicked())
+            YN_res = riscdialog_query_YES;
         dialog__fillin_ok = TRUE;
         break;
 
@@ -506,13 +511,13 @@ mydboxquery(
         assert(f == dbox_CLOSE);
 
     case dboxquery_FCancel:
-        res = riscdialog_query_CANCEL;
+        YN_res = riscdialog_query_CANCEL;
         dialog__fillin_ok = FALSE;
         break;
     }
 
-    trace_2(TRACE_APP_DIALOG, "mydboxquery(%s) returns %d", question, res);
-    return(res);
+    trace_2(TRACE_APP_DIALOG, "mydboxquery(%s) returns %d", question, (int) YN_res);
+    return(YN_res);
 }
 
 /******************************************************************************
@@ -530,85 +535,108 @@ riscdialog_initialise_once(void)
         exit(EXIT_FAILURE);
 }
 
-extern S32
-riscdialog_query_YN(
-    const char * mess)
-{
-    return(mydboxquery((char *) mess, "queryYN", &queryYN_dbox));
-}
-
-extern S32
+extern enum RISCDIALOG_QUERY_DC_REPLY
 riscdialog_query_DC(
     const char * mess)
 {
     dbox d = NULL;
-    S32 res = mydboxquery((char *) mess, "queryDC", &d);
+    enum RISCDIALOG_QUERY_YN_REPLY YN_res = mydboxquery((char *) mess, "queryDC", &d, FALSE);
+    enum RISCDIALOG_QUERY_DC_REPLY DC_res;
+
+    switch(YN_res)
+    {
+    case riscdialog_query_NO:
+        DC_res = riscdialog_query_DC_CANCEL;
+        break;
+
+    default:
+        DC_res = (enum RISCDIALOG_QUERY_DC_REPLY) YN_res;
+        break;
+    }
 
     dbox_dispose(&d);
 
-    return((res == riscdialog_query_NO) ? riscdialog_query_CANCEL : res);
+    return(DC_res);
 }
 
-extern S32
+extern enum RISCDIALOG_QUERY_YN_REPLY
+riscdialog_query_YN(
+    const char * mess)
+{
+    enum RISCDIALOG_QUERY_YN_REPLY YN_res = mydboxquery((char *) mess, "queryYN", &queryYN_dbox, TRUE);
+
+    return(YN_res);
+}
+
+extern enum RISCDIALOG_QUERY_SDC_REPLY
 riscdialog_query_SDC(
     const char * mess)
 {
     dbox d = NULL;
-    S32 res = mydboxquery((char *) mess, "querySDC", &d);
+    enum RISCDIALOG_QUERY_YN_REPLY YN_res = mydboxquery((char *) mess, "querySDC", &d, FALSE);
+    enum RISCDIALOG_QUERY_SDC_REPLY SDC_res = (enum RISCDIALOG_QUERY_SDC_REPLY) YN_res;
 
     dbox_dispose(&d);
 
-    return(res);
+    return(SDC_res);
 }
 
-extern S32
-riscdialog_query_save_existing(void)
+extern enum RISCDIALOG_QUERY_SDC_REPLY
+riscdialog_query_quit_SDC(
+    const char * mess)
 {
-    char tempstring[256];
-    S32 res;
+    dbox d = NULL;
+    enum RISCDIALOG_QUERY_YN_REPLY YN_res = mydboxquery((char *) mess, "quitSDC", &d, FALSE);
+    enum RISCDIALOG_QUERY_SDC_REPLY SDC_res = (enum RISCDIALOG_QUERY_SDC_REPLY) YN_res;
 
-    if(!xf_filealtered)
-    {
-        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns NO because file not altered");
-        return(riscdialog_query_NO);
-    }
+    dbox_dispose(&d);
 
-    (void) xsnprintf(tempstring, elemof32(tempstring), save_edited_file_Zs_STR, currentfilename);
+    return(SDC_res);
+}
 
-    res = riscdialog_query_YN(tempstring);
-
-    switch(res)
-    {
-    case riscdialog_query_CANCEL:
-        #if TRACE_ALLOWED
-        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns CANCEL");
-        return(res);
-        #else
-        /* deliberate drop thru ... */
-        #endif
-
-    case riscdialog_query_NO:
-        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns NO");
-        return(res);
-
-    default:
-        assert(0);
-
-    case riscdialog_query_YES:
-        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_existing() got YES; saving file");
-        break;
-    }
-
+static enum RISCDIALOG_QUERY_SDC_REPLY
+riscdialog_query_save_or_discard_existing_do_save(void)
+{
     dbox_noted_position_save(); /* in case called from Quit sequence */
     application_process_command(N_SaveFile);
     dbox_noted_position_restore();
 
     /* may have failed to save or saved to unsafe receiver */
     if(been_error  ||  xf_filealtered)
-        res = riscdialog_query_CANCEL;
+        return(riscdialog_query_SDC_CANCEL);
 
-    trace_1(TRACE_APP_DIALOG, "riscdialog_query_save_existing() returns %d", res);
-    return(res);
+    return(riscdialog_query_SDC_SAVE);
+}
+
+extern enum RISCDIALOG_QUERY_SDC_REPLY
+riscdialog_query_save_or_discard_existing(void)
+{
+    char tempstring[256];
+    enum RISCDIALOG_QUERY_SDC_REPLY SDC_res;
+
+    if(!xf_filealtered)
+    {
+        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_or_discard_existing() returns DISCARD because file not altered");
+        return(riscdialog_query_SDC_DISCARD);
+    }
+
+    (void) xsnprintf(tempstring, elemof32(tempstring), save_edited_file_Zs_STR, currentfilename);
+
+    SDC_res = riscdialog_query_SDC(tempstring);
+
+    switch(SDC_res)
+    {
+    default:
+        break;
+
+    case riscdialog_query_SDC_SAVE:
+        trace_0(TRACE_APP_DIALOG, "riscdialog_query_save_or_discard_existing() got SAVE; saving file");
+        SDC_res = riscdialog_query_save_or_discard_existing_do_save();
+        break;
+    }
+
+    trace_1(TRACE_APP_DIALOG, "riscdialog_query_save_or_discard_existing() returns %d", (int) SDC_res);
+    return(SDC_res);
 }
 
 /******************************************************************************
@@ -684,7 +712,7 @@ dialog__setfield_high(
     const DIALOG * dptr)
 {
     char array[256];
-    S32 i = 0;
+    U32 i = 0;
     char ch;
     const char *str = dptr->textfield;
 
@@ -1506,7 +1534,7 @@ dproc_onecomponoff(
 
 /******************************************************************************
 *
-* generic yes/no/cancel dialog box
+* generic Yes / No / Cancel dialog box
 *
 * NB. can't be called directly as it needs a string
 *
@@ -1517,9 +1545,7 @@ dproc__query(
     DIALOG *dptr,
     const char *mess)
 {
-    S32 res = riscdialog_query_YN(mess);
-
-    switch(res)
+    switch(riscdialog_query_YN(mess))
     {
     case riscdialog_query_YES:
         dptr[0].option = 'Y';
@@ -1617,7 +1643,7 @@ dproc_aboutprog(
 {
     IGNOREPARM(dptr);
 
-    dialog__setfield_str(aboutprog_Author,     "© 1987-2015, Colton Software");
+    dialog__setfield_str(aboutprog_Author,     "\xA9" " 1987-2015, Colton Software");
 
     dialog__setfield_str(aboutprog_Version,    applicationversion);
 

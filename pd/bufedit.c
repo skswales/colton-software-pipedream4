@@ -120,7 +120,7 @@ inschr(
             if(txnbit)
                 break;
         }
-        else if(is_protected_slot(tcell))
+        else if(is_protected_cell(tcell))
         {
             reperr_null(create_error(ERR_PROTECTED));
             return;
@@ -128,7 +128,7 @@ inschr(
 
         /* text cell or blank text cell and text mode */
         if(tcell  &&  ((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE)))
-            if(txnbit  ||  !isslotblank(tcell))
+            if(txnbit  ||  !is_blank_cell(tcell))
                 break;
 
         /* new numeric cell */
@@ -270,12 +270,12 @@ insert_string_check_numeric(
             if(txnbit)
                 break;
         }
-        else if(is_protected_slot(tcell))
+        else if(is_protected_cell(tcell))
             return(reperr_null(create_error(ERR_PROTECTED)));
 
         /* text cell or blank text cell and text mode */
         if(tcell  &&  ((tcell->type == SL_TEXT)  ||  (tcell->type == SL_PAGE)))
-            if(txnbit  ||  !isslotblank(tcell))
+            if(txnbit  ||  !is_blank_cell(tcell))
                 break;
 
         /* new numeric cell */
@@ -373,16 +373,19 @@ extern void
 PageLeft_fn(void)
 {
     COL tcol;
-    coord win_width, fixwidth;
+    coord win_width, fixwidth = 0;
     P_SCRCOL cptr;
 
     /* find width of unfixed window */
 
-    fixwidth = 0;
-    cptr     = horzvec();
+    assert(0 != array_elements(&horzvec_mh));
+    cptr = horzvec();
+    PTR_ASSERT(cptr);
 
     while(!(cptr->flags & LAST)  &&  (cptr->flags & FIX))
+    {
         fixwidth += colwidth(cptr++->colno);
+    }
 
     win_width = cols_available - fixwidth;
 
@@ -462,7 +465,7 @@ extern void
 CursorLeft_fn(void)
 {
     uchar * ptr;
-    BOOL    in_protected = !slot_in_buffer  &&  is_protected_slot(travel_here());
+    BOOL    in_protected = !slot_in_buffer  &&  is_protected_cell(travel_here());
 
     if(!xf_inexpression  &&  (!lecpos  ||  (!slot_in_buffer  &&  !in_protected)))
     {
@@ -499,7 +502,7 @@ CursorRight_fn(void)
 #if 0
     /* SKS after 4.11 09jan92 - why were we letting punters move around in protected cells? */
         /* might not have cell in buffer due to protection */
-        if(!is_protected_slot(travel_here()))
+        if(!is_protected_cell(travel_here()))
 #endif
         {
             internal_process_command(N_NextColumn);
@@ -864,7 +867,7 @@ block_highlight_core(
     {
         actind_in_block(DOWN_COLUMNS);
 
-        if((tcell->type != SL_TEXT)  ||  isslotblank(tcell))
+        if((tcell->type != SL_TEXT)  ||  is_blank_cell(tcell))
             continue;
 
         prccon(linbuf, tcell);      /* decompile to linbuf */
@@ -1174,11 +1177,11 @@ AutoWidth_fn(void)
         coord biggest_margin = 0;
         P_CELL tcell;
         SLR cs, ce;
-        coord right_margin;
+        /* coord right_margin; no longer used */
         P_S32 widp, wwidp;
 
         readpcolvars(tcol, &widp, &wwidp);
-        right_margin = *wwidp;
+        /* right_margin = *wwidp; no longer used */
 
         cs.col = tcol;
         cs.row = 0;
@@ -1204,7 +1207,7 @@ AutoWidth_fn(void)
 
             case SL_TEXT:
                 /* if we are not last column and nothing to right, don't bother */
-                if(tcol < numcol-1 && is_block_blank(tcol+1, in_block.row, numcol-1, in_block.row))
+                if(tcol < numcol-1 && is_blank_block(tcol+1, in_block.row, numcol-1, in_block.row))
                     nothing_on_right = TRUE;
 
                 /* deliberate fall-thru */
@@ -1965,18 +1968,21 @@ fill_linbuf(
 
                 /* try not to pad if rest of line is blank */
                 for(tcol = 0; tcol < numcol; tcol++)
-                    if(tcol != curcol && !isslotblank(travel(tcol,
-                                                             curr_outrow)))
+                {
+                    if((tcol != curcol) && !is_blank_cell(travel(tcol, curr_outrow)))
                     {
                         rowblank = FALSE;
                         break;
                     }
+                }
 
                 if(rowblank)
                 {
                     for(tcol = 0; tcol < numcol; tcol++)
+                    {
                         if(tcol != curcol)
                             killslot(tcol, curr_outrow);
+                    }
 
                     /* anything pointing to deleted cells in this row become bad */
                     updref(0, currow,     LARGEST_COL_POSSIBLE, currow,               BADCOLBIT, (ROW) 0, UREF_DELETE, DOCNO_NONE);
@@ -2433,8 +2439,8 @@ chkcfm(
         no reformat on lines below the first if something to left or right
     */
     if(iowbit && trow != currow && (
-        !is_block_blank(0,        trow, curcol-1, trow) ||
-        !is_block_blank(curcol+1, trow, numcol-1, trow)))
+        !is_blank_block(0,        trow, curcol-1, trow) ||
+        !is_blank_block(curcol+1, trow, numcol-1, trow)))
         return(FALSE);
 
     return(TRUE);
@@ -2525,8 +2531,6 @@ fndlbr(
         /* if we found a gap, and we didn't get stuck at the line end, break */
         return(had_space && *break_point ? break_point - linbuf : 0);
     }
-
-    startofword = 0;
 
     /* skip leading spaces */
     width = 0;

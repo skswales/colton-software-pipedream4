@@ -155,21 +155,27 @@ string(65, Page_Zd_wait_between_pages_STR,      "Page %d.. Press M=Miss page, A=
 string(66, Miss_Page_Chars_STR,                 "M"); /* eg. German has "UU" for Uberspringen (properly umlauted) */
 string(67, All_Pages_Chars_STR,                 "A");
 
-string(68, save_edited_file_Zs_STR,             "Do you want to save edited file '%s'?");
+string(68, save_edited_file_Zs_STR,             "Do you want to save edited document '%s'?");
 
-string(423,close_dependent_charts_winge_STR,    "This file has dependent unsaved charts. Do you want to discard them?");
-string(424,save_edited_chart_Zs_STR,            "'%s' has not been saved. Do you want to save it?");
+string(423,close_dependent_charts_winge_STR,    "This document has dependent unsaved charts." " " \
+                                                "Do you want to discard them?");
 
-string(53, Zd_file_edited_in_Zs_are_you_sure_STR,   "%d file edited but not saved in %s."); /*: do you want to save or discard it?");*/
-string(54, Zd_files_edited_in_Zs_are_you_sure_STR,  "%d files edited but not saved in %s."); /*: do you want to save or discard them?");*/
+string(424,save_edited_chart_Zs_STR,            "'%s' has not been saved." " " \
+                                                "Do you want to save it?");
 
-string(69, close_dependent_files_winge_STR,     "This file has dependent documents. Do you want to close it?");
-string(70, close_dependent_links_winge_STR,     "This file has dependent HotLinks. Do you want to close it?");
+string(53, Zd_file_edited_in_Zs_are_you_sure_STR,   "There is %d document edited but not saved in %s."); /*: do you want to save or discard it?");*/
+string(54, Zd_files_edited_in_Zs_are_you_sure_STR,  "There are %d documents edited but not saved in %s."); /*: do you want to save or discard them?");*/
 
-string(71, load_supporting_winge_STR,           "File '%s' has a name that would conflict with another document." \
+string(69, close_dependent_files_winge_STR,     "This file has dependent documents." " " \
+                                                "Do you want to close it?");
+
+string(70, close_dependent_links_winge_STR,     "This file has dependent HotLinks." " " \
+                                                "Do you want to close it?");
+
+string(71, load_supporting_winge_STR,           "File '%s' has a name that would conflict with another document." " "\
                                                 "Do you want to load it?");
 
-string(72, name_supporting_winge_STR,           "This file would be given a name that would conflict with another document." \
+string(72, name_supporting_winge_STR,           "This document would be given a name that would conflict with another document." " "\
                                                 "Do you want to rename it?");
 
 /* -------------------------- dialog boxes ------------------------------- */
@@ -207,7 +213,7 @@ string(91, Cannot_store_block_STR,              "Unable to store block to paste 
 /* Help from the icon bar icon */
 
 string(92, help_iconbar,
-                                                "This is the PipeDream 4 icon.|M"
+                                                "This is the PipeDream icon.|M"
                                                 "Drag a file onto this icon to load the file.|M"
                                                 "Click SELECT to create a new document.|M"
                                                 "Shift-click SELECT to view the Choices directory.|M"
@@ -225,7 +231,7 @@ string(93, help_dialog_window,                  "This is a PipeDream dialogue bo
 
 string(94, help_main_window,                    "This is a PipeDream document window.|M");
 
-string(95, help_drag_file_to_insert,            "Drag a file into the window to insert the file at the current slot.");
+string(95, help_drag_file_to_insert,            "Drag a file into the window to insert the file at the current cell.");
 
 string(96, help_click_select_to,                "Click SELECT to ");
 
@@ -235,7 +241,7 @@ string(98, help_position_the_caret_in,          "position the caret in ");
 
 string(99, help_insert_a_reference_to,          "insert a reference to ");
 
-string(100, help_slot,                          "slot ");
+string(100, help_slot,                          "cell ");
 
 string(101, help_colh_inexpression_line,        "You are editing a formula in the formula editing line so this button cannot perform its associated command.");
 
@@ -255,7 +261,7 @@ string(107, help_row_is_page_break,             "This is a page break.|M");
 
 string(108, help_row_is_hard_page_break,        "This row is an expanded hard page break.|M");
 
-string(109, help_colh_contents_line,            "Click SELECT to start editing the current slot contents in the formula editing line.");
+string(109, help_colh_contents_line,            "Click SELECT to start editing the current cell contents in the formula editing line.");
 
 string(110, help_colh_contents_line_inexpression,
                                                 "Click SELECT to position the caret within the formula editing line.");
@@ -264,7 +270,7 @@ string(414, help_colh_transfer_to_window,       "Click SELECT to popup a menu of
                                                 "Click ADJUST to transfer the formula editing line contents to a formula window.");
 
 string(415, help_colh_edit_in_window,           "Click SELECT to popup a menu of formula related topics.|M" \
-                                                "Click ADJUST to edit the current slot contents in a formula window.|M");
+                                                "Click ADJUST to edit the current cell contents in a formula window.|M");
 
 string(416, help_drag_column_width,             "Drag SELECT to alter the width of column ");
 string(417, help_drag_right_margin,             "Drag SELECT to alter the right margin of column ");
@@ -341,7 +347,7 @@ string(161, Centre_window_STR,                  "Centre window");
 string(163, Save_position_STR,                  "Save position");
 string(164, Restore_position_STR,               "Restore position");
 string(165, Swap_position_and_caret_STR,        "Swap position and caret");
-string(167, Go_to_slot_STR,                     "Go to slot");
+string(167, Go_to_slot_STR,                     "Go to cell");
 string(168, Define_key_STR,                     "Define key");
 string(169, Define_function_key_STR,            "Define function key");
 string(170, Define_command_STR,                 "Define command");
@@ -367,7 +373,7 @@ string(141, Size_of_paste_list_STR,             "Paste depth");
 string(173, Delete_character_STR,               "Delete character");
 string(174, Insert_space_STR,                   "Insert space");
 string(176, Delete_word_STR,                    "Delete word");
-string(177, Delete_to_end_of_slot_STR,          "Delete to end of slot");
+string(177, Delete_to_end_of_slot_STR,          "Delete to end of cell");
 string(178, Delete_row_STR,                     "Delete row");
 string(179, Insert_row_STR,                     "Insert row");
 string(180, Paste_STR,                          "Paste");
@@ -472,8 +478,8 @@ string(266, Cursor_left_STR,                    "Caret left");
 string(267, Cursor_right_STR,                   "Caret right");
 string(268, Top_of_column_STR,                  "Top of column");
 string(269, Bottom_of_column_STR,               "Bottom of column");
-string(270, Start_of_slot_STR,                  "Start of slot");
-string(271, End_of_slot_STR,                    "End of slot");
+string(270, Start_of_slot_STR,                  "Start of cell");
+string(271, End_of_slot_STR,                    "End of cell");
 string(272, Scroll_up_STR,                      "Scroll up");
 string(273, Scroll_down_STR,                    "Scroll down");
 string(274, Scroll_left_STR,                    "Scroll left");
@@ -601,7 +607,7 @@ string(369, Edit_formula_in_window_STR,         "Edit formula in window");
 
 string(370, SaveChoices_STR,                    "Save choices");
 
-string(373, New_slot_contents_STR,              "New slot contents");
+string(373, New_slot_contents_STR,              "New cell contents");
 string(374, FullScreen_STR,                     "Full screen");
 string(375, SpreadArray_STR,                    "Transpose block");
 string(376, RepeatCommand_STR,                  "Repeat Command");
@@ -648,20 +654,20 @@ string(515, menu_function_names_title,          "Names");
 string(518, Edit_name_STR,                      "Edit name");
 string(520, formwind_title_STR,                 "Formula window: %s");
 
-string(521, menu_function_numinfo_title,        "Number slot");
-string(522, menu_function_numinfo_entries,      "Slot value,"
-                                                "Supporting slots,Supporting ranges, Supporting names,"
-                                                "Dependent slots,Dependent ranges,Dependent names");
-string(523, menu_function_numinfo_value_title,  "Slot value");
-string(524, menu_function_numinfo_slr_title,    "Slots");
+string(521, menu_function_numinfo_title,        "Number cell");
+string(522, menu_function_numinfo_entries,      "Cell value,"
+                                                "Supporting cells,Supporting ranges, Supporting names,"
+                                                "Dependent cells,Dependent ranges,Dependent names");
+string(523, menu_function_numinfo_value_title,  "Cell value");
+string(524, menu_function_numinfo_slr_title,    "Cells");
 string(525, menu_function_numinfo_range_title,  "Ranges");
 string(526, menu_function_numinfo_name_title,   "Names");
 
-string(527, menu_function_textinfo_title,       "Text slot");
+string(527, menu_function_textinfo_title,       "Text cell");
 string(528, menu_function_textinfo_entries,     "Compile/Show error,"
-                                                "Dependent slots,Dependent ranges,Dependent names");
+                                                "Dependent cells,Dependent ranges,Dependent names");
 
-string(560, menu_function_textinfo_title_blank, "Empty slot");
+string(560, menu_function_textinfo_title_blank, "Empty cell");
 
 string(529, formwind_menu_title,                "Formula");
 
@@ -735,14 +741,14 @@ string(915, colh_button_sort,                   "Click SELECT to sort the marked
                                                 "Click ADJUST to transpose the marked block.");
 string(916, colh_button_spellcheck,             "Click SELECT to bring up the spell check file dialogue box.|M"
                                                 "Click ADJUST to browse through the spelling dictionary.");
-string(917, colh_button_totext,                 "Click SELECT to force slots to text.|M"
+string(917, colh_button_totext,                 "Click SELECT to force cells to text.|M"
                                                 "Click ADJUST to change between number and text");
-string(918, colh_button_tonumber,               "Click SELECT to force slots to number.|M"
+string(918, colh_button_tonumber,               "Click SELECT to force cells to number.|M"
                                                 "Click ADJUST to change between number and text");
 string(919, colh_button_copy,                   "Click SELECT to copy the marked block to the paste list.|M"
                                                 "Click ADJUST to move the marked block to the caret position.");
 string(920, colh_button_delete,                 "Click SELECT to delete the marked block to the paste list.|M"
-                                                "Click ADJUST to clear the slots in the marked block.");
+                                                "Click ADJUST to clear the cells in the marked block.");
 string(921, colh_button_paste,                  "Click SELECT to copy the top item on the paste list to the caret position.");
 
 string(922, colh_button_edit_ok,                "Click SELECT to enter the formula you have typed on the formula editing line into the document.");
@@ -753,9 +759,9 @@ string(924, colh_button_font,                   "Click SELECT to set the base fo
 string(925, colh_button_formatblock,            "Click SELECT to reformat the current paragraph or marked block.");
 string(926, colh_button_cmd_record,             "Click SELECT to start (or stop) recording a command file.");
 string(927, colh_button_cmd_exec,               "Click SELECT to choose and execute a command file.");
-string(928, colh_button_leadtrail,              "Click SELECT to apply leading characters to the current slot or marked block.|M"
-                                                "Click ADJUST to apply trailing characters to the current slot or marked block.");
-string(929, colh_button_decplaces,              "Click SELECT to vary the number of decimal places displayed in the current slot or marked block.");
+string(928, colh_button_leadtrail,              "Click SELECT to apply leading characters to the current cell or marked block.|M"
+                                                "Click ADJUST to apply trailing characters to the current cell or marked block.");
+string(929, colh_button_decplaces,              "Click SELECT to vary the number of decimal places displayed in the current cell or marked block.");
 /* use 930 as next help */
 
 /* use 561 as next if adding at end */

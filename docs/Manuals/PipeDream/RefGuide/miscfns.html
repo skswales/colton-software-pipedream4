@@ -49,9 +49,9 @@ when <span class="csguide-arg">button2</span> is clicked.</p>
 
 <h2>DEREF</h2>
 
-<p><code>DEREF(<span class="csguide-arg">slot_ref</span>)</code></p>
+<p><code>DEREF(<span class="csguide-arg">cell_ref</span>)</code></p>
 
-<p>Returns the value of <span class="csguide-arg">slot_ref</span>.</p>
+<p>Returns the value of <span class="csguide-arg">cell_ref</span>.</p>
 
 <p>For example,</p>
 
@@ -82,14 +82,14 @@ class="csguide-arg">then</span>, <span
 class="csguide-arg">else</span>)</code></p>
 
 <p>If the value of <span class="csguide-arg">condition</span> is
-TRUE, ie non-zero, the function evaluates and returns <span
+TRUE, i.e. non-zero, the function evaluates and returns <span
 class="csguide-arg">then</span>; otherwise, the function evaluates and returns
 <span class="csguide-arg">else</span>.</p>
 
 <p>IF statements can be nested, so you can have, for example:</p>
 
 <p style="margin-left:2em;"><code>IF(A1=3,"A1 is 3",IF(B1=3,"A1 is not 3, but
-B1 is","Neither slot is 3"))</code></p>
+B1 is","Neither cell is 3"))</code></p>
 
 
 <h2>INPUT</h2>
@@ -126,45 +126,45 @@ class="csguide-arg">any</span>.</p>
 
 <h2>SET_VALUE</h2>
 
-<p><code>SET_VALUE(<span class="csguide-arg">slot_ref</span>, <span
+<p><code>SET_VALUE(<span class="csguide-arg">cell_ref</span>, <span
 class="csguide-arg">any</span>)</code></p>
 
-<p>Sets the value of a number slot at <span
-class="csguide-arg">slot_ref</span> with no formula to the value of <span
+<p>Sets the value of a number cell at <span
+class="csguide-arg">cell_ref</span> with no formula to the value of <span
 class="csguide-arg">any</span>.</p>
 
 <p>For example,</p>
 
 <p style="margin-left:2em;"><code>SET_VALUE([fred]A1,56)</code></p>
 
-<p>sets the value of slot A1 in the file called fred to 56.</p>
+<p>sets the value of cell A1 in the file called fred to 56.</p>
 
 <p style="margin-left:2em;"><code>SET_VALUE(E78,"fred")</code></p>
 
-<p>sets the value of slot E78 to "fred".</p>
+<p>sets the value of cell E78 to "fred".</p>
 
 
 <p><code>SET_VALUE(<span class="csguide-arg">range</span>, <span
 class="csguide-arg">array</span>)</code></p>
 
 <p>Enables you to store an array (<span class="csguide-arg">array</span>) over
-a range of slots (<span class="csguide-arg">range</span>).</p>
+a range of cells (<span class="csguide-arg">range</span>).</p>
 
 <p>For example</p>
 
 <p style="margin-left:2em;"><code>SET_VALUE(F1F1O,E1E1O*VAT)</code></p>
 
-<p>would multiply each of the slots from E1 to E10 by the current value of the
+<p>would multiply each of the cells from E1 to E10 by the current value of the
 name <code>VAT</code>, copy the results into an internal array and then write
-out the array into the slots F1 to F10.</p>
+out the array into the cells F1 to F10.</p>
 
 <p>Using arrays and SET_VALUE in this way can remove large chunks of formulae
 from spreadsheets and significantly reduce the amount of memory being used.</p>
 
 <p>Note that SET_VALUE is the only spreadsheet function which overwrites other
-slots. You need to use it carefully because any data you type into the target
-slots will be overwritten the next time that SET_VALUE recalculates. SET_VALUE
-will not overwrite slots which contain formulae.</p>
+cells. You need to use it carefully because any data you type into the target
+cells will be overwritten the next time that SET_VALUE recalculates. SET_VALUE
+will not overwrite cells which contain formulae.</p>
 
 
 <h2>SORT</h2>

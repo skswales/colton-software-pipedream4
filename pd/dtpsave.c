@@ -92,7 +92,7 @@ dtp_save_slot(
     possible_para_dtp =
                         chkcfm_for_fwp(tcol, trow, FALSE)  &&
                         ((trow > fwp_save_stt_row)  &&  chkcfm_for_fwp(tcol, trow-1,  FALSE))  &&
-                        is_block_blank(tcol+1,trow-1,numcol,trow);
+                        is_blank_block(tcol+1,trow-1,numcol,trow);
 
     if(fwp_save_first_slot_on_line)
     {
@@ -196,7 +196,7 @@ fwp_save_slot(
     possible_para_dtp = !saving_fwp  &&
                         chkcfm_for_fwp(tcol, trow, FALSE)  &&
                         ((trow == fwp_save_stt_row)  ||  chkcfm_for_fwp(tcol, trow-1,  TRUE))  &&
-                        is_block_blank(tcol+1,trow,numcol,trow);
+                        is_blank_block(tcol+1,trow,numcol,trow);
 
     if(fwp_save_first_slot_on_line)
     {
@@ -678,6 +678,7 @@ fwp_load_preinit(
             {
                 no_ruler = FALSE;
                 c = fwp_get_ruler(loadinput);
+                IGNOREVAR(c);
                 break;
             }
             /* deliberate fall-through if we don't want rulers */

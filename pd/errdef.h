@@ -36,15 +36,15 @@ reperr_getstr(
 #define reperr_module(module, errornumber) \
     reperr_null(errornumber)
 
-extern S32
+extern STATUS
 reperr_null(
     STATUS errornumber);
 
-extern S32   
+extern STATUS
 reperr_not_installed(
     STATUS errornumber);
 
-extern S32
+extern STATUS
 rep_fserr(
     _In_z_      PC_U8Z str);
 
@@ -55,84 +55,87 @@ reperr_fatal(
 
 /* error definition */
 
-#define MAIN_ERR_BASE (-8) /* NB this is not zero! some reserved for STATUS_xxx codes */
+#define MAIN_ERR_BASE (0)
 
-#define ERR_BAD_NAME            MAIN_ERR_BASE - 2
-#define ERR_NOTFOUND            MAIN_ERR_BASE - 3 /* file not found */
-#define ERR_BAD_SELECTION       MAIN_ERR_BASE - 4
-#define ERR_BAD_PARM            MAIN_ERR_BASE - 5
-#define ERR_EDITINGEXP          MAIN_ERR_BASE - 6
-#define ERR_CANNOTOPEN          MAIN_ERR_BASE - 7
-#define ERR_CANNOTREAD          MAIN_ERR_BASE - 8
-#define ERR_CANNOTWRITE         MAIN_ERR_BASE - 9
-#define ERR_CANNOTCLOSE         MAIN_ERR_BASE - 10
-#define ERR_CHART_ALREADY_LOADED MAIN_ERR_BASE - 11
-#define ERR_BAD_HAT             MAIN_ERR_BASE - 12
-#define ERR_NOLISTFILE          MAIN_ERR_BASE - 13
-#define ERR_LOOP                MAIN_ERR_BASE - 14
-#define ERR_ENDOFLIST           MAIN_ERR_BASE - 15
-#define ERR_CANNOTBUFFER        MAIN_ERR_BASE - 16
-#define ERR_BAD_OPTION          MAIN_ERR_BASE - 17
-#define ERR_NOBLOCK             MAIN_ERR_BASE - 18
-#define ERR_ESCAPE              MAIN_ERR_BASE - 19
-#define ERR_BAD_COL             MAIN_ERR_BASE - 20
-#define ERR_OLDEST_LOST         MAIN_ERR_BASE - 21
-#define ERR_ALREADY_IN_DIALOG   MAIN_ERR_BASE - 22
-#define ERR_BAD_EXPRESSION      MAIN_ERR_BASE - 23
-#define ERR_BAD_MARKER          MAIN_ERR_BASE - 24
-#define ERR_NO_DRIVER           MAIN_ERR_BASE - 25
-#define ERR_NO_MICRO            MAIN_ERR_BASE - 26
-#define ERR_GENFAIL             MAIN_ERR_BASE - 27
-#define ERR_OVERLAP             MAIN_ERR_BASE - 28
-#define ERR_CTRL_CHARS          MAIN_ERR_BASE - 29
-#define ERR_CANNOTINSERT        MAIN_ERR_BASE - 30
-#define ERR_LOTUS               MAIN_ERR_BASE - 31
-#define ERR_NOPAGES             MAIN_ERR_BASE - 32
-#define ERR_SPELL               MAIN_ERR_BASE - 33
-#define ERR_WORDEXISTS          MAIN_ERR_BASE - 34
-#define ERR_PRINTER             MAIN_ERR_BASE - 35
-#define ERR_NOTTABFILE          MAIN_ERR_BASE - 36
-#define ERR_LINES_SPLIT         MAIN_ERR_BASE - 37
-#define ERR_NOTREE              MAIN_ERR_BASE - 38
-#define ERR_BAD_STRING          MAIN_ERR_BASE - 39
-#define ERR_BAD_CELL            MAIN_ERR_BASE - 40
-#define ERR_BAD_RANGE           MAIN_ERR_BASE - 41
-#define ERR_SHEET               MAIN_ERR_BASE - 42
-#define ERR_PROTECTED           MAIN_ERR_BASE - 43
-#define ERR_AWAITRECALC         MAIN_ERR_BASE - 44
-#define ERR_BADDRAWFILE         MAIN_ERR_BASE - 45
-#define ERR_BADFONTSIZE         MAIN_ERR_BASE - 46
-#define ERR_BADLINESPACE        MAIN_ERR_BASE - 47
-#define ERR_CANTWRAP            MAIN_ERR_BASE - 48
-#define ERR_BADDRAWSCALE        MAIN_ERR_BASE - 49
-#define ERR_PRINT_WONT_OPEN     MAIN_ERR_BASE - 50
-#define ERR_NORISCOSPRINTER     MAIN_ERR_BASE - 51
-#define ERR_FONTY               MAIN_ERR_BASE - 52
-#define ERR_ALREADYDUMPING      MAIN_ERR_BASE - 53
-#define ERR_ALREADYMERGING      MAIN_ERR_BASE - 54
-#define ERR_ALREADYANAGRAMS     MAIN_ERR_BASE - 55
-#define ERR_ALREADYSUBGRAMS     MAIN_ERR_BASE - 56
-#define ERR_CANTINSTALL         MAIN_ERR_BASE - 57
-#define ERR_was_DEMO            MAIN_ERR_BASE - 58
-#define ERR_NOROOMFORDBOX       MAIN_ERR_BASE - 59
-#define ERR_NOTINDESKTOP        MAIN_ERR_BASE - 60
-#define ERR_BADPRINTSCALE       MAIN_ERR_BASE - 61
-#define ERR_NOBLOCKINDOC        MAIN_ERR_BASE - 62
-#define ERR_CANTSAVEPASTEBLOCK  MAIN_ERR_BASE - 63
-#define ERR_CANTLOADPASTEBLOCK  MAIN_ERR_BASE - 64
-#define ERR_CANTSAVETOITSELF    MAIN_ERR_BASE - 65
-#define ERR_BAD_LANGUAGE        MAIN_ERR_BASE - 66
-#define ERR_NOTINSTALLED        MAIN_ERR_BASE - 67
-#define ERR_NOSELCHART          MAIN_ERR_BASE - 68
-#define ERR_TOOMANYDOCS         MAIN_ERR_BASE - 69
-#define ERR_LINETOOLONG         MAIN_ERR_BASE - 70
-#define ERR_SYSTEMFONTSELECTED  MAIN_ERR_BASE - 71
-#define ERR_CHARTIMPORTNEEDSSAVEDDOC    MAIN_ERR_BASE - 72
-#define ERR_CHARTNONUMERICDATA  MAIN_ERR_BASE - 73
-#define ERR_HELP_URL_FAILURE    MAIN_ERR_BASE - 74
-#define ERR_SUPPORTING_DOC_NOT_FOUND MAIN_ERR_BASE - 75
+/* NB some are reserved for STATUS_xxx codes */
 
-#define MAIN_ERR_END           (MAIN_ERR_BASE - 76)
+#define ERR_BAD_NAME            MAIN_ERR_BASE - 10
+#define ERR_NOTFOUND            MAIN_ERR_BASE - 11 /* file not found */
+#define ERR_BAD_SELECTION       MAIN_ERR_BASE - 12
+#define ERR_BAD_PARM            MAIN_ERR_BASE - 13
+#define ERR_EDITINGEXP          MAIN_ERR_BASE - 14
+#define ERR_CANNOTOPEN          MAIN_ERR_BASE - 15
+#define ERR_CANNOTREAD          MAIN_ERR_BASE - 16
+#define ERR_CANNOTWRITE         MAIN_ERR_BASE - 17
+#define ERR_CANNOTCLOSE         MAIN_ERR_BASE - 18
+#define ERR_CHART_ALREADY_LOADED MAIN_ERR_BASE - 19
+#define ERR_BAD_HAT             MAIN_ERR_BASE - 20
+#define ERR_NOLISTFILE          MAIN_ERR_BASE - 21
+#define ERR_LOOP                MAIN_ERR_BASE - 22
+#define ERR_ENDOFLIST           MAIN_ERR_BASE - 23
+#define ERR_CANNOTBUFFER        MAIN_ERR_BASE - 24
+#define ERR_BAD_OPTION          MAIN_ERR_BASE - 25
+#define ERR_NOBLOCK             MAIN_ERR_BASE - 26
+#define ERR_ESCAPE              MAIN_ERR_BASE - 27
+#define ERR_BAD_COL             MAIN_ERR_BASE - 28
+#define ERR_OLDEST_LOST         MAIN_ERR_BASE - 29
+#define ERR_ALREADY_IN_DIALOG   MAIN_ERR_BASE - 30
+#define ERR_BAD_EXPRESSION      MAIN_ERR_BASE - 31
+#define ERR_BAD_MARKER          MAIN_ERR_BASE - 32
+#define ERR_NO_DRIVER           MAIN_ERR_BASE - 33
+#define ERR_NO_MICRO            MAIN_ERR_BASE - 34
+#define ERR_GENFAIL             MAIN_ERR_BASE - 35
+#define ERR_OVERLAP             MAIN_ERR_BASE - 36
+#define ERR_CTRL_CHARS          MAIN_ERR_BASE - 37
+#define ERR_CANNOTINSERT        MAIN_ERR_BASE - 38
+#define ERR_LOTUS               MAIN_ERR_BASE - 39
+#define ERR_NOPAGES             MAIN_ERR_BASE - 40
+#define ERR_SPELL               MAIN_ERR_BASE - 41
+#define ERR_WORDEXISTS          MAIN_ERR_BASE - 42
+#define ERR_PRINTER             MAIN_ERR_BASE - 43
+#define ERR_NOTTABFILE          MAIN_ERR_BASE - 44
+#define ERR_LINES_SPLIT         MAIN_ERR_BASE - 45
+#define ERR_NOTREE              MAIN_ERR_BASE - 46
+#define ERR_BAD_STRING          MAIN_ERR_BASE - 47
+#define ERR_BAD_CELL            MAIN_ERR_BASE - 48
+#define ERR_BAD_RANGE           MAIN_ERR_BASE - 49
+#define ERR_SHEET               MAIN_ERR_BASE - 50
+#define ERR_PROTECTED           MAIN_ERR_BASE - 51
+#define ERR_AWAITRECALC         MAIN_ERR_BASE - 52
+#define ERR_BADDRAWFILE         MAIN_ERR_BASE - 53
+#define ERR_BADFONTSIZE         MAIN_ERR_BASE - 54
+#define ERR_BADLINESPACE        MAIN_ERR_BASE - 55
+#define ERR_CANTWRAP            MAIN_ERR_BASE - 56
+#define ERR_BADDRAWSCALE        MAIN_ERR_BASE - 57
+#define ERR_PRINT_WONT_OPEN     MAIN_ERR_BASE - 58
+#define ERR_NORISCOSPRINTER     MAIN_ERR_BASE - 59
+#define ERR_FONTY               MAIN_ERR_BASE - 60
+#define ERR_ALREADYDUMPING      MAIN_ERR_BASE - 61
+#define ERR_ALREADYMERGING      MAIN_ERR_BASE - 62
+#define ERR_ALREADYANAGRAMS     MAIN_ERR_BASE - 63
+#define ERR_ALREADYSUBGRAMS     MAIN_ERR_BASE - 64
+#define ERR_CANTINSTALL         MAIN_ERR_BASE - 65
+#define ERR_was_DEMO            MAIN_ERR_BASE - 66
+#define ERR_NOROOMFORDBOX       MAIN_ERR_BASE - 67
+#define ERR_NOTINDESKTOP        MAIN_ERR_BASE - 68
+#define ERR_BADPRINTSCALE       MAIN_ERR_BASE - 69
+#define ERR_NOBLOCKINDOC        MAIN_ERR_BASE - 70
+#define ERR_CANTSAVEPASTEBLOCK  MAIN_ERR_BASE - 71
+#define ERR_CANTLOADPASTEBLOCK  MAIN_ERR_BASE - 72
+#define ERR_CANTSAVETOITSELF    MAIN_ERR_BASE - 73
+#define ERR_BAD_LANGUAGE        MAIN_ERR_BASE - 74
+#define ERR_NOTINSTALLED        MAIN_ERR_BASE - 75
+#define ERR_NOSELCHART          MAIN_ERR_BASE - 76
+#define ERR_TOOMANYDOCS         MAIN_ERR_BASE - 77
+#define ERR_LINETOOLONG         MAIN_ERR_BASE - 78
+#define ERR_SYSTEMFONTSELECTED  MAIN_ERR_BASE - 79
+#define ERR_CHARTIMPORTNEEDSSAVEDDOC    MAIN_ERR_BASE - 80
+#define ERR_CHARTNONUMERICDATA  MAIN_ERR_BASE - 81
+#define ERR_HELP_URL_FAILURE    MAIN_ERR_BASE - 82
+#define ERR_SUPPORTING_DOC_NOT_FOUND MAIN_ERR_BASE - 83
+#define ERR_CANT_LOAD_FILETYPE  MAIN_ERR_BASE - 84
+
+#define MAIN_ERR_END           (MAIN_ERR_BASE - 85)
 
 /* module errors start here at intervals of increment */
 #ifndef MODULE_ERR_BASE
@@ -185,10 +188,10 @@ reperr_fatal(
     errorstring(-45, "Lines split:") \
     errorstring(-46, "No room: column recalculation forced") \
     errorstring(-47, "Bad string") \
-    errorstring(-48, "Bad slot") \
+    errorstring(-48, "Bad cell") \
     errorstring(-49, "Bad range") \
     errorstring(-50, "ViewSheet:") \
-    errorstring(-51, "Protected slot") \
+    errorstring(-51, "Protected cell") \
     errorstring(-52, "Awaiting recalculation") \
     errorstring(-53, "Bad Draw file") \
     errorstring(-54, "Bad font size") \
@@ -220,6 +223,7 @@ reperr_fatal(
     errorstring(-81, "No numeric data in marked block") \
     errorstring(-82, "No browser available to access URL") \
     errorstring(-83, "Supporting document '%s' not found") \
+    errorstring(-84, "Can't load this type of file") \
 
 
 #endif /* __errdef_h */

@@ -234,7 +234,7 @@ gr_riscdiag_diagram_end(
     }
 
     /* always set sensible bbox */
-    * (int *) &process = 0;
+    zero_struct(process);
     process.recurse    = 1;
     process.recompute  = 1;
     gr_riscdiag_diagram_reset_bbox(p_gr_riscdiag, process);
@@ -245,12 +245,12 @@ gr_riscdiag_diagram_end(
 extern void
 gr_riscdiag_diagram_init(
     _OutRef_    P_DRAW_FILE_HEADER pDrawFileHdr,
-    _In_z_      PC_L1STR szCreatorName)
+    _In_z_      PC_SBSTR szCreatorName)
 {
     /* create the header manually */
     U32 i;
 
-    PREFAST_ONLY_ZERO(pDrawFileHdr, sizeof32(*pDrawFileHdr));
+    CODE_ANALYSIS_ONLY(zero_struct_ptr(pDrawFileHdr));
 
     pDrawFileHdr->title[0] = 'D';
     pDrawFileHdr->title[1] = 'r';
@@ -284,7 +284,7 @@ _Check_return_
 extern STATUS
 gr_riscdiag_diagram_new(
     P_GR_RISCDIAG p_gr_riscdiag,
-    _In_z_      PC_L1STR szCreatorName,
+    _In_z_      PC_SBSTR szCreatorName,
     _InVal_     ARRAY_HANDLE array_handleR)
 {
     P_DRAW_FILE_HEADER pDrawFileHdr;
@@ -347,15 +347,18 @@ gr_riscdiag_diagram_reset_bbox(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_diagram_save(
     P_GR_RISCDIAG p_gr_riscdiag,
-    PC_U8 filename)
+    _In_z_      PC_U8Z filename)
 {
     FILE_HANDLE f;
-    S32        res, res1;
+    STATUS res, res1;
 
-    if((res = file_open(filename, file_open_write, &f)) <= 0)
+    res = file_open(filename, file_open_write, &f);
+
+    if(res <= 0)
         return(res ? res : create_error(FILE_ERR_CANTOPEN));
 
     file_set_type(f, FILETYPE_DRAW);
@@ -374,15 +377,15 @@ gr_riscdiag_diagram_save(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern STATUS
 gr_riscdiag_diagram_save_into(
     P_GR_RISCDIAG p_gr_riscdiag,
     FILE_HANDLE file_handle)
 {
     PC_BYTE pDiagHdr = gr_riscdiag_getoffptr(BYTE, p_gr_riscdiag, 0);
-    S32 res = file_write_err(pDiagHdr, 1, p_gr_riscdiag->draw_diag.length, file_handle);
 
-    return(res);
+    return(file_write_err(pDiagHdr, 1, p_gr_riscdiag->draw_diag.length, file_handle));
 }
 
 /******************************************************************************
@@ -544,7 +547,7 @@ gr_riscdiag_fontlist_lookup(
     /* SKS after 4.11 21jan92 - try looking up our alternate font if not looking for "System" */
     if(!fontRefNum)
     {
-        static S32 recursed_internally = 0;
+        static BOOL recursed_internally = 0;
 
         if(!recursed_internally && (0 != _stricmp(szFontName, "System")))
         {
@@ -563,7 +566,7 @@ gr_riscdiag_fontlist_lookup(
 *
 ******************************************************************************/
 
-extern PC_L1STR
+extern PC_SBSTR
 gr_riscdiag_fontlist_name(
     P_GR_RISCDIAG p_gr_riscdiag,
     _In_        DRAW_DIAG_OFFSET fontListR,
@@ -706,6 +709,7 @@ gr_riscdiag_fontlist_scan(
     P_DRAW_OBJECT pObject;
 
     if(gr_riscdiag_object_first(p_gr_riscdiag, &sttObject, &endObject, &pObject, FALSE))
+    {
         do  {
             if(pObject.hdr->type == DRAW_OBJECT_TYPE_FONTLIST)
             {
@@ -715,6 +719,7 @@ gr_riscdiag_fontlist_scan(
             }
         }
         while(gr_riscdiag_object_next(p_gr_riscdiag, &sttObject, &endObject, &pObject, FALSE));
+    }
 
     return(GR_RISCDIAG_OBJECT_NONE);
 }
@@ -748,7 +753,7 @@ extern STATUS
 gr_riscdiag_group_new(
     P_GR_RISCDIAG p_gr_riscdiag,
     _OutRef_    P_DRAW_DIAG_OFFSET pGroupStart,
-    _In_opt_z_  PC_L1STR pGroupName)
+    _In_opt_z_  PC_SBSTR pGroupName)
 {
     P_DRAW_OBJECT pObject;
     STATUS status;
@@ -761,7 +766,7 @@ gr_riscdiag_group_new(
         return(status);
 
     trace_3(TRACE_MODULE_GR_CHART, "gr_riscdiag_group_new(&%p) offset %d, name %s",
-            report_ptr_cast(p_gr_riscdiag), pGroupStart ? *pGroupStart : 0, report_l1str(pGroupName));
+            report_ptr_cast(p_gr_riscdiag), pGroupStart ? *pGroupStart : 0, report_sbstr(pGroupName));
 
     /* fill name, padding at end with spaces (mustn't be NULLCH terminated) */
     src = pGroupName;
@@ -857,7 +862,8 @@ gr_riscdiag_object_end(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 gr_riscdiag_object_first(
     P_GR_RISCDIAG p_gr_riscdiag,
     _InoutRef_  P_DRAW_DIAG_OFFSET pSttObject,
@@ -868,7 +874,6 @@ gr_riscdiag_object_first(
     P_DRAW_OBJECT pObject;
     DRAW_DIAG_OFFSET thisObject;
     U32 objectType;
-    U32 objectSize;
 
     *pSttObject = gr_riscdiag_normalise_stt(p_gr_riscdiag, *pSttObject);
     *pEndObject = gr_riscdiag_normalise_end(p_gr_riscdiag, *pEndObject);
@@ -882,9 +887,12 @@ gr_riscdiag_object_first(
     /* force scans to be linear, not recursive */
     /* see comments in gr_riscdiag_object_next too ... */
     objectType = pObject.hdr->type;
-    objectSize = ((objectType == DRAW_OBJECT_TYPE_GROUP) && recurse)
-                             ? sizeof(DRAW_OBJECT_GROUP)
-                             : pObject.hdr->size;
+
+#if CHECKING
+    {
+    U32 objectSize = ((objectType == DRAW_OBJECT_TYPE_GROUP) && recurse)
+                                  ? sizeof(DRAW_OBJECT_GROUP)
+                                  : pObject.hdr->size;
 
     myassert2x((objectSize >= sizeof(*pObject.hdr)) ||
                ((objectType == DRAW_OBJECT_TYPE_FONTLIST) && (objectSize >= sizeof(DRAW_OBJECT_FONTLIST))),
@@ -894,6 +902,8 @@ gr_riscdiag_object_first(
     myassert3x(thisObject + objectSize <= p_gr_riscdiag->draw_diag.length,
                "gr_riscdiag_object_first object " U32_XTFMT " size " U32_XTFMT " larger than diagram " U32_XTFMT,
                thisObject, objectSize, p_gr_riscdiag->draw_diag.length);
+    } /*block*/
+#endif
 
     /* stay at this first object */
 
@@ -953,7 +963,8 @@ gr_riscdiag_object_new(
 *
 ******************************************************************************/
 
-extern S32
+_Check_return_
+extern BOOL
 gr_riscdiag_object_next(
     P_GR_RISCDIAG p_gr_riscdiag,
     _InoutRef_  P_DRAW_DIAG_OFFSET pSttObject,

@@ -168,7 +168,6 @@ load_driver(
     char *name;
     FILE_HANDLE input;
     int newch;
-    BOOL firstfield = TRUE;
     char array[BUF_MAX_PATHSTRING];
     uchar linarray[LIN_BUFSIZ];
     S32 error = 0;
@@ -202,7 +201,7 @@ load_driver(
 
     res = add_path_using_dir(array, elemof32(array), name, PDRIVERS_SUBDIR_STR);
     if(res > 0)
-        res = find_filetype_option(array);
+        res = find_filetype_option(array, FILETYPE_UNDETERMINED);
 
     if(res != 'T')
     {
@@ -242,8 +241,6 @@ load_driver(
                 driver_loaded = TRUE;
                 goto ENDPOINT;
             }
-
-        firstfield = FALSE;
 
         if(str_isblank(linarray))
         {

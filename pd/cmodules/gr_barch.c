@@ -37,25 +37,17 @@ local header
 
 /******************************************************************************
 *
-* '3d' mappings
+* '3-D' mappings
 *
 ******************************************************************************/
 
-/* depends on cp->d3.pitch, cp->d3.roll, plotarea sizes */
-
-extern void
-gr_chart_d3_cache_vector(
-    P_GR_CHART cp)
-{
-    IGNOREPARM(cp);
-    assert(cp->d3.valid.vector);
-}
+/* depends on cp->d3, plotarea sizes */
 
 extern void
 gr_map_point(
-    P_GR_POINT xpoint /*inout*/,
-    P_GR_CHART       cp,
-    S32             plotindex)
+    _InoutRef_  P_GR_POINT xpoint,
+    _InRef_     PC_GR_CHART cp,
+    S32 plotindex)
 {
     /* note that plotarea is at the back and right when d3.bits.use */
     assert(cp->d3.valid.vector);
@@ -70,9 +62,27 @@ gr_map_point(
 }
 
 extern void
+gr_map_point_front_or_back(
+    _InoutRef_  P_GR_POINT xpoint,
+    _InRef_     PC_GR_CHART cp,
+    _InVal_     BOOL front)
+{
+    /* note that plotarea is at the back and right when d3.bits.use */
+    assert(cp->d3.valid.vector);
+
+    if(!front)
+    {   /* already at the back */
+        return;
+    }
+
+    xpoint->x = xpoint->x + cp->d3.cache.vector_full.x /*-ve*/;
+    xpoint->y = xpoint->y + cp->d3.cache.vector_full.y /*-ve*/;
+}
+
+extern void
 gr_map_box_front_and_back(
-    P_GR_BOX xbox /*inout*/,
-    P_GR_CHART     cp)
+    _InoutRef_  P_GR_BOX xbox /*inout*/,
+    _InRef_     PC_GR_CHART cp)
 {
     /* SKS after 4.12 30mar92 - for consistency and code size do this here not in callers */
     xbox->x1 = xbox->x0;
@@ -108,6 +118,7 @@ gr_point_partial_z_shift(
 *
 ******************************************************************************/
 
+_Check_return_
 static S32
 gr_actualise_series_plain(
     P_GR_CHART    cp,
@@ -123,8 +134,8 @@ gr_actualise_series_plain(
         GR_CHART_ITEMNO        n_items, item;
         GR_DATASOURCE_FOURSOME dsh;
         GR_CHART_NUMBER        value, valsum;
-        PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
-        PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
+        const PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
+        const PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
         S32 cumulative;
 
         cumulative = serp->bits.cumulative_manual
@@ -179,6 +190,7 @@ gr_actualise_series_plain(
     return(total_n_items);
 }
 
+_Check_return_
 static S32
 gr_actualise_series_error1(
     P_GR_CHART    cp,
@@ -195,8 +207,8 @@ gr_actualise_series_error1(
         GR_DATASOURCE_FOURSOME dsh;
         GR_CHART_NUMBER        value, valsum;
         GR_CHART_NUMBER        error, errsum, valincerr;
-        PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
-        PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
+        const PC_GR_AXES p_axes = gr_axesp_from_series_idx(cp, series_idx);
+        const PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
         S32 cumulative;
 
         cumulative = serp->bits.cumulative_manual
@@ -282,6 +294,7 @@ gr_actualise_series_error1(
  * to perform percentage bars on each axes set individually!
 */
 
+_Check_return_
 extern GR_COORD
 gr_categ_pos(
     PC_GR_CHART  cp,
@@ -294,6 +307,7 @@ gr_categ_pos(
     return(pos);
 }
 
+_Check_return_
 extern GR_COORD
 gr_value_pos(
     PC_GR_CHART cp,
@@ -301,7 +315,7 @@ gr_value_pos(
     GR_AXIS_IDX axis_idx,
     const GR_CHART_NUMBER * value)
 {
-    PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
+    const PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
     F64 plotval = *value;
     GR_COORD pos = (axis_idx == Y_AXIS_IDX) ? cp->plotarea.size.y : cp->plotarea.size.x;
     F64 plotmin;
@@ -330,6 +344,7 @@ gr_value_pos(
     return(pos);
 }
 
+_Check_return_
 extern GR_COORD
 gr_value_pos_rel(
     PC_GR_CHART cp,
@@ -337,7 +352,7 @@ gr_value_pos_rel(
     GR_AXIS_IDX axis_idx,
     const GR_CHART_NUMBER * value)
 {
-    PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
+    const PC_GR_AXIS p_axis = &cp->axes[axes_idx].axis[axis_idx];
     F64 plotval = *value;
     GR_COORD pos = (axis_idx == Y_AXIS_IDX) ? cp->plotarea.size.y : cp->plotarea.size.x;
 
@@ -353,7 +368,8 @@ gr_value_pos_rel(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static STATUS
 gr_barline_label_point(
     P_GR_CHART      cp,
     GR_SERIES_IDX   series_idx,
@@ -370,7 +386,6 @@ gr_barline_label_point(
     S32            eformat  = FALSE;
     GR_MILLIPOINT  swidth_mp;
     GR_COORD       swidth_px, halfwidth, halfheight;
-    S32            res = 1;
 
     gr_point_textstyle_query(cp, series_idx, point, &textstyle);
 
@@ -394,21 +409,18 @@ gr_barline_label_point(
 
     swidth_px = swidth_mp  / GR_MILLIPOINTS_PER_PIXIT;
 
-    if(strlen(cv.data.text))
-    {
-        halfwidth  = swidth_px / 2;
-        halfheight = textstyle.height / 2;
+    if(0 == strlen(cv.data.text))
+        return(STATUS_DONE);
 
-        box.x1 = box.x0 + halfwidth;
-        box.y1 = box.y0 + halfheight;
-        box.x0 = box.x0 - halfwidth;
-        box.y0 = box.y0 - halfheight;
+    halfwidth  = swidth_px / 2;
+    halfheight = textstyle.height / 2;
 
-        res = gr_diag_text_new(cp->core.p_gr_diag, NULL, id,
-                               &box, cv.data.text, &textstyle);
-    }
+    box.x1 = box.x0 + halfwidth;
+    box.y1 = box.y0 + halfheight;
+    box.x0 = box.x0 - halfwidth;
+    box.y0 = box.y0 - halfheight;
 
-    return(res);
+    return(gr_chart_text_new(cp, id, &box, cv.data.text, &textstyle));
 }
 
 /******************************************************************************
@@ -432,23 +444,24 @@ struct GR_BARLINECH_STACKING
     }
 stacking;
 
-static S32
+_Check_return_
+static BOOL
 gr_barlinech_stacking_init(
     P_GR_CHART cp,
     GR_AXES_IDX axes_idx,
     GR_POINT_NO point)
 {
-    GR_SERIES_IDX   series_idx;
-    PC_GR_SERIES    serp;
+    GR_SERIES_IDX series_idx;
+    PC_GR_SERIES serp;
     GR_CHART_NUMBER value;
-    S32             res;
+    BOOL res;
 
     stacking.on          = 1;
     stacking.value       = 0.0;
     stacking.error       = 0.0;
     stacking.valpoint    = cp->barlinech.cache.zeropoint_y;
     stacking.total       = 0.0;
-    stacking.drop_filled = 0; /* 1 would mean no need to consider drawing bottom vanes, but leave 0 for possible -ve pitch */
+    stacking.drop_filled = 0; /* 1 would mean no need to consider drawing bottom vanes, but leave 0 for possible -ve droop */
 
     if(!cp->axes[axes_idx].bits.stacked_pct)
         return(1);
@@ -479,7 +492,7 @@ gr_barlinech_stacking_init(
     {
         /* nothing plottable as %ge in this category */
         gr_chartedit_warning(cp, create_error(GR_CHART_ERR_NEGATIVE_OR_ZERO_IGNORED));
-        return(0);
+        res = 0;
     }
 
     return(res);
@@ -557,7 +570,8 @@ gr_barlinech_series_init(
 *
 ******************************************************************************/
 
-static S32
+_Check_return_
+static BOOL
 gr_barlinech_point_start(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp,
     GR_POINT_NO                     point,
@@ -646,17 +660,16 @@ gr_barlinech_point_start(
     return(1);
 }
 
-static S32
+_Check_return_
+static STATUS
 gr_barchart_point_addin(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp,
     GR_CHART_ITEMNO point)
 {
-    S32               res    = 1;
-    P_GR_CHART        cp     = lcp->cp;
-    GR_AXES_IDX       axes_idx = lcp->axes_idx;
-    P_GR_AXES         p_axes = &cp->axes[axes_idx];
-    GR_SERIES_IDX     series_idx = lcp->series_idx;
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
+    const P_GR_CHART cp = lcp->cp;
+    const GR_AXES_IDX axes_idx = lcp->axes_idx;
+    const P_GR_AXES p_axes = &cp->axes[axes_idx];
+    const GR_SERIES_IDX series_idx = lcp->series_idx;
     GR_CHART_NUMPAIR  value;
     GR_CHART_NUMPAIR  error;
     GR_POINT valpoint, botpoint, toppoint;
@@ -670,6 +683,7 @@ gr_barchart_point_addin(
     GR_BOX err_box;
     GR_COORD          tbar_halfsize;
     S32               labelling;
+    STATUS res = 1;
 
     GR_BOX rect_box;
     GR_COORD bar_width;
@@ -677,8 +691,7 @@ gr_barchart_point_addin(
     if(!gr_barlinech_point_start(lcp, point, &value, &error))
         return(1);
 
-    if((res = gr_chart_group_new(cp, &point_group_start, &lcp->point_id)) < 0)
-        return(res);
+    status_return(res = gr_chart_group_new(cp, &point_group_start, lcp->point_id));
 
     gr_point_fillstyle_query(cp, series_idx, point, &point_fillstyle);
     gr_point_linestyle_query(cp, series_idx, point, &point_linestyle);
@@ -692,7 +705,7 @@ gr_barchart_point_addin(
 
     valpoint.y = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
 
-    /* create assuming simple origin - 3d transformed using plotarea later */
+    /* create assuming simple origin - 3-D transformed using plotarea later */
 
     /* place in right category group */
     valpoint.x  = (int) gr_categ_pos(cp, point);
@@ -727,7 +740,7 @@ gr_barchart_point_addin(
         labelling = (0 - labelling);
     }
 
-    /* map together into 3d world */
+    /* map together into 3-D world */
     if(cp->d3.bits.use)
     {
         gr_map_point(&valpoint, cp, lcp->plotindex);
@@ -784,8 +797,7 @@ gr_barchart_point_addin(
         err_box.y1 = pre_z_shift_box.y0 + err_box.y0;
         err_box.y0 = err_box.y1         - errsize;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
 
         /* vertical part of T at bottom */
         err_box.x1 = err_box.x0 + tbar_halfsize;
@@ -793,8 +805,7 @@ gr_barchart_point_addin(
 
         err_box.y1 = err_box.y0;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
     }
 
     if(cp->d3.bits.use)
@@ -821,11 +832,9 @@ gr_barchart_point_addin(
     if(!point_fillstyle.bits.notsolid)
     {
         if(rect_box.y0 != rect_box.y1)
-            if((res = gr_diag_rectangle_new(p_gr_diag, NULL, lcp->point_id,
-                                            &rect_box, &point_linestyle, &point_fillstyle)) < 0)
-                return(res);
+            status_return(gr_chart_rectangle_new(cp, lcp->point_id, &rect_box, &point_linestyle, &point_fillstyle));
 
-        /* only do 3d if some solid selected */
+        /* only do 3-D if some solid selected */
         if(cp->d3.bits.use)
         {
             GR_POINT origin, ps1, ps2;
@@ -844,10 +853,7 @@ gr_barchart_point_addin(
             ps2.y    = ps1.y + (toppoint.y - botpoint.y);
 
             if(ps1.x && (rect_box.y0 != rect_box.y1))
-                if((res = gr_diag_parallelogram_new(p_gr_diag, NULL, lcp->point_id,
-                                                    &origin, &ps1, &ps2,
-                                                    &point_linestyle, &point_fillstyle)) < 0)
-                    return(res);
+                status_return(gr_diag_parallelogram_new(cp->core.p_gr_diag, NULL, lcp->point_id, &origin, &ps1, &ps2, &point_linestyle, &point_fillstyle));
 
             /* top, even if non-zero height */
             origin.x = rect_box.x0;
@@ -862,21 +868,20 @@ gr_barchart_point_addin(
             ps2.y   += ps1.y;
 
             if(ps2.y)
-                if((res = gr_diag_parallelogram_new(p_gr_diag, NULL, lcp->point_id,
-                                                    &origin, &ps1, &ps2,
-                                                    &point_linestyle, &point_fillstyle)) < 0)
-                    return(res);
+                status_return(gr_diag_parallelogram_new(cp->core.p_gr_diag, NULL, lcp->point_id, &origin, &ps1, &ps2, &point_linestyle, &point_fillstyle));
         }
     }
 
     if(point_fillstyle.pattern)
     {
         if(!barchstyle.bits.pictures_stacked)
-            res = gr_chart_scaled_picture_add(cp, &lcp->point_id, &rect_box, &point_fillstyle);
+        {
+            res = gr_chart_scaled_picture_add(cp, lcp->point_id, &rect_box, &point_fillstyle);
+        }
         else
         {
-            PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
-            PC_GR_AXIS_TICKS ticksp = &p_axis->major;
+            const PC_GR_AXIS p_axis = &p_axes->axis[Y_AXIS_IDX];
+            const PC_GR_AXIS_TICKS p_axis_ticks = &p_axis->major;
             GR_COORD major_spanner_y;
             F64 frac, use_major;
             F64 iter, new_iter;
@@ -884,7 +889,7 @@ gr_barchart_point_addin(
             GR_BOX pict_box = rect_box;
 
             frac      = p_axis->current_frac;
-            use_major = ticksp->current;
+            use_major = p_axis_ticks->current;
 
             if(frac < 0.020)
             {
@@ -941,8 +946,7 @@ gr_barchart_point_addin(
                 if(!add_pict && !barchstyle.bits.pictures_stacked_clipper)
                     break;
 
-                if((res = gr_chart_scaled_picture_add(cp, &lcp->point_id, &pict_box, &point_fillstyle)) < 0)
-                    break;
+                status_break(res = gr_chart_scaled_picture_add(cp, lcp->point_id, &pict_box, &point_fillstyle));
 
                 if(had_last)
                     break;
@@ -963,8 +967,7 @@ gr_barchart_point_addin(
             }
         }
 
-        if(res < 0)
-            return(res);
+        status_return(res);
     }
 
     /* error tit on top? */
@@ -987,11 +990,10 @@ gr_barchart_point_addin(
         /* move to top, right way up */
 
         /* vertical part of T */
-        err_box.y0 = pre_z_shift_box.y1 + err_box.y0; /* 3d shift */
+        err_box.y0 = pre_z_shift_box.y1 + err_box.y0; /* 3-D shift */
         err_box.y1 = err_box.y0         + errsize;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
 
         /* horizontal part of T at top */
         err_box.x1 = err_box.x0 + tbar_halfsize;
@@ -999,8 +1001,7 @@ gr_barchart_point_addin(
 
         err_box.y0 = err_box.y1;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
 
         /* restore unshifted x posn for possible labelling */
         err_box.x0 += tbar_halfsize;
@@ -1010,11 +1011,10 @@ gr_barchart_point_addin(
     {
         GR_BOX txt_box = err_box;
 
-        if((res = gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box)) < 0)
-            return(res);
+        status_return(gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box));
     }
 
-    gr_diag_group_end(p_gr_diag, &point_group_start);
+    gr_chart_group_end(cp, &point_group_start);
 
     return(1);
 }
@@ -1038,18 +1038,17 @@ typedef struct VANE_CONTROL
 }
 VANE_CONTROL, * P_VANE_CONTROL;
 
-static S32
+_Check_return_
+static STATUS
 gr_linechart_vane_new(
-    P_GR_CHART        cp,
-    P_VANE_CONTROL   p_vane,
+    P_GR_CHART cp,
+    P_VANE_CONTROL p_vane,
     PC_GR_POINT origin,
     PC_GR_POINT ps1,
     PC_GR_POINT zsv)
 {
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_POINT ps2;
     F64 alpha, beta;
-    S32 res;
 
     ps2.x = ps1->x + zsv->x;
     ps2.y = ps1->y + zsv->y;
@@ -1076,32 +1075,31 @@ gr_linechart_vane_new(
         }
     }
 
-    if((res = gr_diag_parallelogram_new(p_gr_diag, NULL,
-                                        p_vane->is_drop ? *p_vane->pdrop_id        : *p_vane->point_id,
-                                        origin, ps1, &ps2,
-                                        p_vane->is_drop ?  p_vane->pdrop_linestyle :  p_vane->point_linestyle,
-                                        p_vane->is_drop ?  p_vane->pdrop_fillstyle :  p_vane->point_fillstyle)) < 0)
-        return(res);
+    status_return(gr_diag_parallelogram_new(cp->core.p_gr_diag, NULL,
+                                            p_vane->is_drop ? *p_vane->pdrop_id        : *p_vane->point_id,
+                                            origin, ps1, &ps2,
+                                            p_vane->is_drop ?  p_vane->pdrop_linestyle :  p_vane->point_linestyle,
+                                            p_vane->is_drop ?  p_vane->pdrop_fillstyle :  p_vane->point_fillstyle));
 
     return(1);
 }
 
-static S32
+_Check_return_
+static STATUS
 gr_linechart_point_addin(
     P_GR_BARLINESCATCH_SERIES_CACHE lcp,
     GR_CHART_ITEMNO        point,
     enum GR_BARLINECH_PASS_TYPE pass)
 {
-    S32               res    = 1;
-    P_GR_CHART        cp     = lcp->cp;
-    GR_AXES_IDX       axes_idx = lcp->axes_idx;
-    P_GR_AXES         p_axes = &cp->axes[axes_idx];
-    GR_SERIES_IDX     series_idx = lcp->series_idx;
-    P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
+    const P_GR_CHART cp = lcp->cp;
+    const GR_AXES_IDX axes_idx = lcp->axes_idx;
+    const P_GR_AXES p_axes = &cp->axes[axes_idx];
+    const GR_SERIES_IDX series_idx = lcp->series_idx;
+    const P_GR_DIAG p_gr_diag = cp->core.p_gr_diag;
     GR_CHART_NUMPAIR  value;
     GR_CHART_NUMPAIR  error;
     GR_POINT valpoint, botpoint, toppoint;
-    GR_POINT cur_valpoint, cur_botpoint, cur_toppoint; /* values after 3d depth shifting */
+    GR_POINT cur_valpoint, cur_botpoint, cur_toppoint; /* values after 3-D depth shifting */
     GR_POINT zsv;
     GR_LINECHSTYLE    linechstyle;
     GR_BARLINECHSTYLE barlinechstyle;
@@ -1112,6 +1110,7 @@ gr_linechart_point_addin(
     GR_BOX err_box;
     GR_COORD          tbar_halfsize;
     S32               labelling;
+    STATUS res = 1;
 
     S32               point_linestyle_using_default;
     GR_FILLSTYLE      pdrop_fillstyle;
@@ -1123,8 +1122,7 @@ gr_linechart_point_addin(
     if(!gr_barlinech_point_start(lcp, point, &value, &error))
         return(1);
 
-    if((res = gr_chart_group_new(cp, &point_group_start, &lcp->point_id)) < 0)
-        return(res);
+    status_return(res = gr_chart_group_new(cp, &point_group_start, lcp->point_id));
 
     gr_point_fillstyle_query(cp, series_idx, point, &point_fillstyle);
     point_linestyle_using_default =
@@ -1139,8 +1137,8 @@ gr_linechart_point_addin(
         gr_pdrop_linestyle_query( cp, series_idx, point, &pdrop_linestyle);
     }
 
-    /* BODGE: in 2d mode derive line chart line colour from fill colour if point has defaulted */
-    /* SKS after 4.12 30mar92 - added else in front of if: only bodge in 2d non-fill-axis mode */
+    /* BODGE: in 2-D mode derive line chart line colour from fill colour if point has defaulted */
+    /* SKS after 4.12 30mar92 - added else in front of if: only bodge in 2-D non-fill-axis mode */
     else if(!cp->d3.bits.use && point_linestyle_using_default)
         point_linestyle.fg = point_fillstyle.fg;
 
@@ -1148,7 +1146,7 @@ gr_linechart_point_addin(
 
     valpoint.y = gr_value_pos(cp, axes_idx, Y_AXIS_IDX, &value.y);
 
-    /* create assuming simple origin - 3d transformed using plotarea later */
+    /* create assuming simple origin - 3-D transformed using plotarea later */
 
     /* place in right category group */
     valpoint.x  = gr_categ_pos(cp, point);
@@ -1183,7 +1181,7 @@ gr_linechart_point_addin(
         labelling = (0 - labelling);
     }
 
-    /* map together into 3d world */
+    /* map together into 3-D world */
     if(cp->d3.bits.use)
     {
         gr_map_point(&valpoint, cp, lcp->plotindex);
@@ -1240,8 +1238,7 @@ gr_linechart_point_addin(
         err_box.y1 = pre_z_shift_box.y0 + err_box.y0;
         err_box.y0 = err_box.y1         - errsize;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
 
         /* horizontal part of T at bottom */
         err_box.x1 = err_box.x0 + tbar_halfsize;
@@ -1249,11 +1246,10 @@ gr_linechart_point_addin(
 
         err_box.y1 = err_box.y0;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
     }
 
-    /* preserve valpoint, botpoint and toppoint prior to 3d depth shifting */
+    /* preserve valpoint, botpoint and toppoint prior to 3-D depth shifting */
     cur_valpoint = valpoint;
     cur_botpoint = botpoint;
     cur_toppoint = toppoint;
@@ -1285,7 +1281,7 @@ gr_linechart_point_addin(
         lcp->old_toppoint.x += zsv.x;
         lcp->old_toppoint.y += zsv.y;
 
-        /* find ribbon width 3d shift and leave in zsv */
+        /* find ribbon width 3-D shift and leave in zsv */
         z_frac = barlinechstyle.slot_depth_percentage / 100.0;
 
         gr_point_partial_z_shift(&zsv, NULL, cp, &z_frac);
@@ -1367,9 +1363,7 @@ gr_linechart_point_addin(
                 /* belongs to drop if it is flat not part of the actual ribbon */
                 vane_ctl.is_drop = (ps1.y == 0) && (lcp->old_botpoint.y != lcp->old_valpoint.y);
 
-                if((res = gr_linechart_vane_new(cp, &vane_ctl,
-                                                &lcp->old_botpoint, &ps1, &zsv)) < 0)
-                    return(res);
+                status_return(gr_linechart_vane_new(cp, &vane_ctl, &lcp->old_botpoint, &ps1, &zsv));
 
                 if(intermediate.x)
                 {
@@ -1381,9 +1375,7 @@ gr_linechart_point_addin(
                     /* if one of the bottom vanes belongs to the drop then the other doesn't */
                     vane_ctl.is_drop = !vane_ctl.is_drop;
 
-                    if((res = gr_linechart_vane_new(cp, &vane_ctl,
-                                                    &intermediate, &ps1, &zsv)) < 0)
-                        return(res);
+                    status_return(gr_linechart_vane_new(cp, &vane_ctl, &intermediate, &ps1, &zsv));
                 }
 
                 vane_ctl.at_top = 1;
@@ -1397,9 +1389,7 @@ gr_linechart_point_addin(
                 vane_ctl.is_drop = (ps1.y == 0) && (lcp->old_toppoint.y != lcp->old_valpoint.y);
 
                 if(vane_ctl.is_drop)
-                    if((res = gr_linechart_vane_new(cp, &vane_ctl,
-                                                    &lcp->old_toppoint, &ps1, &zsv)) < 0)
-                        return(res);
+                    status_return(gr_linechart_vane_new(cp, &vane_ctl, &lcp->old_toppoint, &ps1, &zsv));
 
                 if(intermediate.x)
                 {
@@ -1412,9 +1402,7 @@ gr_linechart_point_addin(
                     vane_ctl.is_drop = !vane_ctl.is_drop;
 
                     if(vane_ctl.is_drop)
-                        if((res = gr_linechart_vane_new(cp, &vane_ctl,
-                                                        &intermediate, &ps1, &zsv)) < 0)
-                            return(res);
+                        status_return(gr_linechart_vane_new(cp, &vane_ctl, &intermediate, &ps1, &zsv));
                 }
             }
 
@@ -1429,10 +1417,7 @@ gr_linechart_point_addin(
             ps3.x = (intermediate.x ? cur_toppoint.x : cur_botpoint.x) - lcp->old_botpoint.x;
             ps3.y = (intermediate.x ? cur_toppoint.y : cur_botpoint.y) - lcp->old_botpoint.y;
 
-            if((res = gr_diag_trapezoid_new(p_gr_diag, NULL, lcp->pdrop_id,
-                                            &lcp->old_botpoint, &ps1, &ps2, &ps3,
-                                            &pdrop_linestyle, &pdrop_fillstyle)) < 0)
-                return(res);
+            status_return(gr_diag_quadrilateral_new(p_gr_diag, NULL, lcp->pdrop_id, &lcp->old_botpoint, &ps1, &ps2, &ps3, &pdrop_linestyle, &pdrop_fillstyle));
 
             stacking.drop_filled = pdrop_fillstyle.fg.visible;
         }
@@ -1442,7 +1427,7 @@ gr_linechart_point_addin(
     {
         if(!cp->d3.bits.use)
         {
-            /* the 2d line joins the actual points */
+            /* the 2-D line joins the actual points */
 
             GR_BOX line_box;
 
@@ -1451,12 +1436,11 @@ gr_linechart_point_addin(
             line_box.x1 =      cur_valpoint.x;
             line_box.y1 =      cur_valpoint.y;
 
-            if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &line_box, &point_linestyle)) < 0)
-                return(res);
+            status_return(gr_chart_line_new(cp, lcp->point_id, &line_box, &point_linestyle));
         }
         else if(!lcp->fill_axis)
         {
-            /* the 3d non-filled ribbon joins the actual points */
+            /* the 3-D non-filled ribbon joins the actual points */
 
             ps1.x = cur_valpoint.x - lcp->old_valpoint.x;
             ps1.y = cur_valpoint.y - lcp->old_valpoint.y;
@@ -1464,10 +1448,7 @@ gr_linechart_point_addin(
             ps2.x = ps1.x + zsv.x;
             ps2.y = ps1.y + zsv.y;
 
-            if((res = gr_diag_parallelogram_new(p_gr_diag, NULL, lcp->point_id,
-                                                &lcp->old_valpoint, &ps1, &ps2,
-                                                &point_linestyle, &point_fillstyle)) < 0)
-                return(res);
+            status_return(gr_diag_parallelogram_new(p_gr_diag, NULL, lcp->point_id, &lcp->old_valpoint, &ps1, &ps2, &point_linestyle, &point_fillstyle));
         }
         else
         {
@@ -1482,9 +1463,7 @@ gr_linechart_point_addin(
             vane_ctl.is_drop = (ps1.y == 0) && (lcp->old_toppoint.y != lcp->old_valpoint.y);
 
             if(!vane_ctl.is_drop)
-                if((res = gr_linechart_vane_new(cp, &vane_ctl,
-                                                &lcp->old_toppoint, &ps1, &zsv)) < 0)
-                    return(res);
+                status_return(gr_linechart_vane_new(cp, &vane_ctl, &lcp->old_toppoint, &ps1, &zsv));
 
             if(intermediate.x)
             {
@@ -1497,9 +1476,7 @@ gr_linechart_point_addin(
                 vane_ctl.is_drop = !vane_ctl.is_drop;
 
                 if(!vane_ctl.is_drop)
-                    if((res = gr_linechart_vane_new(cp, &vane_ctl,
-                                                    &intermediate, &ps1, &zsv)) < 0)
-                        return(res);
+                    status_return(gr_linechart_vane_new(cp, &vane_ctl, &intermediate, &ps1, &zsv));
             }
         }
     }
@@ -1514,10 +1491,7 @@ gr_linechart_point_addin(
         ps2.x = ps1.x;
         ps2.y = ps1.y + (cur_toppoint.y - cur_botpoint.y);
 
-        if((res = gr_diag_parallelogram_new(p_gr_diag, NULL, lcp->pdrop_id,
-                                            &cur_botpoint, &ps1, &ps2,
-                                            &pdrop_linestyle, &pdrop_fillstyle)) < 0)
-            return(res);
+        status_return(gr_diag_parallelogram_new(p_gr_diag, NULL, lcp->pdrop_id, &cur_botpoint, &ps1, &ps2, &pdrop_linestyle, &pdrop_fillstyle));
     }
 
     lcp->had_first = 1;
@@ -1537,8 +1511,7 @@ gr_linechart_point_addin(
         pict_box.x1 = cur_valpoint.x + pict_halfsize;
         pict_box.y1 = cur_valpoint.y + pict_halfsize;
 
-        if((res = gr_chart_scaled_picture_add(cp, &lcp->point_id, &pict_box, &point_fillstyle)) < 0)
-            return(res);
+        status_return(gr_chart_scaled_picture_add(cp, lcp->point_id, &pict_box, &point_fillstyle));
     }
 
     /* error tit on top? */
@@ -1559,11 +1532,10 @@ gr_linechart_point_addin(
         /* move to top, right way up */
 
         /* vertical part of T */
-        err_box.y0 = pre_z_shift_box.y1 + err_box.y0; /* 3d shift */
+        err_box.y0 = pre_z_shift_box.y1 + err_box.y0; /* 3-D shift */
         err_box.y1 = err_box.y0         + errsize;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
 
         /* horizontal part of T at top */
         err_box.x1 = err_box.x0 + tbar_halfsize;
@@ -1571,8 +1543,7 @@ gr_linechart_point_addin(
 
         err_box.y0 = err_box.y1;
 
-        if((res = gr_diag_line_new(p_gr_diag, NULL, lcp->point_id, &err_box, &point_linestyle)) < 0)
-            return(res);
+        status_return(gr_chart_line_new(cp, lcp->point_id, &err_box, &point_linestyle));
 
         /* restore unshifted x posn for possible labelling */
         err_box.x0 += tbar_halfsize;
@@ -1582,41 +1553,41 @@ gr_linechart_point_addin(
     {
         GR_BOX txt_box = err_box;
 
-        if((res = gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box)) < 0)
-            return(res);
+        status_return(gr_barline_label_point(cp, series_idx, point, lcp->point_id, &value.y, &txt_box));
     }
 
-    gr_diag_group_end(p_gr_diag, &point_group_start);
+    gr_chart_group_end(cp, &point_group_start);
 
     return(1);
 }
 
-static S32
+_Check_return_
+static STATUS
 gr_barlinechart_axes_addin(
     P_GR_CHART   cp,
     GR_POINT_NO total_n_points,
-    S32         front)
+    _InVal_     BOOL front_phase)
 {
-    GR_CHART_OBJID id = gr_chart_objid_anon;
     GR_DIAG_OFFSET axesGroupStart;
-    GR_AXES_IDX    axes_idx;
-    S32            res;
+    STATUS res;
 
-    if((res = gr_chart_group_new(cp, &axesGroupStart, &id)) < 0)
-        return(res);
+    status_return(res = gr_chart_group_new(cp, &axesGroupStart, gr_chart_objid_anon));
 
-    if((res = gr_axis_addin_category(cp, total_n_points, front)) < 0)
-        return(res);
+    res = gr_axis_addin_category(cp, total_n_points, front_phase);
 
-    axes_idx = cp->axes_idx_max;
+    if(status_ok(res))
+    {
+        GR_AXES_IDX axes_idx = cp->axes_idx_max;
 
-    do  {
-        if((res = gr_axis_addin_value_y(cp, axes_idx, front)) < 0)
-            return(res);
+        do  {
+            status_break(res = gr_axis_addin_value_y(cp, axes_idx, front_phase));
+        }
+        while(axes_idx-- > 0);
     }
-    while(axes_idx-- > 0);
 
-    gr_diag_group_end(cp->core.p_gr_diag, &axesGroupStart);
+    gr_chart_group_end(cp, &axesGroupStart);
+
+    status_return(res);
 
     return(1);
 }
@@ -1700,7 +1671,7 @@ gr_barlinechart_addin(
     }
 
     /* loop over axes again after total_n_points accumulated,
-     * sussing best fit lines and forming Y axis for each axes set
+     * sussing best fit lines and forming y-axis for each axes set
     */
     for(axes_idx = 0; axes_idx <= cp->axes_idx_max; ++axes_idx)
     {
@@ -1805,8 +1776,7 @@ gr_barlinechart_addin(
     }
 
     /* add in rear axes and gridlines */
-    if((res = gr_barlinechart_axes_addin(cp, total_n_points, 0)) < 0)
-        return(res);
+    status_return(res = gr_barlinechart_axes_addin(cp, total_n_points, FALSE));
 
     /* add in data on axes */
 
@@ -1896,7 +1866,7 @@ gr_barlinechart_addin(
                         /* 100% plots may have detected no values to plot */
                         continue;
 
-                    /* plot series from bottom to top of this one point (reverse if -ve pitch) */
+                    /* plot series from bottom to top of this one point (reverse if -ve droop) */
 
                     for(series_idx = stt_idx; series_idx < end_idx; ++series_idx)
                     {
@@ -1925,16 +1895,13 @@ gr_barlinechart_addin(
                             break;
                         }
 
-                        if(res < 0)
-                            break;
+                        status_break(res);
                     }
 
-                    if(res < 0)
-                        break;
+                    status_break(res);
                 }
 
-                if(res < 0)
-                    break;
+                status_break(res);
             }
 
             al_ptr_free(lc_array);
@@ -1981,8 +1948,7 @@ gr_barlinechart_addin(
 
                 gr_barlinech_series_init(lcp);
 
-                if((res = gr_chart_group_new(cp, &series_group_start, &lcp->serid)) < 0)
-                    break;
+                status_break(res = gr_chart_group_new(cp, &series_group_start, lcp->serid));
 
                 serp = getserp(cp, series_idx);
 
@@ -2000,11 +1966,11 @@ gr_barlinechart_addin(
                     /* loop over points in this one series from left to right */
 
                     for(point = 0; point < total_n_points; ++point)
-                        if((res = gr_barchart_point_addin(lcp, point)) < 0)
-                            break;
+                        status_break(res = gr_barchart_point_addin(lcp, point));
 
-                    if((res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_BAR)) < 0)
-                        break;
+                    status_break(res);
+
+                    status_break(res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_BAR));
 
                     if(barindex)
                         --barindex;
@@ -2023,24 +1989,20 @@ gr_barlinechart_addin(
                         /* reset some bits of this series' cache per pass */
                         gr_barlinech_pass_init(lcp);
 
-                        if((res = gr_chart_group_new(cp, &pass_group_start, &lcp->serid)) < 0)
-                            break;
+                        status_break(res = gr_chart_group_new(cp, &pass_group_start, lcp->serid));
 
                         /* loop over points in this one series from left to right */
 
                         for(point = 0; point < total_n_points; ++point)
-                            if((res = gr_linechart_point_addin(lcp, point, pass)) < 0)
-                                break;
+                            status_break(res = gr_linechart_point_addin(lcp, point, pass));
 
-                        if(res < 0)
-                            break;
+                        status_break(res);
 
-                        gr_diag_group_end(cp->core.p_gr_diag, &pass_group_start);
+                        gr_chart_group_end(cp, &pass_group_start);
 
                         /* add in best fit line between the ribbon and point passes iff unstacked */
                         if(pass == GR_BARLINECH_RIBBON_PASS)
-                            if((res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_LINE)) < 0)
-                                break;
+                            status_break(res = gr_barlinescatch_best_fit_addin(lcp, GR_CHARTTYPE_LINE));
                     }
 
                     if(lineindex)
@@ -2051,27 +2013,22 @@ gr_barlinechart_addin(
                     break;
                 }
 
-                if(res < 0)
-                    break;
+                status_break(res);
 
-                gr_diag_group_end(cp->core.p_gr_diag, &series_group_start);
+                gr_chart_group_end(cp, &series_group_start);
             }
 
-            if(res < 0)
-                break;
+            status_break(res);
         }
 
-        if(res < 0)
-            break;
+        status_break(res);
     }
     while(axes_idx-- > 0);
 
-    if(res < 0)
-        return(res);
+    status_return(res);
 
     /* add in front axes and gridlines */
-    if((res = gr_barlinechart_axes_addin(cp, total_n_points, 1)) < 0)
-        return(res);
+    status_return(gr_barlinechart_axes_addin(cp, total_n_points, TRUE));
 
     return(1);
 }

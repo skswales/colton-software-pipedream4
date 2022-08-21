@@ -25,7 +25,7 @@ internal functions
 
 static BOOL
 init___dialog_box(
-    S32 boxnumber,
+    _InVal_     U32 boxnumber,
     BOOL windvars,
     BOOL allocatestrings);
 
@@ -1358,7 +1358,7 @@ update_fontinfo_from_dialog(void)
 
 extern void
 update_dialog_from_windvars(
-    S32 boxnumber)
+    _InVal_     U32 boxnumber)
 {
     DHEADER * dhptr;
     DIALOG * init_dptr, *dptr, *last_dptr;
@@ -1367,6 +1367,7 @@ update_dialog_from_windvars(
 
     if(is_current_document())
     {
+        assert(boxnumber < NDIALOG_BOXES);
         dhptr     = dialog_head + boxnumber;
         init_dptr = dhptr->dialog_box;
 
@@ -1416,7 +1417,7 @@ update_dialog_from_windvars(
 
 extern void
 update_windvars_from_dialog(
-    S32 boxnumber)
+    _InVal_     U32 boxnumber)
 {
     DHEADER * dhptr;
     DIALOG * init_dptr, * dptr, * last_dptr;
@@ -1425,6 +1426,7 @@ update_windvars_from_dialog(
 
     if(is_current_document())
     {
+        assert(boxnumber < NDIALOG_BOXES);
         dhptr     = dialog_head + boxnumber;
         init_dptr = dhptr->dialog_box;
 
@@ -1476,7 +1478,7 @@ update_windvars_from_dialog(
 extern void
 update_all_dialog_from_windvars(void)
 {
-    S32 boxnumber;
+    U32 boxnumber;
 
     for(boxnumber = 0; boxnumber < NDIALOG_BOXES; boxnumber++)
         update_dialog_from_windvars(boxnumber);        /* move wvars -> dialog */
@@ -1485,7 +1487,7 @@ update_all_dialog_from_windvars(void)
 extern void
 update_all_windvars_from_dialog(void)
 {
-    S32 boxnumber;
+    U32 boxnumber;
 
     for(boxnumber = 0; boxnumber < NDIALOG_BOXES; boxnumber++)
         update_windvars_from_dialog(boxnumber);        /* move dialog -> wvars */
@@ -1501,7 +1503,7 @@ update_all_windvars_from_dialog(void)
 extern void
 dialog_finalise(void)
 {
-    S32 boxnumber;
+    U32 boxnumber;
 
     trace_0(TRACE_APP_DIALOG, "dialog_finalise()");
 
@@ -1515,7 +1517,7 @@ dialog_finalise(void)
 extern void
 dialog_hardwired_defaults(void)
 {
-    S32 boxnumber;
+    U32 boxnumber;
 
     for(boxnumber = 0; boxnumber < NDIALOG_BOXES; boxnumber++)
         /* allocate just windvars bits */
@@ -1565,7 +1567,7 @@ dialog_initialise(void)
 extern void
 dialog_initialise_once(void)
 {
-    S32 boxnumber;
+    U32 boxnumber;
 
     trace_0(TRACE_APP_DIALOG, "dialog_initialise_once()");
 
@@ -1584,7 +1586,7 @@ dialog_initialise_once(void)
 
 extern BOOL
 init_dialog_box(
-    S32 boxnumber)
+    _InVal_     U32 boxnumber)
 {
     BOOL res;
 
@@ -1596,15 +1598,20 @@ init_dialog_box(
 
 static BOOL
 init___dialog_box(
-    S32 boxnumber,
+    _InVal_     U32 boxnumber,
     BOOL windvars,
     BOOL allocatestrings)
 {
-    DHEADER * dhptr    = dialog_head + boxnumber;
-    DIALOG * dptr      = dhptr->dialog_box;
-    DIALOG * last_dptr = dptr + dhptr->items;
+    DHEADER * dhptr;
+    DIALOG * dptr;
+    DIALOG * last_dptr;
     BOOL res = TRUE;
     S32 wvoffset;
+
+    assert(boxnumber < NDIALOG_BOXES);
+    dhptr = dialog_head + boxnumber;
+    dptr = dhptr->dialog_box;
+    last_dptr = dptr + dhptr->items;
 
     do  {
         wvoffset = dptr->offset;
@@ -1818,7 +1825,7 @@ ERRORPOINT:
 
 extern BOOL
 dialog_box(
-    S32 boxnumber)
+    _InVal_     U32 boxnumber)
 {
     DHEADER * dhptr;
     DIALOG * dptr;
@@ -1836,6 +1843,7 @@ dialog_box(
 
     update_dialog_from_windvars(boxnumber);
 
+    assert(boxnumber < NDIALOG_BOXES);
     dhptr = dialog_head + boxnumber;
     dptr  = dhptr->dialog_box;
 

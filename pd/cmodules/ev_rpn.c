@@ -358,12 +358,20 @@ read_cur_sym(
         return;
 
     case RPN_DAT_WORD8:
-        p_ev_data->arg.integer = (S32) *p_rpn_content;
+        {
+        S8 s8;
+        read_from_rpn(&s8, p_rpn_content, sizeof32(S8));
+        p_ev_data->arg.integer = (S32) s8;
         return;
+        }
 
     case RPN_DAT_WORD16:
-        p_ev_data->arg.integer = (S32) readval_S16(p_rpn_content);
+        {
+        S16 s16;
+        read_from_rpn(&s16, p_rpn_content, sizeof32(S16));
+        p_ev_data->arg.integer = (S32) s16;
         return;
+        }
 
     case RPN_DAT_WORD32:
         read_from_rpn(&p_ev_data->arg.integer, p_rpn_content, sizeof32(S32));
@@ -378,7 +386,7 @@ read_cur_sym(
         return;
 
     case RPN_DAT_STRING:
-        p_ev_data->arg.string.uchars = p_rpn_content + sizeof(S16);
+        p_ev_data->arg.string.uchars = p_rpn_content + sizeof32(S16);
         p_ev_data->arg.string.size = ustrlen32(p_ev_data->arg.string.uchars);
         return;
 
@@ -507,7 +515,8 @@ extern EV_IDNO
 rpn_skip(
     P_RPNSTATE rpnsp)
 {
-    if(rpnsp->num != -1)
+    assert(rpnsp->num < ELEMOF_RPN_TABLE);
+    if(rpnsp->num < ELEMOF_RPN_TABLE)
     {
         /* work out how to skip symbol */
         ++rpnsp->pos;
@@ -518,16 +527,16 @@ rpn_skip(
             switch(rpnsp->num)
             {
             case RPN_DAT_REAL:
-                rpnsp->pos += sizeof(F64);
+                rpnsp->pos += sizeof32(F64);
                 break;
             case RPN_DAT_WORD8:
-                rpnsp->pos += sizeof(char);
+                rpnsp->pos += sizeof32(S8);
                 break;
             case RPN_DAT_WORD16:
-                rpnsp->pos += sizeof(S16);
+                rpnsp->pos += sizeof32(S16);
                 break;
             case RPN_DAT_WORD32:
-                rpnsp->pos += sizeof(S32);
+                rpnsp->pos += sizeof32(S32);
                 break;
             case RPN_DAT_SLR:
                 rpnsp->pos += PACKED_SLRSIZE;
@@ -542,7 +551,7 @@ rpn_skip(
                 rpnsp->pos += PACKED_DATESIZE;
                 break;
             case RPN_DAT_NAME:
-                rpnsp->pos += sizeof(EV_NAMEID);
+                rpnsp->pos += sizeof32(EV_NAMEID);
                 break;
 
             case RPN_DAT_BLANK:

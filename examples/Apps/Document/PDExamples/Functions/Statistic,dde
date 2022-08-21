@@ -1,4 +1,4 @@
-%OP%VS4.53 (xx-Jan-2015), Colton Software, R9200 7500 3900 8299
+%OP%VS4.54 (04-Oct-2015), Colton Software, R9200 7500 3900 8299
 %OP%DP4
 %OP%LP*
 %OP%TM4
@@ -8,7 +8,7 @@
 %OP%FX160
 %OP%FY160
 %OP%FS0
-%OP%WC418,2290,770,1772,3,13,0,0
+%OP%WC418,2290,770,1772,0,1,0,0
 %CO:A,10,100%%C%%H2%Statistical Functions Examples
 
 
@@ -24,8 +24,10 @@
 AVG
 COMBIN
 COUNT
+COUNTA
 GRAND
 MAX
+MEDIAN
 MIN
 %L%RAND
 STD
@@ -34,35 +36,37 @@ VAR
 VARP
 %CO:B,9,0%
 
-
-%V%%C%8
-%V%%C%7
-%V%%C%2
-%V%%C%11
-%V%%C%6
+%R%First
+%V%%R%8
+%V%%R%7
+%V%%R%2
+%V%%R%11
+%V%%R%6
 
 
 %R%Input 1
 
-%R%B4E8
+%R%B3E9
 %V%%R%%D0%6
-%R%B4E8
+%R%B3E9
+%R%B3E9
 %V%%R%0
-%R%B4E8
-%R%B4E8
+%R%B3E9
+%R%B3E9
+%R%B3E9
 %V%%R%1
-%R%B4E8
-%R%B4E8
-%R%B4E8
-%R%B4E8
+%R%B3E9
+%R%B3E9
+%R%B3E9
+%R%B3E9
 %CO:C,9,0%
 
-
-%V%%C%5
-%V%%C%12
-%V%%C%7
-%V%%C%9
-%V%%C%17
+%R%Second
+%V%%R%5
+%V%%R%12
+%V%%R%7
+%V%%R%9
+%V%%R%17
 
 
 %R%Input 2
@@ -70,7 +74,9 @@ VARP
 %R%-
 %V%%R%%D0%3
 %R%-
+%R%-
 %V%%R%1
+%R%-
 %R%-
 %R%-
 %R%-
@@ -80,12 +86,12 @@ VARP
 %R%-
 %CO:D,9,0%
 
-
-%V%%C%10
-%V%%C%13
-%V%%C%7
-%V%%C%5
-%V%%C%17
+%R%Third
+%V%%R%10
+%V%%R%13
+%V%%R%7
+%V%%R%5
+%V%%R%17
 
 
 %R%Input 3
@@ -101,29 +107,33 @@ VARP
 %R%-
 %R%-
 %R%-
+%R%-
+%R%-
 %CO:E,9,0%
 
-
-%V%%C%13
-%V%%C%19
-%V%%C%1
-%V%%C%7
-%V%%C%1
+%R%Fourth
+%V%%R%13
+%V%%R%19
+%V%%R%1
+%V%%R%7
+%V%%R%1
 
 
 %C%Result
 
-%V%%C%avg(B4E8)
-%V%%C%%D0%combin(B14,C14)
-%V%%C%count(B4E8)
-%V%%C%grand(B16,C16)
-%V%%C%max(B4E8)
-%V%%C%min(B4E8)
-%V%%C%rand(B19)
-%V%%C%std(B4E8)
-%V%%C%stdp(B4E8)
-%V%%C%var(B4E8)
-%V%%C%varp(B4E8)
+%V%%R%avg(B3E9)
+%V%%R%%D0%combin(B14,C14)
+%V%%R%count(B3E9)
+%V%%R%counta(B3E9)
+%V%%R%grand(B17,C17)
+%V%%R%max(B3E9)
+%V%%R%median(B3E9)
+%V%%R%min(B3E9)
+%V%%R%rand(B21)
+%V%%R%std(B3E9)
+%V%%R%stdp(B3E9)
+%V%%R%var(B3E9)
+%V%%R%varp(B3E9)
 %CO:F,2,0%%CO:G,81,0%
 
 
@@ -139,8 +149,10 @@ VARP
 Returns the average of a list of numbers.
 Number of combinations of %H4%Input1%H4% items taken %H4%Input2%H4% at a time.
 Counts the number of entries in a list. (Numeric Slots only).
+Counts the number of non-blank entries in a list.
 Generates a random number from the normal distribution with average %H4%Input1%H4%, s.d. %H4%Input2%H4%, both optional.
 Returns the maximum value in a list.
+Returns the median value of a list.
 Returns the minimum value in a list.
 Generates a random number using %H4%Input1%H4% as the seed. %H4%Input1%H4% is optional.
 Returns the sample standard deviation of a list.

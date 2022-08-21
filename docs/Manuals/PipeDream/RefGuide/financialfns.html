@@ -84,9 +84,9 @@ class="csguide-arg">range</span>)</code></p>
 <p>Calculates the internal rate of return of an investment, and series of
 calculations based on an initial guess.</p>
 
-<p>For example, slot A1 contains the initial investment -5000 (entered as a
-negative number because you are spending it). Slots A2 - A14 each contain the
-number 500, representing payments returned on the investment. Slot A16 contains
+<p>For example, cell A1 contains the initial investment -5000 (entered as a
+negative number because you are spending it). Cells A2 - A14 each contain the
+number 500, representing payments returned on the investment. Cell A16 contains
 the number .01, a first guess for the internal rate of return. The formula
 <code>IRR(A16,A1A14)</code> displays the result 0.04, the internal percentage
 rate of return for the cash flows in column A.</p>
@@ -99,7 +99,7 @@ rate of return for the cash flows in column A.</p>
 <p>Returns the modified internal rate of return for a series of periodic cash
 flows. MIRR considers both the cost of the investment and the interest received
 on reinvestment of the cash. <span class="csguide-arg">values_array</span> is
-an array or a reference to slots which contain numbers. The numbers represent a
+an array or a reference to cells which contain numbers. The numbers represent a
 series of payments (negative values) and income (positive values) occurring at
 regular periods. <span class="csguide-arg">finance_rate</span> is the interest
 rate you pay on the money used in the cash flows. <span
@@ -110,8 +110,8 @@ the cash flows as you reinvest them.</p>
 Three years ago, you borrowed &pound;120,000 at 10% annual interest to buy a workshop
 and equipment. Your annual income for the past three years has been &pound;39,000,
 &pound;30,000, and &pound;21,000. During these years, you reinvested your profits, earning
-12% annually. If you enter the initial cost as a negative number in slot B1 and
-the annual incomes in slots B2, B3 and B4, to calculate the investment's
+12% annually. If you enter the initial cost as a negative number in cell B1 and
+the annual incomes in cells B2, B3 and B4, to calculate the investment's
 modified rate of return after 3 years, you would type
 <code>MIRR(B1B4,.10,.12)</code> which would return -0.04804 as the result.</p>
 
@@ -124,7 +124,7 @@ class="csguide-arg">range</span>)</code></p>
 <p>Calculates the net present value of a series of future cash flows at a fixed
 period interest rate.</p>
 
-<p>For example, slots B10 - B14 each contain the number 120 each representing a
+<p>For example, cells B10 - B14 each contain the number 120 each representing a
 cash flow. What is the net present value of the cash flows given a discount
 rate of 10%? The formula <code>NPV(0.10,B10B14)</code> displays the result
 &pound;454.89, the present value of the future cash flows.</p>

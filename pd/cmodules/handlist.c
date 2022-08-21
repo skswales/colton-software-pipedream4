@@ -804,8 +804,8 @@ list_init(
 
     lp->maxitemsize = ((maxitemsize / SIZEOF_ALIGN_T) + 1) *
                         SIZEOF_ALIGN_T + LIST_ITEMOVH;
-    lp->maxitemsize = MIN(MAX_POOL, lp->maxitemsize);
-    lp->maxpoolsize = MIN(MAX_POOL, maxpoolsize);
+    lp->maxitemsize = MIN((OFF_TYPE) MAX_POOL, lp->maxitemsize);
+    lp->maxpoolsize = MIN((OFF_TYPE) MAX_POOL, maxpoolsize);
     lp->poolsizeinc = MAX(lp->maxpoolsize / 4, lp->maxitemsize);
 }
 

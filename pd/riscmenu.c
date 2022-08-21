@@ -601,13 +601,13 @@ function__event_menu_filler(
 
         (void) write_ref(coord, elemof32(coord), current_docno(), curcol, currow); /* always current doc */
 
-        (void) xsnprintf(entry, elemof32(entry), "Slot '%s'", coord);
+        (void) xsnprintf(entry, elemof32(entry), "Cell '%s'", coord);
 
         if(strlen32(entry) > 12)
             (void) xsnprintf(entry, elemof32(entry), "'%s'", coord);
 
         if(strlen32(entry) > 12)
-            (void) xsnprintf(entry, elemof32(entry), "Slot info");
+            (void) xsnprintf(entry, elemof32(entry), "Cell info");
 
         menu_entry_changetext(menu_function, MENU_FUNCTION_CELLINFO, entry);
 #endif
@@ -765,7 +765,7 @@ function__event_menu_filler(
 
             case SL_TEXT:
                 {
-                BOOL can_compile_text = (NULL != tcell) ? (!is_protected_slot(tcell) && !isslotblank(tcell)) : FALSE;
+                BOOL can_compile_text = (NULL != tcell) ? (!is_protected_cell(tcell) && !is_blank_cell(tcell)) : FALSE;
 
                 set_ev_slr(&menu_function_slr, curcol, currow);
 
